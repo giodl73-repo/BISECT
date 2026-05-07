@@ -89,6 +89,16 @@ pub enum PartitionMode {
     /// Use --sa-steps-per-tract, --sa-t0-factor, --sa-t-final to tune.
     #[value(name = "simulated-annealing")]
     SimulatedAnnealing,
+    /// BFS Region-Growing — greedy geographic district packing. No hyperparameters.
+    /// Seeds placed by maximum BFS spread; tracts assigned to most population-deficient district.
+    /// Inherits balance_tolerance from standard flags. (B.23)
+    #[value(name = "bfs-growth")]
+    BfsGrowth,
+    /// Centroidal Voronoi Districts — geometric packing via graph-distance Voronoi (B.22).
+    /// Seeds placed by k-farthest spread, iteratively moved to medoid of each Voronoi region.
+    /// Use --cvd-iters to control max iterations (default: 20). No METIS call.
+    #[value(name = "centroidal-voronoi")]
+    CentroidalVoronoi,
 }
 
 impl std::fmt::Display for PartitionMode {
@@ -106,6 +116,8 @@ impl std::fmt::Display for PartitionMode {
             Self::ApportionRegions      => write!(f, "apportion-regions"),
             Self::VraSection            => write!(f, "vra-section"),
             Self::SimulatedAnnealing    => write!(f, "simulated-annealing"),
+            Self::BfsGrowth             => write!(f, "bfs-growth"),
+            Self::CentroidalVoronoi     => write!(f, "centroidal-voronoi"),
         }
     }
 }
@@ -1193,6 +1205,13 @@ pub enum StructureMode {
     /// Compact-by-Polsby-Popper greedy level selection (CompactBisect B.7)
     #[value(name = "compact-polsby")]
     CompactPolsby,
+    /// BFS Region-Growing — greedy geographic packing from k-farthest seeds (B.23)
+    #[value(name = "bfs-growth")]
+    BfsGrowth,
+    /// Centroidal Voronoi Districts — graph-distance Voronoi iteration (B.22)
+    /// --structure centroidal-voronoi --cvd-iters 20
+    #[value(name = "centroidal-voronoi")]
+    CentroidalVoronoi,
 }
 
 /// Layer 2 compositor: which edge/vertex weight signal to use.
@@ -1634,6 +1653,14 @@ pub struct StateArgs {
     /// Minority VAP fraction threshold for --search vra-recom. Default: 0.50.
     #[arg(long, default_value_t = 0.50)]
     pub vra_threshold: f64,
+
+    // ── Centroidal Voronoi Districts (CVD) parameters ─────────────────────────
+
+    /// CVD: maximum Voronoi iterations per bisection node. Default: 20.
+    /// Seeds move to medoid of each district until stable or n_iter reached.
+    /// Requires --partition-mode centroidal-voronoi or --structure centroidal-voronoi.
+    #[arg(long, default_value_t = 20)]
+    pub cvd_iters: usize,
 }
 
 // ---------------------------------------------------------------------------
@@ -1799,6 +1826,13 @@ pub struct StatesArgs {
     /// Minority VAP fraction threshold for --search vra-recom. Default: 0.50.
     #[arg(long, default_value_t = 0.50)]
     pub vra_threshold: f64,
+
+    // ── Centroidal Voronoi Districts (CVD) parameters ─────────────────────────
+
+    /// CVD: maximum Voronoi iterations per bisection node. Default: 20.
+    /// Requires --partition-mode centroidal-voronoi or --structure centroidal-voronoi.
+    #[arg(long, default_value_t = 20)]
+    pub cvd_iters: usize,
 }
 
 #[cfg(test)]
@@ -2472,6 +2506,7 @@ mod tests {
             ("ratio-optimal-vra",  StructureMode::RatioOptimalVra),
             ("prime-factor",       StructureMode::PrimeFactor),
             ("compact-polsby",     StructureMode::CompactPolsby),
+            ("bfs-growth",         StructureMode::BfsGrowth),
         ];
         for (s, expected) in cases {
             let parsed = StructureMode::from_str(s, true)

@@ -1,0 +1,116 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage[hypertexnames=false]{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+
+%% Style
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+\setstretch{1.4}
+
+%% Macros
+\newcommand{\vr}{\textsc{VraRecom}}
+\newcommand{\fr}{\textsc{ForestReCom}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\ec}{\ensuremath{\mathrm{EC}}}
+\newcommand{\pp}{\ensuremath{\mathrm{PP}}}
+\newcommand{\vap}{\ensuremath{\mathrm{VAP}}}
+\newcommand{\bvap}{\ensuremath{\mathrm{BVAP}}}
+\newcommand{\hvap}{\ensuremath{\mathrm{HVAP}}}
+\newcommand{\cs}{\textsc{ConvergenceSweep}}
+\newcommand{\vraSection}{\textsc{VRASection}}
+\newcommand{\rhat}{\ensuremath{\hat{R}}}
+\newcommand{\ess}{\ensuremath{\mathrm{ESS}}}
+\newcommand{\Prot}{\ensuremath{\mathcal{P}}}
+
+\title{%
+  \textbf{VRA-Aware MCMC: Sampling the Conditional Distribution\\
+          Over Voting Rights Act-Compliant Redistricting Plans}\\[0.8em]
+  \normalsize\textit{G.13 --- Ensemble Methods / VRA Compliance}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+Standard ensemble redistricting methods---\recom{}, Forest \recom{},
+Merge-Split---sample the full space of valid plans, including plans that
+dilute minority voting strength in violation of Section~2 of the Voting
+Rights Act~\citep{gingles1986}.
+VRA compliance is currently enforced at the \emph{structure layer}
+(\vraSection{}, D.0~\citep{dellaLibera2026vraSection}), which produces a single
+compliant plan but cannot sample the distribution over compliant alternatives.
+We introduce \vr{}: a search-layer algorithm that samples the \emph{conditional
+distribution} over plans preserving all designated majority-minority districts.
+\vr{} extends \fr{}~\citep{dellaLibera2026forestRecom} with a hard rejection
+rule: if a proposed step would reduce the minority VAP fraction of any
+protected district below \texttt{vap\_threshold} (default $0.50$), the step
+is rejected unconditionally before the Metropolis-Hastings evaluation.
+Protected districts are identified once at chain construction from the initial
+plan, matching the legal standard that the submitted plan's majority-minority
+districts must be preserved.
+VRA rejection introduces a three-way step accounting identity:
+$\text{accepted} + \text{vra\_rejections} + \text{mh\_rejections} = \text{steps\_taken}$,
+enabling full audit of chain behaviour.
+Seeding is identical to \fr{} (prefix constants \texttt{FR\_FORWARD\_} and
+\texttt{FR\_REVERSE\_}), so the proposal sequence is auditable against an
+unconstrained replay.
+On North Carolina ($k = 14$, 2 protected districts), Georgia ($k = 14$,
+3 protected districts), and Texas ($k = 38$, 7 protected districts),
+\vr{} achieves VRA rejection rates of $15$--$25\%$, with EC distributions
+slightly above the unconstrained chain, confirming that VRA-compliant plans
+occupy a proper sub-region of the full plan space.
+When no protected districts exist, \vr{} reduces to \fr{} within $2\%$
+on all metrics.
+The recommended workflow pairs \vraSection{} (structure layer, for a
+guaranteed compliant starting plan) with \vr{} (search layer, for sampling
+compliant alternatives): \texttt{--structure ratio-optimal-vra --weights-override
+vra-aligned --search vra-recom}.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-background}
+\input{sections/03-algorithm}
+\input{sections/04-empirical}
+\input{sections/05-audit}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

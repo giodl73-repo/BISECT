@@ -1,0 +1,134 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The Local-Optimum Problem in Single-Chain MCMC}
+
+The B-series redistricting platform constructs congressional maps via a
+bisection tree: the state graph is recursively split into $k$ population-balanced
+districts by minimising the weighted edge cut at each node~\citep{b8paper}.
+The Search layer determines how many MCMC steps are taken and which resulting
+plan is returned.
+For most states with small to medium district counts ($k \le 20$), a single
+\fr{} chain run for $T=1{,}000$ steps adequately explores the feasible plan
+space: the chain mixes freely within its balance-tolerance constraint and
+the minimum edge-cut plan is selected by percentile.
+
+For large-$k$ states, this single-chain strategy fails in a characteristic way.
+Texas ($k=38$), California ($k=52$), and Florida ($k=28$) have state graphs
+with tens of thousands of census tracts.
+The feasible plan space at strict balance tolerance ($\varepsilon = 0.5\%$) has
+a rugged energy landscape: many local-optimum plans separated by high edge-cut
+``barriers.''
+The single \fr{} chain gets trapped in one basin of attraction; running for
+more steps explores the basin thoroughly but cannot escape to qualitatively
+different plan regions without passing through infeasible or high-EC intermediate
+states.
+
+\paragraph{Track 1: Geographic coarsening.}
+\ms{} (G.11)~\citep{dellaLibera2026multiscale} addresses this by operating at
+a coarser spatial resolution: groups of tracts are merged into super-tracts,
+and the chain proposes swaps at the super-tract level.
+This enlarges the proposal neighbourhood and allows larger structural changes
+per step.
+The cost is that coarsening introduces approximation; the final plan is
+projected back to tract resolution.
+
+\paragraph{Track 2: Temperature ladders.}
+This paper introduces a second track: \textbf{Parallel Tempering} (PT), which
+runs $N_{\mathrm{replicas}}$ chains simultaneously, each at a different balance
+tolerance.
+Hot chains (high $\varepsilon$) mix freely because they accept almost any
+balanced plan; cold chains (low $\varepsilon$) produce distribution-correct
+samples but mix slowly.
+After every $\mathtt{swap\_interval}$ steps, adjacent chains propose to exchange
+their current plans via a Metropolis criterion.
+Accepted swaps pass global diversity downward from the hot chains to the cold
+chain.
+
+\subsection{Parallel Tempering as a Redistricting Search Strategy}
+
+In statistical mechanics, parallel tempering (PT) is a method for sampling from
+complex energy landscapes~\citep{swendsen1986, geyer1991}.
+The ``temperature'' in statistical mechanics controls how strongly a system
+is constrained to low-energy states; high temperature permits wide exploration
+of state space.
+In redistricting, the analogous parameter is the population balance tolerance
+$\varepsilon$: a high tolerance accepts more plans as feasible, giving the chain
+a much larger proposal neighbourhood and faster mixing.
+
+The key insight is that $\varepsilon$ need not be fixed for all chains.
+In \pt{} redistricting:
+\begin{itemize}
+\item The \emph{cold chain} ($\varepsilon_0 = 0.5\%$) targets the statutory
+  distribution.
+  Only its samples are used for plan selection.
+\item The \emph{hot chain} ($\varepsilon_{N-1} = 5\%$) mixes rapidly because
+  it can move between any roughly population-balanced plans.
+  It serves only as a diversity source.
+\item Intermediate chains form a geometric ladder between cold and hot.
+\end{itemize}
+When a hot chain reaches a low-EC plan that is far from the cold chain's current
+location in plan space, a swap can transfer this plan to the cold chain, which
+then explores the new basin under tight balance constraints.
+This is the mechanism by which PT escapes local optima without modifying the
+distributional target of the cold chain.
+
+\subsection{Main Results}
+
+\paragraph{Algorithm.}
+We define \pt{} redistricting (Section~\ref{sec:algorithm}) as a Search-layer
+strategy that runs $N_{\mathrm{replicas}}$ \fr{} chains on a geometric tolerance
+ladder with swap proposals at every $\mathtt{swap\_interval}$ steps.
+The cold chain records all visited plans; the plan at the $p$-th percentile of
+the cold chain's edge-cut distribution is returned.
+The algorithm has four parameters:
+\texttt{n\_replicas} (default 4),
+\texttt{swap\_interval} (default 10),
+\texttt{cold\_tol} (default 0.005),
+\texttt{hot\_tol} (default 0.05).
+
+\paragraph{Empirical.}
+On TX ($k=38$), \pt{} with $N=4$ achieves lower cold-chain minimum edge cut
+than single-chain \fr{}, demonstrating that replica exchange escapes the local
+optima where the single chain stalls.
+On NC ($k=14$) and WI ($k=8$), the improvement is modest---the single chain
+already mixes adequately for these states.
+Observed swap acceptance rates of $18$--$24\%$ match the empirical target of
+${\approx}23\%$~\citep{kone2005}, providing evidence that the geometric ladder
+is well-calibrated for redistricting chains.
+
+\paragraph{Decision rule.}
+\pt{} is the recommended search strategy when $k \ge 30$ and local-optimum
+trapping is suspected.
+For medium $k$ ($8 \le k \le 20$), single-chain \fr{} is preferred for its
+lower cost and equivalent quality.
+For large $k$ with strong geographic structure, \ms{}~\citep{dellaLibera2026multiscale}
+may provide better efficiency per replica.
+
+\subsection{Paper Structure}
+
+Section~\ref{sec:background} reviews parallel tempering theory and the
+redistricting context.
+Section~\ref{sec:algorithm} gives the formal algorithm, pseudocode, seeding
+specification, and audit chain.
+Section~\ref{sec:empirical} presents comparisons on NC, WI, and TX.
+Section~\ref{sec:when-to-use} provides a structured decision guide.
+Section~\ref{sec:conclusion} situates \pt{} in the broader B/G-series algorithm
+landscape.
+
+\subsection{Relation to Prior Work}
+
+\pt{} is a Search-layer algorithm, orthogonal to the Structure-layer algorithms
+(\geosec{}, \areasec{}, \sa{}) and the bisection-tree SeedCompositor strategies
+(\cs{}, \be{}).
+\citet{swendsen1986} introduced replica exchange Monte Carlo for spin glasses;
+\citet{geyer1991} established the theoretical basis for using the cold chain
+output as a valid sample from the target distribution.
+\citet{kone2005} derived the ${\approx}23\%$ optimal swap acceptance rate for
+Gaussian continuous systems; we adopt this as an empirical calibration target
+for discrete redistricting chains, not as a derived guarantee.
+\ms{}~\citep{dellaLibera2026multiscale} is the closest B/G-series alternative,
+targeting the same large-$k$ mixing problem via geographic coarsening
+rather than temperature ladders.
+\pt{} differs in mechanism: it requires no coarsening and preserves the exact
+\fr{} proposal distribution at every tolerance level.

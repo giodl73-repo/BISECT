@@ -1,0 +1,118 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+
+%% SIAM-adjacent style: numbered sections, upright headings
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+%% Spacing
+\setstretch{1.4}
+
+%% Algorithm macros
+\newcommand{\pt}{\textsc{ParallelTempering}}
+\newcommand{\fr}{\textsc{ForestRecom}}
+\newcommand{\metis}{\textsc{Metis}}
+\newcommand{\ec}{\ensuremath{\mathrm{EC}}}
+\newcommand{\pp}{\ensuremath{\mathrm{PP}}}
+\newcommand{\be}{\textsc{BisectionEnsemble}}
+\newcommand{\ar}{\textsc{ApportionRegions}}
+\newcommand{\geosec}{\textsc{GeoSection}}
+\newcommand{\areasec}{\textsc{AreaSection}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\ms}{\textsc{MultiScale}}
+\newcommand{\cs}{\textsc{ConvergenceSweep}}
+\newcommand{\sa}{\textsc{SimulatedAnnealing}}
+
+%% Math shorthands
+\newcommand{\ECnorm}{\mathrm{EC}_{\mathrm{norm}}}
+\newcommand{\EC}{\mathrm{EC}}
+
+%% -----------------------------------------------------------------------
+
+\title{%
+  \textbf{Parallel Tempering for Redistricting:}\\
+  \textbf{Replica Exchange MCMC with Geometric Tolerance Ladders}\\[0.8em]
+  \normalsize\textit{B.20 --- Algorithm Design / Search Layer}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+Single-chain Markov chain Monte Carlo (MCMC) redistricting algorithms---\recom{},
+\fr{}, Merge-Split---can become trapped in local optima for large-$k$ states
+such as Texas ($k=38$) where the chain must pass through high edge-cut
+``barriers'' to reach qualitatively different plan regions.
+We introduce \pt{} redistricting, a Search-layer algorithm that runs
+$N_{\mathrm{replicas}}$ chains simultaneously at different balance tolerances
+arranged on a geometric ladder: a cold chain at the statutory $0.5\%$ tolerance
+and a hot chain at $5\%$ tolerance, with intermediate chains in between.
+After every $\mathtt{swap\_interval}$ steps, adjacent chains propose to
+exchange their current plans via a Metropolis criterion,
+$\min\!\bigl(1,\, \exp\bigl((\beta_i - \beta_j)(\EC_i - \EC_j)\bigr)\bigr)$,
+where $\beta = 1/\varepsilon$ is the inverse tolerance.
+Hot chains mix freely across plan space; the cold chain inherits this global
+diversity via accepted swaps.
+
+Empirically, \pt{} with $N_{\mathrm{replicas}} = 4$ achieves lower cold-chain
+edge cut than single-chain \fr{} on Texas ($k=38$), where local-optima
+trapping is most severe, with modest improvements on North Carolina ($k=14$)
+and Wisconsin ($k=8$) where single-chain mixing is adequate.
+Observed swap acceptance rates of $18$--$24\%$ are near the empirical
+target of ${\approx}23\%$ for Gaussian systems (Kone \& Kofke 2005),
+providing evidence that the geometric ladder is well-calibrated for redistricting
+chains.
+The cold chain returns the distribution-correct plan; the hot chains serve
+only to inject global diversity.
+\pt{} is implemented as \texttt{--search parallel-tempering} in the
+\texttt{redist} binary and is the recommended search strategy for states
+with $k \ge 30$.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-background}
+\input{sections/03-algorithm}
+\input{sections/04-empirical}
+\input{sections/05-when-to-use}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

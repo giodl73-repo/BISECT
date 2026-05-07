@@ -1,0 +1,152 @@
+\section{Background}
+\label{sec:background}
+
+\subsection{Parallel Tempering in Statistical Mechanics}
+
+Parallel Tempering (PT) was introduced by \citet{swendsen1986} for simulating
+spin-glass systems at low temperature.
+At low temperature, a single Markov chain may become trapped in a local energy
+minimum for exponentially long times, exploring only a small fraction of the
+configuration space.
+Running multiple chains at increasing temperatures simultaneously allows high-temperature
+chains to mix rapidly and periodically propose their configurations as candidates
+for the low-temperature chain.
+
+\citet{geyer1991} formalised PT as a statistical Monte Carlo method,
+establishing that the joint chain over all replicas is ergodic and that the
+marginal distribution of the cold replica is exactly the target distribution.
+This is the theoretical foundation for using only the cold chain's output in
+plan selection: the hot chains are sampling aids, not target distributions.
+
+\paragraph{Temperature and mixing.}
+In a physical system with energy $E(\sigma)$ and inverse temperature $\beta$,
+the Boltzmann acceptance criterion is $\min(1, \exp(-\beta \Delta E))$.
+High temperature (low $\beta$) means almost all proposals are accepted;
+the chain moves freely.
+Low temperature (high $\beta$) means only improvements or small increases are
+accepted; the chain explores a narrow basin of the energy landscape.
+
+The replica exchange criterion between replica $i$ (at $\beta_i$) and replica
+$j$ (at $\beta_j > \beta_i$, so $\varepsilon_j > \varepsilon_i$) is:
+\[
+  P(\text{swap}) = \min\!\bigl(1,\, \exp\bigl((\beta_i - \beta_j)(E_i - E_j)\bigr)\bigr),
+\]
+where $E_i = \EC(\text{assignment}_i)$ is the edge cut of replica $i$'s current
+plan.
+This is a valid Metropolis proposal on the joint distribution over all replicas,
+preserving the product-of-marginals target distribution~\citep{geyer1991}.
+
+\paragraph{Balance tolerance as redistricting temperature.}
+In redistricting, the population balance tolerance $\varepsilon$ plays the role
+of temperature.
+A plan assignment $\mathbf{a}: V \to \{1,\ldots,k\}$ is \emph{feasible at
+tolerance $\varepsilon$} if every district satisfies:
+\[
+  \left|\frac{\text{pop}(d)}{\bar{p}} - 1\right| \le \varepsilon,
+\]
+where $\bar{p} = P_{\mathrm{total}}/k$ is the ideal population per district.
+At $\varepsilon = 0.005$ (statutory cold tolerance), only plans with $\pm 0.5\%$
+population deviation are accessible.
+At $\varepsilon = 0.05$ (hot tolerance), plans with up to $\pm 5\%$ deviation
+are accessible---a much larger feasible set.
+The \fr{} chain at high tolerance can make proposals that jump between
+topologically distinct plan types (e.g., moving a district's centre of gravity
+by several tracts in a single spanning-tree resampling), while the cold chain
+can only make local adjustments within the tight balance constraint.
+
+\paragraph{The ${\approx}23\%$ swap acceptance target.}
+\citet{kone2005} showed that for Gaussian continuous distributions, the
+optimal swap acceptance rate between adjacent replicas is approximately $23\%$,
+achieved by spacing temperatures so that $\Delta(\ln T) \approx$ const.
+For discrete combinatorial chains, this result is an empirical guideline rather
+than a derived theorem.
+Nevertheless, we use it as a calibration target for the geometric tolerance
+ladder: if observed swap acceptance rates are near $23\%$ across all adjacent
+pairs, the ladder is well-spaced.
+Section~\ref{sec:empirical} reports observed rates of $18$--$24\%$ across NC,
+WI, and TX, consistent with this target.
+
+\subsection{ForestRecom as the Per-Replica Chain}
+
+Each replica in \pt{} redistricting runs one instance of \fr{}
+\citep{dellaLibera2026forestRecom}, the spanning-forest recombination chain.
+\fr{} proposes plan changes by:
+\begin{enumerate}
+\item Selecting two adjacent districts $d_i, d_j$.
+\item Sampling a random spanning forest of the induced subgraph $G[d_i \cup d_j]$
+  with one component per district (a forest with exactly one edge cut between
+  the two components).
+\item Accepting the induced partition if the population balance constraint is
+  satisfied at the replica's tolerance.
+\end{enumerate}
+\fr{} targets an approximately uniform distribution over balanced plans at its
+configured tolerance~\citep{dellaLibera2026forestRecom}.
+Each replica in \pt{} targets this uniform distribution at its own tolerance
+level; the cold chain's stationary distribution is the target we care about.
+
+\paragraph{Forward and reverse RNG split.}
+\fr{} uses separate forward and reverse random number streams (for the forward
+proposal and the reverse-proposal computation in the Hastings ratio).
+In \pt{}, each replica's forward and reverse streams are derived from the
+replica seed via SHA-256 with distinct prefixes, as specified in
+Section~\ref{sec:seeding}.
+
+\subsection{Search-Layer Context in the B-Series Platform}
+
+The B-series redistricting platform uses a three-layer compositor:
+\emph{Structure} (how the bisection tree is built),
+\emph{WeightsOverride} (what edge weights signal),
+and \emph{SeedCompositor} / \emph{Search} (how the plan space is explored and
+the best plan selected).
+\pt{} is a Search-layer algorithm.
+
+\paragraph{Existing search strategies.}
+\texttt{single}: Run one \fr{} chain for $T$ steps, return the minimum-EC plan.
+\texttt{multi}: Run $T$ independent chains from different seeds, return the
+minimum-EC plan overall.
+\texttt{convergence} (\cs{}, B.16): Run chains until $T=600$ consecutive seeds
+produce no improvement.
+\texttt{percentile}: Run one chain, return the plan at the $p$-th percentile
+of the edge-cut distribution.
+\texttt{bisection-ensemble}: Run chains over a bisection-tree ensemble.
+
+\pt{} is a new Search strategy: run $N$ chains at different tolerances
+simultaneously, with periodic swap proposals, and return the plan at the
+$p$-th percentile of the \emph{cold chain's} edge-cut distribution.
+
+\paragraph{Orthogonality.}
+\pt{} is orthogonal to the Structure and WeightsOverride layers.
+It can be combined with any structure configuration (\geosec{},
+\ar{}, standard bisect) and any weight configuration (geographic,
+county, unweighted).
+The empirical experiments in Section~\ref{sec:empirical} use the
+\geosec{} structure and geographic weights as the standard baseline.
+
+\subsection{Comparison with Multi-Scale ReCom}
+
+\ms{}~\citep{dellaLibera2026multiscale} and \pt{} are both designed to improve
+mixing for large-$k$ states.
+Their mechanisms differ:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Property & \ms{} (G.11) & \pt{} (B.20) \\
+\midrule
+Mixing mechanism & Geographic coarsening & Temperature ladders \\
+Proposal size & Large (super-tract level) & Standard (tract level) \\
+Approximation & Yes (coarsening resolution) & No (exact \fr{} at each $\varepsilon$) \\
+Chain count & 1 & $N_{\mathrm{replicas}}$ \\
+Extra cost & $\alpha \times$ coarsening overhead & $N_{\mathrm{replicas}} \times$ per-step cost \\
+Best for & Strong geographic structure & Tolerance-induced barriers \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The two approaches are complementary and can in principle be combined (each PT
+replica running an MS chain at its tolerance), though this is left to future
+work.
+In practice, PT is preferred when the bottleneck is the balance-tolerance
+constraint rather than geographic coarsening, and MS is preferred when the
+bottleneck is proposal size.

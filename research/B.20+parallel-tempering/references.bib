@@ -1,0 +1,202 @@
+%% B.20 --- Parallel Tempering for Redistricting
+%% References
+
+%% ===================================================================
+%% B-SERIES AND G-SERIES SELF-CITATIONS
+%% ===================================================================
+
+@misc{b2paper,
+  author = {Della-Libera, Gio},
+  title  = {Edge-Weighted Bisection for Compact Congressional Districts:
+            Geographic Boundary Lengths as Compactness Signal},
+  year   = {2026},
+  note   = {B.2 in Algorithmic Redistricting series.
+            Key result: $+56\,\%$ Polsby-Popper improvement over unweighted.
+            Geographic boundary-length edge weights used as the default
+            configuration in the empirical experiments of B.20.},
+}
+
+@misc{b8paper,
+  author = {Della-Libera, Gio},
+  title  = {{GeoSection}: Isoperimetrically-Normalised Ratio-Optimal Bisection
+            for Congressional Redistricting},
+  year   = {2026},
+  note   = {B.8 in Algorithmic Redistricting series.
+            Introduces the \textsc{GeoSection} structure-layer algorithm.
+            The ratio-optimal tree structure is used as the default
+            structure configuration in B.20's empirical experiments.},
+}
+
+@misc{dellaLibera2026forestRecom,
+  author = {Della-Libera, Gio},
+  title  = {{ForestRecom}: Spanning-Forest Recombination Chains for
+            Redistricting with Approximate Uniform Targeting},
+  year   = {2026},
+  note   = {G.9 in Algorithmic Redistricting series.
+            Introduces \textsc{ForestRecom} as an MCMC redistricting chain.
+            Each replica in B.20's parallel tempering runs one
+            \textsc{ForestRecomChain} instance. The per-step proposal
+            mechanism and forward/reverse RNG split are inherited from G.9.},
+}
+
+@misc{dellaLibera2026multiscale,
+  author = {Della-Libera, Gio},
+  title  = {{MultiScale} {ReCom}: Geographic Coarsening for Large-District
+            Redistricting},
+  year   = {2026},
+  note   = {G.11 in Algorithmic Redistricting series.
+            Introduces geographic coarsening as an alternative to
+            temperature ladders for large-$k$ states.
+            B.20 compares \textsc{ParallelTempering} and
+            \textsc{MultiScale}: PT uses tolerance ladders; MS uses
+            spatial coarsening. Both target TX ($k=38$) but via
+            different mechanisms.},
+}
+
+@misc{dellaLibera2026comparison,
+  author = {Della-Libera, Gio},
+  title  = {Algorithm Comparison: {MCMC} Search Strategies for
+            Congressional Redistricting},
+  year   = {2026},
+  note   = {G.14 in Algorithmic Redistricting series.
+            Provides a systematic 50-state comparison of all MCMC
+            search strategies including \textsc{ParallelTempering},
+            \textsc{MultiScale}, and baseline \textsc{ForestRecom}.
+            B.20's three-state comparison uses the same experimental
+            protocol as G.14.},
+}
+
+@misc{mccartan2020,
+  author = {McCartan, Cory and Imai, Kosuke},
+  title  = {Sequential Monte Carlo for Sampling Balanced and Compact
+            Redistricting Plans},
+  year   = {2020},
+  note   = {arXiv:2008.06131. Sequential Monte Carlo approach to redistricting
+            sampling. \textsc{ForestRecom} (G.9) builds on the spanning-tree
+            proposal mechanism introduced here.
+            The approximate-uniform targeting property of G.9 is inherited
+            by each \textsc{ParallelTempering} replica.},
+}
+
+%% ===================================================================
+%% PARALLEL TEMPERING / REPLICA EXCHANGE
+%% ===================================================================
+
+@article{swendsen1986,
+  author  = {Swendsen, Robert H. and Wang, Jian-Sheng},
+  title   = {Replica {Monte Carlo} Simulation of Spin-Glasses},
+  journal = {Physical Review Letters},
+  volume  = {57},
+  number  = {21},
+  pages   = {2607--2609},
+  year    = {1986},
+  doi     = {10.1103/PhysRevLett.57.2607},
+  note    = {Foundational parallel tempering paper. Introduces simultaneous
+             simulation at multiple temperatures with periodic replica-exchange
+             proposals accepted via the Metropolis criterion. B.20's
+             implementation of \textsc{ParallelTempering} follows the
+             Swendsen-Wang architecture with balance tolerance as the
+             effective temperature parameter.},
+}
+
+@inproceedings{geyer1991,
+  author    = {Geyer, Charles J.},
+  title     = {Markov Chain {Monte Carlo} Maximum Likelihood},
+  booktitle = {Computing Science and Statistics: Proceedings of the 23rd
+               Symposium on the Interface},
+  editor    = {Keramidas, E. M.},
+  pages     = {156--163},
+  year      = {1991},
+  note      = {Introduces simulated tempering and provides the first
+               theoretical analysis of parallel tempering convergence.
+               Establishes that the stationary distribution of the cold
+               chain is the target distribution at the cold temperature,
+               which justifies using the cold chain output for plan
+               selection in B.20.},
+}
+
+@article{kone2005,
+  author  = {Kone, Amadou and Kofke, David A.},
+  title   = {Selection of Temperature Intervals for Parallel-Tempering Simulations},
+  journal = {Journal of Chemical Physics},
+  volume  = {122},
+  number  = {10},
+  pages   = {104114},
+  year    = {2005},
+  doi     = {10.1063/1.1860556},
+  note    = {Source of the ${\approx}23\%$ empirical swap acceptance target
+             for geometric temperature ladders. Derived for continuous
+             Gaussian systems; B.20 adopts this as an empirical starting
+             point for discrete redistricting chains, not a theoretical
+             guarantee. The observed $18$--$24\%$ swap acceptance rates in
+             B.20's experiments are consistent with this target.},
+}
+
+@article{earl2005,
+  author  = {Earl, David J. and Deem, Michael W.},
+  title   = {Parallel Tempering: Theory, Applications, and New Perspectives},
+  journal = {Physical Chemistry Chemical Physics},
+  volume  = {7},
+  number  = {23},
+  pages   = {3910--3916},
+  year    = {2005},
+  doi     = {10.1039/b509983h},
+  note    = {Review of parallel tempering theory and best practices.
+             Covers geometric ladder design, swap acceptance optimality,
+             and the relationship between the number of replicas and
+             mixing time. B.20's four-replica default and swap interval
+             choice follow the practical guidance in this review.},
+}
+
+%% ===================================================================
+%% REDISTRICTING ENSEMBLE METHODS
+%% ===================================================================
+
+@article{deford2021,
+  author  = {DeFord, Daryl and Duchin, Moon and Solomon, Justin},
+  title   = {Recombination: A Family of {Markov} Chains for Redistricting},
+  journal = {Harvard Data Science Review},
+  volume  = {3},
+  number  = {1},
+  year    = {2021},
+  doi     = {10.1162/99608f92.eb30390f},
+  note    = {ReCom Markov chain redistricting sampler. Introduces the
+             spanning-tree recombination proposal. The single-chain
+             ReCom/ForestRecom baseline is the primary comparison target
+             for B.20's parallel tempering. Both target the same proposal
+             distribution at the cold tolerance; PT assists mixing via
+             hot chains.},
+}
+
+@article{autry2021,
+  author  = {Autry, Eric and Carter, Daniel and Herschlag, Gregory and
+             Hunter, Zach and Mattingly, Jonathan C.},
+  title   = {Multi-Scale Merge-Split {Markov} Chain {Monte Carlo} for
+             Redistricting},
+  journal = {arXiv},
+  year    = {2021},
+  note    = {arXiv:2008.01784. Introduces multi-scale merge-split for
+             redistricting. Compared with B.20's parallel tempering in
+             Section~\ref{sec:when-to-use}: both target large-$k$ mixing
+             but use different mechanisms (geographic coarsening vs.\
+             temperature ladders).},
+}
+
+%% ===================================================================
+%% CRYPTOGRAPHY
+%% ===================================================================
+
+@techreport{sha256nist,
+  author      = {{National Institute of Standards and Technology}},
+  title       = {Secure Hash Standard ({SHS})},
+  institution = {NIST},
+  number      = {FIPS 180-4},
+  year        = {2015},
+  url         = {https://doi.org/10.6028/NIST.FIPS.180-4},
+  note        = {SHA-256 specification used in the B.20 seed derivation
+                 (Section~\ref{sec:seeding}). Four domain-separation prefixes
+                 --- \texttt{"PT\_REPLICA\_"}, \texttt{"PT\_SWAP\_"},
+                 \texttt{"PT\_FWD\_"}, \texttt{"PT\_REV\_"} --- ensure
+                 independence among all random streams in the parallel
+                 tempering run.},
+}

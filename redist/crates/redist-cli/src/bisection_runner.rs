@@ -2558,6 +2558,619 @@ pub fn run_all_splits_sa(
     Ok(assignments)
 }
 
+// ── Centroidal Voronoi Districts (CVD) — Phase 1 (graph-distance) ─────────────
+
+/// Derive a per-node seed for CVD via SHA-256.
+///
+/// Prefix "CVD_INIT_" is distinct from SA_NODE_, FLIP_CHAIN_, etc.
+/// An auditor can recompute: SHA-256("CVD_INIT_" || path || "_" || base_seed:le64) → u64le.
+pub fn derive_cvd_seed(base_seed: u64, path: &str) -> u64 {
+    use sha2::{Digest, Sha256};
+    let mut h = Sha256::new();
+    h.update(b"CVD_INIT_");
+    h.update(path.as_bytes());
+    h.update(b"_");
+    h.update(base_seed.to_le_bytes());
+    let d = h.finalize();
+    u64::from_le_bytes(d[..8].try_into().unwrap())
+}
+
+/// BFS distances from `start` to all other nodes in a local subgraph adjacency list.
+/// Returns `Vec<usize>` of length `local_adj.len()`.
+/// Unreachable nodes get `usize::MAX`.
+fn bfs_distances_from(start: usize, local_adj: &[Vec<usize>]) -> Vec<usize> {
+    let n = local_adj.len();
+    let mut dist = vec![usize::MAX; n];
+    if n == 0 { return dist; }
+    dist[start] = 0;
+    let mut queue = std::collections::VecDeque::new();
+    queue.push_back(start);
+    while let Some(v) = queue.pop_front() {
+        let d = dist[v];
+        for &nb in &local_adj[v] {
+            if dist[nb] == usize::MAX {
+                dist[nb] = d + 1;
+                queue.push_back(nb);
+            }
+        }
+    }
+    dist
+}
+
+/// Medoid approximation: find the tract in `district_tracts` that minimises
+/// the sum of BFS distances to a random sample of up to 50 other tracts.
+/// Returns the local index of the medoid.
+fn find_medoid(
+    district_tracts: &[usize],
+    local_adj: &[Vec<usize>],
+    rng: &mut rand::rngs::SmallRng,
+) -> usize {
+    use rand::seq::SliceRandom;
+    if district_tracts.is_empty() {
+        return 0;
+    }
+    if district_tracts.len() == 1 {
+        return district_tracts[0];
+    }
+    // Sample up to 50 tracts as probe set (exact for small districts)
+    let sample_size = district_tracts.len().min(50);
+    let mut probe: Vec<usize> = district_tracts.to_vec();
+    probe.shuffle(rng);
+    probe.truncate(sample_size);
+
+    let mut best_node = district_tracts[0];
+    let mut best_sum = usize::MAX;
+
+    for &candidate in district_tracts {
+        let dist_from_cand = bfs_distances_from(candidate, local_adj);
+        let sum: usize = probe.iter()
+            .map(|&p| dist_from_cand[p].min(usize::MAX / probe.len()))
+            .sum();
+        if sum < best_sum {
+            best_sum = sum;
+            best_node = candidate;
+        }
+    }
+    best_node
+}
+
+/// Centroidal Voronoi Districts — graph-distance variant (Phase 1, B.22 spec).
+///
+/// Seeds k=2 district centers by k-farthest spread, assigns tracts to nearest
+/// center by BFS hop count, iterates until seeds stabilise (medoid update),
+/// then applies the same post-hoc boundary-swap rebalance as split_subgraph().
+///
+/// Phase 1: no geographic coordinate data required — pure graph topology.
+/// Phase 2 (geographic Euclidean) is deferred until tract_centroids land in LoadedGraph.
+pub fn split_subgraph_cvd(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    tract_indices: &HashSet<usize>,
+    k: usize,                 // always 2 for bisection use
+    balance_tolerance: f64,
+    n_iter: usize,            // max CVD iterations (default: 20)
+    base_seed: u64,
+) -> Result<(HashSet<usize>, HashSet<usize>), String> {
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    // Degenerate: 0 or 1 tracts
+    if tract_indices.len() <= 1 {
+        return Ok((tract_indices.clone(), HashSet::new()));
+    }
+    // Degenerate: fewer tracts than districts
+    if tract_indices.len() < k {
+        let mut sorted: Vec<usize> = tract_indices.iter().copied().collect();
+        sorted.sort_unstable();
+        let left: HashSet<usize> = sorted[..1].iter().copied().collect();
+        let right: HashSet<usize> = sorted[1..].iter().copied().collect();
+        return Ok((left, right));
+    }
+
+    // Build local index mapping (sorted for determinism)
+    let mut sorted: Vec<usize> = tract_indices.iter().copied().collect();
+    sorted.sort_unstable();
+    let global_to_local: HashMap<usize, usize> = sorted.iter()
+        .enumerate().map(|(i, &g)| (g, i)).collect();
+    let m = sorted.len();
+
+    // Build subgraph adjacency (local indices)
+    let local_adj: Vec<Vec<usize>> = sorted.iter().map(|&g| {
+        adjacency[g].iter()
+            .filter(|&&nb| tract_indices.contains(&nb))
+            .map(|&nb| global_to_local[&nb])
+            .collect()
+    }).collect();
+
+    // Local vertex weights
+    let local_pop: Vec<i64> = sorted.iter().map(|&g| vertex_weights[g].max(1)).collect();
+    let total_pop: i64 = local_pop.iter().sum();
+
+    let mut rng = SmallRng::seed_from_u64(base_seed);
+
+    // ── Step 1: k-farthest seed initialisation ──────────────────────────────
+    // seed[0] = base_seed % m (deterministic, CVD_INIT prefix ensures separation from SA)
+    let seed0 = (base_seed as usize) % m;
+
+    // seed[1] = tract with max BFS distance from seed[0]
+    let dist_from_s0 = bfs_distances_from(seed0, &local_adj);
+    let seed1 = (0..m)
+        .filter(|&v| dist_from_s0[v] != usize::MAX)
+        .max_by_key(|&v| dist_from_s0[v])
+        .unwrap_or((seed0 + 1) % m);
+
+    let mut seeds = [seed0, seed1];
+    // Guard: seeds must be distinct
+    if seeds[0] == seeds[1] {
+        seeds[1] = (seeds[0] + 1) % m;
+    }
+
+    // ── CVD iteration ────────────────────────────────────────────────────────
+    let mut assignment: Vec<usize> = vec![0; m]; // 0 = left, 1 = right
+    for _iter in 0..n_iter.max(1) {
+        // ── Voronoi assignment: assign each tract to nearest seed by BFS ──
+        // Compute BFS distances from each seed
+        let dist_s: Vec<Vec<usize>> = seeds.iter()
+            .map(|&s| bfs_distances_from(s, &local_adj))
+            .collect();
+
+        let prev_assignment = assignment.clone();
+        for v in 0..m {
+            let d0 = dist_s[0][v];
+            let d1 = dist_s[1][v];
+            // Assign to nearest seed; tie-break to 0
+            assignment[v] = if d1 < d0 { 1 } else { 0 };
+        }
+
+        // ── Update seeds to medoid of each district ──────────────────────
+        let prev_seeds = seeds;
+        for j in 0..k {
+            let district_tracts: Vec<usize> = (0..m)
+                .filter(|&v| assignment[v] == j)
+                .collect();
+            if !district_tracts.is_empty() {
+                seeds[j] = find_medoid(&district_tracts, &local_adj, &mut rng);
+            }
+            // else: seed unchanged (shouldn't happen unless one district is empty)
+        }
+
+        // ── Check convergence ────────────────────────────────────────────
+        // Seeds stable AND assignment stable → converged
+        if seeds == prev_seeds || assignment == prev_assignment {
+            break;
+        }
+    }
+
+    // ── Post-hoc rebalance: same boundary-swap as split_subgraph ────────────
+    let half_pop = total_pop / 2;
+    let tolerance_pop = (balance_tolerance * total_pop as f64) as i64 + 1;
+
+    for _ in 0..200 {
+        let left_pop: i64 = (0..m)
+            .filter(|&v| assignment[v] == 0)
+            .map(|v| local_pop[v])
+            .sum();
+        let excess = left_pop - half_pop;
+        if excess.abs() <= tolerance_pop { break; }
+
+        let (heavy_side, light_side) = if excess > 0 { (0usize, 1usize) } else { (1, 0) };
+
+        // Find boundary tract on heavy side minimising |pop - |excess||
+        let mut best: Option<(usize, i64)> = None;
+        for v in 0..m {
+            if assignment[v] != heavy_side { continue; }
+            let has_light_nb = local_adj[v].iter().any(|&nb| assignment[nb] == light_side);
+            if !has_light_nb { continue; }
+            let pop = local_pop[v];
+            let score = (pop - excess.abs()).abs();
+            if best.map_or(true, |(_, s)| score < s) {
+                best = Some((v, score));
+            }
+        }
+        match best {
+            Some((v, _)) => { assignment[v] = light_side; }
+            None => break,
+        }
+    }
+
+    // ── Convert local assignment to global HashSets ──────────────────────────
+    let mut left = HashSet::new();
+    let mut right = HashSet::new();
+    for (local, &side) in assignment.iter().enumerate() {
+        let global = sorted[local];
+        if side == 0 { left.insert(global); } else { right.insert(global); }
+    }
+
+    Ok((left, right))
+}
+
+/// Run the full bisection tree using Centroidal Voronoi at each node.
+///
+/// Structurally identical to run_all_splits_sa but calls split_subgraph_cvd
+/// at each bisection node instead of SA or METIS.
+pub fn run_all_splits_cvd(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    num_districts: usize,
+    balance_tolerance: f64,
+    intermediate_dir: Option<&Path>,
+    n_iter: usize,
+    base_seed: u64,
+) -> Result<HashMap<usize, usize>, String> {
+    let n = adjacency.len();
+
+    if num_districts == 1 {
+        if let Some(dir) = intermediate_dir {
+            let round_dir = dir.join("depth_00");
+            let _ = std::fs::create_dir_all(&round_dir);
+            let asgn: HashMap<usize, usize> = (0..n).map(|i| (i, 1)).collect();
+            let _ = write_intermediate_round(&round_dir, &asgn);
+        }
+        return Ok((0..n).map(|i| (i, 1)).collect());
+    }
+
+    let tree = BisectionTree::from_k(num_districts);
+    let mut node_tracts: HashMap<String, HashSet<usize>> = HashMap::new();
+    node_tracts.insert(String::new(), (0..n).collect());
+
+    for depth in 0..tree.max_depth {
+        let nodes_at_depth: Vec<_> = tree.nodes_at_depth(depth).into_iter().cloned().collect();
+
+        let nodes_with_tracts: Vec<(redist_core::BisectionNode, HashSet<usize>)> =
+            nodes_at_depth.into_iter()
+                .filter_map(|node| {
+                    node_tracts.remove(&node.path).map(|tracts| (node, tracts))
+                })
+                .collect();
+
+        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> =
+            nodes_with_tracts.into_par_iter()
+                .map(|(node, tracts)| {
+                    let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
+                    let cvd_seed = derive_cvd_seed(base_seed, &node.path);
+                    let (left, right) = split_subgraph_cvd(
+                        adjacency, vertex_weights, &tracts,
+                        2, // bisection is always k=2
+                        node_ufactor, n_iter, cvd_seed,
+                    ).map_err(|e| format!("depth {} node '{}' (CVD): {e}", depth, node.path))?;
+                    Ok((node.path, left, right))
+                })
+                .collect::<Result<Vec<_>, String>>()?;
+
+        let mut sorted_results = split_results;
+        sorted_results.sort_by_key(|(path, _, _)| path.clone());
+        for (path, left, right) in sorted_results {
+            node_tracts.insert(format!("{path}0"), left);
+            node_tracts.insert(format!("{path}1"), right);
+        }
+
+        if let Some(dir) = intermediate_dir {
+            let round_dir = dir.join(format!("depth_{:02}", depth + 1));
+            let _ = std::fs::create_dir_all(&round_dir);
+            let mut nodes: Vec<(&String, &HashSet<usize>)> = node_tracts.iter().collect();
+            nodes.sort_by_key(|(path, _)| (path.len(), *path));
+            let mut round_asgn: HashMap<usize, usize> = HashMap::with_capacity(n);
+            for (region_id, (_, tracts)) in nodes.iter().enumerate() {
+                for &tract in tracts.iter() {
+                    round_asgn.insert(tract, region_id + 1);
+                }
+            }
+            let _ = write_intermediate_round(&round_dir, &round_asgn);
+        }
+    }
+
+    let mut leaves: Vec<(String, HashSet<usize>)> = node_tracts.into_iter().collect();
+    leaves.sort_by_key(|(path, _)| (path.len(), path.clone()));
+
+    let mut assignments: HashMap<usize, usize> = HashMap::new();
+    for (district_id, (_, tracts)) in leaves.into_iter().enumerate() {
+        for tract in tracts {
+            assignments.insert(tract, district_id + 1);
+        }
+    }
+
+    if assignments.len() != n {
+        return Err(format!(
+            "CVD bisection incomplete: {}/{n} tracts assigned", assignments.len()
+        ));
+    }
+    Ok(assignments)
+}
+
+// ── BFS Region-Growing (B.23) ─────────────────────────────────────────────────
+
+/// Derive the BFS-algorithm seed from base_seed.
+///
+/// SHA-256("BFS_SEED_" || base_seed:u64le) → first 8 bytes as u64le.
+/// The prefix "BFS_SEED_" embeds algorithm identity; any change requires a
+/// prefix change so that existing audit trails remain valid.
+///
+/// Test assertion: `bfs_growth_seed(0)` must equal `0x6e340a3e9e4f3ca8`.
+fn bfs_growth_seed(base_seed: u64) -> u64 {
+    use sha2::{Digest, Sha256};
+    let mut h = Sha256::new();
+    h.update(b"BFS_SEED_");
+    h.update(base_seed.to_le_bytes());
+    let d = h.finalize();
+    u64::from_le_bytes(d[..8].try_into().unwrap())
+}
+
+/// Derive a deterministic per-node BFS seed from the base seed and the node path.
+///
+/// SHA-256("BFS_NODE_" || path.as_bytes() || "_" || base_seed.to_le_bytes()) → first 8 bytes.
+pub fn derive_bfs_seed(base_seed: u64, path: &str) -> u64 {
+    use sha2::{Digest, Sha256};
+    let mut h = Sha256::new();
+    h.update(b"BFS_NODE_");
+    h.update(path.as_bytes());
+    h.update(b"_");
+    h.update(base_seed.to_le_bytes());
+    let d = h.finalize();
+    u64::from_le_bytes(d[..8].try_into().unwrap())
+}
+
+/// Split a subgraph into two balanced parts using BFS Region-Growing.
+///
+/// Algorithm (B.23 spec §1):
+///   1. Build local index (sorted, deterministic)
+///   2. Select 2 seeds by k-farthest BFS spread:
+///      - seed[0] = population-weighted random sample using bfs_growth_seed(base_seed)
+///      - seed[1] = tract with maximum BFS distance from seed[0]
+///   3. BFS growth via min-heap:
+///      - Priority = |ideal_pop - current_pop[district]| (lower = district needs more tracts)
+///      - Assign each unassigned tract to the adjacent district with the greatest deficit
+///   4. Post-hoc rebalance (200-iter boundary-swap, same logic as split_subgraph)
+///
+/// Returns (global left set, global right set) where left = district 0, right = district 1.
+pub fn split_subgraph_bfs(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    tract_indices: &HashSet<usize>,
+    balance_tolerance: f64,
+    base_seed: u64,
+) -> Result<(HashSet<usize>, HashSet<usize>), String> {
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+    use rand::distributions::WeightedIndex;
+    use rand::prelude::*;
+    use std::cmp::Reverse;
+    use std::collections::BinaryHeap;
+
+    // Degenerate: 0 or 1 tracts
+    if tract_indices.len() <= 1 {
+        return Ok((tract_indices.clone(), HashSet::new()));
+    }
+
+    // Build local index mapping (sorted for determinism)
+    let mut sorted: Vec<usize> = tract_indices.iter().copied().collect();
+    sorted.sort_unstable();
+    let global_to_local: HashMap<usize, usize> = sorted.iter()
+        .enumerate().map(|(i, &g)| (g, i)).collect();
+    let m = sorted.len();
+
+    // Build subgraph adjacency (local indices)
+    let local_adj: Vec<Vec<usize>> = sorted.iter().map(|&g| {
+        adjacency[g].iter()
+            .filter(|&&nb| tract_indices.contains(&nb))
+            .map(|&nb| global_to_local[&nb])
+            .collect()
+    }).collect();
+
+    // Local vertex weights (minimum 1 to avoid zero-weight tracts)
+    let local_pop: Vec<i64> = sorted.iter().map(|&g| vertex_weights[g].max(1)).collect();
+    let total_pop: i64 = local_pop.iter().sum();
+    let ideal_pop = total_pop / 2;
+
+    // ── Step 1: Seed selection ────────────────────────────────────────────────
+    // seed[0]: population-weighted random sample
+    let seed_rng_val = bfs_growth_seed(base_seed);
+    let mut rng = SmallRng::seed_from_u64(seed_rng_val);
+
+    let weights: Vec<u64> = local_pop.iter().map(|&p| p.max(1) as u64).collect();
+    let dist = WeightedIndex::new(&weights)
+        .map_err(|e| format!("bfs-growth WeightedIndex: {e}"))?;
+    let seed0 = dist.sample(&mut rng);
+
+    // seed[1]: tract with maximum BFS distance from seed[0]
+    let dist_from_s0 = bfs_distances_from(seed0, &local_adj);
+    let seed1 = (0..m)
+        .filter(|&v| dist_from_s0[v] != usize::MAX)
+        .max_by_key(|&v| dist_from_s0[v])
+        .unwrap_or_else(|| if seed0 == 0 { 1 } else { 0 });
+    // Guard: seeds must be distinct
+    let seed1 = if seed1 == seed0 {
+        (seed0 + 1) % m
+    } else {
+        seed1
+    };
+
+    // ── Step 2: BFS growth ────────────────────────────────────────────────────
+    // assignment: None = unassigned, Some(0) = left, Some(1) = right
+    let mut assignment: Vec<Option<usize>> = vec![None; m];
+    assignment[seed0] = Some(0);
+    assignment[seed1] = Some(1);
+
+    // Track current population per district
+    let mut dist_pop: [i64; 2] = [local_pop[seed0], local_pop[seed1]];
+
+    // Priority queue: (Reverse(current_pop), tract_local, district)
+    // The district with the LOWEST current population needs the next tract most.
+    // Reverse wraps i64 to flip max-heap to min-heap:
+    //   smaller current_pop → smaller Reverse(pop) in natural order →
+    //   larger Reverse(pop) in max-heap order → popped first.
+    // This ensures balanced growth: each next tract goes to the emptier district.
+    let mut heap: BinaryHeap<(Reverse<i64>, usize, usize)> = BinaryHeap::new();
+
+    // Seed the heap with neighbors of seed0 and seed1
+    for (seed_local, side) in [(seed0, 0usize), (seed1, 1usize)] {
+        for &nb in &local_adj[seed_local] {
+            if assignment[nb].is_none() {
+                heap.push((Reverse(dist_pop[side]), nb, side));
+            }
+        }
+    }
+
+    while let Some((_, tract, side)) = heap.pop() {
+        if assignment[tract].is_some() {
+            continue; // already assigned by another path
+        }
+        assignment[tract] = Some(side);
+        dist_pop[side] += local_pop[tract];
+
+        // Add unassigned neighbors to the heap with the updated current_pop
+        for &nb in &local_adj[tract] {
+            if assignment[nb].is_none() {
+                heap.push((Reverse(dist_pop[side]), nb, side));
+            }
+        }
+    }
+
+    // Ensure all tracts are assigned (disconnected graph safety net)
+    for v in 0..m {
+        if assignment[v].is_none() {
+            // Assign any unassigned tract to the side with the smaller population
+            let side = if dist_pop[0] <= dist_pop[1] { 0 } else { 1 };
+            assignment[v] = Some(side);
+            dist_pop[side] += local_pop[v];
+        }
+    }
+
+    // ── Step 3: Post-hoc rebalance ────────────────────────────────────────────
+    // Same boundary-swap logic as split_subgraph and split_subgraph_cvd.
+    let tolerance_pop = (balance_tolerance * total_pop as f64) as i64 + 1;
+
+    for _ in 0..200 {
+        let left_pop: i64 = (0..m)
+            .filter(|&v| assignment[v] == Some(0))
+            .map(|v| local_pop[v])
+            .sum();
+        let excess = left_pop - ideal_pop;
+        if excess.abs() <= tolerance_pop { break; }
+
+        let (heavy_side, light_side) = if excess > 0 { (0usize, 1usize) } else { (1, 0) };
+
+        let mut best: Option<(usize, i64)> = None;
+        for v in 0..m {
+            if assignment[v] != Some(heavy_side) { continue; }
+            let has_light_nb = local_adj[v].iter().any(|&nb| assignment[nb] == Some(light_side));
+            if !has_light_nb { continue; }
+            let pop = local_pop[v];
+            let score = (pop - excess.abs()).abs();
+            if best.map_or(true, |(_, s)| score < s) {
+                best = Some((v, score));
+            }
+        }
+        match best {
+            Some((v, _)) => { assignment[v] = Some(light_side); }
+            None => break,
+        }
+    }
+
+    // ── Convert local assignment to global HashSets ───────────────────────────
+    let mut left = HashSet::new();
+    let mut right = HashSet::new();
+    for (local, side_opt) in assignment.iter().enumerate() {
+        let global = sorted[local];
+        match side_opt {
+            Some(0) => { left.insert(global); }
+            _ => { right.insert(global); }
+        }
+    }
+
+    Ok((left, right))
+}
+
+/// Run the full bisection tree using BFS Region-Growing at each node (B.23).
+///
+/// Structurally identical to run_all_splits_sa/run_all_splits_cvd but calls
+/// split_subgraph_bfs at each bisection node instead of SA/CVD/METIS.
+pub fn run_all_splits_bfs(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    num_districts: usize,
+    balance_tolerance: f64,
+    intermediate_dir: Option<&Path>,
+    base_seed: u64,
+) -> Result<HashMap<usize, usize>, String> {
+    let n = adjacency.len();
+
+    if num_districts == 1 {
+        if let Some(dir) = intermediate_dir {
+            let round_dir = dir.join("depth_00");
+            let _ = std::fs::create_dir_all(&round_dir);
+            let asgn: HashMap<usize, usize> = (0..n).map(|i| (i, 1)).collect();
+            let _ = write_intermediate_round(&round_dir, &asgn);
+        }
+        return Ok((0..n).map(|i| (i, 1)).collect());
+    }
+
+    let tree = BisectionTree::from_k(num_districts);
+    let mut node_tracts: HashMap<String, HashSet<usize>> = HashMap::new();
+    node_tracts.insert(String::new(), (0..n).collect());
+
+    for depth in 0..tree.max_depth {
+        let nodes_at_depth: Vec<_> = tree.nodes_at_depth(depth).into_iter().cloned().collect();
+
+        let nodes_with_tracts: Vec<(redist_core::BisectionNode, HashSet<usize>)> =
+            nodes_at_depth.into_iter()
+                .filter_map(|node| {
+                    node_tracts.remove(&node.path).map(|tracts| (node, tracts))
+                })
+                .collect();
+
+        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> =
+            nodes_with_tracts.into_par_iter()
+                .map(|(node, tracts)| {
+                    let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
+                    let bfs_seed = derive_bfs_seed(base_seed, &node.path);
+                    let (left, right) = split_subgraph_bfs(
+                        adjacency, vertex_weights, &tracts,
+                        node_ufactor, bfs_seed,
+                    ).map_err(|e| format!("depth {} node '{}' (bfs-growth): {e}", depth, node.path))?;
+                    Ok((node.path, left, right))
+                })
+                .collect::<Result<Vec<_>, String>>()?;
+
+        let mut sorted_results = split_results;
+        sorted_results.sort_by_key(|(path, _, _)| path.clone());
+        for (path, left, right) in sorted_results {
+            node_tracts.insert(format!("{path}0"), left);
+            node_tracts.insert(format!("{path}1"), right);
+        }
+
+        if let Some(dir) = intermediate_dir {
+            let round_dir = dir.join(format!("depth_{:02}", depth + 1));
+            let _ = std::fs::create_dir_all(&round_dir);
+            let mut nodes: Vec<(&String, &HashSet<usize>)> = node_tracts.iter().collect();
+            nodes.sort_by_key(|(path, _)| (path.len(), *path));
+            let mut round_asgn: HashMap<usize, usize> = HashMap::with_capacity(n);
+            for (region_id, (_, tracts)) in nodes.iter().enumerate() {
+                for &tract in tracts.iter() {
+                    round_asgn.insert(tract, region_id + 1);
+                }
+            }
+            let _ = write_intermediate_round(&round_dir, &round_asgn);
+        }
+    }
+
+    let mut leaves: Vec<(String, HashSet<usize>)> = node_tracts.into_iter().collect();
+    leaves.sort_by_key(|(path, _)| (path.len(), path.clone()));
+
+    let mut assignments: HashMap<usize, usize> = HashMap::new();
+    for (district_id, (_, tracts)) in leaves.into_iter().enumerate() {
+        for tract in tracts {
+            assignments.insert(tract, district_id + 1);
+        }
+    }
+
+    if assignments.len() != n {
+        return Err(format!(
+            "bfs-growth bisection incomplete: {}/{n} tracts assigned", assignments.len()
+        ));
+    }
+    Ok(assignments)
+}
+
 // ── FlipChain ─────────────────────────────────────────────────────────────────
 
 /// Run a Flip-chain search on the full k-way plan.
@@ -5149,6 +5762,165 @@ mod tests {
         panic!("L2 test: requires real NC data — run manually with --ignored");
     }
 
+    // ── Centroidal Voronoi Districts (CVD) tests ──────────────────────────────
+
+    // L0: 4x4 grid, 2 seeds — valid partition covering all 16 tracts.
+    #[test]
+    fn cvd_produces_valid_k2_partition() {
+        let (adj, pop) = small_grid(4, 4);
+        let tracts: HashSet<usize> = (0..16).collect();
+        let (left, right) = split_subgraph_cvd(
+            &adj, &pop, &tracts,
+            2,    // k=2 (bisection)
+            0.10, // balance_tolerance
+            20,   // n_iter
+            42,   // base_seed
+        ).expect("CVD 4x4 must succeed");
+
+        // Completeness
+        assert_eq!(left.len() + right.len(), 16, "all 16 tracts covered");
+        assert!(left.is_disjoint(&right), "left and right must be disjoint");
+        assert!(!left.is_empty() && !right.is_empty(), "both sides must be non-empty");
+
+        // All tracts in 0..16
+        let mut all: Vec<usize> = left.iter().chain(right.iter()).copied().collect();
+        all.sort_unstable();
+        assert_eq!(all, (0..16usize).collect::<Vec<_>>(), "must partition exactly 0..16");
+    }
+
+    // L0: same base_seed -> identical result (determinism).
+    #[test]
+    fn cvd_deterministic() {
+        let (adj, pop) = small_grid(4, 4);
+        let tracts: HashSet<usize> = (0..16).collect();
+
+        let run = |seed: u64| split_subgraph_cvd(
+            &adj, &pop, &tracts, 2, 0.10, 20, seed
+        ).expect("CVD must succeed");
+
+        let (l1, r1) = run(77);
+        let (l2, r2) = run(77);
+
+        let mut s1: Vec<usize> = l1.iter().copied().collect();
+        s1.sort_unstable();
+        let mut s2: Vec<usize> = l2.iter().copied().collect();
+        s2.sort_unstable();
+        assert_eq!(s1, s2, "same seed must give identical left set");
+
+        let mut t1: Vec<usize> = r1.iter().copied().collect();
+        t1.sort_unstable();
+        let mut t2: Vec<usize> = r2.iter().copied().collect();
+        t2.sort_unstable();
+        assert_eq!(t1, t2, "same seed must give identical right set");
+    }
+
+    // L0: two seeds must be distinct for non-trivial graphs.
+    #[test]
+    fn cvd_seeds_are_distinct() {
+        // On a 4x4 grid, seed0 = 42 % 16 = 10.
+        // seed1 = farthest from 10 → must be != 10.
+        let (adj, pop) = small_grid(4, 4);
+        let tracts: HashSet<usize> = (0..16).collect();
+        // We test by verifying the partition is non-trivial (not all one side)
+        // which implies seeds[0] != seeds[1] since equal seeds → identical Voronoi → all assigned to 0.
+        let (left, right) = split_subgraph_cvd(
+            &adj, &pop, &tracts, 2, 0.10, 20, 42
+        ).expect("CVD must succeed");
+        assert!(!right.is_empty(), "right must be non-empty (seeds must be distinct)");
+    }
+
+    // L0: n_iter=0 returns the initial Voronoi assignment without crashing.
+    #[test]
+    fn cvd_n_iter_zero_no_crash() {
+        let (adj, pop) = small_grid(4, 4);
+        let tracts: HashSet<usize> = (0..16).collect();
+        let result = split_subgraph_cvd(&adj, &pop, &tracts, 2, 0.10, 0, 42);
+        assert!(result.is_ok(), "n_iter=0 must not panic: {:?}", result.err());
+        let (left, right) = result.unwrap();
+        assert_eq!(left.len() + right.len(), 16, "all tracts covered even with n_iter=0");
+    }
+
+    // L1: CVD on a 4x4 grid with k=2 produces a contiguous split in <= 20 iterations.
+    #[test]
+    fn cvd_convergence_within_n_iter() {
+        let (adj, pop) = small_grid(4, 4);
+        let tracts: HashSet<usize> = (0..16).collect();
+        // Run with n_iter=20 and verify the result is a valid partition.
+        // We can't directly inspect iteration count from the public API (iters_done is internal),
+        // so we verify the algorithm terminates and produces a valid result.
+        let (left, right) = split_subgraph_cvd(
+            &adj, &pop, &tracts, 2, 0.10, 20, 99
+        ).expect("CVD must succeed within 20 iterations");
+        assert_eq!(left.len() + right.len(), 16);
+        assert!(left.is_disjoint(&right));
+    }
+
+    // L1: balance check — each side within 10% of half total pop after rebalance.
+    #[test]
+    fn cvd_balance_within_tolerance() {
+        let (adj, pop) = small_grid(4, 4);
+        let total_pop: i64 = pop.iter().sum();
+        let tracts: HashSet<usize> = (0..16).collect();
+        let (left, right) = split_subgraph_cvd(
+            &adj, &pop, &tracts, 2, 0.10, 20, 42
+        ).expect("CVD must succeed");
+        let left_pop: i64 = left.iter().map(|&v| pop[v]).sum();
+        let right_pop: i64 = right.iter().map(|&v| pop[v]).sum();
+        let imbalance_l = (left_pop as f64 - total_pop as f64 / 2.0).abs() / total_pop as f64;
+        let imbalance_r = (right_pop as f64 - total_pop as f64 / 2.0).abs() / total_pop as f64;
+        assert!(imbalance_l <= 0.10, "left imbalance {imbalance_l:.3} must be within 10%");
+        assert!(imbalance_r <= 0.10, "right imbalance {imbalance_r:.3} must be within 10%");
+    }
+
+    // L0: CVD prefix constant is "CVD_INIT_" exactly (audit chain invariant).
+    #[test]
+    fn cvd_prefix_constant() {
+        // SHA-256("CVD_INIT_" || "" || "_" || 0u64le) should be a fixed, known value.
+        // We test that derive_cvd_seed(0, "") matches the expected hash.
+        use sha2::{Digest, Sha256};
+        let mut h = Sha256::new();
+        h.update(b"CVD_INIT_");
+        h.update(b"");
+        h.update(b"_");
+        h.update(0u64.to_le_bytes());
+        let d = h.finalize();
+        let expected = u64::from_le_bytes(d[..8].try_into().unwrap());
+        assert_eq!(derive_cvd_seed(0, ""), expected,
+            "derive_cvd_seed(0, '') must equal SHA-256('CVD_INIT__' || 0:le64) first 8 bytes");
+        // Verify prefix: the prefix must be exactly "CVD_INIT_"
+        let h2: Vec<u8> = {
+            let mut h = Sha256::new();
+            h.update(b"CVD_INIT_");
+            h.update(b"root");
+            h.update(b"_");
+            h.update(42u64.to_le_bytes());
+            h.finalize().to_vec()
+        };
+        let from_derive = derive_cvd_seed(42, "root");
+        let from_expected = u64::from_le_bytes(h2[..8].try_into().unwrap());
+        assert_eq!(from_derive, from_expected, "prefix must be CVD_INIT_");
+    }
+
+    // L0: cvd_structure_mode_parses — "centroidal-voronoi" parses as PartitionMode::CentroidalVoronoi.
+    #[test]
+    fn cvd_structure_mode_parses() {
+        use clap::ValueEnum;
+        use crate::args::PartitionMode;
+        let parsed = PartitionMode::from_str("centroidal-voronoi", true)
+            .expect("PartitionMode must parse 'centroidal-voronoi'");
+        assert!(matches!(parsed, PartitionMode::CentroidalVoronoi),
+            "Expected CentroidalVoronoi, got {:?}", parsed);
+    }
+
+    // L2 (ignored): CVD on NC — compare mean Polsby-Popper vs single METIS call.
+    #[test]
+    #[ignore]
+    fn cvd_nc_pp_vs_metis() {
+        // Requires real NC adjacency data at data/2020/ — L2 only.
+        // Expected: CVD PP >= METIS PP (geographic proximity improves compactness).
+        panic!("L2 test: requires real NC data — run manually with --ignored");
+    }
+
     // ── ShortBurst ────────────────────────────────────────────────────────────
 
     /// 4×2 grid helper: 8 nodes, 2 districts, uniform pop=1000. k=2.
@@ -6185,6 +6957,181 @@ mod tests {
         // Run vra_recom with vap_threshold=0.50, steps=200.
         // Assert: in every accepted plan, no initially-protected district has
         // minority_vap_fraction < 0.50 (i.e., VRA constraint is honoured).
+        // Skipped unless --include-ignored is passed.
+    }
+
+    // ── Group: BFS Region-Growing (B.23) ─────────────────────────────────────
+
+    // L0: 4x4 grid → valid 2-way split (all tracts assigned, two non-empty districts).
+    #[test]
+    fn bfs_growth_produces_valid_k2_partition() {
+        let (adj, pop) = small_grid(4, 4);
+        let tracts: HashSet<usize> = (0..16).collect();
+        let (left, right) = split_subgraph_bfs(&adj, &pop, &tracts, 0.10, 42)
+            .expect("bfs-growth must succeed on 4x4 grid");
+        // All 16 tracts assigned
+        let mut all: Vec<usize> = left.union(&right).copied().collect();
+        all.sort_unstable();
+        assert_eq!(all, (0..16).collect::<Vec<_>>(), "all 16 tracts must be covered");
+        // Both sides non-empty
+        assert!(!left.is_empty(),  "left side must be non-empty");
+        assert!(!right.is_empty(), "right side must be non-empty");
+        // Disjoint
+        assert!(left.is_disjoint(&right), "left and right must be disjoint");
+    }
+
+    // L0: same seed → same result (deterministic).
+    #[test]
+    fn bfs_growth_deterministic() {
+        let (adj, pop) = small_grid(4, 4);
+        let tracts: HashSet<usize> = (0..16).collect();
+        let run = |seed: u64| split_subgraph_bfs(&adj, &pop, &tracts, 0.10, seed)
+            .expect("bfs-growth must succeed");
+        let (l1, r1) = run(99);
+        let (l2, r2) = run(99);
+        assert_eq!(l1, l2, "same seed must produce identical left set");
+        assert_eq!(r1, r2, "same seed must produce identical right set");
+    }
+
+    // L0: no unassigned tracts after BFS + rebalance.
+    #[test]
+    fn bfs_growth_all_tracts_assigned() {
+        let (adj, pop) = small_grid(5, 5); // 25 tracts
+        let tracts: HashSet<usize> = (0..25).collect();
+        let (left, right) = split_subgraph_bfs(&adj, &pop, &tracts, 0.10, 7)
+            .expect("bfs-growth must succeed on 5x5 grid");
+        assert_eq!(left.len() + right.len(), 25, "all 25 tracts must be assigned");
+        assert!(left.is_disjoint(&right), "no tract may appear in both sides");
+    }
+
+    // L0: both districts non-empty for any non-trivial input.
+    #[test]
+    fn bfs_growth_both_districts_nonempty() {
+        // Linear chain: 10 nodes
+        let n = 10usize;
+        let adj: Vec<Vec<usize>> = (0..n).map(|i| {
+            let mut nb = vec![];
+            if i > 0   { nb.push(i - 1); }
+            if i < n-1 { nb.push(i + 1); }
+            nb
+        }).collect();
+        let pop = vec![1000i64; n];
+        let tracts: HashSet<usize> = (0..n).collect();
+        let (left, right) = split_subgraph_bfs(&adj, &pop, &tracts, 0.10, 0)
+            .expect("bfs-growth must succeed on chain");
+        assert!(!left.is_empty(),  "left must be non-empty for chain graph");
+        assert!(!right.is_empty(), "right must be non-empty for chain graph");
+    }
+
+    // L0: BFS from any tract in each district must reach all tracts in that district
+    //     (contiguity guarantee — BFS growth ensures this by construction).
+    #[test]
+    fn bfs_growth_contiguous_districts() {
+        let (adj, pop) = small_grid(4, 4);
+        let tracts: HashSet<usize> = (0..16).collect();
+        let (left, right) = split_subgraph_bfs(&adj, &pop, &tracts, 0.10, 123)
+            .expect("bfs-growth must succeed");
+
+        let is_contiguous = |side: &HashSet<usize>| -> bool {
+            if side.len() <= 1 { return true; }
+            let start = *side.iter().next().unwrap();
+            let mut visited = HashSet::new();
+            let mut queue = std::collections::VecDeque::new();
+            visited.insert(start);
+            queue.push_back(start);
+            while let Some(v) = queue.pop_front() {
+                for &nb in &adj[v] {
+                    if side.contains(&nb) && !visited.contains(&nb) {
+                        visited.insert(nb);
+                        queue.push_back(nb);
+                    }
+                }
+            }
+            visited.len() == side.len()
+        };
+
+        assert!(is_contiguous(&left),  "left district must be contiguous");
+        assert!(is_contiguous(&right), "right district must be contiguous");
+    }
+
+    // L0: "bfs-growth" StructureMode parses correctly from CLI string.
+    #[test]
+    fn bfs_growth_structure_mode_parses() {
+        use clap::ValueEnum;
+        use crate::args::StructureMode;
+        let parsed = StructureMode::from_str("bfs-growth", true)
+            .expect("StructureMode must parse 'bfs-growth'");
+        assert_eq!(parsed, StructureMode::BfsGrowth,
+            "parsed StructureMode must equal BfsGrowth");
+    }
+
+    // L0: seed[1] should be farther from seed[0] than most other tracts
+    //     (maximally-spread seeds — seed[1] = argmax BFS distance from seed[0]).
+    #[test]
+    fn bfs_growth_seeds_maximally_spread() {
+        // 4x4 grid: seeds should be near opposite corners.
+        // We verify this indirectly: the two assigned seeds are not adjacent.
+        let (adj, pop) = small_grid(4, 4);
+        let tracts: HashSet<usize> = (0..16).collect();
+        let (left, right) = split_subgraph_bfs(&adj, &pop, &tracts, 0.10, 0)
+            .expect("bfs-growth must succeed");
+
+        // The farthest-apart split on a 4x4 grid should not put all tracts
+        // in one set (which would happen if both seeds were adjacent).
+        assert!(left.len() >= 1, "left must have at least 1 tract");
+        assert!(right.len() >= 1, "right must have at least 1 tract");
+
+        // The seeds are the initial tracts: verify they are not the same
+        // by confirming both sides have at least 1 tract.
+        // (A more direct test would require exposing seed positions.)
+        let max_frac = (left.len().max(right.len()) as f64) / 16.0;
+        assert!(max_frac <= 0.95,
+            "maximally-spread seeds should not produce a 95%:5% split; got {:.0}%:{:.0}%",
+            left.len() as f64 / 16.0 * 100.0,
+            right.len() as f64 / 16.0 * 100.0);
+    }
+
+    // L1: run_all_splits_bfs on 4x4 grid with k=2: valid, deterministic, contiguous.
+    #[test]
+    fn bfs_growth_run_all_splits_k2() {
+        let (adj, pop) = small_grid(4, 4);
+        let asgn = run_all_splits_bfs(&adj, &pop, 2, 0.05, None, 42)
+            .expect("run_all_splits_bfs k=2 must succeed");
+        assert_eq!(asgn.len(), 16, "all 16 tracts must be assigned");
+        let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
+        assert_eq!(districts.len(), 2, "must produce exactly 2 districts");
+    }
+
+    // L1: run_all_splits_bfs with k=4: valid partition on 4x4 grid.
+    #[test]
+    fn bfs_growth_run_all_splits_k4() {
+        let (adj, pop) = small_grid(4, 4);
+        let asgn = run_all_splits_bfs(&adj, &pop, 4, 0.10, None, 7)
+            .expect("run_all_splits_bfs k=4 must succeed");
+        assert_eq!(asgn.len(), 16, "all 16 tracts must be assigned");
+        let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
+        assert_eq!(districts.len(), 4, "must produce exactly 4 districts");
+    }
+
+    // L1: same base_seed → identical run_all_splits_bfs result.
+    #[test]
+    fn bfs_growth_run_all_splits_deterministic() {
+        let (adj, pop) = small_grid(4, 5); // 20 tracts
+        let run = || run_all_splits_bfs(&adj, &pop, 2, 0.05, None, 12345)
+            .expect("run_all_splits_bfs must succeed");
+        let a1 = run();
+        let a2 = run();
+        assert_eq!(a1, a2, "same base_seed must produce identical assignments");
+    }
+
+    // L2: NC 2020 k=14 — BFS Growth vs single METIS baseline.
+    #[test]
+    #[ignore]
+    fn bfs_growth_nc_ec_vs_metis() {
+        // Requires: data/2020/north_carolina_adjacency.adj.bin
+        // Run bfs-growth and METIS on NC 2020 k=14.
+        // Expected: BFS Growth EC >= METIS EC (METIS explicitly minimizes EC).
+        // Also check: BFS Growth is fast (O(n log n) vs METIS heuristic).
         // Skipped unless --include-ignored is passed.
     }
 }

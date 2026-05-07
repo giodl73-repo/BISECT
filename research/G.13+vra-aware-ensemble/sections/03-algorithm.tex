@@ -1,0 +1,213 @@
+\section{The VRA-Aware MCMC Algorithm}
+\label{sec:algorithm}
+
+\subsection{Motivation: VRA as a Hard Constraint}
+
+VRA compliance is a legal constraint, not a probabilistic preference.
+A plan that reduces a protected district's minority VAP below $50\%$ is legally
+impermissible in a Gingles-covered state, regardless of how compact or
+population-balanced it may be.
+Enforcing VRA as a soft penalty in the Metropolis-Hastings ratio would allow
+non-compliant plans to appear in the ensemble, violating the conditional
+sampling goal.
+
+The correct approach is a hard filter: any proposed step that would produce a
+non-compliant plan is rejected unconditionally.
+This reduces the effective state space of the chain to
+$\Pi_{\mathrm{vra}}(G, k, \Prot) \subseteq \Pi(G, k)$: the set of valid
+plans in which every district $d \in \Prot$ has
+$\vap(\pi^{-1}(d), \pi) \geq \theta$.
+\vr{} is a Markov chain on $\Pi_{\mathrm{vra}}(G, k, \Prot)$, with the
+same long-run mixing properties as \fr{} on the restricted space.
+
+\subsection{Formal Algorithm}
+
+\begin{algorithm}
+\caption{\vr{} Chain}
+\label{alg:vr}
+\begin{algorithmic}[1]
+\Require Initial plan $\pi_0$, steps $S$, base seed $b$, minority VAP
+         fractions $\mathbf{m} \in [0,1]^n$, threshold $\theta$
+\Ensure  Final plan $\pi^*$ and three-way step record
+\State $\Prot \gets \{d \in [k] : \vap(\pi_0^{-1}(d), \pi_0) \geq \theta\}$
+       \Comment{protected set, fixed at construction}
+\State $\pi \gets \pi_0$; \quad
+       $N_{\mathrm{acc}} \gets 0$; \quad
+       $N_{\mathrm{vra}} \gets 0$; \quad
+       $N_{\mathrm{mh}} \gets 0$
+\For{$s \gets 0$ \textbf{to} $S - 1$}
+  \State $\mathrm{rng\_fwd} \gets \mathrm{SmallRng::seed\_from\_u64}(\mathrm{forward\_seed}(b, s, 0))$
+  \State $\mathrm{rng\_rev} \gets \mathrm{SmallRng::seed\_from\_u64}(\mathrm{reverse\_seed}(b, s, 0))$
+  \State \Comment{--- Run inner ForestRecomChain proposal ---}
+  \State $(d_i, d_j) \gets \mathrm{SelectAdjacentPair}(\pi, \mathrm{rng\_fwd})$
+  \State $R \gets \pi^{-1}(d_i) \cup \pi^{-1}(d_j)$
+  \State $T_{\mathrm{fwd}} \gets \mathrm{WilsonUST}(G[R], \mathrm{rng\_fwd})$
+  \State $c_{\mathrm{fwd}} \gets |\{e \in T_{\mathrm{fwd}} : \text{balanced cut}\}|$
+  \If{$c_{\mathrm{fwd}} = 0$} $N_{\mathrm{mh}} \mathrel{+}= 1$; \textbf{continue} \EndIf
+  \State $e^* \gets \mathrm{Uniform}(C(T_{\mathrm{fwd}}), \mathrm{rng\_fwd})$
+  \State $\pi' \gets \pi$ with district pair $(d_i, d_j)$ split by $e^*$
+  \State $T_{\mathrm{rev}} \gets \mathrm{WilsonUST}(G[R], \mathrm{rng\_rev})$
+  \State $c_{\mathrm{rev}} \gets |\{e \in T_{\mathrm{rev}} : \text{balanced cut under } \pi'\}|$
+  \If{$c_{\mathrm{rev}} = 0$} $N_{\mathrm{mh}} \mathrel{+}= 1$; \textbf{continue} \EndIf
+  \State $\alpha_{\mathrm{mh}} \gets \min(1,\; c_{\mathrm{fwd}} / c_{\mathrm{rev}})$
+  \If{$\mathrm{Uniform}([0,1)) \geq \alpha_{\mathrm{mh}}$}
+        \Comment{MH rejection}
+    \State $N_{\mathrm{mh}} \mathrel{+}= 1$; \textbf{continue}
+  \EndIf
+  \State \Comment{--- VRA hard check (fires after MH acceptance) ---}
+  \State $\mathrm{vra\_ok} \gets \mathbf{true}$
+  \For{$d \in \Prot$}
+    \If{$\vap(\pi'^{-1}(d), \pi') < \theta$}
+      \State $\mathrm{vra\_ok} \gets \mathbf{false}$; \textbf{break}
+    \EndIf
+  \EndFor
+  \If{$\neg\,\mathrm{vra\_ok}$}
+        \Comment{VRA rejection: revert and count}
+    \State $N_{\mathrm{vra}} \mathrel{+}= 1$; \textbf{continue}
+  \EndIf
+  \State $\pi \gets \pi'$; \quad $N_{\mathrm{acc}} \mathrel{+}= 1$
+        \Comment{accept}
+\EndFor
+\State \textbf{assert} $N_{\mathrm{acc}} + N_{\mathrm{vra}} + N_{\mathrm{mh}} = S$
+\State \Return $(\pi,\; N_{\mathrm{acc}},\; N_{\mathrm{vra}},\; N_{\mathrm{mh}})$
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{VRA check ordering.}
+The VRA check fires \emph{after} the MH acceptance decision (line 20--26 of
+Algorithm~\ref{alg:vr}).
+This ordering is deliberate: the MH ratio is computed without knowledge of
+VRA status, so the proposal sequence is identical to \fr{} given the same seed.
+A verifier who replays the chain without VRA checking will see the same
+proposals in the same order; the VRA rejections are simply additional
+unconditional rejections layered on top.
+
+An alternative ordering---checking VRA before the MH step and only computing
+the reverse tree if the proposal is VRA-compliant---would save computation
+when VRA rejects.
+We adopt the post-MH ordering to maintain proposal-sequence auditability and
+to match the spec~\citep{dellaLibera2026vraSection}, accepting the minor
+inefficiency of computing $T_{\mathrm{rev}}$ for subsequently VRA-rejected
+proposals.
+
+\paragraph{Protected set semantics.}
+The protected set $\Prot$ is computed from the initial plan $\pi_0$ at chain
+construction and is never updated.
+This matches the legal standard: the Gingles obligation is tied to the
+submitted plan's majority-minority districts, not to the current chain state.
+If a district's minority VAP in the initial plan is exactly at threshold,
+it is protected and must remain at or above threshold throughout the chain.
+
+\paragraph{Degenerate case: no protected districts.}
+If $\Prot = \emptyset$ (no district in $\pi_0$ has minority VAP $\geq \theta$),
+the VRA check never fires and $N_{\mathrm{vra}} = 0$ for all steps.
+The chain reduces to standard \fr{}; a CLI warning is emitted to alert the
+user that VRA enforcement is a no-op.
+
+\subsection{Seed Specification}
+
+\vr{} inherits the \fr{} seed derivation unchanged:
+\begin{align*}
+  \mathrm{forward\_seed}(b, s, 0) &= \mathrm{SHA256}\!\left(
+    \texttt{"FR\_FORWARD\_"} \,\|\, s^{\mathrm{le64}} \,\|\,
+    \texttt{"\_"} \,\|\, 0^{\mathrm{le32}} \,\|\,
+    \texttt{"\_"} \,\|\, b^{\mathrm{le64}}
+  \right)[0{:}8], \\
+  \mathrm{reverse\_seed}(b, s, 0) &= \mathrm{SHA256}\!\left(
+    \texttt{"FR\_REVERSE\_"} \,\|\, s^{\mathrm{le64}} \,\|\,
+    \texttt{"\_"} \,\|\, 0^{\mathrm{le32}} \,\|\,
+    \texttt{"\_"} \,\|\, b^{\mathrm{le64}}
+  \right)[0{:}8].
+\end{align*}
+The prefix constants \texttt{FR\_FORWARD\_} and \texttt{FR\_REVERSE\_} are
+version-locked by an L0 test that asserts equality with the constants in
+\texttt{ForestRecomChain}: any rename in the parent will fail the test,
+preventing silent divergence.
+
+This inheritance has an important consequence for auditability: given the same
+base seed $b$, \vr{} and \fr{} produce \emph{identical proposals} at every
+step.
+Every plan accepted by \vr{} is a plan that \fr{} would also have accepted
+(conditional on MH acceptance), and is additionally guaranteed to be
+VRA-compliant.
+A verifier can confirm this by replaying the chain with VRA checking disabled
+and observing that every \vr{}-accepted plan appears in the unconstrained
+trajectory.
+
+\subsection{Three-Way Step Accounting}
+
+Each step falls into exactly one of three categories:
+
+\begin{description}
+  \item[Accepted ($N_{\mathrm{acc}}$).]
+        The proposal passes both MH acceptance and the VRA check.
+        The chain moves to $\pi'$.
+  \item[MH-rejected ($N_{\mathrm{mh}}$).]
+        The proposal is rejected by the Metropolis-Hastings criterion
+        (including zero-cut failures).
+        The VRA check is not reached.
+        The chain stays at $\pi$.
+  \item[VRA-rejected ($N_{\mathrm{vra}}$).]
+        The proposal passes MH acceptance but fails the VRA check.
+        The chain stays at $\pi$.
+\end{description}
+
+The identity $N_{\mathrm{acc}} + N_{\mathrm{vra}} + N_{\mathrm{mh}} = S$
+holds exactly (enforced by assertion in the implementation).
+This three-way decomposition enables precise audit: the VRA rejection rate
+$\rho_{\mathrm{vra}} = N_{\mathrm{vra}} / S$ quantifies how often the chain
+encounters compliant-to-non-compliant transitions, and the effective sample
+size is $N_{\mathrm{acc}}$.
+
+\begin{proposition}[VRA invariance]
+\label{prop:vra-invariant}
+If the initial plan $\pi_0$ satisfies $\vap(\pi_0^{-1}(d), \pi_0) \geq \theta$
+for all $d \in \Prot$, then every plan $\pi_s$ visited by \vr{} satisfies
+the same condition for all $s \geq 0$.
+\end{proposition}
+
+\begin{proof}
+By construction.
+The chain starts at $\pi_0 \in \Pi_{\mathrm{vra}}$.
+At each step, the VRA check accepts the proposal $\pi'$ only if
+$\vap(\pi'^{-1}(d), \pi') \geq \theta$ for all $d \in \Prot$.
+If the check fails, the chain stays at $\pi$, which by inductive hypothesis
+is in $\Pi_{\mathrm{vra}}$.
+Hence $\Pi_{\mathrm{vra}}$ is absorbing under \vr{}, and VRA compliance is
+a chain invariant.
+\end{proof}
+
+\subsection{Rust Implementation}
+
+The \texttt{VraRecomChain} struct in \texttt{redist-ensemble/src/vra\_recom.rs}:
+
+\begin{verbatim}
+pub struct VraRecomChain {
+    pub inner: ForestRecomChain,
+    pub minority_vap: Vec<f64>,          // per-tract minority VAP fraction
+    pub vap_threshold: f64,              // default 0.50
+    pub protected_districts: HashSet<u32>,
+    pub vra_rejections: u64,
+    pub steps_accepted: u64,
+    pub steps_taken: u64,
+}
+\end{verbatim}
+
+The \texttt{step()} method returns a \texttt{VraStepRecord}:
+
+\begin{verbatim}
+pub struct VraStepRecord {
+    pub accepted: bool,
+    pub vra_rejected: bool,   // true if rejected by VRA (after MH)
+    pub log_w: f64,           // f64::NAN if vra_rejected or mh_rejected
+}
+\end{verbatim}
+
+The compositor variant is \texttt{SeedCompositor::VraRecom \{ steps, p, vap\_threshold \}}.
+
+\paragraph{CLI invocation.}
+\begin{verbatim}
+redist state --state NC --year 2020 \
+    --search vra-recom --seeds 1000 --percentile 0.0 \
+    --vra-threshold 0.50 --weights-override vra-aligned
+\end{verbatim}

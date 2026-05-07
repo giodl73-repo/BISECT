@@ -1,0 +1,112 @@
+\section{VRA Background and Layer Architecture}
+\label{sec:background}
+
+\subsection{Section 2 and the Gingles Factors}
+
+Section~2 of the Voting Rights Act of 1965 prohibits electoral practices that
+result in the denial or abridgement of the right to vote on account of race,
+colour, or membership in a language minority group.
+In redistricting, Section~2 is enforced through the three-part test established
+in \emph{Thornburg v.\ Gingles}~\citep{gingles1986}:
+\begin{enumerate}
+  \item The minority group must be sufficiently large and geographically compact
+        to constitute a majority in a single-member district.
+  \item The minority group must be politically cohesive.
+  \item The majority must vote sufficiently as a bloc to enable it to usually
+        defeat the minority's preferred candidate.
+\end{enumerate}
+When all three Gingles preconditions are met, the jurisdiction must draw a
+majority-minority district: one in which the minority group constitutes a
+majority of the voting-age population (VAP).
+The standard threshold is $50\%$ minority VAP, with BVAP (Black VAP) and
+HVAP (Hispanic VAP) being the most commonly litigated measures.
+
+\subsection{Majority-Minority District Identification}
+
+Let $G = (V, E)$ be the census-tract adjacency graph for a state with $|V| = n$
+tracts.
+For each tract $v \in V$, let $\mathrm{pop}(v)$ be the total population and
+$\mathrm{mvap}(v)$ be the minority voting-age population (BVAP, HVAP, or a
+combined measure, depending on the state).
+The \emph{minority VAP fraction} of a district $D \subseteq V$ in plan $\pi$ is:
+\[
+  \vap(D, \pi) \;=\; \frac{\sum_{v \in D} \mathrm{mvap}(v)}{\sum_{v \in D}
+  \mathrm{pop}(v)}.
+\]
+A district $D$ is a \emph{majority-minority district} under threshold $\theta$
+if $\vap(D, \pi) \geq \theta$.
+The default threshold in this implementation is $\theta = 0.50$, reflecting
+the standard Gingles requirement.
+
+For VRA-aware sampling, we define the \emph{protected set} of a plan $\pi_0$:
+\[
+  \Prot(\pi_0) \;=\; \bigl\{d \in [k] : \vap(\pi_0^{-1}(d),\, \pi_0) \geq \theta\bigr\}.
+\]
+This set is computed once at chain construction and does not change as the
+chain runs.
+The legal justification is that the VRA obligation is defined with respect to
+the submitted plan: a majority-minority district in $\pi_0$ must remain a
+majority-minority district in every alternative plan produced by the chain.
+
+\subsection{The Two-Layer Architecture}
+
+The redistricting compositor separates algorithm choices into three orthogonal
+layers: structure (bisection tree shape), weights (METIS signal), and search
+(seed selection strategy).
+VRA compliance can be enforced at either the structure layer or the search
+layer, with distinct semantics:
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Property} & \textbf{VRASection (D.0)} & \textbf{\vr{} (G.13)} \\
+\midrule
+Layer & Structure & Search \\
+Mechanism & METIS edge-weight bias & Hard MH rejection \\
+Output & Single plan & Distribution over plans \\
+Guarantee & VRA-compliant starting plan & VRA-compliant ensemble \\
+Use case & Generate initial plan & Litigation ensemble \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+\vraSection{} biases the recursive bisection toward cuts that produce
+majority-minority districts; it solves the problem of \emph{finding} a
+compliant plan.
+\vr{} enforces VRA compliance as an invariant of a Markov chain; it solves
+the problem of \emph{sampling} the space of compliant plans.
+
+Neither replaces the other.
+A chain that starts from a non-compliant plan will have an initial rejection
+burst while it first reaches a compliant state, but since any proposed step
+that would move away from compliance is rejected, the chain can never leave
+the compliant sub-space once it has entered it.
+In practice, using \vraSection{} to generate the starting plan eliminates this
+burn-in entirely.
+
+\subsection{VAP Fraction Computation}
+
+The minority VAP data is loaded through the existing vertex-weight pipeline
+via \texttt{--weights-override vra-aligned}.
+This produces a vector $\mathbf{m} \in [0,1]^n$ of per-tract minority VAP
+fractions (i.e., $\mathrm{mvap}(v) / \mathrm{pop}(v)$ for each tract $v$).
+The district-level VAP fraction is then a population-weighted average:
+\[
+  \vap(D, \pi) \;=\;
+  \frac{\sum_{v \in D} m_v \cdot \mathrm{pop}(v)}{\sum_{v \in D} \mathrm{pop}(v)}.
+\]
+The \texttt{minority\_col} parameter selects the minority group column:
+\texttt{BVAP} (Black), \texttt{HVAP} (Hispanic), or \texttt{HVAP+BVAP}
+(combined, computed at load time).
+The values are pre-normalised to $[0,1]$ before being passed to
+\texttt{VraRecomChain::new}, so the VAP fraction computation within the
+chain reduces to a population-weighted average of scalar values.
+
+The per-step VAP check is $O(|D|)$ per protected district, where $|D|$ is
+the number of tracts in the district.
+For the states studied (NC, GA, TX), with $|D| \approx n/k$ and
+$k \leq 38$, this is negligible compared to the Wilson UST call cost of
+$O(|R|^2)$ per step.
+\end{antml:parameter>
+</invoke>

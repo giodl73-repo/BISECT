@@ -1,0 +1,312 @@
+\section{The Parallel Tempering Algorithm}
+\label{sec:algorithm}
+
+\subsection{Notation and Setup}
+
+Let $G = (V, E, w)$ be the census-tract adjacency graph for a state, where
+$V$ is the set of tracts, $E$ is the set of shared-boundary edges, and
+$w: E \to \mathbb{R}_{>0}$ is the geographic boundary-length weight.
+Let $p: V \to \mathbb{Z}_{>0}$ be the 2020 Census tract populations, and let
+$k$ be the target number of congressional districts.
+A \emph{plan} is an assignment $\mathbf{a}: V \to \{1,\ldots,k\}$ such that
+every district $d = \mathbf{a}^{-1}(j)$ is connected in $G$ and satisfies the
+population balance constraint at tolerance $\varepsilon$:
+\[
+  \left|\frac{\sum_{v \in d} p(v)}{P/k} - 1\right| \le \varepsilon,
+\]
+where $P = \sum_{v \in V} p(v)$ is the state total population.
+The \emph{edge cut} of a plan is
+\[
+  \EC(\mathbf{a}) = \sum_{\{u,v\} \in E:\; \mathbf{a}(u) \ne \mathbf{a}(v)} w(u,v).
+\]
+
+\subsection{Geometric Tolerance Ladder}
+\label{sec:ladder}
+
+\pt{} runs $N = N_{\mathrm{replicas}}$ chains indexed $i = 0, 1, \ldots, N-1$.
+Replica $i$ operates at balance tolerance $\varepsilon_i$ drawn from a
+\emph{geometric ladder}:
+\[
+  \varepsilon_i = \varepsilon_{\mathrm{cold}}
+    \times \left(\frac{\varepsilon_{\mathrm{hot}}}{\varepsilon_{\mathrm{cold}}}\right)^{i/(N-1)},
+  \quad i = 0, 1, \ldots, N-1.
+\]
+This gives $\varepsilon_0 = \varepsilon_{\mathrm{cold}}$ (the cold chain, strict statutory
+tolerance) and $\varepsilon_{N-1} = \varepsilon_{\mathrm{hot}}$ (the hot chain,
+relaxed tolerance).
+All intermediate tolerances are strictly increasing.
+
+\begin{definition}[Inverse tolerance / inverse temperature]
+\label{def:beta}
+For replica $i$ with tolerance $\varepsilon_i$, the \emph{inverse tolerance}
+(the analogue of inverse temperature) is $\beta_i = 1 / \varepsilon_i$.
+The cold chain has the highest $\beta$ (most constrained); the hot chain has
+the lowest $\beta$ (least constrained).
+\end{definition}
+
+\paragraph{Equal swap acceptance design.}
+The geometric ladder is chosen so that the expected swap acceptance rate between
+adjacent replicas is approximately equal across all pairs.
+For continuous Gaussian systems, equal spacing in $\ln\varepsilon$ achieves
+${\approx}23\%$ swap acceptance~\citep{kone2005}.
+For discrete redistricting chains, this serves as an empirical starting point.
+The ladder spacing can be diagnosed from the observed swap acceptance rates in
+the audit log; a rate substantially below $15\%$ suggests over-spacing
+(too many replicas needed), and a rate substantially above $35\%$ suggests
+under-spacing (fewer replicas would suffice).
+
+\paragraph{Default parameters.}
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Parameter & Default & Notes \\
+\midrule
+$N_{\mathrm{replicas}}$ & 4 & 4 chains at $\varepsilon \in \{0.005, 0.013, 0.033, 0.05\}$ \\
+$\varepsilon_{\mathrm{cold}}$ & 0.005 & $\pm 0.5\%$ statutory tolerance \\
+$\varepsilon_{\mathrm{hot}}$ & 0.05 & $\pm 5\%$ relaxed tolerance \\
+$\mathtt{swap\_interval}$ & 10 & Swap proposals every 10 steps \\
+$T$ (steps) & 1000 & Total cold chain steps \\
+$p$ (percentile) & 0.0 & Select minimum-EC cold chain plan \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Seeding Specification}
+\label{sec:seeding}
+
+All random streams are derived from a single \texttt{base\_seed} via SHA-256
+with domain-separated prefixes, following the platform-wide seed design.
+Four distinct prefixes are used:
+
+\begin{definition}[Replica Seed]
+\label{def:replica-seed}
+\[
+  \mathtt{replica\_seed}(b, r, s) =
+  \mathrm{first8}\bigl(\mathrm{SHA\text{-}256}(
+    \texttt{"PT\_REPLICA\_"} \;\|\;
+    \mathrm{le4}(r) \;\|\;
+    \texttt{"\_"} \;\|\;
+    \mathrm{le8}(s) \;\|\;
+    \texttt{"\_"} \;\|\;
+    \mathrm{le8}(b)
+  )\bigr),
+\]
+where $b$ is the base seed (u64), $r$ is the replica index (u32), $s$ is the
+step index (u64), $\mathrm{le4}$ and $\mathrm{le8}$ encode values as little-endian bytes,
+and $\mathrm{first8}$ reads the first 8 bytes of the SHA-256 digest as a
+little-endian u64.
+\end{definition}
+
+\begin{definition}[Swap Seed]
+\label{def:swap-seed}
+\[
+  \mathtt{swap\_seed}(b, s, i) =
+  \mathrm{first8}\bigl(\mathrm{SHA\text{-}256}(
+    \texttt{"PT\_SWAP\_"} \;\|\;
+    \mathrm{le4}(i) \;\|\;
+    \texttt{"\_"} \;\|\;
+    \mathrm{le8}(s) \;\|\;
+    \texttt{"\_"} \;\|\;
+    \mathrm{le8}(b)
+  )\bigr),
+\]
+where $i$ is the pair index (0-based, for the swap between replicas $i$ and $i+1$).
+\end{definition}
+
+The forward and reverse RNG streams for replica $r$ at step $s$ are derived
+from the replica seed:
+\[
+  \mathtt{rng\_fwd} = \mathrm{SmallRng::seed\_from\_u64}\!\bigl(
+    \mathrm{first8}(\mathrm{SHA\text{-}256}(\texttt{"PT\_FWD\_"} \;\|\; \mathrm{le8}(r_s)))
+  \bigr),
+\]
+\[
+  \mathtt{rng\_rev} = \mathrm{SmallRng::seed\_from\_u64}\!\bigl(
+    \mathrm{first8}(\mathrm{SHA\text{-}256}(\texttt{"PT\_REV\_"} \;\|\; \mathrm{le8}(r_s)))
+  \bigr),
+\]
+where $r_s = \mathtt{replica\_seed}(b, r, s)$.
+
+\begin{remark}
+The four prefixes \texttt{"PT\_REPLICA\_"}, \texttt{"PT\_SWAP\_"},
+\texttt{"PT\_FWD\_"}, and \texttt{"PT\_REV\_"} are all distinct.
+In particular, $\mathtt{replica\_seed}(b, r, s) \ne \mathtt{swap\_seed}(b, s, r)$
+for all $(b, r, s)$ because the prefixes differ even when the numeric arguments
+coincide.
+A test asserts that each prefix constant in source equals its expected string
+and that $\mathtt{replica\_seed}(0, 0, 0)$ and $\mathtt{swap\_seed}(0, 0, 0)$
+equal hard-coded expected values, preventing silent seed-compatibility drift.
+\end{remark}
+
+\subsection{Formal Pseudocode}
+
+Algorithm~\ref{alg:pt} gives the complete \pt{} procedure.
+
+\begin{algorithm}[t]
+\caption{\pt{}($G$, $k$, $b$, $N$, $\varepsilon_c$, $\varepsilon_h$,
+  $\mathtt{swap\_interval}$, $T$, $p$)}
+\label{alg:pt}
+\begin{algorithmic}[1]
+\State \Comment{Geometric tolerance ladder}
+\For{$i = 0$ \textbf{to} $N-1$}
+  \State $\varepsilon_i \gets \varepsilon_c \times (\varepsilon_h / \varepsilon_c)^{i/(N-1)}$
+\EndFor
+\State \Comment{Initialise all replicas from the same METIS plan}
+\State $\mathbf{a}_{\mathrm{init}} \gets \metis\text{-}k\text{-}{\rm plan}(G, k, \varepsilon_c, b)$
+\For{$i = 0$ \textbf{to} $N-1$}
+  \State $\mathtt{chain}_i \gets \fr\text{-}\mathrm{Chain}(G, k, \mathbf{a}_{\mathrm{init}},
+    \varepsilon_i)$
+\EndFor
+\State $\mathcal{R} \gets \bigl[(\EC(\mathbf{a}_{\mathrm{init}}),\; 0,\;
+  \mathbf{a}_{\mathrm{init}}.\mathrm{clone}())\bigr]$
+\Comment{cold chain records: (EC, step, assignment)}
+\For{$s = 1$ \textbf{to} $T$}
+  \State \Comment{Step all replicas independently}
+  \For{$i = 0$ \textbf{to} $N-1$}
+    \State $r_s \gets \mathtt{replica\_seed}(b, i, s)$
+    \State $\mathtt{rng\_fwd} \gets \mathrm{SmallRng}(\mathrm{SHA\text{-}256}(
+      \texttt{"PT\_FWD\_"} \| r_s))$
+    \State $\mathtt{rng\_rev} \gets \mathrm{SmallRng}(\mathrm{SHA\text{-}256}(
+      \texttt{"PT\_REV\_"} \| r_s))$
+    \State $\mathtt{chain}_i.\mathrm{step}(\mathtt{rng\_fwd},\; \mathtt{rng\_rev})$
+  \EndFor
+  \State $\mathcal{R}.\mathrm{push}\bigl((\EC(\mathtt{chain}_0.\mathbf{a}),\; s,\;
+    \mathtt{chain}_0.\mathbf{a}.\mathrm{clone}())\bigr)$
+  \State \Comment{Swap proposals every swap\_interval steps}
+  \If{$s \bmod \mathtt{swap\_interval} = 0$}
+    \For{$i = 0$ \textbf{to} $N-2$}
+      \State $\mathtt{rng}_{\mathrm{swap}} \gets
+        \mathrm{SmallRng}(\mathtt{swap\_seed}(b, s, i))$
+      \State $\EC_i \gets \EC(\mathtt{chain}_i.\mathbf{a})$
+      \State $\EC_j \gets \EC(\mathtt{chain}_{i+1}.\mathbf{a})$
+      \State $\beta_i \gets 1/\varepsilon_i$; \quad $\beta_j \gets 1/\varepsilon_{i+1}$
+      \State $\ell \gets (\beta_i - \beta_j) \times (\EC_i - \EC_j)$
+      \If{$\mathtt{rng}_{\mathrm{swap}}.\mathrm{gen::<f64>}().\ln() < \min(0, \ell)$}
+        \State \textbf{swap} $\mathtt{chain}_i.\mathbf{a} \leftrightarrow
+          \mathtt{chain}_{i+1}.\mathbf{a}$
+      \EndIf
+    \EndFor
+  \EndIf
+\EndFor
+\State \textbf{sort} $\mathcal{R}$ by $(\EC \;\mathrm{ASC},\; s \;\mathrm{ASC})$
+\State \textbf{return} $\mathcal{R}[\lfloor p \times |\mathcal{R}| \rfloor].\mathbf{a}$
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Three design choices.}
+
+\textbf{1. Geometric tolerance ladder.}
+Equal spacing in $\ln\varepsilon$ gives approximately equal swap acceptance
+rates across all adjacent pairs.
+A ladder with equal absolute spacing $\Delta\varepsilon$ would concentrate swaps
+near the cold end (where the tolerance difference matters most) and produce
+near-universal acceptance near the hot end.
+The geometric ladder distributes swap events more uniformly.
+
+\textbf{2. Swap interval $= 10$.}
+The swap interval balances two competing objectives.
+If swaps are proposed too frequently (interval $= 1$), the chains do not have
+time to diffuse between swap events; consecutive swaps on the same pair are
+anti-correlated, reducing effective exploration.
+If swaps are proposed too infrequently (interval $= 100$), the hot chain may
+return to the cold chain's basin before the swap is proposed, losing the
+diversity benefit.
+Interval $= 10$ is the standard practical choice from the tempering
+literature~\citep{earl2005} and is confirmed by the swap acceptance rates in
+Section~\ref{sec:empirical}.
+
+\textbf{3. Cold chain recording.}
+The cold chain records all plans it visits, not only the plans where an
+internal \fr{} proposal was accepted.
+Regardless of whether the \fr{} proposal was accepted, the cold chain is in
+some plan (either the proposed plan or the previous one); we record that plan.
+This means $|\mathcal{R}| = T + 1$ (the initial plan plus one record per step).
+The percentile selection at line~25 is over all cold chain states, including
+states that persisted across multiple steps due to proposal rejection.
+
+\paragraph{Cold chain acceptance rate vs.\ swap acceptance rate.}
+Two acceptance rates are tracked and reported in the audit log:
+\begin{itemize}
+\item \texttt{swap\_acceptance\_rate}: Fraction of swap proposals that were
+  accepted across all adjacent pairs. Measures chain exchange health.
+\item \texttt{cold\_chain\_acceptance\_rate}: Fraction of \fr{} steps at replica
+  0 where the internal proposal was accepted. Measures cold chain health.
+\end{itemize}
+A very low cold chain acceptance rate with a normal swap rate indicates that
+the cold tolerance is too tight for this state: the cold chain cannot move
+at $\varepsilon_{\mathrm{cold}}$, but the PT mechanism has no way to help
+because the cold chain rejects proposals before swaps can inject diversity.
+A normal cold chain acceptance rate with very low swap rate indicates that the
+tolerance ladder is over-spaced: adjacent chains are too different in tolerance
+to exchange efficiently.
+
+\subsection{CLI Invocation and YAML Configuration}
+
+\pt{} is exposed via the \texttt{--search parallel-tempering} flag:
+\begin{verbatim}
+redist state --state TX --year 2020 \
+  --search parallel-tempering \
+  --pt-replicas 4 \
+  --pt-swap-interval 10 \
+  --pt-cold-tol 0.005 \
+  --pt-hot-tol 0.05 \
+  --seeds 1000 \
+  --percentile 0.0
+\end{verbatim}
+
+YAML configuration:
+\begin{verbatim}
+algorithm:
+  structure: ratio-optimal
+  weights: geographic
+  search: parallel-tempering
+  pt_replicas: 4
+  pt_swap_interval: 10
+  pt_cold_tolerance: 0.005
+  pt_hot_tolerance: 0.05
+  percentile: 0.0
+\end{verbatim}
+
+\subsection{Audit Chain}
+
+Every run appends the following fields to \texttt{runs/\{label\}/\{year\}/index.json}:
+\begin{verbatim}
+"search": "parallel-tempering",
+"n_replicas": 4,
+"swap_interval": 10,
+"cold_tolerance": 0.005,
+"hot_tolerance": 0.05,
+"percentile": 0.0,
+"base_seed": 12345678,
+"steps": 1000,
+"swap_acceptance_rate": 0.21,
+"cold_chain_acceptance_rate": 0.44,
+"selected_step": 847,
+"replica_seed_formula": "SHA-256('PT_REPLICA_' || r:u32le || '_' || s:u64le || '_' || b:u64le)",
+"swap_seed_formula":    "SHA-256('PT_SWAP_'    || i:u32le || '_' || s:u64le || '_' || b:u64le)"
+\end{verbatim}
+
+The field \texttt{selected\_step} is the \emph{rank} of the returned plan in
+the cold chain's EC-sorted record list ($0 =$ minimum EC), not a temporal step
+index.
+An auditor who re-runs the chain with the same \texttt{base\_seed} collects all
+cold chain records, sorts by (EC ASC, step ASC), and confirms that the plan at
+rank \texttt{selected\_step} matches the submitted plan.
+
+\subsection{Computational Cost}
+
+\pt{} costs $N_{\mathrm{replicas}} \times T$ \fr{} steps plus
+$\lfloor T / \mathtt{swap\_interval} \rfloor \times (N_{\mathrm{replicas}}-1)$
+swap evaluations.
+Each swap evaluation requires computing $\EC$ for two chain states, which costs
+$O(|E|)$ per plan.
+In practice, $\EC$ can be maintained incrementally across \fr{} steps so that
+the per-swap cost is $O(1)$ (only the boundary edges of the changed district
+pairs need updating).
+The dominant cost is the $N_{\mathrm{replicas}} \times T$ \fr{} steps, which is
+$N$ times the cost of a single-chain run.
+For $N=4$, the wall-clock cost is approximately $4\times$ the baseline single-chain
+run time (assuming serial chain execution); with parallel execution via Rayon,
+the wall-clock cost approaches the baseline (open question, noted in
+Section~\ref{sec:conclusion}).

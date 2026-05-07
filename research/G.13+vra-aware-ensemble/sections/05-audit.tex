@@ -1,0 +1,138 @@
+\section{Audit Chain and Legal Properties}
+\label{sec:audit}
+
+\subsection{The Audit Chain Record}
+
+Every \vr{} run appends a structured record to
+\texttt{runs/\{label\}/\{year\}/index.json}:
+
+\begin{verbatim}
+{
+  "search": "vra-recom",
+  "forest_steps": 1000,
+  "percentile": 0.0,
+  "base_seed": 12345678,
+  "vap_threshold": 0.50,
+  "protected_districts": [1, 12],
+  "steps_taken": 1000,
+  "steps_accepted": 412,
+  "vra_rejections": 231,
+  "vra_rejection_rate": 0.23,
+  "mh_rejections": 357,
+  "selected_step": 291,
+  "forward_seed_formula":
+    "SHA-256('FR_FORWARD_'||step:u64le||'_'||0u32le||'_'||base_seed:u64le)",
+  "reverse_seed_formula":
+    "SHA-256('FR_REVERSE_'||step:u64le||'_'||0u32le||'_'||base_seed:u64le)"
+}
+\end{verbatim}
+
+The record contains all information needed to independently reproduce the run:
+the base seed, the forward/reverse seed derivation formulas, the protected
+district list, and the exact step counts.
+The accounting identity
+$\text{steps\_accepted} + \text{vra\_rejections} + \text{mh\_rejections} =
+\text{steps\_taken}$ is verifiable from the record without re-running the chain.
+
+\subsection{Auditor Verification Protocol}
+
+An auditor---a court-appointed expert, opposing counsel, or an independent
+researcher---can verify any \vr{} run using only the public audit record:
+
+\begin{enumerate}
+  \item \textbf{Seed derivation.}
+        Re-derive all forward and reverse seeds from \texttt{base\_seed} using
+        the formula in the record.
+        These are deterministic functions of \texttt{base\_seed} and the step
+        index; no other state is required.
+
+  \item \textbf{Proposal replay.}
+        Run a \fr{} chain (no VRA checking) with the same \texttt{base\_seed}.
+        Because \vr{} inherits \fr{}'s seed derivation, the proposal at each
+        step is identical in both chains.
+        The auditor can identify exactly which steps \vr{} accepted, which
+        it rejected via MH, and which it rejected via VRA.
+
+  \item \textbf{VRA verification.}
+        For each step accepted by \vr{}, verify that all districts in
+        \texttt{protected\_districts} have minority VAP $\geq$
+        \texttt{vap\_threshold} under the accepted plan.
+        This is a straightforward computation from the accepted plan
+        assignment and the public census VAP data.
+
+  \item \textbf{Step count verification.}
+        Confirm that the counts in the record satisfy the accounting identity.
+        Confirm that the plan at \texttt{selected\_step} (the $p$-th percentile
+        of the accepted plans by EC) matches the submitted plan.
+\end{enumerate}
+
+This protocol does not require access to the redist binary or any proprietary
+code: only the census data, the SHA-256 implementation, and arithmetic are
+needed.
+The auditability property follows directly from the seed inheritance and the
+determinism of the algorithm.
+
+\subsection{Legal Properties}
+
+\paragraph{Conditional distribution correctness.}
+The target distribution of \vr{} is the conditional distribution over
+$\Pi_{\mathrm{vra}}(G, k, \Prot)$: valid plans in which every protected
+district has minority VAP $\geq \theta$.
+By Proposition~\ref{prop:vra-invariant}, VRA compliance is a chain invariant.
+By the \fr{} expected detailed balance theorem~\citep{dellaLibera2026forestRecom},
+the chain's stationary distribution on $\Pi_{\mathrm{vra}}$ is the
+conditional uniform distribution restricted to the VRA-compliant sub-space,
+in the expected-detailed-balance sense.
+
+\paragraph{Reference plan matching.}
+The protected set $\Prot$ is derived from the \emph{initial plan} $\pi_0$,
+not from the current chain state.
+This matches the legal standard: the obligation is to preserve the
+majority-minority districts that appear in the submitted plan.
+Courts and expert witnesses can confirm that \texttt{protected\_districts}
+in the audit record matches the district IDs of the majority-minority districts
+in the submitted plan, closing the loop between the algorithmic protection
+and the legal requirement.
+
+\paragraph{Relationship to VRASection.}
+\vraSection{} and \vr{} are both necessary for a complete VRA-compliant
+litigation analysis:
+\begin{itemize}
+  \item \vraSection{} generates the submitted plan: a valid plan with
+        majority-minority districts.
+  \item \vr{} generates the comparison ensemble: alternative valid plans
+        that also preserve those districts.
+\end{itemize}
+Using only \vraSection{} without \vr{} provides a single plan but no ensemble
+context.
+Using \vr{} without \vraSection{} risks starting from a non-compliant plan,
+causing an initial burn-in period before the chain reaches the compliant
+sub-space (which, by Proposition~\ref{prop:vra-invariant}, it can never leave
+once the initial plan is non-compliant---since the VRA check rejects transitions
+that would \emph{reduce} VAP below threshold, but cannot enforce compliance
+on plans already below threshold).
+The recommended composite is:
+
+\begin{verbatim}
+structure: ratio-optimal-vra   # VRASection: compliant starting plan
+weights: vra-aligned           # load minority VAP weights
+search: vra-recom              # VraRecomChain: compliant ensemble
+vra_threshold: 0.50
+\end{verbatim}
+
+\subsection{Warning: Empty Protected Set}
+
+If no district in the initial plan has minority VAP $\geq \theta$, the CLI
+emits:
+
+\begin{verbatim}
+WARNING: VRA-aware chain constructed with 0 protected districts --
+VRA enforcement is a no-op. Check --vra-threshold or use
+--weights-override vra-aligned to produce an initial VRA-compliant plan.
+\end{verbatim}
+
+This warning is critical for legal use: a practitioner who inadvertently
+supplies a non-VRA-aligned initial plan will receive an ensemble that is
+indistinguishable from an unconstrained \fr{} run.
+The warning is unconditional (not suppressed by \texttt{--quiet}) to prevent
+silent misuse.

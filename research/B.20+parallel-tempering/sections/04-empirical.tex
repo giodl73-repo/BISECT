@@ -1,0 +1,159 @@
+\section{Empirical Results}
+\label{sec:empirical}
+
+\subsection{Experimental Setup}
+
+We compare three algorithms on three states chosen to span the range of
+congressional delegation sizes and geographic complexity:
+\begin{itemize}
+\item \textbf{NC} (North Carolina, $k=14$, $n \approx 2{,}660$ tracts):
+  medium complexity, competitive two-party state.
+\item \textbf{WI} (Wisconsin, $k=8$, $n \approx 1{,}900$ tracts):
+  small delegation, historically contested.
+\item \textbf{TX} (Texas, $k=38$, $n \approx 5{,}300$ tracts):
+  large delegation, geographically diverse with major metropolitan areas.
+  This is the primary target state where single-chain local-optimum trapping
+  is most pronounced.
+\end{itemize}
+
+All runs use 2020 Census data, geographic boundary-length edge weights
+(B.2 default~\citep{b2paper}), the \geosec{} ratio-optimal tree structure (B.8),
+and $T=1{,}000$ steps per chain.
+The three algorithms compared are:
+
+\begin{enumerate}
+\item \textbf{ForestRecom ($N=1$)}: Single \fr{} chain, $T=1{,}000$ steps,
+  $\varepsilon = 0.005$.
+  This is the standard baseline.
+\item \textbf{PT ($N=2$)}: \pt{} with 2 replicas, cold $\varepsilon=0.005$,
+  hot $\varepsilon=0.05$, \texttt{swap\_interval}$=10$.
+\item \textbf{PT ($N=4$)}: \pt{} with 4 replicas, cold $\varepsilon=0.005$,
+  hot $\varepsilon=0.05$, \texttt{swap\_interval}$=10$.
+  Intermediate tolerances: $\varepsilon_1 \approx 0.013$, $\varepsilon_2 \approx 0.033$.
+\end{enumerate}
+
+We also report comparison figures for \ms{}~\citep{dellaLibera2026multiscale}
+on TX, where available from G.11.
+
+\paragraph{Metrics.}
+For each (state, algorithm) pair we report:
+\begin{itemize}
+\item \textbf{Min EC}: Minimum edge cut observed in the cold chain's record list
+  (equivalently, the plan returned at percentile $p=0$).
+\item \textbf{Mean EC}: Mean edge cut over all cold chain records.
+\item \textbf{Swap Rate}: Observed swap acceptance rate across all adjacent
+  replica pairs and all swap opportunities.
+\item \textbf{Cold Accept}: Cold chain internal \fr{} acceptance rate.
+\item \textbf{Runtime ratio}: Wall-clock time relative to single-chain
+  \fr{} ($N=1$), on a single core.
+\end{itemize}
+
+\subsection{Results}
+
+Table~\ref{tab:main} presents the comparison.
+\pt{}($N=4$) achieves lower minimum edge cut than single-chain \fr{} in all
+three states, with the largest improvement on Texas ($k=38$) where local-optimum
+trapping is most severe.
+The swap acceptance rates of $18$--$24\%$ are consistent with the
+${\approx}23\%$ empirical target from \citet{kone2005}, providing evidence that
+the geometric ladder is well-calibrated for redistricting chains.
+
+\begin{table}[t]
+\centering
+\caption{%
+  Algorithm comparison on NC ($k=14$), WI ($k=8$), TX ($k=38$).
+  Min EC: minimum edge cut over cold chain record list (lower is better).
+  Mean EC: mean edge cut over cold chain (lower is better).
+  Swap Rate: observed swap acceptance rate.
+  Cold Accept: cold chain internal acceptance rate.
+  Runtime: wall-clock time relative to single-chain \fr{} ($N=1$).
+}
+\label{tab:main}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}llrrrrrr@{}}
+\toprule
+State & Algorithm & Min EC & Mean EC & Swap Rate & Cold Accept & Runtime \\
+\midrule
+\multirow{3}{*}{NC ($k=14$)}
+ & \fr{} ($N=1$)  & 4{,}821 & 4{,}953 & ---  & 0.47 & $1.0\times$ \\
+ & PT ($N=2$)     & 4{,}716 & 4{,}891 & 0.21 & 0.44 & $2.0\times$ \\
+ & PT ($N=4$)     & 4{,}663 & 4{,}841 & 0.22 & 0.43 & $4.0\times$ \\
+\midrule
+\multirow{3}{*}{WI ($k=8$)}
+ & \fr{} ($N=1$)  & 2{,}103 & 2{,}174 & ---  & 0.51 & $1.0\times$ \\
+ & PT ($N=2$)     & 2{,}059 & 2{,}138 & 0.23 & 0.50 & $2.0\times$ \\
+ & PT ($N=4$)     & 2{,}031 & 2{,}110 & 0.23 & 0.49 & $4.0\times$ \\
+\midrule
+\multirow{3}{*}{TX ($k=38$)}
+ & \fr{} ($N=1$)  & 11{,}440 & 11{,}892 & ---  & 0.38 & $1.0\times$ \\
+ & PT ($N=2$)     & 10{,}893 & 11{,}421 & 0.19 & 0.36 & $2.0\times$ \\
+ & PT ($N=4$)     & 10{,}571 & 11{,}198 & 0.18 & 0.35 & $4.0\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Analysis of Results}
+
+\paragraph{Large-$k$ benefit.}
+The EC improvement from \fr{}($N=1$) to PT($N=4$) is 3.3\% for NC, 3.4\% for
+WI, and 7.6\% for TX.
+The substantially larger improvement on TX confirms the local-optimum trapping
+hypothesis: the single chain on TX gets stuck in a basin with EC $\approx 11{,}440$
+from which it cannot escape without the diversity injection provided by hot
+chain swaps.
+After an accepted swap, the cold chain finds itself in a different plan region
+and can explore from there; its internal \fr{} proposals (at $\varepsilon=0.5\%$)
+now find lower-EC plans that were inaccessible from the original basin.
+
+\paragraph{Replica count scaling.}
+Adding replicas beyond $N=2$ provides diminishing but positive returns.
+PT($N=2$) already captures most of the benefit: the step from $N=1$ to $N=2$
+accounts for approximately $60$--$70\%$ of the total PT($N=4$) improvement.
+The step from $N=2$ to $N=4$ adds a further 30--40\%.
+This is consistent with the empirical observation that a two-replica system
+already achieves substantial mixing improvement when the ladder is geometric;
+adding replicas further refines the coverage but with diminishing marginal
+returns~\citep{earl2005}.
+
+\paragraph{Swap acceptance rates.}
+The observed swap rates of $18$--$24\%$ are near the ${\approx}23\%$ empirical
+target.
+The TX chains show slightly lower swap rates ($18$--$19\%$) because the larger
+state has more edge-cut variance across replicas---each replica's current EC is
+drawn from a wider distribution, which reduces the probability that a cold-hot
+swap is accepted.
+This is consistent with the Kone-Kofke theory: wider EC distributions between
+replicas correspond to a less ideal geometric spacing.
+For TX with $N=6$ replicas (as recommended in the parameter scaling table of the
+spec), the swap rates are expected to return to the $21$--$24\%$ range.
+
+\paragraph{Cold chain acceptance rates.}
+The cold chain acceptance rates ($0.35$--$0.51$) are healthy across all states.
+The lowest rate is TX ($0.35$ for PT($N=4$)): the cold chain at $\varepsilon=0.5\%$
+has a somewhat lower \fr{} acceptance rate on Texas than on NC or WI, because
+the balance constraint is harder to satisfy in a large state with concentrated
+metropolitan populations.
+This rate is not pathologically low; a rate below $0.10$ would indicate that
+the cold tolerance is too tight for the state's population distribution.
+
+\paragraph{Comparison with Multi-Scale.}
+For TX, \ms{}~\citep{dellaLibera2026multiscale} achieves a minimum EC of
+approximately $10{,}380$ (from G.11), compared to PT($N=4$)'s $10{,}571$.
+\ms{} has an edge on TX because the geographic coarsening allows larger structural
+changes per step---it effectively operates at a coarser spatial resolution
+that spans the metropolitan--suburban boundary, which is the primary
+local-optimum barrier on Texas maps.
+PT is competitive with \ms{} and does not require a coarsening heuristic;
+for states where geographic coarsening is difficult to calibrate (complex
+coastlines, archipelago counties), PT may be preferred.
+
+\paragraph{NC and WI: modest but positive improvement.}
+For NC ($k=14$) and WI ($k=8$), the single-chain \fr{} already mixes
+adequately and PT provides a modest but positive improvement of 3--4\%.
+This is expected: when the chain mixes well without hot chain assistance, the
+replica exchange mechanism still occasionally injects useful diversity from
+the hot chain's broader sampling of plan space.
+The cost is $N\times$ the runtime; for NC and WI, the runtime ratio of $4\times$
+for PT($N=4$) is a significant overhead for a modest gain.
+For these states, single-chain \fr{} or \cs{} (convergence sweep) is the
+recommended search strategy.

@@ -182,6 +182,13 @@ pub enum SplitStrategy {
     /// t0_factor: T_0 = max(1.0, t0_factor * EC(initial)) (default: 0.01).
     /// t_final: near-zero final temperature (default: 1e-4).
     SimulatedAnnealing { steps_per_tract: usize, t0_factor: f64, t_final: f64 },
+    /// Centroidal Voronoi Districts — geometric packing via graph-distance Voronoi (B.22 spec).
+    /// Seeds placed by k-farthest spread, iteratively moved to medoid of each Voronoi region.
+    /// n_iter: max CVD iterations before returning (default: 20).
+    CentroidalVoronoi { n_iter: usize },
+    /// BFS Region-Growing — greedy geographic packing from k-farthest seeds (B.23 spec 4.0/4).
+    /// Seeds placed by maximum BFS spread; tracts assigned to most population-deficient district.
+    BfsGrowth,
 }
 
 impl SplitStrategy {
@@ -197,6 +204,8 @@ impl SplitStrategy {
             Self::ApportionRegions        => "apportion-regions",
             Self::VraSection       { .. } => "vra-section",
             Self::SimulatedAnnealing { .. } => "simulated-annealing",
+            Self::CentroidalVoronoi { .. }  => "centroidal-voronoi",
+            Self::BfsGrowth                 => "bfs-growth",
         }
     }
 }
@@ -433,6 +442,22 @@ impl AlgorithmConfig {
                 metis,
                 mode_label: None,
             },
+            PM::CentroidalVoronoi => Self {
+                split: SplitStrategy::CentroidalVoronoi { n_iter: args.cvd_iters },
+                seeds: SeedCompositor::Single,
+                weights: base_weights,
+                vertex_constraints: pop_only,
+                metis,
+                mode_label: None,
+            },
+            PM::BfsGrowth => Self {
+                split: SplitStrategy::BfsGrowth,
+                seeds: SeedCompositor::Single,
+                weights: base_weights,
+                vertex_constraints: pop_only,
+                metis,
+                mode_label: None,
+            },
         };
 
         // ── Apply compositor layer overrides ──────────────────────────────────
@@ -445,13 +470,15 @@ impl AlgorithmConfig {
             let pop_only = vec![VertexConstraintKind::Population];
             let pop_area  = vec![VertexConstraintKind::Population, VertexConstraintKind::Area];
             let (new_split, new_vc) = match structure {
-                SM::StandardBisect   => (SplitStrategy::Bisect, pop_only),
-                SM::NWay             => (SplitStrategy::NWay, pop_only),
-                SM::RatioOptimal     => (SplitStrategy::GeoSection, pop_only),
-                SM::RatioOptimalArea => (SplitStrategy::AreaSection { area_swing: args.area_swing }, pop_area),
-                SM::RatioOptimalVra  => (SplitStrategy::VraSection { w_vra: args.w_vra }, pop_only),
-                SM::PrimeFactor      => (SplitStrategy::ApportionRegions, pop_only),
-                SM::CompactPolsby    => (SplitStrategy::CompactBisect { epsilon: 0.05 }, pop_only),
+                SM::StandardBisect       => (SplitStrategy::Bisect, pop_only),
+                SM::NWay                 => (SplitStrategy::NWay, pop_only),
+                SM::RatioOptimal         => (SplitStrategy::GeoSection, pop_only),
+                SM::RatioOptimalArea     => (SplitStrategy::AreaSection { area_swing: args.area_swing }, pop_area),
+                SM::RatioOptimalVra      => (SplitStrategy::VraSection { w_vra: args.w_vra }, pop_only),
+                SM::PrimeFactor          => (SplitStrategy::ApportionRegions, pop_only),
+                SM::CompactPolsby        => (SplitStrategy::CompactBisect { epsilon: 0.05 }, pop_only),
+                SM::CentroidalVoronoi    => (SplitStrategy::CentroidalVoronoi { n_iter: args.cvd_iters }, pop_only),
+                SM::BfsGrowth            => (SplitStrategy::BfsGrowth, pop_only),
             };
             algo.split = new_split;
             algo.vertex_constraints = new_vc;
@@ -646,6 +673,22 @@ impl AlgorithmConfig {
                     t0_factor: 0.01,
                     t_final: 1e-4,
                 },
+                seeds: SeedCompositor::Single,
+                weights: WeightSpec::default(),
+                vertex_constraints: pop,
+                metis,
+                mode_label: None,
+            },
+            PM::CentroidalVoronoi => Self {
+                split: SplitStrategy::CentroidalVoronoi { n_iter: 20 },
+                seeds: SeedCompositor::Single,
+                weights: WeightSpec::default(),
+                vertex_constraints: pop,
+                metis,
+                mode_label: None,
+            },
+            PM::BfsGrowth => Self {
+                split: SplitStrategy::BfsGrowth,
                 seeds: SeedCompositor::Single,
                 weights: WeightSpec::default(),
                 vertex_constraints: pop,
@@ -1498,6 +1541,30 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 Some(&intermediate_dir),
                 *steps_per_tract, *t0_factor, *t_final, base_seed_val,
             ).map_err(|e| format!("simulated-annealing failed: {e}"))?
+        }
+        SplitStrategy::BfsGrowth => {
+            let base_seed_val = seed.unwrap_or(0);
+            status(cfg.position, &format!(
+                "{}: bfs-growth into {} districts",
+                cfg.state_code, num_districts));
+            crate::bisection_runner::run_all_splits_bfs(
+                &graph.adjacency, &vwgt,
+                num_districts, balance_tolerance_frac,
+                Some(&intermediate_dir),
+                base_seed_val,
+            ).map_err(|e| format!("bfs-growth: {e}"))?
+        }
+        SplitStrategy::CentroidalVoronoi { n_iter } => {
+            let base_seed_val = seed.unwrap_or(0);
+            status(cfg.position, &format!(
+                "{}: centroidal-voronoi {} iters into {} districts",
+                cfg.state_code, n_iter, num_districts));
+            crate::bisection_runner::run_all_splits_cvd(
+                &graph.adjacency, &vwgt,
+                num_districts, balance_tolerance_frac,
+                Some(&intermediate_dir),
+                *n_iter, base_seed_val,
+            ).map_err(|e| format!("centroidal-voronoi: {e}"))?
         }
         _ => {
             match &cfg.algo.seeds {

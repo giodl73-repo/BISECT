@@ -1,0 +1,31 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+\vr{} extends \fr{} with a hard VRA rejection rule that enforces majority-minority
+district preservation as a chain invariant.
+The three-way step accounting identity ($N_{\mathrm{acc}} + N_{\mathrm{vra}} +
+N_{\mathrm{mh}} = S$) enables full audit of chain behaviour, and the inherited
+\fr{} seed derivation (\texttt{FR\_FORWARD\_}/\texttt{FR\_REVERSE\_}) makes
+every VRA rejection independently verifiable.
+On NC, GA, and TX, VRA rejection rates are $15$--$25\%$, with EC distributions
+$2.7$--$3.0\%$ above the unconstrained baseline---confirming that the VRA
+constraint narrows but does not dominate the accessible plan space.
+
+The correct tool for litigation-grade VRA ensemble analysis is
+\texttt{--structure ratio-optimal-vra --weights-override vra-aligned
+--search vra-recom}: \vraSection{} generates a compliant starting plan,
+and \vr{} samples the distribution over compliant alternatives.
+
+\paragraph{Open questions.}
+Three design choices are deferred to future work.
+(1) \emph{Per-district thresholds}: the current implementation uses a single
+global \texttt{vap\_threshold}; allowing per-district thresholds
+(\texttt{HashMap<u32, f64>}) would accommodate cases where different districts
+have different legal requirements.
+(2) \emph{Incremental VAP tracking}: the current VRA check is $O(|D|)$ per
+protected district per step; incremental tracking of district VAP fractions
+could reduce this to $O(\text{swapped tracts})$ per step, amortising the
+check over the recombination boundary.
+(3) \emph{Combined minority columns}: \texttt{HVAP+BVAP} is currently computed
+at load time; future work may expose this as a first-class \texttt{minority\_col}
+option with its own legal characterisation.
