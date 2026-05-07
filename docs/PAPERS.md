@@ -66,9 +66,9 @@ Ensemble methods: GerryChain/ReCom comparison, diagnostics, mixing time. How doe
 | G.6 | Short-Burst Optimization for Minimum-Edge-Cut Redistricting | [PDF](papers/G.6+short-burst.pdf) | **Accepted** 3.0/4 — `--search short-burst` |
 | G.7 | Sequential Monte Carlo for Calibrated Redistricting Ensembles | [PDF](papers/G.7+smc-redistricting.pdf) | First draft — `redist-smc` crate implemented |
 | G.8 | Flip Proposals for Local Sensitivity Analysis | [PDF](papers/G.8+flip-proposals.pdf) | **Accepted** 3.4/4 — `--search flip` |
-| G.9 | Forest ReCom: Reversible Recombination via Spanning Forest Sampling | [PDF](papers/G.9+forest-recom.pdf) | First draft — `--search forest-recom` |
-| G.10 | Merge-Split MCMC: Explicit Reversibility via Two-Tree Acceptance Ratio | [PDF](papers/G.10+merge-split.pdf) | First draft — `--search merge-split` |
-| G.11 | Multi-scale MCMC: Hierarchical Mixing for Large-k Redistricting | [PDF](papers/G.11+multiscale-mcmc.pdf) | First draft — `--search multiscale` |
+| G.9 | Forest ReCom: Reversible Recombination via Spanning Forest Sampling | [PDF](papers/G.9+forest-recom.pdf) | **Accepted** 3.4/4 — `--search forest-recom` |
+| G.10 | Merge-Split MCMC: Explicit Reversibility via Two-Tree Acceptance Ratio | [PDF](papers/G.10+merge-split.pdf) | **Accepted** 3.2/4 — `--search merge-split` |
+| G.11 | Multi-scale MCMC: Hierarchical Mixing for Large-k Redistricting | [PDF](papers/G.11+multiscale-mcmc.pdf) | **Accepted** 3.0/4 — `--search multiscale` |
 | G.12 | Short-Burst with Calibrated Chains | — | Spec accepted; `--search short-burst-forest/merge-split` implemented |
 
 **Key finding (G.1, real data):** The bisection plan sits at the compactness extremum — 0.1–0.7th percentile in WI/GA/PA/CA. NC is 50th percentile: geographic constraint makes the minimum-cut plan coincide with the ensemble median.
