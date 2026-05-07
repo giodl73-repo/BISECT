@@ -231,7 +231,7 @@ venv/
 
 
 # Rust build artifacts
-redist/target/
+target/
 redist/.cargo/config.toml
 redist/**/*.so
 redist/**/*.pyd
@@ -245,3 +245,6 @@ run_*.log
 *_house_*.log
 *_tract.log
 *_bg.log
+target/
+*.gpkg
+*.geojson
