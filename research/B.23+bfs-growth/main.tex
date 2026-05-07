@@ -1,0 +1,114 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+
+%% SIAM-adjacent style: numbered sections, upright headings
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+%% Spacing
+\setstretch{1.4}
+
+%% Algorithm macros
+\newcommand{\bfsg}{\textsc{BfsGrowth}}
+\newcommand{\cvd}{\textsc{CVD}}
+\newcommand{\metis}{\textsc{Metis}}
+\newcommand{\ec}{\ensuremath{\mathrm{EC}}}
+\newcommand{\pp}{\ensuremath{\mathrm{PP}}}
+\newcommand{\sa}{\textsc{SimulatedAnnealing}}
+\newcommand{\be}{\textsc{BisectionEnsemble}}
+\newcommand{\ar}{\textsc{ApportionRegions}}
+\newcommand{\geosec}{\textsc{GeoSection}}
+\newcommand{\areasec}{\textsc{AreaSection}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\cs}{\textsc{ConvergenceSweep}}
+
+%% Math shorthands
+\newcommand{\ECnorm}{\mathrm{EC}_{\mathrm{norm}}}
+\newcommand{\EC}{\mathrm{EC}}
+\newcommand{\PPmean}{\overline{\mathrm{PP}}}
+
+%% -----------------------------------------------------------------------
+
+\title{%
+  \textbf{BFS Region-Growing: Greedy Geographic District Packing}\\
+  \textbf{from $k$-Farthest Seeds}\\[0.8em]
+  \normalsize\textit{B.23 --- Algorithm Design / Geometric Structure}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+We introduce \bfsg{}, the simplest redistricting algorithm: place $k$ seeds
+at maximally spread locations via BFS-farthest selection, then repeatedly
+assign each unassigned tract to the adjacent district with the greatest
+population deficit.
+The algorithm requires only the adjacency graph and population weights---no
+temperature schedule, no iteration count, no distance metric.
+A single pass of the priority queue produces a contiguous assignment;
+contiguity is guaranteed by induction on the BFS frontier.
+Post-hoc boundary-swap rebalancing (200 iterations) brings all districts
+within the standard $\pm 0.5\%$ tolerance.
+
+Total runtime is $O(n \log n)$ per bisection node, matching \metis{} and
+substantially faster than simulated annealing (B.19) or CVD (B.22).
+Empirical comparison on NC ($k=14$), WI ($k=8$), and TX ($k=38$) shows
+that \bfsg{} achieves lower compactness (Polsby-Popper) than \metis{} or
+\cvd{} while matching them in runtime---confirming its role as the
+\emph{geometric floor}: the compactness achievable by pure proximity-based
+packing without any optimisation objective.
+
+\bfsg{} is useful as: (1) a fast warm-start for MCMC chains
+(\recom{}/Forest ReCom), replacing \metis{} when a geographically
+structured initial plan is preferred; (2) the ``simplest geographic
+partition'' baseline for evaluating how much optimisation algorithms
+add beyond basic geographic proximity; and (3) a legal-argumentation
+tool demonstrating that the submitted plan outperforms the most
+primitive contiguous partition.
+Implementation: \texttt{--structure bfs-growth}.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-background}
+\input{sections/03-algorithm}
+\input{sections/04-comparison}
+\input{sections/05-warmstart}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,307 @@
+\section{The BFS Region-Growing Algorithm}
+\label{sec:algorithm}
+
+\subsection{Notation and Subgraph Setup}
+
+Let $G_v = (V_v, E_v, w_v)$ denote the subgraph at bisection tree node $v$,
+where $V_v$ is the set of census tracts assigned to the subtree rooted at $v$,
+$E_v \subseteq E$ is the induced edge set, and $w_v$ inherits geographic
+boundary-length weights from the parent graph (B.2 default).
+Let $n = |V_v|$ be the number of tracts.
+Let $p_i$ denote the population of tract $i \in V_v$, and let
+$P_v = \sum_{i \in V_v} p_i$ be the total subgraph population.
+For the bisection case, $k = 2$; the algorithm generalises directly to
+$k > 2$ by growing $k$ regions simultaneously.
+
+A \emph{bisection} at node $v$ is a partition $(L, R)$ of $V_v$ satisfying
+the population-balance constraint:
+\[
+  \left|\sum_{i \in L} p_i - \frac{P_v}{2}\right|
+  \;\le\;
+  \delta \cdot \frac{P_v}{2},
+\]
+where $\delta = 0.005$ is the $\pm 0.5\%$ federal tolerance.
+
+\subsection{Seed Derivation}
+
+All randomness in \bfsg{} enters through seed selection.
+The seed is derived deterministically from the global base seed:
+
+\begin{definition}[BFS Growth Seed]
+\label{def:bfs-seed}
+Let $\mathtt{base\_seed}$ be the unsigned 64-bit integer global seed.
+The \emph{BFS Growth seed} is
+\[
+  s_{\mathrm{bfs}} = \mathrm{first8}\bigl(
+    \mathrm{SHA\text{-}256}(
+      \texttt{"BFS\_SEED\_"} \;\|\; \mathrm{le8}(\mathtt{base\_seed})
+    )
+  \bigr),
+\]
+where $\mathrm{le8}(x)$ encodes $x$ as 8 little-endian bytes and
+$\mathrm{first8}(h)$ reads the first 8 bytes of hash $h$ as a
+little-endian unsigned 64-bit integer.
+The derived PRNG is $\mathrm{SmallRng::seed\_from\_u64}(s_{\mathrm{bfs}})$.
+\end{definition}
+
+The domain-separation prefix \texttt{"BFS\_SEED\_"} embeds algorithm
+identity in the seed derivation.
+A test asserts that the prefix constant in source equals exactly
+\texttt{"BFS\_SEED\_"} and that $s_{\mathrm{bfs}}(0)$ equals a
+hard-coded expected value, preventing silent seed-compatibility drift.
+Same $\mathtt{base\_seed} \Rightarrow$ identical seed placement
+$\Rightarrow$ identical BFS assignment $\Rightarrow$ identical final plan.
+
+\subsection{Seed Selection: k-Farthest via BFS}
+
+\begin{definition}[k-Farthest Seeds]
+\label{def:seeds}
+Given sorted tract indices $\mathrm{sorted} = (i_0, i_1, \ldots, i_{n-1})$
+and derived PRNG $\mathrm{rng}$:
+\begin{enumerate}
+\item \textbf{Seed~0.} Sample $\mathrm{seed}_0$ from $V_v$ by
+  population-weighted sampling using $\mathrm{rng}$.
+  Tracts with larger population have proportionally higher probability
+  of being selected as seed~0.
+
+\item \textbf{Seeds $1, \ldots, k-1$.} For $j = 1, \ldots, k-1$:
+  compute BFS distances $\mathrm{dist}_i = \min_{l < j} d_{\mathrm{BFS}}(i, \mathrm{seed}_l)$
+  for all unselected tracts $i$.
+  Set $\mathrm{seed}_j = \arg\max_i \mathrm{dist}_i$.
+\end{enumerate}
+\end{definition}
+
+The BFS-farthest selection ensures that seeds are maximally spread in
+the graph topology.
+For $k = 2$, seed~1 is the tract farthest from seed~0 in BFS hops,
+which is the tract at the opposite end of the state's geographic extent.
+
+\begin{remark}
+Population-weighting for seed~0 reflects the observation that
+high-population areas (cities, suburban cores) are more likely to
+require splitting in the bisection tree.
+Starting from a high-population region ensures that the first district's
+growth immediately encounters the densest part of the graph, where
+boundary decisions are most consequential.
+If seed~0 were placed in a low-population rural area, the growing district
+would accumulate many low-population tracts before reaching the urban
+core, at which point the opposing district would already control most of
+the dense tracts.
+\end{remark}
+
+\subsection{BFS Growth Phase}
+
+\begin{definition}[Priority Queue Growth]
+\label{def:growth}
+Given seeds $(\mathrm{seed}_0, \ldots, \mathrm{seed}_{k-1})$
+and current district populations $(P_0, \ldots, P_{k-1})$ initialised to
+$(p_{\mathrm{seed}_0}, \ldots, p_{\mathrm{seed}_{k-1}})$:
+\begin{enumerate}
+\item Initialise assignment $A: V_v \to \{0, \ldots, k-1, \bot\}$ with
+  $A(\mathrm{seed}_d) = d$ for $d = 0, \ldots, k-1$ and $A(i) = \bot$
+  for all other tracts.
+
+\item Initialise minimum-priority queue $\mathcal{Q}$ with entries
+  $(P_d, \mathrm{seed}_d\text{'s neighbours}, d)$ for each seed $d$,
+  where $P_d$ is the priority key.
+
+\item While $\mathcal{Q}$ is non-empty:
+  \begin{enumerate}
+  \item Pop $(P_d, \mathrm{tract}\; i, d) = \mathcal{Q}.\mathrm{pop\_min}()$.
+  \item If $A(i) \neq \bot$: skip (already assigned by another path).
+  \item Set $A(i) = d$; update $P_d \mathrel{+}= p_i$.
+  \item For each neighbour $j$ of $i$ with $A(j) = \bot$:
+    push $(P_d, j, d)$ to $\mathcal{Q}$.
+  \end{enumerate}
+\end{enumerate}
+\end{definition}
+
+The priority $P_d$ at the time of each push reflects the district's current
+population.
+Because population is monotonically non-decreasing as tracts are assigned,
+tracts pushed later for the same district have weakly higher priority keys,
+so older entries near a smaller district always appear earlier in the
+queue.
+This ensures that the emptiest district expands first.
+
+\subsection{Post-Hoc Rebalancing}
+
+The BFS growth phase produces a contiguous assignment but does not
+guarantee the $\pm 0.5\%$ population balance constraint.
+Population imbalance arises when the final few tracts assigned to a
+district push it over the ideal.
+A post-hoc boundary-swap rebalance corrects this:
+
+\begin{definition}[Rebalance]
+\label{def:rebalance}
+The rebalance phase performs up to \texttt{balance\_post\_iters} $= 200$
+boundary-swap iterations.
+At each iteration, a randomly selected boundary tract is moved from its
+current district to an adjacent district, if:
+(a) the move reduces the maximum deviation from ideal population, and
+(b) both districts remain non-empty and contiguous after the swap.
+The phase terminates early if all districts satisfy the balance constraint.
+\end{definition}
+
+The rebalance phase is identical to the boundary-swap logic used in the
+MultiScale structure-layer algorithm, ensuring consistency across the
+platform.
+
+\subsection{Contiguity Guarantee}
+
+\begin{proposition}[Contiguity by Construction]
+\label{prop:contiguity}
+Let $G_v$ be connected.
+The BFS growth phase (Definition~\ref{def:growth}) produces an assignment
+$A$ in which every district $d$ induces a connected subgraph.
+\end{proposition}
+
+\begin{proof}
+By induction on the number of tracts assigned to district $d$.
+
+\textbf{Base case.} After initialisation, district $d$ contains exactly
+$\{\mathrm{seed}_d\}$, which is trivially connected.
+
+\textbf{Inductive step.} Suppose district $d$ currently induces a connected
+subgraph $S_d$.
+The next tract $i$ assigned to $d$ is popped from $\mathcal{Q}$ with
+assignment label $d$; by Definition~\ref{def:growth} step~3(d),
+$i$ was pushed to $\mathcal{Q}$ because it is a neighbour of some tract
+$j \in S_d$ (specifically the tract that was assigned to $d$ when $i$ was
+first encountered).
+Therefore $i$ is adjacent to $j \in S_d$, and $S_d \cup \{i\}$ is
+connected.
+
+By induction, $S_d$ is connected at every stage of growth.
+After all tracts are assigned, each district is a connected subgraph.
+\end{proof}
+
+\begin{remark}
+The skip at step~3(b) (``already assigned'') is critical: it is possible
+for the same tract $i$ to appear in $\mathcal{Q}$ multiple times, each
+with a different district label, if $i$ is adjacent to tracts from
+multiple districts.
+The first pop assigns $i$ to the district whose frontier reached $i$
+first (i.e., the district with the lowest current population at the time
+of the push).
+Subsequent pops for $i$ are discarded.
+This does not break the contiguity argument because the proving induction
+only requires that the assigned tract is adjacent to some previously
+assigned tract in the same district---a condition guaranteed by the push
+at step~3(d).
+\end{remark}
+
+\subsection{Computational Complexity}
+
+\begin{proposition}[Runtime Complexity]
+\label{prop:complexity}
+Let $n = |V_v|$ and $m = |E_v|$.
+The \bfsg{} algorithm (seed selection + BFS growth + rebalance) runs in
+$O((n + m) \log n)$ time.
+For redistricting graphs, which are planar with $m = O(n)$, this simplifies
+to $O(n \log n)$.
+\end{proposition}
+
+\begin{proof}
+\textit{Seed selection.}
+Each BFS-farthest computation requires one BFS from all current seeds
+simultaneously, which costs $O(n + m)$.
+With $k$ seeds, the total seed selection cost is $O(k(n + m))$.
+For redistricting bisection $k = 2$; for larger $k$, $k \ll n$.
+
+\textit{BFS growth.}
+Each of the $n$ tracts is pushed to $\mathcal{Q}$ at most once per
+adjacent district (at most $\deg(i)$ times).
+Each push/pop is $O(\log n)$.
+Total: $O((n + m) \log n)$.
+
+\textit{Rebalance.}
+The rebalance phase performs at most 200 boundary-swap checks, each
+requiring a contiguity BFS $O(n + m)$.
+Total: $O(200(n + m)) = O(n + m)$.
+
+\textit{Overall.}
+$O((n + m) \log n) + O(n + m) = O((n + m) \log n)$.
+For planar $m = O(n)$: $O(n \log n)$.
+\end{proof}
+
+\begin{remark}
+The $O(n \log n)$ bound matches a single \metis{} call.
+Empirically, \bfsg{} is slightly faster than \metis{} in practice because
+\metis{}'s constant factors include memory allocation for the multilevel
+coarsening data structures, whereas \bfsg{}'s inner loop is a simple
+priority-queue operation with a single population accumulator per district.
+\end{remark}
+
+\subsection{Formal Pseudocode}
+
+Algorithm~\ref{alg:bfs} gives the complete \bfsg{} bisection procedure.
+
+\begin{algorithm}[t]
+\caption{\bfsg{}-\textsc{Bisect}($G_v$, $\mathtt{base\_seed}$, $\mathtt{balance\_post\_iters}$)}
+\label{alg:bfs}
+\begin{algorithmic}[1]
+\State $n \gets |V_v|$; \quad $P \gets \sum_{i \in V_v} p_i$ \Comment{total subgraph population}
+\State $s \gets \mathrm{BFS\text{-}Seed}(\mathtt{base\_seed})$ \Comment{Definition~\ref{def:bfs-seed}}
+\State $\mathrm{rng} \gets \mathrm{SmallRng::seed\_from\_u64}(s)$
+\State $\mathrm{seed}_0 \gets \mathrm{WeightedSample}(V_v,\; \{p_i\},\; \mathrm{rng})$
+       \Comment{population-weighted}
+\State $D_0 \gets \mathrm{BFS\text{-}Distances}(\mathrm{seed}_0,\; G_v)$
+\State $\mathrm{seed}_1 \gets \arg\max_{i \in V_v} D_0[i]$
+       \Comment{k-farthest}
+\State $A \gets [\bot;\; n]$; \quad
+       $A[\mathrm{seed}_0] \gets 0$; \quad $A[\mathrm{seed}_1] \gets 1$
+\State $\mathrm{cur}[0] \gets p_{\mathrm{seed}_0}$; \quad
+       $\mathrm{cur}[1] \gets p_{\mathrm{seed}_1}$
+       \Comment{current district populations}
+\State $\mathcal{Q} \gets \emptyset$ \Comment{min-heap keyed on cur[district]}
+\For{$d \in \{0, 1\}$}
+  \For{$j \in \mathrm{Neighbours}(\mathrm{seed}_d,\; G_v)$}
+    \If{$A[j] = \bot$}
+      \State $\mathcal{Q}.\mathrm{push}(\mathrm{cur}[d],\; j,\; d)$
+    \EndIf
+  \EndFor
+\EndFor
+\While{$\mathcal{Q} \neq \emptyset$}
+  \State $(\text{---},\; i,\; d) \gets \mathcal{Q}.\mathrm{pop\_min}()$
+  \If{$A[i] \neq \bot$} \textbf{continue} \EndIf \Comment{already assigned}
+  \State $A[i] \gets d$; \quad $\mathrm{cur}[d] \mathrel{+}= p_i$
+  \For{$j \in \mathrm{Neighbours}(i,\; G_v)$}
+    \If{$A[j] = \bot$}
+      \State $\mathcal{Q}.\mathrm{push}(\mathrm{cur}[d],\; j,\; d)$
+    \EndIf
+  \EndFor
+\EndWhile
+\State $A \gets \mathrm{Rebalance}(A,\; G_v,\; \{p_i\},\; 0.005,\; \mathtt{balance\_post\_iters})$
+\State \textbf{return} $(\{i : A[i] = 0\},\; \{i : A[i] = 1\})$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{CLI Invocation and Implementation}
+
+\bfsg{} bisection is exposed via the \texttt{--structure bfs-growth}
+flag in the \texttt{redist} binary.
+The full invocation for North Carolina is:
+
+\begin{verbatim}
+redist state --state NC --year 2020 --structure bfs-growth
+\end{verbatim}
+
+No additional structure-layer parameters are required.
+The \texttt{--balance-tolerance} flag (compositor-level) controls the
+rebalance phase tolerance (default $0.5\%$).
+The YAML configuration is:
+
+\begin{verbatim}
+algorithm:
+  structure: bfs-growth
+  weights: geographic
+  search: single
+  balance_tolerance: 0.5
+workers: 8
+years: ["2020"]
+\end{verbatim}
+
+When combined with \texttt{--search convergence --convergence-threshold 600},
+the SeedCompositor runs \cs{} over BFS growth bisections, providing
+multi-seed quality improvement.

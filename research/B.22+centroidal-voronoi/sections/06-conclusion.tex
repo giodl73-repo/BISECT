@@ -1,0 +1,110 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have introduced Centroidal Voronoi Districts (\cvd{}), a Structure-layer
+algorithm that assigns census tracts to district seeds by graph BFS distance
+and iterates seeds to the population-weighted graph-distance medoid of their
+assigned districts.
+\cvd{} is the discrete redistricting analogue of Lloyd's algorithm for
+optimal quantisation~\citep{lloyd1982,du1999}, adapted to weighted planar
+graphs via the graph-distance medoid as the centroid surrogate.
+
+\paragraph{Position in the B-series algorithm landscape.}
+\cvd{} is a geometric structure algorithm, complementing the graph-topology
+structure algorithms (\metis{}, \sa{}, \geosec{}, \areasec{}).
+The two families serve different purposes:
+\begin{itemize}
+\item \textbf{Graph-topology methods} (\metis{}, \sa{}): minimise boundary
+  length (edge cut), producing plans that follow roads, rivers, and county
+  boundaries.
+  Best for: publication-quality single-plan generation when compactness is
+  measured by boundary minimisation.
+\item \textbf{Geometric methods} (\cvd{}, \bfsgrowth{}): assign by proximity,
+  producing plans that fill geographic space radially.
+  Best for: geometric baseline plans, compactness diversity in ensemble
+  analysis, and ``most natural partition'' legal arguments.
+\end{itemize}
+
+The empirical compactness ordering observed in Section~\ref{sec:comparison} is:
+\[
+  \text{METIS} \;<\; \text{CVD(iters=20)} \;<\; \text{SA(steps=10)},
+\]
+where $<$ denotes lower PP (worse compactness).
+\cvd{} sits between \metis{} and \sa{} in compactness, at approximately
+\metis{} runtime (1.6$\times$ slower on NC vs.\ 12$\times$ for \sa{}).
+
+\paragraph{When to use CVD.}
+\begin{itemize}
+\item \textbf{Geometric baseline}: \cvd{} provides the ``most geographically
+  natural partition'' --- the Voronoi tessellation of census tracts around
+  their nearest district seed.
+  This is a legally defensible baseline for redistricting challenges.
+\item \textbf{Ensemble diversity}: Adding \cvd{} plans to a redistricting
+  ensemble enriches the distribution with geometrically compact plans that
+  are structurally different from edge-cut-minimising plans.
+\item \textbf{Fast initialisation}: At $O(n_{\mathrm{iter}} \times m)$ runtime,
+  \cvd{} is the fastest compactness-improving structure method in the B-series.
+  For exploratory runs, \cvd{} provides a valid, balanced, compact plan
+  at a cost close to \metis{}.
+\end{itemize}
+
+\paragraph{Phase~2 geographic CVD.}
+Section~\ref{sec:phase2} previewed Phase~2 \cvd{} using Euclidean distance
+on EPSG:5070 projected tract centroids.
+Phase~2 is expected to yield a 5--10\% further PP improvement for coastal
+and elongated states where BFS hop count diverges from geographic distance.
+Implementation requires adding \texttt{tract\_centroids} to
+\texttt{LoadedGraph}, which is a Phase~2 data pipeline task.
+
+\paragraph{Implementation.}
+\cvd{} bisection is implemented in the \texttt{redist} binary under
+\texttt{--structure centroidal-voronoi}.
+The primary tunable parameter is \texttt{--cvd-iters} (default 20).
+The YAML configuration format:
+\begin{verbatim}
+algorithm:
+  structure: centroidal-voronoi
+  cvd_iters: 20
+  cvd_metric: graph-distance
+  balance_tolerance: 0.5
+\end{verbatim}
+
+\paragraph{Open questions.}
+Several extensions are identified for future work:
+\begin{enumerate}
+\item \textbf{Phase~2 geographic CVD} (Section~\ref{sec:phase2}): implement
+  Euclidean Voronoi once \texttt{tract\_centroids} is added to
+  \texttt{LoadedGraph}.
+  Validate on Florida and Louisiana for the largest expected improvements.
+
+\item \textbf{CVD + BisectionEnsemble}: run \be{}$(T=50)$ with \cvd{}
+  bisectors to combine geometric proximity with multi-seed selection.
+  This is expected to improve PP over single-seed \cvd{} by selecting
+  the most compact geometric Voronoi plan across 50 initialisations.
+
+\item \textbf{CVD as SA warm start}: use the \cvd{} plan as the
+  initialisation for \sa{} bisection instead of the \metis{} plan.
+  Since \cvd{} provides a geometrically compact starting point, \sa{}
+  refinement from \cvd{} may find lower-EC solutions with different
+  compactness properties than \sa{} refinement from \metis{}.
+
+\item \textbf{$k > 2$ CVD}: The current implementation bisects ($k=2$)
+  at each node.
+  A direct $k$-way \cvd{} that places $k$ seeds simultaneously is a natural
+  extension, applicable at nodes where the bisection tree strategy calls for
+  a $k$-way split (as in the \texttt{nway} structure or prime-factor nodes
+  with $k_v = p$ for odd primes $p$).
+
+\item \textbf{Convergence for approximate medoid}: Formalise the convergence
+  analysis for the approximate medoid (probe size 50).
+  Empirical evidence suggests monotone descent in practice; a formal bound
+  on the approximation error's effect on convergence rate would complete
+  the theoretical picture.
+\end{enumerate}
+
+These extensions inherit the clean three-layer compositor design and require
+no structural changes to the codebase beyond the Phase~2 data field addition.
+\cvd{} provides a principled geometric complement to the graph-topology
+structure methods in the B-series, rounding out the algorithm portfolio
+with a method that fills geographic space by proximity rather than by
+boundary minimisation.

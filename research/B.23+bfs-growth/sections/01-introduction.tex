@@ -1,0 +1,151 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The Zero-Hyperparameter Redistricting Algorithm}
+
+Every redistricting algorithm in the B-series platform requires at
+least one tunable hyperparameter.
+\metis{} requires the imbalance factor \texttt{ufactor}~\citep{karypis1998}.
+Simulated Annealing (B.19) requires an initial temperature factor and
+step count per tract~\citep{b19paper}.
+CVD (B.22) requires an iteration count~\citep{b22paper}.
+\cs{} (B.16) requires a convergence threshold $T$~\citep{b16paper}.
+
+This paper introduces \bfsg{}, a Structure-layer algorithm with no
+tunable hyperparameters beyond the standard compositor inputs
+(adjacency graph, population weights, balance tolerance).
+The algorithm places $k$ seeds at maximally geographically spread
+locations---via BFS-farthest selection from a population-weighted
+starting seed---and then grows each district outward by repeatedly
+assigning unassigned tracts to the adjacent district with the greatest
+population deficit.
+One pass through the priority queue produces a complete, contiguous
+assignment.
+
+\bfsg{} is not an optimiser.
+It minimises nothing.
+It does not target edge cut, does not minimise geographic distance to
+centroids, and does not maximise Polsby-Popper.
+It is a \emph{greedy packer}: it fills space by geographic proximity,
+driven toward balance by a population-deficit priority function.
+The result is the simplest geographic partition of $k$ contiguous,
+population-balanced districts that can be constructed in $O(n \log n)$.
+
+\subsection{Motivation and Use Cases}
+
+\bfsg{} is useful in three roles.
+
+\paragraph{Role 1: Fast initial plan (MCMC warm-start).}
+MCMC redistricting chains (\recom{}, Forest ReCom) require an initial
+feasible plan.
+The default is a \metis{} plan.
+\bfsg{} provides an alternative initial plan that is more geographically
+structured---each district originates from a distinct geographic seed and
+grows outward by proximity, producing districts that are roughly
+geographically contiguous without the non-locality that METIS's multilevel
+coarsening occasionally introduces.
+Section~\ref{sec:warmstart} analyzes whether BFS-grown plans accelerate
+MCMC convergence.
+
+\paragraph{Role 2: Compactness baseline (geometric floor).}
+Algorithmic comparisons require a lower bound: what compactness do you
+get for free, without any optimisation?
+\bfsg{} answers this question.
+Its Polsby-Popper scores establish the \emph{geometric floor}---the
+compactness achievable by pure proximity-based packing.
+Every algorithm that outperforms \bfsg{} on compactness earns its
+improvement through deliberate optimisation; every algorithm that
+underperforms it has failed to extract even the baseline geographic signal.
+
+\paragraph{Role 3: Legal argument (``simplest geographic partition'').}
+In redistricting litigation, plaintiffs and defendants invoke compactness
+standards.
+A submitted plan can be compared not only to enacted maps and ensemble
+plans but to the most primitive possible geographic partition.
+If a submitted plan outperforms \bfsg{}---a single-pass, zero-optimisation
+algorithm---on compactness, it demonstrates that at least some deliberate
+geographic care was taken.
+Conversely, if a plan \emph{underperforms} \bfsg{}, a simple greedy packer
+would have done better.
+
+\subsection{Internal Precedent: METIS Section 4}
+
+BFS-based initial partitioning is not a new idea.
+\citet{karypis1998} describe it in Section~4 of the METIS paper as the
+algorithm used internally to partition the coarsened graph before
+Kernighan-Lin refinement begins.
+In METIS's usage, BFS partitioning is a throwaway step: its output is
+immediately refined by KL.
+
+This paper elevates METIS's internal BFS step to a standalone algorithm.
+We ask: how good is BFS partitioning \emph{on its own}, without KL
+refinement?
+The answer---that it achieves lower compactness than METIS or CVD but
+faster than both on a per-node basis---defines its operational envelope.
+
+\subsection{Main Results}
+
+\paragraph{Algorithm.}
+We define \bfsg{} bisection (Section~\ref{sec:algorithm}) as a
+standalone Structure-layer algorithm.
+The algorithm has zero tunable parameters beyond the standard compositor
+inputs.
+A population-weighted seed selection followed by BFS-farthest spread
+of remaining seeds ensures geographic diversity.
+The priority function---current district population as priority (lower
+is more urgent)---drives the growth toward balance.
+
+\paragraph{Contiguity guarantee.}
+We prove (Proposition~\ref{prop:contiguity}) that every district produced
+by \bfsg{} is contiguous by construction.
+The BFS growth frontier guarantees that each tract is added to a district
+by adjacency; no disconnected assignment is possible unless the input
+subgraph is itself disconnected.
+
+\paragraph{Complexity.}
+\bfsg{} runs in $O(n \log n)$ per bisection node (Proposition~\ref{prop:complexity}),
+dominated by the priority queue over $n$ tracts with $O(\log n)$
+per insertion.
+This matches the empirical runtime of a single \metis{} call and is
+substantially faster than SA (B.19) or CVD (B.22).
+
+\paragraph{Empirical comparison.}
+On NC ($k=14$), WI ($k=8$), and TX ($k=38$), \bfsg{} achieves
+mean Polsby-Popper scores 8--15\% below baseline \metis{}
+(Section~\ref{sec:comparison}).
+This establishes the geometric floor: METIS's KL refinement alone adds
+8--15\% compactness improvement over the bare BFS baseline.
+
+\paragraph{Warm-start analysis.}
+Section~\ref{sec:warmstart} shows that \recom{} chains warm-started from
+\bfsg{} plans have comparable or faster autocorrelation decay compared
+to chains warm-started from \metis{} plans on NC and WI,
+suggesting that the more geographically structured initial plan does not
+impede MCMC mixing.
+
+\subsection{Paper Structure}
+
+Section~\ref{sec:background} reviews BFS-based partitioning in the
+multilevel graph partitioning literature and the role of seed selection
+in partition quality.
+Section~\ref{sec:algorithm} gives the formal \bfsg{} algorithm with
+pseudocode, seed derivation, and the contiguity proof.
+Section~\ref{sec:comparison} presents empirical comparison against \metis{}
+and \cvd{} on NC, WI, and TX.
+Section~\ref{sec:warmstart} analyzes BFS Growth as an MCMC warm-start.
+Section~\ref{sec:conclusion} situates \bfsg{} in the B-series algorithm
+landscape.
+
+\subsection{Relation to Prior Work}
+
+\bfsg{} is a Structure-layer algorithm, composing cleanly with all
+SeedCompositor strategies (\cs{}, \be{}) and all WeightsOverride
+configurations (B.2).
+It is the geometric analogue of \cvd{}~\citep{b22paper}: both use
+geographic proximity as the primary signal, but \cvd{} iterates toward
+centroidal Voronoi equilibria while \bfsg{} makes a single pass.
+\citet{karypis1998} used BFS partitioning internally but did not
+evaluate it as a standalone method.
+No prior redistricting literature has examined pure BFS growth as a
+standalone algorithm or established its role as the geometric
+compactness floor.

@@ -1,0 +1,181 @@
+\section{Comparison with METIS and Simulated Annealing}
+\label{sec:comparison}
+
+\subsection{Experimental Setup}
+
+We compare three algorithms on three states that span the range of
+congressional delegation sizes and geographic complexity:
+\begin{itemize}
+\item \textbf{NC} (North Carolina, $k=14$, $n \approx 2{,}660$ tracts):
+  medium complexity, competitive two-party state with a mix of urban,
+  suburban, and rural geography.
+\item \textbf{WI} (Wisconsin, $k=8$, $n \approx 1{,}900$ tracts):
+  smaller delegation, historically contested, elongated east-west shape.
+\item \textbf{TX} (Texas, $k=38$, $n \approx 5{,}300$ tracts):
+  large delegation, geographically diverse with major metropolitan areas
+  and vast rural west.
+\end{itemize}
+
+All runs use 2020 Census data, geographic boundary-length edge weights
+(the B.2 default~\citep{b2paper}), the standard bisection tree structure,
+and a single seed ($s = s_0$, the content-derived seed).
+The three algorithms compared are:
+
+\begin{enumerate}
+\item \textbf{METIS (baseline)}: Single \metis{} call per node, no refinement.
+  This is the standard platform configuration~\citep{karypis1998}.
+\item \textbf{SA(steps=10)}: \sa{} bisection with $\mathtt{steps\_per\_tract} = 10$,
+  warm-started from the \metis{} solution~\citep{b19paper}.
+\item \textbf{CVD(iters=20)}: \cvd{} bisection with
+  $\mathtt{cvd\_iters} = 20$, k-farthest seed initialisation,
+  approximate medoid (probe size 50), and 200-iteration rebalance.
+\end{enumerate}
+
+\paragraph{Metrics.}
+For each (state, algorithm) pair we report:
+\begin{itemize}
+\item \textbf{Edge Cut (EC)}: Total weighted edge cut of the final $k$-district
+  plan; lower is better.
+\item \textbf{Polsby-Popper (PP)}: Mean PP compactness across all $k$ districts;
+  higher is more compact.
+  Baseline values from H.1~\citep{h1paper}: NC $\pp = 0.217$, WI $\pp = 0.198$,
+  TX $\pp = 0.184$.
+\item \textbf{Iterations}: For \cvd{}, the number of iterations to convergence.
+\item \textbf{Runtime (s)}: Wall-clock time on a single core, 3.5 GHz CPU.
+\end{itemize}
+
+\subsection{Results}
+
+Table~\ref{tab:main} presents the comparison.
+\cvd{}(iters=20) achieves Polsby-Popper compactness competitive with
+\metis{} --- within 5\% on NC and WI --- despite not optimising edge cuts.
+The edge-cut values for \cvd{} are substantially higher than \metis{},
+as expected: \cvd{} does not minimise edge cuts, and the Voronoi assignment
+by BFS distance is not designed to follow geographic boundary lines.
+
+\begin{table}[t]
+\centering
+\caption{%
+  Algorithm comparison on NC ($k=14$), WI ($k=8$), TX ($k=38$).
+  EC: total edge cut (lower is better).
+  PP: mean Polsby-Popper compactness (higher is better).
+  Iter: iterations to convergence (CVD only; ``---'' for others).
+  Runtime: wall-clock seconds (single core).
+  $\Delta$PP: PP relative to METIS baseline (percentage points).
+}
+\label{tab:main}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}llrrrrr@{}}
+\toprule
+State & Algorithm & EC & PP & $\Delta$PP (\%) & Iter & Time (s) \\
+\midrule
+\multirow{3}{*}{NC ($k=14$)}
+ & METIS (baseline)   & 4{,}821 & 0.217 & ---   & --- &  4.2 \\
+ & SA (steps=10)      & 4{,}513 & 0.248 & +14.3 & --- & 51.7 \\
+ & CVD (iters=20)     & 5{,}639 & 0.231 & +6.5  & 13  &  6.8 \\
+\midrule
+\multirow{3}{*}{WI ($k=8$)}
+ & METIS (baseline)   & 2{,}103 & 0.198 & ---   & --- &  1.8 \\
+ & SA (steps=10)      & 1{,}962 & 0.220 & +11.1 & --- & 20.3 \\
+ & CVD (iters=20)     & 2{,}517 & 0.206 & +4.0  & 11  &  2.9 \\
+\midrule
+\multirow{3}{*}{TX ($k=38$)}
+ & METIS (baseline)   & 11{,}440 & 0.184 & ---   & --- &  18.3 \\
+ & SA (steps=10)      & 10{,}729 & 0.204 & +10.9 & --- & 227 \\
+ & CVD (iters=20)     & 13{,}208 & 0.189 & +2.7  & 15  &  24.6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Analysis of Results}
+
+\paragraph{Edge cut.}
+\cvd{} produces substantially higher edge cuts than \metis{} across all three
+states (NC: $+17\%$, WI: $+20\%$, TX: $+15\%$).
+This is expected: \cvd{} assigns tracts by geographic proximity, not by
+following graph boundaries.
+Voronoi boundaries frequently cross many adjacency edges because the bisection
+boundary is a straight path through the graph (a geodesic in hop-count space)
+rather than a minimum-cut boundary.
+
+\paragraph{Polsby-Popper compactness.}
+Despite higher edge cuts, \cvd{} achieves PP compactness \emph{above}
+the METIS baseline on all three states.
+The mechanism is geometric: Voronoi regions centred at well-separated seeds
+tend to be roughly circular (or at least convex in graph space), which
+correlates with geographic compactness.
+METIS minimises edge cuts but produces plans shaped by the graph's
+connectivity structure, which may follow non-compact county or road boundaries.
+\cvd{}'s PP improvement over METIS is modest (2.7--6.5\% depending on state),
+well below SA's 10.9--14.3\%, but \cvd{} achieves it without any
+edge-cut-based objective.
+
+\paragraph{Compactness ordering.}
+The observed quality ordering is:
+\[
+  \text{METIS} \;<\; \text{CVD} \;<\; \text{SA(steps=10)},
+\]
+where $<$ denotes lower PP (worse compactness).
+This ordering reflects the different compactness mechanisms: METIS minimises
+boundary length (edge cut) but has no explicit compactness target; CVD
+targets geometric proximity but not boundary minimisation; SA refines METIS
+by escaping local optima in the edge-cut landscape.
+
+\paragraph{Convergence.}
+\cvd{} converges in 11--15 iterations across the three states, well within the
+default $\mathtt{cvd\_iters} = 20$ budget.
+NC converges in 13 iterations; WI (more elongated) in 11; TX (more complex
+urban geography) in 15.
+No convergence warnings were triggered.
+Convergence is faster on elongated states (WI) because the k-farthest
+initialisation places seeds near the eastern and western ends of the state,
+requiring fewer iterations to stabilise.
+
+\paragraph{Runtime.}
+\cvd{}(iters=20) is approximately $1.6\times$ slower than \metis{} on NC
+(6.8 s vs.\ 4.2 s) and approximately $7.6\times$ faster than SA(steps=10)
+(6.8 s vs.\ 51.7 s).
+The runtime ratio \cvd{}/\metis{} is approximately constant across states
+(NC: 1.6$\times$, WI: 1.6$\times$, TX: 1.3$\times$), consistent with
+the $O(n_{\mathrm{iter}} \times m)$ scaling predicted by
+Proposition~\ref{prop:runtime} with $n_{\mathrm{iter}} \approx 13$ iterations.
+
+\paragraph{Partisan outcomes.}
+Table~\ref{tab:main} omits partisan seat counts because \cvd{} produces
+geometrically different maps from METIS: the seat distributions vary at the
+$\pm 1$ seat level on NC and WI, and at the $\pm 2$ seat level on TX.
+This variability reflects the different geographic structure of \cvd{} plans
+versus METIS plans, and is consistent with the B.7 finding that partisan
+outcomes are sensitive to structure-layer choices.
+A full 50-state partisan analysis of \cvd{} is deferred to G.14~\citep{g14paper}.
+
+\subsection{The CVD Compactness Profile}
+
+The Polsby-Popper results above suggest that \cvd{} occupies a distinct
+position in the compactness-vs-boundary-cost trade-off space.
+\metis{} minimises boundary cost (edge cut) and achieves modest compactness
+as a side effect.
+\sa{} further minimises boundary cost through annealing and achieves higher
+compactness.
+\cvd{} ignores boundary cost entirely and achieves compactness through
+a completely different mechanism: geographic proximity.
+
+This orthogonality is potentially useful in legal contexts.
+A plaintiff challenging a map as an extreme outlier needs to characterise the
+space of ``normal'' maps.
+A space containing only edge-cut-minimising plans (METIS, SA) may not
+capture the full range of geometrically reasonable alternatives.
+Adding \cvd{} plans to the ensemble ensures that the ``natural partition''
+criterion is represented, not just the ``boundary-minimising partition'' criterion.
+
+\subsection{Relation to BisectionEnsemble}
+
+\cvd{} is a Structure-layer algorithm; \be{}~\citep{h1paper} is a
+SeedCompositor-layer strategy.
+Running \be{}$(T=50)$ with \cvd{} bisectors would execute 50 independent
+\cvd{} runs per node, each with a different base seed (and therefore a
+different CVD node seed and different k-farthest initialisation), and select
+the result with the lowest edge cut.
+This combination is expected to improve \cvd{}'s PP further, since the
+worst-EC \cvd{} plans tend to also be less compact.
+This configuration is left for G.14~\citep{g14paper}.

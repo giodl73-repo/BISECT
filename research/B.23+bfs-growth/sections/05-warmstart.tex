@@ -1,0 +1,151 @@
+\section{BFS Growth as MCMC Warm-Start}
+\label{sec:warmstart}
+
+\subsection{Motivation}
+
+MCMC redistricting chains---\recom{}, Forest ReCom, and their variants---
+require an initial feasible plan from which the chain begins.
+The quality of this warm-start affects two aspects of chain behaviour:
+\begin{enumerate}
+\item \textbf{Burn-in length.} If the initial plan is far from the
+  chain's stationary distribution, many steps are needed before the
+  chain's samples are representative. This means results from early
+  steps must be discarded as burn-in.
+\item \textbf{Autocorrelation.} If the initial plan is atypical
+  (unusually high or low EC, unusual partisan structure), the chain
+  may exhibit high autocorrelation for longer, reducing the effective
+  sample size.
+\end{enumerate}
+
+The default warm-start in the B-series platform is a single \metis{} call.
+\metis{} produces a low-EC plan that may be an outlier in the ensemble
+distribution---most valid redistricting plans are not minimum-EC plans.
+\bfsg{} produces a higher-EC, more geographically typical plan that may
+lie closer to the centre of the ensemble distribution.
+
+\subsection{Theoretical Argument}
+
+Let $\pi$ denote the stationary distribution of the \recom{} chain over
+valid redistricting plans of a given state.
+The typical plan under $\pi$ is characterised by the ensemble's modal
+EC and PP values, which are substantially higher than the METIS minimum
+and somewhat below the CVD or BFS Growth values.
+
+If the initial plan $x_0$ has EC close to the ensemble mode, the chain
+needs fewer steps to mix because each ReCom merge-split proposal is more
+likely to produce a plan similar to $x_0$---and similarly valued by $\pi$.
+If $x_0$ is a METIS minimum-EC outlier, early proposals that increase EC
+(toward the mode) are accepted, but the chain moves slowly because it
+starts at a corner of the distribution.
+
+\bfsg{} plans have higher EC and more geographically typical boundaries
+than METIS plans.
+If the ensemble mode's EC is between the METIS minimum and the BFS Growth
+value, then the BFS Growth warm-start is closer to the mode in EC-space,
+potentially reducing burn-in.
+
+\subsection{Expected Empirical Results}
+
+We characterise the expected experimental findings for future validation:
+
+\paragraph{NC ($k=14$).}
+The ensemble EC mode for NC 2020 under geographic weights is approximately
+$2{,}400$--$2{,}600$ (from B.7 500-seed sweep data~\citep{b7paper}).
+\metis{} single-seed EC is approximately $2{,}891$ (Table~\ref{tab:main-comparison}),
+which is \emph{above} the mode---suggesting that a single METIS call may
+not be the lowest-EC plan.
+\bfsg{} EC is $3{,}847$, above the METIS baseline and substantially above
+the ensemble mode.
+
+In this case, neither warm-start is at the mode.
+The METIS warm-start is closer to the mode in EC-space.
+Expected finding: \metis{} warm-start has shorter burn-in on NC.
+
+\paragraph{WI ($k=8$).}
+WI's smaller graph ($1{,}406$ tracts) means the ensemble distribution is
+tighter.
+Both METIS and BFS Growth warm-starts are expected to burn in quickly.
+Expected finding: comparable burn-in lengths for both warm-starts.
+
+\paragraph{TX ($k=38$).}
+TX's large graph and diverse geography create a wide ensemble distribution.
+The expected EC mode is in a range where both METIS and BFS Growth plans
+are outliers.
+Expected finding: both warm-starts require substantial burn-in; BFS Growth
+may provide faster autocorrelation decay due to more geographically
+regular boundaries that are less disruptive to the chain's spanning-tree
+proposals.
+
+\subsection{Autocorrelation Decay}
+
+Let $f: \mathcal{P} \to \mathbb{R}$ be a plan statistic (e.g., EC, mean PP,
+partisan seat count).
+The autocorrelation at lag $\ell$ is:
+\[
+  \rho_f(\ell) = \frac{\mathrm{Cov}(f(x_t),\; f(x_{t+\ell}))}
+                      {\mathrm{Var}(f(x_t))},
+\]
+where $(x_t)$ is the Markov chain.
+The \emph{integrated autocorrelation time} $\tau_f = \sum_{\ell=1}^\infty \rho_f(\ell)$
+quantifies how many steps are needed for effectively independent samples.
+
+A smaller $\tau_f$ from a BFS Growth warm-start relative to a METIS
+warm-start would indicate faster mixing when starting from the BFS plan.
+The key hypothesis is:
+
+\begin{quote}
+\textit{For states where the BFS Growth plan's EC is closer to the
+ensemble mode than the METIS plan's EC, the ReCom chain warm-started
+from BFS Growth has smaller $\tau_f$ for EC-correlated statistics.}
+\end{quote}
+
+This hypothesis is testable via paired chain runs on NC, WI, and TX
+with 10{,}000 steps and 50 burn-in discarded.
+The result is left as future empirical work; the B.23 theoretical
+framework and expected directions are stated here.
+
+\subsection{Practical Recommendation}
+
+Given the current analysis, the practical warm-start recommendation is:
+
+\begin{itemize}
+\item \textbf{Default: \metis{} warm-start.}
+  \metis{} is better understood, and its EC properties are well-documented.
+  Use \metis{} as the default warm-start until BFS Growth warm-starts
+  are empirically validated.
+
+\item \textbf{Alternative: \bfsg{} warm-start for geographic analysis.}
+  When the research question concerns geographic compactness or the
+  spatial structure of valid plans, a BFS Growth warm-start provides a
+  more geographically typical initial plan.
+  The BFS Growth plan's higher EC means the chain starts with more
+  boundary-swap flexibility, potentially exploring a wider range of
+  plans early.
+
+\item \textbf{Multi-start: both.}
+  For rigorous ensemble analysis, run two parallel chains from both
+  warm-starts and compare their convergence diagnostics.
+  Agreement between the two chains' stationary-phase distributions
+  confirms mixing; disagreement signals that longer chains are needed.
+\end{itemize}
+
+\subsection{Implementation}
+
+To use \bfsg{} as a warm-start for a \recom{} ensemble:
+
+\begin{verbatim}
+# Step 1: Generate BFS Growth initial plan
+redist state --state NC --year 2020 \
+  --structure bfs-growth --search single
+
+# Step 2: Use the output plan as ReCom warm-start
+redist ensemble --state NC --year 2020 \
+  --initial-plan runs/nc_bfs/2020/nc_plan.json \
+  --chain recom --steps 10000
+\end{verbatim}
+
+The \texttt{--initial-plan} flag accepts any previously generated plan
+in the platform's JSON format, including BFS Growth plans.
+The audit chain (Section~3 of the spec) records the \texttt{base\_seed}
+and \texttt{bfs\_seed} in \texttt{runs/{label}/{year}/index.json},
+enabling full reproducibility of the warm-start.

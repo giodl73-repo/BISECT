@@ -95,8 +95,8 @@ Validation: does the algorithm produce robust results across resolutions, census
 | B.19 | Simulated Annealing Bisection — cooling the edge-cut objective in the bisection tree | [PDF](papers/B.19+simulated-annealing.pdf) | **Accepted** 3.6/4 — `--structure simulated-annealing` |
 | B.20 | Parallel Tempering — multi-chain replica exchange MCMC | [PDF](papers/B.20+parallel-tempering.pdf) | **Accepted** 3.6/4 — `--search parallel-tempering` |
 | B.21 | Adaptive Multi-scale MCMC — self-tuning alpha via Robbins-Monro | [PDF](papers/B.21+adaptive-multiscale.pdf) | **Accepted** 3.5/4 — `--search multiscale-adaptive` |
-| B.22 | Centroidal Voronoi Districts — geometric district construction | — | Spec **Accepted** 3.75/4 |
-| B.23 | BFS Region-Growing — greedy geographic district packing | — | Spec **Accepted** 4.0/4 |
+| B.22 | Centroidal Voronoi Districts — geometric district construction | — | Spec **Accepted** 3.75/4; `--structure centroidal-voronoi` implemented |
+| B.23 | BFS Region-Growing — greedy geographic district packing | — | Spec **Accepted** 4.0/4; `--structure bfs-growth` implemented |
 
 ---
 

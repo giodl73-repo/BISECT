@@ -1,0 +1,133 @@
+\section{Background}
+\label{sec:background}
+
+\subsection{BFS-Based Partitioning in the Multilevel Literature}
+
+Breadth-first search partitioning appears as an internal component of
+several multilevel graph partitioning frameworks.
+\citet{karypis1998} describe BFS-based initial partitioning in Section~4
+of the METIS paper: after the graph has been coarsened to a few hundred
+vertices, a BFS from two seeds produces an initial bisection that is
+immediately refined by Kernighan-Lin boundary swaps.
+The BFS step's output quality is deliberately not optimised---it exists
+only to give KL a feasible starting point.
+
+The use of BFS as a \emph{standalone} partitioner---without subsequent
+KL refinement---has not been studied as a redistricting method.
+This paper fills that gap by evaluating BFS growth as a complete
+Structure-layer algorithm.
+
+\subsection{k-Farthest Seed Selection}
+
+The quality of a BFS partition is determined primarily by seed placement.
+Seeds that are close together produce uneven districts (one large, one
+small); seeds at opposite ends of the graph produce more balanced initial
+boundaries.
+
+The \emph{k-farthest} strategy selects seeds greedily by BFS distance:
+\begin{enumerate}
+\item Seed~0 is selected by population-weighted sampling (denser areas
+  first, reflecting the fact that high-population areas are more likely
+  to require splitting and thus benefit from being starting points).
+\item Each subsequent seed is the tract with the maximum minimum BFS
+  distance to any already-selected seed.
+\end{enumerate}
+This strategy is a BFS analogue of the farthest-point initialisation used
+in $k$-means++ for Euclidean spaces~\citep{cormen2009}.
+It ensures that seeds are maximally spread across the graph topology rather
+than clustering in densely connected regions.
+
+For the redistricting bisection case ($k=2$), the k-farthest strategy
+reduces to: place seed~0 by weighted sampling, then place seed~1 at the
+BFS-farthest tract from seed~0.
+This is exactly the strategy that maximises the initial boundary length
+between the two growing regions.
+
+\subsection{The Population-Deficit Priority Function}
+
+Once seeds are placed, the growth order determines the final district shapes.
+\bfsg{} uses a \emph{minimum-priority queue} keyed on current district
+population:
+\[
+  \text{priority}(\text{district } d) = P_d^{\mathrm{current}},
+\]
+where $P_d^{\mathrm{current}}$ is the total population already assigned
+to district $d$.
+The tract with the lowest priority key is expanded next; ties are broken
+by tract index.
+
+This priority function fills the \emph{emptiest} district first.
+It is motivated by the following balance argument: if district $d$ has
+population far below the ideal, its neighbours should be assigned to $d$
+before they are assigned to a more populated district.
+Formally, under the deficit-priority function, the final imbalance is
+bounded by the maximum single-tract population, because each growth step
+reduces the maximum deficit by at least the added tract's population.
+
+An alternative priority function---$|\text{ideal} - P_d^{\mathrm{current}}|$
+(absolute deficit)---would produce the same ordering when a district is
+below ideal, but would deprioritise districts that have exceeded their
+ideal population, potentially allowing overfull districts to grow further.
+The current-population priority avoids this pathology by always filling
+the smallest district.
+
+\paragraph{Comparison with CVD.}
+\cvd{} assigns each tract to the district whose centroid (geographic center
+of mass) is closest, iterating until centroid positions stabilise~\citep{du1999}.
+The centroidal Voronoi equilibrium minimises within-district sum of squared
+geographic distances---a proxy for compactness.
+
+\bfsg{} assigns tracts by BFS adjacency order, with population deficit
+breaking ties.
+It does not compute centroids and does not iterate.
+The single-pass nature means that \bfsg{} cannot recover from early
+suboptimal assignments, but it also means that \bfsg{} runs in $O(n \log n)$
+rather than $O(n \times k \times \text{iter})$.
+
+Table~\ref{tab:comparison-algorithms} summarises the relationship between
+\bfsg{}, \cvd{}, and \metis{} along the key dimensions.
+
+\begin{table}[t]
+\centering
+\caption{Comparison of structure-layer algorithms.}
+\label{tab:comparison-algorithms}
+\begin{tabular}{lcccc}
+\toprule
+Property & \bfsg{} & \cvd{} & \metis{} \\
+\midrule
+Metric optimised & None (greedy) & Geographic distance & Edge cut \\
+Data needed & Adjacency only & Adjacency + centroids & Adjacency \\
+Iterations & 1 pass & $\sim$20 iters & Multilevel KL \\
+Runtime & $O(n \log n)$ & $O(n \times k \times 20)$ & $O(n \log n)$ \\
+Contiguity guarantee & Yes (BFS) & No (post-process) & No (post-process) \\
+Compactness & Low (floor) & Medium & Medium-high \\
+Hyperparameters & 0 & 1 (iter count) & 1 (ufactor) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Structure-Layer Context in the B-Series Platform}
+
+The B-series redistricting platform uses a three-layer compositor:
+\emph{Structure} (how each bisection node is solved),
+\emph{WeightsOverride} (what edge weights encode), and
+\emph{SeedCompositor} (how many seeds are tried).
+\bfsg{} is a Structure-layer algorithm.
+
+Because \bfsg{} is a Structure-layer algorithm, it composes cleanly with
+all SeedCompositor strategies.
+Running \be{} with $T=50$ seeds, each using \bfsg{} growth, selects the
+best of 50 BFS growth outcomes.
+Running \cs{} with \bfsg{} sweeps forward through seeds until $T=600$
+consecutive seeds produce no improvement.
+In both cases, the SeedCompositor provides the multi-seed search
+quality improvement that \bfsg{} alone cannot.
+
+Existing structure-layer algorithms all modify \emph{what is optimised}
+at each node:
+\geosec{}~\citep{b8paper} minimises normalised edge cut;
+\areasec{} adds area-swing constraints;
+\ar{}~\citep{b11paper} links the bisection tree to Huntington-Hill
+apportionment.
+\bfsg{} is the unique structure-layer algorithm that optimises nothing:
+it is the zero-optimisation baseline against which all others are measured.

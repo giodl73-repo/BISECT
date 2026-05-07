@@ -1,0 +1,340 @@
+\section{The Centroidal Voronoi Districts Algorithm}
+\label{sec:algorithm}
+
+\subsection{Notation and Subgraph Setup}
+
+Let $G_v = (V_v, E_v, w_v)$ denote the subgraph at bisection tree node $v$,
+where $V_v$ is the set of census tracts assigned to the subtree rooted at $v$,
+$E_v \subseteq E$ is the induced edge set, and $w_v$ inherits weights from the
+parent graph.
+Let $m = |V_v|$ be the number of tracts.
+Let $p_i$ denote the population of tract $i \in V_v$, and let
+$P_v = \sum_{i \in V_v} p_i$ be the total subgraph population.
+
+For bisection ($k=2$), \cvd{} assigns each tract to one of two districts
+$\{D_0, D_1\}$ and returns a partition $(S, V_v \setminus S)$ satisfying
+the population-balance constraint:
+\[
+  \left|\sum_{i \in S} p_i - \frac{k_L}{k_v} P_v \right|
+  \;\le\;
+  \delta \cdot \frac{P_v}{k_v},
+\]
+where $\delta$ is the balance tolerance (default $0.005$, the $\pm 0.5\%$
+federal tolerance) and $k_L / k_v$ is the left-subtree population target.
+
+Let $d_{\mathrm{BFS}}(i, j)$ denote the BFS hop-count distance between
+tracts $i$ and $j$ in $G_v$: the length of the shortest path in $E_v$.
+For non-adjacent tracts with no path, $d_{\mathrm{BFS}}(i,j) = \infty$;
+this does not arise for connected subgraphs.
+
+\subsection{Seed Derivation}
+
+\cvd{} requires a per-node random seed to ensure reproducibility.
+The seed must be deterministic given the global base seed and the node's
+position in the bisection tree.
+
+\begin{definition}[CVD Node Seed]
+\label{def:cvd-seed}
+Let $\mathtt{base\_seed}$ be the unsigned 64-bit integer global seed, and let
+$\mathtt{node\_path}$ be the string representation of the path from the root
+to node $v$ (e.g., \texttt{"0/1/0"} for the left-right-left child of the root).
+The \emph{CVD node seed} is
+\[
+  s_v = \mathrm{first8}\bigl(
+    \mathrm{SHA\text{-}256}(
+      \texttt{"CVD\_INIT\_"} \;\|\; \mathtt{node\_path}
+      \;\|\; \texttt{"\_"} \;\|\; \mathrm{le8}(\mathtt{base\_seed})
+    )
+  \bigr),
+\]
+where $\mathrm{le8}(x)$ encodes $x$ as 8 little-endian bytes and
+$\mathrm{first8}(h)$ reads the first 8 bytes of hash $h$ as a
+little-endian unsigned 64-bit integer~\citep{sha256nist}.
+\end{definition}
+
+The domain-separation prefix \texttt{"CVD\_INIT\_"} ensures that the CVD
+seed is independent from all other SHA-256 applications in the platform
+(e.g., \texttt{"SA\_NODE\_"} for B.19's simulated annealing).
+A platform invariant test asserts this prefix constant equals
+\texttt{"CVD\_INIT\_"} exactly, and that $s_v(\mathtt{base\_seed}=0)$
+equals a hard-coded expected value.
+
+\subsection{K-Farthest Seed Initialisation}
+
+The two initial seeds are placed by the k-farthest BFS procedure:
+
+\begin{definition}[K-Farthest Initialisation]
+\label{def:kfarthest}
+Let the tracts in $V_v$ be sorted by global index, giving an ordered list
+$\mathrm{sorted} = (t_0, t_1, \ldots, t_{m-1})$.
+\begin{enumerate}
+\item \textbf{First seed}: $\mathrm{seed}_0 = t_{s_v \bmod m}$, where $s_v$ is
+  the CVD node seed.
+\item \textbf{BFS from $\mathrm{seed}_0$}: compute $d_0(t) = d_{\mathrm{BFS}}(\mathrm{seed}_0, t)$
+  for all $t \in V_v$.
+\item \textbf{Second seed}: $\mathrm{seed}_1 = \arg\max_{t \in V_v} d_0(t)$
+  (farthest tract from $\mathrm{seed}_0$; ties broken by sorted index).
+\end{enumerate}
+\end{definition}
+
+K-farthest initialisation maximises the initial distance between the two seeds,
+preventing the degenerate configuration where both seeds begin in the same
+geographic region.
+For path-like subgraphs (rural county chains), k-farthest trivially places
+seeds at the two endpoints of the path; Voronoi assignment then bisects the
+path at the midpoint, and convergence occurs in 1--2 iterations.
+For complex urban subgraphs with multiple geographic centres, the farthest-pair
+seeds maximise the chance that each seed captures a distinct region.
+
+\begin{remark}
+The sorted-index tie-breaking in both the first seed selection
+($s_v \bmod m$, which maps the hash to a position in the sorted array) and
+the $\arg\max$ ensures that the same $\mathtt{base\_seed}$ and
+$\mathtt{node\_path}$ always produce the same seed pair, regardless of the
+order in which tracts are processed by the surrounding parallelism.
+This reproducibility invariant is tested at L0.
+\end{remark}
+
+\subsection{Voronoi Assignment and Medoid Update}
+
+\begin{definition}[Graph Voronoi Assignment]
+\label{def:voronoi-assign}
+Given seeds $(\mathrm{seed}_0, \mathrm{seed}_1)$, the Voronoi assignment
+$a: V_v \to \{0,1\}$ assigns each tract to its nearest seed by BFS distance:
+\[
+  a(t) = \arg\min_{j \in \{0,1\}} d_{\mathrm{BFS}}(t, \mathrm{seed}_j),
+\]
+with ties broken in favour of district 0.
+\end{definition}
+
+Multi-source BFS computes both $d_{\mathrm{BFS}}(\cdot, \mathrm{seed}_0)$ and
+$d_{\mathrm{BFS}}(\cdot, \mathrm{seed}_1)$ simultaneously in a single BFS pass
+seeded from both seeds, costing $O(m)$ per assignment step.
+
+\begin{definition}[Approximate Graph-Distance Medoid]
+\label{def:medoid}
+Let $D_j = \{t \in V_v : a(t) = j\}$ be the tracts assigned to district $j$.
+Let $\mathrm{probe}_j \subseteq D_j$ be a uniform random sample of at most
+$n_{\mathrm{probe}} = 50$ tracts from $D_j$ (or all tracts if $|D_j| \le 50$).
+The \emph{approximate medoid} of $D_j$ is
+\[
+  \mathrm{medoid}_j = \arg\min_{i \in \mathrm{probe}_j}
+  \sum_{t \in D_j} d_{\mathrm{BFS}}(i, t).
+\]
+\end{definition}
+
+The probe set limits the number of BFS evaluations per district per iteration
+to at most 50, making each medoid update $O(50 \times m)$ in the worst case.
+For $|D_j| \le 50$, the probe set equals $D_j$ and the medoid is exact.
+
+\subsection{Formal Pseudocode}
+
+Algorithm~\ref{alg:cvd} gives the complete \cvd{} bisection procedure.
+
+\begin{algorithm}[t]
+\caption{\cvd{}-\textsc{Bisect}($G_v$, $k_L$, $k_R$, $\mathtt{base\_seed}$,
+  $\mathtt{node\_path}$, $\mathtt{cvd\_iters}$, $\mathtt{balance\_tolerance}$)}
+\label{alg:cvd}
+\begin{algorithmic}[1]
+\State $m \gets |V_v|$
+\If{$m < 2$}
+  \textbf{return} degenerate assignment \Comment{fallback: $\le 1$ tract}
+\EndIf
+\State $s_v \gets \mathrm{CVD\text{-}Node\text{-}Seed}(\mathtt{base\_seed}, \mathtt{node\_path})$
+       \Comment{Definition~\ref{def:cvd-seed}}
+\State $\mathrm{sorted} \gets \mathrm{sort}(V_v)$
+\Comment{deterministic ordering}
+\State $\mathrm{seed}_0 \gets \mathrm{sorted}[s_v \bmod m]$
+\State $d_0 \gets \mathrm{BFS\text{-}Distances}(\mathrm{seed}_0, G_v)$
+\State $\mathrm{seed}_1 \gets \arg\max_{t \in V_v} d_0[t]$
+       \Comment{k-farthest: Definition~\ref{def:kfarthest}}
+\State $\mathrm{seeds} \gets (\mathrm{seed}_0, \mathrm{seed}_1)$
+\State $\mathrm{prev\_seeds} \gets (-1, -1)$
+       \Comment{sentinel: no previous seeds}
+\For{$\mathrm{iter} = 0$ \textbf{to} $\mathtt{cvd\_iters} - 1$}
+  \State $a \gets \mathrm{VoronoiAssign}(\mathrm{seeds}, G_v)$
+         \Comment{multi-source BFS: Definition~\ref{def:voronoi-assign}}
+  \For{$j \in \{0, 1\}$}
+    \State $D_j \gets \{t : a(t) = j\}$
+    \State $\mathrm{probe}_j \gets \mathrm{Sample}(D_j, \min(50, |D_j|))$
+    \State $\mathrm{seeds}[j] \gets \arg\min_{i \in \mathrm{probe}_j}
+           \sum_{t \in D_j} d_{\mathrm{BFS}}(i, t)$
+           \Comment{approx.\ medoid: Definition~\ref{def:medoid}}
+  \EndFor
+  \If{$\mathrm{seeds} = \mathrm{prev\_seeds}$}
+    \textbf{break}
+    \Comment{convergence: seeds unchanged}
+  \EndIf
+  \State $\mathrm{prev\_seeds} \gets \mathrm{seeds}$
+\EndFor
+\State $a \gets \mathrm{VoronoiAssign}(\mathrm{seeds}, G_v)$
+       \Comment{final assignment from converged seeds}
+\State $(S, \bar{S}) \gets \mathrm{Rebalance}(a, G_v, \mathbf{p}, \mathtt{balance\_tolerance})$
+       \Comment{200-iter boundary-swap}
+\State \textbf{return} $(S, \bar{S})$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Three Key Design Decisions}
+
+\paragraph{Decision 1: K-farthest seed placement.}
+Na\"{i}ve seed initialisation (e.g., placing both seeds at the first two tracts
+in sorted order) would typically start both seeds in the same geographic corner
+of the subgraph, requiring many iterations to separate.
+K-farthest initialisation places seeds at the two most geographically distant
+tracts in the subgraph, maximising coverage from the first iteration.
+This reduces the typical iteration count from $\sim 20$ (random initialisation)
+to $\sim 10$ (k-farthest) on NC-scale subgraphs.
+
+\paragraph{Decision 2: Medoid, not centroid.}
+In continuous Euclidean space, the centroid of a cluster is the well-defined
+population-weighted mean position.
+In discrete graph space, the mean of a set of tract indices is a fraction
+--- a position that may not correspond to any real tract, and that cannot
+be used as a BFS source in subsequent Voronoi assignments.
+The graph-distance medoid avoids this problem by requiring the new seed to be
+an actual tract in its district.
+Medoids are also more robust to outliers: the medoid minimises absolute
+distance (L1 sense in graph space), whereas the centroid minimises squared
+distance (L2 sense).
+
+\paragraph{Decision 3: Post-hoc rebalance.}
+Voronoi assignment by BFS distance does not guarantee population balance.
+In a state with highly unequal tract populations, the geometrically central
+tract may be much more or less populous than others at equal hop count.
+The 200-iteration boundary-swap rebalance (consistent with the existing
+\texttt{run\_multiscale} rebalance) corrects population imbalance by moving
+boundary tracts from the overweight district to the underweight district,
+one tract at a time, while preserving contiguity.
+Without this step, \cvd{} plans would frequently violate the federal
+$\pm 0.5\%$ population balance tolerance.
+
+\subsection{Convergence Analysis}
+
+\begin{proposition}[Monotone Energy Descent]
+\label{prop:convergence}
+Let $\mathcal{E}(\mathrm{seeds}) = \sum_{j} \sum_{t \in D_j} d_{\mathrm{BFS}}(t, \mathrm{seeds}[j])$
+be the total graph-distance quantisation energy.
+Each complete iteration (Voronoi assignment + exact medoid update) satisfies
+$\mathcal{E}(\mathrm{seeds}^{(i+1)}) \le \mathcal{E}(\mathrm{seeds}^{(i)})$.
+\end{proposition}
+
+\begin{proof}
+Two observations:
+(a) Voronoi assignment minimises $\mathcal{E}$ over all assignments given
+    fixed seeds: for each tract $t$, assigning to the nearer seed (by
+    $d_{\mathrm{BFS}}$) reduces or maintains $\sum_t d_{\mathrm{BFS}}(t, \mathrm{seeds}[a(t)])$.
+(b) Medoid update minimises $\mathcal{E}$ over all seed choices given fixed
+    assignment: by definition, $\mathrm{medoid}(D_j)$ minimises
+    $\sum_{t \in D_j} d_{\mathrm{BFS}}(i, t)$ over $i \in D_j$.
+Combining (a) and (b): each full iteration is a coordinate descent step on
+$\mathcal{E}$ (alternating over assignments and seed positions), which is
+non-increasing.
+Since $\mathcal{E} \ge 0$ and takes values in a finite set (there are finitely
+many tract pairs), the sequence $\mathcal{E}(\mathrm{seeds}^{(i)})$ converges
+in finitely many steps.
+\end{proof}
+
+\begin{remark}
+Proposition~\ref{prop:convergence} applies to the exact medoid.
+The approximate medoid (probe size 50) does not guarantee monotone descent.
+In practice, the approximation error is small: for large districts
+($|D_j| \gg 50$), the probe median concentrates near the true medoid, and
+the energy is nearly monotone.
+For small districts ($|D_j| \le 50$), the probe is exact and the guarantee holds.
+\end{remark}
+
+\begin{remark}[Path-like graphs.]
+For subgraphs that are paths (a sequence of tracts $t_0 - t_1 - \cdots - t_{m-1}$),
+k-farthest initialisation places $\mathrm{seed}_0$ and $\mathrm{seed}_1$
+at the two endpoints.
+The Voronoi assignment bisects the path at the midpoint.
+The medoid of each half is the midpoint of that half.
+After one iteration, the seeds are at the midpoints of each half, and the
+Voronoi assignment is unchanged.
+Convergence occurs at iteration 2.
+\end{remark}
+
+\subsection{Computational Complexity}
+
+\begin{proposition}[Runtime Complexity]
+\label{prop:runtime}
+\cvd{} bisection at a node with $m$ tracts requires:
+\begin{itemize}
+\item One BFS for k-farthest initialisation: $O(m)$.
+\item Per iteration: two multi-source BFS passes ($O(m)$ each) for
+  Voronoi assignment, plus at most $2 \times 50$ single-source BFS
+  evaluations ($O(m)$ each) for medoid update.
+\item Total per iteration: $O(52 \times m) = O(m)$.
+\item Over $n_{\mathrm{iter}}$ iterations: $O(n_{\mathrm{iter}} \times m)$.
+\item Post-hoc rebalance: $O(200 \times m)$ for boundary-swap iterations.
+\end{itemize}
+Total: $O((n_{\mathrm{iter}} + 200) \times m)$.
+For the default $\mathtt{cvd\_iters} = 20$, this is $O(220 \times m) = O(m)$
+per bisection node.
+\end{proposition}
+
+Comparing to \metis{} ($O(m \log m)$ per node) and \sa{} ($O(\mathtt{steps} \times m^{3/2})$
+per node in the planar-graph regime): \cvd{} is $O(m)$ per node,
+asymptotically faster than both on large subgraphs.
+In practice, \cvd{} and \metis{} have similar wall-clock times because the
+BFS constant in \cvd{} is larger than the multilevel coarsening constant
+in \metis{}.
+
+\subsection{CLI Invocation}
+
+\cvd{} bisection is exposed via \texttt{--structure centroidal-voronoi}
+in the \texttt{redist} binary:
+
+\begin{verbatim}
+redist state --state NC --year 2020 \
+  --structure centroidal-voronoi --cvd-iters 20
+\end{verbatim}
+
+With explicit metric and seeding options (Phase~2 preview):
+\begin{verbatim}
+redist state --state NC --year 2020 \
+  --structure centroidal-voronoi --cvd-iters 20 \
+  --cvd-metric graph-distance --cvd-seed-init kmeans++
+\end{verbatim}
+
+The YAML configuration format:
+\begin{verbatim}
+algorithm:
+  structure: centroidal-voronoi
+  weights: geographic
+  search: convergence
+  cvd_iters: 20
+  cvd_metric: graph-distance
+  cvd_seed_init: kmeans++
+  convergence_threshold: 600
+  balance_tolerance: 0.5
+workers: 8
+\end{verbatim}
+
+\subsection{Audit Chain}
+
+Every \cvd{} run appends structured metadata to
+\texttt{runs/\{label\}/\{year\}/index.json}:
+
+\begin{verbatim}
+"structure": "centroidal-voronoi",
+"n_iter": 20,
+"metric": "graph-distance",
+"seed_init": "kmeans++",
+"base_seed": 12345678,
+"cvd_seed": 987654321,
+"iterations_to_convergence": 14,
+"convergence_warning": false,
+"final_ec": 2847,
+"final_pp_mean": 0.241
+\end{verbatim}
+
+\texttt{iterations\_to\_convergence} records how many iterations were needed
+before seeds stabilised.
+If \texttt{iterations\_to\_convergence == n\_iter}, the algorithm did not
+converge within the budget; \texttt{convergence\_warning} is set to
+\texttt{true} as a non-fatal diagnostic.
+An auditor who knows \texttt{base\_seed} can recompute
+$\mathtt{cvd\_seed} = \mathrm{SHA\text{-}256}(\texttt{"CVD\_INIT\_"} \| \mathtt{base\_seed})$
+and verify full reproducibility of the plan.
