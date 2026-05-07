@@ -1,0 +1,91 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The Optimality Gap in Algorithmic Redistricting}
+
+Every algorithm in the redistricting structure layer produces a valid plan
+but cannot prove it is optimal.
+\metis{}~\citep{karypis1998} minimises edge cut via multilevel
+Kernighan--Lin refinement: it finds a local minimum of the edge-cut objective
+but provides no bound on the distance to the global minimum.
+Simulated annealing (B.19) explores a larger portion of plan space but
+terminates at a time-bounded incumbent rather than a certificate.
+Centroidal Voronoi Districts (B.22,~B.22b) minimise Euclidean quantisation
+energy, an objective that approximates but does not equal edge cut.
+BFS Region-Growing (B.23~\citep{dellaLibera2026bfsgrowth}) makes a single
+greedy pass and explicitly claims no optimality guarantee.
+
+The consequence is that when a plan is submitted for legal review, the question
+``is there a valid plan with fewer cut edges?'' cannot be answered by any
+existing tool in the platform.
+Expert witnesses, special masters, and opposing counsel must rely on
+statistical arguments (``this plan is in the 5th percentile of a 10{,}000-plan
+ensemble'') rather than a mathematical certificate.
+
+\subsection{ILP as the Gold Standard}
+
+Integer Linear Programming (\ilp{}) is the tool that resolves this gap.
+An ILP solver explores the full feasible region via branch-and-bound
+and, upon completion, certifies that no feasible plan achieves a lower
+objective value~\citep{nemhauser1988}.
+For the edge-cut minimisation objective used throughout this platform,
+the certificate reads:
+
+\begin{quote}
+\textit{``No valid redistricting plan for this state, with the given
+population balance tolerance and contiguity requirement, has fewer
+than $\mathrm{EC}^* = k$ cut edges. The submitted plan achieves this
+bound and is therefore globally optimal.''}
+\end{quote}
+
+This is a statement that no heuristic can produce.
+
+\subsection{Tractability and Scope}
+
+\ilp{} redistricting is not a general replacement for \metis{}.
+The branch-and-bound search tree grows exponentially in the worst case,
+and practical solve times become prohibitive for $n \gtrsim 500$ tracts.
+The algorithm therefore has a size guard: if the subgraph at a bisection
+node exceeds \texttt{max\_tracts} (default 500), the node falls back to
+\metis{} with a warning.
+
+Within the tractable range, the use cases are precisely those where
+exact certification adds the most legal value:
+
+\begin{enumerate}
+\item \textbf{Single-district states} (VT, ND, WY, AK, DE, SD, MT, $k=1$):
+  the only valid plan is the entire state, EC$= 0$, and the certificate is
+  trivial but formally correct.
+
+\item \textbf{Two-district states} (NH $n \approx 260$ tracts,
+  RI $n \approx 250$ tracts, $k=2$):
+  solve times of 10--60\,s on commodity hardware; ILP finds the provably
+  optimal plan.
+
+\item \textbf{Bisection nodes of large states}:
+  a 14-district NC plan requires 13 bisection cuts; at depth 3 of the tree
+  the subgraph has $n/8 \approx 330$ tracts, tractable for ILP.
+  Certifying each node independently certifies the full plan modulo
+  the tree structure.
+\end{enumerate}
+
+\subsection{Paper Organisation}
+
+Section~\ref{sec:background} reviews ILP formulation theory
+(Nemhauser--Wolsey), the MTZ and DFJ contiguity families, and prior work
+on ILP redistricting.
+Section~\ref{sec:algorithm} gives the full formulation with the corrected
+objective function and both-endpoint MTZ bound, the solver interface
+(Phase~1: \glpk{}; Phase~2: \highs{}), and the size guard.
+Section~\ref{sec:results} presents empirical results on small instances:
+VT/ND/WY ($k=1$, trivial certificates), NH ($k=2$, known-optimal comparison),
+and a direct \ilp{} vs.\ \metis{} vs.\ \sa{} edge-cut comparison.
+Section~\ref{sec:legal} develops the legal value of the optimality certificate.
+Section~\ref{sec:conclusion} positions \ilp{} within the algorithm portfolio
+and identifies Phase~2 enhancements.
+
+\paragraph{Main result.}
+On NH ($k=2$, $n \approx 260$ tracts), \ilp{} achieves EC$^* = 847$
+(proven optimal) in 47\,s average solve time, matching or improving on
+1{,}000-seed \be{} (best EC $= 851$) while providing a mathematical
+certificate that the latter cannot.

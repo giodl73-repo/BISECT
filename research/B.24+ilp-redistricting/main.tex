@@ -1,0 +1,122 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+
+%% SIAM-adjacent style: numbered sections, upright headings
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+%% Spacing
+\setstretch{1.4}
+
+%% Algorithm macros
+\newcommand{\ilp}{\textsc{ILP}}
+\newcommand{\metis}{\textsc{Metis}}
+\newcommand{\sa}{\textsc{SimulatedAnnealing}}
+\newcommand{\cvd}{\textsc{CVD}}
+\newcommand{\bfsg}{\textsc{BfsGrowth}}
+\newcommand{\be}{\textsc{BisectionEnsemble}}
+\newcommand{\ar}{\textsc{ApportionRegions}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\cs}{\textsc{ConvergenceSweep}}
+\newcommand{\dia}{\textsc{Districting Integrity Act}}
+
+%% ILP-specific macros
+\newcommand{\mtz}{\textsc{MTZ}}
+\newcommand{\dfj}{\textsc{DFJ}}
+\newcommand{\glpk}{\textsc{GLPK}}
+\newcommand{\highs}{\textsc{HiGHS}}
+
+%% Math shorthands
+\newcommand{\ECnorm}{\mathrm{EC}_{\mathrm{norm}}}
+\newcommand{\EC}{\mathrm{EC}}
+\newcommand{\PP}{\mathrm{PP}}
+
+%% -----------------------------------------------------------------------
+
+\title{%
+  \textbf{Exact Redistricting via Integer Linear Programming:}\\
+  \textbf{Certifiable Optimality for Small Instances}\\[0.8em]
+  \normalsize\textit{B.24 --- Algorithm Design / Exact Methods}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+Every structure-layer algorithm in the redistricting literature --- \metis{},
+simulated annealing, Centroidal Voronoi Districts, BFS region-growing --- is
+heuristic: each produces a valid plan but cannot certify that no valid plan
+achieves lower edge cuts.
+We introduce \ilp{} redistricting, which finds the \emph{provably optimal}
+edge-cut plan via Integer Linear Programming and can therefore issue the
+certificate: ``no valid plan with the specified population balance has fewer
+cut edges than the submitted plan.''
+
+The formulation uses binary assignment variables $x_{t,d} \in \{0,1\}$,
+cut-edge indicators $z_{t,t'}$ for undirected edges $t < t'$, and
+Miller--Tucker--Zemlin (MTZ) flow-based contiguity constraints with a
+both-endpoint capacity bound $f_{t,t',d} \leq (n-1)\cdot\min(x_{t,d},
+x_{t',d})$.
+The objective $\min\sum_{t<t'} z_{t,t'}$ counts each cut edge exactly once.
+
+Exact optimisation is tractable only for small instances ($n \leq 500$ tracts).
+The primary use cases are: single-district states (VT, ND, WY, AK, DE, SD,
+$k=1$, trivially optimal with EC$= 0$); two-district states (NH, RI, $k=2$,
+known-optimal solutions reachable in under 60\,s); and bisection nodes of
+larger states where the subgraph is small ($n/k \leq 500$).
+For $n > 500$, the implementation falls back to \metis{} with a warning.
+
+Empirical comparison on small instances shows that \ilp{} matches or improves
+on the best heuristic plans: on NH ($k=2$), \ilp{} achieves an edge cut equal
+to or better than 1{,}000-seed \be{} in 47\,s average solve time.
+The retained MPS file enables independent auditor verification: any external
+solver can reload the formulation and confirm the submitted plan's optimality.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-background}
+\input{sections/03-algorithm}
+\input{sections/04-results}
+\input{sections/05-legal}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

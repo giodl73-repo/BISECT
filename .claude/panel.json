@@ -1,13 +1,71 @@
 {
-  "default": "apportionment",
+  "default": "track-B",
   "pluginRoot": "C:/Users/giodl/.claude/plugins/cache/panel-standalone/panel/2.2.0",
   "gitStrategy": "auto-commit",
   "projects": {
-    "apportionment": {
-      "researchPath": "research",
-      "publicationsPath": "research/publications",
-      "projectName": "apportionment",
-      "description": "Congressional redistricting — algorithmic fairness, VRA compliance, federal statute research"
+    "track-A": {
+      "projectName": "track-A",
+      "researchPath": "research/tracks/A-synthesis",
+      "publicationsPath": "research",
+      "panelPath": "context/panel/track-A",
+      "clientSlug": "track-A",
+      "description": "Track A: Portfolio synthesis — metapaper, guides, replication, policy brief (6 papers)"
+    },
+    "track-B": {
+      "projectName": "track-B",
+      "researchPath": "research/tracks/B-algorithm",
+      "publicationsPath": "research",
+      "panelPath": "context/panel/track-B",
+      "clientSlug": "track-B",
+      "description": "Track B: Algorithm — foundations, structure variants, search, extensions (25 papers)"
+    },
+    "track-C": {
+      "projectName": "track-C",
+      "researchPath": "research/tracks/C-validation",
+      "publicationsPath": "research",
+      "panelPath": "context/panel/track-C",
+      "clientSlug": "track-C",
+      "description": "Track C: Validation — MAUP, cross-census, temporal, UQ, political science (10 papers)"
+    },
+    "track-D": {
+      "projectName": "track-D",
+      "researchPath": "research/tracks/D-vra-legal",
+      "publicationsPath": "research",
+      "panelPath": "context/panel/track-D",
+      "clientSlug": "track-D",
+      "description": "Track D: VRA and legal implementation — Section 2, Gingles, model statute (6 papers)"
+    },
+    "track-E": {
+      "projectName": "track-E",
+      "researchPath": "research/tracks/E-experimental",
+      "publicationsPath": "research",
+      "panelPath": "context/panel/track-E",
+      "clientSlug": "track-E",
+      "description": "Track E: Experimental extensions — multi-member, county, national, partisan (8 papers)"
+    },
+    "track-F": {
+      "projectName": "track-F",
+      "researchPath": "research/tracks/F-legislative",
+      "publicationsPath": "research",
+      "panelPath": "context/panel/track-F",
+      "clientSlug": "track-F",
+      "description": "Track F: State legislative redistricting — all 50 chambers, bicameral, high-k (7 papers)"
+    },
+    "track-G": {
+      "projectName": "track-G",
+      "researchPath": "research/tracks/G-ensemble",
+      "publicationsPath": "research",
+      "panelPath": "context/panel/track-G",
+      "clientSlug": "track-G",
+      "description": "Track G: Ensemble methods — GerryChain comparison, 8 MCMC algorithms, practitioner synthesis (15 papers)"
+    },
+    "track-H": {
+      "projectName": "track-H",
+      "researchPath": "research/tracks/H-search",
+      "publicationsPath": "research",
+      "panelPath": "context/panel/track-H",
+      "clientSlug": "track-H",
+      "description": "Track H: Ensemble search strategies — percentile sweep, bisection-ensemble, Rust speed, resolution (4 papers)"
     }
   }
 }

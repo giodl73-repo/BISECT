@@ -1,0 +1,126 @@
+\section{Background}
+\label{sec:background}
+
+\subsection{ILP Formulation Theory}
+
+Integer Linear Programming extends linear programming by requiring some
+or all decision variables to take integer values.
+The standard reference is Nemhauser and Wolsey~\citeyear{nemhauser1988},
+whose Chapter~1 establishes that the feasible region of an ILP is the
+convex hull of the feasible integer points, and that branch-and-bound
+with LP relaxation bounds provides an exact algorithm with finite
+termination.
+
+For a minimisation ILP with objective $\min c^\top x$ subject to
+$Ax \leq b$, $x \in \{0,1\}^n$, the branch-and-bound algorithm
+maintains an upper bound $U$ (the best feasible integer solution found
+so far) and a lower bound $L$ (the LP relaxation at each node).
+When $L = U$, the current solution is proven optimal and the algorithm
+terminates with a certificate.
+The \emph{optimality gap} at any point is $(U - L)/U$; most practical
+solvers accept a user-specified gap threshold (e.g., 1\%) rather than
+insisting on exact optimality, which can reduce solve time significantly
+on larger instances.
+
+\subsection{MTZ vs.\ DFJ Contiguity Constraints}
+
+Enforcing geographic contiguity --- the requirement that each district
+forms a connected subgraph --- is the central challenge of redistricting
+ILP formulations.
+Two constraint families dominate the literature:
+
+\paragraph{Miller--Tucker--Zemlin (MTZ)~\citep{mtz1960}.}
+Originally developed for the Travelling Salesman Problem, MTZ constraints
+introduce auxiliary flow variables on directed edges.
+Each district $d$ designates a root $r_d$; flow from $r_d$ to each
+non-root tract enforces a spanning tree over the district's tracts.
+MTZ constraints add $O(|E| \cdot k)$ continuous variables and
+$O(|E| \cdot k)$ constraints, which is manageable for small instances.
+The LP relaxation is relatively weak (the LP bound can be far from the
+true integer optimum), but the simplicity of implementation and the
+absence of cut generation make MTZ attractive for Phase~1.
+
+\paragraph{Dantzig--Fulkerson--Johnson (DFJ).}
+DFJ constraints impose connectivity directly via subtour-elimination
+cuts: for every subset $S \subsetneq V_d$ of district $d$'s tracts,
+at least one edge must cross the boundary of $S$.
+DFJ yields a much tighter LP relaxation than MTZ, which typically reduces
+branch-and-bound tree size substantially.
+The drawback is that DFJ requires exponentially many constraints
+(one per subset), necessitating lazy cut generation at each branch node
+(a branch-and-cut implementation).
+DFJ is deferred to Phase~2; Phase~1 uses MTZ for implementation simplicity.
+
+\subsection{Both-Endpoint Capacity Bound}
+
+Standard MTZ uses the capacity bound $f_{t,t',d} \leq (n-1) \cdot x_{t,d}$,
+which allows flow on edge $(t, t')$ as long as the source $t$ is in
+district $d$.
+This permits ``spurious'' flow paths: flow can traverse edge $(t, t')$
+even if $t'$ is not in district $d$, if $x_{t,d} = 1$.
+
+The \emph{both-endpoint} bound tightens this to
+\[
+  f_{t,t',d} \leq (n-1) \cdot \min(x_{t,d},\, x_{t',d}),
+\]
+which forces flow to zero if either endpoint is outside district $d$.
+This yields a stronger LP relaxation than standard MTZ at the cost of
+replacing the linear bound with a bilinear term (which is linearised
+in the ILP using the standard $\min(a,b) \leq a$, $\min(a,b) \leq b$
+encoding).
+Gurnee and Shmoys~\citeyear{gurnee2021} identify the both-endpoint bound
+as the key practical improvement over standard MTZ for redistricting
+instances; we adopt it as the default.
+
+\subsection{Prior Work on ILP Redistricting}
+
+Gurnee and Shmoys~\citeyear{gurnee2021} introduce Fairmandering, a
+column-generation heuristic for fairness-optimised districting.
+Their Section~2 surveys ILP redistricting formulations and identifies
+the both-endpoint MTZ bound as the most effective contiguity constraint
+for instances with $n \leq 500$ tracts.
+They report solve times of 30--120\,s for $k=2$ instances with $n=250$
+on a 2019 laptop, consistent with the empirical results in
+Section~\ref{sec:results} of this paper.
+
+King, Jacobson, and Sewell~\citeyear{king2015} study contiguity and
+hole detection in geographic partitioning and provide the theoretical
+foundation for why connected-district constraints are necessary:
+without them, ILP solutions may produce district fragments that are
+legally invalid and computationally arise naturally at LP relaxation
+boundaries.
+
+\subsection{Comparison with Heuristic Approaches}
+
+Table~\ref{tab:method-compare} places \ilp{} in the context of existing
+structure-layer algorithms.
+
+\begin{table}[t]
+\centering
+\caption{%
+  Structure-layer algorithm comparison. \ilp{} is the only method providing
+  an optimality certificate; tractability is limited to small instances.
+}
+\label{tab:method-compare}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}llllll@{}}
+\toprule
+Property & \ilp{} (B.24) & \metis{} & \sa{} (B.19) & \cvd{} (B.22) & \bfsg{} (B.23) \\
+\midrule
+Optimality    & Exact cert. & Heuristic & Heuristic & Heuristic & None \\
+Contiguity    & MTZ (exact) & Post-proc. & Maintained & Post-proc. & BFS (exact) \\
+Tractability  & $n \leq 500$ & Any & Any & Any & Any \\
+Runtime       & Exp.\ worst & $O(n \log n)$ & $O(T n)$ & $O(I m)$ & $O(n \log n)$ \\
+EC quality    & Gold std.   & High & High & Med & Baseline \\
+PP quality    & Depends     & High & Med & High & Med-High \\
+Use case      & Cert., small & Prod. & Large & Coastal & Warm-start \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The key distinction is not runtime but \emph{what the method can assert}.
+\metis{}, SA, and CVD can assert ``this plan has EC $= k$''; only \ilp{}
+can assert ``\emph{no valid plan} has EC $< k$.''
+This distinction is legally material in contested redistricting litigation,
+where opposing counsel can always argue that heuristic plans leave
+compactness on the table.

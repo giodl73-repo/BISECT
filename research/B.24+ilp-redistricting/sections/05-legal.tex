@@ -1,0 +1,131 @@
+\section{Legal Value of the Optimality Certificate}
+\label{sec:legal}
+
+\subsection{The Certificate Statement}
+
+When the \ilp{} solver returns \texttt{Optimal} with gap $= 0.0$, the
+audit JSON contains:
+
+\begin{verbatim}
+"solver_status": "optimal",
+"optimal_ec": 847,
+"achieved_gap": 0.0,
+"solver_used": "glpk",
+"solver_version": "GLPK 5.0"
+\end{verbatim}
+
+This record supports the following legal assertion, which is unique among
+algorithmic redistricting tools:
+
+\begin{quote}
+\textbf{Certificate of Compactness Optimality.}
+\textit{The redistricting plan submitted herein is the globally optimal
+solution to the edge-cut minimisation problem for the State of New Hampshire,
+2020 Census, with $k = 2$ congressional districts and a population balance
+tolerance of $\pm 0.5\%$.
+No valid redistricting plan --- with the same census data, the same number
+of districts, and the same population balance constraint --- can achieve a
+lower total edge cut.
+The optimality of this plan has been verified by Integer Linear Programming
+with a certified zero optimality gap.
+The complete ILP formulation is retained at \texttt{runs/nh\_optimal/2020/ilp/}
+and can be independently verified by any LP/MIP solver.}
+\end{quote}
+
+This statement has no heuristic equivalent.
+A practitioner submitting a \metis{}-based plan can claim only that it is
+``among the best plans found in a search of 10{,}000 seeds'' --- a
+statistical argument subject to challenge.
+The ILP certificate is a mathematical proof.
+
+\subsection{Scope and Limitations of the Certificate}
+
+The ILP certificate is precisely scoped and practitioners must represent
+it accurately:
+
+\paragraph{Edge cut only.}
+The certificate covers edge-cut compactness (the number of cut adjacency
+edges, which proxies for the total boundary length between districts and
+non-adjacent counties).
+It does not certify optimality for Polsby-Popper, Reock, convex-hull ratio,
+or any other compactness metric.
+A plan optimal by edge cut may not be optimal by Polsby-Popper; these are
+different objectives.
+
+\paragraph{Contiguity model.}
+The certificate assumes MTZ contiguity constraints (connected districts).
+This matches the standard redistricting contiguity requirement.
+However, some jurisdictions require contiguity under a stricter definition
+(e.g., no peninsulas narrower than a minimum width, or contiguity along
+roads rather than adjacency edges).
+Practitioners should verify that the MTZ contiguity model matches the
+applicable legal standard.
+
+\paragraph{Population balance tolerance.}
+The certificate is conditional on the specified $\varepsilon_{\mathrm{bal}}$.
+A certificate at $\varepsilon_{\mathrm{bal}} = 0.5\%$ does not certify
+optimality at $\varepsilon_{\mathrm{bal}} = 1.0\%$; the feasible region
+changes and the optimal plan may differ.
+The tolerance must be disclosed alongside the certificate.
+
+\paragraph{Census data vintage.}
+The certificate is for the specified census year.
+A plan optimal under 2020 Census data may not be optimal under 2010 Census
+data or any future Census, because tract populations change.
+The certificate is inherently vintage-specific.
+
+\paragraph{Legal caveat.}
+The ILP certificate addresses a purely mathematical question (minimum
+edge cut under population balance and contiguity constraints) and does not
+constitute legal advice.
+Redistricting compliance requires assessment of criteria beyond edge-cut
+compactness, including Voting Rights Act compliance, preservation of
+political subdivisions, protection of communities of interest, and
+applicable state constitutional standards, all of which are legal questions
+outside the scope of this tool.
+Practitioners should consult legal counsel before representing the ILP
+certificate in litigation or regulatory proceedings.
+
+\subsection{Independent Auditor Verification}
+
+The retained MPS file enables a fully independent verification path:
+
+\begin{enumerate}
+\item Download the MPS file from \texttt{runs/\{label\}/\{year\}/ilp/\{node\}.mps}.
+\item Load it into any LP/MIP solver (Gurobi, CPLEX, \highs{}, GLPK, SCIP).
+\item Solve with optimality gap 0.
+\item Confirm that the solver returns the same optimal objective value
+  as reported in the audit JSON.
+\item Confirm that the solver's optimal assignment matches the committed
+  district plan.
+\end{enumerate}
+
+This verification requires no access to the platform source code,
+no Rust toolchain, and no proprietary infrastructure.
+Any solver that can read the standard MPS format can verify the certificate.
+
+\subsection{Comparison with Ensemble-Based Expert Reports}
+
+Expert witness reports in redistricting litigation commonly use
+ensemble analysis: generate 10{,}000--100{,}000 random valid plans
+and report where the disputed plan falls in the distribution.
+This approach is well-established (Mattingly and Vaughn, DeFord et al.)
+but has a structural limitation: an ensemble can show that a plan is
+``unusually partisan'' but cannot prove that a more compact plan exists
+that achieves the same partisan outcome.
+
+The ILP certificate addresses a complementary question: it proves that
+no more compact plan exists under the edge-cut metric.
+In a litigation context, ILP and ensemble analysis serve different
+arguments:
+
+\begin{itemize}
+\item Ensemble analysis: ``This plan's partisan outcome is in the 1st
+  percentile of 50{,}000 valid plans'' (statistical).
+\item ILP certificate: ``This plan's edge-cut compactness is globally
+  optimal; no valid plan is more compact by this metric'' (exact).
+\end{itemize}
+
+Used together, these provide a stronger legal argument than either
+alone: the plan cannot be challenged as gerrymandered by compactness
+(ILP certificate) or by partisan outcome (ensemble analysis).
