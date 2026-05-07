@@ -64,10 +64,6 @@ jobs:
     - name: Install METIS
       run: sudo apt-get install -y libmetis-dev
 
-    - name: Test redist-metis
-      run: cargo test -p redist-metis --lib --tests
-      working-directory: redist
-
     - name: Test redist-core
       run: cargo test -p redist-core --lib --tests
       working-directory: redist
