@@ -34,10 +34,13 @@ The main findings:
         20$; for smaller $k$, Short-Burst is sufficient and faster on
         single-core hardware.
 
-  \item \textbf{Adaptive Multi-scale is the fastest-mixing chain for TX.}
-        AMS reduces ACF(100) to 0.31 for TX vs.\ 0.37 for fixed
-        Multi-scale, a 16\% improvement, by front-loading coarse steps
-        during warm-up.
+  \item \textbf{Adaptive Multi-scale and Parallel Tempering are the
+        top-mixing candidates for TX.}
+        AMS and PT produce similar ACF(100) for TX (0.31 vs.\ 0.34),
+        within the single-run uncertainty band; both substantially outperform
+        single-scale chains (FR: 0.48).
+        Whether AMS or PT is faster-mixing for TX is inconclusive from
+        single-run estimates and requires multi-seed validation.
         For $k < 15$, AMS and fixed Multi-scale are indistinguishable.
 
   \item \textbf{The full portfolio is covered by six questions.}
