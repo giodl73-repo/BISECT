@@ -1,7 +1,8 @@
 # Spec: Multi-scale MCMC — Hierarchical Mixing for Large-k Redistricting
 
-**Status**: Proposed (R1 major revision applied — P0 and P1 fixes)  
+**Status**: Accepted (R2 avg 3.0/4 — step-count table unified, coarse_tol L0 test added)  
 **Reviewed R1**: MERIDIAN 2/4, BENCHMARK 2/4, SURVEY 2/4, COVENANT 2/4 → avg 2.0/4  
+**Reviewed R2**: MERIDIAN 3/4, BENCHMARK 3/4, SURVEY 3/4, COVENANT 3/4 → avg 3.0/4  
 **Date**: 2026-05-07  
 **New crate**: `redist-multiscale`  
 **Related paper**: G.11  
@@ -21,9 +22,9 @@ Multi-scale MCMC resolves the slow mixing of standard ReCom for large-k states b
 
 | State size | Example states | Recommended `--multiscale-steps` | Recommended `--multiscale-alpha` |
 |-----------|---------------|----------------------------------|----------------------------------|
-| Medium (k=8–14) | WI, NC, MN | 1,000 | 0.2 |
-| Large (k=20–38) | TX, FL | 2,000 | 0.3 |
-| Very large (k≥40) | CA | 3,000 | 0.4 |
+| Medium (k=8–14) | WI, NC, MN | 2,000 | 0.3 |
+| Large (k=20–38) | TX, FL | 5,000 | 0.35 |
+| Very large (k≥40) | CA | 8,000 | 0.4 |
 
 **Alpha heuristic caveat**: The alpha values above (0.3 for TX, 0.4 for CA) are heuristic defaults based on the scaling argument that alpha ≈ sqrt(k_fine / k_coarse); they have not been validated empirically on these specific states. Phase 2 will add an empirical sweep over alpha ∈ {0.1, 0.2, 0.3, 0.4, 0.5} to find optimal values. Practitioners should treat these as starting points. \citep{autry2021} (Autry et al. recommend alpha ∝ mixing time ratio, which is state-specific.)
 
@@ -274,6 +275,7 @@ This ensures `redist label-verify` can confirm the search parameters and seed de
 ## Test invariants (L1)
 
 - **Synthetic 2-level hierarchy**: 16-tract grid with 4 block-groups of 4 tracts each, k=2, T=500 steps: all visited plans are valid (contiguous, population-balanced at both fine and coarse levels)
+- **coarse_tol default**: `chain.coarse_tol == 2.0 × pop_tolerance` when constructed with default parameters. Test: construct a `MultiScaleChain` with `pop_tolerance=0.005`; assert `coarse_tol == 0.01`. An implementer who hardcodes a different value will fail this test.
 - **alpha=0.0**: alpha=0.0 DOES NOT produce identical output to standard ReCom (the alpha comparison consumes one RNG draw not present in standard ReCom). The correct test: with alpha=0.0, zero coarse steps are taken (`coarse_steps_taken == 0`), and all accepted plans satisfy the fine-level validity constraints. This is verifiable without reference to standard ReCom output.
 - **alpha=1.0**: zero fine moves (`fine_steps_taken == 0`), coarse-only chain still produces valid fine-level plans after projection and rebalance for every step
 - **Coarse-to-fine projection**: after every coarse move, every fine tract's assignment matches its block-group's coarse assignment (checked exhaustively for each step)
