@@ -173,6 +173,135 @@ print(json.dumps({'adjacency': adj, 'vertex_weights': vw,
     })
 }
 
+/// Build a fine->coarse partition from GEOID prefix matching.
+///
+/// fine_geoids: index_to_geoid map at the fine level (e.g., block groups, 12-char GEOIDs)
+/// coarse_geoids: index_to_geoid map at the coarse level (e.g., tracts, 11-char GEOIDs)
+///
+/// Returns fine_to_coarse[fine_idx] = coarse_idx.
+///
+/// Panics if coarse GEOIDs have non-uniform length (FIPS anomaly).
+/// Returns Err if any fine unit's GEOID prefix has no matching coarse unit.
+pub fn derive_partition(
+    fine_geoids: &std::collections::HashMap<usize, String>,
+    coarse_geoids: &std::collections::HashMap<usize, String>,
+) -> Result<Vec<usize>, String> {
+    if fine_geoids.is_empty() {
+        return Ok(vec![]);
+    }
+
+    // Validate uniform coarse GEOID length
+    let lengths: std::collections::HashSet<usize> = coarse_geoids.values().map(|g| g.len()).collect();
+    if lengths.len() > 1 {
+        return Err(format!("coarse GEOIDs have non-uniform lengths: {:?} — check adjacency file", lengths));
+    }
+    let prefix_len = coarse_geoids.values().next().map(|g| g.len()).unwrap_or(11);
+
+    // Build coarse GEOID -> coarse index lookup
+    let coarse_lookup: std::collections::HashMap<&str, usize> = coarse_geoids.iter()
+        .map(|(&idx, geoid)| (geoid.as_str(), idx))
+        .collect();
+
+    let n_fine = fine_geoids.keys().copied().max().map(|m| m + 1).unwrap_or(0);
+    let mut partition = vec![usize::MAX; n_fine];
+
+    for (&fine_idx, fine_geoid) in fine_geoids {
+        if fine_geoid.len() < prefix_len {
+            return Err(format!(
+                "fine GEOID '{fine_geoid}' (len {}) is shorter than coarse prefix length {prefix_len}",
+                fine_geoid.len()
+            ));
+        }
+        let prefix = &fine_geoid[..prefix_len];
+        let coarse_idx = coarse_lookup.get(prefix).ok_or_else(|| format!(
+            "fine GEOID '{fine_geoid}' prefix '{prefix}' has no matching coarse unit — \
+             ensure both adjacency files are from the same census year and state"
+        ))?;
+        partition[fine_idx] = *coarse_idx;
+    }
+
+    // Verify no orphans
+    if let Some(i) = partition.iter().position(|&v| v == usize::MAX) {
+        return Err(format!("fine unit index {i} has no coarse mapping after partition build"));
+    }
+    Ok(partition)
+}
+
+/// Build county-level coarsening from a tract adjacency graph.
+///
+/// Two counties are adjacent iff any tract in county A is adjacent to any
+/// tract in county B in the tract graph. This propagates geographic adjacency
+/// from the tract level up to the county level correctly.
+///
+/// Returns: (county_adj, county_pop, fine_to_coarse)
+/// - county_adj[county]: sorted list of adjacent county indices
+/// - county_pop[county]: sum of constituent tract populations
+/// - fine_to_coarse[tract_idx]: county index (derived from GEOID prefix[:5])
+pub fn build_county_coarsening(
+    tract_geoids: &std::collections::HashMap<usize, String>,
+    tract_adj: &[Vec<usize>],
+    tract_pop: &[i64],
+) -> Result<(Vec<Vec<usize>>, Vec<i64>, Vec<usize>), String> {
+    if tract_geoids.is_empty() {
+        return Ok((vec![], vec![], vec![]));
+    }
+
+    // Build sorted unique county FIPS codes (geoid[:5])
+    let mut county_fips: Vec<String> = tract_geoids.values()
+        .filter(|g| g.len() >= 5)
+        .map(|g| g[..5].to_string())
+        .collect::<std::collections::HashSet<_>>()
+        .into_iter()
+        .collect();
+    county_fips.sort();
+
+    let county_to_idx: std::collections::HashMap<&str, usize> = county_fips.iter()
+        .enumerate()
+        .map(|(i, fips)| (fips.as_str(), i))
+        .collect();
+    let n_counties = county_fips.len();
+
+    // Build fine_to_coarse: tract_idx -> county_idx
+    let n_tracts = tract_geoids.keys().copied().max().map(|m| m + 1).unwrap_or(0);
+    let mut fine_to_coarse = vec![usize::MAX; n_tracts];
+    for (&tract_idx, geoid) in tract_geoids {
+        if geoid.len() < 5 {
+            return Err(format!("tract GEOID '{geoid}' shorter than 5 chars"));
+        }
+        let fips = &geoid[..5];
+        let county_idx = *county_to_idx.get(fips).ok_or_else(|| format!("FIPS '{fips}' not in county map"))?;
+        fine_to_coarse[tract_idx] = county_idx;
+    }
+
+    // County populations: sum of tract populations
+    let mut county_pop = vec![0i64; n_counties];
+    for (tract_idx, &county_idx) in fine_to_coarse.iter().enumerate() {
+        if county_idx < n_counties && tract_idx < tract_pop.len() {
+            county_pop[county_idx] += tract_pop[tract_idx];
+        }
+    }
+
+    // County adjacency: A adjacent to B iff any tract in A adjacent to any tract in B
+    let mut adj_sets: Vec<std::collections::HashSet<usize>> = vec![std::collections::HashSet::new(); n_counties];
+    for (tract_v, neighbors) in tract_adj.iter().enumerate() {
+        if tract_v >= n_tracts { continue; }
+        let cv = fine_to_coarse[tract_v];
+        if cv == usize::MAX { continue; }
+        for &tract_nb in neighbors {
+            if tract_nb >= n_tracts { continue; }
+            let cnb = fine_to_coarse[tract_nb];
+            if cnb == usize::MAX || cnb == cv { continue; }
+            adj_sets[cv].insert(cnb);
+            adj_sets[cnb].insert(cv);
+        }
+    }
+    let county_adj: Vec<Vec<usize>> = adj_sets.into_iter()
+        .map(|s| { let mut v: Vec<usize> = s.into_iter().collect(); v.sort_unstable(); v })
+        .collect();
+
+    Ok((county_adj, county_pop, fine_to_coarse))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -435,5 +564,87 @@ mod tests {
         let fake_pkl = std::path::Path::new("/nonexistent/state_adjacency_2020.pkl");
         let result = load_adjacency_pkl(fake_pkl);
         assert!(result.is_err(), "should error for nonexistent pkl: {warning_snippet}");
+    }
+
+    // ── derive_partition L0 tests ─────────────────────────────────────────────
+
+    #[test]
+    fn derive_partition_bg_to_tract() {
+        // 4 BGs (12-char GEOIDs) mapping to 2 tracts (11-char GEOIDs)
+        let fine: HashMap<usize, String> = [
+            (0, "370010001001".to_string()),
+            (1, "370010001002".to_string()),
+            (2, "370010002001".to_string()),
+            (3, "370010002002".to_string()),
+        ].into_iter().collect();
+        let coarse: HashMap<usize, String> = [
+            (0, "37001000100".to_string()),
+            (1, "37001000200".to_string()),
+        ].into_iter().collect();
+        let partition = derive_partition(&fine, &coarse).unwrap();
+        assert_eq!(partition[0], 0); // BG 370010001001 -> tract 37001000100
+        assert_eq!(partition[1], 0);
+        assert_eq!(partition[2], 1); // BG 370010002001 -> tract 37001000200
+        assert_eq!(partition[3], 1);
+    }
+
+    #[test]
+    fn derive_partition_tract_to_county() {
+        // prefix[:5] = county FIPS
+        let fine: HashMap<usize, String> = [
+            (0, "37001000100".to_string()),
+            (1, "37001000200".to_string()),
+            (2, "37003000100".to_string()),
+        ].into_iter().collect();
+        let coarse: HashMap<usize, String> = [
+            (0, "37001".to_string()),
+            (1, "37003".to_string()),
+        ].into_iter().collect();
+        let partition = derive_partition(&fine, &coarse).unwrap();
+        assert_eq!(partition[0], 0);
+        assert_eq!(partition[1], 0);
+        assert_eq!(partition[2], 1);
+    }
+
+    #[test]
+    fn derive_partition_orphan_returns_err() {
+        let fine: HashMap<usize, String> = [(0, "37001000100".to_string())].into_iter().collect();
+        let coarse: HashMap<usize, String> = [(0, "37003".to_string())].into_iter().collect(); // wrong county
+        assert!(derive_partition(&fine, &coarse).is_err());
+    }
+
+    // ── build_county_coarsening L0 tests ─────────────────────────────────────
+
+    #[test]
+    fn build_county_coarsening_pop_sums() {
+        // 4 tracts in 2 counties
+        let tract_geoids: HashMap<usize, String> = [
+            (0, "37001000100".into()), (1, "37001000200".into()),
+            (2, "37003000100".into()), (3, "37003000200".into()),
+        ].into_iter().collect();
+        let adj = vec![vec![1usize], vec![0], vec![3], vec![2]]; // two disconnected pairs
+        let pop = vec![100i64, 200, 150, 250];
+        let (county_adj, county_pop, ftc) = build_county_coarsening(&tract_geoids, &adj, &pop).unwrap();
+        assert_eq!(county_adj.len(), 2);
+        let total_county: i64 = county_pop.iter().sum();
+        assert_eq!(total_county, 700);
+        // The two counties must partition all 4 tracts
+        assert_ne!(ftc[0], ftc[2]); // tracts in different counties
+        assert_eq!(ftc[0], ftc[1]); // tracts 0,1 in same county (37001)
+    }
+
+    #[test]
+    fn build_county_coarsening_adjacency_symmetric() {
+        let tract_geoids: HashMap<usize, String> = [
+            (0, "37001000100".into()), (1, "37001000200".into()),
+            (2, "37003000100".into()),
+        ].into_iter().collect();
+        // tract 1 adjacent to tract 2 (cross-county boundary)
+        let adj = vec![vec![1usize], vec![0, 2], vec![1]];
+        let pop = vec![100i64; 3];
+        let (county_adj, _, _) = build_county_coarsening(&tract_geoids, &adj, &pop).unwrap();
+        // Counties must be mutually adjacent
+        assert!(county_adj[0].contains(&1) || county_adj[1].contains(&0),
+            "counties must be adjacent when tracts cross boundary");
     }
 }

@@ -15,6 +15,7 @@ redist-core      = { path = "../redist-core" }
 redist-data      = { path = "../redist-data" }
 redist-metis     = { path = "../redist-metis" }
 redist-ensemble  = { path = "../redist-ensemble" }
+redist-multiscale = { path = "../redist-multiscale" }
 redist-smc       = { path = "../redist-smc" }
 rand.workspace = true
 # default-features = false: c-ffi inclusion is controlled by our own feature below.

@@ -2635,6 +2635,7 @@ dependencies = [
  "redist-ensemble",
  "redist-map",
  "redist-metis",
+ "redist-multiscale",
  "redist-report",
  "redist-smc",
  "reqwest",

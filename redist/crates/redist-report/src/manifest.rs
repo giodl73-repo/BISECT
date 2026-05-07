@@ -161,6 +161,42 @@ pub struct PlanManifest {
     /// Burst index of the selected endpoint (0-based).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub selected_burst_idx: Option<usize>,
+
+    // ── Plan resolution fields ────────────────────────────────────────────────
+
+    /// Geographic resolution of the plan assignments ("tract", "bg", "county")
+    #[serde(default = "default_resolution", skip_serializing_if = "is_tract_resolution")]
+    pub plan_resolution: String,
+
+    /// Number of geographic units in this plan (tracts, BGs, or counties)
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub n_units: usize,
+
+    /// Human-readable unit type label
+    #[serde(default = "default_unit_type", skip_serializing_if = "is_census_tract")]
+    pub unit_type: String,
+
+    // ── Multi-scale fields (absent for non-multiscale runs) ───────────────────
+
+    /// Fine resolution level for multiscale runs (e.g., "tract")
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub multiscale_fine: Option<String>,
+
+    /// Coarse resolution level for multiscale runs (e.g., "county")
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub multiscale_coarse: Option<String>,
+
+    /// GEOID prefix formula for fine->coarse mapping (e.g., "geoid_prefix[:5]")
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fine_to_coarse_formula: Option<String>,
+
+    /// Human-readable note on the formula (e.g., "first 5 chars of tract GEOID = county FIPS")
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fine_to_coarse_comment: Option<String>,
+
+    /// Filename of the geoids.json file for independent verification
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub index_to_geoid_file: Option<String>,
 }
 
 fn default_seats_per_district() -> usize { 1 }
@@ -168,6 +204,11 @@ fn default_electoral_system() -> String { "single_member".to_string() }
 fn default_submission_type() -> String { "authoritative".to_string() }
 fn default_ufactor() -> u32 { 5 }
 fn default_niter() -> u32 { 100 }
+fn default_resolution() -> String { "tract".to_string() }
+fn default_unit_type() -> String { "census tract".to_string() }
+fn is_tract_resolution(s: &str) -> bool { s == "tract" }
+fn is_census_tract(s: &str) -> bool { s == "census tract" }
+fn is_zero(n: &usize) -> bool { *n == 0 }
 
 /// Compute SHA-256 of a byte slice. Returns 64-character lowercase hex string.
 pub fn sha256_bytes(data: &[u8]) -> String {

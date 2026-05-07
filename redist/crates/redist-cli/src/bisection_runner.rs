@@ -2554,14 +2554,15 @@ pub fn run_forest_recom(
     Ok(assignment)
 }
 
-/// Multi-scale MCMC stub — interleaves fine (tract) and coarse (block-group) ReCom moves.
+/// Multi-scale MCMC — Option B: fine=tract, coarse=county.
 ///
-/// Requires block-group adjacency: `coarse_adjacency` must be `Some(...)`.
-/// When `None`, returns a `[CONFIG]` error instructing the user to run
-/// `redist fetch --resolution block_group` first.
+/// County adjacency is built on-the-fly from tract GEOIDs (GEOID prefix[:5] = county FIPS),
+/// so no extra data files are needed.  The function interleaves fine (tract) ReCom moves
+/// and coarse (county) ReCom moves with probability `alpha` of choosing the coarse level.
+///
+/// When `geoids` is `None` the function returns a `[CONFIG]` error.
 ///
 /// CLI: `--search multiscale --multiscale-steps 2000 --multiscale-alpha 0.3`
-/// Full MultiScaleChain implementation is task #128 (pending redist-multiscale completion).
 pub fn run_multiscale(
     adjacency: &[Vec<usize>],
     vertex_weights: &[i64],
@@ -2573,22 +2574,162 @@ pub fn run_multiscale(
     total_steps: usize,
     alpha: f64,
     p: f64,
-    // coarse adjacency -- None means block-group data not loaded
-    coarse_adjacency: Option<&[Vec<usize>]>,
-    coarse_partition: Option<&[usize]>,  // fine_tract -> coarse_node
+    // GEOID map for building county coarsening — None falls back to CONFIG error
+    geoids: Option<&std::collections::HashMap<usize, String>>,
 ) -> Result<HashMap<usize, usize>, String> {
-    if coarse_adjacency.is_none() {
-        return Err(
-            "[CONFIG] Multi-scale MCMC requires block-group adjacency. \
-             Run: redist fetch --resolution block_group".to_string()
-        );
+    use sha2::Digest;
+    use rand::Rng;
+    use redist_ensemble::recom::RecomChain;
+    use redist_multiscale::rebalance::rebalance;
+    use crate::adjacency_loader::build_county_coarsening;
+
+    let geoids = geoids.ok_or_else(|| {
+        "[CONFIG] --search multiscale requires GEOID data. \
+         Ensure the adjacency file has an accompanying _geoids.json file.".to_string()
+    })?;
+
+    // Build county coarsening from tract GEOIDs
+    let (county_adj, county_pop, fine_to_coarse) =
+        build_county_coarsening(geoids, adjacency, vertex_weights)
+        .map_err(|e| format!("county coarsening failed: {e}"))?;
+
+    if county_adj.is_empty() {
+        return Err("county coarsening produced no counties".to_string());
     }
-    // Suppress unused-variable warnings — Phase 2 full implementation will use these.
-    let _ = (adjacency, vertex_weights, edge_weights, num_districts,
-             balance_tolerance, niter, base_seed, total_steps, alpha, p, coarse_partition);
-    // Phase 2: full MultiScaleChain implementation (task #128).
-    // For now fall back with a clear stub error.
-    Err("[STUB] run_multiscale not yet fully implemented -- use --search forest-recom or merge-split".to_string())
+
+    // Build initial tract-level plan from METIS
+    let initial_plan = run_all_splits(adjacency, vertex_weights, edge_weights,
+        num_districts, balance_tolerance, niter, Some(base_seed), None)?;
+
+    let n = adjacency.len();
+    let n_counties = county_adj.len();
+
+    // Convert to Vec<u32> (1-based district IDs) for RecomChain
+    let mut assignment_fine: Vec<u32> = (0..n)
+        .map(|i| initial_plan.get(&i).copied().unwrap_or(1) as u32)
+        .collect();
+
+    // Build coarse initial assignment: each county takes the mode district of its tracts
+    let mut assignment_coarse: Vec<u32> = vec![1u32; n_counties];
+    for (tract_idx, &county_idx) in fine_to_coarse.iter().enumerate() {
+        if county_idx < n_counties && tract_idx < assignment_fine.len() {
+            assignment_coarse[county_idx] = assignment_fine[tract_idx];
+        }
+    }
+
+    // Build adjacency as Vec<Vec<u32>> for RecomChain
+    let adj_u32: Vec<Vec<u32>> = adjacency.iter()
+        .map(|nb| nb.iter().map(|&x| x as u32).collect())
+        .collect();
+
+    // Fine (tract) chain
+    let mut fine_chain = RecomChain::new(
+        adj_u32.clone(),
+        vertex_weights.to_vec(),
+        assignment_fine.clone(),
+        num_districts as u32,
+        balance_tolerance,
+    );
+
+    // Coarse (county) chain — looser tolerance to allow coarse moves to succeed
+    let county_adj_u32: Vec<Vec<u32>> = county_adj.iter()
+        .map(|nb| nb.iter().map(|&x| x as u32).collect())
+        .collect();
+    let mut coarse_chain = RecomChain::new(
+        county_adj_u32,
+        county_pop,
+        assignment_coarse.clone(),
+        num_districts as u32,
+        balance_tolerance * 3.0,
+    );
+
+    // Deterministic per-step seed derivation
+    let step_seed_fn = |step: u64| -> u64 {
+        let mut h = sha2::Sha256::new();
+        h.update(b"MSC_STEP_");
+        h.update(step.to_le_bytes());
+        h.update(b"_");
+        h.update(0u32.to_le_bytes()); // chain_idx = 0
+        h.update(b"_");
+        h.update(base_seed.to_le_bytes());
+        let d = h.finalize();
+        u64::from_le_bytes(d[..8].try_into().unwrap())
+    };
+
+    // Collect (ec, step_idx, assignment) for all visited plans
+    let initial_ec = count_edge_cuts(&initial_plan, adjacency);
+    let mut visited: Vec<(usize, usize, Vec<u32>)> = Vec::with_capacity(total_steps + 1);
+    visited.push((initial_ec, 0, assignment_fine.clone()));
+
+    // Convert usize adj to Vec<Vec<usize>> for rebalance (which takes &[Vec<usize>])
+    let adj_usize: Vec<Vec<usize>> = adjacency.to_vec();
+
+    for step in 1..=total_steps {
+        let seed = step_seed_fn(step as u64);
+        let mut rng = SmallRng::seed_from_u64(seed);
+
+        let is_coarse = rng.gen::<f64>() < alpha;
+
+        if is_coarse {
+            // Coarse move: step the county-level chain
+            coarse_chain.step(&mut rng);
+
+            // Project coarse assignment back to fine level
+            for (tract_idx, &county_idx) in fine_to_coarse.iter().enumerate() {
+                if county_idx < n_counties && tract_idx < assignment_fine.len() {
+                    assignment_fine[tract_idx] = coarse_chain.assignment[county_idx];
+                }
+            }
+
+            // Rebalance fine-level plan; reject coarse move if rebalancing fails
+            let mut asgn_work = assignment_fine.clone();
+            let balanced = rebalance(&mut asgn_work, &adj_usize, vertex_weights,
+                num_districts as u32, balance_tolerance, 200);
+            if balanced {
+                assignment_fine = asgn_work;
+                fine_chain.assignment = assignment_fine.clone();
+                // Sync coarse assignment back from rebalanced fine assignment
+                for (tract_idx, &county_idx) in fine_to_coarse.iter().enumerate() {
+                    if county_idx < n_counties && tract_idx < assignment_fine.len() {
+                        assignment_coarse[county_idx] = assignment_fine[tract_idx];
+                    }
+                }
+                coarse_chain.assignment = assignment_coarse.clone();
+            } else {
+                // Coarse move rejected — restore coarse chain from current fine assignment
+                for (tract_idx, &county_idx) in fine_to_coarse.iter().enumerate() {
+                    if county_idx < n_counties && tract_idx < assignment_fine.len() {
+                        assignment_fine[tract_idx] = fine_chain.assignment[tract_idx];
+                        assignment_coarse[county_idx] = assignment_fine[tract_idx];
+                    }
+                }
+                coarse_chain.assignment = assignment_coarse.clone();
+            }
+        } else {
+            // Fine move: step the tract-level chain
+            fine_chain.step(&mut rng);
+            assignment_fine = fine_chain.assignment.clone();
+            // Sync coarse assignment
+            for (tract_idx, &county_idx) in fine_to_coarse.iter().enumerate() {
+                if county_idx < n_counties && tract_idx < assignment_fine.len() {
+                    assignment_coarse[county_idx] = assignment_fine[tract_idx];
+                }
+            }
+            coarse_chain.assignment = assignment_coarse.clone();
+        }
+
+        let current_plan: HashMap<usize, usize> = assignment_fine.iter().enumerate()
+            .map(|(i, &d)| (i, d as usize))
+            .collect();
+        let ec = count_edge_cuts(&current_plan, adjacency);
+        visited.push((ec, step, assignment_fine.clone()));
+    }
+
+    // Sort by (EC ASC, step ASC) for determinism; select at rank floor(p * n)
+    visited.sort_by(|(e1, s1, _), (e2, s2, _)| e1.cmp(e2).then(s1.cmp(s2)));
+    let rank = ((p * visited.len() as f64).floor() as usize).min(visited.len() - 1);
+    let (_, _, best_asgn) = &visited[rank];
+    Ok(best_asgn.iter().enumerate().map(|(i, &d)| (i, d as usize)).collect())
 }
 
 // ── Merge-Split MCMC ─────────────────────────────────────────────────────────
@@ -4586,18 +4727,58 @@ mod tests {
 
     // ── MultiScale tests ──────────────────────────────────────────────────────
 
-    // L0: missing coarse adjacency must return Err containing "block-group".
+    /// Build a synthetic geoid map for an n-tract grid split into two counties.
+    /// Tracts 0..(n/2) -> county "37001", tracts (n/2)..n -> county "37003".
+    fn synthetic_geoids(n: usize) -> std::collections::HashMap<usize, String> {
+        (0..n).map(|i| {
+            let county = if i < n / 2 { "37001" } else { "37003" };
+            let tract_num = i % (n / 2);
+            let geoid = format!("{county}{tract_num:06}");
+            (i, geoid)
+        }).collect()
+    }
+
+    // L0: missing geoids must return Err containing "GEOID".
     #[test]
-    fn multiscale_missing_coarse_adj_returns_error() {
+    fn multiscale_missing_geoids_returns_err() {
         let (adj, pop) = small_grid(4, 4);
         let ew = HashMap::new();
-        let result = run_multiscale(&adj, &pop, &ew, 2, 0.1, 10, 42, 100, 0.3, 0.0, None, None);
-        assert!(result.is_err(), "run_multiscale with no coarse adjacency must return Err");
+        let result = run_multiscale(&adj, &pop, &ew, 2, 0.1, 10, 42, 100, 0.3, 0.0, None);
+        assert!(result.is_err(), "run_multiscale with no geoids must return Err");
         let msg = result.unwrap_err();
         assert!(
-            msg.contains("block-group") || msg.contains("block_group"),
-            "error must mention block-group, got: {msg}"
+            msg.contains("GEOID"),
+            "error must mention GEOID, got: {msg}"
         );
+    }
+
+    // L0: Option B produces a valid 2-district plan on a 4x4 grid with synthetic geoids.
+    #[test]
+    fn multiscale_option_b_valid_plan() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let geoids = synthetic_geoids(16);
+        let result = run_multiscale(&adj, &pop, &ew, 2, 0.10, 10, 42, 50, 0.3, 0.0, Some(&geoids));
+        let asgn = result.expect("multiscale Option B must succeed on 4x4 grid");
+        assert_eq!(asgn.len(), 16, "all 16 tracts must be assigned");
+        let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
+        assert_eq!(districts.len(), 2, "must have exactly 2 districts");
+        for &d in asgn.values() {
+            assert!(d >= 1 && d <= 2, "district label must be in [1,2], got {d}");
+        }
+    }
+
+    // L0: same seed must produce the same result (determinism).
+    #[test]
+    fn multiscale_option_b_deterministic() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let geoids = synthetic_geoids(16);
+        let run = || run_multiscale(&adj, &pop, &ew, 2, 0.10, 10, 99, 50, 0.3, 0.5, Some(&geoids))
+            .expect("multiscale Option B must succeed");
+        let a1 = run();
+        let a2 = run();
+        assert_eq!(a1, a2, "same seed must produce identical assignment");
     }
 
     // L0: "multiscale" must parse as SearchMode::MultiScale via clap ValueEnum.

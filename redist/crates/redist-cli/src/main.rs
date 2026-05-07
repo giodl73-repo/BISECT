@@ -199,6 +199,7 @@ fn main() {
                 write_manifest: args.manifest,
                 force: args.force,
                 resolution: args.resolution.to_string(),
+                plan_resolution: args.resolution.to_string(),
                 seats_per_district: args.seats_per_district,
                 total_seats,
                 adjacency_override: args.adjacency.as_ref().map(std::path::PathBuf::from),

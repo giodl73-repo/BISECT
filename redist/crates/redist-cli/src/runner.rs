@@ -646,6 +646,8 @@ pub struct StateConfig {
     pub write_manifest: bool,
     pub force: bool,
     pub resolution: String,
+    /// Geographic resolution for this run ("tract" | "bg" | "county")
+    pub plan_resolution: String,
     pub seats_per_district: usize,
     pub total_seats: usize,
     pub adjacency_override: Option<std::path::PathBuf>,
@@ -700,6 +702,7 @@ impl StateConfig {
             write_manifest: false,
             force: false,
             resolution: "tract".to_string(),
+            plan_resolution: "tract".to_string(),
             seats_per_district: 1,
             total_seats: num_districts,
             adjacency_override: None,
@@ -1495,7 +1498,8 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                     run_multiscale(
                         &graph.adjacency, &vwgt, &edge_weights,
                         num_districts, balance_tolerance_frac, niter,
-                        base, *total_steps, *alpha, *p, None, None,
+                        base, *total_steps, *alpha, *p,
+                        Some(&graph.index_to_geoid),
                     ).map_err(|e| format!("multiscale: {e}"))?
                 }
                 SeedCompositor::MergeSplit { steps, p } => {
@@ -1730,6 +1734,40 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             },
             burst_seeds: short_burst_burst_seeds,
             selected_burst_idx: short_burst_selected_burst_idx,
+            // Plan resolution fields
+            plan_resolution: cfg.plan_resolution.clone(),
+            n_units: graph.adjacency.len(),
+            unit_type: match cfg.plan_resolution.as_str() {
+                "bg" => "census block group".to_string(),
+                "county" => "county".to_string(),
+                _ => "census tract".to_string(),
+            },
+            // Multi-scale fields
+            multiscale_fine: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. }) {
+                Some("tract".to_string())
+            } else {
+                None
+            },
+            multiscale_coarse: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. }) {
+                Some("county".to_string())
+            } else {
+                None
+            },
+            fine_to_coarse_formula: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. }) {
+                Some("geoid_prefix[:5]".to_string())
+            } else {
+                None
+            },
+            fine_to_coarse_comment: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. }) {
+                Some("first 5 chars of 11-char tract GEOID = parent county FIPS".to_string())
+            } else {
+                None
+            },
+            index_to_geoid_file: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. }) {
+                Some(format!("{}_adjacency_{}_geoids.json", state_name, cfg.year))
+            } else {
+                None
+            },
         };
         redist_report::write_manifest_atomic(&plan_root, &manifest)
             .map_err(|e| format!("manifest write failed: {e}"))?;
@@ -1971,6 +2009,7 @@ mod tests {
             write_manifest: false,
             force: false,
             resolution: "tract".to_string(),
+            plan_resolution: "tract".to_string(),
             seats_per_district: 1,
             total_seats: 1,
             adjacency_override: None,
