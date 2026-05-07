@@ -238,3 +238,10 @@ redist/**/*.pyd
 release_staging/
 reports/
 .claude/worktrees/
+
+# Pipeline run logs
+*.log
+run_*.log
+*_house_*.log
+*_tract.log
+*_bg.log
