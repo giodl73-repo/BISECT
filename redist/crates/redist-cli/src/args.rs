@@ -266,6 +266,10 @@ pub enum Commands {
     /// With no label: shows label picker. With a label: pre-scoped to that label.
     /// With --configure: opens the three-layer compositor wizard.
     Plan(PlanArgs),
+    /// Generate a redistricting ensemble — weighted sample of valid plans.
+    /// Currently supports: --method smc (Sequential Monte Carlo, G.7).
+    /// Output: NDJSON with weighted plans + audit metadata.
+    Ensemble(EnsembleArgs),
 }
 
 // ---------------------------------------------------------------------------
@@ -566,6 +570,65 @@ pub struct CivicArgs {
 pub struct ResearchArgs {
     #[command(subcommand)]
     pub command: crate::research::ResearchSubcommand,
+}
+
+// ---------------------------------------------------------------------------
+// `redist ensemble` — weighted plan ensemble generation (G.7 SMC, future methods)
+// ---------------------------------------------------------------------------
+
+/// Ensemble method to use.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum EnsembleMethod {
+    /// Sequential Monte Carlo — calibrated weighted sample of valid plans.
+    /// Produces an NDJSON file with importance-weighted plans. (G.7 spec accepted 3.1/4)
+    #[value(name = "smc")]
+    Smc,
+}
+
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true)]
+pub struct EnsembleArgs {
+    /// Ensemble method. Currently: smc (Sequential Monte Carlo).
+    #[arg(long, value_enum)]
+    pub method: EnsembleMethod,
+
+    /// Two-letter state code (e.g., NC, WI, TX).
+    #[arg(long)]
+    pub state: String,
+
+    /// Census year (default: 2020).
+    #[arg(short = 'y', long, default_value = "2020")]
+    pub year: crate::args::Year,
+
+    /// Output file path for the NDJSON ensemble (default: {state}_{method}_{year}.ndjson).
+    #[arg(long)]
+    pub output: Option<String>,
+
+    // ── SMC parameters ────────────────────────────────────────────────────────
+
+    /// Number of SMC particles (plans in the weighted sample). Default: 5000.
+    /// Use 1000 for quick checks, 50000+ for publication-quality inference.
+    #[arg(long, default_value_t = 5000)]
+    pub particles: usize,
+
+    /// Resample when ESS < threshold × n_particles. Default: 0.5.
+    /// Lower threshold → fewer resamplings but more particle degeneracy.
+    #[arg(long, default_value_t = 0.5)]
+    pub resample_threshold: f64,
+
+    /// Population balance tolerance as a fraction of ideal. Default: 0.005 (±0.5%).
+    /// Use 0.01 for state legislative chambers, 0.005 for congressional.
+    #[arg(long, default_value_t = 0.005)]
+    pub pop_tolerance: f64,
+
+    /// Base seed for SMC. Default: content-derived from state+year.
+    /// Use --base-seed 42 for reproducible experiments.
+    #[arg(long)]
+    pub base_seed: Option<u64>,
+
+    /// Input data directory (default: data/{year}/{state}).
+    #[arg(long)]
+    pub data_dir: Option<String>,
 }
 
 // ---------------------------------------------------------------------------

@@ -36,6 +36,7 @@ pub mod policy;
 pub mod provenance;
 pub mod registry;
 pub mod run_registry;
+pub mod ensemble;
 pub mod research;
 pub mod report_cmd;
 pub mod runner;

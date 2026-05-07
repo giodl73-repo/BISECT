@@ -1,5 +1,6 @@
 use clap::Parser;
 use redist_cli::args::{Cli, Commands, SuiteCommands};
+use redist_cli::ensemble::run_ensemble;
 use redist_cli::sweep::run_sweep;
 use redist_cli::suite::run_suite_stability;
 use redist_cli::verify::run_verify;
@@ -546,6 +547,12 @@ fn main() {
         // ── redist research: researcher toolkit (RT plan) ─────────────────────
         Commands::Research(args) => {
             redist_cli::research::run_research(&args.command)
+                .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+        }
+
+        // ── redist ensemble: weighted plan ensemble generation ────────────────
+        Commands::Ensemble(args) => {
+            run_ensemble(&args)
                 .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
         }
 
