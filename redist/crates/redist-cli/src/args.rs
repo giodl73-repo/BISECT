@@ -1522,6 +1522,16 @@ pub struct StateArgs {
     #[arg(long, default_value_t = 50usize)]
     pub ms_adapt_interval: usize,
 
+    /// Fine resolution level for --search multiscale (default: tract).
+    /// "tract" = Option B (tract->county); "bg" = Option A (BG->tract) or C (BG->county).
+    #[arg(long, default_value = "tract")]
+    pub multiscale_fine: String,
+
+    /// Coarse resolution level for --search multiscale (default: county).
+    /// "county" with fine=tract = Option B; "tract" with fine=bg = Option A; "county" with fine=bg = Option C.
+    #[arg(long, default_value = "county")]
+    pub multiscale_coarse: String,
+
     /// Total Merge-Split MH steps for --search merge-split. Default: 1000.
     #[arg(long, default_value_t = 1000)]
     pub merge_split_steps: usize,
@@ -1798,6 +1808,16 @@ pub struct StatesArgs {
     /// Adaptation interval (steps between alpha updates) for --search multiscale-adaptive. Default: 50.
     #[arg(long, default_value_t = 50usize)]
     pub ms_adapt_interval: usize,
+
+    /// Fine resolution level for --search multiscale (default: tract).
+    /// "tract" = Option B (tract->county); "bg" = Option A (BG->tract) or C (BG->county).
+    #[arg(long, default_value = "tract")]
+    pub multiscale_fine: String,
+
+    /// Coarse resolution level for --search multiscale (default: county).
+    /// "county" with fine=tract = Option B; "tract" with fine=bg = Option A; "county" with fine=bg = Option C.
+    #[arg(long, default_value = "county")]
+    pub multiscale_coarse: String,
 
     /// Total Merge-Split MH steps for --search merge-split. Default: 1000.
     #[arg(long, default_value_t = 1000)]

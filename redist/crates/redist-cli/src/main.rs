@@ -6,7 +6,7 @@ use redist_cli::suite::run_suite_stability;
 use redist_cli::verify::run_verify;
 use redist_cli::policy::run_policy;
 use redist_cli::doctor::run_doctor;
-use redist_cli::runner::{StateConfig, StateResult, AlgorithmConfig, run_states_parallel, load_all_states, filter_incomplete, chamber_district_count};
+use redist_cli::runner::{StateConfig, StateResult, AlgorithmConfig, run_states_parallel, load_all_states, filter_incomplete, chamber_district_count, validate_multiscale_levels};
 use redist_cli::policy::LocationRegistry;
 use redist_cli::fetch::{load_manifest, build_fetch_list, print_check_report, download_items};
 use redist_cli::analyze::run_analyze;
@@ -178,6 +178,11 @@ fn main() {
             let total_seats = args.total_seats.unwrap_or(
                 args.seats_per_district * effective_num_districts
             );
+
+            // Validate --multiscale-fine / --multiscale-coarse ordering
+            validate_multiscale_levels(&args.multiscale_fine, &args.multiscale_coarse)
+                .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+
             let results = run_states_parallel(vec![StateConfig {
                 state_code: state_code.clone(),
                 state_name,
@@ -204,6 +209,8 @@ fn main() {
                 total_seats,
                 adjacency_override: args.adjacency.as_ref().map(std::path::PathBuf::from),
                 coi_weights: args.coi_weights.as_ref().map(std::path::PathBuf::from),
+                multiscale_fine: args.multiscale_fine.clone(),
+                multiscale_coarse: args.multiscale_coarse.clone(),
             }], 1);
             for r in &results {
                 if !r.success {
@@ -216,6 +223,10 @@ fn main() {
 
         // ── redist states: 50-state parallel ─────────────────────────────────
         Commands::States(args) => {
+            // Validate --multiscale-fine / --multiscale-coarse ordering before building configs
+            validate_multiscale_levels(&args.multiscale_fine, &args.multiscale_coarse)
+                .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+
             let all = load_all_states(&args.year.to_string())
                 .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
 
@@ -254,6 +265,9 @@ fn main() {
                     if args.alpha_county > 0.0 {
                         cfg.algo.weights.alpha_county = args.alpha_county;
                     }
+                    // Wire multiscale fine/coarse levels
+                    cfg.multiscale_fine = args.multiscale_fine.clone();
+                    cfg.multiscale_coarse = args.multiscale_coarse.clone();
                     // Wire search strategy override
                     if let Some(search) = args.search {
                         use redist_cli::args::SearchMode as SeM;

@@ -760,6 +760,12 @@ pub struct StateConfig {
     pub seats_per_district: usize,
     pub total_seats: usize,
     pub adjacency_override: Option<std::path::PathBuf>,
+    /// Fine resolution level for --search multiscale (default: "tract").
+    /// "tract" = Option B; "bg" = Option A or C.
+    pub multiscale_fine: String,
+    /// Coarse resolution level for --search multiscale (default: "county").
+    /// Valid pairs: (tract,county), (bg,tract), (bg,county).
+    pub multiscale_coarse: String,
 }
 
 impl StateConfig {
@@ -816,6 +822,8 @@ impl StateConfig {
             total_seats: num_districts,
             adjacency_override: None,
             coi_weights: None,
+            multiscale_fine: "tract".to_string(),
+            multiscale_coarse: "county".to_string(),
         }
     }
 
@@ -1116,6 +1124,33 @@ fn resolve_adjacency_path(
          Run: redist fetch --type adjacency --states {state_upper} --year {year}\n\
          Then: redist state --state {state_upper} --year {year} ..."
     ))
+}
+
+/// Validate --multiscale-fine / --multiscale-coarse ordering.
+///
+/// Valid pairs (fine must be strictly finer than coarse):
+///   (bg, tract), (bg, county), (tract, county)
+///
+/// Returns Ok(()) for valid pairs; Err with a descriptive message for invalid ones.
+pub fn validate_multiscale_levels(fine: &str, coarse: &str) -> Result<(), String> {
+    let rank = |level: &str| match level {
+        "bg" | "block_group" => Ok(0usize),
+        "tract"              => Ok(1usize),
+        "county"             => Ok(2usize),
+        other => Err(format!(
+            "unknown multiscale level '{other}'. Valid values: bg, tract, county"
+        )),
+    };
+    let fr = rank(fine)?;
+    let cr = rank(coarse)?;
+    if fr < cr {
+        Ok(())
+    } else {
+        Err(format!(
+            "--multiscale-fine {fine} is not finer than --multiscale-coarse {coarse}.\n\
+             Valid orderings (fine -> coarse): bg->tract, bg->county, tract->county."
+        ))
+    }
 }
 
 /// Check CVAP data availability and warn + fall back to total if missing.
@@ -1646,21 +1681,78 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 }
                 SeedCompositor::MultiScale { total_steps, p, alpha } => {
                     let base = seed.unwrap_or(0);
-                    status(cfg.position, &format!("{}: multiscale p={:.2} {} steps alpha={:.2} into {} districts",
-                           cfg.state_code, p, total_steps, alpha, num_districts));
+                    let fine = cfg.multiscale_fine.as_str();
+                    let coarse = cfg.multiscale_coarse.as_str();
+                    status(cfg.position, &format!(
+                        "{}: multiscale({fine}->{coarse}) p={:.2} {} steps alpha={:.2} into {} districts",
+                        cfg.state_code, p, total_steps, alpha, num_districts
+                    ));
+                    // Load BG adjacency for Options A (bg->tract) and C (bg->county)
+                    let bg_graph_opt = if fine == "bg" || fine == "block_group" {
+                        match resolve_adjacency_path(&state_code_lower, &cfg.year, "block_group") {
+                            Ok((bg_path, _)) => {
+                                match crate::adjacency_loader::load_adjacency_pkl(&bg_path) {
+                                    Ok(g) => Some(g),
+                                    Err(e) => return Err(format!(
+                                        "multiscale: failed to load block-group adjacency for {}: {e}", cfg.state_code
+                                    )),
+                                }
+                            }
+                            Err(e) => return Err(format!(
+                                "multiscale: --multiscale-fine bg requires block-group adjacency for {} {}: {e}",
+                                cfg.state_code, cfg.year
+                            )),
+                        }
+                    } else {
+                        None
+                    };
+                    use crate::bisection_runner::MultiscaleFineLevel;
+                    let fine_level = MultiscaleFineLevel::from_str(fine)
+                        .map_err(|e| format!("multiscale: {e}"))?;
                     run_multiscale(
                         &graph.adjacency, &vwgt, &edge_weights,
                         num_districts, balance_tolerance_frac, niter,
                         base, *total_steps, *alpha, *p,
                         Some(&graph.index_to_geoid),
+                        fine_level,
+                        coarse,
+                        bg_graph_opt.as_ref().map(|g| (
+                            g.adjacency.as_slice(),
+                            g.vertex_weights.as_slice(),
+                            &g.index_to_geoid,
+                        )),
                     ).map_err(|e| format!("multiscale: {e}"))?
                 }
                 SeedCompositor::MultiScaleAdaptive { total_steps, p, target_accept, adapt_interval } => {
                     let base = seed.unwrap_or(0);
+                    let fine = cfg.multiscale_fine.as_str();
+                    let coarse = cfg.multiscale_coarse.as_str();
                     status(cfg.position, &format!(
-                        "{}: multiscale-adaptive p={:.2} {} steps target_accept={:.2} adapt_interval={} into {} districts",
+                        "{}: multiscale-adaptive({fine}->{coarse}) p={:.2} {} steps target_accept={:.2} adapt_interval={} into {} districts",
                         cfg.state_code, p, total_steps, target_accept, adapt_interval, num_districts
                     ));
+                    // Load BG adjacency for Options A and C
+                    let bg_graph_opt = if fine == "bg" || fine == "block_group" {
+                        match resolve_adjacency_path(&state_code_lower, &cfg.year, "block_group") {
+                            Ok((bg_path, _)) => {
+                                match crate::adjacency_loader::load_adjacency_pkl(&bg_path) {
+                                    Ok(g) => Some(g),
+                                    Err(e) => return Err(format!(
+                                        "multiscale-adaptive: failed to load block-group adjacency for {}: {e}", cfg.state_code
+                                    )),
+                                }
+                            }
+                            Err(e) => return Err(format!(
+                                "multiscale-adaptive: --multiscale-fine bg requires block-group adjacency for {} {}: {e}",
+                                cfg.state_code, cfg.year
+                            )),
+                        }
+                    } else {
+                        None
+                    };
+                    use crate::bisection_runner::MultiscaleFineLevel;
+                    let fine_level = MultiscaleFineLevel::from_str(fine)
+                        .map_err(|e| format!("multiscale-adaptive: {e}"))?;
                     let acfg = AdaptiveConfig {
                         total_steps: *total_steps,
                         target_accept: *target_accept,
@@ -1675,6 +1767,13 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                         &graph.adjacency, &vwgt, &edge_weights,
                         num_districts, niter, base, acfg,
                         Some(&graph.index_to_geoid),
+                        fine_level,
+                        coarse,
+                        bg_graph_opt.as_ref().map(|g| (
+                            g.adjacency.as_slice(),
+                            g.vertex_weights.as_slice(),
+                            &g.index_to_geoid,
+                        )),
                     ).map_err(|e| format!("multiscale-adaptive: {e}"))?;
                     plan
                 }
@@ -1968,27 +2067,43 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             },
             // Multi-scale fields
             multiscale_fine: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. } | SeedCompositor::MultiScaleAdaptive { .. }) {
-                Some("tract".to_string())
+                Some(cfg.multiscale_fine.clone())
             } else {
                 None
             },
             multiscale_coarse: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. } | SeedCompositor::MultiScaleAdaptive { .. }) {
-                Some("county".to_string())
+                Some(cfg.multiscale_coarse.clone())
             } else {
                 None
             },
             fine_to_coarse_formula: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. } | SeedCompositor::MultiScaleAdaptive { .. }) {
-                Some("geoid_prefix[:5]".to_string())
+                // BG->tract uses prefix[:11]; all county coarsenings use prefix[:5]
+                let formula = if cfg.multiscale_coarse == "tract" {
+                    "geoid_prefix[:11]"
+                } else {
+                    "geoid_prefix[:5]"
+                };
+                Some(formula.to_string())
             } else {
                 None
             },
             fine_to_coarse_comment: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. } | SeedCompositor::MultiScaleAdaptive { .. }) {
-                Some("first 5 chars of 11-char tract GEOID = parent county FIPS".to_string())
+                let comment = match (cfg.multiscale_fine.as_str(), cfg.multiscale_coarse.as_str()) {
+                    ("bg", "tract")  => "first 11 chars of 12-char BG GEOID = parent tract GEOID",
+                    ("bg", "county") => "first 5 chars of 12-char BG GEOID = parent county FIPS",
+                    _                => "first 5 chars of 11-char tract GEOID = parent county FIPS",
+                };
+                Some(comment.to_string())
             } else {
                 None
             },
             index_to_geoid_file: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. } | SeedCompositor::MultiScaleAdaptive { .. }) {
-                Some(format!("{}_adjacency_{}_geoids.json", state_name, cfg.year))
+                // BG-fine options use the BG geoids file; tract-fine uses tract geoids file
+                if cfg.multiscale_fine == "bg" {
+                    Some(format!("{}_bg_adjacency_{}_geoids.json", state_name, cfg.year))
+                } else {
+                    Some(format!("{}_adjacency_{}_geoids.json", state_name, cfg.year))
+                }
             } else {
                 None
             },
@@ -2238,6 +2353,8 @@ mod tests {
             total_seats: 1,
             adjacency_override: None,
             coi_weights: None,
+            multiscale_fine: "tract".to_string(),
+            multiscale_coarse: "county".to_string(),
         }
     }
 
