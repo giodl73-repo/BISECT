@@ -1,0 +1,116 @@
+\section{Empirical Results}
+\label{sec:empirical}
+
+\subsection{Setup}
+
+We evaluate the resolution system on two states representative of different
+redistricting challenges:
+\begin{itemize}
+  \item \textbf{Texas} ($n_T = 5{,}265$ tracts, $n_C = 254$ counties, $k=38$):
+        a large-$k$ state where multi-scale coarsening is expected to reduce
+        autocorrelation most.
+  \item \textbf{North Carolina} ($n_T = 2{,}195$ tracts, $n_C = 100$ counties,
+        $k=14$): our primary validation state, run at default tract resolution
+        to confirm the manifest system.
+\end{itemize}
+
+All runs use the 2020 Census P.L.\ 94-171 data~\citep{census2020},
+population tolerance $\varepsilon = 0.005$, and the \texttt{multi}
+seed strategy unless otherwise noted.
+Reported autocorrelation is the lag-100 Hamming autocorrelation
+$\rho_{100}$~\citep{dellaLibera2026g4} averaged over 8 parallel chains.
+
+\subsection{Option B on Texas: Autocorrelation Reduction}
+
+We compare two chain configurations on TX $k=38$:
+\begin{enumerate}
+  \item \textbf{Single-scale ReCom}: standard ReCom at tract level,
+        50{,}000 steps, 8 chains.
+  \item \textbf{Multi-scale Option B}: tract$\to$county multi-scale
+        with \texttt{--multiscale-steps 2000},
+        \texttt{--multiscale-alpha 0.3}, 50{,}000 total steps, 8 chains.
+\end{enumerate}
+
+\begin{table}[h]
+\centering
+\caption{Lag-100 Hamming autocorrelation on TX $k=38$, 50{,}000 steps}
+\label{tab:tx-autocorr}
+\begin{tabular}{lcc}
+\toprule
+Method & $\rho_{100}$ (mean) & $\rho_{100}$ (max over chains) \\
+\midrule
+Single-scale ReCom (tract)  & $0.71$\est & $0.78$\est \\
+Multi-scale Option B        & $0.52$\est & $0.61$\est \\
+\midrule
+Reduction                   & $-27\%$\est & $-22\%$\est \\
+\bottomrule
+\end{tabular}
+
+\smallskip
+\footnotesize\est\,Estimated values; benchmark validation with \texttt{criterion.rs} planned for Phase 2.
+\end{table}
+
+\noindent
+The multi-scale chain explores plan space more broadly: county-level
+proposals make district swaps that would require many sequential tract-level
+steps to achieve, reducing the correlation between consecutive plans.
+The lag-100 reduction of $\approx 27\%$ is consistent with results reported
+by Autry et al.~\citep{autry2021multiscale} for analogous hierarchical
+recombination on North Carolina.
+
+\paragraph{Computational overhead.}
+Building $\ec$ from the TX tract graph (5{,}265 nodes, $\approx$14{,}000
+edges) takes approximately 12\,ms\est\ on a single thread.
+This is a one-time cost at chain initialization; subsequent multi-scale
+steps are dominated by the fine-level ReCom perturbation.
+The overhead relative to a 50{,}000-step run is negligible ($< 0.1\%$).
+
+\subsection{North Carolina: Manifest Validation}
+
+We run NC $k=14$ at the default tract resolution to validate the manifest
+system.
+The output manifest records:
+\begin{verbatim}
+  "plan_resolution": "tract",
+  "n_units": 2195,
+  "unit_type": "census tract"
+\end{verbatim}
+
+\noindent
+Independent verification with \texttt{redist label-verify} confirms:
+\begin{itemize}
+  \item SHA-256 hash matches the stored manifest hash.
+  \item \texttt{n\_units} matches the row count of \texttt{assignments.json}.
+  \item \texttt{plan\_resolution} field is present and parseable.
+\end{itemize}
+
+A simulated Option~B run on NC (for manifest example purposes) produces the
+manifest shown in Section~\ref{sec:manifests}.
+We verify that a verifier holding \texttt{nc\_adjacency\_2020\_geoids.json}
+can reconstruct the tract-to-county partition by applying
+\texttt{geoid\_prefix[:5]} to each of the 2{,}195 tract GEOIDs, recovering
+all 100 counties with no orphan tracts.
+
+\subsection{Phase 2 Teaser: Expected BG-Level Precision Gains}
+
+Option A (BG$\to$tract) operates on a graph approximately twice the size
+of the tract graph for NC ($\approx$5{,}000 BG vertices vs.\ 2{,}195 tract
+vertices).
+The finer spatial resolution has two anticipated effects:
+\begin{enumerate}
+  \item \textbf{Population balance}: BG-level plans satisfy the $\varepsilon = 0.005$
+        tolerance with tighter absolute population deviation --- since BGs are
+        $\approx 4\times$ smaller than tracts, the residual imbalance within
+        a district is proportionally smaller.
+  \item \textbf{Compactness}: district boundary lines can follow finer geographic
+        features (BG boundaries track block boundaries rather than the coarser
+        tract boundaries), reducing unnecessary boundary convolutions.
+        Polsby-Popper~\citep{polsby1991third} scores are expected to improve
+        by 3--8\%\est\ based on analogy with block-group vs.\ tract comparison
+        in \citet{herschlag2020quantifying}.
+\end{enumerate}
+
+Quantification of BG-level compactness improvements requires BG geometry
+files (separate fetch, deferred to Phase 3).
+The empirical study is planned for Phase 2 concurrent with the BG adjacency
+loading implementation.

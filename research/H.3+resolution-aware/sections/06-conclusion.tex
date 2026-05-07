@@ -1,0 +1,54 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+Geographic resolution is a dial, not a binary choice.
+The census-tract level is the conventional default for congressional
+redistricting, but it is not uniquely correct: block groups offer finer
+spatial precision for state-legislative chambers; counties offer a
+computationally efficient coarsening that reduces MCMC autocorrelation
+in large-$k$ states.
+Making resolution a first-class pipeline parameter requires changes to
+five stages --- data loading, plan generation, multi-scale chain hierarchy,
+plan output, and audit manifests --- none of which is independently
+difficult, but all of which must be consistent.
+
+The central contribution enabling this consistency is the observation that
+the complete fine-to-coarse mapping at any adjacent pair of census levels
+is encoded in the GEOIDs that the pipeline already holds.
+The function \derive{} formalizes this observation as a provably correct
+$O(n_c + n_f)$ algorithm with explicit orphan detection.
+The function \buildc{} extends it to county adjacency construction,
+with a proof that the criterion ``counties are adjacent iff any of their
+constituent tracts are adjacent'' correctly propagates geographic adjacency
+from the tract level up.
+
+Option B (tract$\to$county multi-scale) is fully deployed, requires no
+additional data, and reduces lag-100 Hamming autocorrelation by
+approximately 27\%\est\ on Texas $k=38$ relative to single-scale ReCom
+at tract resolution.
+Every plan manifest now records \texttt{plan\_resolution}, \texttt{n\_units},
+and \texttt{unit\_type}; multi-scale manifests additionally record
+\texttt{fine\_to\_coarse\_formula}, enabling independent partition
+reconstruction without pipeline code.
+
+The roadmap for Phase 2 is: Option A (BG$\to$tract multi-scale) and
+Option C (BG$\to$county), both requiring BG adjacency loading as the
+primary graph; BG-level plan output and analysis; and BG-level compactness
+computation once BG geometry files are available.
+
+Resolution is not an implementation detail.
+It determines the spatial grain of every district boundary drawn by the
+algorithm, the size of every graph the chain traverses, and the
+interpretability of every audit manifest.
+The system described here makes that choice explicit, verifiable, and
+extensible.
+
+\paragraph{Acknowledgments.}
+Census data from the U.S. Census Bureau, P.L.\ 94-171 Redistricting Data.
+All computations performed with the \redist{} pipeline~\citep{dellaLibera2026b1}.
+
+\paragraph{Code availability.}
+The implementation is in \texttt{redist-cli/src/adjacency\_loader.rs}
+(\derive{}, \buildc{}) and \texttt{redist-core/src/manifest.rs}
+(\texttt{plan\_resolution} fields).
+The full pipeline is available at the project repository.

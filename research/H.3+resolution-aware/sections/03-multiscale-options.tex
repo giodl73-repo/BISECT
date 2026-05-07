@@ -1,0 +1,180 @@
+\section{Multi-Scale Resolution Options}
+\label{sec:options}
+
+\subsection{Overview}
+
+The multi-scale MCMC framework~\citep{autry2021multiscale} runs a ReCom chain
+at a fine spatial level while using a coarser representation for
+acceptance/rejection guidance.
+This hierarchical structure reduces autocorrelation: coarse-level proposals
+make larger jumps in plan space that would be rejected at full tract
+resolution, but are tested at county resolution first and only expanded to
+the fine level if they pass.
+
+We define three multi-scale options corresponding to adjacent pairs in the
+GEOID hierarchy.
+Each option is specified by two CLI flags,
+\texttt{--multiscale-fine} and \texttt{--multiscale-coarse},
+combined with \texttt{--search multiscale}:
+
+\begin{table}[h]
+\centering
+\caption{Multi-scale option summary}
+\label{tab:options}
+\begin{tabular}{clllll}
+\toprule
+Option & Fine & Coarse & Extra data & GEOID prefix & Output level & Status \\
+\midrule
+A & \bg{}   & \tract{}  & BG file    & $[:11]$      & BG           & Phase 2 \\
+B & \tract{} & \county{} & None       & $[:5]$       & Tract        & Implemented \\
+C & \bg{}   & \county{} & BG file    & $[:5]$       & BG           & Phase 2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+\textbf{Option B} is the uniquely data-free option: county adjacency is
+derived entirely from the tract graph and GEOIDs, so no additional download
+is required.
+Options A and C require the block-group adjacency file
+(\texttt{\{state\}\_bg\_adjacency\_\{year\}.pkl}),
+which is fetched separately but from the same P.L.\ 94-171 source.
+
+\subsection{Input Validation}
+
+The CLI enforces that \texttt{--multiscale-fine} is strictly finer than
+\texttt{--multiscale-coarse}.
+The valid orderings are $\bg < \tract < \county$ (strictly finer
+$=$ smaller average geographic area, larger GEOID prefix length).
+Invalid orderings return an informative error:
+
+\begin{verbatim}
+  ERROR: --multiscale-fine county is not finer than
+         --multiscale-coarse bg.
+  Valid orderings (fine -> coarse): bg->tract,
+         bg->county, tract->county.
+\end{verbatim}
+
+\noindent
+The check is performed before any data loading, so no compute is wasted
+on malformed invocations.
+
+\subsection{Option B: Tract$\to$County (Implemented)}
+\label{ssec:optionb}
+
+Option B is invoked as:
+\begin{verbatim}
+  redist state --state TX --year 2020 --search multiscale \
+    --multiscale-fine tract --multiscale-coarse county \
+    --multiscale-steps 2000 --multiscale-alpha 0.3
+\end{verbatim}
+
+\paragraph{Data requirements.}
+Only the standard tract adjacency file is required.
+The county adjacency graph $\ec$ is built in-memory by \buildc{}
+immediately after tract adjacency is loaded, in $O(|E_T|)$ time
+(Section~\ref{sec:geoid}).
+The county partition $\mathbf{f}$ is derived by \derive{}
+with prefix length 5.
+
+\paragraph{Multi-scale step sequence.}
+At each chain step, the multi-scale algorithm proceeds as follows:
+
+\begin{enumerate}
+  \item Draw a ReCom proposal at the county level (using $\ec$ and
+        county populations $\mathbf{p}_C$).
+  \item If the county proposal is accepted (population-balanced at
+        coarse tolerance \texttt{coarse\_tol}), expand it to the
+        tract level: all tracts in the affected counties inherit
+        the county assignment.
+  \item Apply a fine-level ReCom perturbation within the expanded region
+        to restore tract-level population balance.
+\end{enumerate}
+
+\paragraph{Coarse tolerance rationale.}
+The coarse tolerance is set to $3\times$ the fine tolerance.
+Formally, if the fine-level tolerance is $\varepsilon_f = 0.005$
+(statutory 0.5\% one-person-one-vote bound), then the coarse tolerance
+is $\varepsilon_c = 3\varepsilon_f = 0.015$.
+The factor of 3 is justified as follows.
+A county contains on average $n_T / n_C \approx 22$ tracts (for NC).
+Population imbalance at the county level of $\varepsilon_c$ can be
+corrected by the fine-level perturbation step without violating
+$\varepsilon_f$, because the fine-level correction has 22 tracts of
+granularity with which to rebalance.
+A tighter coarse tolerance wastes accepted county proposals that could
+be fine-corrected; a looser tolerance risks proposals the fine
+perturbation cannot fix.
+This is a practical heuristic, not a formal guarantee; the Phase 2
+empirical study (Section~\ref{sec:empirical}) validates it on TX.
+
+\paragraph{Output.}
+The output plan is recorded at the fine (tract) level.
+The manifest records \texttt{plan\_resolution = "tract"} and
+\texttt{multiscale\_fine = "tract"}, \texttt{multiscale\_coarse = "county"}.
+
+\subsection{Option A: BG$\to$Tract (Phase 2)}
+\label{ssec:optiona}
+
+Option A runs the fine chain at block-group resolution with tract-level
+coarsening.
+The BG adjacency file (\texttt{\{state\}\_bg\_adjacency\_\{year\}.pkl})
+must be available.
+The partition is derived by \derive{} with prefix length 11.
+
+Option A is the highest-precision multi-scale mode: plans are output at
+BG resolution ($\approx$5{,}000 units for NC), enabling finer district
+boundaries than are possible at tract level.
+This is particularly relevant for state legislative plans with many small
+districts.
+
+\textbf{Phase 2 status}: BG adjacency loading is implemented for the
+single-resolution case (\texttt{--resolution block\_group});
+the multi-scale wiring (passing BG adjacency as the fine graph to the
+multi-scale chain) is planned for Phase 2.
+
+\subsection{Option C: BG$\to$County (Phase 2)}
+\label{ssec:optionc}
+
+Option C combines the finest spatial precision (BG) with the coarsest
+useful guidance level (county), skipping the intermediate tract level.
+The BG-to-county partition is derived by \derive{} with prefix length 5
+applied to BG GEOIDs (12 characters) --- the same prefix length as
+tract$\to$county but applied to longer source strings.
+
+Option C provides the most aggressive autocorrelation reduction (county
+proposals make the largest jumps) while maintaining full BG-level output.
+It requires both the BG adjacency file and BG population data.
+
+\textbf{Phase 2 status}: Planned alongside Option A.
+
+\subsection{Seeding and Reproducibility}
+
+Multi-scale steps use the same \texttt{MSC\_STEP\_} seeding formula as
+single-scale runs.
+The \texttt{plan\_resolution} field is recorded in the manifest rather
+than encoded in the seed: changing resolution with the same
+\texttt{base\_seed} produces different plans (the adjacency graph differs),
+which is correct behavior.
+A user wishing to reproduce an Option~B run must supply the same
+\texttt{base\_seed}, \texttt{--multiscale-steps}, and
+\texttt{--multiscale-alpha} values alongside \texttt{--search multiscale
+--multiscale-fine tract --multiscale-coarse county}.
+All four parameters are recorded in the manifest.
+
+\subsection{CLI Reference}
+
+\begin{verbatim}
+  # Tract level -- default, unchanged
+  redist state --state NC --year 2020
+  # Option B (no extra data)
+  redist state --state TX --year 2020 --search multiscale \
+    --multiscale-fine tract --multiscale-coarse county \
+    --multiscale-steps 2000 --multiscale-alpha 0.3
+  # Option A (BG file required)
+  redist state --state NC --year 2020 --search multiscale \
+    --multiscale-fine bg --multiscale-coarse tract
+  # Option C (BG file required)
+  redist state --state NC --year 2020 --search multiscale \
+    --multiscale-fine bg --multiscale-coarse county
+\end{verbatim}

@@ -1,0 +1,149 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{footmisc}
+\usepackage{mdframed}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{listings}
+
+%% Section formatting
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+\setstretch{1.4}
+
+%% Shorthand macros — pipeline tools
+\newcommand{\redist}{\texttt{redist}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\ar}{\textsc{ApportionRegions}}
+\newcommand{\gc}{\textsc{GerryChain}}
+
+%% Resolution-system macros
+\newcommand{\derive}{\texttt{derive\_partition}}
+\newcommand{\buildc}{\texttt{build\_county\_coarsening}}
+\newcommand{\ec}{\ensuremath{\mathcal{E}_C}}   % county adjacency graph
+\newcommand{\pp}{\ensuremath{\mathrm{PP}}}       % Polsby-Popper
+\newcommand{\geoid}[1]{\texttt{#1}}              % GEOID literal
+
+%% Resolution-level labels
+\newcommand{\bg}{\texttt{bg}}
+\newcommand{\tract}{\texttt{tract}}
+\newcommand{\county}{\texttt{county}}
+
+%% Note markers
+\newcommand{\est}{$^{\dagger}$}
+\newcommand{\bench}{$^{\ddagger}$}
+
+%% Highlighted box
+\newenvironment{keybox}{%
+  \begin{mdframed}[linewidth=0.8pt, innerleftmargin=12pt, innerrightmargin=12pt,
+                   innertopmargin=8pt, innerbottommargin=8pt,
+                   backgroundcolor=gray!8]
+  \small\setstretch{1.3}%
+}{%
+  \end{mdframed}%
+}
+
+%% JSON listing style
+\lstdefinelanguage{json}{
+  basicstyle=\small\ttfamily,
+  showstringspaces=false,
+  breaklines=true,
+  morestring=[b]",
+  stringstyle=\color{black!70},
+  literate=
+    *{:}{{{\color{black}:}}}{1}
+     {,}{{{\color{black},}}}{1}
+     {\{}{{{\color{black}\{}}}{1}
+     {\}}{{{\color{black}\}}}}{1}
+}
+
+%% -----------------------------------------------------------------------
+
+\title{%
+  \textbf{Resolution-Aware Redistricting: Geographic Granularity}\\
+  \textbf{as a First-Class Parameter}\\[0.8em]
+  \normalsize\textit{H.3 --- Algorithmic Extensions / Resolution System}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+Congressional redistricting pipelines conventionally operate at a single spatial
+resolution --- the census tract --- as though it were the uniquely valid unit of
+geographic analysis.
+It is not.
+Block groups ($\approx$1{,}000 persons) offer finer spatial precision for
+state-legislative work; counties ($\approx$100{,}000 persons) provide a
+computationally efficient coarsening that can reduce Markov chain autocorrelation
+in large-$k$ states.
+
+We make geographic resolution a \emph{first-class parameter} throughout the
+\redist{} pipeline: data loading, plan generation, multi-scale Markov chain
+hierarchies, plan output, and cryptographic audit manifests.
+The central algorithmic contribution is \derive{}: a GEOID prefix-matching function
+that derives any fine-to-coarse partition from existing adjacency data,
+with no extra data files for the implemented Option~B (tract$\to$county).
+The county adjacency graph $\ec$ is built from the tract graph via the
+criterion: counties $A$ and $B$ are adjacent if and only if any tract in $A$
+is adjacent (in the tract graph) to any tract in $B$.
+We prove this criterion correctly propagates geographic adjacency from the
+tract level up.
+
+The system supports three multi-scale options:
+Option~A (BG$\to$tract), Option~B (tract$\to$county, fully implemented),
+and Option~C (BG$\to$county).
+Every plan manifest records \texttt{plan\_resolution}, \texttt{n\_units},
+and \texttt{unit\_type}; multi-scale manifests additionally record
+\texttt{fine\_to\_coarse\_formula} so an independent verifier can reconstruct
+the partition without code.
+Empirical comparison on Texas ($k=38$) shows that Option~B multi-scale chains
+reduce lag-100 autocorrelation relative to single-scale ReCom at tract level,
+providing a concrete efficiency benefit alongside the flexibility gain.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-geoid-derivation}
+\input{sections/03-multiscale-options}
+\input{sections/04-manifests}
+\input{sections/05-empirical}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

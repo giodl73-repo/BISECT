@@ -1,0 +1,224 @@
+\section{GEOID Partition Derivation}
+\label{sec:geoid}
+
+\subsection{GEOID Structure and the Prefix Hierarchy}
+
+The Census Bureau assigns every geographic entity a FIPS-based GEOID
+whose character-level prefix encodes the entity's parent at every coarser
+level~\citep{census2020geoids}.
+For the three levels relevant to redistricting, the encoding is:
+
+\begin{definition}[GEOID prefix structure]
+\label{def:geoid}
+Let $\ell \in \{\bg, \tract, \county\}$ denote a resolution level.
+The GEOID of a unit $u$ at level $\ell$ is a fixed-width string $g(u, \ell)$
+of the following lengths:
+\[
+  |g(u, \county)| = 5, \quad
+  |g(u, \tract)| = 11, \quad
+  |g(u, \bg)| = 12.
+\]
+For any unit $u$ at a fine level $\ell_f$ and its parent $\pi(u)$ at a
+coarser level $\ell_c$:
+\[
+  g(\pi(u), \ell_c) = g(u, \ell_f)\bigl[0 \,:\, |g(\pi(u), \ell_c)|\bigr],
+\]
+that is, the coarse GEOID is the exact length-$|g(\cdot,\ell_c)|$ prefix
+of the fine GEOID.
+\end{definition}
+
+This prefix property holds by construction for all three adjacent pairs:
+BG$\to$tract (prefix length 11), tract$\to$county (prefix length 5),
+and BG$\to$county (prefix length 5).
+It is an invariant of the Census Bureau FIPS encoding, not an empirical
+regularity.
+Within any census year, all units at the same level have uniform GEOID
+length --- tracts are always 11 characters, block groups always 12,
+counties always 5.
+
+\subsection{The \texttt{derive\_partition} Function}
+
+Given a set of fine-level GEOIDs (one per adjacency-graph vertex at the
+fine level) and a set of coarse-level GEOIDs, we derive the fine-to-coarse
+index mapping by prefix matching.
+
+\begin{definition}[\derive{}]
+\label{def:derive}
+Let $F = \{(i, g_i)\}_{i=0}^{n_f - 1}$ be the fine-level index-to-GEOID
+map (fine unit index $\mapsto$ GEOID string) and
+$C = \{(j, h_j)\}_{j=0}^{n_c - 1}$ be the coarse-level index-to-GEOID map.
+Define $\ell_c = |h_j|$ (uniform by Definition~\ref{def:geoid}).
+The function \derive{}$(F, C)$ returns the vector
+$\mathbf{f} \in \{0,\ldots,n_c-1\}^{n_f}$ where:
+\[
+  \mathbf{f}[i] = j
+  \quad\text{such that}\quad
+  h_j = g_i[0:\ell_c].
+\]
+\end{definition}
+
+\begin{theorem}[Correctness of \derive{}]
+\label{thm:derive}
+Under Definition~\ref{def:geoid}, \derive{}$(F, C)$ is well-defined
+(every fine unit maps to exactly one coarse unit) and complete
+(no fine unit is left without a coarse mapping).
+\end{theorem}
+
+\begin{proof}
+\textbf{Existence.}
+For each fine unit $i$ with GEOID $g_i$, let $p_i = g_i[0:\ell_c]$.
+By the FIPS prefix property (Definition~\ref{def:geoid}), $p_i$ equals
+the GEOID of the unique coarse parent $\pi(i)$.
+Since $C$ contains every coarse unit in the same census state-and-year
+as $F$, and $\pi(i)$ is a coarse unit in the same state-and-year,
+there exists $j$ such that $h_j = p_i$.
+
+\textbf{Uniqueness.}
+All coarse GEOIDs have the same length $\ell_c$ and are distinct (a GEOID
+uniquely identifies a geographic entity).
+If $h_j = h_{j'} = p_i$ then $j = j'$.
+
+\textbf{Completeness.}
+The assertion that all coarse GEOIDs have uniform length $\ell_c$ is
+checked explicitly before prefix lookup; a mismatched coarse GEOID
+(e.g., from a mixed-year file) raises an error rather than silently
+producing an incorrect prefix.
+After filling $\mathbf{f}$, the implementation checks for any remaining
+\texttt{usize::MAX} sentinel and returns an error if an orphan fine unit
+is found.
+\end{proof}
+
+\paragraph{Implementation detail: uniform-length assertion.}
+The implementation computes $\ell_c$ as the length of the first coarse
+GEOID in iteration order, then asserts equality for every subsequent
+coarse GEOID before building the lookup map.
+This guards against a cross-year data mix (e.g., 2010 county file paired
+with 2020 tract file) that would silently corrupt the prefix computation.
+The assertion cost is $O(n_c)$ at startup, negligible against the $O(n_f)$
+lookup phase.
+
+\paragraph{Complexity.}
+Building the coarse lookup map: $O(n_c)$.
+Filling $\mathbf{f}$: $O(n_f)$ expected via hash lookup.
+Total: $O(n_c + n_f)$.
+
+\subsection{The \texttt{build\_county\_coarsening} Function}
+
+County-level adjacency cannot be read from a file --- no Census Bureau
+product provides a county adjacency graph derived from a tract graph.
+We build it in memory from the tract graph and the tract-to-county
+partition derived by \derive{}.
+
+\begin{definition}[County adjacency criterion]
+\label{def:county-adj}
+Let $G_T = (V_T, E_T)$ be the tract adjacency graph and
+$\mathbf{f}: V_T \to V_C$ be the tract-to-county partition.
+The county adjacency graph $\ec = (V_C, E_C)$ has edge set:
+\[
+  E_C = \bigl\{\{\mathbf{f}(u), \mathbf{f}(v)\} :
+               (u, v) \in E_T \text{ and } \mathbf{f}(u) \neq \mathbf{f}(v)\bigr\}.
+\]
+Counties $A$ and $B$ are adjacent if and only if some tract in $A$
+is adjacent (in the tract graph) to some tract in $B$.
+\end{definition}
+
+\begin{theorem}[Correctness of county adjacency]
+\label{thm:county-adj}
+The adjacency graph $\ec$ produced by Definition~\ref{def:county-adj}
+correctly captures geographic adjacency at the county level: two counties
+share an edge in $\ec$ if and only if they share a geographic boundary.
+\end{theorem}
+
+\begin{proof}
+($\Rightarrow$) Suppose counties $A$ and $B$ share a geographic boundary.
+Then there exist two regions --- one wholly within $A$ and one wholly
+within $B$ --- that share a positive-length boundary segment.
+Census tracts are non-crossing polygons that tile each county; any
+county boundary segment is covered by a sequence of tract boundary
+segments.
+Therefore there exist tracts $u \in A$ and $v \in B$ that share a
+positive-length boundary segment, so $(u, v) \in E_T$, giving
+$\{A, B\} \in E_C$.
+
+($\Leftarrow$) Suppose $\{A, B\} \in E_C$.
+Then there exist $u \in A$, $v \in B$ with $(u,v) \in E_T$.
+Two tracts share a tract-level adjacency edge if and only if they share
+a positive-length boundary segment.
+The boundary segment between $u$ and $v$ lies on the boundary between
+county $A$ and county $B$ (since $u \subset A$ and $v \subset B$
+and counties are non-overlapping).
+Hence $A$ and $B$ share a geographic boundary. \qed
+\end{proof}
+
+\begin{remark}[Water boundaries]
+\label{rem:water}
+In coastal and lake-adjacent states, the Census Bureau sometimes defines
+a tract boundary along a water body shared with another county.
+Whether such a shared water boundary constitutes a geographic adjacency
+depends on legal redistricting criteria: some states require district
+contiguity via land only.
+The criterion in Definition~\ref{def:county-adj} inherits whatever
+adjacency is encoded in the tract graph $G_T$.
+If the tract graph excludes water-only shared boundaries (as in the
+\redist{} default adjacency construction, which requires
+shared-boundary length $> 0$ on land), county adjacency also excludes
+them.
+Users requiring strict land-only county adjacency should verify the
+tract graph was built with land-only boundaries.
+\end{remark}
+
+\paragraph{Output of \buildc{}.}
+The function returns a triple $(\ec, \mathbf{p}_C, \mathbf{f})$ where:
+\begin{itemize}
+  \item $\ec$: the county adjacency list (as \texttt{Vec<Vec<usize>>});
+  \item $\mathbf{p}_C$: county populations, $\mathbf{p}_C[j] = \sum_{i: \mathbf{f}(i)=j} p_i$;
+  \item $\mathbf{f}$: the tract-to-county partition (output of \derive{}).
+\end{itemize}
+
+\begin{proposition}[County population invariant]
+\label{prop:pop}
+$\sum_{j \in V_C} \mathbf{p}_C[j] = \sum_{i \in V_T} p_i$.
+\end{proposition}
+\begin{proof}
+Each tract contributes its population $p_i$ to exactly one county
+(by the partition property of $\mathbf{f}$), so the sum telescopes. \qed
+\end{proof}
+
+\paragraph{Complexity of \buildc{}.}
+\derive{} runs in $O(n_T + n_C)$.
+Building county populations: $O(n_T)$.
+Building $E_C$: $O(|E_T|)$ (one pass over all tract edges).
+Deduplication of $E_C$ (since multiple tract-pairs may produce the same
+county pair): $O(|E_T| \log |E_T|)$ via sort-and-unique, or $O(|E_T|)$
+expected via hash set.
+Total: $O(|E_T| + n_T + n_C)$, linear in the tract graph size.
+
+\subsection{Prefix Lengths by Level Pair}
+
+Table~\ref{tab:prefix} summarizes the prefix length used by \derive{}
+for each supported level pair.
+
+\begin{table}[h]
+\centering
+\caption{GEOID prefix lengths for \derive{}}
+\label{tab:prefix}
+\begin{tabular}{llll}
+\toprule
+Fine level & Coarse level & Fine GEOID length & Prefix length ($= \ell_c$) \\
+\midrule
+Block group & Tract  & 12 & 11 \\
+Tract       & County & 11 & 5  \\
+Block group & County & 12 & 5  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+For BG$\to$county, only the first 5 characters of a 12-character GEOID
+are used; the tract-level characters (positions 5--10) and block-group
+character (position 11) are discarded.
+This skips the intermediate tract level entirely, directly projecting block
+groups onto counties.
+Correctness follows from Definition~\ref{def:geoid}: the first 5 characters
+of any GEOID are always the state-and-county FIPS code, regardless of the
+level of the GEOID.

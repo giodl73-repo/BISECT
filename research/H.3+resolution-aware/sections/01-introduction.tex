@@ -1,0 +1,128 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{Why Resolution Matters}
+
+Congressional redistricting algorithms operate on graphs.
+The vertices are geographic units; the edges are shared boundaries.
+The choice of geographic unit --- the \emph{resolution} of the plan ---
+determines the size of the graph, the granularity with which district
+boundaries can be drawn, and the computational cost of every algorithm
+that touches the graph.
+
+The U.S. Census Bureau publishes three nested levels of geographic
+unit that are practically useful for redistricting:
+
+\begin{itemize}
+  \item \textbf{Block groups} (\bg{}): approximately 600--3{,}000 persons,
+        median $\approx$1{,}000.
+        The finest unit in the P.L.\ 94-171 redistricting file that carries
+        both population and race/ethnicity tabulations.
+        North Carolina contains approximately 5{,}000 block groups.
+  \item \textbf{Census tracts} (\tract{}): approximately 1{,}200--8{,}000 persons,
+        median $\approx$4{,}000.
+        The conventional redistricting unit; the current pipeline default.
+        North Carolina contains 2{,}195 tracts.
+  \item \textbf{Counties} (\county{}): typically 10{,}000--500{,}000 persons,
+        state average $\approx$100{,}000.
+        The coarsest useful level; 100 counties in North Carolina.
+\end{itemize}
+
+\noindent
+Each level trades spatial precision against computational cost.
+Block groups allow finer boundaries but approximately double the graph size
+relative to tracts; counties provide a radical compression to roughly 5\%
+of the tract graph size.
+Neither extreme is universally correct.
+State legislative chambers with many small districts (e.g., a 120-seat
+state house) require finer resolution to prevent population equality
+violations within a single tract from being unresolvable; large-$k$
+congressional states (Texas, $k=38$) benefit from county-level coarsening
+that reduces MCMC autocorrelation at modest precision cost.
+
+\subsection{The GEOID Hierarchy as Free Information}
+
+The Census Bureau encodes the nesting of geographic units directly in
+the GEOID identifier~\citep{census2020geoids}.
+Every block-group GEOID is a one-character extension of a tract GEOID;
+every tract GEOID is a six-character extension of a county GEOID:
+
+\begin{center}
+\begin{tabular}{llll}
+\toprule
+Level & GEOID length & Example (NC, Wake County, tract 0531.01, BG 1) & Structure \\
+\midrule
+County  & 5 chars  & \geoid{37183}              & state(2)+county(3) \\
+Tract   & 11 chars & \geoid{37183053101}        & state(2)+county(3)+tract(6) \\
+Block group & 12 chars & \geoid{371830531011}   & state(2)+county(3)+tract(6)+bg(1) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+This prefix structure means that the complete fine-to-coarse mapping
+at any adjacent pair of levels --- BG$\to$tract, tract$\to$county,
+BG$\to$county --- is derivable from the GEOIDs already present in the
+adjacency files.
+No extra mapping files are required.
+This observation is the key insight enabling the resolution system:
+\emph{geographic hierarchy is encoded in the data we already have}.
+
+\subsection{Three Problems Solved}
+
+The current pipeline exposes a \texttt{--resolution block\_group} flag that
+affects only adjacency loading; resolution does not flow through plan
+generation, analysis, reporting, or audit~\citep{dellaLibera2026resolutionSpec}.
+This creates three concrete problems:
+
+\begin{enumerate}
+  \item \textbf{Multi-scale MCMC requires two simultaneous resolutions}.
+        The Autry et al.\ metropolized multiscale algorithm~\citep{autry2021multiscale}
+        runs a fine-level ReCom chain with coarse-level acceptance/rejection
+        guidance.
+        The current pipeline has no concept of a resolution hierarchy ---
+        it cannot represent ``fine = tract, coarse = county'' as a
+        pipeline-level parameter.
+  \item \textbf{High-precision redistricting cannot output BG-level plans}.
+        A state house with 120 districts and average district population
+        $\approx$86{,}000 cannot be resolved at tract level in dense urban
+        counties; BG-level output is needed but not supported.
+  \item \textbf{County-level coarsening has no clean integration path}.
+        The county adjacency graph can be derived from the tract graph with
+        zero extra data files, yet there is no mechanism to build it
+        on-demand or to record the derivation formula in the audit chain.
+\end{enumerate}
+
+This paper addresses all three by making resolution a first-class parameter
+from data loading through to the cryptographic audit manifest.
+
+\subsection{Contributions}
+
+The contributions of this paper are:
+
+\begin{enumerate}
+  \item \textbf{\derive{}}: a GEOID prefix-matching function that derives
+        any fine-to-coarse partition, with a correctness proof and an
+        explicit orphan detection guarantee (Section~\ref{sec:geoid}).
+  \item \textbf{\buildc{}}: a function that builds the county adjacency graph
+        from the tract graph with a formal proof of the adjacency criterion
+        (Section~\ref{sec:geoid}).
+  \item \textbf{Resolution threading}: \texttt{plan\_resolution}, \texttt{n\_units},
+        and \texttt{unit\_type} fields in every plan manifest, enabling
+        resolution-aware analysis and reporting (Section~\ref{sec:manifests}).
+  \item \textbf{Three multi-scale options}: A (BG$\to$tract), B (tract$\to$county,
+        implemented), C (BG$\to$county) — with data requirements, output levels,
+        and audit formulas for each (Section~\ref{sec:options}).
+  \item \textbf{Empirical validation}: Option~B reduces lag-100 autocorrelation
+        on TX $k=38$; NC manifest examples for all three options
+        (Section~\ref{sec:empirical}).
+\end{enumerate}
+
+\subsection{Paper Organization}
+
+Section~\ref{sec:geoid} develops the GEOID partition derivation machinery:
+formal definitions, correctness proofs, and the county coarsening criterion.
+Section~\ref{sec:options} describes the three multi-scale options, their
+CLI flags, and the implementation status of each.
+Section~\ref{sec:manifests} describes the audit manifest extensions.
+Section~\ref{sec:empirical} presents empirical results.
+Section~\ref{sec:conclusion} concludes.

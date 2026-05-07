@@ -1,0 +1,159 @@
+\section{Resolution in Plan Manifests}
+\label{sec:manifests}
+
+\subsection{Motivation}
+
+The \redist{} audit chain~\citep{dellaLibera2026b1} records a cryptographic
+SHA-256 hash of every plan output together with the parameters used to
+generate it.
+This chain enables independent verification: given the adjacency file,
+the YAML config, and the manifest, a verifier can reproduce the run and
+confirm the hash.
+
+Resolution introduces two new verification requirements:
+\begin{enumerate}
+  \item A verifier must know at which geographic level the plan was generated
+        (tract, BG, or county) in order to interpret the assignment file
+        correctly.
+  \item For multi-scale runs, a verifier must be able to reconstruct the
+        fine-to-coarse partition from public data, without running the
+        pipeline code.
+\end{enumerate}
+
+Both requirements are met by three new fields added to every plan manifest
+(\texttt{index.json}) and four additional fields for multi-scale runs.
+
+\subsection{Core Resolution Fields}
+
+Every plan manifest gains the following fields at generation time:
+
+\begin{lstlisting}[language=json]
+"plan_resolution": "tract",
+"n_units": 2195,
+"unit_type": "census tract"
+\end{lstlisting}
+
+\noindent
+\texttt{plan\_resolution} takes one of three values: \texttt{"bg"},
+\texttt{"tract"}, or \texttt{"county"}.
+\texttt{n\_units} is the number of geographic units at the plan resolution
+(number of rows in the assignment file).
+\texttt{unit\_type} is a human-readable label used in reports and analysis
+output.
+
+These fields are written by \texttt{run\_single\_state()} at plan generation
+time and read by \texttt{redist analyze} and \texttt{redist report} to
+interpret the assignment file correctly.
+For single-scale runs (the current default), \texttt{plan\_resolution = "tract"}
+and \texttt{n\_units} equals the number of tracts in the state.
+
+\subsection{Multi-Scale Manifest Fields}
+
+For multi-scale runs, four additional fields are written:
+
+\begin{lstlisting}[language=json]
+"multiscale_fine": "tract",
+"multiscale_coarse": "county",
+"fine_to_coarse_formula": "geoid_prefix[:5]",
+"fine_to_coarse_comment":
+  "first 5 chars of 11-char tract GEOID = parent county FIPS"
+\end{lstlisting}
+
+\noindent
+The \texttt{fine\_to\_coarse\_formula} field encodes the partition derivation
+rule as a short string that a verifier can apply manually.
+Combined with the \texttt{index\_to\_geoid\_file} field (present in all
+manifests, pointing to the GEOID lookup file co-located with the adjacency
+file), a verifier can:
+\begin{enumerate}
+  \item Load the index-to-GEOID map from \texttt{index\_to\_geoid\_file}.
+  \item Apply the prefix rule: for each unit index $i$, take the prefix
+        of length specified by \texttt{fine\_to\_coarse\_formula}.
+  \item Look up the prefix in the coarse-level GEOID set to obtain the
+        coarse index.
+\end{enumerate}
+This reconstruction is possible without any pipeline code --- only the
+public adjacency files and a simple string-prefix operation are required.
+
+\subsection{Manifest Examples for All Three Options}
+
+\subsubsection{Option A: BG$\to$Tract}
+
+\begin{lstlisting}[language=json]
+{
+  "plan_resolution": "bg",
+  "n_units": 5012,
+  "unit_type": "census block group",
+  "index_to_geoid_file": "nc_bg_adjacency_2020_geoids.json",
+  "multiscale_fine": "bg",
+  "multiscale_coarse": "tract",
+  "fine_to_coarse_formula": "geoid_prefix[:11]",
+  "fine_to_coarse_comment":
+    "first 11 chars of 12-char BG GEOID = parent tract GEOID"
+}
+\end{lstlisting}
+
+\subsubsection{Option B: Tract$\to$County}
+
+\begin{lstlisting}[language=json]
+{
+  "plan_resolution": "tract",
+  "n_units": 2195,
+  "unit_type": "census tract",
+  "index_to_geoid_file": "nc_adjacency_2020_geoids.json",
+  "multiscale_fine": "tract",
+  "multiscale_coarse": "county",
+  "fine_to_coarse_formula": "geoid_prefix[:5]",
+  "fine_to_coarse_comment":
+    "first 5 chars of 11-char tract GEOID = parent county FIPS"
+}
+\end{lstlisting}
+
+\subsubsection{Option C: BG$\to$County}
+
+\begin{lstlisting}[language=json]
+{
+  "plan_resolution": "bg",
+  "n_units": 5012,
+  "unit_type": "census block group",
+  "index_to_geoid_file": "nc_bg_adjacency_2020_geoids.json",
+  "multiscale_fine": "bg",
+  "multiscale_coarse": "county",
+  "fine_to_coarse_formula": "geoid_prefix[:5]",
+  "fine_to_coarse_comment":
+    "first 5 chars of 12-char BG GEOID = parent county FIPS"
+}
+\end{lstlisting}
+
+\noindent
+Note that Options B and C share the same prefix length (5) but differ in
+the source GEOID length (11 for tracts, 12 for BGs) and in
+\texttt{plan\_resolution}.
+
+\subsection{Non-Multi-Scale Runs}
+
+For single-resolution runs, the fields \texttt{multiscale\_fine},
+\texttt{multiscale\_coarse}, \texttt{fine\_to\_coarse\_formula},
+and \texttt{fine\_to\_coarse\_comment} are absent from the manifest.
+The core resolution fields (\texttt{plan\_resolution}, \texttt{n\_units},
+\texttt{unit\_type}) are always present regardless of whether multi-scale
+was used.
+
+\subsection{Downstream Pipeline Behavior}
+
+\textbf{Analysis} (\texttt{redist label-analyze}): reads
+\texttt{plan\_resolution} from the manifest to determine which population
+file and geometry file to use for compactness computation.
+BG-level plans use BG geometries for Polsby-Popper~\citep{polsby1991third};
+tract-level plans use tract geometries (current default).
+County-level plans would use county geometries (deferred).
+
+\textbf{Reporting} (\texttt{redist label-report}): uses \texttt{unit\_type}
+from the manifest for the human-readable label in HTML and JSON reports
+(e.g., ``district boundary at census tract resolution'' vs.\ ``\ldots at
+census block group resolution'').
+
+\textbf{Verification} (\texttt{redist label-verify}): the SHA-256 hash
+covers the entire manifest including resolution fields.
+A plan rebuilt at a different resolution will not match the stored hash,
+flagging a resolution mismatch as a verification failure.
