@@ -1,0 +1,213 @@
+\section{Algorithm: Multi-scale MCMC Option B}
+\label{sec:algorithm}
+
+\subsection{Setup and Notation}
+
+Let $G = (V, E)$ be the census-tract adjacency graph for a state, with
+$|V| = n$ tracts.
+Each tract $v$ has population $\mathrm{pop}(v)$ and a GEOID string
+$\mathrm{geoid}(v)$ of 11 digits (2 state + 3 county + 6 tract).
+The county FIPS code of tract $v$ is
+\[
+  \mathrm{county}(v) = \mathrm{geoid}(v)[0{:}5],
+\]
+the first five characters of the GEOID.
+Let $C = \{\mathrm{county}(v) : v \in V\}$ be the set of distinct county
+FIPS codes, $|C| = n_C$.
+
+The ideal fine population is $P_{\mathrm{ideal}} = \sum_v \mathrm{pop}(v) / k$;
+the fine tolerance is $\epsilon_f$ (default 0.005).
+The coarse tolerance is $\epsilon_c = 3 \epsilon_f$ (default 0.015), to
+reflect the lower precision of county-level population accounting.
+
+\subsection{County Adjacency Derivation}
+
+\begin{proposition}[County adjacency from tract graph]
+\label{prop:county-adj-exact}
+Define the county adjacency graph $G_C = (C, E_C)$ by
+\[
+  (c_1, c_2) \in E_C
+  \iff c_1 \neq c_2
+  \text{ and }
+  \exists\, (v_1, v_2) \in E \text{ with }
+  \mathrm{county}(v_1) = c_1,\;
+  \mathrm{county}(v_2) = c_2.
+\]
+This derivation is exact: two counties are geographically adjacent if and
+only if they share a border, which implies the existence of at least one
+pair of adjacent tracts straddling the county boundary.
+The derivation requires one pass over the tract edge list and runs in $O(|E|)$
+time.
+\end{proposition}
+
+\begin{proof}
+The implication ``geographic adjacency $\Rightarrow$ cross-county tract edge''
+holds because county boundaries in the census TIGER/Line products are
+composed of sequences of tract boundaries.
+Every county boundary segment that forms a shared border between two counties
+is simultaneously a boundary segment of at least one pair of tracts, one in
+each county.
+The reverse implication ``cross-county tract edge $\Rightarrow$ geographic
+adjacency'' holds by definition: two tracts can share an edge in the
+adjacency graph only if they share a boundary segment, and if the tracts
+belong to different counties then those counties share that boundary segment.
+\end{proof}
+
+The derivation scans each edge $(v_1, v_2) \in E$; if
+$\mathrm{county}(v_1) \neq \mathrm{county}(v_2)$, the pair is added to
+$E_C$.
+For Texas, $|E| \approx 15{,}600$ tract edges yield $|E_C| \approx 220$
+county edges from $|C| = 254$ counties.
+
+\subsection{County Population and Initial Coarse Plan}
+
+The county population is
+$\mathrm{pop}(c) = \sum_{v \in f^{-1}(c)} \mathrm{pop}(v)$.
+The initial coarse plan $\pi_C^{(0)} : C \to [k]$ is derived from the
+initial fine plan $\pi^{(0)} : V \to [k]$ by \emph{plurality projection}:
+\[
+  \pi_C^{(0)}(c) = \arg\max_{d \in [k]}\;
+    \mathrm{pop}\!\left(\{v \in f^{-1}(c) : \pi^{(0)}(v) = d\}\right).
+\]
+That is, each county is assigned to the district that contains the plurality
+of its population.
+
+\subsection{Rebalance Subroutine}
+
+After a coarse move proposes a new $\pi_C'$, the fine plan is updated by
+assigning each tract to the district of its county:
+$\pi'(v) = \pi_C'(\mathrm{county}(v))$.
+This projection may violate fine population balance because counties are not
+perfectly equal in population.
+The \emph{rebalance subroutine} restores balance by performing boundary swaps:
+
+\begin{enumerate}
+  \item Identify all districts $d$ with $|\mathrm{pop}(d) - P_{\mathrm{ideal}}|
+        > \epsilon_f \cdot P_{\mathrm{ideal}}$.
+  \item For each over-populated district, find boundary tracts adjacent to
+        under-populated districts and move the tract with the best
+        population-balance improvement.
+  \item Repeat up to 200 iterations.
+  \item If any district remains unbalanced after 200 iterations, \emph{reject}
+        the coarse move entirely (revert to the previous fine plan $\pi$).
+\end{enumerate}
+
+The 200-iteration limit is a hard contract: it prevents the rebalance from
+consuming unbounded time while still accommodating the typical imbalances
+introduced by county-level projection.
+In practice, for Texas, rebalance completes within 5--20 iterations on
+accepted coarse moves; failure occurs when a coarse move produces a coarse
+district that contains an entire county whose population far exceeds
+$P_{\mathrm{ideal}}$.
+
+\subsection{Complete Algorithm}
+
+\begin{algorithm}
+\caption{\ms{} Option B}
+\label{alg:multiscale}
+\begin{algorithmic}[1]
+\Require Tract graph $G$, populations $\{\mathrm{pop}(v)\}$, GEOIDs,
+         initial plan $\pi^{(0)}$, districts $k$,
+         fine tolerance $\epsilon_f$, coarse factor 3,
+         coarsening probability $\alpha$, total steps $T$,
+         percentile $p \in [0,1]$, base seed $b$
+\Ensure  Selected plan $\pi^*$
+
+\State $\epsilon_c \gets 3 \epsilon_f$
+\State $f(v) \gets \mathrm{geoid}(v)[0{:}5]$ for all $v \in V$
+        \Comment{tract $\to$ county map}
+\State $G_C, \{\mathrm{pop}(c)\} \gets \textsc{DeriveCountyGraph}(G, f)$
+        \Comment{$O(|E|)$, Prop.~\ref{prop:county-adj-exact}}
+\State $\pi_C \gets \textsc{PluralityProject}(\pi^{(0)}, f)$
+\State $\pi \gets \pi^{(0)}$
+\State $\mathrm{accepted} \gets [(\ec(\pi),\, \pi)]$
+
+\For{$s \gets 1$ \textbf{to} $T$}
+  \State $u \gets \mathrm{SHA256}(\texttt{"MSC\_STEP\_"} \,\|\, s^{\mathrm{u64le}}
+         \,\|\, 0^{\mathrm{u32le}} \,\|\, b^{\mathrm{u64le}})[0{:}8]$
+         as $\mathrm{SmallRng}$
+  \If{$u.\mathrm{gen\_range}(0.0, 1.0) < \alpha$}
+    \Comment{Coarse move}
+    \State $\pi_C' \gets \recom{}.\mathrm{step}(G_C, \{\mathrm{pop}(c)\}, \pi_C, \epsilon_c, u)$
+    \State $\pi' \gets \textsc{Project}(\pi_C', f)$
+            \Comment{assign each tract to its county's district}
+    \State $\mathrm{ok} \gets \textsc{Rebalance}(\pi', \epsilon_f, \text{max}=200)$
+    \If{$\mathrm{ok}$}
+      \State $\pi \gets \pi'$;\quad $\pi_C \gets \pi_C'$
+      \State $\mathrm{accepted}.\mathrm{push}((\ec(\pi), \pi))$
+    \EndIf
+    \Comment{else reject: keep $\pi$, $\pi_C$ unchanged}
+  \Else
+    \Comment{Fine move}
+    \State $\pi \gets \recom{}.\mathrm{step}(G, \{\mathrm{pop}(v)\}, \pi, \epsilon_f, u)$
+    \State $\pi_C \gets \textsc{PluralityProject}(\pi, f)$
+            \Comment{keep coarse plan consistent}
+    \State $\mathrm{accepted}.\mathrm{push}((\ec(\pi), \pi))$
+  \EndIf
+\EndFor
+
+\State Sort $\mathrm{accepted}$ by $\ec$ ascending
+\State \Return $\mathrm{accepted}[\lfloor p \cdot |\mathrm{accepted}|\rfloor]$
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Deterministic seed schedule.}
+Each step $s$ derives its RNG from a SHA-256 hash of the step index and
+the base seed:
+\[
+  \mathrm{step\_seed}(s, b)
+  = \mathrm{SHA256}\!\left(\texttt{"MSC\_STEP\_"}
+    \,\|\, s^{\mathrm{u64le}}
+    \,\|\, 0^{\mathrm{u32le}}
+    \,\|\, b^{\mathrm{u64le}}\right)[0{:}8]
+    \;\text{as}\; u64.
+\]
+This ensures that the sequence of coarse/fine decisions---and the outcomes
+of each step---is fully determined by $b$ and $T$, enabling exact
+reproduction of any run from the manifest entry alone.
+
+\paragraph{CLI invocation.}
+\begin{verbatim}
+redist state --state TX --year 2020 \
+    --search multiscale \
+    --multiscale-steps 5000 \
+    --multiscale-alpha 0.3
+\end{verbatim}
+
+\subsection{Correctness Properties}
+
+\begin{proposition}[Fine plan validity]
+\label{prop:validity}
+Every fine plan $\pi$ in the \texttt{accepted} list is connected and
+population-balanced within $\epsilon_f$.
+\end{proposition}
+
+\begin{proof}
+The initial plan $\pi^{(0)}$ is valid by assumption.
+Fine \recom{} steps preserve validity (the standard \recom{} invariant).
+Coarse moves are accepted only if \textsc{Rebalance} returns \texttt{ok},
+which certifies $|\mathrm{pop}(d) - P_{\mathrm{ideal}}| \leq \epsilon_f \cdot
+P_{\mathrm{ideal}}$ for all $d$ after rebalancing.
+Connectivity of fine districts after a coarse move: each tract is assigned
+to the district of its county; within a county, the district assignment is
+uniform, so connectivity of the county in $G_C$ is necessary but not
+sufficient for connectivity of the fine district.
+The rebalance swaps maintain a connected fine district by restricting to
+boundary-tract swaps that do not disconnect the donor district (checked via
+BFS, as in the \flip{} chain).
+\end{proof}
+
+\begin{remark}[Stationarity]
+\label{rem:stationarity}
+Like standard \recom{}, \ms{} does not have a fully characterised stationary
+distribution.
+The coarse moves introduce an additional source of non-reversibility: the
+projection and rebalance operations are not symmetric in forward and reverse
+directions.
+For practical redistricting ensemble analysis, this is acceptable---the goal
+is faster mixing to explore the plan space, not exact sampling from a specific
+distribution.
+Applications requiring exact distributional guarantees should use
+\fr{}~\citep{dellaLibera2026forestRecom} at the fine level, though the
+multi-scale extension of \fr{} is left for future work.
+\end{remark}

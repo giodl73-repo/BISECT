@@ -7,7 +7,7 @@ license.workspace = true
 description = "ReCom feasibility sampler for redistricting — uniform random spanning tree MCMC"
 
 [dependencies]
-redist-metis   = { path = "../redist-metis" }
+metis-core     = { workspace = true }
 rand.workspace = true
 sha2.workspace = true
 rayon.workspace = true

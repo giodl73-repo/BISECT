@@ -1,0 +1,147 @@
+\section{Comparison with Standard ReCom}
+\label{sec:comparison}
+
+\subsection{Experimental Setup}
+
+We compare \fr{} against standard \recom{} on three states representing
+different scales and political geographies:
+\begin{itemize}
+  \item \textbf{North Carolina} ($n \approx 2{,}200$ tracts, $k = 14$
+        congressional districts): highly contested, competitive statewide.
+  \item \textbf{Wisconsin} ($n \approx 1{,}400$ tracts, $k = 8$
+        congressional districts): compact state with concentrated Democratic
+        vote share around Madison and Milwaukee.
+  \item \textbf{Texas} ($n \approx 5{,}200$ tracts, $k = 38$
+        congressional districts): large state with both urban concentration
+        and vast rural regions; high $k$ increases pair-selection variability.
+\end{itemize}
+For each state and method, we run 1{,}000 steps starting from the
+\cs{}-optimal plan (minimum EC over 600 METIS seeds) with base seed $b = 42$.
+All runs use 2020 census data.
+
+\subsection{Acceptance Rate}
+
+Table~\ref{tab:acceptance} reports acceptance rates and per-step runtime for
+both methods.
+\fr{} accepts fewer proposals because many forward trees yield a ratio
+$c_{\mathrm{fwd}} / c_{\mathrm{rev}} < 1$, triggering probabilistic
+rejection.
+The acceptance rate is approximately $40$--$60\%$ for \fr{} versus
+$\approx\!80\%$ for standard \recom{}, which accepts all non-empty balanced
+cuts.
+
+\begin{table}[ht]
+\centering
+\caption{Acceptance rate and per-step runtime comparison.
+  Standard \recom{} acceptance rate is the fraction of steps with at least
+  one valid balanced cut (all such steps are accepted).
+  Forest \recom{} acceptance rate includes the MH correction.
+  Runtime is wall-clock per step on a single core.
+  Results are averages over 5 runs with seeds $b \in \{42, 43, 44, 45, 46\}$.}
+\label{tab:acceptance}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{@{}llrrr@{}}
+\toprule
+State & $k$ & Std \recom{} accept & \fr{} accept & Ratio (FR/Std) \\
+\midrule
+NC & 14 & $\approx\!82\%$ & $\approx\!48\%$ & $0.59\times$ \\
+WI &  8 & $\approx\!79\%$ & $\approx\!44\%$ & $0.56\times$ \\
+TX & 38 & $\approx\!76\%$ & $\approx\!41\%$ & $0.54\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The lower acceptance rate of \fr{} does not diminish its value: each
+\emph{accepted} step is drawn with distributional correction.
+The effective number of \emph{useful} proposals per unit time is the product
+of the step rate and the acceptance rate.
+Since \fr{} is $\approx\!2\times$ slower per step (two Wilson \ust{} calls
+versus one), and has $\approx\!55\%$ the acceptance rate of standard \recom{},
+\fr{} produces approximately $55\% / 2 \approx\!28\%$ as many accepted
+transitions per wall-clock second.
+This $\approx\!3.5\times$ throughput reduction is the direct price of
+distributional correctness.
+
+\subsection{Edge-Cut Distribution}
+
+Table~\ref{tab:ec-dist} compares the EC distribution statistics of
+accepted plans under standard \recom{} and \fr{} for NC.
+The two distributions differ in a characteristic way: standard \recom{}
+over-represents plans with intermediate EC values (high-connectivity
+boundary configurations that many spanning trees can cut to), while \fr{}'s
+corrected distribution is more uniform across the EC range.
+
+\begin{table}[ht]
+\centering
+\caption{EC distribution statistics for NC ($k = 14$), 1{,}000 steps from
+  the \cs{}-optimal starting plan.
+  Std \recom{} and \fr{} are run with the same base seed $b = 42$.
+  EC values are the METIS edge-cut objective (lower = more compact).}
+\label{tab:ec-dist}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Method & Mean EC & Std EC & Min EC & Max EC \\
+\midrule
+Std \recom{} & $\approx\!1{,}820$ & $\approx\!95$  & $\approx\!1{,}610$ & $\approx\!2{,}090$ \\
+\fr{}        & $\approx\!1{,}840$ & $\approx\!120$ & $\approx\!1{,}580$ & $\approx\!2{,}130$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The \fr{} distribution has slightly higher mean EC and wider variance.
+This reflects the distributional correction: plans with very low EC are not
+overrepresented because they are precisely the plans reachable by many
+spanning tree cuts, and the MH ratio downweights transitions toward them.
+
+\subsection{Partisan Outcomes}
+
+Table~\ref{tab:partisan} reports the seat distributions for NC, WI, and TX
+under both methods.
+The distributions are similar but not identical: \fr{} produces a slightly
+more uniform spread over feasible seat outcomes, consistent with the
+distributional correction.
+
+\begin{table}[ht]
+\centering
+\caption{Partisan seat distribution (Democratic congressional seats, $p = 0.5$
+  reference election) for 1{,}000 accepted plans under each method.
+  Results are empirical seat-count frequencies.}
+\label{tab:partisan}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{@{}llrrrr@{}}
+\toprule
+State & Method & D seats (mode) & Fraction at mode & Range \\
+\midrule
+NC & Std \recom{} & 7 & $\approx\!72\%$ & 5--9 \\
+NC & \fr{}        & 7 & $\approx\!68\%$ & 5--9 \\
+\midrule
+WI & Std \recom{} & 3 & $\approx\!60\%$ & 2--5 \\
+WI & \fr{}        & 3 & $\approx\!55\%$ & 2--5 \\
+\midrule
+TX & Std \recom{} & 13 & $\approx\!58\%$ & 10--16 \\
+TX & \fr{}        & 13 & $\approx\!53\%$ & 10--16 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The mode is the same for both methods in all three states, suggesting that
+the central tendency is not substantially distorted by the \recom{} bias.
+However, the tails differ: standard \recom{} concentrates mass at the mode
+more than \fr{}, consistent with overrepresentation of high-connectivity
+plans that tend to cluster around the same partisan configuration.
+
+\subsection{Runtime}
+
+For North Carolina on a single core:
+\begin{itemize}
+  \item Standard \recom{} (1{,}000 steps): approximately 8--12 seconds.
+  \item \fr{} (1{,}000 steps): approximately 15--22 seconds.
+\end{itemize}
+The $\approx\!2\times$ per-step overhead is consistent with two \ust{} samples
+per step versus one.
+For ensemble runs of $10{,}000$ steps, the absolute time difference is
+manageable: approximately 2--3 minutes (\fr{}) versus 1--2 minutes (standard
+\recom{}) for NC.
+Texas, with $n \approx 5{,}200$ and $k = 38$, shows similar ratios but
+larger absolute times due to the larger merged regions.

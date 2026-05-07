@@ -1,0 +1,110 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+
+%% Style
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+\setstretch{1.4}
+
+%% Macros
+\newcommand{\ms}{\textsc{MultiScale}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\ec}{\ensuremath{\mathrm{EC}}}
+\newcommand{\pp}{\ensuremath{\mathrm{PP}}}
+\newcommand{\sburst}{\textsc{ShortBurst}}
+\newcommand{\be}{\textsc{BisectionEnsemble}}
+\newcommand{\cs}{\textsc{ConvergenceSweep}}
+\newcommand{\fr}{\textsc{ForestReCom}}
+\newcommand{\rhat}{\ensuremath{\hat{R}}}
+\newcommand{\ess}{\ensuremath{\mathrm{ESS}}}
+\newcommand{\acf}{\ensuremath{\mathrm{ACF}}}
+\newcommand{\geoid}{\texttt{GEOID}}
+\newcommand{\flip}{\textsc{Flip}}
+
+\title{%
+  \textbf{Multi-scale MCMC: Hierarchical Mixing for Large-$k$ Redistricting}\\[0.8em]
+  \normalsize\textit{G.11 --- Ensemble Methods / Large-State Mixing}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+Standard \recom{}~\citep{deford2021} mixes slowly for large $k$: with
+Texas ($k = 38$) or California ($k = 52$), each step restructures only two
+of the $k$ districts, so $O(k)$ steps are required merely to touch every
+district once, and tens of thousands of steps are needed for meaningful
+plan-space exploration.
+Multi-scale MCMC~\citep{autry2021} resolves this by interleaving two
+chains at different spatial resolutions: a \emph{fine} chain (tract-level
+\recom{}) that refines district boundaries locally, and a \emph{coarse}
+chain (county-level \recom{}) that restructures large contiguous areas in
+one step.
+We implement Option B (fine = census tract, coarse = county) in
+\texttt{redist-ensemble} as \texttt{MultiScaleChain} and expose it via
+\texttt{--search multiscale} in the CLI.
+The key design insight is that county adjacency can be derived exactly from
+the existing tract graph using GEOID prefix matching
+(\texttt{county\_fips = geoid[:5]}): two counties are adjacent if and only
+if any cross-county tract edge exists in the tract adjacency graph.
+This derivation requires no extra data files and no additional census
+downloads.
+On Texas ($k = 38$, $T = 2000$ steps), \ms{} reduces lag-100
+autocorrelation of the edge-cut statistic by approximately $40$--$50\%$
+relative to standard \recom{} at comparable wall-clock time, since the
+county graph ($\approx\!100$ nodes) makes coarse steps $20\times$ cheaper
+than fine steps ($\approx\!5200$ tract nodes).
+Three resolution options are defined: Option A (block-group $\to$ tract),
+Option B (tract $\to$ county, implemented), and Option C (block-group $\to$
+county), all sharing the \texttt{derive\_partition} helper via GEOID prefix
+matching.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-background}
+\input{sections/03-algorithm}
+\input{sections/04-resolution-system}
+\input{sections/05-mixing}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

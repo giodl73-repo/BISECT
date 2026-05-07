@@ -10,7 +10,7 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use crate::adjacency_loader::load_adjacency_pkl;
-use crate::bisection_runner::{run_all_splits, run_all_splits_with_search, run_all_splits_compact, run_all_splits_percentile, run_geosection, run_nway_partition, run_flip_chain, run_short_burst, run_forest_recom, run_multiscale, run_merge_split, CompactBisectOpts};
+use crate::bisection_runner::{run_all_splits, run_all_splits_with_search, run_all_splits_compact, run_all_splits_percentile, run_geosection, run_nway_partition, run_flip_chain, run_short_burst, run_short_burst_forest, run_short_burst_merge_split, run_forest_recom, run_multiscale, run_merge_split, CompactBisectOpts};
 use crate::demographics::{load_demographics, align_demographics_to_adjacency};
 use crate::partisan_shares::load_partisan_shares;
 use crate::fetch::load_manifest;
@@ -75,6 +75,11 @@ pub enum SeedCompositor {
     /// minimum). Chain restarts from the previous burst's endpoint. Sort endpoints by
     /// EC ASC; return the plan at rank floor(p * n_bursts). (G.6)
     ShortBurst { burst_length: usize, n_bursts: usize, p: f64 },
+    /// Short-Burst using ForestRecomChain (two-tree MH) as the burst chain.
+    /// Provides compactness optimization with approximate distributional correctness. (G.12)
+    ShortBurstForest { burst_length: usize, n_bursts: usize, p: f64 },
+    /// Short-Burst using MergeSplitChain as the burst chain. (G.12)
+    ShortBurstMergeSplit { burst_length: usize, n_bursts: usize, p: f64 },
     /// Run `steps` Forest ReCom MH steps; collect accepted plans; return at percentile p of EC.
     /// Two-tree Metropolis-Hastings — targets uniform distribution (G.9 spec accepted 3.0/4).
     ForestRecom { steps: usize, p: f64 },
@@ -99,6 +104,8 @@ impl SeedCompositor {
             Self::BisectionEnsemble { ensemble_steps, .. } => *ensemble_steps,
             Self::Flip { flip_steps, .. } => *flip_steps,
             Self::ShortBurst { n_bursts, .. } => *n_bursts,
+            Self::ShortBurstForest { n_bursts, .. } => *n_bursts,
+            Self::ShortBurstMergeSplit { n_bursts, .. } => *n_bursts,
             Self::ForestRecom { steps, .. } => *steps,
             Self::MultiScale { total_steps, .. } => *total_steps,
             Self::MergeSplit { steps, .. } => *steps,
@@ -451,6 +458,16 @@ impl AlgorithmConfig {
                     p: args.percentile.clamp(0.0, 1.0),
                 },
                 SeM::ShortBurst => SeedCompositor::ShortBurst {
+                    burst_length: args.burst_length,
+                    n_bursts: args.n_bursts,
+                    p: args.percentile.clamp(0.0, 1.0),
+                },
+                SeM::ShortBurstForest => SeedCompositor::ShortBurstForest {
+                    burst_length: args.burst_length,
+                    n_bursts: args.n_bursts,
+                    p: args.percentile.clamp(0.0, 1.0),
+                },
+                SeM::ShortBurstMergeSplit => SeedCompositor::ShortBurstMergeSplit {
                     burst_length: args.burst_length,
                     n_bursts: args.n_bursts,
                     p: args.percentile.clamp(0.0, 1.0),
@@ -1481,6 +1498,26 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                     short_burst_selected_burst_idx = Some(b_idx);
                     result
                 }
+                SeedCompositor::ShortBurstForest { burst_length, n_bursts, p } => {
+                    let base = seed.unwrap_or(0);
+                    status(cfg.position, &format!("{}: short-burst-forest p={:.2} {} bursts x {} steps into {} districts",
+                           cfg.state_code, p, n_bursts, burst_length, num_districts));
+                    run_short_burst_forest(
+                        &graph.adjacency, &vwgt, &edge_weights,
+                        num_districts, balance_tolerance_frac, niter,
+                        base, *burst_length, *n_bursts, *p,
+                    ).map_err(|e| format!("short-burst-forest: {e}"))?
+                }
+                SeedCompositor::ShortBurstMergeSplit { burst_length, n_bursts, p } => {
+                    let base = seed.unwrap_or(0);
+                    status(cfg.position, &format!("{}: short-burst-merge-split p={:.2} {} bursts x {} steps into {} districts",
+                           cfg.state_code, p, n_bursts, burst_length, num_districts));
+                    run_short_burst_merge_split(
+                        &graph.adjacency, &vwgt, &edge_weights,
+                        num_districts, balance_tolerance_frac, niter,
+                        base, *burst_length, *n_bursts, *p,
+                    ).map_err(|e| format!("short-burst-merge-split: {e}"))?
+                }
                 SeedCompositor::ForestRecom { steps, p } => {
                     let base = seed.unwrap_or(0);
                     status(cfg.position, &format!("{}: forest-recom p={:.2} {} steps into {} districts",
@@ -1706,31 +1743,36 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             },
             flip_visited_count,
             flip_selected_plan_rank: flip_selected_rank,
-            // Short-burst audit fields
-            short_burst_search: if matches!(&cfg.algo.seeds, SeedCompositor::ShortBurst { .. }) {
-                Some("short-burst".to_string())
-            } else {
-                None
+            // Short-burst audit fields (shared across ShortBurst, ShortBurstForest, ShortBurstMergeSplit)
+            short_burst_search: match &cfg.algo.seeds {
+                SeedCompositor::ShortBurst { .. } => Some("short-burst".to_string()),
+                SeedCompositor::ShortBurstForest { .. } => Some("short-burst-forest".to_string()),
+                SeedCompositor::ShortBurstMergeSplit { .. } => Some("short-burst-merge-split".to_string()),
+                _ => None,
             },
-            burst_length: if let SeedCompositor::ShortBurst { burst_length, .. } = &cfg.algo.seeds {
-                Some(*burst_length)
-            } else {
-                None
+            burst_length: match &cfg.algo.seeds {
+                SeedCompositor::ShortBurst { burst_length, .. }
+                | SeedCompositor::ShortBurstForest { burst_length, .. }
+                | SeedCompositor::ShortBurstMergeSplit { burst_length, .. } => Some(*burst_length),
+                _ => None,
             },
-            n_bursts: if let SeedCompositor::ShortBurst { n_bursts, .. } = &cfg.algo.seeds {
-                Some(*n_bursts)
-            } else {
-                None
+            n_bursts: match &cfg.algo.seeds {
+                SeedCompositor::ShortBurst { n_bursts, .. }
+                | SeedCompositor::ShortBurstForest { n_bursts, .. }
+                | SeedCompositor::ShortBurstMergeSplit { n_bursts, .. } => Some(*n_bursts),
+                _ => None,
             },
-            short_burst_percentile: if let SeedCompositor::ShortBurst { p, .. } = &cfg.algo.seeds {
-                Some(*p)
-            } else {
-                None
+            short_burst_percentile: match &cfg.algo.seeds {
+                SeedCompositor::ShortBurst { p, .. }
+                | SeedCompositor::ShortBurstForest { p, .. }
+                | SeedCompositor::ShortBurstMergeSplit { p, .. } => Some(*p),
+                _ => None,
             },
-            short_burst_base_seed: if matches!(&cfg.algo.seeds, SeedCompositor::ShortBurst { .. }) {
-                Some(seed.unwrap_or(0))
-            } else {
-                None
+            short_burst_base_seed: match &cfg.algo.seeds {
+                SeedCompositor::ShortBurst { .. }
+                | SeedCompositor::ShortBurstForest { .. }
+                | SeedCompositor::ShortBurstMergeSplit { .. } => Some(seed.unwrap_or(0)),
+                _ => None,
             },
             burst_seeds: short_burst_burst_seeds,
             selected_burst_idx: short_burst_selected_burst_idx,

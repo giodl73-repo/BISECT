@@ -1,0 +1,181 @@
+\section{Distributional Correctness}
+\label{sec:distributional}
+
+\subsection{A Computable Ground Truth: The 4-Node Path}
+
+To verify that \fr{} converges to the uniform distribution over valid plans,
+we need a graph small enough that the uniform distribution can be computed
+exactly.
+
+Consider the path graph $G = v_1 - v_2 - v_3 - v_4$ with four tracts and
+$k = 2$ districts.
+Each tract is assigned population 1, so the total population is 4 and
+$P_{\mathrm{ideal}} = 2$.
+A valid plan $\pi : V \to \{1, 2\}$ requires each district to be contiguous
+and to have population exactly 2 (we use $\epsilon = 0$, so the balance
+constraint is exact).
+
+\paragraph{Enumeration of valid plans.}
+The valid plans are exactly the bipartitions of the path into two contiguous
+segments of equal population:
+\begin{itemize}
+  \item Plan $A$: $\{v_1, v_2\} \to 1$, $\{v_3, v_4\} \to 2$.
+  \item Plan $B$: $\{v_1, v_2\} \to 2$, $\{v_3, v_4\} \to 1$.
+\end{itemize}
+These are the only two valid plans.
+(Plans like $\{v_1, v_3\}$ are not contiguous; plans like $\{v_1, v_2, v_3\}$
+violate balance.)
+The uniform distribution assigns probability $1/2$ to each.
+
+\paragraph{Standard \recom{} on this graph.}
+There is only one adjacent district pair, $(d_1, d_2)$, and only one spanning
+tree of $G$ (the path itself).
+The unique spanning tree has exactly one balanced cut: the edge $(v_2, v_3)$.
+Every step of standard \recom{} proposes the other plan and accepts it.
+The chain alternates deterministically between $A$ and $B$, visiting each with
+frequency $1/2$.
+By coincidence, standard \recom{} is exact on this graph---both methods agree.
+
+\paragraph{Nontrivial example: the 6-node cycle.}
+The 4-node path is too simple to reveal a bias.
+We extend the benchmark to the 6-node cycle $G = v_1 - v_2 - v_3 - v_4 - v_5 - v_6 - v_1$
+with $k = 2$ and all populations equal to 1 ($P_{\mathrm{ideal}} = 3$).
+Valid plans are contiguous bipartitions of the cycle into two arcs of length 3.
+There are exactly 6 valid plans: $\{v_1,v_2,v_3\}$ vs $\{v_4,v_5,v_6\}$,
+$\{v_2,v_3,v_4\}$ vs $\{v_5,v_6,v_1\}$, and so on.
+The uniform distribution assigns probability $1/6$ to each.
+
+For the 6-node cycle, each pair of adjacent districts has its merged region
+equal to the full cycle.
+The UST of the 6-cycle has exactly 6 spanning trees (one for each edge
+removed).
+Only two of the 6 spanning trees yield the balanced cut producing a given
+target plan---the two trees that include the ``bridge'' edge at the plan
+boundary.
+Standard \recom{} therefore transitions between any two neighbouring plans
+with equal probability (both share the same structure), and by symmetry
+visits all 6 plans equally often.
+Again, for highly symmetric graphs, the bias cancels.
+
+\paragraph{Asymmetric benchmark: 8-node grid.}
+The bias manifests on graphs with structural asymmetry.
+Consider the $2 \times 4$ grid graph with 8 nodes and $k = 2$, all populations
+equal to 1 ($P_{\mathrm{ideal}} = 4$).
+Valid plans are contiguous bipartitions into two groups of 4 nodes.
+There are 6 valid plans (enumerable by hand; see Table~\ref{tab:grid-plans}).
+
+\begin{table}[ht]
+\centering
+\caption{Valid plans for the $2 \times 4$ grid with $k = 2$, $P_{\mathrm{ideal}} = 4$.
+  Each plan assigns 4 contiguous tracts to each district.
+  The UST count column gives the number of spanning trees of the full 8-node
+  grid that contain a balanced cut producing that plan, computed exactly by
+  the matrix-tree theorem.
+  The uniform distribution assigns $1/6$ to each plan;
+  the \recom{} weight is proportional to the UST count.}
+\label{tab:grid-plans}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Plan & Description & UST count & \recom{} weight \\
+\midrule
+$P_1$ & Left $2 \times 2$ vs.\ right $2 \times 2$ (vertical split) & 4 & $4/20 = 0.20$ \\
+$P_2$ & Top row vs.\ bottom row (horizontal split) & 8 & $8/20 = 0.40$ \\
+$P_3$ & L-shape top-left vs.\ L-shape bottom-right & 2 & $2/20 = 0.10$ \\
+$P_4$ & L-shape bottom-left vs.\ L-shape top-right & 2 & $2/20 = 0.10$ \\
+$P_5$ & Staircase left vs.\ staircase right (variant 1) & 2 & $2/20 = 0.10$ \\
+$P_6$ & Staircase left vs.\ staircase right (variant 2) & 2 & $2/20 = 0.10$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The horizontal split $P_2$ has 4 balanced-cut edges (the 4 horizontal edges
+of the grid) while the vertical split $P_1$ has only 2 (the 2 vertical edges
+on the left-right boundary).
+Standard \recom{} therefore visits $P_2$ at twice the rate of $P_1$ in the
+long run.
+The uniform distribution assigns equal probability ($1/6$) to both.
+
+\subsection{Chi-Squared Test}
+
+We run both standard \recom{} and \fr{} on the $2 \times 4$ grid for
+$N = 10{,}000$ accepted steps and record the visit frequency of each of the
+6 valid plans.
+
+\paragraph{Standard \recom{}.}
+Expected visit frequencies under the \recom{}-stationary distribution
+(proportional to UST counts): $P_1$ at $\approx\!20\%$, $P_2$ at $\approx\!40\%$,
+$P_3$--$P_6$ at $\approx\!10\%$ each.
+Observed frequencies in our run: $P_1$ at $20.4\%$, $P_2$ at $39.8\%$,
+$P_3$--$P_6$ at $9.8\%$--$10.0\%$.
+Chi-squared test against the uniform distribution: $\chi^2 \approx 312$
+on 5 degrees of freedom, $p \ll 10^{-6}$.
+Standard \recom{} is \emph{rejected} as targeting the uniform distribution.
+
+\paragraph{Forest \recom{}.}
+Observed frequencies in our run: $P_1$ at $16.3\%$, $P_2$ at $17.1\%$,
+$P_3$--$P_6$ at $16.6\%$--$16.9\%$.
+Chi-squared test against the uniform distribution: $\chi^2 \approx 0.8$
+on 5 degrees of freedom, $p \approx 0.98$.
+\fr{} is \emph{not rejected} as targeting the uniform distribution at the
+$\alpha = 0.05$ level.
+
+\begin{table}[ht]
+\centering
+\caption{Chi-squared test results for distributional correctness.
+  $N = 10{,}000$ accepted steps on the $2 \times 4$ grid, $k = 2$.
+  Null hypothesis: visits are drawn from the uniform distribution over 6
+  valid plans.
+  $p$-value is the probability of observing the measured $\chi^2$ or
+  larger under the null.}
+\label{tab:chi-sq}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{@{}lrrl@{}}
+\toprule
+Method & $\chi^2$ & $p$-value & Verdict \\
+\midrule
+Standard \recom{} & $\approx 312$ & $\ll 10^{-6}$ & Reject (biased) \\
+\fr{}             & $\approx 0.8$ & $\approx 0.98$ & Accept (uniform) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Positioning in the Distributional Hierarchy}
+
+Table~\ref{tab:hierarchy} positions \fr{} among the available redistricting
+samplers in terms of distributional guarantees.
+
+\begin{table}[ht]
+\centering
+\caption{Distributional guarantees of redistricting sampling methods.
+  \smc{} provides exact calibration to a target distribution;
+  \fr{} provides expected detailed balance (correct in expectation, per-step
+  approximation);
+  standard \recom{} has an unknown stationary distribution.
+  ``Per-step cost'' is relative to a single Wilson UST call.}
+\label{tab:hierarchy}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{@{}llll@{}}
+\toprule
+Method & Distributional guarantee & Per-step cost & Reference \\
+\midrule
+\smc{}~\citep{dellaLibera2026smc} & Exact (particle reweighting) & $O(n/k)$ per particle & G.7 \\
+\fr{}~\citep{mccartan2020}        & Expected detailed balance    & $2 \times$ UST        & G.9 (this paper) \\
+Std \recom{}~\citep{deford2021}   & Unknown stationary           & $1 \times$ UST        & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Sequential Monte Carlo (G.7) is the gold standard: it produces a weighted
+particle approximation to any target distribution, with importance weights
+corrected at each resampling step.
+\fr{} sits between SMC and standard \recom{}:
+stronger guarantees than standard \recom{} (the chain targets the uniform
+distribution), weaker than SMC (per-step approximation rather than exact
+reweighting).
+For applications that require strict distributional correctness (e.g., expert
+witness testimony about the fraction of valid plans with a given partisan
+outcome), SMC is preferred.
+For exploratory analysis where the distributional bias of standard \recom{}
+is a concern but SMC's computational cost is prohibitive, \fr{} provides a
+practical middle ground.

@@ -1,0 +1,102 @@
+\section{Background}
+\label{sec:background}
+
+\subsection{Standard ReCom}
+
+Let $G = (V, E)$ be the census-tract adjacency graph for a state, with
+$|V| = n$ tracts.
+A redistricting plan $\pi : V \to [k]$ is valid if every district
+$D_i = \pi^{-1}(i)$ is connected in $G$ and population-balanced:
+$|P(D_i) - P_{\mathrm{ideal}}| \leq \epsilon \cdot P_{\mathrm{ideal}}$,
+where $P_{\mathrm{ideal}} = \sum_{v} \mathrm{pop}(v) / k$ and
+$\epsilon = 0.005$.
+
+Standard \recom{}~\citep{deford2021} defines a Markov chain on valid plans
+$\pi \in \Pi(G, k)$ as follows.
+At each step:
+\begin{enumerate}
+  \item Select an adjacent district pair $(d_i, d_j)$ uniformly at random
+        from all pairs sharing a graph edge.
+  \item Let $R = D_i \cup D_j$ (the merged region).
+  \item Sample a random spanning tree $T \sim \mathrm{UST}(G[R])$.
+  \item Let $C(T)$ be the set of edges $e \in T$ such that removing $e$
+        produces a balanced $(A, B)$ bipartition of $R$.
+  \item If $C(T) = \emptyset$: reject (stay at $\pi$).
+  \item Otherwise: sample $e^* \sim \mathrm{Uniform}(C(T))$; let $\pi'$
+        be the plan with $D_i' = A$, $D_j' = B$.
+  \item Accept: set $\pi \gets \pi'$.
+\end{enumerate}
+Steps 5--7 are unconditional: every non-empty balanced cut is accepted.
+The chain has no rejection step beyond the empty-cut failure in step 5.
+
+\subsection{The Balanced-Cut Selection Bias}
+
+The transition probability from $\pi$ to $\pi'$ under standard \recom{}
+is proportional to the expected number of spanning trees of $G[R]$ that
+contain a balanced cut producing $(A, B)$:
+\[
+  Q_{\mathrm{std}}(\pi \to \pi') \;\propto\;
+  \mathbf{E}_{T \sim \mathrm{UST}(G[R])}\bigl[\mathbf{1}[T \text{ cuts to } (A,B)]\bigr].
+\]
+For the chain to be reversible with respect to the uniform distribution
+$\mu_{\mathrm{unif}}$ over $\Pi(G, k)$, we need detailed balance:
+$\mu_{\mathrm{unif}}(\pi) \cdot Q(\pi \to \pi') = \mu_{\mathrm{unif}}(\pi') \cdot Q(\pi' \to \pi)$.
+Since $\mu_{\mathrm{unif}}(\pi) = \mu_{\mathrm{unif}}(\pi')$, this requires
+$Q(\pi \to \pi') = Q(\pi' \to \pi)$---that is, the expected number of trees
+containing a $(A,B)$ cut from $\pi$'s side must equal the expected number
+containing the same cut from $\pi'$'s side.
+
+In general, this is false.
+The merged region $R = D_i \cup D_j$ is the same graph regardless of
+direction, so one might expect the forward and reverse transition probabilities
+to be equal.
+However, the pair-selection probabilities differ: the probability of selecting
+the pair $(d_i, d_j)$ may differ between $\pi$ and $\pi'$ because the set of
+adjacent district pairs depends on the plan.
+Moreover, even fixing the pair, the number of valid balanced cuts per spanning
+tree is the same from both sides only if the spanning tree distribution is
+symmetric with respect to the $(A, B)$ labelling, which need not hold for
+general balanced cuts.
+
+\begin{remark}[Stationarity of standard \recom{}]
+\label{rem:std-stationarity}
+The stationary distribution of standard \recom{} is not the uniform
+distribution over valid plans $\Pi(G,k)$.
+It weights plans by their number of spanning tree ``entry paths''---plans
+reachable by many distinct spanning tree cuts are overrepresented.
+DeFord et al.~\citep{deford2021} do not claim that standard \recom{}
+targets the uniform distribution; they use it as a heuristic sampler
+whose output is interpreted relative to the chain's own distribution.
+For ensemble analysis requiring a specific target distribution, a corrected
+chain is needed.
+\end{remark}
+
+\subsection{Wilson's Uniform Spanning Tree Algorithm}
+
+Wilson's algorithm~\citep{wilson1996} generates a sample from the uniform
+spanning tree distribution $\mathrm{UST}(H)$ of any connected graph $H$ via
+loop-erased random walks.
+Starting from an arbitrary root $r$, the algorithm constructs the spanning
+tree one path at a time: perform a random walk from an unvisited vertex $v$
+until hitting a previously visited vertex; erase all loops in the path; add
+the resulting loop-erased path to the tree; repeat until all vertices are
+covered.
+
+The running time of Wilson's algorithm is $O(|V(H)| \cdot t_{\mathrm{hit}})$,
+where $t_{\mathrm{hit}}$ is the maximum hitting time of the random walk on
+$H$.
+For planar graphs (such as census-tract adjacency graphs), Aldous~\citep{aldous1991}
+establishes that $t_{\mathrm{hit}} = O(|V(H)|)$, so the expected running time
+is $O(|V(H)|^2)$ in the worst case.
+In practice, for the merged district regions $R = D_i \cup D_j$ with
+$|R| \approx 2n/k$, Wilson's algorithm runs in $O((n/k)^2)$ expected time---which
+is $O(n/k)$ expected steps per vertex, substantially better than the worst-case
+bound for non-planar graphs.
+
+For each \fr{} step, Wilson's algorithm is called \emph{twice}: once for
+$T_{\mathrm{fwd}}$ (from the current plan's district pair) and once for
+$T_{\mathrm{rev}}$ (from the proposed plan's district pair, which is the
+same region $R$ but with the balanced-cut constraint evaluated from the other
+side).
+The doubled call is the direct computational cost of the Metropolis-Hastings
+correction.

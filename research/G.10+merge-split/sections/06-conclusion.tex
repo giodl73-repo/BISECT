@@ -1,0 +1,28 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+Merge-Split MCMC~\citep{janson2022} resolves the stationary distribution
+ambiguity of standard \recom{}~\citep{deford2021} by sampling an independent
+reverse spanning tree and computing the ratio
+$\mathrm{cuts\_fwd} / \mathrm{cuts\_rev}$ as the Metropolis-Hastings
+acceptance probability.
+The forward cut count appears in the numerator because it dilutes the
+forward proposal probability; the resulting ratio equals
+$Q(\pi' \!\to\! \pi) / Q(\pi \!\to\! \pi')$ in expectation, giving
+approximate detailed balance with the uniform distribution as the target.
+
+The implementation as \texttt{MergeSplitChain} achieves $O(m \log m)$
+per-step cost---the same asymptotic cost as standard \recom{} and far below
+\forestrecom{}'s $O(m^2)$---while raising distributional precision from
+``unknown stationary distribution'' to ``approximately uniform.''
+The empirical acceptance rate of $\approx\!60\%$ on NC and WI is intermediate
+between standard \recom{} ($\approx\!80\%$) and \forestrecom{} ($\approx\!40\%$),
+reflecting the two-tree heuristic's intermediate strictness.
+
+\mergesplit{} is the recommended chain for production redistricting
+ensembles where approximate uniformity is sufficient and ensemble size
+or wall-clock budget makes \forestrecom{} impractical.
+\forestrecom{} is reserved for applications requiring exact theoretical
+guarantees; SMC~\citep{dellaLibera2026smc} is reserved for exact
+calibration.
+The implementation is available via \texttt{--search merge-split}.

@@ -7,7 +7,7 @@ license.workspace = true
 description = "Huntington-Hill apportionment + extensible prime-factor redistricting compositor"
 
 [dependencies]
-redist-metis = { path = "../redist-metis" }
+metis-core   = { workspace = true }
 # optional: only compiled when the "c-ffi" feature is enabled.
 # The "vendored" sub-feature bundles the METIS C source so no system
 # libmetis is required at runtime — but a C compiler is needed at build time.
@@ -21,7 +21,7 @@ serde_json.workspace  = true
 # c-ffi: enables the C METIS FFI engine (links bundled C METIS source).
 # Requires a C compiler at build time; produces a standalone binary at runtime.
 c-ffi = ["dep:metis"]
-# shadow-metis: run redist-metis alongside c-ffi and warn on quality regressions.
+# shadow-metis: run metis-core alongside c-ffi and warn on quality regressions.
 # Implies c-ffi (both engines must be present to compare).
 shadow-metis = ["c-ffi"]
 # Default: include C METIS. Disable with --no-default-features for a

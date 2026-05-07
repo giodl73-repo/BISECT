@@ -1,0 +1,162 @@
+%% G.10 -- Merge-Split MCMC: Explicit Reversibility via Two-Tree Acceptance Ratio
+%% References
+
+%% ===================================================================
+%% SELF-CITATIONS (B/G SERIES)
+%% ===================================================================
+
+@misc{dellaLibera2026forestRecom,
+  author = {Della-Libera, Gio},
+  title  = {Forest {ReCom}: Reversible Redistricting via Spanning Forest
+            Sampling},
+  year   = {2026},
+  note   = {G.9 in Algorithmic Redistricting series.
+            Introduces ForestRecom as a reversible ReCom variant using
+            determinant-based acceptance ratios. Per-step cost $O(m^2)$;
+            acceptance rate $\approx 40\%$. Merge-Split (this paper)
+            reduces per-step cost to $O(m \log m)$ at the price of
+            using a random estimate of the ratio rather than the exact
+            matrix-tree value.},
+}
+
+@misc{dellaLibera2026smc,
+  author = {Della-Libera, Gio},
+  title  = {Sequential {Monte} {Carlo} for Redistricting: Exact Calibration
+            via Particle Filtering},
+  year   = {2026},
+  note   = {G.7 in Algorithmic Redistricting series.
+            Presents SMC as the gold standard for exact distributional
+            calibration. Used as the upper reference point in
+            Section~\ref{sec:when-to-use}.},
+}
+
+@misc{b11paper,
+  author = {Della-Libera, Gio},
+  title  = {{ApportionRegions}: Prime-Factor Bisection for Congressional
+            Redistricting},
+  year   = {2026},
+  note   = {B.11 in Algorithmic Redistricting series.
+            50-state sweep producing the 223D/209R national headline.
+            Provides the plan-level ConvergenceSweep baseline against
+            which Merge-Split ensemble quality is compared.},
+}
+
+%% ===================================================================
+%% MERGE-SPLIT / JANSON
+%% ===================================================================
+
+@misc{janson2022,
+  author = {Janson, Svante},
+  title  = {Randomly Chosen Spanning Trees in Practice: Redistricting and
+            the {Merge-Split} {Markov} Chain},
+  year   = {2022},
+  note   = {Introduces the Merge-Split MCMC proposal for redistricting.
+            Algorithm: sample independent spanning trees $T_{\mathrm{fwd}}$
+            and $T_{\mathrm{rev}}$ of the merged region; accept with
+            probability $\min(1, \mathrm{cuts\_fwd}/\mathrm{cuts\_rev})$.
+            Shows approximate targeting of the uniform distribution.
+            This paper (G.10) implements Janson's algorithm in Rust and
+            provides empirical acceptance rates and EC quality for US
+            congressional districts.},
+}
+
+%% ===================================================================
+%% FOREST RECOM / MCCARTAN
+%% ===================================================================
+
+@article{mccartan2020,
+  author  = {McCartan, Cory and Imai, Kosuke},
+  title   = {Sequential {Monte} {Carlo} for Sampling Balanced and Compact
+             Redistricting Plans},
+  journal = {arXiv},
+  year    = {2020},
+  note    = {arXiv:2008.06131. Introduces Forest ReCom (referred to in
+             subsequent literature as the spanning-forest proposal).
+             Acceptance ratio uses the ratio of spanning forest counts
+             (matrix-tree determinants), giving exact targeting of the
+             uniform distribution over forests. Per-step cost $O(m^2)$.
+             Merge-Split replaces the determinant with a random estimate
+             from an independent spanning tree, reducing cost to
+             $O(m \log m)$.},
+}
+
+%% ===================================================================
+%% RECOM / DEFORD
+%% ===================================================================
+
+@article{deford2021,
+  author  = {DeFord, Daryl and Duchin, Moon and Solomon, Justin},
+  title   = {Recombination: A Family of {Markov} Chains for Redistricting},
+  journal = {Harvard Data Science Review},
+  volume  = {3},
+  number  = {1},
+  year    = {2021},
+  doi     = {10.1162/99608f92.eb30390f},
+  note    = {Standard ReCom proposal. Merges two adjacent districts,
+             samples a random spanning tree of the merged region, and
+             accepts the first balanced cut. Acceptance ratio is
+             implicitly 1 (both forward and reverse have the same
+             structure under the uniform spanning tree measure), so the
+             stationary distribution is unknown.
+             Section~\ref{sec:background} explains why this symmetry
+             holds and why Merge-Split breaks it.},
+}
+
+%% ===================================================================
+%% WILSON UST ALGORITHM
+%% ===================================================================
+
+@article{wilson1996,
+  author  = {Wilson, David Bruce},
+  title   = {Generating Random Spanning Trees More Quickly than the Cover
+             Time},
+  journal = {Proceedings of the 28th Annual ACM Symposium on the Theory
+             of Computing},
+  pages   = {296--303},
+  year    = {1996},
+  doi     = {10.1145/237814.237880},
+  note    = {Wilson's algorithm for sampling a uniformly random spanning
+             tree via loop-erased random walks in $O(m \log m)$ expected
+             time. The two spanning tree samples in MergeSplitChain
+             (forward $T_{\mathrm{fwd}}$ and reverse $T_{\mathrm{rev}}$)
+             each use Wilson's algorithm, giving the overall
+             $O(m \log m)$ per-step cost stated in
+             Section~\ref{sec:algorithm}.},
+}
+
+%% ===================================================================
+%% METROPOLIS-HASTINGS
+%% ===================================================================
+
+@article{metropolis1953,
+  author  = {Metropolis, Nicholas and Rosenbluth, Arianna W. and
+             Rosenbluth, Marshall N. and Teller, Augusta H. and
+             Teller, Edward},
+  title   = {Equation of State Calculations by Fast Computing Machines},
+  journal = {The Journal of Chemical Physics},
+  volume  = {21},
+  number  = {6},
+  pages   = {1087--1092},
+  year    = {1953},
+  doi     = {10.1063/1.1699114},
+  note    = {Original Metropolis-Hastings algorithm. The Merge-Split
+             acceptance ratio $\min(1, \mathrm{cuts\_fwd}/\mathrm{cuts\_rev})$
+             is the MH ratio $\min(1, Q(\pi'\to\pi)/Q(\pi\to\pi'))$
+             under uniform prior on valid plans. Section~\ref{sec:algorithm}
+             derives this ratio explicitly.},
+}
+
+%% ===================================================================
+%% MARKOV CHAIN THEORY
+%% ===================================================================
+
+@book{levin2009,
+  author    = {Levin, David A. and Peres, Yuval and Wilmer, Elizabeth L.},
+  title     = {Markov Chains and Mixing Times},
+  publisher = {American Mathematical Society},
+  year      = {2009},
+  note      = {Standard reference for Markov chain mixing time theory.
+               Detailed balance and stationary distribution theory
+               (Chapter 1) underlie the approximate uniformity claim
+               in Theorem~\ref{thm:approx-balance}.},
+}

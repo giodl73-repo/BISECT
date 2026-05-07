@@ -95,11 +95,11 @@ impl SubGraph {
     pub fn n_edges(&self) -> usize { self.adjncy.len() / 2 }
 }
 
-impl From<&SubGraph> for redist_metis::graph::CsrGraph {
+impl From<&SubGraph> for metis_core::graph::CsrGraph {
     /// Convert a `SubGraph` (METIS FFI format with `i32` arrays) into the
     /// `CsrGraph` type used by `redist-metis` (pure-Rust, `u32` xadj/adjncy).
     fn from(sg: &SubGraph) -> Self {
-        redist_metis::graph::CsrGraph {
+        metis_core::graph::CsrGraph {
             xadj:   sg.xadj.iter().map(|&x| x as u32).collect(),
             adjncy: sg.adjncy.iter().map(|&x| x as u32).collect(),
             ncon:   1,

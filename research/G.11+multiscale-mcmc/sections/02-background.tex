@@ -1,0 +1,118 @@
+\section{Background}
+\label{sec:background}
+
+\subsection{Standard ReCom and Its Mixing Time}
+
+The \recom{} Markov chain~\citep{deford2021} operates on the space of
+valid $k$-district redistricting plans.
+A plan $\pi : V \to [k]$ assigns each census tract $v \in V$ to a district;
+$\pi$ is valid if every district is connected and population-balanced
+(within tolerance $\epsilon$ of the ideal $P_{\mathrm{ideal}} = \sum_v \mathrm{pop}(v) / k$).
+
+A single \recom{} step:
+\begin{enumerate}
+  \item Selects a random pair of adjacent districts $(d_i, d_j)$.
+  \item Merges them into a super-district $D = d_i \cup d_j$.
+  \item Samples a uniformly random spanning tree $T$ of $G[D]$.
+  \item Finds a tree edge whose removal splits $T$ into two balanced
+        subtrees (i.e., each subtree's population is within $\epsilon$ of
+        $P_{\mathrm{ideal}}$).
+  \item Accepts the split as the new $(d_i', d_j')$ if one is found;
+        otherwise rejects.
+\end{enumerate}
+
+The mixing behaviour of \recom{} depends critically on $k$.
+For small $k$ (say $k = 8$ or $k = 14$), each step affects a meaningful
+fraction of the plan, and the chain explores the plan space efficiently.
+For large $k$, the fraction of the plan affected per step is $2/k$, which
+is small.
+More precisely:
+
+\begin{proposition}[Expected steps to restructure all districts]
+\label{prop:recom-mixing}
+Under uniform district-pair selection, the expected number of \recom{} steps
+before every district has been involved in at least one merge-split is
+$\Theta(k \log k)$ by the coupon-collector argument.
+\end{proposition}
+
+\begin{proof}
+There are $\binom{k}{2}$ pairs of adjacent districts (at most; the actual
+number depends on the plan).
+Each step selects one pair uniformly at random from the $\approx k$ adjacent
+pairs (in a reasonably compact plan, each district has $O(1)$ neighbours).
+This is equivalent to the coupon-collector problem with $k$ coupons: the
+expected number of trials to collect all $k$ coupons is $k H_k = \Theta(k \log k)$,
+where $H_k$ is the $k$-th harmonic number.
+\end{proof}
+
+For Texas ($k = 38$), $k \ln k \approx 136$.
+Thus roughly 136 steps are needed in expectation just to touch every district
+once---and touching every district once is far from sufficient for meaningful
+plan-space exploration.
+Empirically, autocorrelation in the edge-cut statistic at lag 100 remains
+above 0.5 for standard \recom{} on Texas.
+
+\subsection{Coarse-Level Abstraction}
+
+Autry et al.~\citep{autry2021} introduced the key idea that the slow mixing
+of fine-level chains can be accelerated by running a coupled chain at a
+coarser spatial resolution.
+
+\begin{definition}[Coarsening]
+\label{def:coarsening}
+Let $G = (V, E)$ be the tract adjacency graph and let $f : V \to C$ be a
+surjective map from tracts to counties (the coarsening map).
+The \emph{county adjacency graph} $G_C = (C, E_C)$ has vertex set $C$
+and edge set
+\[
+  E_C = \{(c_1, c_2) \in C \times C : c_1 \neq c_2
+            \text{ and } \exists\, (v_1, v_2) \in E
+            \text{ with } f(v_1) = c_1,\, f(v_2) = c_2\}.
+\]
+That is, two counties are adjacent in $G_C$ if and only if at least one
+tract in the first county is adjacent to at least one tract in the second
+county in the fine graph $G$.
+\end{definition}
+
+The coarsening $f$ induces a \emph{coarse plan}: given a fine plan $\pi : V \to [k]$,
+the coarse plan assigns each county $c$ to the district that contains the
+majority of $c$'s population, or more precisely, the county plan
+$\pi_C : C \to [k]$ is defined by a projection rule (see
+Section~\ref{sec:algorithm}).
+
+A coarse \recom{} step operates on $G_C$ with county populations
+$\mathrm{pop}(c) = \sum_{v \in f^{-1}(c)} \mathrm{pop}(v)$.
+The result is a coarse plan $\pi_C' : C \to [k]$, which is then
+\emph{projected} back to a fine plan $\pi' : V \to [k]$ by assigning each
+tract $v$ to the district of its county: $\pi'(v) = \pi_C'(f(v))$.
+
+\subsection{Why Coarse Moves Accelerate Mixing}
+
+A coarse \recom{} step is a macro-move that simultaneously reassigns all
+tracts in the merged county-pair.
+If the two merged counties together contain $m$ tracts, the coarse step
+achieves in one move what would require $O(m)$ fine steps.
+Since Texas has $\approx 5200$ census tracts spread across $\approx 100$
+active county regions, a single coarse step can in principle restructure up
+to $52$ tracts per county (average).
+
+More formally, the mixing time of the combined chain is shorter than the
+fine chain alone because coarse moves provide \emph{shortcut paths} in
+the plan-space graph:
+
+\begin{proposition}[Shortcut paths via coarse moves]
+\label{prop:shortcut}
+Let $\pi_0$ and $\pi^*$ be two valid fine plans that differ in $\ell$ tracts,
+all within a single pair of counties.
+The fine \recom{} chain requires $\Omega(\ell / (n/k))$ steps in expectation
+to restructure this region (the probability of selecting the relevant
+district pair at each step is $\approx 2 / k$).
+A single coarse move restructures the entire county pair in one step,
+provided the resulting coarse plan is balanced and the rebalance subroutine
+succeeds.
+\end{proposition}
+
+The coarse chain thus provides a mechanism for large-scale restructuring
+that the fine chain lacks.
+The interleaving parameter $\alpha$ controls the balance between
+large-scale exploration (coarse moves) and local precision (fine moves).

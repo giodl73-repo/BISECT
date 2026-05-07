@@ -6,11 +6,11 @@
 //! |--------|-----------|------------|-------|
 //! | C METIS FFI | `MetisEngine::CFfi` | `libmetis.so` / `.dll` / `.dylib` | Default; battle-tested, handles all k |
 //! | metis-rs (alias) | same as CFfi | same | The `metis` Rust crate IS the C FFI |
-//! | redist-metis | `MetisEngine::RedistMetis` | none | Pure Rust; portable standalone binary; may stall on prime k for large graphs |
+//! | metis-core | `MetisEngine::RedistMetis` | none | Pure Rust; portable standalone binary; may stall on prime k for large graphs |
 //! | gpmetis subprocess | `MetisEngine::Gpmetis` | `gpmetis` on PATH | Reserved; not yet implemented |
 //!
 //! When the `shadow-metis` Cargo feature is enabled with engine `CFfi`, the
-//! `redist-metis` Rust implementation also runs as a quality oracle: a warning
+//! `metis-core` Rust implementation also runs as a quality oracle: a warning
 //! is emitted when the Rust edge-cut exceeds the C edge-cut by more than 20%.
 //!
 //! Note: `redist-cli` has an unrelated `SplitStrategy` *enum* that controls
@@ -21,12 +21,12 @@ use std::collections::HashMap;
 use thiserror::Error;
 use crate::graph::SubGraph;
 
-use redist_metis::api::{
+use metis_core::api::{
     MetisPartitioner as RustMetisPartitioner,
     MetisParams,
     Partitioner as RustPartitioner,
 };
-use redist_metis::graph::CsrGraph;
+use metis_core::graph::CsrGraph;
 
 // ── MetisEngine ───────────────────────────────────────────────────────────────
 
@@ -46,7 +46,7 @@ pub enum MetisEngine {
     /// Only available when the `c-ffi` Cargo feature is enabled (the default).
     CFfi,
 
-    /// **`redist-metis`** — pure-Rust METIS implementation.
+    /// **`metis-core`** — pure-Rust multilevel graph partitioning.
     /// No C dependency at all; no C compiler required.  Fully portable.
     /// May stall on planar census-tract graphs at certain prime k values
     /// due to coarsening depth limits in the Rust implementation.
@@ -74,7 +74,7 @@ impl MetisEngine {
     pub fn as_str(self) -> &'static str {
         match self {
             MetisEngine::CFfi        => "c-ffi",
-            MetisEngine::RedistMetis => "redist-metis",
+            MetisEngine::RedistMetis => "metis-core",
             MetisEngine::Gpmetis     => "gpmetis",
         }
     }
@@ -255,7 +255,7 @@ impl MetisPartitioner {
     // ── redist-metis pure-Rust path ───────────────────────────────────────────
 
     /// Equal-weight k-way split via the `redist-metis` pure-Rust engine.
-    fn split_redist_metis(
+    fn split_metis_core(
         &self,
         g: &CsrGraph,
         k: u32,
@@ -277,7 +277,7 @@ impl MetisPartitioner {
 
     /// Asymmetric-weight k-way split via `redist-metis`.
     /// Falls back to equal-weight split (v1 does not support tpwgts).
-    fn split_redist_metis_weighted(
+    fn split_metis_core_weighted(
         &self,
         g: &CsrGraph,
         k: u32,
@@ -328,7 +328,7 @@ impl Partitioner for MetisPartitioner {
                     #[cfg(feature = "shadow-metis")]
                     {
                         let g = CsrGraph::from(region);
-                        if let Ok(rust_assignment) = self.split_redist_metis(&g, k, seed) {
+                        if let Ok(rust_assignment) = self.split_metis_core(&g, k, seed) {
                             let c_cut    = compute_cut(&g, &assignment);
                             let rust_cut = compute_cut(&g, &rust_assignment);
                             if rust_cut > 0 && c_cut > rust_cut * 12 / 10 {
@@ -347,7 +347,7 @@ impl Partitioner for MetisPartitioner {
 
             MetisEngine::RedistMetis => {
                 let g = CsrGraph::from(region);
-                self.split_redist_metis(&g, k, seed)
+                self.split_metis_core(&g, k, seed)
             }
 
             MetisEngine::Gpmetis => Err(SplitError::Metis(
@@ -387,7 +387,7 @@ impl Partitioner for MetisPartitioner {
                             .map(|&f| (f * 1000.0).round() as u32)
                             .collect();
                         if let Ok(rust_assignment) =
-                            self.split_redist_metis_weighted(&g, k, &fracs_u32, seed)
+                            self.split_metis_core_weighted(&g, k, &fracs_u32, seed)
                         {
                             let c_cut    = compute_cut(&g, &assignment);
                             let rust_cut = compute_cut(&g, &rust_assignment);
@@ -411,7 +411,7 @@ impl Partitioner for MetisPartitioner {
                     .iter()
                     .map(|&f| (f * 1000.0).round() as u32)
                     .collect();
-                self.split_redist_metis_weighted(&g, k, &fracs_u32, seed)
+                self.split_metis_core_weighted(&g, k, &fracs_u32, seed)
             }
 
             MetisEngine::Gpmetis => Err(SplitError::Metis(

@@ -98,9 +98,9 @@ pub struct AlgorithmSection {
     pub w_vra: Option<f64>,
 
     /// METIS backend engine.
-    /// Values: c-ffi (default) | redist-metis | gpmetis
+    /// Values: c-ffi (default) | metis-core | gpmetis
     /// c-ffi: links libmetis (battle-tested, all k values).
-    /// redist-metis: pure Rust, no C dependency, portable standalone binary.
+    /// metis-core: pure Rust, no C dependency, portable standalone binary.
     /// gpmetis: external subprocess (reserved, not yet implemented).
     pub engine: Option<String>,
 }
@@ -244,10 +244,23 @@ impl AlgoYaml {
                 let p = sec.percentile.unwrap_or(0.0).clamp(0.0, 1.0);
                 SeedCompositor::ShortBurst { burst_length, n_bursts, p }
             }
+            "short-burst-forest" => {
+                let burst_length = sec.burst_length.unwrap_or(20);
+                let n_bursts = sec.n_bursts.unwrap_or(50);
+                let p = sec.percentile.unwrap_or(0.0).clamp(0.0, 1.0);
+                SeedCompositor::ShortBurstForest { burst_length, n_bursts, p }
+            }
+            "short-burst-merge-split" => {
+                let burst_length = sec.burst_length.unwrap_or(20);
+                let n_bursts = sec.n_bursts.unwrap_or(50);
+                let p = sec.percentile.unwrap_or(0.0).clamp(0.0, 1.0);
+                SeedCompositor::ShortBurstMergeSplit { burst_length, n_bursts, p }
+            }
             other => {
                 return Err(format!(
                     "[CONFIG] config: unknown search '{}'. \
-                     Valid values: single | multi | convergence | short-burst",
+                     Valid values: single | multi | convergence | short-burst | \
+                     short-burst-forest | short-burst-merge-split",
                     other
                 ));
             }
@@ -256,12 +269,12 @@ impl AlgoYaml {
         // ── Engine selection ───────────────────────────────────────────────────
         let engine = match sec.engine.as_deref().unwrap_or("c-ffi") {
             "c-ffi" | "c" | "metis-rs" => redist_apportion::split::MetisEngine::CFfi,
-            "redist-metis" | "rust"    => redist_apportion::split::MetisEngine::RedistMetis,
+            "metis-core" | "rust"      => redist_apportion::split::MetisEngine::RedistMetis,
             "gpmetis" | "subprocess"   => redist_apportion::split::MetisEngine::Gpmetis,
             other => {
                 return Err(format!(
                     "[CONFIG] config: unknown engine '{}'. \
-                     Valid values: c-ffi | redist-metis | gpmetis",
+                     Valid values: c-ffi | metis-core | gpmetis",
                     other
                 ));
             }
@@ -481,6 +494,12 @@ pub fn validate_config(path: &Path) -> Result<String, String> {
         }
         crate::runner::SeedCompositor::ShortBurst { burst_length, n_bursts, p } => {
             format!("short-burst (p={p:.2}, bursts={n_bursts}, length={burst_length})")
+        }
+        crate::runner::SeedCompositor::ShortBurstForest { burst_length, n_bursts, p } => {
+            format!("short-burst-forest (p={p:.2}, bursts={n_bursts}, length={burst_length})")
+        }
+        crate::runner::SeedCompositor::ShortBurstMergeSplit { burst_length, n_bursts, p } => {
+            format!("short-burst-merge-split (p={p:.2}, bursts={n_bursts}, length={burst_length})")
         }
         crate::runner::SeedCompositor::ForestRecom { steps, p } => {
             format!("forest-recom (p={p:.2}, steps={steps})")

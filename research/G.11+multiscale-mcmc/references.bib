@@ -1,0 +1,119 @@
+%% G.11 -- Multi-scale MCMC: Hierarchical Mixing for Large-k Redistricting
+%% References
+
+%% ===================================================================
+%% SELF-CITATIONS (G/H SERIES)
+%% ===================================================================
+
+@misc{dellaLibera2026forestRecom,
+  author = {Della-Libera, Gio},
+  title  = {Forest {ReCom}: Reversible Recombination via Spanning Forest
+            Sampling},
+  year   = {2026},
+  note   = {G.9 in Algorithmic Redistricting series.
+            Implements ForestReCom with Metropolis-Hastings ratio for
+            distributional correctness. Cited as the alternative fine-level
+            chain that could replace standard ReCom in the multi-scale
+            framework for exact distributional guarantees.},
+}
+
+@misc{dellaLibera2026resolution,
+  author = {Della-Libera, Gio},
+  title  = {Resolution System Specification: {GEOID}-Prefix Coarsening
+            for Multi-scale Redistricting},
+  year   = {2026},
+  note   = {Companion technical specification defining Options A, B, and C
+            of the resolution system and the \texttt{derive\_partition}
+            helper. Documents the GEOID prefix matching approach that
+            enables county adjacency derivation without extra data files.},
+}
+
+@misc{h1paper,
+  author = {Della-Libera, Gio},
+  title  = {{BisectionEnsemble}: Node-Level Ensemble Methods for
+            Structured Redistricting},
+  year   = {2026},
+  note   = {H.1 in Algorithmic Redistricting series.
+            Node-level ReCom chains at each bisection tree node.
+            Provides the BisectionEnsemble comparison baseline in
+            Section~\ref{sec:mixing}.},
+}
+
+@misc{b11paper,
+  author = {Della-Libera, Gio},
+  title  = {{ApportionRegions}: Prime-Factor Bisection for Congressional
+            Redistricting},
+  year   = {2026},
+  note   = {B.11 in Algorithmic Redistricting series.
+            50-state sweep; defines ConvergenceSweep used to generate the
+            initial plan for mixing experiments.},
+}
+
+%% ===================================================================
+%% MULTI-SCALE MCMC
+%% ===================================================================
+
+@article{autry2021,
+  author    = {Autry, Eric and Carter, Daniel and Herschlag, Gregory
+               and Hunter, Zach and Mattingly, Jonathan},
+  title     = {Metropolized Multiscale Forest Recombination for
+               Redistricting},
+  journal   = {Multiscale Modeling and Simulation},
+  volume    = {19},
+  number    = {4},
+  pages     = {1885--1914},
+  year      = {2021},
+  doi       = {10.1137/21M1407999},
+  note      = {Introduces multi-scale MCMC for redistricting, proving ergodicity
+               of the combined chain under mild conditions. The theory and
+               coarse-level abstraction framework that \ms{} implements.
+               Their empirical results on North Carolina ($k=13$) show
+               $3\times$ speedup in effective sample rate.},
+}
+
+%% ===================================================================
+%% RECOM / MCMC REDISTRICTING
+%% ===================================================================
+
+@article{deford2021,
+  author  = {DeFord, Daryl and Duchin, Moon and Solomon, Justin},
+  title   = {Recombination: A Family of {Markov} Chains for Redistricting},
+  journal = {Harvard Data Science Review},
+  volume  = {3},
+  number  = {1},
+  year    = {2021},
+  doi     = {10.1162/99608f92.eb30390f},
+  note    = {The standard ReCom proposal distribution. Forms the fine-level
+             chain in the multi-scale framework. The slow mixing for large
+             $k$ motivates the multi-scale approach of this paper.},
+}
+
+%% ===================================================================
+%% FOREST RECOM (MCCARTAN)
+%% ===================================================================
+
+@article{mccartan2020,
+  author  = {McCartan, Cory and Imai, Kosuke},
+  title   = {Sequential Monte Carlo for Sampling Balanced and Compact
+             Redistricting Plans},
+  journal = {arXiv},
+  year    = {2020},
+  note    = {arXiv:2008.06131. Introduces Sequential Monte Carlo for
+             redistricting and Forest ReCom with Metropolis-Hastings
+             correction. Cited as the Forest ReCom source in
+             Section~\ref{sec:introduction}.},
+}
+
+%% ===================================================================
+%% MARKOV CHAIN MIXING TIME
+%% ===================================================================
+
+@book{levin2009,
+  author    = {Levin, David A. and Peres, Yuval and Wilmer, Elizabeth L.},
+  title     = {Markov Chains and Mixing Times},
+  publisher = {American Mathematical Society},
+  year      = {2009},
+  note      = {Standard reference for Markov chain mixing time theory.
+               The coupon-collector argument in Section~\ref{sec:background}
+               uses harmonic number bounds from Chapter 2.},
+}

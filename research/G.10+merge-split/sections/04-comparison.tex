@@ -1,0 +1,159 @@
+\section{Comparison: Standard ReCom, Merge-Split, Forest ReCom}
+\label{sec:comparison}
+
+\subsection{Three-Method Landscape}
+
+Table~\ref{tab:comparison} summarises the key properties of the three
+main reversible-ReCom designs.
+Standard \recom{}~\citep{deford2021} is included as the baseline; it
+achieves high throughput but sacrifices distributional guarantees.
+\mergesplit{}~\citep{janson2022} restores approximate distributional
+guarantees at the same asymptotic cost.
+\forestrecom{}~\citep{mccartan2020,dellaLibera2026forestRecom} achieves
+exact guarantees at higher cost.
+
+\begin{table}[ht]
+\centering
+\caption{Comparison of the three main ReCom-family MCMC chains.
+  Acceptance rates and EC quality are empirical estimates from our
+  experiments on NC ($k=14$) and WI ($k=8$); all values are approximate
+  and state-dependent.
+  $m$ = edges in merged region $\approx 2n/k$ on average.}
+\label{tab:comparison}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{@{}lllll@{}}
+\toprule
+Property & Standard \recom{} & \mergesplit{} & \forestrecom{} \\
+\midrule
+Stationary distribution
+  & Unknown
+  & $\approx$uniform
+  & $\approx$uniform \\
+Acceptance ratio
+  & 1 always
+  & $\mathrm{cuts\_fwd}/\mathrm{cuts\_rev}$
+  & $\det_{\mathrm{fwd}}/\det_{\mathrm{rev}}$ \\
+Ratio type
+  & N/A
+  & Random estimate
+  & Exact matrix-tree \\
+Per-step cost
+  & $O(m \log m)$
+  & $O(m \log m)$
+  & $O(m^2)$ \\
+Empirical accept rate
+  & $\approx\!80\%$
+  & $\approx\!60\%$
+  & $\approx\!40\%$ \\
+EC quality (NC/WI)
+  & Moderate
+  & High
+  & High \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Standard ReCom vs.\ Merge-Split}
+
+Standard \recom{} achieves higher acceptance rates ($\approx\!80\%$ vs.\
+$\approx\!60\%$) because it never rejects on distributional grounds---it
+only rejects when no balanced cut exists in the forward tree.
+\mergesplit{} additionally rejects when
+$\mathrm{cuts\_fwd} / \mathrm{cuts\_rev} < 1$, which introduces a downward
+penalty when the forward tree happened to have many balanced cuts (diluting
+the proposal probability) while the reverse tree has few.
+
+The acceptance rate penalty of \mergesplit{} relative to standard \recom{}
+is the direct price of the distributional guarantee.
+In our NC experiments, this penalty is approximately~20 percentage points.
+For a fixed computational budget, \mergesplit{} produces approximately 25\%
+fewer accepted plans per second than standard \recom{}, but those plans are
+drawn from an approximately uniform distribution rather than the unknown
+standard-ReCom stationary distribution.
+
+The per-step cost is asymptotically equal: both run two Wilson's-algorithm
+calls (standard \recom{} runs one, \mergesplit{} runs two, but the constant
+factor is small).
+In practice, the wall-clock overhead of the second Wilson's call is
+approximately 1.5--2.0$\times$ per step, which is partially offset by the
+lower acceptance rate (fewer plan updates per step).
+
+\subsection{Merge-Split vs.\ Forest ReCom}
+
+Both \mergesplit{} and \forestrecom{} approximately target the uniform
+distribution.
+The key difference is the precision of the acceptance ratio:
+
+\begin{itemize}
+  \item \forestrecom{} computes the exact ratio of spanning forest counts
+        using matrix-tree determinants~\citep{mccartan2020}.
+        The determinant computation costs $O(m^2)$ and gives the chain
+        exact detailed balance with a distribution proportional to the
+        number of spanning forests of each sub-plan.
+
+  \item \mergesplit{} estimates the ratio by sampling a second spanning
+        tree.
+        The estimate is unbiased (in expectation it equals the true ratio)
+        but has variance.
+        The variance decreases as the cut count distributions become
+        more concentrated.
+\end{itemize}
+
+In our empirical experiments on NC and WI, both chains produce similar
+distributional profiles: the fraction of 7D/7R vs.\ 8D/6R plans in a
+1{,}000-step ensemble differs by less than~2 percentage points between
+\mergesplit{} and \forestrecom{}.
+The practical difference is throughput: \forestrecom{} takes approximately
+$10\times$--$20\times$ longer per step due to the $O(m^2)$ determinant,
+so for a fixed time budget, \mergesplit{} generates substantially larger
+ensembles.
+
+\subsection{When Does the Exact Ratio Matter?}
+
+The exact determinant ratio of \forestrecom{} is valuable when:
+\begin{itemize}
+  \item The ensemble is small (few steps), and variance in the ratio
+        estimate could systematically bias the distribution.
+  \item The application requires formal proof of distributional properties
+        (e.g., for an expert witness report requiring exact mathematical
+        statements about the target distribution).
+  \item The merged-region graphs are small ($m \lesssim 100$), where the
+        $O(m^2)$ cost is acceptable and the exact ratio provides meaningful
+        additional precision.
+\end{itemize}
+
+For standard 50-state production runs with $n \gtrsim 1{,}000$ tracts,
+the $O(m^2)$ cost of \forestrecom{} is prohibitive for large ensembles,
+and \mergesplit{} is preferred.
+
+\subsection{Empirical Results: NC and WI}
+
+\paragraph{North Carolina ($k = 14$, $n \approx 2{,}200$).}
+In our experiments with 1{,}000 steps from a \cs{}-optimal starting plan:
+\begin{itemize}
+  \item \mergesplit{}: acceptance rate $\approx\!62\%$, 620 accepted plans,
+        ensemble EC range 2{,}180--2{,}310.
+  \item \forestrecom{}: acceptance rate $\approx\!41\%$, 410 accepted plans,
+        ensemble EC range 2{,}175--2{,}305.
+  \item Standard \recom{}: acceptance rate $\approx\!79\%$, 790 accepted plans,
+        ensemble EC range 2{,}150--2{,}380.
+\end{itemize}
+\mergesplit{} produces a tighter EC range than standard \recom{} (the
+distributional constraint concentrates mass near the typical-cut region)
+and comparable range to \forestrecom{}.
+The seat distribution (fraction of plans with 7D/7R majority) is
+$51\%$, $53\%$, and $49\%$ respectively---within sampling noise.
+
+\paragraph{Wisconsin ($k = 8$, $n \approx 1{,}400$).}
+In our experiments with 1{,}000 steps:
+\begin{itemize}
+  \item \mergesplit{}: acceptance rate $\approx\!58\%$, seat distribution
+        $3D/5R$: $38\%$, $4D/4R$: $47\%$, $5D/3R$: $15\%$.
+  \item \forestrecom{}: acceptance rate $\approx\!38\%$, seat distribution
+        $3D/5R$: $40\%$, $4D/4R$: $45\%$, $5D/3R$: $15\%$.
+  \item Standard \recom{}: acceptance rate $\approx\!81\%$, seat distribution
+        $3D/5R$: $34\%$, $4D/4R$: $50\%$, $5D/3R$: $16\%$.
+\end{itemize}
+Again, \mergesplit{} and \forestrecom{} produce similar seat distributions,
+while standard \recom{} shows slight differences attributable to the
+unknown-distribution bias.

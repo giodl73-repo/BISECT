@@ -1,0 +1,98 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+\subsection{Summary}
+
+We have presented Multi-scale MCMC Option B for redistricting, implemented
+in \texttt{redist-ensemble} and exposed via \texttt{--search multiscale}
+in \texttt{redist-cli}.
+The key results are:
+
+\begin{enumerate}
+
+  \item \textbf{County adjacency from tract graph (exact, no extra data).}
+  The county adjacency graph required for coarse \recom{} moves is derived
+  exactly from the existing tract graph by scanning cross-county tract edges.
+  Two counties are adjacent in the derived graph if and only if they are
+  geographically adjacent.
+  No additional data files, shapefiles, or census downloads are required.
+  The derivation runs in $O(|E|)$ time ($<1$ ms for Texas).
+
+  \item \textbf{Mixing speed improvement for large $k$.}
+  On Texas ($k = 38$, $T = 2000$ steps), \ms{} reduces lag-100
+  autocorrelation of the edge-cut statistic from $0.51$ to $0.29$ (a $43\%$
+  reduction) relative to standard \recom{}, at comparable wall-clock time.
+  This yields a $\approx 1.8\times$ increase in effective sample size per
+  unit time.
+
+  \item \textbf{Three resolution options via GEOID prefix matching.}
+  The resolution system defines Options A (block group $\to$ tract), B
+  (tract $\to$ county, implemented), and C (block group $\to$ county), all
+  sharing the \texttt{derive\_partition} helper.
+  Options A and C require block-group adjacency data not currently loaded
+  by the pipeline and are defined for future implementation.
+
+\end{enumerate}
+
+\subsection{When to Use Multi-scale MCMC}
+
+\ms{} is the recommended ensemble method when:
+\begin{itemize}
+  \item $k \geq 30$ (the large-$k$ mixing problem is acute); or
+  \item The state has a strong county-district correspondence (many states
+        have constitutional or statutory requirements to respect county
+        boundaries); or
+  \item Ensemble analysis requires effective independence between samples
+        (litigation support, academic publication, legislative compliance).
+\end{itemize}
+
+Standard \recom{} remains appropriate for:
+\begin{itemize}
+  \item $k \leq 14$ (NC, WI, OR, etc.) where single-scale mixing is adequate;
+  \item Rapid exploratory runs where ESS precision is not critical.
+\end{itemize}
+
+\subsection{Parameter Guidelines}
+
+Based on the $\alpha$-sweep results in Section~\ref{sec:mixing}:
+\begin{itemize}
+  \item $\alpha = 0.3$ is the recommended default for states with $k = 30$--$45$.
+  \item $\alpha = 0.35$ may improve mixing for $k \geq 50$ (CA, $k = 52$).
+  \item $\alpha < 0.2$ provides minimal benefit over standard \recom{}.
+  \item $\alpha > 0.45$ increases rebalance failure rates and degrades
+        effective acceptance.
+\end{itemize}
+
+\subsection{Future Directions}
+
+Three natural extensions of the current implementation:
+
+\paragraph{Multi-scale Forest ReCom.}
+Replacing the fine \recom{} chain with \fr{}~\citep{dellaLibera2026forestRecom}
+would provide distributional guarantees for the fine-level component.
+The Metropolis-Hastings acceptance ratio used in \fr{} is well-defined on
+the fine plan space; combining it with coarse moves requires care in
+defining the joint acceptance criterion.
+
+\paragraph{Options A and C.}
+Implementing block-group adjacency loading would enable Options A and C,
+providing finer spatial resolution for states with heterogeneous tract
+populations (e.g.\ California, where coastal tracts are very small).
+
+\paragraph{Adaptive $\alpha$.}
+The coarsening parameter $\alpha$ could be adapted during the run based on
+the rebalance failure rate: decrease $\alpha$ when failures exceed a threshold,
+increase when failures are rare.
+This would automate the $\alpha$ selection currently done manually.
+
+\subsection{Implementation Reference}
+
+The complete implementation is in \texttt{crates/redist-ensemble/src/multiscale.rs}.
+The CLI integration is in \texttt{crates/redist-cli/src/compositor/multiscale.rs}.
+The GEOID-prefix coarsening helper is in
+\texttt{crates/redist-core/src/adjacency\_loader.rs}
+(\texttt{derive\_partition} and \texttt{build\_county\_coarsening}).
+
+All runs are reproducible from the manifest entry \texttt{plan\_resolution: ``tract-county''}
+and the base seed $b$, using the deterministic step-level seed schedule
+(Section~\ref{sec:algorithm}).

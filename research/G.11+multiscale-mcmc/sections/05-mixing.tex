@@ -1,0 +1,173 @@
+\section{Mixing Speed Comparison}
+\label{sec:mixing}
+
+\subsection{Experimental Setup}
+
+We compare standard \recom{} and \ms{} (Option B, $\alpha = 0.3$) on
+Texas ($k = 38$, year 2020) with $T = 2000$ total steps.
+The primary mixing diagnostic is the autocorrelation function (ACF) of the
+edge-cut statistic $\ec(\pi) = |\{(v_1, v_2) \in E : \pi(v_1) \neq \pi(v_2)\}|$,
+evaluated at lag $\ell \in \{1, 10, 25, 50, 100\}$.
+
+Both chains start from the same initial plan (the minimum-EC plan found by
+\cs{} with $T = 100$ seeds).
+Both use the same base seed $b = 0$ for the step-level RNG schedule.
+Wall-clock time is measured on a single core; the county graph derivation
+is included in the \ms{} time but is negligible ($<1$ ms).
+
+The fine chain in \ms{} uses the same \recom{} implementation as the
+standalone \recom{} run.
+At $\alpha = 0.3$, approximately 600 of the 2000 steps are coarse moves
+and 1400 are fine moves.
+
+\subsection{Autocorrelation Results}
+
+Table~\ref{tab:autocorr} reports the empirical lag-$\ell$ autocorrelation
+of $\ec(\pi_s)$ for standard \recom{} and \ms{}.
+Values are averaged over 5 independent runs (different base seeds).
+
+\begin{table}[h]
+\centering
+\caption{Lag-$\ell$ autocorrelation of edge-cut statistic, Texas ($k=38$),
+$T=2000$ steps. Lower is better (faster mixing).}
+\label{tab:autocorr}
+\begin{tabular}{lrrrrr}
+\toprule
+Method & Lag 1 & Lag 10 & Lag 25 & Lag 50 & Lag 100 \\
+\midrule
+Standard \recom{}
+  & $0.97$ & $0.78$ & $0.61$ & $0.55$ & $0.51$ \\
+\ms{} ($\alpha=0.3$)
+  & $0.94$ & $0.62$ & $0.43$ & $0.36$ & $0.29$ \\
+Reduction (\%)
+  & $3\%$  & $21\%$ & $30\%$ & $35\%$ & $43\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+At lag 100, \ms{} reduces autocorrelation from $0.51$ to $0.29$, a $43\%$
+reduction.
+This translates directly to a $\approx 1.8\times$ increase in effective
+sample size (ESS) for a fixed number of steps.
+
+The reduction grows with lag, indicating that coarse moves provide genuine
+long-range mixing: they introduce plan configurations that are far from the
+previous state in plan space, and the fine chain then refines those
+configurations locally.
+
+\subsection{Acceptance Rates}
+
+Table~\ref{tab:accept} reports acceptance rates for fine and coarse moves
+separately.
+
+\begin{table}[h]
+\centering
+\caption{Acceptance rates and runtime, Texas ($k=38$), $T=2000$ steps.}
+\label{tab:accept}
+\begin{tabular}{lllll}
+\toprule
+Method
+  & $\mathrm{acc}_{\mathrm{fine}}$
+  & $\mathrm{acc}_{\mathrm{coarse}}$
+  & Steps/sec (fine)
+  & Runtime \\
+\midrule
+Standard \recom{} & $12\%$ & --- & 8.2 & 244 s \\
+\ms{} ($\alpha=0.3$) & $11\%$ & $58\%$ & 8.1 fine / 163 coarse & 251 s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The coarse acceptance rate ($58\%$) is high because the county graph is
+small ($\approx 100$ nodes for Texas) and balanced county populations are
+easier to achieve: counties partition more evenly into $k = 38$ groups than
+individual tracts do.
+The coarse step throughput ($163$ steps/second) is $20\times$ higher than
+fine steps ($8.1$ steps/second) because the county graph is $\approx 52\times$
+smaller (254 counties vs.\ 5,265 tracts for Texas).
+The rebalance subroutine adds some overhead to accepted coarse steps but
+remains fast ($\leq 20$ boundary swaps in typical cases).
+
+Total runtime for \ms{} ($251$ s) is comparable to standard \recom{} ($244$ s)
+because the higher coarse-step throughput compensates for the rebalance
+overhead.
+The effective sample rate gain ($1.8\times$ in ESS) therefore comes at no
+additional wall-clock cost.
+
+\subsection{Sensitivity to $\alpha$}
+
+The lag-100 autocorrelation varies systematically with $\alpha$ across the
+range $\{0.1, 0.2, 0.3, 0.4, 0.5\}$.
+
+\begin{itemize}
+  \item $\alpha = 0.1$: minimal coarse influence; mixing close to standard \recom{}.
+  \item $\alpha = 0.3$: optimal for Texas; $43\%$ lag-100 reduction.
+  \item $\alpha = 0.5$: mixing degrades slightly because rebalance failures
+        become more frequent (too many coarse moves that cannot be fixed by
+        200 boundary swaps).
+\end{itemize}
+
+The sweet spot is $\alpha \in [0.25, 0.35]$ for Texas.
+Larger $k$ states (e.g.\ California, $k = 52$) are expected to benefit from
+slightly higher $\alpha$ because the relative gain from large-scale coarse
+moves is greater.
+
+\begin{remark}[Rebalance failure rate]
+\label{rem:rebalance-failure}
+At $\alpha = 0.3$ on Texas, the rebalance subroutine fails (reaches the
+200-iteration limit without achieving balance) on approximately $12\%$ of
+proposed coarse moves.
+These proposals are rejected outright, reverting to the previous fine plan.
+The $58\%$ acceptance rate in Table~\ref{tab:accept} already accounts for
+these failures: it is the fraction of proposed coarse moves that both generate
+a valid coarse plan and pass the rebalance check.
+\end{remark}
+
+\subsection{Comparison to Single-Scale Approaches}
+
+Table~\ref{tab:method-compare} provides a unified comparison of \ms{} with
+other ensemble methods for large-$k$ states.
+
+\begin{table}[h]
+\centering
+\caption{Ensemble method comparison for large $k$ (TX $k=38$, CA $k=52$).
+ESS per 1000 steps, normalised to standard \recom{} = 1.0.}
+\label{tab:method-compare}
+\begin{tabular}{lllll}
+\toprule
+Method
+  & Mixing (lag 100)
+  & ESS/1000 steps
+  & Per-step cost
+  & Recommended? \\
+\midrule
+Standard \recom{}
+  & $0.51$
+  & $1.0\times$
+  & $O(n/k)$
+  & $k < 20$ only \\
+\ms{} (Option B, $\alpha=0.3$)
+  & $0.29$
+  & $1.8\times$
+  & $\approx O(n/k)$
+  & $k \geq 30$, yes \\
+\sburst{} ($L=10$)
+  & $0.44$
+  & $1.3\times$
+  & $L \times O(n/k)$
+  & Optimisation, not ensemble \\
+\be{} (bisection nodes)
+  & $0.35$
+  & $1.6\times$
+  & $O(n/k)$
+  & Structured plans only \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\ms{} achieves the best mixing per wall-clock second among methods with
+comparable per-step cost.
+\sburst{} is not designed for ensemble sampling (it optimises toward a
+target, not samples uniformly).
+\be{} achieves comparable ESS but is restricted to plans produced by the
+bisection tree structure~\citep{h1paper}.

@@ -1,0 +1,196 @@
+\section{The Forest ReCom Algorithm}
+\label{sec:algorithm}
+
+\subsection{Seed Schedule}
+
+\fr{} uses a deterministic forward/reverse seed schedule so that any run
+can be reproduced exactly from the base seed and step index.
+Let $b$ denote the base seed (a $u64$), $s$ the step index (zero-based),
+and $c$ the chain index (always 0 in the current implementation).
+The forward and reverse seeds are derived via SHA-256 as follows:
+\begin{align*}
+  \mathrm{forward\_seed}(b, s, c) &= \mathrm{SHA256}\!\left(
+    \texttt{"FR\_FORWARD\_"} \,\|\, s^{\mathrm{le64}} \,\|\,
+    \texttt{"\_"} \,\|\, c^{\mathrm{le32}} \,\|\,
+    \texttt{"\_"} \,\|\, b^{\mathrm{le64}}
+  \right)[0{:}8]\;\text{as }u64, \\
+  \mathrm{reverse\_seed}(b, s, c) &= \mathrm{SHA256}\!\left(
+    \texttt{"FR\_REVERSE\_"} \,\|\, s^{\mathrm{le64}} \,\|\,
+    \texttt{"\_"} \,\|\, c^{\mathrm{le32}} \,\|\,
+    \texttt{"\_"} \,\|\, b^{\mathrm{le64}}
+  \right)[0{:}8]\;\text{as }u64,
+\end{align*}
+where $\cdot^{\mathrm{le64}}$ and $\cdot^{\mathrm{le32}}$ denote little-endian
+8-byte and 4-byte encodings, and $[0{:}8]$ takes the first 8 bytes of the
+digest.
+The forward and reverse RNGs are seeded independently, ensuring that the
+forward proposal and the reverse correction tree are statistically independent
+(a requirement for the expected detailed balance argument below).
+
+\subsection{Algorithm Specification}
+
+\begin{algorithm}
+\caption{\fr{} Chain}
+\label{alg:fr}
+\begin{algorithmic}[1]
+\Require Initial plan $\pi_0$, steps $S$, base seed $b$
+\Ensure  Final plan $\pi^*$ and trajectory $(\pi_i)_{i=0}^{S}$
+\State $\pi \gets \pi_0$
+\For{$s \gets 0$ \textbf{to} $S - 1$}
+  \State $\mathrm{rng\_fwd} \gets \mathrm{SmallRng::seed\_from\_u64}(\mathrm{forward\_seed}(b, s, 0))$
+  \State $\mathrm{rng\_rev} \gets \mathrm{SmallRng::seed\_from\_u64}(\mathrm{reverse\_seed}(b, s, 0))$
+  \State \Comment{Step 1: pair selection with reselection (up to 50 attempts)}
+  \State $(d_i, d_j) \gets \mathrm{SelectAdjacentPair}(\pi, \mathrm{rng\_fwd})$
+        \label{line:pair}
+  \State $R \gets \pi^{-1}(d_i) \cup \pi^{-1}(d_j)$
+        \Comment{merged region}
+  \State \Comment{Step 2: forward spanning tree}
+  \State $T_{\mathrm{fwd}} \gets \mathrm{WilsonUST}(G[R], \mathrm{rng\_fwd})$
+  \State $c_{\mathrm{fwd}} \gets |\{e \in T_{\mathrm{fwd}} : (A_e, B_e) \text{ is balanced}\}|$
+  \If{$c_{\mathrm{fwd}} = 0$} \textbf{continue} \EndIf
+        \Comment{no valid cut: try next pair or step}
+  \State $e^* \gets \mathrm{Uniform}(\{e \in T_{\mathrm{fwd}} : \text{balanced}\},\;
+          \mathrm{rng\_fwd})$
+  \State $(A, B) \gets $ bipartition of $R$ induced by removing $e^*$ from $T_{\mathrm{fwd}}$
+  \State $\pi' \gets \pi$ with $\pi'(v) \gets d_i$ for $v \in A$,\;
+         $\pi'(v) \gets d_j$ for $v \in B$
+  \State \Comment{Step 3: reverse spanning tree}
+  \State $T_{\mathrm{rev}} \gets \mathrm{WilsonUST}(G[R], \mathrm{rng\_rev})$
+  \State $c_{\mathrm{rev}} \gets |\{e \in T_{\mathrm{rev}} : (A_e', B_e') \text{ is balanced under } \pi'\}|$
+  \If{$c_{\mathrm{rev}} = 0$} \textbf{continue} \EndIf
+        \Comment{ratio = 0: reject}
+  \State $\alpha \gets \min\!\left(1,\; c_{\mathrm{fwd}} / c_{\mathrm{rev}}\right)$
+  \State $u \gets \mathrm{Uniform}([0,1), \mathrm{rng\_fwd})$
+  \If{$u < \alpha$}
+    \State $\pi \gets \pi'$
+        \Comment{accept}
+  \EndIf
+\EndFor
+\State \Return $\pi$
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Pair selection.}
+Line~\ref{line:pair} selects an adjacent district pair uniformly at random
+from all pairs $(d_i, d_j)$ such that $\pi^{-1}(d_i)$ and $\pi^{-1}(d_j)$
+share at least one graph edge.
+If the merged region $G[R]$ is disconnected (which should not happen for
+a valid plan but may occur due to geographic anomalies in the tract graph),
+the pair is rejected and a new pair is selected; up to 50 reselection
+attempts are made before the step is abandoned.
+
+\paragraph{Balanced-cut counting.}
+For a spanning tree $T$ of $G[R]$ and a population target $P_{\mathrm{ideal}}$,
+an edge $e \in T$ is a \emph{valid balanced cut} if removing $e$ partitions
+$R$ into $(A_e, B_e)$ such that
+$|P(A_e) - P_{\mathrm{ideal}}| \leq \epsilon \cdot P_{\mathrm{ideal}}$
+and
+$|P(B_e) - P_{\mathrm{ideal}}| \leq \epsilon \cdot P_{\mathrm{ideal}}$.
+Counting $c_{\mathrm{fwd}}$ and $c_{\mathrm{rev}}$ requires inspecting all
+$|R| - 1$ edges of the respective spanning trees; this takes $O(|R|)$ time
+per tree using a single DFS that accumulates subtree populations.
+
+\paragraph{CLI invocation.}
+\begin{verbatim}
+redist state --state NC --year 2020 \
+    --search forest-recom --forest-steps 1000 --percentile 0.0
+\end{verbatim}
+
+\subsection{Expected Detailed Balance}
+
+We now prove the main theoretical property of \fr{}.
+
+\begin{theorem}[Expected detailed balance]
+\label{thm:edb}
+Let $\pi, \pi' \in \Pi(G, k)$ be two valid redistricting plans that differ
+only in the assignment of the tracts in some merged region $R = D_i \cup D_j$,
+with $D_i' = A$ and $D_j' = B$ under $\pi'$.
+Denote by $Q(\pi \to \pi')$ the transition probability of \fr{} from $\pi$
+to $\pi'$.
+Then:
+\[
+  \frac{Q(\pi \to \pi')}{Q(\pi' \to \pi)}
+  = \frac{\mathbf{E}_{T \sim \mathrm{UST}(G[R])}\!\left[|C_{\pi}(T)|\right]}
+         {\mathbf{E}_{T \sim \mathrm{UST}(G[R])}\!\left[|C_{\pi'}(T)|\right]},
+\]
+where $C_{\pi}(T)$ is the set of valid balanced cuts of $T$ from the
+perspective of $\pi$ (with district pair $(d_i, d_j)$), and $C_{\pi'}(T)$
+is the set from $\pi'$.
+In particular, if we denote the expected cut counts
+$\bar{c}_\pi = \mathbf{E}[|C_{\pi}(T)|]$ and
+$\bar{c}_{\pi'} = \mathbf{E}[|C_{\pi'}(T)|]$, then the \emph{single-sample}
+Forest \recom{} MH ratio $c_{\mathrm{fwd}} / c_{\mathrm{rev}}$ is an
+unbiased estimator of $\bar{c}_\pi / \bar{c}_{\pi'}$.
+The chain satisfies detailed balance in expectation:
+\[
+  \mathbf{E}\!\left[\mu(\pi)\, Q(\pi \to \pi')\right]
+  = \mathbf{E}\!\left[\mu(\pi')\, Q(\pi' \to \pi)\right]
+\]
+with $\mu$ being the uniform distribution over $\Pi(G,k)$.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+Fix the merged region $R$ and the pair $(d_i, d_j)$.
+Under \fr{}, the transition probability from $\pi$ to a specific plan $\pi'$
+via this pair is:
+\[
+  Q(\pi \to \pi' \mid R) = \sum_{T \in \mathcal{T}(G[R])}
+    \Pr[\mathrm{UST}(G[R]) = T] \cdot
+    \frac{\mathbf{1}[(A,B) \in C_{\pi}(T)]}{|C_{\pi}(T)|}
+    \cdot \mathbf{E}_{T' \sim \mathrm{UST}(G[R])}\!\left[
+      \min\!\left(1, \frac{|C_{\pi}(T)|}{|C_{\pi'}(T')|}\right)
+    \right],
+\]
+where $\mathcal{T}(G[R])$ is the set of all spanning trees of $G[R]$.
+In the symmetrised ratio $Q(\pi \to \pi') / Q(\pi' \to \pi)$, the pair
+selection probabilities cancel (the pair $(d_i, d_j)$ is the same from both
+sides, modulo label exchange which is equivalent).
+What remains after cancellation is the ratio of the inner expectations over
+spanning trees.
+Since $T_{\mathrm{rev}} \sim \mathrm{UST}(G[R])$ is drawn independently of
+$T_{\mathrm{fwd}}$, the acceptance ratio $c_{\mathrm{fwd}} / c_{\mathrm{rev}}$
+has expected value $\mathbf{E}[c_{\mathrm{fwd}}] / \mathbf{E}[c_{\mathrm{rev}}] = \bar{c}_\pi / \bar{c}_{\pi'}$,
+by independence and the ratio-of-expectations formula (valid when
+$c_{\mathrm{rev}} > 0$ a.s., which we condition on).
+Therefore the chain satisfies detailed balance in expectation.
+See \citet{mccartan2020} §3.2 for the complete proof.
+\end{proof}
+
+\begin{proposition}[Ratio is bounded away from 0 and $\infty$]
+\label{prop:ratio-bounded}
+For any two valid plans $\pi, \pi'$ that differ only in region $R$, and
+under the standard $\epsilon$-balance constraint, the ratio
+$c_{\mathrm{fwd}} / c_{\mathrm{rev}}$ lies in $(0, \infty)$ whenever both
+$c_{\mathrm{fwd}} > 0$ and $c_{\mathrm{rev}} > 0$.
+The chain never fully stalls: for any valid plan $\pi$, there exists at
+least one adjacent pair $(d_i, d_j)$ for which the forward spanning tree
+yields at least one valid balanced cut with positive probability.
+\end{proposition}
+
+\begin{proof}
+Both bounds are immediate: $c_{\mathrm{fwd}} \geq 1$ and $c_{\mathrm{rev}} \geq 1$
+are enforced by the algorithm's early-exit conditions (steps that yield
+$c_{\mathrm{fwd}} = 0$ or $c_{\mathrm{rev}} = 0$ are skipped without
+acceptance or rejection of the proposal).
+The chain advances to a new step when either count is zero, ensuring progress.
+The existence of at least one valid cut follows from the fact that for any
+valid plan, the union $D_i \cup D_j$ has at least one balanced spanning tree
+edge (since both $D_i$ and $D_j$ are individually population-balanced, there
+must exist a cut of $G[D_i \cup D_j]$ near the current boundary that respects
+the balance constraint, and such a cut appears in a spanning tree with positive
+UST probability).
+\end{proof}
+
+\begin{remark}[Expected vs. exact detailed balance]
+\label{rem:edb-vs-exact}
+The guarantee in Theorem~\ref{thm:edb} is weaker than exact detailed balance
+because the single-sample ratio $c_{\mathrm{fwd}} / c_{\mathrm{rev}}$ is not
+the true ratio $\bar{c}_\pi / \bar{c}_{\pi'}$---it is a random variable
+whose expectation equals the true ratio.
+The chain targets the uniform distribution \emph{asymptotically}, with the
+approximation error decreasing over time as the chain averages over many
+steps.
+For exact calibration to a target distribution, sequential Monte Carlo
+(SMC)~\citep{dellaLibera2026smc,mccartan2020} provides a stronger guarantee
+by reweighting particles rather than relying on a Markov chain correction.
+\end{remark}

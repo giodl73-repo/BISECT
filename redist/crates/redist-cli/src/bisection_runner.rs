@@ -276,12 +276,12 @@ pub fn split_subgraph(
                      Rebuild with default features or use --metis-engine c-ffi.".to_string()
                 );
             }
-            use redist_metis::api::{
+            use metis_core::api::{
                 MetisPartitioner as RustBisectPartitioner,
                 MetisParams as RustBisectParams,
                 Partitioner as RustBisectTrait,
             };
-            use redist_metis::graph::CsrGraph as RustCsrGraph;
+            use metis_core::graph::CsrGraph as RustCsrGraph;
             let g = RustCsrGraph {
                 xadj:   xadj.iter().map(|&x| x as u32).collect(),
                 adjncy: adjncy.iter().map(|&x| x as u32).collect(),
@@ -521,12 +521,12 @@ pub fn run_nway_partition(
         }
         #[cfg(not(feature = "c-ffi-engine"))]
         {
-            use redist_metis::api::{
+            use metis_core::api::{
                 MetisPartitioner as RustNwayPartitioner,
                 MetisParams as RustNwayParams,
                 Partitioner as RustNwayTrait,
             };
-            use redist_metis::graph::CsrGraph as RustNwayCsr;
+            use metis_core::graph::CsrGraph as RustNwayCsr;
             let g = RustNwayCsr {
                 xadj:   xadj.iter().map(|&x| x as u32).collect(),
                 adjncy: adjncy.iter().map(|&x| x as u32).collect(),
@@ -1929,6 +1929,320 @@ pub fn run_short_burst(
         .collect();
 
     Ok((assignment, burst_seeds, selected_burst_idx))
+}
+
+// ── ShortBurstForest ──────────────────────────────────────────────────────────
+
+/// Run a Short-Burst Forest ReCom search on the full k-way plan.
+///
+/// Algorithm:
+///   1. Build initial k-way plan via `run_all_splits`.
+///   2. For each burst i in 0..n_bursts:
+///      a. Derive burst seed: SHA-256("SBF_CHAIN_" || i.to_le_bytes() || "_" || base_seed.to_le_bytes()) → u64.
+///      b. Construct a fresh ForestRecomChain from `current_assignment`.
+///      c. Step the chain `burst_length` times, deriving two RNG streams per step:
+///         - forward_seed: SHA-256("SBF_FWD_" || step:u32le || "_" || burst_seed:u64le) → u64
+///         - reverse_seed: SHA-256("SBF_REV_" || step:u32le || "_" || burst_seed:u64le) → u64
+///      d. Record the ENDPOINT (not the minimum within the burst).
+///      e. Set `current_assignment` = endpoint (chain restarts from here).
+///   3. Sort endpoints by (EC ASC, burst_idx ASC).
+///   4. Return plan at rank floor(p * n_bursts), clamped.
+///
+/// Returns `HashMap<usize, usize>` (tract → district, 1-based).
+pub fn run_short_burst_forest(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    base_seed: u64,
+    burst_length: usize,
+    n_bursts: usize,
+    p: f64,
+) -> Result<HashMap<usize, usize>, String> {
+    use sha2::Digest;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+    use redist_ensemble::forest_recom::ForestRecomChain;
+
+    if num_districts <= 1 {
+        let trivial: HashMap<usize, usize> = (0..adjacency.len()).map(|i| (i, 1)).collect();
+        return Ok(trivial);
+    }
+
+    // Build initial plan.
+    let initial = run_all_splits(
+        adjacency, vertex_weights, edge_weights,
+        num_districts, balance_tolerance, niter, Some(base_seed), None,
+    )?;
+
+    if n_bursts == 0 {
+        return Ok(initial);
+    }
+
+    // Build Vec<Vec<u32>> adjacency for ForestRecomChain.
+    let adj_u32: Vec<Vec<u32>> = adjacency.iter()
+        .map(|nbrs| nbrs.iter().map(|&n| n as u32).collect())
+        .collect();
+    let pop: Vec<i64> = vertex_weights.to_vec();
+    let n = adjacency.len();
+
+    // Convert initial HashMap<usize,usize> assignment to Vec<u32> (1-based).
+    let assignment_to_vec = |asgn: &HashMap<usize, usize>| -> Vec<u32> {
+        (0..n).map(|i| asgn.get(&i).copied().unwrap_or(1) as u32).collect()
+    };
+
+    // Count EC from a Vec<u32> assignment using the bisection_runner adjacency.
+    let count_ec_vec = |asgn: &[u32]| -> usize {
+        let mut cut = 0usize;
+        for (v, nbrs) in adjacency.iter().enumerate() {
+            for &nb in nbrs {
+                if nb > v && asgn[v] != asgn[nb] {
+                    cut += 1;
+                }
+            }
+        }
+        cut
+    };
+
+    // Derive burst-level seed: SHA-256("SBF_CHAIN_" || burst_idx:u64le || "_" || base_seed:u64le).
+    let derive_burst_seed = |burst_idx: usize| -> u64 {
+        let mut h = sha2::Sha256::new();
+        h.update(b"SBF_CHAIN_");
+        h.update((burst_idx as u64).to_le_bytes());
+        h.update(b"_");
+        h.update(base_seed.to_le_bytes());
+        let d = h.finalize();
+        u64::from_le_bytes(d[..8].try_into().unwrap())
+    };
+
+    // Derive per-step forward seed: SHA-256("SBF_FWD_" || step:u32le || "_" || burst_seed:u64le).
+    let derive_forward_seed = |step: u32, burst_seed: u64| -> u64 {
+        let mut h = sha2::Sha256::new();
+        h.update(b"SBF_FWD_");
+        h.update(step.to_le_bytes());
+        h.update(b"_");
+        h.update(burst_seed.to_le_bytes());
+        let d = h.finalize();
+        u64::from_le_bytes(d[..8].try_into().unwrap())
+    };
+
+    // Derive per-step reverse seed: SHA-256("SBF_REV_" || step:u32le || "_" || burst_seed:u64le).
+    let derive_reverse_seed = |step: u32, burst_seed: u64| -> u64 {
+        let mut h = sha2::Sha256::new();
+        h.update(b"SBF_REV_");
+        h.update(step.to_le_bytes());
+        h.update(b"_");
+        h.update(burst_seed.to_le_bytes());
+        let d = h.finalize();
+        u64::from_le_bytes(d[..8].try_into().unwrap())
+    };
+
+    let mut current_vec = assignment_to_vec(&initial);
+
+    // Collect (ec, burst_idx, assignment_vec).
+    let mut endpoints: Vec<(usize, usize, Vec<u32>)> = Vec::with_capacity(n_bursts);
+
+    for burst_idx in 0..n_bursts {
+        let burst_seed = derive_burst_seed(burst_idx);
+
+        let mut chain = ForestRecomChain::new(
+            adj_u32.clone(),
+            pop.clone(),
+            current_vec.clone(),
+            num_districts as u32,
+            balance_tolerance,
+        );
+
+        for step in 0..burst_length {
+            let fwd_seed = derive_forward_seed(step as u32, burst_seed);
+            let rev_seed = derive_reverse_seed(step as u32, burst_seed);
+            let mut rng_fwd = SmallRng::seed_from_u64(fwd_seed);
+            let mut rng_rev = SmallRng::seed_from_u64(rev_seed);
+            chain.step(&mut rng_fwd, &mut rng_rev);
+        }
+
+        // Record ENDPOINT (not minimum within burst).
+        let endpoint = chain.assignment.clone();
+        let ec = count_ec_vec(&endpoint);
+        endpoints.push((ec, burst_idx, endpoint.clone()));
+
+        // Next burst starts from this endpoint.
+        current_vec = endpoint;
+    }
+
+    // Sort by (EC ASC, burst_idx ASC) for determinism on EC ties.
+    endpoints.sort_by(|(ec1, idx1, _), (ec2, idx2, _)| ec1.cmp(ec2).then(idx1.cmp(idx2)));
+
+    // Pick plan at rank floor(p * n_bursts), clamped to [0, n_bursts-1].
+    let rank = ((p * n_bursts as f64).floor() as usize).min(endpoints.len() - 1);
+    let (_, _, chosen_vec) = endpoints.into_iter().nth(rank).unwrap();
+
+    // Convert Vec<u32> back to HashMap<usize,usize>.
+    let assignment: HashMap<usize, usize> = chosen_vec.iter()
+        .enumerate()
+        .map(|(i, &d)| (i, d as usize))
+        .collect();
+
+    Ok(assignment)
+}
+
+// ── ShortBurstMergeSplit ──────────────────────────────────────────────────────
+
+/// Run a Short-Burst Merge-Split search on the full k-way plan.
+///
+/// Algorithm:
+///   1. Build initial k-way plan via `run_all_splits`.
+///   2. For each burst i in 0..n_bursts:
+///      a. Derive burst seed: SHA-256("SBMS_CHAIN_" || i.to_le_bytes() || "_" || base_seed.to_le_bytes()) → u64.
+///      b. Construct a fresh MergeSplitChain from `current_assignment`.
+///      c. Step the chain `burst_length` times, deriving two RNG streams per step:
+///         - forward_seed: SHA-256("SBF_FWD_" || step:u32le || "_" || burst_seed:u64le) → u64
+///         - reverse_seed: SHA-256("SBF_REV_" || step:u32le || "_" || burst_seed:u64le) → u64
+///      d. Record the ENDPOINT (not the minimum within the burst).
+///      e. Set `current_assignment` = endpoint (chain restarts from here).
+///   3. Sort endpoints by (EC ASC, burst_idx ASC).
+///   4. Return plan at rank floor(p * n_bursts), clamped.
+///
+/// Returns `HashMap<usize, usize>` (tract → district, 1-based).
+pub fn run_short_burst_merge_split(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    base_seed: u64,
+    burst_length: usize,
+    n_bursts: usize,
+    p: f64,
+) -> Result<HashMap<usize, usize>, String> {
+    use sha2::Digest;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+    use redist_ensemble::merge_split::MergeSplitChain;
+
+    if num_districts <= 1 {
+        let trivial: HashMap<usize, usize> = (0..adjacency.len()).map(|i| (i, 1)).collect();
+        return Ok(trivial);
+    }
+
+    // Build initial plan.
+    let initial = run_all_splits(
+        adjacency, vertex_weights, edge_weights,
+        num_districts, balance_tolerance, niter, Some(base_seed), None,
+    )?;
+
+    if n_bursts == 0 {
+        return Ok(initial);
+    }
+
+    // Build Vec<Vec<u32>> adjacency for MergeSplitChain.
+    let adj_u32: Vec<Vec<u32>> = adjacency.iter()
+        .map(|nbrs| nbrs.iter().map(|&n| n as u32).collect())
+        .collect();
+    let pop: Vec<i64> = vertex_weights.to_vec();
+    let n = adjacency.len();
+
+    // Convert initial HashMap<usize,usize> assignment to Vec<u32> (1-based).
+    let assignment_to_vec = |asgn: &HashMap<usize, usize>| -> Vec<u32> {
+        (0..n).map(|i| asgn.get(&i).copied().unwrap_or(1) as u32).collect()
+    };
+
+    // Count EC from a Vec<u32> assignment using the bisection_runner adjacency.
+    let count_ec_vec = |asgn: &[u32]| -> usize {
+        let mut cut = 0usize;
+        for (v, nbrs) in adjacency.iter().enumerate() {
+            for &nb in nbrs {
+                if nb > v && asgn[v] != asgn[nb] {
+                    cut += 1;
+                }
+            }
+        }
+        cut
+    };
+
+    // Derive burst-level seed: SHA-256("SBMS_CHAIN_" || burst_idx:u64le || "_" || base_seed:u64le).
+    let derive_burst_seed = |burst_idx: usize| -> u64 {
+        let mut h = sha2::Sha256::new();
+        h.update(b"SBMS_CHAIN_");
+        h.update((burst_idx as u64).to_le_bytes());
+        h.update(b"_");
+        h.update(base_seed.to_le_bytes());
+        let d = h.finalize();
+        u64::from_le_bytes(d[..8].try_into().unwrap())
+    };
+
+    // Derive per-step forward seed: SHA-256("SBF_FWD_" || step:u32le || "_" || burst_seed:u64le).
+    let derive_forward_seed = |step: u32, burst_seed: u64| -> u64 {
+        let mut h = sha2::Sha256::new();
+        h.update(b"SBF_FWD_");
+        h.update(step.to_le_bytes());
+        h.update(b"_");
+        h.update(burst_seed.to_le_bytes());
+        let d = h.finalize();
+        u64::from_le_bytes(d[..8].try_into().unwrap())
+    };
+
+    // Derive per-step reverse seed: SHA-256("SBF_REV_" || step:u32le || "_" || burst_seed:u64le).
+    let derive_reverse_seed = |step: u32, burst_seed: u64| -> u64 {
+        let mut h = sha2::Sha256::new();
+        h.update(b"SBF_REV_");
+        h.update(step.to_le_bytes());
+        h.update(b"_");
+        h.update(burst_seed.to_le_bytes());
+        let d = h.finalize();
+        u64::from_le_bytes(d[..8].try_into().unwrap())
+    };
+
+    let mut current_vec = assignment_to_vec(&initial);
+
+    // Collect (ec, burst_idx, assignment_vec).
+    let mut endpoints: Vec<(usize, usize, Vec<u32>)> = Vec::with_capacity(n_bursts);
+
+    for burst_idx in 0..n_bursts {
+        let burst_seed = derive_burst_seed(burst_idx);
+
+        let mut chain = MergeSplitChain::new(
+            adj_u32.clone(),
+            pop.clone(),
+            current_vec.clone(),
+            num_districts as u32,
+            balance_tolerance,
+        );
+
+        for step in 0..burst_length {
+            let fwd_seed = derive_forward_seed(step as u32, burst_seed);
+            let rev_seed = derive_reverse_seed(step as u32, burst_seed);
+            let mut rng_fwd = SmallRng::seed_from_u64(fwd_seed);
+            let mut rng_rev = SmallRng::seed_from_u64(rev_seed);
+            chain.step(&mut rng_fwd, &mut rng_rev);
+        }
+
+        // Record ENDPOINT (not minimum within burst).
+        let endpoint = chain.assignment.clone();
+        let ec = count_ec_vec(&endpoint);
+        endpoints.push((ec, burst_idx, endpoint.clone()));
+
+        // Next burst starts from this endpoint.
+        current_vec = endpoint;
+    }
+
+    // Sort by (EC ASC, burst_idx ASC) for determinism on EC ties.
+    endpoints.sort_by(|(ec1, idx1, _), (ec2, idx2, _)| ec1.cmp(ec2).then(idx1.cmp(idx2)));
+
+    // Pick plan at rank floor(p * n_bursts), clamped to [0, n_bursts-1].
+    let rank = ((p * n_bursts as f64).floor() as usize).min(endpoints.len() - 1);
+    let (_, _, chosen_vec) = endpoints.into_iter().nth(rank).unwrap();
+
+    // Convert Vec<u32> back to HashMap<usize,usize>.
+    let assignment: HashMap<usize, usize> = chosen_vec.iter()
+        .enumerate()
+        .map(|(i, &d)| (i, d as usize))
+        .collect();
+
+    Ok(assignment)
 }
 
 // ── Simulated Annealing ───────────────────────────────────────────────────────
@@ -4877,6 +5191,197 @@ mod tests {
     fn merge_split_nc_mixing() {
         // Placeholder: load NC 2020 adjacency + population, run 1000 steps k=14.
         // Assert acceptance rate > 0 and plan is a valid 14-district partition.
+        // Skipped unless --include-ignored is passed.
+    }
+
+    // ── ShortBurstForest tests ────────────────────────────────────────────────
+
+    // L0: run_short_burst_forest must return a valid 2-district plan on a 4×4 grid.
+    #[test]
+    fn short_burst_forest_produces_valid_k2_partition() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let asgn = run_short_burst_forest(&adj, &pop, &ew, 2, 0.05, 10, 42, 5, 10, 0.0)
+            .expect("short_burst_forest k=2 must succeed");
+        assert_eq!(asgn.len(), 16, "all 16 tracts must be assigned");
+        let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
+        assert_eq!(districts.len(), 2, "must have exactly 2 districts");
+        for &d in asgn.values() {
+            assert!(d >= 1 && d <= 2, "district label must be in [1,2], got {d}");
+        }
+    }
+
+    // L0: p=0.0 EC <= p=1.0 EC (ascending sort — both ends tested to catch inverted sort).
+    #[test]
+    fn short_burst_forest_p0_le_p1_ec() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let asgn_p0 = run_short_burst_forest(&adj, &pop, &ew, 2, 0.10, 10, 77, 5, 20, 0.0)
+            .expect("short_burst_forest p=0.0 must succeed");
+        let asgn_p1 = run_short_burst_forest(&adj, &pop, &ew, 2, 0.10, 10, 77, 5, 20, 1.0)
+            .expect("short_burst_forest p=1.0 must succeed");
+        let ec_p0 = count_edge_cuts(&asgn_p0, &adj);
+        let ec_p1 = count_edge_cuts(&asgn_p1, &adj);
+        assert!(
+            ec_p0 <= ec_p1,
+            "p=0.0 EC={ec_p0} must be <= p=1.0 EC={ec_p1} (ascending sort)"
+        );
+    }
+
+    // L0: same base_seed → identical result (determinism).
+    #[test]
+    fn short_burst_forest_deterministic() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let asgn1 = run_short_burst_forest(&adj, &pop, &ew, 2, 0.05, 10, 42, 5, 10, 0.5)
+            .expect("first run must succeed");
+        let asgn2 = run_short_burst_forest(&adj, &pop, &ew, 2, 0.05, 10, 42, 5, 10, 0.5)
+            .expect("second run must succeed");
+        assert_eq!(asgn1, asgn2, "same seed must produce identical assignment");
+    }
+
+    // L0: n_bursts=0 returns the initial plan unchanged.
+    #[test]
+    fn short_burst_forest_zero_bursts_returns_initial() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let asgn = run_short_burst_forest(&adj, &pop, &ew, 2, 0.05, 10, 42, 5, 0, 0.0)
+            .expect("n_bursts=0 must succeed");
+        assert_eq!(asgn.len(), 16, "must assign all 16 tracts");
+        let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
+        assert_eq!(districts.len(), 2, "must have 2 districts");
+    }
+
+    // L0: n_bursts=1, burst_length=1 — degenerate case succeeds.
+    #[test]
+    fn short_burst_forest_n1_burst_len1() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let asgn = run_short_burst_forest(&adj, &pop, &ew, 2, 0.05, 10, 7, 1, 1, 0.0)
+            .expect("n_bursts=1, burst_length=1 must succeed");
+        assert_eq!(asgn.len(), 16, "all tracts must be assigned");
+        let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
+        assert_eq!(districts.len(), 2, "must have 2 districts");
+    }
+
+    // L0: SBF_CHAIN_ burst seed is distinct from SHORT_BURST_CHAIN_ for same (base_seed, burst_idx).
+    #[test]
+    fn short_burst_chain_seeds_differ_from_standard() {
+        use sha2::Digest;
+        let base_seed: u64 = 0;
+        let burst_idx: u64 = 0;
+
+        // SBF_CHAIN_ seed
+        let sbf_seed = {
+            let mut h = sha2::Sha256::new();
+            h.update(b"SBF_CHAIN_");
+            h.update(burst_idx.to_le_bytes());
+            h.update(b"_");
+            h.update(base_seed.to_le_bytes());
+            let d = h.finalize();
+            u64::from_le_bytes(d[..8].try_into().unwrap())
+        };
+
+        // SHORT_BURST_CHAIN_ seed (same base_seed, burst_idx)
+        let sb_seed = {
+            let mut h = sha2::Sha256::new();
+            h.update(b"SHORT_BURST_CHAIN_");
+            h.update(burst_idx.to_le_bytes());
+            h.update(b"_");
+            h.update(base_seed.to_le_bytes());
+            let d = h.finalize();
+            u64::from_le_bytes(d[..8].try_into().unwrap())
+        };
+
+        // SBMS_CHAIN_ seed
+        let sbms_seed = {
+            let mut h = sha2::Sha256::new();
+            h.update(b"SBMS_CHAIN_");
+            h.update(burst_idx.to_le_bytes());
+            h.update(b"_");
+            h.update(base_seed.to_le_bytes());
+            let d = h.finalize();
+            u64::from_le_bytes(d[..8].try_into().unwrap())
+        };
+
+        assert_ne!(sbf_seed, sb_seed,
+            "SBF_CHAIN_ and SHORT_BURST_CHAIN_ must produce distinct seeds for same (base_seed, burst_idx)");
+        assert_ne!(sbms_seed, sb_seed,
+            "SBMS_CHAIN_ and SHORT_BURST_CHAIN_ must produce distinct seeds for same (base_seed, burst_idx)");
+        assert_ne!(sbf_seed, sbms_seed,
+            "SBF_CHAIN_ and SBMS_CHAIN_ must produce distinct seeds for same (base_seed, burst_idx)");
+
+        // Forward and reverse step seeds are distinct.
+        let step: u32 = 0;
+        let burst_seed: u64 = 12345;
+        let fwd = {
+            let mut h = sha2::Sha256::new();
+            h.update(b"SBF_FWD_");
+            h.update(step.to_le_bytes());
+            h.update(b"_");
+            h.update(burst_seed.to_le_bytes());
+            let d = h.finalize();
+            u64::from_le_bytes(d[..8].try_into().unwrap())
+        };
+        let rev = {
+            let mut h = sha2::Sha256::new();
+            h.update(b"SBF_REV_");
+            h.update(step.to_le_bytes());
+            h.update(b"_");
+            h.update(burst_seed.to_le_bytes());
+            let d = h.finalize();
+            u64::from_le_bytes(d[..8].try_into().unwrap())
+        };
+        assert_ne!(fwd, rev, "SBF_FWD_ and SBF_REV_ must be distinct for the same (step, burst_seed)");
+    }
+
+    // ── ShortBurstMergeSplit tests ────────────────────────────────────────────
+
+    // L0: run_short_burst_merge_split must return a valid 2-district plan on a 4×4 grid.
+    #[test]
+    fn short_burst_merge_split_produces_valid_k2_partition() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let asgn = run_short_burst_merge_split(&adj, &pop, &ew, 2, 0.05, 10, 42, 5, 10, 0.0)
+            .expect("short_burst_merge_split k=2 must succeed");
+        assert_eq!(asgn.len(), 16, "all 16 tracts must be assigned");
+        let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
+        assert_eq!(districts.len(), 2, "must have exactly 2 districts");
+        for &d in asgn.values() {
+            assert!(d >= 1 && d <= 2, "district label must be in [1,2], got {d}");
+        }
+    }
+
+    // L0: same base_seed → identical result (determinism).
+    #[test]
+    fn short_burst_merge_split_deterministic() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let asgn1 = run_short_burst_merge_split(&adj, &pop, &ew, 2, 0.05, 10, 42, 5, 10, 0.5)
+            .expect("first run must succeed");
+        let asgn2 = run_short_burst_merge_split(&adj, &pop, &ew, 2, 0.05, 10, 42, 5, 10, 0.5)
+            .expect("second run must succeed");
+        assert_eq!(asgn1, asgn2, "same seed must produce identical assignment");
+    }
+
+    // L0: n_bursts=1, burst_length=1 — degenerate case succeeds.
+    #[test]
+    fn short_burst_merge_split_n1_burst_len1() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let asgn = run_short_burst_merge_split(&adj, &pop, &ew, 2, 0.05, 10, 7, 1, 1, 0.0)
+            .expect("n_bursts=1, burst_length=1 must succeed");
+        assert_eq!(asgn.len(), 16, "all tracts must be assigned");
+        let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
+        assert_eq!(districts.len(), 2, "must have 2 districts");
+    }
+
+    // L2: NC 2020 k=14 — ShortBurstForest vs ShortBurstMergeSplit vs ShortBurst EC comparison.
+    #[test]
+    #[ignore]
+    fn short_burst_forest_vs_standard_ec_comparison() {
+        // Placeholder: load NC 2020 adjacency, run all three variants on same base_seed.
+        // Record EC for each; assert all three return valid k=14 plans.
         // Skipped unless --include-ignored is passed.
     }
 }

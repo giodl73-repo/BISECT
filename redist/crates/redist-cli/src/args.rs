@@ -1246,6 +1246,14 @@ pub enum SearchMode {
     /// burst_length=20, n_bursts=50 are good defaults for full-state k.
     #[value(name = "short-burst")]
     ShortBurst,
+    /// Short-Burst with Forest ReCom chain (approximate uniform target).
+    /// Uses two RNG streams per step for reversibility. Reuses --burst-length and --n-bursts. (G.12)
+    #[value(name = "short-burst-forest")]
+    ShortBurstForest,
+    /// Short-Burst with Merge-Split chain. Two-tree MH per burst step.
+    /// Reuses --burst-length and --n-bursts. (G.12)
+    #[value(name = "short-burst-merge-split")]
+    ShortBurstMergeSplit,
     /// Flip boundary tracts; return plan at --percentile of all visited EC distribution.
     /// Use --flip-steps for total proposals (default 10000).
     #[value(name = "flip")]
@@ -1271,10 +1279,10 @@ pub enum MetisEngineArg {
     /// Battle-tested; handles all k values including prime k without stalling.
     #[value(name = "c-ffi")]
     CFfi,
-    /// Pure-Rust METIS (`redist-metis` crate). No C dependency.
+    /// Pure-Rust multilevel graph partitioning (`metis-core`). No C dependency.
     /// Produces a fully portable standalone binary. May stall on prime k
     /// for large graphs (>1000 tracts with prime k).
-    #[value(name = "redist-metis")]
+    #[value(name = "metis-core")]
     RedistMetis,
     /// External `gpmetis` binary subprocess. Requires gpmetis on PATH.
     /// Not yet implemented — returns an error if selected.
@@ -2401,16 +2409,18 @@ mod tests {
     fn search_mode_all_variants() {
         use clap::ValueEnum;
         let cases: &[(&str, SearchMode)] = &[
-            ("single",             SearchMode::Single),
-            ("multi",              SearchMode::Multi),
-            ("convergence",        SearchMode::Convergence),
-            ("percentile",         SearchMode::Percentile),
-            ("bisection-ensemble", SearchMode::BisectionEnsemble),
-            ("short-burst",        SearchMode::ShortBurst),
-            ("flip",               SearchMode::Flip),
-            ("forest-recom",       SearchMode::ForestRecom),
-            ("multiscale",         SearchMode::MultiScale),
-            ("merge-split",        SearchMode::MergeSplit),
+            ("single",                  SearchMode::Single),
+            ("multi",                   SearchMode::Multi),
+            ("convergence",             SearchMode::Convergence),
+            ("percentile",              SearchMode::Percentile),
+            ("bisection-ensemble",      SearchMode::BisectionEnsemble),
+            ("short-burst",             SearchMode::ShortBurst),
+            ("short-burst-forest",      SearchMode::ShortBurstForest),
+            ("short-burst-merge-split", SearchMode::ShortBurstMergeSplit),
+            ("flip",                    SearchMode::Flip),
+            ("forest-recom",            SearchMode::ForestRecom),
+            ("multiscale",              SearchMode::MultiScale),
+            ("merge-split",             SearchMode::MergeSplit),
         ];
         for (s, expected) in cases {
             let parsed = SearchMode::from_str(s, true)

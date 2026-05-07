@@ -1,0 +1,105 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The Distributional Problem in Standard ReCom}
+
+Markov chain redistricting has two distinct goals that are often conflated.
+The first is \emph{optimisation}: finding the best plan by some criterion
+(edge cut, compactness, partisan fairness).
+The second is \emph{sampling}: drawing plans from a target distribution so
+that ensemble statistics reflect genuine distributional properties of the
+plan space.
+
+Standard \recom{}~\citep{deford2021} is widely used for both goals.
+At each step, it selects an adjacent pair of districts, merges them, samples
+a random spanning tree of the merged region via Wilson's algorithm, and cuts
+the tree at a balanced edge.
+Every valid balanced cut is accepted; the chain is never rejected.
+
+This 100\% acceptance rate is computationally appealing, but it creates
+a distributional bias.
+Plans reachable by many spanning tree cuts---those whose district boundaries
+happen to lie in highly-connected regions of the census-tract graph---are
+visited more often than plans reachable by few cuts.
+The stationary distribution of standard \recom{} is therefore \emph{not} the
+uniform distribution over valid plans; it is a distribution weighted by the
+number of spanning tree cuts that produce each plan.
+DeFord, Duchin, and Solomon~\citep{deford2021} acknowledge this but note that
+characterising the bias analytically is extremely difficult for real census
+graphs.
+
+For optimisation, this bias is harmless or even beneficial---overweighting
+geometrically accessible plans can guide the chain toward structurally better
+solutions.
+But for ensemble analysis---where the goal is to characterise the full space
+of valid plans and answer questions like ``what fraction of valid plans
+produce 7 Democratic seats in NC?''---the bias is problematic.
+Ensemble statistics derived from a biased chain may not represent the space
+of all valid plans.
+
+\subsection{Forest ReCom as the Fix}
+
+McCartan and Imai~\citep{mccartan2020} introduce \fr{} to correct this bias.
+The key idea is to apply a Metropolis-Hastings correction to the \recom{}
+proposal: after generating the proposal from the forward spanning tree
+$T_{\mathrm{fwd}}$, draw an independent reverse spanning tree $T_{\mathrm{rev}}$
+from the \emph{proposed} district pair, count its valid balanced cuts, and
+accept the proposal with probability
+\[
+  \alpha = \min\!\left(1,\; \frac{c_{\mathrm{fwd}}}{c_{\mathrm{rev}}}\right),
+\]
+where $c_{\mathrm{fwd}}$ is the number of valid cuts in $T_{\mathrm{fwd}}$
+and $c_{\mathrm{rev}}$ is the number of valid cuts in $T_{\mathrm{rev}}$.
+If $c_{\mathrm{rev}} = 0$, the proposal is rejected with probability 1.
+
+The intuition is direct: if the forward tree has many more balanced cuts than
+the reverse tree, the proposed plan is ``more accessible'' from the current
+plan than vice versa; the Metropolis-Hastings ratio downweights this
+asymmetry.
+Over many steps, the chain converges toward the uniform distribution over valid
+plans.
+
+\fr{} does not achieve \emph{exact} detailed balance in the per-step sense
+because $T_{\mathrm{rev}}$ is a single spanning tree sample, not the
+expectation over all spanning trees.
+The ratio $c_{\mathrm{fwd}} / c_{\mathrm{rev}}$ is an unbiased estimator of
+the true transition probability ratio $Q(\pi \to \pi') / Q(\pi' \to \pi)$
+only in expectation.
+We characterise this precisely in Section~\ref{sec:algorithm} and follow
+McCartan and Imai~\citep{mccartan2020} §3.2 in calling the resulting guarantee
+\emph{expected detailed balance}.
+
+\subsection{Three Contributions}
+
+\begin{enumerate}
+  \item \textbf{Implementation.}
+        We provide the complete specification and implementation of \fr{} as
+        \texttt{ForestRecomChain} in \texttt{redist-ensemble}, including the
+        deterministic forward/reverse seed schedule, pair selection with
+        reselection, and the acceptance criterion
+        (Section~\ref{sec:algorithm}).
+
+  \item \textbf{Comparison.}
+        We compare \fr{} against standard \recom{} on NC ($k = 14$), WI
+        ($k = 8$), and TX ($k = 38$) across acceptance rate, edge-cut
+        distribution, partisan outcomes, and runtime
+        (Section~\ref{sec:comparison}).
+
+  \item \textbf{Distributional correctness analysis.}
+        We verify convergence to the uniform plan distribution on a small
+        synthetic graph where the exact uniform distribution is computable,
+        and use a chi-squared test to quantify the improvement over standard
+        \recom{} (Section~\ref{sec:distributional}).
+\end{enumerate}
+
+\subsection{Paper Structure}
+
+Section~\ref{sec:background} reviews standard \recom{}, the spanning-tree
+selection bias, and Wilson's \ust{} algorithm.
+Section~\ref{sec:algorithm} gives the formal \fr{} algorithm and proves
+expected detailed balance.
+Section~\ref{sec:comparison} presents empirical comparisons on real states.
+Section~\ref{sec:distributional} establishes distributional correctness on
+a synthetic benchmark.
+Section~\ref{sec:conclusion} concludes with usage guidance and open
+questions.

@@ -9,7 +9,6 @@ members = [
     "crates/redist-report",
     "crates/redist-web",
     "crates/redist-tui",
-    "crates/redist-metis",
     "crates/redist-ensemble",
     "crates/redist-smc",
     "crates/redist-multiscale",
@@ -25,6 +24,7 @@ license = "MIT"
 
 [workspace.dependencies]
 # Partitioning
+metis-core = { path = "../../metis-core" }
 metis = "0.2.2"
 
 # Algorithm / data structures
