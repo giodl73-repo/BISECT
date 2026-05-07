@@ -4,10 +4,10 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
-description = "redist CLI binary — congressional redistricting pipeline"
+description = "bisect CLI binary — congressional redistricting via recursive bisection"
 
 [[bin]]
-name = "redist"
+name = "bisect"
 path = "src/main.rs"
 
 [dependencies]
