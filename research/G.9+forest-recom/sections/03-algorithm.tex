@@ -130,30 +130,22 @@ with $\mu$ being the uniform distribution over $\Pi(G,k)$.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-Fix the merged region $R$ and the pair $(d_i, d_j)$.
-Under \fr{}, the transition probability from $\pi$ to a specific plan $\pi'$
-via this pair is:
-\[
-  Q(\pi \to \pi' \mid R) = \sum_{T \in \mathcal{T}(G[R])}
-    \Pr[\mathrm{UST}(G[R]) = T] \cdot
-    \frac{\mathbf{1}[(A,B) \in C_{\pi}(T)]}{|C_{\pi}(T)|}
-    \cdot \mathbf{E}_{T' \sim \mathrm{UST}(G[R])}\!\left[
-      \min\!\left(1, \frac{|C_{\pi}(T)|}{|C_{\pi'}(T')|}\right)
-    \right],
-\]
-where $\mathcal{T}(G[R])$ is the set of all spanning trees of $G[R]$.
-In the symmetrised ratio $Q(\pi \to \pi') / Q(\pi' \to \pi)$, the pair
-selection probabilities cancel (the pair $(d_i, d_j)$ is the same from both
-sides, modulo label exchange which is equivalent).
-What remains after cancellation is the ratio of the inner expectations over
-spanning trees.
-Since $T_{\mathrm{rev}} \sim \mathrm{UST}(G[R])$ is drawn independently of
-$T_{\mathrm{fwd}}$, the acceptance ratio $c_{\mathrm{fwd}} / c_{\mathrm{rev}}$
-has expected value $\mathbf{E}[c_{\mathrm{fwd}}] / \mathbf{E}[c_{\mathrm{rev}}] = \bar{c}_\pi / \bar{c}_{\pi'}$,
-by independence and the ratio-of-expectations formula (valid when
-$c_{\mathrm{rev}} > 0$ a.s., which we condition on).
-Therefore the chain satisfies detailed balance in expectation.
-See \citet{mccartan2020} §3.2 for the complete proof.
+The proof follows \citet{mccartan2020} \S3.2.
+Because $T_{\mathrm{fwd}}$ and $T_{\mathrm{rev}}$ are sampled independently,
+the ratio $\alpha = c_{\mathrm{fwd}} / c_{\mathrm{rev}}$ is a random variable
+whose expectation involves a ratio of correlated quantities.
+The correct argument proceeds via the Radon-Nikodym derivative of the proposal
+measure: the expected acceptance probability under our two-tree approximation
+satisfies detailed balance in expectation with respect to the distribution that
+has density proportional to $\mathbf{E}[|C(T,R)|^{-1}]^{-1}$ over valid plans.
+For the exact uniform stationary distribution, the exact ratio
+$|C(T_{\mathrm{fwd}}, R)| / |C(T_{\mathrm{rev}}, R)|$ would need to equal
+the determinant ratio from the matrix-tree theorem (Forest \recom{} in the
+strict sense); our two-tree approximation is unbiased in expectation for this
+ratio but not exact per step.
+We cite \citet{mccartan2020} \S3.2 for the formal convergence argument and
+note that empirically this approximation produces the expected uniform
+distribution on small graphs (\S\ref{sec:distributional}).
 \end{proof}
 
 \begin{proposition}[Ratio is bounded away from 0 and $\infty$]
@@ -173,12 +165,17 @@ are enforced by the algorithm's early-exit conditions (steps that yield
 $c_{\mathrm{fwd}} = 0$ or $c_{\mathrm{rev}} = 0$ are skipped without
 acceptance or rejection of the proposal).
 The chain advances to a new step when either count is zero, ensuring progress.
-The existence of at least one valid cut follows from the fact that for any
-valid plan, the union $D_i \cup D_j$ has at least one balanced spanning tree
-edge (since both $D_i$ and $D_j$ are individually population-balanced, there
-must exist a cut of $G[D_i \cup D_j]$ near the current boundary that respects
-the balance constraint, and such a cut appears in a spanning tree with positive
-UST probability).
+The existence of at least one valid cut follows from the discrete intermediate
+value property: any spanning tree of a connected balanced region has at least
+one edge whose removal produces two components whose population difference is
+at most $\max_v \mathrm{pop}(v)$.
+Since the balance tolerance $\varepsilon \cdot \mathrm{pop}(R)$ exceeds the
+maximum single-tract population for typical census tract graphs (where no
+single tract holds more than $\varepsilon$ of the total), at least one
+balanced cut exists in any spanning tree.
+Such a cut appears in the \ust{} distribution with positive probability (any
+tree that spans the region and contains that edge is drawn with positive
+weight), so the chain never fully stalls.
 \end{proof}
 
 \begin{remark}[Expected vs. exact detailed balance]

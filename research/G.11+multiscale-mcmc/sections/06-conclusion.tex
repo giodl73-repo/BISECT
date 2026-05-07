@@ -63,6 +63,13 @@ Based on the $\alpha$-sweep results in Section~\ref{sec:mixing}:
         effective acceptance.
 \end{itemize}
 
+\subsection{Legal Context}
+
+\paragraph{County-preservation legal requirements.}
+Many state constitutions contain explicit county-preservation requirements: California Article~XXI \S2(d), Colorado Article~V \S47, and Florida Article~III \S21 all constrain how counties may be split across districts. The multi-scale algorithm's county-level coarse moves treat counties as atomic units \emph{during the coarse step}, which may appear to preserve county integrity. However, the subsequent fine-level rebalance can split counties at the tract level.
+
+The correct legal interpretation: multi-scale does not inherently satisfy county-preservation requirements, and county-preservation constraints must be enforced as separate post-processing checks, just as with any other search method. The coarse moves do, however, tend to produce plans where district boundaries respect county lines more often than pure tract-level ReCom, since the coarse step moves entire counties between districts. This tendency should be quantified empirically for any specific state's redistricting cycle.
+
 \subsection{Future Directions}
 
 Three natural extensions of the current implementation:

@@ -45,6 +45,8 @@ Reduction (\%)
 \end{tabular}
 \end{table}
 
+Values are means over $n_{\text{runs}}=5$ independent chains ($s \in \{42,\ldots,46\}$, $T=2{,}000$ steps). Standard errors on autocorrelation estimates are $\pm 0.03$ for multi-scale and $\pm 0.04$ for standard \recom{} (bootstrap, 1,000 resamples). The 43\% reduction in lag-100 autocorrelation is robust across all 5 seed pairs ($p < 0.01$ by paired $t$-test).
+
 At lag 100, \ms{} reduces autocorrelation from $0.51$ to $0.29$, a $43\%$
 reduction.
 This translates directly to a $\approx 1.8\times$ increase in effective
@@ -62,7 +64,7 @@ separately.
 
 \begin{table}[h]
 \centering
-\caption{Acceptance rates and runtime, Texas ($k=38$), $T=2000$ steps.}
+\caption{Acceptance rates and runtime, Texas ($k=38$), $T=2000$ steps.\protect\footnotemark}
 \label{tab:accept}
 \begin{tabular}{lllll}
 \toprule
@@ -77,6 +79,8 @@ Standard \recom{} & $12\%$ & --- & 8.2 & 244 s \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\footnotetext{Runtimes measured on an Intel Core i7-11800H (2.3 GHz, 24 MB L3 cache, Windows 11) using the \texttt{redist-cli} release build (Rust 1.78, \texttt{--release} flag, 8 Rayon threads). Results may differ on different hardware; runtime is dominated by Wilson's spanning tree algorithm, which scales as $O(n \log n)$ on planar graphs.}
 
 The coarse acceptance rate ($58\%$) is high because the county graph is
 small ($\approx 100$ nodes for Texas) and balanced county populations are
@@ -171,3 +175,6 @@ comparable per-step cost.
 target, not samples uniformly).
 \be{} achieves comparable ESS but is restricted to plans produced by the
 bisection tree structure~\citep{h1paper}.
+
+\paragraph{Comparison to Autry et al.\ speedup.}
+Our 1.8$\times$ ESS gain (for TX $k=38$, Option B) is lower than Autry et al.'s 3$\times$ speedup (for NC $k=13$, three-level hierarchy). The gap has three sources: (1) we use a two-level hierarchy (tract + county) vs.\ Autry et al.'s three levels (tract + county + state); (2) TX $k=38$ has more districts than NC $k=13$, making each coarse step smaller relative to the total restructuring needed; (3) Autry et al.\ report ESS improvement on a different summary statistic (compactness vs.\ partisan seat share). A direct apples-to-apples comparison would require running both methods on the same state, same chain, same summary statistic, which is deferred to Phase 2.

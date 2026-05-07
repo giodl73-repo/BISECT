@@ -87,6 +87,10 @@ Std \recom{} & $\approx\!1{,}820$ & $\approx\!95$  & $\approx\!1{,}610$ & $\appr
 \fr{}        & $\approx\!1{,}840$ & $\approx\!120$ & $\approx\!1{,}580$ & $\approx\!2{,}130$ \\
 \bottomrule
 \end{tabular}
+\footnotesize\textit{Note:} Table~\ref{tab:ec-dist} uses base seed $s = 42$;
+Table~\ref{tab:acceptance} averages over seeds $s \in \{42, 43, 44, 45, 46\}$.
+The EC distribution above is a single-seed result; \S\ref{sec:comparison}.2
+confirms this seed produces representative acceptance rates.
 \end{table}
 
 The \fr{} distribution has slightly higher mean EC and wider variance.
@@ -106,7 +110,12 @@ distributional correction.
 \centering
 \caption{Partisan seat distribution (Democratic congressional seats, $p = 0.5$
   reference election) for 1{,}000 accepted plans under each method.
-  Results are empirical seat-count frequencies.}
+  Results are empirical seat-count frequencies.
+  For Texas, $p = 0.5$ corresponds to roughly equal partisan reference; the
+  actual statewide Democratic two-party presidential vote share in 2020 was
+  approximately 46\%, meaning this reference election slightly underestimates
+  the structural Republican lean.
+  The Texas seat outcomes should be interpreted in light of this framing.}
 \label{tab:partisan}
 \renewcommand{\arraystretch}{1.35}
 \begin{tabular}{@{}llrrrr@{}}

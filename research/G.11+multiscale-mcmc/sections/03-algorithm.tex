@@ -19,6 +19,7 @@ The ideal fine population is $P_{\mathrm{ideal}} = \sum_v \mathrm{pop}(v) / k$;
 the fine tolerance is $\epsilon_f$ (default 0.005).
 The coarse tolerance is $\epsilon_c = 3 \epsilon_f$ (default 0.015), to
 reflect the lower precision of county-level population accounting.
+The factor of 3 is chosen as follows: a county-level coarse move moves all $m_c \approx n/100$ tracts in a county simultaneously (for a 100-county state). The fine-level rebalance step then corrects any violations. The factor 3 ensures that for states where the largest single county holds up to $3\varepsilon \cdot \text{pop}(\text{state})$ of total population (e.g., Los Angeles County, CA), the coarse chain still proposes valid county-level moves rather than immediately rejecting. For states with more uniform county populations (e.g., Iowa), a factor of 2 would suffice; the factor 3 is a conservative default. \textbf{Practitioners in states with extreme county population concentration should increase this factor or switch to Option A (BG-level fine moves).}
 
 \subsection{County Adjacency Derivation}
 
@@ -52,6 +53,12 @@ adjacency'' holds by definition: two tracts can share an edge in the
 adjacency graph only if they share a boundary segment, and if the tracts
 belong to different counties then those counties share that boundary segment.
 \end{proof}
+
+\begin{remark}[Water-boundary caveat]
+Proposition~3.1 assumes that two geographically adjacent counties share at least one cross-county tract edge in the TIGER/Line adjacency graph. This holds for land-boundary adjacency. However, some counties are geographically adjacent only across water bodies (e.g., two counties on opposite banks of a river whose tract boundaries do not cross). In TIGER/Line adjacency graphs built without water-crossing bridges, such county pairs may be absent from the derived county adjacency graph---producing a county graph that is slightly sparser than geographic adjacency.
+
+For redistricting purposes, this is typically acceptable: federal congressional districts are not required to cross water bodies, and the missing county adjacency represents a pair that would be difficult to connect in practice. Users in states with significant water-separated county pairs (e.g., Texas Gulf Coast, Louisiana bayou regions) should verify the derived county adjacency against geographic county maps.
+\end{remark}
 
 The derivation scans each edge $(v_1, v_2) \in E$; if
 $\mathrm{county}(v_1) \neq \mathrm{county}(v_2)$, the pair is added to

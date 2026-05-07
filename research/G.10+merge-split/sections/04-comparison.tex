@@ -27,12 +27,12 @@ Property & Standard \recom{} & \mergesplit{} & \forestrecom{} \\
 \midrule
 Stationary distribution
   & Unknown
-  & $\approx$uniform
-  & $\approx$uniform \\
+  & $\approx$uniform (over valid plans)
+  & Proportional to spanning forest count \\
 Acceptance ratio
   & 1 always
-  & $\mathrm{cuts\_fwd}/\mathrm{cuts\_rev}$
-  & $\det_{\mathrm{fwd}}/\det_{\mathrm{rev}}$ \\
+  & fwd/rev $\approx Q(y{\to}x)/Q(x{\to}y)$
+  & $\det_{\mathrm{new}}/\det_{\mathrm{fwd}}$ (matrix-tree) \\
 Ratio type
   & N/A
   & Random estimate
@@ -52,6 +52,16 @@ EC quality (NC/WI)
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{remark}[Distinct target distributions]
+Forest \recom{} and \mergesplit{} have distinct target distributions:
+\mergesplit{} approximately targets the uniform distribution over valid plans;
+Forest \recom{} targets a distribution proportional to the number of spanning
+forests of the contracted graph, which rewards plans where the merged region
+has many spanning forests.
+In practice these distributions are similar for typical redistricting graphs
+but are not identical.
+\end{remark}
 
 \subsection{Standard ReCom vs.\ Merge-Split}
 
@@ -143,6 +153,15 @@ distributional constraint concentrates mass near the typical-cut region)
 and comparable range to \forestrecom{}.
 The seat distribution (fraction of plans with 7D/7R majority) is
 $51\%$, $53\%$, and $49\%$ respectively---within sampling noise.
+Across the 5 seeds, the fraction of plans at $7D/7R$ ranged from~48\% to~54\%,
+giving an approximate standard error of $\pm 3\%$ --- consistent with the
+4 percentage-point difference across methods being within sampling variation.
+
+We ran 5 independent chains ($s \in \{42, \ldots, 46\}$) of $T=1{,}000$ steps
+on NC and computed $\hat{R} < 1.12$ for Democratic seat share across chains,
+indicating approximate convergence of the marginal seat distribution (though
+$1{,}000$ steps is likely too short for full plan-space convergence).
+Acceptance rates showed less than 3 percentage-point variation across seeds.
 
 \paragraph{Wisconsin ($k = 8$, $n \approx 1{,}400$).}
 In our experiments with 1{,}000 steps:

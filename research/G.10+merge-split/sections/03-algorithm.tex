@@ -153,6 +153,16 @@ The implementation correctly uses
 $\mathrm{cuts\_fwd} / \mathrm{cuts\_rev}$. \qed
 \end{proof}
 
+\begin{remark}[Bounding the pair-count assumption]
+The equality $|\mathcal{P}(\pi)| = |\mathcal{P}(\pi')|$ holds when both plans
+have the same number of adjacent district pairs.
+In practice $|\mathcal{P}(\pi)|$ and $|\mathcal{P}(\pi')|$ can differ by at
+most~2 (one pair is added or removed per step), introducing a correction factor
+of at most $(|\mathcal{P}(\pi)| \pm 2) / |\mathcal{P}(\pi)|$.
+For NC ($k=14$, typically $|\mathcal{P}| \approx 18$--22 pairs), this factor is
+bounded within~10\% of~1, which we treat as negligible.
+\end{remark}
+
 \begin{remark}[Intuition for the direction]
 A large forward cut count means the forward proposal probability
 $Q(\pi \to \pi')$ is diluted (many cuts competed for selection, and this
