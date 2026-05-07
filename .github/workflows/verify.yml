@@ -4,15 +4,16 @@ name: Formal Verification
 #   cargo test   — runs on every commit, blocks PR merge (see ci.yml)
 #   cargo kani   — main/release only, too slow for every PR (~35-70 min)
 #   cargo prusti — advisory on PR (continue-on-error: true), blocking on release tags
+#
+# Note: Kani/Prusti harnesses for the pure-Rust partitioning algorithm live in
+# the standalone metis-core repo and are run by its own CI workflow.
+# This file covers verification of redist-specific crates only.
 
 on:
   push:
     branches: [main, master]
     tags:
       - 'v*'
-  # NOTE: Kani is intentionally NOT triggered on pull_request events.
-  # A single Kani run takes 35–70 minutes; running it on every PR commit
-  # would make CI unusable. Prusti runs on PR as an advisory check only.
   pull_request:
     branches: [main, master]
 
@@ -22,7 +23,7 @@ jobs:
   # Runs only on push to main/master and release tags (NOT on PR commits).
   # ---------------------------------------------------------------------------
   kani:
-    name: Kani model checking (redist-metis)
+    name: Kani model checking (redist workspace)
     # Skip this job entirely for pull_request events — Kani is main/release only.
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
@@ -37,18 +38,16 @@ jobs:
           workspaces: redist
           key: kani
 
-      - name: Run Kani harnesses
-        run: cargo kani --workspace -p redist-metis
+      - name: Run Kani harnesses (redist-apportion)
+        run: cargo kani -p redist-apportion --no-default-features
         working-directory: redist
 
   # ---------------------------------------------------------------------------
   # Prusti — static verifier / postcondition checker for Rust
   # Advisory on PR (continue-on-error: true — never blocks merge).
-  # TODO: Remove continue-on-error for release tags once harnesses are stable
-  # and the Prusti job should become a hard gate at release time.
   # ---------------------------------------------------------------------------
   prusti:
-    name: Prusti static verification (redist-metis)
+    name: Prusti static verification (redist workspace)
     runs-on: ubuntu-latest
     # advisory on PR/main-push; blocking on release tags (refs/tags/v*)
     continue-on-error: ${{ !startsWith(github.ref, 'refs/tags/v') }}
@@ -57,12 +56,6 @@ jobs:
 
       - name: Install Prusti
         run: |
-          # Prusti releases are irregular; download is best-effort.
-          # The job has continue-on-error: true on PR so failure is advisory.
-          #
-          # Try the latest known release tag.  If the download 404s, skip
-          # gracefully — cargo prusti will then fail too, but the job exits 0
-          # because we set PRUSTI_AVAILABLE=false and skip the Run step below.
           PRUSTI_VERSION="0.2.2"
           PRUSTI_URL="https://github.com/viperproject/prusti-dev/releases/download/v-${PRUSTI_VERSION}-2023-07-23/prusti-release-ubuntu.zip"
           if curl -sSfL "$PRUSTI_URL" -o /tmp/prusti.zip 2>/dev/null; then
@@ -81,7 +74,7 @@ jobs:
           workspaces: redist
           key: prusti
 
-      - name: Run Prusti
+      - name: Run Prusti (redist-apportion)
         if: env.PRUSTI_AVAILABLE == 'true'
-        run: cargo prusti -p redist-metis
+        run: cargo prusti -p redist-apportion --no-default-features
         working-directory: redist

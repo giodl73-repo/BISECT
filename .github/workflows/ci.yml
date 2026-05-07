@@ -36,10 +36,6 @@ jobs:
         run: brew install metis
 
       # All crates except redist-cli run in parallel (no CWD issue).
-      - name: Test redist-metis
-        run: cargo test -p redist-metis --lib --tests
-        working-directory: redist
-
       - name: Test redist-core
         run: cargo test -p redist-core --lib --tests
         working-directory: redist
@@ -71,18 +67,18 @@ jobs:
         working-directory: redist
 
   # ---------------------------------------------------------------------------
-  # Engine: redist-metis  (pure-Rust METIS — no C dependency)
+  # Engine: metis-core  (pure-Rust multilevel partitioning — no C dependency)
   # No libmetis required.  Runs on all three platforms including Windows.
   # ---------------------------------------------------------------------------
-  test-engine-redist-metis:
-    name: Test / redist-metis engine (${{ matrix.os }})
+  test-engine-metis-core:
+    name: Test / metis-core engine (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     env:
       # Tell redist-apportion tests to use the pure-Rust engine.
-      REDIST_METIS_ENGINE: redist-metis
+      REDIST_METIS_ENGINE: metis-core
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -93,10 +89,7 @@ jobs:
 
       # No METIS install step — that is the whole point of this job.
 
-      - name: Test redist-metis (pure-Rust engine — no C dep)
-        run: cargo test -p redist-metis --lib --tests
-        working-directory: redist
-
+      # metis-core unit tests run in its own repo CI.
       - name: Test redist-core
         run: cargo test -p redist-core --lib --tests
         working-directory: redist
@@ -111,10 +104,10 @@ jobs:
 
       # --no-default-features disables c-ffi on all crates:
       # redist-apportion skips the metis crate entirely (pure-Rust paths only).
-      # redist-cli uses the redist-metis fallback in bisection_runner.rs for
+      # redist-cli uses the metis-core fallback in bisection_runner.rs for
       # all bisect/nway paths; AreaSection returns a clear [CONFIG] error.
 
-      - name: Test redist-apportion (redist-metis engine — no C dep)
+      - name: Test redist-apportion (metis-core engine — no C dep)
         run: cargo test -p redist-apportion --lib --tests --no-default-features
         working-directory: redist
 
@@ -126,7 +119,7 @@ jobs:
         run: cargo test -p redist-report --lib --tests
         working-directory: redist
 
-      - name: Test redist-cli (redist-metis engine — no C dep, serialised)
+      - name: Test redist-cli (metis-core engine — no C dep, serialised)
         run: cargo test -p redist-cli --lib --tests --no-default-features -- --test-threads=1
         working-directory: redist
 
