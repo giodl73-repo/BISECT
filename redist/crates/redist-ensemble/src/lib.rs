@@ -8,3 +8,8 @@
 pub mod spanning;
 pub mod recom;
 pub mod chain;
+pub mod merge_split;
+pub mod forest_recom;
+
+pub use merge_split::MergeSplitChain;
+pub use forest_recom::ForestRecomChain;
