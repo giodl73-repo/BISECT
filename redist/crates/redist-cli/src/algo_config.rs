@@ -510,6 +510,9 @@ pub fn validate_config(path: &Path) -> Result<String, String> {
         crate::runner::SeedCompositor::MergeSplit { steps, p } => {
             format!("merge-split (p={p:.2}, steps={steps})")
         }
+        crate::runner::SeedCompositor::MultiScaleAdaptive { total_steps, p, target_accept, adapt_interval } => {
+            format!("multiscale-adaptive (p={p:.2}, steps={total_steps}, target_accept={target_accept:.2}, adapt_interval={adapt_interval})")
+        }
     };
 
     let years = yaml.resolved_years().join(", ");

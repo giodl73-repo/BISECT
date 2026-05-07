@@ -53,6 +53,48 @@ impl MultiScaleChain {
     }
 }
 
+/// Configuration for AdaptiveMultiScaleChain — Robbins-Monro self-tuning alpha.
+///
+/// Extends MultiScaleConfig by replacing the fixed alpha with adaptive tuning:
+/// coarse-move probability alpha is updated every `adapt_interval` steps toward
+/// `target_accept` using a decaying Robbins-Monro step size gamma_t = gamma_0 / sqrt(t).
+///
+/// coarse_tol = 3 × pop_tolerance (looser than MultiScaleConfig's 2×) to avoid
+/// over-rejection during early adaptation when alpha may be poorly calibrated.
+///
+/// See spec: docs/specs/2026-05-07-adaptive-multiscale.md
+#[derive(Debug, Clone)]
+pub struct AdaptiveMultiScaleConfig {
+    pub total_steps: usize,
+    pub target_accept: f64,    // target coarse acceptance rate (default: 0.30)
+    pub initial_alpha: f64,    // starting alpha (default: 0.30)
+    pub adapt_interval: usize, // steps between alpha updates (default: 50)
+    pub gamma_0: f64,          // Robbins-Monro step size (default: 0.10)
+    pub pop_tolerance: f64,    // fine-level balance tolerance (default: 0.005)
+    pub coarse_tol: f64,       // = 3 × pop_tolerance by default
+    pub p: f64,                // percentile of visited plans (default: 0.0)
+    pub base_seed: u64,
+    pub chain_idx: u32,
+}
+
+impl Default for AdaptiveMultiScaleConfig {
+    fn default() -> Self {
+        let pop_tolerance = 0.005;
+        Self {
+            total_steps: 2000,
+            target_accept: 0.30,
+            initial_alpha: 0.30,
+            adapt_interval: 50,
+            gamma_0: 0.10,
+            pop_tolerance,
+            coarse_tol: 3.0 * pop_tolerance,
+            p: 0.0,
+            base_seed: 0,
+            chain_idx: 0,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -73,5 +115,29 @@ mod tests {
             ..Default::default()
         };
         assert!((cfg.coarse_tol - 0.02).abs() < 1e-12);
+    }
+
+    #[test]
+    fn adaptive_config_coarse_tol_is_three_times_pop_tolerance() {
+        let cfg = AdaptiveMultiScaleConfig::default();
+        assert!(
+            (cfg.coarse_tol - 3.0 * cfg.pop_tolerance).abs() < 1e-12,
+            "AdaptiveMultiScaleConfig::default() coarse_tol must be 3 x pop_tolerance, \
+             got coarse_tol={} pop_tolerance={}", cfg.coarse_tol, cfg.pop_tolerance
+        );
+    }
+
+    #[test]
+    fn adaptive_config_custom_pop_tolerance() {
+        let pop_tolerance = 0.01;
+        let cfg = AdaptiveMultiScaleConfig {
+            pop_tolerance,
+            coarse_tol: 3.0 * pop_tolerance,
+            ..Default::default()
+        };
+        assert!(
+            (cfg.coarse_tol - 0.03).abs() < 1e-12,
+            "custom pop_tolerance=0.01 must yield coarse_tol=0.03, got {}", cfg.coarse_tol
+        );
     }
 }

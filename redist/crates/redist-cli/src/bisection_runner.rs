@@ -3046,6 +3046,296 @@ pub fn run_multiscale(
     Ok(best_asgn.iter().enumerate().map(|(i, &d)| (i, d as usize)).collect())
 }
 
+// ── Adaptive Multi-scale MCMC ────────────────────────────────────────────────
+
+/// Configuration for `run_multiscale_adaptive`.
+///
+/// Mirrors `AdaptiveMultiScaleConfig` in redist-multiscale but is local to
+/// bisection_runner to avoid a crate dependency cycle.
+#[derive(Debug, Clone)]
+pub struct AdaptiveConfig {
+    pub total_steps: usize,
+    pub target_accept: f64,
+    pub initial_alpha: f64,
+    pub adapt_interval: usize,
+    pub gamma_0: f64,
+    pub pop_tolerance: f64,
+    /// Multiplier for coarse tolerance: coarse_tol = coarse_tol_factor × pop_tolerance.
+    /// Default: 3.0 (per B.21 spec; looser than MultiScale's 2× to avoid over-rejection
+    /// during early adaptation when alpha may be far from optimal).
+    pub coarse_tol_factor: f64,
+    pub p: f64,
+}
+
+impl Default for AdaptiveConfig {
+    fn default() -> Self {
+        Self {
+            total_steps: 2000,
+            target_accept: 0.30,
+            initial_alpha: 0.30,
+            adapt_interval: 50,
+            gamma_0: 0.10,
+            pop_tolerance: 0.005,
+            coarse_tol_factor: 3.0,
+            p: 0.0,
+        }
+    }
+}
+
+/// Diagnostic output from `run_multiscale_adaptive`.
+#[derive(Debug)]
+pub struct AdaptiveResult {
+    /// Alpha after the final adaptation round (last entry of alpha_trace, or initial_alpha
+    /// if no adaptation rounds occurred).
+    pub final_alpha: f64,
+    /// Alpha recorded after each adaptation round (length = floor(total_steps / adapt_interval)).
+    pub alpha_trace: Vec<f64>,
+    /// Fine-step acceptance rate over all steps (RecomChain.step() always accepts; = 1.0).
+    pub fine_acceptance_rate: f64,
+    /// Coarse-step acceptance rate: fraction of coarse steps whose rebalance succeeded.
+    pub coarse_acceptance_rate: f64,
+}
+
+/// Run Adaptive Multi-scale MCMC with Robbins-Monro alpha self-tuning (B.21 spec).
+///
+/// Extends `run_multiscale` by automatically adapting the coarse-move probability
+/// alpha toward `config.target_accept` every `config.adapt_interval` steps using
+/// the Robbins-Monro update:
+///
+/// ```text
+/// alpha <- clip(alpha + gamma_t * (recent_coarse_accept - target_accept), 0.05, 0.95)
+/// gamma_t = gamma_0 / sqrt(t),  t = adaptation round (1-based)
+/// ```
+///
+/// Seeding: identical to `run_multiscale` — SHA-256("MSC_STEP_" || step:u64le || "_" ||
+/// 0u32le || "_" || base_seed:u64le) → u64le.  The alpha draw always consumes one
+/// RNG value before the step, regardless of whether alpha is 0 or 1.
+///
+/// Returns `(best_plan, AdaptiveResult)`.
+pub fn run_multiscale_adaptive(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    niter: u32,
+    base_seed: u64,
+    config: AdaptiveConfig,
+    geoids: Option<&std::collections::HashMap<usize, String>>,
+) -> Result<(HashMap<usize, usize>, AdaptiveResult), String> {
+    use sha2::Digest;
+    use rand::Rng;
+    use redist_ensemble::recom::RecomChain;
+    use redist_multiscale::rebalance::rebalance;
+    use crate::adjacency_loader::build_county_coarsening;
+
+    let geoids = geoids.ok_or_else(|| {
+        "[CONFIG] --search multiscale-adaptive requires GEOID data. \
+         Ensure the adjacency file has an accompanying _geoids.json file.".to_string()
+    })?;
+
+    let coarse_tol = config.coarse_tol_factor * config.pop_tolerance;
+
+    // Build county coarsening from tract GEOIDs (same as run_multiscale)
+    let (county_adj, county_pop, fine_to_coarse) =
+        build_county_coarsening(geoids, adjacency, vertex_weights)
+        .map_err(|e| format!("county coarsening failed: {e}"))?;
+
+    if county_adj.is_empty() {
+        return Err("county coarsening produced no counties".to_string());
+    }
+
+    // Build initial tract-level plan from METIS
+    let initial_plan = run_all_splits(
+        adjacency, vertex_weights, edge_weights,
+        num_districts, config.pop_tolerance, niter, Some(base_seed), None,
+    )?;
+
+    let n = adjacency.len();
+    let n_counties = county_adj.len();
+
+    // Convert to Vec<u32> (1-based district IDs) for RecomChain
+    let mut assignment_fine: Vec<u32> = (0..n)
+        .map(|i| initial_plan.get(&i).copied().unwrap_or(1) as u32)
+        .collect();
+
+    // Build coarse initial assignment: each county takes the mode district of its tracts
+    let mut assignment_coarse: Vec<u32> = vec![1u32; n_counties];
+    for (tract_idx, &county_idx) in fine_to_coarse.iter().enumerate() {
+        if county_idx < n_counties && tract_idx < assignment_fine.len() {
+            assignment_coarse[county_idx] = assignment_fine[tract_idx];
+        }
+    }
+
+    // Build adjacency as Vec<Vec<u32>> for RecomChain
+    let adj_u32: Vec<Vec<u32>> = adjacency.iter()
+        .map(|nb| nb.iter().map(|&x| x as u32).collect())
+        .collect();
+
+    // Fine (tract) chain
+    let mut fine_chain = RecomChain::new(
+        adj_u32.clone(),
+        vertex_weights.to_vec(),
+        assignment_fine.clone(),
+        num_districts as u32,
+        config.pop_tolerance,
+    );
+
+    // Coarse (county) chain — coarse_tol_factor × fine tolerance
+    let county_adj_u32: Vec<Vec<u32>> = county_adj.iter()
+        .map(|nb| nb.iter().map(|&x| x as u32).collect())
+        .collect();
+    let mut coarse_chain = RecomChain::new(
+        county_adj_u32,
+        county_pop,
+        assignment_coarse.clone(),
+        num_districts as u32,
+        coarse_tol,
+    );
+
+    // Deterministic per-step seed derivation — identical prefix to run_multiscale
+    let step_seed_fn = |step: u64| -> u64 {
+        let mut h = sha2::Sha256::new();
+        h.update(b"MSC_STEP_");
+        h.update(step.to_le_bytes());
+        h.update(b"_");
+        h.update(0u32.to_le_bytes()); // chain_idx = 0
+        h.update(b"_");
+        h.update(base_seed.to_le_bytes());
+        let d = h.finalize();
+        u64::from_le_bytes(d[..8].try_into().unwrap())
+    };
+
+    // Collect (ec, step_idx, assignment) for all visited plans
+    let initial_ec = count_edge_cuts(&initial_plan, adjacency);
+    let mut visited: Vec<(usize, usize, Vec<u32>)> = Vec::with_capacity(config.total_steps + 1);
+    visited.push((initial_ec, 0, assignment_fine.clone()));
+
+    let adj_usize: Vec<Vec<usize>> = adjacency.to_vec();
+
+    // Robbins-Monro state
+    let mut alpha = config.initial_alpha;
+    let mut alpha_trace: Vec<f64> = Vec::new();
+    let mut coarse_accept_window: Vec<bool> = Vec::new();
+
+    // Global counters for AdaptiveResult
+    let mut total_fine_steps = 0u64;
+    let mut total_coarse_steps = 0u64;
+    let mut total_fine_accepted = 0u64;
+    let mut total_coarse_accepted = 0u64;
+
+    for step in 1..=config.total_steps {
+        let seed = step_seed_fn(step as u64);
+        let mut rng = SmallRng::seed_from_u64(seed);
+
+        // Alpha draw always consumes one RNG value (seeding contract)
+        let is_coarse = rng.gen::<f64>() < alpha;
+
+        if is_coarse {
+            total_coarse_steps += 1;
+            // Coarse move: step the county-level chain
+            coarse_chain.step(&mut rng);
+
+            // Project coarse assignment back to fine level
+            for (tract_idx, &county_idx) in fine_to_coarse.iter().enumerate() {
+                if county_idx < n_counties && tract_idx < assignment_fine.len() {
+                    assignment_fine[tract_idx] = coarse_chain.assignment[county_idx];
+                }
+            }
+
+            // Rebalance fine-level plan; reject if rebalancing fails
+            let mut asgn_work = assignment_fine.clone();
+            let balanced = rebalance(
+                &mut asgn_work, &adj_usize, vertex_weights,
+                num_districts as u32, config.pop_tolerance, 200,
+            );
+            if balanced {
+                assignment_fine = asgn_work;
+                fine_chain.assignment = assignment_fine.clone();
+                // Sync coarse assignment back from rebalanced fine assignment
+                for (tract_idx, &county_idx) in fine_to_coarse.iter().enumerate() {
+                    if county_idx < n_counties && tract_idx < assignment_fine.len() {
+                        assignment_coarse[county_idx] = assignment_fine[tract_idx];
+                    }
+                }
+                coarse_chain.assignment = assignment_coarse.clone();
+                coarse_accept_window.push(true);
+                total_coarse_accepted += 1;
+            } else {
+                // Coarse move rejected — restore coarse chain from current fine assignment
+                for (tract_idx, &county_idx) in fine_to_coarse.iter().enumerate() {
+                    if county_idx < n_counties && tract_idx < assignment_fine.len() {
+                        assignment_fine[tract_idx] = fine_chain.assignment[tract_idx];
+                        assignment_coarse[county_idx] = assignment_fine[tract_idx];
+                    }
+                }
+                coarse_chain.assignment = assignment_coarse.clone();
+                coarse_accept_window.push(false);
+            }
+        } else {
+            total_fine_steps += 1;
+            total_fine_accepted += 1; // RecomChain::step always accepts
+            // Fine move: step the tract-level chain
+            fine_chain.step(&mut rng);
+            assignment_fine = fine_chain.assignment.clone();
+            // Sync coarse assignment
+            for (tract_idx, &county_idx) in fine_to_coarse.iter().enumerate() {
+                if county_idx < n_counties && tract_idx < assignment_fine.len() {
+                    assignment_coarse[county_idx] = assignment_fine[tract_idx];
+                }
+            }
+            coarse_chain.assignment = assignment_coarse.clone();
+        }
+
+        // Robbins-Monro alpha adaptation
+        if step % config.adapt_interval == 0 {
+            let t = (step / config.adapt_interval) as f64; // 1-based round
+            let gamma_t = config.gamma_0 / t.sqrt();
+            let recent_accept = if coarse_accept_window.is_empty() {
+                alpha // no coarse steps this window — leave alpha unchanged
+            } else {
+                coarse_accept_window.iter().filter(|&&a| a).count() as f64
+                    / coarse_accept_window.len() as f64
+            };
+            alpha = (alpha + gamma_t * (recent_accept - config.target_accept))
+                .clamp(0.05, 0.95);
+            alpha_trace.push(alpha);
+            coarse_accept_window.clear();
+        }
+
+        let current_plan: HashMap<usize, usize> = assignment_fine.iter().enumerate()
+            .map(|(i, &d)| (i, d as usize))
+            .collect();
+        let ec = count_edge_cuts(&current_plan, adjacency);
+        visited.push((ec, step, assignment_fine.clone()));
+    }
+
+    // Sort by (EC ASC, step ASC) for determinism; select at rank floor(p * n)
+    visited.sort_by(|(e1, s1, _), (e2, s2, _)| e1.cmp(e2).then(s1.cmp(s2)));
+    let rank = ((config.p * visited.len() as f64).floor() as usize).min(visited.len() - 1);
+    let (_, _, best_asgn) = &visited[rank];
+    let result_plan: HashMap<usize, usize> = best_asgn.iter().enumerate()
+        .map(|(i, &d)| (i, d as usize))
+        .collect();
+
+    let final_alpha = alpha_trace.last().copied().unwrap_or(config.initial_alpha);
+    let adaptive_result = AdaptiveResult {
+        final_alpha,
+        alpha_trace,
+        fine_acceptance_rate: if total_fine_steps > 0 {
+            total_fine_accepted as f64 / total_fine_steps as f64
+        } else {
+            0.0
+        },
+        coarse_acceptance_rate: if total_coarse_steps > 0 {
+            total_coarse_accepted as f64 / total_coarse_steps as f64
+        } else {
+            0.0
+        },
+    };
+
+    Ok((result_plan, adaptive_result))
+}
+
 // ── Merge-Split MCMC ─────────────────────────────────────────────────────────
 
 /// Run `steps` Merge-Split MH steps on a k-way partition, collect all accepted
@@ -5103,6 +5393,98 @@ mod tests {
         let parsed = SearchMode::from_str("multiscale", true)
             .expect("SearchMode must parse 'multiscale'");
         assert_eq!(parsed, SearchMode::MultiScale);
+    }
+
+    // ── AdaptiveMultiScale tests ──────────────────────────────────────────────
+
+    // L0: missing geoids must return Err containing "GEOID".
+    #[test]
+    fn multiscale_adaptive_missing_geoids_returns_err() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let cfg = AdaptiveConfig::default();
+        let result = run_multiscale_adaptive(&adj, &pop, &ew, 2, 10, 42, cfg, None);
+        assert!(result.is_err(), "run_multiscale_adaptive with no geoids must return Err");
+        let msg = result.unwrap_err();
+        assert!(
+            msg.contains("GEOID"),
+            "error must mention GEOID, got: {msg}"
+        );
+    }
+
+    // L0: T=200, adapt_interval=50 -> alpha_trace.len() == 4.
+    #[test]
+    fn multiscale_adaptive_alpha_trace_length() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let geoids = synthetic_geoids(16);
+        let cfg = AdaptiveConfig {
+            total_steps: 200,
+            adapt_interval: 50,
+            ..AdaptiveConfig::default()
+        };
+        let (_, result) = run_multiscale_adaptive(&adj, &pop, &ew, 2, 10, 42, cfg, Some(&geoids))
+            .expect("multiscale_adaptive must succeed on 4x4 grid");
+        assert_eq!(
+            result.alpha_trace.len(), 4,
+            "T=200 adapt_interval=50 must produce exactly 4 adaptation rounds, \
+             got {}", result.alpha_trace.len()
+        );
+    }
+
+    // L0: adapt_interval > total_steps -> no adaptation, alpha_trace empty, final_alpha == initial_alpha.
+    #[test]
+    fn multiscale_adaptive_adapt_interval_gt_steps_no_adaptation() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let geoids = synthetic_geoids(16);
+        let initial_alpha = 0.30;
+        let cfg = AdaptiveConfig {
+            total_steps: 10,
+            adapt_interval: 1000,
+            initial_alpha,
+            ..AdaptiveConfig::default()
+        };
+        let (_, result) = run_multiscale_adaptive(&adj, &pop, &ew, 2, 10, 42, cfg, Some(&geoids))
+            .expect("multiscale_adaptive must succeed");
+        assert!(
+            result.alpha_trace.is_empty(),
+            "adapt_interval > total_steps must produce empty alpha_trace"
+        );
+        assert!(
+            (result.final_alpha - initial_alpha).abs() < 1e-12,
+            "adapt_interval > total_steps: final_alpha must equal initial_alpha, \
+             got {}", result.final_alpha
+        );
+    }
+
+    // L0: same seed -> same result (determinism).
+    #[test]
+    fn multiscale_adaptive_deterministic() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let geoids = synthetic_geoids(16);
+        let make_cfg = || AdaptiveConfig {
+            total_steps: 100,
+            adapt_interval: 25,
+            ..AdaptiveConfig::default()
+        };
+        let (plan1, res1) = run_multiscale_adaptive(&adj, &pop, &ew, 2, 10, 77, make_cfg(), Some(&geoids))
+            .expect("first run must succeed");
+        let (plan2, res2) = run_multiscale_adaptive(&adj, &pop, &ew, 2, 10, 77, make_cfg(), Some(&geoids))
+            .expect("second run must succeed");
+        assert_eq!(plan1, plan2, "same seed must produce identical plan");
+        assert_eq!(res1.alpha_trace, res2.alpha_trace, "same seed must produce identical alpha_trace");
+    }
+
+    // L0: "multiscale-adaptive" must parse as SearchMode::MultiScaleAdaptive via clap ValueEnum.
+    #[test]
+    fn multiscale_adaptive_search_mode_parses() {
+        use clap::ValueEnum;
+        use crate::args::SearchMode;
+        let parsed = SearchMode::from_str("multiscale-adaptive", true)
+            .expect("SearchMode must parse 'multiscale-adaptive'");
+        assert_eq!(parsed, SearchMode::MultiScaleAdaptive);
     }
 
     // ── MergeSplit tests ──────────────────────────────────────────────────────

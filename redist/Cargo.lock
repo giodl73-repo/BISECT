@@ -1763,7 +1763,6 @@ dependencies = [
 [[package]]
 name = "metis-core"
 version = "0.1.0"
-source = "git+https://github.com/giodl73-repo/METIS-CORE.git?branch=master#2a56c97f2b6fcd8149e4ece4400975caaf390fe0"
 dependencies = [
  "rand",
  "rand_pcg",

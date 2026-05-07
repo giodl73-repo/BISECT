@@ -10,7 +10,7 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use crate::adjacency_loader::load_adjacency_pkl;
-use crate::bisection_runner::{run_all_splits, run_all_splits_with_search, run_all_splits_compact, run_all_splits_percentile, run_geosection, run_nway_partition, run_flip_chain, run_short_burst, run_short_burst_forest, run_short_burst_merge_split, run_forest_recom, run_multiscale, run_merge_split, CompactBisectOpts};
+use crate::bisection_runner::{run_all_splits, run_all_splits_with_search, run_all_splits_compact, run_all_splits_percentile, run_geosection, run_nway_partition, run_flip_chain, run_short_burst, run_short_burst_forest, run_short_burst_merge_split, run_forest_recom, run_multiscale, run_multiscale_adaptive, AdaptiveConfig, run_merge_split, CompactBisectOpts};
 use crate::demographics::{load_demographics, align_demographics_to_adjacency};
 use crate::partisan_shares::load_partisan_shares;
 use crate::fetch::load_manifest;
@@ -91,6 +91,15 @@ pub enum SeedCompositor {
     /// Run `steps` Merge-Split MH steps; collect accepted plans; return at percentile p.
     /// Two-tree MH with explicit ratio — O(m log m) per step (G.10 spec accepted 3.0/4).
     MergeSplit { steps: usize, p: f64 },
+    /// Adaptive Multi-scale MCMC — Robbins-Monro self-tuning alpha (B.21 spec accepted 3.75/4).
+    /// Requires block-group adjacency (run: redist fetch --resolution block_group).
+    /// CLI: --search multiscale-adaptive --multiscale-steps 2000 --ms-target-accept 0.30 --ms-adapt-interval 50
+    MultiScaleAdaptive {
+        total_steps: usize,
+        p: f64,
+        target_accept: f64,
+        adapt_interval: usize,
+    },
 }
 
 impl SeedCompositor {
@@ -109,6 +118,7 @@ impl SeedCompositor {
             Self::ForestRecom { steps, .. } => *steps,
             Self::MultiScale { total_steps, .. } => *total_steps,
             Self::MergeSplit { steps, .. } => *steps,
+            Self::MultiScaleAdaptive { total_steps, .. } => *total_steps,
         }
     }
 
@@ -484,6 +494,12 @@ impl AlgorithmConfig {
                 SeM::MergeSplit => SeedCompositor::MergeSplit {
                     steps: args.merge_split_steps,
                     p: args.percentile.clamp(0.0, 1.0),
+                },
+                SeM::MultiScaleAdaptive => SeedCompositor::MultiScaleAdaptive {
+                    total_steps: args.multiscale_steps,
+                    p: args.percentile.clamp(0.0, 1.0),
+                    target_accept: args.ms_target_accept,
+                    adapt_interval: args.ms_adapt_interval,
                 },
             };
         }
@@ -1539,6 +1555,29 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                         Some(&graph.index_to_geoid),
                     ).map_err(|e| format!("multiscale: {e}"))?
                 }
+                SeedCompositor::MultiScaleAdaptive { total_steps, p, target_accept, adapt_interval } => {
+                    let base = seed.unwrap_or(0);
+                    status(cfg.position, &format!(
+                        "{}: multiscale-adaptive p={:.2} {} steps target_accept={:.2} adapt_interval={} into {} districts",
+                        cfg.state_code, p, total_steps, target_accept, adapt_interval, num_districts
+                    ));
+                    let acfg = AdaptiveConfig {
+                        total_steps: *total_steps,
+                        target_accept: *target_accept,
+                        initial_alpha: *target_accept, // start at target
+                        adapt_interval: *adapt_interval,
+                        gamma_0: 0.10,
+                        pop_tolerance: balance_tolerance_frac,
+                        coarse_tol_factor: 3.0,
+                        p: *p,
+                    };
+                    let (plan, _adaptive_result) = run_multiscale_adaptive(
+                        &graph.adjacency, &vwgt, &edge_weights,
+                        num_districts, niter, base, acfg,
+                        Some(&graph.index_to_geoid),
+                    ).map_err(|e| format!("multiscale-adaptive: {e}"))?;
+                    plan
+                }
                 SeedCompositor::MergeSplit { steps, p } => {
                     let base = seed.unwrap_or(0);
                     status(cfg.position, &format!("{}: merge-split p={:.2} {} steps into {} districts",
@@ -1785,27 +1824,27 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 _ => "census tract".to_string(),
             },
             // Multi-scale fields
-            multiscale_fine: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. }) {
+            multiscale_fine: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. } | SeedCompositor::MultiScaleAdaptive { .. }) {
                 Some("tract".to_string())
             } else {
                 None
             },
-            multiscale_coarse: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. }) {
+            multiscale_coarse: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. } | SeedCompositor::MultiScaleAdaptive { .. }) {
                 Some("county".to_string())
             } else {
                 None
             },
-            fine_to_coarse_formula: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. }) {
+            fine_to_coarse_formula: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. } | SeedCompositor::MultiScaleAdaptive { .. }) {
                 Some("geoid_prefix[:5]".to_string())
             } else {
                 None
             },
-            fine_to_coarse_comment: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. }) {
+            fine_to_coarse_comment: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. } | SeedCompositor::MultiScaleAdaptive { .. }) {
                 Some("first 5 chars of 11-char tract GEOID = parent county FIPS".to_string())
             } else {
                 None
             },
-            index_to_geoid_file: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. }) {
+            index_to_geoid_file: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. } | SeedCompositor::MultiScaleAdaptive { .. }) {
                 Some(format!("{}_adjacency_{}_geoids.json", state_name, cfg.year))
             } else {
                 None

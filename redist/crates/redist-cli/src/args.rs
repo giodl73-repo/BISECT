@@ -1270,6 +1270,11 @@ pub enum SearchMode {
     /// Use --merge-split-steps N (default 1000).
     #[value(name = "merge-split")]
     MergeSplit,
+    /// Adaptive Multi-scale MCMC — Robbins-Monro self-tuning coarse-move probability.
+    /// Requires block-group adjacency. Use --multiscale-steps N, --ms-target-accept F,
+    /// --ms-adapt-interval N (defaults: 2000, 0.30, 50). (B.21 spec accepted 3.75/4)
+    #[value(name = "multiscale-adaptive")]
+    MultiScaleAdaptive,
 }
 
 /// Which METIS backend to use for graph partitioning.
@@ -1482,6 +1487,14 @@ pub struct StateArgs {
     /// P(coarse move) for --search multiscale. Default: 0.3.
     #[arg(long, default_value_t = 0.3)]
     pub multiscale_alpha: f64,
+
+    /// Target coarse acceptance rate for --search multiscale-adaptive (Robbins-Monro). Default: 0.30.
+    #[arg(long, default_value_t = 0.30)]
+    pub ms_target_accept: f64,
+
+    /// Adaptation interval (steps between alpha updates) for --search multiscale-adaptive. Default: 50.
+    #[arg(long, default_value_t = 50usize)]
+    pub ms_adapt_interval: usize,
 
     /// Total Merge-Split MH steps for --search merge-split. Default: 1000.
     #[arg(long, default_value_t = 1000)]
@@ -1719,6 +1732,14 @@ pub struct StatesArgs {
     /// P(coarse move) for --search multiscale. Default: 0.3.
     #[arg(long, default_value_t = 0.3)]
     pub multiscale_alpha: f64,
+
+    /// Target coarse acceptance rate for --search multiscale-adaptive (Robbins-Monro). Default: 0.30.
+    #[arg(long, default_value_t = 0.30)]
+    pub ms_target_accept: f64,
+
+    /// Adaptation interval (steps between alpha updates) for --search multiscale-adaptive. Default: 50.
+    #[arg(long, default_value_t = 50usize)]
+    pub ms_adapt_interval: usize,
 
     /// Total Merge-Split MH steps for --search merge-split. Default: 1000.
     #[arg(long, default_value_t = 1000)]
@@ -2421,6 +2442,7 @@ mod tests {
             ("forest-recom",            SearchMode::ForestRecom),
             ("multiscale",              SearchMode::MultiScale),
             ("merge-split",             SearchMode::MergeSplit),
+            ("multiscale-adaptive",     SearchMode::MultiScaleAdaptive),
         ];
         for (s, expected) in cases {
             let parsed = SearchMode::from_str(s, true)

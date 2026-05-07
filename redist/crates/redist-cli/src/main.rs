@@ -278,6 +278,12 @@ fn main() {
                                 steps: args.merge_split_steps,
                                 p: args.percentile.clamp(0.0, 1.0),
                             },
+                            SeM::MultiScaleAdaptive => SeedCompositor::MultiScaleAdaptive {
+                                total_steps: args.multiscale_steps,
+                                p: args.percentile.clamp(0.0, 1.0),
+                                target_accept: args.ms_target_accept,
+                                adapt_interval: args.ms_adapt_interval,
+                            },
                         };
                     }
                     cfg

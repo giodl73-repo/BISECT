@@ -10,6 +10,10 @@ pub mod recom;
 pub mod chain;
 pub mod merge_split;
 pub mod forest_recom;
+pub mod parallel_tempering;
+pub mod vra_recom;
 
 pub use merge_split::MergeSplitChain;
 pub use forest_recom::ForestRecomChain;
+pub use parallel_tempering::ParallelTemperingChain;
+pub use vra_recom::VraRecomChain;
