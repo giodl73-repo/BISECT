@@ -232,6 +232,7 @@ venv/
 
 # Rust build artifacts
 redist/target/
+redist/.cargo/config.toml
 redist/**/*.so
 redist/**/*.pyd
 release_staging/
