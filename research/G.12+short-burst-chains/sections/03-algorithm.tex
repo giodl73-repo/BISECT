@@ -1,0 +1,145 @@
+\section{Algorithm}
+\label{sec:algorithm}
+
+\subsection{ShortBurstForest}
+\label{subsec:alg-sbf}
+
+\sbf{} is the \sburst{} meta-algorithm with ForestRecom as the inner chain.
+Algorithm~\ref{alg:sbf} gives the complete specification.
+
+\begin{algorithm}
+\caption{\sbf{}}
+\label{alg:sbf}
+\begin{algorithmic}[1]
+\Require Burst length $\ell$, burst count $n$, percentile $p \in [0,1]$,
+         base seed $b$
+\Ensure  Selected plan $\pi^*$
+\State $\pi_{\mathrm{cur}} \gets \mathrm{METIS\_plan}(b)$
+       \Comment{initial plan from METIS}
+\State $\mathrm{endpoints} \gets []$
+\For{$i \gets 0$ \textbf{to} $n-1$}
+  \State $s_i \gets \mathrm{SHA256}\!\left(\texttt{"SBF\_CHAIN\_"} \,\|\,
+         i^{\mathrm{le64}} \,\|\, \texttt{"\_"} \,\|\, b^{\mathrm{le64}}
+         \right)[0{:}8]\;\text{as } u64$
+  \State $\mathrm{chain} \gets \mathrm{ForestRecomChain}(\pi_{\mathrm{cur}}, s_i)$
+  \State $\mathrm{accepted}_i \gets 0$
+  \For{$t \gets 0$ \textbf{to} $\ell - 1$}
+    \State $s_{\mathrm{fwd}} \gets \mathrm{SHA256}\!\left(\texttt{"SBF\_FWD\_"} \,\|\,
+           t^{\mathrm{le32}} \,\|\, \texttt{"\_"} \,\|\, s_i^{\mathrm{le64}}
+           \right)[0{:}8]\;\text{as } u64$
+    \State $s_{\mathrm{rev}} \gets \mathrm{SHA256}\!\left(\texttt{"SBF\_REV\_"} \,\|\,
+           t^{\mathrm{le32}} \,\|\, \texttt{"\_"} \,\|\, s_i^{\mathrm{le64}}
+           \right)[0{:}8]\;\text{as } u64$
+    \If{$\mathrm{chain.step}(\mathrm{rng\_fwd}(s_{\mathrm{fwd}}),\,
+         \mathrm{rng\_rev}(s_{\mathrm{rev}}))$ accepted}
+      \State $\mathrm{accepted}_i \gets \mathrm{accepted}_i + 1$
+    \EndIf
+  \EndFor
+  \State $\mathrm{endpoints}.\mathrm{push}\!\left(
+         \ec(\mathrm{chain.assignment}),\; i,\; \mathrm{chain.assignment}
+         \right)$
+  \State $\pi_{\mathrm{cur}} \gets \mathrm{chain.assignment}$
+         \Comment{restart next burst from current endpoint}
+  \State \textbf{Record} $\alpha_i = \mathrm{accepted}_i / \ell$ in audit manifest
+\EndFor
+\State Sort $\mathrm{endpoints}$ by $\ec$ ascending, then by $i$ ascending
+\State \Return $\mathrm{endpoints}[\lfloor p \cdot n \rfloor].\mathrm{assignment}$
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Two RNGs per step.}
+Each ForestRecom step requires two independent RNG streams:
+the \emph{forward RNG} (to sample the proposed spanning tree and cut)
+and the \emph{reverse RNG} (to evaluate the reverse proposal probability for
+the Metropolis--Hastings ratio).
+Both are derived deterministically from the burst seed $s_i$ and the
+step index $t$ using the \texttt{SBF\_FWD\_} and \texttt{SBF\_REV\_}
+prefixes.
+This ensures that any burst trajectory can be independently reproduced by
+any verifier who holds the base seed $b$ and the burst parameters.
+
+\paragraph{Endpoint restart.}
+At the end of each burst, $\pi_{\mathrm{cur}}$ is updated to
+\texttt{chain.assignment}, the endpoint of the current burst.
+This is unconditional: the burst endpoint always becomes the next starting
+plan, regardless of whether it has lower or higher edge-cut than the
+previous $\pi_{\mathrm{cur}}$.
+This allows the chain to escape local minima by occasionally accepting
+worse endpoints during the burst (through the MH criterion).
+
+\paragraph{CLI invocation.}
+\begin{verbatim}
+redist state --state NC --year 2020 \
+    --search short-burst-forest \
+    --burst-length 20 --n-bursts 50 --percentile 0.0
+\end{verbatim}
+
+\subsection{ShortBurstMergeSplit}
+\label{subsec:alg-sbms}
+
+\sbms{} is identical to Algorithm~\ref{alg:sbf} except:
+\begin{enumerate}
+  \item The inner chain is MergeSplitChain instead of ForestRecomChain.
+  \item The seed prefixes are \texttt{"SBMS\_CHAIN\_"}, \texttt{"SBMS\_FWD\_"},
+        and \texttt{"SBMS\_REV\_"}.
+  \item The MH ratio is a single spanning-tree-count ratio rather than the
+        two-tree ForestRecom ratio, so the reverse RNG is used differently
+        internally (see G.10), but the interface to the burst loop is
+        identical.
+\end{enumerate}
+
+\paragraph{CLI invocation.}
+\begin{verbatim}
+redist state --state NC --year 2020 \
+    --search short-burst-merge-split \
+    --burst-length 20 --n-bursts 50 --percentile 0.0
+\end{verbatim}
+
+\subsection{Per-Burst Acceptance Rate Diagnostic}
+\label{subsec:alg-acceptance}
+
+\begin{definition}[Per-burst acceptance rate]
+\label{def:alpha-burst}
+For burst $i$ with $\ell$ steps of which $a_i$ are accepted, the per-burst
+acceptance rate is
+\[
+  \alpha_i = \frac{a_i}{\ell} \in [0,1].
+\]
+The mean per-burst acceptance rate over $n$ bursts is
+$\bar\alpha = \frac{1}{n}\sum_{i=0}^{n-1} \alpha_i$.
+\end{definition}
+
+$\alpha_i$ is recorded in the run audit manifest alongside $\ec$ of the
+burst endpoint and the burst seed $s_i$.
+It serves two diagnostic purposes.
+
+\paragraph{Effective burst length.}
+Only accepted steps produce a new plan; rejected steps stay at the current
+plan.
+The effective number of distinct plans visited per burst is approximately
+$\alpha_i \cdot \ell$.
+For standard \sburst{} with $\bar\alpha \approx 0.75$, a burst of length 20
+visits roughly 15 distinct plans.
+For \sbf{} with $\bar\alpha \approx 0.45$, the same 20-step burst visits
+roughly 9 distinct plans.
+Lower effective burst length directly limits the burst's ability to find
+a substantially better plan than the starting $\pi_{\mathrm{cur}}$.
+
+\paragraph{Anomaly detection.}
+Unusually low $\alpha_i$ for a specific burst (e.g., $\alpha_i < 0.1$)
+may indicate that the starting plan for that burst was in a region of the
+plan space with very few valid neighbouring proposals.
+Such anomalous bursts contribute little to the endpoint distribution and
+should be investigated if they account for a large fraction of the total
+compute budget.
+
+\begin{remark}[Acceptance rate is not a quality metric]
+\label{rem:accept-not-quality}
+Higher $\bar\alpha$ is \emph{not} intrinsically better.
+Standard \sburst{} has high $\bar\alpha$ because it makes no attempt at
+distributional correctness; \sbf{} has lower $\bar\alpha$ because it is
+doing additional computational work (evaluating the MH ratio) to ensure
+that accepted plans are approximately correctly weighted.
+The tradeoff is between exploration speed and distributional fidelity,
+not between ``good'' and ``bad'' acceptance rates.
+\end{remark}

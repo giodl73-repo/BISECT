@@ -1,0 +1,44 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+Short-Burst is a meta-algorithm: it wraps any ergodic Markov chain in a
+burst-and-select loop to drive compactness optimization.
+The chain type is a parameter.
+
+We have implemented two new variants---\sbf{} and \sbms{}---by substituting
+ForestRecom and MergeSplit for the standard \recom{} inner chain.
+The substitution delivers approximate distributional correctness at the
+burst endpoints (from the ForestRecom and MergeSplit MH corrections) while
+preserving the compactness-optimization structure of the Short-Burst wrapper.
+
+The empirical comparison on NC, WI, and TX reveals a clean tradeoff:
+at equal compute budget, SB-Standard achieves the best final edge-cut because
+its uncorrected \recom{} inner chain has higher acceptance rate ($\approx 75\%$)
+and thus visits more distinct plans per burst;
+\sbf{} achieves somewhat higher edge-cut but produces approximately correct
+endpoint distributions, making it the preferred choice for ensemble
+characterisation near the optimum;
+\sbms{} sits between the two variants on both dimensions.
+
+The per-burst acceptance rate diagnostic $\alpha_i$, recorded in the audit
+manifest for all three variants, provides both a reproducibility integrity
+check and an empirical characterisation of the effective burst length.
+It is a lightweight addition to the manifest that costs no extra compute
+and provides meaningful diagnostic information.
+
+\paragraph{Implementation.}
+All three variants are available in \texttt{redist-cli}:
+\begin{verbatim}
+--search short-burst            # G.6: standard ReCom inner chain
+--search short-burst-forest     # G.12: ForestRecom inner chain
+--search short-burst-merge-split # G.12: MergeSplit inner chain
+\end{verbatim}
+
+\paragraph{Composability.}
+The chain-type parameter exposes the composable structure of Short-Burst
+and suggests a general principle: any future chain type that operates on
+the redistricting plan space---subject only to ergodicity and the ability
+to generate forward-RNG and reverse-RNG seeds---can be plugged into the
+burst wrapper with no modification to the burst-selection logic.
+This architectural decision, made in G.6 and extended here, provides a
+stable foundation for future ensemble method development in the G series.

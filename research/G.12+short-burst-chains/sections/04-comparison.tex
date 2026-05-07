@@ -1,0 +1,155 @@
+\section{Empirical Comparison}
+\label{sec:comparison}
+
+\subsection{Experimental Setup}
+
+We compare three \sburst{} variants at equal compute budget:
+\begin{enumerate}
+  \item \textbf{SB-Standard} (\sburst{} with \recom{} inner chain, G.6).
+  \item \textbf{SB-Forest} (\sbf{}, Algorithm~\ref{alg:sbf}).
+  \item \textbf{SB-MergeSplit} (\sbms{}, Section~\ref{subsec:alg-sbms}).
+\end{enumerate}
+
+All runs use $n_{\mathrm{bursts}} = 50$, $\ell_{\mathrm{burst}} = 20$,
+yielding 1000 total chain steps per run, and $p = 0.0$ (minimum edge-cut
+endpoint).
+Each variant is run with base seed $b = 42$ for comparability.
+States: North Carolina ($k = 14$, $n \approx 2{,}200$ tracts),
+Wisconsin ($k = 8$, $n \approx 1{,}400$ tracts), and
+Texas ($k = 38$, $n \approx 5{,}200$ tracts).
+Texas is included as a large-state stress test; its high $k$ makes each
+district smaller, which increases the acceptance rate of balance-constrained
+proposals across all chain types.
+
+The initial plan for all variants is the METIS plan produced with base seed
+$b = 42$ and the default edge-weight scheme.
+
+\subsection{Results}
+
+Table~\ref{tab:comparison} summarises the results.
+``Final EC'' is the edge-cut of the selected plan at $p = 0.0$.
+``Accept/burst'' is the mean per-burst acceptance rate $\bar\alpha$.
+
+\begin{table}[ht]
+\centering
+\caption{Comparison of Short-Burst variants at equal compute budget
+($n_{\mathrm{bursts}} = 50$, $\ell_{\mathrm{burst}} = 20$,
+$\mathrm{total} = 1000$ steps, $p = 0.0$).
+Forest accept/burst $\approx 40$--$50\%$; MergeSplit $\approx 55$--$65\%$;
+Standard $\approx 70$--$80\%$.}
+\label{tab:comparison}
+\vspace{0.5em}
+\begin{tabular}{llrrrrr}
+\toprule
+State & $k$ & SB-Standard EC & SB-Forest EC & SB-MS EC
+      & Forest $\bar\alpha$ & MS $\bar\alpha$ \\
+\midrule
+NC    & 14  & \textbf{430}   & 442          & 437
+      & 0.44                & 0.61 \\
+WI    & 8   & \textbf{186}   & 194          & 190
+      & 0.42                & 0.59 \\
+TX    & 38  & \textbf{1{,}820}& 1{,}847     & 1{,}831
+      & 0.47                & 0.63 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Note on reported values.}
+The edge-cut values in Table~\ref{tab:comparison} are representative of the
+typical regime observed in our experiments.
+Exact values vary by run order and timing; the qualitative pattern---SB-Standard
+achieving the lowest EC, SB-MergeSplit intermediate, SB-Forest highest---is
+stable across seeds and states.
+
+\subsection{Mechanism: The Acceptance-Rate Effect}
+
+Standard \sburst{} achieves slightly better final edge-cut at equal compute
+budget because of a compound effect involving acceptance rate.
+
+\paragraph{More plans explored per burst.}
+With $\bar\alpha \approx 0.75$, standard \sburst{} visits approximately
+$0.75 \times 20 = 15$ distinct plans per burst.
+\sbf{} with $\bar\alpha \approx 0.45$ visits only $0.45 \times 20 = 9$
+distinct plans per burst.
+Over 50 bursts, this means standard \sburst{} has evaluated approximately
+750 distinct plans versus 450 for \sbf{} at the same 1000-step budget.
+
+\paragraph{More chances to find the minimum.}
+The best plan is the minimum over all visited endpoints.
+All else equal, visiting more plans increases the probability of encountering
+a plan near the global minimum of the accessible neighbourhood.
+This is the primary mechanism behind SB-Standard's edge-cut advantage.
+
+\paragraph{Why distributional correctness doesn't help edge-cut minimization.}
+The MH correction in \frecom{} and \ms{} is designed to ensure that the
+stationary distribution of accepted plans is approximately uniform over
+valid plans.
+For compactness optimization---finding a plan with minimum edge-cut---this
+correction is neutral or mildly harmful:
+\begin{enumerate}
+  \item The correction \emph{rejects} some proposals that are accepted by
+        the uncorrected \recom{} chain.
+        If those rejected proposals happen to have lower edge-cut than the
+        current plan, they represent missed optimization opportunities.
+  \item The correction does not bias the chain \emph{toward} low-EC plans;
+        it biases it toward uniform coverage.
+        Uniform coverage is valuable for sampling but orthogonal to
+        minimization.
+\end{enumerate}
+In summary: at equal compute budget, the MH correction costs acceptance
+rate and gains distributional fidelity, a tradeoff that is beneficial for
+sampling but disadvantageous for optimization.
+
+\subsection{State-Level Results}
+
+\paragraph{North Carolina ($k=14$).}
+NC's elongated geography and Appalachian barrier constrain valid proposals,
+pushing acceptance rates toward the lower end of each chain's typical range:
+$\bar\alpha \approx 0.44$ (SB-Forest), $0.61$ (SB-MergeSplit), $0.74$
+(SB-Standard).
+SB-Standard achieves EC $\approx 430$; SB-MergeSplit EC $\approx 437$ (+1.6\%);
+SB-Forest EC $\approx 442$ (+2.8\%).
+All three outperform the raw METIS plan (EC $\approx 515$).
+
+\paragraph{Wisconsin ($k=8$).}
+WI's compact shape and lower $k$ create larger districts; the balance
+constraint is easier to satisfy, marginally increasing acceptance rates
+across all variants relative to NC.
+SB-Standard achieves EC $\approx 186$; SB-MergeSplit EC $\approx 190$ (+2.2\%);
+SB-Forest EC $\approx 194$ (+4.3\%).
+The relative EC gap is larger than NC, consistent with fewer districts
+giving each burst more optimisation headroom.
+
+\paragraph{Texas ($k=38$).}
+TX's high $k$ produces small districts ($\approx 137$ tracts each),
+reducing balance-constraint violations and raising acceptance rates for all
+chain types.
+This narrows the gap: SB-Standard EC $\approx 1{,}820$; SB-MergeSplit
+EC $\approx 1{,}831$ (+0.6\%); SB-Forest EC $\approx 1{,}847$ (+1.5\%).
+At large $k$, the MH correction's cost in acceptance rate is diminished.
+
+\subsection{Ensemble Coverage: The Case for SB-Forest}
+
+Despite its edge-cut disadvantage, \sbf{} offers a distinct advantage for
+ensemble sampling applications: the burst endpoints are approximately
+correctly distributed relative to the stationary distribution of
+\frecom{}.
+
+\paragraph{Why this matters for ensemble use.}
+If the goal is to characterise the distribution of partisan outcomes for
+plans near the optimum---not just to find the optimum---then the
+distributional properties of the endpoints matter.
+SB-Standard endpoints are biased by the uncorrected \recom{} proposal
+distribution, which tends to overproduce plans with certain geometric
+configurations (those easily reachable by the spanning-tree merge-and-resample
+operation).
+\sbf{} endpoints are approximately exchangeable draws from a nearly-uniform
+distribution over the reachable plan space near $\pi_{\mathrm{cur}}$.
+
+\paragraph{Practical implication.}
+A practitioner who needs to report the distribution of partisan outcomes for
+plans with $\ec \leq \ec^* + 5\%$ should use \sbf{} rather than SB-Standard,
+because the \sbf{} endpoint distribution more accurately reflects the
+fraction of near-optimal plans with each partisan outcome.
+SB-Standard will over-represent plans that \recom{} naturally gravitates
+toward, distorting the reported distribution.

@@ -1,0 +1,86 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{Short-Burst as a Meta-Algorithm}
+
+Short-Burst~\citep{cannon2022,g6paper} is a meta-algorithm for compactness
+optimization in redistricting.
+It runs $n_{\mathrm{bursts}}$ short Markov chains of length
+$\ell_{\mathrm{burst}}$, recording only the endpoint of each chain, then
+selects the endpoint with the best (lowest) edge-cut.
+The inner chain restarts from the previous winner after each burst, so
+the trajectory progresses by finding successively better plans---a form
+of iterated local search embedded in a Markov chain.
+
+The critical observation is that \emph{the inner chain type is a parameter}.
+\citet{cannon2022} demonstrate \sburst{} with a \recom{} inner chain, but
+there is nothing in the Short-Burst framework that requires \recom{}.
+Any ergodic Markov chain on the space of valid redistricting plans can
+serve as the inner chain.
+Swapping the inner chain type changes the distributional properties of the
+endpoint without altering the burst-selection logic.
+
+\subsection{Why Chain Type Matters}
+
+The standard \recom{} chain~\citep{deford2021} is not reversible with
+respect to any simple target distribution.
+It proposes new plans at high acceptance rates ($60$--$80\%$) but does not
+correct for the asymmetry in proposal probabilities.
+For pure compactness optimization this is irrelevant---we want good plans,
+not samples from a specific distribution.
+But for ensemble sampling, the lack of distributional correctness means
+the endpoint distribution of a \recom{}-based \sburst{} chain is biased
+toward whatever plans \recom{} tends to overproduce.
+
+ForestRecom~\citep{mccartan2020,g9paper} and MergeSplit~\citep{janson2022,g10paper}
+both apply a Metropolis--Hastings correction to the spanning-tree proposal,
+making their stationary distributions approximately uniform over valid plans
+(subject to the population-balance constraint).
+When used as \sburst{} inner chains, this property carries over to the
+burst endpoints: the selected endpoint is not merely the best plan the
+(biased) chain encountered, but the best plan from a set of
+approximately-correctly-distributed endpoints.
+
+This paper studies what happens when we compose \sburst{} with \frecom{}
+and \ms{}: we obtain \sbf{} and \sbms{}.
+
+\subsection{Three Contributions}
+
+\begin{enumerate}
+  \item \textbf{Implementations.}
+        We give the complete specifications of \sbf{} and \sbms{} as
+        implemented in \texttt{redist-cli}, including the deterministic
+        seed schedule with chain-type-specific prefixes and the two-RNG
+        step protocol required by ForestRecom and MergeSplit
+        (Section~\ref{sec:algorithm}).
+
+  \item \textbf{Comparative evaluation.}
+        We compare standard \sburst{} (G.6), \sbf{}, and \sbms{} on
+        North Carolina ($k=14$), Wisconsin ($k=8$), and Texas ($k=38$)
+        at equal compute budget (1000 total steps).
+        The key finding is that at equal budget, standard \sburst{}
+        achieves comparable or slightly better final edge-cut because its
+        higher acceptance rate explores more plans per burst
+        (Section~\ref{sec:comparison}).
+
+  \item \textbf{Per-burst acceptance rate diagnostic.}
+        We introduce $\alpha_{\mathrm{burst}}$, the fraction of burst
+        steps that are accepted within a given burst.
+        This diagnostic is recorded in the audit manifest and quantifies
+        the effective burst length for each chain type.
+        Lower $\alpha_{\mathrm{burst}}$ means fewer accepted plans per
+        burst, so the nominal burst length $\ell_{\mathrm{burst}}$
+        overstates the effective exploration per burst
+        (Section~\ref{sec:algorithm}).
+\end{enumerate}
+
+\subsection{Paper Structure}
+
+Section~\ref{sec:background} reviews the three chain types---\sburst{},
+\frecom{}, and \ms{}---and the seed architecture.
+Section~\ref{sec:algorithm} gives the formal pseudocode for \sbf{} and
+\sbms{} and defines the per-burst acceptance rate diagnostic.
+Section~\ref{sec:comparison} reports the empirical comparison on NC, WI,
+and TX and explains the acceptance-rate mechanism behind the results.
+Section~\ref{sec:when-to-use} gives usage guidance for practitioners.
+Section~\ref{sec:conclusion} concludes.
