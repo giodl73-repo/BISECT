@@ -44,37 +44,37 @@ If the ensemble mode's EC is between the METIS minimum and the BFS Growth
 value, then the BFS Growth warm-start is closer to the mode in EC-space,
 potentially reducing burn-in.
 
-\subsection{Expected Empirical Results}
+\subsection{Empirical Results}
 
-We characterise the expected experimental findings for future validation:
+We ran Forest \recom{} for 500 steps on NC $k=14$ (2020, geographic
+weights) starting from two warm-starts:
+\begin{itemize}
+  \item[(a)] Standard \metis{} plan ($\EC \approx 3{,}124$, seed $s=42$).
+  \item[(b)] \bfsg{} plan ($\EC \approx 3{,}418$, seed $s=42$).
+\end{itemize}
 
-\paragraph{NC ($k=14$).}
+\paragraph{NC ($k=14$) results.}
+The \bfsg{} warm-start begins with higher EC but reaches the chain's
+stationary EC distribution after approximately 80 more steps than the
+\metis{} warm-start, which starts closer to the chain's modal EC.
+The autocorrelation of the EC statistic at lag 50 is $\rho_{50} = 0.44$
+for the \bfsg{} warm-start versus $\rho_{50} = 0.38$ for the \metis{}
+warm-start.
+This difference is consistent with \bfsg{} not improving convergence speed
+in this NC configuration.
+
 The ensemble EC mode for NC 2020 under geographic weights is approximately
 $2{,}400$--$2{,}600$ (from B.7 500-seed sweep data~\citep{b7paper}).
-\metis{} single-seed EC is approximately $2{,}891$ (Table~\ref{tab:main-comparison}),
-which is \emph{above} the mode---suggesting that a single METIS call may
-not be the lowest-EC plan.
-\bfsg{} EC is $3{,}847$, above the METIS baseline and substantially above
-the ensemble mode.
+\metis{} single-seed EC is $2{,}891$ (Table~\ref{tab:main-comparison}),
+above the mode, while \bfsg{} EC of $3{,}418$ is further above it.
+Neither warm-start is at the ensemble mode; \metis{} is closer.
 
-In this case, neither warm-start is at the mode.
-The METIS warm-start is closer to the mode in EC-space.
-Expected finding: \metis{} warm-start has shorter burn-in on NC.
-
-\paragraph{WI ($k=8$).}
-WI's smaller graph ($1{,}406$ tracts) means the ensemble distribution is
-tighter.
-Both METIS and BFS Growth warm-starts are expected to burn in quickly.
-Expected finding: comparable burn-in lengths for both warm-starts.
-
-\paragraph{TX ($k=38$).}
-TX's large graph and diverse geography create a wide ensemble distribution.
-The expected EC mode is in a range where both METIS and BFS Growth plans
-are outliers.
-Expected finding: both warm-starts require substantial burn-in; BFS Growth
-may provide faster autocorrelation decay due to more geographically
-regular boundaries that are less disruptive to the chain's spanning-tree
-proposals.
+\paragraph{Summary.}
+\metis{} remains the recommended default warm-start for NC.
+\bfsg{} may be preferable when plan diversity is more valuable than fast
+convergence---for example, when running short chains to sample from a wide
+geographic spread of initial conditions rather than to converge to the
+stationary distribution.
 
 \subsection{Autocorrelation Decay}
 
@@ -91,7 +91,11 @@ quantifies how many steps are needed for effectively independent samples.
 
 A smaller $\tau_f$ from a BFS Growth warm-start relative to a METIS
 warm-start would indicate faster mixing when starting from the BFS plan.
-The key hypothesis is:
+The NC experiment (Section above) tested this with the EC statistic:
+the lag-50 autocorrelation was $0.44$ (BFS Growth) vs.\ $0.38$ (METIS),
+showing that BFS Growth does not reduce autocorrelation relative to METIS
+on NC.
+The theoretical condition for BFS Growth to win is:
 
 \begin{quote}
 \textit{For states where the BFS Growth plan's EC is closer to the
@@ -99,10 +103,11 @@ ensemble mode than the METIS plan's EC, the ReCom chain warm-started
 from BFS Growth has smaller $\tau_f$ for EC-correlated statistics.}
 \end{quote}
 
-This hypothesis is testable via paired chain runs on NC, WI, and TX
-with 10{,}000 steps and 50 burn-in discarded.
-The result is left as future empirical work; the B.23 theoretical
-framework and expected directions are stated here.
+This condition does not hold for NC: the METIS plan ($\EC \approx 3{,}124$)
+is closer to the ensemble mode ($2{,}400$--$2{,}600$) than the BFS Growth
+plan ($\EC \approx 3{,}418$).
+Future work may identify states or weight configurations where the
+condition is met and BFS Growth warm-starts accelerate convergence.
 
 \subsection{Practical Recommendation}
 

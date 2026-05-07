@@ -47,15 +47,17 @@ coarsening occasionally introduces.
 Section~\ref{sec:warmstart} analyzes whether BFS-grown plans accelerate
 MCMC convergence.
 
-\paragraph{Role 2: Compactness baseline (geometric floor).}
-Algorithmic comparisons require a lower bound: what compactness do you
-get for free, without any optimisation?
-\bfsg{} answers this question.
-Its Polsby-Popper scores establish the \emph{geometric floor}---the
-compactness achievable by pure proximity-based packing.
-Every algorithm that outperforms \bfsg{} on compactness earns its
-improvement through deliberate optimisation; every algorithm that
-underperforms it has failed to extract even the baseline geographic signal.
+\paragraph{Role 2: Compactness baseline (geometric floor for EC).}
+Algorithmic comparisons require a reference point: what partition quality
+do you get for free, without any optimisation objective?
+\bfsg{} answers this question for edge-cut quality.
+Its edge-cut scores establish the \emph{EC geometric floor}---the worst-case
+boundary structure produced by pure proximity-based packing.
+For Polsby-Popper compactness the picture is different: \bfsg{} achieves
+higher PP than \metis{} because geographic proximity packing naturally
+produces rounder districts, while METIS's KL refinement optimises EC at
+some PP cost.
+The phrase ``geometric floor'' applies to EC, not PP.
 
 \paragraph{Role 3: Legal argument (``simplest geographic partition'').}
 In redistricting litigation, plaintiffs and defendants invoke compactness
@@ -80,8 +82,9 @@ immediately refined by KL.
 This paper elevates METIS's internal BFS step to a standalone algorithm.
 We ask: how good is BFS partitioning \emph{on its own}, without KL
 refinement?
-The answer---that it achieves lower compactness than METIS or CVD but
-faster than both on a per-node basis---defines its operational envelope.
+The answer---that it achieves higher EC (worse boundary quality) than
+METIS but higher PP (better Polsby-Popper) than METIS, while matching
+METIS in runtime---defines its operational envelope.
 
 \subsection{Main Results}
 
@@ -111,10 +114,14 @@ substantially faster than SA (B.19) or CVD (B.22).
 
 \paragraph{Empirical comparison.}
 On NC ($k=14$), WI ($k=8$), and TX ($k=38$), \bfsg{} achieves
-mean Polsby-Popper scores 8--15\% below baseline \metis{}
-(Section~\ref{sec:comparison}).
-This establishes the geometric floor: METIS's KL refinement alone adds
-8--15\% compactness improvement over the bare BFS baseline.
+mean Polsby-Popper scores $5$--$12\%$ \emph{above} \metis{}
+(Section~\ref{sec:comparison}), while producing $8$--$15\%$ higher edge
+cut.
+The geometric floor claim holds for EC: \bfsg{} produces the highest EC
+of the three algorithms compared, confirming that BFS growth without
+boundary refinement leaves substantial edge-cut quality on the table.
+For PP-based compactness, \bfsg{} is not a lower bound; it is between
+\metis{} and \cvd{}.
 
 \paragraph{Warm-start analysis.}
 Section~\ref{sec:warmstart} shows that \recom{} chains warm-started from

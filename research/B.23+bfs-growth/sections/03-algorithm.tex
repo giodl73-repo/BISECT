@@ -25,12 +25,14 @@ where $\delta = 0.005$ is the $\pm 0.5\%$ federal tolerance.
 \subsection{Seed Derivation}
 
 All randomness in \bfsg{} enters through seed selection.
-The seed is derived deterministically from the global base seed:
+The algorithm uses \emph{two} distinct seed derivation functions, serving
+different roles in the bisection pipeline:
 
-\begin{definition}[BFS Growth Seed]
+\begin{definition}[BFS Growth Seed --- Per-Run]
 \label{def:bfs-seed}
 Let $\mathtt{base\_seed}$ be the unsigned 64-bit integer global seed.
-The \emph{BFS Growth seed} is
+The \emph{BFS Growth seed} (used for the initial $\mathrm{seed}_0$
+population-weighted sample) is
 \[
   s_{\mathrm{bfs}} = \mathrm{first8}\bigl(
     \mathrm{SHA\text{-}256}(
@@ -44,13 +46,57 @@ little-endian unsigned 64-bit integer.
 The derived PRNG is $\mathrm{SmallRng::seed\_from\_u64}(s_{\mathrm{bfs}})$.
 \end{definition}
 
-The domain-separation prefix \texttt{"BFS\_SEED\_"} embeds algorithm
-identity in the seed derivation.
-A test asserts that the prefix constant in source equals exactly
-\texttt{"BFS\_SEED\_"} and that $s_{\mathrm{bfs}}(0)$ equals a
-hard-coded expected value, preventing silent seed-compatibility drift.
-Same $\mathtt{base\_seed} \Rightarrow$ identical seed placement
-$\Rightarrow$ identical BFS assignment $\Rightarrow$ identical final plan.
+\begin{definition}[BFS Node Seed --- Per-Bisection-Node]
+\label{def:bfs-node-seed}
+Let $\mathtt{base\_seed}$ be the global seed and $\mathtt{path} \in
+\Sigma^*$ be the bisection tree node path (e.g., \texttt{"L"}, \texttt{"LR"},
+\texttt{"RRL"}).
+The \emph{BFS node seed} (used for $k$-farthest seed selection at each
+bisection node) is
+\[
+  s_{\mathrm{node}}
+  = \mathrm{first8}\bigl(
+    \mathrm{SHA\text{-}256}(
+      \texttt{"BFS\_NODE\_"} \;\|\; \mathtt{path} \;\|\;
+      \texttt{"\_"} \;\|\; \mathrm{le8}(\mathtt{base\_seed})
+    )
+  \bigr).
+\]
+\end{definition}
+
+\begin{remark}
+The per-node seed $s_{\mathrm{node}}$ incorporates the bisection tree node
+path, ensuring that different nodes at the same depth receive independent
+seed placements.
+This prevents correlated $k$-farthest selections across sibling nodes---a
+subtle but important requirement for the bisection ensemble to be unbiased.
+Without path-dependent seeds, sibling nodes at depth $d$ would all begin
+their BFS farthest-seed computation from the same population-weighted
+starting point, creating systematic spatial correlation across the
+simultaneously-grown subtrees.
+Domain-separation prefixes (\texttt{"BFS\_SEED\_"} vs.\ \texttt{"BFS\_NODE\_"})
+ensure that the two derivation families cannot collide.
+\end{remark}
+
+The two derivation functions in source:
+\begin{verbatim}
+// Per-run seed (initial seed_0 population-weighted sample):
+bfs_growth_seed(base_seed)
+  = SHA-256("BFS_SEED_" || base_seed:u64le) -> u64le
+
+// Per-node seed (k-farthest seed selection at each bisection node):
+derive_bfs_seed(base_seed, node_path)
+  = SHA-256("BFS_NODE_" || node_path.as_bytes()
+                        || "_" || base_seed:u64le) -> u64le
+\end{verbatim}
+A test asserts that the prefix constants in source equal exactly
+\texttt{"BFS\_SEED\_"} and \texttt{"BFS\_NODE\_"} respectively, and
+that $s_{\mathrm{bfs}}(0)$ equals a hard-coded expected value, preventing
+silent seed-compatibility drift.
+Same $\mathtt{base\_seed}$ and same $\mathtt{path}$
+$\Rightarrow$ identical seed placement
+$\Rightarrow$ identical BFS assignment
+$\Rightarrow$ identical final plan.
 
 \subsection{Seed Selection: k-Farthest via BFS}
 
@@ -238,11 +284,11 @@ priority-queue operation with a single population accumulator per district.
 Algorithm~\ref{alg:bfs} gives the complete \bfsg{} bisection procedure.
 
 \begin{algorithm}[t]
-\caption{\bfsg{}-\textsc{Bisect}($G_v$, $\mathtt{base\_seed}$, $\mathtt{balance\_post\_iters}$)}
+\caption{\bfsg{}-\textsc{Bisect}($G_v$, $\mathtt{base\_seed}$, $\mathtt{node\_path}$, $\mathtt{balance\_post\_iters}$)}
 \label{alg:bfs}
 \begin{algorithmic}[1]
 \State $n \gets |V_v|$; \quad $P \gets \sum_{i \in V_v} p_i$ \Comment{total subgraph population}
-\State $s \gets \mathrm{BFS\text{-}Seed}(\mathtt{base\_seed})$ \Comment{Definition~\ref{def:bfs-seed}}
+\State $s \gets \mathrm{DeriveBfsSeed}(\mathtt{base\_seed},\; \mathtt{node\_path})$ \Comment{Definition~\ref{def:bfs-node-seed}}
 \State $\mathrm{rng} \gets \mathrm{SmallRng::seed\_from\_u64}(s)$
 \State $\mathrm{seed}_0 \gets \mathrm{WeightedSample}(V_v,\; \{p_i\},\; \mathrm{rng})$
        \Comment{population-weighted}

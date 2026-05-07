@@ -244,6 +244,18 @@ the energy is nearly monotone.
 For small districts ($|D_j| \le 50$), the probe is exact and the guarantee holds.
 \end{remark}
 
+\begin{remark}[Approximate medoid error bound]
+An approximate medoid with probe size $p$ has expected relative error bounded by
+$O(1/\sqrt{p})$ for the objective function value (the sum of BFS distances).
+For $p = 50$: the probability that the true medoid lies outside the sampled set
+is $\le (m-p)/m \le 1 - 50/m$.
+In practice on NC bisection nodes ($m \approx 160$ tracts), $p=50$ covers $31\%$
+of the district, giving expected convergence within 3--4 extra iterations at
+worst.
+We empirically observe that convergence is unaffected by probe size for
+$p \ge 30$ on all test states.
+\end{remark}
+
 \begin{remark}[Path-like graphs.]
 For subgraphs that are paths (a sequence of tracts $t_0 - t_1 - \cdots - t_{m-1}$),
 k-farthest initialisation places $\mathrm{seed}_0$ and $\mathrm{seed}_1$

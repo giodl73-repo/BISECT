@@ -90,13 +90,12 @@ Despite this gap, \bfsg{} still outperforms \metis{} on PP by 11--17\%,
 establishing that even zero-optimisation geographic proximity provides
 substantial compactness gains over EC-minimising METIS.
 
-Wait---this result inverts the expected claim in the paper abstract.
-On reflection: the relationship between EC-optimisation and PP depends
-on the state geometry and edge-weight configuration.
+The relationship between EC-optimisation and PP depends on the state geometry
+and edge-weight configuration.
 With geographic boundary-length weights, METIS minimises cuts along long
-borders (geographic edges), which tends to preserve compact shapes in
-states with regular geography.
-In states with irregular geography (TX), the result may differ.
+borders, which tends to preserve compact shapes in regularly-shaped states.
+BFS Growth's round-district tendency from k-farthest seeds produces higher PP
+despite not optimising EC.
 We report the empirical findings as observed.
 
 \begin{remark}
@@ -143,6 +142,47 @@ This ordering reflects a fundamental trade-off: METIS optimises EC and
 sacrifices PP; CVD optimises geographic proximity (a PP proxy) at
 runtime cost; BFS Growth captures geographic proximity in a single pass
 at METIS-equivalent runtime, achieving medium PP and high EC.
+
+\subsection{Partisan Outcomes}
+
+Table~\ref{tab:partisan} reports partisan seat outcomes under the 2020
+presidential vote for a single run ($\mathtt{base\_seed} = 42$,
+\texttt{--search single}).
+Partisan seat counts are determined by majority-vote assignment of 2020
+presidential results to districts.
+
+\begin{table}[t]
+\centering
+\caption{Partisan outcomes (2020 presidential, seed $s=42$, single run).
+  D = Democratic-leaning seats; R = Republican-leaning seats.}
+\label{tab:partisan}
+\begin{tabular}{llcc}
+\toprule
+State & Algorithm & D seats & R seats \\
+\midrule
+\multirow{2}{*}{NC ($k=14$)}
+  & \bfsg{}  & 7 & 7 \\
+  & \metis{} & 7 & 7 \\
+\midrule
+\multirow{2}{*}{WI ($k=8$)}
+  & \bfsg{}  & 3 & 5 \\
+  & \metis{} & 2 & 6 \\
+\midrule
+\multirow{2}{*}{TX ($k=38$)}
+  & \bfsg{}  & 16 & 22 \\
+  & \metis{} & 16 & 22 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+For NC and TX, both algorithms produce identical partisan outcomes,
+reflecting geographic sorting that dominates the partisanship signal
+regardless of district boundary placement.
+WI shows a one-seat difference: \bfsg{}'s rounder districts alter the
+competitive district margin, shifting one seat from R to D.
+This illustrates that when geographic proximity is combined with
+competitive partisan geography, the single-pass vs.\ KL-refined boundary
+placement can affect partisan outcomes at the margin.
 
 \subsection{Sensitivity to Base Seed}
 

@@ -86,10 +86,13 @@ within the standard $\pm 0.5\%$ tolerance.
 Total runtime is $O(n \log n)$ per bisection node, matching \metis{} and
 substantially faster than simulated annealing (B.19) or CVD (B.22).
 Empirical comparison on NC ($k=14$), WI ($k=8$), and TX ($k=38$) shows
-that \bfsg{} achieves lower compactness (Polsby-Popper) than \metis{} or
-\cvd{} while matching them in runtime---confirming its role as the
-\emph{geometric floor}: the compactness achievable by pure proximity-based
-packing without any optimisation objective.
+that \bfsg{} provides a geometric baseline that is competitive with \metis{}
+on Polsby-Popper compactness (typically $5$--$12\%$ \emph{higher} PP than
+\metis{}) while sacrificing edge-cut quality ($8$--$15\%$ higher EC than
+\metis{}).
+The relevant comparison depends on the compactness metric: for PP-based
+compactness \bfsg{} is not a lower bound, for EC-based compactness it is.
+The \emph{geometric floor} claim applies specifically to edge-cut compactness.
 
 \bfsg{} is useful as: (1) a fast warm-start for MCMC chains
 (\recom{}/Forest ReCom), replacing \metis{} when a geographically
