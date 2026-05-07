@@ -5,6 +5,7 @@
 
 use rand::SeedableRng;
 use rand::rngs::SmallRng;
+use rayon::prelude::*;
 use thiserror::Error;
 
 use crate::partial_plan::PartialPlan;
@@ -92,24 +93,43 @@ pub fn run_smc(
 
     // Main loop: propose districts 1..=(k-1), then assign_remaining for district k
     for stage in 1..k {
-        // ── Proposal step ──────────────────────────────────────────────────────
-        for i in 0..n_p {
-            if log_weights[i] == f64::NEG_INFINITY {
-                continue; // particle already killed
-            }
-            let seed = particle_seed(config.base_seed, stage as u32, i as u32);
-            let mut rng = SmallRng::seed_from_u64(seed);
+        // ── Proposal step (parallel across particles) ──────────────────────────
+        // Each particle at this stage is independent: its proposal uses a seed
+        // derived from (base_seed, stage, i), so there is no shared mutable state.
+        // We collect results into a Vec (deterministic order via enumerate) before
+        // applying them sequentially to avoid non-determinism in the weight update.
+        //
+        // Note: we do NOT use par_iter() on the C METIS library (the proposal uses
+        // redist-ensemble's pure-Rust Wilson's algorithm, which is thread-safe).
+        let proposal_results: Vec<(Option<PartialPlan>, f64)> = (0..n_p)
+            .into_par_iter()
+            .map(|i| {
+                if log_weights[i] == f64::NEG_INFINITY {
+                    return (None, f64::NEG_INFINITY); // already killed
+                }
+                let seed = particle_seed(config.base_seed, stage as u32, i as u32);
+                let mut rng = SmallRng::seed_from_u64(seed);
+                match propose_district(
+                    &particles[i], adjacency, vertex_weights,
+                    k, stage, config.pop_tolerance, &mut rng, i,
+                ) {
+                    Ok((new_partial, log_w)) => (Some(new_partial), log_w),
+                    Err(ProposeError::NoValidCut { .. } | ProposeError::EmptySubgraph { .. }) => {
+                        (None, f64::NEG_INFINITY)
+                    }
+                }
+            })
+            .collect();
 
-            match propose_district(
-                &particles[i], adjacency, vertex_weights,
-                k, stage, config.pop_tolerance, &mut rng, i,
-            ) {
-                Ok((new_partial, log_w)) => {
+        // Apply results sequentially (deterministic order)
+        for (i, (new_partial_opt, log_w)) in proposal_results.into_iter().enumerate() {
+            match new_partial_opt {
+                Some(new_partial) => {
                     particles[i] = new_partial;
                     log_weights[i] += log_w;
                 }
-                Err(ProposeError::NoValidCut { .. } | ProposeError::EmptySubgraph { .. }) => {
-                    log_weights[i] = f64::NEG_INFINITY; // kill particle
+                None => {
+                    log_weights[i] = f64::NEG_INFINITY;
                 }
             }
         }
