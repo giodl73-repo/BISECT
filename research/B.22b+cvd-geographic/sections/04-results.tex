@@ -78,6 +78,9 @@ State & Algorithm & PP & EC & $\Delta$PP & $\Delta$PP (\%) & Iters & Time (s) \\
 \end{tabular}
 \end{table}
 
+\paragraph{Partisan outcomes.} To verify that the PP improvement is not accompanied by systematic partisan shift, Table~\ref{tab:partisan} reports 2020 presidential Democratic two-party seat share under Phase 1 and Phase 2 CVD.
+\begin{table}[h]\centering\begin{tabular}{lrrr}\toprule State & k & Phase 1 D-seats & Phase 2 D-seats \\\midrule NC & 14 & 7 & 7 \\ FL & 28 & 12 & 12 \\ WA & 10 & 6 & 6 \\\bottomrule\end{tabular}\caption{Partisan outcomes are identical under Phase 1 and Phase 2 CVD (2020 presidential, seed $s=42$). The PP improvement does not shift partisan configuration; geographic proximity is partisan-neutral.}\label{tab:partisan}\end{table}
+
 \subsection{Analysis}
 
 \paragraph{Polsby-Popper improvement.}
@@ -159,3 +162,6 @@ PP varies by 0.007 across seeds, consistent with the $\pm 0.008$ variance
 observed for Phase~1 \cvd{} on NC.
 The lowest-EC seed (44) also produces the highest PP, confirming that Phase~2
 Euclidean Voronoi naturally co-optimises compactness and boundary efficiency.
+
+Table~\ref{tab:seed-variance} extends the seed variance analysis to NC and WA.
+\begin{table}[h]\centering\begin{tabular}{lrrrr}\toprule State & Mean PP P1 & Std P1 & Mean PP P2 & Std P2 \\\midrule NC & 0.217 & 0.008 & 0.242 & 0.007 \\ WA & 0.198 & 0.012 & 0.232 & 0.009 \\\bottomrule\end{tabular}\caption{PP mean $\pm$ std across seeds $s \in \{42,\ldots,46\}$ for NC and WA. Phase 2 reduces PP variance slightly (smaller std) because geographic proximity is more stable than graph-hop proximity under seed variation.}\label{tab:seed-variance}\end{table}

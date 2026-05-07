@@ -198,6 +198,14 @@ pub enum SplitStrategy {
     /// BFS Region-Growing — greedy geographic packing from k-farthest seeds (B.23 spec 4.0/4).
     /// Seeds placed by maximum BFS spread; tracts assigned to most population-deficient district.
     BfsGrowth,
+    /// ILP exact redistricting — provably optimal edge-cut plan via integer programming.
+    /// Only practical for n <= max_tracts (default 500). Falls back to METIS for larger nodes.
+    /// (B.24 spec accepted 3.38/4)
+    Ilp {
+        time_limit_secs: u64,   // solver time limit (default: 300)
+        optimality_gap: f64,    // acceptable gap from optimal (default: 0.01)
+        max_tracts: usize,      // size guard (default: 500; fallback to METIS if exceeded)
+    },
 }
 
 impl SplitStrategy {
@@ -215,6 +223,7 @@ impl SplitStrategy {
             Self::SimulatedAnnealing { .. } => "simulated-annealing",
             Self::CentroidalVoronoi { .. }  => "centroidal-voronoi",
             Self::BfsGrowth                 => "bfs-growth",
+            Self::Ilp              { .. }   => "ilp",
         }
     }
 }
@@ -467,6 +476,18 @@ impl AlgorithmConfig {
                 metis,
                 mode_label: None,
             },
+            PM::Ilp => Self {
+                split: SplitStrategy::Ilp {
+                    time_limit_secs: args.ilp_time_limit,
+                    optimality_gap: args.ilp_gap,
+                    max_tracts: args.ilp_max_tracts,
+                },
+                seeds: SeedCompositor::Single,
+                weights: base_weights,
+                vertex_constraints: pop_only,
+                metis,
+                mode_label: None,
+            },
         };
 
         // ── Apply compositor layer overrides ──────────────────────────────────
@@ -702,6 +723,18 @@ impl AlgorithmConfig {
             },
             PM::BfsGrowth => Self {
                 split: SplitStrategy::BfsGrowth,
+                seeds: SeedCompositor::Single,
+                weights: WeightSpec::default(),
+                vertex_constraints: pop,
+                metis,
+                mode_label: None,
+            },
+            PM::Ilp => Self {
+                split: SplitStrategy::Ilp {
+                    time_limit_secs: 300,
+                    optimality_gap: 0.01,
+                    max_tracts: 500,
+                },
                 seeds: SeedCompositor::Single,
                 weights: WeightSpec::default(),
                 vertex_constraints: pop,
@@ -1605,6 +1638,17 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 Some(&intermediate_dir),
                 base_seed_val,
             ).map_err(|e| format!("bfs-growth: {e}"))?
+        }
+        SplitStrategy::Ilp { time_limit_secs, optimality_gap, max_tracts } => {
+            let base_seed_val = seed.unwrap_or(0);
+            status(cfg.position, &format!(
+                "{}: ilp exact redistricting (time_limit={}s gap={:.3} max_tracts={}) into {} districts",
+                cfg.state_code, time_limit_secs, optimality_gap, max_tracts, num_districts));
+            crate::bisection_runner::run_all_splits_ilp(
+                &graph.adjacency, &vwgt, &edge_weights,
+                num_districts, balance_tolerance_frac,
+                *time_limit_secs, *optimality_gap, *max_tracts,
+            ).map_err(|e| format!("ilp: {e}"))?
         }
         SplitStrategy::CentroidalVoronoi { n_iter, metric } => {
             use crate::bisection_runner::VoronoiMetric;

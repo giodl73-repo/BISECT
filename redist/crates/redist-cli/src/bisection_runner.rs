@@ -3386,6 +3386,172 @@ pub fn run_all_splits_bfs(
     Ok(assignments)
 }
 
+// ── ILP Exact Redistricting (B.24) ────────────────────────────────────────────
+
+/// Split a subgraph into two balanced parts using ILP (exact redistricting).
+///
+/// Phase 1: build the ILP formulation and call `solve` with `FormulationOnly`.
+/// Since `FormulationOnly` returns `plan: None`, fall back to METIS (same as
+/// the standard `split_subgraph` path with ncon=1).
+///
+/// When `tract_indices.len() > max_tracts`, skips the ILP entirely and falls
+/// back to METIS directly (size guard).
+pub fn split_subgraph_ilp(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    tract_indices: &HashSet<usize>,
+    balance_tolerance: f64,
+    time_limit_secs: u64,
+    optimality_gap: f64,
+    max_tracts: usize,
+) -> Result<(HashSet<usize>, HashSet<usize>), String> {
+    // Size guard: fall back to METIS when the subgraph is too large.
+    if tract_indices.len() > max_tracts {
+        eprintln!(
+            "WARNING: ILP solver skipped for node ({} tracts > {} limit). Falling back to METIS.",
+            tract_indices.len(),
+            max_tracts,
+        );
+        let empty_ew: HashMap<(usize, usize), f64> = HashMap::new();
+        return split_subgraph(
+            adjacency, vertex_weights, 1, &empty_ew,
+            tract_indices, balance_tolerance, 10, None, None, None,
+        );
+    }
+
+    // Build local index mapping: local -> global (sorted for determinism).
+    let mut sorted: Vec<usize> = tract_indices.iter().copied().collect();
+    sorted.sort_unstable();
+
+    // Build local adjacency (local indices only).
+    let local_adj: Vec<Vec<usize>> = sorted.iter().map(|&g| {
+        adjacency[g].iter()
+            .filter(|&&nb| tract_indices.contains(&nb))
+            .map(|&nb| {
+                sorted.partition_point(|&x| x < nb)
+            })
+            .collect()
+    }).collect();
+
+    // Build local population array (one value per local node).
+    let local_pop: Vec<i64> = sorted.iter()
+        .map(|&g| vertex_weights[g].max(1))
+        .collect();
+
+    // Phase 1: build formulation and solve (FormulationOnly -> plan: None).
+    let formulation = redist_ilp::build_formulation(&local_adj, &local_pop, 2, balance_tolerance);
+    let result = redist_ilp::solve(
+        &formulation,
+        &local_adj,
+        &local_pop,
+        2,
+        balance_tolerance,
+        redist_ilp::IlpSolver::FormulationOnly,
+        optimality_gap,
+    );
+
+    if result.plan.is_some() {
+        // Phase 2 (future): use the ILP plan directly.
+        // Convert local district assignments -> global left/right sets.
+        let plan = result.plan.unwrap();
+        let mut left = HashSet::new();
+        let mut right = HashSet::new();
+        for (local_idx, district) in plan {
+            let global = sorted[local_idx];
+            if district == 0 { left.insert(global); } else { right.insert(global); }
+        }
+        Ok((left, right))
+    } else {
+        // Phase 1: FormulationOnly returns plan: None — fall back to METIS.
+        eprintln!(
+            "ILP Phase 1: FormulationOnly (no solver) — falling back to METIS \
+             (vars={}, constraints={}, time_limit={}s gap={:.3})",
+            formulation.n_variables(),
+            formulation.n_constraints,
+            time_limit_secs,
+            optimality_gap,
+        );
+        let empty_ew: HashMap<(usize, usize), f64> = HashMap::new();
+        split_subgraph(
+            adjacency, vertex_weights, 1, &empty_ew,
+            tract_indices, balance_tolerance, 10, None, None, None,
+        )
+    }
+}
+
+/// Run the full bisection tree using ILP at each node.
+///
+/// Structurally identical to `run_all_splits_sa` / `run_all_splits_bfs` but
+/// calls `split_subgraph_ilp` at each bisection node.
+/// Phase 1: ILP is FormulationOnly so each node falls back to METIS.
+pub fn run_all_splits_ilp(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    balance_tolerance: f64,
+    time_limit_secs: u64,
+    optimality_gap: f64,
+    max_tracts: usize,
+) -> Result<HashMap<usize, usize>, String> {
+    let n = adjacency.len();
+
+    if num_districts == 1 {
+        return Ok((0..n).map(|i| (i, 1)).collect());
+    }
+
+    let tree = BisectionTree::from_k(num_districts);
+    let mut node_tracts: HashMap<String, HashSet<usize>> = HashMap::new();
+    node_tracts.insert(String::new(), (0..n).collect());
+
+    for depth in 0..tree.max_depth {
+        let nodes_at_depth: Vec<_> = tree.nodes_at_depth(depth).into_iter().cloned().collect();
+
+        let nodes_with_tracts: Vec<(redist_core::BisectionNode, HashSet<usize>)> =
+            nodes_at_depth.into_iter()
+                .filter_map(|node| {
+                    node_tracts.remove(&node.path).map(|tracts| (node, tracts))
+                })
+                .collect();
+
+        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> =
+            nodes_with_tracts.into_par_iter()
+                .map(|(node, tracts)| {
+                    let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
+                    let (left, right) = split_subgraph_ilp(
+                        adjacency, vertex_weights, &tracts,
+                        node_ufactor, time_limit_secs, optimality_gap, max_tracts,
+                    ).map_err(|e| format!("depth {} node '{}' (ilp): {e}", depth, node.path))?;
+                    Ok((node.path, left, right))
+                })
+                .collect::<Result<Vec<_>, String>>()?;
+
+        let mut sorted_results = split_results;
+        sorted_results.sort_by_key(|(path, _, _)| path.clone());
+        for (path, left, right) in sorted_results {
+            node_tracts.insert(format!("{path}0"), left);
+            node_tracts.insert(format!("{path}1"), right);
+        }
+    }
+
+    let mut leaves: Vec<(String, HashSet<usize>)> = node_tracts.into_iter().collect();
+    leaves.sort_by_key(|(path, _)| (path.len(), path.clone()));
+
+    let mut assignments: HashMap<usize, usize> = HashMap::new();
+    for (district_id, (_, tracts)) in leaves.into_iter().enumerate() {
+        for tract in tracts {
+            assignments.insert(tract, district_id + 1);
+        }
+    }
+
+    if assignments.len() != n {
+        return Err(format!(
+            "ilp bisection incomplete: {}/{n} tracts assigned", assignments.len()
+        ));
+    }
+    Ok(assignments)
+}
+
 // ── FlipChain ─────────────────────────────────────────────────────────────────
 
 /// Run a Flip-chain search on the full k-way plan.
@@ -8019,5 +8185,111 @@ mod tests {
         // Run SMC with n_particles=500 on NC 2020 k=14.
         // Verify: p=0.0 EC <= p=0.5 EC <= p=1.0 EC (distribution order).
         // Skipped unless --include-ignored is passed.
+    }
+
+    // ── ILP tests (L0/L1) ─────────────────────────────────────────────────────
+
+    /// L0: `--partition-mode ilp` parses to PartitionMode::Ilp.
+    #[test]
+    fn ilp_structure_mode_parses() {
+        use clap::ValueEnum;
+        use crate::args::PartitionMode;
+        let parsed = PartitionMode::from_str("ilp", true)
+            .expect("'ilp' must be a valid PartitionMode");
+        assert_eq!(parsed, PartitionMode::Ilp,
+            "parsed PartitionMode must be Ilp");
+    }
+
+    /// L1: 4x4 grid (16 tracts) with max_tracts=5 — size guard fires, falls back to METIS.
+    /// Verifies: returns Ok, all 16 tracts assigned, two non-empty partitions.
+    #[test]
+    fn ilp_size_guard_fallback() {
+        let (adj, pop) = small_grid(4, 4); // 16 tracts
+        let tracts: HashSet<usize> = (0..16).collect();
+        let result = split_subgraph_ilp(
+            &adj, &pop, &tracts,
+            1.05,   // balance_tolerance
+            60,     // time_limit_secs
+            0.01,   // optimality_gap
+            5,      // max_tracts: 16 > 5 => guard fires
+        );
+        let (left, right) = result.expect("size-guard fallback must not fail");
+        assert!(!left.is_empty(), "left partition must be non-empty after METIS fallback");
+        assert!(!right.is_empty(), "right partition must be non-empty after METIS fallback");
+        assert_eq!(left.len() + right.len(), 16, "all 16 tracts must be assigned");
+        // Verify disjoint
+        for t in &left {
+            assert!(!right.contains(t), "partitions must be disjoint");
+        }
+    }
+
+    /// L1: 4-node path graph — Phase 1 FormulationOnly falls back to METIS,
+    /// returns a valid 2-partition of all 4 nodes.
+    #[test]
+    fn ilp_phase1_produces_valid_plan() {
+        // Path: 0-1-2-3  (4 nodes, well within max_tracts=500)
+        let adj = vec![
+            vec![1usize],
+            vec![0, 2],
+            vec![1, 3],
+            vec![2usize],
+        ];
+        let pop = vec![100i64; 4];
+        let tracts: HashSet<usize> = (0..4).collect();
+        let result = split_subgraph_ilp(
+            &adj, &pop, &tracts,
+            1.05,  // balance_tolerance
+            300,   // time_limit_secs
+            0.01,  // optimality_gap
+            500,   // max_tracts (no guard)
+        );
+        let (left, right) = result.expect("ilp phase1 must not fail");
+        assert!(!left.is_empty(), "left partition must be non-empty");
+        assert!(!right.is_empty(), "right partition must be non-empty");
+        assert_eq!(left.len() + right.len(), 4, "all 4 tracts must be covered");
+        for t in &left {
+            assert!(!right.contains(t), "partitions must be disjoint");
+        }
+    }
+
+    /// L0: ILP formulation variable counts for 4-node path graph, k=2.
+    /// n_binary_x = n*k = 4*2 = 8
+    /// n_binary_z = |E| = 3  (path 0-1-2-3 has 3 edges)
+    /// n_flow_vars = 2*|E|*k = 2*3*2 = 12
+    #[test]
+    fn ilp_formulation_counts_correct() {
+        let adj = vec![
+            vec![1usize],
+            vec![0, 2],
+            vec![1, 3],
+            vec![2usize],
+        ];
+        let pop = vec![100i64; 4];
+        let formulation = redist_ilp::build_formulation(&adj, &pop, 2, 0.005);
+        assert_eq!(formulation.n_binary_x, 8,
+            "n_binary_x should be n*k = 4*2 = 8");
+        assert_eq!(formulation.n_binary_z, 3,
+            "n_binary_z should be |E| = 3 for path 0-1-2-3");
+        assert_eq!(formulation.n_flow_vars, 12,
+            "n_flow_vars should be 2*|E|*k = 2*3*2 = 12");
+    }
+
+    /// L1: run_all_splits_ilp on a 4x4 grid — all 16 tracts assigned into 2 districts.
+    #[test]
+    fn run_all_splits_ilp_produces_complete_assignment() {
+        let (adj, pop) = small_grid(4, 4); // 16 tracts
+        let ew: HashMap<(usize, usize), f64> = HashMap::new();
+        let result = run_all_splits_ilp(
+            &adj, &pop, &ew,
+            2,      // num_districts
+            0.05,   // balance_tolerance
+            60,     // time_limit_secs
+            0.01,   // optimality_gap
+            500,    // max_tracts (no size guard)
+        );
+        let assignments = result.expect("run_all_splits_ilp must succeed on 4x4 grid");
+        assert_eq!(assignments.len(), 16, "all 16 tracts must be assigned");
+        let districts: std::collections::HashSet<usize> = assignments.values().copied().collect();
+        assert_eq!(districts.len(), 2, "must produce exactly 2 districts");
     }
 }

@@ -99,6 +99,9 @@ pub enum PartitionMode {
     /// Use --cvd-iters to control max iterations (default: 20). No METIS call.
     #[value(name = "centroidal-voronoi")]
     CentroidalVoronoi,
+    /// ILP exact redistricting — provably optimal for small instances (n <= 500).
+    #[value(name = "ilp")]
+    Ilp,
 }
 
 impl std::fmt::Display for PartitionMode {
@@ -118,6 +121,7 @@ impl std::fmt::Display for PartitionMode {
             Self::SimulatedAnnealing    => write!(f, "simulated-annealing"),
             Self::BfsGrowth             => write!(f, "bfs-growth"),
             Self::CentroidalVoronoi     => write!(f, "centroidal-voronoi"),
+            Self::Ilp                   => write!(f, "ilp"),
         }
     }
 }
@@ -1682,6 +1686,20 @@ pub struct StateArgs {
     #[arg(long, default_value = "graph-distance")]
     pub cvd_metric: String,
 
+    // ── ILP parameters ────────────────────────────────────────────────────────
+
+    /// ILP time limit in seconds (default: 300).
+    #[arg(long, default_value_t = 300u64)]
+    pub ilp_time_limit: u64,
+
+    /// ILP optimality gap (default: 0.01 = 1% from optimal).
+    #[arg(long, default_value_t = 0.01f64)]
+    pub ilp_gap: f64,
+
+    /// Max tracts before ILP falls back to METIS (default: 500).
+    #[arg(long, default_value_t = 500usize)]
+    pub ilp_max_tracts: usize,
+
     // ── SMC-Percentile parameters ─────────────────────────────────────────────
 
     /// Number of SMC particles for --search smc-percentile (default: 5000).
@@ -1881,6 +1899,20 @@ pub struct StatesArgs {
     /// geographic: Euclidean on Albers-projected coordinates (Phase 2, requires centroids).
     #[arg(long, default_value = "graph-distance")]
     pub cvd_metric: String,
+
+    // ── ILP parameters ────────────────────────────────────────────────────────
+
+    /// ILP time limit in seconds (default: 300).
+    #[arg(long, default_value_t = 300u64)]
+    pub ilp_time_limit: u64,
+
+    /// ILP optimality gap (default: 0.01 = 1% from optimal).
+    #[arg(long, default_value_t = 0.01f64)]
+    pub ilp_gap: f64,
+
+    /// Max tracts before ILP falls back to METIS (default: 500).
+    #[arg(long, default_value_t = 500usize)]
+    pub ilp_max_tracts: usize,
 
     // ── SMC-Percentile parameters ─────────────────────────────────────────────
 

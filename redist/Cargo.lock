@@ -2415,6 +2415,7 @@ dependencies = [
  "redist-core",
  "redist-data",
  "redist-ensemble",
+ "redist-ilp",
  "redist-map",
  "redist-multiscale",
  "redist-report",

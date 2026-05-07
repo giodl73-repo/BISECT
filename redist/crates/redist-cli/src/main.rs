@@ -259,6 +259,12 @@ fn main() {
                     if let SplitStrategy::AreaSection { area_swing } = &mut cfg.algo.split {
                         *area_swing = args.area_swing;
                     }
+                    // Wire ILP parameters from CLI args
+                    if let SplitStrategy::Ilp { time_limit_secs, optimality_gap, max_tracts } = &mut cfg.algo.split {
+                        *time_limit_secs = args.ilp_time_limit;
+                        *optimality_gap  = args.ilp_gap;
+                        *max_tracts      = args.ilp_max_tracts;
+                    }
                     if let Some(tol) = args.balance_tolerance {
                         cfg.balance_tolerance = Some(tol / 100.0);
                     }

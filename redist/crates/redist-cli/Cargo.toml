@@ -13,6 +13,7 @@ path = "src/main.rs"
 [dependencies]
 redist-core      = { path = "../redist-core" }
 redist-data      = { path = "../redist-data" }
+redist-ilp       = { path = "../redist-ilp" }
 metis-core       = { workspace = true }
 redist-ensemble  = { path = "../redist-ensemble" }
 redist-multiscale = { path = "../redist-multiscale" }

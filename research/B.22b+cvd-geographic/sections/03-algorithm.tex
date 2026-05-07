@@ -247,10 +247,18 @@ $\mathcal{E}^{(i+1)} \le \mathcal{E}^{(i)} + O(\varepsilon^2)$.
     + P_j\|\mathbf{s}_j^* - \bar{\mathbf{c}}_j\|^2$.
     The first term vanishes because $\bar{\mathbf{c}}_j$ is the centroid
     ($\sum_t p_t(\mathbf{x}_t - \bar{\mathbf{c}}_j) = 0$); the second term
-    is $P_j\|\mathbf{s}_j^* - \bar{\mathbf{c}}_j\|^2$, which is small when the snap
-    distance is small.
-    In the $\varepsilon$-convergence regime, $\|\mathbf{s}_j - \mathbf{s}_j^{\mathrm{prev}}\| < \varepsilon$
-    implies the snap distance is bounded, so the additional energy is $O(\varepsilon^2)$.
+    is $P_j\|\mathbf{s}_j^* - \bar{\mathbf{c}}_j\|^2$.
+    The snap distance from the continuous centroid $\bar{c}$ to the nearest
+    real tract $c_* = \arg\min_{t \in D_j} \|p_t - \bar{c}\|$ is bounded by
+    the maximum nearest-neighbour radius
+    $r_{\max} = \max_t \min_{t' \neq t} \|\mathbf{x}_t - \mathbf{x}_{t'}\|$
+    of the projected tract set.
+    For census-tract graphs with typical inter-centroid spacing $\geq 500\,$m,
+    and convergence threshold $\varepsilon = 1\,$m, the snap displacement
+    satisfies $\|c_* - \bar{c}\| \leq r_{\max}$, which is bounded by the
+    minimum tract size.
+    Thus the total energy change per snap is $O(r_{\max}^2)$, bounded and
+    converging.
 Combining (a), (b), (c): energy is non-increasing up to $O(\varepsilon^2)$
 rounding per iteration.
 Since $\mathcal{E} \ge 0$ and the number of distinct Voronoi partitions of
