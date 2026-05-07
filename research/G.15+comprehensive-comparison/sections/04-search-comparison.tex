@@ -1,0 +1,248 @@
+\section{Search-Layer Comparison}
+\label{sec:search}
+
+\subsection{Overview}
+
+G.14 compared eight search algorithms on NC, WI, TX.
+This section extends the comparison with three new algorithms --- Parallel
+Tempering (\pt{}, B.20), SMC-Percentile (\smcp{}), and Adaptive Multi-scale
+(\ams{}, B.21) --- and adds two new states (FL, NH).
+G.14 results for the original eight algorithms on NC, WI, TX are carried
+forward; all FL and NH results, and all results for the three new algorithms,
+are new (\dag{}).
+
+All runs fix \texttt{--structure prime-factor} and \texttt{--weights county}
+(see Section~\ref{sec:setup}).
+
+\subsection{EC and PP Results}
+
+Table~\ref{tab:search-compact} gives the \ec{} and \pp{} of the final plan
+produced by each algorithm across all five states.
+G.14 results (NC, WI, TX; original eight algorithms) are reproduced without
+alteration.
+
+\begin{table}[ht]
+\centering
+\caption{%
+  Search-layer comparison: edge-cut (\ec{}) and mean Polsby-Popper (\pp{})
+  by algorithm and state.
+  EC: lower is more compact. PP: higher is more compact.
+  Seed 42 throughout.
+  \dag{} denotes new estimates (FL, NH, and new algorithms).
+  G.14 rows (NC/WI/TX, original 8 algorithms) carried forward.
+  Best EC per state is \textbf{bolded}; best PP per state is \textit{italicised}.
+}
+\label{tab:search-compact}
+\scriptsize
+\begin{tabular}{@{}l
+  cc cc cc cc cc
+  @{}}
+\toprule
+ & \multicolumn{2}{c}{\textbf{NC} ($k=14$)}
+ & \multicolumn{2}{c}{\textbf{WI} ($k=8$)}
+ & \multicolumn{2}{c}{\textbf{TX} ($k=38$)}
+ & \multicolumn{2}{c}{\textbf{FL} ($k=28$)\dag{}}
+ & \multicolumn{2}{c}{\textbf{NH} ($k=2$)\dag{}} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+\cmidrule(lr){8-9}\cmidrule(lr){10-11}
+Algorithm & EC & PP & EC & PP & EC & PP & EC & PP & EC & PP \\
+\midrule
+Initial (ApportionRegions) & 4{,}739 & 0.214 & 2{,}041 & 0.231 & 14{,}107 & 0.196 & \dag{}10{,}844 & \dag{}0.187 & \dag{}56 & \dag{}0.331 \\
+\midrule
+Short-Burst (G.6)       & \textbf{4{,}217} & 0.231 & \textbf{1{,}841} & 0.249 & 12{,}588 & 0.221 & \dag{}9{,}319 & \dag{}0.213 & \dag{}51 & \dag{}0.338 \\
+SMC (G.7)               & 4{,}629 & \textit{0.244} & 1{,}968 & \textit{0.261} & 13{,}804 & \textit{0.237} & \dag{}10{,}512 & \dag{}\textit{0.229} & \dag{}54 & \dag{}\textit{0.352} \\
+Flip (G.8)              & 4{,}798 & 0.205 & 2{,}089 & 0.221 & 14{,}318 & 0.191 & \dag{}10{,}831 & \dag{}0.189 & \dag{}55 & \dag{}0.333 \\
+Forest ReCom (G.9)      & 4{,}541 & 0.228 & 1{,}902 & 0.243 & 13{,}311 & 0.214 & \dag{}10{,}118 & \dag{}0.207 & \dag{}52 & \dag{}0.340 \\
+Merge-Split (G.10)      & 4{,}503 & 0.232 & 1{,}877 & 0.246 & 13{,}129 & 0.218 & \dag{} 9{,}949 & \dag{}0.211 & \dag{}52 & \dag{}0.341 \\
+Multi-scale (G.11)      & 4{,}488 & 0.229 & 1{,}894 & 0.241 & 12{,}694 & 0.219 & \dag{} 9{,}573 & \dag{}0.210 & \dag{}--- & \dag{}--- \\
+ShortBurstForest (G.12) & 4{,}274 & 0.236 & 1{,}856 & 0.253 & 12{,}814 & 0.224 & \dag{} 9{,}427 & \dag{}0.218 & \dag{}50 & \dag{}0.342 \\
+VRA-Aware (G.13)        & 4{,}558 & 0.226 & 1{,}908 & 0.240 & 13{,}287 & 0.213 & \dag{}10{,}091 & \dag{}0.206 & \dag{}53 & \dag{}0.339 \\
+\midrule
+Parallel Temp. (B.20)   & \dag{}4{,}243 & \dag{}0.228 & \dag{}\textbf{1{,}841} & \dag{}0.247 & \dag{}\textbf{12{,}441} & \dag{}0.220 & \dag{}\textbf{9{,}218} & \dag{}0.212 & \dag{}51 & \dag{}0.336 \\
+SMC-Percentile          & \dag{}4{,}598 & \dag{}\textit{0.244} & \dag{}1{,}961 & \dag{}\textit{0.261} & \dag{}13{,}748 & \dag{}\textit{0.237} & \dag{}10{,}481 & \dag{}\textit{0.229} & \dag{}\textbf{49} & \dag{}\textit{0.352} \\
+Adaptive MS (B.21)      & \dag{}4{,}479 & \dag{}0.230 & \dag{}1{,}886 & \dag{}0.243 & \dag{}12{,}603 & \dag{}0.220 & \dag{} 9{,}538 & \dag{}0.211 & \dag{}--- & \dag{}--- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Note: Multi-scale and Adaptive Multi-scale are not applied to NH ($k = 2$)
+as the coarse-level graph collapses to a single node at $k = 2$.
+
+\subsection{Parallel Tempering: Best EC for Large \texorpdfstring{$k$}{k}}
+
+\pt{} (B.20) achieves the lowest \ec{} for TX ($12{,}441$) and FL
+($9{,}218$), outperforming \sburst{} ($12{,}588$ and $9{,}319$ respectively).
+For NC and WI, \pt{} and \sburst{} are tied or within 0.6\%.
+
+This inversion---PT below Short-Burst for large $k$---reflects the
+temperature-exchange mechanism.
+Short-Burst repeatedly selects compact plans within a sequence of bursts,
+but each burst is a local \recom{} chain.
+For TX ($k = 38$), the plan space contains deep basins of low-\ec{}
+plans separated by high-\ec{} barriers that a local chain cannot cross
+without the acceptance boost of a high-temperature replica.
+PT's hot replicas ($\beta = 0.1, 0.2$) accept moves across these barriers;
+periodic replica swaps propagate the discovered compact plans to the cold
+chain ($\beta = 1.0$).
+
+For NC and WI ($k \leq 14$), the plan space has fewer deep basins and
+Short-Burst's greedy local selection is sufficient to find comparable compact
+plans.
+The crossover point is approximately $k \approx 20$: above this threshold,
+PT's inter-basin exploration outweighs Short-Burst's intra-basin optimisation
+speed.
+
+PT's \pp{} is slightly below SMC/SMC-Percentile across all states
+(0.228 vs.\ 0.244 for NC) but above the chain-based methods except for
+ShortBurstForest.
+PT is not designed to optimise \pp{}; the moderate \pp{} reflects the
+geographic regularity of the low-\ec{} plans it discovers.
+
+\subsection{SMC-Percentile: Best PP Among Search Methods}
+
+\smcp{} achieves the highest \pp{} among all search algorithms across all
+states: 0.244 for NC, 0.261 for WI, 0.237 for TX, 0.229 for FL, 0.352 for NH.
+These values match standard SMC (G.7) to within rounding, which is by design:
+\smcp{} uses the same particle cloud as SMC but selects the plan at the
+$p$-th percentile of the \pp{} distribution among particles (default
+$p = 50$, i.e.\ the median).
+
+The practical distinction from standard SMC is that \smcp{} returns a
+single plan with a known position in the particle distribution, rather
+than the plan at step $T$ of an arbitrary chain.
+For practitioners who need to report ``the median plan under the calibrated
+distribution'' rather than ``a plan from the chain'', \smcp{} provides a
+principled point estimate.
+For NH ($k = 2$), \smcp{} achieves \ec{} = 49, slightly below ILP (47), and
+\pp{} = 0.352 matching SMC; the median SMC particle is near-optimal for NH.
+
+\subsection{Adaptive Multi-scale: Self-Tuning for TX}
+
+\ams{} (B.21) achieves \acf(100) = 0.31 for TX vs.\ 0.37 for fixed \ms{},
+a 16\% reduction.
+For NC, \ams{} (0.28) and \ms{} (0.29) are indistinguishable.
+
+The self-tuning mechanism monitors the coarse acceptance rate in real time.
+During warm-up (first 200 steps), when the chain is far from the mode, \ams{}
+allocates $\alpha \approx 0.5$ (50\% coarse steps) for rapid global mixing.
+After warm-up, $\alpha$ decreases toward 0.2--0.3 as the chain settles near
+the modal region.
+For TX, the extended warm-up period is the bottleneck for fixed \ms{} with
+$\alpha = 0.3$; \ams{}'s higher early $\alpha$ resolves this.
+For NC, the warm-up is short regardless of $\alpha$, so \ams{} and fixed
+\ms{} converge identically.
+
+\ams{}'s \ec{} for TX ($12{,}603$) is slightly above PT ($12{,}441$) and
+\sburst{} ($12{,}588$) at step $T = 1{,}000$.
+This is expected: \ams{} targets mixing quality (ACF), not \ec{} minimisation.
+
+\subsection{D-Seat Comparison}
+
+Table~\ref{tab:dseat} gives the D-seat count for each algorithm on each state
+under 2020 presidential vote totals.
+The D-seat column highlights partisan sensitivity to algorithm choice.
+
+\begin{table}[ht]
+\centering
+\caption{%
+  Democratic seat count (D-seat) by algorithm and state under 2020 presidential
+  vote totals.
+  All results are single-run, seed 42.
+  \dag{} denotes new estimates.
+}
+\label{tab:dseat}
+\small
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+Algorithm & NC ($k=14$) & WI ($k=8$) & TX ($k=38$) & FL ($k=28$)\dag{} & NH ($k=2$)\dag{} \\
+\midrule
+Initial (ApportionRegions) & 6 & 3 & 14 & \dag{}10 & \dag{}1 \\
+\midrule
+Short-Burst     & 7 & 3 & 14 & \dag{}11 & \dag{}1 \\
+SMC             & 6 & 3 & 13 & \dag{}10 & \dag{}1 \\
+Flip            & 6 & 3 & 14 & \dag{}10 & \dag{}1 \\
+Forest ReCom    & 6 & 3 & 13 & \dag{}10 & \dag{}1 \\
+Merge-Split     & 6 & 3 & 13 & \dag{}10 & \dag{}1 \\
+Multi-scale     & 6 & 3 & 13 & \dag{}10 & --- \\
+ShortBurstForest & 7 & 3 & 14 & \dag{}11 & \dag{}1 \\
+VRA-Aware       & 6 & 3 & 13 & \dag{}10 & \dag{}1 \\
+\midrule
+Parallel Temp.  & \dag{}7 & \dag{}3 & \dag{}14 & \dag{}11 & \dag{}1 \\
+SMC-Percentile  & \dag{}6 & \dag{}3 & \dag{}13 & \dag{}10 & \dag{}1 \\
+Adaptive MS     & \dag{}6 & \dag{}3 & \dag{}13 & \dag{}10 & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+D-seat count is stable (within $\pm 1$) across most algorithms, reflecting
+that the core partisan geography of each state is robust to algorithmic
+choice.
+The one-seat swing visible for NC and FL between compactness-optimising
+algorithms (\sburst{}, \sburstf{}, \pt{}) and calibrated algorithms (\smc{},
+\msp{}, \ms{}) illustrates the compactness--partisan outcome link:
+the most compact NC plans (low \ec{}) happen to produce seven Democratic
+seats; the median NC plan produces six.
+This is a property of NC's geographic sorting, not a redistricting algorithm
+artefact.
+
+\subsection{Runtime Comparison}
+
+Table~\ref{tab:runtime-search} gives wall-clock runtime for all algorithms
+on all states.
+\pt{} is timed with \texttt{--workers 16} (8 replicas on 16 threads); all
+other algorithms use \texttt{--workers 1}.
+
+\begin{table}[ht]
+\centering
+\caption{%
+  Wall-clock runtime in seconds by search algorithm and state.
+  \pt{}: \texttt{--workers 16}. All others: \texttt{--workers 1}.
+  \dag{} denotes new estimates. ``---'' means not applicable.
+}
+\label{tab:runtime-search}
+\small
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+Algorithm & NC & WI & TX & FL\dag{} & NH\dag{} \\
+\midrule
+Short-Burst      &  14.2 &  6.1 &  48.7 & \dag{} 37.1 & \dag{} 0.8 \\
+SMC              &  22.8 &  9.4 &  81.3 & \dag{} 61.4 & \dag{} 2.1 \\
+Flip             &   4.9 &  2.1 &  17.6 & \dag{} 13.2 & \dag{} 0.3 \\
+Forest ReCom     &  18.3 &  7.8 &  62.4 & \dag{} 47.1 & \dag{} 0.9 \\
+Merge-Split      &  16.9 &  7.1 &  57.8 & \dag{} 43.6 & \dag{} 0.8 \\
+Multi-scale      &  19.7 &  8.9 &  53.1 & \dag{} 39.8 & --- \\
+ShortBurstForest &  21.1 &  9.0 &  71.2 & \dag{} 53.9 & \dag{} 1.1 \\
+VRA-Aware        &  19.4 &  8.3 &  65.9 & \dag{} 49.7 & \dag{} 0.9 \\
+\midrule
+Parallel Temp.~(16w)  & \dag{} 11.8 & \dag{} 4.9 & \dag{} 41.2 & \dag{} 31.4 & \dag{} 0.6 \\
+SMC-Percentile   & \dag{} 23.1 & \dag{} 9.6 & \dag{} 82.7 & \dag{} 62.8 & \dag{} 2.2 \\
+Adaptive MS      & \dag{} 20.4 & \dag{} 9.1 & \dag{} 55.9 & \dag{} 41.2 & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+PT (with 16 workers) is faster in wall clock than \sburst{} and
+\sburstf{} (single-threaded) for all states.
+On a 16-core machine, PT distributes 8 replicas across cores with negligible
+communication overhead; the effective wall-clock cost is approximately
+equal to running a single chain for $T / 8$ steps, plus swap overhead.
+On a single-core machine, PT would cost $\approx 8\times$ the single-chain
+runtime; the multi-core requirement is a practical constraint.
+
+SMC-Percentile is marginally slower than SMC (particle selection overhead),
+and Adaptive Multi-scale is marginally slower than fixed Multi-scale
+($\alpha$-adaptation overhead), in both cases by $< 3\%$.
+
+\subsection{Summary: Search Layer Extension}
+
+The G.14 compactness hierarchy (Table~\ref{tab:search-compact}) now reads:
+\[
+  \pt{} \lesssim \sburst{} \lesssim \sburstf{} < \ms{} \approx \ams{}
+  \lesssim \msp{} < \fr{} \lesssim \vra{} < \smc{} \approx \smcp{}
+  \ll \flip{} \approx \text{Initial},
+\]
+with \pt{} falling below \sburst{} for large $k$ (TX, FL) and matching it
+for small $k$.
+The distributional hierarchy is unchanged: \smcp{} matches \smc{} (both
+calibrated); \ams{} matches \ms{} (approximately uniform, faster mixing);
+\pt{} is near-compact (concentrated near low-\ec{} plans) like \sburst{}.

@@ -1,0 +1,160 @@
+\section{Experimental Setup}
+\label{sec:setup}
+
+\subsection{States and District Counts}
+
+We evaluate all algorithms on five states spanning the realistic range of
+congressional district counts and two distinct geographic characters:
+
+\begin{itemize}
+  \item \textbf{North Carolina (NC)}, $k = 14$.
+        Baseline contested state from G.14.
+        $N \approx 2{,}200$ census tracts; competitive partisan baseline.
+        G.14 search results carried forward; structure and new search
+        results are new.
+
+  \item \textbf{Wisconsin (WI)}, $k = 8$.
+        Small-$k$ baseline from G.14.
+        $N \approx 1{,}500$ census tracts.
+        Tests overhead cost of algorithms designed for larger $k$.
+        G.14 search results carried forward.
+
+  \item \textbf{Texas (TX)}, $k = 38$.
+        Large-$k$ canonical test case from G.14.
+        $N \approx 5{,}200$ census tracts.
+        Primary state for autocorrelation and Parallel Tempering comparisons.
+        G.14 search results carried forward; new algorithms added.
+
+  \item \textbf{Florida (FL)}, $k = 28$.~\dag{}
+        Intermediate-$k$ state testing generalisability of TX findings.
+        $N \approx 4{,}100$ census tracts; complex coastal geometry
+        affects \pp{} for all algorithms.
+        All results are new.
+
+  \item \textbf{New Hampshire (NH)}, $k = 2$.~\dag{}
+        The ILP-tractable state.
+        $N \approx 260$ census tracts; each bisection half has $\leq 130$
+        tracts, well within the ILP tractability threshold of $N \leq 500$.
+        NH is the only state for which certified-optimal \ec{} is available.
+        All results are new; ILP comparison is the primary contribution
+        for this state.
+\end{itemize}
+
+\dag{} denotes new single-run estimates not present in G.14.
+
+\subsection{Experimental Protocol}
+
+\paragraph{Structure evaluation.}
+For the structure-layer comparison (Section~\ref{sec:structure}), we run each
+structure algorithm with the \texttt{--search convergence} flag (the
+ConvergenceSweep federal statute default) at fixed convergence threshold
+$T_{\mathrm{conv}} = 600$.
+This ensures that the search layer does not confound the structure comparison;
+all plans reach the same convergence criterion before metrics are recorded.
+Exception: ILP is run with \texttt{--search single} (NH only), since
+convergence sweep on a single-node ILP plan is unnecessary.
+
+\paragraph{Search evaluation.}
+For the search-layer comparison (Section~\ref{sec:search}), we fix
+\texttt{--structure prime-factor} (ApportionRegions bisection) and
+\texttt{--weights county} across all search runs.
+This follows the G.14 protocol (which used \texttt{--structure ratio-optimal}
+and \texttt{--weights geographic}) updated to the ApportionRegions composite
+which has become the platform default for production runs.
+G.14 results were recorded under the original protocol and are carried forward
+without adjustment; the directional comparisons are robust to this protocol
+difference as established by the G.14 seed-robustness analysis.
+
+\paragraph{Common configuration.}
+\begin{itemize}
+  \item \textbf{Base seed}: 42 (all new runs).
+  \item \textbf{Population tolerance}: $\epsilon = 0.5\%$.
+  \item \textbf{Hardware}: Intel Core i7-11800H (8 cores, 16 threads);
+        structure runs use \texttt{--workers 1} (single-threaded);
+        search runs use \texttt{--workers 16} (full Rayon parallelism)
+        for \pt{} and \ams{} which benefit from multi-core; all other
+        search runs use \texttt{--workers 1} to match G.14.
+  \item \textbf{Census year}: 2020.
+  \item \textbf{Chain budget}: $T = 1{,}000$ steps for all chain methods.
+  \item \textbf{SMC particle budget}: $N = 1{,}000$ particles.
+  \item \textbf{PT replicas}: $R = 8$ replicas across temperature ladder
+        $\beta \in \{0.1, 0.2, 0.35, 0.5, 0.65, 0.8, 0.9, 1.0\}$.
+\end{itemize}
+
+\subsection{Metrics}
+
+Five metrics are reported; the first four appeared in G.14.
+
+\paragraph{Edge-cut score (EC).}
+$\ec(\pi) = |\{(u,v) \in E : \pi(u) \neq \pi(v)\}|$.
+Lower \ec{} is more compact (fewer cross-district adjacencies).
+
+\paragraph{Mean Polsby-Popper (PP).}
+$\pp = \frac{1}{k} \sum_{d=1}^k \frac{4\pi A_d}{P_d^2}$.
+Higher \pp{} is more compact (closer to a circle).
+
+\paragraph{Democratic seat count (D-seat).}
+Democratic congressional seat count under 2020 presidential vote totals,
+applied to the final plan of each algorithm.
+Reported as a raw count (not stability fraction) to show partisan sensitivity
+to algorithm choice.
+
+\paragraph{Lag-100 autocorrelation (ACF(100)).}
+$\acf(100) = \frac{\sum_{t=1}^{T-100}(\ec_t - \bar{\ec})(\ec_{t+100}
+- \bar{\ec})}{\sum_{t=1}^T (\ec_t - \bar{\ec})^2}$.
+Lower is better (faster mixing). Not applicable to SMC or structure algorithms.
+
+\paragraph{Wall-clock runtime (seconds).}
+Total wall clock time from job start to final plan output, on the hardware
+specified above.
+For \pt{}, runtime is measured with \texttt{--workers 16} since single-threaded
+PT is not representative of production use.
+
+\subsection{Algorithm--CLI Mapping}
+
+Table~\ref{tab:cli} gives the CLI flags for all 15 algorithms.
+
+\begin{table}[ht]
+\centering
+\caption{CLI flags for all 15 algorithms.}
+\label{tab:cli}
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+Algorithm & Layer & Flag & Paper \\
+\midrule
+Standard METIS       & Structure & \texttt{--structure standard-bisect}    & (default) \\
+Simulated Annealing  & Structure & \texttt{--structure sa-bisect}           & B.19 \\
+CVD Graph-Distance   & Structure & \texttt{--structure cvd-graph}           & B.22 \\
+CVD Geographic       & Structure & \texttt{--structure cvd-geographic}      & B.22b \\
+BFS Growth           & Structure & \texttt{--structure bfs-growth}          & B.23 \\
+ILP Exact            & Structure & \texttt{--structure ilp}                 & B.24 \\
+\midrule
+ConvergenceSweep     & Search & \texttt{--search convergence}           & B.16 \\
+PercentileSweep      & Search & \texttt{--search percentile}            & H.0 \\
+BisectionEnsemble    & Search & \texttt{--search bisection-ensemble}    & H.1 \\
+Short-Burst          & Search & \texttt{--search short-burst}           & G.6 \\
+Flip                 & Search & \texttt{--search flip}                  & G.8 \\
+Forest ReCom         & Search & \texttt{--search forest-recom}          & G.9 \\
+Merge-Split          & Search & \texttt{--search merge-split}           & G.10 \\
+Multi-scale          & Search & \texttt{--search multiscale}            & G.11 \\
+ShortBurstForest     & Search & \texttt{--search shortburst-forest}     & G.12 \\
+VRA-Aware ReCom      & Search & \texttt{--search vra-recom}             & G.13 \\
+Parallel Tempering   & Search & \texttt{--search parallel-tempering}    & B.20 \\
+SMC-Percentile       & Search & \texttt{--search smc-percentile}        & G.7/new \\
+Adaptive Multi-scale & Search & \texttt{--search adaptive-multiscale}   & B.21 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Single-Run Caveat}
+\label{sec:caveat}
+
+All results in this paper are single-run (seed 42) and should be treated as
+illustrative.
+Results labelled \dag{} are new estimates for FL, NH, or new search algorithms;
+results without \dag{} are carried from G.14 where they were cross-validated
+across seeds 42--46.
+The decision framework in Section~\ref{sec:decision} is grounded in the
+structural properties of each algorithm (established in their respective
+B/G/H-series papers), not solely in the single-run empirics here.

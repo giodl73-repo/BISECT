@@ -1,0 +1,131 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, backgrounds, calc}
+
+%% Style
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+\setstretch{1.4}
+
+%% Macros — structure algorithms
+\newcommand{\metis}{\textsc{METIS}}
+\newcommand{\sa}{\textsc{SimAnneal}}
+\newcommand{\cvdg}{\textsc{CVD-Graph}}
+\newcommand{\cvdgeo}{\textsc{CVD-Geo}}
+\newcommand{\bfsgrow}{\textsc{BFSGrowth}}
+\newcommand{\ilp}{\textsc{ILP}}
+
+%% Macros — search algorithms (inherited from G.14)
+\newcommand{\ms}{\textsc{MultiScale}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\ec}{\ensuremath{\mathrm{EC}}}
+\newcommand{\pp}{\ensuremath{\mathrm{PP}}}
+\newcommand{\sburst}{\textsc{ShortBurst}}
+\newcommand{\sburstf}{\textsc{ShortBurstForest}}
+\newcommand{\be}{\textsc{BisectionEnsemble}}
+\newcommand{\fr}{\textsc{ForestReCom}}
+\newcommand{\msp}{\textsc{MergeSplit}}
+\newcommand{\rhat}{\ensuremath{\hat{R}}}
+\newcommand{\ess}{\ensuremath{\mathrm{ESS}}}
+\newcommand{\acf}{\ensuremath{\mathrm{ACF}}}
+\newcommand{\geoid}{\texttt{GEOID}}
+\newcommand{\flip}{\textsc{Flip}}
+\newcommand{\vra}{\textsc{VraRecom}}
+\newcommand{\smc}{\textsc{SMC}}
+\newcommand{\smcp}{\textsc{SMC-Percentile}}
+\newcommand{\pt}{\textsc{ParTemp}}
+\newcommand{\ams}{\textsc{AdaptiveMS}}
+\newcommand{\cs}{\textsc{ConvergenceSweep}}
+\newcommand{\ps}{\textsc{PercentileSweep}}
+
+\title{%
+  \textbf{A Comprehensive Comparison of Redistricting Structure and Search
+  Algorithms}\\[0.8em]
+  \normalsize\textit{G.15 --- Ensemble Methods / Complete Algorithm Portfolio}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+G.14 compared eight search-layer algorithms for redistricting ensembles.
+G.15 extends the comparison to the complete portfolio of 15 implemented
+algorithms across both structure and search layers of the three-layer compositor.
+Structure-layer algorithms (\metis{} baseline, Simulated Annealing, CVD
+Graph-Distance, CVD Geographic, BFS Growth, and ILP) produce the initial
+bisection plan; search-layer algorithms then select among plans.
+We evaluate all 15 algorithms on five states --- North Carolina ($k = 14$),
+Wisconsin ($k = 8$), Texas ($k = 38$), Florida ($k = 28$), and New Hampshire
+($k = 2$) --- measuring five metrics: edge-cut compactness (\ec{}), mean
+Polsby-Popper (\pp{}), Democratic seat count (D-seat), lag-100 autocorrelation
+(\acf(100)), and wall-clock runtime.
+Key findings: ILP certifies global \ec{}-optimality for NH ($k = 2$);
+Simulated Annealing achieves the best heuristic \ec{} among structure methods
+at 12$\times$ the METIS runtime; CVD-Geographic provides the best \pp{} among
+structure methods when centroids are available; BFS Growth is the fastest
+structure method ($O(n \log n)$) with competitive \pp{}.
+Among search methods, Parallel Tempering outperforms Short-Burst on EC for
+TX ($k = 38$) by escaping local optima inaccessible to burst strategies;
+SMC-Percentile achieves the highest \pp{} among search methods by selecting
+the population-calibrated median plan; and Adaptive Multi-scale matches
+or exceeds fixed Multi-scale on TX while self-tuning the coarse fraction.
+The primary contribution is a six-question decision framework that maps
+redistricting requirements to the appropriate structure + search combination,
+complementing the four-question search-only tree from G.14.
+All results are single-run (seed 42) with dagger notation (\dag{}) for new
+states and algorithms; established results from G.14 (NC/WI/TX search) are
+carried forward.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-setup}
+\input{sections/03-structure-comparison}
+\input{sections/04-search-comparison}
+\input{sections/05-distributional}
+\input{sections/06-decision-framework}
+\input{sections/07-compute-budget}
+\input{sections/08-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

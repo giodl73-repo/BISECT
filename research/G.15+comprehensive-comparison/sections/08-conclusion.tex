@@ -1,0 +1,125 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+\subsection{Summary}
+
+We have compared all 15 implemented redistricting algorithms across both
+structure and search layers on five states (NC $k=14$, WI $k=8$, TX $k=38$,
+FL $k=28$, NH $k=2$) and five metrics (EC, PP, D-seat, ACF(100), runtime).
+The main findings:
+
+\begin{enumerate}
+
+  \item \textbf{ILP certifies what heuristics approximate.}
+        For NH ($k = 2$), ILP achieves EC = 47 (certified optimal), 8.5\%
+        below Simulated Annealing (51) and 23.4\% below METIS (58).
+        The existence of the ILP baseline quantifies the optimality gap
+        of every other structure algorithm for the first time.
+
+  \item \textbf{The structure layer determines the PP ceiling.}
+        CVD-Geographic achieves the highest mean PP of any algorithm
+        across all states, outperforming even SMC-Percentile (the best
+        search method for PP).
+        Search algorithms improve PP by at most 8\% from the structure
+        baseline; a poor PP structure choice cannot be fully compensated
+        by search.
+        When PP is the primary legal criterion, CVD-Geographic structure
+        should be selected first, and the search algorithm selected second.
+
+  \item \textbf{Parallel Tempering dominates EC for large $k$.}
+        For TX ($k=38$) and FL ($k=28$), PT achieves lower final EC than
+        Short-Burst by escaping basin boundaries inaccessible to local
+        burst strategies.
+        The crossover from Short-Burst to PT is at approximately $k \approx
+        20$; for smaller $k$, Short-Burst is sufficient and faster on
+        single-core hardware.
+
+  \item \textbf{Adaptive Multi-scale is the fastest-mixing chain for TX.}
+        AMS reduces ACF(100) to 0.31 for TX vs.\ 0.37 for fixed
+        Multi-scale, a 16\% improvement, by front-loading coarse steps
+        during warm-up.
+        For $k < 15$, AMS and fixed Multi-scale are indistinguishable.
+
+  \item \textbf{The full portfolio is covered by six questions.}
+        Two structure questions (certified optimality? PP priority?) and
+        four search questions (VRA? $k \geq 15$? calibrated distribution?
+        compactness optimisation?) route any redistricting task to the
+        correct structure + search combination.
+
+\end{enumerate}
+
+\subsection{The Three-Layer Compositor as a Portfolio System}
+
+The three-layer compositor (\texttt{--structure}, \texttt{--weights-override},
+\texttt{--search}) was designed to make algorithms composable.
+The comparison in this paper confirms that composability is not merely
+a software design property but a substantive algorithmic advantage:
+the best EC results require both a good structure algorithm (SA) and a
+good search algorithm (PT); the best PP results require both a good structure
+algorithm (CVD-Geo) and a calibrated search algorithm (SMC-Percentile).
+Neither layer alone achieves the best of both metrics simultaneously, and
+no single combination dominates all metrics.
+
+This composability is the defining property of the platform.
+Prior redistricting tools typically implement one algorithm end-to-end
+(GerryChain's ReCom, PlanScore's baseline, redist's SMC).
+The three-layer compositor turns algorithm selection into a parameter choice,
+enabling practitioners to express their redistricting requirements directly
+in the CLI and obtain the appropriate algorithm portfolio automatically.
+
+\subsection{Future Work}
+
+\paragraph{Confirmed interactions.}
+The structure--search interaction (Section~\ref{sec:decision}) is the primary
+open empirical question: does SA + PT compound (both improving EC), or does
+SA's baseline already reduce PT's marginal gain?
+A controlled experiment varying structure with fixed PT search, and varying
+search with fixed SA structure, would resolve this.
+
+\paragraph{Additional structure algorithms.}
+B.25 (in planning) will introduce a spectral bisection structure algorithm
+based on the Fiedler vector of the graph Laplacian.
+Spectral bisection is theoretically related to minimum-\ec{} bisection and
+may bridge the gap between METIS and ILP for moderate-$N$ instances.
+
+\paragraph{Multi-run confidence intervals.}
+All results in this paper are single-run.
+A follow-up study with $R = 20$ independent runs per algorithm--state pair
+would provide confidence intervals and enable formal statistical comparison
+of the close results (e.g., PT vs.\ AMS for ACF; CVD-Geo vs.\ SMC-Percentile
+for PP).
+
+\paragraph{G.15 as practitioner reference.}
+This paper is intended as the definitive practitioner reference for the
+\texttt{redist} algorithm portfolio.
+As new algorithms are added to the B/G/H-series papers, they will be
+incorporated into the combined Table~\ref{tab:combined} and the six-question
+decision tree.
+The framework's modular structure is designed to accommodate these additions
+without restructuring the existing decision logic.
+
+\subsection{Implementation Reference}
+
+All 15 algorithms are implemented in the \texttt{redist} Rust workspace:
+
+\begin{itemize}
+  \item \texttt{crates/redist-core/src/structure/} --- structure algorithms
+        (\texttt{metis.rs}, \texttt{simulated\_annealing.rs},
+        \texttt{cvd\_graph.rs}, \texttt{cvd\_geographic.rs},
+        \texttt{bfs\_growth.rs})
+  \item \texttt{crates/redist-ilp/} --- ILP redistricting crate (B.24)
+  \item \texttt{crates/redist-ensemble/src/} --- search algorithms
+        (\texttt{shortburst.rs}, \texttt{flip.rs},
+        \texttt{forest\_recom.rs}, \texttt{merge\_split.rs},
+        \texttt{multiscale.rs}, \texttt{shortburst\_forest.rs},
+        \texttt{vra\_recom.rs}, \texttt{parallel\_tempering.rs},
+        \texttt{smc.rs}, \texttt{smc\_percentile.rs},
+        \texttt{adaptive\_multiscale.rs})
+  \item \texttt{crates/redist-cli/src/compositor/} --- three-layer compositor
+        and CLI flag routing
+\end{itemize}
+
+The decision framework in Table~\ref{tab:combined} is the recommended
+reference for algorithm selection in the \texttt{redist} platform.
+All runs in this paper are reproducible from seed 42 and the configurations
+in Section~\ref{sec:setup}.

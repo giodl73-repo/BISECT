@@ -1,0 +1,355 @@
+\section{Decision Framework}
+\label{sec:decision}
+
+\subsection{Overview}
+
+G.14 provided a four-question decision tree for selecting the search algorithm.
+This section extends the framework to six questions covering both structure and
+search layers.
+Questions Q1--Q2 select the structure algorithm; questions Q3--Q6 select the
+search algorithm (matching the G.14 four-question tree, with one modification
+at Q3 to incorporate \pt{} and \ams{}).
+
+The framework encodes structural properties of the algorithms established in
+their respective B/G/H-series papers, not solely the single-run empirics of
+this paper.
+
+\subsection{Structure Selection: Q1--Q2}
+
+\begin{enumerate}[label=\textbf{Q\arabic*.}]
+
+  \item \textbf{Is certified-optimal EC required?}
+
+        If the redistricting task requires a provably minimum-\ec{} initial
+        plan (e.g., for small-state legal challenges where optimality is
+        litigated, or for academic benchmarking):
+
+        \begin{itemize}
+          \item If $N \leq 500$ per bisection half (applicable to NH $k = 2$
+                and very small custom jurisdictions): use \ilp{} (B.24).
+          \item If $N > 500$: ILP is not tractable. Use SA (B.19) for the
+                best available heuristic EC; the optimality gap is
+                approximately 8--12\% relative to ILP.
+        \end{itemize}
+
+        \emph{Proceed to: \ilp{} or \sa{}. Then proceed to Q3 for search.}
+
+        If certified or near-optimal EC is not required, proceed to Q2.
+
+  \item \textbf{Is geometric compactness (PP) the primary structure
+        criterion?}
+
+        If the redistricting standard references ``compactness'' in the
+        geometric or perimeter-area sense (as in most legal standards citing
+        Polsby-Popper), the structure algorithm is the primary PP determinant:
+        search algorithms raise PP modestly from the structure baseline
+        (typically $< 8\%$ improvement).
+
+        \begin{itemize}
+          \item If centroid data is available (standard for 2020 decennial
+                pipeline): use \cvdgeo{} (B.22b).
+          \item If centroid data is unavailable or the input graph is
+                non-standard: use \cvdg{} (B.22).
+          \item If PP is important but runtime is constrained: use
+                \bfsgrow{} (B.23); competitive PP, fastest structure method.
+        \end{itemize}
+
+        \emph{Proceed to: \cvdgeo{}, \cvdg{}, or \bfsgrow{}.
+        Then proceed to Q3 for search.}
+
+        If neither certified EC nor elevated PP is a primary concern,
+        use \metis{} (default; fastest, lowest structure overhead)
+        and proceed to Q3.
+
+\end{enumerate}
+
+\subsection{Search Selection: Q3--Q6}
+
+\begin{enumerate}[label=\textbf{Q\arabic*.},start=3]
+
+  \item \textbf{Is VRA compliance required during sampling?}
+
+        If minority-majority district preservation must be enforced during
+        chain execution (not merely verified post hoc):
+        \emph{Proceed to: \vra{} (G.13). Stop.}
+
+        If VRA is verified post hoc, proceed to Q4.
+
+  \item \textbf{Is $k \geq 15$?}
+
+        For large $k$ ($\geq 15$: TX, FL, CA, NY, PA, OH, and others):
+
+        \begin{itemize}
+          \item If \textbf{compactness optimisation} (lowest EC) is the goal:
+                use \pt{} (B.20). Requires multi-core hardware (8--16 cores).
+                For single-core constraint: use \sburst{} (G.6).
+          \item If \textbf{fast mixing} (low ACF, broad distributional
+                coverage) is the goal: use \ams{} (B.21) for self-tuning, or
+                \ms{} (G.11) for fixed $\alpha$.
+          \item If \textbf{calibrated distribution} is required: use \smc{}
+                (G.7) or \smcp{} (new).
+        \end{itemize}
+
+        For $k < 15$, single-scale chains mix adequately; proceed to Q5.
+
+  \item \textbf{Is a calibrated target distribution required?}
+
+        \begin{itemize}
+          \item Exact calibration (importance-weighted, user-specified):
+                use \smcp{} for a percentile-selected plan, or \smc{} for
+                an arbitrary plan from the particle cloud.
+                Difference: \smcp{} returns the median plan (or $p$-th
+                percentile); \smc{} returns the final particle.
+                For court submissions, either is defensible; \smcp{} is
+                preferred when the point estimate must be described precisely.
+          \item Approximate calibration (MH-corrected chain): use \msp{}
+                (G.10) as the default. \fr{} (G.9) is the alternative.
+        \end{itemize}
+
+        If distributional calibration is not required, proceed to Q6.
+
+  \item \textbf{Is pure compactness optimisation the goal?}
+
+        \begin{itemize}
+          \item Best EC, no distributional constraint: use \sburst{} (G.6).
+          \item Best EC with MH-corrected distributional properties: use
+                \sburstf{} (G.12).
+        \end{itemize}
+
+        If the goal is not compactness optimisation, the remaining algorithm
+        is \flip{} (G.8): local boundary sensitivity analysis.
+        \emph{Proceed to: \flip{} (G.8). Stop.}
+
+\end{enumerate}
+
+\subsection{Decision Tree Diagram}
+
+\begin{center}
+\begin{tikzpicture}[
+  decision/.style={
+    diamond, draw, fill=blue!8, text width=3.6cm, align=center,
+    inner sep=1pt, font=\small
+  },
+  result/.style={
+    rectangle, draw, fill=green!10, text width=3.2cm, align=center,
+    rounded corners=3pt, font=\small
+  },
+  arrow/.style={->, >=Stealth, thick},
+  label/.style={font=\small\itshape},
+]
+
+%% Structure layer header
+\node[font=\bfseries\small, text=blue!60!black] (shdr) at (0, 0)
+  {Structure Layer};
+
+%% Q1
+\node[decision, below=0.5cm of shdr] (q1)
+  {Certified optimal EC?\\($N \le 500$?)};
+
+\node[result, right=2.0cm of q1, yshift=1.2cm] (ilp)
+  {\ilp{} (B.24)\\\footnotesize Exact optimality};
+\draw[arrow] (q1.north east)
+  -- node[label, above, sloped]{\small Yes} (ilp.west);
+
+\node[result, right=2.0cm of q1, yshift=-0.5cm] (sa)
+  {\sa{} (B.19)\\\footnotesize Best heuristic EC};
+\coordinate (branch1) at ($(q1.east) + (0.8cm, 0)$);
+\draw[arrow] (q1.east) -- (branch1);
+\draw[arrow] (branch1) |- node[label, right, pos=0.75]{\small N too large} (sa.west);
+
+%% Q2
+\node[decision, below=1.5cm of q1] (q2) {PP primary?\\Centroids available?};
+\draw[arrow] (q1.south) -- node[label, right]{\small No} (q2.north);
+
+\node[result, right=2.0cm of q2, yshift=1.4cm] (cvdgeo)
+  {\cvdgeo{} (B.22b)\\\footnotesize Best PP};
+\node[result, right=2.0cm of q2, yshift=-0.2cm] (bfs)
+  {\bfsgrow{} (B.23)\\\footnotesize Fast, good PP};
+\coordinate (branch2) at ($(q2.east) + (0.8cm, 0)$);
+\draw[arrow] (q2.east) -- node[label, above]{\small Yes} (branch2);
+\draw[arrow] (branch2) |- node[label, right, pos=0.75]{\small Centroids} (cvdgeo.west);
+\draw[arrow] (branch2) |- node[label, right, pos=0.75]{\small Fast} (bfs.west);
+
+\node[result, below=1.0cm of q2, xshift=2.5cm] (metis)
+  {\metis{} (default)\\\footnotesize Fastest};
+\draw[arrow] (q2.south) -- node[label, right]{\small No} (metis.north);
+
+%% Search layer header
+\node[font=\bfseries\small, text=red!60!black, below=1.8cm of metis] (srhdr)
+  {Search Layer};
+
+%% Q3
+\node[decision, below=0.5cm of srhdr] (q3) {VRA required\\during sampling?};
+
+\node[result, right=2.0cm of q3, yshift=1.0cm] (vra)
+  {\vra{} (G.13)\\\footnotesize VRA-constrained};
+\draw[arrow] (q3.north east)
+  -- node[label, above, sloped]{\small Yes} (vra.west);
+
+%% Q4
+\node[decision, below=1.5cm of q3] (q4) {$k \geq 15$?};
+\draw[arrow] (q3.south) -- node[label, right]{\small No} (q4.north);
+
+\node[result, right=2.0cm of q4, yshift=1.4cm] (pt)
+  {\pt{} / \ms{} (B.20/G.11)\\\footnotesize Large-$k$ mixing};
+\draw[arrow] (q4.north east)
+  -- node[label, above, sloped]{\small Yes} (pt.west);
+
+%% Q5
+\node[decision, below=1.5cm of q4] (q5) {Calibrated\\distribution?};
+\draw[arrow] (q4.south) -- node[label, right]{\small No} (q5.north);
+
+\node[result, right=2.0cm of q5, yshift=1.4cm] (smcp2)
+  {\smcp{} / \smc{} (G.7)\\\footnotesize Exact calibration};
+\node[result, right=2.0cm of q5, yshift=-0.4cm] (ms2)
+  {\msp{}/\fr{} (G.10/9)\\\footnotesize Approx.\ uniform};
+\coordinate (branch5) at ($(q5.east) + (0.8cm, 0)$);
+\draw[arrow] (q5.east) -- node[label, above]{\small Yes} (branch5);
+\draw[arrow] (branch5) |- node[label, right, pos=0.75]{\small Exact} (smcp2.west);
+\draw[arrow] (branch5) |- node[label, right, pos=0.75]{\small Approx} (ms2.west);
+
+%% Q6
+\node[decision, below=1.5cm of q5] (q6) {Compactness\\optimisation?};
+\draw[arrow] (q5.south) -- node[label, right]{\small No} (q6.north);
+
+\node[result, right=2.0cm of q6, yshift=1.0cm] (sb)
+  {\sburst{}/\sburstf{} (G.6/12)\\\footnotesize Compact plans};
+\draw[arrow] (q6.north east)
+  -- node[label, above, sloped]{\small Yes} (sb.west);
+
+\node[result, below=1.0cm of q6] (flipr)
+  {\flip{} (G.8)\\\footnotesize Sensitivity};
+\draw[arrow] (q6.south) -- node[label, right]{\small No} (flipr.north);
+
+\end{tikzpicture}
+\end{center}
+
+\subsection{Combined Structure + Search Recommendation Table}
+
+Table~\ref{tab:combined} gives the recommended structure + search combination
+for each practitioner use case.
+
+\begin{table}[ht]
+\centering
+\caption{%
+  Combined structure + search recommendations by use case.
+  ``Alternative'' is the second choice when the primary is unavailable.
+  All flags are for the \texttt{redist} CLI.
+}
+\label{tab:combined}
+\small
+\begin{tabular}{@{}p{4.5cm}p{4.2cm}p{4.2cm}@{}}
+\toprule
+Use Case & Recommended & Alternative \\
+\midrule
+Court submission\\(calibrated, neutral)
+  & \texttt{--structure prime-factor}\newline
+    \texttt{--search smc-percentile}
+  & \texttt{--structure prime-factor}\newline
+    \texttt{--search merge-split} \\[6pt]
+EC minimisation,\\small state ($k \leq 4$, $N \leq 500$)
+  & \texttt{--structure ilp}\newline
+    \texttt{--search single}
+  & \texttt{--structure sa-bisect}\newline
+    \texttt{--search short-burst} \\[6pt]
+EC minimisation,\\large state
+  & \texttt{--structure sa-bisect}\newline
+    \texttt{--search parallel-tempering}
+  & \texttt{--structure sa-bisect}\newline
+    \texttt{--search short-burst} \\[6pt]
+PP maximisation
+  & \texttt{--structure cvd-geographic}\newline
+    \texttt{--search smc-percentile}
+  & \texttt{--structure bfs-growth}\newline
+    \texttt{--search merge-split} \\[6pt]
+Large-$k$ ($k \geq 15$),\\fast mixing
+  & \texttt{--structure prime-factor}\newline
+    \texttt{--search adaptive-multiscale}
+  & \texttt{--structure prime-factor}\newline
+    \texttt{--search multiscale} \\[6pt]
+Large-$k$, EC optimisation\\(multi-core available)
+  & \texttt{--structure sa-bisect}\newline
+    \texttt{--search parallel-tempering}
+  & \texttt{--structure standard-bisect}\newline
+    \texttt{--search short-burst} \\[6pt]
+VRA Section~2 analysis
+  & \texttt{--structure ratio-optimal}\newline
+    \texttt{--weights vra-aligned}\newline
+    \texttt{--search vra-recom}
+  & --- \\[6pt]
+Local sensitivity\\at a fixed plan
+  & \texttt{--structure ratio-optimal}\newline
+    \texttt{--search flip}
+  & --- \\[6pt]
+Production sweep,\\general purpose
+  & \texttt{--structure prime-factor}\newline
+    \texttt{--weights county}\newline
+    \texttt{--search convergence}
+  & \texttt{--structure prime-factor}\newline
+    \texttt{--search merge-split} \\[6pt]
+Fastest result\\(time budget limited)
+  & \texttt{--structure bfs-growth}\newline
+    \texttt{--search convergence}
+  & \texttt{--structure standard-bisect}\newline
+    \texttt{--search single} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Metric Sensitivity Table}
+
+Table~\ref{tab:sensitivity} summarises which algorithm layer and type most
+affects each metric.
+This table is the primary guide for practitioners whose task is defined by
+a single dominant metric.
+
+\begin{table}[ht]
+\centering
+\caption{%
+  Algorithm sensitivity by metric. Layer: which layer (Structure, Search, or Both)
+  most determines the metric. Leader: the algorithm achieving the best
+  value on this metric in this comparison.
+}
+\label{tab:sensitivity}
+\begin{tabular}{@{}llll@{}}
+\toprule
+Metric & Layer & Leader & Second \\
+\midrule
+EC (final plan)   & Both & \pt{} + \sa{} & \sburst{} + \sa{} \\
+PP (final plan)   & Structure (primary) & \cvdgeo{} + \smcp{} & \cvdgeo{} + \smc{} \\
+D-seat            & Search (modest)     & Varies by state & --- \\
+ACF(100)          & Search only         & \ams{} & \pt{} \\
+Runtime (total)   & Both & \bfsgrow{} + \flip{} & \metis{} + \flip{} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Limitations}
+
+The framework inherits the G.14 limitations (single-run, state-specific effects,
+parameter sensitivity) plus two additional caveats for the structure layer.
+
+\paragraph{Structure and search are not independent.}
+The combined recommendation table treats the two layers as separable, but there
+are interactions.
+SA structure + Short-Burst search may not compound: SA already reduces EC at
+structure time, and Short-Burst's burst strategy evaluates relative EC
+improvement from the starting plan.
+If the starting plan is already near the compact region, burst improvement
+may be smaller than from a METIS baseline.
+This interaction has not been formally measured; it is an open empirical
+question for future work.
+
+\paragraph{ILP intractability boundary.}
+The $N \leq 500$ threshold for ILP tractability is empirical (runtime
+$< 60$ s in our experiments).
+For graphs with unusual structure (dense connectivity, deep tree branching),
+ILP may time out at smaller $N$.
+For production use, the \texttt{redist} ILP implementation includes a timeout
+flag (\texttt{--ilp-timeout}) that falls back to SA when exceeded.
+
+\paragraph{Future algorithms.}
+The framework covers all 15 algorithms implemented as of May 2026.
+Future algorithms will require updates; the modular six-question structure
+is designed to accommodate new entries without restructuring the existing
+decision logic.

@@ -1,0 +1,168 @@
+\section{Computation Budget Guidance}
+\label{sec:budget}
+
+\subsection{Overview}
+
+The 15-algorithm portfolio spans four orders of magnitude in runtime:
+\flip{} on NH completes in 0.3 s; \sa{} on TX requires 82.1 s.
+For a 50-state production sweep using the recommended configurations,
+practitioners need a compute budget estimate and a parallelism strategy.
+This section provides both.
+
+\subsection{Per-State Runtime Estimates}
+
+Table~\ref{tab:budget-per-state} gives estimated wall-clock runtime per state
+for the four most common production configurations.
+Estimates are derived from the five benchmark states (NC, WI, TX, FL, NH)
+by linear interpolation in $k \cdot N$ (the dominant cost factor for
+METIS-class algorithms).
+
+\begin{table}[ht]
+\centering
+\caption{%
+  Estimated wall-clock runtime per state (seconds) for four production
+  configurations.
+  Estimates for $k, N$ values not in the benchmark states are interpolated.
+  ``16w'' indicates \texttt{--workers 16}; all others \texttt{--workers 1}.
+  These are rough estimates ($\pm 30\%$) for planning purposes.
+}
+\label{tab:budget-per-state}
+\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Configuration & NC ($k=14$) & WI ($k=8$) & TX ($k=38$) & FL ($k=28$) & Typical 50-state \\
+\midrule
+METIS + Convergence (default)
+  &  $\sim$12 & $\sim$5 & $\sim$38 & $\sim$28 & $\sim$500 s \\
+SA + Short-Burst (EC optimal)
+  &  $\sim$40 & $\sim$18 & $\sim$135 & $\sim$98 & $\sim$1{,}800 s \\
+CVD-Geo + SMC-Percentile (PP + calibrated)
+  &  $\sim$27 & $\sim$12 & $\sim$95 & $\sim$72 & $\sim$1{,}100 s \\
+SA + PT-16w (EC + large-$k$ optimal)
+  &  $\sim$37 & $\sim$16 & $\sim$124 & $\sim$90 & $\sim$1{,}650 s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The default configuration (METIS + Convergence sweep) completes a 50-state
+congressional sweep in approximately 500 s ($\approx 8$ minutes) on a
+single thread, or $\approx 30$ s with 16-thread Rayon parallelism.
+This is the recommended configuration for exploratory runs and parameter tuning.
+
+\subsection{Practical Algorithm Selection Under Budget Constraints}
+
+\paragraph{Tight budget ($< 5$ minutes, single thread).}
+Use METIS + Convergence (default) or BFS + ConvergenceSweep.
+ILP is applicable only to NH; exclude from production sweep or apply
+selectively.
+Do not use SA, CVD-Geo, PT, or SMC-Percentile.
+
+\paragraph{Moderate budget ($< 30$ minutes, single thread or $< 5$ minutes
+with 16 threads).}
+Use BFS or CVD-Geo structure + SMC-Percentile or Merge-Split search.
+This configuration covers PP-maximising and calibrated-distribution use
+cases at approximately $2\times$ the default runtime.
+
+\paragraph{Full budget ($< 2$ hours, 16 threads).}
+SA structure + PT search for EC-optimal results.
+CVD-Geo structure + SMC-Percentile search for PP + calibrated results.
+Adaptive Multi-scale for large-$k$ states (TX, FL, CA, NY) for mixing
+quality.
+
+\subsection{Parallelism Strategy}
+
+The three-layer compositor exposes two levels of parallelism:
+
+\paragraph{State-level parallelism.}
+Each state is independent.
+For a 50-state sweep, distribute states across nodes with
+\texttt{--workers 1} per state and $\leq 50$ parallel jobs.
+This is the most efficient parallelism strategy for homogeneous clusters.
+
+\paragraph{Algorithm-level parallelism (\pt{} only).}
+\pt{} parallelises internally across replicas.
+With 8 replicas and \texttt{--workers 8} or \texttt{--workers 16},
+PT achieves near-linear speedup up to 8 cores.
+For a node with 16 cores handling TX (the bottleneck state in any sweep),
+run 2 states in parallel each with 8 workers:
+\texttt{--workers 8 --replicas 8}.
+
+\paragraph{Anti-pattern to avoid.}
+Do not parallelise chain steps within a single state (e.g., using multiple
+threads for one Merge-Split chain).
+The Markov chain is inherently sequential; multi-threading a single chain
+provides no benefit and introduces synchronisation overhead.
+Only \pt{} benefits from within-state multi-threading (replica parallelism).
+
+\subsection{Which Algorithms Are Practical for 50-State Sweeps}
+
+Table~\ref{tab:practical} classifies all 15 algorithms by production
+practicality for a 50-state congressional sweep.
+
+\begin{table}[ht]
+\centering
+\caption{%
+  Production practicality for a 50-state congressional sweep.
+  ``Full sweep'' means all 50 states; ``Select'' means large-$k$ states only
+  or NH only; ``Not practical'' means runtime or hardware requirements
+  preclude routine use.
+}
+\label{tab:practical}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Algorithm & Production Practicality & Notes \\
+\midrule
+METIS        & Full sweep & Default; fastest \\
+BFS Growth   & Full sweep & Slightly faster than METIS \\
+CVD-Graph    & Full sweep & $2\times$ METIS runtime \\
+CVD-Geo      & Full sweep & Requires centroid data; $2\times$ METIS \\
+SA           & Full sweep & $10\times$ METIS; budget $\sim$30 min/sweep \\
+ILP          & NH only    & Applicable to $k=2$ states; $60\times$ METIS \\
+\midrule
+ConvergenceSweep  & Full sweep & Default search; fast \\
+PercentileSweep   & Full sweep & $\sim$1.5$\times$ Convergence \\
+BisectionEnsemble & Full sweep & $\sim$2$\times$ Convergence \\
+Merge-Split       & Full sweep & Recommended general-purpose \\
+Forest ReCom      & Full sweep & Similar to Merge-Split \\
+Short-Burst       & Full sweep & EC optimal, single-core \\
+ShortBurstForest  & Full sweep & EC + MH; $\sim$50\% slower than Short-Burst \\
+SMC               & Full sweep & Calibrated; $\sim$5$\times$ Merge-Split \\
+SMC-Percentile    & Full sweep & Calibrated point estimate; $\sim$SMC cost \\
+VRA-Aware         & Select     & VRA jurisdictions only \\
+Flip              & Select     & Sensitivity analysis at a fixed plan \\
+Multi-scale       & Large-$k$  & TX, FL, CA, NY, PA, OH; not needed for $k<15$ \\
+Adaptive MS       & Large-$k$  & Preferred over fixed Multi-scale for $k \geq 20$ \\
+Parallel Tempering & Large-$k$ (multi-core) & 8--16 cores; EC optimal for large-$k$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Recommended 50-State Production Stack}
+
+For a complete 50-state congressional sweep that balances quality and runtime:
+
+\begin{enumerate}
+  \item \textbf{Default pass}: All 50 states with
+        \texttt{--structure prime-factor --weights county --search convergence}.
+        Approximately 8 minutes single-threaded.
+        This produces the official plan for all states.
+
+  \item \textbf{Large-$k$ pass}: TX, FL, CA, NY, PA, OH ($k \geq 15$) with
+        \texttt{--structure sa-bisect --search adaptive-multiscale --workers 16}.
+        Approximately 40 minutes.
+        Improves EC and ACF for the six states that most benefit from
+        large-$k$ methods.
+
+  \item \textbf{ILP pass}: NH only with
+        \texttt{--structure ilp --search single}.
+        Approximately 13 seconds.
+        Certifies optimal EC for the two-district state.
+
+  \item \textbf{VRA pass}: Jurisdictions with active Section~2 claims with
+        \texttt{--structure ratio-optimal --weights vra-aligned --search vra-recom}.
+        Approximately 10--20 minutes depending on jurisdiction count.
+\end{enumerate}
+
+Total estimated runtime for the complete four-pass stack on a 16-core machine:
+approximately 60--90 minutes.
