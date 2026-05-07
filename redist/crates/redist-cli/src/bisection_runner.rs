@@ -3477,6 +3477,222 @@ pub fn run_merge_split(
     Ok(assignment)
 }
 
+/// Parallel Tempering: `n_replicas` ForestRecomChains on a geometric tolerance ladder.
+///
+/// Cold chain (replica 0) accumulates plans; `select_plan(p)` returns the plan at
+/// percentile `p` of the cold chain edge-cut distribution.  Hot chains mix faster and
+/// exchange plans with the cold chain every `swap_interval` steps.
+///
+/// Returns `HashMap<usize, usize>` (tract → 1-based district).
+pub fn run_parallel_tempering(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    niter: u32,
+    base_seed: u64,
+    n_replicas: usize,
+    swap_interval: usize,
+    cold_tolerance: f64,
+    hot_tolerance: f64,
+    steps: usize,
+    p: f64,
+) -> Result<HashMap<usize, usize>, String> {
+    use redist_ensemble::parallel_tempering::{ParallelTemperingChain, replica_seed, swap_seed, replica_rngs};
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let n = adjacency.len();
+
+    if num_districts <= 1 {
+        return Ok((0..n).map(|i| (i, 1)).collect());
+    }
+
+    // 1. Build initial plan from METIS using the cold tolerance.
+    let initial = run_all_splits(
+        adjacency, vertex_weights, edge_weights,
+        num_districts, cold_tolerance, niter, Some(base_seed), None,
+    )?;
+
+    if steps == 0 {
+        return Ok(initial);
+    }
+
+    // 2. Convert adjacency Vec<Vec<usize>> → Vec<Vec<u32>> for ParallelTemperingChain.
+    let local_adj: Vec<Vec<u32>> = adjacency.iter()
+        .map(|nbrs| nbrs.iter().map(|&nb| nb as u32).collect())
+        .collect();
+
+    // 3. Convert initial plan (1-based HashMap<usize,usize>) → Vec<u32>.
+    let initial_assignment: Vec<u32> = (0..n)
+        .map(|i| initial.get(&i).copied().unwrap_or(1) as u32)
+        .collect();
+
+    let pop: Vec<i64> = vertex_weights.to_vec();
+
+    // 4. Construct the chain.
+    let mut chain = ParallelTemperingChain::new(
+        local_adj,
+        pop,
+        initial_assignment,
+        num_districts as u32,
+        cold_tolerance,
+        hot_tolerance,
+        n_replicas,
+        swap_interval,
+    );
+
+    // 5. Run `steps` steps.
+    for step in 1..=steps {
+        // Build per-replica (rng_fwd, rng_rev) pairs.
+        let mut rng_replicas: Vec<(SmallRng, SmallRng)> = (0..n_replicas)
+            .map(|i| {
+                let rseed = replica_seed(base_seed, i as u32, step as u64);
+                replica_rngs(rseed)
+            })
+            .collect();
+
+        // Swap RNG: pair index 0 covers all adjacent swaps for this step.
+        let sseed = swap_seed(base_seed, step as u64, 0u32);
+        let mut rng_swap = SmallRng::seed_from_u64(sseed);
+
+        chain.step(&mut rng_replicas, &mut rng_swap);
+    }
+
+    // 6. Select plan from cold chain at percentile p.
+    let chosen = chain.select_plan(p);
+
+    // 7. Convert Vec<u32> → HashMap<usize, usize>.
+    let assignment: HashMap<usize, usize> = chosen.iter()
+        .enumerate()
+        .map(|(i, &d)| (i, d as usize))
+        .collect();
+
+    // Suppress unused-variable warning for edge_weights (used via run_all_splits only).
+    let _ = edge_weights;
+
+    Ok(assignment)
+}
+
+/// VRA-aware Forest ReCom: runs `steps` steps of `VraRecomChain`, which wraps
+/// `ForestRecomChain` with a hard VRA rejection rule preserving majority-minority
+/// districts (those with `minority_vap[t]` fraction >= `vap_threshold`).
+///
+/// `minority_vap`: per-tract minority VAP fraction (0.0–1.0), aligned to `adjacency`.
+/// Returns the plan at percentile `p` of accepted cold-chain EC distribution.
+pub fn run_vra_recom(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    niter: u32,
+    base_seed: u64,
+    steps: usize,
+    p: f64,
+    vap_threshold: f64,
+    minority_vap: &[f64],
+) -> Result<HashMap<usize, usize>, String> {
+    use sha2::Digest;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+    use redist_ensemble::vra_recom::VraRecomChain;
+
+    let n = adjacency.len();
+
+    if num_districts <= 1 {
+        return Ok((0..n).map(|i| (i, 1)).collect());
+    }
+
+    // Build initial plan from METIS.
+    let initial = run_all_splits(
+        adjacency, vertex_weights, edge_weights,
+        num_districts, 0.005, niter, Some(base_seed), None,
+    )?;
+
+    if steps == 0 {
+        return Ok(initial);
+    }
+
+    // Convert adjacency Vec<Vec<usize>> → Vec<Vec<u32>>.
+    let local_adj: Vec<Vec<u32>> = adjacency.iter()
+        .map(|nbrs| nbrs.iter().map(|&nb| nb as u32).collect())
+        .collect();
+
+    // Convert initial plan → Vec<u32>.
+    let initial_assignment: Vec<u32> = (0..n)
+        .map(|i| initial.get(&i).copied().unwrap_or(1) as u32)
+        .collect();
+
+    let pop: Vec<i64> = vertex_weights.to_vec();
+    let mvap: Vec<f64> = minority_vap.to_vec();
+
+    let mut chain = VraRecomChain::new(
+        local_adj,
+        pop,
+        initial_assignment,
+        num_districts as u32,
+        0.005,
+        mvap,
+        vap_threshold,
+    );
+
+    // Include initial plan in the accepted list.
+    let initial_ec = count_edge_cuts(&initial, adjacency);
+    let mut accepted: Vec<(usize, usize, Vec<u32>)> = Vec::new();
+    accepted.push((initial_ec, 0, chain.inner.assignment.clone()));
+
+    for step_idx in 0..steps {
+        let forward_seed = {
+            let mut h = sha2::Sha256::new();
+            h.update(b"FR_FORWARD_");
+            h.update((step_idx as u64).to_le_bytes());
+            h.update(b"_");
+            h.update(0u32.to_le_bytes());
+            h.update(b"_");
+            h.update(base_seed.to_le_bytes());
+            let d = h.finalize();
+            u64::from_le_bytes(d[..8].try_into().unwrap())
+        };
+        let reverse_seed = {
+            let mut h = sha2::Sha256::new();
+            h.update(b"FR_REVERSE_");
+            h.update((step_idx as u64).to_le_bytes());
+            h.update(b"_");
+            h.update(0u32.to_le_bytes());
+            h.update(b"_");
+            h.update(base_seed.to_le_bytes());
+            let d = h.finalize();
+            u64::from_le_bytes(d[..8].try_into().unwrap())
+        };
+
+        let mut rng_forward = SmallRng::seed_from_u64(forward_seed);
+        let mut rng_reverse = SmallRng::seed_from_u64(reverse_seed);
+
+        let rec = chain.step(&mut rng_forward, &mut rng_reverse);
+        if rec.accepted {
+            let ec = rec.inner.cut_edges;
+            accepted.push((ec, step_idx + 1, chain.inner.assignment.clone()));
+        }
+    }
+
+    // Sort by (EC ASC, step_idx ASC) for determinism.
+    accepted.sort_by(|(ec1, idx1, _), (ec2, idx2, _)| ec1.cmp(ec2).then(idx1.cmp(idx2)));
+
+    let accepted_count = accepted.len();
+    let rank = ((p * accepted_count as f64).floor() as usize).min(accepted_count - 1);
+    let (_, _, chosen) = accepted.into_iter().nth(rank).unwrap();
+
+    // Convert Vec<u32> → HashMap<usize, usize>.
+    let assignment: HashMap<usize, usize> = chosen.iter()
+        .enumerate()
+        .map(|(i, &d)| (i, d as usize))
+        .collect();
+
+    let _ = edge_weights;
+
+    Ok(assignment)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -5764,6 +5980,211 @@ mod tests {
     fn short_burst_forest_vs_standard_ec_comparison() {
         // Placeholder: load NC 2020 adjacency, run all three variants on same base_seed.
         // Record EC for each; assert all three return valid k=14 plans.
+        // Skipped unless --include-ignored is passed.
+    }
+
+    // ── run_parallel_tempering L0/L1 tests ──────────────────────────────────
+
+    // L0: basic k=2 partition on a 4x4 grid — valid districts, all tracts assigned.
+    #[test]
+    fn pt_produces_valid_k2_partition() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let asgn = run_parallel_tempering(
+            &adj, &pop, &ew,
+            2,   // num_districts
+            10,  // niter
+            42,  // base_seed
+            2,   // n_replicas
+            5,   // swap_interval
+            0.005, // cold_tolerance
+            0.05,  // hot_tolerance
+            20,  // steps
+            0.0, // p
+        ).expect("pt k=2 on 4x4 grid must succeed");
+
+        assert_eq!(asgn.len(), 16, "all 16 tracts must be assigned");
+        let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
+        assert_eq!(districts.len(), 2, "must have exactly 2 districts");
+        for &d in asgn.values() {
+            assert!(d >= 1 && d <= 2, "district label must be in [1,2], got {d}");
+        }
+    }
+
+    // L1: p=0.0 returns a plan with EC <= p=1.0.
+    #[test]
+    fn pt_p0_le_p1_ec() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let run = |p: f64| {
+            run_parallel_tempering(&adj, &pop, &ew, 2, 10, 99, 2, 5, 0.005, 0.05, 30, p)
+                .expect("pt must succeed")
+        };
+        let a0 = run(0.0);
+        let a1 = run(1.0);
+        let ec0: usize = (0..adj.len())
+            .flat_map(|v| adj[v].iter().map(move |&nb| (v, nb)))
+            .filter(|&(v, nb)| nb > v && a0[&v] != a0[&nb])
+            .count();
+        let ec1: usize = (0..adj.len())
+            .flat_map(|v| adj[v].iter().map(move |&nb| (v, nb)))
+            .filter(|&(v, nb)| nb > v && a1[&v] != a1[&nb])
+            .count();
+        assert!(ec0 <= ec1,
+            "pt p=0.0 EC ({ec0}) must be <= p=1.0 EC ({ec1})");
+    }
+
+    // L0: same base_seed → identical result (determinism).
+    #[test]
+    fn pt_deterministic() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let run = || {
+            run_parallel_tempering(&adj, &pop, &ew, 2, 10, 314159, 3, 5, 0.005, 0.05, 25, 0.0)
+                .expect("pt must succeed")
+        };
+        let a1 = run();
+        let a2 = run();
+        assert_eq!(a1, a2, "same base_seed must produce identical assignment");
+    }
+
+    // L0: steps=0 returns the initial METIS plan immediately (no chain steps).
+    #[test]
+    fn pt_zero_steps_returns_initial() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let asgn = run_parallel_tempering(
+            &adj, &pop, &ew, 2, 10, 42, 2, 5, 0.005, 0.05, 0, 0.0,
+        ).expect("steps=0 must succeed");
+        assert_eq!(asgn.len(), 16, "all tracts must be assigned");
+        let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
+        assert_eq!(districts.len(), 2, "must have 2 districts");
+    }
+
+    // L0: SearchMode parses "parallel-tempering" successfully (CLI integration).
+    #[test]
+    fn pt_search_mode_parses() {
+        use clap::ValueEnum;
+        use crate::args::SearchMode;
+        let parsed = SearchMode::from_str("parallel-tempering", true)
+            .expect("SearchMode must parse 'parallel-tempering'");
+        assert_eq!(parsed, SearchMode::ParallelTempering,
+            "parsed SearchMode must equal ParallelTempering");
+    }
+
+    // L2: NC 2020 k=14 — PT cold chain EC <= single-chain EC (quality check).
+    #[test]
+    #[ignore]
+    fn pt_nc_lower_ec_than_single_chain() {
+        // Requires: data/2020/nc_adjacency.adj.bin
+        // Run PT (n_replicas=4, steps=1000, p=0.0) and single (steps=1, p=0.0)
+        // on NC 2020 k=14. Assert EC_pt <= EC_single at least for p=0.0.
+        // Skipped unless --include-ignored is passed.
+    }
+
+    // ── run_vra_recom L0/L1 tests ────────────────────────────────────────────
+
+    // L0: run_vra_recom must return a valid 2-district plan on a 4x4 grid.
+    #[test]
+    fn vra_recom_produces_valid_k2_partition() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        // minority_vap: first 8 tracts (top half) have 0.6, rest have 0.1
+        let minority_vap: Vec<f64> = (0..16).map(|i| if i < 8 { 0.6 } else { 0.1 }).collect();
+        let asgn = run_vra_recom(
+            &adj, &pop, &ew,
+            2,      // num_districts
+            10,     // niter
+            42,     // base_seed
+            30,     // steps
+            0.0,    // p
+            0.50,   // vap_threshold
+            &minority_vap,
+        ).expect("vra_recom k=2 on 4x4 grid must succeed");
+
+        assert_eq!(asgn.len(), 16, "all 16 tracts must be assigned");
+        let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
+        assert_eq!(districts.len(), 2, "must have exactly 2 districts");
+        for &d in asgn.values() {
+            assert!(d >= 1 && d <= 2, "district label must be in [1,2], got {d}");
+        }
+    }
+
+    // L1: p=0.0 returns a plan with EC <= p=1.0 (percentile ordering).
+    #[test]
+    fn vra_recom_p0_le_p1_ec() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let minority_vap: Vec<f64> = (0..16).map(|i| if i < 8 { 0.6 } else { 0.1 }).collect();
+        let run = |p: f64| {
+            run_vra_recom(&adj, &pop, &ew, 2, 10, 77, 50, p, 0.50, &minority_vap)
+                .expect("vra_recom must succeed")
+        };
+        let a0 = run(0.0);
+        let a1 = run(1.0);
+        let ec = |asgn: &HashMap<usize, usize>| -> usize {
+            (0..adj.len())
+                .flat_map(|v| adj[v].iter().map(move |&nb| (v, nb)))
+                .filter(|&(v, nb)| nb > v && asgn[&v] != asgn[&nb])
+                .count()
+        };
+        assert!(ec(&a0) <= ec(&a1),
+            "vra_recom p=0.0 EC ({}) must be <= p=1.0 EC ({})", ec(&a0), ec(&a1));
+    }
+
+    // L0: same base_seed → identical result (determinism).
+    #[test]
+    fn vra_recom_deterministic() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let minority_vap: Vec<f64> = (0..16).map(|i| if i < 8 { 0.6 } else { 0.1 }).collect();
+        let run = || {
+            run_vra_recom(&adj, &pop, &ew, 2, 10, 271828, 30, 0.0, 0.50, &minority_vap)
+                .expect("vra_recom must succeed")
+        };
+        let a1 = run();
+        let a2 = run();
+        assert_eq!(a1, a2, "same base_seed must produce identical assignment");
+    }
+
+    // L0: minority_vap all 0.0 → protected_districts empty → no VRA rejection
+    // (the chain degenerates to unconstrained ForestRecom; all proposals handled by MH only).
+    #[test]
+    fn vra_recom_zero_minority_vap_no_vra_rejection() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        // All zero → no protected districts → VRA enforcement is a no-op.
+        let minority_vap: Vec<f64> = vec![0.0; 16];
+        let asgn = run_vra_recom(
+            &adj, &pop, &ew,
+            2, 10, 13, 20, 0.0, 0.50, &minority_vap,
+        ).expect("vra_recom with zero minority_vap must succeed");
+        assert_eq!(asgn.len(), 16, "all tracts must be assigned");
+        let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
+        assert_eq!(districts.len(), 2, "must have 2 districts");
+    }
+
+    // L0: SearchMode parses "vra-recom" successfully (CLI integration).
+    #[test]
+    fn vra_recom_search_mode_parses() {
+        use clap::ValueEnum;
+        use crate::args::SearchMode;
+        let parsed = SearchMode::from_str("vra-recom", true)
+            .expect("SearchMode must parse 'vra-recom'");
+        assert_eq!(parsed, SearchMode::VraRecom,
+            "parsed SearchMode must equal VraRecom");
+    }
+
+    // L2: NC 2020 k=14 — VRA-aware chain preserves majority-minority districts.
+    #[test]
+    #[ignore]
+    fn vra_recom_nc_preserves_majority_minority() {
+        // Requires: data/2020/north_carolina_demographics_2020.csv +
+        //           data/2020/north_carolina_adjacency.adj.bin
+        // Load minority_vap from demographics CSV (HVAP / total_pop per tract).
+        // Run vra_recom with vap_threshold=0.50, steps=200.
+        // Assert: in every accepted plan, no initially-protected district has
+        // minority_vap_fraction < 0.50 (i.e., VRA constraint is honoured).
         // Skipped unless --include-ignored is passed.
     }
 }

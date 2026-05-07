@@ -1,0 +1,193 @@
+\section{The \ams{} Algorithm}
+\label{sec:algorithm}
+
+\subsection{Overview}
+
+\ams{} wraps \ms{} (G.11) with a Robbins-Monro adaptation loop.
+The inner chain is identical to \ms{}: at each step, a uniform draw determines
+whether to make a coarse or fine move; coarse moves project the county-level
+plan back to the tract level via the rebalancer.
+The adaptation loop runs every $\Delta$ steps (default $\Delta = 50$),
+measuring the observed coarse acceptance rate in the current window and
+updating $\alpha$ by the Robbins-Monro rule.
+
+\subsection{Design Choices}
+
+Three design choices distinguish \ams{} from a naive adaptive wrapper:
+
+\paragraph{Choice 1: $\gamma_0/\sqrt{t}$ step-size schedule.}
+As established in Section~\ref{sec:background}, this schedule satisfies the
+Robbins-Monro convergence conditions.
+The $1/\sqrt{t}$ decay is slower than the $1/t$ alternative, preserving
+adaptivity into the mid-run phase.
+For $T = 5{,}000$ steps and $\Delta = 50$, there are $t_{\max} = 100$
+adaptation rounds; the step sizes range from $\gamma_0 = 0.10$ (first round)
+to $\gamma_0/\sqrt{100} = 0.01$ (last round).
+The final perturbations are small but nonzero, allowing the alpha to track
+slow non-stationarity.
+
+\paragraph{Choice 2: Adaptation interval $\Delta = 50$.}
+At the default target $\tau = 0.30$, approximately $\alpha \cdot \Delta = 0.30
+\times 50 = 15$ steps in each window are coarse-move attempts.
+A window of 15 binary outcomes gives a standard error of
+$\sqrt{0.30 \times 0.70 / 15} \approx 0.12$ on the acceptance rate estimate.
+This is large relative to the step size $\gamma_t$, but the Robbins-Monro
+convergence theorem handles the noise explicitly.
+A smaller $\Delta$ (e.g., 10) would give noisier estimates and slower
+convergence; a larger $\Delta$ (e.g., 200) would reduce noise but adapt too
+infrequently to track non-stationarity.
+We find $\Delta = 50$ empirically robust across all states tested.
+
+\paragraph{Choice 3: Clip to $[0.05, 0.95]$.}
+Without clipping, the Robbins-Monro iterate could reach $\alpha = 0$ (pure
+fine chain) if the coarse acceptance rate is persistently below target.
+At $\alpha = 0$, no coarse moves occur, so the coarse acceptance rate signal
+is undefined.
+The lower clip $0.05$ ensures at least one coarse move is expected per
+$1/0.05 = 20$ steps, providing a nonzero signal.
+The upper clip $0.95$ prevents the chain from becoming a pure coarse chain,
+which would fail frequently on the rebalancer and provide a misleading
+acceptance rate (all rejections, driving $\alpha$ back down in an oscillatory
+fashion).
+
+\subsection{Formal Pseudocode}
+
+Algorithm~\ref{alg:ams} gives the complete \ams{} procedure.
+
+\begin{algorithm}[t]
+\caption{\ams{}($\text{fine\_adj}$, $\text{coarse\_adj}$,
+  $\text{fine\_to\_coarse}$, $\text{pop}$, $k$, $\delta$,
+  $\tau$, $\alpha_0$, $\Delta$, $\gamma_0$, $T$, $s$, $p$)}
+\label{alg:ams}
+\begin{algorithmic}[1]
+\State $\alpha \gets \alpha_0$ \Comment{initial coarse-move probability; default 0.30}
+\State $\tau \gets 0.30$ \Comment{target coarse acceptance rate}
+\State $\delta_c \gets 3\delta$ \Comment{coarse balance tolerance}
+\State $\mathrm{window} \gets [\,]$ \Comment{coarse accept/reject outcomes}
+\State $\mathrm{alpha\_trace} \gets [\,]$
+\State $\Pi \gets \text{InitialPlan}()$
+\State $\mathrm{EC\_record} \gets [\,]$ \Comment{all visited plan ECs}
+\For{$\text{step} = 1$ \textbf{to} $T$}
+  \State $u \gets \text{step\_seed}(s, \text{step})$
+  \Comment{MSC\_STEP\_ prefix (same as MultiScale)}
+  \If{$u < \alpha$}
+    \State $\Pi' \gets \text{CoarseMove}(\Pi, \text{coarse\_adj}, \text{fine\_to\_coarse},
+           \text{pop}, k, \delta_c)$
+    \State $\text{ok} \gets \text{Rebalance}(\Pi', \text{fine\_adj}, \text{pop}, k, \delta,
+           \text{max\_iter}=200)$
+    \State $\mathrm{window}.\text{push}(\text{ok})$
+    \If{$\text{ok}$}
+      \State $\Pi \gets \Pi'$
+    \EndIf
+  \Else
+    \State $\Pi \gets \text{FineMove}(\Pi, \text{fine\_adj}, \text{pop}, k, \delta)$
+    \Comment{standard ReCom step}
+  \EndIf
+  \State $\mathrm{EC\_record}.\text{push}(\EC(\Pi))$
+  \If{$\text{step} \bmod \Delta = 0$}
+    \State $t \gets \text{step} / \Delta$
+    \Comment{adaptation round index}
+    \State $\gamma_t \gets \gamma_0 / \sqrt{t}$
+    \State $r \gets \text{mean}(\mathrm{window})$
+    \Comment{observed coarse acceptance rate}
+    \State $\alpha \gets \text{clip}\!\bigl(\alpha + \gamma_t(r - \tau),\; 0.05,\; 0.95\bigr)$
+    \State $\mathrm{alpha\_trace}.\text{push}(\alpha)$
+    \State $\mathrm{window} \gets [\,]$
+    \Comment{clear window}
+  \EndIf
+\EndFor
+\State $\text{sorted} \gets \text{sort}(\mathrm{EC\_record})$
+\State \textbf{return} $\text{plan at percentile } p \text{ of sorted EC}$
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Return value.}
+Following the \ms{} convention, \ams{} returns the plan at percentile $p$ of
+the visited plans sorted by $\EC$ (default $p = 0.0$, returning the
+minimum-$\EC$ plan seen).
+The full alpha trace and final $\alpha$ are written to the run manifest.
+
+\subsection{Data Model and Compositor Integration}
+
+\ams{} adds three fields to the \ms{} configuration struct:
+
+\begin{verbatim}
+pub struct AdaptiveMultiScaleConfig {
+    pub total_steps: usize,
+    pub target_accept: f64,    // default: 0.30
+    pub initial_alpha: f64,    // default: 0.30
+    pub adapt_interval: usize, // default: 50
+    pub gamma_0: f64,          // default: 0.10
+    pub pop_tolerance: f64,
+    pub coarse_tol: f64,       // = 3 * pop_tolerance
+    pub p: f64,
+    pub base_seed: u64,
+    pub chain_idx: u32,
+}
+\end{verbatim}
+
+\noindent
+\texttt{AdaptiveMultiScaleChain} wraps \texttt{MultiScaleChain} by reference,
+adding \texttt{alpha} (current $\alpha$), \texttt{coarse\_accept\_window}
+(Vec$\langle$bool$\rangle$), and \texttt{alpha\_trace} (Vec$\langle$f64$\rangle$).
+All projection, rebalance, and hierarchy logic is inherited unchanged from
+\texttt{MultiScaleChain}.
+
+\subsection{CLI and YAML}
+
+\paragraph{CLI.}
+\begin{verbatim}
+redist state --state TX --year 2020 \
+  --search multiscale-adaptive \
+  --multiscale-steps 5000 \
+  --ms-target-accept 0.30 \
+  --ms-adapt-interval 50 \
+  --percentile 0.0
+\end{verbatim}
+
+Advanced parameters \texttt{--ms-gamma0} (default 0.10) and
+\texttt{--ms-initial-alpha} (default 0.30) are available as expert flags for
+diagnosing slow convergence; they default to sensible values for all tested
+states.
+
+\paragraph{YAML.}
+\begin{verbatim}
+algorithm:
+  structure: prime-factor
+  weights: county
+  search: multiscale-adaptive
+  multiscale_steps: 5000
+  ms_target_accept: 0.30
+  ms_adapt_interval: 50
+  percentile: 0.0
+\end{verbatim}
+
+\subsection{Audit Trail}
+
+Every run with \texttt{--search multiscale-adaptive} records the following
+fields in \texttt{runs/\{label\}/\{year\}/index.json}:
+
+\begin{verbatim}
+"search": "multiscale-adaptive",
+"total_steps": 5000,
+"target_accept": 0.30,
+"initial_alpha": 0.30,
+"final_alpha": 0.33,
+"adapt_interval": 50,
+"gamma_0": 0.10,
+"alpha_trace": [0.30, 0.31, 0.33, 0.33, ...],
+"fine_acceptance_rate": 0.73,
+"coarse_acceptance_rate": 0.29,
+"selected_step": 2847,
+"step_seed_formula": "SHA-256('MSC_STEP_' || step:u64le || '_' ||
+    chain_idx:u32le || '_' || base_seed:u64le)"
+\end{verbatim}
+
+The $\gamma_0$ field is mandatory (even when it equals the default 0.10)
+because \texttt{alpha\_trace} cannot be reproduced without the step-size
+schedule.
+\texttt{final\_alpha} is the last entry of \texttt{alpha\_trace}.
+\texttt{fine\_acceptance\_rate} and \texttt{coarse\_acceptance\_rate} are
+computed over all steps, not just the last window.
+This ensures \texttt{redist label-verify} can confirm all search parameters
+and independently reproduce the alpha trace from the base seed.

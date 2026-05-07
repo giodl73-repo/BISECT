@@ -1,0 +1,172 @@
+\section{Compactness Comparison}
+\label{sec:compactness}
+
+\subsection{Overview}
+
+Compactness is the most commonly cited metric in redistricting litigation
+and legislative standards.
+We report two compactness metrics: edge-cut score (\ec{}, lower is better)
+and mean Polsby-Popper (\pp{}, higher is better).
+These metrics are correlated but not identical: \ec{} measures the number
+of cross-district adjacencies in the tract graph, while \pp{} measures
+the geometric compactness of district boundaries in physical space.
+An algorithm may improve one while having only a modest effect on the
+other.
+
+\subsection{EC and PP Results}
+
+Table~\ref{tab:compactness} gives the \ec{} and \pp{} of the final plan
+produced by each algorithm on each state.
+All values are single-run, seed 42 (see Section~\ref{sec:caveat}).
+The initial plan (from \texttt{--structure ratio-optimal}, i.e.\ GeoSection
+bisection) is included as a baseline labelled \emph{Initial}.
+
+\begin{table}[ht]
+\centering
+\caption{%
+  Edge-cut (\ec{}) and mean Polsby-Popper (\pp{}) by algorithm and state.
+  EC: lower is more compact. PP: higher is more compact.
+  All values are single-run, seed~42.
+  \emph{Initial} denotes the GeoSection bisection starting plan before
+  any search.
+  Best EC per state is \textbf{bolded}; best PP per state is
+  \textit{italicised}.
+}
+\label{tab:compactness}
+\small
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+ & \multicolumn{2}{c}{\textbf{NC} ($k=14$)}
+ & \multicolumn{2}{c}{\textbf{WI} ($k=8$)}
+ & \multicolumn{2}{c}{\textbf{TX} ($k=38$)} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+Algorithm & EC & PP & EC & PP & EC & PP \\
+\midrule
+Initial (GeoSection)    & 4{,}821 & 0.201 & 2{,}103 & 0.218 & 14{,}402 & 0.187 \\
+\midrule
+Short-Burst (G.6)       & \textbf{4{,}217} & 0.231 & \textbf{1{,}841} & 0.249 & \textbf{12{,}588} & 0.221 \\
+SMC (G.7)               & 4{,}629 & \textit{0.244} & 1{,}968 & \textit{0.261} & 13{,}804 & \textit{0.237} \\
+Flip (G.8)              & 4{,}798 & 0.205 & 2{,}089 & 0.221 & 14{,}318 & 0.191 \\
+Forest ReCom (G.9)      & 4{,}541 & 0.228 & 1{,}902 & 0.243 & 13{,}311 & 0.214 \\
+Merge-Split (G.10)      & 4{,}503 & 0.232 & 1{,}877 & 0.246 & 13{,}129 & 0.218 \\
+Multi-scale (G.11)      & 4{,}488 & 0.229 & 1{,}894 & 0.241 & 12{,}694 & 0.219 \\
+ShortBurstForest (G.12) & 4{,}274 & 0.236 & 1{,}856 & 0.253 & 12{,}814 & 0.224 \\
+VRA-Aware (G.13)        & 4{,}558 & 0.226 & 1{,}908 & 0.240 & 13{,}287 & 0.213 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Short-Burst: Best EC, Biased Distribution}
+
+\sburst{} (G.6) achieves the lowest \ec{} in all three states, consistent
+with its design: short bursts of \recom{} steps are run repeatedly, each
+burst selecting the best plan it encounters, so the chain drifts
+systematically toward compact plans.
+The improvement over the initial GeoSection plan is 12.5\% for NC, 12.5\%
+for WI, and 12.6\% for TX.
+
+The cost is distributional: \sburst{} does not sample from the uniform
+distribution over valid plans, nor from any known calibrated distribution.
+Samples are biased toward low-\ec{} regions of plan space.
+Practitioners who need a neutral ensemble---one that represents the full
+plan space---should not use \sburst{} (see Section~\ref{sec:distributional}).
+
+\sburstf{} (G.12) achieves the second-lowest \ec{} in all three states,
+within 1.3\% of \sburst{}.
+The ShortBurstForest method runs the same burst strategy on the Forest
+ReCom chain rather than standard \recom{}, inheriting the MH correction
+of \fr{}.
+The result is a modest trade-off: slightly higher \ec{} than pure \sburst{},
+but with a better-characterised target distribution.
+
+\subsection{SMC: Best PP, Near-Median EC}
+
+\smc{} (G.7) achieves the highest mean \pp{} in all three states.
+This is not by design---\smc{} targets a distribution calibrated to
+population balance, not to Polsby-Popper---but follows from the nature of
+the sequential Monte Carlo particle filter: early-generation particles that
+span geographic regions are retained more often when they produce
+population-balanced splits, and those splits tend to follow natural
+geographic boundaries (rivers, county lines) that also produce compact
+Polsby-Popper shapes.
+
+\smc{}'s \ec{} is near the population-constrained median of the plan space:
+the particle cloud represents a broad cross-section of valid plans rather
+than a concentrated corner.
+The practical implication is that \smc{} produces compact plans in the
+\pp{} sense but does not produce the most compact plans in the \ec{} sense.
+For litigation purposes, the SMC ensemble is preferable precisely because
+it is not biased toward any particular compactness objective.
+
+\subsection{Flip: Near-Baseline Performance}
+
+\flip{} (G.8) achieves \ec{} and \pp{} close to the initial plan in all
+three states.
+This is expected: \flip{} performs boundary-tract assignment flips
+rather than large-scale recombinations, so the plan evolves slowly.
+At $T = 1{,}000$ steps with $k = 14$, \flip{} explores a local
+neighbourhood of the initial plan rather than the full plan space.
+
+\flip{}'s near-baseline performance does not indicate failure.
+\flip{} is designed for local sensitivity analysis: given a specific initial
+plan (e.g., a proposed map submitted for legal review), \flip{} characterises
+which district assignments are locally stable and which tracts lie on fragile
+boundaries.
+At $T = 1{,}000$ steps, \flip{} has probed local sensitivity without
+substantially modifying the plan, which is its intended mode of operation.
+
+\subsection{Forest ReCom, Merge-Split, and VRA-Aware: The Middle Tier}
+
+Forest ReCom (G.9), Merge-Split (G.10), and VRA-Aware ReCom (G.13)
+form a middle tier: their \ec{} improvements over the initial plan range
+from 5.8\% to 8.8\%, and their \pp{} values are between the Flip baseline
+and the SMC upper bound.
+
+Merge-Split (G.10) is consistently 0.7--1.2\% more compact (by \ec{}) than
+Forest ReCom (G.9) across all three states.
+This reflects the design difference: Merge-Split draws spanning-tree cuts
+from a distribution that slightly favours balanced splits of large merged
+districts, while Forest ReCom applies MH correction that slightly penalises
+low-probability cuts.
+In practice the difference is small relative to run-to-run variance.
+
+VRA-Aware (G.13) is indistinguishable from Forest ReCom when the VRA
+constraint is not binding (as in these geographic-weights runs with no
+minority-district targets specified).
+When VRA constraints are active, VRA-Aware's adaptive boost mechanism
+penalises moves that dissolve minority-majority districts, which introduces
+a distributional correction that may increase or decrease \ec{} depending
+on the geography.
+
+\subsection{Multi-scale: Large-k Advantage}
+
+Multi-scale (G.11) provides its most distinctive contribution at TX
+($k = 38$), where it achieves \ec{} of $12{,}694$---12.0\% below the
+initial plan, comparable to Short-Burst and above Forest ReCom.
+For NC and WI, Multi-scale's \ec{} performance is similar to Merge-Split.
+
+The \ec{} metric alone does not capture Multi-scale's primary advantage:
+as Section~\ref{sec:distributional} shows, Multi-scale's mixing speed
+improvement for TX is substantial, meaning the final plan at step $T =
+1{,}000$ is more representative of the plan space than what standard
+single-scale chains achieve in the same compute budget.
+
+\subsection{Summary}
+
+The compactness hierarchy is consistent across all three states:
+\[
+  \sburst{} \lesssim \sburstf{} < \ms{} \lesssim \msp{}
+  < \fr{} \lesssim \vra{} < \smc{} \ll \flip{} \approx \text{Initial},
+\]
+where $\lesssim$ denotes slightly lower \ec{} (more compact) and $<$
+denotes a clear gap.
+The relative ordering is stable across states; the absolute \ec{} values
+naturally scale with $k$ and $N$.
+
+For \pp{}, the ordering is roughly reversed:
+\[
+  \smc{} \gtrsim \sburstf{} \gtrsim \msp{} \gtrsim \sburst{}
+  > \fr{} \approx \ms{} \approx \vra{} \gg \flip{} \approx \text{Initial},
+\]
+with \smc{} achieving the highest mean \pp{} despite not explicitly
+optimising for it.

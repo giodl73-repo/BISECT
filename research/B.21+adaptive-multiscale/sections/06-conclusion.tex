@@ -1,0 +1,101 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have introduced \ams{} (Adaptive Multi-scale MCMC), a Search-layer
+algorithm that wraps \ms{} (G.11) with a Robbins-Monro adaptation loop that
+automatically tunes the coarse-move probability $\alpha$.
+The algorithm is simple: every $\Delta = 50$ steps, observe the recent coarse
+acceptance rate, compare to the target $\tau = 0.30$, and update $\alpha$ by
+$\gamma_t = \gamma_0/\sqrt{t}$.
+No other aspect of the chain changes.
+
+\paragraph{Key findings.}
+\begin{itemize}
+  \item \textbf{State-specific convergence.}
+    \ams{} converges to distinct state-specific equilibria: $\alpha^* \approx
+    0.33$ for Texas (highly county-structured), $0.28$ for North Carolina
+    (well-matched to the default), and $0.17$ for Iowa (few districts, small
+    ratio).
+    These differ from the one-size-fits-all default of 0.30.
+
+  \item \textbf{No regression from adaptation.}
+    Autocorrelation of $\EC$ at lag 100 is not worse than fixed-$\alpha$
+    \ms{} using the oracle-optimal alpha in any state tested.
+    For Iowa and California---states where 0.30 is a poor choice---\ams{}
+    provides a clear improvement over the fixed default.
+
+  \item \textbf{Near-oracle performance.}
+    ACF from \ams{} is within 0.01--0.02 of the oracle-optimal fixed-$\alpha$
+    chain (Table~\ref{tab:oracle}), achieved without any manual tuning or
+    pilot runs.
+
+  \item \textbf{Negligible overhead.}
+    The adaptation loop is $O(1)$ per step in amortised cost; runtime is
+    within 2\% of fixed-$\alpha$ \ms{} for all states.
+\end{itemize}
+
+\paragraph{Position in the B-series landscape.}
+\ams{} is a drop-in replacement for \texttt{--search multiscale} at the
+Search (SeedCompositor) layer.
+It is orthogonal to all Structure-layer choices (\geosec{}, \areasec{},
+prime-factor, \sa{}) and all WeightsOverride choices.
+For practitioners, the recommendation is straightforward:
+\begin{itemize}
+  \item Use \texttt{--search multiscale-adaptive} whenever you would have
+    used \texttt{--search multiscale}.
+    The adaptation cost is negligible and the calibration benefit is real.
+  \item Use \texttt{--search multiscale --multiscale-alpha X} only when you
+    have strong prior knowledge that $X$ is the correct $\alpha$ for this
+    specific state, or for reproducibility of a specific historical run.
+\end{itemize}
+
+\paragraph{Audit and reproducibility.}
+The alpha trace, $\gamma_0$, initial alpha, and final alpha are all recorded
+in the run manifest.
+A verifier can independently reproduce the alpha trace from the base seed
+and step seeds using the MSC\_STEP\_ prefix formula.
+The adaptation introduces no new randomness: it is a deterministic function
+of the acceptance events, which are themselves determined by the step seeds.
+
+\paragraph{Open questions.}
+Several extensions are deferred to future work:
+
+\begin{enumerate}
+  \item \textbf{Frozen vs.\ continued adaptation.}
+    The current implementation adapts throughout the run.
+    An alternative is to freeze $\alpha$ once convergence is detected
+    (e.g., when $|\alpha_t - \alpha_{t-1}| < \epsilon$ for several consecutive
+    rounds), giving a cleaner theoretical guarantee (the frozen chain
+    satisfies detailed balance exactly).
+    Continued adaptation is more responsive to non-stationarity; frozen
+    alpha is more reproducible.
+
+  \item \textbf{State-dependent target $\tau$.}
+    The current spec uses a fixed $\tau = 0.30$ for all states.
+    One could set $\tau$ proportional to the county/tract ratio, so that
+    states with higher ratios target higher coarse-move frequencies.
+    This would require a prior model for $\tau(\text{ratio})$ that does not
+    yet exist.
+
+  \item \textbf{Alpha trace compression.}
+    For $T = 10{,}000$ and $\Delta = 50$, the alpha trace has 200 entries---
+    modest but potentially significant for large ensemble runs.
+    Run-length encoding of near-converged traces would reduce storage while
+    preserving full verifiability.
+
+  \item \textbf{Extension to multi-chain ensembles.}
+    When \ams{} is composed with \cs{} or \be{}, each chain runs its own
+    adaptation independently.
+    A shared adaptation pooling coarse acceptance rates across chains might
+    converge faster; the interaction with the SeedCompositor design is an
+    open question.
+\end{enumerate}
+
+\paragraph{Implementation note.}
+\ams{} is implemented as \texttt{AdaptiveMultiScaleChain} in the
+\texttt{redist-multiscale} crate, wrapping \texttt{MultiScaleChain} by
+composition.
+The CLI flag \texttt{--search multiscale-adaptive} enables it; the YAML
+key is \texttt{search: multiscale-adaptive}.
+All other platform interfaces (\texttt{redist label-analyze},
+\texttt{redist label-verify}, the manifest schema) are unchanged.

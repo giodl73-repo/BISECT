@@ -1,0 +1,123 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+\subsection{Summary}
+
+We have compared all eight redistricting ensemble algorithms implemented
+in \texttt{redist-ensemble} (G.6--G.13) on three states spanning
+a representative range of district counts: NC ($k = 14$), WI ($k = 8$),
+and TX ($k = 38$).
+The main findings are:
+
+\begin{enumerate}
+
+  \item \textbf{No algorithm dominates all metrics.}
+        Short-Burst achieves the lowest edge-cut (most compact final plan)
+        but samples from a concentrated near-compact distribution.
+        SMC achieves the highest mean Polsby-Popper and an exactly
+        calibrated target distribution but does not optimise compactness.
+        Multi-scale achieves the fastest mixing for TX but adds overhead
+        that is unnecessary for small $k$.
+
+  \item \textbf{The compactness--distribution trade-off is fundamental.}
+        Algorithms that optimise for compactness (\sburst{}, \sburstf{})
+        necessarily sample from a biased distribution; algorithms that
+        target uniform or calibrated distributions (\smc{}, \fr{}, \msp{})
+        do not produce the most compact plans.
+        ShortBurstForest occupies a middle position: better compactness
+        than pure \fr{}, better distributional properties than pure
+        \sburst{}.
+
+  \item \textbf{Scale is the primary mixing determinant for large $k$.}
+        For TX ($k = 38$), Multi-scale reduces lag-100 autocorrelation by
+        27\% relative to Merge-Split at comparable runtime, due to
+        coarse-level moves that restructure entire county-district
+        assignments in a single step.
+        For WI ($k = 8$), Multi-scale provides no meaningful mixing
+        benefit.
+
+  \item \textbf{VRA compliance and local sensitivity are orthogonal to
+        the compactness--distribution axis.}
+        VRA-Aware ReCom is the only algorithm that enforces VRA constraints
+        during sampling; no other algorithm can substitute for it when
+        minority-majority district preservation is required.
+        Flip is the only algorithm designed for local boundary sensitivity
+        analysis; its high autocorrelation is a feature, not a defect.
+
+  \item \textbf{The four-question decision tree covers all eight algorithms.}
+        Four binary questions---VRA compliance, $k \geq 20$, calibrated
+        distribution, compactness optimisation---suffice to identify the
+        appropriate algorithm for any redistricting task.
+
+\end{enumerate}
+
+\subsection{The Three-Layer Compositor}
+
+The eight algorithms compared in this paper are all implemented as
+\texttt{--search} modes in the \texttt{redist} CLI.
+The three-layer compositor (\texttt{--structure},
+\texttt{--weights-override}, \texttt{--search}) allows practitioners to
+combine any structure algorithm (standard bisect, ApportionRegions,
+GeoSection, etc.) with any edge-weight signal (geographic, county, VRA,
+proportional) and any search algorithm.
+This means that the decision tree in Section~\ref{sec:decision} selects
+the search layer only; the structure and weight layers are configured
+independently based on the specific redistricting task.
+
+For example, a Texas litigation case might use:
+\begin{itemize}
+  \item \texttt{--structure prime-factor}: ApportionRegions bisection for
+        a legally defensible initial plan.
+  \item \texttt{--weights county}: county-respecting edge weights to
+        encourage county-whole district assignments.
+  \item \texttt{--search multiscale}: Multi-scale MCMC for fast mixing
+        across the large-$k$ plan space.
+\end{itemize}
+
+This combination is not available in any prior academic comparison paper;
+the three-layer compositor is a contribution of the \texttt{redist}
+platform itself.
+
+\subsection{Future Work}
+
+\paragraph{CVD and BFS Growth.}
+Two geometric algorithms---CVD-based redistricting (B.22) and BFS Growth
+(B.23)---are in development.
+When implemented, they will be added to this comparison.
+Both algorithms target geometric compactness directly (rather than
+via Markov chain search), which may outperform \sburst{} on \pp{} while
+maintaining a broader distributional footprint.
+
+\paragraph{Multi-run confidence intervals.}
+The empirical results in this paper are single-run (seed 42).
+A follow-up study with $R = 20$ independent runs per algorithm--state pair
+would provide confidence intervals on all metrics and enable formal
+statistical comparison.
+The decision tree would be updated if any ordering reversals appear under
+multi-run averages.
+
+\paragraph{Adaptive parameter selection.}
+Each algorithm has internal parameters (burst length, $\alpha$, VRA boost)
+that affect performance.
+Adaptive selection of these parameters---based on real-time monitoring of
+acceptance rates, autocorrelation, or compactness trajectory---is the
+subject of B.21 (Adaptive Multi-scale) and is a natural extension for
+all other algorithms.
+
+\subsection{Implementation Reference}
+
+All eight algorithms are implemented in:
+\begin{itemize}
+  \item \texttt{crates/redist-ensemble/src/} --- chain implementations
+        (\texttt{shortburst.rs}, \texttt{flip.rs}, \texttt{forest\_recom.rs},
+        \texttt{merge\_split.rs}, \texttt{multiscale.rs},
+        \texttt{shortburst\_forest.rs}, \texttt{vra\_recom.rs})
+  \item \texttt{crates/redist-ensemble/src/smc.rs} --- SMC implementation
+  \item \texttt{crates/redist-cli/src/compositor/} --- CLI integration and
+        three-layer compositor
+\end{itemize}
+
+The decision framework in Table~\ref{tab:decision} is the recommended
+reference for algorithm selection in the \texttt{redist} platform.
+All runs in this paper are reproducible from the base seed 42 and the
+configurations specified in Section~\ref{sec:setup}.

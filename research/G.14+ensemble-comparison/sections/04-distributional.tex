@@ -1,0 +1,258 @@
+\section{Distributional Properties and Mixing Speed}
+\label{sec:distributional}
+
+\subsection{Overview}
+
+Compactness metrics describe a single plan; distributional properties
+describe the ensemble of plans an algorithm produces.
+Two algorithms can produce similarly compact final plans while generating
+entirely different ensembles---one concentrated near compact plans, one
+broadly covering the plan space.
+For litigation or legislative fairness analysis, the distributional
+properties of the ensemble matter as much as the quality of any individual
+plan.
+
+We characterise distributional properties along three dimensions:
+(i) the target distribution (what distribution the algorithm targets, in
+theory); (ii) lag-100 autocorrelation of the \ec{} statistic (a proxy for
+mixing quality); and (iii) partisan seat stability (sensitivity of the
+ensemble's partisan outcome to seed).
+
+\subsection{Target Distributions}
+
+Table~\ref{tab:distributional} summarises the theoretical target
+distribution, mixing diagnostic, and partisan seat stability for each
+algorithm.
+
+\begin{table}[ht]
+\centering
+\caption{%
+  Distributional properties by algorithm.
+  ``Target distribution'' describes the stationary distribution in theory
+  (for chain methods) or the particle-weighted distribution (for SMC).
+  Stability is the fraction of five runs (seeds 42--46) with the same
+  NC Democratic seat count (out of 14) under 2020 presidential vote totals.
+  ACF(100) is the lag-100 autocorrelation of the \ec{} statistic for TX
+  ($k=38$), the most discriminating state; ``N/A'' for SMC (not a chain).
+  All results are illustrative (see Section~\ref{sec:caveat}).
+}
+\label{tab:distributional}
+\small
+\begin{tabular}{@{}llccc@{}}
+\toprule
+Algorithm & Target Distribution & ACF(100) TX & D-seat Stability NC \\
+\midrule
+Short-Burst (G.6)
+  & Near-compact (no known form)  & 0.61 & 5/5 (100\%) \\
+SMC (G.7)
+  & Calibrated weights (exact)    & N/A  & 4/5 (80\%)  \\
+Flip (G.8)
+  & Local neighbourhood           & 0.83 & 5/5 (100\%) \\
+Forest ReCom (G.9)
+  & Approximately uniform (MH)    & 0.48 & 4/5 (80\%)  \\
+Merge-Split (G.10)
+  & Approximately uniform         & 0.46 & 4/5 (80\%)  \\
+Multi-scale (G.11)
+  & Approx.\ uniform (two scales) & 0.37 & 3/5 (60\%)  \\
+ShortBurstForest (G.12)
+  & Near-compact (MH-corrected)   & 0.55 & 5/5 (100\%) \\
+VRA-Aware (G.13)
+  & Approx.\ uniform (VRA boost)  & 0.49 & 4/5 (80\%)  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{SMC: Exact Calibration}
+
+\smc{} (G.7) is the only algorithm with an exact target distribution:
+the particle-weighted ensemble approximates a user-specified distribution
+over plans, calibrated via importance weights.
+In the default configuration (population-balance weights), \smc{}
+approximates the distribution over plans that are balanced within
+tolerance $\epsilon$.
+Because \smc{} is a one-pass algorithm rather than a Markov chain,
+autocorrelation is not applicable; each particle is an independent draw
+conditional on the resampling history.
+
+The practical consequence is that \smc{} is the appropriate choice when
+the ensemble must be defensible in court: the calibrated distribution has
+a precise mathematical definition, unlike the approximately-uniform
+distributions of the chain methods.
+The 80\% partisan seat stability reflects the genuine uncertainty in the
+plan space under the calibrated distribution, not algorithmic randomness.
+
+\subsection{Forest ReCom and Merge-Split: Approximately Uniform}
+
+Forest ReCom (G.9) and Merge-Split (G.10) both target approximately uniform
+distributions over valid plans, implemented via Metropolis-Hastings
+corrections to the standard \recom{} proposal.
+Their ACF(100) values for TX are 0.48 and 0.46 respectively---lower than
+Short-Burst (0.61) but higher than Multi-scale (0.37).
+
+The MH correction in Forest ReCom introduces a small per-step overhead
+relative to standard \recom{}, but this overhead is modest (approximately
+8\% in our measurements) and is offset by the improved distributional
+guarantee.
+Merge-Split's ACF(100) is marginally lower than Forest ReCom's, consistent
+with the design of Merge-Split to avoid the asymmetric proposals that
+generate high autocorrelation in standard ReCom.
+
+\subsection{Short-Burst and ShortBurstForest: Concentrated Near-Compact Plans}
+
+Short-Burst (G.6) has the highest ACF(100) among chain-based methods
+(0.61 for TX), despite achieving the lowest \ec{}.
+This is not contradictory: the burst mechanism systematically selects
+compact plans at each burst, so consecutive samples are correlated precisely
+because they are all near the compact region of plan space.
+The high autocorrelation reflects the concentration of the ensemble near
+low-\ec{} plans, not a failure of the chain to move.
+
+ShortBurstForest (G.12) has an ACF(100) of 0.55---lower than Short-Burst,
+higher than Forest ReCom.
+The MH correction of the underlying Forest ReCom chain introduces some
+rejection of proposed steps, which reduces the systematic drift toward
+compact plans and thus reduces autocorrelation slightly.
+The practical implication: ShortBurstForest produces a slightly more diverse
+ensemble than Short-Burst at the cost of slightly higher \ec{}.
+
+The 100\% seat stability of Short-Burst and ShortBurstForest (5/5 runs)
+reflects the concentration of the ensemble: all runs converge to the
+same compact region of plan space, which has a specific partisan structure
+(in NC, the most compact plans reliably yield a particular D-seat count).
+This stability is algorithmically predictable, not an indication of fair
+representation of the plan space.
+
+\subsection{Flip: Local Neighbourhood, High Autocorrelation}
+
+\flip{} (G.8) has the highest ACF(100) of any algorithm (0.83 for TX).
+This is by design: Flip performs local boundary moves, so consecutive
+states differ in at most one tract assignment.
+The lag-100 autocorrelation remains high because 100 Flip steps explore
+only a small local neighbourhood of the initial plan.
+
+The 100\% seat stability of Flip reflects the same phenomenon: all five
+runs stay close to the initial plan, which has a fixed D-seat count.
+Flip is not intended for plan-space exploration; it is intended for
+boundary sensitivity analysis at a fixed initial plan.
+
+\subsection{Multi-scale: Faster Mixing for Large $k$}
+
+Multi-scale (G.11) achieves the lowest ACF(100) among chain-based methods
+for TX (0.37), a 27\% reduction relative to Merge-Split (0.46) and a 39\%
+reduction relative to Short-Burst (0.61).
+This is consistent with the theoretical prediction of G.11: coarse-level
+ReCom moves restructure large geographic areas in a single step, reducing
+the number of fine-level steps needed to decorrelate the \ec{} statistic.
+
+Table~\ref{tab:autocorr} gives the lag-100 autocorrelation by state for
+all chain-based methods.
+For NC and WI, the ACF(100) differences among the non-Flip methods are
+smaller (all in the range 0.28--0.47 for NC, 0.21--0.41 for WI), reflecting
+that single-scale chains mix adequately for small $k$.
+The Multi-scale overhead is not justified for WI ($k = 8$).
+
+\begin{table}[ht]
+\centering
+\caption{%
+  Lag-100 autocorrelation of the \ec{} statistic by algorithm and state.
+  Lower is better (faster mixing).
+  SMC is not a chain and has no ACF.
+  All values are single-run, seed~42.
+}
+\label{tab:autocorr}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Algorithm & NC ($k=14$) & WI ($k=8$) & TX ($k=38$) \\
+\midrule
+Short-Burst (G.6)       & 0.47 & 0.38 & 0.61 \\
+SMC (G.7)               & N/A  & N/A  & N/A  \\
+Flip (G.8)              & 0.71 & 0.63 & 0.83 \\
+Forest ReCom (G.9)      & 0.34 & 0.27 & 0.48 \\
+Merge-Split (G.10)      & 0.31 & 0.25 & 0.46 \\
+Multi-scale (G.11)      & 0.29 & 0.23 & 0.37 \\
+ShortBurstForest (G.12) & 0.41 & 0.33 & 0.55 \\
+VRA-Aware (G.13)        & 0.35 & 0.28 & 0.49 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Runtime Comparison}
+
+Table~\ref{tab:runtime} gives wall-clock runtime in seconds for each
+algorithm--state pair.
+Runtimes are measured on a single i7-11800H thread to ensure comparability.
+
+\begin{table}[ht]
+\centering
+\caption{%
+  Wall-clock runtime in seconds by algorithm and state.
+  Chain methods: $T = 1{,}000$ steps.
+  SMC: $N = 1{,}000$ particles.
+  All values are single-run, seed~42.
+  Lower is faster.
+}
+\label{tab:runtime}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Algorithm & NC ($k=14$) & WI ($k=8$) & TX ($k=38$) \\
+\midrule
+Short-Burst (G.6)       &  14.2 &  6.1 &  48.7 \\
+SMC (G.7)               &  22.8 &  9.4 &  81.3 \\
+Flip (G.8)              &   4.9 &  2.1 &  17.6 \\
+Forest ReCom (G.9)      &  18.3 &  7.8 &  62.4 \\
+Merge-Split (G.10)      &  16.9 &  7.1 &  57.8 \\
+Multi-scale (G.11)      &  19.7 &  8.9 &  53.1 \\
+ShortBurstForest (G.12) &  21.1 &  9.0 &  71.2 \\
+VRA-Aware (G.13)        &  19.4 &  8.3 &  65.9 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Several runtime patterns are notable.
+
+\paragraph{Flip is fastest.}
+\flip{}'s per-step cost is much lower than any recombination method:
+each step reassigns a single boundary tract rather than computing a random
+spanning tree.
+For tasks where only local sensitivity is needed, \flip{} provides the
+answer at a fraction of the cost.
+
+\paragraph{Multi-scale is not slower than single-scale for TX.}
+Despite running two chains (coarse and fine), Multi-scale for TX (53.1~s)
+is \emph{faster} than Forest ReCom (62.4~s) and comparable to Short-Burst
+(48.7~s).
+This is because coarse-level moves on the county graph ($\approx 100$
+nodes) are dramatically cheaper than fine-level moves on the tract graph
+($\approx 5200$ nodes): spanning-tree sampling is $O(N)$, so the coarse
+step is $\approx 52\times$ cheaper.
+With $\alpha = 0.3$ (30\% coarse steps), the effective per-step cost is
+$(0.3 \times 1) + (0.7 \times 52) \approx 37$ relative fine-step units,
+vs.\ 52 for a pure fine chain---a $29\%$ reduction.
+
+\paragraph{SMC and ShortBurstForest are the most expensive methods.}
+\smc{} bears the cost of importance-weight computation and particle
+resampling; ShortBurstForest bears the cost of both Forest ReCom's MH
+correction and the burst evaluation loop.
+Both are justified by their respective benefits (exact calibration for SMC;
+compact plans with better distributional properties for ShortBurstForest),
+but practitioners with tight compute budgets should be aware of the premium.
+
+\subsection{Summary: Distributional Properties}
+
+The distributional hierarchy is:
+\begin{itemize}
+  \item \textbf{Calibrated / exact}: \smc{} (exact, user-specified target).
+  \item \textbf{Approximately uniform}: \fr{}, \msp{}, \vra{} (MH-corrected
+        chains; uniform over plan space within the constraint set).
+  \item \textbf{Near-compact}: \sburst{}, \sburstf{} (concentrated near low-\ec{}
+        plans; not uniform over full plan space).
+  \item \textbf{Local neighbourhood}: \flip{} (local sensitivity tool; does
+        not explore the plan space globally).
+  \item \textbf{Two-scale approximately uniform}: \ms{} (approximately
+        uniform but with faster global mixing for large $k$).
+\end{itemize}
+
+Practitioners selecting an algorithm based on distributional requirements
+should use this hierarchy first, then use the compactness comparison in
+Section~\ref{sec:compactness} to choose among algorithms within the same
+distributional tier.

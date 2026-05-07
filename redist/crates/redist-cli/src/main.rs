@@ -284,6 +284,19 @@ fn main() {
                                 target_accept: args.ms_target_accept,
                                 adapt_interval: args.ms_adapt_interval,
                             },
+                            SeM::ParallelTempering => SeedCompositor::ParallelTempering {
+                                n_replicas: args.pt_replicas,
+                                swap_interval: args.pt_swap_interval,
+                                cold_tolerance: args.pt_cold_tol,
+                                hot_tolerance: args.pt_hot_tol,
+                                steps: args.seeds.unwrap_or(1000),
+                                p: args.percentile.clamp(0.0, 1.0),
+                            },
+                            SeM::VraRecom => SeedCompositor::VraRecom {
+                                steps: args.seeds.unwrap_or(1000),
+                                p: args.percentile.clamp(0.0, 1.0),
+                                vap_threshold: args.vra_threshold,
+                            },
                         };
                     }
                     cfg

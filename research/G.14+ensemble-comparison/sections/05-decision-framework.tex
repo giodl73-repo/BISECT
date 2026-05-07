@@ -1,0 +1,258 @@
+\section{Decision Framework}
+\label{sec:decision}
+
+\subsection{The Four-Question Tree}
+
+The comparison in Sections~\ref{sec:compactness}
+and~\ref{sec:distributional} reveals that practitioners can select an
+appropriate algorithm by answering four binary questions in sequence.
+The decision tree below maps these questions to algorithm recommendations.
+The tree encodes structural properties of the algorithms (established in
+G.6--G.13), not solely the single-run empirical results of this paper.
+
+\begin{enumerate}[label=\textbf{Q\arabic*.}]
+
+  \item \textbf{Is VRA compliance required?}
+
+    If the redistricting task involves states or jurisdictions subject to
+    Section~5 or Section~2 of the Voting Rights Act, and minority-majority
+    district preservation must be enforced during sampling (not merely
+    verified post hoc), then VRA-Aware ReCom (G.13) is the only algorithm
+    that guarantees preservation of minority-majority districts
+    throughout the chain via adaptive boosts.
+    \emph{Proceed to: \vra{} (G.13). Stop.}
+
+    If VRA compliance is verified post hoc (acceptable for many contexts),
+    proceed to Q2.
+
+  \item \textbf{Is $k \geq 20$?}
+
+    For states with $k \geq 20$ congressional districts (TX $k=38$,
+    FL $k=28$, CA $k=52$, NY $k=26$, PA $k=17$, IL $k=17$, OH $k=15$,
+    GA $k=14$ borderline, and any state approaching this threshold),
+    single-scale chains mix slowly.
+    The lag-100 autocorrelation results in Section~\ref{sec:distributional}
+    show that Multi-scale (G.11) provides a meaningful mixing improvement
+    for TX; for CA ($k=52$), the improvement is expected to be larger.
+    \emph{Proceed to: \ms{} (G.11). Stop.}
+
+    For $k < 20$, single-scale chains mix adequately; proceed to Q3.
+
+  \item \textbf{Is a calibrated target distribution required?}
+
+    If the ensemble will be used for litigation support, academic
+    publication under peer review, or any context where the target
+    distribution must be mathematically specified, a calibrated distribution
+    is required.
+
+    \begin{itemize}
+      \item For \emph{exact} calibration (importance-weighted particles,
+            user-specified target): use \smc{} (G.7).
+      \item For \emph{approximate} calibration (approximately uniform over
+            valid plans, Metropolis-Hastings corrected): use \fr{} (G.9)
+            or \msp{} (G.10).
+            \msp{} is recommended as the default: it has marginally lower
+            autocorrelation and similar distributional guarantees.
+    \end{itemize}
+
+    If distributional calibration is not required (e.g., the task is
+    compactness optimisation or sensitivity analysis), proceed to Q4.
+
+  \item \textbf{Is pure compactness optimisation the goal?}
+
+    If the goal is to produce the most compact plan achievable within
+    the population-balance constraint (for example, constructing a
+    benchmark for expert analysis or a starting point for further
+    refinement):
+
+    \begin{itemize}
+      \item For fastest compactness optimisation with no distributional
+            constraint: use \sburst{} (G.6).
+      \item For compactness optimisation with a better-characterised
+            distributional footprint (MH-corrected): use
+            \sburstf{} (G.12).
+    \end{itemize}
+
+    If the goal is not compactness optimisation, the remaining algorithm
+    is \flip{} (G.8): the appropriate choice for local boundary sensitivity
+    analysis at a fixed initial plan.
+    \emph{Proceed to: \flip{} (G.8). Stop.}
+
+\end{enumerate}
+
+\subsection{Decision Tree Diagram}
+
+\begin{center}
+\begin{tikzpicture}[
+  decision/.style={
+    diamond, draw, fill=blue!8, text width=3.8cm, align=center,
+    inner sep=2pt, font=\small
+  },
+  result/.style={
+    rectangle, draw, fill=green!10, text width=3.2cm, align=center,
+    rounded corners=3pt, font=\small
+  },
+  arrow/.style={->, >=Stealth, thick},
+  label/.style={font=\small\itshape},
+]
+
+%% Root
+\node[decision] (q1) {VRA compliance\\required?};
+
+%% Q1 Yes
+\node[result, right=2.0cm of q1, yshift=1.4cm] (vra)
+  {\vra{} (G.13)\\\footnotesize VRA-constrained};
+\draw[arrow] (q1.north east) -- node[label, above, sloped]{\small Yes} (vra.west);
+
+%% Q2
+\node[decision, below=1.6cm of q1] (q2) {$k \geq 20$?};
+\draw[arrow] (q1.south) -- node[label, right]{\small No} (q2.north);
+
+%% Q2 Yes
+\node[result, right=2.0cm of q2, yshift=1.0cm] (ms)
+  {\ms{} (G.11)\\\footnotesize Large-$k$ mixing};
+\draw[arrow] (q2.north east) -- node[label, above, sloped]{\small Yes} (ms.west);
+
+%% Q3
+\node[decision, below=1.6cm of q2] (q3) {Calibrated\\distribution\\required?};
+\draw[arrow] (q2.south) -- node[label, right]{\small No} (q3.north);
+
+%% Q3 Yes — two outcomes: Exact (SMC) or Approximate (MergeSplit/ForestReCom)
+\node[result, right=2.0cm of q3, yshift=1.4cm] (smc)
+  {\smc{} (G.7)\\\footnotesize Exact calibration};
+\node[result, right=2.0cm of q3, yshift=-0.5cm] (ms2)
+  {\msp{}/\fr{} (G.10/9)\\\footnotesize Approx.\ uniform};
+%% Branch point east of q3
+\coordinate (branch3) at ($(q3.east) + (0.8cm, 0)$);
+\draw[arrow] (q3.east) -- node[label, above]{\small Yes} (branch3);
+\draw[arrow] (branch3) |- node[label, right, pos=0.75]{\small Exact} (smc.west);
+\draw[arrow] (branch3) |- node[label, right, pos=0.75]{\small Approx} (ms2.west);
+
+%% Q4
+\node[decision, below=1.6cm of q3] (q4) {Compactness\\optimisation?};
+\draw[arrow] (q3.south) -- node[label, right]{\small No} (q4.north);
+
+%% Q4 Yes
+\node[result, right=2.0cm of q4, yshift=1.2cm] (sb)
+  {\sburst{} / \sburstf{} (G.6/12)\\\footnotesize Compact plans};
+\draw[arrow] (q4.north east) -- node[label, above, sloped]{\small Yes} (sb.west);
+
+%% Q4 No -> Flip
+\node[result, below=1.0cm of q4] (flip)
+  {\flip{} (G.8)\\\footnotesize Sensitivity analysis};
+\draw[arrow] (q4.south) -- node[label, right]{\small No} (flip.north);
+
+\end{tikzpicture}
+\end{center}
+
+\subsection{Summary Decision Matrix}
+
+Table~\ref{tab:decision} distils the decision tree into a use-case matrix:
+one recommended algorithm per use case with an alternative where applicable.
+The alternative is appropriate when the primary recommendation is unavailable
+(e.g., SMC particle budget is prohibitive) or when the practitioner has
+domain-specific reasons to prefer a different distributional profile.
+
+\begin{table}[ht]
+\centering
+\caption{%
+  Decision matrix: recommended algorithm by use case.
+  ``Alternative'' is the second choice when the primary recommendation
+  is unavailable or inappropriate for the specific context.
+}
+\label{tab:decision}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Use Case & Recommended & Alternative \\
+\midrule
+Court submission (uniform distribution)
+  & \smc{} (G.7) & \fr{} (G.9) \\
+Compactness optimisation
+  & \sburst{} (G.6) & \sburstf{} (G.12) \\
+Large-$k$ states (TX, CA, FL)
+  & \ms{} (G.11) & \sburst{} (G.6) \\
+VRA-compliant sampling
+  & \vra{} (G.13) & --- \\
+Local sensitivity / boundary analysis
+  & \flip{} (G.8) & --- \\
+General purpose (small-$k$, no special requirements)
+  & \msp{} (G.10) & \fr{} (G.9) \\
+Compactness + distributional awareness
+  & \sburstf{} (G.12) & \msp{} (G.10) \\
+Academic publication (calibrated)
+  & \smc{} (G.7) & \msp{} (G.10) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Three-Layer Compositor Integration}
+
+The decision tree selects the \texttt{--search} algorithm.
+In practice, algorithm selection interacts with the other two compositor
+layers:
+
+\paragraph{Structure (\texttt{--structure}).}
+The initial plan produced by the structure layer is the starting point for
+all chain-based methods.
+A better initial plan (e.g., from \texttt{ratio-optimal} GeoSection
+bisection) reduces the warm-up period for all chain methods.
+For \smc{}, the structure layer is not used (SMC constructs plans from
+scratch via particle filter).
+
+\paragraph{Weights (\texttt{--weights-override}).}
+Edge weights affect the probability of each spanning-tree cut in \recom{},
+Forest ReCom, Merge-Split, and Multi-scale.
+County weights (\texttt{county}) tend to produce plans that respect county
+boundaries, regardless of the search algorithm.
+VRA weights (\texttt{vra-aligned}) bias cuts toward minority community
+boundaries; these are complementary to, but distinct from, the VRA-Aware
+search mode.
+
+\paragraph{Combining layers.}
+The most powerful configurations combine all three layers.
+For example:
+\begin{itemize}
+  \item \texttt{--structure prime-factor --weights county --search multiscale}:
+        ApportionRegions initial plan + county-respecting weights +
+        Multi-scale mixing.
+        Recommended for TX or CA litigation.
+  \item \texttt{--structure ratio-optimal --weights geographic --search vra-recom}:
+        GeoSection initial plan + neutral weights + VRA-constrained chain.
+        Recommended for VRA Section~2 analysis.
+  \item \texttt{--structure ratio-optimal --weights geographic --search multi}:
+        GeoSection initial plan + neutral weights + Short-Burst optimisation.
+        Recommended for producing the most compact feasible plan.
+\end{itemize}
+
+\subsection{Limitations of the Decision Tree}
+
+The decision tree presented here is based on the algorithms as implemented
+in \texttt{redist-ensemble} as of G-series papers G.6--G.13.
+Several caveats apply.
+
+\textbf{Parameter sensitivity.}
+Each algorithm has internal parameters (burst length for Short-Burst,
+$\alpha$ for Multi-scale, VRA boost strength for VRA-Aware) that affect
+performance.
+The decision tree assumes default parameters; practitioners with unusual
+geometries or strict distributional requirements should consult the
+individual algorithm papers (G.6--G.13) for parameter guidance.
+
+\textbf{State-specific effects.}
+The comparison covers NC, WI, and TX.
+States with unusual geographic features (e.g., California with very
+heterogeneous tract sizes, or Alaska with non-contiguous population
+centers) may require adjustment.
+
+\textbf{Metric weights.}
+The decision tree treats compactness optimisation and distributional
+correctness as separate goals.
+In practice, a practitioner may want some compactness improvement with
+some distributional coverage.
+ShortBurstForest (G.12) is designed for exactly this middle ground, but
+the optimal balance point depends on the specific task.
+
+\textbf{Future algorithms.}
+CVD (B.22) and BFS Growth (B.23) will add geometric algorithms to the
+comparison.
+When these are implemented, the decision tree will be updated accordingly.

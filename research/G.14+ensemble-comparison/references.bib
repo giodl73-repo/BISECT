@@ -1,0 +1,202 @@
+%% G.14 -- A Practitioner's Comparison of Redistricting Ensemble Algorithms
+%% References
+
+%% ===================================================================
+%% SELF-CITATIONS (G SERIES — ALGORITHMS COMPARED)
+%% ===================================================================
+
+@misc{dellaLibera2026shortburst,
+  author = {Della-Libera, Gio},
+  title  = {Short-{B}urst {MCMC}: Compactness Optimisation via Repeated
+            Exploration Bursts},
+  year   = {2026},
+  note   = {G.6 in Algorithmic Redistricting series.
+            Implements Short-Burst ReCom with burst length and restart
+            schedule. The primary compactness optimisation algorithm in
+            the redist platform. Achieves lowest EC in all comparisons.},
+}
+
+@misc{dellaLibera2026smc,
+  author = {Della-Libera, Gio},
+  title  = {Sequential {M}onte {C}arlo for Redistricting: Calibrated
+            Plan Sampling},
+  year   = {2026},
+  note   = {G.7 in Algorithmic Redistricting series.
+            Implements SMC with importance-weighted particles for exact
+            target distribution. The only algorithm with a calibrated,
+            mathematically specified target distribution. Recommended for
+            litigation-quality ensembles.},
+}
+
+@misc{dellaLibera2026flip,
+  author = {Della-Libera, Gio},
+  title  = {Flip {MCMC}: Boundary-Tract Sensitivity Analysis for
+            Redistricting},
+  year   = {2026},
+  note   = {G.8 in Algorithmic Redistricting series.
+            Implements single-tract boundary flip Markov chain for local
+            sensitivity analysis. High autocorrelation is intentional:
+            the chain explores the local neighbourhood of the initial plan
+            to characterise fragile boundary tracts.},
+}
+
+@misc{dellaLibera2026forestRecom,
+  author = {Della-Libera, Gio},
+  title  = {Forest {ReCom}: Reversible Recombination via Spanning Forest
+            Sampling},
+  year   = {2026},
+  note   = {G.9 in Algorithmic Redistricting series.
+            Implements ForestReCom with Metropolis-Hastings ratio for
+            distributional correctness. Provides approximately uniform
+            distribution over valid plans; baseline for approximately
+            uniform chain comparisons.},
+}
+
+@misc{dellaLibera2026mergeSplit,
+  author = {Della-Libera, Gio},
+  title  = {Merge-{S}plit {MCMC}: Balanced Recombination for
+            Redistricting},
+  year   = {2026},
+  note   = {G.10 in Algorithmic Redistricting series.
+            Merge-Split chain with approximately uniform target
+            distribution. Recommended as the general-purpose algorithm
+            for small-k redistricting without special requirements.
+            Marginally lower autocorrelation than Forest ReCom.},
+}
+
+@misc{dellaLibera2026multiscale,
+  author = {Della-Libera, Gio},
+  title  = {Multi-scale {MCMC}: Hierarchical Mixing for Large-$k$
+            Redistricting},
+  year   = {2026},
+  note   = {G.11 in Algorithmic Redistricting series.
+            Implements Multi-scale MCMC Option B (tract-county) using
+            GEOID prefix coarsening. Recommended for states with
+            k >= 20; reduces lag-100 autocorrelation by 27--43\%
+            relative to single-scale chains.},
+}
+
+@misc{dellaLibera2026shortburstChains,
+  author = {Della-Libera, Gio},
+  title  = {{ShortBurstForest}: Compactness Optimisation on
+            Forest {ReCom} Chains},
+  year   = {2026},
+  note   = {G.12 in Algorithmic Redistricting series.
+            Runs Short-Burst optimisation strategy on the ForestReCom
+            chain rather than standard ReCom, combining compactness
+            optimisation with MH-corrected distributional properties.
+            Second-lowest EC; recommended when distributional awareness
+            is required alongside compactness.},
+}
+
+@misc{dellaLibera2026vraAware,
+  author = {Della-Libera, Gio},
+  title  = {{VRA}-Aware {ReCom}: Minority-Majority District Preservation
+            via Adaptive Sampling},
+  year   = {2026},
+  note   = {G.13 in Algorithmic Redistricting series.
+            VRA-constrained ReCom chain with adaptive boosts to maintain
+            minority-majority districts throughout sampling. The only
+            algorithm that enforces VRA constraints during chain execution
+            (not merely post hoc). Required for VRA Section 2 analysis.},
+}
+
+%% ===================================================================
+%% MULTI-SCALE MCMC
+%% ===================================================================
+
+@article{autry2021,
+  author    = {Autry, Eric and Carter, Daniel and Herschlag, Gregory
+               and Hunter, Zach and Mattingly, Jonathan},
+  title     = {Metropolized Multiscale Forest Recombination for
+               Redistricting},
+  journal   = {Multiscale Modeling and Simulation},
+  volume    = {19},
+  number    = {4},
+  pages     = {1885--1914},
+  year      = {2021},
+  doi       = {10.1137/21M1407999},
+  note      = {Introduces multi-scale MCMC for redistricting, proving
+               ergodicity of the combined chain under mild conditions.
+               Empirical results on NC ($k=13$) show $3\times$ speedup
+               in effective sample rate. Theoretical foundation for
+               G.11 and the Multi-scale comparisons in this paper.},
+}
+
+%% ===================================================================
+%% RECOM / FOREST RECOM
+%% ===================================================================
+
+@article{deford2021,
+  author  = {DeFord, Daryl and Duchin, Moon and Solomon, Justin},
+  title   = {Recombination: A Family of {Markov} Chains for Redistricting},
+  journal = {Harvard Data Science Review},
+  volume  = {3},
+  number  = {1},
+  year    = {2021},
+  doi     = {10.1162/99608f92.eb30390f},
+  note    = {The standard ReCom proposal distribution. Forms the fine-level
+             chain in Multi-scale MCMC, the base chain for Short-Burst
+             and Merge-Split, and the comparison baseline for mixing
+             diagnostics. Slow mixing for large k motivates G.11.},
+}
+
+@article{mccartan2020,
+  author  = {McCartan, Cory and Imai, Kosuke},
+  title   = {Sequential Monte Carlo for Sampling Balanced and Compact
+             Redistricting Plans},
+  journal = {arXiv},
+  year    = {2020},
+  note    = {arXiv:2008.06131. Introduces Sequential Monte Carlo for
+             redistricting and Forest ReCom with Metropolis-Hastings
+             correction. The theoretical foundation for both SMC (G.7)
+             and Forest ReCom (G.9). SMC achieves exact target distribution
+             via importance weighting.},
+}
+
+%% ===================================================================
+%% MIXING TIME THEORY
+%% ===================================================================
+
+@article{cannon2022,
+  author  = {Cannon, Sarah and Goldbloom-Helzner, Ari and Gupta, Varun
+             and Matthews, J. N. Cory and Suwal, Bhushan},
+  title   = {Voting Rights, Markov Chains, and Optimization by Short
+             Bursts},
+  journal = {arXiv},
+  year    = {2022},
+  note    = {arXiv:2011.02322. Theoretical analysis of Short-Burst
+             optimisation for redistricting Markov chains. Proves that
+             Short-Burst finds compact plans more efficiently than
+             single-step gradient methods. Does not include SMC or
+             multi-scale comparisons; this paper extends the empirical
+             comparison to all eight algorithms.},
+}
+
+@article{janson2022,
+  author  = {Janson, Svante},
+  title   = {Graphons, Cut Norm and Distance, Couplings and Rearrangements},
+  journal = {arXiv},
+  year    = {2022},
+  note    = {arXiv:2108.08753 (version cited for mixing time results).
+             Theoretical analysis of graph partition Markov chains and
+             their mixing properties. Provides the graph-cut framework
+             used to understand autocorrelation of the EC statistic in
+             redistricting chains. Does not address VRA constraints or
+             burst optimisation.},
+}
+
+%% ===================================================================
+%% MARKOV CHAIN MIXING TIME
+%% ===================================================================
+
+@book{levin2009,
+  author    = {Levin, David A. and Peres, Yuval and Wilmer, Elizabeth L.},
+  title     = {Markov Chains and Mixing Times},
+  publisher = {American Mathematical Society},
+  year      = {2009},
+  note      = {Standard reference for Markov chain mixing time theory.
+               The coupon-collector argument in G.11 and the
+               autocorrelation definitions in this paper draw on
+               Chapters 2 and 11 of this text.},
+}

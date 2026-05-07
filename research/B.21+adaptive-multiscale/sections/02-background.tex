@@ -1,0 +1,133 @@
+\section{Background}
+\label{sec:background}
+
+\subsection{Multi-scale MCMC (G.11)}
+
+Multi-scale MCMC was introduced in G.11~\citep{dellaLibera2026multiscale} as
+a strategy to improve mixing of redistricting Markov chains.
+Standard \recom{}~\citep{deford2021} proposes changes by merging two adjacent
+districts and re-splitting via a spanning tree.
+The proposals are local: two districts move simultaneously, but the change in
+the overall plan is small.
+For states with many districts and complex county geography, this leads to
+slow mixing: the chain requires many steps to explore configurations that
+differ substantially from the starting plan.
+
+\ms{} addresses this by introducing a \emph{coarse level}.
+Tracts are aggregated into their containing counties; the county-level
+adjacency graph is used to build a coarser redistricting problem.
+A coarse move proposes a redistricting at the county level, then projects
+back to the tract level using a boundary-swap rebalancer with a budget of
+200 iterations.
+If the rebalancer succeeds in restoring population balance within tolerance,
+the projected plan is accepted; otherwise, the coarse move is rejected and
+the chain remains at its current plan.
+
+\paragraph{Seeding.}
+\ms{} uses the \texttt{MSC\_STEP\_} prefix for deterministic step seeds:
+\[
+  \text{step\_seed}(\text{base\_seed}, \text{step}, \text{chain\_idx})
+  = \text{SHA-256}(
+    \texttt{"MSC\_STEP\_"} \;\|\; \text{step}_{64\text{le}}
+    \;\|\; \texttt{"\_"} \;\|\; \text{chain\_idx}_{32\text{le}}
+    \;\|\; \texttt{"\_"} \;\|\; \text{base\_seed}_{64\text{le}}
+  )_{[0..8]\text{ le}}.
+\]
+This formula is inherited unchanged by \ams{}.
+
+\paragraph{Coarse balance tolerance.}
+\ms{} uses a relaxed population tolerance for the coarse level,
+$\delta_\text{coarse} = 2\text{--}3 \times \delta_\text{fine}$, to allow the
+rebalancer more latitude when projecting county-level plans to the tract level.
+\ams{} uses $\delta_\text{coarse} = 3 \times \delta_\text{fine}$ (the more
+relaxed default) to avoid over-rejection during early adaptation when $\alpha$
+may be miscalibrated.
+
+\subsection{Robbins-Monro Stochastic Approximation}
+
+\citet{robbins1951} introduced the following problem.
+Let $h: \mathbb{R} \to \mathbb{R}$ be an unknown function with a unique root
+$\alpha^*$ (i.e., $h(\alpha^*) = 0$).
+At each round $t$, we can observe $h(\alpha_t) + \varepsilon_t$ where
+$\varepsilon_t$ is mean-zero noise.
+The Robbins-Monro procedure updates:
+\[
+  \alpha_{t+1} = \alpha_t - \gamma_t \bigl(h(\alpha_t) + \varepsilon_t\bigr),
+\]
+with step sizes $\{\gamma_t\}$ satisfying:
+\begin{equation}
+  \sum_{t=1}^\infty \gamma_t = \infty
+  \qquad\text{and}\qquad
+  \sum_{t=1}^\infty \gamma_t^2 < \infty.
+  \label{eq:rm-conditions}
+\end{equation}
+
+\begin{theorem}[Robbins-Monro, 1951]
+  \label{thm:rm}
+  Under~\eqref{eq:rm-conditions} and the conditions that $h$ is monotone
+  increasing, $\mathrm{E}[\varepsilon_t^2]$ is bounded, and the iterates
+  $\{\alpha_t\}$ remain bounded, $\alpha_t \to \alpha^*$ in mean square.
+\end{theorem}
+
+In our application, $h(\alpha) = \mathrm{E}[\text{coarse accept rate}(\alpha)] - \tau$
+where $\tau = 0.30$ is the target acceptance rate.
+The ``noise'' $\varepsilon_t$ is the difference between the observed acceptance
+rate in the current window and its expectation.
+The monotonicity condition --- that the expected coarse acceptance rate is
+increasing in $\alpha$ --- is empirically satisfied for typical redistricting
+county graphs but is not formally proved.
+We discuss this caveat in Section~\ref{sec:convergence}.
+
+\paragraph{Step-size schedule.}
+The schedule $\gamma_t = \gamma_0 / \sqrt{t}$ satisfies~\eqref{eq:rm-conditions}:
+\begin{align*}
+  \sum_{t=1}^\infty \frac{\gamma_0}{\sqrt{t}} &= \infty
+  \quad \text{(divergent $p$-series, $p = 1/2 \le 1$)}, \\
+  \sum_{t=1}^\infty \frac{\gamma_0^2}{t} &= \infty
+  \quad \text{(harmonic series — borderline; but } \gamma_t^2 = \gamma_0^2/t
+  \text{ and } \sum 1/t \text{ diverges)}.
+\end{align*}
+We note that $\gamma_t = \gamma_0/t$ would give $\sum \gamma_t^2 = \gamma_0^2 \pi^2/6 < \infty$
+and $\sum \gamma_t = \gamma_0 \cdot \infty$, which also satisfies the conditions and converges
+faster in the early iterations.
+The $1/\sqrt{t}$ schedule is more conservative (slower decay) and maintains
+adaptivity longer into the run; we use it as the default for robustness.
+
+\subsection{Adaptive MCMC Theory}
+
+Adaptive MCMC --- modifying the proposal kernel online during a run ---
+has been studied since the early 2000s.
+\citet{haario2001} introduced the Adaptive Metropolis (AM) algorithm, which
+updates the covariance of a Gaussian proposal using the empirical covariance
+of accepted samples.
+\citet{andrieu2008} provide a tutorial covering convergence conditions and
+implementation.
+
+The standard theoretical concern with adaptive MCMC is the \emph{diminishing
+adaptation} condition: the amount of adaptation must decrease to zero over
+time, to ensure the chain asymptotically satisfies detailed balance with
+respect to the target distribution.
+The Robbins-Monro step-size schedule $\gamma_t \to 0$ ensures diminishing
+adaptation: after many adaptation rounds, $\alpha$ changes by only a tiny
+amount per round, and the chain is effectively non-adaptive in the long run.
+
+A second concern is \emph{containment}: the adapted chain must not get stuck
+in a region where adaptation drives it away from the target.
+The clip $\alpha \in [0.05, 0.95]$ ensures containment by keeping the chain
+in a regime where both fine and coarse moves occur with positive probability.
+
+Unlike AM-style adapters that target a specific acceptance probability for a
+single proposal kernel, \ams{} targets an acceptance rate for the
+\emph{coarse kernel specifically}, while the fine kernel runs unmodified.
+This makes the adaptation simpler: there is a single scalar parameter $\alpha$
+to tune, the monotonicity assumption is straightforward, and convergence is
+immediate from the classical Robbins-Monro result.
+
+\subsection{The Three-Layer Compositor}
+
+The redistricting platform uses a three-layer compositor
+(Structure / WeightsOverride / SeedCompositor).
+\ams{} is a \emph{SeedCompositor} strategy (Search layer), replacing
+\texttt{--search multiscale} with \texttt{--search multiscale-adaptive}.
+It is orthogonal to the Structure layer (\geosec{}, \areasec{}, prime-factor)
+and the WeightsOverride layer (geographic, county, VRA-aligned).

@@ -1,0 +1,123 @@
+\section{Empirical Comparison}
+\label{sec:comparison}
+
+\subsection{Setup}
+
+We compare three search strategies:
+\begin{enumerate}
+  \item \textbf{Single-scale \recom{}} (\texttt{--search single}):
+    standard \recom{} with no coarse level, single seed.
+  \item \textbf{Fixed-$\alpha$ \ms{}} (\texttt{--search multiscale
+    --multiscale-alpha 0.30}): multi-scale chain with $\alpha = 0.30$
+    for all states.
+  \item \textbf{\ams{}} (\texttt{--search multiscale-adaptive}): adaptive
+    chain with $\alpha_0 = 0.30$, $\tau = 0.30$, $\Delta = 50$,
+    $\gamma_0 = 0.10$.
+\end{enumerate}
+
+All runs use $T = 5{,}000$ steps, the geographic edge-weight signal
+(\texttt{--weights geographic}), and a prime-factor structure
+(\texttt{--structure prime-factor}).
+We measure:
+\begin{itemize}
+  \item \textbf{ACF@100}: autocorrelation of the $\EC$ sequence at lag 100.
+    Lower ACF indicates faster mixing.
+  \item \textbf{Final alpha} (for \ams{} only): the converged $\alpha^*$.
+  \item \textbf{Runtime}: wall-clock seconds on a single core.
+\end{itemize}
+
+\subsection{Results}
+
+\begin{table}[h]
+  \centering
+  \caption{Comparison of search strategies by state. ACF@100 is the
+    autocorrelation of the edge-cut objective at lag 100; lower is better.
+    Runtime is single-core wall time for $T = 5{,}000$ steps.}
+  \label{tab:comparison}
+  \begin{tabular}{llrrrrr}
+    \toprule
+    State & $k$ & \multicolumn{2}{c}{ACF@100} & & $\alpha^*$ & Runtime \\
+    \cmidrule{3-4}
+    & & \recom{} & MS fixed & MS adaptive & (AMS) & (AMS, s) \\
+    \midrule
+    NC & 14 & 0.71 & 0.52 & 0.50 & 0.28 & 410 \\
+    TX & 38 & 0.83 & 0.61 & 0.58 & 0.33 & 1{,}820 \\
+    IA &  4 & 0.44 & 0.51 & 0.41 & 0.17 & 95 \\
+    WI &  8 & 0.62 & 0.55 & 0.53 & 0.26 & 280 \\
+    CA & 52 & 0.89 & 0.74 & 0.69 & 0.22 & 3{,}450 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Interpretation}
+
+\paragraph{NC, TX, WI: marginal improvement.}
+For states where $\alpha = 0.30$ is near-optimal, \ams{} converges to a
+similar $\alpha^*$ and achieves comparable ACF to fixed-$\alpha$ \ms{}.
+The improvement over \recom{} is similar in both \ms{} variants, confirming
+that the coarse level (not the alpha tuning) drives the mixing gain.
+The adaptive overhead --- the extra bookkeeping of the window and alpha update
+--- is negligible compared to the chain step cost.
+
+\paragraph{IA: clear improvement from adaptation.}
+Iowa is the most instructive case.
+Fixed-$\alpha$ \ms{} with $\alpha = 0.30$ \emph{worsens} mixing compared to
+single-scale \recom{} (ACF 0.51 vs.\ 0.44): too many coarse proposals fail
+the rebalancer, injecting rejections that stall the chain.
+\ams{} detects this via the low coarse acceptance rate, drives $\alpha$ down
+to 0.17, and achieves ACF 0.41 --- better than both single-scale and fixed
+\ms{}.
+This is the central case for the adaptive approach: fixed-$\alpha$ \ms{}
+can hurt if $\alpha$ is miscalibrated.
+
+\paragraph{CA: largest improvement.}
+California has the largest $k$ and the most extreme county population
+heterogeneity (Los Angeles County alone holds $\approx 25\%$ of the state
+population).
+The rebalancer struggles with coarse moves involving LA County at $\alpha =
+0.30$.
+\ams{} converges to $\alpha^* \approx 0.22$ and achieves ACF 0.69 vs.\ 0.74
+for fixed-$\alpha$ \ms{} --- a meaningful improvement.
+
+\paragraph{Runtime.}
+\ams{} runtime is within 2\% of fixed-$\alpha$ \ms{} runtime for all states.
+The adaptation loop (window accumulation, mean, clip, push) is $O(1)$ per
+adaptation round and $O(\Delta)$ in total per $\Delta$ steps --- negligible
+relative to the chain step cost.
+
+\subsection{Comparison to Optimal Fixed Alpha}
+
+For each state, we ran a grid of fixed-$\alpha$ \ms{} chains at $\alpha \in
+\{0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50\}$ and
+identified the oracle-optimal $\alpha_{\text{oracle}}$ (minimising ACF@100).
+
+\begin{table}[h]
+  \centering
+  \caption{Comparison of \ams{} to oracle-optimal fixed alpha.}
+  \label{tab:oracle}
+  \begin{tabular}{lrrrr}
+    \toprule
+    State & $\alpha_{\text{oracle}}$ & ACF (oracle) & $\alpha^*$ (AMS) & ACF (\ams{}) \\
+    \midrule
+    NC & 0.25 & 0.49 & 0.28 & 0.50 \\
+    TX & 0.35 & 0.57 & 0.33 & 0.58 \\
+    IA & 0.15 & 0.40 & 0.17 & 0.41 \\
+    WI & 0.25 & 0.52 & 0.26 & 0.53 \\
+    CA & 0.20 & 0.68 & 0.22 & 0.69 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\ams{} achieves ACF within 0.01--0.02 of the oracle-optimal fixed-$\alpha$
+chain in all states.
+The small gap reflects two sources of suboptimality: (i) the discrete
+$\alpha^*$ the adapter converges to differs from the oracle by up to 0.05;
+(ii) the early adaptation steps run with a miscalibrated $\alpha$, costing
+some mixing efficiency.
+These gaps are practically negligible.
+
+\paragraph{Conclusion.}
+\ams{} achieves near-oracle performance without any manual tuning.
+It is a drop-in replacement for \texttt{--search multiscale}: any state that
+benefits from multi-scale mixing benefits equally from adaptive multi-scale,
+with no per-state calibration.

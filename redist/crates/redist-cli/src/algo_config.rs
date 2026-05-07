@@ -513,6 +513,12 @@ pub fn validate_config(path: &Path) -> Result<String, String> {
         crate::runner::SeedCompositor::MultiScaleAdaptive { total_steps, p, target_accept, adapt_interval } => {
             format!("multiscale-adaptive (p={p:.2}, steps={total_steps}, target_accept={target_accept:.2}, adapt_interval={adapt_interval})")
         }
+        crate::runner::SeedCompositor::ParallelTempering { n_replicas, swap_interval, cold_tolerance, hot_tolerance, steps, p } => {
+            format!("parallel-tempering (p={p:.2}, steps={steps}, replicas={n_replicas}, swap_interval={swap_interval}, cold_tol={cold_tolerance:.4}, hot_tol={hot_tolerance:.4})")
+        }
+        crate::runner::SeedCompositor::VraRecom { steps, p, vap_threshold } => {
+            format!("vra-recom (p={p:.2}, steps={steps}, vap_threshold={vap_threshold:.2})")
+        }
     };
 
     let years = yaml.resolved_years().join(", ");

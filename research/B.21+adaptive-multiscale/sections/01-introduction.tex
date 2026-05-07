@@ -1,0 +1,143 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The Alpha Hyperparameter in Multi-scale MCMC}
+
+Multi-scale MCMC (\ms{}) is a Search-layer strategy for redistricting
+chains introduced in G.11~\citep{dellaLibera2026multiscale}.
+The algorithm alternates between two Markov kernels: a \emph{fine-level}
+\recom{} move on the full census-tract graph, and a \emph{coarse-level}
+move on the county-aggregated graph, projected back to the tract level via
+a rebalancing pass.
+Coarse moves allow the chain to escape fine-scale local optima by proposing
+large-scale boundary rearrangements at once; fine moves maintain detailed
+feasibility.
+
+The key hyperparameter is $\alpha \in (0,1)$: the probability of making a
+coarse move at each step.
+Setting $\alpha$ too low underuses the coarse level, leaving the chain
+effectively equivalent to standard \recom{}.
+Setting $\alpha$ too high causes the chain to repeatedly propose coarse moves
+that fail the rebalancing check, wasting steps.
+
+\subsection{State-Specific Sensitivity}
+
+The optimal $\alpha$ is not universal.
+It depends on three structural properties of the state:
+
+\paragraph{County/tract ratio.}
+A coarse county graph with $C$ counties has roughly $C$ nodes; a fine
+tract graph has $T$ tracts.
+The ratio $T/C$ measures how much larger a county-level proposal is compared
+to a tract-level proposal.
+For Texas ($C = 254$, $T = 5{,}265$, ratio $\approx 20.7$) each coarse move
+proposes a very large rearrangement, and a moderate $\alpha \approx 0.30$
+gives enough coarse coverage without overwhelming the chain.
+For Iowa ($C = 99$, $T = 825$, ratio $\approx 8.3$) the coarse moves are
+comparatively small, and the rebalancing constraint is harder to satisfy
+with many districts, making a lower $\alpha \approx 0.15$ more effective.
+California is an extreme case: Los Angeles County alone holds approximately
+25\% of the state's population, making county-level proposals for $k = 52$
+districts very difficult to rebalance, so an even lower $\alpha$ is preferred.
+
+\paragraph{District count $k$.}
+Higher $k$ means the rebalancing pass must place more tracts into correct
+districts after a coarse move.
+The $200$-iteration boundary-swap rebalancer has a fixed budget; for large
+$k$, coarse projections are more likely to exhaust the budget without
+achieving balance, leading to rejection.
+A lower $\alpha$ reduces the coarse rejection rate.
+
+\paragraph{County population heterogeneity.}
+States with highly unequal county populations (one or two dominant counties)
+have a coarser population structure.
+County-level proposals in such states tend to create imbalanced projections
+and require more rebalancing iterations.
+Again, a lower $\alpha$ is preferable.
+
+\subsection{The Cost of Manual Tuning}
+
+Manually tuning $\alpha$ across 50 states requires running short pilot chains
+for each state, measuring the coarse acceptance rate, and adjusting $\alpha$
+iteratively.
+This is a significant practical burden:
+\begin{itemize}
+  \item Each pilot run takes minutes to hours for large states.
+  \item The optimal $\alpha$ may shift as the chain evolves (non-stationarity).
+  \item Retuning is required whenever the step count or district count changes.
+\end{itemize}
+A self-tuning procedure would eliminate this burden entirely.
+
+\subsection{Robbins-Monro Stochastic Approximation}
+
+Robbins and Monro~\citeyear{robbins1951} introduced a general method for
+finding the root of an unknown function $h(\alpha) = 0$ using noisy
+observations of $h$.
+Applied here, $h(\alpha) = \mathrm{E}[\text{coarse accept rate}(\alpha)] - \text{target}$:
+the expected coarse acceptance rate is (approximately) monotone in $\alpha$
+over the operating range, so the root of $h$ is the $\alpha^*$ that achieves
+exactly the target acceptance rate.
+
+The Robbins-Monro update rule is:
+\[
+  \alpha_{t+1} = \alpha_t + \gamma_t \bigl(\hat{h}_t(\alpha_t) - 0\bigr),
+\]
+where $\hat{h}_t$ is the observed excess acceptance rate in the current window
+and $\gamma_t = \gamma_0 / \sqrt{t}$ is a decaying step size.
+This step-size schedule satisfies the classical conditions:
+$\sum_{t=1}^\infty \gamma_t = \infty$ (sufficient exploratory power) and
+$\sum_{t=1}^\infty \gamma_t^2 < \infty$ (convergence of variance to zero).
+Under the monotonicity assumption, the iterate converges to $\alpha^*$
+with probability one.
+
+\subsection{Main Contributions}
+
+This paper makes the following contributions:
+
+\begin{enumerate}
+  \item \textbf{Algorithm (\ams{}).}
+    We define \ams{} (Section~\ref{sec:algorithm}), which wraps \ms{} with
+    a Robbins-Monro adaptation loop that updates $\alpha$ every
+    $\Delta = 50$ steps.
+    Three design choices are analysed: the $\gamma_0/\sqrt{t}$ step-size
+    schedule, the $\Delta = 50$ adaptation interval, and the $[0.05, 0.95]$
+    clip to prevent degenerate fixed-point collapse.
+
+  \item \textbf{Convergence analysis (Section~\ref{sec:convergence}).}
+    We state a formal convergence theorem (under the monotonicity assumption),
+    give a proof sketch citing Robbins-Monro 1951, and exhibit empirical
+    alpha traces for NC, TX, and IA showing that convergence occurs within a
+    few hundred steps.
+
+  \item \textbf{Empirical comparison (Section~\ref{sec:comparison}).}
+    We compare \ams{} to fixed-$\alpha$ \ms{} and to single-scale \recom{}
+    on five states, measuring autocorrelation of the edge-cut objective
+    $\EC$ at lag 100.
+    \ams{} matches or improves on fixed-$\alpha$ \ms{} with no manual tuning.
+
+  \item \textbf{Audit trail.}
+    The $\alpha$ trace, $\gamma_0$, initial $\alpha$, and final $\alpha$ are
+    recorded in the run manifest, enabling full reproducibility and independent
+    verification of the convergence path.
+\end{enumerate}
+
+\subsection{Paper Structure}
+
+Section~\ref{sec:background} reviews Multi-scale MCMC, Robbins-Monro
+approximation, and adaptive MCMC theory.
+Section~\ref{sec:algorithm} gives the \ams{} algorithm with pseudocode and
+design rationale.
+Section~\ref{sec:convergence} analyses convergence.
+Section~\ref{sec:comparison} presents the empirical comparison.
+Section~\ref{sec:conclusion} concludes.
+
+\subsection{Relation to Prior Work}
+
+\ams{} is a Search-layer algorithm, sitting at the same layer as \ms{} (G.11)
+in the three-layer compositor.
+It differs from the SeedCompositor strategies (\cs{}, \be{}) which change
+\emph{how many} seeds are explored, not how each chain is run.
+The adaptive MCMC literature~\citep{haario2001, andrieu2008} studies
+adaptation of the \emph{proposal kernel} (e.g., covariance of a Gaussian
+proposal); \ams{} adapts the \emph{mixing ratio} between two fixed kernels,
+which is a structurally simpler problem with more direct convergence arguments.

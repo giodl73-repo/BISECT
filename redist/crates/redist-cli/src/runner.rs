@@ -10,7 +10,7 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use crate::adjacency_loader::load_adjacency_pkl;
-use crate::bisection_runner::{run_all_splits, run_all_splits_with_search, run_all_splits_compact, run_all_splits_percentile, run_geosection, run_nway_partition, run_flip_chain, run_short_burst, run_short_burst_forest, run_short_burst_merge_split, run_forest_recom, run_multiscale, run_multiscale_adaptive, AdaptiveConfig, run_merge_split, CompactBisectOpts};
+use crate::bisection_runner::{run_all_splits, run_all_splits_with_search, run_all_splits_compact, run_all_splits_percentile, run_geosection, run_nway_partition, run_flip_chain, run_short_burst, run_short_burst_forest, run_short_burst_merge_split, run_forest_recom, run_multiscale, run_multiscale_adaptive, AdaptiveConfig, run_merge_split, run_parallel_tempering, run_vra_recom, CompactBisectOpts};
 use crate::demographics::{load_demographics, align_demographics_to_adjacency};
 use crate::partisan_shares::load_partisan_shares;
 use crate::fetch::load_manifest;
@@ -100,6 +100,24 @@ pub enum SeedCompositor {
         target_accept: f64,
         adapt_interval: usize,
     },
+    /// Parallel Tempering: N replicas at geometric tolerance ladder with replica exchange.
+    /// Cold chain (replica 0) provides the plan distribution. (B.20 spec accepted 4.0/4)
+    ParallelTempering {
+        n_replicas: usize,    // number of chains (default: 4)
+        swap_interval: usize, // steps between swap proposals (default: 10)
+        cold_tolerance: f64,  // cold chain balance tolerance (default: 0.005)
+        hot_tolerance: f64,   // hot chain balance tolerance (default: 0.05)
+        steps: usize,         // total steps per cold chain (default: 1000)
+        p: f64,               // percentile of cold chain EC distribution (default: 0.0)
+    },
+    /// VRA-aware MCMC: ForestRecomChain with hard VRA rejection preserving majority-minority districts.
+    /// Requires minority VAP data via --weights-override vra-aligned or explicit minority column.
+    /// (G.13 spec accepted 3.75/4)
+    VraRecom {
+        steps: usize,        // total chain steps (default: 1000)
+        p: f64,              // percentile of EC distribution (default: 0.0)
+        vap_threshold: f64,  // minority VAP fraction threshold (default: 0.50)
+    },
 }
 
 impl SeedCompositor {
@@ -119,6 +137,8 @@ impl SeedCompositor {
             Self::MultiScale { total_steps, .. } => *total_steps,
             Self::MergeSplit { steps, .. } => *steps,
             Self::MultiScaleAdaptive { total_steps, .. } => *total_steps,
+            Self::ParallelTempering { steps, .. } => *steps,
+            Self::VraRecom { steps, .. } => *steps,
         }
     }
 
@@ -500,6 +520,19 @@ impl AlgorithmConfig {
                     p: args.percentile.clamp(0.0, 1.0),
                     target_accept: args.ms_target_accept,
                     adapt_interval: args.ms_adapt_interval,
+                },
+                SeM::ParallelTempering => SeedCompositor::ParallelTempering {
+                    n_replicas: args.pt_replicas,
+                    swap_interval: args.pt_swap_interval,
+                    cold_tolerance: args.pt_cold_tol,
+                    hot_tolerance: args.pt_hot_tol,
+                    steps: args.seeds.unwrap_or(1000),
+                    p: args.percentile.clamp(0.0, 1.0),
+                },
+                SeM::VraRecom => SeedCompositor::VraRecom {
+                    steps: args.seeds.unwrap_or(1000),
+                    p: args.percentile.clamp(0.0, 1.0),
+                    vap_threshold: args.vra_threshold,
                 },
             };
         }
@@ -1587,6 +1620,49 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                         num_districts, balance_tolerance_frac, niter,
                         base, *steps, *p,
                     ).map_err(|e| format!("merge-split failed: {e}"))?
+                }
+                SeedCompositor::ParallelTempering { n_replicas, swap_interval, cold_tolerance, hot_tolerance, steps, p } => {
+                    let base = seed.unwrap_or(0);
+                    status(cfg.position, &format!(
+                        "{}: parallel-tempering p={:.2} {} steps {} replicas into {} districts",
+                        cfg.state_code, p, steps, n_replicas, num_districts
+                    ));
+                    run_parallel_tempering(
+                        &graph.adjacency, &vwgt, &edge_weights,
+                        num_districts, niter, base,
+                        *n_replicas, *swap_interval, *cold_tolerance, *hot_tolerance, *steps, *p,
+                    ).map_err(|e| format!("parallel-tempering: {e}"))?
+                }
+                SeedCompositor::VraRecom { steps, p, vap_threshold } => {
+                    let base = seed.unwrap_or(0);
+                    // Load minority VAP fractions from demographics CSV (same as VRASection).
+                    // Minority fraction = (total_pop - white_non_hispanic) / total_pop.
+                    let demo_path = std::path::Path::new("data")
+                        .join(&cfg.year).join("demographics")
+                        .join(format!("{state_name}_demographics_{}.csv", cfg.year));
+                    let minority_vap: Vec<f64> = if demo_path.exists() {
+                        let demo = load_demographics(&demo_path)
+                            .map_err(|e| format!("{}: vra-recom demographics load failed: {e}", cfg.state_code))?;
+                        align_demographics_to_adjacency(
+                            &demo, &graph.index_to_geoid, graph.n_vertices)
+                    } else {
+                        if cfg.algo.weights.minority_weighting {
+                            eprintln!("WARNING: {}: vra-recom demographics not found at {} — VRA enforcement is a no-op.",
+                                      cfg.state_code, demo_path.display());
+                        } else {
+                            eprintln!("WARNING: --search vra-recom without --weights-override vra-aligned will have 0 protected districts.");
+                        }
+                        vec![0.0; graph.adjacency.len()]
+                    };
+                    status(cfg.position, &format!(
+                        "{}: vra-recom p={:.2} {} steps vap_threshold={:.2} into {} districts",
+                        cfg.state_code, p, steps, vap_threshold, num_districts
+                    ));
+                    crate::bisection_runner::run_vra_recom(
+                        &graph.adjacency, &vwgt, &edge_weights,
+                        num_districts, niter, base,
+                        *steps, *p, *vap_threshold, &minority_vap,
+                    ).map_err(|e| format!("vra-recom: {e}"))?
                 }
                 _ => {
                     status(cfg.position, &format!("{}: recursive bisection into {} districts",

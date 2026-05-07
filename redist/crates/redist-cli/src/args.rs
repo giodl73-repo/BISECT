@@ -1275,6 +1275,13 @@ pub enum SearchMode {
     /// --ms-adapt-interval N (defaults: 2000, 0.30, 50). (B.21 spec accepted 3.75/4)
     #[value(name = "multiscale-adaptive")]
     MultiScaleAdaptive,
+    /// Parallel Tempering: N replicas at geometric tolerance ladder. --pt-replicas, --pt-swap-interval.
+    #[value(name = "parallel-tempering")]
+    ParallelTempering,
+    /// VRA-aware Forest ReCom — hard rejection preserving majority-minority districts.
+    /// Requires minority VAP data (--weights-override vra-aligned).
+    #[value(name = "vra-recom")]
+    VraRecom,
 }
 
 /// Which METIS backend to use for graph partitioning.
@@ -1603,6 +1610,30 @@ pub struct StateArgs {
     /// Requires --partition-mode simulated-annealing.
     #[arg(long, default_value_t = 1e-4)]
     pub sa_t_final: f64,
+
+    // ── Parallel Tempering (PT) parameters ───────────────────────────────────
+
+    /// Number of replicas for --search parallel-tempering. Default: 4.
+    #[arg(long, default_value_t = 4)]
+    pub pt_replicas: usize,
+
+    /// Swap interval for --search parallel-tempering. Default: 10.
+    #[arg(long, default_value_t = 10)]
+    pub pt_swap_interval: usize,
+
+    /// Cold chain balance tolerance for --search parallel-tempering. Default: 0.005.
+    #[arg(long, default_value_t = 0.005)]
+    pub pt_cold_tol: f64,
+
+    /// Hot chain balance tolerance for --search parallel-tempering. Default: 0.05.
+    #[arg(long, default_value_t = 0.05)]
+    pub pt_hot_tol: f64,
+
+    // ── VRA-ReCom parameters ─────────────────────────────────────────────────
+
+    /// Minority VAP fraction threshold for --search vra-recom. Default: 0.50.
+    #[arg(long, default_value_t = 0.50)]
+    pub vra_threshold: f64,
 }
 
 // ---------------------------------------------------------------------------
@@ -1744,6 +1775,30 @@ pub struct StatesArgs {
     /// Total Merge-Split MH steps for --search merge-split. Default: 1000.
     #[arg(long, default_value_t = 1000)]
     pub merge_split_steps: usize,
+
+    // ── Parallel Tempering (PT) parameters ───────────────────────────────────
+
+    /// Number of replicas for --search parallel-tempering. Default: 4.
+    #[arg(long, default_value_t = 4)]
+    pub pt_replicas: usize,
+
+    /// Swap interval for --search parallel-tempering. Default: 10.
+    #[arg(long, default_value_t = 10)]
+    pub pt_swap_interval: usize,
+
+    /// Cold chain balance tolerance for --search parallel-tempering. Default: 0.005.
+    #[arg(long, default_value_t = 0.005)]
+    pub pt_cold_tol: f64,
+
+    /// Hot chain balance tolerance for --search parallel-tempering. Default: 0.05.
+    #[arg(long, default_value_t = 0.05)]
+    pub pt_hot_tol: f64,
+
+    // ── VRA-ReCom parameters ─────────────────────────────────────────────────
+
+    /// Minority VAP fraction threshold for --search vra-recom. Default: 0.50.
+    #[arg(long, default_value_t = 0.50)]
+    pub vra_threshold: f64,
 }
 
 #[cfg(test)]
@@ -2443,6 +2498,8 @@ mod tests {
             ("multiscale",              SearchMode::MultiScale),
             ("merge-split",             SearchMode::MergeSplit),
             ("multiscale-adaptive",     SearchMode::MultiScaleAdaptive),
+            ("parallel-tempering",      SearchMode::ParallelTempering),
+            ("vra-recom",               SearchMode::VraRecom),
         ];
         for (s, expected) in cases {
             let parsed = SearchMode::from_str(s, true)

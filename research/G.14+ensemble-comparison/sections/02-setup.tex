@@ -1,0 +1,162 @@
+\section{Experimental Setup}
+\label{sec:setup}
+
+\subsection{States and District Counts}
+
+We evaluate all eight algorithms on three states that span a representative
+range of congressional district counts and geographic character:
+
+\begin{itemize}
+  \item \textbf{North Carolina (NC)}, $k = 14$.
+        A contested state with a history of contested congressional maps.
+        Moderately large tract graph ($N \approx 2200$ census tracts),
+        county structure that frequently produces split counties, and a
+        competitive partisan baseline.
+        $k = 14$ is a regime in which all single-scale chain methods mix
+        adequately; NC serves primarily as the baseline state.
+
+  \item \textbf{Wisconsin (WI)}, $k = 8$.
+        A small-$k$ state where mixing is straightforward for all methods.
+        WI highlights runtime differences and the overhead costs of
+        algorithms designed for larger problems (multi-scale, VRA boosts).
+        It also provides a clean test of \flip{}: with $k = 8$, individual
+        boundary tracts constitute a larger fraction of each district's
+        perimeter than for larger $k$.
+
+  \item \textbf{Texas (TX)}, $k = 38$.
+        The canonical large-$k$ test case for redistricting ensembles.
+        TX has $N \approx 5200$ census tracts, a complex county structure
+        ($\approx 100$ active county regions in the tract graph), and a
+        plan space that is too large for single-scale chains to explore
+        adequately without multi-scale acceleration.
+        TX is the primary state for autocorrelation comparisons.
+\end{itemize}
+
+\subsection{Common Configuration}
+
+All runs use:
+\begin{itemize}
+  \item \textbf{Base seed}: 42 (set via \texttt{--seed 42}).
+  \item \textbf{Population tolerance}: $\epsilon = 0.5\%$ (the default
+        balance tolerance for the compositor).
+  \item \textbf{Structure}: \texttt{ratio-optimal} (GeoSection bisection)
+        for all methods, providing the same initial plan as the starting
+        point.
+  \item \textbf{Weights}: \texttt{geographic} (default edge weights,
+        no county or VRA signal in the underlying graph).
+  \item \textbf{Hardware}: Intel Core i7-11800H (8 cores, 16 threads,
+        2.3~GHz base), 32~GB DDR4-3200. All runs use a single thread to
+        ensure runtime comparability.
+  \item \textbf{Census year}: 2020.
+\end{itemize}
+
+\paragraph{Chain-method step budget.}
+For chain methods (\sburst{}, \flip{}, \fr{}, \msp{}, \ms{},
+\sburstf{}, \vra{}), we run $T = 1{,}000$ steps per state.
+This budget is deliberately modest; the goal is not to produce a
+production-quality ensemble but to compare algorithms under the same
+compute constraint.
+For TX, 1000 steps means the chain touches each district approximately
+$1000 \times (2/38) \approx 53$ times in expectation---adequate for
+comparing autocorrelation structure but insufficient for a litigation-quality
+ensemble (which would require $T \geq 50{,}000$).
+
+\paragraph{SMC particle budget.}
+For \smc{}, we use $N = 1{,}000$ particles, matching the step budget of
+the chain methods in terms of total plan evaluations.
+The SMC run is a single pass (no MCMC warm-up chains); particles are
+resampled based on population-balance weights.
+
+\subsection{Metrics}
+
+We report four metrics for each algorithm--state pair.
+
+\paragraph{Edge-cut score (EC).}
+Let $G = (V, E)$ be the tract adjacency graph and $\pi : V \to [k]$
+a district assignment.
+The edge-cut score is:
+\[
+  \ec(\pi) = |\{(u,v) \in E : \pi(u) \neq \pi(v)\}|.
+\]
+Lower \ec{} means fewer cross-district adjacencies---a proxy for
+compactness.
+We report the \ec{} of the final plan produced by each algorithm
+(for chain methods, the plan at step $T$).
+
+\paragraph{Mean Polsby-Popper (PP).}
+For district $d$ with area $A_d$ and perimeter $P_d$, the Polsby-Popper
+score is:
+\[
+  \mathrm{PP}_d = \frac{4\pi A_d}{P_d^2}.
+\]
+We report the mean $\pp = \frac{1}{k} \sum_{d=1}^k \mathrm{PP}_d$ of the
+final plan.
+Higher \pp{} means more compact districts (closer to a circle).
+\pp{} is computed from the tract-level geometries projected to district
+boundaries.
+
+\paragraph{Partisan seat stability.}
+We run each algorithm five times with seeds $\{42, 43, 44, 45, 46\}$ and
+report the fraction of runs that produce the same Democratic seat count
+under the 2020 presidential vote totals.
+High stability indicates that the algorithm reliably produces plans with a
+particular partisan outcome; low stability indicates sensitivity to
+seed.
+Note: partisan seat stability measures algorithmic consistency, not
+algorithmic fairness.
+
+\paragraph{Wall-clock runtime.}
+Total wall-clock time in seconds from job start to final plan output,
+including all preprocessing (graph loading, coarsening derivation, initial
+plan construction) but excluding census data download.
+Measured on the single-threaded i7-11800H using the
+\texttt{--workers~1} flag.
+
+\paragraph{Lag-100 autocorrelation (chain methods only).}
+For chain-based methods, we record the \ec{} statistic at each step and
+compute the sample autocorrelation at lag $\ell = 100$:
+\[
+  \acf(100) = \frac{\sum_{t=1}^{T-100} (\ec_t - \bar{\ec})
+                    (\ec_{t+100} - \bar{\ec})}
+                   {\sum_{t=1}^{T} (\ec_t - \bar{\ec})^2}.
+\]
+Lower $\acf(100)$ indicates faster mixing: samples 100 steps apart are
+more nearly independent.
+
+\subsection{Single-Run Caveat}
+\label{sec:caveat}
+
+\textbf{All compactness and runtime figures in this paper are single-run
+results (seed 42) and should be interpreted as illustrative, not definitive.}
+Ensemble estimates with meaningful confidence intervals require $R \geq 10$
+independent runs, which is outside the scope of this comparative paper.
+The figures presented here are consistent with repeated informal testing
+but have not been subjected to formal statistical inference.
+The decision tree in Section~\ref{sec:decision} is based on the
+structural properties of each algorithm (as established in G.6--G.13),
+not solely on the single-run empirical results of this paper.
+
+\subsection{Algorithm--CLI Mapping}
+
+Table~\ref{tab:cli} gives the \texttt{--search} flag that invokes each
+algorithm in the \texttt{redist} CLI.
+
+\begin{table}[ht]
+\centering
+\caption{CLI flags for each algorithm.}
+\label{tab:cli}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Algorithm & \texttt{--search} flag & Paper \\
+\midrule
+Short-Burst     & \texttt{multi}                 & G.6 \\
+SMC             & (standalone mode)              & G.7 \\
+Flip            & \texttt{flip}                  & G.8 \\
+Forest ReCom    & \texttt{forest-recom}          & G.9 \\
+Merge-Split     & \texttt{merge-split}           & G.10 \\
+Multi-scale     & \texttt{multiscale}            & G.11 \\
+ShortBurstForest & \texttt{shortburst-forest}   & G.12 \\
+VRA-Aware ReCom & \texttt{vra-recom}             & G.13 \\
+\bottomrule
+\end{tabular}
+\end{table}
