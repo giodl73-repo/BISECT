@@ -85,7 +85,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: redist
-          key: redist-metis
+          key: metis-core
 
       # No METIS install step — that is the whole point of this job.
 
