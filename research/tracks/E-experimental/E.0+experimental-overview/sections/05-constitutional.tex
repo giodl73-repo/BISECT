@@ -1,0 +1,125 @@
+\section{Constitutional Availability}
+\label{sec:constitutional}
+
+A rigorous comparison of alternative systems must distinguish between systems
+that are immediately available under current constitutional and statutory law
+and systems that require either congressional action, constitutional amendment,
+or both.  This distinction is not merely procedural: it determines which
+systems can be evaluated as near-term reforms versus long-term structural changes.
+
+\subsection{Immediately Available: Multi-Member Districts}
+
+Multi-member districts are constitutionally available without amendment.
+The relevant authority is the federal single-member district statute, codified
+at 2 U.S.C. \S2c, which requires that each state electing more than one
+Representative do so from single-member districts.  This statute was enacted
+by Congress and can be repealed or amended by Congress.  Because it is a
+statutory rather than constitutional requirement, no Article~V process is needed.
+
+The Fair Representation Act (H.R.~3863, 117th Congress) would have amended
+2 U.S.C. \S2c to permit states to use multi-member districts with ranked-choice
+voting \citep{fair2021representation}.  Its repeated introduction without passage
+reflects political rather than constitutional obstacles.
+
+The Voting Rights Act implications of multi-member districts are more complex.
+Historical MMDs were used in some states to dilute minority voting power, and
+\emph{Thornburg v.\ Gingles} \citep{gingles1986} largely prohibited submerging
+minority populations in multi-member district majorities.  However, the
+three-to-five-member districts contemplated by the Fair Representation Act are
+specifically designed to create minority representation opportunities, not to
+dilute them.  Paper E.1 finds that our MMD algorithm produces a minority-
+representation surplus relative to the VRA benchmark --- the opposite of the
+dilution concern.
+
+\subsection{Immediately Available: County-Based Representation}
+
+County representation is more complex.  In states where Congress grants
+state legislatures discretion over the method of electing Representatives
+(as it does under Article~I, \S4), a state could theoretically adopt county-
+based representation for its congressional delegation.  However, the one-person
+one-vote requirement derived from \emph{Reynolds v.\ Sims} \citep{reynolds1964}
+and applied to congressional elections in \emph{Wesberry v.\ Sanders}
+\citep{wesberry1964} would prohibit fractional-vote county representation:
+the population disparities between counties are too large to satisfy the
+``as nearly as is practicable'' equal-population standard.
+
+A constitutional amendment specifying that House seats be allocated to counties
+and that counties with fractional allocations receive weighted votes would be
+required for the strict county representation system described in E.2.
+A weaker version --- restricting district-drawing to preserve county lines
+where population equality permits --- is already common and does not require
+amendment.
+
+\subsection{Requires Constitutional Amendment: National Redistricting}
+
+National redistricting without state lines is constitutionally unavailable.
+Article~I, \S2 is unambiguous: ``Representatives shall be apportioned among
+the several States according to their respective Numbers.''  This requires
+not merely apportionment by state but the drawing of districts within states.
+\emph{Wesberry v.\ Sanders} \citep{wesberry1964} confirmed that congressional
+districts must be drawn within individual states.
+
+The research value of E.3 is precisely that it is a constitutionally prohibited
+counterfactual.  Quantifying the compactness cost of the federalism constraint
+(approximately 12\% PP improvement forgone) gives a precise answer to a
+question that is otherwise answered only impressionistically: how much does
+the state-boundary requirement cost us in geometric terms?
+
+\subsection{Available but Contested: Partisan-Fairness Allocation}
+
+Partisan-fairness seat allocation (E.5) is constitutionally available in the
+sense that Congress could, under Article~I, \S4, impose an efficiency-gap
+criterion on state redistricting plans.  The Supreme Court has held that
+federal courts cannot impose partisan symmetry standards \citep{rucho2019},
+but this does not prevent Congress from doing so by statute.
+
+The contested question is whether a congressional proportionality mandate would
+itself violate the Constitution.  The argument against is that by dictating
+electoral outcomes (seat allocation) rather than drawing procedures, such a
+mandate would interfere with states' reserved powers.  This argument is weaker
+than it appears: Congress has broad authority under Article~I, \S4 to
+``make or alter'' state regulations for congressional elections, and the
+Court has consistently upheld congressional intervention in redistricting.
+
+\subsection{Immediately Available: Algorithmic Single-Member Redistricting (DIA)}
+
+The District-Independent Algorithm, which draws compact single-member districts
+using census geography and the METIS graph partitioner without partisan data,
+is immediately available.  It is a redistricting method, not a structural
+reform, and requires no statutory change at the federal level.  Individual
+states adopting algorithmic redistricting by statute or initiative would need
+only to incorporate the method into their state code alongside existing criteria
+(population equality, contiguity, VRA compliance).
+
+This is the key asymmetry between the DIA and the alternatives: all five
+experimental systems require either congressional action or constitutional
+amendment to implement at the national scale, whereas the DIA can be adopted
+state by state within the existing legal framework.  Table~\ref{tab:constitutional}
+summarizes the constitutional status of each system.\footnote{\emph{Moore v.\
+Harper} (2023) confirmed that state courts may enforce state constitutional
+redistricting requirements, which creates new state-court review venues for all
+systems listed as ``immediately available'' in Table~\ref{tab:constitutional}.
+Federal courts, however, remain closed to partisan gerrymandering claims
+post-\emph{Rucho}.  The District-Independent Algorithm (DIA) is a model
+redistricting method; it has not been formally enacted as a statutory standard
+in any state, though several states use algorithmic criteria that are
+substantively similar.}
+
+\begin{table}[ht]
+\centering
+\caption{Constitutional Availability of Each System}
+\label{tab:constitutional}
+\begin{tabular}{lll}
+\toprule
+\textbf{System} & \textbf{Status} & \textbf{Authority Required} \\
+\midrule
+Baseline DIA (B.1)          & Available    & State statute or initiative \\
+E.1 Multi-member            & Available    & Federal statute (repeal 2 U.S.C. \S2c) \\
+E.2 County representation   & Constrained  & Constitutional amendment (equal pop.) \\
+E.3 National redistricting  & Unavailable  & Constitutional amendment (Art.~I \S2) \\
+E.4 Partisan similarity     & Available    & State or federal statute \\
+E.5 Partisan-fairness alloc.& Available    & Federal statute (Art.~I \S4) \\
+E.6 International           & N/A          & Applicable national law varies \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,209 @@
+% Section 6: Synthesis (~1,200 words)
+
+\subsection{Four Properties of a Valid Redistricting Algorithm}
+
+Drawing together the five empirical papers, this section articulates
+four properties that the C-track collectively validates for METIS
+recursive bisection redistricting.
+
+\subsubsection{Property 1: Spatial Robustness}
+
+\begin{quote}
+\textit{The algorithm produces consistent outputs regardless of the
+spatial resolution of the input units, within a 130$\times$ range
+of unit counts.}
+\end{quote}
+
+Evidence: C.1 demonstrates that Polsby-Popper compactness varies by
+$\Delta PP < 0.005$ (mean) and $< 0.011$ (maximum, Nevada) across
+tract, block-group, and block resolutions. VRA-relevant majority-minority
+district counts vary by $\pm 1$ nationally across the same resolution
+range.
+
+Interpretation: The algorithm responds to the underlying geographic
+structure (terrain, settlement patterns, administrative boundaries)
+rather than to the choice of building block. This is a prerequisite
+for algorithmic legitimacy: a method whose conclusions depend on an
+arbitrary implementation choice (tract vs.\ block) would not be
+trustworthy.
+
+\subsubsection{Property 2: Temporal Stability}
+
+\begin{quote}
+\textit{The algorithm produces stable outputs across the three
+available census cycles (2000, 2010, 2020), with geographic factors
+explaining $3.2\times$ more variance than temporal factors.}
+\end{quote}
+
+Evidence: C.2's variance decomposition finds $\sigma^2_\text{geo} /
+\sigma^2_\text{temp} = 3.2$. Within-slice cross-census correlations
+have median $r = 0.73$. National mean PP varies by approximately 10\%
+over twenty years (0.412 to 0.441).
+
+C.3 demonstrates that recursive bisection provides $0.8$ pp better
+decadal boundary stability than n-way partitioning---a structural
+advantage from hierarchical representation of geographic scale.
+
+Interpretation: An algorithm validated in 2020 does not require
+complete revalidation for 2030. The geographic basis of its performance
+is stable; only the input data changes. This property supports the DIA's
+ten-year certification framework.
+
+\subsubsection{Property 3: Demographic Neutrality}
+
+\begin{quote}
+\textit{The algorithm's performance (compactness, VRA compliance)
+is driven by geographic structure, not demographic composition.
+Demographic shifts between census years do not systematically bias
+the algorithm toward or away from any population group.}
+\end{quote}
+
+Evidence: C.2 demonstrates that temporal variance ($\sigma^2_\text{temp}$)
+is small relative to geographic variance ($\sigma^2_\text{geo}$). Slices
+with high demographic change (Nevada, Arizona, Florida) show higher
+temporal variance, but even these remain within the distribution of
+cross-geographic variance.
+
+C.4 shows that the geographic clustering of states by compactness
+performance is stable: 47 of 50 states remain in the same cluster
+across 2000--2020, despite substantial demographic change over that
+period.
+
+Interpretation: The algorithm does not develop differential performance
+for states with changing racial compositions, political demographics,
+or urbanization levels. Its behavior is \emph{geography-contingent},
+not \emph{demography-contingent}. This is critical for VRA compliance:
+an algorithm that performed worse in states with growing minority
+populations would face legal challenge.
+
+\subsubsection{Property 4: Partisan Neutrality}
+
+\begin{quote}
+\textit{Without accessing partisan data, the algorithm produces plans
+with mean absolute efficiency gap $|EG| = 0.04$---less than half the
+$0.08$ mean for enacted plans. The residual imbalance reflects
+political geography, not algorithmic choice.}
+\end{quote}
+
+Evidence: C.5 documents the $8.3$ percentage-point partisan gap
+between algorithmic and enacted plans across 15 competitive states.
+The compactness-EG separation (Arizona, Nevada) proves that enacted
+partisan bias is not compactness-driven. Five independent fairness
+metrics converge on the same substantive conclusion.
+
+Interpretation: The algorithm's partisan neutrality is a structural
+property of its information access, not a lucky outcome. Because the
+algorithm cannot see partisan data, it cannot gerrymander. The
+impossibility defense \citep{b1paper} is validated empirically: the
+$|EG|$ of $0.04$ is consistent with the lower bound achievable under
+compact districting with Democratic urban concentration, and the
+enacted $|EG|$ of $0.08$ exceeds this lower bound, demonstrating
+manipulation beyond geographic necessity.
+
+\subsubsection{Property 5: VRA Compliance}
+
+\begin{quote}
+\textit{In the 5 states subject to Section 5 preclearance history
+(Alabama, Georgia, Louisiana, Mississippi, South Carolina), the
+VRA-aligned weighting mode achieves majority-minority district targets
+in 4 of 5 states, consistent with the 42\% threshold finding of D.1.}
+\end{quote}
+
+Evidence: C.1 finds that majority-minority district counts vary by
+$\pm 1$ nationally across a 130$\times$ unit-count range, confirming
+that VRA-relevant district structure is resolution-robust. D.1
+\citep{d1paper} establishes that the VRA-aligned mode achieves
+majority-minority targets in 4 of 5 covered states (the exception is
+Louisiana, where district compactness constraints interact with
+dispersed minority population geography in ways that require ongoing
+study).
+
+Interpretation: VRA compliance is not purely a post-hoc check on
+algorithmic output; the algorithm's weight structure can be tuned to
+respond to VRA requirements. The 4/5 coverage rate across the most
+demanding Section 5 states provides baseline empirical evidence that
+the algorithm is suitable for VRA-covered jurisdictions, while the
+one failure mode (Louisiana-type dispersed geography) is identified
+as a known limitation requiring additional work.
+
+\subsection{The Four Properties as a System}
+
+These four properties interact and reinforce each other in the context
+of DIA requirements.
+
+\textbf{Spatial robustness} (P1) establishes that the algorithm's
+conclusions are not artifacts of the tract-level implementation choice.
+This is a prerequisite for \textbf{temporal stability} (P2): if
+changing spatial resolution changed the algorithm's behavior, then
+changing spatial building blocks between census years (tract boundaries
+are redrawn each decade) could also change behavior, undermining
+longitudinal comparisons.
+
+\textbf{Temporal stability} (P2) creates the precondition for
+\textbf{demographic neutrality} (P3): because temporal variance is
+small and geographically explained, we can rule out the confound that
+the algorithm's behavior changes in response to demographic shifts.
+If temporal variance were large and unexplained, demographic neutrality
+claims would be unsupported.
+
+\textbf{Demographic neutrality} (P3) strengthens the \textbf{partisan
+neutrality} (P4) claim. Partisan composition is correlated with
+demographic composition; an algorithm that performed systematically
+differently for states with high minority populations would face
+charges of indirect partisan bias. P3 rules out this mechanism.
+
+Together, the four properties constitute what we call
+\textbf{comprehensive algorithmic validity}: the algorithm produces
+consistent, stable, demographically neutral, and partisan-neutral
+outputs across the full range of conditions under which it would be
+deployed.
+
+\subsection{Connection to DIA Reproducibility Requirements}
+
+The DIA's three reproducibility requirements map onto the four
+validated properties as follows:
+
+\begin{itemize}
+  \item \textbf{R1} (Deterministic from seed): Satisfied by B.7's
+    demonstration that CV $<$ 2\% for 48/50 states across 10,000
+    seeds, and the DIA seed is statistically indistinguishable from
+    optimal.
+
+  \item \textbf{R2} (Invariant to input perturbations): Satisfied by
+    P1 (spatial robustness) and P3 (demographic neutrality). The
+    algorithm's outputs are stable under the largest practical
+    perturbation---a 130$\times$ change in unit count.
+
+  \item \textbf{R3} (Documented behavior across geographies and census
+    years): Satisfied by P2 (temporal stability), P3, and P4.
+    The C-track provides quantitative characterization of algorithm
+    behavior across all 50 states and all three available census years,
+    with identified failure modes (high-growth Nevada-style metropolitan
+    areas) and their expected magnitudes.
+\end{itemize}
+
+\subsection{Limitations of the Validation Program}
+
+The C-track validation has four acknowledged limitations.
+
+First, the block-level analysis (C.1) is complete for 10 of 50 states;
+full 50-state block-level validation awaits additional computation.
+The 10 states span diverse geographies and the results are consistent,
+but the generalization is extrapolated.
+
+Second, C.3 and C.4's temporal stability findings are based on 2 or 3
+time points per state. With three census cycles, it is not possible
+to distinguish a trend from a level shift. The 2030 census will provide
+a critical fourth data point.
+
+Third, the partisan fairness analysis (C.5) is limited to 15
+competitive states because single-district states and strongly
+non-competitive states do not provide meaningful efficiency gap
+estimates. The 15-state sample covers approximately 285 of 435
+congressional districts.
+
+Fourth, validation against enacted plans assumes those plans constitute
+an appropriate comparison. As reform spreads and enacted plans improve
+(C.4's convergence finding), the comparison benchmark itself changes.
+Future validation will require a stable reference standard, perhaps
+provided by independent redistricting commissions' outputs.

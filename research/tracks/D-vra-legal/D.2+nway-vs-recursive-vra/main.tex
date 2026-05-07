@@ -1,0 +1,55 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\title{N-way vs Recursive Bisection for VRA-Compliant Redistricting:\\
+A Comprehensive 50-State Comparison}
+\author{Giovanni Della-Libera}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Graph partitioning algorithms offer two fundamental approaches to congressional redistricting: n-way partitioning (direct division into $k$ districts) and recursive bisection (hierarchical binary splitting). This paper presents the first comprehensive empirical comparison of these methods for Voting Rights Act (VRA) compliance using edge-weighted graph partitioning across all 50 states.
+
+We conduct ablation studies testing five weight factors (1$\times$--100$\times$) and four minority thresholds (40\%--55\%) for both methods, totaling 1,760 redistricting runs across 44 multi-district states. Our key finding challenges conventional assumptions: \textbf{both methods achieve statistically equivalent success rates} (n-way: 47.5\%, recursive: 48.3\%, $p=0.634$), with negligible effect size (Cohen's $d=-0.018$).
+
+However, methods exhibit distinct characteristics. N-way partitioning offers \textbf{67.5\% faster runtime} (3.68s vs 11.33s average), making it preferable for rapid prototyping and large-scale analysis. Recursive bisection achieves a \textbf{higher performance ceiling} with optimal parameters (56.8\% vs 52.3\% best configuration), benefiting careful parameter tuning. Methods show different parameter sensitivities—n-way prefers lower thresholds (40\%), recursive prefers higher thresholds (50\%)—and state-specific advantages, with n-way winning in Virginia (+35\%) and recursive in Connecticut (+45\%).
+
+This equivalence finding has important implications for redistricting reform: practitioners can confidently choose either method based on computational constraints (speed vs optimization) rather than effectiveness concerns. Both approaches produce comparable VRA compliance when properly configured with edge-weighting and total minority coalitions.
+\end{abstract}
+
+\section{Introduction}
+\input{sections/01_introduction}
+
+\section{Background: Graph Partitioning Methods}
+\input{sections/02_background}
+
+\section{Theoretical Analysis}
+\input{sections/03_theory}
+
+\section{Experimental Design}
+\input{sections/04_methodology}
+
+\section{Results}
+\input{sections/05_results}
+
+\section{Discussion}
+\input{sections/06_discussion}
+
+\section{Conclusion}
+\input{sections/07_conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,94 @@
+%% Synthesis Metapaper for Science
+%% Algorithmic Objectivity for Congressional Redistricting
+
+\documentclass[11pt]{article}
+
+% Science journal style packages
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{times}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{tikz}
+\usepackage{subcaption}
+\usetikzlibrary{positioning,arrows.meta}
+
+% Title and authors
+\title{Algorithmic Objectivity for Congressional Redistricting: A National-Scale Demonstration}
+
+\author{
+Giovanni Della-Libera \\
+\small Independent Researcher \\
+\small \texttt{giodl73@gmail.com}
+}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Congressional redistricting in the United States suffers a legitimacy crisis:
+partisan mapmakers manipulate district boundaries to predetermine election outcomes,
+eroding public confidence in representative democracy. We demonstrate that recursive
+graph bisection—a computational method used for supercomputer workload distribution—
+provides an algorithmic alternative that cannot gerrymander because it cannot access
+partisan data. Applied to all 50 states across three census decades (2000/2010/2020),
+this method produces 435 congressional districts with near-perfect population equality,
+geographic contiguity, and geometric compactness. Algorithmic plans create 69 more
+majority-minority districts than enacted maps, exceeding Voting Rights Act requirements
+without explicit racial targeting. We identify a 42\% demographic threshold determining
+where proportional minority representation becomes geographically feasible. These
+findings establish that mathematical governance—successful for congressional
+apportionment since 1941—can extend to redistricting, offering a path toward restoring
+electoral legitimacy through structural objectivity rather than institutional reform.
+\end{abstract}
+
+% Main sections
+\input{sections/01-introduction}
+\input{sections/02-huntington-hill-precedent}
+\input{sections/03-method}
+
+% Figures (generated PNG files)
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/figure1_portfolio_architecture.png}
+\caption{\textbf{Research program architecture.} Ten papers form a comprehensive investigation of algorithmic redistricting. Foundation papers (blue) establish methods, analysis papers (green) validate findings across multiple dimensions, and theory papers (orange) explore algorithmic variations. Arrows indicate methodological dependencies. Key findings annotated for each paper cluster.}
+\label{fig:architecture}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/figure2_national_map_placeholder.png}
+\caption{\textbf{National redistricting results.} Map of all 435 algorithmic congressional districts from 2020 census, color-coded by majority-minority (MM) status. Algorithmic plans created 137 MM districts compared to 68 in enacted maps (+69 surplus). Insets show key examples: Alabama (VRA success with 2 MM districts), California (large state with 52 districts), and Vermont (small state with 1 district). Demonstrates national-scale feasibility.}
+\label{fig:national}
+\end{figure}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/figure3_vra_analysis.png}
+\caption{\textbf{VRA compliance analysis.} (A) Algorithmic plans create 137 majority-minority (MM) districts versus 68 in enacted plans, a surplus of 69 (+101\%). Key states shown: Alabama (0$\rightarrow$2), Georgia (5$\rightarrow$6), Louisiana (1$\rightarrow$2). (B) The 42\% demographic threshold determines where proportional minority representation becomes geographically feasible. States above 42\% minority population achieve near-proportional outcomes; states below 37\% face geometric constraints. (C) Pareto frontier for Alabama shows tradeoff between VRA compliance and geometric compactness, illustrating achievable parameter space.}
+\label{fig:vra}
+\end{figure*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/figure4_temporal_stability.png}
+\caption{\textbf{Temporal stability across census cycles.} (A) Recursive bisection maintains 80\% census tract retention from 2010 to 2020 redistricting, outperforming n-way partitioning (66\%) by 14 percentage points. The hierarchical structure creates geographic scaffolding that persists across demographic change. (B) Variance decomposition reveals that differences between geographic regions (e.g., urban vs. rural) exceed temporal changes by 3.2×, indicating districts reflect durable spatial structure rather than decade-specific population artifacts. (C) District boundary overlay shows 2010 boundaries (blue) and 2020 boundaries (red); purple overlap illustrates high spatial consistency despite population shifts.}
+\label{fig:temporal}
+\end{figure*}
+
+\input{sections/04-findings}
+\input{sections/05-implications}
+\input{sections/06-conclusion}
+
+% Bibliography
+% Note: Using unsrt style for now; Science.bst would be used for journal submission
+\bibliographystyle{unsrt}
+\bibliography{references}
+
+\end{document}

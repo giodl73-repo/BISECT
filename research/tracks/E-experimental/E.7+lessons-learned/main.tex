@@ -1,0 +1,70 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{setspace}
+
+\onehalfspacing
+
+\title{E.7: Six Systems, One Constraint:\\
+       Design Lessons from Algorithmic Alternative Representation}
+
+\author{Gio Della-Libera}
+
+\date{Draft --- \today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Algorithmic redistricting research has largely focused on optimizing the
+drawing of single-member districts.  This paper reports what we learn
+about representation design more broadly by comparing six algorithmically
+implemented alternatives to the standard single-member geographic district:
+multi-member districts (E.1), county-based representation (E.2), national
+redistricting without state lines (E.3), partisan-similarity clustering
+(E.4), partisan-fairness seat allocation (E.5), and international
+applications (E.6).  Five design lessons emerge from systematic comparison.
+First, geography is destiny for single-member districts: the Rodden sorting
+gap produces systematic underrepresentation of Democrats regardless of the
+drawing method, algorithmic or otherwise.  Second, multi-member districts
+partially but not fully escape geographic sorting: three-member districts
+reduce the gap by approximately 40\%, five-member by 65\%.  Third,
+eliminating districts entirely (county representation) trades proportionality
+in competitive states for a fractional-voting mechanism that is institutionally
+unfamiliar and constitutionally problematic.  Fourth, crossing state lines
+produces geographically compact but politically fragmented districts: the
+national map achieves 12\% better mean Polsby--Popper compactness but
+preserves 40\% fewer counties.  Fifth, the compactness--proportionality
+Pareto frontier is steep: gaining one percentage point of proportionality
+costs approximately 0.015 Polsby--Popper units, and no feasible
+single-election geographic system escapes this constraint.  These lessons
+imply a design hierarchy: for single-member systems, the constraint hierarchy
+(population $\to$ contiguity $\to$ compactness) is optimal under geographic
+sorting; multi-member districts are the only structural escape available
+within current constitutional constraints.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-lesson1}
+\input{sections/03-lesson2}
+\input{sections/04-lesson3}
+\input{sections/05-lesson4}
+\input{sections/06-lesson5}
+\input{sections/07-synthesis}
+\input{sections/08-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

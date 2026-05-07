@@ -1,0 +1,196 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Engine: c-ffi  (C METIS FFI via libmetis — default production engine)
+  # Requires libmetis installed.  Runs on Linux + macOS (Windows TBD).
+  # ---------------------------------------------------------------------------
+  test-engine-c-ffi:
+    name: Test / c-ffi engine (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: .
+          key: c-ffi
+
+      - name: Install METIS (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y libmetis-dev
+
+      - name: Install METIS (macOS)
+        if: runner.os == 'macOS'
+        run: brew install metis
+
+      # All crates except bisect-cli run in parallel (no CWD issue).
+      - name: Test bisect-core
+        run: cargo test -p bisect-core --lib --tests
+        working-directory: .
+
+      - name: Test bisect-data
+        run: cargo test -p bisect-data --lib --tests
+        working-directory: .
+
+      - name: Test bisect-analysis
+        run: cargo test -p bisect-analysis --lib --tests
+        working-directory: .
+
+      - name: Test bisect-apportion (c-ffi engine — requires libmetis)
+        run: cargo test -p bisect-apportion --lib --tests
+        working-directory: .
+
+      - name: Test bisect-map
+        run: cargo test -p bisect-map --lib --tests
+        working-directory: .
+
+      - name: Test bisect-report
+        run: cargo test -p bisect-report --lib --tests
+        working-directory: .
+
+      # bisect-cli runs last with --test-threads=1: set_current_dir() is
+      # process-global; parallel tests race on CWD → ENOENT.
+      - name: Test bisect-cli (c-ffi engine, serialised)
+        run: cargo test -p bisect-cli --lib --tests -- --test-threads=1
+        working-directory: .
+
+  # ---------------------------------------------------------------------------
+  # Engine: metis-core  (pure-Rust multilevel partitioning — no C dependency)
+  # No libmetis required.  Runs on all three platforms including Windows.
+  # ---------------------------------------------------------------------------
+  test-engine-metis-core:
+    name: Test / metis-core engine (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    env:
+      # Tell bisect-apportion tests to use the pure-Rust engine.
+      REDIST_METIS_ENGINE: metis-core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: .
+          key: metis-core
+
+      # No METIS install step — that is the whole point of this job.
+
+      # metis-core unit tests run in its own repo CI.
+      - name: Test bisect-core
+        run: cargo test -p bisect-core --lib --tests
+        working-directory: .
+
+      - name: Test bisect-data
+        run: cargo test -p bisect-data --lib --tests
+        working-directory: .
+
+      - name: Test bisect-analysis
+        run: cargo test -p bisect-analysis --lib --tests
+        working-directory: .
+
+      # --no-default-features disables c-ffi on all crates:
+      # bisect-apportion skips the metis crate entirely (pure-Rust paths only).
+      # bisect-cli uses the metis-core fallback in bisection_runner.rs for
+      # all bisect/nway paths; AreaSection returns a clear [CONFIG] error.
+
+      - name: Test bisect-apportion (metis-core engine — no C dep)
+        run: cargo test -p bisect-apportion --lib --tests --no-default-features
+        working-directory: .
+
+      - name: Test bisect-map
+        run: cargo test -p bisect-map --lib --tests
+        working-directory: .
+
+      - name: Test bisect-report
+        run: cargo test -p bisect-report --lib --tests
+        working-directory: .
+
+      - name: Test bisect-cli (metis-core engine — no C dep, serialised)
+        run: cargo test -p bisect-cli --lib --tests --no-default-features -- --test-threads=1
+        working-directory: .
+
+  # ---------------------------------------------------------------------------
+  # Release builds (tag-triggered only)
+  # ---------------------------------------------------------------------------
+  build:
+    name: Build release (${{ matrix.os }})
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact: redist-linux
+            bins: |
+              redist/target/release/redist
+              redist/target/release/bisect-tui
+          - os: windows-latest
+            artifact: redist-windows
+            bins: |
+              redist/target/release/redist.exe
+              redist/target/release/bisect-tui.exe
+          - os: macos-latest
+            artifact: redist-macos
+            bins: |
+              redist/target/release/redist
+              redist/target/release/bisect-tui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: .
+
+      - name: Install METIS (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y libmetis-dev
+
+      - name: Install METIS (macOS)
+        if: runner.os == 'macOS'
+        run: brew install metis
+
+      - name: Build release binaries
+        run: cargo build --release -p bisect-cli -p bisect-tui
+        working-directory: .
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.bins }}
+
+  release:
+    name: Create release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            redist-linux/redist
+            redist-linux/bisect-tui
+            redist-windows/redist.exe
+            redist-windows/bisect-tui.exe
+            redist-macos/redist
+            redist-macos/bisect-tui
+          generate_release_notes: true

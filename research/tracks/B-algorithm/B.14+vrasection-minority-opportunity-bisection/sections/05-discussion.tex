@@ -1,0 +1,235 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{$w_\text{vra}$ Sensitivity}
+
+The alignment weight $w_\text{vra}$ is the primary tuning parameter of
+VRASection.
+Its effect on the algorithm's behaviour can be characterised across
+three qualitative regimes:
+
+\paragraph{Low weight ($w_\text{vra} \leq 0.2$): compactness dominates.}
+At $w_\text{vra} = 0.2$, the maximum alignment discount is 20\,\% of the
+normalised edge-cut.
+In practice, this means VRASection only deviates from GeoSection's
+ratio selection when a highly concentrated split ($A \approx 0.8$--$1.0$)
+is nearly as compact as the GeoSection winner.
+States with moderate geographic sorting (NC, GA, TX) will show little
+change from GeoSection, because their minority populations, while
+concentrated in cities, do not produce alignment scores high enough to
+overcome a 4:1 compactness preference.
+This regime is recommended when legal risk is high and the state has no
+clear Section 2 obligation.
+
+\paragraph{Default weight ($w_\text{vra} = 0.4$): balanced.}
+The proposed default gives compactness 60\,\% weight and alignment 40\,\%.
+For Alabama, this weight is sufficient to shift the ratio from $1:6$ to $2:5$
+(Section~\ref{sec:evaluation}).
+The Shaw predominance condition is satisfied with a 20\,pp margin.
+This regime is recommended as the standard setting for states where
+Section 2 litigation has occurred or is anticipated.
+
+\paragraph{High weight ($w_\text{vra} \geq 0.6$): alignment dominates.}
+At $w_\text{vra} = 0.6$, the alignment bonus can overcome up to 60\,\% of
+the compactness cost, meaning a ratio with $A = 1$ would be preferred
+even if its normalised edge-cut is 2.5$\times$ the GeoSection winner's.
+In states with moderate geographic concentration, this can produce ratios
+that sacrifice meaningful compactness for marginal alignment gains.
+The Shaw predominance condition is not satisfied at $w_\text{vra} = 0.6$
+(see \S\ref{sec:shaw-line} below).
+This regime should not be used in standard redistricting; it may be useful
+for research to identify the maximum alignment achievable under geographic
+constraints.
+
+\paragraph{Summary table.}
+\begin{table}[h]
+\centering
+\caption{$w_\text{vra}$ regimes and their properties.}
+\label{tab:wvra}
+\begin{tabular}{ccccl}
+\toprule
+$w_\text{vra}$ & \textbf{Compactness weight} & \textbf{Alignment weight}
+  & \textbf{Shaw compliant?} & \textbf{Recommended use} \\
+\midrule
+0.0  & 100\,\% & 0\,\%   & Yes (=GeoSection)  & Pure compactness \\
+0.2  & 80\,\%  & 20\,\%  & Yes                & Low-obligation states \\
+0.4  & 60\,\%  & 40\,\%  & Yes                & \textbf{Default (Section 2 states)} \\
+0.5  & 50\,\%  & 50\,\%  & Borderline         & Not recommended \\
+0.6  & 40\,\%  & 60\,\%  & No                 & Research only \\
+1.0  & 0\,\%   & 100\,\% & No                 & Research only \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{The Shaw v. Reno Line and the Cooper v. Harris Counterfactual}
+\label{sec:shaw-line}
+
+The racial-predominance test from \emph{Shaw v.\ Reno} (1993) and
+\emph{Miller v.\ Johnson} (1995) asks whether race was the ``predominant
+factor'' in district design.
+\emph{Cooper v.\ Harris} (2017) clarified the operative inquiry: the court
+asks whether the legislature ``placed a significant number of voters within
+or without a particular district predominately because of their race.''
+This is a counterfactual question, not an arithmetic one.
+Courts do not inspect objective function coefficients; they ask whether
+specific boundary choices are explicable on non-racial grounds.
+
+\paragraph{The correct framework: counterfactual comparison.}
+The controlling question under \emph{Shaw}/\emph{Miller}/\emph{Cooper} is:
+\emph{Would the legislature have drawn this district this way even if it
+were not trying to satisfy the VRA?}
+VRASection passes this test because the counterfactual map --- the pure
+GeoSection result at $w_\text{vra} = 0$ --- is explicitly available as a
+comparison point.
+The counterfactual is not hypothetical; it is computed.
+
+\begin{proposition}[VRASection counterfactual availability]
+\label{prop:counterfactual}
+VRASection with $w_\text{vra} = 0.40$ produces a different first-level
+ratio than GeoSection (the $w_\text{vra} = 0$ counterfactual) in at most
+50\,\% of tested states: 3 of 6 states (MS, GA, LA) produce the
+\emph{same} ratio under both algorithms; only 3 states (AL, NC, SC)
+produce a different ratio.
+In the states where the ratio changes, the new ratio isolates a
+geographically compact region that happens to have minority concentration
+--- the alignment signal reflects a geographic boundary, not a
+racial assignment.
+\end{proposition}
+
+\noindent
+For the three states where VRASection and GeoSection agree (MS, GA, LA),
+the alignment score did not change the outcome: the geographically optimal
+split and the minority-aligned split are the same split.
+This is strong evidence that VRASection is not imposing a racial
+classification --- it is detecting geographic structure that is already
+consistent with compact redistricting.
+
+For the three states where VRASection changes the ratio (AL, NC, SC),
+the change is geographically explicable:
+\begin{itemize}
+\item \textbf{Alabama}: the 2:5 split follows the Black Belt's natural
+  northern boundary (the transition from the dark-soil plantation counties
+  to the Piedmont).
+  This geographic boundary exists independently of minority VAP data;
+  VRASection detects that this boundary also concentrates minority population.
+\item \textbf{North Carolina}: the 1:13 split isolates the Charlotte--Raleigh
+  urban corridor, which is the state's most compact urban concentration
+  by the isoperimetric metric.
+\item \textbf{South Carolina}: the 1:6 split isolates the Lowcountry coastal
+  region, which forms a geographically distinct unit (tidal creeks, barrier
+  islands, and the Sea Island geography).
+\end{itemize}
+
+\paragraph{The objective function weight as supporting evidence.}
+The $w_\text{vra} < 0.5$ inequality is not itself the Shaw defence, but it
+provides quantitative support for the geographic argument.
+For any ratio $i$ with $\mathrm{EC}_\text{norm}(i) \gg 1$, the selection
+score decomposes as:
+\[
+  \underbrace{(1 - w_\text{vra}) \cdot \mathrm{EC}_\text{norm}(i)}_\text{compactness component}
+  \;\;+\;\;
+  \underbrace{(-w_\text{vra} \cdot A \cdot \mathrm{EC}_\text{norm}(i))}_\text{alignment component}
+\]
+At $w_\text{vra} = 0.40$ and the empirical alignment score $A = 0.42$ for
+Alabama's 2:5 split, geographic compactness contributes 60\,\% of the
+score weight and alignment contributes 40\,\%.
+This quantitative record supports the counterfactual argument: the boundary
+choice at 2:5 would have been highly competitive on compactness grounds alone
+(only 4.3\,\% EC premium over the GeoSection winner), and the alignment bonus
+provided the tie-breaking signal, not the primary motivation.
+
+The expert-testimony formulation is therefore:
+``VRASection chose the 2:5 split because it is nearly as compact as the
+1:6 GeoSection winner (4.3\,\% EC premium) and concentrates Alabama's
+Black community along a geographic boundary --- the Black Belt's northern
+limit --- that exists independently of racial data.
+The counterfactual GeoSection map is available for comparison.
+In 3 of 6 tested states, VRASection and GeoSection agree exactly;
+Alabama is among the 3 states where the geographic signal differs,
+and in all 3, the difference is explicable on geographic grounds.''
+
+\subsection{Relationship to B.3: MetisVra Failures}
+
+VRASection and MetisVra address the same goal (VRA-compliant maps) via
+fundamentally different mechanisms.
+The comparison is instructive.
+
+\paragraph{MetisVra: explicit racial concentration.}
+MetisVra adds minority VAP fraction as a second METIS constraint.
+The constraint requires each half of the bisection to contain approximately
+the target minority fraction.
+This approach fails in three of five states because:
+(1) METIS's constraint solver cannot handle the 60--800$\times$ scale
+mismatch between population balance and minority fraction;
+(2) even with extreme tolerance relaxation, the constraint provides
+insufficient guidance to overcome geographic dispersion;
+(3) the approach likely constitutes racial predominance under \emph{Miller}
+in states where achieving the minority target requires sacrificing compactness.
+
+\paragraph{VRASection: geographic signal extraction.}
+VRASection uses minority VAP as input to a geographic score, not as a
+constraint.
+It fails gracefully: when minority population is geographically dispersed,
+$A \approx 0$ for all ratios, and the algorithm reduces to GeoSection.
+It does not attempt to force a minority-concentrated partition where none
+exists in the geography.
+This is the correct behaviour: if no geographic boundary separates
+minority-concentrated from minority-dispersed areas, there is no
+Gingles Prong 1 community to protect, and a standard compact-district
+algorithm is the legally appropriate choice.
+
+\paragraph{Zero user-specified minority thresholds.}
+MetisVra requires a user-specified minority target fraction (e.g., $>50\,\%$)
+and tolerance (ubvec).
+These parameters are legally fraught: a practitioner who specifies
+``50\,\% minority target'' is making an explicit racial decision.
+VRASection requires no such parameters.
+The $w_\text{vra}$ weight is a methodological preference
+(compactness vs.\ alignment balance), not a racial target.
+Two practitioners using VRASection with $w_\text{vra} = 0.40$ will
+produce the same map, without either having specified a minority fraction.
+
+\subsection{Limitation: Alignment Does Not Guarantee $> 50\,\%$ Minority VAP}
+
+VRASection's alignment score measures geographic concentration at the
+\emph{bisection level}, not at the \emph{district level}.
+A high-alignment first-level split concentrates minority population on
+one side, improving the conditions for MM district formation in the
+downstream recursion.
+But it does not guarantee that any specific district will exceed 50\,\%
+minority VAP.
+
+This limitation is inherent to any first-level-only VRA intervention.
+The full recursion is conducted by standard GeoSection, which optimises
+compactness without reference to minority population.
+In the southern sub-region of Alabama's $2:5$ split, the 35--40\,\%
+Black VAP must be further concentrated by the downstream bisection tree.
+Whether this produces one or two Black-majority districts depends on the
+detailed geography of the Black Belt sub-region and the specific ratio
+selections in subsequent bisections.
+
+A post-hoc audit is recommended: after running VRASection, compute
+minority VAP for every final district and report the count of MM districts.
+If the count falls below the Gingles target, the analyst should consider
+increasing $w_\text{vra}$ or applying VRASection at lower recursion levels
+(a ``VRA-aware full recursion'' mode discussed in the plan.md open questions
+but not recommended for standard use due to increased racial predominance risk).
+
+\subsection{Callais v. Landry and the Evidence Standard}
+
+The redist codebase's Callais evidence layer (landed 2026-04-30) provides
+WLS+HC3 regression infrastructure for validating racial bloc voting
+under the \emph{Callais v.\ Landry} (2025) standard.
+VRASection is designed to be used in conjunction with this evidence layer:
+the algorithm produces a map candidate; the bloc-voting analysis validates
+whether each candidate minority opportunity district satisfies Gingles
+Prongs 2 and 3 in the jurisdiction.
+
+This two-stage workflow --- VRASection for map generation, bloc-voting
+analysis for evidence production --- separates the algorithmic decision
+(geographic concentration) from the statistical evidentiary question
+(racially polarised voting).
+The separation is legally significant: the map drawer can state that
+district boundaries were set by geographic compactness (VRASection),
+and the VRA claim is supported by independent statistical evidence
+(Callais analysis), with no circular dependency between the two.

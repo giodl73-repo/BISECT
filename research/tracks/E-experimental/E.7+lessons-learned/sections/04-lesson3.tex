@@ -1,0 +1,109 @@
+\section{Lesson 3: Eliminating Districts Entirely Trades Proportionality for Local Accountability}
+\label{sec:lesson3}
+
+County-based representation (Paper E.2) eliminates the redistricting problem
+by replacing drawn districts with fixed jurisdictional units whose boundaries
+are established by state statute and not subject to manipulation by
+congressional legislatures \citep{dellaLibera2026e2}.  The design lesson from
+this experiment is that the cure for gerrymandering that county representation
+offers comes with two distinct costs: reduced local accountability through the
+fractional-voting mechanism, and reduced responsiveness to population change
+over time.
+
+\subsection{The Design Logic of County Representation}
+
+County representation applies the Huntington--Hill apportionment method ---
+the same method used to allocate House seats among states since 1941
+\citep{balinski2001fair} --- to allocate House seats among the 3,143 US
+counties and county-equivalents.  A county with population equal to $k$ times
+the per-district quota receives $k$ seats; a county with population less than
+one quota receives a fractional vote weight equal to its population share
+of one quota.
+
+The gerrymandering-resistance of this system is complete: county boundaries
+are not drawn by anyone in connection with congressional elections.  The
+allocation is mechanically determined by population.  There is no drawing
+step that can be manipulated.
+
+\subsection{Proportionality in Competitive States}
+
+In competitive states --- where the county composition produces both Democratic-
+leaning and Republican-leaning counties in roughly proportional numbers ---
+county representation produces outcomes that are at least as proportional as
+algorithmic single-member redistricting and often more so.  The reason is that
+county-level vote shares, while not perfectly proportional, tend to be more
+moderate than single-member district vote shares, because counties are larger
+and more geographically heterogeneous than the compact single-member districts
+that maximize sorting.
+
+Paper E.2 finds that in states like Wisconsin, Michigan, Pennsylvania, and
+Arizona --- the quintessential competitive states of the 2010s--2020s ---
+county representation produces seat--vote deviations of 1--2\% versus 3--5\%
+for algorithmic single-member redistricting \citep{dellaLibera2026e2}.  This
+is a meaningful improvement in proportionality that comes without any drawing
+step.
+
+\subsection{Reduced Proportionality in Highly Urbanized States}
+
+In highly urbanized states where large metropolitan counties dominate the
+population, county representation reintroduces the sorting problem in a
+different form.  Cook County (Chicago) would receive approximately 8 House
+seats and would elect all 8 at-large.  Cook County votes approximately 75--25
+Democratic; at-large election of 8 seats from a 75--25 county would produce
+6 Democratic seats and 2 Republican seats under proportional allocation --- much
+better than the 7--1 outcome possible under single-member sorting, but still
+not reflective of the 47\% Republican county-wide vote that Republican voters
+outside Chicago proper would prefer to see represented.
+
+Moreover, the at-large representation mechanism itself is less locally
+accountable than single-member districts.  A voter in Evanston, Illinois
+has no specific representative accountable to Evanston under a Cook County
+at-large system; she has 8 representatives nominally accountable to all of
+Cook County's 5.2 million residents.  The constituent-representative bond
+that single-member districts create --- even with their sorting pathology ---
+is entirely absent.
+
+\subsection{Responsiveness to Population Change}
+
+The second cost of county representation is reduced responsiveness to population
+change.  Congressional districts are redrawn after each decennial census,
+allowing the map to track population shifts within states.  County boundaries,
+by contrast, are fixed by state statute and change rarely.  The allocation of
+House seats to counties would be recomputed after each census, but the
+geographic boundaries would remain fixed.
+
+This means that county representation automatically adjusts for inter-county
+migration (a county that grows relative to the state average receives more
+seats) but cannot adjust for intra-county concentration changes.  If the
+population of a large county becomes more concentrated in its urban core over
+a decade --- as has happened in most major metropolitan areas since 2000 ---
+county representation provides no mechanism to adjust the representation of
+intra-county geographic communities.
+
+Paper E.2 simulates the 2010--2020 population shifts under county representation
+and finds that the system tracks inter-state and inter-county changes reasonably
+well but systematically under-represents the fastest-growing suburban communities
+within large counties, which are precisely the communities most politically
+competitive and most in need of representation adjustment
+\citep{dellaLibera2026e2}.
+
+\subsection{The Fractional-Vote Implementation Problem}
+
+The institutional novelty of fractional voting is not merely a public-relations
+challenge; it creates genuine governance complications.  A county whose
+population entitles it to 0.7 House seats receives a representative with 0.7
+votes in Congress.  If that representative votes on a bill with 217.4 yeas
+and 216.6 nays (to fabricate an extreme case), the outcome depends on how
+fractional votes are tabulated.  Current House rules do not accommodate
+fractional votes, and any implementation would require substantial revision
+of House rules and likely the Rules of the House adopted at the start of
+each Congress.
+
+The constitutional question is more fundamental: \emph{Wesberry v.\ Sanders}
+\citep{wesberry1964} requires that congressional districts be as nearly equal
+in population as practicable.  County populations vary by a factor of nearly
+20,000 (from Los Angeles County at 10 million to Loving County, Texas at
+approximately 64), a variation that is the opposite of ``as nearly equal as
+practicable.''  The only way to reconcile county representation with equal
+population is through fractional voting, which has no constitutional precedent
+in the House of Representatives.

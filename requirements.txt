@@ -1,0 +1,36 @@
+# Core data processing
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Geospatial libraries
+geopandas>=0.14.0
+shapely>=2.0.0
+pyarrow>=14.0.0
+pyogrio>=0.7.0
+
+# Spatial analysis
+libpysal>=4.9.0
+pyproj>=3.6.0
+
+# Census data
+pygris>=0.1.0
+
+# Graph partitioning
+# pymetis>=2023.1  # Commented out - difficult to install on Windows
+networkx>=3.0
+
+# Visualization
+matplotlib>=3.8.0
+
+# Utilities
+tqdm>=4.66.0
+
+# Testing - Dashboard (Playwright)
+pytest>=8.0.0
+pytest-playwright>=0.4.0
+playwright>=1.40.0
+
+# Testing - Pipeline (Unit & Integration)
+pytest-cov>=4.0.0
+pytest-mock>=3.12.0
+pytest-timeout>=2.2.0

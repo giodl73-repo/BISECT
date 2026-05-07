@@ -1,0 +1,114 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+
+%% SIAM-adjacent style: numbered sections, upright headings
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+%% Spacing
+\setstretch{1.4}
+
+%% Algorithm macros
+\newcommand{\ams}{\textsc{AdaptiveMS}}
+\newcommand{\ms}{\textsc{MultiScale}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\ec}{\ensuremath{\mathrm{EC}}}
+\newcommand{\pp}{\ensuremath{\mathrm{PP}}}
+\newcommand{\sa}{\textsc{SimulatedAnnealing}}
+\newcommand{\metis}{\textsc{Metis}}
+\newcommand{\be}{\textsc{BisectionEnsemble}}
+\newcommand{\ar}{\textsc{ApportionRegions}}
+\newcommand{\geosec}{\textsc{GeoSection}}
+\newcommand{\areasec}{\textsc{AreaSection}}
+\newcommand{\cs}{\textsc{ConvergenceSweep}}
+
+%% Math shorthands
+\newcommand{\ECnorm}{\mathrm{EC}_{\mathrm{norm}}}
+\newcommand{\EC}{\mathrm{EC}}
+
+%% -----------------------------------------------------------------------
+
+\title{%
+  \textbf{Adaptive Multi-scale MCMC: Self-Tuning Alpha via}\\
+  \textbf{Robbins-Monro Approximation}\\[0.8em]
+  \normalsize\textit{B.21 --- Algorithm Design / Adaptive Search}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+Multi-scale MCMC (\ms{}) improves redistricting chain mixing by alternating
+between fine-level tract proposals and coarse-level county proposals, with a
+fixed probability $\alpha$ of making a coarse move at each step.
+The optimal $\alpha$ varies by state: Texas ($k=38$, 254 counties, 5{,}265
+tracts) benefits from $\alpha \approx 0.30$, while Iowa ($k=4$, 99 counties,
+825 tracts) benefits from $\alpha \approx 0.15$.
+Manual tuning of $\alpha$ across 50 states is impractical.
+
+We introduce \ams{}, which tunes $\alpha$ automatically using
+\emph{Robbins-Monro stochastic approximation}~\citep{robbins1951}.
+Every $\Delta = 50$ steps the algorithm measures the observed coarse acceptance
+rate in the current window; if it exceeds the target (0.30) $\alpha$ is
+increased; if below, $\alpha$ is decreased.
+The Robbins-Monro step size $\gamma_t = \gamma_0 / \sqrt{t}$ satisfies the
+classical convergence conditions ($\sum \gamma_t = \infty$, $\sum \gamma_t^2 < \infty$),
+so the alpha trace converges to the state-specific optimal under a monotonicity
+assumption empirically satisfied for typical redistricting county graphs.
+
+Empirically, \ams{} converges: North Carolina ($k=14$) stabilises at
+$\alpha^* \approx 0.28$, Texas ($k=38$) at $\approx 0.33$, and Iowa ($k=4$)
+at $\approx 0.17$.
+Autocorrelation of the edge-cut objective at lag 100 matches or improves on
+fixed-$\alpha$ \ms{} in all three states, with no manual tuning.
+\ams{} is a drop-in replacement for \texttt{--search multiscale}, exposed as
+\texttt{--search multiscale-adaptive}.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-background}
+\input{sections/03-algorithm}
+\input{sections/04-convergence}
+\input{sections/05-comparison}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

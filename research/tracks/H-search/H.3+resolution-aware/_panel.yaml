@@ -1,0 +1,13 @@
+paper: H.3+resolution-aware
+title: "Resolution-Aware Redistricting: Geographic Granularity as a First-Class Parameter"
+venue: GIS
+stage: panel
+round: 1
+score_basis: panel-assessed
+reviews_completed: 5
+reviewers:
+  - name: George Karypis
+  - name: Jonathan Rodden
+  - name: Moon Duchin
+  - name: Nicholas Stephanopoulos
+  - name: Albert Liang

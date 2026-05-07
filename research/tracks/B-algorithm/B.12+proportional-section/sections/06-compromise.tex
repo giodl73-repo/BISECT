@@ -1,0 +1,106 @@
+\section{The Proportionality Compromise}
+\label{sec:compromise}
+
+The central empirical question is: what is the minimum partisan information
+required to close the proportionality gap in each state?
+
+\subsection{The Compromise Spectrum}
+
+We define three categories:
+
+\paragraph{Free proportionality states.}
+States where $\sigma < 0.05$ (partisan signal $< 5\,\%$ shift from neutral
+distribution). In these states, geography-only algorithms already produce
+approximately proportional outcomes. No partisan constraint is needed.
+These are states with relatively uniform partisan geography.
+
+\paragraph{Cheap proportionality states.}
+States where $0.05 \leq \sigma < 0.15$. A modest partisan constraint
+(at $\eta \approx 1.10$) closes the proportionality gap.
+These states have moderate partisan concentration but sufficient geographic
+mixing that the R-bloc can be constructed from majority-R tracts without
+requiring extreme packing.
+
+\paragraph{Expensive proportionality states.}
+States where $\sigma \geq 0.15$ or where Lorenz feasibility is violated.
+Closing the proportionality gap requires either a strong partisan constraint
+(high information input) or is geometrically impossible due to extreme
+concentration. Georgia and Massachusetts are the clearest examples:
+Atlanta and Boston are so dominant that any contiguous R-bloc contains
+a majority of D voters, making proportional R districts unachievable
+without non-contiguous or extremely gerrymandered maps.
+
+\subsection{The Inverse Relationship with the Rodden Effect}
+
+A striking pattern emerges: the states where proportionality is most expensive
+are exactly the states with the largest Rodden gaps (Table~\ref{tab:gap-baseline}).
+This is not a coincidence. Both phenomena have the same root cause: extreme
+Democratic geographic concentration.
+
+\begin{proposition}
+\label{prop:rodden-sigma}
+The partisan signal strength $\sigma$ and the Rodden proportionality gap are
+both increasing functions of the partisan Lorenz curve's deviation from the
+diagonal. States with the largest B.9 proportionality gaps require the most
+partisan information to achieve proportionality.
+\end{proposition}
+
+This has a direct implication for redistricting reform: the states that most
+need proportional outcomes (where geographic sorting creates the largest gaps)
+are exactly the states where achieving proportionality requires the most
+politically controversial partisan inputs. There is no easy geographic fix
+for extreme partisan concentration.
+
+\subsection{The Wisconsin Case}
+
+Wisconsin ($d = 0.503$, $k=8$) is a borderline case in two senses.
+First, it is exactly at the proportional threshold: $k_D = 4$ is proportional
+for $d = 0.503$.
+Second, the Lorenz analysis places it in the ``moderate partisan concentration''
+category: $\sigma \approx 0.08$.
+
+Under B.12 at $\eta = 1.10$, Wisconsin should achieve approximately 4D/4R ---
+proportional for a near-even state.
+Under B.9 (geography only), it produces 3D/5R ($-12.8$\,pp gap).
+The difference of 1 seat over 8 corresponds to a $12.5$ percentage-point
+change in Democratic representation, achieved by a partisan constraint
+of $\sigma = 0.08$ (shifting 8\,\% of D votes from the neutral allocation).
+
+This illustrates the core tradeoff: a modest partisan signal (8\,\% reallocation)
+produces a large proportionality improvement (12.5\,pp), but requires
+explicitly incorporating partisan vote data into the redistricting algorithm.
+
+\subsection{Sensitivity to Geographic Resolution}
+\label{sec:compromise:maup}
+
+We repeated the 6-state empirical table at block-group resolution
+($n \approx 239{,}000$ units nationally, compared to $\approx 74{,}000$ census
+tracts).
+Results are qualitatively identical: Wisconsin improves at $\eta = 1.10$
+(achieving near-proportional outcomes as at tract resolution), and North Carolina
+worsens at all $\eta$ values (the B.12 constraint increases the proportionality
+gap regardless of resolution).
+The proportionality paradox --- competitive states showing large Rodden gaps
+despite near-zero $\sigma$ --- is not a resolution artifact; it reflects the
+geographic distribution of partisan populations, which is stable across
+geographic scales.
+This finding is consistent with prior MAUP literature
+\citep{chen2013} showing that partisan sorting patterns are robust to
+unit aggregation.
+
+\subsection{The Recursive Case}
+
+Theorem~\ref{thm:proportionality} guarantees proportionality at the first
+bisection level.
+For full proportionality across the entire $k$-district map, the same
+constraint must be applied recursively at every level of the PrimeFactor
+bisection tree.
+
+At each level, the local Democratic fraction $d'$ of the subregion determines
+a new $\mathtt{tpwgts}$ vector.
+If the D-bloc is a majority-D subregion ($d' > 0.5$), the recursive constraint
+uses the local $d'$ and $k' = k_D$ to produce $k'_D$ and $k'_R$ for that level.
+
+The full recursive proportionality guarantee follows by induction:
+each bisection achieves local proportionality, and the leaf districts
+each contain one winning party at the correct population level.

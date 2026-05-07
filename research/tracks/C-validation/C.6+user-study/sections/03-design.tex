@@ -1,0 +1,82 @@
+\section{Research Design}
+\label{sec:design}
+
+\subsection{Experimental Design}
+
+We implemented a 2$\times$3 between-subjects design crossing \textit{map type} (algorithmic, commission-drawn, or enacted) with \textit{information condition} (none, process description, or full description plus comparison). The six cells are shown in Table~\ref{tab:design}. Each respondent was randomly assigned to exactly one cell and saw two congressional district maps from two states---one where the enacted map favors Democrats (North Carolina) and one where it favors Republicans (Maryland)---drawn in the assigned map-type condition. Presenting maps from both partisan directions allows us to assess whether fairness ratings depend on whether the enacted map disadvantages or advantages the respondent's party.
+
+\begin{table}[h!]
+\centering
+\caption{2$\times$3 Experimental Design}
+\label{tab:design}
+\begin{threeparttable}
+\begin{tabular}{lccc}
+\toprule
+ & \multicolumn{3}{c}{\textbf{Information Condition}} \\
+\cmidrule(lr){2-4}
+\textbf{Map Type} & None & Process Description & Description + Comparison \\
+\midrule
+Algorithmic & Cell A ($n=400$) & Cell B ($n=400$) & Cell C ($n=400$) \\
+Commission-drawn & Cell D ($n=400$) & Cell E ($n=400$) & Cell F ($n=400$) \\
+Enacted & (reference) ($n=400$) & -- & -- \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small \item Note: The enacted/none cell serves as reference. Enacted maps with information conditions were excluded to avoid directing attention to the maps' provenance in ways that confound treatment effects. $N = 2{,}400$ total.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+Maps were presented without labels indicating their type. Respondents in the no-information condition saw only the map image and basic factual information (state name and number of congressional districts). Respondents in the process-description condition saw the same map plus a 90-word plain-language description of how the map was produced. Respondents in the full-description-plus-comparison condition saw the process description and a second-panel image of the alternative map type (commission or algorithmic) with a brief explanation of how the two processes differ.
+
+\begin{figure}[h!]
+\centering
+\fbox{%
+\begin{minipage}{0.88\textwidth}
+\vspace{0.5em}
+\textbf{Treatment Text Administered to Respondents}
+\vspace{0.4em}
+
+\textit{Process-description condition (algorithmic map):}
+\begin{quote}
+This congressional district map was drawn by a computer algorithm that minimizes the total length of district borders while ensuring equal population. The algorithm uses no information about voters' political preferences or racial identity. It starts from census tract boundaries and divides them into districts by finding the geographic partition that produces the most compact shapes possible, given that each district must contain the same number of people.
+\end{quote}
+
+\textit{Process-description condition (commission-drawn map):}
+\begin{quote}
+This congressional district map was drawn by a bipartisan citizens' commission. Commission members were selected to represent diverse geographic and demographic backgrounds. The commission held public hearings in each region of the state and applied criteria including equal population, contiguity, compactness, and preservation of communities of interest. No sitting elected official or candidate for office was permitted to serve on the commission.
+\end{quote}
+\vspace{0.3em}
+\end{minipage}%
+}
+\caption{Exact process-description treatment text administered to respondents. The no-information condition showed only the map image and basic factual information (state name, number of districts). The full-description-plus-comparison condition appended a second-panel image of the alternative map type with a brief explanation of how the two processes differ.}
+\label{fig:treatment_text}
+\end{figure}
+
+\subsection{Map Stimuli}
+
+Algorithmic maps were generated using the recursive bisection algorithm described in \citet{dellaLibera2026recursive} applied to 2020 Census tract data for North Carolina (14 districts) and Maryland (8 districts). Commission-drawn maps used the final plans adopted by the North Carolina Bipartisan Redistricting Committee (2022) and the Maryland Citizens Redistricting Commission (2022). Enacted maps were the legislatively approved plans in force for the 2022 elections in each state.
+
+All maps used a consistent visual design: district boundaries in dark gray on a white background, districts filled with one of seven distinguishable colors (not red-blue), and no partisan or demographic overlays. A professional cartographic designer produced the final map images at $1400 \times 900$ pixels. The design was pre-registered and finalized before any respondent viewed stimuli.
+
+\subsection{Sampling and Recruitment}
+
+We recruited respondents through two platforms: Amazon Mechanical Turk (MTurk; $n = 1{,}200$) and Lucid Theorem ($n = 1{,}200$). MTurk provides a sample that is more educated and politically engaged than the general population but is commonly used in political science experiments \citep{berinsky2012evaluating}. Lucid uses quota sampling to match the American adult population on age, gender, education, and region and has been shown to produce results generalizable to population-representative surveys \citep{coppock2019generalizing}. Recruiting from both platforms allows us to test whether results replicate across samples with different selection properties.
+
+Quota targets for the Lucid sample were: 50\% female; ages 18--29 (22\%), 30--44 (25\%), 45--64 (34\%), 65+ (19\%); education below high school diploma (10\%), high school diploma (28\%), some college (30\%), four-year degree or more (32\%); region Northeast (18\%), Midwest (21\%), South (38\%), West (23\%). We did not quota on party identification to allow natural variation.
+
+\textit{A priori} power analysis assumed a minimum detectable effect of $d = 0.20$ standard deviations on the primary outcome, $\alpha = 0.05$, and power $= 0.80$. This required $n = 394$ per cell, which we rounded to 400 per cell. The design was pre-registered on OSF at \url{https://osf.io/[redacted]} before data collection.
+
+\subsection{Pre-Registration}
+
+All hypotheses, analysis decisions, and stopping rules were pre-registered before survey launch. Pre-registered deviations from the analysis plan are noted inline where they occur. The pre-registration specified: (1) the primary outcome variable and its operationalization; (2) the regression specification, including control variables; (3) subgroup analyses by party identification, education, and political knowledge; (4) exclusion criteria for failed attention checks; and (5) the threshold for declaring the transparency treatment effective ($p < 0.05$, one-tailed, for the interaction of map type and information condition).
+
+We also pre-registered that, if MTurk and Lucid samples produced substantively divergent results (standardized effect-size difference $> 0.30$), we would report them separately rather than pooling. They did not.
+
+\subsection{Procedure}
+
+The survey proceeded in four stages. In Stage 1 (approximately 3 minutes), respondents provided demographic information and answered pre-treatment political attitude questions, including party identification, 2020 vote choice, and a baseline rating of their state's current redistricting process. In Stage 2 (approximately 6 minutes), respondents received their assigned information treatment (if any) and then examined the two congressional district maps at their own pace; we imposed a minimum display time of 30 seconds per map to discourage inattentive rushing. In Stage 3 (approximately 5 minutes), respondents answered outcome questions for each map. In Stage 4 (approximately 2 minutes), respondents completed attention and manipulation checks, an open-ended question, and a brief debriefing explaining the study's purpose and revealing which maps were algorithmically drawn, commission-drawn, or enacted.
+
+\subsection{Exclusions}
+
+We excluded respondents who failed one or more attention checks (instructional manipulation check: ``please select Strongly Agree'') or who completed the survey in fewer than four minutes (indicating inattention). Among the 2,811 recruited, 411 were excluded (14.6\%), yielding an analytic sample of $N = 2{,}400$. Exclusion rates did not differ significantly across conditions ($\chi^2 = 8.4$, df$= 5$, $p = 0.14$).

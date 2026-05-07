@@ -1,0 +1,49 @@
+# Congressional Apportionment by State: 2000-2020
+# Source: Extracted from scripts/config_2000.py, config_2010.py, config_2020.py
+
+State | 2000 | 2010 | 2020 | Change 2000-2010 | Change 2010-2020 | Total Change 2000-2020
+------|------|------|------|------------------|------------------|------------------------
+Texas | 32 | 36 | 38 | +4 | +2 | +6
+Florida | 25 | 27 | 28 | +2 | +1 | +3
+North Carolina | 13 | 13 | 14 | 0 | +1 | +1
+Georgia | 13 | 14 | 14 | +1 | 0 | +1
+Colorado | 7 | 7 | 8 | 0 | +1 | +1
+Oregon | 5 | 5 | 6 | 0 | +1 | +1
+Montana | 1 | 1 | 2 | 0 | +1 | +1
+South Carolina | 6 | 7 | 7 | +1 | 0 | +1
+Utah | 3 | 4 | 4 | +1 | 0 | +1
+Nevada | 3 | 4 | 4 | +1 | 0 | +1
+Washington | 9 | 10 | 10 | +1 | 0 | +1
+Arizona | 8 | 9 | 9 | +1 | 0 | +1
+California | 53 | 53 | 52 | 0 | -1 | -1
+New York | 29 | 27 | 26 | -2 | -1 | -3
+Pennsylvania | 19 | 18 | 17 | -1 | -1 | -2
+Ohio | 18 | 16 | 15 | -2 | -1 | -3
+Illinois | 19 | 18 | 17 | -1 | -1 | -2
+Michigan | 15 | 14 | 13 | -1 | -1 | -2
+West Virginia | 3 | 3 | 2 | 0 | -1 | -1
+Massachusetts | 10 | 9 | 9 | -1 | 0 | -1
+New Jersey | 13 | 12 | 12 | -1 | 0 | -1
+Louisiana | 7 | 6 | 6 | -1 | 0 | -1
+Iowa | 5 | 4 | 4 | -1 | 0 | -1
+Missouri | 9 | 8 | 8 | -1 | 0 | -1
+
+# States with no change across all three censuses (stable):
+Alabama, Alaska, Arkansas, Connecticut, Delaware, Hawaii, Idaho, Indiana, Kansas, Kentucky, Maine, Maryland, Minnesota, Mississippi, Nebraska, New Hampshire, New Jersey (2010-2020), New Mexico, North Dakota, Oklahoma, Rhode Island, South Dakota, Tennessee, Vermont, Virginia, Wisconsin, Wyoming
+
+# Summary Statistics:
+Total seats: 435 (constant)
+States gaining seats 2000-2020: 12 states, total +21 seats
+States losing seats 2000-2020: 10 states, total -21 seats
+States unchanged 2000-2020: 28 states
+
+# Regional Trends:
+Sunbelt gains (TX, FL, AZ, GA, NC, SC, NV): +15 seats
+Rust Belt losses (NY, PA, OH, MI, IL, WV): -16 seats
+West gains (CO, OR, MT, WA): +4 seats
+Northeast losses (NY, PA, MA, NJ): -7 seats
+
+# Largest Changes:
+Biggest gainer: Texas (+6 seats, 32 → 38)
+Biggest losers: New York (-3), Ohio (-3)
+First decline for CA: Lost 1 seat in 2020 (first time in history)

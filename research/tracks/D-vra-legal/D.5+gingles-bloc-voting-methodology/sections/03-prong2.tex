@@ -1,0 +1,74 @@
+\label{sec:prong2}
+
+\subsection{The Legal Standard}
+
+Prong 2 requires that the minority group be ``politically cohesive.''
+\textit{Gingles}, 478 U.S. at 56.  Political cohesion means that minority
+voters tend to support a common candidate in elections.  A minority group
+that is divided in its political preferences does not satisfy Prong 2,
+even if it is geographically concentrated.
+
+Political cohesion has traditionally been demonstrated through racially
+polarized voting (RPV) analysis: regression evidence that minority voters
+support the same candidates at substantially higher rates than non-minority
+voters.  The key quantity is the estimated minority vote share for the
+minority-preferred candidate.
+
+\subsection{WLS Regression for Minority Cohesion}
+
+Minority political cohesion is estimated using the weighted least squares
+(WLS) ecological regression introduced by \citet{goodman1953ecological} and
+developed by \citet{king1997solution}.  The model is:
+
+\begin{equation}
+  Y_t = \alpha + \beta_{\text{min}} \cdot X^{\text{min}}_t
+                + \beta_{\text{maj}} \cdot X^{\text{maj}}_t
+                + \varepsilon_t
+\end{equation}
+
+where:
+\begin{itemize}
+  \item $Y_t$ is the precinct-level vote share for the minority-preferred
+    candidate in precinct $t$.
+  \item $X^{\text{min}}_t$ is the minority CVAP fraction in precinct $t$.
+  \item $X^{\text{maj}}_t = 1 - X^{\text{min}}_t$ is the majority CVAP
+    fraction.
+  \item Weights are proportional to precinct total vote.
+\end{itemize}
+
+The estimator $\hat{\beta}_{\text{min}}$ is the estimated minority vote share
+for the minority-preferred candidate---the Prong 2 quantity of interest.
+
+\subsection{Primary Elections for Cohesion Analysis}
+
+General election results conflate racial cohesion with partisan cohesion:
+minority voters may appear cohesive in general elections simply because they
+are predominantly aligned with one party.  \textit{Callais}~\citep{callais2026}
+requires disentangling the two.  For Prong 2, the cleanest evidence of
+racial cohesion independent of party comes from contested primary elections,
+where candidates of the same party compete and party label does not determine
+the result.
+
+We use contested Democratic primary elections in districts with substantial
+minority populations to estimate $\hat{\beta}_{\text{min}}$.  Where contested
+primaries are unavailable, we use biracial general elections with a
+partisan control variable (see Section~4 for the full disentanglement
+methodology applicable to Prong 3).
+
+\subsection{Running the Prong 2 Analysis}
+
+The Prong 2 analysis is produced by:
+\begin{verbatim}
+redist analyze --state AL --year 2020 --version remedy \
+  --types bloc-voting
+\end{verbatim}
+The \texttt{bloc-voting} analysis type runs the WLS regression and reports
+$\hat{\beta}_{\text{min}}$ with HC3 standard errors and bootstrap confidence
+intervals for each analyzed election.  The output identifies: (a) the
+minority-preferred candidate in each election; (b) the estimated minority
+vote share for that candidate; and (c) the statistical significance of the
+minority cohesion estimate.
+
+A standard Prong 2 evidentiary package includes at least three elections
+spanning at least two election cycles, demonstrating that minority cohesion
+is a persistent pattern rather than a single-election artifact.

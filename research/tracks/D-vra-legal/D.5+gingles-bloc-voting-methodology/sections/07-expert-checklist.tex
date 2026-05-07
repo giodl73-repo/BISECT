@@ -1,0 +1,121 @@
+\label{sec:checklist}
+
+Table~\ref{tab:checklist} presents the expert witness checklist, mapping
+\texttt{redist} command outputs to each Gingles prong.  The checklist is
+organized as a sequential workflow; outputs from earlier steps feed into
+later analysis.
+
+\begin{table}[h]
+\centering
+\caption{Expert Witness Checklist: \texttt{redist} Outputs for Each Gingles Prong}
+\label{tab:checklist}
+\begin{threeparttable}
+\begin{tabular}{p{1cm}p{3.5cm}p{4cm}p{3.5cm}}
+\toprule
+Prong & Legal Element & \texttt{redist} Command & Output for Report \\
+\midrule
+\multirow{4}{*}{1} &
+  Minority constitutes majority of CVAP in proposed district &
+  \texttt{redist analyze --types demographic --vra-mode} &
+  Minority CVAP \% per district \\
+\cmidrule{2-4}
+  & Geographic compactness of minority community &
+  \texttt{redist analyze --types compactness} &
+  Alignment score $A_d$; Polsby-Popper score \\
+\cmidrule{2-4}
+  & Ensemble robustness of Prong 1 finding &
+  \texttt{redist analyze --ensemble-size 1000} &
+  5th--95th pct alignment range \\
+\cmidrule{2-4}
+  & Visual illustration of district and minority heatmap &
+  \texttt{redist map --overlay minority-cvap} &
+  Map figure for exhibit \\
+\midrule
+\multirow{3}{*}{2} &
+  Minority political cohesion (primary elections preferred) &
+  \texttt{redist analyze --types bloc-voting} &
+  $\hat{\beta}_{\text{min}}$ with 95\% CI per election \\
+\cmidrule{2-4}
+  & Cross-election stability of cohesion estimate &
+  Multiple \texttt{--election} arguments &
+  Range table across elections \\
+\cmidrule{2-4}
+  & Identification of minority-preferred candidate &
+  Same command &
+  Candidate-level vote shares \\
+\midrule
+\multirow{4}{*}{3} &
+  Majority bloc voting (baseline, no partisan control) &
+  \texttt{redist analyze --types bloc-voting} &
+  $\hat{\beta}_{\text{race}}$ without control \\
+\cmidrule{2-4}
+  & Racial component after \textit{Callais} partisan control &
+  \texttt{redist analyze --types bloc-voting --partisan-control} &
+  $\hat{\beta}_{\text{race}}$ with control; HC3 SE \\
+\cmidrule{2-4}
+  & Holm multiple-testing correction &
+  Same command &
+  Holm-corrected $p$-values per election \\
+\cmidrule{2-4}
+  & LOO robustness &
+  Same command &
+  LOO stability table \\
+\midrule
+Supporting &
+  Overall criteria compliance for proposed remedial map &
+  \texttt{redist analyze --types all} &
+  Full criteria-compliance report \\
+\cmidrule{2-4}
+  & Deposition-ready log with hash chain &
+  \texttt{redist depo --verify} &
+  Canonical JSONL log + manifest \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item Note: Each \texttt{redist analyze} invocation should specify
+  \texttt{--state}, \texttt{--year}, and \texttt{--version} flags to
+  identify the run.  The deposition log (\texttt{redist depo}) produces
+  a tamper-evident hash chain for all outputs, suitable for discovery
+  production.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\subsection{Deposition Readiness}
+
+Expert testimony in Section 2 litigation will be subject to deposition.
+The \texttt{redist depo} module produces a canonical JSONL log of all
+analysis steps with a SHA-256 hash chain, enabling verification that
+reported outputs match what the algorithm produced~\citep{dellaLibera2026vra}.
+The log is suitable for discovery production and provides a complete
+audit trail from input data to expert report figures.
+
+\subsection{Common Expert Challenges and Responses}
+
+Expert witnesses using this methodology should anticipate the following
+challenges in deposition or cross-examination:
+
+\begin{description}
+  \item[``The alignment score threshold is arbitrary.'']
+    Response: The 0.5 threshold is calibrated to the universe of districts
+    that courts have accepted as satisfying Prong 1.  The ensemble analysis
+    provides the full distribution of alignment scores for the proposed
+    district; the threshold is a summary, not the primary finding.
+
+  \item[``The partisan control absorbs true racial effects.'']
+    Response: The partisan control uses presidential vote, which reflects
+    the party alignment of the \emph{district} environment, not the racial
+    composition of individual precincts.  The coefficient $\hat{\beta}_{\text{race}}$
+    measures the relationship between precinct racial composition and
+    majority vote share holding constant the district's partisan baseline.
+    The LOO analysis confirms that the finding is not sensitive to the
+    specific elections selected.
+
+  \item[``The algorithm could have drawn a different map that doesn't satisfy Prong 1.'']
+    Response: The ensemble range reported for Prong 1 documents the fraction
+    of map configurations that satisfy the geographic compactness criterion.
+    If the Prong 1 finding is robust across more than 90\% of configurations,
+    the alternative maps that fail Prong 1 are outliers in the space of
+    population-balanced, compact configurations.
+\end{description}

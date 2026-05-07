@@ -1,0 +1,55 @@
+\label{sec:conclusion}
+
+This paper has developed a systematic, quantitative methodology for satisfying
+all three Gingles preconditions using the \texttt{redist} algorithmic
+redistricting system.  The methodology addresses each prong with a specific
+quantitative measure grounded in established statistical methods:
+
+\begin{itemize}
+  \item \textbf{Prong 1} is quantified by VRASection's geographic alignment
+    score, with ensemble-based confidence bounds.  The 0.5 alignment threshold
+    corresponds to the empirically observed lower bound of judicially accepted
+    majority-minority districts.
+
+  \item \textbf{Prong 2} is quantified by WLS ecological regression with HC3
+    standard errors, applied to contested primary elections to isolate racial
+    from partisan cohesion.
+
+  \item \textbf{Prong 3} is quantified by the post-\textit{Callais}
+    WLS+HC3+Holm regression with a partisan control variable, supplemented by
+    LOO robustness checks and bootstrap confidence intervals.
+\end{itemize}
+
+The worked example using Alabama AL-07 demonstrates that the methodology
+produces clear, defensible results across all three prongs.  The racial
+bloc-voting coefficient drops from 0.71 to 0.43 when the partisan control
+is introduced---a substantial reduction that confirms the importance of the
+post-\textit{Callais} disentanglement requirement---but remains large,
+statistically significant, and stable, satisfying Prong 3 under the more
+demanding post-\textit{Callais} standard.
+
+Several limitations should be noted.  First, the methodology relies on
+precinct-level ecological regression, which is subject to ecological inference
+bias~\citep{king1997solution}.  In districts with limited racial heterogeneity
+across precincts, the regression estimates will be imprecise.  Second, the
+alignment score depends on the VRASection algorithm's identification of the
+minority community of interest, which is itself a modeling choice.  Third, the
+Holm correction controls family-wise error rate but may be conservative in
+elections with high correlations; the Benjamini-Hochberg procedure may be
+more appropriate in such settings.
+
+The expert witness checklist in Section~7 provides a standardized workflow
+that can be applied consistently across Section 2 cases, reducing the scope
+of expert disagreement to the substantive questions---whether the racial
+bloc-voting coefficient is large enough, whether the alignment score threshold
+is appropriate---rather than to methodological choices that should be
+resolved by reference to established statistical practice.
+
+For courts and practitioners, the key contribution is the \textit{Callais}
+implementation.  Prior to \textit{Callais}, Prong 3 analysis was commonly
+reported without a partisan control variable, producing inflated racial
+bloc-voting coefficients that overstated the racial component.
+Post-\textit{Callais}, the partisan control is required.  The methodology
+developed here provides a specific, reproducible implementation of that
+requirement using standard econometric tools available in the
+\texttt{redist-analysis} crate.

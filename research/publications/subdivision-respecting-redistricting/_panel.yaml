@@ -1,0 +1,75 @@
+paper: subdivision-respecting-redistricting
+title: "Preserving Political Subdivisions in Algorithmic Redistricting: Governmental Hierarchy as Edge-Weight Signal"
+venue: "Election Law Journal / Political Analysis"
+stage: ready
+round: 2
+content_mode: full
+series: B
+series_number: 10
+reviewers: [R-50, R-1, R-37, R-44, R-30]
+round1_reviews:
+  R-50: {score: 1.0, file: reviews/REVIEW-R1-jeffrey-ullman.md}
+  R-1:  {score: 1.0, file: reviews/REVIEW-R2-percy-liang.md}
+  R-37: {score: 2.0, file: reviews/REVIEW-R3-nadia-polikarpova.md}
+  R-44: {score: 1.5, file: reviews/REVIEW-R4-jacob-steinhardt.md}
+  R-30: {score: 2.0, file: reviews/REVIEW-R5-ce-zhang.md}
+round1_avg: 1.5
+reviews:
+  R-50: {score: 2.5, file: reviews/REVIEW-R2-r1-jeffrey-ullman.md}
+  R-1:  {score: 2.5, file: reviews/REVIEW-R2-r2-percy-liang.md}
+  R-37: {score: 3.0, file: reviews/REVIEW-R2-r3-nadia-polikarpova.md}
+  R-44: {score: 2.5, file: reviews/REVIEW-R2-r4-jacob-steinhardt.md}
+  R-30: {score: 2.5, file: reviews/REVIEW-R2-r5-ce-zhang.md}
+avg_score: 2.6
+p1_items:
+  - id: P1-A
+    desc: "Fix Monotonicity Proposition — scope to exact min-cut, not METIS heuristic"
+    status: resolved
+  - id: P1-B
+    desc: "Run multi-seed evaluation (25 seeds per state per alpha, alpha sweep)"
+    status: resolved
+  - id: P1-C
+    desc: "Fill missing EC values in Table 1"
+    status: resolved
+  - id: P1-D
+    desc: "Restrict partisan neutrality to pilot or run ensembles"
+    status: resolved
+  - id: P1-R2-1
+    desc: "Produce Pareto frontier figure"
+    status: resolved
+    resolution: "figures/pareto_frontier.pdf produced from b10_multiseed.csv via b10_pareto_figure.py"
+  - id: P1-R2-2
+    desc: "Restrict multi-level claims or validate hierarchically"
+    status: resolved
+    resolution: "§3.3 explicitly restricts all empirical claims to county-level alpha. Multi-level formula retained with Remark on composition amplification and recommendation to scale alpha proportionally."
+p2_items:
+  - id: P2-R2-1
+    desc: "Report SD alongside ranges in Table 2"
+    status: resolved
+    resolution: "Added (min-max) ranges and mean row to Table 2. EC ratio column added."
+  - id: P2-R2-2
+    desc: "Normalize EC by alpha=0 baseline"
+    status: resolved
+    resolution: "EC ratio = EC_5/EC_0 column added to Table 2."
+  - id: P2-R2-3
+    desc: "Extend ensemble to more states or bound 7-state generalizability"
+    status: open
+  - id: P2-R2-4
+    desc: "Discuss VRA interaction — compositional safety with D.0 VRA mode"
+    status: open
+history:
+  - stage: draft
+    date: "2026-05-02"
+    note: "Paper initialized. 50-state sweep complete (seed=1, alpha=0 vs alpha=5)."
+  - stage: panel
+    date: "2026-05-02"
+    note: "Round 1: 5 reviews, avg 1.5/4. P1 items identified."
+  - stage: revision
+    date: "2026-05-02"
+    note: "All R1 P1 items resolved. 25-seed ensembles. Pareto table. Abstract updated."
+  - stage: recheck
+    date: "2026-05-02"
+    note: "Round 2: avg 2.6/4. P1-R2-1 (figure) and P1-R2-2 (multi-level scope) resolved."
+  - stage: ready
+    date: "2026-05-02"
+    note: "All blocking items resolved. Stage: ready. P2-R2-3/4 deferred to submission response."

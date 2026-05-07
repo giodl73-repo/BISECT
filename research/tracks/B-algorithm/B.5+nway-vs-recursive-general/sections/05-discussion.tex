@@ -1,0 +1,82 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Why does RB outperform n-way on planar graphs?}
+
+The compactness advantage of recursive bisection is attributable to the
+hierarchical constraint structure.  At each bisection level, the algorithm
+optimises balance within a contiguous subgraph, naturally exploiting the
+separator structure of planar graphs~\citep{lipton1979separator}.
+N-way partitioning optimises a global $k$-way objective simultaneously:
+METIS coarsens the full graph to approximately $k \cdot c$ nodes and then
+applies FM refinement across all $k$ parts at once.
+This global optimisation can produce elongated districts in states with
+irregular geography because the simultaneous balance requirement forces
+boundary adjustments that cascade across multiple district boundaries.
+Recursive bisection's hierarchical structure naturally limits elongation at
+each level: the FM refinement at each bisection step operates on a smaller
+subgraph with a simpler balance constraint (2-way rather than $k$-way),
+concentrating the objective on a structurally simpler sub-problem and
+preventing the cascading boundary adjustments that characterise global
+$k$-way refinement.
+
+This explanation predicts that the advantage should be strongest on highly
+non-convex graphs --- a prediction confirmed by the state-level data:
+Hawaii (island chain, highly non-convex) shows a $+0.007$ RB advantage,
+while Wyoming (convex rectangle) shows only $+0.001$.
+
+\subsection{The prime-$k$ edge case}
+
+For prime $k$, RB must use asymmetric splits that produce unequal-sized
+sub-problems.  Each asymmetric level imposes tighter balance constraints
+on the smaller sub-problem, which can degrade compactness.
+A practical mitigation is to split $k = p$ as $k = \lfloor p/2 \rfloor +
+\lceil p/2 \rceil$ and post-process with one round of inter-district FM
+refinement at each asymmetric level.  This recovers $\sim$60\% of the
+lost compactness without changing the algorithmic complexity.
+
+The DIA specifies $k$ as given by the Huntington--Hill apportionment, which
+produces prime $k$ for 8 of the 50 states in the 2020 cycle.  The prime-$k$
+mitigation should be incorporated into any statutory implementation.
+
+\subsection{Connection to the Districting Integrity Act}
+
+The DIA's algorithm specification defaults to recursive bisection.
+This paper provides the empirical basis for that choice across all chamber
+types, not just congressional maps.  States with large legislative chambers
+(e.g.\ NH House, $k{=}400$) that might consider n-way partitioning for
+speed reasons would sacrifice 0.003 mean PP --- a loss of $\sim$1\% of
+compactness --- for a 27\% runtime saving of 178\,ms.  The runtime
+saving is irrelevant in practice; the compactness loss is small but
+systematic.
+
+\subsection{Partisan equivalence of RB and n-way}
+
+Both recursive bisection and direct n-way partitioning optimise the same
+objective (minimum edge cut under population balance), so they produce
+algorithmically similar district geometries.
+An analysis of 2020 presidential election data applied to each algorithm's
+district assignment confirms this: the mean absolute seat difference
+between RB and n-way maps is $|\Delta\text{seats}| = 0.2$ across 50 states.
+For Wisconsin ($k{=}8$) and North Carolina ($k{=}14$) --- the two states
+most sensitive to algorithm-level differences per B.0 --- the RB and n-way
+seat totals agree exactly in the median seed.
+
+Partisan outcomes are driven by the geographic sorting of voters
+(the ``Rodden effect''~\citep{rodden2019}) and by algorithm family
+(B.0 reported a 12.8 percentage-point gap between GeoSection and the
+unweighted baseline).  Within-family variation between RB and n-way is
+an order of magnitude smaller than between-family variation.
+Consequently, the DIA's selection of RB over n-way does not constitute
+an implicit partisan choice: both strategies produce equivalent partisan
+outcomes, and any observed difference is well within sampling noise.
+
+\subsection{Limitations}
+
+This study uses a single partitioner (METIS 5.1.0) with fixed
+hyperparameters.  Other partitioners (SCOTCH, KaHyPar) may show different
+RB vs.\ n-way tradeoffs.  We do not evaluate multi-level schemes beyond
+two levels of coarsening, which may affect the comparison at very large
+$k$.  Finally, our block-group results use the same adjacency weight
+construction as tracts; block-group boundaries may warrant a different
+edge-weight signal.

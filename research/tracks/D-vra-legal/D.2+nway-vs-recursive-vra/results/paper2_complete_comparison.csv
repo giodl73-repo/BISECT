@@ -1,0 +1,11 @@
+max_minority_pct,mm_count,runtime,state,k,target_mm,state_minority_pct,method,tree_structure
+0.4960783813298982,0,0.0563721656799316,mississippi,4,2,0.461,nway_multiconstraint,
+0.3746330861672207,0,0.0701708793640136,louisiana,6,2,0.416,nway_multiconstraint,
+0.3616309909939918,0,0.0619235038757324,alabama,7,2,0.369,nway_multiconstraint,
+0.4182914287632481,0,0.0734500885009765,south_carolina,7,3,0.351,nway_multiconstraint,
+0.6179786891217844,1,0.137131929397583,georgia,14,5,0.424,nway_multiconstraint,
+0.5283662390013437,2,11.385112047195436,mississippi,4,2,0.461,recursive_predetermined,"[3,4]"
+0.4506209760306346,0,10.004718542099,louisiana,6,2,0.416,recursive_predetermined,"[3,4]"
+0.4317457110203257,0,13.782792568206789,alabama,7,2,0.369,recursive_predetermined,"[3,4]"
+0.3615587588183249,0,11.235976696014404,south_carolina,7,3,0.351,recursive_predetermined,"[3,4]"
+0.5187241728853836,1,17.57927632331848,georgia,14,5,0.424,recursive_predetermined,"[3,4]"

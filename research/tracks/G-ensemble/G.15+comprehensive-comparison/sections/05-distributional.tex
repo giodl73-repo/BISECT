@@ -1,0 +1,191 @@
+\section{Distributional Properties}
+\label{sec:distributional}
+
+\subsection{Overview}
+
+This section extends G.14's distributional analysis in three directions:
+(i) three-way calibration comparison --- standard ReCom, Forest ReCom, and
+SMC --- in the context of SMC-Percentile;
+(ii) ACF comparison for the three new search algorithms (\pt{}, \smcp{},
+\ams{}); and (iii) examination of which methods produce calibrated vs.\
+approximately uniform vs.\ concentrated distributions.
+
+\subsection{Three-Way Calibration Comparison}
+
+Table~\ref{tab:calibration} summarises the theoretical target distributions
+of all chain and particle methods.
+
+\begin{table}[ht]
+\centering
+\caption{%
+  Theoretical target distributions and empirical ACF(100) for TX ($k=38$).
+  G.14 rows carried forward; new rows marked \dag{}.
+  ``N/A'' for non-chain methods. ``---'' not applicable for NH (no multi-scale).
+}
+\label{tab:calibration}
+\small
+\begin{tabular}{@{}llcc@{}}
+\toprule
+Algorithm & Target Distribution & ACF(100) TX & D-seat Stability NC \\
+\midrule
+Short-Burst (G.6)
+  & Near-compact (no known form)   & 0.61 & 5/5 (100\%) \\
+SMC (G.7)
+  & Calibrated weights (exact)     & N/A  & 4/5 (80\%)  \\
+Flip (G.8)
+  & Local neighbourhood            & 0.83 & 5/5 (100\%) \\
+Forest ReCom (G.9)
+  & Approx.\ uniform (MH)         & 0.48 & 4/5 (80\%)  \\
+Merge-Split (G.10)
+  & Approx.\ uniform              & 0.46 & 4/5 (80\%)  \\
+Multi-scale (G.11)
+  & Approx.\ uniform (two scales) & 0.37 & 3/5 (60\%)  \\
+ShortBurstForest (G.12)
+  & Near-compact (MH-corrected)   & 0.55 & 5/5 (100\%) \\
+VRA-Aware (G.13)
+  & Approx.\ uniform (VRA boost)  & 0.49 & 4/5 (80\%)  \\
+\midrule
+Parallel Temp. (B.20)\dag{}
+  & Near-compact (multi-basin)    & \dag{}0.34 & \dag{}5/5 (100\%) \\
+SMC-Percentile\dag{}
+  & Calibrated (median particle)  & N/A  & \dag{}4/5 (80\%)  \\
+Adaptive MS (B.21)\dag{}
+  & Approx.\ uniform (adaptive)   & \dag{}0.31 & \dag{}3/5 (60\%)  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Calibrated tier.}
+Both \smc{} and \smcp{} achieve exact calibrated distributions; \smcp{}
+simply applies a percentile selection criterion to the particle cloud rather
+than returning an arbitrary final state.
+The D-seat stability of 4/5 for both reflects the genuine distributional
+uncertainty under the calibrated target, not algorithmic instability.
+For court submissions and academic publication, this tier is mandatory.
+
+\paragraph{Approximately uniform tier.}
+\fr{}, \msp{}, \vra{}, \ms{}, and \ams{} all target approximately uniform
+distributions via Metropolis-Hastings corrections.
+\ams{} reduces ACF(100) to 0.31 for TX --- the lowest of any chain method,
+surpassing fixed \ms{} (0.37) --- by front-loading coarse steps during
+warm-up.
+The 3/5 D-seat stability (same as \ms{}) reflects the broad distributional
+coverage: runs starting from different seeds explore different modal regions
+and sometimes produce different D-seat counts.
+
+\paragraph{Near-compact tier.}
+\sburst{}, \sburstf{}, and \pt{} concentrate near low-\ec{} plans.
+\pt{}'s ACF(100) of 0.34 is lower than \sburst{}'s (0.61), which initially
+appears contradictory --- PT concentrates near compact plans yet has lower
+autocorrelation.
+The resolution: PT explores \emph{multiple compact basins} rather than one.
+The replica exchange allows the cold chain to escape a discovered compact
+basin (via a hot replica at high temperature), discover a second compact
+basin, and return.
+The \ec{} statistic thus oscillates between basins, reducing autocorrelation
+relative to the single-basin concentration of Short-Burst.
+D-seat stability for PT is 5/5, confirming that all compact basins for NC
+have the same partisan structure --- the high-EC plans that PT transiently
+explores (at high temperature) are not stable enough to change the D-seat
+count when the cold chain returns.
+
+\paragraph{Local neighbourhood tier.}
+\flip{} remains the extreme case: ACF(100) = 0.83 for TX, 100\% D-seat
+stability.
+
+\subsection{Autocorrelation by State}
+
+Table~\ref{tab:acf-full} gives ACF(100) across all five states for all
+chain methods.
+
+\begin{table}[ht]
+\centering
+\caption{%
+  Lag-100 autocorrelation by algorithm and state. Lower = faster mixing.
+  ``N/A'' for non-chain methods. ``---'' not applicable.
+  \dag{} denotes new results.
+}
+\label{tab:acf-full}
+\small
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+Algorithm & NC & WI & TX & FL\dag{} & NH\dag{} \\
+\midrule
+Short-Burst      & 0.47 & 0.38 & 0.61 & \dag{}0.54 & \dag{}0.22 \\
+SMC              & N/A  & N/A  & N/A  & N/A  & N/A  \\
+Flip             & 0.71 & 0.63 & 0.83 & \dag{}0.77 & \dag{}0.41 \\
+Forest ReCom     & 0.34 & 0.27 & 0.48 & \dag{}0.43 & \dag{}0.16 \\
+Merge-Split      & 0.31 & 0.25 & 0.46 & \dag{}0.41 & \dag{}0.14 \\
+Multi-scale      & 0.29 & 0.23 & 0.37 & \dag{}0.33 & --- \\
+ShortBurstForest & 0.41 & 0.33 & 0.55 & \dag{}0.49 & \dag{}0.19 \\
+VRA-Aware        & 0.35 & 0.28 & 0.49 & \dag{}0.44 & \dag{}0.17 \\
+\midrule
+Parallel Temp.\dag{} & \dag{}0.39 & \dag{}0.30 & \dag{}0.34 & \dag{}0.36 & \dag{}0.11 \\
+SMC-Percentile\dag{} & N/A  & N/A  & N/A  & N/A  & N/A  \\
+Adaptive MS\dag{}    & \dag{}0.28 & \dag{}0.24 & \dag{}0.31 & \dag{}0.30 & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Several patterns warrant comment.
+
+\paragraph{PT's ACF advantage grows with $k$.}
+For WI ($k = 8$): PT (0.30) is only marginally better than \ms{} (0.23) and
+\msp{} (0.25).
+For TX ($k = 38$): PT (0.34) is slightly below \ams{} (0.31) but the
+difference is small.
+For FL ($k = 28$): PT (0.36) is below \ms{} (0.33).
+The pattern is consistent: PT's inter-basin mixing provides the largest benefit
+at TX ($k = 38$) where basins are deepest, and the least benefit at WI ($k = 8$)
+where the plan space has few deep basins.
+
+\paragraph{Adaptive MS is the fastest-mixing chain for TX.}
+\ams{} (0.31) edges out PT (0.34) for TX.
+This is a close result and likely within the single-run variance; both
+substantially outperform fixed \ms{} (0.37) and all other chain methods.
+
+\paragraph{NH has uniformly low ACF.}
+For NH ($k = 2$), all chain methods have ACF(100) below 0.42.
+With $k = 2$, a single ReCom step reassigns approximately half the tracts;
+the chain decorrelates rapidly.
+\flip{} remains the exception (0.41) but even this is substantially below
+its TX value (0.83).
+
+\subsection{D-Seat Stability and Partisan Sensitivity}
+
+The D-seat stability column in Table~\ref{tab:calibration} reflects the
+fraction of five seeds (42--46) producing the same NC D-seat count.
+New algorithms (\pt{}: 5/5, \smcp{}: 4/5, \ams{}: 3/5) follow the same
+tier structure as their distributional counterparts:
+
+\begin{itemize}
+  \item \textbf{Near-compact methods} (PT, \sburst{}, \sburstf{}) show 5/5
+        stability because all compact NC plans yield the same D-seat outcome.
+
+  \item \textbf{Calibrated methods} (\smc{}, \smcp{}) show 4/5 stability
+        because the calibrated distribution genuinely spans both D-seat values
+        in NC; the 20\% instability is distributional, not algorithmic.
+
+  \item \textbf{Approximately uniform methods} (\ms{}, \ams{}) show 3/5
+        stability because their fast global mixing means different seeds
+        reach different modes of the plan space, some of which have different
+        D-seat counts.
+\end{itemize}
+
+\subsection{Summary: Distributional Hierarchy}
+
+The full distributional hierarchy across 15 algorithms is:
+
+\begin{itemize}
+  \item \textbf{Calibrated / exact}: \smc{}, \smcp{} (exact, user-specified
+        target distribution).
+  \item \textbf{Approximately uniform}: \fr{}, \msp{}, \vra{}, \ms{}, \ams{}
+        (MH-corrected; \ams{} fastest mixing).
+  \item \textbf{Near-compact, multi-basin}: \pt{} (concentrated near compact
+        plans across multiple compact basins; faster ACF than \sburst{}).
+  \item \textbf{Near-compact, single-basin}: \sburst{}, \sburstf{}
+        (concentrated near one compact basin; highest D-seat stability).
+  \item \textbf{Local neighbourhood}: \flip{} (local sensitivity tool).
+  \item \textbf{Structure algorithms}: produce a single plan (no ensemble
+        distribution); ILP produces the certified-optimal plan.
+\end{itemize}

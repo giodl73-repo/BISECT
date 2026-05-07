@@ -1,0 +1,109 @@
+\section{Problem Formulation and Hardness}
+\label{sec:formulation}
+
+\subsection{The redistricting graph model}
+
+Let $G = (V, E, w_V, w_E)$ be a weighted planar graph where:
+\begin{itemize}
+  \item $|V| = n$ is the number of census tracts,
+  \item $w_V : V \to \mathbb{Z}_{>0}$ assigns population to each tract,
+  \item $w_E : E \to \mathbb{R}_{>0}$ assigns shared boundary length to
+    each edge, and
+  \item $G$ is planar (tracts tile a surface without crossings).
+\end{itemize}
+
+\begin{problem}[Balanced $k$-Cut Redistricting]
+\label{prob:bkc}
+Given $G = (V, E, w_V, w_E)$, integer $k \geq 2$, and tolerance
+$\varepsilon > 0$, find a partition $\mathcal{P} = \{P_1, \ldots, P_k\}$
+of $V$ that:
+\begin{enumerate}
+  \item minimises $\mathrm{EC}(\mathcal{P}) = \sum_{(u,v) \in E,\, \pi(u) \neq \pi(v)} w_E(u,v)$,
+  \item satisfies $|w_V(P_i) - W/k| \leq \varepsilon W/k$ for all $i$
+    (population balance), where $W = \sum_v w_V(v)$, and
+  \item each $P_i$ induces a connected subgraph of $G$ (contiguity).
+\end{enumerate}
+\end{problem}
+
+\subsection{NP-hardness of the redistricting problem}
+
+\begin{theorem}[NP-hardness]
+\label{thm:nphard}
+Problem~\ref{prob:bkc} is NP-hard for planar graphs, even with $k = 2$
+and unit vertex weights.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+We reduce from the Connected Planar Graph Bisection problem, which asks
+whether a planar graph can be bisected into two connected parts of equal
+vertex count with edge cut at most $C$.
+This problem is NP-complete by the results of Dyer and
+Frieze~\citep{dyer1985partitioning} on connected graph partition on
+planar graphs; see also Garey and Johnson~\citep{garey1979computers}
+(Problem~ND14) for the disconnected variant, whose connected restriction
+only strengthens hardness.
+
+Given a Connected Planar Graph Bisection instance $(G', C)$ with $|V'|$
+even, set all vertex weights $w_V \equiv 1$ (unit population), all edge
+weights $w_E \equiv 1$ (unit boundary), $k = 2$, and $\varepsilon = 0$.
+A valid solution to Problem~\ref{prob:bkc} on this instance consists of
+two connected parts $P_1, P_2$ with $|P_1| = |P_2| = |V'|/2$ and total
+edge cut minimised — which is precisely a minimum connected bisection of
+$G'$.
+Conversely, every minimum connected bisection of $G'$ yields a valid
+solution to Problem~\ref{prob:bkc} (connectivity of parts satisfies
+contiguity; equal sizes satisfy population balance with $\varepsilon = 0$).
+The reduction is a polynomial-time many-one reduction since all
+assignments are constant-time.
+The planar graph structure of census tract adjacency graphs is preserved
+under this reduction, as $G'$ is planar by assumption and weight
+assignment does not alter planarity. \qed
+\end{proof}
+
+\noindent\textbf{Remark (feasibility vs.\ optimisation).}
+Theorem~\ref{thm:nphard} establishes hardness of the \emph{optimisation}
+variant (finding a partition with minimum edge cut).
+The \emph{feasibility} variant --- does any valid partition exist? ---
+is trivially solvable for connected graphs with $k \leq n$: any spanning
+tree of $G$ can be partitioned into $k$ connected subtrees with
+appropriate edge removal.
+The NP-hardness result therefore concerns the difficulty of finding
+an \emph{optimal} compact partition, not the existence of one.
+
+\begin{proposition}[Approximation ratio]
+\label{prop:approx}
+No known polynomial-time algorithm achieves better than $O(\log n)$
+approximation for balanced $k$-partition in general.
+The approximation quality of METIS recursive bisection on redistricting-scale
+planar graphs is empirically characterised in Section~\ref{sec:runtime};
+no formal approximation guarantee for METIS's heuristic is claimed here.
+\end{proposition}
+
+\noindent\textbf{Context.}
+The ARV framework~\citep{arora2009expander} achieves $O(\sqrt{\log n})$
+approximation for Sparsest Cut via an SDP relaxation; this result applies
+to Sparsest Cut, not to Balanced $k$-Cut with contiguity.
+METIS's Fiduccia--Mattheyses (FM) local search~\citep{fiduccia1982linear}
+has no formal connection to the ARV SDP bound.
+By the Lipton--Tarjan separator theorem~\citep{lipton1979separator},
+every planar graph has a balanced separator of size $O(\sqrt{n})$, which
+gives an $O(\sqrt{n})$ edge-cut upper bound for a single bisection;
+the approximation ratio this implies depends on the unknown optimum.
+Section~\ref{sec:runtime} provides an empirical characterisation of how
+closely METIS tracks the best partition found across multiple seeds.
+
+\subsection{Empirical methodology}
+
+We measure runtime by executing the METIS recursive bisection (C FFI,
+version 5.1.0) on all 50 states across three census years (2000, 2010,
+2020), with configurations:
+\begin{itemize}
+  \item \texttt{ufactor = 5}, \texttt{niter = 100}, \texttt{seed = 42}
+  \item Single-threaded execution on a 16-core AMD Ryzen 9 5950X
+  \item Runtime measured via \texttt{std::time::Instant} in the Rust
+    harness (\texttt{redist-cli})
+  \item Averaged over 10 independent runs to reduce variance
+\end{itemize}
+
+We fit $T = a \cdot n^b$ using ordinary least squares on $\log$-transformed
+data, reporting $b \pm$ one standard error across the 50-state sample.

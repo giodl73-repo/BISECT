@@ -1,0 +1,11 @@
+state_code,state_name,state_minority_pct,num_districts,target_mm,mm_proportion,method,best_weight_factor,best_minority_threshold,best_mm_count,best_max_minority_pct,success_count,total_configs,success_rate,achieves_target
+MS,Mississippi,0.4610,4,2,0.5000,multi_constraint,1.3000,,2,0.5341,4,4,1.0000,True
+MS,Mississippi,0.4610,4,2,0.5000,edge_weighted,10.0000,0.5000,2,0.5540,23,28,0.8214,True
+GA,Georgia,0.4240,14,5,0.3571,multi_constraint,1.3000,,7,0.6479,2,4,0.5000,True
+GA,Georgia,0.4240,14,5,0.3571,edge_weighted,50.0000,0.4500,8,0.8026,28,28,1.0000,True
+LA,Louisiana,0.4160,6,2,0.3333,multi_constraint,5.0000,,2,0.5320,1,4,0.2500,True
+LA,Louisiana,0.4160,6,2,0.3333,edge_weighted,50.0000,0.4000,2,0.6199,12,28,0.4286,True
+AL,Alabama,0.3690,7,2,0.2857,edge_weighted,5.0000,0.4500,2,0.5356,4,28,0.1429,True
+AL,Alabama,0.3690,7,2,0.2857,multi_constraint,5.0000,,1,0.5045,0,4,0.0000,False
+SC,South Carolina,0.3510,7,3,0.4286,edge_weighted,500.0000,0.5000,1,0.5558,0,28,0.0000,False
+SC,South Carolina,0.3510,7,3,0.4286,multi_constraint,2.0000,,1,0.5166,0,4,0.0000,False

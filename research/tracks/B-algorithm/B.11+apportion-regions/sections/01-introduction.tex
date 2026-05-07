@@ -1,0 +1,81 @@
+\section{Introduction}
+\label{sec:intro}
+
+The United States Constitution establishes congressional representation through
+two distinct clauses. Article~I, \S2 mandates that seats be
+\emph{apportioned among the several States} according to population, a
+requirement implemented since 1941 by the Huntington-Hill method
+\citep{balinski2001fair}. Article~I, \S4 provides that ``the Times, Places and
+Manner of holding Elections \ldots\ shall be prescribed in each State by the
+Legislature thereof,'' but that ``Congress may at any time by make or alter
+such Regulations.'' In practice, these clauses are treated as governing
+separate questions: \S2 determines \emph{how many} seats each state receives;
+\S4 (via state or congressional action) determines \emph{where} the district
+boundaries lie.
+
+We argue this separation is artificial and consequential. The seat count $n$
+assigned to a state is not merely a quota --- it encodes a geometric structure.
+Specifically, the prime factorization $n = p_1^{a_1} \times p_2^{a_2} \times
+\cdots$ determines a unique hierarchical partition of any geographic region:
+split into $p_1$ sub-regions, then split each sub-region into $p_2$ parts, and
+so on. When applied to a state's census-tract graph using minimum-cut graph
+partitioning, this hierarchy produces a congressional map with two inputs only:
+\begin{enumerate}
+  \item The prime factorization of $n$ --- pure arithmetic, determined by the
+        apportionment process.
+  \item The census-tract adjacency graph with TIGER boundary weights --- pure
+        geography, derived from federal public records.
+\end{enumerate}
+No political data enters. No human boundary choices are made. The resulting
+\emph{ApportionRegions} (AR) algorithm is a direct geographic
+extension of Huntington-Hill: the same constitutional process that decides how
+many seats a state receives also decides, without further human input, where
+those seats are located.
+
+\paragraph{The reuse property.}
+The most practically significant feature of AR is that geographic splits are
+computed once and reused. The canonical 2-way minimum-cut partition of a state
+(``the bisection'') is computed once and applies to every even seat count.
+The canonical 3-way partition applies to every seat count divisible by~3.
+When a state gains or loses a seat after reapportionment, only the levels of
+the factorization tree affected by the changed prime structure require
+recomputation. Districts have \emph{ancestors} in the tree --- a district
+in the $n$-seat map can be traced to the leaf of the factorization tree that
+contains its census tracts, and that leaf's ancestry is preserved across all
+seat counts sharing the same prime structure at that level.
+
+\paragraph{The discontinuity problem.}
+AR also makes visible a previously unrecognized structural phenomenon:
+consecutive seat counts can have disjoint prime factorizations, causing
+complete structural breaks in the map. California currently has 52 seats
+($52 = 2^2 \times 13$); the preceding apportionment gave it 53 seats
+($53$ is prime). Going from 52 to 53 requires discarding the entire
+2-level binary structure and replacing it with a single 53-way cut of the
+whole state. Going from 51 ($= 3 \times 17$) to 52 ($= 4 \times 13$)
+replaces a ternary top level with a binary one. These discontinuities are
+\emph{mathematically forced}, not arbitrary: they reflect the prime
+structure of the integers, not political choices. We characterize when such
+breaks occur and propose a continuity-preserving variant (AR-smooth) that
+minimises structural change across reapportionments.
+
+\paragraph{Contributions.}
+\begin{enumerate}
+  \item \textbf{Algorithm}: The AR algorithm --- a deterministic,
+        prime-factorization-guided redistricting procedure with formal
+        reuse semantics and a two-input specification (prime factorization
+        + census geography).
+  \item \textbf{Constitutional argument}: A formal claim that AR maps
+        arise from Article~I~\S2 (apportionment) rather than \S4 (Manner),
+        shifting the constitutional footing and removing the ``separate
+        districting question.''
+  \item \textbf{Reuse theorem}: A proof that prime-$p$ splits are
+        canonical and reusable, and that the factorization tree is unique
+        given the minimum-cut at each level.
+  \item \textbf{Empirical evaluation}: Full AR maps for all 50 states at
+        their 2020 apportionment seat counts, comparison to minimum-edge-cut
+        (MEC) maps from \citet{dellaLibera2026mec}, and characterisation of
+        the 51$\to$52 California discontinuity.
+  \item \textbf{AR-smooth}: A reapportionment-stable variant that preserves
+        as much of the existing factorization tree as possible when $n$
+        changes by~$\pm 1$.
+\end{enumerate}

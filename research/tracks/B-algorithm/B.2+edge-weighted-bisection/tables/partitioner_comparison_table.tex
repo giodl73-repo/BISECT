@@ -1,0 +1,28 @@
+\begin{table}[t]
+\caption{Alternative Partitioner Comparison: Edge-Weighted Compactness}
+\label{tab:partitioner-comparison}
+\centering
+\small
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+\textbf{State} & \textbf{METIS} & \textbf{KaHIP} & \textbf{Scotch} & \textbf{Max $\Delta$} \\
+\midrule
+Alabama & 0.3340 & \textbf{0.3360} & 0.3278 & 1.86\% \\
+California & \textbf{0.3310} & 0.3286 & 0.3269 & 1.24\% \\
+Texas & \textbf{0.3500} & 0.3464 & 0.3488 & 1.03\% \\
+Pennsylvania & 0.4000 & \textbf{0.4023} & 0.4014 & 0.57\% \\
+Minnesota & 0.3870 & 0.3837 & \textbf{0.3920} & 1.29\% \\
+\midrule
+\textbf{Mean} & \textbf{0.3604} & \textbf{0.3594} & \textbf{0.3594} & -- \\
+\bottomrule
+\end{tabular}
+\vspace{0.5em}
+
+\footnotesize
+\textit{Note:} All partitioners use edge-weighted recursive bisection with identical
+geometric weights (tract boundary lengths). Bold indicates best compactness per state.
+Max $\Delta$ = maximum deviation from METIS baseline. All differences within 2\%,
+demonstrating that edge weighting generalizes across partitioner implementations.
+METIS chosen for implementation due to: (1) mature, stable codebase, (2) extensive
+validation in HPC community, (3) straightforward edge-weight integration.
+\end{table}

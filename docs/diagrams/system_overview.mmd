@@ -1,0 +1,80 @@
+```mermaid
+graph TB
+    subgraph "Data Sources"
+        A1[Census TIGER/Line<br/>Tract Shapefiles]
+        A2[Census PL94-171<br/>Population Data]
+        A3[MIT Election Lab<br/>Presidential Results]
+        A4[Census DHC<br/>Demographics]
+    end
+
+    subgraph "Data Processing"
+        B1[Download Scripts<br/>scripts/data/]
+        B2[Process to Parquet<br/>Tract-Level Aggregates]
+        B3[Build Adjacency Graphs<br/>NetworkX Graph]
+    end
+
+    subgraph "Core Algorithm"
+        C1[METIS Library<br/>Graph Partitioning]
+        C2[Recursive Bisection<br/>src/apportionment/partition/]
+        C3[District Assignment<br/>Tract → District Mapping]
+    end
+
+    subgraph "Analysis & Metrics"
+        D1[Compactness<br/>Polsby-Popper, Reock]
+        D2[Political Analysis<br/>Partisan Lean]
+        D3[Demographics<br/>Race, Gender, Diversity]
+        D4[City Assignment<br/>Major Cities per District]
+    end
+
+    subgraph "Visualization"
+        E1[District Maps<br/>Individual & State-Level]
+        E2[Round Progression<br/>Bisection History]
+        E3[National Maps<br/>All 435 Districts]
+        E4[Analysis Maps<br/>Political, Demographic]
+    end
+
+    subgraph "Output"
+        F1[Web Dashboard<br/>Interactive Explorer]
+        F2[CSV Exports<br/>District Summaries]
+        F3[PNG Maps<br/>Publication Quality]
+    end
+
+    A1 --> B1
+    A2 --> B1
+    A3 --> B1
+    A4 --> B1
+
+    B1 --> B2
+    B2 --> B3
+
+    B3 --> C2
+    C1 --> C2
+    C2 --> C3
+
+    C3 --> D1
+    C3 --> D2
+    C3 --> D3
+    C3 --> D4
+
+    C3 --> E1
+    C3 --> E2
+    C3 --> E3
+    D1 --> E4
+    D2 --> E4
+    D3 --> E4
+
+    E1 --> F1
+    E2 --> F1
+    E3 --> F1
+    E4 --> F1
+    D1 --> F2
+    D2 --> F2
+    D3 --> F2
+    E1 --> F3
+    E2 --> F3
+    E3 --> F3
+    E4 --> F3
+
+    style C2 fill:#90EE90
+    style F1 fill:#87CEEB
+```

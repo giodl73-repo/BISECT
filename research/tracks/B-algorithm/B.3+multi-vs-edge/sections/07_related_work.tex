@@ -1,0 +1,41 @@
+\label{sec:related}
+
+\subsection{Graph Partitioning Algorithms}
+
+\textbf{METIS~\cite{karypis1998fast}:} Multilevel graph partitioning using coarsening, partitioning, and uncoarsening. Our work uses METIS as the underlying algorithm for both multi-constraint and edge-weighted approaches.
+
+\textbf{Multi-constraint partitioning~\cite{karypis1999multilevel}:} Introduced to handle multiple vertex weights simultaneously, primarily for parallel computing with heterogeneous resources. We show this approach has limitations for asymmetric goals like VRA compliance.
+
+\textbf{ParMETIS~\cite{karypis2003parmetis}:} Parallel version of METIS for distributed-memory systems. Supports multi-constraint partitioning at scale.
+
+\textbf{Zoltan~\cite{devine2002zoltan}:} Parallel partitioning toolkit with multiple algorithms. Includes multi-constraint support and hypergraph partitioning.
+
+\textbf{KaHIP~\cite{sanders2013think}:} Karlsruhe High-Quality Partitioning, focusing on solution quality through local search and evolutionary algorithms. Supports edge weights but not multi-constraint.
+
+\subsection{Redistricting and Gerrymandering}
+
+\textbf{Algorithmic redistricting~\cite{altman2011redistricting}:} Survey of computational approaches to redistricting, including graph partitioning, integer programming, and simulated annealing.
+
+\textbf{Markov Chain Monte Carlo (MCMC)~\cite{deford2019recombination}:} Generate ensembles of redistricting plans to detect gerrymandering. Complementary to our work: MCMC evaluates plans, while graph partitioning generates plans.
+
+\textbf{Compactness metrics~\cite{polsby1991third, reock1961measure}:} Quantitative measures of district shape regularity. Our work uses edge cut as a proxy; future work should incorporate explicit compactness metrics.
+
+\textbf{VRA compliance algorithms~\cite{ansolabehere2015race}:} Prior work on creating majority-minority districts, mostly using heuristics. Our work is the first to systematically compare multi-constraint vs edge-weighted approaches.
+
+\subsection{Multi-Objective Optimization}
+
+\textbf{Scalarization~\cite{marler2004survey}:} Combining multiple objectives into a single objective via weighted sum. Edge-weighting is a form of scalarization applied to graph partitioning.
+
+\textbf{Pareto optimization~\cite{deb2001multi}:} Finding solutions that balance competing objectives without a priori weights. Multi-constraint partitioning implicitly searches the Pareto frontier.
+
+\textbf{Constraint handling~\cite{coello2002theoretical}:} Techniques for managing constraints in optimization. Our constraint conflict analysis relates to constraint domination in multi-objective problems.
+
+\subsection{Differences from Prior Work}
+
+\textbf{First systematic comparison:} Prior work assumes multi-constraint is superior for multi-objective problems. We show edge-weighting outperforms multi-constraint for VRA compliance.
+
+\textbf{Constraint conflict theory:} We provide theoretical explanation (constraint conflict) and empirical validation (ubvec sweep) for why multi-constraint fails.
+
+\textbf{Practical guidance:} We give clear recommendations on when to use each approach based on constraint tightness hierarchy, applicable beyond redistricting.
+
+\textbf{Large-scale evaluation:} 160 experiments across 5 states with multiple parameter configurations, providing robust evidence for our claims.

@@ -1,0 +1,23 @@
+\begin{table}[H]
+\centering
+\caption{Statistical Significance Tests for Key Findings}
+\label{tab:statistical_tests}
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Test} & \textbf{Comparison} & \textbf{n} & \textbf{Mean Diff} & \textbf{95\% CI} & \textbf{p-value} & \textbf{Cohen's d} \\
+\midrule
+State Level Paired T & edge vs weighted vs vs vs baseline vs PP & 5 & 0.013 & [0.003, 0.030] & 0.1780 & 0.442 \\
+Mm Vs Nonmm Two Sample T & non vs mm vs vs vs mm vs PP & 207 / 553 & 0.013 & [0.002, 0.025] & 0.0388* & 0.169 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item \textbf{Mean Diff}: Difference in means between conditions (positive = first group higher)
+\item \textbf{95\% CI}: Bootstrap confidence interval for mean difference
+\item \textbf{p-value}: Significance level (*** p<0.001, ** p<0.01, * p<0.05)
+\item \textbf{Cohen's d}: Effect size (|d|<0.2: negligible, 0.2-0.5: small, 0.5-0.8: medium, $\geq$0.8: large)
+\item \textbf{State-level test}: Paired t-test comparing baseline vs edge-weighted across 4 successful states
+\item \textbf{District-level test}: Two-sample t-test comparing MM vs non-MM districts within edge-weighted configurations
+\item All tests two-tailed, $\alpha = 0.05$. Bootstrap CIs computed with 10,000 resamples.
+\end{tablenotes}
+\end{table}

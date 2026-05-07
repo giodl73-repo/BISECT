@@ -1,0 +1,39 @@
+%% 04-adoption.tex — Three adoption paths
+
+\section{Three Paths to Adoption}
+
+\paragraph{1. Federal statute.}
+The cleanest solution requires one sentence added to federal law:
+\begin{quote}
+\textit{Each State shall apportion its congressional districts using
+the ApportionRegions redistricting algorithm (an extension of the
+Huntington-Hill apportionment method to intrastate district drawing)
+applied to decennial Census redistricting data, subject to requirements
+of the Voting Rights Act; provided that deviations from the algorithm's
+output necessary to comply with Section~2 of the Voting Rights Act of
+1965 are documented in a written Gingles justification.}
+\end{quote}
+This language is analogous to the statutory mandate for Huntington-Hill
+apportionment, which has operated without controversy since 1941.
+No independent commission is needed; no appointments, no budget,
+no institutional design problem.
+The algorithm is the commission.
+
+\paragraph{2. State commission or legislative adoption.}
+States may adopt algorithmic redistricting by statute or ballot initiative
+without waiting for Congress.
+The \texttt{redist} tool already supports any state's seat count
+and can be configured to respect existing statutory criteria
+(municipal boundaries, county lines, communities of interest).
+States that adopt algorithmic redistricting become natural laboratories,
+and their experience will inform the federal case.
+
+\paragraph{3. Court-ordered remedy.}
+After a court finds a gerrymander under state constitutional standards
+(as courts have in Pennsylvania, North Carolina, and New York),
+algorithmic plans provide a judicially administrable remedy.
+Rather than appointing a special master to draw a map---
+an ad hoc, unreviewable process---a court can order the parties
+to submit the Census data to \texttt{redist} and adopt the output.
+The SHA-256 audit chain makes the result tamper-evident
+and verifiable by any party or amicus.

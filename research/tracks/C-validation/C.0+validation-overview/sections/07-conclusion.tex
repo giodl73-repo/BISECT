@@ -1,0 +1,90 @@
+% Section 7: Conclusion (~600 words)
+
+\subsection{Summary}
+
+This paper synthesized five empirical validation studies establishing
+the robustness of METIS recursive bisection redistricting across four
+dimensions. The key quantitative findings are:
+
+\begin{itemize}
+  \item \textbf{Spatial robustness (C.1)}: Mean $\Delta PP < 0.005$
+    across a 130$\times$ unit-count range. Geography drives outcomes,
+    not resolution.
+
+  \item \textbf{Temporal stability (C.2)}: Geographic variance is
+    $3.2\times$ larger than temporal variance. Within-slice cross-census
+    correlation is $r = 0.73$. National PP varies by $\approx 10\%$
+    over 20 years.
+
+  \item \textbf{Boundary stability (C.3)}: Recursive bisection provides
+    $0.8$ pp better decadal stability than n-way partitioning. IoU
+    across census cycles is $71\%$ within geographic slices.
+
+  \item \textbf{Longitudinal convergence (C.4)}: The algorithmic-enacted
+    gap narrowed from $0.114$ (2000) to $0.110$ (2020) as reform
+    spreads. Geographic clustering of algorithm performance is stable:
+    47/50 states remain in the same cluster across 20 years.
+
+  \item \textbf{Partisan fairness (C.5)}: Mean $|EG| = 0.04$ for
+    algorithmic plans vs.\ $0.08$ for enacted. No algorithmic plan
+    exceeds the $7\%$ court threshold; 8 of 15 enacted plans do.
+    Five independent metrics converge on an $\approx 8$ pp partisan
+    gap.
+\end{itemize}
+
+\subsection{The Validation Portfolio as Legal Evidence}
+
+The C-track is designed to be cited as a unit in legal proceedings
+where algorithmic redistricting is challenged or defended. A challenge
+that the algorithm produces different results at different resolutions
+is answered by C.1. A challenge that it fails to generalize across
+census years is answered by C.2 and C.3. A challenge that it is
+implicitly partisan is answered by C.5. A challenge that its
+performance clusters by geography in ways that disadvantage particular
+states is answered by C.4.
+
+No single paper is sufficient; the combination provides a
+multi-dimensional defense that matches the multi-dimensional nature
+of redistricting litigation. Courts examining algorithmic redistricting
+claims under state constitutions require evidence on compactness,
+population balance, VRA compliance, and partisan fairness. The C-track
+provides quantitative baselines for all four.
+
+\subsection{The Broader Point: Validation Is Not Optional}
+
+The DIA's certification requirements reflect a deeper truth: without
+systematic validation, algorithmic redistricting is an assertion, not
+a proof. An algorithm that has been run once on one census year and
+found to produce compact districts is a promising tool; an algorithm
+that has been systematically tested across three spatial resolutions,
+three census years, five fairness metrics, and found robust on all of
+them is a validated tool appropriate for use in consequential legal
+proceedings.
+
+The C-track constitutes, to our knowledge, the first systematic
+multi-dimensional validation program for an algorithmic redistricting
+method at national scale. We hope it serves as a template for other
+researchers developing redistricting algorithms: robustness claims
+require robustness evidence, and robustness evidence requires the kind
+of systematic, multi-dimensional empirical testing this track exemplifies.
+
+\subsection{Future Work}
+
+Three extensions to the C-track are planned.
+
+First, completing block-level analysis (C.1) for all 50 states will
+close the 10-state gap in spatial robustness validation. This requires
+approximately 50 additional compute-hours using the Rust \texttt{redist}
+binary.
+
+Second, incorporating 2030 Census data into C.3 and C.4 will provide
+a third temporal data point, enabling trend analysis rather than
+level-shift characterization.
+
+Third, extending C.5's partisan fairness analysis to all 50 states
+(including small states with few districts) using multi-level modeling
+will complete the national partisan fairness picture. Preliminary
+analysis suggests small states' single-district or two-district plans
+exhibit near-zero EG by construction; the key variation is in
+medium-sized states (5--15 districts) where algorithmic and enacted
+differences are largest.

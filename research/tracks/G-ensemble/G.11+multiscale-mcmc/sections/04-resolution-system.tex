@@ -1,0 +1,120 @@
+\section{Resolution System}
+\label{sec:resolution}
+
+The \ms{} algorithm is parameterised by a choice of \emph{fine resolution}
+and \emph{coarse resolution}.
+The resolution system~\citep{dellaLibera2026resolution} defines three
+options, all sharing the same \texttt{derive\_partition} helper via GEOID
+prefix matching.
+
+\subsection{GEOID Structure and Prefix Matching}
+
+US Census Bureau GEOIDs encode geographic hierarchy in their digit structure.
+For the census tract level, the 11-digit GEOID has the form:
+\begin{center}
+\texttt{SS CCC TTTTTT}
+\end{center}
+where \texttt{SS} (2 digits) is the state FIPS code, \texttt{CCC} (3 digits)
+is the county FIPS code, and \texttt{TTTTTT} (6 digits) is the tract code.
+Block group GEOIDs extend this with one additional digit: \texttt{SS CCC TTTTTT B}.
+
+The \texttt{derive\_partition} helper takes a list of fine GEOIDs and a
+prefix length, and groups fine units by their GEOID prefix:
+
+\begin{definition}[\texttt{derive\_partition}]
+\label{def:derive-partition}
+Given a set of fine-unit GEOIDs $\{g_v : v \in V\}$ and a prefix length
+$\ell \in \{5, 11\}$, the partition map $f_\ell : V \to C_\ell$ is defined
+by
+\[
+  f_\ell(v) = g_v[0{:}\ell]
+\]
+where $g_v[0{:}\ell]$ denotes the first $\ell$ characters of the GEOID.
+The coarse unit set $C_\ell = \{g_v[0{:}\ell] : v \in V\}$ is the image
+of $f_\ell$.
+\end{definition}
+
+The coarse adjacency graph $G_{C_\ell}$ is then derived by
+Definition~\ref{def:coarsening} using $f_\ell$ as the coarsening map.
+
+\subsection{Three Resolution Options}
+
+Table~\ref{tab:resolution-options} summarises the three options.
+
+\begin{table}[h]
+\centering
+\caption{Multi-scale MCMC resolution options.}
+\label{tab:resolution-options}
+\begin{tabular}{lllll}
+\toprule
+Option & Fine level & Coarse level & GEOID prefix & Status \\
+\midrule
+A & Block group & Tract  & 11 digits & Defined \\
+B & Tract       & County & 5 digits  & Implemented \\
+C & Block group & County & 5 digits  & Defined \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Option A: Block group $\to$ Tract.}
+Fine units are block groups (12-digit GEOID); coarse units are census tracts
+(11-digit GEOID).
+The prefix map uses length 11 to group block groups by their parent tract.
+This option provides the finest spatial resolution available in the census
+data hierarchy and is useful for states with very heterogeneous tract
+populations.
+Option A is defined but not yet implemented; it requires block-group
+adjacency data (not currently loaded by the census pipeline).
+
+\paragraph{Option B: Tract $\to$ County (implemented).}
+Fine units are census tracts (11-digit GEOID); coarse units are counties
+(5-digit GEOID = state FIPS + county FIPS).
+The prefix map uses length 5 to group tracts by their parent county.
+This is the implemented option and the focus of this paper.
+Option B requires no extra data files: county adjacency is derived from the
+existing tract graph as described in Section~\ref{sec:algorithm}.
+
+\paragraph{Option C: Block group $\to$ County.}
+Fine units are block groups; coarse units are counties.
+The prefix map uses length 5 (same as Option B).
+Option C skips the intermediate tract level and operates at the extremes of
+the census hierarchy.
+It is defined but requires block-group adjacency data.
+
+\subsection{Shared Infrastructure}
+
+All three options share the same \texttt{derive\_partition} code path.
+The only difference is the input GEOID list (tract or block group) and the
+prefix length (5 or 11).
+The county adjacency derivation (Proposition~\ref{prop:county-adj-exact})
+applies to Options B and C; for Option A, the tract adjacency is derived
+analogously from the block-group graph.
+
+The \texttt{rebalance} subroutine is identical across all three options:
+it operates on the fine plan $\pi : V \to [k]$ and the fine adjacency graph
+$G$, regardless of the coarse resolution.
+The coarse tolerance $\epsilon_c = 3 \epsilon_f$ is also shared.
+
+\subsection{Data Requirements}
+
+\begin{table}[h]
+\centering
+\caption{Data requirements by option.}
+\label{tab:data-reqs}
+\begin{tabular}{llll}
+\toprule
+Option & Fine adjacency & Coarse adjacency & Extra files? \\
+\midrule
+A & Block group (not loaded) & Derived from fine & Yes \\
+B & Tract (loaded) & Derived from tract & No \\
+C & Block group (not loaded) & Derived from fine & Yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Option B is the only option that requires no extra data files beyond what
+is already loaded by the standard redistricting pipeline.
+The county graph is derived in $O(|E|)$ time at the start of each \ms{} run
+and cached for the duration of the run.
+For Texas ($|E| \approx 15{,}600$ tract edges), this derivation takes under
+1 millisecond.

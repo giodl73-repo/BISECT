@@ -1,0 +1,171 @@
+%% G.12 -- Short-Burst Optimization with Calibrated Chains
+%% References
+
+%% ===================================================================
+%% SELF-CITATIONS (G SERIES)
+%% ===================================================================
+
+@misc{g6paper,
+  author = {Della-Libera, Gio},
+  title  = {Short-Burst Optimisation for Redistricting:
+            Short Chains Beat Long Chains},
+  year   = {2026},
+  note   = {G.6 in Algorithmic Redistricting series.
+            Introduces \sburst{} as a meta-algorithm over \recom{} chains.
+            Defines the burst-endpoint selection strategy, the deterministic
+            seed schedule, and the percentile parameter.
+            G.12 extends this by making the chain type a parameter.},
+}
+
+@misc{g8paper,
+  author = {Della-Libera, Gio},
+  title  = {Flip Proposals for Local Sensitivity Analysis
+            in Algorithmic Redistricting},
+  year   = {2026},
+  note   = {G.8 in Algorithmic Redistricting series.
+            Characterises the Flip chain as a local perturbation tool.
+            The per-burst acceptance rate introduced in G.12 is
+            analogous to the visited-count metric in G.8.},
+}
+
+@misc{g9paper,
+  author = {Della-Libera, Gio},
+  title  = {{ForestRecom}: Reversible Forest-Based Recombination
+            for Redistricting},
+  year   = {2026},
+  note   = {G.9 in Algorithmic Redistricting series.
+            Defines \frecom{} with two-tree Metropolis--Hastings,
+            forward RNG and reverse RNG per step.
+            G.12 uses this chain as the inner loop of \sbf{}.},
+}
+
+@misc{g10paper,
+  author = {Della-Libera, Gio},
+  title  = {{MergeSplit} {MCMC} for Redistricting:
+            Explicit Reversibility via Single Ratio Computation},
+  year   = {2026},
+  note   = {G.10 in Algorithmic Redistricting series.
+            Defines \ms{} with a single Metropolis--Hastings ratio
+            per step, cheaper than ForestRecom.
+            G.12 uses this chain as the inner loop of \sbms{}.},
+}
+
+@misc{b11paper,
+  author = {Della-Libera, Gio},
+  title  = {{ApportionRegions}: Prime-Factor Bisection for Congressional
+            Redistricting},
+  year   = {2026},
+  note   = {B.11 in Algorithmic Redistricting series.
+            50-state sweep; 223D/209R national headline.
+            Defines the METIS initial plan used as burst starting point.},
+}
+
+%% ===================================================================
+%% SHORT-BURST
+%% ===================================================================
+
+@article{cannon2022,
+  author  = {Cannon, Sarah and Goldbloom-Helzner, Ari and Gupta, Varun
+             and Matthews, Jesse and Suwal, Bhushan},
+  title   = {Voting Rights, {Markov} Chains, and Optimization by Short
+             Bursts},
+  journal = {arXiv},
+  year    = {2022},
+  note    = {arXiv:2011.02288. Original Short-Burst paper.
+             Proposes running short chains and keeping endpoints to
+             optimize compactness while exploring the plan neighbourhood.
+             G.6 implements this; G.12 extends it to calibrated chains.},
+}
+
+%% ===================================================================
+%% FOREST RECOM / MERGE-SPLIT
+%% ===================================================================
+
+@article{mccartan2020,
+  author  = {McCartan, Cory and Imai, Kosuke},
+  title   = {Sequential Monte Carlo for Sampling Balanced and Compact
+             Redistricting Plans},
+  journal = {arXiv},
+  year    = {2020},
+  note    = {arXiv:2008.06131. Introduces Forest ReCom (two-tree spanning
+             forest proposal) with Metropolis--Hastings correction for
+             approximate distributional correctness.
+             G.9 implements this; G.12 wraps it in the Short-Burst envelope.},
+}
+
+@article{janson2022,
+  author  = {Janson, Svante and others},
+  title   = {Merge-Split {Markov} Chain {Monte} {Carlo} for Community Detection},
+  journal = {arXiv},
+  year    = {2022},
+  note    = {Merge-Split proposal: merge two adjacent districts, resample
+             a single spanning tree, cut at the balance point.
+             Single MH ratio per step, cheaper than Forest ReCom.
+             G.10 adapts this to redistricting; G.12 wraps it in \sbms{}.},
+}
+
+%% ===================================================================
+%% RECOM / MCMC REDISTRICTING
+%% ===================================================================
+
+@article{deford2021,
+  author  = {DeFord, Daryl and Duchin, Moon and Solomon, Justin},
+  title   = {Recombination: A Family of {Markov} Chains for Redistricting},
+  journal = {Harvard Data Science Review},
+  volume  = {3},
+  number  = {1},
+  year    = {2021},
+  doi     = {10.1162/99608f92.eb30390f},
+  note    = {ReCom proposal distribution. The standard \sburst{} inner chain.
+             Section~\ref{sec:background} reviews its properties; the
+             comparison in Section~\ref{sec:comparison} uses it as the
+             baseline.},
+}
+
+%% ===================================================================
+%% MARKOV CHAIN / MCMC BACKGROUND
+%% ===================================================================
+
+@book{levin2009,
+  author    = {Levin, David A. and Peres, Yuval and Wilmer, Elizabeth L.},
+  title     = {Markov Chains and Mixing Times},
+  publisher = {American Mathematical Society},
+  year      = {2009},
+  note      = {Standard reference for Markov chain mixing time theory.
+               The mixing-time interpretation of burst length draws on
+               Chapter 4 (coupling) and Chapter 7 (conductance).},
+}
+
+@article{metropolis1953,
+  author  = {Metropolis, Nicholas and Rosenbluth, Arianna W. and
+             Rosenbluth, Marshall N. and Teller, Augusta H. and
+             Teller, Edward},
+  title   = {Equation of State Calculations by Fast Computing Machines},
+  journal = {The Journal of Chemical Physics},
+  volume  = {21},
+  number  = {6},
+  pages   = {1087--1092},
+  year    = {1953},
+  doi     = {10.1063/1.1699114},
+  note    = {Original Metropolis--Hastings algorithm.
+             ForestRecom and MergeSplit both use MH corrections;
+             their acceptance probabilities determine the per-burst
+             acceptance rates analysed in Section~\ref{sec:comparison}.},
+}
+
+%% ===================================================================
+%% ENSEMBLE / SAMPLING REFERENCES
+%% ===================================================================
+
+@article{imai2023,
+  author  = {Imai, Kosuke and McCartan, Cory and Shibuya, Rei and
+             Yamauchi, Sho},
+  title   = {Automated Redistricting Simulation Using Markov Chain
+             Monte Carlo},
+  journal = {Journal of Statistical Software},
+  year    = {2023},
+  note    = {redist R package. Implements Forest ReCom and Merge-Split
+             for ensemble sampling. The acceptance-rate observations
+             in Section~\ref{sec:comparison} are consistent with
+             values reported in the redist package documentation.},
+}

@@ -1,0 +1,105 @@
+\section{Lesson 4: Crossing State Lines Produces Compact but Fragmented Districts}
+\label{sec:lesson4}
+
+National redistricting without state lines (Paper E.3) is the purest
+implementation of geometric optimization: treat the continental United States
+as a single graph of approximately 73,000 census tracts and partition it into
+435 compact contiguous districts using the METIS minimum-cut algorithm, without
+any constraint that district boundaries respect state lines
+\citep{dellaLibera2026e3}.  The design lesson from this experiment is a
+precise quantification of the federalism compactness cost: the state-boundary
+constraint sacrifices approximately 12\% of achievable mean Polsby--Popper
+compactness in exchange for state-based representation.
+
+\subsection{The Compactness Gain}
+
+The 50-state baseline DIA achieves a mean Polsby--Popper score of 0.367.
+The national redistricting experiment achieves 0.411, an improvement of
+$\Delta\mathrm{PP} = +0.044$, or 12.0\% of the baseline value
+\citep{dellaLibera2026e3}.
+
+This improvement is not uniform across the country.  It is concentrated in
+states where state boundaries happen to bisect naturally compact geographic
+units: the Appalachian ridge that splits the Virginia--West Virginia--North
+Carolina border region; the Mississippi River basin that straddles multiple
+state lines in the upper Midwest; the suburban sprawl of metropolitan areas
+that cross state boundaries (Kansas City, Philadelphia, Cincinnati, Washington
+DC).  In these areas, removing the state constraint allows the algorithm to
+draw districts that follow natural geographic contours rather than arbitrary
+political lines.
+
+Approximately 60\% of districts are unchanged or minimally changed by removing
+the state constraint: they would fall entirely within one state under any
+reasonable compact-district drawing.  The compactness gain is concentrated in
+the remaining 40\%, which gain an average of $\Delta\mathrm{PP} = +0.110$
+--- a substantial improvement in the districts where the state constraint
+was binding.
+
+\subsection{The County Preservation Cost}
+
+The compactness improvement comes at a significant cost in county preservation.
+The baseline DIA preserves 38\% of counties whole (no tract splits across
+district lines).  The national redistricting experiment preserves only 23\%
+of counties whole --- a 40\% reduction in county-preservation rate.
+
+This is counterintuitive at first: if the algorithm is optimizing for
+compactness without state-line constraints, why does county preservation
+decline?  The answer is that state boundaries often happen to coincide with
+county boundaries --- state lines commonly run along county borders, especially
+in the South and Midwest where counties were established contemporaneously with
+state boundaries.  When the algorithm is free to cross state lines, it draws
+districts that cross county lines in new places, fragmenting counties that
+had been preserved under the state-constrained baseline.
+
+The tradeoff between compactness and county preservation is thus partially
+mediated by the state-boundary constraint: state boundaries impose compactness
+costs in some places while incidentally protecting county integrity in others.
+Removing the state constraint improves geometric compactness while degrading
+county coherence.
+
+\subsection{Political Fragmentation}
+
+Beyond county preservation, national redistricting produces a specific type of
+political fragmentation that does not arise in the state-constrained baseline:
+districts that cross state lines represent constituents governed by different
+state laws.
+
+A district spanning the Kansas--Missouri border would represent residents of
+two states with different income tax rates, different Medicaid eligibility
+thresholds, different state legislative districts, different US Senate
+representation, and different electoral calendars.  The House member from such
+a district would face constituent questions --- about state programs, state
+regulations, state courts --- that do not map cleanly onto her congressional
+role.  She would also face a reelection challenge defined by two different
+state primary calendars and two different state party structures.
+
+Paper E.3 identifies 87 cross-state districts in the national map --- districts
+that draw at least 10\% of their population from a different state than the
+majority of their population \citep{dellaLibera2026e3}.  These 87 districts
+represent a substantial fraction of the 435 total (20\%) and are concentrated
+in the densely settled Northeast and the suburban Midwest.
+
+\subsection{The Federalism Cost: A Precise Measurement}
+
+The central contribution of E.3 to the design lessons is that it makes the
+federalism cost of redistricting legible.  Before this experiment, the cost of
+respecting state boundaries in redistricting was unmeasured; the conventional
+wisdom was simply that state-based redistricting is constitutionally required
+and therefore not worth analyzing as a design choice.
+
+The finding that the federalism constraint costs approximately 12\% mean
+compactness is both modest enough to be acceptable and substantial enough to
+be worth knowing.  It is modest in the sense that the 0.367 baseline is
+already substantially higher than the compactness of current commission-drawn
+maps (which average approximately 0.28--0.31 in most states); the 12\%
+improvement would raise the algorithmic baseline to 0.411, an improvement at
+the margin.  It is substantial in the sense that 12\% of mean PP corresponds
+to visibly more regular district shapes in the cross-state border regions where
+the improvement is concentrated.
+
+The implication for reform advocates is that the compactness argument for
+national redistricting is relatively weak: a 12\% improvement is not
+transformative.  The proportionality argument --- that national redistricting
+might reduce the sorting-driven seat gap by drawing districts that cross
+state-level sorting concentrations --- is potentially stronger but is not
+supported by E.3's empirical results (see Lesson~1 above).

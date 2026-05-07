@@ -1,0 +1,59 @@
+% Apportionment Dynamics
+
+\subsection{National Seat Shifts}
+
+Congressional reapportionment following the 2010 and 2020 censuses resulted in significant seat transfers between states. Table~\ref{tab:apportionment} shows the most dramatic changes:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrrrrr}
+\toprule
+\textbf{State} & \textbf{2000} & \textbf{2010} & \textbf{2020} & \textbf{Change} & \textbf{Growth} \\
+\midrule
+Texas        & 32 & 36 & 38 & +6 & +20.6\% \\
+Florida      & 25 & 27 & 28 & +3 & +14.6\% \\
+California   & 53 & 53 & 52 & -1 & +6.1\% \\
+New York     & 29 & 27 & 26 & -3 & +2.1\% \\
+Pennsylvania & 19 & 18 & 17 & -2 & +2.4\% \\
+Ohio         & 18 & 16 & 15 & -3 & +2.3\% \\
+Illinois     & 19 & 18 & 17 & -2 & +1.9\% \\
+\bottomrule
+\end{tabular}
+\caption{Major apportionment changes 2000--2020}
+\label{tab:apportionment}
+\end{table}
+
+\subsection{Regional Trends}
+
+Seat redistribution follows clear regional patterns:
+
+\begin{itemize}
+    \item \textbf{Sunbelt gains}: Texas, Florida, Arizona, Georgia, North Carolina, South Carolina gained 15 seats collectively
+    \item \textbf{Rust Belt losses}: New York, Pennsylvania, Ohio, Michigan, Illinois, West Virginia lost 16 seats
+    \item \textbf{Political implications}: Red states gained 8 seats (net), blue states lost 7 seats
+\end{itemize}
+
+Figure~\ref{fig:apportionment-map} visualizes these shifts as a choropleth map, with blue shading indicating gains and red shading indicating losses. The geographic pattern is striking: coastal and southern states grow while interior and northeastern states decline.
+
+\subsection{Population Growth Correlations}
+
+State-level seat changes correlate strongly with population growth rates ($R^2 = 0.93$, $p < 0.001$). However, the relationship is not perfectly linear due to:
+
+\begin{enumerate}
+    \item \textbf{Threshold effects}: Huntington-Hill apportionment uses divisor methods, so states near thresholds can gain/lose seats with small population changes
+    \item \textbf{Starting position}: Large states (CA, TX) can gain multiple seats; small states (VT, WY) cannot drop below 1 seat
+    \item \textbf{Relative growth}: Seats depend on population share, not absolute numbers
+\end{enumerate}
+
+California's loss of a seat in 2020 marks the first decline for the nation's most populous state in history, reflecting both slowing growth and faster expansion in other states.
+
+\subsection{Implications for District Drawing}
+
+Seat changes force substantial district boundary redrawing:
+\begin{itemize}
+    \item States gaining seats must create entirely new districts
+    \item States losing seats must merge existing districts, disrupting incumbents
+    \item Stable-seat states still redraw to rebalance population
+\end{itemize}
+
+This demographic churn provides the context for our geographic stability analysis (Section~\ref{sec:stability}).

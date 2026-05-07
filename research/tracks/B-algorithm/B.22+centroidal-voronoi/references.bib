@@ -1,0 +1,215 @@
+%% B.22 --- Centroidal Voronoi Districts
+%% References
+
+%% ===================================================================
+%% CENTROIDAL VORONOI TESSELLATIONS
+%% ===================================================================
+
+@article{lloyd1982,
+  author  = {Lloyd, Stuart P.},
+  title   = {Least Squares Quantization in {PCM}},
+  journal = {IEEE Transactions on Information Theory},
+  volume  = {28},
+  number  = {2},
+  pages   = {129--137},
+  year    = {1982},
+  doi     = {10.1109/TIT.1982.1056489},
+  note    = {Foundational paper on optimal quantisation via iterative
+             centroid update. Introduces what is now called Lloyd's
+             algorithm: assign each point to its nearest centre, move
+             each centre to the centroid of its cluster, repeat.
+             B.22 adapts this to discrete weighted graphs via the
+             graph-distance medoid as the centroid surrogate.},
+}
+
+@article{du1999,
+  author  = {Du, Qiang and Faber, Vance and Gunzburger, Max},
+  title   = {Centroidal {Voronoi} Tessellations: Applications and Algorithms},
+  journal = {SIAM Review},
+  volume  = {41},
+  number  = {4},
+  pages   = {637--676},
+  year    = {1999},
+  doi     = {10.1137/S0036144599352836},
+  note    = {Comprehensive analysis of CVTs: existence, uniqueness,
+             convergence, and applications. Proves convergence of
+             Lloyd's algorithm under mild regularity conditions.
+             B.22 inherits the convergence intuition for the discrete
+             graph-distance setting; formal convergence proof for
+             non-Euclidean medoid update is identified as future work.},
+}
+
+%% ===================================================================
+%% K-MEDOIDS CLUSTERING
+%% ===================================================================
+
+@article{park2009,
+  author  = {Park, Hae-Sang and Jun, Chi-Hyuck},
+  title   = {A Simple and Fast Algorithm for {K}-Medoids Clustering},
+  journal = {Expert Systems with Applications},
+  volume  = {36},
+  number  = {2},
+  pages   = {3336--3341},
+  year    = {2009},
+  doi     = {10.1016/j.eswa.2008.01.039},
+  note    = {Efficient k-medoids algorithm. Medoid is the actual data
+             point minimising mean distance to all others in the cluster,
+             unlike the k-means centroid (which may not be a real point).
+             B.22 uses the graph-distance medoid for exactly this reason:
+             discrete tract graphs require a real tract as the seed,
+             not a fractional average location.},
+}
+
+%% ===================================================================
+%% GRAPH PARTITIONING
+%% ===================================================================
+
+@article{karypis1998,
+  author  = {Karypis, George and Kumar, Vipin},
+  title   = {A Fast and High Quality Multilevel Scheme for Partitioning
+             Irregular Graphs},
+  journal = {SIAM Journal on Scientific Computing},
+  volume  = {20},
+  number  = {1},
+  pages   = {359--392},
+  year    = {1998},
+  doi     = {10.1137/S1064827595287997},
+  note    = {Original METIS paper. Establishes $O(m \log n)$ complexity
+             of multilevel Kernighan-Lin partitioning. Used as the
+             primary comparison algorithm in B.22: CVD provides a
+             geometric complement to METIS's graph-topology optimisation.},
+}
+
+%% ===================================================================
+%% B-SERIES AND H-SERIES SELF-CITATIONS
+%% ===================================================================
+
+@misc{b2paper,
+  author = {Della-Libera, Gio},
+  title  = {Edge-Weighted Bisection for Compact Congressional Districts:
+            Geographic Boundary Lengths as Compactness Signal},
+  year   = {2026},
+  note   = {B.2 in Algorithmic Redistricting series.
+            Key result: $+56\,\%$ Polsby-Popper improvement over unweighted.
+            Geographic boundary-length edge weights used as the default
+            configuration in the empirical experiments of B.22.},
+}
+
+@misc{b7paper,
+  author = {Della-Libera, Gio},
+  title  = {The Solution Space of Minimum-Edge-Cut Redistricting:
+            Seed Sensitivity and Partisan Variance},
+  year   = {2026},
+  note   = {B.7 in Algorithmic Redistricting series.
+            50-state 1{,}500-seed sweep. Provides seed-sensitivity baseline
+            and partisan-outcome variance data. Statewide swing model used
+            for D/R seat projections referenced in B.22 comparisons.},
+}
+
+@misc{b8paper,
+  author = {Della-Libera, Gio},
+  title  = {{GeoSection}: Isoperimetrically-Normalised Ratio-Optimal Bisection
+            for Congressional Redistricting},
+  year   = {2026},
+  note   = {B.8 in Algorithmic Redistricting series.
+            Introduces the \textsc{GeoSection} structure-layer algorithm.
+            Empirical PP baselines for NC used as the METIS baseline
+            in B.22 Table~1.},
+}
+
+@misc{b19paper,
+  author = {Della-Libera, Gio},
+  title  = {Simulated Annealing Bisection: Cooling the Edge-Cut Objective
+            in the Redistricting Tree},
+  year   = {2026},
+  note   = {B.19 in Algorithmic Redistricting series.
+            Introduces \textsc{SimulatedAnnealing} bisection.
+            Used as the third comparison algorithm in B.22 Table~1,
+            representing the edge-cut-optimising solver track.
+            Runtime and PP benchmarks from B.19 Table~1.},
+}
+
+@misc{b23paper,
+  author = {Della-Libera, Gio},
+  title  = {{BfsGrowth}: Population-Balanced {BFS} Seed Expansion for
+            Congressional Redistricting},
+  year   = {2026},
+  note   = {B.23 in Algorithmic Redistricting series.
+            Companion paper to B.22: BFS growth from k seeds provides
+            an alternative geometric-proximity structure method.
+            Differs from CVD in that seeds do not move after placement;
+            BFS growth expands greedily until all tracts are claimed.},
+}
+
+@misc{g14paper,
+  author = {Della-Libera, Gio},
+  title  = {Ensemble Comparison of Structure-Layer Algorithms for
+            Congressional Redistricting},
+  year   = {2026},
+  note   = {G.14 in Algorithmic Redistricting series.
+            Comprehensive 50-state ensemble comparison of METIS, SA,
+            CVD, BfsGrowth, GeoSection, and AreaSection.
+            Provides the definitive algorithm ranking by compactness,
+            edge cut, partisan outcomes, and runtime.},
+}
+
+@misc{h1paper,
+  author = {Della-Libera, Gio},
+  title  = {{BisectionEnsemble}: Parallel Seed Search for
+            Minimum-Edge-Cut Redistricting},
+  year   = {2026},
+  note   = {H.1 in Algorithmic Redistricting series.
+            Provides 50-state PP baselines (NC 0.217) used as the
+            METIS single-seed benchmark in B.22.},
+}
+
+%% ===================================================================
+%% REDISTRICTING ENSEMBLE METHODS
+%% ===================================================================
+
+@article{deford2021,
+  author  = {DeFord, Daryl and Duchin, Moon and Solomon, Justin},
+  title   = {Recombination: A Family of {Markov} Chains for Redistricting},
+  journal = {Harvard Data Science Review},
+  volume  = {3},
+  number  = {1},
+  year    = {2021},
+  doi     = {10.1162/99608f92.eb30390f},
+  note    = {ReCom Markov chain redistricting sampler. The primary ensemble
+             method contextualised alongside CVD in B.22: ReCom samples
+             distributions over plans; CVD generates a single geometrically
+             compact plan. Both serve different purposes in the redistricting
+             workflow.},
+}
+
+%% ===================================================================
+%% CRYPTOGRAPHY
+%% ===================================================================
+
+@techreport{sha256nist,
+  author      = {{National Institute of Standards and Technology}},
+  title       = {Secure Hash Standard ({SHS})},
+  institution = {NIST},
+  number      = {FIPS 180-4},
+  year        = {2015},
+  url         = {https://doi.org/10.6028/NIST.FIPS.180-4},
+  note        = {SHA-256 specification used in the B.22 CVD seed derivation.
+                 The domain-separation prefix \texttt{"CVD\_INIT\_"} ensures
+                 independence from other SHA-256 applications in the platform.},
+}
+
+%% ===================================================================
+%% GEOGRAPHIC PROJECTION
+%% ===================================================================
+
+@misc{epsg5070,
+  author = {{EPSG Geodetic Parameter Dataset}},
+  title  = {{NAD83} / {Conus Albers} ({EPSG:5070})},
+  year   = {2023},
+  url    = {https://epsg.io/5070},
+  note   = {Albers Equal Area Conic projection for the conterminous
+            United States. Required for Phase 2 geographic CVD to avoid
+            meridian-convergence distortion in Alaska and Hawaii.
+            All equal-area computations in \texttt{redist-map} use this
+            projection for consistency.},
+}

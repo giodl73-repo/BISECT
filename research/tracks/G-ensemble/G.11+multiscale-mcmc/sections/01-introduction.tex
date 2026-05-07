@@ -1,0 +1,115 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The Large-$k$ Mixing Problem}
+
+Standard \recom{}~\citep{deford2021} mixes well for small district counts
+($k \leq 14$, e.g.\ North Carolina), but degrades for the large states that
+matter most for congressional representation.
+Texas ($k = 38$) and California ($k = 52$) each require an ensemble that
+explores meaningfully different plans---plans that differ in which counties
+anchor which districts, not just which tracts lie on which boundaries.
+A \recom{} step merges two randomly chosen adjacent districts and redraws
+the boundary via a random spanning tree cut.
+With $k = 38$ districts, a single step touches $2/38 \approx 5\%$ of the
+plan.
+To reach a plan that differs substantially from the start---one where, say,
+the Dallas metro is split differently from the Harris County anchor---the
+chain must restructure large contiguous areas, which requires $O(k)$ consecutive
+steps in the same geographic region.
+In practice, auto-correlation in the edge-cut statistic decays slowly: at
+lag 100, standard \recom{} on Texas still exhibits correlations above 0.5,
+indicating that 100-step windows are far too short to treat as independent
+draws from the plan space~\citep{autry2021}.
+
+This slow mixing is not a convergence failure---\recom{} does converge, and
+given sufficient steps it samples the plan space correctly---but a practical
+obstacle.
+Ensemble analysis of redistricting plans for litigation, academic study, or
+legislative compliance requires samples that are effectively independent.
+For TX and CA, achieving independence requires impractically long chains
+with single-scale \recom{}.
+
+\subsection{Multi-scale MCMC as the Hierarchical Solution}
+
+Multi-scale MCMC~\citep{autry2021} resolves the large-$k$ mixing problem
+by operating simultaneously at two spatial resolutions.
+A \emph{coarse} chain restructures the plan at county granularity---treating
+each county as an atomic unit and proposing ReCom moves on the county
+adjacency graph.
+A \emph{fine} chain refines boundaries at tract granularity, moving
+individual tracts between adjacent districts.
+At each step, the algorithm selects the coarse chain with probability
+$\alpha$ (the coarsening parameter) and the fine chain with probability
+$1 - \alpha$.
+
+Coarse moves are transformative: a single ReCom step on the county graph
+can simultaneously reassign dozens of tracts across a large geographic area,
+achieving in one step what would take $O(n_{\mathrm{county}})$ fine steps.
+Fine moves are precise: they refine district boundaries at the tract level,
+achieving good population balance and compact boundaries within the
+constraint set by the coarse structure.
+The interleaving of the two scales achieves faster global mixing (via coarse
+moves) without sacrificing local boundary precision (via fine moves).
+
+\subsection{Three Contributions}
+
+This paper makes three contributions.
+
+\begin{enumerate}
+
+  \item \textbf{County-level coarsening without extra data.}
+  We show that the county adjacency graph required for coarse \recom{} moves
+  can be derived exactly from the existing tract adjacency graph using GEOID
+  prefix matching.
+  No extra data files, shapefiles, or census downloads are required.
+  Section~\ref{sec:algorithm} gives the derivation and proves its exactness
+  (Proposition~\ref{prop:county-adj-exact}).
+
+  \item \textbf{Implementation of Option B.}
+  We implement \ms{} Option B (fine = census tract, coarse = county) in
+  \texttt{redist-ensemble} as \texttt{MultiScaleChain} and expose it via
+  \texttt{--search multiscale} in the \texttt{redist-cli}.
+  Section~\ref{sec:algorithm} gives the complete algorithm specification,
+  including the rebalance contract (200 boundary swaps, reject if fails)
+  and the coarse population tolerance ($3\times$ the fine tolerance).
+
+  \item \textbf{Mixing speed comparison.}
+  We compare autocorrelation at lag 100 between standard \recom{} and
+  \ms{} (Option B, $\alpha = 0.3$) on Texas ($k = 38$, $T = 2000$ steps).
+  Section~\ref{sec:mixing} reports the results; the expected reduction is
+  $40$--$50\%$ in lag-100 autocorrelation at comparable wall-clock time.
+
+\end{enumerate}
+
+\subsection{Relation to Prior Work}
+
+Autry et al.~\citep{autry2021} introduced multi-scale MCMC for redistricting
+and proved that the combined chain is ergodic under mild conditions.
+Their empirical results on North Carolina ($k = 13$) showed a $3\times$
+speedup in effective sample rate relative to single-scale \recom{}.
+Our contribution is an implementation that derives the coarse graph from
+existing data structures (no extra preprocessing) and validates the approach
+on the larger states (TX, CA) where mixing improvement is most needed.
+
+DeFord et al.~\citep{deford2021} introduced the \recom{} proposal that forms
+the fine-level chain in our implementation.
+The coarse-level chain uses the same ReCom mechanism on the county graph,
+so both scales share the same sampling subroutine.
+
+The resolution system (Section~\ref{sec:resolution}) that unifies Options A,
+B, and C is described in the companion resolution spec~\citep{dellaLibera2026resolution}.
+Forest ReCom~\citep{dellaLibera2026forestRecom} (G.9) provides an alternative
+fine-level chain with a known stationary distribution; it can replace standard
+ReCom in the fine level of \ms{} for distributional correctness, though this
+extension is left for future work.
+
+\subsection{Paper Structure}
+
+Section~\ref{sec:background} reviews standard \recom{} mixing and the
+theory of coarse-level abstraction.
+Section~\ref{sec:algorithm} gives the formal specification of \ms{} Option B.
+Section~\ref{sec:resolution} describes the three resolution options (A, B, C)
+and the shared \texttt{derive\_partition} helper.
+Section~\ref{sec:mixing} reports mixing speed results on Texas.
+Section~\ref{sec:conclusion} concludes with guidelines for when to use \ms{}.

@@ -1,0 +1,44 @@
+# configs/official_proposal.yml
+# User-editable. Commit this. Do not confuse with .redist (auto-managed).
+
+name: official_proposal
+description: >
+  Reference implementation for the proposed federal redistricting statute.
+  Algorithm: ApportionRegions (B.11), county weights alpha=2.0 (B.10),
+  convergence search threshold=600 (B.7/B.16). All 50 states, 2020/2010/2000.
+  This config is the citable artifact defining the official proposal parameters.
+  Any run claiming to reproduce these results must use this config unmodified.
+
+algorithm:
+  # Layer 1: bisection structure
+  # Values: standard-bisect | nway | ratio-optimal | ratio-optimal-area |
+  #         ratio-optimal-vra | prime-factor | compact-polsby | apportion-regions
+  structure: apportion-regions
+
+  # Layer 2: edge weights
+  # Values: unweighted | geographic | county | vra-aligned | proportional
+  weights: county
+
+  # County stickiness factor (B.10). Required when weights: county.
+  alpha_county: 2.0
+
+  # Layer 3: seed search strategy
+  # Values: single | multi | convergence
+  search: convergence
+
+  # Consecutive non-improving seeds before stopping (B.7/B.16).
+  # Required when search: convergence.
+  convergence_threshold: 600
+
+  # Population balance tolerance (percent). Congressional standard: 0.5.
+  balance_tolerance: 0.5
+
+# Parallel workers per year.
+workers: 6
+
+# Census years to build. All three is standard for a federal proposal.
+years: [2020, 2010, 2000]
+
+# Analysis types to run after each build year.
+# Values: demographic | political | compactness | contiguity | splits | summary
+analysis_types: [demographic, political, compactness, contiguity, splits, summary]

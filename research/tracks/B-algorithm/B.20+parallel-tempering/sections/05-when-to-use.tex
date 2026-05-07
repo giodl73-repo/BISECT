@@ -1,0 +1,134 @@
+\section{When to Use Parallel Tempering}
+\label{sec:when-to-use}
+
+\subsection{Decision Guide}
+
+\pt{} is the right tool when the single-chain MCMC is stuck.
+The following conditions identify states where local-optimum trapping is likely:
+
+\paragraph{Condition 1: Large $k$.}
+States with $k \ge 30$ (TX, CA, FL, NY) have complex, high-dimensional plan
+spaces where the \fr{} chain at $\varepsilon=0.5\%$ cannot easily traverse the
+energy barriers between distinct plan regions.
+The feasible set at $\varepsilon=0.5\%$ is a small fraction of the feasible
+set at $\varepsilon=5\%$; the hot chain can traverse barriers in the looser
+set and occasionally hand configurations to the cold chain via swaps.
+
+\paragraph{Condition 2: Known local optima.}
+If repeated runs from different seeds consistently produce the same EC value
+(or a small cluster of values), the chain is likely trapped.
+This is detectable from the audit log: if $\mathtt{cold\_chain\_ec\_variance}$
+across multiple runs is small relative to the range of EC values seen in the
+hot chain, the cold chain is trapped.
+
+\paragraph{Condition 3: Willing to pay the replica cost.}
+PT costs $N_{\mathrm{replicas}} \times$ the single-chain runtime (serial execution).
+If runtime is a binding constraint (e.g., interactive use or rapid iteration),
+PT is not appropriate.
+For publication-quality maps or statutory submissions, the runtime cost is
+usually acceptable.
+
+\subsection{Algorithm Decision Matrix}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}llll@{}}
+\toprule
+Situation & Recommended & Reason & CLI \\
+\midrule
+$k \le 5$, fast iteration
+  & \texttt{single}
+  & Adequate mixing, minimal cost
+  & \texttt{--search single} \\
+$k = 6$--$20$, single best plan
+  & \texttt{convergence}
+  & CS sweeps seeds until convergence
+  & \texttt{--search convergence} \\
+$k = 6$--$20$, distributional coverage
+  & \texttt{percentile}
+  & Full cold chain distribution
+  & \texttt{--search percentile} \\
+$k \ge 30$, best plan needed
+  & \textbf{PT ($N=4$)}
+  & Replica exchange escapes local optima
+  & \texttt{--search parallel-tempering} \\
+$k \ge 30$, geographic structure strong
+  & \ms{}
+  & Coarsening matches geographic barriers
+  & \texttt{--search multi-scale} \\
+$k \ge 30$, auditable + reproducible
+  & \textbf{PT ($N=4$)}
+  & Exact seed derivation, full audit chain
+  & \texttt{--search parallel-tempering} \\
+VRA constraints present
+  & VraRecom
+  & VRA-aware chain preserves minority districts
+  & \texttt{--search vra-recom} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{PT vs.\ ForestRecom vs.\ Multi-Scale}
+
+The three strategies for large-$k$ states are single-chain \fr{}, PT, and \ms{}.
+Their trade-offs are:
+
+\paragraph{\fr{} (baseline).}
+\begin{itemize}
+\item \emph{Strength}: Cheapest, simplest, exact distributional target at cold $\varepsilon$.
+\item \emph{Weakness}: Stalls on TX-class states; no mechanism to escape local optima.
+\item \emph{When}: Always run as baseline for comparison. Use as final algorithm
+  only for $k \le 20$.
+\end{itemize}
+
+\paragraph{PT.}
+\begin{itemize}
+\item \emph{Strength}: No approximation. Hot chains explore broadly; cold chain
+  inherits diversity. Exact \fr{} proposal distribution at every tolerance level.
+  Strong audit chain (all seeds deterministic from \texttt{base\_seed}).
+\item \emph{Weakness}: $N\times$ runtime cost (serial). Hot chains do not
+  contribute directly to the output---they are overhead.
+\item \emph{When}: $k \ge 30$, local optima suspected, runtime acceptable,
+  strong auditability required.
+  Default for Texas, California, Florida, New York.
+\end{itemize}
+
+\paragraph{\ms{}.}
+\begin{itemize}
+\item \emph{Strength}: Larger proposals---can move entire clusters of tracts
+  simultaneously. Better efficiency per replica for states where the
+  local-optimum barrier corresponds to a geographic boundary (e.g.,
+  urban/suburban split in TX).
+\item \emph{Weakness}: Coarsening introduces approximation. Requires calibrating
+  the coarsening resolution $\alpha$ for each state. Complex coastlines or
+  non-contiguous counties may cause coarsening failures.
+\item \emph{When}: $k \ge 30$, state has strong geographic structure (river
+  systems, mountain ranges) that defines the local-optimum barriers,
+  and coarsening can be calibrated reliably.
+\end{itemize}
+
+\paragraph{Combining PT and \ms{}.}
+In principle, each PT replica could run an \ms{} chain at its tolerance,
+combining the global diversity injection of PT with the large-proposal benefit
+of \ms{}.
+This is not implemented in the current platform and is left as an open question
+for G-series future work.
+
+\subsection{Parameter Selection for Large States}
+
+For large-$k$ states ($k \ge 30$), the recommended PT configuration is:
+\begin{itemize}
+\item $N_{\mathrm{replicas}} = 6$: Additional replicas improve ladder coverage.
+  The step from $N=4$ to $N=6$ is more valuable for large states (where
+  $N=4$ swap rates drop to $18\%$, below the optimal target) than for
+  small states.
+\item \texttt{cold\_tol} $= 0.005$: Statutory tolerance, fixed.
+\item \texttt{hot\_tol} $= 0.10$: Looser than the default $0.05$ for large
+  states, where the energy barrier is higher and a wider hot-chain
+  sampling range is needed to bridge it.
+\item \texttt{swap\_interval} $= 20$: Longer between swaps for large states,
+  giving each chain more time to diffuse between swap events.
+\end{itemize}
+These recommendations follow from the parameter scaling table in the spec
+(Section~1 of the specification document) and are supported by the
+empirical swap acceptance rates in Section~\ref{sec:empirical}.

@@ -1,0 +1,111 @@
+\subsection{Recursive Bisection for Redistricting}
+
+Recursive bisection partitions a state into $k$ congressional districts through $(k-1)$ sequential binary splits. Starting with the full state graph, the algorithm divides vertices into two subgraphs of target sizes $k_L$ and $k_R$ where $k_L + k_R = k$. Each subgraph is recursively partitioned until all subgraphs contain exactly one district.
+
+\textbf{Formal definition}: Let $G = (V, E)$ represent census tracts (vertices) with adjacency relationships (edges). Each vertex $v \in V$ has population weight $w_{pop}(v)$. The goal is 	o partition $V$ into $k$ disjoint sets $\{P_1, \ldots, P_k\}$ such that:
+
+\begin{itemize}
+\item \textbf{Population balance}: $|w_{pop}(P_i) - w_{pop,target}| \leq 0.005 \cdot w_{pop,target}$ for all $i$
+\item \textbf{Contiguity}: Induced subgraph $G[P_i]$ is connected for all $i$
+\item \textbf{Compactness}: Minimize edge cuts $\sum_{i < j} |\{(u,v) \in E : u \in P_i, v \in P_j\}|$
+\end{itemize}
+
+Recursive bisection operates by:
+\begin{enumerate}
+\item Split $G$ into two connected subgraphs $G_L$ and $G_R$ with $|V_L| / |V| \approx k_L / k$
+\item Recursively partition $G_L$ into $k_L$ districts
+\item Recursively partition $G_R$ into $k_R$ districts
+\item Return union of district sets from both subgraphs
+\end{enumerate}
+
+\subsection{Binary Tree Structures}
+
+The sequence of split sizes defines a \textbf{binary tree structure}. For $k=7$ districts, possible structures include:
+
+\textbf{Balanced trees}:
+\begin{itemize}
+\item $[3,4]$: Split into 3 and 4, then recurse (balanced depth)
+\item $[4,3]$: Mirror of above
+\end{itemize}
+
+\textbf{Unbalanced trees}:
+\begin{itemize}
+\item $[6,1]$: Peel off one district, recurse on 6
+\item $[1,6]$: Mirror of above
+\item $[5,2]$, $[2,5]$: Intermediate balance
+\end{itemize}
+
+Each structure produces different districts. Figure~\ref{fig:tree_structures} illustrates three structures for $k=7$: [3,4], [5,2], and [1,6].
+
+\subsection{Tree Structure Impact on VRA Compliance}
+
+Prior work \citep{dellaLibera2026nwayRecursive} demonstrated tree structure sensitivity for minority representation:
+
+\textbf{Alabama} (k=7, 36.9\% total minority, target 2 MM districts):
+\begin{itemize}
+\item Predetermined tree [3,4]: 43.0\% maximum minority representation, 0/2 MM success
+\item Predetermined tree [2,5]: 46.1\% maximum, 2/2 MM success (achieves VRA target)
+\item N-way optimization: 47.3\% maximum, 2/2 MM success
+\end{itemize}
+
+The [3,4] tree fails because it splits the state such that Black belt counties (highest minority concentration) are divided between the initial subgraphs. The [2,5] tree keeps Black belt regions together in the larger subgraph, enabling subsequent splits 	o create two majority-minority districts.
+
+\textbf{Georgia} (k=14, 42.4\% total minority, target 5 MM districts):
+\begin{itemize}
+\item Predetermined tree [7,7]: Creates symmetric split that may fragment Atlanta metro area
+\item Predetermined tree [10,4]: Groups Atlanta region (high minority concentration) in 4-district subgraph
+\item Impact on final MM district count: unknown (data collection pending)
+\end{itemize}
+
+\subsection{Why Predetermined Trees Are Problematic}
+
+Traditional recursive bisection requires choosing tree structure before seeing state geography or demographics. Three approaches exist:
+
+\textbf{(1) Balanced trees}: Always split $k$ into $\lfloor k/2 \rfloor$ and $\lceil k/2 \rceil$. Creates minimum-depth trees but ignores demographic asymmetry.
+
+\textbf{(2) Geographic heuristics}: Use state shape 	o guide splits (e.g., split tall states top-bottom). Incorporates geography but not demographics.
+
+\textbf{(3) Manual expert selection}: Designer examines demographics and chooses structure. Effective but not reproducible, requires expertise, vulnerable 	o manipulation.
+
+All three approaches share fundamental limitation: \textbf{tree structure is determined without optimization}. The first split commits 	o grouping districts that may have incompatible VRA goals.
+
+\subsection{Prior Work on Tree Selection}
+
+\citet{karypis1998} introduced recursive bisection for graph partitioning but focused on edge-cut minimization without demographic constraints. They noted tree structure sensitivity but did not address data-driven selection.
+
+\citet{duchin2018} analyzed recursive bisection for redistricting, showing compactness depends on tree structure. However, their analysis used predetermined balanced trees.
+
+\citet{autry2020} compared recursive bisection 	o n-way partitioning for partisan fairness, finding n-way superior. They attributed performance gap 	o global optimization but did not investigate tree structure selection.
+
+Our companion paper \citep{dellaLibera2026nwayRecursive} systematically compared n-way and recursive bisection for VRA compliance across 50 states. Key findings:
+\begin{itemize}
+\item N-way creates 150 MM districts nationally vs 68 in enacted plans (+121\%)
+\item Recursive bisection with predetermined balanced trees creates 140 MM districts (+106\%)
+\item Alabama case study showed 3.1 point improvement by changing tree from [3,4] 	o [2,5]
+\end{itemize}
+
+These findings motivate the current paper: if tree structure choice matters so dramatically, can data-driven selection approach n-way performance while preserving recursive transparency?
+
+\subsection{Relationship 	o Other Partitioning Methods}
+
+\textbf{N-way partitioning}: METIS and similar tools partition graphs directly into $k$ parts through iterative refinement. After initial $k$-way split, vertices can move between any partitions 	o optimize global objective. This global optimization produces superior results but lacks hierarchical transparency.
+
+\textbf{Ensemble methods}: Generate thousands of valid redistricting plans through random walks (ReCom, MCMC) and select based on criteria. Computationally expensive (days/weeks for full ensemble) and produces distributions rather than single plans. Not suitable for operational redistricting.
+
+\textbf{Shortest splitline}: Repeatedly split states along shortest line dividing population equally. Fully deterministic and transparent but ignores compactness, contiguity, and demographics. Produces highly irregular districts \citep{olson2010}.
+
+\textbf{Minimum perimeter}: Optimize district perimeter directly using integer programming. Produces extremely compact districts but computationally infeasible for large states ($k > 10$) and ignores demographics.
+
+Adaptive recursive bisection occupies middle ground: more transparent than n-way, more performant than predetermined recursive, faster than ensembles, more sophisticated than splitline, more tractable than optimization.
+
+\subsection{Edge-Weighting for VRA Compliance}
+
+All methods in this paper use \textbf{edge-weighted graph partitioning} 	o optimize minority concentration \citep{dellaLibera2026nwayRecursive}:
+
+\textbf{Standard approach}: Assign weight $w_{ij} = 1$ 	o all edges. METIS minimizes edge cut $\sum_{(i,j) \in E_{cut}} w_{ij}$.
+
+\textbf{VRA-optimized approach}: For census tracts $i$ and $j$ where $m_i \geq \tau$ and $m_j \geq \tau$ (minority percentage exceeds threshold $\tau$), set $w_{ij} = \alpha$ where $\alpha > 1$ is weight factor. Otherwise $w_{ij} = 1$.
+
+\textbf{Effect}: Algorithm avoids cutting edges between high-minority tracts, concentrating minorities within districts rather than splitting them. Optimal parameters from ablation studies: $\alpha = 5$, $\tau = 0.40$ \citep{dellaLibera2026nwayRecursive}.
+
+This edge-weighting applies uniformly across all methods: predetermined trees, adaptive bisection, and n-way partitioning. Thus, performance differences reflect tree structure and optimization scope, not VRA optimization technique.

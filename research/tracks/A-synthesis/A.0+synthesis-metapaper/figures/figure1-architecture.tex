@@ -1,0 +1,50 @@
+% Figure 1: Research Program Architecture
+% Shows 10 papers and their dependencies as a directed graph
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  node distance=1.5cm and 2cm,
+  paper/.style={rectangle, draw, minimum width=3cm, minimum height=1cm, align=center, font=\small},
+  arrow/.style={->, >=stealth, thick}
+]
+
+% Foundation layer (Papers 1-3)
+\node[paper, fill=blue!20] (p1) {Paper 1\\Recursive\\Bisection};
+\node[paper, fill=blue!20, right=of p1] (p2) {Paper 2\\Edge-Weighted\\Bisection};
+\node[paper, fill=blue!20, right=of p2] (p3) {Paper 3\\VRA\\Compliance};
+
+% Analysis layer (Papers 4-7)
+\node[paper, fill=green!20, below=of p1] (p4) {Paper 4\\Threshold\\Analysis};
+\node[paper, fill=green!20, below=of p2] (p5) {Paper 5\\Cross-Census\\Validation};
+\node[paper, fill=green!20, below=of p3] (p6) {Paper 6\\Compactness\\Tradeoff};
+\node[paper, fill=green!20, right=of p6] (p7) {Paper 7\\Temporal\\Stability};
+
+% Theory layer (Papers 8-10)
+\node[paper, fill=orange!20, below=of p4] (p8) {Paper 8\\Multi vs.\\Edge};
+\node[paper, fill=orange!20, below=of p5] (p9) {Paper 9\\Adaptive\\Bisection};
+\node[paper, fill=orange!20, below=of p6] (p10) {Paper 10\\N-way vs.\\Recursive};
+
+% Dependencies
+\draw[arrow] (p1) -- (p2);
+\draw[arrow] (p1) -- (p3);
+\draw[arrow] (p2) -- (p3);
+\draw[arrow] (p1) -- (p4);
+\draw[arrow] (p3) -- (p4);
+\draw[arrow] (p1) -- (p5);
+\draw[arrow] (p3) -- (p6);
+\draw[arrow] (p1) -- (p7);
+\draw[arrow] (p2) -- (p8);
+\draw[arrow] (p1) -- (p9);
+\draw[arrow] (p1) -- (p10);
+
+% Key findings annotations
+\node[right=0.5cm of p1, align=left, font=\tiny] {Method:\\435 districts\\50 states};
+\node[right=0.5cm of p3, align=left, font=\tiny] {+69 MM\\districts};
+\node[right=0.5cm of p4, align=left, font=\tiny] {42\%\\threshold};
+\node[right=0.5cm of p7, align=left, font=\tiny] {80\% tract\\retention};
+
+\end{tikzpicture}
+\caption{\textbf{Research program architecture.} Ten papers form a comprehensive investigation of algorithmic redistricting. Foundation papers (blue) establish methods, analysis papers (green) validate findings across multiple dimensions, and theory papers (orange) explore algorithmic variations. Arrows indicate methodological dependencies. Key findings annotated at right.}
+\label{fig:architecture}
+\end{figure}

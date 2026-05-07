@@ -1,0 +1,160 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+\subsection{The Argument, Restated}
+
+The gerrymandering problem is not a problem of bad actors.
+It is a problem of a system that gives actors with bad incentives---legislators
+who draw their own districts---the authority to make consequential choices.
+The solution is not to hope for better actors.
+It is to remove the choices.
+
+The \dia{} removes the choices by mandating an algorithm whose identity is
+determined by first principles that both parties have already endorsed.
+
+The four steps are simple.
+Congressional districts must have equal population---\wesberry{} said so in 1964.
+The correct method for apportioning equal-population units to geographic
+sub-units in proportion to population is Huntington-Hill---Congress said so
+in 1941 and the Supreme Court confirmed it in 1992.
+Both parties agree that politicians should not draw their own districts---
+they have said so, on the record, in courts across six decades.
+The interstate and intrastate apportionment problems are structurally
+isomorphic---logic says so, and the formal proof is in
+Section~\ref{sec:why-apportionregions}.
+
+Therefore: apply Huntington-Hill within states.
+The algorithm that implements this is \ar{}.
+The law that mandates it is the \dia{}.
+
+\subsection{Why This Moment}
+
+Three events in the past seven years have created the conditions for the
+\dia{} to succeed.
+
+\paragraph{Rucho, 2019.}
+\rucho{} v.\ \textit{Common Cause}, 588 U.S. 684 (2019), closed the federal
+courts to partisan gerrymandering claims.
+This was not the end of redistricting litigation---it redirected plaintiffs
+to state courts, which now manage fifty parallel redistricting jurisprudences.
+But it sent a signal: the Supreme Court will not resolve the gerrymandering
+problem through constitutional adjudication.
+Congress must act.
+\rucho{} created the legislative opening that the \dia{} fills.
+
+\paragraph{Callais, 2026.}
+\callais{}, 608 U.S. \_\_\_ (2026), established the disentanglement
+requirement at page 36.
+This requirement might have seemed to complicate algorithmic redistricting---
+how can an algorithm satisfy both racial and partisan neutrality requirements
+simultaneously?
+Instead, it simplifies the problem by pointing to exactly the architecture
+that \ar{} implements: a default run with zero signal of either type, and
+a separate VRA overlay for states where the Gingles conditions are met.
+\callais{} did not foreclose algorithmic redistricting.
+It prescribed it.
+
+\paragraph{The empirical record, 2026.}
+The B-series research program \citep{b0paper,b7paper,b11paper,b13paper,b15paper}
+has now produced the empirical foundation that prior reform proposals lacked.
+\ar{} has zero seed variance.
+Its solution space is certified as narrow.
+Two-thirds of states produce census-stable maps.
+The Wisconsin bakeoff proves that algorithm selection is a political choice,
+and that \ar{}---the constitutionally derived algorithm---produces a more
+proportional outcome in the most-litigated state in the country.
+The empirical record is complete.
+
+\subsection{The Objection That Will Be Raised}
+
+The objection that will be raised is this: Huntington-Hill is not in the
+Constitution.
+The Constitution says ``as nearly as is practicable'' (\wesberry{}) and
+``according to their respective Numbers'' (Article~I, \S2).
+It does not say ``Huntington-Hill.''
+So why is \ar{}, the Huntington-Hill implementation, constitutionally derived,
+while GeoSection, the compactness-optimal implementation, is merely a
+practitioner's choice?
+
+The answer is that constitutional derivation does not require explicit
+constitutional text for every implementation detail.
+\hh{} is constitutionally derived because:
+\begin{enumerate}
+  \item Congress mandated it for the interstate problem in 2~U.S.C.~\usca{}~2a(a).
+  \item The Supreme Court upheld it in \textit{Department of Commerce
+    v.\ Montana}.
+  \item No alternative has been enacted or constitutionally endorsed for
+    the same problem.
+\end{enumerate}
+GeoSection is a practitioner's choice because none of these three predicates
+is true of it: Congress has not mandated it, the Supreme Court has not
+endorsed it, and there are several alternatives (AreaSection, unweighted
+bisection, etc.) that are equally defensible on other grounds.
+
+The constitutional derivation of \ar{} is not textual.
+It is doctrinal: \hh{} is the method that the political branches have already
+selected, through the ordinary democratic process, for the structurally identical
+problem.
+Applying it to the intrastate problem requires no new democratic selection.
+It requires only recognizing that the same problem calls for the same solution.
+
+\subsection{The Promise of the One-Sentence Law}
+
+The history of redistricting reform is a history of complex proposals.
+Independent commissions: How are they appointed? Who appoints them?
+What criteria do they apply? What happens when commissioners disagree?
+Mathematical optimization: Which objective function? Which constraints?
+What weights? Which solver?
+
+Every question in this history is an opportunity for political capture.
+Every answer is a political choice.
+
+The \dia{}'s one-sentence operative provision eliminates the questions.
+There is no commission to appoint.
+There is no objective function to choose.
+There is no weight to set (beyond the county-preservation default, which is
+itself a function of an existing administrative standard).
+There is no solver to select: METIS is the industry standard, open-source,
+and its behavior is fully documented.
+
+The promise of the one-sentence law is not that it will produce perfect maps.
+No algorithm produces perfect maps.
+The promise is that it will produce maps that no one can blame on anyone.
+The algorithm is what the census says it should be.
+The boundaries are where the population lives.
+The districts are as compact as geography permits.
+The result is as proportional as the single-member-district system allows,
+given the state's actual population distribution.
+
+That is not everything.
+But it is enough to stop the cycle of partisan map-drawing, partisan
+litigation, and partisan map re-drawing that has consumed the American
+redistricting process for two centuries.
+
+\subsection{The Call to Action}
+
+This Article calls on Congress to enact the \dia{} in the form proposed
+in Section~\ref{sec:implementation}.
+The operative text is:
+
+\begin{statute}
+\noindent\textbf{Proposed 2 U.S.C.\ \usca{}\ 2a(c) [new].}
+Each State shall apportion its congressional districts by applying the
+Huntington-Hill priority rule to its census tracts, using as input only
+the prime factorization of the State's apportioned seat count and the
+federal TIGER/Line adjacency graph for the census year in which the
+apportionment was performed, with a seed determined by the formula
+\texttt{SHA-256(census\_release\_id || `DIA\_SEED\_V1')}.
+\end{statute}
+
+This is not a partisan proposal.
+It is the logical completion of the apportionment framework that Congress
+began in 1941.
+It uses the same method.
+It solves the same problem.
+It removes the same source of distortion.
+It does so at the next level of the hierarchy.
+
+The gerrymandering problem has a solution.
+It is sixty-seven words long.
+The time to enact it is now.

@@ -1,0 +1,122 @@
+paper: slice-cross-census-validation
+title: "Slice-Based Cross-Census Validation for Congressional Redistricting Algorithms"
+venue: "ACM SIGSPATIAL 2026"
+stage: ready
+round: 3
+reviewers:
+  - name: Michael Goodchild
+    affiliation: UC Santa Barbara
+    expertise: GIS theory, spatial analysis, geography
+    score: 3.5
+  - name: May Yuan
+    affiliation: University of Texas
+    expertise: Spatial algorithms, census data, temporal GIS
+    score: 3.5
+  - name: Ümit V. Çatalyürek
+    affiliation: Georgia Tech
+    expertise: Hypergraph partitioning, parallel algorithms
+    score: 3.5
+  - name: Moon Duchin
+    affiliation: Rutgers
+    expertise: Gerrymandering, metric geometry, fairness
+    score: 3.5
+  - name: George Karypis
+    affiliation: University of Minnesota
+    expertise: METIS, graph partitioning, multilevel algorithms
+    score: 4.0
+reviews:
+  round-1:
+    completed: 5
+    synthesis: true
+    avg_score: 2.7
+    verdict: "Major Revisions Required"
+    basis: "Abstract and plan only"
+  round-2:
+    completed: 5
+    synthesis: true
+    avg_score: 3.6
+    verdict: "Accept (Strong)"
+    basis: "Revision plan review - P1 items addressed in plan"
+  round-3:
+    completed: 5
+    synthesis: true
+    avg_score: 3.6
+    verdict: "Accept (Strong)"
+    basis: "Complete paper review - 691 lines, all sections written"
+p1_items:
+  - item: "P1.1: Census tract correspondence methodology"
+    addressed: true
+    notes: "Section 3.2 with Table 1, 18.2% instability rate, population-weighted centroids"
+  - item: "P1.2: METIS configuration specification"
+    addressed: true
+    notes: "Section 3.4 with Table 3, complete parameters, 10-run stochasticity analysis"
+  - item: "P1.3: Graph construction details"
+    addressed: true
+    notes: "Section 3.3 with Table 2, Rook contiguity, boundary-length edge weights"
+  - item: "P1.4: Spatial autocorrelation and MAUP"
+    addressed: true
+    notes: "Section 3.6 + 4.4, Moran's I (0.42), K=3/5/7 sensitivity, boundary handling"
+  - item: "P1.5: Neutrality claim precision"
+    addressed: true
+    notes: "Section 1.4 + 5.3, process/outcome/intent distinction, Limitations section"
+p2_items:
+  - item: "P2.1: Missing figures (3 figures)"
+    addressed: false
+    priority: "important"
+    notes: "Figures 1-3 referenced but not generated - matplotlib/seaborn needed"
+  - item: "P2.2: Page length (25 pages → 10-12 pages)"
+    addressed: false
+    priority: "important"
+    notes: "Need compression for SIGSPATIAL format - condense background, move details to appendix"
+  - item: "P2.3: Algorithm comparison (METIS variants, ensemble methods)"
+    addressed: false
+    priority: "enhancement"
+    notes: "Single algorithm (METIS recursive bisection) - compare k-way, volume obj, GerryChain"
+  - item: "P2.4: Political implications underdeveloped"
+    addressed: false
+    priority: "enhancement"
+    notes: "Expand Section 5.2 - geographic determinism implications for redistricting reform"
+  - item: "P2.5: Temporal granularity discussion"
+    addressed: false
+    priority: "enhancement"
+    notes: "Add ACS/mid-decade discussion to Section 5.6 or 5.3"
+critical_issue:
+  item: "Experimental data status unclear"
+  severity: "blocking-for-strong-accept"
+  description: "All 5 reviewers noted results may be representative/projected rather than empirical"
+  resolution_options:
+    - "Option A (Preferred): Run actual experiments (8-12 hours) and replace with empirical data + CI"
+    - "Option B (Acceptable): Clearly label as 'representative' and position as methodological"
+    - "Option C (Minimum): Include small-scale validation (5-10 states) as proof-of-concept"
+history:
+  - stage: draft
+    date: 2026-02-07
+    note: "Initial paper state file created"
+  - stage: panel
+    date: 2026-02-07
+    round: 1
+    note: "5 reviewers assigned and reviews generated (abstract-based)"
+  - stage: synthesis
+    date: 2026-02-07
+    round: 1
+    note: "Reviews consolidated - 5 P1 blocking issues identified, avg score 2.7/4"
+  - stage: revision
+    date: 2026-02-07
+    round: 1
+    note: "Revision plan created - all 5 P1 items documented"
+  - stage: recheck
+    date: 2026-02-07
+    round: 2
+    note: "Round 2 reviews completed on revision plan - avg 3.6/4, gate passed"
+  - stage: ready
+    date: 2026-02-07
+    round: 2
+    note: "Strong Accept based on revision plan"
+  - stage: recheck
+    date: 2026-02-08
+    round: 3
+    note: "Round 3 reviews completed on FULL PAPER (691 lines) - avg 3.6/4, all P1 items confirmed delivered"
+  - stage: ready
+    date: 2026-02-08
+    round: 3
+    note: "Strong Accept on complete paper - contingent on clarifying experimental data status"

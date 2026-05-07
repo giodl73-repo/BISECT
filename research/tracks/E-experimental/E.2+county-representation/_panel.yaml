@@ -1,0 +1,18 @@
+paper: 14+county-representation
+title: "Direct County Representation: An Alternative to Congressional Redistricting"
+venue: "State Politics & Policy Quarterly"
+stage: draft
+round: 0
+content_mode: full
+content_mode_confirmed: true
+word_count: 5443
+reviewers: []
+reviews: {}
+p1_items: []
+history:
+  - stage: draft
+    date: 2026-02-08
+    note: "Paper initialized via panel:setup"
+  - stage: draft
+    date: 2026-02-08
+    note: "Content analysis: 5,443 words, 6 sections, full mode confirmed"

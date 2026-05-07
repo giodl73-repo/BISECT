@@ -1,0 +1,106 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage[hypertexnames=false]{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+
+%% Style
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+\setstretch{1.4}
+
+%% Macros
+\newcommand{\fr}{\textsc{ForestReCom}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\ec}{\ensuremath{\mathrm{EC}}}
+\newcommand{\pp}{\ensuremath{\mathrm{PP}}}
+\newcommand{\sburst}{\textsc{ShortBurst}}
+\newcommand{\be}{\textsc{BisectionEnsemble}}
+\newcommand{\cs}{\textsc{ConvergenceSweep}}
+\newcommand{\smc}{\textsc{SMC}}
+\newcommand{\ust}{\textsc{UST}}
+\newcommand{\rhat}{\ensuremath{\hat{R}}}
+\newcommand{\ess}{\ensuremath{\mathrm{ESS}}}
+
+\title{%
+  \textbf{Forest ReCom: Reversible Recombination via Spanning Forest Sampling}\\[0.8em]
+  \normalsize\textit{G.9 --- Ensemble Methods / Distributional Correctness}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+Standard \recom{}~\citep{deford2021} samples spanning tree cuts uniformly at
+random, accepting every valid balanced cut without correction.
+This biases the chain toward plans reachable by many spanning tree cuts---those
+whose district boundaries lie in geometrically accessible regions of the
+census-tract graph.
+Forest \recom{}~\citep{mccartan2020} corrects this bias using a
+Metropolis-Hastings ratio: given a proposal generated from a forward spanning
+tree $T_{\mathrm{fwd}}$ with $c_{\mathrm{fwd}}$ valid balanced cuts, the
+step is accepted with probability $\min(1, c_{\mathrm{fwd}} / c_{\mathrm{rev}})$,
+where $c_{\mathrm{rev}}$ is the count of valid cuts in an independent
+reverse spanning tree $T_{\mathrm{rev}}$ drawn from the proposed district pair.
+We implement \fr{} in \texttt{redist-ensemble} as \texttt{ForestRecomChain}
+and wire it into the compositor as \texttt{--search forest-recom}.
+The chain satisfies \emph{expected detailed balance} with the uniform
+distribution over valid plans as its stationary target: the ratio
+$c_{\mathrm{fwd}} / c_{\mathrm{rev}}$ is an unbiased estimator of the
+true transition probability ratio.
+This is a weaker guarantee than the exact calibration of sequential Monte
+Carlo~\citep{dellaLibera2026smc} (G.7) but a stronger guarantee than standard
+\recom{} (unknown stationary distribution).
+On North Carolina ($k = 14$), Wisconsin ($k = 8$), and Texas ($k = 38$), \fr{}
+achieves acceptance rates of approximately $40$--$60\%$ (versus $\approx\!80\%$
+for standard \recom{}) at roughly $2\times$ the per-step computational cost.
+Verification on a small synthetic graph (4-node path, $k = 2$, $10{,}000$
+steps) confirms convergence to the uniform plan distribution; a chi-squared
+test rejects standard \recom{} and accepts \fr{} at $\alpha = 0.05$.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-background}
+\input{sections/03-algorithm}
+\input{sections/04-comparison}
+\input{sections/05-distributional}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

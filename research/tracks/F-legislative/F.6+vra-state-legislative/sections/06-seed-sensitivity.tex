@@ -1,0 +1,13 @@
+\section{Seed Sensitivity Analysis}
+\label{sec:seed-sensitivity}
+
+The South Carolina state house result---28 majority-minority districts at state house scale versus 0 possible at congressional scale---constitutes this paper's headline finding. It demonstrates that the geographic dispersion barrier to majority-minority district formation at congressional scale dissolves at state house scale, where smaller district sizes allow compact aggregation of the Black population concentrations in Charleston, Columbia, and the Low Country.
+
+To assess whether this headline result is reproducible across different random seeds, we plan to run VRASection for seeds $s \in \{42, 43, 44, 45, 46\}$ for South Carolina and Alabama. A result is considered stable if all five seeds produce the target majority-minority district count within $\pm 1$ district.
+
+\paragraph{Phase 2 note.}
+Full seed sensitivity results will be reported upon completion of the 5-seed validation runs. The current manuscript reports results for seed $s = 42$ only; readers should treat the 5/5 covered-state result as a single-seed observation pending Phase 2 confirmation.
+
+The theoretical basis for expecting seed stability is strong: VRASection's threshold-based architecture is deterministic given the minority population geography and the 42\% threshold. Seed variation affects only the METIS partitioning of non-minority-concentrated tracts, not the identification and preservation of minority community cores. Because the minority population concentrations in the five covered states are geographically robust---they are not near-threshold cases where small perturbations would change the district count---we expect the seed sensitivity to be low.
+
+For reference, companion papers reporting METIS-based redistricting at congressional scale (B and D tracks) have uniformly found that majority-minority district counts are seed-stable: across 50-seed ensembles in the B.22 geographic analysis, majority-minority district counts varied by at most $\pm 1$ district in 47 of 50 states and were completely stable (0 variation) in 38 of 50 states. State house redistricting, operating at finer geographic resolution with more districts, is expected to show comparable or better seed stability, since each individual district draws on a larger number of base geographic units.

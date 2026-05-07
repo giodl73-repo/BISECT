@@ -1,0 +1,447 @@
+%% Guide to the Algorithmic Redistricting Portfolio
+%% Track-based navigation guide for the 75+ paper research program
+
+\documentclass[12pt]{article}
+
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage{times}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage{array}
+
+\geometry{margin=1in}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue
+}
+
+\title{\textbf{A Guide to the Algorithmic Redistricting Portfolio}}
+\author{Giovanni Della Libera}
+\date{2026}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\newpage
+
+% =============================================================================
+\section{Overview}
+% =============================================================================
+
+Congressional redistricting in the United States suffers a legitimacy crisis:
+partisan mapmakers manipulate district boundaries to predetermine election
+outcomes, eroding public confidence in representative democracy. This portfolio
+demonstrates that \textbf{recursive graph bisection}---a computational method
+used for supercomputer workload distribution---provides an algorithmic
+alternative that \emph{cannot gerrymander because it cannot access partisan
+data}.
+
+Applied to all 50 states across three census decades (2000/2010/2020), the
+algorithm produces 435 congressional districts with near-perfect population
+equality, geographic contiguity, and geometric compactness. The research
+program comprises \textbf{75+ papers across eight tracks (A--H)}, spanning
+algorithm design and validation (Tracks B--C), legal compliance (Track D),
+experimental extensions (Tracks E--F), and ensemble-based plan evaluation
+(Tracks G--H), with Track A providing cross-portfolio synthesis.
+
+Papers in this program are at varying stages of completion. Track B
+foundations, several Track G ensemble papers, all Track H papers, and selected
+papers in Tracks B extensions are accepted or ready for submission. Remaining
+papers across all tracks are in draft. The overall research program is ongoing.
+
+\subsection*{Four Core Contributions}
+
+\begin{itemize}[leftmargin=*,noitemsep,topsep=4pt]
+    \item \textbf{Philosophical}: \emph{Impossibility defense}---the algorithm
+        cannot see partisan data, therefore cannot gerrymander by construction.
+
+    \item \textbf{Technical}: Edge-weighted graph partitioning achieves
+        $+22$--$44\%$ compactness improvement over enacted maps, with seed
+        variance below 2\% for 96\% of states.
+
+    \item \textbf{Empirical}: National-scale validation across 50 states
+        $\times$ 3 census decades (150 redistricting scenarios), with
+        adversarial robustness testing across spatial resolution, statistical
+        methodology, and ensemble comparison.
+
+    \item \textbf{Legal}: The algorithm produces 137 majority-minority
+        districts vs.\ 68 enacted (+69 surplus), with a 42\% geographic
+        concentration threshold identifying the feasibility boundary for VRA
+        compliance.
+\end{itemize}
+
+
+% =============================================================================
+\section{Portfolio Architecture}
+% =============================================================================
+
+The portfolio is organized into eight tracks. Track A synthesizes all other
+tracks; Tracks B--H generate the empirical, algorithmic, legal, and ensemble
+results that the synthesis draws on.
+
+\vspace{6pt}
+
+\begin{longtable}{@{}llp{5.8cm}l@{}}
+\toprule
+\textbf{Track} & \textbf{Theme} & \textbf{Key Headline Result} &
+    \textbf{Papers} \\
+\midrule
+\endhead
+
+\textbf{A} & Portfolio Synthesis &
+    66+ papers synthesized across 8 tracks; 50 states $\times$ 3 decades
+    $\times$ $+22\%$ compactness at CV $<$ 2\% &
+    6 \\[4pt]
+
+\textbf{B} & Algorithm Design \& Variants &
+    $+22$--$44\%$ compactness; seed CV $<$ 2\% for 96\% of states;
+    NC 7D/7R and 223D/209R national via ApportionRegions &
+    25 \\[4pt]
+
+\textbf{C} & Validation \& Robustness &
+    Results robust across 130$\times$ unit-count range; near-zero efficiency
+    gap as byproduct; 30\% more swing districts than enacted &
+    10 \\[4pt]
+
+\textbf{D} & VRA \& Legal Implementation &
+    +69 majority-minority district surplus; 42\% geographic threshold;
+    model federal statute formalizing ApportionRegions &
+    6 \\[4pt]
+
+\textbf{E} & Experimental Extensions &
+    Geometric cost of federalism quantified; proportionality gain from
+    multi-member variants; international applications &
+    8 \\[4pt]
+
+\textbf{F} & State Legislative Redistricting &
+    Algorithm scales from 435 congressional to 400-district state chambers;
+    NestSection achieves senate $= 2{\times}$ house spine compatibility &
+    7 \\[4pt]
+
+\textbf{G} & Ensemble Methods \& Comparison &
+    Bisection plan at 0.1--0.7th compactness percentile (WI/GA/PA/CA),
+    50th in NC; G.14 (practitioner ensemble comparison) accepted at 4.0/4 &
+    15 \\[4pt]
+
+\textbf{H} & Search Strategies &
+    All 4 papers accepted (avg 3.35/4); PercentileSweep for statutory
+    legal posture; Rust ReCom at 2500$\times$ Python speed &
+    4 \\
+
+\bottomrule
+\caption{Portfolio track summary (75+ papers across eight tracks A--H).}
+\label{tab:tracks}
+\end{longtable}
+
+\subsection*{Three-Layer Compositor}
+
+Every redistricting run is governed by three orthogonal choices that
+correspond to the three-layer compositor of the \texttt{redist} binary:
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Flag} & \textbf{Controls} & \textbf{Key Variants} \\
+\midrule
+\texttt{--structure} & Bisection tree shape &
+    \texttt{standard-bisect}, \texttt{prime-factor} (ApportionRegions),
+    \texttt{ratio-optimal} (GeoSection), \texttt{nway} \\[4pt]
+\texttt{--weights-override} & METIS edge/vertex signal &
+    \texttt{geographic} (default), \texttt{county}, \texttt{unweighted},
+    \texttt{vra-aligned} \\[4pt]
+\texttt{--search} & Seed-selection strategy &
+    \texttt{single}, \texttt{convergence} (T=600), \texttt{percentile},
+    \texttt{bisection-ensemble}, \texttt{forest-recom}, \texttt{vra-recom} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Track B addresses structure variants; Track G addresses ensemble algorithms;
+Track H addresses search strategies built on the ensemble foundations.
+
+
+% =============================================================================
+\section{Reading Paths}
+% =============================================================================
+
+The following curated reading paths guide each audience to the papers most
+relevant to their interests. Papers are cited by track code (e.g., B.1, C.5).
+Paper track codes correspond directly to the folder names under
+\texttt{research/}.
+
+% -----------------------------------------------------------------------------
+\subsection{For Political Scientists}
+% -----------------------------------------------------------------------------
+
+\begin{enumerate}[leftmargin=*,noitemsep,topsep=2pt]
+    \item \textbf{B.1} (Recursive Bisection): Establishes the impossibility
+        defense---the algorithm cannot see partisan data---and demonstrates
+        $+22\%$ compactness improvement over enacted maps across 50 states
+        and three census decades.
+
+    \item \textbf{D.0} (VRA Compliance): Documents the 137 vs.\ 68
+        majority-minority district count, establishing that algorithmic
+        redistricting exceeds current VRA performance by 69 districts without
+        explicit racial targeting.
+
+    \item \textbf{D.1} (Threshold Analysis): Identifies the 42\% minority
+        concentration threshold as the geographic limit of algorithmic VRA
+        compliance, with direct implications for the Gingles preconditions.
+
+    \item \textbf{C.5} (Efficiency Gap Analysis): Shows that near-zero
+        partisan efficiency gap emerges as a \emph{byproduct} of compactness
+        optimization across all 50 states, without partisan input.
+
+    \item \textbf{C.8} (Competitive Elections): Demonstrates that algorithmic
+        maps produce 30\% more swing districts than enacted plans, addressing
+        the competitive-elections objection directly.
+
+    \item \textbf{B.11} (ApportionRegions): Presents the prime-factor
+        bisection tree producing NC 7D/7R and 223D/209R nationally---the
+        clearest demonstration that geographic structure drives partisan
+        outcome.
+
+    \item \textbf{A.0} (Synthesis Metapaper): Integrating account of all 60+
+        empirical results, written for a \emph{Science}-level general audience.
+\end{enumerate}
+
+% -----------------------------------------------------------------------------
+\subsection{For Computer Scientists}
+% -----------------------------------------------------------------------------
+
+\begin{enumerate}[leftmargin=*,noitemsep,topsep=2pt]
+    \item \textbf{B.2} (Edge-Weighted Bisection): Introduces geographic
+        proximity weights lifting compactness an additional $+22\%$ beyond
+        B.1's baseline, explaining why single-objective edge-cut dominates.
+
+    \item \textbf{B.3} (Multi vs.\ Edge): Proves that single-objective
+        edge-cut dominates multi-constraint METIS for redistricting---the
+        central algorithm-design finding of the program.
+
+    \item \textbf{B.6} (Computational Complexity): Proves NP-hardness of
+        balanced planar bisection and characterizes METIS runtime as
+        $O(n_{\mathrm{iter}} \times n \log k)$ with empirical near-linear
+        scaling ($O(n^{1.07})$).
+
+    \item \textbf{B.7} (Solution Space): Establishes solution-space tightness:
+        seed CV $<$ 2\% for 96\% of states, partisan variance near zero
+        across all runs.
+
+    \item \textbf{G.14} (Ensemble Comparison): Practitioner comparison of
+        redistricting ensemble algorithms; highest-scored paper in the
+        portfolio at 4.0/4.
+
+    \item \textbf{H.2} (Redist-Ensemble): Presents the Rust ReCom
+        implementation achieving 2500$\times$ speed over the Python
+        GerryChain baseline.
+
+    \item \textbf{B.22} (Centroidal Voronoi): Geometric district construction
+        via CVD; accepted at 3.9/4. B.22b extends to Euclidean distance
+        on EPSG:5070 projections for 2--6\% additional Polsby-Popper gain
+        in coastal and elongated states.
+\end{enumerate}
+
+% -----------------------------------------------------------------------------
+\subsection{For Legal Scholars}
+% -----------------------------------------------------------------------------
+
+\begin{enumerate}[leftmargin=*,noitemsep,topsep=2pt]
+    \item \textbf{B.1} (Recursive Bisection): The impossibility defense and
+        its implications under \emph{Rucho v.\ Common Cause}; Huntington-Hill
+        as precedent for mathematical governance.
+
+    \item \textbf{B.02} (One Federal Law): Formalizes ApportionRegions as the
+        one-sentence geographic completion of Huntington-Hill; the model
+        federal statute.
+
+    \item \textbf{D.0} (VRA Compliance): Full VRA Section 2 compliance
+        analysis: 137 vs.\ 68 majority-minority districts and the totality-of-
+        circumstances framework.
+
+    \item \textbf{D.1} (Threshold Analysis): The 42\% geographic threshold
+        and its relationship to the Gingles compactness precondition.
+
+    \item \textbf{D.3} (Compactness Tradeoff): VRA--compactness tradeoff
+        characterized: real but bounded, with most VRA districts achievable
+        within 85\% of baseline compactness.
+
+    \item \textbf{D.4} (Legal Implementation): 50-state adoption pathway
+        analysis; the model statute that formalizes ApportionRegions as the
+        statutory vehicle.
+
+    \item \textbf{D.5} (Gingles Bloc-Voting): Expert witness methodology for
+        the Gingles bloc-voting analysis required when algorithmic plans face
+        Section 2 challenge.
+\end{enumerate}
+
+% -----------------------------------------------------------------------------
+\subsection{For Practitioners (Redistricting Commissions)}
+% -----------------------------------------------------------------------------
+
+\begin{enumerate}[leftmargin=*,noitemsep,topsep=2pt]
+    \item \textbf{B.1} (Recursive Bisection): Core method overview;
+        compactness and partisan neutrality at national scale.
+
+    \item \textbf{B.2} (Edge-Weighted Bisection): Implementation details for
+        compact districts using geographic proximity weights.
+
+    \item \textbf{B.11} (ApportionRegions): Prime-factor bisection tree for
+        balanced partisan outcomes; the algorithm most directly usable by
+        commissions.
+
+    \item \textbf{B.16} (Convergence Sweep): The statutory seed formula
+        (T=600) balancing computational cost against partisan variance
+        reduction.
+
+    \item \textbf{H.0} (PercentileSweep): Statutory legal posture selection
+        via percentile position in the ensemble---the practitioner-facing
+        search strategy.
+
+    \item \textbf{C.9} (Adoption Case Studies): Arizona, California, and
+        North Carolina adoption pathway analysis; political feasibility
+        documentation.
+
+    \item \textbf{A.5} (Policy Brief): 4-page brief targeting legislative
+        staff and redistricting commissioners; entry point for non-technical
+        audiences.
+\end{enumerate}
+
+% -----------------------------------------------------------------------------
+\subsection{For Judges and Legislative Staff}
+% -----------------------------------------------------------------------------
+
+\begin{enumerate}[leftmargin=*,noitemsep,topsep=2pt]
+    \item \textbf{A.2} (Portfolio Summary): Rapid briefing document condensing
+        the headline findings across all 8 tracks.
+
+    \item \textbf{A.5} (Policy Brief): 4-page accessible summary for
+        non-technical decision-makers.
+
+    \item \textbf{B.02} (One Federal Law): The one-sentence geographic
+        completion of Huntington-Hill and its constitutional grounding.
+
+    \item \textbf{D.4} (Legal Implementation): Model federal statute and
+        50-state adoption pathways.
+
+    \item \textbf{D.5} (Gingles Bloc-Voting): The evidentiary methodology
+        courts require when algorithmic plans face VRA challenge.
+
+    \item \textbf{C.6} (User Study): Evidence that algorithmic maps are rated
+        fairer by the public; legitimacy basis for adoption.
+\end{enumerate}
+
+
+% =============================================================================
+\section{Glossary}
+% =============================================================================
+
+\begin{description}[leftmargin=2.2cm,style=nextline,noitemsep,topsep=4pt]
+    \item[ApportionRegions] Prime-factor bisection tree structure that splits
+        the state into sub-regions corresponding to the prime factors of the
+        district count, enabling balanced geographic and partisan outcomes.
+        Formalized as a one-sentence federal statute in B.02.
+
+    \item[Bisection tree] The hierarchical sequence of binary splits that
+        defines how a state is partitioned into districts under recursive
+        bisection. Structure variants (standard, prime-factor, ratio-optimal)
+        are the subject of Track B structure sub-track.
+
+    \item[Census tracts] Geographic units used as the atomic partitioning
+        units ($\sim$4,000 residents each); the building blocks from which
+        districts are assembled.
+
+    \item[Compactness] A geometric measure of district shape regularity.
+        Polsby-Popper ($4\pi \times \text{Area} / \text{Perimeter}^2$, range
+        $[0,1]$) is the primary measure used throughout the portfolio;
+        higher values indicate more compact districts.
+
+    \item[Edge-weight] A numerical cost assigned to the graph edge connecting
+        two adjacent census tracts. Higher weights make an edge expensive to
+        cut, encouraging the partitioner to preserve adjacency between similar
+        tracts, which produces more compact districts.
+
+    \item[Efficiency gap] Partisan fairness measure: the difference in wasted
+        votes between parties divided by total votes. A near-zero efficiency
+        gap emerges as a byproduct of compactness optimization (C.5).
+
+    \item[Ensemble] The distribution of all valid redistricting plans
+        consistent with statutory constraints, sampled by MCMC methods
+        (GerryChain, ReCom, forest-ReCom, etc.). Track G positions the
+        bisection plan within this distribution.
+
+    \item[GerryChain / ReCom] Open-source Python toolkit (Metric Geometry and
+        Gerrymandering Group) for MCMC redistricting ensemble sampling.
+        GerryChain implements ReCom (recombination) proposals. Track G
+        compares bisection plans to GerryChain-generated ensembles.
+
+    \item[Gingles test] Three-part legal test from \emph{Thornburg v.\ Gingles}
+        (1986) establishing preconditions for a successful VRA Section 2 claim:
+        (1) minority group sufficiently large and geographically compact;
+        (2) minority group politically cohesive; (3) majority votes as a bloc
+        to defeat minority candidates.
+
+    \item[Impossibility defense] The core philosophical claim of the portfolio:
+        the METIS recursive bisection algorithm cannot gerrymander by
+        construction because it is not given access to partisan data. It
+        minimizes edge cuts in a geographic graph---a purely geometric
+        objective.
+
+    \item[Majority-minority district] A district in which minority voters
+        constitute at least 50\% of the voting-age population (VAP), satisfying
+        the Gingles compactness precondition for VRA Section 2 protection.
+
+    \item[METIS] Multilevel $k$-way graph partitioning library (Karypis \&
+        Kumar, 1998). The core computational engine used throughout the
+        portfolio to bisect the census tract adjacency graph.
+
+    \item[NestSection] Bisection tree structure enforcing senate $= 2\times$
+        house spine compatibility for bicameral redistricting (B.13, F.2).
+
+    \item[PercentileSweep] Search strategy (H.0) selecting among valid plans
+        by their partisan percentile position in the ensemble, enabling
+        commissions to choose a legal posture without targeting a specific
+        partisan outcome.
+
+    \item[Polsby-Popper] See \emph{Compactness}.
+
+    \item[VRASection] Bisection structure variant (B.14) that aligns bisection
+        cuts with minority geographic concentration, enabling VRA compliance
+        post-\emph{Allen v.\ Milligan} (2023) and \emph{Callais} (2025).
+\end{description}
+
+
+% =============================================================================
+\section{Code and Data}
+% =============================================================================
+
+\begin{itemize}[leftmargin=*,noitemsep,topsep=4pt]
+    \item \textbf{Primary tool}: The \texttt{redist} Rust binary, built from
+        the \texttt{redist/} workspace in this repository. It is the
+        production-grade implementation of all three-layer compositor options
+        described in Section~\ref{sec:portfolio} and runs approximately
+        213$\times$ faster than the archived Python pipeline.
+
+    \item \textbf{Replication package}: See A.4 for the AEA-compliant
+        replication materials package, including configuration files, census
+        data download scripts, and output reproducibility documentation.
+
+    \item \textbf{Census data}: U.S. Census Bureau redistricting files for
+        2000, 2010, and 2020, downloaded via the \texttt{redist fetch} command.
+        Raw data is not committed to the repository ($\sim$55~GB).
+
+    \item \textbf{METIS library}: \url{http://glaros.dtc.umn.edu/gkhome/metis/metis/overview}.
+        The portfolio also includes a pure-Rust METIS implementation
+        (\texttt{redist-metis} crate) for portable binary distribution.
+
+    \item \textbf{Contact}: \href{mailto:giodl@microsoft.com}{giodl@microsoft.com}
+\end{itemize}
+
+\end{document}

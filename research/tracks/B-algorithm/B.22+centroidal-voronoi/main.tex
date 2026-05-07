@@ -1,0 +1,116 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+
+%% SIAM-adjacent style: numbered sections, upright headings
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+%% Spacing
+\setstretch{1.4}
+
+%% Algorithm macros
+\newcommand{\cvd}{\textsc{CVD}}
+\newcommand{\metis}{\textsc{Metis}}
+\newcommand{\sa}{\textsc{SimulatedAnnealing}}
+\newcommand{\ec}{\ensuremath{\mathrm{EC}}}
+\newcommand{\pp}{\ensuremath{\mathrm{PP}}}
+\newcommand{\be}{\textsc{BisectionEnsemble}}
+\newcommand{\ar}{\textsc{ApportionRegions}}
+\newcommand{\geosec}{\textsc{GeoSection}}
+\newcommand{\areasec}{\textsc{AreaSection}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\cs}{\textsc{ConvergenceSweep}}
+\newcommand{\bfsgrowth}{\textsc{BfsGrowth}}
+\newcommand{\dia}{\textsc{Districting Integrity Act}}
+
+%% Math shorthands
+\newcommand{\ECnorm}{\mathrm{EC}_{\mathrm{norm}}}
+\newcommand{\EC}{\mathrm{EC}}
+
+%% -----------------------------------------------------------------------
+
+\title{%
+  \textbf{Centroidal Voronoi Districts: Geometric Packing via}\\
+  \textbf{Graph-Medoid Iteration}\\[0.8em]
+  \normalsize\textit{B.22 --- Algorithm Design / Geometric Structure}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+We introduce Centroidal Voronoi Districts (\cvd{}), a new Structure-layer
+algorithm for redistricting that assigns each census tract to its nearest
+seed by graph hop-count distance and iteratively moves seeds to the
+population-weighted graph-distance medoid of their assigned district.
+\cvd{} is the discrete redistricting analogue of Lloyd's algorithm
+for optimal quantisation~\citep{lloyd1982}, adapted to weighted planar
+graphs via the \emph{graph-distance medoid} as the centroid surrogate.
+
+Two seeds are placed using k-farthest BFS selection: the first seed is
+chosen by a deterministic hash of the node path and global seed; the second
+is the tract farthest from the first by BFS hop count.
+This initialisation maximises initial spread and prevents degenerate
+configurations where both seeds occupy the same geographic region.
+Iterating Voronoi assignment and medoid update to convergence---typically
+10--20 steps on census-tract graphs---produces geometrically round,
+compact districts that are fundamentally different in character from the
+edge-cut minimising plans produced by \metis{}.
+
+Empirically, \cvd{} on North Carolina ($k=14$) achieves Polsby-Popper
+compactness competitive with \metis{} despite not optimising edge cuts,
+and typically converges in 8--14 iterations.
+\cvd{} runs in $O(n \times k \times n_{\mathrm{iter}})$ time with no spanning
+trees, no MCMC, and no parameter tuning beyond iteration count.
+We compare \cvd{} with \metis{} and \sa{} on compactness, edge cut, and
+runtime, and preview Phase~2 Geographic \cvd{} using Euclidean distance on
+EPSG:5070 projected tract centroids.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-background}
+\input{sections/03-algorithm}
+\input{sections/04-comparison}
+\input{sections/05-phase2}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

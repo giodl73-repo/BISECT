@@ -1,0 +1,38 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Interpretation of Key Findings}
+
+Our central finding—geographic variance exceeds temporal variance by 3.2×—suggests \textbf{algorithm performance is primarily determined by geographic context rather than temporal demographic change}. This validates a core assumption of algorithmic redistricting: if an algorithm uses only geographic and population data, its performance should be stable across census cycles for the same region. The modest national compactness improvement (PP: +0.029 from 2000 to 2020) appears attributable to data quality improvements—census tract boundaries progressively refined to align with natural features—rather than algorithmic or demographic changes.
+
+\subsection{Geographic vs. Demographic Determinism}
+
+The dominance of geographic over temporal variance raises a fundamental question: does redistricting primarily reflect \textit{geographic} constraints (terrain, settlement patterns) or \textit{demographic} characteristics? Our results suggest geography is the primary determinant for algorithmic redistricting using only population data, aligning with prior work showing that geographic compactness and population balance substantially constrain the space of possible plans~\cite{deford2021}. However, this does \textit{not} imply demographic factors are unimportant for political outcomes—geographic and demographic factors are confounded, and geographic clustering can produce systematic partisan outcomes even from "neutral" algorithms~\cite{chen2013, rodden2019}. Our framework assesses algorithmic \textit{consistency}, not outcome \textit{fairness}.
+
+\subsection{Implications for Redistricting Practice}
+
+Our framework enables principled algorithm comparison by distinguishing: (1) \textbf{high geographic sensitivity} (large between-slice variance), (2) \textbf{high temporal sensitivity} (large cross-census variance), (3) \textbf{geographic robustness} (consistent behavior across regions), and (4) \textbf{temporal robustness} (stable behavior over time). METIS exhibits high geographic sensitivity (variance 3.2× larger between slices) and high temporal robustness (within-slice correlation $r=0.73$), suggesting it adapts to local geography while maintaining temporal consistency.
+
+Single-census evaluations may underestimate algorithm generalizability. Cross-census validation provides a more stringent test: algorithms that overfit to specific tract configurations may degrade in subsequent cycles. Conversely, since geographic variance dominates, thorough geographic evaluation (many states, diverse regions) may suffice with limited temporal validation confirming stability.
+
+\subsection{Comparison to Alternative Approaches}
+
+MGGG GerryChain~\cite{gerrychain2018} generates ensembles via MCMC sampling to assess outlier plans, but operates within a single census. Our approach is complementary: combining slice-based validation with ensemble methods would reveal whether the \textit{space} of valid plans changes over time. Roberts et al.~\cite{roberts2017} advocate spatial cross-validation for geographic algorithms. Our slice-based framework implements spatial validation extended to multiple time points, assessing \textit{temporal consistency} (does California behavior persist across censuses?) rather than \textit{spatial generalization} (does California training work in Texas?). Both are valuable.
+
+\subsection{Limitations}
+
+\textbf{Scope.} This framework validates \textbf{algorithmic consistency}, not political fairness or VRA compliance. We measure stable results under controlled geographic conditions, not political neutrality or equity. Critically, we assess \textit{process neutrality} (no partisan data), not \textit{outcome neutrality} (unbiased results)~\cite{rodden2019}. Slice-based validation could be extended to fairness analysis by incorporating partisan data and measuring whether fairness metrics~\cite{stephanopoulos2015, grofman1983} vary across census cycles.
+
+\textbf{Single algorithm.} We evaluate only METIS recursive bisection. Different algorithms (simulated annealing~\cite{altman1998}, integer programming~\cite{mehrotra1998}, MCMC ensemble~\cite{gerrychain2018}) may exhibit different variance profiles. However, our framework is algorithm-agnostic.
+
+\textbf{Geographic challenges.} Alaska and Hawaii present non-contiguous geography and extreme diversity. Slice-based validation may be less meaningful for states where geographic diversity exceeds $K=5$ slice resolution. U.S. territories are not included as they lack voting representation.
+
+\textbf{Reproducibility.} We use METIS 5.1.0 throughout. Karypis noted that METIS 5.x introduced improved coarsening~\cite{karypis2013metis5}, potentially affecting compactness. Full source code and tract correspondence files are provided as supplementary material.
+
+\textbf{Boundary artifacts.} Our majority-overlap rule for slice assignment may introduce artifacts for near-equal splits (45-55\% population), but these represent only 1.2\% of districts. Excluding boundary districts changes results by $<$0.01 PP score, suggesting minimal impact.
+
+\subsection{Future Work and Broader Impact}
+
+Future extensions include: (1) multi-algorithm comparison to test whether geographic dominance is universal or METIS-specific, (2) fairness integration with partisan/demographic data, (3) finer temporal resolution using American Community Survey data, (4) causal analysis identifying which geographic/demographic features drive variance, and (5) extension to state legislative redistricting with thousands of districts.
+
+Algorithmic redistricting is increasingly used in practice (Iowa, Ohio, Virginia)~\cite{mcghee2020}. Ensuring algorithms are robust across census cycles is essential for long-term trust in algorithmic governance. Our validation framework provides a principled methodology for assessing consistency, complementing existing fairness and legal compliance analyses. By quantifying geographic vs. temporal sensitivity, we enable algorithm developers to diagnose instabilities and stakeholders to make informed adoption decisions.

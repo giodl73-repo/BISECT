@@ -1,0 +1,17 @@
+\section{Background and Related Work}
+
+\subsection{The Efficiency Gap}
+
+The efficiency gap measures partisan bias by calculating wasted votes for each party: votes cast for losing candidates and surplus votes beyond 50\%+1 needed to win~\cite{stephanopoulos2015partisan}. The metric ranges from $-50\%$ (complete Democratic advantage) to $+50\%$ (complete Republican advantage), with 0\% indicating no partisan bias. Efficiency gaps exceeding $\pm 7-8\%$ are generally considered indicative of extreme partisan gerrymandering~\cite{mcghee2020fairness}.
+
+\subsection{Geographic Sorting and Unintentional Gerrymandering}
+
+Rodden~\cite{rodden2019cities} and Chen \& Rodden~\cite{chen2013unintentional} demonstrate that Democratic voters' urban concentration creates structural disadvantages in single-member district systems. Even neutral redistricting produces efficiency gaps favoring Republicans because compact urban districts pack Democrats while sprawling rural districts efficiently allocate Republican votes.
+
+\subsection{Algorithmic Redistricting}
+
+Recent work has shown algorithmic methods can satisfy constitutional requirements~\cite{deluca2026recursive,cho2016measuring} and Voting Rights Act compliance~\cite{deluca2026vra}. However, partisan fairness analysis has been limited.
+
+\subsection{Contribution}
+
+This paper provides the first comprehensive efficiency gap analysis of algorithmic redistricting at national scale, establishing empirical benchmarks for partisan fairness evaluation.

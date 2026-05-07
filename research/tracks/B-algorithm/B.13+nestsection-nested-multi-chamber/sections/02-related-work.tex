@@ -1,0 +1,89 @@
+\section{Related Work}
+\label{sec:related}
+
+\subsection{Multi-Member Districts and Nested Structures}
+
+Multi-member district (MMD) systems are well-studied in political science and
+electoral law.  \citet{grofman1993} reviews proportional and semi-proportional
+MMD systems and their effects on minority representation; \citet{bowler1999}
+analyzes strategic voting under MMD arrangements.  Neither line of work
+addresses the computational question of constructing hierarchically consistent
+maps across chambers.
+
+Nested electoral structures---where one legislative body's districts are unions
+of another's---appear in several European parliaments and in some US state
+constitutions.  The classic example is the German Bundestag, which pairs
+single-member constituencies with proportional list seats drawn from the same
+geographic regions.  \citet{taagepera1989} analyzes the seat-product model for
+mixed-member systems; \citet{cox2006} examines how nesting affects strategic
+entry.  These works treat nesting as a political science fact, not a
+computational design problem.
+
+The US context is different: the three chambers are separately apportioned,
+separately litigated, and separately optimized.  No prior computational
+redistricting literature, to our knowledge, treats consistency across chambers
+as an algorithmic objective.
+
+\subsection{Computational Redistricting}
+
+The algorithmic redistricting literature largely focuses on single-chamber
+problems.  \citet{altman2011} and \citet{fifield2020} describe Markov chain
+Monte Carlo (MCMC) sampling over single-chamber district plans; \citet{chen2013}
+uses simulated annealing to generate unbiased district plans for gerrymandering
+detection.  Graph-partitioning approaches based on METIS \citep{karypis1998}
+are widely used in practice; they optimize edge-cut as a proxy for compactness.
+
+Recursive bisection methods \citep{simon1991} produce hierarchical district
+trees naturally, but prior work applies them to a single chamber at a time.
+The GeoSection algorithm \citep{B8} extends recursive bisection with
+ratio-optimal METIS partitioning; ApportionRegions \citep{B11} provides
+integer seat allocation for spine regions.  NestSection builds directly on
+both.
+
+The GerryChain project \citep{deford2019} and related ensemble methods focus
+on detecting gerrymandering by sampling the space of valid plans.  NestSection
+is complementary: rather than detecting gerrymandering post hoc, it constrains
+the feasible plan space by design.  The compatibility score $\sigma$ determines
+how tightly the constraint binds.
+
+\subsection{Cross-Chamber Gerrymandering}
+
+\citet{gelman1994} note that partisan effects compound across legislative
+chambers when maps are drawn by the same partisan majority.  \citet{chen2020}
+documents cases where congressional and state legislative maps were drawn
+sequentially to reinforce each other's partisan effects in North Carolina,
+Wisconsin, and Pennsylvania.
+
+The legal literature on cross-chamber coherence is sparse.  \textit{Rucho v.\
+Common Cause}, 588 U.S.\ 684 (2019), held that federal courts cannot police
+partisan gerrymandering in congressional maps, but left state courts free to
+act under state constitutional provisions \citep{miller2019}.  Several state
+supreme courts have struck down single-chamber maps (Pennsylvania \textit{LWV
+v.\ Commonwealth} (2018); North Carolina \textit{Harper v.\ Hall} (2022);
+New York \textit{Harkenrider v.\ Hochul} (2022)) without addressing the
+cross-chamber consistency problem.
+
+\textit{Allen v.\ Milligan}, 599 U.S.\ 1 (2023), reaffirmed the applicability
+of Section~2 of the Voting Rights Act (VRA) to single-member congressional
+districts, but again in a single-chamber context.  \textit{Callais v.\ Landry}
+(W.D.\ La.\ 2024) addressed VRA compliance in a state legislative map; the
+court's focus on proportionality at a single level highlights the gap that
+NestSection addresses: if VRA compliance is evaluated chamber by chamber, a
+partisan actor can satisfy each chamber's requirements independently while
+maintaining coherent cross-chamber advantages.
+
+\subsection{Factorization and Apportionment Theory}
+
+The connection between prime factorization and hierarchical bisection trees
+appears in \citet{B11} (ApportionRegions) and implicitly in the METIS
+partitioning literature.  \citet{huntington1921} and \citet{balinski1982}
+develop the theory of divisor methods for apportionment; neither addresses
+multi-chamber compatibility.  The NestSection compatibility score
+$\sigma(C, S, H) = (1 - g/m) \times 100$ is, to our knowledge, a novel
+metric for cross-chamber structural alignment.
+
+Divisibility conditions similar to our strict-nesting requirement appear in
+local government law: many state constitutions require county-level districts
+to be composed of whole precinct units, and precinct units to be composed of
+whole census blocks.  NestSection extends this hierarchy upward to the
+legislative level.

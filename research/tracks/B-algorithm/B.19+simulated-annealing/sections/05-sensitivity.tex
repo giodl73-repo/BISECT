@@ -1,0 +1,149 @@
+\section{Parameter Sensitivity}
+\label{sec:sensitivity}
+
+\sa{} bisection has two tunable hyperparameters:
+\texttt{steps\_per\_tract} and \texttt{t0\_factor}.
+This section characterises their effects on solution quality and runtime,
+using North Carolina ($k=14$) as the primary test case.
+WI and TX show qualitatively similar patterns and are noted where they differ.
+
+\subsection{Effect of Steps-Per-Tract}
+
+Table~\ref{tab:steps} shows results for $\mathtt{steps\_per\_tract} \in \{1, 5, 10, 50\}$
+on NC ($k=14$), with fixed $\mathtt{t0\_factor} = 0.01$.
+
+\begin{table}[t]
+\centering
+\caption{%
+  Sensitivity to \texttt{steps\_per\_tract} on NC ($k=14$, 2020 census,
+  geographic weights, \geosec{} tree, single seed).
+  EC: total edge cut. PP: mean Polsby-Popper.
+  $\Delta$PP: improvement over METIS baseline (percentage points).
+  Time: wall-clock seconds (single core).
+}
+\label{tab:steps}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+\texttt{steps\_per\_tract} & EC & PP & $\Delta$PP (\%) & Time (s) \\
+\midrule
+0 (METIS only)  & 4{,}821 & 0.217 & ---   &  4.2 \\
+1               & 4{,}718 & 0.228 &  +5.1 &  8.1 \\
+5               & 4{,}604 & 0.241 & +11.1 & 26.3 \\
+10              & 4{,}513 & 0.248 & +14.3 & 51.7 \\
+50              & 4{,}401 & 0.256 & +17.9 & 247 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Observations.}
+\begin{enumerate}
+\item \textbf{Steps=1 is insufficient.}
+  A single SA step per tract is barely enough to escape the \metis{}
+  local optimum: PP improves by only 5.1\%, less than half the steps=10 gain.
+  The step count is too low to explore the neighbourhood of the initial solution.
+
+\item \textbf{Steps=5 to steps=10 is the key transition.}
+  From steps=5 to steps=10, PP improves by 3.2 percentage points at double
+  the runtime.
+  This suggests that the neighbourhood of the \metis{} local optimum is
+  ``thin''---a few hundred steps per tract are needed to escape it, but
+  not many more.
+
+\item \textbf{Steps=50 has diminishing returns.}
+  From steps=10 to steps=50, PP improves by only 3.6 percentage points
+  at $4.8\times$ the runtime.
+  The marginal PP per second drops by roughly $5\times$ between these two
+  settings.
+
+\item \textbf{Recommendation: steps=10 for production, steps=50 for offline.}
+  For statutory or publication use where a single best plan is needed and
+  runtime is a concern, steps=10 provides the best quality-per-second
+  tradeoff.
+  For offline research runs where runtime is not constrained, steps=50
+  provides a modest additional gain.
+\end{enumerate}
+
+\subsection{Effect of t0\_factor}
+
+Table~\ref{tab:t0} shows results for $\mathtt{t0\_factor} \in \{0.001, 0.005, 0.01, 0.05, 0.1\}$
+on NC ($k=14$), with fixed $\mathtt{steps\_per\_tract} = 10$.
+
+\begin{table}[t]
+\centering
+\caption{%
+  Sensitivity to \texttt{t0\_factor} on NC ($k=14$, 2020 census,
+  geographic weights, \geosec{} tree, single seed, steps=10).
+  $T_0^{\mathrm{root}}$: initial temperature at the root node
+  (where $\EC_0 \approx 4{,}821$).
+  $p_{\mathrm{accept}}$: acceptance probability for a $+1$ EC move at $t=0$.
+  EC: total edge cut. PP: mean Polsby-Popper.
+}
+\label{tab:t0}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+\texttt{t0\_factor} & $T_0^{\mathrm{root}}$ & $p_{\mathrm{accept}}$ & EC & PP \\
+\midrule
+0.001 & 4.82  & $e^{-0.21} \approx 81\%$ & 4{,}549 & 0.244 \\
+0.005 & 24.1  & $e^{-0.04} \approx 96\%$ & 4{,}521 & 0.247 \\
+0.01  & 48.2  & $e^{-0.02} \approx 98\%$ & 4{,}513 & 0.248 \\
+0.05  & 241   & $e^{-0.004} \approx 99.6\%$ & 4{,}508 & 0.249 \\
+0.1   & 482   & $e^{-0.002} \approx 99.8\%$ & 4{,}511 & 0.248 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Observations.}
+\begin{enumerate}
+\item \textbf{t0\_factor = 0.001 is too low.}
+  At $T_0^{\mathrm{root}} = 4.82$, the initial acceptance for a $+1$ EC move
+  is still 81\%, so the problem is not at the root node.
+  At small leaf nodes with $\EC_0 \approx 50$, $T_0 = 0.05$ and acceptance
+  for a $+1$ move drops to $e^{-20} \approx 2 \times 10^{-9}$---effectively
+  zero.
+  SA degenerates to greedy local search at leaf nodes, reducing quality.
+
+\item \textbf{t0\_factor in [0.005, 0.05] is robust.}
+  The PP difference across this range is less than 0.5 percentage points.
+  The initial temperature is high enough to permit exploration at all
+  tree nodes (acceptance $>95\%$ at the root; $>30\%$ at typical leaf nodes
+  with $\EC_0 \approx 100$).
+
+\item \textbf{t0\_factor = 0.1 gives no benefit.}
+  Very high initial temperature means the early SA steps are near-random
+  walks, wasting steps on high-EC proposals.
+  With a fixed step budget, this reduces the exploitation time at low
+  temperatures and marginally harms quality.
+
+\item \textbf{Recommendation: t0\_factor = 0.01 (default).}
+  This is the sweet spot: meaningful exploration at all tree levels without
+  wasting steps on near-random walks.
+\end{enumerate}
+
+\subsection{The t0\_factor = 0 Test Fixture}
+
+Setting $\mathtt{t0\_factor} = 0$ is a special case: by Definition~\ref{def:t0},
+$T_0 = \max(1.0, 0) = 1.0$ regardless of $\EC_0$.
+This deterministic fallback is used in regression tests to verify that the
+SA loop executes without crashing on any subgraph size, with a known
+initial acceptance probability of $e^{-1} \approx 37\%$ for $+1$ EC moves
+at every node.
+This is not recommended for production use (leaf nodes with small $\EC_0$
+would have $T_0/\EC_0 \gg 1$, over-exploring), but it provides a simple,
+size-independent test fixture.
+
+\subsection{Interaction with SeedCompositor}
+
+When \sa{} bisection is composed with \cs{} (i.e.,
+\texttt{--search convergence --convergence-threshold 600}), the two-parameter
+SA configuration applies to each seed independently.
+The SA parameters do not need to be retuned for the multi-seed context:
+each SA run uses the same $\mathtt{steps\_per\_tract}$ and
+$\mathtt{t0\_factor}$, and the best result across all seeds is selected.
+Running SA + CS is approximately $1{,}623 \times$ (CS seeds) $\times 12\times$
+(SA overhead) $\approx 19{,}476\times$ the baseline single-\metis{} cost,
+which is practical for offline research but may be too slow for interactive
+use.
+For interactive use, SA(steps=10) on a single content-derived seed is the
+recommended configuration.

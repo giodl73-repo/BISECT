@@ -1,0 +1,2949 @@
+Running all 5 VRA states...
+================================================================================
+COMPACTNESS-VRA TRADEOFF EXPERIMENTS
+================================================================================
+
+================================================================================
+PHASE 1: BASELINE (No VRA Optimization)
+================================================================================
+
+=== BASELINE: AL (Alabama) ===
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Tracts: 1437, Districts: 7
+  Running uniform METIS (no edge weights)...
+  Edge cut: 280
+  MM districts: 0/2 (max minority: 49.0%)
+  Avg Polsby-Popper: 0.234
+
+=== BASELINE: GA (Georgia) ===
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Tracts: 2796, Districts: 14
+  Running uniform METIS (no edge weights)...
+  Edge cut: 742
+  MM districts: 5/5 (max minority: 76.9%)
+  Avg Polsby-Popper: 0.204
+
+=== BASELINE: LA (Louisiana) ===
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Tracts: 1388, Districts: 6
+  Running uniform METIS (no edge weights)...
+  Edge cut: 194
+  MM districts: 1/2 (max minority: 52.4%)
+  Avg Polsby-Popper: 0.211
+
+=== BASELINE: MS (Mississippi) ===
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Tracts: 878, Districts: 4
+  Running uniform METIS (no edge weights)...
+  Edge cut: 100
+  MM districts: 2/2 (max minority: 53.8%)
+  Avg Polsby-Popper: 0.284
+
+=== BASELINE: SC (South_Carolina) ===
+Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+  Tracts: 1323, Districts: 7
+  Running uniform METIS (no edge weights)...
+  Edge cut: 216
+  MM districts: 0/3 (max minority: 46.3%)
+  Avg Polsby-Popper: 0.238
+
+================================================================================
+PHASE 2: EDGE-WEIGHTED PARAMETER SWEEP
+================================================================================
+
+[1/100] 
+=== EDGE-WEIGHTED: AL | 1x @ 40.0% ===
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Minority tracts: 581/1437, Minority edges: 1268
+  Running METIS with edge weights...
+  Edge cut: 280 (weighted: 280)
+  MM districts: 0/2 (max minority: 49.0%)
+  Non-MM districts avg PP: 0.234
+
+[2/100] 
+=== EDGE-WEIGHTED: AL | 1x @ 45.0% ===
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Minority tracts: 507/1437, Minority edges: 1034
+  Running METIS with edge weights...
+  Edge cut: 280 (weighted: 280)
+  MM districts: 0/2 (max minority: 49.0%)
+  Non-MM districts avg PP: 0.234
+
+[3/100] 
+=== EDGE-WEIGHTED: AL | 1x @ 50.0% ===
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Minority tracts: 439/1437, Minority edges: 880
+  Running METIS with edge weights...
+  Edge cut: 280 (weighted: 280)
+  MM districts: 0/2 (max minority: 49.0%)
+  Non-MM districts avg PP: 0.234
+
+[4/100] 
+=== EDGE-WEIGHTED: AL | 1x @ 55.00000000000001% ===
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Minority tracts: 391/1437, Minority edges: 780
+  Running METIS with edge weights...
+  Edge cut: 280 (weighted: 280)
+  MM districts: 0/2 (max minority: 49.0%)
+  Non-MM districts avg PP: 0.234
+
+[5/100] 
+=== EDGE-WEIGHTED: AL | 5x @ 40.0% ===
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Minority tracts: 581/1437, Minority edges: 1268
+  Running METIS with edge weights...
+  Edge cut: 276 (weighted: 320)
+  MM districts: 2/2 (max minority: 50.8%)
+  MM districts avg PP: 0.257
+  Non-MM districts avg PP: 0.216
+
+[6/100] 
+=== EDGE-WEIGHTED: AL | 5x @ 45.0% ===
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Minority tracts: 507/1437, Minority edges: 1034
+  Running METIS with edge weights...
+  Edge cut: 254 (weighted: 278)
+  MM districts: 2/2 (max minority: 53.6%)
+  MM districts avg PP: 0.126
+  Non-MM districts avg PP: 0.288
+
+[7/100] 
+=== EDGE-WEIGHTED: AL | 5x @ 50.0% ===
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Minority tracts: 439/1437, Minority edges: 880
+  Running METIS with edge weights...
+  Edge cut: 342 (weighted: 402)
+  MM districts: 1/2 (max minority: 50.4%)
+  MM districts avg PP: 0.087
+  Non-MM districts avg PP: 0.158
+
+[8/100] 
+=== EDGE-WEIGHTED: AL | 5x @ 55.00000000000001% ===
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Minority tracts: 391/1437, Minority edges: 780
+  Running METIS with edge weights...
+  Edge cut: 572 (weighted: 656)
+  MM districts: 1/2 (max minority: 53.3%)
+  MM districts avg PP: 0.058
+  Non-MM districts avg PP: 0.105
+
+[9/100] 
+=== EDGE-WEIGHTED: AL | 10x @ 40.0% ===
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Minority tracts: 581/1437, Minority edges: 1268
+  Running METIS with edge weights...
+  Edge cut: 302 (weighted: 446)
+  MM districts: 0/2 (max minority: 49.8%)
+  Non-MM districts avg PP: 0.194
+
+[10/100] 
+=== EDGE-WEIGHTED: AL | 10x @ 45.0% ===
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Minority tracts: 507/1437, Minority edges: 1034
+  Running METIS with edge weights...
+  Edge cut: 358 (weighted: 466)
+  MM districts: 1/2 (max minority: 50.0%)
+  MM districts avg PP: 0.217
+  Non-MM districts avg PP: 0.184
+
+[11/100] 
+=== EDGE-WEIGHTED: AL | 10x @ 50.0% ===
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Minority tracts: 439/1437, Minority edges: 880
+  Running METIS with edge weights...
+  Edge cut: 279 (weighted: 288)
+  MM districts: 1/2 (max minority: 55.9%)
+  MM districts avg PP: 0.175
+  Non-MM districts avg PP: 0.208
+
+[12/100] 
+=== EDGE-WEIGHTED: AL | 10x @ 55.00000000000001% ===
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Minority tracts: 391/1437, Minority edges: 780
+  Running METIS with edge weights...
+  Edge cut: 299 (weighted: 362)
+  MM districts: 0/2 (max minority: 48.8%)
+  Non-MM districts avg PP: 0.197
+
+[13/100] 
+=== EDGE-WEIGHTED: AL | 50x @ 40.0% ===
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Minority tracts: 581/1437, Minority edges: 1268
+  Running METIS with edge weights...
+  Edge cut: 387 (weighted: 1367)
+  MM districts: 2/2 (max minority: 51.8%)
+  MM districts avg PP: 0.112
+  Non-MM districts avg PP: 0.184
+
+[14/100] 
+=== EDGE-WEIGHTED: AL | 50x @ 45.0% ===
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Minority tracts: 507/1437, Minority edges: 1034
+  Running METIS with edge weights...
+  Edge cut: 433 (weighted: 1266)
+  MM districts: 0/2 (max minority: 47.7%)
+  Non-MM districts avg PP: 0.147
+
+[15/100] 
+=== EDGE-WEIGHTED: AL | 50x @ 50.0% ===
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Minority tracts: 439/1437, Minority edges: 880
+  Running METIS with edge weights...
+  Edge cut: 253 (weighted: 302)
+  MM districts: 1/2 (max minority: 55.7%)
+  MM districts avg PP: 0.201
+  Non-MM districts avg PP: 0.221
+
+[16/100] 
+=== EDGE-WEIGHTED: AL | 50x @ 55.00000000000001% ===
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Minority tracts: 391/1437, Minority edges: 780
+  Running METIS with edge weights...
+  Edge cut: 293 (weighted: 489)
+  MM districts: 1/2 (max minority: 50.5%)
+  MM districts avg PP: 0.160
+  Non-MM districts avg PP: 0.224
+
+[17/100] 
+=== EDGE-WEIGHTED: AL | 100x @ 40.0% ===
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Minority tracts: 581/1437, Minority edges: 1268
+  Running METIS with edge weights...
+  Edge cut: 311 (weighted: 2984)
+  MM districts: 1/2 (max minority: 53.0%)
+  MM districts avg PP: 0.083
+  Non-MM districts avg PP: 0.240
+
+[18/100] 
+=== EDGE-WEIGHTED: AL | 100x @ 45.0% ===
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Minority tracts: 507/1437, Minority edges: 1034
+  Running METIS with edge weights...
+  Edge cut: 490 (weighted: 4549)
+  MM districts: 2/2 (max minority: 51.4%)
+  MM districts avg PP: 0.140
+  Non-MM districts avg PP: 0.127
+
+[19/100] 
+=== EDGE-WEIGHTED: AL | 100x @ 50.0% ===
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Minority tracts: 439/1437, Minority edges: 880
+  Running METIS with edge weights...
+  Edge cut: 253 (weighted: 352)
+  MM districts: 1/2 (max minority: 55.7%)
+  MM districts avg PP: 0.201
+  Non-MM districts avg PP: 0.221
+
+[20/100] 
+=== EDGE-WEIGHTED: AL | 100x @ 55.00000000000001% ===
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Minority tracts: 391/1437, Minority edges: 780
+  Running METIS with edge weights...
+  Edge cut: 344 (weighted: 1334)
+  MM districts: 1/2 (max minority: 51.9%)
+  MM districts avg PP: 0.117
+  Non-MM districts avg PP: 0.212
+
+[21/100] 
+=== EDGE-WEIGHTED: GA | 1x @ 40.0% ===
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Minority tracts: 1599/2796, Minority edges: 3936
+  Running METIS with edge weights...
+  Edge cut: 742 (weighted: 742)
+  MM districts: 5/5 (max minority: 76.9%)
+  MM districts avg PP: 0.213
+  Non-MM districts avg PP: 0.200
+
+[22/100] 
+=== EDGE-WEIGHTED: GA | 1x @ 45.0% ===
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Minority tracts: 1425/2796, Minority edges: 3398
+  Running METIS with edge weights...
+  Edge cut: 742 (weighted: 742)
+  MM districts: 5/5 (max minority: 76.9%)
+  MM districts avg PP: 0.213
+  Non-MM districts avg PP: 0.200
+
+[23/100] 
+=== EDGE-WEIGHTED: GA | 1x @ 50.0% ===
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Minority tracts: 1275/2796, Minority edges: 3000
+  Running METIS with edge weights...
+  Edge cut: 742 (weighted: 742)
+  MM districts: 5/5 (max minority: 76.9%)
+  MM districts avg PP: 0.213
+  Non-MM districts avg PP: 0.200
+
+[24/100] 
+=== EDGE-WEIGHTED: GA | 1x @ 55.00000000000001% ===
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Minority tracts: 1118/2796, Minority edges: 2564
+  Running METIS with edge weights...
+  Edge cut: 742 (weighted: 742)
+  MM districts: 5/5 (max minority: 76.9%)
+  MM districts avg PP: 0.213
+  Non-MM districts avg PP: 0.200
+
+[25/100] 
+=== EDGE-WEIGHTED: GA | 5x @ 40.0% ===
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Minority tracts: 1599/2796, Minority edges: 3936
+  Running METIS with edge weights...
+  Edge cut: 747 (weighted: 1587)
+  MM districts: 6/5 (max minority: 83.8%)
+  MM districts avg PP: 0.228
+  Non-MM districts avg PP: 0.190
+
+[26/100] 
+=== EDGE-WEIGHTED: GA | 5x @ 45.0% ===
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Minority tracts: 1425/2796, Minority edges: 3398
+  Running METIS with edge weights...
+  Edge cut: 747 (weighted: 1463)
+  MM districts: 5/5 (max minority: 77.9%)
+  MM districts avg PP: 0.233
+  Non-MM districts avg PP: 0.231
+
+[27/100] 
+=== EDGE-WEIGHTED: GA | 5x @ 50.0% ===
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Minority tracts: 1275/2796, Minority edges: 3000
+  Running METIS with edge weights...
+  Edge cut: 760 (weighted: 1296)
+  MM districts: 6/5 (max minority: 78.5%)
+  MM districts avg PP: 0.220
+  Non-MM districts avg PP: 0.196
+
+[28/100] 
+=== EDGE-WEIGHTED: GA | 5x @ 55.00000000000001% ===
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Minority tracts: 1118/2796, Minority edges: 2564
+  Running METIS with edge weights...
+  Edge cut: 659 (weighted: 1059)
+  MM districts: 6/5 (max minority: 79.1%)
+  MM districts avg PP: 0.234
+  Non-MM districts avg PP: 0.262
+
+[29/100] 
+=== EDGE-WEIGHTED: GA | 10x @ 40.0% ===
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Minority tracts: 1599/2796, Minority edges: 3936
+  Running METIS with edge weights...
+  Edge cut: 803 (weighted: 2549)
+  MM districts: 6/5 (max minority: 74.2%)
+  MM districts avg PP: 0.170
+  Non-MM districts avg PP: 0.211
+
+[30/100] 
+=== EDGE-WEIGHTED: GA | 10x @ 45.0% ===
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Minority tracts: 1425/2796, Minority edges: 3398
+  Running METIS with edge weights...
+  Edge cut: 805 (weighted: 2029)
+  MM districts: 8/5 (max minority: 72.7%)
+  MM districts avg PP: 0.187
+  Non-MM districts avg PP: 0.205
+
+[31/100] 
+=== EDGE-WEIGHTED: GA | 10x @ 50.0% ===
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Minority tracts: 1275/2796, Minority edges: 3000
+  Running METIS with edge weights...
+  Edge cut: 737 (weighted: 1934)
+  MM districts: 5/5 (max minority: 74.7%)
+  MM districts avg PP: 0.240
+  Non-MM districts avg PP: 0.199
+
+[32/100] 
+=== EDGE-WEIGHTED: GA | 10x @ 55.00000000000001% ===
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Minority tracts: 1118/2796, Minority edges: 2564
+  Running METIS with edge weights...
+  Edge cut: 812 (weighted: 2072)
+  MM districts: 6/5 (max minority: 82.2%)
+  MM districts avg PP: 0.199
+  Non-MM districts avg PP: 0.192
+
+[33/100] 
+=== EDGE-WEIGHTED: GA | 50x @ 40.0% ===
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Minority tracts: 1599/2796, Minority edges: 3936
+  Running METIS with edge weights...
+  Edge cut: 1200 (weighted: 15067)
+  MM districts: 7/5 (max minority: 73.6%)
+  MM districts avg PP: 0.101
+  Non-MM districts avg PP: 0.122
+
+[34/100] 
+=== EDGE-WEIGHTED: GA | 50x @ 45.0% ===
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Minority tracts: 1425/2796, Minority edges: 3398
+  Running METIS with edge weights...
+  Edge cut: 998 (weighted: 9524)
+  MM districts: 8/5 (max minority: 80.3%)
+  MM districts avg PP: 0.161
+  Non-MM districts avg PP: 0.143
+
+[35/100] 
+=== EDGE-WEIGHTED: GA | 50x @ 50.0% ===
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Minority tracts: 1275/2796, Minority edges: 3000
+  Running METIS with edge weights...
+  Edge cut: 922 (weighted: 9497)
+  MM districts: 7/5 (max minority: 81.3%)
+  MM districts avg PP: 0.188
+  Non-MM districts avg PP: 0.135
+
+[36/100] 
+=== EDGE-WEIGHTED: GA | 50x @ 55.00000000000001% ===
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Minority tracts: 1118/2796, Minority edges: 2564
+  Running METIS with edge weights...
+  Edge cut: 943 (weighted: 7411)
+  MM districts: 5/5 (max minority: 81.3%)
+  MM districts avg PP: 0.165
+  Non-MM districts avg PP: 0.156
+
+[37/100] 
+=== EDGE-WEIGHTED: GA | 100x @ 40.0% ===
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Minority tracts: 1599/2796, Minority edges: 3936
+  Running METIS with edge weights...
+  Edge cut: 930 (weighted: 27858)
+  MM districts: 7/5 (max minority: 71.5%)
+  MM districts avg PP: 0.147
+  Non-MM districts avg PP: 0.171
+
+[38/100] 
+=== EDGE-WEIGHTED: GA | 100x @ 45.0% ===
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Minority tracts: 1425/2796, Minority edges: 3398
+  Running METIS with edge weights...
+  Edge cut: 845 (weighted: 15101)
+  MM districts: 7/5 (max minority: 77.1%)
+  MM districts avg PP: 0.196
+  Non-MM districts avg PP: 0.163
+
+[39/100] 
+=== EDGE-WEIGHTED: GA | 100x @ 50.0% ===
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Minority tracts: 1275/2796, Minority edges: 3000
+  Running METIS with edge weights...
+  Edge cut: 1445 (weighted: 22928)
+  MM districts: 6/5 (max minority: 77.4%)
+  MM districts avg PP: 0.106
+  Non-MM districts avg PP: 0.086
+
+[40/100] 
+=== EDGE-WEIGHTED: GA | 100x @ 55.00000000000001% ===
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Minority tracts: 1118/2796, Minority edges: 2564
+  Running METIS with edge weights...
+  Edge cut: 1429 (weighted: 19843)
+  MM districts: 7/5 (max minority: 79.9%)
+  MM districts avg PP: 0.072
+  Non-MM districts avg PP: 0.089
+
+[41/100] 
+=== EDGE-WEIGHTED: LA | 1x @ 40.0% ===
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Minority tracts: 688/1388, Minority edges: 1456
+  Running METIS with edge weights...
+  Edge cut: 194 (weighted: 194)
+  MM districts: 1/2 (max minority: 52.4%)
+  MM districts avg PP: 0.094
+  Non-MM districts avg PP: 0.235
+
+[42/100] 
+=== EDGE-WEIGHTED: LA | 1x @ 45.0% ===
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Minority tracts: 617/1388, Minority edges: 1253
+  Running METIS with edge weights...
+  Edge cut: 194 (weighted: 194)
+  MM districts: 1/2 (max minority: 52.4%)
+  MM districts avg PP: 0.094
+  Non-MM districts avg PP: 0.235
+
+[43/100] 
+=== EDGE-WEIGHTED: LA | 1x @ 50.0% ===
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Minority tracts: 530/1388, Minority edges: 1005
+  Running METIS with edge weights...
+  Edge cut: 194 (weighted: 194)
+  MM districts: 1/2 (max minority: 52.4%)
+  MM districts avg PP: 0.094
+  Non-MM districts avg PP: 0.235
+
+[44/100] 
+=== EDGE-WEIGHTED: LA | 1x @ 55.00000000000001% ===
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Minority tracts: 469/1388, Minority edges: 862
+  Running METIS with edge weights...
+  Edge cut: 194 (weighted: 194)
+  MM districts: 1/2 (max minority: 52.4%)
+  MM districts avg PP: 0.094
+  Non-MM districts avg PP: 0.235
+
+[45/100] 
+=== EDGE-WEIGHTED: LA | 5x @ 40.0% ===
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Minority tracts: 688/1388, Minority edges: 1456
+  Running METIS with edge weights...
+  Edge cut: 395 (weighted: 571)
+  MM districts: 2/2 (max minority: 55.8%)
+  MM districts avg PP: 0.119
+  Non-MM districts avg PP: 0.124
+
+[46/100] 
+=== EDGE-WEIGHTED: LA | 5x @ 45.0% ===
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Minority tracts: 617/1388, Minority edges: 1253
+  Running METIS with edge weights...
+  Edge cut: 355 (weighted: 579)
+  MM districts: 2/2 (max minority: 56.8%)
+  MM districts avg PP: 0.103
+  Non-MM districts avg PP: 0.129
+
+[47/100] 
+=== EDGE-WEIGHTED: LA | 5x @ 50.0% ===
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Minority tracts: 530/1388, Minority edges: 1005
+  Running METIS with edge weights...
+  Edge cut: 271 (weighted: 323)
+  MM districts: 1/2 (max minority: 59.3%)
+  MM districts avg PP: 0.305
+  Non-MM districts avg PP: 0.168
+
+[48/100] 
+=== EDGE-WEIGHTED: LA | 5x @ 55.00000000000001% ===
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Minority tracts: 469/1388, Minority edges: 862
+  Running METIS with edge weights...
+  Edge cut: 237 (weighted: 249)
+  MM districts: 1/2 (max minority: 58.9%)
+  MM districts avg PP: 0.220
+  Non-MM districts avg PP: 0.170
+
+[49/100] 
+=== EDGE-WEIGHTED: LA | 10x @ 40.0% ===
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Minority tracts: 688/1388, Minority edges: 1456
+  Running METIS with edge weights...
+  Edge cut: 367 (weighted: 574)
+  MM districts: 1/2 (max minority: 60.8%)
+  MM districts avg PP: 0.310
+  Non-MM districts avg PP: 0.122
+
+[50/100] 
+=== EDGE-WEIGHTED: LA | 10x @ 45.0% ===
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Minority tracts: 617/1388, Minority edges: 1253
+  Running METIS with edge weights...
+  Edge cut: 419 (weighted: 734)
+  MM districts: 2/2 (max minority: 57.2%)
+  MM districts avg PP: 0.083
+  Non-MM districts avg PP: 0.125
+
+[51/100] 
+=== EDGE-WEIGHTED: LA | 10x @ 50.0% ===
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Minority tracts: 530/1388, Minority edges: 1005
+  Running METIS with edge weights...
+  Edge cut: 388 (weighted: 532)
+  MM districts: 1/2 (max minority: 59.7%)
+  MM districts avg PP: 0.131
+  Non-MM districts avg PP: 0.096
+
+[52/100] 
+=== EDGE-WEIGHTED: LA | 10x @ 55.00000000000001% ===
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Minority tracts: 469/1388, Minority edges: 862
+  Running METIS with edge weights...
+  Edge cut: 394 (weighted: 457)
+  MM districts: 0/2 (max minority: 49.5%)
+  Non-MM districts avg PP: 0.147
+
+[53/100] 
+=== EDGE-WEIGHTED: LA | 50x @ 40.0% ===
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Minority tracts: 688/1388, Minority edges: 1456
+  Running METIS with edge weights...
+  Edge cut: 489 (weighted: 2547)
+  MM districts: 2/2 (max minority: 62.0%)
+  MM districts avg PP: 0.114
+  Non-MM districts avg PP: 0.076
+
+[54/100] 
+=== EDGE-WEIGHTED: LA | 50x @ 45.0% ===
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Minority tracts: 617/1388, Minority edges: 1253
+  Running METIS with edge weights...
+  Edge cut: 240 (weighted: 632)
+  MM districts: 1/2 (max minority: 61.0%)
+  MM districts avg PP: 0.326
+  Non-MM districts avg PP: 0.180
+
+[55/100] 
+=== EDGE-WEIGHTED: LA | 50x @ 50.0% ===
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Minority tracts: 530/1388, Minority edges: 1005
+  Running METIS with edge weights...
+  Edge cut: 544 (weighted: 2994)
+  MM districts: 2/2 (max minority: 55.5%)
+  MM districts avg PP: 0.078
+  Non-MM districts avg PP: 0.176
+
+[56/100] 
+=== EDGE-WEIGHTED: LA | 50x @ 55.00000000000001% ===
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Minority tracts: 469/1388, Minority edges: 862
+  Running METIS with edge weights...
+  Edge cut: 745 (weighted: 1725)
+  MM districts: 2/2 (max minority: 61.9%)
+  MM districts avg PP: 0.072
+  Non-MM districts avg PP: 0.044
+
+[57/100] 
+=== EDGE-WEIGHTED: LA | 100x @ 40.0% ===
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Minority tracts: 688/1388, Minority edges: 1456
+  Running METIS with edge weights...
+  Edge cut: 551 (weighted: 6590)
+  MM districts: 1/2 (max minority: 59.8%)
+  MM districts avg PP: 0.332
+  Non-MM districts avg PP: 0.067
+
+[58/100] 
+=== EDGE-WEIGHTED: LA | 100x @ 45.0% ===
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Minority tracts: 617/1388, Minority edges: 1253
+  Running METIS with edge weights...
+  Edge cut: 261 (weighted: 2043)
+  MM districts: 1/2 (max minority: 58.3%)
+  MM districts avg PP: 0.209
+  Non-MM districts avg PP: 0.135
+
+[59/100] 
+=== EDGE-WEIGHTED: LA | 100x @ 50.0% ===
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Minority tracts: 530/1388, Minority edges: 1005
+  Running METIS with edge weights...
+  Edge cut: 397 (weighted: 2773)
+  MM districts: 1/2 (max minority: 58.9%)
+  MM districts avg PP: 0.046
+  Non-MM districts avg PP: 0.102
+
+[60/100] 
+=== EDGE-WEIGHTED: LA | 100x @ 55.00000000000001% ===
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Minority tracts: 469/1388, Minority edges: 862
+  Running METIS with edge weights...
+  Edge cut: 645 (weighted: 2328)
+  MM districts: 1/2 (max minority: 62.0%)
+  MM districts avg PP: 0.048
+  Non-MM districts avg PP: 0.060
+
+[61/100] 
+=== EDGE-WEIGHTED: MS | 1x @ 40.0% ===
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Minority tracts: 471/878, Minority edges: 927
+  Running METIS with edge weights...
+  Edge cut: 100 (weighted: 100)
+  MM districts: 2/2 (max minority: 53.8%)
+  MM districts avg PP: 0.233
+  Non-MM districts avg PP: 0.335
+
+[62/100] 
+=== EDGE-WEIGHTED: MS | 1x @ 45.0% ===
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Minority tracts: 410/878, Minority edges: 749
+  Running METIS with edge weights...
+  Edge cut: 100 (weighted: 100)
+  MM districts: 2/2 (max minority: 53.8%)
+  MM districts avg PP: 0.233
+  Non-MM districts avg PP: 0.335
+
+[63/100] 
+=== EDGE-WEIGHTED: MS | 1x @ 50.0% ===
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Minority tracts: 361/878, Minority edges: 611
+  Running METIS with edge weights...
+  Edge cut: 100 (weighted: 100)
+  MM districts: 2/2 (max minority: 53.8%)
+  MM districts avg PP: 0.233
+  Non-MM districts avg PP: 0.335
+
+[64/100] 
+=== EDGE-WEIGHTED: MS | 1x @ 55.00000000000001% ===
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Minority tracts: 306/878, Minority edges: 504
+  Running METIS with edge weights...
+  Edge cut: 100 (weighted: 100)
+  MM districts: 2/2 (max minority: 53.8%)
+  MM districts avg PP: 0.233
+  Non-MM districts avg PP: 0.335
+
+[65/100] 
+=== EDGE-WEIGHTED: MS | 5x @ 40.0% ===
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Minority tracts: 471/878, Minority edges: 927
+  Running METIS with edge weights...
+  Edge cut: 241 (weighted: 469)
+  MM districts: 1/2 (max minority: 60.1%)
+  MM districts avg PP: 0.087
+  Non-MM districts avg PP: 0.120
+
+[66/100] 
+=== EDGE-WEIGHTED: MS | 5x @ 45.0% ===
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Minority tracts: 410/878, Minority edges: 749
+  Running METIS with edge weights...
+  Edge cut: 201 (weighted: 265)
+  MM districts: 1/2 (max minority: 55.9%)
+  MM districts avg PP: 0.076
+  Non-MM districts avg PP: 0.174
+
+[67/100] 
+=== EDGE-WEIGHTED: MS | 5x @ 50.0% ===
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Minority tracts: 361/878, Minority edges: 611
+  Running METIS with edge weights...
+  Edge cut: 116 (weighted: 136)
+  MM districts: 2/2 (max minority: 54.5%)
+  MM districts avg PP: 0.198
+  Non-MM districts avg PP: 0.249
+
+[68/100] 
+=== EDGE-WEIGHTED: MS | 5x @ 55.00000000000001% ===
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Minority tracts: 306/878, Minority edges: 504
+  Running METIS with edge weights...
+  Edge cut: 132 (weighted: 152)
+  MM districts: 2/2 (max minority: 55.3%)
+  MM districts avg PP: 0.187
+  Non-MM districts avg PP: 0.267
+
+[69/100] 
+=== EDGE-WEIGHTED: MS | 10x @ 40.0% ===
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Minority tracts: 471/878, Minority edges: 927
+  Running METIS with edge weights...
+  Edge cut: 142 (weighted: 295)
+  MM districts: 2/2 (max minority: 52.6%)
+  MM districts avg PP: 0.138
+  Non-MM districts avg PP: 0.234
+
+[70/100] 
+=== EDGE-WEIGHTED: MS | 10x @ 45.0% ===
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Minority tracts: 410/878, Minority edges: 749
+  Running METIS with edge weights...
+  Edge cut: 122 (weighted: 185)
+  MM districts: 1/2 (max minority: 51.7%)
+  MM districts avg PP: 0.236
+  Non-MM districts avg PP: 0.235
+
+[71/100] 
+=== EDGE-WEIGHTED: MS | 10x @ 50.0% ===
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Minority tracts: 361/878, Minority edges: 611
+  Running METIS with edge weights...
+  Edge cut: 131 (weighted: 149)
+  MM districts: 2/2 (max minority: 55.4%)
+  MM districts avg PP: 0.213
+  Non-MM districts avg PP: 0.370
+
+[72/100] 
+=== EDGE-WEIGHTED: MS | 10x @ 55.00000000000001% ===
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Minority tracts: 306/878, Minority edges: 504
+  Running METIS with edge weights...
+  Edge cut: 127 (weighted: 127)
+  MM districts: 2/2 (max minority: 52.1%)
+  MM districts avg PP: 0.197
+  Non-MM districts avg PP: 0.294
+
+[73/100] 
+=== EDGE-WEIGHTED: MS | 50x @ 40.0% ===
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Minority tracts: 471/878, Minority edges: 927
+  Running METIS with edge weights...
+  Edge cut: 234 (weighted: 2537)
+  MM districts: 1/2 (max minority: 61.4%)
+  MM districts avg PP: 0.062
+  Non-MM districts avg PP: 0.206
+
+[74/100] 
+=== EDGE-WEIGHTED: MS | 50x @ 45.0% ===
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Minority tracts: 410/878, Minority edges: 749
+  Running METIS with edge weights...
+  Edge cut: 125 (weighted: 223)
+  MM districts: 2/2 (max minority: 52.5%)
+  MM districts avg PP: 0.165
+  Non-MM districts avg PP: 0.200
+
+[75/100] 
+=== EDGE-WEIGHTED: MS | 50x @ 50.0% ===
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Minority tracts: 361/878, Minority edges: 611
+  Running METIS with edge weights...
+  Edge cut: 184 (weighted: 1066)
+  MM districts: 1/2 (max minority: 57.0%)
+  MM districts avg PP: 0.096
+  Non-MM districts avg PP: 0.211
+
+[76/100] 
+=== EDGE-WEIGHTED: MS | 50x @ 55.00000000000001% ===
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Minority tracts: 306/878, Minority edges: 504
+  Running METIS with edge weights...
+  Edge cut: 128 (weighted: 128)
+  MM districts: 2/2 (max minority: 52.2%)
+  MM districts avg PP: 0.213
+  Non-MM districts avg PP: 0.307
+
+[77/100] 
+=== EDGE-WEIGHTED: MS | 100x @ 40.0% ===
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Minority tracts: 471/878, Minority edges: 927
+  Running METIS with edge weights...
+  Edge cut: 174 (weighted: 1164)
+  MM districts: 2/2 (max minority: 54.8%)
+  MM districts avg PP: 0.132
+  Non-MM districts avg PP: 0.263
+
+[78/100] 
+=== EDGE-WEIGHTED: MS | 100x @ 45.0% ===
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Minority tracts: 410/878, Minority edges: 749
+  Running METIS with edge weights...
+  Edge cut: 147 (weighted: 1434)
+  MM districts: 2/2 (max minority: 53.7%)
+  MM districts avg PP: 0.146
+  Non-MM districts avg PP: 0.209
+
+[79/100] 
+=== EDGE-WEIGHTED: MS | 100x @ 50.0% ===
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Minority tracts: 361/878, Minority edges: 611
+  Running METIS with edge weights...
+  Edge cut: 176 (weighted: 671)
+  MM districts: 2/2 (max minority: 54.2%)
+  MM districts avg PP: 0.132
+  Non-MM districts avg PP: 0.179
+
+[80/100] 
+=== EDGE-WEIGHTED: MS | 100x @ 55.00000000000001% ===
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Minority tracts: 306/878, Minority edges: 504
+  Running METIS with edge weights...
+  Edge cut: 155 (weighted: 155)
+  MM districts: 2/2 (max minority: 53.3%)
+  MM districts avg PP: 0.116
+  Non-MM districts avg PP: 0.223
+
+[81/100] 
+=== EDGE-WEIGHTED: SC | 1x @ 40.0% ===
+Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+  Minority tracts: 552/1323, Minority edges: 1107
+  Running METIS with edge weights...
+  Edge cut: 216 (weighted: 216)
+  MM districts: 0/3 (max minority: 46.3%)
+  Non-MM districts avg PP: 0.238
+
+[82/100] 
+=== EDGE-WEIGHTED: SC | 1x @ 45.0% ===
+Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+  Minority tracts: 460/1323, Minority edges: 844
+  Running METIS with edge weights...
+  Edge cut: 216 (weighted: 216)
+  MM districts: 0/3 (max minority: 46.3%)
+  Non-MM districts avg PP: 0.238
+
+[83/100] 
+=== EDGE-WEIGHTED: SC | 1x @ 50.0% ===
+Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+  Minority tracts: 386/1323, Minority edges: 658
+  Running METIS with edge weights...
+  Edge cut: 216 (weighted: 216)
+  MM districts: 0/3 (max minority: 46.3%)
+  Non-MM districts avg PP: 0.238
+
+[84/100] 
+=== EDGE-WEIGHTED: SC | 1x @ 55.00000000000001% ===
+Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+  Minority tracts: 307/1323, Minority edges: 473
+  Running METIS with edge weights...
+  Edge cut: 216 (weighted: 216)
+  MM districts: 0/3 (max minority: 46.3%)
+  Non-MM districts avg PP: 0.238
+
+[85/100] 
+=== EDGE-WEIGHTED: SC | 5x @ 40.0% ===
+Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+  Minority tracts: 552/1323, Minority edges: 1107
+  Running METIS with edge weights...
+  Edge cut: 304 (weighted: 488)
+  MM districts: 0/3 (max minority: 47.6%)
+  Non-MM districts avg PP: 0.164
+
+[86/100] 
+=== EDGE-WEIGHTED: SC | 5x @ 45.0% ===
+Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+  Minority tracts: 460/1323, Minority edges: 844
+  Running METIS with edge weights...
+  Edge cut: 441 (weighted: 569)
+  MM districts: 0/3 (max minority: 48.9%)
+  Non-MM districts avg PP: 0.123
+
+[87/100] 
+=== EDGE-WEIGHTED: SC | 5x @ 50.0% ===
+Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+  Minority tracts: 386/1323, Minority edges: 658
+  Running METIS with edge weights...
+  Edge cut: 534 (weighted: 706)
+  MM districts: 1/3 (max minority: 50.5%)
+  MM districts avg PP: 0.075
+  Non-MM districts avg PP: 0.125
+
+[88/100] 
+=== EDGE-WEIGHTED: SC | 5x @ 55.00000000000001% ===
+Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+  Minority tracts: 307/1323, Minority edges: 473
+  Running METIS with edge weights...
+  Edge cut: 281 (weighted: 329)
+  MM districts: 0/3 (max minority: 48.5%)
+  Non-MM districts avg PP: 0.185
+
+[89/100] 
+=== EDGE-WEIGHTED: SC | 10x @ 40.0% ===
+Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+  Minority tracts: 552/1323, Minority edges: 1107
+  Running METIS with edge weights...
+  Edge cut: 315 (weighted: 747)
+  MM districts: 1/3 (max minority: 51.9%)
+  MM districts avg PP: 0.152
+  Non-MM districts avg PP: 0.154
+
+[90/100] 
+=== EDGE-WEIGHTED: SC | 10x @ 45.0% ===
+Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+  Minority tracts: 460/1323, Minority edges: 844
+  Running METIS with edge weights...
+  Edge cut: 446 (weighted: 923)
+  MM districts: 1/3 (max minority: 53.5%)
+  MM districts avg PP: 0.086
+  Non-MM districts avg PP: 0.164
+
+[91/100] 
+=== EDGE-WEIGHTED: SC | 10x @ 50.0% ===
+Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+  Minority tracts: 386/1323, Minority edges: 658
+  Running METIS with edge weights...
+  Edge cut: 309 (weighted: 624)
+  MM districts: 1/3 (max minority: 54.1%)
+  MM districts avg PP: 0.221
+  Non-MM districts avg PP: 0.183
+
+[92/100] 
+=== EDGE-WEIGHTED: SC | 10x @ 55.00000000000001% ===
+Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+  Minority tracts: 307/1323, Minority edges: 473
+  Running METIS with edge weights...
+  Edge cut: 358 (weighted: 403)
+  MM districts: 0/3 (max minority: 47.1%)
+  Non-MM districts avg PP: 0.169
+
+[93/100] 
+=== EDGE-WEIGHTED: SC | 50x @ 40.0% ===
+Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+  Minority tracts: 552/1323, Minority edges: 1107
+  Running METIS with edge weights...
+  Edge cut: 386 (weighted: 3179)
+  MM districts: 1/3 (max minority: 54.0%)
+  MM districts avg PP: 0.093
+  Non-MM districts avg PP: 0.184
+
+[94/100] 
+=== EDGE-WEIGHTED: SC | 50x @ 45.0% ===
+Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+  Minority tracts: 460/1323, Minority edges: 844
+  Running METIS with edge weights...
+  Edge cut: 403 (weighted: 1726)
+  MM districts: 1/3 (max minority: 52.2%)
+  MM districts avg PP: 0.133
+  Non-MM districts avg PP: 0.151
+
+[95/100] 
+=== EDGE-WEIGHTED: SC | 50x @ 50.0% ===
+Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+  Minority tracts: 386/1323, Minority edges: 658
+  Running METIS with edge weights...
+  Edge cut: 473 (weighted: 1208)
+  MM districts: 1/3 (max minority: 50.6%)
+  MM districts avg PP: 0.174
+  Non-MM districts avg PP: 0.109
+
+[96/100] 
+=== EDGE-WEIGHTED: SC | 50x @ 55.00000000000001% ===
+Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+  Minority tracts: 307/1323, Minority edges: 473
+  Running METIS with edge weights...
+  Edge cut: 312 (weighted: 753)
+  MM districts: 0/3 (max minority: 49.3%)
+  Non-MM districts avg PP: 0.244
+
+[97/100] 
+=== EDGE-WEIGHTED: SC | 100x @ 40.0% ===
+Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+  Minority tracts: 552/1323, Minority edges: 1107
+  Running METIS with edge weights...
+  Edge cut: 430 (weighted: 8449)
+  MM districts: 0/3 (max minority: 44.4%)
+  Non-MM districts avg PP: 0.153
+
+[98/100] 
+=== EDGE-WEIGHTED: SC | 100x @ 45.0% ===
+Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+  Minority tracts: 460/1323, Minority edges: 844
+  Running METIS with edge weights...
+  Edge cut: 507 (weighted: 4665)
+  MM districts: 0/3 (max minority: 48.9%)
+  Non-MM districts avg PP: 0.118
+
+[99/100] 
+=== EDGE-WEIGHTED: SC | 100x @ 50.0% ===
+Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+  Minority tracts: 386/1323, Minority edges: 658
+  Running METIS with edge weights...
+  Edge cut: 337 (weighted: 1129)
+  MM districts: 0/3 (max minority: 46.6%)
+  Non-MM districts avg PP: 0.155
+
+[100/100] 
+=== EDGE-WEIGHTED: SC | 100x @ 55.00000000000001% ===
+Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+  Minority tracts: 307/1323, Minority edges: 473
+  Running METIS with edge weights...
+  Edge cut: 423 (weighted: 2601)
+  MM districts: 1/3 (max minority: 50.1%)
+  MM districts avg PP: 0.155
+  Non-MM districts avg PP: 0.147
+
+================================================================================
+RESULTS SAVED
+================================================================================
+State-level: C:\src\apportionment\research\gerry-compactness-tradeoff\results\compactness_state_level.csv
+District-level: C:\src\apportionment\research\gerry-compactness-tradeoff\results\compactness_district_level.csv
+
+================================================================================
+QUICK SUMMARY: MM vs Non-MM District Compactness
+================================================================================
+
+Baseline (no VRA optimization):
+  Edge cut: 280
+  Avg Polsby-Popper: 0.234
+  MM districts: 0
+
+Best edge-weighted (VRA success):
+  Weight factor: 1.0x @ 40.0%
+  Edge cut: 100 (-64.3%)
+  Avg Polsby-Popper: 0.284 (+21.3%)
+  MM districts: 2/2
+
+  MM districts PP: 0.233
+  Non-MM districts PP: 0.335
+  Gap: 0.102 (+43.7%)
+
+  -> Non-MM districts are 43.7% more compact

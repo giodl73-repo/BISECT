@@ -1,0 +1,9 @@
+{
+  "total_states": 35,
+  "geography_dominated": 21,
+  "mixed": 5,
+  "gerrymander_dominated": 9,
+  "avg_geographic_fraction": 1.971,
+  "states_where_gerrymandering_worsens_bias": 20,
+  "states_where_gerrymandering_improves_balance": 9
+}

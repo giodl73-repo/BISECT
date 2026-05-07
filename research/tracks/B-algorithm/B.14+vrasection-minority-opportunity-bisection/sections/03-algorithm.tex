@@ -1,0 +1,310 @@
+\section{The VRASection Algorithm}
+\label{sec:algorithm}
+
+\subsection{Setup and Notation}
+
+Let $G = (V, E, w)$ be the state's census-tract adjacency graph.
+Vertices $V$ are census tracts; edges $E$ connect tracts sharing a common
+boundary; edge weights $w(e) > 0$ are shared boundary lengths in metres.
+Vertex weights $\mathbf{p} \in \mathbb{Z}_{>0}^{|V|}$ are census tract populations.
+Let $k$ be the number of congressional districts allocated to this state.
+Let $\mathbf{m} \in \mathbb{R}_{\geq 0}^{|V|}$ be per-tract minority VAP
+counts, where $m_v$ is the minority voting-age population of tract $v$.
+
+\begin{definition}[Feasible bisection]
+A \emph{feasible bisection} of $G$ with ratio $i:(k-i)$, $1 \leq i \leq \lfloor k/2 \rfloor$,
+is a partition $(L, R)$ with $L \cup R = V$, $L \cap R = \emptyset$,
+and $\sum_{v \in L} p_v / \sum_{v \in V} p_v \in [i/k \cdot (1-\delta),\; i/k \cdot (1+\delta)]$
+for balance tolerance $\delta$ (congressional default: $\delta = 0.005$).
+The \emph{edge-cut} of the bisection is $\mathrm{EC}(L) = \sum_{e \in \partial(L)} w(e)$
+where $\partial(L)$ is the set of edges crossing the $L$/$R$ boundary.
+\end{definition}
+
+\begin{definition}[Isoperimetrically normalised edge-cut]
+For ratio $i:(k-i)$, the \emph{normalised edge-cut} is:
+\[
+  \mathrm{EC}_\text{norm}(i) = \frac{\min_{(L,R) \text{ feasible at } i:(k-i)} \mathrm{EC}(L)}{\sqrt{\min(i,\, k-i)}}
+\]
+The $\sqrt{\min(i,k-i)}$ denominator is GeoSection's isoperimetric correction
+\citep{b8paper}, which ensures that all ratios compete on equal footing.
+\end{definition}
+
+\subsection{Geographic Alignment Score}
+
+\begin{definition}[Minority VAP fraction]
+For a subset $S \subseteq V$, the \emph{minority VAP fraction} is:
+\[
+  \mathrm{MVAP}_\text{frac}(S) = \frac{\sum_{v \in S} m_v}{\sum_{v \in V} m_v}
+\]
+where the denominator is over the full vertex set $V$ of the current subgraph
+(not just $S$). This measures what fraction of the subgraph's total minority
+population lands on side $S$ of the bisection.
+\end{definition}
+
+\begin{definition}[Alignment score]
+\label{def:alignment}
+For a feasible bisection $(L, R)$ of $G$, the \emph{alignment score} is:
+\[
+  A(L, R) = \left|\mathrm{MVAP}_\text{frac}(L) - 0.5\right| \times 2
+           = \left|\frac{\sum_{v \in L} m_v}{\sum_{v \in V} m_v} - 0.5\right| \times 2
+\]
+Equivalently, $A(L,R) = |\mathrm{MVAP}_\text{frac}(L) - \mathrm{MVAP}_\text{frac}(R)|$.
+\end{definition}
+
+The alignment score has a natural interpretation.
+$A = 0$ means minority population is split exactly 50/50 between $L$ and $R$
+--- the bisection is \emph{dispersive}: it divides the minority community
+across both sides.
+$A = 1$ means all minority population is on one side --- the bisection is
+\emph{concentrating}: it places the entire minority community on one side.
+A high alignment score indicates that the state has a natural geographic
+boundary separating high-minority from low-minority areas, and that the
+bisection at ratio $i:(k-i)$ falls along this boundary.
+
+\subsection{Modified Selection Objective}
+
+VRASection modifies GeoSection's ratio selection criterion by combining
+the normalised edge-cut with the alignment score.
+
+\begin{definition}[VRASection selection score]
+\label{def:selection-score}
+For ratio $i:(k-i)$ with best-seed bisection $(L^*, R^*)$ at that ratio, the
+\emph{VRASection selection score} is:
+\[
+  \mathrm{score}(i) = \mathrm{EC}_\text{norm}(i)
+  - w_\text{vra} \cdot A(L^*, R^*)
+    \cdot \max\!\left(\mathrm{EC}_\text{norm}(i),\, 1\right)
+\]
+where $w_\text{vra} \in [0, 1]$ is the alignment weight (default $0.40$).
+The ratio $i^*$ selected by VRASection minimises this score:
+\[
+  i^* = \argmin_{1 \leq i \leq \lfloor k/2 \rfloor} \mathrm{score}(i)
+\]
+\end{definition}
+
+The $\max(\mathrm{EC}_\text{norm}(i), 1)$ factor ensures the alignment
+bonus scales with the compactness cost: a ratio with high EC gets a
+proportionally larger bonus for good alignment, so alignment can make a
+moderately expensive ratio competitive with a very cheap but dispersive ratio.
+For typical states where $\mathrm{EC}_\text{norm} \gg 1$ (edge cuts are in
+the hundreds of kilometres), this reduces to:
+\[
+  \mathrm{score}(i) \approx \mathrm{EC}_\text{norm}(i) \cdot (1 - w_\text{vra} \cdot A(L^*, R^*))
+\]
+which has a clean interpretation: the effective compactness cost is discounted
+by the alignment bonus.
+
+\begin{proposition}[VRASection reduces to GeoSection at $w_\text{vra} = 0$]
+\label{prop:geosection}
+When $w_\text{vra} = 0$, $\mathrm{score}(i) = \mathrm{EC}_\text{norm}(i)$
+for all $i$, and VRASection selects the same ratio as GeoSection.
+\end{proposition}
+
+\begin{proof}
+Immediate from Definition~\ref{def:selection-score}: the alignment term
+vanishes when $w_\text{vra} = 0$.
+\end{proof}
+
+\begin{proposition}[Pure geographic concentration at $w_\text{vra} = 1$]
+\label{prop:pure-concentration}
+When $w_\text{vra} = 1$, the selection score is
+$\mathrm{score}(i) = \mathrm{EC}_\text{norm}(i) \cdot (1 - A(L^*, R^*))$,
+and the algorithm maximises geographic alignment subject to compactness
+being non-negative.
+Among ratios where $A = 1$ (perfect concentration), the ratio with smallest
+$\mathrm{EC}_\text{norm}$ is selected.
+\end{proposition}
+
+\begin{proof}
+At $w_\text{vra} = 1$ and for $\mathrm{EC}_\text{norm} \gg 1$:
+$\mathrm{score}(i) = \mathrm{EC}_\text{norm}(i) \cdot (1 - A(L^*, R^*))$.
+This is minimised by maximising $A$ (since $\mathrm{EC}_\text{norm} > 0$).
+When $A = 1$, score is 0 regardless of compactness, but the $\max(\cdot, 1)$
+floor prevents the score from going negative: when EC is very small
+(near-zero), the $\max$ ensures a positive compactness signal is retained.
+\end{proof}
+
+\begin{remark}[Proposed default $w_\text{vra} = 0.40$]
+The default weight balances three considerations:
+(1) \emph{Legal}: at $w_\text{vra} \leq 0.5$, compactness is the predominant
+factor in the objective (see \S\ref{sec:legal-analysis});
+(2) \emph{Empirical}: sensitivity analysis (B.14 pending) suggests that
+$w_\text{vra} = 0.20$ often leaves alignment underutilised,
+while $w_\text{vra} = 0.60$ risks over-prioritising concentration in states
+with dispersed minority populations;
+(3) \emph{Interpretability}: the 60/40 compactness/alignment split
+is legible to non-technical audiences and can be stated plainly in
+expert testimony.
+\end{remark}
+
+\subsection{Legal Analysis: Why VRASection Is Not Racial Targeting}
+\label{sec:legal-analysis}
+
+The \emph{Shaw}/\emph{Miller} racial predominance test asks:
+did the legislature subordinate traditional redistricting principles
+to racial considerations?
+VRASection's design addresses this test on two levels.
+
+\paragraph{What the algorithm does not do.}
+VRASection does not:
+\begin{itemize}
+\item Set a target minority percentage for any district.
+\item Require any district to achieve $> 50\,\%$ minority VAP.
+\item Enumerate racial groups or treat different groups differently.
+\item Use racial identity as a selection criterion at any level
+  (minority VAP is a census attribute, not a racial classification).
+\end{itemize}
+
+\paragraph{What the algorithm does.}
+VRASection observes the spatial distribution of a user-designated
+population attribute (minority VAP) and rewards bisections that
+separate high-concentration tracts from low-concentration tracts.
+This is categorically a \emph{geographic} operation: the algorithm
+finds a natural geographic boundary in the tract adjacency graph.
+If tracts with high minority VAP were distributed uniformly across
+the state, the alignment score would be near zero for all ratios,
+and VRASection would select the same ratio as GeoSection.
+The alignment score is non-trivial only when there is a geographic
+boundary separating minority-concentrated areas from dispersed areas
+--- i.e., only when Gingles Prong 1's geographic compactness requirement
+is actually satisfied in the data.
+
+\paragraph{The compactness dominance condition.}
+At $w_\text{vra} < 0.5$, the compactness component of the score
+($\mathrm{EC}_\text{norm}$) exceeds the maximum possible alignment discount
+($w_\text{vra} \cdot 1 \cdot \mathrm{EC}_\text{norm} = w_\text{vra} \cdot \mathrm{EC}_\text{norm}$)
+by a factor of at least $(1 - w_\text{vra}) / w_\text{vra} > 1$.
+That is:
+\[
+  \text{compactness contribution} \;=\; (1 - w_\text{vra}) \cdot \mathrm{EC}_\text{norm}(i)
+  \;>\; w_\text{vra} \cdot \mathrm{EC}_\text{norm}(i) \;=\; \text{alignment contribution}
+\]
+Geographic compactness is quantifiably the predominant factor for any
+$w_\text{vra} \in (0, 0.5)$.
+The proposed default $w_\text{vra} = 0.40$ gives compactness 60\,\% weight
+and alignment 40\,\% weight, satisfying the \emph{Shaw} threshold with
+a 20\,pp margin.
+
+\paragraph{Contrast with MetisVra.}
+MetisVra adds minority concentration as a co-equal METIS constraint.
+In the ncon=2 formulation, minority VAP fraction and population balance
+are simultaneous hard constraints with equal solver priority.
+This likely fails \emph{Miller}'s predominance test in states where race
+must override compactness to achieve the minority target --- precisely
+the states where MetisVra fails empirically (AL, LA, SC).
+VRASection uses race as a soft tie-breaker, bounded to 40\,\% of the
+selection score, satisfying a proportionality standard rather than maximisation.
+
+\subsection{Algorithm Pseudocode}
+
+\begin{algorithm}[H]
+\caption{VRASection($G$, $k$, $\mathbf{m}$, $N$, $\delta$, $w_\text{vra}$)}
+\label{alg:vrasection}
+\begin{algorithmic}[1]
+\Require Graph $G = (V, E, w)$, districts $k \geq 1$, minority VAP $\mathbf{m} \in \mathbb{R}^{|V|}$,
+  seeds per ratio $N$, balance tolerance $\delta$, alignment weight $w_\text{vra}$
+\Ensure Partition $\{D_1, \ldots, D_k\}$ of $V$
+
+\If{$k = 1$} \Return $\{V\}$ \EndIf
+
+\State $M_\text{total} \gets \sum_{v \in V} m_v$
+  \hfill\Comment{total minority VAP in current subgraph}
+
+\State\Comment{\textbf{Phase 1: Ratio scan (first bisection level only)}}
+\State $\mathrm{best\_score} \gets +\infty$;
+   $i^* \gets 1$; $L^* \gets \emptyset$
+
+\For{$i = 1$ to $\lfloor k/2 \rfloor$}
+  \State $\mathrm{EC}_{\min} \gets +\infty$; $L_{\min} \gets \emptyset$
+  \For{$s = 1$ to $N$}
+    \State $(L, R) \gets \mathrm{METIS}(G,\, i:(k-i),\, \mathrm{ufactor} = 1 + \delta/k,\, \mathrm{seed}=s)$
+    \If{$\mathrm{EC}(L) < \mathrm{EC}_{\min}$}
+      $\mathrm{EC}_{\min} \gets \mathrm{EC}(L)$; $L_{\min} \gets L$
+    \EndIf
+  \EndFor
+  \State $\mathrm{EC}_\text{norm}(i) \gets \mathrm{EC}_{\min} / \sqrt{\min(i, k-i)}$
+    \hfill\Comment{isoperimetric normalisation}
+  \If{$M_\text{total} > 0$ \textbf{and} $w_\text{vra} > 0$}
+    \State $M_L \gets \sum_{v \in L_{\min}} m_v$
+    \State $A_i \gets |M_L / M_\text{total} - 0.5| \times 2$
+      \hfill\Comment{alignment score $\in [0, 1]$}
+    \State $\mathrm{score}(i) \gets \mathrm{EC}_\text{norm}(i)
+           - w_\text{vra} \cdot A_i \cdot \max(\mathrm{EC}_\text{norm}(i),\, 1)$
+  \Else
+    \State $\mathrm{score}(i) \gets \mathrm{EC}_\text{norm}(i)$
+      \hfill\Comment{reduce to GeoSection}
+  \EndIf
+  \If{$\mathrm{score}(i) < \mathrm{best\_score}$}
+    $\mathrm{best\_score} \gets \mathrm{score}(i)$; $i^* \gets i$; $L^* \gets L_{\min}$
+  \EndIf
+\EndFor
+
+\State\Comment{\textbf{Phase 2: Recursion with standard GeoSection (no VRA alignment)}}
+\State $V_L \gets L^*$;\ $V_R \gets V \setminus L^*$
+\State $G_L \gets G[V_L]$;\ $G_R \gets G[V_R]$
+  \hfill\Comment{induced subgraphs}
+
+\State \Return $\mathrm{GeoSection}(G_L, i^*, N, \delta)$
+         $\cup$ $\mathrm{GeoSection}(G_R, k - i^*, N, \delta)$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{remark}[Decoupled Optimization]
+\label{rem:decoupled}
+The current implementation evaluates the alignment score $A(\mathrm{split})$
+on the minimum-EC bisection found for each seed, rather than jointly
+optimising $\mathrm{EC}_\text{norm}$ and alignment.
+Concretely, lines 7--10 of Algorithm~\ref{alg:vrasection} select $L_{\min}$
+by $\min \mathrm{EC}(L)$; the alignment score of that compactness-optimal
+bisection is then applied post-hoc as a ratio-selection input.
+Seeds are searched for their compactness quality, not their alignment quality.
+
+A joint optimisation would evaluate $A(\mathrm{split})$ for every seed
+at every ratio and select the seed minimising
+$\mathrm{score}(i, s) = \mathrm{EC}_\text{norm}(i,s) - w_\text{vra}
+\cdot A(L_s) \cdot \max(\mathrm{EC}_\text{norm}(i,s),\, 1)$
+directly across the joint (seed, ratio) space.
+This would require evaluating the full score for all $N \cdot \lfloor k/2 \rfloor$
+(seed, ratio) pairs --- identical METIS call count, but with alignment
+computed for every seed rather than only the EC-minimising one.
+The decoupled approach is a conservative approximation: by fixing the
+compactness-optimal seed and reading off its alignment post-hoc,
+VRASection may underestimate the achievable alignment at each ratio.
+In the empirical results (Alabama 2:5 at $A = 0.42$), the approximation
+is sufficient for the correct ratio to win by a substantial margin (27.7
+score points).
+The joint optimisation is left for future work; it would not change the
+METIS call count but would change the seed-selection criterion.
+\end{remark}
+
+\paragraph{Design rationale: VRA alignment only at level 1.}
+VRASection applies the alignment bonus only at the first bisection level.
+Recursive calls use standard GeoSection (\texttt{ncon=1}, $w_\text{vra}=0$).
+This choice is deliberate and has both algorithmic and legal motivations.
+
+Algorithmically, the first bisection level has the most geographic information:
+the full state's minority population distribution is visible.
+At deeper recursion levels, the subgraph has already been split along a
+geographic boundary; the remaining minority population is either already
+concentrated (GeoSection will naturally preserve it) or dispersed (no
+further alignment is available).
+
+Legally, applying alignment at every level would make race increasingly
+influential across many bisection decisions, accumulating into racial
+predominance across the full bisection tree.
+A single first-level alignment observation, bounded to 40\,\% of the
+selection score, is categorically different from race influencing every
+split at every level.
+The algorithm can state: ``race was observed once, at the highest geographic
+scale, as a minor factor; all subsequent decisions were geographically
+determined.''
+
+\paragraph{Computational cost.}
+VRASection adds zero METIS calls compared to GeoSection: the alignment
+score is computed from the bisection assignments already produced by the
+ratio scan, not from additional METIS runs.
+The cost is one pass over the vertex set to accumulate minority VAP
+sums, which is $O(|V|)$ per ratio.
+Total computational overhead versus GeoSection:
+$O(\lfloor k/2 \rfloor \cdot |V|)$ additional arithmetic operations
+at the first bisection level, negligible compared to the METIS calls.

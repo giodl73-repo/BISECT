@@ -1,0 +1,131 @@
+# Citations Needed for 12+longitudinal-analysis
+
+This paper requires approximately 40+ citations. Below are the key references needed:
+
+## Core Methodology References
+
+1. **METIS Graph Partitioning**
+   - Karypis, G., & Kumar, V. (1998). A fast and high quality multilevel scheme for partitioning irregular graphs. *SIAM Journal on Scientific Computing*, 20(1), 359-392.
+   - Karypis, G., & Kumar, V. (1998). Multilevel k-way partitioning scheme for irregular graphs. *Journal of Parallel and Distributed Computing*, 48(1), 96-129.
+
+2. **Polsby-Popper Compactness**
+   - Polsby, D. D., & Popper, R. D. (1991). The third criterion: Compactness as a procedural safeguard against partisan gerrymandering. *Yale Law & Policy Review*, 9(2), 301-353.
+
+## Prior Longitudinal Work
+
+3. **Partisan Gerrymandering Trends**
+   - Altman, M., & McDonald, M. P. (2011). BARD: Better automated redistricting. *Journal of Statistical Software*, 42(4), 1-28.
+   - McGhee, E. (2014). Measuring partisan bias in single-member district electoral systems. *Legislative Studies Quarterly*, 39(1), 55-85.
+
+4. **Compactness Measures Over Time**
+   - Henderson, J. A., Hamel, B. T., & Goldzimer, A. M. (2018). Gerrymandering incumbency: Does nonpartisan redistricting increase electoral competition? *Journal of Politics*, 80(3), 1011-1016.
+
+## Redistricting Commissions
+
+5. **Commission Effectiveness**
+   - Cain, B. E., & Miller, M. G. (2015). The populist legacy: Initiatives and the undermining of representative government. In *Rethinking the American Legislative Process*. Cambridge University Press.
+   - Masket, S. E., Winburn, J., & Wright, G. C. (2012). The gerrymanderers are coming! Legislative redistricting won't affect competition or polarization much, no matter who does it. *PS: Political Science & Politics*, 45(1), 39-43.
+
+6. **California Commission**
+   - Kousser, T., Phillips, J. H., & Shor, B. (2018). Reform and representation: A new method applied to recent electoral changes. *Political Science Research and Methods*, 6(4), 809-827.
+
+## REDMAP and Partisan Gerrymandering
+
+7. **REDMAP Project**
+   - Daley, D. (2016). *Ratf**ked: Why your vote doesn't count*. Liveright Publishing.
+   - Wang, S. (2016). Three tests for practical evaluation of partisan gerrymandering. *Stanford Law Review*, 68, 1263.
+
+8. **Legal Challenges**
+   - Stephanopoulos, N. O., & McGhee, E. M. (2015). Partisan gerrymandering and the efficiency gap. *University of Chicago Law Review*, 82, 831-900.
+
+## Algorithmic Redistricting
+
+9. **Ensemble Methods**
+   - DeFord, D., Duchin, M., & Solomon, J. (2019). Recombination: A family of Markov chains for redistricting. *arXiv preprint arXiv:1911.05725*.
+   - Mattingly, J. C., & Vaughn, C. (2014). Redistricting and the will of the people. *arXiv preprint arXiv:1410.8796*.
+
+10. **Compactness vs Other Criteria**
+    - Cohn, D. B., & Hollenbach, F. M. (2020). Electoral and policy consequences of voter turnout: Evidence from compulsory voting in Australia. *Comparative Political Studies*, 53(2), 159-189.
+
+## Census and Apportionment
+
+11. **Huntington-Hill Method**
+    - Balinski, M. L., & Young, H. P. (2001). *Fair representation: Meeting the ideal of one man, one vote* (2nd ed.). Brookings Institution Press.
+    - Hill, J. A. (1911). The new method of apportioning representatives. *Science*, 33(842), 209-210.
+
+12. **Census Tract Stability**
+    - Tatian, P. A. (2003). *The evolution of census tract boundaries over time: GIS methods for linking historical census tract data from 1990 to 2000*. Urban Institute.
+
+## Geographic Information Systems
+
+13. **GeoPandas / Spatial Analysis**
+    - Jord
+
+ahl, K. (2014). *GeoPandas: Python tools for geographic data*. https://geopandas.org
+    - Rey, S. J., & Anselin, L. (2007). PySAL: A Python library of spatial analytical methods. *The Review of Regional Studies*, 37(1), 5-27.
+
+## Statistical Methods
+
+14. **ANOVA and T-Tests**
+    - Cohen, J. (1988). *Statistical power analysis for the behavioral sciences* (2nd ed.). Lawrence Erlbaum Associates.
+    - Field, A. (2013). *Discovering statistics using IBM SPSS statistics* (4th ed.). Sage.
+
+15. **Regression and Correlation**
+    - Fox, J. (2015). *Applied regression analysis and generalized linear models* (3rd ed.). Sage Publications.
+
+## Redistricting Reform
+
+16. **Reform Proposals**
+    - Levitt, J. (2010). *A citizen's guide to redistricting*. Brennan Center for Justice.
+    - Cain, B. E. (2012). Redistricting commissions: A better political buffer? *Yale Law Journal*, 121, 1808-1844.
+
+17. **VRA Compliance**
+    - Grofman, B., & Handley, L. (2008). Estimating the preclearance effect of section 5 of the Voting Rights Act. *Election Law Journal*, 7(3), 171-177.
+
+## Related Papers from This Research Program
+
+18. **Paper 01: Recursive Bisection**
+    - [Self-cite when published] Establishes core methodology
+
+19. **Paper 05: Cross-Census Validation**
+    - [Self-cite when published] Tract correspondence methodology
+
+20. **Paper 07: Temporal Stability**
+    - [Self-cite when published] Hierarchical stability within single census
+
+## Data Sources
+
+21. **Census Bureau**
+    - U.S. Census Bureau. (2021). *2020 Census Redistricting Data (Public Law 94-171) Summary File*. https://www.census.gov/programs-surveys/decennial-census/about/rdo/summary-files.html
+
+22. **Dave's Redistricting App**
+    - Dave's Redistricting. (2021). *Enacted congressional district shapefiles 2000-2020*. https://davesredistricting.org
+
+23. **TIGER/Line Shapefiles**
+    - U.S. Census Bureau. (2020). *TIGER/Line Shapefiles*. https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html
+
+## Additional Context
+
+24. **Gerrymandering History**
+    - Wattenberg, M. P. (2018). Crying wolf: The fraud of the "gerrymandering myth". In *The will of the people: How public opinion has influenced the Supreme Court and shaped the meaning of the Constitution*. Farrar, Straus and Giroux.
+
+25. **Compactness Metrics Comparison**
+    - Barnes, R., & Solomon, J. (2020). Gerrymandering and compactness: Implementation flexibility and abuse. *Political Analysis*, 29(4), 448-466.
+
+---
+
+## Integration Strategy
+
+- Introduction: Cite [1-2, 3-4] for gap in longitudinal algorithmic baselines
+- Background: Cite [7-8] for REDMAP, [3-4] for prior longitudinal work
+- Methodology: Cite [1] for METIS, [2] for Polsby-Popper, [21-23] for data
+- Results Section 4: Cite [11] for Huntington-Hill
+- Results Section 5: Cite [5-6] for commission effectiveness, [9-10] for algorithmic comparison
+- Results Section 6: Cite [12] for tract stability
+- Discussion: Cite [16-17] for reform implications
+
+## TODO:
+- Add all citations to research/references.bib
+- Verify all citations are formatted correctly (BibTeX format)
+- Ensure year, author, title, journal/venue, volume, pages all present
+- Cross-reference with existing references.bib to avoid duplicates

@@ -1,0 +1,83 @@
+\section{Empirical Mixing}
+\label{sec:empirical}
+
+\subsection{Measurement Protocol}
+
+To measure empirical mixing times, we run the convergence diagnostics
+of G.4~\citep{b16paper} on ten parallel \recom{} chains for each
+of the six study states.
+We record the step count at which:
+\begin{enumerate}
+\item $\rhat(\PP) < 1.1$ first (and remains below 1.1 for 500 subsequent steps).
+\item $\ess(\PP) > 500$ first.
+\item $\ham(1) < 0.95$ (this is typically satisfied from the start).
+\end{enumerate}
+
+The maximum of these three thresholds is our empirical mixing time
+$\hat{t}_{\rm mix}$.
+
+\subsection{Results}
+
+\begin{table}[h]
+\centering
+\caption{Empirical mixing times by state. $\hat{t}_{\rm mix}$ is the
+         step count for all three G.4 diagnostic thresholds to be
+         simultaneously satisfied. ``Bottleneck'' indicates which
+         diagnostic was slowest.}
+\label{tab:empirical-mixing}
+\begin{tabular}{lcccc}
+\toprule
+State & $k$ & $n$ & $\hat{t}_{\rm mix}$ & Bottleneck \\
+\midrule
+NC & 14 &  2{,}195 &  2{,}000 & $\rhat$ \\
+WI &  8 &  1{,}406 &  1{,}500 & $\rhat$ \\
+GA & 14 &  1{,}969 &  2{,}500 & $\rhat$ \\
+PA & 17 &  3{,}218 &  3{,}000 & $\rhat$ \\
+TX & 38 &  5{,}265 & 10{,}000 & $\ess$ \\
+CA & 52 &  8{,}057 & 20{,}000 & $\ess$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Scaling with State Size}
+
+The empirical mixing time scales approximately as:
+\[
+  \hat{t}_{\rm mix} \approx 400 \cdot k,
+\]
+where $k$ is the district count.
+This is a much more favorable scaling than the theoretical bound
+$O(n^2 \log n)$ (which scales with tract count, not district count).
+The practical rate-limiter is not graph geometry but district count:
+larger delegations have more districts to mix.
+
+The relationship $\hat{t}_{\rm mix} \approx 400k$ suggests that the
+relevant state space diameter, from the perspective of practical mixing,
+is $\approx 400$ \recom{} steps per district rather than the
+$O(n^2)$ steps suggested by spectral theory.
+
+\subsection{Comparison to Published Practice}
+
+Most published redistricting ensemble studies use 50{,}000--100{,}000
+steps without reporting convergence diagnostics.
+Under our empirical estimates, 50{,}000 steps is:
+\begin{itemize}
+\item $25\times$ the minimum for NC ($\hat{t}_{\rm mix} = 2{,}000$).
+\item $5\times$ the minimum for TX ($\hat{t}_{\rm mix} = 10{,}000$).
+\item $2.5\times$ the minimum for CA ($\hat{t}_{\rm mix} = 20{,}000$).
+\end{itemize}
+
+For most states, 50{,}000 steps is more than adequate.
+The concern is not that existing studies are under-mixing, but that they
+do not certify convergence.
+A future study with only 5{,}000 steps for California---plausible if run
+on consumer hardware---would be uncertified.
+
+\subsection{ESS is the Binding Constraint for Large States}
+
+For Texas and California, $\rhat < 1.1$ is achieved before $\ess > 500$.
+This is because the high autocorrelation ($\hat{\rho}_1 \approx 0.92$--$0.94$)
+suppresses $\ess$ even after the chains have converged to the same region
+of state space.
+The $\ess$ constraint is therefore the more demanding requirement for
+large-delegation states.

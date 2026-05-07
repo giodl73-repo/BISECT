@@ -1,0 +1,284 @@
+% H.2 redist-ensemble references
+
+%% --- Core algorithmic references ---
+
+@inproceedings{wilson1996generating,
+  author    = {Wilson, David B.},
+  title     = {Generating Random Spanning Trees More Quickly than the
+               Cover Time},
+  booktitle = {Proceedings of the 28th Annual ACM Symposium on Theory
+               of Computing},
+  pages     = {296--303},
+  year      = {1996},
+  publisher = {ACM},
+  doi       = {10.1145/237814.237880}
+}
+
+@article{deford2021recombination,
+  author    = {DeFord, Daryl and Duchin, Moon and Solomon, Justin},
+  title     = {Recombination: A Family of Markov Chains for Redistricting},
+  journal   = {Harvard Data Science Review},
+  volume    = {3},
+  number    = {1},
+  year      = {2021},
+  doi       = {10.1162/99608f92.eb30390f}
+}
+
+@article{lawler1980loop,
+  author    = {Lawler, Gregory F.},
+  title     = {A Self-Avoiding Random Walk},
+  journal   = {Duke Mathematical Journal},
+  volume    = {47},
+  number    = {3},
+  pages     = {655--693},
+  year      = {1980},
+  doi       = {10.1215/S0012-7094-80-04741-9}
+}
+
+@article{aldous1991random,
+  author    = {Aldous, David},
+  title     = {The Random Walk Construction of Uniform Spanning Trees
+               and Uniform Labelled Trees},
+  journal   = {SIAM Journal on Discrete Mathematics},
+  volume    = {3},
+  number    = {4},
+  pages     = {450--465},
+  year      = {1990},
+  doi       = {10.1137/0403039}
+}
+
+@article{propp1998exact,
+  author    = {Propp, James G. and Wilson, David B.},
+  title     = {How to Get a Perfectly Random Sample from a Generic
+               {Markov} Chain and Generate a Random Spanning Tree of
+               a Directed Graph},
+  journal   = {Journal of Algorithms},
+  volume    = {27},
+  number    = {2},
+  pages     = {170--217},
+  year      = {1998},
+  publisher = {Academic Press},
+  doi       = {10.1006/jagm.1997.0917}
+}
+
+%% --- Redistricting ensemble methods ---
+
+@misc{gerrychain2021,
+  author    = {{MGGG Redistricting Lab}},
+  title     = {{GerryChain}: A Python Package for Redistricting Ensembles},
+  year      = {2021},
+  howpublished = {\url{https://github.com/mggg/GerryChain}},
+  note      = {Version 0.3}
+}
+
+@article{autry2021multiscale,
+  author    = {Autry, Eric A. and Carter, Daniel and Herschlag,
+               Gregory J. and Hunter, Zach and Mattingly, Jonathan C.},
+  title     = {Metropolized Multiscale Forest Recombination for
+               Redistricting},
+  journal   = {Multiscale Modeling \& Simulation},
+  volume    = {19},
+  number    = {4},
+  pages     = {1885--1914},
+  year      = {2021},
+  doi       = {10.1137/21M1406854}
+}
+
+@article{carter2019merge,
+  author    = {Carter, Daniel and Hunter, Zach and Herschlag, Gregory
+               and Mattingly, Jonathan},
+  title     = {A Merge-Split Proposal for Reversible {Monte Carlo}
+               {Markov} Chain Sampling of Redistricting Plans},
+  journal   = {arXiv preprint arXiv:1911.01503},
+  year      = {2019}
+}
+
+@article{herschlag2020quantifying,
+  author    = {Herschlag, Gregory and Kang, Han Sung and Luo, Justin and
+               Graves, Christy Vaughn and Bangia, Sachet and Ravier, Robert
+               and Mattingly, Jonathan C.},
+  title     = {Quantifying Gerrymandering in North Carolina},
+  journal   = {Statistics and Public Policy},
+  volume    = {7},
+  number    = {1},
+  pages     = {30--38},
+  year      = {2020},
+  doi       = {10.1080/2330443X.2020.1828567}
+}
+
+@article{chikina2017assessing,
+  author    = {Chikina, Maria and Frieze, Alan and Pegden, Wesley},
+  title     = {Assessing Significance in a {Markov} Chain without Mixing},
+  journal   = {Proceedings of the National Academy of Sciences},
+  volume    = {114},
+  number    = {11},
+  pages     = {2860--2864},
+  year      = {2017},
+  doi       = {10.1073/pnas.1617096114}
+}
+
+%% --- Convergence diagnostics ---
+
+@article{gelman1992inference,
+  author    = {Gelman, Andrew and Rubin, Donald B.},
+  title     = {Inference from Iterative Simulation Using Multiple
+               Sequences},
+  journal   = {Statistical Science},
+  volume    = {7},
+  number    = {4},
+  pages     = {457--472},
+  year      = {1992},
+  doi       = {10.1214/ss/1177011136}
+}
+
+@article{geyer1992practical,
+  author    = {Geyer, Charles J.},
+  title     = {Practical {Markov} Chain {Monte Carlo}},
+  journal   = {Statistical Science},
+  volume    = {7},
+  number    = {4},
+  pages     = {473--483},
+  year      = {1992},
+  doi       = {10.1214/ss/1177011137}
+}
+
+@article{vehtari2021rank,
+  author    = {Vehtari, Aki and Gelman, Andrew and Simpson, Daniel and
+               Carpenter, Bob and B{\"u}rkner, Paul-Christian},
+  title     = {Rank-Normalization, Folding, and Localization: An
+               Improved {$\hat{R}$} for Assessing Convergence of {MCMC}},
+  journal   = {Bayesian Analysis},
+  volume    = {16},
+  number    = {2},
+  pages     = {667--718},
+  year      = {2021},
+  doi       = {10.1214/20-BA1221}
+}
+
+@article{welford1962note,
+  author    = {Welford, B. P.},
+  title     = {Note on a Method for Calculating Corrected Sums of
+               Squares and Products},
+  journal   = {Technometrics},
+  volume    = {4},
+  number    = {3},
+  pages     = {419--420},
+  year      = {1962},
+  doi       = {10.1080/00401706.1962.10490022}
+}
+
+%% --- Rust ecosystem ---
+
+@misc{rayon2024,
+  author    = {{Rayon Contributors}},
+  title     = {Rayon: A Data Parallelism Library for {Rust}},
+  year      = {2024},
+  howpublished = {\url{https://github.com/rayon-rs/rayon}}
+}
+
+@inproceedings{matsakis2014rust,
+  author    = {Matsakis, Nicholas D. and Klock, Felix S.},
+  title     = {The {Rust} Language},
+  booktitle = {Proceedings of the 2014 ACM SIGAda Annual Conference on
+               High Integrity Language Technology},
+  pages     = {103--104},
+  year      = {2014},
+  doi       = {10.1145/2663171.2663188}
+}
+
+@misc{lemire2019fast,
+  author    = {Lemire, Daniel},
+  title     = {Fast Random Integer Generation in an Interval},
+  journal   = {ACM Transactions on Modeling and Computer Simulation},
+  volume    = {29},
+  number    = {1},
+  pages     = {1--12},
+  year      = {2019},
+  doi       = {10.1145/3230636}
+}
+
+%% --- Graph partitioning (METIS context) ---
+
+@article{karypis1998fast,
+  author    = {Karypis, George and Kumar, Vipin},
+  title     = {A Fast and High Quality Multilevel Scheme for Partitioning
+               Irregular Graphs},
+  journal   = {SIAM Journal on Scientific Computing},
+  volume    = {20},
+  number    = {1},
+  pages     = {359--392},
+  year      = {1998},
+  doi       = {10.1137/S1064827595287997}
+}
+
+%% --- Legal context ---
+
+@misc{scotus2019rucho,
+  author    = {{Supreme Court of the United States}},
+  title     = {\textit{Rucho v.\ Common Cause}, 588 U.S.\ 684 (2019)},
+  year      = {2019}
+}
+
+%% --- Portfolio papers ---
+
+@article{dellaLibera2026b1,
+  author    = {Della-Libera, Gio},
+  title     = {From Apportionment to Boundary Design: Extending
+               Huntington-Hill to Congressional Redistricting},
+  journal   = {Working paper},
+  year      = {2026},
+  note      = {B.1 --- foundational recursive bisection paper}
+}
+
+@article{dellaLibera2026b7,
+  author    = {Della-Libera, Gio},
+  title     = {The Solution Space of Minimum-Edge-Cut Redistricting:
+               Seed Sensitivity and Partisan Variance},
+  journal   = {Working paper},
+  year      = {2026},
+  note      = {B.7 --- 50-state seed sensitivity}
+}
+
+@article{dellaLibera2026b11,
+  author    = {Della-Libera, Gio},
+  title     = {{ApportionRegions}: Redistricting as the Geographic
+               Completion of Huntington-Hill},
+  journal   = {Working paper},
+  year      = {2026},
+  note      = {B.11 --- ApportionRegions 50-state evaluation}
+}
+
+@article{dellaLibera2026g0,
+  author    = {Della-Libera, Gio},
+  title     = {Algorithmic Redistricting and Ensemble Methods:
+               A Framework for Comparison},
+  journal   = {Working paper},
+  year      = {2026},
+  note      = {G.0 --- G-track methodology framework}
+}
+
+@article{dellaLibera2026g1,
+  author    = {Della-Libera, Gio},
+  title     = {Where Does the Algorithmic Map Fall? {ApportionRegions}
+               vs.\ {GerryChain} Ensemble for Six States},
+  journal   = {Working paper},
+  year      = {2026},
+  note      = {G.1 --- direct percentile placement}
+}
+
+@article{dellaLibera2026g4,
+  author    = {Della-Libera, Gio},
+  title     = {Convergence Diagnostics for Redistricting {Markov} Chains:
+               {$\hat{R}$}, {ESS}, and {Hamming} Autocorrelation},
+  journal   = {Working paper},
+  year      = {2026},
+  note      = {G.4 --- ensemble diagnostics formalisation}
+}
+
+@article{dellaLibera2026h1,
+  author    = {Della-Libera, Gio},
+  title     = {Bisection-Ensemble Duality in Algorithmic Redistricting},
+  journal   = {Working paper},
+  year      = {2026},
+  note      = {H.1 --- bisection-ensemble connection}
+}

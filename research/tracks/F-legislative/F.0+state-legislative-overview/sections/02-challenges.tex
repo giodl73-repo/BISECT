@@ -1,0 +1,84 @@
+\section{Challenges}
+\label{sec:challenges}
+
+State legislative redistricting poses two computational challenges that do not
+arise at the congressional level: the high-$k$ problem and the resolution problem.
+
+\subsection{The High-$k$ Problem}
+\label{sec:challenges:highk}
+
+Congressional redistricting requires partitioning a state into at most 52 parts
+(California, 2020). The METIS multilevel $k$-way partitioner
+\citep{karypis1998fast} handles this comfortably at census-tract resolution:
+California's $\sim\!9{,}000$ tracts divided into 52 districts gives
+$\sim\!173$ tracts per district on average, well above the minimum needed
+for meaningful boundary optimisation.
+
+State legislative redistricting changes this picture dramatically. New Hampshire's
+400-seat house must be drawn from $\approx 320$ census tracts---fewer tracts
+than districts. Wyoming's 60-seat house covers $\approx 140$ tracts, giving a
+ratio of 0.43. Even Washington state's 98-seat house has a ratio of
+$98/1{,}458 \approx 0.067$, above the threshold where tract resolution degrades
+compactness optimisation.
+
+The high-$k$ problem has two manifestations:
+\begin{enumerate}
+  \item \textbf{Degeneracy}: when $k > n_{\mathrm{tracts}}$, METIS cannot produce
+    $k$ non-empty parts---some districts must consist of fractional tracts.
+    The pipeline switches to block-group or block resolution to restore
+    $k \ll n_{\mathrm{units}}$.
+  \item \textbf{Coarseness}: when $k/n_{\mathrm{tracts}}$ approaches $0.05$,
+    each district contains on average only 20 tracts. The boundary between
+    adjacent districts is defined by only a few shared edges, making
+    Polsby-Popper scores artificially high and edge-cut optimisation less
+    meaningful. Resolution improvement restores the geometric richness of the
+    boundary set.
+\end{enumerate}
+
+\subsection{The Resolution Problem}
+\label{sec:challenges:resolution}
+
+The \texttt{redist} pipeline currently supports three resolution levels:
+\begin{itemize}
+  \item \textbf{Census tract}: $\sim\!73{,}000$ nationally, 1,200--8,000
+    residents each. Standard for congressional redistricting.
+  \item \textbf{Census block group}: $\sim\!220{,}000$ nationally, 600--3,000
+    residents each. Needed for high-$k$ state chambers.
+  \item \textbf{Census block}: $\sim\!8{,}100{,}000$ nationally, 0--600
+    residents each. Required only for the most extreme cases (NH, WY).
+\end{itemize}
+
+Moving from tract to block-group resolution multiplies the number of geographic
+units by $\sim\!3\times$ and increases the adjacency graph size by a similar
+factor. This increases runtime by approximately 3--4$\times$ per state.
+Building block-group adjacency data requires a separate preprocessing step:
+\begin{verbatim}
+python scripts/data/geography/build_unit_adjacency.py \
+  --resolution block_group --year 2020
+\end{verbatim}
+This is a one-time cost per census year; the resulting \texttt{.adj.bin} files
+are cached and reused across all runs at that resolution.
+
+\subsection{The Resolution Selection Rule}
+\label{sec:challenges:rule}
+
+We derive the resolution selection rule empirically and theoretically in
+companion paper F.3 \citep{dellaLibera2026stateLegResolution}. The rule is:
+
+\begin{definition}[Resolution selection rule]
+  Let $k$ be the number of districts and $n_{\mathrm{tracts}}$ be the number of
+  census tracts in the state. Use block-group resolution if and only if
+  \[
+    \frac{k}{n_{\mathrm{tracts}}} > 0.05.
+  \]
+\end{definition}
+
+Intuitively: each district should contain at least 20 base geographic units
+on average ($k \cdot 20 \leq n_{\mathrm{tracts}}$, i.e., $k/n \leq 0.05$).
+Below this threshold, the boundary set is rich enough for meaningful compactness
+optimisation; above it, resolution upgrade is necessary.
+
+In practice, most state house chambers have $k/n < 0.05$ and can use tract
+resolution. The exceptions are principally small states with large lower chambers:
+New Hampshire, Wyoming, Vermont, and South Dakota. Washington state sits at the
+boundary ($k/n \approx 0.067$) and benefits meaningfully from block-group resolution.

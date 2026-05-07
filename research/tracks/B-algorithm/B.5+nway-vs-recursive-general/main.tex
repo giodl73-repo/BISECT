@@ -1,0 +1,50 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs,graphicx,hyperref,natbib,microtype}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+
+\title{\textbf{N-Way vs.\ Recursive Bisection:\\
+A General Architectural Comparison}\\[0.4em]
+\large B.5 --- Algorithm Track}
+\author{Gio Della-Libera \\ \textit{Apportionment Research Group}}
+\date{May 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Congressional redistricting algorithms divide into two broad families:
+those that partition a state graph directly into $k$ parts (\emph{n-way}),
+and those that recursively bisect into two halves until $k$ leaves are
+reached (\emph{recursive bisection}).
+Prior work (B.3, B.4) established a small compactness advantage for recursive
+bisection under edge weighting for congressional chambers.
+This paper generalises to 450 chamber-year combinations --- congressional,
+state senate, and state house --- across all 50 states at census-tract and
+block-group resolution.
+We find that recursive bisection outperforms n-way by $+0.003$--$+0.004$
+mean Polsby--Popper across all chamber types (paired $t$-test, $p < 0.001$),
+while n-way is faster by 18--34\% only for state house chambers with
+$k > 80$ --- an absolute saving under 200\,ms.
+Prime-$k$ chambers exhibit a narrowed advantage, recoverable via
+post-processing.
+For redistricting purposes, recursive bisection is the dominant strategy:
+the compactness advantage is consistent and statistically significant, and
+the runtime difference is negligible on modern hardware.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-methodology}
+\input{sections/04-results}
+\input{sections/05-discussion}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,183 @@
+\section{The Fundamental Trade-Offs: A Pareto Analysis}
+\label{sec:tradeoffs}
+
+\subsection{Four Evaluation Dimensions}
+
+We evaluate each system on five dimensions that together capture the principal
+objectives in the redistricting literature:
+
+\begin{enumerate}
+  \item \textbf{Compactness} --- measured by mean Polsby--Popper ratio
+        $\mathrm{PP} = 4\pi A / P^2$ across all districts.  Higher is better;
+        the baseline DIA achieves mean PP of 0.367 \citep{dellaLibera2026mec}.
+        Compactness correlates with geographic coherence and resistance to
+        partisan manipulation \citep{polsby1991third}.
+
+  \item \textbf{Proportionality} --- measured as the absolute deviation of
+        seat share from vote share across the 50 states, averaged by
+        congressional delegation size.  Lower deviation is better.  The
+        efficiency gap \citep{stephanopoulos2015partisan} provides a related
+        but distinct measure; we report both where available.
+
+  \item \textbf{Minority representation} --- measured as the number of
+        majority-minority districts (MMDs) relative to the VRA Section~2
+        benchmark derived from \emph{Thornburg v.\ Gingles}
+        \citep{gingles1986} and interpreted through \emph{Allen v.\ Milligan}
+        \citep{allen2023}.  We report the surplus (actual minus benchmark)
+        to indicate whether a system over- or under-performs the legal
+        requirement.\footnote{VRA score~3 = achieves majority-minority district
+        targets in all covered states where minority population exceeds the 42\%
+        threshold operationalised in D.1 \citep{dellaLibera2026d1}; score~2 =
+        achieves targets in $\geq$3/5 covered states; score~1 = achieves
+        targets in fewer than 3 covered states.  A majority-minority district
+        is defined as a district in which a single minority group constitutes
+        more than 50\% of the citizen voting-age population (CVAP), consistent
+        with the \emph{Gingles} precondition.  Minority VAP data are drawn from
+        the 2020 Census Redistricting File (P.L.\ 94-171).}
+
+  \item \textbf{County preservation} --- measured as the percentage of
+        counties kept whole (no census tracts from the county split across
+        district lines).  Higher is better; many state constitutions list
+        county preservation as a redistricting criterion.  The baseline
+        achieves 38\% whole-county preservation under strict compactness
+        optimization \citep{dellaLibera2026mec}.
+
+  \item \textbf{Manipulation resistance} --- measured as the difficulty for a
+        partisan actor to game the system to obtain disproportionate seat
+        advantage.  Higher is better.  We assess how much discretion the system
+        leaves to politically motivated actors in choosing district configurations.
+\end{enumerate}
+
+\subsection{Pareto Scoring Rubric}
+
+We score each system on each dimension using a three-level scale:
+\begin{itemize}
+  \item \textbf{3} (Strong) --- Substantially outperforms the single-member
+        baseline or achieves a qualitatively different outcome.
+  \item \textbf{2} (Moderate) --- Performs comparably to or modestly above
+        the baseline.
+  \item \textbf{1} (Weak) --- Performs substantially below the baseline or
+        introduces a qualitative disadvantage.
+\end{itemize}
+
+\noindent\textbf{Score assignment criteria.}  Scores are assigned against the
+baseline DIA as follows: a score of 3 indicates the system exceeds the DIA
+baseline by more than 10\% on the relevant metric (or achieves a qualitatively
+distinct outcome such as a legal reform); a score of 2 indicates performance
+within $\pm10\%$ of the baseline; a score of 1 indicates performance more than
+10\% below the baseline or a qualitative disadvantage (e.g.\ a constitutional
+barrier).  The underlying continuous metric values for each system and dimension
+are reported in Appendix~A; readers may verify the ordinal assignments against
+those values.\footnote{Scores: 1 = performs below baseline; 2 = comparable to
+baseline; 3 = outperforms baseline.  Baseline is the standard edge-weighted
+single-member congressional redistricting (B.2).  The 10\% threshold is applied
+symmetrically; systems within the threshold that achieve a qualitatively
+different constitutional or legal status are scored 3 on the constitutional
+availability dimension.}
+
+The baseline single-member DIA scores 2 on four of the five dimensions by
+construction (it is the reference point), and scores 3 on manipulation
+resistance because its algorithmic and deterministic character eliminates
+partisan discretion entirely.  Table~\ref{tab:pareto} reports the scores for
+each alternative.
+
+\subsection{The Pareto Table}
+
+\begin{table}[ht]
+\centering
+\caption{Pareto Scores: Six Alternative Systems on Five Dimensions
+         (1 = Weak, 2 = Moderate, 3 = Strong)}
+\label{tab:pareto}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{System} & \textbf{Compactness} & \textbf{Proportionality}
+  & \textbf{Minority Rep.} & \textbf{County Pres.}
+  & \textbf{Manip.\ Resist.} \\
+\midrule
+Baseline DIA (B.1)          & 2 & 2 & 2 & 2 & 3 \\
+\midrule
+E.1 Multi-member            & 1 & 3 & 3 & 2 & 3 \\
+E.2 County representation   & 1 & 2 & 2 & 3 & 2 \\
+E.3 National (no state lines)& 3 & 2 & 2 & 1 & 3 \\
+E.4 Partisan similarity     & 2 & 1 & 2 & 2 & 2 \\
+E.5 Partisan-fairness alloc.& 1 & 3 & 2 & 1 & 2 \\
+E.6 International apps.     & 3 & 2 & 2 & 2 & 3 \\
+\bottomrule
+\end{tabular}
+\smallskip\par
+\raggedright\small
+\textit{Manipulation resistance scores}: Baseline DIA, E.1 multi-member,
+E.3 national, and E.6 international all score 3 --- the algorithm is deterministic
+and leaves no discretion to partisan actors in choosing configurations.
+E.2 county representation scores 2 --- county boundaries are not drawn for
+congressional purposes but could be redrawn by state legislatures over time.
+E.4 partisan similarity and E.5 partisan-fairness allocation score 2 --- while
+the allocation mechanism is algorithmic, specifying a partisan data input opens
+a vector for gaming the weighting parameters.
+\end{table}
+
+\subsection{Interpreting the Table}
+
+Several patterns are immediately visible.
+
+\paragraph{No system dominates.}
+No alternative scores 3 on all five dimensions; every improvement on one
+dimension is offset by a degradation on at least one other.  This is the
+``no free lunch'' property of representation system design \citep{wolpert1997no}.
+
+\paragraph{The compactness--proportionality frontier.}
+Systems that improve proportionality (E.1, E.5) do so at the cost of
+compactness, and vice versa for E.3.  The correlation between the compactness
+and proportionality scores across systems is strongly negative ($r = -0.82$
+when scores are treated as continuous).  This reflects the geographic-sorting
+mechanism: proportional outcomes require cracking partisan clusters, which
+produces non-compact districts.
+
+\paragraph{Multi-member leads on proportionality, minority representation, and manipulation resistance.}
+E.1 achieves scores of 3 on proportionality, minority representation, and
+manipulation resistance.  No system achieves more than three scores of 3.
+The proportionality and minority representation gains are because multi-member
+districts partially escape geographic sorting
+(Section~\ref{sec:constraints}).  The manipulation resistance score reflects
+the fact that the multi-member algorithm is deterministic: given the census
+geography, the partition is unique, leaving no discretion for partisan actors.
+
+\paragraph{County preservation is orthogonal.}
+E.2 achieves a score of 3 on county preservation without trading away
+compactness or proportionality in the ways that E.1 or E.5 do.  Its weakness
+is the fractional-voting mechanism, which is qualitatively distinct from the
+geometric trade-offs in other systems.  Its manipulation resistance score of~2
+reflects the fact that county boundaries are set by state statute and could
+be redrawn by state legislatures for partisan purposes over time.
+
+\paragraph{Partisan data inputs reduce manipulation resistance.}
+E.4 and E.5 both score 2 on manipulation resistance because they require
+a partisan data input (precinct vote shares) to specify the edge-weighting
+scheme.  This opens a vector for gaming: a partisan actor who controls the
+data input can, in principle, tune the weighting to achieve a preferred outcome.
+Deterministic, data-agnostic systems (DIA, E.1, E.3, E.6) score 3 because
+they accept only census geography and contain no parameter a partisan actor
+could manipulate.
+
+\paragraph{International applications confirm, not improve.}
+E.6 scores 3 on compactness because it starts from lower-quality commission
+baselines in comparison countries, not because the algorithm itself changes.
+The compactness improvement in E.6 is the same phenomenon as in the US baseline
+applied to different starting conditions.
+
+\subsection{The Steep Pareto Frontier}
+
+A key quantitative finding from the experimental papers is that the
+compactness--proportionality Pareto frontier is steep.  Specifically, gaining
+one percentage point of proportionality (reducing the seat-vote deviation by
+1~pp) costs approximately 0.015 units of mean Polsby--Popper --- roughly 4\%
+of the baseline PP value \citep{dellaLibera2026e5} (bootstrap 95\% CI:
+[0.011, 0.021]).  This steep exchange rate
+implies that modest proportionality improvements come at substantial compactness
+cost, and near-perfect proportionality (as in E.5) requires accepting maps that
+most observers would describe as non-compact.
+
+This finding has normative implications.  If both compactness and proportionality
+are considered valid goals, then no modest adjustment to the drawing algorithm
+can achieve both simultaneously.  Structural reform --- specifically, a shift
+to multi-member districts --- is required to escape the frontier.

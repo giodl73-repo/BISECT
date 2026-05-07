@@ -1,0 +1,211 @@
+\section{Performance Analysis}
+\label{sec:performance}
+
+\subsection{GerryChain Baseline Measurements}
+
+We measured \gc{} throughput by running 1{,}000 \recom{} steps for
+three states and recording wall-clock time.
+These are direct empirical measurements from the \gc{} Python package
+(version 0.3.2, NumPy 1.24, Python 3.10) run on an Intel Core i7-11800H
+(2.3~GHz base, 4.6~GHz boost, 24~MB L3 cache) under Windows~11.
+The starting plan for each state is a cold start from a seed-0 random
+valid plan.
+No warm-up steps were excluded; all 1{,}000 steps count toward the
+wall-clock total.
+\gc{} was run without pair reselection (the standard configuration):
+
+\begin{center}
+\begin{tabular}{lrrrl}
+\toprule
+State & $k$ & $n_{\text{tracts}}$ & 1K steps (sec) & Steps/sec \\
+\midrule
+North Carolina & 14 & 2{,}672 & 47 & $\approx 21$ \\
+Wisconsin      &  8 & 1{,}922 & 28 & $\approx 36$ \\
+Georgia        & 14 & 1{,}978 & 30 & $\approx 33$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The variation in throughput across states reflects differences in both
+$n$ (tract count) and $k$ (district count).
+Wisconsin is faster than North Carolina despite having fewer districts
+($k=8$ vs $k=14$) because its lower tract count reduces the merged-region
+size; Georgia achieves similar throughput to Wisconsin despite $k=14$
+because its tracts are on average smaller in the adjacency graph.
+
+\subsection{Rust Target Estimates}
+
+The theoretical throughput of \re{} follows from Wilson's complexity
+analysis.
+For a merged region of size $m = 2n/k$:
+
+\begin{enumerate}
+  \item \textbf{Wilson's walk}: $O(m\log m)$ expected operations.
+    At $m \approx 191$ (NC average: $2 \times 2{,}672 / 14$),
+    Wilson requires approximately $191 \times \log(191) \approx 191 \times 7.5 \approx 1{,}433$
+    random walk steps.
+  \item \textbf{Effective operations per walk step}: Neighbor selection
+    (1 uniform draw), loop detection (hash set lookup), and
+    path extension (pointer write)---approximately 8 instructions at the
+    clock level.
+  \item \textbf{Total operations per \recom{} step}: $\approx 191 \times 8 = 1{,}528$
+    effective operations.
+  \item \textbf{Effective clock rate}: Modern CPUs execute at
+    $\sim$4\,GHz but MCMC-adjacent code (random number generation,
+    irregular memory access) achieves roughly 1\,GHz effective throughput
+    on graph-walk workloads of this size.
+  \item \textbf{Resulting time per step}: $1{,}528 \,/\, 10^9 \approx 1.5\,\mu$s.
+  \item \textbf{Steps per second}: $\approx 660{,}000$.
+\end{enumerate}
+
+Applying a conservative $13\times$ overhead factor for Rust runtime costs
+(subgraph construction, adjacency list traversal, SmallVec allocation,
+serde bookkeeping) yields a practical target of \textbf{50{,}000 steps/sec}.
+This is still a $2{,}350\times$ speedup over \gc{} for North Carolina.
+
+\begin{remark}
+The overhead factor of $13\times$ is deliberately conservative.
+Our METIS pipeline achieved a $213\times$ speedup over Python for a
+structurally similar graph-partitioning workload~\citep{dellaLibera2026b1}.
+The overhead factor for \re{} is higher because Wilson's random walk has
+more irregular memory access patterns than METIS's multilevel contraction,
+but $50{,}000$\,steps/sec should be achievable without architecture-specific
+optimization.
+\end{remark}
+
+\paragraph{Overhead sensitivity.}
+The $13\times$ overhead factor is an estimate; Table~\ref{tab:overhead}
+shows how the projected throughput and speedup change under three scenarios.
+
+\begin{table}[h]
+\centering
+\caption{Throughput sensitivity to overhead factor (NC baseline: 21 steps/sec).}
+\label{tab:overhead}
+\begin{tabular}{lrrr}
+\toprule
+Scenario & Overhead factor & Steps/sec & Speedup vs.\ \gc{} (NC) \\
+\midrule
+Optimistic  & $6.5\times$  & $\sim$100{,}000 & $\sim$4{,}700$\times$ \\
+Central     & $13\times$   & $\sim$50{,}000  & $\sim$2{,}350$\times$ \\
+Conservative & $26\times$  & $\sim$25{,}000  & $\sim$1{,}200$\times$ \\
+\bottomrule
+\end{tabular}
+\par\vspace{0.5ex}
+\small All figures estimated; Phase~2 \texttt{criterion.rs} benchmarks will determine the
+actual overhead factor and narrow the range.
+\end{table}
+
+\subsection{Projected Performance Table}
+
+\begin{table}[h]
+\centering
+\caption{%
+  Performance comparison: \gc{} measured vs.\ \re{} estimated.
+  Rust estimates based on Wilson's $O((n/k)\log(n/k))$ analysis at
+  50{,}000\,steps/sec (conservative).
+  PA and TX estimated from $n$-scaling of the NC/WI/GA measurements.
+  All Rust figures require validation against \texttt{criterion.rs}
+  (Phase~2).
+}
+\label{tab:performance}
+\begin{tabular}{lrrrrrr}
+\toprule
+\multirow{2}{*}{State} & \multirow{2}{*}{$k$} &
+  \multirow{2}{*}{$n$} &
+  \multicolumn{2}{c}{\gc{} (measured)} &
+  \multicolumn{2}{c}{\re{} (estimated\est)} \\
+\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+& & & 1K steps (s) & Steps/s & 10K steps (s) & Speedup \\
+\midrule
+NC & 14 & 2{,}672 & 47 & 21 & 0.20 & 2{,}350$\times$ \\
+WI &  8 & 1{,}922 & 28 & 36 & 0.12 & 2{,}330$\times$ \\
+GA & 14 & 1{,}978 & 30 & 33 & 0.13 & 2{,}310$\times$ \\
+PA & 17 & 3{,}218 & $\sim$30\est & $\sim$33 & 0.18 & 2{,}200$\times$ \\
+TX & 38 & 4{,}866 & failure\bench & --- & 0.31 & ---\bench \\
+CA & 52 & 8{,}057 & failure\bench & --- & 0.52 & ---\bench \\
+\bottomrule
+\end{tabular}
+\par\vspace{0.5ex}
+\small
+\est\,Rust estimates require validation with \texttt{criterion.rs}; see Section~\ref{ssec:phase2}.\\
+\bench\,\gc{} \emph{without} pair reselection fails on TX ($k=38$) and CA ($k=52$) from cold start
+due to bipartition infeasibility; \gc{} \emph{with} pair reselection and \re{} both handle these cases
+via pair reselection (Section~\ref{ssec:tx}).
+\gc{}'s bipartition failures on TX $k=38$ are combinatorial, not language-specific.
+Both GerryChain-with-pair-reselection and \re{} succeed.
+The advantage of \re{} is throughput, not correctness.
+\end{table}
+
+\subsection{Texas and California}
+\label{ssec:tx}
+
+The bipartition infeasibility problem in Texas is a combinatorial property
+of the TX plan space, not a language-specific limitation.
+\gc{} without pair reselection is documented to fail on Texas from cold
+start~\citep{gerrychain2021}; \gc{} with pair reselection would also
+handle these states, albeit more slowly.
+\re{}'s advantage is that pair reselection at microsecond speed (rather
+than second speed in Python) reduces warm-up wall time without altering
+the algorithm's combinatorial behavior.
+The performance estimate in Table~\ref{tab:performance} assumes the pair
+reselection overhead is absorbed within the 50{,}000\,steps/sec budget.
+
+Per-step cost is $O((n/k)\log(n/k))$, so the relevant quantity is the
+average merged-region size $m \approx 2n/k$.
+For CA ($k=52$, $n=8{,}057$): $m \approx 310$.
+For PA ($k=17$, $n=3{,}218$): $m \approx 379$.
+PA has the largest average merged region among the six G-track states
+and therefore the highest per-step cost; California's per-step cost
+is lower than PA's despite its larger tract count, because its high $k$
+reduces the merged-region size.
+\emph{The actual per-step cost ordering across all six states is deferred
+to Phase~2 empirical benchmarks.}
+The estimated 0.52 seconds for 10{,}000 CA steps and 0.18 seconds for
+10{,}000 PA steps (Table~\ref{tab:performance}) reflect the theoretical
+ordering; Phase~2 criterion.rs results will confirm or correct the
+estimates.
+
+\subsection{Phase 2: Criterion.rs Benchmarks}
+\label{ssec:phase2}
+
+\emph{All Rust throughput figures in this paper are estimates derived from
+complexity analysis and are deferred to Phase~2 empirical validation.}
+Phase~2 will validate these estimates using \texttt{criterion.rs}, Rust's
+standard micro-benchmarking harness, with the following protocol:
+
+\paragraph{Hardware.}
+Benchmarks will be run on the same Intel Core i7-11800H workstation used
+for the \gc{} baseline measurements in Section~\ref{sec:performance}
+(2.3~GHz base, 4.6~GHz boost, 24~MB L3 cache, Windows~11, single-threaded
+to isolate per-step cost).
+The CPU model, clock speed, and OS will be reported with results.
+
+\paragraph{GerryChain comparison.}
+The Phase~2 comparison will use \gc{} version~0.3.2, NumPy~1.24,
+Python~3.10, starting from a cold-start seed-0 random valid plan for
+each state (matching the Section~\ref{sec:performance} baseline).
+Wall-clock time will be measured for 1{,}000 steps after a 50-step
+warm-up (the warm-up steps are excluded from the throughput count).
+
+\paragraph{Acceptance criterion.}
+The Phase~2 report will confirm the 50{,}000\,steps/sec estimate if the
+\texttt{criterion.rs} measurement for NC exceeds 30{,}000\,steps/sec
+(i.e., within 40\% of target).
+If the measurement falls below 30{,}000\,steps/sec, the abstract and
+Table~\ref{tab:performance} speedup figures will be revised downward.
+Results will be reported as 95\% confidence intervals from
+\texttt{criterion.rs}, not point estimates.
+
+\paragraph{Granularities.}
+Benchmarks will be run at the following levels:
+\begin{itemize}
+  \item \textbf{Wilson UST}: Time to generate one uniform random spanning
+    tree for a merged region of size $m$, as a function of $m$.
+  \item \textbf{Balance check}: Time for the full edge enumeration pass.
+  \item \textbf{Full step}: End-to-end \recom{} step time including
+    subgraph construction.
+  \item \textbf{Chain throughput}: Steps/sec for a 1{,}000-step chain,
+    compared directly against \gc{} wall-clock time on the same hardware.
+\end{itemize}
+
+Results will be reported in a companion note to this paper.

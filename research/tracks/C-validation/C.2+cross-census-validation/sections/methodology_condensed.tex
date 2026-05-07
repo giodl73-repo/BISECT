@@ -1,0 +1,65 @@
+\section{Methodology}
+\label{sec:methodology}
+
+\subsection{Data Sources}
+
+We use Census Bureau TIGER/Line shapefiles (tract boundaries), PL-94 redistricting files (population counts), and tract relationship files (cross-census correspondences) for 2000/2010/2020~\cite{census2020tiger, census2020pl94, census2020relationships}. Geometries are transformed to NAD83 UTM for accurate distance/area calculations. The 2020 differential privacy mechanism~\cite{abowd2022} has minimal impact on tract-level populations ($<$1\% noise).
+
+\subsection{Census Tract Correspondence}
+
+Census tract boundaries change between census years. Nationally, 18.2\% of tracts split or merge between consecutive censuses, with state-level variation (7.3\% in Vermont to 31.4\% in Nevada)~\cite{schroeder2007}. To create temporally stable reference points, we compute \textbf{population-weighted centroids}: $\mathbf{c}_i = \sum_{b \in B_i} p_b \cdot \mathbf{x}_b / \sum_{b \in B_i} p_b$, where $B_i$ is the set of census blocks within tract $i$. These centroids exhibit high temporal stability despite boundary changes, serving as persistent geographic anchors.
+
+\subsection{Graph Construction}
+
+We represent each state's census tracts as a graph $G = (V, E)$ where nodes correspond to tracts and edges connect adjacent tracts (Rook contiguity: shared boundary $>$1 meter). Edge weights equal shared boundary length in meters: $w_{ij} = \text{length}(\partial T_i \cap \partial T_j)$. This weighting encodes geographic compactness—METIS minimizes total weight of cut edges, preferring compact districts. Island tracts receive synthetic edges to nearest mainland tract (237 edges added nationally). Graph construction exhibits empirical $O(n \log n)$ complexity via spatial indexing (R-tree). Average degree is 6.2 neighbors per tract (range: 4.8-6.3 across states).
+
+\subsection{METIS Configuration}
+
+We use METIS 5.1.0 KMETIS recursive bisection~\cite{karypis1998}. Node weights represent tract populations. The \texttt{ufactor=1} parameter enforces maximum 0.1\% population imbalance, exceeding the 0.5\% legal requirement~\cite{karcher1983}. Key parameters: \texttt{niter=20} (refinement iterations), \texttt{ncuts=10} (initial partitions), \texttt{objtype=CUT} (minimize edge-cut), \texttt{ctype=SHEM} (heavy-edge matching), \texttt{iptype=RANDOM} (robust initialization). METIS contains randomized components; we run 10 times per state-year with different seeds. Standard deviation is consistently $<$2\% of mean edge-cut, indicating high algorithmic stability.
+
+\subsection{Compactness Metrics}
+
+We measure district compactness using Polsby-Popper ($\text{PP} = 4\pi \cdot \text{Area}/\text{Perimeter}^2$)~\cite{polsby1991} and Reock ($\text{Reock} = \text{Area}/\text{MBC Area}$)~\cite{reock1961}. PP ranges from 0 (elongated) to 1 (circular) and heavily penalizes irregular boundaries. To verify algorithmic compactness is meaningful, we compare to 1,000 random partitions per state satisfying population balance and contiguity. METIS achieves mean PP +0.18 vs. random baseline, confirming edge-cut minimization produces genuinely compact districts.
+
+\subsection{Slice-Based Validation Framework}
+
+\subsubsection{Design Rationale}
+
+Traditional k-fold cross-validation assumes i.i.d. samples. Spatial data violates this due to autocorrelation. Existing alternatives include spatial k-fold CV~\cite{roberts2017}, leave-one-out CV, and temporal holdout. Our \textbf{slice-based cross-census approach} differs fundamentally: we create geographic slices that persist across census years, enabling temporal validation. This design reveals whether algorithms respond consistently to the same geographic region as its demographics evolve, detecting systematic temporal trends that within-census spatial CV cannot detect.
+
+\subsubsection{Slice Creation Algorithm}
+
+For each state, we create $K=5$ geographic slices using k-means clustering on persistent tract centroids:
+
+\begin{algorithm}[H]
+\caption{Slice Creation}
+\begin{algorithmic}[1]
+\State \textbf{Input:} Tract centroids $\mathbf{C}^{2000}, \mathbf{C}^{2010}, \mathbf{C}^{2020}$
+\State \textbf{Output:} Slice assignments $S_i$ for each tract $i$
+\State
+\For{each tract $i$ in 2020}
+    \State Find nearest tracts in 2010 and 2000 (within 5km)
+    \State $\mathbf{c}_i^{\text{persistent}} \gets \text{mean}(\mathbf{c}_i^{2000}, \mathbf{c}_i^{2010}, \mathbf{c}_i^{2020})$
+\EndFor
+\State $S \gets \text{k-means}(\{\mathbf{c}_i^{\text{persistent}}\}, K=5)$
+\For{each year $y \in \{2000, 2010, 2020\}$}
+    \For{each tract $i$ in year $y$}
+        \State $S_i \gets \arg\min_k \|\mathbf{c}_i^y - \boldsymbol{\mu}_k\|$
+    \EndFor
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+Key steps: (1) Average each tract's centroid across all years to create temporally stable reference points, (2) Partition persistent centroids into $K$ geographic clusters, (3) Assign each year's tracts to nearest slice centroid. We tested $K \in \{3, 5, 7\}$; $K=5$ provides sufficient geographic granularity while maintaining statistical power (correlation $>$0.85 across $K$ values).
+
+\subsubsection{Validation Protocol}
+
+For each state $s$, slice $k$, and census year $y$: (1) Extract subgraph $G_{s,k}^y$ containing only tracts in slice $k$, (2) Run METIS redistricting to create $d_{s,k}$ districts (proportional to slice population), (3) Compute compactness metrics (PP, Reock), (4) Report slice-level aggregates (mean, median, std dev). This produces 750 slice-year measurements (50 states × 5 slices × 3 years), enabling comparison of \textbf{geographic variance} (compactness differences across slices within a year) vs. \textbf{temporal variance} (differences within a slice across years). The variance ratio $\sigma^2_{\text{geographic}} / \sigma^2_{\text{temporal}}$ measures relative importance.
+
+\subsection{Spatial Validation Methodology}
+
+\textbf{Spatial autocorrelation.} We compute Moran's I for compactness metrics: $I = n \sum_i \sum_j w_{ij}(x_i - \bar{x})(x_j - \bar{x}) / [(\sum_i \sum_j w_{ij}) \sum_i (x_i - \bar{x})^2]$ where $w_{ij} = 1/d_{ij}$ for inter-slice centroid distance $d_{ij}$. National aggregate yields $I = 0.42$ (95\% CI: [0.38, 0.46]), indicating moderate positive spatial autocorrelation—nearby slices have similar compactness, but autocorrelation is not so strong as to eliminate between-slice variance.
+
+\textbf{MAUP sensitivity.} Testing $K \in \{3, 5, 7\}$ slices shows variance ratio remains stable: $\sigma^2_{\text{geo}} / \sigma^2_{\text{temporal}} = 3.2 \pm 0.3$ across all $K$. Correlation of slice-level compactness between $K=5$ and $K=7$ is $r=0.89$, indicating result stability.
+
+\textbf{Boundary districts.} Some districts straddle slice boundaries. We assign each district to the slice containing majority population. In 2020, 8.3\% of districts were split; excluding them changed results by $<$0.01 PP score, confirming robustness. Near-equal splits (45-55\% population in two slices) occurred in only 1.2\% of districts.

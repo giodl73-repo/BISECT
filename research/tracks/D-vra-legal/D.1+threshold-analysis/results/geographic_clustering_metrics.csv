@@ -1,0 +1,6 @@
+state_code,state_name,num_tracts,morans_i,morans_i_p_value,clustering_index_40,clustering_index_45,clustering_index_50,std_minority_pct,cv_minority_pct,mm_tract_pct
+GA,Georgia,2796,0.7695,0.0010,0.7923,0.7387,0.6879,0.2717,0.5470,0.4560
+AL,Alabama,1437,0.7159,0.0010,0.6272,0.5673,0.5038,0.2748,0.6871,0.3055
+MS,Mississippi,878,0.5893,0.0010,0.7464,0.6741,0.6143,0.2636,0.5679,0.4112
+LA,Louisiana,1388,0.5867,0.0010,0.7135,0.6586,0.5936,0.2770,0.6026,0.3818
+SC,South Carolina,1323,0.5805,0.0010,0.6105,0.5320,0.4603,0.2249,0.5756,0.2918

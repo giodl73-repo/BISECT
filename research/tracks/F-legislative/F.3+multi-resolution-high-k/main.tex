@@ -1,0 +1,69 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}[proposition]
+\newtheorem{lemma}{Lemma}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\title{F.3: Resolution Selection for State Legislative Redistricting:\\
+       When Census Tracts Are Too Coarse}
+
+\author{Gio Della-Libera}
+
+\date{Draft --- \today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Census tracts, the standard geographic unit for congressional redistricting,
+contain 1,200--8,000 residents each and are well-matched to districts of
+700,000+ residents. State legislative districts, by contrast, may contain
+as few as 3,500 residents (New Hampshire House), making the average tract
+contain \emph{more} than one district. Redistricting at tract resolution
+in these settings is geometrically degenerate: districts must be composed
+of fractional tracts, population balance constraints cannot be met, and
+compactness scores are artificially inflated by the coarseness of the
+boundary set.
+We introduce the resolution-selection rule $k/n_{\mathrm{tracts}} > 0.05$:
+when the district-to-tract ratio exceeds $5\%$, we shift from census-tract
+to census block-group resolution. Block groups (600--3,000 residents each)
+restore the invariant that each district contains at least 20 base units,
+enabling meaningful compactness optimisation and sub-$0.5\%$ population balance.
+We validate this threshold empirically on Washington (98 districts),
+Texas (150 districts), and California (80 districts), showing that
+block-group resolution improves mean Polsby-Popper from $0.368$ to $0.398$
+and reduces population deviation from $0.8\%$ to $0.4\%$ for the Washington
+House. Runtime at block-group resolution is 3--4$\times$ slower than at
+tract resolution due to the larger adjacency graph.
+We supply a resolution recommendation table for all 50 states and all
+lower chambers, and discuss the MAUP implications of resolution choice
+for partisan and compactness outcomes.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-resolution-problem}
+\input{sections/03-rule-of-thumb}
+\input{sections/04-empirical-comparison}
+\input{sections/05-maup-analysis}
+\input{sections/06-runtime-analysis}
+\input{sections/07-recommendation-table}
+\input{sections/08-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

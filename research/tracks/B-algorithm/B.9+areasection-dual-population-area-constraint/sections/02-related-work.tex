@@ -1,0 +1,62 @@
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Minimum-edge-cut redistricting.}
+The algorithmic redistricting literature has converged on edge-cut minimisation
+as a mathematically clean, politically neutral criterion
+\citep{chikina2017,deford2019,duchin2020}.
+METIS multilevel graph partitioning \citep{karypis1998} is the standard solver.
+\citet{b7paper} establish that for states where the seed-sweep converges, the
+MEC plan is a property of the graph, not the seed.
+GeoSection \citep{b8paper} introduces isoperimetric normalisation to select
+among feasible split ratios at each bisection level.
+
+\paragraph{Compactness and geographic fairness.}
+Polsby-Popper \citep{polsby1991}, Reock \citep{reock1961}, and convex-hull ratio
+are standard single-district compactness metrics used in court challenges.
+These metrics evaluate the shape of individual districts, not the structure of
+the bisection tree.
+Edge-cut minimisation is related but distinct: it minimises total boundary
+length across all districts simultaneously, which is a stronger and
+more globally consistent criterion.
+
+Area balance as a redistricting criterion has received limited formal attention.
+\citet{vickrey1961} proposes that legislative districts should be ``compact and
+contiguous'' without specifying land area formally.
+\citet{niemi1990} study compactness empirically but focus on shape metrics.
+To our knowledge, AreaSection is the first algorithm to enforce simultaneous
+population and land-area balance as a formal METIS dual constraint.
+
+\paragraph{Multi-constraint graph partitioning.}
+METIS supports $k$-way partitioning with $\mathtt{ncon} > 1$ balance constraints
+\citep{karypis1999metis}.
+The dual-constraint mode has been used in scientific computing for
+load balancing with memory constraints \citep{devine2002,hendrickson1995},
+but has not previously been applied to redistricting.
+We use $\mathtt{ncon}=2$ with $\mathtt{tpwgts}$ specifying population fractions
+and $\mathtt{ubvec}=[1.001,\, 1.10]$ specifying per-constraint imbalance
+tolerances (0.1\,\% for population, 10\,\% for area).
+
+\paragraph{Urban concentration and partisan effects.}
+The geographic sorting of American voters --- Democrats concentrated in urban
+cores, Republicans spread through suburban and rural areas --- is well
+documented \citep{rodden2019,chen2013}.
+\citet{stephanopoulos2015} propose the efficiency gap as a measure of partisan
+bias arising from geographic sorting.
+\citet{mcghee2014} show that geographic sorting alone, without any intentional
+gerrymandering, produces Republican-leaning maps under most compactness
+criteria.
+AreaSection is designed to test whether enforcing land-area balance
+mitigates this systematic effect.
+Our empirical results (\S\ref{sec:evaluation}) show it changes the
+competitiveness structure but not the seat allocation, suggesting that
+geographic sorting is robust to changes in the bisection ratio structure.
+
+\paragraph{Lorenz curves in spatial analysis.}
+The Lorenz curve \citep{lorenz1905} measures concentration in distributions.
+\citet{frank2010} apply spatial Lorenz curves to population-area distributions
+in urban analysis.
+We adapt this tool to redistricting feasibility analysis: the population-area
+Lorenz curve (population fraction as a function of cumulative area fraction,
+sorted densest-first) predicts which split ratios can simultaneously satisfy
+population and area constraints.

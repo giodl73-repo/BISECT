@@ -1,0 +1,156 @@
+\subsection{Total Minority Population Calculation}
+
+We compute total minority population as all non-White residents, aggregating across racial and ethnic categories reported in 2020 Census:
+
+\begin{equation}
+\text{minority}_i = \text{total\_pop}_i - \text{white\_non\_hispanic}_i
+\end{equation}
+
+This encompasses Black, Hispanic/Latino, Asian, Native American, Pacific Islander, and multiracial populations. The minority percentage for tract $i$ is:
+
+\begin{equation}
+m_i = \frac{\text{minority}_i}{\text{total\_pop}_i}
+\end{equation}
+
+This approach contrasts with traditional single-group VRA analysis (e.g., ``Black-majority'' districts) and aligns with Supreme Court recognition of coalition districts in \textit{Bartlett v. Strickland} (2009). For Alabama, total minority (36.9\%) substantially exceeds largest single group Black (25.6\%), making coalition districts essential for VRA compliance.
+
+\subsection{Graph Construction}
+
+For each state, we construct a planar graph where:
+
+\textbf{Vertices}: Census tracts (2020 Census geography). Vertex count ranges from 878 tracts (Mississippi) to 9,129 tracts (California).
+
+\textbf{Edges}: Queen contiguity—tracts sharing any boundary segment or corner vertex are adjacent. This captures geographic connectedness for contiguity constraints.
+
+\textbf{Vertex Weights}: Single-constraint (1D) population weights $w_v = \text{total\_pop}_v$. We use population balance as the sole hard constraint, with minority concentration achieved through edge weights rather than multi-constraint optimization.
+
+\textbf{Water Adjacency}: For states with islands or major water bodies creating disconnected components, we add county-based bridge connections linking nearest tracts within the same county (maximum distance: varies by state). This ensures full graph connectivity without violating county boundaries.
+
+\subsection{Edge-Weighted Graph Partitioning}
+
+Edge weights encode VRA compliance objectives. Given weight factor $\alpha$ and minority threshold $\tau$, we assign:
+
+\begin{equation}
+w_{ij} = \begin{cases}
+\alpha & \text{if } m_i \geq \tau \text{ and } m_j \geq \tau \\
+1 & \text{otherwise}
+\end{cases}
+\end{equation}
+
+where $m_i$ and $m_j$ are minority percentages for tracts $i$ and $j$. Edges connecting two minority-dense tracts receive weight $\alpha > 1$, making them ``expensive'' to cut. The METIS partitioning algorithm \citep{karypis1998} minimizes total weighted edge cut:
+
+\begin{equation}
+\text{minimize} \quad \sum_{(i,j) \in E_{\text{cut}}} w_{ij}
+\end{equation}
+
+subject to population balance constraints. This implicitly concentrates minority populations: cutting fewer minority-minority edges preserves minority communities within districts.
+
+\textbf{Why Edge-Weighting Succeeds}: Multi-constraint approaches (using 2D weights for population and minority) suffer from constraint conflicts—tight population balance (0.5\% tolerance) dominates loose minority balance (50\% tolerance), preventing effective minority concentration. Edge-weighting sidesteps this by keeping population as the sole hard constraint while encoding minority objectives in the optimization function itself.
+
+\subsection{Parameter Space}
+
+We conduct ablation studies testing:
+
+\textbf{Weight Factors ($\alpha$)}: [1, 5, 10, 50, 100]
+\begin{itemize}
+\item $\alpha = 1$: Baseline (no edge-weighting, compactness only)
+\item $\alpha = 5$: Moderate weighting
+\item $\alpha = 10, 50, 100$: Stronger weighting (test for diminishing returns)
+\end{itemize}
+
+\subsubsection{Relationship to Production Algorithm}
+
+The V4 production pipeline does not use a fixed $\alpha$ but instead applies an adaptive formula~\citep{dellaLibera2026D0}:
+\begin{equation}
+\alpha = \max\!\left(3.0,\; 10.0 \times \bigl(1.0 - 0.7 \times f_{\text{minority}}\bigr)\right)
+\label{eq:adaptive_boost_d2}
+\end{equation}
+where $f_{\text{minority}}$ is the fraction of state tracts above the minority threshold. For the states tested in this paper, the adaptive formula yields effective weights in the 5$\times$--10$\times$ range, placing it between the $\alpha=5$ and $\alpha=10$ ablation rows. Runtime and success-rate comparisons in this paper use fixed ablation configurations; the adaptive formula's per-state weights are not expected to alter the n-way vs.\ recursive equivalence finding (Cohen's $d = -0.018$) since both methods receive identical edge weights.
+
+\textbf{Minority Thresholds ($\tau$)}: [0.40, 0.45, 0.50, 0.55]
+\begin{itemize}
+\item Lower thresholds: More tracts classified as minority, larger edge weight coverage
+\item Higher thresholds: Stricter definition, potentially stronger concentration
+\end{itemize}
+
+Total parameter combinations: $5 \times 4 = 20$ per state. We test both n-way and recursive bisection with all configurations, yielding 40 runs per state (2,000 runs across 50 states).
+
+\subsection{Partitioning Methods}
+
+\textbf{N-Way Partitioning}: METIS directly partitions graph into $k$ districts simultaneously through multilevel k-way refinement \citep{karypis1998}. Global optimization considers all districts throughout process.
+
+\textbf{Recursive Bisection}: Hierarchical binary splitting with balanced tree structure. For $k$ districts, recursively divide into two groups until reaching $k$ leaves. At each split, use same edge-weighting scheme as n-way. Tree structure is predetermined (balanced splits: e.g., [3,4] for $k=7$).
+
+Both methods use identical edge weights and population constraints for fair comparison. The key difference is optimization scope: n-way sees all $k$ districts globally, recursive bisection makes local binary decisions.
+
+\subsection{Implementation Details}
+
+\textbf{Partitioner}: METIS 5.1.0 (gpmetis executable) with flags:
+\begin{itemize}
+\item \texttt{-contig}: Enforce district contiguity (critical for legal compliance)
+\item \texttt{-minconn}: Minimize subdomain connectivity
+\item \texttt{-ufactor=1.005}: Population imbalance tolerance (0.5\%)
+\item \texttt{-niter=100}: Refinement iterations (balance exploration vs computation)
+\end{itemize}
+
+\textbf{Platform}: \texttt{redist} Rust binary with \texttt{--partition-mode metis-vra} and \texttt{nway} modes. Executed on consumer laptop (Windows 11, 16GB RAM) using \texttt{redist states --workers 4} (sufficient for largest state, California: 9,129 tracts).
+
+\textbf{Data Sources}:
+\begin{itemize}
+\item Census Tracts: TIGER/Line 2020 shapefiles (US Census Bureau)
+\item Demographics: 2020 Decennial Census DHC files (race/ethnicity by tract)
+\item District Counts: 2020 Congressional apportionment (Huntington-Hill method)
+\end{itemize}
+
+\textbf{Reproducibility}: All code, data processing scripts, and METIS configurations available at GitHub repository [URL]. METIS random seed fixed (\texttt{seed=42}) for deterministic results, though some variability remains due to multilevel coarsening heuristics.
+
+\subsection{Evaluation Metrics}
+
+For each partitioning, we compute:
+
+\textbf{(1) MM District Count}: Number of districts with $\geq 50\%$ total minority population. Primary VRA compliance metric.
+
+\textbf{(2) Maximum Minority Concentration}: Highest minority percentage across all $k$ districts. Indicates algorithm's ability to concentrate minority voters.
+
+\textbf{(3) Success}: Boolean indicator whether MM district count $\geq$ target (target estimated as $\lfloor m_{\text{state}} \times k \rfloor$ for proportional representation).
+
+\textbf{(4) Edge Cut (Unweighted)}: Number of tract boundaries cut by district boundaries. Lower values indicate more compact districts (fewer perimeter edges).
+
+\textbf{(5) Edge Cut (Weighted)}: Sum of weighted edges cut, using the same weights $w_{ij}$ from partitioning. Reflects METIS optimization objective.
+
+\textbf{(6) Runtime}: Wall-clock time for partitioning (excluding graph construction). Averaged over single run due to METIS determinism with fixed seed.
+
+\textbf{(7) Population Deviation}: Maximum percentage deviation from ideal district population $p_{\text{ideal}} = \sum_v w_v / k$. All methods constrained to $\pm 0.5\%$ by METIS ufactor parameter.
+
+\subsection{Experimental Design}
+
+\textbf{Phase 1: N-Way Ablation Study}
+\begin{itemize}
+\item States: All 50 states tested; 44 multi-district states analyzed (excluding single-district: AK, DE, MT, ND, SD, VT, WY)
+\item Parameters: 5 weight factors $\times$ 4 thresholds = 20 configurations per state
+\item Total runs: $44 \text{ multi-district states} \times 20 = 880$ n-way partitions
+\end{itemize}
+
+\textbf{Phase 2: Recursive Bisection Ablation Study}
+\begin{itemize}
+\item Same 44 states, same 20 parameter configurations
+\item Total runs: 880 recursive bisection partitions
+\end{itemize}
+
+\textbf{Phase 3: Method Comparison}
+\begin{itemize}
+\item For each state and parameter configuration, compare n-way vs recursive performance
+\item Statistical testing: paired t-tests on state-level success rates (44 paired samples)
+\item Compute effect size (Cohen's $d$) to quantify practical significance
+\item Identify state characteristics predicting method advantages
+\end{itemize}
+
+\textbf{Phase 4: Parameter Optimization}
+\begin{itemize}
+\item Aggregate success rates across states for each configuration
+\item Identify method-specific optimal parameters (n-way vs recursive may differ)
+\item Analyze parameter sensitivity and diminishing returns
+\item Compare performance ceilings (best achievable with optimal tuning)
+\end{itemize}
+
+Total partitioning runs: 1,760 (880 n-way + 880 recursive bisection). Actual computational time: N-way: 0.90 hours, Recursive: 2.77 hours (total 3.67 hours on consumer laptop using \texttt{redist states --workers 4}).

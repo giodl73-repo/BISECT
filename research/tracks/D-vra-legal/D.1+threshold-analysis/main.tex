@@ -1,0 +1,51 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{natbib}
+
+\title{The 42\% Threshold: Geographic Limits of VRA Compliance Through Algorithmic Redistricting}
+\author{Giovanni Della-Libera}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+The Voting Rights Act (VRA) requires creation of majority-minority (MM) districts where ``sufficiently large and geographically compact'' minority populations exist, yet no quantitative threshold defines ``sufficiently large.'' We systematically analyze 43 multi-district states to identify the minimum state-level minority percentage required for near-proportional representation through algorithmic redistricting.
+
+Through comprehensive testing of 645 configurations across all 43 states with congressional districts, we find statistically robust evidence for a \textbf{42\% effectiveness threshold}: states with $\geq$42\% minority population achieve 80-114\% of proportional MM representation through edge-weighted optimization (62\% average success rate), while states below 37\% achieve only 0-66\% of proportional targets (0\% success rate). States in the borderline range (37-42\%) exhibit mixed effectiveness (1.3\% success rate), confirming the threshold pattern.
+
+Statistical analysis validates the threshold across diverse geographic contexts (r=0.78, p$<$1e-08). Category comparison reveals significant differences between above-threshold and below-threshold states (t=7.39, p$<$1e-08). The threshold represents an \textit{effectiveness boundary}: below 42\% state-wide minority, edge-weighted optimization creates MM districts but cannot achieve near-proportional representation even with optimal algorithms.
+
+This work provides courts and legislatures with empirically validated guidance for assessing geographic feasibility of proportional MM representation (Gingles prong 1), distinguishing states where proportional representation is algorithmically achievable from those where it is constrained by fundamental demographic-geographic limits.
+\end{abstract}
+
+\section{Introduction}
+\input{sections/01_introduction}
+
+\section{Background}
+\input{sections/02_background}
+
+\section{Methodology}
+\input{sections/03_methodology}
+
+\section{Results}
+\input{sections/04_results}
+
+\section{Discussion}
+\input{sections/05_discussion}
+
+\section{Limitations and Future Work}
+\input{sections/06_limitations}
+
+\section{Conclusion}
+\input{sections/07_conclusion}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

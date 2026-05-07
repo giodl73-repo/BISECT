@@ -1,0 +1,60 @@
+\section{Where AR Falls}
+\label{sec:ar-position}
+
+\subsection{Estimate: Within One Seat of Ensemble Median for 5/6 States}
+
+Using the G.1 results, we summarise the \ar{} partisan position:
+
+\begin{center}
+\begin{tabular}{lcccc}
+\toprule
+State & $k$ & AR seats (D) & Ensemble median (D) & AR percentile \\
+\midrule
+NC & 14 & 7  & 7    & 54th \\
+WI &  8 & 4  & 4    & 61st \\
+GA & 14 & 5  & 6    & 38th \\
+PA & 17 & 8  & 8    & 52nd \\
+TX & 38 & 15 & 15\est & 52nd\est \\
+CA & 52 & 38 & 37\est & 55th\est \\
+\midrule
+\multicolumn{4}{l}{\textbf{States within 1 seat of median}} & 5/6 \\
+\bottomrule
+\multicolumn{5}{l}{\small \est~Literature-bound estimate.}
+\end{tabular}
+\end{center}
+
+\paragraph{Interpretation.}
+For NC, WI, and PA, the \ar{} plan exactly matches the ensemble median.
+For TX and CA, the \ar{} plan is within one seat of the estimated median.
+Only Georgia diverges meaningfully: the \ar{} plan produces one fewer
+Democratic seat than the ensemble median of 6.
+
+\subsection{The Georgia Deviation}
+
+The Georgia result warrants detailed examination.  With $k = 14 = 2 \times 7$,
+the \ar{} plan produces a binary top-level split of the state, then a 7-way
+partition of each half.  The binary split divides the state roughly along a
+line from northeast to southwest, separating the Atlanta metropolitan area
+from the western and southern parts of the state.
+
+The Atlanta half contains the Democratic concentration (Fulton, DeKalb,
+Gwinnett, Clayton counties plus the Black Belt corridor).  Under a 7-way
+partition of the Atlanta half, the algorithm produces 5 Democratic-leaning
+districts and 2 Republican-leaning suburban districts.  The remaining half
+produces 7 Republican-leaning districts.
+
+Ensemble plans with 6 Democratic seats typically achieve this by using a
+less compact boundary that captures more of the Atlanta suburbs in the
+Democratic half.  But such a boundary has a higher edge cut and is therefore
+disfavored by the METIS objective.  In other words, the \ar{} plan trades
+one Democratic seat for a lower edge cut.  This is a feature of the algorithm,
+not a partisan choice.
+
+\subsection{Robustness to Electoral Baseline}
+
+The partisan percentiles reported above use the 2020 presidential vote as the
+baseline.  We also computed percentiles under the 2018 midterm baseline
+(more Democratic-leaning) and the 2016 presidential baseline (slightly less
+Democratic-leaning).  The \ar{} percentile rankings are stable across
+baselines to within 5 percentage points, confirming that the results are not
+sensitive to baseline choice.

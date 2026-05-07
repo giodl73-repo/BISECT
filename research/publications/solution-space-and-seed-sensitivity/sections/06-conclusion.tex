@@ -1,0 +1,69 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have characterised the solution space of minimum-edge-cut redistricting
+for US congressional districts and drawn three conclusions relevant to the
+Districting Integrity Act and to the broader question of neutral algorithmic
+redistricting.
+
+\paragraph{The seed is irrelevant for certified states.}
+For every focal state in our analysis, the minimum edge-cut plan converges:
+running minima improve infrequently and eventually plateau. For certified
+states (stable tail $\geq 300$ seeds), the partisan outcome does not change
+regardless of which specific seed achieves the minimum. The seed is a
+computational shortcut to reproduce the converged plan, not a hidden partisan
+choice. The correct statutory protocol is not ``run $N$ seeds'' but ``run
+seeds until convergence is certified'': our focal-state sweeps reveal that
+interim results at 200 seeds are overturned in three states (Georgia at seed
+489, Tennessee at seed 609, Wisconsin at seed 318), underscoring that fixed
+seed budgets cannot substitute for convergence testing.
+
+\paragraph{Geometric sorting drives proportionality, not algorithmic bias.}
+The minimum-edge-cut criterion produces near-proportional outcomes in
+geographically mixed states (Georgia $-0.1$\,pp, Michigan $+2.4$\,pp,
+Pennsylvania $-3.5$\,pp) and disproportional outcomes in sorted states
+(Wisconsin $-12.8$\,pp, North Carolina $-13.6$\,pp, Tennessee $-27.1$\,pp).
+This pattern is not algorithmic bias: any criterion that rewards geographic
+compactness will produce the same structure, because compact districts respect
+geographic sorting. The proportionality gap measures the geographic
+distribution of voters, not the algorithm's fairness. Achieving proportional
+representation in sorted states requires importing partisan data, which the
+Districting Integrity Act expressly prohibits for federal congressional
+districts (\S~104(e)). We recommend reporting the proportionality gap as a
+mandatory transparency metric alongside the reproducibility artifacts, not as
+a standard the algorithm is required to meet.
+
+\paragraph{Edge-cut is the correct primary criterion.}
+Among the geometric criteria studied --- minimum edge-cut, maximum
+geometric-mean Polsby-Popper, and proportional bisection --- edge-cut is
+uniquely defensible. It has no interpretive degrees of freedom: the inputs
+(TIGER boundary lengths) are federal public records with no alternative
+measures, and the objective (minimise total boundary length cut) has a single
+unambiguous definition. Compactness metrics introduce choices (which area
+measure? which shape metric?) that could be argued to have been selected
+post-hoc. Proportional bisection requires partisan data as input, prohibited
+by \S~104(e). We propose the \emph{minimum-edge-cut protocol} as the
+standard: run seeds until convergence is certified, publish the minimum-EC
+plan with its convergence trajectory.
+
+\paragraph{Limitations and future work.}
+The Cheeger/Fiedler lower bound is mathematically valid but empirically
+non-certifying for US census-tract graphs: all states have near-zero
+$\lambda_2$ (7--46\,m) due to geographic pinch-points, giving bounds 50--200×
+below the achieved minimum. Tighter bounds from spectral graph theory (SDP
+relaxations, higher Cheeger constants) or from the graph's isoperimetric
+profile would enable formal mathematical certification complementing our
+empirical convergence certificates. The \textsc{CompactBisect} algorithm
+achieves the same converged partisan outcome as MEC for all tested states, via
+multi-level geometric-mean PP optimisation, and merits further study as a
+complementary criterion that reaches convergence faster. Finally, the 14\%
+failure rate for Texas and 39\% for California under the flat 0.5\% tolerance
+schedule motivates implementation of the statute's tiered tolerance
+(\S~104(b)(4)) for large-state deployments.
+
+\vspace{1em}
+\noindent\textbf{Reproducibility.} All code, adjacency files, seed-sweep
+outputs, and convergence data are available at the reference implementation
+repository. The convergence trajectories for all focal states (seed $\times$
+edge-cut tables) are published as reproducibility artifacts alongside this
+paper.

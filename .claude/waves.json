@@ -1,0 +1,15 @@
+{
+  "default": "apportionment",
+  "projects": {
+    "apportionment": {
+      "wavesPath": "context/waves",
+      "disciplinesPath": "context/waves/_config/disciplines",
+      "description": "Apportionment analysis and calculation application",
+      "projectType": "application",
+      "stack": {
+        "backend": "Python",
+        "testing": "pytest (Python)"
+      }
+    }
+  }
+}

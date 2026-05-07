@@ -1,0 +1,44 @@
+```mermaid
+graph TD
+    ROOT[run_complete_redistricting.py<br/>Master Orchestrator]
+
+    ROOT --> STATE[run_state_redistricting.py<br/>Per-State Pipeline]
+
+    STATE --> PROCESS[process_single_state.py<br/>Core Redistricting]
+    STATE --> SUMMARY[create_final_district_summary.py<br/>District Metrics]
+    STATE --> CITIES[add_cities_to_districts.py<br/>City Assignment]
+    STATE --> VISDIST[visualize_districts.py<br/>District Maps]
+    STATE --> VISROUND[visualize_all_rounds.py<br/>Round Progression]
+    STATE --> VISINDIV[create_individual_district_maps.py<br/>Per-District Maps]
+
+    PROCESS --> LIB1[src/apportionment/partition/<br/>recursive_bisection.py]
+    LIB1 --> LIB2[src/apportionment/partition/<br/>metis_wrapper.py]
+    LIB2 --> METIS[METIS Library<br/>gpmetis executable]
+
+    ROOT --> USAGG[create_us_aggregate.py<br/>US District Summary]
+    ROOT --> USROUND[create_us_rounds_hierarchy.py<br/>National Hierarchy]
+    ROOT --> USMAP[create_us_national_map.py<br/>National Base Maps]
+    ROOT --> USPROG[create_us_national_rounds_progression.py<br/>Round Progression Maps]
+
+    ROOT --> POL[scripts/political/<br/>run_political_analysis.py]
+    POL --> POLA[analyze_districts.py<br/>Calculate Partisan Lean]
+    POL --> POLV[visualize_partisan_lean.py<br/>Political Maps]
+    POL --> POLUS[create_us_national_political_map.py<br/>National Political]
+
+    ROOT --> DEM[scripts/demographic/<br/>run_demographic_analysis.py]
+    DEM --> DEMA[analyze_district_demographics.py<br/>Calculate Demographics]
+    DEM --> DEMV[visualize_district_demographics.py<br/>Demographic Maps]
+    DEM --> DEMUS[create_us_national_demographic_map.py<br/>National Demographic]
+
+    ROOT --> COMP[scripts/compactness/<br/>run_compactness_visualization.py]
+    COMP --> COMPV[visualize_compactness.py<br/>Compactness Maps]
+
+    style ROOT fill:#FFB6C1
+    style STATE fill:#FFE4B5
+    style LIB1 fill:#90EE90
+    style LIB2 fill:#90EE90
+    style METIS fill:#87CEEB
+    style POL fill:#B4E7CE
+    style DEM fill:#FFDAB9
+    style COMP fill:#B0E0E6
+```

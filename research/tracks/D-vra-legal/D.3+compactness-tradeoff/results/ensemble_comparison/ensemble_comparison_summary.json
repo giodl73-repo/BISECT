@@ -1,0 +1,49 @@
+{
+  "ensemble_size": 10000,
+  "ensemble_stats": {
+    "edge_cut": {
+      "mean": 280.0028445671339,
+      "std": 15.145484564615403,
+      "min": 226.28289297716975,
+      "max": 330.66074378623966
+    },
+    "polsby_popper": {
+      "mean": 0.11538582167499994,
+      "std": 0.04192267406909914,
+      "min": 0.014046714097050602,
+      "max": 0.30159825056443496
+    },
+    "mm_district_count": {
+      "mean": 0.401,
+      "mode": 0,
+      "distribution": {
+        "0": 7003,
+        "1": 1984,
+        "2": 1013
+      }
+    }
+  },
+  "metis_percentiles": [
+    {
+      "name": "baseline",
+      "label": "Baseline (1\u00d7, no VRA)",
+      "edge_cut_percentile": 49.75,
+      "pp_percentile": 99.32,
+      "mm_match_rate": 70.03
+    },
+    {
+      "name": "edge_weighted_optimal",
+      "label": "Edge-Weighted 5\u00d7@45% (optimal)",
+      "edge_cut_percentile": 4.109999999999999,
+      "pp_percentile": 99.64,
+      "mm_match_rate": 10.13
+    },
+    {
+      "name": "edge_weighted_alternative",
+      "label": "Edge-Weighted 5\u00d7@40%",
+      "edge_cut_percentile": 39.589999999999996,
+      "pp_percentile": 99.09,
+      "mm_match_rate": 10.13
+    }
+  ]
+}

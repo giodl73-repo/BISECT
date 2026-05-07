@@ -1,0 +1,7 @@
+Test,Value,p-value
+Pearson Correlation (r),0.7776,8.59e-10
+Spearman Correlation (rho),0.7848,4.71e-10
+Point-Biserial Correlation,0.7778,8.48e-10
+Threshold Estimate,80.4%,N/A
+95% CI Lower,49.2%,N/A
+95% CI Upper,152.9%,N/A

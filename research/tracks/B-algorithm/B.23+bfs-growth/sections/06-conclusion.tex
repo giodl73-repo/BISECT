@@ -1,0 +1,100 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have introduced \bfsg{}, the simplest redistricting algorithm in the
+B-series platform.
+Given $k$ seeds placed at maximally spread locations via BFS-farthest
+selection, \bfsg{} grows $k$ districts simultaneously by repeatedly
+assigning unassigned tracts to the adjacent district with the greatest
+population deficit.
+The algorithm requires zero hyperparameters beyond the standard compositor
+inputs, runs in $O(n \log n)$, and guarantees contiguity by construction.
+
+\paragraph{Position in the B-series algorithm landscape.}
+\bfsg{} occupies the lowest-quality, fastest position in the structure-layer
+algorithm spectrum.
+The quality-runtime ordering across structure-layer algorithms is:
+\begin{align*}
+  \mathrm{PP:} &\quad \cvd{} \;\geq\; \bfsg{} \;>\; \metis{} \\
+  \mathrm{EC:} &\quad \metis{} \;<\; \cvd{} \;\leq\; \bfsg{} \\
+  \mathrm{Runtime:} &\quad \bfsg{} \;\approx\; \metis{} \;\ll\; \cvd{} \;\ll\; \sa{} \;\ll\; \be{}
+\end{align*}
+This ordering defines the operational role of each algorithm:
+\begin{itemize}
+\item \textbf{Fastest, zero-hyperparameter baseline}: \bfsg{}
+  (recommended for geometric floor measurement and warm-start evaluation).
+\item \textbf{EC-optimised single plan}: \metis{}
+  (recommended for standard single-plan generation).
+\item \textbf{PP-optimised, moderate cost}: \cvd{}
+  (recommended when geographic compactness is the primary objective).
+\item \textbf{High-quality optimised plan}: SA(steps=10) from B.19
+  (recommended for publication-quality single-plan generation).
+\item \textbf{Maximum quality, high cost}: \be{}$(T=100)$ or \cs{}
+  (recommended for statutory map production).
+\end{itemize}
+
+\paragraph{Contiguity as a design feature.}
+The contiguity guarantee (Proposition~\ref{prop:contiguity}) distinguishes
+\bfsg{} from \metis{} and \cvd{}, both of which may produce disconnected
+districts that require post-hoc contiguity repair.
+\bfsg{}'s single-pass BFS growth is provably contiguous without any
+repair step, making it the only structure-layer algorithm in the platform
+with a formal contiguity guarantee.
+This property is a legal asset: a BFS Growth plan can be submitted with
+a proof that district contiguity was guaranteed algorithmically, not
+merely verified post-hoc.
+
+\paragraph{The geometric floor in context.}
+The ``geometric floor'' framing is useful for legal and technical
+communication.
+If a submitted plan achieves higher PP than \bfsg{}, it demonstrates that
+deliberate geographic attention was paid to compactness.
+If a submitted plan achieves \emph{lower} PP than \bfsg{}, a zero-optimisation
+greedy algorithm would have done better---a strong argument that the plan's
+non-compactness is not an unavoidable consequence of geographic constraints.
+
+\paragraph{Implementation.}
+\bfsg{} is implemented in the \texttt{redist} binary under
+\texttt{--structure bfs-growth}.
+No additional parameters are required.
+The YAML configuration is:
+\begin{verbatim}
+algorithm:
+  structure: bfs-growth
+  weights: geographic
+  search: single
+  balance_tolerance: 0.5
+\end{verbatim}
+
+\paragraph{Open questions.}
+Several extensions are identified for future work:
+\begin{enumerate}
+\item \textbf{Composite priority function.} The current priority is
+  current district population (deficit-only).
+  A composite $w_{\mathrm{deficit}} \times \mathrm{deficit} + w_{\mathrm{dist}} \times d_{\mathrm{BFS}}(\mathrm{tract}, \mathrm{seed})$
+  may improve PP at modest runtime cost.
+  The spec notes this as a Phase~2 evaluation item.
+
+\item \textbf{BFS Growth + ApportionRegions tree.}
+  \ar{}~\citep{b11paper} links the bisection tree structure to the
+  prime factorisation of $k$.
+  Substituting \bfsg{} for \metis{} at each \ar{} node creates a
+  zero-hyperparameter, prime-factor tree plan.
+  This is a natural composition and requires no structural changes to
+  the platform.
+
+\item \textbf{Empirical warm-start validation.}
+  Section~\ref{sec:warmstart} states the theoretical framework and
+  expected directions for MCMC warm-start experiments.
+  Executing the paired-chain autocorrelation experiments on NC, WI, and TX
+  is the key empirical validation deferred from this paper.
+
+\item \textbf{High-density states.}
+  The spec notes that for high-density states (NY, CA, IL), seed quality
+  matters more than the growth priority function.
+  Evaluating whether BFS Growth's population-weighted seed~0 selection
+  adequately handles dense urban graphs is a natural extension.
+\end{enumerate}
+
+These extensions inherit the three-layer compositor design and require no
+structural changes to the codebase.

@@ -1,0 +1,68 @@
+\section{Background}
+\label{sec:background}
+
+\subsection{Short-Burst (G.6)}
+\label{subsec:background-sb}
+
+Short-Burst~\citep{cannon2022} resolves the tension between mixing (long chains)
+and optimisation (short chains) by running $n_{\mathrm{bursts}}$ short chains of
+length $\ell_{\mathrm{burst}}$, keeping only the endpoints, and selecting the
+best by edge-cut.
+Each burst restarts from the previous best endpoint, producing a progressive
+search that concentrates probability mass in the burst neighbourhood of each
+successive plan.
+
+In the G.6 implementation, the inner chain is \recom{}~\citep{deford2021}:
+merge two adjacent districts, sample a random spanning tree, cut at the
+balance point.
+\recom{} accepts at $60$--$80\%$ on typical census-tract graphs.
+
+\paragraph{Seeding.}
+For burst $i$ with base seed $b$:
+\[
+  s^{(i)} =
+  \mathrm{SHA256}\!\left(\texttt{"SB\_CHAIN\_"} \,\|\, i^{\mathrm{le64}}
+    \,\|\, \texttt{"\_"} \,\|\, b^{\mathrm{le64}}\right)[0{:}8]\;\text{as } u64.
+\]
+Full reproducibility follows: any burst trajectory is recoverable from $b$
+alone.
+
+\subsection{Forest ReCom (G.9)}
+\label{subsec:background-frecom}
+
+\frecom{}~\citep{mccartan2020,g9paper} uses the same proposal as \recom{}
+(merge two adjacent districts, sample a random spanning tree, cut at the
+balance point) but adds a Metropolis--Hastings correction:
+\[
+  \alpha_{\mathrm{FR}}(\pi \to \pi') =
+  \min\!\left(1,\; \frac{Q(\pi' \to \pi)}{Q(\pi \to \pi')}\right).
+\]
+Computing $Q(\pi' \to \pi)$ requires a \emph{reverse RNG} stream in addition
+to the forward RNG used to sample the proposal.
+The correction makes the stationary distribution approximately uniform over
+valid plans; acceptance rate is $\approx 40$--$50\%$.
+
+\subsection{Merge-Split (G.10)}
+\label{subsec:background-ms}
+
+\ms{}~\citep{janson2022,g10paper} applies the same merge-and-resample proposal
+but computes the MH ratio via a single spanning-tree-count ratio rather than
+the two-tree reverse evaluation used by \frecom{}.
+This makes \ms{} cheaper per step while still providing a distributional
+correction; acceptance rate is $\approx 55$--$65\%$.
+
+\subsection{The Chain-Type Composition}
+\label{subsec:background-composition}
+
+All three chains---\recom{}, \frecom{}, and \ms{}---operate on the same
+state space (valid $k$-district plans of the census-tract adjacency graph)
+and propose moves via the same merge-and-resample operation.
+They differ only in their acceptance criterion and the RNG resources required
+per step.
+
+This structural similarity makes the chain type a clean parameter for the
+\sburst{} wrapper: swapping the inner chain from \recom{} to \frecom{} or
+\ms{} changes the per-step cost and acceptance rate, but leaves the burst
+structure, the endpoint-selection logic, and the seed architecture intact.
+The G.12 implementations exploit this directly: \sbf{} and \sbms{} reuse
+the \sburst{} burst loop, substituting the chain type.

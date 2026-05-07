@@ -1,0 +1,73 @@
+\section{Texas and California Results}
+\label{sec:tx-ca}
+
+\recom{} ensembles for Texas ($k = 38$) and California ($k = 52$) are
+currently running.  This section provides the structural context and a
+principled placeholder.
+
+\subsection{Expected Result and Rationale}
+
+Based on the WI/GA/PA pattern---and the theoretical guarantee that the \ar{}
+algorithm finds the minimum-edge-cut plan---both states are expected to fall
+below the 5th percentile of their ensemble distributions.  The specific
+prediction:
+
+\begin{itemize}
+  \item TX ($k = 38 = 2 \times 19$): the two-level factorisation (2-way bisection
+    then 19-way partition of each half) should achieve aggressive edge-cut
+    minimisation.  Expected: $< 5$th percentile \lit.
+  \item CA ($k = 52 = 2^2 \times 13$): the three-level tree (2-way $\to$ 2-way
+    $\to$ 13-way) provides multiple opportunities for hierarchical compaction.
+    Expected: $< 5$th percentile \lit.
+\end{itemize}
+
+The 5th-percentile bound is conservative.  WI, GA, and PA all landed at or below
+the 0.2nd percentile.  TX and CA are expected to be similar.
+
+\subsection{Texas ($k = 38$)}
+
+Texas is geographically large and politically sorted: Democratic voters are
+concentrated in the Houston, Dallas-Fort Worth, San Antonio, and Austin
+metropolitan areas; Republican voters dominate the rest of the state.  The
+minimum-cut partition should produce compact metropolitan districts and large
+rural districts---a structure with very low edge cut relative to the ensemble.
+
+\begin{center}
+\begin{tabular}{lcccc}
+\toprule
+State & $k$ & Ensemble mean $\EC$ & AR plan $\EC$ & AR percentile \\
+\midrule
+TX & 38 & (pending) & (pending) & $<5$th \lit \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{California ($k = 52$)}
+
+California's complex geography (coast, Central Valley, mountains, Southern
+California basin) combined with high diversity makes it the most complex case
+in the study.  The $k = 52 = 2^2 \times 13$ factorisation produces a three-level
+tree.  B.11 documented that the $k = 52$ structure differs completely from a
+$k = 51 = 3 \times 17$ plan; we use $k = 52$ throughout.
+
+\begin{center}
+\begin{tabular}{lcccc}
+\toprule
+State & $k$ & Ensemble mean $\EC$ & AR plan $\EC$ & AR percentile \\
+\midrule
+CA & 52 & (pending) & (pending) & $<5$th \lit \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Update Plan}
+
+When the TX and CA runs complete, this section will be updated with:
+\begin{enumerate}
+  \item Ensemble mean and standard deviation of $\EC$;
+  \item AR plan edge-cut fraction;
+  \item Empirical percentile.
+\end{enumerate}
+
+The placeholder ``$< 5$th percentile'' will be replaced with the actual value.
+Based on WI/GA/PA, we expect values in the 0.1--1st percentile range.

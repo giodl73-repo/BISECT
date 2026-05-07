@@ -1,0 +1,109 @@
+\section{Background and the Symmetry Collapse}
+\label{sec:background}
+
+\subsection{Standard ReCom}
+
+Let $G = (V, E)$ be the census-tract adjacency graph for a state, and let
+$\pi : V \to [k]$ be a valid redistricting plan (each district connected
+and population-balanced within tolerance $\epsilon$).
+A single \recom{} step proceeds as follows~\citep{deford2021}:
+
+\begin{enumerate}
+  \item Sample an adjacent pair of districts $(d_i, d_j)$ uniformly at
+        random from all pairs sharing at least one boundary edge.
+  \item Form the merged region $R = \pi^{-1}(d_i) \cup \pi^{-1}(d_j)$,
+        with the induced subgraph $G[R]$.
+  \item Sample a uniformly random spanning tree $T$ of $G[R]$ via
+        Wilson's algorithm~\citep{wilson1996}.
+  \item Enumerate the balanced cuts of $T$ --- edges whose removal partitions
+        $T$ into two components, each satisfying the population balance
+        constraint.
+  \item If at least one balanced cut exists, sample one uniformly and
+        accept the resulting plan $\pi'$.
+        Otherwise, reject and repeat from step~1 (pair reselection).
+\end{enumerate}
+
+Step~3 is the dominant cost: Wilson's algorithm runs in $O(|R| \log |R|)$
+expected time for a graph with $|R|$ vertices.
+
+\subsection{Why the Acceptance Ratio Is Always 1}
+
+The Metropolis-Hastings acceptance ratio for the move $\pi \to \pi'$ is:
+\[
+  \alpha(\pi, \pi') = \min\!\left(1,\;
+    \frac{\pi^*(\pi')\, Q(\pi', \pi)}{\pi^*(\pi)\, Q(\pi, \pi')}
+  \right),
+\]
+where $\pi^*$ is the target distribution and $Q(\pi, \pi')$ is the proposal
+probability.
+If we target the uniform distribution $\pi^*(\pi) = \pi^*(\pi')$,
+the ratio simplifies to $Q(\pi', \pi) / Q(\pi, \pi')$.
+
+The proposal probability for standard \recom{} is:
+\begin{align}
+  Q(\pi, \pi') &= \frac{1}{|\mathcal{P}(\pi)|}
+    \cdot \frac{1}{|\mathcal{T}(R)|}
+    \cdot \frac{1}{|\mathcal{C}(T, R)|},
+\end{align}
+where $\mathcal{P}(\pi)$ is the set of adjacent pairs of districts in $\pi$,
+$\mathcal{T}(R)$ is the set of spanning trees of $G[R]$, and
+$\mathcal{C}(T, R)$ is the set of balanced cuts of the sampled tree $T$.
+The reverse proposal $Q(\pi', \pi)$ has the same structure, with the
+same merged region $R$ (since $\pi$ and $\pi'$ differ only in how
+$R$ is partitioned).
+
+In standard \recom{}, both the forward and reverse proposals sample a spanning
+tree from the same graph $G[R]$ with the same uniform measure.
+Consequently:
+\[
+  \frac{Q(\pi', \pi)}{Q(\pi, \pi')}
+  = \frac{|\mathcal{P}(\pi)| \cdot |\mathcal{C}(T', R)|}{|\mathcal{P}(\pi')|
+    \cdot |\mathcal{C}(T, R)|}.
+\]
+Here $T$ is the spanning tree used to propose $\pi'$, and $T'$ is the
+(hypothetical) spanning tree that would propose $\pi$ from $\pi'$.
+Standard \recom{} does \emph{not} sample $T'$---it only ever samples $T$.
+Without an independent sample of $T'$, the ratio $|\mathcal{C}(T', R)|$ is
+unknown, and the ratio $Q(\pi', \pi) / Q(\pi, \pi')$ is not computed.
+The implementation effectively sets $\alpha = 1$ (always accept if a balanced
+cut exists), which is equivalent to using an unknown acceptance ratio.
+
+The stationary distribution of the resulting chain is not the uniform
+distribution; it is a distribution that weights plans by the implicit bias
+of the spanning tree measure and the number of balanced cuts of the typical
+tree in the region.
+
+\subsection{Breaking the Symmetry via Independent Reverse Tree}
+
+Merge-Split~\citep{janson2022} restores computable Metropolis-Hastings
+ratios by sampling $T'$---the reverse spanning tree---independently:
+
+\begin{enumerate}
+  \item After sampling $T_{\mathrm{fwd}}$ and selecting the proposed plan
+        $\pi'$, sample a second uniformly random spanning tree
+        $T_{\mathrm{rev}}$ of the same merged region $G[R]$, using an
+        independent random source.
+  \item Count $\mathrm{cuts\_fwd} = |\mathcal{C}(T_{\mathrm{fwd}}, R)|$
+        and $\mathrm{cuts\_rev} = |\mathcal{C}(T_{\mathrm{rev}}, R)|$.
+  \item Use the ratio $\mathrm{cuts\_fwd} / \mathrm{cuts\_rev}$ as the
+        acceptance probability.
+\end{enumerate}
+
+The key insight is that $|\mathcal{C}(T_{\mathrm{rev}}, R)|$ is a random
+estimate of the expected balanced-cut count $\mathbb{E}[|\mathcal{C}(T', R)|]$
+over all spanning trees $T'$.
+Since both trees are sampled uniformly, the ratio is an unbiased estimator
+of the true ratio $Q(\pi', \pi) / Q(\pi, \pi')$ in expectation, giving
+approximate detailed balance.
+
+\begin{remark}[Exact vs.\ approximate reversibility]
+\label{rem:approx}
+The \mergesplit{} ratio is a random estimate, not the exact matrix-tree ratio
+used by \forestrecom{}~\citep{mccartan2020,dellaLibera2026forestRecom}.
+The approximation is \emph{consistent}---the chain still has a stationary
+distribution---but the stationary distribution is the uniform distribution
+only in expectation over the randomness of $T_{\mathrm{rev}}$.
+For practical redistricting ensembles this distinction rarely matters
+(both produce similar distributional profiles in our experiments), but
+it is important for theoretical claims about exact uniformity.
+\end{remark}

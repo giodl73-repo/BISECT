@@ -1,0 +1,206 @@
+\section{Structure-Layer Comparison}
+\label{sec:structure}
+
+\subsection{Overview}
+
+The structure layer executes the bisection tree that produces the initial
+$k$-district plan.
+All chain-based search algorithms start from this initial plan; the initial
+plan quality therefore functions as the warm-up baseline.
+For SMC and ILP, the structure layer is not used (SMC constructs plans from
+scratch; ILP produces a single optimal plan).
+
+We compare six structure algorithms on EC, PP, D-seat, and runtime.
+ILP results are reported only for NH ($k = 2$); ILP is not tractable for
+larger states.
+
+\subsection{Results}
+
+Table~\ref{tab:structure} gives EC, PP, and runtime for each structure
+algorithm on each state.
+A dagger (\dag{}) marks new results for FL and NH.
+
+\begin{table}[ht]
+\centering
+\caption{%
+  Structure-layer comparison: edge-cut (\ec{}), mean Polsby-Popper (\pp{}),
+  and runtime by algorithm and state.
+  EC: lower is more compact. PP: higher is more compact. Runtime in seconds.
+  All runs use \texttt{--search convergence} at $T_{\mathrm{conv}} = 600$.
+  ILP applies only to NH ($k = 2$).
+  Best EC per state is \textbf{bolded}; best PP per state is \textit{italicised}.
+  \dag{} denotes new single-run estimates.
+}
+\label{tab:structure}
+\small
+\begin{tabular}{@{}lcccccccccccc@{}}
+\toprule
+ & \multicolumn{3}{c}{\textbf{NC} ($k=14$)}
+ & \multicolumn{3}{c}{\textbf{WI} ($k=8$)}
+ & \multicolumn{3}{c}{\textbf{TX} ($k=38$)}
+ & \multicolumn{3}{c}{\textbf{FL} ($k=28$)\dag{}} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}\cmidrule(lr){11-13}
+Algorithm & EC & PP & t(s) & EC & PP & t(s) & EC & PP & t(s) & EC & PP & t(s) \\
+\midrule
+METIS          & 4{,}821 & 0.201 &  2.1
+               & 2{,}103 & 0.218 &  0.9
+               & 14{,}402 & 0.187 &  6.8
+               & \dag{}11{,}204 & \dag{}0.179 & \dag{} 4.9 \\
+Sim.\ Anneal.  & \textbf{4{,}304} & 0.208 & 25.3
+               & \textbf{1{,}879} & 0.224 & 11.1
+               & \textbf{12{,}891} & 0.194 & 82.1
+               & \dag{}\textbf{10{,}024} & \dag{}0.188 & \dag{}60.4 \\
+CVD-Graph      & 4{,}689 & 0.231 &  3.8
+               & 2{,}041 & 0.248 &  1.6
+               & 14{,}018 & 0.214 & 11.3
+               & \dag{}10{,}841 & \dag{}0.209 & \dag{} 8.2 \\
+CVD-Geo        & 4{,}632 & \textit{0.249} &  4.2
+               & 1{,}998 & \textit{0.267} &  1.8
+               & 13{,}741 & \textit{0.232} & 12.7
+               & \dag{}10{,}603 & \dag{}\textit{0.228} & \dag{} 9.1 \\
+BFS Growth     & 4{,}758 & 0.226 &  1.3
+               & 2{,}068 & 0.241 &  0.6
+               & 14{,}219 & 0.211 &  4.1
+               & \dag{}11{,}003 & \dag{}0.203 & \dag{} 2.9 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{%
+  Structure-layer results for New Hampshire ($k=2$, $N \approx 260$)\dag{}.
+  ILP achieves certified-optimal EC; all other algorithms are heuristics.
+  Best EC is \textbf{bolded}; best PP is \textit{italicised}.
+}
+\label{tab:structure-nh}
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Algorithm & EC (NH) & PP (NH) & Runtime (s) \\
+\midrule
+METIS              & 58 & 0.341 &  0.2 \\
+Sim.\ Anneal.      & 51 & 0.348 &  1.9 \\
+CVD-Graph          & 54 & 0.362 &  0.3 \\
+CVD-Geo            & 53 & \textit{0.374} &  0.3 \\
+BFS Growth         & 56 & 0.358 &  0.1 \\
+ILP (exact)        & \textbf{47} & 0.371 & 12.8 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{ILP: Certified Optimal for NH}
+
+\ilp{} (B.24) achieves \ec{} = 47 for NH, certified as the global minimum
+by the ILP optimality certificate (branch-and-bound concluded with zero
+integrality gap).
+This is 8.5\% below Simulated Annealing (51), the nearest heuristic, and
+23.4\% below METIS (58).
+
+The ILP optimality gap across heuristics reveals that even the best heuristic
+structure algorithm leaves meaningful compactness on the table for small
+instances.
+For larger states (NC, WI, TX, FL), ILP is not applicable due to the
+exponential growth of the branch-and-bound tree with $N$.
+ILP's \pp{} (0.371) is competitive with CVD-Geo (0.374) for NH;
+\pp{} maximisation is not an ILP objective, so this reflects the incidental
+geometric regularity of minimum-\ec{} bisections on small graphs.
+
+\subsection{Simulated Annealing: Best Heuristic EC}
+
+\sa{} (B.19) achieves the lowest \ec{} among heuristic structure algorithms
+in all states: 10.7\% below METIS for NC, 10.6\% for WI, 10.5\% for TX,
+and 10.5\% for FL.
+The improvement is consistent across state sizes, reflecting that SA's
+node-swap improvement steps operate at a fixed scale independent of $k$.
+
+The cost is runtime: SA is 12$\times$ slower than METIS for NC (25.3 s
+vs.\ 2.1 s), and proportionally slower for larger states (82.1 s for TX
+vs.\ 6.8 s for METIS).
+For a 50-state sweep, this translates to approximately 10$\times$ the
+structure-layer compute budget.
+When \ec{} optimisation is the primary goal and runtime is not constrained,
+SA is the correct structure choice.
+
+SA's \pp{} is only marginally better than METIS (0.208 vs.\ 0.201 for NC):
+SA optimises \ec{} directly; \pp{} improvement is a side effect of fewer
+cross-district adjacencies, not an explicit objective.
+
+\subsection{CVD-Geographic: Best Heuristic PP}
+
+\cvdgeo{} (B.22b) achieves the highest mean \pp{} among all heuristic
+structure algorithms across all states: 0.249 for NC, 0.267 for WI, 0.232
+for TX, 0.228 for FL.
+This exceeds even the best search-algorithm results for \pp{} (Section
+\ref{sec:search}), confirming that the structure layer sets the \pp{} ceiling.
+
+\cvdgeo{} requires tract centroid data (latitude/longitude of the population-
+weighted centroid of each census tract).
+For the 2020 decennial census, centroid data is available in the
+\texttt{INTPTLAT}/\texttt{INTPTLON} fields of the census tract shapefile;
+the \texttt{redist} data pipeline populates these fields automatically during
+the \texttt{redist fetch} step.
+No additional data acquisition is required for users running the standard
+pipeline.
+
+\cvdgeo{}'s \ec{} (4{,}632 for NC) is 3.9\% below METIS but 7.4\% above SA.
+This is the fundamental CVD-Geo trade-off: superior geometric compactness
+(\pp{}) at the cost of suboptimal graph compactness (\ec{}).
+For tasks where the \pp{} criterion is primary (as in many legal standards
+that reference ``compactness'' in the geometric rather than graph-theoretic
+sense), CVD-Geo is the correct structure choice.
+
+\subsection{CVD Graph-Distance: PP Without Centroids}
+
+\cvdg{} (B.22) achieves \pp{} = 0.231 for NC, below CVD-Geo (0.249) but
+substantially above METIS (0.201).
+The graph-hop metric approximates Euclidean distance on planar graphs;
+the approximation degrades for states with highly irregular tract shapes
+(coastal FL: 0.209 for CVD-Graph vs.\ 0.228 for CVD-Geo).
+CVD-Graph requires only the adjacency graph and is therefore applicable
+without centroid data, making it the preferred choice for custom graph
+inputs or non-standard geographic units.
+
+\subsection{BFS Growth: Fastest Structure Method}
+
+\bfsgrow{} (B.23) runs in wall-clock time 1.3 s for NC, 0.6 s for WI,
+4.1 s for TX, 2.9 s for FL --- the fastest structure method by 1.6--2$\times$
+over METIS.
+\pp{} values (0.226 for NC, 0.241 for WI, 0.211 for TX, 0.203 for FL) are
+substantially above METIS and close to CVD-Graph, reflecting that BFS growth
+from random seeds produces geographically contiguous districts with natural
+boundaries.
+
+BFS Growth has zero hyperparameters: the only choice is the number of random
+seeds, which equals $k$.
+This makes it reproducible and robust across states.
+\ec{} performance is near METIS (within 1\%); BFS Growth does not explicitly
+optimise \ec{}.
+For applications where structure runtime is a bottleneck and moderate \pp{}
+is required without the centroid data of CVD-Geo, BFS Growth is the
+appropriate choice.
+
+\subsection{Summary: Structure Layer}
+
+The structure-layer hierarchy, consistent across all states:
+
+\paragraph{By EC:}
+\[
+  \ilp{} < \sa{} < \cvdgeo{} < \cvdg{} < \bfsgrow{} \lesssim \metis{}
+\]
+where $<$ denotes a clear gap and $\lesssim$ denotes within 1\%.
+
+\paragraph{By PP:}
+\[
+  \cvdgeo{} > \cvdg{} > \bfsgrow{} \approx \sa{} > \metis{}
+\]
+
+\paragraph{By runtime:}
+\[
+  \bfsgrow{} < \metis{} < \cvdg{} \approx \cvdgeo{} \ll \sa{} \ll \ilp{}
+\]
+
+No single algorithm dominates all three dimensions.
+The decision framework in Section~\ref{sec:decision} uses these three
+orderings to route practitioners to the correct structure algorithm
+based on their primary criterion.

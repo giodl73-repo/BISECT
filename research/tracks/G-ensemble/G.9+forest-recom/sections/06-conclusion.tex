@@ -1,0 +1,98 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+\subsection{Summary}
+
+\fr{} is the first \recom{} variant that targets the uniform distribution over
+valid redistricting plans as its stationary distribution.
+It achieves this by augmenting each \recom{} step with a Metropolis-Hastings
+correction: a second independent spanning tree sample from the proposed district
+pair estimates the reverse transition probability, and the ratio of valid cut
+counts determines the acceptance probability.
+
+The key properties established in this paper:
+
+\paragraph{Correct in expectation.}
+The single-sample ratio $c_{\mathrm{fwd}} / c_{\mathrm{rev}}$ is an unbiased
+estimator of the true MH ratio (Theorem~\ref{thm:edb}).
+The chain satisfies detailed balance in expectation, targeting the uniform
+distribution asymptotically.
+
+\paragraph{Never fully stalls.}
+By Proposition~\ref{prop:ratio-bounded}, the ratio is bounded away from 0
+and $\infty$ whenever both spanning trees have at least one valid balanced cut.
+The early-exit conditions (skip steps with zero valid cuts) prevent division
+by zero and guarantee forward progress.
+
+\paragraph{Verifiable on small graphs.}
+The chi-squared test on the $2 \times 4$ grid confirms distributional
+correctness: \fr{} is not rejected as targeting the uniform distribution
+($p \approx 0.98$), while standard \recom{} is decisively rejected
+($p \ll 10^{-6}$).
+
+\paragraph{$2\times$ per-step cost.}
+The Metropolis-Hastings correction requires one additional Wilson \ust{} call
+per step.
+Combined with the lower acceptance rate ($\approx\!40$--$60\%$ vs.
+$\approx\!80\%$), \fr{} achieves approximately $28\%$ the accepted-step
+throughput of standard \recom{} per unit wall-clock time.
+
+\subsection{Usage Guidelines}
+
+\begin{enumerate}
+  \item \textbf{Use \fr{} when distributional correctness matters.}
+        If the ensemble will be used to estimate the fraction of valid plans
+        with a given partisan outcome, and the standard \recom{} bias is a
+        concern, prefer \fr{}.
+        CLI: \texttt{--search forest-recom}.
+
+  \item \textbf{Use standard \recom{} for optimisation.}
+        If the goal is to find good plans (low EC, high compactness) rather
+        than to sample from the plan distribution, standard \recom{} or
+        \sburst{}~\citep{dellaLibera2026shortburst} is faster and equally
+        effective.
+
+  \item \textbf{Use \smc{} for strict distributional guarantees.}
+        For applications requiring exact calibration (e.g., formal expert
+        testimony), SMC~\citep{dellaLibera2026smc} provides stronger guarantees
+        at higher computational cost.
+        \fr{} is a practical intermediate when SMC is infeasible.
+
+  \item \textbf{Default step count.}
+        We recommend at least $1{,}000$ steps for exploratory analysis and
+        $5{,}000$--$10{,}000$ for distributional claims.
+        For large states ($n > 4{,}000$, $k > 30$), the effective mixing time
+        may require more steps; monitor convergence with $\hat{R}$ diagnostics.
+\end{enumerate}
+
+\subsection{Open Questions}
+
+\begin{enumerate}
+  \item \textbf{Variance of the ratio estimator.}
+        The single-sample ratio $c_{\mathrm{fwd}} / c_{\mathrm{rev}}$ can have
+        high variance when the true ratio is far from 1.
+        Averaging over $m > 1$ independent reverse trees would reduce the
+        variance at the cost of $m$ additional \ust{} calls per step.
+        What is the optimal $m$ for typical census-tract graphs?
+
+  \item \textbf{Mixing time under expected detailed balance.}
+        Standard detailed balance guarantees mixing time bounds via spectral
+        gap analysis.
+        Expected detailed balance is weaker; what mixing time bounds follow
+        from it?
+        Are there gap results that apply to the \fr{} chain on planar graphs?
+
+  \item \textbf{Non-uniform target distributions.}
+        The \fr{} framework readily generalises to non-uniform targets $\mu(\pi)$
+        by including the ratio $\mu(\pi') / \mu(\pi)$ in the acceptance probability.
+        This would allow targeting distributions weighted by compactness or
+        partisan fairness criteria.
+        Implementing this generalisation in \texttt{redist-ensemble} is
+        straightforward given the existing \fr{} infrastructure.
+
+  \item \textbf{Forest ReCom and Short-Burst.}
+        Running \sburst{}~\citep{dellaLibera2026shortburst} with \fr{} as the
+        base chain (instead of standard \recom{}) would combine distributional
+        correction with trajectory-level optimisation.
+        This is the subject of G.12~\citep{dellaLibera2026shortburst}.
+\end{enumerate}

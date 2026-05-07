@@ -1,0 +1,33 @@
+% Section 2: Spatial Resolution in Redistricting (600 words target)
+
+\subsection{Census Geographic Hierarchy}
+
+The U.S. Census Bureau organizes geographic data in a nested hierarchy:
+
+\begin{itemize}
+    \item \textbf{Census blocks}: The finest census unit, typically bounded by streets, with $\sim$11 million blocks nationally and mean population $\sim$100 residents
+    \item \textbf{Block groups}: Aggregations of blocks, with $\sim$240,000 nationally and mean population $\sim$1,200 residents
+    \item \textbf{Census tracts}: Aggregations of block groups, with $\sim$85,000 nationally and mean population $\sim$4,000 residents
+\end{itemize}
+
+Tracts are the standard unit for redistricting research due to historical precedent \citep{census-geography}, computational tractability, and balance between spatial detail and statistical stability. However, state redistricting commissions often use blocks for official plans, making block-level analysis policy-relevant.
+
+\subsection{MAUP Theory}
+
+MAUP manifests through two mechanisms in redistricting:
+
+\paragraph{Scale effect.} Finer resolutions permit more precise boundary placement. A minority community concentrated within a census tract becomes spatially identifiable only at block-level resolution. Conversely, coarser resolutions smooth over heterogeneity---a 60\% minority tract may contain blocks ranging from 20\% to 90\% minority.
+
+\paragraph{Zoning effect.} Even at fixed resolution, different boundary configurations produce different results. However, we hold boundaries fixed (using official census geography), so we isolate scale effects.
+
+\subsection{Prior Work on MAUP in Redistricting}
+
+MAUP has been acknowledged in redistricting literature but rarely tested empirically:
+
+\begin{itemize}
+    \item \citet{altman1998scaling} demonstrated that partisan analysis depends on unit choice
+    \item \citet{voss1995ecological} showed that ecological inference suffers from aggregation bias
+    \item Recent work on ensemble methods \citep{duchin2018gerrymandering} uses blocks but does not compare to tract-level results
+\end{itemize}
+
+\textbf{Gap}: No prior work systematically tests whether algorithmic redistricting findings are sensitive to resolution choice. We address this gap by conducting identical analyses at three spatial scales.

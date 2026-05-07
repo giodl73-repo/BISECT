@@ -1,0 +1,79 @@
+\documentclass[12pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1.25in]{geometry}
+\usepackage{times}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{titlesec}
+\usepackage{xcolor}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!60!black,
+  citecolor=blue!60!black,
+  urlcolor=blue!60!black
+}
+
+\titleformat{\section}{\large\bfseries}{}{0em}{}[\titlerule]
+\titlespacing{\section}{0pt}{18pt}{8pt}
+\titleformat{\subsection}[runin]{\bfseries}{}{0em}{}[.]
+\titlespacing{\subsection}{0pt}{10pt}{6pt}
+\titleformat{\paragraph}[runin]{\itshape\bfseries}{}{0em}{}[.]
+\titlespacing{\paragraph}{0pt}{8pt}{4pt}
+
+\title{\textbf{Reproducibility Package for the\\Algorithmic Redistricting Portfolio}\\[6pt]
+\large Track A, Paper 4}
+
+\author{Giovanni Della-Libera\\
+\small\texttt{giodl@microsoft.com}}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+\noindent
+This document is the AEA-compliant reproducibility package for the
+algorithmic redistricting research portfolio.
+It provides complete instructions for replicating every result from scratch:
+the full software stack (\texttt{redist} CLI v0.2.0, Rust 1.77+, METIS 5.2 vendored),
+all data sources (Census Bureau PL 94-171 redistricting files and TIGER/Line shapefiles,
+all public domain), the step-by-step reproduction procedure, and the
+SHA-256 audit chain that links input data through algorithm execution to final outputs.
+Any researcher with an internet connection and a modern laptop can reproduce
+the full 50-state results in approximately two to four hours.
+The Vermont 2020 canonical walkthrough fixture can be reproduced in under two minutes.
+\end{abstract}
+
+\vspace{6pt}
+\hrule
+\vspace{6pt}
+
+\tableofcontents
+
+\newpage
+
+\input{sections/01-introduction}
+
+\input{sections/02-software}
+
+\input{sections/03-data}
+
+\input{sections/04-reproduction}
+
+\input{sections/05-verification}
+
+\input{sections/06-test-suite}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,52 @@
+% Section 7: Related Work
+% Compactness-VRA Tradeoff Quantification
+
+\section{Related Work}
+
+Our work sits at the intersection of three research traditions: compactness measurement in redistricting, Voting Rights Act compliance and minority representation, and multi-objective optimization for redistricting. We synthesize insights from these literatures while making novel contributions through systematic cross-state Pareto frontier analysis.
+
+\subsection{Compactness Metrics and Measurement}
+
+Geometric compactness has been a concern in redistricting since the 19th century, with numerous metrics proposed to quantify district regularity \citep{young1988}. \citet{polsby1991} introduced the Polsby-Popper score (ratio of area to perimeter squared), now the most widely cited compactness metric in legal and academic contexts. \citet{reock1961} proposed the Reock score (ratio of district area to smallest enclosing circle), emphasizing dispersion rather than perimeter irregularity. \citet{schwartzberg1966} developed the convex hull ratio, and numerous variants have been proposed based on moment of inertia \citep{altman1998}, graph-theoretic properties \citep{barnes2001}, and population distribution \citep{fryer2005}.
+
+Extensive research has compared these metrics' properties, showing moderate-to-strong correlations but occasional disagreements on district rankings \citep{altman1998,barnes2001}. Our use of four metrics (edge cut, Polsby-Popper, Reock, convex hull) follows best practices by triangulating across multiple operationalizations, demonstrating that our findings are robust to metric choice (Table 8: cross-metric correlations range from $r = -0.67$ to $r = +0.82$).
+
+\subsection{Voting Rights Act and Minority Representation}
+
+The Voting Rights Act of 1965 fundamentally reshaped redistricting by prohibiting practices that dilute minority voting strength. Legal scholarship has extensively analyzed Section 2's prohibition on vote dilution \citep{issacharoff2002,pildes1993}, with landmark cases establishing standards for majority-minority districts: \emph{Thornburg v. Gingles} (1986) required three preconditions (geographic compactness, political cohesiveness, majority vote dilution), \emph{Shaw v. Reno} (1993) scrutinized ``bizarrely shaped'' racial gerrymanders, and \emph{Georgia v. Ashcroft} (2003) recognized influence districts below 50\% minority population.
+
+Redistricting practitioners have long recognized tension between VRA compliance and compactness, with North Carolina's 12th Congressional District (the ``I-85 district'') serving as the canonical example of extreme non-compactness justified by racial representation \citep{pildes1993}. However, prior work has been largely \emph{qualitative}, identifying tradeoffs through case studies and legal arguments without systematic quantification. \citet{rush1995} analyzed minority opportunity districts in the South but did not measure compactness costs. \citet{lublin1997} examined majority-minority districts' effectiveness but focused on electoral outcomes rather than geometric properties.
+
+Our work provides the first \emph{quantitative} characterization of VRA-compactness tradeoffs through cross-state Pareto frontier analysis, moving beyond anecdotal examples to systematic empirical evidence.
+
+\subsection{Multi-Objective Redistricting Optimization}
+
+Automated redistricting has increasingly employed multi-objective optimization frameworks. \citet{mehrotra1998} formulated redistricting as integer programming with multiple weighted objectives (compactness, contiguity, population balance) but did not explicitly model VRA constraints. \citet{ricca2013} developed multi-objective heuristics for Italian redistricting, demonstrating Pareto frontier analysis for compactness-population tradeoffs.
+
+Recent ensemble methods---Monte Carlo Markov Chain (MCMC) sampling \citep{deford2021} and Recombination (ReCom) \citep{deford2019}---generate large ensembles of redistricting plans to characterize the space of possible partitions. These methods enable outlier detection (identifying gerrymandered plans) and comparative analysis (assessing proposed plans against neutral baselines). However, ensemble methods are computationally expensive (requiring millions of samples for convergence) and typically treat VRA compliance as a filter (accept/reject) rather than an optimization objective.
+
+\citet{deford2021} analyzed partisan fairness in Pennsylvania redistricting using MCMC ensembles but did not systematically explore VRA-compactness tradeoffs. \citet{mccartan2020} developed sequential Monte Carlo methods for redistricting with VRA constraints in Alabama, finding limited compactness costs---consistent with our Alabama win-win result---but did not generalize across states or identify feasibility thresholds.
+
+Our edge-weighted graph partitioning approach complements ensemble methods: rather than sampling broadly across plan space, we directly optimize for demographic objectives via edge-weighting, enabling targeted exploration of the Pareto frontier. This approach is computationally efficient (105 configurations in hours vs. millions of MCMC samples over days) and produces interpretable algorithmic guidance (optimal weight factors and thresholds).
+
+\subsection{Graph Partitioning for Redistricting}
+
+Graph partitioning algorithms have been applied to redistricting since the 1960s, with METIS recursive bisection \citep{karypis1998} becoming a standard approach due to its scalability and compactness optimization via edge-cut minimization. \citet{levin2020} used unweighted METIS for nationwide redistricting, achieving high compactness but ignoring VRA constraints. \citet{king2022} explored METIS variants for partisan fairness but did not model minority representation.
+
+Several studies have incorporated demographic constraints into graph partitioning: \citet{hess1965} added population balance constraints, \citet{garfinkel1970} modeled contiguity requirements, and \citet{macmillan1993} tested compactness heuristics. However, we are unaware of prior work using \emph{edge-weighting} to encode VRA objectives directly into the partitioning objective function, enabling METIS to jointly optimize compactness (via edge-cut) and minority concentration (via demographic-aware edge weights).
+
+Our methodological contribution is demonstrating that edge-weighting dominates alternative VRA approaches (multi-constraint METIS) and can improve \emph{both} objectives simultaneously in favorable demographic contexts---a finding that challenges conventional assumptions about inherent tradeoffs.
+
+\subsection{Our Contributions Relative to Prior Work}
+
+We advance the literature in four primary ways:
+
+\textbf{1. First systematic quantification of VRA-compactness tradeoffs.} Prior work has qualitatively acknowledged tension \citep{pildes1993,issacharoff2002} or studied single states \citep{mccartan2020}, but we provide the first cross-state Pareto frontier analysis with district-level breakdown, revealing state-dependent patterns (win-win, lose-lose, infeasible) rather than universal conflict.
+
+\textbf{2. Identification of geographic feasibility thresholds.} We define feasibility ratios (MM\% / minority\%) and demonstrate empirically that ratios above ~1.2 render VRA targets arithmetically infeasible (South Carolina), moving beyond algorithm benchmarking to fundamental geometric constraints.
+
+\textbf{3. Mechanistic explanation of non-MM district benefits.} We explain \emph{why} non-MM districts gain compactness when MM districts are created (+7.5\% average), linking geographic clustering to joint optimization through three complementary mechanisms. Prior work observed compactness-VRA conflicts but did not explain why non-minority voters might \emph{benefit} from VRA compliance.
+
+\textbf{4. Edge-weighted optimization as preferred VRA algorithm.} We demonstrate that edge-weighted METIS dominates multi-constraint approaches (Alabama: 2 MM vs. 0 MM with better compactness), providing actionable algorithmic guidance for redistricting practitioners and litigation experts. This methodological contribution generalizes beyond our specific states to any context requiring demographic-aware graph partitioning.
+
+These contributions collectively reframe the VRA-compactness relationship as \emph{state-dependent} rather than inherently conflicting, with practical implications for redistricting law, policy, and technology.

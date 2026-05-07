@@ -1,0 +1,49 @@
+\section{Methodology}
+
+\subsection{Algorithmic Redistricting}
+
+We use recursive bisection via METIS graph partitioning~\cite{karypis1998metis,deluca2026recursive} to generate algorithmic redistricting plans for all 50 states. The algorithm:
+\begin{itemize}
+\item Represents census tracts as graph vertices
+\item Connects adjacent tracts with edges
+\item Recursively bisects the graph to create balanced districts
+\item Optimizes for edge-cut minimization (compactness proxy)
+\item Cannot access partisan data during partitioning
+\end{itemize}
+
+\subsection{Efficiency Gap Calculation}
+
+For each district $i$ with Democratic votes $D_i$ and Republican votes $R_i$:
+
+\[
+\text{Wasted}_D^i = \begin{cases}
+D_i - \frac{D_i + R_i}{2} - 1 & \text{if Democrat wins} \\
+D_i & \text{if Republican wins}
+\end{cases}
+\]
+
+\[
+\text{Wasted}_R^i = \begin{cases}
+R_i & \text{if Democrat wins} \\
+R_i - \frac{D_i + R_i}{2} - 1 & \text{if Republican wins}
+\end{cases}
+\]
+
+State-level efficiency gap:
+\[
+\text{EG} = \frac{\sum_i \text{Wasted}_R^i - \sum_i \text{Wasted}_D^i}{\sum_i (D_i + R_i)} \times 100\%
+\]
+
+Positive values favor Republicans; negative values favor Democrats.
+
+\subsection{Data}
+
+\begin{itemize}
+\item \textbf{Districts}: Algorithmic plans from recursive bisection; enacted plans from state legislatures (2020 cycle)
+\item \textbf{Elections}: Presidential (2016, 2020), midterm (2018) results at precinct level
+\item \textbf{States}: All 50 states; focus on 15 competitive states for detailed analysis
+\end{itemize}
+
+\subsection{Comparison Framework}
+
+We compute efficiency gaps for algorithmic and enacted plans using identical election data, enabling direct comparison of partisan bias while holding geography constant.

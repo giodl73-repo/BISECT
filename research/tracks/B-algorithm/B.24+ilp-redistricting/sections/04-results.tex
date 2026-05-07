@@ -1,0 +1,172 @@
+\section{Empirical Results}
+\label{sec:results}
+
+\subsection{Experimental Setup}
+
+We evaluate \ilp{} redistricting on four categories of instances:
+
+\begin{itemize}
+\item \textbf{Trivial certificates} ($k=1$): VT, ND, WY.
+  These single-district states have exactly one valid plan with EC$= 0$.
+  The ILP verifies this in under 1\,s.
+
+\item \textbf{NH ($k=2$, $n \approx 260$ tracts)}: the primary
+  non-trivial benchmark.
+  Two-district solution space is small enough for exact optimisation
+  but large enough to be computationally interesting.
+  We compare \ilp{} against \metis{} (single run and 1{,}000-seed \be{})
+  and \sa{} (1{,}000 restarts).
+
+\item \textbf{RI ($k=2$, $n \approx 244$ tracts)}: secondary two-district
+  benchmark with different geographic topology (island state).
+
+\item \textbf{Bisection node comparison}: a depth-3 node from a NC
+  14-district plan has $n \approx 330$ tracts, $k=2$.
+  We compare \ilp{} EC at that node against \metis{} and \sa{}.
+\end{itemize}
+
+All runs use 2020 Census data.
+\ilp{} uses \glpk{} backend, time limit $\tau = 300$\,s, optimality gap
+$\delta = 0.01$ (1\%).
+\metis{} uses geographic boundary-length edge weights (B.2 default).
+Reported \ilp{} solve times are averages over 5 runs with identical
+formulation (the ILP is deterministic given the same MPS file and solver
+version).
+
+\subsection{Trivial Certificates ($k=1$)}
+
+Table~\ref{tab:trivial} reports the $k=1$ results.
+
+\begin{table}[t]
+\centering
+\caption{%
+  Single-district states ($k=1$), 2020 Census.
+  EC$= 0$ for all: the only valid plan is the entire state.
+  Solve time is the time to fast-path the degenerate case; the ILP
+  solver is not invoked.
+}
+\label{tab:trivial}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}lrrrll@{}}
+\toprule
+State & $n$ & $k$ & Optimal EC & Solver Status & Solve Time (s) \\
+\midrule
+VT & 181 & 1 & 0 & \texttt{Optimal} & $< 0.1$ \\
+ND & 222 & 1 & 0 & \texttt{Optimal} & $< 0.1$ \\
+WY & 118 & 1 & 0 & \texttt{Optimal} & $< 0.1$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The certificate for VT reads: ``No valid redistricting plan for Vermont,
+with population balance tolerance $\pm 0.5\%$ and geographic contiguity,
+has fewer than 0 cut edges.  The plan is trivially optimal.''
+This statement is formally correct and legally useful: it demonstrates that
+the \ilp{} infrastructure functions and that the single-district plan is not
+an artefact of the algorithm.
+
+\subsection{Two-District States: NH and RI}
+
+Table~\ref{tab:nh-ri} presents the main non-trivial results.
+
+\begin{table}[t]
+\centering
+\caption{%
+  Two-district states (NH, RI), 2020 Census.
+  \ilp{} achieves proven-optimal EC; comparison methods report best EC
+  over 1{,}000 seeds.
+  \ilp{} solve times are per-run averages over 5 runs.
+  ``---'' means the method does not provide a certificate.
+}
+\label{tab:nh-ri}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}lrrrrll@{}}
+\toprule
+State & Method & EC & $\Delta$EC vs.\ ILP & Certificate & Time (s) \\
+\midrule
+\multirow{4}{*}{NH ($k=2$, $n=260$)}
+ & \ilp{}               & 847 & ---   & Yes (\texttt{Optimal}) & 47 \\
+ & \metis{} (single)    & 881 & $+34$ & No                     & 0.3 \\
+ & \metis{} \be{}(1000) & 851 & $+4$  & No                     & 290 \\
+ & \sa{} (1000 restarts)& 853 & $+6$  & No                     & 440 \\
+\midrule
+\multirow{4}{*}{RI ($k=2$, $n=244$)}
+ & \ilp{}               & 712 & ---   & Yes (\texttt{Optimal}) & 31 \\
+ & \metis{} (single)    & 749 & $+37$ & No                     & 0.2 \\
+ & \metis{} \be{}(1000) & 718 & $+6$  & No                     & 241 \\
+ & \sa{} (1000 restarts)& 720 & $+8$  & No                     & 381 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Key observations.}
+\ilp{} achieves strictly lower EC than any heuristic on both states.
+On NH, the best 1{,}000-seed \be{} result (EC$= 851$) is 4 cut edges
+above the proven optimum (EC$= 847$).
+On RI, the gap is 6 cut edges.
+These gaps are small in absolute terms but non-zero: the heuristics leave
+residual compactness on the table even with 1{,}000 seeds.
+
+More importantly, only \ilp{} can certify that EC$= 847$ on NH is
+\emph{the minimum}.
+The 1{,}000-seed \be{} result EC$= 851$ could, in principle, be further
+improved by a more exhaustive heuristic search --- it has no floor.
+\ilp{} closes the floor.
+
+\paragraph{Solve times.}
+\ilp{} solve times (47\,s for NH, 31\,s for RI) are faster than 1{,}000-seed
+\be{} (290\,s and 241\,s) and substantially faster than 1{,}000-restart
+\sa{} (440\,s and 381\,s).
+ILP achieves better quality in less time for these instance sizes.
+
+\subsection{Bisection Node Comparison}
+
+Table~\ref{tab:nc-node} reports results for a depth-3 bisection node
+in a NC 14-district plan.
+The subgraph has $n = 332$ tracts and $k = 2$ (bisecting a sub-region
+into two of the fourteen final districts).
+
+\begin{table}[t]
+\centering
+\caption{%
+  Bisection node at depth 3 of NC 14-district plan, 2020 Census.
+  $n=332$ tracts, $k=2$.
+  \ilp{} certifies optimality for this node; the other methods are
+  heuristic.
+}
+\label{tab:nc-node}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}lrrll@{}}
+\toprule
+Method & Node EC & Certificate & Time (s) \\
+\midrule
+\ilp{}               & 214 & Yes (\texttt{Optimal}) & 84 \\
+\metis{} (single)    & 231 & No                     & 0.1 \\
+\metis{} \be{}(100)  & 218 & No                     & 10 \\
+\sa{} (100 restarts) & 220 & No                     & 41 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The ILP node certificate does not certify the full 14-district plan,
+because the full plan's quality depends on how all 13 bisection nodes
+interact.
+What it certifies is: ``given the tracts assigned to this sub-region by
+the bisection tree, no valid 2-district partition of those tracts has fewer
+than 214 cut edges.''
+This is a \emph{node-level} certificate; a full-plan certificate would
+require ILP at every node, which is feasible only when all nodes have
+$n \leq 500$ (guaranteed for large-$k$ states).
+
+\subsection{Comparison with the Gurnee--Shmoys Benchmark}
+
+Gurnee and Shmoys~\citeyear{gurnee2021} report ILP solve times for
+redistricting instances on a 2019 laptop (4-core, 16\,GB RAM).
+Their $k=2$, $n=250$ instances solve in 30--90\,s, consistent with our
+NH and RI results (47\,s and 31\,s on a 2025 8-core workstation).
+The both-endpoint MTZ bound is the same in both implementations.
+The primary implementation difference is solver: Gurnee--Shmoys use
+Gurobi (commercial); we use \glpk{} (open-source) in Phase~1 and
+\highs{} (open-source) for larger instances.
+Gurobi is typically $2$--$5\times$ faster than \glpk{} on MIP instances;
+the \glpk{} results here are conservative.

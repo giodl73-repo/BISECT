@@ -1,0 +1,153 @@
+\section{Background}
+\label{sec:background}
+
+\subsection{Lloyd's Algorithm and Optimal Quantisation}
+
+Lloyd's algorithm was introduced in the context of pulse-code modulation
+(PCM) signal quantisation~\citep{lloyd1982}.
+The problem is: given a probability distribution $\rho$ on $\mathbb{R}^d$
+and a budget of $k$ codewords, place $k$ points $\{c_1,\ldots,c_k\}$ to
+minimise the mean squared quantisation error
+\[
+  \mathcal{E}(\{c_j\}) = \int_{\mathbb{R}^d}
+  \min_{j=1}^{k} \|x - c_j\|^2 \, \rho(x) \, dx.
+\]
+The optimal solution requires two conditions to hold simultaneously:
+(1) each codeword $c_j$ is the centroid (population-weighted mean) of its
+Voronoi cell $V_j = \{x : \|x - c_j\| \le \|x - c_i\| \; \forall i\}$;
+(2) each Voronoi cell is the set of points nearest to its codeword.
+A tessellation satisfying both conditions is a \emph{Centroidal Voronoi
+Tessellation} (CVT).
+
+Lloyd's algorithm achieves a CVT iteratively:
+\begin{enumerate}
+\item Assign each point $x$ to its nearest codeword $\hat{j}(x) = \arg\min_j \|x - c_j\|$.
+\item Update each codeword to the centroid of its cell:
+  $c_j \leftarrow \int_{V_j} x \, \rho(x) \, dx \,/\, \int_{V_j} \rho(x) \, dx$.
+\item Repeat until $\max_j \|c_j^{\mathrm{new}} - c_j^{\mathrm{old}}\| < \epsilon$.
+\end{enumerate}
+Convergence is guaranteed under mild conditions: Du, Faber, and
+Gunzburger~\citeyear{du1999} proved that the energy $\mathcal{E}$ is
+non-increasing at each step, and that fixed points are precisely the CVTs.
+The algorithm does not guarantee convergence to the global minimum (multiple
+local CVTs may exist), but in practice converges quickly for $k \ll n$.
+
+\subsection{Centroidal Voronoi Tessellations: Theory}
+
+Du et al.~\citeyear{du1999} surveyed CVTs comprehensively, establishing:
+\begin{itemize}
+\item \textbf{Existence}: CVTs exist for any compactly supported $\rho$ and
+  any $k \ge 1$.
+\item \textbf{Local optimality}: Every CVT is a local minimiser of
+  $\mathcal{E}$ in the space of $k$-point configurations.
+\item \textbf{Convergence rate}: For smooth $\rho$ on convex domains,
+  Lloyd's algorithm converges at a rate $O(1/t)$ in $\mathcal{E}$.
+\item \textbf{Applications}: CVTs arise naturally in mesh generation,
+  image halftoning, data compression, and spatial clustering.
+\end{itemize}
+
+In the redistricting context, $\rho$ is the census population distribution
+(supported on census tracts rather than a continuum), the ``points'' are
+census tracts, and the ``codewords'' are district seeds.
+The geometric compactness of CVT cells --- roughly circular for smooth $\rho$
+--- is the primary motivation for \cvd{}: it provides districts that are
+compact by construction rather than as a side effect of edge-cut minimisation.
+
+\subsection{K-Medoids Clustering vs.\ K-Means}
+
+The classical k-means algorithm~\citep{lloyd1982} uses the centroid
+(population-weighted mean location) of each cluster as the new centre.
+In continuous Euclidean space, the centroid is always well-defined.
+In discrete graphs, the ``centroid'' of a cluster would be a fractional
+position --- a non-existent point with no corresponding tract.
+
+K-medoids clustering resolves this by requiring each centre to be an actual
+data point~\citep{park2009}.
+The \emph{medoid} of a set $S$ is
+\[
+  \mathrm{medoid}(S) = \arg\min_{i \in S} \sum_{j \in S} d(i,j),
+\]
+where $d(\cdot,\cdot)$ is the distance metric.
+Unlike the mean, the medoid is always an element of $S$, making it the
+natural centre representative for discrete domains.
+
+\cvd{} uses the graph-distance medoid exclusively:
+the ``centroid'' of each district after Voronoi assignment is the tract
+minimising the sum of BFS hop-count distances to all other tracts in the
+district.
+This ensures that seeds are always real census tracts, and that each
+subsequent Voronoi assignment step starts from a valid, connectable
+graph node.
+
+\paragraph{Approximate medoid.}
+Computing the exact medoid requires evaluating $\sum_{j \in S} d(i,j)$
+for every tract $i \in S$, which costs $O(|S|^2)$ BFS evaluations per
+district per iteration.
+For large states (NC: $\sim 2{,}660$ tracts; TX: $\sim 5{,}300$ tracts),
+the exact medoid is expensive.
+\cvd{} uses an approximate medoid: sample up to 50 tracts uniformly at
+random from $S$ and compute the BFS sum only to those 50 tracts.
+The tract minimising this approximate sum is the approximate medoid.
+For $|S| \le 50$, the approximation degenerates to the exact medoid.
+For $|S| \gg 50$, the approximation error is bounded by standard
+concentration inequalities: the expected error is $O(\sqrt{1/50})$ relative
+to the range of per-tract distances.
+
+\subsection{Graph Distance as Redistricting Metric}
+
+BFS hop count on the census-tract adjacency graph is a natural graph-distance
+metric for Phase~1 \cvd{}.
+Unlike geographic Euclidean distance, BFS hop count:
+\begin{itemize}
+\item requires no coordinate data (the adjacency graph is already loaded);
+\item respects geographic connectivity (two tracts separated by a river
+  are farther apart in hop count than two tracts sharing a long boundary,
+  even if they are close in Euclidean space);
+\item is invariant to state shape and projection (Alaska and Hawaii pose
+  no special challenges).
+\end{itemize}
+The primary limitation of BFS hop count is its insensitivity to geographic
+scale: two adjacent rural tracts (large area) are distance 1, as are two
+adjacent urban tracts (small area).
+Phase~2 geographic \cvd{} (Section~\ref{sec:phase2}) addresses this by
+replacing BFS distance with Euclidean distance on projected tract centroids.
+
+\subsection{Structure-Layer Algorithms in the B-Series}
+
+The B-series redistricting platform uses a three-layer compositor:
+\emph{Structure} (how each bisection node is solved),
+\emph{WeightsOverride} (what edge weights encode), and
+\emph{SeedCompositor} (how many seeds are tried and how the best is selected).
+\cvd{} is a Structure-layer algorithm.
+
+Table~\ref{tab:structure-comparison-bg} summarises the Structure-layer
+algorithms in the B-series and their primary design dimension.
+
+\begin{table}[t]
+\centering
+\caption{Structure-layer algorithms in the B-series redistricting platform.
+  ``Optimises'' describes the primary objective at each bisection node.
+  CVD optimises geographic proximity (not edge cut).
+  All algorithms enforce population balance via post-hoc rebalance.}
+\label{tab:structure-comparison-bg}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}lllll@{}}
+\toprule
+Algorithm & Optimises & Randomness & Data needed & Phase \\
+\midrule
+\metis{}         & Edge cut (graph)       & Seeded  & None         & Done \\
+\sa{} (B.19)     & Edge cut (graph) + SA  & Seeded  & None         & Done \\
+\geosec{} (B.8)  & Direction + EC ratio   & Seeded  & None         & Done \\
+\areasec{} (B.9) & Area-swing + EC        & Seeded  & None         & Done \\
+\textbf{\cvd{} (B.22)} & \textbf{Geographic distance} & \textbf{Seeded}
+                        & \textbf{None (P1) / Centroids (P2)} & \textbf{This paper} \\
+\bfsgrowth{} (B.23) & Population balance + proximity & Seeded & None & B.23 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\cvd{} is orthogonal to SeedCompositor strategies: \be{} or \cs{} can be
+applied over \cvd{} subproblems just as over \metis{} subproblems.
+Running \be{}$(T=50)$ with \cvd{} bisection would sample 50 independent
+\cvd{} runs per node (each with a different BFS-derived seed) and select
+the geometrically most compact result.

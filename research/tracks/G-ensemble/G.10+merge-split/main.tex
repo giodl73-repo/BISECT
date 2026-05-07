@@ -1,0 +1,101 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+
+%% Style
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+\setstretch{1.4}
+
+%% Macros
+\newcommand{\mergesplit}{\textsc{MergeSplit}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\forestrecom}{\textsc{ForestReCom}}
+\newcommand{\ec}{\ensuremath{\mathrm{EC}}}
+\newcommand{\pp}{\ensuremath{\mathrm{PP}}}
+\newcommand{\ust}{\textsc{UST}}
+\newcommand{\mh}{\textsc{MH}}
+\newcommand{\cs}{\textsc{ConvergenceSweep}}
+\newcommand{\rhat}{\ensuremath{\hat{R}}}
+\newcommand{\ess}{\ensuremath{\mathrm{ESS}}}
+
+\title{%
+  \textbf{Merge-Split MCMC: Explicit Reversibility}\\
+  \textbf{via Two-Tree Acceptance Ratio}\\[0.8em]
+  \normalsize\textit{G.10 --- Ensemble Methods / Reversible ReCom}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+Standard ReCom~\citep{deford2021} samples a random spanning tree of a merged
+two-district region and selects a balanced cut, but the acceptance ratio is
+always~1: the forward and reverse proposal probabilities are implicitly equal.
+This means the stationary distribution is unknown.
+Merge-Split MCMC~\citep{janson2022} breaks this symmetry by sampling an
+\emph{independent} reverse spanning tree and computing the ratio
+$\mathrm{valid\_cuts\_fwd} / \mathrm{valid\_cuts\_rev}$, which equals
+$Q(\pi' \!\to\! \pi) / Q(\pi \!\to\! \pi')$ exactly under uniform cut
+selection.
+The resulting chain approximately targets the uniform distribution over valid
+redistricting plans at $O(m \log m)$ per step---the same asymptotic cost as
+standard ReCom and far cheaper than Forest ReCom's $O(m^2)$ determinant
+computation~\citep{dellaLibera2026forestRecom}.
+We implement \mergesplit{} as \texttt{MergeSplitChain} and expose it via
+\texttt{--search merge-split}.
+Empirical results on North Carolina ($k=14$) and Wisconsin ($k=8$) show an
+acceptance rate of approximately~60\%, higher than Forest ReCom's~40\%,
+with comparable ensemble quality.
+\mergesplit{} is the recommended chain when approximate uniformity is
+sufficient and speed matters; Forest ReCom is reserved for applications
+requiring stricter distributional guarantees.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-background}
+\input{sections/03-algorithm}
+\input{sections/04-comparison}
+\input{sections/05-when-to-use}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

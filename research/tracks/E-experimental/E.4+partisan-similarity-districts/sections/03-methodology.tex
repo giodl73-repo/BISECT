@@ -1,0 +1,17 @@
+\section{Methodology}
+
+% 3.1: Partisan Vote Similarity
+% - Data sources (2016/2020 presidential, 2018 midterm)
+% - Similarity metric (absolute difference in vote share)
+% - Edge weight formula: w = exp(-α × |D_vote_i - D_vote_j|)
+
+% 3.2: Edge-Weighted Recursive Bisection
+% - METIS configuration
+% - Scaling factor α experiments (1×, 10×, 50×, 100×)
+% - Population balance constraints
+
+% 3.3: Metrics and Analysis
+% - Partisan lean distribution
+% - Safe seat thresholds (D/R+10, D/R+15, D/R+20)
+% - Compactness trade-offs (Polsby-Popper)
+% - Comparison to enacted maps

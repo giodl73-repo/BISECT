@@ -1,0 +1,95 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have introduced \ilp{} redistricting, the first structure-layer algorithm
+in this platform to provide a mathematical optimality certificate for
+edge-cut compactness.
+For small instances ($n \leq 500$ tracts), the ILP formulation with
+both-endpoint MTZ contiguity constraints and a single cut-edge indicator
+per undirected edge finds the provably optimal redistricting plan in
+practical solve times: under 50\,s for NH ($n=260$, $k=2$) and under
+1\,s for single-district states.
+
+\paragraph{What ILP is the right tool for.}
+\ilp{} redistricting is the correct choice in two situations:
+
+\begin{enumerate}
+\item \textbf{Small-state certification.}
+  For VT, ND, WY, AK, DE, SD, MT ($k=1$) and NH, RI ($k=2$), \ilp{}
+  is strictly superior to any heuristic: it finds a better plan (lower EC)
+  in competitive or better time, and adds the certificate that no heuristic
+  can provide.
+
+\item \textbf{Bisection node certification.}
+  For large-$k$ states where each bisection node has $n \leq 500$ tracts,
+  running \ilp{} at every node certifies the compactness of each sub-partition
+  independently of tree structure.
+  For $k = 14$ (NC), depth-3 nodes have $n \approx 330$ tracts; \ilp{}
+  is tractable at these nodes.
+\end{enumerate}
+
+\paragraph{What ILP is not the right tool for.}
+For production 50-state builds, or any state where bisection nodes exceed
+500 tracts, \metis{} remains the correct default.
+The ILP size guard (default \texttt{max\_tracts = 500}) falls back to
+\metis{} automatically and records the fallback in the audit chain.
+
+\paragraph{Phase~2 enhancements.}
+Several enhancements are deferred:
+
+\begin{enumerate}
+\item \textbf{DFJ branch-and-cut.}
+  Replacing MTZ with Dantzig--Fulkerson--Johnson cuts~\citep{nemhauser1988}
+  yields a tighter LP relaxation and typically faster branch-and-bound.
+  Requires a lazy-constraint callback in the solver interface.
+  Deferred to Phase~2.
+
+\item \textbf{\highs{} full integration.}
+  Phase~1 uses \highs{} as a subprocess.
+  Phase~2 will use the \texttt{highs-sys} Rust bindings for tighter
+  integration (in-process solving, MIP start hints for warm-start from
+  \metis{}).
+
+\item \textbf{Gurobi and CPLEX backends.}
+  The \texttt{Solver} trait allows new backends without modifying the
+  formulation.
+  Commercial solvers (Gurobi, CPLEX) are $2$--$5\times$ faster than
+  \glpk{} on MIP instances and would extend the tractable range to
+  $n \approx 1{,}000$.
+
+\item \textbf{Warm-start from \metis{}.}
+  Providing the \metis{} solution as an MIP start hint reduces the
+  gap between the initial upper bound and the LP lower bound,
+  often halving solve time.
+  Requires checking \glpk{}/\highs{} support for MIP start APIs.
+
+\item \textbf{Partial certification for large states.}
+  For states where some bisection nodes exceed 500 tracts, run \ilp{}
+  at the tractable nodes and \metis{} at the larger nodes.
+  Record which nodes are certified and which are heuristic in the audit
+  chain.
+  This gives a ``partially certified'' plan with precise documentation
+  of where the certification is and is not in force.
+\end{enumerate}
+
+\paragraph{Legal caveat.}
+The ILP certificate establishes mathematical optimality for edge-cut
+compactness under the specified population balance tolerance and census
+data vintage.
+It is not a substitute for legal counsel or a certification of compliance
+with state constitutional compactness standards, Voting Rights Act
+requirements, or other legal criteria applicable in a given jurisdiction.
+Practitioners should consult legal counsel before using the ILP
+certificate in redistricting litigation or regulatory proceedings.
+
+\paragraph{Summary.}
+\ilp{} redistricting fills the certification gap in the algorithm
+portfolio.
+Phase~1 (this paper) provides proven-optimal plans for small instances
+and bisection nodes using \glpk{} with both-endpoint MTZ contiguity.
+Phase~2 will extend coverage with DFJ cuts and faster solver backends.
+Together with \metis{} (heuristic, production-scale) and
+\be{}~\citep{dellaLibera2026comparison} (heuristic, high-quality search),
+the platform now covers the full quality-runtime-certification spectrum:
+fast approximate (\metis{}), best-effort approximate (\be{}), and
+exact certified (\ilp{}).

@@ -1,0 +1,44 @@
+paper: gerry-gingles-bloc-voting
+title: "Quantifying VRA Section 2 Evidence with Algorithmic Redistricting: A Gingles Prong-by-Prong Methodology"
+venue: Yale Law Journal
+stage: ready
+round: 2
+reviews_completed: 10
+round1_avg_score: 2.8
+round2_avg_score: 3.0
+gate_passed: true
+created: "2026-02-08"
+updated: "2026-05-07"
+
+reviewers:
+  - name: George Karypis
+    category: Statistical Methodology
+  - name: Jonathan Rodden
+    category: Political Context
+  - name: Moon Duchin
+    category: Mathematical Rigor
+  - name: Nicholas Stephanopoulos
+    affiliation: Harvard Law
+    category: Election Law
+    notes: "Lead reviewer — Callais doctrine"
+  - name: Albert Liang
+    category: Statistical Specification
+
+pp_items:
+  - id: PP-D5-1
+    title: "Daubert reliability analysis"
+    status: open
+  - id: PP-D5-2
+    title: "Case citations for alignment threshold calibration"
+    status: open
+  - id: PP-D5-3
+    title: "Callais binding scope statement"
+    status: open
+
+history:
+  - date: "2026-02-08"
+    stage: panel
+    note: "R1 avg 2.8/4. Stephanopoulos flagged three critical legal errors."
+  - date: "2026-02-08"
+    stage: ready
+    note: "R2 avg 3.0/4. All three legal errors corrected. Accepted."

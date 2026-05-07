@@ -1,0 +1,84 @@
+%% 01-overview.tex — What is this portfolio?
+
+\section{What Is This Portfolio?}
+
+This portfolio is a collection of more than forty research papers asking a single question:
+\emph{Can a computer draw fairer congressional districts than a human politician?}
+
+The answer, across all fifty states and three census decades, is yes.
+
+\subsection*{The Problem in One Sentence}
+
+Every ten years, after the Census, each state redraws its congressional districts.
+In most states, the party in power draws the lines---and draws them to stay in power.
+This practice is called \textbf{gerrymandering}, and in 2019 the U.S.\ Supreme Court
+ruled that federal courts can do nothing about it~\cite{rucho2019}.
+
+\subsection*{The Proposal in One Sentence}
+
+Replace the politician with an algorithm: a mathematical procedure that divides a
+state into equal-population districts using only geography and population counts---no
+voter registration, no election history, no racial or partisan data.
+
+\subsection*{Five Research Tracks}
+
+The portfolio is organized into seven tracks, labeled A through G,
+each investigating a different aspect of algorithmic redistricting.
+Together they span the question from first principles through
+legal compliance, validation, and real-world application.
+
+\begin{center}
+\begin{tikzpicture}[
+  track/.style={rectangle, draw=black, thick, rounded corners=4pt,
+                minimum width=3.8cm, minimum height=1.1cm,
+                align=center, font=\small\bfseries},
+  arrow/.style={->, thick, >=stealth},
+  node distance=0.45cm and 0.6cm
+]
+
+% Row 1 — foundation
+\node[track, fill=blue!15]  (A) {Track A\\Overview \& Guides};
+\node[track, fill=blue!25, right=of A]  (B) {Track B\\Algorithm};
+\node[track, fill=green!20, right=of B] (C) {Track C\\Validation};
+
+% Row 2 — applications
+\node[track, fill=orange!20, below=0.7cm of A] (D) {Track D\\Legal / VRA};
+\node[track, fill=red!15,    below=0.7cm of B] (E) {Track E\\Extensions};
+\node[track, fill=purple!15, below=0.7cm of C] (F) {Track F\\State Leg.};
+
+% Row 3 — synthesis
+\node[track, fill=gray!20, below=0.7cm of E] (G) {Track G\\Ensemble};
+
+% Arrows: B feeds everything
+\draw[arrow] (B) -- (C);
+\draw[arrow] (B) -- (D);
+\draw[arrow] (B) -- (E);
+\draw[arrow] (B) -- (F);
+\draw[arrow] (B) -- (G);
+\draw[arrow] (A) -- (B);
+
+\end{tikzpicture}
+\end{center}
+
+\medskip
+
+\noindent Table~\ref{tab:tracks} summarizes the seven tracks and their paper counts.
+
+\begin{table}[h]
+\centering
+\caption{Portfolio tracks at a glance.}
+\label{tab:tracks}
+\begin{tabular}{@{}clll@{}}
+\toprule
+Track & Name & Core Question & Papers \\
+\midrule
+A & Overview \& Guides     & What does this portfolio do?        & 5 \\
+B & Algorithm              & How does bisection work?            & 18 \\
+C & Validation             & Does it hold up to scrutiny?        & 9 \\
+D & Legal / VRA            & Is it lawful?                       & 6 \\
+E & Extensions             & What else can it do?                & 7 \\
+F & State Legislatures     & Does it scale to smaller chambers?  & 6 \\
+G & Ensemble Analysis      & How does it compare to random maps? & 5 \\
+\bottomrule
+\end{tabular}
+\end{table}

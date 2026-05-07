@@ -1,0 +1,188 @@
+% Section 6: Limitations
+% Compactness-VRA Tradeoff Quantification
+
+\section{Limitations}
+
+Our findings demonstrate that VRA-compactness tradeoffs vary substantially across states and that non-MM districts generally benefit from demographic-aware redistricting. However, several methodological choices and scope conditions limit the generalizability of our conclusions. We address six primary limitations: geographic scope (Southern states), single minority group focus, fixed district counts, geographic resolution, population-only demographics, and compactness as the sole competing objective.
+
+\subsection{Geographic Scope: Southern States with VRA History}
+
+Our analysis focuses exclusively on five Southern states (Alabama, Georgia, Louisiana, Mississippi, South Carolina) with three defining characteristics: (1) large Black populations (35-46\% minority), (2) histories of VRA Section 5 preclearance coverage, and (3) extensive redistricting litigation. This geographic focus provides empirical advantages (comparable demographic contexts, rich litigation history, established VRA targets) but raises questions about generalizability to other regions and states.
+
+\subsubsection{Why Southern States?}
+
+We selected Southern states for three methodological reasons:
+
+\textbf{1. Substantial VRA stakes}: These states have large enough Black populations (35-46\%) to make VRA compliance non-trivial but not automatic. States with $<$20\% minority populations face infeasibility (creating MM districts arithmetically impossible), while states with $>$60\% minority populations achieve VRA compliance trivially. Our states occupy the analytically interesting range where VRA-compactness tradeoffs emerge.
+
+\textbf{2. Comparable demographic contexts}: All five states are predominantly Black-White binary racial contexts, avoiding the multi-group coalition complexities of Southwestern (Latino-dominant) or West Coast (Asian-Latino) states. This comparability enables cross-state pattern identification.
+
+\textbf{3. Established VRA targets}: Decades of litigation have produced consensus MM district targets for each state (AL: 2/7, GA: 5/14, LA: 2/6, MS: 2/4, SC: 3/7). These targets provide clear success criteria. Northern states without VRA coverage history lack established targets, making evaluation ambiguous.
+
+\subsubsection{Generalization to Other Regions}
+
+Our findings may not generalize uniformly to all U.S. regions:
+
+\textbf{Northern/Midwestern States} (e.g., Illinois, Michigan, Ohio):
+\begin{itemize}
+    \item \textbf{Lower minority concentrations}: Black populations 10-20\% (vs 35-46\% in our study)
+    \item \textbf{Higher urban concentration}: Minority populations concentrated in single metro areas (Chicago, Detroit, Cleveland) rather than dispersed across multiple regions
+    \item \textbf{Predicted tradeoff pattern}: Win-win more likely (high urban clustering $\to$ high Moran's $I$ $\to$ Georgia-like pattern). Creating 1-2 MM districts around core cities should improve compactness by consolidating urban areas into cohesive districts.
+    \item \textbf{Mechanism generalization}: Geographic clustering mechanism applies (urban Black Belt comparable to Southern rural Black Belt)
+\end{itemize}
+
+\textbf{Southwestern States} (e.g., Texas, Arizona, New Mexico):
+\begin{itemize}
+    \item \textbf{Latino-dominant demographics}: 30-40\% Latino, creating different VRA dynamics (Section 2 applies but with different thresholds)
+    \item \textbf{Urban-rural split}: Latino populations split between urban (e.g., El Paso, Phoenix) and rural (agricultural regions) contexts
+    \item \textbf{Predicted tradeoff pattern}: Steeper tradeoffs possible. Latino populations less residentially segregated than Black populations (Moran's $I$ typically 0.40-0.50 vs 0.55-0.65), reducing clustering benefits. May exhibit Louisiana-like patterns (compactness sacrifice required).
+    \item \textbf{Caveat}: Border districts (e.g., Texas-Mexico border) may exhibit high Latino clustering, enabling win-win locally
+\end{itemize}
+
+\textbf{West Coast States} (e.g., California, Washington):
+\begin{itemize}
+    \item \textbf{Multi-group diversity}: No single dominant minority (Latino 30-40\%, Asian 10-15\%, Black 5-10\%)
+    \item \textbf{Coalition districts required}: VRA compliance requires Black+Latino or Asian+Latino coalitions (40-45\% combined)
+    \item \textbf{Predicted tradeoff pattern}: Unclear without multi-group extensions. If minority groups co-cluster (e.g., urban neighborhoods with high Black+Latino), win-win possible. If groups spatially separate, steep tradeoffs likely.
+    \item \textbf{Mechanism uncertainty}: Geographic clustering mechanism requires \emph{joint} spatial autocorrelation across groups, not studied here
+\end{itemize}
+
+\textbf{Mountain West States} (e.g., Montana, North Dakota, South Dakota):
+\begin{itemize}
+    \item \textbf{Native American populations}: 5-15\% Native, concentrated on reservations
+    \item \textbf{Extreme geographic dispersion}: Reservations separated by hundreds of miles, creating unique contiguity challenges
+    \item \textbf{Predicted tradeoff pattern}: Likely infeasible (South Carolina-like). Connecting distant reservations requires highly non-compact districts (similar to I-85 district). VRA compliance may require accepting compactness sacrifice.
+    \item \textbf{Mechanism failure}: Geographic clustering exists \emph{within} reservations but not \emph{between} reservations, preventing state-level optimization
+\end{itemize}
+
+\subsubsection{Residential Segregation as Moderator}
+
+The key moderating variable for generalization is \textbf{residential segregation} (measured by Moran's $I$ or dissimilarity index). Our mechanisms depend on geographic clustering:
+
+\begin{itemize}
+    \item \textbf{High segregation (Moran's $I > 0.55$)}: Win-win solutions likely. Minority clusters are large, contiguous, and geographically compact. Edge-weighting preserves natural communities, improving compactness. Examples: Southern Black Belt, Northern urban cores, border Latino regions.
+
+    \item \textbf{Moderate segregation (Moran's $I = 0.40-0.55$)}: Mixed outcomes. Some clusters large enough for MM districts; others require aggregating dispersed populations. May exhibit Alabama-like patterns (slight improvement or neutral tradeoff). Examples: Midwestern suburbs, Western Latino populations.
+
+    \item \textbf{Low segregation (Moran's $I < 0.40$)}: Steep tradeoffs expected. Minority populations dispersed without strong clustering. Creating MM districts requires connecting distant tracts, degrading compactness. Louisiana-like sacrifice patterns. Examples: Rural Western states, integrated suburbs.
+\end{itemize}
+
+\textbf{Empirical Test}: Future research should test: Do states with Moran's $I > 0.55$ consistently exhibit win-win or neutral tradeoffs, while states with Moran's $I < 0.40$ exhibit steep tradeoffs? Our five-state sample suggests yes (GA: 0.58 win-win, MS: 0.65 neutral, AL: 0.62 slight win, LA: 0.52 lose-lose), but larger samples required for confirmation.
+
+\subsubsection{VRA Coverage History}
+
+Our states all had Section 5 preclearance coverage (struck down in \emph{Shelby County v. Holder}, 2013), creating institutional path dependence:
+
+\begin{itemize}
+    \item Decades of Justice Department oversight developed clear MM district targets
+    \item Redistricting litigation produced consensus expectations about VRA compliance
+    \item Historical MM districts created baseline voter awareness and community identity
+\end{itemize}
+
+States without this history (e.g., Pennsylvania, Wisconsin, Colorado) may face different VRA dynamics:
+\begin{itemize}
+    \item No established MM district targets $\to$ ambiguous success criteria
+    \item Less litigation $\to$ weaker precedent for 50\% thresholds
+    \item No historical MM districts $\to$ less community expectation of minority representation
+\end{itemize}
+
+However, this affects \emph{interpretation} of VRA compliance, not \emph{geometric} mechanisms. The clustering mechanisms (minority clusters enable joint compactness-VRA optimization) apply universally. Only the normative targets (``2 MM districts are required'') vary by jurisdiction.
+
+\subsubsection{Confidence in Generalization}
+
+We are \textbf{highly confident} our findings generalize to:
+\begin{itemize}
+    \item Other Southern states with similar Black-White demographics and high segregation (e.g., North Carolina, Virginia, Tennessee)
+    \item Northern states with urban Black concentrations (e.g., Illinois, Michigan, Pennsylvania)
+    \item Any state with Moran's $I > 0.55$ for the relevant minority population
+\end{itemize}
+
+We are \textbf{moderately confident} our findings generalize to:
+\begin{itemize}
+    \item Latino-plurality Southwestern states with moderate segregation (Moran's $I = 0.40-0.55$)
+    \item States requiring 1-2 MM districts (low VRA compliance burden)
+\end{itemize}
+
+We are \textbf{uncertain or skeptical} our findings generalize to:
+\begin{itemize}
+    \item Multi-group coalition states (California, Texas, New York) without multi-group extensions
+    \item States with Native American populations on geographically distant reservations
+    \item States with low minority segregation (Moran's $I < 0.40$)
+    \item States requiring high MM percentages relative to minority population (SC-like infeasibility)
+\end{itemize}
+
+\textbf{Recommendation for Future Research}: Test our framework on 10-15 additional states spanning diverse demographic contexts (Latino-dominant Southwest, Asian-plurality West Coast, Native American Mountain West, low-segregation suburbs). Expected pattern: Segregation (Moran's $I$) predicts tradeoff slope, with high segregation enabling win-win regardless of racial composition.
+
+\subsection{Single Minority Group (Beyond Geographic Scope)}
+
+Our experiments focus exclusively on Black-White demographics in Southern states with histories of VRA Section 5 preclearance. We do not model:
+\begin{itemize}
+    \item \textbf{Multi-group scenarios}: Coalition districts requiring joint representation of multiple minority groups (e.g., Black + Latino in Texas, Asian + Latino in California)
+    \item \textbf{Within-group heterogeneity}: Distinctions between immigrant and native-born populations, language minorities, or ethnic subgroups within broader racial categories
+    \item \textbf{Cross-state minority variation}: Native American populations in Western states, Latino populations in Southwestern states, or Asian populations in West Coast states
+\end{itemize}
+
+This simplification aligns with VRA litigation patterns in our study states (Alabama, Georgia, Louisiana, Mississippi, South Carolina), where Black-White demographics dominate redistricting disputes. However, it limits generalization to more diverse states like California, Texas, or New York, where multi-group coalition districts are common and may exhibit different tradeoff patterns.
+
+\textbf{Implication}: Our mechanisms (geographic clustering enables joint optimization) should generalize to any spatially autocorrelated minority population, but the specific feasibility thresholds and Pareto frontier slopes we identify are Black-specific. Multi-group extensions would require modeling inter-group spatial relationships and coalition formation thresholds (e.g., 40\% Black + 40\% Latino = 80\% combined minority).
+
+\subsection{Fixed District Counts}
+
+We hold the number of congressional districts fixed per state, determined by decennial Census apportionment: Alabama (7), Georgia (14), Louisiana (6), Mississippi (4), South Carolina (7). Varying the number of districts $k$ could alter Pareto frontier shapes---more districts may provide greater flexibility for achieving both compactness and VRA compliance simultaneously, while fewer districts may constrain optimization.
+
+However, this limitation has minimal practical relevance: district counts are constitutionally determined by the apportionment process and cannot be adjusted by redistricting authorities. States receive the number of districts proportional to their population, with no discretion to increase $k$ to improve VRA compliance or compactness. Our fixed-$k$ analysis therefore matches the constrained optimization problem faced by real-world redistricting commissions.
+
+\textbf{Implication}: Our results directly apply to the policy-relevant scenario where $k$ is predetermined. Theoretical research on variable-$k$ Pareto frontiers may provide additional insights into geometric constraints, but would not alter practical redistricting guidance.
+
+\subsection{Geographic Resolution}
+
+We use census tracts as atomic units for district construction, with approximately 1,500 tracts per state on average. Census tracts represent neighborhoods of 2,500-8,000 people and are the standard geographic unit in redistricting research and litigation \citep{altman1998}. Finer-resolution block-level data (approximately 50,000 blocks per state) could enable more precise district boundaries and potentially reveal additional optimization opportunities.
+
+However, block-level analysis imposes severe computational costs: graph partitioning complexity scales superlinearly with node count, implying 30-fold or greater increases in runtime for our parameter sweeps. For our 105-configuration experimental design, this would translate from hours to days of computation per state. Moreover, prior research has shown that tract-level and block-level redistricting produce qualitatively similar district boundaries, with block-level optimization providing marginal compactness improvements \citep{ricca2013}.
+
+\textbf{Implication}: Our tract-level findings likely underestimate the achievable compactness-VRA joint optimization potential, as finer resolution could uncover additional win-win configurations. However, the core mechanisms (geographic clustering, non-MM boundary clarification, baseline suboptimality) operate at tract scale and should persist at block scale. Future work with greater computational resources could refine our quantitative estimates.
+
+\subsection{Population Data Only}
+
+We optimize districts based solely on total residential population, ignoring electoral effectiveness factors that may differentially affect minority voting strength:
+\begin{itemize}
+    \item \textbf{Voter registration rates}: Minority communities often exhibit lower registration rates due to historical disenfranchisement, documentation barriers, or voter suppression tactics
+    \item \textbf{Turnout rates}: Even among registered voters, minority turnout may be lower due to access barriers (polling place closures, transportation, work schedule conflicts)
+    \item \textbf{Age distributions}: Minority populations skew younger on average, with larger proportions under 18 and thus ineligible to vote
+    \item \textbf{Citizenship rates}: In states with substantial immigrant populations, citizenship rates affect voting-eligible population
+\end{itemize}
+
+These factors mean that a district with 50\% minority \emph{population} may have only 40-45\% minority \emph{voters}, potentially undermining electoral effectiveness despite satisfying population-based VRA metrics. Some scholars argue for optimizing on voting-eligible population rather than total population \citep{tucker2020}.
+
+However, Supreme Court precedent in \emph{Evenweil v. Abbott} (2016) affirmed that states may use total population for redistricting, and VRA litigation has historically focused on population-based metrics. Our population-only approach therefore aligns with legal practice, even if it overestimates minority electoral strength.
+
+\textbf{Implication}: Our MM district counts represent upper bounds on VRA compliance under population-based definitions. States with large age gaps, citizenship gaps, or registration/turnout gaps may achieve fewer \emph{electorally effective} MM districts than our population-based optimization suggests. Incorporating voting-eligible population would shift Pareto frontiers toward fewer MM districts for equivalent demographic strength, potentially steepening tradeoff slopes.
+
+\subsection{Compactness as Sole Competing Objective}
+
+We model VRA compliance as competing solely with compactness. Real-world redistricting involves numerous additional objectives:
+\begin{itemize}
+    \item \textbf{Communities of interest}: Keeping cities, counties, or neighborhoods intact to preserve shared interests and facilitate constituent services
+    \item \textbf{Partisan fairness}: Ensuring proportional representation for political parties, avoiding partisan gerrymandering (efficiency gap, mean-median difference)
+    \item \textbf{Incumbent protection}: Preserving existing representatives' districts to maintain constituent relationships and seniority
+    \item \textbf{Administrative boundaries}: Respecting county or municipal boundaries to simplify election administration
+\end{itemize}
+
+Some of these objectives may align with VRA compliance and compactness (e.g., keeping minority-concentrated cities intact improves all three), while others may conflict (e.g., partisan gerrymandering may require non-compact districts that dilute minority votes). Multi-objective optimization with three or more competing objectives would produce higher-dimensional Pareto surfaces rather than two-dimensional frontiers.
+
+\textbf{Implication}: Our binary VRA-compactness tradeoff isolates the relationship between these two objectives but abstracts away other practical constraints. In real redistricting, legislatures may sacrifice compactness to protect incumbents \emph{even when} VRA-compliant compact alternatives exist, or may achieve VRA compliance more easily by aligning MM districts with existing cities (communities of interest). Our findings establish that VRA-compactness conflict is not inherent, but do not claim that these are the only relevant objectives in practice.
+
+\subsection{Scope Conditions and Generalization}
+
+These five limitations collectively define the \emph{scope conditions} under which our findings apply most directly:
+\begin{itemize}
+    \item States with single dominant minority groups and strong spatial autocorrelation
+    \item Fixed district counts determined by constitutional apportionment
+    \item Tract-level redistricting (standard in research and litigation)
+    \item Population-based VRA metrics (legal standard)
+    \item Compactness-focused optimization (ignoring other objectives)
+\end{itemize}
+
+Within these scope conditions, our findings are robust: non-MM districts generally gain compactness, win-win solutions exist in favorable demographic contexts, and feasibility thresholds define the boundary of algorithmic optimization. Extensions beyond these conditions (multi-group coalitions, variable district counts, block-level resolution, voting-eligible population, multi-objective optimization) represent important directions for future research but do not invalidate our core conclusions about the VRA-compactness relationship.
+
+Our mechanisms---geographic clustering enables joint optimization, non-MM districts benefit from clearer boundaries, baseline algorithms are suboptimal---are fundamental to the geometry of minority concentration and should persist across these extensions. However, the quantitative estimates (non-MM gain +7.5\%, feasibility ratio threshold 1.2) are specific to our experimental design and may shift with different methodological choices.

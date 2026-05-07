@@ -1,0 +1,69 @@
+\label{sec:competition}
+
+\subsection{Two-Party Presidential Vote as the Measure}
+
+Electoral competition can be measured many ways: incumbent vote share,
+margin of victory in general elections, challenger quality, or campaign
+spending.  For comparisons across algorithmic and enacted maps, we need a
+measure that is (a) available for every district, (b) exogenous to the
+specific candidates running, and (c) comparable across redistricting cycles.
+
+Presidential vote share satisfies all three criteria.  Presidential election
+results are available at the precinct level for the 2020 election and can be
+reaggregated to any district geometry~\citep{deford2021redistricting}.
+Presidential vote is less sensitive to candidate-specific idiosyncrasies than
+congressional vote; it represents the underlying partisan lean of the
+electorate rather than the personal vote of a specific incumbent.  It is
+standard in the redistricting literature for precisely these
+reasons~\citep{gelman1994unified}.
+
+We compute the two-party Democratic presidential vote share $D_i$ for each
+district $i$ as:
+\begin{equation}
+  D_i = \frac{\text{Biden}_i}{\text{Biden}_i + \text{Trump}_i}
+\end{equation}
+where $\text{Biden}_i$ and $\text{Trump}_i$ denote votes cast in 2020 in
+district $i$'s territory.
+
+\subsection{Competitive and Swing Thresholds}
+
+We adopt two competition thresholds:
+
+\begin{definition}[Competitive District]
+A district is \emph{competitive} if $|D_i - 0.5| < 0.10$, i.e., if the
+two-party Democratic presidential vote share falls between 40\% and 60\%.
+\end{definition}
+
+\begin{definition}[Swing District]
+A district is a \emph{swing district} if $|D_i - 0.5| < 0.05$, i.e., if
+the two-party Democratic presidential vote share falls between 45\% and 55\%.
+\end{definition}
+
+The 10-point competitive threshold is widely used in the congressional
+elections literature and corresponds to a district that could plausibly flip
+parties with a national wave of 5--8 points~\citep{mcdonald2006new}.  The
+5-point swing threshold identifies the most hotly contested districts where
+candidate quality and campaign resources plausibly determine the outcome.
+
+\subsection{Partisan Lean Classification}
+
+Among competitive districts, we classify partisan lean as follows:
+\begin{itemize}
+  \item \textbf{Lean Democratic:} $0.50 \leq D_i < 0.60$
+  \item \textbf{Lean Republican:} $0.40 < D_i < 0.50$
+  \item \textbf{True Toss-up:} $0.475 \leq D_i \leq 0.525$
+\end{itemize}
+This allows us to assess whether competitive algorithmic districts are
+systematically advantaged for one party.
+
+\subsection{Limitations of the Presidential Vote Proxy}
+
+The presidential vote proxy has well-known limitations.  First, it measures
+the 2020 election's specific partisan environment; if the 2020 election was
+unusually nationalized, the proxy may overstate the true competitiveness of
+districts whose local political dynamics differ from the national trend.
+Second, incumbency effects---which can shift congressional vote share by 5--10
+points relative to presidential results~\citep{ansolabehere2000incumbency}---mean
+that a ``competitive'' district by presidential vote may in practice be safe
+for an incumbent.  We address this limitation in Section~6 (longitudinal
+projection) by examining stability under vote-share drift.

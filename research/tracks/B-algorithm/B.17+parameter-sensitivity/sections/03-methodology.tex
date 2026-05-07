@@ -1,0 +1,78 @@
+\section{Methodology}
+\label{sec:methodology}
+
+\subsection{Sweep Design}
+
+We use a one-parameter-at-a-time (OAT) sweep design~\citep{morris1991}.
+For each of the five parameters, we vary that parameter across its range
+while holding all other parameters fixed at their DIA default values.
+
+The grid for each parameter is:
+
+\begin{table}[h]
+\centering
+\caption{Parameter sweep grid. ``Default'' is the DIA baseline value.}
+\label{tab:sweep-grid}
+\begin{tabular}{llcc}
+\toprule
+Parameter & Range & Grid points & Default \\
+\midrule
+$\ufactor$ & $[0.1\%, 5\%]$ & 0.1, 0.5, 1.0, 2.0, 5.0 & 1.0 \\
+$\acounty$ & $[1.0, 10.0]$ & 1.0, 2.0, 3.0, 5.0, 10.0 & 3.0 \\
+$T$ & $[100, 1{,}000]$ & 100, 200, 400, 600, 1000 & 600 \\
+$\aswing$ & $[1.05, 1.20]$ & 1.05, 1.07, 1.10, 1.15, 1.20 & 1.10 \\
+$\wvra$ & $[0.2, 0.6]$ & 0.2, 0.3, 0.4, 0.5, 0.6 & 0.4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+This gives $5 \times 5 = 25$ non-baseline parameter settings,
+plus the one baseline setting, for 26 total pipeline runs.
+Each run is a full 50-state sweep using the \texttt{redist states}
+command.
+
+\paragraph{Limitation of OAT design.}
+One-at-a-time design cannot detect multiplicative interactions between
+parameters; the joint sweep described in Section~\ref{sec:joint-sweep}
+addresses this limitation.
+
+\subsection{Outcome Metrics}
+
+For each pipeline run, we record:
+
+\begin{enumerate}
+\item \textbf{National Democratic seat count} ($D_{\rm nat}$):
+      total Democratic seats across all 50 states and 435 districts,
+      using 2020 election data.
+\item \textbf{State-level partisan gap} ($D_s - 0.5k_s$):
+      difference between Democratic seats and the partisan-neutral
+      expectation for each state.
+\item \textbf{State-average Polsby-Popper} ($\overline{\PP}_s$):
+      mean district-level compactness for each state.
+\item \textbf{County split count} ($C_s$):
+      number of county-district boundaries (lower is better).
+\end{enumerate}
+
+\subsection{Statistical Analysis}
+
+For each parameter and each metric, we report:
+\begin{itemize}
+\item The range of the metric across grid points: $\max - \min$.
+\item The standardized sensitivity index: $(\max - \min) / \sigma_0$,
+      where $\sigma_0$ is the baseline standard deviation from B.7's
+      seed sweep.
+\item A binomial test for whether the sweep produces more Democratic
+      outcomes at higher vs.\ lower parameter values.
+\end{itemize}
+
+The binomial test addresses the concern that a hostile actor could
+find a parameter combination that systematically favors one party.
+
+\subsection{The B.0 Bakeoff Baseline}
+
+For context, we compare parameter sensitivity to algorithm sensitivity
+as measured in B.0~\citep{b0paper}.
+The B.0 bakeoff found a partisan gap of 12.8 percentage points between
+unweighted bisection (4D/4R in Wisconsin) and GeoSection (3D/5R).
+This is our scale reference: any effect smaller than this is ``large'';
+any effect smaller than 1 percentage point is ``negligible''.

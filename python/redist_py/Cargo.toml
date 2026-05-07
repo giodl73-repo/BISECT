@@ -1,0 +1,19 @@
+[package]
+name = "redist_py"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "PyO3 bindings for bisect-core"
+
+[lib]
+name = "redist_py"
+crate-type = ["cdylib"]
+
+[dependencies]
+bisect-core = { path = "../../crates/bisect-core" }
+bisect-data = { path = "../../crates/bisect-data" }
+bisect-analysis = { path = "../../crates/bisect-analysis" }
+pyo3.workspace = true
+numpy.workspace = true
+anyhow.workspace = true

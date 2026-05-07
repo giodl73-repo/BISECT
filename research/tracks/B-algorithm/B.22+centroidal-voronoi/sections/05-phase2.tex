@@ -1,0 +1,142 @@
+\section{Phase 2: Geographic Voronoi Districts}
+\label{sec:phase2}
+
+\subsection{Motivation: When Graph Distance Diverges from Geography}
+
+Phase~1 \cvd{} measures proximity via BFS hop count on the census-tract
+adjacency graph.
+BFS hop count is a faithful proxy for geographic distance in most of the
+contiguous United States: inland states with roughly regular census-tract
+shapes produce adjacency graphs where hop count is proportional to road
+distance, and Voronoi regions based on hop count are reasonable geographic
+approximations.
+
+However, BFS hop count diverges from geographic Euclidean distance in two
+important cases:
+
+\paragraph{Case 1: Coastal and waterfront states.}
+States with substantial water boundaries (Florida, Louisiana, Michigan,
+Maryland) have census tracts that are geographically far apart but connected
+via many intermediate tracts along land corridors.
+Two tracts on opposite shores of a bay may be 2 miles apart in Euclidean
+distance but 50 hops apart in the adjacency graph (via the land route).
+BFS Voronoi in such states assigns coastal tracts to ``wrong'' seeds based
+on graph topology rather than actual geographic proximity, producing
+elongated peninsular districts rather than compact coastal ones.
+
+\paragraph{Case 2: Elongated rural states.}
+States with elongated geographic shapes and irregular census-tract sizes
+(Nevada, Montana, Wyoming) have rural tracts that are large in area but
+contribute only 1 hop to BFS distance.
+A rural tract covering 1{,}000 square miles is treated the same as an urban
+tract covering 1 square mile in hop-count space.
+BFS Voronoi places district boundaries in locations that are geometrically
+natural in hop-count space but geographically arbitrary.
+
+Phase~2 \cvd{} addresses both cases by replacing BFS hop count with
+Euclidean distance on projected tract centroids.
+
+\subsection{Geographic CVD: Algorithm Modification}
+
+The Phase~2 modification to Algorithm~\ref{alg:cvd} is minimal:
+
+\begin{enumerate}
+\item \textbf{Data requirement}: Load a \texttt{tract\_centroids} field in
+  \texttt{LoadedGraph}: \texttt{pub tract\_centroids: Vec<(f64, f64)>},
+  containing the (longitude, latitude) of each tract's polygon centroid.
+  Centroids are available from TIGER/Line shapefiles as the centroid of
+  each tract polygon, derivable from the \texttt{\_geoids.json} file
+  already present in the pipeline.
+
+\item \textbf{Metric change}: Replace $d_{\mathrm{BFS}}(t, \mathrm{seed}_j)$
+  with $d_{\mathrm{Euc}}(t, \mathrm{seed}_j)$, the Euclidean distance between
+  projected centroids.
+
+\item \textbf{Centroid update}: Replace the graph-distance medoid with the
+  population-weighted centroid:
+  \[
+    \mathrm{centre}_j = \frac{\sum_{t \in D_j} p_t \cdot \mathbf{x}_t}
+                             {\sum_{t \in D_j} p_t},
+  \]
+  where $\mathbf{x}_t = (x_t, y_t)$ is the projected centroid of tract $t$.
+  This is the true Euclidean centroid, not a medoid.
+  The nearest tract to the centroid (by Euclidean distance) is used as the
+  new seed for subsequent Voronoi assignments.
+
+\item \textbf{Projection}: Use EPSG:5070 Albers Equal Area Conic for all
+  50 states~\citep{epsg5070}. For continental US states, raw (lon, lat)
+  Euclidean distance is adequate; for Alaska and Hawaii, where meridian
+  convergence is severe, EPSG:5070 is mandatory to avoid distortion.
+  Using EPSG:5070 uniformly ensures consistency with the projection used
+  in \texttt{redist-map} for area and compactness computations.
+\end{enumerate}
+
+\subsection{Expected Improvement over Phase 1}
+
+Phase~2 geographic \cvd{} is expected to yield a 5--10\% Polsby-Popper
+improvement over Phase~1 graph-distance \cvd{} for states where BFS
+hop count diverges substantially from geographic distance.
+
+The intuition: Euclidean Voronoi regions on a geographic plane are exactly
+the geometric cells that minimise mean squared distance from seed to tract
+centroid. These cells are circular in uniform-density regions, and elliptical
+in anisotropic regions, both of which are more compact (higher PP) than the
+irregular BFS Voronoi regions.
+For states where hop count faithfully proxies geography (Iowa, Kansas),
+the Phase~2 improvement is expected to be small ($<3\%$).
+For coastal states (Florida, Louisiana), the improvement is expected to be
+larger (5--10\%) because Phase~2 avoids the along-shore bias of hop-count
+Voronoi.
+
+\subsection{Implementation Plan}
+
+Phase~2 \cvd{} is not yet implemented; it is deferred pending the addition
+of \texttt{tract\_centroids} to \texttt{LoadedGraph}.
+The implementation plan is:
+
+\begin{enumerate}
+\item \textbf{Add \texttt{tract\_centroids} to \texttt{LoadedGraph}}:
+  Derive centroid (lon, lat) for each tract from the existing TIGER/Line
+  shapefile adjacency loader.
+  Store as a \texttt{Vec<(f64, f64)>} field in the \texttt{LoadedGraph} struct.
+  Add to the \texttt{.pkl} adjacency cache for zero-cost access on subsequent runs.
+
+\item \textbf{Implement \texttt{VoronoiMetric::Geographic}}:
+  Add the Euclidean distance branch to the \cvd{} Rust implementation.
+  Project coordinates to EPSG:5070 before computing distances using the
+  existing \texttt{redist-map} projection utilities.
+
+\item \textbf{Validate on FL and LA}:
+  Florida and Louisiana are the strongest tests because of their complex
+  coastal geometries.
+  Compare Phase~1 and Phase~2 \cvd{} PP on these states to confirm the
+  expected improvement.
+
+\item \textbf{Expose via CLI}:
+  \texttt{--cvd-metric geographic} selects Phase~2.
+  The default remains \texttt{graph-distance} for backward compatibility.
+\end{enumerate}
+
+\subsection{Connection to CVT Theory}
+
+Phase~2 geographic \cvd{} is directly the continuous CVT construction of
+Du et al.~\citeyear{du1999} applied to the discrete redistricting domain.
+With Euclidean distance, the Phase~2 algorithm satisfies the two CVT conditions:
+(1) each tract is assigned to its nearest seed (Voronoi condition);
+(2) each seed is at the population-weighted centroid of its district
+(centroidal condition, up to the discretisation of approximating a continuous
+centroid by the nearest actual tract).
+
+The convergence guarantee of Proposition~\ref{prop:convergence} applies to
+Phase~2 without modification: Euclidean Voronoi assignment minimises the sum
+of squared distances given fixed seeds, and centroid update minimises the same
+sum given fixed assignment.
+The discrete rounding (nearest tract to the continuous centroid) introduces
+a rounding error, but does not break the monotone energy descent as long as
+the error is smaller than the step size.
+
+The convergence rate for Phase~2 is expected to be faster than Phase~1 in
+Euclidean-like geographies: the Lloyd energy surface for Euclidean distance
+is smoother and has fewer local minima than the graph-distance surface,
+because Euclidean distance is a continuous metric while BFS hop count is
+discrete and highly non-convex.

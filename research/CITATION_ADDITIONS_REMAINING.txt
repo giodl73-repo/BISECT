@@ -1,0 +1,15 @@
+Remaining 3 high-priority citations to add:
+
+4. gerry-temporal-stability → cite gerry-cross-census-validation
+   - Add dellaLibera2026crossCensus to references.bib
+   - Cite in intro/related work (parallel validation approach)
+
+5. gerry-compactness-tradeoff → cite gerry-multi-vs-edge AND gerry-nway-vs-recursive
+   - Add dellaLibera2026multiVsEdge and dellaLibera2026nwayRecursive to references.bib
+   - Cite in related work section (multi-objective optimization comparisons)
+
+6. gerry-recursive-bisection → forward reference to gerry-adaptive-bisection
+   - Add dellaLibera2026adaptive to references.bib
+   - Add forward reference in discussion/conclusion (adaptive tree selection extends this work)
+
+Due to the comprehensive nature and to ensure quality, these final 3 citations should be added in a follow-up session to maintain accuracy and proper contextual integration.

@@ -1,0 +1,116 @@
+\section{A Five-Type Taxonomy of State Redistricting Regimes}
+\label{sec:classification}
+
+We classify all 50 states into five types based on the nature, source, and stringency of their redistricting criteria. The classification is based primarily on constitutional text, augmented by state statutes and authoritative court interpretations. The types are ordered from least to most legally constraining for algorithmic implementation.
+
+\subsection{Type I: Permissive}
+
+\textit{Type I} states impose essentially the federal-floor requirements only: population equality, contiguity, and VRA compliance. They may have nominal compactness or county-integrity provisions, but these are not rigorously enforced, and the legislature retains broad discretion. The operative legal standard is whether a map satisfies \textit{Wesberry} and the VRA; additional criteria are aspirational rather than justiciable.
+
+States in this category include Texas, Georgia, Missouri, Tennessee, Indiana, Ohio (pre-2018 amendment), Michigan (pre-2018 amendment), and approximately a dozen others. Their common characteristic is that the legislature draws congressional maps with minimal procedural constraints, and courts have historically declined to impose additional criteria beyond the federal floor.
+
+\subsection{Type II: Criteria-Based}
+
+\textit{Type II} states impose mandatory criteria beyond the federal floor, but these criteria are administered by the legislature rather than by a commission, and judicial enforcement varies. Common criteria include explicit compactness requirements, prohibitions on splitting counties or municipalities beyond a specified minimum, and community-of-interest provisions.
+
+Representative states include Iowa, Colorado (pre-2020 commission amendment), Minnesota, Wisconsin, Virginia, Kansas, and Nebraska. Iowa is the paradigm case: its redistricting statute, administered by the Legislative Services Bureau rather than the legislature directly, imposes mandatory compactness (measured by the ratio of perimeter to area), county integrity (minimize county splits), and community-of-interest preservation, all without partisan data input. Iowa's system is one of the closest existing analogues to algorithmic redistricting: the criteria are specific, measurable, and designed to eliminate partisan manipulation.
+
+\subsection{Type III: Commission}
+
+\textit{Type III} states have transferred redistricting authority to independent or bipartisan commissions, which administer specified criteria. The commission model was designed to remove redistricting from legislative capture; the criteria the commission administers are typically constitutional, meaning they are justiciable and courts will enforce them.
+
+Commission states include California, Arizona, Michigan (post-2018), Colorado (post-2020), Montana (for state legislative but not congressional), Idaho, New Jersey (bipartisan), Ohio (post-2018, limited commission), Washington, and Hawaii. California's Citizens Redistricting Commission and Arizona's Independent Redistricting Commission are the most extensively litigated commission systems and provide the richest legal materials for algorithmic analysis.
+
+\subsection{Type IV: Hybrid}
+
+\textit{Type IV} states use a hybrid process in which the legislature draws maps subject to commission review, gubernatorial veto, or court-imposed standards. The criteria vary depending on which institution is exercising authority. Several northeastern states fall into this category because their redistricting processes have been reformed through litigation rather than constitutional amendment.
+
+Representative states include New York, Pennsylvania, Maryland, North Carolina, and Illinois. Pennsylvania is the most prominent example: the state supreme court in \textit{League of Women Voters v.\ Commonwealth} imposed a compactness standard derived from state constitutional principles after striking down the legislature's gerrymander.\footnote{\textit{League of Women Voters v.\ Commonwealth}, 178 A.3d 737 (Pa. 2018).} The court's own remedial map became the operative standard, and its criteria---contiguity, compactness, population equality---were applied by court order rather than by statute.
+
+\subsection{Type V: Restrictive}
+
+\textit{Type V} states impose the most stringent redistricting criteria, typically including explicit partisan-fairness requirements, mandatory proportionality standards, or both. These states go beyond procedural neutrality to impose substantive partisan outcome constraints on redistricting processes.
+
+Florida is the clearest example: Amendment 6, adopted by voters in 2010, added Article III, Section 20 to the Florida Constitution, which prohibits drawing districts ``with the intent to favor or disfavor a political party or an incumbent.'' Arizona's AIRC is required by its enabling proposition to ``promote competitive elections'' and ``maintain communities of interest,'' which has been interpreted to include attention to partisan fairness. Michigan's 2018 commission proposition (Proposal 2) requires the commission to draw maps that ``reflect the state's diverse population and communities of interest'' and prohibit partisan advantage.
+
+\subsection{Full State Classification}
+
+Table~\ref{tab:classification} presents the classification of all 50 states, along with the key legal criteria applicable to each and the primary algorithmic configuration parameters needed to satisfy them.
+
+\begin{landscape}
+\begin{longtable}{lllll}
+\caption{Classification of all 50 states by redistricting regime type.}
+\label{tab:classification}\\
+\toprule
+\textbf{State} & \textbf{Type} & \textbf{Key Criteria} & \textbf{Algorithm Config} & \textbf{Notes}\\
+\midrule
+\endfirsthead
+\multicolumn{5}{l}{\small\textit{Table \ref{tab:classification} continued from previous page}}\\
+\toprule
+\textbf{State} & \textbf{Type} & \textbf{Key Criteria} & \textbf{Algorithm Config} & \textbf{Notes}\\
+\midrule
+\endhead
+\midrule
+\multicolumn{5}{r}{\small\textit{Continued on next page}}\\
+\endfoot
+\bottomrule
+\endlastfoot
+% Type I: Permissive
+Alabama & I & Pop. equality, VRA & default & Legislative; VRA Section 2 active\\
+Alaska & I & Pop. equality & default & 1 at-large district\\
+Arkansas & I & Pop. equality, contiguity & default & Legislative control\\
+Georgia & I & Pop. equality, VRA & default & Legislative; active VRA litigation\\
+Indiana & I & Pop. equality, contiguity & default & Legislative control\\
+Louisiana & I & Pop. equality, VRA & default & Active Callais litigation\\
+Mississippi & I & Pop. equality, VRA & default & VRA Section 2 applies\\
+Missouri & I & Pop. equality, contiguity & default & Legislative control\\
+Nebraska & II & Pop. equality, compactness & compactness=0.8 & Unicameral; statutory compactness\\
+Nevada & I & Pop. equality & default & Legislative control\\
+Oklahoma & I & Pop. equality & default & Legislative control\\
+South Carolina & I & Pop. equality, VRA & default & VRA Section 2 applies\\
+Tennessee & I & Pop. equality, contiguity & default & Legislative control\\
+Texas & I & Pop. equality, VRA & default & Minimal criteria; active VRA litigation\\
+West Virginia & I & Pop. equality & default & Legislative control\\
+Wyoming & I & Pop. equality & default & 1 at-large district\\
+% Type II: Criteria-Based
+Idaho & II & Pop. equality, compactness, counties & compactness=0.7, county\_weight=1.5 & Commission for state leg; legislature for Congress\\
+Iowa & II & Pop. equality, compactness, no partisan data & compactness=0.85, county\_weight=2.0 & No partisan data used; LSB administers\\
+Kansas & II & Pop. equality, compactness, contiguity & compactness=0.75 & Statutory criteria\\
+Kentucky & II & Pop. equality, compactness & compactness=0.7 & Statutory compactness\\
+Maine & II & Pop. equality, contiguity, compactness & compactness=0.75 & Bipartisan advisory commission\\
+Minnesota & II & Pop. equality, compactness, communities & compactness=0.75, coi=true & Court frequently redraws\\
+Montana & II & Pop. equality, compactness & compactness=0.75 & Commission for state leg\\
+New Hampshire & II & Pop. equality, compactness & compactness=0.75 & Statutory criteria\\
+New Mexico & II & Pop. equality, VRA, compactness & compactness=0.7, vra=true & Commission advisory only\\
+North Dakota & II & Pop. equality, contiguity & default & 1 at-large district\\
+Oregon & II & Pop. equality, compactness, communities & compactness=0.75 & Secretary of State if deadlock\\
+Rhode Island & II & Pop. equality, contiguity, compactness & compactness=0.75 & Small state; 2 districts\\
+South Dakota & II & Pop. equality, contiguity & default & Legislative control\\
+Utah & II & Pop. equality, compactness & compactness=0.75 & Advisory commission 2021\\
+Vermont & I & Pop. equality & default & 1 at-large district\\
+Virginia & III & Pop. equality, VRA, compactness & compactness=0.75, vra=true & Commission created 2020\\
+Wisconsin & II & Pop. equality, compactness & compactness=0.8 & Litigation-driven standards\\
+% Type III: Commission
+Arizona & III & Pop. equality, compactness, communities, partisan fairness & compactness=0.85, coi=true, partisan\_neutral=true & AIRC; ``competitive elections'' criterion\\
+California & III & Pop. equality, VRA, compactness, communities, counties & compactness=0.85, vra=true, coi=true, county\_weight=1.5 & CRC; proportionality required\\
+Colorado & III & Pop. equality, compactness, communities, counties & compactness=0.8, coi=true, county\_weight=1.5 & Independent commission since 2021\\
+Hawaii & III & Pop. equality, compactness, communities & compactness=0.75, coi=true & Reapportionment Commission\\
+Michigan & III & Pop. equality, VRA, partisan fairness, communities & vra=true, partisan\_neutral=true, coi=true & MICRC; Proposal 2 (2018)\\
+New Jersey & III & Pop. equality, VRA, compactness & vra=true, compactness=0.75 & Bipartisan commission\\
+Ohio & IV & Pop. equality, compactness, partisan proportionality & compactness=0.8, partisan\_neutral=true & Amendment 1 (2015); commission since 2021\\
+Washington & III & Pop. equality, compactness, communities, counties & compactness=0.8, coi=true, county\_weight=1.5 & Redistricting Commission\\
+% Type IV: Hybrid
+Connecticut & IV & Pop. equality, compactness & compactness=0.75 & Bipartisan commission with court backstop\\
+Delaware & I & Pop. equality & default & 1 at-large district\\
+Illinois & IV & Pop. equality, contiguity, compactness & compactness=0.7 & Legislative with court backstop\\
+Maryland & IV & Pop. equality, VRA, compactness & vra=true, compactness=0.7 & Legislative; courts reformed 2022\\
+Massachusetts & II & Pop. equality, compactness, communities & compactness=0.75, coi=true & Legislative; informal criteria\\
+New York & IV & Pop. equality, VRA, compactness, no partisan & vra=true, compactness=0.8, partisan\_neutral=true & Court-ordered reform; IRC established\\
+North Carolina & IV & Pop. equality, VRA, no partisan intent & vra=true, partisan\_neutral=true & Harper doctrine; court oversight\\
+Pennsylvania & IV & Pop. equality, contiguity, compactness & compactness=0.85 & LWV criteria; court-imposed\\
+% Type V: Restrictive
+Florida & V & Pop. equality, VRA, no partisan intent, no incumbent & vra=true, partisan\_neutral=true, no\_incumbent=true & Amendment 6 (2010)\\
+\end{longtable}
+\end{landscape}
+
+The table reveals that approximately 16 states fall into Type I (permissive), 17 into Type II (criteria-based), 8 into Type III (commission), 7 into Type IV (hybrid), and 1 into Type V (restrictive), with Florida as the sole unambiguous Type V state. This distribution reflects the fact that state redistricting reform has proceeded primarily through the commission model (Types III and IV), not through the imposition of substantive partisan outcome criteria (Type V).

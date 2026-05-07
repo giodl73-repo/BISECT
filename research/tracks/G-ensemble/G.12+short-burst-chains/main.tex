@@ -1,0 +1,109 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+
+%% Style
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+\setstretch{1.4}
+
+%% Macros
+\newcommand{\sbf}{\textsc{ShortBurstForest}}
+\newcommand{\sbms}{\textsc{ShortBurstMergeSplit}}
+\newcommand{\sburst}{\textsc{ShortBurst}}
+\newcommand{\flip}{\textsc{Flip}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\frecom}{\textsc{ForestRecom}}
+\newcommand{\ms}{\textsc{MergeSplit}}
+\newcommand{\ec}{\ensuremath{\mathrm{EC}}}
+\newcommand{\pp}{\ensuremath{\mathrm{PP}}}
+\newcommand{\be}{\textsc{BisectionEnsemble}}
+\newcommand{\cs}{\textsc{ConvergenceSweep}}
+\newcommand{\rhat}{\ensuremath{\hat{R}}}
+\newcommand{\ess}{\ensuremath{\mathrm{ESS}}}
+
+\title{%
+  \textbf{Short-Burst Optimization with Calibrated Chains}\\
+  \textbf{Composing Burst Optimization and Distributional Correctness}\\[0.8em]
+  \normalsize\textit{G.12 --- Ensemble Methods / Composable Search}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+Short-Burst (G.6) is a meta-algorithm: it runs \(n_{\mathrm{bursts}}\) short
+Markov chains and selects the endpoint with the best edge-cut.
+The underlying chain type is a parameter.
+We implement two new chain variants---\sbf{} and \sbms{}---by composing
+Short-Burst with ForestRecom (G.9) and MergeSplit (G.10) chains,
+respectively.
+This pairing delivers two properties simultaneously: compactness optimization
+(the contribution of the Short-Burst wrapper) and approximate distributional
+correctness (the contribution of the ForestRecom and MergeSplit chains).
+We evaluate all three Short-Burst variants---standard \recom{}-based,
+\sbf{}, and \sbms{}---on North Carolina ($k=14$), Wisconsin ($k=8$),
+and Texas ($k=38$) at equal compute budget (1000 total steps per run).
+The key empirical finding is that standard \sburst{} achieves comparable
+or slightly better final edge-cut than the calibrated variants because its
+higher per-burst acceptance rate ($\approx 80\%$) explores more plans per
+burst; ForestRecom and MergeSplit spend compute on the Metropolis--Hastings
+ratio computation that is unnecessary for pure compactness optimization.
+However, \sbf{} produces better \emph{ensemble coverage} near good plans
+because each accepted step is an approximately correct sample from the
+stationary distribution.
+We introduce the \emph{per-burst acceptance rate} diagnostic, recorded in
+the audit manifest, which quantifies the effective burst length for each
+chain type.
+The three variants are available via
+\texttt{--search short-burst-forest} and
+\texttt{--search short-burst-merge-split}.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-background}
+\input{sections/03-algorithm}
+\input{sections/04-comparison}
+\input{sections/05-when-to-use}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

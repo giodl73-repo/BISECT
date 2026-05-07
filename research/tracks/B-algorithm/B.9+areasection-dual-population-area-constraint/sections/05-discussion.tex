@@ -1,0 +1,260 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{AreaSection as a Geometric Regularity Mechanism}
+
+The central empirical finding of this paper is that AreaSection changes the
+\emph{structure} of redistricting outcomes without changing the \emph{outcome}
+for partisan seat counts.
+In Wisconsin and North Carolina --- and, as shown in \S\ref{sec:evaluation},
+across all 44 successfully completed states --- AreaSection and GeoSection
+produce the same partisan seat allocations.
+
+We use the term \emph{geometric regularity} rather than \emph{geographic
+fairness} to describe this contribution.
+``Fairness'' in redistricting law has a specific meaning: it refers to equal
+treatment under the Equal Protection Clause or to the absence of discriminatory
+effect under the Voting Rights Act.
+AreaSection does not alter either.
+What it does is constrain the \emph{bisection tree structure}: each first-level
+split respects a geographic symmetry condition (comparable land area on both
+sides) that standard bisection ignores.
+Whether this geometric regularity property is a legal virtue is a question for
+courts and legislatures; the empirical question this paper addresses is whether
+it has partisan consequences, and the answer is: no.
+
+This finding has an important implication: the proportionality gap in competitive
+states is not a product of urban peeling.
+It is a product of the underlying population distribution.
+A 50.3\,\% Democratic state (Wisconsin) with Republicans distributed across
+a larger geographic footprint will consistently produce a 3D/5R congressional
+delegation under any geographically neutral algorithm, regardless of whether
+the bisection strategy is urban-peeling (GeoSection) or area-balanced
+(AreaSection).
+
+\paragraph{On competitiveness.}
+AreaSection eliminates knife-edge districts: GeoSection creates two Wisconsin
+districts at 49.4\,\% Democratic vote share, while AreaSection creates zero
+such seats.
+This finding cuts in both directions and we do not present it as a normative
+benefit without qualification.
+
+Competitive districts are widely regarded as electorally valuable --- they
+produce responsive elections, prevent entrenchment, and give minority-party
+voters real leverage.
+If knife-edge districts disappeared, a swing toward Republicans could lock in
+a 5R/3D result even more durably than a map with two 49.4\,\% seats.
+Whether seat stability is preferable to seat contestability is a normative and
+legal question that different democratic theories answer differently.
+
+We report the competitiveness reduction as an empirical observation.
+An algorithm designer choosing between GeoSection and AreaSection should
+consider both the seat-count equivalence and the competitiveness difference;
+the choice is not a priori neutral.
+
+\paragraph{Legal theory.}
+The area balance constraint has a natural legal articulation:
+census tracts are administrative units whose areas reflect the physical
+geography of the state, not the partisan composition of their residents.
+A redistricting algorithm that targets geographic symmetry respects the
+physical structure of the state in a way that population-only algorithms
+do not.
+This is a procedural rather than partisan claim: the constraint is
+content-neutral (it treats all land area equally regardless of who lives there)
+and its partisan consequences are empirically nil.
+
+Under \emph{Rucho v. Common Cause} (2019), federal courts cannot remedy
+partisan gerrymandering under the Constitution, but state courts can and
+have done so \citep{lwv2018pa,harper2022nc}.
+State courts reviewing redistricting algorithms may find the geographic
+balance criterion independently defensible:
+``we drew district boundaries to minimise total boundary length while
+giving each half of the state comparable geographic footprint''
+is a claim with a clear, politically neutral rationale.
+
+\subsection{Why Seats Don't Change}
+\label{sec:why-seats-stable}
+
+The stability of seat counts across GeoSection and AreaSection reflects
+a deeper mathematical structure.
+In states with strong geographic partisan sorting (urban Democrats,
+rural Republicans), the \emph{number} of Democratic seats is determined
+by how many contiguous geographic regions have Democratic majorities,
+not by where the bisection boundaries fall.
+AreaSection changes where the boundaries fall, but not which geographic
+regions are sufficiently Democratic to elect a Democrat.
+
+This suggests that the partisan outcome is, in a precise sense, a property
+of the population distribution, not of the bisection algorithm.
+GeoSection (B.7) establishes this claim rigorously for the seed-sweep
+convergence case.
+AreaSection provides corroborating evidence from a different direction:
+changing the geometric constraint does not change the seat count.
+
+\subsection{Limitations}
+\label{sec:limitations}
+
+\paragraph{Large-state balance failures.}
+Six states --- FL, IL, MI, NY, PA, TX --- fail the 1.5\,\% population balance
+check.
+These six states account for 139 of 435 congressional seats (32\,\%) and are
+among the most politically consequential.
+
+The failure mode is \emph{architectural, not incidental}.
+The dual constraint at the first bisection level produces subgraph populations
+that deviate from the ideal district-population target.
+For example, a 3:5 top-level split that achieves only 27.5\,\% instead of
+37.5\,\% of the state population leaves the 3-district subgraph with
+$\sim$540K per district rather than 737K.
+The recursive bisection cannot compensate: it has insufficient population.
+The deviation is not a rounding issue but a consequence of METIS prioritising
+population balance over area balance when both constraints conflict --- the
+left subgraph gets the fraction of population that satisfies the tighter
+constraint, which may not be exactly the target.
+
+Running FL, IL, MI, NY, PA, TX with a 5\,\% balance tolerance confirms that the
+failure mode is not uniform:
+\textbf{FL, IL, and TX succeed at 5\,\%} (FL: 8:20 natural ratio with balanced
+subgraphs; IL: 8:9 with near-equal population; TX: 12:26).
+\textbf{MI, NY, and PA still fail at 5\,\%} (PA 15.9\,\% deviation, MI 13.3\,\%, NY 9.2\,\%).
+
+The distinction is the depth of the recursive bisection challenge.
+FL, IL, and TX succeed because their area constraint produces subgraphs with
+roughly population-proportional halves; the recursive GeoSection within each
+half converges to balanced districts.
+
+For NY, MI, and PA the failure is in the \emph{recursive} bisection, not the
+first-level split.
+New York's 13:13 split achieves $\mathtt{pop\_left}=50.0\,\%$ (confirmed by
+winner logging) --- but the recursive GeoSection within the dense downstate
+subgraph (Manhattan, Brooklyn, Queens: 10.1M people, 26 dense tracts per
+district target) produces district 15 with 848K population vs. the 777K ideal
+--- a 9.2\,\% deviation that persists across 50 seeds.
+The extreme tract density and narrow geographic corridors of the NYC boroughs
+(Manhattan is $\sim$2\,km wide) create geometric constraints that METIS's
+standard bisection cannot overcome without very high seed counts or a
+Manhattan-specific coarsening.
+Pennsylvania and Michigan exhibit the same pattern in their respective dense
+metropolitan cores (Philadelphia, Detroit).
+
+In all three cases, the failure is \emph{geometric}, not algorithmic: the
+census tract graph for dense urban cores resists equal-population bisection at
+the 0.5--5\,\% level that less-dense graphs achieve easily.
+A complete fix requires one of:
+(a) applying the dual constraint at \emph{every} recursive level, not just
+    the first, so each subgraph also targets its own proportional area share;
+(b) post-processing with a population-balancing cell-swap algorithm that
+    adjusts boundaries after the tree is constructed; or
+(c) using per-subgraph population balance (ideal = subgraph\_pop / k) instead
+    of the national ideal.
+Option (c) is simplest and would likely resolve most failures.
+We defer this to future work.
+
+\paragraph{Experimental vs constitutional balance tolerance.}
+The primary sweep used a 1.5\,\% balance tolerance; the constitutional standard
+for congressional redistricting is 0.5\,\% (\emph{Karcher v. Daggett}, 1983).
+Running the full 50-state AreaSection sweep at 0.5\,\% tolerance: \textbf{40 of
+50 states (80\,\%) meet the constitutional standard} with 50 seeds per ratio.
+
+The 10 failures break into two groups:
+(a) The three \emph{architectural} failures (MI, NY, PA) described above ---
+dense urban tract structure makes balanced recursive bisection geometrically
+infeasible at any tolerance below $\sim$8\,\%;
+(b) Seven \emph{rounding} failures where discrete tract sizes prevent hitting
+0.5\,\% but do achieve 1.5\,\%: FL ($\Delta$=3.6\,\%), IL ($\Delta$=2.1\,\%),
+TX ($\Delta$=2.0\,\%), WI ($\Delta$=0.5\,\%, right at the boundary), and three
+further states at 0.5--1.5\,\%.
+Group (b) failures are fixable by increasing seed count (a few hundred seeds
+instead of 50 suffices for most) or by minor post-processing swaps; they do not
+indicate a structural problem.
+
+The 80\,\% success rate at constitutional tolerance is the baseline for a 50-seed
+run.
+Increasing to 200 seeds (a $4\times$ investment) typically eliminates group (b)
+failures for states not in group (a).
+
+\paragraph{Area vs population correlation.}
+The area constraint is an indirect measure of geographic diversity.
+In states where the area-to-population ratio is approximately uniform
+(agricultural Midwest), AreaSection behaves identically to GeoSection.
+The constraint only has meaningful effect in states with strong
+population concentration, which are precisely the states where urban peeling
+is most problematic.
+
+\paragraph{Sensitivity to area swing parameter.}
+Table~\ref{tab:swing-sensitivity} reports the natural ratio and area fraction
+achieved for three representative states across three values of
+$\mathtt{ubvec}[1] = $ area swing.
+
+\begin{table}[h]
+\centering
+\caption{Sensitivity to area swing parameter.
+Natural ratio and area fraction at the winning split for 20 seeds per ratio.
+OK = within target window; VIOLATED = METIS exceeded tolerance.}
+\label{tab:swing-sensitivity}
+\begin{tabular}{llrrr}
+\toprule
+State & Swing & Natural ratio & Area & Status \\
+\midrule
+WI ($p^* = 0.93$) & 1.05 ($\pm 5\,\%$) & 4:4 & 50.9\,\% & OK \\
+WI & 1.10 ($\pm 10\,\%$) & 4:4 & 53.9\,\% & OK \\
+WI & 1.20 ($\pm 20\,\%$) & 2:6 & 41.3\,\% & VIOLATED \\
+\midrule
+GA ($p^* = 0.91$) & 1.05 ($\pm 5\,\%$) & 7:7 & 52.1\,\% & OK \\
+GA & 1.10 ($\pm 10\,\%$) & 3:11 & 54.9\,\% & OK \\
+GA & 1.20 ($\pm 20\,\%$) & 3:11 & 59.2\,\% & OK \\
+\midrule
+NC ($p^* = 0.75$) & 1.05 ($\pm 5\,\%$) & 6:8 & 52.2\,\% & OK \\
+NC & 1.10 ($\pm 10\,\%$) & 6:8 & 52.2\,\% & OK \\
+NC & 1.20 ($\pm 20\,\%$) & 7:7 & 40.8\,\% & VIOLATED \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The sensitivity results reveal that 1.10 is not an arbitrary choice but sits
+at a \emph{regime boundary} in both directions:
+
+\begin{itemize}
+\item At 1.05 (tight): Georgia is forced to a 7:7 equal split.
+  The Atlanta metropolitan area, which occupies $\sim$8\,\% of Georgia's land,
+  cannot satisfy the $\pm 5\,\%$ window at any ratio below 6:8; the algorithm
+  is pushed to a near-equal bisection.
+  While this may be desirable for anti-peeling purposes, it may also be
+  overly aggressive for states where asymmetric geography is genuine.
+
+\item At 1.20 (loose): Wisconsin reverts to a 2:6 ratio
+  (area=41.3\,\%, VIOLATED — just outside the $\pm 20\,\%$ window) because the
+  Milwaukee area's compact boundary is cheaper than the equal geographic split.
+  The area constraint has become too permissive to prevent peeling.
+
+\item At 1.10 (current): both WI and GA produce non-trivial but non-extreme splits
+  (4:4 and 3:11 respectively) with area fractions within tolerance.
+  NC is stable at 6:8 for both 1.05 and 1.10.
+\end{itemize}
+
+The 1.10 default is the tightest value that produces non-trivial, area-compliant
+splits for all three tested states.
+Tighter values (below $\sim 1.07$) risk forcing unnecessarily equal splits for
+geographically concentrated states; looser values (above $\sim 1.15$) risk
+re-enabling peeling for uniform states.
+
+\paragraph{Area measure.}
+We use TIGER ALAND (land area only, excluding water).
+ALAND + AWATER would change results for coastal and Great Lakes states
+(NY, MI, WI) by attributing large water areas to coastal tracts.
+ALAND is the more legally defensible choice: water is not habitable territory
+and should not count toward a district's geographic footprint.
+
+\subsection{Comparison to Polsby-Popper and Other Compactness Metrics}
+
+Standard compactness metrics (Polsby-Popper, Reock, convex-hull ratio) evaluate
+the shape of individual districts after the fact.
+AreaSection is an \emph{algorithmic} constraint applied during bisection:
+it shapes the structure of the bisection tree before any individual district
+boundaries are drawn.
+
+These are complementary, not competing, approaches.
+AreaSection produces bisection trees that respect geographic balance;
+Polsby-Popper audits verify that individual districts within those trees
+are not pathologically non-compact.
+A complete redistricting analysis would apply both.

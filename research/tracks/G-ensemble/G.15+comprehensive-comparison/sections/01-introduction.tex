@@ -1,0 +1,194 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{From Search Comparison to Full Portfolio}
+
+G.14~\citep{dellaLibera2026g14} compared eight search-layer algorithms in the
+\texttt{redist} ensemble platform --- Short-Burst, SMC, Flip, Forest ReCom,
+Merge-Split, Multi-scale MCMC, ShortBurstForest, and VRA-Aware ReCom --- on
+three states, four metrics.
+That comparison answered a narrow but pressing question: given a fixed initial
+plan and a fixed graph, which search algorithm should I run?
+
+The three-layer compositor (\texttt{--structure}, \texttt{--weights-override},
+\texttt{--search}) makes this narrow framing incomplete.
+A practitioner who chooses \textsc{Multi-scale} as the search algorithm but
+uses the default METIS bisection as the structure algorithm may obtain a
+plan that is mixing efficiently but starting from a suboptimal compactness
+baseline.
+Conversely, a practitioner who runs Simulated Annealing structure (best
+heuristic \ec{} in the structure layer) with Flip search (local sensitivity
+only) is using an expensive structure algorithm to build a starting point
+that the search algorithm will never meaningfully improve.
+
+This paper provides the first systematic comparison of all 15 implemented
+algorithms across both structure and search layers.
+Our goal is practical: give a practitioner a complete reference for the full
+algorithm portfolio.
+
+\subsection{The 15 Algorithms}
+
+The \texttt{redist} platform implements six structure algorithms and twelve
+search algorithms, totalling 15 distinct algorithm identities (three search
+algorithms are new since G.14).
+
+\paragraph{Structure layer.}
+Structure algorithms execute one full bisection of the tract graph to produce
+an initial $k$-district plan.
+The five non-ILP algorithms are applied recursively; ILP is applied once per
+bisection node.
+
+\begin{enumerate}
+  \item \textbf{Standard METIS} (\metis{}, baseline): METIS multilevel
+        $k$-way partitioning~\citep{karypis1998}.
+        Fast ($O(N \log N)$), well-tested, default structure algorithm.
+
+  \item \textbf{Simulated Annealing} (\sa{}, B.19): METIS initialisation
+        followed by SA improvement steps on the bisection
+        graph~\citep{dellaLibera2026sa}.
+        Best \ec{} among heuristic structure methods; 12$\times$ slower than
+        METIS.
+
+  \item \textbf{CVD Graph-Distance} (\cvdg{}, B.22): Centroidal Voronoi
+        Diagram bisection using graph hop-distance as the metric, requiring
+        no geographic data beyond the
+        adjacency graph~\citep{dellaLibera2026cvd}.
+        Best \pp{} among structure methods when centroids are unavailable.
+
+  \item \textbf{CVD Geographic} (\cvdgeo{}, B.22b): CVD bisection using
+        Euclidean distance from tract centroids~\citep{dellaLibera2026cvdgeo}.
+        Best \pp{} among all structure methods; requires centroid data.
+
+  \item \textbf{BFS Growth} (\bfsgrow{}, B.23): Breadth-first search growth
+        from $k$ seeds, fastest structure
+        method~\citep{dellaLibera2026bfsgrowth}.
+        Zero hyperparameters, $O(N \log N)$; \pp{} competitive with \cvdg{}.
+
+  \item \textbf{ILP Exact} (\ilp{}, B.24): Integer linear program solving
+        the minimum-\ec{} bisection exactly for small
+        instances~\citep{dellaLibera2026ilp}.
+        Provides certified \ec{}-optimality; applicable only when $N \leq 500$
+        (NH $k = 2$, each half $\leq 300$ tracts).
+\end{enumerate}
+
+\paragraph{Search layer.}
+Eight algorithms were compared in G.14; this paper adds three new algorithms
+(marked with $\star$):
+
+\begin{enumerate}
+  \item \textbf{ConvergenceSweep} (\cs{}, B.16): Multi-seed convergence
+        sweep; federal statute default~\citep{dellaLibera2026convSweep}.
+  \item \textbf{PercentileSweep} (\ps{}, H.0): Statutory choice of legal
+        posture via percentile
+        selection~\citep{dellaLibera2026percentileSweep}.
+  \item \textbf{BisectionEnsemble} (\be{}, H.1): Local ReCom at bisection
+        nodes~\citep{dellaLibera2026bisectionEns}.
+  \item \textbf{Short-Burst} (\sburst{}, G.6)~\citep{dellaLibera2026shortburst}.
+  \item \textbf{Flip} (\flip{}, G.8)~\citep{dellaLibera2026flip}.
+  \item \textbf{Forest ReCom} (\fr{}, G.9)~\citep{dellaLibera2026forestRecom}.
+  \item \textbf{Merge-Split} (\msp{}, G.10)~\citep{dellaLibera2026mergeSplit}.
+  \item \textbf{Multi-scale} (\ms{}, G.11)~\citep{dellaLibera2026multiscale}.
+  \item \textbf{ShortBurstForest} (\sburstf{}, G.12)~\citep{dellaLibera2026shortburstChains}.
+  \item \textbf{VRA-Aware ReCom} (\vra{}, G.13)~\citep{dellaLibera2026vraAware}.
+  \item $\star$ \textbf{Parallel Tempering} (\pt{}, B.20): Replica exchange
+        across temperature ladder; best \ec{} for large
+        $k$~\citep{dellaLibera2026pt}.
+  \item $\star$ \textbf{SMC-Percentile} (\smcp{}, G.7/new): Calibrated SMC
+        selecting the median plan by \pp{}~\citep{dellaLibera2026smcPercentile}.
+  \item $\star$ \textbf{Adaptive Multi-scale} (\ams{}, B.21): Self-tuning
+        coarse fraction $\alpha$~\citep{dellaLibera2026adaptiveMS}.
+\end{enumerate}
+
+\subsection{Five Test States}
+
+G.14 used NC ($k = 14$), WI ($k = 8$), and TX ($k = 38$).
+G.15 adds:
+
+\begin{itemize}
+  \item \textbf{Florida (FL)}, $k = 28$.
+        A large-$k$ state between TX and NC in district count, testing
+        whether the TX findings for Parallel Tempering and Adaptive Multi-scale
+        generalise to an intermediate $k$.
+        FL has $N \approx 4{,}100$ census tracts.
+
+  \item \textbf{New Hampshire (NH)}, $k = 2$.
+        The only state for which ILP is tractable: two congressional districts
+        with $N \approx 260$ tracts.
+        NH provides the \textit{certified-optimal} baseline for all structure
+        algorithms: ILP computes the provably minimum-\ec{} bisection.
+\end{itemize}
+
+\subsection{Main Findings}
+
+Five practical conclusions emerge from the full portfolio comparison.
+
+\begin{enumerate}
+
+  \item \textbf{ILP certifies what heuristics approximate.}
+        For NH ($k = 2$), \ilp{} achieves \ec{} = 47 (certified optimal).
+        SA achieves 51 (nearest heuristic), CVD-Geo 53, BFS 56, METIS 58.
+        The optimality gap of the best heuristic is 8.5\%; the METIS gap
+        is 23.4\%.
+
+  \item \textbf{Structure layer determines the PP ceiling.}
+        \cvdgeo{} achieves the highest \pp{} among all 15 algorithms across
+        all states, outperforming even \smcp{} (the best search method for
+        \pp{}).
+        PP is largely determined at bisection time; search algorithms raise
+        PP modestly from the structure baseline.
+
+  \item \textbf{Parallel Tempering dominates for large $k$.}
+        For TX ($k = 38$) and FL ($k = 28$), \pt{} achieves lower final
+        \ec{} than \sburst{} by escaping basin boundaries that
+        burst strategies cannot cross without
+        the temperature exchange mechanism.
+        For small $k$ (WI, NC), \sburst{} remains competitive.
+
+  \item \textbf{Adaptive Multi-scale is superior to fixed Multi-scale for
+        TX.}
+        \ams{} auto-tunes the coarse fraction $\alpha$ in real time,
+        allocating more coarse steps during the warm-up phase when
+        the chain is far from the mode.
+        For TX, \ams{} reduces \acf(100) to 0.31 vs.\ 0.37 for fixed
+        \ms{}; for NC, they are indistinguishable.
+
+  \item \textbf{The full decision framework requires six questions, not four.}
+        The G.14 four-question tree selects only the search algorithm.
+        Two additional questions --- (v) Is exact structure optimality
+        required? (vi) Is geographic compactness (\pp{}) the primary
+        structure criterion? --- are needed to select the structure
+        algorithm.
+        The expanded framework covers all 15 algorithms.
+
+\end{enumerate}
+
+\subsection{Relation to G.14 and Prior Work}
+
+G.14~\citep{dellaLibera2026g14} is the immediate predecessor.
+Results from G.14 for the original eight search algorithms on NC/WI/TX are
+carried forward without re-running; new states (FL, NH) and new algorithms
+(\pt{}, \smcp{}, \ams{}) are added with dagger notation indicating new
+single-run estimates.
+Structure-layer results are entirely new; G.14 fixed structure at
+\texttt{ratio-optimal} for all comparisons.
+
+Cannon et al.~\citep{cannon2022} and Janson~\citep{janson2022} provide
+theoretical foundations for short-burst and chain mixing, respectively, but
+do not address structure algorithms.
+This paper provides the first joint structure+search comparison in the
+redistricting literature.
+
+\subsection{Paper Structure}
+
+Section~\ref{sec:setup} extends the G.14 experimental setup to five states
+and 15 algorithms.
+Section~\ref{sec:structure} compares the six structure algorithms.
+Section~\ref{sec:search} extends the G.14 search comparison with the three
+new algorithms.
+Section~\ref{sec:distributional} examines distributional properties including
+\pt{} and \ams{}.
+Section~\ref{sec:decision} presents the six-question decision framework and
+combined structure+search recommendation table.
+Section~\ref{sec:budget} gives compute budget guidance for a 50-state
+production sweep.
+Section~\ref{sec:conclusion} concludes.

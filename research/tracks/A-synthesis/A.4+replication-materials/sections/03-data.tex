@@ -1,0 +1,96 @@
+%% 03-data.tex — Data provenance
+
+\section{Data Provenance}
+\label{sec:data}
+
+All input data are publicly available from the U.S. Census Bureau
+at no cost.
+No proprietary data, no subscription services, no restricted files.
+
+\subsection*{Census Redistricting Files (PL 94-171)}
+
+The primary data source is the Public Law 94-171 redistricting file,
+released by the Census Bureau after each decennial census.
+These files provide population counts at the census-tract and census-block
+level, including total population and voting-age population by race and
+Hispanic origin.
+
+\begin{table}[h]
+\centering
+\caption{PL 94-171 data files used in this portfolio.}
+\label{tab:pl94}
+\begin{tabular}{@{}llll@{}}
+\toprule
+Year & Release date & Release ID & SHA-256 (placeholder) \\
+\midrule
+2000 & 2001-03-01 & PL-94-171-2000 & \texttt{a1b2c3d4...} \\
+2010 & 2011-02-03 & PL-94-171-2010 & \texttt{e5f6a7b8...} \\
+2020 & 2021-08-12 & PL-94-171-2020 & \texttt{c9d0e1f2...} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent The placeholder SHA-256 values above will be replaced with
+confirmed hashes after the first clean data fetch using
+\texttt{redist fetch --year 2020}.
+Verification of individual file hashes is performed by
+\texttt{redist label-verify} (see Section~\ref{sec:verification}).
+
+\noindent \textbf{Download URLs} (automated via \texttt{redist fetch}):
+\begin{itemize}[itemsep=2pt]
+  \item 2020: \url{https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/}
+  \item 2010: \url{https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/}
+  \item 2000: \url{https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/}
+\end{itemize}
+
+\subsection*{TIGER/Line Shapefiles}
+
+Geographic boundaries for census tracts are obtained from the
+Census Bureau's TIGER/Line shapefile series~\cite{tiger2020}.
+These files provide tract polygons, from which the pipeline computes
+shared boundary lengths used as edge weights.
+
+\begin{itemize}[itemsep=2pt]
+  \item Download path: \url{https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html}
+  \item File pattern: \texttt{tl\_\{year\}\_\{fips\}\_tract.zip} (one per state per year)
+  \item Total download size: approximately 40 GB for all 50 states, all three years
+\end{itemize}
+
+\subsection*{Fetching Data with \texttt{redist fetch}}
+
+The recommended way to obtain data is through the \texttt{redist fetch} command,
+which downloads, validates, and caches all required files:
+
+\begin{verbatim}
+redist fetch --year 2020               # Download 2020 data (all 50 states)
+redist fetch --year 2020 --state VT    # Vermont only (~2 min, good for testing)
+redist fetch --year 2020 --check-only  # Verify cache, do not download
+\end{verbatim}
+
+\noindent The fetch command validates the SHA-256 of every downloaded file
+against the manifest embedded in the \texttt{redist} binary.
+If a file is corrupted or modified, the command refuses to proceed.
+
+\subsection*{Election Data}
+
+Partisan data used in partisan-outcome metrics (Papers C.5, B.11, and related analyses)
+uses the Harvard--Fekrazad 2020 tract-level election dataset, a precinct-to-tract
+crosswalk derived from official 2020 general election returns.
+The dataset is downloaded and processed via:
+
+\begin{verbatim}
+python scripts/data/elections/fetch_elections.py fetch --year 2020
+\end{verbatim}
+
+\noindent This step is separate from \texttt{redist fetch} and must be run independently.
+SHA-256 of the downloaded election file: \texttt{[placeholder --- run \texttt{sha256sum}
+on the downloaded file after \texttt{fetch\_elections.py} completes]}.
+
+\noindent All SHA-256 hashes in this document use standard UTF-8 encoding of the
+JSON canonical form.
+
+\subsection*{Data License}
+
+All U.S. Census Bureau data are in the public domain.
+No restrictions apply to their use, reproduction, or redistribution.
+See \url{https://www.census.gov/about/policies/privacy/data-linkage/privacy-confidentiality.html}.

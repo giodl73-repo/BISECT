@@ -1,0 +1,63 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+% Define theorem environments
+\newtheorem{proposition}{Proposition}
+
+\title{Cross-Census Temporal Stability:\\
+Recursive Bisection vs N-Way Partitioning Over Decades}
+\author{Giovanni Della-Libera}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Congressional redistricting occurs every decade following the census, raising critical questions about boundary stability over time. While graph partitioning methods optimize current-census districts, their temporal stability across census cycles remains unexplored. This paper presents the first systematic comparison of hierarchical recursive bisection versus flat n-way partitioning methods for maintaining district continuity across the 2010-2020 decade.
+
+We analyze five southern states with significant minority populations, running both methods on 2010 and 2020 census data (20 total redistricting runs). Our key finding: \textbf{recursive bisection provides measurably better temporal stability}, with 71.6\% population disruption versus 72.4\% for n-way partitioning (0.8 percentage point improvement, representing 1.1\% less disruption). This small but consistent advantage appears in 4 out of 5 states tested, suggesting that hierarchical structure preserves coarse-level geographic divisions more effectively than direct k-way optimization.
+
+The stability advantage is modest but meaningful. For a state with 5 million residents, recursive bisection results in approximately 40,000 fewer people reassigned to different districts across the decade. Both methods maintain comparable district quality on current-census metrics (population balance, minority representation, compactness), indicating that recursive bisection's temporal benefits come without sacrificing spatial optimization performance.
+
+These findings suggest redistricting method choice should consider not only current optimization but also future continuity. The 1.1\% stability advantage, while small, is consistent across diverse demographic and geographic contexts. States adopting recursive bisection in 2020 should experience modestly easier 2030 transitions, a prediction testable with forthcoming census data.
+\end{abstract}
+
+\section{Introduction}
+\input{sections/01_introduction}
+
+\section{Background}
+\input{sections/02_background}
+
+\section{Methodology}
+\input{sections/03_methodology}
+\input{sections/03_section_3.5_hierarchical_validation}
+\input{sections/03_section_3.6_theoretical_foundation}
+
+\section{Results}
+\input{sections/04_results}
+\input{sections/04_section_4.4_vra_compliance}
+
+\section{Discussion}
+\input{sections/05_discussion}
+
+\section{Limitations}
+\input{sections/06_limitations}
+
+\section{Future Work}
+\input{sections/07_future_work}
+
+\section{Conclusion}
+\input{sections/08_conclusion}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

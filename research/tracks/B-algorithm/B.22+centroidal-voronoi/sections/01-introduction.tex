@@ -1,0 +1,160 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{Two Families of Structure-Layer Algorithms}
+
+The redistricting platform's three-layer compositor separates plan generation
+into Structure (how each bisection node is solved), WeightsOverride (what edge
+weights encode), and SeedCompositor (how many seeds are tried).
+The B-series has developed a rich family of Structure-layer algorithms,
+all sharing a common pattern: they operate on the graph topology of the
+census-tract adjacency and optimise some variant of the edge-cut objective.
+\metis{} minimises raw edge cut via multilevel KL refinement~\citep{karypis1998};
+\geosec{} (B.8) normalises edge cut by the isoperimetric ratio
+$\sqrt{\min(i,k-i)}$ to favour balanced tree structures~\citep{b8paper};
+\areasec{} (B.9) adds an area-swing constraint.
+\sa{} (B.19) replaces the single \metis{} call with a simulated annealing
+refinement loop to escape local optima in the edge-cut landscape~\citep{b19paper}.
+
+All of these algorithms are, fundamentally, graph-topology methods: they
+reason about which edges to cut, which vertices to separate, and how to
+minimise the cost of a topological partition.
+
+\paragraph{A second family: geometry.}
+This paper introduces a different approach.
+Centroidal Voronoi Districts (\cvd{}) assigns each census tract to its nearest
+seed by geographic proximity and iterates seed placement to convergence.
+No edge-cut objective is consulted.
+The algorithm does not reason about graph topology at all during its main loop;
+it reasons about \emph{distance} --- which seed is closest to each tract.
+\cvd{} is in the tradition of Voronoi-based spatial partitioning rather than
+graph partitioning.
+
+The conceptual distinction matters in practice.
+Edge-cut minimisation produces plans that follow existing graph structure:
+METIS tends to find the ``thinest'' cuts in the adjacency graph, which often
+align with roads, rivers, and county boundaries because those geographic
+features create naturally low-weight edges (short shared boundaries).
+\cvd{} instead fills geographic space radially from seed points.
+In convex regions, \cvd{} produces roughly circular districts.
+In elongated or irregular regions, it produces roughly elliptical districts
+aligned with the long axis.
+The resulting compactness profile is fundamentally different from the
+compactness achieved by edge-cut minimisation.
+
+\subsection{Lloyd's Algorithm and the CVD Connection}
+
+\cvd{} is the discrete redistricting analogue of Lloyd's algorithm for
+optimal quantisation~\citep{lloyd1982}.
+Lloyd's algorithm, in its Euclidean form, iterates:
+\begin{enumerate}
+\item Assign each point to its nearest centre.
+\item Move each centre to the centroid (population-weighted mean) of its cluster.
+\item Repeat until convergence.
+\end{enumerate}
+Du, Faber and Gunzburger~\citeyear{du1999} proved convergence for Centroidal
+Voronoi Tessellations (CVTs) under mild regularity conditions and surveyed their
+applications in mesh generation, image compression, and spatial discretisation.
+
+\cvd{} replaces:
+\begin{itemize}
+\item \textbf{Euclidean distance} with \textbf{BFS hop-count distance} on the
+  census-tract adjacency graph (Phase 1, this paper);
+\item \textbf{the centroid} (a possibly non-existent fractional point) with
+  \textbf{the graph-distance medoid} (the actual tract minimising mean hop
+  distance to all other tracts in its district).
+\end{itemize}
+The medoid substitution is necessary because the redistricting domain is
+discrete: seeds must be actual census tracts, not fractional coordinates.
+The BFS substitution avoids the need for geographic coordinate data, making
+Phase~1 fully implementable with existing adjacency-list data.
+
+\subsection{Use Cases for CVD}
+
+Three practical use cases motivate \cvd{}:
+
+\paragraph{Fast initial plan.}
+\cvd{} runs in $O(n \times n_{\mathrm{iter}})$ time with no spanning trees,
+no MCMC, and no parameter tuning beyond the iteration count.
+For exploratory runs or as a starting point for \sa{} refinement, \cvd{}
+provides a valid, balanced, compact plan at low cost.
+
+\paragraph{Geometric baseline.}
+The ``most geometrically natural partition'' is a defensible legal argument
+in redistricting litigation.
+\cvd{} provides this baseline: the plan produced by assigning each tract to
+its nearest district centre, with no reference to political boundaries,
+demographic composition, or incumbent addresses.
+This is distinct from the \metis{} baseline, which minimises graph-topological
+boundary length rather than geographic proximity.
+
+\paragraph{Compactness diversity.}
+The ensemble literature~\citep{deford2021} shows that plan quality is best
+assessed by comparing a map against the space of alternatives.
+Adding \cvd{} plans to the ensemble diversifies the compactness profile:
+geometric proximity and edge-cut minimisation are complementary objectives
+that explore different regions of the plan space.
+
+\subsection{Main Results}
+
+\paragraph{Algorithm.}
+We define \cvd{} bisection (Section~\ref{sec:algorithm}) as a drop-in
+Structure-layer replacement for \metis{}.
+The algorithm has one primary tunable parameter:
+\texttt{cvd\_iters} (default 20) controls the maximum number of
+assignment-medoid iterations.
+Seed initialisation uses k-farthest BFS selection: the first seed is derived
+deterministically from the global base seed and node path; the second is the
+BFS-farthest tract from the first.
+A post-hoc 200-iteration boundary-swap rebalance enforces the population
+balance tolerance.
+
+\paragraph{Convergence.}
+For census-tract graphs, \cvd{} typically converges in 8--14 iterations on
+large states (NC, TX).
+For path-like or elongated subgraphs (rural county chains), k-farthest seeding
+trivially places seeds at opposite ends of the path, and convergence occurs in
+1--3 steps.
+The algorithm halts when seeds are unchanged between consecutive iterations.
+
+\paragraph{Compactness profile.}
+\cvd{} achieves Polsby-Popper compactness competitive with \metis{}
+on NC ($k=14$) despite not optimising edge cuts.
+The compactness arises naturally from the geometric proximity objective: tracts
+near the centre of a district tend to be compact because they are equally
+distant from all boundaries.
+Section~\ref{sec:comparison} gives the full three-algorithm comparison
+(\cvd{}, \metis{}, \sa{}) on NC, WI, and TX.
+
+\paragraph{Phase~2 preview.}
+Section~\ref{sec:phase2} previews Geographic \cvd{}: replacing BFS hop-count
+distance with Euclidean distance on EPSG:5070 projected tract centroids.
+This requires adding a \texttt{tract\_centroids} field to \texttt{LoadedGraph}
+(a Phase~2 task), but is expected to yield a 5--10\% further PP improvement
+for coastal and elongated states where hop-count distance diverges from
+geographic distance.
+
+\subsection{Paper Structure}
+
+Section~\ref{sec:background} reviews Lloyd's algorithm, CVT theory, and
+graph-distance medoid clustering.
+Section~\ref{sec:algorithm} gives the formal \cvd{} algorithm with pseudocode,
+the seed derivation, and convergence analysis.
+Section~\ref{sec:comparison} presents empirical comparisons on NC, WI, and TX.
+Section~\ref{sec:phase2} previews Phase~2 geographic \cvd{}.
+Section~\ref{sec:conclusion} situates \cvd{} in the B-series algorithm landscape.
+
+\subsection{Relation to Prior Work}
+
+\cvd{} is a Structure-layer algorithm, orthogonal to the SeedCompositor
+strategies (\cs{}, \be{}).
+It is related to but distinct from \metis{}~\citep{karypis1998} (graph
+topology vs.\ geometry) and from \sa{}~\citep{b19paper} (no warm start,
+different objective).
+It is the companion to \bfsgrowth{} (B.23): BFS growth from k seeds also
+uses geographic proximity but grows greedily rather than iterating to
+convergence.
+Lloyd's algorithm in redistricting is not new as a concept, but prior
+applications~\citep{du1999} use Euclidean distance and continuous coordinates;
+the graph-distance medoid formulation for census-tract graphs is, to the
+authors' knowledge, novel.

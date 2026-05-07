@@ -1,0 +1,97 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The Stationary Distribution Problem in Standard ReCom}
+
+Redistricting ensemble methods rely on Markov chain Monte Carlo to generate
+a diverse collection of valid redistricting plans.
+The seminal ReCom proposal~\citep{deford2021} merges two adjacent districts,
+samples a uniformly random spanning tree of the merged region, and accepts the
+first balanced cut found in that tree.
+The procedure is fast---$O(m \log m)$ per step where $m$ is the number of
+edges in the merged region---and produces plans with high acceptance rates.
+
+However, standard \recom{} has a fundamental distributional gap:
+the acceptance ratio is implicitly~1 at every step.
+Because the forward and reverse proposals are symmetric under the uniform
+spanning tree measure, cancelling the ratio exactly, the Metropolis-Hastings
+condition $Q(\pi, \pi') / Q(\pi', \pi) = \pi^*(\pi') / \pi^*(\pi)$ cannot
+distinguish any two plans.
+The chain therefore targets some stationary distribution, but that
+distribution is not the uniform distribution over valid plans---it is an
+unknown distribution shaped by the spanning tree measure and the geometry
+of the adjacency graph.
+For litigation contexts where ensemble arguments are used to demonstrate that
+a submitted plan is an outlier, this unknown distribution is a significant
+weakness.
+
+\subsection{Two Solutions at Different Costs}
+
+Two approaches restore explicit distributional targeting.
+
+\paragraph{Forest ReCom~\citep{mccartan2020,dellaLibera2026forestRecom}.}
+Sample a spanning \emph{forest} (rather than a spanning tree) of the merged
+region; the acceptance ratio is the ratio of the number of spanning forests
+of the two proposed sub-plans, which equals the ratio of matrix-tree
+determinants.
+This exactly targets the uniform distribution over valid spanning-forest
+partitions.
+The cost is $O(m^2)$ per step due to the determinant computation.
+
+\paragraph{Merge-Split MCMC~\citep{janson2022} (this paper).}
+Sample an independent reverse spanning tree of the same merged region and
+count the number of balanced cuts in each tree.
+The acceptance ratio is $\mathrm{cuts\_fwd} / \mathrm{cuts\_rev}$, which is
+a random estimate of the exact Metropolis-Hastings ratio.
+The cost is $O(m \log m)$ per step---the same as standard \recom{}---because
+both trees are sampled via Wilson's algorithm~\citep{wilson1996}.
+
+Merge-Split approximates the uniform distribution in expectation: the ratio
+is an unbiased estimate of the true MH ratio, so the chain is ``approximately
+reversible'' rather than exactly reversible.
+The approximation is the price of the $O(m \log m)$ cost; Forest \recom{}
+pays $O(m^2)$ to remove the approximation.
+
+\subsection{Main Contributions}
+
+\begin{enumerate}
+  \item \textbf{Algorithm.} We give the complete specification of
+        \mergesplit{} as implemented in \texttt{redist-cli}
+        (\texttt{MergeSplitChain}), including the deterministic dual-seed
+        schedule and the two-tree acceptance ratio
+        (Section~\ref{sec:algorithm}).
+
+  \item \textbf{Formal properties.} We state the approximate detailed balance
+        theorem for \mergesplit{} (Theorem~\ref{thm:approx-balance}), prove
+        that the acceptance rate is positive on well-connected graphs
+        (Proposition~\ref{prop:positive-accept}), and derive the per-step
+        cost (Proposition~\ref{prop:cost})
+        (Section~\ref{sec:algorithm}).
+
+  \item \textbf{Ratio direction.} We derive the Metropolis-Hastings ratio
+        $Q(\pi' \!\to\! \pi) / Q(\pi \!\to\! \pi')$ carefully, showing that
+        the forward cut count appears in the numerator (not the denominator)
+        and verifying that the implementation uses
+        $\mathrm{cuts\_fwd} / \mathrm{cuts\_rev}$ correctly
+        (Section~\ref{sec:algorithm}).
+
+  \item \textbf{Comparison.} We provide a unified three-way comparison of
+        standard \recom{}, \mergesplit{}, and \forestrecom{} across
+        stationary distribution, acceptance ratio form, per-step cost, and
+        empirical acceptance rate (Section~\ref{sec:comparison}).
+
+  \item \textbf{Usage guidance.} We specify when to prefer \mergesplit{}
+        over \forestrecom{} and SMC, and provide the CLI invocation
+        (Section~\ref{sec:when-to-use}).
+\end{enumerate}
+
+\subsection{Paper Structure}
+
+Section~\ref{sec:background} reviews standard \recom{}, explains why its
+acceptance ratio is always~1, and introduces the independence argument that
+Merge-Split uses to break the symmetry.
+Section~\ref{sec:algorithm} defines \mergesplit{} formally, proves its
+properties, and derives the ratio direction.
+Section~\ref{sec:comparison} compares the three main reversible-ReCom designs.
+Section~\ref{sec:when-to-use} gives practical usage guidance.
+Section~\ref{sec:conclusion} concludes.

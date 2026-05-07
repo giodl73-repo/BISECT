@@ -1,0 +1,183 @@
+%% B.24 --- ILP Redistricting
+%% References
+
+%% ===================================================================
+%% B-SERIES SELF-CITATIONS
+%% ===================================================================
+
+@misc{b2paper,
+  author = {Della-Libera, Gio},
+  title  = {Edge-Weighted Bisection for Compact Congressional Districts:
+            Geographic Boundary Lengths as Compactness Signal},
+  year   = {2026},
+  note   = {B.2 in Algorithmic Redistricting series.
+            Key result: $+56\,\%$ Polsby-Popper improvement over unweighted.
+            Geographic boundary-length edge weights used as the default
+            configuration. The edge-weight signal that ILP minimises via
+            the cut-edge objective.},
+}
+
+@misc{b7paper,
+  author = {Della-Libera, Gio},
+  title  = {The Solution Space of Minimum-Edge-Cut Redistricting:
+            Seed Sensitivity and Partisan Variance},
+  year   = {2026},
+  note   = {B.7 in Algorithmic Redistricting series.
+            50-state 1{,}500-seed sweep establishing seed-sensitivity
+            baselines and partisan variance data. Provides the METIS
+            baseline EC values used in B.24 Table~2.},
+}
+
+@misc{dellaLibera2026bfsgrowth,
+  author = {Della-Libera, Gio},
+  title  = {{BFS} Region-Growing: Greedy Geographic District Packing
+            from $k$-Farthest Seeds},
+  year   = {2026},
+  note   = {B.23 in Algorithmic Redistricting series.
+            BFS Growth is the simplest heuristic in the structure layer.
+            ILP is the exact counterpart: BFS makes one greedy pass;
+            ILP searches the full feasible region. B.24 positions ILP
+            as the other endpoint of the quality-runtime spectrum.},
+}
+
+@misc{dellaLibera2026comparison,
+  author = {Della-Libera, Gio},
+  title  = {{BisectionEnsemble}: Parallel Seed Search for
+            Minimum-Edge-Cut Redistricting},
+  year   = {2026},
+  note   = {G.14 in Algorithmic Redistricting series.
+            Cross-method comparison including ILP results.
+            Provides the BE(1000) best-EC benchmarks used in B.24
+            Table~2 for NH and RI.},
+}
+
+%% ===================================================================
+%% ILP FORMULATION THEORY
+%% ===================================================================
+
+@book{nemhauser1988,
+  author    = {Nemhauser, George L. and Wolsey, Laurence A.},
+  title     = {Integer and Combinatorial Optimization},
+  publisher = {Wiley},
+  year      = {1988},
+  note      = {Standard reference for ILP theory: branch-and-bound,
+               LP relaxation bounds, and optimality certificates.
+               Chapter~1 establishes that the feasible region is the
+               convex hull of integer points and that branch-and-bound
+               with LP bounds provides finite-termination exact
+               optimisation. DFJ subtour-elimination cuts discussed
+               in Chapter~8.},
+}
+
+@article{mtz1960,
+  author  = {Miller, Clair E. and Tucker, Albert W. and Zemlin, Richard A.},
+  title   = {Integer Programming Formulation of Traveling Salesman Problems},
+  journal = {Journal of the ACM},
+  volume  = {7},
+  number  = {4},
+  pages   = {326--329},
+  year    = {1960},
+  doi     = {10.1145/321043.321046},
+  note    = {Original MTZ paper: flow-based contiguity constraints for TSP.
+             Adapted for redistricting contiguity in B.24: each district $d$
+             has a designated root; flow from root enforces a spanning tree
+             over $d$'s tracts. The both-endpoint capacity bound tightens
+             the standard MTZ formulation for redistricting instances.},
+}
+
+%% ===================================================================
+%% REDISTRICTING ILP AND FAIRNESS
+%% ===================================================================
+
+@inproceedings{gurnee2021,
+  author    = {Gurnee, Wes and Shmoys, David B.},
+  title     = {Fairmandering: A Column Generation Heuristic for
+               Fairness-Optimized Political Districting},
+  booktitle = {Proceedings of the AAAI Workshop on AI for Social Good},
+  year      = {2021},
+  note      = {Introduces Fairmandering: column-generation heuristic for
+               fairness-optimised redistricting. Section~2 surveys ILP
+               redistricting formulations and identifies the both-endpoint
+               MTZ bound as the most effective contiguity constraint for
+               instances with $n \leq 500$ tracts. Reports solve times
+               of 30--120\,s for $k=2$, $n=250$ on a 2019 laptop with
+               Gurobi, consistent with B.24 empirical results using GLPK.},
+}
+
+@article{king2015,
+  author  = {King, Douglas M. and Jacobson, Sheldon H. and Sewell, Edward C.},
+  title   = {Efficient Geo-Graph Contiguity and Hole Algorithms for
+             Geographic Zoning and Dynamic Plane Graph Partitioning},
+  journal = {Management Science},
+  volume  = {61},
+  number  = {5},
+  pages   = {1115--1131},
+  year    = {2015},
+  doi     = {10.1287/mnsc.2014.2045},
+  note    = {Contiguity and hole detection in geographic partitioning.
+             Establishes the theoretical basis for why connected-district
+             constraints are necessary: without them, ILP solutions may
+             produce district fragments that are legally invalid.
+             Referenced in B.24 for the justification of MTZ contiguity
+             constraints.},
+}
+
+%% ===================================================================
+%% GRAPH PARTITIONING
+%% ===================================================================
+
+@article{karypis1998,
+  author  = {Karypis, George and Kumar, Vipin},
+  title   = {A Fast and High Quality Multilevel Scheme for Partitioning
+             Irregular Graphs},
+  journal = {SIAM Journal on Scientific Computing},
+  volume  = {20},
+  number  = {1},
+  pages   = {359--392},
+  year    = {1998},
+  doi     = {10.1137/S1064827595287997},
+  note    = {Original METIS paper. METIS is the primary heuristic
+             comparison baseline in B.24. Establishes $O(m \log n)$
+             complexity of multilevel KL partitioning and provides
+             the lower bound on heuristic quality that ILP must
+             match or improve.},
+}
+
+%% ===================================================================
+%% REDISTRICTING ENSEMBLE METHODS
+%% ===================================================================
+
+@article{deford2021,
+  author  = {DeFord, Daryl and Duchin, Moon and Solomon, Justin},
+  title   = {Recombination: A Family of {Markov} Chains for Redistricting},
+  journal = {Harvard Data Science Review},
+  volume  = {3},
+  number  = {1},
+  year    = {2021},
+  doi     = {10.1162/99608f92.eb30390f},
+  note    = {ReCom redistricting sampler. B.24 Section~5 contrasts
+             ensemble-based expert reports (statistical argument about
+             partisan outcomes) with ILP certificates (mathematical proof
+             of compactness optimality). The two methods address
+             complementary legal questions.},
+}
+
+%% ===================================================================
+%% COMPACTNESS METRICS
+%% ===================================================================
+
+@article{polsby1991,
+  author  = {Polsby, Daniel D. and Popper, Robert D.},
+  title   = {The Third Criterion: Compactness as a Procedural Safeguard
+             Against Partisan Gerrymandering},
+  journal = {Yale Law and Policy Review},
+  volume  = {9},
+  number  = {2},
+  pages   = {301--353},
+  year    = {1991},
+  note    = {Polsby-Popper compactness ratio $\mathrm{PP} = 4\pi A / P^2$.
+             B.24 notes that the ILP certificate covers edge-cut compactness,
+             not PP, and that these are distinct objectives. Practitioners
+             must be precise about which compactness metric the certificate
+             addresses.},
+}

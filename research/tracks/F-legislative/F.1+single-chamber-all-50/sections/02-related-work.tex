@@ -1,0 +1,48 @@
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{State legislative redistricting literature.}
+The political science literature on state legislative redistricting has focused
+primarily on detecting and measuring partisan gerrymandering.
+\citet{chen2013unintentional} demonstrated using simulation that geographic
+sorting of Democratic voters into dense urban areas produces systematic
+partisan bias in state legislative maps even without intentional gerrymandering.
+\citet{stephanopoulos2015partisan} developed the efficiency gap as a measure
+of partisan gerrymandering and applied it to state legislative maps, finding
+that the 2010 round of redistricting produced the most extreme efficiency gaps
+in modern American history in states such as Wisconsin, North Carolina, and Ohio.
+\citet{mcghee2014measuring} earlier characterised partisan bias in
+single-member systems using seat-vote curves, noting that state legislative
+systems are more sensitive to partisan bias than congressional systems due to
+the larger number of smaller districts.
+
+\paragraph{Algorithmic approaches.}
+\citet{cirincione2000assessing} and \citet{altman2011bard} pioneered
+computer-generated redistricting for state legislative applications,
+using simulated annealing to generate random baseline maps.
+\citet{fifield2020automated} developed the sequential Monte Carlo (SMC)
+algorithm for state legislative redistricting, enabling exploration of
+the plan space for chambers with up to $k \approx 100$ districts.
+Our approach differs from these in its objective: rather than exploring
+the plan space, we seek the single best plan under the minimum-edge-cut
+criterion, making the algorithmic output directly comparable to a
+proposed enacted plan.
+
+\paragraph{Compactness in state legislative redistricting.}
+Many state constitutions include explicit compactness requirements for
+legislative maps \citep{monmonier2001bushmanders}. The Polsby-Popper
+measure \citep{polsby1991third} and the Reock score \citep{reock1961note}
+are the most commonly used metrics in legal and academic contexts.
+\citet{kaufman2020state} surveys state compactness standards and finds
+wide variation in both the stringency and the operationalisation of
+compactness requirements. Our work provides a uniform algorithmic baseline
+for comparison across all states.
+
+\paragraph{Block-group resolution.}
+Prior work on block-group redistricting is sparse. \citet{browdy1990computer}
+noted that block-level data enables finer population balance but at high
+computational cost. The MAUP implications of resolution choice for
+redistricting outcomes are studied in \citet{openshaw1984modifiable}
+and, in the congressional context, in companion paper C.1
+\citep{dellaLibera2026maup}. We extend the resolution analysis to
+state legislative redistricting in companion paper F.3.

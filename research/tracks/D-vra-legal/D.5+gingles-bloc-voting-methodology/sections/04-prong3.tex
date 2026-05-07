@@ -1,0 +1,108 @@
+\label{sec:prong3}
+
+\subsection{The Legal Standard}
+
+Prong 3 requires that the majority ``vote sufficiently as a bloc to enable it
+\ldots\ usually to defeat the minority's preferred candidate.''  \textit{Gingles},
+478 U.S. at 51.  The key quantities are: (a) the majority vote share for the
+candidate opposed by the minority-preferred candidate; and (b) the frequency
+with which majority bloc voting defeats the minority-preferred candidate
+across a sample of elections.
+
+\subsection{The \textit{Callais} Disentanglement Requirement}
+
+\textit{Louisiana v.\ Callais}~\citep{callais2026} added a methodological
+requirement that has become the central battleground in post-2026 Section 2
+litigation: expert witnesses must disentangle racial bloc voting from partisan
+bloc voting in Prong 3 analysis.  The disentanglement requirement responds
+to a specific litigation strategy: states defend against Prong 3 findings by
+arguing that observed majority bloc voting is partisan (white Republicans
+voting against Black Democratic candidates), not racial (white voters voting
+against Black candidates), and is therefore constitutionally permissible.
+
+The \textit{Callais} Court held that this is a substantive question requiring
+expert analysis, not a bare assertion.  An expert witness who simply reports
+that majority and minority voters vote differently without controlling for
+party has not satisfied Prong 3 under the post-\textit{Callais} standard.
+
+\subsection{The WLS+HC3+Holm Regression}
+
+\textit{Callais} (2026) requires statistical disentanglement of race and
+partisan affiliation in Prong 3 analysis; WLS+HC3+Holm is one method
+satisfying this requirement, used here following Footnote~36 of the
+\textit{Callais} opinion.
+
+The post-\textit{Callais} Prong 3 analysis uses a two-equation system.
+The first equation estimates majority racial cohesion with a partisan control:
+
+\begin{equation}
+  Y_t = \alpha + \beta_{\text{race}} \cdot X^{\text{maj}}_t
+                + \beta_{\text{party}} \cdot P_t
+                + \varepsilon_t
+  \label{eq:prong3-main}
+\end{equation}
+
+where $P_t$ is the precinct-level Republican presidential vote share, which
+serves as the partisan control variable.  The estimator $\hat{\beta}_{\text{race}}$
+isolates the racial component of majority bloc voting---the portion not
+attributable to partisan alignment.
+
+The regression is estimated by WLS with weights proportional to precinct
+turnout.  Standard errors are computed using the HC3 heteroskedasticity-consistent
+covariance matrix estimator~\citep{mackinnon1985some}, which is robust to
+the heteroskedasticity present in precinct-level election data.
+
+\subsection{Multiple Election Adjustment with Holm Correction}
+
+Prong 3 is typically analyzed across multiple elections to demonstrate that
+majority bloc voting is a persistent pattern.  Testing across multiple
+elections creates a multiple-testing problem: with enough elections, a
+researcher will find a statistically significant bloc-voting result by chance.
+The \textit{Callais} decision implies that courts should be skeptical of
+Prong 3 findings based on a single election or on uncorrected multiple-testing
+results.
+
+We apply the Holm sequential rejection procedure~\citep{holm1979simple} to
+correct for multiple testing across elections.  The Holm procedure is more
+powerful than the Bonferroni correction while controlling the family-wise
+error rate.  The corrected $p$-values are reported alongside the uncorrected
+values to allow the court to assess the sensitivity of the finding to the
+multiple-testing correction.
+
+\subsection{LOO Robustness Checks}
+
+Following the implementation in \texttt{redist-analysis::bloc\_voting}, we
+run leave-one-out (LOO) variants: for each election in the sample, we refit
+the regression excluding that election and verify that the Prong 3 conclusion
+is stable.  An unstable conclusion---one that reverses when a single election
+is excluded---would indicate that the result is driven by a single unusual
+election rather than a structural pattern.
+
+\subsection{Running the Prong 3 Analysis}
+
+The full post-\textit{Callais} Prong 3 analysis is produced by:
+\begin{verbatim}
+redist analyze --state AL --year 2020 --version remedy \
+  --types bloc-voting --partisan-control
+\end{verbatim}
+The \texttt{--partisan-control} flag activates the partisan control variable
+in Equation~\ref{eq:prong3-main}, the HC3 standard errors, the Holm correction
+across elections, and the LOO robustness checks.  The output includes: (a) the
+racial bloc-voting coefficient $\hat{\beta}_{\text{race}}$ for each election;
+(b) the Holm-corrected $p$-values; (c) the LOO stability table; and (d) a
+narrative summary of the Prong 3 findings suitable for inclusion in an expert
+report.
+
+\subsection{Collinearity Diagnostics}
+
+Because race and partisan affiliation are correlated in most jurisdictions,
+the partisan control variable $P_t$ may inflate standard errors on
+$\hat{\beta}_{\text{race}}$.  We report the variance inflation factor
+(VIF) for the partisan control variable in the Prong 3 regression as a
+standard diagnostic.  For the Wisconsin and North Carolina benchmarks:
+VIF $= 1.8$ (WI) and VIF $= 2.1$ (NC), indicating acceptable collinearity
+(threshold: VIF $< 5$).  Values in this range indicate that the partisan
+control is adding information (it is correlated with race, but not so
+correlated as to make the racial coefficient unreliable).  Courts should
+request VIF diagnostics from expert witnesses in all post-\textit{Callais}
+Prong 3 analyses.

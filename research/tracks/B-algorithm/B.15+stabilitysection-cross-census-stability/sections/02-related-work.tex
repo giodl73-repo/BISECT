@@ -1,0 +1,133 @@
+\section{Related Work}
+\label{sec:related}
+
+\subsection{Within-Year Seed Stability: B.7}
+
+The companion paper B.7 \citep{b7paper} establishes seed stability for
+minimum-edge-cut redistricting within a single census year.
+Running 1000 different random initialisations of the METIS algorithm on
+2020 Census data, B.7 finds that the natural ratio is consistent across seeds
+for $>95\,\%$ of states and that partisan seat counts vary by at most one seat
+in competitive states.
+This establishes the MEC solution space as constrained: the algorithm converges
+to a small number of topologically distinct solutions, with the minimum-edge-cut
+solution dominating.
+
+B.15 extends this stability analysis along a second dimension.
+Where B.7 fixes the input data and varies the seed, B.15 fixes the algorithm
+and varies the input data across three independent decennial surveys.
+The two stability dimensions are complementary: a state with high seed stability
+but low census stability has an algorithm that reliably finds its natural
+partition given any one census snapshot, but whose natural partition changes as
+demographics evolve.
+A state with high census stability but low seed stability would have a durable
+geographic structure that is difficult to reliably detect.
+In practice, we expect seed stability and census stability to be correlated:
+states with simple geographic structure (clear urban cores) are both easy to
+detect (high seed stability) and geographically durable (high census stability).
+
+\subsection{GeoSection and Isoperimetric Normalisation: B.8}
+
+GeoSection \citep{b8paper} introduced the normalised edge-cut
+$\mathrm{EC}/\sqrt{\min(i,k-i)}$ as the criterion for selecting the natural
+first-level split ratio.
+The key finding is that for states with compact, geographically isolated
+metropolitan cores, GeoSection \emph{confirms} the asymmetric split that
+unnormalised minimum-edge-cut would also select, while for states with
+distributed population, it correctly selects a more balanced split.
+
+For cross-census stability, GeoSection's normalisation provides a theoretical
+stability guarantee: the denominator $\sqrt{\min(i,k-i)}$ is a function of
+the \emph{number of districts}, not the population distribution.
+If the state's seat count is unchanged between censuses (the common case), the
+normalisation formula is identical; only the edge-cut numerator changes with
+population.
+We show in \S\ref{sec:theory} that the natural ratio is stable whenever the
+population shift is small relative to the isoperimetric gap between the winning
+and second-best ratios.
+
+\subsection{Temporal Stability of Redistricting Maps: Literature}
+
+Temporal stability of redistricting outcomes has received limited direct
+treatment in the quantitative redistricting literature, but several threads
+are relevant.
+
+\paragraph{Population geography as a stable driver.}
+\citet{rodden2019} documents the deep roots of the urban-rural political
+divide in American geography.
+The geographic sorting of Democratic voters into dense urban areas is not a
+recent phenomenon: it has been building since at least the 1970s, accelerating
+through the 1980s and 1990s, and is now a structural feature of American
+political geography.
+\citet{chen2013}'s analysis of ``unintentional gerrymandering'' shows that
+compact, geography-only redistricting algorithms systematically produce
+Republican-advantaged maps because of this geographic sorting---and that this
+bias has been present across multiple redistricting cycles.
+Both findings predict high cross-census stability for GeoSection: if the
+underlying geographic structure is stable, the algorithm's output should be
+stable.
+
+\paragraph{MCMC ensemble stability.}
+\citet{chikina2017} and \citet{deford2019} (GerryChain/ReCom) use Markov chain
+Monte Carlo methods to sample from the space of valid redistricting plans and
+assess whether an enacted plan is an outlier.
+These methods have been applied primarily within a single census year; their
+cross-census behaviour is not characterised.
+StabilitySection provides a complementary analysis: instead of sampling the
+space of plans within one year and measuring variance, we hold the algorithm
+fixed and measure variance across years.
+
+\paragraph{Partisan stability in the literature.}
+\citet{mcghee2014} and \citet{stephanopoulos2015} introduced the efficiency
+gap as a measure of partisan bias in redistricting.
+Their analysis of historical congressional maps shows that efficiency gaps are
+often stable across redistricting cycles within a state---a form of empirical
+cross-cycle stability driven by population geography.
+Our CSS provides a more fine-grained algorithmic measure of the same
+underlying phenomenon.
+
+\subsection{Census Data Changes Between Decennial Years}
+
+Between each pair of consecutive decennial censuses, the Census Bureau makes
+two types of changes relevant to redistricting:
+
+\paragraph{Population counts.}
+The total population and its geographic distribution change.
+Between 2000 and 2020, the US population grew by $18.2\,\%$, from 281.4M to
+331.4M.
+Growth was highly uneven: the Sun Belt states (TX, AZ, GA, FL, NV) grew by
+$30$--$60\,\%$; declining states (WV, MS, AL) contracted.
+Population shifts within states are even larger: suburban expansion around major
+metros, rural depopulation, and the concentration of population in a smaller
+number of very large metro areas.
+
+\paragraph{Tract boundary redesign.}
+Between 2000 and 2010, the Census Bureau split, merged, and redrawn
+approximately $15\,\%$ of census tracts.
+A similar rate of redesign occurred between 2010 and 2020.
+The adjacency graph $G$ used by GeoSection is therefore not identical across
+years: some edges are added (split tracts become adjacent to new neighbors) and
+some are removed (merged tracts eliminate intermediate adjacencies).
+We control for this in our stability decomposition (\S\ref{sec:decomposition}).
+
+\paragraph{Seat count changes.}
+Congressional apportionment changes with population.
+States that gain seats (TX: 32 in 2010 $\to$ 36 in 2020) cannot have
+identical maps in the two years because the number of districts changes.
+For these states, we measure bisection-tree structural similarity rather
+than raw district assignment overlap.
+States that maintain the same seat count across censuses (the majority of
+states) allow direct comparison of assignments.
+
+\subsection{Cross-Census Validity in Data Pipeline Research}
+
+The companion paper C.2 (cross-census validation) examines whether the
+computational infrastructure produces consistent results across census years.
+It tests that the same algorithmic pipeline, applied to different census
+datasets, produces well-formed outputs with valid population balance.
+B.15's focus is complementary but distinct: we study the \emph{mathematical
+invariance} of the algorithm's optimal answer, not the \emph{computational
+reliability} of the pipeline.
+C.2 is a prerequisite for B.15 (we need the three census years in the
+pipeline), and B.15 provides the theoretical explanation for the empirical
+findings C.3 reports on temporal district assignment drift.

@@ -1,0 +1,40 @@
+{
+  "schema_version": "tutorial-checksums v1",
+  "tutorial": "vermont-2020",
+  "build_commit": "PIN_ON_FIRST_RUN",
+  "pinned_at": "PIN_ON_FIRST_RUN",
+  "_note": "This file is the structural skeleton for the Vermont 2020 walkthrough fixture. SHA-256 fields below are placeholders ('PIN_ON_FIRST_RUN') until the first end-to-end run on a clean machine populates them. Re-pin via: bash examples/vermont-2020-walkthrough/pin.sh. Until pinned, `redist doctor --check-tutorial-data --tutorial vermont-2020` will FAIL on every populated row. The L2 acceptance test guards on this file's presence + schema version, not on the pin status, so it can ride along until a maintainer pins.",
+  "pinned_inputs": [
+    {
+      "name": "census_tiger_vt_2020_tracts",
+      "source_url": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_50_tract.zip",
+      "local_path": "outputs/tutorial/2020/data/tiger/tl_2020_50_tract.zip",
+      "sha256": "PIN_ON_FIRST_RUN"
+    },
+    {
+      "name": "fekrazad_2025_vt_share",
+      "source_url": "https://doi.org/10.7910/DVN/Z8TSH3",
+      "local_path": "data/elections/fekrazad/fekrazad-2025.csv",
+      "sha256": "PIN_ON_FIRST_RUN"
+    }
+  ],
+  "expected_outputs": [
+    {
+      "path": "outputs/tutorial/2020/plans/vt_2020_tutorial/final_assignments.json",
+      "sha256": "PIN_ON_FIRST_RUN",
+      "tract_count": 193
+    },
+    {
+      "path": "outputs/tutorial/2020/plans/vt_2020_tutorial/manifest.json",
+      "sha256": "PIN_ON_FIRST_RUN"
+    },
+    {
+      "path": "outputs/tutorial/2020/plans/vt_2020_tutorial/analysis/summary.json",
+      "sha256": "PIN_ON_FIRST_RUN"
+    },
+    {
+      "path": "outputs/tutorial/2020/plans/vt_2020_tutorial/analysis/compactness.json",
+      "sha256": "PIN_ON_FIRST_RUN"
+    }
+  ]
+}

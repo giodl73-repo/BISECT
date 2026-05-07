@@ -1,0 +1,60 @@
+\section{Connections to the B and C Tracks}
+\label{sec:connections}
+
+The F track is designed to complement, not replace, the B-track congressional
+redistricting research. We note three primary connections.
+
+\subsection{B.5/B.6: Computational Complexity Scaling}
+\label{sec:connections:b5b6}
+
+Papers B.5 \citep{dellaLibera2026nwayRecursive} and B.6
+\citep{dellaLibera2026complexity} characterise the scaling behaviour of
+recursive bisection as a function of $k$ and $n$ (number of geographic units).
+F.3 applies these scaling results to state legislative redistricting, where
+$k$ can exceed $n_{\mathrm{tracts}}$. The main additional challenge is that
+B.5 and B.6 assume $k \ll n$; F.3 must handle the degenerate regime where
+$k \approx n$ or $k > n$.
+
+The primary new finding for state legislative applications is that runtime
+scales as $O(k \cdot n \cdot \log n)$ in the normal regime but degrades
+to $O(n^2 \cdot \log n)$ when $k/n$ approaches $1$, because the METIS
+partitioner must maintain contiguity across many small sub-regions that share
+few graph edges. The resolution upgrade (tract $\to$ block-group) restores
+the normal scaling regime.
+
+\subsection{B.13: NestSection for Bicameral Legislatures}
+\label{sec:connections:b13}
+
+Paper B.13 \citep{dellaLibera2026nestSection} introduced NestSection for the
+federal context: drawing both the U.S.\ House map and a hypothetical 100-district
+Senate map as nested geographic hierarchies. F.2 applies NestSection directly
+to the bicameral state legislature context, where the nesting requirement is
+constitutionally mandated (in many states, senate districts must be exact unions
+of house districts or of county units).
+
+The key extension is that state bicameral ratios are far more varied than the
+federal case. The federal $H:S$ ratio is $435:100 = 87:20$, with
+$\gcd(435,100) = 5$---a 5-district spine. State ratios include $2:1$ (most
+common, e.g., WA $98:49$, MN $134:67$), $3:1$ (OH $99:33$), $4:1$ (TN $99:33$
+... correction: TN $99:33$ is $3:1$), and many irregular ratios with small
+$\gcd$ values. F.2 catalogues all 49 bicameral ratios and their NestSection
+compatibility.
+
+\subsection{C.1: MAUP Sensitivity at Sub-Congressional Scale}
+\label{sec:connections:c1}
+
+Paper C.1 \citep{dellaLibera2026maup} analysed the Modifiable Areal Unit
+Problem (MAUP) for congressional redistricting, comparing outcomes at tract,
+block-group, and block resolutions. F.3 extends this analysis to the state
+legislative regime, where the MAUP is more acute: the choice of base resolution
+changes not only the boundary positions but also the \emph{feasibility} of the
+redistricting problem (when $k > n_{\mathrm{tracts}}$, tract-resolution
+redistricting is infeasible).
+
+The new finding in F.3 is that the MAUP effect on partisan outcomes is larger
+for state legislative redistricting than for congressional redistricting.
+At the congressional level, C.1 found that resolution choice changes partisan
+outcomes by at most $\pm 1$ seat (for a $k=52$ state). At the state legislative
+level, F.3 finds that resolution choice changes outcomes by $\pm 2$--$4$ seats
+for $k=98$ (Washington House), because the smaller district size amplifies
+sensitivity to local population concentrations.

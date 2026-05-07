@@ -1,0 +1,128 @@
+\section{Methodology}
+\label{sec:method}
+
+\subsection{Edge-Weight Framework}
+
+Let $G = (V, E)$ be the census-tract adjacency graph for a state,
+where each vertex $v \in V$ represents one census tract and each edge
+$(u,v) \in E$ represents a shared boundary.
+The standard METIS minimum-edge-cut objective minimizes
+$\sum_{(u,v) \in \partial P} w(u,v)$
+where $\partial P$ is the set of edges crossing partition boundaries and
+$w(u,v) = |\text{boundary}(u,v)|$ is the TIGER boundary length in metres.
+
+We extend this with a composable edge-weight pipeline.
+Each $\mathtt{EdgeWeighter}$ is a function $f : \mathbb{R}_{>0}^{|E|} \to \mathbb{R}_{>0}^{|E|}$
+that transforms the current edge-weight map.
+The final weights are the composition:
+\[
+  w^* = f_k \circ \cdots \circ f_2 \circ f_1(w^{\text{geo}})
+\]
+where $w^{\text{geo}}$ is the geographic base (TIGER boundary lengths).
+
+\subsection{Subdivision Stickiness}
+
+\begin{definition}[County stickiness weight]
+For stickiness parameter $\alpha \geq 0$, the \emph{county-sticky} edge weighter is:
+\[
+  f_\alpha(u,v) = w(u,v) \cdot \bigl(1 + \alpha \cdot \mathbf{1}[\text{county}(u) = \text{county}(v)]\bigr).
+\]
+\end{definition}
+
+When $\alpha = 0$, $f_0$ is the identity.
+When $\alpha > 0$, intra-county edges cost $1 + \alpha$ times their geographic length,
+while cross-county edges keep their original cost.
+METIS therefore prefers to cut across county lines, which already represent
+established administrative boundaries.
+
+\paragraph{County derivation from GEOIDs.}
+Census tract GEOIDs are 11-digit strings of the form $\text{SS CCC TTTTTT}$
+where SS is the two-digit state FIPS code and CCC is the three-digit county FIPS
+within the state.
+The full county FIPS is the first five characters of the GEOID.
+This information is stored in the TIGER \texttt{.adj.bin} adjacency file alongside
+the adjacency graph, requiring no additional data download.
+
+\begin{proposition}[Monotonicity, exact solver]
+\label{prop:mono}
+Let $P^*_\alpha$ denote the globally optimal $k$-way partition minimising
+$\sum_{(u,v)\in\partial P} f_\alpha(u,v)$.
+The number of county splits $\text{splits}(P^*_\alpha)$ is weakly decreasing in $\alpha$.
+\end{proposition}
+
+\begin{proof}
+Let $P^*_\alpha$ be optimal under $f_\alpha$ and suppose it splits $s$ counties.
+For any $\alpha' < \alpha$, we have $f_{\alpha'}(u,v) \leq f_\alpha(u,v)$ for all
+$(u,v)$, so the cut cost of $P^*_\alpha$ under $f_{\alpha'}$ is at most its cost
+under $f_\alpha$.
+But the optimal partition under $f_{\alpha'}$ minimises cost further;
+in particular, it can always route along county boundaries (cost unchanged
+under $f_{\alpha'}$), so its county-split count is at most $s$.
+By exchange argument, reducing $\alpha$ cannot force more county splits in an
+optimal solution. \qed
+\end{proof}
+
+\begin{remark}
+Proposition~\ref{prop:mono} applies to the \emph{exact} weighted minimum
+$k$-way cut problem.
+METIS~\citep{Karypis1998} is a multilevel heuristic and does not guarantee
+globally optimal solutions; its output need not be monotone in $\alpha$ for
+any fixed random seed.
+Empirically, Section~\ref{sec:eval} shows that mean county splits over an
+ensemble of seeds are weakly decreasing in $\alpha$ across all 44 multi-district
+states, consistent with the monotone optimal-solution property.
+\end{remark}
+
+\subsection{Hierarchical Extension (Future Work)}
+\label{sec:hierarchy}
+
+The county weighter generalises to any level of the governmental subdivision
+hierarchy.
+Let $L = \{\text{county}, \text{MCD}, \text{place}, \text{VTD}\}$.
+The hierarchical weighter formula is:
+\[
+  f_{\boldsymbol\alpha}(u,v) = w(u,v) \cdot \Bigl(1 + \sum_{\ell \in L} \alpha_\ell \cdot \mathbf{1}[\text{level}_\ell(u) = \text{level}_\ell(v)]\Bigr).
+\]
+We state this formula for completeness; \emph{the present paper validates and
+recommends only $\alpha_{\text{county}}$}.
+The other levels require additional TIGER downloads (COUSUB, PLACE, VTD files)
+and spatial joins, and are left for future empirical validation.
+
+\begin{remark}[Composition amplification]
+When multiple levels are active simultaneously, a tract pair sharing county,
+MCD, and place membership receives multiplier $(1 + \alpha_c + \alpha_m + \alpha_p)$.
+For $\alpha = 5$ at each of three levels this is $16\times$ the base weight,
+which may dominate the geographic signal.
+Practitioners using multi-level composition should reduce per-level $\alpha$
+proportionally (e.g., $\alpha = 2$ per level for three levels gives $7\times$,
+comparable to county-only $\alpha = 5$).
+We defer a formal analysis of multi-level balance behaviour to future work.
+\end{remark}
+
+\subsection{Composition with Other Signals}
+
+The stickiness weighter composes with any other $\mathtt{EdgeWeighter}$ in the pipeline.
+For example, combining county stickiness with the GeoSection split strategy
+(B.8):
+\[
+  w^* = f_{\alpha_{\text{county}}} \circ f_{\text{geo}}(w^0)
+\]
+runs GeoSection using edge weights that penalise intra-county cuts.
+The split strategy and the weight signal are orthogonal: adding $\alpha > 0$
+does not change the GeoSection ratio-selection algorithm, only the weights it
+optimises over.
+
+\subsection{Implementation}
+
+The $\mathtt{SubdivisionWeighter}$ is implemented in Rust as a \texttt{trait EdgeWeighter}
+with a single \texttt{apply(EdgeMap) -> EdgeMap} method.
+Concretely:
+\begin{verbatim}
+w'(u,v) = w(u,v) * (1 + alpha_county * same_county(u, v))
+\end{verbatim}
+where \texttt{same\_county(u,v)} is a precomputed boolean array derived from
+GEOID prefixes.
+The weighter is constructed once per state run and applied before partitioning.
+Runtime overhead is $O(|E|)$, negligible relative to METIS partitioning.
+The \texttt{--alpha-county} flag on \texttt{redist state} exposes this parameter
+at the CLI.

@@ -1,0 +1,73 @@
+paper: vrasection-minority-opportunity-bisection
+title: "VRASection: Geographic Alignment Score for Minority Opportunity District Bisection"
+venue: "Penn Law Review / Election Law Journal"
+stage: ready
+round: 3
+content_mode: full
+series: B
+series_number: 14
+scores:
+  round1:
+    moon-duchin: 3
+    richard-pildes: 3
+    george-karypis: 3
+    jonathan-rodden: 3
+    percy-liang: 2
+    average: 2.8
+  round2:
+    moon-duchin: 3.5
+    richard-pildes: 3.5
+    george-karypis: 3.5
+    jonathan-rodden: 3.5
+    percy-liang: 3.0
+    average: 3.4
+  round3:
+    moon-duchin: 3.5
+    richard-pildes: 3.5
+    george-karypis: 3.5
+    jonathan-rodden: 3.5
+    percy-liang: 3.5
+    average: 3.5
+history:
+  - stage: draft
+    date: "2026-05-02"
+    note: "Paper drafted from plan.md and bisection_runner.rs implementation.
+           6 sections. Alabama 2:5 vs 1:6 empirical result confirmed.
+           Full 6-state comparison table pending pipeline run."
+  - stage: panel
+    round: 1
+    date: "2026-05-02"
+    note: "Round 1 reviews complete. Average 2.8/4. Consensus: strong algorithm design,
+           three critical P1 issues. (1) Shaw predominance argument substitutes
+           w_vra<0.5 inequality for actual doctrine — needs Cooper v. Harris and
+           counterfactual analysis. (2) No end-to-end MM district counts — Alabama
+           must show 2 Black-majority districts per Allen v. Milligan. (3) Alignment
+           score evaluated on compactness-optimal seed, not alignment-optimal (Karypis).
+           NC 7:7->1:13 shift needs political geography analysis (Rodden). Empirical
+           section needs statistical characterization of 3/6 ratio-change finding
+           and sensitivity analysis over w_vra (Liang). Target round 2 score: 3.2+."
+  - stage: recheck
+    round: 2
+    date: "2026-05-02"
+    note: "Round 2 reviews complete. Average 3.4/4 (vs. target 3.2+). All reviewers
+           raised scores. Shaw/Cooper v. Harris counterfactual replacement accepted as
+           legally correct by Duchin and Pildes. Alabama 52% Black VAP subgraph result
+           substantially resolves the MM district concern for Rodden. Decoupled
+           optimization conservative-bias framing accepted by Karypis. Remaining open
+           issues: (1) alignment scores for no-change states not in Table 2 (Duchin,
+           Liang), (2) NC sub-region Black VAP not reported (Rodden, Pildes),
+           (3) seed count discrepancy 20 vs. 50 unresolved (Karypis, Liang),
+           (4) Liang still requires CIs on 3/6 finding — bootstrapped proportion for
+           Alabama ratio selection across seeds. Liang 3.0 is the floor; 4/4 requires
+           end-to-end MM counts + statistical characterization. Suitable for law review
+           submission pending minor revisions; quantitative venue requires additional
+           statistical work."
+  - stage: ready
+    round: 3
+    date: "2026-05-02"
+    note: "Round 3 reviews complete (Liang only). Average 3.5/4. A(winner) column in
+           Table 2 resolves no-change/change interpretation. Alabama CD-7/CD-2 MM count
+           analysis grounds ratio selection in MM district production. NC 31% Black VAP
+           note added. Seed count reconciled at 50. Liang upgrades to 3.5 — editorial
+           remaining issues only (§4.3 label, score gaps for NC/SC, bootstrapped CI for
+           quantitative venue). Paper ready for law review submission."

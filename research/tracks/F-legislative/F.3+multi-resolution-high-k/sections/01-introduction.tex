@@ -1,0 +1,59 @@
+\section{Introduction}
+\label{sec:intro}
+
+Congressional redistricting uses census tracts as its standard geographic unit.
+Tracts contain 1,200--8,000 residents each; congressional districts contain
+approximately 760,000. The ratio of district population to tract population
+is approximately 100--600: each district consists of many tracts, and the
+boundary between adjacent districts can be optimised over a rich set of
+shared-boundary edges.
+
+State legislative redistricting violates this assumption for many chambers.
+New Hampshire's 400-member House has districts with ideal populations of 3,444
+residents---smaller than a single census tract. Wyoming's 60-seat House has
+ideal district populations of 9,494, still within the range of a single tract.
+Even moderate-sized chambers such as Washington's 98-seat House ($T^* = 74,043$)
+have a district-to-tract ratio of only 18 when the state's 1,458 tracts are
+used as base units.
+
+When too few base units are available per district, redistricting degrades in
+two ways:
+\begin{enumerate}
+  \item \textbf{Feasibility failure}: when the number of districts $k$ exceeds
+    the number of base units $n$, redistricting is geometrically impossible
+    without splitting units. METIS cannot produce $k$ non-empty, non-overlapping
+    parts from $n < k$ vertices.
+  \item \textbf{Coarseness}: when $k/n$ is large but less than 1,
+    each district contains on average only $n/k$ units. With few units per
+    district, the boundary between adjacent districts is defined by few shared
+    edges, making compactness optimisation less effective and population balance
+    harder to achieve.
+\end{enumerate}
+
+This paper studies the resolution selection problem: when to upgrade from
+census-tract to census block-group (or block) resolution for state legislative
+redistricting. We derive the rule of thumb $k/n_{\rm tracts} > 0.05$, validate
+it empirically on three high-$k$ chambers (Washington, Texas, California),
+study the MAUP implications of resolution choice, and provide a resolution
+recommendation table for all 50 states and all lower chambers.
+
+\paragraph{Contributions.}
+\begin{enumerate}
+  \item Derivation of the $k/n > 0.05$ resolution selection rule from
+    the 20-units-per-district heuristic.
+  \item Empirical validation on three states: Washington House ($k=98$),
+    Texas House ($k=150$), California Assembly ($k=80$).
+  \item MAUP analysis: does resolution choice change partisan outcomes?
+  \item Runtime analysis: block-group resolution is 3--4$\times$ slower
+    than tract resolution.
+  \item Resolution recommendation table for all 50 states and all lower chambers.
+\end{enumerate}
+
+\paragraph{Organization.}
+Section~\ref{sec:problem} formalises the resolution problem.
+Section~\ref{sec:rule} derives the resolution selection rule.
+Section~\ref{sec:comparison} presents the empirical comparison.
+Section~\ref{sec:maup} analyses MAUP effects.
+Section~\ref{sec:runtime} analyses runtime.
+Section~\ref{sec:table} presents the recommendation table.
+Section~\ref{sec:conclusion} concludes.

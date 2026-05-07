@@ -1,0 +1,13 @@
+{
+  "n_states": 5,
+  "enacted_mean_pp": 0.211,
+  "baseline_mean_pp": 0.2344283213488449,
+  "edge_weighted_mean_pp": 0.19289514489488244,
+  "baseline_improvement_pct": 11.103469833575783,
+  "edge_weighted_improvement_pct": -8.580500049818747,
+  "vra_compliance_comparison": {
+    "enacted_total_mm": 9,
+    "baseline_total_mm": 8,
+    "edge_weighted_total_mm": 10
+  }
+}

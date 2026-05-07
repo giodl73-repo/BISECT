@@ -1,0 +1,191 @@
+%% G.5 — Convergence and Mixing Time Paper
+%% References
+
+%% ===================================================================
+%% B-SERIES SELF-CITATIONS
+%% ===================================================================
+
+@misc{b7paper,
+  author = {Della-Libera, Gio},
+  title  = {The Solution Space of Minimum-Edge-Cut Redistricting:
+            Seed Sensitivity and Partisan Variance},
+  year   = {2026},
+  note   = {B.7 in Algorithmic Redistricting series.
+            50-state 1{,}500-seed sweep. Provides empirical mixing
+            baselines: R-hat $< 1.1$ after 2K-20K steps.},
+}
+
+@misc{b16paper,
+  author = {Della-Libera, Gio},
+  title  = {{ConvergenceSweep}: $T = 600$ as the Statutory Stopping
+            Criterion for Minimum-Edge-Cut Redistricting},
+  year   = {2026},
+  note   = {B.16 in Algorithmic Redistricting series.
+            Introduces ConvergenceSweep as the deterministic, certifiable
+            alternative to MCMC mixing. $O(T \cdot n)$ runtime.},
+}
+
+%% ===================================================================
+%% MARKOV CHAIN MIXING TIME THEORY
+%% ===================================================================
+
+@book{levin2009,
+  author    = {Levin, David A. and Peres, Yuval and Wilmer, Elizabeth L.},
+  title     = {Markov Chains and Mixing Times},
+  publisher = {American Mathematical Society},
+  year      = {2009},
+  note      = {Standard reference for Markov chain mixing time theory.
+               Spectral gap bounds, conductance, and coupling methods.
+               The planar graph spectral gap bound $\Omega(1/n^2)$
+               follows from the vertex separator theorem (Chapter 13).},
+}
+
+@article{sinclair1989,
+  author  = {Sinclair, Alistair and Jerrum, Mark},
+  title   = {Approximate Counting, Uniform Generation and Rapidly Mixing
+             {Markov} Chains},
+  journal = {Information and Computation},
+  volume  = {82},
+  number  = {1},
+  pages   = {93--133},
+  year    = {1989},
+  doi     = {10.1016/0890-5401(89)90067-9},
+  note    = {Foundational paper on Markov chain mixing via conductance.
+             Establishes the Poincare inequality approach to bounding
+             mixing times from below.},
+}
+
+@article{aldous1982,
+  author  = {Aldous, David},
+  title   = {Some Inequalities for Reversible {Markov} Chains},
+  journal = {Journal of the London Mathematical Society},
+  volume  = {2},
+  number  = {3},
+  pages   = {564--576},
+  year    = {1982},
+  doi     = {10.1112/jlms/s2-25.3.564},
+  note    = {Spectral gap bounds for reversible Markov chains.
+             The relation $t_{\rm mix} = O(1/\lambda_{\rm gap})$
+             used in the mixing time analysis.},
+}
+
+@article{diaconis1996,
+  author  = {Diaconis, Persi and Stroock, Daniel},
+  title   = {Geometric Bounds for Eigenvalues of {Markov} Chains},
+  journal = {Annals of Applied Probability},
+  volume  = {1},
+  number  = {1},
+  pages   = {36--61},
+  year    = {1991},
+  doi     = {10.1214/aoap/1177005980},
+  note    = {Path argument for spectral gap lower bounds.
+             The canonical path method applied to give explicit
+             $\Omega(1/n^2)$ spectral gap for grid-like graphs.},
+}
+
+%% ===================================================================
+%% REDISTRICTING ENSEMBLE THEORY
+%% ===================================================================
+
+@article{deford2021,
+  author  = {DeFord, Daryl and Duchin, Moon and Solomon, Justin},
+  title   = {Recombination: A Family of Markov Chains for Redistricting},
+  journal = {Harvard Data Science Review},
+  volume  = {3},
+  number  = {1},
+  year    = {2021},
+  doi     = {10.1162/99608f92.eb30390f},
+  note    = {ReCom proposal distribution. The primary chain whose
+             mixing time is analyzed here. The merge-and-resplit
+             proposal is non-reversible; our bounds apply to the
+             lazy symmetric version.},
+}
+
+@article{autry2021,
+  author  = {Autry, Eric A. and Carter, Daniel and Herschlag, Gregory J.
+             and Hunter, Zach and Mattingly, Jonathan C.},
+  title   = {Metropolized Forest Recombination for Monte Carlo Sampling
+             of Graph Partitions},
+  journal = {SIAM Journal on Applied Mathematics},
+  volume  = {83},
+  number  = {4},
+  pages   = {1366--1391},
+  year    = {2023},
+  doi     = {10.1137/21M1466331},
+  note    = {Forest-based recombination proposal. Provides reversible
+             chain variant that admits spectral gap analysis.
+             Empirical mixing times are similar to ReCom.},
+}
+
+@article{chikina2017,
+  author  = {Chikina, Maria and Frieze, Alan and Pegden, Wesley},
+  title   = {Assessing Significance in a Markov Chain without Mixing},
+  journal = {Proceedings of the National Academy of Sciences},
+  volume  = {114},
+  number  = {11},
+  pages   = {2860--2864},
+  year    = {2017},
+  doi     = {10.1073/pnas.1617540114},
+  note    = {Shows that some statistical tests of gerrymandering are
+             valid even without full mixing. Motivates the distinction
+             between test validity and mixing certification.},
+}
+
+@article{duchindist2020,
+  author  = {Duchin, Moon and Tenner, Bridget Eileen},
+  title   = {Discrete Geometry for Electoral Geography},
+  journal = {arXiv},
+  year    = {2020},
+  note    = {arXiv:1808.05860. Mathematical framework for redistricting
+             as a graph-partitioning problem. Defines the state space
+             whose mixing time we analyze.},
+}
+
+%% ===================================================================
+%% PLANAR GRAPH THEORY
+%% ===================================================================
+
+@book{diestel2017,
+  author    = {Diestel, Reinhard},
+  title     = {Graph Theory},
+  edition   = {5},
+  publisher = {Springer},
+  year      = {2017},
+  doi       = {10.1007/978-3-662-53622-3},
+  note      = {Standard graph theory reference. The planar separator
+               theorem (Chapter 12) gives the $O(\sqrt{n})$ separator
+               that implies the $\Omega(1/n^2)$ spectral gap bound for
+               redistricting chains on planar graphs.},
+}
+
+@article{lipton1979,
+  author  = {Lipton, Richard J. and Tarjan, Robert E.},
+  title   = {A Separator Theorem for Planar Graphs},
+  journal = {SIAM Journal on Applied Mathematics},
+  volume  = {36},
+  number  = {2},
+  pages   = {177--189},
+  year    = {1979},
+  doi     = {10.1137/0136016},
+  note    = {Lipton-Tarjan planar separator theorem: every planar graph
+             on $n$ vertices has a separator of size $O(\sqrt{n})$.
+             This gives the conductance upper bound for random walks
+             on planar redistricting graphs.},
+}
+
+%% ===================================================================
+%% LEGAL
+%% ===================================================================
+
+@misc{rucho2019,
+  title  = {Rucho v.\ Common Cause},
+  year   = {2019},
+  note   = {588 U.S. 684 (2019). Shifts ensemble analysis to state courts.},
+}
+
+@misc{callais2026,
+  title  = {Louisiana v.\ {Callais}},
+  year   = {2026},
+  note   = {608 U.S. \_\_\_ (2026). Disentanglement requirement motivates
+            certified convergence as a precondition for ensemble analysis.},
+}

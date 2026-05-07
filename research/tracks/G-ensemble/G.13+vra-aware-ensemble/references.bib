@@ -1,0 +1,98 @@
+%% G.13 -- VRA-Aware MCMC: Sampling the Conditional Distribution Over
+%%          Voting Rights Act-Compliant Redistricting Plans
+%% References
+
+%% ===================================================================
+%% VRA LEGAL
+%% ===================================================================
+
+@misc{gingles1986,
+  author = {{Supreme Court of the United States}},
+  title  = {Thornburg v.\ {Gingles}, 478 {U.S.} 30},
+  year   = {1986},
+  note   = {Establishes the three-part preconditions for a Section~2
+            Voting Rights Act claim in single-member redistricting:
+            geographic compactness, political cohesion, and majority-bloc
+            voting.
+            Defines the legal basis for majority-minority district
+            requirements used in Section~\ref{sec:background}.},
+}
+
+%% ===================================================================
+%% SELF-CITATIONS (G / D SERIES)
+%% ===================================================================
+
+@misc{dellaLibera2026forestRecom,
+  author = {Della-Libera, Gio},
+  title  = {Forest {ReCom}: Reversible Recombination via Spanning Forest
+            Sampling},
+  year   = {2026},
+  note   = {G.9 in Algorithmic Redistricting series.
+            Implements \fr{} as \texttt{ForestRecomChain} in
+            \texttt{redist-ensemble}.
+            VRA-Aware MCMC (this paper) inherits the seed derivation and
+            MH acceptance criterion from \fr{}, adding a hard VRA rejection
+            rule on top.
+            The expected detailed balance theorem is cited in
+            Section~\ref{sec:algorithm}.},
+}
+
+@misc{dellaLibera2026vraSection,
+  author = {Della-Libera, Gio},
+  title  = {{VRASection}: Structure-Layer Majority-Minority District
+            Preservation via {METIS} Edge-Weight Bias},
+  year   = {2026},
+  note   = {D.0 in Algorithmic Redistricting series.
+            Structure-layer complement to VRA-Aware MCMC (this paper).
+            Generates a single VRA-compliant starting plan;
+            VRA-Aware MCMC samples the distribution over compliant
+            alternatives.
+            Described in Section~\ref{sec:background} (layer architecture)
+            and Section~\ref{sec:audit} (composite workflow).},
+}
+
+@misc{dellaLibera2026comparison,
+  author = {Della-Libera, Gio},
+  title  = {Ensemble Method Comparison: {ForestReCom}, {Merge-Split}, and
+            {VRA-Aware} {MCMC} on Congressional Redistricting},
+  year   = {2026},
+  note   = {G.14 in Algorithmic Redistricting series.
+            Full empirical comparison of \fr{}, Merge-Split, and \vr{}
+            across all 50 states, extending the NC/GA/TX results in
+            Section~\ref{sec:empirical}.},
+}
+
+%% ===================================================================
+%% FOREST RECOM / MCCARTAN IMAI
+%% ===================================================================
+
+@misc{mccartan2020,
+  author = {McCartan, Cory and Imai, Kosuke},
+  title  = {Sequential {Monte} {Carlo} for Sampling Balanced and
+            Compact Redistricting Plans},
+  year   = {2020},
+  note   = {arXiv:2008.06131. Introduces Forest \recom{} as a
+            Metropolis-Hastings correction to standard \recom{} targeting
+            the uniform distribution over valid plans.
+            Section~3.2 proves the expected detailed balance property
+            inherited by \vr{} via the seed prefix constants.
+            Also introduces the Sequential Monte Carlo (SMC) sampler.},
+}
+
+%% ===================================================================
+%% RECOM / MCMC REDISTRICTING
+%% ===================================================================
+
+@article{deford2021,
+  author  = {DeFord, Daryl and Duchin, Moon and Solomon, Justin},
+  title   = {Recombination: A Family of {Markov} Chains for Redistricting},
+  journal = {Harvard Data Science Review},
+  volume  = {3},
+  number  = {1},
+  year    = {2021},
+  doi     = {10.1162/99608f92.eb30390f},
+  note    = {Defines standard \recom{}.
+             Standard \recom{} and its variants sample the full space of
+             valid plans without VRA filtering; \vr{} is the correct
+             replacement for litigation in VRA-covered states.},
+}

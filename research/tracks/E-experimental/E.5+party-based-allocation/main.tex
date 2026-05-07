@@ -1,0 +1,48 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{hyperref}
+\usepackage{natbib}
+\bibliographystyle{apalike}
+
+% Venue target: Electoral Studies
+\title{Partisan Fairness through Algorithmic Districting: An Alternative to Proportional Representation}
+
+\author{Giovanni Della-Libera}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Single-member district systems struggle to achieve proportional representation while maintaining geographic ties and traditional districting criteria. This paper proposes party-specific overlapping districts: each party independently draws districts balanced by party-vote weighted population, covering the entire state. Seats are allocated proportionally via the D'Hondt method before districting, guaranteeing proportionality by construction. We demonstrate the system using recursive bisection on Ohio (15 seats) and California (52 seats), achieving perfect proportionality (efficiency gap $< 0.1\%$) and near-perfect within-party balance (standard deviation $< 0.2\%$). Large delegations enable third-party representation through low natural thresholds---California's 1.89\% threshold yields one ``Other'' seat representing 900,000 voters. The approach resolves the fundamental impossibility of achieving proportionality, compactness, and single-member districts simultaneously by allowing districts to overlap geographically while remaining distinct by party affiliation. This challenges American exceptionalism in single-member plurality while preserving valued geographic representation.
+\end{abstract}
+
+\section{Introduction}
+\input{sections/01-introduction}
+
+\section{Background and Related Work}
+\input{sections/02-related-work}
+
+\section{Methodology}
+\input{sections/03-methodology}
+
+\section{Results}
+\input{sections/04-results}
+
+\section{Discussion}
+\input{sections/05-discussion}
+
+\section{Conclusion}
+\input{sections/06-conclusion}
+
+\bibliography{../references}
+
+\end{document}

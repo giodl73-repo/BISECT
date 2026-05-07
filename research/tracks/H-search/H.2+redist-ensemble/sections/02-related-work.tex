@@ -1,0 +1,88 @@
+\section{Related Work}
+\label{sec:related}
+
+\subsection{ReCom and GerryChain}
+
+The \recom{} (\emph{Recombination}) Markov chain was introduced by
+\citet{deford2021recombination} as a method for sampling redistricting
+plans with a provably well-defined stationary distribution.
+At each step, the chain selects a pair of adjacent districts, merges
+them into a single region, generates a random spanning tree of the merged
+region using Wilson's algorithm, finds all balanced bipartitions of that
+tree, and selects one uniformly at random.
+The chain's stationary distribution is uniform over the space of
+population-balanced redistricting plans, up to the spanning-tree bias
+introduced by graph structure.
+
+\gc{}~\citep{gerrychain2021} is the canonical open-source Python
+implementation of \recom{}, developed and maintained by the MGGG
+Redistricting Lab at Tufts University.
+It has been used in expert reports submitted in redistricting litigation
+in North Carolina~\citep{herschlag2020quantifying}, Wisconsin, and
+Pennsylvania~\citep{chikina2017assessing}, and forms the computational
+backbone of the ensemble-based auditing literature.
+\gc{} is designed for correctness and research flexibility over raw
+throughput; it runs at approximately 21--36 steps per second for
+congressional-scale states.
+
+\citet{autry2021multiscale} extended the \recom{} framework to a
+multiscale forest variant, improving mixing properties for large $k$.
+\citet{carter2019merge} analyzed the \emph{merge-split} chain, a closely
+related Markov chain with distinct stationary distribution properties.
+
+\subsection{Wilson's Spanning Tree Algorithm}
+
+\citet{wilson1996generating} gave the first efficient algorithm for
+generating uniform random spanning trees of an arbitrary graph.
+Wilson's algorithm performs a loop-erased random walk from an arbitrary
+vertex to the already-constructed tree, erasing loops as they form and
+adding the loop-erased path to the tree.
+The algorithm runs in expected time equal to the \emph{mean cover time}
+of a simple random walk on the graph.
+
+The loop-erasing property ensures that the resulting spanning tree is
+drawn uniformly from the set of all spanning trees of the graph (by
+Kirchhoff's matrix-tree theorem), making it a direct tool for \recom{}
+proposals.
+\citet{aldous1991random} proved that the cover time of a random walk on
+a planar graph with $m$ vertices is $O(m\log m)$, giving Wilson's
+algorithm $O(m\log m)$ expected time on census-tract adjacency subgraphs.
+
+The loop-erased random walk has a long independent history
+dating to~\citet{lawler1980loop}, who studied it as a model in
+statistical mechanics.
+\citet{propp1998exact} showed that Wilson's algorithm is a special case
+of their general \emph{coupling from the past} framework.
+
+\subsection{Rust for High-Performance Scientific Computing}
+
+Rust's combination of zero-cost abstractions, safe concurrency, and
+predictable memory layout has made it an increasingly attractive language
+for computationally intensive scientific applications.
+The Rayon data-parallelism library~\citep{rayon2024} provides
+fork-join parallelism with work-stealing scheduling and a threading model
+that maps cleanly onto independent MCMC chains.
+\citet{matsakis2014rust} describe the language's ownership system, which
+eliminates data races by construction---a critical property for parallel
+MCMC where chains share no mutable state.
+
+Within the \texttt{redist} ecosystem, the Rust codebase has achieved
+approximately $213\times$ speedup over the Python pipeline for the core
+METIS partitioning workflow~\citep{dellaLibera2026b1}.
+The \re{} crate extends this philosophy to ensemble sampling.
+
+\subsection{Portfolio Context}
+
+The G-track papers in this portfolio provide the ensemble methodology and
+comparison results that \re{} operationalizes.
+\citet{dellaLibera2026g0} establishes the G-track framework for comparing
+deterministic redistricting algorithms to \gc{} ensembles.
+\citet{dellaLibera2026g1} provides direct percentile placement of the
+\ar{} plans within \gc{} ensembles for six states.
+\citet{dellaLibera2026g4} formalizes the $\rhat$, $\ess$, and Hamming
+autocorrelation diagnostics implemented in the \texttt{redist} binary.
+The H.1 paper~\citep{dellaLibera2026h1} establishes the bisection-ensemble
+connection that motivates real-time ensemble integration.
+\re{} closes the final methodological gap: G-track results previously
+depended on the Python \gc{} installation; \re{} makes those results
+reproducible from the \texttt{redist} Rust binary alone.

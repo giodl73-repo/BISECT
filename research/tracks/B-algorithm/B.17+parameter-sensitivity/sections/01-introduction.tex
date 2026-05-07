@@ -1,0 +1,77 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The DIA Administrator Question}
+
+Suppose the \dia{} is enacted and the redistricting algorithm is run by
+a federal administrator (a ``Districting Administrator'') with a fixed
+parameter set encoded in statute.
+A hostile legislature challenges the map in court, arguing that the
+parameter set was chosen to produce a partisan outcome.
+Alternatively, a well-meaning administrator asks: ``If I tweak the
+METIS imbalance factor slightly, will the partisan outcome change?''
+
+This paper answers both questions empirically through a comprehensive
+50-state parameter sweep.
+The central finding: \emph{partisan seat counts are insensitive to
+parameter tuning}.
+The maximum variation in Democratic seat count across the full parameter
+range of all five parameters is $\Delta D\text{-seats} \leq 0.3$ nationally---
+indistinguishable from sampling noise.
+
+This finding complements B.0's bakeoff~\citep{b0paper}: while algorithm
+\emph{structure} (e.g., GeoSection vs.\ unweighted bisection) can produce
+partisan gaps of 12 percentage points, parameter \emph{tuning} within a
+fixed algorithm produces negligible partisan effects.
+The DIA statute can safely fix any reasonable parameter set.
+
+\subsection{Parameters Studied}
+
+We study five parameters that appear in the \ar{} + \cs{} pipeline:
+
+\begin{enumerate}
+\item \textbf{METIS imbalance factor} ($\ufactor \in [0.1\%, 5\%]$):
+      the maximum allowable population deviation from perfect balance
+      within the METIS heuristic.
+\item \textbf{County edge weight} ($\acounty \in [1.0, 10.0]$):
+      the multiplicative boost applied to edges that cross county lines.
+\item \textbf{ConvergenceSweep threshold} ($T \in [100, 1{,}000]$):
+      the consecutive non-improving seeds required to halt.
+\item \textbf{Area swing} ($\aswing \in [1.05, 1.20]$):
+      the area-to-population ratio parameter in GeoSection/AreaSection.
+\item \textbf{VRA boost weight} ($\wvra \in [0.2, 0.6]$):
+      the multiplicative factor for edges adjacent to VRA-eligible
+      minority community tracts.
+\end{enumerate}
+
+The baseline parameter set is the DIA default: $\ufactor = 1\%$,
+$\acounty = 3.0$, $T = 600$, $\aswing = 1.10$, $\wvra = 0.4$.
+
+\subsection{Main Results}
+
+\begin{enumerate}
+\item \textbf{Partisan outcomes are insensitive.}
+      Across all five parameters and their full ranges, the national
+      Democratic seat count varies by $\leq 0.3$ seats.
+      No parameter, alone or in combination, can systematically shift the
+      partisan outcome by more than one seat nationally.
+\item \textbf{Compactness is sensitive to $\ufactor$.}
+      Polsby-Popper varies by $\pm 0.010$ across the $\ufactor$ range.
+      Tighter $\ufactor$ (e.g., 0.1\%) produces more compact districts;
+      looser $\ufactor$ (e.g., 5\%) allows more population imbalance
+      but also more compactness.
+\item \textbf{$T$ affects runtime, not outcomes.}
+      The \cs{} threshold $T$ has no measurable effect on partisan
+      outcomes across the range $[100, 1{,}000]$.
+      This confirms B.16's finding that the algorithm converges well
+      before $T = 600$.
+\end{enumerate}
+
+\subsection{Paper Structure}
+
+Section~\ref{sec:parameters} defines the five parameters precisely.
+Section~\ref{sec:methodology} describes the sweep design.
+Section~\ref{sec:results} presents per-parameter results.
+Section~\ref{sec:key-finding} synthesises the main finding.
+Section~\ref{sec:implications} draws implications for the DIA statute.
+Section~\ref{sec:conclusion} concludes.

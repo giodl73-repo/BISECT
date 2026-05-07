@@ -1,0 +1,86 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+\subsection{Summary}
+
+We have characterised the 2030 reapportionment shock for the \ar{}
+bisection algorithm.
+Using Census Bureau projections and simulation on 2020 census-tract graphs,
+we find:
+
+\begin{enumerate}
+\item \textbf{Texas is the most disruptive case.}
+      $38 = 2 \times 19 \to 41$ (prime) changes the tree from a 2-level
+      to a flat structure.
+      Simulated Hamming distance: $d_{\rm Ham} = 0.23$.
+
+\item \textbf{Florida is also dramatically affected.}
+      $28 = 4 \times 7 \to 29$ (prime) produces a similar
+      composite-to-prime transition.
+      Simulated $d_{\rm Ham} = 0.19$.
+
+\item \textbf{Reapportionment disruption is less than MCMC mixing.}
+      The worst-case reapportionment disruption ($d_{\rm Ham} = 0.23$)
+      is equivalent to approximately 10 \recom{} steps for Texas.
+      A fully-mixed ensemble (10{,}000+ steps) produces $d_{\rm Ham} \approx 1$.
+
+\item \textbf{Political redistricting is more disruptive.}
+      Contested political redistricting cycles change 35--55\% of tract
+      assignments, $1.5$--$2.4\times$ more than the worst algorithmic
+      reapportionment.
+
+\item \textbf{Fresh recomputation is the correct statutory design.}
+      The DIA's decadal recomputation produces maps optimal for the current
+      apportionment and geography.
+      No continuity bonus or grandfathering clause is needed.
+\end{enumerate}
+
+\subsection{The Arithmetic of Disruption}
+
+The key insight is that reapportionment disruption is determined by two
+factors: seat count change and factorisation change.
+A state gaining one seat from a composite $k$ to another composite $k+1$
+(e.g., Georgia $14 \to 15$, both composite) has disruption $d_{\rm Ham} \approx 0.08$.
+A state moving from composite to prime (Texas, Florida) has disruption
+$d_{\rm Ham} \approx 0.20$--$0.23$.
+
+This arithmetic is predictable and transparent.
+States and administrators can compute the expected disruption years in advance
+from Census Bureau projections.
+
+\subsection{Open Questions}
+
+\begin{enumerate}
+\item \textbf{2030 census data.}
+      The simulations use 2020 data with new seat counts.
+      The actual 2030 disruption will be larger due to population redistribution.
+      A 2030 simulation requires the 2030 census, expected in 2031.
+
+\item \textbf{Optimal transition strategies.}
+      If continuity is valued, is there an \ar{} variant that
+      would minimise $d_{\rm Ham}$ between the old and new maps
+      subject to compactness?
+      This is an open algorithmic question.
+
+\item \textbf{The prime frequency problem.}
+      Among the 50-state seat counts, primes appear frequently
+      (current primes: $\{7, 11, 13, 17, 19, 23, 29, 31, 37, 41\}$).
+      A theory of reapportionment stability that accounts for prime
+      density in the relevant range $[1, 60]$ would be useful.
+      The prime number theorem gives density $\sim 1/\ln(k)$, so
+      roughly $1/\ln(40) \approx 27\%$ of seat counts near 40 are prime.
+\end{enumerate}
+
+\subsection{Practical Advice}
+
+For states expecting seat changes in 2030, we recommend:
+\begin{enumerate}
+\item Pre-compute the 2030 bisection tree from current projections.
+\item Run a preliminary simulation using 2020 data with the projected
+      seat count to estimate boundary disruption.
+\item Publish the projected changes for public comment before the 2030
+      redistricting cycle begins.
+\end{enumerate}
+
+This transparency is consistent with the DIA's overall commitment to
+deterministic, auditable redistricting.

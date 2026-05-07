@@ -1,0 +1,78 @@
+\section{The Algorithmic Plan's Position in the Ensemble}
+\label{sec:percentile}
+
+\subsection{Percentile Definition}
+
+Let $\mathcal{E} = \{P_1, P_2, \ldots, P_N\}$ be an ensemble of $N$ valid
+redistricting plans for a state with $k$ districts.  Let $f: \mathcal{P} \to
+\mathbb{R}$ be a scalar statistic (e.g., Polsby-Popper mean, Democratic seat
+share, minority-majority district count).  The \emph{percentile} of the
+algorithmic plan $P^*$ with respect to $f$ and $\mathcal{E}$ is:
+
+\begin{equation}
+  \pi_f(P^*) = \frac{1}{N} \#\{i \in [N] : f(P_i) \leq f(P^*)\}.
+  \label{eq:percentile}
+\end{equation}
+
+A plan at the 50th percentile is typical; plans at the 5th or 95th percentile
+are unusual but not necessarily extreme.  Courts have generally treated plans
+above the 99th or below the 1st percentile as requiring explanation
+\citep{herschlag2020quantifying}.
+
+\subsection{Statistics of Interest}
+
+The G-track considers three families of statistics:
+
+\begin{enumerate}
+  \item \textbf{Polsby-Popper (PP) compactness.}
+    For a district with area $A$ and perimeter $P$,
+    $\pp = 4\pi A / P^2 \in (0, 1]$.  Higher is more compact.
+    We report the plan-level mean $\bar{\pp}$ and the minimum
+    $\pp_{\min}$ across districts.
+
+  \item \textbf{Partisan seat share.}
+    The number of districts won by each party under a
+    specified electoral baseline (e.g., 2020 presidential vote).
+    We report Democratic seats $S_D \in \{0, 1, \ldots, k\}$.
+
+  \item \textbf{Minority-majority districts (MM).}
+    The count of districts with minority voting-age population exceeding
+    50\%.  We report $\mathrm{MM} \in \{0, 1, \ldots, k\}$.
+\end{enumerate}
+
+\subsection{Interpreting Percentile Position}
+
+The percentile framework supports two distinct claims:
+
+\begin{keybox}
+\textbf{Claim 1 (Compactness not extreme).}
+If $\pi_{\bar\pp}(P^*) \in [0.60, 0.90]$, the \ar{} plan is more compact
+than average but not an outlier.  This is \emph{legally desirable}: a plan
+at the 99th percentile of compactness might be suspected of packing
+communities to achieve partisan ends via the ``compactness route.''
+
+\textbf{Claim 2 (Partisanship near median).}
+If $\pi_{S_D}(P^*) \in [0.40, 0.60]$, the partisan outcome of the \ar{}
+plan is indistinguishable from the geographic median.  This is the
+strongest possible evidence that the plan is not gerrymandered.
+\end{keybox}
+
+We will see in G.1 and G.2 that \ar{} achieves both claims for the majority
+of studied states, with notable exceptions in states with strong geographic
+partisan sorting (Georgia, Texas).
+
+\subsection{Sensitivity to Ensemble Choice}
+
+The percentile $\pi_f(P^*)$ depends on the choice of ensemble $\mathcal{E}$.
+Different chain types (flip vs.\ \recom{}) produce different distributions;
+different ensemble sizes affect statistical precision; different population
+tolerance bounds affect plan diversity.  In G.1, we use published ensemble
+results from \citet{herschlag2020quantifying} for North Carolina and
+\citet{deford2021recombination} for other states, acknowledging that these
+are \recom{} ensembles with $N \geq 10{,}000$ and population tolerance
+$\pm 0.5\%$.
+
+Where published ensembles are unavailable, we use literature-reported
+distributional summaries (mean, standard deviation, approximate percentile
+bounds) to bound $\pi_f(P^*)$.  These bounds are marked with \est{} throughout
+the G-track papers.

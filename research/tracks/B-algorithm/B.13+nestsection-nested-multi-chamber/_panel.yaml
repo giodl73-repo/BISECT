@@ -1,0 +1,171 @@
+title: "NestSection: Consistent Multi-Chamber Redistricting via Compatible Factorization Spines"
+series: B
+number: 13
+stage: ready
+type: algorithm-design
+authors:
+  - name: Gio Della-Libera
+    email: giodl@microsoft.com
+created: 2026-05-02
+updated: 2026-05-02
+status: ready
+
+revision_history:
+  - round: 1
+    date: 2026-05-02
+    avg_score_before: 2.6
+    items_addressed:
+      - "P1-1: Bimodality Gap theorem (Theorem 3) added to §3 after score definition, with full proof and remark"
+      - "P1-2: §4 restructured — trivially compatible (C=1, 7 states) vs weakly compatible (C=2, 2 states) vs non-trivially compatible (OR/AL) distinction added; headline 11-state count caveated"
+      - "P1-3: New subsection §4.3 (Oregon and Alabama) with geographic spine descriptions and figure environments for both states"
+      - "P1-4: Elections Clause scope paragraph added to §5 before statutory design proposal, scoping the mandate to state legislative maps only"
+
+reviews:
+  round: 3
+  avg_score: 3.5
+  scores:
+    - reviewer: George Karypis
+      expertise: graph-partitioning, METIS, tree structures
+      score: 3.5
+      recommendation: "Accept with Minor Revisions"
+      file: reviews/REVIEW-R2-george-karypis.md
+      resolved:
+        - Trunk ordering acknowledged as convention with geographic degree of freedom
+        - Trivially/weakly/non-trivially compatible stratification covers M2 for substantive cases
+        - Mode 2 emptiness proved by Bimodality Gap Theorem
+      remaining:
+        - Brief Algorithm 2 uniformity remark still missing for non-trivial trunk regions
+        - Empirical timing data still absent (accepted as deferred)
+        - NestRefine not formalized as Alg. 3 (acceptable for Mode 1 states where h_i/s_i is integer)
+    - reviewer: Moon Duchin
+      expertise: redistricting-mathematics, ensemble-methods, election-law
+      score: 3.5
+      recommendation: "Accept with Minor Revisions"
+      file: reviews/REVIEW-R3-moon-duchin.md
+      round: 3
+      resolved:
+        - Arizona/Indiana analog developed with two additional sentences — M3 resolved
+        - Congressional-spine-as-given assumption stated explicitly — M2 clarified
+        - Gerrymander resistance claim hedged as conjecture in §5.1 and §5.3 — M1 addressed
+      remaining:
+        - Mode 2 emptiness sentence in §3.4 still absent (editorial preference, not required)
+        - Best-effort tier (22 states) still underdeveloped relative to g≥5 substantive tier
+    - reviewer: Richard Pildes
+      expertise: constitutional-law, election-law, Art-I-redistricting-doctrine
+      score: 3.5
+      recommendation: "Accept with Minor Revisions"
+      file: reviews/REVIEW-R3-richard-pildes.md
+      round: 3
+      resolved:
+        - Arizona/Indiana analog developed: Art. IV §1(14) AZ constitution, Harris v. AIRC citation — M3 resolved
+        - Judicial enforceability sketch added (spine determinism, tau compliance, remedy framework) — M4 resolved
+        - Reynolds v. Sims citation added for state legislative baseline — M1 substantially resolved
+      remaining:
+        - Standing question for political subdivision enforcement not addressed (noted, not required)
+        - California ICRC inter-body coordination gap not fully resolved
+        - Best-effort tier (22 states) could be further developed
+    - reviewer: Percy Liang
+      expertise: empirical-evaluation, benchmarking, ML-systems
+      score: 3.5
+      recommendation: "Accept with Minor Revisions"
+      file: reviews/REVIEW-R2-percy-liang.md
+      resolved:
+        - Bimodality Gap Theorem (Theorem 3) — M1 fully resolved
+        - Trivial/weak/non-trivial stratification — M2 fully resolved
+        - Geographic spine descriptions for Oregon and Alabama added
+      remaining:
+        - Figure captions need cross-reference to §5.2 pipeline status
+        - 30-50% estimate needs explicit hedging as theoretical conjecture
+        - Theorem 3 display name missing in theorem environment
+    - reviewer: Shang-Hua Teng
+      expertise: theoretical-CS, combinatorial-optimization, smoothed-analysis, graph-algorithms
+      score: 3.5
+      recommendation: "Accept with Minor Revisions"
+      file: reviews/REVIEW-R2-shang-hua-teng.md
+      resolved:
+        - Bimodality Gap Theorem — formally proved with tight boundary cases
+      remaining:
+        - Complexity §3.6 still lacks n-based cost ratio for substantive cases (1 sentence required)
+        - Mode 3 hardness not flagged as open problem (1 sentence required)
+        - Prop. 1(3) ordering-convention scope remark still absent
+        - Sigma sensitivity for Oregon/Alabama at C±1 recommended but not required
+
+  round_1:
+    avg_score: 2.6
+    scores:
+      - reviewer: George Karypis
+        score: 3
+        recommendation: "Accept with Major Revisions"
+        file: reviews/REVIEW-george-karypis.md
+        key_issues:
+          - Trunk sequence ordering not geometrically canonical — different orderings yield different geographic spines
+          - NestSection (Alg. 2) assumes uniform seat allocation per trunk region — needs bridge argument from population balance
+          - No empirical timing data for trunk-level GeoSection cost claim
+          - NestRefine boundary-zone assignment rule underspecified (needs Algorithm 3)
+      - reviewer: Moon Duchin
+        score: 2
+        recommendation: "Major Revision"
+        file: reviews/REVIEW-moon-duchin.md
+        key_issues:
+          - Anti-gerrymandering claim stated but not empirically tested (ensemble comparison missing)
+          - No constitutional hook for cross-chamber mandate identified or developed
+          - 11/50 headline dominated by 7 trivially compatible C=1 states — should be restated
+          - Mode 2 has zero empirical instances — either justify or remove from taxonomy
+      - reviewer: Richard Pildes
+        score: 2
+        recommendation: "Major Revision"
+        file: reviews/REVIEW-richard-pildes.md
+        key_issues:
+          - Elections Clause (Art. I §4) problem unengaged — can state mandate bind congressional map?
+          - Art. I §2 hook mentioned in plan metadata but not developed in paper
+          - Arizona/Indiana house-in-senate precedent barely mentioned — strongest existing legal analog
+          - No engagement with judicial enforceability of the proposed spine-sharing mandate
+      - reviewer: Percy Liang
+        score: 3
+        recommendation: "Accept with Revisions"
+        file: reviews/REVIEW-percy-liang.md
+        key_issues:
+          - Bimodality finding deserves formal lemma/theorem not just a paragraph explanation
+          - n=11 dominated by trivial C=1 states — need to stratify trivially/weakly/meaningfully compatible
+          - No geographic maps despite implemented algorithm — Figure 1 is a placeholder box
+          - 30-50% variance reduction estimate in Future Work is unsupported — should be removed or qualified
+      - reviewer: Shang-Hua Teng
+        score: 3
+        recommendation: "Accept with Revisions"
+        file: reviews/REVIEW-shang-hua-teng.md
+        key_issues:
+          - Prop. 1(3) optimality claim is weaker than it appears — canonical ordering is not unique maximizer of shared prefix
+          - Complexity claim conflates operation count with algorithmic cost (n not stated)
+          - Mode 3 optimization under tau_pop budget is an open problem — hardness not characterized
+          - No sensitivity analysis of sigma to +/-1 apportionment changes
+venue_target: Harvard Journal on Legislation
+venue_backup: Election Law Journal
+venue_fallback: Computers, Environment and Urban Systems
+depends_on:
+  - B.8   # GeoSection — ratio-optimal bisection
+  - B.11  # ApportionRegions — factorization tree infrastructure
+companion:
+  - B.9   # AreaSection
+  - B.10  # SubdivisionSection
+  - B.14  # VRASection — VRA interaction
+keywords:
+  - redistricting
+  - multi-chamber consistency
+  - factorization spine
+  - gerrymandering
+  - hierarchical bisection
+  - apportionment
+  - compatible factorization
+implementation:
+  crate: redist-apportion
+  module: nest
+  functions:
+    - compatible_spines
+    - spine_compatibility_score
+    - us_state_compatibility_table
+empirical_status: theoretical  # awaiting pipeline run on census geography
+notes: >
+  50-state compatibility census complete (theoretical, from nest.rs data).
+  11 strictly compatible states (sigma=0), 39 structurally incompatible.
+  Case studies: OR (perfect), NC (Mode 3, sigma=85.7%), TX (fully incompatible, sigma=96.8%).
+  Empirical validation (running NestSection on actual census tracts) deferred.

@@ -1,0 +1,76 @@
+%% 05-verification.tex — How to verify any result
+
+\section{Verification Protocol}
+\label{sec:verification}
+
+\subsection*{Verifying Any Single Claim}
+
+Every quantitative claim in every portfolio paper is linked to a specific
+\texttt{redist} command that produced it.
+To verify a claim:
+
+\begin{enumerate}[leftmargin=*, itemsep=4pt]
+  \item Find the claim in the paper (e.g., ``+22\% compactness improvement'').
+  \item Locate the associated command in the paper's supplementary materials
+        or in the paper's directory under \texttt{research/B.2+edge-weighted-bisection/}.
+  \item Run the command with the same parameters.
+  \item Compare the output to the published hash using \texttt{redist label-verify}.
+\end{enumerate}
+
+\subsection*{The \texttt{redist label-verify} Command}
+
+\begin{verbatim}
+redist label-verify <version>
+\end{verbatim}
+
+\noindent This command:
+\begin{itemize}[itemsep=2pt]
+  \item Reads the config file for \texttt{<version>} and computes its SHA-256.
+  \item Reads all input Census files and computes a combined build hash.
+  \item Reads all district assignment output files and computes the analysis hash.
+  \item Reads the summary statistics and map files and computes the report hash.
+  \item Compares all four hashes to the values published in the portfolio.
+\end{itemize}
+
+\noindent If all four hashes match, the run is verified.
+If any hash differs, the command reports which step failed and which files differ.
+
+\subsection*{The SHA Chain in Detail}
+
+\paragraph{Config hash.}
+The config hash covers the following parameters:
+population tolerance ($\pm$0.5\%), METIS random seed (42), edge-weight scaling
+factor ($\alpha = 5.0$), and the number of METIS refinement iterations ($T = 600$).
+Changing any parameter changes the config hash and propagates through the chain.
+
+\paragraph{Build hash.}
+The build hash is the SHA-256 of the concatenated SHA-256 values of all
+input PL 94-171 files and TIGER/Line shapefiles, in FIPS order.
+This confirms that no input data was altered.
+
+\paragraph{Analysis hash.}
+The analysis hash covers the district assignment CSV for every state,
+in FIPS order within each state.
+Two runs on the same machine with the same inputs produce identical
+analysis hashes.
+Two runs on different machines of the same architecture (x86-64) also match.
+Cross-architecture results (x86-64 vs.\ arm64) may differ by $\leq 0.001$~pp
+due to floating-point ordering differences; the portfolio publishes separate
+reference hashes for each architecture.
+Results that are byte-identical on the same platform
+(x86-64 Linux/Windows/macOS with the same METIS vendored build) are
+fully verified by \texttt{redist label-verify}.
+
+\paragraph{Report hash.}
+The report hash covers the summary statistics CSV (compactness, population
+balance, seat counts) and the map SVG files.
+This confirms that post-processing and visualization did not modify
+the underlying data.
+
+\subsection*{Confirming METIS Determinism}
+
+METIS with a fixed random seed (\texttt{-seed 42}) is deterministic
+on a given architecture (x86-64 or arm64), but may produce different
+results across architectures due to floating-point rounding.
+The portfolio provides separate expected hashes for x86-64 and arm64.
+Users on other architectures should contact the author for guidance.

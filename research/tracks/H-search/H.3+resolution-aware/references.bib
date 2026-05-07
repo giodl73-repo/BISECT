@@ -1,0 +1,171 @@
+% H.3 resolution-aware references
+
+%% --- Census / GEOID structure ---
+
+@techreport{census2020,
+  author      = {{U.S. Census Bureau}},
+  title       = {2020 Census Redistricting Data ({P.L.}\ 94-171) Summary File},
+  institution = {U.S. Department of Commerce},
+  year        = {2020},
+  note        = {Available at \url{https://www.census.gov/programs-surveys/decennial-census/about/rdo/summary-files.html}}
+}
+
+@techreport{census2020geoids,
+  author      = {{U.S. Census Bureau}},
+  title       = {{FIPS} Codes and {GEOID} Structure for Census Geographic Entities},
+  institution = {U.S. Department of Commerce},
+  year        = {2020},
+  note        = {Available at \url{https://www.census.gov/programs-surveys/geography/guidance/geo-identifiers.html}}
+}
+
+%% --- Multi-scale MCMC ---
+
+@article{autry2021multiscale,
+  author    = {Autry, Eric A. and Carter, Daniel and Herschlag,
+               Gregory J. and Hunter, Zach and Mattingly, Jonathan C.},
+  title     = {Metropolized Multiscale Forest Recombination for
+               Redistricting},
+  journal   = {Multiscale Modeling \& Simulation},
+  volume    = {19},
+  number    = {4},
+  pages     = {1885--1914},
+  year      = {2021},
+  doi       = {10.1137/21M1406854}
+}
+
+@article{deford2021recombination,
+  author    = {DeFord, Daryl and Duchin, Moon and Solomon, Justin},
+  title     = {Recombination: A Family of Markov Chains for Redistricting},
+  journal   = {Harvard Data Science Review},
+  volume    = {3},
+  number    = {1},
+  year      = {2021},
+  doi       = {10.1162/99608f92.eb30390f}
+}
+
+%% --- Graph theory (county adjacency) ---
+
+@article{kirchhoff1847,
+  author    = {Kirchhoff, Gustav},
+  title     = {{\"U}ber die {A}ufl{\"o}sung der {G}leichungen, auf welche
+               man bei der {U}ntersuchung der linearen {V}ertheilung
+               galvanischer {S}tr{\"o}me gef{\"u}hrt wird},
+  journal   = {Annalen der Physik und Chemie},
+  volume    = {72},
+  number    = {12},
+  pages     = {497--508},
+  year      = {1847}
+}
+
+%% --- Redistricting context ---
+
+@article{herschlag2020quantifying,
+  author    = {Herschlag, Gregory and Kang, Han Sung and Luo, Justin and
+               Graves, Christy Vaughn and Bangia, Sachet and Ravier, Robert
+               and Mattingly, Jonathan C.},
+  title     = {Quantifying Gerrymandering in North Carolina},
+  journal   = {Statistics and Public Policy},
+  volume    = {7},
+  number    = {1},
+  pages     = {30--38},
+  year      = {2020},
+  doi       = {10.1080/2330443X.2020.1828567}
+}
+
+@misc{scotus2019rucho,
+  author    = {{Supreme Court of the United States}},
+  title     = {\textit{Rucho v.\ Common Cause}, 588 U.S.\ 684 (2019)},
+  year      = {2019}
+}
+
+%% --- Portfolio papers ---
+
+@article{dellaLibera2026b1,
+  author    = {Della-Libera, Gio},
+  title     = {From Apportionment to Boundary Design: Extending
+               {Huntington-Hill} to Congressional Redistricting},
+  journal   = {Working paper},
+  year      = {2026},
+  note      = {B.1 --- foundational recursive bisection paper}
+}
+
+@article{dellaLibera2026b11,
+  author    = {Della-Libera, Gio},
+  title     = {{ApportionRegions}: Redistricting as the Geographic
+               Completion of {Huntington-Hill}},
+  journal   = {Working paper},
+  year      = {2026},
+  note      = {B.11 --- {ApportionRegions} 50-state evaluation}
+}
+
+@article{dellaLibera2026multiscale,
+  author    = {Della-Libera, Gio},
+  title     = {Multi-Scale {ReCom}: Hierarchical {Markov} Chain Redistricting
+               with County-Level Coarsening},
+  journal   = {Working paper},
+  year      = {2026},
+  note      = {G.11 --- multi-scale {MCMC} paper}
+}
+
+@article{dellaLibera2026h2,
+  author    = {Della-Libera, Gio},
+  title     = {\texttt{redist-ensemble}: A High-Performance {Rust}
+               Implementation of {ReCom} for Redistricting Feasibility Analysis},
+  journal   = {Working paper},
+  year      = {2026},
+  note      = {H.2 --- {Rust} ensemble engine}
+}
+
+@techreport{dellaLibera2026resolutionSpec,
+  author      = {Della-Libera, Gio},
+  title       = {Spec: Resolution System --- Geographic Granularity as a
+                 First-Class Parameter},
+  institution = {Apportionment Research Group},
+  year        = {2026},
+  note        = {Internal technical specification, 2026-05-07}
+}
+
+@article{dellaLibera2026g4,
+  author    = {Della-Libera, Gio},
+  title     = {Convergence Diagnostics for Redistricting {Markov} Chains:
+               {$\hat{R}$}, {ESS}, and {Hamming} Autocorrelation},
+  journal   = {Working paper},
+  year      = {2026},
+  note      = {G.4 --- ensemble diagnostics formalisation}
+}
+
+@article{dellaLibera2026g1,
+  author    = {Della-Libera, Gio},
+  title     = {Where Does the Algorithmic Map Fall? {ApportionRegions}
+               vs.\ {GerryChain} Ensemble for Six States},
+  journal   = {Working paper},
+  year      = {2026},
+  note      = {G.1 --- direct percentile placement}
+}
+
+%% --- Compactness measures ---
+
+@article{polsby1991third,
+  author    = {Polsby, Daniel D. and Popper, Robert D.},
+  title     = {The Third Criterion: Compactness as a Procedural Safeguard
+               Against Partisan Gerrymandering},
+  journal   = {Yale Law \& Policy Review},
+  volume    = {9},
+  number    = {2},
+  pages     = {301--353},
+  year      = {1991}
+}
+
+%% --- Graph partitioning ---
+
+@article{karypis1998fast,
+  author    = {Karypis, George and Kumar, Vipin},
+  title     = {A Fast and High Quality Multilevel Scheme for Partitioning
+               Irregular Graphs},
+  journal   = {SIAM Journal on Scientific Computing},
+  volume    = {20},
+  number    = {1},
+  pages     = {359--392},
+  year      = {1998},
+  doi       = {10.1137/S1064827595287997}
+}

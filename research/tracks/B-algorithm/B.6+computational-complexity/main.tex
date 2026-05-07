@@ -1,0 +1,58 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs,graphicx,hyperref,natbib,microtype}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{problem}{Problem}
+
+\title{\textbf{Computational Complexity of\\Recursive Bisection for Redistricting}\\[0.4em]
+\large B.6 --- Algorithm Track}
+\author{Gio Della-Libera \\ \textit{Apportionment Research Group}}
+\date{May 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We analyse the computational complexity of recursive bisection for
+congressional redistricting on planar census-tract graphs.
+We prove that the balanced $k$-cut redistricting problem is NP-hard even
+on planar graphs with unit vertex weights ($k = 2$), by reduction from
+Connected Planar Graph Bisection~\citep{dyer1985partitioning}.
+The hardness result concerns optimisation (finding the minimum-cut
+partition); feasibility (finding any valid partition) is trivially
+solvable for connected graphs.
+No polynomial-time algorithm is known to achieve better than $O(\log n)$
+approximation for balanced $k$-partition in general; METIS's heuristic
+quality is empirically characterised across 50 states.
+The algorithm runs in $O(\texttt{niter} \cdot n \log k)$ time with
+$O(n \log k)$ space ($\texttt{niter} = 100$ in experiments).
+Empirically, on $k > 1$ states across three census years (2000, 2010,
+2020), runtime scales as $O(n^{1.07 \pm 0.03})$ --- nearly linear.
+Single-district states ($k = 1$) are excluded from the scaling analysis
+as they require no bisection.
+For California ($n = 8{,}057$ tracts, $k = 52$ districts), peak memory
+is under 3\,MB at tract resolution.
+These results provide the complexity-theoretic foundation for the Districting
+Integrity Act's use of METIS as the statutory partitioner: exact optimisation
+is intractable, making heuristic approximation not merely acceptable but
+necessary.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-methodology}
+\input{sections/04-results}
+\input{sections/05-discussion}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

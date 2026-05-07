@@ -1,0 +1,58 @@
+We apply the same edge-weighted recursive bisection algorithm used throughout this paper series \citep{dellib2026edgeweighted} to each country's geographic units and population data. The implementation uses the \texttt{redist} platform version 0.1.0 \citep{redistcli2026} with country-specific adaptations described below.
+
+\subsection{Geographic Units and Adjacency}
+
+For each country, we use the smallest available census geographic unit as the node in the adjacency graph (analogous to US census tracts). Census-equivalent units are:
+\begin{itemize}
+    \item \textbf{UK}: Output areas (2021 Census, $\approx$100 households each)
+    \item \textbf{Canada}: Dissemination areas ($\approx$400--700 persons)
+    \item \textbf{Ireland}: Small areas ($\approx$80--120 households)
+    \item \textbf{Malta}: Enumeration districts ($\approx$500 persons)
+    \item \textbf{New Zealand}: Meshblocks ($\approx$50--100 persons)
+    \item \textbf{Germany}: Gemeinden ($\approx$5,000 persons, much larger)
+\end{itemize}
+Germany presents a special challenge: Gemeinden (municipalities) are substantially larger than US census tracts, providing fewer units per constituency. For 299 Wahlkreise with an average of $\approx$4,200 Gemeinden, this gives only $\approx$14 units per constituency --- below the 20-unit granularity threshold identified in our domestic experiments. We use Gemeindeteile (sub-municipality units) where available, and report Germany results separately with appropriate caveats.
+
+Adjacency graphs are constructed using the same shared-boundary detection algorithm as the domestic pipeline, adapted for each country's coordinate reference system. Edges are weighted by shared boundary length.
+
+\subsection{Population Basis and Balance Criterion}
+
+Each country uses a different population basis for redistricting (Section 2). We run the algorithm using the legally specified basis for each country:
+\begin{itemize}
+    \item UK: registered electors (2023 electoral roll)
+    \item Canada: total population (2021 Census)
+    \item Ireland, Malta: total population (national census)
+    \item New Zealand: general electoral population (Stats NZ 2023)
+    \item Germany: German citizens (Destatis 2021)
+\end{itemize}
+
+For single-member systems, the balance criterion is:
+\begin{equation}
+    \left| \frac{d_i - \bar{d}}{\bar{d}} \right| \leq T
+\end{equation}
+where $\bar{d}$ is the national quota. For multi-member systems (Ireland, Malta), we use the per-seat balance criterion from Paper E.1:
+\begin{equation}
+    \bar{d} = M \cdot \frac{P}{S}, \qquad \text{where } M = \text{seats per constituency}, \; S = \text{total seats}.
+\end{equation}
+
+Balance tolerances match each country's legal standard: UK 5\%, Canada 25\%, Ireland 16\% (reflecting seat magnitude variation), Malta 10\%, New Zealand 5\%, Germany 25\%.
+
+\subsection{Per-Node Ufactor Scaling}
+
+We apply the per-node ufactor formula derived in Paper E.1 \citep{dellib2026mmdistricts}:
+\begin{equation}
+    \text{ufactor}_{\text{node}} = 1 + \frac{T}{k_{\text{node}}}
+\end{equation}
+where $k_{\text{node}}$ is the number of final constituencies the node will produce. This guarantees cumulative balance error $\leq T$ regardless of bisection depth --- critical for large district counts like Germany (299 Wahlkreise, 8 bisection rounds).
+
+\subsection{Seat Allocation for Multi-Member Systems}
+
+For Ireland and Malta, we simulate electoral outcomes using the D'Hondt proportional allocation method \citep{dhondt1882} applied within each constituency, using 2020 national election results disaggregated to geographic units. We measure proportionality using the Gallagher index and compare to enacted boundary outcomes.
+
+% TODO: Note that STV (Ireland/Malta) uses ranked preferences; D'Hondt is used
+% as an approximation for party-list PR simulation. True STV simulation
+% requires individual ballot data not available at census unit level.
+
+\subsection{RPLAN Export and Reproducibility}
+
+All constituency assignments are exported in RPLAN v0.1 format \citep{redistcli2026} using internationally adapted geographic unit identifiers. The format records the population basis, balance tolerance, seed, and SHA-256 of source data for full reproducibility. The \texttt{redist policy} command surface country-specific legal standards and vocabulary (ridings, Wahlkreise, constituencies) from the embedded policy database.

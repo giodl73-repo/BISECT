@@ -1,0 +1,89 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The Gap Between Structure-Layer and Search-Layer VRA Enforcement}
+
+Redistricting litigation under Section~2 of the Voting Rights
+Act~\citep{gingles1986} requires two distinct capabilities: (1) generating a
+plan that satisfies VRA---that is, one that preserves majority-minority
+districts in states where they are mandated---and (2) producing an ensemble
+of valid alternative plans to establish what the space of compliant plans looks
+like.
+The first capability is addressed at the \emph{structure layer}: \vraSection{}
+(D.0~\citep{dellaLibera2026vraSection}) biases the METIS bisection to produce
+a single VRA-compliant plan.
+The second capability requires a different tool: a Markov chain that samples the
+\emph{conditional distribution} over plans that are simultaneously valid (equal
+population, contiguity) and VRA-compliant.
+
+Standard ensemble methods do not provide this.
+\recom{}~\citep{deford2021}, Forest \recom{}~\citep{mccartan2020,dellaLibera2026forestRecom},
+and Merge-Split all sample the full space of valid plans without distinguishing
+VRA-compliant from non-compliant alternatives.
+When used for litigation, these chains produce ensembles that include plans
+with no majority-minority districts at all---plans that could never be legally
+enacted in VRA-covered states.
+Drawing conclusions about VRA compliance from such an ensemble conflates the
+space of valid plans with the space of legally permissible plans.
+
+This paper introduces \vr{}: a search-layer algorithm that samples the
+conditional distribution over VRA-compliant redistricting plans.
+The core idea is simple: extend \fr{} with a hard rejection rule that
+unconditionally rejects any proposed step that would reduce the minority VAP
+fraction of a protected district below the VRA threshold.
+VRA compliance is enforced as an invariant of the chain, not as a soft
+preference in the Metropolis-Hastings ratio.
+
+\subsection{Two Contributions}
+
+\begin{enumerate}
+  \item \textbf{Hard-rejection VRA invariant.}
+        \vr{} enforces VRA compliance as a chain invariant: every plan in
+        the ensemble is guaranteed to preserve all protected districts above
+        \texttt{vap\_threshold}.
+        The protection set is fixed at chain construction from the initial
+        plan, matching the legal standard that the submitted plan's
+        majority-minority districts must be preserved in the alternative
+        ensemble.
+        (Section~\ref{sec:algorithm}.)
+
+  \item \textbf{Three-way step accounting for audit.}
+        Every step is categorised as accepted, VRA-rejected, or MH-rejected,
+        with the identity $\text{accepted} + \text{vra\_rejections} +
+        \text{mh\_rejections} = \text{steps\_taken}$ holding exactly.
+        The audit chain records \texttt{protected\_districts},
+        \texttt{vra\_rejection\_rate}, and the seed formula so that any
+        verifier can replay the chain and confirm every VRA rejection.
+        (Section~\ref{sec:audit}.)
+\end{enumerate}
+
+\subsection{Relationship to VRASection}
+
+\vraSection{} is a structure-layer algorithm: it modifies METIS edge weights
+to bias the initial bisection toward VRA-compliant splits.
+\vr{} is a search-layer algorithm: it samples the neighbourhood of an
+already-compliant plan.
+They are complementary.
+The recommended workflow is:
+\begin{enumerate}
+  \item Run \vraSection{} (\texttt{--structure ratio-optimal-vra}) to generate a
+        VRA-compliant starting plan.
+  \item Run \vr{} (\texttt{--search vra-recom}) to sample the distribution over
+        compliant alternatives, with the \vraSection{} plan as the initial state.
+\end{enumerate}
+This ensures both the starting plan and the entire ensemble are VRA-compliant,
+satisfying the legal requirement that the submitted plan and all proposed
+alternatives respect Section~2.
+
+\subsection{Paper Structure}
+
+Section~\ref{sec:background} reviews the Gingles factors, the legal definition
+of majority-minority districts, and the structural distinction between
+structure-layer and search-layer VRA enforcement.
+Section~\ref{sec:algorithm} gives the formal \vr{} algorithm, including the
+three-way step accounting and the seed specification.
+Section~\ref{sec:empirical} presents empirical results on North Carolina,
+Georgia, and Texas, including VRA rejection rates and EC distribution
+comparisons.
+Section~\ref{sec:audit} describes the audit chain and its legal properties.
+Section~\ref{sec:conclusion} concludes with usage guidance and open questions.

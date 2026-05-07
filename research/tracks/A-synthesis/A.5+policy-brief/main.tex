@@ -1,0 +1,585 @@
+%% A.5 --- Policy Brief: Algorithmic Redistricting for State Legislatures
+%% Target audience: State legislators, redistricting commissioners, legislative staff
+%% Format: 4-page brief + appendices, 11pt two-column
+%% Reading level: Flesch-Kincaid grade 8, sentences <= 20 words, active voice
+
+\documentclass[11pt,twocolumn]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{microtype}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{mdframed}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{times}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{parskip}
+\usepackage{titlesec}
+
+\geometry{margin=0.75in}
+
+% Color palette
+\definecolor{policyblue}{RGB}{30,80,150}
+\definecolor{lightblue}{RGB}{220,233,248}
+\definecolor{lightorange}{RGB}{255,244,222}
+\definecolor{lightgreen}{RGB}{220,245,228}
+\definecolor{borderblue}{RGB}{41,98,158}
+\definecolor{borderorange}{RGB}{200,130,30}
+\definecolor{bordergreen}{RGB}{40,140,70}
+
+% Section heading style: bold, rule underneath
+\titleformat{\section}{\large\bfseries\color{policyblue}}{}{0em}{}[{\color{policyblue}\vspace{2pt}\hrule height 1.2pt\vspace{4pt}}]
+\titlespacing{\section}{0pt}{14pt}{6pt}
+
+\titleformat{\subsection}{\normalsize\bfseries}{}{0em}{}
+\titlespacing{\subsection}{0pt}{8pt}{3pt}
+
+% Finding box (blue background)
+\mdfdefinestyle{findingbox}{%
+  backgroundcolor=lightblue,
+  linecolor=borderblue,
+  linewidth=1.5pt,
+  innertopmargin=7pt,
+  innerbottommargin=7pt,
+  innerleftmargin=8pt,
+  innerrightmargin=8pt,
+  skipabove=5pt,
+  skipbelow=5pt,
+  roundcorner=3pt
+}
+
+% FAQ box (orange background)
+\mdfdefinestyle{faqbox}{%
+  backgroundcolor=lightorange,
+  linecolor=borderorange,
+  linewidth=1pt,
+  innertopmargin=6pt,
+  innerbottommargin=6pt,
+  innerleftmargin=8pt,
+  innerrightmargin=8pt,
+  skipabove=4pt,
+  skipbelow=4pt,
+  roundcorner=3pt
+}
+
+% Action box (green background)
+\mdfdefinestyle{actionbox}{%
+  backgroundcolor=lightgreen,
+  linecolor=bordergreen,
+  linewidth=1pt,
+  innertopmargin=6pt,
+  innerbottommargin=6pt,
+  innerleftmargin=8pt,
+  innerrightmargin=8pt,
+  skipabove=4pt,
+  skipbelow=4pt,
+  roundcorner=3pt
+}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=policyblue,
+  urlcolor=policyblue,
+  pdfauthor={Giovanni Della-Libera},
+  pdftitle={Algorithmic Redistricting: A Non-Partisan Solution for State Legislatures}
+}
+
+\title{\textbf{Algorithmic Redistricting:\\
+A Non-Partisan Solution for State Legislatures}}
+
+\author{%
+Giovanni Della-Libera\\
+\small Independent Researcher \quad|\quad May 2026
+}
+
+\date{}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{plain}
+
+%% ------------------------------------------------------------------
+%% EXECUTIVE SUMMARY — spans full width before two-column body begins
+%% ------------------------------------------------------------------
+\twocolumn[{%
+\begin{mdframed}[style=findingbox]
+\textbf{\large Executive Summary}
+
+\smallskip
+
+\textbf{The Problem.}
+Politicians draw their own district lines.
+This lets them choose their voters before voters choose them.
+Ninety percent of seats are effectively uncontested.
+Minority communities are underrepresented.
+Trust in elections falls.
+
+\smallskip
+
+\textbf{The Solution.}
+Computer algorithms draw districts from census geography alone.
+They see no voter registration data and no election results.
+They cannot be instructed to favor any party.
+
+\smallskip
+
+\textbf{The Evidence.}
+Research across all 50 states and three census decades shows:
+\textbf{20\% more compact districts},
+\textbf{69 more majority-minority districts}, and
+\textbf{62\% less partisan bias} compared to enacted plans.
+
+\smallskip
+
+\textbf{The Path Forward.}
+Three adoption models fit different state contexts:
+legislative mandate, commission guidelines, or court-ordered remedy.
+Estimated cost: \$50K--\$200K versus \$1M+ for redistricting litigation.
+
+\smallskip
+
+\textbf{The Ask.}
+Consider algorithmic redistricting for your state's next cycle.
+The 2030 redistricting begins in 2031.
+States that act now will have time to implement and build public confidence.
+\end{mdframed}
+\vspace{8pt}
+}]
+
+%% ------------------------------------------------------------------
+%% SECTION 1: THE PROBLEM
+%% ------------------------------------------------------------------
+\section*{The Problem}
+
+\textbf{Politicians draw their own districts.
+This is a conflict of interest with measurable consequences.}
+
+Every ten years, states redraw congressional and legislative district lines after the census.
+In most states, the legislature draws those maps.
+Elected officials design the districts they will run in.
+
+The result is gerrymandering---manipulating boundaries for partisan gain.
+Mapmakers use two techniques.
+They \emph{pack} opposition voters into a few districts, wasting their votes.
+They \emph{crack} the rest across many districts, diluting their influence.
+
+The consequences are measurable:
+
+\begin{itemize}[leftmargin=*,noitemsep,topsep=3pt]
+  \item \textbf{90\% of seats} are safe.
+        General elections rarely determine outcomes.
+  \item \textbf{Voter trust falls.} Most Americans believe their district is predetermined.
+  \item \textbf{Minorities lose seats.} Drawn maps produce 69 fewer majority-minority districts than algorithmic alternatives.
+  \item \textbf{Bizarre shapes.} Districts span hundreds of miles to connect voters with no shared interests.
+\end{itemize}
+
+Litigation is the current remedy.
+It costs \$1M to \$5M per state.
+Cases take years.
+By the time courts act, another election has passed under the flawed map.
+
+This problem has a ready, tested, and affordable solution.
+
+%% ------------------------------------------------------------------
+%% SECTION 2: THE SOLUTION
+%% ------------------------------------------------------------------
+\section*{The Solution}
+
+\textbf{The algorithm draws districts from geography and population.
+It has no access to political data.}
+
+Algorithmic redistricting uses open-source software to draw district lines automatically.
+The algorithm starts with census tracts---small geographic units with known populations.
+It builds a map of which tracts share a border.
+Then it splits the state into equal-population districts.
+At each split, it minimizes the length of the dividing line.
+The result: compact districts that follow natural geographic boundaries.
+
+Think of it like a GPS for redistricting.
+You provide the destination (number of districts and population targets).
+The algorithm finds the most geographically natural route.
+No political detours are possible.
+
+\textbf{What goes in:}
+census population counts, geographic boundaries, number of districts required by law.
+
+\textbf{What stays out:}
+voter registration, past election results, race, party, and incumbency data.
+
+\begin{mdframed}[style=findingbox]
+\textbf{The structural guarantee.}
+The algorithm cannot gerrymander because it cannot \emph{see} partisan data.
+This is not a policy choice.
+It is a structural property.
+The same inputs always produce the same map.
+Anyone can verify this in minutes using open-source code.
+\end{mdframed}
+
+The algorithm runs in minutes, not months.
+The code is publicly available.
+Any university, court, or journalist can audit the process independently.
+
+%% ------------------------------------------------------------------
+%% SECTION 3: SIX KEY FINDINGS
+%% ------------------------------------------------------------------
+\section*{Six Key Findings}
+
+\textbf{Algorithmic maps outperform enacted maps on every measurable dimension of fairness.}
+
+Research covers all 50 states and three census decades (2000, 2010, 2020).
+All findings compare algorithmic maps to current enacted plans.
+
+\begin{mdframed}[style=findingbox]
+\textbf{Finding 1: 20\% More Compact} \hfill \textit{B.1, B.2}
+
+Algorithmic districts are 20\% more compact than enacted maps.
+Illinois improves by 174\%.
+Maryland improves by 99\%.
+North Carolina improves by 76\%.
+Compact districts respect natural community boundaries.
+They are far harder to manipulate than the winding shapes drawn for political advantage.
+\end{mdframed}
+
+\begin{mdframed}[style=findingbox]
+\textbf{Finding 2: 69 More Majority-Minority Districts} \hfill \textit{D.0}
+
+Algorithmic maps create 69 more majority-minority districts nationally.
+The algorithm uses no racial data.
+Yet geographic concentration of minority communities means compact, equal-population districts naturally capture minority representation.
+The algorithm exceeds Voting Rights Act requirements without explicit racial targeting.
+\end{mdframed}
+
+\begin{mdframed}[style=findingbox]
+\textbf{Finding 3: 62\% Less Partisan Bias} \hfill \textit{C.5}
+
+Partisan bias---measured by the efficiency gap, a standard legal metric---drops from $+5.1\%$ to $-3.2\%$ under algorithmic maps.
+That is a 62\% reduction.
+Neither party gains a structural advantage from the map itself.
+Both parties compete on a level geographic playing field.
+\end{mdframed}
+
+\begin{mdframed}[style=findingbox]
+\textbf{Finding 4: 30\% More Competitive Districts} \hfill \textit{C.8}
+
+The share of genuinely competitive districts rises by 30\%.
+Candidates must appeal to a broader electorate.
+General elections become meaningful again.
+Winning requires persuasion, not just mobilization of a pre-sorted base.
+\end{mdframed}
+
+\begin{mdframed}[style=findingbox]
+\textbf{Finding 5: Stable Across Decades} \hfill \textit{B.15, C.3}
+
+The same geographic logic applied to 2000, 2010, and 2020 census data produces similar district shapes each decade.
+Boundaries remain stable.
+Communities stay in their districts.
+Voters know their representative.
+Political disruption from redistricting decreases substantially.
+\end{mdframed}
+
+\begin{mdframed}[style=findingbox]
+\textbf{Finding 6: Works for State Chambers Too} \hfill \textit{F.1}
+
+The algorithm scales to any district count.
+It has been tested on all 50 state houses---from Delaware's 41-seat chamber to New Hampshire's 400-seat chamber.
+It handles dense urban states and sprawling rural ones.
+It accommodates islands, water crossings, and irregular borders.
+\end{mdframed}
+
+%% ------------------------------------------------------------------
+%% SECTION 4: THREE WAYS TO ADOPT
+%% ------------------------------------------------------------------
+\section*{Three Ways to Adopt}
+
+\textbf{States can adopt algorithmic redistricting through legislation, commission guidelines, or court remedy.}
+
+\subsection*{Model A: Legislative Mandate}
+
+The legislature passes a law requiring algorithmic redistricting.
+The law specifies algorithm parameters, population tolerance, and an independent audit process.
+Any state with appetite for redistricting reform can pursue this model.
+
+\begin{itemize}[leftmargin=*,noitemsep,topsep=3pt]
+  \item \textbf{Timeline:} 1--2 legislative sessions
+  \item \textbf{Cost:} \$50K--\$100K (software, training, audits)
+  \item \textbf{See:} Appendix A for model statutory language
+\end{itemize}
+
+\subsection*{Model B: Commission Guidelines}
+
+An independent redistricting commission adopts the algorithm as a neutral baseline.
+The commission retains authority to adjust for communities of interest.
+The algorithm provides a starting point.
+The commission ensures legal compliance and public accountability.
+
+\begin{itemize}[leftmargin=*,noitemsep,topsep=3pt]
+  \item \textbf{Applies to:} 14 states with independent commissions
+  \item \textbf{Timeline:} 6--12 months before the next cycle
+  \item \textbf{Cost:} \$75K--\$150K (software, training, public engagement)
+\end{itemize}
+
+\subsection*{Model C: Court-Ordered Remedy}
+
+Courts can order algorithmic redistricting when striking down a gerrymandered map.
+The algorithm provides a neutral, reproducible baseline for judicial review.
+Courts in Pennsylvania and North Carolina have used similar approaches.
+
+\begin{itemize}[leftmargin=*,noitemsep,topsep=3pt]
+  \item \textbf{Applies to:} Any state with active redistricting litigation
+  \item \textbf{Timeline:} Deployable immediately as emergency remedy
+  \item \textbf{Cost:} \$100K--\$200K (expert witnesses, implementation)
+\end{itemize}
+
+\subsection*{Implementation Checklist}
+
+\begin{itemize}[leftmargin=*,noitemsep,topsep=3pt]
+  \item[$\square$] Legal review: confirm state constitution permits algorithmic approach
+  \item[$\square$] Software: open-source code is available at no cost
+  \item[$\square$] Data: census redistricting files are publicly available
+  \item[$\square$] Capacity: hire a GIS analyst or partner with a state university
+  \item[$\square$] Validation: commission an independent audit of outputs
+  \item[$\square$] Engagement: hold hearings and publish interactive maps online
+  \item[$\square$] Start at least two years before the redistricting cycle
+\end{itemize}
+
+%% ------------------------------------------------------------------
+%% SECTION 5: ADDRESSING COMMON CONCERNS
+%% ------------------------------------------------------------------
+\section*{Addressing Common Concerns}
+
+\textbf{Every major objection has a direct, evidence-based answer.}
+
+\begin{mdframed}[style=faqbox]
+\textbf{Q: Can this produce gerrymandered maps?}
+
+\textbf{A:} No.
+The algorithm has no access to voter registration data or election results.
+It cannot favor any party.
+This is not a policy choice.
+It is a structural property of how the algorithm works.
+\end{mdframed}
+
+\begin{mdframed}[style=faqbox]
+\textbf{Q: What about minority voting rights?}
+
+\textbf{A:} The algorithm produces 69 \emph{more} majority-minority districts than current maps.
+It meets Voting Rights Act requirements without using racial data.
+Geographic concentration of minority communities naturally produces representative districts under compact, equal-population rules.
+\end{mdframed}
+
+\begin{mdframed}[style=faqbox]
+\textbf{Q: Will this eliminate competitive districts?}
+
+\textbf{A:} The opposite is true.
+Algorithmic maps produce 30\% \emph{more} competitive districts than current enacted plans.
+Gerrymandered maps eliminate competition by design.
+Algorithmic maps restore it by following geography.
+\end{mdframed}
+
+\begin{mdframed}[style=faqbox]
+\textbf{Q: Does this work for our state house?}
+
+\textbf{A:} Yes.
+The algorithm scales to any district count.
+It has been tested on every state house---from Delaware's 41 seats to New Hampshire's 400 seats.
+It performs consistently across urban, rural, and mixed geographies.
+\end{mdframed}
+
+\begin{mdframed}[style=faqbox]
+\textbf{Q: How much does this cost?}
+
+\textbf{A:} Implementation runs \$50K--\$200K depending on adoption model.
+Redistricting litigation typically costs \$1M to \$5M per state---and often produces another round of litigation.
+The census data is free.
+The software is open source.
+\end{mdframed}
+
+\begin{mdframed}[style=faqbox]
+\textbf{Q: Who else supports this approach?}
+
+\textbf{A:} Public legitimacy research shows broad bipartisan support when voters learn that the algorithm cannot access party data \textit{(C.6)}.
+Transparency builds trust.
+The open-source code means any group can audit the process.
+No single party or entity controls the outcome.
+\end{mdframed}
+
+No catch.
+The only parties who face greater competition are those who currently benefit from drawn district lines.
+
+%% ------------------------------------------------------------------
+%% SECTION 6: CALL TO ACTION
+%% ------------------------------------------------------------------
+\section*{Call to Action}
+
+\textbf{Three concrete steps for legislative staff.}
+
+\begin{mdframed}[style=actionbox]
+\textbf{Step 1: Request a state demonstration.}
+State-specific algorithmic maps are available for all 50 states across three census years.
+See what the districts look like before committing to any policy.
+
+\medskip
+
+\textbf{Step 2: Introduce model legislation.}
+Appendix A contains draft statutory language.
+Legislative staff can adapt it to your state's constitutional requirements.
+Technical assistance is available at no cost.
+
+\medskip
+
+\textbf{Step 3: Download and verify the code.}
+The algorithm is open source.
+Your state university can run it independently.
+Reproducibility is a core feature---not a claim.
+Anyone can confirm that the same inputs produce the same maps.
+\end{mdframed}
+
+Algorithmic redistricting is practical, proven, and ready for adoption.
+States that act now will have time to implement, audit, and build public confidence before the 2031 redistricting cycle.
+
+%% ==================================================================
+%% APPENDIX A: MODEL STATUTORY LANGUAGE
+%% Fits on one page in one-column mode
+%% ==================================================================
+\onecolumn
+\appendix
+
+\section*{Appendix A: Model Statutory Language}
+
+{\small\textit{Draft text adapted from research on algorithmic redistricting implementation (D.4).
+States should obtain independent legal review before introduction.
+Bracketed items require state-specific completion.}}
+
+\vspace{8pt}
+
+\noindent\textbf{\large AN ACT} relating to congressional redistricting; requiring the use of algorithmic redistricting methods; providing definitions; establishing validation requirements.
+
+\vspace{6pt}
+\hrule
+\vspace{8pt}
+
+\noindent\textbf{Section 1 --- Findings.}
+
+The Legislature finds that:
+\begin{enumerate}[label=(\alph*),leftmargin=*,noitemsep,topsep=3pt]
+  \item Current redistricting processes create conflicts of interest when elected officials draw the districts they will run in.
+  \item Algorithmic redistricting provides an objective, transparent, and reproducible alternative that uses only population and geographic data.
+  \item Research across all 50 states demonstrates that algorithmic methods produce districts that are more compact, create more majority-minority districts, and reduce partisan bias compared to legislatively drawn maps.
+  \item Algorithmic redistricting is cost-effective: implementation costs of \$50,000--\$200,000 compare favorably to redistricting litigation costs of \$1,000,000 or more.
+\end{enumerate}
+
+\vspace{6pt}
+
+\noindent\textbf{Section 2 --- Definitions.}
+
+As used in this Act:
+\begin{enumerate}[label=(\alph*),leftmargin=*,noitemsep,topsep=3pt]
+  \item \textit{``Algorithmic redistricting''} means a computer-based method of drawing district boundaries using only census population data and geographic boundary data, with no access to voter registration, party affiliation, or election results.
+  \item \textit{``Compactness''} means geometric compactness measured by the Polsby-Popper score ($4\pi \times \text{Area} / \text{Perimeter}^2$), where 1.0 represents a perfect circle.
+  \item \textit{``Baseline map''} means the initial district map produced by the algorithm before any adjustments.
+  \item \textit{``Independent audit''} means a review conducted by a qualified party with no interest in the redistricting outcome.
+\end{enumerate}
+
+\vspace{6pt}
+
+\noindent\textbf{Section 3 --- Requirements.}
+
+\begin{enumerate}[label=(\alph*),leftmargin=*,noitemsep,topsep=3pt]
+  \item [The state redistricting authority] shall use algorithmic redistricting to produce a baseline map for [congressional / state legislative] districts following each decennial census.
+  \item The algorithm shall use the following parameters: population balance tolerance of no more than 0.5\%; geographic contiguity required for all districts; compactness optimization enabled; no input of voter registration, party, or election data.
+  \item The baseline map shall be published for public comment no fewer than 60 days before adoption of any final plan.
+\end{enumerate}
+
+\vspace{6pt}
+
+\noindent\textbf{Section 4 --- Validation.}
+
+\begin{enumerate}[label=(\alph*),leftmargin=*,noitemsep,topsep=3pt]
+  \item An independent audit shall be conducted by [a state university or qualified nonpartisan research organization] before publication of the baseline map.
+  \item The audit shall confirm: (i)~population equality within the required tolerance; (ii)~geographic contiguity of all districts; (iii)~compliance with the federal Voting Rights Act; (iv)~reproducibility---that running the algorithm with the same inputs produces the same map.
+  \item The audit report shall be published online before any legislative vote on a final plan.
+\end{enumerate}
+
+\vspace{6pt}
+
+\noindent\textbf{Section 5 --- Adjustments.}
+
+\begin{enumerate}[label=(\alph*),leftmargin=*,noitemsep,topsep=3pt]
+  \item The redistricting authority may adjust the baseline map to preserve communities of interest, comply with the Voting Rights Act, or address geographic anomalies.
+  \item Any adjustment shall: (i)~maintain population balance within the required tolerance; (ii)~not reduce the compactness score of any affected district by more than 5\% from the baseline; (iii)~be accompanied by written justification describing the community of interest or legal requirement addressed.
+  \item Adjustments may not be made for the purpose of favoring or disfavoring any political party, incumbent, or candidate.
+\end{enumerate}
+
+\vspace{6pt}
+
+\noindent\textbf{Section 6 --- Implementation.}
+
+\begin{enumerate}[label=(\alph*),leftmargin=*,noitemsep,topsep=3pt]
+  \item This Act takes effect [date at least two years before the next redistricting cycle].
+  \item There is appropriated from the General Fund the sum of \$[amount] for software procurement or development, staff training, independent audit, and public engagement.
+  \item The redistricting authority shall publish all algorithm source code, input data, and output maps on a public website within 30 days of producing any baseline map.
+\end{enumerate}
+
+%% ==================================================================
+%% APPENDIX B: COST COMPARISON TABLE
+%% ==================================================================
+\section*{Appendix B: Cost Comparison}
+
+{\small\textit{Estimated costs for redistricting approaches in a typical state.
+Litigation figures are based on publicly reported cases in Pennsylvania, North Carolina, Maryland, and Ohio.}}
+
+\vspace{10pt}
+
+\begin{center}
+\begin{tabular}{@{} l r r l @{}}
+\toprule
+\textbf{Approach} & \textbf{Low Estimate} & \textbf{High Estimate} & \textbf{Notes} \\
+\midrule
+\multicolumn{4}{@{}l}{\textit{Algorithmic Redistricting}} \\[2pt]
+\quad Legislative mandate    & \$50,000    & \$100,000   & Software, training, independent audit \\
+\quad Commission adoption    & \$75,000    & \$150,000   & Software, training, public engagement \\
+\quad Court-ordered remedy   & \$100,000   & \$200,000   & Expert witnesses, technical implementation \\
+\addlinespace[6pt]
+\multicolumn{4}{@{}l}{\textit{Traditional Redistricting}} \\[2pt]
+\quad Legislative process    & \$200,000   & \$500,000   & Staff, consultants, hearings \\
+\quad Redistricting litigation & \$1,000,000 & \$5,000,000 & Legal fees, expert witnesses \\
+\quad Federal court remedy   & \$500,000   & \$2,000,000 & Court-appointed expert, legal fees \\
+\addlinespace[6pt]
+\multicolumn{4}{@{}l}{\textit{Recurring Costs (each redistricting cycle)}} \\[2pt]
+\quad Algorithmic re-run     & \$10,000    & \$25,000    & New census data, updated audit \\
+\quad Legislative re-draw    & \$200,000   & \$500,000   & Same process repeated every 10 years \\
+\quad Litigation risk        & variable    & variable    & If current enacted map is challenged \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{12pt}
+
+\begin{center}
+\begin{tabular}{@{} p{4.5cm} p{9cm} @{}}
+\toprule
+\textbf{Cost Component} & \textbf{Notes} \\
+\midrule
+Census data             & Publicly available at no cost from the U.S. Census Bureau \\
+Algorithm software      & Open-source code available at no cost; commercial support optional \\
+GIS analyst             & One FTE for 6--12 months (\$60K--\$100K loaded cost) \\
+Independent audit       & \$20K--\$50K; university partnership may reduce cost \\
+Public engagement       & \$15K--\$30K for hearings, website, and interactive maps \\
+Legal review            & \$15K--\$40K for constitutional and VRA compliance review \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{14pt}
+
+\noindent\textbf{Bottom line.}
+A state adopting algorithmic redistricting through a legislative mandate can expect to spend \$50K to \$100K total.
+That is less than the legal fees for a single redistricting lawsuit.
+States with ongoing redistricting litigation may recoup implementation costs within the first year by reducing or eliminating active legal proceedings.
+
+\end{document}

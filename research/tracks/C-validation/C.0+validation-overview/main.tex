@@ -1,0 +1,88 @@
+\documentclass[12pt]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{enumitem}
+
+% Title
+\title{\textbf{A Multi-Faceted Validation Framework for\\
+Algorithmic Congressional Redistricting}\\[0.4em]
+\large C.0 --- Validation Track Synthesis Paper}
+
+\author{Gio Della-Libera \\ \textit{Apportionment Research Group}}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Algorithmic redistricting replaces human map-drawing with geometric
+optimization, promising immunity from partisan manipulation. Yet
+immunity from gerrymandering is not the same as validity: an algorithm
+that produces compact, population-balanced districts across one census
+year under one spatial resolution may fail silently under other
+conditions. This paper synthesizes five empirical validation studies
+(C.1--C.5) that together establish the robustness of METIS recursive
+bisection redistricting across four dimensions: spatial resolution,
+temporal continuity, demographic stability, and partisan neutrality.
+Key findings across the C-track are: (1)~geography drives outcomes
+more than resolution---Polsby-Popper compactness varies by $< 0.005$
+across the 130$\times$ unit-count range from census tracts to blocks;
+(2)~the algorithm is temporally stable across three census decades,
+with compactness varying by $\approx 10\%$ nationally between 2000 and
+2020; (3)~district boundaries show geographic clustering stability of
+$r = 0.73$ across census cycles; (4)~the mean absolute efficiency gap
+of algorithmic plans is $0.04$, less than half the $0.08$ mean for
+enacted plans. Together these properties constitute a validation
+portfolio that satisfies the reproducibility and transparency
+requirements of the Districting Integrity Act (DIA).
+\end{abstract}
+
+\noindent\textbf{Keywords:} redistricting, validation, robustness, MAUP,
+temporal stability, efficiency gap, partisan fairness, DIA
+
+\newpage
+
+\section{Introduction}
+\input{sections/01-introduction}
+
+\section{Spatial Robustness: The MAUP Test (C.1)}
+\label{sec:spatial}
+\input{sections/02-spatial-robustness}
+
+\section{Cross-Census Consistency (C.2)}
+\label{sec:cross-census}
+\input{sections/03-cross-census}
+
+\section{Temporal Stability (C.3 and C.4)}
+\label{sec:temporal}
+\input{sections/04-temporal}
+
+\section{Partisan Fairness as a Validation Criterion (C.5)}
+\label{sec:partisan}
+\input{sections/05-partisan-fairness}
+
+\section{Synthesis: Four Properties of a Valid Algorithm}
+\label{sec:synthesis}
+\input{sections/06-synthesis}
+
+\section{Conclusion}
+\label{sec:conclusion}
+\input{sections/07-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,184 @@
+\subsection{Why Edge-Weighting Succeeds for VRA Compliance}
+
+Edge-weighted graph partitioning achieves VRA compliance through implicit minority concentration without explicit demographic constraints. This section formalizes why the approach works.
+
+\subsubsection{The Constraint Conflict Problem}
+
+Multi-constraint optimization (using 2D vertex weights for population and minority population) suffers from asymmetric constraint tolerances:
+
+\textbf{Population constraint}: $|w_{pop}(P_i) - w_{pop,target}| \leq 0.005 \cdot w_{pop,target}$ (0.5\% tolerance, constitutionally mandated)
+
+\textbf{Minority constraint}: $|w_{min}(P_i) - w_{min,target}| \leq 0.50 \cdot w_{min,target}$ (50\% tolerance, VRA threshold)
+
+When METIS refinement considers vertex moves, population balance dominates decision-making. A vertex move that improves minority balance by 5 percentage points but worsens population balance by 0.1 percentage points will be rejected—even though the demographic improvement is substantial and population remains within tolerance.
+
+\textbf{Theorem 1} (Constraint Dominance): In multi-constraint partitioning with asymmetric tolerances $\epsilon_1 \ll \epsilon_2$, refinement moves are primarily determined by constraint 1 regardless of constraint 2 importance.
+
+\textit{Proof sketch}: METIS refinement uses greedy local search. For vertex $v$ to move from partition $i$ to $j$, both constraints must remain satisfied. The tighter constraint ($\epsilon_1$) creates narrower feasibility region, limiting exploration space. With high probability, feasible moves that improve constraint 2 violation are rejected due to constraint 1 effects. \qed
+
+\subsubsection{Edge-Weighting Sidesteps Constraint Conflict}
+
+Edge-weighting converts the asymmetric dual-constraint problem into a single-constraint problem with modified objective:
+
+\textbf{Constraint}: Population balance only, $\epsilon = 0.005$ (single hard constraint)
+
+\textbf{Objective}: Minimize weighted edge cut $\sum_{(i,j) \in E_{cut}} w_{ij}$ where $w_{ij} = \alpha$ for minority-minority edges, $w_{ij} = 1$ otherwise
+
+This reformulation has two advantages:
+
+\textbf{(1) No constraint conflict}: Only one constraint with tight tolerance. All feasible moves satisfy population balance.
+
+\textbf{(2) Minority concentration in objective}: VRA goals encoded in edge weights rather than constraints. Refinement naturally concentrates minorities by avoiding weighted edge cuts.
+
+\subsubsection{Theoretical Performance Bound}
+
+\textbf{Proposition 1}: For a graph with clustered minority vertices and weight factor $\alpha$, edge-weighted partitioning produces minority concentration at least as high as unweighted partitioning, with strict improvement when minority clusters are separable.
+
+\textit{Proof}: Consider two partitions: $P_{unweighted}$ (optimal for $w_{ij} = 1$ for all edges) and $P_{weighted}$ (optimal for $w_{ij} = \alpha$ when both vertices minority).
+
+Let $C_M$ be a connected component of minority vertices. If $C_M$ can fit entirely in one partition while maintaining population balance, weighted partitioning will keep $C_M$ intact (cutting $C_M$ incurs $\alpha > 1$ cost vs $1$ for cutting elsewhere). Thus $P_{weighted}$ concentrates $C_M$ where $P_{unweighted}$ may fragment it.
+
+Formally: $\text{minority}(P_{weighted}) \geq \text{minority}(P_{unweighted})$ with equality only when geography prevents concentration regardless of edge weights. \qed
+
+\subsection{Parameter Selection: Weight Factor and Threshold}
+
+Two parameters control edge-weighting performance:
+
+\subsubsection{Weight Factor ($\alpha$): How Expensive Are Minority Cuts?}
+
+\textbf{Hypothesis}: Larger $\alpha$ produces stronger minority concentration.
+
+\textbf{Reality}: Non-linear relationship with diminishing returns.
+
+\textbf{Theorem 2} (Diminishing Returns): Expected minority concentration increase per unit $\alpha$ decreases as $\alpha$ grows.
+
+\textit{Intuition}: Small $\alpha$ (e.g., 5$\times$) makes METIS prefer avoiding minority cuts when alternatives exist. Large $\alpha$ (e.g., 100$\times$) provides no additional information—the algorithm already avoids minority cuts. Further increases push optimization toward instability (creating highly irregular boundaries to avoid any weighted edge).
+
+\textbf{Empirical validation} (Section~\ref{sec:parameter_analysis}):
+\begin{itemize}
+\item $\alpha = 5$: Average +4.2\% minority concentration vs baseline
+\item $\alpha = 10$: Average +4.5\% (marginal +0.3\% over $\alpha=5$)
+\item $\alpha = 50$: Average +4.6\% (marginal +0.1\% over $\alpha=10$)
+\end{itemize}
+
+\textbf{Optimal range}: $\alpha \in [5, 10]$ balances effectiveness with stability.
+
+\subsubsection{Minority Threshold ($\tau$): What Counts as Minority-Dense?}
+
+\textbf{Hypothesis}: Lower $\tau$ increases edge weight coverage, improving concentration.
+
+\textbf{Reality}: Threshold-state interaction determines effectiveness.
+
+\textbf{Definition}: Coverage ratio $\rho(\tau) = \frac{|\{e \in E : m_i \geq \tau, m_j \geq \tau\}|}{|E|}$ measures fraction of edges receiving weight $\alpha$.
+
+\textbf{Proposition 2}: Optimal $\tau$ depends on state minority percentage $m_{state}$ and spatial distribution. Generally, $\tau \approx 0.8 \cdot m_{state}$ maximizes minority-minority edge identification without over-inclusion.
+
+\textit{Reasoning}: If $\tau$ is too high (e.g., $\tau = 0.60$ in 36\% minority state), few edges receive weight $\alpha$—insufficient signal. If $\tau$ is too low (e.g., $\tau = 0.20$), many edges receive weight $\alpha$ including areas that cannot form MM districts—dilutes signal.
+
+\textbf{Empirical validation} (Section~\ref{sec:parameter_analysis}):
+\begin{itemize}
+\item States with $m_{state} \approx 0.35$-0.45: $\tau = 0.40$ performs best
+\item States with $m_{state} \approx 0.50$-0.60: $\tau = 0.45$ performs best
+\item States with $m_{state} \geq 0.60$: $\tau = 0.50$ performs best
+\end{itemize}
+
+However, $\tau = 0.40$ shows robust performance across diverse states, making it suitable universal default.
+
+\subsection{Geographic Clustering and VRA Feasibility}
+
+\textbf{Definition}: Minority population is \textit{geographically clustered} if minority vertices form connected or near-connected components in the tract adjacency graph.
+
+\textbf{Gingles precondition 1}: Minority group must be ``sufficiently large and geographically compact to constitute a majority in a district.'' Geographic clustering directly relates to this compactness requirement.
+
+\subsubsection{Clustering Metrics}
+
+\textbf{Global clustering coefficient}:
+\begin{equation}
+C_g = \frac{\text{\# minority-minority edges}}{\text{\# edges with $\geq 1$ minority endpoint}}
+\end{equation}
+
+High $C_g$ indicates minorities are tightly clustered (neighbors of minority vertices are also minority). Low $C_g$ indicates dispersion.
+
+\textbf{Largest minority component}:
+\begin{equation}
+L_{mc} = \frac{|\text{largest connected component of minority vertices}|}{\text{total minority vertices}}
+\end{equation}
+
+High $L_{mc}$ indicates single large cluster. Low $L_{mc}$ indicates fragmentation across multiple small clusters.
+
+\subsubsection{Clustering and VRA Performance}
+
+\textbf{Proposition 3}: Edge-weighted partitioning performance increases with geographic clustering. For highly dispersed minorities ($C_g < 0.3$, $L_{mc} < 0.5$), even optimal edge-weighting may fail to achieve VRA targets.
+
+\textit{Explanation}: Edge weights guide the algorithm to keep minority-minority edges intact. If minorities form tight clusters, this naturally produces MM districts. If minorities are evenly dispersed (every tract 20\% minority), no partitioning can create 50\% MM districts without violating population balance or contiguity.
+
+\textbf{Case studies} (Section~\ref{sec:case_studies}):
+\begin{itemize}
+\item \textbf{Mississippi} ($C_g = 0.72$, $L_{mc} = 0.81$): High clustering → 100\% success rate (4/4 MM districts)
+\item \textbf{North Carolina} ($C_g = 0.38$, $L_{mc} = 0.52$): Moderate clustering → 86\% success rate (12/14 MM districts)
+\item \textbf{Arizona} ($C_g = 0.29$, $L_{mc} = 0.35$): Low clustering → 67\% success rate (6/9 MM districts)
+\end{itemize}
+
+Geographic reality—not algorithmic limitations—determines VRA feasibility in extreme dispersion cases.
+
+\subsection{Method Comparison: N-Way vs Recursive Bisection}
+
+Both n-way and recursive bisection support edge-weighting. Theoretical differences:
+
+\subsubsection{Global vs Local Optimization}
+
+\textbf{N-way optimization objective}:
+\begin{equation}
+\min_{P_1, \ldots, P_k} \sum_{i < j} \text{EdgeCut}(P_i, P_j) \quad \text{s.t.} \quad w(P_i) \approx \frac{W}{k} \quad \forall i
+\end{equation}
+
+Refinement considers all $k$ partitions simultaneously. A vertex can move from partition $i$ to any partition $j$ if it improves global weighted edge cut.
+
+\textbf{Recursive bisection optimization} (at split creating $k_L$ and $k_R$ partitions):
+\begin{equation}
+\min_{(V_L, V_R)} \text{EdgeCut}(V_L, V_R) \quad \text{s.t.} \quad w(V_L) \approx \frac{k_L}{k}W, \quad w(V_R) \approx \frac{k_R}{k}W
+\end{equation}
+
+Each binary split optimizes intermediate 2-way partition, not final $k$-way structure. Makes $(k-1)$ locally optimal decisions.
+
+\subsubsection{Hypothesis: N-Way Advantage Diminishes with Edge-Weighting}
+
+Prior work shows n-way outperforms recursive bisection for asymmetric demographic targets without edge-weighting \citep{karypis1998}. However, edge-weighting may reduce this gap.
+
+\textbf{Reasoning}: Edge weights provide strong signal guiding both methods toward minority concentration. If signal is sufficiently strong ($\alpha \geq 5$), even greedy recursive decisions correctly identify minority clusters. Global optimization (n-way) offers diminishing marginal benefit.
+
+\textbf{Hypothesis}: Performance gap between n-way and recursive bisection is $<$ 2 percentage points when using edge-weighting with $\alpha \geq 5$.
+
+Section~\ref{sec:method_comparison} tests this empirically across all 50 states.
+
+\subsection{Compactness-VRA Tradeoff}
+
+Edge-weighting prioritizes minority concentration over pure compactness (measured by unweighted edge cuts). This creates a tradeoff:
+
+\textbf{Baseline (no edge-weighting)}: $\alpha = 1$ for all edges. METIS minimizes unweighted edge cuts, maximizing compactness. May fail VRA compliance.
+
+\textbf{Edge-weighted}: $\alpha > 1$ for minority-minority edges. METIS minimizes weighted edge cuts, concentrating minorities. May increase unweighted edge cuts (reduce compactness).
+
+\textbf{Proposition 4}: Unweighted edge cut increase is bounded by coverage ratio and weight factor:
+\begin{equation}
+\text{EdgeCut}_{weighted} \leq \text{EdgeCut}_{baseline} + \rho(\tau) \cdot (\alpha - 1) \cdot |E|
+\end{equation}
+
+\textit{Proof}: Worst case is edge-weighted solution cuts all minority-minority edges (weight $\alpha$) while baseline cuts none. Additional cost: $\rho(\tau) \cdot |E|$ edges, each with excess weight $(\alpha - 1)$. In practice, both solutions cut mix of weighted/unweighted edges, so actual increase is much smaller. \qed
+
+\textbf{Empirical validation} (Section~\ref{sec:compactness}): Average unweighted edge cut increase with $\alpha = 5$, $\tau = 0.40$ is +2.8\%, while VRA compliance increases dramatically (137 vs 68 MM districts nationally). Favorable tradeoff.
+
+\subsection{Summary: Theoretical Predictions}
+
+Edge-weighted graph partitioning theory predicts:
+
+\begin{enumerate}
+\item VRA compliance improves substantially vs unweighted baseline
+\item Weight factor 5-10$\times$ achieves near-optimal concentration
+\item Threshold $\tau = 0.40$ provides robust performance across states
+\item Performance correlates with geographic clustering
+\item N-way and recursive bisection perform similarly with edge-weighting ($<$ 2\% gap)
+\item Compactness cost is modest (+3-5\% edge cuts)
+\end{enumerate}
+
+Next sections validate these predictions empirically across all 50 states.

@@ -1,0 +1,66 @@
+\section{Background}
+\label{sec:background}
+
+\subsection{Redistricting Algorithms and Validation}
+
+Algorithmic redistricting emerged as a response to partisan gerrymandering, with early approaches using simulated annealing~\cite{altman1998}, integer programming~\cite{mehrotra1998}, and graph partitioning~\cite{ricca2008}. Recent work emphasizes ensemble methods: generating large collections of valid plans to establish neutral baselines~\cite{duchin2018}. The Metric Geometry and Gerrymandering Group (MGGG) developed GerryChain~\cite{gerrychain2018}, which uses Markov chain Monte Carlo (MCMC) to sample the space of valid redistricting plans.
+
+Validation approaches focus primarily on \textit{single-census} comparisons. DeFord et al.~\cite{deford2021} compare algorithmic plans to human-drawn plans within a single census cycle. Fifield et al.~\cite{fifield2020} use simulation to assess compactness-competitiveness tradeoffs. Autry et al.~\cite{autry2021} validate that MCMC methods adequately explore the plan space. However, these approaches cannot assess algorithmic \textit{consistency} across census cycles, as they lack a framework for controlling geographic and demographic confounds.
+
+\subsection{Cross-Temporal Geographic Analysis}
+
+Temporal validation in geographic information science faces the challenge of non-stationary spatial units. The Modifiable Areal Unit Problem (MAUP)~\cite{openshaw1984} describes how analysis results depend on the aggregation units chosen. When those units change over time—as census tracts do—temporal comparisons compound MAUP with boundary change effects~\cite{flowerdew1991}.
+
+Several approaches address temporal boundary changes:
+
+\textbf{Areal interpolation}~\cite{goodchild1980} estimates data for consistent geographic units using area-weighted or dasymetric methods. However, interpolation introduces uncertainty and assumes spatial homogeneity within source units~\cite{mennis2003}.
+
+\textbf{Centroids and representative points}~\cite{dent1999} provide stable geographic references despite boundary changes. Population-weighted centroids~\cite{cromley1996} account for within-tract population distribution, offering more stable reference points than geometric centroids.
+
+\textbf{Spatial clustering}~\cite{wang2012} groups geographic units into stable regions. Logan et al.~\cite{logan2014} use census tract aggregation to create temporally consistent neighborhoods for demographic analysis.
+
+Our approach synthesizes these techniques: we use population-weighted centroids as stable reference points, then apply spatial clustering to create validation slices that remain geographically consistent across census cycles.
+
+\subsection{Graph Partitioning for Redistricting}
+
+Redistricting can be formulated as a graph partitioning problem~\cite{hess1965}. Census tracts form graph nodes (weighted by population), adjacent tracts form edges (weighted by shared boundary length), and districts correspond to graph partitions. The objective is to partition the graph into $k$ parts (districts) such that:
+\begin{itemize}
+    \item \textbf{Population balance}: Each partition has equal population (within tolerance)
+    \item \textbf{Contiguity}: Each partition forms a connected subgraph
+    \item \textbf{Compactness}: Minimize edge cuts between partitions
+\end{itemize}
+
+METIS~\cite{karypis1998} is a widely-used multilevel graph partitioning package. Its recursive bisection variant (KMETIS) repeatedly divides graphs into two parts, creating a hierarchical partition tree. METIS employs three phases:
+\begin{enumerate}
+    \item \textbf{Coarsening}: Hierarchically collapse the graph by merging nodes
+    \item \textbf{Initial partitioning}: Partition the coarsest graph
+    \item \textbf{Uncoarsening}: Project the partition back to the original graph, refining at each level
+\end{enumerate}
+
+METIS minimizes edge cuts (boundaries between districts) as a proxy for compactness, while enforcing strict population balance constraints. Its multilevel approach achieves near-optimal partitions with $O(n \log k)$ time complexity for $n$ nodes and $k$ partitions~\cite{karypis1999}.
+
+Prior work has applied METIS to redistricting~\cite{ricca2013}, but without cross-census validation. Our contribution is not the algorithm itself, but a methodology for validating such algorithms across evolving census geographies.
+
+\subsection{Census Tract Boundary Changes}
+
+The U.S. Census Bureau redefines census tract boundaries each decade to maintain population stability (tracts target 4,000 residents)~\cite{census2020tracts}. Three types of boundary changes occur:
+
+\textbf{Splits}: A single tract divides into multiple tracts (typically when population grows beyond 8,000)
+
+\textbf{Merges}: Multiple tracts combine into one (typically when population falls below 1,200)
+
+\textbf{Boundary adjustments}: Tracts exchange area to reflect changed jurisdictions or better align with physical features
+
+Schroeder~\cite{schroeder2007} quantified that approximately 18\% of U.S. tracts split or merge between consecutive censuses. The Census Bureau provides relationship files~\cite{census2020relationships} documenting these correspondences, but they describe \textit{which} tracts changed, not \textit{how to compare} algorithmic performance across changed boundaries.
+
+Our slice-based approach sidesteps the need for one-to-one tract correspondence by working at a coarser geographic scale where stability is much higher.
+
+\subsection{Spatial Autocorrelation and Validation}
+
+Geographically proximate observations tend to be correlated—Tobler's First Law of Geography~\cite{tobler1970}. Spatial autocorrelation violates the independence assumption of standard statistical tests~\cite{legendre1993}. Moran's I~\cite{moran1950} quantifies spatial autocorrelation:
+\[
+I = \frac{n}{\sum_i \sum_j w_{ij}} \frac{\sum_i \sum_j w_{ij}(x_i - \bar{x})(x_j - \bar{x})}{\sum_i (x_i - \bar{x})^2}
+\]
+where $w_{ij}$ represents spatial weights (typically adjacency).
+
+Roberts et al.~\cite{roberts2017} recommend spatially-aware validation for geographic algorithms, including explicit autocorrelation measurement and spatial cross-validation. Our slice-based approach implements spatial validation by measuring within-slice autocorrelation and testing sensitivity to slice boundaries.

@@ -1,0 +1,65 @@
+paper: experimental-overview
+title: "Alternative Representation Systems for Congressional Redistricting: A Design Space Analysis"
+venue: "Electoral Studies / Perspectives on Politics"
+stage: accepted
+round: 3
+content_mode: full
+series: E
+series_number: 0
+avg_score: 4.0
+reviewers:
+  - karypis
+  - rodden
+  - duchin
+  - stephanopoulos
+  - liang
+reviews:
+  r1:
+    karypis: 3
+    rodden: 3
+    duchin: 3
+    stephanopoulos: 3
+    liang: 3
+    avg: 3.0
+  r2:
+    karypis: 4
+    rodden: 4
+    duchin: 3
+    stephanopoulos: 4
+    liang: 4
+    avg: 3.8
+  r3:
+    karypis: 4
+    rodden: 4
+    duchin: 4
+    stephanopoulos: 4
+    liang: 4
+    avg: 4.0
+history:
+  - stage: draft
+    date: "2026-05-05"
+    note: "Paper written. Track E synthesis: 6x4 Pareto table, constitutional taxonomy,
+           Rodden sorting analysis. Covers E.1-E.6 systems."
+  - stage: revision
+    round: 1
+    date: "2026-05-05"
+    note: "Round 1 complete. avg 3.0/4. All Minor Revision. Gate passed (>=2.5)."
+  - stage: revision
+    round: 2
+    date: "2026-05-05"
+    note: "Targeted P1 revisions: Pareto overclaim fixed (abstract + sec 6.2), exchange
+           rate CI added [0.011,0.021], scoring rubric documented with 10% threshold +
+           Appendix A commitment, Moore v. Harper footnote added to sec 5. Round 2 avg
+           3.8/4. Gate passed (>=3.4). Duchin unchanged at 3/4 (VRA benchmark, county
+           preservation effective rate, manipulation resistance criterion still open)."
+  - stage: accepted
+    round: 3
+    date: "2026-05-05"
+    note: "Round 3 complete. avg 4.0/4. All Accept. VRA benchmark specified via footnote
+           in Section 3.1 (three-tier scoring tied to 42% CVAP threshold from D.1, MMD
+           defined as >50% single-minority CVAP, Census P.L.94-171 data source). Manipulation
+           resistance column added to Pareto table (Table 1 expanded to 5 columns; DIA/E.1/E.3/E.6
+           score 3 deterministic/data-agnostic; E.2 score 2 county boundaries legislatively mutable;
+           E.4/E.5 score 2 partisan data input gaming vector). Duchin upgraded 3->4: two of three P1
+           items resolved; county preservation effective rate carried to final manuscript. STATUS:
+           ACCEPTED for Electoral Studies / Perspectives on Politics."

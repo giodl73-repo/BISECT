@@ -1,0 +1,9 @@
+{
+  "state": "NC",
+  "k": 14,
+  "n_steps": 1000,
+  "mean": 0.097,
+  "std": 0.0059,
+  "plan_cut": 0.0973,
+  "percentile": 49.8
+}

@@ -1,0 +1,58 @@
+% Section 5: Discussion (1,200 words target)
+% TODO: Complete after results interpretation
+
+\subsection{Interpretation of Findings}
+
+% If findings are robust (H0):
+% - Strengthens portfolio claims
+% - Validates tract-level as appropriate resolution
+% - Implications for practitioners
+
+% If findings are sensitive (H1):
+% - MAUP is real concern
+% - Need resolution-aware analysis
+% - Implications for methodology standards
+
+\subsection{Theoretical Implications}
+
+\paragraph{MAUP Mechanisms.}
+% TODO: Explain why resolution matters (or doesn't)
+% - Geographic clustering at different scales
+% - Minority community cohesion vs dispersion
+% - Boundary granularity effects on compactness
+
+\paragraph{Algorithm Behavior.}
+% TODO: Discuss METIS interaction with graph size
+% - Edge-cut minimization at different scales
+% - Local optima and solution diversity
+
+\subsection{Policy Implications}
+
+\paragraph{For Redistricting Commissions.}
+% TODO: Guidance on resolution choice
+% If robust → use tracts (efficiency)
+% If sensitive → use finest feasible resolution
+
+\paragraph{For Courts.}
+% TODO: VRA compliance implications
+% Resolution specification in legal standards
+% Majority-minority definition depends on scale
+
+\subsection{Limitations}
+
+\begin{itemize}
+    \item \textbf{Computational}: Block-level analysis may face memory constraints for largest states
+    \item \textbf{Data quality}: Blocks have small sample sizes, introducing demographic noise
+    \item \textbf{Scope}: Only recursive bisection tested; other partitioners may behave differently
+    \item \textbf{Census years}: Focus on 2020; temporal consistency untested
+\end{itemize}
+
+\subsection{Future Work}
+
+Promising directions include:
+\begin{itemize}
+    \item Testing MAUP with other partitioning algorithms (SCOTCH, spectral methods)
+    \item Examining different adjacency structures (queen contiguity, distance-based)
+    \item Multi-resolution ensemble approaches
+    \item Extension to multi-census temporal analysis
+\end{itemize}

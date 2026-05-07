@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Pre-commit hook: block sensitive-asset patterns from being committed.
+#
+# Structural prevention of PP-17 (sensitive-asset commit prevention).
+# Override with: ALLOW_PDF=1 git commit ...
+#
+# To install: `git config core.hooksPath .githooks`
+# (The setup_env.bat preflight does this automatically on Windows;
+# Linux/macOS contributors should run it manually once.)
+
+set -e
+
+# Block PDFs unless explicitly allowed
+if [ "${ALLOW_PDF:-0}" != "1" ]; then
+    blocked_pdfs=$(git diff --cached --name-only --diff-filter=AM | grep -E '\.pdf$' || true)
+    if [ -n "$blocked_pdfs" ]; then
+        echo "ERROR: pre-commit hook blocking PDF commit (PP-17 prevention)."
+        echo ""
+        echo "The following PDF file(s) are staged:"
+        echo "$blocked_pdfs"
+        echo ""
+        echo "PDFs are excluded from this repository (see .gitignore + spec)."
+        echo "If this is intentional, set ALLOW_PDF=1 and re-run the commit:"
+        echo "    ALLOW_PDF=1 git commit ..."
+        echo ""
+        echo "On Windows: \$env:ALLOW_PDF=\"1\"; git commit ..."
+        exit 1
+    fi
+fi
+
+exit 0

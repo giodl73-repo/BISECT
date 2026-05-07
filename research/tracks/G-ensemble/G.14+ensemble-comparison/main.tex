@@ -1,0 +1,110 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, backgrounds, calc}
+
+%% Style
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+\setstretch{1.4}
+
+%% Macros
+\newcommand{\ms}{\textsc{MultiScale}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\ec}{\ensuremath{\mathrm{EC}}}
+\newcommand{\pp}{\ensuremath{\mathrm{PP}}}
+\newcommand{\sburst}{\textsc{ShortBurst}}
+\newcommand{\sburstf}{\textsc{ShortBurstForest}}
+\newcommand{\be}{\textsc{BisectionEnsemble}}
+\newcommand{\fr}{\textsc{ForestReCom}}
+\newcommand{\msp}{\textsc{MergeSplit}}
+\newcommand{\rhat}{\ensuremath{\hat{R}}}
+\newcommand{\ess}{\ensuremath{\mathrm{ESS}}}
+\newcommand{\acf}{\ensuremath{\mathrm{ACF}}}
+\newcommand{\geoid}{\texttt{GEOID}}
+\newcommand{\flip}{\textsc{Flip}}
+\newcommand{\vra}{\textsc{VraRecom}}
+\newcommand{\smc}{\textsc{SMC}}
+
+\title{%
+  \textbf{A Practitioner's Comparison of Redistricting Ensemble Algorithms}\\[0.8em]
+  \normalsize\textit{G.14 --- Ensemble Methods / Algorithm Comparison}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+The redistricting ensemble literature has produced at least eight distinct
+algorithms: Short-Burst MCMC, SMC, Flip, Forest ReCom, Merge-Split, Multi-scale
+MCMC, ShortBurstForest, and VRA-Aware ReCom.
+Each algorithm makes different trade-offs among compactness optimisation,
+distributional correctness, mixing speed, and runtime.
+No single algorithm dominates all metrics simultaneously, yet practitioners
+often face an immediate decision: which algorithm should I run for this
+redistricting task?
+We systematically compare all eight algorithms on North Carolina ($k = 14$),
+Wisconsin ($k = 8$), and Texas ($k = 38$), measuring four metrics: edge-cut
+compactness (\ec{}), mean Polsby-Popper (\pp{}), partisan seat stability,
+and wall-clock runtime.
+We additionally compute lag-100 autocorrelation for the chain-based methods
+to assess mixing quality.
+From these results we derive a practitioner decision tree that maps
+redistricting requirements to the appropriate algorithm.
+The three-layer compositor (\texttt{--structure}, \texttt{--weights-override},
+\texttt{--search}) enables practitioners to combine structure, edge-weight
+signals, and search algorithm to address any redistricting task within a
+unified CLI interface.
+All results are single-run (seed 42) and should be treated as illustrative
+rather than definitive.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-setup}
+\input{sections/03-compactness}
+\input{sections/04-distributional}
+\input{sections/05-decision-framework}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

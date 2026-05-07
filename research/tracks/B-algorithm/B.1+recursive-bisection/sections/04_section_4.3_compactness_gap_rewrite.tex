@@ -1,0 +1,252 @@
+\subsection{Compactness Gap Analysis: Process Type and Geographic Context}
+\label{sec:compactness-gap-analysis}
+
+A surprising finding emerges from comparing algorithmic and enacted districts: enacted 2020 districts exhibit \textit{higher} average compactness (Polsby-Popper = 0.305) than our algorithmic approach (PP = 0.235)—a 22.8\% gap. This contradicts the common assumption that partisan gerrymandering inevitably produces less compact districts.
+
+However, aggregate national averages obscure critical variation across states and redistricting processes. This section disaggregates results by \textit{redistricting process type}—independent commissions, court-drawn maps, and legislative redistricting—revealing that algorithmic performance depends heavily on the benchmark against which it is compared. The algorithm's value proposition is not ``always more compact than enacted plans'' but rather ``immune to manipulation while maintaining reasonable compactness.''
+
+\subsubsection{Disaggregation by Redistricting Process}
+
+The 2020 redistricting cycle saw unprecedented diversity in redistricting processes. Ten states used independent commissions established by voter initiatives (Arizona, California, Colorado, Michigan, Montana) or constitutional provisions (Alaska, Hawaii, Idaho, New Jersey, Washington). Four states relied on court-drawn maps after partisan redistricting processes failed (Minnesota, New York, North Carolina, Ohio). The remaining 36 states used traditional legislative redistricting, with varying degrees of bipartisanship and judicial oversight.
+
+Table~\ref{tab:process_type_comparison} presents compactness results disaggregated by process type:
+
+\begin{table}[h]
+\centering
+\caption{Compactness by Redistricting Process Type}
+\label{tab:process_type_comparison}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Process Type} & \textbf{States} & \textbf{Algo PP} & \textbf{Enacted PP} & \textbf{Gap} \\
+\midrule
+Commission & 11 & 0.241 & 0.337 & -28.5\% \\
+Court-Drawn & 4 & 0.244 & 0.299 & -18.4\% \\
+Legislative & 35 & 0.232 & 0.295 & -21.4\% \\
+\midrule
+\textbf{Overall} & \textbf{50} & \textbf{0.235} & \textbf{0.305} & \textbf{-22.8\%} \\
+\bottomrule
+\end{tabular}
+\medskip
+\begin{minipage}{\textwidth}
+\small
+\textit{Notes:} Commission includes independent commissions and bipartisan commissions. Court-Drawn includes maps drawn by state or federal courts after redistricting failures. Legislative includes all legislature-controlled processes (partisan, bipartisan, and nonpartisan staff). Polsby-Popper (PP) scores averaged across all districts within each category. Gap = (Algo - Enacted) / Enacted $\times$ 100\%.
+\end{minipage}
+\end{table}
+
+\textbf{Key Finding 1:} The compactness gap is \textit{largest} (-28.5\%) when comparing algorithmic districts to commission-drawn maps, which explicitly prioritized compactness as a constitutional criterion. Commission states averaged PP = 0.337, substantially higher than both algorithmic (0.241) and legislative/court-drawn processes.
+
+\textbf{Key Finding 2:} The gap is \textit{smallest} (-18.4\%) when comparing to court-drawn maps, which typically balance neutrality with population equality but do not explicitly optimize compactness. Court-drawn maps (PP = 0.299) fall between commissions and legislative processes.
+
+\textbf{Key Finding 3:} Legislative redistricting produces intermediate compactness (PP = 0.295), reflecting a mix of carefully-drawn neutral maps, partisan gerrymanders, and geographic constraints. Within this category, substantial variation exists between heavily gerrymandered states (Illinois: PP = 0.148) and relatively neutral states (Iowa: PP = 0.346).
+
+\subsubsection{Commission States: The High-Compactness Benchmark}
+
+Independent redistricting commissions represent the current "gold standard" for non-partisan redistricting. Most commission-enabling laws explicitly mandate compactness as a primary criterion. For example:
+
+\begin{itemize}
+\item \textbf{Michigan} (2018 constitutional amendment): "Districts shall be geographically contiguous and reasonably compact."
+\item \textbf{Colorado} (2018 constitutional amendment): "Maximize the compactness of districts."
+\item \textbf{California} (2008 constitutional amendment): "Districts shall be geographically contiguous...and shall be drawn to achieve...compactness."
+\end{itemize}
+
+These explicit mandates, combined with transparent public processes and iterative refinement, produce highly compact districts. However, this compactness often comes with trade-offs against other criteria.
+
+\textbf{Michigan (2021): Compactness Through Multi-Criteria Optimization}
+
+Michigan's independent commission, established by a 2018 voter initiative, produced maps with exceptional compactness (PP = 0.412)—the second-highest nationally and 125\% higher than our algorithmic result (PP = 0.183).
+
+However, this compactness advantage came at a cost. Table~\ref{tab:michigan_tradeoffs} compares Michigan's enacted and algorithmic maps across multiple criteria:
+
+\begin{table}[h]
+\centering
+\caption{Michigan: Multi-Criteria Trade-offs}
+\label{tab:michigan_tradeoffs}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Criterion} & \textbf{Algorithmic} & \textbf{Enacted (Commission)} \\
+\midrule
+Polsby-Popper & 0.183 & 0.412 \\
+Population Deviation & 2.3\% & 0.8\% \\
+County Splits & 18 & 24 \\
+Municipality Splits & 47 & 62 \\
+Partisan Fairness (Efficiency Gap) & +1.2\% & +2.1\% \\
+\bottomrule
+\end{tabular}
+\medskip
+\begin{minipage}{\textwidth}
+\small
+\textit{Notes:} Population deviation = mean absolute deviation from ideal district size. County/municipality splits = number of political subdivisions divided between districts. Efficiency gap calculated from 2020 presidential results; positive values indicate Democratic advantage.
+\end{minipage}
+\end{table}
+
+The commission achieved exceptional compactness while maintaining tighter population balance (0.8\% vs. 2.3\%), demonstrating human expertise in multi-criteria optimization. However, this came at the cost of increased subdivision splits: the enacted plan divides 24 counties (vs. 18 algorithmic) and 62 municipalities (vs. 47 algorithmic).
+
+This trade-off reflects a fundamental tension: maximizing compactness often requires splitting political subdivisions to create circular districts that cross county boundaries. Michigan's commission explicitly prioritized compactness over community preservation, a legitimate but contestable choice. Our algorithm, using only census tract adjacency, implicitly preserves larger geographic units but achieves lower compactness.
+
+\textbf{California (2011): Balancing Compactness with Communities of Interest}
+
+California's Citizens Redistricting Commission produced moderately compact districts (PP = 0.314), 71\% higher than algorithmic results (PP = 0.183). Unlike Michigan, California's process emphasized \textit{communities of interest}—socially, economically, or geographically cohesive regions—alongside compactness.
+
+California's enacted districts exhibit strong alignment with natural geographic features:
+\begin{itemize}
+\item \textbf{Coastal districts}: Follow Pacific coastline from San Diego to Oregon border
+\item \textbf{Central Valley}: Agricultural districts aligned with valley geography
+\item \textbf{Bay Area}: Districts respect regional identity (Peninsula, East Bay, North Bay)
+\item \textbf{Sierra Nevada}: Mountain districts follow natural boundaries
+\end{itemize}
+
+This geographic alignment produces visually coherent districts that "look right" on a map—a factor the commission explicitly valued through extensive public input. Our algorithm, optimizing only edge cuts, produces districts that cross these natural boundaries when doing so minimizes perimeter.
+
+The California comparison reveals that human mapmakers can incorporate contextual knowledge (geographic features, regional identities, transportation patterns) that pure geometric optimization misses. Whether this contextual knowledge improves or undermines fairness depends on whether it reflects genuine community structure or strategic manipulation.
+
+\textbf{Arizona, Colorado, Idaho: Consistent Commission Advantage}
+
+The commission advantage extends beyond Michigan and California:
+\begin{itemize}
+\item \textbf{Arizona}: Enacted PP = 0.324 vs. Algorithmic PP = 0.198 (+63.6\%)
+\item \textbf{Colorado}: Enacted PP = 0.389 vs. Algorithmic PP = 0.286 (+36.0\%)
+\item \textbf{Idaho}: Enacted PP = 0.398 vs. Algorithmic PP = 0.341 (+16.7\%)
+\end{itemize}
+
+All three states' commissions produced more compact districts than our algorithm. This consistency suggests that \textit{human expertise combined with explicit compactness mandates and iterative refinement outperforms single-objective optimization} in achieving geometric compactness.
+
+However, we emphasize that this comparison is not entirely fair to the algorithm: commission-drawn maps benefit from (1) block-level data providing finer resolution, (2) extensive manual refinement over months, (3) ability to backtrack and revise decisions, and (4) multi-objective optimization balancing compactness with other criteria. Our algorithm makes binary split decisions sequentially without backtracking.
+
+\subsubsection{Gerrymandered States: Algorithmic Advantage Where It Matters}
+
+While commission-drawn maps represent the high-compactness benchmark, they are not the primary problem redistricting reform seeks to address. The core case for algorithmic redistricting rests on preventing \textit{partisan gerrymandering}—intentional manipulation of boundaries for electoral advantage.
+
+In heavily gerrymandered states, our algorithm demonstrates substantial compactness improvements, validating its value proposition precisely where reform is most needed.
+
+\textbf{Illinois (2021): Extreme Democratic Gerrymander}
+
+Illinois's 2021 Democratic-controlled redistricting produced one of the most aggressively gerrymandered maps in modern history \citep{duchin2022illinois}. The enacted plan achieved PP = 0.148—the lowest compactness score nationally and 46\% below the legislative process average (PP = 0.295).
+
+Our algorithm improves compactness by \textbf{62.2\%} (PP = 0.240 vs. enacted 0.148), demonstrating that even basic recursive bisection dramatically outperforms intentional partisan manipulation. Figure~\ref{fig:illinois_comparison} visually contrasts the two approaches:
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/illinois_comparison.png}
+\caption{Illinois: Algorithmic vs. Enacted Districts (2021)}
+\label{fig:illinois_comparison}
+\small
+\textit{Notes:} Left: Algorithmic districts (PP = 0.240). Right: Enacted districts (PP = 0.148). Enacted plan elongates districts to connect geographically disparate Democratic strongholds (Chicago suburbs with downstate urban areas), creating non-compact "ribbon" districts characteristic of packing and cracking strategies.
+\end{minipage}
+\end{figure}
+
+The Illinois comparison crystallizes the algorithm's value: where partisan manipulation is most egregious, algorithmic neutrality produces dramatic improvements. The algorithm cannot create Illinois-style gerrymanders because it cannot \textit{see} where Democrats and Republicans live—the essential prerequisite for strategic boundary manipulation.
+
+\textbf{Texas (2021): Republican-Controlled Redistricting}
+
+Texas presents a more complex case. The 2021 Republican-controlled legislature produced districts with PP = 0.189, modestly higher than algorithmic results (PP = 0.163, -13.8\% gap). This finding initially seems inconsistent with the Illinois pattern—why doesn't the algorithm improve compactness in a Republican-controlled state with documented gerrymandering concerns \citep{wang2016texas}?
+
+Three factors explain Texas's anomalous result:
+
+\textbf{1. Geographic Constraints Dominate:}
+
+Texas faces exceptional geographic challenges: sprawling land area (268,000 sq mi, second-largest state), extremely uneven population distribution (Houston/Dallas/San Antonio concentrate 60\% of population in 15\% of land area), and elongated state shape (800 miles north-south, 780 miles east-west). These constraints limit achievable compactness regardless of redistricting method.
+
+Both algorithmic and enacted approaches struggle with Texas geography:
+\begin{itemize}
+\item \textbf{Rural West Texas}: Sparse population requires enormous geographic districts (District 23 spans 800+ miles)
+\item \textbf{Rio Grande Valley}: Follows river border, creating elongated districts
+\item \textbf{Urban sprawl}: Houston/Dallas metro areas sprawl across multiple counties
+\end{itemize}
+
+\textbf{2. Compactness is Not the Primary Gerrymander Mechanism:}
+
+Texas Republicans achieved partisan advantage primarily through \textit{packing} (concentrating Democrats in supermajority districts) and \textit{cracking} (dividing Democratic areas across multiple Republican districts) rather than through bizarre shapes. A district can be compact while still being gerrymandered if it combines geographically disparate communities with similar partisan lean.
+
+For example, Texas District 7 (Houston suburbs) achieves reasonable compactness (PP = 0.28) while strategically combining wealthy conservative suburbs with diverse moderate neighborhoods to create a narrow Republican advantage—a gerrymander through demographic engineering, not geometric distortion.
+
+\textbf{3. Commission/Court Maps Might Not Improve Much:}
+
+Texas has never had commission-drawn districts, making it difficult to assess how much better a neutral process could perform. However, geographic constraints suggest the ceiling is low. Arizona—a similarly sprawling state with uneven population distribution—achieved PP = 0.324 with an independent commission, only 28\% better than Texas's enacted PP = 0.189. This modest improvement suggests Texas's low compactness is fundamentally geographic, not primarily partisan.
+
+\textbf{Conclusion on Gerrymandered States:}
+
+The algorithm performs best—relative to enacted plans—in states where partisan gerrymandering employs geometric distortion (Illinois, Maryland, North Carolina). It performs less well in states where gerrymandering operates through demographic engineering within compact boundaries (Texas) or where geographic constraints dominate (Texas, Hawaii).
+
+This pattern reveals the algorithm's comparative advantage: \textit{preventing geometric manipulation} while maintaining neutrality. Where compactness violations signal partisan intent, algorithmic districts provide substantial improvements. Where low compactness reflects geography, the algorithm cannot overcome inherent constraints.
+
+\subsubsection{Court-Drawn Maps: The Neutral Middle Ground}
+
+Four states relied on court-drawn maps after redistricting failures: Minnesota (divided legislature), New York (commission deadlock), North Carolina (partisan gerrymander struck down), and Ohio (commission deadlock). Court-drawn maps provide a useful benchmark for "neutral but not compactness-optimizing" redistricting.
+
+Table~\ref{tab:court_comparison} presents results:
+
+\begin{table}[h]
+\centering
+\caption{Court-Drawn Maps vs. Algorithmic Districts}
+\label{tab:court_comparison}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{State} & \textbf{Algorithmic PP} & \textbf{Court-Drawn PP} & \textbf{Difference} \\
+\midrule
+Minnesota & 0.325 & 0.320 & +1.6\% \\
+New York & 0.189 & 0.267 & -29.2\% \\
+North Carolina & 0.203 & 0.298 & -31.9\% \\
+Ohio & 0.259 & 0.312 & -17.0\% \\
+\midrule
+\textbf{Mean} & \textbf{0.244} & \textbf{0.299} & \textbf{-18.4\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Court-drawn maps generally exceed algorithmic compactness, but by a smaller margin (-18.4\%) than commission maps (-28.5\%). This reflects courts' more limited objectives: ensuring population equality, political neutrality, and legal compliance rather than optimizing compactness per se.
+
+\textbf{Minnesota: Statistical Tie:}
+
+Minnesota's court-drawn map (PP = 0.320) and algorithmic result (PP = 0.325) are essentially identical—a difference of just 1.6\%. This near-perfect match suggests that in states with favorable geography (relatively compact shape, even population distribution, no extreme urban concentration), neutral redistricting processes converge on similar outcomes regardless of whether they use human judgment or algorithmic optimization.
+
+Minnesota's convergence validates both approaches: the court achieved neutral results through traditional criteria application, while the algorithm achieved nearly identical results through pure geometric optimization. This equivalence strengthens the algorithmic case—if human expertise and algorithmic optimization produce similar outcomes under neutral conditions, algorithms offer a simpler, more transparent path to the same destination.
+
+\textbf{North Carolina and Ohio: Court Advantage:}
+
+North Carolina (-31.9\%) and Ohio (-17.0\%) show larger court advantages, likely reflecting these states' redistricting histories. Both states experienced multiple rounds of litigation over partisan gerrymandering, giving courts extensive experience with geographic and political constraints. Courts incorporated this institutional knowledge into final maps, producing higher compactness than our algorithm's first-pass optimization.
+
+\subsubsection{Value Proposition: Context-Dependent Performance}
+
+Synthesizing across redistricting processes, our algorithm's performance is highly context-dependent:
+
+\textbf{Best vs. Gerrymandered Maps} (+62\% Illinois, +61\% New Hampshire, +50\% Rhode Island):
+Where partisan actors manipulate boundaries for electoral advantage, algorithmic neutrality produces dramatic compactness improvements. This is precisely where reform is most needed—the algorithm's immunity to partisan data prevents the geometric distortions characteristic of intentional gerrymandering.
+
+\textbf{Competitive with Court-Drawn Maps} (-18\% average gap):
+Neutral court-drawn maps achieve moderately higher compactness through human expertise and iterative refinement, but differences are modest. In favorable geographic contexts (Minnesota), performance is essentially equivalent.
+
+\textbf{Inferior to Commission Maps} (-29\% average gap):
+Independent commissions with explicit compactness mandates, extensive public processes, and months of iterative refinement produce substantially more compact districts. However, commission processes are resource-intensive, politically contentious to establish, and not available in most states.
+
+\textbf{The Redistricting Reform Trilemma:}
+
+The compactness gap analysis reveals a fundamental trilemma in redistricting reform:
+
+\begin{enumerate}
+\item \textbf{Maximum Compactness:} Commission-drawn maps achieve highest geometric quality through human expertise, iterative refinement, and multi-criteria optimization. However, commissions require: constitutional amendments or voter initiatives (politically difficult), extensive time and resources (months of public hearings), and rely on human judgment (potential for capture by sophisticated actors).
+
+\item \textbf{Maximum Transparency:} Algorithmic approaches offer deterministic, reproducible results with guaranteed immunity to partisan manipulation. However, single-objective optimization produces lower compactness than human multi-criteria balancing, and algorithms cannot incorporate contextual knowledge (geographic features, community identities, transportation patterns).
+
+\item \textbf{Maximum Accessibility:} Any state can adopt algorithmic redistricting immediately without constitutional amendments, voter initiatives, or multi-month commission processes. Results are available within hours of census data release, enabling rapid iteration and public engagement.
+\end{enumerate}
+
+No approach simultaneously maximizes all three dimensions. Commission processes prioritize compactness and deliberation at the cost of transparency and accessibility. Algorithmic approaches prioritize transparency and accessibility at the cost of maximum compactness. Traditional legislative processes minimize compactness, transparency, and accessibility while maximizing partisan discretion.
+
+\subsubsection{Conclusion: Reasonable Compactness with Guaranteed Neutrality}
+
+The compactness gap analysis reveals that our algorithm does not uniformly outperform all enacted plans. Commission-drawn maps with explicit compactness mandates achieve substantially higher geometric quality. However, this comparison misses the algorithm's core value proposition: \textit{guaranteed neutrality through structural impossibility of partisan manipulation}.
+
+The relevant question is not "does the algorithm always produce more compact districts?" but rather "does the algorithm produce \textit{reasonably} compact districts while eliminating opportunities for manipulation?"
+
+The evidence suggests yes:
+
+\begin{itemize}
+\item \textbf{Dramatically improves over gerrymandered plans} where reform is most needed
+\item \textbf{Achieves similar results to neutral court-drawn maps} in favorable contexts
+\item \textbf{Falls short of commission-optimized plans} but at substantially lower resource and political costs
+\item \textbf{Guarantees reproducibility and immunity to partisan data} regardless of political control
+\end{itemize}
+
+We argue that "reasonable compactness with guaranteed neutrality" offers a superior value proposition to "maximum compactness with potential vulnerability to capture." Algorithmic redistricting will not produce the most geometrically perfect districts possible, but it will produce districts that cannot be intentionally gerrymandered—a qualitative guarantee that no human process can credibly offer.
+
+Future enhancements—block-level data, edge-weighted optimization (Section~\ref{sec:edge-weighted-optimization}), multi-objective extensions—could close the commission gap while preserving algorithmic transparency. However, even current tract-level recursive bisection offers a viable path toward redistricting reform in the 40 states lacking independent commissions.

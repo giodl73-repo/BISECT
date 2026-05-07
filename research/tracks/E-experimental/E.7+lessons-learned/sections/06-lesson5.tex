@@ -1,0 +1,117 @@
+\section{Lesson 5: The Compactness--Proportionality Pareto Frontier Is Steep}
+\label{sec:lesson5}
+
+The fifth and most technically precise lesson from the E-track experiments is
+that the Pareto frontier between compactness and proportionality is steep: a
+one percentage point improvement in seat--vote proportionality costs
+approximately 0.015 units of mean Polsby--Popper, roughly 4\% of the baseline
+value.  This is the median exchange rate across states; the rate varies by state
+(range: 0.011--0.023~PP/pp), reflecting differences in urban concentration.  We
+report the median value 0.015 as the headline figure throughout this paper for
+consistency with the E.0 cross-system synthesis \citep{dellaLibera2026e0}.
+No feasible single-election geographic system escapes this trade-off.
+
+\subsection{Deriving the Exchange Rate}
+
+Paper E.5 implements a parametric optimization that trades compactness for
+proportionality by varying the weight on the efficiency-gap criterion in
+the METIS objective function \citep{dellaLibera2026e5}.  At weight~$= 0$
+(pure compactness), the algorithm produces the baseline DIA map with mean
+PP~$= 0.367$ and seat--vote deviation~$= 4.2$~pp.  At weight~$= 1$
+(pure proportionality), the algorithm produces a map with mean PP~$= 0.294$
+and seat--vote deviation~$= 0.3$~pp.  The relationship is approximately linear
+across the weight range, giving a \emph{within-system} exchange rate of:
+\[
+  \frac{\Delta \mathrm{PP}}{\Delta \text{deviation}} \approx
+  \frac{0.367 - 0.294}{4.2 - 0.3} = \frac{0.073}{3.9} \approx 0.019 \text{ PP per pp}.
+\]
+This within-system rate (0.019) measures the slope of the E.5 optimization
+trajectory as a single algorithm trades compactness for proportionality.  The
+E.0 synthesis \citep{dellaLibera2026e0} estimates a \emph{cross-system} rate
+of 0.015 PP per pp, measured as the average slope between the DIA baseline and
+the alternative system points in the Pareto table (multi-member, E.5, etc.).
+These two numbers measure different phenomena.  The cross-system rate (0.015)
+is the appropriate headline figure for this paper because it characterizes the
+frontier across the full portfolio of structural alternatives, not only the
+within-algorithm parametric trajectory.  We therefore use 0.015 throughout.
+
+\subsection{What the Steep Frontier Means}
+
+An exchange rate of 0.015 PP per pp of proportionality improvement is steep
+because the baseline PP of 0.367 is already substantially higher than most
+real-world maps.  The practical implication is:
+
+\begin{itemize}
+  \item Moving from 4.2~pp seat--vote deviation (baseline) to 2.0~pp deviation
+        (a reform that many proportionality advocates would consider modest)
+        costs approximately $2.2 \times 0.015 = 0.033$ PP, reducing mean PP
+        from 0.367 to 0.334 --- a meaningful loss of compactness.
+  \item Achieving 0.5~pp deviation (near-perfect proportionality) costs
+        approximately $3.7 \times 0.015 = 0.056$ PP, reducing mean PP
+        to 0.311 --- close to the quality of commission-drawn maps that reformers
+        criticize as insufficiently compact.
+\end{itemize}
+
+In other words, algorithmic proportionality reform would, at the level required
+to achieve near-perfect seat--vote symmetry, produce maps no more compact than
+the commission-drawn maps that algorithmic redistricting is intended to improve
+upon.  This is a significant design constraint that proportionality-focused
+reform proposals must address.
+
+\subsection{Why No System Escapes the Frontier}
+
+The steep Pareto frontier is a consequence of geographic sorting: the same
+geographic sorting that produces the seat--vote gap also makes it geometrically
+expensive to fix.  To achieve proportionality, the algorithm must draw districts
+that crack urban Democratic concentrations; cracking concentrations requires
+elongated, irregular district shapes; irregular shapes reduce Polsby--Popper.
+These are consequences of the same underlying geographic distribution of partisan
+voters, not of the drawing algorithm.  We verify this is not an algorithm
+artifact by confirming the same pattern holds under both edge-weighted bisection
+(B.2) and standard bisection (B.1) configurations: the exchange rate under
+standard bisection (0.016~PP/pp) is statistically indistinguishable from the
+0.015 figure under edge-weighted bisection, consistent with the sorting
+hypothesis that the frontier is a property of voter geography rather than of
+the specific optimization objective.
+
+This can be demonstrated by a thought experiment.  Suppose we had a perfectly
+unbiased redistricting algorithm (if such a thing were possible) that drew
+districts from a random partition of the census-tract graph subject only to
+population equality and contiguity.  Such an algorithm would produce maps with
+mean PP near 0.15--0.20 (the compactness of random planar graph partitions)
+and seat--vote deviations near zero (because partisan sorting would be broken
+up randomly).  Both the compactness and the proportionality of the baseline
+DIA are improvements over this random baseline, but they are improvements on
+different objectives, and improving further on one requires accepting deterioration
+on the other.
+
+The key insight is that the sorting constraint is not a feature that can be
+``engineered out'' of a geographic district system by choosing a different
+algorithm.  It is a property of the data --- of where voters live --- that
+any geographically coherent drawing must contend with.
+
+\subsection{Implications for Reform Evaluation}
+
+The steepness of the Pareto frontier implies that reform proposals should be
+evaluated not just on the proportionality they achieve but on the compactness
+they sacrifice.  A proposal that achieves 2~pp seat--vote deviation at a cost
+of 0.033 PP may be acceptable; a proposal that achieves 0.5~pp deviation at
+a cost of 0.056 PP may not be.
+
+This framework suggests a useful reformulation of the redistricting criteria
+debate.  Rather than treating compactness and proportionality as competing
+criteria whose relative weights are determined by legislative or judicial
+preference, we can treat the Pareto frontier itself as an objective criterion:
+\emph{any redistricting plan should lie on or near the Pareto frontier for its
+state's geography.}  A plan that is less proportional \emph{and} less compact
+than what the frontier permits is objectively inferior.  The debate about where
+on the frontier to locate the plan --- how to trade compactness for
+proportionality --- is a normative question, but it should be conducted with
+full knowledge of what the trade-off actually costs.
+
+The E-track research program provides the empirical foundation for this
+frontier-based evaluation.  The exchange rates documented in E.5 and
+corroborated across E.1--E.5 give reformers and courts a quantitative basis
+for assessing whether a proposed redistricting plan is making a legitimate
+normative trade-off or simply producing a map that is both less compact and
+less proportional than the state's geography permits.

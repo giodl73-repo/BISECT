@@ -1,0 +1,116 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{footmisc}
+\usepackage{mdframed}
+
+%% Section formatting
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+\setstretch{1.4}
+
+%% Shorthand macros
+\newcommand{\ar}{\textsc{ApportionRegions}}
+\newcommand{\gc}{\textsc{GerryChain}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\cs}{\textsc{ConvergenceSweep}}
+\newcommand{\pp}{\ensuremath{\mathrm{PP}}}
+\newcommand{\EC}{\ensuremath{\mathrm{EC}}}
+\newcommand{\rhat}{\ensuremath{\hat{R}}}
+\newcommand{\ess}{\ensuremath{\mathrm{ESS}}}
+
+%% Legal case macros
+\newcommand{\case}[1]{\textit{#1}}
+\newcommand{\rucho}{\case{Rucho v.\ Common Cause}}
+\newcommand{\callais}{\case{Louisiana v.\ Callais}}
+
+%% Note markers
+\newcommand{\est}{$^{\dagger}$}
+
+%% Highlighted box
+\newenvironment{keybox}{%
+  \begin{mdframed}[linewidth=0.8pt, innerleftmargin=12pt, innerrightmargin=12pt,
+                   innertopmargin=8pt, innerbottommargin=8pt,
+                   backgroundcolor=gray!8]
+  \small\setstretch{1.3}%
+}{%
+  \end{mdframed}%
+}
+
+%% -----------------------------------------------------------------------
+
+\title{%
+  \textbf{Algorithmic Redistricting and Ensemble Methods:\\
+          A Framework for Comparison}\\[0.4em]
+  \large Establishing the G-Track Methodology\\[0.8em]
+  \normalsize\textit{G.0 --- Ensemble Methodology}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+Markov-chain ensemble methods and algorithmic redistricting pursue fundamentally
+different goals: the former characterises the space of ``reasonable'' plans in
+order to \emph{evaluate} any given plan against a geographic baseline; the
+latter produces a single canonical plan that is verifiably optimal by a stated
+criterion.  These goals are complementary but often conflated in legal and
+academic discourse.  This paper establishes the methodological framework for
+the G-series, which situates the \ar{} algorithm within the \recom{} ensemble
+to quantify where the algorithmic plan falls along every relevant
+distribution---Polsby-Popper compactness, partisan seat share, and minority
+representation.  We review \gc{}, \recom{}, and Short-Burst methods; introduce
+the percentile framework for locating a single plan in an ensemble
+distribution; connect ensemble convergence diagnostics ($\rhat$, \ess{},
+Hamming autocorrelation) to the \cs{} stopping criterion established in B.16;
+and articulate the statutory implications of a \emph{verifiable deterministic
+plan} against 10,000 \emph{unverifiable stochastic plans}.  The G-track papers
+(G.1--G.5) instantiate this framework on six states with published ensemble
+data.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-ensemble-methods}
+\input{sections/03-percentile-framework}
+\input{sections/04-convergence-diagnostics}
+\input{sections/05-convergence-sweep-bridge}
+\input{sections/06-statutory-implications}
+\input{sections/07-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,54 @@
+\label{sec:methodology}
+
+\subsection{Algorithmic District Generation}
+
+We use the \texttt{redist} recursive-bisection system~\citep{dellaLibera2026recursive}
+to generate congressional maps for all 50 states using 2020 census tract data.
+The algorithm partitions census tracts into $k$ districts---where $k$ is the
+state's congressional apportionment---by minimizing edge-cut in the tract
+adjacency graph subject to population balance within $\pm 0.5\%$ of the
+equal-population target.  The algorithm receives only population counts and
+geographic adjacency data; it has no access to election results, voter
+registration records, or any partisan information.
+
+For states with a single at-large district ($k=1$: Alaska, Delaware, Montana,
+North Dakota, South Dakota, Vermont, Wyoming), we treat the entire state as a
+single district.  For multi-district states, we run the full recursive
+bisection pipeline as described in~\citet{dellaLibera2026recursive}.
+
+\subsection{Enacted Districts}
+
+Enacted district boundaries for the 117th Congress (2021 cycle, based on 2020
+census) are taken from the U.S. Census Bureau's TIGER/Line shapefiles.  These
+represent the maps actually used for the 2022 midterm elections.
+
+\subsection{Vote-Share Reaggregation}
+
+We reaggregate 2020 presidential precinct-level results to both algorithmic
+and enacted districts using area-weighted interpolation.  Where precinct
+boundaries do not align exactly with census tract boundaries, we apportion
+votes proportionally to the overlapping area.  This standard procedure
+introduces small measurement error, but since both algorithmic and enacted
+maps are subject to the same reaggregation process, the comparison is unbiased.
+
+\subsection{Comparison Framework}
+
+For each state, we compute:
+\begin{enumerate}
+  \item The number of competitive districts ($|D_i - 0.5| < 0.10$) under the
+    algorithmic map.
+  \item The number of competitive districts under the enacted map.
+  \item The difference (algorithmic minus enacted).
+  \item The partisan split of competitive districts under each map.
+\end{enumerate}
+
+National totals are aggregated across all 50 states.  We report the
+distribution of competitive district counts and the aggregate partisan split.
+
+\subsection{Longitudinal Projection}
+
+To assess whether competitive algorithmic districts remain competitive as vote
+shares drift, we apply uniform partisan shifts of $\pm 1$, $\pm 2$, $\pm 3$,
+and $\pm 4$ percentage points to the 2020 presidential baseline.  A district
+that remains within the competitive window under the full range of $\pm 4$
+point shifts is classified as \emph{durably competitive}.

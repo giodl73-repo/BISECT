@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "description": "VEST (Voting and Election Science Team) per-state per-year DOIs on Harvard Dataverse. VEST publishes one Dataverse dataset per state per cycle, but there's no central index — each contributor uploads independently. This file is the local cache. To add a state/year, find its DOI at https://dataverse.harvard.edu/dataverse/electionscience and add an entry below. Run `download_election_data.py --doi <DOI> --list-files` to discover the .zip filename, then add it here.",
+  "by_state_and_year": {
+    "_template": {
+      "STATE_CODE": {
+        "YEAR": {
+          "doi": "10.7910/DVN/XXXXXX",
+          "filename": "<discoverable via --list-files>",
+          "notes": "free-form"
+        }
+      }
+    }
+  }
+}

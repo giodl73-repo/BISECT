@@ -1,0 +1,125 @@
+\section{When to Use Each Variant}
+\label{sec:when-to-use}
+
+The three \sburst{} variants serve different purposes.
+The choice depends on whether the primary goal is optimization (find the
+best plan) or characterisation (describe the distribution of plans near
+the optimum).
+
+\subsection{Standard Short-Burst: Pure Compactness Optimization}
+
+Use \textbf{SB-Standard} (\texttt{--search short-burst}) when:
+\begin{itemize}
+  \item The goal is to find a single plan with minimum edge-cut.
+  \item Compute budget is the binding constraint.
+  \item Distributional correctness of the endpoint is not required.
+\end{itemize}
+
+At equal compute budget, SB-Standard visits the most distinct plans per
+burst (highest $\bar\alpha$) and consistently achieves the lowest final
+edge-cut.
+It is the fastest variant and the best choice for production plan generation.
+
+\paragraph{Typical parameters.}
+\begin{verbatim}
+redist state --state TX --year 2020 \
+    --search short-burst \
+    --burst-length 20 --n-bursts 100 --percentile 0.0
+\end{verbatim}
+
+\subsection{ShortBurstForest: Calibrated Exploration Near Good Plans}
+
+Use \textbf{\sbf{}} (\texttt{--search short-burst-forest}) when:
+\begin{itemize}
+  \item The goal is to characterise the distribution of partisan outcomes
+        for plans with edge-cut within a specified range of the optimum.
+  \item The reported ensemble will be used in legislative findings, expert
+        reports, or litigation, where the claim is that ``among all plans
+        within $X$\% of the optimal edge-cut, $Y$\% produce outcome $O$''.
+  \item Approximate distributional correctness is required to support
+        statistical claims about the ensemble.
+\end{itemize}
+
+\sbf{} produces endpoints that are approximately exchangeable draws from
+the stationary distribution of \frecom{} within the burst neighbourhood of
+the current plan.
+This is the appropriate choice when the distribution of the endpoints
+matters, not just the minimum.
+
+\paragraph{Typical parameters.}
+\begin{verbatim}
+redist state --state NC --year 2020 \
+    --search short-burst-forest \
+    --burst-length 20 --n-bursts 50 --percentile 0.0
+\end{verbatim}
+
+\subsection{ShortBurstMergeSplit: The Practical Middle}
+
+Use \textbf{\sbms{}} (\texttt{--search short-burst-merge-split}) when:
+\begin{itemize}
+  \item Distributional correctness is desired but \sbf{}'s compute cost
+        (two RNG streams per step) is prohibitive.
+  \item A moderate improvement in distributional fidelity relative to
+        SB-Standard is acceptable at modest cost in final EC.
+  \item The state has large $k$ (e.g., $k \geq 30$), where the acceptance-rate
+        gap between \sbms{} and SB-Standard is smallest.
+\end{itemize}
+
+\sbms{} offers intermediate acceptance rate ($\bar\alpha \approx 0.60$)
+and intermediate EC quality.
+It is cheaper than \sbf{} (single MH ratio per step) while providing
+more distributional correction than SB-Standard (no correction).
+
+\paragraph{Typical parameters.}
+\begin{verbatim}
+redist state --state TX --year 2020 \
+    --search short-burst-merge-split \
+    --burst-length 20 --n-bursts 50 --percentile 0.0
+\end{verbatim}
+
+\subsection{Audit Trail}
+
+All three variants record the following fields in the run audit manifest:
+\begin{itemize}
+  \item \texttt{burst\_seeds}: the list of $s_i$ values, one per burst.
+  \item \texttt{selected\_burst\_idx}: the index $i^*$ of the selected
+        endpoint (the burst with the minimum EC at percentile $p$).
+  \item \texttt{per\_burst\_acceptance\_rates}: the list of $\alpha_i$
+        values, one per burst.
+  \item \texttt{chain\_type}: the string identifier of the inner chain
+        (\texttt{"recom"}, \texttt{"forest-recom"}, or
+        \texttt{"merge-split"}).
+\end{itemize}
+
+An independent verifier can reproduce the trajectory of any burst by:
+\begin{enumerate}
+  \item Reconstructing $s_i$ from the base seed $b$, burst index $i$,
+        and chain-type prefix.
+  \item Re-running the inner chain for $\ell$ steps using the per-step
+        forward and reverse seeds derived from $s_i$.
+  \item Verifying that the endpoint assignment matches the recorded plan.
+\end{enumerate}
+
+The \texttt{per\_burst\_acceptance\_rates} field also serves as an
+integrity check: if the verifier's replication produces different
+$\alpha_i$ values, the seed derivation or chain implementation is
+inconsistent.
+
+\subsection{Compute Budget Guidance}
+
+The equal-budget comparison ($\ell = 20$, $n = 50$, total $= 1000$ steps)
+is a baseline.
+Recommended adjustments by state size:
+\begin{itemize}
+  \item Small states ($k \leq 10$): $\ell = 10$, $n = 100$ (more bursts
+        improve diversity at fixed total).
+  \item Medium states ($10 < k \leq 20$): $\ell = 20$, $n = 50$ (baseline).
+  \item Large states ($k > 20$): $\ell = 30$, $n = 50$--$100$ (longer
+        bursts needed to explore meaningfully within small districts).
+\end{itemize}
+
+For \sbf{} specifically, the effective burst length is
+$\bar\alpha \cdot \ell \approx 0.45\,\ell$.
+To match SB-Standard's effective per-burst exploration, use
+$\ell \approx 33$ with \sbf{}---a 65\% increase in nominal steps.
+Practitioners should account for this when budgeting compute time.

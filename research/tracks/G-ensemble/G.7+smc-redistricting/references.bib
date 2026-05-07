@@ -1,0 +1,218 @@
+%% G.7 -- Sequential Monte Carlo for Calibrated Redistricting Ensembles
+%% References
+
+%% ===================================================================
+%% SELF-CITATIONS (B/G/H SERIES)
+%% ===================================================================
+
+@misc{b11paper,
+  author = {Della-Libera, Gio},
+  title  = {{ApportionRegions}: Prime-Factor Bisection for Congressional
+            Redistricting},
+  year   = {2026},
+  note   = {B.11 in Algorithmic Redistricting series.
+            50-state sweep; 223D/209R national headline.
+            Defines the plan-level search methods (ConvergenceSweep,
+            PercentileSweep) that \smc{} complements at the ensemble level.},
+}
+
+@misc{g6paper,
+  author = {Della-Libera, Gio},
+  title  = {Short-Burst Optimisation for Redistricting:
+            Short Chains Beat Long Chains},
+  year   = {2026},
+  note   = {G.6 in Algorithmic Redistricting series.
+            Introduces ShortBurst as a trajectory-level optimisation method.
+            Provides the \recom{}-based baseline for Table~\ref{tab:comparison}
+            in Section~\ref{sec:comparison}.},
+}
+
+@misc{g8paper,
+  author = {Della-Libera, Gio},
+  title  = {Flip Proposals for Local Sensitivity Analysis
+            in Algorithmic Redistricting},
+  year   = {2026},
+  note   = {G.8 in Algorithmic Redistricting series.
+            Introduces the \flip{} chain for local sensitivity certification.
+            The audit-chain design in Section~\ref{sec:audit} mirrors and
+            extends the \flip{} manifest format.},
+}
+
+@misc{h1paper,
+  author = {Della-Libera, Gio},
+  title  = {{BisectionEnsemble}: Node-Level Ensemble Methods for
+            Structured Redistricting},
+  year   = {2026},
+  note   = {H.1 in Algorithmic Redistricting series.
+            Introduces node-level \recom{} chains at each bisection tree node.
+            Provides the intermediate ensemble method in the comparison
+            hierarchy of Section~\ref{sec:comparison}.},
+}
+
+%% ===================================================================
+%% SMC / CALIBRATED REDISTRICTING SAMPLING
+%% ===================================================================
+
+@article{fifield2020,
+  author  = {Fifield, Benjamin and Imai, Kosuke and Kawahara, Jun
+             and Kenny, Christopher T.},
+  title   = {Automated Redistricting Simulation Using {Markov} Chain
+             {Monte} {Carlo}},
+  journal = {Journal of the American Statistical Association},
+  volume  = {115},
+  number  = {529},
+  pages   = {1--14},
+  year    = {2020},
+  doi     = {10.1080/01621459.2020.1739532},
+  note    = {Introduces the \smc{} algorithm for redistricting sampling.
+             The spanning-tree construction, importance weighting, and
+             systematic resampling described in Section~\ref{sec:algorithm}
+             follow this paper directly.
+             Establishes that \smc{} targets the uniform distribution over
+             valid $k$-district plans without Markov chain mixing assumptions.},
+}
+
+@misc{mccartan2023,
+  author = {McCartan, Cory and Imai, Kosuke},
+  title  = {\texttt{redist}: Simulation Methods for Legislative
+            Redistricting},
+  year   = {2023},
+  note   = {R package on CRAN.
+            The reference implementation against which \texttt{redist-smc}
+            (this paper's Rust implementation) is validated.
+            The R \texttt{redist\_smc()} function uses the same spanning-tree
+            proposal and importance weights; our implementation adds
+            Rayon parallelism and the SHA-256 audit chain.},
+}
+
+%% ===================================================================
+%% SMC THEORY
+%% ===================================================================
+
+@book{delmoral2004,
+  author    = {Del Moral, Pierre},
+  title     = {Feynman-{K}ac Formulae: Genealogical and Interacting
+               Particle Systems with Applications},
+  publisher = {Springer},
+  year      = {2004},
+  note      = {Standard reference for sequential Monte Carlo theory.
+               Theorem~9.3.1 provides the general consistency result for
+               SMC importance estimators; Proposition~\ref{prop:weight-correct}
+               in Section~\ref{sec:algorithm} is an application to the
+               redistricting case.},
+}
+
+@article{doucet2000,
+  author  = {Doucet, Arnaud and Godsill, Simon and Andrieu, Christophe},
+  title   = {On Sequential {Monte} {Carlo} Sampling Methods for
+             {Bayesian} Filtering},
+  journal = {Statistics and Computing},
+  volume  = {10},
+  number  = {3},
+  pages   = {197--208},
+  year    = {2000},
+  doi     = {10.1023/A:1008935410038},
+  note    = {Introduces systematic resampling as a variance-reduction
+             technique for SMC.
+             The resampling step in Algorithm~\ref{alg:smc} follows the
+             systematic resampling method of this paper, which minimises
+             variance relative to multinomial resampling.},
+}
+
+%% ===================================================================
+%% RECOM / MCMC REDISTRICTING
+%% ===================================================================
+
+@article{deford2021,
+  author  = {DeFord, Daryl and Duchin, Moon and Solomon, Justin},
+  title   = {Recombination: A Family of {Markov} Chains for Redistricting},
+  journal = {Harvard Data Science Review},
+  volume  = {3},
+  number  = {1},
+  year    = {2021},
+  doi     = {10.1162/99608f92.eb30390f},
+  note    = {ReCom proposal distribution. Merges two adjacent districts,
+             samples a random spanning tree of the merged region, and finds
+             a balanced cut.
+             Provides the primary Markov-chain-based comparison baseline
+             in Section~\ref{sec:comparison}.},
+}
+
+%% ===================================================================
+%% SHORT-BURST
+%% ===================================================================
+
+@article{cannon2022,
+  author  = {Cannon, Sarah and Goldbloom-Helzner, Ari and Gupta, Varun
+             and Matthews, Jesse and Suwal, Bhushan},
+  title   = {Voting Rights, {Markov} Chains, and Optimization by Short
+             Bursts},
+  journal = {arXiv},
+  year    = {2022},
+  note    = {arXiv:2011.02288. Introduces ShortBurst as a method for
+             finding near-optimal redistricting plans via short \recom{}
+             chains.
+             Provides the optimisation-oriented comparison baseline in
+             Section~\ref{sec:comparison}.},
+}
+
+%% ===================================================================
+%% SPANNING TREES / RANDOM WALK
+%% ===================================================================
+
+@article{wilson1996,
+  author  = {Wilson, David Bruce},
+  title   = {Generating Random Spanning Trees More Quickly than the
+             Cover Time},
+  journal = {Proceedings of the 28th Annual ACM Symposium on Theory
+             of Computing},
+  pages   = {296--303},
+  year    = {1996},
+  doi     = {10.1145/237814.237880},
+  note    = {Introduces loop-erased random walk for uniform spanning tree
+             (UST) generation.
+             The Wilson UST algorithm is the subroutine used in
+             Algorithm~\ref{alg:smc} to generate the spanning tree $T$
+             of each candidate district component.
+             Running time is $O(n \log n)$ for planar graphs.},
+}
+
+@article{aldous1991,
+  author  = {Aldous, David},
+  title   = {The Random Walk Construction of Uniform Spanning Trees
+             and Uniform Labelled Trees},
+  journal = {SIAM Journal on Discrete Mathematics},
+  volume  = {3},
+  number  = {4},
+  pages   = {450--465},
+  year    = {1990},
+  doi     = {10.1137/0403039},
+  note    = {Establishes that the loop-erased random walk produces a
+             uniformly random spanning tree.
+             This uniformity is critical for the importance-weight
+             derivation in Proposition~\ref{prop:weight-correct}:
+             each spanning tree $T$ is drawn with probability
+             $1/|\mathrm{UST}(C)|$, so the proposal probability of
+             a given cut edge $e^*$ is $1/|T|$ times
+             $1/|\mathrm{valid\_cuts}(T)|$.},
+}
+
+%% ===================================================================
+%% HAJEK / COOLING (CONTRAST)
+%% ===================================================================
+
+@article{hajek1988,
+  author  = {Hajek, Bruce},
+  title   = {Cooling Schedules for Optimal Annealing},
+  journal = {Mathematics of Operations Research},
+  volume  = {13},
+  number  = {2},
+  pages   = {311--329},
+  year    = {1988},
+  doi     = {10.1287/moor.13.2.311},
+  note    = {Reference for simulated annealing cooling schedules.
+             Cited in Section~\ref{sec:comparison} for contrast: \smc{}
+             does not rely on an annealing schedule or temperature parameter
+             to achieve its calibration guarantee; the importance weights
+             perform the correction analytically.},
+}

@@ -1,0 +1,39 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper establishes the partisan neutrality of the \ar{} algorithm through
+ensemble comparison.  The main findings are:
+
+\begin{enumerate}
+  \item \ar{} is not systematically biased toward either party.  It produces
+    outcomes within one seat of the ensemble median in five of six studied
+    states.  The median percentile of Democratic seats across all states is
+    the 53rd percentile---essentially indistinguishable from the geographic
+    median.
+
+  \item The Georgia deviation (38th percentile of Democratic seats) reflects
+    geographic sorting, not algorithmic bias.  The Rodden concentration
+    effect reduces the number of compact Democratic districts in any compact
+    algorithm applied to Georgia.
+
+  \item The \ar{} plan falls inside the proportionality corridor for the
+    competitive states studied (NC, WI, PA, MN).  This is a strong result:
+    an algorithm with no proportionality objective nevertheless produces
+    proportional-adjacent outcomes in competitive states.
+
+  \item Algorithm choice matters in sorted states.  Short-burst algorithms
+    with compactness-correlated objectives can produce extreme partisan
+    outcomes.  \ar{}'s edge-cut objective is not correlated with partisan
+    outcomes in the way that some compactness metrics are.
+\end{enumerate}
+
+The practical implication: the question ``is this map partisan?'' can be
+answered quantitatively for \ar{} plans using ensemble comparison.  For
+competitive states, the answer is clearly no.  For sorted states like Georgia,
+the answer is more nuanced: the plan produces a Republican-leaning outcome
+relative to proportional representation, but this lean is consistent with
+the geographic constraints and is present in a majority of valid plans.
+
+Courts and legislators can use this evidence to conclude that the \ar{}
+plan's partisan outcomes are not a product of manipulation, even in states
+where those outcomes favor one party.

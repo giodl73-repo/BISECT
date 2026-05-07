@@ -1,0 +1,129 @@
+% Supplement E: Fairness Guarantees and Gaming Resistance
+% Formal fairness properties and policy implications
+
+We formalize the fairness properties induced by edge-weighting with $\alpha \geq \alpha_{\text{crit}}$, connecting our computational finding to algorithmic fairness theory.
+
+\subsection{Property 1: Algorithmic Determinism}
+
+\begin{property}[Algorithmic Determinism]
+\label{prop:determinism-supp}
+For weighted graphs with $\alpha \geq \alpha_{\text{crit}}$, all balanced partitioning algorithms $\mathcal{A}$ produce partitions $P_{\mathcal{A}}$ satisfying:
+\[
+d(P_{\mathcal{A}_1}, P_{\mathcal{A}_2}) \leq \epsilon
+\]
+where $d$ is a partition distance metric (e.g., Hamming distance) and $\epsilon \to 0$ as $\alpha \to \infty$.
+\end{property}
+
+\textbf{Implication}: Tract assignment is determined by problem structure (geography, demographics, VRA constraints), not by algorithmic choice. This eliminates a major source of arbitrariness in computational redistricting.
+
+\textbf{Empirical validation}: Our results show zero variance across all methods for test states with $\alpha = 5$, confirming Property~\ref{prop:determinism-supp}.
+
+\subsection{Property 2: Gaming Resistance}
+
+\begin{property}[Gaming Resistance]
+\label{prop:gaming-supp}
+Let $\mathcal{M}$ be the set of all valid partitioning methods. For $\alpha \geq \alpha_{\text{crit}}$:
+\[
+\max_{\mathcal{A}_1, \mathcal{A}_2 \in \mathcal{M}} \left| \text{Utility}(P_{\mathcal{A}_1}) - \text{Utility}(P_{\mathcal{A}_2}) \right| \leq \delta
+\]
+for any utility function $\text{Utility}$ (e.g., party vote share, compactness score), where $\delta = O(1/\alpha)$.
+\end{property}
+
+\textbf{Implication}: Strategic selection of partitioning methods confers negligible advantage. A practitioner cannot ``game'' the system by choosing the method that happens to favor their preferred outcome.
+
+\textbf{Example}: In our experiments, maximum minority percentage varies by $< 0.1\%$ across methods. Even if a practitioner knew predetermined tree $(1, k-1)$ slightly favored their party, the advantage would be too small to matter.
+
+\subsection{Property 3: Transparency-Fairness Equivalence}
+
+\begin{property}[Transparency-Fairness Equivalence]
+\label{prop:transparency-fairness-supp}
+For $\alpha \geq \alpha_{\text{crit}}$, the simplest partitioning method (predetermined recursive bisection) achieves the same fairness outcomes as the most sophisticated method (adaptive multi-objective optimization).
+\end{property}
+
+\textbf{Implication}: Policymakers face no trade-off between transparency and fairness. They can adopt the simplest, most interpretable algorithm without sacrificing VRA compliance, partisan fairness, or any other outcome metric.
+
+\textbf{Policy relevance}: This resolves a long-standing tension in algorithmic redistricting. Traditional methods (e.g., Shortest Splitline~\cite{splitline}) are transparent but inflexible. Modern methods (e.g., MCMC sampling~\cite{duchin2018gerrymandering}) are flexible but opaque. Edge-weighting enables transparent methods to match the outcomes of complex methods.
+
+\subsection{Verification and Auditability}
+
+Algorithmic determinism enables powerful verification mechanisms:
+
+\begin{enumerate}
+    \item \textbf{Independent reproduction}: Any party can verify the result by running \textit{any} partitioning algorithm with the published edge weights. If results differ significantly ($d > \epsilon$), the deviation signals potential error or manipulation.
+
+    \item \textbf{Red-flag testing}: Deviations from the unique optimal partition are immediately suspicious. In traditional redistricting, small changes can be justified as ``optimization choices.'' Under edge-weighting, such changes lack justification.
+
+    \item \textbf{Burden-shifting}: Instead of plaintiffs proving a map is gerrymandered, defendants must explain why their map differs from the algorithmically-determined solution.
+\end{enumerate}
+
+\subsection{Limitations and Boundary Conditions}
+
+These fairness guarantees hold \textit{conditional on $\alpha \geq \alpha_{\text{crit}}$}:
+
+\begin{itemize}
+    \item \textbf{Weight manipulation}: If edge weights are chosen strategically (e.g., setting $\alpha = 2 < \alpha_{\text{crit}}$ to preserve method dependence), gaming resistance fails. This suggests weight selection should be standardized (e.g., ``always use $\alpha = 2k / m_{\text{state}}$'').
+
+    \item \textbf{Constraint manipulation}: Our analysis assumes VRA compliance is the primary constraint. If additional constraints are introduced (e.g., ``preserve county boundaries''), method independence may break down.
+
+    \item \textbf{Threshold effects}: For $\alpha$ slightly below $\alpha_{\text{crit}}$, small perturbations can shift the system between method-dependent and method-independent regimes. This suggests using $\alpha \gg \alpha_{\text{crit}}$ to ensure robustness.
+\end{itemize}
+
+\subsection{Comparison to Other Fairness Frameworks}
+
+Our fairness properties differ from traditional redistricting fairness criteria:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Fairness Criterion} & \textbf{Traditional} & \textbf{Edge-Weighting} \\
+\midrule
+Partisan fairness & Varies by method & Same across methods \\
+VRA compliance & Varies by method & Same across methods \\
+Compactness & Varies by method & Same across methods \\
+Algorithmic determinism & No & Yes \\
+Gaming resistance & No & Yes \\
+Verifiability & Difficult & Easy \\
+\bottomrule
+\end{tabular}
+\caption{Fairness properties under traditional vs. edge-weighted redistricting. Edge-weighting induces method-independent outcomes, enabling new fairness guarantees.}
+\label{tab:fairness-comparison-supp}
+\end{table}
+
+\subsection{Implications for Redistricting Reform}
+
+These fairness guarantees suggest concrete policy recommendations:
+
+\begin{enumerate}
+    \item \textbf{Standardize edge-weighting}: Redistricting commissions should adopt standardized edge weight formulas (e.g., $\alpha = 2k / m_{\text{state}}$) rather than allowing discretionary method choice.
+
+    \item \textbf{Require algorithmic transparency}: Published redistricting plans should include edge weights and partition algorithm specifications, enabling independent verification.
+
+    \item \textbf{Shift burden of proof}: Courts should presume algorithmic validity if plans match independently-verified solutions, placing burden on plaintiffs to show deviations are unjustified.
+
+    \item \textbf{Enable competition}: Multiple independent parties can produce maps using different algorithms and verify convergence, reducing reliance on single trusted map-drawers.
+\end{enumerate}
+
+These recommendations align with broader calls for algorithmic accountability in government decision-making~\cite{kroll2017accountable,citron2008technological,brauneis2018algorithmic}.
+
+\subsection{Open Questions}
+
+Several fairness-related questions remain:
+
+\begin{itemize}
+    \item \textbf{Multi-objective fairness}: If we add constraints beyond VRA (e.g., community of interest preservation), does method independence persist?
+
+    \item \textbf{Dynamic fairness}: How do fairness properties evolve across census cycles as demographic distributions shift?
+
+    \item \textbf{Perceptual fairness}: Do stakeholders perceive algorithmically-determined districts as more fair than human-drawn districts, even if outcomes are identical?
+
+    \item \textbf{Differential fairness}: Do fairness guarantees apply equally to all demographic groups, or do some groups benefit more from algorithmic determinism than others?
+\end{itemize}
+
+We leave these questions for future work, noting that our framework provides a foundation for analyzing fairness in algorithmic redistricting beyond traditional metrics.
+
+\subsection{Summary}
+
+Edge-weighting with $\alpha \geq \alpha_{\text{crit}}$ induces three key fairness properties: (1) algorithmic determinism (tract assignment independent of method choice), (2) gaming resistance (strategic method selection confers no advantage), and (3) transparency-fairness equivalence (simple methods achieve same outcomes as complex methods).
+
+These properties enable verification, auditability, and burden-shifting in redistricting litigation. They suggest policy reforms including standardized edge-weighting, algorithmic transparency requirements, and independent verification protocols.

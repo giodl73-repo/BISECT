@@ -1,0 +1,128 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The Algorithm Selection Problem}
+
+The academic redistricting ensemble literature~\citep{deford2021,mccartan2020,
+cannon2022,janson2022} has produced a rich family of algorithms, each
+designed with a specific theoretical goal in mind.
+DeFord et al.~\citep{deford2021} introduced \recom{} as a general-purpose
+Markov chain over the space of valid $k$-district plans.
+McCartan and Imai~\citep{mccartan2020} developed Sequential Monte Carlo
+(\smc{}) to sample plans with calibrated importance weights, enabling
+exact distributional guarantees.
+Autry et al.~\citep{autry2021} introduced multi-scale MCMC to address slow
+mixing for large $k$.
+Each subsequent algorithm in our G-series papers (G.6--G.13) added
+further specialisation: compactness optimisation, reversibility, VRA
+compliance, or boundary-sensitivity analysis.
+
+For a practitioner---a special master drafting plans for a court, a state
+legislative staffer verifying fairness, or an academic studying plan-space
+geometry---this proliferation creates a decision problem.
+Eight algorithms are implemented; eight sets of CLI flags exist; and each
+algorithm has different strengths.
+Which one should I run?
+
+\subsection{What This Paper Does}
+
+This paper provides a systematic empirical comparison of all eight
+implemented ensemble and search algorithms:
+
+\begin{enumerate}
+  \item \textbf{Short-Burst} (\sburst{}, G.6): short \recom{} bursts
+        targeting low edge-cut plans~\citep{dellaLibera2026shortburst}.
+  \item \textbf{SMC} (\smc{}, G.7): sequential Monte Carlo with
+        calibrated importance weights~\citep{dellaLibera2026smc,mccartan2020}.
+  \item \textbf{Flip} (\flip{}, G.8): boundary-tract assignment flips for
+        local sensitivity analysis~\citep{dellaLibera2026flip}.
+  \item \textbf{Forest ReCom} (\fr{}, G.9): reversible recombination
+        via spanning forests with MH
+        correction~\citep{dellaLibera2026forestRecom}.
+  \item \textbf{Merge-Split} (\msp{}, G.10): merge two districts, split
+        via random spanning tree cut, approximately
+        uniform~\citep{dellaLibera2026mergeSplit}.
+  \item \textbf{Multi-scale MCMC} (\ms{}, G.11): interleaved coarse and
+        fine chains for large-$k$ mixing~\citep{dellaLibera2026multiscale}.
+  \item \textbf{ShortBurstForest} (\sburstf{}, G.12): Short-Burst
+        optimisation running on the Forest ReCom chain for compactness
+        with distributional
+        awareness~\citep{dellaLibera2026shortburstChains}.
+  \item \textbf{VRA-Aware ReCom} (\vra{}, G.13): \recom{} with adaptive
+        boosts to maintain minority-majority
+        districts~\citep{dellaLibera2026vraAware}.
+\end{enumerate}
+
+We compare all eight on three states that span the realistic range of
+congressional district counts: NC ($k = 14$), WI ($k = 8$), TX ($k = 38$).
+For each algorithm--state pair we record four metrics: edge-cut score
+(\ec{}), mean Polsby-Popper (\pp{}), partisan seat stability across five
+independent runs, and wall-clock runtime.
+For chain-based methods we additionally measure lag-100 autocorrelation
+of the \ec{} statistic as a proxy for mixing quality.
+
+\subsection{Main Findings}
+
+Our comparison yields five practical conclusions.
+
+\begin{enumerate}
+  \item \textbf{No algorithm dominates.}
+        \sburst{} achieves the lowest \ec{} (most compact by that metric)
+        but concentrates samples near low-\ec{} plans, sacrificing
+        distributional correctness.
+        \smc{} achieves exact calibration but does not optimise
+        compactness.
+        \ms{} provides the largest mixing improvement for TX but adds
+        overhead for small $k$.
+
+  \item \textbf{Compactness and distribution are in tension.}
+        Algorithms that optimise for \ec{} (Short-Burst, ShortBurstForest)
+        sample from a concentrated distribution near compact plans, not the
+        neutral uniform distribution.
+        Practitioners who need a neutral ensemble for litigation should use
+        \smc{} or \fr{}, not \sburst{}.
+
+  \item \textbf{Scale matters.}
+        For TX ($k = 38$), \ms{} reduces lag-100 autocorrelation by
+        approximately 27\% relative to standard \recom{} at comparable
+        wall-clock time (a significant but context-specific improvement;
+        G.11 reported a 43\% reduction under more favourable initialisation).
+        For WI ($k = 8$), the single-scale chain mixes adequately and
+        \ms{} adds unnecessary overhead.
+
+  \item \textbf{VRA compliance is orthogonal to optimisation mode.}
+        \vra{} achieves distributional properties similar to \fr{}
+        when the VRA constraint is not binding, but is the only algorithm
+        that reliably maintains minority-majority districts when the
+        constraint is active.
+
+  \item \textbf{Decision tree reduces to four questions.}
+        A practitioner can select the appropriate algorithm by answering
+        four binary questions: (i) Is VRA compliance required? (ii) Is
+        $k \geq 20$? (iii) Is a calibrated target distribution required?
+        (iv) Is pure compactness optimisation the goal?
+        Section~\ref{sec:decision} gives the full tree.
+\end{enumerate}
+
+\subsection{Relation to Prior Work}
+
+Cannon et al.~\citep{cannon2022} compare ReCom variants theoretically
+but do not include SMC or multi-scale methods.
+Janson~\citep{janson2022} analyses the mixing time of random graph
+partitioning Markov chains but does not address VRA constraints or
+burst optimisation.
+Our contribution is purely empirical: we compare all eight algorithms
+implemented in \texttt{redist-ensemble} under the same experimental
+conditions and translate the results into a practitioner decision framework.
+
+\subsection{Paper Structure}
+
+Section~\ref{sec:setup} describes the experimental setup: three states,
+hardware, metrics, and single-run caveats.
+Section~\ref{sec:compactness} compares compactness metrics (\ec{} and \pp{})
+across all algorithms and states.
+Section~\ref{sec:distributional} addresses distributional properties and
+mixing speed, including autocorrelation and partisan seat stability.
+Section~\ref{sec:decision} presents the decision tree and summary matrix.
+Section~\ref{sec:conclusion} concludes with implementation references and
+future directions.

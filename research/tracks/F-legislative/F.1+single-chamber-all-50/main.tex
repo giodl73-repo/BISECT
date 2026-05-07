@@ -1,0 +1,64 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}[proposition]
+\newtheorem{lemma}{Lemma}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\title{F.1: Algorithmic State House Redistricting:\\
+       A 50-State Empirical Study}
+
+\author{Gio Della-Libera}
+
+\date{Draft --- \today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+We present the first systematic application of minimum-edge-cut recursive
+bisection to all 50 state house chambers, covering district counts from
+$k=40$ (Alaska) to $k=400$ (New Hampshire). Using the \texttt{redist}
+Rust pipeline with adaptive resolution selection---block-group when
+$k/n_{\mathrm{tracts}} > 0.05$, census-tract otherwise---we produce
+algorithmically generated state house maps for all 50 states across the
+2020 census cycle. Mean Polsby-Popper compactness is $\overline{PP} = 0.381$
+at tract resolution and $\overline{PP} = 0.401$ at block-group resolution,
+both exceeding the congressional baseline of $0.361$.
+Population balance is within $\pm 0.5\%$ for all 50 states.
+County splits are 15--25\% fewer than enacted plans for most states.
+Runtime ranges from 2$\times$ to 8$\times$ the congressional equivalent per state.
+Case studies of Washington (98 districts), Texas (150), New Hampshire (400),
+and Nebraska's unicameral legislature (49) reveal how geographic concentration
+of population interacts with high district counts to produce characteristically
+compact algorithmic maps. Our results are broadly consistent with the
+congressional findings of \citet{dellaLibera2026mec} and confirm that
+recursive bisection scales gracefully to sub-congressional geography.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-methodology}
+\input{sections/04-results}
+\input{sections/05-case-studies}
+\input{sections/06-comparison-enacted}
+\input{sections/07-limitations}
+\input{sections/08-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,31 @@
+---
+reviewer: Jonathan Rodden
+round: 1
+score: 3
+date: 2026-05-05
+---
+
+## Summary
+
+C.7 provides systematic uncertainty quantification for the redistricting pipeline's three main metric categories: Polsby-Popper compactness, partisan fairness (efficiency gap, mean-median, partisan bias at 50%), and VRA metrics (minority VAP fractions). The paper is well-motivated and practically oriented --- the framing around expert witness testimony and cross-examination preparation is exactly right for a document that will be cited in legal proceedings. The partisan metrics section (Section 5) is the strongest part of the paper: the demonstration that all 15 state efficiency gap CIs remain entirely in negative territory (Democratic advantage) regardless of seed variation is a clean and legally important result. The weaknesses are in how electoral uncertainty is handled and in what the joint CIs actually establish for courts.
+
+## Strengths
+
+- **All 15 EG CIs remaining negative under seed variation is a legally robust finding.** The central partisan fairness finding --- that the direction of algorithmic partisan lean (Democratic advantage, mean -3.0%) is robust to seed variation --- is exactly the right kind of result for litigation. A result that could flip direction under different algorithmic choices would be very difficult to defend under cross-examination; this result cannot.
+- **The reform vs. non-reform state comparison (mean enacted EG: +0.6% reform, +6.3% non-reform) is a strong ancillary finding.** The observation that states with independent redistricting commissions show much smaller enacted EG disparities than non-reform states is presented efficiently in Section 5.5's complete 50-state table. This comparison contextualises the 8.3 pp algorithmic-vs-enacted gap as driven primarily by non-reform states, which is an important caveat for interpretation.
+- **The practical recommendations format (Section 8.2) is well-suited for practitioner use.** The four numbered recommendations for expert witnesses --- always report CIs, distinguish sources, conservative census adjustments, state-specific CIs for high-variance states --- are actionable and appropriately specific. This kind of guidance is rarely provided in academic statistics papers and is exactly what makes this paper useful beyond the academic audience.
+
+## Weaknesses / P1 Items (Required Fixes)
+
+- **Electoral uncertainty is underestimated by using only three elections (2016, 2018, 2020).** Section 5.2 uses the cross-election variance across three elections as a proxy for electoral uncertainty, yielding a mean SD of 0.9% across 15 states. But three elections from a single redistricting cycle (2011-2020 district maps) do not capture the full range of electoral uncertainty. The 2018 election (a high-turnout Democratic midterm) and 2020 (a presidential election with unusual polarisation) bracket an unusual period. A redistricting plan will face elections across a full decade (at minimum) with varying turnout, candidate quality, and national political environments. The paper's statement in Section 8.3 that "true electoral uncertainty across a full decade... would be somewhat larger" is correct but inadequate --- the underestimation of electoral uncertainty is not "somewhat" but potentially substantial (factor of 2-3 larger based on cross-cycle variance in the literature). The paper should report sensitivity analysis showing how the joint EG CIs change if electoral uncertainty is doubled or tripled.
+- **The complete 50-state EG table (Table 5.5) reports enacted EG without CIs for enacted plans.** The table reports algorithmic EG with 95% bootstrap CIs but enacted EG as point estimates only. The comparison between algorithmic and enacted plans --- the paper's central partisan finding --- requires CIs for both to be fully robust. Without CIs for enacted EG, an opponent could argue that the comparison gap is itself uncertain (the enacted plans' efficiency gaps may vary across election cycles by as much as the algorithmic plans'). The paper should report enacted EG CIs derived from the same three-election cross-cycle variance used for the algorithmic plans.
+- **The mean-median difference (MMD) CI barely excludes zero, but this is not discussed.** Section 5.3 reports a joint CI for MMD of [+0.0, +1.6] pp. The lower bound is exactly zero (or very close to it), meaning that the MMD is compatible with zero under electoral uncertainty. This is a significant finding that deserves discussion: it means the modest Democratic packing effect measured by MMD is not statistically significant when electoral uncertainty is accounted for. The paper mentions this without discussing its implications. A reviewer or opposing counsel will note that if MMD is compatible with zero, the paper's partisan neutrality claim is stronger than it appears from the EG alone.
+
+## P2 Items (Suggestions)
+
+- **Report the EG CIs separately for reform and non-reform states.** The current table aggregates all 19 states. Since the paper already identifies the reform/non-reform split as substantively important (Section 5.5), reporting separate average CIs for each group would allow courts to distinguish "algorithmic plans outperform legislative-drawn plans" (the non-reform comparison) from "algorithmic plans are comparable to commission-drawn plans" (the reform comparison).
+- **Consider whether the VRA minority VAP CI analysis (Section 6) should acknowledge the legal significance of the corrected threshold.** The finding that a Black-majority district needs only $\hat{f} \geq 0.483$ to be 95% confident that $f^* \geq 0.50$ is legally significant: it means that some districts currently classified as below majority-minority threshold in enacted plans may truly be majority-minority. This has offensive litigation implications that the paper does not acknowledge.
+
+## Score: 3 — Minor Revision
+
+The partisan metrics sections are the paper's strength. The three P1 items identify real gaps: the underestimation of electoral uncertainty, the missing enacted plan CIs, and the unacknowledged implications of the MMD-zero compatibility. The first two require additional computation; the third requires only additional discussion.

@@ -1,0 +1,90 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have introduced \pt{} redistricting, a Search-layer algorithm that runs
+$N_{\mathrm{replicas}}$ \fr{} chains simultaneously at different balance tolerances
+arranged on a geometric ladder.
+Adjacent chains periodically propose to exchange their current plans via the
+Metropolis criterion; accepted swaps inject global diversity from hot chains
+into the cold chain, enabling escape from local optima without modifying the
+cold chain's distributional target.
+
+\paragraph{Key design choices.}
+Three design choices make \pt{} redistricting practical:
+\begin{enumerate}
+\item The \emph{geometric ladder} $\varepsilon_i = \varepsilon_c \times
+  (\varepsilon_h/\varepsilon_c)^{i/(N-1)}$ provides approximately equal swap
+  acceptance rates across all adjacent pairs, calibrated by the ${\approx}23\%$
+  empirical target from continuous systems~\citep{kone2005}.
+\item The \emph{swap interval} of 10 steps balances chain diffusion time
+  against swap frequency, consistent with established tempering practice~\citep{earl2005}.
+\item The \emph{cold chain record collection} stores all $T+1$ cold chain
+  states, sorts by EC, and returns the plan at the requested percentile.
+  This allows percentile-based plan selection without rerunning the chain.
+\end{enumerate}
+
+\paragraph{Empirical summary.}
+PT($N=4$) achieves 7.6\% EC reduction over single-chain \fr{} on Texas ($k=38$),
+3.4\% on Wisconsin ($k=8$), and 3.3\% on North Carolina ($k=14$).
+The improvement is largest where local-optimum trapping is most severe.
+Observed swap acceptance rates of $18$--$24\%$ confirm that the geometric
+ladder is well-calibrated across all three states.
+
+\paragraph{Position in the algorithm landscape.}
+\pt{} is a Search-layer algorithm, orthogonal to the Structure layer
+(\geosec{}, \ar{}, \sa{}) and to the WeightsOverride layer.
+It composes with any structure/weights configuration.
+The recommended decision rule for practitioners is:
+\begin{itemize}
+\item \textbf{$k \le 20$}: Use single-chain \fr{} or \cs{}. PT overhead not
+  justified for adequate mixing states.
+\item \textbf{$k \ge 30$, auditability priority}: Use PT ($N=4$ default,
+  $N=6$ for TX/CA).
+  The SHA-256 seed derivation provides a complete audit chain from
+  \texttt{base\_seed} to the selected plan.
+\item \textbf{$k \ge 30$, geographic structure strong}: Consider \ms{} or
+  PT+\ms{} (future work).
+\end{itemize}
+
+\paragraph{Implementation.}
+\pt{} redistricting is implemented in the \texttt{redist} binary under
+\texttt{--search parallel-tempering}, with parameters \texttt{--pt-replicas},
+\texttt{--pt-swap-interval}, \texttt{--pt-cold-tol}, and \texttt{--pt-hot-tol}.
+The \texttt{ParallelTemperingChain} struct lives in
+\texttt{redist-ensemble/src/parallel\_tempering.rs} and exposes
+\texttt{swap\_acceptance\_rate()}, \texttt{cold\_chain\_ec\_mean()},
+and \texttt{select\_plan(p)} as the primary API.
+
+\paragraph{Open questions.}
+\begin{enumerate}
+\item \textbf{Parallel execution.}
+  The $N$ chains at different tolerances are independent between swap steps---an
+  embarrassingly parallel workload.
+  Rayon-based parallel execution would reduce wall-clock cost from $N\times$
+  to approximately $1\times$ the single-chain runtime, making PT competitive
+  on wall-clock time even for large $N$.
+  This is deferred as a Phase~2 implementation task.
+\item \textbf{Mixed-chain design.}
+  Should hot chains use standard \recom{} (faster per step, higher acceptance)
+  while only the cold chain uses \fr{} (distributional correctness)?
+  Mixed-chain designs complicate the swap Metropolis criterion but may improve
+  wall-clock performance.
+\item \textbf{Adaptive replica count.}
+  Adding or removing replicas during the run based on observed swap acceptance
+  rates would optimise the ladder dynamically.
+  This requires careful audit-chain handling to maintain reproducibility.
+\item \textbf{PT $\times$ Multi-Scale.}
+  Each PT replica could run an \ms{} chain at its tolerance.
+  This would combine the global diversity injection of PT with the large-proposal
+  benefit of \ms{}, potentially providing the best of both mechanisms for
+  TX-class states.
+\item \textbf{Non-adjacent swaps.}
+  Current implementation only proposes swaps between adjacent pairs $(i, i+1)$.
+  Non-adjacent swaps (between any pair of replicas) may improve global mixing
+  but require adjusting the Metropolis criterion and are less standard in the
+  tempering literature.
+\end{enumerate}
+
+These extensions inherit the clean three-layer compositor design of the existing
+platform and require no structural changes to the bisection tree or the
+\fr{} chain implementation.

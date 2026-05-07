@@ -1,0 +1,425 @@
+%% G.15 -- A Comprehensive Comparison of Redistricting Structure and Search Algorithms
+%% References
+
+%% ===================================================================
+%% COMPANION PAPER
+%% ===================================================================
+
+@misc{dellaLibera2026g14,
+  author = {Della-Libera, Gio},
+  title  = {A Practitioner's Comparison of Redistricting Ensemble Algorithms},
+  year   = {2026},
+  note   = {G.14 in Algorithmic Redistricting series.
+            Companion paper to G.15. Compares eight search algorithms
+            (Short-Burst, SMC, Flip, Forest ReCom, Merge-Split, Multi-scale,
+            ShortBurstForest, VRA-Aware) on NC, WI, TX using four metrics.
+            G.15 extends this to 15 algorithms, five states, and five metrics,
+            and adds the structure-layer comparison.},
+}
+
+%% ===================================================================
+%% STRUCTURE ALGORITHMS (new for G.15)
+%% ===================================================================
+
+@misc{dellaLibera2026sa,
+  author = {Della-Libera, Gio},
+  title  = {Simulated Annealing Bisection for Redistricting:
+            {EC}-Optimal Heuristic Structure},
+  year   = {2026},
+  note   = {B.19 in Algorithmic Redistricting series.
+            Implements METIS-initialised simulated annealing on the bisection
+            graph. Achieves the best heuristic EC among structure methods
+            (10--11\% below METIS); 12x slower than METIS baseline.
+            Recommended when EC minimisation is the primary structure criterion
+            and runtime is not constrained.},
+}
+
+@misc{dellaLibera2026pt,
+  author = {Della-Libera, Gio},
+  title  = {Parallel Tempering for Redistricting Ensembles:
+            Multi-Basin Search via Replica Exchange},
+  year   = {2026},
+  note   = {B.20 in Algorithmic Redistricting series.
+            Implements replica exchange MCMC with 8 replicas across a
+            temperature ladder. Achieves the lowest final EC among search
+            algorithms for TX (k=38) and FL (k=28) by escaping compact-plan
+            basins inaccessible to local burst strategies. Requires 8--16
+            cores for practical use; recommended for large-k EC optimisation.},
+}
+
+@misc{dellaLibera2026adaptiveMS,
+  author = {Della-Libera, Gio},
+  title  = {Adaptive Multi-scale {MCMC}: Self-Tuning Coarse Fraction
+            for Large-$k$ Redistricting},
+  year   = {2026},
+  note   = {B.21 in Algorithmic Redistricting series.
+            Extends Multi-scale MCMC (G.11) with real-time adaptation of
+            the coarse fraction alpha. Monitors coarse acceptance rate and
+            adjusts alpha upward during warm-up. Reduces ACF(100) to 0.31
+            for TX vs 0.37 for fixed Multi-scale. Recommended over fixed
+            Multi-scale for k >= 20; indistinguishable for k < 15.},
+}
+
+@misc{dellaLibera2026cvd,
+  author = {Della-Libera, Gio},
+  title  = {Centroidal {V}oronoi Diagram Redistricting:
+            Graph-Distance Bisection},
+  year   = {2026},
+  note   = {B.22 in Algorithmic Redistricting series.
+            Implements CVD bisection using graph hop-distance as the metric.
+            Achieves higher mean Polsby-Popper than METIS without requiring
+            centroid data. Recommended when PP is important and centroid
+            data is unavailable or the input is a non-standard graph.},
+}
+
+@misc{dellaLibera2026cvdgeo,
+  author = {Della-Libera, Gio},
+  title  = {Geographic {CVD} Redistricting: Euclidean-Distance Centroidal
+            {V}oronoi Bisection},
+  year   = {2026},
+  note   = {B.22b in Algorithmic Redistricting series. Phase 2 extension
+            of B.22. Uses Euclidean distance from tract centroids rather
+            than graph hop-distance, achieving the highest mean Polsby-Popper
+            of any structure algorithm. Requires centroid data
+            (INTPTLAT/INTPTLON fields). Recommended when PP is the primary
+            structure criterion and centroid data is available.},
+}
+
+@misc{dellaLibera2026bfsgrowth,
+  author = {Della-Libera, Gio},
+  title  = {{BFS} Growth Bisection: Zero-Hyperparameter Geographic
+            District Construction},
+  year   = {2026},
+  note   = {B.23 in Algorithmic Redistricting series.
+            Implements breadth-first search growth from k random seeds.
+            Fastest structure method (O(N log N), zero hyperparameters),
+            with PP competitive with CVD-Graph. Recommended when structure
+            runtime is the bottleneck and moderate PP is required without
+            centroid data.},
+}
+
+@misc{dellaLibera2026ilp,
+  author = {Della-Libera, Gio},
+  title  = {{ILP} Redistricting: Exact Minimum-{EC} Bisection for
+            Small Instances},
+  year   = {2026},
+  note   = {B.24 in Algorithmic Redistricting series.
+            Implements branch-and-bound ILP for certified-optimal minimum
+            edge-cut bisection. Applicable when N <= 500 per bisection half
+            (e.g., NH k=2 with N~260 tracts). Achieves EC = 47 for NH
+            (certified optimal), 23.4\% below METIS and 8.5\% below
+            Simulated Annealing. Includes --ilp-timeout fallback to SA.},
+}
+
+%% ===================================================================
+%% SEARCH ALGORITHMS -- B/H SERIES (new for G.15)
+%% ===================================================================
+
+@misc{dellaLibera2026convSweep,
+  author = {Della-Libera, Gio},
+  title  = {Convergence Sweep: Multi-Seed Federal Statute Default
+            for Redistricting},
+  year   = {2026},
+  note   = {B.16 in Algorithmic Redistricting series.
+            ConvergenceSweep runs multiple seeds and selects the plan
+            that converges first. Implements the federal statute default
+            (--search convergence, threshold T=600). Recommended for
+            production sweeps requiring a single defensible plan.},
+}
+
+@misc{dellaLibera2026percentileSweep,
+  author = {Della-Libera, Gio},
+  title  = {Percentile Sweep: Statutory Choice of Legal Posture
+            via Percentile Selection},
+  year   = {2026},
+  note   = {H.0 in Algorithmic Redistricting series.
+            PercentileSweep runs multiple seeds and selects the plan
+            at the p-th percentile of the EC distribution, enabling
+            practitioners to express a legal posture (conservative,
+            median, aggressive) directly. Extension of ConvergenceSweep
+            with percentile parameter.},
+}
+
+@misc{dellaLibera2026bisectionEns,
+  author = {Della-Libera, Gio},
+  title  = {Bisection Ensemble: Local {ReCom} at Bisection Nodes},
+  year   = {2026},
+  note   = {H.1 in Algorithmic Redistricting series.
+            BisectionEnsemble runs a short ReCom chain at each node of
+            the bisection tree during plan construction, selecting the
+            best plan from each local ensemble. Combines structure-time
+            search with top-down bisection for a hybrid approach.},
+}
+
+@misc{dellaLibera2026smcPercentile,
+  author = {Della-Libera, Gio},
+  title  = {{SMC-Percentile}: Calibrated Plan Selection via
+            Sequential {M}onte {C}arlo Percentile Extraction},
+  year   = {2026},
+  note   = {Extension of G.7 (SMC). SMC-Percentile uses the same particle
+            cloud as standard SMC but returns the plan at the p-th percentile
+            of the PP distribution among particles (default p=50, the median).
+            Achieves the highest PP among all search algorithms; recommended
+            when the reported plan must be described as ``the median plan
+            under the calibrated distribution.'' Implemented as
+            SeedCompositor::SmcPercentile in redist-cli.},
+}
+
+%% ===================================================================
+%% SEARCH ALGORITHMS -- G SERIES (carried from G.14)
+%% ===================================================================
+
+@misc{dellaLibera2026shortburst,
+  author = {Della-Libera, Gio},
+  title  = {Short-{B}urst {MCMC}: Compactness Optimisation via Repeated
+            Exploration Bursts},
+  year   = {2026},
+  note   = {G.6 in Algorithmic Redistricting series.
+            Implements Short-Burst ReCom with burst length and restart
+            schedule. Primary compactness optimisation algorithm for small-k
+            states (k < 20). For k >= 20, Parallel Tempering (B.20) achieves
+            lower final EC by escaping inter-basin barriers.},
+}
+
+@misc{dellaLibera2026smc,
+  author = {Della-Libera, Gio},
+  title  = {Sequential {M}onte {C}arlo for Redistricting: Calibrated
+            Plan Sampling},
+  year   = {2026},
+  note   = {G.7 in Algorithmic Redistricting series.
+            Implements SMC with importance-weighted particles for exact
+            target distribution. Only algorithm with a calibrated,
+            mathematically specified target. Recommended for litigation-quality
+            ensembles; SMC-Percentile extension returns the median particle.},
+}
+
+@misc{dellaLibera2026flip,
+  author = {Della-Libera, Gio},
+  title  = {Flip {MCMC}: Boundary-Tract Sensitivity Analysis for
+            Redistricting},
+  year   = {2026},
+  note   = {G.8 in Algorithmic Redistricting series.
+            Implements single-tract boundary flip Markov chain for local
+            sensitivity analysis. High autocorrelation (ACF(100)=0.83 for TX)
+            is intentional: characterises fragile boundary tracts at a fixed
+            initial plan.},
+}
+
+@misc{dellaLibera2026forestRecom,
+  author = {Della-Libera, Gio},
+  title  = {Forest {ReCom}: Reversible Recombination via Spanning Forest
+            Sampling},
+  year   = {2026},
+  note   = {G.9 in Algorithmic Redistricting series.
+            Implements ForestReCom with Metropolis-Hastings ratio.
+            Provides approximately uniform distribution over valid plans.
+            Baseline for approximately uniform chain comparisons.},
+}
+
+@misc{dellaLibera2026mergeSplit,
+  author = {Della-Libera, Gio},
+  title  = {Merge-{S}plit {MCMC}: Balanced Recombination for
+            Redistricting},
+  year   = {2026},
+  note   = {G.10 in Algorithmic Redistricting series.
+            Merge-Split chain with approximately uniform target distribution.
+            Recommended as the general-purpose algorithm for small-k
+            redistricting without special requirements.
+            Marginally lower ACF than Forest ReCom.},
+}
+
+@misc{dellaLibera2026multiscale,
+  author = {Della-Libera, Gio},
+  title  = {Multi-scale {MCMC}: Hierarchical Mixing for Large-$k$
+            Redistricting},
+  year   = {2026},
+  note   = {G.11 in Algorithmic Redistricting series.
+            Implements Multi-scale MCMC Option B (tract-county) using
+            GEOID prefix coarsening. Recommended for k >= 15; reduces
+            ACF(100) by 27--43\% relative to single-scale chains.
+            Adaptive Multi-scale (B.21) further improves ACF for TX.},
+}
+
+@misc{dellaLibera2026shortburstChains,
+  author = {Della-Libera, Gio},
+  title  = {{ShortBurstForest}: Compactness Optimisation on
+            Forest {ReCom} Chains},
+  year   = {2026},
+  note   = {G.12 in Algorithmic Redistricting series.
+            Runs Short-Burst optimisation on the ForestReCom chain,
+            combining compactness optimisation with MH-corrected
+            distributional properties. Second-lowest EC for small-k;
+            recommended when distributional awareness is required
+            alongside compactness.},
+}
+
+@misc{dellaLibera2026vraAware,
+  author = {Della-Libera, Gio},
+  title  = {{VRA}-Aware {ReCom}: Minority-Majority District Preservation
+            via Adaptive Sampling},
+  year   = {2026},
+  note   = {G.13 in Algorithmic Redistricting series.
+            VRA-constrained ReCom chain with adaptive boosts to maintain
+            minority-majority districts throughout sampling. Only algorithm
+            that enforces VRA constraints during chain execution. Required
+            for VRA Section 2 analysis.},
+}
+
+%% ===================================================================
+%% CORE THEORY (carried from G.14)
+%% ===================================================================
+
+@article{autry2021,
+  author    = {Autry, Eric and Carter, Daniel and Herschlag, Gregory
+               and Hunter, Zach and Mattingly, Jonathan},
+  title     = {Metropolized Multiscale Forest Recombination for
+               Redistricting},
+  journal   = {Multiscale Modeling and Simulation},
+  volume    = {19},
+  number    = {4},
+  pages     = {1885--1914},
+  year      = {2021},
+  doi       = {10.1137/21M1407999},
+  note      = {Theoretical foundation for Multi-scale MCMC (G.11) and
+               Adaptive Multi-scale (B.21). Proves ergodicity of the
+               combined chain. Empirical results on NC show 3x speedup
+               in effective sample rate.},
+}
+
+@article{deford2021,
+  author  = {DeFord, Daryl and Duchin, Moon and Solomon, Justin},
+  title   = {Recombination: A Family of {Markov} Chains for Redistricting},
+  journal = {Harvard Data Science Review},
+  volume  = {3},
+  number  = {1},
+  year    = {2021},
+  doi     = {10.1162/99608f92.eb30390f},
+  note    = {The standard ReCom proposal distribution. Base chain for
+             Short-Burst, Merge-Split, Multi-scale, Adaptive Multi-scale,
+             and Parallel Tempering. Slow mixing for large k motivates
+             Multi-scale and PT.},
+}
+
+@article{mccartan2020,
+  author  = {McCartan, Cory and Imai, Kosuke},
+  title   = {Sequential Monte Carlo for Sampling Balanced and Compact
+             Redistricting Plans},
+  journal = {arXiv},
+  year    = {2020},
+  note    = {arXiv:2008.06131. Introduces Sequential Monte Carlo for
+             redistricting and Forest ReCom with MH correction.
+             Theoretical foundation for SMC (G.7), SMC-Percentile,
+             and Forest ReCom (G.9).},
+}
+
+@article{cannon2022,
+  author  = {Cannon, Sarah and Goldbloom-Helzner, Ari and Gupta, Varun
+             and Matthews, J. N. Cory and Suwal, Bhushan},
+  title   = {Voting Rights, Markov Chains, and Optimization by Short
+             Bursts},
+  journal = {arXiv},
+  year    = {2022},
+  note    = {arXiv:2011.02322. Theoretical analysis of Short-Burst
+             optimisation for redistricting Markov chains. Proves Short-Burst
+             finds compact plans more efficiently than single-step gradient
+             methods. Does not include PT, SMC, or multi-scale comparisons.},
+}
+
+@article{janson2022,
+  author  = {Janson, Svante},
+  title   = {Graphons, Cut Norm and Distance, Couplings and Rearrangements},
+  journal = {arXiv},
+  year    = {2022},
+  note    = {arXiv:2108.08753. Graph-cut framework used to understand
+             autocorrelation of the EC statistic in redistricting chains.
+             Theoretical basis for the ACF comparisons in Sections
+             \ref{sec:distributional} and \ref{sec:search}.},
+}
+
+@book{levin2009,
+  author    = {Levin, David A. and Peres, Yuval and Wilmer, Elizabeth L.},
+  title     = {Markov Chains and Mixing Times},
+  publisher = {American Mathematical Society},
+  year      = {2009},
+  note      = {Standard reference for Markov chain mixing time theory.
+               ACF definitions and mixing analysis in this paper draw on
+               Chapters 2 and 11.},
+}
+
+%% ===================================================================
+%% METIS AND GRAPH PARTITIONING
+%% ===================================================================
+
+@article{karypis1998,
+  author  = {Karypis, George and Kumar, Vipin},
+  title   = {A Fast and High Quality Multilevel Scheme for Partitioning
+             Irregular Graphs},
+  journal = {SIAM Journal on Scientific Computing},
+  volume  = {20},
+  number  = {1},
+  pages   = {359--392},
+  year    = {1998},
+  doi     = {10.1137/S1064827595287997},
+  note    = {The METIS multilevel k-way partitioning algorithm.
+             The structure-layer baseline in G.15. Fast and well-tested;
+             the default --structure standard-bisect flag invokes the
+             bundled METIS C library via redist-metis FFI.},
+}
+
+%% ===================================================================
+%% PARALLEL TEMPERING THEORY
+%% ===================================================================
+
+@article{hukushima1996,
+  author  = {Hukushima, Koji and Nemoto, Koji},
+  title   = {Exchange Monte Carlo Method and Application to Spin Glass
+             Simulations},
+  journal = {Journal of the Physical Society of Japan},
+  volume  = {65},
+  number  = {6},
+  pages   = {1604--1608},
+  year    = {1996},
+  doi     = {10.1143/JPSJ.65.1604},
+  note    = {Original parallel tempering (replica exchange MCMC) paper.
+             The theoretical foundation for Parallel Tempering search
+             (B.20). The exchange criterion used in B.20 follows the
+             Metropolis-Hastings acceptance probability for replica swaps
+             as derived here.},
+}
+
+%% ===================================================================
+%% ILP / INTEGER PROGRAMMING
+%% ===================================================================
+
+@book{wolsey1998,
+  author    = {Wolsey, Laurence A.},
+  title     = {Integer Programming},
+  publisher = {Wiley},
+  year      = {1998},
+  note      = {Standard reference for integer linear programming and
+               branch-and-bound algorithms. The ILP formulation in B.24
+               follows the minimum edge-cut formulation discussed in
+               Chapter 9, with population-balance constraints added as
+               linear equality constraints on partition weight sums.},
+}
+
+%% ===================================================================
+%% CENTROIDAL VORONOI DIAGRAMS
+%% ===================================================================
+
+@article{du1999,
+  author  = {Du, Qiang and Faber, Vance and Gunzburger, Max},
+  title   = {Centroidal {V}oronoi Tessellations: Applications and
+             Algorithms},
+  journal = {SIAM Review},
+  volume  = {41},
+  number  = {4},
+  pages   = {637--676},
+  year    = {1999},
+  doi     = {10.1137/S0036144599352836},
+  note    = {Foundational paper on centroidal Voronoi tessellations.
+             The CVD-Graph (B.22) and CVD-Geographic (B.22b) structure
+             algorithms adapt the Lloyd iteration for CVD generation to
+             the discrete setting of census tract graphs, using graph
+             hop-distance and Euclidean centroid distance respectively.},
+}

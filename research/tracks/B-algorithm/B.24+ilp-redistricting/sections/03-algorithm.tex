@@ -1,0 +1,248 @@
+\section{Algorithm: ILP Redistricting Formulation}
+\label{sec:algorithm}
+
+\subsection{Notation}
+
+Let $G_v = (V_v, E_v)$ be the subgraph at bisection tree node $v$, with
+$n = |V_v|$ tracts and $k$ districts to produce.
+Let $\mathrm{pop}(t)$ be the population of tract $t$, and
+$P_{\mathrm{ideal}} = \sum_t \mathrm{pop}(t) / k$ the ideal district
+population.
+Let $\varepsilon_{\mathrm{bal}} \in [0,1]$ be the population balance
+tolerance (default $0.5\%$, i.e., $\varepsilon_{\mathrm{bal}} = 0.005$).
+
+For each district $d \in \{0, \ldots, k-1\}$, designate an arbitrary
+root $r_d$ (we use $r_d = $ the tract with smallest global index, which
+is deterministic and audit-compatible).
+
+\subsection{Decision Variables}
+
+\begin{itemize}
+\item $x_{t,d} \in \{0,1\}$: equals 1 iff tract $t$ is assigned to
+  district $d$.
+  Binary.
+  $n \times k$ variables total.
+
+\item $z_{t,t'} \in \{0,1\}$ for each undirected edge $\{t,t'\} \in E_v$
+  with $t < t'$: equals 1 iff the edge is cut (endpoints in different
+  districts).
+  Binary.
+  $|E_v|$ variables total (one per undirected edge; shared across districts).
+
+\item $f_{t,t',d} \geq 0$ for each directed edge $(t,t')$ (both orientations
+  of each undirected edge) and each district $d$: flow on arc $(t,t')$ for
+  district $d$'s connectivity spanning tree.
+  Continuous.
+  $2|E_v| \times k$ variables total.
+\end{itemize}
+
+\subsection{Objective}
+
+\begin{equation}
+\label{eq:objective}
+\min \sum_{\{t,t'\} \in E_v,\; t < t'} z_{t,t'}.
+\end{equation}
+
+Each undirected edge is counted exactly once in the sum.
+The objective counts the total number of cut edges in the partition.
+
+\begin{remark}[Corrected objective]
+An earlier formulation (pre-R1) introduced per-district per-edge auxiliary
+variables $y_{t,t',d}$ and minimised $\sum_d \sum_{t<t'} y_{t,t',d}$,
+which over-counts each cut edge $k$ times (once per district).
+The corrected formulation uses a single indicator $z_{t,t'}$ per undirected
+edge and counts each cut edge exactly once.
+This correction is critical: the old formulation favoured high-$k$ solutions
+by $k$-fold over-penalising each cut, distorting the optimisation landscape.
+\end{remark}
+
+\subsection{Constraints}
+
+\paragraph{Coverage.}
+Every tract is assigned to exactly one district:
+\begin{equation}
+\label{eq:coverage}
+\sum_{d=0}^{k-1} x_{t,d} = 1 \qquad \forall t \in V_v.
+\end{equation}
+
+\paragraph{Population balance.}
+Each district's population is within $\varepsilon_{\mathrm{bal}}$ of ideal:
+\begin{equation}
+\label{eq:balance}
+(1 - \varepsilon_{\mathrm{bal}}) \cdot P_{\mathrm{ideal}}
+\leq \sum_{t \in V_v} \mathrm{pop}(t) \cdot x_{t,d}
+\leq (1 + \varepsilon_{\mathrm{bal}}) \cdot P_{\mathrm{ideal}}
+\qquad \forall d.
+\end{equation}
+
+\paragraph{Cut-edge linearisation.}
+$z_{t,t'}$ is forced to 1 whenever the two endpoints are in different
+districts:
+\begin{align}
+z_{t,t'} &\geq x_{t,d} - x_{t',d}
+  \qquad \forall \{t,t'\} \in E_v,\; t < t',\; \forall d, \label{eq:cut1} \\
+z_{t,t'} &\geq x_{t',d} - x_{t,d}
+  \qquad \forall \{t,t'\} \in E_v,\; t < t',\; \forall d. \label{eq:cut2}
+\end{align}
+Together \eqref{eq:cut1}--\eqref{eq:cut2} enforce $z_{t,t'} \geq |x_{t,d} - x_{t',d}|$
+for all $d$; since $z_{t,t'}$ is minimised in the objective, it takes
+value 1 if and only if the edge is cut by at least one district boundary.
+
+\paragraph{Contiguity (MTZ flow).}
+For each district $d$, the spanning-tree flow constraints enforce that
+the tracts assigned to $d$ form a connected subgraph.
+Root $r_d$ supplies $n_d - 1$ units of flow; each non-root tract in $d$
+consumes one unit:
+\begin{align}
+f_{t,t',d} &\geq 0
+  \qquad \forall (t,t') \in E_v^{\mathrm{dir}},\; \forall d,
+  \label{eq:flow-nonneg} \\
+f_{t,t',d} &\leq (n-1) \cdot \min(x_{t,d},\, x_{t',d})
+  \qquad \forall (t,t') \in E_v^{\mathrm{dir}},\; \forall d,
+  \label{eq:flow-cap} \\
+\sum_{t': (t,t') \in E_v^{\mathrm{dir}}} f_{t,t',d}
+  - \sum_{t': (t',t) \in E_v^{\mathrm{dir}}} f_{t',t,d}
+  &= x_{t,d}
+  \qquad \forall t \neq r_d,\; \forall d,
+  \label{eq:flow-balance} \\
+\sum_{t': (r_d,t') \in E_v^{\mathrm{dir}}} f_{r_d,t',d}
+  &= \sum_{t \in V_v} x_{t,d} - 1
+  \qquad \forall d.
+  \label{eq:flow-root}
+\end{align}
+Here $E_v^{\mathrm{dir}}$ contains both orientations of each undirected
+edge in $E_v$.
+
+\begin{remark}[Both-endpoint capacity bound]
+Constraint~\eqref{eq:flow-cap} uses $\min(x_{t,d}, x_{t',d})$ rather
+than the standard $x_{t,d}$ bound.
+This ensures that flow on arc $(t, t')$ is zero whenever \emph{either}
+endpoint is outside district $d$: if $x_{t',d} = 0$, the flow cap
+drops to zero regardless of $x_{t,d}$.
+The $\min$ is linearised as two linear constraints:
+$f_{t,t',d} \leq (n-1) \cdot x_{t,d}$ and
+$f_{t,t',d} \leq (n-1) \cdot x_{t',d}$.
+This tightens the LP relaxation relative to standard MTZ and reduces
+branch-and-bound tree size~\citep{gurnee2021}.
+\end{remark}
+
+\subsection{Variable Counts and Problem Size}
+
+For reference, Table~\ref{tab:var-counts} gives variable and constraint
+counts for representative instances.
+
+\begin{table}[t]
+\centering
+\caption{%
+  Variable and constraint counts for representative instances.
+  $|E|$ is the number of undirected edges in the tract adjacency graph.
+  Typical adjacency degree is 5--8 per tract for census-tract graphs.
+}
+\label{tab:var-counts}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}lrrrrrrr@{}}
+\toprule
+Instance & $n$ & $k$ & $|E|$ & Bin.\ $x$ & Bin.\ $z$ & Cont.\ $f$ & Constraints \\
+\midrule
+4-node path ($k=2$)   & 4   & 2 & 3  & 8   & 3   & 12  & $\approx 50$ \\
+VT 2020 ($k=1$)        & 181 & 1 & 894 & 181 & 894 & 0   & $\approx 1{,}300$ \\
+NH 2020 ($k=2$)        & 260 & 2 & 1{,}287 & 520 & 1{,}287 & 5{,}148 & $\approx 9{,}400$ \\
+RI 2020 ($k=2$)        & 244 & 2 & 1{,}202 & 488 & 1{,}202 & 4{,}808 & $\approx 8{,}800$ \\
+Bisect node ($n=400$, $k=2$) & 400 & 2 & 1{,}980 & 800 & 1{,}980 & 7{,}920 & $\approx 14{,}500$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{remark}[$k=1$ degenerate case]
+For $k=1$ (single-district states), there is exactly one valid assignment:
+every tract goes to district 0.
+The ILP reduces to a feasibility check with trivially zero edge cut.
+The solver returns \texttt{Optimal} immediately with EC$= 0$ and solve
+time under 1\,s regardless of state size.
+This degenerate case is detected and fast-pathed before solver invocation.
+\end{remark}
+
+\subsection{Formal Pseudocode}
+
+Algorithm~\ref{alg:ilp} gives the top-level \ilp{} redistricting procedure.
+
+\begin{algorithm}[t]
+\caption{\ilp{}-\textsc{Bisect}($G_v$, $k$, $\mathbf{p}$,
+  $\varepsilon_{\mathrm{bal}}$, $\tau$, $\delta$, $n_{\max}$)}
+\label{alg:ilp}
+\begin{algorithmic}[1]
+\State $n \gets |V_v|$
+\If{$k = 1$}
+  \textbf{return} $(\text{all tracts} \to 0,\; \texttt{Optimal},\; \text{EC}=0,\; \text{gap}=0.0)$
+\EndIf
+\If{$n > n_{\max}$}
+  \State $\mathbf{warn}$(\texttt{"ILP fallback: $n > n_{\max}$, using METIS"})
+  \State \textbf{return} \metis{}-\textsc{Bisect}$(G_v, k, \mathbf{p}, \varepsilon_{\mathrm{bal}})$
+  \Comment{size guard}
+\EndIf
+\State Build LP/MPS file $F$ with constraints
+  \eqref{eq:coverage}--\eqref{eq:flow-root}
+  \Comment{write to \texttt{runs/\ldots/ilp/\{node\}.mps}}
+\State $(x^*, z^*, \text{status}, \text{gap}) \gets \textsc{Solve}(F, \tau, \delta)$
+  \Comment{$\tau$: time limit, $\delta$: gap threshold}
+\If{status $\in$ \{\texttt{Optimal}, \texttt{GapReached}\}}
+  \State $\mathrm{assign}(t) \gets \arg\max_d x^*_{t,d}$ for each $t$
+  \State \textbf{return} $(\mathrm{assign},\; \text{status},\; \sum_{t<t'} z^*_{t,t'},\; \text{gap})$
+\ElsIf{status $=$ \texttt{Timeout}}
+  \State \textbf{return} best incumbent with recorded gap $> \delta$
+\Else
+  \textbf{raise} \textsc{Infeasible}
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Solver Selection}
+
+The solver interface is abstracted behind a \texttt{Solver} trait so that
+backends can be swapped without touching the formulation code.
+Phase~1 uses a two-tier priority order:
+
+\begin{enumerate}
+\item \textbf{\glpk{} via \texttt{good\_lp}} --- pure Rust $+$ C binding,
+  no subprocess, bundled with the crate.
+  Default for $n \leq 200$.
+  Typical solve time for NH: 47\,s.
+
+\item \textbf{\highs{} subprocess} --- invokes the \texttt{highs} binary
+  from \texttt{PATH} if available.
+  For $200 < n \leq 500$.
+  \highs{} is a state-of-the-art open-source MIP solver with significantly
+  faster branch-and-bound than \glpk{} on larger instances.
+\end{enumerate}
+
+If neither solver is available and $n \leq n_{\max}$, the MPS file is
+written and the CLI returns an error directing the user to install
+\texttt{highs}.
+
+\subsection{Size Guard and Fallback}
+
+If the subgraph at a bisection node has $n > \texttt{max\_tracts}$
+(default 500), \ilp{} is not invoked and \metis{} runs instead:
+
+\begin{verbatim}
+WARNING: ILP solver skipped for node at depth 2 (847 tracts > 500 limit).
+         Falling back to METIS.
+         Increase --ilp-max-tracts or use --structure metis to suppress.
+\end{verbatim}
+
+The fallback is recorded in the audit JSON as
+\texttt{"solver\_status": "fallback\_metis"} so that the audit chain
+accurately reflects which portions of the bisection tree used exact
+optimisation and which used heuristic fallback.
+
+\subsection{MPS File Retention}
+
+Before invoking the solver, the formulation is serialised to
+\texttt{runs/\{label\}/\{year\}/ilp/\{node\_id\}.mps} in the standard
+Mathematical Programming System format.
+This file is retained regardless of solver outcome.
+An external auditor can reload it into any LP/MIP solver and verify that
+the committed plan achieves the reported optimal objective value.
+This is the practical manifestation of the ``no valid plan has lower
+edge cuts'' certificate: the certificate is the MPS file plus the
+solver's return status.

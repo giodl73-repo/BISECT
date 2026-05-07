@@ -1,0 +1,168 @@
+\section{Theory}
+\label{sec:theory}
+
+\subsection{The Proportionality Guarantee}
+
+\begin{theorem}[Proportionality]
+\label{thm:proportionality}
+Let a state have Democratic fraction $d \in (0,1)$, $k$ equal-population
+districts, and proportional allocation $k_D = \lfloor dk + 0.5 \rfloor$,
+$k_R = k - k_D$.
+If the dual-constraint bisection achieves $\mathtt{tpwgts}$ as in
+\eqref{eq:tpwgts-formula} exactly, then:
+\begin{enumerate}
+  \item The R-bloc ($k_R$ districts) has Democratic concentration $= 50\,\%$,
+        so Republicans win any competitive R-bloc district.
+  \item The D-bloc ($k_D$ districts) has Democratic concentration
+        $= \frac{1 - k_R/(2dk)}{k_D/k} \cdot d = \frac{dk - k_R/2}{k_D} > 50\,\%$,
+        so Democrats win any competitive D-bloc district.
+  \item Recursive bisection within each bloc preserves the majority, so the final
+        plan has at least $k_D$ Democratic-winning and $k_R$ Republican-winning districts.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+Item~(1): Democratic concentration in R-bloc $= \frac{(1-\tau_D) D}{(k_R/k) P}
+= \frac{k_R/(2dk) \cdot dP}{(k_R/k) P} = \frac{1}{2}$. \checkmark
+
+Item~(2): D-bloc Democratic concentration
+$= \frac{\tau_D D}{(k_D/k) P} = \frac{(1 - k_R/(2dk)) \cdot d}{k_D/k}
+= \frac{dk - k_R/2}{k_D}$.
+Since $k_D = dk$ rounded up (under HH), $k_D \geq dk$ and $k_R \leq (1-d)k$.
+Therefore: $\frac{dk - k_R/2}{k_D} \geq \frac{dk - (1-d)k/2}{k_D}
+= \frac{k(3d-1)/2}{k_D}$.
+For $d > 1/3$ (D has at least one seat), this exceeds $1/2$ when $k_D \leq k(3d-1)/1$.
+In the two-party case with $d > 0.5$ (D plurality), the concentration is always $> 50\,\%$. \checkmark
+
+Item~(3) follows by induction: each recursive bisection within the D-bloc
+uses the same constraint with the local $d'$ which equals the D-bloc's concentration
+$\geq 50\,\%$, preserving the D-majority throughout the tree. \qed
+\end{proof}
+
+\begin{remark}
+For $d < 0.5$ (R-plurality state), $k_D < k/2$. The formula still applies,
+but the R-bloc gets the majority of districts. The guarantee is symmetric:
+each party wins its proportional allocation.
+\end{remark}
+
+\subsection{The Partisan Lorenz Feasibility Condition}
+
+Not all states can achieve the $\mathtt{tpwgts}$ targets under the geographic
+contiguity constraint. The partisan Lorenz curve determines feasibility.
+
+\begin{definition}[Partisan Lorenz curve]
+\label{def:lorenz}
+Sort census tracts by Democratic fraction $d_v / p_v$, from least to most
+Democratic (R-heavy first). Define $L_D : [0,1] \to [0,1]$ by:
+\[
+  L_D(x) = \frac{\sum_{v : \mathrm{rank}_R(v) \leq x|V|} d_v}{D}
+\]
+where tracts are ordered from least to most Democratic.
+$L_D(x)$ is the fraction of all Democratic votes in the $x$-fraction least-Democratic tracts.
+\end{definition}
+
+\begin{theorem}[Lorenz feasibility]
+\label{thm:lorenz-feasibility}
+The proportional target $\tau_D^* = 1 - k_R/(2dk)$ is geometrically achievable
+(without contiguity constraint) if and only if:
+\[
+  L_D(k_R/k) \leq \frac{k_R}{2dk}
+\]
+i.e., the least-Democratic $k_R/k$ fraction of the population contains at most
+the required minimum of Democratic votes for the R-bloc.
+\end{theorem}
+
+\begin{proof}
+$L_D(k_R/k)$ is the maximum Democratic fraction achievable in the R-bloc under
+non-contiguous selection of $k_R/k$ of the population (taking the most
+Republican-friendly tracts). If this maximum is $\leq k_R/(2dk)$, the target
+is achievable; if it exceeds $k_R/(2dk)$, even the most Republican-friendly
+geography contains too many Democrats for a proportional R-bloc. \qed
+\end{proof}
+
+\begin{definition}[Natural proportional ratio]
+The \emph{natural proportional ratio} $p^*$ is the population fraction at which
+the partisan Lorenz curve crosses the proportionality target:
+\[
+  p^* = \inf\{x : L_D(x) \geq k_R/(2dk)\}
+\]
+When $p^* \leq k_R/k$, proportionality is feasible. When $p^* > k_R/k$,
+more population is needed than the R-bloc's share to find enough R-friendly tracts.
+\end{definition}
+
+\subsection{The Minimum Partisan Signal}
+
+\begin{definition}[Partisan signal strength]
+The \emph{partisan signal strength} $\sigma$ of a redistricting algorithm is the
+$L^1$ distance between its $\mathtt{tpwgts}[1]$ (D-votes target for left partition)
+and the neutral target $k_D/k$ (equal Democratic distribution):
+\[
+  \sigma = \left|\tau_D - \frac{k_D}{k}\right| = \left|1 - \frac{k_R}{2dk} - \frac{k_D}{k}\right|
+\]
+\end{definition}
+
+$\sigma = 0$ means no partisan signal is required: the algorithm is neutral
+and achieves proportionality by geography alone.
+$\sigma > 0$ measures how far the algorithm must ``pull'' Democratic votes
+from the neutral geographic distribution to achieve proportionality.
+
+\begin{proposition}
+For a state with uniform partisan geography (each tract has Democratic fraction
+exactly $d$), $\sigma = 0$ and proportionality is achieved by any balanced bisection.
+For a state where all Democratic voters are concentrated in one geographic cluster,
+$\sigma$ is maximised and geographic contiguity may prevent proportionality entirely.
+\end{proposition}
+
+\subsection{The Tradeoff Impossibility for Competitive States}
+
+The following theorem gives the key analytical result that replaces the need
+for empirical tradeoff curves in competitive states.
+
+\begin{theorem}[Tradeoff invariance]
+\label{thm:invariance}
+For a state with $d \approx 1/2$ and $k_D = k_R = k/2$, the partisan signal
+strength $\sigma \to 0$ as $d \to 1/2$.
+Specifically, $\sigma = |2d - 1| / 2$.
+
+In this regime, varying $\mathtt{ubvec}[1]$ from $1.0$ to $\infty$ moves the
+$D_{\text{votes}}$ target by at most $\sigma$ in $L^1$ norm.
+The B.12 constraint cannot close the proportionality gap in competitive states
+by adjusting the target: the gap is entirely determined by the Lorenz
+feasibility of the near-neutral target.
+\end{theorem}
+
+\begin{proof}
+With $k_D = k_R = k/2$ (equal allocation, which HH gives for $d \approx 1/2$):
+\[
+  \tau^* = 1 - \frac{k/2}{2d \cdot k} = 1 - \frac{1}{4d}
+\]
+Neutral target: $k_D/k = 1/2$.
+\[
+  \sigma = \left|1 - \frac{1}{4d} - \frac{1}{2}\right| = \left|\frac{1}{2} - \frac{1}{4d}\right|
+  = \frac{|2d-1|}{4d} \approx \frac{|2d-1|}{2} \text{ for } d \approx 1/2
+\]
+The maximum displacement of $\tau_D$ under $\mathtt{ubvec}[1] \in [1.0, \infty)$
+is bounded by $\sigma$. Therefore the constraint cannot move the partition more
+than $\sigma$ from the neutral distribution.
+For competitive states ($|2d-1| < 0.1$), $\sigma < 0.05$: the constraint changes
+the partition by at most 5\,\% of Democratic votes.
+Whether this 5\,\% shift closes the proportionality gap depends entirely on the
+Lorenz curve at that scale --- not on $\mathtt{ubvec}[1]$. \qed
+\end{proof}
+
+\begin{corollary}[Analytical tradeoff bound]
+For competitive states ($|d - 0.5| < 0.05$), the proportionality gap under
+B.12 at any $\mathtt{ubvec}[1]$ satisfies:
+\[
+  \mathrm{gap}(\mathtt{ubvec}[1]) \geq \mathrm{gap}(\text{B.9}) - C \cdot \sigma
+\]
+where $C$ is a state-specific constant bounded by the Lorenz curve slope at $x = k_R/k$.
+For Wisconsin ($\sigma = 0.003$) and Georgia ($\sigma = 0.001$), the B.12 constraint
+cannot reduce the proportionality gap by more than $C \cdot 0.003$ and $C \cdot 0.001$
+respectively, regardless of $\eta = \mathtt{ubvec}[1]$.
+
+This analytically establishes that the tradeoff curve for competitive states is
+flat: no amount of partisan constraint closes the Rodden gap.
+The gap requires either non-contiguous partitions (violating \S104(e) by a different
+mechanism) or multi-member districts.
+\end{corollary}

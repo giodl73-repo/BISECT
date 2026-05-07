@@ -1,0 +1,80 @@
+\section{Parameters Studied}
+\label{sec:parameters}
+
+\subsection{METIS Imbalance Factor ($\ufactor$)}
+
+The METIS graph partitioner~\citep{karypis2013manual} accepts a parameter
+\texttt{ufactor} that controls the maximum allowable imbalance in the
+partition: each partition is required to have weight between
+$(1 - \ufactor) \cdot P_{\rm target}$ and $(1 + \ufactor) \cdot P_{\rm target}$,
+where $P_{\rm target} = P_{\rm total} / k$.
+
+In the redistricting context, METIS is applied at each node of the
+\ar{} bisection tree.
+The DIA population tolerance of $\pm 0.5\%$ is a separate constraint
+applied at the leaf level (individual district).
+
+The $\ufactor$ range $[0.1\%, 5\%]$ covers:
+\begin{itemize}
+\item $0.1\%$: near-perfect balance within METIS; maximally constrains
+      the partitioner, reducing its ability to find compact cuts.
+\item $1\%$ (DIA default): balances compactness and balance.
+\item $5\%$: wide METIS tolerance; allows very compact cuts at the cost
+      of greater population imbalance within METIS subtrees (the DIA
+      leaf-level constraint still applies).
+\end{itemize}
+
+\subsection{County Edge Weight ($\acounty$)}
+
+County-boundary edges receive a multiplicative weight $\acounty$ relative
+to standard geographic boundary-length edges.
+This implements the ``county-respecting'' principle from B.10~\citep{b10paper}:
+the algorithm prefers cuts along county lines.
+
+The range $\acounty \in [1.0, 10.0]$:
+\begin{itemize}
+\item $1.0$: county edges are weighted the same as non-county edges;
+      county-respecting behavior is disabled.
+\item $3.0$ (DIA default): county lines are preferred 3$\times$ over
+      equally long non-county edges.
+\item $10.0$: strong county-respecting; the algorithm will almost always
+      cut along county lines, even at some compactness cost.
+\end{itemize}
+
+\subsection{ConvergenceSweep Threshold ($T$)}
+
+$T$ is the number of consecutive non-improving seeds required to halt
+the sweep.
+The range $T \in [100, 1{,}000]$:
+\begin{itemize}
+\item $T = 100$: fast but may miss the global minimum (B.16 shows
+      Georgia last improves at seed 489, so $T = 100$ fails GA).
+\item $T = 600$ (DIA default): certifiably sufficient for all 50 states
+      with $P(\text{miss}) < 0.001$.
+\item $T = 1{,}000$: extra margin; no additional benefit for any state.
+\end{itemize}
+
+\subsection{Area Swing ($\aswing$)}
+
+In GeoSection/AreaSection (B.8/B.9), the area swing parameter controls
+the relative weight of geographic area versus population in the bisection
+objective.
+The range $\aswing \in [1.05, 1.20]$:
+\begin{itemize}
+\item $1.05$: near-population-proportional bisection.
+\item $1.10$ (DIA default): moderate area weight.
+\item $1.20$: strong area weight; the algorithm will bisect more
+      spatially than demographically.
+\end{itemize}
+
+\subsection{VRA Boost Weight ($\wvra$)}
+
+VRA-eligible tracts (census blocks with $\geq 40\%$ minority population)
+receive edge weight boost $\wvra$ to reduce the probability of splitting
+minority communities.
+The range $\wvra \in [0.2, 0.6]$:
+\begin{itemize}
+\item $0.2$: weak VRA boost; minority community protection is minimal.
+\item $0.4$ (DIA default): moderate VRA boost.
+\item $0.6$: strong VRA boost; significant compactness cost.
+\end{itemize}

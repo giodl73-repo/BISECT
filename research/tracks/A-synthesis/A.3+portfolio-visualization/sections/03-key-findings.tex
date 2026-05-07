@@ -1,0 +1,65 @@
+%% 03-key-findings.tex — Five headline numbers
+
+\section{Five Headline Numbers}
+
+The portfolio distills to five numbers, each the headline result of
+a specific paper or cluster of papers.
+
+\begin{description}[leftmargin=0pt, itemsep=10pt]
+
+  \item[\Large +22\% compactness improvement.]
+    Across all 435 congressional districts, algorithmic maps are
+    22\% more compact than the enacted 2020 maps, measured by the
+    Polsby-Popper score (ratio of district area to perimeter squared).
+    Compact districts follow natural geographic features rather than
+    being stretched to capture partisan voters.
+    \hfill\textit{Paper B.2}~\cite{dellaLibera2026edgeWeighted}
+
+  \item[\Large North Carolina: 7 Democratic, 7 Republican.]
+    When the algorithm partitions North Carolina---a state that has
+    been the subject of repeated gerrymandering litigation---it
+    produces a 7-to-7 delegation, closely matching the state's
+    roughly even partisan split.  No partisan data was used.
+    \hfill\textit{Paper B.11}~\cite{dellaLibera2026ncRegions}
+
+    \smallskip
+    \noindent\textit{Note: This result holds under the ApportionRegions algorithm
+    ($k=14=7\times2$); the same data under GeoSection gives 5D/9R, illustrating
+    that algorithm choice---not the data---determines partisan outcomes.}
+
+  \item[\Large $T = 600$ bisection steps to convergence.]
+    The algorithm reliably converges---produces stable, repeatable
+    districts---within 600 METIS bisection iterations.
+    More iterations change nothing; fewer can leave the solution
+    incomplete.  This gives practitioners a firm stopping rule.
+    \hfill\textit{Paper B.16}~\cite{dellaLibera2026convergence}
+
+  \item[\Large 42\% minority-population threshold for VRA compliance.]
+    States where minority voters make up at least 42\% of the
+    voting-age population can reliably achieve proportional
+    majority-minority representation through algorithmic redistricting.
+    Below this threshold, geography alone makes proportional
+    representation infeasible---regardless of who draws the map.
+    \hfill\textit{Paper D.1}~\cite{dellaLibera2026vraCompliance}
+
+    \smallskip
+    \noindent\textit{This is an empirical regularity derived from 43-state analysis,
+    not a legal bright line; VRA Section~2 compliance still requires the full
+    Gingles three-prong test.  In the five covered states, this means
+    majority-minority districts are achievable through principled methods
+    without sacrificing compactness.}
+
+  \item[\Large $O(n^{1.07})$ runtime.]
+    The algorithm scales nearly linearly with the number of census
+    tracts.  Doubling the number of tracts (moving from tract-level
+    to block-group-level resolution) adds only 7\% more time than
+    a pure linear relationship would predict.  All 50 states run
+    in under eighteen minutes on commodity hardware.
+    \hfill\textit{Paper B.6}~\cite{dellaLibera2026complexity}
+
+\end{description}
+
+\bigskip
+\noindent These five numbers are conservative: they are derived from
+runs on publicly available Census data using openly published code.
+Any researcher with an internet connection can reproduce them.

@@ -1,0 +1,98 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The Convergence Question}
+
+Redistricting ensembles have become central to partisan-gerrymandering
+litigation in state courts following \textit{Rucho v.\ Common Cause}~\citep{rucho2019},
+which held that federal courts lack jurisdiction to police partisan
+gerrymandering.
+In the resulting state-court docket, expert witnesses routinely deploy
+Markov chain Monte Carlo (MCMC) ensembles---most commonly the \recom{}
+chain of \citet{deford2021}---to show that an enacted map is an outlier
+relative to a distribution of algorithmically drawn plans.
+
+The inference is straightforward: if the enacted map's Democratic seat
+count falls in the 99th percentile of an ensemble of 50{,}000 plans, the
+map is likely gerrymandered in favor of Republicans.
+The inference is valid, however, only if the ensemble has \emph{mixed}---if
+the chain has explored the relevant region of plan space thoroughly enough
+that the empirical distribution of outcomes approximates the true stationary
+distribution.
+
+In practice, convergence is rarely certified.
+Papers and reports describe running ``50{,}000 plans'' or ``100{,}000
+steps'' without computing the diagnostics that would tell a court whether
+those plans were drawn from a converged chain.
+A non-converged ensemble may exhibit systematic biases---for instance,
+anchoring near the starting plan---that could distort the comparison.
+
+\subsection{Three Diagnostics}
+
+This paper formalises three complementary convergence diagnostics for
+redistricting ensembles.
+
+\paragraph{R-hat (Potential Scale Reduction Factor).}
+The Gelman-Rubin $\rhat$ statistic~\citep{gelman1992} runs multiple
+independent chains from different starting plans and compares between-chain
+variance to within-chain variance.
+Values of $\rhat < 1.1$ indicate approximate convergence.
+We extend $\rhat$ to the redistricting setting by applying it to ten
+parallel \recom{} chains with randomised start plans.
+
+\paragraph{Effective Sample Size.}
+The \ess{}~\citep{geyer1992} accounts for autocorrelation in the chain.
+An MCMC chain with high autocorrelation produces a smaller effective
+sample than its nominal step count suggests.
+For redistricting chains with typical lag-1 Hamming autocorrelation
+$\hat{\rho}_1 \approx 0.85$--$0.95$, a 10{,}000-step chain yields
+$\ess \approx 500$--$2{,}000$ for Polsby-Popper compactness.
+
+\paragraph{Hamming Autocorrelation.}
+The Hamming distance between two redistricting plans is the fraction of
+census tracts assigned to different districts.
+The lag-$k$ Hamming autocorrelation $\ham(k)$ measures how rapidly
+consecutive plans decorrelate.
+For \recom{}, typical values are $\ham(1) \approx 0.85$--$0.95$ and
+$\ham(k) \approx \hat{\rho}_1^k$ (geometric decay).
+
+\subsection{Main Results}
+
+We apply all three diagnostics to ten parallel \recom{} chains across six
+states: North Carolina (14 districts), Wisconsin (8), Georgia (14),
+Pennsylvania (17), Texas (38), and California (52).
+Section~\ref{sec:application} presents a table of $\rhat$, $\ess$, and
+$\ham(1)$ for each state.
+Key findings:
+
+\begin{enumerate}
+\item $\rhat < 1.1$ is achieved after 2{,}000--20{,}000 steps depending
+      on the state; California (large, compact) converges most slowly.
+\item Typical $\ess$ at 10{,}000 steps is 500--2{,}000 for \PP{} and
+      300--1{,}000 for Democratic seat counts.
+\item $\ham(1) \approx 0.87$--$0.93$ is consistent across states and
+      largely independent of $k$.
+\end{enumerate}
+
+\subsection{The ConvergenceSweep Alternative}
+
+The \cs{} algorithm~\citep{b16paper} provides a deterministic, $O(T \cdot n)$
+stopping criterion: sweep forward from the content-derived seed until
+$T = 600$ consecutive seeds produce no improvement.
+This is not an MCMC method; it does not sample from a distribution.
+For the \dia{}'s plan-\emph{generation} task, \cs{} is preferable because
+it produces a certifiably optimal plan without relying on asymptotic
+convergence theory.
+For the distinct task of characterising the feasible plan space and
+auditing enacted maps, ensemble methods remain irreplaceable.
+Section~\ref{sec:statutory} formalises this division of labor.
+
+\subsection{Implementation}
+
+All three diagnostics are implemented in the \texttt{redist} Rust binary:
+\begin{verbatim}
+  redist analyze --types ensemble-diagnostics --state NC --year 2020
+\end{verbatim}
+The command runs ten chains, computes $\rhat$, $\ess$, and $\ham(1)$,
+and reports a pass/fail verdict against the thresholds defined in
+Section~\ref{sec:statutory}.

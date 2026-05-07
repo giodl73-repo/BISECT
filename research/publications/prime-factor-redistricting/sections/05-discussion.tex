@@ -1,0 +1,214 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{The Constitutional Argument}
+\label{sec:discussion:constitutional}
+
+AR's key constitutional claim is that the map arises from Article~I~\S2
+(apportionment) rather than from \S4 (Manner). The argument proceeds in
+three steps.
+
+\paragraph{Step 1: Apportionment encodes geometry.}
+The Huntington-Hill method assigns each state a seat count $n$ such that
+$n$ is the integer closest to $P / (435/\sum P_i)$ (subject to the priority
+rule). This count is not arbitrary --- it is the output of a constitutional
+mathematical process. AR claims that $n$ also determines the \emph{structure}
+of the map: not as an additional choice, but as an arithmetic consequence.
+
+\paragraph{Step 2: The map IS the apportionment extended to geography.}
+Just as Huntington-Hill partitions the 435 seats among 50 states using a
+priority rule, AR partitions each state's geography into $n$ pieces using
+the prime factorization of $n$. The same constitutional act that produces $n$
+also, through AR, produces the map. No separate ``districting decision'' is
+required.
+
+\paragraph{Step 3: No additional degrees of freedom --- including the seed.}
+The only choices in AR are (a) the prime factorization of $n$ (uniquely
+determined by arithmetic) and (b) the minimum $k$-way cut at each level
+(uniquely determined by TIGER geography, up to tie-breaking). Compare to
+manual redistricting, which introduces thousands of degrees of freedom that
+can be set to achieve partisan outcomes.
+
+The seed-invariance result (\S\ref{sec:eval:seeds}) removes even the last
+apparent degree of freedom. AR with $n = 14$ and $G = \text{NC's census graph}$
+produces the same 7D/7R partition from any METIS seed. The METIS seed is
+not a free parameter in practice: the map is fully determined by $n$ and $G$.
+AR therefore has \emph{literally zero} degrees of freedom: no seed choice,
+no area measure, no shape metric, no weighting scheme.
+
+This argument implies that a statute requiring AR is not merely a Manner
+regulation (\S4) subject to state override prior to congressional action
+--- it is an exercise of the apportionment power (\S2), which is exclusively
+federal.
+
+\subsection{Why Prime Factorization?}
+\label{sec:discussion:why-primes}
+
+One might ask: why use prime factorization? Why not use any factorization
+(e.g., $12 = 4 \times 3$ or $12 = 6 \times 2$ or $12 = 12$)? Three reasons:
+
+\begin{enumerate}
+  \item \textbf{Uniqueness}: The prime factorization is the \emph{unique}
+        canonical factorization of every integer (Fundamental Theorem of
+        Arithmetic). Any other factorization introduces a choice.
+  \item \textbf{Minimal splits}: Primes are irreducible --- a $p$-way split
+        cannot be further decomposed. Using composite splits would introduce
+        redundancy (a $6$-way split could have been a $2\times 3$ or
+        $3\times 2$ split, requiring an ordering choice).
+  \item \textbf{Consistency with smallest-prime-first}: The canonical ordering
+        (smallest prime first) ensures that the largest geographic units
+        (coarsest splits) correspond to the smallest prime factors. For most
+        states, this produces 2-way or 3-way top-level splits, giving
+        geographic coherence (two halves, three thirds).
+\end{enumerate}
+
+\subsection{The Funny Cases}
+\label{sec:discussion:funny}
+
+Several seat count transitions are structurally extreme:
+\begin{itemize}
+  \item $51 \to 52$: $[3, 17] \to [2, 2, 13]$. Complete structural break.
+        The ternary top level (NorCal/Central/SoCal) gives way to a binary
+        top level (North/South), with a completely different secondary
+        structure.
+  \item $52 \to 53$: $[2, 2, 13] \to [53]$. Complete structural break.
+        The two-level binary-then-13 structure gives way to a single 53-cut.
+  \item $n = $ prime $\to n+1 = 2 \times \text{something}$: gaining one seat
+        converts a depth-1 tree to a depth-$\geq 2$ tree.
+\end{itemize}
+
+These transitions are mathematically inevitable, not arbitrary. Their
+existence demonstrates that AR takes the arithmetic of seat counts seriously
+--- the map structure follows from number theory, not from political convenience.
+
+\subsection{Limitations}
+\label{sec:discussion:limitations}
+
+\paragraph{Seed invariance revisited.}
+The empirical zero-variance result (\S\ref{sec:eval:seeds}) resolves the
+convergence concern for partisan outcomes: AR does not require a seed-sweep
+protocol because the outcomes are identical across seeds. However, seed
+invariance does not extend to the exact boundary positions of tracts near
+district edges. The assignment of a census tract that is equally close to two
+candidate districts may flip between seeds. For formal legal certification, an
+implementation should verify that all 480 runs produce byte-identical
+assignments (not merely identical seat counts), or rely on the partition cache
+to enforce it.
+
+\paragraph{Population balance.}
+METIS does not guarantee exact respect for the ufactor constraint. For
+top-level splits involving large primes ($k \geq 7$), the achieved per-part
+imbalance can reach 1--2\% due to the difficulty of balancing $k > 5$ equal
+parts on irregular planar graphs. The final district populations for NC
+(1.32\%) and GA (1.53\%) do not meet the statutory $\pm 0.5\%$ standard
+required by \emph{Wesberry v.\ Sanders}. Production deployment of AR would
+require a post-processing step (e.g.\ a greedy tract-swap refinement that
+moves tracts between adjacent over- and under-populated districts until all
+districts are within tolerance) before the plan could be legally certified.
+
+\paragraph{GerryChain comparison.}
+The evaluation compares AR to MEC (minimum-edge-cut via recursive bisection).
+A comparison to sampling-based methods (GerryChain \citep{duchin2019gerrychain},
+ReCom) would situate AR in the broader landscape: sampling methods explore the
+plan space while AR selects a single canonical plan. Whether AR's canonical
+plan is typical or atypical within the GerryChain distribution is an open
+question and a natural direction for future work.
+
+\paragraph{Tie-breaking.}
+METIS may produce non-unique minimum-$k$-way partitions for some inputs.
+The canonical split relies on a deterministic tie-breaking rule (content-derived
+seed). Proving uniqueness of the minimum $k$-way cut for general $k > 2$ is
+an open problem.
+
+\subsection{The Minimum-Three Threshold and Partisan Proportionality}
+\label{sec:discussion:min3}
+
+AR's constitutional argument is most compelling when every state has at least
+three representatives, because only then can the prime-factorisation tree provide
+a non-trivial two-level geographic decomposition for all states.
+States with $k = 1$ have no factorisation; states with $k = 2$ reduce to a
+single bisection with no hierarchical structure.
+We therefore ask: \emph{at what total House size would Huntington-Hill
+apportionment give every state at least three representatives?}
+
+\paragraph{Calculation.}
+Using 2020 Census apportionment populations and the Huntington-Hill priority
+rule, we ran the allocation to find the first seat count at which all 50 states
+hold at least 3 seats.
+The bottleneck is Wyoming (population 576,851), the smallest state.
+
+\begin{table}[h]
+\centering
+\caption{Total House size required for every state to reach $k$ seats
+(Huntington-Hill, 2020 Census). ``+'' column is seats above current 435.}
+\label{tab:min-seats}
+\begin{tabular}{rrrll}
+\toprule
+Min $k$ & Total seats & $+$ vs 435 & Bottleneck state & Notes \\
+\midrule
+1 & 50  & $-385$ & (constitutional floor) & Current guarantee \\
+2 & 812 & $+377$ & Wyoming (812th seat) & 6 states currently at 1 \\
+3 & 1{,}405 & $+970$ & Wyoming (1{,}405th seat) & CA=168, TX=124, NY=86 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent Table~\ref{tab:min-seats} shows the result.
+All 50 states reach $k \geq 2$ at 812 total seats ($1.87\times$ current);
+all reach $k \geq 3$ at 1{,}405 seats ($3.2\times$ current).
+Both are politically infeasible in the near term, but they establish clear
+theoretical benchmarks.
+The intermediate milestones by state are instructive:
+Alaska reaches $k = 2$ at 642 seats and $k = 3$ at 1{,}108;
+North Dakota at 601 and 1{,}038;
+Vermont at 728 and 1{,}257.
+
+\paragraph{Partisan proportionality.}
+The minimum-$k$ threshold matters for partisan proportionality because
+the \emph{effective representation threshold} --- the minimum vote share
+a party needs to win at least one seat --- is approximately $1/(k+1)$
+under a competitive district model.
+
+At the current 435-seat apportionment:
+\begin{itemize}
+\item Six states (AK, DE, ND, SD, VT, WY) have $k = 1$ and are
+  winner-take-all: a party with 51\% of the statewide vote captures
+  100\% of representation, and a party with 49\% captures 0\%.
+  The effective threshold is 50\%.
+\item The average effective threshold across all 50 states is 19.5\%.
+\end{itemize}
+
+At 812 seats ($k \geq 2$ for all states):
+\begin{itemize}
+\item No state is winner-take-all.
+  Every state can, in principle, split its delegation between parties.
+\item The average effective threshold drops to 13.8\%.
+\end{itemize}
+
+At 1{,}405 seats ($k \geq 3$ for all states):
+\begin{itemize}
+\item Every state can return minority-party representation for a party
+  with $\geq 25$\% of the statewide vote (one of three seats).
+\item The average effective threshold drops further to 7.9\%.
+\item AR's prime-factorisation tree is non-trivial for all 50 states,
+  enabling the two-level geographic decomposition that makes AR's
+  constitutional argument strongest.
+\end{itemize}
+
+\paragraph{Connection to the AR constitutional claim.}
+The minimum-three threshold is not merely a curiosity.
+It is the point at which AR's analogy between apportionment and redistricting
+is \emph{complete}: just as Huntington-Hill allocates seats proportionally
+among states (no state is ``winner-take-all'' for the full allocation),
+a 1{,}405-seat House with AR would produce maps in which no state is
+winner-take-all at the congressional delegation level.
+The two mechanisms --- Huntington-Hill for interstate apportionment,
+AR for intrastate geographic decomposition --- would form a coherent
+proportionality system from the national level down to the district level.
+
+Under the current 435-seat House, this coherence is incomplete: six states
+remain winner-take-all single-member districts, exempt from AR's
+geographic decomposition by the constitutional floor.
+Expanding the House to 812 seats would eliminate winner-take-all single-member
+districts entirely; reaching 1{,}405 would guarantee the three-seat minimum
+that makes the AR tree non-trivial for every state.

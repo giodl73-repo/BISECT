@@ -1,0 +1,87 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}[proposition]
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+
+\title{AreaSection: Simultaneous Population and Land-Area Balance\\
+       in Minimum-Edge-Cut Redistricting (Revision 1)}
+
+\author{Gio Della-Libera}
+
+\date{Draft --- \today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Standard minimum-edge-cut redistricting (and its ratio-optimal extension
+GeoSection, B.8) treats land area as irrelevant to bisection: the algorithm
+cares only about minimising boundary length subject to population balance.
+This produces a systematic pattern --- \emph{urban peeling} --- in which the
+first bisection level always separates the densest metropolitan core from the
+rest of the state, because a compact urban boundary is cheapest.
+Urban peeling is politically contentious: it concentrates Democratic voters
+into a single compact district at every recursion level, producing implicitly
+packed maps even with zero partisan input.
+
+We introduce \textbf{AreaSection}, a dual-constraint extension that adds a
+second METIS balance constraint requiring each half to receive approximately
+50\,\% of the state's land area ($\pm 10$\,\% swing allowed).
+The area constraint is implemented via METIS's \texttt{ncon=2} multi-constraint
+partitioning with per-constraint imbalance vectors (\texttt{ubvec}).
+Ratio selection uses the same isoperimetric normalisation as GeoSection
+($\mathrm{EC}/\sqrt{\min(i,\,k-i)}$) to prevent the caterpillar pathology.
+
+A Lorenz-curve pre-filter identifies ratios where simultaneous
+population-and-area balance is geometrically infeasible and skips them,
+preventing wasted METIS calls.
+
+Applying AreaSection to all 50 states with 50 seeds per ratio,
+44 states converge cleanly.
+The top-level natural ratio shifts dramatically versus GeoSection:
+Illinois moves from 1:17 to 8:9, New York from 1:16 to 13:13, Florida from
+1:27 to 14:14.
+States with genuinely concentrated populations (Georgia: 3:11, Massachusetts: 2:7)
+retain asymmetric splits because the area constraint cannot be satisfied at
+more balanced ratios while maintaining contiguous regions.
+
+A head-to-head comparison across 34 states (all states with complete data
+for both algorithms) shows that AreaSection and GeoSection produce
+\emph{identical seat counts} in 25 of 34 states (76\,\%).
+In the 9 states that differ, 5 favour GeoSection by 1 seat and 4 favour
+AreaSection by 1 seat (net: $-1$ Democratic seat under AreaSection).
+There is no systematic partisan direction.
+Within the states that match, AreaSection produces a cleaner competitiveness
+profile: GeoSection's urban-peeling strategy creates knife-edge suburban
+districts near 49\,\% Democratic vote share as a geometric byproduct;
+AreaSection eliminates these.
+AreaSection is a geometric-regularity mechanism, not a partisan mechanism:
+it changes the bisection tree structure without systematically changing partisan seat allocations.
+All 8 competitive states (46--55\,\% Democratic vote) show Republican
+over-representation under both algorithms (mean $-6.2$\,pp gap), confirming
+that geographic voter sorting — not the bisection algorithm — drives the
+proportionality deficit.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-algorithm}
+\input{sections/04-evaluation}
+\input{sections/05-discussion}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references,../../references}
+
+\end{document}

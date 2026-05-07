@@ -1,0 +1,70 @@
+% Geographic Stability
+\label{sec:stability}
+
+\subsection{Boundary Overlap Analysis}
+
+We compute Intersection-over-Union (IoU) for districts across consecutive census cycles. Table~\ref{tab:stability} summarizes boundary persistence:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrr}
+\toprule
+\textbf{Transition} & \textbf{Mean IoU} & \textbf{\% Districts IoU $>$ 0.7} \\
+\midrule
+2000 $\rightarrow$ 2010 & 0.68 & 54\% \\
+2010 $\rightarrow$ 2020 & 0.71 & 61\% \\
+\bottomrule
+\end{tabular}
+\caption{District boundary persistence across census cycles}
+\label{tab:stability}
+\end{table}
+
+\textbf{Key finding}: Geographic stability increased slightly from 2000--2010 to 2010--2020, despite significant seat reallocations. This suggests that algorithmic redistricting can adapt to population shifts while maintaining substantial boundary continuity.
+
+An IoU threshold of 0.7 indicates that 70\% of a district's area remains unchanged. By this criterion, 61\% of districts in 2020 were substantially similar to their 2010 counterparts—despite 13 states gaining or losing seats.
+
+\subsection{Population Reassignment}
+
+We measure the fraction of population reassigned to different district numbers:
+
+\begin{itemize}
+    \item 2000 $\rightarrow$ 2010: 28\% of population reassigned
+    \item 2010 $\rightarrow$ 2020: 24\% of population reassigned
+\end{itemize}
+
+\textbf{Interpretation}: Algorithmic redistricting maintains structural continuity. Most residents (76\% in 2010--2020) remain in districts geographically similar to their prior representation. This is notable given that population growth is geographically uneven—some regions grow rapidly while others stagnate.
+
+\subsection{State-Level Variability}
+
+Figure~\ref{fig:stability-map} shows state-level IoU scores as a choropleth map. High-stability states (IoU $>$ 0.75) include:
+
+\begin{itemize}
+    \item \textbf{Single-district states}: VT, WY, ND, SD, MT, DE (boundaries identical by definition)
+    \item \textbf{Slow-growth states}: RI, WV (minimal population shifts)
+    \item \textbf{Geographically constrained}: HI, AK (islands/terrain limit boundary options)
+\end{itemize}
+
+Low-stability states (IoU $<$ 0.50) include:
+
+\begin{itemize}
+    \item \textbf{High-growth states}: TX, FL, AZ (population shifts force major redrawing)
+    \item \textbf{Seat-change states}: NY, PA, OH (losing seats requires merging districts)
+\end{itemize}
+
+Texas exemplifies the stability-responsiveness trade-off: IoU = 0.42 (low stability) reflects gaining 6 seats and absorbing 4.7M new residents. The algorithm preserves districts in stable regions while redrawing high-growth areas.
+
+\subsection{Temporal Trends}
+
+The modest increase in stability from 2000--2010 (IoU = 0.68) to 2010--2020 (IoU = 0.71) likely reflects:
+
+\begin{enumerate}
+    \item \textbf{Demographic deceleration}: U.S. population growth slowed from 13.2\% (1990--2000) to 9.7\% (2000--2010) to 7.4\% (2010--2020)
+    \item \textbf{Smaller reallocations}: Fewer seats changed hands in 2020 (13 states) than 2010 (18 states)
+    \item \textbf{Geographic concentration}: Growth increasingly concentrated in specific metros (Austin, Phoenix) rather than statewide
+\end{enumerate}
+
+\subsection{Comparison to Enacted Districts}
+
+Enacted districts show lower stability (mean IoU = 0.51 for 2010--2020) than algorithmic districts (IoU = 0.71). This reflects partisan and incumbent-protection incentives that favor wholesale redrawing over incremental adjustment.
+
+\textbf{Implication}: Algorithmic redistricting provides stability benefits beyond compactness—it adapts to demographic change without unnecessary disruption.

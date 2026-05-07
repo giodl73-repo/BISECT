@@ -1,0 +1,57 @@
+[package]
+name = "bisect-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "bisect CLI binary — congressional redistricting via recursive bisection"
+
+[[bin]]
+name = "bisect"
+path = "src/main.rs"
+
+[dependencies]
+bisect-core      = { path = "../bisect-core" }
+bisect-data      = { path = "../bisect-data" }
+bisect-ilp       = { path = "../bisect-ilp" }
+metis-core       = { workspace = true }
+bisect-ensemble  = { path = "../bisect-ensemble" }
+bisect-multiscale = { path = "../bisect-multiscale" }
+bisect-smc       = { path = "../bisect-smc" }
+rand.workspace = true
+# default-features = false: c-ffi inclusion is controlled by our own feature below.
+bisect-apportion = { path = "../bisect-apportion", default-features = false }
+bisect-analysis  = { path = "../bisect-analysis" }
+bisect-map       = { path = "../bisect-map" }
+bisect-report    = { path = "../bisect-report" }
+# metis is only compiled when the c-ffi-engine feature is enabled.
+metis            = { workspace = true, optional = true }
+geo.workspace         = true
+geo-types.workspace   = true
+fontdb         = "0.22"
+tempfile       = "3"
+anyhow.workspace      = true
+serde.workspace       = true
+serde_json.workspace  = true
+rayon.workspace       = true
+clap           = { version = "4", features = ["derive"] }
+thiserror.workspace   = true
+csv.workspace         = true
+reqwest        = { version = "0.12", features = ["blocking"] }
+zip            = "2"
+polylabel      = "2.0"
+sha2           = "0.10"
+serde_yaml     = "0.9"
+url            = "2"
+fs2            = "0.4"
+
+[features]
+# c-ffi-engine: enables C METIS (bundled via vendored feature — requires C compiler
+# at build time but produces a standalone binary with no runtime lib dependency).
+# Disable with --no-default-features for a fully pure-Rust build (no C toolchain needed).
+c-ffi-engine = ["dep:metis", "bisect-apportion/c-ffi"]
+default = ["c-ffi-engine"]
+
+[dev-dependencies]
+tempfile = "3"
+geozero  = { version = "0.14", features = ["with-wkb", "with-geo"] }
