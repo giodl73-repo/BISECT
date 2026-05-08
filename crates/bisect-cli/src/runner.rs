@@ -206,6 +206,12 @@ pub enum SplitStrategy {
         optimality_gap: f64,    // acceptable gap from optimal (default: 0.01)
         max_tracts: usize,      // size guard (default: 500; fallback to METIS if exceeded)
     },
+    /// Moving-Knife Algorithm — maximises Reock compactness via sweep (B.25 spec 3.75/4).
+    /// Tests n_orientations candidate sweep directions; picks angle with best min(Reock_L, Reock_R).
+    MovingKnife {
+        n_orientations: usize,  // sweep granularity (default: 180 = every 1°)
+        metric: String,         // "reock" (default) | "polsby"
+    },
 }
 
 impl SplitStrategy {
@@ -224,6 +230,7 @@ impl SplitStrategy {
             Self::CentroidalVoronoi { .. }  => "centroidal-voronoi",
             Self::BfsGrowth                 => "bfs-growth",
             Self::Ilp              { .. }   => "ilp",
+            Self::MovingKnife      { .. }   => "moving-knife",
         }
     }
 }
@@ -488,6 +495,17 @@ impl AlgorithmConfig {
                 metis,
                 mode_label: None,
             },
+            PM::MovingKnife => Self {
+                split: SplitStrategy::MovingKnife {
+                    n_orientations: args.mka_orientations,
+                    metric: args.mka_metric.clone(),
+                },
+                seeds: SeedCompositor::Single,
+                weights: base_weights,
+                vertex_constraints: pop_only,
+                metis,
+                mode_label: None,
+            },
         };
 
         // ── Apply compositor layer overrides ──────────────────────────────────
@@ -509,6 +527,7 @@ impl AlgorithmConfig {
                 SM::CompactPolsby        => (SplitStrategy::CompactBisect { epsilon: 0.05 }, pop_only),
                 SM::CentroidalVoronoi    => (SplitStrategy::CentroidalVoronoi { n_iter: args.cvd_iters, metric: args.cvd_metric.parse::<crate::bisection_runner::VoronoiMetric>().unwrap_or(crate::bisection_runner::VoronoiMetric::GraphDistance) }, pop_only),
                 SM::BfsGrowth            => (SplitStrategy::BfsGrowth, pop_only),
+                SM::MovingKnife          => (SplitStrategy::MovingKnife { n_orientations: args.mka_orientations, metric: args.mka_metric.clone() }, pop_only),
             };
             algo.split = new_split;
             algo.vertex_constraints = new_vc;
@@ -734,6 +753,17 @@ impl AlgorithmConfig {
                     time_limit_secs: 300,
                     optimality_gap: 0.01,
                     max_tracts: 500,
+                },
+                seeds: SeedCompositor::Single,
+                weights: WeightSpec::default(),
+                vertex_constraints: pop,
+                metis,
+                mode_label: None,
+            },
+            PM::MovingKnife => Self {
+                split: SplitStrategy::MovingKnife {
+                    n_orientations: 180,
+                    metric: "reock".to_string(),
                 },
                 seeds: SeedCompositor::Single,
                 weights: WeightSpec::default(),
@@ -1649,6 +1679,30 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 num_districts, balance_tolerance_frac,
                 *time_limit_secs, *optimality_gap, *max_tracts,
             ).map_err(|e| format!("ilp: {e}"))?
+        }
+        SplitStrategy::MovingKnife { n_orientations, metric } => {
+            let base_seed_val = seed.unwrap_or(0);
+            if graph.tract_centroids.is_empty() {
+                return Err(
+                    "[CONFIG] --structure moving-knife requires tract centroid data. \
+                     Run: bisect fetch --type centroids".to_string()
+                );
+            }
+            let metric_enum = if metric == "polsby" {
+                crate::bisection_runner::MkaMetric::PolsbyPopper
+            } else {
+                crate::bisection_runner::MkaMetric::Reock
+            };
+            status(cfg.position, &format!(
+                "{}: moving-knife ({} orientations, metric={}) into {} districts",
+                cfg.state_code, n_orientations, metric, num_districts));
+            crate::bisection_runner::run_all_splits_mka(
+                &graph.adjacency, &vwgt,
+                num_districts, balance_tolerance_frac,
+                Some(&intermediate_dir),
+                *n_orientations, metric_enum, base_seed_val,
+                &graph.tract_centroids,
+            ).map_err(|e| format!("moving-knife: {e}"))?
         }
         SplitStrategy::CentroidalVoronoi { n_iter, metric } => {
             use crate::bisection_runner::VoronoiMetric;

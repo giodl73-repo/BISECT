@@ -102,6 +102,12 @@ pub enum PartitionMode {
     /// ILP exact redistricting — provably optimal for small instances (n <= 500).
     #[value(name = "ilp")]
     Ilp,
+    /// Moving-Knife Algorithm — maximises Reock compactness via orientation sweep (B.25).
+    /// Tests n_orientations candidate sweep directions; picks angle that maximises
+    /// min(Reock_left, Reock_right). Requires centroid data (bisect fetch --type centroids).
+    /// Use --mka-orientations N (default 180) and --mka-metric [reock|polsby] (default reock).
+    #[value(name = "moving-knife")]
+    MovingKnife,
 }
 
 impl std::fmt::Display for PartitionMode {
@@ -122,6 +128,7 @@ impl std::fmt::Display for PartitionMode {
             Self::BfsGrowth             => write!(f, "bfs-growth"),
             Self::CentroidalVoronoi     => write!(f, "centroidal-voronoi"),
             Self::Ilp                   => write!(f, "ilp"),
+            Self::MovingKnife           => write!(f, "moving-knife"),
         }
     }
 }
@@ -1216,6 +1223,10 @@ pub enum StructureMode {
     /// --structure centroidal-voronoi --cvd-iters 20
     #[value(name = "centroidal-voronoi")]
     CentroidalVoronoi,
+    /// Moving-Knife Algorithm — Reock-maximising orientation sweep (B.25).
+    /// --structure moving-knife --mka-orientations 180 --mka-metric reock
+    #[value(name = "moving-knife")]
+    MovingKnife,
 }
 
 /// Layer 2 compositor: which edge/vertex weight signal to use.
@@ -1700,6 +1711,20 @@ pub struct StateArgs {
     #[arg(long, default_value_t = 500usize)]
     pub ilp_max_tracts: usize,
 
+    // ── Moving-Knife Algorithm (MKA) parameters ───────────────────────────────
+
+    /// MKA: number of sweep orientations (default: 180 = every 1°).
+    /// Higher = finer angle resolution, slower. 36 (every 5°) is fast but coarser.
+    /// Requires --partition-mode moving-knife or --structure moving-knife.
+    #[arg(long, default_value_t = 180usize)]
+    pub mka_orientations: usize,
+
+    /// MKA: compactness metric to maximise (default: reock).
+    /// reock: Area(D)/Area(MEC(D)) — requires centroid positions only.
+    /// polsby: 4π·Area(D)/Perimeter(D)² — Phase 1 falls back to reock.
+    #[arg(long, default_value = "reock")]
+    pub mka_metric: String,
+
     // ── SMC-Percentile parameters ─────────────────────────────────────────────
 
     /// Number of SMC particles for --search smc-percentile (default: 5000).
@@ -1913,6 +1938,16 @@ pub struct StatesArgs {
     /// Max tracts before ILP falls back to METIS (default: 500).
     #[arg(long, default_value_t = 500usize)]
     pub ilp_max_tracts: usize,
+
+    // ── Moving-Knife Algorithm (MKA) parameters ───────────────────────────────
+
+    /// MKA: number of sweep orientations (default: 180 = every 1°).
+    #[arg(long, default_value_t = 180usize)]
+    pub mka_orientations: usize,
+
+    /// MKA: compactness metric (default: reock). polsby falls back to reock in Phase 1.
+    #[arg(long, default_value = "reock")]
+    pub mka_metric: String,
 
     // ── SMC-Percentile parameters ─────────────────────────────────────────────
 
@@ -2578,6 +2613,7 @@ mod tests {
             (PartitionMode::ProportionalSection,  "proportional-section"),
             (PartitionMode::ApportionRegions,     "apportion-regions"),
             (PartitionMode::VraSection,           "vra-section"),
+            (PartitionMode::MovingKnife,          "moving-knife"),
         ];
         for (variant, expected) in cases {
             assert_eq!(format!("{variant}"), *expected,
@@ -2598,6 +2634,7 @@ mod tests {
             ("prime-factor",       StructureMode::PrimeFactor),
             ("compact-polsby",     StructureMode::CompactPolsby),
             ("bfs-growth",         StructureMode::BfsGrowth),
+            ("moving-knife",       StructureMode::MovingKnife),
         ];
         for (s, expected) in cases {
             let parsed = StructureMode::from_str(s, true)

@@ -1,0 +1,16 @@
+[package]
+name = "bisect-pareto"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Multi-objective Pareto redistricting via NSGA-II (B.26)"
+
+[dependencies]
+bisect-ensemble = { path = "../bisect-ensemble" }
+rand.workspace = true
+sha2.workspace = true
+rayon.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true

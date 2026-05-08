@@ -103,6 +103,15 @@ pub struct AlgorithmSection {
     /// metis-core: pure Rust, no C dependency, portable standalone binary.
     /// gpmetis: external subprocess (reserved, not yet implemented).
     pub engine: Option<String>,
+
+    /// MKA: number of sweep orientations (default: 180).
+    /// Only used when structure == "moving-knife".
+    pub mka_orientations: Option<usize>,
+
+    /// MKA: compactness metric (default: "reock").
+    /// Values: reock | polsby-popper
+    /// Only used when structure == "moving-knife".
+    pub mka_metric: Option<String>,
 }
 
 // ---------------------------------------------------------------------------
@@ -174,12 +183,20 @@ impl AlgoYaml {
                     vec![VertexConstraintKind::Population],
                 )
             }
+            "moving-knife" => {
+                let n_orientations = sec.mka_orientations.unwrap_or(180);
+                let metric = sec.mka_metric.clone().unwrap_or_else(|| "reock".to_string());
+                (
+                    SplitStrategy::MovingKnife { n_orientations, metric },
+                    vec![VertexConstraintKind::Population],
+                )
+            }
             other => {
                 return Err(format!(
                     "[CONFIG] config: unknown structure '{}'. \
                      Valid values: standard-bisect | nway | ratio-optimal | \
                      ratio-optimal-area | ratio-optimal-vra | prime-factor | \
-                     compact-polsby | apportion-regions",
+                     compact-polsby | apportion-regions | moving-knife",
                     other
                 ));
             }

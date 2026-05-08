@@ -265,6 +265,11 @@ fn main() {
                         *optimality_gap  = args.ilp_gap;
                         *max_tracts      = args.ilp_max_tracts;
                     }
+                    // Wire MKA parameters from CLI args
+                    if let SplitStrategy::MovingKnife { n_orientations, metric } = &mut cfg.algo.split {
+                        *n_orientations = args.mka_orientations;
+                        *metric         = args.mka_metric.clone();
+                    }
                     if let Some(tol) = args.balance_tolerance {
                         cfg.balance_tolerance = Some(tol / 100.0);
                     }

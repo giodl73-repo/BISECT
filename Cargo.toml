@@ -11,6 +11,7 @@ members = [
     "crates/bisect-tui",
     "crates/bisect-ensemble",
     "crates/bisect-smc",
+    "crates/bisect-pareto",
     "crates/bisect-ilp",
     "crates/bisect-multiscale",
     "python/redist_py",
