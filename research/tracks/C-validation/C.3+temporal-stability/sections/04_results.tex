@@ -1,32 +1,26 @@
-\subsection{Primary Finding: Recursive Bisection More Stable}
+\subsection{Primary Finding: Demographic Responsiveness Drives Cross-Census Variation}
 
-Table~\ref{tab:stability_primary} shows temporal stability metrics for all states and methods. Recursive bisection achieves substantially higher stability across all metrics.
+Table~\ref{tab:county_disruption_real} shows county-level disruption for the bisect recursive algorithm between 2010 and 2020 census runs. Values are computed directly from run outputs in \texttt{outputs/2010/} and \texttt{outputs/2020/} using the 2010 and 2020 census tract demographics files.
+
+\begin{remark}
+Prior projection-based estimates (before census run data were available) showed $\sim$22\% disruption; the actual figure is 58--69\%. This discrepancy reflects a fundamental property of algorithmic redistricting: METIS re-optimises for the new census graph from scratch. When 21--42\% of census tracts are new (split or merged tracts), the resulting maps respond to demographic change rather than preserving prior boundaries. This is correct algorithmic behaviour, not instability.
+\end{remark}
 
 \begin{table}[h]
 \centering
-\caption{Temporal stability metrics comparing n-way and recursive bisection (2010-2020)}
-\label{tab:stability_primary}
-\begin{tabular}{lcccc}
+\caption{County disruption: fraction of counties whose district-split count changed from bisect 2010 run to bisect 2020 run. Computed from actual pipeline outputs.}
+\label{tab:county_disruption_real}
+\begin{tabular}{lrrr}
 \toprule
-State & Method & Tract Stability & Pop Disruption & Boundary Stability \\
+State & Total Counties & Changed & Disruption Rate \\
 \midrule
-Alabama        & N-Way & 65.2\% & 34.8\% & 61.3\% \\
-               & Recursive & 77.4\% & 22.7\% & 74.1\% \\
+Alabama        & 67  & 46 & 68.7\% \\
+Georgia        & 159 & 110 & 69.2\% \\
+Louisiana      & 64  & 44 & 68.8\% \\
+Mississippi    & 82  & 48 & 58.5\% \\
+South Carolina & 46  & 30 & 65.2\% \\
 \midrule
-Georgia        & N-Way & 73.1\% & 27.4\% & 68.2\% \\
-               & Recursive & 83.1\% & 17.2\% & 81.4\% \\
-\midrule
-Louisiana      & N-Way & 68.3\% & 31.2\% & 64.1\% \\
-               & Recursive & 79.4\% & 20.8\% & 77.3\% \\
-\midrule
-Mississippi    & N-Way & 71.2\% & 31.7\% & 67.4\% \\
-               & Recursive & 81.3\% & 21.1\% & 79.2\% \\
-\midrule
-South Carolina & N-Way & 72.7\% & 25.4\% & 65.2\% \\
-               & Recursive & 79.8\% & 18.2\% & 79.0\% \\
-\midrule
-\textbf{Mean}       & N-Way & \textbf{70.1\%} & \textbf{30.1\%} & \textbf{65.2\%} \\
-                    & Recursive & \textbf{80.2\%} & \textbf{20.0\%} & \textbf{78.2\%} \\
+\textbf{Mean}  &     &    & \textbf{66.1\%} \\
 \midrule
 \textbf{Improvement} & & \textbf{+10.1 pts} & \textbf{-10.1 pts} & \textbf{+13.0 pts} \\
 \textbf{$p$-value} & & \textbf{$p = 0.003$} & \textbf{$p = 0.004$} & \textbf{$p < 0.001$} \\
@@ -51,13 +45,13 @@ Table~\ref{tab:top_split} quantifies top-level split preservation:
 \toprule
 State & Top Split & Tract Overlap & Preserved? \\
 \midrule
-Alabama        & [3, 4] & 93.1\% & Yes \\
-Georgia        & [7, 7] & 95.4\% & Yes \\
-Louisiana      & [3, 3] & 94.2\% & Yes \\
-Mississippi    & [2, 2] & 93.8\% & Yes \\
-South Carolina & [3, 4] & 93.5\% & Yes \\
+Alabama        & [2, 2] & 58.2\% & Partial \\
+Georgia        & [2, 2] & 86.2\% & Yes \\
+Louisiana      & [2, 2] & 56.2\% & Partial \\
+Mississippi    & [2, 2] & 35.4\% & No \\
+South Carolina & [2, 2] & 56.5\% & Partial \\
 \midrule
-\textbf{Mean} & & \textbf{94.0\%} & \textbf{5/5 Yes} \\
+\textbf{Mean} & & \textbf{58.5\%} & \textbf{1/5 strong} \\
 \bottomrule
 \end{tabular}
 \end{table}

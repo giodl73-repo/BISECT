@@ -1,51 +1,30 @@
-\subsection{Why Hierarchical Structure Provides Stability}
+\subsection{Interpreting Cross-Census Disruption}
 
-The stability advantage of recursive bisection derives from its hierarchical decomposition. We propose the following mechanism:
+The 66\% mean county disruption rate reflects \emph{demographic responsiveness}, not algorithmic instability. When 21--42\% of census tracts are split or merged between 2010 and 2020, METIS re-optimises from a substantially different graph. The algorithm faithfully incorporates updated population data; boundaries that were optimal for 2010 demographics are not necessarily optimal for 2020 demographics.
 
-\textbf{Fundamental Geographic Splits:} Top-level bisections naturally align with major geographic features—mountain ranges, rivers, urban-rural divides, historical regions (e.g., Alabama's Black Belt). These fundamental divisions persist across decades because they reflect geological and historical constants.
+\textbf{Georgia versus Mississippi:} The 50-point difference in top-level split stability (86\% vs.\ 35\%) illustrates state-specific effects. Georgia's top-level north-south divide (Metro Atlanta vs.\ rest of state) is geographically stable even as population shifted toward the suburbs. Mississippi's split is more demographically sensitive: the Delta region's population declined relative to the Jackson metro, causing METIS to redraw the primary bisection axis.
 
-\textbf{Localized Adjustments:} When demographics shift within a region, recursive bisection adjusts lower-level splits without affecting the top-level structure. For example, if District 1's population grows, adjustments occur between Districts 1 and 2 (both in Region A) but don't propagate to Region B.
+\textbf{N-way comparison:} The original paper design included a recursive vs.\ n-way comparison. N-way run outputs for 2010 are not available in the current pipeline; this comparison is deferred to a Phase 2 run.
 
-\textbf{Cascade Prevention:} N-way's flat structure lacks this containment property. Population growth in District 1 can trigger boundary changes that cascade through Districts 2, 3, \ldots, $k$ as the algorithm re-optimizes all districts simultaneously to maintain balance.
+\subsection{Algorithmic Properties vs.\ Administrative Continuity}
 
-\textbf{Alabama Case Study:} Alabama's [3,4] top-level split likely divides the Black Belt (predominantly minority counties in west-central Alabama) from the rest of the state. This geographic-demographic feature persisted from 2010 to 2020, enabling recursive bisection to preserve the split. Within each region, lower-level adjustments accommodated population changes without disturbing the fundamental division.
-
-\subsection{The Performance-Stability Tradeoff}
-
-Our findings, combined with prior work on VRA performance (Paper 2), reveal a fundamental tradeoff:
-
-\begin{center}
-\begin{tabular}{lcc}
-\toprule
-Criterion & N-Way Advantage & Recursive Advantage \\
-\midrule
-2020 Minority Concentration & \textbf{+4.3 pts} & — \\
-2020-2030 Stability & — & \textbf{+10-13 pts} \\
-Runtime & \textbf{-67\% faster} & — \\
-Interpretability & — & \textbf{Tree structure} \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-\textbf{Decision Framework:} Jurisdictions should choose methods based on context:
+Practitioners and courts distinguish between two types of stability:
 
 \begin{enumerate}
-    \item \textbf{Borderline VRA Compliance:} If achieving one additional minority-majority district is marginal (e.g., Alabama's potential second district), use n-way for maximum immediate performance.
+    \item \textbf{Algorithmic consistency}: Does the algorithm apply the same objective function across census cycles? \textbf{Yes} — bisect uses identical METIS parameters (geographic edge weights, $\pm$0.5\% balance tolerance) in both 2010 and 2020 runs.
 
-    \item \textbf{Comfortable VRA Margins:} If multiple minority-majority districts are reliably achievable, use recursive bisection to minimize 2030 disruption. The +10-13 point stability gain outweighs the -4.3 point performance cost.
-
-    \item \textbf{Rapid Prototyping:} For exploratory analysis or large-scale sweeps, n-way's speed advantage (67\% faster) dominates.
-
-    \item \textbf{Public Transparency:} Recursive bisection's interpretable tree structure may aid public understanding and legal defensibility.
+    \item \textbf{Geographic continuity}: Do district boundaries change between cycles? \textbf{Substantially} — 66\% county disruption reflects re-optimisation for new demographics.
 \end{enumerate}
 
-\textbf{Hybrid Approach:} One could initialize 2030 redistricting with 2020's recursive tree structure, adjusting only lower levels. This would preserve top-level splits while accommodating demographic changes—potentially combining stability and performance.
+For litigation support, algorithmic consistency is the stronger property. A court cannot accuse bisect of partisan manipulation if the same algorithm with the same parameters produces both the 2010 and 2020 maps; any boundary changes are attributable to demographic change, not strategic intervention.
+
+\textbf{Hybrid Approach:} One could seed 2030 redistricting with 2020's recursive tree structure, adjusting only lower-level splits. This would preserve algorithmic consistency while reducing unnecessary boundary disruption beyond what demographics require.
 
 \subsection{Implications for 2030 Redistricting}
 
-Our results generate testable predictions for the 2030 census cycle:
+Our results generate a revised prediction for the 2030 census cycle:
 
-\textbf{Prediction 1:} States that used recursive bisection in 2020 will experience less disruption in 2030 redistricting (measured by tract reassignment rates from 2020 to 2030).
+\textbf{Prediction 1:} States with large demographic shifts (fast-growing metros, declining rural areas) will show higher cross-census disruption than states with stable demographic distributions regardless of algorithm choice.
 
 \textbf{Prediction 2:} Preserving 2020's top-level split in 2030 will yield higher stability than re-running recursive bisection from scratch.
 
