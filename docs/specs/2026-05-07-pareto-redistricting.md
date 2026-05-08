@@ -1,7 +1,8 @@
 # Spec: Multi-Objective Pareto Redistricting — NSGA-II Genetic Algorithm for Pareto-Optimal Plan Frontier
 
-**Status**: Proposed (R1 reviewed, P1 fixes applied)
+**Status**: Accepted (R2 avg 3.75/4 — ready for implementation)
 **Reviewed R1**: MERIDIAN 3/4, BENCHMARK 3/4, SURVEY 3/4, COVENANT 3/4 → avg 3.0/4
+**Reviewed R2**: MERIDIAN 4/4, BENCHMARK 4/4, SURVEY 3/4, COVENANT 4/4 → avg 3.75/4
 **Date**: 2026-05-07
 **Related paper**: B.26
 **Depends on**: `bisect-core` (adjacency, population), `bisect-cli` (Flip chain mutation), `bisect-metis` (METIS plan generation)
