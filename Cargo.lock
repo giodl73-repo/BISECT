@@ -211,6 +211,7 @@ dependencies = [
  "bisect-ilp",
  "bisect-map",
  "bisect-multiscale",
+ "bisect-pareto",
  "bisect-report",
  "bisect-smc",
  "clap",

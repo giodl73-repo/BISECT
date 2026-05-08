@@ -161,7 +161,7 @@ impl AlgoYaml {
             "ratio-optimal-area" | "areasection" => {
                 let area_swing = sec.area_swing.unwrap_or(0.10);
                 (
-                    SplitStrategy::AreaSection { area_swing },
+                    SplitStrategy::AreaSection { area_swing, area_section_init: crate::runner::AreaSectionInit::RatioOptimal },
                     vec![VertexConstraintKind::Population, VertexConstraintKind::Area],
                 )
             }
@@ -1087,7 +1087,7 @@ algorithm:
         let doc = AlgoYaml::from_file(f.path()).unwrap();
         let algo = doc.to_algorithm_config().unwrap();
         match algo.split {
-            SplitStrategy::AreaSection { area_swing } => {
+            SplitStrategy::AreaSection { area_swing, .. } => {
                 assert!(
                     (area_swing - 0.10).abs() < 1e-9,
                     "default area_swing must be 0.10, got: {area_swing}"
@@ -1342,7 +1342,7 @@ algorithm:
         let doc = AlgoYaml::from_file(f.path()).unwrap();
         let algo = doc.to_algorithm_config().unwrap();
         match algo.split {
-            SplitStrategy::AreaSection { area_swing } => {
+            SplitStrategy::AreaSection { area_swing, .. } => {
                 assert!(
                     (area_swing - 0.25).abs() < 1e-9,
                     "explicit area_swing 0.25 must be used, got: {area_swing}"

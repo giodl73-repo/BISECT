@@ -37,6 +37,7 @@ pub mod provenance;
 pub mod registry;
 pub mod run_registry;
 pub mod ensemble;
+pub mod pareto_cmd;
 pub mod research;
 pub mod report_cmd;
 pub mod runner;

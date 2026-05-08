@@ -754,6 +754,10 @@ pub fn run_geosection(
     minority_vap: Option<&[f64]>,
     // VRASection alignment weight (default 0.40). Only consulted when minority_vap is Some.
     w_vra: f64,
+    // MKA warm-start (AreaSection only): when Some(theta), applies a directional edge-weight
+    // bias at the top level using theta as the cut angle (radians) computed by
+    // split_subgraph_mka_direction(). Ignored when centroids map is non-empty (GeoSection Phase 2).
+    mka_theta_override: Option<f64>,
 ) -> Result<(HashMap<usize, usize>, usize, usize, f64), String> {
     let n = adjacency.len();
 
@@ -827,6 +831,33 @@ pub fn run_geosection(
         (1usize, plain, feasible)
     };
 
+    // ── MKA warm-start: apply directional edge-weight bias using theta* ──────
+    // When mka_theta_override is Some(theta) and centroids are provided, bias
+    // the edge weights toward cuts perpendicular to the MKA-optimal direction.
+    // This pre-bias is applied ONLY at the top level; recursive calls receive
+    // the original (unmodified) weights via recurse_geosection.
+    //
+    // The bias uses apply_directional_penalty with theta as the "minor axis" angle:
+    //   - edges running parallel to the cut direction (sin(θ)=1) get penalised
+    //   - edges running perpendicular (sin(θ)=0) are unchanged
+    // Effect: METIS preferentially cuts across the MKA-optimal direction.
+    let biased_edge_weights: Option<HashMap<(usize, usize), f64>> =
+        if let Some(theta) = mka_theta_override {
+            if !centroids.is_empty() {
+                eprintln!("[areasection-mka] applying directional bias at theta*={:.4} rad ({:.1} deg) with lambda={:.2}",
+                          theta, theta.to_degrees(), lambda);
+                Some(crate::geosection_orientation::apply_directional_penalty(
+                    edge_weights, centroids, theta, lambda,
+                ))
+            } else {
+                None  // no centroids → no bias (fallback already warned by caller)
+            }
+        } else {
+            None
+        };
+    let active_edge_weights: &HashMap<(usize, usize), f64> =
+        biased_edge_weights.as_ref().unwrap_or(edge_weights);
+
     for left_k in 1..=max_left {
         if !lorenz_feasible[left_k] {
             eprintln!("[areasection] skipping ratio {}:{} - Lorenz predicts infeasible area balance",
@@ -861,10 +892,11 @@ pub fn run_geosection(
         let mut ratio_best_right = HashSet::new();
 
         for seed in 1..=(seeds_per_ratio as u64) {
-            match split_subgraph(adjacency, &vwgt_flat, ncon, edge_weights,
+            match split_subgraph(adjacency, &vwgt_flat, ncon, active_edge_weights,
                                   &all_tracts, node_ufactor, niter, Some(seed),
                                   tpwgts.clone(), ubvec.clone()) {
                 Ok((l, r)) => {
+                    // EC measured on original (unbiased) edge weights for fair comparison.
                     let ec: f64 = edge_weights.iter().filter_map(|(&(u,v),&w)| {
                         if l.contains(&u) != l.contains(&v) { Some(w) } else { None }
                     }).sum();
@@ -1055,6 +1087,7 @@ fn recurse_geosection(
         k, balance_tolerance, niter, seeds_per_ratio, None,
         &empty_centroids, 0.0, None, 1.10,  // recursive: ncon=1, area_swing unused
         None, 0.0,  // recursive: no VRA alignment at sub-levels
+        None,       // recursive: no MKA override at sub-levels
     )?;
 
     if local_asgn.len() < sorted.len().saturating_sub(1) {
@@ -9023,5 +9056,44 @@ mod tests {
         // Run MKA and CVD-Geographic on NC 2020 k=14.
         // Assert: MKA min_reock_score > CVD-Geographic min_reock_score.
         // Skipped unless --include-ignored is passed.
+    }
+
+    // ── L0: MKA-AreaSection hybrid warm-start (#162) ─────────────────────────
+
+    /// L0: "moving-knife" parses to AreaSectionInitArg::MovingKnife → AreaSectionInit::MovingKnife.
+    #[test]
+    fn area_section_init_parses() {
+        use crate::args::AreaSectionInitArg;
+        use crate::runner::AreaSectionInit;
+
+        let mk: AreaSectionInit = AreaSectionInitArg::MovingKnife.into();
+        assert_eq!(mk, AreaSectionInit::MovingKnife,
+            "MovingKnife arg must convert to MovingKnife strategy");
+
+        let ro: AreaSectionInit = AreaSectionInitArg::RatioOptimal.into();
+        assert_eq!(ro, AreaSectionInit::RatioOptimal,
+            "RatioOptimal arg must convert to RatioOptimal strategy");
+    }
+
+    /// L0: empty centroids → split_subgraph_mka_direction-based path falls back gracefully.
+    /// When tract_centroids is empty, the warm-start should not panic and should
+    /// produce Some(theta)=None path (no bias applied). We test by verifying that
+    /// split_subgraph_mka_direction on an empty set returns 0.0 without panicking.
+    #[test]
+    fn area_section_mka_init_fallback_no_centroids() {
+        use crate::runner::AreaSectionInit;
+
+        // Empty centroids — simulates the "no centroid data" fallback branch.
+        let empty_tracts: HashSet<usize> = HashSet::new();
+        let empty_centroids: Vec<(f64, f64)> = vec![];
+        let theta = split_subgraph_mka_direction(&empty_tracts, &empty_centroids, 180);
+        // Must return 0.0 (defined in the MKA function for empty input) — not panic.
+        assert_eq!(theta, 0.0,
+            "split_subgraph_mka_direction on empty set must return 0.0");
+
+        // Verify AreaSectionInit enum equality round-trips.
+        let init = AreaSectionInit::MovingKnife;
+        assert_eq!(init, AreaSectionInit::MovingKnife);
+        assert_ne!(init, AreaSectionInit::RatioOptimal);
     }
 }

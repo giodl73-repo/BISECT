@@ -161,6 +161,28 @@ impl std::fmt::Display for Resolution {
     }
 }
 
+/// CLI argument for AreaSection warm-start strategy.
+/// Converts to `crate::runner::AreaSectionInit` via `Into`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum AreaSectionInitArg {
+    /// Use the existing Lorenz-filtered ratio heuristic (no directional pre-bias).
+    #[value(name = "ratio-optimal")]
+    RatioOptimal,
+    /// Call MKA first to get theta* (Reock-optimal angle), then use theta* as a
+    /// directional edge-weight bias before the METIS ratio search.
+    #[value(name = "moving-knife")]
+    MovingKnife,
+}
+
+impl From<AreaSectionInitArg> for crate::runner::AreaSectionInit {
+    fn from(a: AreaSectionInitArg) -> Self {
+        match a {
+            AreaSectionInitArg::RatioOptimal => crate::runner::AreaSectionInit::RatioOptimal,
+            AreaSectionInitArg::MovingKnife  => crate::runner::AreaSectionInit::MovingKnife,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
 pub enum MetisObjective {
     #[value(name = "cut")]
@@ -293,6 +315,9 @@ pub enum Commands {
     /// Currently supports: --method smc (Sequential Monte Carlo, G.7).
     /// Output: NDJSON with weighted plans + audit metadata.
     Ensemble(EnsembleArgs),
+    /// Generate a Pareto-optimal redistricting ensemble (B.26 spec).
+    /// Outputs NDJSON with all Pareto-optimal plans and objective values.
+    Pareto(ParetoArgs),
 }
 
 // ---------------------------------------------------------------------------
@@ -652,6 +677,38 @@ pub struct EnsembleArgs {
     /// Input data directory (default: data/{year}/{state}).
     #[arg(long)]
     pub data_dir: Option<String>,
+}
+
+// ---------------------------------------------------------------------------
+// `bisect pareto` — Pareto-optimal redistricting ensemble (B.26)
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true)]
+pub struct ParetoArgs {
+    /// Two-letter state code (e.g., NC, WI, TX).
+    #[arg(long)]
+    pub state: String,
+
+    /// Census year (default: 2020).
+    #[arg(short = 'y', long, default_value = "2020")]
+    pub year: crate::args::Year,
+
+    /// NSGA-II population size: number of plans per generation. Default: 100.
+    #[arg(long, default_value_t = 100)]
+    pub population: usize,
+
+    /// Number of NSGA-II generations. Default: 200.
+    #[arg(long, default_value_t = 200)]
+    pub generations: usize,
+
+    /// Base seed for all stochastic operations. Default: content-derived.
+    #[arg(long)]
+    pub base_seed: Option<u64>,
+
+    /// Output file path for the NDJSON Pareto frontier (default: {state}_pareto_{year}.ndjson).
+    #[arg(long)]
+    pub output: Option<String>,
 }
 
 // ---------------------------------------------------------------------------
@@ -1454,6 +1511,15 @@ pub struct StateArgs {
     #[arg(long, default_value_t = 1.10)]
     pub area_swing: f64,
 
+    /// AreaSection warm-start strategy (default: ratio-optimal).
+    /// ratio-optimal: existing Lorenz-filtered ratio heuristic (no directional pre-bias).
+    /// moving-knife: call MKA first to get theta* (Reock-optimal angle), then use
+    /// theta* as a directional edge-weight bias before the METIS ratio search.
+    /// Requires --partition-mode areasection or --structure ratio-optimal-area.
+    /// Falls back to ratio-optimal with a warning if centroid data is absent.
+    #[arg(long, value_enum, default_value = "ratio-optimal")]
+    pub area_section_init: AreaSectionInitArg,
+
     /// ProportionalSection (B.12): D_votes constraint softness (ubvec[1]).
     /// 1.05 = tight partisan constraint; 1.20 = loose. Default 1.10.
     #[arg(long, default_value_t = 1.10)]
@@ -1812,6 +1878,11 @@ pub struct StatesArgs {
     /// AreaSection area imbalance tolerance (default: 1.10 = ±10%)
     #[arg(long, default_value_t = 1.10)]
     pub area_swing: f64,
+
+    /// AreaSection warm-start strategy (default: ratio-optimal).
+    /// moving-knife: use MKA theta* as directional edge bias before METIS ratio search.
+    #[arg(long, value_enum, default_value = "ratio-optimal")]
+    pub area_section_init: AreaSectionInitArg,
 
     /// Max deviation per district in percent (default: 0.5 congressional, 5.0 state)
     #[arg(long)]

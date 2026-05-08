@@ -16,6 +16,7 @@ bisect-data      = { path = "../bisect-data" }
 bisect-ilp       = { path = "../bisect-ilp" }
 metis-core       = { workspace = true }
 bisect-ensemble  = { path = "../bisect-ensemble" }
+bisect-pareto    = { path = "../bisect-pareto" }
 bisect-multiscale = { path = "../bisect-multiscale" }
 bisect-smc       = { path = "../bisect-smc" }
 rand.workspace = true

@@ -156,6 +156,21 @@ impl Default for SeedCompositor {
     fn default() -> Self { Self::Multi { seeds: 50 } }
 }
 
+/// Warm-start strategy for AreaSection (B.9) ratio selection.
+///
+/// `RatioOptimal` uses the existing internal Lorenz-filtered ratio heuristic.
+/// `MovingKnife` calls `split_subgraph_mka_direction()` first to obtain theta*
+/// (the Reock-maximising cut angle), then converts it to a directional penalty
+/// applied to edge weights before the METIS ratio search. Requires tract centroids;
+/// falls back to `RatioOptimal` with a warning if centroid data is absent.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AreaSectionInit {
+    /// Current default — internal Lorenz heuristic, no directional pre-bias.
+    RatioOptimal,
+    /// Use MKA theta* as the directional penalty angle for the METIS ratio search.
+    MovingKnife,
+}
+
 /// Layer 1 (structure): what tree of splits?
 ///
 /// Seed counts removed — those belong to SeedCompositor.
@@ -173,7 +188,8 @@ pub enum SplitStrategy {
     /// CompactBisect (B.7): greedy level-by-level geometric-mean PP selection.
     CompactBisect { epsilon: f64 },
     /// AreaSection (B.9): ratio-optimal bisection with dual population+area constraint.
-    AreaSection { area_swing: f64 },
+    /// `area_section_init` controls the warm-start strategy (default: RatioOptimal).
+    AreaSection { area_swing: f64, area_section_init: AreaSectionInit },
     /// ProportionalSection (B.12): ncon=2 [pop, D_votes] with HH-derived tpwgts.
     ProportionalSection { eta: f64 },
     /// ApportionRegions (B.11): prime-factorisation tree — Huntington-Hill geographic completion.
@@ -424,7 +440,10 @@ impl AlgorithmConfig {
                 mode_label: None,
             },
             PM::AreaSection => Self {
-                split: SplitStrategy::AreaSection { area_swing: args.area_swing },
+                split: SplitStrategy::AreaSection {
+                    area_swing: args.area_swing,
+                    area_section_init: args.area_section_init.into(),
+                },
                 seeds: SeedCompositor::Multi { seeds: args.geosection_seeds.max(1) },
                 weights: base_weights,
                 vertex_constraints: pop_and_area,  // ncon=2: population + land area
@@ -521,7 +540,7 @@ impl AlgorithmConfig {
                 SM::StandardBisect       => (SplitStrategy::Bisect, pop_only),
                 SM::NWay                 => (SplitStrategy::NWay, pop_only),
                 SM::RatioOptimal         => (SplitStrategy::GeoSection, pop_only),
-                SM::RatioOptimalArea     => (SplitStrategy::AreaSection { area_swing: args.area_swing }, pop_area),
+                SM::RatioOptimalArea     => (SplitStrategy::AreaSection { area_swing: args.area_swing, area_section_init: args.area_section_init.into() }, pop_area),
                 SM::RatioOptimalVra      => (SplitStrategy::VraSection { w_vra: args.w_vra }, pop_only),
                 SM::PrimeFactor          => (SplitStrategy::ApportionRegions, pop_only),
                 SM::CompactPolsby        => (SplitStrategy::CompactBisect { epsilon: 0.05 }, pop_only),
@@ -689,7 +708,7 @@ impl AlgorithmConfig {
                 mode_label: None,
             },
             PM::AreaSection => Self {
-                split: SplitStrategy::AreaSection { area_swing: 1.10 },
+                split: SplitStrategy::AreaSection { area_swing: 1.10, area_section_init: AreaSectionInit::RatioOptimal },
                 seeds: SeedCompositor::Multi { seeds: 50 },
                 weights: WeightSpec::default(),
                 vertex_constraints: pop_area,  // ncon=2: population + land area
@@ -1505,26 +1524,71 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 num_districts, balance_tolerance_frac, niter,
                 seeds_per_ratio, Some(&intermediate_dir),
                 &centroids, lambda, None, 1.10, None, 0.0,
+                None,  // GeoSection does not use MKA override
             ).map_err(|e| format!("geosection failed: {e}"))?;
             status(cfg.position, &format!("{}: natural ratio {}:{} at {:.0}km",
                    cfg.state_code, nat_left, nat_right, nat_ec / 1000.0));
             asgn
         }
-        SplitStrategy::AreaSection { area_swing } => {
+        SplitStrategy::AreaSection { area_swing, area_section_init } => {
             let seeds_per_ratio = cfg.algo.seeds.seed_count();
             if tiger_areas.is_empty() {
                 return Err(format!("{}: AreaSection requires TIGER ALAND data — not found",
                                    cfg.state_code));
             }
+
+            // ── MKA warm-start: compute theta* for directional edge pre-bias ──
+            //
+            // When MKA init is active and centroid data is present, call
+            // split_subgraph_mka_direction() to get the Reock-optimal cut angle.
+            // That angle is then passed to run_geosection as mka_theta_override,
+            // which uses it to pre-bias edge weights via apply_directional_penalty.
+            //
+            // When centroids are absent, fall back to ratio-optimal with a warning.
+            let mka_theta_override: Option<f64> = if *area_section_init == AreaSectionInit::MovingKnife {
+                if graph.tract_centroids.is_empty() {
+                    eprintln!("WARNING: --area-section-init moving-knife requires tract centroids; falling back to ratio-optimal");
+                    None
+                } else {
+                    let all_tracts: std::collections::HashSet<usize> = (0..graph.adjacency.len()).collect();
+                    let theta = crate::bisection_runner::split_subgraph_mka_direction(
+                        &all_tracts, &graph.tract_centroids, 180,
+                    );
+                    eprintln!("[areasection-mka] theta*={:.4} rad ({:.1} deg) — using as directional bias",
+                              theta, theta.to_degrees());
+                    Some(theta)
+                }
+            } else {
+                None
+            };
+
+            // When MKA init is active and centroids are available, build a CentroidMap
+            // (HashMap<usize, (f64, f64)>) so run_geosection can apply the directional bias
+            // via apply_directional_penalty. This converts the Vec<(f64,f64)> to the map form.
+            let mka_centroid_map: crate::geosection_orientation::CentroidMap =
+                if mka_theta_override.is_some() && !graph.tract_centroids.is_empty() {
+                    graph.tract_centroids.iter().enumerate()
+                        .map(|(i, &pt)| (i, pt))
+                        .collect()
+                } else {
+                    crate::geosection_orientation::CentroidMap::new()
+                };
             let empty_centroids = crate::geosection_orientation::CentroidMap::new();
+            let (centroids_ref, lambda_val): (&crate::geosection_orientation::CentroidMap, f64) =
+                if mka_theta_override.is_some() && !graph.tract_centroids.is_empty() {
+                    (&mka_centroid_map, 1.0)  // lambda=1.0: moderate directional bias
+                } else {
+                    (&empty_centroids, 0.0)
+                };
             status(cfg.position, &format!(
-                "{}: AreaSection {} ratios x {} seeds (pop+area dual, ncon=2)",
-                cfg.state_code, num_districts / 2, seeds_per_ratio));
+                "{}: AreaSection {} ratios x {} seeds (pop+area dual, ncon=2, init={:?})",
+                cfg.state_code, num_districts / 2, seeds_per_ratio, area_section_init));
             let (asgn, nat_left, nat_right, nat_ec) = run_geosection(
                 &graph.adjacency, &graph.vertex_weights, &edge_weights,
                 num_districts, balance_tolerance_frac, niter,
                 seeds_per_ratio, Some(&intermediate_dir),
-                &empty_centroids, 0.0, Some(&tiger_areas), *area_swing, None, 0.0,
+                centroids_ref, lambda_val, Some(&tiger_areas), *area_swing, None, 0.0,
+                mka_theta_override,
             ).map_err(|e| format!("areasection failed: {e}"))?;
             status(cfg.position, &format!("{}: natural ratio {}:{} at {:.0}km",
                    cfg.state_code, nat_left, nat_right, nat_ec / 1000.0));
@@ -1565,6 +1629,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 num_districts, balance_tolerance_frac, niter,
                 seeds_per_ratio, Some(&intermediate_dir),
                 &empty_centroids, 0.0, None, 1.10, mvap_opt, *w_vra,
+                None,  // VRASection does not use MKA override
             ).map_err(|e| format!("vra-section failed: {e}"))?;
             status(cfg.position, &format!("{}: natural ratio {}:{} at {:.0}km",
                    cfg.state_code, nat_left, nat_right, nat_ec / 1000.0));
@@ -3548,7 +3613,7 @@ mod tests {
             ("metis-vra",     SplitStrategy::NWay),
             ("geosection",    SplitStrategy::GeoSection),
             ("compact-bisect",SplitStrategy::CompactBisect { epsilon: 0.05 }),
-            ("areasection",   SplitStrategy::AreaSection { area_swing: 1.10 }),
+            ("areasection",   SplitStrategy::AreaSection { area_swing: 1.10, area_section_init: AreaSectionInit::RatioOptimal }),
             ("apportion-regions",  SplitStrategy::ApportionRegions),
             ("vra-section",   SplitStrategy::VraSection { w_vra: 0.40 }),
         ];
@@ -3827,12 +3892,14 @@ mod tests {
 
     #[test]
     fn split_strategy_area_section_has_area_swing() {
-        let s = SplitStrategy::AreaSection { area_swing: 1.15 };
+        let s = SplitStrategy::AreaSection { area_swing: 1.15, area_section_init: AreaSectionInit::RatioOptimal };
         assert_eq!(s.mode_name(), "areasection",
             "AreaSection mode_name must be 'areasection'");
-        if let SplitStrategy::AreaSection { area_swing } = s {
+        if let SplitStrategy::AreaSection { area_swing, area_section_init } = s {
             assert!((area_swing - 1.15).abs() < 1e-9,
                 "area_swing field must round-trip, got {area_swing}");
+            assert_eq!(area_section_init, AreaSectionInit::RatioOptimal,
+                "area_section_init must round-trip");
         } else {
             panic!("AreaSection variant destructure failed");
         }
@@ -3859,7 +3926,7 @@ mod tests {
             ("metis-vra",          SplitStrategy::NWay),
             ("geosection",         SplitStrategy::GeoSection),
             ("compact-bisect",     SplitStrategy::CompactBisect { epsilon: 0.05 }),
-            ("areasection",        SplitStrategy::AreaSection { area_swing: 1.10 }),
+            ("areasection",        SplitStrategy::AreaSection { area_swing: 1.10, area_section_init: AreaSectionInit::RatioOptimal }),
             ("proportional-section", SplitStrategy::ProportionalSection { eta: 1.10 }),
             ("apportion-regions",  SplitStrategy::ApportionRegions),
             ("vra-section",        SplitStrategy::VraSection { w_vra: 0.40 }),

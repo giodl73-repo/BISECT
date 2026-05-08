@@ -1,6 +1,7 @@
 use clap::Parser;
 use bisect_cli::args::{Cli, Commands, SuiteCommands};
 use bisect_cli::ensemble::run_ensemble;
+use bisect_cli::pareto_cmd::run_pareto;
 use bisect_cli::sweep::run_sweep;
 use bisect_cli::suite::run_suite_stability;
 use bisect_cli::verify::run_verify;
@@ -255,9 +256,10 @@ fn main() {
                         }
                         _ => {}
                     }
-                    // Override area_swing for AreaSection
-                    if let SplitStrategy::AreaSection { area_swing } = &mut cfg.algo.split {
+                    // Override area_swing and area_section_init for AreaSection
+                    if let SplitStrategy::AreaSection { area_swing, area_section_init } = &mut cfg.algo.split {
                         *area_swing = args.area_swing;
+                        *area_section_init = args.area_section_init.into();
                     }
                     // Wire ILP parameters from CLI args
                     if let SplitStrategy::Ilp { time_limit_secs, optimality_gap, max_tracts } = &mut cfg.algo.split {
@@ -616,6 +618,12 @@ fn main() {
         // ── redist ensemble: weighted plan ensemble generation ────────────────
         Commands::Ensemble(args) => {
             run_ensemble(&args)
+                .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+        }
+
+        // ── bisect pareto: Pareto-optimal redistricting ensemble (B.26) ───────
+        Commands::Pareto(args) => {
+            run_pareto(&args)
                 .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
         }
 
