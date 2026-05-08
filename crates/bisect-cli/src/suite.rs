@@ -910,7 +910,7 @@ mod tests {
              fractional ratios (e.g., WA: 10 congressional / 49 senate = 0.204:1).\n\
              This requires multi-level optimization not available in the current \
              recursive bisection approach.\n\
-             To file a feature request: https://github.com/giodl73-repo/REDIST/issues\n\
+             To file a feature request: https://github.com/giodl73-repo/BISECT/issues\n\
              Proceeding without congressional-in-senate nesting.";
         assert!(note.contains("Congressional-in-senate nesting is not yet supported"),
             "note must say nesting is unsupported");

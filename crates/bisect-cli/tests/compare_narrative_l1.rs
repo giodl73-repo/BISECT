@@ -20,7 +20,7 @@ use std::process::Command;
 use serde_json::Value;
 use tempfile::TempDir;
 
-const REDIST: &str = env!("CARGO_BIN_EXE_redist");
+const BISECT: &str = env!("CARGO_BIN_EXE_bisect");
 
 /// Minimal `manifest.json` for a synthetic plan. Mirrors the production
 /// `PlanManifest` shape (see redist-report::manifest::PlanManifest); fields
@@ -163,7 +163,7 @@ fn narrative_dispatch_writes_files_and_records_provenance() {
 
     let report_dir = tmp.path().join("out_narrative");
 
-    let status = Command::new(REDIST)
+    let status = Command::new(BISECT)
         .args([
             "compare",
             "--plan-a", plan_a,
@@ -274,7 +274,7 @@ fn narrative_dispatch_drops_draft_prefix_when_approved() {
     let (output_base, plan_a, plan_b) = build_two_plans(&tmp);
     let report_dir = tmp.path().join("out_approved");
 
-    let status = Command::new(REDIST)
+    let status = Command::new(BISECT)
         .args([
             "compare",
             "--plan-a", plan_a,
@@ -313,7 +313,7 @@ fn narrative_dispatch_format_both_prints_table_and_writes_files() {
     let (output_base, plan_a, plan_b) = build_two_plans(&tmp);
     let report_dir = tmp.path().join("out_both");
 
-    let out = Command::new(REDIST)
+    let out = Command::new(BISECT)
         .args([
             "compare",
             "--plan-a", plan_a,
@@ -351,7 +351,7 @@ fn html_dispatch_writes_self_contained_html_with_civic_banner() {
     let (output_base, plan_a, plan_b) = build_two_plans(&tmp);
     let report_dir = tmp.path().join("out_html");
 
-    let status = Command::new(REDIST)
+    let status = Command::new(BISECT)
         .args([
             "compare",
             "--plan-a", plan_a,
@@ -413,7 +413,7 @@ fn narrative_dispatch_errors_when_plan_b_missing() {
     let (output_base, plan_a, _) = build_two_plans(&tmp);
     let report_dir = tmp.path().join("out_err");
 
-    let out = Command::new(REDIST)
+    let out = Command::new(BISECT)
         .args([
             "compare",
             "--plan-a", plan_a,

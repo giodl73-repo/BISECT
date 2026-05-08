@@ -32,7 +32,7 @@ use std::process::{Command, Output};
 use serde_json::Value;
 use tempfile::TempDir;
 
-const REDIST: &str = env!("CARGO_BIN_EXE_redist");
+const BISECT: &str = env!("CARGO_BIN_EXE_bisect");
 
 // ── Adjacency path resolution ─────────────────────────────────────────────────
 
@@ -197,7 +197,7 @@ impl PipelineFixture {
 
     /// Run `bisect build {label} --year {year} --states IA --workers 1`.
     fn build(&self) -> Output {
-        Command::new(REDIST)
+        Command::new(BISECT)
             .arg("build")
             .arg(&self.label)
             .arg("--year")
@@ -214,7 +214,7 @@ impl PipelineFixture {
 
     /// Run `redist label-analyze {label} --year {year} --types summary`.
     fn analyze(&self) -> Output {
-        Command::new(REDIST)
+        Command::new(BISECT)
             .arg("label-analyze")
             .arg(&self.label)
             .arg("--year")
@@ -228,7 +228,7 @@ impl PipelineFixture {
 
     /// Run `redist label-report {label} --year {year} --format json`.
     fn report(&self) -> Output {
-        Command::new(REDIST)
+        Command::new(BISECT)
             .arg("label-report")
             .arg(&self.label)
             .arg("--year")
@@ -242,7 +242,7 @@ impl PipelineFixture {
 
     /// Run `redist label-verify {label} --year {year}`.
     fn verify(&self) -> Output {
-        Command::new(REDIST)
+        Command::new(BISECT)
             .arg("label-verify")
             .arg(&self.label)
             .arg("--year")
@@ -254,7 +254,7 @@ impl PipelineFixture {
 
     /// Run `redist ls --json` and return the parsed JSON.
     fn ls_json(&self) -> Value {
-        let out = Command::new(REDIST)
+        let out = Command::new(BISECT)
             .arg("ls")
             .arg("--json")
             .current_dir(self.root())
@@ -275,7 +275,7 @@ impl PipelineFixture {
 
     /// Run `redist show {label} --json` and return the parsed JSON.
     fn show_json(&self) -> Value {
-        let out = Command::new(REDIST)
+        let out = Command::new(BISECT)
             .arg("show")
             .arg(&self.label)
             .arg("--json")
@@ -651,7 +651,7 @@ fn test_build_then_mv_preserves_data() {
     assert!(src_year_dir.exists(), "runs/ia_mv_source/2020/ must exist before mv");
 
     // ── mv ia_mv_source → ia_mv_dest ─────────────────────────────────────────
-    let mv_out = Command::new(REDIST)
+    let mv_out = Command::new(BISECT)
         .arg("mv")
         .arg("ia_mv_source")
         .arg("ia_mv_dest")
@@ -708,7 +708,7 @@ fn test_build_then_mv_preserves_data() {
 
     // ── ls --json must reflect the rename ─────────────────────────────────────
     let ls = {
-        let ls_out = Command::new(REDIST)
+        let ls_out = Command::new(BISECT)
             .arg("ls")
             .arg("--json")
             .current_dir(fixture.root())
@@ -774,7 +774,7 @@ GEOID,district\n\
     std::fs::write(&csv_path, csv_content).expect("write external CSV");
 
     // ── Step 3: import as a new label ─────────────────────────────────────────
-    let import_out = Command::new(REDIST)
+    let import_out = Command::new(BISECT)
         .arg("label-import")
         .arg("ia_compare_external")
         .arg("--from")
@@ -836,7 +836,7 @@ GEOID,district\n\
         String::from_utf8_lossy(&analyze_base.stderr),
     );
 
-    let analyze_ext_out = Command::new(REDIST)
+    let analyze_ext_out = Command::new(BISECT)
         .arg("label-analyze")
         .arg("ia_compare_external")
         .arg("--year")
@@ -854,7 +854,7 @@ GEOID,district\n\
     );
 
     // ── Step 6: label-compare ─────────────────────────────────────────────────
-    let compare_out = Command::new(REDIST)
+    let compare_out = Command::new(BISECT)
         .arg("label-compare")
         .arg("ia_compare_base")
         .arg("ia_compare_external")

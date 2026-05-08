@@ -248,3 +248,8 @@ run_*.log
 target/
 *.gpkg
 *.geojson
+
+# Keep config files tracked even though data/ is gitignored
+!data/manifest.json
+!data/location_policy.json
+!data/README.md

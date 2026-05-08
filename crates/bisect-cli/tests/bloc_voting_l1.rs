@@ -18,7 +18,11 @@ use std::process::Command;
 use serde_json::Value;
 use tempfile::TempDir;
 
+<<<<<<< HEAD
 const REDIST: &str = env!("CARGO_BIN_EXE_redist");
+=======
+const BISECT: &str = env!("CARGO_BIN_EXE_bisect");
+>>>>>>> 367a410708657fa601d99e17a813087bb10ad4d5
 
 fn synthetic_precincts_tsv(
     n_precincts: usize,
@@ -139,7 +143,11 @@ fn bloc_voting_l1_synthetic_end_to_end() {
     .unwrap();
 
     // Invoke `bisect analyze --types bloc-voting`.
+<<<<<<< HEAD
     let output = Command::new(REDIST)
+=======
+    let output = Command::new(BISECT)
+>>>>>>> 367a410708657fa601d99e17a813087bb10ad4d5
         .arg("analyze")
         .arg("--state").arg("VT")  // skips manifest auto-derivation path (its
                                     // single-version vs from_label's double-version
@@ -233,7 +241,11 @@ fn bloc_voting_l1_rejects_missing_candidate_race_csv() {
         .join(label);
     write_minimal_plan(&plan_dir, label);
 
+<<<<<<< HEAD
     let output = Command::new(REDIST)
+=======
+    let output = Command::new(BISECT)
+>>>>>>> 367a410708657fa601d99e17a813087bb10ad4d5
         .arg("analyze")
         .arg("--state").arg("VT")  // skips manifest auto-derivation path (its
                                     // single-version vs from_label's double-version
@@ -282,7 +294,11 @@ fn bloc_voting_l1_rejects_method_rxc_as_not_yet_implemented() {
     )
     .unwrap();
 
+<<<<<<< HEAD
     let output = Command::new(REDIST)
+=======
+    let output = Command::new(BISECT)
+>>>>>>> 367a410708657fa601d99e17a813087bb10ad4d5
         .arg("analyze")
         .arg("--state").arg("VT")  // skips manifest auto-derivation path (its
                                     // single-version vs from_label's double-version
