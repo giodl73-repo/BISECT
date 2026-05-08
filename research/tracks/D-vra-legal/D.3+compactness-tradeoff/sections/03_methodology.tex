@@ -170,7 +170,7 @@ The resulting adjacency graphs range from 1,323 tracts (South Carolina) to 2,796
 \begin{itemize}
     \item \texttt{vertex\_weights}: 1D array of tract populations (single objective)
     \item \texttt{nparts}: Target number of congressional districts per state
-    \item \texttt{ufactor}: Population tolerance factor = 1.005 (±0.5\% of target)
+    \item \texttt{ufactor}: Population tolerance factor = 1.005 ($\pm$0.5\% of target)
     \item \texttt{niter}: 100 refinement iterations
     \item \texttt{edge\_weights}: None (all edges weighted equally)
     \item \texttt{tpwgts}: None (no demographic target weights)
@@ -191,7 +191,7 @@ The resulting adjacency graphs range from 1,323 tracts (South Carolina) to 2,796
     \item \texttt{ubvec}: Balance tolerance vector [1.005, 1.20] (strict population, relaxed demographic)
 \end{itemize}
 
-\textbf{Objective}: Minimize edge cut while attempting to match target demographic compositions per district. The relaxed demographic tolerance (±20\%) allows flexibility when exact targets are infeasible.
+\textbf{Objective}: Minimize edge cut while attempting to match target demographic compositions per district. The relaxed demographic tolerance ($\pm$20\%) allows flexibility when exact targets are infeasible.
 
 \textbf{Limitations}: Multi-constraint rigidly constrains the solution space by requiring \emph{every} district to approximate target demographics. This often fails when minority populations cluster in specific regions (Alabama: multi-constraint achieves 0 MM districts despite targeting 2).
 
@@ -210,7 +210,7 @@ w & \text{if } M_u / P_u \geq \theta \text{ and } M_v / P_v \geq \theta \\
 \]
 where $M_u$ and $P_u$ are minority and total populations of tract $u$.
 
-\textbf{Intuition}: Edges between ``minority tracts'' (above threshold $\theta$) receive weight $w$ (e.g., 5× or 10× higher than normal edges). METIS minimizes \emph{weighted} edge cut, making it expensive to separate minority tracts. This naturally clusters minority populations without rigid demographic constraints.
+\textbf{Intuition}: Edges between ``minority tracts'' (above threshold $\theta$) receive weight $w$ (e.g., 5$\times$ or 10$\times$ higher than normal edges). METIS minimizes \emph{weighted} edge cut, making it expensive to separate minority tracts. This naturally clusters minority populations without rigid demographic constraints.
 
 \textbf{Parameters}:
 \begin{itemize}
@@ -260,7 +260,7 @@ For each state, we test 21 configurations: 1 baseline + 20 edge-weighted variati
 \textbf{Parameter Rationale}:
 \begin{itemize}
     \item \textbf{$w = 1$}: Baseline equivalent (no preference for minority clustering)
-    \item \textbf{$w = 5, 10$}: Moderate weighting (5-10× higher cost to cut minority-minority edges)
+    \item \textbf{$w = 5, 10$}: Moderate weighting (5-10$\times$ higher cost to cut minority-minority edges)
     \item \textbf{$w = 50, 100$}: Aggressive weighting (forces strong minority concentration)
     \item \textbf{$\theta = 0.40$}: Liberal threshold (includes tracts with 40-49\% minority)
     \item \textbf{$\theta = 0.50$}: Conservative threshold (only tracts with 50\%+ minority)
@@ -335,7 +335,7 @@ For Alabama (our flagship case study), we generate a 10,000-plan ReCom ensemble:
 \begin{itemize}
     \item \textbf{Starting partition}: Baseline METIS partition (ensures valid initial state)
     \item \textbf{Chain length}: 10,000 steps after 1,000-step burn-in (discard initial states to reduce dependence on starting partition)
-    \item \textbf{Constraints}: Contiguity (all districts connected), population balance (±0.5\%), 7 districts
+    \item \textbf{Constraints}: Contiguity (all districts connected), population balance ($\pm$0.5\%), 7 districts
     \item \textbf{No VRA optimization}: ReCom proposals are purely random (no demographic weighting)
 \end{itemize}
 
@@ -527,17 +527,17 @@ Table~\ref{tab:computational_complexity} reports runtime estimates for baseline 
 \begin{itemize}
     \item \textbf{Baseline mean runtime}: 0.42 seconds per state (range: 0.15s for Mississippi to 0.98s for Georgia)
     \item \textbf{Edge-weighted mean runtime}: 0.47 seconds per state (12\% overhead)
-    \item \textbf{Overhead factor}: 1.12× on average (edge-weighting adds minimal computational cost)
+    \item \textbf{Overhead factor}: 1.12$\times$ on average (edge-weighting adds minimal computational cost)
     \item \textbf{Scaling with graph size}: Runtime scales near-linearly from 880 tracts (Mississippi) to 1,960 tracts (Georgia), consistent with $O(|E| + |V|\log|V|)$ complexity
 \end{itemize}
 
-\textbf{Full Parameter Sweep}: Our experimental design tests 105 configurations (21 per state × 5 states). Total runtime: $105 \times 0.47s \approx 50$ seconds $<$ 1 minute. Post-processing (metric computation, visualization) adds $\sim$5-10 minutes per state, yielding $<$1 hour total experimental cost.
+\textbf{Full Parameter Sweep}: Our experimental design tests 105 configurations (21 per state $\times$ 5 states). Total runtime: $105 \times 0.47s \approx 50$ seconds $<$ 1 minute. Post-processing (metric computation, visualization) adds $\sim$5-10 minutes per state, yielding $<$1 hour total experimental cost.
 
 \subsubsection{Scalability to Block-Level Resolution}
 
 Census block-level data provides finer geographic resolution (50,000 blocks per state vs 1,400 tracts) but increases computational cost. Extrapolating from tract-level performance:
 
-\textbf{Scaling Factor}: Block-level graphs have $\sim$35× more vertices. With $O(|E| + |V|\log|V|)$ complexity, expected runtime scaling is:
+\textbf{Scaling Factor}: Block-level graphs have $\sim$35$\times$ more vertices. With $O(|E| + |V|\log|V|)$ complexity, expected runtime scaling is:
 \[
 \text{Runtime}_{\text{block}} \approx \text{Runtime}_{\text{tract}} \times 35 \times \frac{\log(50{,}000)}{\log(1{,}400)} \approx \text{Runtime}_{\text{tract}} \times 50
 \]
@@ -556,7 +556,7 @@ Edge-weighting introduces two computational steps:
 
 Empirical overhead is 12\%, confirming that edge-weight computation is negligible relative to METIS partitioning. The $O(|E|)$ edge-weighting cost is absorbed into the $O(|E| + |V|\log|V|)$ METIS complexity.
 
-\textbf{Conclusion}: Edge-weighted optimization is computationally inexpensive. The 12\% overhead is negligible compared to the substantial VRA compliance benefits demonstrated in our results (Alabama: 0 MM → 2 MM with 3.2\% compactness improvement).
+\textbf{Conclusion}: Edge-weighted optimization is computationally inexpensive. The 12\% overhead is negligible compared to the substantial VRA compliance benefits demonstrated in our results (Alabama: 0 MM $\rightarrow$ 2 MM with 3.2\% compactness improvement).
 
 \subsubsection{Production Adaptive Formula}
 

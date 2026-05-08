@@ -52,7 +52,7 @@ function AdaptiveBisection(G, k, minority_data):
     districts_L = AdaptiveBisection(G_L, k_L, minority_data)
     districts_R = AdaptiveBisection(G_R, k_R, minority_data)
 
-    return districts_L ∪ districts_R
+    return districts_L union  districts_R
 
 
 function MetisBisect(G, (k_L, k_R), minority_data):
@@ -62,7 +62,7 @@ function MetisBisect(G, (k_L, k_R), minority_data):
     target_R = W * (k_R / (k_L + k_R))
 
     # Call METIS with edge-weighted optimization
-    # Edges between high-minority tracts have weight α > 1
+    # Edges between high-minority tracts have weight $alpha$ > 1
     partition = METIS_PartGraphRecursive(
         nvtxs=|V|,
         xadj=adjacency_list,
@@ -97,8 +97,8 @@ function EvaluateMinorityConcentration(G_L, G_R, minority_data):
 
 function MaxMinorityInSubgraph(G, minority_data):
     # Upper bound: concentrate all minority population in one district
-    total_minority = Σ_{v in G} m_v * w_{pop}(v)
-    total_pop = Σ_{v in G} w_{pop}(v)
+    total_minority = sum_{v in G} m_v * w_{pop}(v)
+    total_pop = sum_{v in G} w_{pop}(v)
     target_district_pop = total_pop / k
 
     return min(total_minority / target_district_pop, 1.0)

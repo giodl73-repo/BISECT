@@ -38,8 +38,12 @@ court can see immediately what fraction of that circle the district occupies.
 
 For court filings using Reock:
 \begin{quote}
-  \emph{All Reock scores were computed using the minimum bounding circle (MBC)
-  of district polygons derived from 2020 Census TIGER/Line tract geometries
-  projected to Albers Equal Area Conic (EPSG:5070). The MBC was computed using
-  Welzl's algorithm applied to the polygon vertex set. Reock $= A(\text{district})/A(\text{MBC})$.}
+  \emph{All Reock scores were computed using a centroid-plus-max-radius approximation
+  to the minimum bounding circle (MBC) of district polygons derived from 2020 Census
+  TIGER/Line tract geometries projected to Albers Equal Area Conic (EPSG:5070).
+  The approximation circle is centred at the polygon centroid with radius equal to the
+  maximum distance from the centroid to any boundary vertex; it contains the polygon
+  and may be slightly larger than the true MBC, producing conservative (slightly lower)
+  Reock values. Reock $= A(\text{district})/A(\text{approx.\ MBC})$.
+  Exact Welzl MBC computation is a planned Phase~2 extension.}
 \end{quote}

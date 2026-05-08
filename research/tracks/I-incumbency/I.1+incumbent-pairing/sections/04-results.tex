@@ -16,7 +16,7 @@ compared to the geographically adjusted random baseline.
 \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
 State & Count & Rate & Count & Rate & $E[C]_\text{geo}$ & $p$-value (enacted) \\
 \midrule
-NC ($k=14$, $n=13$) & 11 & 0.143 & 0 & 0.000 & 7.14 & $< 0.001$ \\
+NC ($k=14$, $n=13$) & 11 & 0.141 & 0 & 0.000 & 7.14 & $< 0.001$ \\
 WI ($k=8$, $n=8$)   & 3  & 0.107 & 0 & 0.000 & 4.20 & $0.014$ \\
 TX ($k=38$, $n=36$) & 67 & 0.105 & 17 & 0.026 & 99.9 & $0.033$ \\
 \bottomrule
@@ -34,13 +34,14 @@ TX ($k=38$, $n=36$) & 67 & 0.105 & 17 & 0.026 & 99.9 & $0.033$ \\
 \subsection{North Carolina}
 
 Under the \textsc{bisect} map for NC$^\dagger$, 11 incumbent pairs share a district
-(pairing count $C = 11$, rate $R = 11/78 = 0.141$, rounded to 0.143 in Table~\ref{tab:pairing-results}).
+(pairing count $C = 11$, rate $R = 11/78 \approx 0.141$ as reported in Table~\ref{tab:pairing-results};
+denominator $\binom{13}{2} = 78$ is the total number of incumbent pairs).
 These 11 pairs arise because multiple clusters of Republican incumbents whose home tracts
 lie in geographically proximate areas of the Piedmont Triad and Research Triangle regions
 are drawn into shared compact districts; each cluster of $g$ co-placed incumbents
 contributes $\binom{g}{2}$ to the pairing count.
 Pairing counts from a single deterministic run (seed\,$=42$)$^\dagger$; counts will vary with different seeds.
-The pairing rate of 0.143 falls between the raw random baseline of 0.214 and the geographically adjusted
+The pairing rate of 0.141 falls between the raw random baseline of 0.214 and the geographically adjusted
 baseline of 0.182, well within one standard deviation of either.
 
 The enacted NC map achieves a pairing rate of exactly 0.000: all 13 filing incumbents
@@ -69,8 +70,9 @@ predicts $E[C]_{\text{geo}} = 4.20$ paired pairs, with $\text{SD} = 1.85$. The
 expectation---well within the plausible range for a single-seed run.
 
 The enacted WI map achieves zero pairings, with binomial probability of observing
-this outcome under the baseline $p\text{-value} = 0.014$. This is statistically
-significant at conventional levels, consistent with deliberate incumbency protection.
+this outcome under the baseline $p\text{-value} = 0.014$ (preliminary single-seed estimate).
+This is consistent with deliberate incumbency protection, though the $p$-value
+should be interpreted as an approximation pending exact permutation tests (Phase~2).
 
 \subsection{Texas}
 
@@ -85,7 +87,7 @@ This yields a rate of 0.105---below but within two standard
 deviations of the adjusted baseline.
 
 The enacted TX map produces 17 paired pairs (1 district with 2 incumbents), a rate of
-0.026. This is significantly below the baseline ($p\text{-value} = 0.033$). The TX
+0.026. This is below the baseline (preliminary single-seed estimate: $p\text{-value} = 0.033$). The TX
 enacted map's near-zero pairing rate is notable because achieving zero pairings with
 36 incumbents in 38 districts is geometrically difficult---incumbent homes are spread
 across a state as large as Texas, but the enacted map still achieves a pairing rate

@@ -113,6 +113,9 @@ VRA Section 2, the 42% threshold, Gingles analysis, post-Callais disentanglement
 | D.2 | N-Way vs. Recursive for VRA-Compliant Redistricting | [PDF](papers/D.2+nway-vs-recursive-vra.pdf) |
 | D.3 | VRA–Compactness Tradeoff — real but bounded | [PDF](papers/D.3+compactness-tradeoff.pdf) |
 | D.5 | Gingles Bloc Voting Methodology — expert witness guide | [PDF](papers/D.5+gingles-bloc-voting-methodology.pdf) |
+| D.6 | Prison Gerrymandering — population adjustment methodology | [PDF](papers/D.6+prison-gerrymandering.pdf) |
+| D.7 | Section 203 Language Minorities — coverage, district design, bilingual access | [PDF](papers/D.7+section-203-language-minorities.pdf) |
+| D.8 | Post-Shelby VRA Landscape — algorithmic redistricting as transparency substitute | [PDF](papers/D.8+post-shelby-landscape.pdf) |
 
 ---
 
@@ -196,13 +199,13 @@ Synthesis, guides, and practitioner materials.
 
 How algorithmically-drawn maps affect incumbents — an algorithm with no incumbency input whose geometric outcomes can be measured against enacted maps.
 
-| Code | Title | Status |
-|------|-------|--------|
-| I.0 | Incumbency and Algorithmic Redistricting: Overview | **Accepted** |
-| I.1 | Incumbent-Pairing Probability | Minor Revision |
-| I.2 | Safe-Seat Creation and Destruction | Minor Revision |
-| I.3 | Open-Seat Effects and Retirement Incentives | Major Revision |
-| I.4 | Incumbency Protection as a Legal Redistricting Criterion | **Accepted** |
+| Code | Title | PDF | Status |
+|------|-------|-----|--------|
+| I.0 | Incumbency and Algorithmic Redistricting: Overview | [PDF](papers/I.0+incumbency-overview.pdf) | **Accepted** |
+| I.1 | Incumbent-Pairing Probability | [PDF](papers/I.1+incumbent-pairing.pdf) | Minor Revision |
+| I.2 | Safe-Seat Creation and Destruction | [PDF](papers/I.2+safe-seat-creation.pdf) | Minor Revision |
+| I.3 | Open-Seat Effects and Retirement Incentives | [PDF](papers/I.3+open-seat-effects.pdf) | Minor Revision |
+| I.4 | Incumbency Protection as a Legal Redistricting Criterion | [PDF](papers/I.4+incumbency-legal-criterion.pdf) | **Accepted** |
 
 ---
 
@@ -210,49 +213,49 @@ How algorithmically-drawn maps affect incumbents — an algorithm with no incumb
 
 Congressional seat apportionment — how seats are allocated to states before districts are drawn. Documents the `bisect-apportion` crate.
 
-| Code | Title | Status |
-|------|-------|--------|
-| J.0 | Apportionment Methods: Overview | Minor Revision |
-| J.1 | Huntington-Hill: The Federal Method | Minor Revision |
-| J.2 | Webster Method and Sainte-Laguë Equivalence | Minor Revision |
-| J.3 | Adams Method and Smallest-State Bias | Major Revision |
-| J.4 | Jefferson/D'Hondt and Large-State Bias | Minor Revision |
-| J.5 | Apportionment Paradoxes and Balinski-Young Impossibility | Minor Revision |
-| J.6 | bisect-apportion: Verified Implementation | Major Revision |
+| Code | Title | PDF | Status |
+|------|-------|-----|--------|
+| J.0 | Apportionment Methods: Overview | [PDF](papers/J.0+apportionment-overview.pdf) | Minor Revision |
+| J.1 | Huntington-Hill: The Federal Method | [PDF](papers/J.1+huntington-hill.pdf) | Minor Revision |
+| J.2 | Webster Method and Sainte-Laguë Equivalence | [PDF](papers/J.2+webster-method.pdf) | Minor Revision |
+| J.3 | Adams Method and Smallest-State Bias | [PDF](papers/J.3+adams-method.pdf) | Minor Revision |
+| J.4 | Jefferson/D'Hondt and Large-State Bias | [PDF](papers/J.4+jefferson-dhondt.pdf) | Minor Revision |
+| J.5 | Apportionment Paradoxes and Balinski-Young Impossibility | [PDF](papers/J.5+apportionment-paradoxes.pdf) | Minor Revision |
+| J.6 | bisect-apportion: Verified Implementation | [PDF](papers/J.6+bisect-apportion-implementation.pdf) | Minor Revision |
 
 ---
 
 ## Track K — Compactness Measures (8 papers)
 
-One paper per compactness metric: mathematical definition, properties, implementation in `bisect-analysis`, empirical comparison across B-series algorithms, legal usage.
+One paper per compactness metric: mathematical definition, properties, implementation in `bisect-analysis`, empirical comparison across B-series algorithms, legal usage. All metrics accessible via `bisect label-analyze --types compactness`.
 
-| Code | Title | Status |
-|------|-------|--------|
-| K.0 | Compactness Taxonomy and Overview | **Accepted** |
-| K.1 | Polsby-Popper Score | **Accepted** |
-| K.2 | Reock Score | Major Revision |
-| K.3 | Convex Hull Ratio | **Accepted** |
-| K.4 | Schwartzberg Score | **Accepted** |
-| K.5 | Length-Width Ratio | Minor Revision |
-| K.6 | Population-Weighted Compactness | **Accepted** |
-| K.7 | Multi-Metric Composite and Court Usage Guide | Minor Revision |
+| Code | Title | PDF | Status |
+|------|-------|-----|--------|
+| K.0 | Compactness Taxonomy and Overview | [PDF](papers/K.0+compactness-overview.pdf) | **Accepted** |
+| K.1 | Polsby-Popper Score | [PDF](papers/K.1+polsby-popper.pdf) | **Accepted** |
+| K.2 | Reock Score | [PDF](papers/K.2+reock.pdf) | **Accepted** |
+| K.3 | Convex Hull Ratio | [PDF](papers/K.3+convex-hull.pdf) | **Accepted** |
+| K.4 | Schwartzberg Score | [PDF](papers/K.4+schwartzberg.pdf) | **Accepted** |
+| K.5 | Length-Width Ratio | [PDF](papers/K.5+length-width.pdf) | Minor Revision |
+| K.6 | Population-Weighted Compactness | [PDF](papers/K.6+population-weighted-compactness.pdf) | **Accepted** |
+| K.7 | Multi-Metric Composite and Court Usage Guide | [PDF](papers/K.7+composite-court-guide.pdf) | Minor Revision |
 
 ---
 
 ## Track L — Partisan Fairness (7 papers)
 
-Partisan fairness metrics — how algorithmically-drawn maps compare to enacted maps across all six major metrics. Post-Rucho legal landscape.
+Partisan fairness metrics — how algorithmically-drawn maps compare to enacted maps across all six major metrics. Post-Rucho legal landscape. All metrics via `bisect label-analyze --types partisan`.
 
-| Code | Title | Status |
-|------|-------|--------|
-| L.0 | Partisan Fairness Metrics: Overview and Framework | **Accepted** |
-| L.1 | Efficiency Gap: Dedicated Treatment | **Accepted** |
-| L.2 | Mean-Median Difference | **Accepted** |
-| L.3 | Partisan Bias and Swing Ratio | **Accepted** |
-| L.4 | Declination | **Accepted** |
-| L.5 | Seats-Votes Curve and Responsiveness | **Accepted** |
-| L.6 | Proportionality vs. Majoritarianism | **Accepted** |
+| Code | Title | PDF | Status |
+|------|-------|-----|--------|
+| L.0 | Partisan Fairness Metrics: Overview and Framework | [PDF](papers/L.0+partisan-fairness-overview.pdf) | **Accepted** |
+| L.1 | Efficiency Gap: Dedicated Treatment | [PDF](papers/L.1+efficiency-gap.pdf) | **Accepted** |
+| L.2 | Mean-Median Difference | [PDF](papers/L.2+mean-median.pdf) | **Accepted** |
+| L.3 | Partisan Bias and Swing Ratio | [PDF](papers/L.3+partisan-bias.pdf) | **Accepted** |
+| L.4 | Declination | [PDF](papers/L.4+declination.pdf) | **Accepted** |
+| L.5 | Seats-Votes Curve and Responsiveness | [PDF](papers/L.5+seats-votes-curve.pdf) | **Accepted** |
+| L.6 | Proportionality vs. Majoritarianism | [PDF](papers/L.6+proportionality-majoritarianism.pdf) | **Accepted** |
 
 ---
 
-*To add a paper: place `main.tex` in `research/tracks/[track]/CODE+title/`, run `cd research && make docs`, commit `docs/papers/CODE+title.pdf`.*
+*To add a paper: place `main.tex` in `research/tracks/[track]/CODE+title/`, run pdflatex+bibtex in the paper directory, copy the PDF to `docs/papers/CODE+title.pdf`, and update this file.*

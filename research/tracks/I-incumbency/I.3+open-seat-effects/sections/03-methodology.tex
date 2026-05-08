@@ -79,3 +79,26 @@ by reapportionment are automatically open seats because no prior district corres
 to them; however, the enacted TX map placed these new seats in a way that pulled
 incumbent-held tracts into adjacent districts, so the two new seats are not in the same
 locations they would be under algorithmic redistricting.
+
+\subsection{Retirement Incentive Model}
+
+We compute a retirement incentive (RI) score for each incumbent as:
+\[
+  \text{RI}_i = \alpha \cdot \mathbf{1}[\text{paired}_i] + \beta \cdot |\Delta v_{D,i}|,
+\]
+where $\text{paired}_i \in \{0,1\}$ indicates whether incumbent $i$ is placed in a
+district with another incumbent, and $\Delta v_{D,i}$ is the change in district
+partisan lean (two-party Democratic vote share) between the prior district and the
+new district. The parameters are:
+\begin{itemize}
+  \item $\alpha = 0.40$: weight on pairing (approximated from \citet{ansolabehere2000incumbency});
+  \item $\beta = 0.50$: weight on partisan lean change magnitude (approximated from
+    \citet{ansolabehere2000incumbency}).
+\end{itemize}
+\textbf{Note:} The parameters $\alpha$ and $\beta$ are approximated from the empirical
+literature on redistricting-induced retirement~\citep{ansolabehere2000incumbency},
+not estimated from \textsc{bisect}-specific data. Estimation from \textsc{bisect}
+redistricting outcomes across multiple cycles is a Phase~2 extension. The RI scores
+reported in Section~\ref{sec:results} should be interpreted as illustrative of the
+direction and magnitude of the retirement pressure differential, not as precise
+predictions of individual retirement probabilities.

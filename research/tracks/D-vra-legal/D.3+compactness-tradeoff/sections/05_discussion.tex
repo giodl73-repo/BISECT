@@ -15,7 +15,7 @@ Minority populations exhibit strong spatial autocorrelation across all study sta
 
 When baseline METIS partitioning ignores demographic composition, it treats all tract boundaries as equally costly to cut. This leads to partitions that arbitrarily divide minority communities, splitting clusters that are geographically cohesive. The resulting districts may achieve population balance and minimize raw edge counts, but they fail to respect the natural community boundaries that emerge from demographic clustering.
 
-Edge-weighted optimization corrects this by making minority-minority edges \emph{expensive} to cut (e.g., 5× higher weight). METIS then minimizes \emph{weighted} edge cut, naturally keeping minority clusters together. Crucially, because these clusters are already geographically compact (high Moran's $I$), preserving them creates districts with better geometric compactness than arbitrary divisions.
+Edge-weighted optimization corrects this by making minority-minority edges \emph{expensive} to cut (e.g., 5$\times$ higher weight). METIS then minimizes \emph{weighted} edge cut, naturally keeping minority clusters together. Crucially, because these clusters are already geographically compact (high Moran's $I$), preserving them creates districts with better geometric compactness than arbitrary divisions.
 
 \textbf{Analogy}: Consider organizing a classroom into study groups. If students with similar interests (e.g., science-focused students) sit together, grouping them by proximity produces both \emph{interest-based cohesion} and \emph{spatial compactness}. Ignoring student interests and grouping arbitrarily may produce equally compact groups spatially but destroys the natural communities. Edge-weighted optimization is analogous to ``interest-aware'' grouping that leverages pre-existing spatial clustering.
 
@@ -31,7 +31,7 @@ Alabama's non-MM districts gain +23.0\% compactness in the best configuration be
 
 Baseline METIS partitioning optimizes exclusively for population balance and (unweighted) edge cut, without regard for demographic composition. This creates a \emph{locally optimal} solution for raw compactness but a \emph{globally suboptimal} solution when considering the natural geographic structure imposed by demographic clustering.
 
-Edge-weighted optimization effectively searches a different region of the solution space---one that respects demographic geography. Because minority clustering aligns with geographic compactness (high Moran's $I$), this alternative solution space can contain configurations that dominate baseline on both VRA compliance and compactness. Alabama's 5×@45\% configuration is precisely such a dominant point: it achieves 2 MM districts (vs. 0 for baseline) \emph{and} reduces edge cut by 9.3\%.
+Edge-weighted optimization effectively searches a different region of the solution space---one that respects demographic geography. Because minority clustering aligns with geographic compactness (high Moran's $I$), this alternative solution space can contain configurations that dominate baseline on both VRA compliance and compactness. Alabama's 5$\times$@45\% configuration is precisely such a dominant point: it achieves 2 MM districts (vs. 0 for baseline) \emph{and} reduces edge cut by 9.3\%.
 
 \textbf{Implication}: The ``VRA-compactness tradeoff'' often cited in redistricting debates may be an artifact of using the wrong baseline. Comparing edge-weighted solutions to unweighted baseline overstates the compactness cost because baseline ignores natural community structure.
 
@@ -45,10 +45,10 @@ Our results directly contradict three common assumptions about the relationship 
 
 \textbf{Our Evidence}: In 4 out of 4 successful states, at least one configuration achieves VRA compliance with equal or better overall compactness than baseline:
 \begin{itemize}
-    \item Alabama 5×@45\%: 2 MM, edge cut $-9.3$\%, PP +3.2\%
-    \item Alabama 5×@40\%: 2 MM, edge cut $-1.4$\%, PP $-2.7$\%
-    \item Georgia 5×@55\%: 6 MM, edge cut $-11.2$\%, PP +22.2\%
-    \item Mississippi 1×@40\%: 2 MM, edge cut 0.0\%, PP 0.0\%
+    \item Alabama 5$\times$@45\%: 2 MM, edge cut $-9.3$\%, PP +3.2\%
+    \item Alabama 5$\times$@40\%: 2 MM, edge cut $-1.4$\%, PP $-2.7$\%
+    \item Georgia 5$\times$@55\%: 6 MM, edge cut $-11.2$\%, PP +22.2\%
+    \item Mississippi 1$\times$@40\%: 2 MM, edge cut 0.0\%, PP 0.0\%
 \end{itemize}
 
 Even Louisiana, which sacrifices significant compactness overall ($-43.1$\% PP), demonstrates that \emph{non-MM} districts lose less ($-39.0$\%) than MM districts ($-51.2$\%). The compactness cost is concentrated in districts being optimized for minority representation, not imposed system-wide.
@@ -98,7 +98,7 @@ Even Alabama demonstrates limited or no tradeoff: creating 2 MM districts improv
 
 \subsection{Constitutional Permissibility of Edge-Weighted Optimization}
 
-Our edge-weighted optimization approach raises an important constitutional question: Does assigning higher weights (5×-10×) to edges connecting minority-minority tract pairs constitute \emph{racial predominance} that would violate the Equal Protection Clause under \emph{Shaw v. Reno} (1993) and \emph{Miller v. Johnson} (1995)?
+Our edge-weighted optimization approach raises an important constitutional question: Does assigning higher weights (5$\times$-10$\times$) to edges connecting minority-minority tract pairs constitute \emph{racial predominance} that would violate the Equal Protection Clause under \emph{Shaw v. Reno} (1993) and \emph{Miller v. Johnson} (1995)?
 
 This question is critical for the practical adoption of our approach. If edge-weighting is constitutionally suspect, our Pareto frontiers become academically interesting but legally unusable. We argue that edge-weighted optimization is constitutionally permissible because it implements \emph{multi-factor balancing} rather than racial predominance, and propose that Pareto efficiency analysis can replace the inherently subjective ``predominant factor'' test with an objective framework.
 
@@ -119,13 +119,13 @@ Edge-weighted METIS optimization does not subordinate compactness to race. Inste
 \textbf{Four Factors Jointly Optimized}:
 
 \begin{enumerate}
-    \item \textbf{Population balance}: All configurations maintain ±0.5\% deviation from target population, satisfying equal protection requirements.
+    \item \textbf{Population balance}: All configurations maintain $\pm$0.5\% deviation from target population, satisfying equal protection requirements.
     \item \textbf{Contiguity}: METIS enforces district contiguity algorithmically---no district spans disconnected components. Edge-weighting preserves this constraint.
-    \item \textbf{Compactness (geometric)}: METIS minimizes \emph{weighted} edge cut. Edge weights reflect \emph{both} geographic distance (tract boundary lengths) and demographic composition. A 5× weight means the algorithm treats cutting a minority-minority boundary as equivalent to cutting five geographic boundaries---still a \emph{compactness} calculation, just one that values community cohesion.
+    \item \textbf{Compactness (geometric)}: METIS minimizes \emph{weighted} edge cut. Edge weights reflect \emph{both} geographic distance (tract boundary lengths) and demographic composition. A 5$\times$ weight means the algorithm treats cutting a minority-minority boundary as equivalent to cutting five geographic boundaries---still a \emph{compactness} calculation, just one that values community cohesion.
     \item \textbf{Demographic composition (VRA)}: Minority-minority edges receive higher weights, making it more ``costly'' for the algorithm to split minority communities. However, this cost is weighed against other factors---if creating an MM district requires extreme contortions (excessive boundary cutting, distant tract connections), the algorithm may decline to do so.
 \end{enumerate}
 
-\textbf{Crucially}, edge-weighting does not \emph{mandate} MM district creation. It makes minority community preservation \emph{preferred} but \emph{not required}. If demographic geography does not support compact MM districts, the algorithm will fail (South Carolina achieves 1/3 MM districts despite aggressive 1000× weights). This demonstrates that race is not predominant---if it were, the algorithm would create MM districts regardless of geometric cost.
+\textbf{Crucially}, edge-weighting does not \emph{mandate} MM district creation. It makes minority community preservation \emph{preferred} but \emph{not required}. If demographic geography does not support compact MM districts, the algorithm will fail (South Carolina achieves 1/3 MM districts despite aggressive 1000$\times$ weights). This demonstrates that race is not predominant---if it were, the algorithm would create MM districts regardless of geometric cost.
 
 \subsubsection{Contrast with Shaw-Miller Violations}
 
@@ -149,7 +149,7 @@ To clarify the distinction, consider how edge-weighted optimization differs from
 \begin{itemize}
     \item \textbf{Approach}: Algorithmic partitioning minimizing weighted edge cut, where weights reflect \emph{both} geography and demography.
     \item \textbf{Trade-off}: Alabama achieves 2 MM districts while \emph{improving} compactness (+3.2\% PP, $-9.3$\% edge cut). Georgia achieves 6 MM districts with +22.2\% compactness. Compactness is \emph{enhanced}, not sacrificed.
-    \item \textbf{Non-Predominant Factor}: Race influences optimization but does not dictate outcomes. South Carolina's failure to reach 3 MM districts despite 1000× weights proves that geometric constraints override racial targets when the two conflict.
+    \item \textbf{Non-Predominant Factor}: Race influences optimization but does not dictate outcomes. South Carolina's failure to reach 3 MM districts despite 1000$\times$ weights proves that geometric constraints override racial targets when the two conflict.
 \end{itemize}
 
 The key difference: Shaw-Miller violations involved compactness \emph{subordination}, where racial objectives overrode all other considerations. Edge-weighting involves compactness \emph{integration}, where racial considerations are incorporated into the compactness metric itself, balancing community cohesion with geometric efficiency.
@@ -179,7 +179,7 @@ We propose that \textbf{Pareto efficiency analysis} provides an objective framew
 
 \textbf{Pareto-Dominated Plans Indicate Predominance}: A redistricting plan is Pareto-dominated if another feasible plan achieves equal or better VRA compliance \emph{and} strictly better compactness (or vice versa). Plans below the Pareto frontier indicate that one objective was prioritized \emph{beyond the point where it conflicted with the other}---precisely what predominance means.
 
-\textbf{Example}: Alabama's multi-constraint approach (Paper 4) achieves 0 MM districts with edge cut 280 and PP 0.234. The edge-weighted 5×@45\% configuration achieves 2 MM districts with edge cut 254 and PP 0.242. The edge-weighted plan \emph{dominates} multi-constraint on both objectives. If Alabama adopted the multi-constraint plan, this would suggest:
+\textbf{Example}: Alabama's multi-constraint approach (Paper 4) achieves 0 MM districts with edge cut 280 and PP 0.234. The edge-weighted 5$\times$@45\% configuration achieves 2 MM districts with edge cut 254 and PP 0.242. The edge-weighted plan \emph{dominates} multi-constraint on both objectives. If Alabama adopted the multi-constraint plan, this would suggest:
 \begin{enumerate}
     \item \textbf{If 0 MM was the goal}: Compactness was subordinated to racial avoidance (achieving fewer MM districts than geometrically optimal).
     \item \textbf{If 2 MM was the goal}: The plan is simply inefficient, achieving neither objective well.
@@ -187,7 +187,7 @@ We propose that \textbf{Pareto efficiency analysis} provides an objective framew
 
 Conversely, \textbf{Pareto-optimal plans indicate balanced trade-offs}: Plans \emph{on} the Pareto frontier represent configurations where improving one objective \emph{requires} sacrificing the other. This demonstrates that neither objective predominates---both are given weight, and the plan reflects a legitimate trade-off choice.
 
-\textbf{Georgia's 5×@55\% configuration}: 6 MM districts, edge cut $-11.2$\%, PP +22.2\%. This plan is Pareto-optimal (no feasible alternative achieves more MM districts with better or equal compactness). The fact that it improves compactness while exceeding VRA targets demonstrates that race was balanced with geometric considerations, not elevated to predominance.
+\textbf{Georgia's 5$\times$@55\% configuration}: 6 MM districts, edge cut $-11.2$\%, PP +22.2\%. This plan is Pareto-optimal (no feasible alternative achieves more MM districts with better or equal compactness). The fact that it improves compactness while exceeding VRA targets demonstrates that race was balanced with geometric considerations, not elevated to predominance.
 
 \textbf{Judicial Application}: Courts assessing Shaw-Miller challenges could require plaintiffs (or defendants) to demonstrate the challenged plan's position relative to the Pareto frontier:
 \begin{itemize}
@@ -226,7 +226,7 @@ Courts evaluating redistricting plans under VRA challenges or compactness requir
 
 Plans that are Pareto-dominated are \emph{unjustifiable}---they sacrifice one objective unnecessarily without gaining on the other.
 
-\textbf{Example Application to Alabama's Multi-Constraint Plan}: Alabama's multi-constraint approach (Paper 4 result: 0 MM districts, 280 edge cut, 0.234 PP) is \emph{dominated} by the edge-weighted 5×@45\% configuration (2 MM districts, 254 edge cut, 0.242 PP). The edge-weighted plan is better on \emph{both} objectives, making multi-constraint indefensible.
+\textbf{Example Application to Alabama's Multi-Constraint Plan}: Alabama's multi-constraint approach (Paper 4 result: 0 MM districts, 280 edge cut, 0.234 PP) is \emph{dominated} by the edge-weighted 5$\times$@45\% configuration (2 MM districts, 254 edge cut, 0.242 PP). The edge-weighted plan is better on \emph{both} objectives, making multi-constraint indefensible.
 
 Courts can reject plans below the Pareto frontier as failing to balance objectives optimally. Only plans \emph{on} the frontier represent legitimate tradeoff choices where improving one objective requires sacrificing the other.
 
@@ -234,10 +234,10 @@ Courts can reject plans below the Pareto frontier as failing to balance objectiv
 
 State legislatures drafting redistricting plans must balance multiple constituencies and objectives. Pareto frontiers make these tradeoffs explicit and transparent.
 
-\textbf{Frontier Presentation}: Legislatures can present the full Pareto frontier to the public, showing all optimal configurations (e.g., Alabama's frontier includes 5×@40\%, 5×@45\%, possibly others). Each point on the frontier represents a defensible choice with clear tradeoffs:
+\textbf{Frontier Presentation}: Legislatures can present the full Pareto frontier to the public, showing all optimal configurations (e.g., Alabama's frontier includes 5$\times$@40\%, 5$\times$@45\%, possibly others). Each point on the frontier represents a defensible choice with clear tradeoffs:
 \begin{itemize}
-    \item \textbf{5×@40\%}: 2 MM, edge cut 276 (better compactness, VRA success)
-    \item \textbf{5×@45\%}: 2 MM, edge cut 254 (best compactness, VRA success)
+    \item \textbf{5$\times$@40\%}: 2 MM, edge cut 276 (better compactness, VRA success)
+    \item \textbf{5$\times$@45\%}: 2 MM, edge cut 254 (best compactness, VRA success)
 \end{itemize}
 
 Public deliberation can then focus on which Pareto-optimal point best serves the state's priorities, rather than arguing over whether VRA compliance is ``possible'' or ``too costly.''
@@ -248,7 +248,7 @@ Public deliberation can then focus on which Pareto-optimal point best serves the
 
 VRA advocates challenging redistricting plans can use Pareto analysis to identify feasible improvements without requiring unrealistic demands.
 
-\textbf{Strategic Targeting}: Rather than demanding maximum MM districts regardless of compactness cost (which courts may reject as unreasonable), advocates can point to Pareto-optimal configurations that achieve strong VRA compliance with minimal or zero compactness sacrifice. Alabama's 5×@45\% configuration (2 MM, better compactness than baseline) is an existence proof that the state \emph{can} achieve compliance without cost, undermining ``impossibility'' defenses.
+\textbf{Strategic Targeting}: Rather than demanding maximum MM districts regardless of compactness cost (which courts may reject as unreasonable), advocates can point to Pareto-optimal configurations that achieve strong VRA compliance with minimal or zero compactness sacrifice. Alabama's 5$\times$@45\% configuration (2 MM, better compactness than baseline) is an existence proof that the state \emph{can} achieve compliance without cost, undermining ``impossibility'' defenses.
 
 \textbf{Quantifying Marginal Costs}: For states where tradeoffs exist (Louisiana), Pareto analysis quantifies the compactness cost per additional MM district. Advocates can argue that specific marginal costs are acceptable under VRA's ``effective voice'' standard, while courts can assess whether costs are proportionate to representational gains.
 
@@ -258,7 +258,7 @@ South Carolina defines the boundary of algorithmic feasibility, demonstrating th
 
 \subsubsection{South Carolina's Arithmetic Impossibility}
 
-Despite testing 20 aggressive configurations (weights up to 1000×, thresholds as low as 30\%), South Carolina achieves at most 1 MM district, far short of its 3-district target. This failure is \emph{not} due to poor algorithmic performance but rather fundamental arithmetic constraints.
+Despite testing 20 aggressive configurations (weights up to 1000$\times$, thresholds as low as 30\%), South Carolina achieves at most 1 MM district, far short of its 3-district target. This failure is \emph{not} due to poor algorithmic performance but rather fundamental arithmetic constraints.
 
 \textbf{Feasibility Ratio Analysis}: The feasibility ratio (MM\% / minority\%) quantifies whether a state's demographic composition can support its MM target:
 \begin{itemize}
@@ -275,9 +275,9 @@ A common misconception is that high Moran's $I$ (strong clustering) guarantees V
 
 \textbf{Contiguity and Population Constraints}: Moran's $I$ measures \emph{correlation} between nearby tracts' minority percentages---neighboring tracts tend to have similar demographics. However, this does not guarantee that high-minority tracts form \emph{large, contiguous clusters} sufficient to compose entire districts.
 
-South Carolina's 386 high-minority tracts (≥50\%) are spread across several clusters (Charleston area, Columbia, parts of coastal regions, rural Black Belt). Each cluster alone is too small to form a 50\% minority district (need ~189 tracts per district × 50\% = ~94 high-minority tracts per MM district). Connecting multiple clusters requires including many low-minority tracts to maintain contiguity, diluting the minority percentage below 50\%.
+South Carolina's 386 high-minority tracts ($\geq$50\%) are spread across several clusters (Charleston area, Columbia, parts of coastal regions, rural Black Belt). Each cluster alone is too small to form a 50\% minority district (need ~189 tracts per district $\times$ 50\% = ~94 high-minority tracts per MM district). Connecting multiple clusters requires including many low-minority tracts to maintain contiguity, diluting the minority percentage below 50\%.
 
-\textbf{Population Balance Constraint}: Even if tracts could be arbitrarily selected, population balance (±0.5\% of target) further constrains feasibility. High-minority tracts may have systematically different population densities (e.g., urban vs. rural), making it difficult to combine exactly 3 subsets that each reach 50\% minority \emph{and} equal population.
+\textbf{Population Balance Constraint}: Even if tracts could be arbitrarily selected, population balance ($\pm$0.5\% of target) further constrains feasibility. High-minority tracts may have systematically different population densities (e.g., urban vs. rural), making it difficult to combine exactly 3 subsets that each reach 50\% minority \emph{and} equal population.
 
 \subsubsection{Policy Implications of Infeasibility}
 
@@ -331,8 +331,8 @@ States where baseline METIS already creates MM districts (MS: 2/2, GA: 5/5) have
 
 \textbf{Implication}: Baseline VRA performance is a useful feasibility diagnostic. If uniform METIS achieves zero MM districts in a state with 40\%+ minority population, this signals either:
 \begin{itemize}
-    \item Favorable geography (clustering exists but isn't leveraged) → edge-weighting likely succeeds
-    \item Unfavorable geography (clustering is weak or dispersed) → edge-weighting may fail
+    \item Favorable geography (clustering exists but isn't leveraged) $\rightarrow$ edge-weighting likely succeeds
+    \item Unfavorable geography (clustering is weak or dispersed) $\rightarrow$ edge-weighting may fail
 \end{itemize}
 
 Moran's $I$ distinguishes these cases: high $I$ with low baseline MM (Alabama) suggests favorable unrealized potential, while low $I$ with low baseline MM suggests infeasibility.
@@ -357,13 +357,13 @@ A critical question for practical adoption is whether edge-weighted optimization
 
 \textbf{Tract-Level Performance}: At tract-level resolution (1,000-2,000 tracts per state), edge-weighted METIS completes in 0.15-0.98 seconds per state, with a mean of 0.47 seconds. Edge-weighting adds only 12\% computational overhead compared to baseline uniform-weight partitioning. Testing our full parameter sweep of 105 configurations requires $<$1 minute of computation time.
 
-\textbf{Block-Level Extrapolation}: Census block data (50,000 blocks per state) provides finer geographic precision but increases graph size 35×. Given METIS's $O(|E| + |V|\log|V|)$ near-linear complexity, extrapolated block-level runtime is $\sim$21-24 seconds per state, yielding $<$1 hour for a full parameter sweep. This remains well within practical constraints for redistricting commissions operating on 2-3 month cycles.
+\textbf{Block-Level Extrapolation}: Census block data (50,000 blocks per state) provides finer geographic precision but increases graph size 35$\times$. Given METIS's $O(|E| + |V|\log|V|)$ near-linear complexity, extrapolated block-level runtime is $\sim$21-24 seconds per state, yielding $<$1 hour for a full parameter sweep. This remains well within practical constraints for redistricting commissions operating on 2-3 month cycles.
 
 \textbf{National Scalability}: Applying edge-weighted optimization to all 50 states in parallel (feasible on modern multi-core workstations) requires $<$2 hours total computation time at tract-level resolution. Block-level national redistricting would complete overnight ($\sim$8-12 hours).
 
 \textbf{Interactive Redistricting}: Sub-second runtimes enable \emph{interactive} redistricting tools where users adjust parameters (e.g., edge weight factor $\beta$, minority threshold $\tau$) and receive immediate feedback on VRA compliance and compactness. This supports iterative refinement and stakeholder engagement during the redistricting process.
 
-\textbf{Comparison to Alternatives}: Ensemble methods (MCMC, ReCom) generate 10,000+ redistricting plans to characterize the solution space but require hours to days of computation per state. Edge-weighted METIS achieves near-Pareto-optimal solutions (0.4\% dominated by ensemble, see §4.8) in seconds, offering a 1000× speedup for practical applications.
+\textbf{Comparison to Alternatives}: Ensemble methods (MCMC, ReCom) generate 10,000+ redistricting plans to characterize the solution space but require hours to days of computation per state. Edge-weighted METIS achieves near-Pareto-optimal solutions (0.4\% dominated by ensemble, see §4.8) in seconds, offering a 1000$\times$ speedup for practical applications.
 
 \textbf{Implication}: Computational efficiency is \emph{not} a barrier to adopting edge-weighted optimization. The approach is fast enough for interactive use, comprehensive parameter exploration, and nationwide deployment. This removes a common objection to algorithmic redistricting (``computers are too slow for real-world deadlines'').
 

@@ -18,6 +18,10 @@ The 2020 Census analysis shows that Adams and HH currently agree,
 reflecting the fortuitous circumstance that no state has an exact quota
 in the (narrow) range where the methods differ.
 As populations shift in future censuses, this agreement may not persist.
+In smaller historical house sizes ($H < 400$) or future censuses with
+different population distributions, Adams and HH may diverge: with fewer
+seats the exact quotas shift, and small states with quotas in the range
+$(s, \sqrt{s(s+1)})$ would gain a seat under Adams but not under HH.
 \textsc{bisect-apportion}'s Adams implementation enables practitioners
 to monitor whether Adams and HH would diverge for future census data
 and to compute the counterfactual apportionment for advocacy,

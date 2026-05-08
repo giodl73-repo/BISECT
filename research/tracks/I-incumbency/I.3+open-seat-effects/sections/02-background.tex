@@ -48,11 +48,13 @@ in partisan lean of the district containing incumbent $i$'s home tract between t
 prior map and the new plan $P$, and $\mathbf{1}[\text{paired}]$ is 1 if $i$ is in a
 district with at least one other incumbent.
 
-We set $\alpha = 0.40$ and $\beta = 0.50$ based on calibration against historical
-post-redistricting retirement rates in cycles where pairing and lean-change data are
-available~\citep{ansolabehere2000incumbency}. These coefficients are approximate; the
-model is intended to illustrate the directional effect of algorithmic vs.\ enacted
+We set $\alpha = 0.40$ and $\beta = 0.50$ based on values approximated from the
+empirical literature on redistricting-induced retirement~\citep{ansolabehere2000incumbency};
+these are not estimated from \textsc{bisect}-specific data.
+The model is intended to illustrate the directional effect of algorithmic vs.\ enacted
 redistricting on retirement pressure, not to produce precise predictions.
+Estimation of $\alpha$ and $\beta$ from \textsc{bisect} redistricting outcomes across
+multiple cycles is a Phase~2 extension.
 
 \subsection{Prior Literature on Open Seats and Redistricting}
 
