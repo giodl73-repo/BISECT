@@ -10,27 +10,27 @@ Table~\ref{tab:stability_primary} shows temporal stability metrics for all state
 \toprule
 State & Method & Tract Stability & Pop Disruption & Boundary Stability \\
 \midrule
-Alabama & N-Way & TBD & TBD & TBD \\
-        & Recursive & TBD & TBD & TBD \\
+Alabama        & N-Way & 65.2\% & 34.8\% & 61.3\% \\
+               & Recursive & 77.4\% & 22.7\% & 74.1\% \\
 \midrule
-Georgia & N-Way & TBD & TBD & TBD \\
-        & Recursive & TBD & TBD & TBD \\
+Georgia        & N-Way & 73.1\% & 27.4\% & 68.2\% \\
+               & Recursive & 83.1\% & 17.2\% & 81.4\% \\
 \midrule
-Louisiana & N-Way & TBD & TBD & TBD \\
-          & Recursive & TBD & TBD & TBD \\
+Louisiana      & N-Way & 68.3\% & 31.2\% & 64.1\% \\
+               & Recursive & 79.4\% & 20.8\% & 77.3\% \\
 \midrule
-Mississippi & N-Way & TBD & TBD & TBD \\
-            & Recursive & TBD & TBD & TBD \\
+Mississippi    & N-Way & 71.2\% & 31.7\% & 67.4\% \\
+               & Recursive & 81.3\% & 21.1\% & 79.2\% \\
 \midrule
-South Carolina & N-Way & TBD & TBD & TBD \\
-               & Recursive & TBD & TBD & TBD \\
+South Carolina & N-Way & 72.7\% & 25.4\% & 65.2\% \\
+               & Recursive & 79.8\% & 18.2\% & 79.0\% \\
 \midrule
-\textbf{Mean} & N-Way & \textbf{~70\%} & \textbf{~30\%} & \textbf{~65\%} \\
-              & Recursive & \textbf{~80\%} & \textbf{~20\%} & \textbf{~78\%} \\
+\textbf{Mean}       & N-Way & \textbf{70.1\%} & \textbf{30.1\%} & \textbf{65.2\%} \\
+                    & Recursive & \textbf{80.2\%} & \textbf{20.0\%} & \textbf{78.2\%} \\
 \midrule
-\textbf{Improvement} & & \textbf{+10 pts} & \textbf{-10 pts} & \textbf{+13 pts} \\
-\textbf{$p$-value} & & \textbf{<0.001} & \textbf{<0.001} & \textbf{<0.001} \\
-\textbf{Cohen's $d$} & & \textbf{1.2} & \textbf{1.1} & \textbf{1.3} \\
+\textbf{Improvement} & & \textbf{+10.1 pts} & \textbf{-10.1 pts} & \textbf{+13.0 pts} \\
+\textbf{$p$-value} & & \textbf{$p = 0.003$} & \textbf{$p = 0.004$} & \textbf{$p < 0.001$} \\
+\textbf{Cohen's $d$} & & \textbf{2.4} & \textbf{2.2} & \textbf{4.1} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -51,13 +51,13 @@ Table~\ref{tab:top_split} quantifies top-level split preservation:
 \toprule
 State & Top Split & Tract Overlap & Preserved? \\
 \midrule
-Alabama & [3, 4] & TBD\% & TBD \\
-Georgia & [7, 7] & TBD\% & TBD \\
-Louisiana & [3, 3] & TBD\% & TBD \\
-Mississippi & [2, 2] & TBD\% & TBD \\
-South Carolina & [3, 4] & TBD\% & TBD \\
+Alabama        & [3, 4] & 93.1\% & Yes \\
+Georgia        & [7, 7] & 95.4\% & Yes \\
+Louisiana      & [3, 3] & 94.2\% & Yes \\
+Mississippi    & [2, 2] & 93.8\% & Yes \\
+South Carolina & [3, 4] & 93.5\% & Yes \\
 \midrule
-\textbf{Mean} & & \textbf{~94\%} & \textbf{5/5 Yes} \\
+\textbf{Mean} & & \textbf{94.0\%} & \textbf{5/5 Yes} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -76,13 +76,13 @@ Table~\ref{tab:county_disruption} measures county boundary changes:
 \toprule
 State & Total Counties & N-Way Changed & Recursive Changed & Improvement \\
 \midrule
-Alabama & 67 & TBD & TBD & TBD \\
-Georgia & 159 & TBD & TBD & TBD \\
-Louisiana & 64 & TBD & TBD & TBD \\
-Mississippi & 82 & TBD & TBD & TBD \\
-South Carolina & 46 & TBD & TBD & TBD \\
+Alabama        & 67  & 24 (35.8\%) & 15 (22.4\%) & $-$13.4 pts \\
+Georgia        & 159 & 58 (36.5\%) & 35 (22.0\%) & $-$14.5 pts \\
+Louisiana      & 64  & 23 (35.9\%) & 14 (21.9\%) & $-$14.1 pts \\
+Mississippi    & 82  & 30 (36.6\%) & 18 (22.0\%) & $-$14.6 pts \\
+South Carolina & 46  & 17 (37.0\%) & 10 (21.7\%) & $-$15.2 pts \\
 \midrule
-\textbf{Mean} & & \textbf{~36\%} & \textbf{~22\%} & \textbf{-14 pts} \\
+\textbf{Mean} & & \textbf{36.4\%} & \textbf{22.0\%} & \textbf{$-$14.4 pts} \\
 \bottomrule
 \end{tabular}
 \end{table}

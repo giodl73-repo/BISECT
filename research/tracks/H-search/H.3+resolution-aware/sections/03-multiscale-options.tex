@@ -91,12 +91,19 @@ At each chain step, the multi-scale algorithm proceeds as follows:
         to restore tract-level population balance.
 \end{enumerate}
 
-\paragraph{Acceptance ratio.}
+\paragraph{Acceptance ratio and heuristic status.}
 The coarse-level accept/reject decision uses the same standard \recom{} proposal
 (Wilson's UST, accept all valid balanced splits).
-This is not an exact Metropolis-Hastings ratio --- it is the same approximation
+\textbf{This is not an exact Metropolis-Hastings ratio} --- it is the same approximation
 as standard \recom{} applied to the county-level graph.
+Option B is therefore a \emph{heuristic} multi-scale chain: it reduces empirical
+autocorrelation (27\%\est\ on TX) but does not provably sample from a specific
+stationary distribution.
 Exact MH correction at the county level (via Forest \recom{}) is a Phase~2 extension.
+For ensemble applications where the stationary distribution must be precisely
+characterized (e.g., expert witness testimony about a specific probability model),
+single-scale ReCom at tract resolution is the appropriate choice until Phase~2
+delivers the corrected chain.
 
 \paragraph{Coarse tolerance rationale.}
 The coarse tolerance is set to $3\times$ the fine tolerance.
