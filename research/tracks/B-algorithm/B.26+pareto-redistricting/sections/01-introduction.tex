@@ -1,0 +1,127 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The Weighted-Sum Problem}
+
+Every redistricting optimisation tool in current use --- including every
+algorithm in this platform --- employs a \emph{weighted-sum objective}:
+\[
+  \min\; w_1 \cdot \EC(\text{plan}) \;+\; w_2 \cdot \text{partisan\_deviation}(\text{plan})
+        \;+\; w_3 \cdot \VRA(\text{plan}).
+\]
+The approach is convenient: it reduces a multi-criterion problem to a single
+number and produces a single plan.
+But it has two structural defects.
+
+\paragraph{Defect 1: Opacity.}
+The weights $w_1, w_2, w_3$ determine which trade-offs the algorithm makes,
+yet their relationship to the resulting plan is non-linear and opaque.
+A practitioner who wants ``compact but proportional'' plans must search the
+weight space by trial and error.
+The same weight vector can produce very different plans in different states
+or census years; there is no principled way to calibrate weights across contexts.
+In a litigation setting, opposing counsel can always argue that the weight choice
+predetermined the outcome.
+
+\paragraph{Defect 2: Hiding the trade-off structure.}
+A single weighted-sum optimum hides the fact that many equally valid plans
+exist with different trade-offs among the criteria.
+Practitioners who want to understand ``how much compactness must we sacrifice
+to achieve one more proportionally-owed seat?'' cannot answer this question
+with a single-plan tool; they must run many separate optimisations with
+different weight vectors and manually compare the results.
+
+\subsection{Pareto-Optimal Redistricting}
+
+\pareto{}-optimal redistricting addresses both defects simultaneously.
+Instead of a single weighted plan, it returns a \emph{Pareto front}: a
+collection of plans such that no plan in the collection is strictly better
+than any other on all criteria simultaneously.
+Every point on the Pareto front represents a distinct, mutually non-dominated
+trade-off.
+Practitioners choose from the front with full transparency: they see exactly
+what compactness they sacrifice to gain proportionality, and what proportionality
+they sacrifice to improve VRA compliance.
+
+\begin{definition}[Pareto dominance]
+\label{def:dominance}
+Plan $A$ \emph{dominates} plan $B$ if $A$ is at least as good as $B$ on every
+objective and strictly better on at least one:
+\[
+  A \succ B \;\iff\;
+  \bigl(\forall\, m:\; A[m] \leq B[m]\bigr)
+  \;\wedge\;
+  \bigl(\exists\, m:\; A[m] < B[m]\bigr).
+\]
+The \emph{Pareto front} $\mathcal{F}_0$ is the set of all plans not dominated
+by any other feasible plan.
+\end{definition}
+
+The Pareto front requires no weight choice and no linear scalarisation.
+It is an objective description of the trade-off structure of the feasible space.
+
+\subsection{Three Contributions}
+
+This paper makes three contributions:
+
+\begin{enumerate}
+\item \textbf{NSGA-II for redistricting.}
+  We adapt \nsga{}~\citep{deb2002} to the redistricting setting, using METIS
+  seeds as the initial population, a ReCom-style crossover operator, and a
+  single boundary-tract flip mutation.
+  The result is an algorithm that maintains a diverse population of valid plans
+  and converges to the Pareto front over three objectives: edge cuts (\EC),
+  partisan distance ($\Dseats$), and VRA deficit ($\VRA$).
+
+\item \textbf{Enacted-plan dominance test.}
+  We introduce a binary legal test: run \nsga{} and check whether any
+  Pareto-optimal plan dominates the enacted plan on all three objectives
+  simultaneously.
+  If so, the legislature chose a plan that is simultaneously less compact,
+  less proportional, and less VRA-compliant than an algorithmically discoverable
+  alternative.
+  This is direct, non-statistical evidence of sub-optimal plan choice.
+
+\item \textbf{SMC-Pareto alternative.}
+  We define an alternative Pareto front construction via projection of the
+  Sequential Monte Carlo (SMC) ensemble~\citep{dellaLibera2026smc} onto
+  objective space.
+  The SMC-Pareto projection is much faster than \nsga{} (minutes rather than
+  hours) but may miss extreme regions of the Pareto front that \nsga{} actively
+  searches.
+\end{enumerate}
+
+\subsection{Paper Organisation}
+
+Section~\ref{sec:background} reviews \nsga{}~\citep{deb2002}, prior work on
+multi-objective redistricting, and defines the three objectives precisely.
+Section~\ref{sec:algorithm} gives the full \nsga{} algorithm with pseudocode
+for all operators: non-dominated sort, crowding distance, tournament selection,
+ReCom-style crossover, and boundary-tract flip mutation; it also covers the
+seeding specification and the SMC-Pareto alternative.
+Section~\ref{sec:results} presents empirical results on NC ($k=14$) and
+WI ($k=8$): Pareto front characteristics and enacted-plan dominance tests.
+Section~\ref{sec:legal} develops the legal framing of the dominance test,
+compares it to ensemble-based expert arguments, and clarifies the validity
+vs.\ completeness distinction in the verification protocol.
+Section~\ref{sec:conclusion} positions \nsga{} redistricting in the algorithm
+portfolio and identifies Phase~2 enhancements.
+
+\paragraph{Main results.}
+On NC ($k=14$, 2020 Census), \nsga{} with $N_{\mathrm{pop}}=100$ plans and
+$N_{\mathrm{gen}}=200$ generations produces a Pareto front of 18--24 plans
+spanning a meaningful range on all three objectives.
+The enacted 2020 NC congressional map is dominated by \ensuremath{N_d} plans
+on the Pareto front, meaning those plans simultaneously achieve lower edge cuts,
+closer to proportional partisan balance, and better VRA compliance than the
+enacted plan.
+On WI ($k=8$), the enacted plan is on the Pareto frontier (not dominated),
+demonstrating that the test produces negative results on some enacted plans.
+
+\paragraph{Notation.}
+$N_{\mathrm{pop}}$ denotes the NSGA-II population size (default 100);
+$N_{\mathrm{gen}}$ the number of generations (default 200);
+$k$ the number of congressional districts;
+$n$ the number of census tracts.
+A dagger~($\dagger$) on a result denotes a single run with the specified
+parameters; results without a dagger are averages over multiple seeds.

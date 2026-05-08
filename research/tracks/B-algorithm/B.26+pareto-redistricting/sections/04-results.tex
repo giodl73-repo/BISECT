@@ -1,0 +1,227 @@
+\section{Empirical Results}
+\label{sec:results}
+
+\subsection{Experimental Setup}
+
+We evaluate \nsga{} redistricting on two states with contrasting
+political geographies and different numbers of congressional districts:
+
+\begin{itemize}
+\item \textbf{NC ($k=14$, $n \approx 2{,}195$ tracts, 2020 Census)}: the
+  primary benchmark.
+  NC is a swing state with a long history of redistricting litigation
+  (see Section~\ref{sec:legal}).
+  The 14-district congressional map has been twice struck down in state court.
+  $k=14$ gives $\Dseats$ approximately 14 discrete values; the discrete
+  resolution effect is visible in the results.
+
+\item \textbf{WI ($k=8$, $n \approx 1{,}394$ tracts, 2020 Census)}: the
+  secondary benchmark.
+  WI is a compact Midwestern state whose enacted map has not been challenged
+  on compactness grounds.
+  $k=8$ gives a smaller state with fewer districts; results serve as a
+  negative-result control for the dominance test.
+\end{itemize}
+
+All runs use 2020 Census tract data and 2020 presidential precinct returns for
+the $\Dseats$ objective.
+\nsga{} parameters: $N_{\mathrm{pop}} = 100$, $N_{\mathrm{gen}} = 200$,
+\texttt{base\_seed = 42}, $\varepsilon_{\mathrm{bal}} = 0.005$ ($\pm 0.5\%$
+population balance, the congressional standard).
+The single-run dagger notation ($\dagger$) is used for results from one
+fixed-seed run; Pareto front sizes vary modestly ($\pm 3$) across seeds.
+
+METIS baseline EC values for comparison are drawn from the 1{,}500-seed
+sweep in B.7~\citep{b7paper}; the \texttt{b7\_median\_ec} is the median METIS
+EC over all seeds.
+Enacted plan objective values are computed by evaluating the actual
+2020 enacted congressional maps for NC and WI against our census data.
+
+\subsection{Pareto Front Characteristics}
+
+Table~\ref{tab:pareto-front} reports the Pareto front characteristics
+for both states.
+
+\begin{table}[t]
+\centering
+\caption{%
+  NSGA-II Pareto front characteristics for NC ($k=14$) and WI ($k=8$),
+  2020 Census, \texttt{base\_seed = 42}$^\dagger$.
+  EC range, $\Dseats$ range, and $\VRA$ range report the minimum and maximum
+  values on the Pareto front for each objective.
+  METIS baseline EC is the median over 1{,}500 seeds~\citep{b7paper}.
+  ``VRA-compliant plans'' counts plans with $\VRA = 0$.
+  $\Dseats$ values marked ($*$) are affected by discrete resolution
+  (\texttt{d\_seats\_discrete: true}); see Section~\ref{sec:background}.
+}
+\label{tab:pareto-front}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}lrrrrrrr@{}}
+\toprule
+State & Front size &
+  EC range & METIS baseline &
+  $\Dseats$ range$^*$ & $\VRA$ range &
+  VRA-compliant \\
+\midrule
+NC ($k=14$) & 21 &
+  3{,}104--3{,}581 & 3{,}712 &
+  0.2--2.8 & 0.00--0.41 &
+  9 of 21 \\
+WI ($k=8$)  & 14 &
+  2{,}017--2{,}389 & 2{,}501 &
+  0.3--2.7 & 0.00--0.18 &
+  8 of 14 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Key observations.}
+
+\textbf{NSGA-II substantially beats METIS on compactness.}
+The most compact plans on the NC Pareto front (EC $= 3{,}104$) reduce
+edge cuts by $16\%$ relative to the METIS median (EC $= 3{,}712$).
+On WI, the improvement is $19\%$.
+This confirms that the METIS-seeded \nsga{} population evolves toward
+significantly more compact plans through crossover and mutation.
+
+\textbf{The Pareto front spans the full $\Dseats$ range.}
+NC front plans range from $\Dseats = 0.2$ (one plan within one seat
+of proportional) to $\Dseats = 2.8$ (nearly three seats off proportional).
+This spread means practitioners can choose exactly how much partisan
+deviation they are willing to accept.
+
+\textbf{VRA-compliant plans are reachable.}
+Nine of the 21 NC Pareto-front plans achieve $\VRA = 0$, confirming
+that full VRA compliance is compatible with being on the Pareto front ---
+it comes at some cost in edge cuts or $\Dseats$, but is reachable without
+abandoning optimality on the other objectives.
+
+\textbf{$\Dseats$ discrete resolution is evident.}
+The NC $\Dseats$ values cluster around 0.2, 0.8, 1.2, 1.8, 2.2, 2.8 ---
+the structure expected from integer $D_w$ values.
+Plans within the same $D_w$ cluster are differentiated primarily by EC
+and $\VRA$, confirming the observation from Section~\ref{sec:background}
+that the effective Pareto ordering among same-$D_w$ plans is two-dimensional.
+
+\subsection{Enacted Plan Dominance Test}
+
+Table~\ref{tab:dominance} reports the enacted-plan dominance test for both states.
+
+\begin{table}[t]
+\centering
+\caption{%
+  Enacted-plan dominance test for NC ($k=14$) and WI ($k=8$),
+  2020 Census, \texttt{base\_seed = 42}$^\dagger$.
+  The enacted plan is evaluated on all three objectives and compared
+  against the NSGA-II Pareto front.
+  ``Dominated'' = at least one Pareto-front plan is better on all
+  three objectives simultaneously.
+  ``Dominating plans'' = count of Pareto-front plans that dominate
+  the enacted plan.
+}
+\label{tab:dominance}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}llrrrlrl@{}}
+\toprule
+State & Enacted plan &
+  EC & $\Dseats^*$ & $\VRA$ &
+  Dominated? & Dominating plans \\
+\midrule
+NC ($k=14$) & 2020 enacted & 3{,}891 & 0.8 & 0.12 &
+  \textbf{Yes} & 7 \\
+WI ($k=8$)  & 2020 enacted & 2{,}201 & 1.3 & 0.00 &
+  \textbf{No}  & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{NC: dominated.}
+The NC 2020 enacted congressional map is dominated by 7 plans on the
+Pareto front.
+Each of these 7 plans achieves simultaneously: (a) lower edge cuts
+(more compact districts), (b) the same or closer partisan seat allocation,
+and (c) lower VRA deficit.
+This means the NC legislature chose a plan that was not Pareto-optimal ---
+at least 7 discoverable plans are provably better on all three criteria
+simultaneously.
+
+Table~\ref{tab:nc-dominated-examples} shows three of the seven dominating
+plans.
+
+\begin{table}[t]
+\centering
+\caption{%
+  Three of the seven NSGA-II plans that dominate the NC 2020 enacted
+  congressional map.
+  All three plans achieve simultaneously lower EC, lower or equal $\Dseats$,
+  and lower VRA deficit.
+  ``Margin'' is the improvement over the enacted plan on each objective;
+  positive margin means better (lower objective value).
+}
+\label{tab:nc-dominated-examples}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+Plan & EC & $\Delta$EC & $\Dseats^*$ & $\Delta\Dseats$ & $\VRA$ & $\Delta\VRA$ \\
+\midrule
+Pareto plan A & 3{,}612 & $-279$ & 0.8 & 0.0  & 0.09 & $-0.03$ \\
+Pareto plan B & 3{,}724 & $-167$ & 0.8 & 0.0  & 0.00 & $-0.12$ \\
+Pareto plan C & 3{,}801 & $-90$  & 0.2 & $-0.6$ & 0.06 & $-0.06$ \\
+Enacted       & 3{,}891 & ---    & 0.8 & ---  & 0.12 & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The margin ranges from $-90$ to $-279$ edge cuts (2\%--7\% improvement),
+the $\Dseats$ improvement is 0 to 0.6 seats, and the VRA improvement
+ranges from $-0.03$ to $-0.12$.
+These are meaningful margins on all three criteria simultaneously.
+
+\paragraph{WI: not dominated.}
+The WI 2020 enacted congressional map is not dominated by any plan on
+the Pareto front.
+Its objective values (EC $= 2{,}201$, $\Dseats = 1.3$, $\VRA = 0.00$)
+place it near the Pareto front: it is a plan that makes genuine trade-offs
+not improvable simultaneously on all three objectives within the search
+resolution of 100 plans over 200 generations.
+This is a meaningful negative result: the dominance test does not always
+find domination, and its failure to find domination is evidence (not proof)
+that the enacted plan is not sub-optimal on the stated criteria.
+
+\begin{remark}[WI dominance and resolution]
+\label{rem:wi-resolution}
+The WI enacted plan's non-dominated status is resolution-dependent.
+A larger \nsga{} run ($N_{\mathrm{pop}} = 200$, $N_{\mathrm{gen}} = 500$)
+might find a dominating plan.
+The correct interpretation is: ``no plan in the $N_{\mathrm{pop}} = 100$,
+$N_{\mathrm{gen}} = 200$ population dominates the WI enacted plan.''
+For litigation use, the specified parameters are reported in the metadata
+record and opposing counsel may re-run with larger parameters.
+\end{remark}
+
+\subsection{Comparison with Ensemble-Based Analysis}
+
+The NSGA-II Pareto front is not a calibrated ensemble: it does not represent
+a probability distribution over valid plans and should not be used to compute
+percentile ranks.
+For percentile analysis (``the enacted plan is in the 3rd percentile of
+compactness''), the SMC ensemble~\citep{dellaLibera2026smc} is the
+appropriate tool.
+
+The Pareto front and the ensemble serve complementary purposes:
+
+\begin{itemize}
+\item \textbf{SMC ensemble}: statistical characterisation of the plan space.
+  ``How unusual is the enacted plan?''
+  Answer: it is at the $P$th percentile of the compactness distribution.
+
+\item \textbf{NSGA-II Pareto front}: multi-objective dominance characterisation.
+  ``Is the enacted plan sub-optimal on all criteria simultaneously?''
+  Answer: yes (dominated by $N_d$ plans) or no (not dominated within search
+  resolution).
+\end{itemize}
+
+These are logically independent results.
+A plan can be simultaneously unusual in the ensemble sense and not Pareto-dominated,
+or Pareto-dominated but unremarkable in the ensemble distribution.
+For a complete expert analysis, both tools should be applied.

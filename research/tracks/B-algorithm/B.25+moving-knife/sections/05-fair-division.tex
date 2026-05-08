@@ -1,0 +1,155 @@
+\section{The Fair-Division Legal Argument}
+\label{sec:fair-division}
+
+\subsection{The Problem of Algorithmic Justification}
+
+When a redistricting commission submits a plan to a court, it must provide
+a justification: why is this plan the best available, and why is the procedure
+that produced it neutral?
+Algorithmic redistricting provides mathematically precise answers to both
+questions, but the precision creates a new challenge: the mathematical
+arguments are often inaccessible to non-technical judges and lay jurors.
+
+Consider the \metis{} justification: ``we minimised the total edge-weighted
+boundary length of the bisection tree, where edge weights are proportional to
+the shared geographic boundary length of adjacent census tracts, using the
+multilevel Kernighan-Lin algorithm.''
+This is a correct and precise description of what \metis{} does.
+But it requires the listener to understand graph partitioning, weighted
+adjacency, and multilevel coarsening to evaluate whether it is a good criterion
+for compactness.
+In \textit{Common Cause v.\ Lewis}, the North Carolina Superior Court
+found it necessary to appoint a special master to evaluate the technical
+properties of proposed maps --- a symptom of the accessibility gap between
+algorithmic precision and legal comprehension.
+
+\subsection{The Moving-Knife Certificate}
+
+The moving-knife protocol provides an alternative justification that is both
+mathematically precise and intuitively accessible:
+
+\begin{quote}
+\textit{A neutral sweep line was rotated through 180 orientations across the
+state.
+At each orientation, the line was positioned where it would divide the
+state's population equally.
+The orientation that produced the most geometrically compact pair of
+regions --- as measured by the Reock score, the ratio of each region's
+area to the smallest circle that could contain it --- was selected.
+Neither party chose the orientation, the line position, or the compactness
+criterion: all three were fixed by the algorithm before any district
+boundaries were drawn.}
+\end{quote}
+
+This description is complete and accurate.
+It is also understandable by a non-technical reader: the intuition of a
+``neutral sweep'' is familiar from everyday geometric reasoning, and
+Reock compactness (``what fraction of the smallest enclosing circle does
+the district fill?'') is more concrete than ``minimise total edge-weighted
+boundary length.''
+
+\subsection{Rawlsian Procedural Fairness}
+
+The philosophical foundation for the moving-knife certificate is Rawlsian
+procedural fairness.
+Rawls~\citeyear{rawls1971} argued that a distribution is just if it could
+have been chosen by rational agents behind a ``veil of ignorance'' --- that
+is, without knowing which position in the distribution they would occupy.
+For redistricting, this translates to: a plan is procedurally fair if the
+procedure that produced it would have been acceptable to either party before
+knowing which districts they would be assigned.
+
+The moving-knife protocol satisfies this criterion.
+Before the sweep begins, neither the commission nor any party knows which
+half of the state will contain which group of voters --- the partition depends
+on the geographic orientation that maximises Reock, which is a function of
+tract geometry and population distribution, not of political affiliation.
+The two halves of the split are not labelled ``Republican'' or ``Democratic''
+during the algorithm's execution; they are labelled only after the plan is
+complete.
+
+This stands in contrast to any procedure that selects among candidate plans
+based on partisan criteria, which would fail the Rawlsian test because such
+a procedure could only be acceptable to the advantaged party.
+
+Puppe and Tasnadi~\citeyear{puppe2026} formalise this argument in the
+public-choice setting, proving that a moving-knife redistricting procedure
+satisfying anonymity (no party is identified in the algorithm), population
+balance (both halves receive equal population), and compactness maximisation
+(the most compact orientation is selected) is the unique procedure satisfying
+all three axioms simultaneously.
+Their axiomatic result provides academic backing for the fair-division
+certificate.
+
+\subsection{Comparison to the METIS Argument}
+
+The \metis{} argument is also neutral: minimising edge-weighted boundary
+length is a function of geography only, containing no electoral data.
+Both arguments are procedurally impartial in the sense that neither
+party controls the outcome.
+We argue that the \mka{} argument is preferable in three contexts:
+
+\begin{enumerate}
+\item \textbf{Jurisdictions where Reock is the operative metric.}
+  When a state constitution or court order specifies Reock compactness
+  as the required criterion, \mka{} directly satisfies the legal mandate.
+  \metis{} does not: it minimises edge cut, not Reock, and cannot certify
+  that the submitted plan maximises Reock.
+
+\item \textbf{Courts that prioritise procedural intelligibility.}
+  When a court must evaluate the procedure on its own merits --- not just
+  the output --- the moving-knife sweep is more accessible than the
+  multilevel coarsening of \metis{}.
+  The sweep has a direct physical analogy (a ruler rotating across a map)
+  that a non-technical judge can visualise; multilevel Kernighan-Lin does not.
+
+\item \textbf{Challenges alleging manipulation.}
+  When a plaintiff alleges that the algorithm was configured to favour one
+  party, the moving-knife procedure is more resistant to this attack: the
+  only configurable parameters are the number of orientations (180 by default)
+  and the compactness metric (Reock by default), both of which are publicly
+  specified and audit-logged.
+  The audit chain records \texttt{optimal\_angle\_deg}, allowing an
+  independent auditor to rerun the sweep and confirm that the certified
+  angle is correct.
+\end{enumerate}
+
+\subsection{Limitations of the Fair-Division Argument}
+
+The moving-knife certificate is not a complete defence in all redistricting
+contexts.
+Several limitations apply:
+
+\paragraph{VRA majority-minority requirements.}
+Section~5 of the Voting Rights Act and state analogues may require that
+minority-majority districts be preserved.
+\mka{} does not account for racial composition; a plan that maximises Reock
+may or may not satisfy VRA requirements.
+Practitioners must verify VRA compliance using the platform's VRA analysis
+tools (\texttt{bisect analyze --types vra}) separately from the Reock
+compactness certification.
+
+\paragraph{Multi-criterion compactness standards.}
+Some state constitutions require compactness under multiple metrics.
+Florida's Article III, \S 20, has been interpreted to require consideration
+of both Reock and Polsby-Popper~\citep{floridaConst}.
+A plan certified as Reock-optimal by \mka{} may not be Polsby-Popper-optimal.
+In such jurisdictions, the \texttt{--mka-metric polsby} flag or a multi-run
+comparison with \cvdgeo{} may be appropriate.
+
+\paragraph{Contiguity and non-convexity.}
+For non-convex subgraph geometries (peninsulas, panhandles), a linear sweep
+may not produce the globally Reock-optimal split: the best Reock orientation
+may depend on the boundary shape of the subgraph in a way that a projection
+sweep cannot capture.
+\mka{} is a best-available heuristic for non-convex regions, not a global
+optimiser.
+The audit chain records \texttt{optimal\_angle\_deg} to allow verification
+that the sweep was exhaustive at the reported granularity, but does not
+certify global optimality.
+
+\paragraph{Bisection tree structure.}
+\mka{} applies the moving-knife sweep at each bisection node independently.
+The globally Reock-optimal plan may not be achievable by independent local
+Reock maximisation at each node, since node-level decisions interact.
+This is the same limitation that applies to all recursive bisection algorithms.

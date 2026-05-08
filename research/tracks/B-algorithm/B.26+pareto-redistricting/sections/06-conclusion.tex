@@ -1,0 +1,109 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have introduced \pareto{}-optimal redistricting, the first multi-objective
+algorithm in this platform that returns a frontier of plans rather than a
+single weighted plan.
+\nsga{} with $N_{\mathrm{pop}} = 100$ plans and $N_{\mathrm{gen}} = 200$
+generations produces a Pareto front of 10--30 plans on medium-sized states
+(NC $k=14$, WI $k=8$), spanning meaningful ranges on all three objectives
+--- edge-cut compactness (\EC{}), partisan proportionality ($\Dseats$), and
+VRA minority representation ($\VRA$).
+
+\paragraph{What Pareto redistricting is the right tool for.}
+
+\begin{enumerate}
+\item \textbf{Enacted-plan dominance testing.}
+  The primary legal application: run \nsga{} and check whether any
+  Pareto-front plan dominates the enacted plan on all three objectives
+  simultaneously.
+  On NC ($k=14$, 2020 Census), 7 Pareto-front plans dominate the enacted map.
+  On WI ($k=8$, 2020 Census), no plan dominates the enacted map --- the
+  test produces meaningful negative results and does not always find
+  dominance.
+
+\item \textbf{Trade-off transparency.}
+  When a practitioner must choose among competing redistricting criteria,
+  the Pareto front makes the trade-off structure explicit without requiring
+  weight specification.
+  A special master can inspect the 21 NC Pareto-front plans and choose
+  among them with full knowledge of what compactness costs what
+  proportionality.
+
+\item \textbf{Multi-objective legal argument.}
+  The dominance certificate is logically stronger than any single-objective
+  test: it shows the enacted plan is simultaneously sub-optimal on
+  compactness, proportionality, and VRA, not merely on one dimension.
+  Opposing counsel cannot trade one objective against another to undermine
+  the certificate.
+\end{enumerate}
+
+\paragraph{What Pareto redistricting is not the right tool for.}
+\nsga{} redistricting is not a replacement for single-plan production tools.
+For generating the best single plan for a given jurisdiction, \metis{} with
+ConvergenceSweep~\citep{dellaLibera2026comparison} remains the correct default:
+it is faster, simpler, and produces a single plan ready for submission.
+For statistical analysis of the plan distribution, SMC~\citep{dellaLibera2026smc}
+is the correct tool.
+\nsga{} is the correct tool when the question is ``what are the trade-offs?''
+or ``is the enacted plan dominated?''
+
+\paragraph{Phase~2 enhancements.}
+
+\begin{enumerate}
+\item \textbf{Continuous $\Dseats$ proxy.}
+  Replace integer $D_w$ with vote margin (sum of $|\text{district vote share} -
+  0.5| \times \text{district population}$ for all districts) as a continuous
+  proxy.
+  This resolves the discrete-resolution limitation identified in
+  Section~\ref{sec:background} and produces a genuinely three-dimensional
+  Pareto front.
+
+\item \textbf{VRA as hard constraint.}
+  A \texttt{--vra-constrained} flag that filters the plan population to
+  VRA-compliant plans before running \nsga{}, so that the Pareto front
+  spans only VRA-compliant plans.
+  This is appropriate when VRA compliance is a non-negotiable requirement
+  and the Pareto trade-off is entirely between \EC{} and $\Dseats$.
+
+\item \textbf{NSGA-II vs.\ SMC-Pareto comparison.}
+  Empirical measurement of whether \nsga{} finds Pareto regions that
+  the SMC projection misses, on NC 2020 with $N_{\mathrm{particles}} = 5{,}000$
+  vs.\ $N_{\mathrm{pop}} = 100$, $N_{\mathrm{gen}} = 200$.
+
+\item \textbf{50-state sweep.}
+  Run the enacted-plan dominance test for all 50 states under 2020 Census.
+  Report which states' enacted maps are dominated by the \nsga{} Pareto front
+  and which are not.
+
+\item \textbf{Rayon parallelism.}
+  Objective evaluation (\EC{}, $\Dseats$, $\VRA$ for all plans in the
+  population) is embarrassingly parallel.
+  Rayon parallelism over the population is straightforward and would
+  reduce sequential runtime by a factor of $\sim$8 on a modern workstation.
+\end{enumerate}
+
+\paragraph{Legal caveat.}
+The dominance certificate establishes a mathematical result: the returned
+plans are valid, mutually non-dominating, and strictly better than the
+enacted plan on the three stated objectives.
+It does not constitute legal advice and does not certify compliance with
+applicable state constitutional standards, Section 2 or Section 5 of the
+Voting Rights Act, or other legal redistricting requirements.
+Practitioners should consult legal counsel before presenting the certificate
+in litigation or regulatory proceedings.
+
+\paragraph{Summary.}
+\pareto{}-optimal redistricting makes trade-offs explicit and the enacted-plan
+dominance test is the most legally actionable output.
+Phase~1 (this paper) provides the \nsga{} implementation, empirical results
+on NC and WI, and the validity-vs.-completeness framework for expert testimony.
+Phase~2 will extend the approach with a continuous $\Dseats$ proxy, VRA
+as a hard constraint option, and a 50-state dominance sweep.
+
+Together with \metis{} (production-scale single plan),
+\be{}~\citep{dellaLibera2026comparison} (high-quality single-objective search),
+SMC (calibrated ensemble), and ILP (exact single-objective certificate),
+the platform now spans the full space of redistricting algorithm questions:
+fast, high-quality, statistically calibrated, exactly certified,
+and Pareto-transparent.
