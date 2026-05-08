@@ -248,14 +248,14 @@ search mode.
 The most powerful configurations combine all three layers.
 For example:
 \begin{itemize}
-  \item \texttt{--structure prime-factor --weights county --search multiscale}:
+  \item \texttt{--structure prime-factor --weights-override county --search multiscale}:
         ApportionRegions initial plan + county-respecting weights +
         Multi-scale mixing.
         Recommended for TX or CA litigation.
-  \item \texttt{--structure ratio-optimal --weights geographic --search vra-recom}:
+  \item \texttt{--structure ratio-optimal --weights-override geographic --search vra-recom}:
         GeoSection initial plan + neutral weights + VRA-constrained chain.
         Recommended for VRA Section~2 analysis.
-  \item \texttt{--structure ratio-optimal --weights geographic --search short-burst}:
+  \item \texttt{--structure ratio-optimal --weights-override geographic --search short-burst}:
         GeoSection initial plan + neutral weights + Short-Burst optimisation.
         Recommended for producing the most compact feasible plan.
 \end{itemize}

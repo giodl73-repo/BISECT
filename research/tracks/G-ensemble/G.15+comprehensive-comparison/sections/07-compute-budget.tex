@@ -144,7 +144,7 @@ For a complete 50-state congressional sweep that balances quality and runtime:
 
 \begin{enumerate}
   \item \textbf{Default pass}: All 50 states with
-        \texttt{--structure prime-factor --weights county --search convergence}.
+        \texttt{--structure prime-factor --weights-override county --search convergence}.
         Approximately 8 minutes single-threaded.
         This produces the official plan for all states.
 
@@ -160,7 +160,7 @@ For a complete 50-state congressional sweep that balances quality and runtime:
         Certifies optimal EC for the two-district state.
 
   \item \textbf{VRA pass}: Jurisdictions with active Section~2 claims with
-        \texttt{--structure ratio-optimal --weights vra-aligned --search vra-recom}.
+        \texttt{--structure ratio-optimal --weights-override vra-aligned --search vra-recom}.
         Approximately 10--20 minutes depending on jurisdiction count.
 \end{enumerate}
 

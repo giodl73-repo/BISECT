@@ -57,9 +57,9 @@ convergence sweep on a single-node ILP plan is unnecessary.
 \paragraph{Search evaluation.}
 For the search-layer comparison (Section~\ref{sec:search}), we fix
 \texttt{--structure prime-factor} (ApportionRegions bisection) and
-\texttt{--weights county} across all search runs.
+\texttt{--weights-override county} across all search runs.
 This follows the G.14 protocol (which used \texttt{--structure ratio-optimal}
-and \texttt{--weights geographic}) updated to the ApportionRegions composite
+and \texttt{--weights-override geographic}) updated to the ApportionRegions composite
 which has become the platform default for production runs.
 G.14 results were recorded under the original protocol and are carried forward
 without adjustment; the directional comparisons are robust to this protocol
