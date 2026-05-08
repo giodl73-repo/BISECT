@@ -1,0 +1,136 @@
+\label{sec:legal}
+
+\subsection{Origins of the Communities of Interest Doctrine}
+
+The constitutional foundation for population equality in legislative districts was
+established in \textit{Reynolds v.\ Sims}, 377 U.S.\ 533 (1964)~\citep{reynolds1964}.
+Chief Justice Warren's majority opinion held that the Equal Protection Clause requires
+that seats in both houses of a state legislature be apportioned on a population basis.
+But the Court also acknowledged that rigid adherence to mathematical equality would
+conflict with legitimate state policies of respecting existing political subdivisions:
+\begin{quote}
+  ``A State may legitimately desire to maintain the integrity of various political
+  subdivisions, insofar as possible, and provide for compact districts of contiguous
+  territory in apportioning its legislature.''
+\end{quote}
+This passage planted the seed of the communities of interest doctrine.
+Political subdivisions---counties, cities, townships---are recognized as legitimate
+organizing units not only because they are administratively convenient but because
+they represent communities with shared interests in local governance.
+The doctrine later generalized beyond formal subdivisions to any group of residents
+who share economic, social, cultural, or civic interests.
+
+\subsection{Shaw v.\ Reno and the Neutrality Requirement}
+
+\textit{Shaw v.\ Reno}, 509 U.S.\ 630 (1993)~\citep{shaw1993}, created the most
+important constraint on community-based redistricting: race cannot be the predominant
+factor in drawing district lines.
+Justice O'Connor's majority opinion held that a district shaped primarily to aggregate
+racial groups is constitutionally suspect and triggers strict scrutiny under the
+Equal Protection Clause, even if the resulting district complies with the Voting Rights
+Act.
+The Court in \textit{Miller v.\ Johnson}, 515 U.S.\ 900 (1995)~\citep{miller1995},
+clarified that the racial predominance test applies whenever race is the ``overriding,
+predominant force'' in the line-drawing process, not merely when districts have
+irregular shapes.
+
+The community character framework is designed to satisfy the Shaw-Miller neutrality
+requirement.
+The character vector $\mathbf{c}(t)$ contains no racial composition data.
+The signals in M.1--M.7---occupational mix, land use category, housing tenure,
+commuting orientation, topographic zone, administrative zone co-membership,
+and transit accessibility---are all geographic and socioeconomic in nature.
+They may correlate with racial composition, as virtually any geographic characteristic
+does, but the correlation is incidental to the signal's purpose, not definitional to it.
+
+A plan drawn with community character weights can be defended on the following grounds:
+the algorithm is unaware of the racial composition of any tract; the weights encode
+measurable, publicly documented geographic and administrative features; and the formula
+is deterministic and verifiable by any party with access to the underlying data.
+No human judgment about the racial character of a neighborhood enters the computation.
+
+\subsection{State Constitutional Criteria}
+
+Four states with independent redistricting commissions provide the clearest statutory
+expressions of the communities of interest doctrine.
+
+\paragraph{California.}
+Proposition 11 (2008), which established the Citizens Redistricting Commission,
+requires that after compliance with federal law, the Commission shall adopt a
+plan that ``shall favor keeping together communities of interest''
+(Cal.\ Elec.\ Code \S 21601(c)).
+A communities of interest is defined as ``a contiguous population which shares common
+social and economic interests that would be best served by common representation.''
+The definition expressly excludes party affiliation and voting history.
+
+\paragraph{Colorado.}
+Article V, Section 44 of the Colorado Constitution directs the Independent Legislative
+Redistricting Commission to preserve ``communities of interest, including but not
+limited to ethnic, cultural, economic, trade area, geographic, and demographic
+factors'' as a mandatory criterion, ranked after equal population, VRA compliance,
+and contiguity.
+The enumeration of ``trade area'' and ``geographic factors'' maps directly to the
+M.4 commuting shed signal and the M.5 topographic signal.
+
+\paragraph{Arizona.}
+The Arizona Independent Redistricting Commission, established by Proposition 106
+(2000), must give ``communities of interest'' weight as one of six criteria
+(Ariz.\ Const.\ Art.\ IV, Pt.\ 2, \S1(14)).
+The Arizona Commission has interpreted the criterion to include ``geographic, social,
+cultural, ethnic, and economic interests,'' consistent with the M-track taxonomy.
+
+\paragraph{Washington.}
+RCW 44.05.090 instructs the Washington State Redistricting Commission to consider
+``communities of interest including racial and language minority groups.''
+This formulation is notable for explicitly including racial and language minorities
+alongside other community types, suggesting that community membership---rather than
+racial classification as such---is the organizing concept.
+
+\subsection{The Property Tax Fiscal Bond}
+
+Among the legally recognized instantiations of community of interest, the property
+tax fiscal bond is the strongest and most judicially familiar.
+Two households in the same school district, county subdivision, or municipal utility
+district do not merely share a geographic location; they are legally bound together
+as co-owners of a fiscal commons.
+They vote on the same bond measures, pay taxes to fund the same schools and fire
+stations, and receive services from the same institutions.
+
+The Supreme Court recognized the civic significance of school district boundaries
+in \textit{Milliken v.\ Bradley}, 418 U.S.\ 717 (1974)~\citep{milliken1974},
+which declined to impose cross-district school desegregation remedies absent
+evidence that district lines were drawn for segregatory purposes.
+The Court's analysis treated school district boundaries as presumptively legitimate
+community boundaries, reflecting genuine differences in local governance, tax policy,
+and civic identity.
+\textit{Reynolds} itself acknowledged that ``the integrity of various political
+subdivisions'' is a legitimate state interest that may justify minor deviations
+from strict population equality.
+
+The M.6 signal (administrative zone co-membership) operationalizes this doctrine
+by treating shared school district, fire district, water district, electric utility
+service territory, and county subdivision membership as direct measures of civic
+co-membership.
+Tracts that share all available zone types are, in the most literal administrative
+sense, members of the same community; the zone co-membership score encodes this fact
+as a continuous edge weight modifier.
+
+\subsection{The ``Quantitative Neutral'' Defense}
+
+An important practical virtue of the community character framework is that it provides
+a \emph{quantitative neutral defense} against gerrymandering claims.
+When a litigant challenges a district boundary as arbitrary or politically motivated,
+the map-drawer using community character weights can respond:
+\begin{itemize}
+  \item The boundary follows the edge of minimum community similarity, computed
+    from publicly available data.
+  \item The formula is $w(u,v) = w_{\mathrm{base}} \times \mathrm{sim}(\mathbf{c}_u, \mathbf{c}_v)$,
+    deterministic and fully disclosed.
+  \item No map-drawer chose which communities to favor; the algorithm chose the
+    geometrically cheapest cut, which is the cut between dissimilar communities.
+  \item The formula can be replicated by any party with access to the same public data.
+\end{itemize}
+This is the redistricting analogue of the quantitative defenses that courts have
+found persuasive in employment discrimination cases: a facially neutral criterion,
+applied consistently, documented in advance, and verifiable by all parties,
+is presumptively lawful even if it produces disparate geographic effects.

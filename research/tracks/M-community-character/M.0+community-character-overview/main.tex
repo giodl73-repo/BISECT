@@ -1,0 +1,59 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{tabularx}
+
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+\title{\textbf{Community Character Weighting: A Framework for\\
+Operationalizing Communities of Interest in\\
+Algorithmic Redistricting}}
+
+\author{Giovanni Della-Libera}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Communities of interest, Redistricting, Edge weights, METIS, Cosine similarity,
+Community character, Algorithmic redistricting, Shaw v.\ Reno, Property-tax fiscal bond
+
+\section{Introduction}
+\input{sections/01-introduction}
+
+\section{The General Framework}
+\input{sections/02-framework}
+
+\section{Legal Grounding}
+\input{sections/03-legal}
+
+\section{Spectrum of Signals: M.1--M.7}
+\input{sections/04-spectrum}
+
+\section{Relationship to Existing \textsc{bisect} Weight Modes}
+\input{sections/05-bisect-integration}
+
+\section{Conclusion}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

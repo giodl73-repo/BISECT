@@ -1,0 +1,93 @@
+Every major redistricting reform of the past two decades has placed ``communities of
+interest'' on the list of criteria that map-drawers must satisfy or at least
+consider~\citep{ncsl2021criteria}.
+California's Proposition 11 (2008), which created the Citizens Redistricting Commission,
+requires the Commission to ``favor keeping together communities of interest''---a
+phrase that appears four times in the enabling statute.
+Colorado's independent commission must give ``communities of interest, including but not
+limited to ethnic, cultural, economic, trade area, geographic, and demographic factors''
+explicit weight under Art.\ V, \S44 of the state constitution.
+Arizona's Independent Redistricting Commission lists preservation of communities of
+interest among its six mandatory criteria, alongside equal population, compactness,
+and VRA compliance.
+Washington's Redistricting Commission is directed by RCW 44.05.090 to give consideration
+to ``communities of interest including racial and language minority groups.''
+
+Yet courts that review maps drawn under these standards face an immediate problem:
+none of the statutes define what a community of interest is, how to measure whether
+one has been preserved, or how to adjudicate competing claims when communities of
+interest conflict with compactness or with county integrity.
+Judges must rely on the testimony of expert witnesses, who in turn rely on qualitative
+descriptions, anecdotal neighborhood histories, and---when challenged---on informal
+assertions that two neighborhoods share a common identity.
+No mathematical definition exists in case law.
+The result is that ``preserve communities of interest'' is legally recognized but
+operationally unenforceable in quantitative terms.
+
+This paper proposes to close that gap.
+We define a community character vector $\mathbf{c}(t)$ for each census tract $t$,
+whose dimensions encode measurable signals of tract identity: the occupational composition
+of resident workers, the land-use mix, the housing tenure and vintage, the commuting
+orientation, the topographic setting, the set of administrative zones the tract belongs
+to, and the transit accessibility of its residents.
+Two adjacent tracts $u$ and $v$ that share similar character vectors are, by this
+definition, members of the same community; the cosine similarity of their character
+vectors provides a continuous measure of community cohesion.
+We then define an edge weight modifier
+\begin{equation}
+  w(u,v) = w_{\mathrm{base}} \times \mathrm{sim}(\mathbf{c}_u, \mathbf{c}_v),
+  \label{eq:general-weight}
+\end{equation}
+which, when passed to the METIS graph partitioner underlying \textsc{bisect}, causes
+the partitioner to be geometrically reluctant to cut through edges connecting
+similar-character tracts.
+A cut that would split a community of interest becomes a costly cut; a cut that
+separates tracts of genuinely different character is cheap.
+The framework is partisan-neutral: no electoral data, no racial composition, and no
+incumbency information enters any component of the character vector or the weight
+formula.
+
+\subsection{Contribution}
+
+This paper makes the following contributions:
+\begin{enumerate}
+  \item \textbf{Mathematical framework}: We provide the first precise mathematical
+    definition of ``community of interest'' as cosine similarity of tract-level
+    character vectors, formalized as an edge weight modifier for METIS graph
+    partitioning (\S\ref{sec:framework}).
+  \item \textbf{Legal grounding}: We trace the communities of interest doctrine from
+    \textit{Reynolds v.\ Sims} (1964) through \textit{Shaw v.\ Reno} (1993)
+    and into modern state-level commission criteria, demonstrating that the framework
+    satisfies the neutrality requirements imposed by Shaw (\S\ref{sec:legal}).
+  \item \textbf{Signal taxonomy}: We provide a structured catalogue of seven
+    community character signals (M.1--M.7), each with its data source, similarity
+    metric, availability, and legal precedent (\S\ref{sec:spectrum}).
+  \item \textbf{Integration specification}: We specify how M-track weights compose
+    with existing \textsc{bisect} edge weight modes via alpha-blending
+    (\S\ref{sec:bisect-integration}).
+\end{enumerate}
+
+\subsection{Scope and Limitations}
+
+This paper is a framework paper.
+It does not report redistricting runs or district-level outcomes; those are the province
+of M.1--M.7, which validate each signal's empirical effect on the plans produced by
+\textsc{bisect}.
+This paper establishes the mathematical and legal scaffolding that all M-track papers
+share.
+The framework is also not a claim about partisan effect: because the character signals
+are partisan-neutral by construction, the framework does not predict or guarantee any
+particular partisan distribution of districts.
+Whether communities of interest so defined produce more or less competitive districts,
+more or less proportional seat allocations, or better or worse compactness scores
+are empirical questions addressed in M.1--M.7 and M.8.
+
+\subsection{Paper Organization}
+
+Section~\ref{sec:framework} defines the mathematical framework.
+Section~\ref{sec:legal} grounds it in redistricting doctrine.
+Section~\ref{sec:spectrum} previews the seven signal types.
+Section~\ref{sec:bisect-integration} explains how M-track weights integrate with
+\textsc{bisect}'s three-layer compositor.
+Section~\ref{sec:conclusion} concludes with a discussion of the framework's
+role in expert witness testimony.

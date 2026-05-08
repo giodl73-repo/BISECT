@@ -1,0 +1,176 @@
+\label{sec:spectrum}
+
+Papers M.1 through M.7 each implement one community character signal.
+Table~\ref{tab:signal-spectrum} provides an overview of all seven signals: their
+data source, the similarity metric used, geographic availability, and the legal
+precedent most directly supporting their use as a community of interest proxy.
+
+\begin{table}[ht]
+\centering
+\caption{Spectrum of community character signals across the M-track.
+  All sources are free and publicly available from federal agencies.
+  Coverage refers to fraction of US states with usable data.}
+\label{tab:signal-spectrum}
+\small
+\begin{tabularx}{\textwidth}{@{}lXlll@{}}
+\toprule
+\textbf{Paper} & \textbf{Signal} & \textbf{Data Source} & \textbf{Similarity} & \textbf{Coverage} \\
+\midrule
+M.1 & Economic character & LODES WAC & Cosine & 100\% \\
+M.2 & Land use mix & NLCD & Cosine & 100\% \\
+M.3 & Housing character & ACS & Cosine & 100\% \\
+M.4 & Commuting shed & LODES OD & Jaccard & 100\% \\
+M.5 & Topographic zone & USGS 3DEP & Valley/ridge & 100\% \\
+M.6 & Zone co-membership & TIGER/EIA 861 & Count ratio & 100\%\tablefootnote{School district + county subdivision + electric utility provide 100\% national coverage. Fire and water districts cover approximately 60\% and 40\% of states, respectively.} \\
+M.7 & Transit accessibility & GTFS & Isochrone overlap & $\sim$70\% \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{M.1 --- Economic Character (LODES WAC)}
+
+The Longitudinal Employer-Household Dynamics (LEHD) Origin-Destination Employment
+Statistics (LODES) Workplace Area Characteristics (WAC) file provides, for each
+census block, counts of jobs in 20 industry categories, 3 earnings bands,
+and 8 worker age groups~\citep{lodes2022}.
+Aggregated to the tract level, this produces an occupational character vector
+reflecting where a tract fits in the regional economy: a manufacturing district,
+a financial services node, a retail corridor, a hospital campus.
+Two tracts with similar industry mixes are, economically, members of the same
+community of interest.
+Cosine similarity of the industry-share vector is the natural measure: it rewards
+proportional similarity of economic composition regardless of the absolute scale
+of employment.
+
+Economic communities of interest are explicitly recognized by Colorado's constitution
+(``trade area'' factors) and have been accepted as a valid community type in Arizona
+IRC proceedings.
+LODES data is annual, free, and available from the Census Bureau's LEHD program.
+
+\subsection{M.2 --- Land Use Mix (NLCD)}
+
+The National Land Cover Database (NLCD), produced by the Multi-Resolution Land
+Characteristics Consortium, classifies every 30-meter pixel in the United States
+into one of 20 land cover categories~\citep{nlcd2019}.
+Aggregated to the tract level, the NLCD produces a land use composition vector
+(fraction of developed land, fraction of forest, fraction of agricultural land,
+fraction of wetland, etc.) that captures the physical character of the tract.
+Two urban tracts are similar; two agricultural tracts are similar; an urban tract
+and an agricultural tract are dissimilar.
+The NLCD is updated approximately every five years and is freely available.
+
+Physical geography as a community character signal has ancient legal roots.
+Natural features---rivers, mountain ranges, valley floors---have served as district
+boundaries since the colonial era, and state constitutions in many western states
+explicitly mention ``natural boundaries'' as a criterion.
+The NLCD operationalizes physical character systematically, across the entire landscape,
+without requiring the map-drawer to identify specific named features.
+
+\subsection{M.3 --- Housing Character (ACS)}
+
+The American Community Survey (ACS) five-year estimates provide, at the tract level,
+counts of housing units by structure type (single-family, multi-family, mobile home),
+tenure (owner-occupied, renter-occupied), vacancy status, and year built~\citep{acs2020}.
+The housing character vector captures the residential identity of a tract: an
+established owner-occupied suburb of single-family homes built in the 1960s is a
+different community from a high-density rental market with recently constructed
+apartment buildings.
+Cosine similarity of the housing character vector captures community similarity
+in the sense of ``neighbors who share a stake in the same type of housing market.''
+
+Housing character is particularly relevant to the communities of interest doctrine
+because housing policy---zoning, rent control, historic preservation, homeowners
+association governance---is a primary vehicle through which neighbors exercise
+collective civic interests.
+Homeowners in the same zoning district share an interest in land-use decisions;
+renters in the same rental market share an interest in rent stabilization policy.
+
+\subsection{M.4 --- Commuting Shed (LODES OD)}
+
+The LODES Origin-Destination (OD) file records, for each pair of census blocks
+with commuting flows, the count of workers who live in one block and work in
+another~\citep{lodes2022}.
+Aggregated to the tract level, this produces a destination distribution for each
+residential tract: where do its residents go to work?
+Two tracts that send large fractions of their workers to the same employment centers
+are parts of the same functional economic area---the commuting shed or labor market area.
+Jaccard similarity of the destination set (tracts that receive at least one commuter
+from each origin) captures this relationship.
+
+The commuting shed is a well-established concept in regional science and is recognized
+as a proxy for economic community of interest by California's commission guidance
+and Colorado's ``trade area'' criterion.
+Functional labor markets are a natural unit of democratic representation: residents
+who commute together to the same city have shared interests in transportation
+infrastructure, highway policy, and regional economic development.
+
+\subsection{M.5 --- Topographic Zone (USGS 3DEP)}
+
+The USGS 3D Elevation Program (3DEP) provides one-meter to one-third-arc-second
+digital elevation models covering the contiguous United States~\citep{usgs3dep}.
+From elevation data, the topographic zone of a tract can be classified as valley
+floor, upland plateau, ridge, or slope zone using standard terrain analysis methods
+(slope curvature and hydrological drainage basin algorithms).
+Two tracts in the same valley share a drainage basin, a flood risk profile, an
+agricultural character, and often a historical settlement pattern; two ridge tracts
+share a different set of interests.
+
+Topographic community signals are particularly relevant in western states, where
+valley communities in the Sierra Nevada, Cascades, Rockies, and Wasatch Range are
+economically and culturally distinct from adjacent upland areas.
+Natural boundaries have been cited approvingly in redistricting cases as evidence
+that a district boundary is not arbitrary~\citep{ncsl2021criteria}.
+
+\subsection{M.6 --- Administrative Zone Co-membership (TIGER/EIA 861)}
+
+Zone co-membership is the most legally direct community character signal.
+When two tracts share a school district, fire district, water district, electric
+utility service territory, and county subdivision, they are members of the same
+administrative community in every governmentally recognized sense.
+The zone score
+\begin{equation}
+  \mathrm{zone\_score}(u,v) \;=\; \frac{|\{z \in Z : \mathrm{zone}_z(u) = \mathrm{zone}_z(v)\}|}{|Z|}
+  \label{eq:zone-score}
+\end{equation}
+counts how many of the available zone types are shared, normalized to $[0,1]$.
+The zone co-membership formula replaces cosine similarity in equation~(\ref{eq:weight-modifier})
+and satisfies all required properties: symmetry, $[0,1]$ range, and graceful degradation
+to $w_{\mathrm{base}}$ when no zone data is available.
+Data for school districts and county subdivisions comes from TIGER/Line shapefiles
+(100\% national coverage); electric utility service territories come from EIA
+Form 861 (100\% coverage); fire and water districts from TIGER/Line Special District
+files (\textasciitilde 60\% and \textasciitilde 40\% coverage, respectively).
+M.6 provides full documentation of the zone co-membership algorithm and its legal grounding.
+
+\subsection{M.7 --- Transit Accessibility (GTFS)}
+
+General Transit Feed Specification (GTFS) data, published by transit agencies and
+aggregated by Transitland and the National Transit Database~\citep{ntd2022},
+encodes transit routes, stops, and schedules for approximately 70\% of the US
+by population.
+Transit accessibility can be measured as the set of destinations reachable within
+a fixed travel time (e.g., 45 minutes) from a tract centroid; two tracts with
+overlapping reachable-destination sets are members of the same transit-accessible
+community.
+Isochrone overlap---the fraction of each tract's reachable set that is also reachable
+from the other tract---provides a natural similarity measure.
+
+Transit co-membership is a recognized community of interest in California's commission
+guidance and in urban planning literature on transit-oriented development.
+In dense urban areas, transit accessibility is a primary determinant of where
+residents can work, shop, and access services, making it a more meaningful community
+bond than road network proximity alone.
+M.7 is limited to the approximately 70\% of states and counties with published GTFS
+feeds; the algorithm degrades gracefully to the zone co-membership or geographic
+baseline for jurisdictions without transit data.
+
+\subsection{M.8 --- Composite Community Index (preview)}
+
+Paper M.8, not yet published, will define a composite community character index
+that combines M.1--M.7 signals with expert-tunable weights.
+The composite is a weighted average of the individual similarity scores,
+providing a single number that can be used as the edge weight modifier when all
+signals are active.
+M.8 will also provide an expert witness template: a standardized declaration format
+that maps the composite score to specific communities of interest recognized in
+prior redistricting proceedings.

@@ -471,7 +471,8 @@ fn main() {
                 if args.check_only {
                     print_check_report(&items);
                 } else {
-                    download_items(&items, args.force, args.release, &manifest)
+                    download_items(&items, args.force, args.release, &manifest,
+                                  args.polite_delay_secs)
                         .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
                 }
             }

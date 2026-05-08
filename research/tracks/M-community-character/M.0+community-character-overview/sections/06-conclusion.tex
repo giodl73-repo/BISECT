@@ -1,0 +1,75 @@
+\label{sec:conclusion}
+
+The redistricting criterion ``preserve communities of interest'' is, at present,
+a phrase that courts accept and litigants invoke but that no judge can quantitatively
+enforce and no algorithm can natively satisfy.
+This paper has proposed a mathematical framework that changes that.
+By representing community character as a vector of tract-level signals, by measuring
+community similarity as cosine similarity of those vectors, and by encoding similarity
+as an METIS edge weight modifier, the framework translates a qualitative legal
+criterion into a deterministic, verifiable, partisan-neutral computation.
+
+The framework satisfies the key legal requirements for defensible redistricting criteria.
+It is neutral under \textit{Shaw v.\ Reno} and \textit{Miller v.\ Johnson}: no
+racial, partisan, or incumbency data enters the character vector.
+It is consistent with the communities of interest doctrine as articulated in
+\textit{Reynolds v.\ Sims} and as codified in California, Colorado, Arizona, and
+Washington state law.
+It is quantitative: the formula $w(u,v) = w_{\mathrm{base}} \times \mathrm{sim}(\mathbf{c}_u, \mathbf{c}_v)$
+is fully disclosed, replicable by any party with access to the same public data, and
+immune to the charge that community identifications were made ad hoc for political advantage.
+
+\subsection{Expert Witness Role}
+
+The framework is designed for use by expert witnesses in redistricting litigation.
+A cartographer or political scientist serving as an expert witness can testify:
+\begin{itemize}
+  \item The district boundaries were placed by an algorithm that minimizes cuts
+    through edges connecting tracts of high community similarity.
+  \item Similarity was computed from [NLCD / LODES / TIGER / EIA 861] data, which is
+    publicly available and was processed by a deterministic formula.
+  \item The formula does not incorporate, and is not aware of, the racial composition,
+    partisan registration, or prior voting history of any tract.
+  \item The communities preserved by the algorithm correspond to communities
+    recognized in prior redistricting litigation and commission proceedings as
+    legitimate communities of interest: school district co-members, commuting-shed
+    partners, economic sector colleagues.
+\end{itemize}
+This template, developed in the context of M-track analysis, provides a standard
+framework for the expert declaration that would accompany any plan submitted
+to a court or commission.
+
+\subsection{Relationship to M.1--M.8}
+
+M.0 is the theoretical reference; M.1--M.7 are the empirical papers.
+Each of M.1--M.7 inherits the framework defined here---character vectors, cosine
+similarity, edge weight modifier, alpha-blending---and specializes it to one
+data source.
+Each paper validates the specialization by running \textsc{bisect} on a selection
+of states and measuring the effect of the character weights on plan outcomes:
+compactness, school district integrity, administrative zone preservation, and
+proportionality gap.
+M.8 will compose all seven signals into a single composite index and provide
+an end-to-end expert witness template.
+
+\subsection{Open Questions}
+
+Three open questions are not addressed in this paper and are left for future work:
+\begin{enumerate}
+  \item \textbf{Optimal alpha}: The alpha-blending parameter $\alpha$ is currently
+    a fixed configuration choice.
+    A data-driven method for selecting $\alpha$ to maximize community preservation
+    subject to compactness constraints would be valuable.
+  \item \textbf{Signal orthogonality}: The M.1--M.7 signals are not independent;
+    for example, economic character and commuting shed are correlated.
+    A principal component analysis of the joint character matrix could identify
+    a smaller set of orthogonal community dimensions.
+  \item \textbf{Temporal stability}: Community character changes over time.
+    Whether a weight regime calibrated on the 2010 census remains appropriate for
+    the 2020 redistricting cycle is an empirical question not addressed here.
+\end{enumerate}
+
+The community character framework proposed in this paper provides a rigorous,
+legally defensible, and computationally tractable answer to the question that
+has long vexed redistricting reform: what, precisely, is a community of interest,
+and how do you know whether you have preserved one?

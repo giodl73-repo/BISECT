@@ -1,0 +1,64 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{url}
+
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+\title{\textbf{Administrative Zone Co-membership Edge Weights:\\
+School Districts, Fire Districts, and Fiscal Bonds\\
+as Community Signals in Algorithmic Redistricting}}
+
+\author{Giovanni Della-Libera}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Communities of interest, Administrative zones, School districts, Fire districts,
+Electric utility service territory, Property tax, Redistricting, METIS edge weights,
+Fiscal bond doctrine, TIGER/Line
+
+\section{Introduction}
+\input{sections/01-introduction}
+
+\section{Administrative Zones as Community Signals}
+\input{sections/02-zones-as-community}
+
+\section{The Zone Co-membership Formula}
+\input{sections/03-formula}
+
+\section{Data Sources and Coverage}
+\input{sections/04-data-sources}
+
+\section{Property Tax Fiscal Bond --- Legal Analysis}
+\input{sections/05-legal}
+
+\section{Experimental Design (Deferred)}
+\input{sections/06-experimental-design}
+
+\section{Conclusion}
+\input{sections/07-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

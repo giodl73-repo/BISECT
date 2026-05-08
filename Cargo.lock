@@ -216,6 +216,7 @@ dependencies = [
  "bisect-smc",
  "clap",
  "csv",
+ "flate2",
  "fontdb",
  "fs2",
  "geo 0.28.0",

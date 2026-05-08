@@ -1,0 +1,129 @@
+\label{sec:bisect-integration}
+
+\subsection{The Three-Layer Compositor}
+
+The \textsc{bisect} redistricting system structures every plan by three independently
+configurable components:
+\begin{enumerate}
+  \item \textbf{Structure} (Layer 1): the bisection tree shape, which determines
+    how the state is recursively divided into the required number of districts.
+    Options include \texttt{standard-bisect}, \texttt{prime-factor} (ApportionRegions),
+    and \texttt{ratio-optimal} (GeoSection).
+  \item \textbf{Weights} (Layer 2): the edge weight mode, which determines how
+    costly each potential cut is for the METIS partitioner.
+    Current modes are \texttt{geographic} (boundary length), \texttt{county}
+    (county co-membership bonus), \texttt{unweighted}, and \texttt{vra-aligned}.
+  \item \textbf{Search} (Layer 3): the seed selection strategy, which determines
+    which METIS result to accept when multiple random seeds are attempted.
+    Options include \texttt{single}, \texttt{multi}, \texttt{convergence},
+    and \texttt{percentile}.
+\end{enumerate}
+Community character weights occupy Layer 2.
+They do not alter the bisection tree structure (Layer 1) or the seed selection
+strategy (Layer 3).
+
+\subsection{Existing Weight Modes}
+
+The current weight modes are:
+\begin{itemize}
+  \item \textbf{Geographic}: $w(u,v)$ proportional to the shared boundary length
+    between tracts $u$ and $v$.
+    Long shared boundaries are more costly to cut; this encourages compact, round
+    districts.
+  \item \textbf{County}: a bonus weight applied to edges between tracts in the same
+    county, as introduced in paper B.10.
+    This encourages county-level community preservation without explicitly encoding
+    any economic or cultural signal.
+  \item \textbf{Unweighted}: $w(u,v) = 1$ for all edges.
+    Used as a baseline; METIS minimizes edge count (number of tract boundary pairs
+    split) rather than weighted cut cost.
+  \item \textbf{VRA-aligned}: a weight mode that boosts edges between tracts with
+    high minority population concentrations to preserve VRA Section 2 majority-minority
+    configurations.
+    See paper B.14 for details.
+\end{itemize}
+
+\subsection{Alpha-Blending Community Character with Base Weights}
+
+The M-track introduces community character weights as an additional modifier that
+composes with any base weight mode via \emph{alpha-blending}:
+\begin{equation}
+  w_{\mathrm{final}}(u,v)
+  \;=\;
+  \alpha \cdot w_{\mathrm{base}}(u,v)
+  \;+\;
+  (1 - \alpha) \cdot w_{\mathrm{char}}(u,v),
+  \quad \alpha \in [0,1],
+  \label{eq:alpha-blend}
+\end{equation}
+where $w_{\mathrm{base}}(u,v)$ is the weight from the active base mode
+(geographic, county, or unweighted) and
+$w_{\mathrm{char}}(u,v) = w_{\mathrm{base}}(u,v) \times \mathrm{sim}(\mathbf{c}_u, \mathbf{c}_v)$
+is the community character modified weight.
+
+When $\alpha = 1$, the final weight equals the base weight (community character
+is inactive).
+When $\alpha = 0$, the final weight is entirely determined by community character
+similarity.
+The default in M-track configurations is $\alpha = 0.5$, which gives equal weight
+to geographic boundaries and community character.
+The alpha parameter is tunable per plan configuration in the YAML config:
+\begin{verbatim}
+algorithm:
+  weights: geographic
+  character_signal: zone-membership
+  character_alpha: 0.5
+\end{verbatim}
+
+\subsection{CLI Integration}
+
+Each M-track signal is activated by the \texttt{--weights-override} flag with the
+corresponding signal name:
+\begin{verbatim}
+bisect state --state NC --year 2020 \
+  --weights-override zone-membership \
+  --version v_zone_m6
+\end{verbatim}
+Multiple signals can be composed using the composite mode (M.8):
+\begin{verbatim}
+bisect state --state NC --year 2020 \
+  --weights-override composite-community \
+  --character-signals economic,zone-membership,housing \
+  --version v_composite_m8
+\end{verbatim}
+
+\subsection{Interaction with Structure and Search Layers}
+
+Community character weights interact with the structure layer in the following way:
+the weights are computed once for the full state adjacency graph and remain constant
+throughout all bisection rounds.
+When the bisection tree recursively splits a subregion, METIS receives the subgraph
+of that subregion together with its original edge weights; no recomputation of
+character similarity is performed.
+This means that the character weights influence not just the first bisection but
+every subsequent level of the recursive partition.
+
+Community character weights do not interact with the search layer (Layer 3).
+All seed selection strategies---single, multi, convergence, percentile---operate on
+the same weighted graph.
+The choice of search strategy affects how many METIS trials are run and which result
+is selected, but it does not alter the weights presented to METIS.
+
+\subsection{Composability with County Weights}
+
+The county weight mode (B.10) and the M.6 zone co-membership mode are related but
+distinct.
+County co-membership is a binary signal: two tracts are either in the same county
+or not.
+Zone co-membership (M.6) is a graded signal: tracts can share zero, one, two, three,
+or all available zone types.
+County subdivision membership (a dimension of M.6) is strictly more refined than
+county membership in New England states, where the town is the primary administrative
+unit and the county is a secondary one.
+
+The two modes can be run independently or composed.
+Running zone co-membership as the base mode subsumes the county signal when
+county subdivision data is available, because county subdivision co-membership implies
+county co-membership in every state.
+In non-New England states where county is the primary unit, the county mode and the
+M.6 county-subdivision dimension produce nearly identical results.

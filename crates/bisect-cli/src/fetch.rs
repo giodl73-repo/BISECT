@@ -114,13 +114,14 @@ pub fn build_fetch_list(
 ) -> Vec<FetchItem> {
     use crate::args::DataType;
     let all_types = data_types.is_empty() || data_types.iter().any(|t| matches!(t, DataType::All));
-    let want_tiger = all_types || data_types.iter().any(|t| matches!(t, DataType::Tiger));
-    let want_pl = all_types || data_types.iter().any(|t| matches!(t, DataType::Redistricting));
-    let want_adj = all_types || data_types.iter().any(|t| matches!(t, DataType::Adjacency));
+    let want_tiger  = all_types || data_types.iter().any(|t| matches!(t, DataType::Tiger));
+    let want_pl     = all_types || data_types.iter().any(|t| matches!(t, DataType::Redistricting));
+    let want_adj    = all_types || data_types.iter().any(|t| matches!(t, DataType::Adjacency));
+    let want_lodes  = data_types.iter().any(|t| matches!(t, DataType::Lodes));
+    let want_school = data_types.iter().any(|t| matches!(t, DataType::SchoolDistricts));
+    let want_eia    = data_types.iter().any(|t| matches!(t, DataType::Eia861));
 
-    // Data types that exist as CLI flags but are not yet downloaded by `bisect fetch`:
-    // Elections, Enacted, Geography. Warn explicitly so users don't think the request
-    // succeeded silently. The Python downloaders below remain the canonical source.
+    // Data types that exist as CLI flags but are not yet downloaded by `bisect fetch`.
     let want_elections = !all_types && data_types.iter().any(|t| matches!(t, DataType::Elections));
     if want_elections {
         eprintln!(
@@ -201,12 +202,81 @@ pub fn build_fetch_list(
                 state_code: code.clone(),
                 year: year.to_string(),
                 kind: "adjacency".to_string(),
-                url: None, // adjacency comes from GitHub Releases
+                url: None,
                 available_locally: local_path.exists(),
                 local_path,
                 done_marker,
             });
         }
+
+        // LODES WAC (Workplace Area Characteristics) — one CSV.gz per state per year.
+        // URL: https://lehd.ces.census.gov/data/lodes/LODES8/{abbr}/wac/{abbr}_wac_S000_JT00_{year}.csv.gz
+        // Aggregated block→tract CSV saved to data/{year}/lodes/{state}_wac_tract.csv
+        if want_lodes {
+            let abbr = code.to_lowercase();
+            let lodes_year = year; // LODES available 2002–2021; use year as-is
+            let url = format!(
+                "https://lehd.ces.census.gov/data/lodes/LODES8/{abbr}/wac/{abbr}_wac_S000_JT00_{lodes_year}.csv.gz"
+            );
+            let local_path = data_dir.join(year).join("lodes")
+                .join(format!("{}_wac_tract.csv", state_lower));
+            let done_marker = data_dir.join(year).join("lodes")
+                .join(format!("{}_wac_tract.done", state_lower));
+            items.push(FetchItem {
+                state_code: code.clone(),
+                year: year.to_string(),
+                kind: "lodes-wac".to_string(),
+                url: Some(url),
+                available_locally: local_path.exists(),
+                local_path,
+                done_marker,
+            });
+        }
+
+        // TIGER/Line School District shapefiles — one ZIP per state per year.
+        // URL pattern: https://www2.census.gov/geo/tiger/TIGER{year}/UNSD/tl_{year}_{fips}_unsd.zip
+        // where fips = 2-digit state FIPS code (from manifest)
+        if want_school {
+            {
+                let fips = &state.fips;
+                let url = format!(
+                    "https://www2.census.gov/geo/tiger/TIGER{year}/UNSD/tl_{year}_{fips}_unsd.zip"
+                );
+                let local_path = data_dir.join(year).join("tiger").join("school_districts")
+                    .join(format!("tl_{year}_{fips}_unsd"))
+                    .join(format!("tl_{year}_{fips}_unsd.shp"));
+                let done_marker = local_path.with_extension("done");
+                items.push(FetchItem {
+                    state_code: code.clone(),
+                    year: year.to_string(),
+                    kind: "school-districts".to_string(),
+                    url: Some(url),
+                    available_locally: local_path.exists(),
+                    local_path,
+                    done_marker,
+                });
+            }
+        }
+    }
+
+    // EIA Form 861 — one national ZIP per year (not per state).
+    // URL: https://www.eia.gov/electricity/data/eia861/zip/f8612020.zip (year-specific)
+    if want_eia {
+        let eia_year = year;
+        let url = format!(
+            "https://www.eia.gov/electricity/data/eia861/zip/f861{eia_year}.zip"
+        );
+        let local_path = data_dir.join(year).join("eia861").join("service_territories.shp");
+        let done_marker = data_dir.join(year).join("eia861").join("eia861.done");
+        items.push(FetchItem {
+            state_code: "US".to_string(),
+            year: year.to_string(),
+            kind: "eia-861".to_string(),
+            url: Some(url),
+            available_locally: local_path.exists(),
+            local_path,
+            done_marker,
+        });
     }
 
     items
@@ -251,16 +321,30 @@ pub fn print_check_report(items: &[FetchItem]) {
 
 /// Download all items that aren't already present.
 /// Uses native Rust (reqwest) for HTTP downloads. No Python subprocess.
+///
+/// `polite_delay_secs`: seconds to sleep between requests. Default 1 second.
+/// Federal servers (Census Bureau, LEHD, EIA) expect polite access — do not
+/// set to 0 unless you have explicit permission or are in a CI environment
+/// with a private mirror.
 pub fn download_items(
     items: &[FetchItem],
     force: bool,
     use_release: bool,
     manifest: &Manifest,
+    polite_delay_secs: u64,
 ) -> Result<(), String> {
+    let mut downloaded_count = 0usize;
     for item in items {
         if !force && item.is_done() {
             println!("[SKIP] {} {} {} (already present)", item.state_code, item.year, item.kind);
             continue;
+        }
+        // Polite delay between requests — inserted before each real download
+        // (not before skips). Respects federal server access expectations.
+        if downloaded_count > 0 && polite_delay_secs > 0 {
+            println!("[WAIT] {}s before next request (--polite-delay-secs {})",
+                polite_delay_secs, polite_delay_secs);
+            std::thread::sleep(std::time::Duration::from_secs(polite_delay_secs));
         }
 
         if let Some(parent) = item.local_path.parent() {
@@ -301,14 +385,23 @@ pub fn download_items(
                 }
             }
 
-            "tiger" | "pl94171" => {
-                // Pure Rust HTTP download + zip extraction (no Python)
+            "tiger" | "pl94171" | "school-districts" | "eia-861" => {
+                // ZIP file: download and extract
                 let url = item.url.as_deref().unwrap();
                 let dest = item.local_path.parent().unwrap();
                 println!("[DOWN] {} {} {} <- {}", item.state_code, item.year, item.kind,
                     url.split('/').last().unwrap_or(url));
-
                 download_and_extract_zip(url, dest)?;
+            }
+
+            "lodes-wac" => {
+                // LODES WAC: download .csv.gz, decompress, aggregate blocks→tracts, save CSV
+                let url = item.url.as_deref().unwrap();
+                let dest_dir = item.local_path.parent().unwrap();
+                println!("[DOWN] {} {} lodes-wac <- {}", item.state_code, item.year,
+                    url.split('/').last().unwrap_or(url));
+                std::fs::create_dir_all(dest_dir).map_err(|e| e.to_string())?;
+                download_lodes_wac(url, &item.local_path)?;
             }
 
             _ => {
@@ -320,7 +413,109 @@ pub fn download_items(
 
         std::fs::write(&item.done_marker, b"done")
             .map_err(|e| format!("done marker write failed: {e}"))?;
+        downloaded_count += 1;
     }
+    Ok(())
+}
+
+/// Download LODES WAC .csv.gz, decompress, aggregate census block rows to tract level,
+/// and save a compact tract-level CSV to `dest_path`.
+///
+/// Input format: w_geocode (15-char block GEOID), C000 (total jobs), CNS01–CNS20 (by sector)
+/// Output format: geoid (11-char tract), c000, cns07, cns09, cns10, cns11 (commercial),
+///                cns01, cns02, cns05, cns08 (industrial)
+///
+/// Aggregation: sum all block rows sharing the same 11-char tract prefix.
+pub fn download_lodes_wac(url: &str, dest_path: &Path) -> Result<(), String> {
+    use std::collections::HashMap;
+    use std::io::{BufRead, BufReader};
+
+    let response = reqwest::blocking::get(url)
+        .map_err(|e| format!("HTTP GET {url}: {e}"))?;
+    if !response.status().is_success() {
+        // LODES data not available for all states/years — treat 404 as soft skip
+        if response.status().as_u16() == 404 {
+            println!("[WARN] LODES WAC not available for this state/year (404). Skipping.");
+            // Write empty CSV so done marker still gets created
+            std::fs::write(dest_path, "geoid,c000,cns07,cns09,cns10,cns11,cns01,cns02,cns05,cns08\n")
+                .map_err(|e| format!("write empty lodes: {e}"))?;
+            return Ok(());
+        }
+        return Err(format!("HTTP {}: {url}", response.status()));
+    }
+
+    // Decompress gzip stream
+    let gz = flate2::read::GzDecoder::new(response);
+    let reader = BufReader::new(gz);
+
+    // Aggregate block rows to tracts
+    // tract_geoid (11 chars) → [c000, cns07, cns09, cns10, cns11, cns01, cns02, cns05, cns08]
+    let mut tracts: HashMap<String, [f64; 9]> = HashMap::new();
+
+    let mut lines = reader.lines();
+    let header = match lines.next() {
+        Some(Ok(h)) => h,
+        _ => return Err("LODES WAC: empty or unreadable file".to_string()),
+    };
+
+    // Find column indices from header
+    let cols: Vec<&str> = header.split(',').collect();
+    let idx = |name: &str| -> Result<usize, String> {
+        cols.iter().position(|c| c.trim_matches('"') == name)
+            .ok_or_else(|| format!("LODES WAC: column '{name}' not found in header"))
+    };
+    let i_geo  = idx("w_geocode")?;
+    let i_c000 = idx("C000")?;
+    let i_c07  = idx("CNS07")?;
+    let i_c09  = idx("CNS09")?;
+    let i_c10  = idx("CNS10")?;
+    let i_c11  = idx("CNS11")?;
+    let i_c01  = idx("CNS01")?;
+    let i_c02  = idx("CNS02")?;
+    let i_c05  = idx("CNS05")?;
+    let i_c08  = idx("CNS08")?;
+
+    for line in lines {
+        let line = line.map_err(|e| format!("LODES read: {e}"))?;
+        if line.trim().is_empty() { continue; }
+        let fields: Vec<&str> = line.split(',').collect();
+        if fields.len() <= i_c08 { continue; }
+
+        let block_geoid = fields[i_geo].trim_matches('"');
+        if block_geoid.len() < 11 { continue; }
+        let tract_geoid = &block_geoid[..11];
+
+        let parse = |i: usize| -> f64 {
+            fields[i].trim_matches('"').parse::<f64>().unwrap_or(0.0)
+        };
+
+        let entry = tracts.entry(tract_geoid.to_string()).or_insert([0.0; 9]);
+        entry[0] += parse(i_c000);
+        entry[1] += parse(i_c07);
+        entry[2] += parse(i_c09);
+        entry[3] += parse(i_c10);
+        entry[4] += parse(i_c11);
+        entry[5] += parse(i_c01);
+        entry[6] += parse(i_c02);
+        entry[7] += parse(i_c05);
+        entry[8] += parse(i_c08);
+    }
+
+    // Write output CSV
+    let mut out = std::fs::File::create(dest_path)
+        .map_err(|e| format!("create {}: {e}", dest_path.display()))?;
+    use std::io::Write as IoWrite;
+    writeln!(out, "geoid,c000,cns07,cns09,cns10,cns11,cns01,cns02,cns05,cns08")
+        .map_err(|e| e.to_string())?;
+    let mut sorted: Vec<_> = tracts.into_iter().collect();
+    sorted.sort_by(|a, b| a.0.cmp(&b.0));
+    for (geoid, v) in sorted {
+        writeln!(out, "{geoid},{},{},{},{},{},{},{},{},{}",
+            v[0] as u64, v[1] as u64, v[2] as u64, v[3] as u64,
+            v[4] as u64, v[5] as u64, v[6] as u64, v[7] as u64, v[8] as u64)
+            .map_err(|e| e.to_string())?;
+    }
+    println!("[OK] LODES WAC aggregated to {}", dest_path.display());
     Ok(())
 }
 

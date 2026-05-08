@@ -1,0 +1,20 @@
+The criterion ``preserve communities of interest'' appears in redistricting law across
+at least thirty states, yet courts that invoke it offer no quantitative definition.
+This paper establishes a mathematical framework that operationalizes communities of
+interest as cosine similarity of tract-level character vectors, yielding edge weight
+modifiers for the METIS graph partitioning engine at the core of the \textsc{bisect}
+redistricting system.
+The framework is modular: any measurable tract-level signal---economic composition,
+land use, housing stock, commuting patterns, topographic setting, administrative zone
+co-membership, or transit accessibility---maps to a dimension of the character vector.
+The resulting edge weight formula $w(u,v) = w_{\mathrm{base}} \times \mathrm{sim}(\mathbf{c}_u, \mathbf{c}_v)$
+satisfies symmetry, non-negativity, and graceful degradation to the unweighted baseline
+when all tracts are identical.
+We ground the framework in the legal doctrine of communities of interest as articulated
+in \textit{Reynolds v.\ Sims} (1964), \textit{Shaw v.\ Reno} (1993), and the independent
+redistricting commission criteria enacted in California, Colorado, Arizona, and Washington.
+The framework is partisan-neutral: no electoral data, racial composition, or incumbency
+information enters any component of the weight computation.
+Papers M.1--M.7 implement specific instantiations of the framework; M.8 provides a
+composite index.
+This paper serves as the foundational theoretical reference for the entire M-track.

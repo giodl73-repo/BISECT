@@ -1,0 +1,139 @@
+\label{sec:formula}
+
+\subsection{Zone Assignment}
+
+For each tract $t \in \mathcal{T}$ and each zone type $z \in \{1, \ldots, 6\}$,
+we define $\mathrm{zone}_z(t)$ as the identifier of the zone of type $z$ that
+contains the centroid of tract $t$.
+This centroid-in-polygon assignment is the standard approach for assigning
+tracts to administrative zones; it fails only when a zone boundary bisects a
+tract so narrowly that the centroid falls on the wrong side.
+For practical purposes, this case is rare: census tracts are designed to respect
+administrative boundaries wherever possible, and in most states school district
+and county subdivision boundaries are co-extensive with or contained within
+tract boundaries.
+
+Let $Z$ be the set of zone types for which data is available in the state being
+processed.
+The minimum $|Z| = 3$ is achieved when only school district, county subdivision,
+and electric utility data are available; the maximum $|Z| = 6$ is achieved when
+fire district, water district, and police precinct data are also present.
+
+\subsection{Zone Co-membership Score}
+
+For two adjacent tracts $u, v \in \mathcal{T}$, the zone co-membership score is
+\begin{equation}
+  \mathrm{zone\_score}(u,v)
+  \;=\;
+  \frac{|\{z \in Z : \mathrm{zone}_z(u) = \mathrm{zone}_z(v)\}|}{|Z|}
+  \;\in\; [0,\, 1].
+  \label{eq:zone-score}
+\end{equation}
+The numerator counts how many of the available zone types are shared between $u$
+and $v$; the denominator normalizes to the number of available zone types.
+The score is 1 when all available zones are shared, 0 when no zones are shared.
+
+\paragraph{Interpretation.}
+A score of 1 means that tracts $u$ and $v$ send their children to the same schools,
+share a fire station, buy water from the same utility, purchase electricity from the
+same provider, and are governed by the same county subdivision---they are members
+of the same administrative community in every dimension available.
+A score of 0 means that $u$ and $v$ share no administrative zone; they may be
+adjacent geographically but are administratively in completely different communities.
+A score of $1/3$ (when $|Z| = 3$) might arise when two tracts share school district
+and county subdivision but are served by different electric utilities---a common
+situation at the edges of utility service territories in rural areas.
+
+\subsection{Edge Weight Modifier}
+
+The zone co-membership score is applied as an edge weight modifier:
+\begin{equation}
+  w(u,v)
+  \;=\;
+  w_{\mathrm{base}}(u,v) \;\times\; \bigl(1 + \alpha \cdot \mathrm{zone\_score}(u,v)\bigr),
+  \quad \alpha = 1.0 \text{ (default)},
+  \label{eq:zone-weight}
+\end{equation}
+where $w_{\mathrm{base}}(u,v)$ is the base edge weight from the active base mode.
+
+\paragraph{Boundary cases.}
+When $\mathrm{zone\_score}(u,v) = 1$ (all zones shared) and $\alpha = 1$:
+\begin{equation}
+  w(u,v) = w_{\mathrm{base}}(u,v) \times 2 \quad \text{(maximum bond)}.
+\end{equation}
+When $\mathrm{zone\_score}(u,v) = 0$ (no zones shared):
+\begin{equation}
+  w(u,v) = w_{\mathrm{base}}(u,v) \times 1 = w_{\mathrm{base}}(u,v) \quad \text{(baseline, unmodified)}.
+\end{equation}
+This design choice is deliberate: tracts that share no administrative zone type
+are not penalized relative to the base weight.
+The algorithm incentivizes preserving administratively co-membered pairs without
+discriminating against pairs that happen to lie at administrative boundaries.
+
+\paragraph{Alpha parameter.}
+The $\alpha$ parameter controls the strength of the zone co-membership incentive.
+At $\alpha = 1$ (default), all-zones-shared tracts have twice the base cut cost.
+At $\alpha = 2$, all-zones-shared tracts have three times the base cut cost.
+At $\alpha = 0$, the formula reduces to $w(u,v) = w_{\mathrm{base}}(u,v)$ with no
+zone effect.
+In practice, $\alpha = 1$ is the recommended value because it provides a meaningful
+but not dominating incentive: METIS can still make a cut between co-membered tracts
+if the geometric cost of avoiding the cut is too high.
+
+\subsection{Mathematical Properties}
+
+\paragraph{Symmetry.}
+$\mathrm{zone\_score}(u,v) = \mathrm{zone\_score}(v,u)$ because set equality is
+symmetric: $\mathrm{zone}_z(u) = \mathrm{zone}_z(v)$ iff $\mathrm{zone}_z(v) = \mathrm{zone}_z(u)$.
+Consequently $w(u,v) = w(v,u)$, satisfying METIS's undirected graph requirement.
+
+\paragraph{Non-negativity.}
+$\mathrm{zone\_score}(u,v) \geq 0$ always (it is a ratio of non-negative integers),
+so $w(u,v) \geq w_{\mathrm{base}}(u,v) \geq 0$ for all $\alpha \geq 0$.
+
+\paragraph{Boundedness.}
+$\mathrm{zone\_score}(u,v) \leq 1$, so $w(u,v) \leq (1 + \alpha) \times w_{\mathrm{base}}(u,v)$.
+For $\alpha = 1$, this means no edge weight is more than doubled.
+
+\paragraph{Graceful degradation.}
+If zone data is entirely unavailable ($|Z| = 0$), the formula is undefined.
+The implementation guards against this by always including county co-membership
+as a fallback dimension when no other zone data is available.
+County co-membership can always be computed from Census tract FIPS codes (the
+first five digits of the tract FIPS are the state and county FIPS).
+In the extreme case where no special district data is available and county subdivision
+is also unavailable, county co-membership serves as $Z = \{$county$\}$ with $|Z| = 1$.
+
+\subsection{Implementation Invariants}
+
+The following invariants are enforced as L0 unit tests:
+\begin{itemize}
+  \item \texttt{all\_zones\_shared\_doubles\_weight}:
+    $\mathrm{zone\_score} = 1.0 \Rightarrow w = 2 \times w_{\mathrm{base}}$ when $\alpha = 1.0$.
+  \item \texttt{no\_zones\_shared\_baseline}:
+    $\mathrm{zone\_score} = 0.0 \Rightarrow w = w_{\mathrm{base}}$ exactly.
+  \item \texttt{zone\_score\_range\_0\_to\_1}:
+    $\mathrm{zone\_score}(u,v) \in [0.0, 1.0]$ for all adjacent tract pairs.
+  \item \texttt{school\_district\_split\_never\_increases}:
+    For any state tested, the number of school district boundary crossings under
+    zone-membership weights is $\leq$ the number under geographic weights.
+  \item \texttt{zone\_score\_symmetric}:
+    $\mathrm{zone\_score}(u,v) = \mathrm{zone\_score}(v,u)$ for all pairs.
+\end{itemize}
+
+\subsection{CLI Activation}
+
+The zone co-membership weight mode is activated with:
+\begin{verbatim}
+bisect state --state NC --year 2020 \
+  --weights-override zone-membership \
+  --version v_zone_m6
+\end{verbatim}
+The alpha parameter can be tuned via the plan YAML configuration:
+\begin{verbatim}
+algorithm:
+  weights: zone-membership
+  zone_alpha: 1.0
+  zone_types: [school_district, county_subdivision, electric_utility,
+               fire_district, water_district]
+\end{verbatim}

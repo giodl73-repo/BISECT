@@ -1,0 +1,153 @@
+\label{sec:legal}
+
+\subsection{Administrative Subdivision Integrity in Constitutional Doctrine}
+
+The constitutional authority for treating administrative subdivisions as communities
+of interest begins with \textit{Reynolds v.\ Sims}, 377 U.S.\ 533 (1964)~\citep{reynolds1964}.
+While the primary holding of \textit{Reynolds} was that legislative seats must be
+apportioned on a population basis, Chief Justice Warren's majority opinion expressly
+preserved the legitimacy of administrative subdivision preservation as a secondary
+criterion:
+\begin{quote}
+  ``A State may legitimately desire to maintain the integrity of various political
+  subdivisions, insofar as possible, and provide for compact districts of contiguous
+  territory in apportioning its legislature.
+  So long as the divergences from a strict population standard are based on legitimate
+  considerations incident to the effectuation of a rational state policy, some
+  deviations from the equal-population principle are constitutionally permissible.''
+\end{quote}
+The Court's acknowledgment that ``integrity of various political subdivisions'' is a
+legitimate consideration is the constitutional anchor for zone co-membership weights.
+Counties, municipalities, townships, and school districts are all political subdivisions
+in the constitutional sense; the zone co-membership score directly measures how many
+such subdivisions two tracts share.
+
+\subsection{School District Integrity and Milliken v.\ Bradley}
+
+\textit{Milliken v.\ Bradley}, 418 U.S.\ 717 (1974)~\citep{milliken1974},
+arose from a desegregation case in the Detroit metropolitan area.
+The Supreme Court declined to order a cross-district busing remedy absent evidence
+that the school district lines had been drawn for segregatory purposes.
+Justice Stewart's concurrence, joined by the majority, treated school district lines
+as presumptively legitimate community boundaries:
+\begin{quote}
+  ``No single tradition in public education is more deeply rooted than local control
+  over the operation of schools; local autonomy has long been thought essential both
+  to the maintenance of community concern and support for public schools and to
+  quality of the educational process.''
+\end{quote}
+While \textit{Milliken} addressed desegregation remedies rather than legislative
+redistricting directly, its reasoning applies with equal force: school districts
+represent genuine local communities organized around the shared civic enterprise of
+public education, and disrupting school district boundaries imposes real costs on
+those communities.
+
+In the redistricting context, this reasoning supports the proposition that a district
+plan that splits a school district has imposed a cost on a genuine community of
+interest.
+The zone co-membership formula captures this cost by making the cut between
+co-school-district tracts more expensive than the cut between tracts in different
+school districts.
+
+\subsection{The Property Tax Fiscal Bond}
+
+The property tax is the financial foundation of local government in the United States.
+It funds public schools (36\% of school revenue nationally~\citep{nces2022}),
+fire protection, local roads, libraries, and parks.
+More importantly for redistricting purposes, it creates a direct fiscal bond between
+neighbors: two households in the same school district are co-investors in the same
+educational enterprise.
+When the school district calls a bond election to finance a new gymnasium, every
+property owner in the district pays if the measure passes.
+This creates a community of shared fiscal interest that is as tangible and verifiable
+as any community of interest recognized in redistricting law.
+
+The property tax fiscal bond operates through county subdivisions in New England states.
+A Massachusetts town, a Vermont town, or a Connecticut town is the unit that levies
+the local property tax, maintains local roads, operates the town hall, and holds
+the annual town meeting at which residents vote directly on the budget.
+Two census tracts in the same Massachusetts town are co-owners of a civic enterprise
+in a direct and literal sense; tracts split between different towns are not.
+
+Zone co-membership scores naturally capture this fiscal bond.
+In Massachusetts, the county subdivision (town) dimension of the zone score is the
+dominant signal: towns are small, well-defined, and politically salient.
+In North Carolina, the school district dimension is more important: school districts
+are large but cross county boundaries, making them a more meaningful unit than the
+county.
+The formula weights all available zone types equally, which is appropriate because
+the relative importance of zone types varies by state.
+
+\subsection{Electric Utility Rate-Payer Community}
+
+State public utility commission law provides an independent legal foundation for
+electric utility service territory as a community of interest.
+When a utility files a rate case before the public utility commission, all customers
+in the service territory have standing as a class.
+The commission may consolidate customer objections, appoint a consumer advocate,
+and conduct hearings in the service territory.
+The rate-payers of a service territory are, in state regulatory law, a recognized
+interest group with collective legal standing.
+
+This community relationship is reinforced by the exclusive franchise nature of
+electric utility service.
+Unlike school districts, which sometimes overlap or where families can exercise
+choice, electric utility service territories are exclusive: a tract is served by
+exactly one retail electric utility and cannot choose a different provider.
+This exclusivity makes the rate-payer community bond non-voluntary and durable in
+a way that other community memberships are not.
+
+The EIA Form 861 data capturing this bond is collected annually, verified by
+federal statute (Energy Policy Act of 2005), and publicly available at no cost.
+It is the most reliable and uniformly available zone type in the M.6 formula.
+
+\subsection{The Shaw v.\ Reno Neutrality Requirement}
+
+\textit{Shaw v.\ Reno}, 509 U.S.\ 630 (1993)~\citep{shaw1993}, requires that
+race not be the predominant factor in drawing district lines.
+The zone co-membership formula satisfies this requirement because:
+\begin{enumerate}
+  \item No racial composition data enters the zone assignment.
+    Zone membership is determined entirely by the spatial boundaries of school
+    districts, county subdivisions, utility service territories, and other
+    administrative zones.
+    These boundaries are determined by historical administrative decisions,
+    not by racial composition.
+  \item The zone co-membership score does not weight zone types differently based
+    on the racial composition of tract residents.
+    School district co-membership is weighted the same way regardless of whether
+    the tracts are predominantly white or predominantly minority.
+  \item The formula is the same for all tract pairs: $\mathrm{zone\_score}(u,v) =
+    |\text{shared zones}| / |Z|$.
+    There is no race-specific adjustment.
+\end{enumerate}
+
+The fact that administrative zones may correlate with race---as virtually any
+geographic feature does---does not make the zone co-membership signal racially
+motivated under the Shaw-Miller standard.
+The Supreme Court in \textit{Miller v.\ Johnson}, 515 U.S.\ 900 (1995)~\citep{miller1995},
+made clear that the relevant question is whether race was the \emph{predominant factor},
+not whether racial effects existed.
+A zone co-membership weight that happens to preserve majority-minority school
+districts because those districts are genuine administrative communities satisfies
+the constitutional standard.
+
+\subsection{State Commission Acceptance}
+
+Administrative subdivision integrity has been accepted as a communities of interest
+criterion by redistricting commissions in California, Colorado, and Arizona.
+California's Citizens Redistricting Commission has cited school district preservation
+as a specific operationalization of the communities of interest criterion in its
+2011 and 2021 proceedings.
+Colorado's independent commission has used county and municipal integrity as a proxy
+for communities of interest.
+Arizona's IRC has accepted expert testimony about administrative zone co-membership
+as evidence that communities of interest have been preserved.
+
+The zone co-membership formula provides a quantitative, replicable version of the
+qualitative judgments that these commissions have made manually.
+Rather than relying on a commissioner's judgment that ``this neighborhood is clearly
+a community of interest,'' the formula computes a score that any party can verify
+using the same public data.
+This quantitative defensibility is the primary advantage of the zone co-membership
+approach over qualitative community identification.

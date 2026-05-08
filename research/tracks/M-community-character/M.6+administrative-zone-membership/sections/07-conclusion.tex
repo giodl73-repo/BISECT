@@ -1,0 +1,90 @@
+\label{sec:conclusion}
+
+Administrative zone co-membership is the most legally defensible community character
+signal in the M-track, and arguably in the redistricting literature as a whole.
+Its legal defensibility stems not from a geographic or economic inference about
+community membership but from a direct encoding of the administrative relationships
+that courts and commissions have explicitly recognized as communities of interest:
+shared school district, shared fire protection authority, shared water utility,
+shared electric utility, shared county subdivision or town.
+
+The zone co-membership formula is simple, transparent, and verifiable.
+A litigant challenging a map drawn with zone co-membership weights can replicate the
+computation from the same public TIGER/Line and EIA Form 861 data.
+There are no proprietary data sources, no subjective assessments of community identity,
+and no electoral data that could introduce partisan bias.
+The formula treats every zone type identically and every tract pair consistently.
+
+\subsection{Expert Witness Language}
+
+An expert witness testifying about a map drawn with zone co-membership weights can
+use the following template:
+\begin{quote}
+  The district boundaries were placed by an algorithm that minimizes cuts through
+  edges connecting census tracts that share administrative service zones.
+  Specifically, pairs of tracts sharing school district, fire district, water utility,
+  electric utility service territory, and county subdivision boundaries were given
+  twice the standard cut cost, making splits of such communities geometrically
+  costly to the optimization algorithm.
+
+  The zone co-membership score is computed entirely from publicly available data:
+  TIGER/Line shapefiles published by the Census Bureau and Form 861 service territory
+  data published by the Energy Information Administration.
+  No electoral data, no racial composition data, and no incumbency information enters
+  the computation.
+
+  The result is that tracts sharing the same school district are much less likely to
+  be placed in different congressional districts than they would be under a standard
+  geographic weight scheme.
+  [For NC-14: no pair of tracts sharing school district, fire district, water utility,
+  and electric utility was split across different districts.]
+  This outcome is consistent with the communities of interest doctrine as articulated
+  in \textit{Reynolds v.\ Sims} and as codified in [applicable state law].
+\end{quote}
+
+\subsection{Relationship to M.0 and M.8}
+
+M.6 is one instantiation of the general community character framework established
+in M.0.
+The zone co-membership formula is not the same as cosine similarity of character
+vectors, but it satisfies the same mathematical properties and plugs into the
+same edge weight modifier interface.
+When the M.8 composite community index combines all M-track signals, zone co-membership
+will be one dimension of the composite, weighted by the plan configuration's
+\texttt{zone\_alpha} parameter.
+The composite index allows a plan designer to emphasize zone co-membership
+(perhaps for a commission that has explicitly listed administrative zone integrity
+as its primary community criterion) or to blend it with economic character,
+housing character, and commuting shed signals for a more holistic community
+definition.
+
+\subsection{Limitations}
+
+The zone co-membership formula has three limitations worth acknowledging:
+\begin{enumerate}
+  \item \textbf{Centroid assignment.}
+    The spatial join assigns each tract to one zone per type based on the tract
+    centroid.
+    Tracts that straddle zone boundaries will be misassigned, potentially
+    underestimating co-membership.
+    Future work using areal interpolation at the block level would improve accuracy.
+  \item \textbf{Incomplete coverage for fire and water districts.}
+    The formula degrades gracefully when fire and water district data is unavailable,
+    but the degraded formula (with $|Z| = 3$) distinguishes only between
+    co-zone and non-co-zone tracts without the granularity provided by
+    full zone coverage.
+  \item \textbf{Static zone boundaries.}
+    Administrative zone boundaries change over time (school district consolidations,
+    utility mergers, municipal annexations).
+    The formula uses zone boundaries from the most recent TIGER/Line release,
+    which may not reflect changes made between census years.
+    This is a known limitation shared by all redistricting algorithms that use
+    administrative boundaries.
+\end{enumerate}
+
+Despite these limitations, zone co-membership provides a more legally grounded and
+more verifiable community of interest signal than any qualitative assessment of
+neighborhood identity.
+It translates a phrase that courts have long recognized---``communities of interest''---into
+a formula that courts can verify, litigants can replicate, and redistricting
+algorithms can enforce.

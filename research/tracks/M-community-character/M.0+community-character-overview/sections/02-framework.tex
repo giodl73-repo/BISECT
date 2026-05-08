@@ -1,0 +1,125 @@
+\label{sec:framework}
+
+\subsection{Character Vectors}
+
+Let $\mathcal{T}$ denote the set of census tracts in the state under redistricting.
+For each tract $t \in \mathcal{T}$, we define a \emph{community character vector}
+\begin{equation}
+  \mathbf{c}(t) = \bigl(c_1(t),\, c_2(t),\, \ldots,\, c_k(t)\bigr) \in \mathbb{R}^k_{\geq 0},
+  \label{eq:char-vector}
+\end{equation}
+where each coordinate $c_i(t)$ is a non-negative real-valued signal derived from
+publicly available, partisan-neutral data.
+The number of dimensions $k$ depends on which signals are active for the given plan
+configuration; any subset of M.1--M.7 may contribute one or more dimensions.
+We require only that each $c_i(t) \geq 0$ and that the vector is defined for every
+tract with nonzero population.
+
+\subsection{Cosine Similarity}
+
+Given two adjacent tracts $u, v \in \mathcal{T}$, their community similarity is
+\begin{equation}
+  \mathrm{sim}(\mathbf{c}_u, \mathbf{c}_v)
+  \;=\;
+  \frac{\mathbf{c}_u \cdot \mathbf{c}_v}{\|\mathbf{c}_u\| \, \|\mathbf{c}_v\|}
+  \;\in\; [0,\, 1],
+  \label{eq:cosine-sim}
+\end{equation}
+where the dot product and norms are the standard Euclidean ones.
+Because all character vector coordinates are non-negative, the cosine similarity is
+always in $[0,1]$; negative similarity---which would arise from negative character
+signals and would have no natural interpretation---is impossible by construction.
+
+Cosine similarity measures the \emph{orientation} of the character vectors rather
+than their magnitude.
+This choice is deliberate: two tracts that are economically active in the same mix of
+industries should be recognized as similar whether one is a large urban tract and
+the other is a small suburban one.
+Scaling by population or area is not done at the similarity level; if population
+weighting is desired for a particular signal, it enters $c_i(t)$ before the similarity
+computation, not after it.
+
+\subsection{Edge Weight Modifier}
+
+Let $G = (\mathcal{T}, E)$ be the tract adjacency graph, where an edge
+$(u,v) \in E$ exists when tracts $u$ and $v$ share a boundary of positive length
+(zero-length point adjacencies are excluded).
+The \textsc{bisect} platform assigns each edge a base weight $w_{\mathrm{base}}(u,v)$
+determined by the active base weight mode (geographic boundary length, county
+co-membership, or unweighted).
+The community character modifier replaces or augments that base weight as
+\begin{equation}
+  w(u,v) \;=\; w_{\mathrm{base}}(u,v) \;\times\; \mathrm{sim}(\mathbf{c}_u, \mathbf{c}_v).
+  \label{eq:weight-modifier}
+\end{equation}
+When $\mathrm{sim}(\mathbf{c}_u, \mathbf{c}_v) = 1$ (identical character vectors),
+the weight is unchanged from $w_{\mathrm{base}}$.
+When $\mathrm{sim}(\mathbf{c}_u, \mathbf{c}_v) = 0$ (orthogonal character vectors,
+meaning completely different community profiles), the edge weight collapses to zero,
+making the cut between those tracts free.
+Intermediate similarities yield intermediate weights.
+
+\subsection{Mathematical Properties}
+
+\paragraph{Symmetry.}
+$\mathrm{sim}(\mathbf{c}_u, \mathbf{c}_v) = \mathrm{sim}(\mathbf{c}_v, \mathbf{c}_u)$
+for all pairs $(u,v)$, since the dot product is symmetric.
+Consequently $w(u,v) = w(v,u)$, which METIS requires: undirected graphs have
+symmetric edge weights.
+
+\paragraph{Non-negativity.}
+$\mathrm{sim}(\mathbf{c}_u, \mathbf{c}_v) \geq 0$ whenever
+$\mathbf{c}_u, \mathbf{c}_v \in \mathbb{R}^k_{\geq 0}$, since the dot product of
+two non-negative vectors is non-negative.
+METIS requires non-negative integer edge weights; the implementation rounds
+$w(u,v)$ to the nearest positive integer after scaling, with a minimum value of $1$.
+
+\paragraph{Graceful degradation.}
+If all tracts have identical character vectors---formally, if
+$\mathbf{c}(t) = \mathbf{c}$ for all $t$---then
+$\mathrm{sim}(\mathbf{c}_u, \mathbf{c}_v) = 1$ for all edges, and
+$w(u,v) = w_{\mathrm{base}}(u,v)$ for all edges.
+The community character modifier does not change the plan at all when there is no
+character variation to exploit.
+This ensures that the framework introduces no distortion in states where the chosen
+signal has no geographic variation.
+
+\paragraph{Degenerate case: zero vector.}
+If a tract $t$ has $\mathbf{c}(t) = \mathbf{0}$---for example, because no workers
+reside in a tract that is entirely commercial---the cosine similarity is undefined.
+The implementation handles this by substituting $\mathrm{sim} = 1$ (treat as identical
+to any neighbor), which is conservative: it does not create a free cut but also does
+not create an artificially strong bond.
+
+\subsection{Well-Definedness of the Similarity}
+
+Cosine similarity is undefined when either vector is the zero vector.
+A tract with zero character in all dimensions is a tract that the available data
+cannot characterize; it should not bias the partitioner in either direction.
+The substitution $\mathrm{sim} = 1$ for zero-vector tracts is equivalent to treating
+such tracts as perfectly similar to their neighbors in the character dimension,
+leaving their cut costs governed entirely by the base weight mode.
+
+Additionally, for the administrative zone co-membership signal (M.6), similarity is
+not cosine-based but ratio-based (fraction of zones shared); see M.6 for the precise
+formula.
+The zone co-membership formula satisfies symmetry, $[0,1]$ range, and graceful
+degradation independently, and is a valid plug-in replacement for
+$\mathrm{sim}(\mathbf{c}_u, \mathbf{c}_v)$ in equation~(\ref{eq:weight-modifier}).
+
+\subsection{Invariants for Implementation}
+
+Any correct implementation of the framework must satisfy:
+\begin{itemize}
+  \item \texttt{similarity\_symmetric}: $\mathrm{sim}(u,v) = \mathrm{sim}(v,u)$
+    for all adjacent tract pairs.
+  \item \texttt{similarity\_self\_is\_one}: $\mathrm{sim}(u,u) = 1.0$ for all
+    tracts $u$ (a tract is perfectly similar to itself).
+  \item \texttt{weight\_stays\_nonneg}: $w(u,v) \geq 0$ for all edges after
+    blending and rounding.
+  \item \texttt{weight\_bounded\_above}: $w(u,v) \leq 2 \times w_{\mathrm{base}}(u,v)$
+    under the multiplicative formula (since $\mathrm{sim} \leq 1$).
+\end{itemize}
+
+These are L0 unit test invariants checked on every build of the \textsc{bisect}
+crate implementing this framework.

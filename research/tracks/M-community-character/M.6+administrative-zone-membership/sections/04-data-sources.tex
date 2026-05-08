@@ -1,0 +1,185 @@
+\label{sec:data-sources}
+
+All data sources for zone co-membership are free, publicly available from federal agencies,
+and updated at least annually.
+Table~\ref{tab:data-sources} summarizes the six zone types with their sources, formats,
+update frequencies, and coverage.
+
+\begin{table}[ht]
+\centering
+\caption{Zone co-membership data sources by priority. Coverage refers to the
+  fraction of US states for which usable data exists. TIGER/Line and EIA
+  Form 861 are the primary sources; all are free and public.}
+\label{tab:data-sources}
+\small
+\begin{tabularx}{\textwidth}{@{}p{2.4cm}Xp{1.8cm}p{1.2cm}p{1.2cm}@{}}
+\toprule
+\textbf{Zone Type} & \textbf{Source / URL Pattern} & \textbf{Format} & \textbf{Update} & \textbf{Coverage} \\
+\midrule
+School district
+  & TIGER/Line SCHOOLDISTRICT shapefile, census.gov/geo/
+  & Shapefile
+  & Annual
+  & 100\% \\
+County subdivision
+  & TIGER/Line COUSUB shapefile, census.gov/geo/
+  & Shapefile
+  & Annual
+  & 100\% \\
+Electric utility territory
+  & EIA Form 861 + HIFLD, eia.gov/electricity/data/eia861/
+  & ZIP+Shapefile
+  & Annual
+  & 100\% \\
+Fire district
+  & TIGER/Line Special District (code 21), census.gov/geo/
+  & Shapefile
+  & Annual
+  & $\sim$60\% \\
+Water/sewer district
+  & TIGER/Line Special District (codes 22--29), census.gov/geo/
+  & Shapefile
+  & Annual
+  & $\sim$40\% \\
+Police precinct
+  & City/county GIS portals (no national source)
+  & Varies
+  & Varies
+  & $\sim$30\% \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{TIGER/Line School Districts}
+
+The Census Bureau's TIGER/Line program publishes annual school district shapefiles
+in three layers~\citep{census2020tiger}:
+\begin{itemize}
+  \item \textbf{Unified school districts} (UNSD): districts that provide both
+    elementary and secondary education.
+  \item \textbf{Elementary school districts} (ELSD): districts providing only
+    elementary education.
+  \item \textbf{Secondary school districts} (SCSD): districts providing only
+    secondary education.
+\end{itemize}
+For census tracts in states where elementary and secondary functions are split
+between different districts (as in parts of California, New Jersey, and New York),
+co-membership is computed separately for each layer and averaged.
+In states with unified districts (the majority), only the UNSD layer is needed.
+
+The TIGER/Line school district shapefiles are published at
+\url{https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html}
+in both ESRI Shapefile and GeoJSON formats, with vintage years matching each decennial
+census.
+School district boundaries are stable between census years but change following
+redistricting decisions by local school boards, which may trigger updates in the
+annual TIGER/Line release.
+
+\subsection{TIGER/Line County Subdivisions}
+
+County subdivisions (COUSUB) are the Census Bureau's primary administrative unit
+below the county level~\citep{census2020tiger}.
+In New England states (Connecticut, Maine, Massachusetts, New Hampshire, Rhode Island,
+Vermont), county subdivisions correspond to towns, which are the primary property
+tax-levying unit.
+In the Midwest (Michigan, Minnesota, Wisconsin, Indiana, and parts of Ohio, Kansas,
+and the Dakotas), county subdivisions correspond to townships.
+In the South and West, county subdivisions are less administratively meaningful (in
+many southern counties they are simply ``census county divisions'' with no governmental
+function), but they still provide a useful geographic unit for community co-membership
+purposes.
+
+COUSUB shapefiles are available from the same TIGER/Line distribution as school
+district shapefiles, with 100\% national coverage.
+
+\subsection{EIA Form 861 Electric Utility Service Territories}
+
+The Energy Information Administration's Form 861 Annual Electric Power Industry Report
+collects data from all electric utilities operating in the United States~\citep{eia861}.
+The associated service territory shapefiles are available as a free annual ZIP
+download from \url{https://www.eia.gov/electricity/data/eia861/}.
+
+The EIA data covers all investor-owned utilities, municipal utilities, rural electric
+cooperatives, and power marketing authorities.
+Coverage is 100\% of US territory: every square meter of the contiguous United States
+is served by exactly one retail electric utility (with the exception of small tribal
+lands in a few states).
+
+The HIFLD (Homeland Infrastructure Foundation-Level Data) Electric Retail Service
+Territories dataset provides an alternative aggregation of the same EIA data at
+\url{https://hifld-geoplatform.opendata.arcgis.com/datasets/electric-retail-service-territories}.
+Both sources are updated annually and are equivalent for zone co-membership purposes.
+
+\subsection{TIGER/Line Special Districts --- Fire and Water}
+
+TIGER/Line Special Districts (the UNSD shapefile with type codes) include fire
+protection districts (code 21) and various water and wastewater district types
+(codes 22--29, covering water authorities, combined water/sewer, irrigation, and
+drainage districts)~\citep{census2020tiger}.
+Coverage for fire district data is approximately 60\% of states; water and sewer
+district coverage is approximately 40\%.
+
+The 60\% fire district coverage is not uniform: states in the Southeast (Georgia,
+Alabama, Mississippi) and parts of the Midwest often rely on county or municipal
+fire departments rather than special districts, and therefore have no TIGER/Line
+fire district data.
+Western states (California, Colorado, Oregon, Nevada, Washington) have extensive
+fire district coverage.
+The M.6 implementation checks for fire district data availability at the state level
+before including it in $Z$.
+
+\subsection{Police Precincts (Fallback to County)}
+
+Municipal police precincts are available from city and county GIS portals for
+approximately 30\% of the US population by coverage area.
+There is no national data source for police precincts; the TIGER/Line program does
+not maintain a precinct layer.
+
+The M.6 implementation uses a two-level fallback:
+\begin{enumerate}
+  \item If a city GIS portal provides a precinct shapefile for the urbanized area
+    containing the tract, use it.
+  \item Otherwise, use county co-membership as a proxy for law enforcement co-membership
+    (in rural areas, the county sheriff provides primary policing).
+\end{enumerate}
+Because county co-membership is already captured by the county subdivision dimension
+(in states where county = county subdivision) or by county FIPS code directly,
+this fallback does not introduce any new data source; it reuses existing county
+boundary data.
+
+\subsection{Spatial Join Implementation}
+
+Zone assignment is performed by a centroid-in-polygon spatial join.
+For each census tract:
+\begin{enumerate}
+  \item Compute the tract centroid (latitude/longitude of the population-weighted
+    centroid from the TIGER/Line TRACT shapefile's INTPTLAT/INTPTLON fields).
+  \item For each zone type $z$ in $Z$, find the polygon in the zone shapefile that
+    contains the centroid and record its identifier.
+  \item Store the zone assignment as a vector of identifiers for the tract.
+\end{enumerate}
+The spatial join is implemented using the Rust \texttt{geo} crate with a spatial
+index (R-tree) for efficiency.
+For a typical state with 1,000--5,000 tracts and six zone types, the spatial join
+completes in under one second.
+
+\subsection{Handling Zone Boundary Tracts}
+
+Census tracts are designed by the Census Bureau to align with administrative boundaries
+wherever possible~\citep{census2020tiger}.
+In practice, however, some tracts straddle zone boundaries---particularly when zone
+boundaries change between decennial censuses and tract boundaries have not been
+updated to match.
+For such tracts, the centroid assignment may place the tract in a zone that covers
+only a minority of its population.
+
+The implementation does not attempt to split tracts; it assigns each tract to exactly
+one zone per zone type, determined by centroid.
+Future work could improve accuracy by using areal interpolation (assigning the zone
+that covers the largest fraction of tract area or population) or by aggregating to
+block groups where tract-level ambiguity is detected.
+For the current implementation, centroid assignment provides a conservative
+approximation that errs on the side of underestimating co-membership (some tract
+pairs will be assigned to different zones when their populations are mostly in the
+same zone), which makes the zone co-membership signal conservative rather than
+aggressive.

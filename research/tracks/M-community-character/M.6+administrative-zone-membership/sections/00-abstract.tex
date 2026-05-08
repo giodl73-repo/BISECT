@@ -1,0 +1,34 @@
+Two households in the same school district, fire district, water utility, and electric
+utility service territory are members of the same community in every administratively
+meaningful sense.
+They pay property taxes together, vote on the same bond measures, and receive services
+from the same institutions.
+This paper proposes \emph{administrative zone co-membership} as the strongest single
+community character signal for redistricting edge weights, and provides a complete
+specification of the formula, data pipeline, and legal grounding.
+
+The zone co-membership score is defined as the fraction of available zone types
+that two adjacent census tracts share:
+$\mathrm{zone\_score}(u,v) = |\{z \in Z : \mathrm{zone}_z(u) = \mathrm{zone}_z(v)\}| \,/\, |Z|$.
+This score modifies the METIS edge weight as
+$w(u,v) = w_{\mathrm{base}} \times (1 + \alpha \times \mathrm{zone\_score}(u,v))$,
+making cuts through administratively co-membered tract pairs geometrically costly.
+
+Six zone types are considered: school district, county subdivision (town/township/borough),
+electric utility service territory, fire district, water/sewer district, and police precinct.
+School district, county subdivision, and electric utility service territory provide 100\%
+national coverage; fire and water districts cover approximately 60\% and 40\% of states,
+respectively.
+The algorithm degrades gracefully when zone types are unavailable: $|Z|$ is computed
+over available types only.
+
+The legal grounding draws on the property tax fiscal bond doctrine established in
+\textit{Milliken v.\ Bradley} (1974) and \textit{Reynolds v.\ Sims} (1964),
+as well as state utility commission recognition of electric utility rate-payer
+communities and the extensive redistricting literature on school district preservation.
+Zone co-membership is the most court-defensible community signal in the M-track
+because it encodes the administrative relationships that courts have explicitly
+recognized as communities of interest, rather than inferring community membership
+from economic or geographic similarity.
+Empirical validation of the algorithm's effect on NC-14 district plans and New England
+town integrity is deferred to post-implementation runs.

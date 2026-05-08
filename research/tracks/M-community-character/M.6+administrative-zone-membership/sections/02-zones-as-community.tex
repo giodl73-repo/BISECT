@@ -1,0 +1,133 @@
+\label{sec:zones-as-community}
+
+The United States has, by Census Bureau count, approximately 90,000 governmental
+units~\citep{census2017govts}.
+These range from the federal government and fifty states at the top to more than
+35,000 special districts---school districts, fire districts, water districts, utility
+districts, mosquito abatement districts, hospital districts---at the bottom.
+For census tracts, the most relevant administrative zones are those that directly
+shape the daily civic and fiscal experience of residents.
+We consider six zone types, described below in order of their legal and fiscal
+significance.
+
+\subsection{School Districts}
+
+School districts are the single most politically salient local administrative boundary
+for families with children.
+The school district determines which school a child attends, the quality of that
+education, and the property tax levy that funds it.
+In the 2019--2020 school year, local property taxes provided approximately 36\% of
+all public school revenue in the United States, with the exact fraction varying
+sharply by state and district~\citep{nces2022}.
+School district bond elections mobilize voter participation at rates comparable to
+presidential primaries in many suburban jurisdictions.
+Parents organize, advocate, and vote as members of their school district community.
+
+From a redistricting perspective, placing tracts from the same school district in
+different legislative districts fractures the school's political constituency.
+A school principal seeking support for a bond measure or capital improvement project
+can no longer turn to a single legislative representative; instead, parents must
+navigate multiple elected officials with different priorities and different committee
+assignments.
+This fragmentation is a recognized harm, and expert witnesses in redistricting
+proceedings across California, Colorado, Virginia, and North Carolina have cited
+it as evidence of inadequate communities of interest preservation.
+
+\subsection{County Subdivisions}
+
+County subdivisions---the Census Bureau's term for minor civil divisions, which include
+towns, townships, boroughs, and municipalities---are the primary property tax-levying
+unit in New England and the Midwest.
+In the six New England states (Connecticut, Maine, Massachusetts, New Hampshire,
+Rhode Island, Vermont) and in several Midwestern states (Michigan, Minnesota, Wisconsin,
+Indiana), the town or township is the governmental unit that levies the property tax,
+maintains local roads, operates the local cemetery, and in some cases provides fire
+and police protection.
+The county in these states is a secondary administrative unit with limited powers.
+
+The ``town meeting''---the annual gathering at which residents of a New England town
+vote directly on the municipal budget, zoning bylaws, and capital expenditures---is
+the oldest continuously operating democratic institution in the United States.
+A census tract placed in the same congressional district as the rest of its town
+can participate collectively in state-level advocacy about the issues the town
+meeting addresses; a census tract split from its town cannot.
+
+In states where the county is the primary unit (most of the South and West),
+county subdivision co-membership is still meaningful as a marker of municipal
+service delivery, but it is less politically central than in New England.
+
+\subsection{Electric Utility Service Territories}
+
+Every square meter of the United States is served by an electric utility, which
+is required to report its service territory to the Energy Information Administration
+on Form 861~\citep{eia861}.
+EIA Form 861 data, supplemented by the Homeland Infrastructure Foundation-Level
+Data (HIFLD) electric utility service territory shapefiles, provides 100\% national
+coverage at no cost.
+
+Rate-payers in the same electric utility service territory are a recognized economic
+community under state public utility commission regulation.
+When a utility seeks a rate increase, it must hold public hearings and notify customers
+in its service territory; those customers have standing to intervene in the regulatory
+proceeding.
+When a utility proposes to build a new power plant or transmission line, it is the
+rate-payers in its service territory who bear the cost and have the right to comment.
+The public utility commission's service territory is, in this sense, a legally
+recognized community of shared economic interest.
+
+Electric utility co-membership is also the most uniformly available zone type:
+unlike school districts (which are relevant primarily to households with children)
+or fire districts (which vary in coverage by state), electric utility co-membership
+affects every resident and every business.
+It is available for every census tract in the United States, making it the most
+reliable zone dimension in the M.6 formula.
+
+\subsection{Fire Districts}
+
+Fire protection districts, or fire protection authorities, are special districts that
+provide fire suppression, emergency medical services, and hazardous materials response.
+They are funded primarily by property taxes levied within the district and, in some
+states, by subscription fees.
+TIGER/Line Special District files identify fire districts with the code 21.
+
+Coverage of fire district data in TIGER/Line is approximately 60\% of states.
+In rural areas, fire protection is frequently provided by volunteer companies organized
+as special districts; in urban areas, fire protection is typically a city or county
+function and does not appear as a separate district.
+The graceful degradation property of the zone co-membership formula ensures that
+the absence of fire district data in a state merely reduces $|Z|$ by one, without
+distorting the score for the other available zone types.
+
+\subsection{Water and Sewer Districts}
+
+Water supply and wastewater treatment districts are among the most numerous special
+districts in the United States.
+They are identified in TIGER/Line Special District files with codes 22 through 29
+(various water and wastewater authority types).
+Coverage is approximately 40\% of states; in many jurisdictions, water service is
+provided by a municipality or county rather than a special district, and therefore
+does not appear in the TIGER/Line special district layer.
+
+Water co-membership is a meaningful community signal where it exists.
+Neighbors who share a water system share a stake in water quality, infrastructure
+replacement schedules, and rate decisions made by the water authority's governing
+board.
+In regions with water scarcity---the Southwest, California's Central Valley---water
+rights and water district governance are among the most contested local political
+issues.
+
+\subsection{Police Precincts}
+
+Police precincts are the most locally variable zone type.
+In cities with municipal police departments, precincts can be obtained from city and
+county GIS portals, but there is no national data source.
+In rural areas, law enforcement is typically a county function (the sheriff's
+department), and the county serves as a fallback unit.
+
+Because of the highly variable data availability, police precincts are the
+lowest-priority zone type in the M.6 formula.
+The algorithm includes precinct co-membership when data is available and substitutes
+county co-membership as a fallback.
+Given the approximately 30\% coverage of municipal precinct data, police precincts
+will frequently not contribute to the zone score, and the formula degrades gracefully
+to the other five zone types.

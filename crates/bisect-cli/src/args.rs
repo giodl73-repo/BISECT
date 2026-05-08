@@ -2980,6 +2980,19 @@ pub enum DataType {
     Geography,
     #[value(name = "elections")]
     Elections,
+    /// LODES WAC (Workplace Area Characteristics) — jobs by NAICS sector per census block.
+    /// Used for M.1 economic character edge weights and B.27.
+    /// Source: Census Bureau LEHD program, https://lehd.ces.census.gov/data/lodes/
+    #[value(name = "lodes")]
+    Lodes,
+    /// TIGER/Line school district shapefiles — used for M.6 zone co-membership weights.
+    /// Source: Census Bureau, https://www.census.gov/geo/maps-data/data/tiger-line.html
+    #[value(name = "school-districts")]
+    SchoolDistricts,
+    /// EIA Form 861 electric utility service territory shapefiles — used for M.6.
+    /// Source: U.S. Energy Information Administration, https://www.eia.gov/electricity/data/eia861/
+    #[value(name = "eia-861")]
+    Eia861,
     #[value(name = "all")]
     All,
 }
@@ -2995,7 +3008,8 @@ pub struct FetchArgs {
     #[arg(long = "states", num_args = 0.., value_delimiter = ' ')]
     pub states: Vec<String>,
 
-    /// Data types: tiger, redistricting, adjacency, enacted, geography, elections, all [default: all]
+    /// Data types: tiger, redistricting, adjacency, enacted, geography, elections,
+    /// lodes, school-districts, eia-861, all [default: all]
     #[arg(long = "type", num_args = 0.., value_delimiter = ' ')]
     pub data_types: Vec<DataType>,
 
@@ -3023,6 +3037,12 @@ pub struct FetchArgs {
     /// On mismatch: deletes the corrupt file and returns an error.
     #[arg(long)]
     pub verify_downloads: bool,
+
+    /// Seconds to sleep between each download request [default: 1].
+    /// Increase for polite fetching from federal servers (Census, LEHD, EIA).
+    /// Set to 0 only in CI environments with explicit server permission.
+    #[arg(long, default_value_t = 1)]
+    pub polite_delay_secs: u64,
 }
 
 // ---------------------------------------------------------------------------

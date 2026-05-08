@@ -1,0 +1,91 @@
+Consider two census tracts separated by a single road in a mid-sized North Carolina city.
+Both tracts are zoned within the same school district; their children attend the same
+elementary and middle schools.
+Both tracts are served by the same volunteer fire company, which they co-fund through
+a special district property tax.
+Their water and sewer service comes from the same municipal utility, and they purchase
+electricity from the same electric cooperative at the same rates, subject to the same
+state public utility commission.
+In what sense are these two tracts \emph{not} members of the same community?
+
+Administrative zone co-membership answers this question with precision.
+The six major zone types that structure civic life in the United States---school
+districts, county subdivisions, electric utility service territories, fire districts,
+water and sewer districts, and police precincts---are not arbitrary bureaucratic
+categories.
+They represent the actual administrative units through which residents exercise
+collective decisions about taxation, infrastructure, public safety, and education.
+Two tracts that are co-members of many zone types share not just a neighborhood
+but a civic fate: they vote on the same measures, receive the same services, and
+bear the same tax burdens.
+This is the strongest possible administrative definition of a community of interest.
+
+\subsection{Redistricting and Administrative Zone Splitting}
+
+When a redistricting plan splits a school district---placing some tracts in one
+congressional or legislative district and other tracts of the same school district
+in a different one---it separates neighbors who share a fiscal and civic unit.
+Parents in the same school district who are represented by different legislators
+have a harder time advocating for school funding as a unified bloc.
+Fire district splitting creates the anomaly of a fire station that responds to
+calls in two different legislative districts with potentially different levels of
+fire code enforcement or public safety appropriations.
+
+School district splitting is a recognized harm in redistricting litigation.
+Expert witnesses and commission staff have cited school district integrity as a
+community of interest criterion in proceedings across California, Colorado, Arizona,
+Virginia, and North Carolina.
+The Brennan Center's best-practices guide for redistricting commissions lists
+school district preservation as a concrete operationalization of the communities
+of interest criterion~\citep{levitt2011guide}.
+
+Yet despite this recognition, no prior redistricting algorithm has incorporated
+school district co-membership (or any other administrative zone type) directly
+into its edge weight computation.
+The \textsc{bisect} system's three-layer compositor provides the infrastructure
+for exactly this capability: Layer 2 (edge weights) can be overridden with any
+function of the tract adjacency graph, including the zone co-membership score
+defined in this paper.
+
+\subsection{Contribution}
+
+This paper makes four contributions:
+\begin{enumerate}
+  \item \textbf{Zone co-membership formula}: We define the zone co-membership
+    score and edge weight modifier precisely, with full specification of the
+    graceful degradation behavior when zone data is partially unavailable
+    (\S\ref{sec:formula}).
+  \item \textbf{Data pipeline}: We identify and document the six data sources
+    for zone co-membership in order of coverage priority, with URLs, formats,
+    update frequencies, and availability statistics
+    (\S\ref{sec:data-sources}).
+  \item \textbf{Legal analysis}: We ground the zone co-membership criterion
+    in the property tax fiscal bond doctrine and in the court cases that
+    recognize administrative subdivision integrity as a legitimate redistricting
+    consideration (\S\ref{sec:legal}).
+  \item \textbf{Experimental design}: We specify the experiments that will
+    validate the algorithm's empirical effect once implementation is complete,
+    including NC-14 school district preservation, WI fire district clustering,
+    and New England town integrity (\S\ref{sec:experimental-design}).
+\end{enumerate}
+
+\subsection{Relationship to M.0}
+
+This paper is an instantiation of the community character framework defined in
+M.0~\citep{m0framework}.
+M.0 established the general form $w(u,v) = w_{\mathrm{base}} \times \mathrm{sim}(\mathbf{c}_u, \mathbf{c}_v)$.
+M.6 replaces cosine similarity with the zone co-membership ratio formula, which
+satisfies the same mathematical properties (symmetry, $[0,1]$ range, graceful
+degradation) but is more directly interpretable for legal purposes: it counts
+shared administrative relationships rather than computing a geometric angle between
+character vectors.
+
+\subsection{Paper Organization}
+
+Section~\ref{sec:zones-as-community} motivates administrative zones as community
+signals.
+Section~\ref{sec:formula} defines the zone co-membership score and edge weight modifier.
+Section~\ref{sec:data-sources} documents all data sources.
+Section~\ref{sec:legal} provides the legal grounding.
+Section~\ref{sec:experimental-design} describes the deferred empirical validation.
+Section~\ref{sec:conclusion} concludes with an expert witness template.

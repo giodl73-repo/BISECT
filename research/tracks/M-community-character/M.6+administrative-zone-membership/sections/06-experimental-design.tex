@@ -1,0 +1,136 @@
+\label{sec:experimental-design}
+
+Empirical validation of the zone co-membership algorithm requires downloading
+TIGER/Line and EIA Form 861 shapefiles, performing the spatial join to assign
+zone membership to census tracts, and running \textsc{bisect} with the
+\texttt{--weights-override zone-membership} flag.
+These data are not yet downloaded and the implementation is not yet deployed;
+this section documents the experimental design so that when the data becomes
+available, the validation protocol is established.
+
+\subsection{States Selected for Validation}
+
+Three states are selected for initial validation based on the quality and coverage
+of their zone data:
+
+\begin{itemize}
+  \item \textbf{North Carolina (NC)}: NC-14 (14 congressional districts) provides
+    a well-studied redistricting case with extensive baseline results from earlier
+    \textsc{bisect} runs.
+    North Carolina has complete school district data in TIGER/Line (unified school
+    districts covering all 100 counties) and good fire district coverage.
+    NC is also a contested redistricting state, making it a high-priority validation
+    target.
+  \item \textbf{Wisconsin (WI)}: WI-8 (8 congressional districts) provides a
+    mid-sized test case.
+    Wisconsin has township-level county subdivision data (the town is a meaningful
+    administrative unit in Wisconsin) and good fire district coverage.
+  \item \textbf{Massachusetts (MA)}: MA-9 (9 congressional districts) provides the
+    strongest test of the county subdivision dimension, because Massachusetts towns
+    are the primary property tax-levying unit.
+    Town integrity is a highly salient community criterion in Massachusetts, making
+    it a natural ground truth for zone co-membership effects.
+\end{itemize}
+
+\subsection{Metrics}
+
+\subsubsection{School District Preservation Rate}
+
+The school district preservation rate is defined as the fraction of school district
+pairs $(D_i, D_j)$ such that $D_i = D_j$ and both tracts end up in the same
+redistricting district.
+More precisely, for each pair of adjacent census tracts $(u, v)$ with
+$\mathrm{zone}_{\text{school}}(u) = \mathrm{zone}_{\text{school}}(v)$, the pair
+is \emph{preserved} if $\mathrm{district}(u) = \mathrm{district}(v)$.
+The preservation rate is the fraction of such adjacent co-school-district pairs that
+are preserved.
+
+A preservation rate of 100\% would mean that no two tracts in the same school district
+were split across different redistricting districts.
+A preservation rate of 0\% would mean that every adjacent co-school-district pair
+was split.
+Geographic baseline (standard-bisect) preservation rates for NC, WI, and MA will be
+measured first; the zone co-membership mode should produce strictly higher preservation
+rates.
+
+\subsubsection{School District Boundary Crossing Count}
+
+The school district boundary crossing count is the total number of edges $(u, v) \in E$
+in the final partition where:
+\begin{enumerate}
+  \item Tracts $u$ and $v$ are assigned to different redistricting districts, AND
+  \item $\mathrm{zone}_{\text{school}}(u) \neq \mathrm{zone}_{\text{school}}(v)$.
+\end{enumerate}
+This metric counts cuts at school district boundaries specifically.
+Under the L0 test invariant \texttt{school\_district\_split\_never\_increases},
+this count must be $\leq$ the count produced by geographic weights.
+The empirical claim in the M.6 spec is that the count is $\leq 20\%$ of the geographic
+weight count for NC-14.
+
+\subsubsection{Compactness Change}
+
+Zone co-membership weights may trade compactness for administrative coherence.
+If zone boundaries follow roads and natural features (as they typically do), zone
+co-membership cuts should be at least as compact as geographic cuts.
+If zone boundaries cross irregular terrain, zone co-membership weights may produce
+slightly less compact districts.
+The Polsby-Popper and Reock compactness scores will be computed for all districts
+under both weight modes (geographic baseline and zone-membership), and the mean
+and standard deviation of the change will be reported.
+The hypothesis is that zone-membership weights produce no statistically significant
+compactness degradation, because administrative boundaries tend to follow the same
+roads and rivers that are natural shape boundaries.
+
+\subsubsection{Proportionality Gap}
+
+The proportionality gap measures the difference between a party's expected seat share
+and its statewide vote share.
+Zone co-membership weights are partisan-neutral by construction, but they may
+nonetheless affect the proportionality gap if partisan registration is geographically
+correlated with administrative zone membership (e.g., if school district boundaries
+align with partisan patterns).
+The proportionality gap will be computed for NC, WI, and MA under both weight modes
+to document whether zone co-membership weights introduce or reduce partisan bias
+compared to the geographic baseline.
+No hypothesis is stated for this metric: it is reported for transparency, not as a
+validation criterion.
+
+\subsection{Comparison Protocol}
+
+All experiments run using the same configuration except for the weight mode:
+\begin{verbatim}
+bisect state --state NC --year 2020 \
+  --structure prime-factor \
+  --search convergence \
+  --weights-override geographic \
+  --version v_geo_baseline
+
+bisect state --state NC --year 2020 \
+  --structure prime-factor \
+  --search convergence \
+  --weights-override zone-membership \
+  --version v_zone_m6
+\end{verbatim}
+
+The convergence search strategy (seed search until $T = 600$ seconds) is used
+for both to ensure that the comparison is not confounded by seed selection.
+Both runs use the 2020 census year and the prime-factor bisection structure,
+consistent with the platform defaults.
+
+\subsection{New England Town Integrity}
+
+For Massachusetts, an additional metric specific to New England is computed:
+\textbf{town integrity}, defined as the fraction of Massachusetts towns that are
+entirely contained within a single redistricting district.
+Under geographic weights, small towns in densely populated areas are frequently
+split across districts.
+Under zone co-membership weights, the county subdivision dimension should strongly
+incentivize keeping towns whole.
+The target from the M.6 spec is that $\geq 95\%$ of Massachusetts towns remain
+whole in $\geq 95\%$ of zone-membership runs.
+
+This metric has direct legal relevance for Massachusetts redistricting: the
+Massachusetts Constitution (Part II, Ch. 1, \S3) has historically been interpreted
+to require preservation of town boundaries in legislative redistricting.
+The town integrity metric thus doubles as a statutory compliance check for
+Massachusetts legislative district plans.
