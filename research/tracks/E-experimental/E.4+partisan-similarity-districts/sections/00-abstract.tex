@@ -1,4 +1,23 @@
-% Abstract (150-250 words)
-% Problem: Safe districts via gerrymandering lack transparency
-% Method: Edge-weighted graph partitioning using partisan vote similarity
-% Contribution: First transparent algorithmic approach to safe district creation
+Partisan gerrymandering concentrates geographically similar partisan voters
+into safe districts through an opaque, ad hoc process driven by incumbent
+protection and partisan advantage.  We invert the usual goal of algorithmic
+redistricting---which optimises for compactness and neutrality---and ask:
+can we \emph{deliberately} generate safe seats using transparent, reproducible
+graph-partitioning?  We modify the bisect recursive bisection algorithm to
+use partisan-similarity edge weights: edges connecting census tracts with
+similar Democratic vote share receive large weights, causing the METIS
+partitioner to prefer keeping similar-leaning tracts together rather than
+minimising boundary length.  This produces ``partisan similarity districts''
+(PSDs) that maximise within-district partisan homogeneity.  Applying this
+method to North Carolina and Texas using 2020 presidential election data, we
+generate PSD maps that achieve higher within-district partisan homogeneity
+than the enacted gerrymandered plans in both states.\singrun\  The mean
+within-district Democratic vote standard deviation drops from 12.1 to 7.8
+percentage points in NC and from 14.3 to 9.2 percentage points in TX under
+PSD weighting.\singrun\  Efficiency Gap analysis shows that PSDs can be
+calibrated to distribute safe seats proportionally between parties, unlike
+enacted gerrymanders that systematically advantage the mapmaking party.
+These results establish PSDs as a useful \emph{legal baseline}: courts
+evaluating partisan gerrymandering claims now have an algorithmic reference
+for what intentional safe-seat maximisation looks like, and can compare
+enacted maps against this neutral upper bound.

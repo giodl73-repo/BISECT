@@ -1,52 +1,59 @@
 \documentclass[12pt]{article}
 
 % Packages
+\usepackage[utf8]{inputenc}
 \usepackage[margin=1in]{geometry}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
-\usepackage{hyperref}
 \usepackage{booktabs}
+\usepackage{caption}
 \usepackage{subcaption}
+\usepackage{hyperref}
+\usepackage{url}
 \usepackage[sort&compress,numbers]{natbib}
 
+% Dagger notation for single-run empirical claims
+\newcommand{\singrun}{\textsuperscript{\dag}}
+
 % Title
-\title{Multi-Member Districts and Proportional Representation: \\
-       Exploring Alternatives to Single-Member Redistricting}
+\title{Multi-Member Districts via Recursive Bisection:\\
+STV and OLPR Variants}
 
 \author{Giovanni Della-Libera}
 
 \date{\today}
-
-% Venue target
-\newcommand{\venuetarget}{Electoral Studies}
 
 \begin{document}
 
 \maketitle
 
 \begin{abstract}
-% TODO: Fill in abstract
+\input{sections/00-abstract}
 \end{abstract}
+
+\noindent\textbf{Keywords:} multi-member districts, proportional representation,
+single transferable vote, open-list proportional representation,
+recursive bisection, electoral reform, algorithmic redistricting
 
 \section{Introduction}
 \input{sections/01-introduction}
 
-\section{Related Work}
-\input{sections/02-related-work}
+\section{Background}
+\input{sections/02-background}
 
-\section{Methodology}
-\input{sections/03-methodology}
+\section{Algorithm}
+\input{sections/03-algorithm}
 
-\section{Evaluation}
-\input{sections/04-evaluation}
+\section{Results}
+\input{sections/04-results}
 
-\section{Discussion}
-\input{sections/05-discussion}
+\section{Legal Landscape}
+\input{sections/05-legal}
 
 \section{Conclusion}
 \input{sections/06-conclusion}
 
 \bibliographystyle{plainnat}
-\bibliography{../references}
+\bibliography{references}
 
 \end{document}

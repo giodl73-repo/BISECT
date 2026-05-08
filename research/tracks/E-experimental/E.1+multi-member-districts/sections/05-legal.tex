@@ -1,0 +1,79 @@
+\subsection{Constitutional Status of MMDs}
+
+The U.S. Constitution does not require single-member districts for the House
+of Representatives.  Article I, Section 2 requires only that representatives
+be ``chosen every second Year by the People of the several States,'' and
+Section 4 gives Congress power to regulate the ``Time, Places and Manner''
+of elections.  The Constitution is silent on district magnitude.
+
+The statutory requirement for single-member districts derives from 2 U.S.C.
+\S~2c, enacted in its current form in 1967.  This statute reads: ``In each
+State entitled in the Ninety-first Congress or in any subsequent Congress to
+more than one Representative under an apportionment made pursuant to the
+provisions of [the apportionment statutes], there shall be established by
+law a number of districts equal to the number of Representatives to which
+such State is so entitled, and Representatives shall be elected only from
+districts so established.''  This language clearly requires single-member
+districts as a matter of current statutory law.  However, Congress could
+repeal or amend Section 2c.  Bills to do so have been introduced repeatedly
+\citep{fair_rep_act_2019}.
+
+\subsection{Illinois Precedent (1870--1980)}
+
+The most relevant domestic precedent for MMD redistricting is Illinois's
+state legislative system from 1870 to 1980.  Under the Illinois Constitution
+of 1870, the state Senate was elected from single-member districts while the
+House was elected from three-member districts using Cumulative Voting
+\citep{cole2001cumulative}.  Each voter cast three votes, allocable in whole
+or fractional amounts among candidates.
+
+Cumulative Voting in Illinois produced significant minority party
+representation: Republicans routinely won one of three seats in safe
+Democratic Chicago districts, and Democrats won one seat in safe Republican
+downstate districts.  The system was abolished by referendum in 1980
+(the ``Cutback Amendment'') under pressure from a taxpayer revolt seeking to
+reduce the size of the legislature rather than because of dissatisfaction
+with its representative outcomes \citep{cole2001cumulative}.
+
+The Illinois precedent is directly relevant because: (a) it demonstrates
+the constitutional validity of MMDs at the state legislative level; (b) it
+provides 110 years of operational experience with three-member districts in
+an American political context; and (c) the elimination of the system was
+motivated by cost-cutting, not representational failure.
+
+\subsection{Voting Rights Act Implications}
+
+Section 2 of the Voting Rights Act (VRA) prohibits voting practices that
+``result in a denial or abridgement of the right ... to vote on account of
+race or color.''  Under \emph{Thornburg v.\ Gingles} \citep{thornburg1986},
+a Section 2 violation requires showing that (1) the minority group is
+sufficiently large and geographically compact to constitute a majority in a
+single-member district, (2) the minority is politically cohesive, and (3) the
+white majority votes sufficiently as a bloc to defeat minority-preferred
+candidates.
+
+The interaction between MMDs and the VRA is complex.  On one hand, MMDs may
+satisfy VRA requirements without creating majority-minority single-member
+districts: proportional allocation in a 4-member district where minorities
+are 35\% of the population will typically elect 1--2 minority-preferred
+candidates.  On the other hand, \emph{Thornburg}'s ``sufficiently compact''
+prong has been interpreted to require geographic compactness in a
+\emph{single-member} district.  Some courts have held that this prong is
+inapplicable where no single-member structure exists \citep{vra_mmd_review}.
+The law on this point is unsettled.
+
+\subsection{Fair Representation Act}
+
+The Fair Representation Act (FRA), introduced in multiple Congresses by
+Rep.\ Don Beyer and others, would require states with more than one
+congressional seat to use multi-member districts with ranked-choice voting
+(STV) \citep{fair_rep_act_2019}.  The Act would supersede 2 U.S.C.\ \S~2c
+and explicitly authorise districts of 3--5 members.  It would also amend
+the VRA to clarify that minority representation in MMDs satisfies Section 2
+obligations.
+
+The computational framework developed in this paper is directly applicable
+to implementing the FRA: bisect generates the district boundaries, and our
+STV implementation provides the seat-allocation algorithm.  The case studies
+presented here could serve as illustrative plans for congressional testimony
+or commission evaluation.

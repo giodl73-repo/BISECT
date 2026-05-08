@@ -1,0 +1,127 @@
+\subsection{Bisect $k$-Adjustment for MMDs}
+
+The bisect algorithm generates a $k$-partition of a state's census tracts
+into equal-population districts.  For single-member redistricting, $k$ equals
+the number of congressional seats apportioned to the state.  For MMDs, $k$
+is reduced to the number of districts, which is $S / M$ for a uniform-magnitude
+design (where $S$ is total seats and $M$ is seats per district):
+
+\begin{equation}
+  k_{\text{MMD}} = \left\lfloor \frac{S}{M} \right\rfloor
+\end{equation}
+
+For non-divisible cases (e.g., Illinois with $S = 17$, $M = 3$: $k = 5$
+with one district taking 4 seats and four districts taking 3), we implement
+a mixed-magnitude design where the algorithm generates 5 equal-population
+partitions and the seat count per district is assigned post-hoc based on
+population ranking.
+
+The bisect CLI exposes this through the \texttt{--seats-per-district} flag:
+
+\begin{verbatim}
+bisect state --state CA --year 2020 --version E1_mmd4 \
+  --districts 13 --seats-per-district 4 \
+  --balance-tolerance 5.0 --seed 42
+\end{verbatim}
+
+\subsection{Per-District Balance Tolerance}
+
+A critical algorithmic adjustment for MMDs is the balance tolerance.
+Single-member redistricting targets $\pm 0.5\%$ population deviation from
+the ideal district population ($P / k$ where $P$ is state population).  This
+strict tolerance reflects the ``one person, one vote'' constitutional
+standard for congressional districts \citep{wesberry1964}.
+
+For MMDs, the relevant equality standard is \emph{per seat}, not per
+district: equal representation means each seat represents the same number of
+people, regardless of how seats are grouped into districts.  For a $k$-district
+design with $M$ seats per district:
+
+\begin{equation}
+  \text{ideal per seat} = \frac{P}{k \cdot M} = \frac{P}{S}
+\end{equation}
+
+\begin{equation}
+  \text{ideal per district} = M \cdot \frac{P}{S}
+\end{equation}
+
+The tolerance per district is therefore $M$ times the per-seat tolerance.
+If we target $\pm 0.5\%$ per seat, the per-district tolerance is
+$\pm 0.5\% \cdot M$.  For 4-member districts this is $\pm 2.0\%$;
+for 2-member districts, $\pm 1.0\%$.
+
+However, this relaxed tolerance is appropriate for the population balance
+constraint only if the \emph{per-seat} standard is applied when evaluating
+constitutional compliance.  We implement both: the algorithm uses the
+per-district tolerance for feasibility, and we report per-seat deviations
+in our results.
+
+\subsection{METIS Ufactor Scaling}
+
+The METIS partitioner uses an ``imbalance factor'' (ufactor) to control
+population balance at each bisection node.  As described in prior portfolio
+work \citep{dellib2026edgeweighted}, the ufactor must be scaled by district
+count to prevent compounding balance errors at each bisection level.
+
+For MMD generation, the ufactor formula is:
+\begin{equation}
+  \text{ufactor}_{\text{node}} = 1 + \frac{T \cdot M}{k_{\text{node}}}
+\end{equation}
+where $T$ is the per-seat tolerance (0.005 for $\pm 0.5\%$), $M$ is seats
+per district, and $k_{\text{node}}$ is the number of districts in the current
+subtree.  This guarantees cumulative balance error $\leq T \cdot M$ regardless
+of bisection depth.
+
+\subsection{STV Implementation}
+
+We implement the Gregory method of STV \citep{gallagher2011ireland}, which
+uses fractional surplus transfer:
+
+\begin{enumerate}
+  \item Compute Droop quota $Q = \lfloor P / (S+1) \rfloor + 1$.
+  \item Award seats to all candidates with votes $\geq Q$.  Transfer surplus
+        at value $TV = (v_c - Q) / v_c$ applied to all continuing ballots
+        for that candidate.
+  \item If no candidate reaches $Q$, eliminate the candidate with fewest
+        first-preference votes.  Transfer their votes at full value.
+  \item Repeat until all $S$ seats are filled or remaining candidates equal
+        remaining vacancies.
+\end{enumerate}
+
+For simulation purposes (where we do not have individual ranked ballots), we
+use vote-share input: parties receive their seat-proportion of the Droop quota
+from aggregate vote data.  This approximation is standard in comparative
+electoral studies \citep{gallagher1991proportionality} and produces accurate
+seat counts when parties are cohesive.
+
+\subsection{OLPR Implementation}
+
+OLPR seat allocation uses the D'Hondt highest-averages method:
+
+\begin{enumerate}
+  \item For each party $p$ with vote total $v_p$, compute quotients
+        $v_p / (s_p + 1)$ where $s_p$ is the current seat count.
+  \item Award the next seat to the party with the highest quotient.
+  \item Repeat until all $S$ seats are awarded.
+\end{enumerate}
+
+The effective threshold---the minimum vote share needed to win at least one
+seat---is approximately $1/(S+1)$ (Droop quota): 20\% for 4-member districts,
+25\% for 3-member, 33\% for 2-member.
+
+\subsection{Data and Configurations}
+
+We run three state case studies using 2020 census tract data and 2020
+presidential election returns \citep{MEDSL2020}:
+
+\begin{description}
+  \item[California ($S=52$).] Two configurations: $k=13$ districts of 4
+    seats (``CA-4''), and $k=26$ districts of 2 seats (``CA-2'').
+  \item[New Jersey ($S=12$).] Two configurations: $k=4$ districts of 3 seats
+    (``NJ-3''), and $k=6$ districts of 2 seats (``NJ-2'').
+  \item[Illinois ($S=17$).] One configuration: $k=5$ districts with a
+    mixed magnitude (three 3-seat and two 4-seat districts, ``IL-mix'').
+\end{description}
+
+All runs use seed 42, geographic edge-weighting, and the \texttt{single}
+search mode.  Results carry the single-run dagger (\singrun) throughout.

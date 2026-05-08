@@ -1,17 +1,91 @@
-\section{Methodology}
+\subsection{Partisan Similarity Metric}
 
-% 3.1: Partisan Vote Similarity
-% - Data sources (2016/2020 presidential, 2018 midterm)
-% - Similarity metric (absolute difference in vote share)
-% - Edge weight formula: w = exp(-α × |D_vote_i - D_vote_j|)
+For each pair of adjacent census tracts $(u, v)$, we define the partisan
+similarity edge weight as:
+\begin{equation}
+  w_{uv}^{\text{PSD}} = \exp\!\bigl(-\alpha \cdot |D_u - D_v|\bigr)
+  \label{eq:psd-weight-full}
+\end{equation}
+where $D_u \in [0,1]$ is the Democratic share of the two-party presidential
+vote in tract $u$ and $\alpha \geq 0$ is the similarity scaling parameter.
 
-% 3.2: Edge-Weighted Recursive Bisection
-% - METIS configuration
-% - Scaling factor α experiments (1×, 10×, 50×, 100×)
-% - Population balance constraints
+When $\alpha = 0$: $w_{uv}^{\text{PSD}} = 1$ for all edges --- pure
+unweighted partitioning, which serves as the lower bound on partisan
+homogeneity.  As $\alpha$ increases, the weight function penalises
+edges connecting tracts with different partisan leans.  METIS minimises
+total weighted edge cuts, so it prefers to cut edges with small weights (i.e.,
+dissimilar tracts) and preserve edges with large weights (similar tracts).
+The result is districts where all member tracts have similar partisan lean.
 
-% 3.3: Metrics and Analysis
-% - Partisan lean distribution
-% - Safe seat thresholds (D/R+10, D/R+15, D/R+20)
-% - Compactness trade-offs (Polsby-Popper)
-% - Comparison to enacted maps
+Note that equation~\eqref{eq:psd-weight-full} attracts \emph{similar} tracts
+regardless of which party they lean toward.  A heavily Republican tract (e.g.,
+$D_u = 0.30$) will have high similarity weight to another Republican-leaning
+tract ($D_v = 0.35$) and low similarity weight to a Democratic-leaning tract
+($D_v = 0.65$).  The resulting PSD map will contain both heavily Republican
+and heavily Democratic safe districts; the distribution of seat types between
+the parties is determined by geographic sorting, not by the algorithm's
+parameters.
+
+\subsection{Parameter Selection}
+
+We test four values of $\alpha$: 0 (unweighted), 5, 20, and 50.  At $\alpha
+= 5$, a pair of tracts with a 10-percentage-point difference in Democratic
+vote share ($|D_u - D_v| = 0.10$) receives weight $\exp(-5 \cdot 0.10) =
+e^{-0.5} \approx 0.61$, while a pair with a 30-point difference receives
+$e^{-1.5} \approx 0.22$.  At $\alpha = 50$, the same pairs receive weights
+$e^{-5} \approx 0.007$ and $e^{-15} \approx 3 \times 10^{-7}$---near-zero,
+effectively prohibiting the edge from being preserved in the partition.
+
+The transition from ``moderate'' ($\alpha = 5$) to ``strong'' ($\alpha = 20$)
+partisan similarity represents the approximate threshold at which the within-
+district homogeneity benefit exceeds the compactness cost, as measured by
+mean Polsby-Popper.
+
+\subsection{Implementation Details}
+
+PSD weighting is implemented in the bisect \texttt{weights-override} framework
+under the key \texttt{partisan-similarity}.  The edge-weight computation
+requires tract-level partisan data, which is loaded from the election data
+layer alongside census demographics.
+
+\begin{verbatim}
+bisect state --state NC --year 2020 --version E4_psd \
+  --weights-override partisan-similarity \
+  --partisan-alpha 20.0 --seed 42
+\end{verbatim}
+
+The partisan data is the 2020 presidential election results disaggregated to
+census tracts from the MIT Election Data Science Lab \citep{MEDSL2020}.
+
+\subsection{Metrics}
+
+We evaluate PSD maps on four metrics:
+
+\paragraph{Within-district partisan standard deviation ($\sigma_D$).}
+For each district, compute the standard deviation of tract-level Democratic
+vote shares weighted by tract population.  A lower $\sigma_D$ indicates a
+more homogeneous district.  We report the mean $\sigma_D$ across all districts
+in the map.
+
+\paragraph{Safe seat count.}
+The number of districts where the district-level Democratic vote share exceeds
+60\% (safe Democratic) or falls below 40\% (safe Republican).  We report
+counts separately for each party.
+
+\paragraph{Efficiency Gap (EG).}
+Computed as described in Section~2, using 2020 presidential election results
+as the vote-share input.
+
+\paragraph{Polsby-Popper compactness (PP).}
+Mean Polsby-Popper across all districts, as a measure of the compactness cost
+of PSD weighting.
+
+\subsection{States}
+
+We apply PSD weighting to North Carolina ($k=14$) and Texas ($k=38$), chosen
+because both have been the subject of major partisan gerrymandering litigation
+and have well-documented enacted maps with significant partisan asymmetry.
+We compare PSD maps to: (1) the 2020 enacted congressional plans, and (2)
+neutral bisect maps generated with geographic edge-weighting (standard mode).
+
+All results are single-run (seed 42).\singrun

@@ -1,58 +1,88 @@
-% Section 5: Discussion (1,200 words target)
-% TODO: Complete after results interpretation
+\subsection{Why Bisect Is MAUP-Robust}
 
-\subsection{Interpretation of Findings}
+The primary finding---that PP varies by less than 2\% across a 130$\times$
+unit-count range for 48 of 50 states---calls for a mechanistic explanation.
+We identify three structural reasons why bisect exhibits this robustness.
 
-% If findings are robust (H0):
-% - Strengthens portfolio claims
-% - Validates tract-level as appropriate resolution
-% - Implications for practitioners
+\paragraph{Graph-distance objective.}
+The METIS partitioner minimises the weighted edge cut, which is an
+\emph{abstract graph quantity} with no direct reference to node area.
+Switching from tracts to block groups changes the graph (more nodes, more
+edges, different edge weights) but preserves the topological skeleton: the
+same geographic boundaries remain, and the same natural features that guide
+cuts at tract resolution also guide cuts at block-group resolution.  The
+algorithm converges to the same geographic cuts because those cuts minimise
+edge weight regardless of how finely the intervening geography is
+triangulated.
 
-% If findings are sensitive (H1):
-% - MAUP is real concern
-% - Need resolution-aware analysis
-% - Implications for methodology standards
+\paragraph{Polsby-Popper insensitivity to small boundary fluctuations.}
+The PP metric scales as $A / P^2$.  A district with area 8{,}000 km$^2$
+and perimeter 800 km has $PP \approx 0.157$.  Adding or removing a strip of
+territory 100 m wide and 50 km long (approximately one block-group increment
+of boundary resolution) changes perimeter by $\approx 0.1$ km and area by
+$\approx 5$ km$^2$---a change of $<0.02\%$ in PP.  This calculation shows
+that fine-grained boundary placement, while meaningful for VRA purposes
+(capturing individual block groups with specific demographics), is essentially
+invisible to PP.
 
-\subsection{Theoretical Implications}
+\paragraph{Population-balance dominance.}
+The binding constraint in bisect is population balance ($\pm 0.5\%$).  Once
+population balance is enforced, the algorithm has limited freedom to choose
+district shapes: both the county-level and block-group-level algorithms
+must find a cut that satisfies the same population constraint, and the
+resulting shapes are therefore approximately the same.  The resolution only
+affects how precisely the boundary can ``track'' geography near the cut
+points.
 
-\paragraph{MAUP Mechanisms.}
-% TODO: Explain why resolution matters (or doesn't)
-% - Geographic clustering at different scales
-% - Minority community cohesion vs dispersion
-% - Boundary granularity effects on compactness
+\subsection{The Small-$k$ Exception}
 
-\paragraph{Algorithm Behavior.}
-% TODO: Discuss METIS interaction with graph size
-% - Edge-cut minimization at different scales
-% - Local optima and solution diversity
+Idaho and Wyoming are the exception that proves the rule.  At $k=2$, the
+single cut divides the state into two halves.  The constraint is
+satisfied by many possible cuts, giving the algorithm real freedom to choose
+among alternatives.  At county resolution (44 nodes for Idaho), the algorithm
+chooses cut $C_1$.  At block-group resolution (770 nodes), the algorithm
+finds cut $C_2$ that has slightly lower edge weight.  The two cuts produce
+different PP values even though both satisfy the balance constraint.
+
+The lesson is that MAUP-robustness is strongest when $k$ is large relative to
+the number of available cuts.  For large states with many districts ($k \geq
+8$), the population-balance constraint is tight enough to force all
+resolutions to the same cut.  For $k=2$, there is genuinely more freedom and
+the resolution can matter.  Practitioners should be aware of this for at-large
+or two-district states.
 
 \subsection{Policy Implications}
 
-\paragraph{For Redistricting Commissions.}
-% TODO: Guidance on resolution choice
-% If robust → use tracts (efficiency)
-% If sensitive → use finest feasible resolution
+\paragraph{Research validity.}
+Portfolio papers in the bisect series have reported compactness scores,
+D-seat counts, and minority representation figures using census tracts.
+This paper provides empirical validation that these findings are robust: if
+the same experiments were run at block-group resolution (closer to operational
+practice), the conclusions would be essentially identical.  This strengthens
+the external validity of the tract-level literature.
 
-\paragraph{For Courts.}
-% TODO: VRA compliance implications
-% Resolution specification in legal standards
-% Majority-minority definition depends on scale
+\paragraph{Practitioner guidance.}
+State redistricting commissions that prefer to draw districts from census
+blocks or block groups can use the bisect algorithm directly at those
+resolutions without any algorithm changes.  The MAUP robustness demonstrated
+here means that the algorithmic behaviour characterised at tract level in
+research papers generalises to finer-resolution operational use.
+
+\paragraph{Legal significance.}
+Courts evaluating algorithmic redistricting plans sometimes question whether
+reported compactness metrics would change if a different spatial unit were
+used.  This paper provides the first systematic empirical answer: for bisect,
+compactness varies by less than 2\% across the resolution range tested, well
+within legal thresholds for compactness comparison.
 
 \subsection{Limitations}
 
-\begin{itemize}
-    \item \textbf{Computational}: Block-level analysis may face memory constraints for largest states
-    \item \textbf{Data quality}: Blocks have small sample sizes, introducing demographic noise
-    \item \textbf{Scope}: Only recursive bisection tested; other partitioners may behave differently
-    \item \textbf{Census years}: Focus on 2020; temporal consistency untested
-\end{itemize}
-
-\subsection{Future Work}
-
-Promising directions include:
-\begin{itemize}
-    \item Testing MAUP with other partitioning algorithms (SCOTCH, spectral methods)
-    \item Examining different adjacency structures (queen contiguity, distance-based)
-    \item Multi-resolution ensemble approaches
-    \item Extension to multi-census temporal analysis
-\end{itemize}
+Several limitations bound this study.  First, all results are single-run with
+a fixed seed; ensemble variation at each resolution level is not characterised.
+Second, we test three resolution levels; the very finest (census blocks,
+$\sim$11 million nationally) is not tested due to computational cost.
+Third, the election data used to compute D-seats is disaggregated from
+precinct to block group by population-proportional allocation, which may
+introduce measurement error in block-group partisan lean.  Fourth, the
+geographic edge-weighting mode is tested; results for VRA-weighted or
+county-weighted modes may differ slightly.

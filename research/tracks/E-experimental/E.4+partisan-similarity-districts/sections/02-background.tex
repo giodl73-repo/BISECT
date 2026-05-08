@@ -1,14 +1,70 @@
-\section{Background}
+\subsection{Partisan Clustering in American Politics}
 
-% 2.1: Safe Districts in American Politics
-% - Definition and measurement
-% - Current distribution across states
+Geographic partisan sorting in the United States has accelerated since the
+1990s \citep{bishop2009bigSort, rodden2019why}.  \citet{chen2013unintentional}
+demonstrated that even random redistricting algorithms produce a systematic
+Republican seat bonus because Democratic voters are more densely concentrated
+in urban centres, creating large wasted-vote surpluses in Democratic-leaning
+districts.  \citet{rodden2019why} extended this analysis, arguing that the
+geographic concentration of Democratic voters---the ``Rodden gap''---is the
+primary source of partisan asymmetry in U.S. legislative elections, with
+intentional gerrymandering as a secondary factor.
 
-% 2.2: Partisan Gerrymandering
-% - Methods and objectives
-% - Transparency and legitimacy issues
+This literature suggests a puzzle: if geographic sorting already produces safe
+seats, what does deliberate safe-seat gerrymandering add?  The answer is
+directional: geographic sorting produces safe \emph{Democratic} districts in
+urban areas, but the Republican seat bonus arises from dispersing Democratic
+voters across suburban and rural Republican districts.  Intentional Republican
+gerrymanders amplify this dispersion, cracking urban-adjacent Democratic
+precincts and reinforcing Republican safety in suburban seats.
 
-% 2.3: Graph Partitioning and Edge-Weighting
-% - METIS recursive bisection
-% - Edge weights as similarity signals
-% - Prior applications (VRA compliance, racial demographics)
+\subsection{The Efficiency Gap}
+
+The Efficiency Gap (EG), introduced by \citet{stephanopoulos2015partisan},
+measures the difference in ``wasted votes'' between the two parties.  A
+wasted vote is any vote cast for a losing candidate (all such votes are
+entirely wasted) or any vote cast for a winning candidate beyond what was
+needed to win (excess votes above 50\% plus one are wasted).  Formally:
+
+\begin{equation}
+  EG = \frac{WV_D - WV_R}{TV}
+\end{equation}
+
+where $WV_D$ and $WV_R$ are total wasted votes for Democrats and Republicans
+respectively, and $TV$ is total votes cast.  A positive EG favours Republicans
+(Democrats waste more votes); a negative EG favours Democrats.
+
+PSDs can be designed to minimise the absolute EG: by distributing safe seats
+proportionally between the parties, the algorithm ensures neither party wastes
+systematically more votes than the other.  This is in contrast to enacted
+gerrymanders, which typically produce large EGs in favour of the mapmaking
+party.
+
+\subsection{Geographic Sorting vs.\ Intentional Packing}
+
+The key distinction for legal analysis is between \emph{organic} geographic
+sorting (which is constitutionally unregulated) and \emph{intentional} packing
+(which may violate state constitutional provisions on partisan fairness).
+PSDs help operationalise this distinction: a PSD map created from geographic-
+only sorting (partisan weights but no geographic boundary preference) represents
+the ``natural'' safe-seat level arising from residential patterns.  An enacted
+plan with higher safe-seat counts for one party than a neutral PSD suggests
+that the excess homogeneity is not geographic in origin.
+
+\subsection{Graph-Partitioning with Partisan Edge Weights}
+
+Prior work on edge-weighted redistricting has used edge weights to encode
+racial minority clustering (VRA-aligned weighting) \citep{dellib2026vra},
+geographic contiguity (standard weighting), and county preservation (county
+weighting) \citep{dellib2026county}.  The use of partisan vote similarity as
+an edge weight is a natural extension: instead of weighting edges by shared
+boundary length or demographic similarity, we weight by partisan similarity.
+
+The only prior work we are aware of that explicitly uses partisan similarity
+as a redistricting objective is \citet{gurnee2021fairmandering}, who optimise
+directly for a specified partisan outcome.  Our approach differs: we
+parametrically vary the similarity weight $\alpha$ (equation~\eqref{eq:psd-weight}),
+producing a family of maps from neutral (compact) to maximally homogeneous
+(partisan similarity), without targeting any specific partisan outcome.  The
+resulting seat distribution is a consequence of geographic sorting, not a
+design target.

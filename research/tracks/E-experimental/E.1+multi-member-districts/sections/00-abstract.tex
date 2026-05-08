@@ -1,0 +1,23 @@
+The United States House of Representatives is elected exclusively through
+single-member plurality districts, a design that enables partisan
+gerrymandering by allowing mapmakers to pack and crack opposition voters
+across district boundaries.  Multi-member districts (MMDs) eliminate this
+vulnerability by replacing geographic seat allocation with within-district
+proportional representation: even a biased boundary cannot deny a party that
+wins 40\% of a district's votes its proportional share of seats.  We
+demonstrate that the bisect recursive bisection algorithm can generate
+MMDs by adjusting the seat-count parameter $k$---for example, dividing
+California's 52 seats into 13 four-member districts ($k=13$) or New Jersey's
+12 seats into 6 two-member districts ($k=6$).  We implement two leading MMD
+seat-allocation rules---Single Transferable Vote (STV) and Open-List
+Proportional Representation (OLPR)---and evaluate them on three state case
+studies (California, New Jersey, Illinois) using 2020 presidential election
+data.  MMDs systematically improve minority representation relative to
+single-member districts: California's 13 four-member districts produce an
+estimated 21--23 minority-opportunity seats, compared to 17 majority-minority
+districts in the enacted single-member plan.\singrun\  Compactness
+(Polsby-Popper) declines modestly---approximately 8\% relative to
+single-member tract-level redistricting---as larger districts span more
+varied terrain.\singrun\  These results establish MMD generation as a
+practical extension of the bisect framework and provide a computational
+baseline for electoral reform evaluation.

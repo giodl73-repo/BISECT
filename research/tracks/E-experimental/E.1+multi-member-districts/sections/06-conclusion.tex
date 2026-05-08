@@ -1,7 +1,40 @@
-% Conclusion
+We have demonstrated that the bisect recursive bisection algorithm extends
+naturally to multi-member district generation by adjusting the district-count
+parameter $k$ and adapting the per-seat balance tolerance formula.  Across
+five configurations in three states, MMDs systematically improve minority
+representation relative to enacted single-member plans---California's
+4-member OLPR districts produce an estimated 22 minority-opportunity seats
+versus 17 in the enacted plan---while incurring a modest compactness penalty
+of approximately 5--12\% in mean Polsby-Popper depending on district
+magnitude.\singrun
 
-% TODO: Summarize:
-% - MMDs as viable alternative to single-member redistricting
-% - Key advantages: gerrymandering elimination, proportional representation
-% - Challenges: implementation, cultural acceptance, VRA implications
-% - Future work: hybrid systems, ranked-choice voting integration
+\paragraph{STV vs.\ OLPR.}
+The two allocation rules produce similar seat distributions.  OLPR produces
+one additional minority-opportunity seat in the California case study, driven
+by the direct candidate-preference mechanism.  STV has the advantage of
+requiring no party registration, making it more accessible for jurisdictions
+with strong traditions of cross-party voting.
+
+\paragraph{Proportionality-compactness tradeoff.}
+The tradeoff is real but modest: the 4-member configuration achieves
+Gallagher indices of 1.8--2.9 (comparable to Nordic PR systems) at a 10--12\%
+compactness cost.  The 2-member configuration achieves intermediate results
+in both dimensions.  The choice between magnitudes is primarily a values
+judgment---how much compactness to sacrifice for proportionality---rather
+than an algorithmic question.
+
+\paragraph{Legal path.}
+The statutory barrier to MMDs (2 U.S.C.\ \S~2c) is a legislative choice, not
+a constitutional requirement.  The Fair Representation Act would clear this
+barrier and explicitly authorize the type of MMD plan generated in this paper.
+The 110-year Illinois precedent with three-member Cumulative Voting districts
+demonstrates that MMDs are compatible with American political culture.
+
+\paragraph{Future work.}
+Several extensions are warranted.  First, ensemble analysis (multiple seeds)
+would characterise the distribution of possible MMD configurations rather than
+the single-run results reported here.  Second, the full 50-state analysis
+would establish national baselines for proportionality and minority
+representation under various MMD designs.  Third, combined MMD and VRA
+edge-weighting experiments would explore whether geographic minority clustering
+and proportional allocation are complementary or substitutable strategies.

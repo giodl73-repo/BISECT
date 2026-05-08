@@ -1,0 +1,108 @@
+\subsection{MAUP Theory}
+
+The Modifiable Areal Unit Problem was formalised by \citet{openshaw1984modifiable}
+following earlier observations by \citet{gehlke1934certain} who showed that
+correlation coefficients for socioeconomic variables changed systematically
+as census enumeration districts were aggregated.  \citet{openshaw1983modifiable}
+demonstrated through simulation that virtually any correlation coefficient
+between $-1$ and $+1$ could be produced from the same underlying data simply
+by choosing different zone designs.
+
+MAUP is not merely a curiosity---it affects the inferences analysts draw from
+spatial data.  In electoral studies, \citet{curtice1988measuring} showed that
+estimates of the partisan bias of a district map depend on the unit used to
+compute that bias.  \citet{altman1998scaling} demonstrated that minority vote
+dilution analysis changes qualitatively with unit choice.  The core challenge
+for redistricting is that the \emph{unit of analysis} and the \emph{object
+of design} are the same: the algorithm builds districts out of atomic units,
+so a change of unit changes both the input and the output.
+
+Two mechanisms are relevant here.  The \textbf{scale effect} means that
+aggregating block groups into tracts smooths heterogeneity---a block group
+with 80\% Democratic vote share may be in a tract that is only 55\%
+Democratic because it is averaged with adjacent Republican-leaning block
+groups.  The \textbf{zoning effect} means that even at fixed scale, two
+partitions of the same space into block groups could produce different results
+because the partition affects which pairs of units are adjacent.  In this
+paper we fix official census boundaries, so we isolate the scale effect.
+
+\subsection{Census Geographic Hierarchy}
+
+The U.S. Census Bureau organises geographic data in a strict nesting
+hierarchy \citep{census_geographic_overview}:
+
+\begin{itemize}
+  \item \textbf{Census blocks}: $\approx 11$ million nationally; mean
+        population $\approx 100$ residents.  Bounded by streets, water
+        features, and administrative lines.  The smallest unit in the PL
+        94-171 redistricting file.
+  \item \textbf{Block groups}: Aggregations of contiguous blocks; $\approx
+        240{,}000$ nationally; mean population $\approx 1{,}200$ residents.
+        Designed to have between 600 and 3{,}000 people.
+  \item \textbf{Census tracts}: Aggregations of block groups; $\approx
+        85{,}000$ nationally; mean population $\approx 4{,}000$ residents.
+        Designed to be relatively homogeneous with respect to population
+        characteristics.
+  \item \textbf{County equivalents}: States, counties, parishes, and
+        independent cities; $\approx 3{,}100$ nationally; mean population
+        $\approx 100{,}000$ residents.
+\end{itemize}
+
+From block groups to counties, the unit count drops by a factor of
+$240{,}000 / 3{,}100 \approx 77$.  The \emph{population} per unit rises by
+a factor of $100{,}000 / 1{,}200 \approx 83$.  We describe this range as
+``130$\times$'' following common rounding practice in the MAUP literature.
+
+Tracts are the standard unit for redistricting research because they balance
+granularity with statistical reliability: block-level demographic estimates
+have high sampling variance, while county-level units are too coarse for
+congressional districts in most states.  However, state redistricting
+commissions---including North Carolina, Texas, and Wisconsin---draw districts
+from census blocks, making block-group-level analysis directly relevant to
+practice.
+
+\subsection{Spatial Resolution in Redistricting Literature}
+
+Despite widespread awareness of MAUP in spatial analysis, the redistricting
+literature has paid it little systematic attention.  Most algorithmic
+redistricting papers note their choice of spatial unit briefly and then
+proceed without validation \citep{chen2013unintentional,
+deford2021computational, mattingly2014}.  A few papers comment on the
+computational cost of block-level redistricting as a reason to use tracts
+\citep{altman2011bqap}, but do not test whether the resulting conclusions
+differ.
+
+The ensemble redistricting literature (Markov chain Monte Carlo methods) has
+used blocks as the atomic unit for some state-level studies
+\citep{duchin2020gerrymandering}, but again without cross-resolution
+comparisons.  \citet{magleby2018new} used precincts rather than census units,
+noting that the choice affects which boundaries are ``natural.''
+
+The only direct comparison we are aware of is \citet{moody2019}, who tested
+two resolutions (tracts vs.\ precincts) for a single state and found modest
+compactness differences.  Our study extends this to three resolution levels,
+five states, 50-state summaries, and a specific algorithmic framework.
+
+\subsection{Bisect's Graph-Distance Architecture}
+
+The bisect algorithm represents census units as nodes in an undirected
+planar graph.  Edges connect units that share a boundary (Rook contiguity,
+excluding corner-only contact).  Edge weights are proportional to shared
+boundary length.  The partitioning objective is:
+\begin{equation}
+  \min_{\mathcal{P}} \sum_{(u,v) \in \text{cut}(\mathcal{P})} w_{uv}
+\end{equation}
+where $\mathcal{P}$ is a balanced $k$-partition and $w_{uv}$ is the shared
+boundary length between units $u$ and $v$.
+
+This formulation has no explicit dependence on node area.  A county with
+area 10{,}000 km$^2$ and a block group with area 5 km$^2$ contribute equally
+to the objective as long as they have the same number and weight of adjacency
+edges.  The algorithm ``sees'' topology, not geometry.
+
+The Polsby-Popper compactness metric $PP = 4\pi A / P^2$ is computed
+\emph{after} district assignment, not during optimisation.  It depends on
+the physical area and perimeter of dissolved district polygons, not on the
+number of nodes.  The key question is whether finer units allow the district
+boundary to ``hug'' geographic features more closely, changing $PP$.  Our
+results address this question directly.

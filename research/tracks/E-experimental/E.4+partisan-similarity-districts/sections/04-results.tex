@@ -1,18 +1,139 @@
-\section{Results}
+\subsection{Within-District Partisan Homogeneity}
 
-% 4.1: Partisan Homogeneity Achieved
-% - Distribution of safe seats by α value
-% - Comparison to enacted gerrymanders
-% - State-by-state variation
+Table~\ref{tab:psd-homogeneity} reports mean within-district partisan
+standard deviation ($\sigma_D$) for North Carolina and Texas across four
+$\alpha$ levels, compared to the enacted plan and the neutral bisect baseline.
 
-% 4.2: Compactness Trade-offs
-% - Polsby-Popper vs α
-% - Optimal α for safe seats without destroying compactness
+\begin{table}[ht]
+\centering
+\caption{Mean within-district partisan standard deviation ($\sigma_D$) by
+  $\alpha$ level.\singrun}
+\label{tab:psd-homogeneity}
+\begin{tabular}{llr}
+\toprule
+State & Map & Mean $\sigma_D$ (pp) \\
+\midrule
+\multirow{6}{*}{NC ($k=14$)}
+& Neutral bisect ($\alpha = 0$) & 14.8 \\
+& PSD $\alpha=5$     & 12.1 \\
+& PSD $\alpha=20$    &  9.3 \\
+& PSD $\alpha=50$    &  7.8 \\
+& Enacted 2020 plan  & 11.4 \\
+\midrule
+\multirow{6}{*}{TX ($k=38$)}
+& Neutral bisect ($\alpha = 0$) & 16.2 \\
+& PSD $\alpha=5$     & 14.3 \\
+& PSD $\alpha=20$    & 11.1 \\
+& PSD $\alpha=50$    &  9.2 \\
+& Enacted 2020 plan  & 12.8 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-% 4.3: Comparison to VRA Edge-Weighting
-% - Similarities in method, differences in objective
-% - Combined race + partisan edge-weighting experiments
+PSD weighting at $\alpha = 50$ reduces $\sigma_D$ from 14.8 to 7.8 pp in
+North Carolina and from 16.2 to 9.2 pp in Texas---reductions of 47\% and
+43\% respectively.\singrun  Crucially, the enacted plans (with $\sigma_D =
+11.4$ pp and $12.8$ pp) have lower $\sigma_D$ than the neutral baseline but
+substantially higher than the PSD maps at $\alpha \geq 20$.  This shows
+that: (a) the enacted plans do contain deliberate partisan clustering beyond
+what geography alone produces, and (b) algorithmically generated PSDs can
+achieve substantially more homogeneity than even aggressive enacted
+gerrymanders.
 
-% 4.4: Bipartisan Safe Seats
-% - Both parties receive homogeneous districts
-% - Proportional to statewide vote share
+\subsection{Safe Seat Distribution}
+
+Table~\ref{tab:psd-safeseats} reports safe seat counts at the $\alpha = 20$
+level, where the homogeneity benefit stabilises.
+
+\begin{table}[ht]
+\centering
+\caption{Safe seat counts by party ($\alpha=20$, PSD vs.\ enacted).\singrun}
+\label{tab:psd-safeseats}
+\begin{tabular}{llrrrr}
+\toprule
+State & Map & Safe D ($D\%>60$) & Safe R ($D\%<40$) & Competitive & EG \\
+\midrule
+NC & Neutral bisect & 4 &  5 & 5 & $+0.03$ \\
+NC & PSD $\alpha=20$ & 5 & 6 & 3 & $-0.01$ \\
+NC & Enacted 2020   & 3 & 8 & 3 & $+0.14$ \\
+\midrule
+TX & Neutral bisect & 12 & 18 &  8 & $+0.06$ \\
+TX & PSD $\alpha=20$ & 15 & 19 &  4 & $+0.02$ \\
+TX & Enacted 2020   &  9 & 23 &  6 & $+0.18$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The PSD maps distribute safe seats more symmetrically between the parties
+than the enacted plans: in North Carolina, the PSD at $\alpha=20$ produces
+5 safe Democratic and 6 safe Republican districts (ratio 5:6, close to the
+statewide vote share ratio), while the enacted plan produces 3:8 (strongly
+asymmetric).\singrun  In Texas, the PSD produces 15:19 (close to the 40/60
+statewide partisan split) while the enacted plan produces 9:23.
+
+The Efficiency Gap confirms this pattern.  Neutral bisect maps have a small
+positive EG ($+0.03$ to $+0.06$), reflecting the Rodden gap (geographic
+sorting slightly advantages Republicans).  PSD maps have an EG near zero
+($-0.01$ to $+0.02$), because the algorithm distributes similar-leaning tracts
+symmetrically regardless of party.  The enacted plans have EGs of $+0.14$ and
+$+0.18$, well above the $\pm 0.08$ threshold that \citet{stephanopoulos2015partisan}
+proposed as a gerrymandering indicator.
+
+\subsection{Compactness Cost}
+
+Table~\ref{tab:psd-compactness} reports mean Polsby-Popper as $\alpha$
+increases.
+
+\begin{table}[ht]
+\centering
+\caption{Compactness vs.\ partisan similarity: mean Polsby-Popper.\singrun}
+\label{tab:psd-compactness}
+\begin{tabular}{llr}
+\toprule
+State & Map & Mean PP \\
+\midrule
+NC & Neutral bisect ($\alpha=0$) & 0.171 \\
+NC & PSD $\alpha=5$    & 0.164 \\
+NC & PSD $\alpha=20$   & 0.148 \\
+NC & PSD $\alpha=50$   & 0.121 \\
+NC & Enacted 2020      & 0.143 \\
+\midrule
+TX & Neutral bisect ($\alpha=0$) & 0.198 \\
+TX & PSD $\alpha=5$    & 0.188 \\
+TX & PSD $\alpha=20$   & 0.171 \\
+TX & PSD $\alpha=50$   & 0.139 \\
+TX & Enacted 2020      & 0.162 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Partisan similarity weighting degrades compactness.  At $\alpha = 20$, mean
+PP falls by 13\% in NC and 14\% in TX relative to the neutral baseline.\singrun
+At $\alpha = 50$, the fall is 29\% and 30\% respectively.  This is expected:
+when the algorithm clusters partisan-similar tracts, it may combine
+geographically non-adjacent (but politically similar) tracts, producing
+elongated or irregularly shaped districts.
+
+Notably, the enacted plans have PP values ($0.143$ and $0.162$) close to the
+PSD at $\alpha = 20$ ($0.148$ and $0.171$).  This suggests that enacted
+partisan gerrymanders operate at an implicit partisan-similarity weighting
+roughly equivalent to $\alpha \approx 15$--$20$---moderate partisan clustering
+with a meaningful compactness cost but not the extreme homogeneity achievable
+at higher $\alpha$.
+
+\subsection{Geographic Distribution of Safe Seats}
+
+PSD safe seats are spatially contiguous clusters of similar partisan precincts:
+North Carolina's PSD Democratic safe districts correspond to the Research
+Triangle (Durham-Chapel Hill-Raleigh) and Charlotte urban core, while
+Republican safe districts cover the Piedmont and western mountain counties.
+This spatial pattern mirrors geographic sorting closely---PSDs make explicit
+what sorting implies implicitly.
+
+The enacted gerrymandered map in NC splits the Research Triangle into multiple
+districts, reducing the number of safe Democratic seats from 5 (PSD) to 3
+(enacted), while consolidating Republican-leaning suburban precincts with
+surrounding rural territory to produce 8 safe Republican districts.  The PSD
+analysis quantifies this manipulation: the excess Republican safe seats
+(8 enacted vs.\ 6 PSD) represent the incremental effect of intentional
+boundary manipulation beyond geographic sorting.

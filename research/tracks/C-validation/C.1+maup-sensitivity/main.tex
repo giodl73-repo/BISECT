@@ -6,13 +6,18 @@
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage{booktabs}
-\usepackage{hyperref}
-\usepackage{natbib}
+\usepackage{caption}
 \usepackage{subcaption}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{natbib}
+
+% Dagger notation for single-run empirical claims
+\newcommand{\singrun}{\textsuperscript{\dag}}
 
 % Title and author
-\title{Spatial Resolution and Algorithmic Redistricting: \\
-A Test of the Modifiable Areal Unit Problem}
+\title{Spatial Resolution Robustness: Algorithmic Redistricting\\
+Across a 130$\times$ Unit-Count Range}
 
 \author{Giovanni Della-Libera}
 
@@ -26,11 +31,14 @@ A Test of the Modifiable Areal Unit Problem}
 \input{sections/00-abstract}
 \end{abstract}
 
+\noindent\textbf{Keywords:} redistricting, MAUP, modifiable areal unit problem,
+census geography, compactness, spatial resolution, recursive bisection
+
 \section{Introduction}
 \input{sections/01-introduction}
 
-\section{Spatial Resolution in Redistricting}
-\input{sections/02-spatial-resolution}
+\section{Background}
+\input{sections/02-background}
 
 \section{Methodology}
 \input{sections/03-methodology}
@@ -44,8 +52,7 @@ A Test of the Modifiable Areal Unit Problem}
 \section{Conclusion}
 \input{sections/06-conclusion}
 
-% Bibliography
 \bibliographystyle{apalike}
-\bibliography{../references}
+\bibliography{references}
 
 \end{document}

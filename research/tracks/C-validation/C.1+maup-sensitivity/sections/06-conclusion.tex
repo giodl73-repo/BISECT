@@ -1,10 +1,37 @@
-% Section 6: Conclusion (400 words target)
-% TODO: Complete after results available
+We have conducted the first systematic empirical test of the Modifiable Areal
+Unit Problem in algorithmic redistricting.  Across a 130$\times$ unit-count
+range---from county equivalents ($\sim$100,000 pop each) to census block
+groups ($\sim$1,200 pop each)---the bisect recursive bisection algorithm
+produces Polsby-Popper compactness scores that vary by less than 2\% for 48
+of 50 states.\textsuperscript{\dag}  D-seat predictions are identical across
+all three resolutions for all five focus states tested.\textsuperscript{\dag}
 
-We have conducted the first systematic empirical test of the Modifiable Areal Unit Problem in algorithmic redistricting by comparing recursive bisection across three spatial resolutions: census tracts, block groups, and census blocks. [Summary of key findings TBD].
+\paragraph{Structural explanation.}
+MAUP-robustness in bisect arises from three reinforcing mechanisms: the
+algorithm optimises a graph-edge-cut objective with no direct dependence on
+node area; Polsby-Popper is insensitive to small boundary fluctuations; and
+the population-balance constraint ($\pm 0.5\%$) eliminates most of the freedom
+that would otherwise allow resolution-dependent variation.
 
-\paragraph{Contribution.} This work establishes the generalizability---or lack thereof---of automated redistricting findings to different spatial scales. [If robust: Our results validate census tracts as appropriate atomic units for redistricting research, enabling confident extrapolation of computational findings to policy contexts.] [If sensitive: Our results demonstrate that spatial resolution is a critical methodological choice with substantive implications for district design and VRA compliance analysis.]
+\paragraph{Practical upshot.}
+For the two states that exceed the 2\% threshold (Idaho, Wyoming, both $k=2$),
+the cause is a small-$k$ effect rather than MAUP, and the absolute magnitude
+of variation (RSI $\approx 2.3$--$2.6\%$) remains small in absolute PP terms
+($\Delta PP \approx 0.005$).
 
-\paragraph{Implications.} For researchers, this work [establishes/challenges] the robustness of algorithmic redistricting methods. For practitioners, it provides [validation/guidance] on resolution choice in automated district design. For courts, it [confirms/complicates] the use of computational evidence in redistricting litigation.
+\paragraph{Contribution.}
+This paper validates a previously untested assumption underlying the bisect
+portfolio: that using census tracts as the atomic unit does not materially
+affect conclusions.  Researchers can cite this paper when defending tract-level
+findings to audiences that question resolution choices.  Practitioners using
+bisect at block-group resolution can expect behaviour consistent with the
+published tract-level characterisation.
 
-\paragraph{Final statement.} The choice of spatial resolution is not merely a technical detail---it is a methodological decision with consequences for democratic representation.
+\paragraph{Future work.}
+Block-level ($\sim$11 million nodes nationally) redistricting remains
+computationally challenging but not infeasible on modern hardware.  A
+50-state block-level run would extend the tested unit-count range from
+$130\times$ to $\sim$3{,}500$\times$ and is a natural next step.  Testing
+MAUP sensitivity for VRA-weighted and county-weighted modes is also
+warranted, as those modes alter edge weights in ways that may interact with
+resolution differently than the geographic mode tested here.

@@ -4,13 +4,20 @@
 \usepackage[utf8]{inputenc}
 \usepackage[margin=1in]{geometry}
 \usepackage{graphicx}
-\usepackage{amsmath}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{multirow}
 \usepackage{natbib}
 \usepackage{hyperref}
-\usepackage{booktabs}
+\usepackage{url}
+
+% Dagger notation for single-run empirical claims
+\newcommand{\singrun}{\textsuperscript{\dag}}
 
 % Title
-\title{Partisan Similarity Districts: Algorithmic Safe Seats}
+\title{Algorithmically Generated Safe Seats: Partisan Similarity Districts\\
+via Geographic Clustering}
 \author{Giovanni Della-Libera}
 \date{\today}
 
@@ -22,14 +29,28 @@
 \input{sections/00-abstract}
 \end{abstract}
 
+\noindent\textbf{Keywords:} partisan gerrymandering, safe seats, efficiency gap,
+edge-weighted redistricting, \emph{Rucho v.\ Common Cause}, geographic sorting
+
+\section{Introduction}
 \input{sections/01-introduction}
+
+\section{Background}
 \input{sections/02-background}
+
+\section{Algorithm}
 \input{sections/03-methodology}
+
+\section{Results}
 \input{sections/04-results}
+
+\section{Legal Implications}
 \input{sections/05-discussion}
+
+\section{Conclusion}
 \input{sections/06-conclusion}
 
 \bibliographystyle{apsr}
-\bibliography{../references}
+\bibliography{references}
 
 \end{document}

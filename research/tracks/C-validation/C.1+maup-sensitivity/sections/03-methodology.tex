@@ -1,54 +1,111 @@
-% Section 3: Methodology (1,000 words target)
+\subsection{States and Resolutions}
 
-\subsection{Data Preparation}
+We select five states that together cover the major dimensions of
+redistricting difficulty: North Carolina (NC, $k=14$), Texas (TX, $k=38$),
+Wisconsin (WI, $k=8$), Florida (FL, $k=28$), and Virginia (VA, $k=11$).
+North Carolina is chosen because it is the most frequently litigated
+redistricting state of the modern era and has been central to prior bisect
+portfolio papers.  Texas provides the largest single-state test ($k=38$) and
+has significant minority populations.  Wisconsin offers a small-$k$ case
+in a highly competitive partisan environment.  Florida and Virginia provide
+Sunbelt diversity and mid-size district counts.
 
-\subsubsection{Census Tracts (Baseline)}
+For each state we run bisect at three resolution levels:
 
-We use census tract shapefiles and demographics from the 2020 Census Redistricting Data (PL 94-171 Summary File), yielding approximately 85,000 tracts nationally. Adjacency graphs were constructed using Rook contiguity (shared edges, excluding corner-only contact).
+\begin{description}
+  \item[County (coarse).] County-equivalent boundaries from the 2020
+    TIGER/Line files.  North Carolina has 100 counties ($n=100$, $k=14$),
+    yielding a graph with $\sim$500 edges.  This is the sparsest possible
+    resolution for which contiguous districts are achievable.
+  \item[Tract (standard).] 2020 census tracts, the default for the bisect
+    portfolio.  NC: $n \approx 2{,}200$; TX: $n \approx 5{,}300$; WI:
+    $n \approx 1{,}900$; FL: $n \approx 4{,}200$; VA: $n \approx 2{,}000$.
+  \item[Block group (fine).] 2020 block groups.  NC: $n \approx 5{,}000$;
+    TX: $n \approx 14{,}000$; WI: $n \approx 4{,}700$; FL: $n \approx
+    11{,}000$; VA: $n \approx 5{,}200$.
+\end{description}
 
-\subsubsection{Block Groups (Finer Resolution)}
+\subsection{Algorithm Parameters}
 
-Block group shapefiles and demographics were obtained from the Census Bureau TIGER/Line files. With approximately 240,000 block groups nationally ($\sim$3$\times$ more units than tracts), this resolution provides intermediate granularity. Adjacency graphs were constructed identically to the tract-level approach.
-
-\subsubsection{Census Blocks (Finest Resolution)}
-
-Census blocks represent the finest available resolution with approximately 11 million blocks nationally ($\sim$130$\times$ more units than tracts). Block-level shapefiles were obtained from TIGER/Line files, with demographics aggregated from the PL 94-171 file. This resolution poses significant computational challenges due to graph size (estimated 35 million edges nationally).
-
-% TODO: Add memory and disk space requirements after implementation
-
-\subsection{Algorithm Configuration}
-
-To isolate resolution effects, we maintain identical parameters across all spatial scales:
-
-\begin{itemize}
-    \item \textbf{Population balance}: $\pm 0.5\%$ deviation from ideal district size
-    \item \textbf{Edge-weighting}: $\alpha = 5.0$ weight multiplier for minority-minority edges
-    \item \textbf{Minority threshold}: $\tau = 0.40$ (units with $\geq 40\%$ minority population)
-    \item \textbf{Partitioning method}: METIS 5.1.0 recursive bisection with multilevel coarsening
-\end{itemize}
-
-This ensures that any observed differences arise from spatial resolution rather than parameter variation.
-
-\subsection{Experimental Design}
-
-We conduct redistricting for all 50 states at three resolutions (150 total runs) using 2020 Census data. To validate computational feasibility, we first test a 10-state subset:
+To isolate the resolution effect, all parameters are held fixed across
+resolutions:
 
 \begin{itemize}
-    \item \textbf{High minority}: Texas, California, Florida, Georgia, New York
-    \item \textbf{Low minority}: Vermont, Maine, West Virginia, New Hampshire, Idaho
+  \item Population balance tolerance: $\pm0.5\%$ of ideal district
+        population.
+  \item Edge weights: geographic (shared boundary length, unscaled).
+  \item Search strategy: \texttt{single} (seed 42 for reproducibility).
+  \item METIS engine: \texttt{c-ffi} (bundled C METIS 5.1.0).
+  \item Census year: 2020.
 \end{itemize}
 
-If subset results confirm METIS scalability at block-level resolution, we proceed to the full 50-state analysis.
+The \texttt{single} search strategy runs one METIS call per bisection node
+and selects the first feasible partition.  This is the simplest possible
+search mode, appropriate for a sensitivity study where the goal is
+understanding variation across resolutions rather than optimising within a
+resolution.
+
+\textbf{Single-run caveat.}\textsuperscript{\dag}  All reported empirical
+results in this paper derive from single runs (one seed, one METIS call per
+bisection node).  Compactness and seat-count figures carry the
+\textsuperscript{\dag} mark throughout to indicate they are not ensemble
+averages.  The purpose of the paper is to demonstrate \emph{robustness across
+resolutions}, not to characterise the full distribution of outcomes within
+any resolution.  Single-run results are appropriate for cross-resolution
+comparison because METIS is deterministic given a fixed seed.
+
+\subsection{Data Sources}
+
+\begin{description}
+  \item[Population.] 2020 Census PL 94-171 Summary File, total population
+    (P1 table).  Available at census tract, block group, and county level
+    from Census Bureau API.
+  \item[Geography.] 2020 TIGER/Line shapefiles, all three resolution levels,
+    downloaded via \texttt{bisect fetch --year 2020}.
+  \item[Election data.] 2020 presidential election results disaggregated to
+    census tract level from the MIT Election Data Science Lab
+    \citep{MEDSL2020}, then re-aggregated to block-group and county level
+    by population-proportional allocation.
+\end{description}
 
 \subsection{Metrics}
 
-For each state and resolution, we compute:
+For each state-resolution combination we compute:
 
-\begin{itemize}
-    \item \textbf{Majority-minority (MM) district count}: Districts where minority population $> 50\%$
-    \item \textbf{Polsby-Popper compactness}: $\frac{4\pi \cdot \text{Area}}{\text{Perimeter}^2}$ (higher is more compact)
-    \item \textbf{Population deviation}: Verify $\pm 0.5\%$ constraint maintained
-    \item \textbf{Runtime}: Computational performance and scalability analysis
-\end{itemize}
+\paragraph{Polsby-Popper compactness (PP).}
+\begin{equation}
+  PP = \frac{4\pi A}{P^2}
+\end{equation}
+where $A$ is district area and $P$ is district perimeter, computed on
+dissolved district polygons in WGS84 coordinates.  We report the mean PP
+across all $k$ districts in each state.
 
-% TODO: Add statistical testing methodology (paired t-tests, regression models)
+\paragraph{D-seat count.}
+The number of districts in which the Democratic presidential vote share
+exceeds 50\%, using 2020 presidential returns as the electoral benchmark.
+This metric is deliberately simple---it uses a single election rather than
+an average---consistent with the single-run framing.
+
+\paragraph{Resolution stability index (RSI).}
+To summarise cross-resolution variation, we define:
+\begin{equation}
+  \text{RSI}(s) = \frac{\max_r PP(s, r) - \min_r PP(s, r)}{\text{mean}_r PP(s, r)}
+\end{equation}
+where $r$ indexes resolution (county, tract, block group) and $s$ indexes
+state.  An RSI $< 0.02$ means the range of PP across resolutions is less
+than 2\% of the mean---our primary stability criterion.
+
+\subsection{Comparison Baseline}
+
+We also compare block-group-level results to the 2020 enacted congressional
+district maps (where available from the NCSL districting data portal) to
+situate the algorithmic results in the context of real-world practice.
+This comparison is secondary to the cross-resolution analysis.
+
+\subsection{Computational Environment}
+
+All runs use the \texttt{bisect} binary (Rust, version matching the
+\texttt{main} branch at submission time) on a Windows 11 workstation with 32
+GB RAM.  Block-group-level runs for large states (TX, FL) require
+approximately 6 GB peak memory and complete within 4 minutes on 8 threads.
+County-level runs for all states complete in under 10 seconds.

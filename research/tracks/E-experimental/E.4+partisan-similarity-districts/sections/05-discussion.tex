@@ -1,20 +1,87 @@
-\section{Discussion}
+\subsection{\emph{Rucho v.\ Common Cause} and the Federal Foreclosure}
 
-% 5.1: Transparency vs Gerrymandering
-% - Is algorithmic partisan clustering "gerrymandering"?
-% - Both parties benefit equally
-% - Transparent, reproducible, auditable
+In \emph{Rucho v.\ Common Cause} (2019), the U.S. Supreme Court held 5--4
+that federal courts lack jurisdiction to adjudicate partisan gerrymandering
+claims under the Constitution \citep{rucho2019}.  Chief Justice Roberts'
+majority opinion acknowledged that partisan gerrymandering is ``incompatible
+with democratic principles'' but concluded that the ``fairness'' of electoral
+maps presents a political question beyond the reach of federal judicial
+standards.  The dissent (Kagan, J.) argued that manageable standards were
+available, including the Efficiency Gap.
 
-% 5.2: Legal and Normative Implications
-% - Rucho v. Common Cause (2019): partisan gerrymandering non-justiciable
-% - Does algorithmic clustering change legal landscape?
-% - Reform debate: competitive vs safe districts
+\emph{Rucho}'s practical effect is to foreclose federal constitutional
+challenges to partisan gerrymandering.  State courts and state constitutions
+have partially filled this gap: the North Carolina Supreme Court struck down
+NC's legislative district plan on state constitutional grounds in 2022
+(\emph{Harper v.\ Hall}), though subsequent court composition changes
+complicated enforcement.  Pennsylvania's Supreme Court struck its
+congressional map in 2018 (\emph{League of Women Voters v.\ Pennsylvania}).
 
-% 5.3: Voter and Party Preferences
-% - Do voters want safe or competitive districts?
-% - Empirical questions for future research
+\subsection{PSDs as a Legal Standard}
 
-% 5.4: Limitations
-% - Assumes partisan preferences are fixed
-% - Ignores VRA requirements (could be combined)
-% - Geographic sorting confounds
+PSDs provide a concrete standard for measuring partisan gerrymandering that
+does not require courts to evaluate ``fairness'' in the abstract---a concern
+at the heart of \emph{Rucho}'s justiciability holding.  Instead, courts can
+ask: does the enacted map produce more safe seats for one party than a
+neutral PSD map would?  This question is empirical, not normative.
+
+The PSD comparison has several advantages as a legal standard:
+
+\paragraph{Algorithmic neutrality.}
+PSDs do not target any specific partisan outcome.  The algorithm accepts
+geographic data (partisan vote shares) and produces the most homogeneous
+partition of that data.  Whichever party's voters are more geographically
+sorted gets more safe seats---this is geography, not design.
+
+\paragraph{Quantifiability.}
+The EG difference between an enacted plan and a PSD baseline (e.g., $+0.14$
+vs.\ $-0.01$ in NC) provides a precise measure of incremental partisan
+manipulation.  Courts can establish thresholds above which the difference is
+attributable to intentional manipulation rather than geographic sorting.
+
+\paragraph{Comparability.}
+Because PSDs and enacted plans are generated from the same underlying data
+(same census tracts, same election returns), comparisons are apples-to-apples:
+any difference in safe seat counts or EG cannot be attributed to data choices
+or methodology.
+
+\subsection{Normative Neutrality}
+
+It is important to emphasise what PSDs are not.  PSDs are not a \emph{reform
+proposal}: we do not argue that safe seats are desirable.  They are not a
+\emph{gerrymandering tool}: because the algorithm distributes safe seats
+proportionally between parties, PSDs would not provide a partisan advantage.
+They are an \emph{analytical instrument}---a way to quantify how much of the
+safe-seat concentration in an enacted plan is attributable to geography versus
+intentional manipulation.
+
+This normative neutrality is consistent with prior work that uses algorithmic
+methods to evaluate redistricting plans without advocating for any specific
+political outcome \citep{dellib2026edgeweighted, chen2013unintentional}.
+
+\subsection{Limitations}
+
+Three limitations bound this analysis.  First, all results are single-run:
+ensemble variation in PSD maps is not characterised, and the reported
+homogeneity levels may not be representative of the full distribution of
+possible PSD maps.  Second, the 2020 presidential election results are used
+as the partisan signal; different elections or multi-election averages would
+produce different weight matrices and different PSD configurations.  Third,
+the analysis holds geographic units fixed at census tracts; the MAUP
+analysis (C.1) suggests that block-group-level results would be similar, but
+this has not been tested for PSD weighting specifically.
+
+\subsection{Relationship to Other Metrics}
+
+The PSD framework is complementary to existing measures:
+
+\begin{itemize}
+  \item \textbf{Efficiency Gap}: PSDs produce near-zero EG by construction,
+    establishing the EG a geographically sorted map would have without
+    intentional manipulation.
+  \item \textbf{Mean-median difference}: PSDs with near-zero EG also tend to
+    produce small mean-median differences, providing a cross-validation.
+  \item \textbf{Declination}: The geometric declination metric (efficiency
+    of seat-vote curves) is expected to be near zero for PSD maps and can
+    be compared to enacted-plan declination.
+\end{itemize}

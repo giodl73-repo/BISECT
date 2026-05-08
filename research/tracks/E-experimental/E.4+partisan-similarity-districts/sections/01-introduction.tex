@@ -1,14 +1,88 @@
-\section{Introduction}
+Safe congressional districts---districts where one party's presidential vote
+share consistently exceeds 60\%---now account for approximately 90\% of all
+House seats \citep{cook2020competitive}.  This homogeneity arises from two
+sources: organic geographic sorting (Democrats concentrate in cities,
+Republicans in rural areas) \citep{bishop2009bigSort}, and deliberate
+partisan gerrymandering (mapmakers pack opposition voters and crack moderate
+constituencies) \citep{stephanopoulos2015partisan}.  The two mechanisms are
+observationally difficult to separate: a state with many safe districts might
+reflect geography, intentional manipulation, or a combination of both.
 
-% 1.1: The Safe District Debate
-% - Two visions: competitive vs safe districts
-% - Current reality: ~90% safe via gerrymandering or geographic sorting
+\subsection{The Safe Seat Debate}
 
-% 1.2: This Paper's Contribution
-% - Algorithmic optimization for safe seats (partisan vote similarity)
-% - Transparent, reproducible alternative to gerrymandering
-% - Normative neutrality: providing method, not advocating
+There are two competing normative visions of redistricting.  The
+\emph{competitive districts} view holds that elections should be contested,
+that safe seats breed complacency and extremism, and that democratic
+accountability requires competitive races \citep{jacobson2015politics}.  The
+\emph{representation} view holds that safe districts ensure minority
+representation (majority-minority districts are deliberately safe for
+minority-preferred candidates) and that forcing artificial competition
+misrepresents naturally sorted communities \citep{rush2000redistricting}.
 
-% 1.3: Comparison to Existing Work
-% - Prior work: neutral redistricting, VRA compliance, proportional representation
-% - This paper: partisan homogeneity via edge-weighting
+This paper takes no position in this normative debate.  Instead, we contribute
+a methodological tool: an algorithm that \emph{deliberately} generates safe
+seats in a transparent, reproducible, and legally auditable way.  The value
+of this tool is not to advocate for safe seats but to establish a neutral
+reference point---a ``maximum-safe-seat'' baseline---against which enacted
+plans can be compared.
+
+\subsection{The Inversion Idea}
+
+The standard bisect algorithm minimises edge cuts, which corresponds to
+minimising district perimeter and maximising geographic compactness.  In
+this mode, neighbouring tracts are assigned to the same district because they
+share a long boundary, not because they have similar partisan lean.
+
+We propose a simple inversion: modify the edge weights to reflect
+\emph{partisan similarity} rather than shared boundary length.  Specifically,
+we set:
+\begin{equation}
+  w_{uv} = \exp\!\bigl(-\alpha \cdot |D_u - D_v|\bigr)
+  \label{eq:psd-weight}
+\end{equation}
+where $D_u$ and $D_v$ are the Democratic presidential vote shares in tracts
+$u$ and $v$, and $\alpha > 0$ is a scaling parameter.  When $\alpha = 0$,
+equation~\eqref{eq:psd-weight} reduces to unit weights (unweighted partitioning).
+As $\alpha \to \infty$, only edges between tracts with identical partisan
+lean receive nonzero weight, producing maximally homogeneous districts.
+
+This ``partisan similarity'' weighting is the \emph{inverse} of what bisect
+normally does: instead of attracting geographically proximate tracts, we
+attract partisan-similar tracts.  The result is partisan similarity districts
+(PSDs): districts that cluster geographically contiguous tracts with similar
+partisan lean, producing homogeneous safe seats.
+
+\subsection{Why PSDs Matter}
+
+PSDs have three important uses:
+
+\paragraph{Legal baseline.}
+\emph{Rucho v.\ Common Cause} (2019) held that federal courts cannot adjudicate
+partisan gerrymandering claims under the Constitution, leaving state courts
+and legislatures as the primary venues for such challenges.  A neutral
+algorithmic method for generating maximally safe seats---one that distributes
+safe seats \emph{proportionally} between parties---provides a natural baseline:
+an enacted plan that exceeds the PSD safe-seat count for one party, while
+being below it for the other, provides quantitative evidence of intentional
+imbalance.
+
+\paragraph{Efficiency Gap calibration.}
+The Efficiency Gap (EG) measures partisan asymmetry in wasted votes
+\citep{stephanopoulos2015partisan}.  PSDs allow analysts to compute the EG
+that would result from a ``symmetric'' safe-seat map, establishing the
+maximum EG achievable without intentional partisan skew.
+
+\paragraph{Algorithm benchmarking.}
+PSDs provide a worst-case compactness benchmark.  Any redistricting algorithm
+that produces districts less compact than PSDs is generating shapes not
+justified by partisan-homogeneity goals; PSDs establish the compactness floor
+for safe-seat-focused redistricting.
+
+\subsection{Paper Structure}
+
+Section~2 reviews the partisan clustering literature, the Efficiency Gap, and
+geographic sorting.  Section~3 describes the PSD weighting formula and
+implementation.  Section~4 presents results for North Carolina and Texas,
+comparing PSDs to enacted plans and to neutral bisect plans.  Section~5
+analyses the legal implications under \emph{Rucho} and related jurisprudence.
+Section~6 concludes.

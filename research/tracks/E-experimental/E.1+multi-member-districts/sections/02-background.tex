@@ -1,0 +1,92 @@
+\subsection{Single Transferable Vote (STV)}
+
+STV is a ranked-choice proportional system in which voters rank individual
+candidates from all parties in preference order.  Seats are filled through an
+iterative elimination-and-transfer process \citep{gallagher2011ireland}:
+
+\begin{enumerate}
+  \item Compute the Droop quota: $Q = \lfloor P / (S + 1) \rfloor + 1$,
+        where $P$ is total valid ballots and $S$ is the number of seats.
+  \item Candidates who reach quota are elected; their surplus votes
+        (above quota) are redistributed to next preferences at a
+        transfer value $TV = \text{surplus} / \text{total votes for
+        candidate}$.
+  \item If no candidate reaches quota, eliminate the candidate with
+        the fewest votes and redistribute their votes at full value.
+  \item Repeat until all seats are filled.
+\end{enumerate}
+
+STV produces proportional outcomes when parties are cohesive in their voter
+rankings.  Its main advantage over closed-list PR is that voters can express
+preferences within parties, not just between parties.  Its main disadvantage
+is ballot complexity: in a 4-member district with 5 parties each running 2
+candidates, a ballot may rank up to 10 candidates.
+
+STV is used in Ireland (Dail Eireann, 3--5 member constituencies), Malta
+(5 members), Scotland (local government, 3--4 members), Australia (Senate,
+state-by-state, 6--12 members), and several U.S. and Canadian cities.  The
+Irish system, with 3--5 member constituencies, is the closest international
+model to a potential U.S. House reform.
+
+\subsection{Open-List Proportional Representation (OLPR)}
+
+OLPR is a party-list system in which voters choose a party and may
+additionally cast a candidate preference vote \citep{karvonen2004preferential}.
+Seats are allocated to parties using a divisor method (D'Hondt or
+Sainte-Lague), and within each party, seats go to candidates with the most
+preference votes.  If a voter does not express a candidate preference, their
+vote counts toward the party's total but not toward any specific candidate.
+
+OLPR is used in Sweden, Finland, the Netherlands, and Brazil (Chamber of
+Deputies).  The defining feature is that voters can influence which
+individuals from their preferred party are elected, while the party-list
+structure ensures that party seat shares are proportional to vote shares.
+
+For algorithmic implementation, OLPR is simpler than STV: the seat-allocation
+step is a D'Hondt divisor calculation, well-established in the literature
+\citep{balinski1982fair}.  The candidate-preference ranking within parties is
+a separate computation that we implement as a post-processing step.
+
+\subsection{District Magnitude and Compactness}
+
+District magnitude---the number of seats per district---is the central design
+variable in MMD systems.  Higher magnitude improves proportionality (lower
+Gallagher index) but tends to produce less compact districts, because larger
+population districts must span more territory.
+
+The relationship between magnitude and compactness has been studied
+theoretically \citep{taagepera2007seats} but rarely empirically for the
+United States.  \citet{altman2011bqap} noted that algorithmic redistricting
+produces more compact districts as $k$ increases (more, smaller districts),
+which is the opposite direction from MMD design (fewer, larger districts).
+
+For a fixed total population $P$ and $k$ districts of magnitude $M$ (so
+$kM = S$ total seats), the mean district population is $P / k$.  A district
+with twice the population of a single-member district is not necessarily twice
+as spatially spread, because population is concentrated---but in low-density
+states, larger districts do span more land, increasing perimeter and reducing
+Polsby-Popper.
+
+\subsection{MMDs and Minority Representation}
+
+Under single-member districts, the primary mechanism for minority
+representation is the majority-minority district (MMD): a district where a
+minority group comprises $>50\%$ of the voting-age population, enabling
+the election of minority-preferred candidates \citep{thernstrom1987whose}.
+The Voting Rights Act (Section 2) can require such districts when specific
+legal conditions are met \citep{thornburg1986}.
+
+Under multi-member proportional districts, minority representation can
+occur without geographic concentration.  A district where a minority group
+is 35\% of the population electing 4 representatives would typically elect
+1--2 minority-preferred candidates under proportional allocation.  This
+``representation without packing'' was argued by \citet{guinier1994tyranny}
+as a superior approach to the geographic concentration required by
+majority-minority single-member districts.
+
+The tradeoff is that MMD minority representation is contingent on minority
+voting cohesion and the availability of minority candidates across party
+lists.  Geographic concentration in a single-member district guarantees
+minority representation; proportional allocation in an MMD converts minority
+vote share into seat share only when the minority votes cohesively for
+candidates of their choosing.
