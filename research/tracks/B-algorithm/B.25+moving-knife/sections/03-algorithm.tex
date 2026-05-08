@@ -25,7 +25,7 @@ orientations produce the same bisecting hyperplane with left and right
 swapped; no information is lost by this restriction.
 The 1$^\circ$ granularity ensures the globally best direction is never
 missed by more than half a degree.
-Runtime is $O(n_{\mathrm{orient}} \times m) = O(180m)$ per bisection node,
+Runtime is $O(n_{\mathrm{orient}} \cdot m \log m) \approx O(180 m \log m)$ per bisection node,
 which is comparable to a single iteration of \cvdgeo{} and substantially
 faster than the full \cvdgeo{} run (typically 7--12 iterations $\times$ $O(m)$).
 

@@ -118,6 +118,7 @@ The absolute-value framing is neutral: it does not favour Democratic or
 Republican outcomes, only representational fidelity.
 A plan that gives Democrats 3 more seats than proportional scores the same as
 one that gives Republicans 3 more seats.
+We use 2020 presidential two-party returns as the partisan signal; presidential returns are standard in ensemble redistricting research \citep{deford2021} but may differ from Senate or gubernatorial returns in polarised cycles --- practitioners should verify sensitivity to vote vintage.
 
 \paragraph{Discrete resolution.}
 $D_w(\pi) \in \{0, 1, \ldots, k\}$ is integer-valued.
@@ -155,6 +156,8 @@ $\VRA = 0$ means every district that was formerly a majority-minority district
 50\% minority VAP.
 Practitioners may filter the NDJSON output by \texttt{vra\_deficit = 0} to
 consider only VRA-compliant plans from the frontier.
+
+\textit{Note}: this implementation counts \emph{all} districts below the 50\% minority VAP threshold, not solely legally designated majority-minority districts. States with few minority-opportunity districts may see VRA\_deficit = 0 under this definition regardless of demographic distribution. Practitioners in covered jurisdictions should apply the Gingles feasibility analysis to determine which districts are legally subject to VRA Section 2 scrutiny.
 
 \paragraph{VRA as objective, not constraint.}
 The spec treats $\VRA$ as an objective rather than a hard constraint, so

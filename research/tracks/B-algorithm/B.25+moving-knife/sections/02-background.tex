@@ -112,8 +112,8 @@ expected $O(m)$ time.
 
 The expected-$O(m)$ bound makes Welzl's algorithm well-suited to the inner
 loop of \mka{}: it is called $2 \times n_{\mathrm{orient}}$ times per bisection
-node (once for each half at each orientation), contributing $O(n_{\mathrm{orient}} \times m)$
-total work.
+node (once for each half at each orientation), contributing $O(n_{\mathrm{orient}} \cdot m \log m)$
+total work (the $O(m \log m)$ sort step dominates).
 
 \subsection{Relationship to Existing Platform Algorithms}
 \label{subsec:related}
@@ -139,7 +139,7 @@ Algorithm & Optimises & Distance & Reock & Runtime \\
 \cvd{}    & Proximity & BFS hop-count  & Medium & $O(n_{\mathrm{iter}} \times m)$ \\
 \cvdgeo{} & Proximity & Euclidean      & Medium--high & $O(n_{\mathrm{iter}} \times m)$ \\
 \bfsg{}   & Balance speed & Euclidean seeds & Medium & $O(m \log m)$ \\
-\textbf{\mka{}} & \textbf{Reock} & \textbf{Euclidean sweep} & \textbf{Highest} & $O(n_{\mathrm{orient}} \times m)$ \\
+\textbf{\mka{}} & \textbf{Reock} & \textbf{Euclidean sweep} & \textbf{Highest} & $O(n_{\mathrm{orient}} \cdot m \log m)$ \\
 \bottomrule
 \end{tabular}
 \end{table}
