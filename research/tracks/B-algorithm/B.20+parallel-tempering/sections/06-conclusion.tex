@@ -55,6 +55,21 @@ The \texttt{ParallelTemperingChain} struct lives in
 \texttt{swap\_acceptance\_rate()}, \texttt{cold\_chain\_ec\_mean()},
 and \texttt{select\_plan(p)} as the primary API.
 
+\paragraph{Legal and Practitioner Use.}
+\pt{} is appropriate for practitioners who require the highest-quality single
+plan and can accept the computational cost of running multiple replicas for
+extended mixing times.
+The SHA-256 seed derivation from \texttt{base\_seed} through the swap schedule
+produces a fully verifiable audit chain that is compatible with the B.17
+verification framework.
+\pt{} is \emph{not} recommended for real-time litigation support: at $N=4$
+replicas and $k \geq 30$ districts, wall-clock costs are $4\times$ single-chain
+runtime and can exceed several hours on large states, making it unsuitable for
+time-constrained court proceedings.
+For litigation support requiring rapid turnaround, practitioners should use
+single-chain \fr{} or \cs{}, which produce auditable plans at a fraction of
+the computational cost.
+
 \paragraph{Open questions.}
 \begin{enumerate}
 \item \textbf{Parallel execution.}

@@ -159,13 +159,14 @@ two-party returns) for CVD plans compared to standard bisection.
 State & $k$ & CVD & Standard METIS & Single-run note \\
 \midrule
 NC & 14 & 7D/7R & 7D/7R & Stable \\
-WI & 8  & 3D/5R & 2D/6R & One-seat variation \\
+WI & 8  & 3D/5R\dagger{} & 2D/6R\dagger{} & One-seat variation \\
 TX & 38 & 16D/22R & 16D/22R & Stable \\
 \bottomrule
 \end{tabular}
 \caption{Partisan outcomes (2020 presidential, single run, seed $s=42$).
 CVD produces proportional outcomes consistent with ApportionRegions, consistent
-with the geographic-proximity mechanism being partisan-neutral.}
+with the geographic-proximity mechanism being partisan-neutral.
+\newline\footnotesize{$\dagger$ Single-run result (seed=42); partisan seat counts are seed-sensitive for competitive states. Multi-seed validation (50 runs) deferred to Phase~2.}}
 \label{tab:partisan}
 \end{table}
 

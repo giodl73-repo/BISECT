@@ -126,14 +126,15 @@ Any solver that can read the standard MPS format can verify the certificate.
 \textbf{Note (Phase~1 limitation):} MPS files are currently stored as loose
 files under \texttt{runs/\{label\}/\{year\}/ilp/}.
 They are \emph{not} included in the \texttt{label-verify} SHA audit chain
-in Phase~1.
+in Phase~1, and their SHA hashes are not yet integrated into the B.17
+parameter-sensitivity verification chain~\citep{b17paper}.
 This means that MPS files can be modified after generation without detection
 by the platform's integrity checks.
 Phase~2 will add MPS file hashes to the \texttt{index.json} manifest,
 enabling tamper-evident chain-of-custody.
-Until then, practitioners submitting ILP certificates in legal proceedings
-should independently hash the MPS file at time of generation and include
-the hash in any expert report.
+Until then, users requiring audit-chain integrity should manually record
+the SHA256 of the MPS output file at time of generation and include
+the hash in any expert report or disclosure.
 
 \subsection{Comparison with Ensemble-Based Expert Reports}
 

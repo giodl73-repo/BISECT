@@ -46,6 +46,16 @@ algorithm:
 workers: 8
 \end{verbatim}
 
+\paragraph{Legal and Practitioner Use.}
+For legal use, CVD-Geographic is the preferred structure-layer algorithm when
+Polsby-Popper compactness is the primary criterion.
+Its $O(n)$ Lloyd iterations produce verifiably compact boundaries that can be
+submitted as ``compactness-optimised'' plans in litigation.
+The 20 Lloyd iteration default matches the B.22 convergence finding
+(Section~\ref{sec:comparison}); plans generated with fewer iterations should
+disclose the iteration count, as early termination may leave seeds not yet
+at their geographic centroid.
+
 \paragraph{Legal context.} CVD-Geographic optimises Polsby-Popper as a purely geometric metric. It does not certify compliance with state constitutional compactness standards, which vary by jurisdiction and may involve different compactness measures (Reock, convex hull ratio) or weigh compactness against other criteria. Practitioners in Florida~\citep{floridaConst} and other high-litigation states should verify compactness compliance using \texttt{redist analyze --types compactness} and consult legal counsel on whether the specific PP improvement is legally material under the applicable state standard. VRA majority-minority district requirements are not affected by the distance metric choice.
 
 \paragraph{Open questions.}

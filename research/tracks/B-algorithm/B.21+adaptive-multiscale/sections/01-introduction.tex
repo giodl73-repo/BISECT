@@ -77,6 +77,8 @@ Applied here, $h(\alpha) = \mathrm{E}[\text{coarse accept rate}(\alpha)] - \text
 the expected coarse acceptance rate is (approximately) monotone in $\alpha$
 over the operating range, so the root of $h$ is the $\alpha^*$ that achieves
 exactly the target acceptance rate.
+\textit{Note: This holds for greedy refinement; full MCMC steps are
+non-monotone by design (acceptance of worse plans maintains detailed balance).}
 
 The Robbins-Monro update rule is:
 \[

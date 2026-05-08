@@ -39,8 +39,10 @@ a chain of length $N$ with autocorrelation $\rho_t$ at lag $t$:
   \label{eq:ess}
 \end{equation}
 
-An \ess{} of at least 400 per statistic is required for reliable 95\%
-interval estimates.  \recom{} ensembles typically achieve higher \ess{} than
+An \ess{} of at least 400 per statistic is the minimum floor for reliable
+95\% interval estimates; G.4~\citep{g4paper} establishes 500 as the
+recommended target based on empirical diagnostics across six states.
+\recom{} ensembles typically achieve higher \ess{} than
 flip-chain ensembles of the same length, because the recombination move
 decorrelates faster.
 
@@ -80,7 +82,7 @@ The following standards apply across all G-track papers:
 Diagnostic & Threshold & Consequence of failure \\
 \midrule
 $\rhat$ & $< 1.1$ & Results flagged as preliminary \\
-\ess    & $> 400$  & Wider uncertainty intervals used \\
+\ess    & $> 500$ (min 400) & Wider uncertainty intervals used \\
 $\rho_H(10)$ & $< 0.10$ & Chain considered mixed \\
 \bottomrule
 \end{tabular}
