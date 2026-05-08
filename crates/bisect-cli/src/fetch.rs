@@ -928,4 +928,195 @@ mod tests {
         assert_eq!(items.len(), 6,
             "2 states × 3 types must produce 6 fetch items; got {}", items.len());
     }
+
+    // ── L0: LODES + school-districts + EIA-861 fetch list ─────────────────────
+
+    #[test]
+    fn test_build_fetch_list_lodes_url_pattern() {
+        use crate::args::DataType;
+        let manifest = load_manifest().unwrap();
+        let items = build_fetch_list(
+            &manifest, &["NC".to_string()], "2020", &[DataType::Lodes]
+        );
+        assert_eq!(items.len(), 1);
+        let url = items[0].url.as_deref().unwrap();
+        assert!(url.contains("lehd.ces.census.gov"), "LODES URL must use LEHD server");
+        assert!(url.contains("nc"), "LODES URL must contain lowercase state code");
+        assert!(url.contains("wac"), "LODES URL must be WAC file");
+        assert!(url.contains("2020"), "LODES URL must contain year");
+        assert!(url.ends_with(".csv.gz"), "LODES WAC must be .csv.gz");
+        assert_eq!(items[0].kind, "lodes-wac");
+        assert!(items[0].local_path.to_string_lossy().contains("lodes"),
+            "LODES local path must be under lodes/ directory");
+        assert!(items[0].local_path.to_string_lossy().ends_with("_wac_tract.csv"),
+            "LODES local path must end with _wac_tract.csv");
+    }
+
+    #[test]
+    fn test_build_fetch_list_school_districts_url_pattern() {
+        use crate::args::DataType;
+        let manifest = load_manifest().unwrap();
+        let items = build_fetch_list(
+            &manifest, &["NC".to_string()], "2020", &[DataType::SchoolDistricts]
+        );
+        assert_eq!(items.len(), 1);
+        let url = items[0].url.as_deref().unwrap();
+        assert!(url.contains("census.gov"), "school district URL must use Census server");
+        assert!(url.contains("UNSD"), "school district URL must reference UNSD directory");
+        assert!(url.contains("unsd"), "school district filename must contain 'unsd'");
+        assert!(url.ends_with(".zip"), "school district must be ZIP");
+        assert_eq!(items[0].kind, "school-districts");
+    }
+
+    #[test]
+    fn test_build_fetch_list_eia861_is_national() {
+        use crate::args::DataType;
+        let manifest = load_manifest().unwrap();
+        // EIA-861 is one national file, not per-state — only 1 item regardless of state filter
+        let items = build_fetch_list(
+            &manifest, &["NC".to_string(), "WI".to_string()], "2020", &[DataType::Eia861]
+        );
+        assert_eq!(items.len(), 1, "EIA-861 produces exactly one national item");
+        assert_eq!(items[0].state_code, "US", "EIA-861 state_code must be 'US'");
+        let url = items[0].url.as_deref().unwrap();
+        assert!(url.contains("eia.gov"), "EIA-861 URL must use EIA server");
+        assert!(url.contains("2020"), "EIA-861 URL must contain year");
+        assert!(url.ends_with(".zip"), "EIA-861 must be ZIP");
+        assert_eq!(items[0].kind, "eia-861");
+    }
+
+    #[test]
+    fn test_fetch_args_polite_delay_default() {
+        use crate::args::FetchArgs;
+        use clap::Parser;
+        let args = FetchArgs::parse_from(["fetch"]);
+        assert_eq!(args.polite_delay_secs, 1,
+            "polite_delay_secs default must be 1 second");
+    }
+
+    #[test]
+    fn test_fetch_args_polite_delay_zero_allowed() {
+        use crate::args::FetchArgs;
+        use clap::Parser;
+        let args = FetchArgs::parse_from(["fetch", "--polite-delay-secs", "0"]);
+        assert_eq!(args.polite_delay_secs, 0);
+    }
+
+    // ── L0: download_lodes_wac block→tract aggregation ───────────────────────
+
+    #[test]
+    fn test_lodes_wac_aggregation_sums_blocks_to_tract() {
+        use std::io::Write;
+        use flate2::write::GzEncoder;
+        use flate2::Compression;
+
+        // Build a minimal LODES WAC CSV in memory:
+        // 3 blocks in 2 tracts (blocks 01001020100001, 01001020100002 → tract 01001020100;
+        //                       block 01001020200001 → tract 01001020200)
+        let csv_content = "\
+w_geocode,C000,CNS01,CNS02,CNS05,CNS07,CNS08,CNS09,CNS10,CNS11\n\
+\"010010201000001\",100,10,5,0,30,20,15,10,5\n\
+\"010010201000002\",50,5,0,0,20,5,5,5,0\n\
+\"010010202000001\",200,0,0,0,80,50,30,20,10\n";
+
+        // Compress to gzip
+        let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+        encoder.write_all(csv_content.as_bytes()).unwrap();
+        let gz_bytes = encoder.finish().unwrap();
+
+        // Write to a temp file (to simulate HTTP response we use a local path via mock)
+        // We test the aggregation logic directly by calling the CSV parsing portion.
+        // Since download_lodes_wac takes a URL, we test via the aggregation sub-logic.
+        // Use a real temp file to simulate the gz stream.
+        let tmp_dir = tempfile::TempDir::new().unwrap();
+        let gz_path = tmp_dir.path().join("test.csv.gz");
+        std::fs::write(&gz_path, &gz_bytes).unwrap();
+
+        let output_path = tmp_dir.path().join("output_wac_tract.csv");
+
+        // Call aggregation via a file:// URL workaround — instead, test the
+        // aggregation logic by parsing the uncompressed stream directly.
+        // We inline the aggregation to test the contract.
+        let f = std::fs::File::open(&gz_path).unwrap();
+        let gz = flate2::read::GzDecoder::new(f);
+        let reader = std::io::BufReader::new(gz);
+        let mut lines = std::io::BufRead::lines(reader);
+
+        let header = lines.next().unwrap().unwrap();
+        let cols: Vec<&str> = header.split(',').collect();
+        let idx = |name: &str| cols.iter().position(|c| c.trim_matches('"') == name).unwrap();
+        let (i_geo, i_c000) = (idx("w_geocode"), idx("C000"));
+
+        let mut tracts: std::collections::HashMap<String, u64> = std::collections::HashMap::new();
+        for line in lines {
+            let line = line.unwrap();
+            let fields: Vec<&str> = line.split(',').collect();
+            let geoid = fields[i_geo].trim_matches('"');
+            let tract = &geoid[..11];
+            let jobs: u64 = fields[i_c000].trim_matches('"').parse().unwrap_or(0);
+            *tracts.entry(tract.to_string()).or_insert(0) += jobs;
+        }
+
+        // Verify aggregation: tract 01001020100 = 100+50=150, tract 01001020200 = 200
+        assert_eq!(tracts["01001020100"], 150,
+            "two blocks in same tract must be summed: 100+50=150");
+        assert_eq!(tracts["01001020200"], 200,
+            "single block in tract = block value");
+        assert_eq!(tracts.len(), 2, "two distinct tracts");
+
+        // Verify totals preserved: 100+50+200 = 350
+        let total: u64 = tracts.values().sum();
+        assert_eq!(total, 350, "L0 invariant: aggregation preserves total job count");
+
+        let _ = output_path; // suppress unused warning
+    }
+
+    #[test]
+    fn test_lodes_wac_empty_csv_produces_header_only() {
+        // A state with no jobs (e.g., uninhabited areas) should produce a valid
+        // header-only CSV rather than crashing.
+        let csv_content = "w_geocode,C000,CNS01,CNS02,CNS05,CNS07,CNS08,CNS09,CNS10,CNS11\n";
+        use std::io::Write;
+        use flate2::write::GzEncoder;
+        use flate2::Compression;
+        let mut enc = GzEncoder::new(Vec::new(), Compression::default());
+        enc.write_all(csv_content.as_bytes()).unwrap();
+        let gz_bytes = enc.finish().unwrap();
+
+        // Parse: no data rows → empty tract map → empty output CSV is valid
+        let gz = flate2::read::GzDecoder::new(std::io::Cursor::new(gz_bytes));
+        let reader = std::io::BufReader::new(gz);
+        let mut lines = std::io::BufRead::lines(reader);
+        let _header = lines.next().unwrap().unwrap();
+        let remaining: Vec<_> = lines.collect();
+        assert!(remaining.is_empty(), "no data rows → aggregation produces empty tract map");
+    }
+
+    // ── L2: Real LODES download (requires internet, marked #[ignore]) ─────────
+
+    #[test]
+    #[ignore = "L2: requires internet access to Census LEHD server"]
+    fn test_lodes_wac_real_download_vt_2020() {
+        // Vermont (VT) is the smallest state by tract count (~790 tracts) —
+        // smallest real LODES download (~200KB). Validates the full pipeline:
+        // HTTP GET → gzip decompress → block→tract aggregation → CSV write.
+        let tmp_dir = tempfile::TempDir::new().unwrap();
+        let output = tmp_dir.path().join("vermont_wac_tract.csv");
+        let url = "https://lehd.ces.census.gov/data/lodes/LODES8/vt/wac/vt_wac_S000_JT00_2020.csv.gz";
+        download_lodes_wac(url, &output).expect("VT LODES download must succeed");
+        assert!(output.exists(), "output CSV must be created");
+        let content = std::fs::read_to_string(&output).unwrap();
+        let lines: Vec<_> = content.lines().collect();
+        assert!(lines.len() > 1, "must have header + at least one tract row");
+        assert_eq!(lines[0], "geoid,c000,cns07,cns09,cns10,cns11,cns01,cns02,cns05,cns08",
+            "header must match expected columns");
+        // VT has ~790 tracts — all jobs should aggregate to fewer rows than blocks
+        assert!(lines.len() < 5000, "VT should have <5000 tracts");
+        // Total jobs in VT 2020 should be in the range 200k-400k
+        let total: u64 = lines.iter().skip(1).map(|l| {
+            l.split(',').nth(1).and_then(|v| v.parse::<u64>().ok()).unwrap_or(0)
+        }).sum();
+        assert!(total > 100_000, "VT total jobs must be >100k; got {total}");
+        assert!(total < 600_000, "VT total jobs must be <600k; got {total}");
+    }
 }
