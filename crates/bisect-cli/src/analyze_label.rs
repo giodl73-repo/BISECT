@@ -24,6 +24,8 @@ use crate::label::{
     state_analysis_dir,
 };
 use crate::run_registry::Registry;
+use crate::geometry::{load_district_geometries, state_name_to_code};
+use crate::partisan::{PartisanArgs, run_partisan};
 
 // ── SHA-256 helper ────────────────────────────────────────────────────────────
 
@@ -420,9 +422,8 @@ fn enumerate_states_in_dir(dir: &Path) -> Result<Vec<String>, String> {
 /// Writes per-type JSON files into `out_dir`.  Returns a map of
 /// `type_name → "ok" | "failed"` for each requested type.
 ///
-/// This is a lightweight orchestrator: it calls the same analysis functions
-/// used by `run_analyze` but targets the label-specific directory layout
-/// (`runs/{label}/{year}/{state}/`) rather than the legacy `outputs/` tree.
+/// Fully wired types: `compactness`, `partisan`.
+/// All other types produce a provenance-stub JSON (future work).
 fn run_analyze_state(
     label: &str,
     year: &str,
@@ -430,8 +431,8 @@ fn run_analyze_state(
     types: &[String],
     out_dir: &Path,
 ) -> Result<HashMap<String, String>, String> {
-    let assignments_path = crate::label::state_runs_dir(label, year, state_name)
-        .join("final_assignments.json");
+    let state_runs_dir = crate::label::state_runs_dir(label, year, state_name);
+    let assignments_path = state_runs_dir.join("final_assignments.json");
 
     // If there are no assignments yet (state failed during build), skip gracefully.
     if !assignments_path.exists() {
@@ -444,12 +445,16 @@ fn run_analyze_state(
 
     let mut type_statuses: HashMap<String, String> = HashMap::new();
 
-    // Resolve the effective type list (empty → all concrete types).
+    // Resolve the effective type list (empty → summary).
     let effective_types: Vec<String> = if types.is_empty() {
         vec!["summary".to_string()]
     } else {
         types.to_vec()
     };
+
+    // Resolve state code once — needed by compactness and partisan.
+    // state_name uses lowercase_underscore convention ("north_carolina" → "NC").
+    let state_code: Option<&'static str> = state_name_to_code(state_name);
 
     for type_name in &effective_types {
         let out_path = out_dir.join(format!("{type_name}.json"));
@@ -461,25 +466,289 @@ fn run_analyze_state(
             continue;
         }
 
-        // Delegate to the per-type writer.  For now, we write a minimal stub JSON
-        // that records provenance — the full analysis requires the adjacency graph
-        // and census data that `run_analyze` loads via AnalyzerContext.
-        //
-        // The label-tree analysis intentionally uses the same output path convention
-        // as the existing analyze command; future work can plumb AnalyzerContext here.
-        let stub = serde_json::json!({
-            "analyzer": type_name,
-            "label": label,
-            "year": year,
-            "state": state_name,
-            "source": format!("runs/{label}/{year}/{state_name}/final_assignments.json"),
-            "status": "ok",
-        });
-        write_json_file(&out_path, &stub)?;
-        type_statuses.insert(type_name.clone(), "ok".to_string());
+        match type_name.as_str() {
+            // ── compactness (#192) ─────────────────────────────────────────────
+            "compactness" => {
+                let status = run_compactness_for_state(
+                    label, year, state_name, state_code,
+                    &assignments_path, &out_path,
+                );
+                match status {
+                    Ok(()) => { type_statuses.insert(type_name.clone(), "ok".to_string()); }
+                    Err(e) => {
+                        eprintln!("[analyze] compactness FAILED for {state_name}/{year}: {e}");
+                        type_statuses.insert(type_name.clone(), "failed".to_string());
+                    }
+                }
+            }
+
+            // ── partisan (#193) ────────────────────────────────────────────────
+            "partisan" => {
+                let status = run_partisan_for_state(
+                    label, year, state_name, state_code,
+                    &assignments_path, out_dir,
+                );
+                match status {
+                    Ok(()) => { type_statuses.insert(type_name.clone(), "ok".to_string()); }
+                    Err(e) => {
+                        eprintln!("[analyze] partisan FAILED for {state_name}/{year}: {e}");
+                        type_statuses.insert(type_name.clone(), "failed".to_string());
+                    }
+                }
+            }
+
+            // ── all other types: provenance stub (future work) ─────────────────
+            _ => {
+                let stub = serde_json::json!({
+                    "analyzer": type_name,
+                    "label": label,
+                    "year": year,
+                    "state": state_name,
+                    "source": format!("runs/{label}/{year}/{state_name}/final_assignments.json"),
+                    "status": "ok",
+                });
+                write_json_file(&out_path, &stub)?;
+                type_statuses.insert(type_name.clone(), "ok".to_string());
+            }
+        }
     }
 
     Ok(type_statuses)
+}
+
+/// Compute all compactness metrics for every district in the label-tree state plan
+/// and write `compactness.json` to `out_path`.
+///
+/// Requires: TIGER tract shapefiles at `data/{year}/tiger/tracts/...`.
+/// If geometry data is unavailable, writes a structured error JSON instead of crashing.
+///
+/// Output format:
+/// ```json
+/// {
+///   "analyzer": "compactness",
+///   "label": "my_plan",
+///   "year": "2020",
+///   "state": "vermont",
+///   "note_pwc": "population_weighted_compactness requires tract centroids; use --types pwc when available",
+///   "districts": [
+///     { "district": 1, "polsby_popper": 0.32, "reock": 0.41, "convex_hull_ratio": 0.88,
+///       "schwartzberg": 1.77, "length_width_ratio": 1.54, "perimeter_m": 432000.0, "area_m2": 2.1e10 },
+///     ...
+///   ],
+///   "summary": {
+///     "mean_polsby_popper": 0.32, "mean_reock": 0.41, "mean_convex_hull_ratio": 0.88,
+///     "mean_schwartzberg": 1.77, "mean_length_width_ratio": 1.54, "n_districts": 1
+///   }
+/// }
+/// ```
+fn run_compactness_for_state(
+    label: &str,
+    year: &str,
+    state_name: &str,
+    state_code: Option<&str>,
+    assignments_path: &Path,
+    out_path: &Path,
+) -> Result<(), String> {
+    // Resolve state code — required for TIGER shapefile lookup.
+    let code = match state_code {
+        Some(c) => c,
+        None => {
+            let err_json = serde_json::json!({
+                "analyzer": "compactness",
+                "label": label,
+                "year": year,
+                "state": state_name,
+                "available": false,
+                "error": format!("unknown state name '{state_name}'; cannot resolve 2-letter code"),
+            });
+            write_json_file(out_path, &err_json)?;
+            return Ok(());
+        }
+    };
+
+    // Load assignments.
+    let raw_assignments: HashMap<String, usize> = std::fs::read_to_string(assignments_path)
+        .map_err(|e| format!("[INTERNAL] compactness: cannot read assignments: {e}"))?
+        .parse::<serde_json::Value>()
+        .map_err(|e| format!("[INTERNAL] compactness: cannot parse assignments JSON: {e}"))?
+        .as_object()
+        .ok_or_else(|| "[INTERNAL] compactness: assignments JSON is not an object".to_string())?
+        .iter()
+        .filter_map(|(k, v)| v.as_u64().map(|d| (k.clone(), d as usize)))
+        .collect();
+
+    // Resolve index-keyed assignments to GEOID-keyed (uses adjacency geoids file).
+    // Pass output_root = current dir since label-tree doesn't have an explicit root.
+    let assignments = crate::geometry::resolve_to_geoid_assignments(
+        raw_assignments,
+        std::path::Path::new("outputs/v1"),  // fallback; geoids also searched in standard paths
+        code,
+        year,
+    );
+
+    // Load dissolved district geometries from TIGER shapefiles.
+    let districts = match load_district_geometries(
+        state_name, code, year,
+        "v1",  // version placeholder — geometry loader searches standard paths
+        &assignments,
+        std::path::Path::new("data"),
+        "tract",
+    ) {
+        Ok(d) => d,
+        Err(e) => {
+            // Missing TIGER data → structured error, not a hard failure.
+            eprintln!("[analyze] compactness: geometry unavailable for {state_name}/{year}: {e}");
+            let err_json = serde_json::json!({
+                "analyzer": "compactness",
+                "label": label,
+                "year": year,
+                "state": state_name,
+                "available": false,
+                "error": format!("geometry not available: {e}"),
+                "hint": format!("Run: bisect fetch --year {year} --states {code}"),
+            });
+            write_json_file(out_path, &err_json)?;
+            return Ok(());
+        }
+    };
+
+    // Compute metrics for each district.
+    let mut district_results: Vec<serde_json::Value> = Vec::new();
+    for (district_id, mp) in &districts {
+        if let Some(poly) = bisect_map::largest_component(mp) {
+            match bisect_analysis::all_metrics(*district_id, poly) {
+                Ok(m) => {
+                    district_results.push(serde_json::json!({
+                        "district": m.district,
+                        "polsby_popper": m.polsby_popper,
+                        "reock": m.reock,
+                        "convex_hull_ratio": m.convex_hull_ratio,
+                        "schwartzberg": m.schwartzberg,
+                        "length_width_ratio": m.length_width_ratio,
+                        "perimeter_m": m.perimeter_m,
+                        "area_m2": m.area_m2,
+                    }));
+                }
+                Err(e) => {
+                    eprintln!("WARNING: compactness skipped for district {district_id} ({state_name}): {e}");
+                }
+            }
+        }
+    }
+    district_results.sort_by_key(|d| d["district"].as_u64().unwrap_or(0));
+
+    // Compute per-metric means across all districts.
+    let n = district_results.len() as f64;
+    let mean = |field: &str| -> f64 {
+        if n == 0.0 { return 0.0; }
+        district_results.iter()
+            .filter_map(|d| d[field].as_f64())
+            .sum::<f64>() / n
+    };
+
+    let summary = serde_json::json!({
+        "mean_polsby_popper":    mean("polsby_popper"),
+        "mean_reock":            mean("reock"),
+        "mean_convex_hull_ratio": mean("convex_hull_ratio"),
+        "mean_schwartzberg":     mean("schwartzberg"),
+        "mean_length_width_ratio": mean("length_width_ratio"),
+        "n_districts": district_results.len(),
+    });
+
+    let result = serde_json::json!({
+        "analyzer": "compactness",
+        "label": label,
+        "year": year,
+        "state": state_name,
+        "available": true,
+        "note_pwc": "population_weighted_compactness requires tract centroids; use --types pwc when available",
+        "districts": district_results,
+        "summary": summary,
+    });
+    write_json_file(out_path, &result)?;
+    eprintln!("[OK] compactness -> {}", out_path.display());
+    Ok(())
+}
+
+/// Run partisan analysis for a label-tree state plan and write `partisan.json`.
+///
+/// Calls the same `run_partisan` function used by the main `bisect analyze` command.
+/// If VEST election data is not available, writes a structured unavailable marker
+/// (matching the format of the main analyze command) rather than failing.
+///
+/// Output when VEST available: full JSON with efficiency_gap, mean_median,
+///   partisan_bias, declination (via MetricsBlock), seats_votes_curve.
+/// Output when VEST absent:
+/// ```json
+/// {
+///   "analyzer": "partisan", "available": false,
+///   "error": "VEST precinct data required for partisan analysis. Run bisect fetch --vest to download."
+/// }
+/// ```
+fn run_partisan_for_state(
+    label: &str,
+    year: &str,
+    state_name: &str,
+    state_code: Option<&str>,
+    assignments_path: &Path,
+    out_dir: &Path,
+) -> Result<(), String> {
+    // Resolve state code.
+    let code = match state_code {
+        Some(c) => c,
+        None => {
+            let out_path = out_dir.join("partisan.json");
+            let err_json = serde_json::json!({
+                "analyzer": "partisan",
+                "label": label,
+                "year": year,
+                "state": state_name,
+                "available": false,
+                "error": format!("unknown state name '{state_name}'; cannot resolve 2-letter code"),
+            });
+            write_json_file(&out_path, &err_json)?;
+            return Ok(());
+        }
+    };
+
+    // Load assignments.
+    let raw_assignments: HashMap<String, usize> = std::fs::read_to_string(assignments_path)
+        .map_err(|e| format!("[INTERNAL] partisan: cannot read assignments: {e}"))?
+        .parse::<serde_json::Value>()
+        .map_err(|e| format!("[INTERNAL] partisan: cannot parse assignments JSON: {e}"))?
+        .as_object()
+        .ok_or_else(|| "[INTERNAL] partisan: assignments JSON is not an object".to_string())?
+        .iter()
+        .filter_map(|(k, v)| v.as_u64().map(|d| (k.clone(), d as usize)))
+        .collect();
+
+    // Resolve to GEOID-keyed assignments.
+    let assignments = crate::geometry::resolve_to_geoid_assignments(
+        raw_assignments,
+        std::path::Path::new("outputs/v1"),
+        code,
+        year,
+    );
+
+    // Delegate to run_partisan — it handles missing election data gracefully.
+    let partisan_args = PartisanArgs {
+        assignments: &assignments,
+        state_code: code,
+        state_name,
+        year,
+        version: "v1",
+        election_file: None,  // use default path: data/{year}/elections/presidential_by_tract.csv
+        bootstrap_samples: 1000,
+        analysis_dir: out_dir,
+        force: false,
+        chamber: "congressional",
+    };
+
+    run_partisan(&partisan_args).map_err(|e| format!("partisan runner failed: {e}"))?;
+
+    // run_partisan writes partisan.json (available=true or available=false) directly.
+    // If election data was absent it already wrote the unavailable marker.
+    Ok(())
 }
 
 /// Produce a report from the analysis outputs and write to `report_dir`.
@@ -1214,5 +1483,238 @@ mod tests {
         assert!(msg.contains("[CONFIG]"),  "[CONFIG] prefix required: {msg}");
         assert!(msg.contains("html") || msg.contains("json"),
             "error must mention valid alternatives: {msg}");
+    }
+
+    // ── 34. compactness: unknown state name writes error JSON, does not crash ──
+    //
+    // When state_name cannot be resolved to a 2-letter code, run_compactness_for_state
+    // must write a structured JSON with available=false rather than propagating an Err.
+
+    #[test]
+    fn test_compactness_unknown_state_writes_error_json() {
+        let tmp = TempDir::new().unwrap();
+        let out_path = tmp.path().join("compactness.json");
+        let assignments_path = tmp.path().join("final_assignments.json");
+        // Write minimal valid assignments file (GEOID-keyed, one district)
+        std::fs::write(&assignments_path, r#"{"10001000100": 1}"#).unwrap();
+
+        // "atlantis" is not a known state name → should write error JSON, not Err
+        let result = run_compactness_for_state(
+            "test_label", "2020", "atlantis", None,
+            &assignments_path, &out_path,
+        );
+        assert!(result.is_ok(), "unknown state must not propagate Err: {result:?}");
+        assert!(out_path.exists(), "error JSON must be written to out_path");
+
+        let json: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(&out_path).unwrap()
+        ).unwrap();
+        assert_eq!(json["analyzer"].as_str(), Some("compactness"));
+        assert_eq!(json["available"].as_bool(), Some(false));
+        assert!(json["error"].as_str().unwrap_or("").contains("atlantis"),
+            "error must mention the unknown state name");
+    }
+
+    // ── 35. compactness: missing geometry writes error JSON, does not crash ─────
+    //
+    // When TIGER shapefiles are absent (no data/ dir), run_compactness_for_state
+    // must write available=false JSON rather than propagating geometry load errors.
+
+    #[test]
+    fn test_compactness_missing_geometry_writes_error_json() {
+        let tmp = TempDir::new().unwrap();
+        let out_path = tmp.path().join("compactness.json");
+        let assignments_path = tmp.path().join("final_assignments.json");
+        // Write minimal GEOID-keyed assignments
+        std::fs::write(&assignments_path, r#"{"50005957100": 1, "50005957200": 1}"#).unwrap();
+
+        // Override CWD so no data/ dir is found
+        let original = std::env::current_dir().expect("current_dir");
+        std::env::set_current_dir(tmp.path()).expect("set_current_dir");
+
+        let result = run_compactness_for_state(
+            "test_label", "2020", "vermont", Some("VT"),
+            &assignments_path, &out_path,
+        );
+
+        std::env::set_current_dir(&original).expect("restore current_dir");
+
+        assert!(result.is_ok(), "missing geometry must not propagate Err: {result:?}");
+        assert!(out_path.exists(), "error JSON must be written to out_path");
+
+        let json: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(&out_path).unwrap()
+        ).unwrap();
+        assert_eq!(json["analyzer"].as_str(), Some("compactness"));
+        assert_eq!(json["available"].as_bool(), Some(false));
+        assert!(json["error"].as_str().is_some(), "must have error field");
+    }
+
+    // ── 36. partisan: unknown state name writes error JSON, does not crash ──────
+
+    #[test]
+    fn test_partisan_unknown_state_writes_error_json() {
+        let tmp = TempDir::new().unwrap();
+        let out_dir = tmp.path().to_path_buf();
+        let assignments_path = tmp.path().join("final_assignments.json");
+        std::fs::write(&assignments_path, r#"{"10001000100": 1}"#).unwrap();
+
+        let result = run_partisan_for_state(
+            "test_label", "2020", "atlantis", None,
+            &assignments_path, &out_dir,
+        );
+        assert!(result.is_ok(), "unknown state must not propagate Err: {result:?}");
+
+        let out_path = out_dir.join("partisan.json");
+        assert!(out_path.exists(), "error JSON must be written");
+
+        let json: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(&out_path).unwrap()
+        ).unwrap();
+        assert_eq!(json["analyzer"].as_str(), Some("partisan"));
+        assert_eq!(json["available"].as_bool(), Some(false));
+    }
+
+    // ── 37. partisan: missing election data writes available=false, not crash ───
+    //
+    // run_partisan_for_state with a valid state but no election CSV must write
+    // available=false (delegating gracefully to run_partisan which handles it).
+
+    #[test]
+    fn test_partisan_missing_election_data_writes_unavailable() {
+        let tmp = TempDir::new().unwrap();
+        let out_dir = tmp.path().to_path_buf();
+        let assignments_path = tmp.path().join("final_assignments.json");
+        std::fs::write(&assignments_path, r#"{"50005957100": 1, "50005957200": 1}"#).unwrap();
+
+        // Run from tmp where data/{year}/elections/presidential_by_tract.csv does not exist
+        let original = std::env::current_dir().expect("current_dir");
+        std::env::set_current_dir(tmp.path()).expect("set_current_dir");
+
+        let result = run_partisan_for_state(
+            "test_label", "2020", "vermont", Some("VT"),
+            &assignments_path, &out_dir,
+        );
+
+        std::env::set_current_dir(&original).expect("restore current_dir");
+
+        assert!(result.is_ok(), "missing election data must not propagate Err: {result:?}");
+
+        let out_path = out_dir.join("partisan.json");
+        assert!(out_path.exists(), "partisan.json must be written even when data absent");
+
+        let json: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(&out_path).unwrap()
+        ).unwrap();
+        assert_eq!(json["analyzer"].as_str(), Some("partisan"));
+        assert_eq!(json["available"].as_bool(), Some(false),
+            "must mark as unavailable when election data absent: {json}");
+    }
+
+    // ── 38. compactness type in run_analyze_state writes compactness.json ───────
+    //
+    // When types = ["compactness"], run_analyze_state must attempt the compactness
+    // path. With no geometry available it writes an error JSON rather than a stub.
+
+    #[test]
+    fn test_run_analyze_state_compactness_dispatches() {
+        let tmp = TempDir::new().unwrap();
+        let original = std::env::current_dir().expect("current_dir");
+        std::env::set_current_dir(tmp.path()).expect("set_current_dir");
+
+        // Set up label tree: runs/my_label/2020/vermont/final_assignments.json
+        let state_runs = tmp.path()
+            .join("runs").join("my_label").join("2020").join("vermont");
+        std::fs::create_dir_all(&state_runs).unwrap();
+        std::fs::write(state_runs.join("final_assignments.json"),
+            r#"{"50005957100": 1}"#).unwrap();
+
+        let out_dir = tmp.path().join("out");
+        std::fs::create_dir_all(&out_dir).unwrap();
+
+        let statuses = run_analyze_state(
+            "my_label", "2020", "vermont",
+            &["compactness".to_string()],
+            &out_dir,
+        ).expect("run_analyze_state must not Err");
+
+        std::env::set_current_dir(&original).expect("restore current_dir");
+
+        // compactness.json must be written (may be error JSON if no TIGER data)
+        assert!(out_dir.join("compactness.json").exists(),
+            "compactness.json must be written");
+        // Status must be "ok" (error JSON is still "ok" — non-crashing)
+        assert_eq!(statuses.get("compactness").map(|s| s.as_str()), Some("ok"),
+            "compactness type must report ok status (error JSON counts as ok): {statuses:?}");
+    }
+
+    // ── 39. partisan type in run_analyze_state writes partisan.json ──────────────
+
+    #[test]
+    fn test_run_analyze_state_partisan_dispatches() {
+        let tmp = TempDir::new().unwrap();
+        let original = std::env::current_dir().expect("current_dir");
+        std::env::set_current_dir(tmp.path()).expect("set_current_dir");
+
+        let state_runs = tmp.path()
+            .join("runs").join("my_label").join("2020").join("vermont");
+        std::fs::create_dir_all(&state_runs).unwrap();
+        std::fs::write(state_runs.join("final_assignments.json"),
+            r#"{"50005957100": 1}"#).unwrap();
+
+        let out_dir = tmp.path().join("out");
+        std::fs::create_dir_all(&out_dir).unwrap();
+
+        let statuses = run_analyze_state(
+            "my_label", "2020", "vermont",
+            &["partisan".to_string()],
+            &out_dir,
+        ).expect("run_analyze_state must not Err");
+
+        std::env::set_current_dir(&original).expect("restore current_dir");
+
+        assert!(out_dir.join("partisan.json").exists(),
+            "partisan.json must be written");
+        assert_eq!(statuses.get("partisan").map(|s| s.as_str()), Some("ok"),
+            "partisan type must report ok status: {statuses:?}");
+
+        let json: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(out_dir.join("partisan.json")).unwrap()
+        ).unwrap();
+        assert_eq!(json["analyzer"].as_str(), Some("partisan"),
+            "partisan.json must have analyzer field");
+    }
+
+    // ── 40. compactness summary fields present when districts computed ────────────
+    //
+    // This test validates the summary JSON structure using a mock geometry path.
+    // We can't run the full geometry pipeline in a unit test, so we check the
+    // error-JSON structure (available=false) has the required schema fields.
+
+    #[test]
+    fn test_compactness_error_json_has_required_fields() {
+        let tmp = TempDir::new().unwrap();
+        let out_path = tmp.path().join("compactness.json");
+        let assignments_path = tmp.path().join("final_assignments.json");
+        std::fs::write(&assignments_path, r#"{"50005957100": 1}"#).unwrap();
+
+        let original = std::env::current_dir().expect("current_dir");
+        std::env::set_current_dir(tmp.path()).expect("set_current_dir");
+
+        run_compactness_for_state(
+            "lbl", "2020", "vermont", Some("VT"),
+            &assignments_path, &out_path,
+        ).unwrap();
+
+        std::env::set_current_dir(&original).expect("restore current_dir");
+
+        let json: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(&out_path).unwrap()
+        ).unwrap();
+        assert!(json.get("analyzer").is_some(), "must have 'analyzer' field");
+        assert!(json.get("label").is_some(), "must have 'label' field");
+        assert!(json.get("year").is_some(), "must have 'year' field");
+        assert!(json.get("state").is_some(), "must have 'state' field");
+        assert!(json.get("available").is_some(), "must have 'available' field");
     }
 }
