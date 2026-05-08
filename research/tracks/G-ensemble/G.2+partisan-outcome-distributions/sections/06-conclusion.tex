@@ -16,10 +16,14 @@ ensemble comparison.  The main findings are:
     effect reduces the number of compact Democratic districts in any compact
     algorithm applied to Georgia.
 
-  \item The \ar{} plan falls inside the proportionality corridor for the
-    competitive states studied (NC, WI, PA, MN).  This is a strong result:
-    an algorithm with no proportionality objective nevertheless produces
-    proportional-adjacent outcomes in competitive states.
+  \item The \ar{} plan falls inside the proportionality corridor for
+    NC and MN but outside for WI, PA, and GA (confirmed from multi-seed
+    AR run outputs).  The revised finding is more nuanced: geographic
+    alignment between the prime factorisation and voter distribution
+    determines whether AR achieves corridor-proportional outcomes.
+    NC's 7-way primary factorisation groups Charlotte and the Research
+    Triangle together, enabling 7D; WI's 2-way primary split creates
+    lopsided geographic halves, yielding only 2D from 50\% D vote.
 
   \item Algorithm choice matters in sorted states.  Short-burst algorithms
     with compactness-correlated objectives can produce extreme partisan

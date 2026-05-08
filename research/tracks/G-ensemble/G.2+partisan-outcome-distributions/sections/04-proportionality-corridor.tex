@@ -44,15 +44,25 @@ MN & 0.531 & 4.2   & $\{4, 5\}$   & 59\% \\
 
 \subsection{AR's Position in the Corridor}
 
-The \ar{} plan falls inside the proportionality corridor for NC (7D = proportional),
-WI (4D = proportional), and PA (8D, within one of proportional).  It falls
-outside the corridor for Georgia (5D vs.\ proportional of 6--7D).
+The \ar{} plan falls inside the proportionality corridor for NC (7D,
+corridor $\{6,7,8\}$) and MN (4D, corridor $\{4,5\}$).
+It falls \emph{outside} the corridor for WI (AR=2D, corridor $\{3,4,5\}$),
+PA (AR=7D, corridor $\{8,9\}$), and Georgia (AR=5D, corridor $\{6,7\}$).
+
+\begin{remark}
+Earlier projections reported WI AR=4D and PA AR=8D, which would have placed
+both inside their corridors.  Confirmed multi-seed AR run outputs
+(\texttt{b11\_ms\_WI}, \texttt{b11\_ms\_PA}) show WI=2D/6R uniformly across
+all seeds and PA=7D/10R uniformly across 20 seeds.  The corrected finding
+is that \ar{} falls inside the proportionality corridor for 2 of 5 primary
+states (NC and MN).
+\end{remark}
 
 \begin{keybox}
-\textbf{Key finding:} \ar{} falls inside the proportionality corridor for
-5 of 6 studied states (including all competitive states).  The single
-exception, Georgia, is explained by geographic sorting under the corridor's
-definition, not by algorithmic bias.
+\textbf{Key finding (revised):} \ar{} falls inside the proportionality
+corridor for NC and MN --- the two states where the primary factorisation
+aligns with geographic voter distribution.  WI, PA, and GA fall outside the
+corridor, driven by geographic sorting rather than algorithmic bias.
 \end{keybox}
 
 \subsection{Minnesota: An Additional Competitive State}
