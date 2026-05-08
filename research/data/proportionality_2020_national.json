@@ -1,0 +1,41 @@
+{
+  "description": "National proportionality analysis, bisect 2020 run (default algorithm: standard-bisect + geographic weights)",
+  "generated": "2026-05-08",
+  "algorithm": "standard-bisect",
+  "weights": "geographic",
+  "search": "single",
+  "year": "2020",
+  "national_summary": {
+    "multi_district_states": 44,
+    "single_district_states_excluded": 6,
+    "total_seats_covered": 429,
+    "dem_seats": 222,
+    "rep_seats": 207,
+    "dem_seat_share_pct": 51.7,
+    "mean_abs_gap_pp": 20.4,
+    "states_within_5pp": 7,
+    "states_within_10pp": 12
+  },
+  "states": {
+    "north_carolina": {"k": 14, "D": 6, "R": 8, "dvote_pct": 49.3, "gap_pp": -6.5},
+    "wisconsin":      {"k": 8,  "D": 3, "R": 5, "dvote_pct": 50.3, "gap_pp": -12.8},
+    "alabama":        {"k": 7,  "D": 0, "R": 7, "dvote_pct": 37.1, "gap_pp": -37.1},
+    "georgia":        {"k": 14, "D": 5, "R": 9, "dvote_pct": 50.1, "gap_pp": -14.4},
+    "louisiana":      {"k": 6,  "D": 1, "R": 5, "dvote_pct": 40.5, "gap_pp": -23.9},
+    "mississippi":    {"k": 4,  "D": 1, "R": 3, "dvote_pct": 41.6, "gap_pp": -16.6},
+    "south_carolina": {"k": 7,  "D": 2, "R": 5, "dvote_pct": 44.1, "gap_pp": -15.5},
+    "california":     {"k": 52, "D": 45,"R": 7, "dvote_pct": 64.9, "gap_pp": 21.6},
+    "florida":        {"k": 28, "D": 5, "R": 23,"dvote_pct": 48.3, "gap_pp": -30.4},
+    "illinois":       {"k": 17, "D": 17,"R": 0, "dvote_pct": 58.7, "gap_pp": 41.3},
+    "michigan":       {"k": 13, "D": 10,"R": 3, "dvote_pct": 51.4, "gap_pp": 25.5},
+    "new_york":       {"k": 26, "D": 26,"R": 0, "dvote_pct": 61.7, "gap_pp": 38.3},
+    "pennsylvania":   {"k": 17, "D": 8, "R": 9, "dvote_pct": 50.6, "gap_pp": -3.5},
+    "texas":          {"k": 38, "D": 8, "R": 30,"dvote_pct": 47.2, "gap_pp": -26.1}
+  },
+  "notes": [
+    "Default algorithm — NOT the prime-factor AR config used in B.11 (which gives 223D/209R).",
+    "IL and NY show full-D outcomes due to geographic concentration of Democratic voters in urban cores.",
+    "Mean |gap| of 20.4pp reflects geographic sorting, not algorithmic bias.",
+    "PA gap=-3.5pp is the most proportional large state under default algorithm."
+  ]
+}
