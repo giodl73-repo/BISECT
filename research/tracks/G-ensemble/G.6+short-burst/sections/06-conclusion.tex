@@ -6,7 +6,7 @@ optimisation.
 By restarting short \recom{} chains from each burst's endpoint, it
 concentrates exploration near good plans without sacrificing the
 Markov property.
-The implementation in \texttt{redist-cli} as \texttt{--search short-burst}
+The implementation in \texttt{bisect} as \texttt{--search short-burst}
 achieves 15--22\% Polsby-Popper improvement over single-seed METIS,
 outperforming both multi-seed METIS and \cs{} under a 1{,}000-step
 budget, and approaching \be{} performance.
@@ -21,6 +21,21 @@ For the statutory baseline, \shb{} is most effective combined with
 \ar{} (\texttt{--structure prime-factor}): \ar{} provides a good
 initialisation, and \shb{} refines via concentrated neighbourhood
 exploration.
+
+\paragraph{Legal and practitioner use.}
+\shb{} is appropriate for litigation support where a demonstrably
+compact plan is required.
+The 15--22\% PP improvement over single-seed METIS, achieved at
+identical runtime cost, enables a straightforward argument: the submitted
+plan was not merely drawn to pass a minimum compactness threshold but
+was refined by neighbourhood exploration.
+Because \shb{} operates on the initial METIS structure (preserving its
+prime-factor bisection tree), the plan carries the same political-neutrality
+properties as B.11's \ar{} plan while achieving measurably higher
+Polsby-Popper compactness.
+The efficiency-gap neutrality ($|\mathrm{EG}| < 0.05$ across NC, WI, TX)
+confirms that the compactness improvement is not purchased at the cost
+of partisan skew---a requirement under the \dia{} framework.
 
 \paragraph{Open directions.}
 
