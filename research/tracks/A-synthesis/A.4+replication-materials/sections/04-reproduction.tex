@@ -24,7 +24,7 @@ bootstrap.bat             # Windows
 \end{verbatim}
 
 \noindent This installs Rust, builds the \texttt{bisect} binary, installs
-Python dependencies, and runs \texttt{redist doctor} to confirm the
+Python dependencies, and runs \texttt{bisect doctor} to confirm the
 environment is ready.  Expected time: 5--10 minutes.
 
 \subsection*{Step 3 --- Fetch Census Data}
@@ -41,9 +41,9 @@ Interrupted fetches resume automatically.
 \subsection*{Step 4 --- Build Official Plans}
 
 \begin{verbatim}
-redist run --year 2020 --version official_2020    # All 50 states, ~18 min
-redist run --year 2010 --version official_2010
-redist run --year 2000 --version official_2000
+bisect build official_2020 --year 2020    # All 50 states, ~18 min
+bisect build official_2010 --year 2010
+bisect build official_2000 --year 2000
 \end{verbatim}
 
 \noindent Output districts are written to

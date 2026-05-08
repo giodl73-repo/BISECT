@@ -14,7 +14,7 @@
 
 % Title
 \title{\textbf{Algorithmic Redistricting Portfolio}\\
-\large An 11-Paper Research Program}
+\large 75+ Papers Across 8 Research Tracks}
 
 \author{Giovanni Della-Libera}
 \date{February 2026}
@@ -25,7 +25,7 @@
 
 \section*{Overview}
 
-Congressional redistricting in the United States suffers a legitimacy crisis: partisan mapmakers manipulate district boundaries to predetermine election outcomes, eroding public confidence in representative democracy. This 11-paper research program demonstrates that \textbf{recursive graph bisection}---a computational method used for supercomputer workload distribution---provides an algorithmic alternative that \emph{cannot gerrymander because it cannot access partisan data}.
+Congressional redistricting in the United States suffers a legitimacy crisis: partisan mapmakers manipulate district boundaries to predetermine election outcomes, eroding public confidence in representative democracy. This research program of 75+ papers across 8 research tracks demonstrates that \textbf{recursive graph bisection}---a computational method used for supercomputer workload distribution---provides an algorithmic alternative that \emph{cannot gerrymander because it cannot access partisan data}.
 
 Applied to all 50 states across three census decades (2000/2010/2020), this method produces 435 congressional districts with near-perfect population equality, geographic contiguity, and geometric compactness. Algorithmic plans create \textbf{69 more majority-minority districts} than enacted maps, exceeding Voting Rights Act requirements without explicit racial targeting. We identify a \textbf{42\% demographic threshold} determining where proportional minority representation becomes geographically feasible. Efficiency gap analysis reveals \textbf{62\% partisan bias reduction} compared to enacted plans, establishing empirical benchmarks for neutral redistricting.
 
@@ -33,27 +33,28 @@ Applied to all 50 states across three census decades (2000/2010/2020), this meth
 
 \begin{itemize}[leftmargin=*,noitemsep,topsep=4pt]
     \item \textbf{Philosophical}: \emph{Impossibility defense}---algorithm cannot see partisan data, therefore cannot gerrymander
-    \item \textbf{Technical}: Edge-weighted graph partitioning achieves +56\% compactness improvement while enabling VRA compliance
+    \item \textbf{Technical}: Edge-weighted graph partitioning achieves +56\% compactness improvement over unweighted METIS bisection while enabling VRA compliance
     \item \textbf{Empirical}: National-scale validation across 50 states and 3 census decades (150 redistricting scenarios)
     \item \textbf{Legal}: 42\% state minority threshold determines VRA feasibility; +69 majority-minority district surplus; 62\% partisan bias reduction
 \end{itemize}
 
 \subsection*{Portfolio Architecture}
 
-The 11-paper portfolio follows a hierarchical structure reflecting methodological dependencies:
+The portfolio follows a track-based structure reflecting methodological dependencies:
 
 \begin{itemize}[leftmargin=*,noitemsep,topsep=4pt]
-    \item \textbf{Foundation} (Paper 01): Recursive bisection method and impossibility defense
-    \item \textbf{Primary Extensions} (Papers 02-03): Compactness optimization and demographic awareness
-    \item \textbf{Systematic Investigations} (Papers 04-10): Seven papers exploring properties, limits, and alternatives
-    \item \textbf{Partisan Fairness} (Paper 11): Efficiency gap analysis quantifying bias reduction
+    \item \textbf{Track A}: Portfolio synthesis and overview (this paper series)
+    \item \textbf{Tracks B--C}: Algorithm design, variants, validation, and robustness
+    \item \textbf{Track D}: VRA and legal compliance
+    \item \textbf{Tracks E--F}: Experimental extensions and state legislative redistricting
+    \item \textbf{Tracks G--H}: Ensemble methods, comparison, and search strategies
 \end{itemize}
 
-This structure enables progressive deepening: Papers 04-11 build on the compactness optimization (02) and VRA framework (03), enabling systematic investigation of algorithm properties and political implications.
+This structure enables progressive deepening: Tracks B--H generate empirical, algorithmic, legal, and ensemble results that Track A synthesizes across the full program.
 
 \section*{Paper Summaries}
 
-All 11 papers are complete and ready for submission.
+The following summaries cover the eleven foundation papers (B.1--B.11 / original series) that initiated the program. The portfolio is an ongoing research program; papers across all eight tracks are at varying stages of completion.
 
 \subsection*{Paper 01: Recursive Bisection for Congressional Redistricting}
 
@@ -148,7 +149,7 @@ The portfolio advances three research frontiers: (1) computational political sci
 
 \section*{Code, Data, and Replication}
 
-\textbf{Replication materials} include the \texttt{bisect} Rust CLI (redist-metis crate) and sample datasets for Vermont and Delaware (smallest states, $\sim$2 minute runtime on commodity hardware). Full 50-state redistricting requires $\sim$40GB census data (U.S. Census Bureau redistricting files for 2000/2010/2020) and $\sim$18 minutes parallel for all 50 states (\texttt{bisect states --workers 8}). Binary available at \url{https://github.com/giodl73-repo/REDIST}.
+\textbf{Replication materials} include the \texttt{bisect} Rust CLI (\texttt{bisect-metis} crate) and sample datasets for Vermont and Delaware (smallest states, $\sim$2 minute runtime on commodity hardware). Full 50-state redistricting requires $\sim$40GB census data (U.S. Census Bureau redistricting files for 2000/2010/2020) and $\sim$18 minutes parallel for all 50 states (\texttt{bisect states --workers 8}). Binary available at \url{https://github.com/giodl73-repo/REDIST}.
 
 \textbf{Census data sources}: U.S. Census Bureau redistricting files (PL 94-171), TIGER/Line shapefiles for geographic boundaries, American Community Survey (ACS) for demographic data.
 
@@ -158,12 +159,12 @@ The portfolio advances three research frontiers: (1) computational political sci
 
 \section*{Citation Guide}
 
-\textbf{Publication status}: All 11 papers are complete and ready for submission (as of February 2026). Preprints will be available on arXiv upon initial submission.
+\textbf{Publication status}: This is an ongoing research program (75+ papers across 8 tracks). Track B foundations, several Track G ensemble papers, all Track H papers, and selected papers in Track B extensions are accepted or ready for submission. Remaining papers across all tracks are in draft. Preprints will be available on arXiv upon initial submission.
 
 \textbf{For the entire research program}:
 
 \begin{quote}
-Della-Libera, G. (2026). Algorithmic redistricting: An 11-paper research program. Preprint series.
+Della-Libera, G. (2026). Algorithmic redistricting: A 75+ paper research program across 8 tracks. Preprint series.
 \end{quote}
 
 \textbf{For specific papers} (examples):
@@ -182,6 +183,6 @@ Della-Libera, G. (2026). Measuring partisan fairness in algorithmic redistrictin
 
 \vspace{6pt}
 
-\noindent\textbf{About this summary}: This 6-page research statement provides detailed descriptions of the 11-paper algorithmic redistricting portfolio. For a brief overview, see the 3-page \emph{Guide to the Algorithmic Redistricting Portfolio}. For full findings, see individual papers. For synthesis across papers, see Paper 00 (Synthesis Metapaper for \emph{Science}).
+\noindent\textbf{About this summary}: This 6-page research statement provides detailed descriptions of the foundation papers of the algorithmic redistricting portfolio (75+ papers across 8 research tracks). For a brief overview, see the 3-page \emph{Guide to the Algorithmic Redistricting Portfolio}. For full findings, see individual papers. For synthesis across papers, see Paper A.0 (Synthesis Metapaper for \emph{Science}).
 
 \end{document}

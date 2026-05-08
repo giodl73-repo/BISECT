@@ -70,8 +70,13 @@ FL: $28 \to 29$, NY: $26 \to 25$, and others), traces how
 each seat change alters the bisection tree, and simulates
 the resulting tract-level boundary movements.
 The key finding is that seat-change-induced disruption is
-\emph{less} than the disruption from a single MCMC remix step:
-the \ar{} algorithm recomputes the tree fresh from the new
+equivalent to approximately 9--10 \recom{} steps: far less than
+a full MCMC remix (10{,}000+ steps to decorrelate) and less than
+typical political redistricting (35--55\,\% tract reassignment).
+The reapportionment adjustment itself is deterministic and requires
+no MCMC steps; subsequent chain remixing takes $\approx$10 \recom{}
+steps to restabilise.
+The \ar{} algorithm recomputes the tree fresh from the new
 apportionment each decade, which is the intended statutory
 behavior under the \dia{}.
 Texas is the most interesting case: $38 = 2 \times 19$ (deep prime,

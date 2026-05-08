@@ -57,7 +57,7 @@ cd REDIST
   \item \textbf{Build the binary}:
 \begin{verbatim}
 cargo build --release
-# Binary appears at: target/release/redist
+# Binary appears at: target/release/bisect
 \end{verbatim}
 
   \item \textbf{Add to PATH}:
@@ -71,8 +71,8 @@ $env:PATH += ";$PWD\target\release"
 
   \item \textbf{Verify installation}:
 \begin{verbatim}
-redist --version   # Should print: redist 0.2.0
-redist doctor      # Checks all dependencies
+bisect --version   # Should print: bisect 0.2.0
+bisect doctor      # Checks all dependencies
 \end{verbatim}
 
 \end{enumerate}
@@ -104,4 +104,4 @@ bootstrap.bat         # Windows
 
 \noindent The bootstrap scripts install Rust (if absent), build the binary,
 check for Python 3.13+, install Python dependencies,
-and run \texttt{redist doctor} to confirm the environment is ready.
+and run \texttt{bisect doctor} to confirm the environment is ready.
