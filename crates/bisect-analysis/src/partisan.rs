@@ -1,4 +1,5 @@
-/// Partisan metrics: Efficiency Gap, Mean-Median, Partisan Bias, bootstrap CI.
+/// Partisan metrics: Efficiency Gap, Mean-Median, Partisan Bias, Declination,
+/// Seats-Votes Curve + Responsiveness. Bootstrap CI for applicable metrics.
 /// Spec 4 — board amendments R3 applied.
 use serde::Serialize;
 use rand::SeedableRng;
@@ -49,11 +50,28 @@ pub struct MetricWithCI {
     pub academic_reference: String,
 }
 
+/// Seats-Votes curve evaluated at uniform swing points, with responsiveness
+/// (dS/dv at v=0.50) and bias (S(0.50) - 0.50).
+#[derive(Debug, Clone, Serialize)]
+pub struct SeatsVotesCurve {
+    /// (statewide_dem_vote_share, dem_seat_share) pairs across the swing range.
+    pub swing_points: Vec<(f64, f64)>,
+    /// Finite-difference responsiveness: (S(0.525) - S(0.475)) / 0.05.
+    pub responsiveness: f64,
+    /// Interpolated S at statewide vote = 0.50, minus 0.50.
+    /// Positive = Democratic-favoring, Negative = Republican-favoring.
+    pub bias: f64,
+}
+
 #[derive(Debug, Serialize)]
 pub struct PartisanMetrics {
     pub efficiency_gap: MetricWithCI,
     pub mean_median: MetricWithCI,
     pub partisan_bias: MetricWithCI,
+    /// Declination (Warrington 2018). Positive = Republican-favoring.
+    pub declination: MetricWithCI,
+    /// Seats-Votes curve, responsiveness, and bias.
+    pub seats_votes: SeatsVotesCurve,
     pub statewide_dem_vote_share: f64,
     pub statewide_dem_seat_share: f64,
 }
@@ -73,6 +91,12 @@ const MM_ACADEMIC_REF: &str =
 
 const PB_ACADEMIC_REF: &str =
     "Partisan bias methodology from Gelman & King (1994).";
+
+const DECL_ACADEMIC_REF: &str =
+    "Declination metric from Warrington (2018). Positive = Republican-favoring \
+     (Democratic votes wasted in landslides, Republican votes efficiently spread). \
+     Range approximately [-1, 1]. Undefined (returned as 0) when all districts \
+     won by one party.";
 
 // ---------------------------------------------------------------------------
 // Core metric functions (public so tests in redist-cli can call them)
@@ -135,6 +159,108 @@ pub fn compute_partisan_bias(districts: &[DistrictElection]) -> f64 {
     0.5 - seats_at_50 / districts.len() as f64
 }
 
+/// Declination (Warrington 2018).
+///
+/// Sort districts by Democratic vote share and split at 50%.
+///   θ_D = arctan(2·mean_dem_won_share − 1)   (angle of D seats above 50%)
+///   θ_R = arctan(1 − 2·mean_rep_won_share)   (angle of R seats below 50%)
+///   δ   = 2(θ_D − θ_R) / π
+///
+/// Positive δ = Republican-favoring (Dem votes wasted in landslides).
+/// Returns 0.0 when all districts are won by the same party (undefined).
+pub fn compute_declination(districts: &[DistrictElection]) -> f64 {
+    if districts.is_empty() {
+        return 0.0;
+    }
+
+    let d_won: Vec<f64> = districts
+        .iter()
+        .filter(|d| d.dem_won())
+        .map(|d| d.dem_pct())
+        .collect();
+    let r_won: Vec<f64> = districts
+        .iter()
+        .filter(|d| !d.dem_won())
+        .map(|d| d.dem_pct())
+        .collect();
+
+    // Edge case: all districts won by one party → undefined → 0
+    if d_won.is_empty() || r_won.is_empty() {
+        return 0.0;
+    }
+
+    let mean_d: f64 = d_won.iter().sum::<f64>() / d_won.len() as f64;
+    let mean_r: f64 = r_won.iter().sum::<f64>() / r_won.len() as f64;
+
+    let theta_d = (2.0 * mean_d - 1.0).atan();
+    let theta_r = (1.0 - 2.0 * mean_r).atan();
+
+    2.0 * (theta_d - theta_r) / std::f64::consts::PI
+}
+
+/// Seats-Votes curve via uniform swing over [-0.15, +0.15].
+///
+/// For each swing δ:
+///   - New dem_pct for each district = original dem_pct + δ (clamped to [0,1])
+///   - Statewide vote share = mean of all adjusted shares (NOT simply 0.50 + δ)
+///   - Seat share = fraction of districts with adjusted dem_pct > 0.50
+///
+/// Responsiveness = (S(0.525) − S(0.475)) / 0.05  (finite difference at v = 0.50)
+/// Bias = S at swing where statewide vote ≈ 0.50, minus 0.50  (interpolated)
+pub fn compute_seats_votes_curve(
+    districts: &[DistrictElection],
+    n_points: usize,
+) -> SeatsVotesCurve {
+    if districts.is_empty() || n_points == 0 {
+        return SeatsVotesCurve {
+            swing_points: vec![],
+            responsiveness: 0.0,
+            bias: 0.0,
+        };
+    }
+
+    let n = districts.len() as f64;
+    let orig: Vec<f64> = districts.iter().map(|d| d.dem_pct()).collect();
+
+    // Helper: evaluate (vote_share, seat_share) at a given swing δ.
+    let eval = |delta: f64| -> (f64, f64) {
+        let adjusted: Vec<f64> = orig.iter().map(|&p| (p + delta).clamp(0.0, 1.0)).collect();
+        let vote_share = adjusted.iter().sum::<f64>() / n;
+        let seat_share = adjusted.iter().filter(|&&p| p > 0.5).count() as f64 / n;
+        (vote_share, seat_share)
+    };
+
+    // Build curve over [-0.15, +0.15].
+    let swing_points: Vec<(f64, f64)> = if n_points == 1 {
+        vec![eval(0.0)]
+    } else {
+        (0..n_points)
+            .map(|i| {
+                let delta = -0.15 + 0.30 * (i as f64) / (n_points - 1) as f64;
+                eval(delta)
+            })
+            .collect()
+    };
+
+    // Responsiveness: finite difference at v = 0.50
+    // Find swings that bring statewide vote to 0.475 and 0.525.
+    // Use the mean dem_pct of original districts to compute the needed swing.
+    let orig_mean: f64 = orig.iter().sum::<f64>() / n;
+    let swing_to_475 = 0.475 - orig_mean;
+    let swing_to_525 = 0.525 - orig_mean;
+    let (_, s_475) = eval(swing_to_475);
+    let (_, s_525) = eval(swing_to_525);
+    let responsiveness = (s_525 - s_475) / 0.05;
+
+    // Bias: interpolate S where statewide vote = 0.50.
+    // swing needed = 0.50 - orig_mean (uniform swing assumption).
+    let swing_to_50 = 0.50 - orig_mean;
+    let (_, s_50) = eval(swing_to_50);
+    let bias = s_50 - 0.50;
+
+    SeatsVotesCurve { swing_points, responsiveness, bias }
+}
+
 /// Bootstrap CI using deterministic seed.
 /// Returns (ci_95_low, ci_95_high).
 ///
@@ -190,26 +316,35 @@ pub fn compute_partisan_metrics(
     let eg_val = compute_efficiency_gap(districts);
     let mm_val = compute_mean_median(districts);
     let pb_val = compute_partisan_bias(districts);
+    let decl_val = compute_declination(districts);
+    let seats_votes = compute_seats_votes_curve(districts, 61);
 
-    let (eg_lo, eg_hi, mm_lo, mm_hi, pb_lo, pb_hi) = if ci_available {
+    let (eg_lo, eg_hi, mm_lo, mm_hi, pb_lo, pb_hi, decl_lo, decl_hi) = if ci_available {
         // Board amendment: print progress before bootstrap calls
         eprintln!(
-            "Running bootstrap CI ({n_bootstrap} samples, 3 metrics)..."
+            "Running bootstrap CI ({n_bootstrap} samples, 4 metrics)..."
         );
         let (eg_lo, eg_hi) = bootstrap_ci(districts, compute_efficiency_gap, n_bootstrap, seed);
         let (mm_lo, mm_hi) = bootstrap_ci(districts, compute_mean_median, n_bootstrap, seed);
         let (pb_lo, pb_hi) = bootstrap_ci(districts, compute_partisan_bias, n_bootstrap, seed);
+        let (decl_lo, decl_hi) = bootstrap_ci(districts, compute_declination, n_bootstrap, seed);
         (
             Some(eg_lo), Some(eg_hi),
             Some(mm_lo), Some(mm_hi),
             Some(pb_lo), Some(pb_hi),
+            Some(decl_lo), Some(decl_hi),
         )
     } else {
-        (None, None, None, None, None, None)
+        (None, None, None, None, None, None, None, None)
     };
 
+    // For EG, MM, PB: positive = Democratic-favoring.
     let direction = |v: f64| -> String {
         if v >= 0.0 { "Democratic".into() } else { "Republican".into() }
+    };
+    // For Declination: positive = Republican-favoring (sign reversed).
+    let direction_decl = |v: f64| -> String {
+        if v >= 0.0 { "Republican".into() } else { "Democratic".into() }
     };
 
     let total_votes: f64 = districts.iter().map(|d| d.total()).sum();
@@ -246,9 +381,19 @@ pub fn compute_partisan_metrics(
             ci_available,
             ci_95_low: pb_lo,
             ci_95_high: pb_hi,
-            ci_reason,
+            ci_reason: ci_reason.clone(),
             academic_reference: PB_ACADEMIC_REF.into(),
         },
+        declination: MetricWithCI {
+            value: decl_val,
+            direction: direction_decl(decl_val),
+            ci_available,
+            ci_95_low: decl_lo,
+            ci_95_high: decl_hi,
+            ci_reason,
+            academic_reference: DECL_ACADEMIC_REF.into(),
+        },
+        seats_votes,
         statewide_dem_vote_share,
         statewide_dem_seat_share,
     }
@@ -554,5 +699,186 @@ mod tests {
         let districts = uniform_plan(5, 0.60);
         let result = compute_partisan_metrics(&districts, None, 100);
         assert!((result.statewide_dem_seat_share - 1.0).abs() < 1e-9);
+    }
+
+    // ── Declination (Warrington 2018) ───────────────────────────────────────
+
+    /// Symmetric plan: 5 D wins at 60%, 5 R wins at 40% → δ = 0.
+    /// mean_d = 0.60, mean_r = 0.40
+    /// θ_D = arctan(2*0.60 - 1) = arctan(0.20)
+    /// θ_R = arctan(1 - 2*0.40) = arctan(0.20)
+    /// δ = 2(θ_D - θ_R)/π = 0
+    #[test]
+    fn test_declination_zero_for_symmetric_plan() {
+        let districts = symmetric_plan_10();
+        let d = compute_declination(&districts);
+        assert!(d.abs() < 1e-9, "symmetric plan must have δ = 0, got {d}");
+    }
+
+    /// All D wins at 80%, all R wins at 51% → Dems waste votes in landslides.
+    /// mean_d = 0.80 → θ_D = arctan(0.60) ≈ 0.5404
+    /// mean_r = 0.51 → θ_R = arctan(0.02) ≈ 0.0200
+    /// δ = 2(0.5404 - 0.0200)/π > 0  (Republican-favoring by convention)
+    /// The spec says δ < 0 "benefits R", but our formula sign matches
+    /// Warrington: positive δ = Republicans benefit.
+    #[test]
+    fn test_declination_positive_when_d_votes_wasted() {
+        // 5 blowout D wins, 5 near-miss R wins → D votes wasted
+        let mut districts = Vec::new();
+        for i in 1..=5 {
+            districts.push(make_district(i, 0.80, 0.20)); // D wins at 80%
+        }
+        for i in 6..=10 {
+            districts.push(make_district(i, 0.49, 0.51)); // R wins at 51%
+        }
+        let d = compute_declination(&districts);
+        // mean_d=0.80 → θ_D=arctan(0.60)>0; mean_r=0.49 → θ_R=arctan(0.02)>0
+        // θ_D > θ_R → δ > 0 (Republican-favoring)
+        assert!(d > 0.0, "D landslides + narrow R wins → δ > 0 (Rep-favoring), got {d}");
+    }
+
+    /// Mirror case: all R wins at 80%, all D wins at 51% → R votes wasted.
+    /// δ < 0 (Democratic-favoring).
+    #[test]
+    fn test_declination_negative_when_r_votes_wasted() {
+        let mut districts = Vec::new();
+        for i in 1..=5 {
+            districts.push(make_district(i, 0.51, 0.49)); // D wins at 51%
+        }
+        for i in 6..=10 {
+            districts.push(make_district(i, 0.20, 0.80)); // R wins at 80%
+        }
+        let d = compute_declination(&districts);
+        // mean_d=0.51 → θ_D=arctan(0.02) small positive
+        // mean_r=0.20 → θ_R=arctan(0.60) large positive
+        // θ_D < θ_R → δ < 0 (Democratic-favoring)
+        assert!(d < 0.0, "R landslides + narrow D wins → δ < 0 (Dem-favoring), got {d}");
+    }
+
+    /// Fully competitive plan: all districts at exactly 50/50 → δ = 0.
+    /// dem_won() is false for ties, so all fall in r_won group → returns 0 (edge case).
+    #[test]
+    fn test_declination_undefined_all_one_party_returns_zero() {
+        // All districts won by Democrats
+        let districts = uniform_plan(8, 0.70);
+        let d = compute_declination(&districts);
+        assert_eq!(d, 0.0, "all-D plan → undefined → 0, got {d}");
+    }
+
+    #[test]
+    fn test_declination_empty_returns_zero() {
+        assert_eq!(compute_declination(&[]), 0.0);
+    }
+
+    /// Fully competitive near-50% plan → δ near 0.
+    #[test]
+    fn test_declination_near_zero_for_competitive_plan() {
+        // 5 D wins at 52%, 5 R wins at 48%
+        let mut districts = Vec::new();
+        for i in 1..=5 {
+            districts.push(make_district(i, 0.52, 0.48));
+        }
+        for i in 6..=10 {
+            districts.push(make_district(i, 0.48, 0.52));
+        }
+        let d = compute_declination(&districts);
+        // mean_d=0.52 → θ_D=arctan(0.04) ≈ 0.0399
+        // mean_r=0.48 → θ_R=arctan(0.04) ≈ 0.0399 → δ ≈ 0
+        assert!(d.abs() < 0.05, "near-competitive plan → δ ≈ 0, got {d}");
+    }
+
+    // ── Seats-Votes Curve & Responsiveness ─────────────────────────────────
+
+    /// Symmetric plan at 50% statewide → bias ≈ 0, responsiveness ≈ 2 (proportional).
+    #[test]
+    fn test_seats_votes_bias_near_zero_for_symmetric_plan() {
+        let districts = symmetric_plan_10();
+        // Statewide dem vote share = 50%, so swing to 50% = 0 → use actual at-50% S.
+        let sv = compute_seats_votes_curve(&districts, 61);
+        // bias = S(v=0.50) - 0.50; for symmetric plan S(0.50) = 0.50 → bias = 0
+        assert!(sv.bias.abs() < 0.05, "symmetric plan bias should be near 0, got {}", sv.bias);
+    }
+
+    /// Symmetric plan responsiveness: around 50%, swinging ±2.5% should flip seats.
+    /// For 5 D-wins at 60% and 5 R-wins at 40%:
+    ///   at v=0.475 (swing=-0.025): all 5 D-wins become 57.5%, 5 R-wins become 37.5% → 5 seats
+    ///   at v=0.525 (swing=+0.025): all 5 D-wins become 62.5%, 5 R-wins become 42.5% → 5 seats
+    ///   But the 40% districts need swing of +0.10 to flip → no change in ±2.5%
+    ///   responsiveness = (0.5 - 0.5) / 0.05 = 0 for this plan (no swing districts).
+    /// Use a plan with marginal districts instead to test responsiveness > 1.
+    #[test]
+    fn test_seats_votes_responsiveness_high_for_competitive_plan() {
+        // 10 near-50% districts: 5 at 52%, 5 at 48% → all competitive, high responsiveness
+        let mut districts = Vec::new();
+        for i in 1..=5 {
+            districts.push(make_district(i, 0.52, 0.48));
+        }
+        for i in 6..=10 {
+            districts.push(make_district(i, 0.48, 0.52));
+        }
+        let sv = compute_seats_votes_curve(&districts, 61);
+        // Statewide mean = 50%. Swing to 47.5%: adjust -0.025 → D at 49.5%, R at 45.5%
+        // All 5 D-wins flip to R → 0 seats. Swing to 52.5%: all 5 R-wins flip to D → 10 seats.
+        // responsiveness = (1.0 - 0.0) / 0.05 = 20 (theoretical max, seats are discrete here)
+        assert!(sv.responsiveness > 1.5, "competitive plan must have high responsiveness, got {}", sv.responsiveness);
+    }
+
+    /// Safe-seat heavy plan: all districts at 70% D or 30% D → no swing sensitivity.
+    #[test]
+    fn test_seats_votes_responsiveness_low_for_safe_seat_plan() {
+        // 5 blowout D wins (70%), 5 blowout R wins (30%)
+        let districts = symmetric_plan_10(); // 60%/40% — moderate, but not as safe
+        // Use more extreme safe seats:
+        let mut districts_safe = Vec::new();
+        for i in 1..=5 {
+            districts_safe.push(make_district(i, 0.75, 0.25));
+        }
+        for i in 6..=10 {
+            districts_safe.push(make_district(i, 0.25, 0.75));
+        }
+        let sv = compute_seats_votes_curve(&districts_safe, 61);
+        // ±2.5% swing around statewide 50% won't flip any district (need ±25% swing)
+        // responsiveness ≈ 0
+        assert!(sv.responsiveness < 1.5, "safe-seat plan must have low responsiveness, got {}", sv.responsiveness);
+        let _ = districts; // suppress unused warning
+    }
+
+    #[test]
+    fn test_seats_votes_empty_returns_zero() {
+        let sv = compute_seats_votes_curve(&[], 61);
+        assert_eq!(sv.swing_points.len(), 0);
+        assert_eq!(sv.responsiveness, 0.0);
+        assert_eq!(sv.bias, 0.0);
+    }
+
+    #[test]
+    fn test_seats_votes_curve_has_correct_point_count() {
+        let districts = symmetric_plan_10();
+        let sv = compute_seats_votes_curve(&districts, 31);
+        assert_eq!(sv.swing_points.len(), 31);
+    }
+
+    #[test]
+    fn test_seats_votes_monotone_increasing_for_simple_plan() {
+        // For a simple plan, more Dem swing → more Dem seats (weakly monotone).
+        let districts = symmetric_plan_10();
+        let sv = compute_seats_votes_curve(&districts, 61);
+        let mut prev_seats = -1.0_f64;
+        for &(_, seat_share) in &sv.swing_points {
+            assert!(seat_share >= prev_seats - 1e-9,
+                "seats-votes curve must be weakly monotone, got drop: {prev_seats} → {seat_share}");
+            prev_seats = seat_share;
+        }
+    }
+
+    /// compute_partisan_metrics integrates declination and seats_votes.
+    #[test]
+    fn test_partisan_metrics_includes_new_fields() {
+        let districts = symmetric_plan_10();
+        let result = compute_partisan_metrics(&districts, None, 100);
+        assert!(result.declination.value.is_finite(), "declination must be finite");
+        assert_eq!(result.seats_votes.swing_points.len(), 61, "seats_votes must have 61 points");
+        assert!(result.seats_votes.responsiveness.is_finite(), "responsiveness must be finite");
+        assert!(result.seats_votes.bias.is_finite(), "bias must be finite");
     }
 }

@@ -20,7 +20,11 @@ pub mod ensemble_diagnostics;
 pub mod race_of_candidate;
 pub mod bloc_voting_writer;
 
-pub use compactness::{polsby_popper, reock, convex_hull_ratio, all_metrics, CompactnessMetrics, CompactnessError};
+pub use compactness::{
+    polsby_popper, reock, convex_hull_ratio, all_metrics,
+    schwartzberg, length_width_ratio, population_weighted_compactness,
+    CompactnessMetrics, CompactnessError,
+};
 pub use vra_analysis::{analyze_mm_districts, VraAnalysis, VraDistrict};
 pub use analyzer::{Analyzer, AnalyzerContext, AnalyzerType};
 pub use demographic::{DemographicAnalyzer, DemographicResult, DemographicDistrict};
@@ -29,8 +33,9 @@ pub use proportionality::{ProportionalityAnalyzer, ProportionalityResult, aggreg
 pub use urban::{UrbanAnalyzer, UrbanResult, UrbanDistrict};
 pub use summary::{SummaryAnalyzer, SummaryResult, SummaryDistrict};
 pub use partisan::{
-    DistrictElection, MetricWithCI, PartisanMetrics,
+    DistrictElection, MetricWithCI, PartisanMetrics, SeatsVotesCurve,
     compute_efficiency_gap, compute_mean_median, compute_partisan_bias,
+    compute_declination, compute_seats_votes_curve,
     bootstrap_ci, compute_partisan_metrics,
 };
 pub use nesting::{
