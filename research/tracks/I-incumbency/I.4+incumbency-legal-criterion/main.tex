@@ -1,0 +1,60 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{multirow}
+
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+\title{\textbf{Incumbency Protection as a Redistricting Criterion:\\
+Legal Analysis and Algorithmic Implications}}
+
+\author{Giovanni Della-Libera}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Incumbency Protection, Redistricting Criteria, \textit{Karcher v.\ Daggett},
+\textit{Burdick v.\ Takushi}, \textit{Thornburg v.\ Gingles}, Voting Rights Act,
+Algorithmic Redistricting, Constitutional Compliance, \textsc{bisect},
+State Constitutional Law
+
+\section{Introduction: The Incumbency Objection to Algorithmic Redistricting}
+\input{sections/01-introduction}
+
+\section{Incumbency Protection as a Permissible Redistricting Criterion:
+  Federal Constitutional Doctrine}
+\input{sections/02-background}
+
+\section{\textit{Karcher v.\ Daggett} and Population Deviations}
+\input{sections/03-methodology}
+
+\section{VRA Interaction: When Incumbency and Minority Representation Conflict}
+\input{sections/04-results}
+
+\section{State Constitutional Frameworks and the Algorithmic Indifference Standard}
+\input{sections/05-discussion}
+
+\section{Conclusion}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

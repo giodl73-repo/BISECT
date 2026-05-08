@@ -1,0 +1,64 @@
+\subsection{Geometric vs.\ Arithmetic Mean: The Core Difference}
+
+The single difference between Huntington-Hill and Webster is the
+rounding threshold used for fractional quotas in $(s, s+1)$:
+\begin{align*}
+\text{HH threshold:}      &\quad \sqrt{s(s+1)} \\
+\text{Webster threshold:} &\quad s + 0.5.
+\end{align*}
+The arithmetic mean of $s$ and $s+1$ is $(s + s+1)/2 = s + 0.5$.
+The geometric mean of $s$ and $s+1$ is $\sqrt{s(s+1)}$.
+By the AM-GM inequality, $\text{AM} \geq \text{GM}$, with equality
+only when $s = s+1$ (impossible), so:
+\[
+  \sqrt{s(s+1)} < s + 0.5 \quad \text{for all } s \geq 1.
+\]
+
+This means HH's threshold is strictly lower than Webster's.
+A state with exact quota $q_i$ satisfying
+$\sqrt{s(s+1)} < q_i < s + 0.5$
+will receive $s+1$ seats under HH but only $s$ seats under Webster.
+The set of such states is the locus of HH-Webster disagreement.
+
+For 2020 Census data:
+\begin{itemize}
+  \item The natural divisor is $d \approx 761{,}169$.
+  \item A state in the HH-Webster disagreement region at seat count $s$
+    needs population in the interval
+    $(761{,}169 \cdot \sqrt{s(s+1)},\; 761{,}169 \cdot (s+0.5))$.
+  \item For $s = 1$: this interval is approximately $(1{,}076{,}607, 1{,}141{,}754)$.
+\end{itemize}
+
+Montana's 2020 population (1{,}084{,}225) falls in this interval for $s=1$:
+\begin{itemize}
+  \item $761{,}169 \times \sqrt{1 \times 2} = 761{,}169 \times 1.414 = 1{,}076{,}413$
+  \item $761{,}169 \times 1.5 = 1{,}141{,}754$
+  \item Montana population: 1{,}084{,}225 --- within the interval.
+\end{itemize}
+Montana receives 2 seats under Huntington-Hill and would receive 1 seat
+under Webster if the divisor were adjusted to produce 435 total seats
+under Webster's rounding rule.
+(In the 2020 census, the adjusted Webster divisor still gives Montana 2 seats
+because other near-threshold states balance out; the specific state that
+would differ requires computing the Webster divisor precisely.)
+
+\subsection{Which Method Is ``Better''?}
+
+The choice between HH and Webster is not a mathematical question with
+a unique answer but a normative question about which fairness criterion
+to prioritise.
+\begin{itemize}
+  \item HH's relative deviation criterion (minimising the
+    max relative difference in per-capita representation) is appropriate
+    if one views representational fairness as inherently relative ---
+    the ratio between large and small states' per-capita representation
+    matters, not the absolute difference.
+  \item Webster's least-squares criterion is appropriate if one views
+    fairness as minimising aggregate squared error from proportionality ---
+    a standard statistical notion of ``closest to proportional.''
+\end{itemize}
+The Supreme Court confirmed in \textit{Montana} that Congress has
+discretion to choose either criterion \citep{montana1992}.
+Most academic analysts view Webster as slightly preferable on grounds
+of neutrality \citep{balinski1982fair}, while the 1941 Congress
+chose HH on grounds of the relative deviation argument.

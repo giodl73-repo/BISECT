@@ -1,0 +1,68 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{array}
+
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}{Definition}
+
+\title{\textbf{The Webster Method: Arithmetic Mean Rounding\\
+and Its Historical Role in U.S.\ Apportionment}}
+
+\author{Giovanni Della-Libera}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Webster method, major fractions, Sainte-Lagu\"e, arithmetic mean rounding,
+congressional apportionment, U.S.\ apportionment history,
+\textsc{bisect-apportion}
+
+\section{Introduction: Webster in Historical Context}
+\input{sections/01-introduction}
+
+\section{Mathematical Definition: Arithmetic Mean Rounding and Common Divisor}
+\input{sections/02-definition}
+
+\section{Bias Properties: Small-State vs.\ Large-State Favoring}
+\input{sections/03-bias}
+
+\section{Comparison to Huntington-Hill: Geometric vs.\ Arithmetic Mean}
+\input{sections/04-comparison}
+
+\section{2020 Census Results and Huntington-Hill Comparison}
+\input{sections/05-empirical}
+
+\section{Historical U.S.\ Apportionments Using Webster}
+\input{sections/06-history}
+
+\section{\textsc{bisect-apportion} Implementation}
+\input{sections/07-implementation}
+
+\section{Conclusion}
+\input{sections/08-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

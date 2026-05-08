@@ -1,0 +1,88 @@
+\label{sec:bias}
+
+\subsection{Jefferson Maximises Large-State Representation}
+
+\begin{theorem}[Jefferson Large-State Bias]
+  \label{thm:jefferson-bias}
+  Among all divisor methods, Jefferson is the most large-state-favoring:
+  for any partition of states into ``large'' ($p_i > p_{\text{med}}$)
+  and ``small'' ($p_i \leq p_{\text{med}}$), Jefferson maximises the
+  aggregate seat share of large states.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+  For floor rounding with divisor $d$, each state receives $\lfloor p_i/d \rfloor$
+  seats.
+  The fraction of seats ``lost'' by state $i$ to rounding is
+  $(p_i/d - \lfloor p_i/d \rfloor)/(\lfloor p_i/d \rfloor + (p_i/d - \lfloor p_i/d \rfloor))$.
+  For small $s_i$ (small states), this fraction is large ---
+  the fractional part is a large share of the seat count.
+  For large $s_i$ (large states), the fractional part is a small
+  share of the seat count.
+  Jefferson discards all fractional parts; any divisor method that
+  preserves some fractional parts (HH, Webster, Adams) redistributes
+  those fractional parts from large states to small states,
+  reducing large states' share.
+  Hence Jefferson, which discards all fractional parts equally,
+  effectively transfers the most seat-share to large states
+  relative to any other divisor method.
+  See \citet{balinski1982fair}, ch.~4, for the formal ordering proof.
+\end{proof}
+
+\subsection{Quantitative Bias Characterisation}
+
+For each divisor method $M$, define the \emph{relative deviation}
+from proportionality for state $i$ as:
+\[
+  \delta_i^M = \frac{s_i^M/H}{p_i/N} - 1,
+\]
+where $s_i^M$ is the seat count under method $M$, $H = 435$,
+and $N$ is total population.
+$\delta_i^M > 0$ means overrepresentation; $\delta_i^M < 0$ means
+underrepresentation.
+
+Under Jefferson for 2020 Census data:
+\begin{itemize}
+  \item \textbf{Wyoming}: exact quota $\approx 0.758$; receives 1 seat
+    (constitutional floor).
+    $\delta_{\text{WY}}^{\text{Jeff}} = (1/435) / (576{,}851/331{,}108{,}434) - 1
+    \approx +32\%$ (massively overrepresented due to constitutional floor,
+    not Jefferson's rounding).
+  \item \textbf{California}: exact quota $\approx 51.95$; receives 51 seats
+    under Jefferson.
+    $\delta_{\text{CA}}^{\text{Jeff}} = (51/435) / (39{,}538{,}223/331{,}108{,}434) - 1
+    \approx -2\%$ (slightly underrepresented by rounding).
+  \item \textbf{Texas}: exact quota $\approx 38.31$; receives 38 seats.
+    $\delta_{\text{TX}}^{\text{Jeff}} \approx -0.8\%$.
+\end{itemize}
+Large states (CA, TX, FL) are slightly underrepresented by floor rounding
+because their large fractional parts (0.95, 0.31, etc.) are discarded.
+Small states receive exactly 1 seat (constitutional floor),
+regardless of their fractional quotas below 1.
+
+The large-state-favoring bias of Jefferson is most visible not in the
+constitutional-floor states (where all methods agree) but in
+mid-size states near a rounding boundary.
+A state with exact quota 3.9 would receive 3 seats under Jefferson
+but 4 seats under Adams (and 4 under HH and Webster if quota $> 3.5$).
+The loss of 0.9 fractional seats is a 23\% reduction in seat count.
+
+\subsection{Comparison to Huntington-Hill for 2020}
+
+For the 2020 Census, Jefferson and Huntington-Hill differ for
+three states:
+\begin{itemize}
+  \item States that \emph{lose} seats under Jefferson relative to HH:
+    Minnesota (quota $\approx 7.50$: HH gives 8, Jefferson gives 7
+    because floor of 7.50 = 7).
+  \item States that \emph{gain} seats under Jefferson relative to HH:
+    Texas (quota $\approx 38.31$: both give 38).
+    California (quota $\approx 51.95$: Jefferson gives 51, HH gives 52).
+\end{itemize}
+(These figures are approximate; the exact Jefferson divisor must be
+found by binary search and differs from the HH divisor.)
+The large-state-favoring bias of Jefferson manifests as:
+California and Texas lose 1 seat each under Jefferson relative to HH
+(because HH's lower threshold for rounding up awards their fractional
+excess seats), while Minnesota gains 1 seat under HH (because HH's
+threshold is below 0.5, capturing Minnesota's near-0.5 fractional part).

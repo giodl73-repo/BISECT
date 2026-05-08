@@ -1,0 +1,123 @@
+\label{sec:fairness}
+
+Fairness in apportionment is multidimensional.
+Three criteria have dominated the academic and legal literature:
+the \emph{population pair test} (which method is fairest to each pair
+of states?), the \emph{quota rule} (is each state within 1 of its
+exact proportional entitlement?), and \emph{paradox immunity}
+(does the method produce counterintuitive results when House size
+or populations change?).
+No method satisfies all three simultaneously --- the Balinski-Young
+impossibility theorem guarantees this \citep{balinski1982fair}.
+
+\subsection{The Population Pair Test}
+
+For any pair of states $(i,j)$, the per-capita representation ratio
+is $R_{ij} = (p_i/s_i) / (p_j/s_j)$.
+In a perfectly proportional system, $R_{ij} = 1$ for all pairs.
+The \emph{population pair test} asks: does the method minimise
+the maximum deviation of $R_{ij}$ from 1 over all pairs?
+
+Huntington-Hill minimises the maximum \emph{relative} deviation
+$\max_{i \neq j} |R_{ij} - 1|/\min(R_{ij}, 1/R_{ij})$, which Huntington
+\citeyearpar{huntington1928method} characterised as minimising the
+relative difference in per-capita representation.
+Webster minimises the maximum \emph{absolute} deviation
+$\max_{i \neq j} |p_i/s_i - p_j/s_j|$.
+The two criteria agree for most pairs but can disagree for pairs of
+states with very different populations (e.g., California vs.\ Wyoming),
+where the choice between relative and absolute deviation produces
+different seat assignments.
+
+\subsection{The Quota Rule}
+
+The quota rule requires that each state receive either $\lfloor q_i \rfloor$
+or $\lceil q_i \rceil$ seats, where $q_i = p_i \times H / N$ is its
+exact proportional quota.
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+Method & Quota rule satisfied? \\
+\midrule
+Hamilton    & Yes (by construction) \\
+Huntington-Hill & Yes for 2020 Census; not guaranteed in general \\
+Webster     & Yes for 2020 Census; not guaranteed in general \\
+Adams       & Always at upper quota ($s_i \geq \lceil q_i \rceil$) \\
+Jefferson   & Always at lower quota ($s_i \leq \lceil q_i \rceil$); may violate upper \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Hamilton's quota compliance is exact by construction.
+Huntington-Hill and Webster satisfy the quota rule in practice for
+all known U.S.\ census data but can in principle violate it for
+extreme population distributions.
+The Balinski-Young theorem \citep{balinski1982fair} shows that
+satisfying the quota rule for all possible population vectors
+requires a quota method, which is incompatible with paradox immunity.
+
+\subsection{Paradox Immunity}
+
+The three classical apportionment paradoxes are:
+\begin{enumerate}
+  \item \textbf{Alabama Paradox}: Increasing $H$ by 1 causes some state
+    to lose a seat.
+  \item \textbf{Population Paradox}: State $A$'s population grows faster
+    than state $B$'s between censuses, yet $A$ loses a seat to $B$.
+  \item \textbf{New-States Paradox}: Adding a new state with proportional
+    seats causes existing states to exchange seats.
+\end{enumerate}
+
+Divisor methods are immune to all three paradoxes (proved in J.5).
+The key insight is that in a priority-queue divisor method,
+awarding additional seats can only go to states with the highest
+priority --- a state that currently holds seat $s$ holds it because
+its priority $P_i(s-1)$ exceeded all competitors' priorities at that
+step.
+Increasing $H$ adds more seats through the priority queue;
+no existing seat allocation is reconsidered.
+Hamilton is susceptible to all three paradoxes because its
+fractional-remainder ranking is non-monotone in $H$ and population.
+
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+Method & Alabama & Population & New-States \\
+\midrule
+Huntington-Hill & Immune & Immune & Immune \\
+Webster         & Immune & Immune & Immune \\
+Adams           & Immune & Immune & Immune \\
+Jefferson       & Immune & Immune & Immune \\
+Hamilton        & Susceptible & Susceptible & Susceptible \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Bias Direction}
+
+The four divisor methods lie on a spectrum from most small-state-favoring
+(Adams) to most large-state-favoring (Jefferson), with
+Huntington-Hill and Webster in between:
+
+\begin{center}
+Adams $\succ$ Huntington-Hill $\succ$ Webster $\succ$ Jefferson
+\end{center}
+
+\noindent
+(Where $A \succ B$ means $A$ gives systematically more seats to small
+states relative to $B$.)
+This ordering follows from the rounding thresholds:
+Adams always rounds up (giving small states the benefit of fractional
+seats), Jefferson always rounds down (denying fractional seats),
+Huntington-Hill rounds at the geometric mean (slightly above 0.5,
+favouring small states), and Webster rounds at 0.5 (neutral between
+large and small states).
+
+For the 2020 Census, small-state bias manifests most visibly in the
+treatment of states near the 1-to-2 seat boundary.
+Wyoming, Vermont, and Alaska all have quotas between 0.75 and 1.0:
+they receive 1 seat under all five methods because the constitutional
+floor overrides rounding, but their \emph{effective} over-representation
+relative to strict proportionality is highest under Adams and lowest
+under Jefferson.

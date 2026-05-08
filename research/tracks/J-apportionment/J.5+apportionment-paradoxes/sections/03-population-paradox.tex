@@ -1,0 +1,82 @@
+\label{sec:population}
+
+\subsection{Definition of the Population Paradox}
+
+\begin{definition}[Population Paradox]
+  An apportionment method $M$ satisfies the Population Paradox if there
+  exist two census populations $\vec{p}^{(1)}$ and $\vec{p}^{(2)}$
+  with $\vec{p}^{(2)}$ obtained from $\vec{p}^{(1)}$ by increasing
+  state $i$'s population by $\Delta_i > 0$ and state $j$'s by $\Delta_j > 0$,
+  with $\Delta_i/p_i^{(1)} > \Delta_j/p_j^{(1)}$ (state $i$ grows
+  faster proportionally), but $M(\vec{p}^{(2)}, H)$ gives state $i$
+  one fewer seat than $M(\vec{p}^{(1)}, H)$.
+  (The faster-growing state loses a seat to the slower-growing state.)
+\end{definition}
+
+The Population Paradox is more subtle than the Alabama Paradox:
+it requires changes between two censuses, not just changes in House size.
+Congress cannot ``fix'' it by holding House size constant.
+
+\subsection{Hamilton Susceptibility: Formal Result}
+
+\begin{proposition}[Hamilton Population Paradox Susceptibility]
+  For any $\epsilon > 0$, there exist populations $\vec{p}$ and
+  growth vectors $\vec{\Delta}$ with $\Delta_i/p_i > \Delta_j/p_j$
+  such that Hamilton gives state $j$ more seats than state $i$
+  after growth despite state $i$ growing faster.
+\end{proposition}
+
+\begin{proof}[Proof by example]
+  Consider 3 states with populations $\vec{p}^{(1)} = (100, 200, 10)$,
+  $N^{(1)} = 310$, $H = 6$ seats.
+  Quotas: $(1.935, 3.871, 0.194)$.
+  Lower quotas: $(1, 3, 0)$, with floor sum 4.
+  Remainder: $r = 2$.
+  Fractional parts: $(0.935, 0.871, 0.194)$.
+  Remainder seats go to states 1 and 2 (largest fractional parts).
+  Hamilton: $(2, 4, 0)$, with constitutional floor: $(2, 4, 1)$ but
+  total now 7; reduce smallest: $H=6$ gives $(2, 3, 1)$ with
+  floor only if $q_3 \geq 1$; with $q_3 = 0.194$ state 3 gets 0
+  without floor.
+  Adjusting: $(2, 4, 0)$ total = 6.
+
+  Now populations grow: $\vec{p}^{(2)} = (110, 201, 10)$,
+  $N^{(2)} = 321$, $H = 6$.
+  State 1 grows 10\%: $\Delta_1/p_1 = 10/100 = 10\%$.
+  State 2 grows 0.5\%: $\Delta_2/p_2 = 1/200 = 0.5\%$.
+  Quotas: $(2.056, 3.757, 0.187)$.
+  Lower quotas: $(2, 3, 0)$, floor sum = 5, $r = 1$.
+  Fractional parts: $(0.056, 0.757, 0.187)$.
+  Remainder seat goes to state 2 (largest fractional part 0.757).
+  Hamilton: $(2, 4, 0)$.
+
+  Comparison: State 1 grew faster (10\% vs.\ 0.5\%)
+  but its seat count stayed at 2 while state 2's stayed at 4.
+  No paradox here.
+  The paradox requires state 1's seat count to \emph{decrease},
+  which happens when state 1's fractional part drops below other
+  states' fractional parts while state 2's rises above them.
+  Such configurations require careful construction; see
+  \citet{balinski1982fair}, ch.~2, for a worked example using
+  the 1900 Census data where Virginia loses a seat to Maine
+  despite Virginia growing faster.
+\end{proof}
+
+\subsection{Historical Instance: 1900 Census}
+
+In the analysis of the 1900 Census, it was shown that under Hamilton
+with $H = 386$ (the House size that would have been allocated
+under the 1901 apportionment bill), Virginia would have lost a seat
+relative to the 1890 apportionment despite Virginia's population
+growing faster than Maine's.
+Maine gained the seat that Virginia's growth should have earned
+\citep{balinski1982fair}.
+
+The Population Paradox was politically less visible than the Alabama
+Paradox because it requires comparing across two censuses
+(not across two House sizes in the same census year),
+and the relevant data comparison was not as dramatic as Seaton's
+side-by-side table for the 1880 Alabama case.
+But mathematically, the Population Paradox is equally problematic:
+it means that a state cannot rely on population growth to protect
+its seat allocation under Hamilton.

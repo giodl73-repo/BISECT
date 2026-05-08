@@ -1,0 +1,112 @@
+\label{sec:background}
+
+\subsection{Definition of Incumbent Pairing}
+
+Let $\mathcal{I} = \{i_1, i_2, \ldots, i_n\}$ be the set of congressional incumbents in
+a state who are seeking reelection following redistricting. Each incumbent $i_j$ has a
+home census tract $t(i_j)$, determined from their FEC candidate filing address and
+geocoded to the 2020 Census TIGER/Line tract layer. A redistricting plan $P$ assigns
+each census tract to exactly one of $k$ congressional districts; let $d_P(t)$ denote
+the district assignment of tract $t$ under plan $P$.
+
+\begin{definition}[Incumbent Pairing]
+Two incumbents $i_a$ and $i_b$ are \emph{paired} under plan $P$ if and only if their
+home tracts are assigned to the same district:
+\[
+  d_P(t(i_a)) = d_P(t(i_b)).
+\]
+The \emph{pairing count} of plan $P$ is the number of unordered pairs of incumbents
+that are paired:
+\[
+  C(P) = \left|\{(i_a, i_b) : i_a \neq i_b, d_P(t(i_a)) = d_P(t(i_b))\}\right|.
+\]
+The \emph{pairing rate} of plan $P$ is:
+\[
+  R(P) = \frac{C(P)}{\binom{n}{2}}.
+\]
+\end{definition}
+
+Note that $R(P) = 0$ if and only if every district contains at most one incumbent's
+home tract. $R(P) = 1$ if and only if all incumbents are assigned to the same district,
+which is feasible only if $k=1$.
+
+\subsection{Analytical Baseline Under Random Redistricting}
+
+We derive the expected pairing count under a random redistricting process. The simplest
+model assigns each incumbent independently and uniformly at random to one of $k$
+districts. Under this model:
+
+\begin{proposition}[Expected Pairing Count under Uniform Random Assignment]
+If $n$ incumbents are assigned independently and uniformly at random to $k$ districts,
+the expected number of paired pairs is:
+\[
+  E[C] = \binom{n}{2} \cdot \frac{1}{k}.
+\]
+\end{proposition}
+
+\begin{proof}
+For any pair $(i_a, i_b)$, $\Pr[d(i_a) = d(i_b)] = \sum_{j=1}^{k} \Pr[d(i_a)=j] \cdot
+\Pr[d(i_b)=j] = \sum_{j=1}^k (1/k)^2 = 1/k$. Summing over all $\binom{n}{2}$ pairs
+and applying linearity of expectation yields the result.
+\end{proof}
+
+This yields the expected pairing rates shown in Table~\ref{tab:baseline}. The variance
+under this model is:
+\[
+  \text{Var}[C] = \binom{n}{2} \cdot \frac{1}{k} \cdot \left(1 - \frac{1}{k}\right)
+  + 2\binom{n}{3} \cdot \frac{1}{k^2},
+\]
+where the second term arises from the covariance between pairs sharing a common incumbent.
+
+\begin{table}[ht]
+\centering
+\caption{Analytical baseline for incumbent pairing under uniform random redistricting.}
+\label{tab:baseline}
+\begin{tabular}{l r r r r r}
+\toprule
+State & $k$ & $n$ & $E[C]$ & $\text{SD}[C]$ & $E[R]$ \\
+\midrule
+NC & 14 & 13 & 5.57 & 2.19 & 0.214 \\
+WI & 8  & 8  & 3.50 & 1.62 & 0.250 \\
+TX & 38 & 36 & 16.58 & 3.96 & 0.265 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Geographic Adjustment}
+
+The uniform random model overstates the expected pairing rate because it ignores the
+geographic adjacency structure of the redistricting problem. Incumbents whose home
+tracts are geographically distant from each other are less likely to be paired by any
+contiguous-district redistricting plan than the uniform model predicts. We compute a
+geographic adjustment factor $\rho_s$ for each state $s$ by:
+
+\begin{enumerate}
+  \item Constructing the set of all contiguous-district plans consistent with the
+    METIS adjacency graph structure.
+  \item Computing, for each pair $(i_a, i_b)$, the fraction of randomly sampled plans
+    that place both incumbents in the same district.
+  \item Setting $\rho_s$ to the ratio of the geographically adjusted expected pairing
+    count to the uniform-model expected pairing count.
+\end{enumerate}
+
+For NC, this adjustment yields $\rho_{\text{NC}} \approx 0.85$, reflecting the fact
+that incumbent home tracts in NC are somewhat dispersed across the state's geography.
+For WI, $\rho_{\text{WI}} \approx 0.70$, reflecting the relatively spread distribution
+of WI incumbent residences. For TX, $\rho_{\text{TX}} \approx 0.78$.
+
+Applying these adjustments, the geographically adjusted expected pairing rates are:
+NC: 0.182; WI: 0.175; TX: 0.207. We use these adjusted expectations as the primary
+baseline for testing.
+
+\subsection{The Incumbency Protection Premium}
+
+We define the \textit{incumbency protection premium} (IPP) of an enacted plan as the
+difference between the geographically adjusted random baseline pairing rate and the
+enacted pairing rate:
+\[
+  \text{IPP}(P) = E_{\text{geo}}[R] - R(P).
+\]
+A positive IPP indicates that the enacted plan provides more pairing protection than
+random geography would imply; a zero or negative IPP indicates no deliberate protection.
+Both enacted map analysis and algorithmic comparison can be expressed in terms of IPP.

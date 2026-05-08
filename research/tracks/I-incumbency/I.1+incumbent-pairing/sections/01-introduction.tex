@@ -1,0 +1,63 @@
+\label{sec:introduction}
+
+Every redistricting cycle produces a set of electoral consequences whose political
+salience far exceeds their frequency: incumbent pairings. When two sitting members of
+Congress find themselves in the same new district, at least one career is disrupted.
+The affected legislators face three options: compete in a primary against a fellow
+incumbent (expensive, divisive, and uncertain), seek an open seat in a different
+district (requiring campaign infrastructure transplantation), or retire. None of these
+options is attractive. Incumbent legislators therefore place enormous pressure on state
+mapmakers to draw districts that minimise pairing, and mapmakers with access to incumbent
+home addresses have consistently accommodated this pressure~\citep{altman2011public}.
+
+The question this paper addresses is simple but consequential: how does this deliberate
+pairing-minimisation compare to what a politically blind algorithm would produce?
+The \textsc{bisect} redistricting system~\citep{bisect2024} draws congressional districts
+by recursively bisecting a census tract adjacency graph to optimise population balance,
+with optional edge weights derived from geographic characteristics. The algorithm receives
+no information about incumbent home addresses. It cannot minimise pairing because it does
+not know where incumbents live.
+
+This creates a natural experiment. We observe the pairing rate under two plans---the
+\textsc{bisect} algorithmic map and the enacted 2022 congressional map---for the same
+set of incumbents in the same geographic state. The difference between these rates is
+attributable to exactly one factor: the enacted mapmakers' access to and use of incumbent
+address data. If the algorithmic map produces pairing rates consistent with the random
+baseline, and the enacted map produces pairing rates significantly below that baseline,
+we have strong evidence that enacted pairing protection is a deliberate redistricting
+choice requiring incumbency data, not a consequence of geographic constraints.
+
+\subsection{Contribution}
+
+This paper makes four contributions:
+
+\begin{enumerate}
+  \item \textbf{Analytical baseline}: We derive the exact expectation and variance for
+    the incumbent pairing count under uniform random redistricting for NC, WI, and TX,
+    and provide a geographic adjustment that accounts for the spatial clustering of
+    incumbent residences.
+  \item \textbf{Algorithmic benchmark}: We report the pairing rate under \textsc{bisect}
+    algorithmic maps for all three states and test whether these rates are consistent
+    with the random baseline.
+  \item \textbf{Enacted map comparison}: We test whether enacted 2022 pairing rates
+    differ significantly from the random baseline, establishing the magnitude of deliberate
+    incumbency protection.
+  \item \textbf{Legal interpretation}: We interpret these findings in the context of
+    redistricting litigation, identifying the conditions under which pairing-rate
+    comparisons can serve as evidence of strategic mapmaking.
+\end{enumerate}
+
+\subsection{States Studied}
+
+We study three states representing distinct redistricting contexts. North Carolina
+($k=14$) is a historically contested redistricting state with a long record of federal
+litigation over both racial and partisan gerrymandering~\citep{shaw1993, harper2022}.
+Wisconsin ($k=8$) provides a smaller-$k$ context where pairing probabilities are
+lower but the enacted map's zero-pairing outcome is more conspicuous against the random
+baseline. Texas ($k=38$) provides the largest-$k$ case where even a random process
+would produce substantial pairing, making the enacted map's near-zero outcome more
+analytically remarkable.
+
+All results use 2020 Census tract data and FEC 2022 candidate filing addresses
+geocoded to census tract centroids. Single-seed \textsc{bisect} results are marked
+with $^\dagger$.

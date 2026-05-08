@@ -1,0 +1,108 @@
+\label{sec:results}
+
+\subsection{Open-Seat Counts}
+
+Table~\ref{tab:open-results} presents the strict and broad open-seat counts for
+\textsc{bisect} algorithmic maps and enacted 2022 congressional maps in all three states.
+
+\begin{table}[ht]
+\centering
+\begin{threeparttable}
+\caption{Open-seat counts: \textsc{bisect} vs.\ enacted 2022 maps vs.\ baseline.}
+\label{tab:open-results}
+\begin{tabular}{l r r r r r}
+\toprule
+ & & \multicolumn{2}{c}{Open seats (strict)} & \multicolumn{2}{c}{Open seats (broad)} \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6}
+State & Baseline 95\% CI & \textsc{bisect}$^\dagger$ & Enacted & \textsc{bisect}$^\dagger$ & Enacted \\
+\midrule
+NC ($k=14$, $n=13$) & $[0, 3]$ & 4 & 2 & 6 & 2 \\
+WI ($k=8$, $n=8$)   & $[0, 2]$ & 2 & 1 & 3 & 1 \\
+TX ($k=38$, $n=36$) & $[1, 8]$ & 7 & 3 & 11 & 4 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item[$\dagger$] Single-run result (seed\,$=42$).
+\item Strict: no incumbent home tract in district. Broad: strict open seat or incumbent
+  in competitive district ($|v_D - 0.50| \leq 0.05$).
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\paragraph{North Carolina.}
+The \textsc{bisect} NC map$^\dagger$ produces 4 strict open seats and 6 broad open
+seats. The two additional broad open seats are districts that contain one incumbent's
+home tract but whose partisan lean shifted to competitive ($v_D \in [0.45, 0.55]$)
+relative to the prior district. The enacted NC map produces only 2 strict open seats,
+both of which correspond to districts where incumbents chose not to seek reelection
+for personal reasons unrelated to the map.
+
+The \textsc{bisect} strict count of 4 is above the 95\% confidence interval of $[0, 3]$
+under the random baseline. This slight excess reflects the specific geography of NC:
+two pairs of incumbents whose home tracts fall on the same side of the compact
+geographic cuts produce pairs that leave two districts with no incumbents. This is
+a known consequence of the pairing effect documented in I.1: each pairing event
+creates at least one open district (the district that lost its incumbent to the pair's
+district).
+
+\paragraph{Wisconsin.}
+The \textsc{bisect} WI map$^\dagger$ produces 2 strict open seats, within the $[0, 2]$
+baseline range. The enacted WI map produces 1 strict open seat. The difference is modest
+but directionally consistent: the algorithmic map creates twice as many strict open seats
+as the enacted map.
+
+\paragraph{Texas.}
+The \textsc{bisect} TX map$^\dagger$ produces 7 strict open seats and 11 broad open
+seats. The 7 strict open seats include the 4 districts paired with incumbents' home tracts
+(generating 4 open districts from the 4 pairings) plus 3 additional open districts where
+no incumbent happened to live. The enacted TX map produces 3 strict open seats (2 from the
+new TX seats created by reapportionment, 1 from a natural retirement).
+
+The broad open-seat count of 11 for \textsc{bisect} reflects TX's large delegation and
+the significant partisan composition shifts that compact redistricting produces in the
+competitive Houston, Dallas-Fort Worth, and Austin suburban rings.
+
+\subsection{Retirement Incentive Analysis}
+
+Table~\ref{tab:retirement} presents the estimated retirement incentive scores for each
+state's incumbents under \textsc{bisect} and enacted plans. We report the mean score
+across all $n$ incumbents seeking reelection and the fraction with scores above the
+median threshold for historical retirement ($\text{RI} \geq 0.30$ based on calibration
+against the 2002 and 2012 post-redistricting cycles).
+
+\begin{table}[ht]
+\centering
+\begin{threeparttable}
+\caption{Retirement incentive scores under \textsc{bisect} vs.\ enacted plans.}
+\label{tab:retirement}
+\begin{tabular}{l r r r r}
+\toprule
+ & \multicolumn{2}{c}{Mean RI score} & \multicolumn{2}{c}{Fraction RI $\geq$ 0.30} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+State & \textsc{bisect}$^\dagger$ & Enacted & \textsc{bisect}$^\dagger$ & Enacted \\
+\midrule
+NC & 0.38 & 0.12 & 0.54 & 0.15 \\
+WI & 0.29 & 0.08 & 0.38 & 0.13 \\
+TX & 0.31 & 0.11 & 0.42 & 0.17 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item[$\dagger$] Single-run result (seed\,$=42$).
+\item RI parameters: $\alpha = 0.40$ (pairing indicator), $\beta = 0.50$ (lean change magnitude).
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+Under \textsc{bisect} maps, the mean retirement incentive score is 2.5--4.5 times
+higher than under enacted maps across all three states. The fraction of incumbents
+with scores above the historical retirement threshold ranges from 0.38 (WI) to 0.54
+(NC) under the algorithmic plan, compared to 0.08--0.17 under enacted plans.
+
+These scores are illustrative rather than definitive: the $\alpha$ and $\beta$
+parameters are calibrated on historical averages and may not capture the specific
+strategic responses of NC, WI, and TX incumbents. But the directional conclusion is
+robust: algorithmic redistricting creates substantially more retirement pressure than
+enacted redistricting, because it does not engineer protective districts for each
+sitting member.

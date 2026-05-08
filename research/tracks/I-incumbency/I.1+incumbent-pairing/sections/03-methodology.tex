@@ -1,0 +1,69 @@
+\label{sec:methodology}
+
+\subsection{Data Construction}
+
+\paragraph{Incumbent identification.}
+We identify all sitting members of the 117th Congress (2021--2022) who represent
+districts in NC, WI, and TX, and who filed as candidates for reelection in the
+2022 congressional elections following redistricting. Members who announced retirement
+before redistricting was completed are excluded; members who sought different districts
+due to pairing are included and classified as paired. This yields $n = 13$ incumbents
+for NC (one member announced retirement before the filing deadline), $n = 8$ for WI
+(all eight members filing), and $n = 36$ for TX (two members announced retirement
+before filing).
+
+\paragraph{Address geocoding.}
+FEC Form 2 candidate filings for the 2022 election cycle report the candidate's home
+address. We geocode these addresses to 2020 Census TIGER/Line census tracts using the
+Census Bureau's online batch geocoder~\citep{censusGeocoder}. Where a home address
+geocodes to a tract boundary (within 100 metres of a tract edge), we assign to the
+tract containing the address centroid.
+
+\paragraph{District assignment.}
+For \textsc{bisect} plans, we run the algorithm with:
+\begin{verbatim}
+bisect build <state>_2022_test --year 2020
+    --structure prime-factor
+    --weights-override geographic
+    --workers 8
+\end{verbatim}
+Single-seed results use seed\,$=42$ and are marked with $^\dagger$. The resulting
+district assignment maps each census tract to a district identifier. We then look up
+the district identifier for each incumbent's home tract to determine $d_P(t(i))$.
+
+For enacted plans, we use the 2022 enacted congressional district shapefiles from
+the Census Bureau's TIGER/Line redistricting layer, assigning each incumbent's
+geocoded home address to the 2022 enacted district that contains it.
+
+\subsection{Statistical Testing}
+
+To test whether enacted pairing rates differ significantly from the random baseline,
+we use a one-sided binomial test. Under the null hypothesis that each pair of
+incumbents is paired with probability $p_0 = 1/k$ (or the geographically adjusted
+$p_0 = \rho / k$), the observed pairing count $c$ follows a binomial distribution
+with parameters $m = \binom{n}{2}$ (number of pairs) and $p_0$. The $p$-value for
+the hypothesis that the enacted plan's pairing rate is below the random baseline is:
+\[
+  p\text{-value} = \Pr[C \leq c \mid C \sim \text{Binom}(m, p_0)].
+\]
+
+For \textsc{bisect} plans, we test the null hypothesis that the pairing rate is
+consistent with the random baseline using the same binomial test, but two-sided:
+\[
+  p\text{-value} = 2 \cdot \min\left(\Pr[C \leq c], \Pr[C \geq c]\right).
+\]
+Failure to reject this null (i.e., $p > 0.10$) establishes that the \textsc{bisect}
+pairing rate is consistent with random redistricting.
+
+\subsection{Limitations}
+
+Several limitations affect the interpretation of these results. First, the geocoding
+of incumbent home addresses introduces measurement error: a small number of incumbents
+may have moved since filing their FEC disclosures, and some addresses may geocode
+to incorrect tracts. We estimate this affects at most 2--3 incumbents across the three
+states and is unlikely to change any pairing outcome. Second, the random baseline
+assumes that all geographically contiguous plans are equally likely, which is not
+exactly true for \textsc{bisect}'s specific optimisation procedure. Third, incumbents
+who lived in the same county or metropolitan area prior to redistricting may have been
+more likely to be paired regardless of map, which the geographic adjustment partially
+but not fully accounts for.

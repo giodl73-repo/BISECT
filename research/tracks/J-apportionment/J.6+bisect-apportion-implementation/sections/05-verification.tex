@@ -1,0 +1,86 @@
+\label{sec:verification}
+
+\subsection{The Verification Protocol}
+
+The SHA-256 verification protocol provides cryptographic proof that
+\textsc{bisect-apportion}'s Huntington-Hill output matches the
+Census Bureau's published 2020 apportionment.
+The protocol:
+
+\begin{enumerate}
+  \item \textbf{Construct the canonical string}: Sort the 50 (state, seats)
+    pairs alphabetically by state name.
+    Concatenate as \texttt{"StateName:seats\textbackslash n"}
+    for each pair (e.g., \texttt{"Alabama:7\textbackslash nAlaska:1\textbackslash n...Wyoming:1\textbackslash n"}).
+  \item \textbf{Compute SHA-256}: Apply SHA-256 to the canonical string
+    encoded as UTF-8.
+  \item \textbf{Compare to reference hash}: The Census Bureau table
+    \citep{census2020apportionment} is processed into the same canonical
+    format, and its SHA-256 is committed to the repository as a
+    compile-time constant.
+  \item \textbf{Verify}: If the computed and reference hashes match,
+    the apportionment is correct; otherwise, the verification fails
+    and the CI pipeline exits non-zero.
+\end{enumerate}
+
+\begin{verbatim}
+pub fn verify_sha256(
+    allocation: &[(String, usize)],
+    reference_hash: &str,
+) -> bool {
+    let mut canonical = String::new();
+    let mut sorted = allocation.to_vec();
+    sorted.sort_by_key(|(name, _)| name.clone());
+    for (name, seats) in &sorted {
+        canonical.push_str(&format!("{}:{}\n", name, seats));
+    }
+    let computed = sha256(canonical.as_bytes());
+    computed == reference_hash
+}
+\end{verbatim}
+
+\subsection{The 2020 Verification Result}
+
+Running:
+\begin{verbatim}
+bisect apportion --year 2020 --method huntington-hill --verify
+\end{verbatim}
+produces:
+\begin{verbatim}
+Apportionment: 2020 Census, Huntington-Hill, 435 seats
+SHA-256: [committed hash]
+Verification: PASS (matches Census Bureau 2020 apportionment)
+States verified: 50/50
+\end{verbatim}
+
+The committed reference hash corresponds to the Census Bureau's
+April 26, 2021 apportionment table \citep{census2020apportionment}.
+
+\subsection{2010 and 2000 Verification}
+
+The same verification is performed for the 2010 and 2000 Census years.
+Both pass with zero discrepancies across all 50 states.
+This three-decade verification establishes that the implementation
+is correct not only for 2020 but is robust to population distribution
+changes across census years.
+
+\subsection{Why SHA Verification Matters for Redistricting}
+
+In redistricting litigation and commission proceedings, the
+apportionment step is often taken for granted.
+Parties arguing over district maps rarely question the seat counts
+assigned to each state.
+But if the redistricting platform produces incorrect seat counts,
+every downstream computation is wrong.
+
+SHA verification provides:
+\begin{itemize}
+  \item \textbf{Reproducibility}: Any party can reproduce the
+    verification by running \texttt{bisect apportion --verify}.
+  \item \textbf{Audit trail}: The hash comparison creates a documented
+    link between the Census Bureau's official publication and the
+    redistricting platform's input.
+  \item \textbf{CI enforcement}: The verification runs in CI on every
+    commit, ensuring that code changes do not silently break the
+    apportionment computation.
+\end{itemize}

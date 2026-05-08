@@ -1,0 +1,71 @@
+\label{sec:history}
+
+\subsection{Pre-1941: The Hamilton Era and Its Problems}
+
+From 1850 to 1900, Congress used the Hamilton method (largest remainders).
+Hamilton's appeal was intuitive: give each state the integer part of its
+proportional share, then distribute remaining seats to states with the
+largest fractional parts.
+However, the 1880 Census produced a devastating demonstration of Hamilton's
+weakness: the \emph{Alabama Paradox}.
+
+When the House was sized at 299 seats, Alabama received 8 seats.
+When the House was increased to 300 seats, Alabama's seat count fell to 7
+--- a counterintuitive result that no method based on monotone priority
+could produce.
+The paradox arose because Alabama's fractional remainder, which had ranked
+it 8th among states competing for the last few seats at $H=299$,
+fell below the threshold at $H=300$ when a new state displaced it in the
+fractional ranking.
+
+Congress responded by fixing the House size at each census to avoid
+triggering the paradox.
+The Apportionment Act of 1929 \citep{apportionment1929} temporarily froze
+the House size at 435 and required automatic apportionment after each
+census, but it did not specify which mathematical method to use.
+This led to conflict: the 1930 Census was reapportioned by two different
+methods (Hamilton and Webster) producing different results,
+and Congress could not agree on which to certify.
+The apportionment ultimately used for the 1930s was the same as
+the 1910 apportionment --- no reapportionment occurred.
+
+\subsection{The 1941 Act: Adoption of Huntington-Hill}
+
+The crisis of the 1930s non-apportionment prompted Congress to resolve
+the method question definitively.
+The National Academy of Sciences convened a panel of mathematicians,
+which in 1929 recommended Huntington-Hill (the method Edward V.
+Huntington had been advocating since 1911 and which Hill~\citeyearpar{hill1911apportionment}
+had independently proposed).
+
+The Act of November~15, 1941 codified Huntington-Hill as the
+statutory apportionment method (2~U.S.C.\ \S2a).
+The Act's logic reflected three congressional concerns:
+\begin{enumerate}
+  \item \textbf{Paradox immunity}: Huntington-Hill, as a divisor method,
+    cannot produce the Alabama Paradox.
+    The House size can be adjusted without risking a state losing seats.
+  \item \textbf{Mathematical neutrality}: The geometric mean rounding rule
+    was characterised by Huntington as the most defensible on grounds of
+    equal treatment of each seat within a state's allocation.
+  \item \textbf{Near-proportionality}: The relative deviation criterion
+    (Theorem~\ref{thm:hh-optimal}) provided a principled basis for
+    Congress to defend the method in court.
+\end{enumerate}
+Webster was also seriously considered; the difference between the two
+methods was primarily the treatment of small states near the rounding
+boundary.
+Congress's choice of HH over Webster has been described as reflecting
+a subtle preference for protecting small-state representation
+\citep{balinski1982fair,schmeckebier1941congressional}.
+
+\subsection{Reapportionments Under 2 U.S.C.\ \S2a}
+
+The 1941 Act has governed every apportionment since:
+1950, 1960, 1970, 1980, 1990, 2000, 2010, and 2020.
+In each case, the Census Bureau publishes its computation of the
+priority sequence, identifies the last seat awarded and the state
+that narrowly missed a seat, and certifies the final seat counts.
+For the 2020 Census, the last seat (seat 435) went to New York;
+Texas and Minnesota were within a small number of priority points
+of gaining or losing a seat.

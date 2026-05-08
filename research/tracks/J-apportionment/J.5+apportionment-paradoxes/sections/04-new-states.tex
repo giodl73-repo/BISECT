@@ -1,0 +1,109 @@
+\label{sec:newstates}
+
+\subsection{Definition of the New-States Paradox}
+
+\begin{definition}[New-States Paradox]
+  An apportionment method $M$ satisfies the New-States Paradox if
+  adding a new state $k$ with population $p_k$ and
+  $m = \text{round}(p_k \times H / N)$ additional seats
+  (so the new House size is $H' = H + m$) causes existing states
+  to exchange seats: state $i$ gains a seat and state $j$ loses one,
+  even though no change was made to states $i$ and $j$ themselves.
+\end{definition}
+
+The New-States Paradox is paradoxical because the new state's seats are
+supposed to be ``proportional'' to its population ---
+the existing states should not be affected.
+But under Hamilton, the addition of the new state changes the exact quotas
+of all states (because the national total $N$ and divisor change),
+and the remainder-seat ranking can shift.
+
+\subsection{The Oklahoma 1907 Example}
+
+When Oklahoma was admitted to the Union in 1907, Congress increased
+the House size from 386 to 391 (by 5 seats, approximately proportional
+to Oklahoma's population).
+Under Hamilton:
+
+\begin{enumerate}
+  \item Before Oklahoma: $H = 386$, $N \approx 76{,}000{,}000$.
+    Maine received 3 seats; New York received 38 seats.
+  \item After Oklahoma: $H = 391$, $N \approx 77{,}000{,}000$.
+    The new Hamilton apportionment (with Oklahoma receiving 5 seats)
+    gave Maine 4 seats and New York 37 seats.
+\end{enumerate}
+
+The addition of Oklahoma with its proportional 5 seats caused Maine
+to gain a seat and New York to lose a seat, despite no change in
+Maine's or New York's populations.
+This is the New-States Paradox \citep{balinski1982fair}.
+
+\subsection{Numerical Example}
+
+\begin{example}[3-State New-States Paradox]
+  Start with 2 states: $\vec{p} = (30, 20)$, $N = 50$, $H = 5$.
+  Quotas: $(3.0, 2.0)$, lower quotas $(3, 2)$, $r = 0$.
+  Hamilton: $(3, 2)$.
+
+  Add state 3 with $p_3 = 10$.
+  Proportional seats: $10 \times 5 / 50 = 1$.
+  New House size: $H' = 6$; new total population: $N' = 60$.
+
+  New quotas: $(30 \times 6/60, 20 \times 6/60, 10 \times 6/60)
+  = (3.0, 2.0, 1.0)$.
+  Lower quotas: $(3, 2, 1)$, $r = 0$.
+  Hamilton: $(3, 2, 1)$.
+  No paradox in this example.
+
+  For a paradox, we need the remainder-seat ranking to change.
+  Consider $\vec{p} = (34, 66)$, $N = 100$, $H = 10$.
+  Quotas: $(3.4, 6.6)$, lower quotas $(3, 6)$, $r = 1$.
+  Fractional parts: $(0.4, 0.6)$; state 2 gets remainder.
+  Hamilton: $(3, 7)$.
+
+  Add state 3 with $p_3 = 7$. Proportional seats: $7 \times 10/100 = 0.7 \approx 1$.
+  $H' = 11$, $N' = 107$.
+  New quotas: $(34 \times 11/107, 66 \times 11/107, 7 \times 11/107)
+  = (3.495, 6.785, 0.720)$.
+  Lower quotas: $(3, 6, 0)$, sum = 9, $r = 2$.
+  Fractional parts: $(0.495, 0.785, 0.720)$.
+  State 2 gets first remainder (0.785), state 3 gets second (0.720).
+  Hamilton: $(3, 7, 1)$.
+  No change for states 1 and 2.
+
+  Adjusting population so that state 1's fractional part displaces state 2:
+  populations $(34, 66)$ with $H = 10$: state 1 has fractional 0.4,
+  state 2 has 0.6.
+  Add state 3 with $p_3 = 50$: proportional $= 50 \times 10/100 = 5$ seats.
+  $H' = 15$, $N' = 150$.
+  New quotas: $(34\times 15/150, 66\times 15/150, 50\times 15/150)
+  = (3.4, 6.6, 5.0)$.
+  Same fractions as before! No paradox.
+
+  The New-States Paradox requires specific population configurations;
+  the Oklahoma example uses the actual 1907 census data and is
+  documented in \citet{balinski1982fair}.
+\end{example}
+
+\subsection{Why All Three Paradoxes Share the Same Root}
+
+The Alabama, Population, and New-States paradoxes all arise from
+the same mathematical structure: Hamilton's fractional-part ranking
+is not monotone in the parameters (House size, populations, number
+of states) that are supposed to determine the apportionment.
+Specifically:
+\begin{itemize}
+  \item The fractional parts $f_i = q_i - \lfloor q_i \rfloor$
+    are discontinuous functions of $H$ and $\vec{p}$
+    (a small change in $H$ or $p_i$ can cross an integer boundary,
+    dramatically changing $f_i$).
+  \item The ranking of fractional parts can change even when no state's
+    fractional part changes monotonically.
+  \item States that should benefit from an increase in $H$ or $p_i$
+    can instead lose their remainder seat because another state's
+    fractional part happened to increase more.
+\end{itemize}
+Divisor methods avoid all of this because they use a priority function
+$P_i(s)$ that is monotone in $p_i$ and the seat allocation is determined
+by a priority queue that only grows (never reconsidering previously
+allocated seats).

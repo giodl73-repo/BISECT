@@ -1,0 +1,38 @@
+Huntington-Hill is U.S.\ apportionment law, and it is a good law.
+Its geometric mean rounding rule implements a mathematically principled
+notion of equal per-capita representation across all pairs of states,
+and its divisor-method structure guarantees immunity to the
+Alabama paradox, the population paradox, and the new-states paradox.
+These properties were the primary technical rationale for Congress's
+1941 adoption of the method and the Supreme Court's unanimous
+upholding in \textit{Montana} (1992).
+
+The \textsc{bisect-apportion} implementation provides practitioners
+with an exact, SHA-verified, auditable computation of the
+Huntington-Hill apportionment for 2020, 2010, and 2000 Census data.
+Its integer arithmetic ensures that priority comparisons are exact
+even in near-tie cases, and its CLI provides a simple interface
+for redistricting pipelines to obtain the statutory seat counts
+before drawing district boundaries.
+
+Three caveats deserve emphasis.
+First, HH's optimality under the population pair test (Theorem~\ref{thm:hh-optimal})
+is specific to the \emph{relative} deviation criterion;
+Webster is optimal under the \emph{absolute} deviation criterion.
+The choice between HH and Webster is not a mathematical question
+but a political one about which notion of fairness Congress preferred.
+Second, the quota rule --- which Hamilton satisfies but HH does not ---
+remains a point of academic debate.
+The Balinski-Young impossibility theorem establishes that no method can
+satisfy both the quota rule and paradox immunity, but does not tell us
+which property Congress should prioritise.
+Third, the Montana case confirms that courts will not second-guess
+Congress's choice of apportionment method; the role of mathematical
+analysis is to characterise the method's properties, not to
+litigate its superiority.
+
+Practitioners using \textsc{bisect} for redistricting can rely on
+\textsc{bisect-apportion} as a correct and legally defensible
+implementation of 2~U.S.C.\ \S2a.
+The SHA verification provides the audit trail that commission and
+court contexts require.

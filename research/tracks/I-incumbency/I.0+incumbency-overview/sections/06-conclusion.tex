@@ -1,0 +1,35 @@
+\label{sec:conclusion}
+
+This paper has presented a unified framework for understanding how \textsc{bisect}
+algorithmic redistricting interacts with congressional incumbency. Three mechanisms---
+geographic restructuring, partisan composition change, and constituent-base
+reassignment---explain how an algorithm with no incumbency inputs nonetheless produces
+measurable incumbency consequences. Three metrics---incumbent pairing rate, safe-seat
+fraction, and open-seat count---provide the empirical vocabulary for comparing algorithmic
+outcomes to enacted maps and to the incumbency-neutral baseline.
+
+The empirical overview across NC, WI, and TX establishes the central quantitative
+finding: \textsc{bisect} maps fall within the incumbency-neutral baseline range on all
+three metrics, while enacted 2022 congressional maps produce significantly lower pairing
+rates and higher safe-seat fractions than the baseline. This gap cannot be explained by
+geographic constraints; it requires the hypothesis that enacted mapmakers used incumbent
+address data and partisan information to engineer protective boundaries.
+
+The legal framework governing this finding is settled. Courts have consistently held
+that incumbency protection is a permissible redistricting criterion, but no court has
+required it. Algorithmic indifference to incumbency is legally sound. The \textsc{bisect}
+algorithm's failure to protect incumbents is not a constitutional defect; it is a
+deliberate design choice to treat incumbency the same way a neutral geographic process
+would treat it---as one of the many consequences of drawing compact, population-balanced
+districts from a census tract graph, rather than as a target to be optimised.
+
+The companion papers in this series provide the detailed empirical and legal analysis
+summarised here. I.1 derives the mathematical expectation for incumbent pairing under
+random redistricting and tests whether \textsc{bisect} and enacted maps differ
+significantly from that expectation. I.2 documents the safe-seat creation and destruction
+dynamics in detail, including the party-specific decomposition. I.3 analyses open-seat
+creation and its implications for electoral accountability. I.4 provides a comprehensive
+legal survey of incumbency as a redistricting criterion across federal doctrine and state
+constitutional frameworks. Together, these papers establish \textsc{bisect} as a
+credible, incumbency-neutral baseline for redistricting litigation and legislative
+proceedings.

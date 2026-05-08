@@ -1,0 +1,45 @@
+\label{sec:conclusion}
+
+Prison gerrymandering---the Census Bureau's practice of counting
+incarcerated people at the prison location rather than their home
+address---is a data-layer problem with significant legal and representational
+consequences. Approximately 1.4 million people are affected by this
+counting convention at each decennial census, and because approximately
+58\% of the state and federal prison population is Black or Hispanic,
+the distortion falls disproportionately on minority communities. Rural
+districts containing large correctional facilities receive inflated
+population counts; urban minority communities from which incarcerated
+people originate receive deflated counts.
+
+At least twelve states have enacted legislation to correct this distortion
+for redistricting purposes, reallocating prison populations to their home
+counties using data from the Census Bureau's DHC-A file and the Bureau
+of Justice Statistics National Prisoner Statistics program. The
+\textsc{bisect} redistricting pipeline implements these corrections through
+the \texttt{--adjust-prison-population} flag on \texttt{bisect fetch},
+applying the adjustment uniformly across all covered facilities with a
+full SHA audit chain.
+
+The empirical findings across North Carolina, Texas, and California
+demonstrate that prison population adjustment has measurable but modest
+effects on \textsc{bisect} plans: 1--2 districts are affected per state,
+with partisan lean shifts of 0.3--0.5 percentage points and minority
+voting-age population shifts of 0.4--0.8 percentage points. These shifts
+are small relative to the overall plan, but they matter in borderline cases:
+a district close to the majority-minority threshold can cross it under
+adjusted data, and a district close to the equal-population tolerance
+boundary requires a different geographic footprint under the adjusted count.
+
+For expert witnesses and redistricting practitioners, the key takeaway is
+procedural: before producing any algorithmic redistricting plan in a state
+with a prison population adjustment law, the applicable scope of that law
+must be determined (state legislative only, or congressional as well), and
+the \textsc{bisect} pipeline must be run with the corresponding data.
+The \textit{Evenwel} framework permits this adjustment---it addresses where
+within total population to count each person, not which population base
+to use---and the \textsc{bisect} implementation provides a reproducible,
+judicially verifiable result.
+
+\bigskip
+\noindent\textit{The author thanks the redistricting research team for
+data access and algorithmic development. All errors are the author's own.}

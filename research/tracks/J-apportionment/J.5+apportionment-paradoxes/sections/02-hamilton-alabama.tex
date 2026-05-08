@@ -1,0 +1,133 @@
+\label{sec:alabama}
+
+\subsection{The Hamilton Method}
+
+\begin{definition}[Hamilton Method]
+  Given populations $p_1, \ldots, p_n$ and House size $H$:
+  \begin{enumerate}
+    \item Compute exact quotas $q_i = p_i \times H / N$ where $N = \sum_j p_j$.
+    \item Let $r = H - \sum_i \lfloor q_i \rfloor$ be the number of
+      ``remainder seats'' (necessarily $0 \leq r < n$).
+    \item Assign lower quota $\lfloor q_i \rfloor$ to each state.
+    \item Distribute the $r$ remainder seats to the $r$ states with
+      largest fractional parts $f_i = q_i - \lfloor q_i \rfloor$,
+      breaking ties by population.
+  \end{enumerate}
+\end{definition}
+
+Hamilton satisfies the quota rule by construction:
+every state receives either $\lfloor q_i \rfloor$ or $\lceil q_i \rceil$
+seats.
+This is its principal advantage over divisor methods.
+
+\subsection{Definition of the Alabama Paradox}
+
+\begin{definition}[Alabama Paradox]
+  An apportionment method $M$ satisfies the Alabama Paradox if there
+  exist populations $p_1, \ldots, p_n$ and House size $H$ such that
+  $M(\vec{p}, H)$ gives state $i$ seats $s_i$, but
+  $M(\vec{p}, H+1)$ gives state $i$ seats $s_i - 1 < s_i$.
+  (Increasing the House size causes a state to lose a seat.)
+\end{definition}
+
+\subsection{The 1880 Alabama Paradox: Historical Example}
+
+The 1880 Census populations for the relevant states were:
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+State & 1880 Population \\
+\midrule
+Alabama       & 1,262,505 \\
+Texas         & 1,591,749 \\
+Illinois      & 3,077,871 \\
+Total (all states) & 50,155,783 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+At $H = 299$, Alabama's exact quota is:
+$q_{\text{AL}} = 1{,}262{,}505 \times 299 / 50{,}155{,}783 \approx 7.530$.
+Lower quota: 7. Fractional part: 0.530.
+Alabama receives 8 seats (lower quota 7 + 1 remainder seat,
+as its 0.530 fractional part ranks among the top $r$ remainder receivers).
+
+At $H = 300$, Alabama's exact quota is:
+$q_{\text{AL}} = 1{,}262{,}505 \times 300 / 50{,}155{,}783 \approx 7.545$.
+Lower quota: 7. Fractional part: 0.545.
+One might expect Alabama to retain its remainder seat (its fractional part increased).
+However, Texas's exact quota at $H = 300$ is:
+$q_{\text{TX}} = 1{,}591{,}749 \times 300 / 50{,}155{,}783 \approx 9.516$.
+Lower quota: 9. Fractional part: 0.516.
+At $H = 299$, Texas had fractional part $0.516 \times 299/300 \approx 0.515$.
+Illinois at $H = 300$ has fractional part approximately 0.549.
+
+The critical change at $H = 300$ is that the addition of one seat
+increases the lower quotas for multiple states, reducing the number
+of remainder seats $r$, and changes the fractional-part ranking.
+Alabama's fractional part of 0.545 is now \emph{below} the fractional
+parts of Illinois (0.549) and possibly other states, so Alabama
+loses its remainder seat.
+Result: Alabama receives 7 seats at $H = 300$.
+
+\begin{example}[Synthetic Alabama Paradox]
+  Consider 3 states with populations $(6, 6, 2)$ and $H$ varying:
+  \[
+    N = 14, \quad q_i = \frac{p_i \cdot H}{14}.
+  \]
+  At $H = 7$: quotas $(3, 3, 1)$ exactly, no fractional parts,
+  Hamilton gives $(3, 3, 1)$.
+  At $H = 8$: quotas $(3.43, 3.43, 1.14)$, lower quotas $(3, 3, 1)$,
+  $r = 1$ remainder, fractional parts $(0.43, 0.43, 0.14)$,
+  tie broken by population: state 1 gets remainder.
+  Hamilton gives $(4, 3, 1)$.
+  At $H = 14$: quotas $(6, 6, 2)$, Hamilton gives $(6, 6, 2)$.
+
+  Now consider $H = 9$: quotas $(3.86, 3.86, 1.29)$, lower quotas $(3, 3, 1)$,
+  $r = 2$ remainders.
+  Hamilton gives $(4, 4, 1)$.
+  State 3 had 1 seat at $H=7$, 1 at $H=8$, 1 at $H=9$ ---
+  no paradox here. But with different population ratios, a paradox occurs.
+
+  For a clean 3-state example exhibiting the paradox:
+  populations $(5, 5, 2)$, $N = 12$:
+  \begin{itemize}
+    \item $H = 11$: quotas $(4.583, 4.583, 1.833)$, lower quotas $(4,4,1)$,
+      $r=2$, fractional parts $(0.583, 0.583, 0.833)$.
+      State 3 gets one remainder, state 1 gets the other.
+      Hamilton: $(5, 4, 2)$.
+    \item $H = 12$: quotas $(5, 5, 2)$, lower quotas $(5,5,2)$, $r=0$.
+      Hamilton: $(5, 5, 2)$.
+    \item $H = 13$: quotas $(5.417, 5.417, 2.167)$, lower quotas $(5,5,2)$,
+      $r=1$, fractional parts $(0.417, 0.417, 0.167)$.
+      State 1 gets the remainder (tie with state 2 broken by label).
+      Hamilton: $(6, 5, 2)$.
+  \end{itemize}
+  State 2 had 4 seats at $H=11$ but 5 at $H=12$: no paradox.
+  Constructing a clean Alabama paradox requires populations that create
+  the fractional-part crossing \citep{balinski1982fair}.
+\end{example}
+
+\subsection{Why Hamilton Is Susceptible}
+
+The Alabama Paradox occurs because the number of remainder seats
+$r = H - \sum_i \lfloor q_i \rfloor$ does not increase monotonically
+with $H$.
+When $H$ increases by 1:
+\begin{itemize}
+  \item Every exact quota $q_i = p_i \times H / N$ increases by $p_i/N$.
+  \item Some lower quotas $\lfloor q_i \rfloor$ increase by 1
+    (when $q_i$ crosses an integer).
+  \item The total increase in lower quotas equals
+    $|\{i : q_i \text{ crosses an integer at this } H\}|$,
+    which can be 0, 1, 2, or more.
+\end{itemize}
+If the total lower quotas increase by 2 when $H$ increases by 1,
+then $r = H - \sum \lfloor q_i \rfloor$ \emph{decreases} by 1.
+This means one fewer remainder seat is available, and some state
+that had a remainder seat loses it.
+The fractional-part ranking then determines which state loses the seat.
+If the losing state is not the one whose quota crossed an integer
+(i.e., not the state that ``earned'' the lower-quota increase),
+the result is counterintuitive: a state unrelated to the quota-crossing
+event loses a seat.

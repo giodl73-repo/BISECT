@@ -1,0 +1,45 @@
+The three classical apportionment paradoxes --- Alabama, Population,
+and New-States --- are not pathological curiosities but inevitable
+consequences of Hamilton's quota-compliance mechanism.
+The non-monotone fractional-part ranking that enables Hamilton to
+satisfy the quota rule for all possible population vectors is
+precisely the mechanism that creates the paradoxes.
+
+Divisor methods avoid this trap by using a different mechanism:
+monotone priority queues that only add seats, never reconsidering
+previously allocated seats.
+The formal proof of divisor method immunity
+(Theorem~\ref{thm:divisor-immune}) establishes that this immunity
+holds for all four divisor methods (HH, Webster, Adams, Jefferson)
+and for all possible population vectors.
+
+The Balinski-Young impossibility theorem
+(Theorem~\ref{thm:by-impossibility}) closes the loop:
+paradox immunity and quota compliance are mathematically incompatible,
+and no future mathematical innovation can resolve this incompatibility.
+The tradeoff is real and irreducible.
+
+For \textsc{bisect} platform users:
+\begin{itemize}
+  \item Huntington-Hill is provably paradox-free; any redistricting
+    pipeline built on \textsc{bisect-apportion}'s HH implementation
+    inherits this guarantee.
+  \item The \texttt{check\_alabama\_paradox} function provides
+    empirical verification for any method, enabling practitioners
+    to audit non-HH apportionments.
+  \item The Balinski-Young theorem should be cited whenever a party
+    in redistricting litigation argues that a ``better'' apportionment
+    method exists that is both quota-compliant and paradox-free ---
+    no such method exists.
+\end{itemize}
+
+The mathematical result has a political moral: the 1941 Congress
+made the right call.
+Paradox immunity is more valuable than quota compliance because
+paradoxes undermine the legitimacy of the apportionment process
+in a way that occasional quota violations do not.
+A state that loses a seat when the House grows has been treated
+arbitrarily; a state that loses a fractional seat to rounding
+has been treated consistently by a known rule.
+The first is politically unacceptable; the second is mathematically
+unavoidable.

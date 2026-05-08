@@ -1,0 +1,125 @@
+\label{sec:legal}
+
+\subsection{Section~5's Prophylactic Function}
+
+Section~5 preclearance served a function that Section~2 litigation
+cannot replicate: it was a prophylactic rule that deterred discriminatory
+redistricting before it was enacted, not a remedy applied after the harm
+had occurred. Even jurisdictions that believed their redistricting plans
+were VRA-compliant had to justify that belief to the DOJ or a federal
+court before implementation. This review process had three effects:
+
+\begin{enumerate}
+\item \textbf{Deterrence}: Knowing that plans would be scrutinized
+  ex ante discouraged covered jurisdictions from drawing maps that
+  would fail the non-retrogression standard.
+
+\item \textbf{Documentation}: The preclearance submission process
+  required covered jurisdictions to document their redistricting
+  criteria, methods, and demographic analysis. This created a
+  contemporaneous record that could be used in subsequent litigation.
+
+\item \textbf{Speed}: Administrative preclearance (the DOJ route)
+  was available within 60 days; even the slower judicial preclearance
+  route produced decisions before the election cycle. Section~2
+  litigation, by contrast, typically spans multiple election cycles.
+\end{enumerate}
+
+All three of these functions disappeared with \textit{Shelby County}.
+No deterrence exists in former covered states because no pre-enactment
+review is required. No documentation requirement compels contemporaneous
+disclosure of redistricting criteria and methodology. No fast-track
+process exists to resolve disputes before an election cycle begins.
+
+\subsection{Algorithmic Redistricting as Transparency Substitute}
+
+\textsc{bisect} cannot restore Section~5 preclearance---that requires
+an act of Congress. But it can provide a transparency substitute that
+addresses two of Section~5's three functions: deterrence (partially)
+and documentation (fully).
+
+\textbf{Documentation}: The \textsc{bisect} pipeline produces a complete
+SHA audit chain for every redistricting plan. Every input (Census tract
+data, adjacency graph), every intermediate result (bisection sequence,
+seed selection), and every output (district assignment file) is
+cryptographically hashed and chained. This produces a plan that is
+fully reproducible by any party with access to the public Census data
+and the published \textsc{bisect} software. In expert witness proceedings,
+this means that the \textsc{bisect} plan can be verified independently
+by opposing experts, eliminating disputes about whether the algorithmic
+result was manipulated.
+
+\textbf{Deterrence (partial)}: A \textsc{bisect} reference plan available
+as a published neutral baseline before state legislatures begin drawing
+maps creates a deterrent that is weaker than Section~5 (it is not
+legally required) but stronger than nothing. Legislators and mapmakers
+who know that a neutral algorithmic plan will be produced and introduced
+into evidence must draw further from the neutral baseline to achieve
+a desired partisan or demographic result---and the further they draw,
+the more visible the deviation from the neutral plan becomes.
+
+\subsection{Three Use Cases in Post-\textit{Shelby} Litigation}
+
+The \textsc{bisect} reference plan serves three distinct roles in
+post-\textit{Shelby} Section~2 redistricting litigation.
+
+\textbf{Use Case 1: Plaintiff Reference Plan}. In a Section~2 vote-dilution
+case, the plaintiff must show not only that the enacted plan dilutes
+minority voting strength but that an alternative plan exists that would
+provide adequate minority representation without sacrificing other
+redistricting criteria. Under \textit{Allen v.\ Milligan}, the plaintiff's
+burden includes demonstrating that a majority-minority district is
+``reasonably configured''---that is, compact and otherwise consistent
+with legitimate redistricting principles. A \textsc{bisect} plan with
+VRA mode enabled (\texttt{--weights-override vra-aligned}) provides
+exactly this: a reasonably configured alternative plan that creates the
+required majority-minority district while satisfying population balance,
+contiguity, and compactness requirements. Because the plan is algorithmic
+and reproducible, it is resistant to the opposing argument that it was
+``drawn to prove a point'' or constructed after the fact to win litigation.
+
+\textbf{Use Case 2: Defendant's Neutral Map Defense}. States defending
+their redistricting plans against Section~2 claims can introduce a
+\textsc{bisect} reference plan to show that the enacted map does not
+deviate materially from what a neutral process would produce. If the
+\textsc{bisect} plan and the enacted plan produce similar BVAP
+distributions, the defendant can argue that any deviation from a
+``perfect'' minority representation outcome is attributable to geography
+rather than mapmaker intent. This defense is most compelling when
+the state ran \textsc{bisect} as part of its redistricting process
+and adopted the plan with minimal modification---demonstrating that
+the neutral algorithm, not political manipulation, determined the
+outcome.
+
+\textbf{Use Case 3: Court-Appointed Special Master Baseline}. When
+courts order remedial redistricting plans---as the Alabama district court
+did in \textit{Allen v.\ Milligan} and the North Carolina Supreme Court
+did in \textit{Harper v.\ Hall}---they often appoint special masters
+to produce alternative plans. \textsc{bisect} is well-suited to this
+role: it produces plans quickly, satisfies the traditional redistricting
+criteria that courts require of remedial maps (population equality,
+contiguity, compactness), and can be configured to satisfy VRA
+requirements through the VRA mode. The full audit chain provides
+the transparency that a court-ordered plan requires.
+
+\subsection{The Non-Retrogression Analogy}
+
+Section~5's non-retrogression standard asked: does the new plan reduce
+minority electoral opportunity relative to the existing plan? The
+\textsc{bisect} reference plan enables an analogous comparison in
+Section~2 litigation: does the enacted plan reduce minority electoral
+opportunity relative to what a neutral, non-partisan process would produce?
+
+This ``neutral baseline'' comparison does not replicate Section~5's
+legal effect---Section~2 does not adopt a non-retrogression standard,
+and \textit{Gingles} does not require comparison to a neutral baseline.
+But it provides a framework for the expert witness to quantify the
+\textit{magnitude} of minority vote dilution. A claim that a map
+``dilutes minority voting strength'' is more compelling, and more
+legally actionable, when it can be attached to a specific quantity:
+``the enacted map produces a BVAP of X\% in the relevant district,
+while a neutral algorithmic plan produces Y\%, a gap of Z percentage
+points attributable entirely to mapmaker choices rather than demographic
+geography.'' This quantification---the gap between the neutral baseline
+and the enacted plan---is the algorithmic redistricting contribution
+to post-\textit{Shelby} Section~2 litigation.

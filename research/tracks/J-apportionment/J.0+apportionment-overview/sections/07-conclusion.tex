@@ -1,0 +1,39 @@
+Congressional apportionment is a mathematical problem with a constitutional
+mandate and a century of contested solutions.
+The choice of method is not arbitrary: it determines which states gain
+or lose representation for a decade, and it determines whether the
+resulting allocations are susceptible to counterintuitive paradoxes
+that undermine public confidence in the process.
+
+This paper has established the foundational framework for the J-track.
+The divisor vs.\ quota taxonomy divides the five major methods into
+two families with fundamentally different mathematical properties.
+The three fairness criteria --- population pair test, quota rule,
+and paradox immunity --- capture different values that cannot
+simultaneously be satisfied: the Balinski-Young impossibility theorem
+guarantees a tradeoff.
+
+Congress's 1941 choice of Huntington-Hill reflects a specific resolution
+of this tradeoff: paradox immunity and near-proportional representation
+at the cost of occasional quota-rule violations.
+The Supreme Court in \textit{Montana} confirmed that Congress has broad
+discretion in choosing among apportionment methods and that the choice
+need not be optimal under any single criterion.
+
+The \textsc{bisect-apportion} crate makes this framework computationally
+accessible: it implements all five methods with exact integer arithmetic,
+reproduces the 2020 Census Bureau result exactly under SHA verification,
+and provides a CLI for counterfactual apportionment analysis.
+For redistricting practitioners and researchers, it establishes that
+the apportionment step of the \textsc{bisect} pipeline is a correct,
+auditable, and reproducible implementation of federal law.
+
+\paragraph{Future directions.}
+The J-track does not address the apportionment of state legislative
+chambers, which may use different methods (many states use Webster
+or Hamilton for their own chambers), or the apportionment of seats
+in the Electoral College.
+Extending \textsc{bisect-apportion} to these contexts, and to
+non-U.S.\ parliamentary systems where d'Hondt and Sainte-Lagu\"e
+are used for party-list PR, would expand the crate's utility
+for comparative electoral systems research.

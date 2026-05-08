@@ -1,0 +1,29 @@
+\label{sec:conclusion}
+
+This paper has established a mathematical framework for analysing incumbent pairing
+under algorithmic redistricting, derived the analytical baseline expectation for three
+representative states, and demonstrated empirically that \textsc{bisect} maps fall
+within the geographic random baseline while enacted maps fall significantly below it.
+
+The central finding is stark: enacted congressional maps in NC, WI, and TX all produce
+pairing rates that are statistically inconsistent with random redistricting, implying
+that mapmakers deliberately drew district boundaries to guarantee each sitting incumbent
+a home district. The \textsc{bisect} algorithm, operating without incumbency data,
+produces pairing rates consistent with the random baseline across all three states.
+
+For redistricting practitioners, these findings have three direct implications.
+First, any redistricting plan that achieves a significantly lower pairing rate than
+the geographically adjusted baseline has used incumbency data or has subordinated
+other redistricting criteria to achieve pairing protection---a choice that may require
+justification in a legal proceeding. Second, \textsc{bisect} maps provide a credible
+neutral baseline for pairing-rate comparisons: if an algorithmic map consistent with
+geographic constraints produces pairing at the random rate, the enacted map's lower
+pairing rate is attributable to mapmaker choice, not geographic necessity. Third, the
+incumbency protection premium provides a single number that quantifies the degree to
+which a plan departs from geographic neutrality on pairing---useful for expert witness
+reports and judicial findings of fact.
+
+Future work should extend this analysis to multi-seed ensemble runs to characterise
+the full distribution of pairing outcomes under algorithmic redistricting, and to
+commission-drawn and court-drawn maps to establish whether neutral human redistricting
+produces pairing rates closer to the algorithmic or enacted baseline.

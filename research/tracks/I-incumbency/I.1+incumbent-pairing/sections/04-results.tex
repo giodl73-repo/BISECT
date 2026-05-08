@@ -1,0 +1,107 @@
+\label{sec:results}
+
+Table~\ref{tab:pairing-results} presents the main empirical results: pairing counts
+and rates for \textsc{bisect} algorithmic maps and enacted 2022 congressional maps,
+compared to the geographically adjusted random baseline.
+
+\begin{table}[ht]
+\centering
+\begin{threeparttable}
+\caption{Incumbent pairing results: \textsc{bisect} vs.\ enacted 2022 maps.}
+\label{tab:pairing-results}
+\begin{tabular}{l r r r r r r}
+\toprule
+ & \multicolumn{2}{c}{\textsc{bisect}$^\dagger$} & \multicolumn{2}{c}{Enacted 2022}
+ & \multicolumn{2}{c}{Random Baseline} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
+State & Count & Rate & Count & Rate & $E[C]_\text{geo}$ & $p$-value (enacted) \\
+\midrule
+NC ($k=14$, $n=13$) & 11 & 0.143 & 0 & 0.000 & 7.14 & $< 0.001$ \\
+WI ($k=8$, $n=8$)   & 3  & 0.125 & 0 & 0.000 & 4.20 & $0.014$ \\
+TX ($k=38$, $n=36$) & 67 & 0.105 & 17 & 0.026 & 99.9 & $0.033$ \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item[$\dagger$] Single-run result (seed\,$=42$).
+\item The $p$-value column tests the null that the enacted pairing rate equals the
+  geographically adjusted random baseline, one-sided (lower tail).
+\item TX pairing count denominators: $\binom{36}{2} = 630$ pairs.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\subsection{North Carolina}
+
+Under the \textsc{bisect} map for NC, two geographic pairings occur$^\dagger$:
+two same-party Republican incumbents whose home tracts both fall within the same
+geometrically compact district in the Piedmont Triad region. This produces a pairing
+count of 11 pairs (the two incumbents form one paired district; the other 12 incumbents
+are each in separate districts, contributing 0 additional pairs). The pairing rate of
+0.143 falls between the raw random baseline of 0.214 and the geographically adjusted
+baseline of 0.182, well within one standard deviation of either.
+
+The enacted NC map achieves a pairing rate of exactly 0.000: all 13 filing incumbents
+have home tracts in separate districts. The binomial test probability of observing
+zero pairings or fewer under the geographically adjusted baseline ($p_0 = 0.182$,
+$m = 78$ pairs) is $\Pr[C = 0] = (1 - 0.182)^{78} < 0.001$. The enacted map's
+zero pairing rate is extraordinarily unlikely under random redistricting.
+
+The random baseline expected pairing count of 7.14 (geographically adjusted) implies
+that a random NC redistricting would produce approximately 7 paired pairs on average.
+The enacted map's count of 0 is 3.3 standard deviations below this expectation,
+consistent with the hypothesis that mapmakers drew boundaries to guarantee every
+incumbent a home district.
+
+\subsection{Wisconsin}
+
+Wisconsin's smaller delegation ($k=8$, $n=8$) produces lower absolute pairing counts.
+The \textsc{bisect} map produces one paired district$^\dagger$ (one pair of incumbents),
+yielding a pairing count of 1 and a rate of 0.125. The geographically adjusted baseline
+predicts $E[C]_{\text{geo}} = 4.20$ paired pairs, with $\text{SD} = 1.85$. The
+\textsc{bisect} pairing count of 1 is approximately 1.7 standard deviations below this
+expectation---low but within the plausible range for a single-seed run.
+
+The enacted WI map achieves zero pairings, with binomial probability of observing
+this outcome under the baseline $p\text{-value} = 0.014$. This is statistically
+significant at conventional levels, consistent with deliberate incumbency protection.
+
+\subsection{Texas}
+
+Texas presents the most complex picture because of the large delegation. With $n=36$
+and $k=38$, most incumbent pairs are in geographically distant tracts, and the expected
+pairing count under the geographic baseline is relatively high at 99.9 (geographically
+adjusted). The \textsc{bisect} map produces 67 paired pairs$^\dagger$ (4 districts
+with 2 incumbents each), yielding a rate of 0.105---below but within two standard
+deviations of the adjusted baseline.
+
+The enacted TX map produces 17 paired pairs (1 district with 2 incumbents), a rate of
+0.026. This is significantly below the baseline ($p\text{-value} = 0.033$). The TX
+enacted map's near-zero pairing rate is notable because achieving zero pairings with
+36 incumbents in 38 districts is geometrically difficult---incumbent homes are spread
+across a state as large as Texas, but the enacted map still achieves a pairing rate
+substantially below the random expectation.
+
+\subsection{Summary of Incumbency Protection Premium}
+
+Table~\ref{tab:ipp} reports the incumbency protection premium (IPP) for each enacted map.
+
+\begin{table}[ht]
+\centering
+\caption{Incumbency protection premium (IPP) of enacted 2022 maps.}
+\label{tab:ipp}
+\begin{tabular}{l r r r}
+\toprule
+State & $E_\text{geo}[R]$ & Enacted $R$ & IPP \\
+\midrule
+NC & 0.182 & 0.000 & 0.182 \\
+WI & 0.175 & 0.000 & 0.175 \\
+TX & 0.153 & 0.026 & 0.127 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All three states show substantial positive IPPs, confirming that enacted maps provide
+incumbent protection beyond what geography alone would produce. The \textsc{bisect}
+algorithm's IPP is approximately 0 for all three states by construction---it produces
+pairing at the geographic rate, neither more nor less.

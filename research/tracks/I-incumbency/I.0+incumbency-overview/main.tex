@@ -1,0 +1,58 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{multirow}
+
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+\title{\textbf{Incumbency and Algorithmic Redistricting:\\
+How a Politically Blind Algorithm Affects Incumbent Legislators}}
+
+\author{Giovanni Della-Libera}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Incumbency, Algorithmic Redistricting, Incumbent Pairing, Safe Seats, Open Seats,
+Partisan Gerrymandering, \textit{Karcher v.\ Daggett}, Voting Rights Act,
+\textsc{bisect}, Congressional Redistricting
+
+\section{Introduction: The Incumbency Paradox in Algorithmic Redistricting}
+\input{sections/01-introduction}
+
+\section{Incumbency as a Redistricting Criterion: Legal Background}
+\input{sections/02-background}
+
+\section{Three Metrics for Measuring Incumbency Outcomes}
+\input{sections/03-methodology}
+
+\section{Empirical Overview: NC, WI, and TX}
+\input{sections/04-results}
+
+\section{The Neutrality Argument: Geometry, Not Strategy}
+\input{sections/05-discussion}
+
+\section{Conclusion}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,65 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{array}
+
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}{Definition}
+
+\title{\textbf{Congressional Apportionment Methods:\\
+A Mathematical Framework for the \textsc{bisect} Platform}}
+
+\author{Giovanni Della-Libera}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Congressional apportionment, Huntington-Hill, Webster method, Adams method,
+Jefferson method, Hamilton method, divisor methods, quota methods,
+Alabama paradox, \textsc{bisect-apportion}
+
+\section{Introduction and Constitutional Foundation}
+\input{sections/01-introduction}
+
+\section{Taxonomy: Divisor Methods vs.\ Quota Methods}
+\input{sections/02-taxonomy}
+
+\section{Overview of Five Methods: Definitions and Properties}
+\input{sections/03-definitions}
+
+\section{Fairness Criteria: Population Pair Test, Quota Rule, and Bias Direction}
+\input{sections/04-fairness}
+
+\section{\textsc{bisect-apportion}: Implementation and 2020 Verification}
+\input{sections/05-implementation}
+
+\section{Synthesis of J.1--J.6 Findings}
+\input{sections/06-synthesis}
+
+\section{Conclusion}
+\input{sections/07-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

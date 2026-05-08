@@ -1,0 +1,78 @@
+\label{sec:results}
+
+Table~\ref{tab:incumbency-summary} presents the three incumbency metrics for
+\textsc{bisect} algorithmic maps, enacted 2022 congressional maps, and the
+incumbency-neutral random baseline for NC, WI, and TX.
+
+\begin{table}[ht]
+\centering
+\begin{threeparttable}
+\caption{Incumbency outcomes: \textsc{bisect} vs.\ enacted 2022 maps vs.\ random
+baseline. All \textsc{bisect} results are single-run (seed\,$=42$).}
+\label{tab:incumbency-summary}
+\begin{tabular}{l l r r r}
+\toprule
+State & Metric & \textsc{bisect}$^\dagger$ & Enacted 2022 & Random Baseline \\
+\midrule
+NC ($k=14$) & Pairing rate & 0.143 & 0.000 & 0.222 \\
+            & Safe-seat fraction & 0.43  & 0.64  & n/a \\
+            & Open-seat count & 4     & 2     & 1.0--2.5 \\
+\addlinespace
+WI ($k=8$)  & Pairing rate & 0.125 & 0.000 & 0.175 \\
+            & Safe-seat fraction & 0.38  & 0.50  & n/a \\
+            & Open-seat count & 2     & 1     & 0.8--1.6 \\
+\addlinespace
+TX ($k=38$) & Pairing rate & 0.105 & 0.026 & 0.153 \\
+            & Safe-seat fraction & 0.55  & 0.71  & n/a \\
+            & Open-seat count & 7     & 3     & 4.6--6.1 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item[$\dagger$] Single-run result (seed\,$=42$). See I.1--I.3 for ensemble distributions.
+\item The random baseline for safe-seat fraction is not reported here because it depends
+  on geographic partisan sorting, not on a simple combinatorial formula; see I.2 for the
+  geographic-constraint-adjusted baseline.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\subsection{Incumbent Pairing}
+
+The most striking finding in Table~\ref{tab:incumbency-summary} is the enacted maps'
+pairing rates. North Carolina and Wisconsin enacted maps achieve a pairing rate of
+exactly 0.000---every sitting incumbent received a home district under the enacted plan.
+Texas, with 38 districts and 36 incumbents seeking reelection, achieves a pairing rate
+of 0.026 (approximately one pairing event), substantially below the random baseline of
+0.153. The \textsc{bisect} algorithmic maps produce pairing rates of 0.143 (NC),
+0.125 (WI), and 0.105 (TX), all materially closer to the random baseline than to the
+enacted map rates.
+
+As I.1 documents in detail, this pattern is consistent with the hypothesis that enacted
+maps use incumbent address data to draw boundaries that guarantee each sitting member
+a home district, while \textsc{bisect} maps produce pairing at the rate that geographic
+chance implies.
+
+\subsection{Safe-Seat Fraction}
+
+Across all three states, \textsc{bisect} maps produce fewer safe seats than enacted maps.
+The gap is largest in North Carolina (0.43 vs.\ 0.64) and Texas (0.55 vs.\ 0.71) and
+more modest but still present in Wisconsin (0.38 vs.\ 0.50). These differences are
+statistically significant at conventional levels (I.2 reports $p < 0.01$ for NC and TX
+under a two-sample test of proportions).
+
+The safe-seat reduction is mechanically driven by \textsc{bisect}'s compactness
+optimisation: compact geographic districts in states with moderate partisan segregation
+are less likely to produce extreme partisan margins than districts drawn with an eye to
+concentrating one party's voters in safe enclaves and dispersing the other party's
+voters across competitive seats.
+
+\subsection{Open-Seat Count}
+
+\textsc{bisect} maps produce more open seats than enacted maps in all three states.
+NC produces 4 bisect open seats versus 2 enacted; WI produces 2 versus 1; TX produces
+7 versus 3. The \textsc{bisect} open-seat counts are within or slightly above the
+random-baseline ranges, consistent with the view that algorithmic indifference to
+incumbency produces open seats at approximately the rate that geographic chance
+implies---not more disruptive than a random process, but substantially more open than
+enacted maps that actively engineer home districts for all sitting members.

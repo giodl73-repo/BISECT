@@ -1,0 +1,120 @@
+\label{sec:discussion}
+
+\subsection{The Algorithmic Indifference Standard}
+
+We propose the following standard for evaluating whether an algorithmic redistricting
+methodology is constitutionally sound on incumbency grounds:
+
+\begin{definition}[Algorithmic Indifference Standard]
+An algorithmic redistricting methodology satisfies the \emph{algorithmic indifference
+standard} on incumbency if and only if:
+\begin{enumerate}
+  \item The algorithm receives no incumbency data (no incumbent home addresses, no
+    prior district boundary data used for incumbency-protection purposes) as an input.
+  \item The algorithm's output is determined solely by constitutionally required or
+    permitted criteria (population balance, contiguity, compactness, community of
+    interest) that do not include incumbency.
+  \item The algorithm's incumbency outcomes are statistically consistent with what a
+    random geographic redistricting process would produce given the same geographic
+    constraints.
+\end{enumerate}
+\end{definition}
+
+The \textsc{bisect} algorithm satisfies all three prongs. It receives no incumbent
+addresses. Its optimisation target is population balance and geometric compactness.
+And its incumbency outcomes (I.1--I.3) are statistically consistent with the geographic
+random baseline across NC, WI, and TX.
+
+A methodology that satisfies the algorithmic indifference standard cannot be challenged
+on the ground that it ``fails to consider'' incumbency in any constitutionally meaningful
+sense: the constitutional doctrine permits but does not require incumbency consideration,
+and the algorithm's outputs are equivalent to what a truly neutral process would produce.
+
+\subsection{Post-\textit{Rucho} State Court Applications}
+
+The algorithmic indifference standard has particular relevance in state court proceedings
+following \textit{Rucho v.\ Common Cause}\footnote{\textit{Rucho v.\ Common Cause},
+588 U.S.\ 684 (2019).} State courts evaluating redistricting plans under state
+constitutional free-elections, equal protection, or partisan fairness claims have
+increasingly adopted the approach of comparing enacted maps to neutral algorithmic
+baselines. The North Carolina Supreme Court in \textit{Harper v.\ Hall}\footnote{
+\textit{Harper v.\ Hall}, 868 S.E.2d 499 (N.C.\ 2022).} and the Pennsylvania Supreme
+Court in \textit{League of Women Voters v.\ Commonwealth}\footnote{\textit{League of
+Women Voters v.\ Commonwealth}, 178 A.3d 737 (Pa.\ 2018).} both used neutral map
+comparisons to evaluate whether enacted maps departed from what neutral redistricting
+would produce.
+
+In these proceedings, incumbents may argue that the algorithmic baseline is unfair
+because it does not protect incumbency. The algorithmic indifference standard provides
+the response: an algorithm that is indifferent to incumbency produces outcomes that
+are statistically equivalent to what neutral redistricting---redistricting that is
+directed to achieve only constitutionally required criteria---would produce. The
+algorithm's outcomes are, by construction, the outputs of a fair process that applies
+no thumb on the scale for or against any specific incumbent.
+
+\subsection{The Expert Witness Application}
+
+For expert witnesses proposing \textsc{bisect} maps in redistricting litigation, the
+legal analysis in this paper supports three specific arguments.
+
+\paragraph{Incumbency consideration is not required.}
+The first and most direct argument: federal constitutional doctrine does not require
+any redistricting methodology to consider incumbency. \textit{Karcher}'s identification
+of incumbency as a legitimate objective means that mapmakers may consider it; it does
+not mean that methodologies that do not consider it are constitutionally defective.
+An algorithm that ignores incumbency is no different in constitutional status from a
+commission that is instructed not to consider incumbent addresses in drawing its map---
+a perfectly lawful instruction that courts have endorsed in Arizona's and California's
+commission systems.
+
+\paragraph{Algorithmic outcomes are equivalent to neutral redistricting.}
+The second argument draws on I.1--I.3: the \textsc{bisect} algorithm's incumbency
+outcomes are statistically indistinguishable from what a random geographic redistricting
+process would produce. This means that the algorithm is not more disruptive to incumbency
+than any other neutral redistricting process. An expert witness can testify that the
+algorithmic map's pairing rate, safe-seat fraction, and open-seat count are all within
+the expected range for a geographically constrained redistricting process with no
+incumbency input---the algorithm is neutral on incumbency because its outputs reflect
+geographic chance, not strategic choice.
+
+\paragraph{The enacted map's incumbency outcomes are non-random.}
+The third argument is the flip side: I.1's binomial tests demonstrate that the enacted
+map's incumbency outcomes---zero pairings in NC and WI, significantly below-baseline
+pairing in TX---are inconsistent with random redistricting. This is circumstantial
+evidence that the enacted mapmakers used incumbent address data to engineer protective
+districts. The contrast between algorithmic neutrality and enacted strategic protection
+provides courts with a precise quantitative measure of the incumbency manipulation
+that the enacted map embeds.
+
+\subsection{Practitioner Decision Table}
+
+Table~\ref{tab:decision-table} summarises the legal analysis for practitioners
+evaluating whether to deploy \textsc{bisect} maps in redistricting proceedings.
+
+\begin{table}[ht]
+\centering
+\begin{threeparttable}
+\caption{Decision table for incumbency objections to algorithmic redistricting.}
+\label{tab:decision-table}
+\begin{tabular}{p{3.5cm} p{4cm} p{5cm}}
+\toprule
+Objection & Legal Standard & Response \\
+\midrule
+Algorithm ignores incumbency & \textit{Karcher}: permissive, not mandatory & No court
+  requires incumbency consideration; algorithm satisfies all required criteria \\
+\addlinespace
+Algorithm produces pairing & No constitutional prohibition on pairing & Pairing rate
+  is consistent with geographic baseline; enacted zero-pairing requires incumbency data \\
+\addlinespace
+Algorithm produces unsafe seats & VRA requires minority opportunity, not safe seats &
+  VRA compliance is evaluated ex post; majority-minority districts preserved where required \\
+\addlinespace
+State statute permits incumbency & Permit $\neq$ require & Algorithm is not prohibited
+  from ignoring incumbency; no state statute mandates protection \\
+\addlinespace
+Algorithm disrupts continuity & \textit{Burdick}: election admin interest & Algorithm
+  disruption is equivalent to neutral redistricting; more continuity than random \\
+\bottomrule
+\end{tabular}
+\end{threeparttable}
+\end{table}

@@ -1,0 +1,145 @@
+\label{sec:architecture}
+
+\subsection{Public API}
+
+The primary public interface is:
+
+\begin{verbatim}
+/// Apportion `house_size` seats among states by population.
+pub fn apportion(
+    populations: &[(String, u64)],
+    house_size: usize,
+    method: ApportionMethod,
+) -> Vec<(String, usize)>
+
+pub enum ApportionMethod {
+    HuntingtonHill,
+    Webster,
+    Adams,
+    Jefferson,
+    Hamilton,
+}
+\end{verbatim}
+
+The function returns a vector of (state name, seat count) pairs,
+sorted alphabetically by state name.
+Total seat count is guaranteed to equal \texttt{house\_size}.
+Each state is guaranteed at least 1 seat (constitutional floor).
+
+Secondary utilities:
+
+\begin{verbatim}
+/// Check if Hamilton produces the Alabama paradox at this H.
+pub fn check_alabama_paradox(
+    populations: &[(String, u64)],
+    house_size: usize,
+) -> Option<(String, usize, usize)>
+
+/// Verify SHA-256 of output against committed reference hash.
+pub fn verify_sha256(
+    allocation: &[(String, usize)],
+    reference_hash: &str,
+) -> bool
+\end{verbatim}
+
+\subsection{Priority Queue Implementation}
+
+The divisor methods (HH, Webster, Adams, Jefferson) share a
+priority-queue core:
+
+\begin{verbatim}
+fn apportion_divisor(
+    populations: &[(String, u64)],
+    house_size: usize,
+    priority: fn(pop: u128, seats: u32) -> Priority,
+) -> Vec<(String, usize)> {
+    let n = populations.len();
+    // Step 1: assign constitutional floor (1 seat per state)
+    let mut seats = vec![1usize; n];
+    // Step 2: build max-heap with priority for (n+1)th seat
+    let mut heap = BinaryHeap::new();
+    for (i, (_, pop)) in populations.iter().enumerate() {
+        heap.push(PriorityEntry {
+            priority: priority(*pop as u128, 1),
+            index: i,
+        });
+    }
+    // Step 3: award remaining H - n seats
+    for _ in n..house_size {
+        let top = heap.pop().unwrap();
+        seats[top.index] += 1;
+        heap.push(PriorityEntry {
+            priority: priority(
+                populations[top.index].1 as u128,
+                seats[top.index] as u32,
+            ),
+            index: top.index,
+        });
+    }
+    // Return sorted result
+    populations.iter().zip(seats.iter())
+        .map(|((name, _), &s)| (name.clone(), s))
+        .collect()
+}
+\end{verbatim}
+
+\subsection{Priority Representation}
+
+The \texttt{Priority} type is a rational number stored as two \texttt{u128}
+integers:
+
+\begin{verbatim}
+struct Priority {
+    numerator: u128,
+    denominator: u128,
+}
+
+impl PartialOrd for Priority {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        // Cross-multiply to compare fractions exactly:
+        // a/b > c/d iff a*d > b*c (for positive b,d)
+        (self.numerator * other.denominator)
+            .partial_cmp(&(other.numerator * self.denominator))
+    }
+}
+\end{verbatim}
+
+This representation enables exact comparison without floating-point
+approximation, which is essential for correct tie-breaking.
+
+\subsection{Hamilton Implementation}
+
+Hamilton does not use the priority queue.
+It is implemented separately:
+
+\begin{verbatim}
+fn apportion_hamilton(
+    populations: &[(String, u64)],
+    house_size: usize,
+) -> Vec<(String, usize)> {
+    let total: u64 = populations.iter().map(|(_, p)| p).sum();
+    // Compute exact quotas as rationals
+    let quotas: Vec<(u128, u128)> = populations.iter()
+        .map(|(_, &p)| (p as u128 * house_size as u128, total as u128))
+        .collect();
+    // Assign lower quotas
+    let mut seats: Vec<usize> = quotas.iter()
+        .map(|&(n, d)| (n / d) as usize)
+        .collect();
+    // Apply constitutional floor
+    for s in seats.iter_mut() { *s = (*s).max(1); }
+    // Distribute remainder seats by fractional part
+    let remainder = house_size.saturating_sub(seats.iter().sum());
+    let mut fracs: Vec<(u128, usize)> = quotas.iter()
+        .enumerate()
+        .map(|(i, &(n, d))| (n % d, i))
+        .collect();
+    fracs.sort_by(|a, b| b.0.cmp(&a.0));
+    for k in 0..remainder {
+        seats[fracs[k].1] += 1;
+    }
+    populations.iter().zip(seats.iter())
+        .map(|((name, _), &s)| (name.clone(), s))
+        .collect()
+}
+\end{verbatim}

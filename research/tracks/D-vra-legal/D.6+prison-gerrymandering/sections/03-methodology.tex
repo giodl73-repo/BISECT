@@ -1,0 +1,97 @@
+\label{sec:methodology}
+
+\subsection{How \textsc{bisect} Handles Prison Population Adjustment}
+
+The \textsc{bisect} pipeline treats prison population adjustment as a
+data preprocessing step, implemented in the \texttt{bisect-data} crate
+and triggered by the \texttt{--adjust-prison-population} flag on
+\texttt{bisect fetch}. This design keeps the adjustment entirely outside
+the redistricting algorithm itself: \textsc{bisect}'s partitioning engine
+operates on whatever population data is provided, and the adjustment
+determines what that data contains. The algorithm is neutral with respect
+to the adjustment choice; the data layer implements whatever state law requires.
+
+\begin{verbatim}
+# Download unadjusted Census data (default):
+bisect fetch --year 2020 --workers 8
+
+# Download with prison population adjustment
+# (applied where state law requires):
+bisect fetch --year 2020 --workers 8 --adjust-prison-population
+
+# Build plan on adjusted data:
+bisect build official_2020 --year 2020 --workers 8
+\end{verbatim}
+
+\subsection{Adjustment Algorithm}
+
+The adjustment proceeds in three steps.
+
+\textbf{Step 1: Identify group quarters population.} The Census Bureau's
+2020 DHC-A file provides population counts for each type of group quarters
+(GQ) facility, including correctional facilities for adults, at the census
+tract level. The \texttt{bisect-data} module reads GQ Type 101 (Federal
+correctional facilities) and GQ Type 201 (State correctional facilities)
+to identify all tracts containing prisons.
+
+\textbf{Step 2: Subtract prison population from tract.} For each
+prison-containing tract, the incarcerated population (GQ Types 101 and 201)
+is subtracted from the tract's total population. The tract's minority
+population composition is adjusted proportionally using the DHC-A
+demographic breakdown by GQ type.
+
+\textbf{Step 3: Reallocate to home county.} The subtracted population is
+redistributed to the home counties of incarcerated people using the BJS
+National Prisoner Statistics (NPS) program data, which reports the
+home-state distribution of state prisoners and the home-county distribution
+for states that participate in the NPS county-level reporting. For states
+without county-level NPS data, the adjustment uses the state-level
+distribution weighted by county population.
+
+\subsection{Data Invariants}
+
+The prison population adjustment must satisfy two invariants, which are
+validated as L0 tests in the \textsc{bisect} test suite:
+
+\begin{enumerate}
+\item \textbf{Population conservation}: The total state population is
+  identical before and after adjustment. Prison adjustment reallocates
+  people between geographic units; it does not add or remove anyone from
+  the count. Formally: $\sum_i p_i^{\text{adj}} = \sum_i p_i^{\text{raw}}$
+  for all census tracts $i$ in the state.
+
+\item \textbf{Non-negativity}: No census tract has negative population
+  after adjustment. In practice this is always satisfied because prisons
+  do not contain more people than the tract's total population---the GQ
+  population is a subset of the total---but the invariant is checked
+  explicitly: $p_i^{\text{adj}} \geq 0$ for all $i$.
+\end{enumerate}
+
+\subsection{North Carolina Case Study}
+
+North Carolina illustrates the adjustment's mechanics. The state has
+multiple correctional facilities, but two are particularly relevant for
+redistricting: Hoke Correctional Institution in Hoke County and Lumberton
+Correctional Institution in Robeson County.
+
+Hoke County, which contains Hoke Correctional Institution, has a total
+2020 Census population of approximately 53,600. The facility holds
+approximately 900 inmates. Under the unadjusted count, all 900 are counted
+in Hoke County. Under the adjustment, these 900 individuals are reallocated
+to their home counties---primarily Mecklenburg County (Charlotte),
+Durham County, and Forsyth County (Winston-Salem), which have the highest
+incarcerated-population origination rates in the state as reported in
+North Carolina Department of Adult Correction administrative data.
+
+This reallocation shifts approximately 900 people out of the 11th or
+9th congressional district (depending on which encompasses Hoke County
+in the plan year) and into the congressional districts covering Mecklenburg
+and Durham counties, which are the 12th and 4th districts respectively
+in the 2022 congressional plan.
+
+The shift is small---900 people against a congressional district target
+of approximately 745,000 in North Carolina---but it is not negligible in
+borderline cases: a district that is 1,500 people over quota can be brought
+into compliance by a 1,500-person reallocation without any boundary change.
+More importantly, the minority composition of the reallocated population
+affects the VRA analysis, as discussed in Section~\ref{sec:results}.

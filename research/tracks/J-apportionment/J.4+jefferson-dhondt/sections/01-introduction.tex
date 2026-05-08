@@ -1,0 +1,50 @@
+Thomas Jefferson, as Secretary of State and later as President, was the
+first American statesman to analyse the apportionment problem mathematically.
+His 1792 memo to President Washington argued that the correct method of
+apportionment was to divide each state's population by a common divisor
+and take the floor --- exactly what we now call the Jefferson method
+\citep{schmeckebier1941congressional}.
+Jefferson's method was embedded in the Apportionment Act of 1792 and
+used for the next six apportionments (1790, 1800, 1810, 1820, 1830,
+and 1840, with the 1840 apportionment being the last).
+
+The political controversy surrounding Jefferson's method was apparent
+early.
+After the 1830 Census, New York's apportionment under Jefferson's method
+gave it 40 seats when its exact quota was only 38.59 ---
+a clear violation of the quota rule.
+Daniel Webster led the congressional opposition, arguing that Jefferson's
+method was a ``palpable violation of the Constitution'' \citep{balinski1982fair}.
+The 1842 Apportionment Act replaced Jefferson with Webster's method.
+
+Simultaneously, and entirely independently, the Belgian mathematician
+Victor d'Hondt published in 1882 a method for allocating seats among
+political parties in proportional representation elections
+\citep{dhondt1882systeme}.
+D'Hondt's formula --- assign the next seat to the party with the highest
+priority $V_j/s_j$, where $V_j$ is the party's vote total ---
+is mathematically identical to Jefferson's priority formula $P_i(s_i) = p_i/s_i$.
+The two methods were independently derived for different applications
+but converge to the same algorithm.
+
+Today, d'Hondt is the world's most widely used seat allocation formula.
+Belgium, Spain, Portugal, the Netherlands, Brazil, Argentina, Turkey,
+and many other countries use d'Hondt for their parliamentary elections.
+Jefferson's method is thus simultaneously the first U.S.\ apportionment
+method (abandoned for domestic use) and the dominant global PR formula
+(adopted by much of the democratic world).
+
+This paper's contributions:
+\begin{enumerate}
+  \item \textbf{Equivalence proof}: We prove that Jefferson and d'Hondt
+    are mathematically identical (Section~\ref{sec:dhondt}).
+  \item \textbf{Bias characterisation}: We prove that Jefferson
+    maximises aggregate representation for large states and show
+    the quantitative effect on 2020 Census data (Section~\ref{sec:bias}).
+  \item \textbf{Historical documentation}: We trace Jefferson's use
+    in six U.S.\ apportionments and the political controversy
+    that led to its abandonment (Section~\ref{sec:history}).
+  \item \textbf{Implementation}: We document the \textsc{bisect-apportion}
+    crate's Jefferson/d'Hondt implementation for both U.S.\ apportionment
+    and PR seat allocation (Section~\ref{sec:implementation}).
+\end{enumerate}

@@ -1,0 +1,85 @@
+\label{sec:discussion}
+
+\subsection{Comparison to Commission-Drawn Maps}
+
+The most natural comparators for \textsc{bisect} algorithmic maps are commission-drawn
+and court-drawn maps, which are produced by humans but under instructions to apply
+neutral criteria without partisan intent. Unfortunately, direct comparison is limited
+by data availability: NC's 2022 map was drawn by the legislature and partially modified
+by courts; WI's 2022 map was drawn by the legislature and partially modified by the
+state Supreme Court; TX's 2022 map was drawn by the legislature and upheld with minor
+modifications after litigation.
+
+For NC, we can compare to the court-drawn remedial map imposed by the NC Supreme Court
+in early 2022, which was subsequently set aside by the conservative majority reinstated
+after the 2022 election. The court-drawn NC map produced approximately 3 open seats
+and a safe-seat fraction of approximately 0.50---closer to the \textsc{bisect} outcome
+(4 open seats, 0.43 safe-seat fraction) than to the enacted outcome (2 open seats, 0.64
+safe-seat fraction). This suggests that neutral human redistricting produces open-seat
+and safe-seat outcomes more similar to algorithmic redistricting than to enacted plans.
+
+Colorado provides the best available commission comparison: the Independent
+Redistricting Commission's 2022 congressional map produced 3 open seats out of 8
+districts, a fraction of 0.375---comparable to the algorithmic open-seat rates reported
+in Table~\ref{tab:open-results} for WI. The Colorado commission was explicitly prohibited
+from considering incumbent addresses in its deliberations, making it the closest
+available human-drawn analogue to the algorithmic approach.
+
+\subsection{Implications for Electoral Accountability}
+
+The open-seat analysis has a direct implication for electoral accountability that
+extends beyond the individual retirement decision. A redistricting plan's open-seat
+count determines, in part, the rate at which seats change hands between parties across
+election cycles: open seats are more likely to change party than incumbent seats, and
+more open seats mean more competitive elections and more responsive legislative
+delegations.
+
+From this perspective, the enacted maps' low open-seat counts represent a systematic
+reduction in electoral accountability. Incumbents who are shielded from competitive
+elections by engineered home districts face fewer incentives to maintain alignment
+with their constituents' preferences and are less vulnerable to party-level accountability
+through wave elections. The \textsc{bisect} comparison demonstrates that a geographically
+compact map produces substantially more open seats---not as a goal, but as a consequence
+of geographic optimisation that does not protect incumbent residences.
+
+\subsection{No Strategic Intent}
+
+A critical feature of the open-seat analysis is that the algorithmic open seats are
+not the product of any strategic intent to increase electoral competition. The algorithm
+does not know that creating a district without an incumbent home tract produces an open
+seat; it simply draws compact, population-balanced districts without regard to where
+incumbents live. The open seats that result are geometric accidents: the compact district
+boundary happens to exclude all incumbent home tracts from a particular district,
+producing an open seat as a by-product of geographic optimisation.
+
+This distinguishes algorithmic redistricting from proposals to deliberately maximise
+competitiveness as a redistricting criterion. Proposals to mandate competitive districts
+(e.g., requiring at least $X\%$ of districts to have partisan lean within $Y$ percentage
+points) are constitutionally contested: some state courts have accepted competitiveness
+as a criterion, others have rejected it. The \textsc{bisect} algorithm's indifference
+to competition means that its maps cannot be challenged as pursuing an impermissible
+competitiveness mandate---the competition is a consequence of compactness, not a target
+of the algorithm.
+
+\subsection{Retirement Deterrence vs.\ Forced Retirement}
+
+The retirement incentive model distinguishes between retirement deterrence and forced
+retirement. Retirement deterrence occurs when an incumbent faces a more competitive
+district or a stronger primary opponent, increasing the probability of choosing to
+retire rather than run. Forced retirement occurs when two incumbents are paired and one
+is effectively unable to win the primary, producing a near-certain retirement.
+
+Under \textsc{bisect} plans, both mechanisms are active. The pairing events documented
+in I.1 produce forced retirements: one of the paired incumbents will almost certainly
+leave Congress after the redistricting cycle, whether by losing the primary, relocating
+to an adjacent open seat, or retiring. The partisan composition changes documented in
+I.2 produce retirement deterrence: incumbents whose safe seats become competitive face
+higher campaign costs and lower reelection probabilities, which translates into higher
+retirement probabilities in the aggregate.
+
+The combined effect, captured in the retirement incentive score, represents the full
+scope of the algorithmic redistricting disruption to incumbency. Enacted maps
+deliberately minimise both mechanisms: they separate incumbents to avoid pairing and
+maintain safe-seat margins to prevent competitive deterrence. The \textsc{bisect}
+algorithm, by being indifferent to both, allows both mechanisms to operate at their
+geographic baseline rates.

@@ -1,0 +1,26 @@
+The United States Census Bureau counts incarcerated people at the location of
+their prison or jail rather than their pre-incarceration home address---a
+practice known as prison gerrymandering. Because approximately 58\% of the
+state and federal prison population is Black or Hispanic, and because large
+correctional facilities are concentrated in rural areas that tend to vote
+Republican, this Census methodology systematically inflates the population
+count of rural legislative districts while deflating the counts of the urban
+and suburban communities from which most incarcerated people originate.
+At least twelve states have enacted legislation to adjust prison populations
+to home addresses for redistricting purposes, using data now available through
+the Census Bureau's 2020 Detailed Demographic and Housing Characteristics
+(DHC-A) file.
+
+This paper analyzes the legal framework for prison gerrymandering, surveys
+enacted state adjustment laws, and documents how the \textsc{bisect}
+algorithmic redistricting pipeline handles prison population adjustments.
+The \textsc{bisect-data} preprocessing module accepts adjusted Census data
+where state law requires it, applying the adjustment uniformly before any
+partisan data enters the pipeline. Empirical results for North Carolina,
+Texas, and California show that prison population adjustment shifts district
+boundaries in 1--3 districts per state, with partisan lean changes of
+0.3--0.5 percentage points and Voting Rights Act
+implications for minority-opportunity districts. Because \textsc{bisect}
+applies adjustment uniformly and reproducibly---with a full SHA audit
+chain---it provides expert witnesses and courts with a verifiable,
+neutral implementation of whichever population base state law requires.

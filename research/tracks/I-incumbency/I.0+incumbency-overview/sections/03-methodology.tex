@@ -1,0 +1,103 @@
+\label{sec:methodology}
+
+We measure incumbency outcomes along three dimensions, each capturing a distinct
+mechanism through which redistricting affects incumbent legislators. All three metrics
+are defined on a post hoc basis: the \textsc{bisect} algorithm runs without any
+incumbency input, and incumbent home addresses are geocoded to census tracts and
+assigned to districts only after the algorithmic map is finalised.
+
+\subsection{Metric 1: Incumbent Pairing Rate}
+
+\textit{Incumbent pairing} occurs when two or more sitting incumbents from the same
+state delegation are assigned to the same new congressional district. A paired district
+contains at least two incumbent home census tracts; incumbents in such a district must
+either compete in a primary against each other or one must seek a different seat or retire.
+
+For a state with $n$ incumbents seeking reelection and $k$ congressional districts,
+the expected number of pairs under a uniformly random assignment of incumbents to
+districts is:
+\[
+  E[\text{pairs}] = \binom{n}{2} \cdot \frac{1}{k},
+\]
+under the simplifying assumption that incumbents are uniformly distributed across
+tracts, which provides a useful upper bound on the random expectation. The geographic
+concentration of incumbents (who tend to live in suburban rings rather than rural areas
+or urban cores) reduces this expectation somewhat; I.1 derives a geographically adjusted
+expectation for each state.
+
+The \textit{pairing rate} for a redistricting plan is the fraction of all incumbent
+pairs $(i, j)$ that are assigned to the same district:
+\[
+  \text{Pairing Rate} = \frac{|\{(i,j) : d(i) = d(j)\}|}{\binom{n}{2}},
+\]
+where $d(i)$ denotes the district assignment of incumbent $i$.
+
+\subsection{Metric 2: Safe-Seat Fraction}
+
+A district is \textit{safe} if its partisan lean exceeds $\pm 15$ percentage points
+from parity, meaning the expected Democratic presidential vote share falls outside the
+range $[0.35, 0.65]$. We use 2020 presidential precinct returns from the Voting and
+Election Science Team (VEST) database~\citep{vest2020}, aggregated to 2020 census
+tracts and then to \textsc{bisect} or enacted district boundaries.
+
+Formally, district $d$ is safe if:
+\[
+  \left| \frac{V^D_d}{V^D_d + V^R_d} - 0.50 \right| > 0.15,
+\]
+where $V^D_d$ and $V^R_d$ are the 2020 Democratic and Republican presidential votes
+summed across all census tracts in district $d$.
+
+The \textit{safe-seat fraction} for a plan is the number of safe districts divided by
+the total number of districts $k$. We report both the aggregate fraction and the
+party-specific decomposition (safe-D and safe-R separately) in Section~\ref{sec:results}.
+
+\subsection{Metric 3: Open-Seat Count}
+
+A district is an \textit{open seat} in a redistricting plan if no sitting incumbent's
+home census tract is assigned to that district. Open seats are consequential because
+they produce competitive primaries, attract well-funded challengers from both parties,
+and generate higher campaign spending than incumbent-protected seats. Algorithmic
+redistricting creates open seats at the rate that geographic coincidence produces them,
+not at a rate deliberately minimised by mapmakers with access to incumbent address data.
+
+Formally, district $d$ is open under plan $P$ if:
+\[
+  \{i : d_P(i) = d\} = \emptyset,
+\]
+where $d_P(i)$ is the district assigned to incumbent $i$'s home census tract under plan $P$.
+
+The expected number of open seats under a random assignment of $n$ incumbents to $k$
+districts (without replacement, one district per incumbent) is:
+\[
+  E[\text{open seats}] = k \cdot \left(1 - \frac{1}{k}\right)^n \approx k \cdot e^{-n/k}
+  \quad \text{for large } k.
+\]
+For NC with $n = 13$ incumbents and $k = 14$ districts, this gives $E[\text{open}] \approx 1.0$;
+for TX with $n = 36$ and $k = 38$, $E[\text{open}] \approx 4.6$.
+
+\subsection{The Incumbency-Neutral Baseline}
+
+All three metrics are evaluated against the \textit{incumbency-neutral baseline}: the
+expected value of each metric under a geographic redistricting process that has no access
+to incumbent location data. The \textsc{bisect} algorithm defines this baseline empirically
+for NC, WI, and TX. A plan that falls within the baseline range on all three metrics
+produces incumbency outcomes that are statistically indistinguishable from what a neutral
+random geographic process would produce---it is incumbency-neutral in its consequences
+even if not in its effects on any specific incumbent.
+
+\subsection{Data Sources}
+
+\begin{itemize}
+  \item \textbf{Incumbent addresses}: Federal Election Commission (FEC) 2022 candidate
+    filings, from which home addresses for sitting incumbents were geocoded to 2020
+    census tract centroids using the Census Bureau TIGER/Line geocoder.
+  \item \textbf{Election data}: VEST 2020 presidential precinct returns~\citep{vest2020},
+    aggregated to 2020 census tracts via area-weighted spatial join.
+  \item \textbf{Tract geometries}: 2020 TIGER/Line congressional district boundaries
+    and tract geometries~\citep{census2020tiger}.
+  \item \textbf{Algorithmic maps}: \textsc{bisect} with \texttt{--structure prime-factor}
+    and \texttt{--weights-override geographic} (seed\,$=42$)$^\dagger$.
+\end{itemize}
+
+\footnotetext[$\dagger$]{Single-run result (seed\,$=42$). Ensemble results are
+reported in I.1--I.3 where sufficient runs are available.}

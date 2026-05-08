@@ -1,0 +1,28 @@
+The Huntington-Hill method of equal proportions is the congressional
+apportionment formula mandated by 2~U.S.C.\ \S2a since 1941.
+It allocates each successive House seat to the state with the highest
+priority value $P_i(s) = p_i / \sqrt{s_i(s_i+1)}$, where $p_i$ is the
+state's apportionment population and $s_i$ its current seat count.
+This priority formula implements a geometric mean rounding rule:
+state $i$ receives an additional seat if its population-to-seats ratio
+$p_i/s_i$ exceeds the geometric mean of the per-seat populations at $s_i$
+and $s_i+1$ seats, which minimises the maximum relative difference in
+per-capita representation between any two states.
+
+We prove three properties.
+First, Huntington-Hill minimises the population pair test --- the maximum
+relative deviation $|p_i/s_i - p_j/s_j| / \min(p_i/s_i, p_j/s_j)$
+over all pairs $(i,j)$ --- establishing it as uniquely neutral between
+large and small states in a relative sense.
+Second, Huntington-Hill is immune to the Alabama paradox, the population
+paradox, and the new-states paradox, because the priority-queue allocation
+is monotone in population and House size.
+Third, the \textsc{bisect-apportion} Rust implementation of
+Huntington-Hill reproduces the official 2020 Census Bureau apportionment
+exactly across all 50 states, verified by SHA-256 comparison to the
+Census Bureau's April~26, 2021 published result (435 seats:
+California 52, Texas 38, \ldots, Wyoming 1).
+We document the 1941 statutory adoption and the Supreme Court's
+holding in \textit{United States Dept.\ of Commerce v.\ Montana},
+503~U.S.\ 442 (1992), which confirmed Congress's broad discretion
+in choosing among apportionment methods.

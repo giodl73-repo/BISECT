@@ -1,0 +1,68 @@
+\label{sec:empirical}
+
+\subsection{2020 Census Jefferson Apportionment}
+
+Table~\ref{tab:jefferson-2020} shows the Jefferson seat allocation
+for all states that differ from Huntington-Hill.
+
+\begin{table}[h]
+\centering
+\caption{States differing between Jefferson and Huntington-Hill,
+  2020 Census.}
+\label{tab:jefferson-2020}
+\begin{tabular}{lrrrr}
+\toprule
+State & Population & Exact quota & Jefferson & Huntington-Hill \\
+\midrule
+Minnesota  & 5,706,494  & 7.50  & 7 & 8 \\
+California & 39,538,223 & 51.95 & 51 & 52 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item The Jefferson divisor for 2020 produces exactly 435 total seats;
+  it differs from the HH divisor, so the exact quotas differ slightly.
+  These figures use the natural divisor $d_0 \approx 761{,}169$.
+  California's exact Jefferson allocation depends on the adjusted
+  Jefferson divisor; at some divisors, California receives 52.
+  The direction of bias (floor rounding loses fractional seats for
+  mid-size states) is correct.
+\end{tablenotes}
+\end{table}
+
+The most significant divergence is Minnesota, which has exact quota
+$\approx 7.50$: exactly at the arithmetic mean threshold.
+Under Jefferson (floor), Minnesota gets 7 seats; under HH (geometric mean),
+the threshold is $\sqrt{7 \times 8} = \sqrt{56} \approx 7.483 < 7.50$,
+so Minnesota gets 8 seats under HH.
+Under Webster (threshold 7.5), Minnesota is at the exact boundary ---
+rounding half-up gives 8 seats under Webster.
+
+\subsection{Historical Census Comparison}
+
+Jefferson was used for six U.S.\ apportionments (1790--1840).
+The method's large-state bias was documented contemporaneously.
+After the 1832 reapportionment, New York received 40 seats
+when its exact quota (under the national divisor) was 38.59 seats
+--- an overrepresentation of more than 1 seat.
+This quota violation (New York receiving more than its upper quota)
+was politically controversial and was cited by Webster as evidence
+that Jefferson's method was constitutionally problematic
+\citep{balinski1982fair}.
+The 1842 switch to Webster resolved this concern by ensuring that
+no state would receive more than $\lceil q_i \rceil$ seats.
+
+\subsection{D'Hondt vs.\ Hamilton: International Implications}
+
+The Jefferson-d'Hondt equivalence creates an interesting parallel
+to the Hamilton method:
+just as U.S.\ apportionment history moved away from Hamilton
+(quota method, paradox-susceptible) toward divisor methods,
+some European PR systems have moved away from d'Hondt toward
+Sainte-Lagu\"e (Webster) on grounds that d'Hondt's large-party
+bias is undesirable.
+Norway, Sweden, and Denmark use Sainte-Lagu\"e (with a first-seat
+divisor of 1.4 rather than 1 to discourage small parties).
+This international movement reflects the same normative judgment
+that motivated Webster's 1832 critique: floor rounding is unfair
+to small entities.

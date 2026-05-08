@@ -1,0 +1,68 @@
+\label{sec:introduction}
+
+\subsection{The Prison Gerrymandering Problem}
+
+When the Census Bureau conducts the decennial census, it applies a
+``usual residence'' rule: each person is counted at the place where they
+live and sleep most of the time.\footnote{U.S.\ Census Bureau,
+\textit{Residence Criteria and Residence Situations} (2020).}
+For most Americans, usual residence is straightforward. For the
+approximately 1.4 million people held in state and federal correctional
+facilities at the time of the 2020 census, however, the Bureau treats
+the prison or jail as the usual residence, counting incarcerated people
+at the facility address rather than at their pre-incarceration home.
+
+This counting rule creates what researchers and advocates call
+\textit{prison gerrymandering}: when census counts are used to draw
+legislative districts, districts containing large correctional facilities
+receive an inflated population count, while the communities from which
+incarcerated people came receive a deflated count. The practical effect
+is representational: rural districts with prisons require fewer actual
+non-incarcerated residents to ``fill'' the required equal-population
+quota, giving each non-incarcerated resident in those districts more
+relative representation than a resident in an urban district without a
+prison.
+
+\subsection{Why Prison Gerrymandering Matters for Algorithmic Redistricting}
+
+The \textsc{bisect} algorithmic redistricting pipeline uses Census
+population data as its foundational input: population balance is the
+primary hard constraint that every district assignment must satisfy.
+If the Census data fed into \textsc{bisect} contains the prison
+gerrymandering distortion, then the ``equal-population'' districts
+\textsc{bisect} produces will be equal only in the nominal Census sense,
+not in terms of actual residential population. This has three implications.
+
+First, in states that have enacted prison population adjustment laws,
+\textsc{bisect} plans must use the adjusted population data to comply with
+state law. Running \textsc{bisect} on unadjusted data in those states
+would produce legally non-compliant plans.
+
+Second, the racial and partisan implications of prison gerrymandering
+interact directly with the Voting Rights Act analysis. Because incarcerated
+populations are disproportionately Black and Hispanic, and because
+correctional facilities are concentrated in rural areas, the prison
+population distortion systematically reduces the apparent minority
+population of urban minority-opportunity districts. This can affect
+whether a district clears the majority-minority threshold required for
+VRA compliance.
+
+Third, expert witnesses in redistricting proceedings must understand
+whether the population data underlying any plan---algorithmic or
+enacted---has been adjusted for prison populations, and must be able to
+explain the adjustment's implementation and its consequences.
+
+\subsection{Overview}
+
+Section~\ref{sec:background} sets out the constitutional and legal framework
+for prison gerrymandering, including the Supreme Court's decision in
+\textit{Evenwel v.\ Abbott} (2016) and the survey of state adjustment laws.
+Section~\ref{sec:methodology} describes the \textsc{bisect} implementation:
+how the \texttt{bisect fetch} command downloads adjusted Census data where
+state laws require it, how the adjustment reallocates incarcerated populations
+to their home counties using the Census DHC-A file, and what invariants the
+adjusted data must satisfy. Section~\ref{sec:results} presents empirical results
+for North Carolina, Texas, and California, reporting which districts change
+and by how much under prison-adjusted population data. Section~\ref{sec:legal}
+addresses the legal implications for expert witnesses and court filings.
+Section~\ref{sec:conclusion} concludes.

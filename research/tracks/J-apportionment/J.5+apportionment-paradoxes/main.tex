@@ -1,0 +1,71 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{enumerate}
+
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}{Definition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{example}{Example}
+
+\title{\textbf{Apportionment Paradoxes: The Balinski-Young\\
+Impossibility Theorem and Divisor Method Immunity}}
+
+\author{Giovanni Della-Libera}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Alabama paradox, population paradox, new-states paradox, Hamilton method,
+Balinski-Young impossibility theorem, divisor methods, apportionment,
+quota rule, paradox immunity
+
+\section{Introduction: Three Paradoxes in U.S.\ Apportionment History}
+\input{sections/01-introduction}
+
+\section{Hamilton (Largest Remainders) and the Alabama Paradox}
+\input{sections/02-hamilton-alabama}
+
+\section{Population Paradox: Definition, Hamilton Susceptibility, and Historical Example}
+\input{sections/03-population-paradox}
+
+\section{New-States Paradox: Definition, Hamilton Susceptibility, and the Oklahoma Example}
+\input{sections/04-new-states}
+
+\section{Divisor Method Immunity: Formal Proof for All Four Divisor Methods}
+\input{sections/05-immunity}
+
+\section{The Balinski-Young Impossibility Theorem}
+\input{sections/06-balinski-young}
+
+\section{Consequences for Apportionment Method Choice}
+\input{sections/07-consequences}
+
+\section{Conclusion}
+\input{sections/08-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

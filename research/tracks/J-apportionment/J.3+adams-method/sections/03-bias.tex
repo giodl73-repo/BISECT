@@ -1,0 +1,77 @@
+\label{sec:bias}
+
+\subsection{The Maximum Minimum Representation Theorem}
+
+The key property of Adams is that it maximises the minimum per-capita
+representation across all states.
+
+\begin{theorem}[Adams Maximises Minimum Representation]
+  \label{thm:adams-minmax}
+  Among all apportionments satisfying $\sum_i s_i = H$ and $s_i \geq 1$,
+  Adams maximises $\min_i (p_i/s_i)$.
+\end{theorem}
+
+\begin{proof}
+  For any apportionment $(s_1, \ldots, s_n)$, the minimum per-capita
+  representation is $\min_i (p_i/s_i)$.
+  Under Adams with divisor $d$, state $i$ receives $\lceil p_i/d \rceil$
+  seats, so $s_i \leq p_i/d + 1$.
+  Therefore $p_i/s_i \geq p_i/(p_i/d + 1) \geq d/(1 + d/p_i)$.
+
+  For the state with the smallest population $p_{\min}$,
+  $p_{\min}/s_{\min} \geq p_{\min} \cdot d / (p_{\min} + d) \to d$
+  as $d \to 0$.
+  The Adams divisor is chosen to achieve exactly $H$ total seats;
+  the minimum representation is determined by the smallest population
+  state's ceiling.
+
+  Alternative proof: Suppose some apportionment $(s_1', \ldots, s_n')$
+  with the same total $H$ achieves higher minimum representation
+  $\min_i (p_i/s_i') > \min_i (p_i/s_i^{\text{Ad}})$.
+  Let $j = \arg\min_i (p_i/s_i^{\text{Ad}})$ be the state with lowest
+  representation under Adams.
+  Since $p_j/s_j' > p_j/s_j^{\text{Ad}}$, we have $s_j' < s_j^{\text{Ad}}$.
+  But $s_j^{\text{Ad}} = \lceil p_j/d \rceil$ is already the smallest
+  possible value for a ceiling-rounding method at divisor $d$.
+  Any smaller $s_j'$ would violate ceiling rounding for some achievable
+  divisor, contradicting the assumption.
+  See \citet{balinski1982fair}, ch.~3, for a rigorous treatment.
+\end{proof}
+
+\subsection{Equivalent Formulation: Upper Quota Guarantee}
+
+Adams guarantees that every state receives at least $\lceil q_i \rceil$
+seats (upper quota), where $q_i = p_i \times H / N$ is the exact
+proportional quota.
+This is equivalent to Theorem~\ref{thm:adams-minmax}:
+if every state receives its upper quota, then the most underrepresented
+state (the one most harmed by fractional rounding) is maximally protected.
+
+\begin{corollary}[Upper Quota Compliance]
+  Under Adams, every state satisfies $s_i \geq \lceil q_i \rceil$,
+  i.e., no state receives fewer seats than its exact proportional
+  entitlement rounded up.
+\end{corollary}
+
+This is a strong form of fairness from the perspective of small states:
+no state is ``cheated'' of any fractional entitlement.
+The cost is that large states are correspondingly underrepresented
+relative to their exact quotas.
+
+\subsection{The Bias Ordering}
+
+For a state with exact quota $q_i = 1 + \epsilon$ (barely above 1):
+\begin{itemize}
+  \item Adams: receives 2 seats (ceiling rounding).
+  \item Huntington-Hill: receives 2 seats if $\epsilon > \sqrt{2} - 1
+    \approx 0.414$; 1 seat otherwise.
+  \item Webster: receives 2 seats if $\epsilon > 0.5$; 1 seat otherwise.
+  \item Jefferson: receives 1 seat (floor rounding, regardless of $\epsilon$).
+\end{itemize}
+This comparison makes the bias ordering concrete:
+Adams gives a bonus seat to states with \emph{any} fractional quota
+above 1; Jefferson gives no bonus seat regardless of the fractional part;
+HH and Webster occupy intermediate positions.
+For small states with $q_i$ near 1 (the most common case where methods
+disagree), Adams is maximally generous and Jefferson is maximally
+stingy.

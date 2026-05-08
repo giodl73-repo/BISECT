@@ -1,0 +1,112 @@
+\label{sec:results}
+
+\subsection{VRA \S{}2 and Incumbency: The \textit{Gingles} Framework}
+
+The Voting Rights Act of 1965, \S{}2, as interpreted in \textit{Thornburg v.\
+Gingles}\footnote{\textit{Thornburg v.\ Gingles}, 478 U.S.\ 30 (1986).} and its progeny,
+prohibits redistricting plans that result in the denial or abridgement of the right
+to vote on account of race or color. The \textit{Gingles} three-part test for
+demonstrating vote dilution requires plaintiffs to show: (1) the minority group is
+sufficiently large and geographically compact to form a majority in a single-member
+district; (2) the minority group is politically cohesive; and (3) the white majority
+votes sufficiently as a bloc to usually defeat the minority-preferred candidate.
+
+When all three prongs are met, the redistricting body must draw a majority-minority
+district in the relevant area, unless doing so would require deviation from other
+constitutionally or statutorily required criteria~\citep{gingles1986}. The question
+for algorithmic redistricting is whether the VRA's majority-minority district requirement
+independently mandates that the district be drawn in a way that protects the incumbent
+minority representative's home address.
+
+\subsection{The VRA Does Not Require Incumbency Protection}
+
+The answer is no. The VRA requires a district in which minority voters have an equal
+opportunity to elect candidates of their choice---not that the specific candidate
+currently representing that district be protected from competitive challenges.
+\textit{Gingles} and its progeny focus on the electoral opportunity available to
+minority voters as a group, not on the electoral security of any individual incumbent.
+
+This distinction is practically significant because minority incumbents, like all
+incumbents, benefit from incumbency advantage that provides electoral security even
+without gerrymandered district protection. A minority incumbent who faces a primary
+opponent following redistricting is not, by that fact alone, the victim of a VRA
+violation; the VRA violation would require showing that the redistricting has diminished
+the minority group's opportunity to elect their preferred candidate below the level
+that existed prior to redistricting.
+
+\subsection{The Tension When Incumbency and VRA Conflict}
+
+A genuine tension arises when protecting a minority incumbent's residency core
+conflicts with the minority community's VRA-required opportunity district. This can
+occur in two scenarios.
+
+\paragraph{Scenario 1: Anglo incumbent in majority-minority area.}
+If an Anglo incumbent represents a district that has, through demographic change,
+become majority-minority, the VRA may require redrawing the district to create a
+majority-minority district. Protecting the Anglo incumbent's home tract may conflict
+with the VRA requirement to create the majority-minority district. Courts have
+consistently held that the VRA requirement takes precedence over incumbent protection
+in this scenario~\citep{thornburg1986progress}.
+
+\paragraph{Scenario 2: Minority incumbent in a contested area.}
+If a minority incumbent represents a district that is being split or reconfigured, the
+VRA may appear to require drawing boundaries that protect the incumbent's district as
+a majority-minority seat. However, this scenario is more complex: the VRA requires
+a majority-minority \textit{district}, not a majority-minority district that includes
+a specific incumbent's home address. The algorithmic map may produce a majority-minority
+district that satisfies the \textit{Gingles} test without including the specific
+incumbent's home tract.
+
+\subsection{Algorithmic Maps and VRA Compliance}
+
+The \textsc{bisect} algorithm does not automatically produce VRA-compliant maps;
+VRA compliance is evaluated ex post and, where required, the algorithm can be
+re-run with VRA constraints (see the \texttt{--weights-override vra-aligned} flag
+in the \textsc{bisect} CLI documentation). The key point for the incumbency analysis
+is that VRA compliance and incumbency protection are analytically separable:
+
+\begin{enumerate}
+  \item A \textsc{bisect} map that produces a majority-minority district in the
+    geographically appropriate area satisfies VRA \S{}2 for that area, regardless
+    of whether the minority incumbent's home tract falls within that district.
+  \item If the minority incumbent's home tract does not fall in the majority-minority
+    district, the incumbent may seek to run in that district (residency requirements
+    for Congress are at the state level; most states require only that a candidate
+    reside in the state, not the district), or may seek election in an adjacent
+    district, or may retire. None of these outcomes is a VRA violation.
+  \item If the majority-minority district required by the VRA happens to not include
+    the existing minority incumbent's home tract, the appropriate resolution is to
+    adjust the map's boundaries to include the incumbent's tract within the
+    majority-minority district---a minor adjustment that does not require re-running the
+    full algorithm---rather than to inject incumbency data into the algorithmic
+    optimisation.
+\end{enumerate}
+
+\subsection{State Constitutional Constraints}
+
+Survey of state constitutional provisions reveals a spectrum of approaches to incumbency
+as a redistricting criterion.
+
+\paragraph{Explicit permission.}
+Several states explicitly permit consideration of incumbency in their redistricting
+criteria statutes or constitutional provisions. California's commission guidelines
+permit ``maintaining communities of interest and neighbourhoods'' as a criterion,
+which has been interpreted to include maintaining existing constituent-representative
+relationships~\citep{ncsl2021criteria}. Ohio's constitutional redistricting criteria
+(pre-amendment) allowed ``maintaining the cores of prior districts,'' which provided
+an implicit basis for incumbency protection.
+
+\paragraph{Explicit prohibition.}
+Arizona and California's independent redistricting commission enabling statutes
+explicitly prohibit the commission from drawing districts to favour any incumbent or
+political party. This prohibition is directional (commissions cannot protect incumbents)
+but does not speak to whether algorithms that are indifferent to incumbency comply
+with the prohibition. We argue that they do: an algorithm that neither protects nor
+targets incumbents satisfies a prohibition on incumbency protection.
+
+\paragraph{Silent frameworks.}
+Most state constitutions and redistricting statutes do not mention incumbency at all,
+leaving the question to the redistricting body's discretion within the bounds of
+constitutional and statutory criteria. In these states, the algorithmic indifference
+to incumbency is legally unremarkable: the algorithm is not required to consider
+incumbency, and its failure to do so cannot be characterised as a legal defect.

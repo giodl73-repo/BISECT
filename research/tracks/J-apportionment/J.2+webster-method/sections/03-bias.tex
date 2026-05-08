@@ -1,0 +1,81 @@
+\subsection{The Least-Squares Optimality of Webster}
+
+\begin{theorem}[Webster Least-Squares Optimality]
+  Among all apportionments satisfying $\sum_i s_i = H$ and $s_i \geq 1$,
+  Webster minimises the sum of squared deviations from exact quotas:
+  \[
+    \text{Webster} = \arg\min_{\{s_i\}} \sum_{i=1}^{n} (s_i - q_i)^2,
+  \]
+  where $q_i = p_i \times H / N$ is state $i$'s exact proportional quota.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+  Consider a transfer of one seat from state $j$ to state $i$
+  (where $s_j \geq 2$ and $s_i \geq 1$).
+  The change in $\sum (s_k - q_k)^2$ is:
+  \[
+    \Delta = (s_i + 1 - q_i)^2 + (s_j - 1 - q_j)^2
+           - (s_i - q_i)^2 - (s_j - q_j)^2.
+  \]
+  The transfer reduces the sum iff $\Delta < 0$, i.e.,
+  iff $q_i - s_i > q_j - s_j + 1 - 1 = q_j - s_j$,
+  i.e., iff state $i$ has a larger fractional excess from its
+  current allocation than state $j$.
+  At the Webster optimum, no such improving transfer exists,
+  meaning each state's residual $q_i - s_i$ is within $[-0.5, 0.5]$,
+  which is precisely the condition for $s_i = \lfloor q_i + 0.5 \rfloor$.
+  (More precisely, the proof uses the fact that integer rounding at 0.5
+  is the unique solution to the least-squares nearest-integer problem.)
+  See \citet{balinski1982fair}, ch.~3, for the full proof.
+\end{proof}
+
+This optimality property makes Webster the natural ``proportionality
+benchmark'' in academic apportionment analysis:
+it is the divisor method that gets closest to strict proportionality
+in the mean-squared sense.
+
+\subsection{Neutrality Between Small and Large States}
+
+Webster is \emph{neutral} between small and large states in the following
+precise sense: the arithmetic mean rounding threshold $s + 0.5$ is the
+symmetric midpoint between $s$ (no extra seat) and $s+1$ (extra seat).
+States with exact quotas above the midpoint receive more; those below
+receive fewer.
+This symmetry means that, in expectation over uniformly distributed
+exact quotas, Webster neither systematically overrepresents nor
+underrepresents any size class of states.
+
+By contrast:
+\begin{itemize}
+  \item \textbf{Adams} (ceiling rounding): every state with a fractional
+    quota above $s$ receives $s+1$ seats, giving small states with
+    quotas barely above an integer the same benefit as large states
+    with quotas nearly at the next integer.
+    This systematically overrepresents small states.
+  \item \textbf{Huntington-Hill}: threshold $\sqrt{s(s+1)} < s+0.5$,
+    so states need a \emph{smaller} fractional excess to round up
+    under HH than under Webster.
+    The excess benefiting small states is small but nonzero.
+  \item \textbf{Jefferson} (floor rounding): every fractional part is
+    lost, systematically underrepresenting small states
+    (which have large fractional excesses relative to their seat counts).
+\end{itemize}
+
+The ordering of bias (from most small-state-favoring to most
+large-state-favoring) is:
+\[
+\text{Adams} \succ \text{HH} \succ \text{Webster} \succ \text{Jefferson}.
+\]
+Webster is the unique divisor method with zero systematic bias
+in the arithmetic-mean sense.
+
+\subsection{Paradox Immunity}
+
+Webster, as a divisor method, is immune to the Alabama paradox,
+the population paradox, and the new-states paradox.
+The proof is identical in structure to the proof for Huntington-Hill
+(J.1, Theorem~2): the priority queue monotonically allocates seats
+based on population, so increasing $H$ or increasing a state's
+population can only add seats, never remove them.
+The full paradox immunity proof for all divisor methods is given
+in J.5.

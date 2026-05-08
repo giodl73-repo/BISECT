@@ -1,0 +1,82 @@
+\label{sec:introduction}
+
+When a state legislature or redistricting commission proposes an algorithmic map for
+legislative approval or court review, incumbents and their allies reliably raise a
+specific objection: the algorithm does not consider incumbency. This objection takes
+several forms. In legislative proceedings, it appears as a policy argument---``We have
+a responsibility to maintain continuity in representation''---invoking the constituents'
+interests in an uninterrupted relationship with their existing representative. In
+litigation, it appears as a legal argument---``The enacted map appropriately considered
+the legitimate redistricting criterion of preserving the cores of prior districts and
+avoiding contests between incumbents''---citing the Supreme Court's language in
+\textit{Karcher v.\ Daggett}\footnote{\textit{Karcher v.\ Daggett}, 462 U.S.\ 725, 740
+(1983).} as authority for the proposition that the algorithm's failure to consider
+incumbency is a legal defect.
+
+Both forms of the objection deserve a thorough response. This paper provides that
+response, grounded in the federal constitutional doctrine, VRA requirements, and state
+constitutional law that govern redistricting in the three states studied in I.1--I.3.
+
+\subsection{The Objection in Three Forms}
+
+The incumbency objection to algorithmic redistricting presents itself in three distinct
+legal framings:
+
+\paragraph{The \textit{Karcher} objection.}
+The Supreme Court in \textit{Karcher v.\ Daggett} identified ``avoiding contests between
+incumbents'' as a ``legitimate objective'' that may justify minor population deviations
+from mathematical equality. Opponents of algorithmic maps argue from this language that
+incumbency consideration is a constitutionally endorsed redistricting criterion, and that
+a redistricting methodology that ignores it is legally incomplete or defective.
+
+\paragraph{The VRA objection.}
+In states with majority-minority districts, protecting minority incumbents is sometimes
+argued to be required by VRA \S{}2 as part of the remedy for vote dilution.
+If \textsc{bisect} maps pair a minority incumbent with an Anglo incumbent, opponents
+argue that the algorithmic indifference to incumbency has produced a map that dilutes
+minority voting strength by forcing a primary contest that the minority incumbent may
+lose.
+
+\paragraph{The state law objection.}
+Several states have redistricting criteria statutes or commission guidelines that
+explicitly list ``preserving communities of interest'' or ``maintaining incumbency''
+as permissible considerations. Opponents of algorithmic maps in these states argue
+that the algorithm's failure to consider these factors violates state statutory law.
+
+\subsection{The Response in Three Parts}
+
+This paper develops a three-part response:
+
+\begin{enumerate}
+  \item Incumbency protection is permissible under federal constitutional doctrine, but
+    not required. \textit{Karcher}'s identification of it as a ``legitimate objective''
+    does not mandate its consideration; it merely confirms that a mapmaker who considers
+    it is not constitutionally defective. An algorithm that does not consider it is
+    equally not constitutionally defective.
+  \item The VRA objection conflates the VRA's requirements for district drawing with
+    requirements for \textit{how} districts are drawn. The VRA requires that minority
+    voters have an equal opportunity to elect candidates of their choice; it does not
+    require that the redistricting process protect any specific incumbent's electoral
+    prospects. When \textsc{bisect} maps produce VRA-compliant majority-minority
+    districts, the VRA is satisfied regardless of where specific incumbents' homes happen
+    to fall.
+  \item State redistricting criteria that permit incumbency consideration impose a duty
+    to consider, not a mandate to protect. An algorithmic process that systematically
+    excludes incumbency data cannot ``consider'' incumbency in the way state statutes
+    contemplate; but the proper remedy---if one is needed---is to run the algorithm
+    with an awareness of its incumbency outputs and to make post hoc adjustments where
+    VRA compliance requires them, not to inject incumbency data into the algorithmic
+    optimisation.
+\end{enumerate}
+
+\subsection{Paper Organisation}
+
+Section~\ref{sec:background} reviews the federal constitutional doctrine on
+incumbency, covering the full lineage from \textit{Karcher} through \textit{Cox v.\
+Larios}. Section~\ref{sec:methodology} develops the \textit{Karcher} doctrine in
+detail, clarifying what the ``legitimate objective'' language does and does not
+authorise. Section~\ref{sec:results} analyses the VRA interaction, drawing on
+\textit{Thornburg v.\ Gingles} and its progeny. Section~\ref{sec:discussion}
+surveys state constitutional frameworks and develops the algorithmic indifference
+standard. Section~\ref{sec:conclusion} concludes with practical guidance for
+practitioners using \textsc{bisect} in litigation.

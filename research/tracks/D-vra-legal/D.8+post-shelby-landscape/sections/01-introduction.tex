@@ -1,0 +1,74 @@
+\label{sec:introduction}
+
+\subsection{June 25, 2013}
+
+On June 25, 2013, the Supreme Court decided \textit{Shelby County v.\
+Holder}.\footnote{\textit{Shelby County v.\ Holder}, 570 U.S.\ 529 (2013).}
+By a 5--4 vote, the Court invalidated the coverage formula in Section~4(b)
+of the Voting Rights Act of 1965---the provision that designated which
+states and counties were subject to Section~5 preclearance---on the ground
+that it was based on data from 1964--1972 and no longer reflected current
+conditions sufficient to justify its departure from the equal sovereignty
+of the states.
+
+Section~5 itself was not struck. The majority opinion by Chief Justice
+Roberts acknowledged that Congress could enact a new coverage formula
+based on current data, and it left Section~5's operative requirements
+in place. But without a valid coverage formula, no jurisdiction is
+covered. Section~5 became a dead letter within hours of the decision.
+
+The practical consequences were swift. Texas, which had been one of
+the nine fully covered states, announced the same day that it would
+implement a strict voter ID law that had previously been rejected
+under preclearance. North Carolina enacted an omnibus voting restrictions
+bill within months. Other former covered states moved to implement
+redistricting plans that had been blocked or conditioned under
+the preclearance process.
+
+\subsection{What the Post-\textit{Shelby} Landscape Looks Like}
+
+Thirteen years after \textit{Shelby County}, the VRA enforcement landscape
+for redistricting has stabilized around Section~2. The \textit{Thornburg
+v.\ Gingles}\footnote{\textit{Thornburg v.\ Gingles}, 478 U.S.\ 30 (1986).}
+three-part test---geographic concentration, political cohesion, and
+majority bloc voting---remains the operative standard for redistricting
+challenges. Section~2 cases proceed ex post, after maps are enacted,
+through federal court litigation that can take years. The structural
+asymmetry between Section~5 (ex ante, administrative, faster) and Section~2
+(ex post, judicial, slower) is the defining feature of the post-\textit{Shelby}
+enforcement environment.
+
+\subsection{Algorithmic Redistricting in the Post-\textit{Shelby} World}
+
+This paper argues that algorithmic redistricting fills part of the gap
+that Section~5's demise created. Section~5 required covered jurisdictions
+to prove, before implementation, that a proposed change did not retrogress
+minority voting strength. This ex ante proof requirement created a paper
+trail and a neutral benchmark: the existing plan provided the non-retrogression
+baseline. Without Section~5, no such proof is required before enactment,
+and no neutral baseline exists unless one is constructed.
+
+The \textsc{bisect} pipeline produces a neutral baseline by construction.
+Because it operates without partisan data---it uses Census demographics,
+geographic adjacency, and population counts, but not election results or
+voter registration data---the \textsc{bisect} plan reflects what a
+principled, non-partisan redistricting process would produce. The gap
+between a \textsc{bisect} plan's BVAP distribution and an enacted plan's
+BVAP distribution measures the portion of minority vote dilution that
+is attributable to mapmaker choice rather than geography. This is precisely
+the comparison that Section~2 litigation requires---and precisely the
+comparison that Section~5 would have caught ex ante.
+
+\subsection{Overview}
+
+Section~\ref{sec:background} describes the pre-\textit{Shelby} Section~5
+framework and the \textit{Shelby County} holding.
+Section~\ref{sec:methodology} traces Section~2's evolution as the primary
+post-\textit{Shelby} enforcement mechanism, including the effects of
+\textit{Abbott v.\ Perez} (2018) and \textit{Brnovich v.\ Democratic
+National Committee} (2021).
+Section~\ref{sec:results} analyzes \textit{Allen v.\ Milligan} (2023)
+and state VRA analogs.
+Section~\ref{sec:legal} develops the algorithmic redistricting as
+transparency substitute argument.
+Section~\ref{sec:conclusion} concludes.

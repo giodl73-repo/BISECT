@@ -1,0 +1,69 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{array}
+
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}{Definition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\title{\textbf{The Jefferson Method: Floor Rounding,\\
+D'Hondt Equivalence, and Large-State Bias}}
+
+\author{Giovanni Della-Libera}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Jefferson method, greatest divisors, d'Hondt, floor rounding,
+large-state bias, proportional representation, congressional apportionment,
+\textsc{bisect-apportion}
+
+\section{Introduction: Jefferson in U.S.\ History and D'Hondt Globally}
+\input{sections/01-introduction}
+
+\section{Mathematical Definition: Floor Rounding, Priority Formula, Common Divisor}
+\input{sections/02-definition}
+
+\section{Equivalence to D'Hondt: Formal Proof}
+\input{sections/03-dhondt}
+
+\section{Large-State Bias: Formal Properties}
+\input{sections/04-bias}
+
+\section{2020 Census Results: Jefferson vs.\ Huntington-Hill}
+\input{sections/05-empirical}
+
+\section{Historical U.S.\ Apportionments (1790--1840)}
+\input{sections/06-history}
+
+\section{\textsc{bisect-apportion} Implementation}
+\input{sections/07-implementation}
+
+\section{Conclusion}
+\input{sections/08-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

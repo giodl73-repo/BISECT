@@ -1,0 +1,64 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{array}
+
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}{Definition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\title{\textbf{The Adams Method: Ceiling Rounding and Smallest-State Bias}}
+
+\author{Giovanni Della-Libera}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Adams method, smallest divisors, ceiling rounding, small-state bias,
+congressional apportionment, paradox immunity, \textsc{bisect-apportion}
+
+\section{Introduction: Adams in the Divisor Method Spectrum}
+\input{sections/01-introduction}
+
+\section{Mathematical Definition: Ceiling Rounding and Common Divisor}
+\input{sections/02-definition}
+
+\section{Small-State Bias: Formal Properties}
+\input{sections/03-bias}
+
+\section{Paradox Immunity: Proof for Divisor Methods}
+\input{sections/04-paradox}
+
+\section{2020 Census Results: Adams vs.\ Huntington-Hill vs.\ Webster}
+\input{sections/05-empirical}
+
+\section{\textsc{bisect-apportion} Implementation}
+\input{sections/06-implementation}
+
+\section{Conclusion}
+\input{sections/07-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

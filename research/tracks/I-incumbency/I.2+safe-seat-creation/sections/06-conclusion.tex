@@ -1,0 +1,31 @@
+\label{sec:conclusion}
+
+This paper has documented the safe-seat creation dynamics of \textsc{bisect} algorithmic
+redistricting and compared them to enacted 2022 congressional maps for NC, WI, and TX.
+The central findings are consistent across states: \textsc{bisect} maps produce fewer
+safe seats and more competitive districts than enacted maps, with the difference
+statistically significant at the 1\% level in NC and the 5\% level in TX.
+
+The party-specific decomposition reveals that the enacted maps' additional safe seats
+are predominantly safe-Republican in the Republican-controlled states of NC and TX,
+while safe-Democratic seat counts are comparable between algorithmic and enacted maps.
+This asymmetry reflects the mechanism of partisan gerrymandering: the party controlling
+redistricting adds safe seats for its own incumbents through packing and cracking,
+while the geography-constrained safe-Democratic seats in urban cores appear in both
+plans.
+
+For legal practitioners, the key finding is the distinction between
+\textit{geographically determined} safe seats (those that appear in both algorithmic
+and enacted maps because no compact plan can avoid them) and \textit{politically
+engineered} safe seats (those that appear in enacted maps but not in the algorithmic
+baseline because they require deliberate boundary choices that sacrifice compactness
+to engineer partisan margins). The \textsc{bisect} comparison operationalises this
+distinction, providing courts with a quantitative measure of the politically engineered
+safe-seat premium.
+
+Future work should extend this analysis to multi-seed ensemble runs to characterise
+the full distribution of safe-seat fractions under algorithmic redistricting, which
+would allow a more precise characterisation of the algorithmic safe-seat baseline and
+tighter confidence intervals on the enacted map's premium. Ensemble results would
+also enable direct comparison with the ensemble-based tests used by the algorithmic
+redistricting literature~\citep{herschlag2020quantifying}.

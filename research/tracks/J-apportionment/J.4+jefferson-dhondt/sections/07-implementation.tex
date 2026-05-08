@@ -1,0 +1,46 @@
+\label{sec:implementation}
+
+The \textsc{bisect-apportion} crate implements Jefferson/d'Hondt
+using the priority formula $P_i^{\text{Jeff}}(s) = p_i/(s+1)$
+(giving the $(s+1)$-th seat when already holding $s$ seats).
+Starting from 0 seats per entity (not the constitutional-floor
+initialisation used for HH, Webster, and Adams), the algorithm
+awards all $H$ seats via priority queue and then applies the
+constitutional floor $\max(1, \cdot)$ as a post-processing step.
+
+\begin{verbatim}
+bisect apportion --year 2020 --method jefferson
+bisect apportion --year 2020 --method dhondt   # alias for jefferson
+\end{verbatim}
+
+\subsection{Integer Arithmetic}
+
+The priority comparison for Jefferson is:
+$P_i > P_j \iff p_i/(s_i+1) > p_j/(s_j+1) \iff p_i(s_j+1) > p_j(s_i+1)$.
+This requires only 64-bit integer multiplication
+(maximum value: $4 \times 10^7 \times 435 \approx 1.7 \times 10^{10}$,
+well within \texttt{i64} range).
+
+\subsection{D'Hondt Mode for PR Analysis}
+
+The crate supports d'Hondt mode for proportional representation analysis:
+\begin{verbatim}
+bisect apportion --method dhondt --votes "PartyA:340,PartyB:280,..."
+                 --seats 10
+\end{verbatim}
+This enables comparative analysis of how vote distributions translate
+to seat allocations under d'Hondt vs.\ Sainte-Lagu\"e (Webster),
+a common task in electoral systems research and policy analysis
+for countries considering PR system reform.
+
+\subsection{Test Suite}
+
+\begin{itemize}
+  \item \textbf{L0}: Priority formula $P(0) = p$, $P(1) = p/2$, $P(2) = p/3$.
+  \item \textbf{L1}: 5-party, 10-seat d'Hondt example from
+    \citet{lijphart1994electoral} produces the expected allocation
+    [4, 3, 2, 1, 0] (with constitutional floor producing [4, 3, 2, 1, 1]
+    in the U.S.\ apportionment context).
+  \item \textbf{L2}: Jefferson for 2020 Census produces correct
+    total of 435 seats with floor rounding applied.
+\end{itemize}

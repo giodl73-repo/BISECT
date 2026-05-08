@@ -1,0 +1,81 @@
+\label{sec:definition}
+
+\begin{definition}[Jefferson Method / D'Hondt]
+  Given populations $p_1, \ldots, p_n$ (or vote totals $V_1, \ldots, V_n$)
+  and House size $H$ (or total seats $S$), the Jefferson/d'Hondt method
+  finds a common divisor $d > 0$ such that:
+  \[
+    \sum_{i=1}^{n} \max\!\left(1, \left\lfloor \frac{p_i}{d} \right\rfloor\right) = H,
+  \]
+  and assigns each state $s_i = \max(1, \lfloor p_i/d \rfloor)$ seats.
+\end{definition}
+
+\noindent
+Note: in the pure d'Hondt formulation for PR elections, there is no
+constitutional minimum of 1 seat per party --- a party with very few
+votes may receive 0 seats.
+For the U.S.\ apportionment context, the $\max(1, \cdot)$ enforces
+the constitutional floor.
+
+\subsection{Priority Queue Formulation}
+
+Jefferson/d'Hondt successively awards seats using the priority:
+\[
+  P_i^{\text{Jeff}}(s) = \frac{p_i}{s+1}
+\]
+(giving state $i$ its $(s+1)$-th seat when it has $s$ seats).
+Starting from 0 seats, the algorithm:
+\begin{enumerate}
+  \item For each state, initialise priority $P_i(0) = p_i/1 = p_i$.
+  \item For each of the $H$ seats:
+    extract state $j$ with highest priority, set $s_j \leftarrow s_j+1$,
+    push new priority $P_j(s_j) = p_j/(s_j+1)$.
+  \item Apply constitutional floor: if any $s_i = 0$, redistribute
+    from the state with most seats.
+\end{enumerate}
+In practice, all 50 states have populations large enough that their
+priorities at $s=0$ (i.e., $p_i$ itself) exceed the priority of any
+state at $s=50$ or above, so all states receive at least 1 seat
+before the priority queue would ever return to $s=0$.
+
+\subsection{Rounding Threshold}
+
+For exact quota $q_i = p_i/d \in (s, s+1)$:
+\begin{itemize}
+  \item Jefferson assigns $s_i = s$ seats (floor rounding).
+  \item The threshold for receiving $s+1$ seats is $q_i \geq s+1$,
+    i.e., the exact quota must be at least an integer to round up.
+  \item Any fractional excess is lost.
+\end{itemize}
+This is the highest possible threshold: a state must have an exact quota
+of at least $s+1$ (i.e., an integer-valued or higher quota) to receive
+$s+1$ seats.
+Compare to Adams (threshold: $q_i > s$, any fractional excess rounds up),
+HH (threshold: $q_i > \sqrt{s(s+1)}$), and Webster ($q_i > s+0.5$).
+
+\subsection{Worked Example: 5 Parties, 10 Seats}
+
+Consider 5 parties with votes $(340, 280, 160, 130, 90)$
+and $S = 10$ seats.
+The priority sequence (d'Hondt):
+
+\begin{center}
+\begin{tabular}{ccccc}
+\toprule
+Seat & Party A & Party B & Party C & Party D \\
+\midrule
+1 & \textbf{340} & 280 & 160 & 130 \\
+2 & 280 & \textbf{280} & 160 & 130 \\
+3 & \textbf{170} & 140 & 160 & 130 \\
+4 & 140 & \textbf{140} & 160 & 130 \\
+5 & 113 & 93 & \textbf{160} & 130 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Seats 1--10 assigned in priority order:
+A(340), B(280), A(170), B(140), C(160), D(130), A(113), B(93), C(80), A(85).
+Final: A=4, B=3, C=2, D=1, E=0 seats.
+This standard d'Hondt example \citep{lijphart1994electoral}
+illustrates the large-party advantage: Party E (90 votes, 9\% of total)
+receives 0 seats despite crossing the 10\% threshold with 90/1000 votes.

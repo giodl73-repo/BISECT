@@ -1,0 +1,34 @@
+Congressional apportionment --- the allocation of 435 House seats among the
+50 states based on census population counts --- is the foundational step
+of every redistricting cycle.
+Article~I, \S2 of the U.S.\ Constitution mandates that representatives
+``shall be apportioned among the several States according to their
+respective Numbers,'' but it does not specify which mathematical method
+Congress must use.
+Five methods have been proposed, debated, and in some cases enacted:
+Huntington-Hill (equal proportions, current law since 1941),
+Webster (major fractions), Adams (smallest divisors),
+Jefferson (greatest divisors, used 1790--1840), and Hamilton
+(largest remainders).
+These methods divide into two families: \emph{divisor methods}
+(Huntington-Hill, Webster, Adams, Jefferson), which allocate seats by
+rounding a population-to-divisor ratio, and \emph{quota methods}
+(Hamilton), which allocate seats by rounding exact proportional quotas.
+
+We develop a unified mathematical framework characterising all five methods
+along three dimensions: the rounding rule that determines each state's
+seat count, the fairness criterion each method optimises, and susceptibility
+to the classical apportionment paradoxes.
+The central taxonomic result is that divisor methods are provably
+immune to the Alabama paradox and related anomalies while quota methods
+are susceptible --- a fact that drove Congress's 1941 switch from Hamilton
+to Huntington-Hill.
+Using 2020 Census data (apportionment population 331{,}108{,}434;
+435 seats), we compute all five methods' seat allocations for all 50 states
+and identify the three states where methods diverge.
+The \textsc{bisect-apportion} Rust crate implements all five methods
+with a unified interface and reproduces the official 2020 Census Bureau
+Huntington-Hill apportionment exactly, verified by SHA-256 comparison to
+the published result.
+This paper is the foundational overview for J.1--J.6, which study each
+method and the paradox theory in depth.

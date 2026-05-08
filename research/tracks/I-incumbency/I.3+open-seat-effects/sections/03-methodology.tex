@@ -1,0 +1,70 @@
+\label{sec:methodology}
+
+\subsection{Analytical Baseline for Open-Seat Count}
+
+We derive the expected number of strict open seats under random redistricting.
+Consider $n$ incumbents assigned to $k$ districts, where we model the assignment
+as placing each district's ``home tract'' independently according to some district-level
+probability. For tractability, we use the following model: the $n$ incumbent home tracts
+are distributed uniformly across $k$ districts with the constraint that each tract
+is assigned to exactly one district. The probability that a specific district $d$
+receives no incumbent home tract is:
+
+\[
+  \Pr[\text{district } d \text{ is open}] = \frac{\binom{k-1}{1}^n}{\binom{k}{1}^n}
+  = \left(1 - \frac{1}{k}\right)^n \approx e^{-n/k},
+\]
+
+and the expected number of open districts is:
+\[
+  E[\text{open}] = k \cdot \left(1 - \frac{1}{k}\right)^n.
+\]
+
+Table~\ref{tab:open-baseline} reports the expected open-seat counts and the
+95\% credible interval for the three states.
+
+\begin{table}[ht]
+\centering
+\caption{Analytical baseline for open-seat count under random redistricting.}
+\label{tab:open-baseline}
+\begin{tabular}{l r r r r r}
+\toprule
+State & $k$ & $n$ & $E[\text{open}]$ & SD & 95\% CI \\
+\midrule
+NC & 14 & 13 & 1.04 & 0.96 & $[0, 3]$ \\
+WI & 8  & 8  & 0.65 & 0.77 & $[0, 2]$ \\
+TX & 38 & 36 & 3.97 & 1.88 & $[1, 8]$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The 95\% confidence intervals are derived from the exact distribution of the
+``coupon collector'' analogue; they are wide because the open-seat count is a
+discrete random variable with overdispersion at small $k$.
+
+\subsection{Geographic Adjustment}
+
+As in I.1, we apply a geographic adjustment to account for the fact that contiguous
+redistricting is not equivalent to uniform random assignment. Incumbents whose home
+tracts are geographically central to the state are less likely to land in open-seat
+districts than incumbents whose home tracts are on the geographic periphery (near state
+boundaries or coastal regions where districts naturally push tracts against non-district
+edges). The geographic adjustment increases the expected open-seat count relative to
+the uniform model for all three states, since peripheral incumbents are more likely to
+be isolated in districts that capture them away from other incumbents:
+NC geographic-adjusted $E[\text{open}] \approx 1.5$; WI $\approx 1.1$; TX $\approx 5.2$.
+
+\subsection{Enacted Map Open-Seat Identification}
+
+For enacted maps, we identify strict open seats by intersecting the geocoded incumbent
+home addresses with the enacted 2022 congressional district boundaries. Districts that
+contain no incumbent home address are strict open seats; in practice, these include
+both districts where no incumbent ran and districts that were newly created due to
+reapportionment-driven delegation growth.
+
+For the 2022 cycle, NC did not gain or lose seats (maintaining $k=14$), WI maintained
+$k=8$, and TX gained two seats (from $k=36$ to $k=38$). The two new TX seats created
+by reapportionment are automatically open seats because no prior district corresponds
+to them; however, the enacted TX map placed these new seats in a way that pulled
+incumbent-held tracts into adjacent districts, so the two new seats are not in the same
+locations they would be under algorithmic redistricting.

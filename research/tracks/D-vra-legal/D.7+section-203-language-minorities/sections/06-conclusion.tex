@@ -1,0 +1,51 @@
+\label{sec:conclusion}
+
+Section~203 of the Voting Rights Act is the most overlooked provision
+in redistricting analysis. Most redistricting commentary focuses on
+Section~2 (majority-minority districts) and, historically, Section~5
+(preclearance, now effectively dormant). But Section~203 creates
+independent legal obligations that affect every redistricting cycle in
+the 331 jurisdictions covered by the 2023 Census Bureau determination:
+those jurisdictions must provide election materials in the applicable
+language minority language regardless of how district lines are drawn.
+
+Redistricting affects Section~203 not by changing which jurisdictions are
+covered---coverage is determined by Census ACS data and is independent of
+district boundaries---but by affecting the administrative ease of compliance
+and the community integrity of language minority groups within the
+redistricting unit. When a Section~203-covered county is split between
+two congressional districts, the county election office faces increased
+administrative burden. When the language minority community itself is split
+across district lines, the political representation and advocacy capacity
+of that community is diluted even as its Section~203 rights remain intact.
+
+The \textsc{bisect} algorithmic redistricting pipeline addresses both
+concerns. The county-weight mode (\texttt{--weights-override county})
+minimizes Section~203 county splits by penalizing cross-county boundary
+cuts in the METIS graph partitioning. For Texas, this produces a 35\%
+reduction in Section~203 covered county splits relative to the enacted
+2022 congressional plan; for California, a 9\% reduction. For the
+Vietnamese community in Santa Clara County, \textsc{bisect} preserves
+3 of 4 Vietnamese-majority census tracts within a single district,
+compared with 1 of 4 under the enacted plan.
+
+For jurisdictions with both Section~203 coverage and Section~2
+majority-minority district requirements, \textsc{bisect} applies both
+in sequence: the VRA mode (\texttt{--weights-override vra-aligned})
+satisfies Section~2's majority-minority district requirement, and within
+that constrained solution space, the county-weight optimization minimizes
+Section~203 administrative burden. The 23 counties nationally with both
+requirements present the most demanding redistricting context; the
+\textsc{bisect} dual-optimization approach provides a principled,
+verifiable resolution.
+
+Expert witnesses and redistricting practitioners in states with significant
+Section~203 coverage should incorporate both metrics in their analysis:
+county split rates (for administrative burden) and community integrity
+scores (for political representation). Both are straightforward to compute
+from \textsc{bisect} output data, and both are relevant to the comprehensive
+VRA compliance analysis that courts and redistricting commissions require.
+
+\bigskip
+\noindent\textit{The author thanks the redistricting research team for
+data access and algorithmic development. All errors are the author's own.}

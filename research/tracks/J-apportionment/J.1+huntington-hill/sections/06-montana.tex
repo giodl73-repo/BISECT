@@ -1,0 +1,84 @@
+\label{sec:montana}
+
+\subsection{Background and Procedural History}
+
+After the 1990 Census, Montana's population (799{,}065) entitled it to
+$q_{\text{MT}} = 799{,}065 \times 435 / 248{,}709{,}873 \approx 1.398$ seats.
+Under Huntington-Hill, Montana's priority for a second seat was
+$P_{\text{MT}}(1) = 799{,}065/\sqrt{2} \approx 565{,}034$,
+which fell below the priority cutoff for the 435th seat.
+Montana received 1 seat; Washington received the last seat.
+
+Montana brought suit arguing that the Huntington-Hill method violated
+Article~I, \S2's requirement of proportional apportionment because
+a single-member Montana district with 799{,}065 residents was
+``as equal as possible'' in population to other districts, and that
+a method giving Montana 1 seat while Washington (with comparable
+population) received more was arbitrary.
+Montana proposed the Dean method (an alternative divisor method)
+or a ``maximum deviation'' standard as alternatives.
+
+\subsection{Procedural Posture}
+
+The district court found for Montana, holding that Huntington-Hill
+was not the method that minimised the maximum deviation from equal
+population.
+The United States appealed directly to the Supreme Court under
+28~U.S.C.\ \S1253 (direct appeal in reapportionment cases).
+
+\subsection{The Supreme Court's Holding}
+
+The Supreme Court reversed in \textit{United States Dept.\ of Commerce v.\
+Montana}, 503~U.S.\ 442 (1992), in a unanimous opinion authored by
+Justice Stevens \citep{montana1992}.
+The Court held:
+
+\begin{enumerate}
+  \item \textbf{Political question doctrine does not bar review}:
+    The case presented a justiciable question about statutory
+    interpretation, not a purely political question.
+  \item \textbf{Congress has broad discretion}: Article~I, \S2 does not
+    specify a mathematical method; Congress may choose any method that
+    is a reasonable interpretation of ``proportional'' representation.
+    The Court rejected Montana's argument that only one method
+    (the Dean method or maximum-deviation minimisation) satisfied
+    the Constitution.
+  \item \textbf{Huntington-Hill is constitutional}: The equal proportions
+    method is a rational choice by Congress.
+    It has mathematical properties (the relative population pair test)
+    that justify it as a form of proportionality.
+    The Court noted that the debate among mathematicians about which
+    method is ``best'' is one that courts are ill-equipped to resolve,
+    and that statutory deference to Congress is appropriate.
+  \item \textbf{Fractions make perfection impossible}: The Court
+    acknowledged that any apportionment of indivisible seats will
+    produce some inequity, and that Congress is not required
+    to minimise any particular measure of that inequity as long as
+    its chosen method is rational.
+\end{enumerate}
+
+\subsection{Significance for \textsc{bisect-apportion}}
+
+\textit{Montana} establishes three points relevant to the
+\textsc{bisect-apportion} implementation:
+
+First, the correct implementation of Huntington-Hill is not merely
+a mathematical exercise but a legal requirement.
+The statutory apportionment method determines how many districts each
+state draws; any error in the implementation produces downstream
+redistricting errors.
+
+Second, the Court's discussion of alternative methods
+(Dean, Adams, Webster) confirms that these methods are mathematically
+distinct from Huntington-Hill in ways that can affect specific states.
+\textsc{bisect-apportion}'s implementation of all five methods enables
+the ``what if Congress had chosen Webster?'' counterfactual analysis
+that practitioners and courts may request.
+
+Third, \textit{Montana}'s political question discussion confirms that
+the mathematical properties of apportionment methods are justiciable
+issues.
+The SHA-verified correctness of \textsc{bisect-apportion} is thus
+legally as well as mathematically significant: it establishes an
+auditable chain of custody from the Census Bureau's published
+population figures to the final seat counts.

@@ -1,0 +1,111 @@
+\label{sec:methodology}
+
+\subsection{The \textit{Karcher} Doctrine in Detail}
+
+Justice Brennan's majority opinion in \textit{Karcher v.\ Daggett} is the locus
+classicus for incumbency as a redistricting criterion, and it deserves careful attention
+because its language is frequently misread in redistricting proceedings.
+
+The holding of \textit{Karcher} was that New Jersey's congressional map, which contained
+population deviations of 0.6984\%, was unconstitutional because the state failed to
+demonstrate that those deviations were necessary to achieve a legitimate state objective.
+Justice Brennan's majority accepted that the deviations were small in absolute terms
+but held that the Equal Population principle demanded justification for any deviation
+from mathematical equality in congressional apportionment~\citep{karcher1983}.
+
+The language on legitimate objectives appeared in the context of explaining what kinds
+of justifications would suffice to uphold a map with minor deviations:
+
+\begin{quote}
+``Any number of consistently applied legislative policies might justify some
+variance, including, for example, making districts compact, respecting municipal
+boundaries, preserving the cores of prior districts, and avoiding contests between
+incumbents.''
+\end{quote}
+
+Three features of this passage are critical for the incumbency objection. First, the
+passage is framed hypothetically: it describes what ``might'' justify deviations, not
+what must be done. Second, it is explicitly a non-exhaustive list (``for example''),
+indicating that the Court was not enumerating mandatory criteria. Third, the passage
+appears in a section explaining why the New Jersey map \textit{failed} the test---the
+state did not demonstrate that the listed or other objectives justified its deviations.
+The Court was not endorsing the criteria; it was explaining what a successful justification
+would need to show.
+
+The misreading of \textit{Karcher} in incumbency litigation typically proceeds as follows:
+the \textit{Karcher} dicta identifies incumbency protection as a legitimate objective;
+a legitimate objective is a required consideration; therefore, any redistricting plan
+that does not consider incumbency fails the \textit{Karcher} test. Each step in this
+syllogism is incorrect. ``Legitimate objective'' means an objective that is not
+constitutionally prohibited, not one that is constitutionally required. Redistricting
+bodies are free to pursue or not pursue any legitimate objective, so long as they
+satisfy the constitutional requirements of equal population, non-dilution of minority
+voting strength, and contiguity.
+
+\subsection{The \textit{Cox v.\ Larios} Limitation}
+
+\textit{Cox v.\ Larios} provides the clearest statement of the limits of incumbency
+as a justification for population deviations. The three-judge district court in the
+Northern District of Georgia found that Georgia's state legislative maps contained
+population deviations of up to 9.98\% in the state Senate and 4.98\% in the state House,
+justified in part by the legislature's desire to protect incumbent legislators. The
+court held that using incumbency protection as a primary justification for deviations
+of this magnitude was unconstitutional: the deviations were too large to be justified
+by any legitimate interest, including incumbency protection~\citep{cox2004}.
+
+The Supreme Court's summary affirmance of \textit{Cox v.\ Larios} confirmed that
+the district court's analysis was correct, at least as applied to the facts. The holding
+can be read as establishing a rough proportionality constraint: small deviations may
+be justified by legitimate interests including incumbency; large deviations cannot.
+For congressional redistricting, where any deviation from mathematical equality must
+be justified~\citep{karcher1983}, the \textit{Cox} holding implies that incumbency
+protection cannot justify any deviation that is not the \textit{necessary} result of
+pursuing the incumbent-protection objective---a high standard that enacted maps
+frequently fail to meet.
+
+\subsection{Algorithmic Redistricting and Population Deviation}
+
+The \textsc{bisect} algorithm produces congressional maps that satisfy the
+equal-population constraint without any incumbency-related deviation. By operating
+on census tracts rather than precincts, and by explicitly balancing population at
+each bisection step, the algorithm produces maps where the maximum population deviation
+across districts is well below 1\% in all three states studied. This performance is
+not dependent on incumbency protection---the algorithm achieves near-perfect population
+equality purely through its population-balance optimisation.
+
+This means that the \textit{Karcher}/\textit{Cox} analysis is largely irrelevant to
+algorithmic redistricting: the algorithm does not introduce population deviations that
+require justification by incumbency or any other criterion. The \textit{Karcher}
+line of cases addresses the justification for deviations that the algorithm does not
+produce. The incumbency objection, framed as a \textit{Karcher} challenge, therefore
+fails at the threshold: there are no deviations to justify.
+
+\subsection{Three Uses of Algorithmic Incumbency Analysis in Litigation}
+
+The I.1--I.3 empirical results can be deployed in redistricting litigation in three
+distinct ways.
+
+\paragraph{Establishing non-randomness of enacted pairing rates.}
+I.1's binomial test demonstrates that enacted map pairing rates are statistically
+inconsistent with random redistricting. This is evidence that mapmakers actively used
+incumbent address data to minimise pairings---a redistricting choice, not a geographic
+necessity. In litigation challenging the enacted map, this evidence supports the
+inference that the map was drawn with at least some degree of strategic incumbency
+protection.
+
+\paragraph{Providing a neutral reference distribution.}
+The \textsc{bisect} map provides a neutral reference point for all three incumbency
+metrics: pairing rate, safe-seat fraction, and open-seat count. Courts can use this
+reference distribution to assess whether the enacted map's incumbency outcomes are
+within the range of what geographic redistricting would produce, or whether they
+represent deliberate departures from geographic chance. A large positive incumbency
+protection premium (as documented in I.0--I.3) supports the inference of strategic
+mapmaking.
+
+\paragraph{Quantifying the intentional incumbency protection premium.}
+The IPP metric (I.1) provides a single number that quantifies the departure from
+geographic neutrality on incumbent pairing. Courts evaluating whether an enacted map's
+use of incumbency was proportionate to its legitimate objectives can use the IPP to
+assess the degree of the departure: a large IPP (enacted pairing rate far below the
+geographic baseline) suggests that incumbency was not merely considered but was a
+dominant criterion that displaced other redistricting objectives.

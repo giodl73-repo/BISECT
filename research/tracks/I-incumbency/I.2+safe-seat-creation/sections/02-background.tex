@@ -1,0 +1,69 @@
+\label{sec:background}
+
+\subsection{Defining a Safe Seat}
+
+We define a district as \textit{safe} if its expected Democratic presidential vote
+share falls outside the competitive range $[0.35, 0.65]$---that is, if the expected
+margin of victory for the dominant party exceeds 15 percentage points. Formally:
+
+\begin{definition}[Safe Seat]
+District $d$ is a \emph{safe-Democratic seat} if $v_d^D > 0.65$, a
+\emph{safe-Republican seat} if $v_d^D < 0.35$, and \emph{competitive} if
+$|v_d^D - 0.50| \leq 0.15$, where $v_d^D$ is the two-party Democratic presidential
+vote share in district $d$ in 2020:
+\[
+  v_d^D = \frac{\sum_{t \in d} V_t^D}{\sum_{t \in d} (V_t^D + V_t^R)},
+\]
+and $V_t^D$, $V_t^R$ are the 2020 Democratic and Republican presidential votes in
+tract $t$.
+\end{definition}
+
+The 15 percentage point threshold is conventional in the political science literature
+on electoral competition~\citep{fiorina1980incumbency} and corresponds approximately
+to the margin that insulates an incumbent from being defeated by a statewide wave of
+moderate magnitude. We additionally classify districts as \textit{lean-Democratic}
+($v_d^D \in (0.50, 0.65]$) and \textit{lean-Republican} ($v_d^D \in [0.35, 0.50)$)
+to provide a more granular picture of the competitive landscape.
+
+\subsection{Measurement Approach}
+
+Presidential vote share is a standard proxy for district-level partisan lean because
+it is relatively stable across election cycles, is not directly susceptible to
+incumbency advantage (since the presidential candidates are the same in all districts),
+and is available at fine geographic granularity through the VEST database.
+
+We aggregate VEST 2020 presidential precinct returns to 2020 census tracts via an
+area-weighted spatial join~\citep{vest2020}. Precinct boundaries do not align with
+census tract boundaries; we apportion precinct votes to census tracts in proportion to
+the share of each precinct's area that falls within each tract. This introduces
+measurement error in tracts that are split across many precincts, particularly in
+urban areas with small precincts. In NC and WI, the area-weighting error is estimated
+to be less than 0.5 percentage points for 95\% of tracts; in TX, where some rural
+precincts are very large, the error can reach 1--2 percentage points in sparsely
+populated tracts.
+
+\subsection{Geographic Sources of Safe Seats}
+
+Not all safe seats are created equal. Two distinct mechanisms produce safe districts
+under any redistricting plan, including algorithmic ones:
+
+\paragraph{Geographic sorting.}
+When voters of one party are heavily concentrated in a small geographic area---most
+dramatically in urban cores---any contiguous district drawn around that area will be
+heavily partisan regardless of how the district is shaped. Downtown Chicago, urban
+Houston, and the Research Triangle in NC will all produce safe-Democratic districts
+under any compact map that groups their tracts together. These geographically
+unavoidable safe seats are present in both algorithmic and enacted maps.
+
+\paragraph{Deliberate packing and cracking.}
+Deliberate packing concentrates one party's voters into fewer, very safe seats to
+``waste'' their votes in a small number of blowout victories. Deliberate cracking
+disperses those voters across multiple districts to deny them majorities anywhere.
+Both tactics increase the safe-seat count for the party doing the packing and cracking,
+and both require information about voter partisan behaviour that goes beyond what compact
+geography alone would imply.
+
+The comparison between algorithmic and enacted safe-seat counts provides a measure of
+how much of the enacted map's safe-seat count is attributable to geographic sorting
+(which algorithmic maps also produce) versus deliberate packing and cracking (which only
+enacted maps can produce, because they use partisan data).

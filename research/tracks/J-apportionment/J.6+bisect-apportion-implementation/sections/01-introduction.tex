@@ -1,0 +1,56 @@
+Congressional apportionment is a step in the redistricting process
+that must be performed exactly.
+An error in apportionment --- giving a state one more or fewer seat
+than it is legally entitled to --- propagates through the entire
+redistricting pipeline: the number of districts drawn, their target
+population, and the resulting map are all wrong.
+For a redistricting platform to be usable in litigation, commission
+proceedings, or policy analysis, its apportionment step must be
+demonstrably correct.
+
+The official U.S.\ congressional apportionment is computed by the
+Census Bureau using the Huntington-Hill method mandated by
+2~U.S.C.\ \S2a \citep{usc2a}.
+The Census Bureau publishes its official seat counts within 9 months
+of each decennial census.
+Any redistricting platform claiming to implement U.S.\ apportionment
+law must reproduce these official seat counts exactly.
+
+\textsc{bisect-apportion} achieves this requirement through four
+design choices:
+\begin{enumerate}
+  \item \textbf{Exact integer arithmetic}: Priority values are compared
+    as rational fractions using \texttt{u128} integers, eliminating
+    floating-point rounding errors.
+  \item \textbf{SHA-256 verification}: The crate computes a cryptographic
+    hash of its output and compares it to a committed hash of the
+    Census Bureau's published result.
+  \item \textbf{Comprehensive test suite}: 61 tests at L0/L1/L2
+    provide coverage of unit formulas, synthetic examples, and
+    real-data regression.
+  \item \textbf{Unified interface}: All five methods share a common
+    \texttt{apportion()} function, enabling direct comparison and
+    reducing the risk of method-specific bugs.
+\end{enumerate}
+
+This paper documents the implementation in sufficient detail for
+replication, audit, and extension.
+Sections~\ref{sec:architecture}--\ref{sec:other-methods} describe the
+code architecture and method implementations.
+Section~\ref{sec:verification} describes the SHA verification protocol.
+Section~\ref{sec:tests} documents the test suite.
+Section~\ref{sec:comparison} presents the comparative 2020 Census
+output for all five methods.
+
+\subsection{Why Five Methods?}
+
+The crate implements all five methods because practitioners and
+researchers need counterfactual analysis:
+\emph{what would the seat allocation be if Congress had adopted
+Webster instead of Huntington-Hill?}
+\emph{What if Adams were used?}
+These questions arise in apportionment reform advocacy, in academic
+analysis of congressional representation, and in state-level
+apportionment decisions where different methods are legally permitted.
+A unified five-method implementation enables these comparisons without
+requiring practitioners to seek separate tools for each method.

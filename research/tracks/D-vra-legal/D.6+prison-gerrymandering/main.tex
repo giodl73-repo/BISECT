@@ -1,0 +1,58 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{multirow}
+
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+\title{\textbf{Prison Gerrymandering and Algorithmic Redistricting:\\
+Population Adjustment, VRA Interaction, and \textsc{bisect} Implementation}}
+
+\author{Giovanni Della-Libera}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Prison Gerrymandering, Census Population Adjustment, Voting Rights Act,
+Decennial Census, Group Quarters, \textit{Evenwel v.\ Abbott},
+Algorithmic Redistricting, \textsc{bisect}
+
+\section{Introduction}
+\input{sections/01-introduction}
+
+\section{Constitutional and Legal Framework}
+\input{sections/02-background}
+
+\section{Methodology: Prison Adjustment in \textsc{bisect}}
+\input{sections/03-methodology}
+
+\section{Empirical Impact on \textsc{bisect} Maps}
+\input{sections/04-results}
+
+\section{Legal Implications for Redistricting Practice}
+\input{sections/05-legal}
+
+\section{Conclusion}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

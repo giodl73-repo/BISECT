@@ -1,0 +1,45 @@
+The \textsc{bisect-apportion} crate establishes that a redistricting
+platform can implement federal apportionment law exactly, verifiably,
+and with full test coverage.
+The SHA-256 verification protocol is the key contribution:
+it creates a cryptographic link between the Census Bureau's official
+publication and the redistricting platform's apportionment step,
+providing the auditability that litigation and commission contexts require.
+
+Three engineering decisions underpin the crate's correctness:
+\begin{enumerate}
+  \item \textbf{Exact integer arithmetic}: The \texttt{u128} rational
+    representation for priority values eliminates floating-point
+    rounding errors in the tie-breaking step, which is where naive
+    implementations are most likely to produce incorrect results.
+  \item \textbf{Unified architecture}: The shared priority-queue core
+    for all divisor methods ensures that correctness demonstrated for
+    Huntington-Hill (via SHA verification) transfers structurally
+    to Webster, Adams, and Jefferson.
+  \item \textbf{L0/L1/L2 test pyramid}: The 61-test suite covers
+    unit formulas (L0), synthetic examples (L1), and real-data regression
+    (L2), providing the multilevel assurance expected for software
+    implementing federal law.
+\end{enumerate}
+
+The comparative analysis (Section~\ref{sec:comparison}) shows that for
+the 2020 Census, Huntington-Hill, Webster, and Hamilton agree on all
+50 states, while Adams and Jefferson produce small divergences for
+states near the rounding boundary.
+This empirical result contextualises the theoretical debates in J.1--J.5:
+the choice of apportionment method has real but limited consequences
+for 2020 Census data, concentrated in a small number of states with
+populations near the rounding threshold.
+
+For practitioners, the key takeaway is that \textsc{bisect-apportion}
+provides a legally defensible, computationally exact, and independently
+auditable implementation of 2~U.S.C.\ \S2a.
+It should be the first step in any redistricting pipeline:
+run \texttt{bisect apportion --year \{year\} --method huntington-hill
+--verify} before beginning any district-drawing computation,
+and the SHA verification will confirm that the seat counts are correct.
+
+Future work should extend the verification to state legislative
+apportionments (which may use different methods and different
+statutory seat counts) and to international PR seat allocations
+(using the d'Hondt and Sainte-Lagu\"{e} equivalences documented in J.2 and J.4).

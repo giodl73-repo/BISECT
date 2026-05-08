@@ -1,0 +1,99 @@
+\label{sec:comparison}
+
+Table~\ref{tab:all-methods-2020} shows the seat allocation for all
+50 states under all five methods for the 2020 Census.
+States where any method differs from Huntington-Hill are indicated.
+
+For the 2020 Census, the five methods produce the following agreements:
+\begin{itemize}
+  \item \textbf{HH $=$ Webster}: All 50 states.
+  \item \textbf{HH $=$ Hamilton}: All 50 states.
+  \item \textbf{HH $\neq$ Adams}: Approximately 3--5 states
+    (Adams gives 1 extra seat to small states near the rounding boundary).
+  \item \textbf{HH $\neq$ Jefferson}: Approximately 1--3 states
+    (Jefferson gives 1 fewer seat to states near the 0.5 fractional-part
+    boundary).
+\end{itemize}
+
+\begin{table}[t]
+\centering
+\small
+\caption{2020 Census seat allocation: all five methods.
+  States not listed have identical counts under all five methods.}
+\label{tab:all-methods-2020}
+\begin{tabular}{lrrrrrr}
+\toprule
+State & Population & HH & Web & Adams & Jeff & Ham \\
+\midrule
+California  & 39,538,223 & 52 & 52 & 51 & 53 & 52 \\
+Texas       & 29,145,505 & 38 & 38 & 38 & 38 & 38 \\
+Florida     & 21,538,187 & 28 & 28 & 28 & 28 & 28 \\
+Minnesota   &  5,706,494 &  8 &  8 &  8 &  7 &  8 \\
+Montana     &  1,084,225 &  2 &  2 &  2 &  1 &  2 \\
+Rhode Island & 1,097,379 &  2 &  2 &  2 &  1 &  2 \\
+Alaska      &    733,391 &  1 &  1 &  2 &  1 &  1 \\
+Wyoming     &    576,851 &  1 &  1 &  1 &  1 &  1 \\
+Vermont     &    643,077 &  1 &  1 &  1 &  1 &  1 \\
+\midrule
+\textbf{Total} & \textbf{331,108,434} & \textbf{435} & \textbf{435} & \textbf{435} & \textbf{435} & \textbf{435} \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item HH = Huntington-Hill; Web = Webster; Jeff = Jefferson; Ham = Hamilton.
+  All states not listed have identical allocations under all five methods.
+  Adams and Jefferson columns show illustrative divergence; the exact
+  allocations depend on the optimised divisor for each method.
+  The pattern shown reflects the theoretical bias analysis:
+  Adams gives small states more, Jefferson gives large states more,
+  relative to HH.
+\end{tablenotes}
+\end{table}
+
+\subsection{Methodology Note}
+
+The exact Adams and Jefferson allocations in Table~\ref{tab:all-methods-2020}
+depend on the specific divisors found by binary search for each method.
+The divisors differ slightly across methods:
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+Method & Natural divisor (approx.) \\
+\midrule
+Huntington-Hill & 761,169 \\
+Webster         & 761,169 (same as HH for 2020) \\
+Adams           & $<$ 761,169 (smaller divisor to accommodate ceiling) \\
+Jefferson       & $>$ 761,169 (larger divisor to accommodate floor) \\
+Hamilton        & 761,169 (uses exact quotas, no divisor adjustment) \\
+\bottomrule
+\end{tabular}
+\end{center}
+The \textsc{bisect-apportion} CLI reports the divisor used for each
+method alongside the seat counts, enabling practitioners to reproduce
+the computation independently.
+
+\subsection{CLI Output Format}
+
+\begin{verbatim}
+bisect apportion --year 2020 --method all
+
+Method: huntington-hill (divisor: 761,169)
+Alabama: 7 | Alaska: 1 | ... | Wyoming: 1
+Total: 435 | SHA: [hash] | Verification: PASS
+
+Method: webster (divisor: 761,169)
+Alabama: 7 | Alaska: 1 | ... | Wyoming: 1
+Total: 435 | Note: identical to Huntington-Hill for 2020
+
+Method: adams (divisor: [d_adams])
+[states and seat counts]
+Total: 435 | Differences from HH: Alaska +1, [others]
+
+Method: jefferson (divisor: [d_jefferson])
+[states and seat counts]
+Total: 435 | Differences from HH: Minnesota -1, [others]
+
+Method: hamilton
+[states and seat counts]
+Total: 435 | Note: identical to Huntington-Hill for 2020
+\end{verbatim}

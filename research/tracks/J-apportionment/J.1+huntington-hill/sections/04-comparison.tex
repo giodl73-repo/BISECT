@@ -1,0 +1,100 @@
+\label{sec:comparison}
+
+\subsection{HH vs.\ Webster: Geometric vs.\ Arithmetic Mean}
+
+The only difference between Huntington-Hill and Webster is the rounding
+threshold: $\sqrt{s(s+1)}$ (HH) vs.\ $s + 0.5$ (Webster).
+For all $s \geq 1$:
+\[
+  s < \sqrt{s(s+1)} < s + 0.5.
+\]
+The gap between the thresholds is:
+\[
+  (s+0.5) - \sqrt{s(s+1)}
+  = (s+0.5) - \sqrt{s^2+s}
+  = \frac{(s+0.5)^2 - (s^2+s)}{(s+0.5) + \sqrt{s^2+s}}
+  = \frac{0.25}{(s+0.5) + \sqrt{s^2+s}}
+  \approx \frac{1}{8s}
+\]
+for large $s$.
+This gap is small for large $s$ (large states, where the threshold
+rarely matters) and largest for small $s$ (small states).
+For $s = 1$: HH threshold $= \sqrt{2} \approx 1.414$, Webster threshold
+$= 1.5$; the gap is 0.086.
+
+In practice, the two methods agree for all but a small number of states
+near the boundary.
+For the 2020 Census, Huntington-Hill and Webster agree on all 50 states
+(J.2 identifies the specific states closest to the boundary);
+the difference between the two methods manifests in some historical
+censuses and for smaller House sizes.
+
+\begin{table}[h]
+\centering
+\caption{Rounding thresholds for seats 1--6 under Huntington-Hill and Webster.}
+\label{tab:thresholds}
+\begin{tabular}{rrrr}
+\toprule
+Seats $s$ & HH threshold $\sqrt{s(s+1)}$ & Webster threshold $s+0.5$ & Gap \\
+\midrule
+1 & 1.4142 & 1.5000 & 0.0858 \\
+2 & 2.4495 & 2.5000 & 0.0505 \\
+3 & 3.4641 & 3.5000 & 0.0359 \\
+4 & 4.4721 & 4.5000 & 0.0279 \\
+5 & 5.4772 & 5.5000 & 0.0228 \\
+6 & 6.4807 & 6.5000 & 0.0193 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Because HH's threshold is lower than Webster's, a state whose exact quota
+$q_i = p_i/d$ falls between $\sqrt{s(s+1)}$ and $s+0.5$ will receive
+$s+1$ seats under HH but only $s$ seats under Webster.
+States with small populations (and thus small $s$) are more likely
+to fall in this interval, which is why HH is described as
+slightly small-state-favoring relative to Webster.
+
+\subsection{HH vs.\ Adams: Geometric Mean vs.\ Ceiling}
+
+Adams uses ceiling rounding: state $i$ receives $\lceil p_i/d \rceil$
+seats, meaning the threshold is at $s$ (i.e., any non-integer quota
+rounds up to the next integer).
+For small states, Adams is substantially more generous than HH
+because Adams never rounds a fractional quota down.
+For example, a state with exact quota 1.05 receives 2 seats under Adams
+but only 1 seat under HH (since HH's threshold is $\sqrt{1\cdot 2}
+\approx 1.414 > 1.05$, the state does not yet qualify for a second seat).
+
+The practical effect on 2020 Census data: Alaska (quota $\approx 0.96$)
+receives 1 seat under both Adams and HH (the constitutional floor provides
+the 1-seat minimum regardless); Rhode Island (quota $\approx 1.44$)
+receives 2 seats under Adams and 2 seats under HH;
+Montana at 2020 (quota $\approx 1.42$) receives 2 seats under both.
+Adams would diverge from HH for a state with quota between 1 and $\sqrt{2}
+\approx 1.414$, which does not occur in the 2020 Census but occurred in
+some historical censuses.
+
+\subsection{Summary: Divisor Method Spectrum}
+
+The four divisor methods lie on a spectrum ordered by their rounding
+thresholds.
+For a state with exact quota $q \in (s, s+1)$, the state receives $s+1$
+seats if its quota exceeds the method's threshold:
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Method & Threshold for $(s+1)$-th seat & Bias \\
+\midrule
+Adams           & $q > s$ (always rounds up)     & Most small-state-favoring \\
+Huntington-Hill & $q > \sqrt{s(s+1)}$            & Slightly small-state-favoring \\
+Webster         & $q > s + 0.5$                  & Neutral \\
+Jefferson       & $q > s + 1$ (always rounds down) & Most large-state-favoring \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Huntington-Hill lies between Webster and Adams on this spectrum,
+reflecting Congress's choice of a method that is neither strongly
+pro-small-state (Adams) nor neutral (Webster),
+but slightly protective of smaller states' proportional representation.

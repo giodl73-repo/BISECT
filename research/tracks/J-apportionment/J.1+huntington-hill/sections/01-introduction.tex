@@ -1,0 +1,47 @@
+Huntington-Hill is U.S.\ law.
+Since November~15, 1941, 2~U.S.C.\ \S2a has required that congressional
+seats be apportioned among the states using the method of equal proportions,
+which is the formal name for Huntington-Hill.
+Every redistricting cycle --- 1950, 1960, \ldots, 2020 --- has begun with
+a Huntington-Hill apportionment.
+The method's outputs determine how many congressional districts each state
+draws: North Carolina drew 14 districts after the 2020 apportionment;
+Montana, which received a second seat for the first time since 1990,
+drew 2.
+
+Despite its statutory status, Huntington-Hill is often poorly understood
+by practitioners and even by redistricting attorneys.
+The geometric mean rounding rule --- ``round at $\sqrt{s(s+1)}$'' ---
+is less intuitive than Webster's arithmetic mean rounding (``round at
+$s+0.5$'') or Hamilton's largest-remainder rule.
+The priority formula $P_i(s) = p_i/\sqrt{s(s+1)}$ is sometimes
+described informally as ``give the next seat to whichever state needs
+it most,'' but this informal description does not convey the specific
+geometric mean construction or its optimality property.
+
+This paper develops the mathematical foundations of Huntington-Hill
+with enough formal detail for use in expert witness testimony,
+policy analysis, and software implementation verification.
+Section~\ref{sec:definition} gives the precise mathematical definition.
+Section~\ref{sec:properties} proves the two key properties:
+optimality (HH minimises the population pair test) and paradox immunity.
+Section~\ref{sec:comparison} compares HH to Webster and Adams,
+the two closest neighbours on the divisor method spectrum.
+Section~\ref{sec:history} documents the 1941 statutory adoption
+and the congressional debate that preceded it.
+Section~\ref{sec:montana} analyses \textit{United States Dept.\ of
+Commerce v.\ Montana} (1992), the definitive Supreme Court ruling on
+Huntington-Hill's constitutionality.
+Section~\ref{sec:implementation} documents the \textsc{bisect-apportion}
+implementation and its SHA-verified 2020 result.
+
+\subsection{Data}
+
+All empirical results use the 2020 Census apportionment populations
+published by the Census Bureau on April~26, 2021
+\citep{census2020apportionment}.
+Total apportionment population: 331{,}108{,}434.
+House size: 435.
+The apportionment population excludes the District of Columbia
+but includes U.S.\ service members and federal civilian employees
+stationed abroad who are allocated to a home state.

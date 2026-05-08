@@ -1,0 +1,90 @@
+\label{sec:discussion}
+
+\subsection{Interpretation of Findings}
+
+The central finding of this paper---that enacted maps achieve pairing rates far below
+the random baseline while \textsc{bisect} maps fall within the baseline---has a
+straightforward interpretation: incumbent mapmakers use incumbency data to draw district
+lines that guarantee each sitting member a home district. The algorithm cannot do this
+because it does not receive incumbency data. The resulting difference in pairing rates
+is not attributable to any difference in geographic constraints (both maps must satisfy
+the same contiguity, population, and compactness requirements); it is attributable
+entirely to the enacted mapmakers' access to and use of incumbent address data.
+
+This framing has an important implication: enacted maps' low pairing rates are not a
+gift from geography. They are a choice. A mapmaker with no incumbency data---or with
+an explicit instruction not to use incumbency data---would produce pairing rates in the
+range of the algorithmic baseline, not the enacted zero. The incumbency protection
+premium quantifies the cost of this choice: to achieve zero pairings in NC, mapmakers
+must draw district boundaries that deviate from the geographic optimum in ways that
+benefit specific incumbents, at the cost of whatever other criteria would have been
+served by the geographically optimal boundary.
+
+\subsection{Same-Party vs.\ Cross-Party Pairing}
+
+The pairing events under \textsc{bisect} maps in this study are predominantly
+same-party: both NC pairings in the single-seed result involve Republican incumbents
+whose home tracts are geographically proximate. This is not surprising: geographic
+proximity of home tracts is correlated with same-party membership in states with
+strong geographic partisan sorting, because incumbents of the same party tend to
+represent geographically adjacent districts and therefore tend to live in adjacent
+or nearby tracts.
+
+Cross-party pairing---where a Republican and a Democratic incumbent find themselves
+in the same new district---is more likely to occur in states with significant partisan
+mixing at the district boundary, which is more common in competitive states like WI.
+In our sample, the single WI pairing event under \textsc{bisect}$^\dagger$ involves
+incumbents from different parties.
+
+For litigation purposes, same-party pairing and cross-party pairing have different
+political valences. Same-party pairing produces a primary contest with uncertain
+implications for the general election. Cross-party pairing produces an automatic general
+election contest between sitting incumbents, with significant media attention and
+fundraising implications. Courts have not distinguished between these types in
+evaluating whether pairing constitutes an unconstitutional burden on incumbents; neither
+type is constitutionally prohibited.
+
+\subsection{Legal Framework: Incumbency as a Permissible Factor}
+
+The legal framework governing incumbent pairing in redistricting is established by
+three key propositions. First, incumbent pairing is not constitutionally prohibited.
+No constitutional provision prevents a redistricting plan from placing two incumbents
+in the same district; the First Amendment and the Equal Protection Clause protect
+voters, not the electoral interests of sitting legislators~\citep{rucho2019}.
+
+Second, incumbent protection is permissible but not required. As the Supreme Court
+noted in \textit{Karcher v.\ Daggett}\footnote{\textit{Karcher v.\ Daggett}, 462
+U.S.\ 725, 740 (1983).} and \textit{Cox v.\ Larios}\footnote{\textit{Cox v.\ Larios},
+542 U.S.\ 947 (2004).}, a mapmaker may consider incumbency as one factor among
+many, but may not justify unconstitutional population deviations or other constitutional
+violations on the sole basis of incumbency protection.
+
+Third, an algorithm that ignores incumbency is constitutionally sound. There is no
+federal constitutional right to a redistricting process that considers incumbency;
+voters have no cognisable injury from a plan that produces pairing rates consistent
+with random redistricting. State statutory requirements to avoid ``undue'' incumbent
+disruption may impose an additional obligation, but these requirements have generally
+been interpreted as requiring good-faith consideration of incumbency, not as mandating
+any specific pairing rate.
+
+The practical implication for expert witnesses is clear: a \textsc{bisect} map that
+produces pairing rates consistent with the random baseline is constitutionally sound.
+The fact that the enacted map achieves a lower pairing rate does not mean that the
+algorithmic map is constitutionally defective; it means that the enacted map chose
+to use incumbency data to reduce pairing, a choice the algorithm did not make.
+
+\subsection{Evidence of Strategic Mapmaking}
+
+The incumbency protection premium provides a useful quantitative tool for redistricting
+litigation. A large positive IPP---the enacted map produces far fewer pairings than
+geography would imply---is circumstantial evidence that mapmakers used incumbent
+location data in drawing district lines. This evidence is strongest when combined with
+evidence that other traditional redistricting criteria (compactness, community
+preservation) were subordinated to achieve the low pairing rate~\citep{mcghee2014measuring}.
+
+For NC and WI, where the enacted IPP is 0.175 or greater, the evidence is strong:
+a map that achieves zero pairings among 8 or 13 incumbents in a state where random
+redistricting would produce multiple pairings cannot plausibly have been drawn without
+reference to incumbent home addresses. For TX, where the enacted IPP is 0.127, the
+evidence is somewhat weaker---a low-pairing outcome is less improbable in a large
+delegation---but still statistically significant.

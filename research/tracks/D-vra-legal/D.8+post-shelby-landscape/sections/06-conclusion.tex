@@ -1,0 +1,71 @@
+\label{sec:conclusion}
+
+\textit{Shelby County v.\ Holder} changed the operational environment
+for minority voting rights in redistricting more than any other Supreme
+Court decision since \textit{Thornburg v.\ Gingles} established the
+three-part test in 1986. By invalidating Section~4(b)'s coverage formula
+and rendering Section~5 preclearance a dead letter, the Court removed
+the most powerful and most efficient VRA enforcement tool: the ex ante
+administrative review that compelled covered jurisdictions to justify
+their redistricting plans before implementation.
+
+Thirteen years later, the legislative fix---a new coverage formula---
+has not been enacted. Former covered states conduct redistricting
+without any federal pre-enactment review. Section~2 vote-dilution
+litigation under the \textit{Gingles} framework remains the primary
+federal remedy, reinforced by \textit{Allen v.\ Milligan}'s 2023
+reaffirmation that the framework applies with full force to redistricting
+claims. Several states have enacted VRA analogs that provide supplemental
+protection, with New York's John R.\ Lewis Voting Rights Act representing
+the most comprehensive restoration of preclearance-like review at the
+state level.
+
+Algorithmic redistricting with \textsc{bisect} fills part of the gap
+that Section~5's demise created. It cannot restore the ex ante legal
+requirement that covered states prove non-retrogression; that requires
+Congressional action. But it provides the documentation function---a
+transparent, reproducible, verifiable neutral plan that any party can
+independently replicate and verify---and a partial deterrence function
+through the availability of a published neutral baseline. In Section~2
+litigation, the \textsc{bisect} reference plan quantifies the gap between
+what geography would produce under a neutral process and what the enacted
+map actually produces, translating the legal concept of ``vote dilution''
+into a specific, measurable deviation from a neutral baseline.
+
+Three practical conclusions follow for redistricting practitioners
+working in the post-\textit{Shelby} environment:
+
+\begin{enumerate}
+\item \textbf{Run \textsc{bisect} early}. In former covered states with
+  significant minority populations, produce and publish a \textsc{bisect}
+  reference plan before the legislative redistricting process begins.
+  This establishes the neutral baseline and, by making the deviation from
+  that baseline visible, creates a deterrent against extreme redistricting.
+
+\item \textbf{Document the VRA mode analysis}. The \textsc{bisect} VRA mode
+  (\texttt{--weights-override vra-aligned}) implements the \textit{Gingles}
+  three-prong analysis algorithmically. Run the VRA mode analysis for all
+  relevant states and document the results: which districts are majority-minority
+  under a neutral plan, what the BVAP thresholds are, and how the enacted
+  plan compares. This documentation is the algorithmic equivalent of the
+  Section~5 preclearance submission.
+
+\item \textbf{Use the audit chain as evidence}. The \textsc{bisect} SHA
+  audit chain provides cryptographic proof that the reference plan was
+  produced by the neutral algorithm and has not been modified. In litigation,
+  this resolves disputes about whether the algorithmic plan was manipulated
+  ex post to support a desired outcome. Present the audit chain as part
+  of the expert witness report alongside the demographic and geographic
+  analysis.
+\end{enumerate}
+
+Section~5 cannot be restored by algorithmic means. But the transparency,
+reproducibility, and verifiability that algorithmic redistricting provides
+can substitute for the documentation function that Section~5 required,
+and can give Section~2 plaintiffs a quantitative, evidence-based framework
+for measuring the cost of minority vote dilution in the post-\textit{Shelby}
+world.
+
+\bigskip
+\noindent\textit{The author thanks the redistricting research team for
+data access and algorithmic development. All errors are the author's own.}

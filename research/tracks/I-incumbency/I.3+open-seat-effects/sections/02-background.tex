@@ -1,0 +1,66 @@
+\label{sec:background}
+
+\subsection{Defining an Open Seat}
+
+We use a strict and a broad definition of open seat. Under the \textit{strict} definition,
+a district is open if no incumbent's home census tract is assigned to it:
+
+\begin{definition}[Strict Open Seat]
+District $d$ is a \emph{strict open seat} under plan $P$ if and only if:
+\[
+  \nexists\, i \in \mathcal{I} : d_P(t(i)) = d,
+\]
+where $\mathcal{I}$ is the set of incumbents seeking reelection, $t(i)$ is incumbent
+$i$'s home census tract, and $d_P(t)$ is the district assignment of tract $t$ under $P$.
+\end{definition}
+
+Under the \textit{broad} definition, we additionally count districts that are
+technically incumbent-occupied but where the incumbent faces a genuinely competitive
+election due to redistricting-induced partisan composition change:
+
+\begin{definition}[Broad Open Seat]
+District $d$ is a \emph{broad open seat} under plan $P$ if either (a) it is a strict
+open seat, or (b) it contains exactly one incumbent's home tract and its partisan lean
+$v_d^D$ falls in the range $[0.45, 0.55]$ (competitive by the 5-percentage-point
+threshold used in I.2).
+\end{definition}
+
+The broad definition captures the reality that a nominal incumbent district can
+function like an open seat if redistricting has moved the partisan composition to
+truly competitive territory---the incumbent will face challengers as well-funded and
+experienced as those who contest open seats.
+
+\subsection{Retirement Incentive Model}
+
+We model the probability that an incumbent retires following redistricting as a
+function of two factors: (a) whether she is paired with another incumbent (in which
+case she faces a primary against a sitting colleague), and (b) how much her district's
+partisan lean changed relative to her prior district. Formally, the retirement
+incentive score for incumbent $i$ under plan $P$ is:
+
+\[
+  \text{RI}(i, P) = \alpha \cdot \mathbf{1}[\text{paired}(i,P)]
+  + \beta \cdot |\Delta v^D_{d(i)}|,
+\]
+
+where $\Delta v^D_{d(i)} = v^D_{d_P(t(i))} - v^D_{d_\text{prior}(i)}$ is the change
+in partisan lean of the district containing incumbent $i$'s home tract between the
+prior map and the new plan $P$, and $\mathbf{1}[\text{paired}]$ is 1 if $i$ is in a
+district with at least one other incumbent.
+
+We set $\alpha = 0.40$ and $\beta = 0.50$ based on calibration against historical
+post-redistricting retirement rates in cycles where pairing and lean-change data are
+available~\citep{ansolabehere2000incumbency}. These coefficients are approximate; the
+model is intended to illustrate the directional effect of algorithmic vs.\ enacted
+redistricting on retirement pressure, not to produce precise predictions.
+
+\subsection{Prior Literature on Open Seats and Redistricting}
+
+The relationship between redistricting and open seats has been studied most thoroughly
+in the context of the 1990 and 2000 redistricting cycles. \citet{ansolabehere2000incumbency}
+find that redistricting increased open-seat rates in the 1990 cycle by approximately
+30\% in states with major boundary changes. \citet{altman2011public} argue that public
+mapping exercises consistently produce more competitive and more open maps than
+legislative redistricting, consistent with the algorithmic comparison developed here.
+\citet{king1994electoral} document that the electoral cycle effect on seat swings is
+mediated by the open-seat rate: years with more open seats produce larger partisan swings.

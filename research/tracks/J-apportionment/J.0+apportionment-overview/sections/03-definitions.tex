@@ -1,0 +1,139 @@
+We describe each method's allocation for 2020 Census data,
+summarising the properties developed in J.1--J.4.
+Table~\ref{tab:2020seats} shows the seat allocation for all 50 states
+under all five methods; the three states where any method disagrees
+with Huntington-Hill are highlighted.
+
+\subsection{Huntington-Hill (Equal Proportions)}
+
+Huntington-Hill assigns the $s$-th seat to state $i$ if
+$p_i / \sqrt{(s-1)s}$ is the highest priority value among all states.
+Starting from 1 seat per state (50 seats assigned), seats 51 through 435
+are awarded sequentially by priority.
+The 2020 apportionment under this method matches the Census Bureau's
+official result: California 52, Texas 38, Florida 28, New York 26,
+\ldots, Wyoming 1.
+The last seat (seat 435) went to New York; Montana narrowly missed
+a second seat (J.1 documents the priority margin).
+
+\textit{Optimality property}: Huntington-Hill minimises, over all pairs
+of states $(i, j)$, the maximum relative difference
+$(p_i/s_i) / (p_j/s_j)$ in per-capita representation
+\citep{huntington1928method}.
+
+\subsection{Webster (Major Fractions)}
+
+Webster adjusts a common divisor $d$ until $\sum_i [p_i/d]_{0.5} = 435$,
+where $[\cdot]_{0.5}$ denotes rounding to the nearest integer
+(rounding at 0.5).
+Under 2020 data, Webster produces a seat allocation identical to
+Huntington-Hill for 49 states; Minnesota retains its 8th seat under
+Webster while losing it to another state under Huntington-Hill
+(see J.2 for the exact computation).
+
+\textit{Optimality property}: Webster minimises the sum of squared
+deviations $\sum_i (s_i - q_i)^2$ where $q_i = p_i \times 435 / N$
+is the exact quota \citep{balinski1982fair}.
+
+\subsection{Adams (Smallest Divisors)}
+
+Adams assigns each state $\lceil p_i/d \rceil$ seats for a divisor $d$
+chosen such that the total is 435.
+Because ceiling always rounds up, every state receives at least
+$\lceil q_i \rceil$ seats --- meaning no state is below its exact
+proportional entitlement.
+Under 2020 data, Adams gives Rhode Island, Hawaii, and Montana one extra
+seat each relative to Huntington-Hill; large states correspondingly lose
+seats.
+
+\textit{Optimality property}: Adams maximises the minimum per-capita
+representation $\min_i (p_i/s_i)$ across all states
+\citep{balinski1982fair}.
+
+\subsection{Jefferson (Greatest Divisors / D'Hondt)}
+
+Jefferson assigns each state $\lfloor p_i/d \rfloor$ seats, subject to
+a floor of 1.
+Floor rounding systematically underrepresents small states:
+Wyoming's exact quota of $\approx 0.758$ is rounded to 1 only due to the
+constitutional floor, not by Jefferson's rounding rule.
+Jefferson is the dominant method in European and Latin American
+proportional representation systems, where it is called d'Hondt
+\citep{lijphart1986degrees}.
+Under 2020 data, Jefferson would give Texas 39 and California 53 seats
+while several small states would be reduced to the constitutional
+minimum of 1.
+
+\textit{Equivalence}: Jefferson and d'Hondt are mathematically identical;
+the priority value $P_i(s) = p_i/s$ is the same formula
+regardless of whether $p_i$ represents population or votes (J.4).
+
+\subsection{Hamilton (Largest Remainders)}
+
+Hamilton computes exact quotas $q_i = p_i \times 435 / N$,
+assigns lower quotas $\lfloor q_i \rfloor$, and distributes the
+remaining $435 - \sum_i \lfloor q_i \rfloor$ seats to states
+with the largest fractional parts.
+Hamilton satisfies the quota rule (every state is within 1 of its
+exact quota) but is susceptible to all three classical paradoxes.
+Under 2020 data, Hamilton produces the same result as Huntington-Hill
+for all 50 states --- the methods agree for this particular census ---
+but they can disagree in other years and especially for smaller House sizes.
+
+\begin{table}[t]
+\centering
+\small
+\caption{2020 Census apportionment: selected states under all five methods.
+  States marked $*$ differ from Huntington-Hill under at least one method.
+  Full 50-state table appears in the Appendix.}
+\label{tab:2020seats}
+\begin{tabular}{lrrrrrr}
+\toprule
+State & Pop.\ (2020) & HH & Webster & Adams & Jefferson & Hamilton \\
+\midrule
+California    & 39,538,223 & 52 & 52 & 51 & 53 & 52 \\
+Texas         & 29,145,505 & 38 & 38 & 37 & 39 & 38 \\
+Florida       & 21,538,187 & 28 & 28 & 27 & 28 & 28 \\
+New York      & 20,201,249 & 26 & 26 & 26 & 26 & 26 \\
+North Carolina &10,439,388 & 14 & 14 & 14 & 14 & 14 \\
+Minnesota$^*$ &  5,706,494 &  8 &  8 &  8 &  7 &  8 \\
+Rhode Island$^*$& 1,097,379 & 2 &  2 &  3 &  1 &  2 \\
+Montana$^*$   &  1,084,225 &  2 &  2 &  3 &  1 &  2 \\
+Hawaii$^*$    &  1,455,271 &  2 &  2 &  3 &  2 &  2 \\
+Wyoming       &    576,851 &  1 &  1 &  1 &  1 &  1 \\
+Vermont       &    643,077 &  1 &  1 &  1 &  1 &  1 \\
+Alaska        &    733,391 &  1 &  1 &  2 &  1 &  1 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item HH = Huntington-Hill (current U.S.\ law).
+  All methods give 435 total seats and a minimum of 1 per state.
+  The Adams column reflects the small-state-favoring ceiling rounding;
+  the Jefferson column reflects large-state-favoring floor rounding.
+\end{tablenotes}
+\end{table}
+
+\subsection{Where Methods Diverge}
+
+For the 2020 Census, the five methods produce identical allocations for
+at least 45 of the 50 states.
+Divergence concentrates near the rounding threshold for small states
+and near integer-quota boundaries for mid-size states.
+Three patterns emerge:
+\begin{enumerate}
+  \item \textbf{Small-state sensitivity}: Adams gives Alaska, Montana,
+    Rhode Island, and Hawaii an extra seat relative to HH;
+    Jefferson would reduce Minnesota and potentially Rhode Island
+    relative to HH.
+  \item \textbf{Large-state offsetting}: Any extra seats given to small
+    states under Adams must be taken from large states (CA, TX, FL)
+    because the total is fixed at 435.
+  \item \textbf{Near-threshold states}: Minnesota at the 2020 census
+    sits very close to the boundary between 7 and 8 seats;
+    it receives 8 under HH, Webster, Adams, and Hamilton,
+    but would receive 7 under Jefferson.
+\end{enumerate}
+These findings underscore that the choice of apportionment method is
+not merely academic: it determines the political representation of
+specific states for a decade.

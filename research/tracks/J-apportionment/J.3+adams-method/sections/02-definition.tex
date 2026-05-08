@@ -1,0 +1,75 @@
+\label{sec:definition}
+
+\begin{definition}[Adams Method]
+  Given populations $p_1, \ldots, p_n$ and House size $H$,
+  the Adams apportionment finds a common divisor $d > 0$ such that:
+  \[
+    \sum_{i=1}^{n} \max\!\left(1, \left\lceil \frac{p_i}{d} \right\rceil\right) = H,
+  \]
+  and assigns each state $s_i = \max(1, \lceil p_i/d \rceil)$ seats.
+\end{definition}
+
+\noindent
+Note that for states with $p_i > 0$, we have $\lceil p_i/d \rceil \geq 1$
+as long as $d \leq p_i$.
+Since the minimum state population (Wyoming 2020: 576{,}851) is much
+larger than any reasonable divisor, the $\max(1, \cdot)$ is binding only
+for the constitutional floor guarantee.
+
+\subsection{Priority Queue Formulation}
+
+Adams as a priority queue uses the first-seat priority
+$P_i^{\text{Ad}}(0) = p_i$ (effectively infinite, since every state
+gets its first seat) and for subsequent seats:
+\[
+  P_i^{\text{Ad}}(s) = \frac{p_i}{s},
+\]
+the same formula as Jefferson.
+The difference between Adams and Jefferson is not the priority formula
+but the initialisation: Adams assigns 1 seat to each state and then
+runs the priority queue for the remaining $H - n$ seats;
+Jefferson assigns 0 seats initially and runs for $H$ steps.
+In practice, since every state must have at least 1 seat
+(constitutional floor), the two methods agree for all states above
+the constitutional floor, and the floor is active only for
+states with exact quotas below 1.
+Adams and Jefferson use the same priority formula $p_i/s$
+but Adams's base allocation guarantees the constitutional floor
+more naturally.
+
+\subsection{Rounding Threshold}
+
+For exact quota $q_i = p_i/d \in (s, s+1)$:
+\begin{itemize}
+  \item Adams assigns $s_i = s+1$ seats (ceiling).
+  \item The threshold for receiving $s+1$ seats is $q_i > s$,
+    i.e., any fractional part triggers rounding up.
+\end{itemize}
+This is the lowest possible threshold: any state with a non-integer
+quota receives the upper quota under Adams.
+Compare to HH's threshold $\sqrt{s(s+1)} > s$ and Webster's
+threshold $s + 0.5 > \sqrt{s(s+1)}$.
+
+\subsection{Worked Example}
+
+For populations $(100, 50, 10)$ and $H = 5$ seats,
+exact quotas at $d = 160/5 = 32$ are $(3.125, 1.5625, 0.3125)$.
+Adams assigns ceilings $(4, 2, 1)$ = 7 seats, too many.
+Adjusting $d$ upward to $d = 36$: quotas $(2.78, 1.39, 0.28)$,
+ceilings $(3, 2, 1)$ = 6 seats, still too many.
+At $d = 53$: quotas $(1.89, 0.94, 0.19)$,
+ceilings $(2, 1, 1)$ = 4 seats, too few.
+At $d = 45$: quotas $(2.22, 1.11, 0.22)$,
+ceilings $(3, 2, 1)$ = 6 seats.
+At $d = 55$: quotas $(1.82, 0.91, 0.18)$,
+ceilings $(2, 1, 1)$ = 4 seats.
+The Adams divisor is between 45 and 55; binary search converges
+to $d \approx 50$ giving quotas $(2.0, 1.0, 0.2)$,
+ceilings $(2, 1, 1)$ = 4 seats.
+The divisor must be decreased further; at $d = 49$:
+quotas $(2.04, 1.02, 0.20)$, ceilings $(3, 2, 1)$ = 6.
+At $d = 51$: quotas $(1.96, 0.98, 0.196)$, ceilings $(2, 1, 1)$ = 4.
+There is no divisor that gives exactly 5 seats under Adams for this example,
+illustrating that Adams may not have a divisor that exactly achieves
+a given $H$ --- in practice, the divisor giving the closest total
+to $H$ is used, with tie-breaking by population.

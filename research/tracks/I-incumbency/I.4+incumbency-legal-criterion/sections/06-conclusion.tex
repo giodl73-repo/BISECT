@@ -1,0 +1,46 @@
+\label{sec:conclusion}
+
+This paper has provided a comprehensive legal analysis of incumbency protection as a
+redistricting criterion and its implications for algorithmic redistricting. The analysis
+rests on three pillars of federal constitutional doctrine: \textit{Karcher v.\ Daggett}'s
+identification of incumbency protection as a permissible but not mandatory objective;
+\textit{Cox v.\ Larios}'s limitation of incumbency protection to contexts where it
+justifies only minor population deviations; and \textit{Thornburg v.\ Gingles}'
+establishment of VRA \S{}2 requirements that are independent of and take precedence
+over incumbency protection in majority-minority district contexts.
+
+From these doctrinal foundations, we derived the algorithmic indifference standard:
+a redistricting methodology that receives no incumbency data, optimises only constitutionally
+required or permitted criteria, and produces incumbency outcomes consistent with the
+geographic random baseline is constitutionally sound under federal law. The \textsc{bisect}
+algorithm satisfies this standard, and the empirical evidence in I.1--I.3 confirms that
+its incumbency outcomes are statistically indistinguishable from what neutral redistricting
+would produce.
+
+The state constitutional analysis reveals a spectrum of approaches to incumbency as
+a redistricting criterion, ranging from explicit prohibition (Arizona, California
+commission systems) to explicit permission (California commission guidelines, Ohio
+pre-amendment criteria) to silence (most state constitutions). In all three categories,
+the algorithmic indifference standard provides a defensible position: the algorithm
+is neither prohibited by the explicit-prohibition states (because it neither protects
+nor targets incumbents) nor required to protect incumbents by the explicit-permission
+states (because permission is not mandate) nor constrained by the silent states (because
+no constraint is stated).
+
+For practitioners deploying \textsc{bisect} maps in redistricting litigation, the
+central message is that the incumbency objection to algorithmic redistricting, while
+rhetorically effective, is legally unfounded. No federal constitutional provision
+requires incumbency protection; no VRA provision requires it; and no state constitutional
+or statutory provision mandates it in any state we have studied. The algorithm's
+indifference to incumbency is not a defect---it is a design choice that produces
+incumbency outcomes equivalent to what a neutral geographic redistricting process would
+produce, and those outcomes are constitutionally sound.
+
+The most powerful response to the incumbency objection in litigation is therefore
+empirical rather than doctrinal: the \textsc{bisect} map's incumbency outcomes are
+within the range of geographic chance, while the enacted map's outcomes are significantly
+below the baseline, demonstrating that enacted incumbent protection requires strategic
+use of incumbency data that the algorithm does not access. This shifts the burden of
+justification onto the enacted map---the party defending the map must explain why the
+enacted map's near-zero pairing rate and above-baseline safe-seat fraction are a
+geographic necessity rather than a strategic choice.

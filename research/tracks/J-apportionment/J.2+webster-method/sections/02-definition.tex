@@ -1,0 +1,74 @@
+\subsection{Common Divisor Formulation}
+
+\begin{definition}[Webster Method]
+  Let $p_1, \ldots, p_n$ be state populations, $H$ the House size,
+  and $N = \sum_i p_i$.
+  The Webster apportionment finds a common divisor $d > 0$ such that:
+  \[
+    \sum_{i=1}^{n} \max\!\left(1, \left\lfloor \frac{p_i}{d} + 0.5 \right\rfloor\right) = H,
+  \]
+  and assigns each state $s_i = \max(1, \lfloor p_i/d + 0.5 \rfloor)$ seats.
+\end{definition}
+
+\noindent
+The divisor $d$ is found by binary search or by starting from the natural
+divisor $d_0 = N/H$ and adjusting iteratively.
+For 2020 Census data, $d_0 = 331{,}108{,}434 / 435 \approx 761{,}169$,
+and the Webster divisor is within a small percentage of $d_0$.
+
+\subsection{Priority Queue Formulation}
+
+Equivalently, Webster is a divisor method with priority values:
+\[
+  P_i^{\text{Web}}(s) = \frac{p_i}{s + 0.5},
+\]
+giving state $i$ its $(s+1)$-th seat when $p_i/(s+0.5)$ is the
+maximum priority.
+The first seat priority $P_i^{\text{Web}}(0) = 2p_i$ differs from
+Huntington-Hill's first seat priority $P_i^{\text{HH}}(0) = p_i/\sqrt{1\cdot0}$
+(which is technically infinite --- every state is guaranteed its first
+seat by the constitutional floor and not by the priority queue).
+This formulation confirms that Webster is a standard divisor method
+and inherits divisor-method paradox immunity.
+
+\subsection{Equivalence to Sainte-Lagu\"e}
+
+In the context of proportional representation for party-list elections,
+the Sainte-Lagu\"e method assigns seats to parties using the priority:
+\[
+  P_j^{\text{SL}}(s) = \frac{V_j}{2s+1},
+\]
+where $V_j$ is party $j$'s vote total and $s$ its current seat count.
+Note that $P_j^{\text{SL}}(s) = V_j / (2s+1)$, and the first-seat
+priority is $V_j / 1 = V_j$.
+
+This is proportional to $P_i^{\text{Web}}(s) = p_i/(s+0.5)$:
+\[
+  P_i^{\text{Web}}(s) = \frac{p_i}{s + 0.5} = \frac{2 p_i}{2s + 1}
+  \propto P_j^{\text{SL}}(s).
+\]
+Since both methods use the same priority order (with votes replacing
+populations and parties replacing states), they produce identical
+seat allocations whenever the inputs produce the same priority sequence.
+The formal equivalence is exact: Webster apportionment equals
+Sainte-Lagu\"e apportionment.
+This equivalence is documented in \citet{lijphart1994electoral}
+and is used in comparative electoral systems analysis.
+
+\subsection{Rounding Threshold Comparison}
+
+For state $i$ with exact quota $q_i = p_i/d$, Webster assigns
+$s_i = \lfloor q_i + 0.5 \rfloor$ seats (before applying the constitutional
+floor).
+The rounding threshold is $s + 0.5$ for each integer $s \geq 0$.
+Comparing to Huntington-Hill:
+\begin{itemize}
+  \item HH threshold: $\sqrt{s(s+1)} < s+0.5$ for all $s \geq 1$
+  \item Webster threshold: $s + 0.5$
+  \item Gap: $(s+0.5) - \sqrt{s(s+1)} \approx 1/(8s)$ for large $s$
+\end{itemize}
+A state whose exact quota falls in $({\sqrt{s(s+1)}}, s+0.5)$
+receives $s+1$ seats under HH but only $s$ seats under Webster.
+This interval is narrow for large $s$ (large states) and wider
+for small $s$ (small states), making HH slightly more generous
+to small states.

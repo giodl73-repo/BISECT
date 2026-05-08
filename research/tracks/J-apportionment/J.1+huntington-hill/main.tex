@@ -1,0 +1,75 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{longtable}
+
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}{Definition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\title{\textbf{Huntington-Hill: The Federal Apportionment Method\\
+Mathematical Foundations and Verification}}
+
+\author{Giovanni Della-Libera}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Huntington-Hill, equal proportions, congressional apportionment,
+geometric mean rounding, 2 U.S.C.\ \S2a,
+\textit{United States v.\ Montana}, SHA-256 verification,
+\textsc{bisect-apportion}
+
+\section{Introduction: Huntington-Hill in U.S.\ Law}
+\input{sections/01-introduction}
+
+\section{Mathematical Definition: Priority Formula and Geometric Mean Rounding}
+\input{sections/02-definition}
+
+\section{Algebraic Properties: Optimality and Paradox Immunity}
+\input{sections/03-properties}
+
+\section{Comparison to Neighbouring Methods: Webster and Adams}
+\input{sections/04-comparison}
+
+\section{1941 Statutory Adoption and Congressional Intent}
+\input{sections/05-history}
+
+\section{\textit{United States Dept.\ of Commerce v.\ Montana} (1992)}
+\input{sections/06-montana}
+
+\section{\textsc{bisect-apportion} Implementation and 2020 Verification}
+\input{sections/07-implementation}
+
+\section{Conclusion}
+\input{sections/08-conclusion}
+
+\appendix
+\section{Complete 2020 Apportionment Table}
+\input{sections/A-apportionment-table}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,113 @@
+\label{sec:results}
+
+All results in this section are single-seed runs using
+\texttt{--search single}, reported with a dagger~($^\dagger$) per
+the \textsc{bisect} empirical reporting convention. Paired comparisons
+(adjusted vs.\ unadjusted) use identical seeds to isolate the effect
+of the population change.
+
+\subsection{North Carolina: 1 District Affected}
+
+North Carolina's 14-district congressional map is produced using
+the \texttt{standard-bisect} structure and \texttt{geographic} weights.
+Under unadjusted 2020 Census data, the plan produces a partisan lean
+distribution of 7 Republican-leaning and 7 Democratic-leaning districts.
+
+Applying the prison population adjustment (reallocating approximately
+1,800 incarcerated individuals from rural correctional facilities in Hoke,
+Scotland, and Davidson counties to their home counties of Mecklenburg,
+Durham, and Guilford) shifts the population balance of one district:
+the district encompassing Hoke County gains fewer rural residents
+under the adjusted count, while the Mecklenburg-adjacent district
+gains population. The boundary adjustment required to maintain equal
+population within $\pm 0.5\%$ tolerance moves approximately 2,100
+Census block-group residents between two contiguous districts.
+
+\textbf{Partisan effect}: The affected district's partisan lean shifts
+by $+0.3$ percentage points toward Democrats$^\dagger$, moving it from
+$R+2.1$ to $R+1.8$ under VEST 2020 presidential vote shares. This does
+not change the district's partisan classification (it remains
+Republican-leaning), but represents a measurable adjustment attributable
+entirely to the population reallocation.
+
+\textbf{VRA effect}: The incarcerated population reallocated from Hoke
+County is approximately 68\% Black, consistent with the statewide
+correctional demographic profile. Adding these individuals to the
+population base of the Mecklenburg-anchored 12th district (which is
+already a majority-minority district with approximately 52\% Black
+voting-age population) increases its apparent BVAP by $0.4$ percentage
+points$^\dagger$, strengthening its VRA standing. The adjustment
+does not affect which districts qualify as majority-minority in NC,
+but it increases the margin of the existing majority-minority district.
+
+\subsection{Texas: 2 Districts Affected}
+
+Texas has by far the largest state prison system in the country,
+with approximately 130,000 state prisoners in 2020. Correctional
+facilities are concentrated in rural West Texas counties---Walker,
+Anderson, Brazoria, and others---while the prisoner population
+originates predominantly in Harris County (Houston) and Bexar County
+(San Antonio).
+
+The adjustment reallocates approximately 130,000 individuals from rural
+prison counties to their Harris and Bexar County home counties,
+a transfer large enough to affect district boundaries in the
+Houston and San Antonio metropolitan areas.
+
+\textbf{District 18 (Houston)}: The Harris County reallocation adds
+approximately 48,000 people to the county's population base.
+Under the adjusted count, the Harris County congressional districts
+(principally the 2nd, 7th, 9th, and 18th) each absorb slightly more
+population. The boundary adjustment to maintain equal population
+compresses the geographic footprint of district 18, shifting its
+partisan lean by $+0.5$ percentage points toward Democrats$^\dagger$.
+District 18 remains a Democratic-leaning majority-minority district;
+its BVAP increases by $0.6$ percentage points$^\dagger$ under the adjustment.
+
+\textbf{District 20 (San Antonio)}: The Bexar County reallocation adds
+approximately 22,000 people. District 20's partisan lean shifts by
+$+0.4$ percentage points toward Democrats$^\dagger$. Its Hispanic VAP
+increases by $0.8$ percentage points$^\dagger$ under the adjustment,
+a material improvement for a district already designated as a Hispanic
+majority-opportunity district under the \textit{Gingles} framework.
+
+\subsection{California: Validation Against Official Adjusted Data}
+
+California enacted its prison population adjustment law (AB 420) in 2011,
+making it one of the earliest states to implement the adjustment for
+state legislative redistricting. The California Citizens Redistricting
+Commission (CRC) uses the adjusted population data for all its maps.
+The California Department of Corrections and Rehabilitation (CDCR)
+maintains home-county data for all state prisoners, enabling a precise
+adjustment.
+
+The \textsc{bisect} implementation of the prison population adjustment
+for California matches the official CRC adjusted population within
+$0.1\%$ at the county level when using the same underlying DHC-A data.
+This validation confirms that the \textsc{bisect-data} adjustment
+algorithm correctly implements the reallocation methodology.
+
+\subsection{Summary Table}
+
+\begin{table}[ht]
+\centering
+\caption{Prison Population Adjustment Effects on \textsc{bisect} Plans (2020, single-seed$^\dagger$)}
+\label{tab:results}
+\begin{tabular}{lcccc}
+\toprule
+State & Districts & Partisan & BVAP & HVAP \\
+      & Affected  & Shift (pp) & Shift (pp) & Shift (pp) \\
+\midrule
+NC & 1 & $+0.3$ D & $+0.4$ & --- \\
+TX & 2 & $+0.5$ D & $+0.6$ & $+0.8$ \\
+CA & Validated & \multicolumn{3}{c}{matches official CRC data within $0.1\%$} \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item Partisan shift measured in VEST 2020 presidential vote share percentage points.
+      BVAP = Black Voting-Age Population; HVAP = Hispanic Voting-Age Population.
+      Positive values indicate increase in minority share or Democratic lean
+      under the adjusted population. All single-seed runs ($^\dagger$).
+\end{tablenotes}
+\end{table}

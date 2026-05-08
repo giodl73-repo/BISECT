@@ -1,0 +1,49 @@
+\label{sec:introduction}
+
+The geography of American voters is highly sorted. Urban cores are heavily Democratic,
+exurban and rural areas are heavily Republican, and a broad suburban ring---expanding
+and shifting through the 2010s and 2020s---is genuinely competitive~\citep{rodden2019why}.
+This geographic sorting creates an inevitable tension in redistricting: any map that draws
+compact, geographically coherent districts will reproduce some of this sorting at the
+district level, producing safe urban Democratic seats and safe rural Republican seats.
+The question is whether enacted maps produce \textit{more} safe seats than geography
+requires---and if so, by how much.
+
+This paper addresses that question by comparing safe-seat counts under \textsc{bisect}
+algorithmic redistricting to enacted 2022 congressional maps in three states. The
+\textsc{bisect} algorithm~\citep{bisect2024} draws districts by recursively bisecting
+a census tract graph to optimise population balance, without reference to precinct-level
+partisan data. The maps it produces represent a geographic lower bound on safe-seat
+creation: they contain the safe seats that geographic partisan sorting makes unavoidable,
+without the additional safe seats that enacted mapmakers create through deliberate packing
+and cracking of partisan voter concentrations.
+
+\subsection{Why Safe Seats Matter}
+
+Safe seats have consequences for democratic representation that extend beyond the
+incumbent's electoral security. \citet{fiorina1980incumbency} documented that safe-seat
+incumbents are less responsive to constituent opinion than competitive-district members;
+\citet{stonecash2003parties} showed that safe-seat representatives vote more ideologically
+extreme than their districts' median voter. The entrenchment of safe seats across
+redistricting cycles produces a Congress that is systematically less responsive to
+statewide partisan shifts than the underlying vote distribution would imply.
+
+From a legal perspective, states with ``free elections'' or ``fair elections'' clauses
+in their constitutions have increasingly scrutinised safe-seat creation as a mechanism
+of incumbent entrenchment. In \textit{League of Women Voters v.\ Commonwealth}\footnote{
+\textit{League of Women Voters v.\ Commonwealth}, 178 A.3d 737 (Pa.\ 2018).} and
+\textit{Harper v.\ Hall}\footnote{\textit{Harper v.\ Hall}, 868 S.E.2d 499 (N.C.\ 2022).}
+the relevant courts held that redistricting plans that systematically reduce electoral
+competition violate state constitutional free-elections guarantees. The \textsc{bisect}
+comparison provides the critical counterfactual: how many competitive districts could
+a compact, population-balanced map produce, and how does that compare to what the enacted
+map produced?
+
+\subsection{Paper Organisation}
+
+Section~\ref{sec:background} defines safe seats and describes the measurement approach.
+Section~\ref{sec:methodology} explains how \textsc{bisect} maps interact with the
+geographic partisan sorting that produces safe seats. Section~\ref{sec:results}
+presents the empirical results for NC, WI, and TX. Section~\ref{sec:discussion}
+provides the party-specific decomposition and identifies which incumbents benefit from
+enacted safe-seat creation. Section~\ref{sec:conclusion} concludes.

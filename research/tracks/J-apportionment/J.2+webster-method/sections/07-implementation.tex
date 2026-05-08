@@ -1,0 +1,41 @@
+The \textsc{bisect-apportion} crate implements Webster's method via the
+same priority-queue architecture as Huntington-Hill, with the priority
+function changed to:
+\[
+  P_i^{\text{Web}}(s) = \frac{p_i^2}{(s+0.5)^2 \cdot 4}
+\]
+in integer arithmetic (multiplying by 4 to avoid fractions in the
+denominator: $p_i/(s+0.5) = 2p_i/(2s+1)$, so the integer comparison is
+$P_i > P_j \iff (2p_i)^2 \cdot (2s_j+1)^2 > (2p_j)^2 \cdot (2s_i+1)^2$,
+i.e., $p_i^2 \cdot (2s_j+1)^2 > p_j^2 \cdot (2s_i+1)^2$).
+
+\subsection{CLI Usage}
+
+\begin{verbatim}
+bisect apportion --year 2020 --method webster
+\end{verbatim}
+
+The output format is identical to Huntington-Hill output.
+For the 2020 Census, the output matches the HH output exactly.
+
+\subsection{Test Coverage}
+
+\begin{itemize}
+  \item \textbf{L0}: Priority formula $P^{\text{Web}}(0) = 2p$,
+    $P^{\text{Web}}(1) = 2p/3$, etc.\ computed correctly.
+  \item \textbf{L1}: 3-state synthetic example (pop 100, 100, 15;
+    5 seats): Webster produces [2, 2, 1]; verified by hand.
+  \item \textbf{L2}: 2020 Census Webster output matches HH output
+    at 100\% (50/50 states identical).
+\end{itemize}
+
+\subsection{Sainte-Lagu\"e Mode}
+
+The \textsc{bisect-apportion} crate's Webster implementation is
+also usable for party-list PR seat allocation (Sainte-Lagu\"e mode),
+where the \texttt{populations} argument receives party vote totals
+and \texttt{house\_size} is the number of seats to allocate.
+This enables comparative electoral systems analysis
+(e.g., ``how many seats would each party receive under Sainte-Lagu\"e
+if the 2020 House used party-list PR?'') without requiring a separate
+implementation.

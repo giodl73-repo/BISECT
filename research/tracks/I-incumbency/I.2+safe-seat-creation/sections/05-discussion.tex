@@ -1,0 +1,105 @@
+\label{sec:discussion}
+
+\subsection{Party-Specific Analysis}
+
+The safe-seat comparison reveals an asymmetric pattern across the three states. In NC
+and TX---states where Republicans controlled redistricting in 2021--2022---the enacted
+maps produce significantly more safe-Republican seats than the algorithmic baseline,
+while the safe-Democratic seat count is comparable or lower. In WI, where the
+Republican-controlled legislature's map was partially modified by court intervention,
+the asymmetry is smaller.
+
+This asymmetry reflects the mechanism of partisan gerrymandering: the party in control
+of redistricting packs opposition voters into very safe seats (wasting their votes in
+blowout victories) while cracking them across safe-majority seats (denying them
+representation). The resulting map has more safe seats overall, but the additional safe
+seats are predominantly for the party in control.
+
+Table~\ref{tab:party-decomp} reports the party-specific safe-seat counts for all three
+states, highlighting the asymmetric nature of the safe-seat creation.
+
+\begin{table}[ht]
+\centering
+\begin{threeparttable}
+\caption{Party-specific safe-seat decomposition.}
+\label{tab:party-decomp}
+\begin{tabular}{l l r r r}
+\toprule
+State & Plan & Safe-D seats & Safe-R seats & Difference \\
+\midrule
+NC ($k=14$) & \textsc{bisect}$^\dagger$ & 2 & 6 & $-$4 (R advantage) \\
+            & Enacted 2022              & 3 & 9 & $-$6 (R advantage) \\
+            & Additional (enacted--alg) & +1 & +3 & \\
+\addlinespace
+WI ($k=8$)  & \textsc{bisect}$^\dagger$ & 2 & 1 & +1 (D advantage) \\
+            & Enacted 2022              & 2 & 2 & 0 \\
+            & Additional (enacted--alg) & 0 & +2 & \\
+\addlinespace
+TX ($k=38$) & \textsc{bisect}$^\dagger$ & 8 & 14 & $-$6 (R advantage) \\
+            & Enacted 2022              & 7 & 19 & $-$12 (R advantage) \\
+            & Additional (enacted--alg) & $-$1 & +5 & \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item[$\dagger$] Single-run result (seed\,$=42$).
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\subsection{Geographic Determinism of Democratic Safe Seats}
+
+A consistent finding across all three states is that safe-Democratic seats are largely
+preserved by geographic compactness: \textsc{bisect} maps produce safe-D seat counts
+comparable to enacted maps (or even slightly higher in TX) because urban Democratic
+voter concentrations are sufficiently dense that any compact district centred on them
+will produce a safe-D seat.
+
+This geographic determinism of Democratic safe seats has an important implication for
+the free-elections doctrine analysis discussed below: the urban-core safe-D seats in
+\textsc{bisect} maps are not a product of packing strategy but of geographic sorting.
+Their presence in both algorithmic and enacted maps confirms that they cannot be
+eliminated without violating compactness, creating prison gerrymandering concerns, or
+fragmenting cities.
+
+The additional safe seats in enacted maps are predominantly safe-Republican seats in
+suburban and exurban areas, where the geographic partisan mix would, under compact
+redistricting, produce competitive or lean districts. Converting these lean-R or
+competitive tracts into safe-R districts requires extending district boundaries to
+incorporate more rural Republican precincts, creating less compact shapes.
+
+\subsection{Legal Implications: Free Elections Doctrine}
+
+The free elections doctrine analysis builds on the \textsc{bisect} comparison to
+establish that the enacted maps' safe-seat counts substantially exceed the geographic
+minimum. Compact redistricting (as operationalised by the algorithmic map) produces
+$X$ safe seats; the enacted map produces $X + \Delta$ safe seats, where $\Delta > 0$
+measures the enacted map's safe-seat premium. This premium represents the additional
+electoral insulation that incumbents receive from deliberate district boundary choices.
+
+State supreme courts evaluating free-elections claims---following the precedents in
+\textit{League of Women Voters v.\ Commonwealth}\footnote{\textit{League of Women
+Voters v.\ Commonwealth}, 178 A.3d 737 (Pa.\ 2018).} and \textit{Harper v.\ Hall}
+\footnote{\textit{Harper v.\ Hall}, 868 S.E.2d 499 (N.C.\ 2022).}---have focused
+precisely on this question: does the enacted map suppress competitive elections beyond
+what geographic necessity requires? The \textsc{bisect} comparison provides the
+counterfactual that courts need to answer this question: a geographically compact plan
+that produces more competitive districts than the enacted map demonstrates that the
+enacted map's low competitive-seat count is a choice, not a necessity.
+
+\subsection{Compactness as an Indirect Cause}
+
+The mechanism by which \textsc{bisect} produces fewer safe seats than enacted maps is
+indirect and important: compactness optimisation, not any explicit competitive-district
+target, drives the result. The algorithm does not know about partisan lean; it draws
+compact districts without regard to whether those districts are safe or competitive.
+But compact districts in suburban transition zones---where Democratic and Republican
+voters are geographically interspersed---produce competitive seat shares that deliberate
+packing and cracking strategies avoid.
+
+This indirect effect has a legal implication: \textsc{bisect}'s more competitive maps
+are not a consequence of the algorithm pursuing competitiveness as a goal (which would
+be a permissible but non-required redistricting criterion under state law). They are
+a consequence of the algorithm pursuing compactness, which is both a traditional
+redistricting criterion and constitutionally required in many states. The competitiveness
+of \textsc{bisect} maps is a side effect of geographic optimisation, not a target.

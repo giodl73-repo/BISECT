@@ -1,0 +1,129 @@
+\label{sec:legal}
+
+\subsection{Section~203 and Section~2: Distinct but Overlapping Frameworks}
+
+Section~203 and Section~2 of the Voting Rights Act protect overlapping
+but distinct interests. Section~2 protects minority voting strength:
+it prohibits redistricting plans that dilute minority communities'
+ability to elect representatives of their choice, and through the
+\textit{Thornburg v.\ Gingles}\footnote{\textit{Thornburg v.\ Gingles},
+478 U.S.\ 30 (1986).} framework, it requires majority-minority districts
+in jurisdictions where the three Gingles preconditions are met.
+Section~203 protects access: it ensures that language minority citizens
+can receive election materials in their native language, enabling effective
+participation in the electoral process.
+
+A jurisdiction can be covered by both provisions---as many are. A
+Spanish-speaking community in South Texas may be both a Section~2
+majority-Hispanic community (requiring a majority-Hispanic district)
+and a Section~203-covered community (requiring Spanish-language
+election materials). These requirements reinforce each other, but
+they also interact in ways that redistricting must address.
+
+\subsection{Jurisdictions with Both Section~203 and Section~2 Coverage}
+
+This paper identifies 23 counties nationally that, as of 2023, have both
+Section~203 coverage for a language minority group and a Gingles-feasible
+majority-minority community within the same language group. These counties
+present the most demanding redistricting challenge: the district plan must
+simultaneously satisfy Section~2's majority-minority district requirement
+and avoid splitting the Section~203-covered community between districts.
+
+The counties divide into three categories:
+
+\textbf{Urban Spanish-speaking counties} (Bexar, El Paso, Webb, Hidalgo
+in Texas; Bernalillo in New Mexico; Miami-Dade in Florida): Large,
+geographically concentrated Hispanic communities with both Section~203
+Spanish coverage and Section~2 majority-Hispanic district feasibility.
+These are the least problematic: the community's geographic concentration
+makes it natural for both Section~2 and Section~203 purposes to keep it
+within one district.
+
+\textbf{Multi-language urban counties} (Santa Clara, Los Angeles, Alameda
+in California; King County in Washington; Maricopa in Arizona): Counties
+with Section~203 coverage in multiple languages, at least one of which
+also has Section~2 feasibility. The challenge here is that different
+language communities may be geographically separated within the county,
+making it difficult to satisfy Section~2 for one community without
+splitting another community covered by Section~203.
+
+\textbf{Native American reservation counties} (Apache, Navajo in Arizona;
+San Juan in New Mexico; various in Alaska): Tribal nations whose members
+are covered by Section~203 for Native American or Alaska Native languages
+and in many cases are also majority populations with Section~2 feasibility.
+The geographic structure of reservations---often non-contiguous with state
+borders---presents unique redistricting challenges.
+
+\subsection{How \textsc{bisect} VRA Mode Handles Both Requirements}
+
+The \textsc{bisect} VRA mode (\texttt{--weights-override vra-aligned}) is
+designed to satisfy Section~2's majority-minority district requirement by
+assigning higher METIS edge weights to boundaries between tracts with high
+minority population concentration, making the algorithm reluctant to split
+minority communities. This directly serves Section~203 community integrity
+as well: keeping minority tracts together serves both VRA provisions.
+
+The interaction is not always perfectly aligned. In a multi-language county,
+the VRA mode optimizes for the language group that meets the Section~2
+Gingles threshold---typically the largest minority group---and may not
+specifically optimize for a second language minority community that has
+Section~203 coverage but not Section~2 feasibility. In these cases, the
+\textsc{bisect} county-weight mode (\texttt{--weights-override county})
+provides better Section~203 protection than the VRA mode, because county
+integrity protects the administrative unit at which Section~203 coverage
+is determined.
+
+\subsection{Documentation for Court Filings}
+
+Expert witnesses presenting \textsc{bisect} plans in jurisdictions with
+both Section~203 and Section~2 requirements should document:
+
+\begin{enumerate}
+\item \textbf{Section~203 coverage determination}: Cite the applicable
+  Federal Register determination (88 Fed.\ Reg.\ 34,396 for the 2023
+  determination) and identify which counties in the state are covered
+  and for which languages.
+
+\item \textbf{County split comparison}: Present Table~\ref{tab:results-203}
+  or equivalent data showing that the \textsc{bisect} plan produces fewer
+  Section~203 county splits than the enacted plan. This demonstrates
+  that the algorithmic plan is more administratively compatible with
+  Section~203 compliance.
+
+\item \textbf{Community integrity scores}: For each language minority
+  community with Section~203 coverage, report the community integrity
+  score for both the \textsc{bisect} plan and the enacted plan. A
+  significantly higher score for the \textsc{bisect} plan is evidence
+  that the enacted plan's splits are not compelled by population arithmetic.
+
+\item \textbf{Section~2 compliance}: Confirm that the \textsc{bisect}
+  plan satisfies Section~2's majority-minority district requirements
+  in all applicable jurisdictions, and that the Section~203-motivated
+  design choices (county integrity, community compactness) are compatible
+  with the Section~2 requirements.
+\end{enumerate}
+
+\subsection{The Gingles--Section~203 Interaction: A Note on Legal Hierarchy}
+
+When Section~203 community integrity and Section~2 majority-minority
+district requirements conflict---as they may in multi-language counties
+where achieving a majority-minority district for one group splits a
+Section~203-covered community of another---Section~2's requirements are
+legally paramount. The Supreme Court has been clear that majority-minority
+districts must be drawn where the Gingles preconditions are met.\footnote{
+See \textit{Alabama Legislative Black Caucus v.\ Alabama}, 575 U.S.\ 254 (2015)
+(holding that racial predominance in redistricting requires strict scrutiny
+but that VRA-required majority-minority districts satisfy that scrutiny).}
+
+Section~203, by contrast, creates an administrative obligation on the
+county election office, not a constraint on district lines. A district plan
+that splits a Section~203-covered community does not violate Section~203
+as long as the county election office continues to provide language
+assistance county-wide. The Section~203 consideration is therefore
+a secondary optimization criterion: after Section~2 requirements are satisfied,
+the plan should minimize Section~203 administrative burden by minimizing
+covered county splits and maximizing community integrity.
+
+This hierarchy is reflected in the \textsc{bisect} pipeline: the VRA mode
+(Section~2) takes precedence, and within the VRA-constrained solution space,
+the county-weight mode (Section~203) further optimizes for county integrity.

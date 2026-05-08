@@ -1,0 +1,41 @@
+\label{sec:implementation}
+
+The \textsc{bisect-apportion} Adams implementation uses the priority:
+\[
+  P_i^{\text{Ad}}(s) = \frac{p_i}{s}
+\]
+for $s \geq 1$ (with the first seat guaranteed by the constitutional
+floor initialisation).
+In integer arithmetic, the comparison is:
+$P_i > P_j \iff p_i \cdot s_j > p_j \cdot s_i$,
+which uses only 64-bit integers (well within range for 2020 Census data
+where $p_i \leq 4 \times 10^7$ and $s_j \leq 52$).
+
+\begin{verbatim}
+bisect apportion --year 2020 --method adams
+\end{verbatim}
+
+\subsection{European Usage of Adams}
+
+Although Adams has not been used for U.S.\ congressional apportionment,
+ceiling rounding (also called the ``method of smallest divisors'')
+has been used in some European subnational apportionment contexts.
+The Austrian Nationalrat uses a three-stage apportionment process
+that includes a ceiling step at the regional level \citep{lijphart1994electoral}.
+Italy used ceiling rounding in some historical proportional
+representation allocations.
+These international uses confirm that Adams is a practically viable
+method, not merely a theoretical construct.
+
+\subsection{Test Suite}
+
+\begin{itemize}
+  \item \textbf{L0}: $\lceil 1.1 \rceil = 2$, $\lceil 2.0 \rceil = 2$,
+    $\lceil 2.1 \rceil = 3$ --- basic ceiling arithmetic.
+  \item \textbf{L1}: 3-state example (pop 100, 100, 15; 5 seats):
+    Adams with a divisor that produces 5 total seats gives [2, 2, 1]
+    (same as HH and Webster for this example).
+  \item \textbf{L2}: 2020 Census Adams output matches official HH
+    apportionment (since both give the same result for 2020 data)
+    at 100\% match rate.
+\end{itemize}

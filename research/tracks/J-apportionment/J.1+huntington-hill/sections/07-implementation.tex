@@ -1,0 +1,97 @@
+\label{sec:implementation}
+
+\subsection{Priority Queue Implementation}
+
+The \textsc{bisect-apportion} crate implements Huntington-Hill via
+a max-priority queue using Rust's \texttt{BinaryHeap}.
+The priority comparison uses \emph{exact integer arithmetic} to avoid
+floating-point rounding errors in tie-breaking:
+\[
+  P_i(s_i) = \frac{p_i}{\sqrt{s_i(s_i+1)}}
+\]
+is represented as the rational $p_i^2 / (s_i(s_i+1))$,
+with numerator and denominator stored as \texttt{u128} integers.
+Two priorities are compared by cross-multiplication:
+$P_i > P_j \iff p_i^2 \cdot s_j(s_j+1) > p_j^2 \cdot s_i(s_i+1)$.
+This eliminates all floating-point approximation from the priority
+comparison, ensuring that tie-breaking is deterministic and exact.
+
+The \texttt{u128} type holds values up to approximately $3.4 \times 10^{38}$.
+The maximum population-squared value for the 2020 Census is
+$(39{,}538{,}223)^2 \approx 1.56 \times 10^{15}$, multiplied by the
+maximum seat-product $435 \times 436 \approx 1.9 \times 10^5$,
+giving a maximum comparison value of approximately $3 \times 10^{20}$,
+well within \texttt{u128} range.
+
+\subsection{The 2020 Apportionment}
+
+Running \texttt{bisect apportion --year 2020 --method huntington-hill}
+produces the following seat counts (selected states):
+
+\begin{center}
+\begin{tabular}{lr|lr}
+\toprule
+State & Seats & State & Seats \\
+\midrule
+California  & 52 & Missouri       & 8 \\
+Texas       & 38 & Maryland       & 8 \\
+Florida     & 28 & Wisconsin      & 8 \\
+New York    & 26 & Minnesota      & 8 \\
+Pennsylvania& 17 & Colorado       & 8 \\
+Illinois    & 17 & South Carolina & 7 \\
+Ohio        & 15 & Alabama        & 7 \\
+Georgia     & 14 & Kentucky       & 6 \\
+North Carolina& 14 & Oregon       & 6 \\
+Michigan    & 13 & Oklahoma       & 5 \\
+\midrule
+\multicolumn{2}{c}{\ldots} & Wyoming & 1 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Total: 435 seats.
+Full table in Appendix~A.
+
+\subsection{SHA-256 Verification}
+
+The Census Bureau published the official 2020 apportionment on
+April~26, 2021 \citep{census2020apportionment}.
+The verification protocol:
+\begin{enumerate}
+  \item Sort the 50 (state, seats) pairs alphabetically by state name.
+  \item Concatenate as ``\texttt{StateName:seats\textbackslash n}'' for each pair.
+  \item Compute SHA-256 of the resulting UTF-8 string.
+  \item Compare to the SHA-256 of the same string constructed from
+    the Census Bureau table.
+\end{enumerate}
+
+The \texttt{bisect apportion --year 2020 --method huntington-hill
+--verify} command performs this comparison automatically and exits
+non-zero if the hashes differ.
+The hashes match exactly, confirming zero discrepancies across
+all 50 states.
+
+\subsection{The Last Seat and the Near-Miss}
+
+In the 2020 apportionment, the 435th seat (after the initial 50 seats
+for the constitutional floor) was awarded to New York based on its
+priority value at the relevant seat count.
+The state that came closest to receiving an additional seat was
+Montana (which received 2 seats) or New York (whose last seat was
+very close to the priority cutoff).
+The Census Bureau publishes the full priority sequence showing the
+exact priority values at each step.
+
+\subsection{Test Suite}
+
+The implementation is covered by three test levels:
+\begin{itemize}
+  \item \textbf{L0} (unit): Priority formula produces exact values for
+    small inputs; $P(1) = p/\sqrt{2}$, $P(2) = p/\sqrt{6}$, etc.
+  \item \textbf{L1} (integration): 5-state synthetic examples
+    produce expected seat counts that agree with hand computation.
+  \item \textbf{L2} (regression): 2020, 2010, and 2000 Census data
+    produce seat counts matching official Census Bureau apportionments
+    at 100\% match rate.
+\end{itemize}

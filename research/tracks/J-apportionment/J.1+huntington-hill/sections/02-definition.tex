@@ -1,0 +1,93 @@
+\label{sec:definition}
+
+\subsection{The Priority Formula}
+
+\begin{definition}[Huntington-Hill Priority]
+  Let state $i$ have apportionment population $p_i$ and current seat
+  count $s_i \geq 1$.
+  The \emph{Huntington-Hill priority value} for state $i$'s next
+  ($s_i+1$)-th seat is:
+  \[
+    P_i(s_i) = \frac{p_i}{\sqrt{s_i(s_i+1)}}.
+  \]
+\end{definition}
+
+\begin{definition}[Huntington-Hill Apportionment Algorithm]
+  Given populations $p_1, \ldots, p_n$ and House size $H$:
+  \begin{enumerate}
+    \item Assign $s_i = 1$ to each state (constitutional floor;
+      50 seats assigned, $H - 50$ remain).
+    \item Initialise a max-priority queue with $(P_i(1), i)$
+      for $i = 1, \ldots, n$.
+    \item Repeat $H - n$ times:
+      \begin{enumerate}
+        \item Extract the state $j$ with highest priority $P_j(s_j)$.
+        \item Set $s_j \leftarrow s_j + 1$.
+        \item Insert $(P_j(s_j), j)$ into the queue.
+      \end{enumerate}
+    \item Return $(s_1, \ldots, s_n)$.
+  \end{enumerate}
+\end{definition}
+
+The algorithm has time complexity $O(H \log n)$,
+where $H = 435$ and $n = 50$ for the federal case.
+In practice, the full priority sequence is computed once per census year.
+
+\subsection{The Geometric Mean Rounding Rule}
+
+The priority formula is equivalent to a divisor method with geometric
+mean rounding.
+For a given common divisor $d$, state $i$'s exact seat count is $p_i/d$.
+The Huntington-Hill rounding rule assigns $s_i$ seats if:
+\[
+  \sqrt{s_i(s_i+1)} \leq \frac{p_i}{d} < \sqrt{(s_i+1)(s_i+2)},
+\]
+i.e., the exact quota falls between the geometric means at $s_i$ and
+$s_i+1$.
+The geometric mean $\text{GM}(s, s+1) = \sqrt{s(s+1)}$ lies between
+$s$ and $s+1$, and for all $s \geq 1$:
+\[
+  s < \sqrt{s(s+1)} < s + 0.5 < s + 1.
+\]
+This inequality shows that HH's rounding threshold $\sqrt{s(s+1)}$
+is strictly between $s$ (Jefferson) and $s+0.5$ (Webster),
+making HH more favourable to small states than Webster
+(because HH's threshold is higher, meaning a smaller quota is needed
+to round up) but less favourable than Adams (ceiling rounding).
+
+\subsection{Worked Example}
+
+Consider a 5-state example with populations $(100, 100, 50, 25, 1)$
+and $H = 10$ seats.
+The exact national divisor is $d = 276/10 = 27.6$.
+The exact quotas are:
+\begin{align*}
+q_1 &= 100/27.6 = 3.623, \quad q_2 = 3.623, \quad q_3 = 1.812, \\
+q_4 &= 0.906, \quad q_5 = 0.036.
+\end{align*}
+Hamilton assigns: 4, 4, 2, 1, 1 (lower quotas 3,3,1,0,0 plus 5 remainders go to states 1,2,3,4,5).
+Wait---5 must receive 1 by constitutional floor; Hamilton then assigns
+lower quotas 3, 3, 1, 0, 0 plus 5 remainder seats to states 1 (0.623),
+2 (0.623), 3 (0.812), 4 (0.906), 5 (0.036):
+\[
+\text{Hamilton: } 4, 4, 2, 1, 1.
+\]
+Huntington-Hill priority sequence for seats 6--10 (after the initial
+5 seats assigned):
+\begin{center}
+\begin{tabular}{cccc}
+\toprule
+Seat & State & $s_i$ before & $P_i(s_i) = p_i/\sqrt{s_i(s_i+1)}$ \\
+\midrule
+6 & 1 & 1 & $100/\sqrt{2} = 70.71$ \\
+7 & 2 & 1 & $100/\sqrt{2} = 70.71$ \\
+8 & 3 & 1 & $50/\sqrt{2} = 35.36$ \\
+9 & 1 & 2 & $100/\sqrt{6} = 40.82$ \\
+10 & 2 & 2 & $100/\sqrt{6} = 40.82$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+Result: state 1 gets 3, state 2 gets 3, state 3 gets 2, states 4 and 5
+get 1 each.
+Both methods agree for this example; they diverge on census data
+near the rounding boundary.

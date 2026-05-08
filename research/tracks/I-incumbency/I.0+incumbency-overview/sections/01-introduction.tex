@@ -1,0 +1,80 @@
+\label{sec:introduction}
+
+When courts and commissions turn to algorithmic redistricting as an alternative to
+partisan line-drawing, one of the first objections raised by incumbent legislators is
+straightforward: the algorithm does not know where I live. This objection is technically
+correct. The \textsc{bisect} redistricting system~\citep{bisect2024} receives as inputs
+census tract geometries, population counts, and optionally precinct-level election data
+for edge weighting---but never incumbent addresses, party registration at the home
+address, or any other signal tied to the specific location of sitting legislators.
+The algorithm is, in the terminology of this paper, incumbency-blind.
+
+The paradox is that incumbency-blind redistricting is not incumbency-neutral in its
+consequences. When a recursive bisection algorithm draws a new district boundary, it
+creates a district that may or may not contain an incumbent's home census tract.
+Whether it does depends entirely on the geographic coincidence between district boundaries
+optimised for population balance and compactness, and the residential addresses of
+legislators whose homes were not an input to the optimisation. These coincidences are not
+random in the sense of being uniformly distributed across all possible maps; they are random
+in the sense of being drawn from the distribution implied by the algorithm's geographic
+constraints, which we call the incumbency-neutral baseline.
+
+This paper synthesises four companion papers---I.1 (incumbent pairing), I.2 (safe-seat
+creation), I.3 (open-seat effects), and I.4 (legal analysis)---into a unified framework
+for understanding how algorithmic redistricting affects incumbent legislators. Our goals
+are three:
+
+\begin{enumerate}
+  \item \textbf{Descriptive}: Document the incumbency consequences of \textsc{bisect}
+    algorithmic maps in NC, WI, and TX on three measurable dimensions (pairing rate,
+    safe-seat fraction, open-seat count), and compare these consequences to enacted
+    2022 congressional maps and to the incumbency-neutral baseline.
+  \item \textbf{Explanatory}: Identify the three mechanisms through which an
+    incumbency-blind algorithm produces incumbency outcomes: geographic restructuring,
+    partisan composition change, and constituent-base reassignment.
+  \item \textbf{Legal}: Establish that \textsc{bisect}'s constitutional silence on
+    incumbency is legally sound under existing federal doctrine, and that the
+    algorithm's outcomes are indistinguishable from what a neutral random redistricting
+    process would produce given the same geographic constraints.
+\end{enumerate}
+
+\subsection{Three Mechanisms}
+
+The paradox of incumbency-blind redistricting producing incumbency consequences is
+resolved by recognising that district boundaries affect incumbents through three
+geometric mechanisms that operate independently of any incumbent-specific intent:
+
+\paragraph{Geographic restructuring.}
+When district boundaries shift, two incumbents who previously lived in separate districts
+may find themselves in the same new district. This \textit{incumbent pairing} forces at
+least one incumbent to retire, seek an open seat in a different district, or face a
+primary against a fellow incumbent. The algorithm does not intend to pair them; the
+pairing is a consequence of population-balance optimisation drawing a boundary through
+a region where two incumbents happened to live close enough together to fall on the
+same side of the cut.
+
+\paragraph{Partisan composition change.}
+Even when an incumbent remains the sole member of Congress residing in a new district,
+the district's partisan lean may change dramatically if the algorithm's geographic
+boundary reassigns neighbourhoods that were heavily partisan in one direction. An
+incumbent who held a safe seat under the enacted plan may find herself in a competitive
+seat under the algorithmic plan---not because the algorithm targeted her, but because
+the compactness-optimal boundary happened to include or exclude a suburban ring that
+shifted the district's presidential vote share by 10 percentage points.
+
+\paragraph{Constituent-base reassignment.}
+Even with stable partisan lean, boundary shifts reassign specific communities of
+constituents from one incumbent to another. Incumbents invest heavily in constituent
+service relationships within their current districts; losing a county or a congressional
+district's share of a city disrupts those relationships and may create a different
+electoral environment regardless of aggregate partisan numbers.
+
+\subsection{Paper Organisation}
+
+Section~\ref{sec:background} reviews the legal background on incumbency as a
+redistricting criterion, covering the key federal cases and the VRA tension.
+Section~\ref{sec:methodology} introduces the three metrics (pairing rate, safe-seat
+fraction, open-seat count) and the incumbency-neutral baseline.
+Section~\ref{sec:results} presents the empirical overview across NC, WI, and TX.
+Section~\ref{sec:discussion} develops the neutrality argument and its legal implications.
+Section~\ref{sec:conclusion} concludes.

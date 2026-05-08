@@ -1,0 +1,113 @@
+\label{sec:taxonomy}
+
+The five apportionment methods divide into two families based on a
+fundamental difference in how they handle the rounding problem.
+
+\subsection{Divisor Methods}
+
+A \emph{divisor method} works by finding a common divisor $d$ such that
+when each state's population $p_i$ is divided by $d$ and rounded according
+to a fixed rounding rule $r$, the total seats equal $H$.
+Formally:
+
+\begin{definition}[Divisor Method]
+  Let $p_1, \ldots, p_n$ be state populations, $H$ the House size,
+  and $r: \mathbb{R}_{\geq 0} \to \mathbb{Z}_{\geq 0}$ a rounding function.
+  A \emph{divisor method} with rounding rule $r$ finds $d > 0$ such that
+  $\sum_{i=1}^{n} \max(1, r(p_i/d)) = H$ and assigns state $i$ the
+  seat count $s_i = \max(1, r(p_i/d))$.
+\end{definition}
+
+The constitutional floor of 1 seat per state is enforced by the $\max(1, \cdot)$
+operation.
+The four divisor methods differ only in their rounding rule:
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Method & Rounding rule $r(q)$ & Round at \\
+\midrule
+Huntington-Hill & Round at geometric mean $\sqrt{s(s+1)}$ & $\sqrt{s(s+1)}$ \\
+Webster         & Round at arithmetic mean ($+0.5$)         & $s + 0.5$ \\
+Adams           & Ceiling (always round up)                 & $s$ (lower) \\
+Jefferson       & Floor (always round down)                 & $s+1$ (upper) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Here $s = \lfloor q \rfloor$ is the integer part of the exact quota $q = p_i/d$.
+Equivalently, each divisor method defines a \emph{priority value}
+$P_i(s)$ --- the value placed on giving state $i$ its $(s+1)$-th seat
+when it currently has $s$ --- and awards successive seats to the state
+with the highest current priority:
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+Method & Priority value $P_i(s)$ for the $(s+1)$-th seat \\
+\midrule
+Huntington-Hill & $p_i / \sqrt{s(s+1)}$ \\
+Webster         & $p_i / (s + 0.5)$ \\
+Adams           & $p_i / s$ \quad (so first seat has priority $\infty$) \\
+Jefferson       & $p_i / s$ \quad (same as Adams; differs in base allocation) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The priority-queue formulation reveals why divisor methods are paradox-immune:
+the seat allocation is determined by a \emph{monotone} function of population.
+Adding seats or increasing a state's population can only increase its priority
+and thus its seat count --- never decrease it.
+This monotonicity is the defining property of the divisor family
+\citep{balinski1982fair}.
+
+\subsection{Quota Methods (Hamilton)}
+
+Hamilton's method (also called the \emph{Hare method} or \emph{largest
+remainders} method) takes a different approach.
+It computes exact quotas $q_i = p_i \times H / N$, where $N = \sum_i p_i$
+is total population, assigns each state $\lfloor q_i \rfloor$ seats
+(the \emph{lower quota}), and then distributes the remaining
+$H - \sum_i \lfloor q_i \rfloor$ seats one at a time to the states
+with the largest fractional parts $q_i - \lfloor q_i \rfloor$.
+
+\begin{definition}[Hamilton Method]
+  Given populations $p_1, \ldots, p_n$, House size $H$, and
+  $N = \sum_i p_i$:
+  \begin{enumerate}
+    \item Compute $q_i = p_i \times H / N$ for each state.
+    \item Let $r = H - \sum_i \lfloor q_i \rfloor$ (the ``remainder seats'').
+    \item Assign $s_i = \lfloor q_i \rfloor + 1$ to the $r$ states
+      with largest $q_i - \lfloor q_i \rfloor$; assign
+      $s_i = \lfloor q_i \rfloor$ to the rest.
+  \end{enumerate}
+\end{definition}
+
+Hamilton satisfies the \emph{quota rule}: each state receives either
+$\lfloor q_i \rfloor$ or $\lceil q_i \rceil$ seats.
+This is a natural fairness criterion --- no state is off by more than 1
+from its exact proportional entitlement.
+However, Hamilton is susceptible to the Alabama paradox and related
+anomalies (Section~\ref{sec:fairness}).
+The key distinction is that Hamilton's seat allocation depends on the
+\emph{joint ranking} of all states' fractional parts, which is
+non-monotone: adding a seat can change the ranking sufficiently to
+cause a state to lose one of its remainder seats.
+
+\subsection{Why the Taxonomy Matters}
+
+The divisor/quota distinction is not merely mathematical.
+It determines which methods are susceptible to paradoxes that are
+politically unacceptable.
+Congress abandoned Hamilton in 1941 precisely because the Alabama Paradox
+--- where increasing the House size caused Alabama to lose a seat ---
+was constitutionally and politically embarrassing.
+Huntington-Hill was chosen because it is (a)~a divisor method
+(paradox-immune) and (b)~the divisor method that minimises the relative
+difference in per-capita representation between any two states
+\citep{huntington1928method}.
+The Balinski-Young impossibility theorem \citep{balinski1982fair} proves
+that no method can be both a quota method (satisfying the quota rule)
+and a divisor method (paradox-immune) --- the choice of one family
+necessarily sacrifices the property of the other.

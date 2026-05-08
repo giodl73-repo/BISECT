@@ -1,0 +1,32 @@
+The Adams method represents the small-state extreme of the divisor
+method spectrum.
+Its ceiling rounding guarantees that every state receives at least
+its upper quota entitlement, and its maximisation of minimum
+per-capita representation makes it the most protective method
+for small states facing the rounding problem.
+
+The paradox immunity proof (Theorem~\ref{thm:adams-paradox})
+establishes that even the most extreme small-state bias does not
+compromise the monotone allocation property that makes divisor methods
+superior to Hamilton.
+This is an important theoretical point: paradox immunity is a consequence
+of the divisor method structure, not of any particular rounding rule.
+Adams, HH, Webster, and Jefferson are all paradox-immune despite
+spanning the entire range of small-to-large-state bias.
+
+The 2020 Census analysis shows that Adams and HH currently agree,
+reflecting the fortuitous circumstance that no state has an exact quota
+in the (narrow) range where the methods differ.
+As populations shift in future censuses, this agreement may not persist.
+\textsc{bisect-apportion}'s Adams implementation enables practitioners
+to monitor whether Adams and HH would diverge for future census data
+and to compute the counterfactual apportionment for advocacy,
+policy analysis, and litigation support.
+
+The theoretical significance of Adams extends beyond its direct applicability:
+it defines one end of the fairness spectrum that Congress implicitly
+navigated when adopting Huntington-Hill in 1941.
+Understanding where HH sits on the Adams-to-Jefferson spectrum ---
+closer to Adams than to Webster --- is essential context for
+evaluating the Supreme Court's \textit{Montana} holding that
+Congress's choice was rational.

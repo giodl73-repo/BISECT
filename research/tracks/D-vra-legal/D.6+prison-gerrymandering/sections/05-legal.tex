@@ -1,0 +1,113 @@
+\label{sec:legal}
+
+\subsection{State-by-State Adjustment Requirements}
+
+The threshold legal question for any redistricting plan in a state
+with a prison population adjustment law is straightforward: does state
+law require the adjusted or unadjusted Census data? The answer is
+not always obvious, because some state adjustment laws apply only to
+state legislative redistricting (not congressional redistricting),
+and some apply only to the decennial census year, not to mid-decade
+special redistricting cycles.
+
+Table~\ref{tab:state-requirements} summarizes the scope of each state's
+adjustment law based on statutory text as of 2026.
+
+\begin{table}[ht]
+\centering
+\caption{Scope of State Prison Population Adjustment Laws}
+\label{tab:state-requirements}
+\begin{tabular}{llcc}
+\toprule
+State & Law & Congressional & State Legislative \\
+\midrule
+California & Cal.\ Elec.\ Code \S\ 21003 & No & Yes \\
+Colorado & Colo.\ Rev.\ Stat.\ \S\ 2-1-901 & Yes & Yes \\
+Delaware & Del.\ Code Ann.\ tit.\ 29, \S\ 804 & No & Yes \\
+Illinois & 10 ILCS 5/3A-1 et seq. & No & Yes \\
+Maryland & Md.\ State Gov't Code \S\ 2-2A-01 & No & Yes \\
+Michigan & Mich.\ Comp.\ Laws \S\ 168.931 & No & Yes \\
+Montana & Mont.\ Code Ann.\ \S\ 13-2-109 & No & Yes \\
+Nevada & Nev.\ Rev.\ Stat.\ \S\ 218C.130 & No & Yes \\
+New Jersey & N.J. Stat.\ Ann.\ \S\ 52:14-1.4 & No & Yes \\
+New York & N.Y.\ Legis.\ Law \S\ 83-m & No & Yes \\
+Virginia & Va.\ Code Ann.\ \S\ 24.2-304.03 & No & Yes \\
+Washington & Wash.\ Rev.\ Code \S\ 44.05.160 & No & Yes \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item Colorado is the only state whose adjustment law applies explicitly
+to congressional redistricting. All others apply to state legislative
+redistricting only. Expert witnesses must verify current law; statutes
+may have been amended after this paper's writing.
+\end{tablenotes}
+\end{table}
+
+Congressional redistricting in most adjustment states thus proceeds on
+unadjusted Census data, while state legislative maps use adjusted data.
+This asymmetry means that a state commission drawing both congressional
+and state legislative maps must maintain two separate population datasets.
+The \textsc{bisect} pipeline handles this through the
+\texttt{--adjust-prison-population} flag: omitting the flag for the
+congressional run and including it for the state legislative run.
+
+\subsection{Algorithmic Neutrality and Court Filings}
+
+A key advantage of the \textsc{bisect} approach to prison population
+adjustment is its neutrality: the adjustment is applied uniformly
+to all census tracts in all states covered by state law, without any
+discretion about which facilities to adjust or how to weight the
+home-county reallocation. The \textsc{bisect} SHA audit chain records
+both the unadjusted and adjusted population inputs, enabling any
+party to verify that the adjustment was applied consistently.
+
+For expert witnesses, this neutrality is essential. Opposing counsel
+cannot argue that the adjustment was selectively applied to benefit
+one party, because the \textsc{bisect} implementation applies the same
+DHC-A data and NPS home-county reallocation to every correctional
+facility in the state. The adjustment methodology is documented in the
+\textsc{bisect-data} source code and in the NPS data provenance chain.
+
+\subsection{VRA Implications for Court Filings}
+
+When prison population adjustment affects a minority-opportunity district's
+BVAP or HVAP, the expert witness must explain the adjustment to the court.
+The key points are:
+
+\begin{enumerate}
+\item \textbf{Population adjustment is required by state law}: In
+adjustment states, using unadjusted Census data would produce a plan
+that does not comply with the applicable statutory requirement for
+the population base.
+
+\item \textbf{The adjustment increases accuracy of minority representation}:
+Because incarcerated people cannot vote, counting them in the prison
+district rather than their home district overstates the political representation
+of the prison district's residents and understates the representation of
+the minority community's home district. Adjustment corrects this distortion.
+
+\item \textbf{The VRA analysis uses the adjusted population}: In adjustment
+states, the \textit{Gingles} threshold analysis (whether a majority-minority
+district is feasible) should use the adjusted MVAP, not the unadjusted
+Census MVAP. Using unadjusted data in an adjustment state would systematically
+undercount the minority population of urban districts where majority-minority
+districts are most likely to be required.
+\end{enumerate}
+
+\subsection{The Non-Adjustment Case: Federal and Non-Adjustment States}
+
+In states without adjustment laws, and for congressional redistricting in
+most adjustment states, \textsc{bisect} uses unadjusted Census data.
+This is the legally required approach for those contexts: the Supreme Court
+has not required states to adjust prison populations, and absent a state
+law requiring adjustment, using the Census Bureau's official counts is the
+legally safe choice.
+
+Expert witnesses in non-adjustment states should nonetheless be prepared to
+discuss prison gerrymandering if opposing parties raise it, particularly in
+states with large prison populations (Texas, Florida, Pennsylvania, Ohio).
+The appropriate response is that (a) the applicable law does not require
+adjustment, (b) the Census Bureau's official methodology governs in the
+absence of a contrary state requirement, and (c) \textsc{bisect} can produce
+both adjusted and unadjusted plans for comparison if the court requests it.

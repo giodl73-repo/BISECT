@@ -1,0 +1,45 @@
+John Quincy Adams proposed his apportionment method in 1832 during
+the congressional debate that followed the 1830 Census.
+Adams, a former president serving in the House, objected to Jefferson's
+method on grounds that it systematically underrepresented small states.
+His proposed remedy was the opposite extreme: always round up.
+Under Adams, every state receives at least the ceiling of its
+exact proportional quota, ensuring that no state loses representation
+due to fractional rounding.
+
+Adams's method was never adopted for federal congressional apportionment.
+In the 1832 debate, Congress ultimately chose neither Adams nor Jefferson
+but moved toward Webster's arithmetic mean rounding \citep{balinski1982fair}.
+The political economy of apportionment reform consistently favoured
+compromises between small-state and large-state interests,
+and Adams's ceiling rounding --- which gave small states an extra seat
+even when their exact quota was barely above an integer ---
+was seen as excessive in the other direction from Jefferson.
+
+Despite its lack of federal adoption, Adams is theoretically important
+for three reasons.
+First, it defines one extreme of the divisor method spectrum:
+Adams is the unique divisor method that is most small-state-favoring
+(just as Jefferson is the unique divisor method that is most
+large-state-favoring).
+The spectrum Adams $\succ$ HH $\succ$ Webster $\succ$ Jefferson
+provides the theoretical context for understanding what Huntington-Hill's
+choice of geometric mean rounding achieves --- it is a deliberate
+position between the two extremes.
+Second, Adams's maximisation of minimum per-capita representation
+(proved in Section~\ref{sec:bias}) is a meaningful fairness criterion:
+it ensures that the most underrepresented state is as well-represented
+as possible.
+Third, Adams is paradox-immune as a divisor method, providing a concrete
+example that paradox immunity does not require near-neutral rounding ---
+even ceiling rounding, which is aggressively biased toward small states,
+preserves the monotone allocation property.
+
+\subsection{Scope}
+
+This paper proves Adams's small-state optimality (Section~\ref{sec:bias}),
+establishes paradox immunity (Section~\ref{sec:paradox}),
+computes the 2020 Census Adams apportionment and compares it to
+Huntington-Hill and Webster (Section~\ref{sec:empirical}),
+and documents the \textsc{bisect-apportion} implementation
+(Section~\ref{sec:implementation}).

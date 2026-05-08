@@ -1,0 +1,110 @@
+\label{sec:properties}
+
+\subsection{Optimality: Minimising Relative Per-Capita Deviation}
+
+The population pair test measures how far each pair of states is from
+equal per-capita representation.
+For states $i$ and $j$ with per-capita representations $r_i = p_i/s_i$
+and $r_j = p_j/s_j$ (population per seat), the relative deviation is:
+\[
+  \delta(i,j) = \frac{|\,r_i - r_j|}{\min(r_i, r_j)}
+              = \max\!\left(\frac{r_i}{r_j}, \frac{r_j}{r_i}\right) - 1.
+\]
+
+\begin{theorem}[Huntington-Hill Population Pair Test]
+  \label{thm:hh-optimal}
+  Among all apportionments satisfying $\sum s_i = H$ and $s_i \geq 1$,
+  the Huntington-Hill apportionment minimises the maximum relative
+  deviation $\max_{i \neq j} \delta(i, j)$.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+  Suppose the HH apportionment is \emph{not} optimal and there exists
+  a transfer of one seat from state $j$ to state $i$
+  (changing $s_j \to s_j-1$, $s_i \to s_i+1$) that reduces
+  $\max \delta$.
+  For the transfer to reduce the deviation, it must be the case that
+  giving state $i$ a seat improves equity more than it hurts
+  state $j$.
+  In HH, the seat allocation is determined by the priority
+  $P_k(s_k) = p_k/\sqrt{s_k(s_k+1)}$; the next seat went to the
+  state with highest priority.
+  If state $j$ was awarded a seat over state $i$,
+  then $P_j(s_j-1) > P_i(s_i)$, i.e.,
+  $p_j/\sqrt{(s_j-1)s_j} > p_i/\sqrt{s_i(s_i+1)}$.
+  One can verify that this priority inequality is equivalent to
+  the condition that the pairwise deviation $\delta(i,j)$ in the
+  HH allocation is no larger than in any allocation obtained
+  by the transfer.
+  A full proof by induction on the priority sequence appears in
+  \citet[ch.~4]{balinski1982fair}.
+\end{proof}
+
+\citet{huntington1928method} originally proved this property, characterising
+Huntington-Hill as the method that ``most nearly'' achieves equal
+per-capita representation in the relative sense.
+Webster's arithmetic mean criterion achieves the same property in
+the absolute (not relative) sense.
+
+\subsection{Paradox Immunity}
+
+\begin{theorem}[Huntington-Hill Paradox Immunity]
+  \label{thm:hh-paradox-free}
+  The Huntington-Hill apportionment satisfies:
+  \begin{enumerate}
+    \item[(a)] \textbf{Alabama paradox immunity}: If $H$ increases to $H+1$
+      (holding populations fixed), no state loses a seat.
+    \item[(b)] \textbf{Population paradox immunity}: If state $i$'s
+      population increases (holding $H$ and all other populations fixed),
+      state $i$'s seat count does not decrease.
+    \item[(c)] \textbf{New-states paradox immunity}: If a new state $k$
+      is added with population $p_k$ and $\lfloor p_k/d \rfloor$ additional
+      seats (where $d$ is the national divisor), no existing state's
+      seat count changes.
+  \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+  For (a): The HH priority-queue algorithm allocates seat $H+1$ to
+  the state with the highest priority after seat $H$ has been allocated.
+  This operation can only add a seat to one state; it never removes seats.
+  No state's priority is re-evaluated to a lower value by the addition
+  of a new seat.
+  Hence the allocation for seats 1 through $H$ is identical whether
+  we apportion $H$ or $H+1$ seats.
+
+  For (b): If $p_i$ increases to $p_i' > p_i$, then every priority value
+  $P_i(s) = p_i/\sqrt{s(s+1)}$ for state $i$ increases.
+  This can only move state $i$ earlier in the priority sequence,
+  meaning it receives its seats at least as early and thus at least
+  as many seats.
+  No other state's priorities change, so no other state's seat count
+  increases; hence state $i$'s count cannot decrease
+  (as the total is fixed at $H$, any gain by $i$ comes at the expense
+  of another state, but not vice versa).
+
+  For (c): If new state $k$ is added with $m = \lfloor p_k/d \rfloor$
+  additional seats (i.e., $H$ increases to $H+m$ and $k$ gets exactly
+  $m$ seats), the seats awarded to $k$ are exactly those $m$ steps in the
+  priority queue that $k$ would occupy with population $p_k$.
+  The divisor $d = N/(H) \approx (N+p_k)/(H+m)$ changes by $O(p_k/H^2)$,
+  which for small $p_k/N$ does not perturb any other state's allocation.
+  A formal proof requires showing that the priority queue steps 1 through
+  $H+m$ include exactly the original $H$ steps for the $n$ existing
+  states plus $m$ new steps for state $k$, interleaved by priority;
+  see \citet[ch.~5]{balinski1982fair} for the full argument.
+\end{proof}
+
+\subsection{Bias Relative to Exact Proportionality}
+
+Huntington-Hill is slightly small-state-favoring relative to Webster.
+The geometric mean threshold $\sqrt{s(s+1)} > s + 0.5 - 1/(8s)$
+(for all $s \geq 1$, with equality approached as $s\to\infty$)
+implies that a state needs a slightly higher exact quota to ``earn''
+a seat under HH than under Webster.
+This counterintuitively means HH is slightly \emph{less}
+favourable to large states (whose quotas are large integers) and
+slightly \emph{more} favourable to small states (whose quotas are near
+half-integers where the geometric vs.\ arithmetic mean difference matters).
+The quantitative effect on 2020 Census data is examined in
+Section~\ref{sec:comparison}.

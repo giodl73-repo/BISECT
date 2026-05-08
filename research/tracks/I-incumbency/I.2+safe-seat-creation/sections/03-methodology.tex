@@ -1,0 +1,60 @@
+\label{sec:methodology}
+
+\subsection{Algorithmic Map Generation}
+
+We generate \textsc{bisect} congressional maps for NC ($k=14$), WI ($k=8$), and TX
+($k=38$) using 2020 Census PL 94-171 population data and TIGER/Line tract geometries.
+The algorithm is invoked as:
+\begin{verbatim}
+bisect build <state>_incumb_test --year 2020
+    --structure prime-factor
+    --weights-override geographic
+    --workers 8
+\end{verbatim}
+The \texttt{--weights-override geographic} flag instructs the algorithm to use only
+geographic edge weights (shared boundary length between adjacent tracts), without
+incorporating any precinct-level partisan data. This ensures that the algorithm has
+no information about where Democratic or Republican voters are concentrated.
+
+Single-seed results use seed\,$=42$ and are marked with $^\dagger$.
+
+\subsection{Partisan Data Assignment}
+
+After generating the \textsc{bisect} district assignments, we assign 2020 VEST
+presidential precinct returns to each district by:
+\begin{enumerate}
+  \item Performing an area-weighted spatial join of VEST precincts to 2020 census
+    tract polygons, producing tract-level estimates of $V_t^D$ and $V_t^R$.
+  \item Summing $V_t^D$ and $V_t^R$ across all tracts $t$ assigned to each district $d$
+    to produce district-level vote totals.
+  \item Computing $v_d^D = V_d^D / (V_d^D + V_d^R)$.
+\end{enumerate}
+
+The same procedure is applied to the enacted 2022 congressional district boundaries.
+This ensures that any differences in safe-seat counts between algorithmic and enacted
+maps are attributable to differences in district boundary placement, not to differences
+in how partisan data is assigned.
+
+\subsection{Competitive District Count}
+
+A district is classified as competitive if $|v_d^D - 0.50| \leq 0.05$ (within 5
+percentage points of parity), lean-D if $v_d^D \in (0.50, 0.65]$, lean-R if
+$v_d^D \in [0.35, 0.50)$, safe-D if $v_d^D > 0.65$, and safe-R if $v_d^D < 0.35$.
+Each district falls into exactly one category.
+
+\subsection{Statistical Testing}
+
+To test whether the difference in safe-seat fractions between \textsc{bisect} and
+enacted maps is statistically significant, we use a two-sample test of proportions.
+Let $f_\text{alg}$ be the algorithmic safe-seat fraction and $f_\text{enact}$ be
+the enacted safe-seat fraction, with sample sizes $k_\text{alg} = k_\text{enact} = k$.
+The test statistic is:
+\[
+  z = \frac{f_\text{enact} - f_\text{alg}}{\sqrt{\hat{p}(1-\hat{p})(1/k + 1/k)}},
+\]
+where $\hat{p} = (f_\text{enact} + f_\text{alg})/2$ is the pooled proportion.
+We report the one-sided $p$-value for the hypothesis that $f_\text{enact} > f_\text{alg}$.
+
+Note that the single-seed nature of the \textsc{bisect} results introduces additional
+uncertainty not captured by the binomial test; the reported $p$-values should be
+interpreted as lower bounds on the evidence against the null.

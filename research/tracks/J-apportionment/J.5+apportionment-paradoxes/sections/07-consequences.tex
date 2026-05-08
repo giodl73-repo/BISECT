@@ -1,0 +1,88 @@
+\label{sec:consequences}
+
+\subsection{The 1941 Congressional Decision}
+
+The Alabama Paradox was politically toxic.
+It meant that:
+\begin{enumerate}
+  \item A state's senators could vote to expand the House,
+    believing this would help their state, only to discover that
+    their state lost a seat.
+  \item The ``natural'' solution of increasing $H$ until all paradoxes
+    disappeared was infeasible: the paradox can recur at any $H$.
+  \item States near the remainder-seat boundary were perpetually
+    uncertain about their seat count, making redistricting planning
+    difficult.
+\end{enumerate}
+
+The National Academy of Sciences panel, reporting in 1929 and again
+in 1941, recommended Huntington-Hill specifically because it is
+a divisor method and therefore paradox-immune.
+The 1941 Act adopted Huntington-Hill, ending the use of Hamilton
+for federal apportionment.
+The \textit{Montana} case (1992) confirmed that Congress's rejection
+of quota compliance in favour of paradox immunity was constitutional.
+
+\subsection{Implications for State Legislative Apportionment}
+
+Some states use Hamilton for their own legislative apportionments,
+accepting the quota-compliance guarantee at the cost of paradox
+susceptibility.
+This is legally permissible: the choice of apportionment method for
+state legislatures is governed by state law and subject to the
+one-person-one-vote standard of \textit{Wesberry v.\ Sanders} (1964)
+and \textit{Reynolds v.\ Sims}, 377 U.S.\ 533 (1964),
+but not to any specific formula requirement.
+
+Redistricting practitioners should be aware that when advising on
+state legislative apportionment, the choice of method carries
+the Balinski-Young tradeoff: Hamilton offers quota compliance
+at the cost of the Alabama Paradox; divisor methods offer
+paradox immunity at the cost of occasional quota violations.
+
+\subsection{Implications for \textsc{bisect-apportion}}
+
+The \textsc{bisect-apportion} crate implements the
+\texttt{check\_alabama\_paradox} function, which tests whether
+a given population vector and House size produce a paradox
+under Hamilton:
+\begin{verbatim}
+fn check_alabama_paradox(
+    populations: &[(String, u64)],
+    house_size: usize,
+) -> Option<(String, usize, usize)>
+\end{verbatim}
+Returns \texttt{Some((state\_name, seats\_at\_H, seats\_at\_H+1))}
+if a paradox is found, \texttt{None} otherwise.
+For Huntington-Hill, this function always returns \texttt{None}
+(formal guarantee from Theorem~\ref{thm:divisor-immune}).
+For Hamilton, it may return a paradox for some House sizes.
+
+The function enables practitioners to:
+\begin{itemize}
+  \item Verify that their apportionment method is paradox-free
+    for the current census data.
+  \item Demonstrate to a court that the chosen method is
+    house monotone, supporting the argument that the method
+    does not produce arbitrary results.
+  \item Analyse whether alternative methods (e.g., Hamilton for a
+    state legislative chamber) would produce paradoxes at relevant
+    House sizes.
+\end{itemize}
+
+\subsection{International Context: Electoral Systems}
+
+The Balinski-Young framework applies equally to PR electoral systems.
+The equivalences in J.4 (Jefferson = d'Hondt) and J.2 (Webster =
+Sainte-Lagu\"e) establish that the U.S.\ apportionment debate
+is formally equivalent to the PR system debate.
+
+Countries using Hamilton (Hare-Niemeyer method, as it is called
+in Germany's historical context) are subject to the same paradoxes
+for party-list seat allocation.
+Germany switched from Hamilton to Webster (Sainte-Lagu\"e) in 2008
+partly because of documented paradox instances in German Bundestag
+seat allocation under Hamilton.
+This international parallel confirms that the Balinski-Young theorem
+is not a U.S.-specific curiosity but a universal mathematical
+constraint on any proportional allocation system.

@@ -1,0 +1,67 @@
+\label{sec:discussion}
+
+The central finding of this paper is that \textsc{bisect} algorithmic maps produce
+incumbency outcomes statistically indistinguishable from the incumbency-neutral baseline,
+while enacted maps produce outcomes systematically below that baseline on pairing rate
+and above it on safe-seat fraction. This finding is analytically expected but empirically
+important: it demonstrates that the discrepancy between algorithmic and enacted maps is
+not an artefact of geographic constraints (which affect both maps equally) but of
+deliberate mapmaker choices about where to draw district boundaries relative to incumbent
+addresses and partisan voter concentrations.
+
+\subsection{The Neutrality Argument}
+
+We call this the \textit{neutrality argument}: the \textsc{bisect} algorithm is
+incumbency-neutral not in the sense that it produces no incumbency consequences, but in
+the sense that the incumbency consequences it produces are a predictable function of
+geography alone. Given the geographic distribution of a state's voters and the location
+of incumbent homes within that geography, the algorithm produces a specific incumbency
+outcome, and that outcome is well characterised by the incumbency-neutral random baseline.
+No strategic choice about incumbency protection is embedded in the algorithm; the only
+embedded choices are about population balance, contiguity, and compactness.
+
+This distinction matters legally. When a state legislator testifies that a proposed
+algorithmic map ``unfairly pairs'' two incumbents, the appropriate response is not that
+pairing was intended, but that pairing was the inevitable result of drawing compact,
+population-balanced districts in a geography where those two incumbents live geographically
+close to each other. The enacted map's zero pairing rate, by contrast, is not a function
+of geography---it is a function of deliberate boundary choices that required access to
+incumbent address data and the political will to use that data to protect incumbents.
+
+\subsection{Incumbency Outcomes as Purely Geometric}
+
+The three mechanisms identified in Section~\ref{sec:introduction} all reduce to the
+same geometric observation: \textsc{bisect} draws district boundaries by optimising a
+cost function that has nothing to do with incumbent locations, and the resulting
+boundaries happen to intersect the geographic distribution of incumbents in ways that
+produce pairing, partisan composition change, and constituent reassignment. These
+outcomes are fully determined by two inputs: the algorithm's geographic optimisation
+and the geographic distribution of incumbent homes. Neither input involves any strategic
+assessment of incumbency; the outcomes are therefore purely geometric, not strategic.
+
+Enacted maps, by contrast, produce incumbency outcomes that cannot be explained by
+geography alone. The enacted maps' zero pairing rates and high safe-seat fractions require
+an explanation that goes beyond compact geography---they require the hypothesis that
+mapmakers actively used incumbent addresses and partisan data to engineer protective
+boundaries. I.1 and I.2 provide formal statistical tests of this hypothesis; both
+papers reject the null that enacted pairing rates and safe-seat fractions are consistent
+with random redistricting.
+
+\subsection{Implications for Expert Witness Testimony}
+
+The neutrality argument has direct implications for redistricting litigation. When an
+expert witness proposes \textsc{bisect} maps as a neutral baseline in a gerrymandering
+case, opposing counsel may argue that the algorithm ``unfairly'' disrupts incumbency by
+producing more pairings and more open seats than the enacted map. The neutrality argument
+provides the response: the algorithmic map produces incumbency outcomes consistent with
+what a neutral random process would produce given the state's geography. The enacted map's
+lower pairing rate and higher safe-seat fraction are not geographic necessities; they are
+choices. Any map that achieves a lower pairing rate than the algorithmic baseline does so
+by using incumbent location data---a choice, not a necessity.
+
+This framing also addresses the VRA tension noted in Section~\ref{sec:background}. When
+a \textsc{bisect} map pairs a minority incumbent with an Anglo incumbent, it does so
+because their homes happen to fall on the same side of a geographically optimal boundary,
+not because the algorithm targeted either incumbent. The pairing is a geographic accident;
+the remedy, if any, lies in post hoc adjustment of the boundary to honour VRA requirements,
+not in attributing strategic intent to an algorithm that had none.

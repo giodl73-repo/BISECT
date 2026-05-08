@@ -1,0 +1,56 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{multirow}
+
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+\title{\textbf{Incumbent-Pairing Probability Under Algorithmic Redistricting}}
+
+\author{Giovanni Della-Libera}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Incumbent Pairing, Algorithmic Redistricting, Random Baseline, Redistricting Criteria,
+Congressional Elections, \textsc{bisect}, North Carolina, Wisconsin, Texas
+
+\section{Introduction}
+\input{sections/01-introduction}
+
+\section{Mathematical Framework: Pairing Rate and Analytical Baseline}
+\input{sections/02-background}
+
+\section{Incumbent Pairing Under Algorithmic Redistricting}
+\input{sections/03-methodology}
+
+\section{Empirical Results}
+\input{sections/04-results}
+
+\section{Legal Landscape: Incumbency as a Permissible Factor}
+\input{sections/05-discussion}
+
+\section{Conclusion}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

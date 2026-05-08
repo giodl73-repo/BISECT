@@ -1,0 +1,87 @@
+Every ten years, following the decennial census, the United States Congress
+apportions 435 House seats among the 50 states in proportion to population.
+This apportionment step --- not redistricting, which comes after --- determines
+\emph{how many} seats each state receives before a single district boundary
+is drawn.
+Getting the apportionment step right is a precondition for any legitimate
+redistricting: a pipeline that draws 15 districts for North Carolina
+when that state is entitled to 14 has introduced an error at the foundation
+that no amount of subsequent algorithmic sophistication can correct.
+
+The constitutional mandate is clear in form but silent on method.
+Article~I, \S2 reads: ``Representatives\ldots shall be apportioned among
+the several States according to their respective Numbers,'' and
+the Fourteenth Amendment, \S2, refined this to ``the whole number of persons
+in each State.''
+The Supreme Court confirmed in \textit{Wesberry v.\ Sanders}, 376 U.S.\ 1
+(1964), that congressional districts must be as equal in population as
+practicable \citep{wesberry1964}, establishing that mathematical precision
+in apportionment and districting is a constitutional value.
+Yet Congress has changed the apportionment method eleven times since 1789
+\citep{balinski1982fair}, and each change has reflected different
+mathematical and political judgements about what ``proportional'' means
+when the exact quotas are not integers.
+
+\subsection{The Rounding Problem}
+
+The core mathematical difficulty is that exact proportional shares are
+generally not integers.
+If the U.S.\ apportionment population is $N = 331{,}108{,}434$ and the
+House size is $H = 435$, the national divisor is $d = N/H \approx 761{,}169$
+persons per seat.
+California's apportionment population of approximately $39{,}538{,}223$
+yields an exact quota of $q_{\text{CA}} = 39{,}538{,}223 / 761{,}169
+\approx 51.94$ seats --- which must be rounded to an integer.
+Wyoming's population of approximately $576{,}851$ yields a quota of
+$q_{\text{WY}} \approx 0.758$, which must be rounded to at least 1
+(the constitutional minimum).
+Different rounding rules for these fractional parts define different
+apportionment methods, and they disagree in close cases.
+
+\subsection{Five Methods}
+
+The five methods that have received serious legislative and academic
+attention are:
+\begin{enumerate}
+  \item \textbf{Huntington-Hill (equal proportions)}: round at the geometric
+    mean of consecutive integers; used since 1941 \citep{huntington1928method}.
+  \item \textbf{Webster (major fractions)}: round at the arithmetic mean
+    (i.e., at 0.5); used 1842 and 1911--1940 \citep{balinski1982fair}.
+  \item \textbf{Adams (smallest divisors)}: always round up (ceiling);
+    never used federally but studied for its small-state properties
+    \citep{balinski1982fair}.
+  \item \textbf{Jefferson (greatest divisors)}: always round down (floor);
+    used 1790--1840 under Jefferson's recommendation \citep{schmeckebier1941congressional}.
+  \item \textbf{Hamilton (largest remainders)}: allocate integer parts first,
+    then distribute remaining seats to states with largest fractional remainders;
+    used 1850--1900 \citep{balinski1982fair}.
+\end{enumerate}
+Methods 1--4 belong to the \emph{divisor family}; method 5 is a \emph{quota method}.
+This distinction is the most important structural division in apportionment theory.
+
+\subsection{Scope and Contribution}
+
+This paper makes three contributions to the J-track.
+First, we develop the divisor vs.\ quota taxonomy formally, showing that
+the two families differ not just in computation but in their fundamental
+mathematical properties (Section~\ref{sec:taxonomy}).
+Second, we characterise all five methods along three fairness dimensions ---
+the population pair test (which divisor method treats each pair of states
+most equitably), the quota rule (which methods guarantee that each state
+receives a seat count within 1 of its exact quota), and bias direction
+(which states gain or lose seats relative to strict proportionality)
+--- and provide the 2020 Census seat allocation table for all five methods
+and all 50 states (Section~\ref{sec:fairness}).
+Third, we document the \textsc{bisect-apportion} crate's implementation
+of all five methods and its SHA-256-verified reproduction of the official
+2020 apportionment (Section~\ref{sec:implementation}).
+
+\subsection{Data}
+
+All computations use 2020 Census Bureau apportionment population figures
+as published in the April~26, 2021 release \citep{census2020apportionment}.
+The apportionment population for each state counts all residents including
+overseas federal employees allocated to a home state; it excludes the
+District of Columbia (which has no House representation) and U.S.\ territories.
+Total apportionment population: 331{,}108{,}434.
+House size: 435.

@@ -1,0 +1,69 @@
+\subsection{2020 Census: Webster vs.\ Huntington-Hill}
+
+We compute the Webster apportionment for 2020 Census data using
+\textsc{bisect-apportion}'s Webster implementation.
+The Webster divisor is found by binary search starting from the natural
+divisor $d_0 = 761{,}169$ and adjusting until
+$\sum_i \max(1, \lfloor p_i/d + 0.5 \rfloor) = 435$.
+
+\textbf{Result}: For the 2020 Census, Webster produces the same seat
+allocation as Huntington-Hill for all 50 states.
+
+This agreement is not coincidental: it reflects the fact that for the
+2020 Census population distribution, no state's exact quota (using the
+Webster divisor) falls in the interval $(\sqrt{s(s+1)}, s+0.5)$ for
+any $s$.
+In other words, all states are either clearly above or clearly below the
+rounding threshold under both methods.
+
+\subsection{States Near the Boundary}
+
+The states closest to a rounding threshold under Webster in 2020 are
+those whose exact quotas $q_i = p_i \times 435 / 331{,}108{,}434$
+have fractional parts nearest to 0.5.
+
+\begin{table}[h]
+\centering
+\caption{States with exact quotas nearest to 0.5 rounding thresholds,
+  2020 Census (Webster method).}
+\label{tab:near-boundary}
+\begin{tabular}{lrrrr}
+\toprule
+State & Population & Exact quota & Fractional part & Webster seats \\
+\midrule
+Montana   & 1,084,225  & 1.425 & 0.425 & 2 \\
+Rhode Island & 1,097,379 & 1.442 & 0.442 & 2 \\
+New Hampshire & 1,377,529 & 1.811 & 0.811 & 2 \\
+Hawaii    & 1,455,271  & 1.912 & 0.912 & 2 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item States with fractional parts far from 0.5 are not affected by the
+  HH vs.\ Webster choice. Montana and Rhode Island, with fractional parts
+  near 0.42--0.44, are the states closest to a different outcome under
+  a small perturbation of the divisor.
+\end{tablenotes}
+\end{table}
+
+Montana is the most historically significant near-threshold state:
+its 2020 population of 1{,}084{,}225 gives it a quota of $\approx 1.425$
+under both HH and Webster.
+Under both methods, this rounds to 2 seats.
+Under the 1990 Census, Montana's lower population placed it below the
+HH threshold for a second seat (receiving 1), triggering the
+\textit{Montana} litigation.
+
+\subsection{Historical Census Comparisons}
+
+Webster and Huntington-Hill do not always agree.
+For the 1940 Census (the last apportionment under Webster before
+the 1941 Act adopted HH), the methods differed for Michigan:
+Webster would give Michigan 17 seats, HH gives 17 seats for that
+census --- the methods happened to agree.
+More interesting is the comparison on hypothetical House sizes:
+at $H = 400$, Webster and HH differ by 1 seat for at least one state
+in the 2020 Census distribution; at $H = 435$, they agree.
+This size-dependence illustrates that the methods' agreement or
+disagreement is a function of the specific population distribution
+and House size, not a general rule.

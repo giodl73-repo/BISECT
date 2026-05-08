@@ -1,0 +1,70 @@
+The mathematical study of apportionment began in earnest with a paradox.
+In 1880, the chief clerk of the Census Bureau, C.\ W.\ Seaton, computed
+apportionments for House sizes ranging from 275 to 350.
+He discovered that when the House was sized at 299, Alabama received 8 seats;
+when sized at 300, Alabama received only 7.
+The addition of a seat to the House had caused a state to \emph{lose} a seat.
+
+This result, which came to be called the \emph{Alabama Paradox},
+was not a computational error.
+It was a mathematical property of the Hamilton method --- the method
+then in use for U.S.\ congressional apportionment.
+Seaton wrote to members of Congress to report the finding,
+and it triggered a political crisis: if the House size could not be
+set without risking arbitrary redistributions of seats,
+the entire apparatus of periodic reapportionment was in question.
+
+The Alabama Paradox was not isolated.
+Two related paradoxes were discovered in subsequent decades:
+\begin{enumerate}
+  \item \textbf{Population Paradox} (documented for 1900 Census):
+    A state whose population grows faster than another may nonetheless
+    lose a seat to the slower-growing state at the next apportionment.
+  \item \textbf{New-States Paradox} (Oklahoma, 1907):
+    When Oklahoma was admitted to the Union with a proportional increase
+    in House size, the rounding of remainders caused Maine to gain a
+    seat and New York to lose one --- an exchange that had nothing to
+    do with their populations.
+\end{enumerate}
+
+All three paradoxes share a common mathematical root: Hamilton's
+distribution of remainder seats by fractional-part ranking is
+non-monotone.
+The ranking of fractional parts changes as House size increases,
+populations change, or new states are added, and these changes can
+rearrange which states receive remainder seats in counterintuitive ways.
+
+The resolution came in two stages.
+First, Congress replaced Hamilton with Huntington-Hill in 1941,
+eliminating the paradoxes by switching to a divisor method.
+Second, Balinski and Young \citeyearpar{balinski1982fair} proved in 1982
+that this tradeoff is fundamental: no apportionment method can simultaneously
+satisfy the quota rule (each state within 1 of its exact quota) and be
+paradox-immune.
+The Alabama Paradox and the quota rule are mathematically incompatible.
+
+\subsection{Scope and Organisation}
+
+This paper provides:
+\begin{itemize}
+  \item A formal definition of each paradox and a numerical demonstration
+    under Hamilton (Sections~\ref{sec:alabama}--\ref{sec:newstates}).
+  \item A formal proof of divisor method immunity to all three paradoxes
+    (Section~\ref{sec:immunity}).
+  \item A proof sketch of the Balinski-Young impossibility theorem
+    (Section~\ref{sec:balinski-young}).
+  \item Policy and historical consequences (Section~\ref{sec:consequences}).
+\end{itemize}
+The mathematical level is accessible to readers with undergraduate
+mathematics (real analysis, basic combinatorics) but sufficient for
+use in expert witness testimony or appellate-level policy analysis.
+
+\subsection{Notation}
+
+Throughout: $n$ states, populations $p_1, \ldots, p_n > 0$,
+$N = \sum_i p_i$, House size $H \geq n$,
+exact quotas $q_i = p_i \times H / N$.
+An apportionment is a vector $(s_1, \ldots, s_n)$ with $s_i \geq 1$
+and $\sum_i s_i = H$.
+For Hamilton: lower quotas $\lfloor q_i \rfloor$,
+fractional parts $f_i = q_i - \lfloor q_i \rfloor$.

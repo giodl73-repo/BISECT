@@ -1,0 +1,87 @@
+\label{sec:methodology}
+
+\subsection{Measuring County Splits in \textsc{bisect} Plans}
+
+A \textit{county split} occurs when a county's population is divided
+between two or more congressional districts. County splits are measured
+by the number of distinct (county, district) pairs in the final plan
+minus the number of counties: if Texas has 254 counties and the plan
+assigns them to 38 districts with 60 county splits, there are $254 + 60 = 314$
+county-district pairs.
+
+For Section~203 purposes, the relevant measure is whether a
+\textit{Section~203-covered county} is split. Non-covered counties can be
+split without Section~203 administrative consequences. The metric used here
+is:
+
+\[
+\text{Covered County Splits} = \sum_{c \in \text{covered counties}} \mathbf{1}[\text{county } c \text{ spans} > 1 \text{ district}]
+\]
+
+\subsection{\textsc{bisect} Mode Comparison}
+
+Two \textsc{bisect} operating modes are relevant for Section~203:
+
+\textbf{Standard geographic mode} (\texttt{--weights-override geographic}):
+Edge weights are proportional to the length of the shared boundary between
+adjacent census tracts, scaled by population. This mode optimizes for
+geographic compactness without specific consideration of county boundaries.
+County splits occur when the bisection algorithm determines that splitting
+a county produces a more balanced population partition.
+
+\textbf{County-weight mode} (\texttt{--weights-override county}):
+Edge weights on tract-to-tract boundaries that cross county lines are
+reduced by a penalty factor, making the algorithm reluctant to cut
+cross-county edges. This directly encodes a preference for county
+integrity into the optimization. County splits still occur where
+necessary for population balance, but the algorithm minimizes them.
+
+The county-weight mode is particularly relevant for Section~203 analysis
+because it specifically targets the administrative unit (the county)
+at which Section~203 coverage is determined and at which election
+administration is organized.
+
+\subsection{Community Integrity Metric}
+
+Beyond county splits, a finer-grained measure is needed for the analysis
+of language minority communities that are smaller than counties. For the
+Vietnamese community in Santa Clara County (California) and the Spanish-speaking
+colonias in Hidalgo County (Texas), the relevant unit is not the county
+but the census tract cluster that constitutes the community.
+
+The community integrity metric used here is the fraction of language-minority
+census tracts in a defined community that are assigned to the plurality district
+(the district that receives the most tracts from the community):
+
+\[
+\text{Community Integrity} = \frac{\max_d |\{t \in C : d(t) = d\}|}{|C|}
+\]
+
+where $C$ is the set of census tracts in the community, $d(t)$ is the
+district assigned to tract $t$, and $d$ ranges over all districts. A score
+of 1.0 means the community is perfectly intact (all tracts in one district);
+a score of 0.5 means the community is split evenly between two districts.
+
+\subsection{Dispersed vs.\ Concentrated Language Communities}
+
+Not all Section~203-covered language communities benefit equally from
+\textsc{bisect}'s compactness optimization. Two distinct geographic
+patterns are observed:
+
+\textbf{Concentrated communities}: Urban language minority communities
+(Vietnamese in San Jose's Little Saigon, Chinese in San Francisco's
+Chinatown, Spanish-speaking colonias along the Texas-Mexico border)
+are geographically compact. \textsc{bisect}'s geographic compactness
+optimization tends to keep these communities intact because their tracts
+form contiguous clusters that the algorithm naturally assigns to a single
+partition.
+
+\textbf{Dispersed communities}: Rural and semi-rural Spanish-speaking
+populations in Texas (outside the border region), Navajo populations
+spread across multiple Arizona counties, and similar dispersed communities
+present a more difficult case. Because the community is not geographically
+concentrated, the compactness optimization does not create natural pressure
+to keep it intact. These communities may be better served by the
+\textsc{bisect} VRA mode (\texttt{--weights-override vra-aligned}), which
+explicitly weights minority community edges higher to maintain community
+cohesion.

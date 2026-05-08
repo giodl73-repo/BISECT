@@ -1,0 +1,39 @@
+The Jefferson method occupies a unique position in the history of
+apportionment: it is simultaneously the first U.S.\ congressional
+apportionment formula and the world's most widely used electoral
+seat allocation method.
+Its floor rounding rule --- simple, deterministic, and producing
+no fractional-seat complications --- has an intuitive appeal that
+explains both Jefferson's original advocacy and d'Hondt's independent
+rediscovery.
+
+The formal equivalence between Jefferson and d'Hondt (Theorem~\ref{thm:dhondt-equiv})
+has important implications for the comparative electoral systems literature:
+the academic debates about d'Hondt's large-party bias in PR systems
+are mathematically equivalent to the historical U.S.\ debates about
+Jefferson's large-state bias in apportionment.
+The resolution adopted in both contexts was the same:
+move toward arithmetic-mean rounding (Webster/Sainte-Lagu\"e),
+which is neutral, or toward ceiling rounding (Adams), which
+protects small entities.
+
+For the \textsc{bisect} platform, the Jefferson/d'Hondt implementation
+serves two purposes.
+First, it enables counterfactual analysis of U.S.\ apportionment:
+what would the 2020 congressional map look like if Jefferson's method
+had never been replaced?
+Second, it enables comparative PR analysis: how do different seat
+allocation formulas translate vote distributions to seat allocations
+for countries using d'Hondt?
+
+The large-state-favoring bias of Jefferson is documented both theoretically
+(Theorem~\ref{thm:jefferson-bias}) and historically (Section~\ref{sec:history}).
+The 1832 controversy that led to Jefferson's abandonment was a
+genuine mathematical dispute about quota compliance, not merely
+a political conflict.
+Webster's argument that floor rounding could give a state more than
+its upper quota was mathematically correct, and Congress ultimately
+agreed.
+Understanding this history provides essential context for evaluating
+modern apportionment reform proposals and for legal analysis of
+apportionment challenges under Article~I.

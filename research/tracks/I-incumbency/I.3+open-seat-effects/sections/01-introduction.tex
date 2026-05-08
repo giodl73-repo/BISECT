@@ -1,0 +1,46 @@
+\label{sec:introduction}
+
+Open-seat elections are, by every empirical measure, more competitive than races
+featuring a sitting incumbent. \citet{cox1996legislative} document that incumbency
+advantage---the additional vote share a sitting member earns relative to an open-seat
+candidate of the same party---averaged 6--9 percentage points in the 1980s and 1990s.
+\citet{jacobson2006politics} shows that open-seat races attract higher-quality
+challengers, defined as candidates with prior elected office experience, who mount
+more effective campaigns and reduce the typical advantage of the majority party.
+\citet{cain1987incumbency} find that open-seat races in marginal districts are the
+primary mechanism by which partisan tides translate into seat changes in the House
+of Representatives.
+
+Recognising these dynamics, incumbent legislators treat open-seat creation as one of
+the primary threats of redistricting. A mapmaker who draws a district that contains
+no incumbent's home---whether by inadvertence or by design---creates an open seat in
+which the incumbent's party has no built-in advantage. An algorithmic mapmaker who
+has no information about incumbent locations will create open seats whenever the
+geometric optimisation places a district boundary in a way that excludes all incumbents'
+home tracts from a particular district. The rate at which this occurs is the
+incumbency-neutral baseline for open-seat creation.
+
+This paper derives that baseline, applies it to NC, WI, and TX, and compares the
+algorithmic open-seat count to enacted maps and to available neutral comparators
+(commission-drawn and court-drawn maps). We also develop a \textit{retirement incentive
+model} that assesses the pressures each incumbent faces under an algorithmic plan:
+incumbents who are paired with stronger opponents or whose district partisan lean
+shifts substantially face higher retirement probability, and the aggregate retirement
+pressure is higher under algorithmic than enacted plans.
+
+\subsection{Contribution}
+
+This paper makes three contributions. First, we derive the analytical expected
+open-seat count under random redistricting, accounting for geographic concentration
+of incumbent residences. Second, we test whether \textsc{bisect} algorithmic maps
+and enacted maps fall within this baseline. Third, we construct a simple retirement
+incentive model that translates open-seat counts, pairing outcomes, and partisan
+composition changes into estimates of the retirement pressure each individual incumbent
+faces.
+
+\subsection{States and Data}
+
+We study NC ($k=14$), WI ($k=8$), and TX ($k=38$) using 2020 Census tract data,
+FEC 2022 candidate filing addresses geocoded to census tracts, and VEST 2020
+presidential precinct returns. All \textsc{bisect} results use seed\,$=42$ and
+are marked with $^\dagger$.

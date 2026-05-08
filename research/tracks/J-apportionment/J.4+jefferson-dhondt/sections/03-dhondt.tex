@@ -1,0 +1,73 @@
+\label{sec:dhondt}
+
+\begin{theorem}[Jefferson-D'Hondt Equivalence]
+  \label{thm:dhondt-equiv}
+  The Jefferson apportionment method and the d'Hondt proportional
+  representation method are mathematically identical.
+  For any set of populations (or vote totals) $p_1, \ldots, p_n$
+  and total seats $H$, both methods produce the same seat allocation
+  $(s_1, \ldots, s_n)$.
+\end{theorem}
+
+\begin{proof}
+  Jefferson's priority for state $i$'s $(s+1)$-th seat is
+  $P_i^{\text{Jeff}}(s) = p_i/(s+1)$.
+  D'Hondt's priority for party $j$'s next seat when it has $s$ seats is
+  $P_j^{\text{D'H}}(s) = V_j/(s+1)$.
+  With $p_i = V_j$ (population = vote total) and $n = $ (number of
+  states) $= $ (number of parties), the two priority formulas are
+  identical: $P_i^{\text{Jeff}}(s) = P_j^{\text{D'H}}(s)$ for all $s$.
+  Since the priority-queue algorithm depends only on the priority
+  function, both methods execute identical sequences of seat awards
+  and produce identical allocations.
+\end{proof}
+
+The equivalence is an instance of a more general structural identity:
+any divisor method applied to a collection of ``vote shares''
+(whether those shares are state populations, party vote totals,
+or any other quantity to be proportionally allocated) produces
+the same seat allocation.
+The only formal difference between the U.S.\ apportionment context
+and the PR election context is the constitutional floor:
+U.S.\ apportionment requires $s_i \geq 1$ for all states, while
+PR elections do not require every party to receive a seat.
+
+\subsection{The D'Hondt Method in Practice}
+
+D'Hondt's original 1882 paper \citep{dhondt1882systeme} proposed the
+method for Belgian elections, and it was adopted by Belgium and
+subsequently spread to much of Europe, Latin America, and beyond.
+Countries using d'Hondt for national legislative elections include:
+\begin{itemize}
+  \item \textbf{Western Europe}: Belgium, Spain, Portugal, Austria,
+    the Netherlands (historically), Switzerland (partially)
+  \item \textbf{Eastern Europe}: Czech Republic, Poland, Romania,
+    Croatia, Serbia
+  \item \textbf{Latin America}: Brazil, Argentina, Colombia, Ecuador
+  \item \textbf{Other}: Japan (lower house), Turkey (modified d'Hondt),
+    Israel (modified)
+\end{itemize}
+The method is known in the literature as d'Hondt in the electoral
+context and Jefferson in the U.S.\ apportionment context.
+The failure to recognise the equivalence for much of the 20th century
+led to redundant analysis in two separate literatures
+\citep{balinski1982fair, lijphart1994electoral}.
+Balinski and Young \citeyearpar{balinski1982fair} provided the
+definitive unified treatment showing that the two bodies of work
+address the same mathematical problem.
+
+\subsection{Why D'Hondt Favors Large Parties}
+
+The equivalence proof explains why d'Hondt is widely criticised
+in the PR literature for favouring large parties (or, in the U.S.\
+context, large states):
+floor rounding discards fractional seats that would disproportionately
+benefit small parties/states.
+A party with 10\% of votes in a 10-seat system has an exact quota of 1.0;
+a party with 10.1\% has a quota of 1.01.
+Under d'Hondt, both receive 1 seat.
+Under Hamilton (largest remainders), the 10.1\% party has a
+larger fractional remainder (0.01 vs.\ 0.0) and is more likely to
+receive a remainder seat.
+Jefferson/d'Hondt's indifference to fractional remainders creates
+the systematic large-party/state bias documented in Section~\ref{sec:bias}.

@@ -1,0 +1,30 @@
+The Adams (smallest divisors) apportionment method assigns each state
+$s_i = \lceil p_i/d \rceil$ seats for a common divisor $d$ chosen to
+produce a total of $H$ seats.
+Ceiling rounding --- always rounding up --- means every state receives
+at least as many seats as its exact proportional quota demands,
+making Adams the most small-state-favoring of the five major apportionment
+methods.
+
+We prove that Adams maximises the minimum per-capita representation across
+all states: $\max_d \min_i (p_i / \lceil p_i/d \rceil)$.
+Equivalently, Adams guarantees that no state's per-capita representation
+falls below the level achieved by its upper quota entitlement.
+This property makes Adams the natural benchmark for maximum small-state
+protection in apportionment reform debates.
+
+We prove paradox immunity for the Adams method using the same
+divisor-method monotonicity argument that applies to Huntington-Hill
+and Webster: because the seat allocation is determined by a priority
+queue that only adds seats, increasing the House size or increasing a
+state's population can never reduce any state's seat count.
+
+Using 2020 Census data, Adams gives Rhode Island, Montana, and Alaska
+each one additional seat relative to Huntington-Hill,
+while large states (California, Texas, Florida) correspondingly receive
+fewer seats to maintain the 435-seat total.
+We document that Adams has not been used for federal apportionment
+in the United States but is used in some European subnational
+proportional representation systems.
+The \textsc{bisect-apportion} crate implements Adams with the same
+priority-queue architecture as the other divisor methods.

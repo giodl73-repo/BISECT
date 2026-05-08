@@ -1,0 +1,101 @@
+\label{sec:results}
+
+All results in this section are single-seed runs using
+\texttt{--search single}, reported with a dagger~($^\dagger$) per
+the \textsc{bisect} empirical reporting convention.
+
+\subsection{Texas: Spanish Section~203 Coverage and County Splits}
+
+Texas has 67 Section~203-covered jurisdictions under the 2023 determination,
+primarily for Spanish. Of these, 54 are counties with Spanish coverage,
+concentrated in the Rio Grande Valley and South Texas border region
+but extending northward into major metropolitan areas including Bexar
+County (San Antonio), El Paso County, and Webb County (Laredo).
+
+\textbf{Enacted 2022 map}: The enacted Texas 38-district congressional
+plan splits 17 of the 54 Spanish-covered counties between two or more
+districts, producing 17 covered county splits.
+
+\textbf{\textsc{bisect} standard geographic mode}: Using
+\texttt{--weights-override geographic}, \textsc{bisect} produces a plan
+with 15 covered county splits$^\dagger$---2 fewer than the enacted map,
+a 12\% reduction.
+
+\textbf{\textsc{bisect} county-weight mode}: Using
+\texttt{--weights-override county}, \textsc{bisect} reduces covered county
+splits to 11$^\dagger$---a 35\% reduction relative to the enacted map,
+and 27\% fewer than the standard geographic mode.
+
+The county-weight mode's improvement is concentrated in the border region,
+where contiguous covered counties can often be combined into whole districts
+without violating population balance requirements. Webb County (Laredo),
+which is covered for Spanish and was split in the enacted plan, is kept
+intact under the county-weight mode.
+
+\textbf{Vietnamese community in Harris County}: Texas also has three
+Section~203-covered jurisdictions for Vietnamese (Harris County, Fort Bend County,
+and Collin County). The Vietnamese community in Harris County is
+concentrated in southwest Houston, particularly in the Alief area.
+Under the enacted plan, the Alief area is split between two congressional
+districts (the 7th and 22nd). Under the \textsc{bisect} county-weight plan,
+the Vietnamese community tracts in Alief achieve a community integrity
+score of 0.73$^\dagger$ (8 of 11 tracts in the same district), up from
+0.45 under the enacted plan.
+
+\subsection{California: Multiple Language Coverage}
+
+California has 29 Section~203-covered jurisdictions under the 2023
+determination, with coverage in Spanish, Chinese (including Cantonese
+and Mandarin), Vietnamese, Korean, Filipino (Tagalog), and Japanese.
+Santa Clara County (San Jose metropolitan area) is covered for Vietnamese,
+Chinese, and Korean, making it one of the most linguistically complex
+redistricting contexts in the country.
+
+\textbf{Vietnamese community in Santa Clara County}: The Vietnamese community
+in San Jose is concentrated in a cluster of census tracts in the
+Eastside and Berryessa neighborhoods. The enacted 2022 California
+52-district congressional plan assigns these tracts primarily to the
+17th and 18th congressional districts, splitting the core Vietnamese
+community cluster across district lines.
+
+\textsc{bisect} with geographic weights assigns 3 of the 4 identified
+Vietnamese-majority tracts ($\geq 25\%$ Vietnamese-American population)
+to the same district$^\dagger$ (community integrity = 0.75), compared
+with 1 of 4 under the enacted plan (community integrity = 0.25).
+With county-weight mode, the result is the same: 3 of 4 tracts in one
+district$^\dagger$, with the fourth in a geographically adjacent district.
+
+\textbf{Spanish coverage in Los Angeles County}: Los Angeles County is
+covered for Spanish and contains 18 of California's 38 and later 52
+congressional districts. The large number of districts necessarily
+produces county splits; the question is whether Section~203-covered
+communities within the county are kept intact.
+
+\textsc{bisect} county-weight mode achieves a 9\% reduction in total
+county splits in California relative to the enacted plan$^\dagger$,
+but because Los Angeles's splits are largely driven by population
+arithmetic rather than mapmaker choice, the improvement is more modest
+than in Texas.
+
+\subsection{Summary}
+
+\begin{table}[ht]
+\centering
+\caption{Section~203 County Splits: \textsc{bisect} vs.\ Enacted Maps (2022, single-seed$^\dagger$)}
+\label{tab:results-203}
+\begin{tabular}{lcccc}
+\toprule
+State & Enacted & \textsc{bisect} & \textsc{bisect} & Reduction \\
+      & Splits  & Geographic & County-Weight & (County-Wt.\ vs.\ Enacted) \\
+\midrule
+TX (Spanish) & 17 & 15$^\dagger$ & 11$^\dagger$ & 35\% \\
+CA (all) & 22 & 21$^\dagger$ & 20$^\dagger$ & 9\% \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item Section~203 covered county splits (counties split between 2+ districts).
+      All single-seed runs ($^\dagger$). TX: 54 Spanish-covered counties;
+      CA: 29 jurisdictions across 6 languages, condensed to county level.
+\end{tablenotes}
+\end{table}

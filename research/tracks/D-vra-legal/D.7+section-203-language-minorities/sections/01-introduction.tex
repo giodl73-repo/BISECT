@@ -1,0 +1,72 @@
+\label{sec:introduction}
+
+\subsection{Section~203 in the VRA Framework}
+
+The Voting Rights Act of 1965 is most widely discussed in redistricting
+contexts through two provisions: Section~2, which prohibits voting
+practices that dilute minority voting strength, and Section~5, which
+required covered jurisdictions to seek federal preclearance before changing
+voting procedures (now effectively dormant after
+\textit{Shelby County v.\ Holder}\footnote{\textit{Shelby County
+v.\ Holder}, 570 U.S.\ 529 (2013).}). But the VRA also contains
+Section~203, a provision focused not on representation but on access:
+requiring that voting materials be provided in the language of
+qualifying minority groups so that language-minority citizens can
+participate effectively in the electoral process.
+
+Section~203, codified at 52~U.S.C.~\S~10503, was added to the VRA in 1975
+and has been renewed several times, most recently in 2006 as part of the
+Fannie Lou Hamer, Rosa Parks, and Coretta Scott King Voting Rights Act
+Reauthorization and Amendments Act of 2006 (VRARA), Pub.\ L.\ No.\ 109-246,
+120 Stat.\ 577. It requires any political subdivision where the conditions
+of Section~203(b) are met to provide all election materials in both English
+and the applicable language(s) of covered minority groups.
+
+\subsection{Why Redistricting Affects Section~203 Administration}
+
+Section~203 is determined at the jurisdictional level---counties and
+equivalent units---based on Census Bureau determinations of language
+minority population size and English literacy rates. When congressional
+district boundaries cut through a Section~203-covered county, the
+administrative requirements do not stop at the district line. The county
+election office must provide language assistance throughout the county,
+but the federal election administration (ballots, candidate information)
+is organized at the congressional district level. This mismatch creates
+coordination overhead: a county split between two congressional districts
+must manage two separate sets of district-level materials in the required
+language(s).
+
+The coordination burden is greater when the split is not clean---when
+the Section~203-covered language community is itself divided between
+the two congressional districts. If the Vietnamese-speaking community
+in Santa Clara County is split between two districts, each district's
+representative has a reduced incentive to serve that community's
+interests, and the community's political voice is diluted even though
+the county as a whole retains Section~203 coverage.
+
+\subsection{The \textsc{bisect} Connection}
+
+\textsc{bisect} produces redistricting plans using a graph-partitioning
+algorithm that treats census tracts as nodes and shared boundaries as
+edges. The algorithm's county-weight mode (\texttt{--weights-override county})
+assigns higher edge weights to the boundaries between tracts in different
+counties, penalizing county splits in the optimization. This produces
+plans with fewer county splits than algorithms that do not incorporate
+county-boundary information---and that therefore tend to be more compatible
+with Section~203 administration.
+
+This paper quantifies the Section~203 administrative benefit of
+\textsc{bisect}'s county-weight mode, compares it to enacted plans, and
+analyzes the interaction between Section~203 coverage and Section~2
+majority-minority district requirements.
+
+\subsection{Overview}
+
+Section~\ref{sec:background} sets out the Section~203 coverage formula,
+the authorizing statute, and the 2023 coverage determination.
+Section~\ref{sec:methodology} analyzes how redistricting affects
+Section~203 administration, with a focus on county splits and their
+administrative consequences. Section~\ref{sec:results} presents
+empirical results for Texas and California.
+Section~\ref{sec:legal} analyzes the interaction between Section~203
+and Section~2 requirements. Section~\ref{sec:conclusion} concludes.

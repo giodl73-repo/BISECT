@@ -1,0 +1,59 @@
+The J-track papers J.1--J.6 develop each method and the paradox theory
+in depth.
+We summarise the key finding from each paper.
+
+\paragraph{J.1 (Huntington-Hill).}
+Huntington-Hill's priority formula $P_i(s) = p_i/\sqrt{s(s+1)}$
+implements the geometric mean rounding rule.
+The paper proves that this minimises the relative difference in
+per-capita representation across all pairs of states,
+documents the 1941 statutory adoption (2~U.S.C.\ \S2a),
+and analyses the Supreme Court's upholding of this statutory
+choice in \textit{United States Dept.\ of Commerce v.\ Montana},
+503~U.S.\ 442 (1992).
+The SHA-verified 2020 apportionment appears in the appendix.
+
+\paragraph{J.2 (Webster).}
+Webster's arithmetic mean rounding is slightly more large-state-favoring
+than Huntington-Hill's geometric mean.
+For the 2020 Census the methods agree for 49 states;
+the paper identifies the one state near the rounding boundary
+and documents Webster's historical use in 1842 and 1911--1940.
+Webster's optimality in terms of minimising squared deviation from quota
+makes it the natural academic benchmark for evaluating HH's small-state
+bias.
+
+\paragraph{J.3 (Adams).}
+Adams ceiling rounding maximises the minimum per-capita representation
+across all states --- the most small-state-favorable divisor method.
+Under 2020 data, Adams gives several small states an extra seat
+at the expense of large states.
+The paper proves paradox immunity for ceiling-rounding divisor methods
+using the same monotonicity argument that applies to all divisor methods.
+
+\paragraph{J.4 (Jefferson/D'Hondt).}
+Jefferson's floor rounding is the most large-state-favoring divisor method
+and, internationally, the most widely used electoral apportionment method.
+The paper proves the formal equivalence between Jefferson and d'Hondt
+(the priority formula $p_i/s$ applies to both state populations and
+party vote totals), and documents Jefferson's use in the United States
+from 1790 to 1840 and its eventual abandonment due to large-state bias.
+
+\paragraph{J.5 (Paradoxes).}
+The central paper of the J-track.
+It proves susceptibility for Hamilton (with historical examples:
+Alabama 1880, Population 1900, Oklahoma 1907) and immunity for all
+four divisor methods.
+The proof of divisor method immunity uses the monotone priority-queue
+argument.
+The Balinski-Young impossibility theorem \citep{balinski1982fair}
+--- no method can simultaneously satisfy the quota rule and be
+paradox-immune --- provides the theoretical capstone.
+
+\paragraph{J.6 (Implementation).}
+Documents the \textsc{bisect-apportion} crate in detail:
+integer arithmetic for exact priority comparison, the SHA-256
+verification protocol, the 61-test suite at L0/L1/L2 levels,
+and comparative results for all five methods on 2020 Census data.
+The crate's unified interface enables the comparative analysis
+in J.0--J.5 to be reproduced computationally.

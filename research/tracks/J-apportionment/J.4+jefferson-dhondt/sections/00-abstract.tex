@@ -1,0 +1,32 @@
+The Jefferson (greatest divisors) method, known internationally as
+the d'Hondt method, allocates seats by successively awarding the
+next seat to the state or party with the highest priority value
+$P_i(s) = p_i/s_i$, where $p_i$ is the state's population (or party's
+vote total) and $s_i$ its current seat count.
+Equivalently, Jefferson assigns each state $\lfloor p_i/d \rfloor$
+seats for a common divisor $d$, always rounding down.
+
+Jefferson was the first apportionment method used in the United States,
+employed for congressional apportionments from 1790 to 1840 at
+Secretary of State Thomas Jefferson's recommendation.
+Its floor rounding systematically underrepresents small states
+(whose fractional quota parts are lost to rounding) and
+overrepresents large states, a bias that led to its eventual
+abandonment in U.S.\ practice.
+
+Internationally, d'Hondt is the dominant proportional representation
+formula for party-list parliamentary elections, used in Belgium, Spain,
+Portugal, Brazil, Argentina, and dozens of other countries.
+We prove the formal equivalence between Jefferson and d'Hondt:
+the priority formula $p_i/s_i$ (population-to-seats ratio) and
+$V_j/s_j$ (votes-to-seats ratio) are mathematically identical
+functions applied to different quantities, confirming that U.S.\
+apportionment history and contemporary PR system design address
+the same mathematical problem.
+
+We prove that Jefferson maximises total seat share for large states
+under any fixed population distribution, characterise the magnitude
+of large-state bias for 2020 Census data, and document the historical
+1832 controversy that ultimately led to Jefferson's abandonment.
+The \textsc{bisect-apportion} crate implements Jefferson/d'Hondt
+for both U.S.\ apportionment and comparative electoral systems analysis.

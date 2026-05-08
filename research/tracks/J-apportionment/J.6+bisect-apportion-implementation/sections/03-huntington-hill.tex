@@ -1,0 +1,68 @@
+\label{sec:huntington-hill}
+
+\subsection{Priority Formula}
+
+The Huntington-Hill priority for the $(s+1)$-th seat (when a state
+currently has $s$ seats) is:
+\[
+  P_i^{\text{HH}}(s) = \frac{p_i}{\sqrt{s(s+1)}}.
+\]
+For exact arithmetic, this is represented as:
+\[
+  P_i^{\text{HH}}(s) = \frac{p_i^2}{s(s+1)},
+\]
+which eliminates the square root by squaring both numerator and denominator
+(preserving the comparison order since both quantities are positive).
+The implementation is:
+
+\begin{verbatim}
+fn hh_priority(pop: u128, seats: u32) -> Priority {
+    Priority {
+        numerator: pop * pop,
+        denominator: seats as u128 * (seats as u128 + 1),
+    }
+}
+\end{verbatim}
+
+\subsection{Overflow Analysis}
+
+For 2020 Census data, the maximum population is California:
+$p_{\text{CA}} = 39{,}538{,}223$.
+The maximum numerator is $p_{\text{CA}}^2 = (3.95 \times 10^7)^2
+\approx 1.56 \times 10^{15}$.
+The maximum denominator is $s \times (s+1)$ where $s$ is at most 52
+(California's seat count): $52 \times 53 = 2{,}756$.
+The cross-multiplication value in the comparison is at most
+$p_i^2 \times s_j(s_j+1) \leq 1.56 \times 10^{15} \times 2756
+\approx 4.3 \times 10^{18}$,
+well within \texttt{u128}'s capacity of approximately $3.4 \times 10^{38}$.
+
+\subsection{Tie-Breaking}
+
+Ties occur when two states have identical priority values, i.e.,
+when $p_i^2 / (s_i(s_i+1)) = p_j^2 / (s_j(s_j+1))$.
+In exact integer arithmetic, this requires $p_i^2 \times s_j(s_j+1) =
+p_j^2 \times s_i(s_i+1)$, which for census-scale populations is
+extremely rare.
+When ties occur, the implementation breaks them alphabetically by
+state name (a deterministic and documented rule).
+The Census Bureau's own computation uses the same Huntington-Hill
+priority formula; any tie-breaking rule is valid as long as it
+is documented, since true ties in priority values are mathematically
+equivalent and either state is equally entitled to the seat.
+
+\subsection{The Last Seat for 2020}
+
+The 385th seat (the last seat allocated above the constitutional floor)
+in the 2020 apportionment was awarded to New York.
+The priority value at this step was:
+\[
+  P_{\text{NY}}(25) = \frac{20{,}201{,}249^2}{25 \times 26}
+  = \frac{4.08 \times 10^{14}}{650}
+  \approx 6.28 \times 10^{11}.
+\]
+The next highest priority was for a competing state (Montana or
+another state near its rounding boundary), with a priority below
+New York's.
+The Census Bureau publishes the full priority sequence, and
+\textsc{bisect-apportion}'s output matches it.
