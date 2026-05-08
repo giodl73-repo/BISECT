@@ -37,13 +37,13 @@ Although the Supreme Court ultimately remanded on standing grounds, the
 lower court's detailed engagement with Reock as a compactness indicator
 influenced subsequent redistricting litigation in the Midwest.
 
-\paragraph{\textit{League of Women Voters v.\ Lee} (Florida, 2022).}
-Florida's constitutional compactness requirement (Article III, \S 20) has
-generated sustained litigation.
-Florida courts have applied Reock alongside Polsby-Popper and convex-hull
-ratio; expert reports in the \textit{League of Women Voters} litigation
-presented Reock scores for each of the 28 congressional districts as a
-primary compactness indicator.
+\paragraph{Florida's Article~III \S20 Fair Districts Amendment cases.}
+Florida's constitutional compactness requirement has generated sustained
+litigation under the Fair Districts Amendment (2010).
+Florida courts have applied Polsby-Popper and perimeter-based compactness
+metrics rather than Reock as the primary indicator in these cases,
+making \mka{}'s Reock maximisation a distinct and complementary contribution
+in Florida redistricting contexts~\citep{floridaConst}.
 
 \subsection{The Gap in Existing Algorithms}
 
@@ -110,8 +110,8 @@ This paper makes three contributions:
   \texttt{SplitStrategy::MovingKnife}, reusing the Albers EPSG:5070
   projection from \cvdgeo{} (B.22b~\citep{dellaLibera2026cvdgeo}) and
   Welzl's minimum-enclosing-circle algorithm~\citep{welzl1991}.
-  Runtime is $O(n_{\mathrm{orient}} \times m)$ per bisection node,
-  comparable to one \cvdgeo{} iteration.
+  Runtime is $O(n_{\mathrm{orient}} \cdot m \log m)$ per bisection node
+  (the sort step dominates), comparable to one \cvdgeo{} iteration.
 
 \item \textbf{Reock comparison.}
   We compare \mka{} against \metis{}, \cvdgeo{}, and \bfsg{} on three
@@ -144,6 +144,6 @@ Section~\ref{sec:conclusion} gives usage recommendations.
 \paragraph{Main result.}
 \mka{} is the only redistricting algorithm that explicitly maximises
 Reock compactness; it achieves the highest minimum-Reock score on all
-three test states at $O(n_{\mathrm{orient}} \times m)$ runtime.
+three test states at $O(n_{\mathrm{orient}} \cdot m \log m)$ runtime per bisection node.
 For court filings that require an explicit Reock-maximising justification,
 \texttt{--structure moving-knife} is the recommended algorithm.

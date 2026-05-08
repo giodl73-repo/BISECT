@@ -84,8 +84,8 @@ measure most frequently cited in redistricting litigation.
 \mka{} adapts the fair-division moving-knife protocol of Dubins and
 Spanier~\citeyear{dubins1961} to the bisection framework: a sweep line rotates
 through $n_{\mathrm{orient}}$ orientations (default 180, every $1^\circ$); at each
-orientation tracts are sorted by projection onto the sweep axis, a
-population-balanced split is computed, and the minimum Reock score of the two
+orientation tracts are sorted by projection onto the sweep axis in $O(m \log m)$,
+a population-balanced split is computed, and the minimum Reock score of the two
 halves is recorded.
 The orientation achieving the highest minimum Reock score is selected.
 Minimum-enclosing circles are computed via Welzl's expected-$O(m)$
@@ -95,9 +95,10 @@ B.22b~\citep{dellaLibera2026cvdgeo}).
 
 Reock compactness is the measure most explicitly referenced in redistricting
 litigation: courts in North Carolina (\textit{Common Cause v.\ Lewis},
-2019~\citep{common_cause_lewis}), Wisconsin (\textit{Whitford v.\ Gill}, 2016),
-and Florida (\textit{League of Women Voters v.\ Lee}, 2022) have each cited
-Reock scores directly.
+2019~\citep{common_cause_lewis}) and Wisconsin (\textit{Whitford v.\ Gill}, 2016)
+have each cited Reock scores directly; Florida's Article~III \S20 Fair Districts
+Amendment cases use Polsby-Popper and perimeter-based metrics, making \mka{}'s
+Reock maximisation a distinct and complementary contribution in that jurisdiction.
 All prior redistricting algorithms---\metis{} (minimises edge cut),
 \cvdgeo{} (minimises Euclidean distance to seeds), \bfsg{} (maximises geographic
 balance speed)---achieve Reock as a byproduct at best.
