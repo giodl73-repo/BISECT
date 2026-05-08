@@ -379,6 +379,8 @@ pub fn write_template_config(
         area_swing: None,
         w_vra: None,
         engine: None,
+        mka_orientations: None,
+        mka_metric: None,
     };
     let yaml_doc = AlgoYaml {
         name: name.to_string(),
