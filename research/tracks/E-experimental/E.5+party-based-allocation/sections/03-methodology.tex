@@ -9,6 +9,9 @@ We implement the overlapping party-district system using recursive bisection on 
 \textbf{Stage 1: Data preparation}
 
 For each state, we construct a graph where nodes represent census tracts and edges connect spatially adjacent tracts \citep{author2024recursive}. Node weights encode population (from 2020 Census); edge weights reflect spatial proximity (inverse distance between tract centroids). We compute statewide vote shares using the 2020 presidential election, aggregating county-level results \citep{leip2020}. This provides party vote shares $v_D$ (Democratic), $v_R$ (Republican), and $v_O$ (other parties).
+\begin{remark}
+Using presidential rather than congressional vote shares introduces a known bias: presidential margins can diverge from congressional margins due to candidate-specific effects and ticket-splitting. A production system should use a composite partisan index (e.g., the average of the most recent presidential and U.S. Senate statewide results). We use presidential vote in this proof-of-concept for data availability; the algorithmic framework is agnostic to which vote-share estimate is supplied.
+\end{remark}
 
 \textbf{Stage 2: Proportional seat allocation}
 
