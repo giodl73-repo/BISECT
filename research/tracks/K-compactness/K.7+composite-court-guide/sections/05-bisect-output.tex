@@ -42,7 +42,7 @@ The output is a JSON file at \texttt{analysis/<label>/<year>/compactness.json}:
 }
 \end{verbatim}
 
-\subsection{Certification Chain}
+\subsection{Verification Chain}
 
 The JSON output is linked to the plan's SHA-256 hash chain:
 \begin{verbatim}
@@ -50,7 +50,10 @@ bisect label-verify <label> --year 2020
 \end{verbatim}
 verifies that the compactness output corresponds to the exact district
 assignment file and TIGER/Line data that produced it.
-This provides a cryptographic chain of custody suitable for court filings.
+This provides a cryptographic chain of custody suitable for inclusion in expert reports.
+Formal certification as a court-filing appendix requires counsel review and
+expert witness attestation; the structured JSON output is the technical input
+to that process, not the certified artifact itself.
 
 \subsection{Acceptable Range Flags}
 

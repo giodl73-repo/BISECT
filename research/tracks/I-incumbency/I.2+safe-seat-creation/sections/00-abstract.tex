@@ -9,8 +9,12 @@ algorithmic redistricting for North Carolina ($k=14$), Wisconsin ($k=8$), and Te
 ($k=38$) using 2020 VEST presidential precinct returns, and compares these outcomes to
 enacted 2022 congressional maps. We find that \textsc{bisect} maps produce safe-seat
 fractions of $0.43^\dagger$ (NC), $0.38^\dagger$ (WI), and $0.55^\dagger$ (TX)---
-significantly below the enacted map fractions of 0.64 (NC), 0.50 (WI), and 0.71 (TX)
-in all three states ($p < 0.01$ under a two-sample test of proportions for NC and TX).
+below the enacted map fractions of 0.64 (NC), 0.50 (WI), and 0.71 (TX)
+in all three states. These are preliminary single-seed observations ($^\dagger$);
+multi-seed validation is required before interpreting as a general property of the algorithm.
+Under a two-sample test of proportions using the single-seed bisect fractions, $p < 0.01$
+for NC and TX, but these $p$-values should be treated as indicative, not definitive,
+pending ensemble validation.
 \textsc{Bisect} maps produce three to six more competitive districts per state than
 enacted maps. The safe-seat reduction is driven primarily by the elimination of
 extreme-margin Republican seats created by cracking Democratic voters across suburban

@@ -39,8 +39,19 @@ TX & 38 & 36 & 3.97 & 1.88 & $[1, 8]$ \\
 \end{table}
 
 The 95\% confidence intervals are derived from the exact distribution of the
-``coupon collector'' analogue; they are wide because the open-seat count is a
-discrete random variable with overdispersion at small $k$.
+open-seat count. The exact open-seat probability uses the occupancy formula from
+the classical balls-into-bins (occupancy) problem: for $n$ balls (incumbents) placed
+into $k$ bins (districts), the probability that a specific bin is empty is
+$(1-1/k)^n$, and the exact distribution of the number of empty bins is obtained
+from inclusion-exclusion:
+\[
+  \Pr[\text{exactly } j \text{ bins empty}]
+    = \binom{k}{j} \sum_{i=0}^{k-j} (-1)^i \binom{k-j}{i} \left(\frac{k-j-i}{k}\right)^n.
+\]
+The coupon-collector analogy (how many draws to see all $k$ values) is a related
+but distinct framing used for intuition; the exact formula above, from the occupancy
+problem, is used in all calculations. The confidence intervals are wide because the
+open-seat count is a discrete random variable with overdispersion at small $k$.
 
 \subsection{Geographic Adjustment}
 

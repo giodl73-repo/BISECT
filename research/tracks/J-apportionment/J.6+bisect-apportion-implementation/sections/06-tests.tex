@@ -1,9 +1,14 @@
 \label{sec:tests}
 
-The \textsc{bisect-apportion} test suite comprises 61 tests organised
-into three levels following the \textsc{bisect} platform convention.
+The \textsc{bisect-apportion} test suite comprises 95 tests organised
+into three levels following the \textsc{bisect} platform convention;
+24 tests specifically cover apportionment methods and paradox checking
+(\texttt{huntington\_hill}, \texttt{divisor\_methods}, and
+\texttt{paradoxes} modules), while the remaining tests cover the
+prime-factor compositor, graph, nesting, and split strategies
+that share the same crate.
 
-\subsection{L0: Unit Tests (37 tests)}
+\subsection{L0: Unit Tests}
 
 L0 tests verify individual functions and edge cases in isolation.
 
@@ -42,7 +47,7 @@ L0 tests verify individual functions and edge cases in isolation.
   \item \texttt{check\_alabama\_paradox}: HH on 2020 Census returns \texttt{None}.
 \end{itemize}
 
-\subsection{L1: Integration Tests (14 tests)}
+\subsection{L1: Integration Tests}
 
 L1 tests verify complete apportionments on synthetic examples with
 known correct answers.
@@ -65,11 +70,11 @@ Populations $(6, 6, 2, 2, 1)$, $H = 10$:
   \item Hamilton on additional paradox configuration (from J.5): correct state.
 \end{itemize}
 
-\paragraph{Verification protocol tests (3 tests):}
+\paragraph{Output format tests:}
 \begin{itemize}
-  \item \texttt{verify\_sha256} returns \texttt{true} for correct allocation.
-  \item \texttt{verify\_sha256} returns \texttt{false} for off-by-one allocation.
-  \item Canonical string format matches expected output for 3-state example.
+  \item Canonical string format (``\texttt{StateName:seats\textbackslash n}''
+    sorted alphabetically) matches expected output for 3-state example.
+  \item All 50 states present in output; seat total equals \texttt{house\_size}.
 \end{itemize}
 
 \paragraph{D'Hondt equivalence test (1 test):}
@@ -79,32 +84,32 @@ produces same allocation as standard d'Hondt table.
 \paragraph{Webster-Sainte-Lagu\"{e} equivalence test (1 test):}
 5-party example with Webster: produces same allocation as Sainte-Lagu\"{e}.
 
-\paragraph{Overflow stress test (1 test):}
+\paragraph{Precision stress test (1 test):}
 Populations at maximum realistic values ($5 \times 10^7$), 52 seats:
-no \texttt{u128} overflow occurs.
+no \texttt{f64} precision loss affects the seat allocation result.
 
-\subsection{L2: Real-Data Regression Tests (10 tests)}
+\subsection{L2: Real-Data Regression Tests}
 
 L2 tests verify against Census Bureau official apportionments.
 
-\paragraph{2020 Census (3 tests):}
+\paragraph{2020 Census:}
 \begin{itemize}
-  \item HH 2020: SHA verification passes; all 50 states match official table.
+  \item HH 2020: string comparison passes; all 50 states match official table.
   \item Webster 2020: all 50 states match expected Webster output.
   \item Hamilton 2020: all 50 states match expected Hamilton output
     (which agrees with HH for 2020 data).
 \end{itemize}
 
-\paragraph{2010 Census (3 tests):}
+\paragraph{2010 Census:}
 \begin{itemize}
-  \item HH 2010: SHA verification passes; all 50 states match.
+  \item HH 2010: string comparison passes; all 50 states match.
   \item Webster 2010: matches expected (may differ from HH for 1--2 states).
   \item Hamilton 2010: matches expected.
 \end{itemize}
 
-\paragraph{2000 Census (3 tests):}
+\paragraph{2000 Census:}
 \begin{itemize}
-  \item HH 2000: SHA verification passes; all 50 states match.
+  \item HH 2000: string comparison passes; all 50 states match.
   \item Webster 2000: matches expected.
   \item Adams 2000: matches expected.
 \end{itemize}

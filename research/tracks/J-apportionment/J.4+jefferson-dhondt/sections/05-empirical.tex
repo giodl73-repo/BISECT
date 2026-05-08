@@ -8,25 +8,26 @@ for all states that differ from Huntington-Hill.
 \begin{table}[h]
 \centering
 \caption{States differing between Jefferson and Huntington-Hill,
-  2020 Census.}
+  2020 Census (selected; see J.0 Table~1 for complete comparison).}
 \label{tab:jefferson-2020}
 \begin{tabular}{lrrrr}
 \toprule
 State & Population & Exact quota & Jefferson & Huntington-Hill \\
 \midrule
-Minnesota  & 5,706,494  & 7.50  & 7 & 8 \\
-California & 39,538,223 & 51.95 & 51 & 52 \\
+California & 39,538,223 & 51.95 & 53 & 52 \\
+Minnesota  & 5,706,494  & 7.50  &  7 &  8 \\
+Rhode Island & 1,097,379 & 1.44 &  1 &  2 \\
+Montana    & 1,084,225  & 1.42  &  1 &  2 \\
 \bottomrule
 \end{tabular}
 \begin{tablenotes}
 \small
-\item The Jefferson divisor for 2020 produces exactly 435 total seats;
-  it differs from the HH divisor, so the exact quotas differ slightly.
-  These figures use the natural divisor $d_0 \approx 761{,}169$.
-  California's exact Jefferson allocation depends on the adjusted
-  Jefferson divisor; at some divisors, California receives 52.
-  The direction of bias (floor rounding loses fractional seats for
-  mid-size states) is correct.
+\item The Jefferson divisor for 2020 is adjusted (via binary search)
+  to produce exactly 435 total seats; it is lower than the HH divisor,
+  allowing large states to accumulate extra floor seats.
+  California gains 1 seat under Jefferson relative to HH (53 vs.\ 52),
+  consistent with Jefferson's large-state-favoring bias.
+  Minnesota, Rhode Island, and Montana each lose 1 seat relative to HH.
 \end{tablenotes}
 \end{table}
 
@@ -37,6 +38,9 @@ the threshold is $\sqrt{7 \times 8} = \sqrt{56} \approx 7.483 < 7.50$,
 so Minnesota gets 8 seats under HH.
 Under Webster (threshold 7.5), Minnesota is at the exact boundary ---
 rounding half-up gives 8 seats under Webster.
+California, by contrast, gains a seat under Jefferson (53 vs.\ HH's 52)
+because the lower Jefferson divisor allows its large absolute floor quotient
+to capture an additional seat.
 
 \subsection{Historical Census Comparison}
 

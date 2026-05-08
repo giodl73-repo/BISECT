@@ -2,29 +2,34 @@
 
 \subsection{Public API}
 
-The primary public interface is:
+The crate exposes two primary apportionment functions:
 
 \begin{verbatim}
-/// Apportion `house_size` seats among states by population.
-pub fn apportion(
-    populations: &[(String, u64)],
-    house_size: usize,
-    method: ApportionMethod,
-) -> Vec<(String, usize)>
+/// Huntington-Hill apportionment (2 U.S.C. sec 2a).
+/// `populations`: map from state code to total population.
+pub fn huntington_hill(
+    populations: &HashMap<String, u64>,
+    total_seats: u32,
+) -> HashMap<String, u32>
 
-pub enum ApportionMethod {
+/// General divisor-method apportionment.
+/// `rule` selects HuntingtonHill, Webster, Adams, or Jefferson.
+pub fn apportionment_divisor(
+    populations: &[(String, u64)],
+    house_size: u32,
+    rule: RoundingRule,
+) -> Vec<(String, u32)>
+
+pub enum RoundingRule {
     HuntingtonHill,
     Webster,
     Adams,
     Jefferson,
-    Hamilton,
 }
 \end{verbatim}
 
-The function returns a vector of (state name, seat count) pairs,
-sorted alphabetically by state name.
-Total seat count is guaranteed to equal \texttt{house\_size}.
-Each state is guaranteed at least 1 seat (constitutional floor).
+Both functions guarantee at least 1 seat per state (constitutional floor)
+and a total seat count equal to \texttt{total\_seats} / \texttt{house\_size}.
 
 Secondary utilities:
 
@@ -34,78 +39,69 @@ pub fn check_alabama_paradox(
     populations: &[(String, u64)],
     house_size: usize,
 ) -> Option<(String, usize, usize)>
-
-/// Verify SHA-256 of output against committed reference hash.
-pub fn verify_sha256(
-    allocation: &[(String, usize)],
-    reference_hash: &str,
-) -> bool
 \end{verbatim}
 
 \subsection{Priority Queue Implementation}
 
 The divisor methods (HH, Webster, Adams, Jefferson) share a
-priority-queue core:
+priority-queue core in \texttt{apportionment\_divisor}:
 
+\begin{enumerate}
+  \item Assign each state 1 seat (constitutional floor).
+  \item Build a max-heap keyed by each state's \texttt{f64} priority
+    for the next seat.
+  \item For each of the remaining $H - n$ seats, pop the state with
+    highest priority, increment its seat count, and push its updated
+    priority back onto the heap.
+\end{enumerate}
+
+The key loop (simplified):
 \begin{verbatim}
-fn apportion_divisor(
-    populations: &[(String, u64)],
-    house_size: usize,
-    priority: fn(pop: u128, seats: u32) -> Priority,
-) -> Vec<(String, usize)> {
-    let n = populations.len();
-    // Step 1: assign constitutional floor (1 seat per state)
-    let mut seats = vec![1usize; n];
-    // Step 2: build max-heap with priority for (n+1)th seat
-    let mut heap = BinaryHeap::new();
-    for (i, (_, pop)) in populations.iter().enumerate() {
-        heap.push(PriorityEntry {
-            priority: priority(*pop as u128, 1),
-            index: i,
-        });
-    }
-    // Step 3: award remaining H - n seats
-    for _ in n..house_size {
-        let top = heap.pop().unwrap();
-        seats[top.index] += 1;
-        heap.push(PriorityEntry {
-            priority: priority(
-                populations[top.index].1 as u128,
-                seats[top.index] as u32,
-            ),
-            index: top.index,
-        });
-    }
-    // Return sorted result
-    populations.iter().zip(seats.iter())
-        .map(|((name, _), &s)| (name.clone(), s))
-        .collect()
+// Seed heap: all states start at 1 seat
+for (idx, (name, pop)) in populations.iter().enumerate() {
+    heap.push(Entry {
+        priority: priority_for(*pop, 1, rule),
+        idx,
+        name: name.clone(),
+    });
+}
+// Award remaining seats
+let remaining = house_size - n_states;
+for _ in 0..remaining {
+    let Entry { idx, .. } = heap.pop().unwrap();
+    seats[idx] += 1;
+    heap.push(Entry {
+        priority: priority_for(populations[idx].1, seats[idx], rule),
+        idx,
+        name: populations[idx].0.clone(),
+    });
 }
 \end{verbatim}
 
 \subsection{Priority Representation}
 
-The \texttt{Priority} type is a rational number stored as two \texttt{u128}
-integers:
+Priority values are stored as \texttt{f64} (double-precision floating-point):
 
 \begin{verbatim}
-struct Priority {
-    numerator: u128,
-    denominator: u128,
-}
-
-impl PartialOrd for Priority {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        // Cross-multiply to compare fractions exactly:
-        // a/b > c/d iff a*d > b*c (for positive b,d)
-        (self.numerator * other.denominator)
-            .partial_cmp(&(other.numerator * self.denominator))
+let priority_for = |pop: u64, n: u32, rule: RoundingRule| -> f64 {
+    let n = n as f64;
+    let p = pop as f64;
+    match rule {
+        RoundingRule::HuntingtonHill => p / (n * (n + 1.0)).sqrt(),
+        RoundingRule::Webster        => p / (n + 0.5),
+        RoundingRule::Adams          => p / n,
+        RoundingRule::Jefferson      => p / (n + 1.0),
     }
-}
+};
 \end{verbatim}
 
-This representation enables exact comparison without floating-point
-approximation, which is essential for correct tie-breaking.
+Double-precision floating-point arithmetic (\texttt{f64}) is used for
+priority comparisons.
+For the priority values used in apportionment --- populations up to
+approximately 40~million and seat counts up to approximately 100 ---
+\texttt{f64} provides exact results since all values are representable
+as integers within \texttt{f64}'s 53-bit mantissa precision limits.
+Ties are broken deterministically by lexicographic state name order.
 
 \subsection{Hamilton Implementation}
 

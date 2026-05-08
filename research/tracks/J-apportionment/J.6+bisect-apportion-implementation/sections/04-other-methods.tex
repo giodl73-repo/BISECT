@@ -2,63 +2,40 @@
 
 \subsection{Webster}
 
-Webster's priority for the $(s+1)$-th seat is $p_i/(s+0.5) = 2p_i/(2s+1)$.
-In exact arithmetic:
+Webster's priority for the $(s+1)$-th seat is $p_i/(s+0.5)$.
+The implementation computes this as:
 
 \begin{verbatim}
-fn webster_priority(pop: u128, seats: u32) -> Priority {
-    Priority {
-        numerator: 4 * pop * pop,
-        denominator: (2 * seats as u128 + 1) * (2 * seats as u128 + 1),
-    }
-}
+RoundingRule::Webster => p / (n + 0.5),
 \end{verbatim}
 
-The factor of 4 in the numerator cancels the factor of 4 implicit
-in squaring the denominator's $2s+1$: the comparison
-$p_i/(s_i+0.5) > p_j/(s_j+0.5)$ becomes
-$p_i(s_j+0.5) > p_j(s_i+0.5)$, equivalently
-$2p_i(2s_j+1) > 2p_j(2s_i+1)$, equivalently
-$(2p_i)^2(2s_j+1)^2 > (2p_j)^2(2s_i+1)^2$,
-which is the cross-multiplication form.
-
-Overflow check: maximum value is $(2 \times 3.95 \times 10^7)^2 \times
-(2 \times 52+1)^2 = (7.9 \times 10^7)^2 \times 105^2
-\approx 6.9 \times 10^{17}$, within \texttt{u128}.
+where \texttt{p} and \texttt{n} are the \texttt{f64} casts of population
+and current seat count.
+The comparison $p_i/(s_i+0.5) > p_j/(s_j+0.5)$ is computed exactly
+within \texttt{f64} precision for the population values used in practice.
 
 \subsection{Adams}
 
 Adams uses $P_i^{\text{Ad}}(s) = p_i/s$:
 
 \begin{verbatim}
-fn adams_priority(pop: u128, seats: u32) -> Priority {
-    Priority {
-        numerator: pop * pop,
-        denominator: (seats as u128) * (seats as u128),
-    }
-}
+RoundingRule::Adams => p / n,
 \end{verbatim}
 
-The comparison $p_i/s_i > p_j/s_j$ becomes $p_i \times s_j > p_j \times s_i$
-(or equivalently $p_i^2 s_j^2 > p_j^2 s_i^2$).
+Each state starts at 1 seat (constitutional floor), so the first
+Adams priority is $p_i/1 = p_i$.
 
 \subsection{Jefferson}
 
-Jefferson uses $P_i^{\text{Jeff}}(s) = p_i/(s+1)$
-(starting from $s=0$ for the first seat):
+Jefferson uses $P_i^{\text{Jeff}}(s) = p_i/(s+1)$:
 
 \begin{verbatim}
-fn jefferson_priority(pop: u128, seats: u32) -> Priority {
-    Priority {
-        numerator: pop * pop,
-        denominator: (seats as u128 + 1) * (seats as u128 + 1),
-    }
-}
+RoundingRule::Jefferson => p / (n + 1.0),
 \end{verbatim}
 
-Jefferson initialises with 0 seats per state (not 1), allocating
-all $H$ seats via priority queue, and then applies the constitutional
-floor as post-processing.
+Jefferson initialises with 1 seat per state (constitutional floor),
+and the priority formula $p/(n+1.0)$ means the next seat priority
+for a state at 1 seat is $p/2$, equivalent to the d'Hondt divisor sequence.
 
 \subsection{Hamilton}
 

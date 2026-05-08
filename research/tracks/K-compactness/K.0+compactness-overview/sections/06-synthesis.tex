@@ -37,7 +37,9 @@ $S \approx 2.13$.
 
 \subsection{K.5 --- Length-Width Ratio}
 
-LW $> 3$ is a documented court threshold for elongation challenges (K.5, Claim~1);
+LW $> 3$ is a commonly used practitioner benchmark for elongation challenges,
+appearing in expert reports in Illinois and New York redistricting cases (K.5, Claim~1);
+no federal court has established LW $> 3$ as a binding legal standard;
 all four bisect algorithms produce LW $\leq 2.8$ on NC 2020 (K.5, Claim~2).
 Axis-aligned bounding boxes (AABB) overestimate LW by up to 41\% for diagonally
 oriented districts; only MBR-based LW (rotating calipers, K.5 Section~3) is
@@ -47,7 +49,7 @@ legally defensible (K.5, Claim~3).
 
 PWC--PP correlation is $r < 0.4$ across all algorithm-state pairs (K.6, Claim~1),
 confirming that representational and geometric compactness are independent dimensions.
-Prime-factor reduces PWC 18\% below standard-bisect on NC 2020 due to hierarchical
+Prime-factor reduces PWC 14\% below standard-bisect on NC 2020 due to hierarchical
 nesting aligning population concentrations with district centroids (K.6, Claim~2).
 TX exhibits high PWC variance due to concentrated urban centres; WI exhibits low
 variance due to dispersed population (K.6, Claim~3).
@@ -58,5 +60,6 @@ No single compactness metric is legally authoritative (K.7, Claim~1).
 A composite profile of all six metrics produces 89\% inter-judge agreement in a
 simulated legal review panel, versus 67--74\% for any single metric (K.7, Claim~2).
 The \texttt{bisect label-analyze --types all} command produces all six metrics in
-a certified JSON appendix ready for court filing without post-processing (K.7, Claim~3).
+structured JSON output suitable for inclusion in expert reports; formal certification
+requires counsel review and expert witness attestation (K.7, Claim~3).
 Template court-filing language is provided in K.7, Section~6.

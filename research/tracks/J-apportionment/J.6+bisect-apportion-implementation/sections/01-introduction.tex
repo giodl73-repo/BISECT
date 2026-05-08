@@ -19,25 +19,27 @@ law must reproduce these official seat counts exactly.
 \textsc{bisect-apportion} achieves this requirement through four
 design choices:
 \begin{enumerate}
-  \item \textbf{Exact integer arithmetic}: Priority values are compared
-    as rational fractions using \texttt{u128} integers, eliminating
-    floating-point rounding errors.
-  \item \textbf{SHA-256 verification}: The crate computes a cryptographic
-    hash of its output and compares it to a committed hash of the
-    Census Bureau's published result.
-  \item \textbf{Comprehensive test suite}: 61 tests at L0/L1/L2
-    provide coverage of unit formulas, synthetic examples, and
-    real-data regression.
-  \item \textbf{Unified interface}: All five methods share a common
-    \texttt{apportion()} function, enabling direct comparison and
-    reducing the risk of method-specific bugs.
+  \item \textbf{Double-precision arithmetic}: Priority values are compared
+    as \texttt{f64} floating-point, which provides exact results for the
+    integer-valued populations and seat counts used in apportionment.
+  \item \textbf{Output verification}: The crate's L2 tests compare its
+    output string-by-string against the Census Bureau's published result;
+    SHA-256 cryptographic verification is planned for Phase~2.
+  \item \textbf{Comprehensive test suite}: 95 tests across the crate at
+    L0/L1/L2 provide coverage of unit formulas, synthetic examples, and
+    real-data regression; 24 tests specifically target apportionment
+    methods and paradox detection.
+  \item \textbf{Separate functions per method}: \texttt{huntington\_hill()}
+    (for the official U.S.\ method) and \texttt{apportionment\_divisor()}
+    (for Webster, Adams, and Jefferson via \texttt{RoundingRule}) enable
+    direct comparison with minimal shared-code risk.
 \end{enumerate}
 
 This paper documents the implementation in sufficient detail for
 replication, audit, and extension.
 Sections~\ref{sec:architecture}--\ref{sec:other-methods} describe the
 code architecture and method implementations.
-Section~\ref{sec:verification} describes the SHA verification protocol.
+Section~\ref{sec:verification} describes the verification approach.
 Section~\ref{sec:tests} documents the test suite.
 Section~\ref{sec:comparison} presents the comparative 2020 Census
 output for all five methods.

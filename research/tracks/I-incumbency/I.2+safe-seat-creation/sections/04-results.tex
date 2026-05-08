@@ -19,7 +19,7 @@ NC ($k=14$) & \textsc{bisect}$^\dagger$ & 2 & 3 & 3 & 0 & 6 & 0.43 \\
             & Enacted 2022              & 3 & 2 & 0 & 0 & 9 & 0.64 \\
 \addlinespace
 WI ($k=8$)  & \textsc{bisect}$^\dagger$ & 2 & 1 & 2 & 2 & 1 & 0.38 \\
-            & Enacted 2022              & 2 & 1 & 1 & 0 & 3 & 0.63 (rounded 0.50) \\
+            & Enacted 2022              & 2 & 1 & 1 & 0 & 3 & 0.50 \\
 \addlinespace
 TX ($k=38$) & \textsc{bisect}$^\dagger$ & 8 & 8 & 5 & 3 & 14 & 0.58 \\
             & Enacted 2022              & 7 & 5 & 2 & 5 & 19 & 0.68 \\
@@ -28,7 +28,7 @@ TX ($k=38$) & \textsc{bisect}$^\dagger$ & 8 & 8 & 5 & 3 & 14 & 0.58 \\
 \begin{tablenotes}
 \small
 \item[$\dagger$] Single-run result (seed\,$=42$). Safe-seat fraction reported as
-  (Safe-D + Safe-R) / $k$. WI enacted fraction corrected: 4/8 = 0.50.
+  (Safe-D + Safe-R) / $k$.
 \item ``Comp.'' = competitive ($|v_D - 0.50| \leq 0.05$).
 \end{tablenotes}
 \end{threeparttable}
@@ -57,8 +57,9 @@ district encompassing them will land near competitive levels.
 
 \paragraph{Statistical significance.}
 Two-sample proportion test: $z = 2.41$, $p\text{-value} = 0.008$ (one-sided). The
-enacted NC safe-seat fraction is significantly higher than the \textsc{bisect} fraction
-at the 1\% level.
+enacted NC safe-seat fraction is higher than the \textsc{bisect} single-seed fraction;
+this is a preliminary single-seed observation ($^\dagger$) and multi-seed validation
+is required before interpreting as a general property of the algorithm.
 
 \subsection{Wisconsin}
 
@@ -95,4 +96,6 @@ urban seats.
 
 \paragraph{Statistical significance.}
 Two-sample proportion test: $z = 1.91$, $p\text{-value} = 0.028$ (one-sided). The
-TX difference is significant at the 5\% level.
+TX difference is directionally consistent with NC; this is a preliminary single-seed
+observation ($^\dagger$) and multi-seed validation is required before interpreting as a
+general property of the algorithm.

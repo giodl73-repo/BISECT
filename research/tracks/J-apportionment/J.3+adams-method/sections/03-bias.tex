@@ -8,34 +8,28 @@ representation across all states.
 \begin{theorem}[Adams Maximises Minimum Representation]
   \label{thm:adams-minmax}
   Among all apportionments satisfying $\sum_i s_i = H$ and $s_i \geq 1$,
-  Adams maximises $\min_i (p_i/s_i)$.
+  Adams maximises $\min_i (s_i/q_i)$ where $q_i = Hp_i/P$ is state $i$'s
+  exact quota.
 \end{theorem}
 
-\begin{proof}
-  For any apportionment $(s_1, \ldots, s_n)$, the minimum per-capita
-  representation is $\min_i (p_i/s_i)$.
-  Under Adams with divisor $d$, state $i$ receives $\lceil p_i/d \rceil$
-  seats, so $s_i \leq p_i/d + 1$.
-  Therefore $p_i/s_i \geq p_i/(p_i/d + 1) \geq d/(1 + d/p_i)$.
+\begin{proof}[Proof sketch]
+  Adams assigns seats by ceiling rounding: $s_i^{\text{Ad}} = \lceil p_i/d \rceil$
+  for a divisor $d$ chosen so that $\sum_i s_i^{\text{Ad}} = H$.
+  Since ceiling rounding always rounds up, $s_i^{\text{Ad}} \geq p_i/d$,
+  which means $s_i^{\text{Ad}} \geq \lceil q_i \rceil$ for the appropriate
+  divisor --- each state receives at least its exact quota rounded up.
+  Therefore $s_i/q_i \geq 1$ for all $i$, so the minimum relative
+  representation under Adams satisfies $\min_i (s_i^{\text{Ad}}/q_i) \geq 1$.
 
-  For the state with the smallest population $p_{\min}$,
-  $p_{\min}/s_{\min} \geq p_{\min} \cdot d / (p_{\min} + d) \to d$
-  as $d \to 0$.
-  The Adams divisor is chosen to achieve exactly $H$ total seats;
-  the minimum representation is determined by the smallest population
-  state's ceiling.
+  Any other divisor method that uses rounding below the ceiling (e.g.,
+  Webster at 0.5, HH at the geometric mean, Jefferson at the floor)
+  assigns some states $s_i < \lceil q_i \rceil$, reducing their relative
+  representation below 1 and hence reducing the minimum.
+  Since Adams is the unique divisor method that always rounds up,
+  it uniquely achieves $\min_i (s_i/q_i) \geq 1$, maximising the
+  floor of relative representation.
 
-  Alternative proof: Suppose some apportionment $(s_1', \ldots, s_n')$
-  with the same total $H$ achieves higher minimum representation
-  $\min_i (p_i/s_i') > \min_i (p_i/s_i^{\text{Ad}})$.
-  Let $j = \arg\min_i (p_i/s_i^{\text{Ad}})$ be the state with lowest
-  representation under Adams.
-  Since $p_j/s_j' > p_j/s_j^{\text{Ad}}$, we have $s_j' < s_j^{\text{Ad}}$.
-  But $s_j^{\text{Ad}} = \lceil p_j/d \rceil$ is already the smallest
-  possible value for a ceiling-rounding method at divisor $d$.
-  Any smaller $s_j'$ would violate ceiling rounding for some achievable
-  divisor, contradicting the assumption.
-  See \citet{balinski1982fair}, ch.~3, for a rigorous treatment.
+  Formal proof in \citet{balinski1982fair}, Ch.~4.
 \end{proof}
 
 \subsection{Equivalent Formulation: Upper Quota Guarantee}

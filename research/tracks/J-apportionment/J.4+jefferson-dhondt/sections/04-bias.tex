@@ -70,19 +70,25 @@ The loss of 0.9 fractional seats is a 23\% reduction in seat count.
 \subsection{Comparison to Huntington-Hill for 2020}
 
 For the 2020 Census, Jefferson and Huntington-Hill differ for
-three states:
+several states (see J.0, Table~1):
 \begin{itemize}
   \item States that \emph{lose} seats under Jefferson relative to HH:
     Minnesota (quota $\approx 7.50$: HH gives 8, Jefferson gives 7
-    because floor of 7.50 = 7).
+    because floor of 7.50 = 7);
+    Rhode Island and Montana (each loses the extra seat that Adams-style
+    ceiling rounding had provided).
   \item States that \emph{gain} seats under Jefferson relative to HH:
-    Texas (quota $\approx 38.31$: both give 38).
-    California (quota $\approx 51.95$: Jefferson gives 51, HH gives 52).
+    California (quota $\approx 51.95$: Jefferson gives 53, HH gives 52
+    --- Jefferson favours large states, so California gains 1 seat
+    relative to Huntington-Hill).
+    Texas similarly gains seats relative to HH under Jefferson
+    because its large fractional quotas aggregate into extra floors
+    when the Jefferson divisor is adjusted downward.
 \end{itemize}
 (These figures are approximate; the exact Jefferson divisor must be
 found by binary search and differs from the HH divisor.)
 The large-state-favoring bias of Jefferson manifests as:
-California and Texas lose 1 seat each under Jefferson relative to HH
-(because HH's lower threshold for rounding up awards their fractional
-excess seats), while Minnesota gains 1 seat under HH (because HH's
-threshold is below 0.5, capturing Minnesota's near-0.5 fractional part).
+California gains seats relative to HH because Jefferson's floor rounding
+with a lower divisor allows large states to accumulate extra seats from
+their large absolute fractional entitlements, while small states at the
+constitutional floor are unaffected by rounding direction.

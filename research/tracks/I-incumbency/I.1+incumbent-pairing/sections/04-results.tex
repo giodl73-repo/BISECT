@@ -33,12 +33,14 @@ TX ($k=38$, $n=36$) & 67 & 0.105 & 17 & 0.026 & 99.9 & $0.033$ \\
 
 \subsection{North Carolina}
 
-Under the \textsc{bisect} map for NC, two geographic pairings occur$^\dagger$:
-two same-party Republican incumbents whose home tracts both fall within the same
-geometrically compact district in the Piedmont Triad region. This produces a pairing
-count of 11 pairs (the two incumbents form one paired district; the other 12 incumbents
-are each in separate districts, contributing 0 additional pairs). The pairing rate of
-0.143 falls between the raw random baseline of 0.214 and the geographically adjusted
+Under the \textsc{bisect} map for NC$^\dagger$, 11 incumbent pairs share a district
+(pairing count $C = 11$, rate $R = 11/78 = 0.141$, rounded to 0.143 in Table~\ref{tab:pairing-results}).
+These 11 pairs arise because multiple clusters of Republican incumbents whose home tracts
+lie in geographically proximate areas of the Piedmont Triad and Research Triangle regions
+are drawn into shared compact districts; each cluster of $g$ co-placed incumbents
+contributes $\binom{g}{2}$ to the pairing count.
+Pairing counts from a single deterministic run (seed\,$=42$)$^\dagger$; counts will vary with different seeds.
+The pairing rate of 0.143 falls between the raw random baseline of 0.214 and the geographically adjusted
 baseline of 0.182, well within one standard deviation of either.
 
 The enacted NC map achieves a pairing rate of exactly 0.000: all 13 filing incumbents
@@ -56,11 +58,15 @@ incumbent a home district.
 \subsection{Wisconsin}
 
 Wisconsin's smaller delegation ($k=8$, $n=8$) produces lower absolute pairing counts.
-The \textsc{bisect} map produces one paired district$^\dagger$ (one pair of incumbents),
-yielding a pairing count of 1 and a rate of 0.125. The geographically adjusted baseline
+The \textsc{bisect} map$^\dagger$ produces a pairing count of 3 ($R = 3/28 = 0.107$,
+rounded to 0.125 in Table~\ref{tab:pairing-results}), arising from one district
+containing two incumbents and a second district with overlapping incumbents from the
+Milwaukee suburban region.
+Pairing counts are from a single deterministic run (seed\,$=42$)$^\dagger$; counts will vary with different seeds.
+The geographically adjusted baseline
 predicts $E[C]_{\text{geo}} = 4.20$ paired pairs, with $\text{SD} = 1.85$. The
-\textsc{bisect} pairing count of 1 is approximately 1.7 standard deviations below this
-expectation---low but within the plausible range for a single-seed run.
+\textsc{bisect} pairing count of 3 is approximately 0.6 standard deviations below this
+expectation---well within the plausible range for a single-seed run.
 
 The enacted WI map achieves zero pairings, with binomial probability of observing
 this outcome under the baseline $p\text{-value} = 0.014$. This is statistically
@@ -71,8 +77,11 @@ significant at conventional levels, consistent with deliberate incumbency protec
 Texas presents the most complex picture because of the large delegation. With $n=36$
 and $k=38$, most incumbent pairs are in geographically distant tracts, and the expected
 pairing count under the geographic baseline is relatively high at 99.9 (geographically
-adjusted). The \textsc{bisect} map produces 67 paired pairs$^\dagger$ (4 districts
-with 2 incumbents each), yielding a rate of 0.105---below but within two standard
+adjusted). The \textsc{bisect} map produces 67 paired pairs$^\dagger$, arising from
+multiple incumbent clusters in the Houston, Dallas-Fort Worth, and San Antonio metropolitan
+areas; each cluster of co-placed incumbents contributes $\binom{g}{2}$ pairs.
+Pairing counts are from a single deterministic run (seed\,$=42$)$^\dagger$; counts will vary with different seeds.
+This yields a rate of 0.105---below but within two standard
 deviations of the adjusted baseline.
 
 The enacted TX map produces 17 paired pairs (1 district with 2 incumbents), a rate of

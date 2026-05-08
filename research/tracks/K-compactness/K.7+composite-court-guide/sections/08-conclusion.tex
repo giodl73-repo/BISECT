@@ -13,9 +13,10 @@ Our three principal findings are:
     our simulated panel review, versus 67--74\% for any individual metric---a
     substantial advantage in persuasive clarity.
   \item The \texttt{bisect label-analyze --types all} command produces all six
-    metrics in a certified JSON appendix, with a SHA-256 hash chain linking the
+    metrics in a structured JSON output, with a SHA-256 hash chain linking the
     compactness output to the underlying data and software version.
-    No post-processing is required for court submission.
+    This output is suitable for inclusion in expert reports; formal certification
+    as a court-filing appendix requires counsel review and expert witness attestation.
 \end{enumerate}
 
 \subsection{Recommended Practice}
@@ -24,8 +25,8 @@ For any redistricting plan submitted to a court, commission, or legislature:
 \begin{enumerate}
   \item Run \texttt{bisect label-analyze --types all} to generate the composite profile.
   \item Include the template language from Section~6 in the expert report body.
-  \item Append the full per-district table (Appendix B) and the certified JSON (Appendix A).
-  \item Verify the certification chain with \texttt{bisect label-verify}.
+  \item Append the full per-district table (Appendix B) and the structured JSON (Appendix A).
+  \item Verify the hash chain with \texttt{bisect label-verify}.
   \item Present all six metrics, explain each metric's purpose, and note which
     algorithm was used and why it was selected.
 \end{enumerate}

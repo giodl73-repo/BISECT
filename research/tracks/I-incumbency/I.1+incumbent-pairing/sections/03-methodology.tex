@@ -47,6 +47,14 @@ the hypothesis that the enacted plan's pairing rate is below the random baseline
   p\text{-value} = \Pr[C \leq c \mid C \sim \text{Binom}(m, p_0)].
 \]
 
+\textbf{Note:} this test assumes independent pairing events, which is an approximation
+since pairings within the same redistricting plan are correlated. If incumbents $A$ and
+$B$ are placed in the same district, this constrains the placement of incumbents $C$ and
+$D$ (they cannot also be placed in that same district), so pair events share dependence
+through the district-capacity constraint. The reported $p$-values are therefore
+anti-conservative (they understate the true $p$-value under exact permutation). Exact
+permutation tests over the space of valid redistricting plans are a Phase~2 extension.
+
 For \textsc{bisect} plans, we test the null hypothesis that the pairing rate is
 consistent with the random baseline using the same binomial test, but two-sided:
 \[

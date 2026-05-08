@@ -9,12 +9,15 @@ geographic restructuring that pairs incumbents in the same district, changes in
 partisan composition that alter the safe/competitive balance, and boundary shifts
 that reassign constituent bases. We introduce the incumbency-neutral baseline as the
 expected value of each incumbency metric under random redistricting given the state's
-geographic constraints, and show that \textsc{bisect} outcomes fall within this
-baseline range on all three metrics across all three states. Enacted 2022 congressional
-maps, by contrast, produce significantly lower incumbent pairing rates and higher
-safe-seat fractions than the algorithmic baseline in all three states, consistent with
-deliberate use of incumbent address data that the \textsc{bisect} algorithm does not
-receive. The legal framework governing algorithmic treatment of incumbency is asymmetric:
+geographic constraints, and show that \textsc{bisect} outcomes fall within or
+marginally above this baseline range on all three metrics across all three states
+(the NC open-seat count of 4 slightly exceeds the $[0,3]$ 95\% CI as a consequence
+of the pairing effect; all other metrics are within range). These are
+preliminary single-seed observations ($^\dagger$); multi-seed validation is a Phase~2
+extension. Enacted 2022 congressional maps, by contrast, produce significantly lower
+incumbent pairing rates and higher safe-seat fractions than the random incumbency-neutral
+baseline in all three states, consistent with deliberate use of incumbent address data
+that the \textsc{bisect} algorithm does not receive. The legal framework governing algorithmic treatment of incumbency is asymmetric:
 courts have held that incumbency protection is a permissible redistricting criterion,
 but no court has required it, and algorithmic indifference to incumbency is
 constitutionally sound. These findings establish \textsc{bisect} as an incumbency-neutral

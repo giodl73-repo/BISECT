@@ -95,16 +95,28 @@ for all possible population vectors.
   State 1 gets remainder: $(6,2,1,1)$ under Hamilton --- quota-compliant since $\lceil 5+5/(9k) \rceil = 6$.
   House monotone so far.
 
-  The formal proof requires a more specific construction where a quota-compliant
-  method is forced to make a ``wrong'' choice at some $H$ and then violate
-  monotonicity at $H+1$.
-  Balinski and Young's proof constructs a 4-state example where:
-  at $H=H_0$, any quota-compliant method must give state $i$ exactly
-  $\lceil q_i \rceil$ seats;
-  at $H=H_0+1$, the quotas shift such that state $i$'s upper quota
-  decreases to $\lfloor q_i \rfloor < \lceil q_i^{H_0} \rceil$,
-  forcing a quota-compliant method to reduce state $i$'s seat count ---
-  violating house monotonicity.
+  The key step exhibiting the impossibility:
+  assume any method $M$ satisfies the quota rule.
+  Consider a configuration where state $A$ is at exactly its lower
+  quota $\lfloor q_A \rfloor$ at house size $H$.
+  Increasing the house to $H+1$ means all quotas increase, so the new
+  seat must go to some state without violating the quota rule.
+  Balinski and Young construct a 4-state example with populations chosen
+  so that at $H_0$, the quota rule forces state $A$ to receive
+  $\lceil q_A(H_0) \rceil$ seats;
+  at $H_0 + 1$, the quotas shift (because total seats increased)
+  so that $\lceil q_A(H_0+1) \rceil = \lceil q_A(H_0) \rceil - 1$
+  (state $A$'s upper quota decreases by 1 as the divisor shifts).
+  A quota-compliant method must then give state $A$ at most
+  $\lceil q_A(H_0+1) \rceil = \lceil q_A(H_0) \rceil - 1$ seats ---
+  one fewer than at $H_0$, violating house monotonicity.
+  There exist configurations where any allocation choice causes some
+  state to lose a seat relative to its new quota: this is the Alabama
+  paradox for quota-compliant methods.
+  Therefore $M$ cannot satisfy both quota compliance and paradox immunity.
+  $\square$
+
+  (See Balinski \& Young 1982, Theorem~4.1 for the full construction.)
 
   The full proof appears in \citet{balinski1982fair}, Theorem~4.1, pp.\ 111--115.
   It establishes the impossibility for any method satisfying both properties
