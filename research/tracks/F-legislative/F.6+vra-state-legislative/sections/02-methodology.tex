@@ -7,7 +7,7 @@ VRASection is the minority opportunity district module of the algorithmic redist
 
 \textbf{Note on base geographic units.} All five covered states (AL, GA, LA, MS, SC) require block-group resolution under the F.3 resolution rule ($k/n_{\mathrm{tracts}} > 0.05$ for each). VRASection therefore operates on census block groups as the base unit throughout this analysis, not census tracts. Block-group adjacency files for the five covered states are generated using:
 \begin{verbatim}
-redist fetch --year 2020 --resolution block_group \
+bisect fetch --year 2020 --resolution block_group \
   --states AL GA LA MS SC
 \end{verbatim}
 

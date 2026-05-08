@@ -131,9 +131,9 @@ Table~\ref{tab:cli} gives the CLI flags for all 15 algorithms.
 Algorithm & Layer & Flag & Paper \\
 \midrule
 Standard METIS       & Structure & \texttt{--structure standard-bisect}    & (default) \\
-Simulated Annealing  & Structure & \texttt{--structure sa-bisect}           & B.19 \\
-CVD Graph-Distance   & Structure & \texttt{--structure cvd-graph}           & B.22 \\
-CVD Geographic       & Structure & \texttt{--structure cvd-geographic}      & B.22b \\
+Simulated Annealing  & Structure & \texttt{--structure simulated-annealing}  & B.19 \\
+CVD Graph-Distance   & Structure & \texttt{--structure centroidal-voronoi}   & B.22 \\
+CVD Geographic       & Structure & \texttt{--structure centroidal-voronoi --cvd-metric geographic} & B.22b \\
 BFS Growth           & Structure & \texttt{--structure bfs-growth}          & B.23 \\
 ILP Exact            & Structure & \texttt{--structure ilp}                 & B.24 \\
 \midrule
@@ -145,7 +145,7 @@ Flip                 & Search & \texttt{--search flip}                  & G.8 \\
 Forest ReCom         & Search & \texttt{--search forest-recom}          & G.9 \\
 Merge-Split          & Search & \texttt{--search merge-split}           & G.10 \\
 Multi-scale          & Search & \texttt{--search multiscale}            & G.11 \\
-ShortBurstForest     & Search & \texttt{--search shortburst-forest}     & G.12 \\
+ShortBurstForest     & Search & \texttt{--search short-burst-forest}    & G.12 \\
 VRA-Aware ReCom      & Search & \texttt{--search vra-recom}             & G.13 \\
 Parallel Tempering   & Search & \texttt{--search parallel-tempering}    & B.20 \\
 SMC-Percentile       & Search & \texttt{--search smc-percentile}        & G.7/new \\

@@ -9,7 +9,7 @@ each one.
 
 \textbf{Title}: ``Algorithmic State House Redistricting: A 50-State Empirical Study''
 
-F.1 is the primary empirical paper. It applies the \texttt{redist} pipeline
+F.1 is the primary empirical paper. It applies the \texttt{bisect} pipeline
 with adaptive resolution selection (\texttt{block\_group} when
 $k/n_{\mathrm{tracts}} > 0.05$, \texttt{tract} otherwise) to all 50 state
 house chambers. The paper reports Polsby-Popper scores, population balance
@@ -51,7 +51,7 @@ Many states impose explicit compactness requirements (e.g., Ohio's
 ``no more splitting of political subdivisions than necessary'' standard),
 municipal-boundary preservation rules, or community-of-interest requirements
 that go beyond the federal one-person-one-vote floor.
-F.4 surveys these state-specific criteria and evaluates how the \texttt{redist}
+F.4 surveys these state-specific criteria and evaluates how the \texttt{bisect}
 pipeline's objective function can be adapted to meet them.
 
 \subsection{F.5 --- Compactness: Legislative vs.\ Congressional}

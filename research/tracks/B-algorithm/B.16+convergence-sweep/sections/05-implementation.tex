@@ -1,9 +1,9 @@
 \section{Implementation}
 \label{sec:implementation}
 
-\subsection{The redist Binary}
+\subsection{The bisect Binary}
 
-\cs{} is fully implemented in the \texttt{redist} binary as
+\cs{} is fully implemented in the \texttt{bisect} binary as
 \texttt{SeedCompositor::ConvergenceSweep\{threshold\}}.
 The implementation is production-ready: it has been used to generate all
 convergence data reported in Section~\ref{sec:sufficiency} and Table~\ref{tab:convergence}.
@@ -28,11 +28,11 @@ The canonical command for a statutory redistricting run under the \dia{}
 is:
 
 \begin{verbatim}
-redist state \
+bisect state \
   --state <FIPS_CODE> \
   --year <CENSUS_YEAR> \
   --structure prime-factor \
-  --weights geographic \
+  --weights-override geographic \
   --search convergence \
   --convergence-threshold 600
 \end{verbatim}
@@ -41,7 +41,7 @@ redist state \
 \begin{itemize}
 \item \texttt{--structure prime-factor}: selects the \ar{} prime-factorisation
       bisection tree structure (B.11)~\citep{b11paper}.
-\item \texttt{--weights geographic}: selects the geographic boundary-length
+\item \texttt{--weights-override geographic}: selects the geographic boundary-length
       edge weights (B.2)~\citep{b2paper}.
 \item \texttt{--search convergence}: activates \texttt{SeedCompositor::ConvergenceSweep}.
 \item \texttt{--convergence-threshold 600}: sets $\Tstat = 600$ (the statutory
@@ -49,7 +49,7 @@ redist state \
 \end{itemize}
 
 \paragraph{METIS thread-count requirement.}
-The \texttt{redist} binary automatically sets \texttt{METIS\_OPTION\_NTHREADS=1}
+The \texttt{bisect} binary automatically sets \texttt{METIS\_OPTION\_NTHREADS=1}
 in statutory mode (\texttt{--search convergence}).
 This ensures that METIS is run single-threaded for the certified statutory run,
 as required by Proposition~\ref{prop:determinism}.
@@ -61,18 +61,18 @@ alternative for litigation purposes.
 For research and non-binding runs:
 
 \begin{verbatim}
-redist state \
+bisect state \
   --state <FIPS_CODE> \
   --year <CENSUS_YEAR> \
   --structure prime-factor \
-  --weights geographic \
+  --weights-override geographic \
   --search convergence \
   --convergence-threshold 500
 \end{verbatim}
 
 \subsection{Reproducibility Guarantee}
 
-Given a fixed \texttt{census\_release\_id}, the \texttt{redist} binary
+Given a fixed \texttt{census\_release\_id}, the \texttt{bisect} binary
 computes $s_0$ as specified in Definition~\ref{def:diav1}.
 The binary ships with:
 \begin{itemize}

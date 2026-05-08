@@ -16,7 +16,7 @@ district, leaving the rest of the state to be bisected at subsequent levels.}
 We call this \textbf{urban peeling}. It arises not from any partisan intent
 but from a geometric fact: the boundary surrounding a dense city is shorter
 than any boundary that bisects the state into two comparably-populated regions.
-Illinois splits 1:17 at the first level (Chicago peel), not 8:9.
+Illinois splits 1:16 at the first level (Chicago peel), not 8:9.
 New York splits 1:25 (New York City peel), not 13:13.
 Wisconsin splits 1:7 (Milwaukee peel), not 4:4.
 
@@ -46,11 +46,11 @@ The area constraint is enforced simultaneously with the population constraint
 using METIS's native dual-constraint (\texttt{ncon=2}) partitioning with
 per-constraint imbalance vectors (\texttt{ubvec}).
 
-The area constraint cannot be satisfied by a 1:17 split in Illinois because
+The area constraint cannot be satisfied by a 1:16 split in Illinois because
 Chicago occupies $<5$\,\% of the state's land.
 A near-equal population split is therefore geometrically forced by the area
 balance requirement.
-Illinois moves from 1:17 (GeoSection) to 8:9 (AreaSection).
+Illinois moves from 1:16 (GeoSection) to 8:9 (AreaSection).
 New York moves from 1:25 to 13:13.
 Florida moves from 1:27 to 14:14.
 

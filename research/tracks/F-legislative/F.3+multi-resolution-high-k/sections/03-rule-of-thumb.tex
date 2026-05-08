@@ -69,10 +69,10 @@ To apply the rule for a given state and chamber:
   \item Otherwise, use \texttt{--resolution tract} (default).
 \end{enumerate}
 
-The \texttt{redist} pipeline automates this check when
+The \texttt{bisect} pipeline automates this check when
 \texttt{--resolution auto} is specified:
 \begin{verbatim}
-redist state --state WA --chamber house --resolution auto --year 2020
+bisect state --state WA --chamber house --resolution auto --year 2020
 \end{verbatim}
 The auto-selection reads the state's tract count from the configuration file
 and applies the $k/n > 0.05$ rule.

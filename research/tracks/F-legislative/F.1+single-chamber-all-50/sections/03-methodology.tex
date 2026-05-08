@@ -5,7 +5,7 @@
 \label{sec:methodology:algorithm}
 
 We apply the minimum-edge-cut recursive bisection algorithm of
-\citet{dellaLibera2026recursive} via the \texttt{redist} Rust binary.
+\citet{dellaLibera2026recursive} via the \texttt{bisect} Rust binary.
 The algorithm partitions a state's census-unit adjacency graph
 $G = (V, E, w)$ into $k$ balanced parts minimising total edge-cut weight,
 where edge weights $w(e)$ are the TIGER boundary lengths between adjacent units.

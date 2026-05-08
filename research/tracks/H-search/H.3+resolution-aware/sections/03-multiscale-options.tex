@@ -64,7 +64,7 @@ on malformed invocations.
 
 Option B is invoked as:
 \begin{verbatim}
-  redist state --state TX --year 2020 --search multiscale \
+  bisect state --state TX --year 2020 --search multiscale \
     --multiscale-fine tract --multiscale-coarse county \
     --multiscale-steps 2000 --multiscale-alpha 0.3
 \end{verbatim}
@@ -180,15 +180,15 @@ All four parameters are recorded in the manifest.
 
 \begin{verbatim}
   # Tract level -- default, unchanged
-  redist state --state NC --year 2020
+  bisect state --state NC --year 2020
   # Option B (no extra data)
-  redist state --state TX --year 2020 --search multiscale \
+  bisect state --state TX --year 2020 --search multiscale \
     --multiscale-fine tract --multiscale-coarse county \
     --multiscale-steps 2000 --multiscale-alpha 0.3
   # Option A (BG file required)
-  redist state --state NC --year 2020 --search multiscale \
+  bisect state --state NC --year 2020 --search multiscale \
     --multiscale-fine bg --multiscale-coarse tract
   # Option C (BG file required)
-  redist state --state NC --year 2020 --search multiscale \
+  bisect state --state NC --year 2020 --search multiscale \
     --multiscale-fine bg --multiscale-coarse county
 \end{verbatim}

@@ -48,7 +48,7 @@ algorithm~\citep{wilson1996generating}.
 The design goal is to collapse the throughput gap sufficiently that
 a 10{,}000-step ensemble for any congressional-scale state completes in
 under one second, enabling ensemble analysis to run as an integrated step
-within \texttt{redist build} rather than as a separate overnight job.
+within \texttt{bisect build} rather than as a separate overnight job.
 
 The key algorithmic innovation is the use of Wilson's loop-erased random
 walk~\citep{lawler1980loop} to generate uniform random spanning trees.
@@ -72,8 +72,8 @@ efficiency to be realized in practice.
 \subsection{Pipeline Integration}
 
 The intended deployment is as the \texttt{redist ensemble} subcommand,
-integrated into the same binary as \texttt{redist state},
-\texttt{redist analyze}, and \texttt{redist map}.
+integrated into the same binary as \texttt{bisect state},
+\texttt{bisect analyze}, and \texttt{bisect map}.
 A typical invocation:
 
 \begin{verbatim}

@@ -33,12 +33,12 @@ Congressional redistricting has attracted the bulk of algorithmic redistricting
 research, yet state legislative chambers govern far more of everyday civic
 life---education, criminal justice, taxation, and elections administration.
 We introduce the F research track, a systematic program for applying the
-\texttt{redist} recursive-bisection pipeline to all 50 state legislatures.
+\texttt{bisect} recursive-bisection pipeline to all 50 state legislatures.
 The central challenges are \emph{scale} (New Hampshire's 400-member House
 requires $400$ districts from a state with only $\sim\!4{,}000$ census tracts)
 and \emph{resolution} (census tracts are too coarse for high-$k$ chambers,
 requiring a shift to block-group or block geography).
-We describe the \texttt{redist} CLI's \texttt{--chamber} and \texttt{--resolution}
+We describe the \texttt{bisect} CLI's \texttt{--chamber} and \texttt{--resolution}
 flags, develop the rule of thumb that block-group resolution is needed when
 $k / n_{\mathrm{tracts}} > 0.05$, and preview the empirical findings of
 companion papers F.1--F.6. Key results: state-house mean Polsby-Popper

@@ -179,6 +179,10 @@ Empirically (from 30-seed METIS runs at $\eta \in \{1.05, 1.10, 1.20\}$):
     ring; the constraint can shift approximately $C \cdot \sigma \approx 4{,}200 \times 0.003 \approx 12.5$\,pp --- consistent with the observed $-12.5$\,pp improvement at $\eta=1.10$.
   \item \textbf{Georgia}: $C(\text{GA}) \approx 720$. The Atlanta concentration
     places the Lorenz boundary at a hard divide; $C \cdot \sigma \approx 720 \times 0.001 \approx 0.7$\,pp --- consistent with the observed partial improvement from $-14.4$\,pp to $-7.3$\,pp (the remaining gap is Lorenz-infeasible).
+
+\begin{remark}
+The Lorenz bound predicts \textit{maximum achievable} proportionality improvement; the observed 7.1\,pp for Georgia reflects that ProportionalSection approaches (but does not reach) this bound under the feasible plan space. The bound is a ceiling, not a prediction. The $C \cdot \sigma \approx 0.7$\,pp figure describes the marginal sensitivity of the bound at $\sigma = 0.001$; the larger observed improvement occurs because ProportionalSection moves the partition across multiple topological configurations, each contributing incrementally.
+\end{remark}
   \item \textbf{Arizona}: $C(\text{AZ}) \approx 85$, reflecting very low geographic
     responsiveness; $C \cdot \sigma \approx 0.08$\,pp --- no observable effect.
 \end{itemize}

@@ -8,9 +8,9 @@ To measure the compactness penalty from nesting, we compare two maps for each
 compatible state:
 \begin{itemize}
   \item \textbf{Independent}: The house map and senate map are optimised
-    independently (two separate \texttt{redist} runs with no nesting constraint).
+    independently (two separate \texttt{bisect} runs with no nesting constraint).
   \item \textbf{NestSection}: The house and senate maps are jointly optimised
-    via NestSection (one \texttt{redist} run with \texttt{--chamber nest}).
+    via NestSection (one \texttt{bisect} run with \texttt{--chamber nest}).
 \end{itemize}
 
 The compactness penalty is measured as the percentage increase in total

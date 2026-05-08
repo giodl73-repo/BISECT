@@ -11,7 +11,7 @@ All runs use 50 seeds per ratio.
 Population balance tolerance is $0.5\,\%$, matching the congressional standard
 from \emph{Karcher v.\ Daggett} (1983).
 
-The reference implementation is the \texttt{redist} Rust binary, partition
+The reference implementation is the \texttt{bisect} Rust binary, partition
 mode \texttt{geosection}, using METIS 5.1 via the \texttt{metis-rs} crate.
 All 44 multi-district states converge within the $0.5\,\%$ balance tolerance.
 

@@ -11,7 +11,7 @@ Population balance tolerance is 1.5\,\% (broader than the 0.5\,\%
 constitutional standard, applied to accommodate discrete-tract rounding in
 recursive bisections; see \S\ref{sec:limitations}).
 
-The reference implementation is the \texttt{redist} Rust binary using METIS 5.2.1
+The reference implementation is the \texttt{bisect} Rust binary using METIS 5.2.1
 compiled for Windows x64, linked via the \texttt{metis-rs} FFI crate.
 44 of 50 states converge within tolerance; 6 states (FL, IL, MI, NY, PA, TX)
 exceed the 1.5\,\% balance threshold due to recursive bisection rounding in

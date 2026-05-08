@@ -180,7 +180,7 @@ Therefore the entire execution path is determined by $(G, k, T, s_0)$.
 Proposition~\ref{prop:determinism} assumes that METIS itself is compiled with
 the same floating-point model on all platforms, \textbf{and that METIS is
 invoked with \texttt{METIS\_OPTION\_NTHREADS=1} (single-threaded mode)}.
-The \texttt{redist} binary ships a vendored METIS with determinism flags
+The \texttt{bisect} binary ships a vendored METIS with determinism flags
 (\texttt{-fno-fast-math}) enabled by default; the federal-statute build is
 pinned to a specific source hash in the \texttt{Cargo.lock}.
 Furthermore, \textbf{METIS must be run single-threaded} for the statutory

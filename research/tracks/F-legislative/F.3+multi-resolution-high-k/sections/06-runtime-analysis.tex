@@ -4,7 +4,7 @@
 \subsection{Theoretical Scaling}
 \label{sec:runtime:theory}
 
-The \texttt{redist} pipeline's runtime is dominated by the METIS $k$-way
+The \texttt{bisect} pipeline's runtime is dominated by the METIS $k$-way
 partitioning step. METIS's multilevel scheme runs in $O(n \log n)$ time
 for a graph with $n$ vertices \citep{karypis1998fast}. Moving from tract
 ($n_T$) to block-group ($n_{BG}$) resolution multiplies the vertex count

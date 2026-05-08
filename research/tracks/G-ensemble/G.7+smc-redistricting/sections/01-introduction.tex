@@ -44,7 +44,7 @@ We implement \smc{} as a Rust crate (\texttt{redist-smc}) with 48 tests,
 Rayon parallelism at the per-stage particle-proposal step, and a full SHA-256
 audit chain.
 The implementation is exposed to the CLI as
-\texttt{redist ensemble --method smc --state NC --year 2020 --particles 5000}.
+\texttt{bisect ensemble --method smc --state NC --year 2020 --particles 5000 --base-seed 42}.
 
 \paragraph{Contribution 2: The importance-weighting derivation.}
 We derive the weight increment formula $\Delta\log w_i = \log|{\rm

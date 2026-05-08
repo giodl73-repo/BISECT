@@ -5,7 +5,7 @@ We have presented the first systematic 50-state empirical study of algorithmical
 generated state house maps using the minimum-edge-cut recursive bisection
 algorithm. The results establish three main findings.
 
-First, the \texttt{redist} pipeline scales gracefully to the state legislative
+First, the \texttt{bisect} pipeline scales gracefully to the state legislative
 context. All 50 state house chambers are successfully redistricted, with
 population balance within $\pm 0.5\%$ in every state and runtimes under
 8 minutes per state at single-seed operation.
@@ -25,7 +25,7 @@ crack geographic communities across administrative boundaries.
 These results position the F track as a credible algorithmic baseline for
 state legislative redistricting reform. A state redistricting commission
 seeking a compact, population-balanced, county-respecting benchmark plan
-can generate one using \texttt{redist state --chamber house --resolution block\_group}
+can generate one using \texttt{bisect state --chamber house --resolution block\_group}
 in under 10 minutes per state.
 
 \paragraph{Future work.}

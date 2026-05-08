@@ -11,7 +11,7 @@ All runs use 50 seeds per ratio and $\lambda = 0$ (Phase 1 only).
 Population balance tolerance is 0.5\,\% ($\delta = 0.005$), matching the
 congressional standard established in \emph{Karcher v.\ Daggett} (1983).
 
-The reference implementation is the \texttt{redist} Rust binary using
+The reference implementation is the \texttt{bisect} Rust binary using
 METIS 5.1 (vendored via \texttt{metis-rs} 0.2 FFI crate).
 All 45 multi-district states converge within the 0.5\,\% balance tolerance.
 Five single-district states (AK, DE, ND, SD, VT, WY) receive trivial
@@ -235,7 +235,7 @@ on all 44 multi-district states with complete data.
 \centering
 \caption{GeoSection vs.\ B.7 MEC seat comparison.
   States where GeoSection produces different D-seat counts.
-  Net: $+6$ D seats for GeoSection.}
+  Net: $+5$ D seats for GeoSection.}
 \label{tab:head-to-head}
 \begin{tabular}{lrrrrr}
 \toprule
@@ -359,7 +359,7 @@ The Wisconsin result (margin = 142\,km at CV = 1.06\,\%) is highly robust.
 
 GeoSection selects a single deterministic plan; ensemble methods such as
 ReCom \citep{deford2019} characterise the distribution of compact plans.
-For North Carolina, published ReCom ensemble results \citep{duchin2020nc}
+For North Carolina, published ReCom ensemble results \citep{deford2021}
 using 50,000 random walk steps on compact maps report a median of 5\,D/9\,R
 with an interquartile range of 4--6\,D seats.
 GeoSection's 5\,D/9\,R outcome lies at the ensemble median, confirming that
@@ -368,7 +368,7 @@ plan space.
 This is consistent with the interpretation that GeoSection selects the
 \emph{geographically natural} plan: it produces an outcome that a random compact
 walk would also identify as the modal outcome.
-For Wisconsin, ensemble results from \cite{mggg2019wi} report a median of
+For Wisconsin, ensemble results (citation pending) report a median of
 3\,D/5\,R for compact plans, consistent with GeoSection's 3\,D/5\,R.
 
 These ensemble comparisons support the claim that GeoSection's selected plans

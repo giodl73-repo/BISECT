@@ -54,12 +54,12 @@ nesting procedure or must use a different chamber ratio.
 
 \begin{verbatim}
 # Washington: H=98, S=49, gcd=49 (ratio 2:1)
-redist state --state WA --chamber nest \
+bisect state --state WA --chamber nest \
              --house-districts 98 --senate-districts 49 \
              --resolution block_group --year 2020
 
 # Minnesota: H=134, S=67, gcd=67 (ratio 2:1)
-redist state --state MN --chamber nest \
+bisect state --state MN --chamber nest \
              --house-districts 134 --senate-districts 67 \
              --resolution tract --year 2020
 \end{verbatim}

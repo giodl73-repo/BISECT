@@ -31,14 +31,14 @@ four stages:
 
 \begin{enumerate}
   \item \textbf{Data preparation and algorithm run.}  Commission staff
-    (or a designated technical contractor) run \texttt{redist state --state AZ
+    (or a designated technical contractor) run \texttt{bisect state --state AZ
     --year 2020 --version v1} to generate a population-balanced, compact map.
     The VRASection weight is applied to protect minority-opportunity districts
     in the Phoenix metropolitan area.  The output is a GEOID-to-district
     assignment file and a map visual.
 
   \item \textbf{Criteria-compliance verification.}  Commission staff run
-    \texttt{redist analyze --state AZ --year 2020 --version v1 --types
+    \texttt{bisect analyze --state AZ --year 2020 --version v1 --types
     compactness demographic} to generate the criteria-compliance report.
     This report documents population balance, compactness scores, and
     minority-population percentages for each district.

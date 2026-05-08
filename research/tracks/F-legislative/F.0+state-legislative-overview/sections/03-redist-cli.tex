@@ -1,15 +1,15 @@
-\section{The \texttt{redist} CLI for State Legislative Redistricting}
+\section{The \texttt{bisect} CLI for State Legislative Redistricting}
 \label{sec:cli}
 
-The \texttt{redist} Rust binary was extended with two flags for state legislative
+The \texttt{bisect} Rust binary was extended with two flags for state legislative
 redistricting: \texttt{--chamber} and \texttt{--resolution}.
 
 \subsection{The \texttt{--chamber} Flag}
 \label{sec:cli:chamber}
 
 \begin{verbatim}
-redist state --state WA --chamber house --resolution block_group
-redist state --state WA --chamber senate --resolution tract
+bisect state --state WA --chamber house --resolution block_group
+bisect state --state WA --chamber senate --resolution tract
 \end{verbatim}
 
 The \texttt{--chamber} flag selects the target chamber, which determines the
@@ -31,7 +31,7 @@ The \texttt{--chamber senate} flag uses the corresponding senate fields.
 \label{sec:cli:resolution}
 
 \begin{verbatim}
-redist state --state WA --chamber house --resolution block_group
+bisect state --state WA --chamber house --resolution block_group
 \end{verbatim}
 
 The \texttt{--resolution} flag accepts \texttt{tract} (default),
@@ -67,7 +67,7 @@ python scripts/data/geography/build_unit_adjacency.py \
   --resolution block_group --year 2020 --states WA
 
 # Run state legislative redistricting
-redist state --state WA --chamber house \
+bisect state --state WA --chamber house \
              --resolution block_group --year 2020 --version v1
 \end{verbatim}
 

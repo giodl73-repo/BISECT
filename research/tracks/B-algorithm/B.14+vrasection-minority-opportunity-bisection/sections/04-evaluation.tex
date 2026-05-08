@@ -54,7 +54,7 @@ under VRASection.
   & \textbf{$A(\text{winner})$}
   & \textbf{MetisVra success?} & \textbf{VRASection MM districts} \\
 \midrule
-AL & 3:4 & \textbf{1:6} & 0.27 & No (0/28 configs) & Black Belt isolated \\
+AL & 3:4 & \textbf{2:5} & 0.27 & No (0/28 configs) & Black Belt isolated \\
 MS & 1:3 & \textbf{1:3} & 0.12 & Yes (23/28) & Same (minority dispersed) \\
 GA & 1:13 & \textbf{1:13} & 0.31 & Yes (27/28) & Same (Atlanta already peels) \\
 NC & 7:7 & \textbf{1:13} & 0.19 & No (0/28 configs)   & Charlotte/Raleigh isolated \\
@@ -148,18 +148,15 @@ The Black Belt and Jefferson County are geographically separated by
 predominantly white suburban/rural counties (Chilton, Bibb, Shelby).
 This separation creates a natural geographic boundary that VRASection detects.
 
-\paragraph{GeoSection result: 1:6 (urban peel).}
-GeoSection selects a $1:6$ split, isolating Jefferson County (Birmingham)
-as a single district while placing all remaining population in a $6$-district
-subregion.
-This is the caterpillar peel at the first level: Birmingham's compact urban
-boundary is shorter per the isoperimetric metric than any equal-population
-bisection of the full state.
-The problem for VRA purposes: the $1:6$ split concentrates Black population
-in Birmingham (approximately 50--55\,\% Black VAP in that district) but
-leaves the Black Belt dispersed across the remaining 6-district subregion,
+\paragraph{GeoSection result: 3:4 (near-equal split).}
+GeoSection selects a $3:4$ split for Alabama (the confirmed natural ratio from B.8 Table~1), producing a near-equal geographic division rather than isolating Birmingham.
+Although isoperimetric normalisation prevents the 1:6 caterpillar peel in Alabama
+(Birmingham is not compact enough to win the normalised comparison), the 3:4 split
+still leaves the Black Belt dispersed across both sub-regions,
 where it can be divided in ways that dilute the Black Belt community's
 voting strength.
+The $1:6$ split is evaluated as a candidate ratio by VRASection (score = 350.2,
+see CLI output below) but is not the GeoSection winner.
 
 \paragraph{VRASection result: 2:5 (Black Belt concentration).}
 With $w_\text{vra} = 0.40$, VRASection selects a $2:5$ split.
@@ -168,9 +165,9 @@ a boundary drawn along the Black Belt's northern border concentrates a
 larger fraction of Alabama's Black VAP on the southern side (Black Belt +
 Montgomery area + Mobile coast) than Birmingham isolation achieves.
 
-The $2:5$ result is empirically confirmed from the \texttt{redist} CLI:
+The $2:5$ result is empirically confirmed from the \texttt{bisect} CLI:
 \begin{verbatim}
-  redist state --state AL --partition-mode vra-section --w-vra 0.40
+  bisect state --state AL --partition-mode vra-section --w-vra 0.40
   [vra-section] ratio 1:6  normalised=430.1  score=350.2
   [vra-section] ratio 2:5  normalised=448.7  score=322.5  <-- winner
   [vra-section] ratio 3:4  normalised=501.3  score=482.8
@@ -206,20 +203,20 @@ before any district boundaries are drawn.
 \textbf{Algorithm} & \textbf{Ratio} & $\mathrm{EC}_\text{norm}$ & \textbf{Alignment $A$}
   & \textbf{Selection score} & \textbf{EC premium} \\
 \midrule
-GeoSection  & 1:6 & 430.1 & --- & 430.1 & 0.0\,\% (baseline) \\
-VRASection  & 2:5 & 448.7 & 0.42 & 322.5 & +4.3\,\% \\
+GeoSection  & 3:4 & 501.3 & --- & 501.3 & 0.0\,\% (baseline) \\
+VRASection  & 2:5 & 448.7 & 0.42 & 322.5 & $-10.7$\,\% (VRA-aligned, lower EC) \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \paragraph{Black Belt as a majority-minority subgraph.}
-VRASection's 1:6 split\footnote{Note: the table above reports
-GeoSection's $1:6$ as an \emph{urban peel} (Birmingham isolation)
+VRASection's hypothetical $1:6$ split\footnote{Note: the table above reports
+GeoSection's $3:4$ as the confirmed natural ratio (B.8 Table~1)
 and VRASection's $2:5$ as the selected ratio.
 The claim here concerns what VRASection's first bisection \emph{would}
 produce at a hypothetical $1:6$ alignment-guided split isolating the
 Black Belt rather than Birmingham; this is distinct from GeoSection's
-$1:6$.
+$3:4$ split.
 VRASection selects $2:5$, not $1:6$, for Alabama.}
 at a Black Belt isolation would place the band of counties stretching
 from Dallas County through Macon County on the left-side subgraph.
@@ -232,7 +229,7 @@ before any further bisection is performed.\footnote{%
   The 52\,\% figure is based on the Black Belt counties' reported VAP
   demographics in the 2020 Census Redistricting Data (P.L.\ 94-171).
   Full MM district counting requires running the complete
-  \texttt{redist analyze --types demographic} pipeline on the final
+  \texttt{bisect analyze --types demographic} pipeline on the final
   7-way partition; this analysis is pending for the full empirical run
   reported in Section~\ref{sec:projected}.}
 The recursive GeoSection within this subgraph will then produce at least

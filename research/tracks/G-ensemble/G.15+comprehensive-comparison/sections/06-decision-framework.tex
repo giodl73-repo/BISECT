@@ -259,15 +259,15 @@ Court submission\\(calibrated, neutral)
 EC minimisation,\\small state ($k \leq 4$, $N \leq 500$)
   & \texttt{--structure ilp}\newline
     \texttt{--search single}
-  & \texttt{--structure sa-bisect}\newline
+  & \texttt{--structure simulated-annealing}\newline
     \texttt{--search short-burst} \\[6pt]
 EC minimisation,\\large state
-  & \texttt{--structure sa-bisect}\newline
+  & \texttt{--structure simulated-annealing}\newline
     \texttt{--search parallel-tempering}
-  & \texttt{--structure sa-bisect}\newline
+  & \texttt{--structure simulated-annealing}\newline
     \texttt{--search short-burst} \\[6pt]
 PP maximisation
-  & \texttt{--structure cvd-geographic}\newline
+  & \texttt{--structure centroidal-voronoi --cvd-metric geographic}\newline
     \texttt{--search smc-percentile}
   & \texttt{--structure bfs-growth}\newline
     \texttt{--search merge-split} \\[6pt]
@@ -277,7 +277,7 @@ Large-$k$ ($k \geq 15$),\\fast mixing
   & \texttt{--structure prime-factor}\newline
     \texttt{--search multiscale} \\[6pt]
 Large-$k$, EC optimisation\\(multi-core available)
-  & \texttt{--structure sa-bisect}\newline
+  & \texttt{--structure simulated-annealing}\newline
     \texttt{--search parallel-tempering}
   & \texttt{--structure standard-bisect}\newline
     \texttt{--search short-burst} \\[6pt]

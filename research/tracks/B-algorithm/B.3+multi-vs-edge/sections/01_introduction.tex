@@ -11,7 +11,7 @@ This raises a fundamental question: \textit{Why does single-objective optimizati
 We provide the first comprehensive analysis of why edge-weighted single-objective optimization dramatically outperforms multi-constraint methods for asymmetric redistricting goals:
 
 \begin{enumerate}
-    \item \textbf{Empirical Evidence:} Across 160 experiments (5 states $\times$ 32 configurations), edge-weighted achieves 47.9\% configuration success rate vs.~multi-constraint's 35.0\% (12.9 percentage point gap). At the state level, edge-weighted succeeds in 4/5 states vs.~multi-constraint's 3/5.
+    \item \textbf{Empirical Evidence:} Across 160 experiments (5 states $\times$ 32 configurations), edge-weighted achieves 47.9\% configuration success rate vs.~multi-constraint's 35.7\% (12.1 percentage point gap). At the state level, edge-weighted succeeds in 4/5 states vs.~multi-constraint's 3/5.
 
     \item \textbf{Theoretical Explanation:} We demonstrate that \textit{constraint conflict} fundamentally limits multi-constraint effectiveness. When population balance requires tight constraints ($\pm0.5\%$) and minority concentration requires loose constraints ($\pm50-400\%$), METIS prioritizes the tight constraint, rendering the loose constraint ineffective. Edge-weighting avoids this conflict by encoding VRA goals directly in the objective function.
 

@@ -15,24 +15,24 @@ Stage & Commission (AZ/CA) & Statute & Court Order (NC) \\
 \midrule
 \textbf{Data prep} &
 Commission staff; \newline
-\texttt{redist fetch} &
+\texttt{bisect fetch} &
 State GIS office; \newline
-\texttt{redist fetch} &
+\texttt{bisect fetch} &
 Special master staff; \newline
-\texttt{redist fetch} \\
+\texttt{bisect fetch} \\
 \addlinespace
 \textbf{Initial run} &
-Staff run \texttt{redist state}; \newline
+Staff run \texttt{bisect state}; \newline
 Commission reviews output &
-Designated agency runs \texttt{redist state}; \newline
+Designated agency runs \texttt{bisect state}; \newline
 Legislative committee reviews &
-Special master runs \texttt{redist state}; \newline
+Special master runs \texttt{bisect state}; \newline
 Court receives report \\
 \addlinespace
 \textbf{Analysis} &
-\texttt{redist analyze} \newline compactness + demographic &
-\texttt{redist analyze} \newline all types &
-\texttt{redist analyze} \newline political + demographic \\
+\texttt{bisect analyze} \newline compactness + demographic &
+\texttt{bisect analyze} \newline all types &
+\texttt{bisect analyze} \newline political + demographic \\
 \addlinespace
 \textbf{Public comment} &
 60-day public hearing period; \newline Commission adjustments logged &
@@ -57,10 +57,10 @@ Higher court (appeal) \\
 \end{tabular}
 \begin{tablenotes}
 \small
-\item Note: \texttt{redist fetch} downloads and validates census data.
-  \texttt{redist state} runs the partitioning algorithm.
-  \texttt{redist analyze} generates criteria-compliance reports.
-  Commands follow the \texttt{redist} CLI reference~\citep{redistCliQuickstart}.
+\item Note: \texttt{bisect fetch} downloads and validates census data.
+  \texttt{bisect state} runs the partitioning algorithm.
+  \texttt{bisect analyze} generates criteria-compliance reports.
+  Commands follow the \texttt{bisect} CLI reference~\citep{redistCliQuickstart}.
 \end{tablenotes}
 \end{threeparttable}
 \end{table}

@@ -1,39 +1,39 @@
 \label{sec:checklist}
 
 Table~\ref{tab:checklist} presents the expert witness checklist, mapping
-\texttt{redist} command outputs to each Gingles prong.  The checklist is
+\texttt{bisect} command outputs to each Gingles prong.  The checklist is
 organized as a sequential workflow; outputs from earlier steps feed into
 later analysis.
 
 \begin{table}[h]
 \centering
-\caption{Expert Witness Checklist: \texttt{redist} Outputs for Each Gingles Prong}
+\caption{Expert Witness Checklist: \texttt{bisect} Outputs for Each Gingles Prong}
 \label{tab:checklist}
 \begin{threeparttable}
 \begin{tabular}{p{1cm}p{3.5cm}p{4cm}p{3.5cm}}
 \toprule
-Prong & Legal Element & \texttt{redist} Command & Output for Report \\
+Prong & Legal Element & \texttt{bisect} Command & Output for Report \\
 \midrule
 \multirow{4}{*}{1} &
   Minority constitutes majority of CVAP in proposed district &
-  \texttt{redist analyze --types demographic --vra-mode} &
+  \texttt{bisect analyze --types demographic --vra-mode} &
   Minority CVAP \% per district \\
 \cmidrule{2-4}
   & Geographic compactness of minority community &
-  \texttt{redist analyze --types compactness} &
+  \texttt{bisect analyze --types compactness} &
   Alignment score $A_d$; Polsby-Popper score \\
 \cmidrule{2-4}
   & Ensemble robustness of Prong 1 finding &
-  \texttt{redist analyze --ensemble-size 1000} &
+  \texttt{bisect analyze --ensemble-size 1000} &
   5th--95th pct alignment range \\
 \cmidrule{2-4}
   & Visual illustration of district and minority heatmap &
-  \texttt{redist map --overlay minority-cvap} &
+  \texttt{bisect map --overlay minority-cvap} &
   Map figure for exhibit \\
 \midrule
 \multirow{3}{*}{2} &
   Minority political cohesion (primary elections preferred) &
-  \texttt{redist analyze --types bloc-voting} &
+  \texttt{bisect analyze --types bloc-voting} &
   $\hat{\beta}_{\text{min}}$ with 95\% CI per election \\
 \cmidrule{2-4}
   & Cross-election stability of cohesion estimate &
@@ -46,11 +46,11 @@ Prong & Legal Element & \texttt{redist} Command & Output for Report \\
 \midrule
 \multirow{4}{*}{3} &
   Majority bloc voting (baseline, no partisan control) &
-  \texttt{redist analyze --types bloc-voting} &
+  \texttt{bisect analyze --types bloc-voting} &
   $\hat{\beta}_{\text{race}}$ without control \\
 \cmidrule{2-4}
   & Racial component after \textit{Callais} partisan control &
-  \texttt{redist analyze --types bloc-voting --partisan-control} &
+  \texttt{bisect analyze --types bloc-voting --partisan-control} &
   $\hat{\beta}_{\text{race}}$ with control; HC3 SE \\
 \cmidrule{2-4}
   & Holm multiple-testing correction &
@@ -63,19 +63,19 @@ Prong & Legal Element & \texttt{redist} Command & Output for Report \\
 \midrule
 Supporting &
   Overall criteria compliance for proposed remedial map &
-  \texttt{redist analyze --types all} &
+  \texttt{bisect analyze --types all} &
   Full criteria-compliance report \\
 \cmidrule{2-4}
   & Deposition-ready log with hash chain &
-  \texttt{redist depo --verify} &
+  \texttt{bisect depo --verify} &
   Canonical JSONL log + manifest \\
 \bottomrule
 \end{tabular}
 \begin{tablenotes}
 \small
-\item Note: Each \texttt{redist analyze} invocation should specify
+\item Note: Each \texttt{bisect analyze} invocation should specify
   \texttt{--state}, \texttt{--year}, and \texttt{--version} flags to
-  identify the run.  The deposition log (\texttt{redist depo}) produces
+  identify the run.  The deposition log (\texttt{bisect depo}) produces
   a tamper-evident hash chain for all outputs, suitable for discovery
   production.
 \end{tablenotes}
@@ -85,7 +85,7 @@ Supporting &
 \subsection{Deposition Readiness}
 
 Expert testimony in Section 2 litigation will be subject to deposition.
-The \texttt{redist depo} module produces a canonical JSONL log of all
+The \texttt{bisect depo} module produces a canonical JSONL log of all
 analysis steps with a SHA-256 hash chain, enabling verification that
 reported outputs match what the algorithm produced~\citep{dellaLibera2026vra}.
 The log is suitable for discovery production and provides a complete

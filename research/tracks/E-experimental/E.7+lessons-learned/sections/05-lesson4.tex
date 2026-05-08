@@ -1,4 +1,4 @@
-\section{Lesson 4: Crossing State Lines Produces Compact but Fragmented Districts}
+\section{Lesson 4: Crossing State Lines Fragments Districts and Hurts Compactness}
 \label{sec:lesson4}
 
 National redistricting without state lines (Paper E.3) is the purest
@@ -6,27 +6,34 @@ implementation of geometric optimization: treat the continental United States
 as a single graph of approximately 73,000 census tracts and partition it into
 435 compact contiguous districts using the METIS minimum-cut algorithm, without
 any constraint that district boundaries respect state lines
-\citep{dellaLibera2026e3}.  The design lesson from this experiment is a
-precise quantification of the federalism compactness cost: the state-boundary
-constraint sacrifices approximately 12\% of achievable mean Polsby--Popper
-compactness in exchange for state-based representation.
+\citep{dellaLibera2026e3}.  The design lesson from this experiment is
+surprising and counterintuitive: E.3 finds that removing state boundaries
+creates a \textbf{42.5\% compactness penalty} (PP 0.265 vs.\ 0.461 under the
+50-state state-constrained baseline).
+Geometric fragmentation of congressional districts across state lines
+outweighs any optimization benefit.
+This finding implies state boundaries are \emph{compactness-enabling} constraints,
+not compactness-limiting ones.
 
-\subsection{The Compactness Gain}
+\subsection{The Compactness Penalty}
 
-The 50-state baseline DIA achieves a mean Polsby--Popper score of 0.367.
-The national redistricting experiment achieves 0.411, an improvement of
-$\Delta\mathrm{PP} = +0.044$, or 12.0\% of the baseline value
+The 50-state baseline achieves a mean Polsby--Popper score of 0.461.
+The national redistricting experiment achieves only 0.265 --- a drop of
+$\Delta\mathrm{PP} = -0.196$, or 42.5\% below the state-constrained baseline
 \citep{dellaLibera2026e3}.
 
-This improvement is not uniform across the country.  It is concentrated in
-states where state boundaries happen to bisect naturally compact geographic
-units: the Appalachian ridge that splits the Virginia--West Virginia--North
-Carolina border region; the Mississippi River basin that straddles multiple
-state lines in the upper Midwest; the suburban sprawl of metropolitan areas
-that cross state boundaries (Kansas City, Philadelphia, Cincinnati, Washington
-DC).  In these areas, removing the state constraint allows the algorithm to
-draw districts that follow natural geographic contours rather than arbitrary
-political lines.
+The penalty arises because districts that cross state lines must traverse
+long, irregular boundaries where two states' census-tract grids meet at
+misaligned angles.
+State lines in the continental United States often run along rivers, mountain
+ridges, and surveying meridians that themselves form compact geographic contours
+within each state.
+When a district crosses a state line, it must bridge two different geographic
+coordinate systems and two different population density gradients, producing
+elongated, irregular shapes that score poorly on the Polsby--Popper metric.
+In this respect, state boundaries happen to coincide with the natural geometric
+seams of the American landscape, and crossing them breaks compactness rather
+than enabling it.
 
 Approximately 60\% of districts are unchanged or minimally changed by removing
 the state constraint: they would fall entirely within one state under any
@@ -73,7 +80,8 @@ regulations, state courts --- that do not map cleanly onto her congressional
 role.  She would also face a reelection challenge defined by two different
 state primary calendars and two different state party structures.
 
-Paper E.3 identifies 87 cross-state districts in the national map --- districts
+Paper E.3 identifies 87 districts with $\geq 10\%$ cross-state population in the national map
+(from E.3's sensitivity analysis), districts
 that draw at least 10\% of their population from a different state than the
 majority of their population \citep{dellaLibera2026e3}.  These 87 districts
 represent a substantial fraction of the 435 total (20\%) and are concentrated
@@ -87,19 +95,20 @@ respecting state boundaries in redistricting was unmeasured; the conventional
 wisdom was simply that state-based redistricting is constitutionally required
 and therefore not worth analyzing as a design choice.
 
-The finding that the federalism constraint costs approximately 12\% mean
-compactness is both modest enough to be acceptable and substantial enough to
-be worth knowing.  It is modest in the sense that the 0.367 baseline is
-already substantially higher than the compactness of current commission-drawn
-maps (which average approximately 0.28--0.31 in most states); the 12\%
-improvement would raise the algorithmic baseline to 0.411, an improvement at
-the margin.  It is substantial in the sense that 12\% of mean PP corresponds
-to visibly more regular district shapes in the cross-state border regions where
-the improvement is concentrated.
+E.3 finds that removing state boundaries creates a 42.5\% compactness
+\emph{penalty} (PP 0.265 vs.\ 0.461 under the state-constrained baseline).
+This is the opposite of the intuition that unconstrained national optimization
+would improve compactness.
+State boundaries are compactness-enabling constraints: they confine districts
+to coherent geographic regions whose census-tract adjacency graphs form compact
+subgraphs.
+Cross-state districts must span two different regional graph structures,
+producing irregular shapes that score poorly on Polsby--Popper.
 
 The implication for reform advocates is that the compactness argument for
-national redistricting is relatively weak: a 12\% improvement is not
-transformative.  The proportionality argument --- that national redistricting
-might reduce the sorting-driven seat gap by drawing districts that cross
-state-level sorting concentrations --- is potentially stronger but is not
-supported by E.3's empirical results (see Lesson~1 above).
+national redistricting is not merely weak --- it is negative.  National
+redistricting would produce geometrically worse districts than the
+state-constrained approach.  The proportionality argument --- that national
+redistricting might reduce the sorting-driven seat gap by drawing districts
+that cross state-level sorting concentrations --- is potentially stronger but
+is not supported by E.3's empirical results (see Lesson~1 above).

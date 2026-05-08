@@ -107,7 +107,7 @@ Table~\ref{tab:runtime-full} reports wall-clock runtimes for all 50 states.
 Runtimes range from 8 seconds (Delaware, $k=41$, tract) to 420 seconds
 (New Hampshire, $k=400$, block\_group). The median runtime is 67 seconds.
 Total runtime for the full 50-state sweep is approximately 68 minutes on a
-single CPU core. With 4 parallel workers (via \texttt{redist states --workers 4}),
+single CPU core. With 4 parallel workers (via \texttt{bisect states --workers 4}),
 this reduces to approximately 18 minutes.
 
 Block-group resolution states are 3.2$\times$ slower on average than

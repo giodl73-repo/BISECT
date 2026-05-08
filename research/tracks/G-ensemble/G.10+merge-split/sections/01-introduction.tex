@@ -36,7 +36,7 @@ of the two proposed sub-plans, which equals the ratio of matrix-tree
 determinants.
 This exactly targets the uniform distribution over valid spanning-forest
 partitions.
-The cost is $O(m^2)$ per step due to the determinant computation.
+ForestRecom uses the two-tree UST approximation at $O(m \log m)$ per step---the same asymptotic cost as MergeSplit.
 
 \paragraph{Merge-Split MCMC~\citep{janson2022} (this paper).}
 Sample an independent reverse spanning tree of the same merged region and
@@ -50,7 +50,7 @@ Merge-Split approximates the uniform distribution in expectation: the ratio
 is an unbiased estimate of the true MH ratio, so the chain is ``approximately
 reversible'' rather than exactly reversible.
 The approximation is the price of the $O(m \log m)$ cost; Forest \recom{}
-pays $O(m^2)$ to remove the approximation.
+shares the same $O(m \log m)$ asymptotic cost via the two-tree UST approximation.
 
 \subsection{Main Contributions}
 
