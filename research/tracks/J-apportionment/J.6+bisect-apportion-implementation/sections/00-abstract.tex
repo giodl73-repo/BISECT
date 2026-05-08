@@ -8,11 +8,11 @@ apportionment (435 seats, 50 states), confirmed by string comparison
 to the Census Bureau's April~26, 2021 published result:
 zero discrepancies across all 50 states.
 
-The implementation uses double-precision floating-point (\texttt{f64})
-arithmetic for priority comparisons; for the population values used in
-apportionment (up to approximately 40~million) and seat counts (up to
-approximately 100), \texttt{f64} provides exact results within its 53-bit
-mantissa precision.
+The priority computations use \texttt{f64} arithmetic.
+For the seat counts and population values in U.S.\ apportionment
+(populations $\leq 40$~million, seat counts $\leq 100$), priority comparisons
+are exact because no population/seat product exceeds $4\times10^9$, well within
+\texttt{f64}'s exact integer range of $2^{53} \approx 9\times10^{15}$.
 SHA-256 seed verification is planned for Phase~2; currently the implementation
 uses a deterministic seed formula without cryptographic verification.
 

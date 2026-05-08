@@ -4,6 +4,17 @@ in a single command:
 bisect label-analyze <label> --year 2020 --types all
 \end{verbatim}
 
+All metrics are implemented in \texttt{crates/bisect-analysis/src/compactness.rs}
+and returned together via the \texttt{all\_metrics()} function:
+\begin{itemize}
+  \item \texttt{polsby\_popper()} — K.1, range $[0,1]$
+  \item \texttt{reock()} — K.2, range $[0,1]$ (centroid approximation)
+  \item \texttt{convex\_hull\_ratio()} — K.3, range $[0,1]$
+  \item \texttt{schwartzberg()} — K.4, range $[1,\infty)$
+  \item \texttt{length\_width\_ratio()} — K.5, range $[1,\infty)$
+  \item \texttt{population\_weighted\_compactness()} — K.6, separate function (requires tract populations)
+\end{itemize}
+
 \subsection{Output Format}
 
 The output is a JSON file at \texttt{analysis/<label>/<year>/compactness.json}:

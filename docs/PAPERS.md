@@ -1,8 +1,8 @@
 # Research Papers
 
-66 papers across eight tracks (A–H). PDFs open directly from the links below. LaTeX sources in [`research/tracks/`](../research/tracks/) — each series in its own track subdirectory.
+120+ papers across twelve tracks (A–L). PDFs open directly from the links below. LaTeX sources in [`research/tracks/`](../research/tracks/) — each series in its own track subdirectory.
 
-Papers are organised by the question they answer. Each paper's series code (A–H) is shown for cross-reference. To recompile: `cd research && make docs`
+Papers are organised by the question they answer. Each paper's series code (A–L) is shown for cross-reference. To recompile: `cd research && make docs`
 
 ---
 
@@ -190,4 +190,69 @@ Synthesis, guides, and practitioner materials.
 
 ---
 
-*To add a paper: place `main.tex` in `research/CODE+title/`, run `cd research && make docs`, commit `docs/papers/CODE+title.pdf`.*
+---
+
+## Track I — Incumbency (5 papers)
+
+How algorithmically-drawn maps affect incumbents — an algorithm with no incumbency input whose geometric outcomes can be measured against enacted maps.
+
+| Code | Title | Status |
+|------|-------|--------|
+| I.0 | Incumbency and Algorithmic Redistricting: Overview | **Accepted** |
+| I.1 | Incumbent-Pairing Probability | Minor Revision |
+| I.2 | Safe-Seat Creation and Destruction | Minor Revision |
+| I.3 | Open-Seat Effects and Retirement Incentives | Major Revision |
+| I.4 | Incumbency Protection as a Legal Redistricting Criterion | **Accepted** |
+
+---
+
+## Track J — Apportionment Methods (7 papers)
+
+Congressional seat apportionment — how seats are allocated to states before districts are drawn. Documents the `bisect-apportion` crate.
+
+| Code | Title | Status |
+|------|-------|--------|
+| J.0 | Apportionment Methods: Overview | Minor Revision |
+| J.1 | Huntington-Hill: The Federal Method | Minor Revision |
+| J.2 | Webster Method and Sainte-Laguë Equivalence | Minor Revision |
+| J.3 | Adams Method and Smallest-State Bias | Major Revision |
+| J.4 | Jefferson/D'Hondt and Large-State Bias | Minor Revision |
+| J.5 | Apportionment Paradoxes and Balinski-Young Impossibility | Minor Revision |
+| J.6 | bisect-apportion: Verified Implementation | Major Revision |
+
+---
+
+## Track K — Compactness Measures (8 papers)
+
+One paper per compactness metric: mathematical definition, properties, implementation in `bisect-analysis`, empirical comparison across B-series algorithms, legal usage.
+
+| Code | Title | Status |
+|------|-------|--------|
+| K.0 | Compactness Taxonomy and Overview | **Accepted** |
+| K.1 | Polsby-Popper Score | **Accepted** |
+| K.2 | Reock Score | Major Revision |
+| K.3 | Convex Hull Ratio | **Accepted** |
+| K.4 | Schwartzberg Score | **Accepted** |
+| K.5 | Length-Width Ratio | Minor Revision |
+| K.6 | Population-Weighted Compactness | **Accepted** |
+| K.7 | Multi-Metric Composite and Court Usage Guide | Minor Revision |
+
+---
+
+## Track L — Partisan Fairness (7 papers)
+
+Partisan fairness metrics — how algorithmically-drawn maps compare to enacted maps across all six major metrics. Post-Rucho legal landscape.
+
+| Code | Title | Status |
+|------|-------|--------|
+| L.0 | Partisan Fairness Metrics: Overview and Framework | **Accepted** |
+| L.1 | Efficiency Gap: Dedicated Treatment | **Accepted** |
+| L.2 | Mean-Median Difference | **Accepted** |
+| L.3 | Partisan Bias and Swing Ratio | **Accepted** |
+| L.4 | Declination | **Accepted** |
+| L.5 | Seats-Votes Curve and Responsiveness | **Accepted** |
+| L.6 | Proportionality vs. Majoritarianism | **Accepted** |
+
+---
+
+*To add a paper: place `main.tex` in `research/tracks/[track]/CODE+title/`, run `cd research && make docs`, commit `docs/papers/CODE+title.pdf`.*

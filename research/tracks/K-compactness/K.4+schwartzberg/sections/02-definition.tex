@@ -1,3 +1,11 @@
+\subsection{Implementation}
+
+The Schwartzberg score is implemented as \texttt{schwartzberg()} in
+\texttt{crates/bisect-analysis/src/compactness.rs}, reusing the
+\texttt{polsby\_popper()} result via $S = 1/\sqrt{\mathrm{PP}}$.
+It is included in \texttt{all\_metrics()} and reported by
+\texttt{bisect label-analyze --types compactness}.
+
 \subsection{Formula}
 
 Let $D$ be a district with area $A(D)$ and perimeter $P(D)$.

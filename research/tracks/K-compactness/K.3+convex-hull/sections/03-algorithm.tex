@@ -1,3 +1,8 @@
+The convex hull ratio is implemented as \texttt{convex\_hull\_ratio()} in
+\texttt{crates/bisect-analysis/src/compactness.rs} and is included in the
+\texttt{CompactnessMetrics} struct returned by \texttt{all\_metrics()}.
+All six K-track metrics are reported together via \texttt{bisect label-analyze --types compactness}.
+
 We use Andrew's monotone chain algorithm~\citep{andrew1979another} to compute
 the convex hull of a district polygon in $O(n \log n)$ time.
 (Graham scan~\citep{graham1972efficient} achieves the same asymptotic complexity
