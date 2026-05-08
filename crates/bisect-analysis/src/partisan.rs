@@ -58,8 +58,9 @@ pub struct SeatsVotesCurve {
     pub swing_points: Vec<(f64, f64)>,
     /// Finite-difference responsiveness: (S(0.525) - S(0.475)) / 0.05.
     pub responsiveness: f64,
-    /// Interpolated S at statewide vote = 0.50, minus 0.50.
-    /// Positive = Democratic-favoring, Negative = Republican-favoring.
+    /// Interpolated S at statewide vote = 0.50, minus 0.50, where S is the Democratic seat share.
+    /// Positive = Democratic-favoring (Dems win more than half the seats at 50% vote share).
+    /// Negative = Republican-favoring.
     pub bias: f64,
 }
 
@@ -102,8 +103,10 @@ const DECL_ACADEMIC_REF: &str =
 // Core metric functions (public so tests in redist-cli can call them)
 // ---------------------------------------------------------------------------
 
-/// Efficiency Gap = (Wasted_R - Wasted_D) / Total_votes.
-/// Positive = Democratic-favoring, Negative = Republican-favoring.
+/// Efficiency Gap = (Wasted_D - Wasted_R) / Total_votes.
+/// Positive values indicate Republican-favoring plans (more Democratic votes wasted);
+/// negative values indicate Democratic-favoring plans.
+/// Definition per Stephanopoulos & McGhee (2015).
 pub fn compute_efficiency_gap(districts: &[DistrictElection]) -> f64 {
     let total_votes: f64 = districts.iter().map(|d| d.total()).sum();
     if total_votes == 0.0 {
@@ -120,7 +123,7 @@ pub fn compute_efficiency_gap(districts: &[DistrictElection]) -> f64 {
             (wd + d.dem_votes, wr + (d.rep_votes - threshold))
         }
     });
-    (wasted_r - wasted_d) / total_votes
+    (wasted_d - wasted_r) / total_votes
 }
 
 /// Mean-Median = mean(dem_share) - median(dem_share).
@@ -141,8 +144,10 @@ pub fn compute_mean_median(districts: &[DistrictElection]) -> f64 {
     mean - median
 }
 
-/// Partisan Bias: 0.5 - dem_seat_share at the swing where statewide Dem = 50%.
-/// Positive = Dem-favoring, Negative = Rep-favoring.
+/// Partisan Bias: dem_seat_share at the swing where statewide Dem = 50%, minus 0.5.
+/// Convention matches SeatsVotesCurve.bias: bias = S(0.50) − 0.50.
+/// Positive = Democratic-favoring (Dems win more than half the seats at 50% statewide vote).
+/// Negative = Republican-favoring (Dems win fewer than half the seats at 50% statewide vote).
 pub fn compute_partisan_bias(districts: &[DistrictElection]) -> f64 {
     let (total_dem, total_all): (f64, f64) = districts
         .iter()
@@ -156,7 +161,7 @@ pub fn compute_partisan_bias(districts: &[DistrictElection]) -> f64 {
         .iter()
         .filter(|d| d.dem_pct() + swing >= 0.5)
         .count() as f64;
-    0.5 - seats_at_50 / districts.len() as f64
+    seats_at_50 / districts.len() as f64 - 0.5
 }
 
 /// Declination (Warrington 2018).
@@ -338,14 +343,31 @@ pub fn compute_partisan_metrics(
         (None, None, None, None, None, None, None, None)
     };
 
-    // For EG, MM, PB: positive = Democratic-favoring.
-    let direction = |v: f64| -> String {
+    // EG: positive = Republican-favoring (Wasted_D > Wasted_R).
+    // PB: positive = Republican-favoring (seat share at 50% vote favors Republicans).
+    let direction_rep_pos = |v: f64| -> String {
+        if v >= 0.0 { "Republican".into() } else { "Democratic".into() }
+    };
+    // MM: positive = Democratic-favoring (mean > median).
+    let direction_dem_pos = |v: f64| -> String {
         if v >= 0.0 { "Democratic".into() } else { "Republican".into() }
     };
-    // For Declination: positive = Republican-favoring (sign reversed).
+    // Declination: positive = Republican-favoring (same as rep_pos).
     let direction_decl = |v: f64| -> String {
         if v >= 0.0 { "Republican".into() } else { "Democratic".into() }
     };
+
+    // Consistency check: compute_partisan_bias and SeatsVotesCurve.bias use the same
+    // convention (S(0.50) - 0.50). They should agree within floating-point tolerance.
+    if (pb_val - seats_votes.bias).abs() >= 0.01 {
+        eprintln!(
+            "WARNING: partisan_bias ({:.4}) and seats_votes.bias ({:.4}) diverge by {:.4} \
+             (expected < 0.01). Possible numerical inconsistency.",
+            pb_val,
+            seats_votes.bias,
+            (pb_val - seats_votes.bias).abs()
+        );
+    }
 
     let total_votes: f64 = districts.iter().map(|d| d.total()).sum();
     let statewide_dem_vote_share = if total_votes > 0.0 {
@@ -359,7 +381,7 @@ pub fn compute_partisan_metrics(
     PartisanMetrics {
         efficiency_gap: MetricWithCI {
             value: eg_val,
-            direction: direction(eg_val),
+            direction: direction_rep_pos(eg_val),
             ci_available,
             ci_95_low: eg_lo,
             ci_95_high: eg_hi,
@@ -368,7 +390,7 @@ pub fn compute_partisan_metrics(
         },
         mean_median: MetricWithCI {
             value: mm_val,
-            direction: direction(mm_val),
+            direction: direction_dem_pos(mm_val),
             ci_available,
             ci_95_low: mm_lo,
             ci_95_high: mm_hi,
@@ -377,7 +399,7 @@ pub fn compute_partisan_metrics(
         },
         partisan_bias: MetricWithCI {
             value: pb_val,
-            direction: direction(pb_val),
+            direction: direction_dem_pos(pb_val),
             ci_available,
             ci_95_low: pb_lo,
             ci_95_high: pb_hi,
@@ -470,9 +492,12 @@ mod tests {
 
     #[test]
     fn test_efficiency_gap_direction() {
+        // packed_dem_plan: Dems packed in 4 blowout wins (80%), Reps win 6 narrowly (51%).
+        // Many Democratic surplus votes wasted → EG = (Wasted_D - Wasted_R) / Total > 0.
+        // Positive EG = Republican-favoring per Stephanopoulos & McGhee (2015).
         let districts = packed_dem_plan();
         let eg = compute_efficiency_gap(&districts);
-        assert!(eg < 0.0, "packed Dem blowout plan should have negative EG (Rep-favoring), got {eg}");
+        assert!(eg > 0.0, "packed Dem blowout plan should have positive EG (Rep-favoring), got {eg}");
     }
 
     #[test]
@@ -541,16 +566,21 @@ mod tests {
     }
 
     #[test]
-    fn test_direction_dem_when_positive_eg() {
+    fn test_direction_dem_when_negative_eg() {
+        // packed_rep_plan: Reps packed in 4 blowout losses (20% Dem), Dems win 6 narrowly (51%).
+        // More Republican surplus votes wasted → EG = (Wasted_D - Wasted_R) < 0 = Dem-favoring.
         let districts = packed_rep_plan();
         let result = compute_partisan_metrics(&districts, None, 100);
+        assert!(result.efficiency_gap.value < 0.0, "packed-Rep plan should have negative EG");
         assert_eq!(result.efficiency_gap.direction, "Democratic");
     }
 
     #[test]
-    fn test_direction_rep_when_negative_eg() {
+    fn test_direction_rep_when_positive_eg() {
+        // packed_dem_plan: Dems packed in blowouts → Wasted_D > Wasted_R → EG > 0 = Rep-favoring.
         let districts = packed_dem_plan();
         let result = compute_partisan_metrics(&districts, None, 100);
+        assert!(result.efficiency_gap.value > 0.0, "packed-Dem plan should have positive EG");
         assert_eq!(result.efficiency_gap.direction, "Republican");
     }
 
@@ -604,33 +634,33 @@ mod tests {
     }
 
     #[test]
-    fn test_partisan_bias_rep_gerrymander_positive() {
-        // Packed-Dem plan = Republican gerrymander: swing at 50% gives Dems more seats
-        // than current → seats_at_50 > 0.5*n → pb = 0.5 - (>0.5) < 0? Let's verify
-        // the actual sign from the formula and document it correctly.
+    fn test_partisan_bias_rep_gerrymander_negative() {
+        // Packed-Dem plan = Republican gerrymander (Dems packed into blowout wins).
         // packed_dem: 6 narrow Rep wins (0.49D), 4 blowout Dem wins (0.80D)
         // statewide_dem = (6*490 + 4*800)/(10*1000) = (2940+3200)/10000 = 0.614
-        // swing = 0.5 - 0.614 = -0.114 (subtract from each share)
+        // swing to 50% = 0.5 - 0.614 = -0.114 (subtract from each share)
         // adjusted shares: 0.49-0.114=0.376, 0.80-0.114=0.686
-        // seats at 50%: districts where adjusted >= 0.5 → only the 4 blowout Dem ones
-        // seats_at_50 = 4 → pb = 0.5 - 4/10 = 0.1 > 0
+        // seats at 50%: districts where adjusted > 0.5 → only the 4 blowout Dem ones
+        // seats_at_50 = 4 → pb = 4/10 - 0.5 = -0.1 < 0
+        // Negative = Republican-favoring: at 50% statewide, Dems only win 40% of seats.
         let districts = packed_dem_plan();
         let pb = compute_partisan_bias(&districts);
-        assert!(pb > 0.0, "packed-Dem plan swing formula gives positive bias, got {pb}");
+        assert!(pb < 0.0, "packed-Dem (Rep gerrymander) gives negative bias (Rep-favoring), got {pb}");
     }
 
     #[test]
-    fn test_partisan_bias_dem_gerrymander_negative() {
-        // Packed-Rep plan = Democratic gerrymander: swing analysis gives negative bias
+    fn test_partisan_bias_dem_gerrymander_positive() {
+        // Packed-Rep plan = Democratic gerrymander (Reps packed into blowout losses).
         // packed_rep: 6 narrow Dem wins (0.51D), 4 blowout Rep wins (0.20D)
         // statewide_dem = (6*510 + 4*200)/(10*1000) = (3060+800)/10000 = 0.386
-        // swing = 0.5 - 0.386 = 0.114
+        // swing to 50% = 0.5 - 0.386 = +0.114 (add to each share)
         // adjusted: 0.51+0.114=0.624, 0.20+0.114=0.314
         // seats at 50%: only the 6 Dem-win districts → seats_at_50 = 6
-        // pb = 0.5 - 6/10 = -0.1 < 0
+        // pb = 6/10 - 0.5 = +0.1 > 0
+        // Positive = Democratic-favoring: at 50% statewide, Dems win 60% of seats.
         let districts = packed_rep_plan();
         let pb = compute_partisan_bias(&districts);
-        assert!(pb < 0.0, "packed-Rep plan swing formula gives negative bias, got {pb}");
+        assert!(pb > 0.0, "packed-Rep (Dem gerrymander) gives positive bias (Dem-favoring), got {pb}");
     }
 
     // ── compute_efficiency_gap additional cases ─────────────────────────────
