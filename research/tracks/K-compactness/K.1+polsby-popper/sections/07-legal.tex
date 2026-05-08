@@ -1,0 +1,58 @@
+PP has appeared in redistricting litigation and statutory frameworks in multiple
+contexts.
+
+\subsection{Court Usage}
+
+\paragraph{North Carolina legislative redistricting (2017--2020).}
+Expert reports submitted in North Carolina legislative redistricting litigation
+(\textit{Common Cause v.\ Rucho}, later renamed after the state defendants)
+cited PP values for proposed and enacted plans.
+\citet{chen2017expert} reports PP values for North Carolina Senate districts
+in the range $0.10$--$0.35$, consistent with our bisect estimates for NC
+congressional districts.
+
+\paragraph{Gill v.\ Whitford (2018).}
+The Wisconsin gerrymandering case \textit{Gill v.\ Whitford}, 585 U.S.\ 48 (2018),
+produced a substantial record of expert reports.
+Compactness metrics including PP were submitted to document that the challenged
+legislative plan was less compact than algorithmic alternatives~\citep{gill2018}.
+
+\paragraph{Rucho v.\ Common Cause (2019).}
+\textit{Rucho v.\ Common Cause}, 588 U.S.\ 684 (2019), held that partisan
+gerrymandering claims are non-justiciable under federal law but explicitly
+confirmed that state law compactness standards---including PP---remain
+judicially enforceable~\citep{rucho2019}.
+
+\subsection{Statutory Requirements}
+
+\paragraph{Ohio H.B.\ 1 (2015).}
+Ohio's 2015 redistricting reform required the General Assembly to maximise
+compactness using a PP-based criterion.
+The Ohio Redistricting Commission has applied PP in its evaluation framework
+for the 2020 redistricting cycle.
+
+\paragraph{Iowa statutory compactness.}
+Iowa Code \S 42.4 requires districts to be ``as compact as possible,''
+which the Legislative Services Agency has operationalised using perimeter-to-area
+ratios equivalent to a PP calculation.
+
+\paragraph{Princeton Gerrymandering Project.}
+The Princeton Gerrymandering Project grades redistricting plans on a letter
+scale that includes PP as a component of its ``shape'' score~\citep{pgp2022}.
+Plans are graded A--F; bisect ratio-optimal plans would score in the B--A range
+based on Table~\ref{tab:pp_main}.
+
+\subsection{Limitations for Court Filings}
+
+PP must be accompanied by the projection specification when submitted as
+court evidence. An expert report stating ``mean PP $= 0.22$'' without specifying
+EPSG:5070 is open to challenge from opposing experts who may compute PP in
+a different coordinate system and obtain different values.
+We recommend including the following disclosure in all court filings:
+\begin{quote}
+  \emph{All Polsby-Popper scores were computed using district polygon geometries
+  projected to the Albers Equal Area Conic coordinate system (EPSG:5070) using
+  the TIGER/Line 2020 Census tract boundaries released by the U.S.\ Census Bureau.
+  Perimeter measurements use Euclidean distance between projected polygon vertices.
+  No boundary smoothing was applied.}
+\end{quote}

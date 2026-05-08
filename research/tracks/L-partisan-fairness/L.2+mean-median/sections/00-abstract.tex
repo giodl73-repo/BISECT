@@ -1,0 +1,21 @@
+The Mean-Median Difference ($\text{MM} = \bar{v}_D - \tilde{v}_D$), introduced by \citet{wang2016},
+measures the gap between the mean and median Democratic vote share across congressional districts.
+Positive MM indicates Democratic voters are geographically concentrated in fewer, higher-margin
+districts---a pattern associated with packing. Unlike the Efficiency Gap, MM does not require
+a swing model and is more stable across election cycles. Its central evidentiary challenge
+in litigation is the geographic sorting confound: any positive MM may reflect where Democrats
+choose to live, not deliberate mapmaker choices.
+
+We resolve this confound empirically by comparing enacted 2022 congressional maps to
+\textsc{bisect} algorithmic maps drawn from the same geographic constraints.
+For North Carolina ($k=14$), enacted MM $\approx 0.07$ vs.\ bisect MM $\approx 0.02$
+(60--70\% reduction); for Wisconsin ($k=8$), enacted MM $\approx 0.06$ vs.\ bisect MM $\approx 0.02$.
+The bisect residual of $\approx 0.02$--$0.03$ establishes the geographic sorting baseline---the
+MM that the residential distribution of voters produces in any compact map. The enacted-bisect
+gap of $\approx 0.04$--$0.05$ isolates the mapmaker contribution, providing courts with
+a precise measure of manipulation independent of residential patterns.
+
+MM is more stable than EG across election cycles (NC standard deviation $\approx 0.015$ vs.\
+$\approx 0.030$ for EG), making it the preferred metric for single-election analysis in
+post-\textit{Rucho} state court proceedings. It has been cited in NC \textit{Harper v.\ Hall}
+(2022) and PA redistricting proceedings; no court has adopted a specific MM threshold.

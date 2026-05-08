@@ -1,0 +1,58 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{multirow}
+
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+\title{\textbf{Partisan Fairness Metrics in Congressional Redistricting:\\
+A Framework, Taxonomy, and Reference Distribution}}
+
+\author{Giovanni Della-Libera}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Partisan Gerrymandering, Efficiency Gap, Mean-Median Difference, Partisan Bias,
+Declination, Seats-Votes Curve, Proportionality, Algorithmic Redistricting,
+\textit{Rucho v.\ Common Cause}
+
+\section{Introduction and Post-\textit{Rucho} Landscape}
+\input{sections/01-introduction}
+
+\section{Taxonomy of Partisan Fairness Metrics}
+\input{sections/02-definition}
+
+\section{Bisect Algorithmic Maps as a Reference Distribution}
+\input{sections/03-behavior}
+
+\section{Empirical Overview Across NC, WI, TX, and FL}
+\input{sections/04-empirical}
+
+\section{Legal Landscape and State Court Pathways}
+\input{sections/05-legal}
+
+\section{Conclusion}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

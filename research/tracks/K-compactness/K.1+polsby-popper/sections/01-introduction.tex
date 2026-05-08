@@ -1,0 +1,41 @@
+The Polsby-Popper score was introduced by \citet{polsby1991third} as a
+``third criterion'' for redistricting, complementing equal population and
+contiguity. Its formula---$\text{PP} = 4\pi A / P^2$---translates the classical
+isoperimetric inequality ($4\pi A \leq P^2$, with equality only for a disk) into
+a normalised compactness score on $[0,1]$.
+A score of $1$ represents a perfect circle; a score near $0$ indicates a district
+whose boundary is so convoluted relative to its area that it cannot plausibly
+reflect geographic or community-of-interest considerations.
+
+PP's appeal in legal proceedings is threefold.
+First, the $[0,1]$ scale is self-explanatory: an expert witness can tell a judge
+that ``a score of $0.22$ means the district is 22\% as compact as a circle.''
+Second, PP has appeared in expert reports across decades of redistricting
+litigation, providing courts with an established evidentiary baseline.
+Third, PP is required by statute in Ohio (H.B.\ 1 redistricting criteria,
+2015), referenced in North Carolina redistricting guidelines, and embedded in
+the evaluation framework of the Princeton Gerrymandering Project.
+
+Despite its prominence, PP has a known limitation: perimeter measurements are
+sensitive to the resolution and accuracy of boundary data.
+U.S.\ Census TIGER/Line shapefiles represent coastlines, rivers, and state borders
+at a fixed resolution that introduces digitisation artifacts---small jags that
+inflate perimeter without reflecting any deliberate district design choice.
+We document this artifact and the correction methodology.
+
+\subsection{Scope and Data}
+
+We compute PP for all congressional districts produced by the four \textsc{bisect}
+structure algorithms:
+\begin{itemize}
+  \item \textbf{standard-bisect}: recursive bisection using METIS partitioning
+    with default geographic edge weights (\texttt{--weights-override geographic}).
+  \item \textbf{prime-factor} (ApportionRegions): hierarchical bisection following
+    prime factorisation of $k$ (\texttt{--structure prime-factor}).
+  \item \textbf{ratio-optimal} (GeoSection): bisection optimising the area-ratio
+    at each cut (\texttt{--structure ratio-optimal}).
+  \item \textbf{moving-knife} (MKA): moving-knife algorithm maximising minimum
+    Reock score (\texttt{--structure moving-knife}).
+\end{itemize}
+States: NC ($k=14$), WI ($k=8$), TX ($k=38$), 2020 Census TIGER/Line tracts.
+All single-seed results use seed $= 42^\dagger$.

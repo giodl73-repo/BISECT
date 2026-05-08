@@ -1,0 +1,36 @@
+\section{Introduction}
+\label{sec:introduction}
+
+The seats-votes curve is the foundational concept in the political science literature
+on partisan fairness in redistricting. Before the Efficiency Gap, before Declination,
+before the Mean-Median Difference---the seats-votes relationship was the starting
+point for every analysis of whether redistricting produced systematically asymmetric
+partisan outcomes. The curve maps statewide vote share to seat share, and its shape
+encodes everything that matters for partisan fairness: a symmetric curve (the ideal)
+treats both parties identically at every vote level; an asymmetric curve (the signature
+of gerrymandering) favors one party across the full range of plausible election outcomes.
+
+The scalar metrics in L.1--L.4 are all summaries of the seats-votes curve. The
+Efficiency Gap is the area between the observed $S(v)$ curve and the diagonal $S(v) = v$.
+Partisan Bias is the value of $S(0.50) - 0.50$. Mean-Median Difference is a summary
+of the vote-share distribution that affects the shape of the curve near the median.
+Declination is a summary of the angular structure of the curve's inflection near 50\%.
+None of these scalar summaries captures the full picture that the curve provides.
+
+This paper argues that the seats-votes curve---supplemented by its scalar summary,
+Responsiveness ($R = dS/dv|_{v=0.50}$)---is the preferred exhibit for courtroom
+presentations of partisan fairness evidence. The curve is the sufficient statistic:
+all other L-series metrics can be computed from it, which means reporting the curve
+is at least as informative as reporting any combination of the scalar metrics.
+The graphical format communicates directly to judicial audiences. And the comparison
+of \textsc{bisect} and enacted curves---two step-functions on the same axes,
+one passing symmetrically through $(0.50, 0.50)$ with slope $\approx 2.0$, the
+other passing below $(0.50, 0.50)$ with slope $\approx 1.3$---provides the most
+complete visual evidence of partisan asymmetry available.
+
+Section~\ref{sec:definition} develops the mathematical definition and proves the
+sufficiency claim analytically. Section~\ref{sec:behavior} explains why compactness
+produces high responsiveness and why enacted safe-seat maps have suppressed responsiveness.
+Section~\ref{sec:empirical} presents the empirical curves for NC with responsiveness
+and bias statistics. Section~\ref{sec:legal} documents the curve's legal history.
+Section~\ref{sec:conclusion} concludes with courtroom guidance.

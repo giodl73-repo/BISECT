@@ -1,0 +1,59 @@
+\section{Behavior Under Algorithmic Redistricting}
+\label{sec:behavior}
+
+\subsection{Why Compactness Produces Near-Zero Partisan Bias}
+
+Partisan Bias is zero for any redistricting plan whose seats-votes function is
+symmetric around $(0.50, 0.50)$. The symmetry condition is satisfied when the
+distribution of district vote shares is symmetric around 0.50: if the map has
+as many districts at $0.50 - \epsilon$ as at $0.50 + \epsilon$ for all $\epsilon$,
+then a swing from $v < 0.50$ to $v > 0.50$ that brings the statewide mean from
+below to above 50\% will flip the same number of districts from Republican to
+Democratic as would be won by Republicans under a symmetric negative swing.
+
+Compactness optimization under \textsc{bisect} produces district vote-share
+distributions that are approximately symmetric around the statewide median
+Democratic vote share. This occurs because compact, geographically contiguous
+districts sample their populations from the surrounding area, and the surrounding
+area in most states has a mix of partisan compositions at intermediate distances
+from any given center. The result is a distribution of district vote shares that
+clusters near the statewide median, with few outliers at the extremes.
+
+The mechanism is not perfect symmetry: NC's urban cores produce outlier districts
+at 70--80\% Democratic, creating some right-tail skewness. But the skewness is
+much smaller than under enacted maps that deliberately pack Democratic voters into
+fewer, higher-margin districts while cracking their remaining voters across many
+45--48\% districts. The extreme asymmetry of the enacted distribution ($v_i \in
+\{35\%, 38\%, 40\%, 42\%, 44\%, 70\%, 75\%, 80\%\}$, for example) produces large
+negative Partisan Bias; the moderate asymmetry of the \textsc{bisect} distribution
+produces near-zero Partisan Bias.
+
+\subsection{Symmetry as a Byproduct of Geographic Fairness}
+
+The connection between compactness and partisan symmetry can be stated precisely:
+any redistricting plan that allocates population based solely on geographic proximity
+(compact, contiguous districts) will tend to have approximately symmetric vote-share
+distributions, because geographic proximity in most states does not correlate with
+partisan composition in a strongly asymmetric way at the district level.
+
+This means that Partisan Bias near zero is not a design goal of \textsc{bisect}---
+the algorithm optimizes population equality and compactness, not partisan symmetry---
+but a structural byproduct of those geographic criteria. Expert witnesses can use
+this property to make the causal argument: the compactness of \textsc{bisect} maps
+drives both their geographic coherence and their partisan near-neutrality. When an
+enacted map deviates from compactness in specific ways (districts with narrow necks,
+geographic reaching across natural barriers), the compactness deviation and the
+partisan asymmetry coincide---because the boundary configurations that compactness
+forbids are precisely the configurations that packing and cracking require.
+
+\subsection{Bisect Results}
+
+\textsc{Bisect} maps for NC ($k=14$) produce Bias $\approx -0.01$ ($^\dagger$), which
+is below the $1/14 \approx 0.071$ threshold for a one-seat advantage and therefore
+rounds to zero in the discrete seat-share framework. WI ($k=8$) and TX ($k=38$)
+similarly produce $|\text{Bias}| < 0.02$. The near-zero Bias confirms the compactness
+mechanism: geographic boundary-drawing without partisan data produces approximately
+symmetric treatment of the two parties at the electoral pivot.
+
+\footnotetext{$^\dagger$ Single-run \textsc{bisect} result using VEST 2020
+presidential precinct returns, standard-bisect structure, geographic weights.}

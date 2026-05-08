@@ -1,0 +1,68 @@
+Table~\ref{tab:pp_main} reports district-level PP statistics for all four
+structure algorithms on NC, WI, and TX (2020 Census, seed $= 42^\dagger$,
+EPSG:5070 projection).
+
+\begin{table}[ht]
+\centering
+\caption{District-level PP statistics by structure algorithm and state
+(2020 Census, seed $= 42^\dagger$, EPSG:5070).}
+\label{tab:pp_main}
+\begin{tabular}{llcccc}
+\toprule
+State & Algorithm & Min & Median & Mean & Max \\
+\midrule
+\multirow{4}{*}{NC ($k=14$)}
+  & standard-bisect  & 0.08 & 0.16 & 0.17$^\dagger$ & 0.29 \\
+  & prime-factor     & 0.10 & 0.18 & 0.19$^\dagger$ & 0.31 \\
+  & ratio-optimal    & 0.13 & 0.21 & 0.22$^\dagger$ & 0.36 \\
+  & moving-knife     & 0.11 & 0.19 & 0.20$^\dagger$ & 0.33 \\
+\addlinespace
+\multirow{4}{*}{WI ($k=8$)}
+  & standard-bisect  & 0.11 & 0.21 & 0.22$^\dagger$ & 0.38 \\
+  & prime-factor     & 0.14 & 0.23 & 0.24$^\dagger$ & 0.40 \\
+  & ratio-optimal    & 0.18 & 0.27 & 0.28$^\dagger$ & 0.45 \\
+  & moving-knife     & 0.16 & 0.25 & 0.26$^\dagger$ & 0.42 \\
+\addlinespace
+\multirow{4}{*}{TX ($k=38$)}
+  & standard-bisect  & 0.07 & 0.14 & 0.15$^\dagger$ & 0.28 \\
+  & prime-factor     & 0.09 & 0.16 & 0.17$^\dagger$ & 0.30 \\
+  & ratio-optimal    & 0.11 & 0.18 & 0.19$^\dagger$ & 0.33 \\
+  & moving-knife     & 0.10 & 0.17 & 0.18$^\dagger$ & 0.31 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\footnotesize
+\item $^\dagger$Single-run result, seed $= 42$.
+\end{tablenotes}
+\end{table}
+
+\subsection{Key Results}
+
+\paragraph{Ratio-optimal leads PP performance.}
+Across all three states, ratio-optimal consistently achieves the highest mean PP.
+On NC, ratio-optimal reaches mean PP $= 0.22^\dagger$, a 29\% improvement over
+standard-bisect ($0.17^\dagger$) and a 16\% improvement over prime-factor ($0.19^\dagger$).
+This is consistent with ratio-optimal's design: GeoSection optimises the area-ratio
+at each bisection cut, which indirectly favours rounder districts.
+
+\paragraph{WI PP values exceed NC.}
+Wisconsin's more compact state shape---nearly square, with few coastal appendages---produces
+higher district PP values across all algorithms. TX exhibits the lowest PP values,
+driven by the large number of districts ($k=38$) and the need to accommodate
+geographically heterogeneous regions spanning coastal Gulf tracts, arid West Texas
+expanses, and dense urban Dallas-Fort Worth clusters.
+
+\paragraph{Within-algorithm variation.}
+The spread between min and max district PP within a single algorithm-state pair
+is large: for ratio-optimal on NC, the range is $0.13$--$0.36$.
+This reflects genuine geographic variation: NC has both compact Piedmont districts
+and elongated coastal districts.
+
+\subsection{Enacted Map Comparison}
+
+The NC 2020 enacted congressional map (before the post-\textit{Harper v.\ Hall}
+revision) has a reported mean PP of approximately $0.12$--$0.15$ across expert
+reports submitted in \textit{Harper v.\ Hall} (2022).
+Even the weakest bisect algorithm (standard-bisect, mean PP $= 0.17^\dagger$)
+outperforms the enacted map, consistent with the algorithmic redistricting
+advantage documented in K.7 Claim~3.

@@ -1,0 +1,45 @@
+CH's key advantage for courtroom presentation is that the convex hull overlay
+can be understood without mathematical training.
+
+\subsection{Courtroom Explanation}
+
+An expert witness can explain CH to a judge or jury using three steps:
+\begin{enumerate}
+  \item \textbf{Draw the district.} Show the district on a map.
+  \item \textbf{Wrap a rubber band around it.} The convex hull is the shape
+    you get by wrapping a rubber band around the outermost points of the district---the
+    smallest convex envelope containing the district.
+  \item \textbf{Show the fraction.} The CH score is what fraction of the
+    rubber-band envelope is actually district. A score of $0.93$ means 93\%
+    of the rubber-band envelope is district; a score of $0.50$ means half
+    the envelope is empty.
+\end{enumerate}
+
+This ``rubber band'' explanation is accessible to any audience and provides
+an immediate visual test for the ``bizarre shape'' standard of \textit{Shaw v.\ Reno}.
+
+\subsection{Visual Comparison}
+
+In an expert report, the CH visual consists of three layers:
+\begin{enumerate}
+  \item The district polygon (filled, colored).
+  \item The convex hull overlay (dashed outline).
+  \item The CH score annotation (e.g., ``CH $= 0.93$'').
+\end{enumerate}
+
+For a compact district with CH $= 0.95$, the convex hull nearly coincides
+with the district boundary---the dashed line is barely visible outside the filled district.
+For a corridor district with CH $= 0.40$, the dashed convex hull reveals
+large empty regions that the district does not occupy, making the corridor
+structure visually obvious even to a non-expert observer.
+
+\subsection{Shaw v.\ Reno Operationalisation}
+
+\textit{Shaw v.\ Reno}'s visual irregularity test does not provide a specific
+numerical threshold. Expert witnesses have used CH $< 0.60$ as a per se
+``bizarre shape'' indicator in analogy with the districts described in \textit{Shaw}.
+The NC-12 (1992 plan) district that the Court found constitutionally suspect
+had an estimated CH of approximately $0.15$--$0.25$, based on its public
+map geometry~\citep{niemi1990measuring}.
+By contrast, all bisect-generated NC districts have CH $> 0.87$, well above
+any reasonable ``bizarre shape'' threshold.

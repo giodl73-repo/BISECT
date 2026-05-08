@@ -1,0 +1,50 @@
+Table~\ref{tab:conversion} provides the conversion between PP and S for
+common PP values observed in \textsc{bisect} redistricting runs.
+
+\begin{table}[ht]
+\centering
+\caption{PP-to-S conversion table ($S = 1/\sqrt{\text{PP}}$).}
+\label{tab:conversion}
+\begin{tabular}{cc|cc}
+\toprule
+PP & $S = 1/\sqrt{\text{PP}}$ & PP & $S = 1/\sqrt{\text{PP}}$ \\
+\midrule
+0.05 & 4.47 & 0.35 & 1.69 \\
+0.08 & 3.54 & 0.40 & 1.58 \\
+0.10 & 3.16 & 0.45 & 1.49 \\
+0.12 & 2.89 & 0.50 & 1.41 \\
+0.15 & 2.58 & 0.55 & 1.35 \\
+0.18 & 2.36 & 0.60 & 1.29 \\
+0.20 & 2.24 & 0.65 & 1.24 \\
+0.22 & 2.13 & 0.70 & 1.20 \\
+0.25 & 2.00 & 0.75 & 1.15 \\
+0.28 & 1.89 & 0.80 & 1.12 \\
+0.30 & 1.83 & 0.785 ($\square$) & 1.128 \\
+0.31 & 1.79 & 1.00 ($\bigcirc$) & 1.000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Threshold Equivalences}
+
+State statutes that mandate $S \leq c$ are equivalent to PP thresholds:
+\[
+  S \leq c \iff \text{PP} \geq \frac{1}{c^2}.
+\]
+Key equivalences:
+\begin{itemize}
+  \item $S \leq 1.5$ $\Leftrightarrow$ PP $\geq 0.44$
+  \item $S \leq 1.8$ $\Leftrightarrow$ PP $\geq 0.31$
+  \item $S \leq 2.0$ $\Leftrightarrow$ PP $\geq 0.25$
+  \item $S \leq 2.5$ $\Leftrightarrow$ PP $\geq 0.16$
+  \item $S \leq 3.0$ $\Leftrightarrow$ PP $\geq 0.11$
+\end{itemize}
+
+\subsection{Practical Conversion in bisect}
+
+The CLI converts PP to S via:
+\begin{verbatim}
+bisect label-analyze <label> --year 2020 --types schwartzberg
+\end{verbatim}
+Internally, the implementation computes PP and then applies $S = 1/\sqrt{\text{PP}}$.
+The equivalence $|S - 1/\sqrt{\text{PP}}| < 10^{-6}$ is verified in the L0 test suite.

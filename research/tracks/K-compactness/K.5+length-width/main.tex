@@ -1,0 +1,67 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+
+\title{\textbf{Length-Width Ratio in Algorithmic Redistricting:\\
+Rotating Calipers, the $\text{LW} > 3$ Threshold,\\
+and AABB vs.\ MBR Discrepancy}}
+
+\author{Giovanni Della-Libera}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Length-Width Ratio, Minimum Bounding Rectangle, Rotating Calipers,
+Compactness, Elongation, Redistricting
+
+\section{Introduction}
+\input{sections/01-introduction}
+
+\section{Mathematical Definition: MBR vs.\ AABB}
+\input{sections/02-definition}
+
+\section{Rotating Calipers Algorithm}
+\input{sections/03-algorithm}
+
+\section{The LW $> 3$ Court Threshold: Case Survey}
+\input{sections/04-threshold}
+
+\section{Empirical Comparison Across Structure Algorithms}
+\input{sections/05-empirical}
+
+\section{AABB vs.\ MBR Discrepancy Quantification}
+\input{sections/06-discrepancy}
+
+\section{Practitioner Usage Guide}
+\input{sections/07-practitioner}
+
+\section{Conclusion}
+\input{sections/08-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

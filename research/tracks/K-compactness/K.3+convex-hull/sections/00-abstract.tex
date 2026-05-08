@@ -1,0 +1,17 @@
+The Convex Hull Ratio (CH $= A / A(\text{conv}(D))$) is the most visually
+intuitive compactness metric for redistricting litigation: it measures what
+fraction of a district's convex envelope is actually occupied by the district,
+detecting non-convex ``tentacle'' or ``octopus arm'' geometries that perimeter-based
+metrics fail to identify.
+We study CH across four \textsc{bisect} structure algorithms---standard-bisect,
+prime-factor, ratio-optimal, and moving-knife---for North Carolina ($k=14$),
+Wisconsin ($k=8$), and Texas ($k=38$) under 2020 Census data.
+Key findings: (1) Synthetic tentacle districts with PP $\approx 0.15$
+and Reock $\approx 0.35$ score CH $< 0.60$, demonstrating CH's unique
+sensitivity to non-convex appendages.
+(2) All four bisect structure algorithms produce CH $> 0.85$ on all NC 2020
+congressional districts, confirming that bisect's recursive partitioning
+does not generate tentacle geometries by construction.
+(3) CH is the most legally intuitive compactness metric for courtroom
+presentation under \textit{Shaw v.\ Reno} (1993)'s visual-irregularity test.
+All results use single seed $= 42^\dagger$.

@@ -1,0 +1,57 @@
+\subsection{Formula}
+
+Let $D$ be a district with area $A(D)$ and perimeter $P(D)$.
+The Schwartzberg score is:
+\begin{equation}
+  S(D) = \frac{P(D)}{2\sqrt{\pi A(D)}}.
+  \label{eq:schwartzberg}
+\end{equation}
+The denominator $2\sqrt{\pi A}$ is the perimeter of a circle with area $A$:
+a circle of radius $r$ has area $\pi r^2$ and perimeter $2\pi r$,
+so $2\pi r = 2\pi \sqrt{A/\pi} = 2\sqrt{\pi A}$.
+Thus S is the ratio of the district's perimeter to the perimeter of a circle
+with the same area.
+
+\subsection{Properties}
+
+\begin{proposition}
+  $S(D) \geq 1$ for any polygon $D$, with equality if and only if $D$ is a disk.
+\end{proposition}
+
+\begin{proof}
+  By the isoperimetric inequality, $P^2 \geq 4\pi A$, so $P \geq 2\sqrt{\pi A}$,
+  giving $S = P/(2\sqrt{\pi A}) \geq 1$.
+  Equality holds iff $P^2 = 4\pi A$, i.e., iff $D$ is a disk. \qed
+\end{proof}
+
+\begin{proposition}
+  S is scale-invariant, rotation-invariant, and translation-invariant.
+\end{proposition}
+
+\begin{proof}
+  Scaling by $\lambda$: $A \mapsto \lambda^2 A$ and $P \mapsto \lambda P$,
+  so $S = \lambda P / (2\sqrt{\pi \lambda^2 A}) = P/(2\sqrt{\pi A})$. \qed
+\end{proof}
+
+\subsection{Canonical Values}
+
+\begin{table}[ht]
+\centering
+\caption{Schwartzberg score for canonical shapes.}
+\label{tab:s_canonical}
+\begin{tabular}{lcc}
+\toprule
+Shape & $S$ & Approximate value \\
+\midrule
+Disk & $1$ & $1.000$ \\
+Regular hexagon & $2 / (3^{3/4} \sqrt{\pi/3})$ & $1.050$ \\
+Square of side $a$ & $2/\sqrt{\pi}$ & $1.128$ \\
+Equilateral triangle & $2\sqrt[4]{3}/\sqrt{\pi}$ & $1.286$ \\
+$1\times 3$ rectangle & $4\sqrt{3/\pi}/3$ & $1.302$ \\
+$1\times 10$ rectangle & $11\sqrt{10/\pi}/10$ & $1.960$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Note: S $= 2/\sqrt{\pi} \approx 1.128$ for a square, derived from
+$A = a^2$, $P = 4a$: $S = 4a / (2\sqrt{\pi a^2}) = 2/\sqrt{\pi}$.

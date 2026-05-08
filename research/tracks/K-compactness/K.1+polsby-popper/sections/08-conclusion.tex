@@ -1,0 +1,28 @@
+The Polsby-Popper score is the most widely used compactness metric in U.S.\
+redistricting litigation, combining a principled geometric foundation
+(the isoperimetric inequality) with a self-explanatory $[0,1]$ scale.
+We have established that:
+
+\begin{enumerate}
+  \item PP is maximised uniquely by a disk (Theorem~1), providing a theoretical
+    upper bound that no district can exceed.
+  \item The ratio-optimal structure algorithm achieves mean PP $\geq 0.22^\dagger$
+    on NC 2020, outperforming standard-bisect ($0.17^\dagger$) and prime-factor
+    ($0.19^\dagger$)---a result consistent across WI and TX.
+  \item Geographic projection to EPSG:5070 is required for legally defensible PP
+    values; raw WGS84 computation underestimates PP by $0.035$--$0.040$ on average
+    for the three states studied.
+  \item PP correlates $r = 0.71$ with Reock on NC 2020, confirming that perimeter-based
+    and area-based metrics are related but non-redundant, motivating the multi-metric
+    composite approach in K.7.
+\end{enumerate}
+
+The practitioner guidance is clear: use PP as the lead litigation metric,
+always specify EPSG:5070 projection, and supplement with Reock and CH
+to address opposing counsel's boundary-sensitivity argument.
+
+Future work in K.4 (Schwartzberg) will provide the conversion formula
+$S = 1/\sqrt{\text{PP}}$ for jurisdictions that mandate Schwartzberg-equivalent
+notation in statutory filings.
+The K.7 composite guide synthesises all six metrics into a single certified
+compactness report suitable for court appendices.

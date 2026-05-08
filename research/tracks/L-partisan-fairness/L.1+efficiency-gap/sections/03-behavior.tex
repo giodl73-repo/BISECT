@@ -1,0 +1,67 @@
+\section{Behavior Under Algorithmic Redistricting}
+\label{sec:behavior}
+
+\subsection{Why Compactness Reduces EG}
+
+The Efficiency Gap is elevated when one party's votes are systematically more
+efficient than the other's---when one party wins many districts narrowly while
+the other wins a few districts by large margins. This vote-distribution pattern
+is the geometric signature of packing and cracking: cracking splits the target
+party's voters across many just-losing districts (all votes wasted as losing-side
+votes), while packing concentrates the remainder in a few landslide districts
+(excess votes above 50\%+1 wasted as surplus).
+
+Both cracking and packing require drawing district boundaries that reach across
+natural geographic discontinuities. A cracked district must aggregate enough
+opposing-party voters from dispersed locations to stay just below 50%; a packed
+district must concentrate enough co-party voters from surrounding territory to
+push the margin above 70--80\%. Both operations produce geographically irregular
+boundaries---elongated districts, districts with narrow necks connecting distant
+population clusters, or districts that wrap around geographic features to include
+or exclude specific communities.
+
+Compactness optimization in \textsc{bisect} penalizes exactly these boundary
+configurations. By maximizing the ratio of area enclosed to perimeter (Polsby-Popper),
+or equivalently by minimizing the perimeter given a fixed area, compactness
+constraints prevent the geographic reaching that packing and cracking require.
+Districts under \textsc{bisect} draw their populations from geographically
+contiguous, approximately circular or convex regions. Because American residential
+geography is heterogeneous at fine scales---partisan communities are not uniformly
+distributed, but they are also not perfectly segregated---compactness constraints
+produce districts with roughly competitive partisan compositions near the geographic
+center of the state's partisan distribution.
+
+The formal statement is: compactness optimization is sufficient to bound $|\text{EG}|$
+near the geographic sorting baseline, because the only mechanism for creating large
+EG (systematic packing and cracking) requires geographic configurations that
+compactness penalizes. This is not a design guarantee---the algorithm does not
+target any EG level---but an emergent property of the compactness constraint.
+
+\subsection{Residual EG in Bisect Maps}
+
+\textsc{Bisect} maps for NC ($k=14$) produce $|\text{EG}| < 0.03$, not $\text{EG}=0$.$^\dagger$
+The residual EG reflects two sources:
+
+\textbf{Geographic sorting.} Democratic voters are concentrated in the Triangle
+(Research Triangle: Durham, Chapel Hill, Raleigh) and Charlotte urban cores.
+Compactness constraints prevent drawing boundaries around these communities
+to dilute them, which means compact districts centered on these cores will be
+heavily Democratic. Any map with $k=14$ districts that includes compact districts
+centered on these cores will have some positive EG, because the cores produce
+large Democratic surpluses in a small number of districts.
+
+\textbf{Arithmetic of bisection.} The \textsc{bisect} algorithm divides the state
+into districts of approximately equal population by recursive geographic bisection.
+When one party's voters are geographically concentrated, the bisection tends to
+create one or two districts with strong partisan skew (the concentrated area)
+and the remainder with weaker skew. The resulting vote-share distribution
+produces a small but non-zero EG.
+
+The key finding is that the residual EG in \textsc{bisect} maps ($\approx 0.02$)
+is substantially below the enacted map EG ($\approx 0.09$) and reflects geography
+rather than deliberate manipulation. The gap between the two values ($\approx 0.07$)
+is the mapmaker contribution---the additional EG beyond what a neutral process
+produces for the same state.
+
+\footnotetext{$^\dagger$ Single-run \textsc{bisect} result using VEST 2020
+presidential precinct returns, standard-bisect structure, geographic weights.}

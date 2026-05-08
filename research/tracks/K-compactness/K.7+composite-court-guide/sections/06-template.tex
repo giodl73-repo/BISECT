@@ -1,0 +1,71 @@
+The following template provides model language for the compactness section of
+an expert report filed in redistricting litigation.
+Bracketed items [\ldots] should be replaced with plan-specific values.
+
+\bigskip
+\hrule
+\bigskip
+
+\noindent\textbf{COMPACTNESS ANALYSIS} \\
+\textit{[Expert Name], Expert Report, [Case Name], [Date]}
+
+\bigskip
+
+\noindent I have computed six standard compactness metrics for each district in
+the proposed [name] congressional redistricting plan for [State], applied to
+2020 Census TIGER/Line tract geometries projected to the Albers Equal Area
+Conic coordinate system (EPSG:5070).
+All metrics were computed using the \textsc{bisect} algorithmic redistricting
+platform, version [version], with seed $= [seed]$.
+
+\bigskip
+
+\noindent\textbf{Mean Compactness Profile} (all [k] districts):
+\begin{itemize}
+  \item \textbf{Polsby-Popper (PP)}: Mean $= [PP]$ (scale $[0,1]$; higher is more compact;
+    $1.0$ = circle; $0.785$ = square). Source: K.1.
+  \item \textbf{Reock}: Mean $= [Reock]$ (scale $[0,1]$; higher is more compact;
+    less sensitive to coastal boundary artifacts than PP). Source: K.2.
+  \item \textbf{Convex Hull Ratio (CH)}: Mean $= [CH]$ (scale $(0,1]$; $1.0$
+    means perfectly convex; no district has tentacle appendages below CH $= 0.85$).
+    Source: K.3.
+  \item \textbf{Schwartzberg (S)}: Mean $= [S]$ (scale $[1,\infty)$; lower is
+    more compact; $S = 1/\sqrt{PP}$). Source: K.4.
+  \item \textbf{Length-Width Ratio (LW)}: Mean $= [LW]$; maximum district LW $= [LW\_max]$.
+    No district exceeds the LW $= 3$ court threshold. Source: K.5.
+  \item \textbf{Population-Weighted Compactness (PWC)}: Mean $= [PWC]$ km$^2$.
+    [Algorithm] achieves [X]\% lower PWC than a standard bisection baseline.
+    Source: K.6.
+\end{itemize}
+
+\noindent The submitted plan achieves PP $= [PP]$, Reock $= [Reock]$,
+CH $= [CH]$, placing it in the [percentile] of algorithmically-generated plans
+for [State] under 2020 Census data.
+
+\noindent All six metrics are within the acceptable range for all $[k]$ districts
+(PP $\geq 0.18$, Reock $\geq 0.30$, CH $\geq 0.82$, S $\leq 2.4$, LW $\leq 2.8$,
+PWC within two standard deviations of state mean).
+
+\noindent The complete per-district compactness data are provided in Appendix~A
+(machine-readable JSON) and Appendix~B (district-by-district table).
+
+\bigskip
+\hrule
+\bigskip
+
+\subsection{Notes on the Template}
+
+\paragraph{Percentile language.}
+The ``percentile'' claim requires running the \textsc{bisect} ensemble
+(\texttt{--search bisection-ensemble}) to generate a distribution of plans
+and report the submitted plan's percentile position.
+For a single-seed plan (seed $= 42^\dagger$), the percentile is approximate.
+
+\paragraph{Certification statement.}
+For certified court filings, add:
+\begin{quote}
+  \emph{I certify that the compactness values reported herein were computed
+  using version [X.Y.Z] of the \textsc{bisect} platform from the TIGER/Line
+  2020 Census tract geometry files (SHA-256: [hash]) with no modification to
+  the underlying data or software.}
+\end{quote}

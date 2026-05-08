@@ -1,0 +1,85 @@
+\section{Mathematical Definition and Properties}
+\label{sec:definition}
+
+\subsection{Definition}
+
+For a $k$-district congressional plan with district-level Democratic vote shares
+$v_1, v_2, \ldots, v_k$, partition the districts into Democratic-won ($\mathcal{D} =
+\{i : v_i > 0.50\}$) and Republican-won ($\mathcal{R} = \{i : v_i < 0.50\}$). Let
+$k_D = |\mathcal{D}|$ and $k_R = |\mathcal{R}|$ be the number of districts won
+by each party.
+
+Compute the mean Democratic vote share in each party's won districts:
+\[
+\bar{v}_D^+ = \frac{1}{k_D}\sum_{i \in \mathcal{D}} v_i, \qquad
+\bar{v}_R^- = \frac{1}{k_R}\sum_{i \in \mathcal{R}} v_i.
+\]
+$\bar{v}_D^+$ is the mean of Democratic-won district vote shares (values above 0.50);
+$\bar{v}_R^-$ is the mean of Republican-won district vote shares (values below 0.50).
+
+Compute the angles:
+\[
+\theta_D = \arctan(2\bar{v}_D^+ - 1), \qquad \theta_R = \arctan(1 - 2\bar{v}_R^-).
+\]
+$\theta_D$ measures how far the center of Democratic-won districts is from 50\%:
+if Democratic-won districts average $\bar{v}_D^+ = 0.65$, then $\theta_D = \arctan(0.30)
+\approx 0.29$ radians. $\theta_R$ symmetrically measures how far the center of
+Republican-won districts is from 50\%: if Republican-won districts average
+$\bar{v}_R^- = 0.42$, then $\theta_R = \arctan(0.16) \approx 0.16$ radians.
+
+Declination is:
+\[
+\delta = \frac{2(\theta_D - \theta_R)}{\pi}.
+\]
+The normalization by $\pi/2$ maps the range to $[-1, 1]$. Positive $\delta$ indicates
+that Democratic-won districts are further from 50\% than Republican-won districts
+($\theta_D > \theta_R$), i.e., Democratic voters are packed into high-margin
+districts while Republican voters win by smaller margins---a configuration associated
+with Republican structural advantage.
+
+\subsection{Geometric Interpretation}
+
+The geometric interpretation of Declination is most transparent on a plot of sorted
+district vote shares. Sort all $k$ districts by Democratic vote share from lowest
+to highest. Plot the vote shares on the vertical axis against district rank on the
+horizontal axis. Draw a horizontal line at 50\%.
+
+In a district with pure cracking of Democratic voters and pure packing of remaining
+Democrats:
+\begin{itemize}
+\item Republican-won districts (left half of the plot) cluster near 45\%---close to
+  the 50\% line, producing small $\theta_R$.
+\item Democratic-won districts (right half) cluster near 75\%---far from the 50\%
+  line, producing large $\theta_D$.
+\end{itemize}
+The declination $\delta = 2(\theta_D - \theta_R)/\pi$ is large positive.
+
+In a compact, neutral redistricting plan, both parties' won districts average
+similarly close to 50\%, producing $\theta_D \approx \theta_R$ and $\delta \approx 0$.
+
+\subsection{Three Methodological Critiques}
+
+\textbf{Critique 1: Undefined when one party wins all seats.}
+If $k_R = 0$ (all districts won by Democrats) or $k_D = 0$ (all districts won by
+Republicans), $\bar{v}_R^-$ or $\bar{v}_D^+$ is undefined, and Declination cannot
+be computed. This is not merely a hypothetical concern: in small delegations in
+wave elections, one party may sweep all districts, and in states with very lopsided
+partisan geography (e.g., MA $k=9$ in a strong Democratic year), the metric is
+undefined. Expert witnesses cannot rely on Declination in cases where such edge
+conditions arise.
+
+\textbf{Critique 2: Sensitive to the 50\% seat-win threshold.}
+The partition of districts into $\mathcal{D}$ and $\mathcal{R}$ depends on which
+districts are above and below 50\%. A district with $v_i = 0.501$ (barely Democratic)
+contributes to $\bar{v}_D^+$; a district with $v_i = 0.499$ (barely Republican)
+contributes to $\bar{v}_R^-$. Small changes in vote shares near 50\% can move
+districts between categories, causing discontinuous changes in Declination. This
+discontinuity is more severe than the analogous discontinuity in EG (where flipping
+a district changes the wasted-vote count by a bounded amount).
+
+\textbf{Critique 3: No established unconstitutionality threshold.}
+No court has determined what value of Declination constitutes a constitutionally
+problematic partisan advantage. \citet{warrington2018} proposes $|\delta| > 0.2$
+as indicating substantial partisan advantage but acknowledges this is tentative.
+Unlike EG's 8\% threshold (which was at least proposed explicitly), Declination
+has no corresponding proposal with empirical calibration.

@@ -1,0 +1,44 @@
+LW provides a uniquely intuitive compactness metric for courtroom communication.
+
+\subsection{When to Use LW}
+
+\begin{itemize}
+  \item \textbf{Primary use}: When the legal challenge involves ``elongation''
+    claims---districts that run as corridors across the state.
+  \item \textbf{Secondary use}: As a complement to Reock in the composite profile,
+    because both measure elongation but from different geometric primitives
+    (MBC vs.\ MBR).
+  \item \textbf{Threshold certification}: When the jurisdiction applies a
+    LW $> 3$ threshold (Illinois, New York expert practice), use LW as the
+    primary pass-fail metric.
+\end{itemize}
+
+\subsection{Courtroom Explanation}
+
+\begin{quote}
+  \emph{The Length-Width Ratio measures the aspect ratio of the smallest rectangle
+  that can contain the district, oriented at any angle. A district with LW $= 3$
+  is three times as long as it is wide. All 14 NC congressional districts in
+  the proposed plan have LW $\leq 2.38$, well below the 3:1 threshold that
+  courts have applied in redistricting challenges.}
+\end{quote}
+
+\subsection{Disclosure Statement}
+
+For court filings:
+\begin{quote}
+  \emph{All Length-Width Ratio scores were computed using the minimum-area
+  bounding rectangle (MBR) of district convex hulls, projected to Albers
+  Equal Area Conic (EPSG:5070). The MBR was computed using the rotating
+  calipers algorithm applied to the convex hull vertices. LW $= \ell / w$
+  where $\ell \geq w$ are the MBR dimensions. Axis-aligned bounding boxes
+  (AABB) were not used because they are orientation-dependent.}
+\end{quote}
+
+\subsection{CLI Usage}
+
+\begin{verbatim}
+bisect label-analyze <label> --year 2020 --types lw
+\end{verbatim}
+Output includes both MBR and AABB values for comparison, with a flag
+if any district exceeds LW $= 3.0$.

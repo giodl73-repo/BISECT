@@ -1,0 +1,17 @@
+The Polsby-Popper score (PP $= 4\pi A / P^2$) is the most frequently cited compactness
+metric in U.S.\ redistricting litigation and is required by statute in several states.
+We study PP across four algorithmic redistricting structure algorithms---standard-bisect,
+prime-factor (ApportionRegions), ratio-optimal (GeoSection), and moving-knife (MKA)---applied
+to North Carolina ($k=14$, 2{,}195 tracts), Wisconsin ($k=8$, 1{,}406 tracts),
+and Texas ($k=38$, 5{,}265 tracts) under 2020 Census data.
+We prove that PP is maximised uniquely by a disk (isoperimetric inequality),
+give exact PP values for canonical shapes (square, hexagon, equilateral triangle),
+and document that ratio-optimal achieves mean PP $\geq 0.22$ on NC 2020---outperforming
+standard-bisect (mean PP $\approx 0.17$) and prime-factor (mean PP $\approx 0.19$).
+We show that PP is systematically underestimated for coastal and riverine districts
+due to jagged TIGER/Line boundary segments, and that projecting to Albers Equal Area
+Conic (EPSG:5070) before computation shifts mean PP upward by $0.03$--$0.06$
+for affected states.
+PP correlates $r = 0.71$ with Reock across NC 2020 districts, confirming that
+perimeter-based and area-based compactness metrics are related but non-redundant.
+All results use single seed $= 42^\dagger$.

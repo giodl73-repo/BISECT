@@ -1,0 +1,69 @@
+A composite compactness profile presents all six metrics for each district
+in a certified redistricting plan, alongside summary statistics and comparisons
+to benchmark plans.
+
+\subsection{Complete Summary Table}
+
+Table~\ref{tab:summary} reports all six metrics for all four bisect structure
+algorithms on NC 2020 (seed $= 42^\dagger$).
+This is the format recommended for Appendix A of an expert report.
+
+\begin{table}[ht]
+\centering
+\caption{Complete compactness profile: all six metrics, all four algorithms,
+NC 2020 (mean district values, seed $= 42^\dagger$).}
+\label{tab:summary}
+\begin{tabular}{lcccccc}
+\toprule
+Algorithm & PP $\uparrow$ & Reock $\uparrow$ & CH $\uparrow$ & S $\downarrow$ & LW $\downarrow$ & PWC$^*$ $\downarrow$ \\
+\midrule
+standard-bisect & 0.17 & 0.31 & 0.93 & 2.46 & 1.79 & 72.1 \\
+prime-factor    & 0.19 & 0.34 & 0.94 & 2.30 & 1.72 & 62.1 \\
+ratio-optimal   & 0.22 & 0.37 & 0.95 & 2.13 & 1.68 & 67.8 \\
+moving-knife    & 0.20 & 0.38 & 0.94 & 2.24 & 1.65 & 66.4 \\
+\midrule
+NC enacted 2020$^\ddagger$ & $\approx 0.13$ & $\approx 0.26$ & $\approx 0.84$ & $\approx 2.77$ & $\approx 2.2$ & --- \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\footnotesize
+\item Arrows indicate preferred direction ($\uparrow$ = higher better, $\downarrow$ = lower better).
+\item $^\dagger$ Single-run result, seed $= 42$.
+\item $^*$ PWC in km$^2$ (EPSG:5070).
+\item $^\ddagger$ NC enacted 2020 estimates from publicly available expert reports;
+  these values are approximate and not certified by this analysis.
+\end{tablenotes}
+\end{table}
+
+\subsection{Cross-State Summary}
+
+\begin{table}[ht]
+\centering
+\caption{Complete compactness profile for ratio-optimal algorithm across
+NC, WI, TX (mean district values, seed $= 42^\dagger$).}
+\label{tab:cross_state}
+\begin{tabular}{lcccccc}
+\toprule
+State & PP $\uparrow$ & Reock $\uparrow$ & CH $\uparrow$ & S $\downarrow$ & LW $\downarrow$ & PWC$^*$ $\downarrow$ \\
+\midrule
+NC ($k=14$) & 0.22 & 0.37 & 0.95 & 2.13 & 1.68 & 67.8 \\
+WI ($k=8$)  & 0.28 & 0.45 & 0.96 & 1.89 & 1.51 & 52.8 \\
+TX ($k=38$) & 0.19 & 0.34 & 0.93 & 2.29 & 1.79 & 118.3 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\footnotesize
+\item $^\dagger$ Single-run result, seed $= 42$.
+\item $^*$ PWC in km$^2$ (EPSG:5070).
+\end{tablenotes}
+\end{table}
+
+\subsection{Per-District Profile}
+
+For court filings, Table~\ref{tab:summary} should be supplemented with
+a per-district table listing all six metric values for each of the $k$ districts.
+The \texttt{bisect label-analyze --types all} output JSON contains this information
+in machine-readable format; a CSV export is available via:
+\begin{verbatim}
+bisect label-report <label> --year 2020 --format csv
+\end{verbatim}

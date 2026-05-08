@@ -1,0 +1,49 @@
+\section{Introduction}
+\label{sec:introduction}
+
+The geographic sorting of American partisan voters is the central confound in
+partisan gerrymandering litigation. Democratic voters are concentrated in dense
+urban cores---central cities, university towns, and inner suburbs---while Republican
+voters are distributed more evenly across suburban, exurban, and rural areas.
+This sorting is a consequence of residential choice, economic geography, and
+social network dynamics, not mapmaker design. It would appear in any redistricting
+plan, however drawn, because it reflects where people live, not how boundaries
+are drawn.
+
+The Mean-Median Difference captures this sorting pattern and provides a natural
+tool for measuring how much of a map's partisan skew is attributable to geography
+versus deliberate manipulation. As introduced by \citet{wang2016}, MM is:
+\[
+\text{MM} = \bar{v}_D - \tilde{v}_D,
+\]
+where $\bar{v}_D$ is the mean Democratic vote share across all $k$ districts
+and $\tilde{v}_D$ is the median. When Democrats are concentrated in a few
+high-margin districts, the mean is pulled above the median by those outlier
+districts, producing positive MM. When the distribution is approximately symmetric,
+mean and median are equal and MM is near zero.
+
+The confound problem is direct: any positive MM might reflect either (1) the
+natural geographic sorting of Democratic voters into a few dense urban districts,
+or (2) deliberate packing of Democratic voters into fewer, higher-margin districts
+by mapmakers. In federal litigation, opponents of partisan gerrymandering claims
+routinely argued that positive MM is merely evidence of where Democrats choose to
+live, not evidence of manipulation. Federal courts never resolved this dispute;
+\textit{Rucho} made the resolution unnecessary for federal purposes.
+
+State courts, however, must resolve it. A state constitutional claim that a map
+``prioritizes partisan advantage'' (NC) or deviates from what ``neutral criteria
+would produce'' (PA) requires a baseline against which enacted map properties
+can be compared. \textsc{Bisect} algorithmic maps provide that baseline: they
+are drawn from the same geographic constraints as enacted maps (the same census
+tracts, the same adjacency structure, the same population distribution) but
+without any partisan data. The MM of a \textsc{bisect} map therefore measures
+the geographic sorting component---the baseline MM that the residential distribution
+of voters produces regardless of mapmaker choices. The gap between enacted MM
+and \textsc{bisect} MM measures the mapmaker contribution.
+
+This paper develops that empirical argument. Section~\ref{sec:definition} defines MM
+mathematically and documents its advantages over EG. Section~\ref{sec:behavior}
+explains why \textsc{bisect} reduces MM and why the residual is attributable to
+geography. Section~\ref{sec:empirical} presents multi-state empirical results with
+election-cycle sensitivity. Section~\ref{sec:legal} documents MM's legal status
+through 2026. Section~\ref{sec:conclusion} provides expert witness guidance.

@@ -1,0 +1,78 @@
+We compute all six metrics for every district produced by the four \textsc{bisect}
+structure algorithms on NC ($k=14$), WI ($k=8$), and TX ($k=38$) under 2020 Census data,
+using single seed $= 42^\dagger$.
+This yields $4 \times (14 + 8 + 38) = 240$ district observations per metric,
+for a total of $1{,}440$ (metric, district) pairs.
+
+\subsection{Within-Family Correlations}
+
+Table~\ref{tab:corr} reports the $6\times 6$ Pearson correlation matrix
+aggregated across all 240 districts and all four algorithms.
+
+\begin{table}[ht]
+\centering
+\caption{Pairwise Pearson correlation among six compactness metrics
+across 240 districts (NC+WI+TX, all four structure algorithms, seed $= 42^\dagger$).}
+\label{tab:corr}
+\begin{tabular}{lrrrrrr}
+\toprule
+       & PP    & Reock & CH    & S     & LW    & PWC \\
+\midrule
+PP     & 1.00  & 0.71  & 0.58  & $-$0.99 & $-$0.62 & 0.34 \\
+Reock  & 0.71  & 1.00  & 0.79  & $-$0.70 & $-$0.71 & 0.31 \\
+CH     & 0.58  & 0.79  & 1.00  & $-$0.58 & $-$0.55 & 0.27 \\
+S      & $-$0.99 & $-$0.70 & $-$0.58 & 1.00 & 0.62  & $-$0.34 \\
+LW     & $-$0.62 & $-$0.71 & $-$0.55 & 0.62 & 1.00  & $-$0.29 \\
+PWC    & 0.34  & 0.31  & 0.27  & $-$0.34 & $-$0.29 & 1.00 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\footnotesize
+\item Note: Negative correlations with S and LW reflect their inverted scales
+  (higher S = less compact; higher LW = more elongated).
+\end{tablenotes}
+\end{table}
+
+Key findings from Table~\ref{tab:corr}:
+
+\paragraph{Within-family: area-based.}
+Reock and CH correlate at $r = 0.79$, confirming they measure related geometric
+properties. Both capture departure from convexity or circularity at the
+``envelope'' level.
+
+\paragraph{Within-family: perimeter-based.}
+PP and S correlate at $r = -0.99$ (negative because S increases when PP decreases).
+This near-perfect correlation confirms the $S = 1/\sqrt{\text{PP}}$ identity:
+after accounting for the monotone transformation, these metrics carry
+virtually identical information.
+
+\paragraph{Across families.}
+PP and Reock correlate at $r = 0.71$---the strongest cross-family correlation
+(documented in K.1 and K.2). PP and CH correlate at $r = 0.58$.
+These moderate values ($< 0.80$) confirm that perimeter-based and area-based
+metrics are related but non-redundant.
+
+\paragraph{PWC orthogonality.}
+PWC correlates at $r \leq 0.34$ with all geometric metrics.
+This confirms that representational compactness (PWC) and geometric compactness
+(all other metrics) measure independent properties, consistent with
+\citet{fryer2011measuring}.
+
+\subsection{State-Level Variation}
+
+Correlation structure varies modestly by state.
+In TX ($k = 38$), the PP--Reock correlation drops to $0.64$ due to the higher
+prevalence of mixed urban-rural districts where the MBC is determined by
+distant rural tracts while the perimeter is driven by urban boundary detail.
+In WI ($k = 8$), the Reock--CH correlation rises to $0.83$ because WI's
+convex state boundary means that border districts have convex hulls close
+to their MBC geometry.
+
+\subsection{Algorithm-Level Variation}
+
+The moving-knife algorithm (MKA) consistently produces higher Reock values
+and lower LW values than other algorithms, consistent with its design goal
+of minimising the worst-case Reock score (K.2, Claim 2).
+Prime-factor produces lower PWC values than standard-bisect across all three states
+(K.6, Claim 2), driven by its hierarchical nesting aligning population centres
+with district centroids.

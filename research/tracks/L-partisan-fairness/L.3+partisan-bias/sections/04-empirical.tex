@@ -1,0 +1,97 @@
+\section{Empirical Results}
+\label{sec:empirical}
+
+\subsection{Multi-State Comparison}
+
+Table~\ref{tab:bias-baseline} reports Partisan Bias for \textsc{bisect} and
+enacted 2022 congressional maps across four states using VEST 2020 presidential
+returns and the uniform swing model.
+
+\begin{table}[ht]
+\centering
+\caption{Partisan Bias: Bisect vs.\ Enacted 2022 Congressional Maps}
+\label{tab:bias-baseline}
+\begin{threeparttable}
+\begin{tabular}{@{}llrrrr@{}}
+\toprule
+State ($k$) & Bias (Bisect$^\dagger$) & Bias (Enacted) & $|\Delta\text{Bias}|$ & Seats Equiv. \\
+\midrule
+NC ($k=14$) & $-0.01$ & $-0.07$ & $0.06$ & $\approx 1$ \\
+WI ($k=8$)  & $-0.01$ & $-0.05$ & $0.04$ & $\approx 0.4$ \\
+TX ($k=38$) & $-0.02$ & $-0.09$ & $0.07$ & $\approx 2.7$ \\
+FL ($k=28$) & $-0.01$ & $-0.06$ & $0.05$ & $\approx 1.4$ \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item $^\dagger$ Single-run \textsc{bisect} result. Negative Bias indicates Republican
+advantage. Seats Equiv.\ $= |\Delta\text{Bias}| \times k$ = seat-count equivalent
+of the Bias gap.
+\item Source: VEST 2020 presidential returns; uniform swing model.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+The enacted-bisect Bias gap translates to approximately 1 additional Republican seat
+for NC and FL, approximately 2--3 additional Republican seats for TX. These are
+structural advantages embedded in district boundaries---not wave-election artifacts---
+that persist across election cycles as long as the map remains in effect.
+
+\subsection{Swing Model Sensitivity}
+
+Table~\ref{tab:bias-swing} reports NC Partisan Bias under three swing models:
+uniform swing (the standard model), a district-weight-adjusted swing (larger
+swing applied to competitive districts, smaller to safe districts), and an
+empirically-derived district-specific swing from historical election data.
+
+\begin{table}[ht]
+\centering
+\caption{Partisan Bias Sensitivity to Swing Model: NC ($k=14$), 2020 Presidential}
+\label{tab:bias-swing}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Swing Model & Bias (Bisect$^\dagger$) & Bias (Enacted) \\
+\midrule
+Uniform swing & $-0.01$ & $-0.07$ \\
+Heteroskedastic (competitive districts weighted up) & $-0.01$ & $-0.06$ \\
+District-specific (historical) & $-0.01$ & $-0.06$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The qualitative conclusion---\textsc{bisect} near-zero, enacted substantially negative---
+is robust across all three swing models. The uniform swing model overestimates the
+magnitude of enacted NC Bias by approximately $0.01$ (14\%) compared to the
+heteroskedastic correction. Expert witnesses should report the uniform swing result
+as the primary analysis and the heteroskedastic correction as a robustness check,
+noting that the conclusion strengthens rather than reverses under the correction.
+
+\subsection{Election-Cycle Stability}
+
+Partisan Bias is moderately stable across election cycles for NC:
+\begin{itemize}
+\item 2016 Presidential: Bisect $-0.01$, Enacted $-0.08$
+\item 2018 Congressional: Bisect $-0.01$, Enacted $-0.07$
+\item 2020 Presidential: Bisect $-0.01$, Enacted $-0.07$
+\item 2018 Senate: Bisect $-0.01$, Enacted $-0.07$
+\end{itemize}
+Standard deviation: Bisect $\approx 0.002$, Enacted $\approx 0.004$.
+Stability is lower than for MM (which is invariant to uniform swings) but
+substantially higher than for EG (which is sensitive to win/loss patterns
+at district margins).
+
+\subsection{Texas Heteroskedastic Correction}
+
+For Texas ($k=38$), which has 12 safe Republican districts ($v_i < 35\%$)
+and 8 safe Democratic districts ($v_i > 65\%$), the uniform swing model applies
+the same swing magnitude to competitive districts near 50\% and to safe districts
+near 20\% or 80\%. The safe districts are unlikely to flip under realistic
+swing conditions; applying uniform swing overestimates how close they would
+come to 50\%, biasing the Bias estimate.
+
+Applying the heteroskedastic correction---which reduces swing magnitude by
+50\% for districts with $|v_i - 0.50| > 0.20$---reduces enacted TX
+$|\text{Bias}|$ from $0.09$ to $0.08$ (an 11\% reduction). \textsc{Bisect}
+TX $|\text{Bias}|$ changes from $0.02$ to $0.02$ (negligible change, because
+\textsc{bisect} maps have fewer safe-seat outliers). The qualitative gap
+persists under the correction.

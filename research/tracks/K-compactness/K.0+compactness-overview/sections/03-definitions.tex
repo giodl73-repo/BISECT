@@ -1,0 +1,77 @@
+We state precise mathematical definitions for reference across K.1--K.7.
+All definitions are implemented in
+\texttt{crates/bisect-analysis/src/compactness.rs}.
+
+\subsection{Polsby-Popper (PP)}
+
+Let $D$ be a district with area $A(D)$ and perimeter $P(D)$. The
+Polsby-Popper score is:
+\[
+  \text{PP}(D) = \frac{4\pi A(D)}{P(D)^2}.
+\]
+By the isoperimetric inequality, PP$(D) \leq 1$ with equality if and only if $D$
+is a disk. PP$(D) = \pi/4 \approx 0.785$ for a square.
+
+\subsection{Reock}
+
+Let $\text{MBC}(D)$ denote the minimum bounding circle of $D$ (the smallest
+circle containing $D$), with area $A(\text{MBC}(D)) = \pi r^2$. Then:
+\[
+  \text{Reock}(D) = \frac{A(D)}{\pi r^2}.
+\]
+Computation uses Welzl's randomised algorithm in $O(n)$ expected time
+(K.2, Section~3).
+
+\subsection{Convex Hull Ratio (CH)}
+
+Let $\text{conv}(D)$ be the convex hull of the district polygon $D$. Then:
+\[
+  \text{CH}(D) = \frac{A(D)}{A(\text{conv}(D))}.
+\]
+CH$(D) = 1$ if and only if $D$ is convex. Computation uses Andrew's monotone
+chain algorithm in $O(n \log n)$ (K.3, Section~3).
+
+\subsection{Schwartzberg (S)}
+
+\[
+  S(D) = \frac{P(D)}{2\sqrt{\pi A(D)}}.
+\]
+$S(D) \geq 1$ with equality iff $D$ is a disk. The identity $S(D) = 1/\sqrt{\text{PP}(D)}$
+holds exactly (K.4, Theorem~1).
+
+\subsection{Length-Width Ratio (LW)}
+
+Let $\text{MBR}(D)$ be the minimum-area bounding rectangle of $D$, with dimensions
+$\ell$ (longer side) and $w$ (shorter side). Then:
+\[
+  \text{LW}(D) = \frac{\ell}{w} \geq 1.
+\]
+LW$(D) = 1$ for a square; LW$(D) = 3$ for a $1\times 3$ rectangle.
+The MBR is computed via rotating calipers in $O(n)$ after computing the convex hull
+in $O(n \log n)$ (K.5, Section~3).
+
+\subsection{Population-Weighted Compactness (PWC)}
+
+Let $D$ be a district with tracts $\{t_1, \ldots, t_m\}$, each tract $t_i$ having
+population $p_i$ and centroid $c_i$. The population-weighted centroid is:
+\[
+  \bar{c} = \frac{\sum_i p_i c_i}{\sum_i p_i}.
+\]
+Then:
+\[
+  \text{PWC}(D) = \frac{\sum_i p_i \cdot \|c_i - \bar{c}\|^2}{\sum_i p_i}.
+\]
+Units are square metres (or square kilometres after normalisation).
+PWC $= 0$ for a single-tract district; PWC is unbounded above (K.6).
+
+\subsection{Test Invariants (L0)}
+
+For any correct implementation, the following must hold on unit test:
+\begin{itemize}
+  \item PP $\in [0,1]$; Reock $\in [0,1]$; CH $\in (0,1]$;
+    $S \geq 1$; LW $\geq 1$; PWC $\geq 0$.
+  \item For a circle: PP $= 1$, Reock $= 1$, CH $= 1$, $S = 1$.
+  \item For a square of side $a$: PP $= \pi/4$, LW $= 1$,
+    $S = 2/\sqrt{\pi} \approx 1.128$.
+  \item $|S(D) - 1/\sqrt{\text{PP}(D)}| < 10^{-9}$ for all test polygons.
+\end{itemize}

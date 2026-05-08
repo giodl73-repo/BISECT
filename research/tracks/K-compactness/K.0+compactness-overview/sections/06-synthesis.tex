@@ -1,0 +1,62 @@
+The K-track papers (K.1--K.7) each study one metric in depth.
+This section summarises the principal finding from each and situates it
+within the taxonomic and correlation framework established above.
+
+\subsection{K.1 --- Polsby-Popper}
+
+Ratio-optimal achieves mean PP $\geq 0.22$ across NC 2020 congressional districts,
+outperforming standard-bisect ($\approx 0.17$) and prime-factor ($\approx 0.19$)
+(K.1, Claim~1). PP is the lead litigation metric but requires geographic projection
+to EPSG:5070 (Albers Equal Area Conic) before computation; raw TIGER/Line boundaries
+suppress PP by $0.03$--$0.06$ for coastal states (K.1, Claim~3).
+
+\subsection{K.2 --- Reock}
+
+Moving-knife achieves mean Reock $\geq 0.38$ on NC 2020 versus $0.31$ for
+standard-bisect---a 23\% improvement in the worst-case district (K.2, Claim~2).
+The Reock--PP gap averages $+0.12$ under ratio-optimal across NC/WI/TX
+(K.2, Claim~3), confirming Reock's systematically more lenient interpretation
+of compactness. Welzl's algorithm provides the exact minimum bounding circle
+in $O(n)$ expected time (K.2, Section~3).
+
+\subsection{K.3 --- Convex Hull}
+
+All four bisect structure algorithms produce CH $> 0.85$ on all NC 2020
+congressional districts (K.3, Claim~2). CH's unique value is tentacle detection:
+synthetic tentacle districts with PP $\approx 0.15$ and Reock $\approx 0.35$
+score CH $< 0.60$ (K.3, Claim~1). CH is also the most legally intuitive metric
+for per se visual-irregularity tests under \textit{Shaw v.\ Reno} (K.3, Claim~3).
+
+\subsection{K.4 --- Schwartzberg}
+
+$S = 1/\sqrt{\text{PP}}$ exactly (K.4, Theorem~1).
+Colorado's constitution (Art.\ V, \S 44) mandates a Schwartzberg-equivalent
+criterion (K.4, Claim~2). The conversion table in K.4 allows practitioners to
+translate bisect's PP output to S for statutory compliance: PP $= 0.22$ implies
+$S \approx 2.13$.
+
+\subsection{K.5 --- Length-Width Ratio}
+
+LW $> 3$ is a documented court threshold for elongation challenges (K.5, Claim~1);
+all four bisect algorithms produce LW $\leq 2.8$ on NC 2020 (K.5, Claim~2).
+Axis-aligned bounding boxes (AABB) overestimate LW by up to 41\% for diagonally
+oriented districts; only MBR-based LW (rotating calipers, K.5 Section~3) is
+legally defensible (K.5, Claim~3).
+
+\subsection{K.6 --- Population-Weighted Compactness}
+
+PWC--PP correlation is $r < 0.4$ across all algorithm-state pairs (K.6, Claim~1),
+confirming that representational and geometric compactness are independent dimensions.
+Prime-factor reduces PWC 18\% below standard-bisect on NC 2020 due to hierarchical
+nesting aligning population concentrations with district centroids (K.6, Claim~2).
+TX exhibits high PWC variance due to concentrated urban centres; WI exhibits low
+variance due to dispersed population (K.6, Claim~3).
+
+\subsection{K.7 --- Composite Court Guide}
+
+No single compactness metric is legally authoritative (K.7, Claim~1).
+A composite profile of all six metrics produces 89\% inter-judge agreement in a
+simulated legal review panel, versus 67--74\% for any single metric (K.7, Claim~2).
+The \texttt{bisect label-analyze --types all} command produces all six metrics in
+a certified JSON appendix ready for court filing without post-processing (K.7, Claim~3).
+Template court-filing language is provided in K.7, Section~6.

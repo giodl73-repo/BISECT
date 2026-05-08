@@ -1,0 +1,66 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{array}
+
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+
+\title{\textbf{Population-Weighted Compactness in Algorithmic Redistricting:\\
+Moment of Inertia, Prime-Factor Advantage,\\
+and Representational Independence}}
+
+\author{Giovanni Della-Libera}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Population-Weighted Compactness, Moment of Inertia, Redistricting,
+Representational Compactness, Prime-Factor Algorithm, Fryer-Holden
+
+\section{Introduction: Representational vs.\ Geometric Compactness}
+\input{sections/01-introduction}
+
+\section{Mathematical Definition}
+\input{sections/02-definition}
+
+\section{Population Weighting and Centroid Computation}
+\input{sections/03-centroid}
+
+\section{Empirical Comparison Across Structure Algorithms}
+\input{sections/04-empirical}
+
+\section{PWC--PP and PWC--Reock Correlation Analysis}
+\input{sections/05-correlation}
+
+\section{Prime-Factor Hierarchy and PWC Minimisation}
+\input{sections/06-prime-factor}
+
+\section{Legal and Practitioner Usage}
+\input{sections/07-legal}
+
+\section{Conclusion}
+\input{sections/08-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

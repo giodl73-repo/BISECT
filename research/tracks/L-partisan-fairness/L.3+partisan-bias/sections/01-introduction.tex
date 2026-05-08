@@ -1,0 +1,42 @@
+\section{Introduction}
+\label{sec:introduction}
+
+The symmetry standard is the oldest and most intuitively compelling framework
+for evaluating partisan fairness in redistricting. Its core principle is simple:
+a fair electoral system should treat both parties symmetrically, so that if party
+A would win $S\%$ of seats with $V\%$ of votes, then party B should also win $S\%$
+of seats if it receives $V\%$ of votes. Asymmetry---receiving more seats at a given
+vote share than the opposing party would receive at the same vote share---is the
+geometric signature of partisan advantage embedded in district boundaries.
+
+Partisan Bias operationalizes the symmetry standard at the electoral pivot: it
+measures whether a party receiving exactly 50\% of the two-party vote would win
+exactly 50\% of the seats. A map with zero Partisan Bias at 50\% does not
+necessarily satisfy the full symmetry standard (which requires symmetry across
+all vote shares), but it provides the single most policy-relevant test: does the
+map translate equal votes into equal representation at the margin?
+
+The Partisan Bias concept was formalized by \citet{grofmanKing2007} as part of
+the broader symmetry standard literature, building on earlier work by Grofman,
+King, and Morrill. It was a central component of expert testimony in the North
+Carolina redistricting cases culminating in \textit{Harper v.\ Hall} and in Ohio
+redistricting proceedings. The metric's primary advantage over EG is its intuitive
+accessibility: the proposition ``if both parties received exactly half the votes,
+party A would win more than half the seats'' communicates partisan asymmetry to
+judicial audiences without requiring them to understand wasted-vote algebra.
+
+The metric's primary limitation is its dependence on the swing model used to
+estimate $S(0.50)$ from observed district vote shares. The uniform swing assumption---
+that all district vote shares shift by the same amount when the statewide total
+shifts---is a first-order approximation that fails in states with high proportions
+of safe seats, where marginal and safe districts respond differently to statewide
+swings. This paper documents the limitation, proposes a heteroskedastic correction,
+and shows that the qualitative conclusion (enacted maps have substantially higher
+Partisan Bias than \textsc{bisect} maps) is robust across swing model choices.
+
+Section~\ref{sec:definition} develops the mathematical definition and the
+symmetry standard framework. Section~\ref{sec:behavior} explains why compactness
+produces near-zero Partisan Bias. Section~\ref{sec:empirical} presents multi-state
+empirical results with swing model sensitivity analysis. Section~\ref{sec:legal}
+documents the legal status of the symmetry standard and Partisan Bias through
+2026. Section~\ref{sec:conclusion} concludes.

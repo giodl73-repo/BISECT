@@ -1,0 +1,59 @@
+We quantify Reock's boundary insensitivity by comparing Reock values computed
+on smoothed vs.\ raw TIGER/Line district geometries.
+
+\subsection{Boundary Representations}
+
+\paragraph{Raw TIGER/Line.}
+The 2020 Census TIGER/Line tract polygons represent coastlines, rivers, and
+state boundaries with the full digitisation detail of the source data.
+NC coastal tracts may have $> 1{,}000$ vertices along a single coastal segment.
+
+\paragraph{Smoothed boundaries.}
+We apply Douglas-Peucker simplification~\citep{douglas1973algorithms}
+with tolerance $\epsilon = 100$ metres to reduce vertex counts by approximately
+60--80\% for coastal tracts, while preserving the overall shape of inland boundaries.
+This represents the ``true'' compactness of a district stripped of digitisation noise.
+
+\subsection{Reock vs.\ PP Sensitivity}
+
+Table~\ref{tab:boundary_sensitivity} compares the change in mean district Reock
+and PP when switching from smoothed to raw boundaries for NC coastal districts
+(seed $= 42^\dagger$, ratio-optimal).
+
+\begin{table}[ht]
+\centering
+\caption{Mean metric change (smoothed $\to$ raw boundaries) for NC coastal
+  districts under ratio-optimal, seed $= 42^\dagger$.}
+\label{tab:boundary_sensitivity}
+\begin{tabular}{lccc}
+\toprule
+Metric & Smoothed & Raw (TIGER/Line) & Change \\
+\midrule
+Reock & 0.374$^\dagger$ & 0.355$^\dagger$ & $-0.019$ \\
+PP    & 0.261$^\dagger$ & 0.213$^\dagger$ & $-0.048$ \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\footnotesize
+\item Note: ``Coastal districts'' = NC districts with $\geq 10$\% of their
+  boundary on Atlantic coast or sound (approximately 5 of 14 NC districts).
+\item $^\dagger$Single-run result, seed $= 42$.
+\end{tablenotes}
+\end{table}
+
+The Reock decrease ($-0.019$) is 2.5$\times$ smaller than the PP decrease ($-0.048$).
+This confirms Claim~1: Reock is less sensitive to boundary representation
+than PP for coastal and riverine districts.
+
+\subsection{Mechanism}
+
+The MBC is determined by at most three extreme points on the district boundary
+(by Welzl's algorithm, the boundary set $|R| \leq 3$).
+For a coastal NC district, these extreme points are typically the inland extreme
+(a Piedmont tract) and two coastal extremes (the northernmost and southernmost
+shoreline points), none of which move substantially when digitisation detail is reduced.
+The jagged coastline between these extreme points does not affect the MBC.
+
+In contrast, PP depends on the total perimeter $P = \sum_i |e_i|$ summed over all
+boundary edges. Each additional vertex introduced by TIGER/Line digitisation of
+the coastline adds perimeter length, directly increasing $P$ and decreasing PP.

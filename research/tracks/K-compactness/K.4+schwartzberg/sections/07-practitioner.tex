@@ -1,0 +1,41 @@
+This section provides a practical guide for converting between PP and S in
+court filings, statutory compliance documents, and expert reports.
+
+\subsection{When to Report S vs.\ PP}
+
+\begin{itemize}
+  \item \textbf{Report PP} when: filing in federal court; using the Princeton
+    Gerrymandering Project's grading framework; comparing to prior expert reports
+    that use PP; or when the audience is familiar with $[0,1]$ scales.
+  \item \textbf{Report S} when: filing with Colorado's IRC; statutory context
+    requires $S \leq c$ language; audience is a legislative body more comfortable
+    with ``distance from circular'' framing.
+  \item \textbf{Report both} when: filing in a jurisdiction that has used both
+    conventions, or when the report is intended for a general audience that
+    includes both court and legislative readers.
+\end{itemize}
+
+\subsection{Example Expert Report Language}
+
+\begin{quote}
+  \emph{The proposed plan achieves a mean Polsby-Popper score of $0.22$ across
+  all 14 NC congressional districts, equivalent to a mean Schwartzberg score of
+  $S = 1/\sqrt{0.22} \approx 2.13$. Individual district PP values range from
+  $0.13$ to $0.36$ (S $\in [1.67, 2.77]$). These values substantially exceed
+  the NC enacted 2020 map's reported mean PP of approximately $0.12$--$0.15$
+  (S $\approx 2.58$--$2.89$).}
+\end{quote}
+
+\subsection{Conversion for Statutory Compliance}
+
+When a statute mandates $S \leq c$, use the equivalence $S \leq c \Leftrightarrow \text{PP} \geq 1/c^2$.
+For Colorado's informal $S \leq 2.0$ benchmark:
+\[
+  \text{PP} \geq \frac{1}{(2.0)^2} = 0.25.
+\]
+The bisect command:
+\begin{verbatim}
+bisect label-analyze <label> --year 2020 --types schwartzberg
+\end{verbatim}
+reports both S values and the equivalent PP for each district,
+with a statutory compliance flag if any district exceeds the specified threshold.

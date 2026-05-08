@@ -1,0 +1,68 @@
+\section{Behavior Under Algorithmic Redistricting}
+\label{sec:behavior}
+
+\subsection{Why Bisect Reduces MM}
+
+\textsc{Bisect} reduces MM relative to enacted maps through the same compactness
+mechanism that reduces EG, but the mechanism operates differently at the level
+of the vote-share distribution.
+
+Under enacted maps drawn with partisan intent, packing concentrates Democratic
+voters in a small number of districts with Democratic vote shares of 75--85\%.
+These packed districts pull the mean Democratic vote share substantially above
+the median, because the median is determined by the cluster of competitive or
+Republican-leaning districts in the middle of the distribution, not by the
+packed outliers. The result is large positive MM.
+
+Under \textsc{bisect}, compactness constraints prevent the geographic reaching
+required to concentrate Democratic voters from dispersed locations into a small
+number of super-majority districts. Compact districts centered on urban cores
+will have high Democratic vote shares---the core concentration is a geographic
+fact---but the absence of deliberate additional packing means fewer districts
+at the extreme high end of the distribution. The distribution of Democratic
+vote shares is less right-skewed, and the mean-median gap is smaller.
+
+The residual MM in \textsc{bisect} maps ($\approx 0.02$--$0.03$) reflects the
+minimum right-skewness that results from compact districts centered on North
+Carolina's Triangle and Charlotte urban cores. These cores have Democratic vote
+shares of 70--80\%, and any compact district that includes them will have
+Democratic vote shares near that range. Compactness prevents drawing additional
+territory to push adjacent districts from 48\% to 55\% Democratic---the cracking
+operation that would add more moderate-margin districts to the left of the
+median---but it cannot eliminate the right-tail outliers created by the urban cores
+themselves.
+
+\subsection{The Geographic Sorting Baseline}
+
+The \textsc{bisect} MM value of $\approx 0.02$--$0.03$ for NC represents the
+geographic sorting baseline: the MM that any compact, population-equal redistricting
+plan must produce for North Carolina given the residential distribution of its
+voters. This baseline is empirically determined by running \textsc{bisect} on
+the state's census tract geometry with VEST election returns.
+
+The baseline is state-specific: Texas ($k=38$) has a slightly higher baseline
+($\approx 0.03$) because its urban cores (Houston, Dallas, Austin, San Antonio)
+are larger and more densely Democratic relative to the state's overall partisan
+balance. Wisconsin ($k=8$) has a similar baseline ($\approx 0.02$) because
+Milwaukee and Madison are dense Democratic centers relative to the state's
+competitive statewide balance.
+
+\subsection{The Mapmaker Contribution}
+
+The mapmaker contribution to MM is the difference between enacted MM and
+\textsc{bisect} MM, holding geography constant:
+\[
+\Delta\text{MM} = \text{MM}_{\text{enacted}} - \text{MM}_{\text{bisect}}.
+\]
+For NC: $\Delta\text{MM} \approx 0.07 - 0.02 = 0.05$. This gap represents
+the additional vote-share skewness that mapmakers introduced by deliberately
+drawing boundaries to concentrate Democratic voters in fewer, higher-margin
+districts than compactness would produce naturally. In state constitutional
+terms, $\Delta\text{MM}$ is the portion of partisan advantage that cannot
+be explained by geography and therefore must be explained by deliberate
+redistricting choices.
+
+This decomposition is the key legal contribution of comparing \textsc{bisect}
+to enacted maps. The geographic component ($\approx 0.02$) is irreducible;
+courts applying NC's free elections clause should focus on the mapmaker
+component ($\approx 0.05$) as the portion attributable to deliberate manipulation.

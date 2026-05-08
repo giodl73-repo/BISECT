@@ -1,0 +1,52 @@
+We use Andrew's monotone chain algorithm~\citep{andrew1979another} to compute
+the convex hull of a district polygon in $O(n \log n)$ time.
+(Graham scan~\citep{graham1972efficient} achieves the same asymptotic complexity
+but requires a polar angle sort; Andrew's algorithm uses a lexicographic sort
+that is numerically more stable.)
+
+\subsection{Algorithm}
+
+\begin{algorithm}
+\caption{Andrew's Monotone Chain Convex Hull}
+\label{alg:monotone}
+\begin{algorithmic}[1]
+\Function{ConvexHull}{$P$: sorted point set}
+  \State Sort $P$ lexicographically by $(x, y)$
+  \State Build lower hull $L$:
+  \For{$p \in P$}
+    \While{$|L| \geq 2$ and cross$(L[-2], L[-1], p) \leq 0$}
+      \State Remove last point from $L$
+    \EndWhile
+    \State Append $p$ to $L$
+  \EndFor
+  \State Build upper hull $U$ similarly (iterate $P$ in reverse)
+  \State \Return $L \cup U$ (removing duplicate endpoints)
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+The \texttt{cross} function computes the cross product:
+\[
+  \text{cross}(O, A, B) = (A_x - O_x)(B_y - O_y) - (A_y - O_y)(B_x - O_x).
+\]
+A non-positive cross product indicates a right turn (or collinear point),
+which is removed to maintain convexity.
+
+\subsection{Convex Hull Area}
+
+After computing the convex hull vertices, the area is computed via the shoelace formula:
+\[
+  A(\text{conv}(D)) = \frac{1}{2} \left| \sum_{i=0}^{m-1} (x_i y_{i+1} - x_{i+1} y_i) \right|,
+\]
+where $(x_i, y_i)$ are the vertices of the convex hull polygon.
+
+\subsection{Test Invariants}
+
+L0 invariants:
+\begin{itemize}
+  \item CH of any convex polygon is exactly $1.0$.
+  \item CH $\in (0, 1]$ for any polygon.
+  \item For a cross-shaped synthetic district with arm length 10 and width 2:
+    CH $\approx 0.80$ (verifiable analytically).
+  \item Convex hull area $\geq$ district area for all test geometries.
+\end{itemize}

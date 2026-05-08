@@ -1,0 +1,103 @@
+The six compactness metrics decompose naturally into three families based on
+which geometric primitive they measure.
+
+\subsection{Family 1: Perimeter-Based Metrics}
+
+Perimeter-based metrics compare the district's perimeter (or a function of it)
+to its area, penalising jagged or convoluted boundaries.
+Both PP and Schwartzberg (S) belong to this family.
+
+\textbf{Polsby-Popper} measures how much of the isoperimetric inequality
+is consumed by the district:
+\[
+  \text{PP} = \frac{4\pi A}{P^2} \in [0, 1],
+\]
+where $A$ is district area and $P$ is perimeter. A perfect circle achieves
+PP $= 1$; a square achieves PP $= \pi/4 \approx 0.785$.
+
+\textbf{Schwartzberg} inverts the same relationship:
+\[
+  S = \frac{P}{2\sqrt{\pi A}} \in [1, \infty),
+\]
+with $S = 1$ for a circle and $S = \sqrt{4\pi}/\pi = 2/\sqrt{\pi} \approx 1.128$
+for a square.
+The exact identity $S = 1/\sqrt{\text{PP}}$ (proved in K.4) confirms these
+metrics carry identical geometric information.
+
+\paragraph{Sensitivity to boundaries.}
+Perimeter-based metrics are acutely sensitive to boundary representation.
+Jagged TIGER/Line coastlines and riverine boundaries artificially inflate $P$,
+suppressing PP by $0.04$--$0.08$ for affected districts (documented in K.1).
+Geographic projection (Albers Equal Area Conic, EPSG:5070) is required before
+computing PP or S.
+
+\subsection{Family 2: Area-Based Metrics}
+
+Area-based metrics compare the district's area to a reference shape derived
+from its geometry---the minimum enclosing circle or the convex hull.
+Reock and CH belong to this family.
+
+\textbf{Reock} compares district area to its minimum bounding circle (MBC):
+\[
+  \text{Reock} = \frac{A}{\pi r^2} \in [0, 1],
+\]
+where $r$ is the radius of the smallest circle containing the district.
+
+\textbf{Convex Hull Ratio} compares district area to its convex hull:
+\[
+  \text{CH} = \frac{A}{A(\text{conv}(D))} \in (0, 1],
+\]
+where $\text{conv}(D)$ is the convex hull of district $D$.
+
+\paragraph{Boundary insensitivity.}
+Area-based metrics are substantially less sensitive to boundary representation
+because they measure the interior area of a shape, not its perimeter.
+On NC coastal districts, Reock decreases by $\leq 0.02$ when switching from
+smoothed to raw TIGER/Line boundaries, versus PP decreasing by $0.04$--$0.08$
+(K.2).
+This makes area-based metrics more appropriate for coastal states.
+
+\paragraph{What each detects.}
+Reock detects departure from circularity in the global shape envelope,
+while CH detects non-convex appendages (``tentacles'') that reduce the fraction
+of the convex hull that is actually populated. A district can have moderate Reock
+($\approx 0.35$) but very low CH ($< 0.60$) if it has thin tentacle arms---the
+case documented in K.3 where synthetic tentacle districts expose CH's sensitivity
+to non-convex geometry.
+
+\subsection{Family 3: Representational Metric}
+
+\textbf{Population-Weighted Compactness (PWC)} does not measure shape;
+it measures the average squared distance of residents from the district centroid,
+weighted by tract population:
+\[
+  \text{PWC} = \frac{\sum_i \text{pop}_i \cdot d(\bar{c}, c_i)^2}{\text{pop}_{\text{total}}},
+\]
+where $c_i$ is the centroid of tract $i$, $\bar{c}$ is the population-weighted
+district centroid, and $d$ is Euclidean distance.
+PWC measures how difficult it is for a representative to serve all constituents:
+a geometrically compact district with population dispersed along its edges
+may have higher PWC than a slightly elongated district with population
+concentrated near the centre.
+This orthogonality to geometric metrics ($r < 0.4$ with PP across all algorithm-state
+pairs, documented in K.6) is what makes PWC a distinct dimension.
+
+\subsection{Summary of Families}
+
+\begin{table}[h]
+\centering
+\caption{Compactness metric families and their geometric primitive.}
+\label{tab:families}
+\begin{tabular}{llll}
+\toprule
+Metric & Family & Scale & Reference shape \\
+\midrule
+Polsby-Popper (PP) & Perimeter-based & $[0,1]$ & Circle (isoperimetric) \\
+Schwartzberg (S)   & Perimeter-based & $[1,\infty)$ & Circle (inverted) \\
+Reock              & Area-based      & $[0,1]$ & Minimum bounding circle \\
+Convex Hull (CH)   & Area-based      & $(0,1]$ & Convex hull \\
+Length-Width (LW)  & Elongation      & $[1,\infty)$ & Min.\ bounding rectangle \\
+PWC                & Representational & $[0,\infty)$ & Population centroid \\
+\bottomrule
+\end{tabular}
+\end{table}

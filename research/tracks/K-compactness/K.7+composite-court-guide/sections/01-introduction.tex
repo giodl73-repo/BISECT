@@ -1,0 +1,37 @@
+Expert witnesses in redistricting litigation face a recurring methodological
+challenge: opposing counsel argues that any single compactness metric was
+chosen because it favours the expert's side, and that a different metric
+would tell a different story.
+This ``metric shopping'' objection is legitimate: as documented in K.0,
+the six standard compactness metrics have pairwise correlations ranging from
+$r = 0.27$ (PWC--CH) to $r = 0.79$ (Reock--CH), confirming that different
+metrics can and do give different answers about the same district.
+
+The solution is a composite profile: present all six metrics, explain
+what each measures, and let the court weigh them.
+A composite profile is robust to metric-shopping objections because the expert
+is not selecting the most favourable metric---they are presenting all metrics
+and explaining the full picture.
+This approach has been used in academic redistricting literature~\citep{niemi1990measuring}
+and is increasingly standard in expert reports filed in state redistricting litigation.
+
+\subsection{The bisect Platform}
+
+The \textsc{bisect} platform supports composite reporting natively.
+The command:
+\begin{verbatim}
+bisect label-analyze <label> --year 2020 --types all
+\end{verbatim}
+computes all six K-track metrics for every district in a single pass,
+producing a certified JSON output that can be directly appended to an expert report.
+No post-processing is required; the JSON is self-documenting with metric names,
+values, ranges, and projection specifications.
+
+\subsection{Structure of This Paper}
+
+Section~2 surveys court cases where each metric has been cited.
+Section~3 explains the composite profile methodology.
+Section~4 addresses weighting when metrics disagree.
+Section~5 documents the \texttt{bisect label-analyze} output format.
+Section~6 provides template court-filing language.
+Section~7 reports the simulated panel agreement analysis.

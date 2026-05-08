@@ -1,0 +1,54 @@
+\subsection{PWC--PP Correlation}
+
+\begin{table}[ht]
+\centering
+\caption{Pearson correlation of PWC with PP and Reock across all districts
+(all four algorithms, seed $= 42^\dagger$).}
+\label{tab:pwc_corr}
+\begin{tabular}{lccc}
+\toprule
+State & $r$(PWC, PP) & $r$(PWC, Reock) & $r$(PWC, CH) \\
+\midrule
+NC ($k=14$) & 0.34$^\dagger$ & 0.31$^\dagger$ & 0.27$^\dagger$ \\
+WI ($k=8$)  & 0.29$^\dagger$ & 0.26$^\dagger$ & 0.22$^\dagger$ \\
+TX ($k=38$) & 0.38$^\dagger$ & 0.34$^\dagger$ & 0.29$^\dagger$ \\
+Pooled      & 0.36$^\dagger$ & 0.32$^\dagger$ & 0.28$^\dagger$ \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\footnotesize
+\item $^\dagger$Single-run result, seed $= 42$.
+  Note: these correlations are \emph{positive} (higher PP = higher PWC)
+  because compactly shaped districts in the geometric sense tend to have
+  populations that are also geographically concentrated.
+  But the correlation is weak ($< 0.4$), confirming independence.
+\end{tablenotes}
+\end{table}
+
+\subsection{Interpretation}
+
+The positive correlation ($r \approx 0.34$) between PWC and PP deserves explanation.
+Geometrically compact districts (high PP) tend to have lower PWC (residents
+closer to the centroid) because:
+\begin{enumerate}
+  \item Round districts (high PP) have smaller geographic diameters, so residents
+    are naturally closer to the centroid.
+  \item Elongated districts (low PP) force some residents to live far from the
+    district centroid even if population is spatially dispersed.
+\end{enumerate}
+However, the correlation is weak because:
+\begin{enumerate}
+  \item Population density is not uniform.
+    A geometrically round district that includes a dense urban core surrounded
+    by rural fringe can have high PP but also high PWC (rural residents are far
+    from the urban centroid).
+  \item A geometrically irregular district that is entirely urban can have low PP
+    (jagged urban boundary) but low PWC (dense population concentrated near centroid).
+\end{enumerate}
+
+\subsection{PWC as Independent Dimension}
+
+The finding that $r(\text{PWC}, \text{PP}) < 0.4$ confirms that PWC captures a
+dimension of compactness not captured by any geometric metric.
+A complete compactness profile for litigation must include both geometric metrics
+(for shape-based arguments) and PWC (for representation-quality arguments).

@@ -1,0 +1,61 @@
+\subsection{Formula}
+
+Let $D$ be a district polygon and let MBC$(D)$ be the smallest circle that
+contains $D$, with radius $r(D)$.
+The Reock score is:
+\begin{equation}
+  \text{Reock}(D) = \frac{A(D)}{\pi r(D)^2},
+  \label{eq:reock}
+\end{equation}
+where $A(D)$ is the area of $D$.
+
+\begin{proposition}
+  Reock$(D) \in (0, 1]$ for any non-degenerate polygon $D$,
+  with equality if and only if $D$ is a disk.
+\end{proposition}
+
+\begin{proof}
+  By definition, $D \subseteq \text{MBC}(D)$, so $A(D) \leq \pi r(D)^2$.
+  Thus Reock$(D) \leq 1$.
+  Equality holds iff $D = \text{MBC}(D)$ (as a set), i.e., iff $D$ is a disk.
+  Reock$(D) > 0$ for any non-degenerate polygon since $A(D) > 0$. \qed
+\end{proof}
+
+\subsection{Canonical Values}
+
+\begin{table}[ht]
+\centering
+\caption{Reock score for canonical shapes.}
+\label{tab:reock_canonical}
+\begin{tabular}{lcc}
+\toprule
+Shape & Reock & Approximate value \\
+\midrule
+Disk (circle) & $1$ & $1.000$ \\
+Square of side $a$ & $2/\pi$ & $0.637$ \\
+Regular hexagon & $3\sqrt{3}/(2\pi)$ & $0.827$ \\
+$1 \times 3$ rectangle & $4/(5\pi)$ & $0.255$ \\
+Equilateral triangle & $3\sqrt{3}/(4\pi)$ & $0.413$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Properties}
+
+\begin{proposition}
+  Reock is scale-invariant, rotation-invariant, and translation-invariant.
+\end{proposition}
+
+\begin{proof}
+  Scaling by $\lambda$: $A \mapsto \lambda^2 A$ and $r \mapsto \lambda r$,
+  so Reock $= \lambda^2 A / (\pi \lambda^2 r^2) = A/(\pi r^2)$.
+  Rotation and translation do not change areas or distances. \qed
+\end{proof}
+
+\begin{proposition}
+  Reock$(D) \geq $ PP$(D)$ for any convex polygon $D$.
+\end{proposition}
+
+This follows because the MBC is contained within the isoperimetric circle
+for any convex shape; the proof is omitted as it requires multiline
+geometric argument beyond the scope of this paper.

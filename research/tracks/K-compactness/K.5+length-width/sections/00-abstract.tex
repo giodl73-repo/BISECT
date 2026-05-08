@@ -1,0 +1,17 @@
+The Length-Width Ratio (LW $=$ maximum / minimum dimension of the minimum
+bounding rectangle) measures elongation---the most visually interpretable
+form of non-compactness for legislative and judicial audiences.
+Courts have applied a LW $> 3$ threshold to flag ``elongated'' districts in
+redistricting challenges in Illinois and New York.
+We study LW across four \textsc{bisect} structure algorithms---standard-bisect,
+prime-factor, ratio-optimal, and moving-knife---for North Carolina ($k=14$),
+Wisconsin ($k=8$), and Texas ($k=38$) under 2020 Census data.
+Key findings: (1) LW $> 3$ is a documented court threshold for elongation challenges
+(K.5, Claim~1); (2) all four bisect algorithms produce LW $\leq 2.8$ on NC 2020
+(seed $= 42^\dagger$), confirming that bisect does not generate elongated districts;
+(3) axis-aligned bounding boxes (AABB) systematically overestimate LW by up to 41\%
+for diagonally oriented districts, making only MBR-based LW (rotating calipers)
+legally defensible.
+We describe the rotating calipers algorithm in $O(n)$ after the convex hull
+and provide the full AABB vs.\ MBR discrepancy analysis across NC/WI/TX.
+All results use single seed $= 42^\dagger$.

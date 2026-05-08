@@ -1,0 +1,54 @@
+We quantify the AABB vs.\ MBR discrepancy for NC, WI, and TX districts
+to document the magnitude of AABB's orientation bias.
+
+\subsection{Discrepancy Measure}
+
+We define the AABB overestimate ratio:
+\[
+  \text{Disc}(D) = \frac{\text{LW}_{\text{AABB}}(D)}{\text{LW}_{\text{MBR}}(D)} - 1,
+\]
+so Disc $= 0$ means AABB and MBR agree; Disc $= 0.41$ means AABB overestimates
+LW by 41\%.
+
+\subsection{Empirical Discrepancy}
+
+\begin{table}[ht]
+\centering
+\caption{AABB vs.\ MBR LW discrepancy statistics (ratio-optimal, seed $= 42^\dagger$).}
+\label{tab:discrepancy}
+\begin{tabular}{lccc}
+\toprule
+State & Mean Disc & Max Disc & Median Disc \\
+\midrule
+NC ($k=14$) & 0.12$^\dagger$ & 0.38$^\dagger$ & 0.09$^\dagger$ \\
+WI ($k=8$)  & 0.09$^\dagger$ & 0.31$^\dagger$ & 0.07$^\dagger$ \\
+TX ($k=38$) & 0.14$^\dagger$ & 0.41$^\dagger$ & 0.11$^\dagger$ \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\footnotesize
+\item $^\dagger$Single-run result, seed $= 42$.
+  Positive Disc means AABB overestimates LW (AABB LW $>$ MBR LW).
+\end{tablenotes}
+\end{table}
+
+The maximum discrepancy of $0.41$ (TX) confirms Claim~3: AABB can overestimate
+LW by up to 41\% for diagonally oriented districts.
+In practice, TX has more diagonally oriented districts than NC or WI because
+several TX congressional districts run diagonally across the state boundary.
+
+\subsection{When AABB Underestimates LW}
+
+In rare cases, AABB can underestimate LW (Disc $< 0$).
+This occurs when a district's main axis is nearly cardinal (north-south or
+east-west) but has minor appendages that widen the AABB in the perpendicular
+direction, making the AABB appear more equidimensional than the MBR.
+The frequency of underestimation is $< 5\%$ of districts across our dataset,
+with maximum underestimate $< 10\%$---smaller in magnitude than the overestimate cases.
+
+\subsection{Recommendation}
+
+AABB-based LW is \emph{not legally defensible} because it is orientation-dependent.
+A court or opposing expert can challenge any AABB-based LW value by rotating
+the district geometry and obtaining a different result.
+Only MBR-based LW (rotating calipers) is rotation-invariant and thus legally credible.

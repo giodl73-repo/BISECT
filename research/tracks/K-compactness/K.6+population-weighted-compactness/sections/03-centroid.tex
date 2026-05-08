@@ -1,0 +1,47 @@
+\subsection{Data Requirements}
+
+PWC requires tract-level population data, not just district polygon geometry.
+This distinguishes PWC from PP, Reock, CH, S, and LW, which depend only on
+the geometric shape of the district polygon.
+PWC computation requires the 2020 Census PL 94-171 redistricting file,
+which provides:
+\begin{itemize}
+  \item Total population $p_i$ for each tract $i$.
+  \item Tract geographic centroid $c_i$ (internal point or area centroid from TIGER/Line).
+\end{itemize}
+
+\subsection{Centroid Computation}
+
+Tract centroids are the geographic centroids of tract polygons,
+computed as the area-weighted mean of polygon vertices.
+We use the ``interior point'' method: for non-convex tracts, we use the
+point-on-surface (POS) rather than the area centroid to ensure the centroid
+is inside the tract.
+The area centroid of a non-convex tract can fall outside the tract itself,
+producing misleading distance computations for tracts with holes or inlets.
+
+\subsection{Analytical Example}
+
+Consider a $3 \times 3$ grid of unit tracts with equal population $p = 1$.
+Tract centroids are at $(i + 0.5, j + 0.5)$ for $i, j \in \{0, 1, 2\}$.
+The population-weighted centroid of the whole grid is:
+\[
+  \bar{c} = \frac{\sum_{i,j} (i + 0.5, j + 0.5)}{9} = (1.5, 1.5).
+\]
+PWC for the whole-grid district:
+\begin{align}
+  \text{PWC} &= \frac{1}{9} \sum_{i,j} \|(i+0.5, j+0.5) - (1.5, 1.5)\|^2 \\
+  &= \frac{1}{9} \sum_{i,j} \left[(i-1)^2 + (j-1)^2\right] \\
+  &= \frac{1}{9} \cdot 9 \cdot \frac{2(0^2 + 1^2 + 1^2)}{3}
+  = \frac{4}{3} \approx 1.333 \text{ square units}.
+\end{align}
+This matches the L1 test invariant: PWC equals the sum of squared distances
+from each tract centroid to the grid centre, divided by 9.
+
+\subsection{Implementation}
+
+Implemented in \texttt{crates/bisect-analysis/src/compactness.rs}.
+Requires the run's tract assignment file and the Census tract centroid file.
+PWC for each district is computed in $O(m)$ where $m$ is the number of tracts
+in the district.
+Total computation for all districts is $O(M)$ where $M$ is the total tract count.

@@ -1,0 +1,20 @@
+Population-Weighted Compactness (PWC) is a moment-of-inertia metric that measures
+the average squared distance of residents from their district centroid,
+weighted by tract population.
+Unlike area-based and perimeter-based metrics, PWC captures representational quality:
+a district where voters live far from the district centre imposes higher coordination
+costs on constituents and their representative.
+We study PWC across four \textsc{bisect} structure algorithms---standard-bisect,
+prime-factor, ratio-optimal, and moving-knife---for North Carolina ($k=14$, 2{,}195 tracts),
+Wisconsin ($k=8$, 1{,}406 tracts), and Texas ($k=38$, 5{,}265 tracts)
+under 2020 Census data (seed $= 42^\dagger$).
+Key findings:
+(1) PWC--PP correlation is $r < 0.4$ across all algorithm-state pairs,
+confirming that representational and geometric compactness are independent dimensions.
+(2) Prime-factor reduces mean PWC 18\% below standard-bisect on NC 2020
+due to hierarchical nesting aligning population concentrations with district centroids.
+(3) TX exhibits high PWC variance across districts due to concentrated urban centres
+(Dallas-Fort Worth, Houston, San Antonio-Austin), while WI exhibits low variance
+due to more dispersed population.
+All results use single seed $= 42^\dagger$ with tract-level population weights
+from the 2020 Census PL 94-171 redistricting file.

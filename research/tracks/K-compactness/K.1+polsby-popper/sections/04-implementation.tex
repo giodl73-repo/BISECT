@@ -1,0 +1,72 @@
+PP computation is implemented in \texttt{crates/bisect-analysis/src/compactness.rs}.
+The implementation uses the \texttt{geo} crate for polygon area and perimeter
+computation and \texttt{proj} for coordinate system transformation.
+
+\subsection{Computational Pipeline}
+
+\begin{enumerate}
+  \item \textbf{Load geometries}: District polygons are loaded from the run's
+    output shapefile in WGS84 (EPSG:4326).
+  \item \textbf{Project}: Each district polygon is projected to Albers Equal Area
+    Conic (EPSG:5070) using the PROJ library.
+  \item \textbf{Compute area}: Shoelace formula applied to the projected polygon
+    vertices gives $A$ in square metres.
+  \item \textbf{Compute perimeter}: Euclidean distance summed over projected edge
+    segments gives $P$ in metres.
+  \item \textbf{Apply formula}: PP $= 4\pi A / P^2$.
+\end{enumerate}
+
+\subsection{Numerical Stability}
+
+For very small districts (single-tract districts in single-state analyses),
+$P^2$ can be large relative to $A$, causing PP to approach zero.
+No numerical instability occurs because PP is bounded below by zero and
+the formula involves only division, not subtraction of nearly equal quantities.
+
+\subsection{CLI Usage}
+
+PP is computed by:
+\begin{verbatim}
+bisect label-analyze <label> --year 2020 --types pp
+\end{verbatim}
+or as part of the full compactness profile:
+\begin{verbatim}
+bisect label-analyze <label> --year 2020 --types all
+\end{verbatim}
+Output JSON format:
+\begin{verbatim}
+{
+  "districts": [
+    {
+      "district_id": 1,
+      "polsby_popper": 0.231,
+      "projection": "EPSG:5070"
+    },
+    ...
+  ],
+  "state_mean_pp": 0.224,
+  "seed": 42
+}
+\end{verbatim}
+
+\subsection{Test Suite}
+
+L0 invariants (inline unit tests):
+\begin{itemize}
+  \item PP of a circle approximated by a regular 1000-gon is within $0.001$ of $1.0$.
+  \item PP is in $[0,1]$ for any valid polygon.
+  \item PP of a square is within $0.001$ of $\pi/4 \approx 0.785$.
+  \item PP is scale-invariant: doubling all coordinates changes PP by $< 10^{-9}$.
+\end{itemize}
+
+L1 integration test:
+\begin{itemize}
+  \item On a $4 \times 4$ grid of unit squares with two equal rectangular districts,
+    PP is computed without panic and matches the formula value within $0.001$.
+\end{itemize}
+
+L2 regression test:
+\begin{itemize}
+  \item NC 2020 ratio-optimal mean PP $\geq 0.22$ (seed $= 42^\dagger$).
+  \item Projection to EPSG:5070 increases mean PP by $\geq 0.01$ for NC coastal districts.
+\end{itemize}

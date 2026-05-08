@@ -1,0 +1,44 @@
+\section{Introduction}
+\label{sec:introduction}
+
+Partisan gerrymandering through packing and cracking leaves a distinctive geometric
+signature on the district vote-share distribution. Cracking spreads the target party's
+voters across many districts at vote shares just below 50\%---winning voters concentrated
+in losing positions, with all votes wasted. Packing concentrates the remaining voters in
+a small number of landslide districts at 70--80\%---the excess votes above 50\%+1 wasted
+as surplus. The combination produces a bimodal distribution: many districts clustered near
+45\% Democratic (cracked) and a few districts clustered near 75\% Democratic (packed),
+with the mean and median of Democratic-won and Democratic-lost districts pulled apart.
+
+\citet{warrington2018} proposed Declination as a direct geometric measure of this pattern.
+Rather than aggregating wasted votes (as EG does) or measuring the mean-median gap (as MM
+does), Declination computes the angular geometry of the vote-share distribution: the angle
+at which Republican-won districts tilt toward 50\% (cracking: opponents' wins cluster just
+below 50\%) versus the angle at which Democratic-won districts tilt toward 50\% (packing:
+opponents' wins cluster far above 50\%). The difference in these angles, normalized to the
+range $[-1, 1]$, is the Declination.
+
+This geometric approach has an appealing transparency: Declination can be read directly
+from a plot of sorted district vote shares, without requiring computation of wasted votes,
+median statistics, or swing models. A court or jury can see the asymmetry directly in the
+graph---many districts clustered just below the 50\% line (cracked districts) versus few
+districts far above it (packed districts)---and the Declination translates that visual
+asymmetry into a scalar.
+
+The legal status of Declination is, however, explicitly undeveloped. No federal or state
+court has adopted it as evidence as of 2026. This paper documents that legal status
+explicitly and explains the methodological critiques that may account for judicial
+non-adoption. It also provides the first systematic analysis of Declination's behavior
+under \textsc{bisect} algorithmic redistricting, establishing the neutral-map baseline
+for comparison to enacted maps.
+
+The paper's contribution is not to rehabilitate Declination for court use---its legal
+status is what it is---but to provide a rigorous empirical foundation for expert witnesses
+who may be asked about it in cross-examination, and to establish that \textsc{bisect}
+maps produce near-zero Declination as a byproduct of compactness, providing context for
+evaluating enacted maps' Declination values if courts eventually develop interest in the metric.
+
+Section~\ref{sec:definition} defines Declination and documents the three methodological
+critiques. Section~\ref{sec:behavior} explains the compactness mechanism. Section~\ref{sec:empirical}
+presents empirical results. Section~\ref{sec:legal} documents the legal non-adoption record
+through 2026. Section~\ref{sec:conclusion} concludes.

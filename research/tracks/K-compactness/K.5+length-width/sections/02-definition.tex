@@ -1,0 +1,58 @@
+\subsection{Minimum Bounding Rectangle (MBR)}
+
+The Minimum Bounding Rectangle (MBR) of a polygon $D$ is the smallest-area
+rectangle (at any orientation) that contains $D$.
+Formally, for each orientation $\theta \in [0, \pi/2)$, let $B_\theta(D)$ be
+the axis-aligned bounding box of $D$ rotated by $\theta$.
+The MBR is:
+\[
+  \text{MBR}(D) = \arg\min_{\theta \in [0,\pi/2)} A(B_\theta(D)).
+\]
+
+\begin{proposition}
+  The MBR of a convex polygon has one side flush with an edge of the polygon.
+\end{proposition}
+
+This is the rotating calipers theorem: the optimal bounding rectangle is
+always flush with one convex hull edge.
+
+\subsection{Length-Width Ratio}
+
+Let $\ell$ (length) and $w$ (width) with $\ell \geq w$ be the dimensions of MBR$(D)$.
+Then:
+\begin{equation}
+  \text{LW}(D) = \frac{\ell}{w} \geq 1.
+  \label{eq:lw}
+\end{equation}
+LW $= 1$ for a square; LW $= 3$ for a $1 \times 3$ rectangle.
+
+\subsection{AABB vs.\ MBR}
+
+The Axis-Aligned Bounding Box (AABB) reports:
+\[
+  \text{AABB}(D) = [\min x, \max x] \times [\min y, \max y],
+\]
+with LW$_{\text{AABB}}(D) = (\max x - \min x) / (\max y - \min y)$
+(or the reciprocal if height exceeds width).
+
+\begin{proposition}
+  $\text{LW}_{\text{MBR}}(D) \leq \text{LW}_{\text{AABB}}(D)$
+  is not guaranteed; AABB can both over- and under-estimate true LW.
+\end{proposition}
+
+The key property that makes AABB unreliable:
+\[
+  A(\text{AABB}(D)) \geq A(\text{MBR}(D)),
+\]
+but the dimensions of AABB are not monotone transforms of the MBR dimensions.
+
+\subsection{Test Invariants}
+
+L0 invariants:
+\begin{itemize}
+  \item LW $\geq 1$ for any polygon.
+  \item LW of a square $= 1.0$ (exact).
+  \item LW of a $1 \times 3$ rectangle $= 3.0$ (exact, for MBR).
+  \item LW is rotation-invariant when computed via MBR.
+  \item MBR area $\leq$ AABB area for any polygon.
+\end{itemize}

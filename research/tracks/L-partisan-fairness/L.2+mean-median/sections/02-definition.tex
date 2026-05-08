@@ -1,0 +1,66 @@
+\section{Mathematical Definition and Properties}
+\label{sec:definition}
+
+\subsection{Definition}
+
+For a $k$-district congressional plan with district-level Democratic vote shares
+$v_1, v_2, \ldots, v_k$, the Mean-Median Difference is:
+\[
+\text{MM} = \bar{v}_D - \tilde{v}_D,
+\]
+where $\bar{v}_D = k^{-1}\sum_{i=1}^k v_i$ is the mean and $\tilde{v}_D$ is
+the median (the value $v_{(k/2)}$ for even $k$, or $v_{((k+1)/2)}$ for odd $k$,
+in the sorted sequence $v_{(1)} \leq v_{(2)} \leq \cdots \leq v_{(k)}$).
+
+Positive MM ($\bar{v}_D > \tilde{v}_D$) indicates a right-skewed distribution
+of Democratic vote shares: a few districts with very high Democratic vote share
+(packing) pull the mean above the median. Negative MM indicates a left-skewed
+distribution (a few districts with very low Democratic vote share, consistent
+with packing Democratic voters at very low margins in Republican-advantaged districts).
+
+\subsection{Range and Interpretation}
+
+The range of MM is approximately $[-0.10, +0.10]$ for congressional delegations;
+values outside this range are rare and typically indicate either very small $k$
+or severe packing. For NC ($k=14$), one district moving from 55\% to 80\%
+Democratic vote share shifts MM by approximately $0.0179 / k \approx 0.013$,
+setting the practical resolution.
+
+The mean-median relationship from statistical distribution theory provides
+interpretive guidance: for a symmetric distribution, $\text{MM} = 0$; positive
+skewness implies positive MM; negative skewness implies negative MM. Because
+geographic sorting of Democratic voters into urban cores produces a right-skewed
+distribution of Democratic vote shares (a few very high-margin urban districts,
+many moderate-to-low-margin suburban and rural districts), baseline MM for any
+state with significant urban concentration will be positive---independently of
+whether the map was gerrymandered.
+
+\subsection{Advantages Over EG}
+
+MM has two advantages over EG that make it preferable for single-election analysis:
+
+\textbf{No swing model required.} MM is computed directly from observed vote shares
+without applying a uniform swing transformation. EG requires either directly computing
+from observed vote counts (a function of who actually won) or applying a swing model
+to estimate hypothetical outcomes. MM avoids this model dependency entirely.
+
+\textbf{Lower election-cycle sensitivity.} Because MM depends on the ranked distribution
+of vote shares (how concentrated are high-Democratic-margin districts?), it is less
+sensitive to uniform partisan swings than EG. A uniform 5-point Democratic surge shifts
+all district vote shares by the same amount, preserving the ranked order and therefore
+the mean-median gap. EG changes more dramatically because the swing shifts which districts
+are won and lost, creating discontinuities in the wasted-vote calculation.
+
+\textbf{No uncontested-district distortion.} EG calculations require special treatment
+of uncontested districts (where one party receives no votes). MM treats all districts
+identically regardless of contestedness, though districts with implausibly extreme
+vote shares (e.g., 95\% because no opposing candidate ran) should be excluded or
+corrected using standard imputation methods.
+
+\subsection{Relationship to EG}
+
+For a symmetric distribution of district vote shares, $\text{MM} \approx \text{EG}/(2k)$,
+reflecting that both metrics increase with the skewness of the vote-share distribution.
+The formal relationship depends on the shape of the distribution; empirically, for NC and
+WI, $\text{MM} \approx 0.5 \times \text{EG}$ when both are computed from the same data,
+consistent with the theoretical approximation for $k \approx 10$.

@@ -1,0 +1,86 @@
+\section{Empirical Results}
+\label{sec:empirical}
+
+\subsection{Multi-State Comparison}
+
+Table~\ref{tab:decl-baseline} reports Declination for \textsc{bisect} and enacted
+2022 congressional maps across four states using VEST 2020 presidential returns.
+
+\begin{table}[ht]
+\centering
+\caption{Declination: Bisect vs.\ Enacted 2022 Congressional Maps}
+\label{tab:decl-baseline}
+\begin{threeparttable}
+\begin{tabular}{@{}llrrr@{}}
+\toprule
+State ($k$) & $\delta$ (Bisect$^\dagger$) & $\delta$ (Enacted) & $|\Delta\delta|$ & Reduction \\
+\midrule
+NC ($k=14$) & $+0.08$ & $+0.35$ & $0.27$ & 77\% \\
+WI ($k=8$)  & $+0.07$ & $+0.28$ & $0.21$ & 75\% \\
+TX ($k=38$) & $+0.09$ & $+0.40$ & $0.31$ & 78\% \\
+FL ($k=28$) & $+0.08$ & $+0.32$ & $0.24$ & 75\% \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item $^\dagger$ Single-run \textsc{bisect} result. Positive $\delta$ indicates
+Republican advantage through packing/cracking.
+\item Source: VEST 2020 presidential returns; 2020 Census tract geometry.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+The 75--78\% reduction is the largest percentage reduction of any L-series metric.
+Enacted map values of $\delta \approx +0.28$--$+0.40$ are dramatically above the
+\textsc{bisect} baseline of $\delta \approx +0.07$--$+0.09$. If courts were to
+develop interest in Declination, the gap of $\Delta\delta \approx 0.21$--$0.31$
+provides strong evidence of deliberate cracking beyond what compactness-constrained
+redistricting produces.
+
+\subsection{NC District-Level Decomposition}
+
+Table~\ref{tab:decl-nc-decomp} illustrates the geometric structure underlying
+NC's Declination values by showing the average Democratic vote share in each
+party's won districts under \textsc{bisect} and enacted plans.
+
+\begin{table}[ht]
+\centering
+\caption{NC Declination Decomposition: Democratic and Republican Won-District Centroids}
+\label{tab:decl-nc-decomp}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Plan & $\bar{v}_D^+$ & $\bar{v}_R^-$ & $\theta_D$ & $\theta_R$ \\
+\midrule
+Bisect$^\dagger$ & $0.64$ & $0.44$ & $0.27$ & $0.21$ \\
+Enacted 2022    & $0.71$ & $0.45$ & $0.37$ & $0.17$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The key difference is not in $\bar{v}_R^-$ (Republican-won district centroid), which
+is similar for both plans ($0.44$--$0.45$), but in $\bar{v}_D^+$ (Democratic-won
+district centroid), which is substantially higher for the enacted plan ($0.71$ vs.\
+$0.64$). The enacted plan packs Democratic voters into fewer, higher-margin districts,
+pulling $\bar{v}_D^+$ away from 50\% and increasing $\theta_D$. The cracking component
+(low $\bar{v}_R^-$) is similar for both plans, reflecting that the geographic distribution
+of Republican voters does not differ dramatically between compact and enacted boundaries.
+
+This decomposition illustrates a key limitation of Declination: it does not distinguish
+between packing (high $\bar{v}_D^+$) and cracking (low $\bar{v}_R^-$) as the source
+of positive $\delta$. Both produce the same positive Declination via different mechanisms.
+The NC evidence shows that the enacted map's elevated Declination is driven primarily
+by packing (high $\bar{v}_D^+$) rather than cracking of Republican margins (the
+Republican-won district centroid is similar in both plans).
+
+\subsection{Election-Cycle Sensitivity}
+
+Unlike MM (which is exactly invariant to uniform swings) and unlike EG (which varies
+substantially with swings), Declination has moderate sensitivity to partisan swings
+because uniform swings can move districts across the 50\% threshold, changing
+$k_D$ and $k_R$ and potentially changing $\bar{v}_D^+$ and $\bar{v}_R^-$ discontinuously.
+
+For NC, a 5-point uniform Democratic swing reduces enacted $\delta$ from $+0.35$
+to $+0.28$ (because some Republicans-won districts at 47--50\% flip to Democratic,
+changing the partition). \textsc{Bisect} $\delta$ falls from $+0.08$ to $+0.07$
+(one district near 50\% flips). The qualitative gap persists under any realistic
+swing scenario.

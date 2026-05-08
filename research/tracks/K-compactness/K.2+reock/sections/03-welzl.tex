@@ -1,0 +1,56 @@
+Computing the minimum bounding circle (MBC) of a polygon is equivalent to
+computing the smallest enclosing disk (SED) of its vertex set.
+We use Welzl's randomised algorithm~\citep{welzl1991smallest}, which runs in
+$O(n)$ expected time.
+
+\subsection{Algorithm}
+
+\begin{algorithm}
+\caption{Welzl's Minimum Enclosing Circle}
+\label{alg:welzl}
+\begin{algorithmic}[1]
+\Function{Welzl}{$P$: point set, $R$: boundary set}
+  \If{$P = \emptyset$ or $|R| = 3$}
+    \State \Return \Call{MinCircleFromBoundary}{$R$}
+  \EndIf
+  \State Choose $p \in P$ uniformly at random
+  \State $D \gets$ \Call{Welzl}{$P \setminus \{p\}$, $R$}
+  \If{$p \in D$}
+    \State \Return $D$
+  \EndIf
+  \State \Return \Call{Welzl}{$P \setminus \{p\}$, $R \cup \{p\}$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\texttt{MinCircleFromBoundary($R$)} returns the unique circle defined by
+$|R|$ points: the trivial circle for $|R| = 0$ (radius 0), the circle with
+diameter $\overline{p_1 p_2}$ for $|R| = 2$, and the circumcircle of
+$\{p_1, p_2, p_3\}$ for $|R| = 3$.
+
+\begin{theorem}[Welzl's correctness]
+  Algorithm~\ref{alg:welzl} returns the unique minimum enclosing circle
+  of $P$, and runs in $O(n)$ expected time.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+Uniqueness of the MBC follows from strict convexity of the containment constraint
+(the MBC is the unique solution to a strictly convex program).
+The $O(n)$ expected time bound follows from the backward analysis of the
+randomised algorithm~\citep{welzl1991smallest}: the probability that a
+newly added point $p$ is on the boundary of the MBC is at most $3/i$ when
+$|P| = i$, giving the harmonic series $\sum_{i=1}^{n} O(3/i) = O(n)$. \qed
+\end{proof}
+
+\subsection{Implementation}
+
+The implementation in \texttt{crates/bisect-analysis/src/compactness.rs}
+extracts all polygon vertices (including holes), shuffles them using the
+run's seed for reproducibility (seed $= 42^\dagger$), and calls Welzl's algorithm.
+Test invariants (L0):
+\begin{itemize}
+  \item Reock of a circle is $1.0$ (exact to floating-point precision).
+  \item Welzl MBC contains all input points: for all $p \in P$,
+    $\|p - \text{centre}\| \leq r + 10^{-9}$.
+  \item MBC area $\geq$ polygon area for any convex polygon.
+\end{itemize}

@@ -1,0 +1,40 @@
+Geometric compactness metrics---PP, Reock, CH, S, LW---measure properties
+of district shapes as geometric objects.
+They answer the question: \emph{Is this shape compact?}
+Population-Weighted Compactness (PWC) answers a different question:
+\emph{Are the residents of this district well-served by their geographic arrangement?}
+
+A district can be perfectly circular (PP $= 1$, Reock $= 1$, CH $= 1$)
+but have all its population concentrated at the district's periphery,
+forcing residents to live far from the district centroid and from each other.
+Conversely, a geometrically irregular district can have low PWC if
+its population is concentrated near a central urban core.
+
+\subsection{The Fryer-Holden Formulation}
+
+\citet{fryer2011measuring} introduced a moment-of-inertia compactness metric
+equivalent to PWC and showed that it captures a dimension of representational
+quality distinct from geometric metrics.
+In their framework, PWC represents the expected squared distance between two
+randomly drawn residents of the same district---a measure of how ``close together''
+the district's population is.
+\citet{fryer2011measuring} find that minimising PWC is equivalent to minimising
+travel costs for district-level political activity (town halls, canvassing,
+constituent service).
+
+\subsection{Relationship to Community of Interest}
+
+Many state redistricting guidelines include a ``community of interest'' criterion:
+districts should contain ``geographically compact'' communities with shared
+interests~\citep{ncsl2021criteria}.
+PWC provides a data-driven operationalisation of this criterion for the spatial
+component: communities with low PWC have their residents clustered near a
+common geographic centre, facilitating the shared-interest representation
+that the community-of-interest standard seeks to protect.
+
+\subsection{Scope}
+
+This paper provides the first systematic comparison of PWC across all four
+bisect structure algorithms on NC, WI, and TX (2020 Census, seed $= 42^\dagger$).
+We document the prime-factor algorithm's PWC advantage and the low correlation
+between PWC and geometric metrics.

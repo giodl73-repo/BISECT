@@ -1,0 +1,84 @@
+\section{Mathematical Definition and Properties}
+\label{sec:definition}
+
+\subsection{The Seats-Votes Function}
+
+The Partisan Bias is defined as a scalar summary of the seats-votes function $S(v)$.
+For a $k$-district congressional plan with district-level Democratic vote shares
+$v_1, v_2, \ldots, v_k$ (observed for a specific election cycle), the uniform
+swing model estimates the seats-votes function as follows.
+
+Let $\bar{v}_D = k^{-1}\sum_i v_i$ be the observed mean Democratic vote share.
+The uniform swing needed to bring the statewide mean to a target value $v$ is
+$\delta(v) = v - \bar{v}_D$. Applying this swing to all districts:
+\[
+\hat{v}_i(v) = v_i + \delta(v) = v_i + v - \bar{v}_D.
+\]
+The estimated Democratic seat share at statewide vote share $v$ is:
+\[
+S(v) = \frac{1}{k}\sum_{i=1}^k \mathbf{1}[\hat{v}_i(v) > 0.50].
+\]
+The function $S(v)$ is a step function that jumps at values of $v$ where a
+swing brings a district exactly to 50\% ($v = 0.50 - v_i + \bar{v}_D$).
+
+\subsection{Partisan Bias Definition}
+
+Partisan Bias is:
+\[
+\text{Bias} = S(0.50) - 0.50.
+\]
+$\text{Bias} > 0$ indicates Democratic advantage at the 50\% pivot (Democrats
+would win more than half the seats with exactly half the votes). $\text{Bias} < 0$
+indicates Republican advantage. Because $S(v)$ is a step function, Bias is computed
+at $v = 0.50$, using the convention that ties are broken by the observed order of
+district vote shares.
+
+For NC ($k=14$), $S(v)$ takes values $\{0, 1/14, 2/14, \ldots, 14/14\}$.
+The minimum nonzero $|\text{Bias}|$ is $1/14 \approx 0.071$, corresponding
+to a one-seat advantage. Enacted NC Bias $\approx -0.07$ thus indicates that
+Republicans would win exactly one additional seat (8 vs.\ 7) if the statewide
+vote were tied---a systematic structural advantage equivalent to one seat in a
+14-seat delegation.
+
+\subsection{The Symmetry Standard}
+
+Zero Partisan Bias is a necessary condition for the full symmetry standard but
+not sufficient. The full symmetry standard requires:
+\[
+S(v) = 1 - S(1-v) \quad \text{for all } v \in [0,1].
+\]
+This means the seats-votes function is anti-symmetric around the point $(0.50, 0.50)$:
+the curve is the same whether read from left to right or reflected. Equivalently,
+the party winning 60\% of votes should win the same seat share that the opposing
+party would win at 60\% of votes.
+
+Partisan Bias at the 50\% pivot tests only whether $S(0.50) = 0.50$, not whether
+the full symmetry condition holds across all vote levels. A map could satisfy the
+Bias test at 50\% while having asymmetric responsiveness at 55\% and 45\%. The
+seats-votes curve (L.5) provides the full symmetry picture; Partisan Bias provides
+a scalar summary at the most policy-relevant vote level.
+
+\subsection{Uniform Swing Limitation}
+
+The uniform swing model applies the same $\delta$ to every district, implicitly
+assuming that all districts respond identically to statewide vote changes. This
+assumption fails systematically in two scenarios:
+
+\textbf{Safe-seat heterogeneity.} Districts with vote shares far from 50\% (safe
+seats) respond less to statewide swings in practice, because incumbency advantage,
+uncontested races, and campaign resource allocation protect them from the full
+swing magnitude. Applying uniform swing to safe seats overestimates how many
+seats change hands, which overestimates the slope of $S(v)$ near 50\% and
+biases the Partisan Bias estimate.
+
+\textbf{Geographic clustering.} Urban districts respond differently from suburban
+and rural districts because the vote-share determinants (income, education, race)
+change nonlinearly with geography. Uniform swing treats all districts as exchangeable,
+ignoring this geographic heterogeneity.
+
+For Texas ($k=38$), which has approximately 12 safe Republican districts ($v_i < 0.35$)
+and 8 safe Democratic districts ($v_i > 0.65$), uniform swing overestimates
+$|\text{Bias}|$ by approximately 15\% compared to a heteroskedastic correction
+that applies reduced swing magnitudes to safe districts. The qualitative conclusion
+(enacted TX $|\text{Bias}| \approx 0.09$ vs.\ bisect $|\text{Bias}| < 0.02$)
+is robust to this correction.

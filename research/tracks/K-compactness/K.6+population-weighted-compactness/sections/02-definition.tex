@@ -1,0 +1,56 @@
+\subsection{Formula}
+
+Let $D$ be a district containing tracts $\{t_1, \ldots, t_m\}$.
+Let $p_i$ be the population of tract $t_i$ and $c_i \in \mathbb{R}^2$ be
+the centroid of $t_i$.
+The total population is $P_D = \sum_i p_i$.
+The population-weighted centroid of $D$ is:
+\begin{equation}
+  \bar{c}_D = \frac{\sum_i p_i c_i}{\sum_i p_i}.
+  \label{eq:centroid}
+\end{equation}
+The Population-Weighted Compactness is:
+\begin{equation}
+  \text{PWC}(D) = \frac{\sum_i p_i \cdot \|c_i - \bar{c}_D\|^2}{\sum_i p_i}.
+  \label{eq:pwc}
+\end{equation}
+This is the population-weighted variance of tract centroid distances from
+the district centroid, equivalently the second moment of inertia of the
+population distribution about the centroid.
+
+\subsection{Properties}
+
+\begin{proposition}
+  PWC$(D) \geq 0$ with equality iff all tracts have the same centroid.
+\end{proposition}
+
+\begin{proof}
+  PWC is a weighted sum of squared distances $\|c_i - \bar{c}_D\|^2 \geq 0$,
+  so PWC $\geq 0$.
+  PWC $= 0$ iff $\|c_i - \bar{c}_D\|^2 = 0$ for all $i$ with $p_i > 0$,
+  i.e., iff all populated tracts have centroid $\bar{c}_D$.
+  For a single-tract district, PWC $= 0$ exactly. \qed
+\end{proof}
+
+\begin{proposition}
+  PWC is translation-invariant and scale-dependent.
+  If all coordinates are scaled by $\lambda$, PWC scales by $\lambda^2$.
+\end{proposition}
+
+This scale-dependence means PWC values are not directly comparable across
+projections.
+All PWC computations use EPSG:5070 (Albers Equal Area Conic, metres),
+so values are in square metres.
+For practical comparison, we normalise by state area:
+$\text{PWC}_{\text{norm}} = \text{PWC} / (\text{state area})$.
+
+\subsection{Test Invariants}
+
+L0 invariants:
+\begin{itemize}
+  \item PWC $= 0$ for a single-tract district.
+  \item PWC $\geq 0$ always.
+  \item PWC is invariant to district relabelling (renaming districts
+    does not change any individual district's PWC).
+  \item Scaling all coordinates by $\lambda$ scales PWC by $\lambda^2$.
+\end{itemize}

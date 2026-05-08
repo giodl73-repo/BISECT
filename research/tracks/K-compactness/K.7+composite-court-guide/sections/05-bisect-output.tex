@@ -1,0 +1,66 @@
+The \textsc{bisect} platform generates all six K-track compactness metrics
+in a single command:
+\begin{verbatim}
+bisect label-analyze <label> --year 2020 --types all
+\end{verbatim}
+
+\subsection{Output Format}
+
+The output is a JSON file at \texttt{analysis/<label>/<year>/compactness.json}:
+\begin{verbatim}
+{
+  "label": "nc_ratio_optimal_2020",
+  "year": "2020",
+  "seed": 42,
+  "projection": "EPSG:5070",
+  "algorithm": "ratio-optimal",
+  "districts": [
+    {
+      "district_id": 1,
+      "population": 745234,
+      "polsby_popper": 0.231,
+      "reock": 0.374,
+      "convex_hull": 0.952,
+      "schwartzberg": 2.079,
+      "length_width": 1.647,
+      "pwc_km2": 58.3,
+      "within_acceptable_range": true
+    },
+    ...
+  ],
+  "state_summary": {
+    "mean_pp": 0.224,
+    "mean_reock": 0.371,
+    "mean_ch": 0.947,
+    "mean_schwartzberg": 2.113,
+    "mean_lw": 1.683,
+    "mean_pwc_km2": 67.8,
+    "max_lw": 2.43,
+    "districts_exceeding_lw3": 0,
+    "all_ch_above_085": true
+  }
+}
+\end{verbatim}
+
+\subsection{Certification Chain}
+
+The JSON output is linked to the plan's SHA-256 hash chain:
+\begin{verbatim}
+bisect label-verify <label> --year 2020
+\end{verbatim}
+verifies that the compactness output corresponds to the exact district
+assignment file and TIGER/Line data that produced it.
+This provides a cryptographic chain of custody suitable for court filings.
+
+\subsection{Acceptable Range Flags}
+
+The ``acceptable range'' flags in the JSON are based on:
+\begin{itemize}
+  \item PP $\geq 0.18$ (conservative threshold from K.1)
+  \item Reock $\geq 0.30$ (from K.2)
+  \item CH $\geq 0.82$ (from K.3)
+  \item S $\leq 2.4$ (equivalent to PP $\geq 0.17$, from K.4)
+  \item LW $\leq 2.8$ (court threshold $< 3$, from K.5)
+  \item PWC within 2 standard deviations of state mean (from K.6)
+\end{itemize}
+These thresholds are conservative and can be adjusted for specific jurisdictions.

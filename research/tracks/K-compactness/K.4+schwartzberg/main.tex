@@ -1,0 +1,67 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{array}
+
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\title{\textbf{Schwartzberg Score in Algorithmic Redistricting:\\
+Equivalence to Polsby-Popper, Statutory Requirements,\\
+and Conversion Guide}}
+
+\author{Giovanni Della-Libera}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Schwartzberg Score, Polsby-Popper, Compactness, Colorado Constitution,
+Redistricting Statutes, Isoperimetric Inequality
+
+\section{Introduction}
+\input{sections/01-introduction}
+
+\section{Mathematical Definition}
+\input{sections/02-definition}
+
+\section{Equivalence Theorem: $S = 1/\sqrt{\text{PP}}$}
+\input{sections/03-equivalence}
+
+\section{Conversion Table and Calculator}
+\input{sections/04-conversion}
+
+\section{Statutory Survey: States That Mandate or Reference $S$}
+\input{sections/05-statutory}
+
+\section{Empirical Comparison Across Structure Algorithms}
+\input{sections/06-empirical}
+
+\section{Practitioner Usage Guide}
+\input{sections/07-practitioner}
+
+\section{Conclusion}
+\input{sections/08-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

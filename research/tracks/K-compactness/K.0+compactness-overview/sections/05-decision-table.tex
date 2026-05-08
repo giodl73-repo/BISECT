@@ -1,0 +1,75 @@
+We organise the six metrics into a decision table by use case.
+The table answers the practitioner question: \emph{given a specific legal or
+analytical task, which metric should I lead with?}
+
+\begin{table}[ht]
+\centering
+\caption{Compactness metric decision table for redistricting practitioners.}
+\label{tab:decision}
+\begin{tabular}{p{3.0cm}p{2.2cm}p{5.5cm}p{3.0cm}}
+\toprule
+Use Case & Lead Metric & Rationale & \textsc{bisect} Flag \\
+\midrule
+Litigation evidence (federal/state court) &
+  PP &
+  Most frequently cited metric in U.S.\ redistricting litigation; $[0,1]$ scale
+  explainable to lay juries in minutes; PP $= 4\pi A/P^2$ derivable on a whiteboard &
+  \texttt{--types pp} \\
+\addlinespace
+Coastal/riverine state comparison &
+  Reock &
+  Less sensitive to TIGER/Line boundary artifacts than PP; MBC visually intuitive;
+  used in NC (\textit{Harper v.\ Hall}) and WI (\textit{Gill v.\ Whitford}) &
+  \texttt{--types reock} \\
+\addlinespace
+Public communication &
+  CH &
+  Most visually intuitive: audience can see whether district fits inside its convex
+  hull without mathematical training; effective for showing non-convex appendages &
+  \texttt{--types ch} \\
+\addlinespace
+VRA district analysis &
+  PWC &
+  Measures representational compactness; compact geometry does not guarantee
+  that minority voters are efficiently clustered around the district centroid &
+  \texttt{--types pwc} \\
+\addlinespace
+Statutory compliance (CO, IA, OR, UT) &
+  S &
+  Colorado's constitution references a Schwartzberg-equivalent criterion;
+  $S = 1/\sqrt{\text{PP}}$ allows conversion from PP output to S for filings &
+  \texttt{--types schwartzberg} \\
+\addlinespace
+Algorithmic optimisation target &
+  LW &
+  LW $>3$ threshold is the most commonly enforced bright-line rule in court
+  filings; bisect produces LW $\leq 2.8$ on NC 2020 by construction &
+  \texttt{--types lw} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Notes on the Decision Table}
+
+\paragraph{Lead metric is not the only metric.}
+The decision table identifies the \emph{primary} metric for each use case.
+We recommend always including all six metrics in a certified compactness report
+(K.7), using the lead metric to organise testimony or narrative while
+supplementing with the full profile.
+
+\paragraph{Cross-family redundancy.}
+Because PP and S are algebraically equivalent ($S = 1/\sqrt{\text{PP}}$),
+a report that includes PP need not separately report S unless the jurisdiction's
+statute explicitly requires S notation. The conversion table in K.4 enables
+translation between representations.
+
+\paragraph{Algorithm selection.}
+The decision table does not depend on algorithm choice for the lead metric
+recommendation. However, if the goal is \emph{maximising} a specific metric,
+algorithm matters:
+\begin{itemize}
+  \item Maximise Reock: use \texttt{--structure moving-knife} (K.2).
+  \item Minimise PWC: use \texttt{--structure prime-factor} (K.6).
+  \item Maximise PP: use \texttt{--structure ratio-optimal} (K.1).
+  \item All algorithms guarantee CH $> 0.85$ on NC by construction (K.3).
+\end{itemize}

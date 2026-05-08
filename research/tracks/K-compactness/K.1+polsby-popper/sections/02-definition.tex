@@ -1,0 +1,67 @@
+\subsection{Formula}
+
+Let $D$ be a simply connected planar district with area $A(D)$ and perimeter $P(D)$.
+The Polsby-Popper score is:
+\begin{equation}
+  \text{PP}(D) = \frac{4\pi A(D)}{P(D)^2}.
+  \label{eq:pp}
+\end{equation}
+
+\begin{theorem}[PP is maximised by a disk]
+  For any simply connected planar region $D$, $\text{PP}(D) \leq 1$,
+  with equality if and only if $D$ is a disk.
+\end{theorem}
+
+\begin{proof}
+  The isoperimetric inequality states $4\pi A \leq P^2$ for any simple closed curve,
+  with equality if and only if the curve is a circle~\citep{osserman1978isoperimetric}.
+  Dividing both sides by $P^2$ gives $\text{PP}(D) = 4\pi A/P^2 \leq 1$,
+  with equality iff $D$ is a disk. \qed
+\end{proof}
+
+\subsection{Canonical Values}
+
+We record PP for common geometric shapes.
+
+\begin{table}[ht]
+\centering
+\caption{Polsby-Popper score for canonical shapes.}
+\label{tab:canonical}
+\begin{tabular}{lcc}
+\toprule
+Shape & PP & Approximate value \\
+\midrule
+Disk (circle) & $1$ & $1.000$ \\
+Regular hexagon & $\pi\sqrt{3}/6$ & $0.907$ \\
+Square         & $\pi/4$        & $0.785$ \\
+Equilateral triangle & $\pi/(3\sqrt{3})$ & $0.605$ \\
+$1 \times 3$ rectangle & $3\pi/16$ & $0.589$ \\
+$1 \times 10$ rectangle & $10\pi/121$ & $0.260$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Properties}
+
+\begin{proposition}
+  PP is scale-invariant: $\text{PP}(\lambda D) = \text{PP}(D)$ for any $\lambda > 0$.
+\end{proposition}
+
+\begin{proof}
+  Scaling by $\lambda$ gives $A \mapsto \lambda^2 A$ and $P \mapsto \lambda P$,
+  so PP $= 4\pi(\lambda^2 A)/(\lambda P)^2 = 4\pi A/P^2$. \qed
+\end{proof}
+
+\begin{proposition}
+  PP is rotation-invariant and translation-invariant.
+\end{proposition}
+
+These invariances confirm PP is a geometric property of the shape,
+independent of its location or orientation on the map.
+
+\subsection{Relation to Schwartzberg}
+
+The Schwartzberg score $S = P/(2\sqrt{\pi A})$ satisfies $S = 1/\sqrt{\text{PP}}$
+exactly (K.4, Theorem~1). This means PP and S carry identical geometric information
+and can be converted losslessly: a district with PP $= 0.22$ has
+$S = 1/\sqrt{0.22} \approx 2.13$.

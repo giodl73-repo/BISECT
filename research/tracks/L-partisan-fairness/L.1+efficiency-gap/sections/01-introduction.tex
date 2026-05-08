@@ -1,0 +1,42 @@
+\section{Introduction}
+\label{sec:introduction}
+
+The Efficiency Gap became the dominant partisan fairness metric in American redistricting
+litigation between its introduction by \citet{stephanopoulosMcGhee2015} and the Supreme
+Court's foreclosure of federal partisan gerrymandering claims in \textit{Rucho v.\
+Common Cause}.\footnote{\textit{Rucho v.\ Common Cause}, 588 U.S.\ 684 (2019).}
+Its central appeal is the intuitive foundation: democratic elections should not
+systematically waste more votes from one party than the other, and the EG
+measures exactly this asymmetry in a single number that is computable from
+publicly available election returns.
+
+EG rose to prominence in \textit{Gill v.\ Whitford},\footnote{\textit{Gill v.\
+Whitford}, 585 U.S.\ 48 (2018).} where plaintiffs used it as the primary
+quantitative evidence that Wisconsin's 2012 state assembly maps were a partisan
+gerrymander. The district court ruled for the plaintiffs partly on EG evidence;
+SCOTUS reversed on standing grounds, declining to reach the merits. \textit{Rucho}
+then foreclosed the merits question entirely at the federal level. This sequence
+left EG in an unusual legal position: extensively discussed in federal judicial
+opinions, endorsed by leading political scientists, proposed as a constitutional
+standard---but ultimately not adopted by any federal court.
+
+State courts have continued to cite EG in partisan gerrymandering claims, but
+without any binding threshold. The North Carolina Supreme Court in \textit{Harper
+v.\ Hall}\footnote{\textit{Harper v.\ Hall}, 868 S.E.2d 499 (N.C.\ 2022).}
+treated EG as one of several indicators of partisan manipulation, not as a
+standalone standard. The result is that EG remains a central piece of expert
+testimony evidence---widely computed, widely cited, and well understood by
+redistricting courts---without any legal framework specifying what value makes
+a map constitutionally infirm.
+
+This paper fills the need for a rigorous analysis of EG's behavior under
+\textsc{bisect} algorithmic redistricting. The \textsc{bisect} algorithm,
+which draws congressional districts using only population counts and geographic
+adjacency without any partisan data, produces maps with EG values that provide
+a natural reference point for state court comparison. Section~\ref{sec:definition}
+develops the mathematical definition and its properties. Section~\ref{sec:behavior}
+explains why compactness-driven redistricting systematically reduces EG.
+Section~\ref{sec:empirical} presents multi-state, multi-election empirical
+results with sensitivity analysis. Section~\ref{sec:legal} provides a
+comprehensive legal history from the metric's introduction through 2026.
+Section~\ref{sec:conclusion} concludes with guidance for expert witnesses.

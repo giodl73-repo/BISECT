@@ -1,0 +1,68 @@
+\section{Behavior Under Algorithmic Redistricting}
+\label{sec:behavior}
+
+\subsection{Why Bisect Achieves High Responsiveness}
+
+Responsiveness $R \approx 2.0$ under \textsc{bisect} reflects the distribution
+of district vote shares that compactness-driven redistricting produces. The
+$S(v)$ curve is steep near 50\% when many districts have vote shares close to
+50\%---competitive districts that will flip at small swings. It is flat near
+50\% when few districts are close to 50\%, because the swing needed to flip any
+one of the distant safe seats is large.
+
+Under \textsc{bisect}, compact districts centered on geographically mixed areas
+tend to have vote shares that cluster near the statewide median. This is not a
+designed property---the algorithm does not target any particular vote-share
+distribution---but an emergent consequence of sampling populations from
+geographically contiguous areas in states where partisan communities are
+geographically mixed at fine scales. The result is a roughly bell-shaped
+distribution of district vote shares centered near the statewide mean, with
+the tails (safe seats) under-represented relative to a plan that deliberately
+concentrates partisan voters.
+
+When the district vote-share distribution is roughly uniform or bell-shaped near
+50\%, many districts cluster near the pivot, and $R$ is high. When the distribution
+is bimodal (many safe seats far from 50\%, few competitive districts near 50\%),
+$R$ is low because the curve is flat near 50\% and steep only in the vote-share
+ranges where safe seats cluster.
+
+\subsection{Why Enacted Maps Have Suppressed Responsiveness}
+
+Enacted maps with deliberate partisan gerrymandering produce bimodal district
+vote-share distributions: a cluster of safe Republican seats (vote shares near
+35--42\%) from cracking, and a cluster of packed Democratic seats (vote shares
+near 70--80\%), with few competitive districts near 50\%. This bimodal
+distribution produces a flat $S(v)$ near 50\%: the curve jumps at the cracked-
+district vote shares (around 35--42\% Democratic, which flip at swings of
+$0.50 - 0.42 = 0.08$ or larger) and at the packed-district vote shares
+(around 70--80\%, which flip only at very large Democratic waves), with a
+flat region in between where no districts are available to flip.
+
+The flat $S(v)$ near 50\% translates to $R < 1.5$: each point of statewide
+vote share translates to fewer than 1.5 seat-share points near the pivot.
+For NC ($k=14$) with enacted $R \approx 1.3$, a 3.5-point Democratic swing
+moves the expected seat share by approximately $3.5 \times 1.3 / 100 \approx
+0.046$, i.e., 0.65 seats. Republican incumbents in cracked-but-safe seats
+are insulated from all but extraordinary wave elections.
+
+\subsection{The Graphical Exhibit}
+
+The most informative way to present the seats-votes curve as courtroom evidence
+is as a comparison graph:
+\begin{itemize}
+\item Horizontal axis: statewide Democratic two-party vote share $v \in [0.30, 0.70]$
+  (the plausible range for NC).
+\item Vertical axis: expected Democratic seat share $S(v) \in [0, 1]$.
+\item Plot \textsc{bisect} $S(v)$: a step function passing through $(0.50, 0.50)$
+  with slope $\approx 2.0$ and approximately symmetric shape.
+\item Plot enacted $S(v)$: a step function passing below $(0.50, 0.50)$---at
+  $v = 0.50$, enacted $S(0.50) \approx 0.43 = 6/14$---with slope $\approx 1.3$
+  and an asymmetric shape that favors Republicans across the full range.
+\item Mark the reference point $(0.50, 0.50)$ and the anti-symmetric ideal
+  for reference.
+\end{itemize}
+This graph communicates two properties simultaneously without any scalar calculation:
+(1) the vertical gap between the bisect and enacted curves at $v=0.50$ is the
+Partisan Bias difference; (2) the relative steepness of the two curves at $v=0.50$
+is the responsiveness difference. Courts can read both properties directly from
+the graph.

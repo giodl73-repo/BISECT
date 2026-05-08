@@ -1,0 +1,56 @@
+The rotating calipers algorithm~\citep{toussaint1983solving} computes the MBR
+of a convex polygon in $O(n)$ time after the convex hull is available.
+Since the convex hull is computed in $O(n \log n)$ (K.3, Section~3),
+the total MBR computation is $O(n \log n)$.
+
+\subsection{Algorithm}
+
+\begin{algorithm}
+\caption{Rotating Calipers for Minimum Bounding Rectangle}
+\label{alg:rotating_calipers}
+\begin{algorithmic}[1]
+\Function{MinBoundingRect}{$H$: convex hull vertices}
+  \State Find the four extremal vertices: top, right, bottom, left
+  \State Initialise four calipers along cardinal directions
+  \State $A_{\min} \gets \infty$; $\text{MBR} \gets \text{None}$
+  \For{$i = 0$ to $|H|-1$} \Comment{rotate through each hull edge}
+    \State Edge vector $\mathbf{e} \gets H[i+1] - H[i]$
+    \State Rotate calipers so one caliper is flush with edge $\mathbf{e}$
+    \State Compute $\ell, w$ from caliper positions (projections onto $\mathbf{e}$
+      and its perpendicular)
+    \If{$\ell \cdot w < A_{\min}$}
+      \State $A_{\min} \gets \ell \cdot w$; $\text{MBR} \gets (\ell, w)$
+    \EndIf
+  \EndFor
+  \State \Return MBR
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+At each step, the calipers advance to the next hull edge by rotating by the
+minimum angle needed to align with that edge.
+The total rotation is $2\pi$ over all $n$ hull edges, giving $O(n)$ steps.
+
+\subsection{Example: Rotated Rectangle}
+
+Consider a $1 \times 3$ rectangle rotated 45 degrees.
+Its vertices are (in approximate coordinates):
+$(0,0)$, $(0.71, -0.71)$, $(2.83, 1.41)$, $(2.12, 2.12)$.
+
+AABB: $\min x = 0$, $\max x = 2.83$, $\min y = -0.71$, $\max y = 2.12$.
+AABB dimensions: $2.83 \times 2.83$; LW$_{\text{AABB}} = 1.0$.
+
+MBR: rotating calipers finds the rectangle oriented at 45 degrees with
+dimensions $3 \times 1$; LW$_{\text{MBR}} = 3.0$.
+
+AABB underestimates LW from $3.0$ to $1.0$ (a 100\% error) in this example.
+For realistic districts oriented at modest angles (15--30 degrees),
+the AABB overestimate is typically 5--41\%.
+
+\subsection{Implementation}
+
+Implemented in \texttt{crates/bisect-analysis/src/compactness.rs}.
+The convex hull is computed first (Andrew's monotone chain, K.3 Section~3),
+then rotating calipers is applied to the hull vertices.
+Numerical precision: coordinates in projected metres (EPSG:5070);
+LW reported to 3 decimal places.

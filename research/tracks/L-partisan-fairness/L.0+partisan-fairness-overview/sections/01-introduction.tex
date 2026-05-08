@@ -1,0 +1,95 @@
+\section{Introduction and Post-\textit{Rucho} Landscape}
+\label{sec:introduction}
+
+On June 27, 2019, the Supreme Court closed the federal courthouse to partisan gerrymandering claims.
+In \textit{Rucho v.\ Common Cause},\footnote{\textit{Rucho v.\ Common Cause}, 588 U.S.\ 684 (2019).}
+Chief Justice Roberts, writing for a five-Justice majority, held that partisan gerrymandering
+claims present political questions beyond the reach of federal courts. The majority acknowledged
+that gerrymandering was ``unjust'' and ``incompatible with democratic principles,'' yet concluded
+that no judicially manageable standard existed to distinguish permissible partisan line-drawing
+from unconstitutional excess.\footnote{\textit{Id.}\ at 693, 721.}
+
+The doctrinal effect was immediate. Federal circuit and district courts ceased adjudicating
+partisan gerrymandering claims. The 2020 redistricting cycle---the first following
+\textit{Rucho}---produced congressional maps that the federal judiciary largely left intact
+regardless of their partisan consequences. State courts stepped into the void with
+inconsistent results: Pennsylvania invalidated its congressional map under the state
+constitution's ``free and equal elections'' clause;\footnote{\textit{League of Women Voters
+v.\ Commonwealth}, 178 A.3d 737 (Pa.\ 2018).} North Carolina's Supreme Court invalidated
+its map under the ``free elections'' clause;\footnote{\textit{Harper v.\ Hall}, 868 S.E.2d
+499 (N.C.\ 2022).} Ohio's Supreme Court invalidated its map under the Ohio Constitution's
+requirement that districts not be drawn to favor a political party;\footnote{\textit{League
+of Women Voters of Ohio v.\ Ohio Redistricting Comm'n}, 167 Ohio St.3d 255 (2022).}
+but courts in other states declined to reach the merits.
+
+The practical consequence for practitioners is this: partisan gerrymandering litigation
+now proceeds almost entirely through state constitutional claims, evaluated under state
+law standards that vary in text, interpretation, and evidentiary expectations across
+jurisdictions. Expert witnesses in these proceedings must select among six distinct
+partisan fairness metrics, each with its own mathematical definition, behavioral properties,
+legal history, and known limitations. The selection decision is not merely technical---it
+is strategic. A metric endorsed in Pennsylvania state court may not have been cited in
+North Carolina proceedings; a threshold adopted in Wisconsin academic commentary may
+have been explicitly rejected in federal dicta. Metric-shopping criticism from opposing
+counsel can undermine the credibility of any individual metric if the expert cannot
+explain why that metric was chosen over the alternatives.
+
+This paper provides a unified framework. Section~\ref{sec:definition} taxonomizes the
+six metrics into descriptive and normative categories, explaining what each measures
+and how the measures relate to each other. Section~\ref{sec:behavior} introduces
+\textsc{bisect} algorithmic maps as a natural reference distribution for state court
+proceedings---a class of maps drawn without partisan data that cluster near the
+partisan-neutral centroid on all six metrics, providing a non-partisan baseline
+against which enacted maps can be compared. Section~\ref{sec:empirical} presents
+an empirical overview across four states: North Carolina ($k=14$), Wisconsin ($k=8$),
+Texas ($k=38$), and Florida ($k=28$), reporting all six metrics for both algorithmic
+and enacted maps. Section~\ref{sec:legal} analyzes the legal landscape, including
+the relevant state constitutional provisions, the case law through 2026, and a
+decision table for expert witnesses. Section~\ref{sec:conclusion} concludes.
+
+\subsection{What Post-\textit{Rucho} Left Open}
+
+\textit{Rucho}'s holding was deliberately narrow. The Court explicitly preserved
+multiple non-federal pathways for partisan gerrymandering reform. Chief Justice
+Roberts identified state courts as the primary institutional alternative, writing
+that ``[p]rovisions in state statutes and state constitutions can provide standards
+and guidance for state courts to apply'' to partisan gerrymandering claims.\footnote{
+\textit{Rucho}, 588 U.S.\ at 721.} He also preserved the possibility of federal
+legislation, noting that ``[o]ther reform mechanisms are available'' including
+``independent redistricting commissions'' and federal statutory action by Congress.\footnote{
+\textit{Id.}}
+
+These open pathways are not rhetorical---they have been operationalized. State courts
+in Pennsylvania, North Carolina, and Ohio have issued map-invalidating decisions
+precisely on the state constitutional grounds the Chief Justice identified as viable.
+The metrics in this paper provide the empirical inputs for those proceedings.
+The \textsc{bisect} reference distribution provides the conceptual tool that courts
+need to move from ``this map is extreme'' (a qualitative assertion vulnerable to
+political characterization) to ``this map lies $X$ standard deviations from what
+a neutral process produces'' (a quantitative claim that translates partisan fairness
+into the statistical framework courts are accustomed to in other expert testimony contexts).
+
+\subsection{The Six Metrics: A Preview}
+
+The L-series papers (L.1 through L.6) provide dedicated treatments of each metric.
+This paper provides the integrating framework:
+
+\begin{itemize}
+\item \textbf{Efficiency Gap} (L.1): $\text{EG} = (\text{Wasted}_D - \text{Wasted}_R)/\text{Total}$.
+  Measures asymmetry of wasted votes. Introduced by \citet{stephanopoulosMcGhee2015}.
+  8\% threshold proposed but not legally adopted.
+\item \textbf{Mean-Median Difference} (L.2): $\text{MM} = \bar{v}_D - \tilde{v}_D$.
+  Measures the gap between mean and median district vote share.
+  Introduced by \citet{wang2016}. Less sensitive to election swings than EG.
+\item \textbf{Partisan Bias} (L.3): $\text{Bias} = S(0.50) - 0.50$.
+  Symmetry standard at the 50\% pivot. Part of the framework in
+  \citet{grofmanKing2007}.
+\item \textbf{Declination} (L.4): $\delta = 2(\theta_D - \theta_R)/\pi$.
+  Geometric measure of packing and cracking. Introduced by \citet{warrington2018}.
+  No court has adopted it as of 2026.
+\item \textbf{Seats-Votes Curve and Responsiveness} (L.5): $S(v)$, $R = dS/dv|_{v=0.50}$.
+  The sufficient statistic from which EG and Bias are recoverable. Best courtroom exhibit.
+\item \textbf{Proportionality / Gallagher Index} (L.6):
+  $\text{LSq} = \sqrt{\tfrac{1}{2}\sum_i(v_i-s_i)^2}$.
+  Normative standard; no federal constitutional requirement post-\textit{Rucho}.
+\end{itemize}

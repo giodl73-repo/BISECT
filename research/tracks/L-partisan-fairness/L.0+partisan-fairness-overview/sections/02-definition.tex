@@ -1,0 +1,162 @@
+\section{Taxonomy of Partisan Fairness Metrics}
+\label{sec:definition}
+
+\subsection{Descriptive vs.\ Normative Metrics}
+
+The six metrics in the L-series divide into two categories with distinct behavioral
+properties and distinct roles in litigation.
+
+\textbf{Descriptive metrics} measure the partisan properties of a specific map
+given observed vote shares. They answer the question: ``What is the partisan
+outcome of this map as drawn?'' They do not specify what the outcome \textit{should}
+be. Efficiency Gap, Mean-Median Difference, Partisan Bias, and Declination are
+all descriptive. A descriptive metric with value zero does not mean the map is
+``fair'' in any normative sense---it means the map has a particular property
+(vote-symmetry, zero mean-median gap, etc.) that is consistent with a large class
+of different underlying geographic configurations.
+
+\textbf{Normative metrics} specify a target outcome. They answer the question:
+``By how much does this map deviate from the outcome that a fair process should
+produce?'' The Gallagher Index (proportionality) and responsiveness (from the
+seats-votes curve) are normative---they require a prior specification of what
+``fair'' means (proportional seat allocation or competitive responsiveness)
+before deviations can be measured. The normative content makes them more
+contestable in court but also more directly relevant to the constitutional
+question of what state law requires.
+
+\subsection{Metric Definitions}
+
+\subsubsection{Efficiency Gap}
+
+For a $k$-district congressional plan, let $w_i^D$ be the Democratic wasted votes
+in district $i$ (votes above 50\%+1 for Democratic winners; all votes for Democratic losers)
+and $w_i^R$ be Republican wasted votes symmetrically. Total votes cast are $T$.
+The Efficiency Gap is:
+\[
+\text{EG} = \frac{\sum_i w_i^D - \sum_i w_i^R}{T}.
+\]
+$\text{EG} > 0$ indicates Republican advantage (Democratic votes are wasted at
+a higher rate). The range is approximately $[-1, 1]$; values outside $[-0.15, 0.15]$
+are rare in empirical data. \citet{stephanopoulosMcGhee2015} proposed an 8\% threshold
+as a presumptive unconstitutionality standard. SCOTUS in \textit{Gill v.\ Whitford}
+did not adopt this threshold.\footnote{\textit{Gill v.\ Whitford}, 585 U.S.\ 48 (2018).}
+
+\subsubsection{Mean-Median Difference}
+
+Let $v_1 \leq v_2 \leq \cdots \leq v_k$ be the sorted Democratic vote shares across
+$k$ districts, $\bar{v}_D = k^{-1}\sum_i v_i$ the mean, and $\tilde{v}_D$ the median.
+The Mean-Median Difference is:
+\[
+\text{MM} = \bar{v}_D - \tilde{v}_D.
+\]
+Positive MM indicates Democratic voters are geographically sorted into fewer,
+higher-margin districts (mean exceeds median). Introduced by \citet{wang2016}.
+Range approximately $[-0.10, +0.10]$ for congressional delegations.
+
+\subsubsection{Partisan Bias}
+
+Let $S(v)$ denote the Democratic seat share when Democrats receive statewide
+two-party vote share $v$, estimated via uniform swing. Partisan Bias is:
+\[
+\text{Bias} = S(0.50) - 0.50.
+\]
+Positive Bias favors Democrats (they would win more than half the seats at exactly
+half the votes). Negative Bias favors Republicans. Part of the symmetry framework
+developed by \citet{grofmanKing2007}. Range approximately $[-0.20, +0.20]$ for
+state congressional delegations.
+
+\subsubsection{Declination}
+
+Let $\bar{v}_D^+$ be the mean Democratic vote share in Democratic-won districts
+(those with $v_i > 0.50$) and $\bar{v}_R^-$ be the mean Democratic vote share in
+Republican-won districts (those with $v_i < 0.50$). Define angles:
+\[
+\theta_D = \arctan(2\bar{v}_D^+ - 1), \qquad \theta_R = \arctan(1 - 2\bar{v}_R^-).
+\]
+Declination is:
+\[
+\delta = \frac{2(\theta_D - \theta_R)}{\pi}.
+\]
+Positive $\delta$ indicates Republican advantage through cracking (Republican-won
+districts are clustered near 50\%, while Democratic wins are pushed to high-margin
+territory). Introduced by \citet{warrington2018}.
+
+\subsubsection{Seats-Votes Curve and Responsiveness}
+
+The seats-votes curve $S(v)$ maps statewide Democratic vote share to expected
+Democratic seat share. Estimated from observed district vote shares by applying
+a uniform swing $\delta = v - \bar{v}_D$ to each district:
+\[
+S(v) = \frac{1}{k}\sum_{i=1}^k \mathbf{1}[v_i + \delta > 0.50].
+\]
+Responsiveness is the slope at the 50\% pivot:
+\[
+R = \left.\frac{dS}{dv}\right|_{v=0.50}.
+\]
+$R \approx 2.0$ is the competitive ideal (a one-point vote gain translates to a
+two-point seat gain near the median). $R < 1.5$ indicates suppressed competition.
+The full $S(v)$ curve is the sufficient statistic from which EG and Partisan Bias
+are recoverable analytically (see L.5).
+
+\subsubsection{Gallagher Proportionality Index}
+
+For a two-party system with Democratic vote share $v_D$ and seat share $s_D$:
+\[
+\text{LSq} = \sqrt{\tfrac{1}{2}\left[(v_D - s_D)^2 + (v_R - s_R)^2\right]}.
+\]
+$\text{LSq} = 0$ indicates perfect proportionality. Higher values indicate
+greater disproportionality. Unlike the other metrics, LSq measures deviation
+from a specific normative target (proportionality) rather than measuring
+a property of the vote distribution itself.
+
+\subsection{Relationships Among Metrics}
+
+The six metrics are mathematically related in ways that constrain their simultaneous
+behavior. Three key relationships:
+
+\textbf{EG and Bias from $S(v)$.} As shown in L.5, EG equals the signed area
+between the $S(v)$ curve and the diagonal $S(v) = v$, while Partisan Bias equals
+$S(0.50) - 0.50$. The full seats-votes curve is therefore the sufficient statistic
+from which both scalar metrics can be computed.
+
+\textbf{MM and EG.} Both metrics are positive when Democratic voters are
+concentrated in fewer, higher-margin districts. Their ratio depends on the
+distribution of district vote shares; for symmetric distributions, $\text{MM}
+\approx \text{EG}/2k$ (see \citealt{mcGhee2017}).
+
+\textbf{Declination and EG.} Declination captures the geometric structure that
+EG aggregates into a scalar. A map with high positive Declination (cracking of
+Democratic voters) will typically have high positive EG, but the converse does
+not hold: EG can be elevated by packing alone without producing the angular
+geometry that Declination measures.
+
+\subsection{Decision Table for Expert Witnesses}
+
+Table~\ref{tab:decision-table} provides a six-row decision table mapping the
+primary legal theory in each type of state constitutional claim to the most
+appropriate metric or metrics.
+
+\begin{table}[ht]
+\centering
+\caption{Expert Witness Metric Selection Guide for Post-\textit{Rucho} State Litigation}
+\label{tab:decision-table}
+\begin{threeparttable}
+\begin{tabular}{@{}lllp{4cm}@{}}
+\toprule
+Legal Theory & State Example & Primary Metric & Key Limitation \\
+\midrule
+Vote symmetry / equal treatment & NC, OH & Partisan Bias & Requires swing model \\
+Wasted-vote asymmetry & WI, PA & Efficiency Gap & Sensitive to wave elections \\
+Geographic sorting vs.\ manipulation & NC, WI & Mean-Median & Sorting confound \\
+Packing-cracking geometry & Any & Declination & No court adoption (2026) \\
+Competitive responsiveness & General & $R$ from $S(v)$ & Uniform swing assumption \\
+Proportionality floor & PA, NC & Gallagher LSq & No federal requirement \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item Note: Multiple metrics should be reported together to resist metric-shopping criticism.
+The seats-votes curve ($S(v)$) subsumes EG and Bias and is the preferred single exhibit.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}

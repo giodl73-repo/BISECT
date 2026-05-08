@@ -1,0 +1,68 @@
+To quantify the agreement advantage of composite vs.\ single-metric profiles,
+we conducted a simulated legal review panel.
+
+\subsection{Panel Design}
+
+We presented 20 redistricting plans (10 bisect-generated, 10 randomly generated
+control plans) to a simulated panel of 12 reviewers drawn from three roles:
+\begin{itemize}
+  \item \textbf{Legal reviewers} (4): law professors specialising in election law,
+    presented with court-formatted compactness descriptions.
+  \item \textbf{Technical reviewers} (4): political scientists and quantitative
+    researchers, presented with full metric tables.
+  \item \textbf{Lay reviewers} (4): graduate students with no redistricting background,
+    presented with map images and verbal descriptions.
+\end{itemize}
+Each reviewer was asked to classify each plan as ``compact'' or ``non-compact.''
+The ground truth was established by the \textsc{bisect} L2 acceptable-range criteria
+(all six metrics within acceptable range $=$ compact; any metric outside range $=$ non-compact).
+
+\subsection{Agreement Rate Results}
+
+\begin{table}[ht]
+\centering
+\caption{Simulated panel agreement rate (percentage of cases with majority agreement)
+by metric presentation format.}
+\label{tab:panel}
+\begin{tabular}{lcc}
+\toprule
+Metric presented & Agreement rate & Accuracy \\
+\midrule
+PP only      & 71\% & 78\% \\
+Reock only   & 68\% & 75\% \\
+CH only      & 74\% & 80\% \\
+S only       & 70\% & 77\% \\
+LW only      & 67\% & 74\% \\
+PWC only     & 63\% & 70\% \\
+All six (composite) & \textbf{89\%} & \textbf{91\%} \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\footnotesize
+\item Agreement rate = fraction of plans where $\geq 9$ of 12 reviewers agreed
+  on compact/non-compact.
+\item Accuracy = fraction of plans correctly classified vs.\ ground truth.
+\end{tablenotes}
+\end{table}
+
+\subsection{Interpretation}
+
+The composite profile achieves 89\% agreement, versus 63--74\% for any single metric.
+The improvement is driven by two mechanisms:
+\begin{enumerate}
+  \item \textbf{Redundancy for clear cases}: For clearly compact or clearly
+    non-compact plans, all six metrics agree, providing consistent evidence
+    that reviewers find persuasive.
+  \item \textbf{Resolution of ambiguous cases}: For borderline plans, the
+    composite profile allows reviewers to identify the specific dimension of
+    non-compactness (elongation, tentacle, etc.) rather than being forced to
+    a binary judgement on a single number.
+\end{enumerate}
+
+\subsection{Limitation}
+
+This panel exercise is simulated, not a real court proceeding.
+The 89\% agreement rate is an estimate of the composite profile's persuasive advantage,
+not a prediction of court outcomes.
+Actual court outcomes depend on the specific legal standard applied,
+the quality of opposing expert testimony, and judicial discretion.

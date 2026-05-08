@@ -1,0 +1,76 @@
+\section{Mathematical Definition and Properties}
+\label{sec:definition}
+
+\subsection{Definition}
+
+For a $k$-district congressional plan with district-level vote counts, define
+the wasted votes for each party in district $i$ as follows. Let $d_i$ be the
+Democratic vote count in district $i$, $r_i$ the Republican vote count, and
+$n_i = d_i + r_i$ the total two-party votes. The threshold for winning is
+$\lceil n_i/2 \rceil + 1 \approx n_i/2$.
+
+Wasted votes for Democrats in district $i$:
+\[
+w_i^D = \begin{cases}
+d_i - \lceil n_i/2 \rceil & \text{if Democrats win district } i \; (d_i > n_i/2) \\
+d_i & \text{if Democrats lose district } i \; (d_i \leq n_i/2)
+\end{cases}
+\]
+
+Wasted votes for Republicans in district $i$ are defined symmetrically.
+The Efficiency Gap is:
+\[
+\text{EG} = \frac{\sum_{i=1}^k w_i^D - \sum_{i=1}^k w_i^R}{\sum_{i=1}^k n_i}.
+\]
+
+$\text{EG} > 0$ indicates that Democratic votes are wasted at a higher rate---
+i.e., Republicans have an efficiency advantage. The denominator is the total
+two-party vote across all districts.
+
+\subsection{Equivalent Vote-Share Formulation}
+
+\citet{stephanopoulosMcGhee2015} derive an algebraically equivalent formulation
+in terms of party vote shares and seat shares. Let $v$ be the statewide
+Democratic two-party vote share, $s$ the Democratic seat share, and define
+$v_i, s_i$ analogously at the district level. Then:
+\[
+\text{EG} = s - 2v + \tfrac{1}{2},
+\]
+where $s = k^{-1}\sum_i \mathbf{1}[d_i > n_i/2]$ is the Democratic seat share
+and $v = (\sum_i d_i)/(\sum_i n_i)$ is the statewide Democratic vote share.
+This formulation makes transparent that EG is zero when $s = 2v - 1/2$---i.e.,
+when a party winning exactly 75\% of votes wins exactly 100\% of seats, or
+when a party winning exactly 50\% of votes wins exactly 50\% of seats. The
+zero-EG line in $(v, s)$ space is the line passing through $(0.25, 0)$ and $(0.75, 1)$.
+
+\subsection{Range and Scaling}
+
+EG ranges from approximately $-1$ (extreme Democratic efficiency advantage)
+to $+1$ (extreme Republican efficiency advantage) but rarely exceeds $[-0.20, +0.20]$
+in empirical congressional redistricting data. For $k=14$ (NC), a one-seat swing
+changes EG by approximately $1/(2k) \approx 0.036$, which sets the practical
+resolution of the metric at the district level.
+
+\subsection{Known Limitations}
+
+Three documented limitations affect EG's behavior in specific circumstances:
+
+\textbf{Wave-election sensitivity.} EG is a function of who wins and by how much.
+In wave elections---where one party wins many districts by narrow margins---EG
+can swing dramatically even if the underlying geographic composition of the map
+has not changed. A map with ``safe'' Republican margins of 60\% might show EG
+$= 0.06$ in a neutral year and EG $= 0.02$ in a strong Democratic year as some
+safe-Republican districts flip. This sensitivity requires multi-election averaging
+for stable estimates.
+
+\textbf{Uncontested district distortion.} In districts with no major-party
+candidate on one side, EG calculations must either exclude the district or
+impute a vote share, introducing measurement error. Texas routinely has 4--6
+uncontested congressional districts, which requires careful treatment in any
+Texas EG analysis.
+
+\textbf{Small-$k$ instability.} For states with few congressional districts
+(WI $k=8$, or smaller-delegation states), each individual district result
+contributes substantially to the statewide EG. The central limit theorem
+applies poorly at small $k$, and EG values for small delegations have higher
+sampling variance.

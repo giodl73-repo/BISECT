@@ -1,0 +1,68 @@
+\section{Mathematical Definition and Properties}
+\label{sec:definition}
+
+\subsection{The Gallagher Least-Squares Index}
+
+The Gallagher Index ($\text{LSq}$) measures the disproportionality between
+vote shares and seat shares across all parties. For a two-party system with
+Democratic vote share $v_D$ and seat share $s_D$:
+\[
+\text{LSq} = \sqrt{\tfrac{1}{2}\left[(v_D - s_D)^2 + (v_R - s_R)^2\right]},
+\]
+where $v_R = 1 - v_D$ and $s_R = 1 - s_D$. In the two-party case, this simplifies to:
+\[
+\text{LSq} = |v_D - s_D| / \sqrt{2} \cdot \sqrt{2} = |v_D - s_D|.
+\]
+$\text{LSq} = 0$ indicates perfect proportionality ($s_D = v_D$). Higher values
+indicate greater disproportionality. For a multi-party extension applicable to
+congressional delegations in states with independent candidates or third-party
+vote shares, the index sums over all parties $i$:
+\[
+\text{LSq} = \sqrt{\tfrac{1}{2}\sum_i (v_i - s_i)^2}.
+\]
+
+In the two-party application, $\text{LSq} = |s_D - v_D|$---simply the absolute
+deviation between Democratic seat share and Democratic vote share. A state where
+Democrats win 50\% of votes but only 43\% of seats (6/14 in NC) has
+$\text{LSq} = |0.429 - 0.50| = 0.071$. The Gallagher Index is commonly expressed
+as a percentage; we report it as a decimal for consistency with the other L-series metrics.
+
+\subsection{The Majoritarian Bonus}
+
+The majoritarian bonus is the ratio of seat share to vote share for the plurality winner:
+\[
+\text{Bonus} = \frac{s_{\max}}{v_{\max}},
+\]
+where $s_{\max}$ and $v_{\max}$ are the seat share and vote share of the plurality-winning party.
+$\text{Bonus} = 1.0$ indicates no seat bonus (perfect proportionality); $\text{Bonus} > 1.0$
+indicates the plurality winner receives more seats than its proportional entitlement.
+
+Historically, Anglo-American first-past-the-post systems produce bonuses in the range
+$1.2$--$1.5$ for the plurality winner (the winner wins 20--50\% more seats than its vote
+share would indicate under strict proportionality). Bonuses above $2.0$ indicate extreme
+disproportionality that is difficult to attribute to structural features of the electoral
+system alone.
+
+\subsection{The Structural Proportionality Floor}
+
+A key claim of this paper is that single-member district systems impose a structural
+lower bound on $\text{LSq}$ that is greater than zero, even under a fully neutral
+redistricting process. This structural floor exists because:
+
+\textbf{Geographic sorting.} When voters of one party are geographically concentrated,
+compact single-member districts will overrepresent that party's geographic density
+in some districts and underrepresent it in others, producing deviations from strict
+proportionality even under neutral boundary-drawing.
+
+\textbf{Winner-take-all arithmetic.} Each district elects exactly one representative.
+A party winning 51\% of the vote in every district wins 100\% of the seats;
+a party winning 51\% statewide but whose voters are all in fewer districts
+can win fewer than 51\% of the seats. These discontinuities in the seat-allocation
+process are inherent in the single-member plurality system and cannot be eliminated
+by neutral boundary-drawing.
+
+The structural floor---the minimum $\text{LSq}$ achievable by any compact,
+population-equal redistricting plan for a given state---is empirically measurable
+by running \textsc{bisect} on the state's census geometry. For NC, the structural
+floor is approximately $\text{LSq} \approx 0.03$--$0.05$; for TX, slightly higher
+due to larger geographic heterogeneity.

@@ -1,0 +1,74 @@
+PP is sensitive to perimeter measurement, which in turn depends on the
+geographic projection used. This section documents the artifact and the
+correction methodology.
+
+\subsection{The TIGER/Line Boundary Artifact}
+
+U.S.\ Census TIGER/Line shapefiles represent geographic boundaries at a
+resolution of approximately 100--500 metres for tract boundaries, but coastlines
+and rivers are digitised at higher detail, introducing small zigzag segments
+that faithfully represent physical geography but inflate perimeter relative
+to any smooth representation of the same boundary.
+
+The consequence for PP is that coastal and riverine districts appear less compact
+than their ``true'' geometric shape warrants.
+Consider a district whose true boundary, if smoothed, would give PP $= 0.28$.
+Digitised at TIGER/Line resolution, the same district may report PP $= 0.22$---a
+21\% underestimate purely from boundary representation artifacts.
+
+\subsection{Projection Effects}
+
+Longitude-latitude coordinates (WGS84, EPSG:4326) distort area and distance
+at mid-latitudes, making PP unreliable for direct comparison across states.
+Computation in geographic coordinates (degrees) systematically biases perimeter
+relative to area because one degree of longitude is shorter in absolute distance
+than one degree of latitude at non-zero latitudes.
+
+\paragraph{Recommended projection.}
+All PP computations in the \textsc{bisect} platform use Albers Equal Area Conic
+(EPSG:5070), the standard equal-area projection for the contiguous United States.
+This projection:
+\begin{itemize}
+  \item Preserves area exactly (by definition of an equal-area projection).
+  \item Minimises angular distortion at mid-latitudes ($\approx 23\degree$--$\approx 49\degree$N).
+  \item Is the projection used by the U.S.\ Geological Survey for national maps
+    and the standard for redistricting data in academic literature~\citep{census2020tiger}.
+\end{itemize}
+
+\subsection{Quantifying the Correction}
+
+We compare PP computed in raw WGS84 and in EPSG:5070 for all NC, WI, and TX
+districts under ratio-optimal structure (seed $= 42^\dagger$).
+Table~\ref{tab:projection} reports the mean PP shift.
+
+\begin{table}[ht]
+\centering
+\caption{Mean PP improvement from Albers Equal Area Conic (EPSG:5070) vs.\
+raw WGS84 coordinates (ratio-optimal, seed $= 42^\dagger$).}
+\label{tab:projection}
+\begin{tabular}{lccc}
+\toprule
+State & Mean PP (WGS84) & Mean PP (EPSG:5070) & Shift \\
+\midrule
+NC ($k=14$) & 0.185 & 0.225$^\dagger$ & $+0.040$ \\
+WI ($k=8$)  & 0.210 & 0.248$^\dagger$ & $+0.038$ \\
+TX ($k=38$) & 0.168 & 0.203$^\dagger$ & $+0.035$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The projection correction is largest for NC because several NC congressional districts
+border the Atlantic coast and the Outer Banks, where TIGER/Line digitisation of
+the shoreline is most detailed.
+Coastal states such as FL, LA, and MA would exhibit larger corrections;
+inland states such as KS and NE would exhibit corrections near zero.
+
+\subsection{Boundary Smoothing (Not Recommended)}
+
+An alternative to projection correction is boundary smoothing---applying a
+Douglas-Peucker algorithm~\citep{douglas1973algorithms} to reduce vertex count.
+We do \emph{not} recommend this approach for legal applications because:
+(1) smoothing is not standardised and opposing counsel can challenge the smoothing
+parameter as arbitrary; (2) smoothing removes geometric information and may obscure
+genuine non-compactness in highly irregular districts; and (3) projection to
+EPSG:5070 achieves the necessary correction without altering the underlying geometry.

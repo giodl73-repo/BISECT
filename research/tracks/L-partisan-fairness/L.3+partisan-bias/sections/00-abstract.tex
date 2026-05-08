@@ -1,0 +1,21 @@
+Partisan Bias, defined as $\text{Bias} = S(0.50) - 0.50$ where $S(v)$ is the Democratic seat share
+at statewide vote share $v$, measures whether the two parties are treated symmetrically by a
+redistricting plan at the electoral pivot. It is estimated via the uniform swing model: each
+district's vote share is shifted by $\delta = 0.50 - \bar{v}_D$ to bring the statewide mean to 50\%,
+and the resulting seat share is computed. The symmetry standard---the framework within which Partisan
+Bias is most often applied---requires that the seats-votes relationship be symmetric: if party A would
+win $S\%$ of seats with $V\%$ of votes, then party B should win $S\%$ of seats if it also wins $V\%$
+of votes. Zero Partisan Bias is a necessary (but not sufficient) condition for this symmetry.
+
+We find that \textsc{bisect} algorithmic maps produce $|\text{Bias}| < 0.02$ across NC ($k=14$),
+WI ($k=8$), and TX ($k=38$)---less than one seat in the NC delegation---compared to enacted NC
+Bias $\approx -0.07$ (Republican advantage of approximately one full seat). Compactness-driven
+redistricting produces near-zero Partisan Bias as a byproduct, because the symmetric treatment
+of geographic space implies approximately symmetric treatment of partisan communities.
+
+The paper documents the uniform swing assumption and its limitations. For Texas, with a high
+proportion of safe seats, uniform swing overestimates Bias magnitude by approximately 15\%;
+a heteroskedastic-swing correction narrows the gap but does not change the qualitative
+conclusion. Partisan Bias has been cited in NC, PA, and OH expert testimony as part of the
+symmetry standard framework; no court has adopted a specific Bias threshold as a constitutional
+standard.

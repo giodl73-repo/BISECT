@@ -1,0 +1,70 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+
+\title{\textbf{Reock Score in Algorithmic Redistricting:\\
+Minimum Bounding Circle, Boundary Insensitivity,\\
+and Moving-Knife Optimisation}}
+
+\author{Giovanni Della-Libera}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Reock Score, Compactness, Minimum Bounding Circle, Welzl Algorithm,
+Moving-Knife Algorithm, Gerrymandering, Redistricting
+
+\section{Introduction}
+\input{sections/01-introduction}
+
+\section{Mathematical Definition}
+\input{sections/02-definition}
+
+\section{Welzl's Algorithm for the Minimum Bounding Circle}
+\input{sections/03-welzl}
+
+\section{Boundary Insensitivity Analysis}
+\input{sections/04-boundary}
+
+\section{Moving-Knife Algorithm and Reock Maximisation}
+\input{sections/05-mka}
+
+\section{Empirical Comparison Across Structure Algorithms}
+\input{sections/06-empirical}
+
+\section{Reock--PP Gap Quantification}
+\input{sections/07-gap}
+
+\section{Legal Usage and Case Survey}
+\input{sections/08-legal}
+
+\section{Conclusion}
+\input{sections/09-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

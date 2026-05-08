@@ -1,0 +1,20 @@
+The Efficiency Gap (EG), introduced by \citet{stephanopoulosMcGhee2015}, measures the
+asymmetry of wasted votes between parties as $\text{EG} = (\text{Wasted}_D - \text{Wasted}_R)/T$,
+where wasted votes for the winning party are votes above 50\%+1 and for the losing party are all
+votes cast. Positive EG indicates Republican advantage. This paper provides a dedicated analysis
+of EG behavior under \textsc{bisect} algorithmic redistricting, extending the partial treatment
+in C.5 with multi-election sensitivity analysis and a comprehensive legal history.
+
+We find that \textsc{bisect} maps produce $|\text{EG}| < 0.03$ for North Carolina ($k=14$)
+compared to the enacted map's $|\text{EG}| = 0.09$---a threefold reduction attributable to
+compactness-driven avoidance of the geographic segregation that packing and cracking require.
+Critically, single-election EG estimates have standard deviation $\approx 0.030$ across election
+cycles for NC, requiring multi-election averaging (2016, 2018, 2020 presidential; 2018 Senate)
+to produce stable estimates; a uniform 5-point statewide swing shifts EG by approximately 0.04.
+
+Legally, the 8\% threshold proposed by \citealt{stephanopoulosMcGhee2015} was explicitly not
+adopted by the Supreme Court in \textit{Gill v.\ Whitford} (2018) and has no federal constitutional
+weight post-\textit{Rucho} (2019). Expert witnesses citing EG must disclose its academic origin,
+its election-sensitivity, and the absence of any adopted legal threshold. The \textsc{bisect}
+reference distribution demonstrates that EG near zero is achievable by neutral design,
+providing state courts with an empirical baseline for evaluating enacted map EG values.

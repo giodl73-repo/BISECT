@@ -1,0 +1,56 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{array}
+
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+\title{\textbf{Partisan Bias in Congressional Maps:\\
+Symmetry Standard, Swing Models, and Algorithmic Neutrality}}
+
+\author{Giovanni Della-Libera}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Partisan Bias, Symmetry Standard, Seats-Votes Curve, Uniform Swing, Heteroskedastic
+Correction, Algorithmic Redistricting, \textit{Grofman and King}
+
+\section{Introduction}
+\input{sections/01-introduction}
+
+\section{Mathematical Definition and Properties}
+\input{sections/02-definition}
+
+\section{Behavior Under Algorithmic Redistricting}
+\input{sections/03-behavior}
+
+\section{Empirical Results}
+\input{sections/04-empirical}
+
+\section{Legal Landscape}
+\input{sections/05-legal}
+
+\section{Conclusion}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

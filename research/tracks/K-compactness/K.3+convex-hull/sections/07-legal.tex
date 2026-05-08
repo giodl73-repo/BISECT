@@ -1,0 +1,45 @@
+CH has been implicitly referenced in redistricting case law and has been
+made explicit in several state redistricting standards.
+
+\subsection{Shaw v.\ Reno (1993)}
+
+The Supreme Court's visual-irregularity test in \textit{Shaw v.\ Reno},
+509 U.S.\ 630 (1993), is a conceptual predecessor to CH~\citep{shaw1993}.
+The Court held that a district whose shape ``is so bizarre on its face'' that
+it cannot be explained except as a racial classification triggers strict scrutiny.
+This test requires the court to examine whether the district's shape is the
+result of a ``legitimate districting principle'' or of deliberate racial sorting.
+CH provides a rigorous operationalisation: a district with CH $< 0.60$ has
+more than 40\% of its convex hull unoccupied, which is the geometric signature
+of a corridor or tentacle shape that cannot be explained by contiguity alone.
+
+\subsection{Ohio Redistricting Criteria}
+
+Ohio's 2015 redistricting reform (H.B.\ 1) requires that districts be
+``as compact as possible'' using the principle that districts should not
+``bypass populations'' on their way to connecting distant communities.
+This ``bypass'' criterion is equivalent to a high-CH requirement:
+a district that bypasses populations has a convex hull that is much larger
+than the district itself (low CH).
+
+\subsection{Pennsylvania: League of Women Voters v.\ Commonwealth}
+
+In \textit{League of Women Voters of Pennsylvania v.\ Commonwealth},
+178 A.3d 737 (Pa.\ 2018), the Pennsylvania Supreme Court struck down the
+2011 congressional map as an unconstitutional partisan gerrymander under
+the Pennsylvania Constitution.
+The court's opinion cited the ``meandering and irregular'' shape of several
+districts, which expert reports documented using CH-like measures~\citep{lwvpa2018}.
+The court-ordered remedial map produced districts with substantially higher
+CH values than the struck-down map.
+
+\subsection{Recommended Disclosure}
+
+For court filings using CH:
+\begin{quote}
+  \emph{All Convex Hull Ratio scores were computed using the convex hull of
+  district polygons derived from 2020 Census TIGER/Line tract geometries
+  projected to Albers Equal Area Conic (EPSG:5070). The convex hull was
+  computed using Andrew's monotone chain algorithm. CH $= A(\text{district}) /
+  A(\text{convex hull})$.}
+\end{quote}

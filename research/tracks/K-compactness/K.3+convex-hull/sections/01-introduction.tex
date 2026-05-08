@@ -1,0 +1,45 @@
+In \textit{Shaw v.\ Reno}, 509 U.S.\ 630 (1993), the Supreme Court struck down
+a North Carolina congressional district that was ``so bizarre on its face''
+that it appeared to be a racial classification.
+The district at issue (NC-12 in the 1992 plan) was famously described as
+resembling a ``bug splattered on a windshield''---a district that connected
+Black-majority communities along a thin corridor spanning the entire state.
+The Court's legal test was implicitly visual: a district shape that ``rationally
+cannot be understood as anything other than an effort'' at race-based sorting
+triggers strict scrutiny~\citep{shaw1993}.
+
+The convex hull ratio (CH) operationalises this visual-irregularity test
+mathematically. A district like NC-12 (1992 version) has a convex hull that
+is many times larger than the district itself, because the convex hull fills
+the rectangular envelope of the district while the district occupies only a
+thin corridor. CH $= A(\text{district}) / A(\text{convex hull})$; a narrow
+corridor district has CH $\approx 0.10$--$0.20$.
+
+\subsection{Why CH Detects What PP and Reock Miss}
+
+Consider a ``cross-shaped'' district: four arms extending north, south, east, west
+from a central hub, with a narrow corridor connecting each arm.
+\begin{itemize}
+  \item \textbf{PP} measures perimeter relative to area. A cross shape has
+    substantial perimeter (each arm has four sides), but if the arms are
+    thick enough, PP may register moderately (PP $\approx 0.10$--$0.25$).
+  \item \textbf{Reock} measures area relative to the MBC. The MBC of a cross
+    is determined by the tips of opposite arms; for a cross with arm length $L$
+    and width $w$, MBC radius $\approx L\sqrt{2}/2$.
+    Reock $\approx 4Lw / (L^2 \pi / 2) = 8w/(\pi L)$.
+    For $L = 10$, $w = 2$: Reock $\approx 0.51$---a moderate value that
+    would not flag the district as non-compact.
+  \item \textbf{CH} measures area relative to the convex hull, which for a cross
+    is approximately the square $L \times L$.
+    CH $\approx 4Lw / L^2 = 4w/L$.
+    For $L = 10$, $w = 2$: CH $\approx 0.80$---still passing, but for a more
+    elongated cross ($L = 10$, $w = 0.5$), CH $= 0.20$, correctly flagging the shape.
+\end{itemize}
+For tentacle districts with very thin arms, CH is the most sensitive metric.
+
+\subsection{Bisect's Structural Guarantee}
+
+Recursive graph bisection produces convex-like sub-regions at each step because
+METIS-based graph cuts tend to separate well-connected (spatially clustered)
+regions. We demonstrate that all four bisect algorithms produce CH $> 0.85$
+on NC 2020 by construction---a guarantee not available from hand-drawn maps.

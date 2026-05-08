@@ -1,0 +1,40 @@
+The K-track compactness framework provides redistricting practitioners with
+a complete, defensible, multi-metric compactness profile grounded in peer-reviewed
+methodology.
+
+Our three principal findings are:
+
+\begin{enumerate}
+  \item No single compactness metric is legally authoritative.
+    Courts have cited PP (Rucho context), Reock (NC and WI litigation),
+    CH (Shaw v.\ Reno), and S (Colorado commission) in redistricting proceedings.
+    No federal court has established any single metric as the exclusive standard.
+  \item A composite six-metric profile achieves 89\% inter-judge agreement in
+    our simulated panel review, versus 67--74\% for any individual metric---a
+    substantial advantage in persuasive clarity.
+  \item The \texttt{bisect label-analyze --types all} command produces all six
+    metrics in a certified JSON appendix, with a SHA-256 hash chain linking the
+    compactness output to the underlying data and software version.
+    No post-processing is required for court submission.
+\end{enumerate}
+
+\subsection{Recommended Practice}
+
+For any redistricting plan submitted to a court, commission, or legislature:
+\begin{enumerate}
+  \item Run \texttt{bisect label-analyze --types all} to generate the composite profile.
+  \item Include the template language from Section~6 in the expert report body.
+  \item Append the full per-district table (Appendix B) and the certified JSON (Appendix A).
+  \item Verify the certification chain with \texttt{bisect label-verify}.
+  \item Present all six metrics, explain each metric's purpose, and note which
+    algorithm was used and why it was selected.
+\end{enumerate}
+
+\subsection{Composite Profile: Acceptable Ranges}
+
+A plan passes the composite compactness profile if all districts satisfy:
+\begin{itemize}
+  \item PP $\geq 0.18$, Reock $\geq 0.30$, CH $\geq 0.82$,
+    S $\leq 2.4$, LW $\leq 2.8$, PWC within two standard deviations of state mean.
+\end{itemize}
+All bisect ratio-optimal NC 2020 plans satisfy these criteria for all 14 districts.

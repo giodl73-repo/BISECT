@@ -1,0 +1,78 @@
+\section{Mathematical Definition and Properties}
+\label{sec:definition}
+
+\subsection{The Uniform Swing Seats-Votes Curve}
+
+For a $k$-district plan with observed Democratic vote shares $v_1, \ldots, v_k$
+(from a baseline election) and observed statewide mean $\bar{v}_D = k^{-1}\sum_i v_i$,
+the uniform swing seats-votes curve is:
+\[
+S(v) = \frac{1}{k}\sum_{i=1}^k \mathbf{1}[v_i + (v - \bar{v}_D) > 0.50],
+\quad v \in [0,1].
+\]
+$S(v)$ is a step function taking values in $\{0, 1/k, 2/k, \ldots, 1\}$.
+It increases by $1/k$ at each value $v^* = 0.50 - v_i + \bar{v}_D$ where
+a district would flip from Republican to Democratic.
+
+The curve is well-defined for all $v$ if no district has exactly $v_i = \bar{v}_D
+- (v - 0.50)$, which occurs with probability zero for continuous vote shares.
+In practice, district vote shares are discrete (counts), so ties are broken
+using the district rank in the sorted vote-share sequence.
+
+\subsection{Responsiveness}
+
+Responsiveness is the slope of $S(v)$ at the 50\% vote-share pivot:
+\[
+R = \left.\frac{dS}{dv}\right|_{v=0.50} = \frac{1}{k \cdot \Delta v_{\text{pivot}}},
+\]
+where $\Delta v_{\text{pivot}}$ is the vote-share interval around 50\% within which
+the next district flips. For a plan with $m$ districts near the pivot,
+$R \approx m / (k \cdot \Delta v)$. Intuitively, $R$ counts how many districts
+would flip per unit of vote-share change near the pivot.
+
+A plan with $R = 2.0$ has the property that a 1-point statewide vote swing
+near 50\% changes the seat share by 2 points---the competitive ideal. This
+translates to: for NC ($k=14$), a 1-point vote swing flips approximately
+$14 \times 2 / 100 \approx 0.28$ districts, i.e., one district for every
+$\approx 3.5$-point swing. Plans with $R < 1.5$ have fewer competitive
+districts, so the same swing flips fewer seats, insulating incumbents from
+electoral accountability.
+
+\subsection{The Sufficiency Result}
+
+The seats-votes curve is the sufficient statistic for the two most-used scalar
+partisan metrics: Efficiency Gap and Partisan Bias.
+
+\textbf{EG from $S(v)$.} The Efficiency Gap, under the uniform distribution
+of statewide vote shares, equals the signed area between the $S(v)$ curve
+and the diagonal $S(v) = v$:
+\[
+\text{EG} = \int_0^1 [S(v) - v]\, dv \approx \bar{S} - \bar{v}_D,
+\]
+where the approximation holds when the uniform distribution over $[0,1]$ is
+a reasonable model for the distribution of statewide vote shares. More precisely,
+$\text{EG} = s - 2v + 1/2$ (the vote-share formulation from L.1), which equals
+the signed area under the exact step function $S(v)$.
+
+\textbf{Bias from $S(v)$.} Partisan Bias is simply $S(0.50) - 0.50$---the
+value of the $S(v)$ curve at the 50\% pivot, minus 0.50. Reading Partisan Bias
+from the seats-votes curve requires only locating the point $(0.50, S(0.50))$
+and measuring its vertical distance from $(0.50, 0.50)$.
+
+\textbf{Corollary.} A court that admits the seats-votes curve as evidence
+already has access to both EG and Partisan Bias as scalar summaries of that
+curve. The reverse is not true: EG and Partisan Bias as scalars do not
+uniquely determine the seats-votes curve. The curve is therefore strictly
+more informative than any combination of its scalar summaries.
+
+\subsection{The Competitive Ideal}
+
+The symmetric seats-votes curve---$S(v) = v$ for all $v$, the diagonal---would
+imply perfect proportionality: a party winning $v\%$ of votes wins $v\%$ of
+seats. This is not a realistic target for single-member district systems, which
+structurally produce a majority-bonus ($S$ above the diagonal for vote shares
+above 50\% and below the diagonal for vote shares below 50\%). The competitive
+ideal is not the diagonal but a curve passing through $(0.50, 0.50)$ with slope
+$R \approx 2.0$---the curve that translates vote swings into seat changes at
+a competitive rate without concentrating seat changes in a narrow vote-share band
+that insulates incumbents.

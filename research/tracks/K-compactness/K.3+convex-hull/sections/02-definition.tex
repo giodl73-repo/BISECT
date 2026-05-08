@@ -1,0 +1,61 @@
+\subsection{Convex Hull}
+
+The convex hull of a point set $S \subset \mathbb{R}^2$ is the smallest convex
+set containing $S$:
+\[
+  \text{conv}(S) = \left\{ \sum_i \lambda_i p_i : p_i \in S,\; \lambda_i \geq 0,\;
+  \sum_i \lambda_i = 1 \right\}.
+\]
+For a polygon $D$, $\text{conv}(D)$ is determined by its vertex set.
+
+\subsection{Convex Hull Ratio}
+
+\begin{equation}
+  \text{CH}(D) = \frac{A(D)}{A(\text{conv}(D))} \in (0, 1].
+  \label{eq:ch}
+\end{equation}
+
+\begin{proposition}
+  CH$(D) = 1$ if and only if $D$ is convex.
+\end{proposition}
+
+\begin{proof}
+  If $D$ is convex, then $D = \text{conv}(D)$, so $A(D) = A(\text{conv}(D))$
+  and CH $= 1$. Conversely, if $D$ is non-convex, there exists a point $p$
+  outside $D$ but inside $\text{conv}(D)$, so $A(\text{conv}(D)) > A(D)$
+  and CH $< 1$. \qed
+\end{proof}
+
+\subsection{Canonical Values}
+
+\begin{table}[ht]
+\centering
+\caption{Convex Hull Ratio for canonical shapes.}
+\label{tab:ch_canonical}
+\begin{tabular}{lc}
+\toprule
+Shape & CH \\
+\midrule
+Any convex polygon & $1.00$ \\
+Regular star polygon ($n=5$) & $\approx 0.38$ \\
+Cross shape ($L = 10$, $w = 2$) & $0.80$ \\
+Corridor district (width $= 0.5$, length $= 10$) & $\approx 0.50$ \\
+L-shaped district & $\approx 0.75$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Relationship to PP and Reock}
+
+Unlike PP and Reock, CH has no simple algebraic relationship to other metrics.
+CH measures specifically the degree of non-convexity, which is a distinct
+geometric property from:
+\begin{itemize}
+  \item Perimeter raggedness (PP, S): a smooth non-convex boundary can have
+    low CH but moderate PP.
+  \item Global circularity (Reock): a district can be elongated (low Reock)
+    but convex (CH $= 1$), or compact globally (high Reock) but have thin arms
+    (low CH).
+\end{itemize}
+This independence from PP and Reock makes CH a non-redundant component of
+the multi-metric compactness profile.

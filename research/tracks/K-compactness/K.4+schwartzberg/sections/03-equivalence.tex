@@ -1,0 +1,48 @@
+\begin{theorem}[$S = 1/\sqrt{\text{PP}}$]
+  \label{thm:equivalence}
+  For any polygon $D$ with area $A$ and perimeter $P$:
+  \begin{equation}
+    S(D) = \frac{1}{\sqrt{\text{PP}(D)}}.
+    \label{eq:equivalence}
+  \end{equation}
+\end{theorem}
+
+\begin{proof}
+  Recall PP $= 4\pi A / P^2$ and $S = P / (2\sqrt{\pi A})$.
+  Then:
+  \begin{align}
+    \frac{1}{\sqrt{\text{PP}}} &= \frac{1}{\sqrt{4\pi A / P^2}} \\
+    &= \frac{1}{\sqrt{4\pi A} / P} \\
+    &= \frac{P}{\sqrt{4\pi A}} \\
+    &= \frac{P}{2\sqrt{\pi A}} = S. \qed
+  \end{align}
+\end{proof}
+
+\begin{corollary}
+  $S(D) \cdot \sqrt{\text{PP}(D)} = 1$ for any polygon $D$.
+\end{corollary}
+
+\begin{corollary}
+  The monotone transformation $f(x) = 1/\sqrt{x}$ converts PP to S losslessly:
+  $S = f(\text{PP})$ and PP $= f(S)^{-1} = 1/S^2$.
+\end{corollary}
+
+\subsection{Numerical Verification}
+
+The equivalence $|S - 1/\sqrt{\text{PP}}| < 10^{-9}$ must hold for all
+computed districts.
+The \textsc{bisect} test suite includes an L0 invariant that verifies this
+identity to floating-point precision for all district geometries.
+
+\subsection{Implications}
+
+Theorem~\ref{thm:equivalence} has two practical implications:
+\begin{enumerate}
+  \item \textbf{No independent computation needed}: If \textsc{bisect} reports PP,
+    S is obtained immediately as $S = 1/\sqrt{\text{PP}}$.
+    There is no need to run a separate Schwartzberg computation.
+  \item \textbf{Statutory compliance}: If a state statute mandates a
+    Schwartzberg score threshold (e.g., $S \leq 2.0$), this is equivalent to
+    a PP threshold ($\text{PP} \geq 0.25$).
+    The \textsc{bisect} label-analyze output can be converted directly.
+\end{enumerate}

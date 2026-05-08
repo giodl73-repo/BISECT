@@ -1,0 +1,24 @@
+Compactness is not one concept but six. Area-based metrics (Reock, CH) correlate
+strongly within their family ($r = 0.79$) but only moderately with perimeter-based
+metrics ($r = 0.58$--$0.71$), confirming that no single metric captures all
+legally relevant dimensions of shape. PWC is largely orthogonal to geometric metrics
+($r < 0.4$), measuring the representational quality of a district rather than
+its visual shape.
+
+Courts have recognised this plurality. At least four metrics appear across
+redistricting case law---PP, Reock, CH, and Schwartzberg-equivalent---and
+no federal court has established a single authoritative metric.
+The decision table in Section~5 provides a principled basis for metric selection
+by use case, while K.7 argues that a composite six-metric profile is the most
+legally defensible approach because it is robust to opposing counsel's
+metric-selection arguments.
+
+The \textsc{bisect} platform generates all six metrics simultaneously via
+\texttt{bisect label-analyze --types all}, producing a certified JSON appendix
+for court filings. All results in K.0--K.7 use 2020 Census TIGER/Line data
+with Albers Equal Area Conic projection (EPSG:5070) and single seed $= 42^\dagger$.
+
+Future work in the L track (partisan fairness, L.0--L.6) will examine
+whether compactness and partisan metrics trade off, and whether the
+algorithm choice that maximises compactness (ratio-optimal for PP, moving-knife
+for Reock) systematically favours either party in NC, WI, and TX.

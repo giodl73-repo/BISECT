@@ -1,0 +1,60 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{multirow}
+
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+\title{\textbf{Compactness Metrics in Algorithmic Redistricting:\\
+A Taxonomy, Correlation Analysis, and Practitioner Decision Table}}
+
+\author{Giovanni Della-Libera}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Redistricting, Compactness, Polsby-Popper, Reock, Convex Hull, Schwartzberg,
+Length-Width Ratio, Population-Weighted Compactness, Gerrymandering
+
+\section{Introduction and Legal Background}
+\input{sections/01-introduction}
+
+\section{Metric Taxonomy: Area-Based vs.\ Perimeter-Based}
+\input{sections/02-taxonomy}
+
+\section{Mathematical Definitions of All Six Metrics}
+\input{sections/03-definitions}
+
+\section{Correlation Analysis Across Algorithms and States}
+\input{sections/04-correlation}
+
+\section{Practitioner Decision Table}
+\input{sections/05-decision-table}
+
+\section{Synthesis of K.1--K.7 Findings}
+\input{sections/06-synthesis}
+
+\section{Conclusion}
+\input{sections/07-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

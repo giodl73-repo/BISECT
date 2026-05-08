@@ -1,0 +1,66 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{array}
+
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+
+\title{\textbf{Polsby-Popper Score in Algorithmic Redistricting:\\
+Derivation, Projection Sensitivity, and Empirical Comparison}}
+
+\author{Giovanni Della-Libera}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Polsby-Popper, Compactness, Redistricting, Isoperimetric Inequality,
+Geographic Projection, TIGER/Line, Gerrymandering
+
+\section{Introduction}
+\input{sections/01-introduction}
+
+\section{Mathematical Definition and Properties}
+\input{sections/02-definition}
+
+\section{Projection and Normalization}
+\input{sections/03-projection}
+
+\section{Implementation in \texttt{bisect-analysis}}
+\input{sections/04-implementation}
+
+\section{Empirical Comparison Across Structure Algorithms}
+\input{sections/05-empirical}
+
+\section{PP--Reock Correlation Analysis}
+\input{sections/06-pp-reock}
+
+\section{Legal Usage and Statutory Survey}
+\input{sections/07-legal}
+
+\section{Conclusion}
+\input{sections/08-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

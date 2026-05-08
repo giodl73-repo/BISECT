@@ -1,0 +1,76 @@
+\section{Legal Landscape}
+\label{sec:legal}
+
+\subsection{Origin and Academic Status}
+
+The Mean-Median Difference was introduced by \citet{wang2016} in a Stanford Law Review
+article arguing that simple distributional statistics can identify partisan gerrymanders
+with less theoretical baggage than the Efficiency Gap. Wang proposed MM as a complement
+to EG, noting that its election-cycle stability made it more reliable for single-election
+analysis and its independence from the swing model made it methodologically simpler to
+defend against technical cross-examination.
+
+Unlike EG, no specific MM threshold has been proposed in the academic literature as
+a presumptive unconstitutionality standard. This is both a limitation (courts have
+no threshold to apply) and an advantage (expert witnesses are not forced to defend
+a specific threshold that opposing experts can challenge as arbitrary). The appropriate
+framing in state court proceedings is comparative: not ``MM above $X\%$ is unconstitutional''
+but ``enacted MM is $Y$ units above what a neutral algorithm produces for the same state,
+a gap that reflects mapmaker choices rather than geography.''
+
+\subsection{State Court Appearances}
+
+\textbf{North Carolina} (\textit{Harper v.\ Hall}, 2022): MM was among the metrics
+cited in expert testimony that the NC Supreme Court credited in invalidating the
+2022 congressional map. The court treated convergent evidence across multiple metrics
+as demonstrating systematic partisan intent; MM's consistency with EG and Partisan
+Bias evidence strengthened the multi-metric case.
+
+\textbf{Pennsylvania}: Expert testimony in Pennsylvania redistricting proceedings
+has used MM alongside EG. PA courts have focused more on legislative intent evidence
+and on the \textit{League of Women Voters} precedent's comparative analysis of
+proposed maps than on specific metric thresholds.
+
+\textbf{Wisconsin}: Wisconsin redistricting expert testimony has cited MM in state
+and federal proceedings. The metric's stability advantage over EG makes it
+particularly relevant in Wisconsin, where competitive statewide elections make
+wave-election sensitivity a material concern.
+
+\subsection{The Geographic Sorting Defense and Its Rebuttal}
+
+The primary defense against MM-based gerrymandering claims is the geographic
+sorting argument: positive MM reflects where Democrats choose to live, not
+deliberate manipulation. This defense has significant merit as a descriptive
+claim---the geographic sorting baseline is real and must be acknowledged.
+
+The \textsc{bisect} reference distribution provides the empirical rebuttal:
+\begin{enumerate}
+\item Run \textsc{bisect} on the challenged state's census geography without
+  partisan data, producing a map with MM $\approx 0.02$--$0.03$ (the geographic baseline).
+\item Compare to the enacted map's MM $\approx 0.07$.
+\item The gap ($\Delta\text{MM} \approx 0.05$) cannot be explained by geography,
+  because geography is held constant between the two maps.
+\item Therefore the gap reflects deliberate mapmaker choices---deliberate packing
+  beyond what compactness-constrained redistricting requires.
+\end{enumerate}
+
+This rebuttal holds geography constant, which is exactly what the geographic sorting
+defense requires: the defense acknowledges geographic constraints, so any MM above
+the geographic baseline (measured by \textsc{bisect}) must be explained by something
+other than geography.
+
+\subsection{Recommended Expert Witness Protocol}
+
+\begin{enumerate}
+\item Report MM computed directly from observed vote shares (no swing model) for
+  at least the 2016, 2018, and 2020 presidential cycles, with the standard deviation.
+\item Report the \textsc{bisect} reference MM ($\approx 0.02$--$0.03$ for most states)
+  as the geographic sorting baseline.
+\item Report $\Delta\text{MM}$ as the mapmaker contribution, explicitly distinguishing
+  it from the geographic baseline.
+\item Demonstrate MM's invariance to uniform swings (Table~\ref{tab:mm-swing}) to
+  preempt the wave-election sensitivity objection.
+\item Note that no court has adopted a specific MM threshold; the relevant legal
+  question is whether $\Delta\text{MM}$ is consistent with the applicable state
+  constitutional standard for partisan gerrymandering.
+\end{enumerate}

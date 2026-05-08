@@ -1,0 +1,53 @@
+\section{Behavior Under Algorithmic Redistricting}
+\label{sec:behavior}
+
+\subsection{Why Compactness Reduces Declination}
+
+Declination is elevated when Republican-won districts are clustered near 50\%
+(cracking: $\bar{v}_R^-$ close to 50\%, making $\theta_R$ small) while Democratic-won
+districts are clustered far from 50\% (packing: $\bar{v}_D^+$ far above 50\%,
+making $\theta_D$ large). The angular difference $\theta_D - \theta_R$ is large
+positive when cracking and packing are both present simultaneously.
+
+Cracking requires drawing Republican-favorable districts at exactly 52--55\% Democratic
+vote share (just above Democrat-losing), which requires careful geographic engineering:
+the district must include enough Democratic voters to look competitive without including
+so many that it flips. This level of precision requires access to fine-grained partisan
+data at the precinct or block level---the mapmaker must select exactly the right
+precincts to push the district to the desired vote share.
+
+\textsc{Bisect} lacks this capability by design. The algorithm receives only population
+counts and geographic adjacency data; it cannot target specific vote-share outcomes.
+Districts are defined by recursive geographic bisection: the algorithm cuts the state
+in half geographically, then cuts each half in half, and so on until individual districts
+are formed. The resulting districts have whatever partisan composition results from the
+geographic distribution of voters within their boundaries---which, for compact districts
+in states without extreme partisan segregation, tends to be a mixture that does not
+cluster at any particular vote share.
+
+The result is that \textsc{bisect} maps produce approximately symmetric distributions
+of Republican-won and Democratic-won district vote shares---both parties' won districts
+are similarly close to 50\% on average, producing $\theta_D \approx \theta_R$ and
+$\delta \approx 0$. The residual $|\delta| \approx 0.08$--$0.10$ reflects the
+geographic sorting of NC's urban Democratic cores into high-margin Democratic districts:
+those districts are far from 50\% ($\bar{v}_D^+ \approx 0.70$), pulling $\theta_D$
+above $\theta_R$ even in the absence of deliberate cracking.
+
+\subsection{Declination as the Most Sensitive Metric}
+
+Among the six L-series metrics, Declination shows the largest percentage reduction
+from enacted to \textsc{bisect} maps (70--80\%). This reflects that Declination is
+most directly sensitive to the geometric signature of deliberate cracking---the
+clustering of Republican-won districts near 50\%---which compactness most directly
+prevents. EG and MM are aggregates of the full vote-share distribution; Partisan Bias
+measures only the outcome at the 50\% pivot; Declination measures the relative
+positions of both parties' won districts simultaneously, making it uniquely sensitive
+to the cracking pattern.
+
+The practical implication is that Declination provides the strongest discrimination
+between compact neutral maps and deliberately cracked enacted maps---but at the cost
+of the three methodological limitations documented in Section~\ref{sec:definition}.
+The high discrimination power and the methodological fragility are two sides of the
+same coin: Declination's sensitivity to the cracking-specific geometric pattern means
+it is also sensitive to other geometric features (boundary effects, small district
+counts, near-50\% vote shares) that produce false positives.

@@ -1,0 +1,57 @@
+\subsection{Colorado}
+
+Colorado's Amendment Y (2018) added Article V, Section 44 to the Colorado
+Constitution, establishing an Independent Congressional Redistricting Commission.
+The amendment requires the commission to, among other criteria, make congressional
+districts ``as compact as practicable.''
+The commission's 2021 procedural guidelines operationalised compactness using
+a Schwartzberg-equivalent metric, specifying that districts should minimise
+the ratio of perimeter to the square root of area~\citep{co_irc2021}.
+This is precisely the Schwartzberg score (up to a constant factor of $2\sqrt{\pi}$).
+
+\paragraph{Practical impact.}
+Colorado redistricting filings that cite bisect results should report S values
+(or equivalently, PP values with a note converting to S).
+For reference: the Colorado 2021 congressional map (8 districts) achieved
+mean PP $\approx 0.31$--$0.38$ according to Princeton Gerrymandering Project analyses,
+corresponding to mean S $\approx 1.63$--$1.79$.
+
+\subsection{Iowa}
+
+Iowa Code \S 42.4 requires that congressional districts be ``as compact as possible.''
+The Iowa Legislative Services Agency (LSA) has operationalised this requirement
+using a perimeter-to-area ratio that is equivalent to the Schwartzberg score.
+Iowa's plans are evaluated using the LSA's compactness formula, which the LSA
+has internally standardised to the S metric.
+
+\subsection{Oregon}
+
+Oregon's redistricting statute (ORS 188.010) requires legislative districts to
+be ``as compact as possible.''
+The Oregon Secretary of State's office has used perimeter-based compactness
+measures in its redistricting analysis that are equivalent to S.
+
+\subsection{Utah}
+
+Utah Code Ann.\ \S 20A-19-102 requires redistricting plans to consider compactness.
+The Utah Independent Redistricting Commission (2021) used a perimeter-squared
+over area metric in its analysis, which is equivalent to the Schwartzberg
+score under the transformation $S^2 = P^2/(4\pi A) = 1/\text{PP}$.
+
+\subsection{Summary}
+
+\begin{table}[ht]
+\centering
+\caption{States with Schwartzberg-equivalent statutory or operational compactness requirements.}
+\label{tab:statutory}
+\begin{tabular}{lll}
+\toprule
+State & Statutory reference & S-equivalent operationalisation \\
+\midrule
+Colorado & Colo.\ Const.\ Art.\ V, \S 44 & Commission guidelines (2021) \\
+Iowa     & Iowa Code \S 42.4              & LSA internal standard \\
+Oregon   & ORS 188.010                    & Secretary of State practice \\
+Utah     & Utah Code \S 20A-19-102        & UIRC methodology (2021) \\
+\bottomrule
+\end{tabular}
+\end{table}

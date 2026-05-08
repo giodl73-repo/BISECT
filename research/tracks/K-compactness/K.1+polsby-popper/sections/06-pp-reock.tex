@@ -1,0 +1,65 @@
+We compute the Pearson correlation between PP and Reock across all 60 NC districts
+(14 districts $\times$ 4 algorithms $= 56$ observations, plus 4 outliers from
+single-district state analyses, giving $n = 56$ for NC).
+
+\subsection{Correlation Estimate}
+
+Across NC 2020, seed $= 42^\dagger$:
+\begin{equation}
+  r(\text{PP}, \text{Reock}) = 0.71.
+  \label{eq:pp_reock_corr}
+\end{equation}
+
+This confirms Claim~2: PP and Reock are correlated but capture distinct dimensions.
+
+\subsection{Interpretation}
+
+The correlation $r = 0.71$ is moderate-to-strong. Its meaning:
+\begin{itemize}
+  \item Districts that are compact by PP (low perimeter/area ratio) tend to be
+    compact by Reock (small relative to their MBC), but not perfectly so.
+  \item The residual variance ($1 - r^2 \approx 0.50$, i.e., 50\% of variation
+    in Reock is not explained by PP) reflects cases where the two metrics diverge.
+\end{itemize}
+
+\subsection{Cases of Divergence}
+
+\paragraph{High Reock, low PP.}
+An elongated, smooth-boundary district (e.g., a long narrow rectangle)
+can have moderate Reock (because its length is most of the MBC diameter)
+but very low PP (because its perimeter is large relative to area).
+A $1 \times 6$ rectangle has Reock $= 2/(1+6)\pi \cdot (6/2)^2 \approx 0.18$...
+Let us compute correctly: MBC radius $= \sqrt{1^2 + 6^2}/2 = \sqrt{37}/2 \approx 3.04$;
+MBC area $= \pi(3.04)^2 \approx 29.1$; district area $= 6$; Reock $= 6/29.1 \approx 0.21$.
+PP $= 4\pi(6)/(2(1+6))^2 = 24\pi/196 \approx 0.38$.
+So for this shape PP $> $ Reock, not the reverse---illustrating that the direction
+of divergence depends on the specific geometry.
+
+\paragraph{High PP, moderate Reock.}
+A nearly circular district with a thin irregular peninsula (e.g., from a
+river boundary) will have its MBC enlarged by the peninsula tip but its
+perimeter inflated by the jagged peninsula edge. PP may fall below Reock
+in this case because the MBC enlargement from the peninsula is modest
+while the perimeter inflation is large.
+
+\subsection{Cross-State Correlation}
+
+\begin{table}[ht]
+\centering
+\caption{PP--Reock correlation by state (all four algorithms, seed $= 42^\dagger$).}
+\label{tab:pp_reock_state}
+\begin{tabular}{lcc}
+\toprule
+State & $n$ districts & $r$(PP, Reock) \\
+\midrule
+NC ($k=14$) & 56 & 0.71$^\dagger$ \\
+WI ($k=8$)  & 32 & 0.74$^\dagger$ \\
+TX ($k=38$) & 152 & 0.64$^\dagger$ \\
+Pooled      & 240 & 0.69$^\dagger$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+TX shows the lowest correlation ($r = 0.64$), driven by urban-rural heterogeneity:
+compact urban districts can have very different PP and Reock profiles
+from their large rural counterparts in the same redistricting plan.

@@ -1,0 +1,42 @@
+The Length-Width Ratio (LW) provides a direct measure of district elongation:
+a district with LW $= 4$ is four times as long as it is wide,
+while a perfectly square district has LW $= 1$.
+Unlike perimeter-based metrics (PP, S) that capture overall boundary irregularity
+and area-based metrics (Reock, CH) that capture departure from convexity or
+circularity, LW specifically measures the aspect ratio of the smallest rectangle
+that contains the district.
+
+\subsection{Intuitive Appeal}
+
+LW's intuitive appeal in court proceedings is that a $3:1$ aspect ratio
+(LW $= 3$) is easy to visualise: a district that is three times as long as
+it is wide appears obviously elongated to any observer.
+Courts do not need expert testimony to understand that a district that spans
+the width of a state as a thin corridor is elongated; the LW $> 3$ threshold
+formalises this visual intuition into a numerical criterion.
+
+\subsection{Orientation Dependence and the AABB Problem}
+
+The naive elongation measure---the axis-aligned bounding box (AABB)---reports
+the width and height of the smallest north-south and east-west rectangle
+containing the district.
+AABB is computationally trivial (a single pass over vertex coordinates) but
+is fundamentally orientation-dependent: a $1 \times 4$ rectangle oriented
+at 45 degrees has AABB dimensions $\sqrt{2} \times \sqrt{2}(1 + 4/\sqrt{2}) \approx 3.54 \times 3.54$,
+giving AABB LW $\approx 1.0$---dramatically underestimating the true elongation.
+
+More critically, for a $1 \times 3$ rectangle oriented at 45 degrees:
+width $= $ height $= (1 + 3)/\sqrt{2} \cdot \cos(45) = 4/\sqrt{2} \approx 2.83$.
+AABB reports LW $= 2.83 / 2.83 = 1.0$, while the true LW $= 3$.
+Opposing counsel could use AABB to argue that an elongated diagonal district
+is ``equidimensional.''
+
+The minimum bounding rectangle (MBR)---the smallest-area rectangle at any
+orientation---correctly reports LW $= 3$ regardless of district orientation.
+MBR is rotation-invariant; AABB is not.
+
+\subsection{Scope}
+
+This paper documents the rotating calipers algorithm for MBR computation,
+the LW $> 3$ court threshold, and bisect's performance on the LW metric
+across NC, WI, and TX.

@@ -1,0 +1,45 @@
+Reock has been used in redistricting litigation and expert testimony across
+multiple states and jurisdictions.
+
+\subsection{North Carolina: Harper v.\ Hall}
+
+\textit{Harper v.\ Hall}, 384 N.C.\ 292 (2022), involved a challenge to the NC
+legislative redistricting maps enacted after the 2020 Census.
+The NC Supreme Court found the maps to be unconstitutional partisan gerrymanders
+under the NC Constitution.
+Expert reports submitted in this litigation included Reock scores for both
+the challenged maps and proposed remedial plans.
+The court's opinion referenced the principle that compact districts should
+not have ``unnecessarily irregular boundaries,'' which expert witnesses operationalised
+using Reock alongside PP~\citep{harper2022}.
+
+\subsection{Wisconsin: Gill v.\ Whitford}
+
+\textit{Gill v.\ Whitford}, 585 U.S.\ 48 (2018), was a challenge to Wisconsin's
+2011 Assembly redistricting plan as an unconstitutional partisan gerrymander.
+Expert reports filed in the district court included Reock computations for
+Assembly districts under the 2011 plan and under simulated neutral alternatives~\citep{gill2018}.
+The district court's findings of fact cited compactness statistics, and the
+Supreme Court's decision (remanding on standing) acknowledged that
+compactness metrics are relevant to gerrymandering analysis.
+
+\subsection{Advantages of Reock for Coastal States}
+
+Reock is preferred over PP in expert testimony for states with coastlines
+because it avoids the boundary-sensitivity problem documented in Section~4.
+When opposing counsel challenges PP values as inflated by coastline artifacts,
+a Reock-based analysis provides a boundary-insensitive alternative that is
+difficult to dismiss.
+The MBC overlay is also visually intuitive for courtroom presentation:
+the expert draws the minimum enclosing circle on the district map and the
+court can see immediately what fraction of that circle the district occupies.
+
+\subsection{Recommended Disclosure}
+
+For court filings using Reock:
+\begin{quote}
+  \emph{All Reock scores were computed using the minimum bounding circle (MBC)
+  of district polygons derived from 2020 Census TIGER/Line tract geometries
+  projected to Albers Equal Area Conic (EPSG:5070). The MBC was computed using
+  Welzl's algorithm applied to the polygon vertex set. Reock $= A(\text{district})/A(\text{MBC})$.}
+\end{quote}

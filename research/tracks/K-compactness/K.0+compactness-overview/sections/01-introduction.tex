@@ -1,0 +1,69 @@
+Compactness has been a legal criterion for redistricting in the United States since
+the nineteenth century, yet it remains operationally undefined in federal law.
+The Supreme Court held in \textit{Shaw v.\ Reno}, 509 U.S.\ 630 (1993), that
+districts with shapes ``so bizarre'' as to be inexplicable except as racial
+classifications trigger strict scrutiny under the Equal Protection Clause.
+Justice O'Connor's majority opinion described districts ``so dramatically irregular
+that, on its face, it rationally cannot be understood as anything other than an
+effort to segregate voters by race''---language that implicitly invokes compactness
+without defining it mathematically~\citep{shaw1993}.
+\textit{Rucho v.\ Common Cause}, 588 U.S.\ 684 (2019), confirmed that partisan
+gerrymandering claims are non-justiciable under federal law but explicitly noted
+that state-law compactness standards remain enforceable~\citep{rucho2019}.
+State constitutions in at least 22 states mandate compactness as a redistricting
+criterion~\citep{ncsl2021criteria}.
+
+Despite this legal backdrop, the redistricting literature has produced at least
+six distinct mathematical operationalisations of compactness, each capturing
+a different geometric property:
+\begin{itemize}
+  \item \textbf{Polsby-Popper (PP)}: area-to-perimeter ratio, penalising jagged
+    boundaries~\citep{polsby1991third}.
+  \item \textbf{Reock}: ratio of district area to its minimum bounding circle,
+    measuring how round the district is in the broadest sense~\citep{reock1961note}.
+  \item \textbf{Convex Hull Ratio (CH)}: ratio of district area to convex hull area,
+    detecting non-convex ``tentacle'' geometries~\citep{young1988measuring}.
+  \item \textbf{Schwartzberg (S)}: perimeter-to-circle-equivalent ratio,
+    preferred in some state statutes~\citep{schwartzberg1966reapportionment}.
+  \item \textbf{Length-Width Ratio (LW)}: minimum bounding rectangle elongation,
+    used to identify linear districts~\citep{niemi1990measuring}.
+  \item \textbf{Population-Weighted Compactness (PWC)}: moment-of-inertia metric
+    weighting by tract population, measuring representational compactness~\citep{fryer2011measuring}.
+\end{itemize}
+
+No prior work has systematically compared all six metrics across a common algorithmic
+redistricting platform with fixed census data and reproducible seeds. The \textsc{bisect}
+redistricting system~\citep{bisect2024} provides that platform: four distinct
+structure algorithms (standard-bisect, prime-factor/ApportionRegions, ratio-optimal/GeoSection,
+moving-knife/MKA) each generate a complete set of districts for NC, WI, and TX,
+enabling controlled comparison across 24 algorithm-state pairs.
+
+\subsection{Contribution}
+
+This paper makes three contributions:
+\begin{enumerate}
+  \item \textbf{Taxonomy}: We organise the six metrics into two families---area-based
+    (Reock, CH) and perimeter-based (PP, S)---plus one representational metric (PWC),
+    and characterise the within-family and across-family correlation structure.
+  \item \textbf{Correlation analysis}: We report the full $6\times6$ Pearson
+    correlation matrix across all districts produced by all four algorithms for
+    NC, WI, and TX, providing the first empirical estimate of metric redundancy
+    under controlled algorithmic redistricting.
+  \item \textbf{Decision table}: We provide a practitioner guide mapping each
+    metric to its primary legal use case, recommended court contexts, and
+    \textsc{bisect} CLI flag.
+\end{enumerate}
+
+This paper is the foundational reference for K.1--K.7, each of which studies
+one metric in depth.
+
+\subsection{Data and Reproducibility}
+
+All results use 2020 Census TIGER/Line tract geometries and PL 94-171
+redistricting-file population counts.
+Single-seed results (seed\,$=42$) are marked with~$^\dagger$.
+Implementation is in \texttt{crates/bisect-analysis/src/compactness.rs}.
+All six metrics are produced by:
+\begin{verbatim}
+bisect label-analyze <label> --year 2020 --types all
+\end{verbatim}

@@ -1,0 +1,67 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+
+\title{\textbf{Convex Hull Ratio in Algorithmic Redistricting:\\
+Tentacle Detection, Legal Intuition, and\\
+Algorithmic Guarantee}}
+
+\author{Giovanni Della-Libera}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Convex Hull, Compactness, Redistricting, Tentacle Districts, Shaw v.\ Reno,
+Gerrymandering, Graham Scan
+
+\section{Introduction}
+\input{sections/01-introduction}
+
+\section{Mathematical Definition}
+\input{sections/02-definition}
+
+\section{Computational Implementation: Andrew's Monotone Chain}
+\input{sections/03-algorithm}
+
+\section{Tentacle Detection: Cases Where CH Diverges from PP and Reock}
+\input{sections/04-tentacle}
+
+\section{Empirical Comparison Across Structure Algorithms}
+\input{sections/05-empirical}
+
+\section{Visual Explanation for Court Presentation}
+\input{sections/06-visual}
+
+\section{Legal Usage and Case Survey}
+\input{sections/07-legal}
+
+\section{Conclusion}
+\input{sections/08-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

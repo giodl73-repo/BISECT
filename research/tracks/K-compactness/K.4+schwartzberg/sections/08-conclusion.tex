@@ -1,0 +1,23 @@
+The Schwartzberg score and Polsby-Popper score are algebraically equivalent:
+$S = 1/\sqrt{\text{PP}}$ exactly (Theorem~\ref{thm:equivalence}).
+Despite this equivalence, the two representations serve different legislative
+and litigation contexts.
+PP's $[0,1]$ scale is standard in academic literature and federal court filings;
+S's $[1,\infty)$ scale is preferred by Colorado's IRC and several state
+redistricting commissions.
+
+Our empirical results confirm that:
+\begin{enumerate}
+  \item Ratio-optimal achieves mean S $\approx 2.13^\dagger$ on NC 2020
+    (mean PP $\approx 0.22^\dagger$), the best performance among all four algorithms.
+  \item Colorado ratio-optimal results achieve mean S $\approx 1.74^\dagger$
+    with maximum district S $= 2.00$, satisfying any $S \leq 2.0$ threshold
+    across all 8 districts.
+  \item The conversion table (Section~4) enables practitioners to translate
+    any bisect PP output to S without additional computation.
+\end{enumerate}
+
+The practical recommendation is to report PP as the primary metric with S
+as a parenthetical conversion in jurisdictions that mandate Schwartzberg-equivalent
+criteria.
+The K.7 composite guide provides template language incorporating both representations.

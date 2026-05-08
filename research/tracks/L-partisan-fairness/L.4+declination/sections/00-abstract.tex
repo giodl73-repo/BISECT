@@ -1,0 +1,26 @@
+Declination ($\delta$), introduced by \citet{warrington2018}, is a geometric measure of
+packing and cracking that operates directly on the vote-share diagram. Given sorted district
+Democratic vote shares, it computes the angle between Democratic-won districts' centroid and
+Republican-won districts' centroid relative to the 50\% threshold: positive $\delta$ indicates
+Republican advantage through cracking (Democratic voters spread just below 50\%) or packing
+(excess Democratic voters concentrated far above 50\%). The metric has an appealing geometric
+transparency---it can be visualized directly on a plot of sorted district vote shares---and
+it captures packing-cracking patterns that EG may miss when offsetting patterns in each party's
+won districts produce a moderate aggregate wasted-vote count.
+
+We find that \textsc{bisect} algorithmic maps produce $|\delta| < 0.10$ for NC ($k=14$),
+WI ($k=8$), and TX ($k=38$)---compared to enacted NC $\delta \approx +0.35$, enacted WI
+$\delta \approx +0.28$, and enacted TX $\delta \approx +0.40$---because compactness-driven
+bisection does not systematically place Democratic voters just below 50\%, the geographic
+signature of cracking. The reduction (70--80\%) is the largest of all six L-series metrics,
+reflecting that Declination is most sensitive to the precise boundary configurations that
+compactness most directly prevents.
+
+\textbf{Legal status:} Declination has been accepted as evidence by no federal or state court
+as of 2026. It was introduced as an exhibit in \textit{Common Cause v.\ Rucho} (M.D.N.C.\
+2018) but the court did not rely on it. Subsequent NC, PA, and OH redistricting opinions
+cite EG, MM, and Bias without mentioning declination. Expert witnesses should not lead with
+declination as a standalone metric and must be prepared to defend against three methodological
+critiques: (1) undefined when one party wins all seats; (2) sensitive to the 50\% seat-win
+threshold; (3) no established unconstitutionality threshold. This paper provides the first
+systematic analysis of declination under algorithmic redistricting and documents its legal status.

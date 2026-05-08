@@ -1,0 +1,38 @@
+The Schwartzberg score was introduced by \citet{schwartzberg1966reapportionment}
+as a measure of district compactness derived from the isoperimetric ratio.
+Unlike PP, which maps to $[0,1]$ with $1$ representing a circle,
+S maps to $[1,\infty)$ with $1$ representing a circle:
+a district with S $= 2$ is ``twice as non-circular'' as a circle
+in the sense that its perimeter is twice the perimeter of a circle
+with the same area.
+
+\subsection{Why S Is Preferred in Legislative Contexts}
+
+Practitioners and legislators often find S more intuitive than PP because:
+\begin{enumerate}
+  \item The $[1,\infty)$ scale avoids the counterintuitive PP property that
+    ``higher is more compact.'' S $= 1$ is compact; S $= 5$ is very non-compact.
+  \item S has the dimension of a ``stretch factor'': S $= 2.0$ means the district's
+    boundary is twice as long as a circle of the same area would require.
+  \item For statutory compliance, legislators can write ``districts shall have
+    Schwartzberg score $\leq 2.0$'' rather than ``Polsby-Popper score $\geq 0.25$,''
+    which is more natural in plain English.
+\end{enumerate}
+
+\subsection{Colorado's Mandate}
+
+Colorado's constitution (Art.\ V, \S 44, enacted by Amendment Y in 2018)
+requires the Independent Congressional Redistricting Commission to consider
+compactness as one of its primary criteria.
+The commission's 2021 procedural rules operationalised ``compactness'' using
+a Schwartzberg-equivalent perimeter-to-area ratio~\citep{co_irc2021}.
+This makes Colorado the most clearly documented state in which S-equivalent
+notation is the legally operative compactness metric.
+
+\subsection{Algebraic Equivalence}
+
+Despite differences in scale and legislative preference, S and PP carry
+identical geometric information.
+Section~3 proves $S = 1/\sqrt{\text{PP}}$ exactly, so the \textsc{bisect}
+PP output can always be converted to S using this formula.
+The conversion table in Section~4 makes this practical.
