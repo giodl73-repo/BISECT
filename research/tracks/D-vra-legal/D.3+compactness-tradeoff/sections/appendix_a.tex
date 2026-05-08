@@ -184,7 +184,7 @@ where $P_i$ is the total population of district $i$.
 We use PyMETIS, a Python wrapper for METIS, with the following interface:
 
 \begin{verbatim}
-# Replication: redist state --state [XX] --partition-mode metis-vra --year 2020
+# Replication: bisect state --state [XX] --partition-mode metis-vra --year 2020
 import networkx as nx
 
 def partition_with_metis(G, k, beta, tau):

@@ -21,7 +21,7 @@ adjustment authority to refine boundaries before public adoption.
 legislative or commission action in a state that has already adopted
 multi-criterion redistricting criteria.  California's criteria---population
 equality, VRA compliance, county contiguity, compactness, and
-proportionality---map closely onto the \texttt{redist} system's weights and
+proportionality---map closely onto the \texttt{bisect} system's weights and
 constraints.  A California-style adoption would require demonstrating that
 each criterion is satisfied algorithmically, a task the paper shows is
 tractable.
@@ -30,7 +30,7 @@ tractable.
 post-\textit{Harper}) is available where state courts have found
 constitutional violations in enacted maps.  The court-order pathway places
 the algorithm at the center of the remedial process: a special master
-appointed by the court runs \texttt{redist}, the output becomes the
+appointed by the court runs \texttt{bisect}, the output becomes the
 remedial map, and the burden shifts to the challenger to demonstrate a
 constitutional defect in the output.
 
@@ -47,7 +47,7 @@ command, when, under what oversight, and with what review opportunity.
 Section~6 addresses challenges common to all three pathways: data preparation,
 public transparency, and the challenge process.  Section~7 concludes.
 
-Throughout, we use the \texttt{redist} system~\citep{dellaLibera2026recursive}
+Throughout, we use the \texttt{bisect} system~\citep{dellaLibera2026recursive}
 as the reference implementation.  The commands cited in the workflow table
-are drawn from the \texttt{redist} CLI reference~\citep{redistCliQuickstart}.
+are drawn from the \texttt{bisect} CLI reference~\citep{redistCliQuickstart}.
 The legal analysis draws on~\citet{dellaLibera2026legal}.

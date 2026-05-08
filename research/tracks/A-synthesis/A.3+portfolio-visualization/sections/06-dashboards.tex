@@ -48,11 +48,11 @@ produced a non-contiguous piece or a population imbalance.
 \subsection*{Reproducing Any Figure}
 
 Every figure in the portfolio can be regenerated from the public
-Census data and the open-source \texttt{redist} CLI:
+Census data and the open-source \texttt{bisect} CLI:
 
 \begin{verbatim}
-redist fetch --year 2020
-redist state --state NC --year 2020 --version v1
+bisect fetch --year 2020
+bisect state --state NC --year 2020 --version v1
 redist map   --state NC --year 2020 --version v1
 \end{verbatim}
 

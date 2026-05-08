@@ -71,13 +71,13 @@ efficiency to be realized in practice.
 
 \subsection{Pipeline Integration}
 
-The intended deployment is as the \texttt{redist ensemble} subcommand,
+The intended deployment is as the \texttt{bisect ensemble} subcommand,
 integrated into the same binary as \texttt{bisect state},
 \texttt{bisect analyze}, and \texttt{bisect map}.
 A typical invocation:
 
 \begin{verbatim}
-  redist ensemble --state NC --year 2020 --steps 10000 \
+  bisect ensemble --state NC --year 2020 --steps 10000 \
                   --chains 8 --seed 42 --out nc_ensemble.json
 \end{verbatim}
 

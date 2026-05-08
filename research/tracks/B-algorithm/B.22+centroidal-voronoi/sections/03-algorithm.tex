@@ -296,16 +296,16 @@ in \metis{}.
 \subsection{CLI Invocation}
 
 \cvd{} bisection is exposed via \texttt{--structure centroidal-voronoi}
-in the \texttt{redist} binary:
+in the \texttt{bisect} binary:
 
 \begin{verbatim}
-redist state --state NC --year 2020 \
+bisect state --state NC --year 2020 \
   --structure centroidal-voronoi --cvd-iters 20
 \end{verbatim}
 
 With explicit metric and seeding options (Phase~2 preview):
 \begin{verbatim}
-redist state --state NC --year 2020 \
+bisect state --state NC --year 2020 \
   --structure centroidal-voronoi --cvd-iters 20 \
   --cvd-metric graph-distance --cvd-seed-init kmeans++
 \end{verbatim}

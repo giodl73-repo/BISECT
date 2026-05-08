@@ -120,10 +120,10 @@ For standard 50-state redistricting analysis:
 \paragraph{CLI reference.}
 \begin{verbatim}
 # 1000-step Merge-Split chain, best plan (percentile 0.0)
-redist state --state NC --year 2020 \
+bisect state --state NC --year 2020 \
     --search merge-split --merge-split-steps 1000 --percentile 0.0
 
 # 5000-step chain for a larger ensemble
-redist state --state TX --year 2020 \
+bisect state --state TX --year 2020 \
     --search merge-split --merge-split-steps 5000 --percentile 0.0
 \end{verbatim}

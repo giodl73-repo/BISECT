@@ -3,10 +3,10 @@
 \section{Software Stack}
 \label{sec:software}
 
-\subsection*{Primary Tool: \texttt{redist} CLI}
+\subsection*{Primary Tool: \texttt{bisect} CLI}
 
 All redistricting computations in this portfolio are performed by the
-\texttt{redist} command-line tool, a Rust binary built on the METIS
+\texttt{bisect} command-line tool, a Rust binary built on the METIS
 graph-partitioning library.
 The binary is the single point of truth: it handles data ingestion,
 adjacency graph construction, METIS invocation, population balancing,
@@ -20,7 +20,7 @@ and output generation.
 \toprule
 Component & Version & Role & Source \\
 \midrule
-\texttt{redist} CLI    & v0.2.0          & Pipeline orchestrator & See \S\ref{sec:install} \\
+\texttt{bisect} CLI    & v0.2.0          & Pipeline orchestrator & See \S\ref{sec:install} \\
 Rust toolchain         & 1.77+           & Build tool            & \url{https://rustup.rs} \\
 METIS                  & 5.2 (vendored)  & Graph partitioner     & Bundled in repo \\
 Python                 & 3.13+           & Dashboard, research   & \url{https://python.org} \\
@@ -30,11 +30,11 @@ GeoPandas              & 1.0+            & Shapefile I/O         & \texttt{pip i
 \end{table}
 
 \noindent METIS 5.2 is \emph{vendored} (statically compiled into the
-\texttt{redist} binary), so researchers do not need to install it separately.
+\texttt{bisect} binary), so researchers do not need to install it separately.
 This eliminates version drift between METIS releases as a source of
 non-reproducibility.
 
-\subsection*{Installing the \texttt{redist} CLI}
+\subsection*{Installing the \texttt{bisect} CLI}
 \label{sec:install}
 
 \begin{enumerate}[leftmargin=*, itemsep=4pt]
@@ -79,7 +79,7 @@ redist doctor      # Checks all dependencies
 
 \subsection*{Platform Support}
 
-The \texttt{redist} binary is tested on:
+The \texttt{bisect} binary is tested on:
 \begin{itemize}[itemsep=2pt]
   \item Linux x86-64 (Ubuntu 22.04, Debian 12)
   \item macOS arm64 (Apple Silicon, macOS 14+)

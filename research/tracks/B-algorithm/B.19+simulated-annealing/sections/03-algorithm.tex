@@ -207,11 +207,11 @@ from those points as temperature drops).
 \subsection{CLI Invocation and Implementation}
 
 \sa{} bisection is exposed via the \texttt{--structure simulated-annealing}
-flag in the \texttt{redist} binary.
+flag in the \texttt{bisect} binary.
 The full invocation for North Carolina is:
 
 \begin{verbatim}
-redist state --state NC --year 2020 \
+bisect state --state NC --year 2020 \
   --structure simulated-annealing \
   --sa-steps-per-tract 10 \
   --sa-t0-factor 0.01

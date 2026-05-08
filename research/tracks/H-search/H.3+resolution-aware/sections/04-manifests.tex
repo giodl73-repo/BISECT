@@ -157,19 +157,19 @@ validate \texttt{n\_units} and confirm every GEOID is well-formed.
 
 \subsection{Downstream Pipeline Behavior}
 
-\textbf{Analysis} (\texttt{redist label-analyze}): reads
+\textbf{Analysis} (\texttt{bisect label-analyze}): reads
 \texttt{plan\_resolution} from the manifest to determine which population
 file and geometry file to use for compactness computation.
 BG-level plans use BG geometries for Polsby-Popper~\citep{polsby1991third};
 tract-level plans use tract geometries (current default).
 County-level plans would use county geometries (deferred).
 
-\textbf{Reporting} (\texttt{redist label-report}): uses \texttt{unit\_type}
+\textbf{Reporting} (\texttt{bisect label-report}): uses \texttt{unit\_type}
 from the manifest for the human-readable label in HTML and JSON reports
 (e.g., ``district boundary at census tract resolution'' vs.\ ``\ldots at
 census block group resolution'').
 
-\textbf{Verification} (\texttt{redist label-verify}): the SHA-256 hash
+\textbf{Verification} (\texttt{bisect label-verify}): the SHA-256 hash
 covers the entire manifest including resolution fields.
 A plan rebuilt at a different resolution will not match the stored hash,
 flagging a resolution mismatch as a verification failure.

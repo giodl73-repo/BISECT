@@ -92,11 +92,11 @@ Rows containing A3 (VRASection) and A4 (ProportionalSection) are mutually
 exclusive.
 This is not a software limitation but a constitutional requirement under
 \callais{} p.~36.
-The \texttt{callais\_preflight} function in the \texttt{redist} CLI enforces
+The \texttt{callais\_preflight} function in the \texttt{bisect} CLI enforces
 this at runtime:
 
 \begin{verbatim}
-  redist state --state AL --partition-mode vra-section \
+  bisect state --state AL --partition-mode vra-section \
     --proportional-section           # ERROR
   [BOUNDARY] callais_preflight: VRASection and ProportionalSection
   cannot be combined in a single run (Callais p.36, disentanglement

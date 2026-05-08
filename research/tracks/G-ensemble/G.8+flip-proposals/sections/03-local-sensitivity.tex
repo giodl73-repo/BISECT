@@ -63,7 +63,7 @@ via single-tract moves.
 
 \begin{verbatim}
 for p in 0.0 0.25 0.50 0.75 1.00; do
-  redist state --state NC --year 2020 \
+  bisect state --state NC --year 2020 \
       --search flip --flip-steps 10000 --percentile $p
 done
 \end{verbatim}

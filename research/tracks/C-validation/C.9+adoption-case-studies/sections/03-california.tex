@@ -17,7 +17,7 @@ from Arizona.
 
 \subsection{Algorithmic Satisfaction of California's Criteria}
 
-The \texttt{redist} system's weight parameters map onto California's criteria
+The \texttt{bisect} system's weight parameters map onto California's criteria
 in a natural way.
 
 \textbf{Criterion 1 (population equality)} is enforced directly: the
@@ -37,7 +37,7 @@ tracts are considered adjacent, so every output district is contiguous by
 construction.
 
 \textbf{Criterion 4 (minimization of city and county splits)} corresponds to
-the county-sticky edge weight in the \texttt{redist} system.  Increasing the
+the county-sticky edge weight in the \texttt{bisect} system.  Increasing the
 weight on county-boundary adjacency edges penalizes splits.  The county-sticky
 weight can be calibrated to California's specific county structure, with
 larger counties (Los Angeles, San Diego) receiving higher weights to reflect

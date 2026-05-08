@@ -140,11 +140,11 @@ To use \bfsg{} as a warm-start for a \recom{} ensemble:
 
 \begin{verbatim}
 # Step 1: Generate BFS Growth initial plan
-redist state --state NC --year 2020 \
+bisect state --state NC --year 2020 \
   --structure bfs-growth --search single
 
 # Step 2: Use the output plan as ReCom warm-start
-redist ensemble --state NC --year 2020 \
+bisect ensemble --state NC --year 2020 \
   --initial-plan runs/nc_bfs/2020/nc_plan.json \
   --chain recom --steps 10000
 \end{verbatim}

@@ -144,7 +144,7 @@ results that the synthesis draws on.
 \subsection*{Three-Layer Compositor}
 
 Every redistricting run is governed by three orthogonal choices that
-correspond to the three-layer compositor of the \texttt{redist} binary:
+correspond to the three-layer compositor of the \texttt{bisect} binary:
 
 \begin{center}
 \begin{tabular}{@{}lll@{}}
@@ -423,7 +423,7 @@ Paper track codes correspond directly to the folder names under
 % =============================================================================
 
 \begin{itemize}[leftmargin=*,noitemsep,topsep=4pt]
-    \item \textbf{Primary tool}: The \texttt{redist} Rust binary, built from
+    \item \textbf{Primary tool}: The \texttt{bisect} Rust binary, built from
         the \texttt{redist/} workspace in this repository. It is the
         production-grade implementation of all three-layer compositor options
         described in Section~\ref{sec:portfolio} and runs approximately
@@ -434,7 +434,7 @@ Paper track codes correspond directly to the folder names under
         data download scripts, and output reproducibility documentation.
 
     \item \textbf{Census data}: U.S. Census Bureau redistricting files for
-        2000, 2010, and 2020, downloaded via the \texttt{redist fetch} command.
+        2000, 2010, and 2020, downloaded via the \texttt{bisect fetch} command.
         Raw data is not committed to the repository ($\sim$55~GB).
 
     \item \textbf{METIS library}: \url{http://glaros.dtc.umn.edu/gkhome/metis/metis/overview}.

@@ -72,7 +72,7 @@ Unlike \recom{} --- a Markov chain with unknown stationary distribution ---
 each construction stage, recovering the true uniform distribution over valid
 plans without mixing assumptions.
 We implement \smc{} in the \texttt{redist-smc} Rust crate (48 tests,
-Rayon-parallelised per stage) as \texttt{redist ensemble --method smc}.
+Rayon-parallelised per stage) as \texttt{bisect ensemble --method smc}.
 The key algorithmic innovations are: (1)~importance weights equal to
 $\log|\mathrm{valid\_cuts}(T)|$, which corrects for the spanning-tree
 proposal's non-uniformity; and (2)~largest-component seeding, which preserves

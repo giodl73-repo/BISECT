@@ -10,7 +10,7 @@ We use 2020 Census tract-level data for the contiguous United States (48 states 
 
 \subsection{Multi-Member District Generation}
 
-We generate multi-member districts using edge-weighted recursive bisection graph partitioning, implemented in the \texttt{redist} open-source redistricting platform \citep{redistcli2026}. The algorithm represents census tracts as nodes in a graph, with edges weighted by shared boundary length. Graph partitioning minimizes total weighted edge cuts, equivalent to minimizing total district perimeter --- producing compact districts without explicitly optimizing for a compactness metric.
+We generate multi-member districts using edge-weighted recursive bisection graph partitioning, implemented in the \texttt{bisect} open-source redistricting platform \citep{redistcli2026}. The algorithm represents census tracts as nodes in a graph, with edges weighted by shared boundary length. Graph partitioning minimizes total weighted edge cuts, equivalent to minimizing total district perimeter --- producing compact districts without explicitly optimizing for a compactness metric.
 
 We generate three uniform configurations:
 \begin{itemize}
@@ -18,7 +18,7 @@ We generate three uniform configurations:
     \item \textbf{Uniform-5}: 87 districts, 5 seats each (435 total seats)
     \item \textbf{Uniform-7}: 62 districts, 7 seats each (434 total seats)
 \end{itemize}
-using the \texttt{redist states --seats-per-district M --districts k} command with seed 42 for reproducibility.
+using the \texttt{bisect states --seats-per-district M --districts k} command with seed 42 for reproducibility.
 
 \subsubsection{Per-Seat Balance Criterion}
 
@@ -70,9 +70,9 @@ We compare multi-member configurations against: (1) the 2020 enacted single-memb
 
 \subsection{Replication}
 
-All code, data, and results are at \url{https://giodl73-repo.github.io/REDIST/}. The \texttt{redist} binary (version 0.1.0) reproduces all configurations from reported seeds. Each configuration's manifest records the SHA-256 hash of source data and the exact command:
+All code, data, and results are at \url{https://giodl73-repo.github.io/REDIST/}. The \texttt{bisect} binary (version 0.1.0) reproduces all configurations from reported seeds. Each configuration's manifest records the SHA-256 hash of source data and the exact command:
 \begin{verbatim}
-redist state --year 2020 --version E1 \
+bisect state --year 2020 --version E1 \
   --districts [N] --seats-per-district [M] \
   --balance-tolerance 10.0 --seed 42
 \end{verbatim}

@@ -47,7 +47,7 @@ imposing a maximum $\pm 0.05\%$ deviation from the ideal district population
 $P/k$.
 This satisfies the \karcher{} population equality standard with a large margin.
 
-The algorithm is implemented in the \texttt{redist} Rust binary
+The algorithm is implemented in the \texttt{bisect} Rust binary
 \citep{b0paper}, which runs a 50-state apportionment in approximately
 30 minutes on a laptop.
 The \dia{} would require states to run the algorithm within 30 days of
@@ -257,7 +257,7 @@ automatically disabled for that run.
 If ProportionalSection is activated (a state petitions for a proportionality
 adjustment), VRASection is automatically disabled for that run.
 The two modes are mutually exclusive within a single run and the gate is enforced
-by the \texttt{redist} binary at runtime: attempting to configure both will cause
+by the \texttt{bisect} binary at runtime: attempting to configure both will cause
 the run to fail with a \texttt{[CONFIG]} error message referencing the
 \callais{} disentanglement requirement.
 

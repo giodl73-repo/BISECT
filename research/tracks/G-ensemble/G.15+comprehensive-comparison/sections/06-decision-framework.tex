@@ -243,7 +243,7 @@ for each practitioner use case.
 \caption{%
   Combined structure + search recommendations by use case.
   ``Alternative'' is the second choice when the primary is unavailable.
-  All flags are for the \texttt{redist} CLI.
+  All flags are for the \texttt{bisect} CLI.
 }
 \label{tab:combined}
 \small
@@ -354,7 +354,7 @@ The $N \leq 500$ threshold for ILP tractability is empirical (runtime
 $< 60$ s in our experiments).
 For graphs with unusual structure (dense connectivity, deep tree branching),
 ILP may time out at smaller $N$.
-For production use, the \texttt{redist} ILP implementation includes a timeout
+For production use, the \texttt{bisect} ILP implementation includes a timeout
 flag (\texttt{--ilp-timeout}) that falls back to SA when exceeded.
 
 \paragraph{Future algorithms.}

@@ -88,7 +88,7 @@ racial outcome.
 \subsection{The CLI Mutex Gate}
 
 The \texttt{callais\_preflight} function is the runtime enforcement mechanism.
-It is called at the start of every \texttt{redist state} and \texttt{redist run}
+It is called at the start of every \texttt{bisect state} and \texttt{redist run}
 invocation, before any data is loaded:
 
 \begin{verbatim}
@@ -122,7 +122,7 @@ not part of the optimisation.
 
 \subsection{The Plan Manifest as Audit Record}
 
-Every \texttt{redist} run produces a \texttt{whatif-manifest v1} JSON sidecar
+Every \texttt{bisect} run produces a \texttt{whatif-manifest v1} JSON sidecar
 with the following fields relevant to Callais compliance:
 
 \begin{verbatim}
@@ -224,7 +224,7 @@ The algorithmic redistricting toolbox satisfies the \callais{} p.~36
 disentanglement requirement if and only if the following conditions hold:
 \begin{enumerate}
   \item At most one of $\{$VRASection, ProportionalSection$\}$ is active in
-    any single \texttt{redist} run.
+    any single \texttt{bisect} run.
   \item The \texttt{callais\_preflight} gate is not bypassed (no
     \texttt{--skip-preflight} flag).
   \item The plan manifest \texttt{whatif-manifest v1} is produced and its

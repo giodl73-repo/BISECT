@@ -66,7 +66,7 @@ that maps cleanly onto independent MCMC chains.
 eliminates data races by construction---a critical property for parallel
 MCMC where chains share no mutable state.
 
-Within the \texttt{redist} ecosystem, the Rust codebase has achieved
+Within the \texttt{bisect} ecosystem, the Rust codebase has achieved
 approximately $213\times$ speedup over the Python pipeline for the core
 METIS partitioning workflow~\citep{dellaLibera2026b1}.
 The \re{} crate extends this philosophy to ensemble sampling.
@@ -80,9 +80,9 @@ deterministic redistricting algorithms to \gc{} ensembles.
 \citet{dellaLibera2026g1} provides direct percentile placement of the
 \ar{} plans within \gc{} ensembles for six states.
 \citet{dellaLibera2026g4} formalizes the $\rhat$, $\ess$, and Hamming
-autocorrelation diagnostics implemented in the \texttt{redist} binary.
+autocorrelation diagnostics implemented in the \texttt{bisect} binary.
 The H.1 paper~\citep{dellaLibera2026h1} establishes the bisection-ensemble
 connection that motivates real-time ensemble integration.
 \re{} closes the final methodological gap: G-track results previously
 depended on the Python \gc{} installation; \re{} makes those results
-reproducible from the \texttt{redist} Rust binary alone.
+reproducible from the \texttt{bisect} Rust binary alone.

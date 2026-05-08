@@ -54,7 +54,7 @@ The main findings are:
 \subsection{The Three-Layer Compositor}
 
 The eight algorithms compared in this paper are all implemented as
-\texttt{--search} modes in the \texttt{redist} CLI.
+\texttt{--search} modes in the \texttt{bisect} CLI.
 The three-layer compositor (\texttt{--structure},
 \texttt{--weights-override}, \texttt{--search}) allows practitioners to
 combine any structure algorithm (standard bisect, ApportionRegions,
@@ -75,7 +75,7 @@ For example, a Texas litigation case might use:
 \end{itemize}
 
 This combination is not available in any prior academic comparison paper;
-the three-layer compositor is a contribution of the \texttt{redist}
+the three-layer compositor is a contribution of the \texttt{bisect}
 platform itself.
 
 \subsection{Future Work}
@@ -118,6 +118,6 @@ All eight algorithms are implemented in:
 \end{itemize}
 
 The decision framework in Table~\ref{tab:decision} is the recommended
-reference for algorithm selection in the \texttt{redist} platform.
+reference for algorithm selection in the \texttt{bisect} platform.
 All runs in this paper are reproducible from the base seed 42 and the
 configurations specified in Section~\ref{sec:setup}.

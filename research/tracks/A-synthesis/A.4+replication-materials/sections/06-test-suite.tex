@@ -32,10 +32,10 @@ using Vermont's tract data with a synthetic two-seat configuration.
 
 \begin{verbatim}
 # Run the walkthrough (< 2 minutes on any modern laptop)
-redist state --state VT --year 2020 --version walkthrough
+bisect state --state VT --year 2020 --version walkthrough
 
 # Verify the output matches the fixture
-redist label-verify walkthrough
+bisect label-verify walkthrough
 
 # Browse the output
 ls outputs/walkthrough/2020/vermont/

@@ -22,7 +22,7 @@ It is the fastest variant and the best choice for production plan generation.
 
 \paragraph{Typical parameters.}
 \begin{verbatim}
-redist state --state TX --year 2020 \
+bisect state --state TX --year 2020 \
     --search short-burst \
     --burst-length 20 --n-bursts 100 --percentile 0.0
 \end{verbatim}
@@ -48,7 +48,7 @@ matters, not just the minimum.
 
 \paragraph{Typical parameters.}
 \begin{verbatim}
-redist state --state NC --year 2020 \
+bisect state --state NC --year 2020 \
     --search short-burst-forest \
     --burst-length 20 --n-bursts 50 --percentile 0.0
 \end{verbatim}
@@ -72,7 +72,7 @@ more distributional correction than SB-Standard (no correction).
 
 \paragraph{Typical parameters.}
 \begin{verbatim}
-redist state --state TX --year 2020 \
+bisect state --state TX --year 2020 \
     --search short-burst-merge-split \
     --burst-length 20 --n-bursts 50 --percentile 0.0
 \end{verbatim}

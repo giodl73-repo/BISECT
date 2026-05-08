@@ -23,16 +23,16 @@ git checkout v0.2.0      # Pin to the release used in the portfolio
 bootstrap.bat             # Windows
 \end{verbatim}
 
-\noindent This installs Rust, builds the \texttt{redist} binary, installs
+\noindent This installs Rust, builds the \texttt{bisect} binary, installs
 Python dependencies, and runs \texttt{redist doctor} to confirm the
 environment is ready.  Expected time: 5--10 minutes.
 
 \subsection*{Step 3 --- Fetch Census Data}
 
 \begin{verbatim}
-redist fetch --year 2020      # ~40 GB, allow 30-90 min depending on connection
-redist fetch --year 2010
-redist fetch --year 2000
+bisect fetch --year 2020      # ~40 GB, allow 30-90 min depending on connection
+bisect fetch --year 2010
+bisect fetch --year 2000
 \end{verbatim}
 
 \noindent All files are SHA-256 validated on download.
@@ -54,9 +54,9 @@ and the bisection round at which each district was finalized.
 \subsection*{Step 5 --- Verify Labels}
 
 \begin{verbatim}
-redist label-verify official_2020    # Checks SHA chain for 2020 run
-redist label-verify official_2010
-redist label-verify official_2000
+bisect label-verify official_2020    # Checks SHA chain for 2020 run
+bisect label-verify official_2010
+bisect label-verify official_2000
 \end{verbatim}
 
 \noindent This command recomputes the SHA-256 of every config, input file,

@@ -140,7 +140,7 @@ All projection, rebalance, and hierarchy logic is inherited unchanged from
 
 \paragraph{CLI.}
 \begin{verbatim}
-redist state --state TX --year 2020 \
+bisect state --state TX --year 2020 \
   --search multiscale-adaptive \
   --multiscale-steps 5000 \
   --ms-target-accept 0.30 \
@@ -192,5 +192,5 @@ schedule.
 \texttt{final\_alpha} is the last entry of \texttt{alpha\_trace}.
 \texttt{fine\_acceptance\_rate} and \texttt{coarse\_acceptance\_rate} are
 computed over all steps, not just the last window.
-This ensures \texttt{redist label-verify} can confirm all search parameters
+This ensures \texttt{bisect label-verify} can confirm all search parameters
 and independently reproduce the alpha trace from the base seed.

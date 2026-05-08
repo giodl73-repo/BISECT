@@ -6,7 +6,7 @@
 \subsection*{Verifying Any Single Claim}
 
 Every quantitative claim in every portfolio paper is linked to a specific
-\texttt{redist} command that produced it.
+\texttt{bisect} command that produced it.
 To verify a claim:
 
 \begin{enumerate}[leftmargin=*, itemsep=4pt]
@@ -14,13 +14,13 @@ To verify a claim:
   \item Locate the associated command in the paper's supplementary materials
         or in the paper's directory under \texttt{research/B.2+edge-weighted-bisection/}.
   \item Run the command with the same parameters.
-  \item Compare the output to the published hash using \texttt{redist label-verify}.
+  \item Compare the output to the published hash using \texttt{bisect label-verify}.
 \end{enumerate}
 
-\subsection*{The \texttt{redist label-verify} Command}
+\subsection*{The \texttt{bisect label-verify} Command}
 
 \begin{verbatim}
-redist label-verify <version>
+bisect label-verify <version>
 \end{verbatim}
 
 \noindent This command:
@@ -59,7 +59,7 @@ due to floating-point ordering differences; the portfolio publishes separate
 reference hashes for each architecture.
 Results that are byte-identical on the same platform
 (x86-64 Linux/Windows/macOS with the same METIS vendored build) are
-fully verified by \texttt{redist label-verify}.
+fully verified by \texttt{bisect label-verify}.
 
 \paragraph{Report hash.}
 The report hash covers the summary statistics CSV (compactness, population

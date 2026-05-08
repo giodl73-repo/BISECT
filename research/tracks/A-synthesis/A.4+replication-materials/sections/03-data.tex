@@ -32,11 +32,11 @@ Year & Release date & Release ID & SHA-256 (placeholder) \\
 
 \noindent The placeholder SHA-256 values above will be replaced with
 confirmed hashes after the first clean data fetch using
-\texttt{redist fetch --year 2020}.
+\texttt{bisect fetch --year 2020}.
 Verification of individual file hashes is performed by
-\texttt{redist label-verify} (see Section~\ref{sec:verification}).
+\texttt{bisect label-verify} (see Section~\ref{sec:verification}).
 
-\noindent \textbf{Download URLs} (automated via \texttt{redist fetch}):
+\noindent \textbf{Download URLs} (automated via \texttt{bisect fetch}):
 \begin{itemize}[itemsep=2pt]
   \item 2020: \url{https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/}
   \item 2010: \url{https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/}
@@ -56,19 +56,19 @@ shared boundary lengths used as edge weights.
   \item Total download size: approximately 40 GB for all 50 states, all three years
 \end{itemize}
 
-\subsection*{Fetching Data with \texttt{redist fetch}}
+\subsection*{Fetching Data with \texttt{bisect fetch}}
 
-The recommended way to obtain data is through the \texttt{redist fetch} command,
+The recommended way to obtain data is through the \texttt{bisect fetch} command,
 which downloads, validates, and caches all required files:
 
 \begin{verbatim}
-redist fetch --year 2020               # Download 2020 data (all 50 states)
-redist fetch --year 2020 --state VT    # Vermont only (~2 min, good for testing)
-redist fetch --year 2020 --check-only  # Verify cache, do not download
+bisect fetch --year 2020               # Download 2020 data (all 50 states)
+bisect fetch --year 2020 --state VT    # Vermont only (~2 min, good for testing)
+bisect fetch --year 2020 --check-only  # Verify cache, do not download
 \end{verbatim}
 
 \noindent The fetch command validates the SHA-256 of every downloaded file
-against the manifest embedded in the \texttt{redist} binary.
+against the manifest embedded in the \texttt{bisect} binary.
 If a file is corrupted or modified, the command refuses to proceed.
 
 \subsection*{Election Data}
@@ -82,7 +82,7 @@ The dataset is downloaded and processed via:
 python scripts/data/elections/fetch_elections.py fetch --year 2020
 \end{verbatim}
 
-\noindent This step is separate from \texttt{redist fetch} and must be run independently.
+\noindent This step is separate from \texttt{bisect fetch} and must be run independently.
 SHA-256 of the downloaded election file: \texttt{[placeholder --- run \texttt{sha256sum}
 on the downloaded file after \texttt{fetch\_elections.py} completes]}.
 
