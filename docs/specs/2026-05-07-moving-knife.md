@@ -1,6 +1,7 @@
 # Spec: Moving-Knife Algorithm (MKA) — Fair-Division Geometric Bisection for Maximum Reock Compactness
 
-**Status**: Proposed  
+**Status**: Proposed (R1 reviewed, P1 fixes applied)
+**Reviewed R1**: MERIDIAN 3/4, BENCHMARK 3/4, SURVEY 3/4, COVENANT 4/4 → avg 3.25/4  
 **Date**: 2026-05-07  
 **Layer**: Structure (SplitStrategy::MovingKnife) — replaces METIS at each bisection node  
 **Related paper**: B.25  
@@ -117,7 +118,9 @@ split_subgraph_mka(adj, pop, tract_indices, centroids, n_orientations, metric, b
   return (global_left_set, global_right_set)
 ```
 
-**Reock score formula**: Reock(D) = Area(D) / Area(MEC(D)), where MEC = Minimum Enclosing Circle of D's projected centroids. Welzl's algorithm gives the MEC in expected O(m) time (Welzl 1991). Area(D) is the sum of tract areas (precomputed from TIGER/Line polygons; same source as population weights).
+**Reock score formula**: Reock(D) = Area_polygon(D) / Area(MEC_polygon(D))
+
+where Area_polygon(D) = sum of TIGER/Line polygon areas for tracts in D, and MEC_polygon(D) is the minimum enclosing circle of the tract *polygon boundary vertices* (not just centroids). In the Phase 1 implementation, we use the centroid approximation: MEC is fitted to the projected centroid points only, not the full polygon boundaries. This approximation may produce Reock_approx > 1 for large boundary tracts; the implementation clamps to [0.0, 1.0] to prevent this. The L0 invariant `Reock ≤ 1` is enforced by clamping, not structural guarantee. Phase 2 will implement the polygon-boundary MEC using the Shapely convex hull + circumscribed circle approach.
 
 **PolsbyPopper alternative**: When `--mka-metric polsby` is specified, the sweep maximises Polsby-Popper instead of Reock. PP requires perimeter computation (O(m) with precomputed edge lengths from the adjacency file) — supported but Reock is the default, since Reock requires only centroid positions and MEC geometry with no polygon perimeter data.
 
@@ -131,10 +134,10 @@ MKA is deterministic given `base_seed` and `n_orientations`. The seed is needed 
 
 ```
 mka_seed(base_seed, node_path) =
-  SHA-256("MKA_INIT_" || node_path.as_bytes() || "_" || base_seed:u64le) → u64le
+  SHA-256("MKA_INIT_" || node_path_len:u32le || node_path.as_bytes() || base_seed:u64le) → u64le
 ```
 
-The prefix `"MKA_INIT_"` is distinct from `"CVD_GEO_INIT_"` and `"CVD_INIT_"`. A test asserts all three prefix constants are present in source and are pairwise distinct. `node_path` is required to make seeds unique across bisection tree nodes (same role as in CVD Phase 2).
+where `node_path_len` is the byte length of `node_path` as a 4-byte little-endian u32. This eliminates the prefix-collision risk by making the boundary between node_path and base_seed unambiguous. The separator `"_"` is dropped since the length prefix makes it unnecessary. The prefix `"MKA_INIT_"` is distinct from `"CVD_GEO_INIT_"` and `"CVD_INIT_"`. A test asserts all three prefix constants are present in source and are pairwise distinct. `node_path` is required to make seeds unique across bisection tree nodes (same role as in CVD Phase 2).
 
 ---
 
@@ -173,6 +176,8 @@ pub fn run_moving_knife(
     node_path: &str,
 ) -> (HashSet<usize>, HashSet<usize>)  // (left_set, right_set)
 ```
+
+**Data source for tract areas**: TIGER/Line census tract shapefiles provide polygon areas in square metres. These are computed from the `.adj.bin` adjacency files during `bisect fetch --year YEAR --states STATE` and stored in the `LoadedGraph.tract_areas` field alongside `vertex_weights` (population). No separate fetch step is needed — tract area data is bundled with the adjacency file. If `tract_areas` is empty (e.g. for synthetic test graphs), the Reock numerator defaults to the number of tracts as a proxy area, and the denominator is the MEC area of the centroid positions. This fallback is acceptable for unit tests but not for production use.
 
 **`split_subgraph_mka_direction`** (AreaSection warm-start; see Section 6):
 
@@ -227,6 +232,8 @@ ERROR: --structure moving-knife requires tract centroid data.
        Run: bisect fetch --type centroids --states NC --year 2020
 ```
 
+Note: tract centroid coordinates and tract polygon areas (`tract_areas`) both originate from the same `bisect fetch` step and are bundled into the `.adj.bin` adjacency file. If centroids are missing, areas are also missing; a single fetch resolves both.
+
 ```bash
 # Hybrid: MKA direction + AreaSection balance enforcement
 bisect state --state NC --year 2020 \
@@ -258,7 +265,7 @@ Every run appends to `runs/{label}/{year}/index.json`. MKA adds the following fi
 "structure": "moving-knife",
 "mka_orientations": 180,
 "mka_metric": "reock",
-"mka_seed_formula": "SHA-256('MKA_INIT_' || node_path || '_' || base_seed:u64le)",
+"mka_seed_formula": "SHA-256('MKA_INIT_' || node_path_len:u32le || node_path || base_seed:u64le)",
 "node_path": "01",
 "base_seed": 12345678,
 "mka_seed": 987654321,
@@ -269,7 +276,7 @@ Every run appends to `runs/{label}/{year}/index.json`. MKA adds the following fi
 "convergence_warning": false
 ```
 
-`optimal_angle_deg` enables independent verification: an auditor reruns the sweep with the same centroids and `n_orientations` and confirms θ* matches. `node_path` is required for independent seed reproduction: `mka_seed = SHA-256("MKA_INIT_" || node_path || "_" || base_seed:u64le)`. `convergence_warning` is always `false` for MKA (no iterative convergence; the sweep is exhaustive over all orientations). `min_reock_score` is the score of the worst half at θ* — the quantity MKA directly maximises.
+`optimal_angle_deg` enables independent verification: an auditor reruns the sweep with the same centroids and `n_orientations` and confirms θ* matches. `node_path` is required for independent seed reproduction: `mka_seed = SHA-256("MKA_INIT_" || node_path_len:u32le || node_path || base_seed:u64le)`. `convergence_warning` is always `false` for MKA (no iterative convergence; the sweep is exhaustive over all orientations). `min_reock_score` is the score of the worst half at θ* — the quantity MKA directly maximises.
 
 ---
 
@@ -281,6 +288,7 @@ Every run appends to `runs/{label}/{year}/index.json`. MKA adds the following fi
 - `min_reock_score > 0` for any valid subgraph with m ≥ 2
 - `reock_left ≥ 0` and `reock_right ≥ 0`
 - MEC area ≥ district area for all districts (Reock ≤ 1 by definition)
+- `reock_left.clamp(0.0, 1.0) == reock_left` (Reock values never exceed 1.0 after clamping)
 - `optimal_angle_deg` ∈ [0, 180) for all inputs
 - `n_orientations=1`: only tests θ=0° (horizontal sweep); valid plan returned, no panic
 - Prefix `"MKA_INIT_"` is distinct from `"CVD_GEO_INIT_"` and `"CVD_INIT_"` — hard-coded assertion confirming all three constants are pairwise unequal
@@ -309,7 +317,7 @@ Every run appends to `runs/{label}/{year}/index.json`. MKA adds the following fi
 
 3. **AreaSection integration protocol**: when `--area-section-init moving-knife`, the MKA angle overrides the ratio-direction completely (`ratio_direction = mka_direction`). It is not used as a warm-start for further optimisation. This is the full-override interpretation; an additive warm-start variant is deferred.
 
-4. **Tract area source**: `tract_areas` (m² per tract) is required for Reock computation. Confirm this is derivable from existing TIGER/Line data in the pipeline without a new fetch step. If not, scope a `bisect fetch --type areas` command (analogous to `--type centroids`).
+4. **Tract area source**: `tract_areas` (m² per tract) is required for Reock computation. *Resolved (P1 fix)*: TIGER/Line polygon areas are already bundled in the `.adj.bin` adjacency file and stored in `LoadedGraph.tract_areas`. No new fetch step is needed. See data source note in Section 5.
 
 5. **Interaction with bisection ensemble**: `BisectionEnsemble` over MKA subproblems varies `base_seed` per member. Verify that `mka_seed` (which depends on both `base_seed` and `node_path`) produces distinct seeds across ensemble members at each bisection node — same verification needed for CVD Phase 2.
 

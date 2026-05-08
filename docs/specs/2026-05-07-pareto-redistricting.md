@@ -1,6 +1,7 @@
 # Spec: Multi-Objective Pareto Redistricting — NSGA-II Genetic Algorithm for Pareto-Optimal Plan Frontier
 
-**Status**: Proposed
+**Status**: Proposed (R1 reviewed, P1 fixes applied)
+**Reviewed R1**: MERIDIAN 3/4, BENCHMARK 3/4, SURVEY 3/4, COVENANT 3/4 → avg 3.0/4
 **Date**: 2026-05-07
 **Related paper**: B.26
 **Depends on**: `bisect-core` (adjacency, population), `bisect-cli` (Flip chain mutation), `bisect-metis` (METIS plan generation)
@@ -139,12 +140,13 @@ The fast non-dominated sort (Deb et al. 2002, Algorithm 1) assigns each plan a P
 fast_non_dominated_sort(objectives) -> Vec<usize>:   // rank for each plan
   n = len(objectives)
   domination_count = [0] × n     // how many plans dominate plan i
-  dominated_by[i] = []            // plans that plan i dominates
+  // dominates_set[p] = set of plans that plan p dominates (p is better on all objectives)
+  dominates_set[i] = []
 
   for p in 0..n:
     for q in 0..n:
       if dominates(objectives[p], objectives[q]):
-        dominated_by[p].push(q)
+        dominates_set[p].push(q)
       elif dominates(objectives[q], objectives[p]):
         domination_count[p] += 1
 
@@ -157,7 +159,7 @@ fast_non_dominated_sort(objectives) -> Vec<usize>:   // rank for each plan
   while fronts[i] is not empty:
     next_front = []
     for p in fronts[i]:
-      for q in dominated_by[p]:
+      for q in dominates_set[p]:
         domination_count[q] -= 1
         if domination_count[q] == 0:
           next_front.push(q)    // rank i+1
@@ -486,6 +488,10 @@ The metadata record provides full reproducibility. A verifier with access to the
 
 The NSGA-II run itself (200 generations × crossover + mutation) is not fully replayed during verification — only the final frontier is checked for validity and non-dominance. Full replay is possible given the seed formulas and census data.
 
+**Validity vs completeness distinction**: The 4-step verification protocol is a *validity check* — it confirms the returned plans are mutually non-dominating, have correct objective values, and the file is untampered. It does **not** guarantee the frontier is the true NSGA-II Pareto front from the stated population and generations. A manipulated implementation could return any set of mutually non-dominating plans.
+
+*Completeness check* (expensive): to confirm the frontier is the actual NSGA-II output, an auditor must re-run the full algorithm with the documented seeds, population size, and generation count on the same census data. The seed formulas make this possible but not fast (hours of compute for large states). For litigation use, the completeness check can be performed by opposing counsel's expert with the documented parameters.
+
 ---
 
 ## 10. SMC-Pareto alternative
@@ -553,6 +559,11 @@ A result of `is_enacted_dominated: false` means the enacted plan is on (or close
 - All plans in the Pareto frontier: `dominated = false`; no plan in the frontier is dominated by any other plan in the frontier (self-check)
 - `generation_found` ≤ N_gen for all plans in the frontier
 
+**SMC-project path (L1)**:
+- Write a synthetic NDJSON file with 10 particle lines (using the `SmcResult` format from bisect-smc) where each particle has a pre-computed `plan`, `log_weight`, and `particle_idx`
+- Call `smc_project::load_smc_and_evaluate(&synthetic_ndjson, adj, pop, k)`
+- Assert: objective vectors are computed for all 10 particles; the returned Pareto front contains only non-dominated plans; the NDJSON output format is identical to the NSGA-II output format (same field names, same NDJSON structure)
+
 ### L2 (real data, `#[ignore]`)
 
 - `run_nsga2(NC, 2020, k=14, N_pop=100, N_gen=50, base_seed=42)` → Pareto front size ≥ 5 (meaningful objective-space diversity)
@@ -592,6 +603,10 @@ Once `bisect-pareto` is stable, a follow-on spec will define:
 
 1. **VRA as constraint vs objective**: current spec uses VRA_deficit as an objective (plans may violate VRA but are ranked lower). Should VRA-compliant plans be a hard filter with only the compliant Pareto front returned? Deferred — practitioners can filter the NDJSON output by `vra_deficit = 0`. A `--vra-constrained` flag is a Phase 2 addition.
 2. **Crossover validity rate**: how often does the ReCom-style crossover produce a valid plan? If < 20%, NSGA-II degenerates to random mutation. Phase 2 will measure this empirically on NC and TX.
-3. **D_seats objective direction**: current spec minimises |D_seats_won − proportional_seats| (distance from proportional representation — neutral framing). Alternatives: use D_seats directly (no neutrality assumption); use partisan symmetry (swap test); use efficiency gap. Deferred — the distance-from-proportional framing is used unless practitioners request otherwise.
+3. **Resolved (P1)**: D_seats integer resolution acknowledged and documented. With NC k=14, D_seats_won ∈ {0..14} produces only ~14 distinct values of D_seats = |D_seats_won - proportional_seats|. The Pareto front may degenerate to a 2D EC vs VRA_deficit frontier when many plans achieve the same D_seats value.
+
+   **Phase 1 decision**: Use `d_seats: f64 = |D_seats_won as f64 - proportional_seats|` without modification. The discrete nature is disclosed in the NDJSON output via a metadata field `d_seats_discrete: true` and in the output documentation. When D_seats fails to differentiate plans, the effective Pareto front over EC and VRA_deficit is still valuable and legally defensible.
+
+   **Phase 2**: Consider vote margin (sum of |district_vote_share - 0.5| × district_pop) as a continuous D_seats proxy to improve objective resolution.
 4. **SMC-Pareto comparison**: does the SMC sample cover the Pareto frontier well, or does NSGA-II find regions SMC misses? Phase 2 empirical comparison on NC 2020 with N_particles=5000 vs N_pop=100, N_gen=200.
 5. **Parallelism**: NSGA-II's objective evaluation is embarrassingly parallel (each plan evaluated independently). Rayon parallelism over the population is straightforward. Deferred to Phase 2 after the sequential implementation is validated.
