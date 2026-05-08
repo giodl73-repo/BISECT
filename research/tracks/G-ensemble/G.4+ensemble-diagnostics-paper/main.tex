@@ -73,8 +73,10 @@ ensembles: the Gelman-Rubin potential scale reduction factor ($\rhat$),
 effective sample size (\ess{}), and Hamming autocorrelation ($\ham$).
 We derive state-specific thresholds, apply them to ten parallel \recom{}
 chains across six states (NC, WI, GA, PA, TX, CA), and show that typical
-runs of 10{,}000 steps yield $\ess{} \approx 300$--$800$ for
-Polsby-Popper compactness and $\rhat < 1.1$ after 2{,}000--20{,}000 steps.
+runs of 10{,}000 steps yield $\ess{} \approx 300$--$850$ for
+Polsby-Popper compactness and $\rhat < 1.1$ first achieved at
+1{,}500--20{,}000 steps (empirical); certified 5{,}000-step minimum
+recommended for all states.
 We show that the \cs{} algorithm introduced in B.16~\citep{b16paper}
 is a deterministic, $O(T \cdot n)$ alternative that provides a
 certifiable stopping criterion without relying on asymptotic MCMC theory.

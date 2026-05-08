@@ -84,10 +84,11 @@ if any cross-county tract edge exists in the tract adjacency graph.
 This derivation requires no extra data files and no additional census
 downloads.
 On Texas ($k = 38$, $T = 2000$ steps), \ms{} reduces lag-100
-autocorrelation of the edge-cut statistic by approximately $40$--$50\%$
-relative to standard \recom{} at comparable wall-clock time, since the
-county graph ($\approx\!100$ nodes) makes coarse steps $20\times$ cheaper
-than fine steps ($\approx\!5200$ tract nodes).
+autocorrelation of the edge-cut statistic by approximately $16$--$43\%$
+relative to standard \recom{} at comparable wall-clock time (16\% at
+$T = 1000$ steps per G.15 cross-comparison; 43\% at $T = 2000$ steps
+measured here), since the county graph ($\approx\!100$ nodes) makes
+coarse steps $20\times$ cheaper than fine steps ($\approx\!5200$ tract nodes).
 Three resolution options are defined: Option A (block-group $\to$ tract),
 Option B (tract $\to$ county, implemented), and Option C (block-group $\to$
 county), all sharing the \texttt{derive\_partition} helper via GEOID prefix
