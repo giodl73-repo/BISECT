@@ -117,8 +117,12 @@ Any correct implementation of the framework must satisfy:
     tracts $u$ (a tract is perfectly similar to itself).
   \item \texttt{weight\_stays\_nonneg}: $w(u,v) \geq 0$ for all edges after
     blending and rounding.
-  \item \texttt{weight\_bounded\_above}: $w(u,v) \leq 2 \times w_{\mathrm{base}}(u,v)$
-    under the multiplicative formula (since $\mathrm{sim} \leq 1$).
+  \item \texttt{weight\_bounded\_above}: $w(u,v) \leq w_{\mathrm{base}}(u,v)$
+    under the multiplicative formula (since $\mathrm{sim} \leq 1$, so
+    $w_{\mathrm{base}} \times \mathrm{sim} \leq w_{\mathrm{base}}$).
+    Note: M.6's additive boost variant ($w = w_{\mathrm{base}} \times (1 + \alpha \times
+    \mathrm{score})$) can exceed $w_{\mathrm{base}}$ and is a distinct variant of
+    the framework; see M.6 §3 for reconciliation.
 \end{itemize}
 
 These are L0 unit test invariants checked on every build of the \textsc{bisect}

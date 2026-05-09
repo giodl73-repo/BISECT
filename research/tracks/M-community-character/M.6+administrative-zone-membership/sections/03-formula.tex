@@ -46,7 +46,7 @@ situation at the edges of utility service territories in rural areas.
 
 \subsection{Edge Weight Modifier}
 
-The zone co-membership score is applied as an edge weight modifier:
+The zone co-membership score is applied as an \emph{additive boost}:
 \begin{equation}
   w(u,v)
   \;=\;
@@ -55,6 +55,20 @@ The zone co-membership score is applied as an edge weight modifier:
   \label{eq:zone-weight}
 \end{equation}
 where $w_{\mathrm{base}}(u,v)$ is the base edge weight from the active base mode.
+
+\begin{remark}[Relationship to M.0 multiplicative formula]
+The M.0 framework defines $w = w_{\mathrm{base}} \times \mathrm{sim}$, which \emph{reduces}
+weights for dissimilar pairs (minimum: $0$ when $\mathrm{sim}=0$).
+M.6's additive boost instead \emph{increases} weights for co-zone pairs
+(minimum: $w_{\mathrm{base}}$ when $\mathrm{zone\_score}=0$; maximum: $2 \times w_{\mathrm{base}}$
+when $\mathrm{zone\_score}=1$ and $\alpha=1$).
+Both are valid instantiations of the M-track community character framework:
+multiplicative (M.1--M.5, M.7) models similarity as an attenuation of existing weights;
+additive boost (M.6) models co-membership as a strengthening signal on top of
+existing weights. For zone co-membership, the additive interpretation is natural:
+two tracts in the same fire district have a \emph{stronger} connection than baseline,
+rather than a less-attenuated one.
+\end{remark}
 
 \paragraph{Boundary cases.}
 When $\mathrm{zone\_score}(u,v) = 1$ (all zones shared) and $\alpha = 1$:
