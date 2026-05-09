@@ -291,7 +291,48 @@ impl EdgeWeighter for MinorityAugmentWeighter {
 }
 
 // ---------------------------------------------------------------------------
-// Step 5 — COI (Community of Interest) file-based weights
+// Step 5 — Economic character similarity (B.27/M.1)
+// ---------------------------------------------------------------------------
+
+/// Blends existing edge weights by the cosine similarity of adjacent tracts'
+/// economic character vectors.
+///
+/// Formula: `w_new = w * (alpha + (1 - alpha) * sim)`
+///
+/// - `sim = 1.0` (both tracts have the same economic character) → weight unchanged.
+/// - `sim = 0.0` (tracts are economically orthogonal) → weight scaled to `alpha * w`.
+///   With the default `alpha = 0.5` this halves the edge, making it easier to cut.
+///
+/// Requires LODES WAC data. If data is absent, this weighter is not pushed and
+/// the pipeline falls back to geographic weights unchanged.
+pub struct EconomicCharacterWeighter {
+    chars: Vec<crate::lodes::EconChar>,  // indexed by node
+    alpha: f64,
+}
+
+impl EconomicCharacterWeighter {
+    pub fn new(chars: Vec<crate::lodes::EconChar>, alpha: f64) -> Self {
+        Self { chars, alpha }
+    }
+}
+
+impl EdgeWeighter for EconomicCharacterWeighter {
+    fn apply(&self, weights: EdgeMap) -> EdgeMap {
+        let zero = crate::lodes::EconChar::zero();
+        weights.into_iter().map(|((u, v), w)| {
+            let cu = self.chars.get(u).unwrap_or(&zero);
+            let cv = self.chars.get(v).unwrap_or(&zero);
+            let sim = crate::lodes::cosine_similarity(cu, cv);
+            // Blend: alpha keeps existing weight, (1-alpha) scales by similarity.
+            // Similar tracts (sim=1): weight unchanged. Dissimilar (sim=0): weight * alpha.
+            let w_new = w * (self.alpha + (1.0 - self.alpha) * sim);
+            ((u, v), w_new)
+        }).collect()
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Step 6 — COI (Community of Interest) file-based weights
 // ---------------------------------------------------------------------------
 
 /// Applies per-vertex COI weights loaded from a JSON file.
@@ -471,6 +512,93 @@ mod tests {
         // (1,2): COI = (1+0)/2 = 0.5 → 100 × 1.5 = 150
         assert!((out[&(1,2)] - 150.0).abs() < 1e-9,
             "mixed-COI edge should be 1.5×, got {}", out[&(1,2)]);
+    }
+
+    // ── EconomicCharacterWeighter L0 tests ──────────────────────────────────
+
+    fn ec(ci: f64, ind: f64, jpr: f64) -> crate::lodes::EconChar {
+        crate::lodes::EconChar {
+            commercial_intensity: ci,
+            industrial_fraction: ind,
+            jobs_per_resident: jpr,
+        }
+    }
+
+    #[test]
+    fn econ_weighter_leaves_similar_tracts_unchanged() {
+        // Two identical tracts → sim = 1.0 → weight unchanged (alpha=0.5)
+        let chars = vec![ec(0.5, 0.2, 3.0), ec(0.5, 0.2, 3.0)];
+        let ew = EconomicCharacterWeighter::new(chars, 0.5);
+        let weights = edge_map(&[((0, 1), 200.0)]);
+        let out = ew.apply(weights);
+        assert!(
+            (out[&(0, 1)] - 200.0).abs() < 1e-9,
+            "similar tracts (sim=1) should leave weight unchanged, got {}",
+            out[&(0, 1)]
+        );
+    }
+
+    #[test]
+    fn econ_weighter_halves_dissimilar_edges() {
+        // Orthogonal chars → sim = 0.0 → w_new = w * (0.5 + 0.5*0) = 0.5*w
+        let chars = vec![ec(1.0, 0.0, 0.0), ec(0.0, 1.0, 0.0)];
+        let ew = EconomicCharacterWeighter::new(chars, 0.5);
+        let weights = edge_map(&[((0, 1), 100.0)]);
+        let out = ew.apply(weights);
+        assert!(
+            (out[&(0, 1)] - 50.0).abs() < 1e-9,
+            "dissimilar tracts (sim=0, alpha=0.5) should halve weight, got {}",
+            out[&(0, 1)]
+        );
+    }
+
+    #[test]
+    fn econ_weighter_preserves_edge_ordering() {
+        // Two pairs with same similarity but different base weights — ordering preserved
+        let chars = vec![
+            ec(0.5, 0.2, 3.0), // node 0
+            ec(0.5, 0.2, 3.0), // node 1 — identical to 0
+            ec(0.5, 0.2, 3.0), // node 2
+            ec(0.5, 0.2, 3.0), // node 3 — identical to 2
+        ];
+        let ew = EconomicCharacterWeighter::new(chars, 0.5);
+        let weights = edge_map(&[((0, 1), 300.0), ((2, 3), 100.0)]);
+        let out = ew.apply(weights);
+        // Both have sim=1 → unchanged; (0,1) heavier than (2,3)
+        assert!(
+            out[&(0, 1)] > out[&(2, 3)],
+            "edge ordering must be preserved: {} vs {}",
+            out[&(0, 1)],
+            out[&(2, 3)]
+        );
+    }
+
+    #[test]
+    fn econ_weighter_both_residential_weight_unchanged() {
+        // Both residential (zero EconChar) → sim = 1.0 → weight unchanged
+        let chars = vec![crate::lodes::EconChar::zero(), crate::lodes::EconChar::zero()];
+        let ew = EconomicCharacterWeighter::new(chars, 0.5);
+        let weights = edge_map(&[((0, 1), 150.0)]);
+        let out = ew.apply(weights);
+        assert!(
+            (out[&(0, 1)] - 150.0).abs() < 1e-9,
+            "two residential tracts (both zero) should leave weight unchanged, got {}",
+            out[&(0, 1)]
+        );
+    }
+
+    #[test]
+    fn econ_weighter_one_residential_neutral_blend() {
+        // One residential, one commercial → sim = 0.5 → w * (0.5 + 0.5*0.5) = w * 0.75
+        let chars = vec![crate::lodes::EconChar::zero(), ec(0.8, 0.1, 2.0)];
+        let ew = EconomicCharacterWeighter::new(chars, 0.5);
+        let weights = edge_map(&[((0, 1), 100.0)]);
+        let out = ew.apply(weights);
+        assert!(
+            (out[&(0, 1)] - 75.0).abs() < 1e-9,
+            "one residential + one non-zero (sim=0.5) should give 75.0, got {}",
+            out[&(0, 1)]
+        );
     }
 
     #[test]
