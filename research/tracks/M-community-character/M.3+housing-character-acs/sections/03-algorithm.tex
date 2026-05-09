@@ -58,6 +58,7 @@ dense urban cores.
   \label{eq:mf}
 \end{equation}
 the fraction of units in structures with 10 or more units.
+Note: the M.4 spec uses ``5+ units'' informally; the precise B25024 category boundary for large multifamily is 10 units (B25024\_007: 10--19 units; B25024\_008: 20 or more units). Structures with 5--9 units (B25024\_006) are excluded from the large-multifamily fraction because they are more similar in community character to small apartment buildings than to large elevator buildings.
 $\mathrm{MF}(t) \in [0,1]$.
 High values ($> 0.50$) characterize apartment corridors, urban high-density
 residential zones, and transit-oriented development nodes.
@@ -84,11 +85,18 @@ districts.
 \end{equation}
 a score that maps the median year built to the interval $[0,1]$, where higher
 values indicate older housing stock.
+\emph{Implementation note:} The M.3 spec approximates this as $(2024 - \text{B25035}) / 100$;
+the present formula supersedes that approximation.
+The spec formula is unbounded (it exceeds 1.0 for tracts with median year before 1924)
+and uses an arbitrary divisor.
+Equation~\eqref{eq:vt} is the implementation target: it is clamped to $[0,1]$,
+calibrated on the 1940--2020 housing stock range, and consistent with the
+$^\dagger$Phase~2 test invariants.
 The formula is calibrated so that:
 \begin{itemize}
   \item Median year 1940 or earlier: $\mathrm{VT} = 1.0$ (fully historic).
   \item Median year 1980: $\mathrm{VT} = 0.5$ (mid-century suburban).
-  \item Median year 2010: $\mathrm{VT} \approx 0.375$ (new suburban).
+  \item Median year 2010: $\mathrm{VT} = 0.125$ (new suburban).
   \item Median year 2020 or later: $\mathrm{VT} = 0.0$ (new construction, clamped).
 \end{itemize}
 The $\max(0, \min(1, \cdot))$ clamp handles the edge cases of tracts with
@@ -221,8 +229,8 @@ The following invariants must hold on every build:
     $v$ with $\mathrm{OO} = 0.1, \mathrm{MF} = 0.8$:
     $\mathrm{sim}_h(u,v) < 0.30$.
   \item[\texttt{vintage\_far\_apart\_low\_similarity}]
-    For $u$ with $\mathrm{VT} = 0.10$ (built $\approx$2014) and $v$ with
-    $\mathrm{VT} = 0.80$ (built $\approx$1948), holding SF and OO equal:
+    For $u$ with $\mathrm{VT} = 0.10$ (built $\approx$2012) and $v$ with
+    $\mathrm{VT} = 0.80$ (built $\approx$1956), holding SF and OO equal:
     $\mathrm{sim}_h(u,v) < 0.50$.
   \item[\texttt{similarity\_symmetric}]
     $\mathrm{sim}_h(u,v) = \mathrm{sim}_h(v,u)$ for all tract pairs.

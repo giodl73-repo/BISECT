@@ -117,10 +117,11 @@ pub fn build_fetch_list(
     let want_tiger  = all_types || data_types.iter().any(|t| matches!(t, DataType::Tiger));
     let want_pl     = all_types || data_types.iter().any(|t| matches!(t, DataType::Redistricting));
     let want_adj    = all_types || data_types.iter().any(|t| matches!(t, DataType::Adjacency));
-    let want_lodes    = data_types.iter().any(|t| matches!(t, DataType::Lodes));
-    let want_lodes_od = data_types.iter().any(|t| matches!(t, DataType::LodesOd));
-    let want_school   = data_types.iter().any(|t| matches!(t, DataType::SchoolDistricts));
-    let want_eia      = data_types.iter().any(|t| matches!(t, DataType::Eia861));
+    let want_lodes       = data_types.iter().any(|t| matches!(t, DataType::Lodes));
+    let want_lodes_od    = data_types.iter().any(|t| matches!(t, DataType::LodesOd));
+    let want_school      = data_types.iter().any(|t| matches!(t, DataType::SchoolDistricts));
+    let want_eia         = data_types.iter().any(|t| matches!(t, DataType::Eia861));
+    let want_acs_housing = data_types.iter().any(|t| matches!(t, DataType::AcsHousing));
 
     // Data types that exist as CLI flags but are not yet downloaded by `bisect fetch`.
     let want_elections = !all_types && data_types.iter().any(|t| matches!(t, DataType::Elections));
@@ -281,6 +282,32 @@ pub fn build_fetch_list(
                 });
             }
         }
+
+        // ACS 5-year housing character — one JSON per state per year from Census ACS API.
+        // Tables: B25024 (units in structure), B25003 (tenure), B25035 (median year built).
+        // Output: data/{year}/acs_housing/{state_lower}_housing_{year}.csv
+        // No API key required for <=50 variables per request.
+        if want_acs_housing {
+            let fips = &state.fips;
+            let url = format!(
+                "https://api.census.gov/data/{year}/acs/acs5?get=B25024_002E,B25024_003E,\
+B25024_007E,B25024_008E,B25024_009E,B25024_010E,B25024_011E,B25003_001E,B25003_002E,\
+B25035_001E,NAME&for=tract:*&in=state:{fips}"
+            );
+            let local_path = data_dir.join(year).join("acs_housing")
+                .join(format!("{state_lower}_housing_{year}.csv"));
+            let done_marker = data_dir.join(year).join("acs_housing")
+                .join(format!("{state_lower}_housing_{year}.done"));
+            items.push(FetchItem {
+                state_code: code.clone(),
+                year: year.to_string(),
+                kind: "acs-housing".to_string(),
+                url: Some(url),
+                available_locally: local_path.exists(),
+                local_path,
+                done_marker,
+            });
+        }
     }
 
     // EIA Form 861 — one national ZIP per year (not per state).
@@ -436,6 +463,16 @@ pub fn download_items(
                     url.split('/').last().unwrap_or(url));
                 std::fs::create_dir_all(dest_dir).map_err(|e| e.to_string())?;
                 download_lodes_od(url, &item.local_path)?;
+            }
+
+            "acs-housing" => {
+                // ACS housing: fetch Census ACS JSON, compute derived columns, write CSV
+                let url = item.url.as_deref().unwrap();
+                let dest_dir = item.local_path.parent().unwrap();
+                println!("[DOWN] {} {} acs-housing <- ACS API (state {})",
+                    item.state_code, item.year, item.state_code);
+                std::fs::create_dir_all(dest_dir).map_err(|e| e.to_string())?;
+                download_acs_housing(url, &item.local_path)?;
             }
 
             _ => {
@@ -637,6 +674,165 @@ pub fn download_lodes_od(url: &str, dest_path: &std::path::Path) -> Result<(), S
             .map_err(|e| e.to_string())?;
     }
     println!("[OK] LODES OD aggregated to {}", dest_path.display());
+    Ok(())
+}
+
+/// Download ACS 5-year housing character data from the Census ACS API and write
+/// a per-tract CSV with four derived columns.
+///
+/// API response: JSON array where row 0 is a header and rows 1..N are data.
+/// Each data row includes: B25024_002E (1-unit detached), B25024_003E (1-unit attached),
+/// B25024_007E..B25024_010E (5+unit multifamily), B25024_011E (mobile home),
+/// B25003_001E (total occupied), B25003_002E (owner-occupied),
+/// B25035_001E (median year built), plus NAME, state, county, tract columns.
+///
+/// Derived columns written to dest_path:
+///   geoid            = state(2) + county(3) + tract(6)
+///   pct_sf           = (1-unit-det + 1-unit-att) / total_units   [0,1], default 0.5
+///   pct_mf           = (5-9 + 10-19 + 20-49 + 50+ units) / total_units  [0,1]
+///   pct_owner        = owner_occupied / total_occupied  [0,1], default 0.5
+///   housing_vintage  = 1.0 - (median_year_built - 1940) / (2020 - 1940)  [0,1]
+///                      pre-1940 -> ~1.0 (historic), 2020+ -> 0.0 (new);
+///                      unreliable code (-666666666) -> 0.5 (neutral)
+///
+/// Soft errors:
+///   - 404 from API: writes empty CSV with header only (ACS not available for year/state)
+///   - Row-level parse errors: skipped with [WARN] printed to stderr
+pub fn download_acs_housing(url: &str, dest_path: &Path) -> Result<(), String> {
+    // Build a polite HTTP client with User-Agent identifying this research project.
+    let client = reqwest::blocking::Client::builder()
+        .user_agent("bisect redistricting research (giodl@microsoft.com)")
+        .build()
+        .map_err(|e| format!("HTTP client build: {e}"))?;
+
+    let response = client.get(url)
+        .send()
+        .map_err(|e| format!("HTTP GET ACS housing {url}: {e}"))?;
+
+    if !response.status().is_success() {
+        if response.status().as_u16() == 404 {
+            println!("[WARN] ACS housing data not available for this state/year (404). Skipping.");
+            std::fs::write(dest_path,
+                "geoid,pct_sf,pct_mf,pct_owner,housing_vintage\n")
+                .map_err(|e| format!("write empty acs-housing: {e}"))?;
+            return Ok(());
+        }
+        return Err(format!("HTTP {}: ACS housing {url}", response.status()));
+    }
+
+    // ACS API returns a JSON array-of-arrays: first row is header, rest are data.
+    let body = response.text().map_err(|e| format!("ACS response body: {e}"))?;
+    let rows: Vec<Vec<serde_json::Value>> = serde_json::from_str(&body)
+        .map_err(|e| format!("ACS JSON parse: {e}\nURL: {url}"))?;
+
+    if rows.is_empty() {
+        std::fs::write(dest_path,
+            "geoid,pct_sf,pct_mf,pct_owner,housing_vintage\n")
+            .map_err(|e| format!("write empty acs-housing: {e}"))?;
+        return Ok(());
+    }
+
+    // Build column index from header row.
+    let header_row: Vec<String> = rows[0].iter()
+        .map(|v| v.as_str().unwrap_or("").to_string())
+        .collect();
+    let find_col = |name: &str| -> Result<usize, String> {
+        header_row.iter().position(|c| c == name)
+            .ok_or_else(|| format!("ACS housing: column '{name}' not found in response header"))
+    };
+
+    let i_sf_det  = find_col("B25024_002E")?;
+    let i_sf_att  = find_col("B25024_003E")?;
+    let i_mf_5_9  = find_col("B25024_007E")?;
+    let i_mf_1019 = find_col("B25024_008E")?;
+    let i_mf_2049 = find_col("B25024_009E")?;
+    let i_mf_50p  = find_col("B25024_010E")?;
+    let i_occ_tot = find_col("B25003_001E")?;
+    let i_occ_own = find_col("B25003_002E")?;
+    let i_vintage = find_col("B25035_001E")?;
+    let i_state   = find_col("state")?;
+    let i_county  = find_col("county")?;
+    let i_tract   = find_col("tract")?;
+
+    // Helper: parse a JSON value as f64, returning 0.0 on null/error.
+    let parse_f64 = |v: &serde_json::Value| -> f64 {
+        match v {
+            serde_json::Value::Number(n) => n.as_f64().unwrap_or(0.0),
+            serde_json::Value::String(s) => s.parse::<f64>().unwrap_or(0.0),
+            _ => 0.0,
+        }
+    };
+
+    let mut out = std::fs::File::create(dest_path)
+        .map_err(|e| format!("create {}: {e}", dest_path.display()))?;
+    use std::io::Write as IoWrite;
+    writeln!(out, "geoid,pct_sf,pct_mf,pct_owner,housing_vintage")
+        .map_err(|e| e.to_string())?;
+
+    let mut row_count = 0usize;
+    for row in rows.iter().skip(1) {
+        if row.len() <= i_tract { continue; }
+
+        // Build 11-char GEOID: state(2) + county(3) + tract(6)
+        let state_fips  = row[i_state].as_str().unwrap_or("");
+        let county_fips = row[i_county].as_str().unwrap_or("");
+        let tract_code  = row[i_tract].as_str().unwrap_or("");
+        if state_fips.len() != 2 || county_fips.len() != 3 || tract_code.len() != 6 {
+            eprintln!("[WARN] ACS housing: skipping row with malformed FIPS \
+                ({state_fips}/{county_fips}/{tract_code})");
+            continue;
+        }
+        let geoid = format!("{state_fips}{county_fips}{tract_code}");
+
+        // Housing type fractions
+        let sf_det  = parse_f64(&row[i_sf_det]).max(0.0);
+        let sf_att  = parse_f64(&row[i_sf_att]).max(0.0);
+        let mf_5_9  = parse_f64(&row[i_mf_5_9]).max(0.0);
+        let mf_1019 = parse_f64(&row[i_mf_1019]).max(0.0);
+        let mf_2049 = parse_f64(&row[i_mf_2049]).max(0.0);
+        let mf_50p  = parse_f64(&row[i_mf_50p]).max(0.0);
+
+        let sf_units  = sf_det + sf_att;
+        let mf_units  = mf_5_9 + mf_1019 + mf_2049 + mf_50p;
+        let total_units = sf_units + mf_units;
+
+        let pct_sf = if total_units > 0.0 {
+            (sf_units / total_units).clamp(0.0, 1.0)
+        } else {
+            0.5
+        };
+        let pct_mf = if total_units > 0.0 {
+            (mf_units / total_units).clamp(0.0, 1.0)
+        } else {
+            0.5
+        };
+
+        // Tenure fraction
+        let occ_tot = parse_f64(&row[i_occ_tot]).max(0.0);
+        let occ_own = parse_f64(&row[i_occ_own]).max(0.0);
+        let pct_owner = if occ_tot > 0.0 {
+            (occ_own / occ_tot).clamp(0.0, 1.0)
+        } else {
+            0.5
+        };
+
+        // Housing vintage: 1.0 = pre-1940 (historic), 0.0 = 2020+ (new)
+        // Unreliable code from Census: -666666666
+        let raw_vintage = parse_f64(&row[i_vintage]);
+        let housing_vintage = if raw_vintage < -600_000_000.0 || raw_vintage == 0.0 {
+            // Unreliable or missing — use neutral
+            0.5
+        } else {
+            let v = 1.0 - (raw_vintage - 1940.0) / (2020.0 - 1940.0);
+            v.clamp(0.0, 1.0)
+        };
+
+        writeln!(out, "{geoid},{pct_sf:.6},{pct_mf:.6},{pct_owner:.6},{housing_vintage:.6}")
+            .map_err(|e| e.to_string())?;
+        row_count += 1;
+    }
+
+    println!("[OK] ACS housing: {row_count} tracts written to {}", dest_path.display());
     Ok(())
 }
 
@@ -1293,6 +1489,109 @@ h_geocode,w_geocode,S000,SA01,SA02,SA03,SE01,SE02,SE03,SI01,SI02,SI03,createdate
         // Total preserved: 50+30+80=160
         let total: u64 = od.values().sum();
         assert_eq!(total, 160, "aggregation must preserve total job count");
+    }
+
+    // ── L0: ACS housing fetch list + formula tests ────────────────────────────
+
+    #[test]
+    fn test_build_fetch_list_acs_housing_url_pattern() {
+        use crate::args::DataType;
+        let manifest = load_manifest().unwrap();
+        let items = build_fetch_list(
+            &manifest, &["NC".to_string()], "2020", &[DataType::AcsHousing]
+        );
+        assert_eq!(items.len(), 1, "ACS housing must produce exactly 1 item per state");
+        assert_eq!(items[0].kind, "acs-housing");
+        let url = items[0].url.as_deref().unwrap();
+        assert!(url.contains("api.census.gov"), "ACS URL must use api.census.gov");
+        assert!(url.contains("B25024_002E"), "ACS URL must include B25024_002E (1-unit detached)");
+        assert!(url.contains("for=tract"), "ACS URL must request tract-level data");
+        // NC FIPS is "37"
+        assert!(url.contains("state:37"), "ACS URL must include NC FIPS state code");
+        assert!(url.contains("2020"), "ACS URL must include year");
+        let path_str = items[0].local_path.to_string_lossy().to_lowercase();
+        assert!(path_str.contains("acs_housing"), "local path must be under acs_housing/");
+        assert!(path_str.contains("north_carolina"), "local path must include state name");
+        assert!(path_str.ends_with("_housing_2020.csv"),
+            "local path must end with _housing_2020.csv; got: {path_str}");
+    }
+
+    /// housing_vintage formula: 1.0 - (year - 1940) / (2020 - 1940)
+    #[test]
+    fn test_acs_housing_vintage_formula() {
+        let vintage = |built_year: f64| -> f64 {
+            let v = 1.0 - (built_year - 1940.0) / (2020.0 - 1940.0);
+            v.clamp(0.0, 1.0)
+        };
+
+        // year=1960: (1-(1960-1940)/(2020-1940)) = 1 - 20/80 = 0.75
+        let v1960 = vintage(1960.0);
+        assert!((v1960 - 0.75).abs() < 1e-9,
+            "vintage(1960) must be 0.75; got {v1960}");
+
+        // year=2020: (1-(2020-1940)/80) = 0.0
+        let v2020 = vintage(2020.0);
+        assert!((v2020 - 0.0).abs() < 1e-9,
+            "vintage(2020) must be 0.0; got {v2020}");
+
+        // year=1940: (1-0/80) = 1.0
+        let v1940 = vintage(1940.0);
+        assert!((v1940 - 1.0).abs() < 1e-9,
+            "vintage(1940) must be 1.0; got {v1940}");
+
+        // year=1939: pre-1940, raw=1.0125 -> clamped to 1.0
+        let v1939 = vintage(1939.0);
+        assert!((v1939 - 1.0).abs() < 1e-9,
+            "vintage(1939) must clamp to 1.0; got {v1939}");
+
+        // year=2025: post-2020, raw<0 -> clamped to 0.0
+        let v2025 = vintage(2025.0);
+        assert!((v2025 - 0.0).abs() < 1e-9,
+            "vintage(2025) must clamp to 0.0; got {v2025}");
+    }
+
+    /// Unreliable Census code -666666666 must yield housing_vintage = 0.5 (neutral)
+    #[test]
+    fn test_acs_housing_vintage_unreliable_code() {
+        let unreliable: f64 = -666_666_666.0;
+        // Reproduce the branching logic from download_acs_housing
+        let housing_vintage = if unreliable < -600_000_000.0 || unreliable == 0.0 {
+            0.5
+        } else {
+            let v = 1.0 - (unreliable - 1940.0) / (2020.0 - 1940.0);
+            v.clamp(0.0, 1.0)
+        };
+        assert!((housing_vintage - 0.5).abs() < 1e-9,
+            "unreliable code -666666666 must yield vintage=0.5; got {housing_vintage}");
+    }
+
+    /// Verify pct_sf defaults to 0.5 when total_units == 0
+    #[test]
+    fn test_acs_housing_pct_sf_default_when_zero_units() {
+        let sf_units = 0.0_f64;
+        let mf_units = 0.0_f64;
+        let total_units = sf_units + mf_units;
+        let pct_sf = if total_units > 0.0 {
+            (sf_units / total_units).clamp(0.0, 1.0)
+        } else {
+            0.5
+        };
+        assert!((pct_sf - 0.5).abs() < 1e-9,
+            "pct_sf must default to 0.5 when total_units=0; got {pct_sf}");
+    }
+
+    /// Verify pct_owner defaults to 0.5 when total_occupied == 0
+    #[test]
+    fn test_acs_housing_pct_owner_default_when_zero_occupied() {
+        let occ_tot = 0.0_f64;
+        let occ_own = 0.0_f64;
+        let pct_owner = if occ_tot > 0.0 {
+            (occ_own / occ_tot).clamp(0.0, 1.0)
+        } else {
+            0.5
+        };
+        assert!((pct_owner - 0.5).abs() < 1e-9,
+            "pct_owner must default to 0.5 when total_occupied=0; got {pct_owner}");
     }
 
     // ── L2: Real LODES download (requires internet, marked #[ignore]) ─────────
