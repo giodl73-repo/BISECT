@@ -79,10 +79,10 @@ Other candidates that fail writeability:
 
 Recursive bisection on tract-adjacency graphs runs in seconds-to-minutes per state on a laptop. The METIS library has been available since 1997. The algorithm has been used in scientific computing for circuit layout, parallel-computing partitioning, and operations research for decades. There is no novel implementation risk.
 
-The reference implementation (this project, `redist`) has been validated against:
+The reference implementation (this project, `BISECT`) has been validated against:
 
 - All 50 states' 2020 congressional districts (`bisect states --year 2020`)
-- Multi-chamber suites for 12 states (`redist suite`)
+- Multi-chamber suites for 12 states (`BISECT suite`)
 - Multiple census years (2000, 2010, 2020)
 - Block-group resolution for high-district-count states (CA 52D, TX 38D)
 
@@ -143,14 +143,14 @@ This proposal would not have been viable five years ago. Two things changed.
 
 In 2020, no public, validated, byte-reproducible implementation of recursive-bisection congressional districting existed. Academic implementations existed (DRA, Auto-Redistrict, GerryChain) but each had limitations: GerryChain produces ensembles not single maps; DRA is interactive and not byte-reproducible; Auto-Redistrict has not been validated at the state-by-state level for all 50 states.
 
-By 2026, this project (`redist`) has:
+By 2026, this project (`BISECT`) has:
 
 - Validated 50-state output for 2000 / 2010 / 2020 census years.
 - Per-plan `manifest.json` with input SHA-256s and parameter records.
 - AEA-compliant replication packages (`bisect analyze --paper-mode`).
-- Civic-input pipeline with URL snapshotting (`redist civic ingest --snapshot-urls`).
-- Court-submission report scaffolding (`redist report --format pdf`).
-- Plan-comparison narrative generator with provenance manifest (`redist compare --format html`).
+- Civic-input pipeline with URL snapshotting (`BISECT civic ingest --snapshot-urls`).
+- Court-submission report scaffolding (`BISECT report --format pdf`).
+- Plan-comparison narrative generator with provenance manifest (`BISECT compare --format html`).
 - Ensemble diagnostics for convergence claims (`bisect-analysis::ensemble_diagnostics`).
 - Bloc-voting analysis for VRA § 2 (`bisect analyze --types bloc-voting`).
 - Atomic plan import with Callais p.36 mutex (`PlanDirGuard` + `callais_preflight`).
@@ -185,7 +185,7 @@ In the spirit of `FAIRNESS_DOCTRINE.md` § 6, here is what this proposal does *n
 
 5. **It is not the only path.** State-court litigation (`FAIRNESS_DOCTRINE.md`'s domain) and state-commission reform are independent paths and should continue. This bill is additive, not substitutive.
 
-6. **It does not require this implementation.** § 107(a) authorizes a designation process. The Director of Census plus the expert panel could designate any implementation that meets the algorithmic specification. This project (`redist`) is positioned to be that implementation, but the model bill's machinery does not depend on it.
+6. **It does not require this implementation.** § 107(a) authorizes a designation process. The Director of Census plus the expert panel could designate any implementation that meets the algorithmic specification. This project (`BISECT`) is positioned to be that implementation, but the model bill's machinery does not depend on it.
 
 7. **The algorithm is not "fair" in some metaphysical sense.** It is partisan-blind and race-blind by construction, and it produces the same output for the same inputs. Whether the outputs are "fair" depends on what "fair" means; the model bill does not litigate that question. It substitutes a *procedural* fairness claim (reproducibility) for a *substantive* one (which the *Rucho* Court found unavailable to federal courts).
 

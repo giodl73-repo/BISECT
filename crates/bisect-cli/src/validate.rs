@@ -1,4 +1,4 @@
-/// `redist validate` — validate a .rplan file for format correctness.
+/// `BISECT validate` — validate a .rplan file for format correctness.
 ///
 /// Dispatches to `bisect_report::validate_rplan()`.
 /// Exits 0 on PASS, non-zero on FAIL.
@@ -13,8 +13,7 @@ pub fn run_validate(args: &ValidateArgs) -> anyhow::Result<()> {
         .map_err(|e| anyhow::anyhow!("cannot read '{}': {}", path.display(), e))?;
 
     // Parse and validate
-    let result = validate_rplan_str(&content)
-        .map_err(|e| anyhow::anyhow!("FAIL: {}", e))?;
+    let result = validate_rplan_str(&content).map_err(|e| anyhow::anyhow!("FAIL: {}", e))?;
 
     // Count assignments
     let rplan: serde_json::Value = serde_json::from_str(&content)?;
@@ -75,7 +74,8 @@ mod tests {
             },
             "assignments": {"53033000100": 1},
             "geometry": null
-        }"#.to_string()
+        }"#
+        .to_string()
     }
 
     fn make_rplan_with_bad_geoid_json() -> String {
@@ -95,7 +95,8 @@ mod tests {
             },
             "assignments": {"530330": 1},
             "geometry": null
-        }"#.to_string()
+        }"#
+        .to_string()
     }
 
     #[test]
@@ -111,7 +112,10 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let path = tmp.path().join("plan.rplan");
         std::fs::write(&path, make_valid_rplan_json()).unwrap();
-        let result = run_validate(&ValidateArgs { file: path, strict: false });
+        let result = run_validate(&ValidateArgs {
+            file: path,
+            strict: false,
+        });
         assert!(result.is_ok(), "expected ok, got: {:?}", result);
     }
 
@@ -120,7 +124,10 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let path = tmp.path().join("plan.rplan");
         std::fs::write(&path, make_rplan_with_bad_geoid_json()).unwrap();
-        let result = run_validate(&ValidateArgs { file: path, strict: false });
+        let result = run_validate(&ValidateArgs {
+            file: path,
+            strict: false,
+        });
         assert!(result.is_err());
         let msg = result.unwrap_err().to_string();
         assert!(msg.contains("GEOID"), "expected GEOID in error, got: {msg}");
@@ -131,10 +138,16 @@ mod tests {
     #[test]
     fn test_validate_missing_file_errors() {
         let path = PathBuf::from("/nonexistent/path/plan.rplan");
-        let result = run_validate(&ValidateArgs { file: path, strict: false });
+        let result = run_validate(&ValidateArgs {
+            file: path,
+            strict: false,
+        });
         assert!(result.is_err());
         let msg = result.unwrap_err().to_string();
-        assert!(msg.contains("cannot read"), "error must say 'cannot read': {msg}");
+        assert!(
+            msg.contains("cannot read"),
+            "error must say 'cannot read': {msg}"
+        );
     }
 
     #[test]
@@ -142,7 +155,10 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let path = tmp.path().join("bad.rplan");
         std::fs::write(&path, b"this is not json at all").unwrap();
-        let result = run_validate(&ValidateArgs { file: path, strict: false });
+        let result = run_validate(&ValidateArgs {
+            file: path,
+            strict: false,
+        });
         assert!(result.is_err());
     }
 
@@ -151,7 +167,10 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let path = tmp.path().join("empty.rplan");
         std::fs::write(&path, b"").unwrap();
-        let result = run_validate(&ValidateArgs { file: path, strict: false });
+        let result = run_validate(&ValidateArgs {
+            file: path,
+            strict: false,
+        });
         assert!(result.is_err());
     }
 
@@ -161,7 +180,10 @@ mod tests {
         let path = tmp.path().join("wrong_schema.rplan");
         // Valid JSON object but missing rplan_version/metadata/assignments
         std::fs::write(&path, br#"{"foo": "bar", "baz": 42}"#).unwrap();
-        let result = run_validate(&ValidateArgs { file: path, strict: false });
+        let result = run_validate(&ValidateArgs {
+            file: path,
+            strict: false,
+        });
         assert!(result.is_err());
     }
 
@@ -201,7 +223,10 @@ mod tests {
     #[test]
     fn test_validate_args_file_path_stored() {
         let path = PathBuf::from("/some/path/plan.rplan");
-        let args = ValidateArgs { file: path.clone(), strict: false };
+        let args = ValidateArgs {
+            file: path.clone(),
+            strict: false,
+        };
         assert_eq!(args.file, path);
     }
 
@@ -229,7 +254,8 @@ mod tests {
             },
             "assignments": {"53033000100": 1},
             "geometry": null
-        }"#.to_string()
+        }"#
+        .to_string()
     }
 
     #[test]
@@ -237,8 +263,14 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let path = tmp.path().join("no_version.rplan");
         std::fs::write(&path, make_rplan_missing_version_json()).unwrap();
-        let result = run_validate(&ValidateArgs { file: path, strict: false });
-        assert!(result.is_err(), "rplan without rplan_version field must fail");
+        let result = run_validate(&ValidateArgs {
+            file: path,
+            strict: false,
+        });
+        assert!(
+            result.is_err(),
+            "rplan without rplan_version field must fail"
+        );
     }
 
     fn make_rplan_missing_assignments_json() -> String {
@@ -257,7 +289,8 @@ mod tests {
                 "created_by": "test"
             },
             "geometry": null
-        }"#.to_string()
+        }"#
+        .to_string()
     }
 
     #[test]
@@ -265,7 +298,10 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let path = tmp.path().join("no_assignments.rplan");
         std::fs::write(&path, make_rplan_missing_assignments_json()).unwrap();
-        let result = run_validate(&ValidateArgs { file: path, strict: false });
+        let result = run_validate(&ValidateArgs {
+            file: path,
+            strict: false,
+        });
         assert!(result.is_err(), "rplan without assignments field must fail");
     }
 

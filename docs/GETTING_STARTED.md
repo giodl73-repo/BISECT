@@ -39,17 +39,17 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 Build the binary once:
 
 ```bash
-cargo build --release --manifest-path redist/Cargo.toml
+cargo build --release --manifest-path Cargo.toml
 ```
 
-Add to PATH (so you can run `redist` anywhere):
+Add to PATH (so you can run `BISECT` anywhere):
 
 ```bash
 # Windows PowerShell
-$env:PATH += ";$PWD\redist\target\release"
+$env:PATH += ";$PWD\BISECT\target\release"
 
 # Linux/macOS (add to .bashrc/.zshrc)
-export PATH="$PWD/redist/target/release:$PATH"
+export PATH="$PWD/BISECT/target/release:$PATH"
 ```
 
 ### Required for Python analysis scripts (optional)
@@ -75,7 +75,7 @@ git clone https://github.com/your-org/apportionment.git
 cd apportionment
 
 # Step 2: Build the Rust binary (one-time)
-cargo build --release --manifest-path redist/Cargo.toml
+cargo build --release --manifest-path Cargo.toml
 
 # Step 3: Download Vermont census data
 bisect fetch --states VT --year 2020
@@ -127,7 +127,7 @@ python scripts/data/generate_adj_bin.py --year 2010
 python scripts/data/generate_adj_bin.py --year 2000
 
 # Run all years
-redist run --version V3 --workers 12
+BISECT run --version V3 --workers 12
 ```
 
 ---
@@ -212,7 +212,7 @@ between minority-heavy tracts, encouraging majority-minority districts.
 
 ## Resume Interrupted Runs
 
-`bisect states` and `redist run` skip states that already have `final_assignments.json`.
+`bisect states` and `BISECT run` skip states that already have `final_assignments.json`.
 If a run is interrupted, just re-run the same command — completed states are skipped.
 
 ```bash
@@ -262,8 +262,8 @@ python scripts/pipeline/run_complete_redistricting.py --version v1
 **`gpmetis: command not found`**
 : Install METIS: `conda install -c conda-forge metis`
 
-**`error: no such file or directory: redist/target/release/redist`**
-: Build the binary first: `cargo build --release --manifest-path redist/Cargo.toml`
+**`error: no such file or directory: target/release/bisect`**
+: Build the binary first: `cargo build --release --manifest-path Cargo.toml`
 
 **`ERROR: adjacency file not found`**
 : Download adjacency files with `bisect fetch --year 2020 --release`, then convert:
@@ -285,7 +285,7 @@ python scripts/pipeline/run_complete_redistricting.py --version v1
 
 ## Next Steps
 
-- **Full CLI reference**: [`docs/REDIST_CLI.md`](REDIST_CLI.md)
+- **Full CLI reference**: [`docs/BISECT_CLI.md`](BISECT_CLI.md)
 - **Algorithm explanation**: [`docs/RECURSIVE_BISECTION.md`](RECURSIVE_BISECTION.md)
 - **Output data fields**: [`docs/DATA_DICTIONARY.md`](DATA_DICTIONARY.md)
 - **Troubleshooting**: [`docs/TROUBLESHOOTING.md`](TROUBLESHOOTING.md)

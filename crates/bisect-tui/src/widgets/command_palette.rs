@@ -1,29 +1,18 @@
 /// Command palette overlay — floating input with suggestions list.
-
 use ratatui::{
-    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Clear, Paragraph},
+    Frame,
 };
 
 use crate::app::App;
 
 /// All available commands.
 static ALL_COMMANDS: &[&str] = &[
-    "run",
-    "compare",
-    "verify",
-    "doctor",
-    "sort",
-    "filter",
-    "export",
-    "analyze",
-    "map",
-    "fetch",
-    "help",
-    "quit",
+    "run", "compare", "verify", "doctor", "sort", "filter", "export", "analyze", "map", "fetch",
+    "help", "quit",
 ];
 
 /// Return commands matching the given input (prefix match, case-insensitive).
@@ -69,7 +58,12 @@ pub fn render(f: &mut Frame, area: Rect, app: &App) {
 
     // Input line with ": " prefix and cursor
     let input_line = Line::from(vec![
-        Span::styled(": ", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+        Span::styled(
+            ": ",
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        ),
         Span::raw(&app.palette_input),
         Span::styled("_", Style::default().fg(Color::White)),
     ]);
@@ -98,19 +92,28 @@ mod tests {
     #[test]
     fn test_suggestions_run_matches_run() {
         let result = suggestions("run");
-        assert!(result.contains(&"run"), "suggestions('run') must include 'run'");
+        assert!(
+            result.contains(&"run"),
+            "suggestions('run') must include 'run'"
+        );
     }
 
     #[test]
     fn test_suggestions_empty_returns_empty() {
         let result = suggestions("");
-        assert!(result.is_empty(), "empty input must return empty suggestions");
+        assert!(
+            result.is_empty(),
+            "empty input must return empty suggestions"
+        );
     }
 
     #[test]
     fn test_suggestions_doc_matches_doctor() {
         let result = suggestions("doc");
-        assert!(result.contains(&"doctor"), "suggestions('doc') must include 'doctor'");
+        assert!(
+            result.contains(&"doctor"),
+            "suggestions('doc') must include 'doctor'"
+        );
     }
 
     #[test]

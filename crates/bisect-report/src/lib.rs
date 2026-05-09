@@ -1,4 +1,4 @@
-/// redist-report: RPLAN interchange format, PlanManifest, plan path management,
+/// BISECT-report: RPLAN interchange format, PlanManifest, plan path management,
 /// commission report assembly (HTML/JSON), GeoJSON/GerryChain/CSV export,
 /// GeoJSON plan import (PIP), and SHA-256 audit chain.
 ///
@@ -17,32 +17,38 @@ pub mod canonical;
 pub mod civic_gate;
 pub mod comparison;
 pub mod export;
-pub mod moe;
-pub mod narrative;
-pub mod narrative_manifest;
 pub mod html;
 pub mod html_comparison;
 pub mod import;
 pub mod manifest;
+pub mod moe;
+pub mod narrative;
+pub mod narrative_manifest;
 pub mod paths;
 pub mod report;
 pub mod rplan;
 
-pub use audit::{ExternalAnalyzerRecord, generate_verification_command, generate_verification_script, sha256_file as audit_sha256_file};
-pub use export::{export_geojson, export_gerrychain_v23, export_tracts_csv, import_gerrychain_to_assignments};
+pub use audit::{
+    generate_verification_command, generate_verification_script, sha256_file as audit_sha256_file,
+    ExternalAnalyzerRecord,
+};
+pub use export::{
+    export_geojson, export_gerrychain_v23, export_tracts_csv, import_gerrychain_to_assignments,
+};
 pub use html::render_html_report;
 pub use import::{import_geojson_plan, import_plan_to_rplan};
 pub use manifest::{
-    PlanManifest, check_incomplete_plan, default_label, sha256_bytes, sha256_file,
-    tiger_source_url, write_manifest_atomic,
+    check_incomplete_plan, default_label, sha256_bytes, sha256_file, tiger_source_url,
+    write_manifest_atomic, PlanManifest,
 };
-pub use paths::{check_plan_collision, create_plan_dir, now_iso8601, plan_output_dir, state_output_dir};
+pub use paths::{
+    check_plan_collision, create_plan_dir, now_iso8601, plan_output_dir, state_output_dir,
+};
 pub use report::{
-    Report, ReportContext, ReportSections, assemble_report,
-    check_required_analysis_files, REQUIRED_ANALYSIS_FILES,
+    assemble_report, check_required_analysis_files, Report, ReportContext, ReportSections,
+    REQUIRED_ANALYSIS_FILES,
 };
 pub use rplan::{
-    RplanError, RplanFile, RplanMetadata, ValidationResult, validate_geoid_format,
-    validate_geoid_format_batch, validate_district_range, validate_rplan,
-    validate_rplan_str, write_rplan,
+    validate_district_range, validate_geoid_format, validate_geoid_format_batch, validate_rplan,
+    validate_rplan_str, write_rplan, RplanError, RplanFile, RplanMetadata, ValidationResult,
 };

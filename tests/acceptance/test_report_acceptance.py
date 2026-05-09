@@ -2,7 +2,7 @@
 L2 Acceptance tests for Spec 6: commission reports, GeoJSON export, plan import.
 
 These tests require:
-- redist binary built (cargo build --release --manifest-path redist/Cargo.toml)
+- BISECT binary built (cargo build --release --manifest-path Cargo.toml)
 - A VT plan fixture at outputs/RustV3/2020/plans/vt_congress_test/
 
 Run with:
@@ -19,12 +19,12 @@ from pathlib import Path
 
 import pytest
 
-BINARY = Path("redist/target/release/redist.exe") if sys.platform == "win32" else Path("redist/target/release/redist")
+BINARY = Path("target/release/bisect.exe") if sys.platform == "win32" else Path("target/release/bisect")
 BASE_DIR = Path(".")
 
 
 def binary_available() -> bool:
-    """Check if the redist binary exists."""
+    """Check if the BISECT binary exists."""
     return BINARY.exists()
 
 
@@ -37,10 +37,10 @@ def vt_plan_exists() -> bool:
 
 
 skip_no_binary = pytest.mark.skipif(
-    not binary_available(), reason="redist binary not built"
+    not binary_available(), reason="BISECT binary not built"
 )
 skip_no_vt_fixture = pytest.mark.skipif(
-    not vt_plan_exists(), reason="VT fixture plan not available (run redist state --state VT first)"
+    not vt_plan_exists(), reason="VT fixture plan not available (run BISECT state --state VT first)"
 )
 
 
@@ -298,7 +298,7 @@ class TestGerryChainIntegration:
 
     @pytest.mark.skipif(
         not binary_available(),
-        reason="redist binary not built"
+        reason="BISECT binary not built"
     )
     def test_gerrychain_schema_valid(self, vt_plan_label, binary, tmp_path):
         """Export to GerryChain format, then verify schema with GerryChain library if available."""

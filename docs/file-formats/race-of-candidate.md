@@ -2,7 +2,7 @@
 
 **Schema version:** `race-of-candidate v1`
 **Status:** Implemented (Callais Evidence Layer Task 4)
-**Owner:** `redist/crates/bisect-analysis/src/race_of_candidate.rs`
+**Owner:** `BISECT/crates/bisect-analysis/src/race_of_candidate.rs`
 **Spec:** `docs/superpowers/specs/2026-04-30-callais-evidence-layer.md`
 **Plan:** `docs/superpowers/plans/2026-04-30-callais-evidence-layer.md` Task 4
 
@@ -90,13 +90,13 @@ Before signing your bloc-voting analysis as evidence:
 - [ ] Every row's `independently_verified` is `true`, OR you can defend the `[CAVEAT]` text on the stand.
 - [ ] Every `attestation_doc_path` resolves to a file on disk relative to the CSV.
 - [ ] Every attestation document contains, at minimum: curator name, credential, attestation date, and a per-candidate sentence justifying the classification.
-- [ ] The reproducibility zip (`redist report --format pdf` will produce it) includes both the CSV and every attestation document.
-- [ ] You have run `redist doctor --verify-manifest` on the analysis output and confirmed the binary version matches your court submission.
+- [ ] The reproducibility zip (`BISECT report --format pdf` will produce it) includes both the CSV and every attestation document.
+- [ ] You have run `BISECT doctor --verify-manifest` on the analysis output and confirmed the binary version matches your court submission.
 
 ## Cross-references
 
-- Implementation: `redist/crates/bisect-analysis/src/race_of_candidate.rs`
-- JSON Schema: `redist/crates/bisect-analysis/schemas/bloc_voting.schema.json` (`race_of_candidate_provenance` block)
+- Implementation: `BISECT/crates/bisect-analysis/src/race_of_candidate.rs`
+- JSON Schema: `BISECT/crates/bisect-analysis/schemas/bloc_voting.schema.json` (`race_of_candidate_provenance` block)
 - Callais legal grounding: `docs/legal/CALLAIS_REFERENCE.md`
 - Callais Evidence Layer plan: `docs/superpowers/plans/2026-04-30-callais-evidence-layer.md`
 - Civic Bidirectional input plan (matched edit BD-R2): `docs/superpowers/plans/2026-04-30-civic-bidirectional.md`

@@ -76,7 +76,13 @@ pub fn now_iso8601() -> String {
     let hours = rem / 3600;
     let minutes = (rem % 3600) / 60;
     let seconds = rem % 60;
-    format!("{}T{:02}:{:02}:{:02}Z", epoch_days_to_date(days), hours, minutes, seconds)
+    format!(
+        "{}T{:02}:{:02}:{:02}Z",
+        epoch_days_to_date(days),
+        hours,
+        minutes,
+        seconds
+    )
 }
 
 fn epoch_days_to_date(days: u64) -> String {
@@ -115,12 +121,22 @@ mod tests {
         let result = check_plan_collision(&plan_dir, false);
         assert!(result.is_err());
         let msg = result.unwrap_err().to_string();
-        assert!(msg.contains("already exists"), "Error must say 'already exists'");
-        assert!(msg.contains("washington_house_2020"), "Error must include plan label");
+        assert!(
+            msg.contains("already exists"),
+            "Error must say 'already exists'"
+        );
+        assert!(
+            msg.contains("washington_house_2020"),
+            "Error must include plan label"
+        );
         // Task 115: error must include the full plan directory path
         let plan_dir_str = plan_dir.to_string_lossy();
-        assert!(msg.contains(plan_dir_str.as_ref()),
-            "Error must include the full plan directory path '{}', got: {}", plan_dir_str, msg);
+        assert!(
+            msg.contains(plan_dir_str.as_ref()),
+            "Error must include the full plan directory path '{}', got: {}",
+            plan_dir_str,
+            msg
+        );
         assert!(msg.contains("--force"), "Error must mention --force option");
     }
 
@@ -144,9 +160,21 @@ mod tests {
         let base = tmp.path().to_path_buf();
         create_plan_dir(&base, "wa_house_draft1").unwrap();
         assert!(base.join("plans").join("wa_house_draft1").exists());
-        assert!(base.join("plans").join("wa_house_draft1").join("analysis").exists());
-        assert!(base.join("plans").join("wa_house_draft1").join("maps").exists());
-        assert!(base.join("plans").join("wa_house_draft1").join("intermediate").exists());
+        assert!(base
+            .join("plans")
+            .join("wa_house_draft1")
+            .join("analysis")
+            .exists());
+        assert!(base
+            .join("plans")
+            .join("wa_house_draft1")
+            .join("maps")
+            .exists());
+        assert!(base
+            .join("plans")
+            .join("wa_house_draft1")
+            .join("intermediate")
+            .exists());
     }
 
     #[test]
@@ -213,7 +241,12 @@ mod tests {
         // Creating the same plan dir twice must not fail
         create_plan_dir(tmp.path(), "idempotent_label").unwrap();
         create_plan_dir(tmp.path(), "idempotent_label").unwrap();
-        assert!(tmp.path().join("plans").join("idempotent_label").join("analysis").exists());
+        assert!(tmp
+            .path()
+            .join("plans")
+            .join("idempotent_label")
+            .join("analysis")
+            .exists());
     }
 
     #[test]
@@ -221,9 +254,16 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let plan_dir = tmp.path().join("plans").join("existing");
         std::fs::create_dir_all(&plan_dir).unwrap();
-        std::fs::write(plan_dir.join("manifest.json"), r#"{"created_at":"2026-01-01T00:00:00Z"}"#).unwrap();
+        std::fs::write(
+            plan_dir.join("manifest.json"),
+            r#"{"created_at":"2026-01-01T00:00:00Z"}"#,
+        )
+        .unwrap();
         let err = check_plan_collision(&plan_dir, false).unwrap_err();
-        assert!(err.to_string().contains("--force"), "collision error must mention --force");
+        assert!(
+            err.to_string().contains("--force"),
+            "collision error must mention --force"
+        );
     }
 
     #[test]
@@ -231,9 +271,16 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let plan_dir = tmp.path().join("plans").join("my_unique_label");
         std::fs::create_dir_all(&plan_dir).unwrap();
-        std::fs::write(plan_dir.join("manifest.json"), r#"{"created_at":"2026-01-01T00:00:00Z"}"#).unwrap();
+        std::fs::write(
+            plan_dir.join("manifest.json"),
+            r#"{"created_at":"2026-01-01T00:00:00Z"}"#,
+        )
+        .unwrap();
         let err = check_plan_collision(&plan_dir, false).unwrap_err();
-        assert!(err.to_string().contains("my_unique_label"), "collision error must contain the label");
+        assert!(
+            err.to_string().contains("my_unique_label"),
+            "collision error must contain the label"
+        );
     }
 
     #[test]
@@ -244,18 +291,28 @@ mod tests {
         std::fs::write(
             plan_dir.join("manifest.json"),
             r#"{"created_at":"2026-03-15T09:00:00Z","label":"dated_plan"}"#,
-        ).unwrap();
+        )
+        .unwrap();
         // The check_plan_collision reads created_at; error contains the path
-        let err = check_plan_collision(&plan_dir, false).unwrap_err().to_string();
+        let err = check_plan_collision(&plan_dir, false)
+            .unwrap_err()
+            .to_string();
         // path must be in the error
-        assert!(err.contains("dated_plan"), "error must contain the plan label");
+        assert!(
+            err.contains("dated_plan"),
+            "error must contain the plan label"
+        );
     }
 
     #[test]
     fn test_now_iso8601_format() {
         let ts = now_iso8601();
         // Must be 20 chars: YYYY-MM-DDTHH:MM:SSZ
-        assert_eq!(ts.len(), 20, "ISO 8601 timestamp must be 20 chars, got: {ts}");
+        assert_eq!(
+            ts.len(),
+            20,
+            "ISO 8601 timestamp must be 20 chars, got: {ts}"
+        );
         assert!(ts.contains('T'), "must have T separator");
         assert!(ts.ends_with('Z'), "must end with Z");
         // Year must be 4 digits starting with 20
@@ -297,7 +354,10 @@ mod tests {
         // Corrupt JSON → created_at will fall back to "unknown" but collision is still detected
         std::fs::write(plan_dir.join("manifest.json"), b"not valid json").unwrap();
         let result = check_plan_collision(&plan_dir, false);
-        assert!(result.is_err(), "corrupt manifest must still trigger collision error");
+        assert!(
+            result.is_err(),
+            "corrupt manifest must still trigger collision error"
+        );
     }
 
     #[test]

@@ -1,5 +1,5 @@
 [package]
-name = "redist_py"
+name = "bisect_py"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -7,7 +7,7 @@ license.workspace = true
 description = "PyO3 bindings for bisect-core"
 
 [lib]
-name = "redist_py"
+name = "bisect_py"
 crate-type = ["cdylib"]
 
 [dependencies]

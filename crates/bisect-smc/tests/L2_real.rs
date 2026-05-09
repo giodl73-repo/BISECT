@@ -1,6 +1,6 @@
-//! L2 real-data tests for redist-smc.
+//! L2 real-data tests for BISECT-smc.
 //! All tests are #[ignore] — they require real census data (not available in CI).
-//! Run with: cargo test -p redist-smc --test L2_real -- --ignored --nocapture
+//! Run with: cargo test -p BISECT-smc --test L2_real -- --ignored --nocapture
 
 use bisect_smc::{run_smc, SmcConfig};
 
@@ -18,18 +18,16 @@ fn load_state_data(state_lower: &str, year: &str) -> (Vec<Vec<usize>>, Vec<i64>)
         PathBuf::from(format!("/data/{year}/adjacency/{filename}")),
     ];
 
-    let path = candidates.iter()
-        .find(|p| p.exists())
-        .unwrap_or_else(|| {
-            panic!(
-                "L2 test: adjacency file not found for {state_lower} {year}.\n\
+    let path = candidates.iter().find(|p| p.exists()).unwrap_or_else(|| {
+        panic!(
+            "L2 test: adjacency file not found for {state_lower} {year}.\n\
                  Run: bisect fetch --year {year}\n\
                  Tried: {:?}",
-                candidates
-            )
-        });
+            candidates
+        )
+    });
 
-    // Use the adjacency loader from redist-cli if available; otherwise panic with guidance.
+    // Use the adjacency loader from BISECT-cli if available; otherwise panic with guidance.
     // In practice, L2 tests are run from the workspace root where the manifest is configured.
     panic!(
         "L2 test: cannot load from path {} directly without adjacency loader.\n\
@@ -64,17 +62,34 @@ fn l2_nc_2020_k14_n1000_valid_weighted_ensemble() {
     // All plans valid
     for (idx, plan) in result.plans.iter().enumerate() {
         assert_eq!(plan.len(), adj.len(), "plan {idx}: all tracts assigned");
-        for &d in plan { assert!(d >= 1 && d <= k as u32, "plan {idx}: district {d} OOB"); }
+        for &d in plan {
+            assert!(d >= 1 && d <= k as u32, "plan {idx}: district {d} OOB");
+        }
         for d in 1..=k as u32 {
-            assert!(plan.iter().any(|&x| x == d), "plan {idx}: district {d} empty");
+            assert!(
+                plan.iter().any(|&x| x == d),
+                "plan {idx}: district {d} empty"
+            );
         }
     }
 
     // Print ESS trace for diagnostics
-    let min_ess = result.ess_trace.iter().cloned().fold(f64::INFINITY, f64::min);
-    let min_stage = result.ess_trace.iter().position(|&e| e == min_ess).unwrap_or(0);
-    eprintln!("NC 2020 k=14 N=1000: {} resamplings, min ESS={:.0} at stage {}",
-        result.resample_count, min_ess, min_stage + 1);
+    let min_ess = result
+        .ess_trace
+        .iter()
+        .cloned()
+        .fold(f64::INFINITY, f64::min);
+    let min_stage = result
+        .ess_trace
+        .iter()
+        .position(|&e| e == min_ess)
+        .unwrap_or(0);
+    eprintln!(
+        "NC 2020 k=14 N=1000: {} resamplings, min ESS={:.0} at stage {}",
+        result.resample_count,
+        min_ess,
+        min_stage + 1
+    );
 }
 
 // ── L2.2: VT 2020 k=1 trivial ─────────────────────────────────────────────────
@@ -83,11 +98,17 @@ fn l2_nc_2020_k14_n1000_valid_weighted_ensemble() {
 #[ignore]
 fn l2_vt_2020_k1_trivial() {
     let (adj, pop) = load_state_data("vermont", "2020");
-    let cfg = SmcConfig { n_particles: 10, base_seed: 0, ..Default::default() };
+    let cfg = SmcConfig {
+        n_particles: 10,
+        base_seed: 0,
+        ..Default::default()
+    };
     let result = run_smc(&adj, &pop, 1, cfg).expect("VT k=1 must succeed");
 
-    assert!(result.plans.iter().all(|p| p.iter().all(|&d| d == 1)),
-        "VT k=1: all tracts must be in district 1");
+    assert!(
+        result.plans.iter().all(|p| p.iter().all(|&d| d == 1)),
+        "VT k=1: all tracts must be in district 1"
+    );
     let wsum: f64 = result.weights.iter().sum();
     assert!((wsum - 1.0).abs() < 1e-9, "uniform weights sum 1.0");
     assert_eq!(result.resample_count, 0, "k=1: no resampling");

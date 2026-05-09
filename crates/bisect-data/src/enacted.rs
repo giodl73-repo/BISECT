@@ -113,11 +113,7 @@ pub fn assign_single_centroid(
     assign_nearest(centroid, polygons, ids)
 }
 
-fn assign_nearest(
-    centroid: &Point<f64>,
-    polygons: &[MultiPolygon<f64>],
-    ids: &[usize],
-) -> usize {
+fn assign_nearest(centroid: &Point<f64>, polygons: &[MultiPolygon<f64>], ids: &[usize]) -> usize {
     polygons
         .iter()
         .zip(ids.iter())
@@ -138,13 +134,7 @@ mod tests {
 
     /// Build a simple axis-aligned square polygon.
     fn make_square(x0: f64, y0: f64, x1: f64, y1: f64) -> MultiPolygon<f64> {
-        let ring = LineString::from(vec![
-            (x0, y0),
-            (x1, y0),
-            (x1, y1),
-            (x0, y1),
-            (x0, y0),
-        ]);
+        let ring = LineString::from(vec![(x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0)]);
         MultiPolygon::new(vec![Polygon::new(ring, vec![])])
     }
 
@@ -166,7 +156,10 @@ mod tests {
         let polygons = vec![poly];
         let ids = vec![5usize];
         let result = assign_single_centroid(&centroid, &polygons, &ids);
-        assert_eq!(result, 5, "Nearest-polygon fallback must assign coastal tract");
+        assert_eq!(
+            result, 5,
+            "Nearest-polygon fallback must assign coastal tract"
+        );
     }
 
     #[test]
@@ -178,7 +171,8 @@ mod tests {
             make_square(-122.0, 45.5, -120.5, 46.5),
         ];
         let ids = vec![1usize, 2usize];
-        let (result, meta) = assign_tracts_to_enacted(&centroids, &geoids, &polygons, &ids).unwrap();
+        let (result, meta) =
+            assign_tracts_to_enacted(&centroids, &geoids, &polygons, &ids).unwrap();
         assert_eq!(result.len(), 2, "All tracts must be assigned");
         for geoid in &geoids {
             assert!(result.contains_key(geoid), "GEOID {} not in result", geoid);
@@ -190,8 +184,8 @@ mod tests {
     fn test_zero_unassigned_tracts_after_fallback() {
         // One centroid outside all polygons -> fallback should still assign it.
         let centroids = vec![
-            Point::new(-100.0, 40.0),  // inside polygon 1
-            Point::new(0.0, 0.0),      // outside all polygons -> fallback to nearest
+            Point::new(-100.0, 40.0), // inside polygon 1
+            Point::new(0.0, 0.0),     // outside all polygons -> fallback to nearest
         ];
         let geoids = vec!["530330001001".to_string(), "530330002001".to_string()];
         let polygons = vec![
@@ -199,8 +193,13 @@ mod tests {
             make_square(-120.0, 47.0, -119.0, 48.0),
         ];
         let ids = vec![1usize, 2usize];
-        let (result, meta) = assign_tracts_to_enacted(&centroids, &geoids, &polygons, &ids).unwrap();
-        assert_eq!(result.len(), geoids.len(), "100% coverage required after fallback");
+        let (result, meta) =
+            assign_tracts_to_enacted(&centroids, &geoids, &polygons, &ids).unwrap();
+        assert_eq!(
+            result.len(),
+            geoids.len(),
+            "100% coverage required after fallback"
+        );
         assert!(meta.fallback_count >= 1, "At least one fallback expected");
         assert!(!meta.pip_method_note.is_empty());
     }
@@ -212,7 +211,10 @@ mod tests {
         let polygons: Vec<MultiPolygon<f64>> = vec![];
         let ids: Vec<usize> = vec![];
         let result = assign_tracts_to_enacted(&centroids, &geoids, &polygons, &ids);
-        assert!(result.is_err(), "Empty polygon list must produce error, not silent gap");
+        assert!(
+            result.is_err(),
+            "Empty polygon list must produce error, not silent gap"
+        );
         assert!(result.unwrap_err().to_string().contains("coverage"));
     }
 
@@ -237,8 +239,8 @@ mod tests {
     fn test_fallback_count_recorded_in_metadata() {
         // Force one fallback by using an offshore centroid.
         let centroids = vec![
-            Point::new(-120.5, 47.5),  // inside poly 1
-            Point::new(0.0, 0.0),      // outside all -> fallback
+            Point::new(-120.5, 47.5), // inside poly 1
+            Point::new(0.0, 0.0),     // outside all -> fallback
         ];
         let geoids = vec!["g1".to_string(), "g2".to_string()];
         let polygons = vec![

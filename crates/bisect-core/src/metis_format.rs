@@ -8,8 +8,8 @@
 /// path (current primary path) does NOT set these flags. The behaviour
 /// difference is minor in practice — METIS produces contiguous results
 /// without `-contig` for planar graphs — but will be made explicit when
-/// Phase 1c ports the full subprocess wrapper to Rust. The caller (PyO3 layer or redist-cli) writes
-/// the content to disk and invokes gpmetis. This keeps redist-core free of I/O.
+/// Phase 1c ports the full subprocess wrapper to Rust. The caller (PyO3 layer or BISECT-cli) writes
+/// the content to disk and invokes gpmetis. This keeps BISECT-core free of I/O.
 ///
 /// METIS format spec:
 ///   Line 1: <n_vertices> <n_edges> <fmt> [ncon]
@@ -30,7 +30,9 @@ pub enum MetisFormatError {
     PartitionLengthMismatch(usize, usize),
     #[error("invalid partition line {0:?}: {1}")]
     InvalidPartitionLine(String, String),
-    #[error("edge_weights key ({0},{1}) is not in canonical (min,max) order; use ({1},{0}) instead")]
+    #[error(
+        "edge_weights key ({0},{1}) is not in canonical (min,max) order; use ({1},{0}) instead"
+    )]
     NonCanonicalEdgeKey(usize, usize),
 }
 
@@ -49,7 +51,10 @@ pub fn write_metis_graph(
         return Err(MetisFormatError::EmptyGraph);
     }
     if vertex_weights.len() != n {
-        return Err(MetisFormatError::WeightLengthMismatch(vertex_weights.len(), n));
+        return Err(MetisFormatError::WeightLengthMismatch(
+            vertex_weights.len(),
+            n,
+        ));
     }
 
     // Validate edge_weights keys are canonical (u < v). Non-canonical keys would silently
@@ -107,21 +112,31 @@ pub fn write_metis_graph(
 /// Each vertex line: `pop area neighbor+1 ew ...`
 pub fn write_metis_graph_dual(
     adjacency: &[Vec<usize>],
-    vertex_weights_pop: &[i64],   // constraint 1: population
-    vertex_weights_area: &[i64],  // constraint 2: land area (ALAND)
+    vertex_weights_pop: &[i64],  // constraint 1: population
+    vertex_weights_area: &[i64], // constraint 2: land area (ALAND)
     edge_weights: Option<&HashMap<(usize, usize), f64>>,
 ) -> Result<String, MetisFormatError> {
     let n = adjacency.len();
-    if n == 0 { return Err(MetisFormatError::EmptyGraph); }
+    if n == 0 {
+        return Err(MetisFormatError::EmptyGraph);
+    }
     if vertex_weights_pop.len() != n {
-        return Err(MetisFormatError::WeightLengthMismatch(vertex_weights_pop.len(), n));
+        return Err(MetisFormatError::WeightLengthMismatch(
+            vertex_weights_pop.len(),
+            n,
+        ));
     }
     if vertex_weights_area.len() != n {
-        return Err(MetisFormatError::WeightLengthMismatch(vertex_weights_area.len(), n));
+        return Err(MetisFormatError::WeightLengthMismatch(
+            vertex_weights_area.len(),
+            n,
+        ));
     }
     if let Some(ew) = edge_weights {
         for &(u, v) in ew.keys() {
-            if u > v { return Err(MetisFormatError::NonCanonicalEdgeKey(u, v)); }
+            if u > v {
+                return Err(MetisFormatError::NonCanonicalEdgeKey(u, v));
+            }
         }
     }
 
@@ -134,7 +149,7 @@ pub fn write_metis_graph_dual(
     out.push_str(&format!("{n} {n_edges} {fmt} 2\n"));
 
     for i in 0..n {
-        let pop  = vertex_weights_pop[i].max(1);
+        let pop = vertex_weights_pop[i].max(1);
         let area = vertex_weights_area[i].max(1);
         // Two vertex weights: population then area
         out.push_str(&format!("{pop} {area}"));
@@ -164,15 +179,18 @@ pub fn parse_metis_partition(
         .lines()
         .filter(|l| !l.trim().is_empty())
         .map(|l| {
-            l.trim().parse::<usize>().map_err(|e| {
-                MetisFormatError::InvalidPartitionLine(l.to_string(), e.to_string())
-            })
+            l.trim()
+                .parse::<usize>()
+                .map_err(|e| MetisFormatError::InvalidPartitionLine(l.to_string(), e.to_string()))
         })
         .collect();
 
     let assignments = assignments?;
     if assignments.len() != expected_n {
-        return Err(MetisFormatError::PartitionLengthMismatch(assignments.len(), expected_n));
+        return Err(MetisFormatError::PartitionLengthMismatch(
+            assignments.len(),
+            expected_n,
+        ));
     }
     Ok(assignments)
 }
@@ -239,7 +257,7 @@ mod tests {
     fn test_missing_edge_gets_weight_1() {
         let mut ew = HashMap::new();
         ew.insert((0, 1), 200.0_f64); // only boost edge 0-1
-        // Edge 1-2 is missing → gets weight 1.0m → 100cm
+                                      // Edge 1-2 is missing → gets weight 1.0m → 100cm
         let content = write_metis_graph(&simple_adj(), &simple_weights(), Some(&ew)).unwrap();
         let lines: Vec<&str> = content.lines().collect();
         // Vertex 1 line: "1200 1 20000 3 100" (edge 0-1: 200m→20000cm, edge 1-2: 1.0m→100cm)
@@ -255,7 +273,10 @@ mod tests {
     #[test]
     fn test_weight_length_mismatch() {
         let result = write_metis_graph(&simple_adj(), &[100, 200], None);
-        assert!(matches!(result, Err(MetisFormatError::WeightLengthMismatch(2, 4))));
+        assert!(matches!(
+            result,
+            Err(MetisFormatError::WeightLengthMismatch(2, 4))
+        ));
     }
 
     #[test]
@@ -269,14 +290,20 @@ mod tests {
     fn test_parse_partition_length_mismatch() {
         let content = "0\n1\n0\n";
         let result = parse_metis_partition(content, 4);
-        assert!(matches!(result, Err(MetisFormatError::PartitionLengthMismatch(3, 4))));
+        assert!(matches!(
+            result,
+            Err(MetisFormatError::PartitionLengthMismatch(3, 4))
+        ));
     }
 
     #[test]
     fn test_parse_partition_invalid_line() {
         let content = "0\nbad\n1\n1\n";
         let result = parse_metis_partition(content, 4);
-        assert!(matches!(result, Err(MetisFormatError::InvalidPartitionLine(_, _))));
+        assert!(matches!(
+            result,
+            Err(MetisFormatError::InvalidPartitionLine(_, _))
+        ));
     }
 
     #[test]
@@ -309,7 +336,10 @@ mod tests {
         let adj = vec![vec![1], vec![0]];
         let vw = vec![100i64, 200];
         let result = write_metis_graph(&adj, &vw, Some(&ew));
-        assert!(matches!(result, Err(MetisFormatError::NonCanonicalEdgeKey(1, 0))));
+        assert!(matches!(
+            result,
+            Err(MetisFormatError::NonCanonicalEdgeKey(1, 0))
+        ));
     }
 
     #[test]
@@ -327,13 +357,13 @@ mod tests {
     fn test_format_011_with_mixed_boosted_and_default_edges() {
         let mut ew = HashMap::new();
         ew.insert((0, 1), 200.0); // Only boost edge 0-1
-        // Graph: 0-1-2-3 but also 1-3
+                                  // Graph: 0-1-2-3 but also 1-3
         let adj = vec![vec![1], vec![0, 2, 3], vec![1], vec![1]];
         let vw = vec![100i64, 200, 150, 175];
         let content = write_metis_graph(&adj, &vw, Some(&ew)).unwrap();
         let lines: Vec<&str> = content.lines().collect();
         assert_eq!(lines[0], "4 3 011 1"); // 3 edges: (0,1),(1,2),(1,3); fmt 011
-        // Vertex 1: neighbors 0 (200m→20000cm), 2 (default 1m→100cm), 3 (default 1m→100cm)
+                                           // Vertex 1: neighbors 0 (200m→20000cm), 2 (default 1m→100cm), 3 (default 1m→100cm)
         assert_eq!(lines[2], "200 1 20000 3 100 4 100");
     }
 
@@ -361,29 +391,38 @@ mod tests {
     #[test]
     fn parse_partition_empty_input_returns_empty() {
         let result = parse_metis_partition("", 0).unwrap();
-        assert!(result.is_empty(), "empty input with n=0 should give empty vec");
+        assert!(
+            result.is_empty(),
+            "empty input with n=0 should give empty vec"
+        );
     }
 
     /// write_metis_graph_dual header contains " 2" (ncon=2) at end.
     #[test]
     fn write_metis_graph_dual_ncon2_header() {
         let adj = vec![vec![1], vec![0]];
-        let pop  = vec![1000i64, 1200];
+        let pop = vec![1000i64, 1200];
         let area = vec![5000i64, 6000];
         let content = write_metis_graph_dual(&adj, &pop, &area, None).unwrap();
         let header = content.lines().next().unwrap();
-        assert!(header.ends_with(" 2"), "dual header should end with ncon=2, got {header:?}");
+        assert!(
+            header.ends_with(" 2"),
+            "dual header should end with ncon=2, got {header:?}"
+        );
     }
 
     /// write_metis_graph_dual output has n+1 lines (header + n vertex lines).
     #[test]
     fn write_metis_graph_dual_vertex_count_matches() {
         let adj = vec![vec![1], vec![0, 2], vec![1]];
-        let pop  = vec![1000i64, 1200, 900];
+        let pop = vec![1000i64, 1200, 900];
         let area = vec![5000i64, 6000, 4500];
         let content = write_metis_graph_dual(&adj, &pop, &area, None).unwrap();
         let line_count = content.lines().count();
-        assert_eq!(line_count, 4, "header + 3 vertex lines = 4, got {line_count}");
+        assert_eq!(
+            line_count, 4,
+            "header + 3 vertex lines = 4, got {line_count}"
+        );
     }
 
     /// write_metis_graph with a non-canonical edge key (u > v) returns NonCanonicalEdgeKey.
@@ -392,7 +431,7 @@ mod tests {
         let mut ew = HashMap::new();
         ew.insert((2, 0), 150.0); // non-canonical: 2 > 0
         let adj = vec![vec![1], vec![0, 2], vec![1]];
-        let vw  = vec![100i64, 200, 150];
+        let vw = vec![100i64, 200, 150];
         let result = write_metis_graph(&adj, &vw, Some(&ew));
         assert!(
             matches!(result, Err(MetisFormatError::NonCanonicalEdgeKey(2, 0))),
@@ -422,9 +461,12 @@ mod tests {
     #[test]
     fn write_metis_graph_dual_weight_mismatch() {
         let adj = vec![vec![1], vec![0]];
-        let pop  = vec![1000i64]; // only 1 weight for 2 vertices
+        let pop = vec![1000i64]; // only 1 weight for 2 vertices
         let area = vec![5000i64, 6000];
         let result = write_metis_graph_dual(&adj, &pop, &area, None);
-        assert!(matches!(result, Err(MetisFormatError::WeightLengthMismatch(1, 2))));
+        assert!(matches!(
+            result,
+            Err(MetisFormatError::WeightLengthMismatch(1, 2))
+        ));
     }
 }

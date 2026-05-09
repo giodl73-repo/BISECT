@@ -1,11 +1,10 @@
 /// Home screen — two-panel plan browser with table and detail panel.
-
 use ratatui::{
-    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Cell, Gauge, Paragraph, Row, Table},
+    Frame,
 };
 
 use crate::app::App;
@@ -103,13 +102,13 @@ fn render_plan_list(f: &mut Frame, area: Rect, app: &App) {
     let table = Table::new(
         rows,
         [
-            Constraint::Min(20),     // Label
-            Constraint::Length(4),   // St
-            Constraint::Length(12),  // Chamber
-            Constraint::Length(5),   // Yr
-            Constraint::Length(5),   // D
-            Constraint::Length(5),   // Sp
-            Constraint::Length(3),   // C
+            Constraint::Min(20),    // Label
+            Constraint::Length(4),  // St
+            Constraint::Length(12), // Chamber
+            Constraint::Length(5),  // Yr
+            Constraint::Length(5),  // D
+            Constraint::Length(5),  // Sp
+            Constraint::Length(3),  // C
         ],
     )
     .header(header)
@@ -121,9 +120,7 @@ fn render_plan_list(f: &mut Frame, area: Rect, app: &App) {
 fn render_detail_panel(f: &mut Frame, area: Rect, app: &App) {
     let plans = app.visible_plans();
 
-    let block = Block::default()
-        .borders(Borders::ALL)
-        .title(" Detail ");
+    let block = Block::default().borders(Borders::ALL).title(" Detail ");
 
     if plans.is_empty() || app.selected_plan >= plans.len() {
         f.render_widget(block, area);
@@ -139,15 +136,15 @@ fn render_detail_panel(f: &mut Frame, area: Rect, app: &App) {
     let rows = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(3),  // name + state/chamber/year
-            Constraint::Length(1),  // PP gauge label
-            Constraint::Length(1),  // PP gauge
-            Constraint::Length(1),  // deviation gauge label
-            Constraint::Length(1),  // deviation gauge
-            Constraint::Length(1),  // splits gauge label
-            Constraint::Length(1),  // splits gauge
-            Constraint::Length(1),  // contiguous indicator
-            Constraint::Min(1),     // actions
+            Constraint::Length(3), // name + state/chamber/year
+            Constraint::Length(1), // PP gauge label
+            Constraint::Length(1), // PP gauge
+            Constraint::Length(1), // deviation gauge label
+            Constraint::Length(1), // deviation gauge
+            Constraint::Length(1), // splits gauge label
+            Constraint::Length(1), // splits gauge
+            Constraint::Length(1), // contiguous indicator
+            Constraint::Min(1),    // actions
         ])
         .split(inner);
 
@@ -203,8 +200,8 @@ fn render_detail_panel(f: &mut Frame, area: Rect, app: &App) {
         Some(false) => ("Contiguous: NO", Color::Red),
         None => ("Contiguous: ?", Color::DarkGray),
     };
-    let contiguous_widget = Paragraph::new(contiguous_text)
-        .style(Style::default().fg(contiguous_color));
+    let contiguous_widget =
+        Paragraph::new(contiguous_text).style(Style::default().fg(contiguous_color));
     f.render_widget(contiguous_widget, rows[7]);
 
     // Actions
@@ -219,14 +216,24 @@ mod tests {
     use super::*;
     use ratatui::{backend::TestBackend, Terminal};
 
-    fn render_to_string(width: u16, height: u16, f: impl FnOnce(&mut ratatui::Frame, ratatui::layout::Rect)) -> String {
+    fn render_to_string(
+        width: u16,
+        height: u16,
+        f: impl FnOnce(&mut ratatui::Frame, ratatui::layout::Rect),
+    ) -> String {
         let backend = TestBackend::new(width, height);
         let mut terminal = Terminal::new(backend).unwrap();
-        terminal.draw(|frame| {
-            let area = frame.area();
-            f(frame, area);
-        }).unwrap();
-        terminal.backend().buffer().content().iter()
+        terminal
+            .draw(|frame| {
+                let area = frame.area();
+                f(frame, area);
+            })
+            .unwrap();
+        terminal
+            .backend()
+            .buffer()
+            .content()
+            .iter()
             .map(|c| c.symbol().to_string())
             .collect::<String>()
     }
@@ -244,7 +251,10 @@ mod tests {
             ..Default::default()
         }];
         let content = render_to_string(120, 30, |f, area| render(f, area, &app));
-        assert!(content.contains("wa_house_test"), "plan label must appear: {content}");
+        assert!(
+            content.contains("wa_house_test"),
+            "plan label must appear: {content}"
+        );
     }
 
     #[test]
@@ -261,7 +271,13 @@ mod tests {
     fn test_home_quick_action_bar_visible() {
         let app = crate::app::App::default();
         let content = render_to_string(120, 20, |f, area| render(f, area, &app));
-        assert!(content.contains("[r]"), "quick action bar must show [r] Run");
-        assert!(content.contains("[v]"), "quick action bar must show [v] Verify");
+        assert!(
+            content.contains("[r]"),
+            "quick action bar must show [r] Run"
+        );
+        assert!(
+            content.contains("[v]"),
+            "quick action bar must show [v] Verify"
+        );
     }
 }

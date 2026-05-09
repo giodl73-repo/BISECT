@@ -30,7 +30,7 @@
       "invalidates": ["mm_count", "vra_analysis"],
       "blocks_narrative_when": null,
       "warn_when": null,
-      "owner": "redist-analysis::vra_analysis"
+      "owner": "BISECT-analysis::vra_analysis"
     },
     {
       "name": "bloc_p_value_method",
@@ -44,7 +44,7 @@
         "rationale": "without multiple-testing correction, every test is one-shot; Holm is what makes family-level significance defensible"
       },
       "warn_when": null,
-      "owner": "redist-analysis::bloc_voting"
+      "owner": "BISECT-analysis::bloc_voting"
     },
     {
       "name": "bloc_robust_se_type",
@@ -57,7 +57,7 @@
         "condition": "value == 'hc1' AND n_clusters < 30",
         "message": "HC1 with n_clusters<30 is anti-conservative; HC3 recommended (Long & Ervin 2000)"
       },
-      "owner": "redist-analysis::bloc_voting"
+      "owner": "BISECT-analysis::bloc_voting"
     },
     {
       "name": "bloc_cluster_unit",
@@ -68,7 +68,7 @@
       "_note": "Changing the cluster unit changes the test count, which redefines the Holm family",
       "blocks_narrative_when": null,
       "warn_when": null,
-      "owner": "redist-analysis::bloc_voting"
+      "owner": "BISECT-analysis::bloc_voting"
     },
     {
       "name": "compactness_metric",
@@ -78,7 +78,7 @@
       "invalidates": ["compactness_analysis"],
       "blocks_narrative_when": null,
       "warn_when": null,
-      "owner": "redist-analysis::compactness"
+      "owner": "BISECT-analysis::compactness"
     },
     {
       "name": "partisan_efficiency_threshold",
@@ -88,7 +88,7 @@
       "invalidates": ["partisan_analysis"],
       "blocks_narrative_when": null,
       "warn_when": null,
-      "owner": "redist-analysis::partisan"
+      "owner": "BISECT-analysis::partisan"
     }
   ]
 }

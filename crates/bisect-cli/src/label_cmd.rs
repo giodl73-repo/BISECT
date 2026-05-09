@@ -2,13 +2,12 @@
 ///
 /// Implements Phase 4 of Spec 7 — label-based pipeline management:
 ///
-///   redist ls [--json]           List all labels with stage completion
-///   redist show X [--json]       Show detailed info for a label
-///   redist mv X Y [--force]      Atomic rename (filesystem + registry)
-///   redist verify X [--year Y]   Traverse SHA chain and report integrity
+///   BISECT ls [--json]           List all labels with stage completion
+///   BISECT show X [--json]       Show detailed info for a label
+///   BISECT mv X Y [--force]      Atomic rename (filesystem + registry)
+///   BISECT verify X [--year Y]   Traverse SHA chain and report integrity
 ///
 /// All output is ASCII-only (no Unicode): Windows CP1252 safe, court-printable.
-
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
@@ -17,17 +16,16 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 
 use crate::label::{
-    analysis_dir, analysis_index_path, build_index_path, report_index_path,
-    reports_dir, runs_dir, validate_label_name, year_analysis_dir, year_runs_dir,
-    year_reports_dir,
+    analysis_dir, analysis_index_path, build_index_path, report_index_path, reports_dir, runs_dir,
+    validate_label_name, year_analysis_dir, year_reports_dir, year_runs_dir,
 };
 use crate::run_registry::Registry;
 
 // ── Public entry points ────────────────────────────────────────────────────────
 
-/// `redist ls [--json]`
+/// `BISECT ls [--json]`
 ///
-/// Lists all labels from the `.redist` registry with their stage completion.
+/// Lists all labels from the `.bisect` registry with their stage completion.
 /// Human format (default):
 /// ```text
 /// official_proposal   built: 2020 2010 2000   analyzed: 2020   reported: --
@@ -98,7 +96,7 @@ pub fn run_ls(json: bool) -> Result<(), String> {
     Ok(())
 }
 
-/// `redist show X [--json]`
+/// `BISECT show X [--json]`
 ///
 /// Shows detailed info for label X:
 /// - All years and their status (built/analyzed/reported)
@@ -174,9 +172,21 @@ pub fn run_show(label: &str, json: bool) -> Result<(), String> {
     } else {
         println!("Years:");
         for year in &all_years {
-            let b = if entry.built.contains(&year.to_string()) { "[built]" } else { "      " };
-            let a = if entry.analyzed.contains(&year.to_string()) { "[analyzed]" } else { "          " };
-            let r = if entry.reported.contains(&year.to_string()) { "[reported]" } else { "          " };
+            let b = if entry.built.contains(&year.to_string()) {
+                "[built]"
+            } else {
+                "      "
+            };
+            let a = if entry.analyzed.contains(&year.to_string()) {
+                "[analyzed]"
+            } else {
+                "          "
+            };
+            let r = if entry.reported.contains(&year.to_string()) {
+                "[reported]"
+            } else {
+                "          "
+            };
             println!("  {year}  {b}  {a}  {r}");
         }
     }
@@ -184,7 +194,7 @@ pub fn run_show(label: &str, json: bool) -> Result<(), String> {
     Ok(())
 }
 
-/// `redist mv X Y [--force]`
+/// `BISECT mv X Y [--force]`
 ///
 /// Atomically renames label X to Y:
 /// 1. Validates Y with `label::validate_label_name`
@@ -193,7 +203,7 @@ pub fn run_show(label: &str, json: bool) -> Result<(), String> {
 /// 4. Updates `"label"` field in `runs/Y/index.json` if it exists
 /// 5. Same for `analysis/X/` -> `analysis/Y/` and `analysis/Y/index.json`
 /// 6. Same for `reports/X/` -> `reports/Y/` and `reports/Y/index.json`
-/// 7. Updates `.redist` registry: removes X, inserts Y with the same LabelEntry
+/// 7. Updates `.bisect` registry: removes X, inserts Y with the same LabelEntry
 /// 8. Prints confirmation
 pub fn run_mv(src: &str, dst: &str, force: bool) -> Result<(), String> {
     // Step 1: validate destination label name
@@ -221,7 +231,11 @@ pub fn run_mv(src: &str, dst: &str, force: bool) -> Result<(), String> {
     // Step 3-6: move filesystem directories and patch index.json files
     let dir_triples = [
         (runs_dir(src), runs_dir(dst), build_index_path(dst)),
-        (analysis_dir(src), analysis_dir(dst), analysis_index_path(dst)),
+        (
+            analysis_dir(src),
+            analysis_dir(dst),
+            analysis_index_path(dst),
+        ),
         (reports_dir(src), reports_dir(dst), report_index_path(dst)),
     ];
 
@@ -315,13 +329,11 @@ struct ChainLink {
 
 impl ChainLink {
     fn is_ok(&self) -> bool {
-        !self.missing
-            && self.sha_recorded.is_some()
-            && self.sha_recorded == self.sha_actual
+        !self.missing && self.sha_recorded.is_some() && self.sha_recorded == self.sha_actual
     }
 }
 
-/// `redist verify X [--year Y]`
+/// `BISECT verify X [--year Y]`
 ///
 /// Traverses the SHA chain for label X:
 ///   config -> build index -> analysis index -> report index
@@ -366,7 +378,9 @@ pub fn run_verify(label: &str, year_filter: Option<&str>) -> Result<(), String> 
         // The build index records which config file was used and its SHA.
         let config_link = check_config_sha(label, year, &run_index);
         print_link(&config_link);
-        if !config_link.is_ok() { overall_ok = false; }
+        if !config_link.is_ok() {
+            overall_ok = false;
+        }
 
         // ── Link 2: build index SHA ─────────────────────────────────────────
         // The analysis index records the SHA of the build index it was derived from.
@@ -377,7 +391,9 @@ pub fn run_verify(label: &str, year_filter: Option<&str>) -> Result<(), String> 
             "run_index_sha256",
         );
         print_link(&build_link);
-        if !build_link.is_ok() { overall_ok = false; }
+        if !build_link.is_ok() {
+            overall_ok = false;
+        }
 
         // ── Link 3: analysis index SHA ──────────────────────────────────────
         // The report index records the SHA of the analysis index it was derived from.
@@ -388,7 +404,9 @@ pub fn run_verify(label: &str, year_filter: Option<&str>) -> Result<(), String> 
             "analysis_index_sha256",
         );
         print_link(&analysis_link);
-        if !analysis_link.is_ok() { overall_ok = false; }
+        if !analysis_link.is_ok() {
+            overall_ok = false;
+        }
 
         println!();
     }
@@ -398,7 +416,9 @@ pub fn run_verify(label: &str, year_filter: Option<&str>) -> Result<(), String> 
         println!("Verdict: VERIFIED");
     } else {
         println!("Verdict: FAILED");
-        return Err(format!("verify: SHA chain for '{label}' has failures (see above)"));
+        return Err(format!(
+            "verify: SHA chain for '{label}' has failures (see above)"
+        ));
     }
 
     Ok(())
@@ -473,7 +493,11 @@ fn check_config_sha(label: &str, year: &str, run_index_path: &PathBuf) -> ChainL
     let actual_sha = sha256_of_file(&config_path);
 
     ChainLink {
-        description: format!("{description} ({}) vs {}", config_path.display(), run_index_path.display()),
+        description: format!(
+            "{description} ({}) vs {}",
+            config_path.display(),
+            run_index_path.display()
+        ),
         path: config_path,
         sha_recorded: recorded_sha,
         sha_actual: actual_sha,
@@ -536,7 +560,10 @@ fn check_cross_sha(
 
     if recorded_sha.is_none() {
         return ChainLink {
-            description: format!("{description} (no '{recorded_field}' in {})", consumer_path.display()),
+            description: format!(
+                "{description} (no '{recorded_field}' in {})",
+                consumer_path.display()
+            ),
             path: consumer_path.clone(),
             sha_recorded: None,
             sha_actual: None,
@@ -552,7 +579,11 @@ fn check_cross_sha(
     };
 
     ChainLink {
-        description: format!("{description} ({} -> {})", producer_path.display(), consumer_path.display()),
+        description: format!(
+            "{description} ({} -> {})",
+            producer_path.display(),
+            consumer_path.display()
+        ),
         path: producer_path.clone(),
         sha_recorded: recorded_sha,
         sha_actual: actual_sha,
@@ -570,10 +601,7 @@ fn sha256_of_file(path: &PathBuf) -> Option<String> {
 /// Print one chain link in ASCII-only format.
 fn print_link(link: &ChainLink) {
     if link.missing {
-        println!(
-            "  {}: [MISSING or INCOMPLETE]",
-            link.description
-        );
+        println!("  {}: [MISSING or INCOMPLETE]", link.description);
     } else {
         let recorded = link.sha_recorded.as_deref().unwrap_or("(none)");
         let short = &recorded[..recorded.len().min(16)];
@@ -623,7 +651,11 @@ mod tests {
         let _dir = with_tempdir(|| {
             // Should not error — just prints "(no labels in registry)"
             let result = run_ls(false);
-            assert!(result.is_ok(), "ls on empty registry must succeed: {:?}", result);
+            assert!(
+                result.is_ok(),
+                "ls on empty registry must succeed: {:?}",
+                result
+            );
         });
     }
 
@@ -641,9 +673,9 @@ mod tests {
             assert!(result.is_ok(), "ls --json must succeed: {:?}", result);
 
             // Verify the registry itself is valid JSON (the format run_ls uses)
-            let content = fs::read_to_string(".redist").unwrap();
-            let parsed: serde_json::Value = serde_json::from_str(&content)
-                .expect("registry must be valid JSON");
+            let content = fs::read_to_string(".bisect").unwrap();
+            let parsed: serde_json::Value =
+                serde_json::from_str(&content).expect("registry must be valid JSON");
             assert!(parsed.is_object(), "registry must be a JSON object");
             assert!(parsed.get("official_proposal").is_some());
         });
@@ -670,7 +702,11 @@ mod tests {
             Registry::mark_built("my_plan", "2020").unwrap();
             // show must succeed
             let result = run_show("my_plan", false);
-            assert!(result.is_ok(), "show existing label must succeed: {:?}", result);
+            assert!(
+                result.is_ok(),
+                "show existing label must succeed: {:?}",
+                result
+            );
         });
     }
 
@@ -707,7 +743,10 @@ mod tests {
             Registry::mark_built("beta", "2010").unwrap();
 
             let result = run_mv("alpha", "beta", false);
-            assert!(result.is_err(), "mv without --force to existing target must fail");
+            assert!(
+                result.is_err(),
+                "mv without --force to existing target must fail"
+            );
             let msg = result.unwrap_err();
             assert!(msg.contains("[CONFIG]"), "must be [CONFIG] error: {msg}");
             assert!(msg.contains("--force"), "must mention --force: {msg}");
@@ -723,10 +762,17 @@ mod tests {
             Registry::mark_built("beta", "2010").unwrap();
 
             let result = run_mv("alpha", "beta", true);
-            assert!(result.is_ok(), "mv --force to existing target must succeed: {:?}", result);
+            assert!(
+                result.is_ok(),
+                "mv --force to existing target must succeed: {:?}",
+                result
+            );
 
             // alpha must be gone, beta must have alpha's built years
-            assert!(Registry::get("alpha").unwrap().is_none(), "alpha must be gone");
+            assert!(
+                Registry::get("alpha").unwrap().is_none(),
+                "alpha must be gone"
+            );
             let beta = Registry::get("beta").unwrap().expect("beta must exist");
             assert!(
                 beta.built.contains(&"2020".to_string()),
@@ -764,9 +810,15 @@ mod tests {
             assert!(result.is_ok(), "mv must succeed: {:?}", result);
 
             // runs/old_label must be gone
-            assert!(!PathBuf::from("runs/old_label").exists(), "runs/old_label must be gone");
+            assert!(
+                !PathBuf::from("runs/old_label").exists(),
+                "runs/old_label must be gone"
+            );
             // runs/new_label must exist
-            assert!(PathBuf::from("runs/new_label").exists(), "runs/new_label must exist");
+            assert!(
+                PathBuf::from("runs/new_label").exists(),
+                "runs/new_label must exist"
+            );
             // Registry must reflect the rename
             assert!(Registry::get("old_label").unwrap().is_none());
             assert!(Registry::get("new_label").unwrap().is_some());
@@ -782,7 +834,10 @@ mod tests {
 
             // Create runs/old_label/index.json with "label": "old_label"
             let index_dst = PathBuf::from("runs/old_label/index.json");
-            write_json(&index_dst, &serde_json::json!({"label": "old_label", "version": "1"}));
+            write_json(
+                &index_dst,
+                &serde_json::json!({"label": "old_label", "version": "1"}),
+            );
 
             let result = run_mv("old_label", "new_label", false);
             assert!(result.is_ok(), "mv must succeed: {:?}", result);
@@ -889,7 +944,10 @@ mod tests {
             assert!(result.is_err(), "verify nonexistent label must fail");
             let msg = result.unwrap_err();
             assert!(msg.contains("[CONFIG]"), "must have [CONFIG] prefix: {msg}");
-            assert!(msg.contains("nonexistent_plan"), "must name the label: {msg}");
+            assert!(
+                msg.contains("nonexistent_plan"),
+                "must name the label: {msg}"
+            );
         });
     }
 
@@ -976,7 +1034,7 @@ mod tests {
             description: "test".to_string(),
             path: PathBuf::from("test.json"),
             sha_recorded: Some("abc123".to_string()),
-            sha_actual:   Some("abc123".to_string()),
+            sha_actual: Some("abc123".to_string()),
             missing: false,
         };
         assert!(link.is_ok(), "ChainLink with matching SHAs must be ok");
@@ -990,10 +1048,13 @@ mod tests {
             description: "test".to_string(),
             path: PathBuf::from("test.json"),
             sha_recorded: Some("abc123".to_string()),
-            sha_actual:   Some("def456".to_string()),
+            sha_actual: Some("def456".to_string()),
             missing: false,
         };
-        assert!(!link.is_ok(), "ChainLink with mismatched SHAs must not be ok");
+        assert!(
+            !link.is_ok(),
+            "ChainLink with mismatched SHAs must not be ok"
+        );
     }
 
     // ── 21. ChainLink is_ok: missing=true → false even if SHAs match ─────────
@@ -1004,10 +1065,13 @@ mod tests {
             description: "test".to_string(),
             path: PathBuf::from("test.json"),
             sha_recorded: Some("abc123".to_string()),
-            sha_actual:   Some("abc123".to_string()),
-            missing: true,  // explicit missing flag
+            sha_actual: Some("abc123".to_string()),
+            missing: true, // explicit missing flag
         };
-        assert!(!link.is_ok(), "missing=true must make ChainLink not ok even with matching SHAs");
+        assert!(
+            !link.is_ok(),
+            "missing=true must make ChainLink not ok even with matching SHAs"
+        );
     }
 
     // ── 22. ChainLink is_ok: None sha_actual → false ─────────────────────────
@@ -1021,10 +1085,13 @@ mod tests {
             description: "test".to_string(),
             path: PathBuf::from("test.json"),
             sha_recorded: Some("abc123".to_string()),
-            sha_actual:   None,
+            sha_actual: None,
             missing: false,
         };
-        assert!(!link.is_ok(), "ChainLink with None actual SHA must not be ok");
+        assert!(
+            !link.is_ok(),
+            "ChainLink with None actual SHA must not be ok"
+        );
     }
 
     // ── 23. patch_label_field: no "label" key leaves file unchanged ───────────
@@ -1033,19 +1100,30 @@ mod tests {
     fn test_patch_label_field_no_label_key_is_noop() {
         let _dir = with_tempdir(|| {
             let path = PathBuf::from("no_label.json");
-            write_json(&path, &serde_json::json!({
-                "year": "2020",
-                "version": "1.0.0",
-            }));
+            write_json(
+                &path,
+                &serde_json::json!({
+                    "year": "2020",
+                    "version": "1.0.0",
+                }),
+            );
 
-            patch_label_field(&path, "old", "new").expect("patch must succeed even without label key");
+            patch_label_field(&path, "old", "new")
+                .expect("patch must succeed even without label key");
 
             let content = fs::read_to_string(&path).unwrap();
             let val: serde_json::Value = serde_json::from_str(&content).unwrap();
             // "year" must still be present
-            assert_eq!(val["year"].as_str(), Some("2020"), "year field must survive: {val}");
+            assert_eq!(
+                val["year"].as_str(),
+                Some("2020"),
+                "year field must survive: {val}"
+            );
             // no "label" key must have been injected
-            assert!(val.get("label").is_none(), "label key must not be injected: {val}");
+            assert!(
+                val.get("label").is_none(),
+                "label key must not be injected: {val}"
+            );
         });
     }
 
@@ -1055,18 +1133,24 @@ mod tests {
     fn test_patch_label_field_wrong_old_value_leaves_label_unchanged() {
         let _dir = with_tempdir(|| {
             let path = PathBuf::from("wrong_old.json");
-            write_json(&path, &serde_json::json!({
-                "label": "actual_old",
-                "year": "2020",
-            }));
+            write_json(
+                &path,
+                &serde_json::json!({
+                    "label": "actual_old",
+                    "year": "2020",
+                }),
+            );
 
             // Patch with the wrong "old" value — should leave "actual_old" intact
             patch_label_field(&path, "wrong_old", "new_name").expect("patch must succeed");
 
             let content = fs::read_to_string(&path).unwrap();
             let val: serde_json::Value = serde_json::from_str(&content).unwrap();
-            assert_eq!(val["label"].as_str(), Some("actual_old"),
-                "label must be unchanged when old value doesn't match: {val}");
+            assert_eq!(
+                val["label"].as_str(),
+                Some("actual_old"),
+                "label must be unchanged when old value doesn't match: {val}"
+            );
         });
     }
 
@@ -1079,11 +1163,15 @@ mod tests {
         // Since we can't easily produce a registry entry with built=[] via the
         // public API, we test the message format that would be emitted.
         let label = "empty_label";
-        let msg = format!(
-            "verify: label '{label}' has no built years — nothing to verify."
+        let msg = format!("verify: label '{label}' has no built years — nothing to verify.");
+        assert!(
+            msg.contains("empty_label"),
+            "message must name the label: {msg}"
         );
-        assert!(msg.contains("empty_label"), "message must name the label: {msg}");
-        assert!(msg.contains("nothing to verify"), "message must say nothing to verify: {msg}");
+        assert!(
+            msg.contains("nothing to verify"),
+            "message must say nothing to verify: {msg}"
+        );
     }
 
     // ── 26. sha256_of_file: known content produces known hash ─────────────────
@@ -1096,8 +1184,7 @@ mod tests {
             fs::write(&path, b"").unwrap();
             let hash = sha256_of_file(&path).expect("must compute hash of empty file");
             assert_eq!(
-                hash,
-                "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                hash, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
                 "SHA-256 of empty file must be the known constant"
             );
         });
@@ -1108,7 +1195,10 @@ mod tests {
     #[test]
     fn test_sha256_of_file_missing_returns_none() {
         let result = sha256_of_file(&PathBuf::from("/nonexistent/sha_test_xyz.json"));
-        assert!(result.is_none(), "sha256_of_file must return None for missing file");
+        assert!(
+            result.is_none(),
+            "sha256_of_file must return None for missing file"
+        );
     }
 
     // ── 28. mv: invalid destination label format → error before FS changes ────
@@ -1124,7 +1214,10 @@ mod tests {
             let result = run_mv("my_plan", "bad label", false);
             assert!(result.is_err(), "mv to invalid label must fail");
             let msg = result.unwrap_err();
-            assert!(msg.contains(' '), "error must mention the invalid character: {msg}");
+            assert!(
+                msg.contains(' '),
+                "error must mention the invalid character: {msg}"
+            );
 
             // The source directory must still exist (no FS changes happened)
             assert!(
@@ -1151,37 +1244,50 @@ mod tests {
 
             // Write runs/full_chain/2020/index.json (build index)
             let run_index_path = PathBuf::from("runs/full_chain/2020/index.json");
-            write_json(&run_index_path, &serde_json::json!({
-                "label": "full_chain",
-                "year": "2020",
-                "config_sha256": config_sha,
-            }));
+            write_json(
+                &run_index_path,
+                &serde_json::json!({
+                    "label": "full_chain",
+                    "year": "2020",
+                    "config_sha256": config_sha,
+                }),
+            );
 
             // Compute build index SHA for the analysis index
             let run_index_sha = sha256_of_file(&run_index_path).unwrap();
 
             // Write analysis/full_chain/2020/index.json (analysis index)
             let analysis_index_path = PathBuf::from("analysis/full_chain/2020/index.json");
-            write_json(&analysis_index_path, &serde_json::json!({
-                "label": "full_chain",
-                "year": "2020",
-                "run_index_sha256": run_index_sha,
-            }));
+            write_json(
+                &analysis_index_path,
+                &serde_json::json!({
+                    "label": "full_chain",
+                    "year": "2020",
+                    "run_index_sha256": run_index_sha,
+                }),
+            );
 
             // Compute analysis index SHA for the report index
             let analysis_index_sha = sha256_of_file(&analysis_index_path).unwrap();
 
             // Write reports/full_chain/2020/index.json (report index)
             let report_index_path = PathBuf::from("reports/full_chain/2020/index.json");
-            write_json(&report_index_path, &serde_json::json!({
-                "label": "full_chain",
-                "year": "2020",
-                "analysis_index_sha256": analysis_index_sha,
-            }));
+            write_json(
+                &report_index_path,
+                &serde_json::json!({
+                    "label": "full_chain",
+                    "year": "2020",
+                    "analysis_index_sha256": analysis_index_sha,
+                }),
+            );
 
             // Now verify — all three links must match
             let result = run_verify("full_chain", Some("2020"));
-            assert!(result.is_ok(), "full matching SHA chain must return Verdict: VERIFIED: {:?}", result);
+            assert!(
+                result.is_ok(),
+                "full matching SHA chain must return Verdict: VERIFIED: {:?}",
+                result
+            );
         });
     }
 }

@@ -15,7 +15,7 @@ it, so tampering at any stage breaks the chain.
 
 A label is a human-readable identifier for a complete redistricting run. It
 captures the full pipeline from algorithm configuration through final reports.
-Labels are stored in the `.redist` registry file at the root of the project.
+Labels are stored in the `.bisect` registry file at the root of the project.
 
 Labels follow no enforced naming convention, but the project uses these
 patterns by practice:
@@ -146,7 +146,7 @@ Generates HTML, JSON, or PDF reports from the analysis outputs. Reads from
 `analysis/official_2020/{year}/`, writes to `reports/official_2020/{year}/`.
 
 The `--format pdf` path requires Typst; see
-`redist/crates/bisect-report/typst-templates/README.md` for installation. For court submissions,
+`BISECT/crates/bisect-report/typst-templates/README.md` for installation. For court submissions,
 the PDF format produces a report that satisfies the requirements of the
 `bisect-report` crate's civic gate (BD-R1).
 
@@ -181,7 +181,7 @@ bisect ls
 bisect ls --year 2020
 ```
 
-Lists all labels registered in `.redist`, with a one-line status summary
+Lists all labels registered in `.bisect`, with a one-line status summary
 for each: which stages have been completed, how many states are built, and
 whether any MISMATCH conditions exist.
 
@@ -203,14 +203,14 @@ Detailed status for one label. Shows the config algorithm parameters, resolved
 paths for each year, per-state build status, SHA chain integrity summary, and
 timing information.
 
-### `redist mv`
+### `BISECT mv`
 
 ```bash
-redist mv nc_draft nc_official
+BISECT mv nc_draft nc_official
 ```
 
 Atomically renames a label. Updates:
-- The `.redist` registry entry
+- The `.bisect` registry entry
 - All filesystem directories under `runs/`, `analysis/`, and `reports/`
 - The `name` field in `configs/{label}.yml`
 - The `label` field in every `index.json` under the old label path
@@ -281,7 +281,7 @@ analysis_types:
 ```
 
 The `name` field must match the filename: `configs/official_2020.yml` must
-have `name: official_2020`. The `redist config` command validates this and
+have `name: official_2020`. The `BISECT config` command validates this and
 will reject a config with a mismatched name.
 
 ---
@@ -290,7 +290,7 @@ will reject a config with a mismatched name.
 
 ```bash
 # 1. Create and validate the config
-redist config create my_plan --structure ratio-optimal --weights geographic \
+BISECT config create my_plan --structure ratio-optimal --weights geographic \
   --search convergence --convergence-threshold 600
 
 # 2. Build for all years
@@ -327,5 +327,5 @@ re-verification.
 
 - [three-layer-compositor.md](three-layer-compositor.md) — algorithm configuration
 - [section-algorithms.md](section-algorithms.md) — algorithm family reference
-- `docs/REDIST_CLI.md` — complete CLI flag reference
+- `docs/BISECT_CLI.md` — complete CLI flag reference
 - `docs/specs/` — label pipeline design specifications

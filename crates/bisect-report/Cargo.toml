@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 authors = ["Gio Della-Libera"]
 license = "MIT"
-description = "RPLAN format, PlanManifest, validate/migrate, report/export/import for redist CLI"
+description = "RPLAN format, PlanManifest, validate/migrate, report/export/import for BISECT CLI"
 
 [dependencies]
 bisect-core = { path = "../bisect-core" }

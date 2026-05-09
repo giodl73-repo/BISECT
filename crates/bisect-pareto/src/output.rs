@@ -6,8 +6,8 @@
 //!
 //! Per spec §8.2 and §9.
 
-use std::io::{self, Write};
 use std::fmt::Write as FmtWrite;
+use std::io::{self, Write};
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -116,8 +116,8 @@ impl ParetoResult {
             d_seats_discrete: true,
             file_sha256: file_hash,
         };
-        let meta_json = serde_json::to_string(&meta)
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        let meta_json =
+            serde_json::to_string(&meta).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
         let meta_line = format!("{meta_json}\n");
         writer.write_all(meta_line.as_bytes())?;
 
@@ -127,9 +127,9 @@ impl ParetoResult {
     /// Parse the metadata record from an NDJSON string (last metadata-type line).
     pub fn read_metadata_from_ndjson(ndjson: &str) -> Option<serde_json::Value> {
         ndjson.lines().rev().find_map(|line| {
-            serde_json::from_str::<serde_json::Value>(line).ok().filter(|v| {
-                v.get("type").and_then(|t| t.as_str()) == Some("metadata")
-            })
+            serde_json::from_str::<serde_json::Value>(line)
+                .ok()
+                .filter(|v| v.get("type").and_then(|t| t.as_str()) == Some("metadata"))
         })
     }
 }
@@ -142,7 +142,11 @@ mod tests {
     fn make_result(n: usize) -> ParetoResult {
         let entry = ParetoEntry {
             plan: vec![1u32, 1, 2, 2],
-            objectives: Objectives { ec: 1.0, d_seats: 0.5, vra_deficit: 0.0 },
+            objectives: Objectives {
+                ec: 1.0,
+                d_seats: 0.5,
+                vra_deficit: 0.0,
+            },
             dominated: false,
             generation_found: 0,
         };
@@ -196,7 +200,10 @@ mod tests {
         let result = make_result(3);
         let mut buf = Vec::new();
         result.write_ndjson(&mut buf).unwrap();
-        assert!(!buf.windows(2).any(|w| w == b"\r\n"), "must not contain CRLF");
+        assert!(
+            !buf.windows(2).any(|w| w == b"\r\n"),
+            "must not contain CRLF"
+        );
         assert!(buf.iter().any(|&b| b == b'\n'), "must contain LF");
     }
 
@@ -238,7 +245,10 @@ mod tests {
             assert!(v["d_seats"].is_number(), "d_seats must be number");
             assert!(v["vra_deficit"].is_number(), "vra_deficit must be number");
             assert!(v["dominated"].is_boolean(), "dominated must be boolean");
-            assert!(v["generation_found"].is_number(), "generation_found must be number");
+            assert!(
+                v["generation_found"].is_number(),
+                "generation_found must be number"
+            );
         }
     }
 }

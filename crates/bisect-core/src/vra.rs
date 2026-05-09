@@ -8,7 +8,7 @@ use std::collections::HashMap;
 /// Only minority-to-minority edges (both endpoints above threshold) are boosted.
 /// All other edges have implicit weight 1.0 (not included in the returned map).
 ///
-/// This is the single authoritative implementation — both redist-cli and the
+/// This is the single authoritative implementation — both BISECT-cli and the
 /// Python pipeline (via PyO3) call this function.
 pub fn build_vra_edge_weights(
     edges: &[(usize, usize)],
@@ -25,7 +25,8 @@ pub fn build_vra_edge_weights(
     let alpha = 3.0_f64.max(10.0 * (1.0 - 0.7 * f_minority));
 
     // Step 2: boost only edges where BOTH endpoints are minority tracts
-    edges.iter()
+    edges
+        .iter()
         .filter(|&&(u, v)| {
             minority_fracs.get(u).copied().unwrap_or(0.0) >= threshold
                 && minority_fracs.get(v).copied().unwrap_or(0.0) >= threshold
@@ -42,9 +43,7 @@ mod tests {
     fn test_adaptive_formula_alabama() {
         // Alabama: ~22% of tracts above 40% minority → f ≈ 0.22 → α ≈ 8.46
         let n = 100usize;
-        let minority_fracs: Vec<f64> = (0..n)
-            .map(|i| if i < 22 { 0.50 } else { 0.20 })
-            .collect();
+        let minority_fracs: Vec<f64> = (0..n).map(|i| if i < 22 { 0.50 } else { 0.20 }).collect();
         // All edges connect tract 0 (minority) to tract 1 (minority)
         let edges = vec![(0usize, 1usize)];
         let weights = build_vra_edge_weights(&edges, &minority_fracs, 0.40);
@@ -58,8 +57,14 @@ mod tests {
         let minority_fracs = vec![0.20, 0.20, 0.60]; // only tract 2 is minority
         let edges = vec![(0usize, 1usize), (1usize, 2usize)];
         let weights = build_vra_edge_weights(&edges, &minority_fracs, 0.40);
-        assert!(!weights.contains_key(&(0, 1)), "non-minority edge should not be boosted");
-        assert!(!weights.contains_key(&(1, 2)), "mixed edge should not be boosted");
+        assert!(
+            !weights.contains_key(&(0, 1)),
+            "non-minority edge should not be boosted"
+        );
+        assert!(
+            !weights.contains_key(&(1, 2)),
+            "mixed edge should not be boosted"
+        );
     }
 
     #[test]
@@ -69,7 +74,10 @@ mod tests {
         let edges: Vec<(usize, usize)> = (0..49).map(|i| (i, i + 1)).collect();
         let weights = build_vra_edge_weights(&edges, &minority_fracs, 0.40);
         for &alpha in weights.values() {
-            assert!((alpha - 3.0).abs() < 1e-9, "floor should be 3.0, got {alpha}");
+            assert!(
+                (alpha - 3.0).abs() < 1e-9,
+                "floor should be 3.0, got {alpha}"
+            );
         }
     }
 
@@ -80,10 +88,16 @@ mod tests {
         let edges = vec![(0usize, 1usize), (1usize, 2usize)];
         let weights = build_vra_edge_weights(&edges, &minority_fracs, 0.40);
         // f_minority = 2/3 → α = max(3.0, 10*(1-0.7*(2/3))) = max(3.0, 5.33) = 5.33
-        assert!(weights.contains_key(&(0, 1)), "minority-minority edge must be in output");
+        assert!(
+            weights.contains_key(&(0, 1)),
+            "minority-minority edge must be in output"
+        );
         let alpha = weights[&(0, 1)];
         let expected = 3.0_f64.max(10.0 * (1.0 - 0.7 * (2.0 / 3.0)));
-        assert!((alpha - expected).abs() < 1e-9, "alpha={alpha} expected={expected}");
+        assert!(
+            (alpha - expected).abs() < 1e-9,
+            "alpha={alpha} expected={expected}"
+        );
         // Mixed edge not in output
         assert!(!weights.contains_key(&(1, 2)));
     }
@@ -95,7 +109,10 @@ mod tests {
         let minority_fracs = vec![0.70, 0.70, 0.70]; // all minority
         let edges = vec![(0usize, 99usize)]; // 99 is out of bounds
         let weights = build_vra_edge_weights(&edges, &minority_fracs, 0.40);
-        assert!(!weights.contains_key(&(0, 99)), "out-of-bounds vertex treated as non-minority");
+        assert!(
+            !weights.contains_key(&(0, 99)),
+            "out-of-bounds vertex treated as non-minority"
+        );
     }
 
     #[test]

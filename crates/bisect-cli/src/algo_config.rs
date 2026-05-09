@@ -1,3 +1,4 @@
+use sha2::{Digest, Sha256};
 /// Algorithm configuration YAML loading — Phase 7 of Spec 7 (Label-Based Run Management).
 ///
 /// Loads `configs/X.yml` into an `AlgoYaml` struct and converts it to the
@@ -19,7 +20,6 @@
 /// analysis_types: [compactness, splits, summary]
 /// ```
 use std::path::Path;
-use sha2::{Digest, Sha256};
 
 // ---------------------------------------------------------------------------
 // Public structs
@@ -28,7 +28,7 @@ use sha2::{Digest, Sha256};
 /// Top-level YAML document for a label's algorithm configuration.
 ///
 /// This is the committed, human-editable file in `configs/X.yml`.
-/// Separate from `.redist` (auto-managed registry) and `runs/X/index.json`
+/// Separate from `.bisect` (auto-managed registry) and `runs/X/index.json`
 /// (auto-managed build index).
 #[derive(Debug, Clone, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -121,11 +121,13 @@ pub struct AlgorithmSection {
 impl AlgoYaml {
     /// Load from a YAML file path. Returns `[CONFIG]` error on parse failure.
     pub fn from_file(path: &Path) -> Result<Self, String> {
-        let bytes = std::fs::read(path).map_err(|e| {
-            format!("[CONFIG] config: cannot read '{}': {e}", path.display())
-        })?;
+        let bytes = std::fs::read(path)
+            .map_err(|e| format!("[CONFIG] config: cannot read '{}': {e}", path.display()))?;
         let text = std::str::from_utf8(&bytes).map_err(|e| {
-            format!("[CONFIG] config: '{}' is not valid UTF-8: {e}", path.display())
+            format!(
+                "[CONFIG] config: '{}' is not valid UTF-8: {e}",
+                path.display()
+            )
         })?;
         serde_yaml::from_str::<AlgoYaml>(text).map_err(|e| {
             // serde_yaml error messages already mention the field name for unknown-field
@@ -139,7 +141,9 @@ impl AlgoYaml {
     /// Maps structure/weights/search strings to SplitStrategy/WeightSpec/SeedCompositor.
     /// Returns `[CONFIG]` error for unknown values or missing conditional fields.
     pub fn to_algorithm_config(&self) -> Result<crate::runner::AlgorithmConfig, String> {
-        use crate::runner::{AlgorithmConfig, SeedCompositor, SplitStrategy, WeightSpec, MetisParams};
+        use crate::runner::{
+            AlgorithmConfig, MetisParams, SeedCompositor, SplitStrategy, WeightSpec,
+        };
         use crate::vertex_weights::VertexConstraintKind;
 
         let sec = &self.algorithm;
@@ -150,10 +154,7 @@ impl AlgoYaml {
                 SplitStrategy::Bisect,
                 vec![VertexConstraintKind::Population],
             ),
-            "nway" => (
-                SplitStrategy::NWay,
-                vec![VertexConstraintKind::Population],
-            ),
+            "nway" => (SplitStrategy::NWay, vec![VertexConstraintKind::Population]),
             "ratio-optimal" | "geosection" => (
                 SplitStrategy::GeoSection,
                 vec![VertexConstraintKind::Population],
@@ -161,7 +162,10 @@ impl AlgoYaml {
             "ratio-optimal-area" | "areasection" => {
                 let area_swing = sec.area_swing.unwrap_or(0.10);
                 (
-                    SplitStrategy::AreaSection { area_swing, area_section_init: crate::runner::AreaSectionInit::RatioOptimal },
+                    SplitStrategy::AreaSection {
+                        area_swing,
+                        area_section_init: crate::runner::AreaSectionInit::RatioOptimal,
+                    },
                     vec![VertexConstraintKind::Population, VertexConstraintKind::Area],
                 )
             }
@@ -185,9 +189,15 @@ impl AlgoYaml {
             }
             "moving-knife" => {
                 let n_orientations = sec.mka_orientations.unwrap_or(180);
-                let metric = sec.mka_metric.clone().unwrap_or_else(|| "reock".to_string());
+                let metric = sec
+                    .mka_metric
+                    .clone()
+                    .unwrap_or_else(|| "reock".to_string());
                 (
-                    SplitStrategy::MovingKnife { n_orientations, metric },
+                    SplitStrategy::MovingKnife {
+                        n_orientations,
+                        metric,
+                    },
                     vec![VertexConstraintKind::Population],
                 )
             }
@@ -214,7 +224,8 @@ impl AlgoYaml {
                 "geographic" => WeightSpec::default(),
                 "county" => {
                     let alpha = sec.alpha_county.ok_or_else(|| {
-                        "[CONFIG] config: 'alpha_county' is required when weights: county".to_string()
+                        "[CONFIG] config: 'alpha_county' is required when weights: county"
+                            .to_string()
                     })?;
                     WeightSpec {
                         geographic: true,
@@ -259,19 +270,31 @@ impl AlgoYaml {
                 let burst_length = sec.burst_length.unwrap_or(20);
                 let n_bursts = sec.n_bursts.unwrap_or(50);
                 let p = sec.percentile.unwrap_or(0.0).clamp(0.0, 1.0);
-                SeedCompositor::ShortBurst { burst_length, n_bursts, p }
+                SeedCompositor::ShortBurst {
+                    burst_length,
+                    n_bursts,
+                    p,
+                }
             }
             "short-burst-forest" => {
                 let burst_length = sec.burst_length.unwrap_or(20);
                 let n_bursts = sec.n_bursts.unwrap_or(50);
                 let p = sec.percentile.unwrap_or(0.0).clamp(0.0, 1.0);
-                SeedCompositor::ShortBurstForest { burst_length, n_bursts, p }
+                SeedCompositor::ShortBurstForest {
+                    burst_length,
+                    n_bursts,
+                    p,
+                }
             }
             "short-burst-merge-split" => {
                 let burst_length = sec.burst_length.unwrap_or(20);
                 let n_bursts = sec.n_bursts.unwrap_or(50);
                 let p = sec.percentile.unwrap_or(0.0).clamp(0.0, 1.0);
-                SeedCompositor::ShortBurstMergeSplit { burst_length, n_bursts, p }
+                SeedCompositor::ShortBurstMergeSplit {
+                    burst_length,
+                    n_bursts,
+                    p,
+                }
             }
             other => {
                 return Err(format!(
@@ -286,8 +309,8 @@ impl AlgoYaml {
         // ── Engine selection ───────────────────────────────────────────────────
         let engine = match sec.engine.as_deref().unwrap_or("c-ffi") {
             "c-ffi" | "c" | "metis-rs" => bisect_apportion::split::MetisEngine::CFfi,
-            "metis-core" | "rust"      => bisect_apportion::split::MetisEngine::RedistMetis,
-            "gpmetis" | "subprocess"   => bisect_apportion::split::MetisEngine::Gpmetis,
+            "metis-core" | "rust" => bisect_apportion::split::MetisEngine::RedistMetis,
+            "gpmetis" | "subprocess" => bisect_apportion::split::MetisEngine::Gpmetis,
             other => {
                 return Err(format!(
                     "[CONFIG] config: unknown engine '{}'. \
@@ -302,7 +325,10 @@ impl AlgoYaml {
             weights,
             vertex_constraints,
             seeds,
-            metis: MetisParams { engine, ..MetisParams::default() },
+            metis: MetisParams {
+                engine,
+                ..MetisParams::default()
+            },
             mode_label: None,
         })
     }
@@ -312,7 +338,10 @@ impl AlgoYaml {
     /// Returns a 64-character lowercase hex string.
     pub fn file_sha256(path: &Path) -> Result<String, String> {
         let bytes = std::fs::read(path).map_err(|e| {
-            format!("[CONFIG] config: cannot read '{}' for hashing: {e}", path.display())
+            format!(
+                "[CONFIG] config: cannot read '{}' for hashing: {e}",
+                path.display()
+            )
         })?;
         let mut hasher = Sha256::new();
         hasher.update(&bytes);
@@ -327,26 +356,30 @@ impl AlgoYaml {
 
     /// Return the resolved years list (config value or default ["2020", "2010", "2000"]).
     pub fn resolved_years(&self) -> Vec<String> {
-        self.years.clone().unwrap_or_else(|| {
-            vec!["2020".to_string(), "2010".to_string(), "2000".to_string()]
-        })
+        self.years
+            .clone()
+            .unwrap_or_else(|| vec!["2020".to_string(), "2010".to_string(), "2000".to_string()])
     }
 
     /// Return the resolved analysis types (config value or default).
     pub fn resolved_analysis_types(&self) -> Vec<String> {
         self.analysis_types.clone().unwrap_or_else(|| {
-            vec!["compactness".to_string(), "splits".to_string(), "summary".to_string()]
+            vec![
+                "compactness".to_string(),
+                "splits".to_string(),
+                "summary".to_string(),
+            ]
         })
     }
 }
 
 // ---------------------------------------------------------------------------
-// `redist config new` — write a template YAML to configs/X.yml
+// `BISECT config new` — write a template YAML to configs/X.yml
 // ---------------------------------------------------------------------------
 
 /// Write a template config YAML file to `configs/{name}.yml`.
 ///
-/// Called by `redist config new --name X ...`.
+/// Called by `BISECT config new --name X ...`.
 /// Returns `[CONFIG]` error if the directory cannot be created or the file
 /// already exists (unless `force` is true).
 pub fn write_template_config(
@@ -396,14 +429,15 @@ pub fn write_template_config(
     // Build YAML text
     let weights_str = weights.unwrap_or("geographic");
     let search_str = search.unwrap_or("single");
-    let years_str = years.iter()
+    let years_str = years
+        .iter()
         .map(|y| format!("\"{}\"", y))
         .collect::<Vec<_>>()
         .join(", ");
 
     let mut lines = vec![
         format!("# configs/{name}.yml"),
-        "# User-editable. Commit this. Do not confuse with .redist (auto-managed).".to_string(),
+        "# User-editable. Commit this. Do not confuse with .bisect (auto-managed).".to_string(),
         String::new(),
         format!("name: {name}"),
         "description: >".to_string(),
@@ -442,18 +476,19 @@ pub fn write_template_config(
         return Ok(content);
     }
 
-    let out_path = output_path
-        .map(|p| p.to_path_buf())
-        .unwrap_or_else(|| {
-            let configs_dir = std::path::PathBuf::from("configs");
-            configs_dir.join(format!("{name}.yml"))
-        });
+    let out_path = output_path.map(|p| p.to_path_buf()).unwrap_or_else(|| {
+        let configs_dir = std::path::PathBuf::from("configs");
+        configs_dir.join(format!("{name}.yml"))
+    });
 
     // Create the configs/ directory if needed
     if let Some(parent) = out_path.parent() {
         if !parent.as_os_str().is_empty() && !parent.exists() {
             std::fs::create_dir_all(parent).map_err(|e| {
-                format!("[CONFIG] config new: cannot create directory '{}': {e}", parent.display())
+                format!(
+                    "[CONFIG] config new: cannot create directory '{}': {e}",
+                    parent.display()
+                )
             })?;
         }
     }
@@ -466,14 +501,17 @@ pub fn write_template_config(
     }
 
     std::fs::write(&out_path, content.as_bytes()).map_err(|e| {
-        format!("[CONFIG] config new: cannot write '{}': {e}", out_path.display())
+        format!(
+            "[CONFIG] config new: cannot write '{}': {e}",
+            out_path.display()
+        )
     })?;
 
     Ok(format!("Written: {}", out_path.display()))
 }
 
 // ---------------------------------------------------------------------------
-// `redist config validate` — load and validate without running
+// `BISECT config validate` — load and validate without running
 // ---------------------------------------------------------------------------
 
 /// Load and validate a config YAML file.
@@ -511,31 +549,63 @@ pub fn validate_config(path: &Path) -> Result<String, String> {
         crate::runner::SeedCompositor::Flip { flip_steps, p } => {
             format!("flip (p={p:.2}, steps={flip_steps})")
         }
-        crate::runner::SeedCompositor::ShortBurst { burst_length, n_bursts, p } => {
+        crate::runner::SeedCompositor::ShortBurst {
+            burst_length,
+            n_bursts,
+            p,
+        } => {
             format!("short-burst (p={p:.2}, bursts={n_bursts}, length={burst_length})")
         }
-        crate::runner::SeedCompositor::ShortBurstForest { burst_length, n_bursts, p } => {
+        crate::runner::SeedCompositor::ShortBurstForest {
+            burst_length,
+            n_bursts,
+            p,
+        } => {
             format!("short-burst-forest (p={p:.2}, bursts={n_bursts}, length={burst_length})")
         }
-        crate::runner::SeedCompositor::ShortBurstMergeSplit { burst_length, n_bursts, p } => {
+        crate::runner::SeedCompositor::ShortBurstMergeSplit {
+            burst_length,
+            n_bursts,
+            p,
+        } => {
             format!("short-burst-merge-split (p={p:.2}, bursts={n_bursts}, length={burst_length})")
         }
         crate::runner::SeedCompositor::ForestRecom { steps, p } => {
             format!("forest-recom (p={p:.2}, steps={steps})")
         }
-        crate::runner::SeedCompositor::MultiScale { total_steps, p, alpha } => {
+        crate::runner::SeedCompositor::MultiScale {
+            total_steps,
+            p,
+            alpha,
+        } => {
             format!("multiscale (p={p:.2}, steps={total_steps}, alpha={alpha:.2})")
         }
         crate::runner::SeedCompositor::MergeSplit { steps, p } => {
             format!("merge-split (p={p:.2}, steps={steps})")
         }
-        crate::runner::SeedCompositor::MultiScaleAdaptive { total_steps, p, target_accept, adapt_interval } => {
+        crate::runner::SeedCompositor::MultiScaleAdaptive {
+            total_steps,
+            p,
+            target_accept,
+            adapt_interval,
+        } => {
             format!("multiscale-adaptive (p={p:.2}, steps={total_steps}, target_accept={target_accept:.2}, adapt_interval={adapt_interval})")
         }
-        crate::runner::SeedCompositor::ParallelTempering { n_replicas, swap_interval, cold_tolerance, hot_tolerance, steps, p } => {
+        crate::runner::SeedCompositor::ParallelTempering {
+            n_replicas,
+            swap_interval,
+            cold_tolerance,
+            hot_tolerance,
+            steps,
+            p,
+        } => {
             format!("parallel-tempering (p={p:.2}, steps={steps}, replicas={n_replicas}, swap_interval={swap_interval}, cold_tol={cold_tolerance:.4}, hot_tol={hot_tolerance:.4})")
         }
-        crate::runner::SeedCompositor::VraRecom { steps, p, vap_threshold } => {
+        crate::runner::SeedCompositor::VraRecom {
+            steps,
+            p,
+            vap_threshold,
+        } => {
             format!("vra-recom (p={p:.2}, steps={steps}, vap_threshold={vap_threshold:.2})")
         }
         crate::runner::SeedCompositor::SmcPercentile { n_particles, p } => {
@@ -559,7 +629,10 @@ pub fn validate_config(path: &Path) -> Result<String, String> {
     if let Some(desc) = &yaml.description {
         let trimmed = desc.trim();
         if !trimmed.is_empty() {
-            out.push(format!("  description: {}", trimmed.lines().next().unwrap_or("")));
+            out.push(format!(
+                "  description: {}",
+                trimmed.lines().next().unwrap_or("")
+            ));
         }
     }
     Ok(out.join("\n"))
@@ -760,11 +833,7 @@ algorithm:
 "#;
         let f = write_yaml(yaml);
         let sha = AlgoYaml::file_sha256(f.path()).unwrap();
-        assert_eq!(
-            sha.len(),
-            64,
-            "SHA-256 must be 64 hex chars, got: {sha}"
-        );
+        assert_eq!(sha.len(), 64, "SHA-256 must be 64 hex chars, got: {sha}");
         assert!(
             sha.chars().all(|c| c.is_ascii_hexdigit()),
             "SHA-256 must be lowercase hex: {sha}"
@@ -925,7 +994,11 @@ algorithm:
         let f = write_yaml(yaml);
         let doc = AlgoYaml::from_file(f.path()).unwrap();
         let years = doc.resolved_years();
-        assert_eq!(years, vec!["2020", "2010", "2000"], "default years must be 2020/2010/2000");
+        assert_eq!(
+            years,
+            vec!["2020", "2010", "2000"],
+            "default years must be 2020/2010/2000"
+        );
     }
 
     // ── Test 17: ratio-optimal maps to GeoSection ─────────────────────────────
@@ -962,8 +1035,14 @@ algorithm:
         let f = write_yaml(yaml);
         let doc = AlgoYaml::from_file(f.path()).unwrap();
         let algo = doc.to_algorithm_config().unwrap();
-        assert!(algo.weights.geographic, "geographic weights must set geographic flag");
-        assert_eq!(algo.weights.alpha_county, 0.0, "geographic weights must leave alpha_county at 0");
+        assert!(
+            algo.weights.geographic,
+            "geographic weights must set geographic flag"
+        );
+        assert_eq!(
+            algo.weights.alpha_county, 0.0,
+            "geographic weights must leave alpha_county at 0"
+        );
     }
 
     // ── Test 19: write_template_config dry_run returns YAML text ──────────────
@@ -985,12 +1064,28 @@ algorithm:
             None,
             false,
             true, // dry_run
-        ).unwrap();
-        assert!(result.contains("name: my_plan"), "YAML must contain name: {result}");
-        assert!(result.contains("apportion-regions"), "YAML must contain structure: {result}");
-        assert!(result.contains("county"), "YAML must contain weights: {result}");
-        assert!(result.contains("alpha_county: 2"), "YAML must contain alpha_county: {result}");
-        assert!(result.contains("convergence_threshold: 600"), "YAML must contain threshold: {result}");
+        )
+        .unwrap();
+        assert!(
+            result.contains("name: my_plan"),
+            "YAML must contain name: {result}"
+        );
+        assert!(
+            result.contains("apportion-regions"),
+            "YAML must contain structure: {result}"
+        );
+        assert!(
+            result.contains("county"),
+            "YAML must contain weights: {result}"
+        );
+        assert!(
+            result.contains("alpha_county: 2"),
+            "YAML must contain alpha_county: {result}"
+        );
+        assert!(
+            result.contains("convergence_threshold: 600"),
+            "YAML must contain threshold: {result}"
+        );
     }
 
     // ── Test 20: validate_config returns [OK] for valid file ──────────────────
@@ -1010,9 +1105,18 @@ years: ["2020", "2010", "2000"]
 "#;
         let f = write_yaml(yaml);
         let result = validate_config(f.path()).unwrap();
-        assert!(result.starts_with("[OK]"), "validate_config must return [OK] for valid YAML: {result}");
-        assert!(result.contains("apportion-regions"), "output must mention structure: {result}");
-        assert!(result.contains("convergence"), "output must mention search: {result}");
+        assert!(
+            result.starts_with("[OK]"),
+            "validate_config must return [OK] for valid YAML: {result}"
+        );
+        assert!(
+            result.contains("apportion-regions"),
+            "output must mention structure: {result}"
+        );
+        assert!(
+            result.contains("convergence"),
+            "output must mention search: {result}"
+        );
     }
 
     // ── Test 21: validate_config returns error for invalid YAML ───────────────
@@ -1027,9 +1131,15 @@ algorithm:
 "#;
         let f = write_yaml(yaml);
         let result = validate_config(f.path());
-        assert!(result.is_err(), "validate_config must fail for unknown structure");
+        assert!(
+            result.is_err(),
+            "validate_config must fail for unknown structure"
+        );
         let err = result.unwrap_err();
-        assert!(err.contains("[CONFIG]"), "error must contain [CONFIG]: {err}");
+        assert!(
+            err.contains("[CONFIG]"),
+            "error must contain [CONFIG]: {err}"
+        );
     }
 
     // ── Test 22: structure "standard-bisect" maps to SplitStrategy::Bisect ──
@@ -1048,7 +1158,8 @@ algorithm:
         let algo = doc.to_algorithm_config().unwrap();
         assert!(
             matches!(algo.split, SplitStrategy::Bisect),
-            "standard-bisect must map to SplitStrategy::Bisect, got: {:?}", algo.split
+            "standard-bisect must map to SplitStrategy::Bisect, got: {:?}",
+            algo.split
         );
     }
 
@@ -1068,7 +1179,8 @@ algorithm:
         let algo = doc.to_algorithm_config().unwrap();
         assert!(
             matches!(algo.split, SplitStrategy::NWay),
-            "nway must map to SplitStrategy::NWay, got: {:?}", algo.split
+            "nway must map to SplitStrategy::NWay, got: {:?}",
+            algo.split
         );
     }
 
@@ -1138,7 +1250,8 @@ algorithm:
         let algo = doc.to_algorithm_config().unwrap();
         assert!(
             matches!(algo.split, SplitStrategy::CompactBisect { .. }),
-            "compact-polsby must map to SplitStrategy::CompactBisect, got: {:?}", algo.split
+            "compact-polsby must map to SplitStrategy::CompactBisect, got: {:?}",
+            algo.split
         );
     }
 
@@ -1156,8 +1269,14 @@ algorithm:
         let f = write_yaml(yaml);
         let doc = AlgoYaml::from_file(f.path()).unwrap();
         let algo = doc.to_algorithm_config().unwrap();
-        assert!(!algo.weights.geographic, "unweighted must set geographic=false");
-        assert_eq!(algo.weights.alpha_county, 0.0, "unweighted must have alpha_county=0.0");
+        assert!(
+            !algo.weights.geographic,
+            "unweighted must set geographic=false"
+        );
+        assert_eq!(
+            algo.weights.alpha_county, 0.0,
+            "unweighted must have alpha_county=0.0"
+        );
     }
 
     // ── Test 28: weights "vra-aligned" sets minority_weighting=true ──────────
@@ -1174,8 +1293,14 @@ algorithm:
         let f = write_yaml(yaml);
         let doc = AlgoYaml::from_file(f.path()).unwrap();
         let algo = doc.to_algorithm_config().unwrap();
-        assert!(algo.weights.minority_weighting, "vra-aligned must set minority_weighting=true");
-        assert!(algo.weights.geographic, "vra-aligned must also set geographic=true");
+        assert!(
+            algo.weights.minority_weighting,
+            "vra-aligned must set minority_weighting=true"
+        );
+        assert!(
+            algo.weights.geographic,
+            "vra-aligned must also set geographic=true"
+        );
     }
 
     // ── Test 29: search "multi" with no seeds → defaults to 50 ───────────────
@@ -1214,7 +1339,10 @@ algorithm:
         let doc = AlgoYaml::from_file(f.path()).unwrap();
         let err = doc.to_algorithm_config().unwrap_err();
         assert!(err.contains("[CONFIG]"), "[CONFIG] prefix required: {err}");
-        assert!(err.contains("turbo-search"), "error must name the bad value: {err}");
+        assert!(
+            err.contains("turbo-search"),
+            "error must name the bad value: {err}"
+        );
     }
 
     // ── Test 31: resolved_workers respects explicit value ─────────────────────
@@ -1230,7 +1358,11 @@ workers: 12
 "#;
         let f = write_yaml(yaml);
         let doc = AlgoYaml::from_file(f.path()).unwrap();
-        assert_eq!(doc.resolved_workers(), 12, "explicit workers value must be respected");
+        assert_eq!(
+            doc.resolved_workers(),
+            12,
+            "explicit workers value must be respected"
+        );
     }
 
     // ── Test 32: resolved_years respects single-year config ───────────────────
@@ -1247,7 +1379,11 @@ years: ["2020"]
         let f = write_yaml(yaml);
         let doc = AlgoYaml::from_file(f.path()).unwrap();
         let years = doc.resolved_years();
-        assert_eq!(years, vec!["2020"], "single-year config must resolve to [2020]");
+        assert_eq!(
+            years,
+            vec!["2020"],
+            "single-year config must resolve to [2020]"
+        );
     }
 
     // ── Test 33: resolved_analysis_types defaults to compactness/splits/summary
@@ -1263,9 +1399,18 @@ algorithm:
         let f = write_yaml(yaml);
         let doc = AlgoYaml::from_file(f.path()).unwrap();
         let types = doc.resolved_analysis_types();
-        assert!(types.contains(&"compactness".to_string()), "default types must include compactness: {types:?}");
-        assert!(types.contains(&"splits".to_string()),      "default types must include splits: {types:?}");
-        assert!(types.contains(&"summary".to_string()),     "default types must include summary: {types:?}");
+        assert!(
+            types.contains(&"compactness".to_string()),
+            "default types must include compactness: {types:?}"
+        );
+        assert!(
+            types.contains(&"splits".to_string()),
+            "default types must include splits: {types:?}"
+        );
+        assert!(
+            types.contains(&"summary".to_string()),
+            "default types must include summary: {types:?}"
+        );
     }
 
     // ── Test 34: resolved_analysis_types respects config value ────────────────
@@ -1282,8 +1427,11 @@ analysis_types: [demographic, summary]
         let f = write_yaml(yaml);
         let doc = AlgoYaml::from_file(f.path()).unwrap();
         let types = doc.resolved_analysis_types();
-        assert_eq!(types, vec!["demographic", "summary"],
-            "configured analysis_types must be returned: {types:?}");
+        assert_eq!(
+            types,
+            vec!["demographic", "summary"],
+            "configured analysis_types must be returned: {types:?}"
+        );
     }
 
     // ── Test 35: file_sha256 on missing file → [CONFIG] error ─────────────────
@@ -1389,15 +1537,38 @@ algorithm:
         // Write a first time
         let years = vec!["2020".to_string()];
         write_template_config(
-            "my_plan", "apportion-regions", None, None, Some("single"),
-            None, None, None, &years, 4, Some(&out_path), false, false
-        ).unwrap();
+            "my_plan",
+            "apportion-regions",
+            None,
+            None,
+            Some("single"),
+            None,
+            None,
+            None,
+            &years,
+            4,
+            Some(&out_path),
+            false,
+            false,
+        )
+        .unwrap();
         assert!(out_path.exists(), "file must be written on first call");
 
         // Write a second time without force — must fail
         let result = write_template_config(
-            "my_plan", "apportion-regions", None, None, Some("single"),
-            None, None, None, &years, 4, Some(&out_path), false, false
+            "my_plan",
+            "apportion-regions",
+            None,
+            None,
+            Some("single"),
+            None,
+            None,
+            None,
+            &years,
+            4,
+            Some(&out_path),
+            false,
+            false,
         );
         assert!(result.is_err(), "second write without force must fail");
         let msg = result.unwrap_err();
@@ -1406,10 +1577,25 @@ algorithm:
 
         // Write a third time WITH force — must succeed
         let result = write_template_config(
-            "my_plan", "apportion-regions", None, None, Some("single"),
-            None, None, None, &years, 4, Some(&out_path), true, false
+            "my_plan",
+            "apportion-regions",
+            None,
+            None,
+            Some("single"),
+            None,
+            None,
+            None,
+            &years,
+            4,
+            Some(&out_path),
+            true,
+            false,
         );
-        assert!(result.is_ok(), "write with force must succeed: {:?}", result);
+        assert!(
+            result.is_ok(),
+            "write with force must succeed: {:?}",
+            result
+        );
     }
 
     // ── Test 41: write_template_config with invalid structure → error ─────────
@@ -1418,10 +1604,24 @@ algorithm:
     fn test_write_template_config_invalid_structure_returns_error() {
         let years = vec!["2020".to_string()];
         let result = write_template_config(
-            "my_plan", "flying-saucer", None, None, Some("single"),
-            None, None, None, &years, 4, None, false, true // dry_run
+            "my_plan",
+            "flying-saucer",
+            None,
+            None,
+            Some("single"),
+            None,
+            None,
+            None,
+            &years,
+            4,
+            None,
+            false,
+            true, // dry_run
         );
-        assert!(result.is_err(), "invalid structure must fail config generation");
+        assert!(
+            result.is_err(),
+            "invalid structure must fail config generation"
+        );
         let msg = result.unwrap_err();
         assert!(msg.contains("[CONFIG]"), "[CONFIG] prefix required: {msg}");
     }
@@ -1432,10 +1632,21 @@ algorithm:
     fn test_write_template_config_default_balance_tolerance() {
         let years = vec!["2020".to_string()];
         let content = write_template_config(
-            "my_plan", "apportion-regions", None, None, Some("single"),
-            None, None, None, // balance_tolerance=None → default 0.5
-            &years, 4, None, false, true // dry_run
-        ).unwrap();
+            "my_plan",
+            "apportion-regions",
+            None,
+            None,
+            Some("single"),
+            None,
+            None,
+            None, // balance_tolerance=None → default 0.5
+            &years,
+            4,
+            None,
+            false,
+            true, // dry_run
+        )
+        .unwrap();
         assert!(
             content.contains("balance_tolerance: 0.5"),
             "default balance_tolerance 0.5 must appear in template: {content}"

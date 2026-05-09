@@ -60,15 +60,28 @@ fn apply_laplacian(
     lv
 }
 
-fn dot(a: &[f64], b: &[f64]) -> f64 { a.iter().zip(b).map(|(x,y)| x*y).sum() }
-fn norm(v: &[f64]) -> f64 { dot(v, v).sqrt() }
-fn normalize(v: &mut Vec<f64>) { let n = norm(v); if n > 1e-14 { for x in v { *x /= n; } } }
+fn dot(a: &[f64], b: &[f64]) -> f64 {
+    a.iter().zip(b).map(|(x, y)| x * y).sum()
+}
+fn norm(v: &[f64]) -> f64 {
+    dot(v, v).sqrt()
+}
+fn normalize(v: &mut Vec<f64>) {
+    let n = norm(v);
+    if n > 1e-14 {
+        for x in v {
+            *x /= n;
+        }
+    }
+}
 
 /// Project out the component of v along the all-ones direction (λ₁=0 eigenvector).
 fn project_out_ones(v: &mut Vec<f64>) {
     let n = v.len() as f64;
     let mean: f64 = v.iter().sum::<f64>() / n;
-    for x in v.iter_mut() { *x -= mean; }
+    for x in v.iter_mut() {
+        *x -= mean;
+    }
 }
 
 /// Compute the Fiedler value λ₂ of the weighted graph Laplacian.
@@ -80,17 +93,27 @@ pub fn compute_fiedler(
     tol: f64,
 ) -> (f64, bool) {
     let n = adjacency.len();
-    if n <= 1 { return (0.0, true); }
+    if n <= 1 {
+        return (0.0, true);
+    }
     if n == 2 {
         let w = edge_weights.get(&(0, 1)).copied().unwrap_or(0.0);
         return (2.0 * w, true);
     }
 
-    let degree: Vec<f64> = (0..n).map(|i|
-        adjacency[i].iter().map(|&j| {
-            edge_weights.get(&(i.min(j), i.max(j))).copied().unwrap_or(0.0)
-        }).sum()
-    ).collect();
+    let degree: Vec<f64> = (0..n)
+        .map(|i| {
+            adjacency[i]
+                .iter()
+                .map(|&j| {
+                    edge_weights
+                        .get(&(i.min(j), i.max(j)))
+                        .copied()
+                        .unwrap_or(0.0)
+                })
+                .sum()
+        })
+        .collect();
 
     // ── Step 1: λ_max via power iteration on L ──────────────────────────────
     let mut v: Vec<f64> = (0..n).map(|i| (i as f64 + 1.0).sin()).collect();
@@ -107,9 +130,13 @@ pub fn compute_fiedler(
         v = lv;
         project_out_ones(&mut v);
         normalize(&mut v);
-        if (lambda_max - prev).abs() < tol { break; }
+        if (lambda_max - prev).abs() < tol {
+            break;
+        }
     }
-    if lambda_max < 1e-10 { lambda_max = *degree.iter().cloned().reduce(f64::max).get_or_insert(1.0); }
+    if lambda_max < 1e-10 {
+        lambda_max = *degree.iter().cloned().reduce(f64::max).get_or_insert(1.0);
+    }
 
     // ── Step 2: λ₂ via power iteration on (λ_max·I − L) restricted to 1⃗⊥ ──
     // Dominant eigenvalue of (λ_max·I − L) on 1⃗⊥  =  λ_max − λ₂
@@ -123,13 +150,20 @@ pub fn compute_fiedler(
     for _ in 0..max_iter {
         // Apply (λ_max·I − L): w = λ_max·u − L·u
         let lu = apply_laplacian(&u, adjacency, edge_weights, &degree);
-        let mut w: Vec<f64> = u.iter().zip(&lu).map(|(&ui, &lui)| lambda_max * ui - lui).collect();
+        let mut w: Vec<f64> = u
+            .iter()
+            .zip(&lu)
+            .map(|(&ui, &lui)| lambda_max * ui - lui)
+            .collect();
         project_out_ones(&mut w);
         let prev_dom = dom;
         dom = dot(&u, &w); // Rayleigh quotient for (λ_max·I − L)
         normalize(&mut w);
         u = w;
-        if (dom - prev_dom).abs() < tol { converged = true; break; }
+        if (dom - prev_dom).abs() < tol {
+            converged = true;
+            break;
+        }
     }
 
     let lambda2 = (lambda_max - dom).max(0.0);
@@ -142,15 +176,25 @@ pub fn compute_fiedler(
 pub fn gmpp_upper_bound(
     lambda2: f64,
     n_vertices: usize,
-    area_left: f64, area_right: f64,
-    ext_perim_left: f64, ext_perim_right: f64,
+    area_left: f64,
+    area_right: f64,
+    ext_perim_left: f64,
+    ext_perim_right: f64,
 ) -> f64 {
     let ec_lb = lambda2 * n_vertices as f64 / 4.0;
     // The cut contributes ec_lb to BOTH halves' perimeters
-    let p_left  = ec_lb + ext_perim_left;
+    let p_left = ec_lb + ext_perim_left;
     let p_right = ec_lb + ext_perim_right;
-    let pp_left  = if p_left  > 0.0 { 4.0 * std::f64::consts::PI * area_left  / (p_left  * p_left)  } else { 0.0 };
-    let pp_right = if p_right > 0.0 { 4.0 * std::f64::consts::PI * area_right / (p_right * p_right) } else { 0.0 };
+    let pp_left = if p_left > 0.0 {
+        4.0 * std::f64::consts::PI * area_left / (p_left * p_left)
+    } else {
+        0.0
+    };
+    let pp_right = if p_right > 0.0 {
+        4.0 * std::f64::consts::PI * area_right / (p_right * p_right)
+    } else {
+        0.0
+    };
     (pp_left * pp_right).sqrt()
 }
 
@@ -173,12 +217,21 @@ pub fn make_certificate(
         .filter(|&ub| ub > 1e-14)
         .map(|ub| achieved_gmpp / ub);
 
-    let certified = certification_ratio.map(|r| r >= 1.0 - delta).unwrap_or(false);
+    let certified = certification_ratio
+        .map(|r| r >= 1.0 - delta)
+        .unwrap_or(false);
 
     FiedlerCertificate {
-        n_vertices, lambda2, total_edge_weight, ec_lower_bound,
-        achieved_gmpp, gmpp_upper_bound: gmpp_upper_bound_val,
-        certification_ratio, seeds_used, certified, delta,
+        n_vertices,
+        lambda2,
+        total_edge_weight,
+        ec_lower_bound,
+        achieved_gmpp,
+        gmpp_upper_bound: gmpp_upper_bound_val,
+        certification_ratio,
+        seeds_used,
+        certified,
+        delta,
     }
 }
 
@@ -186,15 +239,23 @@ pub fn make_certificate(
 mod tests {
     use super::*;
 
-    fn line_graph(n: usize, w: f64) -> (Vec<Vec<usize>>, HashMap<(usize,usize),f64>) {
-        let adj: Vec<Vec<usize>> = (0..n).map(|i| {
-            let mut nb = vec![];
-            if i > 0 { nb.push(i-1); }
-            if i < n-1 { nb.push(i+1); }
-            nb
-        }).collect();
+    fn line_graph(n: usize, w: f64) -> (Vec<Vec<usize>>, HashMap<(usize, usize), f64>) {
+        let adj: Vec<Vec<usize>> = (0..n)
+            .map(|i| {
+                let mut nb = vec![];
+                if i > 0 {
+                    nb.push(i - 1);
+                }
+                if i < n - 1 {
+                    nb.push(i + 1);
+                }
+                nb
+            })
+            .collect();
         let mut ew = HashMap::new();
-        for i in 0..n-1 { ew.insert((i, i+1), w); }
+        for i in 0..n - 1 {
+            ew.insert((i, i + 1), w);
+        }
         (adj, ew)
     }
 
@@ -203,7 +264,7 @@ mod tests {
         // P_2: L = [[w,-w],[-w,w]], eigenvalues 0 and 2w
         let adj = vec![vec![1], vec![0]];
         let mut ew = HashMap::new();
-        ew.insert((0,1), 500.0);
+        ew.insert((0, 1), 500.0);
         let (lam, _) = compute_fiedler(&adj, &ew, 50, 1e-8);
         assert!((lam - 1000.0).abs() < 10.0, "P_2 λ₂=2w=1000, got {lam}");
     }
@@ -220,9 +281,11 @@ mod tests {
     #[test]
     fn complete_k3_lambda2() {
         // K_3 w=1: L=[[2,-1,-1],[-1,2,-1],[-1,-1,2]], eigenvalues 0,3,3
-        let adj = vec![vec![1,2], vec![0,2], vec![0,1]];
+        let adj = vec![vec![1, 2], vec![0, 2], vec![0, 1]];
         let mut ew = HashMap::new();
-        ew.insert((0,1),1.0); ew.insert((0,2),1.0); ew.insert((1,2),1.0);
+        ew.insert((0, 1), 1.0);
+        ew.insert((0, 2), 1.0);
+        ew.insert((1, 2), 1.0);
         let (lam, conv) = compute_fiedler(&adj, &ew, 200, 1e-6);
         assert!(conv, "K_3 should converge");
         assert!((lam - 3.0).abs() < 0.3, "K_3 λ₂=3, got {lam}");
@@ -236,7 +299,7 @@ mod tests {
         let n = 6usize;
         let (adj, ew) = line_graph(n, 100.0);
         let (lam, _) = compute_fiedler(&adj, &ew, 200, 1e-6);
-        let lb = lam * n as f64 / 4.0;  // Cheeger: λ₂ × n/4
+        let lb = lam * n as f64 / 4.0; // Cheeger: λ₂ × n/4
         assert!(lb > 0.0, "lower bound must be positive, got {lb}");
         assert!(lb <= 100.0 + 1.0, "bound {lb} exceeds actual min-cut 100");
     }
@@ -254,7 +317,7 @@ mod tests {
     #[test]
     fn single_vertex_lambda2_is_zero() {
         let adj: Vec<Vec<usize>> = vec![vec![]];
-        let ew: HashMap<(usize,usize),f64> = HashMap::new();
+        let ew: HashMap<(usize, usize), f64> = HashMap::new();
         let (lam, conv) = compute_fiedler(&adj, &ew, 50, 1e-8);
         assert_eq!(lam, 0.0, "single vertex λ₂ = 0");
         assert!(conv, "single vertex always converges");
@@ -266,7 +329,10 @@ mod tests {
         let result = gmpp_upper_bound(1.0, 10, 1000.0, 1000.0, 0.0, 0.0);
         // With ec_lb = 1.0 × 10 / 4 = 2.5; p_left = p_right = 2.5 > 0 → not 0
         // Just check it returns a finite positive value
-        assert!(result >= 0.0 && result.is_finite(), "result should be finite non-negative");
+        assert!(
+            result >= 0.0 && result.is_finite(),
+            "result should be finite non-negative"
+        );
     }
 
     /// gmpp_upper_bound scales correctly with area (larger area → larger GMPP bound).
@@ -274,7 +340,10 @@ mod tests {
     fn gmpp_upper_bound_scales_with_area() {
         let ub_small = gmpp_upper_bound(1.0, 4, 100.0, 100.0, 50.0, 50.0);
         let ub_large = gmpp_upper_bound(1.0, 4, 10000.0, 10000.0, 50.0, 50.0);
-        assert!(ub_large > ub_small, "larger area should produce larger GMPP upper bound");
+        assert!(
+            ub_large > ub_small,
+            "larger area should produce larger GMPP upper bound"
+        );
     }
 
     /// make_certificate: certified=false when achieved_gmpp << upper bound.
@@ -283,7 +352,10 @@ mod tests {
         let (adj, ew) = line_graph(4, 1.0);
         let cert = make_certificate(&adj, &ew, 0.01, Some(1.0), 1, 0.05);
         // achieved 0.01 / upper 1.0 = ratio 0.01 << 0.95 → not certified
-        assert!(!cert.certified, "ratio 0.01 should be below the 1-delta threshold");
+        assert!(
+            !cert.certified,
+            "ratio 0.01 should be below the 1-delta threshold"
+        );
     }
 
     /// make_certificate: certified=true when achieved_gmpp ≈ upper bound.
@@ -292,6 +364,9 @@ mod tests {
         let (adj, ew) = line_graph(4, 1.0);
         // achieved 0.99, upper 1.0, delta 0.05 → ratio = 0.99 ≥ 0.95 → certified
         let cert = make_certificate(&adj, &ew, 0.99, Some(1.0), 1, 0.05);
-        assert!(cert.certified, "ratio 0.99 should be certified at delta=0.05");
+        assert!(
+            cert.certified,
+            "ratio 0.99 should be certified at delta=0.05"
+        );
     }
 }

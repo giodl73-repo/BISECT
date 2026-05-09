@@ -18,7 +18,7 @@ No open standard exists for redistricting plan interchange. Current tools use:
 | PlanScore | GeoJSON via API | API-only; no file format spec |
 | Maptitude | Proprietary `.rds` | Closed, no external access |
 | Census enacted | ESRI shapefile | Boundaries only; no tract mapping |
-| `redist` (current) | `{"tract_index": district_int}` | Index-keyed, not GEOID-keyed |
+| `BISECT` (current) | `{"tract_index": district_int}` | Index-keyed, not GEOID-keyed |
 
 The result: every tool that wants to interoperate writes its own converter, and those converters break when the source tool updates. A practitioner submitting a plan to a court needs a single, stable, independently verifiable format — not a chain of tool-specific exports.
 
@@ -28,7 +28,7 @@ The result: every tool that wants to interoperate writes its own converter, and 
 - **GEOID-keyed** — uses Census tract GEOIDs as the authoritative identifier, not tool-internal indices
 - **GeoJSON-compatible** — the geometry section follows RFC 7946 exactly
 - **Self-describing** — metadata sufficient to reproduce or verify the plan
-- **Tool-neutral** — no `redist`-specific fields required; any tool can write a valid RPLAN file
+- **Tool-neutral** — no `BISECT`-specific fields required; any tool can write a valid RPLAN file
 
 ---
 
@@ -66,7 +66,7 @@ All four top-level keys are required. `geometry` may be `null` if district polyg
     "population_source": "total",
     "balance_tolerance_pct": 5.0,
     "created_at": "2026-04-26T14:23:00Z",
-    "created_by": "redist v0.1.0",
+    "created_by": "BISECT v0.1.0",
     "seed": 42,
     "notes": "Draft 1 — WA House redistricting commission submission"
   }
@@ -87,7 +87,7 @@ All four top-level keys are required. `geometry` may be `null` if district polyg
 | `created_by` | yes | string | Tool name + version that created this file |
 | `seed` | no | integer\|null | RNG seed if plan was generated algorithmically |
 | `notes` | no | string | Free text |
-| `source_manifest` | no | object | Full PlanManifest if created by `redist` (Spec 1) |
+| `source_manifest` | no | object | Full PlanManifest if created by `BISECT` (Spec 1) |
 
 ---
 
@@ -159,7 +159,7 @@ When present, contains dissolved district polygons as a GeoJSON FeatureCollectio
 
 | Tool | Can read RPLAN | Can write RPLAN | Notes |
 |------|---------------|----------------|-------|
-| `redist` CLI | Yes (native) | Yes (native) | First-class format |
+| `BISECT` CLI | Yes (native) | Yes (native) | First-class format |
 | GerryChain v2.3+ | Via converter | Via converter | `assignment` field maps to RPLAN `assignments` |
 | DRA | Via GeoJSON geometry section | No | Reads district polygons only |
 | PlanScore | Via GeoJSON geometry section | No | API-only, reads polygons |
@@ -201,9 +201,9 @@ A valid RPLAN file must pass all of:
 4. **Coverage**: when `state_fips` and `year` are known, all tracts in that state are present (checked via Census tract count reference)
 5. **GeoJSON RFC 7946**: geometry section (if present) passes RFC 7946 validation
 
-`redist` CLI validates on read:
+`BISECT` CLI validates on read:
 ```bash
-redist validate --file plan.rplan
+BISECT validate --file plan.rplan
 # → PASS: valid RPLAN v0.1 (530 tracts, 10 districts, WA 2020 congressional)
 # → FAIL: 3 GEOIDs invalid format (must be 11 digits): ["530330", "5303300010", "5303300010011"]
 ```
@@ -245,7 +245,7 @@ RPLAN is **not a replacement for GeoJSON** for district polygon interchange. It 
 
 ## Reference implementation
 
-The `redist` binary is the reference implementation for RPLAN:
+The `BISECT` binary is the reference implementation for RPLAN:
 
 ```bash
 # Generate a plan and write as RPLAN
@@ -254,14 +254,14 @@ bisect state --state WA --year 2020 --version WA_Plans \
   --output-format rplan
 
 # Validate an RPLAN file
-redist validate --file wa_house_draft1.rplan
+BISECT validate --file wa_house_draft1.rplan
 
 # Convert RPLAN to other formats
-redist export --file wa_house_draft1.rplan \
+BISECT export --file wa_house_draft1.rplan \
   --format geojson shapefile gerrychain csv
 
 # Import RPLAN from any tool
-redist import --file external_plan.rplan \
+BISECT import --file external_plan.rplan \
   --state WA --year 2020 --label external_for_analysis
 ```
 
@@ -271,7 +271,7 @@ redist import --file external_plan.rplan \
 
 **[LEDGER]**: RPLAN `assignments` uses plural; GerryChain uses `assignment` singular — this is intentional and documented above. The field name difference is preserved to avoid silent misreads when converting.
 
-**[COVENANT]**: The `source_manifest` field in metadata carries the full `PlanManifest` (Spec 1) for `redist`-generated plans, providing complete audit chain. For plans from other tools, `source_manifest` is `null` and the `created_by` field records the tool.
+**[COVENANT]**: The `source_manifest` field in metadata carries the full `PlanManifest` (Spec 1) for `BISECT`-generated plans, providing complete audit chain. For plans from other tools, `source_manifest` is `null` and the `created_by` field records the tool.
 
 **[WARD]**: RPLAN carries `chamber` and `population_source` in metadata so consuming tools know which legal standards apply when analyzing the plan. These fields inform Spec 3's state-specific split analysis.
 
@@ -295,10 +295,10 @@ Correct top-level structure:
 ```
 The `metadata` example shown in this spec erroneously includes `"rplan_version": "0.1"` as the first field inside the `metadata` block. That field must be removed from the `metadata` object. `rplan_version` belongs at the top level only.
 
-**[SURVEY] CRITICAL — Define redist validate in Commands enum**
-`redist validate --file plan.rplan` is shown as a CLI command but no `Commands::Validate` variant is defined.
-Fix: Add to Spec 1's implementation section. `redist validate` dispatches to `redist_report::validate_rplan()` which checks schema, GEOID format, district range, coverage, and RFC 7946.
+**[SURVEY] CRITICAL — Define BISECT validate in Commands enum**
+`BISECT validate --file plan.rplan` is shown as a CLI command but no `Commands::Validate` variant is defined.
+Fix: Add to Spec 1's implementation section. `BISECT validate` dispatches to `BISECT_report::validate_rplan()` which checks schema, GEOID format, district range, coverage, and RFC 7946.
 
 **[LEDGER] CRITICAL — Define path convention migration**
 `plans/{label}/` tree (Spec 1) vs legacy `states/{state_name}/` tree (existing CLI). These coexist but are never reconciled.
-Fix: Both trees are preserved. Unlabeled runs continue using `states/{state_name}/`. Labeled runs use `plans/{label}/`. `bisect analyze` and `redist map` accept either `--state` (legacy path) or `--label` (new path). A `redist migrate --state WA --label wa_congressional_2020` command copies a legacy plan into the new tree. Document this in the overview spec.
+Fix: Both trees are preserved. Unlabeled runs continue using `states/{state_name}/`. Labeled runs use `plans/{label}/`. `bisect analyze` and `BISECT map` accept either `--state` (legacy path) or `--label` (new path). A `BISECT migrate --state WA --label wa_congressional_2020` command copies a legacy plan into the new tree. Document this in the overview spec.

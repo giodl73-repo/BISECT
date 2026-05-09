@@ -33,7 +33,7 @@ Properties of census data formats that must be maintained. Violating these produ
 
 **Test:** `tests/unit/test_rust_graph.py::test_edge_weights_canonical_order`
 `tests/unit/test_rust_serialize.py::test_edge_weights_canonical_order_preserved`
-`redist/crates/bisect-core/src/metis_format.rs::test_non_canonical_edge_key_returns_error`
+`BISECT/crates/bisect-core/src/metis_format.rs::test_non_canonical_edge_key_returns_error`
 
 **Status:** ENFORCED
 
@@ -65,6 +65,6 @@ Properties of census data formats that must be maintained. Violating these produ
 
 **Test:** PARTIAL — no explicit test verifies all weights ≥ 1. The max(1) clamp prevents METIS failures but could hide data quality issues.
 
-**Test:** `redist/crates/bisect-cli/src/bisection_runner.rs::test_invariant_vertex_weights_positive`
+**Test:** `BISECT/crates/bisect-cli/src/bisection_runner.rs::test_invariant_vertex_weights_positive`
 
 **Status:** ENFORCED — max(weight, 1) clamp + unit test verifying clamping logic

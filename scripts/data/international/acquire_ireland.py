@@ -385,18 +385,18 @@ def main():
     ig = graph_dict.get("index_to_geoid", {})
     geoid_path.write_text(json.dumps({str(k): v for k, v in ig.items()}))
     try:
-        import redist_py
+        import bisect_py
         adj = graph_dict["adjacency"]
         vw = [int(x) for x in graph_dict["vertex_weights"]]
         ew = {(min(i, j), max(i, j)): float(w) for (i, j), w in graph_dict["edge_weights"].items()}
-        bin_data = redist_py.adjacency_to_bin(adj, vw, ew, len(adj), len(ew))
+        bin_data = bisect_py.adjacency_to_bin(adj, vw, ew, len(adj), len(ew))
         bin_path = OUT_DIR / "ie_adjacency_2022.adj.bin"
         bin_path.write_bytes(bin_data)
         print(f"  [OK] {bin_path} ({len(bin_data)/1e6:.1f} MB)")
     except ImportError:
         bin_path = None
-        print("  [WARN] redist_py not available — .adj.bin not generated")
-        print("  Build with: cd redist/python/redist_py && maturin develop")
+        print("  [WARN] bisect_py not available — .adj.bin not generated")
+        print("  Build with: cd python/bisect_py && maturin develop")
 
     # Summary
     print(f"\n=== Ireland Acquisition Complete ===")
@@ -405,18 +405,18 @@ def main():
     print(f"  Total pop: {sum(graph_dict['vertex_weights']):,}")
     print(f"  Constituencies: {IRELAND_N_CONSTITUENCIES} × avg 4.1 seats = {IRELAND_TOTAL_SEATS_2023} total")
     print(f"\nNext — run redistricting (avg seats=4, balance=5%):")
-    print(f"  redist state --state IE --year 2022 --version international \\")
+    print(f"  BISECT state --state IE --year 2022 --version international \\")
     print(f"    --adjacency {bin_path or pkl_path} --state-name ireland \\")
     print(f"    --districts {IRELAND_N_CONSTITUENCIES} --seats-per-district 4 \\")
     print(f"    --chamber parliamentary --balance-tolerance 5 --label ireland_dail_2022")
 
     if args.run and bin_path:
         print("\nStep 6: Running redistricting...")
-        redist = Path("redist/target/release/redist.exe")
-        if not redist.exists():
-            redist = Path("redist/target/release/redist")
-        if redist.exists():
-            cmd = [str(redist), "state",
+        BISECT = Path("target/release/bisect.exe")
+        if not BISECT.exists():
+            BISECT = Path("target/release/bisect")
+        if BISECT.exists():
+            cmd = [str(BISECT), "state",
                    "--state", "IE", "--year", "2022", "--version", "international",
                    "--adjacency", str(bin_path), "--state-name", "ireland",
                    "--districts", str(IRELAND_N_CONSTITUENCIES),
@@ -426,7 +426,7 @@ def main():
             result = subprocess.run(cmd, capture_output=True, text=True)
             print(result.stderr)
         else:
-            print("  [WARN] redist binary not found")
+            print("  [WARN] BISECT binary not found")
 
 
 if __name__ == "__main__":

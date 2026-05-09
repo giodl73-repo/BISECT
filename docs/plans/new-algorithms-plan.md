@@ -91,7 +91,7 @@ SMC already produces a weighted sample from the uniform distribution over plans.
      - Three objectives: EC, partisan, VRA
      - Output format: NDJSON Pareto frontier
     ↓
-#165 Implement redist-pareto (→ bisect-pareto) crate
+#165 Implement BISECT-pareto (→ bisect-pareto) crate
      - NSGA-II with ReCom-style crossover + Flip-style mutation
      - Rayon parallelism for objective evaluation
      - CLI: bisect pareto --state NC --year 2020 --population 100 --generations 200

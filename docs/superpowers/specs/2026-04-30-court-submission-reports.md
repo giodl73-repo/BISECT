@@ -8,7 +8,7 @@
 
 ## Why this exists
 
-Courts and special masters consume PDFs, not JSON or HTML. Today the project produces `analysis/*.json` (machine-readable) and `redist report --format html` (browser-readable) but not court-formatted PDFs with the conventions expert witnesses use: cover page, methodology section, reproducibility appendix, signature block, citations.
+Courts and special masters consume PDFs, not JSON or HTML. Today the project produces `analysis/*.json` (machine-readable) and `BISECT report --format html` (browser-readable) but not court-formatted PDFs with the conventions expert witnesses use: cover page, methodology section, reproducibility appendix, signature block, citations.
 
 A practitioner who has finished their analysis still has to take our HTML output, copy-paste into Word, format manually, and hope nothing changed in the data underneath. This spec eliminates that step.
 
@@ -16,7 +16,7 @@ A practitioner who has finished their analysis still has to take our HTML output
 
 ### In scope
 
-1. **PDF rendering pipeline** — `redist report --format pdf` produces a court-ready document from the same data the HTML report uses.
+1. **PDF rendering pipeline** — `BISECT report --format pdf` produces a court-ready document from the same data the HTML report uses.
 
 2. **Standard sections (v2 expanded per SURVEY)** — cover page, executive summary, methodology, results, **expert qualifications (CV attachment)**, **declaration of conflicts of interest**, **prior-testimony list (last 5 years per FRCP 26(a)(2)(B))**, **Daubert-readiness self-assessment**, reproducibility appendix, signature block. Each section is templated and pulls from the analysis JSON or expert-config.
 
@@ -24,14 +24,14 @@ A practitioner who has finished their analysis still has to take our HTML output
    - `manifest.json` with explicit per-input-file SHA-256 + fetch date schema (every input file gets a row: path, sha256, fetched_at, source_url)
    - `provenance.json` (binary version, build commit, build date, rustc version)
    - **Race-of-candidate CSV** when bloc-voting analysis is included (BOUNDARY blocker — without this, evidence is not Daubert-defensible)
-   - Verification command: `redist doctor --verify-manifest <path-to-manifest>`
+   - Verification command: `BISECT doctor --verify-manifest <path-to-manifest>`
    - **Step-by-step rebuild instructions** for a non-engineer special master. **Recommended path** (5–15 min on first build): use the bootstrap script from the Onboarding spec — `bash bootstrap.sh` (Linux/macOS) or `bootstrap.bat` (Windows), which handles `rustup`, METIS, the locked toolchain, and PATH setup. **Manual fallback** (30–60 min, for environments where running scripts is restricted):
      ```
      # Prereqs: rustup (https://rustup.rs), C compiler, METIS dev headers
      git clone <repo-url>
      git checkout <build_commit>
-     cd redist && cargo build --release --locked
-     ./target/release/redist doctor --verify-manifest <path>
+     cargo build --release --locked
+     ./target/release/BISECT doctor --verify-manifest <path>
      ```
      Common failures (`linker not found` → install build-essential / Xcode CLT / VS Build Tools; METIS missing → `apt install libmetis-dev` / `brew install metis` / Windows uses vendored copy) are documented in `docs/error-conventions.md`.
    - **Page limit**: appendix is bounded to 20 pages of the main PDF; full audit data is in the sidecar `reproducibility_package.zip`. The PDF references the zip's SHA-256.
@@ -49,7 +49,7 @@ A practitioner who has finished their analysis still has to take our HTML output
 
 ### Out of scope
 
-- WYSIWYG editing (use the `redist report --format html` output as a draft, then fix in Word if needed)
+- WYSIWYG editing (use the `BISECT report --format html` output as a draft, then fix in Word if needed)
 - Court-jurisdiction-specific formatting (Eastern District of Louisiana has different conventions than Northern District of Georgia; we ship a generic template, expert customizes)
 - Automated trial-exhibit numbering (case-management software territory)
 - Case caption auto-fill (requires per-case metadata; out of scope)
@@ -66,8 +66,8 @@ A non-PDF/A `--draft` mode is available for iteration but warns that the output 
 ## Citation format (v2 — DATUM gap)
 
 CLI flag `--citation-style {bluebook,apa,chicago}` with the following defaults:
-- `redist report --format pdf --jurisdiction <COURT>` → defaults to `bluebook` for any U.S. court
-- `redist report --format pdf --paper-mode` → defaults to `apa`
+- `BISECT report --format pdf --jurisdiction <COURT>` → defaults to `bluebook` for any U.S. court
+- `BISECT report --format pdf --paper-mode` → defaults to `apa`
 
 Citation generator pulls metadata from the election-source registry (`scripts/data/elections/sources.json`) and the per-input-file manifest entries. Every cited source includes: author/curator, title, year, DOI/URL, accessed date.
 
@@ -102,12 +102,12 @@ outputs/{version}/states/{state_name}/reports/
 └── signed_summary.html          # Existing HTML report (unchanged)
 ```
 
-The reproducibility package is a single zip containing everything a special master needs to verify: the PDF, all input JSONs, the manifest, the provenance, and a `README.md` with the exact `redist doctor --verify-manifest` command.
+The reproducibility package is a single zip containing everything a special master needs to verify: the PDF, all input JSONs, the manifest, the provenance, and a `README.md` with the exact `BISECT doctor --verify-manifest` command.
 
 ## CLI surface
 
 ```
-redist report --label LABEL --format pdf [options]
+BISECT report --label LABEL --format pdf [options]
 
 Options:
   --expert-name "Dr. Jane Smith"
@@ -133,13 +133,13 @@ Options:
 | Different jurisdictions want different formatting | Ship one generic template; allow `--jurisdiction` to swap in alternates over time |
 | Auto-generated text may sound robotic / not legally defensible | Mark draft text explicitly `[DRAFT]`; expert rewrites before signing |
 | Citation accuracy depends on registry metadata | Reuse the same registry already powering the fetchers; metadata is in one place |
-| Citation URLs go stale between report-generation and trial | Reproducibility package embeds a snapshot of the registry at generation time; `redist doctor --verify-manifest` checks URLs for 404 |
+| Citation URLs go stale between report-generation and trial | Reproducibility package embeds a snapshot of the registry at generation time; `BISECT doctor --verify-manifest` checks URLs for 404 |
 | Embedded paths non-portable across OS / users | Path-rewriting pass at report-generation time; only relative paths in the PDF |
 | PDF appendix grows unbounded | 20-page hard cap inside the PDF; overflow goes to `reproducibility_package.zip` with SHA-256 reference |
 
 ## Definition of done
 
-- `redist report --format pdf --label vt_test` produces a clean PDF in <10 seconds
+- `BISECT report --format pdf --label vt_test` produces a clean PDF in <10 seconds
 - PDF contains all standard sections; no template variables leak through
 - Reproducibility appendix correctly references the manifest + provenance
 - One peer-reviewed sample (the Louisiana Callais walkthrough from the Onboarding spec) is committed under `examples/`

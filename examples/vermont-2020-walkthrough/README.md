@@ -13,13 +13,13 @@ For the post-Callais §2 evidence kit, see `examples/louisiana-callais-walkthrou
 | File | Purpose |
 |---|---|
 | `run.sh` / `run.bat` | The canonical pipeline invocation. Runs fetch → bisection → analyze → report → verify-manifest. |
-| `checksums.json` | Pinned SHA-256 of every input + output. Schema: `tutorial-checksums v1`. Consumed by `redist doctor --check-tutorial-data`. |
+| `checksums.json` | Pinned SHA-256 of every input + output. Schema: `tutorial-checksums v1`. Consumed by `bisect doctor --check-tutorial-data`. |
 | `pin.sh` | Helper that re-pins `checksums.json` from a successful local run. |
 | `expected_outputs/` | (Reserved) sample output snippets for visual diff if a run produces unexpected results. |
 
 ## Running the walkthrough
 
-Prerequisites: `redist` on `PATH` (run `bootstrap.sh` from the repo root if needed).
+Prerequisites: `bisect` on `PATH` (run `bootstrap.sh` from the repo root if needed).
 
 ```bash
 bash examples/vermont-2020-walkthrough/run.sh
@@ -30,12 +30,12 @@ Expected wall-clock: 2–5 minutes on broadband + a 4-core laptop. The TIGER fet
 After the run completes, validate against the pinned checksums:
 
 ```bash
-redist doctor --check-tutorial-data --tutorial vermont-2020
+bisect doctor --check-tutorial-data --tutorial vermont-2020
 ```
 
 ## Pinning (or re-pinning) checksums
 
-The committed `checksums.json` ships with `PIN_ON_FIRST_RUN` placeholders. Until a maintainer runs `pin.sh` on a clean machine, every populated row will report `[FAIL]` from `redist doctor --check-tutorial-data`.
+The committed `checksums.json` ships with `PIN_ON_FIRST_RUN` placeholders. Until a maintainer runs `pin.sh` on a clean machine, every populated row will report `[FAIL]` from `bisect doctor --check-tutorial-data`.
 
 To pin from your own clean run:
 
@@ -57,8 +57,8 @@ It is **not** appropriate to re-pin to silence a `[FAIL]` from a real bug. Inves
 
 - Onboarding plan: `docs/superpowers/plans/2026-04-30-onboarding-and-tutorials.md`
 - L2 acceptance test: `tests/acceptance/test_walkthrough_vermont.py`
-- Doctor command: `redist doctor --check-tutorial-data --help`
-- Schema source of truth: `redist/crates/bisect-cli/src/doctor.rs::TutorialChecksums`
+- Doctor command: `bisect doctor --check-tutorial-data --help`
+- Schema source of truth: `crates/bisect-cli/src/doctor.rs::TutorialChecksums`
 
 ## Tract count
 

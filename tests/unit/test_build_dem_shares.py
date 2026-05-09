@@ -2,7 +2,7 @@
 Unit tests for scripts/data/political/build_dem_shares.py — the per-tract
 Democratic vote share producer for partisan-weighted bisection mode.
 
-The producer is invoked offline before `redist state --partition-mode partisan-weighted`.
+The producer is invoked offline before `BISECT state --partition-mode partisan-weighted`.
 Tests cover:
   - Direct mode: tract-level CSV → TSV
   - VAP-disaggregation mode: county results + tract demographics → TSV

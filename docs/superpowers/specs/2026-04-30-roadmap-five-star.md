@@ -96,4 +96,4 @@ A persona is "5★" when:
 
 - `docs/superpowers/specs/2026-04-29-rust-python-final-architecture.md` — current architecture (what we have today)
 - `docs/legal/CALLAIS_REFERENCE.md` — legal grounding for the §2 evidence layer
-- `docs/REDIST_CLI.md` — current CLI surface
+- `docs/BISECT_CLI.md` — current CLI surface

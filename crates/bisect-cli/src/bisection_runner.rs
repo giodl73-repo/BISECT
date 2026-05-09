@@ -1,3 +1,7 @@
+use bisect_core::{ufactor_for_depth, BisectionTree};
+use rand::rngs::SmallRng;
+use rand::SeedableRng;
+use rayon::prelude::*;
 /// Level-parallel METIS bisection runner.
 ///
 /// Implements the recursive bisection loop using BisectionTree for split
@@ -7,10 +11,6 @@
 /// then depth D+1 is processed. BisectionNode implements Clone (bisection.rs).
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
-use rayon::prelude::*;
-use rand::SeedableRng;
-use rand::rngs::SmallRng;
-use bisect_core::{BisectionTree, ufactor_for_depth};
 
 // ── CompactBisect (B.7) ───────────────────────────────────────────────────────
 
@@ -34,7 +34,12 @@ pub struct CompactBisectOpts {
 }
 
 impl Default for CompactBisectOpts {
-    fn default() -> Self { Self { seeds_per_level: 50, epsilon: 0.05 } }
+    fn default() -> Self {
+        Self {
+            seeds_per_level: 50,
+            epsilon: 0.05,
+        }
+    }
 }
 
 /// Select the best bisection candidate by geometric-mean Polsby-Popper,
@@ -49,17 +54,21 @@ fn select_compact_split(
 ) -> (HashSet<usize>, HashSet<usize>) {
     assert!(!candidates.is_empty());
 
-    let ec_min = candidates.iter().map(|(_, _, ec)| *ec)
+    let ec_min = candidates
+        .iter()
+        .map(|(_, _, ec)| *ec)
         .fold(f64::INFINITY, f64::min);
     let threshold = ec_min * (1.0 + epsilon);
 
-    let near_min: Vec<&(HashSet<usize>, HashSet<usize>, f64)> = candidates.iter()
+    let near_min: Vec<&(HashSet<usize>, HashSet<usize>, f64)> = candidates
+        .iter()
         .filter(|(_, _, ec)| *ec <= threshold)
         .collect();
 
     // If no geometry: return the minimum-edge-cut candidate
     if !graph.has_geometry() {
-        let best = near_min.iter()
+        let best = near_min
+            .iter()
             .min_by(|a, b| a.2.partial_cmp(&b.2).unwrap_or(std::cmp::Ordering::Equal))
             .copied()
             .unwrap_or(&candidates[0]);
@@ -67,7 +76,8 @@ fn select_compact_split(
     }
 
     // Geometric-mean PP selection: argmax sqrt(PP(L) * PP(R))
-    let best_idx = near_min.iter()
+    let best_idx = near_min
+        .iter()
         .enumerate()
         .map(|(i, (l, r, _))| {
             let gm = graph.geometric_mean_pp(l, r).unwrap_or(0.0);
@@ -97,7 +107,9 @@ pub fn find_gpmetis() -> Option<String> {
 /// BFS connectivity check: returns true if the subgraph (local indices 0..n) is connected.
 fn is_connected(adj: &[Vec<usize>]) -> bool {
     let n = adj.len();
-    if n <= 1 { return true; }
+    if n <= 1 {
+        return true;
+    }
     let mut visited = vec![false; n];
     let mut queue = std::collections::VecDeque::new();
     visited[0] = true;
@@ -111,6 +123,27 @@ fn is_connected(adj: &[Vec<usize>]) -> bool {
         }
     }
     visited.iter().all(|&v| v)
+}
+
+fn is_connected_subset(adjacency: &[Vec<usize>], vertices: &HashSet<usize>) -> bool {
+    if vertices.len() <= 1 {
+        return true;
+    }
+    let Some(&start) = vertices.iter().next() else {
+        return true;
+    };
+    let mut visited: HashSet<usize> = HashSet::with_capacity(vertices.len());
+    let mut queue = std::collections::VecDeque::new();
+    visited.insert(start);
+    queue.push_back(start);
+    while let Some(v) = queue.pop_front() {
+        for &nb in &adjacency[v] {
+            if vertices.contains(&nb) && visited.insert(nb) {
+                queue.push_back(nb);
+            }
+        }
+    }
+    visited.len() == vertices.len()
 }
 
 /// Convert adjacency list to CSR format required by the METIS C API.
@@ -133,7 +166,9 @@ fn adj_to_csr(adj: &[Vec<usize>]) -> (Vec<i32>, Vec<i32>) {
 /// and clamped to minimum 1.
 fn ew_to_adjwgt(adj: &[Vec<usize>], ew: Option<&HashMap<(usize, usize), f64>>) -> Option<Vec<i32>> {
     let ew = ew?;
-    if ew.is_empty() { return None; }
+    if ew.is_empty() {
+        return None;
+    }
     let mut adjwgt = Vec::new();
     for (i, neighbors) in adj.iter().enumerate() {
         for &j in neighbors {
@@ -183,25 +218,34 @@ pub fn split_subgraph(
     // Build local index mapping: local → global (sorted for determinism)
     let mut sorted: Vec<usize> = tract_indices.iter().copied().collect();
     sorted.sort_unstable();
-    let global_to_local: HashMap<usize, usize> = sorted.iter()
-        .enumerate().map(|(local, &global)| (global, local)).collect();
+    let global_to_local: HashMap<usize, usize> = sorted
+        .iter()
+        .enumerate()
+        .map(|(local, &global)| (global, local))
+        .collect();
     let n = sorted.len();
 
     // Build subgraph adjacency (local indices)
-    let sub_adj: Vec<Vec<usize>> = sorted.iter().map(|&g| {
-        adjacency[g].iter()
-            .filter(|&&nb| tract_indices.contains(&nb))
-            .map(|&nb| global_to_local[&nb])
-            .collect()
-    }).collect();
+    let sub_adj: Vec<Vec<usize>> = sorted
+        .iter()
+        .map(|&g| {
+            adjacency[g]
+                .iter()
+                .filter(|&&nb| tract_indices.contains(&nb))
+                .map(|&nb| global_to_local[&nb])
+                .collect()
+        })
+        .collect();
 
     // Build local vertex weights: extract ncon values per vertex from interleaved global array
-    let local_vwgt: Vec<i32> = sorted.iter()
+    let local_vwgt: Vec<i32> = sorted
+        .iter()
         .flat_map(|&g| (0..ncon).map(move |c| vwgt[g * ncon + c].max(1) as i32))
         .collect();
 
     // Subgraph edge weights (reindex to local, canonical order)
-    let sub_ew: HashMap<(usize, usize), f64> = edge_weights.iter()
+    let sub_ew: HashMap<(usize, usize), f64> = edge_weights
+        .iter()
         .filter(|&(&(u, v), _)| tract_indices.contains(&u) && tract_indices.contains(&v))
         .map(|(&(u, v), &w)| {
             let lu = global_to_local[&u];
@@ -210,7 +254,11 @@ pub fn split_subgraph(
         })
         .collect();
 
-    let ew_opt = if sub_ew.is_empty() { None } else { Some(&sub_ew) };
+    let ew_opt = if sub_ew.is_empty() {
+        None
+    } else {
+        Some(&sub_ew)
+    };
 
     // Build CSR for the METIS FFI
     let (xadj, adjncy) = adj_to_csr(&sub_adj);
@@ -220,9 +268,21 @@ pub fn split_subgraph(
     // This handles isolated subgraphs (e.g. two disconnected components) without
     // calling METIS, which may stall on empty adjacency in the pure-Rust engine.
     if adjncy.is_empty() {
-        let half = sorted.len() / 2;
-        let left: HashSet<usize> = sorted[..half].iter().copied().collect();
-        let right: HashSet<usize> = sorted[half..].iter().copied().collect();
+        let total_pop: i64 = sorted.iter().map(|&g| vwgt[g * ncon]).sum();
+        let target_frac = tpwgts.as_ref().map(|tw| tw[0] as f64).unwrap_or(0.5);
+        let left_target = (target_frac * total_pop as f64) as i64;
+        let mut running = 0i64;
+        let mut split_at = 1usize;
+        for (idx, &g) in sorted.iter().enumerate() {
+            if idx > 0 && running >= left_target {
+                split_at = idx;
+                break;
+            }
+            running += vwgt[g * ncon].max(1);
+            split_at = (idx + 1).min(sorted.len() - 1);
+        }
+        let left: HashSet<usize> = sorted[..split_at].iter().copied().collect();
+        let right: HashSet<usize> = sorted[split_at..].iter().copied().collect();
         return Ok((left, right));
     }
 
@@ -242,8 +302,16 @@ pub fn split_subgraph(
             let graph = metis::Graph::new(ncon as i32, 2, &xadj, &adjncy)
                 .map_err(|e| format!("METIS graph init: {e}"))?
                 .set_vwgt(&local_vwgt);
-            let graph = if let Some(ref ew) = adjwgt { graph.set_adjwgt(ew) } else { graph };
-            let graph = if let Some(ref tw) = tpwgts { graph.set_tpwgts(tw) } else { graph };
+            let graph = if let Some(ref ew) = adjwgt {
+                graph.set_adjwgt(ew)
+            } else {
+                graph
+            };
+            let graph = if let Some(ref tw) = tpwgts {
+                graph.set_tpwgts(tw)
+            } else {
+                graph
+            };
             let graph = if let Some(ref ub) = ubvec {
                 graph.set_ubvec(ub)
             } else {
@@ -258,10 +326,12 @@ pub fn split_subgraph(
                 graph
             };
             if tpwgts.is_some() {
-                graph.part_kway(&mut part)
+                graph
+                    .part_kway(&mut part)
                     .map_err(|e| format!("METIS kway bisection failed: {e}"))?;
             } else {
-                graph.part_recursive(&mut part)
+                graph
+                    .part_recursive(&mut part)
                     .map_err(|e| format!("METIS bisection failed: {e}"))?;
             }
             part
@@ -273,37 +343,43 @@ pub fn split_subgraph(
             if ncon > 1 {
                 return Err(
                     "[CONFIG] AreaSection (ncon=2) requires the c-ffi-engine feature. \
-                     Rebuild with default features or use --metis-engine c-ffi.".to_string()
+                     Rebuild with default features or use --metis-engine c-ffi."
+                        .to_string(),
                 );
             }
             use metis_core::api::{
-                MetisPartitioner as RustBisectPartitioner,
-                MetisParams as RustBisectParams,
+                MetisParams as RustBisectParams, MetisPartitioner as RustBisectPartitioner,
                 Partitioner as RustBisectTrait,
             };
             use metis_core::graph::CsrGraph as RustCsrGraph;
             let g = RustCsrGraph {
-                xadj:   xadj.iter().map(|&x| x as u32).collect(),
+                xadj: xadj.iter().map(|&x| x as u32).collect(),
                 adjncy: adjncy.iter().map(|&x| x as u32).collect(),
-                ncon:   1,
-                vwgt:   local_vwgt.clone(),
+                ncon: 1,
+                vwgt: local_vwgt.clone(),
                 adjwgt: adjwgt.clone(),
             };
             let uf_u32 = (uf_int as u32).clamp(1, 1000);
             let params = RustBisectParams {
-                ufactor: uf_u32, niter, seed, coarsen_to: 20, tpwgts: None,
+                ufactor: uf_u32,
+                niter,
+                seed,
+                coarsen_to: 20,
+                tpwgts: None,
                 ..RustBisectParams::default()
             };
             let partition = if let Some(ref tw) = tpwgts {
                 // Asymmetric split: convert f32 fracs (first 2 values) to u32 thousandths.
-                let fracs: Vec<u32> = tw.iter().take(2)
-                    .map(|&f| (f * 1000.0).round() as u32).collect();
-                RustBisectPartitioner::with_params(params, 2)
-                    .split_weighted(&g, &fracs, seed)
+                let fracs: Vec<u32> = tw
+                    .iter()
+                    .take(2)
+                    .map(|&f| (f * 1000.0).round() as u32)
+                    .collect();
+                RustBisectPartitioner::with_params(params, 2).split_weighted(&g, &fracs, seed)
             } else {
-                RustBisectPartitioner::with_params(params, 2)
-                    .split(&g, 2, seed)
-            }.map_err(|e| format!("metis-core bisection: {e}"))?;
+                RustBisectPartitioner::with_params(params, 2).split(&g, 2, seed)
+            }
+            .map_err(|e| format!("metis-core bisection: {e}"))?;
             partition.assignment.iter().map(|&p| p as i32).collect()
         }
     };
@@ -312,7 +388,11 @@ pub fn split_subgraph(
     let mut right = HashSet::new();
     for (local, &p) in part.iter().enumerate() {
         let global = sorted[local];
-        if p == 0 { left.insert(global); } else { right.insert(global); }
+        if p == 0 {
+            left.insert(global);
+        } else {
+            right.insert(global);
+        }
     }
 
     // Post-hoc boundary-swap rebalancing.
@@ -321,18 +401,27 @@ pub fn split_subgraph(
     // both sides are within `ufactor` of their target weights.
     // left/right store GLOBAL indices; use global_to_local for local_vwgt/sub_adj access.
     let total_pop: i64 = local_vwgt.chunks(ncon).map(|c| c[0] as i64).sum();
-    let left_target = tpwgts.as_ref()
+    let left_target = tpwgts
+        .as_ref()
         .map(|tw| (tw[0] as f64 * total_pop as f64) as i64)
         .unwrap_or(total_pop / 2);
-    let tolerance_pop = (ufactor as f64 * total_pop as f64 / 1000.0) as i64 + 1;
+    let tolerance_pop = ((ufactor - 1.0).max(0.0) * left_target.max(1) as f64) as i64 + 1;
 
     for _ in 0..200 {
-        let left_pop: i64 = left.iter()
-            .map(|&g| local_vwgt[global_to_local[&g] * ncon] as i64).sum();
+        let left_pop: i64 = left
+            .iter()
+            .map(|&g| local_vwgt[global_to_local[&g] * ncon] as i64)
+            .sum();
         let excess = left_pop - left_target;
-        if excess.abs() <= tolerance_pop { break; }
+        if excess.abs() <= tolerance_pop {
+            break;
+        }
 
-        let (heavy, light) = if excess > 0 { (&left, &right) } else { (&right, &left) };
+        let (heavy, light) = if excess > 0 {
+            (&left, &right)
+        } else {
+            (&right, &left)
+        };
         let light_global: HashSet<usize> = light.clone();
         let heavy_global: HashSet<usize> = heavy.clone();
 
@@ -340,9 +429,20 @@ pub fn split_subgraph(
         let mut best: Option<(usize, i64)> = None;
         for &g in &heavy_global {
             let lg = global_to_local[&g];
-            let has_light_nb = sub_adj[lg].iter()
+            let has_light_nb = sub_adj[lg]
+                .iter()
                 .any(|&nb_local| light_global.contains(&sorted[nb_local]));
             if has_light_nb {
+                let mut heavy_after = heavy_global.clone();
+                heavy_after.remove(&g);
+                if !is_connected_subset(adjacency, &heavy_after) {
+                    continue;
+                }
+                let mut light_after = light_global.clone();
+                light_after.insert(g);
+                if !is_connected_subset(adjacency, &light_after) {
+                    continue;
+                }
                 let pop = local_vwgt[lg * ncon] as i64;
                 let score = (pop - excess.abs()).abs();
                 if best.map_or(true, |(_, s)| score < s) {
@@ -352,8 +452,13 @@ pub fn split_subgraph(
         }
         match best {
             Some((g, _)) => {
-                if excess > 0 { left.remove(&g); right.insert(g); }
-                else { right.remove(&g); left.insert(g); }
+                if excess > 0 {
+                    left.remove(&g);
+                    right.insert(g);
+                } else {
+                    right.remove(&g);
+                    left.insert(g);
+                }
             }
             None => break,
         }
@@ -393,13 +498,13 @@ pub fn population_lorenz(
     let mut curve: Vec<(f64, f64)> = Vec::with_capacity(order.len() + 1);
     curve.push((0.0, 0.0));
     let mut cum_area = 0.0f64;
-    let mut cum_pop  = 0.0f64;
+    let mut cum_pop = 0.0f64;
     let mut natural_pop_at_half = 0.0f64;
     let mut crossed_half = false;
 
     for &i in &order {
         cum_area += vertex_areas_m2[i] / total_area;
-        cum_pop  += vertex_weights[i] as f64 / total_pop;
+        cum_pop += vertex_weights[i] as f64 / total_pop;
         curve.push((cum_area, cum_pop));
         if !crossed_half && cum_area >= 0.5 {
             // Interpolate to find exact pop fraction at area = 0.5
@@ -419,21 +524,20 @@ pub fn population_lorenz(
         num_districts - natural_k_raw
     } else {
         natural_k_raw
-    }.clamp(1, max_left);
+    }
+    .clamp(1, max_left);
 
     (curve, natural_pop_at_half, natural_k)
 }
 
 /// For a given population fraction `p`, return the minimum area fraction needed
 /// (greedily taking the densest tracts first — non-contiguous lower bound).
-fn lorenz_min_area(
-    vertex_weights: &[i64],
-    vertex_areas_m2: &[f64],
-    target_pop_frac: f64,
-) -> f64 {
+fn lorenz_min_area(vertex_weights: &[i64], vertex_areas_m2: &[f64], target_pop_frac: f64) -> f64 {
     let total_pop: f64 = vertex_weights.iter().map(|&w| w as f64).sum();
     let total_area: f64 = vertex_areas_m2.iter().sum();
-    if total_area == 0.0 { return 0.0; }
+    if total_area == 0.0 {
+        return 0.0;
+    }
 
     let mut order: Vec<usize> = (0..vertex_weights.len()).collect();
     order.sort_by(|&a, &b| {
@@ -445,13 +549,14 @@ fn lorenz_min_area(
     let mut cum_pop = 0.0f64;
     let mut cum_area = 0.0f64;
     for &i in &order {
-        if cum_pop >= target_pop_frac * total_pop { break; }
-        cum_pop  += vertex_weights[i] as f64;
+        if cum_pop >= target_pop_frac * total_pop {
+            break;
+        }
+        cum_pop += vertex_weights[i] as f64;
         cum_area += vertex_areas_m2[i];
     }
     cum_area / total_area
 }
-
 
 /// Run n-way partitioning: call gpmetis once with nparts=k.
 ///
@@ -482,15 +587,19 @@ pub fn run_nway_partition(
     let vwgt: Vec<i32> = vertex_weights.iter().map(|&w| (w as i32).max(1)).collect();
     let adjwgt = ew_to_adjwgt(
         adjacency,
-        if edge_weights.is_empty() { None } else { Some(edge_weights) },
+        if edge_weights.is_empty() {
+            None
+        } else {
+            Some(edge_weights)
+        },
     );
 
     // Equal target weights: first k-1 partitions get 1/k each; last gets remainder.
     // This guarantees the weights sum exactly to 1.0 in f32 regardless of k.
     let weight_per = 1.0_f32 / num_districts as f32;
     let mut tpwgts: Vec<f32> = vec![weight_per; num_districts];
-    let total: f32 = tpwgts[..num_districts-1].iter().sum();
-    tpwgts[num_districts-1] = 1.0_f32 - total;
+    let total: f32 = tpwgts[..num_districts - 1].iter().sum();
+    tpwgts[num_districts - 1] = 1.0_f32 - total;
 
     let uf_int = ((ufactor - 1.0) * 1000.0).round() as i32;
     let uf_int = uf_int.clamp(1, 1000);
@@ -504,7 +613,11 @@ pub fn run_nway_partition(
                 .map_err(|e| format!("METIS n-way graph init: {e}"))?
                 .set_vwgt(&vwgt)
                 .set_tpwgts(&tpwgts);
-            let graph = if let Some(ref ew) = adjwgt { graph.set_adjwgt(ew) } else { graph };
+            let graph = if let Some(ref ew) = adjwgt {
+                graph.set_adjwgt(ew)
+            } else {
+                graph
+            };
             let graph = graph
                 .set_option(metis::option::UFactor(uf_int))
                 .set_option(metis::option::NIter(niter as i32))
@@ -515,23 +628,23 @@ pub fn run_nway_partition(
             } else {
                 graph
             };
-            graph.part_kway(&mut part)
+            graph
+                .part_kway(&mut part)
                 .map_err(|e| format!("METIS n-way partition failed: {e}"))?;
             part
         }
         #[cfg(not(feature = "c-ffi-engine"))]
         {
             use metis_core::api::{
-                MetisPartitioner as RustNwayPartitioner,
-                MetisParams as RustNwayParams,
+                MetisParams as RustNwayParams, MetisPartitioner as RustNwayPartitioner,
                 Partitioner as RustNwayTrait,
             };
             use metis_core::graph::CsrGraph as RustNwayCsr;
             let g = RustNwayCsr {
-                xadj:   xadj.iter().map(|&x| x as u32).collect(),
+                xadj: xadj.iter().map(|&x| x as u32).collect(),
                 adjncy: adjncy.iter().map(|&x| x as u32).collect(),
-                ncon:   1,
-                vwgt:   vwgt.clone(),
+                ncon: 1,
+                vwgt: vwgt.clone(),
                 adjwgt: adjwgt.clone(),
             };
             let uf_u32 = (uf_int as u32).clamp(1, 1000);
@@ -559,7 +672,11 @@ pub fn run_nway_partition(
     };
 
     // Convert 0-based METIS output to 1-based district IDs
-    Ok(part.iter().enumerate().map(|(tract, &p)| (tract, p as usize + 1)).collect())
+    Ok(part
+        .iter()
+        .enumerate()
+        .map(|(tract, &p)| (tract, p as usize + 1))
+        .collect())
 }
 
 /// Run the full level-parallel bisection for k districts.
@@ -601,17 +718,26 @@ pub fn run_nway_partition(
 /// Returns (assignments, k_D, k_R, best_ec, d_statewide).
 pub fn run_proportional_section(
     adjacency: &[Vec<usize>],
-    vertex_weights: &[i64],       // population
-    vertex_d_votes: &[f64],        // Democratic vote counts per tract
-    vertex_two_party: &[f64],      // Democrat + Republican two-party vote totals per tract
+    vertex_weights: &[i64],   // population
+    vertex_d_votes: &[f64],   // Democratic vote counts per tract
+    vertex_two_party: &[f64], // Democrat + Republican two-party vote totals per tract
     edge_weights: &std::collections::HashMap<(usize, usize), f64>,
     num_districts: usize,
     balance_tolerance: f64,
     niter: u32,
     seeds: usize,
-    eta: f64,                      // ubvec[1] for D_votes constraint (1.05–1.20)
+    eta: f64, // ubvec[1] for D_votes constraint (1.05–1.20)
     intermediate_dir: Option<&std::path::Path>,
-) -> Result<(std::collections::HashMap<usize, usize>, usize, usize, f64, f64), String> {
+) -> Result<
+    (
+        std::collections::HashMap<usize, usize>,
+        usize,
+        usize,
+        f64,
+        f64,
+    ),
+    String,
+> {
     let n = adjacency.len();
     if num_districts <= 1 {
         let asgn = (0..n).map(|i| (i, 1)).collect();
@@ -628,14 +754,21 @@ pub fn run_proportional_section(
     // Huntington-Hill allocation
     let k_d_float = d * num_districts as f64;
     let k_d_floor = k_d_float as usize;
-    let k_d = if k_d_floor > 0 && k_d_float > (k_d_floor * (k_d_floor + 1)) as f64 / ((k_d_floor as f64).sqrt() * (k_d_floor as f64 + 1.0).sqrt()) {
+    let k_d = if k_d_floor > 0
+        && k_d_float
+            > (k_d_floor * (k_d_floor + 1)) as f64
+                / ((k_d_floor as f64).sqrt() * (k_d_floor as f64 + 1.0).sqrt())
+    {
         k_d_floor + 1
     } else {
         k_d_floor.max(1)
     };
     let k_r = num_districts - k_d;
 
-    eprintln!("[proportional] d={:.3} k_D={} k_R={} eta={}", d, k_d, k_r, eta);
+    eprintln!(
+        "[proportional] d={:.3} k_D={} k_R={} eta={}",
+        d, k_d, k_r, eta
+    );
 
     // B.12 tpwgts: right (R-bloc) gets minimum D for 50% D concentration
     let d_right_target = (k_r as f64 / (2.0 * d * num_districts as f64)).clamp(0.01, 0.99);
@@ -644,19 +777,24 @@ pub fn run_proportional_section(
     let pop_right = k_r as f64 / num_districts as f64;
 
     let tpwgts = vec![
-        pop_left as f32, d_left_target as f32,
-        pop_right as f32, d_right_target as f32,
+        pop_left as f32,
+        d_left_target as f32,
+        pop_right as f32,
+        d_right_target as f32,
     ];
     let ubvec = vec![1.001f32, eta as f32];
 
     // Scale D votes to integer weights for METIS (scale to match pop magnitude)
     let pop_scale = total_pop as f64 / total_d.max(1.0);
-    let d_weights_i64: Vec<i64> = vertex_d_votes.iter()
+    let d_weights_i64: Vec<i64> = vertex_d_votes
+        .iter()
         .map(|&v| ((v * pop_scale) as i64).max(1))
         .collect();
 
     // Interleaved vwgt: [pop_0, d_0, pop_1, d_1, ...]
-    let vwgt_flat: Vec<i64> = vertex_weights.iter().zip(d_weights_i64.iter())
+    let vwgt_flat: Vec<i64> = vertex_weights
+        .iter()
+        .zip(d_weights_i64.iter())
         .flat_map(|(&p, &dv)| [p.max(1), dv])
         .collect();
 
@@ -668,14 +806,27 @@ pub fn run_proportional_section(
 
     for seed in 1..=(seeds as u64) {
         match split_subgraph(
-            adjacency, &vwgt_flat, 2, edge_weights, &all_tracts,
+            adjacency,
+            &vwgt_flat,
+            2,
+            edge_weights,
+            &all_tracts,
             1.0 + balance_tolerance / num_districts as f64,
-            niter, Some(seed),
-            Some(tpwgts.clone()), Some(ubvec.clone()),
+            niter,
+            Some(seed),
+            Some(tpwgts.clone()),
+            Some(ubvec.clone()),
         ) {
             Ok((l, r)) => {
-                let ec: f64 = edge_weights.iter()
-                    .filter_map(|(&(u, v), &w)| if l.contains(&u) != l.contains(&v) { Some(w) } else { None })
+                let ec: f64 = edge_weights
+                    .iter()
+                    .filter_map(|(&(u, v), &w)| {
+                        if l.contains(&u) != l.contains(&v) {
+                            Some(w)
+                        } else {
+                            None
+                        }
+                    })
                     .sum();
                 if ec < best_ec {
                     best_ec = ec;
@@ -684,43 +835,81 @@ pub fn run_proportional_section(
                 }
             }
             Err(e) => {
-                if seed == 1 { eprintln!("[proportional] seed 1 error: {}", &e.chars().take(200).collect::<String>()); }
+                if seed == 1 {
+                    eprintln!(
+                        "[proportional] seed 1 error: {}",
+                        &e.chars().take(200).collect::<String>()
+                    );
+                }
             }
         }
     }
 
     if best_left.is_empty() {
-        return Err(format!("proportional-section: all {} seeds failed for {}:{}", seeds, k_d, k_r));
+        return Err(format!(
+            "proportional-section: all {} seeds failed for {}:{}",
+            seeds, k_d, k_r
+        ));
     }
 
     // Actual D fraction achieved
     let d_left_actual: f64 = best_left.iter().map(|&v| vertex_d_votes[v]).sum::<f64>() / total_d;
-    eprintln!("[proportional] winner: D_left={:.1}% (target {:.1}%), EC={:.0}km",
-              d_left_actual*100.0, d_left_target*100.0, best_ec/1000.0);
+    eprintln!(
+        "[proportional] winner: D_left={:.1}% (target {:.1}%), EC={:.0}km",
+        d_left_actual * 100.0,
+        d_left_target * 100.0,
+        best_ec / 1000.0
+    );
 
     if let Some(dir) = intermediate_dir {
         let _ = std::fs::create_dir_all(dir.join("depth_01"));
         let mut d1 = std::collections::HashMap::new();
-        for &v in &best_left  { d1.insert(v, 1); }
-        for &v in &best_right { d1.insert(v, 2); }
+        for &v in &best_left {
+            d1.insert(v, 1);
+        }
+        for &v in &best_right {
+            d1.insert(v, 2);
+        }
         let _ = write_intermediate_round(&dir.join("depth_01"), &d1);
     }
 
     // Recurse with ncon=1 standard bisection
     let node_ufactor = 1.0 + balance_tolerance / num_districts as f64;
     let left_asgn = recurse_geosection(
-        &best_left, adjacency, vertex_weights, edge_weights,
-        k_d, balance_tolerance, niter, seeds.min(50), 1,
-        &crate::geosection_orientation::CentroidMap::new(), 0.0)?;
+        &best_left,
+        adjacency,
+        vertex_weights,
+        edge_weights,
+        k_d,
+        balance_tolerance,
+        niter,
+        seeds.min(50),
+        1,
+        &crate::geosection_orientation::CentroidMap::new(),
+        0.0,
+    )?;
     let right_asgn = recurse_geosection(
-        &best_right, adjacency, vertex_weights, edge_weights,
-        k_r, balance_tolerance, niter, seeds.min(50), k_d + 1,
-        &crate::geosection_orientation::CentroidMap::new(), 0.0)?;
+        &best_right,
+        adjacency,
+        vertex_weights,
+        edge_weights,
+        k_r,
+        balance_tolerance,
+        niter,
+        seeds.min(50),
+        k_d + 1,
+        &crate::geosection_orientation::CentroidMap::new(),
+        0.0,
+    )?;
 
     let mut assignments = left_asgn;
     assignments.extend(right_asgn);
     if assignments.len() != n {
-        return Err(format!("proportional-section incomplete: {}/{}", assignments.len(), n));
+        return Err(format!(
+            "proportional-section incomplete: {}/{}",
+            assignments.len(),
+            n
+        ));
     }
     Ok((assignments, k_d, k_r, best_ec, d))
 }
@@ -767,12 +956,28 @@ pub fn run_geosection(
     }
     if num_districts == 2 {
         // Only one ratio possible: 1:1
-        let asgn = run_all_splits(adjacency, vertex_weights, edge_weights,
-                                   2, balance_tolerance, niter,
-                                   Some(1), intermediate_dir)?;
-        let ec: f64 = edge_weights.iter().map(|(&(u,v),&w)| {
-            if asgn.get(&u) != asgn.get(&v) { w } else { 0.0 }
-        }).sum();
+        let asgn = run_all_splits(
+            adjacency,
+            vertex_weights,
+            edge_weights,
+            2,
+            balance_tolerance,
+            niter,
+            Some(1),
+            intermediate_dir,
+        )?;
+        let ec: f64 = edge_weights
+            .iter()
+            .map(
+                |(&(u, v), &w)| {
+                    if asgn.get(&u) != asgn.get(&v) {
+                        w
+                    } else {
+                        0.0
+                    }
+                },
+            )
+            .sum();
         return Ok((asgn, 1, 1, ec));
     }
 
@@ -786,16 +991,21 @@ pub fn run_geosection(
     let mut best_right_set = HashSet::new();
 
     let all_tracts: HashSet<usize> = (0..n).collect();
-    let max_left = num_districts / 2;  // try ratios 1:k-1 through k/2:k/2
+    let max_left = num_districts / 2; // try ratios 1:k-1 through k/2:k/2
 
     // ── AreaSection mode: build interleaved vwgt and Lorenz feasibility mask ──
     let (ncon, vwgt_flat, lorenz_feasible) = if let Some(areas) = vertex_areas_m2 {
         // Scale areas to hectares (÷10,000 m²) to stay within METIS i32 range.
         // Large rural tracts can be billions of m²; hectares keep them within i32.
-        let vertex_areas_ha: Vec<i64> = areas.iter()
-            .map(|&a| ((a / 10_000.0) as i64).max(1)).collect();
-        let interleaved: Vec<i64> = vertex_weights.iter().zip(&vertex_areas_ha)
-            .flat_map(|(&p, &a)| [p, a]).collect();
+        let vertex_areas_ha: Vec<i64> = areas
+            .iter()
+            .map(|&a| ((a / 10_000.0) as i64).max(1))
+            .collect();
+        let interleaved: Vec<i64> = vertex_weights
+            .iter()
+            .zip(&vertex_areas_ha)
+            .flat_map(|(&p, &a)| [p, a])
+            .collect();
 
         // Lorenz pre-filtering: skip ratios where area balance is geometrically impossible
         let area_max = 0.5 * area_swing;
@@ -803,31 +1013,48 @@ pub fn run_geosection(
         let (_, natural_pop, suggested_k) = population_lorenz(vertex_weights, areas, num_districts);
         eprintln!("[areasection] Lorenz: dense-half contains {:.1}% of population -> natural split ~{}:{}",
                   natural_pop * 100.0, num_districts - suggested_k, suggested_k);
-        let feasible: Vec<bool> = (0..=max_left).map(|left_k| {
-            if left_k == 0 { return false; }
-            let p = left_k as f64 / num_districts as f64;
-            let min_a = lorenz_min_area(vertex_weights, areas, p);
-            let max_a = 1.0 - lorenz_min_area(vertex_weights, areas, 1.0 - p);
-            min_a <= area_max && max_a >= area_min
-        }).collect();
+        let feasible: Vec<bool> = (0..=max_left)
+            .map(|left_k| {
+                if left_k == 0 {
+                    return false;
+                }
+                let p = left_k as f64 / num_districts as f64;
+                let min_a = lorenz_min_area(vertex_weights, areas, p);
+                let max_a = 1.0 - lorenz_min_area(vertex_weights, areas, 1.0 - p);
+                min_a <= area_max && max_a >= area_min
+            })
+            .collect();
         for left_k in 1..=max_left {
             let p = left_k as f64 / num_districts as f64;
             let min_a = lorenz_min_area(vertex_weights, areas, p);
             let max_a = 1.0 - lorenz_min_area(vertex_weights, areas, 1.0 - p);
-            eprintln!("[areasection]   ratio {}:{} ({:.1}% pop): Lorenz area range [{:.1}%-{:.1}%] -> {}",
-                      left_k, num_districts - left_k, p * 100.0,
-                      min_a * 100.0, max_a * 100.0,
-                      if feasible[left_k] { "feasible" } else { "INFEASIBLE (Lorenz)" });
+            eprintln!(
+                "[areasection]   ratio {}:{} ({:.1}% pop): Lorenz area range [{:.1}%-{:.1}%] -> {}",
+                left_k,
+                num_districts - left_k,
+                p * 100.0,
+                min_a * 100.0,
+                max_a * 100.0,
+                if feasible[left_k] {
+                    "feasible"
+                } else {
+                    "INFEASIBLE (Lorenz)"
+                }
+            );
         }
-        eprintln!("[areasection] {} ratios x {} seeds (pop+area dual constraint)",
-                  max_left, seeds_per_ratio);
+        eprintln!(
+            "[areasection] {} ratios x {} seeds (pop+area dual constraint)",
+            max_left, seeds_per_ratio
+        );
         (2usize, interleaved, feasible)
     } else {
         // ncon=1: plain population weights, all ratios feasible
         let plain: Vec<i64> = vertex_weights.to_vec();
         let feasible = vec![true; max_left + 1];
-        eprintln!("[geosection] trying {} ratios x {} seeds for k={}",
-                  max_left, seeds_per_ratio, num_districts);
+        eprintln!(
+            "[geosection] trying {} ratios x {} seeds for k={}",
+            max_left, seeds_per_ratio, num_districts
+        );
         (1usize, plain, feasible)
     };
 
@@ -841,27 +1068,34 @@ pub fn run_geosection(
     //   - edges running parallel to the cut direction (sin(θ)=1) get penalised
     //   - edges running perpendicular (sin(θ)=0) are unchanged
     // Effect: METIS preferentially cuts across the MKA-optimal direction.
-    let biased_edge_weights: Option<HashMap<(usize, usize), f64>> =
-        if let Some(theta) = mka_theta_override {
-            if !centroids.is_empty() {
-                eprintln!("[areasection-mka] applying directional bias at theta*={:.4} rad ({:.1} deg) with lambda={:.2}",
+    let biased_edge_weights: Option<HashMap<(usize, usize), f64>> = if let Some(theta) =
+        mka_theta_override
+    {
+        if !centroids.is_empty() {
+            eprintln!("[areasection-mka] applying directional bias at theta*={:.4} rad ({:.1} deg) with lambda={:.2}",
                           theta, theta.to_degrees(), lambda);
-                Some(crate::geosection_orientation::apply_directional_penalty(
-                    edge_weights, centroids, theta, lambda,
-                ))
-            } else {
-                None  // no centroids → no bias (fallback already warned by caller)
-            }
+            Some(crate::geosection_orientation::apply_directional_penalty(
+                edge_weights,
+                centroids,
+                theta,
+                lambda,
+            ))
         } else {
-            None
-        };
+            None // no centroids → no bias (fallback already warned by caller)
+        }
+    } else {
+        None
+    };
     let active_edge_weights: &HashMap<(usize, usize), f64> =
         biased_edge_weights.as_ref().unwrap_or(edge_weights);
 
     for left_k in 1..=max_left {
         if !lorenz_feasible[left_k] {
-            eprintln!("[areasection] skipping ratio {}:{} - Lorenz predicts infeasible area balance",
-                      left_k, num_districts - left_k);
+            eprintln!(
+                "[areasection] skipping ratio {}:{} - Lorenz predicts infeasible area balance",
+                left_k,
+                num_districts - left_k
+            );
             continue;
         }
         let right_k = num_districts - left_k;
@@ -892,14 +1126,30 @@ pub fn run_geosection(
         let mut ratio_best_right = HashSet::new();
 
         for seed in 1..=(seeds_per_ratio as u64) {
-            match split_subgraph(adjacency, &vwgt_flat, ncon, active_edge_weights,
-                                  &all_tracts, node_ufactor, niter, Some(seed),
-                                  tpwgts.clone(), ubvec.clone()) {
+            match split_subgraph(
+                adjacency,
+                &vwgt_flat,
+                ncon,
+                active_edge_weights,
+                &all_tracts,
+                node_ufactor,
+                niter,
+                Some(seed),
+                tpwgts.clone(),
+                ubvec.clone(),
+            ) {
                 Ok((l, r)) => {
                     // EC measured on original (unbiased) edge weights for fair comparison.
-                    let ec: f64 = edge_weights.iter().filter_map(|(&(u,v),&w)| {
-                        if l.contains(&u) != l.contains(&v) { Some(w) } else { None }
-                    }).sum();
+                    let ec: f64 = edge_weights
+                        .iter()
+                        .filter_map(|(&(u, v), &w)| {
+                            if l.contains(&u) != l.contains(&v) {
+                                Some(w)
+                            } else {
+                                None
+                            }
+                        })
+                        .sum();
                     if ec < ratio_best {
                         ratio_best = ec;
                         ratio_best_left = l;
@@ -908,8 +1158,12 @@ pub fn run_geosection(
                 }
                 Err(e) => {
                     if seed == 1 && ncon == 2 {
-                        eprintln!("[areasection] seed 1 error (ratio {}:{}): {}", left_k, right_k,
-                                  &e.chars().take(300).collect::<String>());
+                        eprintln!(
+                            "[areasection] seed 1 error (ratio {}:{}): {}",
+                            left_k,
+                            right_k,
+                            &e.chars().take(300).collect::<String>()
+                        );
                     }
                     continue;
                 }
@@ -939,8 +1193,13 @@ pub fn run_geosection(
                 // AreaSection doesn't use VRA alignment; just use normalised
                 normalised
             } else {
-                eprintln!("[vra-section]   ratio {}:{} normalised={:.1}  score={:.1}",
-                          left_k, right_k, normalised/1000.0, score/1000.0);
+                eprintln!(
+                    "[vra-section]   ratio {}:{} normalised={:.1}  score={:.1}",
+                    left_k,
+                    right_k,
+                    normalised / 1000.0,
+                    score / 1000.0
+                );
                 score
             }
         } else {
@@ -952,12 +1211,23 @@ pub fn run_geosection(
                 let area_left: f64 = ratio_best_left.iter().map(|&v| areas[v]).sum();
                 let total_area: f64 = areas.iter().sum();
                 let area_frac = area_left / total_area;
-                eprintln!("[areasection]   ratio {}:{} best={:.0}km  normalised={:.1}  area_left={:.1}%",
-                          left_k, right_k, ratio_best/1000.0, normalised/1000.0, area_frac*100.0);
+                eprintln!(
+                    "[areasection]   ratio {}:{} best={:.0}km  normalised={:.1}  area_left={:.1}%",
+                    left_k,
+                    right_k,
+                    ratio_best / 1000.0,
+                    normalised / 1000.0,
+                    area_frac * 100.0
+                );
             }
         } else if minority_vap.is_none() {
-            eprintln!("[geosection]   ratio {}:{} best={:.0}km  normalised={:.1}",
-                      left_k, right_k, ratio_best/1000.0, normalised/1000.0);
+            eprintln!(
+                "[geosection]   ratio {}:{} best={:.0}km  normalised={:.1}",
+                left_k,
+                right_k,
+                ratio_best / 1000.0,
+                normalised / 1000.0
+            );
         }
 
         if selection_score < best_normalised {
@@ -970,9 +1240,20 @@ pub fn run_geosection(
         }
     }
 
-    let mode_tag = if ncon == 2 { "areasection" } else if minority_vap.is_some() { "vra-section" } else { "geosection" };
-    eprintln!("[{mode_tag}] natural ratio {}:{} at {:.0}km (normalised={:.1})",
-              best_left, best_right, best_ec/1000.0, best_normalised/1000.0);
+    let mode_tag = if ncon == 2 {
+        "areasection"
+    } else if minority_vap.is_some() {
+        "vra-section"
+    } else {
+        "geosection"
+    };
+    eprintln!(
+        "[{mode_tag}] natural ratio {}:{} at {:.0}km (normalised={:.1})",
+        best_left,
+        best_right,
+        best_ec / 1000.0,
+        best_normalised / 1000.0
+    );
 
     // For AreaSection: log the winning split's area fraction and whether it's within ubvec
     if ncon == 2 {
@@ -999,21 +1280,43 @@ pub fn run_geosection(
         let round_dir = dir.join("depth_01");
         let _ = std::fs::create_dir_all(&round_dir);
         let mut d1: HashMap<usize, usize> = HashMap::new();
-        for &v in &best_left_set  { d1.insert(v, 1); }
-        for &v in &best_right_set { d1.insert(v, 2); }
+        for &v in &best_left_set {
+            d1.insert(v, 1);
+        }
+        for &v in &best_right_set {
+            d1.insert(v, 2);
+        }
         let _ = write_intermediate_round(&round_dir, &d1);
     }
 
     // Recurse: each half finds its own natural ratio with its own orientation.
     // Recursive calls always use ncon=1 (area constraint only at the first level).
-    let left_asgn  = recurse_geosection(
-        &best_left_set,  adjacency, vertex_weights, edge_weights,
-        best_left,  balance_tolerance, niter, seeds_per_ratio, 1,
-        centroids, lambda)?;
+    let left_asgn = recurse_geosection(
+        &best_left_set,
+        adjacency,
+        vertex_weights,
+        edge_weights,
+        best_left,
+        balance_tolerance,
+        niter,
+        seeds_per_ratio,
+        1,
+        centroids,
+        lambda,
+    )?;
     let right_asgn = recurse_geosection(
-        &best_right_set, adjacency, vertex_weights, edge_weights,
-        best_right, balance_tolerance, niter, seeds_per_ratio, best_left + 1,
-        centroids, lambda)?;
+        &best_right_set,
+        adjacency,
+        vertex_weights,
+        edge_weights,
+        best_right,
+        balance_tolerance,
+        niter,
+        seeds_per_ratio,
+        best_left + 1,
+        centroids,
+        lambda,
+    )?;
 
     let mut assignments = left_asgn;
     assignments.extend(right_asgn);
@@ -1039,7 +1342,7 @@ fn recurse_geosection(
     verts: &HashSet<usize>,
     adjacency: &[Vec<usize>],
     vertex_weights: &[i64],
-    edge_weights: &HashMap<(usize,usize),f64>,
+    edge_weights: &HashMap<(usize, usize), f64>,
     k: usize,
     balance_tolerance: f64,
     niter: u32,
@@ -1047,32 +1350,43 @@ fn recurse_geosection(
     district_base: usize,
     centroids: &crate::geosection_orientation::CentroidMap,
     lambda: f64,
-) -> Result<HashMap<usize,usize>, String> {
-    if k == 0 { return Ok(HashMap::new()); }
+) -> Result<HashMap<usize, usize>, String> {
+    if k == 0 {
+        return Ok(HashMap::new());
+    }
     if k == 1 {
         return Ok(verts.iter().map(|&v| (v, district_base)).collect());
     }
 
     // Extract sorted vertex list for deterministic local indexing
-    let sorted: Vec<usize> = { let mut v: Vec<usize> = verts.iter().copied().collect(); v.sort_unstable(); v };
-    let global_to_local: HashMap<usize,usize> = sorted.iter().enumerate().map(|(i,&g)|(g,i)).collect();
+    let sorted: Vec<usize> = {
+        let mut v: Vec<usize> = verts.iter().copied().collect();
+        v.sort_unstable();
+        v
+    };
+    let global_to_local: HashMap<usize, usize> =
+        sorted.iter().enumerate().map(|(i, &g)| (g, i)).collect();
 
     // Build local subgraph components
     let local_adj: Vec<Vec<usize>> = build_subgraph_adjacency(verts, adjacency);
     let local_vw: Vec<i64> = sorted.iter().map(|&g| vertex_weights[g]).collect();
-    let mut local_ew: HashMap<(usize,usize),f64> = edge_weights.iter()
-        .filter_map(|(&(u,v),&w)| {
+    let mut local_ew: HashMap<(usize, usize), f64> = edge_weights
+        .iter()
+        .filter_map(|(&(u, v), &w)| {
             let lu = *global_to_local.get(&u)?;
             let lv = *global_to_local.get(&v)?;
             Some(((lu.min(lv), lu.max(lv)), w))
         })
-        .fold(HashMap::new(), |mut m,(k,v)| { m.insert(k,v); m });
+        .fold(HashMap::new(), |mut m, (k, v)| {
+            m.insert(k, v);
+            m
+        });
 
     // Phase 2: PCA of THIS subregion's centroids → local minor axis → directional penalty
     if lambda > 1e-10 && !centroids.is_empty() {
         if let Some(angle) = crate::geosection_orientation::compute_minor_axis(verts, centroids) {
             local_ew = crate::geosection_orientation::apply_directional_penalty(
-                &local_ew, centroids, angle, lambda
+                &local_ew, centroids, angle, lambda,
             );
         }
     }
@@ -1083,41 +1397,68 @@ fn recurse_geosection(
     // Always ncon=1 for recursive levels (area constraint only at first level).
     let empty_centroids = crate::geosection_orientation::CentroidMap::new();
     let (local_asgn, nat_left, nat_right, nat_ec) = run_geosection(
-        &local_adj, &local_vw, &local_ew,
-        k, balance_tolerance, niter, seeds_per_ratio, None,
-        &empty_centroids, 0.0, None, 1.10,  // recursive: ncon=1, area_swing unused
-        None, 0.0,  // recursive: no VRA alignment at sub-levels
-        None,       // recursive: no MKA override at sub-levels
+        &local_adj,
+        &local_vw,
+        &local_ew,
+        k,
+        balance_tolerance,
+        niter,
+        seeds_per_ratio,
+        None,
+        &empty_centroids,
+        0.0,
+        None,
+        1.10, // recursive: ncon=1, area_swing unused
+        None,
+        0.0,  // recursive: no VRA alignment at sub-levels
+        None, // recursive: no MKA override at sub-levels
     )?;
 
     if local_asgn.len() < sorted.len().saturating_sub(1) {
         // Partial assignment — fall back to standard for this subregion
-        return recurse_standard(verts, &local_adj, adjacency, vertex_weights, edge_weights,
-                                k, balance_tolerance, niter, district_base);
+        return recurse_standard(
+            verts,
+            &local_adj,
+            adjacency,
+            vertex_weights,
+            edge_weights,
+            k,
+            balance_tolerance,
+            niter,
+            district_base,
+        );
     }
 
     // Map local indices back to global with district offset
-    let result: HashMap<usize,usize> = local_asgn.iter()
+    let result: HashMap<usize, usize> = local_asgn
+        .iter()
         .filter_map(|(&local, &dist)| {
-            sorted.get(local).map(|&global| (global, dist + district_base - 1))
+            sorted
+                .get(local)
+                .map(|&global| (global, dist + district_base - 1))
         })
         .collect();
     Ok(result)
 }
 
 /// Build adjacency restricted to a subset of vertices (for recursion).
-fn build_subgraph_adjacency(verts: &HashSet<usize>, adj: &[Vec<usize>])
-    -> Vec<Vec<usize>>
-{
+fn build_subgraph_adjacency(verts: &HashSet<usize>, adj: &[Vec<usize>]) -> Vec<Vec<usize>> {
     let sorted: Vec<usize> = {
         let mut v: Vec<usize> = verts.iter().copied().collect();
-        v.sort_unstable(); v
+        v.sort_unstable();
+        v
     };
-    let global_to_local: HashMap<usize,usize> = sorted.iter()
-        .enumerate().map(|(i,&g)| (g,i)).collect();
-    sorted.iter().map(|&g| {
-        adj[g].iter().filter_map(|&nb| global_to_local.get(&nb).copied()).collect()
-    }).collect()
+    let global_to_local: HashMap<usize, usize> =
+        sorted.iter().enumerate().map(|(i, &g)| (g, i)).collect();
+    sorted
+        .iter()
+        .map(|&g| {
+            adj[g]
+                .iter()
+                .filter_map(|&nb| global_to_local.get(&nb).copied())
+                .collect()
+        })
+        .collect()
 }
 
 /// Recurse using standard bisection (UpfloorD k/2 : ceil k/2) within a subgraph.
@@ -1127,37 +1468,56 @@ fn recurse_standard(
     sub_adj: &[Vec<usize>],
     global_adj: &[Vec<usize>],
     vertex_weights: &[i64],
-    edge_weights: &HashMap<(usize,usize),f64>,
+    edge_weights: &HashMap<(usize, usize), f64>,
     k: usize,
     balance_tolerance: f64,
     niter: u32,
     district_base: usize,
-) -> Result<HashMap<usize,usize>, String> {
-    if k == 0 { return Ok(HashMap::new()); }
+) -> Result<HashMap<usize, usize>, String> {
+    if k == 0 {
+        return Ok(HashMap::new());
+    }
     if k == 1 {
         return Ok(verts.iter().map(|&v| (v, district_base)).collect());
     }
 
-    let sorted: Vec<usize> = { let mut v: Vec<usize> = verts.iter().copied().collect(); v.sort_unstable(); v };
-    let global_to_local: HashMap<usize,usize> = sorted.iter().enumerate().map(|(i,&g)|(g,i)).collect();
+    let sorted: Vec<usize> = {
+        let mut v: Vec<usize> = verts.iter().copied().collect();
+        v.sort_unstable();
+        v
+    };
+    let global_to_local: HashMap<usize, usize> =
+        sorted.iter().enumerate().map(|(i, &g)| (g, i)).collect();
 
     // Extract sub-vertex-weights and sub-edge-weights
     let sub_vw: Vec<i64> = sorted.iter().map(|&g| vertex_weights[g]).collect();
-    let sub_ew: HashMap<(usize,usize),f64> = edge_weights.iter()
-        .filter_map(|(&(u,v),&w)| {
+    let sub_ew: HashMap<(usize, usize), f64> = edge_weights
+        .iter()
+        .filter_map(|(&(u, v), &w)| {
             let lu = *global_to_local.get(&u)?;
             let lv = *global_to_local.get(&v)?;
             Some(((lu.min(lv), lu.max(lv)), w))
         })
-        .fold(HashMap::new(), |mut m,(k,v)| { m.insert(k,v); m });
+        .fold(HashMap::new(), |mut m, (k, v)| {
+            m.insert(k, v);
+            m
+        });
 
     let sub_n = sorted.len();
-    let sub_asgn = run_all_splits(sub_adj, &sub_vw, &sub_ew,
-                                   k, balance_tolerance, niter,
-                                   Some(42), None)?;
+    let sub_asgn = run_all_splits(
+        sub_adj,
+        &sub_vw,
+        &sub_ew,
+        k,
+        balance_tolerance,
+        niter,
+        Some(42),
+        None,
+    )?;
 
     // Map back to global indices with offset
-    let result: HashMap<usize,usize> = sub_asgn.iter()
+    let result: HashMap<usize, usize> = sub_asgn
+        .iter()
         .map(|(&local, &dist)| (sorted[local], dist + district_base - 1))
         .collect();
     Ok(result)
@@ -1174,8 +1534,17 @@ pub fn run_all_splits(
     // If Some, writes intermediate/depth_{d:02}/assignments.json after each round.
     intermediate_dir: Option<&Path>,
 ) -> Result<HashMap<usize, usize>, String> {
-    run_all_splits_with_search(adjacency, vertex_weights, edge_weights, num_districts,
-        balance_tolerance, niter, seed, intermediate_dir, None)
+    run_all_splits_with_search(
+        adjacency,
+        vertex_weights,
+        edge_weights,
+        num_districts,
+        balance_tolerance,
+        niter,
+        seed,
+        intermediate_dir,
+        None,
+    )
 }
 
 /// Variant of `run_all_splits` that supports BisectionEnsemble search at each node.
@@ -1213,46 +1582,62 @@ pub fn run_all_splits_with_search(
         let nodes_at_depth: Vec<_> = tree.nodes_at_depth(depth).into_iter().cloned().collect();
 
         // Extract data BEFORE parallel section — no shared references across threads
-        let nodes_with_tracts: Vec<(bisect_core::BisectionNode, HashSet<usize>)> =
-            nodes_at_depth.into_iter()
-                .filter_map(|node| {
-                    node_tracts.remove(&node.path).map(|tracts| (node, tracts))
-                })
-                .collect();
+        let nodes_with_tracts: Vec<(bisect_core::BisectionNode, HashSet<usize>)> = nodes_at_depth
+            .into_iter()
+            .filter_map(|node| node_tracts.remove(&node.path).map(|tracts| (node, tracts)))
+            .collect();
 
-        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> =
-            nodes_with_tracts.into_par_iter()
-                .map(|(node, tracts)| {
-                    // Per-node ufactor: 1.0 + balance_tolerance / k_node
-                    // This is the mathematically correct formula: if each split at a node
-                    // with k remaining districts is balanced to (T/k)%, the cumulative
-                    // error across all levels never exceeds T% per final district.
-                    // Root (k=98, T=10%): ufactor=1.00102 (very tight)
-                    // Leaf (k=2, T=10%): ufactor=1.05 (loose — OK since only 2 districts)
-                    let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
+        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> = nodes_with_tracts
+            .into_par_iter()
+            .map(|(node, tracts)| {
+                // Per-node ufactor: 1.0 + balance_tolerance / k_node
+                // This is the mathematically correct formula: if each split at a node
+                // with k remaining districts is balanced to (T/k)%, the cumulative
+                // error across all levels never exceeds T% per final district.
+                // Root (k=98, T=10%): ufactor=1.00102 (very tight)
+                // Leaf (k=2, T=10%): ufactor=1.05 (loose — OK since only 2 districts)
+                let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
 
-                    // Target weights: k_left/k and k_right/k
-                    // Equal when k_left == k_right (even k); unequal for odd k
-                    let tpwgts = if node.k_left == node.k_right {
-                        None // equal split — METIS default
-                    } else {
-                        let left_w = node.k_left as f32 / node.k as f32;
-                        Some(vec![left_w, 1.0_f32 - left_w]) // right = 1-left (exact f32 sum)
-                    };
-                    let (left, right) = if let Some((p, ens_steps)) = bisection_ensemble {
-                        split_subgraph_bisection_ensemble(
-                            adjacency, vertex_weights, edge_weights, &tracts,
-                            node_ufactor, niter, seed, ens_steps, p,
-                        ).map_err(|e| format!("depth {} node '{}' (ensemble): {e}", depth, node.path))?
-                    } else {
-                        split_subgraph(
-                            adjacency, vertex_weights, 1, edge_weights, &tracts,
-                            node_ufactor, niter, seed, tpwgts, None,
-                        ).map_err(|e| format!("depth {} node '{}': {e}", depth, node.path))?
-                    };
-                    Ok((node.path, left, right))
-                })
-                .collect::<Result<Vec<_>, String>>()?;
+                // Target weights: k_left/k and k_right/k
+                // Equal when k_left == k_right (even k); unequal for odd k
+                let tpwgts = if node.k_left == node.k_right {
+                    None // equal split — METIS default
+                } else {
+                    let left_w = node.k_left as f32 / node.k as f32;
+                    Some(vec![left_w, 1.0_f32 - left_w]) // right = 1-left (exact f32 sum)
+                };
+                let (left, right) = if let Some((p, ens_steps)) = bisection_ensemble {
+                    split_subgraph_bisection_ensemble(
+                        adjacency,
+                        vertex_weights,
+                        edge_weights,
+                        &tracts,
+                        node_ufactor,
+                        niter,
+                        seed,
+                        tpwgts.clone(),
+                        ens_steps,
+                        p,
+                    )
+                    .map_err(|e| format!("depth {} node '{}' (ensemble): {e}", depth, node.path))?
+                } else {
+                    split_subgraph(
+                        adjacency,
+                        vertex_weights,
+                        1,
+                        edge_weights,
+                        &tracts,
+                        node_ufactor,
+                        niter,
+                        seed,
+                        tpwgts,
+                        None,
+                    )
+                    .map_err(|e| format!("depth {} node '{}': {e}", depth, node.path))?
+                };
+                Ok((node.path, left, right))
+            })
+            .collect::<Result<Vec<_>, String>>()?;
 
         // Sort results by path before inserting to ensure deterministic insertion order.
         // Rayon's thread scheduling may vary, so the collection order of split_results
@@ -1299,7 +1684,8 @@ pub fn run_all_splits_with_search(
 
     if assignments.len() != n {
         return Err(format!(
-            "bisection incomplete: {}/{n} tracts assigned", assignments.len()
+            "bisection incomplete: {}/{n} tracts assigned",
+            assignments.len()
         ));
     }
     Ok(assignments)
@@ -1360,47 +1746,67 @@ pub fn run_all_splits_compact(
 
     for depth in 0..tree.max_depth {
         let nodes_at_depth: Vec<_> = tree.nodes_at_depth(depth).into_iter().cloned().collect();
-        let nodes_with_tracts: Vec<(bisect_core::BisectionNode, HashSet<usize>)> =
-            nodes_at_depth.into_iter()
-                .filter_map(|node| node_tracts.remove(&node.path).map(|t| (node, t)))
-                .collect();
+        let nodes_with_tracts: Vec<(bisect_core::BisectionNode, HashSet<usize>)> = nodes_at_depth
+            .into_iter()
+            .filter_map(|node| node_tracts.remove(&node.path).map(|t| (node, t)))
+            .collect();
 
-        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> =
-            nodes_with_tracts.into_par_iter()
-                .map(|(node, tracts)| {
-                    let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
-                    let tpwgts_node = if node.k_left == node.k_right { None } else {
-                        let left_w = node.k_left as f32 / node.k as f32;
-                        Some(vec![left_w, 1.0_f32 - left_w])
-                    };
+        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> = nodes_with_tracts
+            .into_par_iter()
+            .map(|(node, tracts)| {
+                let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
+                let tpwgts_node = if node.k_left == node.k_right {
+                    None
+                } else {
+                    let left_w = node.k_left as f32 / node.k as f32;
+                    Some(vec![left_w, 1.0_f32 - left_w])
+                };
 
-                    // Run N seeds, collect (left, right, edge_cut)
-                    let candidates: Vec<(HashSet<usize>, HashSet<usize>, f64)> =
-                        (1..=opts.seeds_per_level).filter_map(|s| {
-                            let seed = Some(s as u64);
-                            split_subgraph(
-                                adjacency, vertex_weights, 1, edge_weights,
-                                &tracts, node_ufactor, niter, seed,
-                                tpwgts_node.clone(), None,
-                            ).ok().map(|(l, r)| {
-                                let ec: f64 = edge_weights.iter().filter_map(|(&(u, v), &w)| {
-                                    if l.contains(&u) != l.contains(&v) { Some(w) } else { None }
-                                }).sum();
-                                (l, r, ec)
-                            })
-                        }).collect();
+                // Run N seeds, collect (left, right, edge_cut)
+                let candidates: Vec<(HashSet<usize>, HashSet<usize>, f64)> = (1..=opts
+                    .seeds_per_level)
+                    .filter_map(|s| {
+                        let seed = Some(s as u64);
+                        split_subgraph(
+                            adjacency,
+                            vertex_weights,
+                            1,
+                            edge_weights,
+                            &tracts,
+                            node_ufactor,
+                            niter,
+                            seed,
+                            tpwgts_node.clone(),
+                            None,
+                        )
+                        .ok()
+                        .map(|(l, r)| {
+                            let ec: f64 = edge_weights
+                                .iter()
+                                .filter_map(|(&(u, v), &w)| {
+                                    if l.contains(&u) != l.contains(&v) {
+                                        Some(w)
+                                    } else {
+                                        None
+                                    }
+                                })
+                                .sum();
+                            (l, r, ec)
+                        })
+                    })
+                    .collect();
 
-                    if candidates.is_empty() {
-                        return Err(format!(
-                            "depth {} node '{}': all {} seeds failed",
-                            depth, node.path, opts.seeds_per_level
-                        ));
-                    }
+                if candidates.is_empty() {
+                    return Err(format!(
+                        "depth {} node '{}': all {} seeds failed",
+                        depth, node.path, opts.seeds_per_level
+                    ));
+                }
 
-                    let (left, right) = select_compact_split(&candidates, &geom_graph, opts.epsilon);
-                    Ok((node.path, left, right))
-                })
-                .collect::<Result<Vec<_>, String>>()?;
+                let (left, right) = select_compact_split(&candidates, &geom_graph, opts.epsilon);
+                Ok((node.path, left, right))
+            })
+            .collect::<Result<Vec<_>, String>>()?;
 
         let mut sorted = split_results;
         sorted.sort_by_key(|(path, _, _)| path.clone());
@@ -1416,7 +1822,9 @@ pub fn run_all_splits_compact(
             nodes.sort_by_key(|(path, _)| (path.len(), *path));
             let mut round_asgn: HashMap<usize, usize> = HashMap::with_capacity(n);
             for (region_id, (_, tracts)) in nodes.iter().enumerate() {
-                for &tract in tracts.iter() { round_asgn.insert(tract, region_id + 1); }
+                for &tract in tracts.iter() {
+                    round_asgn.insert(tract, region_id + 1);
+                }
             }
             let _ = write_intermediate_round(&round_dir, &round_asgn);
         }
@@ -1426,10 +1834,15 @@ pub fn run_all_splits_compact(
     leaves.sort_by_key(|(path, _)| (path.len(), path.clone()));
     let mut assignments: HashMap<usize, usize> = HashMap::new();
     for (district_id, (_, tracts)) in leaves.into_iter().enumerate() {
-        for tract in tracts { assignments.insert(tract, district_id + 1); }
+        for tract in tracts {
+            assignments.insert(tract, district_id + 1);
+        }
     }
     if assignments.len() != n {
-        return Err(format!("bisection incomplete: {}/{n} tracts assigned", assignments.len()));
+        return Err(format!(
+            "bisection incomplete: {}/{n} tracts assigned",
+            assignments.len()
+        ));
     }
     Ok(assignments)
 }
@@ -1481,50 +1894,58 @@ pub fn run_all_splits_proportional(
 
     for depth in 0..tree.max_depth {
         let nodes_at_depth: Vec<_> = tree.nodes_at_depth(depth).into_iter().cloned().collect();
-        let nodes_with_tracts: Vec<(bisect_core::BisectionNode, HashSet<usize>)> =
-            nodes_at_depth.into_iter()
-                .filter_map(|node| node_tracts.remove(&node.path).map(|t| (node, t)))
-                .collect();
+        let nodes_with_tracts: Vec<(bisect_core::BisectionNode, HashSet<usize>)> = nodes_at_depth
+            .into_iter()
+            .filter_map(|node| node_tracts.remove(&node.path).map(|t| (node, t)))
+            .collect();
 
-        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> =
-            nodes_with_tracts.into_par_iter()
-                .map(|(node, tracts)| {
-                    let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
+        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> = nodes_with_tracts
+            .into_par_iter()
+            .map(|(node, tracts)| {
+                let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
 
-                    // Compute Dem vote share within this subgraph
-                    let total_dem: f64 = tracts.iter().map(|&v| dem_votes[v]).sum();
-                    let total_votes: f64 = tracts.iter()
-                        .map(|&v| vertex_weights[v] as f64).sum();
-                    let dem_share = if total_votes > 0.0 {
-                        total_dem / total_votes
-                    } else {
-                        0.5 // fallback: equal split
-                    };
+                // Compute Dem vote share within this subgraph
+                let total_dem: f64 = tracts.iter().map(|&v| dem_votes[v]).sum();
+                let total_votes: f64 = tracts.iter().map(|&v| vertex_weights[v] as f64).sum();
+                let dem_share = if total_votes > 0.0 {
+                    total_dem / total_votes
+                } else {
+                    0.5 // fallback: equal split
+                };
 
-                    // Proportional district allocation: round to nearest integer
-                    let k_dem = (dem_share * node.k as f64).round() as usize;
-                    let k_dem = k_dem.max(1).min(node.k - 1); // at least 1 per side
-                    let k_rep = node.k - k_dem;
+                // Proportional district allocation: round to nearest integer
+                let k_dem = (dem_share * node.k as f64).round() as usize;
+                let k_dem = k_dem.max(1).min(node.k - 1); // at least 1 per side
+                let k_rep = node.k - k_dem;
 
-                    // Use the proportional allocation as METIS target weights.
-                    // METIS will minimise edge-cut subject to this population-ratio constraint.
-                    let tpwgts = if k_dem == k_rep {
-                        None // equal — use default
-                    } else {
-                        Some(vec![
-                            k_dem as f32 / node.k as f32,
-                            k_rep as f32 / node.k as f32,
-                        ])
-                    };
+                // Use the proportional allocation as METIS target weights.
+                // METIS will minimise edge-cut subject to this population-ratio constraint.
+                let tpwgts = if k_dem == k_rep {
+                    None // equal — use default
+                } else {
+                    Some(vec![
+                        k_dem as f32 / node.k as f32,
+                        k_rep as f32 / node.k as f32,
+                    ])
+                };
 
-                    let (left, right) = split_subgraph(
-                        adjacency, vertex_weights, 1, edge_weights,
-                        &tracts, node_ufactor, niter, seed, tpwgts, None,
-                    ).map_err(|e| format!("depth {} node '{}': {e}", depth, node.path))?;
+                let (left, right) = split_subgraph(
+                    adjacency,
+                    vertex_weights,
+                    1,
+                    edge_weights,
+                    &tracts,
+                    node_ufactor,
+                    niter,
+                    seed,
+                    tpwgts,
+                    None,
+                )
+                .map_err(|e| format!("depth {} node '{}': {e}", depth, node.path))?;
 
-                    Ok((node.path, left, right))
-                })
-                .collect::<Result<Vec<_>, String>>()?;
+                Ok((node.path, left, right))
+            })
+            .collect::<Result<Vec<_>, String>>()?;
 
         let mut sorted = split_results;
         sorted.sort_by_key(|(path, _, _)| path.clone());
@@ -1540,7 +1961,9 @@ pub fn run_all_splits_proportional(
             nodes.sort_by_key(|(path, _)| (path.len(), *path));
             let mut round_asgn: HashMap<usize, usize> = HashMap::with_capacity(n);
             for (region_id, (_, tracts)) in nodes.iter().enumerate() {
-                for &tract in tracts.iter() { round_asgn.insert(tract, region_id + 1); }
+                for &tract in tracts.iter() {
+                    round_asgn.insert(tract, region_id + 1);
+                }
             }
             let _ = write_intermediate_round(&round_dir, &round_asgn);
         }
@@ -1550,10 +1973,15 @@ pub fn run_all_splits_proportional(
     leaves.sort_by_key(|(path, _)| (path.len(), path.clone()));
     let mut assignments: HashMap<usize, usize> = HashMap::new();
     for (district_id, (_, tracts)) in leaves.into_iter().enumerate() {
-        for tract in tracts { assignments.insert(tract, district_id + 1); }
+        for tract in tracts {
+            assignments.insert(tract, district_id + 1);
+        }
     }
     if assignments.len() != n {
-        return Err(format!("bisection incomplete: {}/{n} tracts assigned", assignments.len()));
+        return Err(format!(
+            "bisection incomplete: {}/{n} tracts assigned",
+            assignments.len()
+        ));
     }
     Ok(assignments)
 }
@@ -1566,10 +1994,7 @@ pub fn run_all_splits_proportional(
 /// one entry per connected component (global indices).
 ///
 /// Used by `repair_bisection_contiguity` to detect fragmented partitions.
-pub fn connected_components_of(
-    adj: &[Vec<usize>],
-    subset: &HashSet<usize>,
-) -> Vec<HashSet<usize>> {
+pub fn connected_components_of(adj: &[Vec<usize>], subset: &HashSet<usize>) -> Vec<HashSet<usize>> {
     let mut unvisited: HashSet<usize> = subset.clone();
     let mut components: Vec<HashSet<usize>> = Vec::new();
 
@@ -1616,28 +2041,29 @@ pub fn repair_bisection_contiguity(
     left: HashSet<usize>,
     right: HashSet<usize>,
 ) -> (HashSet<usize>, HashSet<usize>) {
-    let repair_side = |main: HashSet<usize>, other: HashSet<usize>| -> (HashSet<usize>, HashSet<usize>) {
-        let mut comps = connected_components_of(adj, &main);
-        if comps.len() <= 1 {
-            return (main, other);
-        }
-        // Keep the largest component; migrate the rest to the other side.
-        comps.sort_by_key(|c| std::cmp::Reverse(c.len()));
-        let mut kept = comps.remove(0);
-        let mut gained = other;
-        for orphan in comps {
-            gained.extend(orphan);
-        }
-        // Safety: never let the kept side shrink to zero if the other side
-        // would swallow everything.
-        if kept.is_empty() && !gained.is_empty() {
-            // Move one vertex back (pathological case).
-            let v = *gained.iter().next().unwrap();
-            gained.remove(&v);
-            kept.insert(v);
-        }
-        (kept, gained)
-    };
+    let repair_side =
+        |main: HashSet<usize>, other: HashSet<usize>| -> (HashSet<usize>, HashSet<usize>) {
+            let mut comps = connected_components_of(adj, &main);
+            if comps.len() <= 1 {
+                return (main, other);
+            }
+            // Keep the largest component; migrate the rest to the other side.
+            comps.sort_by_key(|c| std::cmp::Reverse(c.len()));
+            let mut kept = comps.remove(0);
+            let mut gained = other;
+            for orphan in comps {
+                gained.extend(orphan);
+            }
+            // Safety: never let the kept side shrink to zero if the other side
+            // would swallow everything.
+            if kept.is_empty() && !gained.is_empty() {
+                // Move one vertex back (pathological case).
+                let v = *gained.iter().next().unwrap();
+                gained.remove(&v);
+                kept.insert(v);
+            }
+            (kept, gained)
+        };
 
     let (left2, right2) = repair_side(left, right);
     let (right3, left3) = repair_side(right2, left2);
@@ -1646,10 +2072,13 @@ pub fn repair_bisection_contiguity(
 
 /// Write one intermediate round's assignments to `{round_dir}/assignments.json`.
 /// Format: `{"tract_index": region_id, ...}` — mirrors final_assignments.json.
-fn write_intermediate_round(round_dir: &Path, assignments: &HashMap<usize, usize>) -> Result<(), String> {
+fn write_intermediate_round(
+    round_dir: &Path,
+    assignments: &HashMap<usize, usize>,
+) -> Result<(), String> {
     let path = round_dir.join("assignments.json");
-    let json = serde_json::to_string(assignments)
-        .map_err(|e| format!("serialize intermediate: {e}"))?;
+    let json =
+        serde_json::to_string(assignments).map_err(|e| format!("serialize intermediate: {e}"))?;
     std::fs::write(&path, json).map_err(|e| format!("write intermediate: {e}"))
 }
 
@@ -1684,15 +2113,17 @@ pub fn run_all_splits_percentile(
     }
 
     // Derive n_seeds seeds from SHA-256 walk.
-    let seeds: Vec<u64> = (0..n_seeds).map(|i| {
-        let mut h = sha2::Sha256::new();
-        h.update(b"PERCENTILE_SWEEP_V1_");
-        h.update(i.to_le_bytes());
-        h.update(b"_");
-        h.update(base_seed.to_le_bytes());
-        let d = h.finalize();
-        u64::from_le_bytes(d[..8].try_into().unwrap())
-    }).collect();
+    let seeds: Vec<u64> = (0..n_seeds)
+        .map(|i| {
+            let mut h = sha2::Sha256::new();
+            h.update(b"PERCENTILE_SWEEP_V1_");
+            h.update(i.to_le_bytes());
+            h.update(b"_");
+            h.update(base_seed.to_le_bytes());
+            let d = h.finalize();
+            u64::from_le_bytes(d[..8].try_into().unwrap())
+        })
+        .collect();
 
     // Run all seeds sequentially. par_iter() would call the C METIS library from
     // multiple threads simultaneously; METIS shares global/TLS RNG state and is
@@ -1700,15 +2131,25 @@ pub fn run_all_splits_percentile(
     // The pure-Rust metis-core engine is thread-safe, but we use sequential
     // iteration unconditionally so both engine paths produce identical output.
     let n = adjacency.len();
-    let results: Vec<(usize, usize, HashMap<usize, usize>)> = seeds.iter()
+    let results: Vec<(usize, usize, HashMap<usize, usize>)> = seeds
+        .iter()
         .enumerate()
         .map(|(idx, &seed)| {
-            let asgn = run_all_splits(adjacency, vertex_weights, edge_weights,
-                num_districts, balance_tolerance, niter, Some(seed), None)
-                .unwrap_or_else(|_| (0..n).map(|i| (i, 1)).collect());
+            let asgn = run_all_splits(
+                adjacency,
+                vertex_weights,
+                edge_weights,
+                num_districts,
+                balance_tolerance,
+                niter,
+                Some(seed),
+                None,
+            )
+            .unwrap_or_else(|_| (0..n).map(|i| (i, 1)).collect());
             let ec = count_edge_cuts(&asgn, adjacency);
             (idx, ec, asgn)
-        }).collect();
+        })
+        .collect();
 
     // Sort by (edge_cut ASC, seed_index ASC) — secondary key breaks ties deterministically.
     let mut sorted = results;
@@ -1727,7 +2168,9 @@ fn count_edge_cuts(assignment: &HashMap<usize, usize>, adj: &[Vec<usize>]) -> us
         for &nb in nbrs {
             if nb > v {
                 let dn = assignment.get(&nb).copied().unwrap_or(0);
-                if dv != dn { cut += 1; }
+                if dv != dn {
+                    cut += 1;
+                }
             }
         }
     }
@@ -1753,51 +2196,94 @@ pub fn split_subgraph_bisection_ensemble(
     ufactor: f64,
     niter: u32,
     base_seed: Option<u64>,
+    tpwgts: Option<Vec<f32>>,
     ensemble_steps: usize,
     p: f64,
 ) -> Result<(HashSet<usize>, HashSet<usize>), String> {
-    use rand::SeedableRng;
     use rand::rngs::SmallRng;
+    use rand::SeedableRng;
 
     // Fall back to standard METIS bisection for very small regions.
     if tract_indices.len() <= 4 {
-        return split_subgraph(adjacency, vwgt, 1, edge_weights, tract_indices,
-            ufactor, niter, base_seed, None, None);
+        return split_subgraph(
+            adjacency,
+            vwgt,
+            1,
+            edge_weights,
+            tract_indices,
+            ufactor,
+            niter,
+            base_seed,
+            tpwgts,
+            None,
+        );
     }
 
     // Build local subgraph.
     let mut sorted: Vec<usize> = tract_indices.iter().copied().collect();
     sorted.sort_unstable();
-    let global_to_local: HashMap<usize, u32> = sorted.iter()
-        .enumerate().map(|(i, &g)| (g, i as u32)).collect();
+    let global_to_local: HashMap<usize, u32> = sorted
+        .iter()
+        .enumerate()
+        .map(|(i, &g)| (g, i as u32))
+        .collect();
     #[allow(unused_imports)]
     use bisect_ensemble::recom::RecomChain;
     let n = sorted.len();
 
-    let local_adj: Vec<Vec<u32>> = sorted.iter().map(|&g| {
-        adjacency[g].iter()
-            .filter_map(|&nb| global_to_local.get(&nb).copied())
-            .collect()
-    }).collect();
+    let local_adj: Vec<Vec<u32>> = sorted
+        .iter()
+        .map(|&g| {
+            adjacency[g]
+                .iter()
+                .filter_map(|&nb| global_to_local.get(&nb).copied())
+                .collect()
+        })
+        .collect();
     let local_pop: Vec<i64> = sorted.iter().map(|&g| vwgt[g]).collect();
 
     // Seed initial partition via METIS bisection.
     let (init_left, init_right) = split_subgraph(
-        adjacency, vwgt, 1, edge_weights, tract_indices, ufactor, niter, base_seed, None, None
+        adjacency,
+        vwgt,
+        1,
+        edge_weights,
+        tract_indices,
+        ufactor,
+        niter,
+        base_seed,
+        tpwgts.clone(),
+        None,
     )?;
-    let initial_assignment: Vec<u32> = sorted.iter()
+    let initial_assignment: Vec<u32> = sorted
+        .iter()
         .map(|g| if init_left.contains(g) { 1 } else { 2 })
         .collect();
 
     // Run local ReCom ensemble.
     let seed = base_seed.unwrap_or(0xDEAD_BEEF_CAFE_1234);
     let mut rng = SmallRng::seed_from_u64(seed);
-    let mut chain = RecomChain::new(local_adj, local_pop, initial_assignment, 2, ufactor - 1.0);
+    let total_pop: f64 = local_pop.iter().map(|&p| p as f64).sum();
+    let chain_tolerance = ufactor - 1.0;
+    let mut chain = if let Some(ref tw) = tpwgts {
+        RecomChain::new_with_target_pops(
+            local_adj,
+            local_pop,
+            initial_assignment,
+            vec![tw[0] as f64 * total_pop, tw[1] as f64 * total_pop],
+            chain_tolerance,
+        )
+    } else {
+        RecomChain::new(local_adj, local_pop, initial_assignment, 2, chain_tolerance)
+    };
 
     let mut accepted_assignments: Vec<(usize, Vec<u32>)> = Vec::new();
     // Include the initial METIS plan.
     {
-        let ec: usize = chain.assignment.iter().enumerate()
+        let ec: usize = chain
+            .assignment
+            .iter()
+            .enumerate()
             .flat_map(|(v, &d)| chain.adj[v].iter().map(move |&nb| (v, nb as usize, d)))
             .filter(|(v, nb, d)| chain.assignment[*nb] != *d && *nb > *v)
             .count();
@@ -1823,11 +2309,15 @@ pub fn split_subgraph_bisection_ensemble(
         .min(accepted_assignments.len() - 1);
     let (_, chosen) = accepted_assignments.into_iter().nth(rank).unwrap();
 
-    let left: HashSet<usize> = sorted.iter().enumerate()
+    let left: HashSet<usize> = sorted
+        .iter()
+        .enumerate()
         .filter(|(i, _)| chosen[*i] == 1)
         .map(|(_, &g)| g)
         .collect();
-    let right: HashSet<usize> = sorted.iter().enumerate()
+    let right: HashSet<usize> = sorted
+        .iter()
+        .enumerate()
         .filter(|(i, _)| chosen[*i] == 2)
         .map(|(_, &g)| g)
         .collect();
@@ -1862,8 +2352,8 @@ pub fn run_short_burst(
     n_bursts: usize,
     p: f64,
 ) -> Result<(HashMap<usize, usize>, Vec<u64>, usize), String> {
-    use sha2::Digest;
     use bisect_ensemble::recom::RecomChain;
+    use sha2::Digest;
 
     if num_districts <= 1 {
         let trivial: HashMap<usize, usize> = (0..adjacency.len()).map(|i| (i, 1)).collect();
@@ -1872,8 +2362,14 @@ pub fn run_short_burst(
 
     // Build initial plan.
     let initial = run_all_splits(
-        adjacency, vertex_weights, edge_weights,
-        num_districts, balance_tolerance, niter, Some(base_seed), None,
+        adjacency,
+        vertex_weights,
+        edge_weights,
+        num_districts,
+        balance_tolerance,
+        niter,
+        Some(base_seed),
+        None,
     )?;
 
     if n_bursts == 0 {
@@ -1881,7 +2377,8 @@ pub fn run_short_burst(
     }
 
     // Build Vec<Vec<u32>> adjacency for RecomChain.
-    let adj_u32: Vec<Vec<u32>> = adjacency.iter()
+    let adj_u32: Vec<Vec<u32>> = adjacency
+        .iter()
         .map(|nbrs| nbrs.iter().map(|&n| n as u32).collect())
         .collect();
     let pop: Vec<i64> = vertex_weights.to_vec();
@@ -1889,7 +2386,9 @@ pub fn run_short_burst(
 
     // Convert initial HashMap<usize,usize> assignment to Vec<u32> (1-based).
     let assignment_to_vec = |asgn: &HashMap<usize, usize>| -> Vec<u32> {
-        (0..n).map(|i| asgn.get(&i).copied().unwrap_or(1) as u32).collect()
+        (0..n)
+            .map(|i| asgn.get(&i).copied().unwrap_or(1) as u32)
+            .collect()
     };
 
     // Count EC from a Vec<u32> assignment using the bisection_runner adjacency.
@@ -1956,7 +2455,8 @@ pub fn run_short_burst(
     let (_, selected_burst_idx, chosen_vec) = endpoints.into_iter().nth(rank).unwrap();
 
     // Convert Vec<u32> back to HashMap<usize,usize>.
-    let assignment: HashMap<usize, usize> = chosen_vec.iter()
+    let assignment: HashMap<usize, usize> = chosen_vec
+        .iter()
         .enumerate()
         .map(|(i, &d)| (i, d as usize))
         .collect();
@@ -1994,10 +2494,10 @@ pub fn run_short_burst_forest(
     n_bursts: usize,
     p: f64,
 ) -> Result<HashMap<usize, usize>, String> {
-    use sha2::Digest;
-    use rand::SeedableRng;
-    use rand::rngs::SmallRng;
     use bisect_ensemble::forest_recom::ForestRecomChain;
+    use rand::rngs::SmallRng;
+    use rand::SeedableRng;
+    use sha2::Digest;
 
     if num_districts <= 1 {
         let trivial: HashMap<usize, usize> = (0..adjacency.len()).map(|i| (i, 1)).collect();
@@ -2006,8 +2506,14 @@ pub fn run_short_burst_forest(
 
     // Build initial plan.
     let initial = run_all_splits(
-        adjacency, vertex_weights, edge_weights,
-        num_districts, balance_tolerance, niter, Some(base_seed), None,
+        adjacency,
+        vertex_weights,
+        edge_weights,
+        num_districts,
+        balance_tolerance,
+        niter,
+        Some(base_seed),
+        None,
     )?;
 
     if n_bursts == 0 {
@@ -2015,7 +2521,8 @@ pub fn run_short_burst_forest(
     }
 
     // Build Vec<Vec<u32>> adjacency for ForestRecomChain.
-    let adj_u32: Vec<Vec<u32>> = adjacency.iter()
+    let adj_u32: Vec<Vec<u32>> = adjacency
+        .iter()
         .map(|nbrs| nbrs.iter().map(|&n| n as u32).collect())
         .collect();
     let pop: Vec<i64> = vertex_weights.to_vec();
@@ -2023,7 +2530,9 @@ pub fn run_short_burst_forest(
 
     // Convert initial HashMap<usize,usize> assignment to Vec<u32> (1-based).
     let assignment_to_vec = |asgn: &HashMap<usize, usize>| -> Vec<u32> {
-        (0..n).map(|i| asgn.get(&i).copied().unwrap_or(1) as u32).collect()
+        (0..n)
+            .map(|i| asgn.get(&i).copied().unwrap_or(1) as u32)
+            .collect()
     };
 
     // Count EC from a Vec<u32> assignment using the bisection_runner adjacency.
@@ -2113,7 +2622,8 @@ pub fn run_short_burst_forest(
     let (_, _, chosen_vec) = endpoints.into_iter().nth(rank).unwrap();
 
     // Convert Vec<u32> back to HashMap<usize,usize>.
-    let assignment: HashMap<usize, usize> = chosen_vec.iter()
+    let assignment: HashMap<usize, usize> = chosen_vec
+        .iter()
         .enumerate()
         .map(|(i, &d)| (i, d as usize))
         .collect();
@@ -2151,10 +2661,10 @@ pub fn run_short_burst_merge_split(
     n_bursts: usize,
     p: f64,
 ) -> Result<HashMap<usize, usize>, String> {
-    use sha2::Digest;
-    use rand::SeedableRng;
-    use rand::rngs::SmallRng;
     use bisect_ensemble::merge_split::MergeSplitChain;
+    use rand::rngs::SmallRng;
+    use rand::SeedableRng;
+    use sha2::Digest;
 
     if num_districts <= 1 {
         let trivial: HashMap<usize, usize> = (0..adjacency.len()).map(|i| (i, 1)).collect();
@@ -2163,8 +2673,14 @@ pub fn run_short_burst_merge_split(
 
     // Build initial plan.
     let initial = run_all_splits(
-        adjacency, vertex_weights, edge_weights,
-        num_districts, balance_tolerance, niter, Some(base_seed), None,
+        adjacency,
+        vertex_weights,
+        edge_weights,
+        num_districts,
+        balance_tolerance,
+        niter,
+        Some(base_seed),
+        None,
     )?;
 
     if n_bursts == 0 {
@@ -2172,7 +2688,8 @@ pub fn run_short_burst_merge_split(
     }
 
     // Build Vec<Vec<u32>> adjacency for MergeSplitChain.
-    let adj_u32: Vec<Vec<u32>> = adjacency.iter()
+    let adj_u32: Vec<Vec<u32>> = adjacency
+        .iter()
         .map(|nbrs| nbrs.iter().map(|&n| n as u32).collect())
         .collect();
     let pop: Vec<i64> = vertex_weights.to_vec();
@@ -2180,7 +2697,9 @@ pub fn run_short_burst_merge_split(
 
     // Convert initial HashMap<usize,usize> assignment to Vec<u32> (1-based).
     let assignment_to_vec = |asgn: &HashMap<usize, usize>| -> Vec<u32> {
-        (0..n).map(|i| asgn.get(&i).copied().unwrap_or(1) as u32).collect()
+        (0..n)
+            .map(|i| asgn.get(&i).copied().unwrap_or(1) as u32)
+            .collect()
     };
 
     // Count EC from a Vec<u32> assignment using the bisection_runner adjacency.
@@ -2270,7 +2789,8 @@ pub fn run_short_burst_merge_split(
     let (_, _, chosen_vec) = endpoints.into_iter().nth(rank).unwrap();
 
     // Convert Vec<u32> back to HashMap<usize,usize>.
-    let assignment: HashMap<usize, usize> = chosen_vec.iter()
+    let assignment: HashMap<usize, usize> = chosen_vec
+        .iter()
         .enumerate()
         .map(|(i, &d)| (i, d as usize))
         .collect();
@@ -2354,9 +2874,9 @@ pub fn split_subgraph_sa(
     t_final: f64,
     sa_seed: u64,
 ) -> Result<(HashSet<usize>, HashSet<usize>), String> {
+    use rand::rngs::SmallRng;
     use rand::Rng;
     use rand::SeedableRng;
-    use rand::rngs::SmallRng;
 
     if tract_indices.len() <= 1 {
         return Ok((tract_indices.clone(), HashSet::new()));
@@ -2365,17 +2885,21 @@ pub fn split_subgraph_sa(
     // Build local index mapping (sorted for determinism)
     let mut sorted: Vec<usize> = tract_indices.iter().copied().collect();
     sorted.sort_unstable();
-    let global_to_local: HashMap<usize, usize> = sorted.iter()
-        .enumerate().map(|(i, &g)| (g, i)).collect();
+    let global_to_local: HashMap<usize, usize> =
+        sorted.iter().enumerate().map(|(i, &g)| (g, i)).collect();
     let n = sorted.len();
 
     // Build subgraph adjacency (local indices)
-    let sub_adj: Vec<Vec<usize>> = sorted.iter().map(|&g| {
-        adjacency[g].iter()
-            .filter(|&&nb| tract_indices.contains(&nb))
-            .map(|&nb| global_to_local[&nb])
-            .collect()
-    }).collect();
+    let sub_adj: Vec<Vec<usize>> = sorted
+        .iter()
+        .map(|&g| {
+            adjacency[g]
+                .iter()
+                .filter(|&&nb| tract_indices.contains(&nb))
+                .map(|&nb| global_to_local[&nb])
+                .collect()
+        })
+        .collect();
 
     // Build local vertex weights
     let local_pop: Vec<i64> = sorted.iter().map(|&g| vertex_weights[g].max(1)).collect();
@@ -2386,13 +2910,21 @@ pub fn split_subgraph_sa(
     // Get initial METIS partition — use a sub_vwgt of i64 for split_subgraph
     let sub_vwgt: Vec<i64> = local_pop.clone();
     let (metis_left, metis_right) = split_subgraph(
-        adjacency, vertex_weights, 1, edge_weights, tract_indices,
+        adjacency,
+        vertex_weights,
+        1,
+        edge_weights,
+        tract_indices,
         balance_tolerance + 1.0, // let METIS use full state tolerance (we re-check ourselves)
-        100, None, None, None,
+        100,
+        None,
+        None,
+        None,
     )?;
 
     // Build initial local partition (0=left, 1=right)
-    let mut partition: Vec<u8> = sorted.iter()
+    let mut partition: Vec<u8> = sorted
+        .iter()
         .map(|g| if metis_left.contains(g) { 0 } else { 1 })
         .collect();
 
@@ -2413,7 +2945,8 @@ pub fn split_subgraph_sa(
 
     // Helper: compute population of each side
     let side_pop = |p: &[u8], side: u8| -> i64 {
-        p.iter().enumerate()
+        p.iter()
+            .enumerate()
             .filter(|(_, &s)| s == side)
             .map(|(i, _)| local_pop[i])
             .sum()
@@ -2482,11 +3015,15 @@ pub fn split_subgraph_sa(
     }
 
     // Convert best_partition to global HashSets
-    let left: HashSet<usize> = sorted.iter().enumerate()
+    let left: HashSet<usize> = sorted
+        .iter()
+        .enumerate()
         .filter(|(i, _)| best_partition[*i] == 0)
         .map(|(_, &g)| g)
         .collect();
-    let right: HashSet<usize> = sorted.iter().enumerate()
+    let right: HashSet<usize> = sorted
+        .iter()
+        .enumerate()
         .filter(|(i, _)| best_partition[*i] == 1)
         .map(|(_, &g)| g)
         .collect();
@@ -2531,25 +3068,31 @@ pub fn run_all_splits_sa(
     for depth in 0..tree.max_depth {
         let nodes_at_depth: Vec<_> = tree.nodes_at_depth(depth).into_iter().cloned().collect();
 
-        let nodes_with_tracts: Vec<(bisect_core::BisectionNode, HashSet<usize>)> =
-            nodes_at_depth.into_iter()
-                .filter_map(|node| {
-                    node_tracts.remove(&node.path).map(|tracts| (node, tracts))
-                })
-                .collect();
+        let nodes_with_tracts: Vec<(bisect_core::BisectionNode, HashSet<usize>)> = nodes_at_depth
+            .into_iter()
+            .filter_map(|node| node_tracts.remove(&node.path).map(|tracts| (node, tracts)))
+            .collect();
 
-        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> =
-            nodes_with_tracts.into_par_iter()
-                .map(|(node, tracts)| {
-                    let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
-                    let sa_seed = derive_sa_seed(base_seed, &node.path);
-                    let (left, right) = split_subgraph_sa(
-                        adjacency, vertex_weights, edge_weights, &tracts,
-                        node_ufactor, steps_per_tract, t0_factor, t_final, sa_seed,
-                    ).map_err(|e| format!("depth {} node '{}' (SA): {e}", depth, node.path))?;
-                    Ok((node.path, left, right))
-                })
-                .collect::<Result<Vec<_>, String>>()?;
+        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> = nodes_with_tracts
+            .into_par_iter()
+            .map(|(node, tracts)| {
+                let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
+                let sa_seed = derive_sa_seed(base_seed, &node.path);
+                let (left, right) = split_subgraph_sa(
+                    adjacency,
+                    vertex_weights,
+                    edge_weights,
+                    &tracts,
+                    node_ufactor,
+                    steps_per_tract,
+                    t0_factor,
+                    t_final,
+                    sa_seed,
+                )
+                .map_err(|e| format!("depth {} node '{}' (SA): {e}", depth, node.path))?;
+                Ok((node.path, left, right))
+            })
+            .collect::<Result<Vec<_>, String>>()?;
 
         let mut sorted_results = split_results;
         sorted_results.sort_by_key(|(path, _, _)| path.clone());
@@ -2585,7 +3128,8 @@ pub fn run_all_splits_sa(
 
     if assignments.len() != n {
         return Err(format!(
-            "SA bisection incomplete: {}/{n} tracts assigned", assignments.len()
+            "SA bisection incomplete: {}/{n} tracts assigned",
+            assignments.len()
         ));
     }
     Ok(assignments)
@@ -2622,9 +3166,14 @@ impl std::str::FromStr for VoronoiMetric {
     type Err = String;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "graph-distance" | "graph_distance" | "GraphDistance" => Ok(VoronoiMetric::GraphDistance),
+            "graph-distance" | "graph_distance" | "GraphDistance" => {
+                Ok(VoronoiMetric::GraphDistance)
+            }
             "geographic" | "Geographic" => Ok(VoronoiMetric::Geographic),
-            other => Err(format!("unknown cvd-metric '{}': use 'graph-distance' or 'geographic'", other)),
+            other => Err(format!(
+                "unknown cvd-metric '{}': use 'graph-distance' or 'geographic'",
+                other
+            )),
         }
     }
 }
@@ -2675,7 +3224,9 @@ fn euclidean_dist(a: (f64, f64), b: (f64, f64)) -> f64 {
 fn bfs_distances_from(start: usize, local_adj: &[Vec<usize>]) -> Vec<usize> {
     let n = local_adj.len();
     let mut dist = vec![usize::MAX; n];
-    if n == 0 { return dist; }
+    if n == 0 {
+        return dist;
+    }
     dist[start] = 0;
     let mut queue = std::collections::VecDeque::new();
     queue.push_back(start);
@@ -2717,7 +3268,8 @@ fn find_medoid(
 
     for &candidate in district_tracts {
         let dist_from_cand = bfs_distances_from(candidate, local_adj);
-        let sum: usize = probe.iter()
+        let sum: usize = probe
+            .iter()
             .map(|&p| dist_from_cand[p].min(usize::MAX / probe.len()))
             .sum();
         if sum < best_sum {
@@ -2740,13 +3292,13 @@ pub fn split_subgraph_cvd(
     adjacency: &[Vec<usize>],
     vertex_weights: &[i64],
     tract_indices: &HashSet<usize>,
-    k: usize,                 // always 2 for bisection use
+    k: usize, // always 2 for bisection use
     balance_tolerance: f64,
-    n_iter: usize,            // max CVD iterations (default: 20)
+    n_iter: usize, // max CVD iterations (default: 20)
     base_seed: u64,
 ) -> Result<(HashSet<usize>, HashSet<usize>), String> {
-    use rand::SeedableRng;
     use rand::rngs::SmallRng;
+    use rand::SeedableRng;
 
     // Degenerate: 0 or 1 tracts
     if tract_indices.len() <= 1 {
@@ -2764,17 +3316,21 @@ pub fn split_subgraph_cvd(
     // Build local index mapping (sorted for determinism)
     let mut sorted: Vec<usize> = tract_indices.iter().copied().collect();
     sorted.sort_unstable();
-    let global_to_local: HashMap<usize, usize> = sorted.iter()
-        .enumerate().map(|(i, &g)| (g, i)).collect();
+    let global_to_local: HashMap<usize, usize> =
+        sorted.iter().enumerate().map(|(i, &g)| (g, i)).collect();
     let m = sorted.len();
 
     // Build subgraph adjacency (local indices)
-    let local_adj: Vec<Vec<usize>> = sorted.iter().map(|&g| {
-        adjacency[g].iter()
-            .filter(|&&nb| tract_indices.contains(&nb))
-            .map(|&nb| global_to_local[&nb])
-            .collect()
-    }).collect();
+    let local_adj: Vec<Vec<usize>> = sorted
+        .iter()
+        .map(|&g| {
+            adjacency[g]
+                .iter()
+                .filter(|&&nb| tract_indices.contains(&nb))
+                .map(|&nb| global_to_local[&nb])
+                .collect()
+        })
+        .collect();
 
     // Local vertex weights
     let local_pop: Vec<i64> = sorted.iter().map(|&g| vertex_weights[g].max(1)).collect();
@@ -2804,7 +3360,8 @@ pub fn split_subgraph_cvd(
     for _iter in 0..n_iter.max(1) {
         // ── Voronoi assignment: assign each tract to nearest seed by BFS ──
         // Compute BFS distances from each seed
-        let dist_s: Vec<Vec<usize>> = seeds.iter()
+        let dist_s: Vec<Vec<usize>> = seeds
+            .iter()
             .map(|&s| bfs_distances_from(s, &local_adj))
             .collect();
 
@@ -2819,9 +3376,7 @@ pub fn split_subgraph_cvd(
         // ── Update seeds to medoid of each district ──────────────────────
         let prev_seeds = seeds;
         for j in 0..k {
-            let district_tracts: Vec<usize> = (0..m)
-                .filter(|&v| assignment[v] == j)
-                .collect();
+            let district_tracts: Vec<usize> = (0..m).filter(|&v| assignment[v] == j).collect();
             if !district_tracts.is_empty() {
                 seeds[j] = find_medoid(&district_tracts, &local_adj, &mut rng);
             }
@@ -2845,16 +3400,22 @@ pub fn split_subgraph_cvd(
             .map(|v| local_pop[v])
             .sum();
         let excess = left_pop - half_pop;
-        if excess.abs() <= tolerance_pop { break; }
+        if excess.abs() <= tolerance_pop {
+            break;
+        }
 
         let (heavy_side, light_side) = if excess > 0 { (0usize, 1usize) } else { (1, 0) };
 
         // Find boundary tract on heavy side minimising |pop - |excess||
         let mut best: Option<(usize, i64)> = None;
         for v in 0..m {
-            if assignment[v] != heavy_side { continue; }
+            if assignment[v] != heavy_side {
+                continue;
+            }
             let has_light_nb = local_adj[v].iter().any(|&nb| assignment[nb] == light_side);
-            if !has_light_nb { continue; }
+            if !has_light_nb {
+                continue;
+            }
             let pop = local_pop[v];
             let score = (pop - excess.abs()).abs();
             if best.map_or(true, |(_, s)| score < s) {
@@ -2862,7 +3423,9 @@ pub fn split_subgraph_cvd(
             }
         }
         match best {
-            Some((v, _)) => { assignment[v] = light_side; }
+            Some((v, _)) => {
+                assignment[v] = light_side;
+            }
             None => break,
         }
     }
@@ -2872,7 +3435,11 @@ pub fn split_subgraph_cvd(
     let mut right = HashSet::new();
     for (local, &side) in assignment.iter().enumerate() {
         let global = sorted[local];
-        if side == 0 { left.insert(global); } else { right.insert(global); }
+        if side == 0 {
+            left.insert(global);
+        } else {
+            right.insert(global);
+        }
     }
 
     Ok((left, right))
@@ -2897,10 +3464,9 @@ pub fn split_subgraph_cvd_geographic(
     node_path: &str,
 ) -> Result<(HashSet<usize>, HashSet<usize>), String> {
     if tract_centroids.is_empty() {
-        return Err(
-            "[CONFIG] --cvd-metric geographic requires centroid data. \
-             Run: bisect fetch --type centroids".to_string()
-        );
+        return Err("[CONFIG] --cvd-metric geographic requires centroid data. \
+             Run: bisect fetch --type centroids"
+            .to_string());
     }
 
     if tract_indices.len() <= 1 {
@@ -2909,24 +3475,31 @@ pub fn split_subgraph_cvd_geographic(
 
     let mut sorted: Vec<usize> = tract_indices.iter().copied().collect();
     sorted.sort_unstable();
-    let global_to_local: HashMap<usize, usize> = sorted.iter()
-        .enumerate().map(|(i, &g)| (g, i)).collect();
+    let global_to_local: HashMap<usize, usize> =
+        sorted.iter().enumerate().map(|(i, &g)| (g, i)).collect();
     let m = sorted.len();
 
-    let local_adj: Vec<Vec<usize>> = sorted.iter().map(|&g| {
-        adjacency[g].iter()
-            .filter(|&&nb| tract_indices.contains(&nb))
-            .map(|&nb| global_to_local[&nb])
-            .collect()
-    }).collect();
+    let local_adj: Vec<Vec<usize>> = sorted
+        .iter()
+        .map(|&g| {
+            adjacency[g]
+                .iter()
+                .filter(|&&nb| tract_indices.contains(&nb))
+                .map(|&nb| global_to_local[&nb])
+                .collect()
+        })
+        .collect();
 
     let local_pop: Vec<i64> = sorted.iter().map(|&g| vertex_weights[g].max(1)).collect();
     let total_pop: i64 = local_pop.iter().sum();
 
-    let projected: Vec<(f64, f64)> = sorted.iter().map(|&g| {
-        let (lon, lat) = tract_centroids[g];
-        albers_project(lon, lat)
-    }).collect();
+    let projected: Vec<(f64, f64)> = sorted
+        .iter()
+        .map(|&g| {
+            let (lon, lat) = tract_centroids[g];
+            albers_project(lon, lat)
+        })
+        .collect();
 
     // k-farthest seed initialisation (Euclidean, deterministic)
     let cvd_geo_seed = derive_cvd_geo_seed(base_seed, node_path);
@@ -2938,7 +3511,11 @@ pub fn split_subgraph_cvd_geographic(
             da.partial_cmp(&db).unwrap_or(std::cmp::Ordering::Equal)
         })
         .unwrap_or((seed0_local + 1) % m);
-    let seed1_local = if seed1_local == seed0_local { (seed0_local + 1) % m } else { seed1_local };
+    let seed1_local = if seed1_local == seed0_local {
+        (seed0_local + 1) % m
+    } else {
+        seed1_local
+    };
 
     let mut seed_coords: [(f64, f64); 2] = [projected[seed0_local], projected[seed1_local]];
     let mut assignment: Vec<usize> = vec![0; m];
@@ -2957,15 +3534,19 @@ pub fn split_subgraph_cvd_geographic(
                 .filter(|&v| assignment[v] == j)
                 .map(|v| local_pop[v])
                 .sum();
-            if district_total_pop == 0 { continue; }
+            if district_total_pop == 0 {
+                continue;
+            }
             let wx: f64 = (0..m)
                 .filter(|&v| assignment[v] == j)
                 .map(|v| projected[v].0 * local_pop[v] as f64)
-                .sum::<f64>() / district_total_pop as f64;
+                .sum::<f64>()
+                / district_total_pop as f64;
             let wy: f64 = (0..m)
                 .filter(|&v| assignment[v] == j)
                 .map(|v| projected[v].1 * local_pop[v] as f64)
-                .sum::<f64>() / district_total_pop as f64;
+                .sum::<f64>()
+                / district_total_pop as f64;
             let mean_coord = (wx, wy);
             let nearest = (0..m)
                 .min_by(|&a, &b| {
@@ -2979,27 +3560,42 @@ pub fn split_subgraph_cvd_geographic(
 
         let eps = 1.0f64;
         let stable = (0..2).all(|j| euclidean_dist(seed_coords[j], prev_seed_coords[j]) < eps);
-        if stable || assignment == prev_assignment { break; }
+        if stable || assignment == prev_assignment {
+            break;
+        }
     }
 
     // Post-hoc rebalance: same 200-iter boundary-swap as split_subgraph_cvd
     let half_pop = total_pop / 2;
     let tolerance_pop = (balance_tolerance * total_pop as f64) as i64 + 1;
     for _ in 0..200 {
-        let left_pop: i64 = (0..m).filter(|&v| assignment[v] == 0).map(|v| local_pop[v]).sum();
+        let left_pop: i64 = (0..m)
+            .filter(|&v| assignment[v] == 0)
+            .map(|v| local_pop[v])
+            .sum();
         let excess = left_pop - half_pop;
-        if excess.abs() <= tolerance_pop { break; }
+        if excess.abs() <= tolerance_pop {
+            break;
+        }
         let (heavy_side, light_side) = if excess > 0 { (0usize, 1usize) } else { (1, 0) };
         let mut best: Option<(usize, i64)> = None;
         for v in 0..m {
-            if assignment[v] != heavy_side { continue; }
-            if !local_adj[v].iter().any(|&nb| assignment[nb] == light_side) { continue; }
+            if assignment[v] != heavy_side {
+                continue;
+            }
+            if !local_adj[v].iter().any(|&nb| assignment[nb] == light_side) {
+                continue;
+            }
             let pop = local_pop[v];
             let score = (pop - excess.abs()).abs();
-            if best.map_or(true, |(_, s)| score < s) { best = Some((v, score)); }
+            if best.map_or(true, |(_, s)| score < s) {
+                best = Some((v, score));
+            }
         }
         match best {
-            Some((v, _)) => { assignment[v] = light_side; }
+            Some((v, _)) => {
+                assignment[v] = light_side;
+            }
             None => break,
         }
     }
@@ -3008,7 +3604,11 @@ pub fn split_subgraph_cvd_geographic(
     let mut right = HashSet::new();
     for (local, &side) in assignment.iter().enumerate() {
         let global = sorted[local];
-        if side == 0 { left.insert(global); } else { right.insert(global); }
+        if side == 0 {
+            left.insert(global);
+        } else {
+            right.insert(global);
+        }
     }
     Ok((left, right))
 }
@@ -3030,10 +3630,9 @@ pub fn run_all_splits_cvd(
 ) -> Result<HashMap<usize, usize>, String> {
     // Early validation for geographic metric
     if metric == VoronoiMetric::Geographic && tract_centroids.is_empty() {
-        return Err(
-            "[CONFIG] --cvd-metric geographic requires centroid data. \
-             Run: bisect fetch --type centroids".to_string()
-        );
+        return Err("[CONFIG] --cvd-metric geographic requires centroid data. \
+             Run: bisect fetch --type centroids"
+            .to_string());
     }
     let n = adjacency.len();
 
@@ -3054,36 +3653,44 @@ pub fn run_all_splits_cvd(
     for depth in 0..tree.max_depth {
         let nodes_at_depth: Vec<_> = tree.nodes_at_depth(depth).into_iter().cloned().collect();
 
-        let nodes_with_tracts: Vec<(bisect_core::BisectionNode, HashSet<usize>)> =
-            nodes_at_depth.into_iter()
-                .filter_map(|node| {
-                    node_tracts.remove(&node.path).map(|tracts| (node, tracts))
-                })
-                .collect();
+        let nodes_with_tracts: Vec<(bisect_core::BisectionNode, HashSet<usize>)> = nodes_at_depth
+            .into_iter()
+            .filter_map(|node| node_tracts.remove(&node.path).map(|tracts| (node, tracts)))
+            .collect();
 
-        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> =
-            nodes_with_tracts.into_par_iter()
-                .map(|(node, tracts)| {
-                    let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
-                    let (left, right) = match metric {
-                        VoronoiMetric::GraphDistance => {
-                            let cvd_seed = derive_cvd_seed(base_seed, &node.path);
-                            split_subgraph_cvd(
-                                adjacency, vertex_weights, &tracts,
-                                2,
-                                node_ufactor, n_iter, cvd_seed,
-                            ).map_err(|e| format!("depth {} node '{}' (CVD): {e}", depth, node.path))?
-                        }
-                        VoronoiMetric::Geographic => {
-                            split_subgraph_cvd_geographic(
-                                adjacency, vertex_weights, tract_centroids, &tracts,
-                                node_ufactor, n_iter, base_seed, &node.path,
-                            ).map_err(|e| format!("depth {} node '{}' (CVD-geo): {e}", depth, node.path))?
-                        }
-                    };
-                    Ok((node.path, left, right))
-                })
-                .collect::<Result<Vec<_>, String>>()?;
+        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> = nodes_with_tracts
+            .into_par_iter()
+            .map(|(node, tracts)| {
+                let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
+                let (left, right) = match metric {
+                    VoronoiMetric::GraphDistance => {
+                        let cvd_seed = derive_cvd_seed(base_seed, &node.path);
+                        split_subgraph_cvd(
+                            adjacency,
+                            vertex_weights,
+                            &tracts,
+                            2,
+                            node_ufactor,
+                            n_iter,
+                            cvd_seed,
+                        )
+                        .map_err(|e| format!("depth {} node '{}' (CVD): {e}", depth, node.path))?
+                    }
+                    VoronoiMetric::Geographic => split_subgraph_cvd_geographic(
+                        adjacency,
+                        vertex_weights,
+                        tract_centroids,
+                        &tracts,
+                        node_ufactor,
+                        n_iter,
+                        base_seed,
+                        &node.path,
+                    )
+                    .map_err(|e| format!("depth {} node '{}' (CVD-geo): {e}", depth, node.path))?,
+                };
+                Ok((node.path, left, right))
+            })
+            .collect::<Result<Vec<_>, String>>()?;
 
         let mut sorted_results = split_results;
         sorted_results.sort_by_key(|(path, _, _)| path.clone());
@@ -3119,7 +3726,8 @@ pub fn run_all_splits_cvd(
 
     if assignments.len() != n {
         return Err(format!(
-            "CVD bisection incomplete: {}/{n} tracts assigned", assignments.len()
+            "CVD bisection incomplete: {}/{n} tracts assigned",
+            assignments.len()
         ));
     }
     Ok(assignments)
@@ -3177,10 +3785,10 @@ pub fn split_subgraph_bfs(
     balance_tolerance: f64,
     base_seed: u64,
 ) -> Result<(HashSet<usize>, HashSet<usize>), String> {
-    use rand::SeedableRng;
-    use rand::rngs::SmallRng;
     use rand::distributions::WeightedIndex;
     use rand::prelude::*;
+    use rand::rngs::SmallRng;
+    use rand::SeedableRng;
     use std::cmp::Reverse;
     use std::collections::BinaryHeap;
 
@@ -3192,17 +3800,21 @@ pub fn split_subgraph_bfs(
     // Build local index mapping (sorted for determinism)
     let mut sorted: Vec<usize> = tract_indices.iter().copied().collect();
     sorted.sort_unstable();
-    let global_to_local: HashMap<usize, usize> = sorted.iter()
-        .enumerate().map(|(i, &g)| (g, i)).collect();
+    let global_to_local: HashMap<usize, usize> =
+        sorted.iter().enumerate().map(|(i, &g)| (g, i)).collect();
     let m = sorted.len();
 
     // Build subgraph adjacency (local indices)
-    let local_adj: Vec<Vec<usize>> = sorted.iter().map(|&g| {
-        adjacency[g].iter()
-            .filter(|&&nb| tract_indices.contains(&nb))
-            .map(|&nb| global_to_local[&nb])
-            .collect()
-    }).collect();
+    let local_adj: Vec<Vec<usize>> = sorted
+        .iter()
+        .map(|&g| {
+            adjacency[g]
+                .iter()
+                .filter(|&&nb| tract_indices.contains(&nb))
+                .map(|&nb| global_to_local[&nb])
+                .collect()
+        })
+        .collect();
 
     // Local vertex weights (minimum 1 to avoid zero-weight tracts)
     let local_pop: Vec<i64> = sorted.iter().map(|&g| vertex_weights[g].max(1)).collect();
@@ -3215,8 +3827,8 @@ pub fn split_subgraph_bfs(
     let mut rng = SmallRng::seed_from_u64(seed_rng_val);
 
     let weights: Vec<u64> = local_pop.iter().map(|&p| p.max(1) as u64).collect();
-    let dist = WeightedIndex::new(&weights)
-        .map_err(|e| format!("bfs-growth WeightedIndex: {e}"))?;
+    let dist =
+        WeightedIndex::new(&weights).map_err(|e| format!("bfs-growth WeightedIndex: {e}"))?;
     let seed0 = dist.sample(&mut rng);
 
     // seed[1]: tract with maximum BFS distance from seed[0]
@@ -3293,15 +3905,23 @@ pub fn split_subgraph_bfs(
             .map(|v| local_pop[v])
             .sum();
         let excess = left_pop - ideal_pop;
-        if excess.abs() <= tolerance_pop { break; }
+        if excess.abs() <= tolerance_pop {
+            break;
+        }
 
         let (heavy_side, light_side) = if excess > 0 { (0usize, 1usize) } else { (1, 0) };
 
         let mut best: Option<(usize, i64)> = None;
         for v in 0..m {
-            if assignment[v] != Some(heavy_side) { continue; }
-            let has_light_nb = local_adj[v].iter().any(|&nb| assignment[nb] == Some(light_side));
-            if !has_light_nb { continue; }
+            if assignment[v] != Some(heavy_side) {
+                continue;
+            }
+            let has_light_nb = local_adj[v]
+                .iter()
+                .any(|&nb| assignment[nb] == Some(light_side));
+            if !has_light_nb {
+                continue;
+            }
             let pop = local_pop[v];
             let score = (pop - excess.abs()).abs();
             if best.map_or(true, |(_, s)| score < s) {
@@ -3309,7 +3929,9 @@ pub fn split_subgraph_bfs(
             }
         }
         match best {
-            Some((v, _)) => { assignment[v] = Some(light_side); }
+            Some((v, _)) => {
+                assignment[v] = Some(light_side);
+            }
             None => break,
         }
     }
@@ -3320,8 +3942,12 @@ pub fn split_subgraph_bfs(
     for (local, side_opt) in assignment.iter().enumerate() {
         let global = sorted[local];
         match side_opt {
-            Some(0) => { left.insert(global); }
-            _ => { right.insert(global); }
+            Some(0) => {
+                left.insert(global);
+            }
+            _ => {
+                right.insert(global);
+            }
         }
     }
 
@@ -3359,25 +3985,24 @@ pub fn run_all_splits_bfs(
     for depth in 0..tree.max_depth {
         let nodes_at_depth: Vec<_> = tree.nodes_at_depth(depth).into_iter().cloned().collect();
 
-        let nodes_with_tracts: Vec<(bisect_core::BisectionNode, HashSet<usize>)> =
-            nodes_at_depth.into_iter()
-                .filter_map(|node| {
-                    node_tracts.remove(&node.path).map(|tracts| (node, tracts))
-                })
-                .collect();
+        let nodes_with_tracts: Vec<(bisect_core::BisectionNode, HashSet<usize>)> = nodes_at_depth
+            .into_iter()
+            .filter_map(|node| node_tracts.remove(&node.path).map(|tracts| (node, tracts)))
+            .collect();
 
-        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> =
-            nodes_with_tracts.into_par_iter()
-                .map(|(node, tracts)| {
-                    let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
-                    let bfs_seed = derive_bfs_seed(base_seed, &node.path);
-                    let (left, right) = split_subgraph_bfs(
-                        adjacency, vertex_weights, &tracts,
-                        node_ufactor, bfs_seed,
-                    ).map_err(|e| format!("depth {} node '{}' (bfs-growth): {e}", depth, node.path))?;
-                    Ok((node.path, left, right))
-                })
-                .collect::<Result<Vec<_>, String>>()?;
+        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> = nodes_with_tracts
+            .into_par_iter()
+            .map(|(node, tracts)| {
+                let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
+                let bfs_seed = derive_bfs_seed(base_seed, &node.path);
+                let (left, right) =
+                    split_subgraph_bfs(adjacency, vertex_weights, &tracts, node_ufactor, bfs_seed)
+                        .map_err(|e| {
+                            format!("depth {} node '{}' (bfs-growth): {e}", depth, node.path)
+                        })?;
+                Ok((node.path, left, right))
+            })
+            .collect::<Result<Vec<_>, String>>()?;
 
         let mut sorted_results = split_results;
         sorted_results.sort_by_key(|(path, _, _)| path.clone());
@@ -3413,7 +4038,8 @@ pub fn run_all_splits_bfs(
 
     if assignments.len() != n {
         return Err(format!(
-            "bfs-growth bisection incomplete: {}/{n} tracts assigned", assignments.len()
+            "bfs-growth bisection incomplete: {}/{n} tracts assigned",
+            assignments.len()
         ));
     }
     Ok(assignments)
@@ -3463,14 +4089,19 @@ pub fn welzl_mec(points: &[(f64, f64)]) -> (f64, f64, f64) {
     // Helper: circumscribed circle of three points.
     // Returns None if the three points are collinear.
     let circumcircle = |a: (f64, f64), b: (f64, f64), c: (f64, f64)| -> Option<(f64, f64, f64)> {
-        let ax = a.0; let ay = a.1;
-        let bx = b.0 - ax; let by = b.1 - ay;
-        let cx = c.0 - ax; let cy = c.1 - ay;
+        let ax = a.0;
+        let ay = a.1;
+        let bx = b.0 - ax;
+        let by = b.1 - ay;
+        let cx = c.0 - ax;
+        let cy = c.1 - ay;
         let d = 2.0 * (bx * cy - by * cx);
-        if d.abs() < 1e-10 { return None; }
-        let ux = (cy * (bx*bx + by*by) - by * (cx*cx + cy*cy)) / d;
-        let uy = (bx * (cx*cx + cy*cy) - cx * (bx*bx + by*by)) / d;
-        let r2 = ux*ux + uy*uy;
+        if d.abs() < 1e-10 {
+            return None;
+        }
+        let ux = (cy * (bx * bx + by * by) - by * (cx * cx + cy * cy)) / d;
+        let uy = (bx * (cx * cx + cy * cy) - cx * (bx * bx + by * by)) / d;
+        let r2 = ux * ux + uy * uy;
         Some((ax + ux, ay + uy, r2))
     };
 
@@ -3484,14 +4115,15 @@ pub fn welzl_mec(points: &[(f64, f64)]) -> (f64, f64, f64) {
                 let cy = (p[0].1 + p[1].1) * 0.5;
                 let dx = p[0].0 - p[1].0;
                 let dy = p[0].1 - p[1].1;
-                (cx, cy, (dx*dx + dy*dy) * 0.25)
+                (cx, cy, (dx * dx + dy * dy) * 0.25)
             }
         }
     };
 
     let point_in_circle = |pt: (f64, f64), cx: f64, cy: f64, r2: f64| -> bool {
-        let dx = pt.0 - cx; let dy = pt.1 - cy;
-        dx*dx + dy*dy <= r2 * (1.0 + 1e-10)
+        let dx = pt.0 - cx;
+        let dy = pt.1 - cy;
+        dx * dx + dy * dy <= r2 * (1.0 + 1e-10)
     };
 
     // Iterative Welzl (avoids stack overflow on large inputs).
@@ -3513,33 +4145,57 @@ pub fn welzl_mec(points: &[(f64, f64)]) -> (f64, f64, f64) {
         if !point_in_circle(p, cx, cy, r2) {
             // p must be on the boundary — restart with {p}.
             let (ncx, ncy, nr2) = circle_from_boundary(&[p]);
-            cx = ncx; cy = ncy; r2 = nr2;
+            cx = ncx;
+            cy = ncy;
+            r2 = nr2;
             for j in 0..i {
                 let q = pts[j];
                 if !point_in_circle(q, cx, cy, r2) {
                     // q must also be on the boundary — restart with {p, q}.
                     let (ncx, ncy, nr2) = circle_from_boundary(&[p, q]);
-                    cx = ncx; cy = ncy; r2 = nr2;
+                    cx = ncx;
+                    cy = ncy;
+                    r2 = nr2;
                     for k in 0..j {
                         let s = pts[k];
                         if !point_in_circle(s, cx, cy, r2) {
                             // Three boundary points: use circumcircle.
                             if let Some((ncx, ncy, nr2)) = circumcircle(p, q, s) {
-                                cx = ncx; cy = ncy; r2 = nr2;
+                                cx = ncx;
+                                cy = ncy;
+                                r2 = nr2;
                             } else {
                                 // Collinear: use the farthest pair.
-                                let d_pq = { let dx=p.0-q.0; let dy=p.1-q.1; dx*dx+dy*dy };
-                                let d_ps = { let dx=p.0-s.0; let dy=p.1-s.1; dx*dx+dy*dy };
-                                let d_qs = { let dx=q.0-s.0; let dy=q.1-s.1; dx*dx+dy*dy };
+                                let d_pq = {
+                                    let dx = p.0 - q.0;
+                                    let dy = p.1 - q.1;
+                                    dx * dx + dy * dy
+                                };
+                                let d_ps = {
+                                    let dx = p.0 - s.0;
+                                    let dy = p.1 - s.1;
+                                    dx * dx + dy * dy
+                                };
+                                let d_qs = {
+                                    let dx = q.0 - s.0;
+                                    let dy = q.1 - s.1;
+                                    dx * dx + dy * dy
+                                };
                                 if d_pq >= d_ps && d_pq >= d_qs {
                                     let (ncx, ncy, nr2) = circle_from_boundary(&[p, q]);
-                                    cx = ncx; cy = ncy; r2 = nr2;
+                                    cx = ncx;
+                                    cy = ncy;
+                                    r2 = nr2;
                                 } else if d_ps >= d_qs {
                                     let (ncx, ncy, nr2) = circle_from_boundary(&[p, s]);
-                                    cx = ncx; cy = ncy; r2 = nr2;
+                                    cx = ncx;
+                                    cy = ncy;
+                                    r2 = nr2;
                                 } else {
                                     let (ncx, ncy, nr2) = circle_from_boundary(&[q, s]);
-                                    cx = ncx; cy = ncy; r2 = nr2;
+                                    cx = ncx;
+                                    cy = ncy;
+                                    r2 = nr2;
                                 }
                             }
                         }
@@ -3595,14 +4251,17 @@ pub fn split_subgraph_mka_direction(
     sorted.sort_unstable();
     let m = sorted.len();
 
-    let projected: Vec<(f64, f64)> = sorted.iter().map(|&g| {
-        if g < centroids.len() {
-            let (lon, lat) = centroids[g];
-            albers_project(lon, lat)
-        } else {
-            (0.0, 0.0)
-        }
-    }).collect();
+    let projected: Vec<(f64, f64)> = sorted
+        .iter()
+        .map(|&g| {
+            if g < centroids.len() {
+                let (lon, lat) = centroids[g];
+                albers_project(lon, lat)
+            } else {
+                (0.0, 0.0)
+            }
+        })
+        .collect();
 
     let mut best_score = f64::NEG_INFINITY;
     let mut best_theta = 0.0f64;
@@ -3621,12 +4280,18 @@ pub fn split_subgraph_mka_direction(
         // Find balance split: cumulative count >= m/2 (population-unaware direction-only version).
         let split_idx = (m / 2).saturating_sub(1).min(m - 1);
 
-        let left_pts: Vec<(f64, f64)> = proj_vals[..=split_idx].iter()
-            .map(|&(_, i)| projected[i]).collect();
-        let right_pts: Vec<(f64, f64)> = proj_vals[split_idx + 1..].iter()
-            .map(|&(_, i)| projected[i]).collect();
+        let left_pts: Vec<(f64, f64)> = proj_vals[..=split_idx]
+            .iter()
+            .map(|&(_, i)| projected[i])
+            .collect();
+        let right_pts: Vec<(f64, f64)> = proj_vals[split_idx + 1..]
+            .iter()
+            .map(|&(_, i)| projected[i])
+            .collect();
 
-        if left_pts.is_empty() || right_pts.is_empty() { continue; }
+        if left_pts.is_empty() || right_pts.is_empty() {
+            continue;
+        }
 
         let rl = reock_score(&left_pts, &[]);
         let rr = reock_score(&right_pts, &[]);
@@ -3663,10 +4328,9 @@ pub fn split_subgraph_mka(
     use std::f64::consts::PI;
 
     if centroids.is_empty() {
-        return Err(
-            "[CONFIG] --structure moving-knife requires centroid data. \
-             Run: bisect fetch --type centroids".to_string()
-        );
+        return Err("[CONFIG] --structure moving-knife requires centroid data. \
+             Run: bisect fetch --type centroids"
+            .to_string());
     }
 
     if tract_indices.len() <= 1 {
@@ -3684,31 +4348,38 @@ pub fn split_subgraph_mka(
     // Build local index (sorted for determinism).
     let mut sorted: Vec<usize> = tract_indices.iter().copied().collect();
     sorted.sort_unstable();
-    let global_to_local: HashMap<usize, usize> = sorted.iter()
-        .enumerate().map(|(i, &g)| (g, i)).collect();
+    let global_to_local: HashMap<usize, usize> =
+        sorted.iter().enumerate().map(|(i, &g)| (g, i)).collect();
     let m = sorted.len();
 
     // Build local adjacency for post-hoc rebalance.
-    let local_adj: Vec<Vec<usize>> = sorted.iter().map(|&g| {
-        adjacency[g].iter()
-            .filter(|&&nb| tract_indices.contains(&nb))
-            .map(|&nb| global_to_local[&nb])
-            .collect()
-    }).collect();
+    let local_adj: Vec<Vec<usize>> = sorted
+        .iter()
+        .map(|&g| {
+            adjacency[g]
+                .iter()
+                .filter(|&&nb| tract_indices.contains(&nb))
+                .map(|&nb| global_to_local[&nb])
+                .collect()
+        })
+        .collect();
 
     let local_pop: Vec<i64> = sorted.iter().map(|&g| vertex_weights[g].max(1)).collect();
     let total_pop: i64 = local_pop.iter().sum();
     let target_pop = total_pop / 2;
 
     // Project centroids via Albers.
-    let projected: Vec<(f64, f64)> = sorted.iter().map(|&g| {
-        if g < centroids.len() {
-            let (lon, lat) = centroids[g];
-            albers_project(lon, lat)
-        } else {
-            (0.0, 0.0)
-        }
-    }).collect();
+    let projected: Vec<(f64, f64)> = sorted
+        .iter()
+        .map(|&g| {
+            if g < centroids.len() {
+                let (lon, lat) = centroids[g];
+                albers_project(lon, lat)
+            } else {
+                (0.0, 0.0)
+            }
+        })
+        .collect();
 
     let n_orient = n_orientations.max(1);
     let mut best_score = f64::NEG_INFINITY;
@@ -3748,12 +4419,16 @@ pub fn split_subgraph_mka(
 
         let left_pts: Vec<(f64, f64)> = (0..m)
             .filter(|&i| assignment[i] == 0)
-            .map(|i| projected[i]).collect();
+            .map(|i| projected[i])
+            .collect();
         let right_pts: Vec<(f64, f64)> = (0..m)
             .filter(|&i| assignment[i] == 1)
-            .map(|i| projected[i]).collect();
+            .map(|i| projected[i])
+            .collect();
 
-        if left_pts.is_empty() || right_pts.is_empty() { continue; }
+        if left_pts.is_empty() || right_pts.is_empty() {
+            continue;
+        }
 
         let score = match metric {
             MkaMetric::Reock => {
@@ -3781,14 +4456,24 @@ pub fn split_subgraph_mka(
     for _ in 0..200 {
         let left_pop: i64 = (0..m)
             .filter(|&v| best_assignment[v] == 0)
-            .map(|v| local_pop[v]).sum();
+            .map(|v| local_pop[v])
+            .sum();
         let excess = left_pop - half_pop;
-        if excess.abs() <= tolerance_pop { break; }
+        if excess.abs() <= tolerance_pop {
+            break;
+        }
         let (heavy_side, light_side) = if excess > 0 { (0usize, 1usize) } else { (1, 0) };
         let mut best_swap: Option<(usize, i64)> = None;
         for v in 0..m {
-            if best_assignment[v] != heavy_side { continue; }
-            if !local_adj[v].iter().any(|&nb| best_assignment[nb] == light_side) { continue; }
+            if best_assignment[v] != heavy_side {
+                continue;
+            }
+            if !local_adj[v]
+                .iter()
+                .any(|&nb| best_assignment[nb] == light_side)
+            {
+                continue;
+            }
             let pop = local_pop[v];
             let score = (pop - excess.abs()).abs();
             if best_swap.map_or(true, |(_, s)| score < s) {
@@ -3796,7 +4481,9 @@ pub fn split_subgraph_mka(
             }
         }
         match best_swap {
-            Some((v, _)) => { best_assignment[v] = light_side; }
+            Some((v, _)) => {
+                best_assignment[v] = light_side;
+            }
             None => break,
         }
     }
@@ -3806,7 +4493,11 @@ pub fn split_subgraph_mka(
     let mut right = HashSet::new();
     for (local, &side) in best_assignment.iter().enumerate() {
         let global = sorted[local];
-        if side == 0 { left.insert(global); } else { right.insert(global); }
+        if side == 0 {
+            left.insert(global);
+        } else {
+            right.insert(global);
+        }
     }
 
     // Guarantee both halves are non-empty (degenerate rebalance guard).
@@ -3840,10 +4531,9 @@ pub fn run_all_splits_mka(
     tract_centroids: &[(f64, f64)],
 ) -> Result<HashMap<usize, usize>, String> {
     if tract_centroids.is_empty() {
-        return Err(
-            "[CONFIG] --structure moving-knife requires centroid data. \
-             Run: bisect fetch --type centroids".to_string()
-        );
+        return Err("[CONFIG] --structure moving-knife requires centroid data. \
+             Run: bisect fetch --type centroids"
+            .to_string());
     }
 
     let n = adjacency.len();
@@ -3865,25 +4555,30 @@ pub fn run_all_splits_mka(
     for depth in 0..tree.max_depth {
         let nodes_at_depth: Vec<_> = tree.nodes_at_depth(depth).into_iter().cloned().collect();
 
-        let nodes_with_tracts: Vec<(bisect_core::BisectionNode, HashSet<usize>)> =
-            nodes_at_depth.into_iter()
-                .filter_map(|node| {
-                    node_tracts.remove(&node.path).map(|tracts| (node, tracts))
-                })
-                .collect();
+        let nodes_with_tracts: Vec<(bisect_core::BisectionNode, HashSet<usize>)> = nodes_at_depth
+            .into_iter()
+            .filter_map(|node| node_tracts.remove(&node.path).map(|tracts| (node, tracts)))
+            .collect();
 
-        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> =
-            nodes_with_tracts.into_par_iter()
-                .map(|(node, tracts)| {
-                    let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
-                    let (left, right) = split_subgraph_mka(
-                        adjacency, vertex_weights, &tracts,
-                        tract_centroids,
-                        node_ufactor, n_orientations, metric, base_seed, &node.path,
-                    ).map_err(|e| format!("depth {} node '{}' (mka): {e}", depth, node.path))?;
-                    Ok((node.path, left, right))
-                })
-                .collect::<Result<Vec<_>, String>>()?;
+        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> = nodes_with_tracts
+            .into_par_iter()
+            .map(|(node, tracts)| {
+                let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
+                let (left, right) = split_subgraph_mka(
+                    adjacency,
+                    vertex_weights,
+                    &tracts,
+                    tract_centroids,
+                    node_ufactor,
+                    n_orientations,
+                    metric,
+                    base_seed,
+                    &node.path,
+                )
+                .map_err(|e| format!("depth {} node '{}' (mka): {e}", depth, node.path))?;
+                Ok((node.path, left, right))
+            })
+            .collect::<Result<Vec<_>, String>>()?;
 
         let mut sorted_results = split_results;
         sorted_results.sort_by_key(|(path, _, _)| path.clone());
@@ -3919,7 +4614,8 @@ pub fn run_all_splits_mka(
 
     if assignments.len() != n {
         return Err(format!(
-            "moving-knife bisection incomplete: {}/{n} tracts assigned", assignments.len()
+            "moving-knife bisection incomplete: {}/{n} tracts assigned",
+            assignments.len()
         ));
     }
     Ok(assignments)
@@ -3953,8 +4649,16 @@ pub fn split_subgraph_ilp(
         );
         let empty_ew: HashMap<(usize, usize), f64> = HashMap::new();
         return split_subgraph(
-            adjacency, vertex_weights, 1, &empty_ew,
-            tract_indices, balance_tolerance, 10, None, None, None,
+            adjacency,
+            vertex_weights,
+            1,
+            &empty_ew,
+            tract_indices,
+            balance_tolerance,
+            10,
+            None,
+            None,
+            None,
         );
     }
 
@@ -3963,19 +4667,19 @@ pub fn split_subgraph_ilp(
     sorted.sort_unstable();
 
     // Build local adjacency (local indices only).
-    let local_adj: Vec<Vec<usize>> = sorted.iter().map(|&g| {
-        adjacency[g].iter()
-            .filter(|&&nb| tract_indices.contains(&nb))
-            .map(|&nb| {
-                sorted.partition_point(|&x| x < nb)
-            })
-            .collect()
-    }).collect();
+    let local_adj: Vec<Vec<usize>> = sorted
+        .iter()
+        .map(|&g| {
+            adjacency[g]
+                .iter()
+                .filter(|&&nb| tract_indices.contains(&nb))
+                .map(|&nb| sorted.partition_point(|&x| x < nb))
+                .collect()
+        })
+        .collect();
 
     // Build local population array (one value per local node).
-    let local_pop: Vec<i64> = sorted.iter()
-        .map(|&g| vertex_weights[g].max(1))
-        .collect();
+    let local_pop: Vec<i64> = sorted.iter().map(|&g| vertex_weights[g].max(1)).collect();
 
     // Phase 1: build formulation and solve (FormulationOnly -> plan: None).
     let formulation = bisect_ilp::build_formulation(&local_adj, &local_pop, 2, balance_tolerance);
@@ -3997,7 +4701,11 @@ pub fn split_subgraph_ilp(
         let mut right = HashSet::new();
         for (local_idx, district) in plan {
             let global = sorted[local_idx];
-            if district == 0 { left.insert(global); } else { right.insert(global); }
+            if district == 0 {
+                left.insert(global);
+            } else {
+                right.insert(global);
+            }
         }
         Ok((left, right))
     } else {
@@ -4012,8 +4720,16 @@ pub fn split_subgraph_ilp(
         );
         let empty_ew: HashMap<(usize, usize), f64> = HashMap::new();
         split_subgraph(
-            adjacency, vertex_weights, 1, &empty_ew,
-            tract_indices, balance_tolerance, 10, None, None, None,
+            adjacency,
+            vertex_weights,
+            1,
+            &empty_ew,
+            tract_indices,
+            balance_tolerance,
+            10,
+            None,
+            None,
+            None,
         )
     }
 }
@@ -4046,24 +4762,28 @@ pub fn run_all_splits_ilp(
     for depth in 0..tree.max_depth {
         let nodes_at_depth: Vec<_> = tree.nodes_at_depth(depth).into_iter().cloned().collect();
 
-        let nodes_with_tracts: Vec<(bisect_core::BisectionNode, HashSet<usize>)> =
-            nodes_at_depth.into_iter()
-                .filter_map(|node| {
-                    node_tracts.remove(&node.path).map(|tracts| (node, tracts))
-                })
-                .collect();
+        let nodes_with_tracts: Vec<(bisect_core::BisectionNode, HashSet<usize>)> = nodes_at_depth
+            .into_iter()
+            .filter_map(|node| node_tracts.remove(&node.path).map(|tracts| (node, tracts)))
+            .collect();
 
-        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> =
-            nodes_with_tracts.into_par_iter()
-                .map(|(node, tracts)| {
-                    let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
-                    let (left, right) = split_subgraph_ilp(
-                        adjacency, vertex_weights, &tracts,
-                        node_ufactor, time_limit_secs, optimality_gap, max_tracts,
-                    ).map_err(|e| format!("depth {} node '{}' (ilp): {e}", depth, node.path))?;
-                    Ok((node.path, left, right))
-                })
-                .collect::<Result<Vec<_>, String>>()?;
+        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> = nodes_with_tracts
+            .into_par_iter()
+            .map(|(node, tracts)| {
+                let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
+                let (left, right) = split_subgraph_ilp(
+                    adjacency,
+                    vertex_weights,
+                    &tracts,
+                    node_ufactor,
+                    time_limit_secs,
+                    optimality_gap,
+                    max_tracts,
+                )
+                .map_err(|e| format!("depth {} node '{}' (ilp): {e}", depth, node.path))?;
+                Ok((node.path, left, right))
+            })
+            .collect::<Result<Vec<_>, String>>()?;
 
         let mut sorted_results = split_results;
         sorted_results.sort_by_key(|(path, _, _)| path.clone());
@@ -4085,7 +4805,8 @@ pub fn run_all_splits_ilp(
 
     if assignments.len() != n {
         return Err(format!(
-            "ilp bisection incomplete: {}/{n} tracts assigned", assignments.len()
+            "ilp bisection incomplete: {}/{n} tracts assigned",
+            assignments.len()
         ));
     }
     Ok(assignments)
@@ -4120,8 +4841,8 @@ pub fn run_flip_chain(
     base_seed: u64,
     p: f64,
 ) -> Result<(HashMap<usize, usize>, usize, usize), String> {
-    use sha2::Digest;
     use rand::Rng;
+    use sha2::Digest;
 
     let n = adjacency.len();
 
@@ -4132,8 +4853,14 @@ pub fn run_flip_chain(
 
     // Build initial plan (deterministic starting point).
     let initial = run_all_splits(
-        adjacency, vertex_weights, edge_weights,
-        num_districts, balance_tolerance, 100, Some(base_seed), None,
+        adjacency,
+        vertex_weights,
+        edge_weights,
+        num_districts,
+        balance_tolerance,
+        100,
+        Some(base_seed),
+        None,
     )?;
 
     // Derive chain RNG seed.
@@ -4150,7 +4877,9 @@ pub fn run_flip_chain(
     let mut rng = SmallRng::seed_from_u64(chain_seed);
 
     // Work with a flat Vec<usize> for O(1) access.
-    let mut plan: Vec<usize> = (0..n).map(|i| initial.get(&i).copied().unwrap_or(1)).collect();
+    let mut plan: Vec<usize> = (0..n)
+        .map(|i| initial.get(&i).copied().unwrap_or(1))
+        .collect();
 
     // Per-district population (districts are 1-based up to num_districts).
     let total_pop: i64 = vertex_weights.iter().sum();
@@ -4268,7 +4997,8 @@ pub fn run_flip_chain(
     let rank = ((p * visited_count as f64).floor() as usize).min(visited_count - 1);
     let (_, _, chosen_vec) = visited.into_iter().nth(rank).unwrap();
 
-    let assignment: HashMap<usize, usize> = chosen_vec.iter()
+    let assignment: HashMap<usize, usize> = chosen_vec
+        .iter()
         .enumerate()
         .map(|(i, &d)| (i, d))
         .collect();
@@ -4301,10 +5031,10 @@ pub fn run_forest_recom(
     steps: usize,
     p: f64,
 ) -> Result<HashMap<usize, usize>, String> {
-    use sha2::Digest;
-    use rand::SeedableRng;
-    use rand::rngs::SmallRng;
     use bisect_ensemble::forest_recom::ForestRecomChain;
+    use rand::rngs::SmallRng;
+    use rand::SeedableRng;
+    use sha2::Digest;
 
     let n = adjacency.len();
 
@@ -4314,8 +5044,14 @@ pub fn run_forest_recom(
 
     // Build initial plan from METIS.
     let initial = run_all_splits(
-        adjacency, vertex_weights, edge_weights,
-        num_districts, balance_tolerance, niter, Some(base_seed), None,
+        adjacency,
+        vertex_weights,
+        edge_weights,
+        num_districts,
+        balance_tolerance,
+        niter,
+        Some(base_seed),
+        None,
     )?;
 
     if steps == 0 {
@@ -4323,7 +5059,8 @@ pub fn run_forest_recom(
     }
 
     // Convert adjacency from Vec<Vec<usize>> to Vec<Vec<u32>> for ForestRecomChain.
-    let local_adj: Vec<Vec<u32>> = adjacency.iter()
+    let local_adj: Vec<Vec<u32>> = adjacency
+        .iter()
         .map(|nbrs| nbrs.iter().map(|&nb| nb as u32).collect())
         .collect();
 
@@ -4390,7 +5127,8 @@ pub fn run_forest_recom(
     let (_, _, chosen) = accepted.into_iter().nth(rank).unwrap();
 
     // Convert Vec<u32> back to HashMap<usize, usize>.
-    let assignment: HashMap<usize, usize> = chosen.iter()
+    let assignment: HashMap<usize, usize> = chosen
+        .iter()
         .enumerate()
         .map(|(i, &d)| (i, d as usize))
         .collect();
@@ -4465,33 +5203,52 @@ pub fn run_multiscale(
     // Coarse level string: "county" or "tract"
     coarse_level: &str,
     // BG adjacency graph (required for Options A and C; None for Option B)
-    bg_graph: Option<(&[Vec<usize>], &[i64], &std::collections::HashMap<usize, String>)>,
+    bg_graph: Option<(
+        &[Vec<usize>],
+        &[i64],
+        &std::collections::HashMap<usize, String>,
+    )>,
 ) -> Result<HashMap<usize, usize>, String> {
-    use sha2::Digest;
-    use rand::Rng;
+    use crate::adjacency_loader::{build_county_coarsening, derive_partition};
     use bisect_ensemble::recom::RecomChain;
     use bisect_multiscale::rebalance::rebalance;
-    use crate::adjacency_loader::{build_county_coarsening, derive_partition};
+    use rand::Rng;
+    use sha2::Digest;
 
     let geoids = geoids.ok_or_else(|| {
         "[CONFIG] --search multiscale requires GEOID data. \
-         Ensure the adjacency file has an accompanying _geoids.json file.".to_string()
+         Ensure the adjacency file has an accompanying _geoids.json file."
+            .to_string()
     })?;
 
     // Resolve the fine and coarse adjacency structures based on option
     let (fine_adj, fine_pop, fine_geoids, coarse_adj, coarse_pop, fine_to_coarse) =
         build_multiscale_levels(
-            adjacency, vertex_weights, geoids,
-            fine_level, coarse_level, bg_graph,
+            adjacency,
+            vertex_weights,
+            geoids,
+            fine_level,
+            coarse_level,
+            bg_graph,
         )?;
 
     if coarse_adj.is_empty() {
-        return Err(format!("multiscale coarse graph ('{coarse_level}') produced no units"));
+        return Err(format!(
+            "multiscale coarse graph ('{coarse_level}') produced no units"
+        ));
     }
 
     // Build initial plan from METIS (always at the tract level for seeding)
-    let initial_plan = run_all_splits(adjacency, vertex_weights, edge_weights,
-        num_districts, balance_tolerance, niter, Some(base_seed), None)?;
+    let initial_plan = run_all_splits(
+        adjacency,
+        vertex_weights,
+        edge_weights,
+        num_districts,
+        balance_tolerance,
+        niter,
+        Some(base_seed),
+        None,
+    )?;
 
     let n_fine = fine_adj.len();
     let n_coarse = coarse_adj.len();
@@ -4515,9 +5272,8 @@ pub fn run_multiscale(
             // bg_to_tract_partition: bg_idx -> tract_idx (built during build_multiscale_levels)
             // We need to recover this mapping from fine_geoids (BG) to tract geoids.
             // Re-derive from fine_geoids (already validated in build_multiscale_levels).
-            let tract_geoid_lookup: HashMap<&str, usize> = geoids.iter()
-                .map(|(&idx, g)| (g.as_str(), idx))
-                .collect();
+            let tract_geoid_lookup: HashMap<&str, usize> =
+                geoids.iter().map(|(&idx, g)| (g.as_str(), idx)).collect();
             let mut asgn = vec![1u32; n_fine];
             for (&bg_idx, bg_geoid) in fine_geoids.iter() {
                 let tract_prefix = &bg_geoid[..bg_geoid.len().min(11)];
@@ -4540,7 +5296,8 @@ pub fn run_multiscale(
     }
 
     // Build adjacency as Vec<Vec<u32>> for RecomChain
-    let fine_adj_u32: Vec<Vec<u32>> = fine_adj.iter()
+    let fine_adj_u32: Vec<Vec<u32>> = fine_adj
+        .iter()
         .map(|nb| nb.iter().map(|&x| x as u32).collect())
         .collect();
 
@@ -4554,7 +5311,8 @@ pub fn run_multiscale(
     );
 
     // Coarse chain — looser tolerance to allow coarse moves to succeed
-    let coarse_adj_u32: Vec<Vec<u32>> = coarse_adj.iter()
+    let coarse_adj_u32: Vec<Vec<u32>> = coarse_adj
+        .iter()
         .map(|nb| nb.iter().map(|&x| x as u32).collect())
         .collect();
     let mut coarse_chain = RecomChain::new(
@@ -4579,7 +5337,9 @@ pub fn run_multiscale(
     };
 
     // Compute initial EC on the fine graph (BG for A/C, tract for B)
-    let initial_fine_plan: HashMap<usize, usize> = assignment_fine.iter().enumerate()
+    let initial_fine_plan: HashMap<usize, usize> = assignment_fine
+        .iter()
+        .enumerate()
         .map(|(i, &d)| (i, d as usize))
         .collect();
     let initial_ec = count_edge_cuts(&initial_fine_plan, &fine_adj);
@@ -4605,8 +5365,14 @@ pub fn run_multiscale(
 
             // Rebalance fine-level plan; reject coarse move if rebalancing fails
             let mut asgn_work = assignment_fine.clone();
-            let balanced = rebalance(&mut asgn_work, &fine_adj, &fine_pop,
-                num_districts as u32, balance_tolerance, 200);
+            let balanced = rebalance(
+                &mut asgn_work,
+                &fine_adj,
+                &fine_pop,
+                num_districts as u32,
+                balance_tolerance,
+                200,
+            );
             if balanced {
                 assignment_fine = asgn_work;
                 fine_chain.assignment = assignment_fine.clone();
@@ -4640,7 +5406,9 @@ pub fn run_multiscale(
             coarse_chain.assignment = assignment_coarse.clone();
         }
 
-        let current_plan: HashMap<usize, usize> = assignment_fine.iter().enumerate()
+        let current_plan: HashMap<usize, usize> = assignment_fine
+            .iter()
+            .enumerate()
             .map(|(i, &d)| (i, d as usize))
             .collect();
         let ec = count_edge_cuts(&current_plan, &fine_adj);
@@ -4651,7 +5419,11 @@ pub fn run_multiscale(
     visited.sort_by(|(e1, s1, _), (e2, s2, _)| e1.cmp(e2).then(s1.cmp(s2)));
     let rank = ((p * visited.len() as f64).floor() as usize).min(visited.len() - 1);
     let (_, _, best_asgn) = &visited[rank];
-    Ok(best_asgn.iter().enumerate().map(|(i, &d)| (i, d as usize)).collect())
+    Ok(best_asgn
+        .iter()
+        .enumerate()
+        .map(|(i, &d)| (i, d as usize))
+        .collect())
 }
 
 /// Build fine and coarse adjacency structures for multi-scale MCMC.
@@ -4668,15 +5440,22 @@ fn build_multiscale_levels<'a>(
     tract_geoids: &'a std::collections::HashMap<usize, String>,
     fine_level: MultiscaleFineLevel,
     coarse_level: &str,
-    bg_graph: Option<(&[Vec<usize>], &[i64], &'a std::collections::HashMap<usize, String>)>,
-) -> Result<(
-    Vec<Vec<usize>>,  // fine_adj
-    Vec<i64>,         // fine_pop
-    &'a std::collections::HashMap<usize, String>, // fine_geoids (borrows bg or tract)
-    Vec<Vec<usize>>,  // coarse_adj
-    Vec<i64>,         // coarse_pop
-    Vec<usize>,       // fine_to_coarse
-), String> {
+    bg_graph: Option<(
+        &[Vec<usize>],
+        &[i64],
+        &'a std::collections::HashMap<usize, String>,
+    )>,
+) -> Result<
+    (
+        Vec<Vec<usize>>,                              // fine_adj
+        Vec<i64>,                                     // fine_pop
+        &'a std::collections::HashMap<usize, String>, // fine_geoids (borrows bg or tract)
+        Vec<Vec<usize>>,                              // coarse_adj
+        Vec<i64>,                                     // coarse_pop
+        Vec<usize>,                                   // fine_to_coarse
+    ),
+    String,
+> {
     use crate::adjacency_loader::{build_county_coarsening, derive_partition};
 
     match fine_level {
@@ -4684,7 +5463,7 @@ fn build_multiscale_levels<'a>(
             // Option B: fine=tract, coarse=county (only valid coarse for tract-fine)
             let (coarse_adj, coarse_pop, fine_to_coarse) =
                 build_county_coarsening(tract_geoids, tract_adj, tract_pop)
-                .map_err(|e| format!("county coarsening failed: {e}"))?;
+                    .map_err(|e| format!("county coarsening failed: {e}"))?;
             Ok((
                 tract_adj.to_vec(),
                 tract_pop.to_vec(),
@@ -4723,7 +5502,7 @@ fn build_multiscale_levels<'a>(
                     // Build county coarsening directly from BG GEOIDs (prefix[:5])
                     let (coarse_adj, coarse_pop, fine_to_coarse) =
                         build_county_coarsening(bg_geoids, bg_adj, bg_pop)
-                        .map_err(|e| format!("BG->county coarsening failed: {e}"))?;
+                            .map_err(|e| format!("BG->county coarsening failed: {e}"))?;
                     Ok((
                         bg_adj.to_vec(),
                         bg_pop.to_vec(),
@@ -4742,7 +5521,7 @@ fn build_multiscale_levels<'a>(
 
 /// Configuration for `run_multiscale_adaptive`.
 ///
-/// Mirrors `AdaptiveMultiScaleConfig` in redist-multiscale but is local to
+/// Mirrors `AdaptiveMultiScaleConfig` in BISECT-multiscale but is local to
 /// bisection_runner to avoid a crate dependency cycle.
 #[derive(Debug, Clone)]
 pub struct AdaptiveConfig {
@@ -4818,16 +5597,21 @@ pub fn run_multiscale_adaptive(
     // Coarse level string: "county" or "tract"
     coarse_level: &str,
     // BG adjacency graph (required for Options A and C; None for Option B)
-    bg_graph: Option<(&[Vec<usize>], &[i64], &std::collections::HashMap<usize, String>)>,
+    bg_graph: Option<(
+        &[Vec<usize>],
+        &[i64],
+        &std::collections::HashMap<usize, String>,
+    )>,
 ) -> Result<(HashMap<usize, usize>, AdaptiveResult), String> {
-    use sha2::Digest;
-    use rand::Rng;
     use bisect_ensemble::recom::RecomChain;
     use bisect_multiscale::rebalance::rebalance;
+    use rand::Rng;
+    use sha2::Digest;
 
     let geoids = geoids.ok_or_else(|| {
         "[CONFIG] --search multiscale-adaptive requires GEOID data. \
-         Ensure the adjacency file has an accompanying _geoids.json file.".to_string()
+         Ensure the adjacency file has an accompanying _geoids.json file."
+            .to_string()
     })?;
 
     let coarse_tol = config.coarse_tol_factor * config.pop_tolerance;
@@ -4835,18 +5619,30 @@ pub fn run_multiscale_adaptive(
     // Resolve fine and coarse adjacency structures
     let (fine_adj, fine_pop, fine_geoids, coarse_adj, coarse_pop, fine_to_coarse) =
         build_multiscale_levels(
-            adjacency, vertex_weights, geoids,
-            fine_level, coarse_level, bg_graph,
+            adjacency,
+            vertex_weights,
+            geoids,
+            fine_level,
+            coarse_level,
+            bg_graph,
         )?;
 
     if coarse_adj.is_empty() {
-        return Err(format!("multiscale-adaptive coarse graph ('{coarse_level}') produced no units"));
+        return Err(format!(
+            "multiscale-adaptive coarse graph ('{coarse_level}') produced no units"
+        ));
     }
 
     // Build initial plan from METIS (always at tract level for seeding)
     let initial_plan = run_all_splits(
-        adjacency, vertex_weights, edge_weights,
-        num_districts, config.pop_tolerance, niter, Some(base_seed), None,
+        adjacency,
+        vertex_weights,
+        edge_weights,
+        num_districts,
+        config.pop_tolerance,
+        niter,
+        Some(base_seed),
+        None,
     )?;
 
     let n_fine = fine_adj.len();
@@ -4854,19 +5650,16 @@ pub fn run_multiscale_adaptive(
 
     // Project initial plan to fine level (same logic as run_multiscale)
     let mut assignment_fine: Vec<u32> = match fine_level {
-        MultiscaleFineLevel::Tract => {
-            (0..n_fine)
-                .map(|i| initial_plan.get(&i).copied().unwrap_or(1) as u32)
-                .collect()
-        }
+        MultiscaleFineLevel::Tract => (0..n_fine)
+            .map(|i| initial_plan.get(&i).copied().unwrap_or(1) as u32)
+            .collect(),
         MultiscaleFineLevel::BlockGroup => {
             let n_tracts = adjacency.len();
             let tract_plan: Vec<u32> = (0..n_tracts)
                 .map(|i| initial_plan.get(&i).copied().unwrap_or(1) as u32)
                 .collect();
-            let tract_geoid_lookup: HashMap<&str, usize> = geoids.iter()
-                .map(|(&idx, g)| (g.as_str(), idx))
-                .collect();
+            let tract_geoid_lookup: HashMap<&str, usize> =
+                geoids.iter().map(|(&idx, g)| (g.as_str(), idx)).collect();
             let mut asgn = vec![1u32; n_fine];
             for (&bg_idx, bg_geoid) in fine_geoids.iter() {
                 let tract_prefix = &bg_geoid[..bg_geoid.len().min(11)];
@@ -4889,7 +5682,8 @@ pub fn run_multiscale_adaptive(
     }
 
     // Build fine adjacency as Vec<Vec<u32>> for RecomChain
-    let fine_adj_u32: Vec<Vec<u32>> = fine_adj.iter()
+    let fine_adj_u32: Vec<Vec<u32>> = fine_adj
+        .iter()
         .map(|nb| nb.iter().map(|&x| x as u32).collect())
         .collect();
 
@@ -4903,7 +5697,8 @@ pub fn run_multiscale_adaptive(
     );
 
     // Coarse chain — coarse_tol_factor × fine tolerance
-    let coarse_adj_u32: Vec<Vec<u32>> = coarse_adj.iter()
+    let coarse_adj_u32: Vec<Vec<u32>> = coarse_adj
+        .iter()
         .map(|nb| nb.iter().map(|&x| x as u32).collect())
         .collect();
     let mut coarse_chain = RecomChain::new(
@@ -4928,7 +5723,9 @@ pub fn run_multiscale_adaptive(
     };
 
     // Collect (ec, step_idx, assignment) for all visited plans
-    let initial_fine_plan: HashMap<usize, usize> = assignment_fine.iter().enumerate()
+    let initial_fine_plan: HashMap<usize, usize> = assignment_fine
+        .iter()
+        .enumerate()
         .map(|(i, &d)| (i, d as usize))
         .collect();
     let initial_ec = count_edge_cuts(&initial_fine_plan, &fine_adj);
@@ -4968,8 +5765,12 @@ pub fn run_multiscale_adaptive(
             // Rebalance fine-level plan; reject if rebalancing fails
             let mut asgn_work = assignment_fine.clone();
             let balanced = rebalance(
-                &mut asgn_work, &fine_adj, &fine_pop,
-                num_districts as u32, config.pop_tolerance, 200,
+                &mut asgn_work,
+                &fine_adj,
+                &fine_pop,
+                num_districts as u32,
+                config.pop_tolerance,
+                200,
             );
             if balanced {
                 assignment_fine = asgn_work;
@@ -4997,7 +5798,7 @@ pub fn run_multiscale_adaptive(
         } else {
             total_fine_steps += 1;
             total_fine_accepted += 1; // RecomChain::step always accepts
-            // Fine move: step the fine-level chain
+                                      // Fine move: step the fine-level chain
             fine_chain.step(&mut rng);
             assignment_fine = fine_chain.assignment.clone();
             // Sync coarse assignment
@@ -5019,13 +5820,14 @@ pub fn run_multiscale_adaptive(
                 coarse_accept_window.iter().filter(|&&a| a).count() as f64
                     / coarse_accept_window.len() as f64
             };
-            alpha = (alpha + gamma_t * (recent_accept - config.target_accept))
-                .clamp(0.05, 0.95);
+            alpha = (alpha + gamma_t * (recent_accept - config.target_accept)).clamp(0.05, 0.95);
             alpha_trace.push(alpha);
             coarse_accept_window.clear();
         }
 
-        let current_plan: HashMap<usize, usize> = assignment_fine.iter().enumerate()
+        let current_plan: HashMap<usize, usize> = assignment_fine
+            .iter()
+            .enumerate()
             .map(|(i, &d)| (i, d as usize))
             .collect();
         let ec = count_edge_cuts(&current_plan, &fine_adj);
@@ -5036,7 +5838,9 @@ pub fn run_multiscale_adaptive(
     visited.sort_by(|(e1, s1, _), (e2, s2, _)| e1.cmp(e2).then(s1.cmp(s2)));
     let rank = ((config.p * visited.len() as f64).floor() as usize).min(visited.len() - 1);
     let (_, _, best_asgn) = &visited[rank];
-    let result_plan: HashMap<usize, usize> = best_asgn.iter().enumerate()
+    let result_plan: HashMap<usize, usize> = best_asgn
+        .iter()
+        .enumerate()
         .map(|(i, &d)| (i, d as usize))
         .collect();
 
@@ -5089,10 +5893,10 @@ pub fn run_merge_split(
     steps: usize,
     p: f64,
 ) -> Result<HashMap<usize, usize>, String> {
-    use sha2::Digest;
-    use rand::SeedableRng;
-    use rand::rngs::SmallRng;
     use bisect_ensemble::merge_split::MergeSplitChain;
+    use rand::rngs::SmallRng;
+    use rand::SeedableRng;
+    use sha2::Digest;
 
     let n = adjacency.len();
 
@@ -5102,8 +5906,14 @@ pub fn run_merge_split(
 
     // Build initial plan from METIS.
     let initial = run_all_splits(
-        adjacency, vertex_weights, edge_weights,
-        num_districts, balance_tolerance, niter, Some(base_seed), None,
+        adjacency,
+        vertex_weights,
+        edge_weights,
+        num_districts,
+        balance_tolerance,
+        niter,
+        Some(base_seed),
+        None,
     )?;
 
     if steps == 0 {
@@ -5111,7 +5921,8 @@ pub fn run_merge_split(
     }
 
     // Convert adjacency from Vec<Vec<usize>> to Vec<Vec<u32>> for MergeSplitChain.
-    let local_adj: Vec<Vec<u32>> = adjacency.iter()
+    let local_adj: Vec<Vec<u32>> = adjacency
+        .iter()
         .map(|nbrs| nbrs.iter().map(|&nb| nb as u32).collect())
         .collect();
 
@@ -5189,7 +6000,8 @@ pub fn run_merge_split(
     let (_, _, chosen) = accepted.into_iter().nth(rank).unwrap();
 
     // Convert Vec<u32> back to HashMap<usize, usize>.
-    let assignment: HashMap<usize, usize> = chosen.iter()
+    let assignment: HashMap<usize, usize> = chosen
+        .iter()
         .enumerate()
         .map(|(i, &d)| (i, d as usize))
         .collect();
@@ -5221,9 +6033,11 @@ pub fn run_parallel_tempering(
     steps: usize,
     p: f64,
 ) -> Result<HashMap<usize, usize>, String> {
-    use bisect_ensemble::parallel_tempering::{ParallelTemperingChain, replica_seed, swap_seed, replica_rngs};
-    use rand::SeedableRng;
+    use bisect_ensemble::parallel_tempering::{
+        replica_rngs, replica_seed, swap_seed, ParallelTemperingChain,
+    };
     use rand::rngs::SmallRng;
+    use rand::SeedableRng;
 
     let n = adjacency.len();
 
@@ -5233,8 +6047,14 @@ pub fn run_parallel_tempering(
 
     // 1. Build initial plan from METIS using the cold tolerance.
     let initial = run_all_splits(
-        adjacency, vertex_weights, edge_weights,
-        num_districts, cold_tolerance, niter, Some(base_seed), None,
+        adjacency,
+        vertex_weights,
+        edge_weights,
+        num_districts,
+        cold_tolerance,
+        niter,
+        Some(base_seed),
+        None,
     )?;
 
     if steps == 0 {
@@ -5242,7 +6062,8 @@ pub fn run_parallel_tempering(
     }
 
     // 2. Convert adjacency Vec<Vec<usize>> → Vec<Vec<u32>> for ParallelTemperingChain.
-    let local_adj: Vec<Vec<u32>> = adjacency.iter()
+    let local_adj: Vec<Vec<u32>> = adjacency
+        .iter()
         .map(|nbrs| nbrs.iter().map(|&nb| nb as u32).collect())
         .collect();
 
@@ -5286,7 +6107,8 @@ pub fn run_parallel_tempering(
     let chosen = chain.select_plan(p);
 
     // 7. Convert Vec<u32> → HashMap<usize, usize>.
-    let assignment: HashMap<usize, usize> = chosen.iter()
+    let assignment: HashMap<usize, usize> = chosen
+        .iter()
         .enumerate()
         .map(|(i, &d)| (i, d as usize))
         .collect();
@@ -5315,10 +6137,10 @@ pub fn run_vra_recom(
     vap_threshold: f64,
     minority_vap: &[f64],
 ) -> Result<HashMap<usize, usize>, String> {
-    use sha2::Digest;
-    use rand::SeedableRng;
-    use rand::rngs::SmallRng;
     use bisect_ensemble::vra_recom::VraRecomChain;
+    use rand::rngs::SmallRng;
+    use rand::SeedableRng;
+    use sha2::Digest;
 
     let n = adjacency.len();
 
@@ -5328,8 +6150,14 @@ pub fn run_vra_recom(
 
     // Build initial plan from METIS.
     let initial = run_all_splits(
-        adjacency, vertex_weights, edge_weights,
-        num_districts, 0.005, niter, Some(base_seed), None,
+        adjacency,
+        vertex_weights,
+        edge_weights,
+        num_districts,
+        0.005,
+        niter,
+        Some(base_seed),
+        None,
     )?;
 
     if steps == 0 {
@@ -5337,7 +6165,8 @@ pub fn run_vra_recom(
     }
 
     // Convert adjacency Vec<Vec<usize>> → Vec<Vec<u32>>.
-    let local_adj: Vec<Vec<u32>> = adjacency.iter()
+    let local_adj: Vec<Vec<u32>> = adjacency
+        .iter()
         .map(|nbrs| nbrs.iter().map(|&nb| nb as u32).collect())
         .collect();
 
@@ -5406,7 +6235,8 @@ pub fn run_vra_recom(
     let (_, _, chosen) = accepted.into_iter().nth(rank).unwrap();
 
     // Convert Vec<u32> → HashMap<usize, usize>.
-    let assignment: HashMap<usize, usize> = chosen.iter()
+    let assignment: HashMap<usize, usize> = chosen
+        .iter()
         .enumerate()
         .map(|(i, &d)| (i, d as usize))
         .collect();
@@ -5475,9 +6305,14 @@ pub fn run_smc_percentile(
         .map_err(|e| format!("run_smc failed: {e}"))?;
 
     // For each particle i, compute EC and record (ec, i, plans[i].clone()).
-    let mut ranked: Vec<(usize, usize, Vec<u32>)> = result.plans.iter().enumerate()
+    let mut ranked: Vec<(usize, usize, Vec<u32>)> = result
+        .plans
+        .iter()
+        .enumerate()
         .map(|(i, plan)| {
-            let asgn: HashMap<usize, usize> = plan.iter().enumerate()
+            let asgn: HashMap<usize, usize> = plan
+                .iter()
+                .enumerate()
                 .map(|(v, &d)| (v, d as usize))
                 .collect();
             let ec = count_edge_cuts(&asgn, adjacency);
@@ -5515,12 +6350,15 @@ pub fn run_smc_percentile(
 
     // Fallback: if nothing selected (e.g. p=1.0 with rounding), take last.
     let chosen = selected.unwrap_or_else(|| {
-        ranked.last().map(|(_, _, pl)| pl.clone())
+        ranked
+            .last()
+            .map(|(_, _, pl)| pl.clone())
             .unwrap_or_else(|| vec![1u32; n])
     });
 
     // Convert Vec<u32> → HashMap<usize, usize>.
-    let assignment: HashMap<usize, usize> = chosen.iter()
+    let assignment: HashMap<usize, usize> = chosen
+        .iter()
         .enumerate()
         .map(|(i, &d)| (i, d as usize))
         .collect();
@@ -5538,15 +6376,25 @@ mod tests {
     fn test_detect_gpmetis_version_returns_string() {
         let version = detect_gpmetis_version();
         assert!(!version.is_empty(), "must return a non-empty string");
-        assert!(version.chars().all(|c| !c.is_control() || c == ' '),
-            "version string must contain only printable chars: {:?}", version);
-        assert!(version.contains("METIS"), "expected METIS in version string, got: {version}");
+        assert!(
+            version.chars().all(|c| !c.is_control() || c == ' '),
+            "version string must contain only printable chars: {:?}",
+            version
+        );
+        assert!(
+            version.contains("METIS"),
+            "expected METIS in version string, got: {version}"
+        );
     }
 
     #[test]
     fn test_detect_gpmetis_version_never_panics() {
         let v = detect_gpmetis_version();
-        assert!(!v.is_empty(), "must return a non-empty string, got: {:?}", v);
+        assert!(
+            !v.is_empty(),
+            "must return a non-empty string, got: {:?}",
+            v
+        );
     }
 
     #[test]
@@ -5556,8 +6404,19 @@ mod tests {
         let ew = HashMap::new();
         let indices: HashSet<usize> = (0..4).collect();
 
-        let (left, right) = split_subgraph(&adj, &vw, 1, &ew, &indices, 1.001, 100, Some(42), None, None)
-            .expect("METIS should split 4-node graph");
+        let (left, right) = split_subgraph(
+            &adj,
+            &vw,
+            1,
+            &ew,
+            &indices,
+            1.001,
+            100,
+            Some(42),
+            None,
+            None,
+        )
+        .expect("METIS should split 4-node graph");
 
         assert_eq!(left.len() + right.len(), 4, "all tracts assigned");
         assert!(!left.is_empty() && !right.is_empty(), "non-empty split");
@@ -5586,7 +6445,6 @@ mod tests {
 
     #[test]
     fn test_run_all_splits_two_districts() {
-
         let adj = vec![vec![1], vec![0, 2], vec![1, 3], vec![2]];
         let vw = vec![1000i64, 1000, 1000, 1000];
         let ew = HashMap::new();
@@ -5594,12 +6452,26 @@ mod tests {
         let assignments = run_all_splits(&adj, &vw, &ew, 2, 0.005, 100, Some(42), None).unwrap();
 
         assert_eq!(assignments.len(), 4, "all tracts assigned");
-        assert!(assignments.values().any(|&d| d == 1), "district 1 must exist");
-        assert!(assignments.values().any(|&d| d == 2), "district 2 must exist");
+        assert!(
+            assignments.values().any(|&d| d == 1),
+            "district 1 must exist"
+        );
+        assert!(
+            assignments.values().any(|&d| d == 2),
+            "district 2 must exist"
+        );
         assert!(assignments.values().all(|&d| d == 1 || d == 2));
 
-        let d1: HashSet<usize> = assignments.iter().filter(|(_, &v)| v == 1).map(|(&k, _)| k).collect();
-        let d2: HashSet<usize> = assignments.iter().filter(|(_, &v)| v == 2).map(|(&k, _)| k).collect();
+        let d1: HashSet<usize> = assignments
+            .iter()
+            .filter(|(_, &v)| v == 1)
+            .map(|(&k, _)| k)
+            .collect();
+        let d2: HashSet<usize> = assignments
+            .iter()
+            .filter(|(_, &v)| v == 2)
+            .map(|(&k, _)| k)
+            .collect();
         assert!(d1.is_disjoint(&d2), "districts must be disjoint");
         assert_eq!(d1.len() + d2.len(), 4, "complete coverage");
     }
@@ -5607,7 +6479,12 @@ mod tests {
     #[test]
     fn test_leaf_sort_bfs_order() {
         // Verify sort_by_key gives BFS not lex order
-        let mut paths = vec!["1".to_string(), "0".to_string(), "01".to_string(), "00".to_string()];
+        let mut paths = vec![
+            "1".to_string(),
+            "0".to_string(),
+            "01".to_string(),
+            "00".to_string(),
+        ];
         paths.sort_by_key(|p| (p.len(), p.clone()));
         // BFS: depth-1 first ("0","1"), then depth-2 ("00","01")
         assert_eq!(paths, vec!["0", "1", "00", "01"]);
@@ -5627,17 +6504,30 @@ mod tests {
 
     #[test]
     fn test_nway_two_districts() {
-
         let adj = vec![vec![1, 2], vec![0, 3], vec![0, 3], vec![1, 2]];
         let vw = vec![1000i64; 4];
         let ew: HashMap<(usize, usize), f64> = HashMap::new();
         let assignments = run_nway_partition(&adj, &vw, &ew, 2, 1.005, 100, Some(42)).unwrap();
         assert_eq!(assignments.len(), 4);
-        assert!(assignments.values().any(|&d| d == 1), "district 1 must exist");
-        assert!(assignments.values().any(|&d| d == 2), "district 2 must exist");
+        assert!(
+            assignments.values().any(|&d| d == 1),
+            "district 1 must exist"
+        );
+        assert!(
+            assignments.values().any(|&d| d == 2),
+            "district 2 must exist"
+        );
         // Districts are 1-based and disjoint
-        let d1: HashSet<_> = assignments.iter().filter(|(_, &v)| v == 1).map(|(&k, _)| k).collect();
-        let d2: HashSet<_> = assignments.iter().filter(|(_, &v)| v == 2).map(|(&k, _)| k).collect();
+        let d1: HashSet<_> = assignments
+            .iter()
+            .filter(|(_, &v)| v == 1)
+            .map(|(&k, _)| k)
+            .collect();
+        let d2: HashSet<_> = assignments
+            .iter()
+            .filter(|(_, &v)| v == 2)
+            .map(|(&k, _)| k)
+            .collect();
         assert!(d1.is_disjoint(&d2));
         assert_eq!(d1.len() + d2.len(), 4);
     }
@@ -5708,7 +6598,10 @@ mod tests {
         for decimal in [1.0001_f64, 1.0_f64, 0.999_f64] {
             let raw = ((decimal - 1.0) * 1000.0).round() as i32;
             let clamped = (raw as u32).clamp(1, 1000);
-            assert!(clamped >= 1, "ufactor must be >= 1, got {clamped} from decimal {decimal}");
+            assert!(
+                clamped >= 1,
+                "ufactor must be >= 1, got {clamped} from decimal {decimal}"
+            );
         }
     }
 
@@ -5721,7 +6614,10 @@ mod tests {
         let node_ufactor = 1.0 + tolerance / k_root as f64;
         // ~0.102% — convert to int
         let ufactor_int = ((node_ufactor - 1.0) * 1000.0).round() as u32;
-        assert_eq!(ufactor_int, 1, "root of 98-district (10%) → ufactor=1 (0.1%)");
+        assert_eq!(
+            ufactor_int, 1,
+            "root of 98-district (10%) → ufactor=1 (0.1%)"
+        );
 
         // Leaf of 2-district split (T=10%): should be loose
         let k_leaf = 2usize;
@@ -5739,7 +6635,10 @@ mod tests {
         let node_ufactor = 1.0 + tolerance / k as f64;
         let raw = ((node_ufactor - 1.0) * 1000.0).round() as u32;
         let ufactor_int = raw.clamp(1, 1000); // minimum 1 = 0.1%
-        assert_eq!(ufactor_int, 1, "CA 52D congressional root → clamped to minimum ufactor=1 (0.1%)");
+        assert_eq!(
+            ufactor_int, 1,
+            "CA 52D congressional root → clamped to minimum ufactor=1 (0.1%)"
+        );
     }
 
     #[test]
@@ -5751,10 +6650,14 @@ mod tests {
         // Old bug: atoi("1.0050") == 1 (always)
         // New fix: round((1.005 - 1.0) * 1000) == 5
         let correct_int = ((old_style_float - 1.0) * 1000.0).round() as u32;
-        assert_ne!(correct_int, 1,
-            "REGRESSION: 1.005 should not convert to 1 — that was the bug. Got {correct_int}");
-        assert_eq!(correct_int, 5,
-            "1.005 (0.5% tolerance) must convert to integer 5");
+        assert_ne!(
+            correct_int, 1,
+            "REGRESSION: 1.005 should not convert to 1 — that was the bug. Got {correct_int}"
+        );
+        assert_eq!(
+            correct_int, 5,
+            "1.005 (0.5% tolerance) must convert to integer 5"
+        );
     }
 
     #[test]
@@ -5769,46 +6672,76 @@ mod tests {
         let mut sorted: Vec<usize> = tract_indices.iter().copied().collect();
         sorted.sort_unstable();
         let sub_vw: Vec<i64> = sorted.iter().map(|&g| vw[g].max(1)).collect();
-        assert!(sub_vw.iter().all(|&v| v >= 1), "all vertex weights must be >= 1 after clamping");
+        assert!(
+            sub_vw.iter().all(|&v| v >= 1),
+            "all vertex weights must be >= 1 after clamping"
+        );
     }
 
     // ── Group 1: split_subgraph edge cases ───────────────────────────────────
 
     #[test]
     fn test_split_subgraph_with_edge_weights() {
-
         // 4-node chain with strong edge weights on left side — should bias split
-        let adj = vec![vec![1], vec![0,2], vec![1,3], vec![2]];
+        let adj = vec![vec![1], vec![0, 2], vec![1, 3], vec![2]];
         let vw = vec![1000i64; 4];
         let mut ew = HashMap::new();
-        ew.insert((0,1), 1000.0); // strong edge — METIS should avoid cutting
-        ew.insert((1,2), 1.0);    // weak edge — METIS may cut here
-        ew.insert((2,3), 1000.0); // strong edge
+        ew.insert((0, 1), 1000.0); // strong edge — METIS should avoid cutting
+        ew.insert((1, 2), 1.0); // weak edge — METIS may cut here
+        ew.insert((2, 3), 1000.0); // strong edge
         let indices: HashSet<usize> = (0..4).collect();
-        let (left, right) = split_subgraph(&adj, &vw, 1, &ew, &indices, 1.005, 100, Some(42), None, None)
-            .expect("should split with edge weights");
+        let (left, right) = split_subgraph(
+            &adj,
+            &vw,
+            1,
+            &ew,
+            &indices,
+            1.005,
+            100,
+            Some(42),
+            None,
+            None,
+        )
+        .expect("should split with edge weights");
         assert_eq!(left.len() + right.len(), 4);
         assert!(!left.is_empty() && !right.is_empty());
     }
 
     #[test]
     fn test_split_subgraph_unequal_target_weights() {
-
         // 6 tracts, split 4:2 (target weights 2/3 and 1/3)
-        let adj = vec![vec![1,2], vec![0,3], vec![0,3], vec![1,2,4,5], vec![3,5], vec![3,4]];
+        let adj = vec![
+            vec![1, 2],
+            vec![0, 3],
+            vec![0, 3],
+            vec![1, 2, 4, 5],
+            vec![3, 5],
+            vec![3, 4],
+        ];
         let vw = vec![1000i64; 6];
         let ew = HashMap::new();
         let indices: HashSet<usize> = (0..6).collect();
         let (left, right) = split_subgraph(
-            &adj, &vw, 1, &ew, &indices, 1.05, 100, Some(42),
-            Some(vec![2.0f32/3.0, 1.0f32/3.0]),  // unequal: 4:2 split
+            &adj,
+            &vw,
+            1,
+            &ew,
+            &indices,
+            1.05,
+            100,
+            Some(42),
+            Some(vec![2.0f32 / 3.0, 1.0f32 / 3.0]), // unequal: 4:2 split
             None,
-        ).expect("should split with target weights");
+        )
+        .expect("should split with target weights");
         assert_eq!(left.len() + right.len(), 6);
         assert!(!left.is_empty() && !right.is_empty());
         // Approximate target: left ~4 tracts, right ~2 (within tolerance)
         let larger = left.len().max(right.len());
-        assert!(larger >= 3, "larger partition should have >= 3 tracts for 4:2 split");
+        assert!(
+            larger >= 3,
+            "larger partition should have >= 3 tracts for 4:2 split"
+        );
     }
 
     #[test]
@@ -5818,22 +6751,33 @@ mod tests {
         let vw = vec![1000i64];
         let ew = HashMap::new();
         let indices: HashSet<usize> = vec![0].into_iter().collect();
-        let (left, right) = split_subgraph(&adj, &vw, 1, &ew, &indices, 1.005, 100, None, None, None)
-            .expect("single node split");
+        let (left, right) =
+            split_subgraph(&adj, &vw, 1, &ew, &indices, 1.005, 100, None, None, None)
+                .expect("single node split");
         assert_eq!(left.len(), 1);
         assert!(right.is_empty());
     }
 
     #[test]
     fn test_split_subgraph_two_tracts_always_splits() {
-
         // 2 tracts: must produce one in each partition
         let adj = vec![vec![1], vec![0]];
         let vw = vec![1000i64, 1000];
         let ew = HashMap::new();
         let indices: HashSet<usize> = (0..2).collect();
-        let (left, right) = split_subgraph(&adj, &vw, 1, &ew, &indices, 1.005, 100, Some(42), None, None)
-            .expect("2-node split");
+        let (left, right) = split_subgraph(
+            &adj,
+            &vw,
+            1,
+            &ew,
+            &indices,
+            1.005,
+            100,
+            Some(42),
+            None,
+            None,
+        )
+        .expect("2-node split");
         assert_eq!(left.len(), 1);
         assert_eq!(right.len(), 1);
         assert!(left.is_disjoint(&right));
@@ -5843,19 +6787,28 @@ mod tests {
 
     #[test]
     fn test_run_nway_partition_basic() {
-
         // 12 tracts into 3 districts — n-way partition
         let n = 12;
-        let adj: Vec<Vec<usize>> = (0..n).map(|i| {
-            let mut nbrs = vec![];
-            if i > 0 { nbrs.push(i-1); }
-            if i < n-1 { nbrs.push(i+1); }
-            nbrs
-        }).collect();
+        let adj: Vec<Vec<usize>> = (0..n)
+            .map(|i| {
+                let mut nbrs = vec![];
+                if i > 0 {
+                    nbrs.push(i - 1);
+                }
+                if i < n - 1 {
+                    nbrs.push(i + 1);
+                }
+                nbrs
+            })
+            .collect();
         let vw = vec![1000i64; n];
         let ew = HashMap::new();
         let result = run_nway_partition(&adj, &vw, &ew, 3, 1.05, 100, Some(42));
-        assert!(result.is_ok(), "n-way partition should succeed: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "n-way partition should succeed: {:?}",
+            result.err()
+        );
         let assignments = result.unwrap();
         assert_eq!(assignments.len(), n, "all tracts assigned");
         let districts: std::collections::HashSet<usize> = assignments.values().copied().collect();
@@ -5869,15 +6822,20 @@ mod tests {
     #[test]
     #[cfg(feature = "c-ffi-engine")]
     fn test_run_nway_partition_balance() {
-
         // 20 equal-weight tracts into 4 districts — should be well-balanced
         let n = 20;
-        let adj: Vec<Vec<usize>> = (0..n).map(|i| {
-            let mut nbrs = vec![];
-            if i > 0 { nbrs.push(i-1); }
-            if i < n-1 { nbrs.push(i+1); }
-            nbrs
-        }).collect();
+        let adj: Vec<Vec<usize>> = (0..n)
+            .map(|i| {
+                let mut nbrs = vec![];
+                if i > 0 {
+                    nbrs.push(i - 1);
+                }
+                if i < n - 1 {
+                    nbrs.push(i + 1);
+                }
+                nbrs
+            })
+            .collect();
         let vw = vec![1000i64; n];
         let ew = HashMap::new();
         let assignments = run_nway_partition(&adj, &vw, &ew, 4, 1.05, 100, Some(42)).unwrap();
@@ -5889,14 +6847,17 @@ mod tests {
         let ideal = 20 * 1000 / 4; // 5000
         for d in 1..=4 {
             let dev = (district_pops[d] - ideal as i64).abs() as f64 / ideal as f64;
-            assert!(dev <= 0.1, "district {d} deviation {:.1}% exceeds 10%", dev*100.0);
+            assert!(
+                dev <= 0.1,
+                "district {d} deviation {:.1}% exceeds 10%",
+                dev * 100.0
+            );
         }
     }
 
     #[test]
     fn test_run_nway_partition_output_complete_and_valid() {
-
-        let adj = vec![vec![1,2], vec![0,3], vec![0,3], vec![1,2]];
+        let adj = vec![vec![1, 2], vec![0, 3], vec![0, 3], vec![1, 2]];
         let vw = vec![1000i64; 4];
         let ew = HashMap::new();
         let assignments = run_nway_partition(&adj, &vw, &ew, 2, 1.05, 100, Some(42)).unwrap();
@@ -5905,7 +6866,10 @@ mod tests {
         assert!(assignments.values().all(|&d| d >= 1 && d <= 2));
         let d1: Vec<_> = assignments.values().filter(|&&d| d == 1).collect();
         let d2: Vec<_> = assignments.values().filter(|&&d| d == 2).collect();
-        assert!(!d1.is_empty() && !d2.is_empty(), "both districts must have tracts");
+        assert!(
+            !d1.is_empty() && !d2.is_empty(),
+            "both districts must have tracts"
+        );
     }
 
     // ── Group 3: run_all_splits edge cases ───────────────────────────────────
@@ -5918,15 +6882,26 @@ mod tests {
 
         let n = 16;
         // Grid graph: 4x4
-        let adj: Vec<Vec<usize>> = (0..n).map(|i| {
-            let row = i / 4; let col = i % 4;
-            let mut nbrs = vec![];
-            if row > 0 { nbrs.push(i-4); }
-            if row < 3 { nbrs.push(i+4); }
-            if col > 0 { nbrs.push(i-1); }
-            if col < 3 { nbrs.push(i+1); }
-            nbrs
-        }).collect();
+        let adj: Vec<Vec<usize>> = (0..n)
+            .map(|i| {
+                let row = i / 4;
+                let col = i % 4;
+                let mut nbrs = vec![];
+                if row > 0 {
+                    nbrs.push(i - 4);
+                }
+                if row < 3 {
+                    nbrs.push(i + 4);
+                }
+                if col > 0 {
+                    nbrs.push(i - 1);
+                }
+                if col < 3 {
+                    nbrs.push(i + 1);
+                }
+                nbrs
+            })
+            .collect();
         let vw = vec![1000i64; n];
         let ew = HashMap::new();
         let assignments = run_all_splits(&adj, &vw, &ew, 8, 0.10, 100, Some(42), None).unwrap();
@@ -5943,8 +6918,14 @@ mod tests {
         // should produce well-balanced output
 
         let adj = vec![
-            vec![1,4], vec![0,2,5], vec![1,3,6], vec![2,7],
-            vec![0,5], vec![1,4,6], vec![2,5,7], vec![3,6],
+            vec![1, 4],
+            vec![0, 2, 5],
+            vec![1, 3, 6],
+            vec![2, 7],
+            vec![0, 5],
+            vec![1, 4, 6],
+            vec![2, 5, 7],
+            vec![3, 6],
         ];
         let vw = vec![1000i64; 8]; // 8 equal tracts
         let ew = HashMap::new();
@@ -5957,7 +6938,11 @@ mod tests {
         let ideal = 8000 / 4; // 2000
         for d in 1..=4 {
             let dev = (pops[d] - ideal).abs() as f64 / ideal as f64;
-            assert!(dev <= 0.10, "district {d} deviation {:.1}% exceeds 10%", dev*100.0);
+            assert!(
+                dev <= 0.10,
+                "district {d} deviation {:.1}% exceeds 10%",
+                dev * 100.0
+            );
         }
     }
 
@@ -5970,7 +6955,10 @@ mod tests {
         let total_tracts = 1784usize; // WA 2020
         let house_districts = 98usize;
         let tpd = total_tracts as f64 / house_districts as f64;
-        assert!(tpd < 20.0, "WA house at tract level has {tpd:.1} tracts/district — below granularity threshold");
+        assert!(
+            tpd < 20.0,
+            "WA house at tract level has {tpd:.1} tracts/district — below granularity threshold"
+        );
 
         let avg_tract_pop = 7_705_281i64 / total_tracts as i64;
         let ideal_district_pop = 7_705_281i64 / house_districts as i64;
@@ -5986,7 +6974,10 @@ mod tests {
         let total_tracts = 1784usize;
         let congressional_districts = 10usize;
         let tpd = total_tracts as f64 / congressional_districts as f64;
-        assert!(tpd >= 20.0, "WA congressional has {tpd:.1} tracts/district — sufficient granularity");
+        assert!(
+            tpd >= 20.0,
+            "WA congressional has {tpd:.1} tracts/district — sufficient granularity"
+        );
     }
 
     #[test]
@@ -5995,7 +6986,10 @@ mod tests {
         let bg_count = 5311usize;
         let house_districts = 98usize;
         let bgpd = bg_count as f64 / house_districts as f64;
-        assert!(bgpd >= 20.0, "WA house at block_group has {bgpd:.1} BGs/district — adequate");
+        assert!(
+            bgpd >= 20.0,
+            "WA house at block_group has {bgpd:.1} BGs/district — adequate"
+        );
     }
 
     // ── Task 147: ARM Linux platform detection ───────────────────────────────
@@ -6022,7 +7016,10 @@ mod tests {
         let msg = format!("gpmetis not found ({os}/{arch}). {install_hint}");
         assert!(msg.contains(os), "error must contain OS: {os}");
         assert!(msg.contains(arch), "error must contain arch: {arch}");
-        assert!(msg.contains("gpmetis not found"), "must include 'gpmetis not found'");
+        assert!(
+            msg.contains("gpmetis not found"),
+            "must include 'gpmetis not found'"
+        );
     }
 
     #[test]
@@ -6043,10 +7040,14 @@ mod tests {
             _ =>
                 "Install METIS from https://github.com/KarypisLab/METIS",
         };
-        assert!(install_hint.contains("apt-get install metis"),
-            "ARM Linux must get apt-get hint, got: {install_hint}");
-        assert!(install_hint.contains("ARM Linux"),
-            "must mention ARM Linux, got: {install_hint}");
+        assert!(
+            install_hint.contains("apt-get install metis"),
+            "ARM Linux must get apt-get hint, got: {install_hint}"
+        );
+        assert!(
+            install_hint.contains("ARM Linux"),
+            "must mention ARM Linux, got: {install_hint}"
+        );
     }
 
     /// Task 112: Windows path quoting invariant.
@@ -6065,17 +7066,26 @@ mod tests {
 
         // The flag should contain the path verbatim (with spaces) — no manual quoting
         let flag_str = flag.to_string_lossy();
-        assert!(flag_str.contains(" "), "spaces are preserved in OsString — OS API handles quoting");
+        assert!(
+            flag_str.contains(" "),
+            "spaces are preserved in OsString — OS API handles quoting"
+        );
         assert!(flag_str.starts_with("-tpwgt="), "flag prefix preserved");
-        assert!(!flag_str.contains('"'), "no manual quoting added — OS API handles this");
+        assert!(
+            !flag_str.contains('"'),
+            "no manual quoting added — OS API handles this"
+        );
 
         // Contrast: format!() with .display() would produce the same string,
         // but would be passed through the shell if used with Command::new("sh").arg("-c", ...)
         // When using Command::arg() directly, the OS API receives the raw arg — safe either way.
         // The important invariant: do NOT concatenate paths into shell strings.
         let display_str = format!("-tpwgt={}", spaced_path.display());
-        assert_eq!(flag_str, display_str.as_str(),
-            "OsString flag matches display()-based string for non-Unicode paths");
+        assert_eq!(
+            flag_str,
+            display_str.as_str(),
+            "OsString flag matches display()-based string for non-Unicode paths"
+        );
     }
 
     /// Scenario 23: Rayon seed determinism — sort split_results by path before insert.
@@ -6083,8 +7093,6 @@ mod tests {
     /// twice returns identical assignments (deterministic output).
     #[test]
     fn test_rayon_results_sorted_before_insert() {
-
-
         // A simple 4-node chain graph: 0-1-2-3
         let adj = vec![vec![1usize], vec![0, 2], vec![1, 3], vec![2]];
         let vw = vec![1000i64, 1000, 1000, 1000];
@@ -6094,8 +7102,16 @@ mod tests {
         let result1 = run_all_splits(&adj, &vw, &ew, 2, 0.005, 100, Some(42), None);
         let result2 = run_all_splits(&adj, &vw, &ew, 2, 0.005, 100, Some(42), None);
 
-        assert!(result1.is_ok(), "first run must succeed: {:?}", result1.err());
-        assert!(result2.is_ok(), "second run must succeed: {:?}", result2.err());
+        assert!(
+            result1.is_ok(),
+            "first run must succeed: {:?}",
+            result1.err()
+        );
+        assert!(
+            result2.is_ok(),
+            "second run must succeed: {:?}",
+            result2.err()
+        );
 
         let a1 = result1.unwrap();
         let a2 = result2.unwrap();
@@ -6120,27 +7136,39 @@ mod tests {
     fn test_write_metis_graph_dual_format() {
         use bisect_core::metis_format::write_metis_graph_dual;
         // 3-vertex path: 0-1-2
-        let adj = vec![vec![1], vec![0,2], vec![1]];
-        let pop  = vec![100i64, 200, 150];
+        let adj = vec![vec![1], vec![0, 2], vec![1]];
+        let pop = vec![100i64, 200, 150];
         let area = vec![500i64, 800, 600];
         let mut ew = HashMap::new();
-        ew.insert((0,1), 1000.0f64);
-        ew.insert((1,2), 1500.0f64);
+        ew.insert((0, 1), 1000.0f64);
+        ew.insert((1, 2), 1500.0f64);
 
         let content = write_metis_graph_dual(&adj, &pop, &area, Some(&ew)).unwrap();
         let lines: Vec<&str> = content.lines().collect();
 
         // Header: "3 2 011 2"
-        assert_eq!(lines[0], "3 2 011 2", "header must be '3 2 011 2' for ncon=2");
+        assert_eq!(
+            lines[0], "3 2 011 2",
+            "header must be '3 2 011 2' for ncon=2"
+        );
 
         // Vertex 0: "100 500 2 100000 ..." (pop area neighbor1 eweight1)
-        assert!(lines[1].starts_with("100 500 "), "vertex 0 must start with pop area");
+        assert!(
+            lines[1].starts_with("100 500 "),
+            "vertex 0 must start with pop area"
+        );
 
         // Vertex 1 (degree 2): "200 800 1 100000 3 150000"
-        assert!(lines[2].starts_with("200 800 "), "vertex 1 must start with pop area");
+        assert!(
+            lines[2].starts_with("200 800 "),
+            "vertex 1 must start with pop area"
+        );
 
         // Vertex 2: "150 600 2 150000"
-        assert!(lines[3].starts_with("150 600 "), "vertex 2 must start with pop area");
+        assert!(
+            lines[3].starts_with("150 600 "),
+            "vertex 2 must start with pop area"
+        );
     }
 
     /// Verify tpwgts file format for ncon=2 uses "partition : constraint = weight" syntax.
@@ -6153,17 +7181,31 @@ mod tests {
         // Correct ncon=2 format: partition : constraint = weight
         // n-1 partition format: write only partition 0, METIS infers partition 1
         // (same as Python archive: write n-1 partitions, METIS infers the last)
-        let content = format!(
-            "0 : 0 = {pop_left:.6}\n0 : 1 = {area_left:.6}\n"
-        );
+        let content = format!("0 : 0 = {pop_left:.6}\n0 : 1 = {area_left:.6}\n");
         let lines: Vec<&str> = content.lines().collect();
-        assert_eq!(lines.len(), 2, "n-1 format: write 1 partition × 2 constraints = 2 lines");
-        assert!(lines[0].starts_with("0 : 0 = "), "line 0 must be 'p0:constraint0'");
-        assert!(lines[1].starts_with("0 : 1 = "), "line 1 must be 'p0:constraint1'");
+        assert_eq!(
+            lines.len(),
+            2,
+            "n-1 format: write 1 partition × 2 constraints = 2 lines"
+        );
+        assert!(
+            lines[0].starts_with("0 : 0 = "),
+            "line 0 must be 'p0:constraint0'"
+        );
+        assert!(
+            lines[1].starts_with("0 : 1 = "),
+            "line 1 must be 'p0:constraint1'"
+        );
         let p0c0: f64 = lines[0][8..].trim().parse().unwrap();
         let p0c1: f64 = lines[1][8..].trim().parse().unwrap();
-        assert!((p0c0 - pop_left).abs() < 1e-5, "constraint 0 should be pop_left");
-        assert!((p0c1 - area_left).abs() < 1e-5, "constraint 1 should be area_left");
+        assert!(
+            (p0c0 - pop_left).abs() < 1e-5,
+            "constraint 0 should be pop_left"
+        );
+        assert!(
+            (p0c1 - area_left).abs() < 1e-5,
+            "constraint 1 should be area_left"
+        );
     }
 
     /// Integration test: call split_subgraph with ncon=2 (unified dual-constraint path).
@@ -6174,17 +7216,37 @@ mod tests {
         // 8-vertex grid: 0-1-2-3 (top row), 4-5-6-7 (bottom row)
         // Edges: 0-1, 1-2, 2-3, 4-5, 5-6, 6-7, 0-4, 1-5, 2-6, 3-7
         let adj = vec![
-            vec![1,4], vec![0,2,5], vec![1,3,6], vec![2,7],
-            vec![0,5], vec![4,6,1], vec![5,7,2], vec![6,3],
+            vec![1, 4],
+            vec![0, 2, 5],
+            vec![1, 3, 6],
+            vec![2, 7],
+            vec![0, 5],
+            vec![4, 6, 1],
+            vec![5, 7, 2],
+            vec![6, 3],
         ];
-        let pop  = vec![100i64; 8]; // uniform population
-        // area in hectares (already scaled; each vertex = 100 ha)
+        let pop = vec![100i64; 8]; // uniform population
+                                   // area in hectares (already scaled; each vertex = 100 ha)
         let area_ha = vec![100i64; 8];
         // interleaved vwgt for ncon=2: [pop_0, area_0, pop_1, area_1, ...]
-        let vwgt_interleaved: Vec<i64> = pop.iter().zip(area_ha.iter())
-            .flat_map(|(&p, &a)| [p, a]).collect();
+        let vwgt_interleaved: Vec<i64> = pop
+            .iter()
+            .zip(area_ha.iter())
+            .flat_map(|(&p, &a)| [p, a])
+            .collect();
         let mut ew = HashMap::new();
-        for (u,v) in [(0,1),(1,2),(2,3),(4,5),(5,6),(6,7),(0,4),(1,5),(2,6),(3,7)] {
+        for (u, v) in [
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (4, 5),
+            (5, 6),
+            (6, 7),
+            (0, 4),
+            (1, 5),
+            (2, 6),
+            (3, 7),
+        ] {
             ew.insert((u.min(v), u.max(v)), 1000.0f64);
         }
         let tracts: HashSet<usize> = (0..8).collect();
@@ -6192,8 +7254,14 @@ mod tests {
         // Bisect 50/50 by both population and area (ncon=2)
         // tpwgts=[0.5, 0.5, 0.5, 0.5]: both partitions get 50% pop and 50% area
         let result = split_subgraph(
-            &adj, &vwgt_interleaved, 2, &ew, &tracts,
-            1.005, 100, Some(42),
+            &adj,
+            &vwgt_interleaved,
+            2,
+            &ew,
+            &tracts,
+            1.005,
+            100,
+            Some(42),
             Some(vec![0.5f32, 0.5f32, 0.5f32, 0.5f32]),
             Some(vec![1.001f32, 1.001f32]),
         );
@@ -6206,8 +7274,11 @@ mod tests {
                 let pop_left: i64 = left.iter().map(|&v| pop[v]).sum();
                 let pop_total: i64 = pop.iter().sum();
                 let ratio = pop_left as f64 / pop_total as f64;
-                assert!((ratio - 0.5).abs() < 0.15,
-                    "pop balance should be ~50%: got {:.1}%", ratio*100.0);
+                assert!(
+                    (ratio - 0.5).abs() < 0.15,
+                    "pop balance should be ~50%: got {:.1}%",
+                    ratio * 100.0
+                );
             }
             Err(e) => {
                 // METIS may fail on this version — log and skip
@@ -6220,11 +7291,16 @@ mod tests {
 
     #[test]
     fn lorenz_curve_starts_at_origin_ends_at_one() {
-        let pop  = vec![100i64, 200, 300, 400];
+        let pop = vec![100i64, 200, 300, 400];
         let area = vec![1000.0f64, 2000.0, 3000.0, 4000.0];
         let (curve, _, _) = population_lorenz(&pop, &area, 4);
-        assert!(curve.first().map(|&(a,p)| a == 0.0 && p == 0.0).unwrap_or(false),
-                "curve must start at (0,0)");
+        assert!(
+            curve
+                .first()
+                .map(|&(a, p)| a == 0.0 && p == 0.0)
+                .unwrap_or(false),
+            "curve must start at (0,0)"
+        );
         let (a_last, p_last) = *curve.last().unwrap();
         assert!((a_last - 1.0).abs() < 1e-9, "curve area must reach 1.0");
         assert!((p_last - 1.0).abs() < 1e-9, "curve pop must reach 1.0");
@@ -6232,7 +7308,7 @@ mod tests {
 
     #[test]
     fn lorenz_curve_monotone_non_decreasing() {
-        let pop  = vec![50i64, 200, 100, 400, 10];
+        let pop = vec![50i64, 200, 100, 400, 10];
         let area = vec![500.0f64, 1000.0, 800.0, 2000.0, 200.0];
         let (curve, _, _) = population_lorenz(&pop, &area, 5);
         for w in curve.windows(2) {
@@ -6244,28 +7320,39 @@ mod tests {
     #[test]
     fn lorenz_natural_ratio_uniform_state_is_half() {
         // Uniform state: all tracts same density → natural pop at 50% area = 50%
-        let pop  = vec![100i64; 10];
+        let pop = vec![100i64; 10];
         let area = vec![1000.0f64; 10];
         let (_, natural_pop, suggested_k) = population_lorenz(&pop, &area, 10);
-        assert!((natural_pop - 0.5).abs() < 0.05,
-                "uniform state natural pop should be ~50%: got {:.1}%", natural_pop * 100.0);
-        assert_eq!(suggested_k, 5, "uniform state natural k should be 5 out of 10");
+        assert!(
+            (natural_pop - 0.5).abs() < 0.05,
+            "uniform state natural pop should be ~50%: got {:.1}%",
+            natural_pop * 100.0
+        );
+        assert_eq!(
+            suggested_k, 5,
+            "uniform state natural k should be 5 out of 10"
+        );
     }
 
     #[test]
     fn lorenz_natural_ratio_concentrated_state() {
         // Very concentrated: first 2 tracts have 90% of pop in 10% of area
-        let pop  = vec![900i64, 900, 10, 10, 10, 10, 10, 10, 10, 10];
-        let area = vec![500.0f64, 500.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0];
+        let pop = vec![900i64, 900, 10, 10, 10, 10, 10, 10, 10, 10];
+        let area = vec![
+            500.0f64, 500.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0,
+        ];
         let (_, natural_pop, _) = population_lorenz(&pop, &area, 10);
         // Dense 50% of area (first 5 dense tracts) should contain well above 50% of pop
-        assert!(natural_pop > 0.7,
-                "concentrated state: dense half should hold >70% pop, got {:.1}%", natural_pop * 100.0);
+        assert!(
+            natural_pop > 0.7,
+            "concentrated state: dense half should hold >70% pop, got {:.1}%",
+            natural_pop * 100.0
+        );
     }
 
     #[test]
     fn lorenz_min_area_for_zero_is_zero() {
-        let pop  = vec![100i64, 200, 300];
+        let pop = vec![100i64, 200, 300];
         let area = vec![1000.0f64, 2000.0, 3000.0];
         let min_a = lorenz_min_area(&pop, &area, 0.0);
         assert_eq!(min_a, 0.0);
@@ -6273,7 +7360,7 @@ mod tests {
 
     #[test]
     fn lorenz_min_area_for_one_is_one() {
-        let pop  = vec![100i64, 200, 300];
+        let pop = vec![100i64, 200, 300];
         let area = vec![1000.0f64, 2000.0, 3000.0];
         let min_a = lorenz_min_area(&pop, &area, 1.0);
         assert!((min_a - 1.0).abs() < 1e-9);
@@ -6284,10 +7371,14 @@ mod tests {
         // Tract 0: 900 pop, 100 area (very dense)
         // Tract 1: 100 pop, 900 area (very sparse)
         // Minimum area to hold 90% of pop = just tract 0 = 100/1000 = 10%
-        let pop  = vec![900i64, 100];
+        let pop = vec![900i64, 100];
         let area = vec![100.0f64, 900.0];
         let min_a = lorenz_min_area(&pop, &area, 0.9);
-        assert!(min_a < 0.15, "dense tract holds 90% pop in ~10% area, got {:.1}%", min_a * 100.0);
+        assert!(
+            min_a < 0.15,
+            "dense tract holds 90% pop in ~10% area, got {:.1}%",
+            min_a * 100.0
+        );
     }
 
     // ── VRASection (B.14): alignment score unit tests ─────────────────────────
@@ -6297,7 +7388,9 @@ mod tests {
     /// = |mvap_left/mvap_total - (1 - mvap_left/mvap_total)| = |2*mvap_left/mvap_total - 1|
     fn vra_alignment(mvap: &[f64], left: &[usize]) -> f64 {
         let mvap_total: f64 = mvap.iter().sum();
-        if mvap_total == 0.0 { return 0.0; }
+        if mvap_total == 0.0 {
+            return 0.0;
+        }
         let mvap_left: f64 = left.iter().map(|&v| mvap[v]).sum();
         (mvap_left / mvap_total - 0.5).abs() * 2.0
     }
@@ -6308,8 +7401,10 @@ mod tests {
         let mvap = vec![100.0, 100.0, 0.0, 0.0];
         let left = vec![0, 1];
         let a = vra_alignment(&mvap, &left);
-        assert!((a - 1.0).abs() < 1e-9,
-            "all minority on left should give alignment=1.0, got {a}");
+        assert!(
+            (a - 1.0).abs() < 1e-9,
+            "all minority on left should give alignment=1.0, got {a}"
+        );
     }
 
     #[test]
@@ -6318,18 +7413,22 @@ mod tests {
         let mvap = vec![50.0, 50.0, 50.0, 50.0];
         let left = vec![0, 1];
         let a = vra_alignment(&mvap, &left);
-        assert!(a < 1e-9,
-            "equal minority split should give alignment=0.0, got {a}");
+        assert!(
+            a < 1e-9,
+            "equal minority split should give alignment=0.0, got {a}"
+        );
     }
 
     #[test]
     fn test_vra_alignment_partial_concentration() {
         // 3/4 of minority on left, 1/4 on right → alignment = |0.75 - 0.25| = 0.5
-        let mvap = vec![75.0, 0.0, 25.0, 0.0];  // total=100
+        let mvap = vec![75.0, 0.0, 25.0, 0.0]; // total=100
         let left = vec![0]; // mvap_left = 75
         let a = vra_alignment(&mvap, &left);
-        assert!((a - 0.5).abs() < 1e-9,
-            "3/4 concentration should give alignment=0.5, got {a}");
+        assert!(
+            (a - 0.5).abs() < 1e-9,
+            "3/4 concentration should give alignment=0.5, got {a}"
+        );
     }
 
     #[test]
@@ -6343,18 +7442,24 @@ mod tests {
         // High alignment (0.8): score = 1000 - 0.4 * 0.8 * max(1000, 1) = 1000 - 320 = 680
         let alignment_high = 0.8_f64;
         let score_high = normalised - w_vra * alignment_high * normalised.max(1.0);
-        assert!((score_high - 680.0).abs() < 1e-9,
-            "score with high alignment should be 680, got {score_high}");
+        assert!(
+            (score_high - 680.0).abs() < 1e-9,
+            "score with high alignment should be 680, got {score_high}"
+        );
 
         // Low alignment (0.1): score = 1000 - 0.4 * 0.1 * 1000 = 1000 - 40 = 960
         let alignment_low = 0.1_f64;
         let score_low = normalised - w_vra * alignment_low * normalised.max(1.0);
-        assert!((score_low - 960.0).abs() < 1e-9,
-            "score with low alignment should be 960, got {score_low}");
+        assert!(
+            (score_low - 960.0).abs() < 1e-9,
+            "score with low alignment should be 960, got {score_low}"
+        );
 
         // High alignment split (lower score) should be preferred
-        assert!(score_high < score_low,
-            "high alignment ({score_high}) should beat low alignment ({score_low})");
+        assert!(
+            score_high < score_low,
+            "high alignment ({score_high}) should beat low alignment ({score_low})"
+        );
     }
 
     #[test]
@@ -6384,7 +7489,11 @@ mod tests {
         let adj = vec![vec![], vec![]];
         let subset: HashSet<usize> = vec![0, 1].into_iter().collect();
         let comps = connected_components_of(&adj, &subset);
-        assert_eq!(comps.len(), 2, "two isolated vertices must yield 2 components");
+        assert_eq!(
+            comps.len(),
+            2,
+            "two isolated vertices must yield 2 components"
+        );
     }
 
     #[test]
@@ -6403,8 +7512,12 @@ mod tests {
         // 6-node graph in two cliques: 0-1-2 and 3-4-5, with no cross-edges.
         // Pass subset = {0,1,2} → should find 1 component even though 3-4-5 exist.
         let adj = vec![
-            vec![1, 2], vec![0, 2], vec![0, 1],   // clique A
-            vec![4, 5], vec![3, 5], vec![3, 4],   // clique B
+            vec![1, 2],
+            vec![0, 2],
+            vec![0, 1], // clique A
+            vec![4, 5],
+            vec![3, 5],
+            vec![3, 4], // clique B
         ];
         let subset: HashSet<usize> = vec![0, 1, 2].into_iter().collect();
         let comps = connected_components_of(&adj, &subset);
@@ -6421,7 +7534,11 @@ mod tests {
         let adj = vec![vec![1, 2, 3], vec![0], vec![0], vec![0]];
         let subset: HashSet<usize> = vec![0, 1].into_iter().collect();
         let comps = connected_components_of(&adj, &subset);
-        assert_eq!(comps.len(), 1, "external edges must be ignored; {{0,1}} is connected");
+        assert_eq!(
+            comps.len(),
+            1,
+            "external edges must be ignored; {{0,1}} is connected"
+        );
     }
 
     // ── Group: repair_bisection_contiguity ───────────────────────────────────
@@ -6431,10 +7548,10 @@ mod tests {
         // Left = {0,1}, Right = {2,3} on a 4-node chain.
         // Both sides already connected — repair should return them unchanged.
         let adj = vec![vec![1], vec![0, 2], vec![1, 3], vec![2]];
-        let left: HashSet<usize>  = vec![0, 1].into_iter().collect();
+        let left: HashSet<usize> = vec![0, 1].into_iter().collect();
         let right: HashSet<usize> = vec![2, 3].into_iter().collect();
         let (l2, r2) = repair_bisection_contiguity(&adj, left.clone(), right.clone());
-        assert_eq!(l2, left,  "no-op: left unchanged");
+        assert_eq!(l2, left, "no-op: left unchanged");
         assert_eq!(r2, right, "no-op: right unchanged");
     }
 
@@ -6443,11 +7560,13 @@ mod tests {
         // Chain 0-1-2-3-4.  Left = {0,1,4} — vertex 4 is not connected to 0,1
         // through left-only edges.  Repair should move vertex 4 to right.
         let adj = vec![vec![1], vec![0, 2], vec![1, 3], vec![2, 4], vec![3]];
-        let left: HashSet<usize>  = vec![0, 1, 4].into_iter().collect();
+        let left: HashSet<usize> = vec![0, 1, 4].into_iter().collect();
         let right: HashSet<usize> = vec![2, 3].into_iter().collect();
         let (l2, r2) = repair_bisection_contiguity(&adj, left, right);
-        assert!(!l2.contains(&4) || r2.contains(&4) || l2.contains(&4),
-            "vertex 4 must end up in exactly one side");
+        assert!(
+            !l2.contains(&4) || r2.contains(&4) || l2.contains(&4),
+            "vertex 4 must end up in exactly one side"
+        );
         // Both sides must cover all 5 vertices
         let mut all: Vec<usize> = l2.union(&r2).copied().collect();
         all.sort_unstable();
@@ -6459,12 +7578,16 @@ mod tests {
         // Chain 0-1-2-3-4.  Right = {1,4} — vertex 4 is orphaned from 1 (no path
         // through right).  Repair migrates 4 to left.
         let adj = vec![vec![1], vec![0, 2], vec![1, 3], vec![2, 4], vec![3]];
-        let left: HashSet<usize>  = vec![0, 2, 3].into_iter().collect();
+        let left: HashSet<usize> = vec![0, 2, 3].into_iter().collect();
         let right: HashSet<usize> = vec![1, 4].into_iter().collect();
         let (l2, r2) = repair_bisection_contiguity(&adj, left, right);
         let mut all: Vec<usize> = l2.union(&r2).copied().collect();
         all.sort_unstable();
-        assert_eq!(all, vec![0, 1, 2, 3, 4], "repair must preserve all vertices");
+        assert_eq!(
+            all,
+            vec![0, 1, 2, 3, 4],
+            "repair must preserve all vertices"
+        );
     }
 
     #[test]
@@ -6472,22 +7595,31 @@ mod tests {
         // Arbitrary disconnected split on an 8-node graph.
         // Key invariant: |left| + |right| must equal n after repair.
         let adj: Vec<Vec<usize>> = vec![
-            vec![1], vec![0, 2], vec![1, 3], vec![2],
-            vec![5], vec![4, 6], vec![5, 7], vec![6],
+            vec![1],
+            vec![0, 2],
+            vec![1, 3],
+            vec![2],
+            vec![5],
+            vec![4, 6],
+            vec![5, 7],
+            vec![6],
         ];
         // left gets both chains but with a gap: {0,1,5,6}
-        let left: HashSet<usize>  = vec![0, 1, 5, 6].into_iter().collect();
+        let left: HashSet<usize> = vec![0, 1, 5, 6].into_iter().collect();
         let right: HashSet<usize> = vec![2, 3, 4, 7].into_iter().collect();
         let (l2, r2) = repair_bisection_contiguity(&adj, left, right);
         assert_eq!(l2.len() + r2.len(), 8, "all 8 vertices must be covered");
-        assert!(l2.is_disjoint(&r2), "sides must remain disjoint after repair");
+        assert!(
+            l2.is_disjoint(&r2),
+            "sides must remain disjoint after repair"
+        );
     }
 
     #[test]
     fn repair_result_both_sides_nonempty() {
         // Even a maximally unbalanced split should keep both sides non-empty.
         let adj = vec![vec![1], vec![0, 2], vec![1]];
-        let left: HashSet<usize>  = vec![0, 2].into_iter().collect(); // disconnected
+        let left: HashSet<usize> = vec![0, 2].into_iter().collect(); // disconnected
         let right: HashSet<usize> = vec![1].into_iter().collect();
         let (l2, r2) = repair_bisection_contiguity(&adj, left, right);
         assert!(!l2.is_empty(), "left must remain non-empty after repair");
@@ -6499,7 +7631,7 @@ mod tests {
     fn repair_idempotent_on_connected() {
         // Calling repair twice on an already-connected split must produce the same result.
         let adj = vec![vec![1, 2], vec![0, 3], vec![0, 3], vec![1, 2]];
-        let left: HashSet<usize>  = vec![0, 1].into_iter().collect();
+        let left: HashSet<usize> = vec![0, 1].into_iter().collect();
         let right: HashSet<usize> = vec![2, 3].into_iter().collect();
         let (l1, r1) = repair_bisection_contiguity(&adj, left.clone(), right.clone());
         let (l2, r2) = repair_bisection_contiguity(&adj, l1.clone(), r1.clone());
@@ -6512,7 +7644,7 @@ mod tests {
     #[test]
     fn lorenz_empty_weights_returns_early() {
         // All-zero weights → function returns early with empty curve and 0 natural pop
-        let pop  = vec![0i64, 0, 0];
+        let pop = vec![0i64, 0, 0];
         let area = vec![1000.0f64, 2000.0, 3000.0];
         let (curve, natural_pop, suggested_k) = population_lorenz(&pop, &area, 4);
         assert!(curve.is_empty(), "zero total pop must return empty curve");
@@ -6523,18 +7655,28 @@ mod tests {
     #[test]
     fn lorenz_single_tract() {
         // 1 vertex: curve is trivially (0,0)→(1,1)
-        let pop  = vec![100i64];
+        let pop = vec![100i64];
         let area = vec![1000.0f64];
         let (curve, natural_pop, _) = population_lorenz(&pop, &area, 2);
-        assert_eq!(curve.len(), 2, "single tract: curve has 2 points (0,0) and (1,1)");
-        assert!((curve[0].0).abs() < 1e-9 && (curve[0].1).abs() < 1e-9,
-            "first point must be (0,0)");
-        assert!((curve[1].0 - 1.0).abs() < 1e-9 && (curve[1].1 - 1.0).abs() < 1e-9,
-            "last point must be (1,1)");
+        assert_eq!(
+            curve.len(),
+            2,
+            "single tract: curve has 2 points (0,0) and (1,1)"
+        );
+        assert!(
+            (curve[0].0).abs() < 1e-9 && (curve[0].1).abs() < 1e-9,
+            "first point must be (0,0)"
+        );
+        assert!(
+            (curve[1].0 - 1.0).abs() < 1e-9 && (curve[1].1 - 1.0).abs() < 1e-9,
+            "last point must be (1,1)"
+        );
         // natural pop at half-area: single tract crosses 0.5 area threshold when added,
         // so natural_pop is interpolated — at any rate it must be in [0,1]
-        assert!(natural_pop >= 0.0 && natural_pop <= 1.0,
-            "natural_pop must be in [0,1], got {natural_pop}");
+        assert!(
+            natural_pop >= 0.0 && natural_pop <= 1.0,
+            "natural_pop must be in [0,1], got {natural_pop}"
+        );
     }
 
     #[test]
@@ -6545,26 +7687,32 @@ mod tests {
         // After adding tract 0: cum_area = 10/110 ≈ 0.091 — still < 0.5
         // After adding tract 1: cum_area = 110/110 = 1.0 — crossed 0.5
         // So natural_pop_at_half is interpolated between (0.091, 100/110) and (1.0, 1.0)
-        let pop  = vec![100i64, 10];
+        let pop = vec![100i64, 10];
         let area = vec![10.0f64, 100.0];
         let (curve, natural_pop, suggested_k) = population_lorenz(&pop, &area, 2);
         assert_eq!(curve.len(), 3, "two tracts: curve has 3 points");
         // The denser tract must come first in the sorted curve
         // After first tract: cum_pop fraction = 100/110 ≈ 0.909
-        assert!(curve[1].1 > 0.8,
-            "after dense tract, accumulated pop fraction must be > 80%, got {:.3}", curve[1].1);
+        assert!(
+            curve[1].1 > 0.8,
+            "after dense tract, accumulated pop fraction must be > 80%, got {:.3}",
+            curve[1].1
+        );
         // natural_pop must be > 0.5 (dense area contains majority of pop)
         assert!(natural_pop > 0.5,
             "natural pop at half area > 0.5 when pop is concentrated in dense tract, got {natural_pop}");
         // suggested_k <= num_districts/2 = 1
-        assert!(suggested_k >= 1, "suggested_k must be >= 1, got {suggested_k}");
+        assert!(
+            suggested_k >= 1,
+            "suggested_k must be >= 1, got {suggested_k}"
+        );
     }
 
     #[test]
     fn lorenz_natural_k_clamped_to_half() {
         // Verify suggested_k is always <= num_districts/2 for various inputs.
         // Use a heavily concentrated state (all pop in first tract).
-        let pop  = vec![1000i64, 1, 1, 1, 1, 1, 1, 1];
+        let pop = vec![1000i64, 1, 1, 1, 1, 1, 1, 1];
         let area = vec![10.0f64; 8];
         for k in [2usize, 4, 6, 8, 10, 20, 52] {
             let (_, _, suggested_k) = population_lorenz(&pop, &area, k);
@@ -6600,15 +7748,23 @@ mod tests {
         // Suppress "unused" warning for the total variable
         let _ = mvap_total;
 
-        assert!(a1 <= a2, "alignment must grow with concentration: {a1} <= {a2}");
-        assert!(a2 <= a3, "alignment must grow with concentration: {a2} <= {a3}");
+        assert!(
+            a1 <= a2,
+            "alignment must grow with concentration: {a1} <= {a2}"
+        );
+        assert!(
+            a2 <= a3,
+            "alignment must grow with concentration: {a2} <= {a3}"
+        );
     }
 
     #[test]
     fn vra_alignment_large_state_many_tracts() {
         // 50-tract test — verify no integer overflow or precision issues.
         // Even-indexed tracts have high minority pop, odd-indexed have none.
-        let mvap: Vec<f64> = (0..50).map(|i| if i % 2 == 0 { 100.0 } else { 0.0 }).collect();
+        let mvap: Vec<f64> = (0..50)
+            .map(|i| if i % 2 == 0 { 100.0 } else { 0.0 })
+            .collect();
         let left: Vec<usize> = (0..25).collect();
         let a = vra_alignment(&mvap, &left);
         // left has tracts 0..25: even-indexed = 0,2,4,...,24 → 13 tracts × 100.0 = 1300
@@ -6616,10 +7772,14 @@ mod tests {
         // total mvap = 25 × 100.0 = 2500
         // mvap_left = 1300, mvap_frac = 1300/2500 = 0.52
         // alignment = |0.52 - 0.5| * 2 = 0.04
-        assert!(a >= 0.0 && a <= 1.0,
-            "alignment must be in [0,1] for 50-tract test, got {a}");
-        assert!((a - 0.04).abs() < 1e-9,
-            "expected alignment ~0.04, got {a:.6}");
+        assert!(
+            a >= 0.0 && a <= 1.0,
+            "alignment must be in [0,1] for 50-tract test, got {a}"
+        );
+        assert!(
+            (a - 0.04).abs() < 1e-9,
+            "expected alignment ~0.04, got {a:.6}"
+        );
     }
 
     #[test]
@@ -6627,12 +7787,14 @@ mod tests {
         // Alignment is symmetric: A(left, right) == A(right, left).
         // i.e. swapping the two sides does not change the score.
         let mvap = vec![80.0, 20.0, 10.0, 90.0];
-        let left_indices  = vec![0, 1]; // mvap_left  = 100
+        let left_indices = vec![0, 1]; // mvap_left  = 100
         let right_indices = vec![2, 3]; // mvap_right = 100
         let a_fwd = vra_alignment(&mvap, &left_indices);
         let a_rev = vra_alignment(&mvap, &right_indices);
-        assert!((a_fwd - a_rev).abs() < 1e-9,
-            "alignment must be symmetric: fwd={a_fwd:.6} rev={a_rev:.6}");
+        assert!(
+            (a_fwd - a_rev).abs() < 1e-9,
+            "alignment must be symmetric: fwd={a_fwd:.6} rev={a_rev:.6}"
+        );
     }
 
     // ── Group: bisection_runner edge cases ────────────────────────────────────
@@ -6641,58 +7803,73 @@ mod tests {
     fn split_subgraph_empty_tract_indices_returns_empty() {
         // Empty tract set → (empty, empty) without panic
         let adj = vec![vec![1], vec![0, 2], vec![1]];
-        let vw  = vec![1000i64; 3];
-        let ew  = HashMap::new();
+        let vw = vec![1000i64; 3];
+        let ew = HashMap::new();
         let indices: HashSet<usize> = HashSet::new();
-        let (left, right) = split_subgraph(&adj, &vw, 1, &ew, &indices, 1.005, 100, None, None, None)
-            .expect("empty tract set must not error");
-        assert!(left.is_empty(),  "empty input → left must be empty");
+        let (left, right) =
+            split_subgraph(&adj, &vw, 1, &ew, &indices, 1.005, 100, None, None, None)
+                .expect("empty tract set must not error");
+        assert!(left.is_empty(), "empty input → left must be empty");
         assert!(right.is_empty(), "empty input → right must be empty");
     }
 
     #[test]
     fn split_subgraph_single_tract_returns_all_left() {
         // 1-tract set → (that tract, empty) — already covered by Group 1 but added for completeness
-        let adj  = vec![vec![]];
-        let vw   = vec![5000i64];
-        let ew   = HashMap::new();
+        let adj = vec![vec![]];
+        let vw = vec![5000i64];
+        let ew = HashMap::new();
         let indices: HashSet<usize> = vec![0].into_iter().collect();
-        let (left, right) = split_subgraph(&adj, &vw, 1, &ew, &indices, 1.005, 100, None, None, None)
-            .expect("single-tract split must not error");
-        assert!(left.contains(&0),  "single tract must land in left");
-        assert!(right.is_empty(),   "right must be empty for single-tract input");
+        let (left, right) =
+            split_subgraph(&adj, &vw, 1, &ew, &indices, 1.005, 100, None, None, None)
+                .expect("single-tract split must not error");
+        assert!(left.contains(&0), "single tract must land in left");
+        assert!(
+            right.is_empty(),
+            "right must be empty for single-tract input"
+        );
     }
 
     #[test]
     fn run_all_splits_single_district_no_metis_call() {
         // k=1: every tract gets district 1 without invoking METIS at all.
         let n = 50usize;
-        let adj: Vec<Vec<usize>> = (0..n).map(|i| {
-            let mut nb = vec![];
-            if i > 0   { nb.push(i-1); }
-            if i < n-1 { nb.push(i+1); }
-            nb
-        }).collect();
+        let adj: Vec<Vec<usize>> = (0..n)
+            .map(|i| {
+                let mut nb = vec![];
+                if i > 0 {
+                    nb.push(i - 1);
+                }
+                if i < n - 1 {
+                    nb.push(i + 1);
+                }
+                nb
+            })
+            .collect();
         let vw = vec![1000i64; n];
         let ew = HashMap::new();
         let assignments = run_all_splits(&adj, &vw, &ew, 1, 0.005, 100, None, None)
             .expect("k=1 must succeed without METIS");
         assert_eq!(assignments.len(), n, "all tracts assigned");
-        assert!(assignments.values().all(|&d| d == 1),
-            "k=1: every tract must be in district 1");
+        assert!(
+            assignments.values().all(|&d| d == 1),
+            "k=1: every tract must be in district 1"
+        );
     }
 
     #[test]
     fn run_nway_single_district_shortcut() {
         // k=1 via run_nway_partition: verify same shortcut path works.
         let adj = vec![vec![1], vec![0, 2], vec![1]];
-        let vw  = vec![1000i64; 3];
-        let ew  = HashMap::new();
+        let vw = vec![1000i64; 3];
+        let ew = HashMap::new();
         let assignments = run_nway_partition(&adj, &vw, &ew, 1, 1.005, 100, None)
             .expect("k=1 nway must not invoke METIS");
         assert_eq!(assignments.len(), 3, "all 3 tracts assigned");
-        assert!(assignments.values().all(|&d| d == 1),
-            "k=1: every tract must be district 1");
+        assert!(
+            assignments.values().all(|&d| d == 1),
+            "k=1: every tract must be district 1"
+        );
     }
 
     #[test]
@@ -6700,8 +7877,10 @@ mod tests {
         for ufactor in [1.0_f64, 1.0001, 1.001, 1.003, 1.004, 1.005] {
             let raw = ((ufactor - 1.0) * 1000.0).round() as i32;
             let clamped = raw.clamp(5, 1000);
-            assert!(clamped >= 5,
-                "uf_int must be >= 5 (0.5%% floor), got {clamped} from ufactor={ufactor}");
+            assert!(
+                clamped >= 5,
+                "uf_int must be >= 5 (0.5%% floor), got {clamped} from ufactor={ufactor}"
+            );
         }
     }
 
@@ -6710,11 +7889,19 @@ mod tests {
     fn small_grid(rows: usize, cols: usize) -> (Vec<Vec<usize>>, Vec<i64>) {
         let n = rows * cols;
         let mut adj = vec![vec![]; n];
-        for r in 0..rows { for c in 0..cols {
-            let v = r*cols+c;
-            if c+1<cols { adj[v].push(v+1); adj[v+1].push(v); }
-            if r+1<rows { adj[v].push(v+cols); adj[v+cols].push(v); }
-        }}
+        for r in 0..rows {
+            for c in 0..cols {
+                let v = r * cols + c;
+                if c + 1 < cols {
+                    adj[v].push(v + 1);
+                    adj[v + 1].push(v);
+                }
+                if r + 1 < rows {
+                    adj[v].push(v + cols);
+                    adj[v + cols].push(v);
+                }
+            }
+        }
         let pop = vec![1000i64; n];
         (adj, pop)
     }
@@ -6725,7 +7912,10 @@ mod tests {
         let ew = HashMap::new();
         let result = run_all_splits_percentile(&adj, &pop, &ew, 1, 0.05, 10, 42, 5, 0.5, None)
             .expect("k=1 must succeed");
-        assert!(result.values().all(|&d| d == 1), "k=1: all tracts in district 1");
+        assert!(
+            result.values().all(|&d| d == 1),
+            "k=1: all tracts in district 1"
+        );
     }
 
     #[test]
@@ -6750,7 +7940,10 @@ mod tests {
         let max_plan = run_all_splits_percentile(&adj, &pop, &ew, 2, 0.05, 10, 99, 10, 1.0, None)
             .expect("p=1.0 must succeed");
         let ec_max = count_edge_cuts(&max_plan, &adj);
-        assert!(ec_min <= ec_max, "p=0.0 plan must have fewer or equal cuts than p=1.0");
+        assert!(
+            ec_min <= ec_max,
+            "p=0.0 plan must have fewer or equal cuts than p=1.0"
+        );
     }
 
     #[test]
@@ -6770,9 +7963,22 @@ mod tests {
         let ew = HashMap::new();
         let tracts: HashSet<usize> = (0..16).collect();
         let (left, right) = split_subgraph_bisection_ensemble(
-            &adj, &pop, &ew, &tracts, 1.05, 10, Some(42), 50, 0.5
-        ).expect("bisection ensemble must succeed");
-        assert!(!left.is_empty() && !right.is_empty(), "both components must be non-empty");
+            &adj,
+            &pop,
+            &ew,
+            &tracts,
+            1.05,
+            10,
+            Some(42),
+            None,
+            50,
+            0.5,
+        )
+        .expect("bisection ensemble must succeed");
+        assert!(
+            !left.is_empty() && !right.is_empty(),
+            "both components must be non-empty"
+        );
         let mut all: Vec<usize> = left.iter().chain(right.iter()).copied().collect();
         all.sort_unstable();
         let expected: Vec<usize> = (0..16).collect();
@@ -6786,8 +7992,18 @@ mod tests {
         let ew = HashMap::new();
         let tracts: HashSet<usize> = (0..16).collect();
         let (l_ens, r_ens) = split_subgraph_bisection_ensemble(
-            &adj, &pop, &ew, &tracts, 1.05, 10, Some(42), 20, 0.0
-        ).expect("must succeed");
+            &adj,
+            &pop,
+            &ew,
+            &tracts,
+            1.05,
+            10,
+            Some(42),
+            None,
+            20,
+            0.0,
+        )
+        .expect("must succeed");
         // Just verify it produces a valid partition
         assert_eq!(l_ens.len() + r_ens.len(), 16);
     }
@@ -6797,11 +8013,54 @@ mod tests {
         let (adj, pop) = small_grid(4, 5); // 20 tracts
         let ew = HashMap::new();
         let result = run_all_splits_with_search(
-            &adj, &pop, &ew, 2, 0.05, 10, Some(42), None, Some((0.5, 30))
-        ).expect("bisection-ensemble run_all_splits must succeed");
+            &adj,
+            &pop,
+            &ew,
+            2,
+            0.05,
+            10,
+            Some(42),
+            None,
+            Some((0.5, 30)),
+        )
+        .expect("bisection-ensemble run_all_splits must succeed");
         assert_eq!(result.len(), 20);
         let districts: std::collections::HashSet<usize> = result.values().copied().collect();
         assert_eq!(districts.len(), 2);
+    }
+
+    #[test]
+    fn empty_graph_split_honors_tpwgts_left_target() {
+        let adj = vec![vec![], vec![], vec![], vec![]];
+        let pop = vec![10i64, 10, 10, 70];
+        let ew = HashMap::new();
+        let tracts: HashSet<usize> = (0..4).collect();
+        let (left, right) = split_subgraph(
+            &adj,
+            &pop,
+            1,
+            &ew,
+            &tracts,
+            1.05,
+            10,
+            Some(1),
+            Some(vec![0.30, 0.70]),
+            None,
+        )
+        .expect("empty graph split must succeed");
+        let left_pop: i64 = left.iter().map(|&g| pop[g]).sum();
+        let right_pop: i64 = right.iter().map(|&g| pop[g]).sum();
+        assert_eq!(left_pop, 30);
+        assert_eq!(right_pop, 70);
+    }
+
+    #[test]
+    fn connected_subset_detects_bridge_removal_disconnection() {
+        let adj = vec![vec![1usize], vec![0, 2], vec![1]];
+        let connected: HashSet<usize> = [0, 1, 2].into_iter().collect();
+        let disconnected: HashSet<usize> = [0, 2].into_iter().collect();
+        assert!(is_connected_subset(&adj, &connected));
+        assert!(!is_connected_subset(&adj, &disconnected));
     }
 
     #[test]
@@ -6809,8 +8068,15 @@ mod tests {
         // 4-node path split at midpoint: [0,1] | [2,3]. One cut edge: 1-2.
         let adj = vec![vec![1usize], vec![0, 2], vec![1, 3], vec![2]];
         let mut asgn = HashMap::new();
-        asgn.insert(0, 1); asgn.insert(1, 1); asgn.insert(2, 2); asgn.insert(3, 2);
-        assert_eq!(count_edge_cuts(&asgn, &adj), 1, "4-node path bisection has 1 cut edge");
+        asgn.insert(0, 1);
+        asgn.insert(1, 1);
+        asgn.insert(2, 2);
+        asgn.insert(3, 2);
+        assert_eq!(
+            count_edge_cuts(&asgn, &adj),
+            1,
+            "4-node path bisection has 1 cut edge"
+        );
     }
 
     // ── Simulated Annealing tests ─────────────────────────────────────────────
@@ -6823,12 +8089,15 @@ mod tests {
         let ew = HashMap::new();
         let tracts: HashSet<usize> = (0..16).collect();
         let (left, right) = split_subgraph_sa(
-            &adj, &pop, &ew, &tracts,
-            0.10, // balance_tolerance
+            &adj, &pop, &ew, &tracts, 0.10, // balance_tolerance
             0,    // steps_per_tract = 0 → n_steps = 0
-            0.01, 1e-4, 42
-        ).expect("SA with 0 steps must succeed");
-        assert!(!left.is_empty() && !right.is_empty(), "both sides non-empty");
+            0.01, 1e-4, 42,
+        )
+        .expect("SA with 0 steps must succeed");
+        assert!(
+            !left.is_empty() && !right.is_empty(),
+            "both sides non-empty"
+        );
         assert_eq!(left.len() + right.len(), 16, "all tracts covered");
         assert!(left.is_disjoint(&right), "sides must be disjoint");
     }
@@ -6839,15 +8108,25 @@ mod tests {
         let (adj, pop) = small_grid(4, 4);
         let ew = HashMap::new();
         let tracts: HashSet<usize> = (0..16).collect();
-        let run = |seed: u64| split_subgraph_sa(
-            &adj, &pop, &ew, &tracts, 0.10, 5, 0.01, 1e-4, seed
-        ).expect("SA must succeed");
+        let run = |seed: u64| {
+            split_subgraph_sa(&adj, &pop, &ew, &tracts, 0.10, 5, 0.01, 1e-4, seed)
+                .expect("SA must succeed")
+        };
         let (l1, r1) = run(99);
         let (l2, r2) = run(99);
         // Sort to compare deterministically
-        let mut v1: Vec<usize> = l1.iter().chain(r1.iter()).map(|&v| v + if l1.contains(&v) { 0 } else { 100 }).collect();
-        let mut v2: Vec<usize> = l2.iter().chain(r2.iter()).map(|&v| v + if l2.contains(&v) { 0 } else { 100 }).collect();
-        v1.sort_unstable(); v2.sort_unstable();
+        let mut v1: Vec<usize> = l1
+            .iter()
+            .chain(r1.iter())
+            .map(|&v| v + if l1.contains(&v) { 0 } else { 100 })
+            .collect();
+        let mut v2: Vec<usize> = l2
+            .iter()
+            .chain(r2.iter())
+            .map(|&v| v + if l2.contains(&v) { 0 } else { 100 })
+            .collect();
+        v1.sort_unstable();
+        v2.sort_unstable();
         assert_eq!(v1, v2, "same seed must produce identical partition");
     }
 
@@ -6858,15 +8137,20 @@ mod tests {
         let t0_factor = 0.0_f64;
         let initial_ec = 5usize;
         let t0 = (t0_factor * initial_ec as f64).max(1.0);
-        assert!((t0 - 1.0).abs() < 1e-10, "t0_factor=0.0 must give T_0=1.0, got {t0}");
+        assert!(
+            (t0 - 1.0).abs() < 1e-10,
+            "t0_factor=0.0 must give T_0=1.0, got {t0}"
+        );
         // Also verify it runs without panic
         let (adj, pop) = small_grid(4, 4);
         let ew = HashMap::new();
         let tracts: HashSet<usize> = (0..16).collect();
-        let result = split_subgraph_sa(
-            &adj, &pop, &ew, &tracts, 0.10, 3, 0.0, 1e-4, 42
+        let result = split_subgraph_sa(&adj, &pop, &ew, &tracts, 0.10, 3, 0.0, 1e-4, 42);
+        assert!(
+            result.is_ok(),
+            "SA with t0_factor=0.0 must succeed: {:?}",
+            result.err()
         );
-        assert!(result.is_ok(), "SA with t0_factor=0.0 must succeed: {:?}", result.err());
     }
 
     // L0: greedy mode (t_final == t0 effectively zero temperature) never increases EC.
@@ -6881,23 +8165,32 @@ mod tests {
         let tracts: HashSet<usize> = (0..16).collect();
 
         // Get initial METIS EC for reference
-        let (l_metis, r_metis) = split_subgraph(
-            &adj, &pop, 1, &ew, &tracts, 1.10, 100, Some(42), None, None
-        ).expect("METIS must succeed");
+        let (l_metis, r_metis) =
+            split_subgraph(&adj, &pop, 1, &ew, &tracts, 1.10, 100, Some(42), None, None)
+                .expect("METIS must succeed");
         let mut metis_asgn = HashMap::new();
-        for &v in &l_metis { metis_asgn.insert(v, 1usize); }
-        for &v in &r_metis { metis_asgn.insert(v, 2usize); }
+        for &v in &l_metis {
+            metis_asgn.insert(v, 1usize);
+        }
+        for &v in &r_metis {
+            metis_asgn.insert(v, 2usize);
+        }
         let initial_ec = count_edge_cuts(&metis_asgn, &adj);
 
-        let (l_sa, r_sa) = split_subgraph_sa(
-            &adj, &pop, &ew, &tracts, 0.10, 5, 0.01, 1e-15, 42
-        ).expect("SA greedy must succeed");
+        let (l_sa, r_sa) = split_subgraph_sa(&adj, &pop, &ew, &tracts, 0.10, 5, 0.01, 1e-15, 42)
+            .expect("SA greedy must succeed");
         let mut sa_asgn = HashMap::new();
-        for &v in &l_sa { sa_asgn.insert(v, 1usize); }
-        for &v in &r_sa { sa_asgn.insert(v, 2usize); }
+        for &v in &l_sa {
+            sa_asgn.insert(v, 1usize);
+        }
+        for &v in &r_sa {
+            sa_asgn.insert(v, 2usize);
+        }
         let sa_ec = count_edge_cuts(&sa_asgn, &adj);
-        assert!(sa_ec <= initial_ec,
-            "greedy SA (t_final=1e-15) must not increase EC: initial={initial_ec} sa={sa_ec}");
+        assert!(
+            sa_ec <= initial_ec,
+            "greedy SA (t_final=1e-15) must not increase EC: initial={initial_ec} sa={sa_ec}"
+        );
     }
 
     // L1: SA produces a valid 2-partition on a 4x4 grid (contiguity + balance).
@@ -6906,19 +8199,23 @@ mod tests {
         let (adj, pop) = small_grid(4, 4);
         let ew = HashMap::new();
         let tracts: HashSet<usize> = (0..16).collect();
-        let (left, right) = split_subgraph_sa(
-            &adj, &pop, &ew, &tracts, 0.10, 10, 0.01, 1e-4, 777
-        ).expect("SA 4x4 must succeed");
+        let (left, right) = split_subgraph_sa(&adj, &pop, &ew, &tracts, 0.10, 10, 0.01, 1e-4, 777)
+            .expect("SA 4x4 must succeed");
 
         // Completeness and disjointness
         assert_eq!(left.len() + right.len(), 16, "all 16 tracts covered");
         assert!(left.is_disjoint(&right), "sides disjoint");
-        assert!(!left.is_empty() && !right.is_empty(), "both sides non-empty");
+        assert!(
+            !left.is_empty() && !right.is_empty(),
+            "both sides non-empty"
+        );
 
         // Contiguity: BFS check for each side
         let check_connected = |side: &HashSet<usize>| -> bool {
             let members: Vec<usize> = side.iter().copied().collect();
-            if members.len() <= 1 { return true; }
+            if members.len() <= 1 {
+                return true;
+            }
             let mut visited = std::collections::HashSet::new();
             let mut queue = std::collections::VecDeque::new();
             queue.push_back(members[0]);
@@ -6933,14 +8230,17 @@ mod tests {
             }
             members.iter().all(|v| visited.contains(v))
         };
-        assert!(check_connected(&left),  "left side must be contiguous");
+        assert!(check_connected(&left), "left side must be contiguous");
         assert!(check_connected(&right), "right side must be contiguous");
 
         // Balance: each side within 10% of half total pop
         let total_pop: i64 = pop.iter().sum();
         let left_pop: i64 = left.iter().map(|&v| pop[v]).sum();
         let balance = (left_pop as f64 - total_pop as f64 / 2.0).abs() / total_pop as f64;
-        assert!(balance <= 0.10, "SA balance must be within 10%: {balance:.3}");
+        assert!(
+            balance <= 0.10,
+            "SA balance must be within 10%: {balance:.3}"
+        );
     }
 
     // L1: SA result EC <= initial METIS EC + small_margin (SA should not seriously worsen EC).
@@ -6951,27 +8251,36 @@ mod tests {
         let tracts: HashSet<usize> = (0..16).collect();
 
         // METIS baseline
-        let (l_m, r_m) = split_subgraph(
-            &adj, &pop, 1, &ew, &tracts, 1.10, 100, Some(42), None, None
-        ).expect("METIS baseline must succeed");
+        let (l_m, r_m) =
+            split_subgraph(&adj, &pop, 1, &ew, &tracts, 1.10, 100, Some(42), None, None)
+                .expect("METIS baseline must succeed");
         let mut m_asgn = HashMap::new();
-        for &v in &l_m { m_asgn.insert(v, 1usize); }
-        for &v in &r_m { m_asgn.insert(v, 2usize); }
+        for &v in &l_m {
+            m_asgn.insert(v, 1usize);
+        }
+        for &v in &r_m {
+            m_asgn.insert(v, 2usize);
+        }
         let metis_ec = count_edge_cuts(&m_asgn, &adj);
 
         // SA with enough steps to make progress
-        let (l_sa, r_sa) = split_subgraph_sa(
-            &adj, &pop, &ew, &tracts, 0.10, 20, 0.01, 1e-4, 42
-        ).expect("SA must succeed");
+        let (l_sa, r_sa) = split_subgraph_sa(&adj, &pop, &ew, &tracts, 0.10, 20, 0.01, 1e-4, 42)
+            .expect("SA must succeed");
         let mut sa_asgn = HashMap::new();
-        for &v in &l_sa { sa_asgn.insert(v, 1usize); }
-        for &v in &r_sa { sa_asgn.insert(v, 2usize); }
+        for &v in &l_sa {
+            sa_asgn.insert(v, 1usize);
+        }
+        for &v in &r_sa {
+            sa_asgn.insert(v, 2usize);
+        }
         let sa_ec = count_edge_cuts(&sa_asgn, &adj);
 
         // SA may equal METIS (especially on a tight grid), but must not be >> METIS.
         // Allow up to +2 edge cuts as "small margin" for stochastic variance.
-        assert!(sa_ec <= metis_ec + 2,
-            "SA EC should not exceed METIS EC + 2: metis={metis_ec} sa={sa_ec}");
+        assert!(
+            sa_ec <= metis_ec + 2,
+            "SA EC should not exceed METIS EC + 2: metis={metis_ec} sa={sa_ec}"
+        );
     }
 
     // L2 (ignored): SA on North Carolina should improve or equal compactness vs METIS.
@@ -6992,22 +8301,29 @@ mod tests {
         let (adj, pop) = small_grid(4, 4);
         let tracts: HashSet<usize> = (0..16).collect();
         let (left, right) = split_subgraph_cvd(
-            &adj, &pop, &tracts,
-            2,    // k=2 (bisection)
+            &adj, &pop, &tracts, 2,    // k=2 (bisection)
             0.10, // balance_tolerance
             20,   // n_iter
             42,   // base_seed
-        ).expect("CVD 4x4 must succeed");
+        )
+        .expect("CVD 4x4 must succeed");
 
         // Completeness
         assert_eq!(left.len() + right.len(), 16, "all 16 tracts covered");
         assert!(left.is_disjoint(&right), "left and right must be disjoint");
-        assert!(!left.is_empty() && !right.is_empty(), "both sides must be non-empty");
+        assert!(
+            !left.is_empty() && !right.is_empty(),
+            "both sides must be non-empty"
+        );
 
         // All tracts in 0..16
         let mut all: Vec<usize> = left.iter().chain(right.iter()).copied().collect();
         all.sort_unstable();
-        assert_eq!(all, (0..16usize).collect::<Vec<_>>(), "must partition exactly 0..16");
+        assert_eq!(
+            all,
+            (0..16usize).collect::<Vec<_>>(),
+            "must partition exactly 0..16"
+        );
     }
 
     // L0: same base_seed -> identical result (determinism).
@@ -7016,9 +8332,9 @@ mod tests {
         let (adj, pop) = small_grid(4, 4);
         let tracts: HashSet<usize> = (0..16).collect();
 
-        let run = |seed: u64| split_subgraph_cvd(
-            &adj, &pop, &tracts, 2, 0.10, 20, seed
-        ).expect("CVD must succeed");
+        let run = |seed: u64| {
+            split_subgraph_cvd(&adj, &pop, &tracts, 2, 0.10, 20, seed).expect("CVD must succeed")
+        };
 
         let (l1, r1) = run(77);
         let (l2, r2) = run(77);
@@ -7045,10 +8361,12 @@ mod tests {
         let tracts: HashSet<usize> = (0..16).collect();
         // We test by verifying the partition is non-trivial (not all one side)
         // which implies seeds[0] != seeds[1] since equal seeds → identical Voronoi → all assigned to 0.
-        let (left, right) = split_subgraph_cvd(
-            &adj, &pop, &tracts, 2, 0.10, 20, 42
-        ).expect("CVD must succeed");
-        assert!(!right.is_empty(), "right must be non-empty (seeds must be distinct)");
+        let (left, right) =
+            split_subgraph_cvd(&adj, &pop, &tracts, 2, 0.10, 20, 42).expect("CVD must succeed");
+        assert!(
+            !right.is_empty(),
+            "right must be non-empty (seeds must be distinct)"
+        );
     }
 
     // L0: n_iter=0 returns the initial Voronoi assignment without crashing.
@@ -7057,9 +8375,17 @@ mod tests {
         let (adj, pop) = small_grid(4, 4);
         let tracts: HashSet<usize> = (0..16).collect();
         let result = split_subgraph_cvd(&adj, &pop, &tracts, 2, 0.10, 0, 42);
-        assert!(result.is_ok(), "n_iter=0 must not panic: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "n_iter=0 must not panic: {:?}",
+            result.err()
+        );
         let (left, right) = result.unwrap();
-        assert_eq!(left.len() + right.len(), 16, "all tracts covered even with n_iter=0");
+        assert_eq!(
+            left.len() + right.len(),
+            16,
+            "all tracts covered even with n_iter=0"
+        );
     }
 
     // L1: CVD on a 4x4 grid with k=2 produces a contiguous split in <= 20 iterations.
@@ -7070,9 +8396,8 @@ mod tests {
         // Run with n_iter=20 and verify the result is a valid partition.
         // We can't directly inspect iteration count from the public API (iters_done is internal),
         // so we verify the algorithm terminates and produces a valid result.
-        let (left, right) = split_subgraph_cvd(
-            &adj, &pop, &tracts, 2, 0.10, 20, 99
-        ).expect("CVD must succeed within 20 iterations");
+        let (left, right) = split_subgraph_cvd(&adj, &pop, &tracts, 2, 0.10, 20, 99)
+            .expect("CVD must succeed within 20 iterations");
         assert_eq!(left.len() + right.len(), 16);
         assert!(left.is_disjoint(&right));
     }
@@ -7083,15 +8408,20 @@ mod tests {
         let (adj, pop) = small_grid(4, 4);
         let total_pop: i64 = pop.iter().sum();
         let tracts: HashSet<usize> = (0..16).collect();
-        let (left, right) = split_subgraph_cvd(
-            &adj, &pop, &tracts, 2, 0.10, 20, 42
-        ).expect("CVD must succeed");
+        let (left, right) =
+            split_subgraph_cvd(&adj, &pop, &tracts, 2, 0.10, 20, 42).expect("CVD must succeed");
         let left_pop: i64 = left.iter().map(|&v| pop[v]).sum();
         let right_pop: i64 = right.iter().map(|&v| pop[v]).sum();
         let imbalance_l = (left_pop as f64 - total_pop as f64 / 2.0).abs() / total_pop as f64;
         let imbalance_r = (right_pop as f64 - total_pop as f64 / 2.0).abs() / total_pop as f64;
-        assert!(imbalance_l <= 0.10, "left imbalance {imbalance_l:.3} must be within 10%");
-        assert!(imbalance_r <= 0.10, "right imbalance {imbalance_r:.3} must be within 10%");
+        assert!(
+            imbalance_l <= 0.10,
+            "left imbalance {imbalance_l:.3} must be within 10%"
+        );
+        assert!(
+            imbalance_r <= 0.10,
+            "right imbalance {imbalance_r:.3} must be within 10%"
+        );
     }
 
     // L0: CVD prefix constant is "CVD_INIT_" exactly (audit chain invariant).
@@ -7107,8 +8437,11 @@ mod tests {
         h.update(0u64.to_le_bytes());
         let d = h.finalize();
         let expected = u64::from_le_bytes(d[..8].try_into().unwrap());
-        assert_eq!(derive_cvd_seed(0, ""), expected,
-            "derive_cvd_seed(0, '') must equal SHA-256('CVD_INIT__' || 0:le64) first 8 bytes");
+        assert_eq!(
+            derive_cvd_seed(0, ""),
+            expected,
+            "derive_cvd_seed(0, '') must equal SHA-256('CVD_INIT__' || 0:le64) first 8 bytes"
+        );
         // Verify prefix: the prefix must be exactly "CVD_INIT_"
         let h2: Vec<u8> = {
             let mut h = Sha256::new();
@@ -7126,12 +8459,15 @@ mod tests {
     // L0: cvd_structure_mode_parses — "centroidal-voronoi" parses as PartitionMode::CentroidalVoronoi.
     #[test]
     fn cvd_structure_mode_parses() {
-        use clap::ValueEnum;
         use crate::args::PartitionMode;
+        use clap::ValueEnum;
         let parsed = PartitionMode::from_str("centroidal-voronoi", true)
             .expect("PartitionMode must parse 'centroidal-voronoi'");
-        assert!(matches!(parsed, PartitionMode::CentroidalVoronoi),
-            "Expected CentroidalVoronoi, got {:?}", parsed);
+        assert!(
+            matches!(parsed, PartitionMode::CentroidalVoronoi),
+            "Expected CentroidalVoronoi, got {:?}",
+            parsed
+        );
     }
 
     // L2 (ignored): CVD on NC — compare mean Polsby-Popper vs single METIS call.
@@ -7164,18 +8500,24 @@ mod tests {
         let (adj, pop) = small_grid(4, 4);
         let centroids = grid4x4_centroids();
         let tracts: HashSet<usize> = (0..16).collect();
-        let (left, right) = split_subgraph_cvd_geographic(
-            &adj, &pop, &centroids, &tracts,
-            0.10, 20, 42, "root",
-        ).expect("CVD geographic 4x4 must succeed");
+        let (left, right) =
+            split_subgraph_cvd_geographic(&adj, &pop, &centroids, &tracts, 0.10, 20, 42, "root")
+                .expect("CVD geographic 4x4 must succeed");
 
         assert_eq!(left.len() + right.len(), 16, "all 16 tracts covered");
         assert!(left.is_disjoint(&right), "left and right must be disjoint");
-        assert!(!left.is_empty() && !right.is_empty(), "both sides non-empty");
+        assert!(
+            !left.is_empty() && !right.is_empty(),
+            "both sides non-empty"
+        );
 
         let mut all: Vec<usize> = left.iter().chain(right.iter()).copied().collect();
         all.sort_unstable();
-        assert_eq!(all, (0..16usize).collect::<Vec<_>>(), "must partition exactly 0..16");
+        assert_eq!(
+            all,
+            (0..16usize).collect::<Vec<_>>(),
+            "must partition exactly 0..16"
+        );
     }
 
     // L0: same seed and node_path -> identical result (determinism).
@@ -7185,19 +8527,24 @@ mod tests {
         let centroids = grid4x4_centroids();
         let tracts: HashSet<usize> = (0..16).collect();
 
-        let run = || split_subgraph_cvd_geographic(
-            &adj, &pop, &centroids, &tracts, 0.10, 20, 77, "node01",
-        ).expect("must succeed");
+        let run = || {
+            split_subgraph_cvd_geographic(&adj, &pop, &centroids, &tracts, 0.10, 20, 77, "node01")
+                .expect("must succeed")
+        };
 
         let (l1, r1) = run();
         let (l2, r2) = run();
 
-        let mut s1: Vec<usize> = l1.iter().copied().collect(); s1.sort_unstable();
-        let mut s2: Vec<usize> = l2.iter().copied().collect(); s2.sort_unstable();
+        let mut s1: Vec<usize> = l1.iter().copied().collect();
+        s1.sort_unstable();
+        let mut s2: Vec<usize> = l2.iter().copied().collect();
+        s2.sort_unstable();
         assert_eq!(s1, s2, "same seed must give identical left set");
 
-        let mut t1: Vec<usize> = r1.iter().copied().collect(); t1.sort_unstable();
-        let mut t2: Vec<usize> = r2.iter().copied().collect(); t2.sort_unstable();
+        let mut t1: Vec<usize> = r1.iter().copied().collect();
+        t1.sort_unstable();
+        let mut t2: Vec<usize> = r2.iter().copied().collect();
+        t2.sort_unstable();
         assert_eq!(t1, t2, "same seed must give identical right set");
     }
 
@@ -7207,18 +8554,25 @@ mod tests {
         // SHA-256("CVD_GEO_INIT_"...) != SHA-256("CVD_INIT_"...) for same inputs
         let geo_seed = derive_cvd_geo_seed(42, "root");
         let phase1_seed = derive_cvd_seed(42, "root");
-        assert_ne!(geo_seed, phase1_seed,
-            "CVD_GEO_INIT_ prefix must produce different seeds than CVD_INIT_");
+        assert_ne!(
+            geo_seed, phase1_seed,
+            "CVD_GEO_INIT_ prefix must produce different seeds than CVD_INIT_"
+        );
     }
 
     // L0: albers_project(-96, 37.5): x near 0 (central meridian), y finite and positive.
     #[test]
     fn albers_project_central_meridian_near_zero() {
         let (x, y) = albers_project(-96.0, 37.5);
-        assert!(x.abs() < 1000.0,
-            "x at central meridian must be within 1km of 0, got {x}");
+        assert!(
+            x.abs() < 1000.0,
+            "x at central meridian must be within 1km of 0, got {x}"
+        );
         assert!(y.is_finite(), "y must be finite, got {y}");
-        assert!(y >= 0.0, "y must be non-negative (positive northing), got {y}");
+        assert!(
+            y >= 0.0,
+            "y must be non-negative (positive northing), got {y}"
+        );
     }
 
     // L0: empty centroids with Geographic metric returns Err containing "centroid".
@@ -7228,12 +8582,21 @@ mod tests {
         let empty_centroids: Vec<(f64, f64)> = vec![];
         let tracts: HashSet<usize> = (0..16).collect();
         let result = split_subgraph_cvd_geographic(
-            &adj, &pop, &empty_centroids, &tracts, 0.10, 20, 42, "root",
+            &adj,
+            &pop,
+            &empty_centroids,
+            &tracts,
+            0.10,
+            20,
+            42,
+            "root",
         );
         assert!(result.is_err(), "empty centroids must return Err");
         let err = result.unwrap_err();
-        assert!(err.contains("centroid"),
-            "error must mention centroid, got: {err}");
+        assert!(
+            err.contains("centroid"),
+            "error must mention centroid, got: {err}"
+        );
     }
 
     // L2 (ignored): NC geographic CVD vs graph-distance CVD -- Phase 2 paper comparison.
@@ -7251,18 +8614,20 @@ mod tests {
     fn grid8_adj() -> Vec<Vec<usize>> {
         // 0-1-2-3 top row, 4-5-6-7 bottom row; vertical edges 0-4, 1-5, 2-6, 3-7.
         vec![
-            vec![1, 4],       // 0
-            vec![0, 2, 5],    // 1
-            vec![1, 3, 6],    // 2
-            vec![2, 7],       // 3
-            vec![0, 5],       // 4
-            vec![4, 1, 6],    // 5
-            vec![5, 2, 7],    // 6
-            vec![6, 3],       // 7
+            vec![1, 4],    // 0
+            vec![0, 2, 5], // 1
+            vec![1, 3, 6], // 2
+            vec![2, 7],    // 3
+            vec![0, 5],    // 4
+            vec![4, 1, 6], // 5
+            vec![5, 2, 7], // 6
+            vec![6, 3],    // 7
         ]
     }
 
-    fn grid8_pop() -> Vec<i64> { vec![1000i64; 8] }
+    fn grid8_pop() -> Vec<i64> {
+        vec![1000i64; 8]
+    }
 
     // L0: n_bursts=0 returns the initial plan unchanged (no ReCom at all).
     #[test]
@@ -7300,10 +8665,10 @@ mod tests {
         let adj = grid8_adj();
         let pop = grid8_pop();
         let ew = HashMap::new();
-        let (asgn_min, _, _) = run_short_burst(&adj, &pop, &ew, 2, 0.05, 10, 77, 5, 10, 0.0)
-            .expect("p=0.0");
-        let (asgn_max, _, _) = run_short_burst(&adj, &pop, &ew, 2, 0.05, 10, 77, 5, 10, 1.0)
-            .expect("p=1.0");
+        let (asgn_min, _, _) =
+            run_short_burst(&adj, &pop, &ew, 2, 0.05, 10, 77, 5, 10, 0.0).expect("p=0.0");
+        let (asgn_max, _, _) =
+            run_short_burst(&adj, &pop, &ew, 2, 0.05, 10, 77, 5, 10, 1.0).expect("p=1.0");
         // Both are valid plans.
         assert_eq!(asgn_min.len(), 8);
         assert_eq!(asgn_max.len(), 8);
@@ -7319,10 +8684,10 @@ mod tests {
         let adj = grid8_adj();
         let pop = grid8_pop();
         let ew = HashMap::new();
-        let (a1, s1, i1) = run_short_burst(&adj, &pop, &ew, 2, 0.05, 10, 42, 10, 5, 0.3)
-            .expect("run 1");
-        let (a2, s2, i2) = run_short_burst(&adj, &pop, &ew, 2, 0.05, 10, 42, 10, 5, 0.3)
-            .expect("run 2");
+        let (a1, s1, i1) =
+            run_short_burst(&adj, &pop, &ew, 2, 0.05, 10, 42, 10, 5, 0.3).expect("run 1");
+        let (a2, s2, i2) =
+            run_short_burst(&adj, &pop, &ew, 2, 0.05, 10, 42, 10, 5, 0.3).expect("run 2");
         assert_eq!(a1, a2, "same seed must give same assignment");
         assert_eq!(s1, s2, "same seed must give same burst seeds");
         assert_eq!(i1, i2, "same seed must give same selected burst index");
@@ -7351,12 +8716,17 @@ mod tests {
         let pop = grid8_pop();
         let ew = HashMap::new();
         // burst_length=0: chain steps 0 times, endpoint == input == initial plan for all bursts.
-        let (asgn_p0, seeds_p0, idx_p0) = run_short_burst(&adj, &pop, &ew, 2, 0.05, 10, 13, 0, 5, 0.0)
-            .expect("burst_length=0 p=0.0");
-        let (asgn_p1, seeds_p1, idx_p1) = run_short_burst(&adj, &pop, &ew, 2, 0.05, 10, 13, 0, 5, 1.0)
-            .expect("burst_length=0 p=1.0");
+        let (asgn_p0, seeds_p0, idx_p0) =
+            run_short_burst(&adj, &pop, &ew, 2, 0.05, 10, 13, 0, 5, 0.0)
+                .expect("burst_length=0 p=0.0");
+        let (asgn_p1, seeds_p1, idx_p1) =
+            run_short_burst(&adj, &pop, &ew, 2, 0.05, 10, 13, 0, 5, 1.0)
+                .expect("burst_length=0 p=1.0");
         // All endpoints are the same plan, so both p=0.0 and p=1.0 select the same assignment.
-        assert_eq!(asgn_p0, asgn_p1, "with burst_length=0 all endpoints are the same plan");
+        assert_eq!(
+            asgn_p0, asgn_p1,
+            "with burst_length=0 all endpoints are the same plan"
+        );
         assert_eq!(seeds_p0, seeds_p1, "same base seed means same burst seeds");
         // Tie-breaking by burst_idx ASC: rank 0 = burst 0, rank 4 = burst 4.
         assert_eq!(idx_p0, 0, "p=0.0 with equal ECs must select burst 0");
@@ -7421,7 +8791,10 @@ mod tests {
         let ew = HashMap::new();
         let (asgn, visited_count, rank) = run_flip_chain(&adj, &pop, &ew, 2, 0.05, 0, 42, 0.0)
             .expect("flip_chain must succeed with 0 steps");
-        assert_eq!(visited_count, 1, "0 steps => visited has 1 entry (initial plan)");
+        assert_eq!(
+            visited_count, 1,
+            "0 steps => visited has 1 entry (initial plan)"
+        );
         assert_eq!(rank, 0, "only one plan, rank must be 0");
         assert_eq!(asgn.len(), 16, "all 16 tracts assigned");
         let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
@@ -7434,9 +8807,12 @@ mod tests {
         let (adj, pop) = grid_4x4();
         let ew = HashMap::new();
         // Even with 0 steps, visited must be >= 1.
-        let (_, visited_count, _) = run_flip_chain(&adj, &pop, &ew, 2, 0.05, 0, 99, 0.0)
-            .expect("flip_chain must succeed");
-        assert!(visited_count >= 1, "visited list must contain at least the initial plan");
+        let (_, visited_count, _) =
+            run_flip_chain(&adj, &pop, &ew, 2, 0.05, 0, 99, 0.0).expect("flip_chain must succeed");
+        assert!(
+            visited_count >= 1,
+            "visited list must contain at least the initial plan"
+        );
     }
 
     // L0: p=0.0 selects plan with EC <= plan selected by p=1.0 (sort ascending).
@@ -7444,14 +8820,16 @@ mod tests {
     fn flip_p0_le_flip_p1_ec() {
         let (adj, pop) = grid_4x4();
         let ew = HashMap::new();
-        let (asgn_p0, _, _) = run_flip_chain(&adj, &pop, &ew, 2, 0.1, 200, 42, 0.0)
-            .expect("flip p=0.0 must succeed");
-        let (asgn_p1, _, _) = run_flip_chain(&adj, &pop, &ew, 2, 0.1, 200, 42, 1.0)
-            .expect("flip p=1.0 must succeed");
+        let (asgn_p0, _, _) =
+            run_flip_chain(&adj, &pop, &ew, 2, 0.1, 200, 42, 0.0).expect("flip p=0.0 must succeed");
+        let (asgn_p1, _, _) =
+            run_flip_chain(&adj, &pop, &ew, 2, 0.1, 200, 42, 1.0).expect("flip p=1.0 must succeed");
         let ec_p0 = count_edge_cuts(&asgn_p0, &adj);
         let ec_p1 = count_edge_cuts(&asgn_p1, &adj);
-        assert!(ec_p0 <= ec_p1,
-            "p=0.0 (min) EC={ec_p0} must be <= p=1.0 (max) EC={ec_p1}");
+        assert!(
+            ec_p0 <= ec_p1,
+            "p=0.0 (min) EC={ec_p0} must be <= p=1.0 (max) EC={ec_p1}"
+        );
     }
 
     // L0: determinism — same seed produces the same result.
@@ -7481,7 +8859,10 @@ mod tests {
         let ew = HashMap::new();
         let (asgn, visited_count, _) = run_flip_chain(&adj, &pop, &ew, 2, 0.0, 100, 42, 0.0)
             .expect("flip_chain on isolated graph must succeed");
-        assert_eq!(visited_count, 1, "no boundary tracts -> no flips -> only initial plan");
+        assert_eq!(
+            visited_count, 1,
+            "no boundary tracts -> no flips -> only initial plan"
+        );
         assert_eq!(asgn.len(), 2);
     }
 
@@ -7495,7 +8876,10 @@ mod tests {
         assert_eq!(asgn.len(), 16, "all 16 tracts must be assigned");
         for i in 0..16 {
             let d = asgn[&i];
-            assert!(d >= 1 && d <= 4, "district {d} out of range [1,4] for tract {i}");
+            assert!(
+                d >= 1 && d <= 4,
+                "district {d} out of range [1,4] for tract {i}"
+            );
         }
         // No duplicate assignments (each tract assigned exactly once).
         let unique: std::collections::HashSet<usize> = asgn.keys().copied().collect();
@@ -7515,7 +8899,9 @@ mod tests {
         for d in &districts {
             let members: Vec<usize> = (0..n).filter(|&v| asgn[&v] == *d).collect();
             assert!(!members.is_empty(), "district {d} must be non-empty");
-            if members.len() == 1 { continue; }
+            if members.len() == 1 {
+                continue;
+            }
             let start = members[0];
             let mut visited_bfs = vec![false; n];
             visited_bfs[start] = true;
@@ -7530,7 +8916,10 @@ mod tests {
                 }
             }
             for &v in &members {
-                assert!(visited_bfs[v], "district {d}: tract {v} is disconnected from the rest");
+                assert!(
+                    visited_bfs[v],
+                    "district {d}: tract {v} is disconnected from the rest"
+                );
             }
         }
     }
@@ -7646,12 +9035,14 @@ mod tests {
     /// Build a synthetic geoid map for an n-tract grid split into two counties.
     /// Tracts 0..(n/2) -> county "37001", tracts (n/2)..n -> county "37003".
     fn synthetic_geoids(n: usize) -> std::collections::HashMap<usize, String> {
-        (0..n).map(|i| {
-            let county = if i < n / 2 { "37001" } else { "37003" };
-            let tract_num = i % (n / 2);
-            let geoid = format!("{county}{tract_num:06}");
-            (i, geoid)
-        }).collect()
+        (0..n)
+            .map(|i| {
+                let county = if i < n / 2 { "37001" } else { "37003" };
+                let tract_num = i % (n / 2);
+                let geoid = format!("{county}{tract_num:06}");
+                (i, geoid)
+            })
+            .collect()
     }
 
     // L0: missing geoids must return Err containing "GEOID".
@@ -7659,9 +9050,26 @@ mod tests {
     fn multiscale_missing_geoids_returns_err() {
         let (adj, pop) = small_grid(4, 4);
         let ew = HashMap::new();
-        let result = run_multiscale(&adj, &pop, &ew, 2, 0.1, 10, 42, 100, 0.3, 0.0,
-            None, MultiscaleFineLevel::Tract, "county", None);
-        assert!(result.is_err(), "run_multiscale with no geoids must return Err");
+        let result = run_multiscale(
+            &adj,
+            &pop,
+            &ew,
+            2,
+            0.1,
+            10,
+            42,
+            100,
+            0.3,
+            0.0,
+            None,
+            MultiscaleFineLevel::Tract,
+            "county",
+            None,
+        );
+        assert!(
+            result.is_err(),
+            "run_multiscale with no geoids must return Err"
+        );
         let msg = result.unwrap_err();
         assert!(
             msg.contains("GEOID"),
@@ -7675,12 +9083,31 @@ mod tests {
         let (adj, pop) = small_grid(4, 4);
         let ew = HashMap::new();
         let geoids = synthetic_geoids(16);
-        let result = run_multiscale(&adj, &pop, &ew, 2, 0.10, 10, 42, 50, 0.3, 0.0,
-            Some(&geoids), MultiscaleFineLevel::BlockGroup, "tract", None);
-        assert!(result.is_err(), "run_multiscale with fine=bg and no bg_graph must return Err");
+        let result = run_multiscale(
+            &adj,
+            &pop,
+            &ew,
+            2,
+            0.10,
+            10,
+            42,
+            50,
+            0.3,
+            0.0,
+            Some(&geoids),
+            MultiscaleFineLevel::BlockGroup,
+            "tract",
+            None,
+        );
+        assert!(
+            result.is_err(),
+            "run_multiscale with fine=bg and no bg_graph must return Err"
+        );
         let msg = result.unwrap_err();
         assert!(
-            msg.contains("block-group adjacency") || msg.contains("block_group") || msg.contains("bg"),
+            msg.contains("block-group adjacency")
+                || msg.contains("block_group")
+                || msg.contains("bg"),
             "error must mention block-group adjacency, got: {msg}"
         );
     }
@@ -7691,8 +9118,22 @@ mod tests {
         let (adj, pop) = small_grid(4, 4);
         let ew = HashMap::new();
         let geoids = synthetic_geoids(16);
-        let result = run_multiscale(&adj, &pop, &ew, 2, 0.10, 10, 42, 50, 0.3, 0.0,
-            Some(&geoids), MultiscaleFineLevel::Tract, "county", None);
+        let result = run_multiscale(
+            &adj,
+            &pop,
+            &ew,
+            2,
+            0.10,
+            10,
+            42,
+            50,
+            0.3,
+            0.0,
+            Some(&geoids),
+            MultiscaleFineLevel::Tract,
+            "county",
+            None,
+        );
         let asgn = result.expect("multiscale Option B must succeed on 4x4 grid");
         assert_eq!(asgn.len(), 16, "all 16 tracts must be assigned");
         let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
@@ -7708,9 +9149,25 @@ mod tests {
         let (adj, pop) = small_grid(4, 4);
         let ew = HashMap::new();
         let geoids = synthetic_geoids(16);
-        let run = || run_multiscale(&adj, &pop, &ew, 2, 0.10, 10, 99, 50, 0.3, 0.5,
-            Some(&geoids), MultiscaleFineLevel::Tract, "county", None)
-            .expect("multiscale Option B must succeed");
+        let run = || {
+            run_multiscale(
+                &adj,
+                &pop,
+                &ew,
+                2,
+                0.10,
+                10,
+                99,
+                50,
+                0.3,
+                0.5,
+                Some(&geoids),
+                MultiscaleFineLevel::Tract,
+                "county",
+                None,
+            )
+            .expect("multiscale Option B must succeed")
+        };
         let a1 = run();
         let a2 = run();
         assert_eq!(a1, a2, "same seed must produce identical assignment");
@@ -7722,9 +9179,25 @@ mod tests {
         let (adj, pop) = small_grid(4, 4);
         let ew = HashMap::new();
         let geoids = synthetic_geoids(16);
-        let run = || run_multiscale(&adj, &pop, &ew, 2, 0.10, 10, 99, 50, 0.3, 0.5,
-            Some(&geoids), MultiscaleFineLevel::Tract, "county", None)
-            .expect("multiscale Option B must succeed");
+        let run = || {
+            run_multiscale(
+                &adj,
+                &pop,
+                &ew,
+                2,
+                0.10,
+                10,
+                99,
+                50,
+                0.3,
+                0.5,
+                Some(&geoids),
+                MultiscaleFineLevel::Tract,
+                "county",
+                None,
+            )
+            .expect("multiscale Option B must succeed")
+        };
         let a1 = run();
         let a2 = run();
         assert_eq!(a1, a2, "same seed must produce identical assignment");
@@ -7735,17 +9208,21 @@ mod tests {
     fn derive_partition_bg_to_tract_synthetic() {
         use crate::adjacency_loader::derive_partition;
         // 12 BG geoids (12 chars each): 3 groups of 4, mapping to 3 tracts
-        let bg_geoids: std::collections::HashMap<usize, String> = (0..12).map(|i| {
-            // BG 0-3 -> tract "37001000100"; BG 4-7 -> "37001000200"; BG 8-11 -> "37001000300"
-            let tract_num = i / 4 + 1;
-            let bg_num = i % 4 + 1;
-            let geoid = format!("37001{tract_num:06}{bg_num}");
-            (i, geoid)
-        }).collect();
-        let tract_geoids: std::collections::HashMap<usize, String> = (0..3).map(|t| {
-            let geoid = format!("37001{:06}", t + 1);
-            (t, geoid)
-        }).collect();
+        let bg_geoids: std::collections::HashMap<usize, String> = (0..12)
+            .map(|i| {
+                // BG 0-3 -> tract "37001000100"; BG 4-7 -> "37001000200"; BG 8-11 -> "37001000300"
+                let tract_num = i / 4 + 1;
+                let bg_num = i % 4 + 1;
+                let geoid = format!("37001{tract_num:06}{bg_num}");
+                (i, geoid)
+            })
+            .collect();
+        let tract_geoids: std::collections::HashMap<usize, String> = (0..3)
+            .map(|t| {
+                let geoid = format!("37001{:06}", t + 1);
+                (t, geoid)
+            })
+            .collect();
         let partition = derive_partition(&bg_geoids, &tract_geoids)
             .expect("derive_partition BG->tract must succeed");
         assert_eq!(partition.len(), 12, "partition must have 12 entries");
@@ -7754,7 +9231,8 @@ mod tests {
             let expected_tract = i / 4;
             assert_eq!(
                 partition[i], expected_tract,
-                "BG {i} must map to tract {expected_tract}, got {}", partition[i]
+                "BG {i} must map to tract {expected_tract}, got {}",
+                partition[i]
             );
         }
     }
@@ -7764,15 +9242,36 @@ mod tests {
     fn multiscale_fine_coarse_validation() {
         use crate::runner::validate_multiscale_levels;
         // Valid orderings
-        assert!(validate_multiscale_levels("bg", "tract").is_ok(), "(bg, tract) must be valid");
-        assert!(validate_multiscale_levels("bg", "county").is_ok(), "(bg, county) must be valid");
-        assert!(validate_multiscale_levels("tract", "county").is_ok(), "(tract, county) must be valid");
+        assert!(
+            validate_multiscale_levels("bg", "tract").is_ok(),
+            "(bg, tract) must be valid"
+        );
+        assert!(
+            validate_multiscale_levels("bg", "county").is_ok(),
+            "(bg, county) must be valid"
+        );
+        assert!(
+            validate_multiscale_levels("tract", "county").is_ok(),
+            "(tract, county) must be valid"
+        );
         // Invalid orderings
-        assert!(validate_multiscale_levels("county", "bg").is_err(), "(county, bg) must be invalid");
-        assert!(validate_multiscale_levels("tract", "tract").is_err(), "(tract, tract) must be invalid");
-        assert!(validate_multiscale_levels("county", "tract").is_err(), "(county, tract) must be invalid");
+        assert!(
+            validate_multiscale_levels("county", "bg").is_err(),
+            "(county, bg) must be invalid"
+        );
+        assert!(
+            validate_multiscale_levels("tract", "tract").is_err(),
+            "(tract, tract) must be invalid"
+        );
+        assert!(
+            validate_multiscale_levels("county", "tract").is_err(),
+            "(county, tract) must be invalid"
+        );
         // Block_group alias
-        assert!(validate_multiscale_levels("block_group", "county").is_ok(), "(block_group, county) must be valid");
+        assert!(
+            validate_multiscale_levels("block_group", "county").is_ok(),
+            "(block_group, county) must be valid"
+        );
     }
 
     // L1: Option A (BG->tract) on synthetic 12-BG graph produces valid 2-district plan.
@@ -7780,41 +9279,66 @@ mod tests {
     fn multiscale_option_a_bg_to_tract_synthetic() {
         // Build a 12-node BG adjacency (3×4 linear chain, 3 tracts of 4 BGs each)
         let n_bg = 12;
-        let bg_adj: Vec<Vec<usize>> = (0..n_bg).map(|i| {
-            let mut nb = Vec::new();
-            if i > 0 { nb.push(i - 1); }
-            if i + 1 < n_bg { nb.push(i + 1); }
-            nb
-        }).collect();
+        let bg_adj: Vec<Vec<usize>> = (0..n_bg)
+            .map(|i| {
+                let mut nb = Vec::new();
+                if i > 0 {
+                    nb.push(i - 1);
+                }
+                if i + 1 < n_bg {
+                    nb.push(i + 1);
+                }
+                nb
+            })
+            .collect();
         let bg_pop: Vec<i64> = vec![1000i64; n_bg];
 
         // 3 tract nodes (linear chain)
         let n_tract = 3;
-        let tract_adj: Vec<Vec<usize>> = (0..n_tract).map(|i| {
-            let mut nb = Vec::new();
-            if i > 0 { nb.push(i - 1); }
-            if i + 1 < n_tract { nb.push(i + 1); }
-            nb
-        }).collect();
+        let tract_adj: Vec<Vec<usize>> = (0..n_tract)
+            .map(|i| {
+                let mut nb = Vec::new();
+                if i > 0 {
+                    nb.push(i - 1);
+                }
+                if i + 1 < n_tract {
+                    nb.push(i + 1);
+                }
+                nb
+            })
+            .collect();
         let tract_pop: Vec<i64> = vec![4000i64; n_tract];
 
         let ew = HashMap::new();
 
         // BG GEOIDs: 4 BGs per tract, geoid = tract_prefix + bg digit
-        let bg_geoids: std::collections::HashMap<usize, String> = (0..n_bg).map(|i| {
-            let tract_num = i / 4 + 1;
-            let bg_num = i % 4 + 1;
-            (i, format!("37001{tract_num:06}{bg_num}"))
-        }).collect();
+        let bg_geoids: std::collections::HashMap<usize, String> = (0..n_bg)
+            .map(|i| {
+                let tract_num = i / 4 + 1;
+                let bg_num = i % 4 + 1;
+                (i, format!("37001{tract_num:06}{bg_num}"))
+            })
+            .collect();
 
         // Tract GEOIDs: 11-char
-        let tract_geoids: std::collections::HashMap<usize, String> = (0..n_tract).map(|t| {
-            (t, format!("37001{:06}", t + 1))
-        }).collect();
+        let tract_geoids: std::collections::HashMap<usize, String> = (0..n_tract)
+            .map(|t| (t, format!("37001{:06}", t + 1)))
+            .collect();
 
         let result = run_multiscale(
-            &tract_adj, &tract_pop, &ew, 2, 0.10, 10, 42, 30, 0.3, 0.0,
-            Some(&tract_geoids), MultiscaleFineLevel::BlockGroup, "tract",
+            &tract_adj,
+            &tract_pop,
+            &ew,
+            2,
+            0.10,
+            10,
+            42,
+            30,
+            0.3,
+            0.0,
+            Some(&tract_geoids),
+            MultiscaleFineLevel::BlockGroup,
+            "tract",
             Some((&bg_adj, &bg_pop, &bg_geoids)),
         );
         let asgn = result.expect("multiscale Option A must succeed on synthetic BG graph");
@@ -7827,42 +9351,69 @@ mod tests {
     #[test]
     fn multiscale_option_c_bg_to_county_synthetic() {
         let n_bg = 12;
-        let bg_adj: Vec<Vec<usize>> = (0..n_bg).map(|i| {
-            let mut nb = Vec::new();
-            if i > 0 { nb.push(i - 1); }
-            if i + 1 < n_bg { nb.push(i + 1); }
-            nb
-        }).collect();
+        let bg_adj: Vec<Vec<usize>> = (0..n_bg)
+            .map(|i| {
+                let mut nb = Vec::new();
+                if i > 0 {
+                    nb.push(i - 1);
+                }
+                if i + 1 < n_bg {
+                    nb.push(i + 1);
+                }
+                nb
+            })
+            .collect();
         let bg_pop: Vec<i64> = vec![1000i64; n_bg];
 
         // Tract adjacency (for METIS seeding)
         let n_tract = 3;
-        let tract_adj: Vec<Vec<usize>> = (0..n_tract).map(|i| {
-            let mut nb = Vec::new();
-            if i > 0 { nb.push(i - 1); }
-            if i + 1 < n_tract { nb.push(i + 1); }
-            nb
-        }).collect();
+        let tract_adj: Vec<Vec<usize>> = (0..n_tract)
+            .map(|i| {
+                let mut nb = Vec::new();
+                if i > 0 {
+                    nb.push(i - 1);
+                }
+                if i + 1 < n_tract {
+                    nb.push(i + 1);
+                }
+                nb
+            })
+            .collect();
         let tract_pop: Vec<i64> = vec![4000i64; n_tract];
         let ew = HashMap::new();
 
         // BG geoids: 6 BGs per county (2 counties)
-        let bg_geoids: std::collections::HashMap<usize, String> = (0..n_bg).map(|i| {
-            let county = if i < 6 { "37001" } else { "37003" };
-            let tract_num = (i % 6) / 4 + 1;
-            let bg_num = i % 4 + 1;
-            (i, format!("{county}{tract_num:06}{bg_num}"))
-        }).collect();
+        let bg_geoids: std::collections::HashMap<usize, String> = (0..n_bg)
+            .map(|i| {
+                let county = if i < 6 { "37001" } else { "37003" };
+                let tract_num = (i % 6) / 4 + 1;
+                let bg_num = i % 4 + 1;
+                (i, format!("{county}{tract_num:06}{bg_num}"))
+            })
+            .collect();
 
         // Tract geoids
-        let tract_geoids: std::collections::HashMap<usize, String> = (0..n_tract).map(|t| {
-            let county = if t == 0 { "37001" } else { "37003" };
-            (t, format!("{county}{:06}", t % 2 + 1))
-        }).collect();
+        let tract_geoids: std::collections::HashMap<usize, String> = (0..n_tract)
+            .map(|t| {
+                let county = if t == 0 { "37001" } else { "37003" };
+                (t, format!("{county}{:06}", t % 2 + 1))
+            })
+            .collect();
 
         let result = run_multiscale(
-            &tract_adj, &tract_pop, &ew, 2, 0.10, 10, 42, 30, 0.3, 0.0,
-            Some(&tract_geoids), MultiscaleFineLevel::BlockGroup, "county",
+            &tract_adj,
+            &tract_pop,
+            &ew,
+            2,
+            0.10,
+            10,
+            42,
+            30,
+            0.3,
+            0.0,
+            Some(&tract_geoids),
+            MultiscaleFineLevel::BlockGroup,
+            "county",
             Some((&bg_adj, &bg_pop, &bg_geoids)),
         );
         let asgn = result.expect("multiscale Option C must succeed on synthetic BG graph");
@@ -7874,10 +9425,10 @@ mod tests {
     // L0: "multiscale" must parse as SearchMode::MultiScale via clap ValueEnum.
     #[test]
     fn multiscale_search_mode_parses() {
-        use clap::ValueEnum;
         use crate::args::SearchMode;
-        let parsed = SearchMode::from_str("multiscale", true)
-            .expect("SearchMode must parse 'multiscale'");
+        use clap::ValueEnum;
+        let parsed =
+            SearchMode::from_str("multiscale", true).expect("SearchMode must parse 'multiscale'");
         assert_eq!(parsed, SearchMode::MultiScale);
     }
 
@@ -7889,9 +9440,23 @@ mod tests {
         let (adj, pop) = small_grid(4, 4);
         let ew = HashMap::new();
         let cfg = AdaptiveConfig::default();
-        let result = run_multiscale_adaptive(&adj, &pop, &ew, 2, 10, 42, cfg, None,
-            MultiscaleFineLevel::Tract, "county", None);
-        assert!(result.is_err(), "run_multiscale_adaptive with no geoids must return Err");
+        let result = run_multiscale_adaptive(
+            &adj,
+            &pop,
+            &ew,
+            2,
+            10,
+            42,
+            cfg,
+            None,
+            MultiscaleFineLevel::Tract,
+            "county",
+            None,
+        );
+        assert!(
+            result.is_err(),
+            "run_multiscale_adaptive with no geoids must return Err"
+        );
         let msg = result.unwrap_err();
         assert!(
             msg.contains("GEOID"),
@@ -7910,13 +9475,26 @@ mod tests {
             adapt_interval: 50,
             ..AdaptiveConfig::default()
         };
-        let (_, result) = run_multiscale_adaptive(&adj, &pop, &ew, 2, 10, 42, cfg, Some(&geoids),
-            MultiscaleFineLevel::Tract, "county", None)
-            .expect("multiscale_adaptive must succeed on 4x4 grid");
+        let (_, result) = run_multiscale_adaptive(
+            &adj,
+            &pop,
+            &ew,
+            2,
+            10,
+            42,
+            cfg,
+            Some(&geoids),
+            MultiscaleFineLevel::Tract,
+            "county",
+            None,
+        )
+        .expect("multiscale_adaptive must succeed on 4x4 grid");
         assert_eq!(
-            result.alpha_trace.len(), 4,
+            result.alpha_trace.len(),
+            4,
             "T=200 adapt_interval=50 must produce exactly 4 adaptation rounds, \
-             got {}", result.alpha_trace.len()
+             got {}",
+            result.alpha_trace.len()
         );
     }
 
@@ -7933,9 +9511,20 @@ mod tests {
             initial_alpha,
             ..AdaptiveConfig::default()
         };
-        let (_, result) = run_multiscale_adaptive(&adj, &pop, &ew, 2, 10, 42, cfg, Some(&geoids),
-            MultiscaleFineLevel::Tract, "county", None)
-            .expect("multiscale_adaptive must succeed");
+        let (_, result) = run_multiscale_adaptive(
+            &adj,
+            &pop,
+            &ew,
+            2,
+            10,
+            42,
+            cfg,
+            Some(&geoids),
+            MultiscaleFineLevel::Tract,
+            "county",
+            None,
+        )
+        .expect("multiscale_adaptive must succeed");
         assert!(
             result.alpha_trace.is_empty(),
             "adapt_interval > total_steps must produce empty alpha_trace"
@@ -7943,7 +9532,8 @@ mod tests {
         assert!(
             (result.final_alpha - initial_alpha).abs() < 1e-12,
             "adapt_interval > total_steps: final_alpha must equal initial_alpha, \
-             got {}", result.final_alpha
+             got {}",
+            result.final_alpha
         );
     }
 
@@ -7958,21 +9548,46 @@ mod tests {
             adapt_interval: 25,
             ..AdaptiveConfig::default()
         };
-        let (plan1, res1) = run_multiscale_adaptive(&adj, &pop, &ew, 2, 10, 77, make_cfg(), Some(&geoids),
-            MultiscaleFineLevel::Tract, "county", None)
-            .expect("first run must succeed");
-        let (plan2, res2) = run_multiscale_adaptive(&adj, &pop, &ew, 2, 10, 77, make_cfg(), Some(&geoids),
-            MultiscaleFineLevel::Tract, "county", None)
-            .expect("second run must succeed");
+        let (plan1, res1) = run_multiscale_adaptive(
+            &adj,
+            &pop,
+            &ew,
+            2,
+            10,
+            77,
+            make_cfg(),
+            Some(&geoids),
+            MultiscaleFineLevel::Tract,
+            "county",
+            None,
+        )
+        .expect("first run must succeed");
+        let (plan2, res2) = run_multiscale_adaptive(
+            &adj,
+            &pop,
+            &ew,
+            2,
+            10,
+            77,
+            make_cfg(),
+            Some(&geoids),
+            MultiscaleFineLevel::Tract,
+            "county",
+            None,
+        )
+        .expect("second run must succeed");
         assert_eq!(plan1, plan2, "same seed must produce identical plan");
-        assert_eq!(res1.alpha_trace, res2.alpha_trace, "same seed must produce identical alpha_trace");
+        assert_eq!(
+            res1.alpha_trace, res2.alpha_trace,
+            "same seed must produce identical alpha_trace"
+        );
     }
 
     // L0: "multiscale-adaptive" must parse as SearchMode::MultiScaleAdaptive via clap ValueEnum.
     #[test]
     fn multiscale_adaptive_search_mode_parses() {
-        use clap::ValueEnum;
         use crate::args::SearchMode;
+        use clap::ValueEnum;
         let parsed = SearchMode::from_str("multiscale-adaptive", true)
             .expect("SearchMode must parse 'multiscale-adaptive'");
         assert_eq!(parsed, SearchMode::MultiScaleAdaptive);
@@ -8205,7 +9820,10 @@ mod tests {
             let d = h.finalize();
             u64::from_le_bytes(d[..8].try_into().unwrap())
         };
-        assert_ne!(fwd, rev, "SBF_FWD_ and SBF_REV_ must be distinct for the same (step, burst_seed)");
+        assert_ne!(
+            fwd, rev,
+            "SBF_FWD_ and SBF_REV_ must be distinct for the same (step, burst_seed)"
+        );
     }
 
     // ── ShortBurstMergeSplit tests ────────────────────────────────────────────
@@ -8266,17 +9884,17 @@ mod tests {
         let (adj, pop) = small_grid(4, 4);
         let ew = HashMap::new();
         let asgn = run_parallel_tempering(
-            &adj, &pop, &ew,
-            2,   // num_districts
-            10,  // niter
-            42,  // base_seed
-            2,   // n_replicas
-            5,   // swap_interval
+            &adj, &pop, &ew, 2,     // num_districts
+            10,    // niter
+            42,    // base_seed
+            2,     // n_replicas
+            5,     // swap_interval
             0.005, // cold_tolerance
             0.05,  // hot_tolerance
-            20,  // steps
-            0.0, // p
-        ).expect("pt k=2 on 4x4 grid must succeed");
+            20,    // steps
+            0.0,   // p
+        )
+        .expect("pt k=2 on 4x4 grid must succeed");
 
         assert_eq!(asgn.len(), 16, "all 16 tracts must be assigned");
         let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
@@ -8305,8 +9923,10 @@ mod tests {
             .flat_map(|v| adj[v].iter().map(move |&nb| (v, nb)))
             .filter(|&(v, nb)| nb > v && a1[&v] != a1[&nb])
             .count();
-        assert!(ec0 <= ec1,
-            "pt p=0.0 EC ({ec0}) must be <= p=1.0 EC ({ec1})");
+        assert!(
+            ec0 <= ec1,
+            "pt p=0.0 EC ({ec0}) must be <= p=1.0 EC ({ec1})"
+        );
     }
 
     // L0: same base_seed → identical result (determinism).
@@ -8328,9 +9948,8 @@ mod tests {
     fn pt_zero_steps_returns_initial() {
         let (adj, pop) = small_grid(4, 4);
         let ew = HashMap::new();
-        let asgn = run_parallel_tempering(
-            &adj, &pop, &ew, 2, 10, 42, 2, 5, 0.005, 0.05, 0, 0.0,
-        ).expect("steps=0 must succeed");
+        let asgn = run_parallel_tempering(&adj, &pop, &ew, 2, 10, 42, 2, 5, 0.005, 0.05, 0, 0.0)
+            .expect("steps=0 must succeed");
         assert_eq!(asgn.len(), 16, "all tracts must be assigned");
         let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
         assert_eq!(districts.len(), 2, "must have 2 districts");
@@ -8339,12 +9958,15 @@ mod tests {
     // L0: SearchMode parses "parallel-tempering" successfully (CLI integration).
     #[test]
     fn pt_search_mode_parses() {
-        use clap::ValueEnum;
         use crate::args::SearchMode;
+        use clap::ValueEnum;
         let parsed = SearchMode::from_str("parallel-tempering", true)
             .expect("SearchMode must parse 'parallel-tempering'");
-        assert_eq!(parsed, SearchMode::ParallelTempering,
-            "parsed SearchMode must equal ParallelTempering");
+        assert_eq!(
+            parsed,
+            SearchMode::ParallelTempering,
+            "parsed SearchMode must equal ParallelTempering"
+        );
     }
 
     // L2: NC 2020 k=14 — PT cold chain EC <= single-chain EC (quality check).
@@ -8367,15 +9989,18 @@ mod tests {
         // minority_vap: first 8 tracts (top half) have 0.6, rest have 0.1
         let minority_vap: Vec<f64> = (0..16).map(|i| if i < 8 { 0.6 } else { 0.1 }).collect();
         let asgn = run_vra_recom(
-            &adj, &pop, &ew,
-            2,      // num_districts
-            10,     // niter
-            42,     // base_seed
-            30,     // steps
-            0.0,    // p
-            0.50,   // vap_threshold
+            &adj,
+            &pop,
+            &ew,
+            2,    // num_districts
+            10,   // niter
+            42,   // base_seed
+            30,   // steps
+            0.0,  // p
+            0.50, // vap_threshold
             &minority_vap,
-        ).expect("vra_recom k=2 on 4x4 grid must succeed");
+        )
+        .expect("vra_recom k=2 on 4x4 grid must succeed");
 
         assert_eq!(asgn.len(), 16, "all 16 tracts must be assigned");
         let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
@@ -8403,8 +10028,12 @@ mod tests {
                 .filter(|&(v, nb)| nb > v && asgn[&v] != asgn[&nb])
                 .count()
         };
-        assert!(ec(&a0) <= ec(&a1),
-            "vra_recom p=0.0 EC ({}) must be <= p=1.0 EC ({})", ec(&a0), ec(&a1));
+        assert!(
+            ec(&a0) <= ec(&a1),
+            "vra_recom p=0.0 EC ({}) must be <= p=1.0 EC ({})",
+            ec(&a0),
+            ec(&a1)
+        );
     }
 
     // L0: same base_seed → identical result (determinism).
@@ -8430,10 +10059,8 @@ mod tests {
         let ew = HashMap::new();
         // All zero → no protected districts → VRA enforcement is a no-op.
         let minority_vap: Vec<f64> = vec![0.0; 16];
-        let asgn = run_vra_recom(
-            &adj, &pop, &ew,
-            2, 10, 13, 20, 0.0, 0.50, &minority_vap,
-        ).expect("vra_recom with zero minority_vap must succeed");
+        let asgn = run_vra_recom(&adj, &pop, &ew, 2, 10, 13, 20, 0.0, 0.50, &minority_vap)
+            .expect("vra_recom with zero minority_vap must succeed");
         assert_eq!(asgn.len(), 16, "all tracts must be assigned");
         let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
         assert_eq!(districts.len(), 2, "must have 2 districts");
@@ -8442,12 +10069,15 @@ mod tests {
     // L0: SearchMode parses "vra-recom" successfully (CLI integration).
     #[test]
     fn vra_recom_search_mode_parses() {
-        use clap::ValueEnum;
         use crate::args::SearchMode;
-        let parsed = SearchMode::from_str("vra-recom", true)
-            .expect("SearchMode must parse 'vra-recom'");
-        assert_eq!(parsed, SearchMode::VraRecom,
-            "parsed SearchMode must equal VraRecom");
+        use clap::ValueEnum;
+        let parsed =
+            SearchMode::from_str("vra-recom", true).expect("SearchMode must parse 'vra-recom'");
+        assert_eq!(
+            parsed,
+            SearchMode::VraRecom,
+            "parsed SearchMode must equal VraRecom"
+        );
     }
 
     // L2: NC 2020 k=14 — VRA-aware chain preserves majority-minority districts.
@@ -8475,9 +10105,13 @@ mod tests {
         // All 16 tracts assigned
         let mut all: Vec<usize> = left.union(&right).copied().collect();
         all.sort_unstable();
-        assert_eq!(all, (0..16).collect::<Vec<_>>(), "all 16 tracts must be covered");
+        assert_eq!(
+            all,
+            (0..16).collect::<Vec<_>>(),
+            "all 16 tracts must be covered"
+        );
         // Both sides non-empty
-        assert!(!left.is_empty(),  "left side must be non-empty");
+        assert!(!left.is_empty(), "left side must be non-empty");
         assert!(!right.is_empty(), "right side must be non-empty");
         // Disjoint
         assert!(left.is_disjoint(&right), "left and right must be disjoint");
@@ -8488,8 +10122,9 @@ mod tests {
     fn bfs_growth_deterministic() {
         let (adj, pop) = small_grid(4, 4);
         let tracts: HashSet<usize> = (0..16).collect();
-        let run = |seed: u64| split_subgraph_bfs(&adj, &pop, &tracts, 0.10, seed)
-            .expect("bfs-growth must succeed");
+        let run = |seed: u64| {
+            split_subgraph_bfs(&adj, &pop, &tracts, 0.10, seed).expect("bfs-growth must succeed")
+        };
         let (l1, r1) = run(99);
         let (l2, r2) = run(99);
         assert_eq!(l1, l2, "same seed must produce identical left set");
@@ -8503,8 +10138,15 @@ mod tests {
         let tracts: HashSet<usize> = (0..25).collect();
         let (left, right) = split_subgraph_bfs(&adj, &pop, &tracts, 0.10, 7)
             .expect("bfs-growth must succeed on 5x5 grid");
-        assert_eq!(left.len() + right.len(), 25, "all 25 tracts must be assigned");
-        assert!(left.is_disjoint(&right), "no tract may appear in both sides");
+        assert_eq!(
+            left.len() + right.len(),
+            25,
+            "all 25 tracts must be assigned"
+        );
+        assert!(
+            left.is_disjoint(&right),
+            "no tract may appear in both sides"
+        );
     }
 
     // L0: both districts non-empty for any non-trivial input.
@@ -8512,17 +10154,23 @@ mod tests {
     fn bfs_growth_both_districts_nonempty() {
         // Linear chain: 10 nodes
         let n = 10usize;
-        let adj: Vec<Vec<usize>> = (0..n).map(|i| {
-            let mut nb = vec![];
-            if i > 0   { nb.push(i - 1); }
-            if i < n-1 { nb.push(i + 1); }
-            nb
-        }).collect();
+        let adj: Vec<Vec<usize>> = (0..n)
+            .map(|i| {
+                let mut nb = vec![];
+                if i > 0 {
+                    nb.push(i - 1);
+                }
+                if i < n - 1 {
+                    nb.push(i + 1);
+                }
+                nb
+            })
+            .collect();
         let pop = vec![1000i64; n];
         let tracts: HashSet<usize> = (0..n).collect();
         let (left, right) = split_subgraph_bfs(&adj, &pop, &tracts, 0.10, 0)
             .expect("bfs-growth must succeed on chain");
-        assert!(!left.is_empty(),  "left must be non-empty for chain graph");
+        assert!(!left.is_empty(), "left must be non-empty for chain graph");
         assert!(!right.is_empty(), "right must be non-empty for chain graph");
     }
 
@@ -8532,11 +10180,13 @@ mod tests {
     fn bfs_growth_contiguous_districts() {
         let (adj, pop) = small_grid(4, 4);
         let tracts: HashSet<usize> = (0..16).collect();
-        let (left, right) = split_subgraph_bfs(&adj, &pop, &tracts, 0.10, 123)
-            .expect("bfs-growth must succeed");
+        let (left, right) =
+            split_subgraph_bfs(&adj, &pop, &tracts, 0.10, 123).expect("bfs-growth must succeed");
 
         let is_contiguous = |side: &HashSet<usize>| -> bool {
-            if side.len() <= 1 { return true; }
+            if side.len() <= 1 {
+                return true;
+            }
             let start = *side.iter().next().unwrap();
             let mut visited = HashSet::new();
             let mut queue = std::collections::VecDeque::new();
@@ -8553,19 +10203,22 @@ mod tests {
             visited.len() == side.len()
         };
 
-        assert!(is_contiguous(&left),  "left district must be contiguous");
+        assert!(is_contiguous(&left), "left district must be contiguous");
         assert!(is_contiguous(&right), "right district must be contiguous");
     }
 
     // L0: "bfs-growth" StructureMode parses correctly from CLI string.
     #[test]
     fn bfs_growth_structure_mode_parses() {
-        use clap::ValueEnum;
         use crate::args::StructureMode;
+        use clap::ValueEnum;
         let parsed = StructureMode::from_str("bfs-growth", true)
             .expect("StructureMode must parse 'bfs-growth'");
-        assert_eq!(parsed, StructureMode::BfsGrowth,
-            "parsed StructureMode must equal BfsGrowth");
+        assert_eq!(
+            parsed,
+            StructureMode::BfsGrowth,
+            "parsed StructureMode must equal BfsGrowth"
+        );
     }
 
     // L0: seed[1] should be farther from seed[0] than most other tracts
@@ -8576,8 +10229,8 @@ mod tests {
         // We verify this indirectly: the two assigned seeds are not adjacent.
         let (adj, pop) = small_grid(4, 4);
         let tracts: HashSet<usize> = (0..16).collect();
-        let (left, right) = split_subgraph_bfs(&adj, &pop, &tracts, 0.10, 0)
-            .expect("bfs-growth must succeed");
+        let (left, right) =
+            split_subgraph_bfs(&adj, &pop, &tracts, 0.10, 0).expect("bfs-growth must succeed");
 
         // The farthest-apart split on a 4x4 grid should not put all tracts
         // in one set (which would happen if both seeds were adjacent).
@@ -8588,10 +10241,12 @@ mod tests {
         // by confirming both sides have at least 1 tract.
         // (A more direct test would require exposing seed positions.)
         let max_frac = (left.len().max(right.len()) as f64) / 16.0;
-        assert!(max_frac <= 0.95,
+        assert!(
+            max_frac <= 0.95,
             "maximally-spread seeds should not produce a 95%:5% split; got {:.0}%:{:.0}%",
             left.len() as f64 / 16.0 * 100.0,
-            right.len() as f64 / 16.0 * 100.0);
+            right.len() as f64 / 16.0 * 100.0
+        );
     }
 
     // L1: run_all_splits_bfs on 4x4 grid with k=2: valid, deterministic, contiguous.
@@ -8620,8 +10275,10 @@ mod tests {
     #[test]
     fn bfs_growth_run_all_splits_deterministic() {
         let (adj, pop) = small_grid(4, 5); // 20 tracts
-        let run = || run_all_splits_bfs(&adj, &pop, 2, 0.05, None, 12345)
-            .expect("run_all_splits_bfs must succeed");
+        let run = || {
+            run_all_splits_bfs(&adj, &pop, 2, 0.05, None, 12345)
+                .expect("run_all_splits_bfs must succeed")
+        };
         let a1 = run();
         let a2 = run();
         assert_eq!(a1, a2, "same base_seed must produce identical assignments");
@@ -8659,14 +10316,16 @@ mod tests {
     fn smc_percentile_p0_le_p1_ec() {
         let adj = vec![vec![1usize], vec![0, 2], vec![1, 3], vec![2]];
         let pop = vec![100i64; 4];
-        let plan_p0 = run_smc_percentile(&adj, &pop, 2, 99, 50, 0.0, 0.5)
-            .expect("p=0.0 must succeed");
-        let plan_p1 = run_smc_percentile(&adj, &pop, 2, 99, 50, 1.0, 0.5)
-            .expect("p=1.0 must succeed");
+        let plan_p0 =
+            run_smc_percentile(&adj, &pop, 2, 99, 50, 0.0, 0.5).expect("p=0.0 must succeed");
+        let plan_p1 =
+            run_smc_percentile(&adj, &pop, 2, 99, 50, 1.0, 0.5).expect("p=1.0 must succeed");
         let ec_p0 = count_edge_cuts(&plan_p0, &adj);
         let ec_p1 = count_edge_cuts(&plan_p1, &adj);
-        assert!(ec_p0 <= ec_p1,
-            "p=0.0 (min) EC={ec_p0} must be <= p=1.0 (max) EC={ec_p1}");
+        assert!(
+            ec_p0 <= ec_p1,
+            "p=0.0 (min) EC={ec_p0} must be <= p=1.0 (max) EC={ec_p1}"
+        );
     }
 
     // L0: same seed -> same result (determinism).
@@ -8674,8 +10333,10 @@ mod tests {
     fn smc_percentile_deterministic() {
         let adj = vec![vec![1usize], vec![0, 2], vec![1, 3], vec![2]];
         let pop = vec![100i64; 4];
-        let run = || run_smc_percentile(&adj, &pop, 2, 77, 30, 0.5, 0.5)
-            .expect("smc_percentile must succeed");
+        let run = || {
+            run_smc_percentile(&adj, &pop, 2, 77, 30, 0.5, 0.5)
+                .expect("smc_percentile must succeed")
+        };
         let a1 = run();
         let a2 = run();
         assert_eq!(a1, a2, "same base_seed must produce identical results");
@@ -8685,11 +10346,15 @@ mod tests {
     #[test]
     fn smc_percentile_smcp_seed_distinct_from_base() {
         let seed_42 = derive_smcp_seed(42);
-        let seed_0  = derive_smcp_seed(0);
-        assert_ne!(seed_42, 42u64,
-            "derive_smcp_seed(42) must differ from raw 42");
-        assert_ne!(seed_42, seed_0,
-            "derive_smcp_seed(42) must differ from derive_smcp_seed(0)");
+        let seed_0 = derive_smcp_seed(0);
+        assert_ne!(
+            seed_42, 42u64,
+            "derive_smcp_seed(42) must differ from raw 42"
+        );
+        assert_ne!(
+            seed_42, seed_0,
+            "derive_smcp_seed(42) must differ from derive_smcp_seed(0)"
+        );
     }
 
     // L0: p=0.0 returns a complete valid plan (all tracts assigned).
@@ -8698,9 +10363,13 @@ mod tests {
     fn smc_percentile_zero_weight_skip() {
         let adj = vec![vec![1usize], vec![0, 2], vec![1, 3], vec![2]];
         let pop = vec![100i64; 4];
-        let result = run_smc_percentile(&adj, &pop, 2, 55, 20, 0.0, 0.5)
-            .expect("p=0.0 must succeed");
-        assert_eq!(result.len(), 4, "p=0.0 must return a complete plan (4 tracts)");
+        let result =
+            run_smc_percentile(&adj, &pop, 2, 55, 20, 0.0, 0.5).expect("p=0.0 must succeed");
+        assert_eq!(
+            result.len(),
+            4,
+            "p=0.0 must return a complete plan (4 tracts)"
+        );
         let districts: std::collections::HashSet<usize> = result.values().copied().collect();
         assert_eq!(districts.len(), 2, "p=0.0 must produce exactly 2 districts");
     }
@@ -8708,12 +10377,15 @@ mod tests {
     // L0: smc-percentile search mode parses correctly.
     #[test]
     fn smc_percentile_search_mode_parses() {
-        use clap::ValueEnum;
         use crate::args::SearchMode;
+        use clap::ValueEnum;
         let parsed = SearchMode::from_str("smc-percentile", true)
             .expect("'smc-percentile' must be a valid SearchMode");
-        assert_eq!(parsed, SearchMode::SmcPercentile,
-            "parsed SearchMode must be SmcPercentile");
+        assert_eq!(
+            parsed,
+            SearchMode::SmcPercentile,
+            "parsed SearchMode must be SmcPercentile"
+        );
     }
 
     // L2: NC 2020 calibrated distribution (requires real data).
@@ -8731,12 +10403,15 @@ mod tests {
     /// L0: `--partition-mode ilp` parses to PartitionMode::Ilp.
     #[test]
     fn ilp_structure_mode_parses() {
-        use clap::ValueEnum;
         use crate::args::PartitionMode;
-        let parsed = PartitionMode::from_str("ilp", true)
-            .expect("'ilp' must be a valid PartitionMode");
-        assert_eq!(parsed, PartitionMode::Ilp,
-            "parsed PartitionMode must be Ilp");
+        use clap::ValueEnum;
+        let parsed =
+            PartitionMode::from_str("ilp", true).expect("'ilp' must be a valid PartitionMode");
+        assert_eq!(
+            parsed,
+            PartitionMode::Ilp,
+            "parsed PartitionMode must be Ilp"
+        );
     }
 
     /// L1: 4x4 grid (16 tracts) with max_tracts=5 — size guard fires, falls back to METIS.
@@ -8746,16 +10421,25 @@ mod tests {
         let (adj, pop) = small_grid(4, 4); // 16 tracts
         let tracts: HashSet<usize> = (0..16).collect();
         let result = split_subgraph_ilp(
-            &adj, &pop, &tracts,
-            1.05,   // balance_tolerance
-            60,     // time_limit_secs
-            0.01,   // optimality_gap
-            5,      // max_tracts: 16 > 5 => guard fires
+            &adj, &pop, &tracts, 1.05, // balance_tolerance
+            60,   // time_limit_secs
+            0.01, // optimality_gap
+            5,    // max_tracts: 16 > 5 => guard fires
         );
         let (left, right) = result.expect("size-guard fallback must not fail");
-        assert!(!left.is_empty(), "left partition must be non-empty after METIS fallback");
-        assert!(!right.is_empty(), "right partition must be non-empty after METIS fallback");
-        assert_eq!(left.len() + right.len(), 16, "all 16 tracts must be assigned");
+        assert!(
+            !left.is_empty(),
+            "left partition must be non-empty after METIS fallback"
+        );
+        assert!(
+            !right.is_empty(),
+            "right partition must be non-empty after METIS fallback"
+        );
+        assert_eq!(
+            left.len() + right.len(),
+            16,
+            "all 16 tracts must be assigned"
+        );
         // Verify disjoint
         for t in &left {
             assert!(!right.contains(t), "partitions must be disjoint");
@@ -8767,20 +10451,14 @@ mod tests {
     #[test]
     fn ilp_phase1_produces_valid_plan() {
         // Path: 0-1-2-3  (4 nodes, well within max_tracts=500)
-        let adj = vec![
-            vec![1usize],
-            vec![0, 2],
-            vec![1, 3],
-            vec![2usize],
-        ];
+        let adj = vec![vec![1usize], vec![0, 2], vec![1, 3], vec![2usize]];
         let pop = vec![100i64; 4];
         let tracts: HashSet<usize> = (0..4).collect();
         let result = split_subgraph_ilp(
-            &adj, &pop, &tracts,
-            1.05,  // balance_tolerance
-            300,   // time_limit_secs
-            0.01,  // optimality_gap
-            500,   // max_tracts (no guard)
+            &adj, &pop, &tracts, 1.05, // balance_tolerance
+            300,  // time_limit_secs
+            0.01, // optimality_gap
+            500,  // max_tracts (no guard)
         );
         let (left, right) = result.expect("ilp phase1 must not fail");
         assert!(!left.is_empty(), "left partition must be non-empty");
@@ -8797,20 +10475,21 @@ mod tests {
     /// n_flow_vars = 2*|E|*k = 2*3*2 = 12
     #[test]
     fn ilp_formulation_counts_correct() {
-        let adj = vec![
-            vec![1usize],
-            vec![0, 2],
-            vec![1, 3],
-            vec![2usize],
-        ];
+        let adj = vec![vec![1usize], vec![0, 2], vec![1, 3], vec![2usize]];
         let pop = vec![100i64; 4];
         let formulation = bisect_ilp::build_formulation(&adj, &pop, 2, 0.005);
-        assert_eq!(formulation.n_binary_x, 8,
-            "n_binary_x should be n*k = 4*2 = 8");
-        assert_eq!(formulation.n_binary_z, 3,
-            "n_binary_z should be |E| = 3 for path 0-1-2-3");
-        assert_eq!(formulation.n_flow_vars, 12,
-            "n_flow_vars should be 2*|E|*k = 2*3*2 = 12");
+        assert_eq!(
+            formulation.n_binary_x, 8,
+            "n_binary_x should be n*k = 4*2 = 8"
+        );
+        assert_eq!(
+            formulation.n_binary_z, 3,
+            "n_binary_z should be |E| = 3 for path 0-1-2-3"
+        );
+        assert_eq!(
+            formulation.n_flow_vars, 12,
+            "n_flow_vars should be 2*|E|*k = 2*3*2 = 12"
+        );
     }
 
     /// L1: run_all_splits_ilp on a 4x4 grid — all 16 tracts assigned into 2 districts.
@@ -8819,12 +10498,11 @@ mod tests {
         let (adj, pop) = small_grid(4, 4); // 16 tracts
         let ew: HashMap<(usize, usize), f64> = HashMap::new();
         let result = run_all_splits_ilp(
-            &adj, &pop, &ew,
-            2,      // num_districts
-            0.05,   // balance_tolerance
-            60,     // time_limit_secs
-            0.01,   // optimality_gap
-            500,    // max_tracts (no size guard)
+            &adj, &pop, &ew, 2,    // num_districts
+            0.05, // balance_tolerance
+            60,   // time_limit_secs
+            0.01, // optimality_gap
+            500,  // max_tracts (no size guard)
         );
         let assignments = result.expect("run_all_splits_ilp must succeed on 4x4 grid");
         assert_eq!(assignments.len(), 16, "all 16 tracts must be assigned");
@@ -8841,7 +10519,7 @@ mod tests {
         for r in 0..rows {
             for col in 0..cols {
                 let lon = -96.05 + col as f64 * 0.01;
-                let lat = 37.45  + r   as f64 * 0.01;
+                let lat = 37.45 + r as f64 * 0.01;
                 c.push((lon, lat));
             }
         }
@@ -8855,13 +10533,25 @@ mod tests {
         let centroids = synthetic_centroids(4, 4);
         let tracts: HashSet<usize> = (0..16).collect();
         let (left, right) = split_subgraph_mka(
-            &adj, &pop, &tracts, &centroids,
-            0.10, 180, MkaMetric::Reock, 42, "root",
-        ).expect("mka must succeed on 4x4 grid");
+            &adj,
+            &pop,
+            &tracts,
+            &centroids,
+            0.10,
+            180,
+            MkaMetric::Reock,
+            42,
+            "root",
+        )
+        .expect("mka must succeed on 4x4 grid");
         let mut all: Vec<usize> = left.union(&right).copied().collect();
         all.sort_unstable();
-        assert_eq!(all, (0..16).collect::<Vec<_>>(), "all 16 tracts must be covered");
-        assert!(!left.is_empty(),  "left side must be non-empty");
+        assert_eq!(
+            all,
+            (0..16).collect::<Vec<_>>(),
+            "all 16 tracts must be covered"
+        );
+        assert!(!left.is_empty(), "left side must be non-empty");
         assert!(!right.is_empty(), "right side must be non-empty");
         assert!(left.is_disjoint(&right), "left and right must be disjoint");
     }
@@ -8872,10 +10562,20 @@ mod tests {
         let (adj, pop) = small_grid(4, 4);
         let centroids = synthetic_centroids(4, 4);
         let tracts: HashSet<usize> = (0..16).collect();
-        let run = || split_subgraph_mka(
-            &adj, &pop, &tracts, &centroids,
-            0.10, 180, MkaMetric::Reock, 77, "root",
-        ).expect("mka must succeed");
+        let run = || {
+            split_subgraph_mka(
+                &adj,
+                &pop,
+                &tracts,
+                &centroids,
+                0.10,
+                180,
+                MkaMetric::Reock,
+                77,
+                "root",
+            )
+            .expect("mka must succeed")
+        };
         let (l1, r1) = run();
         let (l2, r2) = run();
         assert_eq!(l1, l2, "same seed must produce identical left set");
@@ -8888,28 +10588,46 @@ mod tests {
         // Two coincident points: MEC radius = 0 → reock_score should return 1.0 (clamped).
         let pts = vec![(0.0f64, 0.0f64), (0.0, 0.0)];
         let r = reock_score(&pts, &[]);
-        assert!(r >= 0.0 && r <= 1.0, "reock_score must be in [0,1], got {r}");
+        assert!(
+            r >= 0.0 && r <= 1.0,
+            "reock_score must be in [0,1], got {r}"
+        );
         // Large spread: MEC area >> n_tracts — should clamp to 0 from below, return [0,1].
         let spread = vec![(0.0f64, 0.0f64), (1.0e9, 0.0), (0.0, 1.0e9)];
         let r2 = reock_score(&spread, &[]);
-        assert!(r2 >= 0.0 && r2 <= 1.0, "reock_score for large spread must be in [0,1], got {r2}");
+        assert!(
+            r2 >= 0.0 && r2 <= 1.0,
+            "reock_score for large spread must be in [0,1], got {r2}"
+        );
     }
 
     // L0: MKA seed prefix is distinct from CVD GEO and CVD Phase 1 prefixes.
     #[test]
     fn mka_seed_prefix_distinct_from_cvd() {
         // The three prefix constants must be pairwise unequal (source-level assertion).
-        const MKA_PREFIX:     &str = "MKA_INIT_";
+        const MKA_PREFIX: &str = "MKA_INIT_";
         const CVD_GEO_PREFIX: &str = "CVD_GEO_INIT_";
-        const CVD_PREFIX:     &str = "CVD_INIT_";
-        assert_ne!(MKA_PREFIX, CVD_GEO_PREFIX, "MKA_INIT_ must differ from CVD_GEO_INIT_");
-        assert_ne!(MKA_PREFIX, CVD_PREFIX,     "MKA_INIT_ must differ from CVD_INIT_");
-        assert_ne!(CVD_GEO_PREFIX, CVD_PREFIX, "CVD_GEO_INIT_ must differ from CVD_INIT_");
+        const CVD_PREFIX: &str = "CVD_INIT_";
+        assert_ne!(
+            MKA_PREFIX, CVD_GEO_PREFIX,
+            "MKA_INIT_ must differ from CVD_GEO_INIT_"
+        );
+        assert_ne!(
+            MKA_PREFIX, CVD_PREFIX,
+            "MKA_INIT_ must differ from CVD_INIT_"
+        );
+        assert_ne!(
+            CVD_GEO_PREFIX, CVD_PREFIX,
+            "CVD_GEO_INIT_ must differ from CVD_INIT_"
+        );
 
         // mka_seed(0, "") must differ from derive_cvd_geo_seed(0, "").
-        let mka_s   = mka_seed(0, "");
+        let mka_s = mka_seed(0, "");
         let cvd_geo = derive_cvd_geo_seed(0, "");
-        assert_ne!(mka_s, cvd_geo, "mka_seed(0,'') must differ from derive_cvd_geo_seed(0,'')");
+        assert_ne!(
+            mka_s, cvd_geo,
+            "mka_seed(0,'') must differ from derive_cvd_geo_seed(0,'')"
+        );
     }
 
     // L0: split_subgraph_mka_direction returns the same theta as the full split's optimal angle.
@@ -8925,25 +10643,38 @@ mod tests {
 
         // The full split uses n_orientations=36 and should pick the same best angle.
         // We can verify theta_star is in [0, PI).
-        assert!(theta_star >= 0.0 && theta_star < PI,
-            "theta* must be in [0, PI), got {theta_star}");
+        assert!(
+            theta_star >= 0.0 && theta_star < PI,
+            "theta* must be in [0, PI), got {theta_star}"
+        );
 
         // Also verify the direction function doesn't panic on the full split.
         split_subgraph_mka(
-            &adj, &pop, &tracts, &centroids,
-            0.10, 36, MkaMetric::Reock, 42, "root",
-        ).expect("mka full split must succeed");
+            &adj,
+            &pop,
+            &tracts,
+            &centroids,
+            0.10,
+            36,
+            MkaMetric::Reock,
+            42,
+            "root",
+        )
+        .expect("mka full split must succeed");
     }
 
     // L0: "moving-knife" StructureMode parses correctly from CLI string.
     #[test]
     fn mka_structure_mode_parses() {
-        use clap::ValueEnum;
         use crate::args::StructureMode;
+        use clap::ValueEnum;
         let parsed = StructureMode::from_str("moving-knife", true)
             .expect("StructureMode must parse 'moving-knife'");
-        assert_eq!(parsed, StructureMode::MovingKnife,
-            "parsed StructureMode must equal MovingKnife");
+        assert_eq!(
+            parsed,
+            StructureMode::MovingKnife,
+            "parsed StructureMode must equal MovingKnife"
+        );
     }
 
     // L0: Welzl MEC of a single point has radius 0.
@@ -8962,7 +10693,7 @@ mod tests {
         let p2 = (4.0f64, 0.0f64);
         let (cx, cy, r2) = welzl_mec(&[p1, p2]);
         assert!((cx - 2.0).abs() < 1e-9, "cx must be midpoint 2.0, got {cx}");
-        assert!(cy.abs() < 1e-9,          "cy must be 0.0, got {cy}");
+        assert!(cy.abs() < 1e-9, "cy must be 0.0, got {cy}");
         // Distance = 4, radius = 2, radius² = 4.
         assert!((r2 - 4.0).abs() < 1e-9, "radius² must be 4.0, got {r2}");
     }
@@ -8974,8 +10705,15 @@ mod tests {
         let centroids = synthetic_centroids(4, 4);
         let tracts: HashSet<usize> = (0..16).collect();
         let result = split_subgraph_mka(
-            &adj, &pop, &tracts, &centroids,
-            0.10, 1, MkaMetric::Reock, 0, "root",
+            &adj,
+            &pop,
+            &tracts,
+            &centroids,
+            0.10,
+            1,
+            MkaMetric::Reock,
+            0,
+            "root",
         );
         assert!(result.is_ok(), "n_orientations=1 must not panic");
         let (l, r) = result.unwrap();
@@ -8988,21 +10726,35 @@ mod tests {
     fn mka_both_halves_nonempty() {
         // Linear chain: 6 nodes.
         let n = 6usize;
-        let adj: Vec<Vec<usize>> = (0..n).map(|i| {
-            let mut nb = vec![];
-            if i > 0   { nb.push(i - 1); }
-            if i < n-1 { nb.push(i + 1); }
-            nb
-        }).collect();
+        let adj: Vec<Vec<usize>> = (0..n)
+            .map(|i| {
+                let mut nb = vec![];
+                if i > 0 {
+                    nb.push(i - 1);
+                }
+                if i < n - 1 {
+                    nb.push(i + 1);
+                }
+                nb
+            })
+            .collect();
         let pop = vec![1000i64; n];
         // Use simple centroid positions along x-axis.
         let centroids: Vec<(f64, f64)> = (0..n).map(|i| (-96.0 + i as f64 * 0.01, 37.5)).collect();
         let tracts: HashSet<usize> = (0..n).collect();
         let (left, right) = split_subgraph_mka(
-            &adj, &pop, &tracts, &centroids,
-            0.10, 180, MkaMetric::Reock, 0, "chain",
-        ).expect("mka must succeed on chain");
-        assert!(!left.is_empty(),  "left must be non-empty for chain graph");
+            &adj,
+            &pop,
+            &tracts,
+            &centroids,
+            0.10,
+            180,
+            MkaMetric::Reock,
+            0,
+            "chain",
+        )
+        .expect("mka must succeed on chain");
+        assert!(!left.is_empty(), "left must be non-empty for chain graph");
         assert!(!right.is_empty(), "right must be non-empty for chain graph");
     }
 
@@ -9017,7 +10769,10 @@ mod tests {
         // The returned angle is platform-dependent (floating-point tie-breaking),
         // so only assert it is a valid finite angle in [0, PI).
         assert!(theta.is_finite(), "theta must be finite");
-        assert!(theta >= 0.0 && theta < PI, "theta must be in [0, PI), got {theta:.4}");
+        assert!(
+            theta >= 0.0 && theta < PI,
+            "theta must be in [0, PI), got {theta:.4}"
+        );
     }
 
     // L1: run_all_splits_mka on 4x4 grid with k=2: valid and deterministic.
@@ -9026,9 +10781,17 @@ mod tests {
         let (adj, pop) = small_grid(4, 4);
         let centroids = synthetic_centroids(4, 4);
         let asgn = run_all_splits_mka(
-            &adj, &pop, 2, 0.05, None,
-            180, MkaMetric::Reock, 42, &centroids,
-        ).expect("run_all_splits_mka k=2 must succeed");
+            &adj,
+            &pop,
+            2,
+            0.05,
+            None,
+            180,
+            MkaMetric::Reock,
+            42,
+            &centroids,
+        )
+        .expect("run_all_splits_mka k=2 must succeed");
         assert_eq!(asgn.len(), 16, "all 16 tracts must be assigned");
         let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
         assert_eq!(districts.len(), 2, "must produce exactly 2 districts");
@@ -9039,10 +10802,20 @@ mod tests {
     fn mka_run_all_splits_deterministic() {
         let (adj, pop) = small_grid(4, 4);
         let centroids = synthetic_centroids(4, 4);
-        let run = || run_all_splits_mka(
-            &adj, &pop, 2, 0.05, None,
-            180, MkaMetric::Reock, 99999, &centroids,
-        ).expect("run_all_splits_mka must succeed");
+        let run = || {
+            run_all_splits_mka(
+                &adj,
+                &pop,
+                2,
+                0.05,
+                None,
+                180,
+                MkaMetric::Reock,
+                99999,
+                &centroids,
+            )
+            .expect("run_all_splits_mka must succeed")
+        };
         let a1 = run();
         let a2 = run();
         assert_eq!(a1, a2, "same base_seed must produce identical assignments");
@@ -9067,12 +10840,18 @@ mod tests {
         use crate::runner::AreaSectionInit;
 
         let mk: AreaSectionInit = AreaSectionInitArg::MovingKnife.into();
-        assert_eq!(mk, AreaSectionInit::MovingKnife,
-            "MovingKnife arg must convert to MovingKnife strategy");
+        assert_eq!(
+            mk,
+            AreaSectionInit::MovingKnife,
+            "MovingKnife arg must convert to MovingKnife strategy"
+        );
 
         let ro: AreaSectionInit = AreaSectionInitArg::RatioOptimal.into();
-        assert_eq!(ro, AreaSectionInit::RatioOptimal,
-            "RatioOptimal arg must convert to RatioOptimal strategy");
+        assert_eq!(
+            ro,
+            AreaSectionInit::RatioOptimal,
+            "RatioOptimal arg must convert to RatioOptimal strategy"
+        );
     }
 
     /// L0: empty centroids → split_subgraph_mka_direction-based path falls back gracefully.
@@ -9088,8 +10867,10 @@ mod tests {
         let empty_centroids: Vec<(f64, f64)> = vec![];
         let theta = split_subgraph_mka_direction(&empty_tracts, &empty_centroids, 180);
         // Must return 0.0 (defined in the MKA function for empty input) — not panic.
-        assert_eq!(theta, 0.0,
-            "split_subgraph_mka_direction on empty set must return 0.0");
+        assert_eq!(
+            theta, 0.0,
+            "split_subgraph_mka_direction on empty set must return 0.0"
+        );
 
         // Verify AreaSectionInit enum equality round-trips.
         let init = AreaSectionInit::MovingKnife;

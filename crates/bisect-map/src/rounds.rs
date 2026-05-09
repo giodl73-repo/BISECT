@@ -26,7 +26,9 @@ pub fn districts_in_region(tree: &BisectionTree, round: usize, region: usize) ->
     // For well-formed bisection trees (each region splits into 2), the count
     // equals the number of regions in the final round that contain tracts
     // that were in `region` at `round`.
-    let Some(regions_at_round) = tree.rounds.get(round) else { return 0 };
+    let Some(regions_at_round) = tree.rounds.get(round) else {
+        return 0;
+    };
     let Some((_, tracts_in_region)) = regions_at_round.iter().find(|(id, _)| *id == region) else {
         return 0;
     };
@@ -34,7 +36,8 @@ pub fn districts_in_region(tree: &BisectionTree, round: usize, region: usize) ->
 
     let empty = vec![];
     let last_round = tree.rounds.last().unwrap_or(&empty);
-    last_round.iter()
+    last_round
+        .iter()
         .filter(|(_, tracts)| tracts.iter().any(|t| tract_set.contains(t)))
         .count()
         .max(1)
@@ -47,7 +50,9 @@ pub fn build_lineage(tree: &BisectionTree) -> Lineage {
         let prev = &tree.rounds[round - 1];
         let curr = &tree.rounds[round];
         for (region_id, tracts) in curr {
-            if tracts.is_empty() { continue; }
+            if tracts.is_empty() {
+                continue;
+            }
             let sample_tract = tracts[0];
             // Find which parent region contained this tract
             if let Some((parent_id, _)) = prev.iter().find(|(_, pt)| pt.contains(&sample_tract)) {
@@ -161,7 +166,7 @@ mod tests {
         let tree = BisectionTree {
             rounds: vec![
                 vec![(0, vec![0, 1])],
-                vec![(0, vec![0]), (1, vec![])],   // region 1 is empty
+                vec![(0, vec![0]), (1, vec![])], // region 1 is empty
                 vec![(0, vec![0]), (1, vec![1])],
             ],
         };
@@ -178,8 +183,11 @@ mod tests {
         let tree = sample_tree();
         // Every leaf region at the final round should count as 1 district
         for &region in &[0, 1, 2, 3] {
-            assert_eq!(districts_in_region(&tree, 2, region), 1,
-                "final round region {region} must be 1 district");
+            assert_eq!(
+                districts_in_region(&tree, 2, region),
+                1,
+                "final round region {region} must be 1 district"
+            );
         }
     }
 }

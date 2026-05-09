@@ -1,9 +1,9 @@
-# Error Conventions for `redist` CLI
+# Error Conventions for `BISECT` CLI
 
 **Date:** 2026-04-30
 **Owner:** Onboarding plan Task 6 (`docs/superpowers/plans/2026-04-30-onboarding-and-tutorials.md`)
 
-This document codifies the categorized error model the `redist` CLI presents to end users. It is not an internal Rust style guide — it is a contract with the people running the binary.
+This document codifies the categorized error model the `BISECT` CLI presents to end users. It is not an internal Rust style guide — it is a contract with the people running the binary.
 
 ## Categories
 
@@ -14,7 +14,7 @@ Every user-facing error message starts with one of four categorized prefixes. Th
 | `[INPUT]` | The user supplied bad data, a bad path, or a bad CLI flag. Fix the inputs. | The user | `[INPUT] Row 47 GEOID '1001950100' is 10 digits; tract GEOIDs are 11 digits. Excel/Sheets stripped a leading zero. Re-export the GEOID column with column-format = Text.` |
 | `[CONFIG]` | A required external dependency, environment variable, file, or pinned version is missing or wrong. Fix the environment. | The user (or DevOps) | `[CONFIG] verapdf 1.x not found on PATH. Install: https://verapdf.org/software/. Required for --format pdf court-mode validation.` |
 | `[NETWORK]` | A remote fetch failed, timed out, or returned an unexpected HTTP status. Probably retry; possibly fall back. | The user (or the network) | `[NETWORK] Census TIGER fetch failed (HTTP 503): https://www2.census.gov/geo/tiger/.... Retry in 30s, or fetch manually and place at outputs/v1/2020/data/tiger/.` |
-| `[INTERNAL]` | A bug or unexpected state in `redist` itself. The user cannot fix it; the developer must. | The developer | `[INTERNAL] Unreachable code in bisection runner — please file an issue with the manifest at outputs/v1/2020/plans/.../manifest.json.` |
+| `[INTERNAL]` | A bug or unexpected state in `BISECT` itself. The user cannot fix it; the developer must. | The developer | `[INTERNAL] Unreachable code in bisection runner — please file an issue with the manifest at outputs/v1/2020/plans/.../manifest.json.` |
 
 ## Anatomy of a good error
 
@@ -31,17 +31,17 @@ Examples:
 ```
 
 ```
-[CONFIG] redist not on PATH. Run: source ~/.cargo/env  (or re-run bootstrap.sh).
+[CONFIG] BISECT not on PATH. Run: source ~/.cargo/env  (or re-run bootstrap.sh).
 ```
 
 ```
-[NETWORK] Dataverse API key validation failed (HTTP 401). The key in ~/.config/redist/credentials.toml is invalid or expired. Generate a new one at https://dataverse.harvard.edu/account.
+[NETWORK] Dataverse API key validation failed (HTTP 401). The key in ~/.config/BISECT/credentials.toml is invalid or expired. Generate a new one at https://dataverse.harvard.edu/account.
 ```
 
 ```
 [INTERNAL] PlanManifest deserialization succeeded but population_balance_valid was unset.
-   This is a bug. File at https://github.com/.../issues with: redist --version, the manifest path,
-   and the cargo build commit (run: redist doctor --verify-manifest <manifest>).
+   This is a bug. File at https://github.com/.../issues with: BISECT --version, the manifest path,
+   and the cargo build commit (run: BISECT doctor --verify-manifest <manifest>).
 ```
 
 ## Anti-patterns
@@ -78,23 +78,23 @@ The full error audit (every `unwrap()`, `expect()`, and bare `?` in `bisect-cli/
 
 - New code (post-2026-04-30) uses categorized prefixes by default
 - Existing user-facing error paths are migrated as they're touched in unrelated work
-- `redist doctor`'s `--check-tutorial-data` (the first new entry point) demonstrates the conventions
+- `BISECT doctor`'s `--check-tutorial-data` (the first new entry point) demonstrates the conventions
 - High-priority paths to migrate next (in order): `bisect state` failure modes, `bisect fetch` HTTP errors, `bisect analyze` missing-input errors
 
 Track migration coverage in `docs/superpowers/plans/2026-04-30-onboarding-and-tutorials.md` Task 6.
 
 ## Build provenance overrides (B-07)
 
-Two related env-var overrides for the recorded `redist_build_commit`:
+Two related env-var overrides for the recorded `BISECT_build_commit`:
 
-- **`REDIST_BUILD_COMMIT_OVERRIDE`** (build-time, supported in production):
+- **`BISECT_BUILD_COMMIT_OVERRIDE`** (build-time, supported in production):
   When set during `cargo build`, replaces `git rev-parse HEAD` as the recorded
   commit. Used by reproducible-build packagers pinning to a release tag.
   Verbatim — does NOT append the `-dirty` suffix (the override is the
   authoritative attestation). The build script logs a `cargo:warning=` so the
   override is visible in build logs.
 
-- **`REDIST_BUILD_COMMIT`** (runtime, test-only): the test harness can spoof
+- **`BISECT_BUILD_COMMIT`** (runtime, test-only): the test harness can spoof
   the running binary's commit string to exercise build-commit-mismatch
   warnings + `--enforce-build-commit` gates without rebuilding. This path is
   available only when the binary is compiled with `cfg(test)` OR a future

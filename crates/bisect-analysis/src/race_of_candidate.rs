@@ -200,7 +200,9 @@ pub enum RaceParseError {
     InvalidAttestationFormat { value: String },
     #[error("[INPUT] row {row}: empty {field}")]
     EmptyRequired { row: usize, field: String },
-    #[error("[INPUT] row {row}: invalid bool '{value}' for independently_verified (use true|false)")]
+    #[error(
+        "[INPUT] row {row}: invalid bool '{value}' for independently_verified (use true|false)"
+    )]
     InvalidBool { row: usize, value: String },
     #[error("[INPUT] row {row}: attestation document not found at '{path}'")]
     AttestationDocMissing { row: usize, path: String },
@@ -274,12 +276,7 @@ pub fn parse_race_of_candidate_csv<P: AsRef<Path>>(
             line: row_num,
             message: e.to_string(),
         })?;
-        let get = |col: &str| -> &str {
-            record
-                .get(col_idx[col])
-                .map(|s| s.trim())
-                .unwrap_or("")
-        };
+        let get = |col: &str| -> &str { record.get(col_idx[col]).map(|s| s.trim()).unwrap_or("") };
         let need_nonempty = |col: &str| -> Result<String, RaceParseError> {
             let v = get(col);
             if v.is_empty() {
@@ -389,19 +386,22 @@ pub fn parse_race_of_candidate_csv<P: AsRef<Path>>(
     let mut curators: HashMap<String, CuratorRecord> = HashMap::new();
     let mut docs: HashMap<String, AttestationDocRecord> = HashMap::new();
     for a in &annotations {
-        let entry = curators.entry(a.curator.clone()).or_insert_with(|| CuratorRecord {
-            curator: a.curator.clone(),
-            curator_credentials: a.curator_credentials.clone(),
-            curator_attestation_date: a.curator_attestation_date.clone(),
-            n_candidates: 0,
-        });
+        let entry = curators
+            .entry(a.curator.clone())
+            .or_insert_with(|| CuratorRecord {
+                curator: a.curator.clone(),
+                curator_credentials: a.curator_credentials.clone(),
+                curator_attestation_date: a.curator_attestation_date.clone(),
+                n_candidates: 0,
+            });
         entry.n_candidates += 1;
         let path_str = a.attestation_doc_path.display().to_string();
-        docs.entry(a.attestation_doc_sha256.clone()).or_insert(AttestationDocRecord {
-            path: path_str,
-            format: a.attestation_doc_format,
-            sha256: a.attestation_doc_sha256.clone(),
-        });
+        docs.entry(a.attestation_doc_sha256.clone())
+            .or_insert(AttestationDocRecord {
+                path: path_str,
+                format: a.attestation_doc_format,
+                sha256: a.attestation_doc_sha256.clone(),
+            });
     }
     let mut curator_list: Vec<CuratorRecord> = curators.into_values().collect();
     curator_list.sort_by(|a, b| a.curator.cmp(&b.curator));
@@ -475,7 +475,16 @@ mod tests {
     fn build_fixture(
         dir: &Path,
         rows: &[(
-            &str, &str, &str, &str, &str, &str, &str, bool, &str, &str, // doc body
+            &str,
+            &str,
+            &str,
+            &str,
+            &str,
+            &str,
+            &str,
+            bool,
+            &str,
+            &str, // doc body
         )],
     ) -> PathBuf {
         let mut csv = String::from(
@@ -545,7 +554,10 @@ mod tests {
         assert!(set.provenance.annotations_independently_verified);
         assert_eq!(set.provenance.curators.len(), 1);
         assert_eq!(set.provenance.attestation_documents.len(), 1);
-        assert!(set.disputes.is_empty(), "no multi-curator rows -> no disputes");
+        assert!(
+            set.disputes.is_empty(),
+            "no multi-curator rows -> no disputes"
+        );
     }
 
     #[test]
@@ -554,8 +566,16 @@ mod tests {
         let csv = build_fixture(
             tmp.path(),
             &[(
-                "X", "DEM", "Greenish", "C", "creds", "2026-01-01", "src", true,
-                "doc.pdf", "pdf",
+                "X",
+                "DEM",
+                "Greenish",
+                "C",
+                "creds",
+                "2026-01-01",
+                "src",
+                true,
+                "doc.pdf",
+                "pdf",
             )],
         );
         match parse_race_of_candidate_csv(&csv) {
@@ -572,8 +592,16 @@ mod tests {
         let csv = build_fixture(
             tmp.path(),
             &[(
-                "X", "DEM", "Black", "C", "creds", "2026-01-01", "src", true,
-                "doc.html", "html",
+                "X",
+                "DEM",
+                "Black",
+                "C",
+                "creds",
+                "2026-01-01",
+                "src",
+                true,
+                "doc.html",
+                "html",
             )],
         );
         match parse_race_of_candidate_csv(&csv) {
@@ -589,12 +617,23 @@ mod tests {
         let csv = build_fixture(
             tmp.path(),
             &[(
-                "Y", "DEM", "Black", "Curator", "creds", "2026-01-01", "src", true,
-                "scan.png", "png",
+                "Y",
+                "DEM",
+                "Black",
+                "Curator",
+                "creds",
+                "2026-01-01",
+                "src",
+                true,
+                "scan.png",
+                "png",
             )],
         );
         let set = parse_race_of_candidate_csv(&csv).expect("png attestation accepted under BD-R2");
-        assert_eq!(set.annotations[0].attestation_doc_format, AttestationDocFormat::Png);
+        assert_eq!(
+            set.annotations[0].attestation_doc_format,
+            AttestationDocFormat::Png
+        );
         assert!(!set.annotations[0].attestation_doc_format.is_court_strict());
     }
 
@@ -605,8 +644,16 @@ mod tests {
         let csv = build_fixture(
             tmp.path(),
             &[(
-                "Z", "DEM", "Black", "C", "creds", "2026-01-01", "src", true,
-                "doc.docx", "pdf",
+                "Z",
+                "DEM",
+                "Black",
+                "C",
+                "creds",
+                "2026-01-01",
+                "src",
+                true,
+                "doc.docx",
+                "pdf",
             )],
         );
         match parse_race_of_candidate_csv(&csv) {
@@ -637,8 +684,16 @@ mod tests {
         let csv = build_fixture(
             tmp.path(),
             &[(
-                "X", "DEM", "Black", "C", "creds", "2026-01-01", "src", false,
-                "doc.pdf", "pdf",
+                "X",
+                "DEM",
+                "Black",
+                "C",
+                "creds",
+                "2026-01-01",
+                "src",
+                false,
+                "doc.pdf",
+                "pdf",
             )],
         );
         let set = parse_race_of_candidate_csv(&csv).expect("parse");
@@ -653,12 +708,28 @@ mod tests {
             tmp.path(),
             &[
                 (
-                    "Adams", "DEM", "Black", "Smith", "Ph.D.", "2026-01-01",
-                    "src1", true, "smith_adams.pdf", "pdf",
+                    "Adams",
+                    "DEM",
+                    "Black",
+                    "Smith",
+                    "Ph.D.",
+                    "2026-01-01",
+                    "src1",
+                    true,
+                    "smith_adams.pdf",
+                    "pdf",
                 ),
                 (
-                    "Adams", "DEM", "Hispanic", "Jones", "M.A.", "2026-01-15",
-                    "src2", true, "jones_adams.pdf", "pdf",
+                    "Adams",
+                    "DEM",
+                    "Hispanic",
+                    "Jones",
+                    "M.A.",
+                    "2026-01-15",
+                    "src2",
+                    true,
+                    "jones_adams.pdf",
+                    "pdf",
                 ),
             ],
         );
@@ -696,8 +767,16 @@ mod tests {
         let csv = build_fixture(
             tmp.path(),
             &[(
-                "X", "DEM", "Black", "Curator", "creds", "2026-01-01", "src", true,
-                "doc.pdf", "pdf",
+                "X",
+                "DEM",
+                "Black",
+                "Curator",
+                "creds",
+                "2026-01-01",
+                "src",
+                true,
+                "doc.pdf",
+                "pdf",
             )],
         );
         let set = parse_race_of_candidate_csv(&csv).expect("parse");

@@ -1,10 +1,10 @@
-# Citation String Conventions for `redist`
+# Citation String Conventions for `BISECT`
 
 **Status:** Specification (consumed by Court Submission Reports plan when shipped).
 **Owner:** Court Submission Reports plan Task 2 (docs/superpowers/plans/2026-04-30-court-submission-reports.md)
 **v2.1 tracking:** D-06
 
-This is the source of truth for the exact citation strings emitted by `redist report --format pdf` and (when the Researcher Toolkit plan ships) `bisect analyze --paper-mode`. Every source class has Bluebook, APA, and Chicago templates with worked examples; the `--citation-style` flag selects between them.
+This is the source of truth for the exact citation strings emitted by `BISECT report --format pdf` and (when the Researcher Toolkit plan ships) `bisect analyze --paper-mode`. Every source class has Bluebook, APA, and Chicago templates with worked examples; the `--citation-style` flag selects between them.
 
 If you're authoring a new source class (e.g., a new election-data registry entry, a new attestation-document type), add a `## §X — <source class>` subsection with all three template variants and a worked example.
 
@@ -15,9 +15,9 @@ If you're authoring a new source class (e.g., a new election-data registry entry
 Selection rules, in order:
 
 1. Explicit `--citation-style {bluebook|apa|chicago}` overrides everything.
-2. `redist report --format pdf --jurisdiction <COURT>` → defaults to `bluebook` (any U.S. federal or state court). Bluebook is the conservative legal-citation default.
+2. `BISECT report --format pdf --jurisdiction <COURT>` → defaults to `bluebook` (any U.S. federal or state court). Bluebook is the conservative legal-citation default.
 3. `bisect analyze --paper-mode` → defaults to `apa`. APA is the dominant format in social-science journals.
-4. `redist civic ingest` and the comment-period report → defaults to `chicago`. Chicago author-date is the default for community-document citation; not court, not paper.
+4. `BISECT civic ingest` and the comment-period report → defaults to `chicago`. Chicago author-date is the default for community-document citation; not court, not paper.
 5. Without any of the above, Bluebook is the conservative fallback (mismatching style in court is harder to defend than mismatching in a press release).
 
 ---
@@ -35,7 +35,7 @@ These appear across multiple source classes; document once here.
 | `${url}` | string | Canonical URL for sources without a DOI. |
 | `${accessed_date}` | string (`YYYY-MM-DD`) | Calendar date of access; derived from `fetched_at` per `docs/file-formats/manifests.md` §4. |
 | `${publisher}` | string | For dataset citations, the dataset host (e.g., `Harvard Dataverse`). |
-| `${commit_short}` | string | 8-char git SHA of the binary version that produced the citation. From `redist_build_commit_short`. |
+| `${commit_short}` | string | 8-char git SHA of the binary version that produced the citation. From `BISECT_build_commit_short`. |
 
 ---
 
@@ -95,31 +95,31 @@ ${author}. ${year}. "${title}." Accessed ${accessed_date}. ${url}.
 
 ### 3.3 Software (this binary)
 
-For citing the `redist` binary itself in expert reports.
+For citing the `BISECT` binary itself in expert reports.
 
 **Bluebook:**
 
 ```
-redist v${redist_version} (commit ${commit_short}), https://github.com/<owner>/redist (last visited ${accessed_date}).
+BISECT v${BISECT_version} (commit ${commit_short}), https://github.com/<owner>/BISECT (last visited ${accessed_date}).
 ```
 
 **APA:**
 
 ```
-Della-Libera, G. (${year}). redist (Version ${redist_version}, commit ${commit_short}) [Computer software]. https://github.com/<owner>/redist
+Della-Libera, G. (${year}). BISECT (Version ${BISECT_version}, commit ${commit_short}) [Computer software]. https://github.com/<owner>/BISECT
 ```
 
 **Chicago author-date:**
 
 ```
-Della-Libera, Gio. ${year}. "redist (Version ${redist_version}, commit ${commit_short})." https://github.com/<owner>/redist.
+Della-Libera, Gio. ${year}. "BISECT (Version ${BISECT_version}, commit ${commit_short})." https://github.com/<owner>/BISECT.
 ```
 
 **Worked example** (Vermont 2020 walkthrough):
 
-- Bluebook: `redist v0.1.0 (commit dee93fa5), https://github.com/<owner>/redist (last visited Apr. 30, 2026).`
-- APA: `Della-Libera, G. (2026). redist (Version 0.1.0, commit dee93fa5) [Computer software]. https://github.com/<owner>/redist`
-- Chicago: `Della-Libera, Gio. 2026. "redist (Version 0.1.0, commit dee93fa5)." https://github.com/<owner>/redist.`
+- Bluebook: `BISECT v0.1.0 (commit dee93fa5), https://github.com/<owner>/BISECT (last visited Apr. 30, 2026).`
+- APA: `Della-Libera, G. (2026). BISECT (Version 0.1.0, commit dee93fa5) [Computer software]. https://github.com/<owner>/BISECT`
+- Chicago: `Della-Libera, Gio. 2026. "BISECT (Version 0.1.0, commit dee93fa5)." https://github.com/<owner>/BISECT.`
 
 ### 3.4 Expert deposition transcript
 

@@ -1,10 +1,10 @@
-/// run_registry.rs — `.redist` run registry for label-based pipeline management.
+/// run_registry.rs — `.bisect` run registry for label-based pipeline management.
 ///
-/// The `.redist` file at the repository root (CWD) tracks what has been done
+/// The `.bisect` file at the repository root (CWD) tracks what has been done
 /// to each label (built, analyzed, reported).  It is never edited by the user;
-/// only written by `redist` commands.
+/// only written by `BISECT` commands.
 ///
-/// All mutating operations acquire an exclusive advisory lock on `.redist.lock`
+/// All mutating operations acquire an exclusive advisory lock on `.bisect.lock`
 /// before loading → modifying → atomically saving.  Read-only operations use a
 /// shared lock.  This prevents lost-update races when parallel year builds call
 /// `mark_built` concurrently.
@@ -40,7 +40,7 @@ pub struct LabelEntry {
     pub reported: Vec<String>,
 }
 
-/// The full `.redist` registry — maps label name → stage completion.
+/// The full `.bisect` registry — maps label name → stage completion.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Registry {
     #[serde(flatten)]
@@ -50,20 +50,20 @@ pub struct Registry {
 // ── Path helpers ───────────────────────────────────────────────────────────────
 
 fn registry_path() -> PathBuf {
-    PathBuf::from(".redist")
+    PathBuf::from(".bisect")
 }
 
 fn registry_tmp_path() -> PathBuf {
-    PathBuf::from(".redist.tmp")
+    PathBuf::from(".bisect.tmp")
 }
 
 fn lock_path() -> PathBuf {
-    PathBuf::from(".redist.lock")
+    PathBuf::from(".bisect.lock")
 }
 
 // ── Core I/O (without locking — callers must hold lock) ───────────────────────
 
-/// Load the registry from `.redist` in the current working directory.
+/// Load the registry from `.bisect` in the current working directory.
 /// Returns an empty registry if the file does not exist.
 /// Does NOT acquire a lock — use `load()` (shared lock) for external callers
 /// or call this only while holding the exclusive lock.
@@ -72,24 +72,22 @@ fn load_unlocked() -> Result<Registry, String> {
     if !path.exists() {
         return Ok(Registry::default());
     }
-    let content = fs::read_to_string(&path)
-        .map_err(|e| format!("failed to read .redist: {e}"))?;
+    let content = fs::read_to_string(&path).map_err(|e| format!("failed to read .bisect: {e}"))?;
     if content.trim().is_empty() {
         return Ok(Registry::default());
     }
-    serde_json::from_str::<Registry>(&content)
-        .map_err(|e| format!("failed to parse .redist: {e}"))
+    serde_json::from_str::<Registry>(&content).map_err(|e| format!("failed to parse .bisect: {e}"))
 }
 
-/// Save the registry to `.redist` atomically (write `.redist.tmp` → rename).
+/// Save the registry to `.bisect` atomically (write `.bisect.tmp` → rename).
 /// Does NOT acquire a lock — callers must hold the exclusive lock.
 fn save_unlocked(registry: &Registry) -> Result<(), String> {
     let json = serde_json::to_string_pretty(registry)
         .map_err(|e| format!("failed to serialize registry: {e}"))?;
     let tmp = registry_tmp_path();
-    fs::write(&tmp, json).map_err(|e| format!("failed to write .redist.tmp: {e}"))?;
+    fs::write(&tmp, json).map_err(|e| format!("failed to write .bisect.tmp: {e}"))?;
     fs::rename(&tmp, registry_path())
-        .map_err(|e| format!("failed to rename .redist.tmp → .redist: {e}"))
+        .map_err(|e| format!("failed to rename .bisect.tmp → .bisect: {e}"))
 }
 
 // ── Public locking helpers ─────────────────────────────────────────────────────
@@ -101,7 +99,7 @@ fn open_lock_file() -> Result<fs::File, String> {
         .write(true)
         .read(true)
         .open(lock_path())
-        .map_err(|e| format!("failed to open .redist.lock: {e}"))
+        .map_err(|e| format!("failed to open .bisect.lock: {e}"))
 }
 
 // ── Registry impl ──────────────────────────────────────────────────────────────
@@ -109,8 +107,8 @@ fn open_lock_file() -> Result<fs::File, String> {
 impl Registry {
     // ── Public constructors ────────────────────────────────────────────────────
 
-    /// Load from `.redist` in the current working directory while holding a
-    /// shared lock on `.redist.lock`.  Returns empty registry if file absent.
+    /// Load from `.bisect` in the current working directory while holding a
+    /// shared lock on `.bisect.lock`.  Returns empty registry if file absent.
     pub fn load() -> Result<Self, String> {
         let lock = open_lock_file()?;
         lock.lock_shared()
@@ -121,7 +119,7 @@ impl Registry {
         result
     }
 
-    /// Save to `.redist` atomically (write `.redist.tmp` → rename).
+    /// Save to `.bisect` atomically (write `.bisect.tmp` → rename).
     ///
     /// The caller must hold the exclusive lock.  In normal use, call
     /// `with_lock` which handles this automatically.
@@ -131,7 +129,7 @@ impl Registry {
 
     // ── Mutation under exclusive lock ──────────────────────────────────────────
 
-    /// Acquire an exclusive lock on `.redist.lock`, load the registry, call
+    /// Acquire an exclusive lock on `.bisect.lock`, load the registry, call
     /// `f(&mut registry)`, save the result, then release the lock.
     ///
     /// All mutating operations use this pattern to prevent lost-update races.
@@ -247,7 +245,7 @@ impl Registry {
     /// - Returns `Err` if `from` does not exist in the registry.
     ///
     /// Note: This is a registry-only rename.  For a full filesystem + registry
-    /// rename, use `redist mv` (which calls this after moving directories).
+    /// rename, use `BISECT mv` (which calls this after moving directories).
     pub fn rename_label(from: &str, to: &str, force: bool) -> Result<(), String> {
         Self::with_lock(|reg| {
             if !reg.labels.contains_key(from) {
@@ -334,13 +332,16 @@ mod tests {
         dir
     }
 
-    // ── 1. load returns empty registry when .redist is absent ─────────────────
+    // ── 1. load returns empty registry when .bisect is absent ─────────────────
 
     #[test]
     fn test_load_missing_returns_empty() {
         let _dir = with_tempdir(|| {
             let reg = Registry::load().expect("load must succeed");
-            assert!(reg.labels.is_empty(), "expected empty registry when .redist absent");
+            assert!(
+                reg.labels.is_empty(),
+                "expected empty registry when .bisect absent"
+            );
         });
     }
 
@@ -350,8 +351,13 @@ mod tests {
     fn test_mark_built_adds_year() {
         let _dir = with_tempdir(|| {
             Registry::mark_built("my_label", "2020").expect("mark_built");
-            let entry = Registry::get("my_label").expect("get").expect("entry exists");
-            assert!(entry.built.contains(&"2020".to_string()), "2020 must be in built");
+            let entry = Registry::get("my_label")
+                .expect("get")
+                .expect("entry exists");
+            assert!(
+                entry.built.contains(&"2020".to_string()),
+                "2020 must be in built"
+            );
             assert!(entry.analyzed.is_empty());
             assert!(entry.reported.is_empty());
         });
@@ -365,8 +371,11 @@ mod tests {
             Registry::mark_built("lbl", "2020").unwrap();
             Registry::mark_built("lbl", "2020").unwrap();
             let entry = Registry::get("lbl").unwrap().unwrap();
-            assert_eq!(entry.built.iter().filter(|y| *y == "2020").count(), 1,
-                "duplicate year must not be added");
+            assert_eq!(
+                entry.built.iter().filter(|y| *y == "2020").count(),
+                1,
+                "duplicate year must not be added"
+            );
         });
     }
 
@@ -378,8 +387,14 @@ mod tests {
             let result = Registry::mark_analyzed("lbl", "2020");
             assert!(result.is_err(), "must error when year not built");
             let msg = result.unwrap_err();
-            assert!(msg.contains("[CONFIG]"), "error must contain [CONFIG] prefix: {msg}");
-            assert!(msg.contains("bisect build"), "error must contain fix command: {msg}");
+            assert!(
+                msg.contains("[CONFIG]"),
+                "error must contain [CONFIG] prefix: {msg}"
+            );
+            assert!(
+                msg.contains("bisect build"),
+                "error must contain fix command: {msg}"
+            );
         });
     }
 
@@ -404,8 +419,14 @@ mod tests {
             let result = Registry::mark_reported("lbl", "2020");
             assert!(result.is_err(), "must error when year not analyzed");
             let msg = result.unwrap_err();
-            assert!(msg.contains("[CONFIG]"), "error must contain [CONFIG] prefix: {msg}");
-            assert!(msg.contains("bisect analyze"), "error must contain fix command: {msg}");
+            assert!(
+                msg.contains("[CONFIG]"),
+                "error must contain [CONFIG] prefix: {msg}"
+            );
+            assert!(
+                msg.contains("bisect analyze"),
+                "error must contain fix command: {msg}"
+            );
         });
     }
 
@@ -439,9 +460,18 @@ mod tests {
 
             Registry::invalidate_year("lbl", "2020").expect("invalidate_year");
             let after = Registry::get("lbl").unwrap().unwrap();
-            assert!(after.built.contains(&"2020".to_string()), "built must be preserved");
-            assert!(!after.analyzed.contains(&"2020".to_string()), "analyzed must be cleared");
-            assert!(!after.reported.contains(&"2020".to_string()), "reported must be cleared");
+            assert!(
+                after.built.contains(&"2020".to_string()),
+                "built must be preserved"
+            );
+            assert!(
+                !after.analyzed.contains(&"2020".to_string()),
+                "analyzed must be cleared"
+            );
+            assert!(
+                !after.reported.contains(&"2020".to_string()),
+                "reported must be cleared"
+            );
         });
     }
 
@@ -453,12 +483,17 @@ mod tests {
             Registry::mark_built("old_name", "2020").unwrap();
             Registry::rename_label("old_name", "new_name", false).expect("rename must succeed");
 
-            assert!(Registry::get("old_name").unwrap().is_none(),
-                "old label must be gone after rename");
-            let entry = Registry::get("new_name").unwrap()
+            assert!(
+                Registry::get("old_name").unwrap().is_none(),
+                "old label must be gone after rename"
+            );
+            let entry = Registry::get("new_name")
+                .unwrap()
                 .expect("new label must exist after rename");
-            assert!(entry.built.contains(&"2020".to_string()),
-                "renamed entry must preserve built list");
+            assert!(
+                entry.built.contains(&"2020".to_string()),
+                "renamed entry must preserve built list"
+            );
         });
     }
 
@@ -473,7 +508,10 @@ mod tests {
             let result = Registry::rename_label("alpha", "beta", false);
             assert!(result.is_err(), "must error when target already exists");
             let msg = result.unwrap_err();
-            assert!(msg.contains("[CONFIG]"), "error must be a [CONFIG] error: {msg}");
+            assert!(
+                msg.contains("[CONFIG]"),
+                "error must be a [CONFIG] error: {msg}"
+            );
             assert!(msg.contains("--force"), "error must mention --force: {msg}");
         });
     }
@@ -489,10 +527,15 @@ mod tests {
             // With --force the rename must succeed, replacing beta's data with alpha's
             Registry::rename_label("alpha", "beta", true).expect("forced rename must succeed");
 
-            assert!(Registry::get("alpha").unwrap().is_none(), "alpha must be removed");
+            assert!(
+                Registry::get("alpha").unwrap().is_none(),
+                "alpha must be removed"
+            );
             let beta = Registry::get("beta").unwrap().expect("beta must exist");
-            assert!(beta.built.contains(&"2020".to_string()),
-                "beta must now have alpha's built years (2020), not its old data (2010)");
+            assert!(
+                beta.built.contains(&"2020".to_string()),
+                "beta must now have alpha's built years (2020), not its old data (2010)"
+            );
         });
     }
 
@@ -507,8 +550,11 @@ mod tests {
 
             let labels = Registry::list_labels().expect("list_labels");
             let names: Vec<&str> = labels.iter().map(|(n, _)| n.as_str()).collect();
-            assert_eq!(names, vec!["apple", "mango", "zebra"],
-                "labels must be sorted alphabetically");
+            assert_eq!(
+                names,
+                vec!["apple", "mango", "zebra"],
+                "labels must be sorted alphabetically"
+            );
         });
     }
 
@@ -521,8 +567,10 @@ mod tests {
             assert!(Registry::get("to_remove").unwrap().is_some());
 
             Registry::remove_label("to_remove").expect("remove_label");
-            assert!(Registry::get("to_remove").unwrap().is_none(),
-                "label must be absent after remove");
+            assert!(
+                Registry::get("to_remove").unwrap().is_none(),
+                "label must be absent after remove"
+            );
         });
     }
 
@@ -564,9 +612,12 @@ mod tests {
         let _dir = with_tempdir(|| {
             Registry::mark_built("lbl", "2020").unwrap();
 
-            // After a successful mark_built, .redist exists and .redist.tmp does not
-            assert!(registry_path().exists(), ".redist must exist after save");
-            assert!(!registry_tmp_path().exists(), ".redist.tmp must not exist after atomic rename");
+            // After a successful mark_built, .bisect exists and .bisect.tmp does not
+            assert!(registry_path().exists(), ".bisect must exist after save");
+            assert!(
+                !registry_tmp_path().exists(),
+                ".bisect.tmp must not exist after atomic rename"
+            );
         });
     }
 
@@ -623,7 +674,10 @@ mod tests {
             assert!(result.is_err());
             let msg = result.unwrap_err();
             assert!(msg.contains("[CONFIG]"), "must be [CONFIG] error: {msg}");
-            assert!(msg.contains("nonexistent"), "must name the missing label: {msg}");
+            assert!(
+                msg.contains("nonexistent"),
+                "must name the missing label: {msg}"
+            );
         });
     }
 
@@ -636,7 +690,11 @@ mod tests {
         let _dir = with_tempdir(|| {
             Registry::mark_built("lbl", "2020").unwrap();
             let result = Registry::require_built("lbl", "2020");
-            assert!(result.is_ok(), "require_built must succeed when year is built: {:?}", result);
+            assert!(
+                result.is_ok(),
+                "require_built must succeed when year is built: {:?}",
+                result
+            );
         });
     }
 
@@ -648,7 +706,11 @@ mod tests {
             Registry::mark_built("lbl", "2020").unwrap();
             Registry::mark_analyzed("lbl", "2020").unwrap();
             let result = Registry::require_analyzed("lbl", "2020");
-            assert!(result.is_ok(), "require_analyzed must succeed when year is analyzed: {:?}", result);
+            assert!(
+                result.is_ok(),
+                "require_analyzed must succeed when year is analyzed: {:?}",
+                result
+            );
         });
     }
 
@@ -697,12 +759,12 @@ mod tests {
     #[test]
     fn test_require_built_label_exists_but_wrong_year() {
         let _dir = with_tempdir(|| {
-            Registry::mark_built("lbl", "2010").unwrap();  // built for 2010, not 2020
+            Registry::mark_built("lbl", "2010").unwrap(); // built for 2010, not 2020
             let result = Registry::require_built("lbl", "2020");
             assert!(result.is_err(), "must error when year not in built list");
             let msg = result.unwrap_err();
-            assert!(msg.contains("[CONFIG]"),  "[CONFIG] prefix required: {msg}");
-            assert!(msg.contains("2020"),      "must name the missing year: {msg}");
+            assert!(msg.contains("[CONFIG]"), "[CONFIG] prefix required: {msg}");
+            assert!(msg.contains("2020"), "must name the missing year: {msg}");
             assert!(msg.contains("bisect build"), "must suggest fix: {msg}");
         });
     }
@@ -734,10 +796,13 @@ mod tests {
             let result = Registry::mark_reported("my_plan", "2020");
             assert!(result.is_err());
             let msg = result.unwrap_err();
-            assert!(msg.contains("[CONFIG]"),       "[CONFIG] prefix required: {msg}");
-            assert!(msg.contains("my_plan"),        "must name the label: {msg}");
-            assert!(msg.contains("2020"),           "must name the year: {msg}");
-            assert!(msg.contains("bisect analyze"), "must suggest the fix: {msg}");
+            assert!(msg.contains("[CONFIG]"), "[CONFIG] prefix required: {msg}");
+            assert!(msg.contains("my_plan"), "must name the label: {msg}");
+            assert!(msg.contains("2020"), "must name the year: {msg}");
+            assert!(
+                msg.contains("bisect analyze"),
+                "must suggest the fix: {msg}"
+            );
         });
     }
 
@@ -749,7 +814,11 @@ mod tests {
     fn test_invalidate_year_on_absent_label_is_noop() {
         let _dir = with_tempdir(|| {
             let result = Registry::invalidate_year("ghost_label", "2020");
-            assert!(result.is_ok(), "invalidate_year on absent label must succeed: {:?}", result);
+            assert!(
+                result.is_ok(),
+                "invalidate_year on absent label must succeed: {:?}",
+                result
+            );
             // Registry should still be empty
             let labels = Registry::list_labels().unwrap();
             assert!(labels.is_empty(), "registry must remain empty: {labels:?}");
@@ -765,13 +834,22 @@ mod tests {
             Registry::mark_built("lbl", "2010").unwrap();
             Registry::mark_built("lbl", "2000").unwrap();
             let entry = Registry::get("lbl").unwrap().unwrap();
-            assert!(entry.built.contains(&"2020".to_string()), "2020 must be built");
-            assert!(entry.built.contains(&"2010".to_string()), "2010 must be built");
-            assert!(entry.built.contains(&"2000".to_string()), "2000 must be built");
+            assert!(
+                entry.built.contains(&"2020".to_string()),
+                "2020 must be built"
+            );
+            assert!(
+                entry.built.contains(&"2010".to_string()),
+                "2010 must be built"
+            );
+            assert!(
+                entry.built.contains(&"2000".to_string()),
+                "2000 must be built"
+            );
         });
     }
 
-    // ── 30. Registry round-trips through JSON: .redist is valid JSON ──────────
+    // ── 30. Registry round-trips through JSON: .bisect is valid JSON ──────────
 
     #[test]
     fn test_registry_is_valid_json_after_mutations() {
@@ -779,11 +857,11 @@ mod tests {
             Registry::mark_built("plan_x", "2020").unwrap();
             Registry::mark_analyzed("plan_x", "2020").unwrap();
 
-            let content = std::fs::read_to_string(".redist")
-                .expect(".redist must exist after mutations");
-            let v: serde_json::Value = serde_json::from_str(&content)
-                .expect(".redist must be valid JSON");
-            assert!(v.is_object(), ".redist must be a JSON object");
+            let content =
+                std::fs::read_to_string(".bisect").expect(".bisect must exist after mutations");
+            let v: serde_json::Value =
+                serde_json::from_str(&content).expect(".bisect must be valid JSON");
+            assert!(v.is_object(), ".bisect must be a JSON object");
             assert!(v.get("plan_x").is_some(), "plan_x must appear in JSON");
         });
     }

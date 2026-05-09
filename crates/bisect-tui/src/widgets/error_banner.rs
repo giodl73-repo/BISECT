@@ -1,11 +1,10 @@
 /// Error banner — 4-line Red-bordered overlay at bottom when app.error is set.
-
 use ratatui::{
-    Frame,
     layout::Rect,
     style::{Color, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Clear, Paragraph},
+    Frame,
 };
 
 use crate::app::App;

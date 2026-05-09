@@ -8,7 +8,7 @@ param(
 )
 
 Set-Location C:\src\apportionment
-$env:REDIST_LOCATION_POLICY = "C:\src\apportionment\redist\data\location_policy.json"
+$env:BISECT_LOCATION_POLICY = "C:\src\apportionment\BISECT\data\location_policy.json"
 
 $outDir = "outputs\b11_multiseed"
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
@@ -72,13 +72,13 @@ foreach ($entry in $statesToRun) {
         $pPath = "outputs\$ver\2020\states\$stName\analysis\proportionality.json"
 
         if (-not (Test-Path $mPath)) {
-            $null = .\redist\target\release\redist.exe state --state $code --year 2020 `
+            $null = .\target\release\bisect.exe state --state $code --year 2020 `
                 --version $ver --partition-mode prime-factor --seed $seed --manifest 2>&1
             if ($LASTEXITCODE -ne 0) { $seeds_fail++; continue }
         }
 
         if ((Test-Path $mPath) -and (-not (Test-Path $pPath))) {
-            $null = .\redist\target\release\redist.exe analyze --state $code --year 2020 `
+            $null = .\target\release\bisect.exe analyze --state $code --year 2020 `
                 --version $ver --types proportionality 2>&1
         }
 

@@ -1,4 +1,4 @@
-/// `redist doctor` — pre-flight check for a location+year+chamber+resolution.
+/// `BISECT doctor` — pre-flight check for a location+year+chamber+resolution.
 ///
 /// Checks:
 ///  1. Is the location known to the registry?
@@ -46,7 +46,7 @@ pub fn run_doctor(args: &DoctorArgs) {
     if !registry.has_location(&code) {
         println!("[FAIL] Location '{code}' not found in location_policy.json.");
         println!("       To add it: edit bisect/data/location_policy.json");
-        println!("       Or set REDIST_LOCATION_POLICY to a custom policy file.");
+        println!("       Or set BISECT_LOCATION_POLICY to a custom policy file.");
         std::process::exit(1);
     }
     println!("[PASS] Location '{code}' is registered.");
@@ -54,7 +54,11 @@ pub fn run_doctor(args: &DoctorArgs) {
     // ── 2. Year valid? ────────────────────────────────────────────────────────
     let years = registry.available_years(&code);
     match registry.validate_year(&code, &args.year) {
-        Ok(_) => println!("[PASS] Year '{}' is valid for {code}.  Available: {}", args.year, years.join(", ")),
+        Ok(_) => println!(
+            "[PASS] Year '{}' is valid for {code}.  Available: {}",
+            args.year,
+            years.join(", ")
+        ),
         Err(e) => {
             println!("[FAIL] {e}");
             std::process::exit(1);
@@ -75,13 +79,18 @@ pub fn run_doctor(args: &DoctorArgs) {
 
     // ── 4. Balance tolerance ─────────────────────────────────────────────────
     let tol = chamber_balance_tolerance(&code, &args.chamber);
-    println!("[INFO] Balance tolerance: {:.1}% (from policy; override with --balance-tolerance)",
-        tol * 100.0);
+    println!(
+        "[INFO] Balance tolerance: {:.1}% (from policy; override with --balance-tolerance)",
+        tol * 100.0
+    );
 
     // ── 5. Granularity warning ────────────────────────────────────────────────
     match registry.granularity_warning(&code, &args.year, &args.chamber, &args.resolution) {
         Some(warn) => println!("[WARN] {warn}"),
-        None => println!("[PASS] Resolution '{}' is appropriate for {code} {}.", args.resolution, args.chamber),
+        None => println!(
+            "[PASS] Resolution '{}' is appropriate for {code} {}.",
+            args.resolution, args.chamber
+        ),
     }
 
     // ── 6. Adjacency file ─────────────────────────────────────────────────────
@@ -100,18 +109,28 @@ pub fn run_doctor(args: &DoctorArgs) {
         Err(e) => println!("[WARN] Could not resolve adjacency path: {e}"),
     }
 
-    // ── 7. TIGER geometry files (needed for redist map) ──────────────────────
+    // ── 7. TIGER geometry files (needed for BISECT map) ──────────────────────
     {
         let tiger_path = std::path::PathBuf::from(&args.output_base)
-            .join("V3").join("data").join(&args.year).join("tiger");
+            .join("V3")
+            .join("data")
+            .join(&args.year)
+            .join("tiger");
         let has_tiger = tiger_path.exists()
-            && tiger_path.read_dir()
+            && tiger_path
+                .read_dir()
                 .map(|mut d| d.next().is_some())
                 .unwrap_or(false);
         if has_tiger {
-            println!("[PASS] TIGER geometry found (maps available): {}", tiger_path.display());
+            println!(
+                "[PASS] TIGER geometry found (maps available): {}",
+                tiger_path.display()
+            );
         } else {
-            println!("[INFO] TIGER geometry not found (maps will fail): {}", tiger_path.display());
+            println!(
+                "[INFO] TIGER geometry not found (maps will fail): {}",
+                tiger_path.display()
+            );
             println!(
                 "       Run: bisect fetch --type tiger --states {} --year {}",
                 code, args.year
@@ -125,10 +144,14 @@ pub fn run_doctor(args: &DoctorArgs) {
         if let Some(location) = policy.get(&code) {
             if let Some(nesting) = location.get("nesting_requirement").and_then(|v| v.as_str()) {
                 if nesting != "null" {
-                    let ratio = location.get("nesting_ratio")
+                    let ratio = location
+                        .get("nesting_ratio")
                         .and_then(|v| v.as_str())
                         .unwrap_or("?");
-                    println!("[INFO] Nesting: {} ({} ratio). Use 'bisect suite' for multi-chamber.", nesting, ratio);
+                    println!(
+                        "[INFO] Nesting: {} ({} ratio). Use 'bisect suite' for multi-chamber.",
+                        nesting, ratio
+                    );
                 }
             }
         }
@@ -138,22 +161,30 @@ pub fn run_doctor(args: &DoctorArgs) {
     {
         let policy = registry.raw();
         if let Some(location) = policy.get(&code) {
-            if let Some(std) = location.get("compactness_standard").and_then(|v| v.as_str()) {
+            if let Some(std) = location
+                .get("compactness_standard")
+                .and_then(|v| v.as_str())
+            {
                 println!("[INFO] Compactness standard: {std}");
             }
         }
     }
 
-    println!("\n[OK] Doctor check complete for {code} {} {}.", args.chamber, args.year);
+    println!(
+        "\n[OK] Doctor check complete for {code} {} {}.",
+        args.chamber, args.year
+    );
 }
 
 // ---------------------------------------------------------------------------
-// All-plans scan mode — `redist doctor --all`
+// All-plans scan mode — `BISECT doctor --all`
 // ---------------------------------------------------------------------------
 
 fn run_all_plans_doctor(version: &str, year: &str, output_base: &str) {
     let plans_dir = std::path::PathBuf::from(output_base)
-        .join(version).join(year).join("plans");
+        .join(version)
+        .join(year)
+        .join("plans");
 
     let mut labels: Vec<String> = std::fs::read_dir(&plans_dir)
         .ok()
@@ -171,54 +202,94 @@ fn run_all_plans_doctor(version: &str, year: &str, output_base: &str) {
         return;
     }
 
-    println!("=== bisect doctor --all: {} plans in {}/{}/{}/plans/ ===\n",
-        labels.len(), output_base, version, year);
-    println!("{:<30} {:>9} {:>8} {:>6} {:>7} {:>8}",
-        "Label", "Districts", "Balance", "PP", "Splits", "Missing");
+    println!(
+        "=== bisect doctor --all: {} plans in {}/{}/{}/plans/ ===\n",
+        labels.len(),
+        output_base,
+        version,
+        year
+    );
+    println!(
+        "{:<30} {:>9} {:>8} {:>6} {:>7} {:>8}",
+        "Label", "Districts", "Balance", "PP", "Splits", "Missing"
+    );
     println!("{}", "-".repeat(75));
 
     for label in &labels {
         match crate::plan_context::PlanContext::from_label(
-            std::path::Path::new(output_base), version, year, label
+            std::path::Path::new(output_base),
+            version,
+            year,
+            label,
         ) {
             Err(_) => println!("{:<30} [no manifest]", label),
             Ok(ctx) => {
                 let n = ctx.num_districts();
                 let balance = if ctx.analysis_file_exists("summary.json") {
                     let path = ctx.analysis_file("summary.json");
-                    std::fs::read_to_string(&path).ok()
+                    std::fs::read_to_string(&path)
+                        .ok()
                         .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
                         .and_then(|v| v["population_balance_valid"].as_bool())
                         .map(|ok| if ok { "OK" } else { "FAIL" })
                         .unwrap_or("?")
-                } else { "-" };
+                } else {
+                    "-"
+                };
                 let pp = if ctx.analysis_file_exists("compactness.json") {
                     let path = ctx.analysis_file("compactness.json");
-                    std::fs::read_to_string(&path).ok()
+                    std::fs::read_to_string(&path)
+                        .ok()
                         .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
                         .and_then(|v| {
                             v["districts"].as_array().and_then(|d| {
-                                let vals: Vec<f64> = d.iter().filter_map(|x| x["polsby_popper"].as_f64()).collect();
-                                if vals.is_empty() { None } else { Some(vals.iter().sum::<f64>() / vals.len() as f64) }
+                                let vals: Vec<f64> = d
+                                    .iter()
+                                    .filter_map(|x| x["polsby_popper"].as_f64())
+                                    .collect();
+                                if vals.is_empty() {
+                                    None
+                                } else {
+                                    Some(vals.iter().sum::<f64>() / vals.len() as f64)
+                                }
                             })
                         })
                         .map(|pp_val| format!("{:.3}", pp_val))
                         .unwrap_or_else(|| "-".to_string())
-                } else { "-".to_string() };
+                } else {
+                    "-".to_string()
+                };
                 let splits = if ctx.analysis_file_exists("splits.json") {
                     let path = ctx.analysis_file("splits.json");
-                    std::fs::read_to_string(&path).ok()
+                    std::fs::read_to_string(&path)
+                        .ok()
                         .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
                         .and_then(|v| v["counties"]["split"].as_u64())
                         .map(|n| n.to_string())
                         .unwrap_or_else(|| "-".to_string())
-                } else { "-".to_string() };
+                } else {
+                    "-".to_string()
+                };
                 let required = ["summary.json", "compactness.json", "contiguity.json"];
-                let missing_count = required.iter().filter(|&&f| !ctx.analysis_file_exists(f)).count();
-                let missing_str = if missing_count == 0 { "none".to_string() } else { format!("{} required", missing_count) };
+                let missing_count = required
+                    .iter()
+                    .filter(|&&f| !ctx.analysis_file_exists(f))
+                    .count();
+                let missing_str = if missing_count == 0 {
+                    "none".to_string()
+                } else {
+                    format!("{} required", missing_count)
+                };
 
-                println!("{:<30} {:>9} {:>8} {:>6} {:>7} {:>8}",
-                    &label[..label.len().min(29)], n, balance, pp, splits, missing_str);
+                println!(
+                    "{:<30} {:>9} {:>8} {:>6} {:>7} {:>8}",
+                    &label[..label.len().min(29)],
+                    n,
+                    balance,
+                    pp,
+                    splits,
+                    missing_str
+                );
             }
         }
     }
@@ -226,14 +297,17 @@ fn run_all_plans_doctor(version: &str, year: &str, output_base: &str) {
 }
 
 // ---------------------------------------------------------------------------
-// Plan diagnosis mode — `redist doctor --label <label>`
+// Plan diagnosis mode — `BISECT doctor --label <label>`
 // ---------------------------------------------------------------------------
 
 fn run_plan_doctor(label: &str, version: &str, year: &str, output_base: &str) {
     use std::path::PathBuf;
 
     let ctx = match crate::plan_context::PlanContext::from_label(
-        PathBuf::from(output_base).as_path(), version, year, label,
+        PathBuf::from(output_base).as_path(),
+        version,
+        year,
+        label,
     ) {
         Ok(c) => c,
         Err(e) => {
@@ -274,7 +348,11 @@ fn run_plan_doctor(label: &str, version: &str, year: &str, output_base: &str) {
             let info = read_analysis_summary(&ctx, name);
             // For compactness: use [WARN] when PP is low or moderate (< 0.25)
             let status = if *name == "compactness.json" {
-                if info.contains("low") || info.contains("moderate") { "WARN" } else { "PASS" }
+                if info.contains("low") || info.contains("moderate") {
+                    "WARN"
+                } else {
+                    "PASS"
+                }
             } else {
                 "PASS"
             };
@@ -319,13 +397,19 @@ fn run_plan_doctor(label: &str, version: &str, year: &str, output_base: &str) {
     println!("\n-- Report readiness ───────────────────────────────────────────");
     if missing_required.is_empty() {
         println!("[PASS] Required analysis files present");
-        println!("[INFO] To generate report: bisect report --label {} --format html", label);
+        println!(
+            "[INFO] To generate report: bisect report --label {} --format html",
+            label
+        );
     } else {
         println!(
             "[FAIL] Missing required files: {}",
             missing_required.join(", ")
         );
-        println!("       Run: bisect analyze --label {} --types all --force", label);
+        println!(
+            "       Run: bisect analyze --label {} --types all --force",
+            label
+        );
     }
     if !missing_optional.is_empty() {
         println!(
@@ -461,7 +545,7 @@ fn analysis_fetch_hint(name: &str, state_code: &str, year: &str) -> Option<Strin
 }
 
 // ---------------------------------------------------------------------------
-// `redist doctor --verify-manifest <PATH>` — provenance audit
+// `BISECT doctor --verify-manifest <PATH>` — provenance audit
 // ---------------------------------------------------------------------------
 
 /// Verify a plan manifest.json against the running binary's provenance.
@@ -501,21 +585,35 @@ pub fn run_verify_manifest(manifest_path: &str) -> i32 {
     println!("Running binary:");
     println!("  version:      {}", prov.version);
     println!("  build_commit: {}", prov.build_commit);
-    println!("  redist_build_date:   {}", prov.redist_build_date);
+    println!("  bisect_build_date:   {}", prov.bisect_build_date);
     println!("  rustc_version:       {}", prov.rustc_version);
     println!();
 
     // 3. Pull recorded version
-    let manifest_version = json.get("binary_version")
+    let manifest_version = json
+        .get("binary_version")
         .and_then(|v| v.as_str())
         .unwrap_or("");
     println!("Manifest records:");
-    println!("  binary_version:      {}", if manifest_version.is_empty() { "(missing)" } else { manifest_version });
+    println!(
+        "  binary_version:      {}",
+        if manifest_version.is_empty() {
+            "(missing)"
+        } else {
+            manifest_version
+        }
+    );
     if let Some(s) = json.get("binary_sha256").and_then(|v| v.as_str()) {
-        println!("  binary_sha256:       {}", if s.is_empty() { "(not recorded)" } else { s });
+        println!(
+            "  binary_sha256:       {}",
+            if s.is_empty() { "(not recorded)" } else { s }
+        );
     }
     if let Some(s) = json.get("adjacency_sha256").and_then(|v| v.as_str()) {
-        println!("  adjacency_sha256:    {}", if s.is_empty() { "(not recorded)" } else { s });
+        println!(
+            "  adjacency_sha256:    {}",
+            if s.is_empty() { "(not recorded)" } else { s }
+        );
     }
     if let Some(s) = json.get("created_at").and_then(|v| v.as_str()) {
         println!("  created_at:          {s}");
@@ -562,7 +660,7 @@ pub fn run_verify_manifest(manifest_path: &str) -> i32 {
 }
 
 // ---------------------------------------------------------------------------
-// `redist doctor --check-tutorial-data` — pinned-data drift detection
+// `BISECT doctor --check-tutorial-data` — pinned-data drift detection
 // ---------------------------------------------------------------------------
 
 /// Schema for `examples/{tutorial}-walkthrough/checksums.json`.
@@ -627,7 +725,7 @@ fn hex_lower(bytes: &[u8]) -> String {
     s
 }
 
-/// Run `redist doctor --check-tutorial-data`. Returns process exit code.
+/// Run `BISECT doctor --check-tutorial-data`. Returns process exit code.
 ///
 /// - 0: every row PASS (every locally-present file matches its pinned SHA)
 /// - 1: at least one row FAIL (a present file's hash does not match)
@@ -651,10 +749,7 @@ pub fn run_check_tutorial_data(tutorial: &str, repo_root: &std::path::Path) -> i
         Ok(c) => c,
         Err(e) => {
             println!("[FAIL] Cannot read checksums file: {e}");
-            println!(
-                "       Expected at: {}",
-                checksums_path.display()
-            );
+            println!("       Expected at: {}", checksums_path.display());
             println!("       Did the Onboarding plan's Task 1 fixture land?");
             return 2;
         }
@@ -758,10 +853,7 @@ pub fn run_check_tutorial_data(tutorial: &str, repo_root: &std::path::Path) -> i
     }
 
     println!();
-    println!(
-        "Summary: {} PASS, {} FAIL, {} MISSING",
-        pass, fail, missing
-    );
+    println!("Summary: {} PASS, {} FAIL, {} MISSING", pass, fail, missing);
 
     if fail > 0 {
         println!();
@@ -831,10 +923,15 @@ mod tests {
     fn test_doctor_wa_house_tract_warns_granularity() {
         let registry = LocationRegistry::load();
         let warn = registry.granularity_warning("WA", "2020", "house", "tract");
-        assert!(warn.is_some(), "WA house at tract resolution must warn about granularity");
+        assert!(
+            warn.is_some(),
+            "WA house at tract resolution must warn about granularity"
+        );
         let msg = warn.unwrap();
-        assert!(msg.contains("block_group") || msg.contains("resolution"),
-            "warning must suggest block_group: {msg}");
+        assert!(
+            msg.contains("block_group") || msg.contains("resolution"),
+            "warning must suggest block_group: {msg}"
+        );
     }
 
     #[test]
@@ -848,7 +945,10 @@ mod tests {
     fn test_doctor_wa_congressional_no_warn() {
         let registry = LocationRegistry::load();
         let warn = registry.granularity_warning("WA", "2020", "congressional", "tract");
-        assert!(warn.is_none(), "WA congressional (10D) should not warn at tract");
+        assert!(
+            warn.is_none(),
+            "WA congressional (10D) should not warn at tract"
+        );
     }
 
     #[test]
@@ -878,8 +978,10 @@ mod tests {
         let result = registry.validate_year("WA", "2024");
         assert!(result.is_err(), "2024 must be invalid for WA");
         let msg = result.unwrap_err();
-        assert!(msg.contains("2020") || msg.contains("2010"),
-            "error must list valid years: {msg}");
+        assert!(
+            msg.contains("2020") || msg.contains("2010"),
+            "error must list valid years: {msg}"
+        );
     }
 
     #[test]
@@ -900,13 +1002,19 @@ mod tests {
         let normalized = code.to_uppercase();
         assert_eq!(normalized, "WA", "to_uppercase of 'wa' must produce 'WA'");
         // Registry finds normalized code
-        assert!(registry.has_location(&normalized),
-            "registry must find 'WA' (normalized from 'wa')");
+        assert!(
+            registry.has_location(&normalized),
+            "registry must find 'WA' (normalized from 'wa')"
+        );
         // Confirm that the normalization used in run_doctor matches registry lookup
         let args_state = "wa"; // simulates DoctorArgs.state = "wa"
         let code_normalized = args_state.to_uppercase();
-        assert!(registry.has_location(&code_normalized),
-            "run_doctor normalization pattern must work: {} -> {}", args_state, code_normalized);
+        assert!(
+            registry.has_location(&code_normalized),
+            "run_doctor normalization pattern must work: {} -> {}",
+            args_state,
+            code_normalized
+        );
     }
 
     #[test]
@@ -924,7 +1032,10 @@ mod tests {
         let code = "_TEST_EL";
         assert_eq!(code.to_uppercase(), "_TEST_EL");
         let registry = LocationRegistry::load();
-        assert!(registry.has_location("_TEST_EL"), "_TEST_EL must be in registry");
+        assert!(
+            registry.has_location("_TEST_EL"),
+            "_TEST_EL must be in registry"
+        );
     }
 
     // ── Gap 7: doctor checks TIGER geometry files ─────────────────────────────
@@ -938,15 +1049,23 @@ mod tests {
         let code = "WA";
 
         let tiger_path = std::path::PathBuf::from(output_base)
-            .join("V3").join("data").join(year).join("tiger");
+            .join("V3")
+            .join("data")
+            .join(year)
+            .join("tiger");
 
         // Verify the detection logic: non-existent path → info check fires
         let has_tiger = tiger_path.exists()
-            && tiger_path.read_dir()
+            && tiger_path
+                .read_dir()
                 .map(|mut d| d.next().is_some())
                 .unwrap_or(false);
 
-        assert!(!has_tiger, "TIGER path must not exist in test env: {}", tiger_path.display());
+        assert!(
+            !has_tiger,
+            "TIGER path must not exist in test env: {}",
+            tiger_path.display()
+        );
 
         // Build the message that would be emitted
         let info_msg = format!(
@@ -958,10 +1077,22 @@ mod tests {
             code, year
         );
 
-        assert!(info_msg.contains("tiger"), "info message must contain 'tiger': {info_msg}");
-        assert!(info_msg.contains("TIGER"), "info message must contain 'TIGER': {info_msg}");
-        assert!(fetch_hint.contains("bisect fetch"), "hint must suggest 'bisect fetch': {fetch_hint}");
-        assert!(fetch_hint.contains("--type tiger"), "hint must include '--type tiger': {fetch_hint}");
+        assert!(
+            info_msg.contains("tiger"),
+            "info message must contain 'tiger': {info_msg}"
+        );
+        assert!(
+            info_msg.contains("TIGER"),
+            "info message must contain 'TIGER': {info_msg}"
+        );
+        assert!(
+            fetch_hint.contains("bisect fetch"),
+            "hint must suggest 'bisect fetch': {fetch_hint}"
+        );
+        assert!(
+            fetch_hint.contains("--type tiger"),
+            "hint must include '--type tiger': {fetch_hint}"
+        );
     }
 
     // ── Task 145: compactness standard ───────────────────────────────────────
@@ -971,12 +1102,13 @@ mod tests {
         let registry = LocationRegistry::load();
         let policy = registry.raw();
         let wa = policy.get("WA").expect("WA must be in policy");
-        let std = wa.get("compactness_standard")
-            .and_then(|v| v.as_str());
+        let std = wa.get("compactness_standard").and_then(|v| v.as_str());
         assert!(std.is_some(), "WA must have compactness_standard field");
         let s = std.unwrap();
-        assert!(s.contains("RCW") || s.contains("compact"),
-            "WA compactness_standard must reference RCW or compactness: {s}");
+        assert!(
+            s.contains("RCW") || s.contains("compact"),
+            "WA compactness_standard must reference RCW or compactness: {s}"
+        );
     }
 
     #[test]
@@ -986,15 +1118,21 @@ mod tests {
         let policy = registry.raw();
         let states_with_standard = ["WA", "CA", "CO", "FL", "TX", "VA", "NY"];
         for code in &states_with_standard {
-            let location = policy.get(*code)
+            let location = policy
+                .get(*code)
                 .unwrap_or_else(|| panic!("{code} must be in policy"));
-            let std = location.get("compactness_standard")
+            let std = location
+                .get("compactness_standard")
                 .and_then(|v| v.as_str());
-            assert!(std.is_some(),
-                "{code} must have compactness_standard field, but it's missing");
+            assert!(
+                std.is_some(),
+                "{code} must have compactness_standard field, but it's missing"
+            );
             let s = std.unwrap();
-            assert!(!s.is_empty(),
-                "{code} compactness_standard must not be empty");
+            assert!(
+                !s.is_empty(),
+                "{code} compactness_standard must not be empty"
+            );
         }
     }
 
@@ -1004,28 +1142,60 @@ mod tests {
     fn test_doctor_compactness_low_pp_shows_warn_context() {
         // PP < 0.15 should get "low" context
         let pp = 0.12_f64;
-        let context = if pp < 0.15 { "low" } else if pp < 0.25 { "moderate" } else if pp < 0.35 { "good" } else { "well-compact" };
+        let context = if pp < 0.15 {
+            "low"
+        } else if pp < 0.25 {
+            "moderate"
+        } else if pp < 0.35 {
+            "good"
+        } else {
+            "well-compact"
+        };
         assert_eq!(context, "low");
     }
 
     #[test]
     fn test_doctor_compactness_high_pp_shows_compact_context() {
         let pp = 0.36_f64;
-        let context = if pp < 0.15 { "low" } else if pp < 0.25 { "moderate" } else if pp < 0.35 { "good" } else { "well-compact" };
+        let context = if pp < 0.15 {
+            "low"
+        } else if pp < 0.25 {
+            "moderate"
+        } else if pp < 0.35 {
+            "good"
+        } else {
+            "well-compact"
+        };
         assert_eq!(context, "well-compact");
     }
 
     #[test]
     fn test_doctor_compactness_moderate_pp() {
         let pp = 0.20_f64;
-        let context = if pp < 0.15 { "low" } else if pp < 0.25 { "moderate" } else if pp < 0.35 { "good" } else { "well-compact" };
+        let context = if pp < 0.15 {
+            "low"
+        } else if pp < 0.25 {
+            "moderate"
+        } else if pp < 0.35 {
+            "good"
+        } else {
+            "well-compact"
+        };
         assert_eq!(context, "moderate");
     }
 
     #[test]
     fn test_doctor_compactness_good_pp() {
         let pp = 0.30_f64;
-        let context = if pp < 0.15 { "low" } else if pp < 0.25 { "moderate" } else if pp < 0.35 { "good" } else { "well-compact" };
+        let context = if pp < 0.15 {
+            "low"
+        } else if pp < 0.25 {
+            "moderate"
+        } else if pp < 0.35 {
+            "good"
+        } else {
+            "well-compact"
+        };
         assert_eq!(context, "good");
     }
 
@@ -1034,7 +1204,12 @@ mod tests {
     fn test_read_analysis_summary_compactness_includes_context() {
         use tempfile::TempDir;
         let tmp = TempDir::new().unwrap();
-        let plan_dir = tmp.path().join("v1").join("2020").join("plans").join("ctx_test");
+        let plan_dir = tmp
+            .path()
+            .join("v1")
+            .join("2020")
+            .join("plans")
+            .join("ctx_test");
         let analysis_dir = plan_dir.join("analysis");
         std::fs::create_dir_all(&analysis_dir).unwrap();
         std::fs::write(
@@ -1064,32 +1239,46 @@ mod tests {
                 "total_seats": 1,
                 "electoral_system": "single_member",
                 "gpmetis_version": "unknown"
-            }).to_string(),
-        ).unwrap();
+            })
+            .to_string(),
+        )
+        .unwrap();
 
         // Low PP (< 0.15) → "low" context
         std::fs::write(
             analysis_dir.join("compactness.json"),
             serde_json::json!({
                 "districts": [{"district": 1, "polsby_popper": 0.10}]
-            }).to_string(),
-        ).unwrap();
-        let ctx = crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "ctx_test").unwrap();
+            })
+            .to_string(),
+        )
+        .unwrap();
+        let ctx =
+            crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "ctx_test")
+                .unwrap();
         let summary = read_analysis_summary(&ctx, "compactness.json");
-        assert!(summary.contains("low") || summary.contains("legal"),
-            "low PP must show 'low' context: {summary}");
+        assert!(
+            summary.contains("low") || summary.contains("legal"),
+            "low PP must show 'low' context: {summary}"
+        );
 
         // High PP (> 0.35) → "well-compact" context
         std::fs::write(
             analysis_dir.join("compactness.json"),
             serde_json::json!({
                 "districts": [{"district": 1, "polsby_popper": 0.40}]
-            }).to_string(),
-        ).unwrap();
-        let ctx2 = crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "ctx_test").unwrap();
+            })
+            .to_string(),
+        )
+        .unwrap();
+        let ctx2 =
+            crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "ctx_test")
+                .unwrap();
         let summary2 = read_analysis_summary(&ctx2, "compactness.json");
-        assert!(summary2.contains("well-compact"),
-            "high PP must show 'well-compact' context: {summary2}");
+        assert!(
+            summary2.contains("well-compact"),
+            "high PP must show 'well-compact' context: {summary2}"
+        );
     }
 
     /// read_analysis_summary summary.json includes balance context.
@@ -1097,7 +1286,12 @@ mod tests {
     fn test_read_analysis_summary_balance_context() {
         use tempfile::TempDir;
         let tmp = TempDir::new().unwrap();
-        let plan_dir = tmp.path().join("v1").join("2020").join("plans").join("bal_ctx_test");
+        let plan_dir = tmp
+            .path()
+            .join("v1")
+            .join("2020")
+            .join("plans")
+            .join("bal_ctx_test");
         let analysis_dir = plan_dir.join("analysis");
         std::fs::create_dir_all(&analysis_dir).unwrap();
         std::fs::write(
@@ -1127,8 +1321,10 @@ mod tests {
                 "total_seats": 10,
                 "electoral_system": "single_member",
                 "gpmetis_version": "unknown"
-            }).to_string(),
-        ).unwrap();
+            })
+            .to_string(),
+        )
+        .unwrap();
 
         // Valid balance with 10 districts → "within tolerance" context
         std::fs::write(
@@ -1140,12 +1336,18 @@ mod tests {
                     {"district": 4}, {"district": 5}, {"district": 6},
                     {"district": 7}, {"district": 8}, {"district": 9}, {"district": 10}
                 ]
-            }).to_string(),
-        ).unwrap();
-        let ctx = crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "bal_ctx_test").unwrap();
+            })
+            .to_string(),
+        )
+        .unwrap();
+        let ctx =
+            crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "bal_ctx_test")
+                .unwrap();
         let summary = read_analysis_summary(&ctx, "summary.json");
-        assert!(summary.contains("within tolerance"),
-            "valid balance with >1 district must show 'within tolerance': {summary}");
+        assert!(
+            summary.contains("within tolerance"),
+            "valid balance with >1 district must show 'within tolerance': {summary}"
+        );
 
         // Invalid balance → "EXCEEDS TOLERANCE" context
         std::fs::write(
@@ -1153,12 +1355,18 @@ mod tests {
             serde_json::json!({
                 "population_balance_valid": false,
                 "districts": [{"district": 1}, {"district": 2}]
-            }).to_string(),
-        ).unwrap();
-        let ctx2 = crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "bal_ctx_test").unwrap();
+            })
+            .to_string(),
+        )
+        .unwrap();
+        let ctx2 =
+            crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "bal_ctx_test")
+                .unwrap();
         let summary2 = read_analysis_summary(&ctx2, "summary.json");
-        assert!(summary2.contains("EXCEEDS TOLERANCE"),
-            "invalid balance must show 'EXCEEDS TOLERANCE': {summary2}");
+        assert!(
+            summary2.contains("EXCEEDS TOLERANCE"),
+            "invalid balance must show 'EXCEEDS TOLERANCE': {summary2}"
+        );
     }
 
     // ── Plan diagnosis mode (--label) ─────────────────────────────────────────
@@ -1207,13 +1415,8 @@ mod tests {
         )
         .unwrap();
 
-        let ctx = crate::plan_context::PlanContext::from_label(
-            tmp.path(),
-            "v1",
-            "2020",
-            "vt_test",
-        )
-        .unwrap();
+        let ctx = crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "vt_test")
+            .unwrap();
         assert_eq!(ctx.num_districts(), 1);
         assert_eq!(ctx.chamber(), "congressional");
         assert_eq!(ctx.state_code(), "VT");
@@ -1224,12 +1427,7 @@ mod tests {
     fn test_read_analysis_summary_compactness() {
         use tempfile::TempDir;
         let tmp = TempDir::new().unwrap();
-        let plan_dir = tmp
-            .path()
-            .join("v1")
-            .join("2020")
-            .join("plans")
-            .join("t");
+        let plan_dir = tmp.path().join("v1").join("2020").join("plans").join("t");
         let analysis_dir = plan_dir.join("analysis");
         std::fs::create_dir_all(&analysis_dir).unwrap();
         std::fs::write(
@@ -1272,13 +1470,8 @@ mod tests {
         )
         .unwrap();
 
-        let ctx = crate::plan_context::PlanContext::from_label(
-            tmp.path(),
-            "v1",
-            "2020",
-            "t",
-        )
-        .unwrap();
+        let ctx =
+            crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "t").unwrap();
         let summary = read_analysis_summary(&ctx, "compactness.json");
         assert!(
             summary.contains("0.31") || summary.contains("PP"),
@@ -1355,13 +1548,16 @@ mod tests {
     fn test_verify_manifest_matching_version_returns_0() {
         let tmp = tempfile::TempDir::new().unwrap();
         let prov = Provenance::current();
-        let path = write_manifest(&tmp, serde_json::json!({
-            "binary_version": prov.version,
-            "binary_sha256": "",
-            "adjacency_file": "",
-            "adjacency_sha256": "",
-            "created_at": "2026-04-29T00:00:00Z",
-        }));
+        let path = write_manifest(
+            &tmp,
+            serde_json::json!({
+                "binary_version": prov.version,
+                "binary_sha256": "",
+                "adjacency_file": "",
+                "adjacency_sha256": "",
+                "created_at": "2026-04-29T00:00:00Z",
+            }),
+        );
         let result = run_verify_manifest(path.to_str().unwrap());
         assert_eq!(result, 0, "matching version → exit 0");
     }
@@ -1369,10 +1565,13 @@ mod tests {
     #[test]
     fn test_verify_manifest_mismatched_version_returns_1() {
         let tmp = tempfile::TempDir::new().unwrap();
-        let path = write_manifest(&tmp, serde_json::json!({
-            "binary_version": "999.999.999",
-            "binary_sha256": "",
-        }));
+        let path = write_manifest(
+            &tmp,
+            serde_json::json!({
+                "binary_version": "999.999.999",
+                "binary_sha256": "",
+            }),
+        );
         let result = run_verify_manifest(path.to_str().unwrap());
         assert_eq!(result, 1, "version mismatch → exit 1");
     }
@@ -1381,10 +1580,13 @@ mod tests {
     fn test_verify_manifest_missing_binary_version_warns_not_fails() {
         // A manifest without binary_version is unverifiable but not a hard failure.
         let tmp = tempfile::TempDir::new().unwrap();
-        let path = write_manifest(&tmp, serde_json::json!({
-            "label": "vt_2020",
-            "state_code": "VT",
-        }));
+        let path = write_manifest(
+            &tmp,
+            serde_json::json!({
+                "label": "vt_2020",
+                "state_code": "VT",
+            }),
+        );
         let result = run_verify_manifest(path.to_str().unwrap());
         assert_eq!(result, 0, "missing binary_version → warn, exit 0");
     }
@@ -1399,7 +1601,7 @@ mod tests {
     fn build_tutorial_fixture(
         repo_root: &std::path::Path,
         tutorial: &str,
-        inputs: &[(&str, &[u8], &str)],   // (local_path, bytes-to-write, sha256-to-claim)
+        inputs: &[(&str, &[u8], &str)], // (local_path, bytes-to-write, sha256-to-claim)
         outputs: &[(&str, &[u8], &str)],
     ) -> std::path::PathBuf {
         let walk_dir = repo_root
@@ -1429,9 +1631,7 @@ mod tests {
             .collect();
         let expected_outputs: Vec<serde_json::Value> = outputs
             .iter()
-            .map(|(rel, _bytes, sha)| {
-                serde_json::json!({"path": rel, "sha256": sha})
-            })
+            .map(|(rel, _bytes, sha)| serde_json::json!({"path": rel, "sha256": sha}))
             .collect();
         let checksums = serde_json::json!({
             "schema_version": "tutorial-checksums v1",
@@ -1460,7 +1660,11 @@ mod tests {
             tmp.path(),
             "synthetic-test",
             &[("data/input.bin", input_bytes, &known_sha256(input_bytes))],
-            &[("outputs/v1/plan/out.json", output_bytes, &known_sha256(output_bytes))],
+            &[(
+                "outputs/v1/plan/out.json",
+                output_bytes,
+                &known_sha256(output_bytes),
+            )],
         );
         let exit = run_check_tutorial_data("synthetic-test", tmp.path());
         assert_eq!(exit, 0, "every-row-PASS must exit 0");
@@ -1504,7 +1708,10 @@ mod tests {
         });
         std::fs::write(walk_dir.join("checksums.json"), checksums.to_string()).unwrap();
         let exit = run_check_tutorial_data("missing-test", tmp.path());
-        assert_eq!(exit, 0, "MISSING-only must exit 0 (not yet run is not an error)");
+        assert_eq!(
+            exit, 0,
+            "MISSING-only must exit 0 (not yet run is not an error)"
+        );
     }
 
     #[test]
@@ -1571,7 +1778,9 @@ mod tests {
         let got = sha256_file(&p).unwrap();
         assert_eq!(got, known_sha256(bytes));
         // Lowercase hex output
-        assert!(got.chars().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase()));
+        assert!(got
+            .chars()
+            .all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase()));
     }
 
     // ── Additional doctor tests ──────────────────────────────────────────────
@@ -1583,13 +1792,16 @@ mod tests {
     fn test_verify_manifest_all_optional_fields_present_returns_0() {
         let tmp = tempfile::TempDir::new().unwrap();
         let prov = Provenance::current();
-        let path = write_manifest(&tmp, serde_json::json!({
-            "binary_version": prov.version,
-            "binary_sha256": "a".repeat(64),
-            "adjacency_file": "vt_2020_tract.adj.bin",
-            "adjacency_sha256": "b".repeat(64),
-            "created_at": "2026-04-29T12:00:00Z",
-        }));
+        let path = write_manifest(
+            &tmp,
+            serde_json::json!({
+                "binary_version": prov.version,
+                "binary_sha256": "a".repeat(64),
+                "adjacency_file": "vt_2020_tract.adj.bin",
+                "adjacency_sha256": "b".repeat(64),
+                "created_at": "2026-04-29T12:00:00Z",
+            }),
+        );
         let result = run_verify_manifest(path.to_str().unwrap());
         assert_eq!(result, 0);
     }
@@ -1600,12 +1812,18 @@ mod tests {
     fn test_verify_manifest_empty_binary_sha256_is_informational_not_fail() {
         let tmp = tempfile::TempDir::new().unwrap();
         let prov = Provenance::current();
-        let path = write_manifest(&tmp, serde_json::json!({
-            "binary_version": prov.version,
-            "binary_sha256": "",
-        }));
+        let path = write_manifest(
+            &tmp,
+            serde_json::json!({
+                "binary_version": prov.version,
+                "binary_sha256": "",
+            }),
+        );
         let result = run_verify_manifest(path.to_str().unwrap());
-        assert_eq!(result, 0, "empty binary_sha256 is informational, not a hard failure");
+        assert_eq!(
+            result, 0,
+            "empty binary_sha256 is informational, not a hard failure"
+        );
     }
 
     /// hex_lower produces lowercase hex digits only.
@@ -1613,15 +1831,21 @@ mod tests {
     fn test_hex_lower_all_lowercase() {
         let bytes: Vec<u8> = (0u8..=15).collect();
         let h = hex_lower(&bytes);
-        assert!(h.chars().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase()),
-            "hex_lower must produce lowercase only: {h}");
+        assert!(
+            h.chars()
+                .all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase()),
+            "hex_lower must produce lowercase only: {h}"
+        );
     }
 
     /// sha256_file on a missing path returns Err (not a panic).
     #[test]
     fn test_sha256_file_missing_returns_err() {
         let result = sha256_file(std::path::Path::new("/nonexistent/sha256/target.bin"));
-        assert!(result.is_err(), "sha256_file must return Err on missing file");
+        assert!(
+            result.is_err(),
+            "sha256_file must return Err on missing file"
+        );
     }
 
     /// sha256_file on an empty file returns the known SHA of 0 bytes.
@@ -1631,7 +1855,11 @@ mod tests {
         let p = tmp.path().join("empty.bin");
         std::fs::write(&p, b"").unwrap();
         let got = sha256_file(&p).unwrap();
-        assert_eq!(got, known_sha256(b""), "sha256 of empty file must match known value");
+        assert_eq!(
+            got,
+            known_sha256(b""),
+            "sha256 of empty file must match known value"
+        );
         assert_eq!(got.len(), 64);
     }
 
@@ -1652,7 +1880,10 @@ mod tests {
         let hint = analysis_fetch_hint("demographic.json", "TX", "2020");
         assert!(hint.is_some());
         let h = hint.unwrap();
-        assert!(h.contains("demographics"), "hint must mention demographics: {h}");
+        assert!(
+            h.contains("demographics"),
+            "hint must mention demographics: {h}"
+        );
     }
 
     /// analysis_fetch_hint returns Some for vra_analysis.json.
@@ -1661,14 +1892,20 @@ mod tests {
         let hint = analysis_fetch_hint("vra_analysis.json", "AL", "2020");
         assert!(hint.is_some());
         let h = hint.unwrap();
-        assert!(h.contains("demographics"), "vra hint must point at demographics: {h}");
+        assert!(
+            h.contains("demographics"),
+            "vra hint must point at demographics: {h}"
+        );
     }
 
     /// analysis_fetch_hint returns None for compactness.json (no extra data needed).
     #[test]
     fn test_analysis_fetch_hint_compactness_none() {
         let hint = analysis_fetch_hint("compactness.json", "WA", "2020");
-        assert!(hint.is_none(), "compactness.json requires no extra data fetch");
+        assert!(
+            hint.is_none(),
+            "compactness.json requires no extra data fetch"
+        );
     }
 
     /// analysis_fetch_hint returns None for splits.json.
@@ -1683,7 +1920,12 @@ mod tests {
     fn test_read_analysis_summary_contiguity_all_contiguous() {
         use tempfile::TempDir;
         let tmp = TempDir::new().unwrap();
-        let plan_dir = tmp.path().join("v1").join("2020").join("plans").join("cont_test");
+        let plan_dir = tmp
+            .path()
+            .join("v1")
+            .join("2020")
+            .join("plans")
+            .join("cont_test");
         let analysis_dir = plan_dir.join("analysis");
         std::fs::create_dir_all(&analysis_dir).unwrap();
         std::fs::write(
@@ -1713,26 +1955,40 @@ mod tests {
                 "total_seats": 1,
                 "electoral_system": "single_member",
                 "gpmetis_version": "unknown"
-            }).to_string(),
-        ).unwrap();
+            })
+            .to_string(),
+        )
+        .unwrap();
 
         // Contiguous
         std::fs::write(
             analysis_dir.join("contiguity.json"),
             serde_json::json!({"all_contiguous": true}).to_string(),
-        ).unwrap();
-        let ctx = crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "cont_test").unwrap();
+        )
+        .unwrap();
+        let ctx =
+            crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "cont_test")
+                .unwrap();
         let summary = read_analysis_summary(&ctx, "contiguity.json");
-        assert!(summary.contains("all contiguous"), "must show 'all contiguous': {summary}");
+        assert!(
+            summary.contains("all contiguous"),
+            "must show 'all contiguous': {summary}"
+        );
 
         // Non-contiguous
         std::fs::write(
             analysis_dir.join("contiguity.json"),
             serde_json::json!({"all_contiguous": false}).to_string(),
-        ).unwrap();
-        let ctx2 = crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "cont_test").unwrap();
+        )
+        .unwrap();
+        let ctx2 =
+            crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "cont_test")
+                .unwrap();
         let summary2 = read_analysis_summary(&ctx2, "contiguity.json");
-        assert!(summary2.contains("NON-CONTIGUOUS"), "must show 'NON-CONTIGUOUS': {summary2}");
+        assert!(
+            summary2.contains("NON-CONTIGUOUS"),
+            "must show 'NON-CONTIGUOUS': {summary2}"
+        );
     }
 
     /// read_analysis_summary for a completely unknown file name returns empty string.
@@ -1740,7 +1996,12 @@ mod tests {
     fn test_read_analysis_summary_unknown_file_empty() {
         use tempfile::TempDir;
         let tmp = TempDir::new().unwrap();
-        let plan_dir = tmp.path().join("v1").join("2020").join("plans").join("unk_test");
+        let plan_dir = tmp
+            .path()
+            .join("v1")
+            .join("2020")
+            .join("plans")
+            .join("unk_test");
         let analysis_dir = plan_dir.join("analysis");
         std::fs::create_dir_all(&analysis_dir).unwrap();
         std::fs::write(
@@ -1770,16 +2031,24 @@ mod tests {
                 "total_seats": 1,
                 "electoral_system": "single_member",
                 "gpmetis_version": "unknown"
-            }).to_string(),
-        ).unwrap();
+            })
+            .to_string(),
+        )
+        .unwrap();
         std::fs::write(
             analysis_dir.join("splits.json"),
             serde_json::json!({"counties": {"split": 3}}).to_string(),
-        ).unwrap();
-        let ctx = crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "unk_test").unwrap();
+        )
+        .unwrap();
+        let ctx =
+            crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "unk_test")
+                .unwrap();
         let summary = read_analysis_summary(&ctx, "splits.json");
         // The fallback arm returns "" for unrecognized names
-        assert_eq!(summary, "", "unknown file name must return empty string: '{summary}'");
+        assert_eq!(
+            summary, "",
+            "unknown file name must return empty string: '{summary}'"
+        );
     }
 
     /// check_tutorial_data: build_commit and pinned_at fields are informational;
@@ -1795,7 +2064,10 @@ mod tests {
             &[],
         );
         let exit = run_check_tutorial_data("info-fields-test", tmp.path());
-        assert_eq!(exit, 0, "build_commit + pinned_at must not affect exit code");
+        assert_eq!(
+            exit, 0,
+            "build_commit + pinned_at must not affect exit code"
+        );
     }
 
     /// verify_manifest: a manifest with adjacency_file field present but empty
@@ -1804,10 +2076,13 @@ mod tests {
     fn test_verify_manifest_adjacency_file_empty_no_fail() {
         let tmp = tempfile::TempDir::new().unwrap();
         let prov = Provenance::current();
-        let path = write_manifest(&tmp, serde_json::json!({
-            "binary_version": prov.version,
-            "adjacency_file": "",
-        }));
+        let path = write_manifest(
+            &tmp,
+            serde_json::json!({
+                "binary_version": prov.version,
+                "adjacency_file": "",
+            }),
+        );
         let result = run_verify_manifest(path.to_str().unwrap());
         assert_eq!(result, 0, "empty adjacency_file must not trigger a failure");
     }

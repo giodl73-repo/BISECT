@@ -14,16 +14,18 @@
 //! Weight derivation (spec §2.2): proposal probability = 1/|valid_cuts|;
 //! target = uniform; importance correction = |valid_cuts|; log_increment = log(|valid_cuts|).
 
-use rand::{Rng, SeedableRng};
 use rand::rngs::SmallRng;
+use rand::{Rng, SeedableRng};
 use thiserror::Error;
 
-use bisect_ensemble::spanning::{random_spanning_tree, SpanningTree};
 use crate::partial_plan::PartialPlan;
+use bisect_ensemble::spanning::{random_spanning_tree, SpanningTree};
 
 #[derive(Debug, Error)]
 pub enum ProposeError {
-    #[error("no valid balanced cut found in spanning tree (stage {stage}, particle {particle_idx})")]
+    #[error(
+        "no valid balanced cut found in spanning tree (stage {stage}, particle {particle_idx})"
+    )]
     NoValidCut { stage: usize, particle_idx: usize },
     #[error("unassigned subgraph is empty at stage {stage}")]
     EmptySubgraph { stage: usize },
@@ -38,7 +40,7 @@ pub fn propose_district(
     adj: &[Vec<usize>],
     pop: &[i64],
     k: usize,
-    stage: usize,         // 1-based: we are assigning district `stage`
+    stage: usize, // 1-based: we are assigning district `stage`
     pop_tolerance: f64,
     rng: &mut SmallRng,
     particle_idx: usize,
@@ -69,12 +71,16 @@ pub fn propose_district(
     }
 
     // Build local adjacency (only within the component)
-    let local_adj: Vec<Vec<u32>> = sorted_comp.iter().map(|&g| {
-        adj[g].iter()
-            .filter(|&&nb| g2l[nb] != usize::MAX)
-            .map(|&nb| g2l[nb] as u32)
-            .collect()
-    }).collect();
+    let local_adj: Vec<Vec<u32>> = sorted_comp
+        .iter()
+        .map(|&g| {
+            adj[g]
+                .iter()
+                .filter(|&&nb| g2l[nb] != usize::MAX)
+                .map(|&nb| g2l[nb] as u32)
+                .collect()
+        })
+        .collect();
 
     // Single-tract component: assign trivially (only one choice, weight = log(1) = 0)
     if m == 1 {
@@ -93,7 +99,8 @@ pub fn propose_district(
     // For each tree edge (a, b), split_on gives two components.
     // A cut is balanced if one component's population is within pop_tol_abs of target_pop.
     let local_pop: Vec<i64> = sorted_comp.iter().map(|&g| pop[g]).collect();
-    let valid_cuts: Vec<(u32, u32)> = tree.edges()
+    let valid_cuts: Vec<(u32, u32)> = tree
+        .edges()
         .filter(|&(a, b)| {
             let (ca, _cb) = tree.split_on(a, b);
             let pop_a: i64 = ca.iter().map(|&v| local_pop[v as usize]).sum();
@@ -105,7 +112,10 @@ pub fn propose_district(
         .collect();
 
     if valid_cuts.is_empty() {
-        return Err(ProposeError::NoValidCut { stage, particle_idx });
+        return Err(ProposeError::NoValidCut {
+            stage,
+            particle_idx,
+        });
     }
 
     // Step 6: select one valid cut uniformly at random
@@ -118,7 +128,8 @@ pub fn propose_district(
     let pop_a: i64 = comp_a.iter().map(|&v| local_pop[v as usize]).sum();
     let pop_b = total_remaining_pop - pop_a;
     let a_is_new = if (pop_a as f64 - target_pop).abs() <= pop_tol_abs
-                      && (pop_b as f64 - target_pop).abs() <= pop_tol_abs {
+        && (pop_b as f64 - target_pop).abs() <= pop_tol_abs
+    {
         // Both valid: use component containing seed_local
         comp_a.contains(&seed_local)
     } else {
@@ -132,9 +143,8 @@ pub fn propose_district(
     };
 
     // Convert local → global indices
-    let new_district_global: Vec<usize> = new_district_local.iter()
-        .map(|&l| sorted_comp[l])
-        .collect();
+    let new_district_global: Vec<usize> =
+        new_district_local.iter().map(|&l| sorted_comp[l]).collect();
 
     // Step 7: assign the new district
     let mut new_partial = partial.clone();
@@ -148,7 +158,9 @@ pub fn propose_district(
 
 /// Check if a set of tracts forms a connected subgraph (BFS).
 pub fn is_connected(tracts: &[usize], adj: &[Vec<usize>]) -> bool {
-    if tracts.is_empty() { return true; }
+    if tracts.is_empty() {
+        return true;
+    }
     let tract_set: std::collections::HashSet<usize> = tracts.iter().copied().collect();
     let mut visited = std::collections::HashSet::new();
     let mut queue = std::collections::VecDeque::new();
@@ -170,12 +182,18 @@ mod tests {
     use super::*;
 
     fn path_adj(n: usize) -> Vec<Vec<usize>> {
-        (0..n).map(|i| {
-            let mut nb = Vec::new();
-            if i > 0 { nb.push(i - 1); }
-            if i < n - 1 { nb.push(i + 1); }
-            nb
-        }).collect()
+        (0..n)
+            .map(|i| {
+                let mut nb = Vec::new();
+                if i > 0 {
+                    nb.push(i - 1);
+                }
+                if i < n - 1 {
+                    nb.push(i + 1);
+                }
+                nb
+            })
+            .collect()
     }
 
     fn grid_adj(rows: usize, cols: usize) -> Vec<Vec<usize>> {
@@ -184,8 +202,14 @@ mod tests {
         for r in 0..rows {
             for c in 0..cols {
                 let v = r * cols + c;
-                if c + 1 < cols { adj[v].push(v + 1); adj[v + 1].push(v); }
-                if r + 1 < rows { adj[v].push(v + cols); adj[v + cols].push(v); }
+                if c + 1 < cols {
+                    adj[v].push(v + 1);
+                    adj[v + 1].push(v);
+                }
+                if r + 1 < rows {
+                    adj[v].push(v + cols);
+                    adj[v + cols].push(v);
+                }
             }
         }
         adj
@@ -202,11 +226,20 @@ mod tests {
             .expect("propose must succeed on path graph k=2");
 
         // One district assigned, one still unassigned
-        let assigned: Vec<usize> = new_partial.assignment.iter().enumerate()
+        let assigned: Vec<usize> = new_partial
+            .assignment
+            .iter()
+            .enumerate()
             .filter_map(|(i, a)| if *a == Some(1) { Some(i) } else { None })
             .collect();
-        assert!(!assigned.is_empty(), "district 1 must have at least one tract");
-        assert!(is_connected(&assigned, &adj), "assigned district must be contiguous");
+        assert!(
+            !assigned.is_empty(),
+            "district 1 must have at least one tract"
+        );
+        assert!(
+            is_connected(&assigned, &adj),
+            "assigned district must be contiguous"
+        );
         assert!(log_w >= 0.0, "log_w must be ≥ 0 (at least one valid cut)");
         assert_eq!(new_partial.unassigned_count, 4 - assigned.len());
     }
@@ -229,8 +262,12 @@ mod tests {
 
         // All 16 tracts assigned to districts 1 or 2
         assert_eq!(partial.unassigned_count, 0);
-        let d1: Vec<usize> = (0..16).filter(|&i| partial.assignment[i] == Some(1)).collect();
-        let d2: Vec<usize> = (0..16).filter(|&i| partial.assignment[i] == Some(2)).collect();
+        let d1: Vec<usize> = (0..16)
+            .filter(|&i| partial.assignment[i] == Some(1))
+            .collect();
+        let d2: Vec<usize> = (0..16)
+            .filter(|&i| partial.assignment[i] == Some(2))
+            .collect();
         assert!(!d1.is_empty() && !d2.is_empty(), "both districts non-empty");
         assert!(is_connected(&d1, &adj), "district 1 contiguous");
         assert!(is_connected(&d2, &adj), "district 2 contiguous");
@@ -255,8 +292,11 @@ mod tests {
         // The star's spanning tree has only 1-leaf cuts — all invalid.
         let result = propose_district(&partial, &adj, &pop, 2, 1, 0.005, &mut rng, 42);
         // Should fail with NoValidCut
-        assert!(matches!(result, Err(ProposeError::NoValidCut { .. })),
-            "star graph with tight tolerance must produce NoValidCut, got {:?}", result);
+        assert!(
+            matches!(result, Err(ProposeError::NoValidCut { .. })),
+            "star graph with tight tolerance must produce NoValidCut, got {:?}",
+            result
+        );
     }
 
     #[test]
@@ -281,11 +321,18 @@ mod tests {
         let partial = PartialPlan::empty(16);
         let mut rng = SmallRng::seed_from_u64(13);
 
-        let (new_partial, _) = propose_district(&partial, &adj, &pop, 2, 1, 0.1, &mut rng, 0).unwrap();
-        let d1: Vec<usize> = new_partial.assignment.iter().enumerate()
+        let (new_partial, _) =
+            propose_district(&partial, &adj, &pop, 2, 1, 0.1, &mut rng, 0).unwrap();
+        let d1: Vec<usize> = new_partial
+            .assignment
+            .iter()
+            .enumerate()
             .filter_map(|(i, a)| if *a == Some(1) { Some(i) } else { None })
             .collect();
-        assert!(is_connected(&d1, &adj), "proposed district must be contiguous");
+        assert!(
+            is_connected(&d1, &adj),
+            "proposed district must be contiguous"
+        );
     }
 
     #[test]

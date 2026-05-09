@@ -6,7 +6,7 @@ param(
 )
 
 Set-Location C:\src\apportionment
-$env:REDIST_LOCATION_POLICY = "C:\src\apportionment\redist\data\location_policy.json"
+$env:BISECT_LOCATION_POLICY = "C:\src\apportionment\BISECT\data\location_policy.json"
 
 $stateConfig = @{
     "NH" = @{ name="new_hampshire"; nD=2;  from=1;    to=200  }
@@ -37,13 +37,13 @@ foreach ($code in $req) {
         $pPath = "outputs\$ver\2020\states\$stName\analysis\proportionality.json"
 
         if (-not (Test-Path $aPath)) {
-            $null = .\redist\target\release\redist.exe state --state $code --year 2020 `
+            $null = .\target\release\bisect.exe state --state $code --year 2020 `
                 --version $ver --seed $seed --manifest 2>&1
             if ($LASTEXITCODE -ne 0) { Write-Output "  seed $seed FAILED"; continue }
         }
 
         if ((Test-Path $mPath) -and (-not (Test-Path $pPath))) {
-            $null = .\redist\target\release\redist.exe analyze --state $code --year 2020 `
+            $null = .\target\release\bisect.exe analyze --state $code --year 2020 `
                 --version $ver --types proportionality 2>&1
         }
 

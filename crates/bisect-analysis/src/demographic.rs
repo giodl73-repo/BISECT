@@ -1,6 +1,6 @@
-use std::collections::HashMap;
-use serde::{Deserialize, Serialize};
 use anyhow::Context;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 use crate::analyzer::{Analyzer, AnalyzerContext};
 
@@ -25,8 +25,8 @@ pub struct DemographicDistrict {
     pub pct_asian: f64,
     pub pct_hispanic: f64,
     pub pct_other: f64,
-    pub pct_minority: f64,       // = 1 - pct_white
-    pub is_majority_minority: bool,  // pct_minority >= 0.50
+    pub pct_minority: f64,          // = 1 - pct_white
+    pub is_majority_minority: bool, // pct_minority >= 0.50
     pub pop_basis: &'static str,    // always "total_population"
 }
 
@@ -38,8 +38,15 @@ pub struct DemographicResult {
 }
 
 fn validate_columns(headers: &csv::StringRecord) -> anyhow::Result<()> {
-    let required = ["GEOID", "total_pop", "white_non_hispanic", "black_non_hispanic",
-                    "asian_non_hispanic", "hispanic", "other"];
+    let required = [
+        "GEOID",
+        "total_pop",
+        "white_non_hispanic",
+        "black_non_hispanic",
+        "asian_non_hispanic",
+        "hispanic",
+        "other",
+    ];
     for col in required {
         if !headers.iter().any(|h| h == col) {
             anyhow::bail!("demographics CSV missing required column: {col}");
@@ -63,7 +70,7 @@ pub fn aggregate_demographic(
     let mut unmatched = 0usize;
     for row in rows {
         if let Some(&district) = assignments.get(&row.geoid) {
-            let e = totals.entry(district).or_insert((0,0,0,0,0,0));
+            let e = totals.entry(district).or_insert((0, 0, 0, 0, 0, 0));
             e.0 += row.total_pop;
             e.1 += row.white_non_hispanic;
             e.2 += row.black_non_hispanic;
@@ -79,25 +86,34 @@ pub fn aggregate_demographic(
         eprintln!("WARNING: {unmatched} tract rows had no assignment match — possible census vintage mismatch");
     }
 
-    let mut districts: Vec<DemographicDistrict> = totals.into_iter().map(|(district, (total_pop, white, black, asian, hisp, other))| {
-        let pct = |v: i64| -> f64 {
-            if total_pop == 0 { 0.0 } else { v as f64 / total_pop as f64 }
-        };
-        let pct_white = pct(white);
-        let pct_minority = 1.0 - pct_white;
-        DemographicDistrict {
-            district,
-            total_pop,
-            pct_white,
-            pct_black: pct(black),
-            pct_asian: pct(asian),
-            pct_hispanic: pct(hisp),
-            pct_other: pct(other),
-            pct_minority,
-            is_majority_minority: pct_minority >= 0.50,
-            pop_basis: "total_population",
-        }
-    }).collect();
+    let mut districts: Vec<DemographicDistrict> = totals
+        .into_iter()
+        .map(
+            |(district, (total_pop, white, black, asian, hisp, other))| {
+                let pct = |v: i64| -> f64 {
+                    if total_pop == 0 {
+                        0.0
+                    } else {
+                        v as f64 / total_pop as f64
+                    }
+                };
+                let pct_white = pct(white);
+                let pct_minority = 1.0 - pct_white;
+                DemographicDistrict {
+                    district,
+                    total_pop,
+                    pct_white,
+                    pct_black: pct(black),
+                    pct_asian: pct(asian),
+                    pct_hispanic: pct(hisp),
+                    pct_other: pct(other),
+                    pct_minority,
+                    is_majority_minority: pct_minority >= 0.50,
+                    pop_basis: "total_population",
+                }
+            },
+        )
+        .collect();
     districts.sort_by_key(|d| d.district);
 
     DemographicResult {
@@ -116,7 +132,8 @@ pub fn aggregate_demographic_from_str(
     let mut rdr = csv::Reader::from_reader(csv_content.as_bytes());
     let headers = rdr.headers()?.clone();
     validate_columns(&headers)?;
-    let rows: Vec<DemographicRow> = rdr.deserialize()
+    let rows: Vec<DemographicRow> = rdr
+        .deserialize()
         .collect::<Result<Vec<_>, _>>()
         .context("failed to parse demographics CSV")?;
     Ok(aggregate_demographic(&rows, assignments, num_districts))
@@ -127,7 +144,9 @@ pub struct DemographicAnalyzer;
 impl Analyzer for DemographicAnalyzer {
     type Output = DemographicResult;
 
-    fn name() -> &'static str { "demographic" }
+    fn name() -> &'static str {
+        "demographic"
+    }
 
     fn run(ctx: &AnalyzerContext<'_>) -> anyhow::Result<Self::Output> {
         // Demographics CSV may be named by state_name (vermont_demographics_2020.csv)
@@ -139,12 +158,13 @@ impl Analyzer for DemographicAnalyzer {
             demo_dir.join(format!("{state_name_lower}_demographics_{}.csv", ctx.year)),
             demo_dir.join(format!("{state_code_lower}_demographics_{}.csv", ctx.year)),
         ];
-        let csv_path = candidates.iter()
-            .find(|p| p.exists())
-            .ok_or_else(|| anyhow::anyhow!(
+        let csv_path = candidates.iter().find(|p| p.exists()).ok_or_else(|| {
+            anyhow::anyhow!(
                 "demographics CSV not found for {} — tried {:?}",
-                ctx.state_name, candidates
-            ))?;
+                ctx.state_name,
+                candidates
+            )
+        })?;
 
         let mut rdr = csv::Reader::from_path(csv_path)
             .with_context(|| format!("cannot open demographics CSV: {}", csv_path.display()))?;
@@ -152,11 +172,16 @@ impl Analyzer for DemographicAnalyzer {
         let headers = rdr.headers()?.clone();
         validate_columns(&headers)?;
 
-        let rows: Vec<DemographicRow> = rdr.deserialize()
+        let rows: Vec<DemographicRow> = rdr
+            .deserialize()
             .collect::<Result<Vec<_>, _>>()
             .context("failed to parse demographics CSV rows")?;
 
-        Ok(aggregate_demographic(&rows, ctx.assignments, ctx.num_districts))
+        Ok(aggregate_demographic(
+            &rows,
+            ctx.assignments,
+            ctx.num_districts,
+        ))
     }
 }
 
@@ -164,7 +189,15 @@ impl Analyzer for DemographicAnalyzer {
 mod tests {
     use super::*;
 
-    fn make_demo_row(geoid: &str, total_pop: i64, white: i64, black: i64, asian: i64, hisp: i64, other: i64) -> DemographicRow {
+    fn make_demo_row(
+        geoid: &str,
+        total_pop: i64,
+        white: i64,
+        black: i64,
+        asian: i64,
+        hisp: i64,
+        other: i64,
+    ) -> DemographicRow {
         DemographicRow {
             geoid: geoid.to_string(),
             total_pop,
@@ -230,6 +263,9 @@ mod tests {
         let assignments = hashmap(&[]);
         let result = aggregate_demographic_from_str(csv_content, &assignments, 1);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("missing required column"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("missing required column"));
     }
 }

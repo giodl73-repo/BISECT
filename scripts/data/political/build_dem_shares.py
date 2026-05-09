@@ -1,5 +1,5 @@
 """
-Build per-tract Democratic vote share for `redist state --partition-mode partisan-weighted`.
+Build per-tract Democratic vote share for `BISECT state --partition-mode partisan-weighted`.
 
 Produces a TSV consumable by the Rust CLI. Format spec:
     docs/file-formats/partisan-shares.md

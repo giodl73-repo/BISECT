@@ -39,7 +39,11 @@ pub enum DiagnosticsError {
     #[error("[INPUT] empty partition trajectory")]
     EmptyTrajectory,
     #[error("[INPUT] partitions have differing unit counts: first={first}, at index {idx}={got}")]
-    PartitionLengthMismatch { first: usize, idx: usize, got: usize },
+    PartitionLengthMismatch {
+        first: usize,
+        idx: usize,
+        got: usize,
+    },
 }
 
 // ===========================================================================
@@ -124,7 +128,9 @@ pub fn gelman_rubin_rhat(chains: &[&[f64]]) -> Result<f64, DiagnosticsError> {
 }
 
 /// Compute R-hat records for a list of (metric_name, per-chain-samples).
-pub fn rhat_records(metrics: &[(String, Vec<&[f64]>)]) -> Result<Vec<RhatRecord>, DiagnosticsError> {
+pub fn rhat_records(
+    metrics: &[(String, Vec<&[f64]>)],
+) -> Result<Vec<RhatRecord>, DiagnosticsError> {
     metrics
         .iter()
         .map(|(name, chains)| {
@@ -292,7 +298,11 @@ pub fn hamming_autocorrelation(
             }
             total += (diff as f64) / (n_units as f64);
         }
-        out.push(if pairs > 0 { total / (pairs as f64) } else { 0.0 });
+        out.push(if pairs > 0 {
+            total / (pairs as f64)
+        } else {
+            0.0
+        });
     }
     Ok(out)
 }
@@ -369,7 +379,10 @@ mod tests {
         let c = vec![5.0; 50];
         let chains: Vec<&[f64]> = (0..4).map(|_| c.as_slice()).collect();
         let r = gelman_rubin_rhat(&chains).unwrap();
-        assert!((r - 1.0).abs() < 1e-9, "identical chains -> R-hat ~ 1; got {r}");
+        assert!(
+            (r - 1.0).abs() < 1e-9,
+            "identical chains -> R-hat ~ 1; got {r}"
+        );
     }
 
     #[test]
@@ -379,7 +392,9 @@ mod tests {
         let mut rng_state: u64 = 0x1234_5678;
         let mut rand = || -> f64 {
             // Linear congruential generator (cheap; deterministic across platforms).
-            rng_state = rng_state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            rng_state = rng_state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             ((rng_state >> 33) as f64) / ((1u64 << 31) as f64) - 1.0
         };
         for _ in 0..4 {
@@ -388,18 +403,28 @@ mod tests {
         }
         let chains: Vec<&[f64]> = chains_owned.iter().map(|c| c.as_slice()).collect();
         let r = gelman_rubin_rhat(&chains).unwrap();
-        assert!(r < 1.10, "well-mixed chains should have R-hat < 1.10; got {r}");
+        assert!(
+            r < 1.10,
+            "well-mixed chains should have R-hat < 1.10; got {r}"
+        );
     }
 
     #[test]
     fn test_rhat_diverged_chains_above_threshold() {
         // 4 chains centered on different means -> R-hat substantially above 1.
         let chains_owned: Vec<Vec<f64>> = (0..4)
-            .map(|i| (0..200).map(|j| (i as f64) * 10.0 + (j as f64) * 0.001).collect())
+            .map(|i| {
+                (0..200)
+                    .map(|j| (i as f64) * 10.0 + (j as f64) * 0.001)
+                    .collect()
+            })
             .collect();
         let chains: Vec<&[f64]> = chains_owned.iter().map(|c| c.as_slice()).collect();
         let r = gelman_rubin_rhat(&chains).unwrap();
-        assert!(r > 1.05, "diverged chains should have R-hat > 1.05; got {r}");
+        assert!(
+            r > 1.05,
+            "diverged chains should have R-hat > 1.05; got {r}"
+        );
     }
 
     #[test]
@@ -431,7 +456,10 @@ mod tests {
         assert_eq!(recs[0].n_chains, 4);
         assert_eq!(recs[0].n_per_chain, 100);
         assert_eq!(recs[0].threshold, 1.05);
-        assert!(!recs[0].above_threshold, "identical chains -> not above threshold");
+        assert!(
+            !recs[0].above_threshold,
+            "identical chains -> not above threshold"
+        );
     }
 
     // ── Effective Sample Size ──────────────────────────────────────────────
@@ -441,12 +469,18 @@ mod tests {
         // Independent samples should give ESS ~ N (autocorrelations near zero).
         let mut rng_state: u64 = 42;
         let mut rand = || -> f64 {
-            rng_state = rng_state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            rng_state = rng_state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             ((rng_state >> 33) as f64) / ((1u64 << 31) as f64) - 1.0
         };
         let trace: Vec<f64> = (0..1000).map(|_| rand()).collect();
         let ess = effective_sample_size(&trace);
-        assert!(ess > 500.0, "iid trace should have ESS > N/2; got {ess} of {}", trace.len());
+        assert!(
+            ess > 500.0,
+            "iid trace should have ESS > N/2; got {ess} of {}",
+            trace.len()
+        );
     }
 
     #[test]
@@ -455,7 +489,9 @@ mod tests {
         // ESS should be much smaller than N.
         let mut rng_state: u64 = 1;
         let mut rand = || -> f64 {
-            rng_state = rng_state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            rng_state = rng_state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             ((rng_state >> 33) as f64) / ((1u64 << 31) as f64) - 1.0
         };
         let mut trace = Vec::with_capacity(1000);
@@ -465,7 +501,11 @@ mod tests {
             trace.push(x);
         }
         let ess = effective_sample_size(&trace);
-        assert!(ess < 200.0, "AR(0.9) should give small ESS; got {ess} of {}", trace.len());
+        assert!(
+            ess < 200.0,
+            "AR(0.9) should give small ESS; got {ess} of {}",
+            trace.len()
+        );
         assert!(ess > 0.0);
     }
 
@@ -490,7 +530,9 @@ mod tests {
         // Highly autocorrelated trace with N=200 -> ESS small enough to flag.
         let mut rng_state: u64 = 7;
         let mut rand = || -> f64 {
-            rng_state = rng_state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            rng_state = rng_state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             ((rng_state >> 33) as f64) / ((1u64 << 31) as f64) - 1.0
         };
         let mut trace = Vec::with_capacity(200);
@@ -500,8 +542,15 @@ mod tests {
             trace.push(x);
         }
         let recs = ess_records(&[("eff_gap".to_string(), trace.as_slice())]);
-        assert_eq!(recs[0].computed_on, "summary_statistic", "S-03: ESS on summary statistics, NOT partitions");
-        assert!(recs[0].ess < 100.0, "highly autocorrelated trace should flag below_threshold; got ess={}", recs[0].ess);
+        assert_eq!(
+            recs[0].computed_on, "summary_statistic",
+            "S-03: ESS on summary statistics, NOT partitions"
+        );
+        assert!(
+            recs[0].ess < 100.0,
+            "highly autocorrelated trace should flag below_threshold; got ess={}",
+            recs[0].ess
+        );
         assert!(recs[0].below_threshold);
     }
 
@@ -509,10 +558,7 @@ mod tests {
 
     #[test]
     fn test_hamming_lag_0_is_zero() {
-        let parts = vec![
-            vec![1, 1, 2, 2],
-            vec![1, 2, 2, 1],
-        ];
+        let parts = vec![vec![1, 1, 2, 2], vec![1, 2, 2, 1]];
         let h = hamming_autocorrelation(&parts, 1).unwrap();
         assert_eq!(h[0], 0.0, "lag 0 must be zero");
     }
@@ -521,10 +567,7 @@ mod tests {
     fn test_hamming_lag_1_simple_case() {
         // 4 units; partition swaps units 1 and 3 between t=0 and t=1.
         // Hamming distance = 2/4 = 0.5.
-        let parts = vec![
-            vec![1, 1, 2, 2],
-            vec![1, 2, 2, 1],
-        ];
+        let parts = vec![vec![1, 1, 2, 2], vec![1, 2, 2, 1]];
         let h = hamming_autocorrelation(&parts, 1).unwrap();
         assert_eq!(h[1], 0.5);
     }
@@ -535,7 +578,10 @@ mod tests {
         let parts = vec![p.clone(), p.clone(), p.clone(), p.clone()];
         let h = hamming_autocorrelation(&parts, 3).unwrap();
         for (lag, v) in h.iter().enumerate() {
-            assert_eq!(*v, 0.0, "identical partitions: all lags must be 0; lag {lag} got {v}");
+            assert_eq!(
+                *v, 0.0,
+                "identical partitions: all lags must be 0; lag {lag} got {v}"
+            );
         }
     }
 
@@ -585,9 +631,14 @@ mod tests {
     fn test_tau_int_slow_mixing_chain_above_1() {
         // Slow mixing: hamming stays near 0 for many lags -> 1 - h_k ~ 1
         // -> large tau_int.
-        let h = vec![0.0, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 1.0];
+        let h = vec![
+            0.0, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 1.0,
+        ];
         let tau = integrated_autocorrelation_time(&h);
-        assert!(tau > 5.0, "slow mixing should give large tau_int; got {tau}");
+        assert!(
+            tau > 5.0,
+            "slow mixing should give large tau_int; got {tau}"
+        );
     }
 
     #[test]

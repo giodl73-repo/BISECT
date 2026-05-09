@@ -1,34 +1,37 @@
-/// plan_cmd.rs — `redist plan [X] [--configure]`
+/// plan_cmd.rs — `BISECT plan [X] [--configure]`
 ///
 /// Interactive TUI hub with label awareness.
 ///
 /// Dispatch rules:
-/// - No label, no flags: launch redist-tui with no arguments (label picker mode)
-/// - `--label X`:        launch redist-tui with `--label X` (pre-scoped to that label)
-/// - `--configure`:      launch redist-tui with `--configure` (opens compositor wizard)
+/// - No label, no flags: launch BISECT-tui with no arguments (label picker mode)
+/// - `--label X`:        launch BISECT-tui with `--label X` (pre-scoped to that label)
+/// - `--configure`:      launch BISECT-tui with `--configure` (opens compositor wizard)
 /// - `--config PATH`:    also pass `--config PATH` when launching the TUI
 ///
-/// Registry JSON is injected via `REDIST_REGISTRY_JSON` env var so the TUI can
+/// Registry JSON is injected via `BISECT_REGISTRY_JSON` env var so the TUI can
 /// read current state without a file I/O race.
 ///
-/// Fallback (when redist-tui binary is absent):
-/// - With label:       print a summary equivalent to `redist show X`
-/// - With --configure: print `redist config validate configs/{label}.yml` guidance
-/// - Otherwise:        print a `redist ls` summary
-
+/// Fallback (when BISECT-tui binary is absent):
+/// - With label:       print a summary equivalent to `BISECT show X`
+/// - With --configure: print `BISECT config validate configs/{label}.yml` guidance
+/// - Otherwise:        print a `BISECT ls` summary
 use crate::args::PlanArgs;
 use crate::run_registry::Registry;
 
 // ── Binary discovery ───────────────────────────────────────────────────────────
 
-/// Resolve the path to the `redist-tui` binary.
+/// Resolve the path to the `BISECT-tui` binary.
 ///
 /// On all platforms: look for the sibling binary next to the current
 /// executable (same directory), mirroring the existing Tui dispatch in main.rs.
 pub fn find_tui_binary() -> std::path::PathBuf {
-    let mut path = std::env::current_exe()
-        .unwrap_or_else(|_| std::path::PathBuf::from("bisect-tui"));
-    path.set_file_name(if cfg!(windows) { "bisect-tui.exe" } else { "bisect-tui" });
+    let mut path =
+        std::env::current_exe().unwrap_or_else(|_| std::path::PathBuf::from("bisect-tui"));
+    path.set_file_name(if cfg!(windows) {
+        "bisect-tui.exe"
+    } else {
+        "bisect-tui"
+    });
     path
 }
 
@@ -47,19 +50,22 @@ fn registry_json() -> String {
 
 // ── Fallback output helpers ────────────────────────────────────────────────────
 
-/// Print a plain-text summary when redist-tui is absent and no label was given.
+/// Print a plain-text summary when BISECT-tui is absent and no label was given.
 ///
-/// Mirrors the output of `redist ls` but printed inline so the user can see
+/// Mirrors the output of `BISECT ls` but printed inline so the user can see
 /// what labels exist and which stages are complete.
 fn print_ls_fallback() {
     let pairs = Registry::list_labels().unwrap_or_default();
     if pairs.is_empty() {
-        println!("[INFO] No labels found in .redist registry.");
+        println!("[INFO] No labels found in .bisect registry.");
         println!("       Run: bisect build <LABEL> --year 2020");
         return;
     }
     println!("[INFO] bisect-tui not available. Label registry:");
-    println!("  {:<30} {:<20} {:<20} {:<20}", "LABEL", "BUILT", "ANALYZED", "REPORTED");
+    println!(
+        "  {:<30} {:<20} {:<20} {:<20}",
+        "LABEL", "BUILT", "ANALYZED", "REPORTED"
+    );
     println!("  {}", "-".repeat(92));
     for (name, entry) in &pairs {
         println!(
@@ -72,19 +78,40 @@ fn print_ls_fallback() {
     }
 }
 
-/// Print a summary for a specific label when redist-tui is absent.
+/// Print a summary for a specific label when BISECT-tui is absent.
 ///
-/// Mirrors the output of `redist show X` so the user still gets useful info.
+/// Mirrors the output of `BISECT show X` so the user still gets useful info.
 fn print_show_fallback(label: &str) {
     match Registry::get(label) {
         Ok(Some(entry)) => {
             println!("[INFO] bisect-tui not available. Showing label: {label}");
-            println!("  Built:    {}", if entry.built.is_empty() { "(none)".to_string() } else { entry.built.join(", ") });
-            println!("  Analyzed: {}", if entry.analyzed.is_empty() { "(none)".to_string() } else { entry.analyzed.join(", ") });
-            println!("  Reported: {}", if entry.reported.is_empty() { "(none)".to_string() } else { entry.reported.join(", ") });
+            println!(
+                "  Built:    {}",
+                if entry.built.is_empty() {
+                    "(none)".to_string()
+                } else {
+                    entry.built.join(", ")
+                }
+            );
+            println!(
+                "  Analyzed: {}",
+                if entry.analyzed.is_empty() {
+                    "(none)".to_string()
+                } else {
+                    entry.analyzed.join(", ")
+                }
+            );
+            println!(
+                "  Reported: {}",
+                if entry.reported.is_empty() {
+                    "(none)".to_string()
+                } else {
+                    entry.reported.join(", ")
+                }
+            );
         }
         Ok(None) => {
-            println!("[INFO] Label '{label}' not found in .redist registry.");
+            println!("[INFO] Label '{label}' not found in .bisect registry.");
             println!("       Run: bisect build {label} --year 2020");
         }
         Err(e) => {
@@ -93,7 +120,7 @@ fn print_show_fallback(label: &str) {
     }
 }
 
-/// Print configure guidance when redist-tui is absent and --configure was passed.
+/// Print configure guidance when BISECT-tui is absent and --configure was passed.
 fn print_configure_fallback(label: Option<&str>) {
     println!("[INFO] bisect-tui not available. To edit algorithm config:");
     if let Some(lbl) = label {
@@ -107,9 +134,9 @@ fn print_configure_fallback(label: Option<&str>) {
 
 // ── Entry point ────────────────────────────────────────────────────────────────
 
-/// Run the `redist plan` command.
+/// Run the `BISECT plan` command.
 ///
-/// Tries to launch `redist-tui` as a subprocess.  If the binary is not found,
+/// Tries to launch `BISECT-tui` as a subprocess.  If the binary is not found,
 /// falls back to printing a plain-text summary and returns `Ok(())`.
 pub fn run_plan(args: PlanArgs) -> Result<(), String> {
     let tui_bin = find_tui_binary();
@@ -133,7 +160,7 @@ pub fn run_plan(args: PlanArgs) -> Result<(), String> {
     let mut cmd = std::process::Command::new(&tui_bin);
 
     // Inject registry state as env var so TUI avoids file I/O races.
-    cmd.env("REDIST_REGISTRY_JSON", registry_json());
+    cmd.env("BISECT_REGISTRY_JSON", registry_json());
 
     // Forward label.
     if let Some(ref lbl) = args.label {
@@ -179,7 +206,11 @@ mod tests {
     /// Default PlanArgs has no label and configure=false.
     #[test]
     fn plan_args_defaults() {
-        let args = PlanArgs { label: None, configure: false, config: None };
+        let args = PlanArgs {
+            label: None,
+            configure: false,
+            config: None,
+        };
         assert!(args.label.is_none(), "default label must be None");
         assert!(!args.configure, "default configure must be false");
         assert!(args.config.is_none(), "default config must be None");
@@ -204,7 +235,11 @@ mod tests {
     /// PlanArgs with configure=true is stored correctly.
     #[test]
     fn plan_args_configure_true() {
-        let args = PlanArgs { label: None, configure: true, config: None };
+        let args = PlanArgs {
+            label: None,
+            configure: true,
+            config: None,
+        };
         assert!(args.configure, "configure flag must be true");
         assert!(args.label.is_none());
     }
@@ -231,7 +266,10 @@ mod tests {
         let p = find_tui_binary();
         let name = p.file_name().unwrap().to_string_lossy();
         if cfg!(windows) {
-            assert_eq!(name, "bisect-tui.exe", "Windows binary must have .exe extension");
+            assert_eq!(
+                name, "bisect-tui.exe",
+                "Windows binary must have .exe extension"
+            );
         } else {
             assert_eq!(name, "bisect-tui", "Unix binary must have no extension");
         }
@@ -261,7 +299,7 @@ mod tests {
 
     #[test]
     fn fallback_ls_does_not_panic() {
-        // print_ls_fallback calls Registry::load internally; with no .redist file
+        // print_ls_fallback calls Registry::load internally; with no .bisect file
         // in the cwd (test runner dir), it returns an empty registry.
         // We capture by just verifying it does not panic.
         print_ls_fallback();
@@ -281,7 +319,10 @@ mod tests {
         let json = registry_json();
         // Must be parseable as JSON (at minimum an empty object `{}`)
         let parsed: Result<serde_json::Value, _> = serde_json::from_str(&json);
-        assert!(parsed.is_ok(), "registry_json must return valid JSON: {json}");
+        assert!(
+            parsed.is_ok(),
+            "registry_json must return valid JSON: {json}"
+        );
     }
 
     // ── 11. PlanArgs with config path ────────────────────────────────────────────
@@ -295,7 +336,10 @@ mod tests {
         };
         assert_eq!(args.label.as_deref(), Some("vt_test"));
         assert!(args.configure);
-        assert_eq!(args.config.as_deref(), Some(std::path::Path::new("configs/vt_test.yml")));
+        assert_eq!(
+            args.config.as_deref(),
+            Some(std::path::Path::new("configs/vt_test.yml"))
+        );
     }
 
     // ── 12. find_tui_binary: path is a sibling of current executable ─────────
@@ -331,8 +375,8 @@ mod tests {
     fn registry_json_empty_registry_is_empty_object() {
         // The registry_json helper returns at minimum "{}"
         let json = registry_json();
-        let v: serde_json::Value = serde_json::from_str(&json)
-            .expect("registry_json must always return valid JSON");
+        let v: serde_json::Value =
+            serde_json::from_str(&json).expect("registry_json must always return valid JSON");
         assert!(v.is_object(), "registry_json must return a JSON object");
     }
 
@@ -372,7 +416,11 @@ mod tests {
 
     #[test]
     fn run_plan_fallback_does_not_panic_for_ls_mode() {
-        let args = PlanArgs { label: None, configure: false, config: None };
+        let args = PlanArgs {
+            label: None,
+            configure: false,
+            config: None,
+        };
         if args.label.is_none() && !args.configure {
             print_ls_fallback();
         }

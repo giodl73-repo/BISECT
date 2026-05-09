@@ -20,9 +20,9 @@ import subprocess
 from pathlib import Path
 import sys
 
-REDIST = Path("redist/target/release/redist.exe")
-if not REDIST.exists():
-    REDIST = Path("redist/target/release/redist")
+BISECT = Path("target/release/bisect.exe")
+if not BISECT.exists():
+    BISECT = Path("target/release/bisect")
 
 
 def main():
@@ -36,8 +36,8 @@ def main():
     parser.add_argument("--analyze-only", action="store_true")
     args = parser.parse_args()
 
-    if not REDIST.exists():
-        print(f"ERROR: redist binary not found at {REDIST}")
+    if not BISECT.exists():
+        print(f"ERROR: BISECT binary not found at {BISECT}")
         sys.exit(1)
 
     adj = Path("outputs/international/ireland/ie_adjacency_2022.adj.bin")
@@ -53,7 +53,7 @@ def main():
 
     if not args.analyze_only:
         cmd = [
-            str(REDIST), "state",
+            str(BISECT), "state",
             "--state", "IE",
             "--year", "2020",
             "--version", "international",
@@ -74,7 +74,7 @@ def main():
             # Try without seats-per-district
             print("\n[RETRY] Without --seats-per-district...")
             cmd2 = [
-                str(REDIST), "state",
+                str(BISECT), "state",
                 "--state", "IE",
                 "--year", "2020",
                 "--version", "international",
@@ -95,7 +95,7 @@ def main():
 
     print(f"\n=== Analysis ===")
     cmd = [
-        str(REDIST), "analyze",
+        str(BISECT), "analyze",
         "--label", args.label,
         "--year", "2020",
         "--version", "international",

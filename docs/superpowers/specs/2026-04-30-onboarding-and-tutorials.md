@@ -20,11 +20,11 @@ This spec gets onboarding to ≤ 5 minutes for the happy path and provides one w
    - Detects the platform
    - Installs `rustup` if missing
    - Installs the pinned rustc via `rust-toolchain.toml`
-   - Builds `redist` in release mode
+   - Builds `BISECT` in release mode
    - **Verifies the build produced the binary at the expected path** before mutating PATH (TRENCH PP-18 prevention)
-   - Adds `redist/target/release` to PATH; verifies the next shell can find the binary via `which redist` / `where redist`
-   - Optionally installs maturin + builds the `redist_py` wheel; verifies via `python -c "import redist_py"` before claiming success
-   - Optionally prompts for `DATAVERSE_API_KEY`. **Validates the key with one Dataverse API round-trip** before writing it to local config (TRENCH PP-19 prevention). Writes to `~/.config/redist/credentials.toml` (Linux/macOS) or `%APPDATA%\redist\credentials.toml` (Windows) — explicit path, not hidden in a project dir.
+   - Adds `BISECT/target/release` to PATH; verifies the next shell can find the binary via `which BISECT` / `where BISECT`
+   - Optionally installs maturin + builds the `bisect_py` wheel; verifies via `python -c "import bisect_py"` before claiming success
+   - Optionally prompts for `DATAVERSE_API_KEY`. **Validates the key with one Dataverse API round-trip** before writing it to local config (TRENCH PP-19 prevention). Writes to `~/.config/BISECT/credentials.toml` (Linux/macOS) or `%APPDATA%\BISECT\credentials.toml` (Windows) — explicit path, not hidden in a project dir.
    - **Runs a real smoke test, not `--print-only`** (TRENCH PP-20): `bisect state --state VT --year 2020 --label bootstrap_test --output-dir /tmp/bootstrap_smoke`. Verifies the bisection actually completed and final_assignments.json has 193 tract entries.
    - Reports success with next-step pointers
 
@@ -41,7 +41,7 @@ This spec gets onboarding to ≤ 5 minutes for the happy path and provides one w
    - Run `bisect state --state VT --year 2020`
    - Run `bisect analyze --types all`
    - Generate the PDF expert report
-   - Verify with `redist doctor --verify-manifest`
+   - Verify with `BISECT doctor --verify-manifest`
    - Each step shows expected output + how long it should take
 
 3a. **Tutorial data versioning (DATUM/COVENANT/TRENCH consensus)**
@@ -49,14 +49,14 @@ This spec gets onboarding to ≤ 5 minutes for the happy path and provides one w
       - Fekrazad DOI version
       - Census TIGER year + URL
       - Expected output checksums for each step (`final_assignments.json`, `district_summary.csv`)
-    - New CLI: `redist doctor --check-tutorial-data` validates that the user's local data matches the pinned versions (by SHA-256). If the upstream changed, the user gets an actionable warning, not a silent drift.
+    - New CLI: `BISECT doctor --check-tutorial-data` validates that the user's local data matches the pinned versions (by SHA-256). If the upstream changed, the user gets an actionable warning, not a silent drift.
     - Tutorial output blocks show:
       ```
       Expected: final_assignments.json sha256 = abc123...
       Got:      def456...
       → Data has drifted from tutorial baseline. Either:
          (a) re-fetch with the pinned commands above
-         (b) Run `redist doctor --check-tutorial-data` for diagnosis
+         (b) Run `BISECT doctor --check-tutorial-data` for diagnosis
       ```
 
 3b. **Advanced Louisiana / Callais walkthrough** (separate doc; not the canonical example)
@@ -75,7 +75,7 @@ This spec gets onboarding to ≤ 5 minutes for the happy path and provides one w
    - First 30 seconds: what is this and who's it for (persona table)
    - Next 5 minutes: quickstart link tree
    - Architecture diagram (one image)
-   - Link to deeper docs (REDIST_CLI.md, architecture spec, etc.)
+   - Link to deeper docs (BISECT_CLI.md, architecture spec, etc.)
 
 ### Out of scope
 
@@ -102,9 +102,9 @@ if ! command -v rustup >/dev/null 2>&1; then
 fi
 
 step 2 "Installing pinned toolchain..."
-cd redist && rustup show
+rustup show
 
-step 3 "Building redist (release)..."
+step 3 "Building BISECT (release)..."
 cargo build --release --locked
 
 step 4 "Adding to PATH..."
@@ -123,7 +123,7 @@ step 6 "Done!"
 echo "Try: bisect state --state VT --year 2020"
 ```
 
-Plus `bootstrap.bat` mirroring for Windows (use `%TEMP%\bootstrap_smoke` and `where redist` instead of `which`).
+Plus `bootstrap.bat` mirroring for Windows (use `%TEMP%\bootstrap_smoke` and `where BISECT` instead of `which`).
 
 ### Quickstart doc structure (template)
 
@@ -163,7 +163,7 @@ Doctest of walkthrough markdown was considered (BENCHMARK noted) but rejected: l
 
 - `bootstrap.sh` + `bootstrap.bat` succeed on a clean VM in ≤ 10 minutes wall-clock
 - `quickstart-*.md` exists for all 5 personas; each tested end-to-end manually
-- **Vermont walkthrough** committed under `examples/vermont-walkthrough/` with pinned input data + checksum file at `examples/vermont-walkthrough/checksums.json` (consumed by `redist doctor --check-tutorial-data`)
+- **Vermont walkthrough** committed under `examples/vermont-walkthrough/` with pinned input data + checksum file at `examples/vermont-walkthrough/checksums.json` (consumed by `BISECT doctor --check-tutorial-data`)
 - Louisiana advanced walkthrough committed under `examples/louisiana-callais-walkthrough/` with input data references; explicitly framed as post-Callais §2 evidence kit
 - README.md leads with the persona table; link tree has no broken links
 - Error-message audit covers every CLI subcommand main path; documented in error-conventions.md

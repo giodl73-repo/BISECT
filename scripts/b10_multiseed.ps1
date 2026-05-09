@@ -8,7 +8,7 @@ param(
 )
 
 Set-Location C:\src\apportionment
-$redist = ".\redist\target\release\redist.exe"
+$BISECT = ".\target\release\bisect.exe"
 $outDir = "outputs\b10_multiseed"
 $csv    = "$outDir\multiseed_results.csv"
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
@@ -48,12 +48,12 @@ foreach ($code in $req) {
             $gPath = "outputs\V3\data\2020\adjacency\$($code.ToLower())_adjacency_2020_geoids.json"
 
             if (-not (Test-Path $mPath)) {
-                $cmd = "$redist state --state $code --year 2020 --version $ver --seed $s --manifest --force $alphaArg"
+                $cmd = "$BISECT state --state $code --year 2020 --version $ver --seed $s --manifest --force $alphaArg"
                 $null = Invoke-Expression $cmd 2>&1
                 if ($LASTEXITCODE -ne 0) { Write-Output "  FAIL $code a=$alpha s=$s"; continue }
             }
             if (-not (Test-Path $pPath)) {
-                $null = & $redist analyze --state $code --year 2020 --version $ver --types proportionality 2>&1
+                $null = & $BISECT analyze --state $code --year 2020 --version $ver --types proportionality 2>&1
             }
 
             $ec=0; $d=0; $gap=0; $splits=0
@@ -109,12 +109,12 @@ foreach ($code in @("GA","NC","PA","TX","CA")) {
             $gPath = "outputs\V3\data\2020\adjacency\$($code.ToLower())_adjacency_2020_geoids.json"
 
             if (-not (Test-Path $mPath)) {
-                $cmd = "$redist state --state $code --year 2020 --version $ver --seed $s --manifest --force --alpha-county $alpha"
+                $cmd = "$BISECT state --state $code --year 2020 --version $ver --seed $s --manifest --force --alpha-county $alpha"
                 $null = Invoke-Expression $cmd 2>&1
                 if ($LASTEXITCODE -ne 0) { continue }
             }
             if (-not (Test-Path $pPath)) {
-                $null = & $redist analyze --state $code --year 2020 --version $ver --types proportionality 2>&1
+                $null = & $BISECT analyze --state $code --year 2020 --version $ver --types proportionality 2>&1
             }
 
             $ec=0; $d=0; $gap=0; $splits=0

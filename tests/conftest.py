@@ -131,10 +131,10 @@ def make_disconnected_plan():
     the contiguity exit-code test to run without skipping.
 
     Usage in test:
-        state, year, version, label = make_disconnected_plan(tmp_redist_output)
+        state, year, version, label = make_disconnected_plan(tmp_BISECT_output)
 
     The returned tuple (state, year, version, label) can be passed directly to
-    `redist analyze --state STATE --year YEAR --version VERSION --label LABEL`.
+    `BISECT analyze --state STATE --year YEAR --version VERSION --label LABEL`.
 
     The fixture creates a synthetic VT-like plan where district 1 has two tracts
     in geographically non-adjacent positions (tracts share no adjacency edges),
@@ -146,7 +146,7 @@ def make_disconnected_plan():
         version = "spec3_disconnected"
         label = "vt_disconnected_test"
 
-        # Create the plan directory structure matching what redist analyze expects.
+        # Create the plan directory structure matching what BISECT analyze expects.
         # Path: {output_dir}/{year}/plans/{label}/
         plan_dir = output_dir / year / "plans" / label
         plan_dir.mkdir(parents=True, exist_ok=True)

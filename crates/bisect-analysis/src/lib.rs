@@ -1,67 +1,74 @@
-pub mod county_names;
-pub mod dhondt;
-pub mod compactness;
-pub mod vra_analysis;
 pub mod analyzer;
-pub mod demographic;
-pub mod political;
-pub mod proportionality;
-pub mod urban;
-pub mod summary;
-pub mod partisan;
-pub mod nesting;
+pub mod bloc_voting;
+pub mod bloc_voting_writer;
+pub mod compactness;
 pub mod comparison;
 pub mod contiguity;
-pub mod splits;
-pub mod split_standards;
-pub mod exit_codes;
-pub mod bloc_voting;
+pub mod county_names;
+pub mod demographic;
+pub mod dhondt;
 pub mod ensemble_diagnostics;
+pub mod exit_codes;
+pub mod nesting;
+pub mod partisan;
+pub mod political;
+pub mod proportionality;
 pub mod race_of_candidate;
-pub mod bloc_voting_writer;
+pub mod split_standards;
+pub mod splits;
+pub mod summary;
+pub mod urban;
+pub mod vra_analysis;
 
-pub use compactness::{
-    polsby_popper, reock, convex_hull_ratio, all_metrics,
-    schwartzberg, length_width_ratio, population_weighted_compactness,
-    CompactnessMetrics, CompactnessError,
-};
-pub use vra_analysis::{analyze_mm_districts, VraAnalysis, VraDistrict};
 pub use analyzer::{Analyzer, AnalyzerContext, AnalyzerType};
-pub use demographic::{DemographicAnalyzer, DemographicResult, DemographicDistrict};
-pub use political::{PoliticalAnalyzer, PoliticalResult, PoliticalDistrict};
-pub use proportionality::{ProportionalityAnalyzer, ProportionalityResult, aggregate_proportionality};
-pub use urban::{UrbanAnalyzer, UrbanResult, UrbanDistrict};
-pub use summary::{SummaryAnalyzer, SummaryResult, SummaryDistrict};
-pub use partisan::{
-    DistrictElection, MetricWithCI, PartisanMetrics, SeatsVotesCurve,
-    compute_efficiency_gap, compute_mean_median, compute_partisan_bias,
-    compute_declination, compute_seats_votes_curve,
-    bootstrap_ci, compute_partisan_metrics,
+pub use bloc_voting::{
+    cluster_bootstrap, compute_vif, fit_wls, hc3_stderr, holm_bonferroni, run_bloc_voting_family,
+    BlocVotingConfig, BlocVotingError, BlocVotingFamilyResult, BlocVotingTest,
+    BlocVotingTestResult, ClusterCi, Coef, Precinct, RegressionFit, RobustnessCheck,
+};
+pub use bloc_voting_writer::{
+    build_bloc_voting_json, regression_specification_string, render_summary_md,
+    write_bloc_voting_outputs, BlocVotingJson, CandidateBlock, EcologyBlock, FamilyDetail,
+    ProvenanceBlock, RegressionBlock, WriteContext, ECOLOGY_CAVEAT,
+};
+pub use compactness::{
+    all_metrics, convex_hull_ratio, length_width_ratio, polsby_popper,
+    population_weighted_compactness, reock, schwartzberg, CompactnessError, CompactnessMetrics,
+};
+pub use comparison::{
+    compare_plans, format_comparison_csv, format_comparison_json, format_comparison_table, jaccard,
+    PlanComparison,
+};
+pub use contiguity::{bfs_component_count, check_contiguity, ContiguityResult, DistrictContiguity};
+pub use county_names::county_name;
+pub use demographic::{DemographicAnalyzer, DemographicDistrict, DemographicResult};
+pub use dhondt::{dhondt_allocate, gallagher_index};
+pub use exit_codes::{
+    compute_exit_code, compute_exit_code_with_flags, BIT_BALANCE, BIT_CONTIGUITY, BIT_MISSING_DATA,
+    BIT_NESTING,
 };
 pub use nesting::{
-    NestingViolation, NestingValidation,
-    build_chamber_adjacency, validate_nesting, compute_nest_ratio,
+    build_chamber_adjacency, compute_nest_ratio, validate_nesting, NestingValidation,
+    NestingViolation,
 };
-pub use comparison::{compare_plans, jaccard, format_comparison_table, format_comparison_json, format_comparison_csv, PlanComparison};
-pub use contiguity::{check_contiguity, bfs_component_count, ContiguityResult, DistrictContiguity};
-pub use splits::{analyze_county_splits, analyze_county_splits_with_state, analyze_municipal_splits, county_fips_from_geoid, CountySplitResult, MunicipalSplitResult};
-pub use split_standards::{get_split_standard, SplitStandard};
-pub use exit_codes::{compute_exit_code, compute_exit_code_with_flags, BIT_BALANCE, BIT_CONTIGUITY, BIT_NESTING, BIT_MISSING_DATA};
-pub use dhondt::{dhondt_allocate, gallagher_index};
-pub use county_names::county_name;
-pub use bloc_voting::{
-    fit_wls, hc3_stderr, compute_vif, holm_bonferroni, cluster_bootstrap,
-    run_bloc_voting_family,
-    Precinct, Coef, RegressionFit, BlocVotingError, ClusterCi,
-    BlocVotingTest, BlocVotingConfig, BlocVotingTestResult, BlocVotingFamilyResult,
-    RobustnessCheck,
+pub use partisan::{
+    bootstrap_ci, compute_declination, compute_efficiency_gap, compute_mean_median,
+    compute_partisan_bias, compute_partisan_metrics, compute_seats_votes_curve, DistrictElection,
+    MetricWithCI, PartisanMetrics, SeatsVotesCurve,
+};
+pub use political::{PoliticalAnalyzer, PoliticalDistrict, PoliticalResult};
+pub use proportionality::{
+    aggregate_proportionality, ProportionalityAnalyzer, ProportionalityResult,
 };
 pub use race_of_candidate::{
     parse_race_of_candidate_csv, AnnotationSet, AttestationDocFormat, AttestationDocRecord,
     CandidateAnnotation, CandidateRace, CuratorRecord, RaceOfCandidateProvenance, RaceParseError,
 };
-pub use bloc_voting_writer::{
-    build_bloc_voting_json, render_summary_md, regression_specification_string,
-    write_bloc_voting_outputs, BlocVotingJson, CandidateBlock, EcologyBlock, FamilyDetail,
-    ProvenanceBlock, RegressionBlock, WriteContext, ECOLOGY_CAVEAT,
+pub use split_standards::{get_split_standard, SplitStandard};
+pub use splits::{
+    analyze_county_splits, analyze_county_splits_with_state, analyze_municipal_splits,
+    county_fips_from_geoid, CountySplitResult, MunicipalSplitResult,
 };
+pub use summary::{SummaryAnalyzer, SummaryDistrict, SummaryResult};
+pub use urban::{UrbanAnalyzer, UrbanDistrict, UrbanResult};
+pub use vra_analysis::{analyze_mm_districts, VraAnalysis, VraDistrict};

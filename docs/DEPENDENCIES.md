@@ -62,23 +62,23 @@ brew install metis
 ### 3. Build the binary
 
 ```bash
-cargo build --release --manifest-path redist/Cargo.toml
-# Binary: redist/target/release/redist.exe (Windows) or redist/target/release/redist (Linux/macOS)
+cargo build --release --manifest-path Cargo.toml
+# Binary: target/release/bisect.exe (Windows) or target/release/bisect (Linux/macOS)
 ```
 
-Add to PATH so `redist` works anywhere:
+Add to PATH so `BISECT` works anywhere:
 ```bash
 # Windows PowerShell (current session)
-$env:PATH += ";$PWD\redist\target\release"
+$env:PATH += ";$PWD\BISECT\target\release"
 
 # Linux/macOS (add to ~/.bashrc or ~/.zshrc)
-export PATH="$PWD/redist/target/release:$PATH"
+export PATH="$PWD/BISECT/target/release:$PATH"
 ```
 
 ### 4. Verify
 
 ```bash
-redist --version
+BISECT --version
 gpmetis --help | head -1
 ```
 
@@ -94,7 +94,7 @@ bisect states --year 2020 --version V3 \
   --output-dir outputs/V3 --workers 8                # All 50 states
 ```
 
-See [`docs/REDIST_CLI.md`](REDIST_CLI.md) for full command reference.
+See [`docs/BISECT_CLI.md`](BISECT_CLI.md) for full command reference.
 
 ---
 
@@ -176,15 +176,15 @@ except ImportError:
 
 ## PyO3 Bindings (Rust ↔ Python, Developers Only)
 
-Required only if you are modifying the `redist_py` Python bindings or working on
+Required only if you are modifying the `bisect_py` Python bindings or working on
 the `bisect-core`/`bisect-data` crates.
 
 ```bash
 pip install maturin
 
-cd redist/python/redist_py
+cd python/bisect_py
 maturin develop          # Build and install in the current Python env
-python -c "import redist_py; print('PyO3 bindings OK')"
+python -c "import bisect_py; print('PyO3 bindings OK')"
 ```
 
 ---
@@ -227,6 +227,6 @@ $env:CENSUS_API_KEY = "your_key_here"
 
 ## See Also
 
-- [`REDIST_CLI.md`](REDIST_CLI.md) — CLI commands and options
+- [`BISECT_CLI.md`](BISECT_CLI.md) — CLI commands and options
 - [`GETTING_STARTED.md`](GETTING_STARTED.md) — First-run walkthrough
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — Development workflow

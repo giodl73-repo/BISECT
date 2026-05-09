@@ -57,8 +57,8 @@ pub fn render_html_report(report: &Report) -> anyhow::Result<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::report::{assemble_report, ReportContext, REQUIRED_ANALYSIS_FILES};
     use crate::manifest::PlanManifest;
+    use crate::report::{assemble_report, ReportContext, REQUIRED_ANALYSIS_FILES};
     use tempfile::TempDir;
 
     fn make_test_manifest(label: &str) -> PlanManifest {
@@ -73,8 +73,8 @@ mod tests {
             seed: Some(42),
             binary_version: "0.1.0".into(),
             binary_sha256: "a".repeat(64),
-            binary_download_url:
-                "https://github.com/owner/redist/releases/download/v0.1.0/redist".into(),
+            binary_download_url: "https://github.com/owner/BISECT/releases/download/v0.1.0/BISECT"
+                .into(),
             adjacency_file: "vt_adjacency_2020.adj.bin".into(),
             adjacency_sha256: "b".repeat(64),
             adjacency_build_command: "python scripts/data/generate_adj_bin.py".into(),
@@ -100,8 +100,7 @@ mod tests {
         for name in REQUIRED_ANALYSIS_FILES {
             std::fs::write(
                 analysis_dir.join(name),
-                serde_json::to_string(&serde_json::json!({"status": "ok", "file": name}))
-                    .unwrap(),
+                serde_json::to_string(&serde_json::json!({"status": "ok", "file": name})).unwrap(),
             )
             .unwrap();
         }
@@ -144,16 +143,10 @@ mod tests {
             !html.contains("http://"),
             "HTML must not reference external HTTP resources"
         );
-        assert!(
-            !html.contains("https://cdn"),
-            "HTML must not load from CDN"
-        );
+        assert!(!html.contains("https://cdn"), "HTML must not load from CDN");
         // If images present, must be data URIs
         if html.contains("<img") {
-            assert!(
-                html.contains("data:image/"),
-                "images must be data URIs"
-            );
+            assert!(html.contains("data:image/"), "images must be data URIs");
         }
     }
 

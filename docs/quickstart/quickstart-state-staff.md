@@ -2,7 +2,7 @@
 
 **Who you are:** Staff for a state legislature, redistricting commission, or governor's office. You draw maps interactively (Districtr / Dave's Redistricting App / QGIS) and need fast analysis + court-quality reports as you iterate.
 
-**What you'll have at the end:** A Districtr -> `redist` -> PDF round-trip that you can run without re-learning anything between map iterations.
+**What you'll have at the end:** A Districtr -> `BISECT` -> PDF round-trip that you can run without re-learning anything between map iterations.
 
 **Time:** 5 minutes per iteration after first setup.
 
@@ -18,9 +18,9 @@
 
 2. **Draw a map** in Districtr against your state's 2020 tracts. Save as JSON via Districtr's "Save Plan" -> "Download as JSON".
 
-3. **Import into `redist`:**
+3. **Import into `BISECT`:**
    ```bash
-   redist import --format districtr senate_proposal_v3.json \
+   BISECT import --format districtr senate_proposal_v3.json \
        --plan-label senate_proposal_v3 \
        --state VT --year 2020
    ```
@@ -34,7 +34,7 @@
 
 5. **Generate a report:**
    ```bash
-   redist report --plan-label senate_proposal_v3 --year 2020 --format html
+   BISECT report --plan-label senate_proposal_v3 --year 2020 --format html
    ```
    Or `--format pdf` for court-ready PDF/A-2b output.
 
@@ -87,11 +87,11 @@ bisect state --state WA --year 2020 \
 ```
 
 What happens:
-1. `redist` draws 98 house districts using METIS on census tracts (block-group resolution auto-applied)
+1. `BISECT` draws 98 house districts using METIS on census tracts (block-group resolution auto-applied)
 2. It builds a new adjacency graph where nodes are house districts
 3. METIS runs on the house-district graph with k=49
 4. Each senate district is defined as exactly 2 whole house districts -- nesting is guaranteed by construction
-5. `redist` validates the nesting before writing output
+5. `BISECT` validates the nesting before writing output
 
 Expected output:
 ```
@@ -104,7 +104,7 @@ outputs/v1/2020/plans/wa_bicameral_v1/
 
 Validate after drawing:
 ```bash
-redist suite validate --name wa_bicameral_v1 --year 2020 --version v1
+BISECT suite validate --name wa_bicameral_v1 --year 2020 --version v1
 ```
 
 Output confirms nesting or lists violations:
@@ -132,7 +132,7 @@ See `docs/guides/nesting-guide.md` for per-state constitutional nesting requirem
 
 ## Expected output at each step
 
-- **Step 3:** plan label visible via `redist doctor --label senate_proposal_v3`
+- **Step 3:** plan label visible via `BISECT doctor --label senate_proposal_v3`
 - **Step 4:** five JSON files under `analysis/`, exit 0
 - **Step 5:** `report.html` viewable in any browser; no external network calls
 - **State legislative run:** `final_assignments.json` with district IDs 1..k, plus `manifest.json` tagging `chamber` and `resolution`
@@ -140,10 +140,10 @@ See `docs/guides/nesting-guide.md` for per-state constitutional nesting requirem
 
 ## Where to go next
 
-- DRA round-trip: `redist import --format dra <CSV>` and `redist export --format dra --plan-label <LABEL>`
-- Shapefile from QGIS: `redist import --format shapefile <DIR>` (must have a `district` column)
-- Plan-vs-plan comparison: `redist compare --plan-a senate_v3 --plan-b senate_v4 --format both`
-- Compare against the currently enacted map: `redist compare --plan-a senate_v3 --baseline ENACTED`
+- DRA round-trip: `BISECT import --format dra <CSV>` and `BISECT export --format dra --plan-label <LABEL>`
+- Shapefile from QGIS: `BISECT import --format shapefile <DIR>` (must have a `district` column)
+- Plan-vs-plan comparison: `BISECT compare --plan-a senate_v3 --plan-b senate_v4 --format both`
+- Compare against the currently enacted map: `BISECT compare --plan-a senate_v3 --baseline ENACTED`
 - Nesting guide: `docs/guides/nesting-guide.md`
 
 ## Format notes

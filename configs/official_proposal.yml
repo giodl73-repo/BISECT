@@ -1,5 +1,5 @@
 # configs/official_proposal.yml
-# User-editable. Commit this. Do not confuse with .redist (auto-managed).
+# User-editable. Commit this. Do not confuse with .bisect (auto-managed).
 
 name: official_proposal
 description: >

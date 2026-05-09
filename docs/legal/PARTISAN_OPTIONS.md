@@ -198,7 +198,7 @@ This is mechanically distinct from the shipped partisan-weighted mode (#2), whic
 - E.4 partisan-similarity partition mode (`--partition-mode partisan-similarity`).
 - 3-state pilot run (CA, PA, NC per E.4 plan.md) producing `proportionality.json` deltas.
 - Full 50-state × 15-config ablation (compute-heavy; suitable for a paper-mode run).
-- Wiring proportionality into the `redist compare` narrative + HTML side-by-side reports (would let a civic-advocate report quote the gap directly).
+- Wiring proportionality into the `BISECT compare` narrative + HTML side-by-side reports (would let a civic-advocate report quote the gap directly).
 
 ---
 

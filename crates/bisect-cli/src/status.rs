@@ -103,8 +103,15 @@ mod tests {
         // We capture by verifying ascii_safe produces what we expect
         let msg = "Round 1: caf\u{00E9} done";
         let safe = ascii_safe(msg);
-        assert!(safe.is_ascii(), "sanitized message must be ASCII: {:?}", safe);
-        assert!(safe.contains("caf?"), "non-ASCII char should be replaced with '?'");
+        assert!(
+            safe.is_ascii(),
+            "sanitized message must be ASCII: {:?}",
+            safe
+        );
+        assert!(
+            safe.contains("caf?"),
+            "non-ASCII char should be replaced with '?'"
+        );
     }
 
     #[test]
@@ -126,14 +133,20 @@ mod tests {
     fn test_ascii_safe_all_printable_ascii_unchanged() {
         let printable = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
         let result = ascii_safe(printable);
-        assert_eq!(result, printable, "all printable ASCII must pass through unchanged");
+        assert_eq!(
+            result, printable,
+            "all printable ASCII must pass through unchanged"
+        );
     }
 
     #[test]
     fn test_ascii_safe_high_unicode_all_replaced() {
         let input = "\u{0100}\u{0101}\u{4E2D}\u{6587}"; // Ā, ā, 中, 文
         let result = ascii_safe(input);
-        assert_eq!(result, "????", "all non-ASCII chars must be replaced with '?'");
+        assert_eq!(
+            result, "????",
+            "all non-ASCII chars must be replaced with '?'"
+        );
     }
 
     #[test]
@@ -189,7 +202,10 @@ mod tests {
     fn test_status_negative_position() {
         // Position -1 is used in the Python STATUS protocol for "no bar" mode.
         let line = format!("STATUS:{}:{}\n", -1, "processing");
-        assert!(line.starts_with("STATUS:-1:"), "negative position must be emitted as-is");
+        assert!(
+            line.starts_with("STATUS:-1:"),
+            "negative position must be emitted as-is"
+        );
         assert!(line.is_ascii());
     }
 

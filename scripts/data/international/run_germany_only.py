@@ -13,9 +13,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-REDIST = Path("redist/target/release/redist.exe")
-if not REDIST.exists():
-    REDIST = Path("redist/target/release/redist")
+BISECT = Path("target/release/bisect.exe")
+if not BISECT.exists():
+    BISECT = Path("target/release/bisect")
 
 
 def run_germany(districts: int, label: str, adj_path: Path, tolerance: float = 25.0):
@@ -24,7 +24,7 @@ def run_germany(districts: int, label: str, adj_path: Path, tolerance: float = 2
     print(f"  Adjacency: {adj_path} ({adj_path.stat().st_size} bytes)")
 
     cmd = [
-        str(REDIST), "state",
+        str(BISECT), "state",
         "--state", "DE",
         "--year", "2020",
         "--version", "international",
@@ -79,10 +79,10 @@ def build_adjacency_level3(gdf_path: Path) -> Path:
     import geopandas as gpd
 
     try:
-        import redist_py
-        has_redist_py = True
+        import bisect_py
+        has_bisect_py = True
     except ImportError:
-        has_redist_py = False
+        has_bisect_py = False
 
     out = Path("outputs/international/germany")
     pkl_path = out / "de_adjacency_2021_l3.pkl"
@@ -177,17 +177,17 @@ def build_adjacency_level3(gdf_path: Path) -> Path:
             pickle.dump(graph_dict, f)
         print(f"  [OK] {pkl_path}")
 
-    if has_redist_py:
+    if has_bisect_py:
         adj = graph_dict["adjacency"]
         vw = [int(x) for x in graph_dict["vertex_weights"]]
         ew = {(min(i, j), max(i, j)): float(w) for (i, j), w in graph_dict["edge_weights"].items()}
-        bin_data = redist_py.adjacency_to_bin(adj, vw, ew, len(adj), len(ew))
+        bin_data = bisect_py.adjacency_to_bin(adj, vw, ew, len(adj), len(ew))
         bin_path = pkl_path.with_suffix(".adj.bin")
         bin_path.write_bytes(bin_data)
         print(f"  [OK] {bin_path} ({len(bin_data)/1e3:.1f} KB)")
         return bin_path
     else:
-        print("  [WARN] redist_py not available for .adj.bin conversion")
+        print("  [WARN] bisect_py not available for .adj.bin conversion")
         return pkl_path
 
 
@@ -200,8 +200,8 @@ def main():
                         help="Download and use GADM level 3 (~11K Gemeinden)")
     args = parser.parse_args()
 
-    if not REDIST.exists():
-        print(f"ERROR: redist binary not found at {REDIST}")
+    if not BISECT.exists():
+        print(f"ERROR: BISECT binary not found at {BISECT}")
         sys.exit(1)
 
     if args.use_level3:
@@ -221,7 +221,7 @@ def main():
     if ok:
         print("\n=== Analysis ===")
         cmd = [
-            str(REDIST), "analyze",
+            str(BISECT), "analyze",
             "--label", args.label,
             "--year", "2020",
             "--version", "international",

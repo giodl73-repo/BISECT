@@ -377,7 +377,7 @@ Pareto front size grows with k because the objective space becomes larger. For s
 NSGA-II is complex enough to warrant its own crate, separate from `bisect-ensemble` and `bisect-smc`.
 
 ```
-redist/crates/bisect-pareto/
+BISECT/crates/bisect-pareto/
   src/
     lib.rs              // pub use
     algorithm.rs        // run_nsga2() top-level, NSGA-II main loop

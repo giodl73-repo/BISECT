@@ -1,15 +1,14 @@
-/// report_cmd.rs — `redist report` command dispatch.
+use crate::args::{ReportArgs, ReportFormat};
+use bisect_report::{
+    assemble_report, check_required_analysis_files, render_html_report, PlanManifest, ReportContext,
+};
+/// report_cmd.rs — `BISECT report` command dispatch.
 ///
 /// Spec 6 / Board amendments:
 /// - PDF format exits with code 1 with clear message (other formats complete first)
 /// - Checks all required analysis files before assembly
 /// - Returns Err if assemble_report fails
 use std::path::{Path, PathBuf};
-use crate::args::{ReportArgs, ReportFormat};
-use bisect_report::{
-    PlanManifest, ReportContext, assemble_report, check_required_analysis_files,
-    render_html_report,
-};
 
 /// Run the report command. Returns Ok or Err for non-PDF failures.
 /// PDF format is handled specially: other formats complete, then exits with code 1.
@@ -33,7 +32,10 @@ pub fn run_report(args: &ReportArgs) -> anyhow::Result<()> {
     // Read manifest — prefer PlanContext (single source of truth); fall back to minimal
     // manifest for plans created before v0.1.0 that may lack manifest.json.
     let manifest: PlanManifest = crate::plan_context::PlanContext::from_label(
-        &PathBuf::from(&args.output_base), &args.version, &args.year, &args.label,
+        &PathBuf::from(&args.output_base),
+        &args.version,
+        &args.year,
+        &args.label,
     )
     .map(|ctx| ctx.manifest)
     .unwrap_or_else(|_| PlanManifest {
@@ -81,7 +83,9 @@ pub fn run_report(args: &ReportArgs) -> anyhow::Result<()> {
             out_dir.join("audit.json")
         };
         std::fs::write(&audit_file, audit_json)?;
-        let abs = audit_file.canonicalize().unwrap_or_else(|_| audit_file.clone());
+        let abs = audit_file
+            .canonicalize()
+            .unwrap_or_else(|_| audit_file.clone());
         eprintln!("[OK] audit.json written to: {}", abs.display());
         return Ok(());
     }
@@ -93,7 +97,10 @@ pub fn run_report(args: &ReportArgs) -> anyhow::Result<()> {
             "WARNING: Missing required analysis files: {}",
             missing.join(", ")
         );
-        eprintln!("Run 'bisect analyze --label {}' to generate them.", args.label);
+        eprintln!(
+            "Run 'bisect analyze --label {}' to generate them.",
+            args.label
+        );
     }
 
     // Separate PDF from other formats
@@ -136,7 +143,9 @@ pub fn run_report(args: &ReportArgs) -> anyhow::Result<()> {
         let audit_json = build_audit_json(&manifest)?;
         let audit_file = out_dir.join("audit.json");
         std::fs::write(&audit_file, &audit_json)?;
-        let abs = audit_file.canonicalize().unwrap_or_else(|_| audit_file.clone());
+        let abs = audit_file
+            .canonicalize()
+            .unwrap_or_else(|_| audit_file.clone());
         eprintln!("[OK] audit.json written: {}", abs.display());
     }
 
@@ -277,7 +286,7 @@ mod tests {
         // When no PDF tool is available, try_generate_pdf returns false.
         // We test with non-existent paths so no actual tool can succeed.
         let html = std::path::Path::new("/nonexistent/path/report.html");
-        let pdf  = std::path::Path::new("/nonexistent/path/report.pdf");
+        let pdf = std::path::Path::new("/nonexistent/path/report.pdf");
         let result = try_generate_pdf(html, pdf);
         // On CI with no wkhtmltopdf/pandoc this must return false without panicking.
         // On a dev machine that has pandoc installed but with a missing input file,
@@ -432,7 +441,7 @@ mod tests {
     fn test_try_generate_pdf_with_nonexistent_html_returns_false() {
         // Non-existent HTML → any external tool should fail → returns false
         let html = std::path::Path::new("/tmp/does_not_exist_abc123.html");
-        let pdf  = std::path::Path::new("/tmp/does_not_exist_abc123.pdf");
+        let pdf = std::path::Path::new("/tmp/does_not_exist_abc123.pdf");
         // Must not panic regardless of which tools are installed
         let result = try_generate_pdf(html, pdf);
         // If html doesn't exist the tool will fail; pdf_path won't be created
@@ -467,8 +476,10 @@ mod tests {
         let result = super::run_report(&args);
         assert!(result.is_err());
         let msg = result.unwrap_err().to_string();
-        assert!(msg.contains("not found") || msg.contains("nonexistent_plan_xyz"),
-            "error must mention plan dir: got {msg}");
+        assert!(
+            msg.contains("not found") || msg.contains("nonexistent_plan_xyz"),
+            "error must mention plan dir: got {msg}"
+        );
     }
 
     #[test]
@@ -497,7 +508,10 @@ mod tests {
         // the path ends_with .json → audit_file = out directly
         let out_dir = std::path::PathBuf::from(args.out.as_ref().unwrap());
         let is_json_file = out_dir.extension().map(|e| e == "json").unwrap_or(false);
-        assert!(is_json_file, "out ending in .json must be treated as the audit file itself");
+        assert!(
+            is_json_file,
+            "out ending in .json must be treated as the audit file itself"
+        );
     }
 
     #[test]
@@ -522,7 +536,9 @@ mod tests {
             draft: false,
         };
         let has_pdf = args.format.contains(&ReportFormat::Pdf);
-        let non_pdf: Vec<&ReportFormat> = args.format.iter()
+        let non_pdf: Vec<&ReportFormat> = args
+            .format
+            .iter()
             .filter(|f| **f != ReportFormat::Pdf)
             .collect();
         assert!(has_pdf);
@@ -584,7 +600,9 @@ mod tests {
             allow_non_strict_civic: false,
             draft: false,
         };
-        let out_dir = args.out.as_ref()
+        let out_dir = args
+            .out
+            .as_ref()
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| std::path::PathBuf::from(format!("reports/{}", args.label)));
         assert_eq!(out_dir, std::path::PathBuf::from("reports/my_plan"));
@@ -604,16 +622,21 @@ mod tests {
     fn test_external_analyzer_record_fields() {
         use std::io::Write;
         let mut tmp = tempfile::NamedTempFile::new().unwrap();
-        tmp.write_all(b"#!/usr/bin/env python3\nprint('analysis')").unwrap();
+        tmp.write_all(b"#!/usr/bin/env python3\nprint('analysis')")
+            .unwrap();
         let record = bisect_report::ExternalAnalyzerRecord::from_script(
             tmp.path(),
             "python {script} {assignments_json} {output_dir}",
-        ).unwrap();
+        )
+        .unwrap();
         // sha256 must be a 64-char hex string
         assert_eq!(record.sha256.len(), 64);
         assert!(record.sha256.chars().all(|c| c.is_ascii_hexdigit()));
         // command must be stored verbatim
-        assert_eq!(record.command, "python {script} {assignments_json} {output_dir}");
+        assert_eq!(
+            record.command,
+            "python {script} {assignments_json} {output_dir}"
+        );
     }
 
     #[test]
@@ -621,23 +644,22 @@ mod tests {
         use std::io::Write;
         let mut tmp = tempfile::NamedTempFile::new().unwrap();
         tmp.write_all(b"pass").unwrap();
-        let record = bisect_report::ExternalAnalyzerRecord::from_script(
-            tmp.path(),
-            "python {script}",
-        ).unwrap();
+        let record =
+            bisect_report::ExternalAnalyzerRecord::from_script(tmp.path(), "python {script}")
+                .unwrap();
         // 'script' field stores the path to the script file
         let script_name = tmp.path().file_name().unwrap().to_string_lossy();
-        assert!(record.script.ends_with(script_name.as_ref()),
-            "script field must end with the script's file name, got: {}", record.script);
+        assert!(
+            record.script.ends_with(script_name.as_ref()),
+            "script field must end with the script's file name, got: {}",
+            record.script
+        );
     }
 
     #[test]
     fn test_external_analyzer_missing_file_errors() {
         let missing = std::path::Path::new("/nonexistent/no_such_script.py");
-        let result = bisect_report::ExternalAnalyzerRecord::from_script(
-            missing,
-            "python {script}",
-        );
+        let result = bisect_report::ExternalAnalyzerRecord::from_script(missing, "python {script}");
         assert!(result.is_err(), "from_script must fail on missing file");
     }
 
@@ -662,7 +684,9 @@ mod tests {
             allow_non_strict_civic: false,
             draft: false,
         };
-        let non_pdf: Vec<&ReportFormat> = args.format.iter()
+        let non_pdf: Vec<&ReportFormat> = args
+            .format
+            .iter()
             .filter(|f| **f != ReportFormat::Pdf)
             .collect();
         assert_eq!(non_pdf.len(), 2);
@@ -677,7 +701,7 @@ mod tests {
         let out_dir = std::path::PathBuf::from("reports").join(label);
         let html_path = out_dir.join(format!("{label}_report.html"));
         let json_path = out_dir.join(format!("{label}_report.json"));
-        let pdf_path  = out_dir.join(format!("{label}_report.pdf"));
+        let pdf_path = out_dir.join(format!("{label}_report.pdf"));
         assert!(html_path.ends_with(format!("{label}_report.html")));
         assert!(json_path.ends_with(format!("{label}_report.json")));
         assert!(pdf_path.ends_with(format!("{label}_report.pdf")));
@@ -688,20 +712,42 @@ mod tests {
         // audit_only skips HTML/JSON; audit_with_report writes both.
         // They should not be set simultaneously.
         let args_only = ReportArgs {
-            label: "x".into(), year: "2020".into(), version: "v1".into(),
-            format: vec![ReportFormat::Html], out: None,
-            audit_only: true, audit_with_report: false, output_base: "outputs".into(),
-            expert_name: None, expert_credentials: None, expert_affiliation: None,
-            case_caption_file: None, jurisdiction: None, citation_style: None,
-            expert_config: None, allow_non_strict_civic: false, draft: false,
+            label: "x".into(),
+            year: "2020".into(),
+            version: "v1".into(),
+            format: vec![ReportFormat::Html],
+            out: None,
+            audit_only: true,
+            audit_with_report: false,
+            output_base: "outputs".into(),
+            expert_name: None,
+            expert_credentials: None,
+            expert_affiliation: None,
+            case_caption_file: None,
+            jurisdiction: None,
+            citation_style: None,
+            expert_config: None,
+            allow_non_strict_civic: false,
+            draft: false,
         };
         let args_with = ReportArgs {
-            label: "x".into(), year: "2020".into(), version: "v1".into(),
-            format: vec![ReportFormat::Html], out: None,
-            audit_only: false, audit_with_report: true, output_base: "outputs".into(),
-            expert_name: None, expert_credentials: None, expert_affiliation: None,
-            case_caption_file: None, jurisdiction: None, citation_style: None,
-            expert_config: None, allow_non_strict_civic: false, draft: false,
+            label: "x".into(),
+            year: "2020".into(),
+            version: "v1".into(),
+            format: vec![ReportFormat::Html],
+            out: None,
+            audit_only: false,
+            audit_with_report: true,
+            output_base: "outputs".into(),
+            expert_name: None,
+            expert_credentials: None,
+            expert_affiliation: None,
+            case_caption_file: None,
+            jurisdiction: None,
+            citation_style: None,
+            expert_config: None,
+            allow_non_strict_civic: false,
+            draft: false,
         };
         // audit_only=true → audit_with_report should be false
         assert!(args_only.audit_only && !args_only.audit_with_report);
@@ -712,24 +758,41 @@ mod tests {
     #[test]
     fn test_pdf_install_note_contains_chromium() {
         let note = "chromium: chromium --headless --print-to-pdf=output.pdf input.html";
-        assert!(note.contains("chromium"), "PDF note must mention chromium as alternative");
+        assert!(
+            note.contains("chromium"),
+            "PDF note must mention chromium as alternative"
+        );
     }
 
     #[test]
     fn test_pdf_install_note_contains_wkhtmltopdf_url() {
         let note = "wkhtmltopdf: https://wkhtmltopdf.org/downloads.html";
-        assert!(note.contains("https://wkhtmltopdf.org"), "note must contain wkhtmltopdf URL");
+        assert!(
+            note.contains("https://wkhtmltopdf.org"),
+            "note must contain wkhtmltopdf URL"
+        );
     }
 
     #[test]
     fn test_report_args_version_field() {
         let args = ReportArgs {
-            label: "test".into(), year: "2010".into(), version: "v3".into(),
-            format: vec![ReportFormat::Html], out: None,
-            audit_only: false, audit_with_report: false, output_base: "outputs".into(),
-            expert_name: None, expert_credentials: None, expert_affiliation: None,
-            case_caption_file: None, jurisdiction: None, citation_style: None,
-            expert_config: None, allow_non_strict_civic: false, draft: false,
+            label: "test".into(),
+            year: "2010".into(),
+            version: "v3".into(),
+            format: vec![ReportFormat::Html],
+            out: None,
+            audit_only: false,
+            audit_with_report: false,
+            output_base: "outputs".into(),
+            expert_name: None,
+            expert_credentials: None,
+            expert_affiliation: None,
+            case_caption_file: None,
+            jurisdiction: None,
+            citation_style: None,
+            expert_config: None,
+            allow_non_strict_civic: false,
+            draft: false,
         };
         assert_eq!(args.version, "v3");
         assert_eq!(args.year, "2010");

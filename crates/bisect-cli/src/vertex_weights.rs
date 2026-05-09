@@ -36,10 +36,10 @@ pub fn build_vertex_weights(
     let mut c = ComposedVertexWeighter::new();
     for kind in constraints {
         match kind {
-            VertexConstraintKind::Population =>
-                c = c.push(PopulationWeighter::from_graph(populations.to_vec())),
-            VertexConstraintKind::Area =>
-                c = c.push(AreaWeighter::from_tiger(areas_m2.to_vec())),
+            VertexConstraintKind::Population => {
+                c = c.push(PopulationWeighter::from_graph(populations.to_vec()))
+            }
+            VertexConstraintKind::Area => c = c.push(AreaWeighter::from_tiger(areas_m2.to_vec())),
         }
     }
     if c.steps.is_empty() {
@@ -61,7 +61,9 @@ pub struct ComposedVertexWeighter {
 }
 
 impl ComposedVertexWeighter {
-    pub fn new() -> Self { Self { steps: vec![] } }
+    pub fn new() -> Self {
+        Self { steps: vec![] }
+    }
 
     pub fn push<W: VertexWeighter + 'static>(mut self, w: W) -> Self {
         self.steps.push(Box::new(w));
@@ -69,7 +71,9 @@ impl ComposedVertexWeighter {
     }
 
     /// Number of balance constraints (= ncon for METIS).
-    pub fn ncon(&self) -> usize { self.steps.len().max(1) }
+    pub fn ncon(&self) -> usize {
+        self.steps.len().max(1)
+    }
 
     /// Interleaved vertex weights for METIS `vwgt`:
     /// [w0_v0, w1_v0, ..., w0_v1, w1_v1, ...]
@@ -77,19 +81,21 @@ impl ComposedVertexWeighter {
         if self.steps.is_empty() {
             return vec![1i64; n_vertices]; // uniform — METIS treats as equal weight
         }
-        let cols: Vec<Vec<i64>> = self.steps.iter()
-            .map(|s| s.weights(n_vertices))
-            .collect();
+        let cols: Vec<Vec<i64>> = self.steps.iter().map(|s| s.weights(n_vertices)).collect();
         (0..n_vertices)
             .flat_map(|v| cols.iter().map(move |col| col[v]))
             .collect()
     }
 
-    pub fn is_default(&self) -> bool { self.steps.len() <= 1 }
+    pub fn is_default(&self) -> bool {
+        self.steps.len() <= 1
+    }
 }
 
 impl Default for ComposedVertexWeighter {
-    fn default() -> Self { Self::new().push(PopulationWeighter::default()) }
+    fn default() -> Self {
+        Self::new().push(PopulationWeighter::default())
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -103,11 +109,17 @@ pub struct PopulationWeighter {
 }
 
 impl Default for PopulationWeighter {
-    fn default() -> Self { Self { populations: vec![] } }
+    fn default() -> Self {
+        Self {
+            populations: vec![],
+        }
+    }
 }
 
 impl PopulationWeighter {
-    pub fn from_graph(populations: Vec<i64>) -> Self { Self { populations } }
+    pub fn from_graph(populations: Vec<i64>) -> Self {
+        Self { populations }
+    }
 }
 
 impl VertexWeighter for PopulationWeighter {
@@ -132,7 +144,9 @@ pub struct AreaWeighter {
 }
 
 impl AreaWeighter {
-    pub fn from_tiger(areas_m2: Vec<f64>) -> Self { Self { areas_m2 } }
+    pub fn from_tiger(areas_m2: Vec<f64>) -> Self {
+        Self { areas_m2 }
+    }
 }
 
 impl VertexWeighter for AreaWeighter {
@@ -140,7 +154,8 @@ impl VertexWeighter for AreaWeighter {
         if self.areas_m2.is_empty() {
             vec![1i64; n_vertices]
         } else {
-            self.areas_m2.iter()
+            self.areas_m2
+                .iter()
                 .map(|&a| ((a / 10_000.0) as i64).max(1))
                 .collect()
         }
@@ -182,8 +197,8 @@ mod tests {
 
     #[test]
     fn population_only_interleaved_matches_input() {
-        let c = ComposedVertexWeighter::new()
-            .push(PopulationWeighter::from_graph(vec![100, 200, 300]));
+        let c =
+            ComposedVertexWeighter::new().push(PopulationWeighter::from_graph(vec![100, 200, 300]));
         let out = c.interleaved(3);
         assert_eq!(out, vec![100, 200, 300]);
     }
@@ -199,8 +214,8 @@ mod tests {
     fn area_weighter_scales_to_hectares() {
         let aw = AreaWeighter::from_tiger(vec![50_000.0, 1_000_000.0]);
         let out = aw.weights(2);
-        assert_eq!(out[0], 5);    // 50,000 m² = 5 ha
-        assert_eq!(out[1], 100);  // 1,000,000 m² = 100 ha
+        assert_eq!(out[0], 5); // 50,000 m² = 5 ha
+        assert_eq!(out[1], 100); // 1,000,000 m² = 100 ha
     }
 
     #[test]
@@ -225,14 +240,19 @@ mod tests {
         let c = ComposedVertexWeighter::new()
             .push(PopulationWeighter::from_graph(vec![100, 200]))
             .push(AreaWeighter::from_tiger(vec![10_000.0, 20_000.0]));
-        assert!(!c.is_default(), "two-constraint composer must not be flagged as default");
+        assert!(
+            !c.is_default(),
+            "two-constraint composer must not be flagged as default"
+        );
     }
 
     #[test]
     fn single_step_composer_is_default() {
-        let c = ComposedVertexWeighter::new()
-            .push(PopulationWeighter::from_graph(vec![100, 200]));
-        assert!(c.is_default(), "single-constraint composer must be flagged as default");
+        let c = ComposedVertexWeighter::new().push(PopulationWeighter::from_graph(vec![100, 200]));
+        assert!(
+            c.is_default(),
+            "single-constraint composer must be flagged as default"
+        );
     }
 
     #[test]
@@ -245,9 +265,9 @@ mod tests {
         let out = c.interleaved(2);
         assert_eq!(out.len(), 4, "ncon=2 × n_vertices=2 = 4 elements");
         assert_eq!(out[0], 500, "v0 population");
-        assert_eq!(out[1], 1,   "v0 area = 10000/10000 = 1 ha");
+        assert_eq!(out[1], 1, "v0 area = 10000/10000 = 1 ha");
         assert_eq!(out[2], 800, "v1 population");
-        assert_eq!(out[3], 3,   "v1 area = 30000/10000 = 3 ha");
+        assert_eq!(out[3], 3, "v1 area = 30000/10000 = 3 ha");
     }
 
     // ── PopulationWeighter edge cases ────────────────────────────────────────
@@ -256,7 +276,11 @@ mod tests {
     fn population_weighter_empty_populations_returns_uniform() {
         let pw = PopulationWeighter::from_graph(vec![]);
         let out = pw.weights(3);
-        assert_eq!(out, vec![1, 1, 1], "empty populations must return uniform weight=1");
+        assert_eq!(
+            out,
+            vec![1, 1, 1],
+            "empty populations must return uniform weight=1"
+        );
     }
 
     #[test]
@@ -272,7 +296,11 @@ mod tests {
     fn area_weighter_empty_areas_returns_uniform() {
         let aw = AreaWeighter::from_tiger(vec![]);
         let out = aw.weights(4);
-        assert_eq!(out, vec![1, 1, 1, 1], "empty areas must return uniform weight=1");
+        assert_eq!(
+            out,
+            vec![1, 1, 1, 1],
+            "empty areas must return uniform weight=1"
+        );
     }
 
     #[test]
@@ -282,7 +310,10 @@ mod tests {
         let aw = AreaWeighter::from_tiger(vec![large]);
         let out = aw.weights(1);
         let expected = (large / 10_000.0) as i64;
-        assert_eq!(out[0], expected, "very large area must be representable as i64");
+        assert_eq!(
+            out[0], expected,
+            "very large area must be representable as i64"
+        );
         assert!(out[0] > 0, "large area must remain positive");
     }
 
@@ -318,7 +349,7 @@ mod tests {
 
     #[test]
     fn build_vertex_weights_population_and_area_ncon_2() {
-        let pops  = vec![100i64, 200];
+        let pops = vec![100i64, 200];
         let areas = vec![50_000.0f64, 100_000.0];
         let c = build_vertex_weights(
             &[VertexConstraintKind::Population, VertexConstraintKind::Area],

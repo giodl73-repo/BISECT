@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# bootstrap.sh — Linux/macOS one-shot setup for the redist project.
+# bootstrap.sh — Linux/macOS one-shot setup for the bisect project.
 #
 # Onboarding plan Task 3 (https://github.com/.../docs/superpowers/plans/2026-04-30-onboarding-and-tutorials.md).
 # Goals: get a clean machine from `git clone` to first useful run in <= 10 minutes wall-clock.
 #
 # What this does:
 #   1. Detects rustup; installs if missing
-#   2. Builds redist in release mode (uses pinned toolchain from rust-toolchain.toml)
+#   2. Builds bisect in release mode (uses pinned toolchain from rust-toolchain.toml)
 #   3. PATH preflight (PP-18): verify binary at expected path BEFORE mutating PATH
-#   4. PATH update + verify with `command -v redist`
-#   5. Optional: --with-python builds the redist_py wheel via maturin and verifies the import
+#   4. PATH update + verify with `command -v bisect`
+#   5. Optional: --with-python builds the bisect_py wheel via maturin and verifies the import
 #   6. Optional: --with-api-key prompts for DATAVERSE_API_KEY and validates it via one round-trip
-#               (PP-19) before writing to ~/.config/redist/credentials.toml
+#               (PP-19) before writing to ~/.config/bisect/credentials.toml
 #   7. Real smoke test (PP-20): runs the Vermont walkthrough and asserts tract count
 #
 # ASCII-only output (PP-34 Windows console policy; harmless on Linux/macOS).
@@ -54,50 +54,50 @@ if ! command -v rustup >/dev/null 2>&1; then
 fi
 ok "rustup: $(rustup --version 2>&1 | head -1)"
 
-# ── Step 2: pinned toolchain (rust-toolchain.toml in redist/) ────────────────
+# ── Step 2: pinned toolchain ────────────────────────────────────────────────
 step 2 "Installing pinned toolchain..."
-(cd redist && rustup show >/dev/null)
-ok "rustc: $(cd redist && rustc --version)"
+rustup show >/dev/null
+ok "rustc: $(rustc --version)"
 
-# ── Step 3: build redist ─────────────────────────────────────────────────────
-step 3 "Building redist (release, --locked)..."
-(cd redist && cargo build --release --locked --bin redist) \
+# ── Step 3: build bisect ─────────────────────────────────────────────────────
+step 3 "Building bisect (release, --locked)..."
+cargo build --release --locked --bin bisect \
     || fail "cargo build failed; see output above"
 
 # ── Step 4: PATH preflight (PP-18) ───────────────────────────────────────────
 step 4 "PATH preflight..."
-EXPECTED_BIN="${REPO_ROOT}/redist/target/release/redist"
+EXPECTED_BIN="${REPO_ROOT}/target/release/bisect"
 [ -x "$EXPECTED_BIN" ] || fail "build succeeded but binary not at expected path: $EXPECTED_BIN"
 ok "binary at $EXPECTED_BIN"
 
 # ── Step 5: add to PATH for this shell + persist hint ────────────────────────
 step 5 "PATH update..."
-export PATH="${REPO_ROOT}/redist/target/release:${PATH}"
-command -v redist >/dev/null || fail "redist still not on PATH after update"
-ok "redist on PATH: $(command -v redist)"
+export PATH="${REPO_ROOT}/target/release:${PATH}"
+command -v bisect >/dev/null || fail "bisect still not on PATH after update"
+ok "bisect on PATH: $(command -v bisect)"
 echo
 echo "    To make this permanent, add to your shell rc (~/.bashrc, ~/.zshrc):"
-echo "      export PATH=\"${REPO_ROOT}/redist/target/release:\$PATH\""
+echo "      export PATH=\"${REPO_ROOT}/target/release:\$PATH\""
 
 # ── Step 6 (optional): Python wheel via maturin ──────────────────────────────
 if [ "$WITH_PYTHON" -eq 1 ]; then
-    step 6 "Building redist_py PyO3 wheel via maturin..."
+    step 6 "Building bisect_py PyO3 wheel via maturin..."
     command -v python3 >/dev/null || fail "python3 required for --with-python"
     if ! command -v maturin >/dev/null 2>&1; then
         echo "maturin not found; installing via pip..."
         python3 -m pip install --user --quiet maturin || fail "maturin install failed"
     fi
-    (cd redist/python/redist_py && maturin develop --release) \
+    (cd python/bisect_py && maturin develop --release) \
         || fail "maturin build failed"
-    python3 -c "import redist_py; print('redist_py:', redist_py.__version__)" \
-        || fail "redist_py import failed after build"
-    ok "redist_py importable"
+    python3 -c "import bisect_py; print('bisect_py:', bisect_py.__version__)" \
+        || fail "bisect_py import failed after build"
+    ok "bisect_py importable"
 fi
 
 # ── Step 7 (optional): API key with round-trip validation (PP-19) ────────────
 if [ "$WITH_API_KEY" -eq 1 ]; then
     step 7 "Dataverse API key setup..."
-    CRED_DIR="${HOME}/.config/redist"
+    CRED_DIR="${HOME}/.config/bisect"
     CRED_FILE="${CRED_DIR}/credentials.toml"
     mkdir -p "$CRED_DIR"
     chmod 700 "$CRED_DIR" 2>/dev/null || true
@@ -129,9 +129,9 @@ if [ "$SKIP_SMOKE" -eq 1 ]; then
     echo; echo "[step 8] Smoke test SKIPPED (--skip-smoke)"
 else
     step 8 "Smoke test (real run)..."
-    SMOKE_DIR="$(mktemp -d -t redist-bootstrap-smoke-XXXXXX)"
+    SMOKE_DIR="$(mktemp -d -t bisect-bootstrap-smoke-XXXXXX)"
     trap 'rm -rf "$SMOKE_DIR"' EXIT
-    redist state --state VT --year 2020 --label bootstrap_test \
+    bisect state --state VT --year 2020 --label bootstrap_test \
         --output-base "$SMOKE_DIR" --version v1 \
         || fail "smoke test bisection failed"
     ASSIGN="${SMOKE_DIR}/v1/2020/plans/bootstrap_test/final_assignments.json"
@@ -150,8 +150,8 @@ echo "=================================================="
 echo "Bootstrap complete."
 echo
 echo "Try:"
-echo "  redist state --state VT --year 2020"
-echo "  redist doctor --state VT --year 2020"
+echo "  bisect state --state VT --year 2020"
+echo "  bisect doctor --state VT --year 2020"
 echo "  bash examples/vermont-2020-walkthrough/run.sh"
 echo
 echo "First-time docs: docs/quickstart/"

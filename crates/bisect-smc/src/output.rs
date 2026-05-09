@@ -5,28 +5,28 @@
 //! - Resample records between stages (when resampling occurs)
 //! - Final metadata record with file_sha256 (SHA-256 of all preceding lines, LF-normalised)
 
-use std::io::{self, Write};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fmt::Write as FmtWrite;
+use std::io::{self, Write};
 
 /// A resampling event record — embedded in the NDJSON stream between stages.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResampleRecord {
     #[serde(rename = "type")]
-    pub record_type: String,      // "resample"
+    pub record_type: String, // "resample"
     pub stage: usize,
     pub resample_round: u32,
     pub ess_before: f64,
     pub resample_seed: u64,
-    pub index_map: Vec<usize>,    // new_particle[j] came from old_particle[index_map[j]]
+    pub index_map: Vec<usize>, // new_particle[j] came from old_particle[index_map[j]]
 }
 
 /// Final metadata record — last line of the NDJSON file.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetadataRecord {
     #[serde(rename = "type")]
-    pub record_type: String,      // "metadata"
+    pub record_type: String, // "metadata"
     pub base_seed: u64,
     pub n_particles: usize,
     pub resample_threshold: f64,
@@ -62,10 +62,13 @@ pub struct SmcResult {
 }
 
 impl SmcResult {
-    pub fn n_plans(&self) -> usize { self.plans.len() }
+    pub fn n_plans(&self) -> usize {
+        self.plans.len()
+    }
 
     pub fn k(&self) -> u32 {
-        self.plans.first()
+        self.plans
+            .first()
             .and_then(|p| p.iter().copied().max())
             .unwrap_or(0)
     }
@@ -79,15 +82,13 @@ impl SmcResult {
     /// - One particle line per plan: {"plan":[...],"log_weight":-2.31,"particle_idx":0}
     /// - Resample records interleaved if requested (requires resample metadata)
     /// - Final metadata line with file_sha256
-    pub fn write_ndjson<W: Write>(
-        &self,
-        writer: &mut W,
-        config: &WriteConfig,
-    ) -> io::Result<()> {
+    pub fn write_ndjson<W: Write>(&self, writer: &mut W, config: &WriteConfig) -> io::Result<()> {
         let mut hasher = Sha256::new();
 
         // Convert normalised weights back to log-weights for output
-        let log_weights: Vec<f64> = self.weights.iter()
+        let log_weights: Vec<f64> = self
+            .weights
+            .iter()
             .map(|&w| if w > 0.0 { w.ln() } else { f64::NEG_INFINITY })
             .collect();
 
@@ -138,9 +139,11 @@ impl SmcResult {
 
     /// Parse an NDJSON file into particle lines and the metadata record.
     pub fn read_metadata_from_ndjson(ndjson: &str) -> Option<MetadataRecord> {
-        ndjson.lines().rev()
-            .find_map(|line| serde_json::from_str::<MetadataRecord>(line).ok()
-                .filter(|m| m.record_type == "metadata"))
+        ndjson.lines().rev().find_map(|line| {
+            serde_json::from_str::<MetadataRecord>(line)
+                .ok()
+                .filter(|m| m.record_type == "metadata")
+        })
     }
 }
 
@@ -172,7 +175,10 @@ mod tests {
     #[test]
     fn ndjson_output_has_correct_line_count() {
         let result = make_result(5, 2);
-        let config = WriteConfig { resample_threshold: 0.5, pop_tolerance: 0.005 };
+        let config = WriteConfig {
+            resample_threshold: 0.5,
+            pop_tolerance: 0.005,
+        };
         let mut buf = Vec::new();
         result.write_ndjson(&mut buf, &config).unwrap();
         let s = String::from_utf8(buf).unwrap();
@@ -184,20 +190,29 @@ mod tests {
     #[test]
     fn ndjson_metadata_line_is_last() {
         let result = make_result(3, 2);
-        let config = WriteConfig { resample_threshold: 0.5, pop_tolerance: 0.005 };
+        let config = WriteConfig {
+            resample_threshold: 0.5,
+            pop_tolerance: 0.005,
+        };
         let mut buf = Vec::new();
         result.write_ndjson(&mut buf, &config).unwrap();
         let s = String::from_utf8(buf).unwrap();
         let last_line = s.lines().last().unwrap();
         let meta: serde_json::Value = serde_json::from_str(last_line).unwrap();
         assert_eq!(meta["type"], "metadata");
-        assert!(meta["file_sha256"].as_str().unwrap().len() == 64, "SHA-256 = 64 hex chars");
+        assert!(
+            meta["file_sha256"].as_str().unwrap().len() == 64,
+            "SHA-256 = 64 hex chars"
+        );
     }
 
     #[test]
     fn ndjson_file_sha256_is_deterministic() {
         let result = make_result(4, 2);
-        let config = WriteConfig { resample_threshold: 0.5, pop_tolerance: 0.005 };
+        let config = WriteConfig {
+            resample_threshold: 0.5,
+            pop_tolerance: 0.005,
+        };
         let mut buf1 = Vec::new();
         let mut buf2 = Vec::new();
         result.write_ndjson(&mut buf1, &config).unwrap();
@@ -208,17 +223,26 @@ mod tests {
     #[test]
     fn ndjson_lines_use_lf_not_crlf() {
         let result = make_result(2, 2);
-        let config = WriteConfig { resample_threshold: 0.5, pop_tolerance: 0.005 };
+        let config = WriteConfig {
+            resample_threshold: 0.5,
+            pop_tolerance: 0.005,
+        };
         let mut buf = Vec::new();
         result.write_ndjson(&mut buf, &config).unwrap();
-        assert!(!buf.windows(2).any(|w| w == b"\r\n"), "must not contain CRLF");
+        assert!(
+            !buf.windows(2).any(|w| w == b"\r\n"),
+            "must not contain CRLF"
+        );
         assert!(buf.iter().any(|&b| b == b'\n'), "must contain LF");
     }
 
     #[test]
     fn ndjson_particle_lines_parse_as_json() {
         let result = make_result(3, 2);
-        let config = WriteConfig { resample_threshold: 0.5, pop_tolerance: 0.005 };
+        let config = WriteConfig {
+            resample_threshold: 0.5,
+            pop_tolerance: 0.005,
+        };
         let mut buf = Vec::new();
         result.write_ndjson(&mut buf, &config).unwrap();
         let s = String::from_utf8(buf).unwrap();
@@ -228,20 +252,28 @@ mod tests {
             let v: serde_json::Value = serde_json::from_str(line)
                 .unwrap_or_else(|_| panic!("particle line is not valid JSON: {line}"));
             assert!(v["plan"].is_array(), "particle line must have 'plan' array");
-            assert!(v["log_weight"].is_number(), "particle line must have 'log_weight'");
-            assert!(v["particle_idx"].is_number(), "particle line must have 'particle_idx'");
+            assert!(
+                v["log_weight"].is_number(),
+                "particle line must have 'log_weight'"
+            );
+            assert!(
+                v["particle_idx"].is_number(),
+                "particle line must have 'particle_idx'"
+            );
         }
     }
 
     #[test]
     fn read_metadata_roundtrip() {
         let result = make_result(3, 2);
-        let config = WriteConfig { resample_threshold: 0.5, pop_tolerance: 0.005 };
+        let config = WriteConfig {
+            resample_threshold: 0.5,
+            pop_tolerance: 0.005,
+        };
         let mut buf = Vec::new();
         result.write_ndjson(&mut buf, &config).unwrap();
         let s = String::from_utf8(buf).unwrap();
-        let meta = SmcResult::read_metadata_from_ndjson(&s)
-            .expect("metadata must be parseable");
+        let meta = SmcResult::read_metadata_from_ndjson(&s).expect("metadata must be parseable");
         assert_eq!(meta.base_seed, 42);
         assert_eq!(meta.n_particles, 3);
         assert_eq!(meta.smc_version, "1.0");

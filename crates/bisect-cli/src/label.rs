@@ -1,7 +1,7 @@
 /// `label.rs` — Label-based path convention functions.
 ///
 /// A **label** is the user-facing name for a run (`official_proposal`, `vt_test`).
-/// Every `redist` command resolves its input/output directories from the label alone
+/// Every `BISECT` command resolves its input/output directories from the label alone
 /// through the fixed conventions encoded here.  No path arguments are needed in
 /// normal use.
 ///
@@ -22,14 +22,13 @@
 /// runs/{label}/{year}/{state_name}/
 /// analysis/{label}/{year}/{state_name}/
 /// ```
-
 use std::path::PathBuf;
 
 // ── Validation ────────────────────────────────────────────────────────────────
 
 /// Reserved names that cannot be used as labels (they are the output directories
 /// themselves, so a label with one of these names would collide with the layout).
-const RESERVED: &[&str] = &["runs", "analysis", "reports", ".redist", "configs"];
+const RESERVED: &[&str] = &["runs", "analysis", "reports", ".bisect", "configs"];
 
 /// Validate a label name.
 ///
@@ -46,9 +45,7 @@ pub fn validate_label_name(label: &str) -> Result<(), String> {
     }
 
     if label.starts_with('.') {
-        return Err(format!(
-            "label '{label}' must not start with '.'"
-        ));
+        return Err(format!("label '{label}' must not start with '.'"));
     }
 
     if let Some(bad) = label
@@ -190,17 +187,21 @@ mod tests {
 
     #[test]
     fn invalid_reserved_reports() {
-        assert!(validate_label_name("reports").unwrap_err().contains("reserved"));
+        assert!(validate_label_name("reports")
+            .unwrap_err()
+            .contains("reserved"));
     }
 
     #[test]
     fn invalid_reserved_redist() {
-        assert!(validate_label_name(".redist").unwrap_err().contains("'.'"));
+        assert!(validate_label_name(".bisect").unwrap_err().contains("'.'"));
     }
 
     #[test]
     fn invalid_reserved_configs() {
-        assert!(validate_label_name("configs").unwrap_err().contains("reserved"));
+        assert!(validate_label_name("configs")
+            .unwrap_err()
+            .contains("reserved"));
     }
 
     // ── validate_label_name — invalid: path separators ───────────────────────
@@ -265,10 +266,7 @@ mod tests {
 
     #[test]
     fn year_runs_dir_basic() {
-        assert_eq!(
-            year_runs_dir("x", "2020"),
-            PathBuf::from("runs/x/2020")
-        );
+        assert_eq!(year_runs_dir("x", "2020"), PathBuf::from("runs/x/2020"));
     }
 
     #[test]
@@ -338,8 +336,8 @@ mod tests {
     fn invalid_reserved_error_message_format() {
         let err = validate_label_name("configs").unwrap_err();
         // Must name the label and say "reserved"
-        assert!(err.contains("configs"),   "error must name the label: {err}");
-        assert!(err.contains("reserved"),  "error must say 'reserved': {err}");
+        assert!(err.contains("configs"), "error must name the label: {err}");
+        assert!(err.contains("reserved"), "error must say 'reserved': {err}");
     }
 
     /// Invalid-character error must name both the label AND the bad character.
@@ -347,14 +345,17 @@ mod tests {
     fn invalid_char_error_names_bad_character() {
         let err = validate_label_name("my@label").unwrap_err();
         assert!(err.contains("my@label"), "error must name the label: {err}");
-        assert!(err.contains('@'),        "error must name the bad char: {err}");
+        assert!(err.contains('@'), "error must name the bad char: {err}");
     }
 
     /// Dot-prefix error message must name the label.
     #[test]
     fn invalid_dot_prefix_error_names_label() {
         let err = validate_label_name(".gitignore").unwrap_err();
-        assert!(err.contains(".gitignore"), "error must name the label: {err}");
+        assert!(
+            err.contains(".gitignore"),
+            "error must name the label: {err}"
+        );
     }
 
     // ── validate_label_name — boundary / edge cases (MEDIUM) ─────────────────
@@ -388,16 +389,21 @@ mod tests {
     #[test]
     fn invalid_null_byte() {
         let err = validate_label_name("my\x00label").unwrap_err();
-        assert!(err.contains('\x00') || err.contains("invalid"),
-            "error must mention the invalid character: {err}");
+        assert!(
+            err.contains('\x00') || err.contains("invalid"),
+            "error must mention the invalid character: {err}"
+        );
     }
 
-    /// The ".redist" reserved name hits the dot-prefix rule before the reserved check.
+    /// The ".bisect" reserved name hits the dot-prefix rule before the reserved check.
     #[test]
-    fn invalid_redist_hits_dot_rule_first() {
-        let err = validate_label_name(".redist").unwrap_err();
+    fn invalid_bisect_hits_dot_rule_first() {
+        let err = validate_label_name(".bisect").unwrap_err();
         // Must be caught by the dot-prefix rule (checked before reserved list)
-        assert!(err.contains("'.'"), "dot-prefix rule must fire first: {err}");
+        assert!(
+            err.contains("'.'"),
+            "dot-prefix rule must fire first: {err}"
+        );
     }
 
     // ── Path helpers — additional combinations (MEDIUM) ───────────────────────

@@ -10,7 +10,7 @@
 
 ## The three-layer compositor
 
-Every plan produced by `redist` is the output of three independently configurable layers:
+Every plan produced by `BISECT` is the output of three independently configurable layers:
 
 | Layer | Flag | What it does |
 |-------|------|--------------|
@@ -103,7 +103,7 @@ The output CSV has one row per label. Open in pandas or Excel to compare. Typica
 For a systematic bakeoff across all documented structure modes:
 
 ```bash
-redist sweep --state NC --year 2020 \
+BISECT sweep --state NC --year 2020 \
     --modes apportion-regions standard-bisect ratio-optimal ratio-optimal-area \
     --weights geographic county \
     --search convergence percentile:0.5 \
@@ -111,7 +111,7 @@ redist sweep --state NC --year 2020 \
     --label-prefix nc_bakeoff_full
 ```
 
-This runs 4 structures x 2 weight modes x 2 search modes = 16 labeled plans and writes them to `outputs/v1/2020/plans/nc_bakeoff_full_*`. Aggregate with `redist aggregate` for a 16-row comparison table.
+This runs 4 structures x 2 weight modes x 2 search modes = 16 labeled plans and writes them to `outputs/v1/2020/plans/nc_bakeoff_full_*`. Aggregate with `BISECT aggregate` for a 16-row comparison table.
 
 ---
 

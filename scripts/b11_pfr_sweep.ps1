@@ -1,5 +1,5 @@
 # B.11 Prime-Factor Redistricting sweep — all 50 states, 2020 seat counts
-# Runs redist state --partition-mode prime-factor for each state.
+# Runs BISECT state --partition-mode prime-factor for each state.
 # Outputs: outputs/b11_sweep/pfr_results.csv
 #
 # Usage: pwsh -File scripts\b11_pfr_sweep.ps1 [-States "CA,TX,..."] [-Force]
@@ -10,7 +10,7 @@ param(
 )
 
 Set-Location C:\src\apportionment
-$env:REDIST_LOCATION_POLICY = "C:\src\apportionment\redist\data\location_policy.json"
+$env:BISECT_LOCATION_POLICY = "C:\src\apportionment\BISECT\data\location_policy.json"
 
 $outDir = "outputs\b11_sweep"
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
@@ -89,7 +89,7 @@ foreach ($entry in $statesToRun) {
 
     # Run if not already done
     if (-not (Test-Path $mPath) -or $Force) {
-        $out = .\redist\target\release\redist.exe state --state $code --year 2020 `
+        $out = .\target\release\bisect.exe state --state $code --year 2020 `
             --version $ver --partition-mode prime-factor --manifest 2>&1
         if ($LASTEXITCODE -ne 0) {
             Write-Output "  FAILED: $($out | Select-Object -Last 3 | Out-String)"
@@ -98,7 +98,7 @@ foreach ($entry in $statesToRun) {
     }
 
     if ((Test-Path $mPath) -and (-not (Test-Path $pPath))) {
-        $null = .\redist\target\release\redist.exe analyze --state $code --year 2020 `
+        $null = .\target\release\bisect.exe analyze --state $code --year 2020 `
             --version $ver --types proportionality 2>&1
     }
 

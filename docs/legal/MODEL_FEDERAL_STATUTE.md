@@ -418,4 +418,4 @@ We have removed the v0 reliance on *Montana* (1992) for the proposition that Con
 - `docs/legal/FAIRNESS_DOCTRINE.md` — state-court companion strategy
 - `docs/legal/CALLAIS_REFERENCE.md` — race-conscious-redistricting grounding
 - `docs/file-formats/manifests.md` — schema underlying § 105(b)(3)
-- `docs/REDIST_CLI.md` — the user-facing surface that satisfies § 107(a)
+- `docs/BISECT_CLI.md` — the user-facing surface that satisfies § 107(a)

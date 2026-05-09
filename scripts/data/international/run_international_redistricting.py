@@ -18,9 +18,9 @@ import sys
 from pathlib import Path
 
 
-REDIST = Path("redist/target/release/redist.exe")
-if not REDIST.exists():
-    REDIST = Path("redist/target/release/redist")
+BISECT = Path("target/release/bisect.exe")
+if not BISECT.exists():
+    BISECT = Path("target/release/bisect")
 
 
 def run_cmd(cmd, label=""):
@@ -52,7 +52,7 @@ def run_ireland(analyze_only=False):
     if not analyze_only:
         # Run redistricting
         cmd = [
-            REDIST, "state",
+            BISECT, "state",
             "--state", "IE",
             "--year", "2020",
             "--version", "international",
@@ -71,7 +71,7 @@ def run_ireland(analyze_only=False):
             # Try without --seats-per-district (may not be needed for population balance)
             print("[INFO] Retrying without --seats-per-district...")
             cmd2 = [
-                REDIST, "state",
+                BISECT, "state",
                 "--state", "IE",
                 "--year", "2020",
                 "--version", "international",
@@ -90,7 +90,7 @@ def run_ireland(analyze_only=False):
 
     # Run analysis
     cmd = [
-        REDIST, "analyze",
+        BISECT, "analyze",
         "--label", "ireland_dail_2022",
         "--year", "2020",
         "--version", "international",
@@ -125,7 +125,7 @@ def run_germany(analyze_only=False):
     if not analyze_only:
         # Run redistricting
         cmd = [
-            REDIST, "state",
+            BISECT, "state",
             "--state", "DE",
             "--year", "2020",
             "--version", "international",
@@ -144,7 +144,7 @@ def run_germany(analyze_only=False):
 
     # Run analysis
     cmd = [
-        REDIST, "analyze",
+        BISECT, "analyze",
         "--label", "germany_bundestag_2021",
         "--year", "2020",
         "--version", "international",
@@ -167,11 +167,11 @@ def main():
     parser.add_argument("--analyze-only", action="store_true", help="Skip redistricting, run analysis only")
     args = parser.parse_args()
 
-    if not REDIST.exists():
-        print(f"ERROR: redist binary not found at {REDIST}")
+    if not BISECT.exists():
+        print(f"ERROR: BISECT binary not found at {BISECT}")
         sys.exit(1)
 
-    print(f"Using redist binary: {REDIST}")
+    print(f"Using BISECT binary: {BISECT}")
 
     results = {}
     if args.country in ("ireland", "both"):

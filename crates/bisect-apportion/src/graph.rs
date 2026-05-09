@@ -82,28 +82,39 @@ impl SubGraph {
             xadj.push(adjncy.len() as i32);
         }
 
-        let vwgt: Vec<i32> = sorted.iter()
+        let vwgt: Vec<i32> = sorted
+            .iter()
             .map(|&g| (vertex_weights[g] as i32).max(1))
             .collect();
 
         let adjwgt = if has_ew { Some(adjwgt_vals) } else { None };
 
-        Ok(SubGraph { global_ids: sorted, xadj, adjncy, vwgt, adjwgt })
+        Ok(SubGraph {
+            global_ids: sorted,
+            xadj,
+            adjncy,
+            vwgt,
+            adjwgt,
+        })
     }
 
-    pub fn n_vertices(&self) -> usize { self.global_ids.len() }
-    pub fn n_edges(&self) -> usize { self.adjncy.len() / 2 }
+    pub fn n_vertices(&self) -> usize {
+        self.global_ids.len()
+    }
+    pub fn n_edges(&self) -> usize {
+        self.adjncy.len() / 2
+    }
 }
 
 impl From<&SubGraph> for metis_core::graph::CsrGraph {
     /// Convert a `SubGraph` (METIS FFI format with `i32` arrays) into the
-    /// `CsrGraph` type used by `redist-metis` (pure-Rust, `u32` xadj/adjncy).
+    /// `CsrGraph` type used by `BISECT-metis` (pure-Rust, `u32` xadj/adjncy).
     fn from(sg: &SubGraph) -> Self {
         metis_core::graph::CsrGraph {
-            xadj:   sg.xadj.iter().map(|&x| x as u32).collect(),
+            xadj: sg.xadj.iter().map(|&x| x as u32).collect(),
             adjncy: sg.adjncy.iter().map(|&x| x as u32).collect(),
-            ncon:   1,
-            vwgt:   sg.vwgt.clone(),
+            ncon: 1,
+            vwgt: sg.vwgt.clone(),
             adjwgt: sg.adjwgt.clone(),
         }
     }
@@ -117,15 +128,17 @@ mod tests {
         // 3-vertex triangle: 0-1, 1-2, 0-2
         let adj = vec![vec![1, 2], vec![0, 2], vec![0, 1]];
         let vw = vec![100i64, 200, 150];
-        let ew: HashMap<_, _> = [((0,1), 1000.0), ((1,2), 2000.0), ((0,2), 1500.0)]
-            .iter().cloned().collect();
+        let ew: HashMap<_, _> = [((0, 1), 1000.0), ((1, 2), 2000.0), ((0, 2), 1500.0)]
+            .iter()
+            .cloned()
+            .collect();
         (adj, vw, ew)
     }
 
     #[test]
     fn test_full_graph() {
         let (adj, vw, ew) = triangle();
-        let sg = SubGraph::build(&[0,1,2], &adj, &vw, &ew).unwrap();
+        let sg = SubGraph::build(&[0, 1, 2], &adj, &vw, &ew).unwrap();
         assert_eq!(sg.n_vertices(), 3);
         assert_eq!(sg.vwgt, vec![100, 200, 150]);
         assert!(sg.adjwgt.is_some());

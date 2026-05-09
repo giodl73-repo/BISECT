@@ -1,3 +1,4 @@
+use serde_json::{json, Map, Value};
 /// export.rs — GeoJSON RFC 7946, GerryChain v2.3, CSV export.
 ///
 /// Spec 6 / Scenario 3:
@@ -6,7 +7,6 @@
 /// - GerryChain v2.3 uses "assignment" (singular) field
 /// - CSV has "geoid" and "district" columns
 use std::collections::HashMap;
-use serde_json::{json, Map, Value};
 
 use crate::rplan::RplanFile;
 
@@ -18,7 +18,10 @@ pub fn export_geojson(plan: &RplanFile) -> anyhow::Result<String> {
     // Build a map of district_id → list of assignments (GEOIDs) for counting
     let mut district_geoids: HashMap<usize, Vec<&str>> = HashMap::new();
     for (geoid, &dist) in &plan.assignments {
-        district_geoids.entry(dist).or_default().push(geoid.as_str());
+        district_geoids
+            .entry(dist)
+            .or_default()
+            .push(geoid.as_str());
     }
 
     let features: Vec<Value> = if let Some(geom) = &plan.geometry {
@@ -47,9 +50,7 @@ pub fn export_geojson(plan: &RplanFile) -> anyhow::Result<String> {
 }
 
 /// Build placeholder features (no real geometry) with district_id property.
-fn build_empty_district_features(
-    district_geoids: &HashMap<usize, Vec<&str>>,
-) -> Vec<Value> {
+fn build_empty_district_features(district_geoids: &HashMap<usize, Vec<&str>>) -> Vec<Value> {
     let mut districts: Vec<usize> = district_geoids.keys().copied().collect();
     districts.sort_unstable();
 
@@ -92,9 +93,7 @@ pub fn export_gerrychain_v23(plan: &RplanFile) -> anyhow::Result<String> {
 
 /// Import GerryChain v2.3 JSON back to an RplanFile assignments map.
 /// GerryChain uses "assignment" (singular); we produce "assignments" (plural).
-pub fn import_gerrychain_to_assignments(
-    gc_json: &str,
-) -> anyhow::Result<HashMap<String, usize>> {
+pub fn import_gerrychain_to_assignments(gc_json: &str) -> anyhow::Result<HashMap<String, usize>> {
     let v: Value = serde_json::from_str(gc_json)?;
     let assignment = v["assignment"]
         .as_object()
@@ -230,7 +229,10 @@ mod tests {
         let lon = coords[0].as_f64().unwrap();
         let lat = coords[1].as_f64().unwrap();
         assert!(lon < 0.0, "longitude must be negative for WA (west)");
-        assert!(lat > 40.0 && lat < 50.0, "latitude must be in WA range 40-50");
+        assert!(
+            lat > 40.0 && lat < 50.0,
+            "latitude must be in WA range 40-50"
+        );
     }
 
     #[test]
@@ -295,8 +297,11 @@ mod tests {
         let plan = fixture_wa_congressional_plan();
         let geojson_str = export_geojson(&plan).unwrap();
         let v: Value = serde_json::from_str(&geojson_str).unwrap();
-        assert_eq!(v["type"].as_str().unwrap(), "FeatureCollection",
-            "top-level type must be FeatureCollection");
+        assert_eq!(
+            v["type"].as_str().unwrap(),
+            "FeatureCollection",
+            "top-level type must be FeatureCollection"
+        );
     }
 
     #[test]
@@ -329,8 +334,11 @@ mod tests {
         };
         let geojson_str = export_geojson(&plan).unwrap();
         let v: Value = serde_json::from_str(&geojson_str).unwrap();
-        assert_eq!(v["features"].as_array().unwrap().len(), 0,
-            "empty plan must produce 0 features");
+        assert_eq!(
+            v["features"].as_array().unwrap().len(),
+            0,
+            "empty plan must produce 0 features"
+        );
     }
 
     #[test]
@@ -358,7 +366,12 @@ mod tests {
         let geojson_str = export_geojson(&plan).unwrap();
         let v: Value = serde_json::from_str(&geojson_str).unwrap();
         assert_eq!(v["features"].as_array().unwrap().len(), 1);
-        assert_eq!(v["features"][0]["properties"]["district_id"].as_u64().unwrap(), 1);
+        assert_eq!(
+            v["features"][0]["properties"]["district_id"]
+                .as_u64()
+                .unwrap(),
+            1
+        );
     }
 
     #[test]
@@ -378,8 +391,11 @@ mod tests {
         let plan = fixture_wa_congressional_plan();
         let gc_json = export_gerrychain_v23(&plan).unwrap();
         let v: Value = serde_json::from_str(&gc_json).unwrap();
-        assert_eq!(v["gerrychain_version_target"].as_str().unwrap(), "2.3",
-            "GerryChain export must declare version target 2.3");
+        assert_eq!(
+            v["gerrychain_version_target"].as_str().unwrap(),
+            "2.3",
+            "GerryChain export must declare version target 2.3"
+        );
     }
 
     #[test]
@@ -412,23 +428,35 @@ mod tests {
     fn test_gerrychain_import_missing_assignment_field_errors() {
         let json = r#"{"not_assignment": {"53001": 1}}"#;
         let result = import_gerrychain_to_assignments(json);
-        assert!(result.is_err(), "missing 'assignment' field must produce error");
+        assert!(
+            result.is_err(),
+            "missing 'assignment' field must produce error"
+        );
         let msg = result.unwrap_err().to_string();
-        assert!(msg.contains("assignment"), "error must mention 'assignment' field");
+        assert!(
+            msg.contains("assignment"),
+            "error must mention 'assignment' field"
+        );
     }
 
     #[test]
     fn test_gerrychain_import_non_integer_district_errors() {
         let json = r#"{"assignment": {"53001": "one"}}"#;
         let result = import_gerrychain_to_assignments(json);
-        assert!(result.is_err(), "non-integer district value must produce error");
+        assert!(
+            result.is_err(),
+            "non-integer district value must produce error"
+        );
     }
 
     #[test]
     fn test_gerrychain_import_empty_assignment_ok() {
         let json = r#"{"assignment": {}}"#;
         let result = import_gerrychain_to_assignments(json).unwrap();
-        assert!(result.is_empty(), "empty assignment field must produce empty map");
+        assert!(
+            result.is_empty(),
+            "empty assignment field must produce empty map"
+        );
     }
 
     #[test]
@@ -436,7 +464,8 @@ mod tests {
         let plan = fixture_wa_congressional_plan();
         let csv_str = export_tracts_csv(&plan).unwrap();
         let mut reader = csv::Reader::from_reader(csv_str.as_bytes());
-        let geoids: Vec<String> = reader.records()
+        let geoids: Vec<String> = reader
+            .records()
             .map(|r| r.unwrap()[0].to_string())
             .collect();
         let mut sorted = geoids.clone();
@@ -481,10 +510,17 @@ mod tests {
         let geojson_str = export_geojson(&plan).unwrap();
         let v: Value = serde_json::from_str(&geojson_str).unwrap();
         let features = v["features"].as_array().unwrap();
-        assert_eq!(features.len(), 10, "geometry FeatureCollection must have 10 features");
+        assert_eq!(
+            features.len(),
+            10,
+            "geometry FeatureCollection must have 10 features"
+        );
         // All features must have geometry (not null) since we provided it
         for f in features {
-            assert!(!f["geometry"].is_null(), "features from provided geometry must have geometry");
+            assert!(
+                !f["geometry"].is_null(),
+                "features from provided geometry must have geometry"
+            );
         }
     }
 }

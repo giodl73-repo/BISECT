@@ -83,7 +83,7 @@ def test_verification_command_no_local_paths():
 - Spec 0: GeoJSON coordinates in [lon, lat] order (RFC 7946)
 - GerryChain v2.3: reads `assignments` field (its own field is `assignment` singular)
 - Spec 0: GerryChain→RPLAN conversion maps `assignment` → `assignments`
-- Spec 6: `redist import` achieves 100% tract coverage
+- Spec 6: `BISECT import` achieves 100% tract coverage
 
 **L0 test assertions**:
 ```python

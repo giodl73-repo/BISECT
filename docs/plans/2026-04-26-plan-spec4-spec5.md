@@ -2,14 +2,14 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Implement `bisect analyze --types partisan` with efficiency gap, mean-median, and partisan bias (plus bootstrap CI), and `redist suite` for drawing and validating multi-chamber nested plans. Together these enable a practitioner to quantify partisan fairness and enforce constitutional nesting constraints (e.g., WA senate-in-house) from a single CLI.
+**Goal:** Implement `bisect analyze --types partisan` with efficiency gap, mean-median, and partisan bias (plus bootstrap CI), and `BISECT suite` for drawing and validating multi-chamber nested plans. Together these enable a practitioner to quantify partisan fairness and enforce constitutional nesting constraints (e.g., WA senate-in-house) from a single CLI.
 
 **Specs:** Spec 4 (Partisan Metrics) + Spec 5 (Multi-Chamber/Nested Plans), board amendments through R3.
 
 **Architecture:**
 - `bisect-analysis` crate: new `partisan.rs` module implementing the `Analyzer` trait
 - `bisect-cli`: `AnalyzeArgs` gains `--election-file`; new `Suite` subcommand tree with `draw`, `validate`, `add-plan`
-- `redist-suite` logic lives in `bisect-cli/src/suite.rs` (no separate crate needed at this scale)
+- `BISECT-suite` logic lives in `bisect-cli/src/suite.rs` (no separate crate needed at this scale)
 - Nesting adjacency and validation live in `bisect-analysis/src/nesting.rs`
 
 **Tech Stack:** Rust, `serde_json`, `csv` crate, `rand` (deterministic bootstrap), existing `bisect-analysis` `Analyzer` trait
@@ -22,13 +22,13 @@
 
 | File | Action | Responsibility |
 |------|--------|----------------|
-| `redist/crates/bisect-analysis/src/partisan.rs` | **Create** | `PartisanAnalyzer`: EG, MM, PB, bootstrap CI |
-| `redist/crates/bisect-analysis/src/nesting.rs` | **Create** | `build_chamber_adjacency`, `validate_nesting`, `NestingValidation` |
-| `redist/crates/bisect-analysis/src/lib.rs` | **Modify** | expose `partisan`, `nesting` modules |
-| `redist/crates/bisect-cli/src/partisan.rs` | **Create** | `run_partisan()` — load election CSV, dispatch analyzer, write JSON |
-| `redist/crates/bisect-cli/src/suite.rs` | **Create** | `run_suite()` — draw chambers in sequence, enforce nesting hard-fail |
-| `redist/crates/bisect-cli/src/args.rs` | **Modify** | `AnalyzeArgs` + `--election-file`; `SuiteArgs` subcommand tree |
-| `redist/crates/bisect-cli/src/main.rs` | **Modify** | wire `Commands::Suite` |
+| `BISECT/crates/bisect-analysis/src/partisan.rs` | **Create** | `PartisanAnalyzer`: EG, MM, PB, bootstrap CI |
+| `BISECT/crates/bisect-analysis/src/nesting.rs` | **Create** | `build_chamber_adjacency`, `validate_nesting`, `NestingValidation` |
+| `BISECT/crates/bisect-analysis/src/lib.rs` | **Modify** | expose `partisan`, `nesting` modules |
+| `BISECT/crates/bisect-cli/src/partisan.rs` | **Create** | `run_partisan()` — load election CSV, dispatch analyzer, write JSON |
+| `BISECT/crates/bisect-cli/src/suite.rs` | **Create** | `run_suite()` — draw chambers in sequence, enforce nesting hard-fail |
+| `BISECT/crates/bisect-cli/src/args.rs` | **Modify** | `AnalyzeArgs` + `--election-file`; `SuiteArgs` subcommand tree |
+| `BISECT/crates/bisect-cli/src/main.rs` | **Modify** | wire `Commands::Suite` |
 | `tests/unit/test_partisan.rs` | **Create** | L0 partisan metric + bootstrap tests |
 | `tests/unit/test_nesting.rs` | **Create** | L0 chamber adjacency + nesting validation tests |
 | `tests/acceptance/test_partisan_acceptance.py` | **Create** | L2 acceptance: WA partisan JSON, VT single-district, missing election |
@@ -157,7 +157,7 @@ Combinations are ORed: balance + nesting = 1 | 4 = 5.
 
 ## Task 1: Partisan metric functions
 
-**Files:** `redist/crates/bisect-analysis/src/partisan.rs`
+**Files:** `BISECT/crates/bisect-analysis/src/partisan.rs`
 
 - [ ] **L0: Write failing metric tests**
 
@@ -265,7 +265,7 @@ fn test_direction_rep_when_negative_eg() {
 - [ ] **Implement `partisan.rs`**
 
 ```rust
-// redist/crates/bisect-analysis/src/partisan.rs
+// BISECT/crates/bisect-analysis/src/partisan.rs
 
 use serde::Serialize;
 use rand::{SeedableRng, rngs::SmallRng};
@@ -454,7 +454,7 @@ pub fn compute_partisan_metrics(
 
 ## Task 2: Election CSV loader + analyzer dispatch
 
-**Files:** `redist/crates/bisect-cli/src/partisan.rs`, `redist/crates/bisect-cli/src/args.rs`
+**Files:** `BISECT/crates/bisect-cli/src/partisan.rs`, `BISECT/crates/bisect-cli/src/args.rs`
 
 - [ ] **L0: Write failing loader tests**
 
@@ -513,7 +513,7 @@ fn test_aggregate_to_districts_correct_sum() {
 
 ## Task 3: `AnalyzerType::Partisan` wired into analyze dispatcher
 
-**Files:** `redist/crates/bisect-analysis/src/analyzer.rs`, `redist/crates/bisect-cli/src/analyze.rs`
+**Files:** `BISECT/crates/bisect-analysis/src/analyzer.rs`, `BISECT/crates/bisect-cli/src/analyze.rs`
 
 - [ ] **Add `Partisan` variant to `AnalyzerType` enum**
 - [ ] **Wire in `analyze.rs`:** when `types` includes `partisan`, call `run_partisan()`
@@ -536,7 +536,7 @@ fn test_analyze_partisan_type_dispatches_correctly() {
 
 ## Task 4: Chamber adjacency graph
 
-**Files:** `redist/crates/bisect-analysis/src/nesting.rs`
+**Files:** `BISECT/crates/bisect-analysis/src/nesting.rs`
 
 - [ ] **L0: Write failing adjacency tests** (from Spec 5 + Scenario 4)
 
@@ -604,7 +604,7 @@ fn test_build_chamber_adjacency_primary_component_only() {
 - [ ] **Implement `build_chamber_adjacency()`**
 
 ```rust
-// redist/crates/bisect-analysis/src/nesting.rs
+// BISECT/crates/bisect-analysis/src/nesting.rs
 
 use std::collections::{HashMap, HashSet, VecDeque};
 use serde::Serialize;
@@ -635,7 +635,7 @@ pub fn build_chamber_adjacency(
 
 ## Task 5: Nesting validation
 
-**Files:** `redist/crates/bisect-analysis/src/nesting.rs` (continued)
+**Files:** `BISECT/crates/bisect-analysis/src/nesting.rs` (continued)
 
 - [ ] **L0: Write failing validation tests** (from Spec 5 L0 + Scenario 4)
 
@@ -764,9 +764,9 @@ pub fn compute_exit_code(
 
 ---
 
-## Task 6: `redist suite` CLI — draw subcommand
+## Task 6: `BISECT suite` CLI — draw subcommand
 
-**Files:** `redist/crates/bisect-cli/src/suite.rs`, `redist/crates/bisect-cli/src/args.rs`, `redist/crates/bisect-cli/src/main.rs`
+**Files:** `BISECT/crates/bisect-cli/src/suite.rs`, `BISECT/crates/bisect-cli/src/args.rs`, `BISECT/crates/bisect-cli/src/main.rs`
 
 - [ ] **L0: Write failing suite-draw tests**
 
@@ -774,7 +774,7 @@ pub fn compute_exit_code(
 #[test]
 fn test_suite_args_parse_nest_mode() {
     let args = SuiteArgs::parse_from([
-        "redist", "suite",
+        "BISECT", "suite",
         "--state", "WA", "--year", "2020", "--version", "WA_Plans",
         "--name", "wa_test", "--house-districts", "98", "--senate-districts", "49",
         "--nest", "senate-in-house",
@@ -836,13 +836,13 @@ fn test_suite_manifest_records_nesting_mode() {
 
 - [ ] **Add `Commands::Suite` to `main.rs`**
 - [ ] **Run tests** — expect PASS
-- [ ] **Commit:** `git commit -m "feat(suite): redist suite draw command with senate-in-house nesting"`
+- [ ] **Commit:** `git commit -m "feat(suite): BISECT suite draw command with senate-in-house nesting"`
 
 ---
 
-## Task 7: `redist suite validate` subcommand + suite export
+## Task 7: `BISECT suite validate` subcommand + suite export
 
-**Files:** `redist/crates/bisect-cli/src/suite.rs` (continued)
+**Files:** `BISECT/crates/bisect-cli/src/suite.rs` (continued)
 
 - [ ] **L0: Write failing validate + export tests**
 
@@ -908,7 +908,7 @@ fn test_suite_json_envelope_references_all_chambers() {
 def test_wa_partisan_produces_json(wa_plan_fixture):
     """WA 10-district plan with 2020 election → partisan.json with all 3 metrics."""
     result = subprocess.run([
-        "redist", "analyze",
+        "BISECT", "analyze",
         "--state", "WA", "--year", "2020", "--version", "test",
         "--label", wa_plan_fixture,
         "--types", "partisan",
@@ -927,7 +927,7 @@ def test_wa_partisan_produces_json(wa_plan_fixture):
 def test_vt_single_district_partisan(vt_plan_fixture):
     """VT (1 district) → available=true, CI suppressed."""
     subprocess.run([
-        "redist", "analyze", "--state", "VT", "--year", "2020",
+        "BISECT", "analyze", "--state", "VT", "--year", "2020",
         "--version", "test", "--label", vt_plan_fixture, "--types", "partisan",
     ], capture_output=True, check=True)
     data = json.loads((Path(f"outputs/test/2020/plans/{vt_plan_fixture}/analysis/partisan.json")).read_text())
@@ -939,7 +939,7 @@ def test_vt_single_district_partisan(vt_plan_fixture):
 def test_partisan_missing_election_returns_unavailable(tmp_plan_no_election):
     """No election CSV → available=false, exit 0."""
     result = subprocess.run([
-        "redist", "analyze",
+        "BISECT", "analyze",
         "--types", "partisan",
         "--label", tmp_plan_no_election,
     ], capture_output=True)
@@ -952,7 +952,7 @@ def test_partisan_missing_election_returns_unavailable(tmp_plan_no_election):
 def test_partisan_with_custom_election_file(wa_plan_fixture, tmp_election_csv):
     """--election-file flag accepts custom CSV."""
     subprocess.run([
-        "redist", "analyze",
+        "BISECT", "analyze",
         "--state", "WA", "--year", "2020", "--version", "test",
         "--label", wa_plan_fixture,
         "--types", "partisan",
@@ -971,7 +971,7 @@ def test_partisan_with_custom_election_file(wa_plan_fixture, tmp_election_csv):
 def test_wa_suite_draws_all_three_chambers():
     """Suite command produces 3 plan directories."""
     subprocess.run([
-        "redist", "suite",
+        "BISECT", "suite",
         "--state", "WA", "--year", "2020", "--version", "test",
         "--name", "wa_test_suite",
         "--congressional-districts", "10",
@@ -988,7 +988,7 @@ def test_wa_suite_draws_all_three_chambers():
 def test_wa_senate_nests_in_house():
     """validate_nesting returns valid:true for generated WA suite."""
     result = subprocess.run([
-        "redist", "suite", "validate",
+        "BISECT", "suite", "validate",
         "--name", "wa_test_suite", "--version", "test", "--year", "2020",
     ], capture_output=True, check=True)
     data = json.loads(result.stdout)
@@ -1002,7 +1002,7 @@ def test_suite_manifest_records_nesting_mode():
 def test_suite_validate_exit_5_on_nesting_violation():
     """Synthesized nesting violation → exit code 5."""
     result = subprocess.run([
-        "redist", "suite", "validate",
+        "BISECT", "suite", "validate",
         "--name", "wa_violation_suite", "--version", "test", "--year", "2020",
     ], capture_output=True)
     assert result.returncode == 5
@@ -1016,13 +1016,13 @@ def test_suite_validate_exit_5_on_nesting_violation():
 ## Cargo.toml additions
 
 ```toml
-# redist/crates/bisect-analysis/Cargo.toml
+# BISECT/crates/bisect-analysis/Cargo.toml
 [dependencies]
 rand = { version = "0.8", features = ["small_rng"] }
 # ... existing deps
 ```
 
-No new crates required for `redist-suite` (uses existing `serde_json`, `csv`, `thiserror`).
+No new crates required for `BISECT-suite` (uses existing `serde_json`, `csv`, `thiserror`).
 
 ---
 
@@ -1035,8 +1035,8 @@ No new crates required for `redist-suite` (uses existing `serde_json`, `csv`, `t
 | 3 | `AnalyzerType::Partisan` wired into dispatcher | 1 L0 integration |
 | 4 | `build_chamber_adjacency()` with primary-component filtering | 3 L0 unit |
 | 5 | `validate_nesting()` + bitfield exit codes | 6 L0 unit |
-| 6 | `redist suite draw` — chamber sequencing + nesting hard-fail | 4 L0 unit |
-| 7 | `redist suite validate` + suite export (3 RPLAN + envelope) | 4 L0 unit |
+| 6 | `BISECT suite draw` — chamber sequencing + nesting hard-fail | 4 L0 unit |
+| 7 | `BISECT suite validate` + suite export (3 RPLAN + envelope) | 4 L0 unit |
 | 8 | L2 acceptance tests (partisan + suite) | 7 L2 acceptance |
 
 **Total new tests: ~38** (28 L0 unit + 3 L0 integration + 7 L2 acceptance)

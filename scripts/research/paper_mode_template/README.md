@@ -38,10 +38,10 @@ The renderer substitutes the following placeholders in `REPRODUCE.sh`:
 
 | Placeholder | Source |
 |---|---|
-| `{{REDIST_VERSION}}` | Runtime `redist_version` |
-| `{{REDIST_BUILD_COMMIT}}` | `provenance::Provenance::current().redist_build_commit` |
-| `{{CARGO_LOCK_SHA256}}` | `sha256sum redist/Cargo.lock` at paper-mode time |
-| `{{RUST_TOOLCHAIN_SHA256}}` | `sha256sum redist/rust-toolchain.toml` if present |
+| `{{BISECT_VERSION}}` | Runtime `BISECT_version` |
+| `{{BISECT_BUILD_COMMIT}}` | `provenance::Provenance::current().BISECT_build_commit` |
+| `{{CARGO_LOCK_SHA256}}` | `sha256sum BISECT/Cargo.lock` at paper-mode time |
+| `{{RUST_TOOLCHAIN_SHA256}}` | `sha256sum BISECT/rust-toolchain.toml` if present |
 | `{{REQUIREMENTS_LOCK_SHA256}}` | `sha256sum requirements.lock` if present |
 | `{{TARGET_PLATFORM}}` | `linux-x86_64-glibc-2.35` (D-05 explicit pin) |
 | `{{ANALYZE_INVOCATION}}` | The exact `bisect analyze ...` command line that produced this run |

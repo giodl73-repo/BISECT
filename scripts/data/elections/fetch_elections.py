@@ -28,7 +28,7 @@ Usage:
 When you add a new source: edit sources.json. If its fetcher is null, this tool
 will print the URL + manual-fetch instructions instead of dispatching.
 
-Pipeline integration: `redist analyze --types political` consumes whatever
+Pipeline integration: `BISECT analyze --types political` consumes whatever
 this tool produced (or any tract-level CSV with `geoid, dem_votes, rep_votes`).
 """
 

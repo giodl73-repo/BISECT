@@ -33,7 +33,7 @@
 ### New crate: `bisect-ensemble`
 
 ```
-redist/crates/bisect-ensemble/
+BISECT/crates/bisect-ensemble/
   src/
     lib.rs         — public API
     recom.rs       — ReCom proposal: spanning tree sampling + partition update
@@ -282,7 +282,7 @@ Empirical results from the G-series:
 ### Phase 3 — Diagnostics (3 days)
 - [ ] `diagnostics.rs`: R-hat, ESS, Hamming autocorrelation
 - [ ] `bisect ensemble-diagnostics` command
-- [ ] G.4 paper numbers become reproducible via `redist`
+- [ ] G.4 paper numbers become reproducible via `BISECT`
 
 ### Phase 4 — G-series paper update (1 day)
 - [ ] Rerun G.1–G.4 data with Rust ensemble
@@ -303,7 +303,7 @@ Empirical results from the G-series:
 ## Research significance
 
 Adding Rust ReCom closes the last methodological gap in the portfolio:
-- G.1 becomes **fully reproducible** via `redist` (no Python/GerryChain dependency)
+- G.1 becomes **fully reproducible** via `BISECT` (no Python/GerryChain dependency)
 - G.4 diagnostics become trivially fast (10K-step ensembles for R-hat convergence)
 - The DIA statutory argument gains a new leg: the algorithm is not only deterministic and verifiable, but its position in the feasible space is also certifiable by the same tool that generated it
 

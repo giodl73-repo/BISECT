@@ -15,29 +15,29 @@
    bash bootstrap.sh
    ```
 
-2. **Get the state's proposed plan into a format `redist` can read.** This is the friction point — the state may publish only PDFs or shapefiles. Choose the path that matches what they published:
+2. **Get the state's proposed plan into a format `BISECT` can read.** This is the friction point — the state may publish only PDFs or shapefiles. Choose the path that matches what they published:
    - **Districtr-published** (newer states, e.g., MA, MO):
      ```bash
-     redist import --format districtr state_plan.json --plan-label state_proposal --state XX --year 2020
+     BISECT import --format districtr state_plan.json --plan-label state_proposal --state XX --year 2020
      ```
    - **Shapefile** (most states publish .zip with .shp/.shx/.dbf):
      ```bash
-     redist import --format shapefile state_plan.shp --plan-label state_proposal --state XX --year 2020
+     BISECT import --format shapefile state_plan.shp --plan-label state_proposal --state XX --year 2020
      ```
      The shapefile MUST contain a `district` column. If it does not, you may need to re-attribute it in QGIS first.
    - **GeoJSON** (DRA exports, Districtr alternates):
      ```bash
-     redist import --format geojson state_plan.geojson --plan-label state_proposal --state XX --year 2020
+     BISECT import --format geojson state_plan.geojson --plan-label state_proposal --state XX --year 2020
      ```
    - **CSV** (DRA's most common export):
      ```bash
-     redist import --format dra state_plan.csv --plan-label state_proposal --state XX --year 2020
+     BISECT import --format dra state_plan.csv --plan-label state_proposal --state XX --year 2020
      ```
    - **State publishes only a PDF and won't release machine-readable form:** open a public-records request. Template language: *"Pursuant to [state public records law cite], I request the GeoJSON, shapefile, or CSV form of the proposed redistricting plan referenced as [plan name]. PDF maps alone are insufficient for analysis."* This is a real friction point we cannot solve in software.
 
 3. **Draw your alternative** in Districtr (web, free) or Dave's Redistricting App. Save as JSON. Import as a *civic counter-proposal* (the tag is loud in every downstream artifact):
    ```bash
-   redist import --format districtr lwv_alt_plan.json \
+   BISECT import --format districtr lwv_alt_plan.json \
        --as-civic-counter-proposal \
        --submitted-by "League of Women Voters of Vermont" \
        --plan-label lwvvt_alt --state VT --year 2020
@@ -45,7 +45,7 @@
 
 4. **(Optional) Ingest community-of-interest comments** gathered during the comment period (Civic Bidirectional plan, when shipped):
    ```bash
-   redist civic ingest community_comments.csv \
+   BISECT civic ingest community_comments.csv \
        --label lwvvt_comments --year 2020 --state VT \
        --submitter "Lake Champlain Neighborhood Council"
    ```
@@ -53,7 +53,7 @@
 
 5. **Compare the two plans** with civic-friendly narrative + summary card:
    ```bash
-   redist compare --plan-a state_proposal --plan-b lwvvt_alt \
+   BISECT compare --plan-a state_proposal --plan-b lwvvt_alt \
        --comments-label lwvvt_comments \
        --format both --approved-by "Your Name"
    ```
@@ -74,7 +74,7 @@
 
 ## Where to go next
 
-- Plain-English walkthrough of the comparison output: `docs/REDIST_CLI.md` `redist compare` section
+- Plain-English walkthrough of the comparison output: `docs/BISECT_CLI.md` `BISECT compare` section
 - Sheets template for COI comments: `docs/civic/templates/community-of-interest.xlsx` (when shipped)
 - For the press release angle: the first paragraph of `narrative.md` is designed to read aloud verbatim
 - If your state's official plan analysis includes civic data submitted under non-strict validation, court-mode reports will refuse to embed it without an explicit `--allow-non-strict-civic` flag — that's a feature, not a bug

@@ -1,16 +1,16 @@
+use bisect_data::deserialize_adjacency;
 /// Adjacency graph loader — native Rust, no Python subprocess.
 ///
 /// Reads `.adj.bin` (binary format) + `_geoids.json` (GEOID mapping).
 /// Falls back to the Python pkl shim if `.adj.bin` not found, so the
 /// transition is backward-compatible.
 ///
-/// The `.adj.bin` format is written by `redist_py.adjacency_to_bin()` and
+/// The `.adj.bin` format is written by `bisect_py.adjacency_to_bin()` and
 /// read by `bisect_data::deserialize_adjacency()`. It is ~2-5× smaller than
 /// pkl and loads in <1ms (vs ~200ms for the Python shim).
 use std::collections::HashMap;
 use std::path::Path;
 use std::process::Command;
-use bisect_data::deserialize_adjacency;
 
 /// Loaded adjacency graph ready for use in run_single_state.
 #[derive(Debug, Clone)]
@@ -71,22 +71,29 @@ fn try_load_centroids(stem: &str, n_vertices: usize) -> Result<Vec<(f64, f64)>, 
     if !path.exists() {
         return Ok(vec![]);
     }
-    let text = std::fs::read_to_string(&path)
-        .map_err(|e| format!("read {}: {e}", path.display()))?;
-    let v: serde_json::Value = serde_json::from_str(&text)
-        .map_err(|e| format!("parse {}: {e}", path.display()))?;
-    let arr = v["centroids"].as_array()
-        .ok_or_else(|| format!("centroids file {} missing 'centroids' array key", path.display()))?;
+    let text =
+        std::fs::read_to_string(&path).map_err(|e| format!("read {}: {e}", path.display()))?;
+    let v: serde_json::Value =
+        serde_json::from_str(&text).map_err(|e| format!("parse {}: {e}", path.display()))?;
+    let arr = v["centroids"].as_array().ok_or_else(|| {
+        format!(
+            "centroids file {} missing 'centroids' array key",
+            path.display()
+        )
+    })?;
     let centroids: Vec<(f64, f64)> = arr
         .iter()
         .enumerate()
         .map(|(i, c)| {
-            let inner = c.as_array()
+            let inner = c
+                .as_array()
                 .ok_or_else(|| format!("centroids[{i}] is not an array"))?;
-            let lon = inner.first()
+            let lon = inner
+                .first()
                 .and_then(|x| x.as_f64())
                 .ok_or_else(|| format!("centroids[{i}][0] is not a number (lon)"))?;
-            let lat = inner.get(1)
+            let lat = inner
+                .get(1)
                 .and_then(|x| x.as_f64())
                 .ok_or_else(|| format!("centroids[{i}][1] is not a number (lat)"))?;
             Ok((lon, lat))
@@ -95,7 +102,9 @@ fn try_load_centroids(stem: &str, n_vertices: usize) -> Result<Vec<(f64, f64)>, 
     if n_vertices > 0 && centroids.len() != n_vertices {
         return Err(format!(
             "centroids length mismatch: file {} has {} entries but adjacency has {} vertices",
-            path.display(), centroids.len(), n_vertices
+            path.display(),
+            centroids.len(),
+            n_vertices
         ));
     }
     Ok(centroids)
@@ -104,11 +113,13 @@ fn try_load_centroids(stem: &str, n_vertices: usize) -> Result<Vec<(f64, f64)>, 
 /// Load from native .adj.bin + _geoids.json -- zero Python, sub-millisecond.
 fn load_from_bin(bin_path: &Path, geoid_path: &Path) -> Result<LoadedGraph, String> {
     if !bin_path.exists() {
-        return Err(format!("adjacency .adj.bin not found: {}", bin_path.display()));
+        return Err(format!(
+            "adjacency .adj.bin not found: {}",
+            bin_path.display()
+        ));
     }
 
-    let bytes = std::fs::read(bin_path)
-        .map_err(|e| format!("read {}: {e}", bin_path.display()))?;
+    let bytes = std::fs::read(bin_path).map_err(|e| format!("read {}: {e}", bin_path.display()))?;
 
     let graph = deserialize_adjacency(&bytes)
         .map_err(|e| format!("deserialize {}: {e}", bin_path.display()))?;
@@ -117,8 +128,8 @@ fn load_from_bin(bin_path: &Path, geoid_path: &Path) -> Result<LoadedGraph, Stri
     let index_to_geoid: HashMap<usize, String> = if geoid_path.exists() {
         let content = std::fs::read_to_string(geoid_path)
             .map_err(|e| format!("read geoids {}: {e}", geoid_path.display()))?;
-        let raw: HashMap<String, String> = serde_json::from_str(&content)
-            .map_err(|e| format!("parse geoids: {e}"))?;
+        let raw: HashMap<String, String> =
+            serde_json::from_str(&content).map_err(|e| format!("parse geoids: {e}"))?;
         raw.into_iter()
             .filter_map(|(k, v)| k.parse::<usize>().ok().map(|ki| (ki, v)))
             .collect()
@@ -146,19 +157,23 @@ fn load_from_bin(bin_path: &Path, geoid_path: &Path) -> Result<LoadedGraph, Stri
 }
 
 /// Python pkl shim fallback (used when .adj.bin not present).
-/// REDIST_PYTHON must be set to the Python executable with numpy available.
+/// BISECT_PYTHON must be set to the Python executable with numpy available.
 fn load_from_pkl_shim(pkl_path: &Path) -> Result<LoadedGraph, String> {
     if !pkl_path.exists() {
         return Err(format!("adjacency pkl not found: {}", pkl_path.display()));
     }
 
-    // REDIST_PYTHON must be set explicitly in CI/containers.
+    // BISECT_PYTHON must be set explicitly in CI/containers.
     // Default `py` (Windows) and `python3` (Linux/macOS) may not be correct if:
     //   - Running in Alpine/minimal containers where only `python` exists
     //   - Running inside a venv where Python is at a non-standard path
-    // Set REDIST_PYTHON=<full path> to override.
-    let python_cmd = std::env::var("REDIST_PYTHON").unwrap_or_else(|_| {
-        if cfg!(windows) { "py".to_string() } else { "python3".to_string() }
+    // Set BISECT_PYTHON=<full path> to override.
+    let python_cmd = std::env::var("BISECT_PYTHON").unwrap_or_else(|_| {
+        if cfg!(windows) {
+            "py".to_string()
+        } else {
+            "python3".to_string()
+        }
     });
 
     const PYTHON_DUMP: &str = r#"
@@ -198,17 +213,19 @@ print(json.dumps({'adjacency': adj, 'vertex_weights': vw,
         index_to_geoid: HashMap<String, String>,
     }
 
-    let data: AdjacencyJson = serde_json::from_slice(&output.stdout)
-        .map_err(|e| format!("JSON parse failed: {e}"))?;
+    let data: AdjacencyJson =
+        serde_json::from_slice(&output.stdout).map_err(|e| format!("JSON parse failed: {e}"))?;
 
-    let edge_weights: HashMap<(usize, usize), f64> = data.edge_weights_list
+    let edge_weights: HashMap<(usize, usize), f64> = data
+        .edge_weights_list
         .into_iter()
         .map(|(u, v, w)| ((u.min(v), u.max(v)), w))
         .collect();
 
     let n_edges = edge_weights.len();
     let n_vertices = data.adjacency.len();
-    let index_to_geoid: HashMap<usize, String> = data.index_to_geoid
+    let index_to_geoid: HashMap<usize, String> = data
+        .index_to_geoid
         .into_iter()
         .filter_map(|(k, v)| k.parse::<usize>().ok().map(|ki| (ki, v)))
         .collect();
@@ -220,7 +237,7 @@ print(json.dumps({'adjacency': adj, 'vertex_weights': vw,
         index_to_geoid,
         n_vertices,
         n_edges,
-        tract_centroids: vec![],  // pkl shim does not provide centroids
+        tract_centroids: vec![], // pkl shim does not provide centroids
     })
 }
 
@@ -242,18 +259,28 @@ pub fn derive_partition(
     }
 
     // Validate uniform coarse GEOID length
-    let lengths: std::collections::HashSet<usize> = coarse_geoids.values().map(|g| g.len()).collect();
+    let lengths: std::collections::HashSet<usize> =
+        coarse_geoids.values().map(|g| g.len()).collect();
     if lengths.len() > 1 {
-        return Err(format!("coarse GEOIDs have non-uniform lengths: {:?} — check adjacency file", lengths));
+        return Err(format!(
+            "coarse GEOIDs have non-uniform lengths: {:?} — check adjacency file",
+            lengths
+        ));
     }
     let prefix_len = coarse_geoids.values().next().map(|g| g.len()).unwrap_or(11);
 
     // Build coarse GEOID -> coarse index lookup
-    let coarse_lookup: std::collections::HashMap<&str, usize> = coarse_geoids.iter()
+    let coarse_lookup: std::collections::HashMap<&str, usize> = coarse_geoids
+        .iter()
         .map(|(&idx, geoid)| (geoid.as_str(), idx))
         .collect();
 
-    let n_fine = fine_geoids.keys().copied().max().map(|m| m + 1).unwrap_or(0);
+    let n_fine = fine_geoids
+        .keys()
+        .copied()
+        .max()
+        .map(|m| m + 1)
+        .unwrap_or(0);
     let mut partition = vec![usize::MAX; n_fine];
 
     for (&fine_idx, fine_geoid) in fine_geoids {
@@ -264,16 +291,20 @@ pub fn derive_partition(
             ));
         }
         let prefix = &fine_geoid[..prefix_len];
-        let coarse_idx = coarse_lookup.get(prefix).ok_or_else(|| format!(
-            "fine GEOID '{fine_geoid}' prefix '{prefix}' has no matching coarse unit — \
+        let coarse_idx = coarse_lookup.get(prefix).ok_or_else(|| {
+            format!(
+                "fine GEOID '{fine_geoid}' prefix '{prefix}' has no matching coarse unit — \
              ensure both adjacency files are from the same census year and state"
-        ))?;
+            )
+        })?;
         partition[fine_idx] = *coarse_idx;
     }
 
     // Verify no orphans
     if let Some(i) = partition.iter().position(|&v| v == usize::MAX) {
-        return Err(format!("fine unit index {i} has no coarse mapping after partition build"));
+        return Err(format!(
+            "fine unit index {i} has no coarse mapping after partition build"
+        ));
     }
     Ok(partition)
 }
@@ -298,7 +329,8 @@ pub fn build_county_coarsening(
     }
 
     // Build sorted unique county FIPS codes (geoid[:5])
-    let mut county_fips: Vec<String> = tract_geoids.values()
+    let mut county_fips: Vec<String> = tract_geoids
+        .values()
         .filter(|g| g.len() >= 5)
         .map(|g| g[..5].to_string())
         .collect::<std::collections::HashSet<_>>()
@@ -306,21 +338,29 @@ pub fn build_county_coarsening(
         .collect();
     county_fips.sort();
 
-    let county_to_idx: std::collections::HashMap<&str, usize> = county_fips.iter()
+    let county_to_idx: std::collections::HashMap<&str, usize> = county_fips
+        .iter()
         .enumerate()
         .map(|(i, fips)| (fips.as_str(), i))
         .collect();
     let n_counties = county_fips.len();
 
     // Build fine_to_coarse: tract_idx -> county_idx
-    let n_tracts = tract_geoids.keys().copied().max().map(|m| m + 1).unwrap_or(0);
+    let n_tracts = tract_geoids
+        .keys()
+        .copied()
+        .max()
+        .map(|m| m + 1)
+        .unwrap_or(0);
     let mut fine_to_coarse = vec![usize::MAX; n_tracts];
     for (&tract_idx, geoid) in tract_geoids {
         if geoid.len() < 5 {
             return Err(format!("tract GEOID '{geoid}' shorter than 5 chars"));
         }
         let fips = &geoid[..5];
-        let county_idx = *county_to_idx.get(fips).ok_or_else(|| format!("FIPS '{fips}' not in county map"))?;
+        let county_idx = *county_to_idx
+            .get(fips)
+            .ok_or_else(|| format!("FIPS '{fips}' not in county map"))?;
         fine_to_coarse[tract_idx] = county_idx;
     }
 
@@ -333,21 +373,35 @@ pub fn build_county_coarsening(
     }
 
     // County adjacency: A adjacent to B iff any tract in A adjacent to any tract in B
-    let mut adj_sets: Vec<std::collections::HashSet<usize>> = vec![std::collections::HashSet::new(); n_counties];
+    let mut adj_sets: Vec<std::collections::HashSet<usize>> =
+        vec![std::collections::HashSet::new(); n_counties];
     for (tract_v, neighbors) in tract_adj.iter().enumerate() {
-        if tract_v >= n_tracts { continue; }
+        if tract_v >= n_tracts {
+            continue;
+        }
         let cv = fine_to_coarse[tract_v];
-        if cv == usize::MAX { continue; }
+        if cv == usize::MAX {
+            continue;
+        }
         for &tract_nb in neighbors {
-            if tract_nb >= n_tracts { continue; }
+            if tract_nb >= n_tracts {
+                continue;
+            }
             let cnb = fine_to_coarse[tract_nb];
-            if cnb == usize::MAX || cnb == cv { continue; }
+            if cnb == usize::MAX || cnb == cv {
+                continue;
+            }
             adj_sets[cv].insert(cnb);
             adj_sets[cnb].insert(cv);
         }
     }
-    let county_adj: Vec<Vec<usize>> = adj_sets.into_iter()
-        .map(|s| { let mut v: Vec<usize> = s.into_iter().collect(); v.sort_unstable(); v })
+    let county_adj: Vec<Vec<usize>> = adj_sets
+        .into_iter()
+        .map(|s| {
+            let mut v: Vec<usize> = s.into_iter().collect();
+            v.sort_unstable();
+            v
+        })
         .collect();
 
     Ok((county_adj, county_pop, fine_to_coarse))
@@ -364,25 +418,32 @@ mod tests {
     }
 
     fn vt_pkl_path() -> std::path::PathBuf {
-        std::path::Path::new("outputs/V3/data/2020/adjacency/vt_adjacency_2020.pkl")
-            .to_path_buf()
+        std::path::Path::new("outputs/V3/data/2020/adjacency/vt_adjacency_2020.pkl").to_path_buf()
     }
 
     #[test]
     fn test_load_from_bin_vermont() {
-        if !vt_bin_path().exists() { return; }
+        if !vt_bin_path().exists() {
+            return;
+        }
         let graph = load_from_bin(
             &vt_bin_path(),
             &vt_bin_path().with_file_name("vt_adjacency_2020_geoids.json"),
-        ).expect("should load VT .adj.bin");
+        )
+        .expect("should load VT .adj.bin");
         assert_eq!(graph.n_vertices, 193, "VT should have 193 tracts");
         assert_eq!(graph.n_edges, 500, "VT should have 500 edges");
-        assert!(graph.vertex_weights.iter().all(|&v| v > 0), "all weights positive");
+        assert!(
+            graph.vertex_weights.iter().all(|&v| v > 0),
+            "all weights positive"
+        );
     }
 
     #[test]
     fn test_load_from_bin_geoids_present() {
-        if !vt_bin_path().exists() { return; }
+        if !vt_bin_path().exists() {
+            return;
+        }
         let geoid_path = vt_bin_path().with_file_name("vt_adjacency_2020_geoids.json");
         let graph = load_from_bin(&vt_bin_path(), &geoid_path).unwrap();
         if geoid_path.exists() {
@@ -397,29 +458,38 @@ mod tests {
     #[test]
     fn test_load_adjacency_pkl_prefers_bin() {
         // When .adj.bin exists, no Python subprocess should be needed
-        if !vt_bin_path().exists() { return; }
-        // Temporarily set REDIST_PYTHON to a nonexistent path — if bin is used,
+        if !vt_bin_path().exists() {
+            return;
+        }
+        // Temporarily set BISECT_PYTHON to a nonexistent path — if bin is used,
         // this won't matter (no subprocess); if pkl shim is used, it will fail
-        let old = std::env::var("REDIST_PYTHON").ok();
-        std::env::set_var("REDIST_PYTHON", "/nonexistent/python");
+        let old = std::env::var("BISECT_PYTHON").ok();
+        std::env::set_var("BISECT_PYTHON", "/nonexistent/python");
         let result = load_adjacency_pkl(&vt_pkl_path());
         if let Some(old_val) = old {
-            std::env::set_var("REDIST_PYTHON", old_val);
+            std::env::set_var("BISECT_PYTHON", old_val);
         } else {
-            std::env::remove_var("REDIST_PYTHON");
+            std::env::remove_var("BISECT_PYTHON");
         }
-        assert!(result.is_ok(), ".adj.bin should be used without Python: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            ".adj.bin should be used without Python: {:?}",
+            result.err()
+        );
         let graph = result.unwrap();
         assert_eq!(graph.n_vertices, 193);
     }
 
     #[test]
     fn test_edge_weights_canonical_order() {
-        if !vt_bin_path().exists() { return; }
+        if !vt_bin_path().exists() {
+            return;
+        }
         let graph = load_from_bin(
             &vt_bin_path(),
             &vt_bin_path().with_file_name("vt_adjacency_2020_geoids.json"),
-        ).unwrap();
+        )
+        .unwrap();
         for &(u, v) in graph.edge_weights.keys() {
             assert!(u < v, "edge ({u},{v}) not canonical after bin load");
         }
@@ -433,8 +503,10 @@ mod tests {
         assert!(result.is_err(), "should fail if neither bin nor pkl exists");
         // Error message should mention the file path
         let err = result.unwrap_err();
-        assert!(err.contains("not found") || err.contains("adjacency"),
-            "error should be descriptive: {err}");
+        assert!(
+            err.contains("not found") || err.contains("adjacency"),
+            "error should be descriptive: {err}"
+        );
     }
 
     // ── 15 new L0 tests: error cases, FIPS validation, year mismatch ─────────
@@ -513,62 +585,90 @@ mod tests {
         // geoid file does not exist — should be treated as empty (no error)
         // but the .adj.bin is corrupt
         let result = load_from_bin(&bin_path, &geoid_path);
-        assert!(result.is_err(), "corrupt .adj.bin with no geoid file must still error");
+        assert!(
+            result.is_err(),
+            "corrupt .adj.bin with no geoid file must still error"
+        );
     }
 
     #[test]
     fn loaded_graph_n_vertices_equals_adjacency_length() {
         // Structural invariant: n_vertices == adjacency.len()
-        if !vt_bin_path().exists() { return; }
+        if !vt_bin_path().exists() {
+            return;
+        }
         let graph = load_from_bin(
             &vt_bin_path(),
             &vt_bin_path().with_file_name("vt_adjacency_2020_geoids.json"),
-        ).unwrap();
-        assert_eq!(graph.n_vertices, graph.adjacency.len(),
-            "n_vertices must equal adjacency.len()");
+        )
+        .unwrap();
+        assert_eq!(
+            graph.n_vertices,
+            graph.adjacency.len(),
+            "n_vertices must equal adjacency.len()"
+        );
     }
 
     #[test]
     fn loaded_graph_n_edges_matches_edge_weights_keys() {
-        if !vt_bin_path().exists() { return; }
+        if !vt_bin_path().exists() {
+            return;
+        }
         let graph = load_from_bin(
             &vt_bin_path(),
             &vt_bin_path().with_file_name("vt_adjacency_2020_geoids.json"),
-        ).unwrap();
+        )
+        .unwrap();
         // n_edges is set from edge_weights.len() when loaded from bin
-        assert_eq!(graph.n_edges, graph.edge_weights.len(),
-            "n_edges must equal number of edge_weight entries");
+        assert_eq!(
+            graph.n_edges,
+            graph.edge_weights.len(),
+            "n_edges must equal number of edge_weight entries"
+        );
     }
 
     #[test]
     fn loaded_graph_vertex_weights_nonempty() {
-        if !vt_bin_path().exists() { return; }
+        if !vt_bin_path().exists() {
+            return;
+        }
         let graph = load_from_bin(
             &vt_bin_path(),
             &vt_bin_path().with_file_name("vt_adjacency_2020_geoids.json"),
-        ).unwrap();
-        assert!(!graph.vertex_weights.is_empty(),
-            "vertex_weights must not be empty after loading");
+        )
+        .unwrap();
+        assert!(
+            !graph.vertex_weights.is_empty(),
+            "vertex_weights must not be empty after loading"
+        );
     }
 
     #[test]
     fn loaded_graph_vertex_weights_all_positive() {
-        if !vt_bin_path().exists() { return; }
+        if !vt_bin_path().exists() {
+            return;
+        }
         let graph = load_from_bin(
             &vt_bin_path(),
             &vt_bin_path().with_file_name("vt_adjacency_2020_geoids.json"),
-        ).unwrap();
-        assert!(graph.vertex_weights.iter().all(|&w| w >= 0),
-            "vertex weights must be non-negative (population counts)");
+        )
+        .unwrap();
+        assert!(
+            graph.vertex_weights.iter().all(|&w| w >= 0),
+            "vertex weights must be non-negative (population counts)"
+        );
     }
 
     #[test]
     fn adjacency_symmetry_each_node_lists_bidirectional_edges() {
-        if !vt_bin_path().exists() { return; }
+        if !vt_bin_path().exists() {
+            return;
+        }
         let graph = load_from_bin(
             &vt_bin_path(),
             &vt_bin_path().with_file_name("vt_adjacency_2020_geoids.json"),
-        ).unwrap();
+        )
+        .unwrap();
         // For every edge (u → v) in adjacency, there should be a reverse edge (v → u).
         // Check just the first 20 vertices for speed.
         for v in 0..graph.adjacency.len().min(20) {
@@ -593,13 +693,17 @@ mod tests {
     #[test]
     fn load_from_bin_geoid_file_missing_is_ok_returns_empty_map() {
         // If .adj.bin is valid but _geoids.json doesn't exist, we get an empty map
-        if !vt_bin_path().exists() { return; }
+        if !vt_bin_path().exists() {
+            return;
+        }
         let geoid_path = std::path::Path::new("/nonexistent/does_not_exist_geoids.json");
         let result = load_from_bin(&vt_bin_path(), geoid_path);
         // Should succeed with empty index_to_geoid
         if let Ok(graph) = result {
-            assert!(graph.index_to_geoid.is_empty() || !graph.index_to_geoid.is_empty(),
-                "index_to_geoid may be empty or populated");
+            assert!(
+                graph.index_to_geoid.is_empty() || !graph.index_to_geoid.is_empty(),
+                "index_to_geoid may be empty or populated"
+            );
         }
         // If the .adj.bin itself parsed correctly, it's valid
     }
@@ -614,7 +718,10 @@ mod tests {
         // (The WARNING is printed to stderr; we just verify the fn doesn't panic.)
         let fake_pkl = std::path::Path::new("/nonexistent/state_adjacency_2020.pkl");
         let result = load_adjacency_pkl(fake_pkl);
-        assert!(result.is_err(), "should error for nonexistent pkl: {warning_snippet}");
+        assert!(
+            result.is_err(),
+            "should error for nonexistent pkl: {warning_snippet}"
+        );
     }
 
     // ── derive_partition L0 tests ─────────────────────────────────────────────
@@ -627,11 +734,15 @@ mod tests {
             (1, "370010001002".to_string()),
             (2, "370010002001".to_string()),
             (3, "370010002002".to_string()),
-        ].into_iter().collect();
+        ]
+        .into_iter()
+        .collect();
         let coarse: HashMap<usize, String> = [
             (0, "37001000100".to_string()),
             (1, "37001000200".to_string()),
-        ].into_iter().collect();
+        ]
+        .into_iter()
+        .collect();
         let partition = derive_partition(&fine, &coarse).unwrap();
         assert_eq!(partition[0], 0); // BG 370010001001 -> tract 37001000100
         assert_eq!(partition[1], 0);
@@ -646,11 +757,12 @@ mod tests {
             (0, "37001000100".to_string()),
             (1, "37001000200".to_string()),
             (2, "37003000100".to_string()),
-        ].into_iter().collect();
-        let coarse: HashMap<usize, String> = [
-            (0, "37001".to_string()),
-            (1, "37003".to_string()),
-        ].into_iter().collect();
+        ]
+        .into_iter()
+        .collect();
+        let coarse: HashMap<usize, String> = [(0, "37001".to_string()), (1, "37003".to_string())]
+            .into_iter()
+            .collect();
         let partition = derive_partition(&fine, &coarse).unwrap();
         assert_eq!(partition[0], 0);
         assert_eq!(partition[1], 0);
@@ -670,12 +782,17 @@ mod tests {
     fn build_county_coarsening_pop_sums() {
         // 4 tracts in 2 counties
         let tract_geoids: HashMap<usize, String> = [
-            (0, "37001000100".into()), (1, "37001000200".into()),
-            (2, "37003000100".into()), (3, "37003000200".into()),
-        ].into_iter().collect();
+            (0, "37001000100".into()),
+            (1, "37001000200".into()),
+            (2, "37003000100".into()),
+            (3, "37003000200".into()),
+        ]
+        .into_iter()
+        .collect();
         let adj = vec![vec![1usize], vec![0], vec![3], vec![2]]; // two disconnected pairs
         let pop = vec![100i64, 200, 150, 250];
-        let (county_adj, county_pop, ftc) = build_county_coarsening(&tract_geoids, &adj, &pop).unwrap();
+        let (county_adj, county_pop, ftc) =
+            build_county_coarsening(&tract_geoids, &adj, &pop).unwrap();
         assert_eq!(county_adj.len(), 2);
         let total_county: i64 = county_pop.iter().sum();
         assert_eq!(total_county, 700);
@@ -687,15 +804,20 @@ mod tests {
     #[test]
     fn build_county_coarsening_adjacency_symmetric() {
         let tract_geoids: HashMap<usize, String> = [
-            (0, "37001000100".into()), (1, "37001000200".into()),
+            (0, "37001000100".into()),
+            (1, "37001000200".into()),
             (2, "37003000100".into()),
-        ].into_iter().collect();
+        ]
+        .into_iter()
+        .collect();
         // tract 1 adjacent to tract 2 (cross-county boundary)
         let adj = vec![vec![1usize], vec![0, 2], vec![1]];
         let pop = vec![100i64; 3];
         let (county_adj, _, _) = build_county_coarsening(&tract_geoids, &adj, &pop).unwrap();
         // Counties must be mutually adjacent
-        assert!(county_adj[0].contains(&1) || county_adj[1].contains(&0),
-            "counties must be adjacent when tracts cross boundary");
+        assert!(
+            county_adj[0].contains(&1) || county_adj[1].contains(&0),
+            "counties must be adjacent when tracts cross boundary"
+        );
     }
 }

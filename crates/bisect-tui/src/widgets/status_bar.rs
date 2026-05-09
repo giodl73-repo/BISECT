@@ -1,11 +1,10 @@
 /// Status bar — always-visible 1-line footer showing current context.
-
 use ratatui::{
-    Frame,
     layout::Rect,
     style::{Color, Style},
     text::{Line, Span},
     widgets::Paragraph,
+    Frame,
 };
 
 use crate::app::App;
@@ -53,16 +52,29 @@ mod tests {
     fn test_status_bar_shows_plan_count() {
         use crate::app::{App, PlanSummary};
         let mut app = App::default();
-        app.plans = vec![PlanSummary { label: "test".into(), ..Default::default() }];
+        app.plans = vec![PlanSummary {
+            label: "test".into(),
+            ..Default::default()
+        }];
         let backend = ratatui::backend::TestBackend::new(80, 1);
         let mut terminal = ratatui::Terminal::new(backend).unwrap();
-        terminal.draw(|f| {
-            let area = f.area();
-            render(f, area, &app);
-        }).unwrap();
-        let content: String = terminal.backend().buffer().content().iter()
-            .map(|c| c.symbol().to_string()).collect();
-        assert!(content.contains("1") || content.contains("plans"), "plan count must appear: {content}");
+        terminal
+            .draw(|f| {
+                let area = f.area();
+                render(f, area, &app);
+            })
+            .unwrap();
+        let content: String = terminal
+            .backend()
+            .buffer()
+            .content()
+            .iter()
+            .map(|c| c.symbol().to_string())
+            .collect();
+        assert!(
+            content.contains("1") || content.contains("plans"),
+            "plan count must appear: {content}"
+        );
     }
 
     #[test]
@@ -71,8 +83,16 @@ mod tests {
         let backend = ratatui::backend::TestBackend::new(80, 1);
         let mut terminal = ratatui::Terminal::new(backend).unwrap();
         terminal.draw(|f| render(f, f.area(), &app)).unwrap();
-        let content: String = terminal.backend().buffer().content().iter()
-            .map(|c| c.symbol().to_string()).collect();
-        assert!(content.contains("?") || content.contains("q"), "help hint must appear: {content}");
+        let content: String = terminal
+            .backend()
+            .buffer()
+            .content()
+            .iter()
+            .map(|c| c.symbol().to_string())
+            .collect();
+        assert!(
+            content.contains("?") || content.contains("q"),
+            "help hint must appear: {content}"
+        );
     }
 }

@@ -33,7 +33,7 @@ SMC is the right tool when the question is "what fraction of valid plans have pr
 
 ## 2. Algorithm: SMC for redistricting
 
-The algorithm is the Fifield et al. (2020) adaptation of Sequential Monte Carlo to redistricting, as implemented in the R `redist` package. We adapt it to Rust with precise seeding.
+The algorithm is the Fifield et al. (2020) adaptation of Sequential Monte Carlo to redistricting, as implemented in the R `BISECT` package. We adapt it to Rust with precise seeding.
 
 ### 2.1 High-level structure
 
@@ -169,7 +169,7 @@ Systematic resampling has lower variance than multinomial resampling and is O(N)
 SMC is complex enough to warrant its own crate, separate from `bisect-ensemble`.
 
 ```
-redist/crates/bisect-smc/
+BISECT/crates/bisect-smc/
   src/
     lib.rs              // pub use
     algorithm.rs        // run_smc() top-level
@@ -298,7 +298,7 @@ This provides a three-step audit chain: file integrity → algorithm parameters 
 
 ### 5.3 Comparison with GerryChain
 
-The R `redist` package (McCartan et al. 2023) implements SMC via `redist_smc()`. Our implementation should be validated against the R package output on a small test case (same seed, same graph, same k) in the L2 test suite. This validates correctness of the algorithm, not just the implementation.
+The R `BISECT` package (McCartan et al. 2023) implements SMC via `BISECT_smc()`. Our implementation should be validated against the R package output on a small test case (same seed, same graph, same k) in the L2 test suite. This validates correctness of the algorithm, not just the implementation.
 
 ---
 
@@ -379,7 +379,7 @@ The `file_sha256` field is the SHA-256 of all bytes in the file preceding the fi
 
 - `run_smc(NC, 2020, k=14, N=1000, seed=42)` → 1000 plans; mean weighted EC within 10% of BisectionEnsemble(p=0.5) result
 - `run_smc(VT, 2020, k=1, N=100)` → all plans are the trivial single-district plan
-- Cross-validation: compare weighted EC distribution to GerryChain/R redist SMC on the same small graph
+- Cross-validation: compare weighted EC distribution to GerryChain/R BISECT SMC on the same small graph
 
 ---
 
@@ -398,7 +398,7 @@ The `file_sha256` field is the SHA-256 of all bytes in the file preceding the fi
 Once `bisect-smc` is stable, a follow-on spec will define:
 - `SeedCompositor::SmcPercentile { n_particles, p }` — run SMC, select plan at percentile p of weighted EC distribution
 - `bisect ensemble analyze` — weighted statistics over SMC ensemble
-- Validation against R `redist::redist_smc()` output for NC, WI
+- Validation against R `BISECT::BISECT_smc()` output for NC, WI
 
 ### Known risks
 

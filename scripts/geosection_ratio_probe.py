@@ -121,7 +121,7 @@ def probe_ratios(code, name, k, n_seeds=100):
         for p in ['bin/gpmetis.exe']:
             if os.path.exists(p): gpmetis = p; break
     if gpmetis is None:
-        print("gpmetis not found — using redist state directly instead")
+        print("gpmetis not found — using BISECT state directly instead")
         os.unlink(graph_file)
         return probe_ratios_via_redist(code, name, k, n_seeds)
 
@@ -167,8 +167,8 @@ def probe_ratios(code, name, k, n_seeds=100):
     return results
 
 def probe_ratios_via_redist(code, name, k, n_seeds=50):
-    """Fallback: use redist state with different partition modes."""
-    print(f"Using redist state for {code.upper()} (gpmetis not directly accessible)")
+    """Fallback: use BISECT state with different partition modes."""
+    print(f"Using BISECT state for {code.upper()} (gpmetis not directly accessible)")
     # We can use the existing b7_WI_s* runs to get the 50/50 baseline
     # and need to add a new mode for other ratios
     print("Note: Only 50/50 data available from existing runs.")

@@ -1,4 +1,4 @@
-# redist CLI Architecture Spec
+# BISECT CLI Architecture Spec
 **Date:** 2026-04-28  
 **Status:** Approved — basis for plan-context-refactor
 
@@ -130,19 +130,19 @@ All output paths are relative to `{output_base}/{version}/`:
 
 ### Class A: Plan-creating commands
 Resolve metadata from args + registry. Write manifest.json.
-- `bisect state`, `bisect states`, `redist run`, `redist suite draw`, `redist import`, `redist migrate`
+- `bisect state`, `bisect states`, `BISECT run`, `BISECT suite draw`, `BISECT import`, `BISECT migrate`
 
 **Obligation:** Write a complete, correct `manifest.json` before writing any other outputs.
 
 ### Class B: Plan-operating commands
 Load `PlanContext` from manifest. Never re-resolve metadata from global sources.
-- `bisect analyze`, `redist report`, `redist map`, `redist export`, `redist compare`, `bisect verify`
+- `bisect analyze`, `BISECT report`, `BISECT map`, `BISECT export`, `BISECT compare`, `bisect verify`
 
 **Obligation:** Use `PlanContext.from_label()` at entry. Fail with clear error if manifest missing.
 
 ### Class C: Metadata-only commands
 Don't operate on plans. Read from registry or global sources.
-- `redist doctor`, `redist policy`, `bisect fetch`, `redist validate`, `redist tui`
+- `BISECT doctor`, `BISECT policy`, `bisect fetch`, `BISECT validate`, `BISECT tui`
 
 ---
 

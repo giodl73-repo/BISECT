@@ -118,7 +118,10 @@ fn civic_counter_proposal_framing(report: &ComparisonReport) -> Option<String> {
         format!(
             "{side_label} is a civic counter-proposal submitted by {by} on {at}; \
              it is not the state's official map.",
-            by = side.submitted_by.as_deref().unwrap_or("[unknown submitter]"),
+            by = side
+                .submitted_by
+                .as_deref()
+                .unwrap_or("[unknown submitter]"),
             at = side.submitted_at.as_deref().unwrap_or("[unknown date]"),
         )
     })
@@ -132,7 +135,11 @@ fn diff_scope_paragraph(report: &ComparisonReport) -> String {
     } else if n_districts == 1 {
         format!("District {}", d.districts_with_changes[0])
     } else {
-        let names: Vec<String> = d.districts_with_changes.iter().map(|n| n.to_string()).collect();
+        let names: Vec<String> = d
+            .districts_with_changes
+            .iter()
+            .map(|n| n.to_string())
+            .collect();
         format!("Districts {}", names.join(", "))
     };
     format!(
@@ -150,12 +157,23 @@ fn partisan_composition_paragraph(report: &ComparisonReport, cfg: &NarrativeConf
     // possible, suppress the directional claim. Always emit the seat-count
     // numbers; only suppress the comparative phrasing.
     let directional = if let Some((a_ci, b_ci)) = cfg.partisan_seat_ci {
-        suppress_or_emit("partisan_seats", MetricMonotonicity::Monotone, a_ci, b_ci)
-            .unwrap_or_else(|| {
-                directional_phrase("Plan B", report.plan_b.leaning_seats, "Plan A", report.plan_a.leaning_seats)
-            })
+        suppress_or_emit("partisan_seats", MetricMonotonicity::Monotone, a_ci, b_ci).unwrap_or_else(
+            || {
+                directional_phrase(
+                    "Plan B",
+                    report.plan_b.leaning_seats,
+                    "Plan A",
+                    report.plan_a.leaning_seats,
+                )
+            },
+        )
     } else {
-        directional_phrase("Plan B", report.plan_b.leaning_seats, "Plan A", report.plan_a.leaning_seats)
+        directional_phrase(
+            "Plan B",
+            report.plan_b.leaning_seats,
+            "Plan A",
+            report.plan_a.leaning_seats,
+        )
     };
 
     let mut s = format!(
@@ -172,22 +190,29 @@ fn partisan_composition_paragraph(report: &ComparisonReport, cfg: &NarrativeConf
     let close_b = close_call_districts(&report.plan_b, cfg);
     if !close_a.is_empty() || !close_b.is_empty() {
         s.push(' ');
-        s.push_str(&close_call_sentence(&close_a, &close_b, cfg.leaning_threshold));
+        s.push_str(&close_call_sentence(
+            &close_a,
+            &close_b,
+            cfg.leaning_threshold,
+        ));
     }
     s
 }
 
-fn directional_phrase(
-    a_name: &str,
-    a_seats: usize,
-    b_name: &str,
-    b_seats: usize,
-) -> String {
+fn directional_phrase(a_name: &str, a_seats: usize, b_name: &str, b_seats: usize) -> String {
     use std::cmp::Ordering;
     match a_seats.cmp(&b_seats) {
-        Ordering::Greater => format!("{a_name} yields {} more Democratic-leaning seats than {b_name}.", a_seats - b_seats),
-        Ordering::Less => format!("{b_name} yields {} more Democratic-leaning seats than {a_name}.", b_seats - a_seats),
-        Ordering::Equal => "Both plans elect the same number of Democratic-leaning seats.".to_string(),
+        Ordering::Greater => format!(
+            "{a_name} yields {} more Democratic-leaning seats than {b_name}.",
+            a_seats - b_seats
+        ),
+        Ordering::Less => format!(
+            "{b_name} yields {} more Democratic-leaning seats than {a_name}.",
+            b_seats - a_seats
+        ),
+        Ordering::Equal => {
+            "Both plans elect the same number of Democratic-leaning seats.".to_string()
+        }
     }
 }
 
@@ -209,7 +234,11 @@ fn close_call_districts(plan: &PlanSide, cfg: &NarrativeConfig) -> Vec<CloseCall
             out.push(CloseCallDistrict {
                 index: i + 1,
                 dem_share: share,
-                side: if share >= cfg.leaning_threshold { "above" } else { "below" },
+                side: if share >= cfg.leaning_threshold {
+                    "above"
+                } else {
+                    "below"
+                },
             });
         }
     }
@@ -259,8 +288,14 @@ fn mm_count_paragraph(report: &ComparisonReport, cfg: &NarrativeConfig) -> Strin
 fn mm_count_directional(a: &PlanSide, b: &PlanSide) -> String {
     use std::cmp::Ordering;
     match a.mm_count.cmp(&b.mm_count) {
-        Ordering::Greater => format!("Plan A yields {} more MM district(s) than Plan B.", a.mm_count - b.mm_count),
-        Ordering::Less => format!("Plan B yields {} more MM district(s) than Plan A.", b.mm_count - a.mm_count),
+        Ordering::Greater => format!(
+            "Plan A yields {} more MM district(s) than Plan B.",
+            a.mm_count - b.mm_count
+        ),
+        Ordering::Less => format!(
+            "Plan B yields {} more MM district(s) than Plan A.",
+            b.mm_count - a.mm_count
+        ),
         Ordering::Equal => "Both plans yield the same number of MM districts.".to_string(),
     }
 }
@@ -294,7 +329,9 @@ fn pp_directional(a: f64, b: f64) -> String {
 fn audit_footer(report: &ComparisonReport, cfg: &NarrativeConfig) -> String {
     let signed = match &cfg.approved_by {
         Some(name) => format!("Approved by: {name}"),
-        None => "Not yet approved (run with --approved-by \"<your name>\" to sign off).".to_string(),
+        None => {
+            "Not yet approved (run with --approved-by \"<your name>\" to sign off).".to_string()
+        }
     };
     format!(
         "Plan A: {a} (manifest sha256 prefix {a_sha})\n\
@@ -373,14 +410,23 @@ mod tests {
     #[test]
     fn test_value_correctness_seat_counts_appear_verbatim() {
         let s = render_narrative(&fixture_report(), &NarrativeConfig::default());
-        assert!(s.contains("5 Democratic-leaning"), "Plan A seat count must appear verbatim: {s}");
-        assert!(s.contains("4 Democratic-leaning"), "Plan B seat count must appear verbatim: {s}");
+        assert!(
+            s.contains("5 Democratic-leaning"),
+            "Plan A seat count must appear verbatim: {s}"
+        );
+        assert!(
+            s.contains("4 Democratic-leaning"),
+            "Plan B seat count must appear verbatim: {s}"
+        );
     }
 
     #[test]
     fn test_value_correctness_threshold_disclosed() {
         let s = render_narrative(&fixture_report(), &NarrativeConfig::default());
-        assert!(s.contains("55% Dem-share threshold"), "threshold must be disclosed: {s}");
+        assert!(
+            s.contains("55% Dem-share threshold"),
+            "threshold must be disclosed: {s}"
+        );
     }
 
     #[test]
@@ -391,7 +437,10 @@ mod tests {
             s.contains("just above the leaning threshold"),
             "above-threshold close-call must be flagged: {s}"
         );
-        assert!(s.contains("55.3%"), "exact dem share for the close-call must appear: {s}");
+        assert!(
+            s.contains("55.3%"),
+            "exact dem share for the close-call must appear: {s}"
+        );
     }
 
     #[test]
@@ -418,8 +467,14 @@ mod tests {
         let mut cfg = NarrativeConfig::default();
         cfg.leaning_threshold = 0.50;
         let s = render_narrative(&fixture_report(), &cfg);
-        assert!(s.contains("50% Dem-share threshold"), "new threshold must be disclosed: {s}");
-        assert!(!s.contains("55% Dem-share threshold"), "old threshold must be gone: {s}");
+        assert!(
+            s.contains("50% Dem-share threshold"),
+            "new threshold must be disclosed: {s}"
+        );
+        assert!(
+            !s.contains("55% Dem-share threshold"),
+            "old threshold must be gone: {s}"
+        );
     }
 
     // ── [DRAFT] gate (Task 5) ────────────────────────────────────────────────
@@ -430,7 +485,10 @@ mod tests {
         // Count [DRAFT prefix occurrences. Should be one per body paragraph
         // (5 paragraphs: civic + diff + partisan + mm + compactness).
         let count = s.matches("[DRAFT - review before publication]").count();
-        assert!(count >= 5, "expected at least 5 [DRAFT] prefixes, got {count}: {s}");
+        assert!(
+            count >= 5,
+            "expected at least 5 [DRAFT] prefixes, got {count}: {s}"
+        );
     }
 
     #[test]
@@ -442,7 +500,10 @@ mod tests {
             !s.contains("[DRAFT - review before publication]"),
             "no [DRAFT] prefix when --approved-by is set: {s}"
         );
-        assert!(s.contains("Approved by: Jane Q. Citizen"), "approval recorded: {s}");
+        assert!(
+            s.contains("Approved by: Jane Q. Citizen"),
+            "approval recorded: {s}"
+        );
     }
 
     // ── Civic-counter-proposal framing (Task 5 / BD-N3) ──────────────────────
@@ -465,7 +526,10 @@ mod tests {
         // Framing must come BEFORE the partisan paragraph.
         let civic_pos = s.find("civic counter-proposal").unwrap();
         let partisan_pos = s.find("Statewide partisan composition").unwrap();
-        assert!(civic_pos < partisan_pos, "civic framing must precede partisan paragraph");
+        assert!(
+            civic_pos < partisan_pos,
+            "civic framing must precede partisan paragraph"
+        );
     }
 
     #[test]
@@ -473,7 +537,10 @@ mod tests {
         let mut report = fixture_report();
         report.plan_b.submission_type = None;
         let s = render_narrative(&report, &NarrativeConfig::default());
-        assert!(!s.contains("civic counter-proposal"), "no framing when neither plan is civic: {s}");
+        assert!(
+            !s.contains("civic counter-proposal"),
+            "no framing when neither plan is civic: {s}"
+        );
     }
 
     // ── MoE suppression (Task 4 integration) ─────────────────────────────────
@@ -483,10 +550,7 @@ mod tests {
         // Provide overlapping CIs for partisan seats; the directional phrase
         // must be replaced with MOE_SUPPRESSED_TEXT.
         let mut cfg = NarrativeConfig::default();
-        cfg.partisan_seat_ci = Some((
-            CiBand::new(5.0, 4.4, 5.6),
-            CiBand::new(4.0, 3.4, 4.6),
-        ));
+        cfg.partisan_seat_ci = Some((CiBand::new(5.0, 4.4, 5.6), CiBand::new(4.0, 3.4, 4.6)));
         let s = render_narrative(&fixture_report(), &cfg);
         assert!(s.contains(MOE_SUPPRESSED_TEXT), "MoE text must appear: {s}");
         // The seat-count numbers themselves must STILL appear (only the
@@ -498,22 +562,22 @@ mod tests {
     #[test]
     fn test_moe_no_suppression_when_intervals_disjoint() {
         let mut cfg = NarrativeConfig::default();
-        cfg.partisan_seat_ci = Some((
-            CiBand::new(5.0, 4.9, 5.1),
-            CiBand::new(4.0, 3.9, 4.1),
-        ));
+        cfg.partisan_seat_ci = Some((CiBand::new(5.0, 4.9, 5.1), CiBand::new(4.0, 3.9, 4.1)));
         let s = render_narrative(&fixture_report(), &cfg);
-        assert!(!s.contains(MOE_SUPPRESSED_TEXT), "no suppression when CIs disjoint: {s}");
-        assert!(s.contains("Plan A yields 1 more"), "directional phrase must be present: {s}");
+        assert!(
+            !s.contains(MOE_SUPPRESSED_TEXT),
+            "no suppression when CIs disjoint: {s}"
+        );
+        assert!(
+            s.contains("Plan A yields 1 more"),
+            "directional phrase must be present: {s}"
+        );
     }
 
     #[test]
     fn test_moe_mm_count_suppression() {
         let mut cfg = NarrativeConfig::default();
-        cfg.mm_count_ci = Some((
-            CiBand::new(1.0, 0.0, 1.0),
-            CiBand::new(0.0, 0.0, 1.0),
-        ));
+        cfg.mm_count_ci = Some((CiBand::new(1.0, 0.0, 1.0), CiBand::new(0.0, 0.0, 1.0)));
         let s = render_narrative(&fixture_report(), &cfg);
         // MM-count paragraph contains both "Plan A has 1, Plan B has 1" AND the suppression.
         assert!(s.contains("Plan A has 1"));
@@ -527,7 +591,10 @@ mod tests {
         let s = render_narrative(&fixture_report(), &NarrativeConfig::default());
         assert!(s.contains("aaaaaaaa"), "Plan A sha prefix must appear: {s}");
         assert!(s.contains("bbbbbbbb"), "Plan B sha prefix must appear: {s}");
-        assert!(s.contains("narrative_manifest.json"), "audit-trail pointer must appear: {s}");
+        assert!(
+            s.contains("narrative_manifest.json"),
+            "audit-trail pointer must appear: {s}"
+        );
     }
 
     #[test]
@@ -596,20 +663,32 @@ mod tests {
     #[test]
     fn test_narrative_contains_compactness_section() {
         let s = render_narrative(&fixture_report(), &NarrativeConfig::default());
-        assert!(s.contains("Compactness"), "compactness paragraph must appear: {s}");
-        assert!(s.contains("Polsby-Popper"), "Polsby-Popper must be mentioned: {s}");
+        assert!(
+            s.contains("Compactness"),
+            "compactness paragraph must appear: {s}"
+        );
+        assert!(
+            s.contains("Polsby-Popper"),
+            "Polsby-Popper must be mentioned: {s}"
+        );
     }
 
     #[test]
     fn test_narrative_contains_mm_count_section() {
         let s = render_narrative(&fixture_report(), &NarrativeConfig::default());
-        assert!(s.contains("Majority-minority"), "MM section must appear: {s}");
+        assert!(
+            s.contains("Majority-minority"),
+            "MM section must appear: {s}"
+        );
     }
 
     #[test]
     fn test_narrative_contains_diff_scope_section() {
         let s = render_narrative(&fixture_report(), &NarrativeConfig::default());
-        assert!(s.contains("Plan B reassigns"), "diff scope section must appear: {s}");
+        assert!(
+            s.contains("Plan B reassigns"),
+            "diff scope section must appear: {s}"
+        );
     }
 
     #[test]
@@ -625,15 +704,20 @@ mod tests {
             DiffSummary::default(),
         );
         let s = render_narrative(&report, &NarrativeConfig::default());
-        assert!(!s.contains("civic counter-proposal"),
-            "no civic framing when no civic submission type: {s}");
+        assert!(
+            !s.contains("civic counter-proposal"),
+            "no civic framing when no civic submission type: {s}"
+        );
     }
 
     #[test]
     fn test_narrative_audit_footer_always_present() {
         // Even without approval, the audit footer separator --- must appear.
         let s = render_narrative(&fixture_report(), &NarrativeConfig::default());
-        assert!(s.contains("---"), "audit footer separator must always appear");
+        assert!(
+            s.contains("---"),
+            "audit footer separator must always appear"
+        );
     }
 
     #[test]
@@ -641,22 +725,34 @@ mod tests {
         let mut cfg = NarrativeConfig::default();
         cfg.approved_by = Some("Dr. Expert Witness".into());
         let s = render_narrative(&fixture_report(), &cfg);
-        assert!(s.contains("Dr. Expert Witness"), "signer name must appear in footer: {s}");
+        assert!(
+            s.contains("Dr. Expert Witness"),
+            "signer name must appear in footer: {s}"
+        );
     }
 
     #[test]
     fn test_narrative_compactness_values_appear() {
         // Plan A pp=0.42, Plan B pp=0.40 must appear in the output.
         let s = render_narrative(&fixture_report(), &NarrativeConfig::default());
-        assert!(s.contains("0.420") || s.contains("0.42"), "Plan A PP value must appear: {s}");
-        assert!(s.contains("0.400") || s.contains("0.40"), "Plan B PP value must appear: {s}");
+        assert!(
+            s.contains("0.420") || s.contains("0.42"),
+            "Plan A PP value must appear: {s}"
+        );
+        assert!(
+            s.contains("0.400") || s.contains("0.40"),
+            "Plan B PP value must appear: {s}"
+        );
     }
 
     #[test]
     fn test_narrative_plan_a_more_compact_directional_phrase() {
         // Plan A pp=0.42 > Plan B pp=0.40 → "Plan A is more compact".
         let s = render_narrative(&fixture_report(), &NarrativeConfig::default());
-        assert!(s.contains("Plan A is more compact"), "directional compactness phrase: {s}");
+        assert!(
+            s.contains("Plan A is more compact"),
+            "directional compactness phrase: {s}"
+        );
     }
 
     #[test]
@@ -665,8 +761,10 @@ mod tests {
         report.plan_a.mean_pp = 0.42;
         report.plan_b.mean_pp = 0.42; // equal
         let s = render_narrative(&report, &NarrativeConfig::default());
-        assert!(s.contains("essentially equally compact"),
-            "equal PP must produce 'equally compact' phrase: {s}");
+        assert!(
+            s.contains("essentially equally compact"),
+            "equal PP must produce 'equally compact' phrase: {s}"
+        );
     }
 
     #[test]
@@ -675,16 +773,20 @@ mod tests {
         report.plan_a.mean_pp = 0.35;
         report.plan_b.mean_pp = 0.50; // B is more compact
         let s = render_narrative(&report, &NarrativeConfig::default());
-        assert!(s.contains("Plan B is more compact"),
-            "when Plan B has higher PP, 'Plan B is more compact' must appear: {s}");
+        assert!(
+            s.contains("Plan B is more compact"),
+            "when Plan B has higher PP, 'Plan B is more compact' must appear: {s}"
+        );
     }
 
     #[test]
     fn test_narrative_mm_equal_phrase() {
         // Both plans have mm_count=1 (from fixtures) → "same number of MM districts".
         let s = render_narrative(&fixture_report(), &NarrativeConfig::default());
-        assert!(s.contains("same number of MM districts"),
-            "equal MM counts must say 'same number': {s}");
+        assert!(
+            s.contains("same number of MM districts"),
+            "equal MM counts must say 'same number': {s}"
+        );
     }
 
     #[test]
@@ -696,7 +798,9 @@ mod tests {
             CiBand::new(0.41, 0.37, 0.45), // overlap
         ));
         let s = render_narrative(&fixture_report(), &cfg);
-        assert!(s.contains(MOE_SUPPRESSED_TEXT),
-            "overlapping PP CIs must trigger MoE suppression: {s}");
+        assert!(
+            s.contains(MOE_SUPPRESSED_TEXT),
+            "overlapping PP CIs must trigger MoE suppression: {s}"
+        );
     }
 }

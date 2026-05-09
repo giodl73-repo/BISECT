@@ -15,18 +15,23 @@ pub fn wkb_to_geometry(wkb: &[u8]) -> anyhow::Result<Geometry<f64>> {
 /// Union all geometries (Polygon or MultiPolygon) into one MultiPolygon.
 /// Flattens MultiPolygon components before dissolving.
 pub fn dissolve_geometries(geoms: &[Geometry<f64>]) -> MultiPolygon<f64> {
-    let polys: Vec<Polygon<f64>> = geoms.iter().flat_map(|g| match g {
-        Geometry::Polygon(p) => vec![p.clone()],
-        Geometry::MultiPolygon(mp) => mp.0.clone(),
-        _ => vec![],
-    }).collect();
+    let polys: Vec<Polygon<f64>> = geoms
+        .iter()
+        .flat_map(|g| match g {
+            Geometry::Polygon(p) => vec![p.clone()],
+            Geometry::MultiPolygon(mp) => mp.0.clone(),
+            _ => vec![],
+        })
+        .collect();
     dissolve_polygons(&polys)
 }
 
 /// Union all polygons into one MultiPolygon via geo::BooleanOps.
 pub fn dissolve_polygons(polys: &[Polygon<f64>]) -> MultiPolygon<f64> {
     use geo::BooleanOps;
-    if polys.is_empty() { return MultiPolygon(vec![]); }
+    if polys.is_empty() {
+        return MultiPolygon(vec![]);
+    }
     let mut acc = MultiPolygon(vec![polys[0].clone()]);
     for p in &polys[1..] {
         acc = acc.union(&MultiPolygon(vec![p.clone()]));
@@ -47,31 +52,47 @@ pub fn group_dissolve(
             groups.entry(dist).or_default().push(tract_geoms[i].clone());
         }
     }
-    groups.into_iter().map(|(d, geoms)| (d, dissolve_geometries(&geoms))).collect()
+    groups
+        .into_iter()
+        .map(|(d, geoms)| (d, dissolve_geometries(&geoms)))
+        .collect()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use geo_types::polygon;
     use geo::Area;
+    use geo_types::polygon;
 
     #[test]
     fn test_dissolve_two_adjacent_squares() {
-        let sq1: Polygon<f64> = polygon![(x:0.,y:0.),(x:1.,y:0.),(x:1.,y:1.),(x:0.,y:1.),(x:0.,y:0.)];
-        let sq2: Polygon<f64> = polygon![(x:1.,y:0.),(x:2.,y:0.),(x:2.,y:1.),(x:1.,y:1.),(x:1.,y:0.)];
+        let sq1: Polygon<f64> =
+            polygon![(x:0.,y:0.),(x:1.,y:0.),(x:1.,y:1.),(x:0.,y:1.),(x:0.,y:0.)];
+        let sq2: Polygon<f64> =
+            polygon![(x:1.,y:0.),(x:2.,y:0.),(x:2.,y:1.),(x:1.,y:1.),(x:1.,y:0.)];
         let merged = dissolve_polygons(&[sq1, sq2]);
-        assert!((merged.unsigned_area() - 2.0).abs() < 1e-9,
-            "merged area={}", merged.unsigned_area());
+        assert!(
+            (merged.unsigned_area() - 2.0).abs() < 1e-9,
+            "merged area={}",
+            merged.unsigned_area()
+        );
     }
 
     #[test]
     fn test_dissolve_group_by_district() {
         let tracts = vec![
-            Geometry::Polygon(polygon![(x:0.,y:0.),(x:1.,y:0.),(x:1.,y:1.),(x:0.,y:1.),(x:0.,y:0.)]),
-            Geometry::Polygon(polygon![(x:1.,y:0.),(x:2.,y:0.),(x:2.,y:1.),(x:1.,y:1.),(x:1.,y:0.)]),
-            Geometry::Polygon(polygon![(x:0.,y:1.),(x:1.,y:1.),(x:1.,y:2.),(x:0.,y:2.),(x:0.,y:1.)]),
-            Geometry::Polygon(polygon![(x:1.,y:1.),(x:2.,y:1.),(x:2.,y:2.),(x:1.,y:2.),(x:1.,y:1.)]),
+            Geometry::Polygon(
+                polygon![(x:0.,y:0.),(x:1.,y:0.),(x:1.,y:1.),(x:0.,y:1.),(x:0.,y:0.)],
+            ),
+            Geometry::Polygon(
+                polygon![(x:1.,y:0.),(x:2.,y:0.),(x:2.,y:1.),(x:1.,y:1.),(x:1.,y:0.)],
+            ),
+            Geometry::Polygon(
+                polygon![(x:0.,y:1.),(x:1.,y:1.),(x:1.,y:2.),(x:0.,y:2.),(x:0.,y:1.)],
+            ),
+            Geometry::Polygon(
+                polygon![(x:1.,y:1.),(x:2.,y:1.),(x:2.,y:2.),(x:1.,y:2.),(x:1.,y:1.)],
+            ),
         ];
         let assignments = vec![1usize, 1, 2, 2];
         let districts = group_dissolve(&tracts, &assignments, 2);
@@ -89,12 +110,17 @@ mod tests {
 
     #[test]
     fn test_dissolve_noncontiguous_returns_two_components() {
-        let sq1: Polygon<f64> = polygon![(x:0.,y:0.),(x:1.,y:0.),(x:1.,y:1.),(x:0.,y:1.),(x:0.,y:0.)];
-        let sq2: Polygon<f64> = polygon![(x:5.,y:5.),(x:6.,y:5.),(x:6.,y:6.),(x:5.,y:6.),(x:5.,y:5.)];
+        let sq1: Polygon<f64> =
+            polygon![(x:0.,y:0.),(x:1.,y:0.),(x:1.,y:1.),(x:0.,y:1.),(x:0.,y:0.)];
+        let sq2: Polygon<f64> =
+            polygon![(x:5.,y:5.),(x:6.,y:5.),(x:6.,y:6.),(x:5.,y:6.),(x:5.,y:5.)];
         let merged = dissolve_polygons(&[sq1, sq2]);
         // Area is stable across i_overlay versions; component count may vary
-        assert!((merged.unsigned_area() - 2.0).abs() < 1e-9,
-            "non-contiguous area must be 2.0, got {}", merged.unsigned_area());
+        assert!(
+            (merged.unsigned_area() - 2.0).abs() < 1e-9,
+            "non-contiguous area must be 2.0, got {}",
+            merged.unsigned_area()
+        );
         assert!(!merged.0.is_empty());
     }
 
@@ -104,12 +130,15 @@ mod tests {
         // Generated with geozero::ToWkb on geo_types::Polygon
         use geozero::{CoordDimensions, ToWkb};
         let p: Geometry<f64> = Geometry::Polygon(
-            polygon![(x:0.,y:0.),(x:1.,y:0.),(x:1.,y:1.),(x:0.,y:1.),(x:0.,y:0.)]
+            polygon![(x:0.,y:0.),(x:1.,y:0.),(x:1.,y:1.),(x:0.,y:1.),(x:0.,y:0.)],
         );
         let wkb = p.to_wkb(CoordDimensions::xy()).expect("encode");
         let decoded = wkb_to_geometry(&wkb).expect("decode");
-        assert!((decoded.unsigned_area() - 1.0).abs() < 1e-9,
-            "decoded area={}", decoded.unsigned_area());
+        assert!(
+            (decoded.unsigned_area() - 1.0).abs() < 1e-9,
+            "decoded area={}",
+            decoded.unsigned_area()
+        );
     }
 
     #[test]
@@ -121,7 +150,11 @@ mod tests {
         ]));
         let wkb = mp.to_wkb(CoordDimensions::xy()).expect("encode");
         let result = wkb_to_geometry(&wkb);
-        assert!(result.is_ok(), "MultiPolygon WKB must not fail: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "MultiPolygon WKB must not fail: {:?}",
+            result.err()
+        );
         assert!((result.unwrap().unsigned_area() - 2.0).abs() < 1e-9);
     }
 }

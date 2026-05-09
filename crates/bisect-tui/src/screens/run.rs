@@ -1,11 +1,10 @@
 /// Run screen — form, running progress, and completion summary.
-
 use ratatui::{
-    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Gauge, LineGauge, Paragraph},
+    Frame,
 };
 
 use crate::app::{RunPhase, RunState};
@@ -54,7 +53,9 @@ fn render_form(f: &mut Frame, area: Rect, state: &RunState) {
         .enumerate()
         .map(|(i, (label, value))| {
             let style = if i == form.active_field {
-                Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD)
             } else {
                 Style::default()
             };
@@ -114,7 +115,7 @@ fn render_running(f: &mut Frame, area: Rect, state: &RunState) {
     constraints.push(Constraint::Length(1)); // assigned LineGauge
     constraints.push(Constraint::Length(1)); // elapsed
     constraints.push(Constraint::Length(1)); // balance
-    constraints.push(Constraint::Min(3));    // log preview
+    constraints.push(Constraint::Min(3)); // log preview
 
     let rows = Layout::default()
         .direction(Direction::Vertical)
@@ -125,8 +126,14 @@ fn render_running(f: &mut Frame, area: Rect, state: &RunState) {
 
     // Bisection depth gauges
     for (depth_i, &(done, total)) in progress.depths.iter().enumerate() {
-        if row_idx + 1 >= rows.len() { break; }
-        let ratio = if total > 0 { (done as f64 / total as f64).clamp(0.0, 1.0) } else { 0.0 };
+        if row_idx + 1 >= rows.len() {
+            break;
+        }
+        let ratio = if total > 0 {
+            (done as f64 / total as f64).clamp(0.0, 1.0)
+        } else {
+            0.0
+        };
         let label_area = rows[row_idx];
         let gauge_area = rows[row_idx + 1];
 
@@ -143,7 +150,8 @@ fn render_running(f: &mut Frame, area: Rect, state: &RunState) {
 
     // If no depths yet, show placeholder
     if progress.depths.is_empty() && row_idx + 1 < rows.len() {
-        let label = Paragraph::new("Bisection: waiting...").style(Style::default().fg(Color::DarkGray));
+        let label =
+            Paragraph::new("Bisection: waiting...").style(Style::default().fg(Color::DarkGray));
         f.render_widget(label, rows[row_idx]);
         row_idx += 2;
     }
@@ -184,12 +192,18 @@ fn render_running(f: &mut Frame, area: Rect, state: &RunState) {
 
     // Log preview (last 3 lines)
     if row_idx < rows.len() {
-        let log_lines: Vec<Line> = state.log_lines
+        let log_lines: Vec<Line> = state
+            .log_lines
             .iter()
             .rev()
             .take(3)
             .rev()
-            .map(|l| Line::from(Span::styled(l.as_str(), Style::default().fg(Color::DarkGray))))
+            .map(|l| {
+                Line::from(Span::styled(
+                    l.as_str(),
+                    Style::default().fg(Color::DarkGray),
+                ))
+            })
             .collect();
         let log_block = Block::default().title(" Log ").borders(Borders::TOP);
         let log_para = Paragraph::new(log_lines).block(log_block);
@@ -274,21 +288,31 @@ mod tests {
     use super::*;
     use ratatui::{backend::TestBackend, Terminal};
 
-    fn render_to_string(width: u16, height: u16, f: impl FnOnce(&mut ratatui::Frame, ratatui::layout::Rect)) -> String {
+    fn render_to_string(
+        width: u16,
+        height: u16,
+        f: impl FnOnce(&mut ratatui::Frame, ratatui::layout::Rect),
+    ) -> String {
         let backend = TestBackend::new(width, height);
         let mut terminal = Terminal::new(backend).unwrap();
-        terminal.draw(|frame| {
-            let area = frame.area();
-            f(frame, area);
-        }).unwrap();
-        terminal.backend().buffer().content().iter()
+        terminal
+            .draw(|frame| {
+                let area = frame.area();
+                f(frame, area);
+            })
+            .unwrap();
+        terminal
+            .backend()
+            .buffer()
+            .content()
+            .iter()
             .map(|c| c.symbol().to_string())
             .collect::<String>()
     }
 
     #[test]
     fn test_run_form_renders_fields() {
-        use crate::app::{RunState, RunForm};
+        use crate::app::{RunForm, RunState};
         let mut state = RunState::default();
         state.form = RunForm {
             location: "WA".into(),
@@ -297,12 +321,15 @@ mod tests {
             ..Default::default()
         };
         let content = render_to_string(120, 30, |f, area| render(f, area, &state));
-        assert!(content.contains("WA") || content.contains("house"), "form fields must appear");
+        assert!(
+            content.contains("WA") || content.contains("house"),
+            "form fields must appear"
+        );
     }
 
     #[test]
     fn test_run_progress_shows_depth_bars() {
-        use crate::app::{RunState, RunPhase, RunProgress};
+        use crate::app::{RunPhase, RunProgress, RunState};
         let mut state = RunState::default();
         state.phase = RunPhase::Running;
         state.progress = RunProgress {
@@ -313,12 +340,17 @@ mod tests {
             ..Default::default()
         };
         let content = render_to_string(120, 30, |f, area| render(f, area, &state));
-        assert!(content.contains("Depth") || content.contains("depth") || content.contains("2 / 2") || content.contains("22"));
+        assert!(
+            content.contains("Depth")
+                || content.contains("depth")
+                || content.contains("2 / 2")
+                || content.contains("22")
+        );
     }
 
     #[test]
     fn test_run_completion_shows_pass_indicators() {
-        use crate::app::{RunState, RunPhase, RunResult};
+        use crate::app::{RunPhase, RunResult, RunState};
         let mut state = RunState::default();
         state.phase = RunPhase::Complete(RunResult {
             success: true,
@@ -327,12 +359,17 @@ mod tests {
             ..Default::default()
         });
         let content = render_to_string(120, 30, |f, area| render(f, area, &state));
-        assert!(content.contains("Done") || content.contains("Complete") || content.contains("154") || content.contains("SUCCESS"));
+        assert!(
+            content.contains("Done")
+                || content.contains("Complete")
+                || content.contains("154")
+                || content.contains("SUCCESS")
+        );
     }
 
     #[test]
     fn test_run_form_tab_cycles_active_field() {
-        use crate::app::{RunForm};
+        use crate::app::RunForm;
         let mut form = RunForm::default();
         assert_eq!(form.active_field, 0);
         // Simulate Tab: increment, wrapping at 8
@@ -348,7 +385,7 @@ mod tests {
 
     #[test]
     fn test_run_form_char_edits_active_field() {
-        use crate::app::{RunForm};
+        use crate::app::RunForm;
         let mut form = RunForm::default();
         // active_field == 0 means location
         assert_eq!(form.active_field, 0);
@@ -363,8 +400,11 @@ mod tests {
 
     #[test]
     fn test_run_form_backspace_removes_char() {
-        use crate::app::{RunForm};
-        let mut form = RunForm { location: "WA".into(), ..Default::default() };
+        use crate::app::RunForm;
+        let mut form = RunForm {
+            location: "WA".into(),
+            ..Default::default()
+        };
         assert_eq!(form.active_field, 0);
         // Simulate Backspace on location (field 0)
         form.location.pop();
@@ -382,7 +422,11 @@ mod tests {
         let start = std::time::Instant::now();
         let elapsed = start.elapsed().as_secs();
         // In a test, elapsed should be 0 (sub-second) — just verify no panic
-        assert!(elapsed < 5, "elapsed must be reasonable for a test: {}s", elapsed);
+        assert!(
+            elapsed < 5,
+            "elapsed must be reasonable for a test: {}s",
+            elapsed
+        );
     }
 
     #[test]
@@ -402,7 +446,9 @@ mod tests {
     fn test_panic_hook_can_be_installed() {
         // Verify panic::set_hook doesn't panic (smoke test for the TUI setup path)
         let original = std::panic::take_hook();
-        std::panic::set_hook(Box::new(move |info| { original(info); }));
+        std::panic::set_hook(Box::new(move |info| {
+            original(info);
+        }));
         // If we got here, hook installation works
     }
 }

@@ -2,7 +2,7 @@
 
 ## Short version
 
-Every `redist` run is fully described by three independent choices: how the
+Every `BISECT` run is fully described by three independent choices: how the
 bisection tree is structured, what signal METIS optimises, and how the seed
 space is searched. These three choices are orthogonal — any combination of
 valid layer values produces a well-defined run. The combination is recorded

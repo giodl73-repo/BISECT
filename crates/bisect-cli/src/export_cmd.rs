@@ -1,14 +1,14 @@
-/// export_cmd.rs — `redist export` command dispatch.
+use crate::args::{ExportArgs, ExportFormat};
+use bisect_report::{
+    audit::{generate_verification_command_from_manifest, generate_verification_script},
+    export_geojson, export_gerrychain_v23, export_tracts_csv, sha256_file, write_rplan,
+    PlanManifest, RplanFile,
+};
+/// export_cmd.rs — `BISECT export` command dispatch.
 ///
 /// Dispatches to bisect_report::{export_geojson, export_gerrychain_v23, export_tracts_csv}
 /// based on --format flag.
 use std::path::PathBuf;
-use crate::args::{ExportArgs, ExportFormat};
-use bisect_report::{
-    RplanFile, export_geojson, export_gerrychain_v23, export_tracts_csv, sha256_file,
-    write_rplan, PlanManifest,
-    audit::{generate_verification_command_from_manifest, generate_verification_script},
-};
 
 /// Run the export command.
 pub fn run_export(args: &ExportArgs) -> anyhow::Result<()> {
@@ -68,9 +68,7 @@ pub fn run_export(args: &ExportArgs) -> anyhow::Result<()> {
                 eprintln!("[OK] {} (sha256: {})", abs.display(), sha);
             }
             ExportFormat::ReproducibilityPackage => {
-                write_reproducibility_package(
-                    &plan_dir, &out_dir, &args.label, &rplan,
-                )?;
+                write_reproducibility_package(&plan_dir, &out_dir, &args.label, &rplan)?;
             }
         }
     }
@@ -147,12 +145,17 @@ fn load_rplan_from_plan_dir(plan_dir: &std::path::Path, label: &str) -> anyhow::
 fn warn_if_null_geometry(rplan: &RplanFile, label: &str, year: &str) {
     // Plan has no geometry if geometry field is None or not a FeatureCollection
     // with non-null coordinate data.
-    let has_geometry = rplan.geometry.as_ref().map(|g| {
-        g["type"].as_str() == Some("FeatureCollection")
-            && g["features"].as_array().map(|f| {
-                f.iter().any(|feat| !feat["geometry"].is_null())
-            }).unwrap_or(false)
-    }).unwrap_or(false);
+    let has_geometry = rplan
+        .geometry
+        .as_ref()
+        .map(|g| {
+            g["type"].as_str() == Some("FeatureCollection")
+                && g["features"]
+                    .as_array()
+                    .map(|f| f.iter().any(|feat| !feat["geometry"].is_null()))
+                    .unwrap_or(false)
+        })
+        .unwrap_or(false);
 
     if !has_geometry {
         let state = if rplan.metadata.state_code.is_empty() {
@@ -205,7 +208,12 @@ fn write_reproducibility_package(
 
     // 2. {label}.rplan — export plan assignments in RPLAN format
     let rplan_path = pkg_dir.join(format!("{}.rplan", label));
-    write_rplan(&rplan_path, &rplan.metadata, &rplan.assignments, rplan.geometry.clone())?;
+    write_rplan(
+        &rplan_path,
+        &rplan.metadata,
+        &rplan.assignments,
+        rplan.geometry.clone(),
+    )?;
 
     // 3. analysis/ — copy all JSON files from plan_dir/analysis/ if they exist
     let analysis_src = plan_dir.join("analysis");
@@ -295,7 +303,11 @@ mod tests {
             label: "wa_house_draft1".into(),
             year: "2020".into(),
             version: "WA_Plans".into(),
-            format: vec![ExportFormat::GeoJson, ExportFormat::GerryChain, ExportFormat::Csv],
+            format: vec![
+                ExportFormat::GeoJson,
+                ExportFormat::GerryChain,
+                ExportFormat::Csv,
+            ],
             out: None,
             output_base: "outputs".into(),
         };
@@ -326,7 +338,9 @@ mod tests {
         let tmp = tempfile::TempDir::new().unwrap();
         let file_path = tmp.path().join("test_output.txt");
         std::fs::write(&file_path, b"hello").unwrap();
-        let abs = file_path.canonicalize().unwrap_or_else(|_| file_path.clone());
+        let abs = file_path
+            .canonicalize()
+            .unwrap_or_else(|_| file_path.clone());
         let abs_str = abs.to_string_lossy();
         // Absolute path must contain either / or \ (a path separator)
         assert!(
@@ -350,10 +364,16 @@ mod tests {
         std::fs::write(&file_path, r#"{"type":"FeatureCollection","features":[]}"#).unwrap();
 
         let sha = sha256_file(&file_path).expect("sha256_file should succeed");
-        assert_eq!(sha.len(), 64, "SHA-256 must be 64 hex characters, got: {}", sha);
+        assert_eq!(
+            sha.len(),
+            64,
+            "SHA-256 must be 64 hex characters, got: {}",
+            sha
+        );
         assert!(
             sha.chars().all(|c| c.is_ascii_hexdigit()),
-            "SHA-256 must be hex characters only, got: {}", sha
+            "SHA-256 must be hex characters only, got: {}",
+            sha
         );
         assert_eq!(sha, sha.to_lowercase(), "SHA-256 must be lowercase hex");
     }
@@ -378,13 +398,21 @@ mod tests {
         };
         // warn_if_null_geometry should not panic and should detect missing geometry
         // (we can't capture eprintln, but we can verify the detection logic)
-        let has_geometry = plan_no_geom.geometry.as_ref().map(|g| {
-            g["type"].as_str() == Some("FeatureCollection")
-                && g["features"].as_array().map(|f| {
-                    f.iter().any(|feat| !feat["geometry"].is_null())
-                }).unwrap_or(false)
-        }).unwrap_or(false);
-        assert!(!has_geometry, "plan with geometry=None should be detected as missing geometry");
+        let has_geometry = plan_no_geom
+            .geometry
+            .as_ref()
+            .map(|g| {
+                g["type"].as_str() == Some("FeatureCollection")
+                    && g["features"]
+                        .as_array()
+                        .map(|f| f.iter().any(|feat| !feat["geometry"].is_null()))
+                        .unwrap_or(false)
+            })
+            .unwrap_or(false);
+        assert!(
+            !has_geometry,
+            "plan with geometry=None should be detected as missing geometry"
+        );
 
         // Plan with FeatureCollection but all null geometries
         let plan_null_feats = RplanFile {
@@ -397,13 +425,21 @@ mod tests {
             })),
             ..plan_no_geom.clone()
         };
-        let has_geometry2 = plan_null_feats.geometry.as_ref().map(|g| {
-            g["type"].as_str() == Some("FeatureCollection")
-                && g["features"].as_array().map(|f| {
-                    f.iter().any(|feat| !feat["geometry"].is_null())
-                }).unwrap_or(false)
-        }).unwrap_or(false);
-        assert!(!has_geometry2, "plan with all-null geometries should be detected as missing geometry");
+        let has_geometry2 = plan_null_feats
+            .geometry
+            .as_ref()
+            .map(|g| {
+                g["type"].as_str() == Some("FeatureCollection")
+                    && g["features"]
+                        .as_array()
+                        .map(|f| f.iter().any(|feat| !feat["geometry"].is_null()))
+                        .unwrap_or(false)
+            })
+            .unwrap_or(false);
+        assert!(
+            !has_geometry2,
+            "plan with all-null geometries should be detected as missing geometry"
+        );
 
         // The warn function itself must not panic for either case
         warn_if_null_geometry(&plan_no_geom, "wa_test", "2020");
@@ -422,8 +458,8 @@ mod tests {
             seed: Some(42),
             binary_version: "0.1.0".into(),
             binary_sha256: "a".repeat(64),
-            binary_download_url:
-                "https://github.com/owner/redist/releases/download/v0.1.0/redist".into(),
+            binary_download_url: "https://github.com/owner/BISECT/releases/download/v0.1.0/BISECT"
+                .into(),
             adjacency_file: "vt_adjacency_2020.adj.bin".into(),
             adjacency_sha256: "b".repeat(64),
             tiger_source_url:
@@ -452,11 +488,13 @@ mod tests {
         std::fs::write(
             analysis_dir.join("summary.json"),
             serde_json::to_string(&serde_json::json!({"status": "ok"})).unwrap(),
-        ).unwrap();
+        )
+        .unwrap();
         std::fs::write(
             analysis_dir.join("compactness.json"),
             serde_json::to_string(&serde_json::json!({"status": "ok"})).unwrap(),
-        ).unwrap();
+        )
+        .unwrap();
 
         let label = "vt_congressional_2020";
         let rplan = RplanFile {
@@ -478,15 +516,31 @@ mod tests {
 
         let pkg_dir = out_dir.join(format!("{}_reproducibility", label));
         assert!(pkg_dir.exists(), "package directory must be created");
-        assert!(pkg_dir.join("manifest.json").exists(), "manifest.json must be present");
-        assert!(pkg_dir.join(format!("{}.rplan", label)).exists(), "{}.rplan must be present", label);
-        assert!(pkg_dir.join("audit.json").exists(), "audit.json must be present");
-        assert!(pkg_dir.join("verify.sh").exists(), "verify.sh must be present");
+        assert!(
+            pkg_dir.join("manifest.json").exists(),
+            "manifest.json must be present"
+        );
+        assert!(
+            pkg_dir.join(format!("{}.rplan", label)).exists(),
+            "{}.rplan must be present",
+            label
+        );
+        assert!(
+            pkg_dir.join("audit.json").exists(),
+            "audit.json must be present"
+        );
+        assert!(
+            pkg_dir.join("verify.sh").exists(),
+            "verify.sh must be present"
+        );
 
         // Verify audit.json is valid JSON with an "audit" key
         let audit_content = std::fs::read_to_string(pkg_dir.join("audit.json")).unwrap();
         let audit_val: serde_json::Value = serde_json::from_str(&audit_content).unwrap();
-        assert!(audit_val["audit"].is_object(), "audit.json must contain an 'audit' object");
+        assert!(
+            audit_val["audit"].is_object(),
+            "audit.json must contain an 'audit' object"
+        );
     }
 
     // ── 15 additional tests for export_cmd ────────────────────────────────────
@@ -523,7 +577,11 @@ mod tests {
             label: "ca_congressional_2020".into(),
             year: "2020".into(),
             version: "v1".into(),
-            format: vec![ExportFormat::GeoJson, ExportFormat::Csv, ExportFormat::GerryChain],
+            format: vec![
+                ExportFormat::GeoJson,
+                ExportFormat::Csv,
+                ExportFormat::GerryChain,
+            ],
             out: None,
             output_base: "outputs".into(),
         };
@@ -559,13 +617,21 @@ mod tests {
                 ]
             })),
         };
-        let has_geometry = plan_with_geom.geometry.as_ref().map(|g| {
-            g["type"].as_str() == Some("FeatureCollection")
-                && g["features"].as_array().map(|f| {
-                    f.iter().any(|feat| !feat["geometry"].is_null())
-                }).unwrap_or(false)
-        }).unwrap_or(false);
-        assert!(has_geometry, "plan with real geometry must be detected as having geometry");
+        let has_geometry = plan_with_geom
+            .geometry
+            .as_ref()
+            .map(|g| {
+                g["type"].as_str() == Some("FeatureCollection")
+                    && g["features"]
+                        .as_array()
+                        .map(|f| f.iter().any(|feat| !feat["geometry"].is_null()))
+                        .unwrap_or(false)
+            })
+            .unwrap_or(false);
+        assert!(
+            has_geometry,
+            "plan with real geometry must be detected as having geometry"
+        );
         // Must not panic
         warn_if_null_geometry(&plan_with_geom, "vt_real", "2020");
     }
@@ -577,9 +643,15 @@ mod tests {
         std::fs::create_dir_all(&plan_dir).unwrap();
         // Neither .rplan nor final_assignments.json present
         let result = load_rplan_from_plan_dir(&plan_dir, "test_label");
-        assert!(result.is_err(), "must fail when neither .rplan nor assignments file exists");
+        assert!(
+            result.is_err(),
+            "must fail when neither .rplan nor assignments file exists"
+        );
         let msg = result.unwrap_err().to_string();
-        assert!(msg.contains("No .rplan"), "error must mention missing file: {msg}");
+        assert!(
+            msg.contains("No .rplan"),
+            "error must mention missing file: {msg}"
+        );
     }
 
     #[test]
@@ -589,13 +661,15 @@ mod tests {
         let plan_dir = tmp.path().join("vt_plan");
         std::fs::create_dir_all(&plan_dir).unwrap();
         // Write assignments at root (legacy layout)
-        let assignments: HashMap<String, usize> = [
-            ("50001000100".to_string(), 1usize),
-        ].iter().cloned().collect();
+        let assignments: HashMap<String, usize> = [("50001000100".to_string(), 1usize)]
+            .iter()
+            .cloned()
+            .collect();
         std::fs::write(
             plan_dir.join("final_assignments.json"),
-            serde_json::to_string(&assignments).unwrap()
-        ).unwrap();
+            serde_json::to_string(&assignments).unwrap(),
+        )
+        .unwrap();
         let rplan = load_rplan_from_plan_dir(&plan_dir, "vt_plan").unwrap();
         assert_eq!(rplan.assignments.len(), 1);
         assert_eq!(rplan.assignments["50001000100"], 1);
@@ -612,11 +686,15 @@ mod tests {
         let assignments: HashMap<String, usize> = [
             ("06001000100".to_string(), 2usize),
             ("06001000200".to_string(), 3usize),
-        ].iter().cloned().collect();
+        ]
+        .iter()
+        .cloned()
+        .collect();
         std::fs::write(
             data_dir.join("final_assignments.json"),
-            serde_json::to_string(&assignments).unwrap()
-        ).unwrap();
+            serde_json::to_string(&assignments).unwrap(),
+        )
+        .unwrap();
         let rplan = load_rplan_from_plan_dir(&plan_dir, "ca_plan").unwrap();
         assert_eq!(rplan.assignments.len(), 2);
     }
@@ -646,14 +724,23 @@ mod tests {
         });
         std::fs::write(plan_dir.join("vt_plan.rplan"), rplan_data.to_string()).unwrap();
         // Also write a different assignments file that should be ignored
-        let other: HashMap<String, usize> = [("99999999999".to_string(), 9)].iter().cloned().collect();
-        std::fs::write(plan_dir.join("final_assignments.json"), serde_json::to_string(&other).unwrap()).unwrap();
+        let other: HashMap<String, usize> =
+            [("99999999999".to_string(), 9)].iter().cloned().collect();
+        std::fs::write(
+            plan_dir.join("final_assignments.json"),
+            serde_json::to_string(&other).unwrap(),
+        )
+        .unwrap();
         let rplan = load_rplan_from_plan_dir(&plan_dir, "vt_plan").unwrap();
         // Should read the .rplan, not the assignments file
-        assert!(rplan.assignments.contains_key("50001000100"),
-            ".rplan file must take priority over final_assignments.json");
-        assert!(!rplan.assignments.contains_key("99999999999"),
-            "assignments from final_assignments.json must not appear when .rplan exists");
+        assert!(
+            rplan.assignments.contains_key("50001000100"),
+            ".rplan file must take priority over final_assignments.json"
+        );
+        assert!(
+            !rplan.assignments.contains_key("99999999999"),
+            "assignments from final_assignments.json must not appear when .rplan exists"
+        );
     }
 
     #[test]
@@ -664,10 +751,19 @@ mod tests {
         std::fs::create_dir_all(&plan_dir).unwrap();
         // Write a minimal manifest
         let manifest = make_test_manifest_for_repro();
-        std::fs::write(plan_dir.join("manifest.json"), serde_json::to_string(&manifest).unwrap()).unwrap();
+        std::fs::write(
+            plan_dir.join("manifest.json"),
+            serde_json::to_string(&manifest).unwrap(),
+        )
+        .unwrap();
         // Write assignments
-        let assignments: HashMap<String, usize> = [("06001000100".to_string(), 1)].iter().cloned().collect();
-        std::fs::write(plan_dir.join("final_assignments.json"), serde_json::to_string(&assignments).unwrap()).unwrap();
+        let assignments: HashMap<String, usize> =
+            [("06001000100".to_string(), 1)].iter().cloned().collect();
+        std::fs::write(
+            plan_dir.join("final_assignments.json"),
+            serde_json::to_string(&assignments).unwrap(),
+        )
+        .unwrap();
         let rplan = load_rplan_from_plan_dir(&plan_dir, "vt_congressional_2020").unwrap();
         assert_eq!(rplan.metadata.label, "vt_congressional_2020");
         assert_eq!(rplan.metadata.state_code, "VT");
@@ -682,11 +778,18 @@ mod tests {
         let plan_dir = tmp.path().join("plan");
         std::fs::create_dir_all(&plan_dir).unwrap();
         let manifest = make_test_manifest_for_repro();
-        std::fs::write(plan_dir.join("manifest.json"), serde_json::to_string_pretty(&manifest).unwrap()).unwrap();
+        std::fs::write(
+            plan_dir.join("manifest.json"),
+            serde_json::to_string_pretty(&manifest).unwrap(),
+        )
+        .unwrap();
         let label = "vt_congressional_2020";
         let rplan = RplanFile {
             rplan_version: "0.1".into(),
-            metadata: RplanMetadata { label: label.into(), ..Default::default() },
+            metadata: RplanMetadata {
+                label: label.into(),
+                ..Default::default()
+            },
             assignments: HashMap::new(),
             geometry: None,
         };
@@ -694,11 +797,13 @@ mod tests {
         std::fs::create_dir_all(&out_dir).unwrap();
         write_reproducibility_package(&plan_dir, &out_dir, label, &rplan).unwrap();
         let pkg_dir = out_dir.join(format!("{}_reproducibility", label));
-        let audit: serde_json::Value = serde_json::from_str(
-            &std::fs::read_to_string(pkg_dir.join("audit.json")).unwrap()
-        ).unwrap();
-        assert!(audit["audit"]["binary_version"].is_string(),
-            "audit.json must contain binary_version");
+        let audit: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(pkg_dir.join("audit.json")).unwrap())
+                .unwrap();
+        assert!(
+            audit["audit"]["binary_version"].is_string(),
+            "audit.json must contain binary_version"
+        );
         assert_eq!(audit["audit"]["binary_version"], "0.1.0");
     }
 
@@ -710,11 +815,18 @@ mod tests {
         let plan_dir = tmp.path().join("plan");
         std::fs::create_dir_all(&plan_dir).unwrap();
         let manifest = make_test_manifest_for_repro();
-        std::fs::write(plan_dir.join("manifest.json"), serde_json::to_string_pretty(&manifest).unwrap()).unwrap();
+        std::fs::write(
+            plan_dir.join("manifest.json"),
+            serde_json::to_string_pretty(&manifest).unwrap(),
+        )
+        .unwrap();
         let label = "vt_congressional_2020";
         let rplan = RplanFile {
             rplan_version: "0.1".into(),
-            metadata: RplanMetadata { label: label.into(), ..Default::default() },
+            metadata: RplanMetadata {
+                label: label.into(),
+                ..Default::default()
+            },
             assignments: HashMap::new(),
             geometry: None,
         };
@@ -735,15 +847,26 @@ mod tests {
         let analysis_dir = plan_dir.join("analysis");
         std::fs::create_dir_all(&analysis_dir).unwrap();
         let manifest = make_test_manifest_for_repro();
-        std::fs::write(plan_dir.join("manifest.json"), serde_json::to_string_pretty(&manifest).unwrap()).unwrap();
+        std::fs::write(
+            plan_dir.join("manifest.json"),
+            serde_json::to_string_pretty(&manifest).unwrap(),
+        )
+        .unwrap();
         // Write 3 analysis files
         for name in &["summary.json", "partisan.json", "compactness.json"] {
-            std::fs::write(analysis_dir.join(name), serde_json::json!({"ok": true}).to_string()).unwrap();
+            std::fs::write(
+                analysis_dir.join(name),
+                serde_json::json!({"ok": true}).to_string(),
+            )
+            .unwrap();
         }
         let label = "vt_congressional_2020";
         let rplan = RplanFile {
             rplan_version: "0.1".into(),
-            metadata: RplanMetadata { label: label.into(), ..Default::default() },
+            metadata: RplanMetadata {
+                label: label.into(),
+                ..Default::default()
+            },
             assignments: HashMap::new(),
             geometry: None,
         };
@@ -753,8 +876,11 @@ mod tests {
         let pkg_dir = out_dir.join(format!("{}_reproducibility", label));
         // All 3 analysis files must appear in analysis/ subdirectory
         for name in &["summary.json", "partisan.json", "compactness.json"] {
-            assert!(pkg_dir.join("analysis").join(name).exists(),
-                "{} must be copied to reproducibility package analysis dir", name);
+            assert!(
+                pkg_dir.join("analysis").join(name).exists(),
+                "{} must be copied to reproducibility package analysis dir",
+                name
+            );
         }
     }
 
@@ -769,7 +895,10 @@ mod tests {
         let label = "no_manifest_label";
         let rplan = RplanFile {
             rplan_version: "0.1".into(),
-            metadata: RplanMetadata { label: label.into(), ..Default::default() },
+            metadata: RplanMetadata {
+                label: label.into(),
+                ..Default::default()
+            },
             assignments: HashMap::new(),
             geometry: None,
         };
@@ -777,12 +906,15 @@ mod tests {
         std::fs::create_dir_all(&out_dir).unwrap();
         write_reproducibility_package(&plan_dir, &out_dir, label, &rplan).unwrap();
         let pkg_dir = out_dir.join(format!("{}_reproducibility", label));
-        let audit: serde_json::Value = serde_json::from_str(
-            &std::fs::read_to_string(pkg_dir.join("audit.json")).unwrap()
-        ).unwrap();
+        let audit: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(pkg_dir.join("audit.json")).unwrap())
+                .unwrap();
         // When manifest is missing, audit must contain a "note" field
         let note = audit["audit"]["note"].as_str().unwrap_or("");
-        assert!(note.contains("manifest"), "audit note must mention manifest when missing: {note}");
+        assert!(
+            note.contains("manifest"),
+            "audit note must mention manifest when missing: {note}"
+        );
     }
 
     #[test]

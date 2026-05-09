@@ -249,7 +249,7 @@ Every run is defined by four orthogonal choices:
 `cargo build` → `c-ffi` (bundled C, fast, handles all k).
 `cargo build --no-default-features` → `bisect-metis` (pure Rust, portable, no C toolchain needed).
 
-See [`docs/REDIST_CLI.md`](docs/REDIST_CLI.md) for the complete flag reference.
+See [`docs/BISECT_CLI.md`](docs/BISECT_CLI.md) for the complete flag reference.
 
 ---
 
@@ -288,7 +288,7 @@ docs/quickstart/    # Persona-specific quickstart guides
 
 ## Documentation
 
-- **[`docs/REDIST_CLI.md`](docs/REDIST_CLI.md)** — complete CLI reference
+- **[`docs/BISECT_CLI.md`](docs/BISECT_CLI.md)** — complete CLI reference
 - **[`docs/PAPERS.md`](docs/PAPERS.md)** — all 66 research papers with PDFs
 - **[`docs/legal/`](docs/legal/)** — model statute, fairness doctrine
 - **[`docs/quickstart/`](docs/quickstart/)** — persona guides
@@ -300,10 +300,10 @@ docs/quickstart/    # Persona-specific quickstart guides
 
 | Dashboard | Year | Link |
 |-----------|------|------|
-| 2020 results | 2020 | [Open →](https://giodl73-repo.github.io/REDIST/dashboard_2020.html) |
-| 2010 results | 2010 | [Open →](https://giodl73-repo.github.io/REDIST/dashboard_2010.html) |
-| 2000 results | 2000 | [Open →](https://giodl73-repo.github.io/REDIST/dashboard_2000.html) |
-| VRA (2020) | 2020 | [Open →](https://giodl73-repo.github.io/REDIST/dashboard_vra.html) |
+| 2020 results | 2020 | [Open →](https://giodl73-repo.github.io/BISECT/dashboard_2020.html) |
+| 2010 results | 2010 | [Open →](https://giodl73-repo.github.io/BISECT/dashboard_2010.html) |
+| 2000 results | 2000 | [Open →](https://giodl73-repo.github.io/BISECT/dashboard_2000.html) |
+| VRA (2020) | 2020 | [Open →](https://giodl73-repo.github.io/BISECT/dashboard_vra.html) |
 
 ---
 

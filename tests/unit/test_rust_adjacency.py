@@ -1,5 +1,5 @@
 """
-L2 tests for redist_py.build_adjacency — parallel spatial adjacency builder.
+L2 tests for bisect_py.build_adjacency — parallel spatial adjacency builder.
 
 Tests with synthetic projected polygons (EPSG:5070-like coordinates in metres).
 All polygons use coordinates in the millions to clearly look projected.
@@ -9,16 +9,16 @@ import os
 import struct
 import pytest
 
-RUST_AVAILABLE = os.environ.get('REDIST_NO_RUST', '0') != '1'
+RUST_AVAILABLE = os.environ.get('BISECT_NO_RUST', '0') != '1'
 try:
-    import redist_py
-    REDIST_PY_IMPORTABLE = True
+    import bisect_py
+    BISECT_PY_IMPORTABLE = True
 except ImportError:
-    REDIST_PY_IMPORTABLE = False
+    BISECT_PY_IMPORTABLE = False
 
 pytestmark = pytest.mark.skipif(
-    not RUST_AVAILABLE or not REDIST_PY_IMPORTABLE,
-    reason='redist_py not available'
+    not RUST_AVAILABLE or not BISECT_PY_IMPORTABLE,
+    reason='bisect_py not available'
 )
 
 BASE = 1_000_000.0  # clearly projected coords (metres)
@@ -52,12 +52,12 @@ P_FAR = make_square_wkb(BASE + 10*SZ, BASE, SZ)  # not adjacent to anything
 class TestBuildAdjacencyBasic:
 
     def test_linear_chain_n_edges(self):
-        g = redist_py.build_adjacency([P0, P1, P2])
+        g = bisect_py.build_adjacency([P0, P1, P2])
         assert g['n_edges'] == 2
         assert g['n_vertices'] == 3
 
     def test_linear_chain_adjacency(self):
-        g = redist_py.build_adjacency([P0, P1, P2])
+        g = bisect_py.build_adjacency([P0, P1, P2])
         adj = g['adjacency']
         assert 1 in adj[0]  # p0 → p1
         assert 0 in adj[1]  # p1 → p0
@@ -66,14 +66,14 @@ class TestBuildAdjacencyBasic:
         assert 2 not in adj[0]  # p0 not directly adjacent to p2
 
     def test_adjacency_is_symmetric(self):
-        g = redist_py.build_adjacency([P0, P1, P2])
+        g = bisect_py.build_adjacency([P0, P1, P2])
         adj = g['adjacency']
         for i, nbrs in enumerate(adj):
             for j in nbrs:
                 assert i in adj[j], f"{j} should have {i} as neighbor"
 
     def test_edge_weights_exist(self):
-        g = redist_py.build_adjacency([P0, P1, P2])
+        g = bisect_py.build_adjacency([P0, P1, P2])
         ew = g['edge_weights']
         assert (0, 1) in ew
         assert (1, 2) in ew
@@ -82,12 +82,12 @@ class TestBuildAdjacencyBasic:
             assert w > 0
 
     def test_edge_weights_canonical_order(self):
-        g = redist_py.build_adjacency([P0, P1, P2])
+        g = bisect_py.build_adjacency([P0, P1, P2])
         for (u, v) in g['edge_weights']:
             assert u < v, f"Edge key ({u},{v}) not in canonical order"
 
     def test_isolated_polygon_no_neighbors(self):
-        g = redist_py.build_adjacency([P0, P_FAR])
+        g = bisect_py.build_adjacency([P0, P_FAR])
         adj = g['adjacency']
         assert adj[0] == []
         assert adj[1] == []
@@ -98,7 +98,7 @@ class TestBuildAdjacencyBasic:
         center = make_square_wkb(BASE + SZ, BASE, SZ)
         left   = make_square_wkb(BASE,       BASE, SZ)
         right  = make_square_wkb(BASE + SZ*2, BASE, SZ)
-        g = redist_py.build_adjacency([center, left, right])
+        g = bisect_py.build_adjacency([center, left, right])
         adj = g['adjacency']
         for nbrs in adj:
             assert nbrs == sorted(nbrs), "neighbor lists must be sorted"
@@ -106,14 +106,14 @@ class TestBuildAdjacencyBasic:
     def test_min_boundary_length_default_10m(self):
         """Corner-touching squares share ~0.1m — filtered at default 10m."""
         diag = make_square_wkb(BASE + SZ, BASE + SZ, SZ)  # diagonal from P0
-        g = redist_py.build_adjacency([P0, diag])
+        g = bisect_py.build_adjacency([P0, diag])
         # Corner contact → filtered by min_boundary_length=10
         assert g['n_edges'] == 0
 
     def test_min_boundary_length_override(self):
         """Setting min_boundary_length=0 includes corner contacts."""
         diag = make_square_wkb(BASE + SZ, BASE + SZ, SZ)
-        g = redist_py.build_adjacency([P0, diag], min_boundary_length=0.0)
+        g = bisect_py.build_adjacency([P0, diag], min_boundary_length=0.0)
         assert g['n_edges'] == 1
 
 
@@ -139,10 +139,10 @@ class TestBuildAdjacencyValidation:
         wkb0 = degree_square_wkb(-72.5, 44.0)
         wkb1 = degree_square_wkb(-72.4, 44.0)
         with pytest.raises(ValueError, match='projected'):
-            redist_py.build_adjacency([wkb0, wkb1])
+            bisect_py.build_adjacency([wkb0, wkb1])
 
     def test_return_type_is_dict(self):
-        g = redist_py.build_adjacency([P0, P1])
+        g = bisect_py.build_adjacency([P0, P1])
         assert isinstance(g, dict)
         assert 'adjacency' in g
         assert 'edge_weights' in g
@@ -150,7 +150,7 @@ class TestBuildAdjacencyValidation:
         assert 'n_edges' in g
 
     def test_single_polygon(self):
-        g = redist_py.build_adjacency([P0])
+        g = bisect_py.build_adjacency([P0])
         assert g['n_vertices'] == 1
         assert g['n_edges'] == 0
         assert g['adjacency'] == [[]]

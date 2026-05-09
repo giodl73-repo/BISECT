@@ -122,7 +122,7 @@ The `burst_seeds` must record the *actual 64-bit values* derived from `chain_see
 
 ## 2. Sequential Monte Carlo / SMC (G.7)
 
-**Concept** (Imai, Kane, Fifield 2020 — the R `redist` package): generates a *weighted* sample of valid plans via sequential importance resampling. More statistically correct than MCMC for inference; produces calibrated posteriors.
+**Concept** (Imai, Kane, Fifield 2020 — the R `BISECT` package): generates a *weighted* sample of valid plans via sequential importance resampling. More statistically correct than MCMC for inference; produces calibrated posteriors.
 
 **Architecture**: SMC is **not** a `SeedCompositor` variant. It is a standalone ensemble method accessed via `bisect ensemble --method smc`, not via `bisect state --search smc`. The reason: SMC doesn't produce a single plan — it produces a population of weighted plans. Integration into the single-plan compositor would require choosing one plan from the weighted population, which is semantically equivalent to a PercentileSweep on a weighted ensemble (deferred to a follow-on spec).
 

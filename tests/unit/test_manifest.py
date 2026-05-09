@@ -1,7 +1,7 @@
 """L0 unit tests for PlanManifest format.
 
 Tests the manifest.json structure from Python's perspective — ensuring the
-manifest written by the Rust redist-report crate has all required fields
+manifest written by the Rust BISECT-report crate has all required fields
 for audit, reproducibility, and court submission.
 """
 import json
@@ -23,10 +23,10 @@ def make_manifest_fixture(label="wa_house_draft1", state_code="WA"):
         "seed": 42,
         "binary_version": "0.1.0",
         "binary_sha256": "a" * 64,
-        "binary_download_url": "https://github.com/owner/redist/releases/download/v0.1.0/redist",
+        "binary_download_url": "https://github.com/owner/BISECT/releases/download/v0.1.0/BISECT",
         "adjacency_file": f"{state_code.lower()}_adjacency_2020.adj.bin",
         "adjacency_sha256": "b" * 64,
-        "adjacency_build_command": "redist fetch --year 2020 --states WA",
+        "adjacency_build_command": "BISECT fetch --year 2020 --states WA",
         "adjacency_build_version": "0.1.0",
         "tiger_source_url": f"https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_53_tract.zip",
         "tiger_sha256": "c" * 64,
@@ -43,7 +43,7 @@ def generate_audit_report_fixture(label):
         "label": label,
         "audit": {
             "verification_command": (
-                f"redist state --state {manifest['state_code']} "
+                f"BISECT state --state {manifest['state_code']} "
                 f"--year {manifest['year']} --version {manifest['binary_version']} "
                 f"--seed {manifest['seed']}"
             ),

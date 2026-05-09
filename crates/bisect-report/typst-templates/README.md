@@ -1,4 +1,4 @@
-# Typst templates for `redist report --format pdf`
+# Typst templates for `BISECT report --format pdf`
 
 **Status:** SCAFFOLD ONLY (2026-04-30). The PDF render path is not yet executable.
 **Owner:** Court Submission Reports plan (`docs/superpowers/plans/2026-04-30-court-submission-reports.md`)
@@ -36,7 +36,7 @@ The Court Submission Reports plan has 10 tasks; this scaffolding covers Tasks 3 
 5. Land the determinism contract (D-04: `SOURCE_DATE_EPOCH`, sorted-name tar+gzip with fixed mtime, zeroed PDF metadata)
 6. Land the verapdf gate (PP-32: refuse to write `.pdf` when verapdf rejects the bytes)
 
-Until then, `redist report --format pdf` falls back to the legacy `try_generate_pdf` path (wkhtmltopdf/pandoc with a `[CONFIG]` error if neither is installed). The new CLI flags (`--expert-name`, `--jurisdiction`, etc.) are wired but currently advisory — the legacy path doesn't consume them.
+Until then, `BISECT report --format pdf` falls back to the legacy `try_generate_pdf` path (wkhtmltopdf/pandoc with a `[CONFIG]` error if neither is installed). The new CLI flags (`--expert-name`, `--jurisdiction`, etc.) are wired but currently advisory — the legacy path doesn't consume them.
 
 ## Cross-references
 

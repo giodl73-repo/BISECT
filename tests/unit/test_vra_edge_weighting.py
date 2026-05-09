@@ -272,16 +272,16 @@ class TestVRACodePath:
 
 # ── Rust formula parity tests ─────────────────────────────────────────────────
 import os as _os
-_RUST_AVAILABLE = _os.environ.get('REDIST_NO_RUST', '0') != '1'
+_RUST_AVAILABLE = _os.environ.get('BISECT_NO_RUST', '0') != '1'
 try:
-    import redist_py as _redist_py
+    import bisect_py as _bisect_py
     _RUST_IMPORTABLE = True
 except ImportError:
     _RUST_IMPORTABLE = False
 
 _RUST_SKIP = pytest.mark.skipif(
     not _RUST_AVAILABLE or not _RUST_IMPORTABLE,
-    reason='redist_py not available'
+    reason='bisect_py not available'
 )
 
 
@@ -314,7 +314,7 @@ class TestRustFormulaParity:
         import numpy as np
         minority_fracs = np.array(minority_pcts, dtype=np.float64)
         edges = [(i, j) for i in range(len(adj)) for j in adj[i] if i < j]
-        return _redist_py.build_vra_edge_weights(edges, minority_fracs, threshold=threshold)
+        return _bisect_py.build_vra_edge_weights(edges, minority_fracs, threshold=threshold)
 
     def _assert_parity(self, adj, minority_pcts, label, threshold=0.40):
         py = self._python_weights(adj, minority_pcts, threshold)

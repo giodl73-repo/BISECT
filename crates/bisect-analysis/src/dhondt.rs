@@ -56,8 +56,7 @@ pub fn gallagher_index(
         .keys()
         .map(|party| {
             let vote_pct = votes.get(party).unwrap_or(&0.0) / total_votes * 100.0;
-            let seat_pct =
-                (*seats.get(party).unwrap_or(&0) as f64) / total_seats as f64 * 100.0;
+            let seat_pct = (*seats.get(party).unwrap_or(&0) as f64) / total_seats as f64 * 100.0;
             (vote_pct - seat_pct).powi(2)
         })
         .sum();

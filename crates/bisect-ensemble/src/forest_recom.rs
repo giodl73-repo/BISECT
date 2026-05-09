@@ -19,11 +19,11 @@
 //! stationary distribution where every balanced spanning-tree cut is equally
 //! likely — identical to GerryChain's Forest-ReCom stationary distribution.
 
-use std::collections::{HashMap, HashSet};
-use rand::Rng;
-use rand::seq::SliceRandom;
 use crate::recom::StepRecord;
 use crate::spanning::{random_spanning_tree, SpanningTree};
+use rand::seq::SliceRandom;
+use rand::Rng;
+use std::collections::{HashMap, HashSet};
 
 /// Maximum number of pair reselection attempts per step.
 const MAX_PAIR_ATTEMPTS: usize = 50;
@@ -60,9 +60,15 @@ impl ForestRecomChain {
         let ideal_pop = pop.iter().sum::<i64>() as f64 / k as f64;
         let total_edges = adj.iter().map(|nb| nb.len()).sum::<usize>() / 2;
         Self {
-            adj, pop, assignment, k, pop_tolerance,
-            steps_taken: 0, steps_accepted: 0,
-            ideal_pop, total_edges,
+            adj,
+            pop,
+            assignment,
+            k,
+            pop_tolerance,
+            steps_taken: 0,
+            steps_accepted: 0,
+            ideal_pop,
+            total_edges,
         }
     }
 
@@ -75,7 +81,9 @@ impl ForestRecomChain {
         self.steps_taken += 1;
 
         let accepted = self.try_step(rng_forward, rng_reverse);
-        if accepted { self.steps_accepted += 1; }
+        if accepted {
+            self.steps_accepted += 1;
+        }
 
         let cut = self.count_cut_edges();
         let max_dev = self.max_pop_deviation();
@@ -93,7 +101,9 @@ impl ForestRecomChain {
     /// Returns true if the assignment was updated.
     fn try_step<R: Rng>(&mut self, rng_forward: &mut R, rng_reverse: &mut R) -> bool {
         let pairs = self.adjacent_pairs();
-        if pairs.is_empty() { return false; }
+        if pairs.is_empty() {
+            return false;
+        }
 
         // Shuffle pairs for random pair reselection.
         let mut pair_order: Vec<usize> = (0..pairs.len()).collect();
@@ -103,24 +113,34 @@ impl ForestRecomChain {
             let (d_i, d_j) = pairs[pair_idx];
 
             // Extract region: all tracts in d_i ∪ d_j.
-            let region: Vec<u32> = self.assignment.iter().enumerate()
+            let region: Vec<u32> = self
+                .assignment
+                .iter()
+                .enumerate()
                 .filter(|(_, &d)| d == d_i || d == d_j)
                 .map(|(v, _)| v as u32)
                 .collect();
 
-            if region.len() < 2 { continue; }
+            if region.len() < 2 {
+                continue;
+            }
 
             // Build local subgraph adjacency (local indices 0..region.len()).
-            let local_idx: HashMap<u32, u32> = region.iter()
+            let local_idx: HashMap<u32, u32> = region
+                .iter()
                 .enumerate()
                 .map(|(local, &global)| (global, local as u32))
                 .collect();
 
-            let local_adj: Vec<Vec<u32>> = region.iter().map(|&g| {
-                self.adj[g as usize].iter()
-                    .filter_map(|&nb| local_idx.get(&nb).copied())
-                    .collect()
-            }).collect();
+            let local_adj: Vec<Vec<u32>> = region
+                .iter()
+                .map(|&g| {
+                    self.adj[g as usize]
+                        .iter()
+                        .filter_map(|&nb| local_idx.get(&nb).copied())
+                        .collect()
+                })
+                .collect();
 
             // Pre-compute region population array and target.
             let local_pop: Vec<i64> = region.iter().map(|&g| self.pop[g as usize]).collect();
@@ -171,8 +191,12 @@ impl ForestRecomChain {
 
             if rng_forward.gen::<f64>() < ratio.min(1.0) {
                 // Accept: apply the proposed split.
-                for &local in &comp_a { self.assignment[region[local as usize] as usize] = d_i; }
-                for &local in &comp_b { self.assignment[region[local as usize] as usize] = d_j; }
+                for &local in &comp_a {
+                    self.assignment[region[local as usize] as usize] = d_i;
+                }
+                for &local in &comp_b {
+                    self.assignment[region[local as usize] as usize] = d_j;
+                }
                 return true;
             } else {
                 // Reject: plan unchanged.
@@ -184,7 +208,11 @@ impl ForestRecomChain {
 
     /// Acceptance rate: steps_accepted / steps_taken.
     pub fn acceptance_rate(&self) -> f64 {
-        if self.steps_taken == 0 { 0.0 } else { self.steps_accepted as f64 / self.steps_taken as f64 }
+        if self.steps_taken == 0 {
+            0.0
+        } else {
+            self.steps_accepted as f64 / self.steps_taken as f64
+        }
     }
 
     /// Count all edges crossing district boundaries.
@@ -205,7 +233,8 @@ impl ForestRecomChain {
         for (v, &d) in self.assignment.iter().enumerate() {
             *dist_pops.entry(d).or_default() += self.pop[v];
         }
-        dist_pops.values()
+        dist_pops
+            .values()
             .map(|&p| (p as f64 - self.ideal_pop).abs() / self.ideal_pop)
             .fold(0.0_f64, f64::max)
     }
@@ -262,8 +291,8 @@ pub fn count_balanced_cuts(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand::SeedableRng;
     use rand::rngs::SmallRng;
+    use rand::SeedableRng;
 
     // ── Graph helpers ─────────────────────────────────────────────────────────
 
@@ -284,8 +313,14 @@ mod tests {
         for r in 0..rows {
             for c in 0..cols {
                 let v = r * cols + c;
-                if c + 1 < cols { adj[v].push((v + 1) as u32); adj[v + 1].push(v as u32); }
-                if r + 1 < rows { adj[v].push((v + cols) as u32); adj[v + cols].push(v as u32); }
+                if c + 1 < cols {
+                    adj[v].push((v + 1) as u32);
+                    adj[v + 1].push(v as u32);
+                }
+                if r + 1 < rows {
+                    adj[v].push((v + cols) as u32);
+                    adj[v + cols].push(v as u32);
+                }
             }
         }
         adj
@@ -294,7 +329,10 @@ mod tests {
     // ── Chain helpers ─────────────────────────────────────────────────────────
 
     fn make_rngs(seed: u64) -> (SmallRng, SmallRng) {
-        (SmallRng::seed_from_u64(seed), SmallRng::seed_from_u64(seed ^ 0xDEAD_BEEF_CAFE_1234))
+        (
+            SmallRng::seed_from_u64(seed),
+            SmallRng::seed_from_u64(seed ^ 0xDEAD_BEEF_CAFE_1234),
+        )
     }
 
     // ── Tests ─────────────────────────────────────────────────────────────────
@@ -312,7 +350,11 @@ mod tests {
 
         // Plan must still have exactly 2 districts.
         let districts: HashSet<u32> = chain.assignment.iter().copied().collect();
-        assert_eq!(districts.len(), 2, "must have exactly 2 districts after step");
+        assert_eq!(
+            districts.len(),
+            2,
+            "must have exactly 2 districts after step"
+        );
 
         // StepRecord fields must be in range.
         assert_eq!(rec.step, 1);
@@ -351,15 +393,23 @@ mod tests {
         let assignment: Vec<u32> = (0..16).map(|i| if i < 8 { 1 } else { 2 }).collect();
 
         let (mut rf1, mut rr1) = make_rngs(7);
-        let mut chain1 = ForestRecomChain::new(adj.clone(), pop.clone(), assignment.clone(), 2, 0.10);
-        let recs1: Vec<bool> = (0..30).map(|_| chain1.step(&mut rf1, &mut rr1).accepted).collect();
+        let mut chain1 =
+            ForestRecomChain::new(adj.clone(), pop.clone(), assignment.clone(), 2, 0.10);
+        let recs1: Vec<bool> = (0..30)
+            .map(|_| chain1.step(&mut rf1, &mut rr1).accepted)
+            .collect();
 
         let (mut rf2, mut rr2) = make_rngs(7);
         let mut chain2 = ForestRecomChain::new(adj, pop, assignment, 2, 0.10);
-        let recs2: Vec<bool> = (0..30).map(|_| chain2.step(&mut rf2, &mut rr2).accepted).collect();
+        let recs2: Vec<bool> = (0..30)
+            .map(|_| chain2.step(&mut rf2, &mut rr2).accepted)
+            .collect();
 
         assert_eq!(recs1, recs2, "same seeds must produce identical trajectory");
-        assert_eq!(chain1.assignment, chain2.assignment, "same seeds must produce same final assignment");
+        assert_eq!(
+            chain1.assignment, chain2.assignment,
+            "same seeds must produce same final assignment"
+        );
     }
 
     #[test]
@@ -402,7 +452,8 @@ mod tests {
             let tree = random_spanning_tree(&adj, &mut rng);
             let cuts = count_balanced_cuts(&tree, &local_pop, target, tol_abs);
             assert_eq!(
-                cuts.len(), 1,
+                cuts.len(),
+                1,
                 "4-node uniform path must have exactly 1 balanced cut"
             );
         }
@@ -419,7 +470,10 @@ mod tests {
         // everything is rejected.
         let n = 5usize;
         let mut adj = vec![vec![]; n];
-        for i in 1..n { adj[0].push(i as u32); adj[i].push(0); }
+        for i in 1..n {
+            adj[0].push(i as u32);
+            adj[i].push(0);
+        }
         // Deliberately unequal populations so no exact half-sum exists.
         let pop = vec![100i64, 200, 300, 400, 500]; // total=1500, target=750
         let assignment = vec![1u32, 1, 1, 2, 2];
@@ -451,7 +505,8 @@ mod tests {
         assert!(
             chain.steps_accepted <= chain.steps_taken,
             "steps_accepted {} must never exceed steps_taken {}",
-            chain.steps_accepted, chain.steps_taken
+            chain.steps_accepted,
+            chain.steps_taken
         );
         assert_eq!(chain.steps_taken, 200);
     }
@@ -464,7 +519,11 @@ mod tests {
         let pop = vec![1000i64; 4];
         let assignment = vec![1u32, 1, 2, 2];
         let chain = ForestRecomChain::new(adj, pop, assignment, 2, 0.05);
-        assert_eq!(chain.acceptance_rate(), 0.0, "rate must be 0.0 with no steps taken");
+        assert_eq!(
+            chain.acceptance_rate(),
+            0.0,
+            "rate must be 0.0 with no steps taken"
+        );
     }
 
     #[test]
@@ -475,9 +534,12 @@ mod tests {
         let mut chain = ForestRecomChain::new(adj, pop, assignment, 2, 0.05);
         let (mut rf, mut rr) = make_rngs(1);
         assert_eq!(chain.steps_taken, 0);
-        chain.step(&mut rf, &mut rr); assert_eq!(chain.steps_taken, 1);
-        chain.step(&mut rf, &mut rr); assert_eq!(chain.steps_taken, 2);
-        chain.step(&mut rf, &mut rr); assert_eq!(chain.steps_taken, 3);
+        chain.step(&mut rf, &mut rr);
+        assert_eq!(chain.steps_taken, 1);
+        chain.step(&mut rf, &mut rr);
+        assert_eq!(chain.steps_taken, 2);
+        chain.step(&mut rf, &mut rr);
+        assert_eq!(chain.steps_taken, 3);
     }
 
     #[test]
@@ -506,7 +568,10 @@ mod tests {
         for _ in 0..100 {
             chain.step(&mut rf, &mut rr);
             let dev = chain.max_pop_deviation();
-            assert!(dev <= 0.11, "pop deviation {dev:.4} must not exceed tolerance+epsilon");
+            assert!(
+                dev <= 0.11,
+                "pop deviation {dev:.4} must not exceed tolerance+epsilon"
+            );
         }
     }
 
@@ -523,6 +588,10 @@ mod tests {
         let tree = random_spanning_tree(&adj, &mut rng);
         let cuts1 = count_balanced_cuts(&tree, &local_pop, target, tol_abs);
         let cuts2 = count_balanced_cuts(&tree, &local_pop, target, tol_abs);
-        assert_eq!(cuts1.len(), cuts2.len(), "count must be stable / deterministic");
+        assert_eq!(
+            cuts1.len(),
+            cuts2.len(),
+            "count must be stable / deterministic"
+        );
     }
 }

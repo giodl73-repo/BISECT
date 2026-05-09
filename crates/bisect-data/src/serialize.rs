@@ -1,3 +1,4 @@
+use crate::adjacency::AdjacencyGraph;
 /// Adjacency graph binary serialization (.adj.bin format).
 ///
 /// Fast Rust-to-Rust format. Not pickle — Python uses the companion
@@ -30,7 +31,6 @@
 ///   v2 files are read correctly (has_geometry defaults to 0).
 use std::io::{self, Read, Write};
 use thiserror::Error;
-use crate::adjacency::AdjacencyGraph;
 
 const MAGIC: &[u8; 4] = b"RADJ";
 const FORMAT_VERSION: u32 = 3;
@@ -52,9 +52,7 @@ pub enum SerializeError {
 
 /// Serialize an adjacency graph to binary bytes (format v2 with vertex_weights).
 pub fn serialize_adjacency(graph: &AdjacencyGraph) -> Vec<u8> {
-    let mut buf = Vec::with_capacity(
-        16 + graph.n_vertices * 16 + graph.n_edges * 16
-    );
+    let mut buf = Vec::with_capacity(16 + graph.n_vertices * 16 + graph.n_edges * 16);
 
     // Header
     buf.extend_from_slice(MAGIC);
@@ -79,9 +77,11 @@ pub fn serialize_adjacency(graph: &AdjacencyGraph) -> Vec<u8> {
     // Validate canonical key order before writing — non-canonical keys (u>v) would
     // deserialize as-is and silently produce duplicate or wrong edges downstream.
     for &(u, v) in graph.edge_weights.keys() {
-        assert!(u < v,
+        assert!(
+            u < v,
             "edge_weights key ({u},{v}) is not canonical (u must be < v); \
-             build_adjacency_graph always produces canonical keys");
+             build_adjacency_graph always produces canonical keys"
+        );
     }
     buf.extend_from_slice(&(graph.edge_weights.len() as u32).to_le_bytes());
     // Sort for deterministic output
@@ -94,8 +94,7 @@ pub fn serialize_adjacency(graph: &AdjacencyGraph) -> Vec<u8> {
     }
 
     // v3: CompactBisect geometry (has_geometry flag + ext_perimeters + areas)
-    let has_geometry = !graph.vertex_ext_perimeters.is_empty()
-                    && !graph.vertex_areas.is_empty();
+    let has_geometry = !graph.vertex_ext_perimeters.is_empty() && !graph.vertex_areas.is_empty();
     buf.extend_from_slice(&(has_geometry as u32).to_le_bytes());
     if has_geometry {
         for &p in &graph.vertex_ext_perimeters {
@@ -118,7 +117,7 @@ pub fn deserialize_adjacency(data: &[u8]) -> Result<AdjacencyGraph, SerializeErr
             if pos + 4 > data.len() {
                 return Err(SerializeError::Truncated { context: $ctx });
             }
-            let v = u32::from_le_bytes(data[pos..pos+4].try_into().unwrap());
+            let v = u32::from_le_bytes(data[pos..pos + 4].try_into().unwrap());
             pos += 4;
             v
         }};
@@ -129,7 +128,7 @@ pub fn deserialize_adjacency(data: &[u8]) -> Result<AdjacencyGraph, SerializeErr
             if pos + 8 > data.len() {
                 return Err(SerializeError::Truncated { context: $ctx });
             }
-            let v = f64::from_le_bytes(data[pos..pos+8].try_into().unwrap());
+            let v = f64::from_le_bytes(data[pos..pos + 8].try_into().unwrap());
             pos += 8;
             v
         }};
@@ -152,12 +151,16 @@ pub fn deserialize_adjacency(data: &[u8]) -> Result<AdjacencyGraph, SerializeErr
 
     // Vertex weights (v2+ addition; v1 files have none — backward compat below)
     let vertex_weights: Vec<i64> = if version >= 2 {
-        (0..n_vertices).map(|_| {
-            if pos + 8 > data.len() { return 1i64; }
-            let v = i64::from_le_bytes(data[pos..pos+8].try_into().unwrap());
-            pos += 8;
-            v
-        }).collect()
+        (0..n_vertices)
+            .map(|_| {
+                if pos + 8 > data.len() {
+                    return 1i64;
+                }
+                let v = i64::from_le_bytes(data[pos..pos + 8].try_into().unwrap());
+                pos += 8;
+                v
+            })
+            .collect()
     } else {
         vec![1i64; n_vertices] // v1 files: default to 1 (no population data)
     };
@@ -197,9 +200,13 @@ pub fn deserialize_adjacency(data: &[u8]) -> Result<AdjacencyGraph, SerializeErr
         let has_geometry = read_u32!("has_geometry");
         if has_geometry == 1 {
             let mut ext_perims = Vec::with_capacity(n_vertices);
-            for _ in 0..n_vertices { ext_perims.push(read_f64!("ext_perimeter")); }
+            for _ in 0..n_vertices {
+                ext_perims.push(read_f64!("ext_perimeter"));
+            }
             let mut areas = Vec::with_capacity(n_vertices);
-            for _ in 0..n_vertices { areas.push(read_f64!("vertex_area")); }
+            for _ in 0..n_vertices {
+                areas.push(read_f64!("vertex_area"));
+            }
             (ext_perims, areas)
         } else {
             (Vec::new(), Vec::new())
@@ -231,9 +238,13 @@ mod tests {
         edge_weights.insert((0, 1), 500.5_f64);
         edge_weights.insert((1, 2), 300.0_f64);
         AdjacencyGraph {
-            adjacency, vertex_weights: vec![1000, 1200, 900],
-            edge_weights, n_vertices: 3, n_edges: 2,
-            vertex_areas: Vec::new(), vertex_ext_perimeters: Vec::new(),
+            adjacency,
+            vertex_weights: vec![1000, 1200, 900],
+            edge_weights,
+            n_vertices: 3,
+            n_edges: 2,
+            vertex_areas: Vec::new(),
+            vertex_ext_perimeters: Vec::new(),
         }
     }
 
@@ -309,10 +320,15 @@ mod tests {
         let mut bytes = serialize_adjacency(&g);
         // Header n_edges is at offset 12..16 (after magic, version, n_vertices)
         // Change it to 999
-        bytes[12] = 0xe7; bytes[13] = 0x03; bytes[14] = 0x00; bytes[15] = 0x00; // 999 LE
+        bytes[12] = 0xe7;
+        bytes[13] = 0x03;
+        bytes[14] = 0x00;
+        bytes[15] = 0x00; // 999 LE
         let result = deserialize_adjacency(&bytes);
-        assert!(matches!(result, Err(SerializeError::EdgeCountMismatch { .. })),
-            "mismatched n_edges should be caught");
+        assert!(
+            matches!(result, Err(SerializeError::EdgeCountMismatch { .. })),
+            "mismatched n_edges should be caught"
+        );
     }
 
     #[test]
@@ -327,17 +343,23 @@ mod tests {
     fn test_large_graph_roundtrip() {
         // 100 nodes in a cycle with edge weights
         let n = 100usize;
-        let adjacency: Vec<Vec<usize>> = (0..n)
-            .map(|i| vec![(i + n - 1) % n, (i + 1) % n])
-            .collect();
+        let adjacency: Vec<Vec<usize>> =
+            (0..n).map(|i| vec![(i + n - 1) % n, (i + 1) % n]).collect();
         let edge_weights: HashMap<(usize, usize), f64> = (0..n)
             .map(|i| ((i, (i + 1) % n), 100.0 + i as f64))
             .filter(|&((u, v), _)| u < v)
             .collect();
         let n_edges = edge_weights.len();
         let vertex_weights = vec![1000i64; n];
-        let g = AdjacencyGraph { adjacency, vertex_weights, edge_weights, n_vertices: n, n_edges,
-                                vertex_areas: Vec::new(), vertex_ext_perimeters: Vec::new() };
+        let g = AdjacencyGraph {
+            adjacency,
+            vertex_weights,
+            edge_weights,
+            n_vertices: n,
+            n_edges,
+            vertex_areas: Vec::new(),
+            vertex_ext_perimeters: Vec::new(),
+        };
         let bytes = serialize_adjacency(&g);
         let g2 = deserialize_adjacency(&bytes).unwrap();
         assert_eq!(g.adjacency, g2.adjacency);
@@ -352,7 +374,10 @@ mod tests {
         let g = make_graph();
         let bytes = serialize_adjacency(&g);
         let version = u32::from_le_bytes(bytes[4..8].try_into().unwrap());
-        assert_eq!(version, 3, "format version should be 3 (v3 with geometry support)");
+        assert_eq!(
+            version, 3,
+            "format version should be 3 (v3 with geometry support)"
+        );
     }
 
     /// n_vertices header field matches actual graph size.

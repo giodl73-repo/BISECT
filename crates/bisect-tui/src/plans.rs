@@ -1,5 +1,4 @@
 /// Plan discovery — scans output directories for manifests and analysis JSONs.
-
 use crate::app::PlanSummary;
 use std::path::{Path, PathBuf};
 
@@ -32,33 +31,42 @@ pub fn discover_plans(output_base: &str, version: &str, year: &str) -> Vec<PlanS
 }
 
 /// Read a single plan directory.
-fn read_plan(plan_dir: &Path, registry: &bisect_cli::policy::LocationRegistry) -> Option<PlanSummary> {
+fn read_plan(
+    plan_dir: &Path,
+    registry: &bisect_cli::policy::LocationRegistry,
+) -> Option<PlanSummary> {
     // Read manifest.json
     let manifest_path = plan_dir.join("manifest.json");
     let manifest_content = std::fs::read_to_string(&manifest_path).ok()?;
     let manifest: serde_json::Value = serde_json::from_str(&manifest_content).ok()?;
 
-    let state_code = manifest.get("state_code")
+    let state_code = manifest
+        .get("state_code")
         .and_then(|v| v.as_str())
         .unwrap_or("")
         .to_string();
-    let chamber = manifest.get("chamber")
+    let chamber = manifest
+        .get("chamber")
         .and_then(|v| v.as_str())
         .unwrap_or("")
         .to_string();
-    let year = manifest.get("year")
+    let year = manifest
+        .get("year")
         .and_then(|v| v.as_str())
         .unwrap_or("")
         .to_string();
-    let num_districts = manifest.get("num_districts")
+    let num_districts = manifest
+        .get("num_districts")
         .and_then(|v| v.as_u64())
         .unwrap_or(0) as usize;
-    let label = manifest.get("label")
+    let label = manifest
+        .get("label")
         .and_then(|v| v.as_str())
         .unwrap_or_else(|| plan_dir.file_name().and_then(|n| n.to_str()).unwrap_or(""))
         .to_string();
 
-    let state_name = registry.state_name(&state_code)
+    let state_name = registry
+        .state_name(&state_code)
         .unwrap_or_else(|| state_code.clone());
 
     // Read analysis/compactness.json → mean_pp (polsby_popper)
@@ -95,9 +103,7 @@ fn read_json(plan_dir: &Path, relative: &str) -> Option<serde_json::Value> {
 }
 
 fn read_f64_field(plan_dir: &Path, relative: &str, field: &str) -> Option<f64> {
-    read_json(plan_dir, relative)?
-        .get(field)?
-        .as_f64()
+    read_json(plan_dir, relative)?.get(field)?.as_f64()
 }
 
 fn read_usize_field(plan_dir: &Path, relative: &str, field: &str) -> Option<usize> {
@@ -108,9 +114,7 @@ fn read_usize_field(plan_dir: &Path, relative: &str, field: &str) -> Option<usiz
 }
 
 fn read_bool_field(plan_dir: &Path, relative: &str, field: &str) -> Option<bool> {
-    read_json(plan_dir, relative)?
-        .get(field)?
-        .as_bool()
+    read_json(plan_dir, relative)?.get(field)?.as_bool()
 }
 
 #[cfg(test)]
@@ -126,7 +130,14 @@ mod tests {
         fs::write(path, content).unwrap();
     }
 
-    fn make_plan(plans_dir: &Path, label: &str, state_code: &str, chamber: &str, year: &str, districts: u64) -> PathBuf {
+    fn make_plan(
+        plans_dir: &Path,
+        label: &str,
+        state_code: &str,
+        chamber: &str,
+        year: &str,
+        districts: u64,
+    ) -> PathBuf {
         let plan_dir = plans_dir.join(label);
         fs::create_dir_all(&plan_dir).unwrap();
 
@@ -156,7 +167,10 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         // Don't create the plans directory at all
         let result = discover_plans(tmp.path().to_str().unwrap(), "v1", "2020");
-        assert!(result.is_empty(), "missing plans dir should return empty vec");
+        assert!(
+            result.is_empty(),
+            "missing plans dir should return empty vec"
+        );
     }
 
     #[test]

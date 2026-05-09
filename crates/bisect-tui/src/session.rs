@@ -26,15 +26,33 @@ pub struct Session {
     pub seats_per_district: usize,
 }
 
-fn default_location() -> String { "VT".into() }
-fn default_chamber() -> String { "congressional".into() }
-fn default_year() -> String { "2020".into() }
-fn default_version() -> String { "v1".into() }
-fn default_output_base() -> String { "outputs".into() }
-fn default_resolution() -> String { "tract".into() }
-fn default_sort_column() -> String { "label".into() }
-fn default_sort_dir() -> String { "asc".into() }
-fn default_seats() -> usize { 1 }
+fn default_location() -> String {
+    "VT".into()
+}
+fn default_chamber() -> String {
+    "congressional".into()
+}
+fn default_year() -> String {
+    "2020".into()
+}
+fn default_version() -> String {
+    "v1".into()
+}
+fn default_output_base() -> String {
+    "outputs".into()
+}
+fn default_resolution() -> String {
+    "tract".into()
+}
+fn default_sort_column() -> String {
+    "label".into()
+}
+fn default_sort_dir() -> String {
+    "asc".into()
+}
+fn default_seats() -> usize {
+    1
+}
 
 impl Default for Session {
     fn default() -> Self {
@@ -54,18 +72,25 @@ impl Default for Session {
     }
 }
 
-/// Path to session config file: ~/.config/redist/tui.toml
+/// Path to session config file: ~/.config/BISECT/tui.toml
 pub fn config_path() -> Option<std::path::PathBuf> {
-    let home = std::env::var_os("HOME")
-        .or_else(|| std::env::var_os("USERPROFILE"))?;
-    Some(std::path::PathBuf::from(home)
-        .join(".config").join("bisect").join("tui.toml"))
+    let home = std::env::var_os("HOME").or_else(|| std::env::var_os("USERPROFILE"))?;
+    Some(
+        std::path::PathBuf::from(home)
+            .join(".config")
+            .join("bisect")
+            .join("tui.toml"),
+    )
 }
 
 /// Load session from disk. Returns Default if file absent or unparseable.
 pub fn load_session() -> Session {
-    let Some(path) = config_path() else { return Session::default() };
-    let Ok(content) = std::fs::read_to_string(&path) else { return Session::default() };
+    let Some(path) = config_path() else {
+        return Session::default();
+    };
+    let Ok(content) = std::fs::read_to_string(&path) else {
+        return Session::default();
+    };
     toml::from_str(&content).unwrap_or_default()
 }
 
@@ -122,7 +147,8 @@ mod tests {
         let tmp = tempfile::TempDir::new().unwrap();
         let path = tmp.path().join("nonexistent.toml");
         let content = std::fs::read_to_string(&path);
-        let s: Session = content.ok()
+        let s: Session = content
+            .ok()
             .and_then(|c| toml::from_str(&c).ok())
             .unwrap_or_default();
         assert_eq!(s.chamber, "congressional");

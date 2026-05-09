@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://redist.example.org/schemas/bloc_voting.schema.json",
+  "$id": "https://BISECT.example.org/schemas/bloc_voting.schema.json",
   "title": "Bloc Voting Analysis (Callais Evidence Layer)",
-  "description": "Output of `redist analyze --types bloc-voting` per docs/superpowers/specs/2026-04-30-callais-evidence-layer.md. The SCALE BLOCK from the v1 review was lifted by adopting WLS+HC3, Holm-Bonferroni, cluster-bootstrap by county, VIF, robustness across baselines, and the race-of-candidate provenance protocol — every field below carries that constraint.",
+  "description": "Output of `BISECT analyze --types bloc-voting` per docs/superpowers/specs/2026-04-30-callais-evidence-layer.md. The SCALE BLOCK from the v1 review was lifted by adopting WLS+HC3, Holm-Bonferroni, cluster-bootstrap by county, VIF, robustness across baselines, and the race-of-candidate provenance protocol — every field below carries that constraint.",
   "type": "object",
   "required": [
     "schema_version",
@@ -161,11 +161,11 @@
     },
     "provenance": {
       "type": "object",
-      "required": ["redist_version", "redist_build_commit", "rustc_version"],
+      "required": ["BISECT_version", "BISECT_build_commit", "rustc_version"],
       "properties": {
-        "redist_version": {"type": "string"},
-        "redist_build_commit": {"type": "string"},
-        "redist_build_commit_short": {"type": "string"},
+        "BISECT_version": {"type": "string"},
+        "BISECT_build_commit": {"type": "string"},
+        "BISECT_build_commit_short": {"type": "string"},
         "rustc_version": {"type": "string"},
         "args": {"type": "object"}
       }

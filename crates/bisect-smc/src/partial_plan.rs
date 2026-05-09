@@ -49,7 +49,9 @@ impl PartialPlan {
 
     /// Return the indices of all unassigned tracts.
     pub fn unassigned_tracts(&self) -> Vec<usize> {
-        self.assignment.iter().enumerate()
+        self.assignment
+            .iter()
+            .enumerate()
             .filter_map(|(i, a)| if a.is_none() { Some(i) } else { None })
             .collect()
     }
@@ -90,13 +92,10 @@ impl PartialPlan {
     /// Returns the component (list of tract indices) with the highest total population.
     /// Per spec §2.2: the spanning tree is built over this component, ensuring
     /// the connectivity invariant (remaining unassigned tracts stay connected).
-    pub fn largest_unassigned_component<'a>(
-        &self,
-        adj: &[Vec<usize>],
-        pop: &[i64],
-    ) -> Vec<usize> {
+    pub fn largest_unassigned_component<'a>(&self, adj: &[Vec<usize>], pop: &[i64]) -> Vec<usize> {
         let components = self.unassigned_components(adj);
-        components.into_iter()
+        components
+            .into_iter()
             .max_by_key(|c| c.iter().map(|&t| pop[t]).sum::<i64>())
             .unwrap_or_default()
     }
@@ -104,7 +103,8 @@ impl PartialPlan {
     /// Extract the final complete assignment as a Vec<u32> (1-based district IDs).
     /// Panics if any tract is still unassigned.
     pub fn finalise(&self) -> Vec<u32> {
-        self.assignment.iter()
+        self.assignment
+            .iter()
             .map(|a| a.expect("finalise called with unassigned tracts"))
             .collect()
     }
@@ -115,12 +115,18 @@ mod tests {
     use super::*;
 
     fn path_adj(n: usize) -> Vec<Vec<usize>> {
-        (0..n).map(|i| {
-            let mut nb = Vec::new();
-            if i > 0 { nb.push(i - 1); }
-            if i < n - 1 { nb.push(i + 1); }
-            nb
-        }).collect()
+        (0..n)
+            .map(|i| {
+                let mut nb = Vec::new();
+                if i > 0 {
+                    nb.push(i - 1);
+                }
+                if i < n - 1 {
+                    nb.push(i + 1);
+                }
+                nb
+            })
+            .collect()
     }
 
     #[test]

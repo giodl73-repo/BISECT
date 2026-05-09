@@ -22,10 +22,7 @@ pub struct Graph {
 }
 
 impl Graph {
-    pub fn new(
-        adjacency: Vec<Vec<usize>>,
-        vertex_weights: Vec<i64>,
-    ) -> Result<Self, GraphError> {
+    pub fn new(adjacency: Vec<Vec<usize>>, vertex_weights: Vec<i64>) -> Result<Self, GraphError> {
         let n = adjacency.len();
         if n == 0 {
             return Err(GraphError::EmptyGraph);
@@ -33,7 +30,11 @@ impl Graph {
         if vertex_weights.len() != n {
             return Err(GraphError::AdjacencyLengthMismatch(vertex_weights.len(), n));
         }
-        Ok(Self { adjacency, vertex_weights, n_vertices: n })
+        Ok(Self {
+            adjacency,
+            vertex_weights,
+            n_vertices: n,
+        })
     }
 
     pub fn n_vertices(&self) -> usize {
@@ -57,14 +58,15 @@ mod tests {
         // 3--4--+
         Graph::new(
             vec![
-                vec![1, 3],  // 0
-                vec![0, 2],  // 1
-                vec![1, 4],  // 2
-                vec![0, 4],  // 3
-                vec![3, 2],  // 4
+                vec![1, 3], // 0
+                vec![0, 2], // 1
+                vec![1, 4], // 2
+                vec![0, 4], // 3
+                vec![3, 2], // 4
             ],
             vec![1000, 1200, 900, 1100, 800],
-        ).unwrap()
+        )
+        .unwrap()
     }
 
     #[test]
@@ -87,7 +89,10 @@ mod tests {
     fn test_adjacency_length_mismatch() {
         // 2 adjacency entries but 3 weight entries
         let result = Graph::new(vec![vec![1], vec![0]], vec![100, 200, 300]);
-        assert!(matches!(result, Err(GraphError::AdjacencyLengthMismatch(3, 2))));
+        assert!(matches!(
+            result,
+            Err(GraphError::AdjacencyLengthMismatch(3, 2))
+        ));
     }
 
     #[test]

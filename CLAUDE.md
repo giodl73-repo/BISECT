@@ -4,14 +4,14 @@
 
 ## What this is
 
-Congressional and state legislative redistricting via METIS recursive bisection. 50 states, 435 districts, 3 census years. Purely algorithmic. Production tool is the `redist` Rust binary (~213× faster than the archived Python pipeline).
+Congressional and state legislative redistricting via METIS recursive bisection. 50 states, 435 districts, 3 census years. Purely algorithmic. Production tool is the `BISECT` Rust binary (~213× faster than the archived Python pipeline).
 
 ## Key directories
 
 ```
 crates/              # Rust workspace (bisect-cli, bisect-core, bisect-data, bisect-analysis,
                         #   bisect-map, bisect-report, bisect-apportion, bisect-metis, bisect-ensemble)
-docs/                   # Human-facing docs (REDIST_CLI.md, PAPERS.md, concepts/, quickstart/, legal/)
+docs/                   # Human-facing docs (BISECT_CLI.md, PAPERS.md, concepts/, quickstart/, legal/)
 docs/papers/            # 63+ compiled PDFs (committed)
 research/               # LaTeX sources for all papers (A–H series)
 scripts/                # Python: data download, elections, dashboard generation only
@@ -90,7 +90,7 @@ Add tests for every new feature: L0 (inline unit), L1 (integration, synthetic da
 
 ## Key docs
 
-- `docs/REDIST_CLI.md` — complete CLI reference
+- `docs/BISECT_CLI.md` — complete CLI reference
 - `docs/PAPERS.md` — all 63+ papers with PDFs, organised by question
 - `docs/concepts/` — algorithm guides (three-layer compositor, section algorithms, label pipeline, ensemble methods)
 - `docs/quickstart/` — persona guides (special master, researcher, state staff, algorithm explorer, federal statute)

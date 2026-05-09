@@ -13,7 +13,7 @@
 //!
 //! Run with:
 //! ```sh
-//! cargo +stable test -p redist-cli --test spec7_pipeline_l2 -- \
+//! cargo +stable test -p BISECT-cli --test spec7_pipeline_l2 -- \
 //!     --include-ignored --test-threads=1
 //! ```
 //!
@@ -39,14 +39,14 @@ const BISECT: &str = env!("CARGO_BIN_EXE_bisect");
 /// Try to locate the IA 2020 `.adj.bin` file.
 ///
 /// Search order (all resolve from environment / compile-time paths):
-/// 1. `REDIST_ADJ_IA` env var (absolute path, useful in CI)
+/// 1. `BISECT_ADJ_IA` env var (absolute path, useful in CI)
 /// 2. `CARGO_MANIFEST_DIR` → navigate up to apportionment project root
 /// 3. Current working directory heuristic
 ///
 /// Returns `None` if the file cannot be found.
 fn find_ia_adj_bin() -> Option<PathBuf> {
     // 1. Explicit env override
-    if let Ok(p) = std::env::var("REDIST_ADJ_IA") {
+    if let Ok(p) = std::env::var("BISECT_ADJ_IA") {
         let path = PathBuf::from(p);
         if path.exists() {
             return Some(path);
@@ -59,7 +59,7 @@ fn find_ia_adj_bin() -> Option<PathBuf> {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let apportionment_root = manifest_dir
         .ancestors()
-        .nth(3) // redist-cli → crates → redist → apportionment
+        .nth(3) // BISECT-cli → crates → BISECT → apportionment
         .map(|p| p.to_path_buf());
 
     if let Some(root) = apportionment_root {
@@ -152,7 +152,10 @@ impl PipelineFixture {
         // Create a zero-byte placeholder .pkl so resolve_adjacency_path's
         // existence check passes.  load_adjacency_pkl will use the .adj.bin instead.
         std::fs::write(&adj_pkl_dst, b"").unwrap_or_else(|e| {
-            panic!("failed to create placeholder .pkl at {}: {e}", adj_pkl_dst.display())
+            panic!(
+                "failed to create placeholder .pkl at {}: {e}",
+                adj_pkl_dst.display()
+            )
         });
 
         // Copy _geoids.json sidecar if present (optional — enables GEOID mapping).
@@ -190,7 +193,10 @@ impl PipelineFixture {
             workers = workers,
             year = self.year,
         );
-        let config_path = self.root().join("configs").join(format!("{}.yml", self.label));
+        let config_path = self
+            .root()
+            .join("configs")
+            .join(format!("{}.yml", self.label));
         std::fs::write(&config_path, yaml)
             .unwrap_or_else(|e| panic!("failed to write config: {e}"));
     }
@@ -212,7 +218,7 @@ impl PipelineFixture {
             .expect("spawn bisect build")
     }
 
-    /// Run `redist label-analyze {label} --year {year} --types summary`.
+    /// Run `BISECT label-analyze {label} --year {year} --types summary`.
     fn analyze(&self) -> Output {
         Command::new(BISECT)
             .arg("label-analyze")
@@ -226,7 +232,7 @@ impl PipelineFixture {
             .expect("spawn bisect label-analyze")
     }
 
-    /// Run `redist label-report {label} --year {year} --format json`.
+    /// Run `BISECT label-report {label} --year {year} --format json`.
     fn report(&self) -> Output {
         Command::new(BISECT)
             .arg("label-report")
@@ -240,7 +246,7 @@ impl PipelineFixture {
             .expect("spawn bisect label-report")
     }
 
-    /// Run `redist label-verify {label} --year {year}`.
+    /// Run `BISECT label-verify {label} --year {year}`.
     fn verify(&self) -> Output {
         Command::new(BISECT)
             .arg("label-verify")
@@ -252,7 +258,7 @@ impl PipelineFixture {
             .expect("spawn bisect label-verify")
     }
 
-    /// Run `redist ls --json` and return the parsed JSON.
+    /// Run `BISECT ls --json` and return the parsed JSON.
     fn ls_json(&self) -> Value {
         let out = Command::new(BISECT)
             .arg("ls")
@@ -273,7 +279,7 @@ impl PipelineFixture {
         })
     }
 
-    /// Run `redist show {label} --json` and return the parsed JSON.
+    /// Run `BISECT show {label} --json` and return the parsed JSON.
     fn show_json(&self) -> Value {
         let out = Command::new(BISECT)
             .arg("show")
@@ -299,7 +305,8 @@ impl PipelineFixture {
     ///
     /// Returns the parsed index so callers can make further assertions.
     fn assert_build_index(&self) -> Value {
-        let path = self.root()
+        let path = self
+            .root()
             .join("runs")
             .join(&self.label)
             .join(&self.year)
@@ -320,7 +327,8 @@ impl PipelineFixture {
 
     /// Assert that `analysis/{label}/{year}/index.json` exists and is valid JSON.
     fn assert_analysis_index(&self) -> Value {
-        let path = self.root()
+        let path = self
+            .root()
             .join("analysis")
             .join(&self.label)
             .join(&self.year)
@@ -341,7 +349,8 @@ impl PipelineFixture {
 
     /// Assert that `reports/{label}/{year}/index.json` exists and is valid JSON.
     fn assert_report_index(&self) -> Value {
-        let path = self.root()
+        let path = self
+            .root()
             .join("reports")
             .join(&self.label)
             .join(&self.year)
@@ -445,7 +454,8 @@ fn test_build_iowa_creates_correct_structure() {
     );
 
     // ── Directory structure ───────────────────────────────────────────────────
-    let ia_dir = fixture.root()
+    let ia_dir = fixture
+        .root()
         .join("runs")
         .join("ia_build_test")
         .join("2020")
@@ -605,9 +615,7 @@ fn test_full_pipeline_build_analyze_verify() {
     let verify_out = fixture.verify();
     let verify_stdout = String::from_utf8_lossy(&verify_out.stdout);
     let verify_stderr = String::from_utf8_lossy(&verify_out.stderr);
-    eprintln!(
-        "[verify output]\n--- stdout ---\n{verify_stdout}\n--- stderr ---\n{verify_stderr}"
-    );
+    eprintln!("[verify output]\n--- stdout ---\n{verify_stdout}\n--- stderr ---\n{verify_stderr}");
 
     // The verify output must contain either VERIFIED (full chain intact) or
     // at least show the config SHA link was checked (MATCH for config sha link,
@@ -644,11 +652,15 @@ fn test_build_then_mv_preserves_data() {
     assert_success(&build_out, "bisect build ia_mv_source");
 
     // Sanity: source directories exist
-    let src_year_dir = fixture.root()
+    let src_year_dir = fixture
+        .root()
         .join("runs")
         .join("ia_mv_source")
         .join("2020");
-    assert!(src_year_dir.exists(), "runs/ia_mv_source/2020/ must exist before mv");
+    assert!(
+        src_year_dir.exists(),
+        "runs/ia_mv_source/2020/ must exist before mv"
+    );
 
     // ── mv ia_mv_source → ia_mv_dest ─────────────────────────────────────────
     let mv_out = Command::new(BISECT)
@@ -661,10 +673,7 @@ fn test_build_then_mv_preserves_data() {
     assert_success(&mv_out, "bisect mv ia_mv_source ia_mv_dest");
 
     // ── Post-mv directory assertions ──────────────────────────────────────────
-    let dst_year_dir = fixture.root()
-        .join("runs")
-        .join("ia_mv_dest")
-        .join("2020");
+    let dst_year_dir = fixture.root().join("runs").join("ia_mv_dest").join("2020");
     assert!(
         dst_year_dir.exists(),
         "runs/ia_mv_dest/2020/ must exist after mv: {}",
@@ -683,7 +692,7 @@ fn test_build_then_mv_preserves_data() {
     // mv patches runs/{dst}/index.json (the top-level index, if present) but
     // does NOT patch the year-level runs/{dst}/{year}/index.json.  The year-
     // level file still contains the old label name internally — that is the
-    // documented behaviour of `redist mv` (it patches only the root index).
+    // documented behaviour of `BISECT mv` (it patches only the root index).
     // We verify the year-level file survived the rename intact (valid JSON).
     let dst_index_path = dst_year_dir.join("index.json");
     assert!(
@@ -691,8 +700,7 @@ fn test_build_then_mv_preserves_data() {
         "runs/ia_mv_dest/2020/index.json must exist after mv: {}",
         dst_index_path.display()
     );
-    let content = std::fs::read_to_string(&dst_index_path)
-        .expect("read dst year-level index.json");
+    let content = std::fs::read_to_string(&dst_index_path).expect("read dst year-level index.json");
     let dst_index: Value = serde_json::from_str(&content)
         .expect("dst year-level index.json must be valid JSON after mv");
     // The year field and summary must be intact — even if label field retains old name
@@ -791,9 +799,7 @@ GEOID,district\n\
     // Either outcome is acceptable — the test asserts what it can.
     let import_stdout = String::from_utf8_lossy(&import_out.stdout);
     let import_stderr = String::from_utf8_lossy(&import_out.stderr);
-    eprintln!(
-        "[import output]\n--- stdout ---\n{import_stdout}\n--- stderr ---\n{import_stderr}"
-    );
+    eprintln!("[import output]\n--- stdout ---\n{import_stdout}\n--- stderr ---\n{import_stderr}");
 
     if !import_out.status.success() {
         // If import fails due to invalid GEOIDs, skip the compare step.

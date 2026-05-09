@@ -1,7 +1,7 @@
 //! Civic Bidirectional Input: COI ingestion + conflict detection (Plan 6).
 //!
 //! Implements the high-leverage parts of the Civic Bidirectional Input plan:
-//! - Task 1: `redist civic` subcommand scaffolding + `civic-coi v1` manifest schema
+//! - Task 1: `BISECT civic` subcommand scaffolding + `civic-coi v1` manifest schema
 //! - Task 2: BOM-tolerant CSV reader + canonicalization (PP-27, DATUM)
 //! - Task 3: GEOID typo + leading-zero detection (PP-28)
 //! - Task 4: URL validator with parsed-IP loopback rejection (PP-29)
@@ -11,7 +11,7 @@
 //! fetch + test-server infrastructure), `add-candidate-race` CLI surface
 //! (Callais's `race_of_candidate` parser already exists; this is wiring),
 //! Sheets template + HOWTO (CM-03), hermetic LA fixture (B-04), dogfood test
-//! report (CM-04), full `redist civic ingest` end-to-end with file system I/O.
+//! report (CM-04), full `BISECT civic ingest` end-to-end with file system I/O.
 //!
 //! Spec: `docs/superpowers/specs/2026-04-30-civic-bidirectional.md`
 //! Plan: `docs/superpowers/plans/2026-04-30-civic-bidirectional.md`
@@ -35,7 +35,7 @@ pub struct CivicManifest {
     pub submitter: String,
     /// ISO-8601 UTC timestamp when the submitter says they wrote the file.
     pub submitted_at: String,
-    /// ISO-8601 UTC timestamp when `redist civic ingest` ran.
+    /// ISO-8601 UTC timestamp when `BISECT civic ingest` ran.
     pub ingested_at: String,
     pub year: String,
     pub state: String,
@@ -103,7 +103,11 @@ pub enum CivicError {
     #[error("[INPUT] CSV header missing required column '{0}'. Required: geoid, comment_id, label, source, source_url, confidence, submitted_at.")]
     MissingColumn(String),
     #[error("[INPUT] Row {row} GEOID '{geoid}' is {len} digits; tract GEOIDs are 11 digits. Excel/Sheets stripped a leading zero. Re-export the GEOID column with column-format = Text. See docs/civic/HOWTO.md#leading-zero.")]
-    LeadingZeroLost { row: usize, geoid: String, len: usize },
+    LeadingZeroLost {
+        row: usize,
+        geoid: String,
+        len: usize,
+    },
     #[error("[INPUT] Row {row} GEOID '{geoid}' not found in {state} {year} tract set; check for a typo or wrong state/year.")]
     GeoidNotInTractSet {
         row: usize,
@@ -219,15 +223,7 @@ pub const COI_REQUIRED_COLUMNS: [&str; 7] = [
 /// Returns `(rows, normalized_csv_bytes, detected_encoding, line_endings)`.
 pub fn parse_and_canonicalize_csv(
     raw_bytes: &[u8],
-) -> Result<
-    (
-        Vec<CoiRow>,
-        Vec<u8>,
-        DetectedEncoding,
-        &'static str,
-    ),
-    CivicError,
-> {
+) -> Result<(Vec<CoiRow>, Vec<u8>, DetectedEncoding, &'static str), CivicError> {
     let (clean_bytes, encoding) = detect_and_strip_bom(raw_bytes)?;
     let line_endings = detect_line_endings(&clean_bytes);
 
@@ -307,7 +303,10 @@ fn serialize_canonical(rows: &[CoiRow], extra_cols: &[(usize, String)]) -> Vec<u
     // Schema-version header line.
     out.push_str("# civic-coi-csv v1\n");
     // Required columns header (always quoted-or-not deterministically).
-    let mut header_cells: Vec<String> = COI_REQUIRED_COLUMNS.iter().map(|s| (*s).to_string()).collect();
+    let mut header_cells: Vec<String> = COI_REQUIRED_COLUMNS
+        .iter()
+        .map(|s| (*s).to_string())
+        .collect();
     for (_, name) in extra_cols {
         header_cells.push(name.clone());
     }
@@ -330,7 +329,10 @@ fn serialize_canonical(rows: &[CoiRow], extra_cols: &[(usize, String)]) -> Vec<u
                 csv_quote(v, *col == "geoid")
             })
             .chain(extra_cols.iter().map(|(_, name)| {
-                csv_quote(row.extras.get(name).map(String::as_str).unwrap_or(""), false)
+                csv_quote(
+                    row.extras.get(name).map(String::as_str).unwrap_or(""),
+                    false,
+                )
             }))
             .collect();
         out.push_str(&cells.join(","));
@@ -543,7 +545,7 @@ fn classify_ip(ip: IpAddr) -> Option<(&'static str, String)> {
 // ===========================================================================
 
 /// Bounded-fetch limits. Constants (not flags) so the snapshot record is
-/// reproducible across runs of the same redist version. Both are
+/// reproducible across runs of the same BISECT version. Both are
 /// load-bearing for the link-rot-resilience claim — bumping them is a
 /// schema change.
 pub const SNAPSHOT_MAX_BODY_BYTES: usize = 5 * 1024 * 1024; // 5 MB
@@ -663,7 +665,7 @@ pub fn snapshot_url_with_client(
 // Conflict detection (Task 7 — B-08)
 // ===========================================================================
 
-/// Result of a `redist civic conflicts` run.
+/// Result of a `BISECT civic conflicts` run.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ConflictsReport {
     /// Same GEOID assigned to different `comment_id`s across labels (without
@@ -877,8 +879,7 @@ fn output_dir_for_label(args_output_base: &str, version: &str, label: &str) -> P
 }
 
 fn run_ingest(args: &CivicIngestArgs) -> anyhow::Result<()> {
-    let mode = ValidateMode::from_str(&args.validate)
-        .map_err(|e| anyhow::anyhow!("{e}"))?;
+    let mode = ValidateMode::from_str(&args.validate).map_err(|e| anyhow::anyhow!("{e}"))?;
     if !args.csv.exists() {
         anyhow::bail!("[INPUT] civic CSV not found: {}", args.csv.display());
     }
@@ -888,7 +889,7 @@ fn run_ingest(args: &CivicIngestArgs) -> anyhow::Result<()> {
     let (rows, normalized, encoding, _) = parse_and_canonicalize_csv(&raw)?;
 
     // GEOID validation. We don't yet ship the per-state tract set inside this
-    // module (the existing TIGER reader lives in redist-data and requires
+    // module (the existing TIGER reader lives in BISECT-data and requires
     // fetched files); for now we only run the structural checks (length 9/10
     // catches the leading-zero case). Set-membership check fires when the
     // caller passes Some(set).
@@ -1072,7 +1073,10 @@ fn run_list(args: &CivicListArgs) -> anyhow::Result<()> {
         eprintln!("[INFO] no civic inputs ingested yet");
         return Ok(());
     }
-    println!("{:<32} {:<10} {:<12} {}", "label", "year/state", "validate", "submitter");
+    println!(
+        "{:<32} {:<10} {:<12} {}",
+        "label", "year/state", "validate", "submitter"
+    );
     println!("{}", "-".repeat(80));
     for entry in entries {
         if !entry.path().is_dir() {
@@ -1100,7 +1104,11 @@ fn run_show(args: &CivicShowArgs) -> anyhow::Result<()> {
     let dir = output_dir_for_label(&args.output_base, &args.version, &args.label);
     let manifest_path = dir.join("manifest.json");
     if !manifest_path.exists() {
-        anyhow::bail!("[INPUT] no civic input '{}' at {}", args.label, dir.display());
+        anyhow::bail!(
+            "[INPUT] no civic input '{}' at {}",
+            args.label,
+            dir.display()
+        );
     }
     let bytes = std::fs::read(&manifest_path)?;
     let manifest: CivicManifest = serde_json::from_slice(&bytes)?;
@@ -1108,7 +1116,7 @@ fn run_show(args: &CivicShowArgs) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Manifest schema for `redist civic add-candidate-race` outputs. Schema-versioned
+/// Manifest schema for `BISECT civic add-candidate-race` outputs. Schema-versioned
 /// separately from `civic-coi v1` because the columns + provenance shape differ.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CandidateRaceManifest {
@@ -1304,13 +1312,19 @@ mod tests {
         let err = detect_and_strip_bom(bytes).unwrap_err();
         let msg = err.to_string();
         assert!(msg.contains("UTF-16"), "must name UTF-16: {msg}");
-        assert!(msg.contains("re-export as UTF-8"), "must give remediation: {msg}");
+        assert!(
+            msg.contains("re-export as UTF-8"),
+            "must give remediation: {msg}"
+        );
     }
 
     #[test]
     fn test_reject_utf16_be() {
         let bytes = b"\xFE\xFF\x00h\x00e\x00l\x00";
-        assert!(matches!(detect_and_strip_bom(bytes), Err(CivicError::Utf16Unsupported)));
+        assert!(matches!(
+            detect_and_strip_bom(bytes),
+            Err(CivicError::Utf16Unsupported)
+        ));
     }
 
     #[test]
@@ -1326,7 +1340,8 @@ mod tests {
     #[test]
     fn test_canonical_round_trip_byte_stable() {
         // Same input, parsed + canonicalized twice -> byte-identical output.
-        let csv = b"\xEF\xBB\xBFgeoid,comment_id,label,source,source_url,confidence,submitted_at\r\n\
+        let csv =
+            b"\xEF\xBB\xBFgeoid,comment_id,label,source,source_url,confidence,submitted_at\r\n\
                     50001000200,COI-2,East,LWV,,medium,2026-04-15T00:00:00Z\r\n\
                     50001000100,COI-1,Downtown,LWV,,high,2026-04-15T00:00:00Z\r\n";
         let (_, n1, _, _) = parse_and_canonicalize_csv(csv).unwrap();
@@ -1334,7 +1349,10 @@ mod tests {
         assert_eq!(n1, n2, "canonicalized output must be byte-stable");
         // Header includes schema-version line.
         let s = std::str::from_utf8(&n1).unwrap();
-        assert!(s.starts_with("# civic-coi-csv v1\n"), "schema header must lead: {s}");
+        assert!(
+            s.starts_with("# civic-coi-csv v1\n"),
+            "schema header must lead: {s}"
+        );
         // Sorted order: 50001000100 must appear before 50001000200.
         let pos1 = s.find("50001000100").unwrap();
         let pos2 = s.find("50001000200").unwrap();
@@ -1360,7 +1378,10 @@ mod tests {
                     50001000100,COI-1,Downtown,LWV,,high\n";
         let err = parse_and_canonicalize_csv(csv).unwrap_err();
         let msg = err.to_string();
-        assert!(msg.contains("submitted_at"), "must name missing column: {msg}");
+        assert!(
+            msg.contains("submitted_at"),
+            "must name missing column: {msg}"
+        );
     }
 
     #[test]
@@ -1370,7 +1391,9 @@ mod tests {
                     50001000100,COI-1,Downtown,LWV,,high,2026-04-15T00:00:00Z,note here\n";
         let (rows, normalized, _, _) = parse_and_canonicalize_csv(csv).unwrap();
         assert_eq!(rows[0].extras["comment"], "note here");
-        assert!(std::str::from_utf8(&normalized).unwrap().contains("note here"));
+        assert!(std::str::from_utf8(&normalized)
+            .unwrap()
+            .contains("note here"));
     }
 
     #[test]
@@ -1425,7 +1448,10 @@ mod tests {
     fn test_geoid_non_numeric_rejected() {
         let err = validate_geoid(1, "abcdef12345", "AL", "2020", None).unwrap_err();
         let msg = err.to_string();
-        assert!(msg.contains("non-numeric"), "must mention non-numeric: {msg}");
+        assert!(
+            msg.contains("non-numeric"),
+            "must mention non-numeric: {msg}"
+        );
     }
 
     #[test]
@@ -1448,9 +1474,18 @@ mod tests {
 
     #[test]
     fn test_validate_mode_parse_all_three() {
-        assert!(matches!(ValidateMode::from_str("strict"), Ok(ValidateMode::Strict)));
-        assert!(matches!(ValidateMode::from_str("lenient"), Ok(ValidateMode::Lenient)));
-        assert!(matches!(ValidateMode::from_str("advisory"), Ok(ValidateMode::Advisory)));
+        assert!(matches!(
+            ValidateMode::from_str("strict"),
+            Ok(ValidateMode::Strict)
+        ));
+        assert!(matches!(
+            ValidateMode::from_str("lenient"),
+            Ok(ValidateMode::Lenient)
+        ));
+        assert!(matches!(
+            ValidateMode::from_str("advisory"),
+            Ok(ValidateMode::Advisory)
+        ));
     }
 
     #[test]
@@ -1520,27 +1555,42 @@ mod tests {
     fn test_url_ipv4_mapped_ipv6_loopback_rejected() {
         let err = validate_source_url("http://[::ffff:127.0.0.1]/").unwrap_err();
         let msg = err.to_string();
-        assert!(msg.contains("loopback"), "must name loopback predicate: {msg}");
+        assert!(
+            msg.contains("loopback"),
+            "must name loopback predicate: {msg}"
+        );
     }
 
     #[test]
     fn test_url_rfc1918_192_168_rejected() {
-        assert!(validate_source_url("http://192.168.1.1/").unwrap_err().to_string().contains("private"));
+        assert!(validate_source_url("http://192.168.1.1/")
+            .unwrap_err()
+            .to_string()
+            .contains("private"));
     }
 
     #[test]
     fn test_url_rfc1918_10_rejected() {
-        assert!(validate_source_url("http://10.0.0.1/").unwrap_err().to_string().contains("private"));
+        assert!(validate_source_url("http://10.0.0.1/")
+            .unwrap_err()
+            .to_string()
+            .contains("private"));
     }
 
     #[test]
     fn test_url_rfc1918_172_16_rejected() {
-        assert!(validate_source_url("http://172.16.0.1/").unwrap_err().to_string().contains("private"));
+        assert!(validate_source_url("http://172.16.0.1/")
+            .unwrap_err()
+            .to_string()
+            .contains("private"));
     }
 
     #[test]
     fn test_url_link_local_169_254_rejected() {
-        assert!(validate_source_url("http://169.254.1.1/").unwrap_err().to_string().contains("link-local"));
+        assert!(validate_source_url("http://169.254.1.1/")
+            .unwrap_err()
+            .to_string()
+            .contains("link-local"));
     }
 
     #[test]
@@ -1566,8 +1616,14 @@ mod tests {
     #[test]
     fn test_conflicts_no_overlap_no_mismatch() {
         let inputs = vec![
-            ("a".to_string(), vec![make_row("01001950100", "C1", "Downtown")]),
-            ("b".to_string(), vec![make_row("01001950200", "C2", "Eastside")]),
+            (
+                "a".to_string(),
+                vec![make_row("01001950100", "C1", "Downtown")],
+            ),
+            (
+                "b".to_string(),
+                vec![make_row("01001950200", "C2", "Eastside")],
+            ),
         ];
         let report = detect_conflicts(&inputs);
         assert!(report.coi_overlap.is_empty());
@@ -1577,8 +1633,14 @@ mod tests {
     #[test]
     fn test_conflicts_geoid_in_two_different_comment_ids() {
         let inputs = vec![
-            ("a".to_string(), vec![make_row("01001950100", "C1", "Downtown")]),
-            ("b".to_string(), vec![make_row("01001950100", "C2", "Eastside")]),
+            (
+                "a".to_string(),
+                vec![make_row("01001950100", "C1", "Downtown")],
+            ),
+            (
+                "b".to_string(),
+                vec![make_row("01001950100", "C2", "Eastside")],
+            ),
         ];
         let report = detect_conflicts(&inputs);
         assert_eq!(report.coi_overlap.len(), 1);
@@ -1588,8 +1650,14 @@ mod tests {
     #[test]
     fn test_conflicts_label_mismatch_same_comment_id() {
         let inputs = vec![
-            ("a".to_string(), vec![make_row("01001950100", "C1", "Downtown")]),
-            ("b".to_string(), vec![make_row("01001950200", "C1", "Old Downtown")]),
+            (
+                "a".to_string(),
+                vec![make_row("01001950100", "C1", "Downtown")],
+            ),
+            (
+                "b".to_string(),
+                vec![make_row("01001950200", "C1", "Old Downtown")],
+            ),
         ];
         let report = detect_conflicts(&inputs);
         assert_eq!(report.coi_label_mismatch.len(), 1);
@@ -1697,7 +1765,8 @@ mod tests {
     #[test]
     fn test_snapshot_url_writes_body_and_headers() {
         let body = b"<html>hello</html>".to_vec();
-        let (url, handle) = spawn_oneshot_server("200 OK", "text/html; charset=utf-8", body.clone());
+        let (url, handle) =
+            spawn_oneshot_server("200 OK", "text/html; charset=utf-8", body.clone());
         let tmp = tempfile::TempDir::new().unwrap();
 
         let rec = snapshot_url_with_client(&url, tmp.path(), snapshot_test_client())
@@ -1720,9 +1789,14 @@ mod tests {
         let sha8: String = rec.body_sha256.chars().take(8).collect();
         let headers = std::fs::read_to_string(tmp.path().join(format!("{sha8}.headers.txt")))
             .expect("headers file must exist");
-        assert!(headers.contains("200"), "headers file must include status line");
         assert!(
-            headers.lines().any(|l| l.starts_with("content-length:") || l.starts_with("Content-Length:")),
+            headers.contains("200"),
+            "headers file must include status line"
+        );
+        assert!(
+            headers
+                .lines()
+                .any(|l| l.starts_with("content-length:") || l.starts_with("Content-Length:")),
             "headers must include Content-Length"
         );
     }
@@ -1746,7 +1820,8 @@ mod tests {
 
     #[test]
     fn test_snapshot_url_records_404_status() {
-        let (url, handle) = spawn_oneshot_server("404 Not Found", "text/plain", b"missing".to_vec());
+        let (url, handle) =
+            spawn_oneshot_server("404 Not Found", "text/plain", b"missing".to_vec());
         let tmp = tempfile::TempDir::new().unwrap();
 
         let rec = snapshot_url_with_client(&url, tmp.path(), snapshot_test_client())
@@ -1762,11 +1837,8 @@ mod tests {
     fn test_snapshot_url_unreachable_host_returns_err() {
         // Port 1 on localhost should refuse instantly.
         let tmp = tempfile::TempDir::new().unwrap();
-        let result = snapshot_url_with_client(
-            "http://127.0.0.1:1/",
-            tmp.path(),
-            snapshot_test_client(),
-        );
+        let result =
+            snapshot_url_with_client("http://127.0.0.1:1/", tmp.path(), snapshot_test_client());
         assert!(result.is_err(), "unreachable host must return an error");
     }
 
@@ -1774,7 +1846,7 @@ mod tests {
 
     /// Build a synthetic candidate-race CSV + per-row attestation files in `dir`.
     /// Returns the CSV path. Mirrors the fixture pattern in
-    /// redist-analysis::race_of_candidate::tests.
+    /// BISECT-analysis::race_of_candidate::tests.
     fn write_synthetic_candidate_race_fixture(dir: &Path) -> PathBuf {
         let mut csv = String::from(
             "candidate_name,party,race,curator,curator_credentials,curator_attestation_date,source,independently_verified,attestation_doc_path,attestation_doc_format\n",
@@ -1782,12 +1854,28 @@ mod tests {
         // Two candidates, same curator, both independently_verified.
         let rows: &[(&str, &str, &str, &str, &str, &str, &str, bool, &str, &str)] = &[
             (
-                "Adams J", "DEM", "Black", "test_curator", "PhD History",
-                "2026-04-15", "elections.gov", true, "adams.pdf", "pdf",
+                "Adams J",
+                "DEM",
+                "Black",
+                "test_curator",
+                "PhD History",
+                "2026-04-15",
+                "elections.gov",
+                true,
+                "adams.pdf",
+                "pdf",
             ),
             (
-                "Brown K", "DEM", "white", "test_curator", "PhD History",
-                "2026-04-15", "elections.gov", true, "brown.pdf", "pdf",
+                "Brown K",
+                "DEM",
+                "white",
+                "test_curator",
+                "PhD History",
+                "2026-04-15",
+                "elections.gov",
+                true,
+                "brown.pdf",
+                "pdf",
             ),
         ];
         for (name, party, race, curator, creds, date, source, iv, doc_path, doc_fmt) in rows {
@@ -1822,7 +1910,11 @@ mod tests {
         };
 
         let result = run_add_candidate_race(&args);
-        assert!(result.is_ok(), "add-candidate-race must succeed: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "add-candidate-race must succeed: {:?}",
+            result.err()
+        );
 
         let dir = output_base
             .join("v1")
@@ -1844,7 +1936,10 @@ mod tests {
         assert_eq!(m["label"].as_str(), Some("vt_2020_test"));
         assert_eq!(m["n_annotations"].as_u64(), Some(2));
         assert_eq!(m["n_curators"].as_u64(), Some(1));
-        assert_eq!(m["annotations_independently_verified"].as_bool(), Some(true));
+        assert_eq!(
+            m["annotations_independently_verified"].as_bool(),
+            Some(true)
+        );
         assert_eq!(m["n_disputes"].as_u64(), Some(0));
         assert_eq!(m["original_csv_sha256"].as_str().unwrap().len(), 64);
         assert_eq!(m["attestation_doc_sha256"].as_str().unwrap().len(), 64);
@@ -1896,9 +1991,14 @@ mod tests {
             version: "v1".into(),
         };
         let err = run_add_candidate_race(&args).unwrap_err().to_string();
-        assert!(err.contains("[INPUT]"), "must use [INPUT] error category: {err}");
-        assert!(err.contains("CSV not found") || err.contains("does-not-exist"),
-            "error must reference missing CSV: {err}");
+        assert!(
+            err.contains("[INPUT]"),
+            "must use [INPUT] error category: {err}"
+        );
+        assert!(
+            err.contains("CSV not found") || err.contains("does-not-exist"),
+            "error must reference missing CSV: {err}"
+        );
     }
 
     #[test]
@@ -1916,8 +2016,14 @@ mod tests {
             version: "v1".into(),
         };
         let err = run_add_candidate_race(&args).unwrap_err().to_string();
-        assert!(err.contains("[INPUT]"), "must use [INPUT] error category: {err}");
-        assert!(err.contains("attestation"), "error must reference missing attestation: {err}");
+        assert!(
+            err.contains("[INPUT]"),
+            "must use [INPUT] error category: {err}"
+        );
+        assert!(
+            err.contains("attestation"),
+            "error must reference missing attestation: {err}"
+        );
     }
 
     #[test]
@@ -1953,7 +2059,10 @@ mod tests {
         )
         .unwrap();
         let m: serde_json::Value = serde_json::from_str(&manifest_text).unwrap();
-        assert_eq!(m["annotations_independently_verified"].as_bool(), Some(false));
+        assert_eq!(
+            m["annotations_independently_verified"].as_bool(),
+            Some(false)
+        );
     }
 
     #[test]
@@ -2028,8 +2137,10 @@ mod tests {
     #[test]
     fn test_geoid_8_digits_invalid_format() {
         let err = validate_geoid(1, "12345678", "AL", "2020", None).unwrap_err();
-        assert!(matches!(err, CivicError::InvalidGeoidFormat { .. }),
-            "8-digit GEOID should be InvalidGeoidFormat, not LeadingZeroLost: {err}");
+        assert!(
+            matches!(err, CivicError::InvalidGeoidFormat { .. }),
+            "8-digit GEOID should be InvalidGeoidFormat, not LeadingZeroLost: {err}"
+        );
     }
 
     /// GEOID validation: 11 digits all zeros passes structural check (valid format).
@@ -2057,7 +2168,10 @@ mod tests {
     #[test]
     fn test_url_ipv6_unspecified_rejected() {
         let err = validate_source_url("http://[::]/").unwrap_err();
-        assert!(err.to_string().contains("unspecified"), ":: is unspecified: {err}");
+        assert!(
+            err.to_string().contains("unspecified"),
+            ":: is unspecified: {err}"
+        );
     }
 
     /// URL validation: IPv4-mapped private IPv6 (::ffff:10.0.0.1) rejected.
@@ -2065,15 +2179,20 @@ mod tests {
     fn test_url_ipv4_mapped_private_rejected() {
         let err = validate_source_url("http://[::ffff:10.0.0.1]/").unwrap_err();
         let msg = err.to_string();
-        assert!(msg.contains("private") || msg.contains("IPv4-mapped"),
-            "::ffff:10.0.0.1 must be rejected as private/IPv4-mapped: {msg}");
+        assert!(
+            msg.contains("private") || msg.contains("IPv4-mapped"),
+            "::ffff:10.0.0.1 must be rejected as private/IPv4-mapped: {msg}"
+        );
     }
 
     /// URL validation: ftp scheme rejected.
     #[test]
     fn test_url_ftp_scheme_rejected() {
         let err = validate_source_url("ftp://example.org/data.zip").unwrap_err();
-        assert!(err.to_string().contains("ftp"), "ftp scheme must be named in error: {err}");
+        assert!(
+            err.to_string().contains("ftp"),
+            "ftp scheme must be named in error: {err}"
+        );
     }
 
     /// Conflict detection: same GEOID in same comment_id (same input) — no conflict.
@@ -2081,13 +2200,21 @@ mod tests {
     fn test_conflicts_same_geoid_same_comment_id_no_conflict() {
         // Both inputs agree: geoid + same comment_id → no GEOID overlap (same ID).
         let inputs = vec![
-            ("a".to_string(), vec![make_row("01001950100", "C1", "Downtown")]),
-            ("b".to_string(), vec![make_row("01001950100", "C1", "Downtown")]),
+            (
+                "a".to_string(),
+                vec![make_row("01001950100", "C1", "Downtown")],
+            ),
+            (
+                "b".to_string(),
+                vec![make_row("01001950100", "C1", "Downtown")],
+            ),
         ];
         let report = detect_conflicts(&inputs);
         // Same comment_id across both → no label mismatch either.
-        assert!(report.coi_overlap.is_empty(),
-            "same comment_id for same geoid is not an overlap");
+        assert!(
+            report.coi_overlap.is_empty(),
+            "same comment_id for same geoid is not an overlap"
+        );
         assert!(report.coi_label_mismatch.is_empty());
     }
 
@@ -2095,57 +2222,77 @@ mod tests {
     #[test]
     fn test_conflicts_multiple_geoid_overlaps() {
         let inputs = vec![
-            ("a".to_string(), vec![
-                make_row("01001950100", "C1", "Downtown"),
-                make_row("01001950200", "C2", "Midtown"),
-            ]),
-            ("b".to_string(), vec![
-                make_row("01001950100", "C99", "Other"),
-                make_row("01001950200", "C98", "OtherMid"),
-            ]),
+            (
+                "a".to_string(),
+                vec![
+                    make_row("01001950100", "C1", "Downtown"),
+                    make_row("01001950200", "C2", "Midtown"),
+                ],
+            ),
+            (
+                "b".to_string(),
+                vec![
+                    make_row("01001950100", "C99", "Other"),
+                    make_row("01001950200", "C98", "OtherMid"),
+                ],
+            ),
         ];
         let report = detect_conflicts(&inputs);
-        assert_eq!(report.coi_overlap.len(), 2,
-            "both GEOIDs should show as overlaps");
+        assert_eq!(
+            report.coi_overlap.len(),
+            2,
+            "both GEOIDs should show as overlaps"
+        );
     }
 
     /// race_conflict_robustness_violated: 0 disputed of N doesn't violate.
     #[test]
     fn test_b08_zero_disputed_never_violates() {
         for n_total in 1..=100 {
-            assert!(!race_conflict_robustness_violated(0, n_total, 0.10),
-                "0 disputed should never violate: n_total={n_total}");
+            assert!(
+                !race_conflict_robustness_violated(0, n_total, 0.10),
+                "0 disputed should never violate: n_total={n_total}"
+            );
         }
     }
 
     /// race_conflict_robustness_violated: all disputed → violates.
     #[test]
     fn test_b08_all_disputed_violates() {
-        assert!(race_conflict_robustness_violated(10, 10, 0.10),
-            "100% disputed must violate at any reasonable threshold");
+        assert!(
+            race_conflict_robustness_violated(10, 10, 0.10),
+            "100% disputed must violate at any reasonable threshold"
+        );
     }
 
     /// csv_quote: a value with a comma gets double-quoted.
     #[test]
     fn test_csv_quote_comma_forces_quotes() {
         let result = csv_quote("hello, world", false);
-        assert!(result.starts_with('"') && result.ends_with('"'),
-            "value with comma must be quoted: {result}");
+        assert!(
+            result.starts_with('"') && result.ends_with('"'),
+            "value with comma must be quoted: {result}"
+        );
     }
 
     /// csv_quote: a value with embedded double quotes escapes them.
     #[test]
     fn test_csv_quote_embedded_quotes_escaped() {
         let result = csv_quote("say \"hi\"", false);
-        assert!(result.contains("\"\""), "embedded quotes must be escaped: {result}");
+        assert!(
+            result.contains("\"\""),
+            "embedded quotes must be escaped: {result}"
+        );
     }
 
     /// csv_quote: force=true always quotes even a plain value.
     #[test]
     fn test_csv_quote_force_always_quotes() {
         let result = csv_quote("01001950100", true);
-        assert!(result.starts_with('"'),
-            "force=true must always quote (GEOID protection): {result}");
+        assert!(
+            result.starts_with('"'),
+            "force=true must always quote (GEOID protection): {result}"
+        );
     }
 
     /// Parsing a CSV with a leading `# schema-version` comment line succeeds.
@@ -2154,7 +2301,11 @@ mod tests {
         let csv = b"# civic-coi-csv v1\ngeoid,comment_id,label,source,source_url,confidence,submitted_at\n\
                     01001950100,COI-1,Downtown,LWV,,high,2026-04-15T00:00:00Z\n";
         let (rows, _, _, _) = parse_and_canonicalize_csv(csv).unwrap();
-        assert_eq!(rows.len(), 1, "comment line must be stripped before CSV parse");
+        assert_eq!(
+            rows.len(),
+            1,
+            "comment line must be stripped before CSV parse"
+        );
         assert_eq!(rows[0].comment_id, "COI-1");
     }
 
@@ -2165,7 +2316,13 @@ mod tests {
                     01001950100,COI-1,Downtown,LWV,,high,2026-04-15T00:00:00Z\r\n";
         let (_, normalized, _, _) = parse_and_canonicalize_csv(csv).unwrap();
         let s = std::str::from_utf8(&normalized).unwrap();
-        assert!(!s.contains("\r\n"), "canonical output must not contain CRLF");
-        assert!(s.contains('\n'), "canonical output must have LF line endings");
+        assert!(
+            !s.contains("\r\n"),
+            "canonical output must not contain CRLF"
+        );
+        assert!(
+            s.contains('\n'),
+            "canonical output must have LF line endings"
+        );
     }
 }

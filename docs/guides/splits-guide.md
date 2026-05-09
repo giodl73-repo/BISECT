@@ -1,6 +1,6 @@
 # County and Municipal Preservation Guide
 
-How `redist` measures political subdivision splits, why they matter legally, and what the standards are by state.
+How `BISECT` measures political subdivision splits, why they matter legally, and what the standards are by state.
 
 ---
 
@@ -8,7 +8,7 @@ How `redist` measures political subdivision splits, why they matter legally, and
 
 Most state constitutions require redistricting plans to avoid splitting counties and municipalities. The specific language varies dramatically by state, and the legal consequences of splitting depend on the exact wording of your state's constitution.
 
-`redist` computes split counts and reports them against your state's specific constitutional standard — not a generic score.
+`BISECT` computes split counts and reports them against your state's specific constitutional standard — not a generic score.
 
 ---
 
@@ -83,7 +83,7 @@ bisect analyze --label wa_house_v1 --types splits
 
 **Standard**: California has a stricter standard than Washington. The Independent Redistricting Commission uses a two-part test: (1) minimize the number of county splits, and (2) minimize the population of any county fragment that falls in a different district.
 
-`redist` reports both: split count and the population of split county fragments.
+`BISECT` reports both: split count and the population of split county fragments.
 
 ### Texas
 
@@ -99,11 +99,11 @@ bisect analyze --label wa_house_v1 --types splits
 
 ### North Carolina, Georgia, Virginia
 
-These states have had significant redistricting litigation. `redist` reports split counts but does not determine whether splits were "necessary" — that is a legal determination requiring facts about whether the split was avoidable.
+These states have had significant redistricting litigation. `BISECT` reports split counts but does not determine whether splits were "necessary" — that is a legal determination requiring facts about whether the split was avoidable.
 
 ### States without a splits requirement
 
-Some states have no constitutional county preservation requirement (e.g., Rhode Island). For these states, `redist` reports split counts without a legal standard field.
+Some states have no constitutional county preservation requirement (e.g., Rhode Island). For these states, `BISECT` reports split counts without a legal standard field.
 
 ---
 
@@ -111,7 +111,7 @@ Some states have no constitutional county preservation requirement (e.g., Rhode 
 
 Municipal splits are computed from the Census Bureau's Place-to-Tract relationship files. A city is "split" if its census-designated place (CDP) spans more than one district.
 
-**Important**: Census-designated places include unincorporated areas that may not be legally considered "municipalities" under your state's constitution. Verify which entities your state's constitution covers before relying on `redist`'s municipal split count.
+**Important**: Census-designated places include unincorporated areas that may not be legally considered "municipalities" under your state's constitution. Verify which entities your state's constitution covers before relying on `BISECT`'s municipal split count.
 
 **Data availability**: Municipal split data requires `bisect fetch --type geography`. If this data is unavailable and your state's constitution requires municipal preservation, `bisect analyze --types splits` exits with an error rather than silently omitting municipal splits.
 
@@ -120,7 +120,7 @@ Municipal splits are computed from the Census Bureau's Place-to-Tract relationsh
 ## Comparing your plan to the enacted map
 
 ```bash
-redist compare --plan-a wa_house_v1 --enacted --year 2020 --version WA_Plans
+BISECT compare --plan-a wa_house_v1 --enacted --year 2020 --version WA_Plans
 ```
 
 The comparison output shows:
@@ -137,19 +137,19 @@ Courts and commissions often evaluate plans relative to each other and to the en
 
 ## Minimizing splits in your plans
 
-`redist` does not optimize for split minimization directly — it optimizes for compactness (edge-weighted mode) or population balance. To reduce splits, try:
+`BISECT` does not optimize for split minimization directly — it optimizes for compactness (edge-weighted mode) or population balance. To reduce splits, try:
 
 1. **More seeds**: Run several plans with different seeds and pick the one with fewest splits.
 2. **Edge weights**: In `--partition-mode edge-weighted`, edges along county lines get high weight (long shared boundary), so METIS tends to avoid cutting them.
 3. **Manual review**: After the algorithmic run, inspect `splits.json` for split counties that could be reassigned to a single district without violating population balance.
 
-Future versions of `redist` may support a county-preservation constraint mode that penalizes splits directly in the METIS objective.
+Future versions of `BISECT` may support a county-preservation constraint mode that penalizes splits directly in the METIS objective.
 
 ---
 
 ## Severity scoring
 
-Not all splits are equal. `redist` reports `split_severity` — the number of districts containing tracts from a split county:
+Not all splits are equal. `BISECT` reports `split_severity` — the number of districts containing tracts from a split county:
 
 | Severity | Meaning | Legal exposure |
 |----------|---------|----------------|

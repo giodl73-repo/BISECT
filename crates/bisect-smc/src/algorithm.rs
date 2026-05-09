@@ -3,16 +3,16 @@
 //! Runs the Fifield et al. (2020) Sequential Monte Carlo redistricting sampler.
 //! Produces a weighted sample of N valid k-district plans.
 
-use rand::SeedableRng;
 use rand::rngs::SmallRng;
+use rand::SeedableRng;
 use rayon::prelude::*;
 use thiserror::Error;
 
+use crate::output::{ResampleRecord, SmcResult};
 use crate::partial_plan::PartialPlan;
 use crate::proposal::{propose_district, ProposeError};
 use crate::resample::{ess, kahan_softmax, systematic_resample};
 use crate::seeds::{particle_seed, resample_seed};
-use crate::output::{ResampleRecord, SmcResult};
 
 #[derive(Debug, Clone)]
 pub struct SmcConfig {
@@ -59,10 +59,14 @@ pub fn run_smc(
     let n_p = config.n_particles;
 
     if k == 0 {
-        return Err(SmcError::InvalidConfig { msg: "k must be ≥ 1".into() });
+        return Err(SmcError::InvalidConfig {
+            msg: "k must be ≥ 1".into(),
+        });
     }
     if n_p == 0 {
-        return Err(SmcError::InvalidConfig { msg: "n_particles must be ≥ 1".into() });
+        return Err(SmcError::InvalidConfig {
+            msg: "n_particles must be ≥ 1".into(),
+        });
     }
 
     // k=1: all plans trivially assign every tract to district 1
@@ -81,9 +85,7 @@ pub fn run_smc(
     }
 
     // Initialise: N empty partial plans, log-weights = 0
-    let mut particles: Vec<PartialPlan> = (0..n_p)
-        .map(|_| PartialPlan::empty(n))
-        .collect();
+    let mut particles: Vec<PartialPlan> = (0..n_p).map(|_| PartialPlan::empty(n)).collect();
     let mut log_weights: Vec<f64> = vec![0.0f64; n_p];
 
     let mut ess_trace: Vec<f64> = Vec::with_capacity(k - 1);
@@ -100,7 +102,7 @@ pub fn run_smc(
         // applying them sequentially to avoid non-determinism in the weight update.
         //
         // Note: we do NOT use par_iter() on the C METIS library (the proposal uses
-        // redist-ensemble's pure-Rust Wilson's algorithm, which is thread-safe).
+        // BISECT-ensemble's pure-Rust Wilson's algorithm, which is thread-safe).
         let proposal_results: Vec<(Option<PartialPlan>, f64)> = (0..n_p)
             .into_par_iter()
             .map(|i| {
@@ -110,8 +112,14 @@ pub fn run_smc(
                 let seed = particle_seed(config.base_seed, stage as u32, i as u32);
                 let mut rng = SmallRng::seed_from_u64(seed);
                 match propose_district(
-                    &particles[i], adjacency, vertex_weights,
-                    k, stage, config.pop_tolerance, &mut rng, i,
+                    &particles[i],
+                    adjacency,
+                    vertex_weights,
+                    k,
+                    stage,
+                    config.pop_tolerance,
+                    &mut rng,
+                    i,
                 ) {
                     Ok((new_partial, log_w)) => (Some(new_partial), log_w),
                     Err(ProposeError::NoValidCut { .. } | ProposeError::EmptySubgraph { .. }) => {
@@ -139,7 +147,10 @@ pub fn run_smc(
         ess_trace.push(current_ess);
 
         if current_ess == 0.0 {
-            return Err(SmcError::AllParticlesKilled { stage, n_particles: n_p });
+            return Err(SmcError::AllParticlesKilled {
+                stage,
+                n_particles: n_p,
+            });
         }
 
         // ── Resample if needed ─────────────────────────────────────────────────
@@ -172,9 +183,7 @@ pub fn run_smc(
     let weights = kahan_softmax(&log_weights);
 
     // ── Finalise plans ─────────────────────────────────────────────────────────
-    let plans: Vec<Vec<u32>> = particles.iter()
-        .map(|p| p.finalise())
-        .collect();
+    let plans: Vec<Vec<u32>> = particles.iter().map(|p| p.finalise()).collect();
 
     Ok(SmcResult {
         plans,
@@ -193,12 +202,18 @@ mod tests {
     use super::*;
 
     fn path_adj(n: usize) -> Vec<Vec<usize>> {
-        (0..n).map(|i| {
-            let mut nb = Vec::new();
-            if i > 0 { nb.push(i - 1); }
-            if i < n - 1 { nb.push(i + 1); }
-            nb
-        }).collect()
+        (0..n)
+            .map(|i| {
+                let mut nb = Vec::new();
+                if i > 0 {
+                    nb.push(i - 1);
+                }
+                if i < n - 1 {
+                    nb.push(i + 1);
+                }
+                nb
+            })
+            .collect()
     }
 
     fn grid_adj(rows: usize, cols: usize) -> Vec<Vec<usize>> {
@@ -207,15 +222,23 @@ mod tests {
         for r in 0..rows {
             for c in 0..cols {
                 let v = r * cols + c;
-                if c + 1 < cols { adj[v].push(v + 1); adj[v + 1].push(v); }
-                if r + 1 < rows { adj[v].push(v + cols); adj[v + cols].push(v); }
+                if c + 1 < cols {
+                    adj[v].push(v + 1);
+                    adj[v + 1].push(v);
+                }
+                if r + 1 < rows {
+                    adj[v].push(v + cols);
+                    adj[v + cols].push(v);
+                }
             }
         }
         adj
     }
 
     fn is_connected(tracts: &[usize], adj: &[Vec<usize>]) -> bool {
-        if tracts.is_empty() { return true; }
+        if tracts.is_empty() {
+            return true;
+        }
         let set: std::collections::HashSet<usize> = tracts.iter().copied().collect();
         let mut visited = std::collections::HashSet::new();
         let mut queue = std::collections::VecDeque::new();
@@ -236,11 +259,17 @@ mod tests {
     fn smc_k1_trivial() {
         let adj = path_adj(4);
         let pop = vec![100i64; 4];
-        let cfg = SmcConfig { n_particles: 10, base_seed: 0, ..Default::default() };
+        let cfg = SmcConfig {
+            n_particles: 10,
+            base_seed: 0,
+            ..Default::default()
+        };
         let result = run_smc(&adj, &pop, 1, cfg).unwrap();
         assert_eq!(result.n_plans(), 10);
-        assert!(result.plans.iter().all(|p| p.iter().all(|&d| d == 1)),
-            "k=1: all tracts in district 1");
+        assert!(
+            result.plans.iter().all(|p| p.iter().all(|&d| d == 1)),
+            "k=1: all tracts in district 1"
+        );
         let wsum: f64 = result.weights.iter().sum();
         assert!((wsum - 1.0).abs() < 1e-9, "weights sum to 1: {wsum}");
         assert_eq!(result.resample_count, 0);
@@ -251,8 +280,12 @@ mod tests {
     fn smc_path_k2_produces_valid_plans() {
         let adj = path_adj(6);
         let pop = vec![100i64; 6];
-        let cfg = SmcConfig { n_particles: 50, base_seed: 42,
-                              pop_tolerance: 0.2, ..Default::default() };
+        let cfg = SmcConfig {
+            n_particles: 50,
+            base_seed: 42,
+            pop_tolerance: 0.2,
+            ..Default::default()
+        };
         let result = run_smc(&adj, &pop, 2, cfg).unwrap();
 
         assert_eq!(result.n_plans(), 50);
@@ -274,8 +307,12 @@ mod tests {
     fn smc_deterministic_same_seed() {
         let adj = path_adj(8);
         let pop = vec![100i64; 8];
-        let cfg1 = SmcConfig { n_particles: 20, base_seed: 99,
-                               pop_tolerance: 0.2, ..Default::default() };
+        let cfg1 = SmcConfig {
+            n_particles: 20,
+            base_seed: 99,
+            pop_tolerance: 0.2,
+            ..Default::default()
+        };
         let cfg2 = cfg1.clone();
         let r1 = run_smc(&adj, &pop, 2, cfg1).unwrap();
         let r2 = run_smc(&adj, &pop, 2, cfg2).unwrap();
@@ -288,28 +325,48 @@ mod tests {
     fn smc_weights_all_positive() {
         let adj = grid_adj(3, 3);
         let pop = vec![100i64; 9];
-        let cfg = SmcConfig { n_particles: 30, base_seed: 7,
-                              pop_tolerance: 0.4, ..Default::default() };
+        let cfg = SmcConfig {
+            n_particles: 30,
+            base_seed: 7,
+            pop_tolerance: 0.4,
+            ..Default::default()
+        };
         let result = run_smc(&adj, &pop, 3, cfg).unwrap();
-        assert!(result.weights.iter().all(|&w| w >= 0.0),
-            "all weights must be non-negative");
+        assert!(
+            result.weights.iter().all(|&w| w >= 0.0),
+            "all weights must be non-negative"
+        );
     }
 
     #[test]
     fn smc_ess_trace_length_k_minus_1() {
         let adj = path_adj(6);
         let pop = vec![100i64; 6];
-        let cfg = SmcConfig { n_particles: 20, base_seed: 1,
-                              pop_tolerance: 0.3, ..Default::default() };
+        let cfg = SmcConfig {
+            n_particles: 20,
+            base_seed: 1,
+            pop_tolerance: 0.3,
+            ..Default::default()
+        };
         let result = run_smc(&adj, &pop, 3, cfg).unwrap();
-        assert_eq!(result.ess_trace.len(), 2, "k=3 → ESS trace length = k-1 = 2");
+        assert_eq!(
+            result.ess_trace.len(),
+            2,
+            "k=3 → ESS trace length = k-1 = 2"
+        );
     }
 
     #[test]
     fn smc_k1_error_on_zero_particles() {
         let adj = path_adj(4);
         let pop = vec![100i64; 4];
-        let cfg = SmcConfig { n_particles: 0, ..Default::default() };
-        assert!(matches!(run_smc(&adj, &pop, 2, cfg), Err(SmcError::InvalidConfig { .. })));
+        let cfg = SmcConfig {
+            n_particles: 0,
+            ..Default::default()
+        };
+        assert!(matches!(
+            run_smc(&adj, &pop, 2, cfg),
+            Err(SmcError::InvalidConfig { .. })
+        ));
     }
 }

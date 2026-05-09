@@ -188,10 +188,10 @@ mod tests {
     /// Expected: n_binary_x=8, n_binary_z=3, n_flow_vars=6*2=12.
     fn path_4_adjacency() -> Vec<Vec<usize>> {
         vec![
-            vec![1],          // 0 -- 1
-            vec![0, 2],       // 1 -- 0, 2
-            vec![1, 3],       // 2 -- 1, 3
-            vec![2],          // 3 -- 2
+            vec![1],    // 0 -- 1
+            vec![0, 2], // 1 -- 0, 2
+            vec![1, 3], // 2 -- 1, 3
+            vec![2],    // 3 -- 2
         ]
     }
 
@@ -206,9 +206,15 @@ mod tests {
         let f = build_formulation(&adj, &pop, 2, 0.005);
 
         assert_eq!(f.n_binary_x, 8, "n_binary_x should be n*k = 4*2 = 8");
-        assert_eq!(f.n_binary_z, 3, "n_binary_z should equal |E| = 3 (path 0-1-2-3)");
+        assert_eq!(
+            f.n_binary_z, 3,
+            "n_binary_z should equal |E| = 3 (path 0-1-2-3)"
+        );
         // 2 * |E| * k = 2 * 3 * 2 = 12
-        assert_eq!(f.n_flow_vars, 12, "n_flow_vars should be 2*|E|*k = 2*3*2 = 12");
+        assert_eq!(
+            f.n_flow_vars, 12,
+            "n_flow_vars should be 2*|E|*k = 2*3*2 = 12"
+        );
     }
 
     #[test]
@@ -218,9 +224,9 @@ mod tests {
         let f = build_formulation(&adj, &pop, 2, 0.005);
         // Coverage constraints: one per tract.
         let n_coverage = 4; // n = 4
-        // The coverage constraints are embedded in n_constraints; verify via formula:
-        // n_coverage = n, n_balance = 2*k, n_cut = 2*|E|*k, n_mtz = 2*|E|*k + (n-1)*k + k
-        // Total = 4 + 4 + 12 + 12 + 3 + 2 = 37
+                            // The coverage constraints are embedded in n_constraints; verify via formula:
+                            // n_coverage = n, n_balance = 2*k, n_cut = 2*|E|*k, n_mtz = 2*|E|*k + (n-1)*k + k
+                            // Total = 4 + 4 + 12 + 12 + 3 + 2 = 37
         assert!(
             f.n_constraints >= n_coverage,
             "n_constraints ({}) must be >= n_coverage ({})",
@@ -236,7 +242,10 @@ mod tests {
         let adj = path_4_adjacency();
         let pop = uniform_pop(4, 100);
         let f = build_formulation(&adj, &pop, 2, 0.005);
-        assert!(f.n_constraints > 0, "formulation must have at least one constraint");
+        assert!(
+            f.n_constraints > 0,
+            "formulation must have at least one constraint"
+        );
     }
 
     #[test]
@@ -253,7 +262,10 @@ mod tests {
         let adj = path_4_adjacency();
         let pop = uniform_pop(4, 100);
         let f = build_formulation(&adj, &pop, 2, 0.005);
-        assert_eq!(f.n_constraints, 40, "expected 40 constraints for 4-node path k=2");
+        assert_eq!(
+            f.n_constraints, 40,
+            "expected 40 constraints for 4-node path k=2"
+        );
     }
 
     #[test]
@@ -284,9 +296,6 @@ mod tests {
         let adj = path_4_adjacency();
         let pop = uniform_pop(4, 100);
         let f = build_formulation(&adj, &pop, 2, 0.005);
-        assert_eq!(
-            f.n_variables(),
-            f.n_binary_x + f.n_binary_z + f.n_flow_vars
-        );
+        assert_eq!(f.n_variables(), f.n_binary_x + f.n_binary_z + f.n_flow_vars);
     }
 }

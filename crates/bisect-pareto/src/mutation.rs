@@ -5,9 +5,9 @@
 //!
 //! Per spec §5.
 
-use rand::SeedableRng;
 use rand::rngs::SmallRng;
 use rand::seq::SliceRandom;
+use rand::SeedableRng;
 
 /// Single boundary-tract flip mutation.
 ///
@@ -43,9 +43,7 @@ pub fn mutate(
 
     // Collect all boundary tracts
     let boundary: Vec<usize> = (0..n)
-        .filter(|&t| {
-            adjacency[t].iter().any(|&u| plan[u] != plan[t])
-        })
+        .filter(|&t| adjacency[t].iter().any(|&u| plan[u] != plan[t]))
         .collect();
 
     if boundary.is_empty() {
@@ -81,13 +79,15 @@ pub fn mutate(
     let new_pop_d_new = pop_d_new + tract_pop;
 
     // Population balance check
-    if (new_pop_d_old as f64 - target_pop).abs() > tol_abs { return plan.to_vec(); }
-    if (new_pop_d_new as f64 - target_pop).abs() > tol_abs { return plan.to_vec(); }
+    if (new_pop_d_old as f64 - target_pop).abs() > tol_abs {
+        return plan.to_vec();
+    }
+    if (new_pop_d_new as f64 - target_pop).abs() > tol_abs {
+        return plan.to_vec();
+    }
 
     // Contiguity check: d_old (minus tract t) must remain connected
-    let d_old_tracts: Vec<usize> = (0..n)
-        .filter(|&i| plan[i] == d_old && i != t)
-        .collect();
+    let d_old_tracts: Vec<usize> = (0..n).filter(|&i| plan[i] == d_old && i != t).collect();
 
     if d_old_tracts.is_empty() {
         // Would create an empty district — invalid
@@ -106,7 +106,9 @@ pub fn mutate(
 
 /// Check if a set of tracts forms a connected subgraph via BFS.
 fn is_connected_subset(tracts: &[usize], adjacency: &[Vec<usize>]) -> bool {
-    if tracts.len() <= 1 { return true; }
+    if tracts.len() <= 1 {
+        return true;
+    }
     let set: std::collections::HashSet<usize> = tracts.iter().copied().collect();
     let mut visited = std::collections::HashSet::new();
     let mut queue = std::collections::VecDeque::new();
@@ -128,34 +130,56 @@ mod tests {
     use super::*;
 
     fn path_adj(n: usize) -> Vec<Vec<usize>> {
-        (0..n).map(|i| {
-            let mut nb = Vec::new();
-            if i > 0 { nb.push(i - 1); }
-            if i < n - 1 { nb.push(i + 1); }
-            nb
-        }).collect()
+        (0..n)
+            .map(|i| {
+                let mut nb = Vec::new();
+                if i > 0 {
+                    nb.push(i - 1);
+                }
+                if i < n - 1 {
+                    nb.push(i + 1);
+                }
+                nb
+            })
+            .collect()
     }
 
-    fn is_plan_valid_basic(plan: &[u32], adj: &[Vec<usize>], pop: &[i64], k: usize, tol: f64) -> bool {
+    fn is_plan_valid_basic(
+        plan: &[u32],
+        adj: &[Vec<usize>],
+        pop: &[i64],
+        k: usize,
+        tol: f64,
+    ) -> bool {
         let n = plan.len();
         let total: i64 = pop.iter().sum();
         let target = total as f64 / k as f64;
         let tol_abs = tol * target;
         for d in 1u32..=k as u32 {
             let tracts: Vec<usize> = (0..n).filter(|&t| plan[t] == d).collect();
-            if tracts.is_empty() { return false; }
+            if tracts.is_empty() {
+                return false;
+            }
             let dp: i64 = tracts.iter().map(|&t| pop[t]).sum();
-            if (dp as f64 - target).abs() > tol_abs { return false; }
+            if (dp as f64 - target).abs() > tol_abs {
+                return false;
+            }
             let set: std::collections::HashSet<usize> = tracts.iter().copied().collect();
             let mut vis = std::collections::HashSet::new();
             let mut q = std::collections::VecDeque::new();
-            q.push_back(tracts[0]); vis.insert(tracts[0]);
+            q.push_back(tracts[0]);
+            vis.insert(tracts[0]);
             while let Some(v) = q.pop_front() {
                 for &u in &adj[v] {
-                    if set.contains(&u) && !vis.contains(&u) { vis.insert(u); q.push_back(u); }
+                    if set.contains(&u) && !vis.contains(&u) {
+                        vis.insert(u);
+                        q.push_back(u);
+                    }
                 }
             }
-            if vis.len() != tracts.len() { return false; }
+            if vis.len() != tracts.len() {
+                return false;
+            }
         }
         true
     }
@@ -170,7 +194,10 @@ mod tests {
         // Result must either be original or a valid plan
         let is_unchanged = result == plan;
         let is_valid = is_plan_valid_basic(&result, &adj, &pop, 2, 0.5);
-        assert!(is_unchanged || is_valid, "mutation must return original or valid plan");
+        assert!(
+            is_unchanged || is_valid,
+            "mutation must return original or valid plan"
+        );
     }
 
     #[test]
@@ -180,7 +207,10 @@ mod tests {
         let pop = vec![100i64; 2];
         let plan = vec![1u32, 2];
         let result = mutate(&plan, &adj, &pop, 2, 0.5, 0);
-        assert_eq!(result, plan, "degenerate: should return unchanged (no valid flip)");
+        assert_eq!(
+            result, plan,
+            "degenerate: should return unchanged (no valid flip)"
+        );
     }
 
     #[test]

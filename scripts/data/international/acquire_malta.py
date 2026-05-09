@@ -277,15 +277,15 @@ def save_pkl(graph_dict: dict, pkl_path: Path) -> None:
 
 
 def convert_to_bin(pkl_path: Path) -> Path:
-    """Convert pkl to .adj.bin using redist_py (PyO3 binding to redist-data)."""
+    """Convert pkl to .adj.bin using bisect_py (PyO3 binding to BISECT-data)."""
     bin_path = pkl_path.with_suffix(".adj.bin")
     geoid_path = pkl_path.with_name(pkl_path.stem + "_geoids.json")
 
     try:
-        import redist_py
+        import bisect_py
     except ImportError:
-        print("  [ERROR] redist_py not installed.")
-        print("  Install: cd redist/python/redist_py && maturin develop")
+        print("  [ERROR] bisect_py not installed.")
+        print("  Install: cd python/bisect_py && maturin develop")
         return None
 
     with open(pkl_path, "rb") as f:
@@ -295,7 +295,7 @@ def convert_to_bin(pkl_path: Path) -> Path:
     ew = {(min(i, j), max(i, j)): float(w) for (i, j), w in d.get("edge_weights", {}).items()}
     ig = {int(k): str(v) for k, v in d.get("index_to_geoid", {}).items()}
 
-    bin_data = redist_py.adjacency_to_bin(adj, vw, ew, len(adj), len(ew))
+    bin_data = bisect_py.adjacency_to_bin(adj, vw, ew, len(adj), len(ew))
     bin_path.write_bytes(bin_data)
     geoid_path.write_text(json.dumps({str(k): v for k, v in ig.items()}))
     print(f"  [OK] Converted to .adj.bin: {bin_path} ({len(bin_data):,} bytes)")
@@ -307,16 +307,16 @@ def convert_to_bin(pkl_path: Path) -> Path:
 # ---------------------------------------------------------------------------
 
 def run_redistricting(adj_bin_path: Path) -> None:
-    """Run redist state with Malta parameters."""
-    redist_bin = Path("redist/target/release/redist.exe")
-    if not redist_bin.exists():
-        redist_bin = Path("redist/target/release/redist")
-    if not redist_bin.exists():
-        print("  [WARN] redist binary not found — build with: cargo build --release -p redist-cli")
+    """Run BISECT state with Malta parameters."""
+    BISECT_bin = Path("target/release/bisect.exe")
+    if not BISECT_bin.exists():
+        BISECT_bin = Path("target/release/bisect")
+    if not BISECT_bin.exists():
+        print("  [WARN] BISECT binary not found — build with: cargo build --release -p bisect-cli")
         return
 
     cmd = [
-        str(redist_bin), "state",
+        str(BISECT_bin), "state",
         "--state", "MT",
         "--year", "2021",
         "--version", "international",
@@ -409,7 +409,7 @@ def main():
         print(f"  Bin: {bin_path}")
 
     print("\nNext step — run redistricting:")
-    print(f"  redist state --state MT --year 2021 --version international \\")
+    print(f"  BISECT state --state MT --year 2021 --version international \\")
     print(f"    --adjacency {bin_path or pkl_path} \\")
     print(f"    --state-name malta --districts 13 --seats-per-district 5 \\")
     print(f"    --chamber parliamentary --balance-tolerance 25 --label malta_parliament_2021")

@@ -1,4 +1,4 @@
-/// analyze_label.rs — `bisect analyze X` and `redist report X` label-aware commands.
+/// analyze_label.rs — `bisect analyze X` and `BISECT report X` label-aware commands.
 ///
 /// Phase 3 of Spec 7: extends the label pipeline with label-scoped analysis and
 /// report generation that draw from `runs/{label}/{year}/` and write to
@@ -13,19 +13,18 @@
 /// runs/{label}/{year}/index.json       ← built by `bisect build X`
 /// analysis/{label}/{year}/             ← written by `bisect analyze X`
 /// analysis/{label}/{year}/index.json   ← written here (SHA of build index)
-/// reports/{label}/{year}/              ← written by `redist report X`
+/// reports/{label}/{year}/              ← written by `BISECT report X`
 /// reports/{label}/{year}/index.json    ← written here (SHA of analysis index)
 /// ```
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-use crate::label::{
-    validate_label_name, year_analysis_dir, year_reports_dir, year_runs_dir,
-    state_analysis_dir,
-};
-use crate::run_registry::Registry;
 use crate::geometry::{load_district_geometries, state_name_to_code};
-use crate::partisan::{PartisanArgs, run_partisan};
+use crate::label::{
+    state_analysis_dir, validate_label_name, year_analysis_dir, year_reports_dir, year_runs_dir,
+};
+use crate::partisan::{run_partisan, PartisanArgs};
+use crate::run_registry::Registry;
 
 // ── SHA-256 helper ────────────────────────────────────────────────────────────
 
@@ -61,9 +60,9 @@ fn now_rfc3339() -> String {
         .map(|d| d.as_secs())
         .unwrap_or(0);
     // Reuse the same minimal Gregorian implementation from build_cmd.
-    let s   = secs % 60;
+    let s = secs % 60;
     let min = (secs / 60) % 60;
-    let h   = (secs / 3600) % 24;
+    let h = (secs / 3600) % 24;
     let days = secs / 86400;
     let (y, mo, d) = days_to_ymd(days);
     format!("{y:04}-{mo:02}-{d:02}T{h:02}:{min:02}:{s:02}Z")
@@ -155,11 +154,12 @@ pub fn run_label_analyze(
     validate_label_name(label)?;
 
     // 2. Get registry entry.
-    let entry = Registry::get(label)?
-        .ok_or_else(|| format!(
+    let entry = Registry::get(label)?.ok_or_else(|| {
+        format!(
             "[CONFIG] analyze: label '{label}' not found in registry.\n\
              Run: bisect build {label} --year <YEAR> first."
-        ))?;
+        )
+    })?;
 
     if entry.built.is_empty() {
         return Err(format!(
@@ -184,15 +184,16 @@ pub fn run_label_analyze(
         let state_names = enumerate_states_in_dir(&year_dir)?;
 
         // Apply --states filter (case-insensitive; filter is state_names, not codes).
-        let filter: std::collections::HashSet<String> = states
-            .iter()
-            .map(|s| s.to_lowercase())
-            .collect();
+        let filter: std::collections::HashSet<String> =
+            states.iter().map(|s| s.to_lowercase()).collect();
 
         let target_states: Vec<String> = if filter.is_empty() {
             state_names
         } else {
-            state_names.into_iter().filter(|n| filter.contains(n)).collect()
+            state_names
+                .into_iter()
+                .filter(|n| filter.contains(n))
+                .collect()
         };
 
         if target_states.is_empty() {
@@ -247,20 +248,26 @@ pub fn run_label_analyze(
                     } else {
                         "ok"
                     };
-                    state_statuses.insert(state_name.clone(), StateAnalysisStatus {
-                        status: overall.to_string(),
-                        error: None,
-                        type_statuses: type_map,
-                    });
+                    state_statuses.insert(
+                        state_name.clone(),
+                        StateAnalysisStatus {
+                            status: overall.to_string(),
+                            error: None,
+                            type_statuses: type_map,
+                        },
+                    );
                     eprintln!("[analyze] {label}/{y}/{state_name}: {overall}");
                 }
                 Err(e) => {
                     eprintln!("[analyze] FAILED {label}/{y}/{state_name}: {e}");
-                    state_statuses.insert(state_name.clone(), StateAnalysisStatus {
-                        status: "failed".to_string(),
-                        error: Some(e),
-                        type_statuses: HashMap::new(),
-                    });
+                    state_statuses.insert(
+                        state_name.clone(),
+                        StateAnalysisStatus {
+                            status: "failed".to_string(),
+                            error: Some(e),
+                            type_statuses: HashMap::new(),
+                        },
+                    );
                 }
             }
         }
@@ -287,7 +294,7 @@ pub fn run_label_analyze(
 
 // ── run_label_report ──────────────────────────────────────────────────────────
 
-/// Execute `redist report <label> [--year Y] [--format html|json] [--out PATH]`.
+/// Execute `BISECT report <label> [--year Y] [--format html|json] [--out PATH]`.
 ///
 /// Logic:
 /// 1. Validate label.
@@ -310,12 +317,13 @@ pub fn run_label_report(
     validate_label_name(label)?;
 
     // 2. Get registry entry.
-    let entry = Registry::get(label)?
-        .ok_or_else(|| format!(
+    let entry = Registry::get(label)?.ok_or_else(|| {
+        format!(
             "[CONFIG] report: label '{label}' not found in registry.\n\
              Run: bisect build {label} --year <YEAR> and \
              bisect analyze {label} --year <YEAR> first."
-        ))?;
+        )
+    })?;
 
     if entry.analyzed.is_empty() {
         return Err(format!(
@@ -359,7 +367,7 @@ pub fn run_label_report(
         // 4c/d. Determine output directory.
         let report_dir: PathBuf = match out {
             Some(p) => p.to_path_buf(),
-            None    => year_reports_dir(label, y),
+            None => year_reports_dir(label, y),
         };
         std::fs::create_dir_all(&report_dir).map_err(|e| {
             format!(
@@ -406,7 +414,12 @@ fn enumerate_states_in_dir(dir: &Path) -> Result<Vec<String>, String> {
         return Ok(vec![]);
     }
     let mut names: Vec<String> = std::fs::read_dir(dir)
-        .map_err(|e| format!("[INTERNAL] enumerate_states: cannot read '{}': {e}", dir.display()))?
+        .map_err(|e| {
+            format!(
+                "[INTERNAL] enumerate_states: cannot read '{}': {e}",
+                dir.display()
+            )
+        })?
         .filter_map(|entry| entry.ok())
         .filter(|entry| entry.path().is_dir())
         .filter_map(|entry| entry.file_name().into_string().ok())
@@ -470,11 +483,17 @@ fn run_analyze_state(
             // ── compactness (#192) ─────────────────────────────────────────────
             "compactness" => {
                 let status = run_compactness_for_state(
-                    label, year, state_name, state_code,
-                    &assignments_path, &out_path,
+                    label,
+                    year,
+                    state_name,
+                    state_code,
+                    &assignments_path,
+                    &out_path,
                 );
                 match status {
-                    Ok(()) => { type_statuses.insert(type_name.clone(), "ok".to_string()); }
+                    Ok(()) => {
+                        type_statuses.insert(type_name.clone(), "ok".to_string());
+                    }
                     Err(e) => {
                         eprintln!("[analyze] compactness FAILED for {state_name}/{year}: {e}");
                         type_statuses.insert(type_name.clone(), "failed".to_string());
@@ -485,11 +504,17 @@ fn run_analyze_state(
             // ── partisan (#193) ────────────────────────────────────────────────
             "partisan" => {
                 let status = run_partisan_for_state(
-                    label, year, state_name, state_code,
-                    &assignments_path, out_dir,
+                    label,
+                    year,
+                    state_name,
+                    state_code,
+                    &assignments_path,
+                    out_dir,
                 );
                 match status {
-                    Ok(()) => { type_statuses.insert(type_name.clone(), "ok".to_string()); }
+                    Ok(()) => {
+                        type_statuses.insert(type_name.clone(), "ok".to_string());
+                    }
                     Err(e) => {
                         eprintln!("[analyze] partisan FAILED for {state_name}/{year}: {e}");
                         type_statuses.insert(type_name.clone(), "failed".to_string());
@@ -581,15 +606,17 @@ fn run_compactness_for_state(
     // Pass output_root = current dir since label-tree doesn't have an explicit root.
     let assignments = crate::geometry::resolve_to_geoid_assignments(
         raw_assignments,
-        std::path::Path::new("outputs/v1"),  // fallback; geoids also searched in standard paths
+        std::path::Path::new("outputs/v1"), // fallback; geoids also searched in standard paths
         code,
         year,
     );
 
     // Load dissolved district geometries from TIGER shapefiles.
     let districts = match load_district_geometries(
-        state_name, code, year,
-        "v1",  // version placeholder — geometry loader searches standard paths
+        state_name,
+        code,
+        year,
+        "v1", // version placeholder — geometry loader searches standard paths
         &assignments,
         std::path::Path::new("data"),
         "tract",
@@ -640,10 +667,14 @@ fn run_compactness_for_state(
     // Compute per-metric means across all districts.
     let n = district_results.len() as f64;
     let mean = |field: &str| -> f64 {
-        if n == 0.0 { return 0.0; }
-        district_results.iter()
+        if n == 0.0 {
+            return 0.0;
+        }
+        district_results
+            .iter()
             .filter_map(|d| d[field].as_f64())
-            .sum::<f64>() / n
+            .sum::<f64>()
+            / n
     };
 
     let summary = serde_json::json!({
@@ -737,7 +768,7 @@ fn run_partisan_for_state(
         state_name,
         year,
         version: "v1",
-        election_file: None,  // use default path: data/{year}/elections/presidential_by_tract.csv
+        election_file: None, // use default path: data/{year}/elections/presidential_by_tract.csv
         bootstrap_samples: 1000,
         analysis_dir: out_dir,
         force: false,
@@ -892,7 +923,7 @@ fn write_report_index(
 ) -> Result<(), String> {
     let dir: PathBuf = match out {
         Some(p) => p.to_path_buf(),
-        None    => year_reports_dir(label, year),
+        None => year_reports_dir(label, year),
     };
     let path = dir.join("index.json");
     let json = serde_json::to_string_pretty(index)
@@ -908,8 +939,12 @@ fn write_report_index(
 fn write_json_file(path: &Path, value: &serde_json::Value) -> Result<(), String> {
     let json = serde_json::to_string_pretty(value)
         .map_err(|e| format!("[INTERNAL] write_json_file: serialize failed: {e}"))?;
-    std::fs::write(path, json)
-        .map_err(|e| format!("[INTERNAL] write_json_file: cannot write '{}': {e}", path.display()))
+    std::fs::write(path, json).map_err(|e| {
+        format!(
+            "[INTERNAL] write_json_file: cannot write '{}': {e}",
+            path.display()
+        )
+    })
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -952,7 +987,10 @@ mod tests {
             assert!(result.is_err());
             let msg = result.unwrap_err();
             assert!(msg.contains("[CONFIG]"), "must be [CONFIG]: {msg}");
-            assert!(msg.contains("official_proposal"), "must name the label: {msg}");
+            assert!(
+                msg.contains("official_proposal"),
+                "must name the label: {msg}"
+            );
         });
     }
 
@@ -982,7 +1020,7 @@ mod tests {
     fn test_report_requires_analyzed_year() {
         // Simulate the [CONFIG] error text emitted when analyzed list is empty.
         let label = "my_plan";
-        let year  = "2020";
+        let year = "2020";
         let msg = format!(
             "[CONFIG] report: label '{label}' has no analyzed years.\n\
              Run: bisect analyze {label} --year {year} first."
@@ -997,8 +1035,14 @@ mod tests {
             "[CONFIG] report: 'my_plan' has not been analyzed for year 2020.\n\
              Run: bisect analyze my_plan --year 2020"
         );
-        assert!(registry_msg.contains("[CONFIG]"), "registry msg must be [CONFIG]: {registry_msg}");
-        assert!(registry_msg.contains("bisect analyze"), "registry msg must suggest analyze: {registry_msg}");
+        assert!(
+            registry_msg.contains("[CONFIG]"),
+            "registry msg must be [CONFIG]: {registry_msg}"
+        );
+        assert!(
+            registry_msg.contains("bisect analyze"),
+            "registry msg must suggest analyze: {registry_msg}"
+        );
     }
 
     // ── 5. Report label not in registry → [CONFIG] error ─────────────────────
@@ -1010,7 +1054,10 @@ mod tests {
             assert!(result.is_err());
             let msg = result.unwrap_err();
             assert!(msg.contains("[CONFIG]"), "must be [CONFIG]: {msg}");
-            assert!(msg.contains("nonexistent_label"), "must name the label: {msg}");
+            assert!(
+                msg.contains("nonexistent_label"),
+                "must name the label: {msg}"
+            );
         });
     }
 
@@ -1077,10 +1124,7 @@ mod tests {
         let json = serde_json::to_value(&index).unwrap();
         let files = json["files"].as_array().unwrap();
         assert_eq!(files.len(), 1, "files list must have 1 entry");
-        assert_eq!(
-            files[0].as_str().unwrap(),
-            "vt_test_2020_report.json"
-        );
+        assert_eq!(files[0].as_str().unwrap(), "vt_test_2020_report.json");
     }
 
     // ── 9. report unsupported format returns [CONFIG] error ───────────────────
@@ -1098,7 +1142,10 @@ mod tests {
         assert!(result.is_err());
         let msg = result.unwrap_err();
         assert!(msg.contains("[CONFIG]"), "must be [CONFIG]: {msg}");
-        assert!(msg.contains("pdf"), "must mention the unsupported format: {msg}");
+        assert!(
+            msg.contains("pdf"),
+            "must mention the unsupported format: {msg}"
+        );
     }
 
     // ── 10. sha256_str produces 64 hex chars ──────────────────────────────────
@@ -1106,7 +1153,12 @@ mod tests {
     #[test]
     fn test_sha256_str_produces_64_hex() {
         let hash = sha256_str("hello world");
-        assert_eq!(hash.len(), 64, "SHA-256 must be 64 chars, got: {}", hash.len());
+        assert_eq!(
+            hash.len(),
+            64,
+            "SHA-256 must be 64 chars, got: {}",
+            hash.len()
+        );
         assert!(
             hash.chars().all(|c| c.is_ascii_hexdigit()),
             "SHA-256 must be lowercase hex: {hash}"
@@ -1144,8 +1196,11 @@ mod tests {
             std::fs::create_dir_all(tmp.path().join(state)).unwrap();
         }
         let names = enumerate_states_in_dir(tmp.path()).unwrap();
-        assert_eq!(names, vec!["alaska", "california", "vermont"],
-            "states must be sorted alphabetically");
+        assert_eq!(
+            names,
+            vec!["alaska", "california", "vermont"],
+            "states must be sorted alphabetically"
+        );
     }
 
     // ── 14. enumerate_states_in_dir on missing dir returns empty vec ──────────
@@ -1162,7 +1217,10 @@ mod tests {
     fn test_now_rfc3339_format() {
         let ts = now_rfc3339();
         assert!(ts.len() >= 20, "timestamp too short: {ts}");
-        assert!(ts.contains('T'), "timestamp must contain 'T' separator: {ts}");
+        assert!(
+            ts.contains('T'),
+            "timestamp must contain 'T' separator: {ts}"
+        );
         assert!(ts.ends_with('Z'), "timestamp must end with 'Z': {ts}");
     }
 
@@ -1209,13 +1267,15 @@ mod tests {
         let report_dir = tmp.path().join("reports");
         std::fs::create_dir_all(&report_dir).unwrap();
 
-        let files = generate_label_report(
-            "senate_draft", "2020", &analysis_dir, &report_dir, "html"
-        ).unwrap();
+        let files =
+            generate_label_report("senate_draft", "2020", &analysis_dir, &report_dir, "html")
+                .unwrap();
 
         assert_eq!(files.len(), 1, "must write exactly 1 HTML file");
-        assert_eq!(files[0], "senate_draft_2020_report.html",
-            "filename must follow {{label}}_{{year}}_report.html pattern");
+        assert_eq!(
+            files[0], "senate_draft_2020_report.html",
+            "filename must follow {{label}}_{{year}}_report.html pattern"
+        );
         assert!(
             report_dir.join(&files[0]).exists(),
             "HTML file must exist on disk"
@@ -1232,13 +1292,15 @@ mod tests {
         let report_dir = tmp.path().join("reports");
         std::fs::create_dir_all(&report_dir).unwrap();
 
-        let files = generate_label_report(
-            "senate_draft", "2020", &analysis_dir, &report_dir, "json"
-        ).unwrap();
+        let files =
+            generate_label_report("senate_draft", "2020", &analysis_dir, &report_dir, "json")
+                .unwrap();
 
         assert_eq!(files.len(), 1, "must write exactly 1 JSON file");
-        assert_eq!(files[0], "senate_draft_2020_report.json",
-            "filename must follow {{label}}_{{year}}_report.json pattern");
+        assert_eq!(
+            files[0], "senate_draft_2020_report.json",
+            "filename must follow {{label}}_{{year}}_report.json pattern"
+        );
         assert!(
             report_dir.join(&files[0]).exists(),
             "JSON file must exist on disk"
@@ -1282,15 +1344,18 @@ mod tests {
     #[test]
     fn test_analysis_index_states_serialise() {
         let mut states = HashMap::new();
-        states.insert("vermont".to_string(), StateAnalysisStatus {
-            status: "ok".to_string(),
-            error: None,
-            type_statuses: {
-                let mut m = HashMap::new();
-                m.insert("summary".to_string(), "ok".to_string());
-                m
+        states.insert(
+            "vermont".to_string(),
+            StateAnalysisStatus {
+                status: "ok".to_string(),
+                error: None,
+                type_statuses: {
+                    let mut m = HashMap::new();
+                    m.insert("summary".to_string(), "ok".to_string());
+                    m
+                },
             },
-        });
+        );
         let index = AnalysisIndex {
             label: "vt_test".to_string(),
             year: "2020".to_string(),
@@ -1319,9 +1384,9 @@ mod tests {
             "[CONFIG] analyze: label '{label}' has no built years.\n\
              Run: bisect build {label} --year <YEAR> first."
         );
-        assert!(msg.contains("[CONFIG]"),       "[CONFIG] prefix required: {msg}");
-        assert!(msg.contains("my_plan"),        "must name the label: {msg}");
-        assert!(msg.contains("bisect build"),   "must suggest fix: {msg}");
+        assert!(msg.contains("[CONFIG]"), "[CONFIG] prefix required: {msg}");
+        assert!(msg.contains("my_plan"), "must name the label: {msg}");
+        assert!(msg.contains("bisect build"), "must suggest fix: {msg}");
     }
 
     // ── 25. report: label not in registry → [CONFIG] error format ────────────
@@ -1334,10 +1399,16 @@ mod tests {
              Run: bisect build {label} --year <YEAR> and \
              bisect analyze {label} --year <YEAR> first."
         );
-        assert!(msg.contains("[CONFIG]"),      "[CONFIG] prefix required: {msg}");
-        assert!(msg.contains("ghost"),         "must name the label: {msg}");
-        assert!(msg.contains("bisect build"),  "must mention build step: {msg}");
-        assert!(msg.contains("bisect analyze"),"must mention analyze step: {msg}");
+        assert!(msg.contains("[CONFIG]"), "[CONFIG] prefix required: {msg}");
+        assert!(msg.contains("ghost"), "must name the label: {msg}");
+        assert!(
+            msg.contains("bisect build"),
+            "must mention build step: {msg}"
+        );
+        assert!(
+            msg.contains("bisect analyze"),
+            "must mention analyze step: {msg}"
+        );
     }
 
     // ── 26. sha256_str is consistent with sha256_file for same content ────────
@@ -1349,10 +1420,12 @@ mod tests {
         let mut tmp = tempfile::NamedTempFile::new().unwrap();
         tmp.write_all(content.as_bytes()).unwrap();
 
-        let via_str  = sha256_str(content);
+        let via_str = sha256_str(content);
         let via_file = sha256_file(tmp.path()).unwrap();
-        assert_eq!(via_str, via_file,
-            "sha256_str and sha256_file must produce the same digest for identical content");
+        assert_eq!(
+            via_str, via_file,
+            "sha256_str and sha256_file must produce the same digest for identical content"
+        );
     }
 
     // ── 27. sha256_str: known value for empty string ──────────────────────────
@@ -1363,8 +1436,7 @@ mod tests {
     fn test_sha256_str_empty_string_known_digest() {
         let hash = sha256_str("");
         assert_eq!(
-            hash,
-            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            hash, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             "SHA-256 of empty string must be the known constant"
         );
     }
@@ -1383,8 +1455,11 @@ mod tests {
 
         let html = std::fs::read_to_string(report_dir.join("myplan_2010_report.html")).unwrap();
         assert!(html.contains("myplan"), "HTML must contain label: {html}");
-        assert!(html.contains("2010"),   "HTML must contain year: {html}");
-        assert!(html.contains("<!DOCTYPE html>"), "HTML must start with DOCTYPE");
+        assert!(html.contains("2010"), "HTML must contain year: {html}");
+        assert!(
+            html.contains("<!DOCTYPE html>"),
+            "HTML must start with DOCTYPE"
+        );
     }
 
     // ── 29. generate_label_report json contains label and year ────────────────
@@ -1401,9 +1476,17 @@ mod tests {
 
         let raw = std::fs::read_to_string(report_dir.join("myplan_2010_report.json")).unwrap();
         let v: serde_json::Value = serde_json::from_str(&raw).unwrap();
-        assert_eq!(v["label"].as_str(), Some("myplan"), "JSON must contain label");
-        assert_eq!(v["year"].as_str(),  Some("2010"),   "JSON must contain year");
-        assert_eq!(v["report_type"].as_str(), Some("label_analysis"), "JSON must have report_type");
+        assert_eq!(
+            v["label"].as_str(),
+            Some("myplan"),
+            "JSON must contain label"
+        );
+        assert_eq!(v["year"].as_str(), Some("2010"), "JSON must contain year");
+        assert_eq!(
+            v["report_type"].as_str(),
+            Some("label_analysis"),
+            "JSON must have report_type"
+        );
     }
 
     // ── 30. enumerate_states_in_dir: files are excluded, only dirs returned ──
@@ -1423,8 +1506,11 @@ mod tests {
 
         let names = enumerate_states_in_dir(tmp.path()).unwrap();
         // Must only contain the directories
-        assert_eq!(names, vec!["alaska", "vermont"],
-            "enumerate_states must skip files and return only dirs: {names:?}");
+        assert_eq!(
+            names,
+            vec!["alaska", "vermont"],
+            "enumerate_states must skip files and return only dirs: {names:?}"
+        );
     }
 
     // ── 31. ReportIndex roundtrips through JSON ───────────────────────────────
@@ -1442,7 +1528,7 @@ mod tests {
         let json = serde_json::to_string(&original).unwrap();
         let restored: ReportIndex = serde_json::from_str(&json).unwrap();
         assert_eq!(restored.label, "senate_draft");
-        assert_eq!(restored.year,  "2020");
+        assert_eq!(restored.year, "2020");
         assert_eq!(restored.format, "html");
         assert_eq!(restored.analysis_index_sha256, "a".repeat(64));
         assert_eq!(restored.files.len(), 1);
@@ -1464,7 +1550,7 @@ mod tests {
         let json = serde_json::to_string(&original).unwrap();
         let restored: AnalysisIndex = serde_json::from_str(&json).unwrap();
         assert_eq!(restored.label, "plan_a");
-        assert_eq!(restored.year,  "2010");
+        assert_eq!(restored.year, "2010");
         assert_eq!(restored.run_index_sha256, "b".repeat(64));
         assert_eq!(restored.types, vec!["summary", "compactness"]);
     }
@@ -1480,9 +1566,11 @@ mod tests {
 
         let result = generate_label_report("plan", "2020", &analysis_dir, &out, "xml");
         let msg = result.unwrap_err();
-        assert!(msg.contains("[CONFIG]"),  "[CONFIG] prefix required: {msg}");
-        assert!(msg.contains("html") || msg.contains("json"),
-            "error must mention valid alternatives: {msg}");
+        assert!(msg.contains("[CONFIG]"), "[CONFIG] prefix required: {msg}");
+        assert!(
+            msg.contains("html") || msg.contains("json"),
+            "error must mention valid alternatives: {msg}"
+        );
     }
 
     // ── 34. compactness: unknown state name writes error JSON, does not crash ──
@@ -1500,19 +1588,27 @@ mod tests {
 
         // "atlantis" is not a known state name → should write error JSON, not Err
         let result = run_compactness_for_state(
-            "test_label", "2020", "atlantis", None,
-            &assignments_path, &out_path,
+            "test_label",
+            "2020",
+            "atlantis",
+            None,
+            &assignments_path,
+            &out_path,
         );
-        assert!(result.is_ok(), "unknown state must not propagate Err: {result:?}");
+        assert!(
+            result.is_ok(),
+            "unknown state must not propagate Err: {result:?}"
+        );
         assert!(out_path.exists(), "error JSON must be written to out_path");
 
-        let json: serde_json::Value = serde_json::from_str(
-            &std::fs::read_to_string(&out_path).unwrap()
-        ).unwrap();
+        let json: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&out_path).unwrap()).unwrap();
         assert_eq!(json["analyzer"].as_str(), Some("compactness"));
         assert_eq!(json["available"].as_bool(), Some(false));
-        assert!(json["error"].as_str().unwrap_or("").contains("atlantis"),
-            "error must mention the unknown state name");
+        assert!(
+            json["error"].as_str().unwrap_or("").contains("atlantis"),
+            "error must mention the unknown state name"
+        );
     }
 
     // ── 35. compactness: missing geometry writes error JSON, does not crash ─────
@@ -1533,18 +1629,24 @@ mod tests {
         std::env::set_current_dir(tmp.path()).expect("set_current_dir");
 
         let result = run_compactness_for_state(
-            "test_label", "2020", "vermont", Some("VT"),
-            &assignments_path, &out_path,
+            "test_label",
+            "2020",
+            "vermont",
+            Some("VT"),
+            &assignments_path,
+            &out_path,
         );
 
         std::env::set_current_dir(&original).expect("restore current_dir");
 
-        assert!(result.is_ok(), "missing geometry must not propagate Err: {result:?}");
+        assert!(
+            result.is_ok(),
+            "missing geometry must not propagate Err: {result:?}"
+        );
         assert!(out_path.exists(), "error JSON must be written to out_path");
 
-        let json: serde_json::Value = serde_json::from_str(
-            &std::fs::read_to_string(&out_path).unwrap()
-        ).unwrap();
+        let json: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&out_path).unwrap()).unwrap();
         assert_eq!(json["analyzer"].as_str(), Some("compactness"));
         assert_eq!(json["available"].as_bool(), Some(false));
         assert!(json["error"].as_str().is_some(), "must have error field");
@@ -1560,17 +1662,23 @@ mod tests {
         std::fs::write(&assignments_path, r#"{"10001000100": 1}"#).unwrap();
 
         let result = run_partisan_for_state(
-            "test_label", "2020", "atlantis", None,
-            &assignments_path, &out_dir,
+            "test_label",
+            "2020",
+            "atlantis",
+            None,
+            &assignments_path,
+            &out_dir,
         );
-        assert!(result.is_ok(), "unknown state must not propagate Err: {result:?}");
+        assert!(
+            result.is_ok(),
+            "unknown state must not propagate Err: {result:?}"
+        );
 
         let out_path = out_dir.join("partisan.json");
         assert!(out_path.exists(), "error JSON must be written");
 
-        let json: serde_json::Value = serde_json::from_str(
-            &std::fs::read_to_string(&out_path).unwrap()
-        ).unwrap();
+        let json: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&out_path).unwrap()).unwrap();
         assert_eq!(json["analyzer"].as_str(), Some("partisan"));
         assert_eq!(json["available"].as_bool(), Some(false));
     }
@@ -1592,23 +1700,35 @@ mod tests {
         std::env::set_current_dir(tmp.path()).expect("set_current_dir");
 
         let result = run_partisan_for_state(
-            "test_label", "2020", "vermont", Some("VT"),
-            &assignments_path, &out_dir,
+            "test_label",
+            "2020",
+            "vermont",
+            Some("VT"),
+            &assignments_path,
+            &out_dir,
         );
 
         std::env::set_current_dir(&original).expect("restore current_dir");
 
-        assert!(result.is_ok(), "missing election data must not propagate Err: {result:?}");
+        assert!(
+            result.is_ok(),
+            "missing election data must not propagate Err: {result:?}"
+        );
 
         let out_path = out_dir.join("partisan.json");
-        assert!(out_path.exists(), "partisan.json must be written even when data absent");
+        assert!(
+            out_path.exists(),
+            "partisan.json must be written even when data absent"
+        );
 
-        let json: serde_json::Value = serde_json::from_str(
-            &std::fs::read_to_string(&out_path).unwrap()
-        ).unwrap();
+        let json: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&out_path).unwrap()).unwrap();
         assert_eq!(json["analyzer"].as_str(), Some("partisan"));
-        assert_eq!(json["available"].as_bool(), Some(false),
-            "must mark as unavailable when election data absent: {json}");
+        assert_eq!(
+            json["available"].as_bool(),
+            Some(false),
+            "must mark as unavailable when election data absent: {json}"
+        );
     }
 
     // ── 38. compactness type in run_analyze_state writes compactness.json ───────
@@ -1623,29 +1743,44 @@ mod tests {
         std::env::set_current_dir(tmp.path()).expect("set_current_dir");
 
         // Set up label tree: runs/my_label/2020/vermont/final_assignments.json
-        let state_runs = tmp.path()
-            .join("runs").join("my_label").join("2020").join("vermont");
+        let state_runs = tmp
+            .path()
+            .join("runs")
+            .join("my_label")
+            .join("2020")
+            .join("vermont");
         std::fs::create_dir_all(&state_runs).unwrap();
-        std::fs::write(state_runs.join("final_assignments.json"),
-            r#"{"50005957100": 1}"#).unwrap();
+        std::fs::write(
+            state_runs.join("final_assignments.json"),
+            r#"{"50005957100": 1}"#,
+        )
+        .unwrap();
 
         let out_dir = tmp.path().join("out");
         std::fs::create_dir_all(&out_dir).unwrap();
 
         let statuses = run_analyze_state(
-            "my_label", "2020", "vermont",
+            "my_label",
+            "2020",
+            "vermont",
             &["compactness".to_string()],
             &out_dir,
-        ).expect("run_analyze_state must not Err");
+        )
+        .expect("run_analyze_state must not Err");
 
         std::env::set_current_dir(&original).expect("restore current_dir");
 
         // compactness.json must be written (may be error JSON if no TIGER data)
-        assert!(out_dir.join("compactness.json").exists(),
-            "compactness.json must be written");
+        assert!(
+            out_dir.join("compactness.json").exists(),
+            "compactness.json must be written"
+        );
         // Status must be "ok" (error JSON is still "ok" — non-crashing)
-        assert_eq!(statuses.get("compactness").map(|s| s.as_str()), Some("ok"),
-            "compactness type must report ok status (error JSON counts as ok): {statuses:?}");
+        assert_eq!(
+            statuses.get("compactness").map(|s| s.as_str()),
+            Some("ok"),
+            "compactness type must report ok status (error JSON counts as ok): {statuses:?}"
+        );
     }
 
     // ── 39. partisan type in run_analyze_state writes partisan.json ──────────────
@@ -1656,33 +1791,51 @@ mod tests {
         let original = std::env::current_dir().expect("current_dir");
         std::env::set_current_dir(tmp.path()).expect("set_current_dir");
 
-        let state_runs = tmp.path()
-            .join("runs").join("my_label").join("2020").join("vermont");
+        let state_runs = tmp
+            .path()
+            .join("runs")
+            .join("my_label")
+            .join("2020")
+            .join("vermont");
         std::fs::create_dir_all(&state_runs).unwrap();
-        std::fs::write(state_runs.join("final_assignments.json"),
-            r#"{"50005957100": 1}"#).unwrap();
+        std::fs::write(
+            state_runs.join("final_assignments.json"),
+            r#"{"50005957100": 1}"#,
+        )
+        .unwrap();
 
         let out_dir = tmp.path().join("out");
         std::fs::create_dir_all(&out_dir).unwrap();
 
         let statuses = run_analyze_state(
-            "my_label", "2020", "vermont",
+            "my_label",
+            "2020",
+            "vermont",
             &["partisan".to_string()],
             &out_dir,
-        ).expect("run_analyze_state must not Err");
+        )
+        .expect("run_analyze_state must not Err");
 
         std::env::set_current_dir(&original).expect("restore current_dir");
 
-        assert!(out_dir.join("partisan.json").exists(),
-            "partisan.json must be written");
-        assert_eq!(statuses.get("partisan").map(|s| s.as_str()), Some("ok"),
-            "partisan type must report ok status: {statuses:?}");
+        assert!(
+            out_dir.join("partisan.json").exists(),
+            "partisan.json must be written"
+        );
+        assert_eq!(
+            statuses.get("partisan").map(|s| s.as_str()),
+            Some("ok"),
+            "partisan type must report ok status: {statuses:?}"
+        );
 
-        let json: serde_json::Value = serde_json::from_str(
-            &std::fs::read_to_string(out_dir.join("partisan.json")).unwrap()
-        ).unwrap();
-        assert_eq!(json["analyzer"].as_str(), Some("partisan"),
-            "partisan.json must have analyzer field");
+        let json: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(out_dir.join("partisan.json")).unwrap())
+                .unwrap();
+        assert_eq!(
+            json["analyzer"].as_str(),
+            Some("partisan"),
+            "partisan.json must have analyzer field"
+        );
     }
 
     // ── 40. compactness summary fields present when districts computed ────────────
@@ -1702,19 +1855,26 @@ mod tests {
         std::env::set_current_dir(tmp.path()).expect("set_current_dir");
 
         run_compactness_for_state(
-            "lbl", "2020", "vermont", Some("VT"),
-            &assignments_path, &out_path,
-        ).unwrap();
+            "lbl",
+            "2020",
+            "vermont",
+            Some("VT"),
+            &assignments_path,
+            &out_path,
+        )
+        .unwrap();
 
         std::env::set_current_dir(&original).expect("restore current_dir");
 
-        let json: serde_json::Value = serde_json::from_str(
-            &std::fs::read_to_string(&out_path).unwrap()
-        ).unwrap();
+        let json: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&out_path).unwrap()).unwrap();
         assert!(json.get("analyzer").is_some(), "must have 'analyzer' field");
         assert!(json.get("label").is_some(), "must have 'label' field");
         assert!(json.get("year").is_some(), "must have 'year' field");
         assert!(json.get("state").is_some(), "must have 'state' field");
-        assert!(json.get("available").is_some(), "must have 'available' field");
+        assert!(
+            json.get("available").is_some(),
+            "must have 'available' field"
+        );
     }
 }

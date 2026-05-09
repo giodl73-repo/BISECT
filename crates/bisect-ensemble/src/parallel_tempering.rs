@@ -7,10 +7,10 @@
 //!
 //! See spec: `docs/specs/2026-05-07-parallel-tempering.md`
 
-use rand::{Rng, SeedableRng};
-use rand::rngs::SmallRng;
-use sha2::{Digest, Sha256};
 use crate::forest_recom::ForestRecomChain;
+use rand::rngs::SmallRng;
+use rand::{Rng, SeedableRng};
+use sha2::{Digest, Sha256};
 
 // ── Seed derivation helpers ───────────────────────────────────────────────────
 
@@ -128,8 +128,7 @@ impl ParallelTemperingChain {
             (0..n_replicas)
                 .map(|i| {
                     cold_tolerance
-                        * (hot_tolerance / cold_tolerance)
-                            .powf(i as f64 / (n_replicas - 1) as f64)
+                        * (hot_tolerance / cold_tolerance).powf(i as f64 / (n_replicas - 1) as f64)
                 })
                 .collect()
         };
@@ -137,13 +136,7 @@ impl ParallelTemperingChain {
         let replicas = tolerances
             .iter()
             .map(|&tol| {
-                ForestRecomChain::new(
-                    adj.clone(),
-                    pop.clone(),
-                    initial_assignment.clone(),
-                    k,
-                    tol,
-                )
+                ForestRecomChain::new(adj.clone(), pop.clone(), initial_assignment.clone(), k, tol)
             })
             .collect();
 
@@ -168,17 +161,11 @@ impl ParallelTemperingChain {
     /// `rng_replicas`: one `(rng_fwd, rng_rev)` pair per replica, derived from
     /// seeds externally (see [`replica_rngs`]).
     /// `rng_swap`: RNG for the swap coin flips.
-    pub fn step(
-        &mut self,
-        rng_replicas: &mut Vec<(SmallRng, SmallRng)>,
-        rng_swap: &mut SmallRng,
-    ) {
+    pub fn step(&mut self, rng_replicas: &mut Vec<(SmallRng, SmallRng)>, rng_swap: &mut SmallRng) {
         self.steps_taken += 1;
 
         // 1. Each replica takes one step.
-        for ((rng_fwd, rng_rev), replica) in
-            rng_replicas.iter_mut().zip(self.replicas.iter_mut())
-        {
+        for ((rng_fwd, rng_rev), replica) in rng_replicas.iter_mut().zip(self.replicas.iter_mut()) {
             replica.step(rng_fwd, rng_rev);
         }
 
@@ -193,8 +180,7 @@ impl ParallelTemperingChain {
             for i in 0..self.n_replicas.saturating_sub(1) {
                 self.swap_attempts += 1;
 
-                let ec_i =
-                    count_edge_cuts_u32(&self.replicas[i].assignment, &self.replicas[i].adj);
+                let ec_i = count_edge_cuts_u32(&self.replicas[i].assignment, &self.replicas[i].adj);
                 let ec_j = count_edge_cuts_u32(
                     &self.replicas[i + 1].assignment,
                     &self.replicas[i + 1].adj,
@@ -319,7 +305,16 @@ mod tests {
         let adj = grid_adj_u32(4, 4);
         let pop = vec![1000i64; 16];
         let assignment: Vec<u32> = (0..16u32).map(|i| if i < 8 { 1 } else { 2 }).collect();
-        ParallelTemperingChain::new(adj, pop, assignment, 2, cold, hot, n_replicas, swap_interval)
+        ParallelTemperingChain::new(
+            adj,
+            pop,
+            assignment,
+            2,
+            cold,
+            hot,
+            n_replicas,
+            swap_interval,
+        )
     }
 
     /// Advance a PT chain T steps using deterministic seeds derived from base_seed.
@@ -427,8 +422,7 @@ mod tests {
         let adj = path_adj_u32(4);
         let pop = vec![1000i64; 4];
         let assignment = vec![1u32, 1, 2, 2];
-        let mut pt =
-            ParallelTemperingChain::new(adj, pop, assignment, 2, 0.05, 0.05, 1, 5);
+        let mut pt = ParallelTemperingChain::new(adj, pop, assignment, 2, 0.05, 0.05, 1, 5);
         run_pt(&mut pt, t, 77);
 
         assert_eq!(
@@ -521,7 +515,8 @@ mod tests {
         assert!(
             pt.swap_acceptances <= pt.swap_attempts,
             "swap_acceptances {} must not exceed swap_attempts {}",
-            pt.swap_acceptances, pt.swap_attempts
+            pt.swap_acceptances,
+            pt.swap_attempts
         );
     }
 

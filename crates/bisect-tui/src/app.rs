@@ -86,7 +86,7 @@ pub struct CompareResult {
     pub splits_b: usize,
     pub contiguous_a: bool,
     pub contiguous_b: bool,
-    pub most_changed: Vec<(usize, f64)>,  // (district_id, pct_moved)
+    pub most_changed: Vec<(usize, f64)>, // (district_id, pct_moved)
 }
 
 // ── Verify screen state ───────────────────────────────────────────────────────
@@ -269,9 +269,13 @@ impl App {
 
     /// Filtered + sorted plans for display.
     pub fn visible_plans(&self) -> Vec<&PlanSummary> {
-        let mut plans: Vec<&PlanSummary> = self.plans.iter()
+        let mut plans: Vec<&PlanSummary> = self
+            .plans
+            .iter()
             .filter(|p| {
-                if self.filter.is_empty() { return true; }
+                if self.filter.is_empty() {
+                    return true;
+                }
                 let f = self.filter.to_lowercase();
                 p.label.to_lowercase().contains(&f)
                     || p.state_code.to_lowercase().contains(&f)
@@ -282,12 +286,32 @@ impl App {
         match (&self.sort, &self.sort_dir) {
             (SortColumn::Label, SortDir::Asc) => plans.sort_by(|a, b| a.label.cmp(&b.label)),
             (SortColumn::Label, SortDir::Desc) => plans.sort_by(|a, b| b.label.cmp(&a.label)),
-            (SortColumn::Splits, SortDir::Asc) => plans.sort_by_key(|p| p.county_splits.unwrap_or(usize::MAX)),
-            (SortColumn::Splits, SortDir::Desc) => plans.sort_by_key(|p| std::cmp::Reverse(p.county_splits.unwrap_or(0))),
-            (SortColumn::Pp, SortDir::Asc) => plans.sort_by(|a, b| a.mean_pp.partial_cmp(&b.mean_pp).unwrap_or(std::cmp::Ordering::Equal)),
-            (SortColumn::Pp, SortDir::Desc) => plans.sort_by(|a, b| b.mean_pp.partial_cmp(&a.mean_pp).unwrap_or(std::cmp::Ordering::Equal)),
-            (SortColumn::Deviation, SortDir::Asc) => plans.sort_by(|a, b| a.max_deviation_pct.partial_cmp(&b.max_deviation_pct).unwrap_or(std::cmp::Ordering::Equal)),
-            (SortColumn::Deviation, SortDir::Desc) => plans.sort_by(|a, b| b.max_deviation_pct.partial_cmp(&a.max_deviation_pct).unwrap_or(std::cmp::Ordering::Equal)),
+            (SortColumn::Splits, SortDir::Asc) => {
+                plans.sort_by_key(|p| p.county_splits.unwrap_or(usize::MAX))
+            }
+            (SortColumn::Splits, SortDir::Desc) => {
+                plans.sort_by_key(|p| std::cmp::Reverse(p.county_splits.unwrap_or(0)))
+            }
+            (SortColumn::Pp, SortDir::Asc) => plans.sort_by(|a, b| {
+                a.mean_pp
+                    .partial_cmp(&b.mean_pp)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            }),
+            (SortColumn::Pp, SortDir::Desc) => plans.sort_by(|a, b| {
+                b.mean_pp
+                    .partial_cmp(&a.mean_pp)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            }),
+            (SortColumn::Deviation, SortDir::Asc) => plans.sort_by(|a, b| {
+                a.max_deviation_pct
+                    .partial_cmp(&b.max_deviation_pct)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            }),
+            (SortColumn::Deviation, SortDir::Desc) => plans.sort_by(|a, b| {
+                b.max_deviation_pct
+                    .partial_cmp(&a.max_deviation_pct)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            }),
         }
         plans
     }
@@ -295,13 +319,34 @@ impl App {
     /// Cycle to next sort column/direction.
     pub fn cycle_sort(&mut self) {
         self.sort = match (&self.sort, &self.sort_dir) {
-            (SortColumn::Label, SortDir::Asc) => { self.sort_dir = SortDir::Desc; SortColumn::Label }
-            (SortColumn::Label, SortDir::Desc) => { self.sort_dir = SortDir::Asc; SortColumn::Splits }
-            (SortColumn::Splits, SortDir::Asc) => { self.sort_dir = SortDir::Desc; SortColumn::Splits }
-            (SortColumn::Splits, SortDir::Desc) => { self.sort_dir = SortDir::Asc; SortColumn::Pp }
-            (SortColumn::Pp, SortDir::Asc) => { self.sort_dir = SortDir::Desc; SortColumn::Pp }
-            (SortColumn::Pp, SortDir::Desc) => { self.sort_dir = SortDir::Asc; SortColumn::Deviation }
-            _ => { self.sort_dir = SortDir::Asc; SortColumn::Label }
+            (SortColumn::Label, SortDir::Asc) => {
+                self.sort_dir = SortDir::Desc;
+                SortColumn::Label
+            }
+            (SortColumn::Label, SortDir::Desc) => {
+                self.sort_dir = SortDir::Asc;
+                SortColumn::Splits
+            }
+            (SortColumn::Splits, SortDir::Asc) => {
+                self.sort_dir = SortDir::Desc;
+                SortColumn::Splits
+            }
+            (SortColumn::Splits, SortDir::Desc) => {
+                self.sort_dir = SortDir::Asc;
+                SortColumn::Pp
+            }
+            (SortColumn::Pp, SortDir::Asc) => {
+                self.sort_dir = SortDir::Desc;
+                SortColumn::Pp
+            }
+            (SortColumn::Pp, SortDir::Desc) => {
+                self.sort_dir = SortDir::Asc;
+                SortColumn::Deviation
+            }
+            _ => {
+                self.sort_dir = SortDir::Asc;
+                SortColumn::Label
+            }
         };
     }
 }
@@ -351,8 +396,16 @@ mod tests {
     fn test_visible_plans_filter_by_state_code() {
         let mut app = App::default();
         app.plans = vec![
-            PlanSummary { label: "wa_house".into(), state_code: "WA".into(), ..Default::default() },
-            PlanSummary { label: "ca_cong".into(), state_code: "CA".into(), ..Default::default() },
+            PlanSummary {
+                label: "wa_house".into(),
+                state_code: "WA".into(),
+                ..Default::default()
+            },
+            PlanSummary {
+                label: "ca_cong".into(),
+                state_code: "CA".into(),
+                ..Default::default()
+            },
         ];
         app.filter = "WA".to_string();
         let visible = app.visible_plans();
@@ -406,9 +459,21 @@ mod tests {
     fn test_visible_plans_empty_filter_shows_all() {
         let mut app = App::default();
         app.plans = vec![
-            PlanSummary { label: "wa_house".into(), state_code: "WA".into(), ..Default::default() },
-            PlanSummary { label: "ca_cong".into(), state_code: "CA".into(), ..Default::default() },
-            PlanSummary { label: "tx_senate".into(), state_code: "TX".into(), ..Default::default() },
+            PlanSummary {
+                label: "wa_house".into(),
+                state_code: "WA".into(),
+                ..Default::default()
+            },
+            PlanSummary {
+                label: "ca_cong".into(),
+                state_code: "CA".into(),
+                ..Default::default()
+            },
+            PlanSummary {
+                label: "tx_senate".into(),
+                state_code: "TX".into(),
+                ..Default::default()
+            },
         ];
         app.filter = String::new();
         assert_eq!(app.visible_plans().len(), 3);
@@ -418,8 +483,16 @@ mod tests {
     fn test_visible_plans_filter_case_insensitive() {
         let mut app = App::default();
         app.plans = vec![
-            PlanSummary { label: "WA_house".into(), state_code: "WA".into(), ..Default::default() },
-            PlanSummary { label: "ca_cong".into(), state_code: "CA".into(), ..Default::default() },
+            PlanSummary {
+                label: "WA_house".into(),
+                state_code: "WA".into(),
+                ..Default::default()
+            },
+            PlanSummary {
+                label: "ca_cong".into(),
+                state_code: "CA".into(),
+                ..Default::default()
+            },
         ];
         app.filter = "wa".to_string();
         let visible = app.visible_plans();
@@ -431,8 +504,18 @@ mod tests {
     fn test_visible_plans_filter_by_chamber() {
         let mut app = App::default();
         app.plans = vec![
-            PlanSummary { label: "wa_house".into(), state_code: "WA".into(), chamber: "house".into(), ..Default::default() },
-            PlanSummary { label: "wa_senate".into(), state_code: "WA".into(), chamber: "senate".into(), ..Default::default() },
+            PlanSummary {
+                label: "wa_house".into(),
+                state_code: "WA".into(),
+                chamber: "house".into(),
+                ..Default::default()
+            },
+            PlanSummary {
+                label: "wa_senate".into(),
+                state_code: "WA".into(),
+                chamber: "senate".into(),
+                ..Default::default()
+            },
         ];
         app.filter = "senate".to_string();
         let visible = app.visible_plans();
@@ -444,9 +527,21 @@ mod tests {
     fn test_visible_plans_sort_by_splits_asc() {
         let mut app = App::default();
         app.plans = vec![
-            PlanSummary { label: "b".into(), county_splits: Some(10), ..Default::default() },
-            PlanSummary { label: "a".into(), county_splits: Some(2), ..Default::default() },
-            PlanSummary { label: "c".into(), county_splits: Some(5), ..Default::default() },
+            PlanSummary {
+                label: "b".into(),
+                county_splits: Some(10),
+                ..Default::default()
+            },
+            PlanSummary {
+                label: "a".into(),
+                county_splits: Some(2),
+                ..Default::default()
+            },
+            PlanSummary {
+                label: "c".into(),
+                county_splits: Some(5),
+                ..Default::default()
+            },
         ];
         app.sort = SortColumn::Splits;
         app.sort_dir = SortDir::Asc;
@@ -460,8 +555,16 @@ mod tests {
     fn test_visible_plans_sort_by_splits_desc() {
         let mut app = App::default();
         app.plans = vec![
-            PlanSummary { label: "b".into(), county_splits: Some(10), ..Default::default() },
-            PlanSummary { label: "a".into(), county_splits: Some(2), ..Default::default() },
+            PlanSummary {
+                label: "b".into(),
+                county_splits: Some(10),
+                ..Default::default()
+            },
+            PlanSummary {
+                label: "a".into(),
+                county_splits: Some(2),
+                ..Default::default()
+            },
         ];
         app.sort = SortColumn::Splits;
         app.sort_dir = SortDir::Desc;
@@ -473,8 +576,16 @@ mod tests {
     fn test_visible_plans_sort_by_pp_asc() {
         let mut app = App::default();
         app.plans = vec![
-            PlanSummary { label: "b".into(), mean_pp: Some(0.9), ..Default::default() },
-            PlanSummary { label: "a".into(), mean_pp: Some(0.1), ..Default::default() },
+            PlanSummary {
+                label: "b".into(),
+                mean_pp: Some(0.9),
+                ..Default::default()
+            },
+            PlanSummary {
+                label: "a".into(),
+                mean_pp: Some(0.1),
+                ..Default::default()
+            },
         ];
         app.sort = SortColumn::Pp;
         app.sort_dir = SortDir::Asc;
@@ -486,8 +597,16 @@ mod tests {
     fn test_visible_plans_sort_by_deviation_desc() {
         let mut app = App::default();
         app.plans = vec![
-            PlanSummary { label: "a".into(), max_deviation_pct: Some(0.5), ..Default::default() },
-            PlanSummary { label: "b".into(), max_deviation_pct: Some(2.0), ..Default::default() },
+            PlanSummary {
+                label: "a".into(),
+                max_deviation_pct: Some(0.5),
+                ..Default::default()
+            },
+            PlanSummary {
+                label: "b".into(),
+                max_deviation_pct: Some(2.0),
+                ..Default::default()
+            },
         ];
         app.sort = SortColumn::Deviation;
         app.sort_dir = SortDir::Desc;
@@ -529,7 +648,12 @@ mod tests {
     #[test]
     fn test_check_status_variants_debug() {
         // Ensure all CheckStatus variants can be formatted without panic
-        let statuses = [CheckStatus::Pass, CheckStatus::Warn, CheckStatus::Fail, CheckStatus::Info];
+        let statuses = [
+            CheckStatus::Pass,
+            CheckStatus::Warn,
+            CheckStatus::Fail,
+            CheckStatus::Info,
+        ];
         for s in &statuses {
             let _ = format!("{:?}", s);
         }

@@ -2,7 +2,7 @@
 **Date:** 2026-05-02
 **Status:** Design approved — pending implementation plan
 **Replaces:** `metis = { version = "0.2", features = ["vendored"] }` (C FFI)
-**New crate:** `redist/crates/bisect-metis/`
+**New crate:** `BISECT/crates/bisect-metis/`
 
 ## Why this exists
 

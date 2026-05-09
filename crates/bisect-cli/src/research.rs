@@ -1,7 +1,7 @@
-//! Researcher Toolkit (`redist research ...`).
+//! Researcher Toolkit (`BISECT research ...`).
 //!
 //! Today's surface area:
-//! - `redist research validate-ensemble` (RT Task 5 / M-02): consume an MCMC
+//! - `BISECT research validate-ensemble` (RT Task 5 / M-02): consume an MCMC
 //!   ensemble (one JSONL per chain), compute R-hat / ESS / optional Hamming
 //!   autocorrelation per metric using the already-shipped
 //!   `bisect_analysis::ensemble_diagnostics` math, and emit a
@@ -12,8 +12,8 @@
 //!   strategy.
 //!
 //! Future subcommands (deferred):
-//! - `redist research check-compat` (Task 3): GerryChain handshake.
-//! - `redist research mcmc` (Task 6): wrapper around scripts/research/mcmc_ensemble.py.
+//! - `BISECT research check-compat` (Task 3): GerryChain handshake.
+//! - `BISECT research mcmc` (Task 6): wrapper around scripts/research/mcmc_ensemble.py.
 //!
 //! Input format for `validate-ensemble`:
 //!
@@ -295,10 +295,7 @@ pub fn run_validate_ensemble(args: &ValidateEnsembleArgs) -> anyhow::Result<()> 
 fn load_chains_from_dir(dir: &Path) -> anyhow::Result<Vec<Vec<EnsembleStep>>> {
     let mut paths: Vec<PathBuf> = std::fs::read_dir(dir)?
         .filter_map(|r| r.ok().map(|e| e.path()))
-        .filter(|p| {
-            p.is_file()
-                && p.extension().and_then(|s| s.to_str()) == Some("jsonl")
-        })
+        .filter(|p| p.is_file() && p.extension().and_then(|s| s.to_str()) == Some("jsonl"))
         .collect();
     paths.sort();
 
@@ -377,9 +374,8 @@ mod tests {
             let offset = (c as f64) * 5.0;
             for s in 0..n_per_chain {
                 let value = offset + (s as f64) * 0.001;
-                let line = format!(
-                    "{{\"step\": {s}, \"metrics\": {{\"efficiency_gap\": {value}}}}}\n"
-                );
+                let line =
+                    format!("{{\"step\": {s}, \"metrics\": {{\"efficiency_gap\": {value}}}}}\n");
                 text.push_str(&line);
             }
             fs::write(dir.join(format!("chain-{c}.jsonl")), text).unwrap();
@@ -399,7 +395,11 @@ mod tests {
             strict: false,
         };
         let result = run_validate_ensemble(&args);
-        assert!(result.is_ok(), "well-mixed ensemble must succeed: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "well-mixed ensemble must succeed: {:?}",
+            result.err()
+        );
     }
 
     #[test]
@@ -417,8 +417,12 @@ mod tests {
         };
         run_validate_ensemble(&args).unwrap();
 
-        let report: serde_json::Value = serde_json::from_str(&fs::read_to_string(&out).unwrap()).unwrap();
-        assert_eq!(report["schema_version"].as_str(), Some("validate-ensemble v1"));
+        let report: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&out).unwrap()).unwrap();
+        assert_eq!(
+            report["schema_version"].as_str(),
+            Some("validate-ensemble v1")
+        );
         assert_eq!(report["n_chains"].as_u64(), Some(4));
         assert_eq!(report["n_per_chain"].as_u64(), Some(50));
         // The metric is so unmixed that R-hat will be far above threshold.
@@ -426,7 +430,10 @@ mod tests {
         assert_eq!(metrics.len(), 1);
         let m = &metrics[0];
         assert_eq!(m["metric"].as_str(), Some("efficiency_gap"));
-        assert!(m["rhat"]["above_threshold"].as_bool().unwrap_or(false), "wildly unmixed chains must trip R-hat");
+        assert!(
+            m["rhat"]["above_threshold"].as_bool().unwrap_or(false),
+            "wildly unmixed chains must trip R-hat"
+        );
         assert!(!m["passes_thresholds"].as_bool().unwrap());
         assert!(!report["all_pass"].as_bool().unwrap());
     }
@@ -444,7 +451,10 @@ mod tests {
             strict: true,
         };
         let result = run_validate_ensemble(&args);
-        assert!(result.is_err(), "--strict must propagate convergence failures as a non-zero exit");
+        assert!(
+            result.is_err(),
+            "--strict must propagate convergence failures as a non-zero exit"
+        );
         let msg = result.unwrap_err().to_string();
         assert!(msg.contains("[INPUT]"));
         assert!(msg.contains("efficiency_gap"));
@@ -464,7 +474,10 @@ mod tests {
         };
         let err = run_validate_ensemble(&args).unwrap_err().to_string();
         assert!(err.contains("[INPUT]"));
-        assert!(err.contains(">=4 parallel chains") || err.contains(">=4"), "must mention 4-chain minimum: {err}");
+        assert!(
+            err.contains(">=4 parallel chains") || err.contains(">=4"),
+            "must mention 4-chain minimum: {err}"
+        );
     }
 
     #[test]
@@ -487,7 +500,10 @@ mod tests {
         };
         let err = run_validate_ensemble(&args).unwrap_err().to_string();
         assert!(err.contains("[INPUT]"));
-        assert!(err.contains("differing lengths"), "error must mention chain-length mismatch: {err}");
+        assert!(
+            err.contains("differing lengths"),
+            "error must mention chain-length mismatch: {err}"
+        );
     }
 
     #[test]
@@ -509,7 +525,8 @@ mod tests {
         };
         run_validate_ensemble(&args).unwrap();
 
-        let report: serde_json::Value = serde_json::from_str(&fs::read_to_string(&out).unwrap()).unwrap();
+        let report: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&out).unwrap()).unwrap();
         let metrics = report["metrics"].as_array().unwrap();
         let dem_seats = metrics
             .iter()
@@ -524,7 +541,10 @@ mod tests {
         assert!(pr_seats < 0.01, "enacted dem_seats=3 should rank at the bottom of an ensemble centered on 5: pr={pr_seats}");
         // mean_median=-0.5 is BELOW every ensemble sample (~-0.01), so pr ~= 0.
         let pr_mm = mean_median["enacted_percentile_rank"].as_f64().unwrap();
-        assert!(pr_mm < 0.01, "enacted mean_median=-0.5 should rank at the bottom: pr={pr_mm}");
+        assert!(
+            pr_mm < 0.01,
+            "enacted mean_median=-0.5 should rank at the bottom: pr={pr_mm}"
+        );
     }
 
     #[test]
@@ -543,7 +563,11 @@ mod tests {
             strict: false,
         };
         let result = run_validate_ensemble(&args);
-        assert!(result.is_ok(), "non-jsonl files must be skipped: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "non-jsonl files must be skipped: {:?}",
+            result.err()
+        );
     }
 
     #[test]
@@ -621,7 +645,11 @@ mod tests {
             strict: false,
         };
         let result = run_validate_ensemble(&args);
-        assert!(result.is_ok(), "exactly 4 chains must satisfy S-03 requirement: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "exactly 4 chains must satisfy S-03 requirement: {:?}",
+            result.err()
+        );
     }
 
     #[test]
@@ -636,7 +664,10 @@ mod tests {
             enacted: None,
             strict: false,
         };
-        assert!(run_validate_ensemble(&args).is_ok(), "6 chains must be accepted");
+        assert!(
+            run_validate_ensemble(&args).is_ok(),
+            "6 chains must be accepted"
+        );
     }
 
     #[test]
@@ -650,6 +681,9 @@ mod tests {
             strict: false,
         };
         let err = run_validate_ensemble(&args).unwrap_err().to_string();
-        assert!(err.contains("[INPUT]"), "missing dir must emit [INPUT] error: {err}");
+        assert!(
+            err.contains("[INPUT]"),
+            "missing dir must emit [INPUT] error: {err}"
+        );
     }
 }

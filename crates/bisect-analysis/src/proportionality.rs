@@ -220,10 +220,12 @@ impl Analyzer for ProportionalityAnalyzer {
         }
 
         let mut rdr = csv::Reader::from_path(&csv_path)?;
-        let rows: Vec<PoliticalRow> = rdr
-            .deserialize()
-            .collect::<Result<Vec<_>, _>>()?;
-        Ok(aggregate_proportionality(&rows, ctx.assignments, ctx.num_districts))
+        let rows: Vec<PoliticalRow> = rdr.deserialize().collect::<Result<Vec<_>, _>>()?;
+        Ok(aggregate_proportionality(
+            &rows,
+            ctx.assignments,
+            ctx.num_districts,
+        ))
     }
 }
 
@@ -282,11 +284,7 @@ mod tests {
             row("02", 660.0, 340.0),
             row("03", 700.0, 300.0),
         ];
-        let result = aggregate_proportionality(
-            &rows,
-            &asgn(&[("01", 1), ("02", 2), ("03", 3)]),
-            3,
-        );
+        let result = aggregate_proportionality(&rows, &asgn(&[("01", 1), ("02", 2), ("03", 3)]), 3);
         assert!(result.dem_vote_share_statewide > 0.65);
         assert!(result.dem_vote_share_statewide < 0.67);
         assert_eq!(result.dem_seats, 3);
@@ -342,7 +340,10 @@ mod tests {
             row("99001000200", 800.0, 400.0),
         ];
         let result = aggregate_proportionality(&rows, &asgn(&[("02013000100", 1)]), 1);
-        assert!(!result.available, "no matching tracts must set available=false");
+        assert!(
+            !result.available,
+            "no matching tracts must set available=false"
+        );
         assert_eq!(result.total_two_party_votes, 0.0);
     }
 
@@ -353,7 +354,10 @@ mod tests {
             row("02", 500.0, 500.0),
         ];
         let result = aggregate_proportionality(&rows, &asgn(&[("01", 1), ("02", 2)]), 2);
-        assert!(result.n_uncontested >= 1, "uncontested district must be flagged");
+        assert!(
+            result.n_uncontested >= 1,
+            "uncontested district must be flagged"
+        );
     }
 
     #[test]
@@ -363,11 +367,7 @@ mod tests {
             row("02", 300.0, 700.0), // 0.30
             row("03", 600.0, 400.0), // 0.60
         ];
-        let result = aggregate_proportionality(
-            &rows,
-            &asgn(&[("01", 1), ("02", 2), ("03", 3)]),
-            3,
-        );
+        let result = aggregate_proportionality(&rows, &asgn(&[("01", 1), ("02", 2), ("03", 3)]), 3);
         let s = &result.per_district_dem_share_sorted;
         assert_eq!(s.len(), 3);
         assert!(s[0] <= s[1] && s[1] <= s[2], "must be sorted ascending");
@@ -412,11 +412,7 @@ mod tests {
             row("02", 500.0, 500.0),
             row("03", 500.0, 500.0),
         ];
-        let result = aggregate_proportionality(
-            &rows,
-            &asgn(&[("01", 1), ("02", 2), ("03", 3)]),
-            3,
-        );
+        let result = aggregate_proportionality(&rows, &asgn(&[("01", 1), ("02", 2), ("03", 3)]), 3);
         // Exact 0.5 dem_pct -> dem_seat under our >= 0.5 tie-break.
         // dem_seats = 3, seat_share = 1.0, gap = +50pp.
         // This is a documented limitation of the tie-break in tied data; in

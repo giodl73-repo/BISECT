@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 /// PlanManifest — full audit chain for redistricting plans.
 ///
 /// Records all inputs needed to independently reproduce and verify a plan:
@@ -12,8 +14,6 @@
 /// - adjacency_file is filename only, never a full path
 use std::io::Read;
 use std::path::Path;
-use sha2::{Digest, Sha256};
-use serde::{Deserialize, Serialize};
 
 /// Full audit chain for a redistricting plan run.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -163,9 +163,11 @@ pub struct PlanManifest {
     pub selected_burst_idx: Option<usize>,
 
     // ── Plan resolution fields ────────────────────────────────────────────────
-
     /// Geographic resolution of the plan assignments ("tract", "bg", "county")
-    #[serde(default = "default_resolution", skip_serializing_if = "is_tract_resolution")]
+    #[serde(
+        default = "default_resolution",
+        skip_serializing_if = "is_tract_resolution"
+    )]
     pub plan_resolution: String,
 
     /// Number of geographic units in this plan (tracts, BGs, or counties)
@@ -177,7 +179,6 @@ pub struct PlanManifest {
     pub unit_type: String,
 
     // ── Multi-scale fields (absent for non-multiscale runs) ───────────────────
-
     /// Fine resolution level for multiscale runs (e.g., "tract")
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub multiscale_fine: Option<String>,
@@ -199,16 +200,36 @@ pub struct PlanManifest {
     pub index_to_geoid_file: Option<String>,
 }
 
-fn default_seats_per_district() -> usize { 1 }
-fn default_electoral_system() -> String { "single_member".to_string() }
-fn default_submission_type() -> String { "authoritative".to_string() }
-fn default_ufactor() -> u32 { 5 }
-fn default_niter() -> u32 { 100 }
-fn default_resolution() -> String { "tract".to_string() }
-fn default_unit_type() -> String { "census tract".to_string() }
-fn is_tract_resolution(s: &str) -> bool { s == "tract" }
-fn is_census_tract(s: &str) -> bool { s == "census tract" }
-fn is_zero(n: &usize) -> bool { *n == 0 }
+fn default_seats_per_district() -> usize {
+    1
+}
+fn default_electoral_system() -> String {
+    "single_member".to_string()
+}
+fn default_submission_type() -> String {
+    "authoritative".to_string()
+}
+fn default_ufactor() -> u32 {
+    5
+}
+fn default_niter() -> u32 {
+    100
+}
+fn default_resolution() -> String {
+    "tract".to_string()
+}
+fn default_unit_type() -> String {
+    "census tract".to_string()
+}
+fn is_tract_resolution(s: &str) -> bool {
+    s == "tract"
+}
+fn is_census_tract(s: &str) -> bool {
+    s == "census tract"
+}
+fn is_zero(n: &usize) -> bool {
+    *n == 0
+}
 
 /// Compute SHA-256 of a byte slice. Returns 64-character lowercase hex string.
 pub fn sha256_bytes(data: &[u8]) -> String {
@@ -304,12 +325,22 @@ impl PlanDirGuard {
         // Build the sibling tmp path: append ".tmp" to the final-dir name.
         let mut tmp_name = final_dir
             .file_name()
-            .ok_or_else(|| anyhow::anyhow!("[INTERNAL] final_dir has no file name component: {}", final_dir.display()))?
+            .ok_or_else(|| {
+                anyhow::anyhow!(
+                    "[INTERNAL] final_dir has no file name component: {}",
+                    final_dir.display()
+                )
+            })?
             .to_os_string();
         tmp_name.push(".tmp");
         let tmp_dir = final_dir
             .parent()
-            .ok_or_else(|| anyhow::anyhow!("[INTERNAL] final_dir has no parent: {}", final_dir.display()))?
+            .ok_or_else(|| {
+                anyhow::anyhow!(
+                    "[INTERNAL] final_dir has no parent: {}",
+                    final_dir.display()
+                )
+            })?
             .join(&tmp_name);
 
         // Clear any stale tmp from a previous failed run.
@@ -401,11 +432,10 @@ impl Drop for PlanDirGuard {
 ///
 /// Called at:
 /// - `bisect state` runtime via `validate_partisan_config(StateConfig)` (existing).
-/// - `redist import` (this gate, before PlanDirGuard::commit) — Task 6.2.
+/// - `BISECT import` (this gate, before PlanDirGuard::commit) — Task 6.2.
 /// - `bisect analyze` (top of run_analyze) — Task 6.3.
 pub fn callais_preflight(manifest: &PlanManifest) -> anyhow::Result<()> {
-    let vra_aware = manifest.partition_mode == "metis-vra"
-        || manifest.population_source == "cvap";
+    let vra_aware = manifest.partition_mode == "metis-vra" || manifest.population_source == "cvap";
     let partisan_weighted = manifest.partition_mode == "partisan-weighted";
     if vra_aware && partisan_weighted {
         anyhow::bail!(
@@ -463,7 +493,8 @@ mod tests {
             seed: Some(42),
             binary_version: "0.1.0".into(),
             binary_sha256: "a".repeat(64),
-            binary_download_url: "https://github.com/owner/redist/releases/download/v0.1.0/redist".into(),
+            binary_download_url: "https://github.com/owner/BISECT/releases/download/v0.1.0/BISECT"
+                .into(),
             adjacency_file: format!("{}_adjacency_2020.adj.bin", state_fips.to_lowercase()),
             adjacency_sha256: "b".repeat(64),
             adjacency_build_command: "python scripts/data/generate_adj_bin.py".into(),
@@ -502,8 +533,7 @@ mod tests {
         // Note: this is the canonical test vector
         assert_eq!(hash.len(), 64, "SHA-256 hex must be 64 chars");
         assert_eq!(
-            hash,
-            "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+            hash, "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
             "sha256_file() must return known SHA-256 of 'hello world'"
         );
     }
@@ -631,8 +661,10 @@ mod tests {
             ..make_test_manifest("53")
         };
         let json = serde_json::to_value(&manifest).unwrap();
-        assert!(json["gpmetis_version"].is_string(),
-            "gpmetis_version must be a string field in the serialized manifest");
+        assert!(
+            json["gpmetis_version"].is_string(),
+            "gpmetis_version must be a string field in the serialized manifest"
+        );
         assert_eq!(json["gpmetis_version"], "METIS 5.1.0");
     }
 
@@ -642,8 +674,10 @@ mod tests {
         let manifest = make_test_manifest("53");
         let json = serde_json::to_value(&manifest).unwrap();
         // Default is empty string (from #[serde(default)])
-        assert!(json["gpmetis_version"].is_string(),
-            "gpmetis_version field must be present even when empty");
+        assert!(
+            json["gpmetis_version"].is_string(),
+            "gpmetis_version field must be present even when empty"
+        );
     }
 
     #[test]
@@ -670,7 +704,10 @@ mod tests {
         let mut m = make_test_manifest("50");
         m.partition_mode = "edge-weighted".into();
         m.population_source = "total".into();
-        assert!(callais_preflight(&m).is_ok(), "edge-weighted + total population must pass");
+        assert!(
+            callais_preflight(&m).is_ok(),
+            "edge-weighted + total population must pass"
+        );
     }
 
     #[test]
@@ -678,7 +715,10 @@ mod tests {
         let mut m = make_test_manifest("50");
         m.partition_mode = "metis-vra".into();
         m.population_source = "cvap".into();
-        assert!(callais_preflight(&m).is_ok(), "VRA-only configuration must pass");
+        assert!(
+            callais_preflight(&m).is_ok(),
+            "VRA-only configuration must pass"
+        );
     }
 
     #[test]
@@ -686,19 +726,31 @@ mod tests {
         let mut m = make_test_manifest("50");
         m.partition_mode = "partisan-weighted".into();
         m.population_source = "total".into();
-        assert!(callais_preflight(&m).is_ok(), "partisan-weighted + total population must pass");
+        assert!(
+            callais_preflight(&m).is_ok(),
+            "partisan-weighted + total population must pass"
+        );
     }
 
     #[test]
     fn test_callais_preflight_blocks_partisan_weighted_with_cvap() {
         let mut m = make_test_manifest("50");
         m.partition_mode = "partisan-weighted".into();
-        m.population_source = "cvap".into();  // VRA-aware proxy
+        m.population_source = "cvap".into(); // VRA-aware proxy
         let err = callais_preflight(&m).unwrap_err();
         let msg = format!("{err}");
-        assert!(msg.starts_with("[BOUNDARY]"), "must be [BOUNDARY] category: {msg}");
-        assert!(msg.contains("Callais p.36"), "must cite Callais p.36: {msg}");
-        assert!(msg.contains("disentanglement"), "must say disentanglement: {msg}");
+        assert!(
+            msg.starts_with("[BOUNDARY]"),
+            "must be [BOUNDARY] category: {msg}"
+        );
+        assert!(
+            msg.contains("Callais p.36"),
+            "must cite Callais p.36: {msg}"
+        );
+        assert!(
+            msg.contains("disentanglement"),
+            "must say disentanglement: {msg}"
+        );
     }
 
     #[test]
@@ -709,8 +761,14 @@ mod tests {
         m.population_source = "cvap".into();
         let err = callais_preflight(&m).unwrap_err();
         let msg = format!("{err}");
-        assert!(msg.contains("la_2020_disputed"), "must name the manifest: {msg}");
-        assert!(msg.contains("partisan-weighted"), "must name partition_mode: {msg}");
+        assert!(
+            msg.contains("la_2020_disputed"),
+            "must name the manifest: {msg}"
+        );
+        assert!(
+            msg.contains("partisan-weighted"),
+            "must name partition_mode: {msg}"
+        );
         assert!(msg.contains("cvap"), "must name population_source: {msg}");
     }
 
@@ -753,7 +811,10 @@ mod tests {
             p
         };
         assert!(!tmp_path.exists(), "tmp dir must be removed on drop");
-        assert!(!final_dir.exists(), "final dir must not be created on failure");
+        assert!(
+            !final_dir.exists(),
+            "final dir must not be created on failure"
+        );
     }
 
     #[test]
@@ -764,7 +825,10 @@ mod tests {
         std::fs::write(final_dir.join("preexisting.txt"), b"keep me").unwrap();
         let result = PlanDirGuard::new(final_dir.clone(), false);
         assert!(result.is_err(), "must refuse to overwrite without force");
-        assert!(final_dir.join("preexisting.txt").exists(), "existing files untouched");
+        assert!(
+            final_dir.join("preexisting.txt").exists(),
+            "existing files untouched"
+        );
     }
 
     #[test]
@@ -777,7 +841,10 @@ mod tests {
         std::fs::write(guard.tmp_dir().join("new_file.json"), b"new").unwrap();
         guard.commit().unwrap();
         assert!(final_dir.join("new_file.json").exists());
-        assert!(!final_dir.join("preexisting.txt").exists(), "force replaces atomically");
+        assert!(
+            !final_dir.join("preexisting.txt").exists(),
+            "force replaces atomically"
+        );
     }
 
     #[test]
@@ -811,7 +878,10 @@ mod tests {
         std::fs::write(final_dir.join("from_other_process.txt"), b"hi").unwrap();
         let tmp_path = guard.tmp_dir().to_path_buf();
         let result = guard.commit();
-        assert!(result.is_err(), "mid-run collision must refuse without force");
+        assert!(
+            result.is_err(),
+            "mid-run collision must refuse without force"
+        );
         // Existing final dir untouched; tmp still exists for debugging.
         assert!(final_dir.join("from_other_process.txt").exists());
         // (Tmp may or may not exist depending on Drop order; what matters is
@@ -826,8 +896,8 @@ mod tests {
         let mut m = make_test_manifest("50");
         m.partition_mode = "partisan-weighted".into();
         m.population_source = "total".into(); // not cvap, but partition_mode is metis-vra is set below
-        // Actually the vra check is partition_mode == "metis-vra" OR population_source == "cvap"
-        // So: metis-vra + partisan-weighted
+                                              // Actually the vra check is partition_mode == "metis-vra" OR population_source == "cvap"
+                                              // So: metis-vra + partisan-weighted
         m.partition_mode = "metis-vra".into();
         // But partisan_weighted is checked via partition_mode == "partisan-weighted"
         // They can't both be true in the same field — the real test is cvap + partisan-weighted
@@ -836,7 +906,10 @@ mod tests {
         m.partition_mode = "partisan-weighted".into();
         m.population_source = "cvap".into();
         let result = callais_preflight(&m);
-        assert!(result.is_err(), "partisan-weighted + cvap must fail preflight");
+        assert!(
+            result.is_err(),
+            "partisan-weighted + cvap must fail preflight"
+        );
         let msg = result.unwrap_err().to_string();
         assert!(msg.contains("[BOUNDARY]"));
     }
@@ -848,7 +921,10 @@ mod tests {
         m.population_source = "cvap".into();
         let err = callais_preflight(&m).unwrap_err();
         let msg = format!("{err}");
-        assert!(msg.contains("CALLAIS_REFERENCE"), "error must cite the reference doc: {msg}");
+        assert!(
+            msg.contains("CALLAIS_REFERENCE"),
+            "error must cite the reference doc: {msg}"
+        );
     }
 
     #[test]
@@ -863,8 +939,10 @@ mod tests {
     fn test_callais_preflight_passes_default_manifest() {
         // A default PlanManifest has empty strings — must not trigger BOUNDARY.
         let m = PlanManifest::default();
-        assert!(callais_preflight(&m).is_ok(),
-            "default manifest (empty strings) must pass callais_preflight");
+        assert!(
+            callais_preflight(&m).is_ok(),
+            "default manifest (empty strings) must pass callais_preflight"
+        );
     }
 
     #[test]
@@ -872,7 +950,10 @@ mod tests {
         // SHA-256 of empty slice is well-known.
         let hash = sha256_bytes(b"");
         assert_eq!(hash.len(), 64);
-        assert_eq!(hash, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+        assert_eq!(
+            hash,
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        );
     }
 
     #[test]
@@ -896,7 +977,10 @@ mod tests {
     #[test]
     fn test_sha256_file_nonexistent_returns_error() {
         let result = sha256_file(std::path::Path::new("/tmp/does_not_exist_xyz_abc.bin"));
-        assert!(result.is_err(), "sha256_file on nonexistent path must return Err");
+        assert!(
+            result.is_err(),
+            "sha256_file on nonexistent path must return Err"
+        );
     }
 
     #[test]
@@ -931,12 +1015,18 @@ mod tests {
 
     #[test]
     fn test_default_label_single_word_state() {
-        assert_eq!(default_label("vermont", "congressional", "2020"), "vermont_congressional_2020");
+        assert_eq!(
+            default_label("vermont", "congressional", "2020"),
+            "vermont_congressional_2020"
+        );
     }
 
     #[test]
     fn test_default_label_multi_word_state_lowercased() {
-        assert_eq!(default_label("NORTH DAKOTA", "senate", "2010"), "north_dakota_senate_2010");
+        assert_eq!(
+            default_label("NORTH DAKOTA", "senate", "2010"),
+            "north_dakota_senate_2010"
+        );
     }
 
     #[test]
@@ -975,8 +1065,10 @@ mod tests {
         v.as_object_mut().unwrap().remove("submission_type");
         let stripped = v.to_string();
         let m: PlanManifest = serde_json::from_str(&stripped).unwrap();
-        assert_eq!(m.submission_type, "authoritative",
-            "submission_type serde default must be 'authoritative' when absent from JSON");
+        assert_eq!(
+            m.submission_type, "authoritative",
+            "submission_type serde default must be 'authoritative' when absent from JSON"
+        );
     }
 
     #[test]
@@ -992,7 +1084,10 @@ mod tests {
         let bytes = std::fs::read(tmp.path().join("manifest.json")).unwrap();
         let parsed: PlanManifest = serde_json::from_slice(&bytes).unwrap();
         assert_eq!(parsed.submission_type, "civic_counter_proposal");
-        assert_eq!(parsed.submitted_by.as_deref(), Some("League of Women Voters"));
+        assert_eq!(
+            parsed.submitted_by.as_deref(),
+            Some("League of Women Voters")
+        );
         assert_eq!(parsed.submitted_at.as_deref(), Some("2026-04-15T12:00:00Z"));
     }
 
@@ -1019,8 +1114,10 @@ mod tests {
             ..make_test_manifest("50")
         };
         let json = serde_json::to_value(&manifest).unwrap();
-        assert!(json.get("edge_cut").is_none(),
-            "edge_cut=None must be absent from serialized JSON (skip_serializing_if)");
+        assert!(
+            json.get("edge_cut").is_none(),
+            "edge_cut=None must be absent from serialized JSON (skip_serializing_if)"
+        );
     }
 
     #[test]
@@ -1056,11 +1153,17 @@ mod tests {
         let guard = PlanDirGuard::new(final_dir.clone(), false).unwrap();
         let tmp_path = guard.tmp_dir();
         // tmp_dir must be a sibling (same parent)
-        assert_eq!(tmp_path.parent(), final_dir.parent(),
-            "tmp_dir must be a sibling of final_dir");
+        assert_eq!(
+            tmp_path.parent(),
+            final_dir.parent(),
+            "tmp_dir must be a sibling of final_dir"
+        );
         // tmp_dir name must end with ".tmp"
         let name = tmp_path.file_name().unwrap().to_string_lossy();
-        assert!(name.ends_with(".tmp"), "tmp_dir name must end with .tmp, got: {name}");
+        assert!(
+            name.ends_with(".tmp"),
+            "tmp_dir name must end with .tmp, got: {name}"
+        );
         drop(guard);
     }
 
@@ -1070,8 +1173,11 @@ mod tests {
         let final_dir = tmp.path().join("plans").join("ny_congressional");
         std::fs::create_dir_all(final_dir.parent().unwrap()).unwrap();
         let guard = PlanDirGuard::new(final_dir.clone(), false).unwrap();
-        assert_eq!(guard.final_dir(), final_dir.as_path(),
-            "final_dir() accessor must return the expected path");
+        assert_eq!(
+            guard.final_dir(),
+            final_dir.as_path(),
+            "final_dir() accessor must return the expected path"
+        );
         drop(guard);
     }
 
@@ -1080,15 +1186,19 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         std::fs::write(tmp.path().join("manifest.tmp"), b"{}").unwrap();
         let err = check_incomplete_plan(tmp.path(), "my_special_label").unwrap_err();
-        assert!(err.to_string().contains("my_special_label"),
-            "error must name the plan label");
+        assert!(
+            err.to_string().contains("my_special_label"),
+            "error must name the plan label"
+        );
     }
 
     #[test]
     fn test_manifest_import_compat_sha256_round_trip() {
         let tmp = TempDir::new().unwrap();
         let manifest = PlanManifest {
-            import_compat_sha256: Some("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".into()),
+            import_compat_sha256: Some(
+                "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".into(),
+            ),
             ..make_test_manifest("50")
         };
         write_manifest_atomic(tmp.path(), &manifest).unwrap();

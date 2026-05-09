@@ -1,3 +1,4 @@
+use geo_types::{Coord, LineString, MultiPolygon, Polygon};
 /// TIGER/Line tract shapefile reader.
 ///
 /// Reads ESRI .shp files (pure Rust, no GDAL). Returns per-tract records
@@ -10,7 +11,6 @@
 /// population data separately.
 use std::path::Path;
 use thiserror::Error;
-use geo_types::{Polygon, MultiPolygon, LineString, Coord};
 
 #[derive(Debug, Error)]
 pub enum TigerError {
@@ -59,8 +59,8 @@ pub fn read_tiger_tracts<P: AsRef<Path>>(shp_path: P) -> Result<Vec<TractRecord>
     let mut records = Vec::new();
 
     for (idx, shape_record) in reader.iter_shapes_and_records().enumerate() {
-        let (shape, record) = shape_record
-            .map_err(|e| TigerError::ShapefileError(e.to_string()))?;
+        let (shape, record) =
+            shape_record.map_err(|e| TigerError::ShapefileError(e.to_string()))?;
 
         // Extract GEOID from attributes
         let geoid = match record.get("GEOID") {
@@ -151,15 +151,11 @@ fn shapefile_polyz_to_geo(poly: &shapefile::PolygonZ) -> Polygon<f64> {
 }
 
 fn ring_to_linestring(points: &[shapefile::Point]) -> LineString<f64> {
-    LineString::new(
-        points.iter().map(|p| Coord { x: p.x, y: p.y }).collect(),
-    )
+    LineString::new(points.iter().map(|p| Coord { x: p.x, y: p.y }).collect())
 }
 
 fn ring_to_linestring_z(points: &[shapefile::PointZ]) -> LineString<f64> {
-    LineString::new(
-        points.iter().map(|p| Coord { x: p.x, y: p.y }).collect(),
-    )
+    LineString::new(points.iter().map(|p| Coord { x: p.x, y: p.y }).collect())
 }
 
 /// Encode a geo Polygon as WKB (Well-Known Binary), little-endian.
@@ -179,7 +175,10 @@ fn geo_to_wkb_polygon(poly: &Polygon<f64>) -> Vec<u8> {
     buf.extend_from_slice(&n_rings.to_le_bytes());
 
     // Exterior ring
-    write_ring(&mut buf, poly.exterior().points().collect::<Vec<_>>().as_slice());
+    write_ring(
+        &mut buf,
+        poly.exterior().points().collect::<Vec<_>>().as_slice(),
+    );
     // Interior rings (holes)
     for interior in poly.interiors() {
         write_ring(&mut buf, interior.points().collect::<Vec<_>>().as_slice());
@@ -195,11 +194,17 @@ fn write_ring(buf: &mut Vec<u8>, coords: &[geo_types::Point<f64>]) {
     // WKB requires the ring to be closed: first == last point.
     // Shapefile rings are always closed; add the closing point defensively
     // in case a caller constructs a polygon without one.
-    let needs_close = coords.first().zip(coords.last())
+    let needs_close = coords
+        .first()
+        .zip(coords.last())
         .map(|(f, l)| (f.x() - l.x()).abs() > 1e-12 || (f.y() - l.y()).abs() > 1e-12)
         .unwrap_or(false);
 
-    let n = if needs_close { coords.len() + 1 } else { coords.len() };
+    let n = if needs_close {
+        coords.len() + 1
+    } else {
+        coords.len()
+    };
     buf.extend_from_slice(&(n as u32).to_le_bytes());
     for pt in coords {
         buf.extend_from_slice(&pt.x().to_le_bytes());
@@ -243,7 +248,7 @@ mod tests {
         let wkb = geo_to_wkb_polygon(&poly);
         assert!(!wkb.is_empty());
         assert_eq!(wkb[0], 1u8); // little-endian byte order marker
-        // WKB type = 3 (Polygon)
+                                 // WKB type = 3 (Polygon)
         assert_eq!(u32::from_le_bytes([wkb[1], wkb[2], wkb[3], wkb[4]]), 3u32);
     }
 
@@ -266,8 +271,11 @@ mod tests {
         // First and last x must match
         let first_x = f64::from_le_bytes(wkb[13..21].try_into().unwrap());
         let last_offset = 13 + (n_points as usize - 1) * 16;
-        let last_x = f64::from_le_bytes(wkb[last_offset..last_offset+8].try_into().unwrap());
-        assert_eq!(first_x, last_x, "first and last point must match (WKB ring closed)");
+        let last_x = f64::from_le_bytes(wkb[last_offset..last_offset + 8].try_into().unwrap());
+        assert_eq!(
+            first_x, last_x,
+            "first and last point must match (WKB ring closed)"
+        );
     }
 
     #[test]
@@ -278,13 +286,16 @@ mod tests {
                 Coord { x: 0.0, y: 0.0 },
                 Coord { x: 1.0, y: 0.0 },
                 Coord { x: 0.5, y: 1.0 },
-                Coord { x: 0.0, y: 0.0 },  // explicit closing point
+                Coord { x: 0.0, y: 0.0 }, // explicit closing point
             ]),
             vec![],
         );
         let wkb = geo_to_wkb_polygon(&poly);
         let n_points = u32::from_le_bytes([wkb[9], wkb[10], wkb[11], wkb[12]]);
-        assert_eq!(n_points, 4u32, "should have 4 points (not 5) — no duplicate closing");
+        assert_eq!(
+            n_points, 4u32,
+            "should have 4 points (not 5) — no duplicate closing"
+        );
     }
 
     #[test]
@@ -307,7 +318,8 @@ mod tests {
     #[test]
     fn test_read_vermont_tracts_skippable() {
         // Live shapefile test — skip if file not present
-        let path = std::path::Path::new("data/2020/tiger/tracts/tl_2020_50_tract/tl_2020_50_tract.shp");
+        let path =
+            std::path::Path::new("data/2020/tiger/tracts/tl_2020_50_tract/tl_2020_50_tract.shp");
         if !path.exists() {
             return; // skip silently (CI won't have data/)
         }
@@ -316,8 +328,16 @@ mod tests {
         // All GEOIDs should be 11 chars starting with "50" (Vermont FIPS)
         for r in &records {
             assert_eq!(r.geoid.len(), 11, "GEOID {}", r.geoid);
-            assert!(r.geoid.starts_with("50"), "GEOID {} should start with 50", r.geoid);
-            assert!(!r.geometry_wkb.is_empty(), "WKB should not be empty for {}", r.geoid);
+            assert!(
+                r.geoid.starts_with("50"),
+                "GEOID {} should start with 50",
+                r.geoid
+            );
+            assert!(
+                !r.geometry_wkb.is_empty(),
+                "WKB should not be empty for {}",
+                r.geoid
+            );
         }
         // Records should be sorted by GEOID
         let geoids: Vec<&str> = records.iter().map(|r| r.geoid.as_str()).collect();

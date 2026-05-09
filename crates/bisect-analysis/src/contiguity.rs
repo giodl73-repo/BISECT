@@ -207,10 +207,7 @@ pub fn validate_nesting(
     let mut senate_to_house: HashMap<usize, HashSet<usize>> = HashMap::new();
     for (geoid, &s_dist) in senate {
         if let Some(&h_dist) = house.get(geoid) {
-            senate_to_house
-                .entry(s_dist)
-                .or_default()
-                .insert(h_dist);
+            senate_to_house.entry(s_dist).or_default().insert(h_dist);
         }
     }
 
@@ -243,11 +240,8 @@ mod tests {
         // 4 tracts in a line: 0-1-2-3, all in district 1 -> contiguous
         let adj = vec![vec![1usize], vec![0, 2], vec![1, 3], vec![2]];
         let geoids: Vec<String> = (0..4).map(|i| format!("t{:011}", i)).collect();
-        let assignments: HashMap<String, usize> = geoids
-            .iter()
-            .cloned()
-            .zip(vec![1, 1, 1, 1])
-            .collect();
+        let assignments: HashMap<String, usize> =
+            geoids.iter().cloned().zip(vec![1, 1, 1, 1]).collect();
         let result = check_contiguity(&assignments, &adj, &geoids, 1);
         assert!(result.all_contiguous);
         assert!(result.districts[0].contiguous);
@@ -330,7 +324,10 @@ mod tests {
     fn test_disconnected_tract_county_context_unknown_fips() {
         // Unknown FIPS should return the raw FIPS string (first 5 chars)
         let ctx = county_context_for_geoid("99999001234");
-        assert_eq!(ctx, "99999", "unknown FIPS should return raw FIPS, got: {ctx}");
+        assert_eq!(
+            ctx, "99999",
+            "unknown FIPS should return raw FIPS, got: {ctx}"
+        );
     }
 
     #[test]
@@ -350,7 +347,9 @@ mod tests {
             ("53033000002".to_string(), 1),
             ("53001000003".to_string(), 2),
             ("53033000004".to_string(), 1), // isolated
-        ].into_iter().collect();
+        ]
+        .into_iter()
+        .collect();
         let result = check_contiguity(&assignments, &adj, &geoids, 2);
         let d1 = result.districts.iter().find(|d| d.district == 1).unwrap();
         assert!(!d1.contiguous);
@@ -360,10 +359,15 @@ mod tests {
             "county context count must match disconnected tract count"
         );
         // The isolated tract 53033000004 should have King County context
-        let king_ctx = d1.disconnected_tract_counties.iter()
+        let king_ctx = d1
+            .disconnected_tract_counties
+            .iter()
             .any(|c| c.contains("King"));
-        assert!(king_ctx, "King County tract should get 'King' context, got: {:?}",
-            d1.disconnected_tract_counties);
+        assert!(
+            king_ctx,
+            "King County tract should get 'King' context, got: {:?}",
+            d1.disconnected_tract_counties
+        );
     }
 
     // ── bfs_component_count edge cases ──────────────────────────────────────
@@ -399,13 +403,7 @@ mod tests {
     fn test_bfs_component_count_fully_connected_chain() {
         // 5-node chain 0-1-2-3-4, all in subset → single component
         let members: HashSet<usize> = [0, 1, 2, 3, 4].iter().cloned().collect();
-        let adj = vec![
-            vec![1],
-            vec![0, 2],
-            vec![1, 3],
-            vec![2, 4],
-            vec![3],
-        ];
+        let adj = vec![vec![1], vec![0, 2], vec![1, 3], vec![2, 4], vec![3]];
         let (count, _) = bfs_component_count(&members, &adj);
         assert_eq!(count, 1);
     }
@@ -417,11 +415,15 @@ mod tests {
         // District 2 has no tracts → should be marked contiguous with tract_count=0
         let adj = vec![vec![1usize], vec![0usize]];
         let geoids: Vec<String> = vec!["t0".to_string(), "t1".to_string()];
-        let assignments: HashMap<String, usize> =
-            [("t0".to_string(), 1), ("t1".to_string(), 1)].into_iter().collect();
+        let assignments: HashMap<String, usize> = [("t0".to_string(), 1), ("t1".to_string(), 1)]
+            .into_iter()
+            .collect();
         let result = check_contiguity(&assignments, &adj, &geoids, 2);
         let d2 = result.districts.iter().find(|d| d.district == 2).unwrap();
-        assert!(d2.contiguous, "empty district must be treated as contiguous");
+        assert!(
+            d2.contiguous,
+            "empty district must be treated as contiguous"
+        );
         assert_eq!(d2.tract_count, 0);
         assert_eq!(d2.component_count, 0);
     }
@@ -430,16 +432,15 @@ mod tests {
     fn test_check_contiguity_three_components_reports_correct_count() {
         // District 1 has 5 tracts in 3 separate components
         let adj = vec![
-            vec![1], vec![0], // component A: 0-1
-            vec![3], vec![2], // component B: 2-3
-            vec![],           // component C: 4 isolated
+            vec![1],
+            vec![0], // component A: 0-1
+            vec![3],
+            vec![2], // component B: 2-3
+            vec![],  // component C: 4 isolated
         ];
         let geoids: Vec<String> = (0..5).map(|i| format!("t{i:011}")).collect();
-        let assignments: HashMap<String, usize> = geoids
-            .iter()
-            .cloned()
-            .zip(std::iter::repeat(1))
-            .collect();
+        let assignments: HashMap<String, usize> =
+            geoids.iter().cloned().zip(std::iter::repeat(1)).collect();
         let result = check_contiguity(&assignments, &adj, &geoids, 1);
         let d1 = &result.districts[0];
         assert!(!d1.contiguous);
@@ -476,7 +477,11 @@ mod tests {
         ]);
         let result = validate_nesting(&house, &senate, 2);
         assert!(!result.valid);
-        let v = result.violations.iter().find(|v| v.senate_district == 3).unwrap();
+        let v = result
+            .violations
+            .iter()
+            .find(|v| v.senate_district == 3)
+            .unwrap();
         // Senate 3 contains house districts 3, 5, 6, 7
         assert!(v.house_districts.len() >= 3);
     }

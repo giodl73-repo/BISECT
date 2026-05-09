@@ -5,7 +5,7 @@
 //!
 //! Phase 2 will implement MPS file generation + subprocess invocation.
 
-use crate::formulation::{IlpFormulation, build_formulation};
+use crate::formulation::{build_formulation, IlpFormulation};
 use crate::result::{IlpResult, SolverStatus};
 
 /// Which solver backend to use.
@@ -107,12 +107,7 @@ mod tests {
     use crate::result::SolverStatus;
 
     fn path_4_adjacency() -> Vec<Vec<usize>> {
-        vec![
-            vec![1],
-            vec![0, 2],
-            vec![1, 3],
-            vec![2],
-        ]
+        vec![vec![1], vec![0, 2], vec![1, 3], vec![2]]
     }
 
     fn uniform_pop(n: usize, pop_each: i64) -> Vec<i64> {
@@ -160,8 +155,14 @@ mod tests {
         let pop = uniform_pop(4, 100);
         let f = build_formulation(&adj, &pop, 2, 0.005);
         let result = solve(
-            &f, &adj, &pop, 2, 0.005,
-            IlpSolver::Glpk { time_limit_secs: 60 },
+            &f,
+            &adj,
+            &pop,
+            2,
+            0.005,
+            IlpSolver::Glpk {
+                time_limit_secs: 60,
+            },
             0.01,
         );
         assert_eq!(result.status, SolverStatus::SubprocessNotImplemented);
@@ -174,8 +175,14 @@ mod tests {
         let pop = uniform_pop(4, 100);
         let f = build_formulation(&adj, &pop, 2, 0.005);
         let result = solve(
-            &f, &adj, &pop, 2, 0.005,
-            IlpSolver::Highs { time_limit_secs: 300 },
+            &f,
+            &adj,
+            &pop,
+            2,
+            0.005,
+            IlpSolver::Highs {
+                time_limit_secs: 300,
+            },
             0.01,
         );
         assert_eq!(result.status, SolverStatus::SubprocessNotImplemented);
@@ -186,7 +193,8 @@ mod tests {
     fn build_and_solve_formulation_only_roundtrip() {
         let adj = path_4_adjacency();
         let pop = uniform_pop(4, 100);
-        let (form, result) = build_and_solve(&adj, &pop, 2, 0.005, IlpSolver::FormulationOnly, 0.01);
+        let (form, result) =
+            build_and_solve(&adj, &pop, 2, 0.005, IlpSolver::FormulationOnly, 0.01);
         // Formulation variable counts match result.
         assert_eq!(result.n_variables, form.n_variables());
         assert_eq!(result.n_constraints, form.n_constraints);

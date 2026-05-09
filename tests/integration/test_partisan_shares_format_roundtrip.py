@@ -6,8 +6,8 @@ The Python producer (`scripts/data/political/build_dem_shares.py`) writes
 the file; the Rust loader (consumed via the PyO3 binding for partisan_weights)
 reads it. If the format spec drifts on either side, this test fails.
 
-Skipped if redist_py is not built. The Rust-side parsing logic lives in
-`redist-cli/src/partisan_shares.rs` and has its own unit tests; what THIS
+Skipped if bisect_py is not built. The Rust-side parsing logic lives in
+`BISECT-cli/src/partisan_shares.rs` and has its own unit tests; what THIS
 test verifies is that the Python writer produces output the Rust side
 accepts as valid input.
 
@@ -29,33 +29,33 @@ sys.path.insert(0, str(PROJECT_ROOT / "scripts" / "data" / "political"))
 
 import build_dem_shares  # noqa: E402
 
-# The Rust loader proper is in redist-cli, not exposed via PyO3 directly.
+# The Rust loader proper is in BISECT-cli, not exposed via PyO3 directly.
 # What IS exposed is build_partisan_weights, which takes a numpy array of
 # dem_shares — already parsed. So we test the format end-to-end by:
 #   1. Python producer writes TSV
 #   2. Python (this test) parses the TSV with the same rules the Rust loader uses
-#   3. Pass parsed shares to redist_py.build_partisan_weights
+#   3. Pass parsed shares to bisect_py.build_partisan_weights
 #   4. Verify the result matches what build_partisan_weights returns when called
 #      with the same shares directly (no TSV roundtrip)
 
-REDIST_PY_AVAILABLE = False
+BISECT_PY_AVAILABLE = False
 try:
-    import redist_py  # noqa: F401
+    import bisect_py  # noqa: F401
     import numpy as np  # noqa: F401
-    REDIST_PY_AVAILABLE = True
+    BISECT_PY_AVAILABLE = True
 except ImportError:
     pass
 
 pytestmark = pytest.mark.skipif(
-    not REDIST_PY_AVAILABLE,
-    reason="redist_py not available; build with `cd redist/python/redist_py && maturin develop`"
+    not BISECT_PY_AVAILABLE,
+    reason="bisect_py not available; build with `cd python/bisect_py && maturin develop`"
 )
 
 
 def parse_tsv_like_rust(path: Path) -> dict[str, float]:
     """
     Mirror the Rust loader's parsing rules from
-    redist-cli/src/partisan_shares.rs::load_partisan_shares_map:
+    BISECT-cli/src/partisan_shares.rs::load_partisan_shares_map:
       - Skip lines starting with '#' or blank
       - First non-blank line whose 2nd column doesn't parse as float = header (skip)
       - GEOIDs are zfilled to 11 chars
@@ -134,8 +134,8 @@ class TestPyO3PartisanWeightsAcceptsProducerOutput:
         direct_array = np.array([shares_dict[g] for g in sorted_geoids], dtype=np.float64)
 
         edges = [(0, 1), (2, 3), (0, 2)]  # D-D, R-R, D-R
-        w_via_tsv = redist_py.build_partisan_weights(edges, shares_array, 0.55, 0.45)
-        w_direct = redist_py.build_partisan_weights(edges, direct_array, 0.55, 0.45)
+        w_via_tsv = bisect_py.build_partisan_weights(edges, shares_array, 0.55, 0.45)
+        w_direct = bisect_py.build_partisan_weights(edges, direct_array, 0.55, 0.45)
 
         # Both should return the same dict (D-D and R-R boosted, D-R not)
         assert w_via_tsv == w_direct, (

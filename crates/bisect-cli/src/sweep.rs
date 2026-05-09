@@ -1,4 +1,4 @@
-/// `redist sweep` — N-seed optimization planning tool (v1: command generator).
+/// `BISECT sweep` — N-seed optimization planning tool (v1: command generator).
 ///
 /// Validates sweep parameters, generates plan labels, and prints the equivalent
 /// `bisect state` shell commands for the user to run. Does NOT execute them in v1.
@@ -40,16 +40,19 @@ pub fn generate_sweep_labels(args: &SweepArgs) -> Vec<String> {
 
 /// Run the sweep planning command.
 pub fn run_sweep(args: &SweepArgs) -> anyhow::Result<()> {
-    validate_sweep_args(args)
-        .map_err(|e| anyhow::anyhow!("{}", e))?;
+    validate_sweep_args(args).map_err(|e| anyhow::anyhow!("{}", e))?;
 
     let labels = generate_sweep_labels(args);
 
-    eprintln!("=== bisect sweep: {} seeds, keep top {} by {} ===",
-        args.seeds, args.keep_top, args.optimize_by);
+    eprintln!(
+        "=== bisect sweep: {} seeds, keep top {} by {} ===",
+        args.seeds, args.keep_top, args.optimize_by
+    );
     eprintln!();
-    eprintln!("Would run {} plans for {} {} (year={}, version={}):",
-        args.seeds, args.state, args.chamber, args.year, args.version);
+    eprintln!(
+        "Would run {} plans for {} {} (year={}, version={}):",
+        args.seeds, args.state, args.chamber, args.year, args.version
+    );
     eprintln!();
 
     for (i, label) in labels.iter().enumerate() {
@@ -63,12 +66,21 @@ pub fn run_sweep(args: &SweepArgs) -> anyhow::Result<()> {
     }
 
     eprintln!("After running all seeds, compare with:");
-    eprintln!("  bisect compare --labels {} --optimize-by {}",
-        labels.iter().take(args.keep_top).cloned().collect::<Vec<_>>().join(","),
-        args.optimize_by);
+    eprintln!(
+        "  bisect compare --labels {} --optimize-by {}",
+        labels
+            .iter()
+            .take(args.keep_top)
+            .cloned()
+            .collect::<Vec<_>>()
+            .join(","),
+        args.optimize_by
+    );
     eprintln!();
-    eprintln!("Report: Would run {} plans, keeping top {} by {}",
-        args.seeds, args.keep_top, args.optimize_by);
+    eprintln!(
+        "Report: Would run {} plans, keeping top {} by {}",
+        args.seeds, args.keep_top, args.optimize_by
+    );
 
     if args.run {
         eprintln!("NOTE: --run flag is reserved for v2 auto-execution. Not implemented yet.");
@@ -113,10 +125,14 @@ mod tests {
         let result = validate_sweep_args(&args);
         assert!(result.is_err(), "keep_top > seeds must return error");
         let msg = result.unwrap_err();
-        assert!(msg.contains("keep-top") || msg.contains("keep_top"),
-            "error must mention keep-top: {msg}");
-        assert!(msg.contains("seeds") || msg.contains("10"),
-            "error must mention seeds: {msg}");
+        assert!(
+            msg.contains("keep-top") || msg.contains("keep_top"),
+            "error must mention keep-top: {msg}"
+        );
+        assert!(
+            msg.contains("seeds") || msg.contains("10"),
+            "error must mention seeds: {msg}"
+        );
     }
 
     #[test]
@@ -125,8 +141,10 @@ mod tests {
         let result = validate_sweep_args(&args);
         assert!(result.is_err(), "invalid optimize_by must return error");
         let msg = result.unwrap_err();
-        assert!(msg.contains("gerrymandering") || msg.contains("invalid"),
-            "error must mention the invalid value: {msg}");
+        assert!(
+            msg.contains("gerrymandering") || msg.contains("invalid"),
+            "error must mention the invalid value: {msg}"
+        );
     }
 
     #[test]
@@ -153,7 +171,12 @@ mod tests {
         for metric in &["compactness", "splits", "deviation"] {
             let args = make_sweep_args("CA", 5, 3, metric);
             let result = validate_sweep_args(&args);
-            assert!(result.is_ok(), "metric '{}' must be valid: {:?}", metric, result.err());
+            assert!(
+                result.is_ok(),
+                "metric '{}' must be valid: {:?}",
+                metric,
+                result.err()
+            );
         }
     }
 
@@ -161,13 +184,17 @@ mod tests {
     fn test_sweep_keep_top_equal_seeds_is_ok() {
         let args = make_sweep_args("VT", 5, 5, "compactness"); // keep_top == seeds: ok
         let result = validate_sweep_args(&args);
-        assert!(result.is_ok(), "keep_top == seeds must be ok: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "keep_top == seeds must be ok: {:?}",
+            result.err()
+        );
     }
 
     // ── Task 212: generated commands go to stdout ─────────────────────────────
 
     #[test]
-    fn test_sweep_generates_redist_state_commands() {
+    fn test_sweep_generates_bisect_state_commands() {
         // The generated labels should contain the state and chamber
         let mut args = make_sweep_args("WA", 3, 1, "compactness");
         args.chamber = "house".to_string();
@@ -175,11 +202,13 @@ mod tests {
         assert_eq!(labels.len(), 3);
         assert!(
             labels[0].contains("wa") || labels[0].contains("WA"),
-            "label must reference state: {}", labels[0]
+            "label must reference state: {}",
+            labels[0]
         );
         assert!(
             labels[0].contains("house"),
-            "label must reference chamber: {}", labels[0]
+            "label must reference chamber: {}",
+            labels[0]
         );
     }
 
@@ -188,9 +217,21 @@ mod tests {
         let args = make_sweep_args("TX", 3, 2, "splits");
         let labels = generate_sweep_labels(&args);
         // Each label should contain the seed number
-        assert!(labels[0].contains("1"), "first label must contain seed 1: {}", labels[0]);
-        assert!(labels[1].contains("2"), "second label must contain seed 2: {}", labels[1]);
-        assert!(labels[2].contains("3"), "third label must contain seed 3: {}", labels[2]);
+        assert!(
+            labels[0].contains("1"),
+            "first label must contain seed 1: {}",
+            labels[0]
+        );
+        assert!(
+            labels[1].contains("2"),
+            "second label must contain seed 2: {}",
+            labels[1]
+        );
+        assert!(
+            labels[2].contains("3"),
+            "third label must contain seed 3: {}",
+            labels[2]
+        );
     }
 
     // ── 15 additional L0 tests ───────────────────────────────────────────────
@@ -203,8 +244,10 @@ mod tests {
         let result = validate_sweep_args(&args);
         assert!(result.is_err(), "zero seeds must return error");
         let msg = result.unwrap_err();
-        assert!(msg.contains("seeds") || msg.contains("1"),
-            "error must mention minimum seeds: {msg}");
+        assert!(
+            msg.contains("seeds") || msg.contains("1"),
+            "error must mention minimum seeds: {msg}"
+        );
     }
 
     #[test]
@@ -212,13 +255,20 @@ mod tests {
         // keep_top=0 <= seeds=5: boundary case, should be allowed
         let args = make_sweep_args("WA", 5, 0, "compactness");
         let result = validate_sweep_args(&args);
-        assert!(result.is_ok(), "keep_top=0 with seeds>0 must be valid: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "keep_top=0 with seeds>0 must be valid: {:?}",
+            result.err()
+        );
     }
 
     #[test]
     fn test_validate_sweep_keep_top_one_of_one_seed_is_ok() {
         let args = make_sweep_args("VT", 1, 1, "splits");
-        assert!(validate_sweep_args(&args).is_ok(), "seeds=1 keep_top=1 must be valid");
+        assert!(
+            validate_sweep_args(&args).is_ok(),
+            "seeds=1 keep_top=1 must be valid"
+        );
     }
 
     #[test]
@@ -226,7 +276,12 @@ mod tests {
         for metric in VALID_METRICS {
             let args = make_sweep_args("CA", 3, 2, metric);
             let result = validate_sweep_args(&args);
-            assert!(result.is_ok(), "metric '{}' must be valid: {:?}", metric, result.err());
+            assert!(
+                result.is_ok(),
+                "metric '{}' must be valid: {:?}",
+                metric,
+                result.err()
+            );
         }
     }
 
@@ -242,7 +297,10 @@ mod tests {
         // Metric names are case-sensitive: "Compactness" != "compactness"
         let args = make_sweep_args("WA", 3, 1, "Compactness");
         let result = validate_sweep_args(&args);
-        assert!(result.is_err(), "Capitalized metric must fail (case-sensitive)");
+        assert!(
+            result.is_err(),
+            "Capitalized metric must fail (case-sensitive)"
+        );
     }
 
     // -- generate_sweep_labels -----------------------------------------------
@@ -261,8 +319,14 @@ mod tests {
         let args = make_sweep_args("CA", 2, 1, "splits");
         let labels = generate_sweep_labels(&args);
         for label in &labels {
-            assert!(label.starts_with("ca_"), "label must start with 'ca_': {label}");
-            assert!(!label.contains("CA"), "label must not contain uppercase 'CA': {label}");
+            assert!(
+                label.starts_with("ca_"),
+                "label must start with 'ca_': {label}"
+            );
+            assert!(
+                !label.contains("CA"),
+                "label must not contain uppercase 'CA': {label}"
+            );
         }
     }
 
@@ -291,8 +355,16 @@ mod tests {
         let mut args = make_sweep_args("WA", 2, 1, "compactness");
         args.chamber = "senate".to_string();
         let labels = generate_sweep_labels(&args);
-        assert!(labels[0].contains("senate"), "senate chamber must appear in label: {}", labels[0]);
-        assert!(!labels[0].contains("congressional"), "congressional must not appear: {}", labels[0]);
+        assert!(
+            labels[0].contains("senate"),
+            "senate chamber must appear in label: {}",
+            labels[0]
+        );
+        assert!(
+            !labels[0].contains("congressional"),
+            "congressional must not appear: {}",
+            labels[0]
+        );
     }
 
     // -- run_sweep integration (pure logic only) -----------------------------
@@ -301,14 +373,21 @@ mod tests {
     fn test_run_sweep_returns_ok_for_valid_args() {
         let args = make_sweep_args("VT", 3, 2, "compactness");
         let result = run_sweep(&args);
-        assert!(result.is_ok(), "run_sweep with valid args must return Ok: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "run_sweep with valid args must return Ok: {:?}",
+            result.err()
+        );
     }
 
     #[test]
     fn test_run_sweep_returns_err_for_invalid_metric() {
         let args = make_sweep_args("VT", 3, 2, "invalid_metric");
         let result = run_sweep(&args);
-        assert!(result.is_err(), "run_sweep with invalid metric must return Err");
+        assert!(
+            result.is_err(),
+            "run_sweep with invalid metric must return Err"
+        );
     }
 
     #[test]
@@ -317,7 +396,11 @@ mod tests {
         let mut args = make_sweep_args("VT", 2, 1, "splits");
         args.run = true;
         let result = run_sweep(&args);
-        assert!(result.is_ok(), "run_sweep with --run flag must still return Ok: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "run_sweep with --run flag must still return Ok: {:?}",
+            result.err()
+        );
     }
 
     #[test]
@@ -325,8 +408,7 @@ mod tests {
         for seeds in [1, 5, 10, 50] {
             let args = make_sweep_args("WA", seeds, seeds, "compactness");
             let labels = generate_sweep_labels(&args);
-            assert_eq!(labels.len(), seeds,
-                "label count must equal seeds={seeds}");
+            assert_eq!(labels.len(), seeds, "label count must equal seeds={seeds}");
         }
     }
 }

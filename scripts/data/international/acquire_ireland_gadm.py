@@ -179,16 +179,16 @@ def save_outputs(graph_dict: dict) -> tuple:
 
     bin_path = None
     try:
-        import redist_py
+        import bisect_py
         adj = graph_dict["adjacency"]
         vw = [int(x) for x in graph_dict["vertex_weights"]]
         ew = {(min(i, j), max(i, j)): float(w) for (i, j), w in graph_dict["edge_weights"].items()}
-        bin_data = redist_py.adjacency_to_bin(adj, vw, ew, len(adj), len(ew))
+        bin_data = bisect_py.adjacency_to_bin(adj, vw, ew, len(adj), len(ew))
         bin_path = OUT_DIR / "ie_adjacency_2022.adj.bin"
         bin_path.write_bytes(bin_data)
         print(f"  [OK] {bin_path} ({len(bin_data)} bytes)")
     except ImportError:
-        print("  [WARN] redist_py not available")
+        print("  [WARN] bisect_py not available")
 
     return pkl_path, bin_path
 
@@ -234,7 +234,7 @@ def main():
     print(f"  Edges: {len(graph_dict['edge_weights'])}")
     print(f"  Total pop: {sum(graph_dict['vertex_weights']):,}")
     print(f"\nNext - run redistricting:")
-    print(f"  redist state --state IE --year 2020 --version international \\")
+    print(f"  BISECT state --state IE --year 2020 --version international \\")
     print(f"    --adjacency {adj_arg} --state-name ireland \\")
     print(f"    --districts 43 --seats-per-district 4 \\")
     print(f"    --chamber parliamentary --balance-tolerance 5 \\")

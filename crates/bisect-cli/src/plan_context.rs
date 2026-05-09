@@ -1,11 +1,11 @@
+use bisect_report::PlanManifest;
 /// PlanContext — single source of truth for all metadata about an existing plan.
 ///
-/// Architecture invariant (see docs/superpowers/specs/2026-04-28-redist-cli-architecture.md):
+/// Architecture invariant (see docs/superpowers/specs/2026-04-28-BISECT-cli-architecture.md):
 /// Any Class B command (analyze, report, compare, verify, map, export) MUST load its
 /// plan metadata from this struct, never from LocationRegistry or load_all_states().
 /// The manifest.json written by `bisect state` is the authoritative record.
 use std::path::{Path, PathBuf};
-use bisect_report::PlanManifest;
 
 /// All metadata and derived paths for an existing redistricting plan.
 #[derive(Debug)]
@@ -37,14 +37,19 @@ impl PlanContext {
                 format!(
                     "No plans found in {}/{}/{}/plans/. \
                      Run 'bisect state --label {}' to create one.",
-                    output_base.display(), version, year, label
+                    output_base.display(),
+                    version,
+                    year,
+                    label
                 )
             } else {
                 format!("Available plans: {}", available.join(", "))
             };
             anyhow::bail!(
                 "Plan '{}' not found at {}\n{}",
-                label, plan_dir.display(), hint
+                label,
+                plan_dir.display(),
+                hint
             );
         }
 
@@ -53,14 +58,16 @@ impl PlanContext {
             anyhow::bail!(
                 "Plan '{}' exists but has no manifest.json — the plan may be corrupt.\n\
                  Delete the directory and re-run: bisect state --label {}",
-                label, label
+                label,
+                label
             );
         }
 
         let manifest: PlanManifest = serde_json::from_str(
             &std::fs::read_to_string(&manifest_path)
-                .map_err(|e| anyhow::anyhow!("cannot read manifest.json: {e}"))?
-        ).map_err(|e| anyhow::anyhow!("invalid manifest.json: {e}"))?;
+                .map_err(|e| anyhow::anyhow!("cannot read manifest.json: {e}"))?,
+        )
+        .map_err(|e| anyhow::anyhow!("invalid manifest.json: {e}"))?;
 
         Ok(Self { plan_dir, manifest })
     }
@@ -161,7 +168,13 @@ mod tests {
     use super::*;
     use tempfile::TempDir;
 
-    fn write_test_manifest(plan_dir: &Path, num_districts: usize, chamber: &str, state_code: &str, year: &str) {
+    fn write_test_manifest(
+        plan_dir: &Path,
+        num_districts: usize,
+        chamber: &str,
+        state_code: &str,
+        year: &str,
+    ) {
         std::fs::create_dir_all(plan_dir).unwrap();
         let manifest = serde_json::json!({
             "label": plan_dir.file_name().unwrap().to_str().unwrap(),
@@ -192,7 +205,8 @@ mod tests {
         std::fs::write(
             plan_dir.join("manifest.json"),
             serde_json::to_string_pretty(&manifest).unwrap(),
-        ).unwrap();
+        )
+        .unwrap();
     }
 
     fn make_plan_dir(tmp: &TempDir, label: &str) -> PathBuf {
@@ -208,7 +222,11 @@ mod tests {
         write_test_manifest(&plan_dir, 98, "house", "WA", "2020");
 
         let ctx = PlanContext::from_label(tmp.path(), "v1", "2020", "wa_house_test").unwrap();
-        assert_eq!(ctx.num_districts(), 98, "must read 98 from manifest, not 10 (congressional)");
+        assert_eq!(
+            ctx.num_districts(),
+            98,
+            "must read 98 from manifest, not 10 (congressional)"
+        );
         assert_eq!(ctx.chamber(), "house");
         assert_eq!(ctx.state_code(), "WA");
     }
@@ -230,13 +248,28 @@ mod tests {
     fn test_plan_context_missing_plan_gives_available_list() {
         let tmp = TempDir::new().unwrap();
         // Create two existing plans
-        write_test_manifest(&make_plan_dir(&tmp, "wa_house_v1"), 98, "house", "WA", "2020");
-        write_test_manifest(&make_plan_dir(&tmp, "wa_senate_v1"), 49, "senate", "WA", "2020");
+        write_test_manifest(
+            &make_plan_dir(&tmp, "wa_house_v1"),
+            98,
+            "house",
+            "WA",
+            "2020",
+        );
+        write_test_manifest(
+            &make_plan_dir(&tmp, "wa_senate_v1"),
+            49,
+            "senate",
+            "WA",
+            "2020",
+        );
 
         let result = PlanContext::from_label(tmp.path(), "v1", "2020", "nonexistent_plan");
         assert!(result.is_err());
         let msg = result.unwrap_err().to_string();
-        assert!(msg.contains("nonexistent_plan"), "error must name the missing plan");
+        assert!(
+            msg.contains("nonexistent_plan"),
+            "error must name the missing plan"
+        );
         assert!(
             msg.contains("wa_house_v1") || msg.contains("wa_senate_v1"),
             "error must list available plans: {msg}"
@@ -262,7 +295,8 @@ mod tests {
         let plan_dir = make_plan_dir(&tmp, "vt_congressional_2020");
         write_test_manifest(&plan_dir, 1, "congressional", "VT", "2020");
 
-        let ctx = PlanContext::from_label(tmp.path(), "v1", "2020", "vt_congressional_2020").unwrap();
+        let ctx =
+            PlanContext::from_label(tmp.path(), "v1", "2020", "vt_congressional_2020").unwrap();
         assert_eq!(ctx.num_districts(), 1);
         assert_eq!(ctx.chamber(), "congressional");
         assert_eq!(ctx.state_code(), "VT");
@@ -281,16 +315,40 @@ mod tests {
         let ctx = PlanContext::from_label(tmp.path(), "v1", "2020", "vt_test").unwrap();
         assert_eq!(ctx.analysis_dir(), plan_dir.join("analysis"));
         assert_eq!(ctx.data_dir(), plan_dir.join("data"));
-        assert_eq!(ctx.assignments_path(), plan_dir.join("data").join("final_assignments.json"));
-        assert_eq!(ctx.analysis_file("summary.json"), plan_dir.join("analysis").join("summary.json"));
+        assert_eq!(
+            ctx.assignments_path(),
+            plan_dir.join("data").join("final_assignments.json")
+        );
+        assert_eq!(
+            ctx.analysis_file("summary.json"),
+            plan_dir.join("analysis").join("summary.json")
+        );
     }
 
     #[test]
     fn test_list_available_plans_sorted() {
         let tmp = TempDir::new().unwrap();
-        write_test_manifest(&make_plan_dir(&tmp, "z_plan"), 1, "congressional", "VT", "2020");
-        write_test_manifest(&make_plan_dir(&tmp, "a_plan"), 1, "congressional", "VT", "2020");
-        write_test_manifest(&make_plan_dir(&tmp, "m_plan"), 1, "congressional", "VT", "2020");
+        write_test_manifest(
+            &make_plan_dir(&tmp, "z_plan"),
+            1,
+            "congressional",
+            "VT",
+            "2020",
+        );
+        write_test_manifest(
+            &make_plan_dir(&tmp, "a_plan"),
+            1,
+            "congressional",
+            "VT",
+            "2020",
+        );
+        write_test_manifest(
+            &make_plan_dir(&tmp, "m_plan"),
+            1,
+            "congressional",
+            "VT",
+            "2020",
+        );
 
         let plans = list_available_plans(tmp.path(), "v1", "2020");
         assert_eq!(plans, vec!["a_plan", "m_plan", "z_plan"]);
@@ -306,8 +364,10 @@ mod tests {
         let result = PlanContext::from_label(tmp.path(), "v1", "2020", "bad_manifest_plan");
         assert!(result.is_err());
         let msg = result.unwrap_err().to_string();
-        assert!(msg.contains("manifest") || msg.contains("invalid"),
-            "error must mention manifest: {msg}");
+        assert!(
+            msg.contains("manifest") || msg.contains("invalid"),
+            "error must mention manifest: {msg}"
+        );
     }
 
     #[test]
@@ -320,12 +380,15 @@ mod tests {
         let plan_dir = make_plan_dir(&tmp, "zero_tol_plan");
         write_test_manifest(&plan_dir, 1, "congressional", "VT", "2020");
         // Override balance_tolerance_pct to 0 by writing a custom manifest
-        let mut manifest: serde_json::Value = serde_json::from_str(
-            &std::fs::read_to_string(plan_dir.join("manifest.json")).unwrap()
-        ).unwrap();
+        let mut manifest: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(plan_dir.join("manifest.json")).unwrap())
+                .unwrap();
         manifest["balance_tolerance_pct"] = serde_json::json!(0.0);
-        std::fs::write(plan_dir.join("manifest.json"),
-            serde_json::to_string(&manifest).unwrap()).unwrap();
+        std::fs::write(
+            plan_dir.join("manifest.json"),
+            serde_json::to_string(&manifest).unwrap(),
+        )
+        .unwrap();
 
         let ctx = PlanContext::from_label(tmp.path(), "v1", "2020", "zero_tol_plan").unwrap();
         // Must not panic — value of 0.0 is valid (handled by caller)
@@ -337,15 +400,22 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let plan_dir = make_plan_dir(&tmp, "zero_seats_plan");
         write_test_manifest(&plan_dir, 1, "congressional", "VT", "2020");
-        let mut manifest: serde_json::Value = serde_json::from_str(
-            &std::fs::read_to_string(plan_dir.join("manifest.json")).unwrap()
-        ).unwrap();
+        let mut manifest: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(plan_dir.join("manifest.json")).unwrap())
+                .unwrap();
         manifest["seats_per_district"] = serde_json::json!(0);
-        std::fs::write(plan_dir.join("manifest.json"),
-            serde_json::to_string(&manifest).unwrap()).unwrap();
+        std::fs::write(
+            plan_dir.join("manifest.json"),
+            serde_json::to_string(&manifest).unwrap(),
+        )
+        .unwrap();
 
         let ctx = PlanContext::from_label(tmp.path(), "v1", "2020", "zero_seats_plan").unwrap();
-        assert_eq!(ctx.seats_per_district(), 1, "zero seats_per_district must clamp to 1");
+        assert_eq!(
+            ctx.seats_per_district(),
+            1,
+            "zero seats_per_district must clamp to 1"
+        );
     }
 
     #[test]
@@ -357,7 +427,8 @@ mod tests {
         std::fs::create_dir_all(&analysis_dir).unwrap();
         std::fs::write(analysis_dir.join("summary.json"), b"{}").unwrap();
 
-        let ctx = PlanContext::from_label(tmp.path(), "v1", "2020", "existing_analysis_plan").unwrap();
+        let ctx =
+            PlanContext::from_label(tmp.path(), "v1", "2020", "existing_analysis_plan").unwrap();
         assert!(ctx.analysis_file_exists("summary.json"));
         assert!(!ctx.analysis_file_exists("nonexistent.json"));
     }

@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-BINARY = Path("redist/target/release/redist.exe") if sys.platform == "win32" else Path("redist/target/release/redist")
+BINARY = Path("target/release/bisect.exe") if sys.platform == "win32" else Path("target/release/bisect")
 BASE_DIR = Path(".")
 
 
@@ -31,7 +31,7 @@ def vt_plan_exists() -> bool:
 
 
 skip_no_binary = pytest.mark.skipif(
-    not binary_available(), reason="redist binary not built"
+    not binary_available(), reason="BISECT binary not built"
 )
 skip_no_vt_fixture = pytest.mark.skipif(
     not vt_plan_exists(), reason="VT fixture plan not available"

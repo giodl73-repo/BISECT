@@ -2,9 +2,9 @@
 
 **Status:** Format v2 (current)
 **Producer:** `bisect fetch` (writes from TIGER), `bisect-data::serialize_adjacency`
-**Consumer:** `bisect-data::deserialize_adjacency`, PyO3 binding `redist_py.deserialize_adjacency`
+**Consumer:** `bisect-data::deserialize_adjacency`, PyO3 binding `bisect_py.deserialize_adjacency`
 
-A compact binary format for adjacency graphs with vertex weights and per-edge weights. Designed for fast Rust-to-Rust I/O; the `redist` pipeline reads `.adj.bin` directly.
+A compact binary format for adjacency graphs with vertex weights and per-edge weights. Designed for fast Rust-to-Rust I/O; the `BISECT` pipeline reads `.adj.bin` directly.
 
 The format intentionally stays Rust-internal — external tools should consume `final_assignments.json` (which is the human-readable plan output) rather than the adjacency file.
 

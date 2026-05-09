@@ -96,7 +96,7 @@ The pipeline writes hidden marker files to enable resuming interrupted runs:
 
 ## Rust CLI vs Python Pipeline outputs
 
-The `redist` Rust CLI and the Python pipeline produce overlapping but different files:
+The `BISECT` Rust CLI and the Python pipeline produce overlapping but different files:
 
 | Output | Rust CLI | Python pipeline |
 |--------|----------|-----------------|

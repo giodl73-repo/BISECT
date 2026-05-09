@@ -4,8 +4,8 @@
 //! before any state whose priority `pop / sqrt(n*(n+1))` is lower. Every
 //! state is guaranteed at least 1 seat (constitutional minimum).
 
-use std::collections::{BinaryHeap, HashMap};
 use std::cmp::Ordering;
+use std::collections::{BinaryHeap, HashMap};
 
 /// Allocate `total_seats` congressional seats among states using Huntington-Hill.
 ///
@@ -27,8 +27,7 @@ pub fn huntington_hill(
     );
 
     // All states start with the constitutional minimum of 1 seat.
-    let mut seats: HashMap<String, u32> =
-        populations.keys().map(|k| (k.clone(), 1u32)).collect();
+    let mut seats: HashMap<String, u32> = populations.keys().map(|k| (k.clone(), 1u32)).collect();
 
     // Priority queue entry. Higher priority → gets next seat.
     // Tie-break by state code for determinism.

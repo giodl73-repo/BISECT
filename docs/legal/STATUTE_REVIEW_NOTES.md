@@ -113,7 +113,7 @@ This is a **fundamental scope limitation**, not a drafting gap. A separate bill 
 
 Civic groups currently submit COI inputs at state public hearings. Under § 104(e), COI data cannot enter the algorithm. § 106(g) repurposes public hearings toward § 2 evidence-gathering, which is a real but narrower use case. Civic-engagement groups will see this as a loss, even though the underlying tradeoff (mechanical determinism vs. discretionary local input) is what makes the bill survive *Rucho*.
 
-**Mitigation outside the bill**: `redist civic ingest` lets civic groups archive their COI submissions independently. The submissions become public-record artifacts but do not modify the federally-mandated map. Reform-organization messaging should emphasize this complementarity rather than pretending COI input affects the federal districts.
+**Mitigation outside the bill**: `BISECT civic ingest` lets civic groups archive their COI submissions independently. The submissions become public-record artifacts but do not modify the federally-mandated map. Reform-organization messaging should emphasize this complementarity rather than pretending COI input affects the federal districts.
 
 ### 4.3 Computational-accessibility concerns
 

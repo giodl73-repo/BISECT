@@ -20,7 +20,7 @@
 
 ## Why this case is in the project
 
-This case is the legal grounding for the partisan-edge-weighting feature that lives in `redist/crates/bisect-core/src/partisan_weights.rs` (introduced via Plan 03 at `docs/superpowers/plans/2026-04-29-partisan-bisection-weighting.md`).
+This case is the legal grounding for the partisan-edge-weighting feature that lives in `BISECT/crates/bisect-core/src/partisan_weights.rs` (introduced via Plan 03 at `docs/superpowers/plans/2026-04-29-partisan-bisection-weighting.md`).
 
 Callais (p. 23 majority) describes the strong-inference framework that a §2 challenger uses to demonstrate intentional discrimination: showing that the State's stated political goals could have been achieved with better minority outcomes. The partisan-weighting feature lets the same algorithm be invoked by both sides — a state hits its partisan target with maximally compact districts; a challenger uses the same engine, with the same partisan target as a constraint, to produce an alternative map that improves minority outcomes.
 

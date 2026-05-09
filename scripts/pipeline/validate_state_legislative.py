@@ -1,7 +1,7 @@
 """
 Validate state house redistricting across all 50 states.
 
-Runs redist state for each state at the correct resolution (block_group for
+Runs BISECT state for each state at the correct resolution (block_group for
 states with < 20 tracts/district, tract otherwise). Uses 10% balance tolerance
 and ufactor=50 appropriate for state legislative maps.
 
@@ -38,10 +38,10 @@ HOUSE_DISTRICTS = {
 
 
 def find_binary():
-    for p in ['redist/target/release/redist.exe', 'redist/target/release/redist']:
+    for p in ['target/release/bisect.exe', 'target/release/bisect']:
         if Path(p).exists():
             return str(Path(p).resolve())
-    sys.exit("ERROR: redist binary not found.")
+    sys.exit("ERROR: BISECT binary not found.")
 
 
 def count_tracts(state_code):

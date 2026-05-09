@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Implement `redist compare` and `bisect analyze --types contiguity splits`. `redist compare` computes Jaccard similarity, population equality, and compactness between two plans or a plan vs enacted districts. Enacted districts are downloaded via `bisect fetch --type enacted`, converted from polygon boundaries to tract assignments using centroid point-in-polygon with nearest-polygon fallback (100% coverage enforced). `bisect analyze --types contiguity splits` runs BFS contiguity checks and county/municipal split counts. Exit codes use composable bitfields (1=balance, 2=contiguity, 4=nesting, 8=missing-data). `--allow-noncontiguous` suppresses bit 1. State-specific split standards are looked up from a built-in table (WA, CA, TX, CO minimum).
+**Goal:** Implement `BISECT compare` and `bisect analyze --types contiguity splits`. `BISECT compare` computes Jaccard similarity, population equality, and compactness between two plans or a plan vs enacted districts. Enacted districts are downloaded via `bisect fetch --type enacted`, converted from polygon boundaries to tract assignments using centroid point-in-polygon with nearest-polygon fallback (100% coverage enforced). `bisect analyze --types contiguity splits` runs BFS contiguity checks and county/municipal split counts. Exit codes use composable bitfields (1=balance, 2=contiguity, 4=nesting, 8=missing-data). `--allow-noncontiguous` suppresses bit 1. State-specific split standards are looked up from a built-in table (WA, CA, TX, CO minimum).
 
 **Specs:** Spec 2 (Plan Comparison), Spec 3 (Constraint Analysis) + R3 board amendments
 
@@ -12,7 +12,7 @@
 - `bisect-analysis/src/splits.rs` — `analyze_county_splits()`, `analyze_municipal_splits()`, GEOID parsing
 - `bisect-analysis/src/split_standards.rs` — per-state constitutional split standard lookup table
 - `bisect-data/src/enacted.rs` — `assign_tracts_to_enacted()`, nearest-polygon fallback
-- `bisect-cli/src/compare.rs` — `redist compare` dispatcher
+- `bisect-cli/src/compare.rs` — `BISECT compare` dispatcher
 - `bisect-cli/src/fetch.rs` — extend with `--type enacted`, `--type geography`
 - `bisect-cli/src/analyze.rs` — extend with `contiguity`, `splits` analyzer types
 - `bisect-cli/src/exit_codes.rs` — composable bitfield exit codes
@@ -25,19 +25,19 @@
 
 | File | Action |
 |------|--------|
-| `redist/crates/bisect-analysis/src/comparison.rs` | **Create** — Jaccard, population, compactness comparison |
-| `redist/crates/bisect-analysis/src/contiguity.rs` | **Create** — BFS per-district contiguity check |
-| `redist/crates/bisect-analysis/src/splits.rs` | **Create** — county + municipal split analysis |
-| `redist/crates/bisect-analysis/src/split_standards.rs` | **Create** — per-state constitutional lookup table |
-| `redist/crates/bisect-analysis/src/exit_codes.rs` | **Create** — composable bitfield exit codes |
-| `redist/crates/bisect-analysis/src/lib.rs` | **Modify** — expose new modules |
-| `redist/crates/bisect-data/src/enacted.rs` | **Create** — enacted shapefile download + tract assignment |
-| `redist/crates/bisect-data/src/lib.rs` | **Modify** — expose enacted module |
-| `redist/crates/bisect-cli/src/compare.rs` | **Create** — `redist compare` dispatcher + output formatting |
-| `redist/crates/bisect-cli/src/analyze.rs` | **Modify** — add `contiguity`, `splits` to analyzer dispatch |
-| `redist/crates/bisect-cli/src/fetch.rs` | **Modify** — add `enacted`, `geography` fetch types |
-| `redist/crates/bisect-cli/src/args.rs` | **Modify** — `CompareArgs`, extend `AnalyzeArgs`, extend `FetchArgs` |
-| `redist/crates/bisect-cli/src/main.rs` | **Modify** — wire `Commands::Compare`; update analyze + fetch dispatch |
+| `BISECT/crates/bisect-analysis/src/comparison.rs` | **Create** — Jaccard, population, compactness comparison |
+| `BISECT/crates/bisect-analysis/src/contiguity.rs` | **Create** — BFS per-district contiguity check |
+| `BISECT/crates/bisect-analysis/src/splits.rs` | **Create** — county + municipal split analysis |
+| `BISECT/crates/bisect-analysis/src/split_standards.rs` | **Create** — per-state constitutional lookup table |
+| `BISECT/crates/bisect-analysis/src/exit_codes.rs` | **Create** — composable bitfield exit codes |
+| `BISECT/crates/bisect-analysis/src/lib.rs` | **Modify** — expose new modules |
+| `BISECT/crates/bisect-data/src/enacted.rs` | **Create** — enacted shapefile download + tract assignment |
+| `BISECT/crates/bisect-data/src/lib.rs` | **Modify** — expose enacted module |
+| `BISECT/crates/bisect-cli/src/compare.rs` | **Create** — `BISECT compare` dispatcher + output formatting |
+| `BISECT/crates/bisect-cli/src/analyze.rs` | **Modify** — add `contiguity`, `splits` to analyzer dispatch |
+| `BISECT/crates/bisect-cli/src/fetch.rs` | **Modify** — add `enacted`, `geography` fetch types |
+| `BISECT/crates/bisect-cli/src/args.rs` | **Modify** — `CompareArgs`, extend `AnalyzeArgs`, extend `FetchArgs` |
+| `BISECT/crates/bisect-cli/src/main.rs` | **Modify** — wire `Commands::Compare`; update analyze + fetch dispatch |
 | `tests/unit/test_comparison.py` | **Create** — L0 comparison tests |
 | `tests/unit/test_contiguity.py` | **Create** — L0 contiguity tests |
 | `tests/unit/test_splits.py` | **Create** — L0 splits tests |
@@ -47,7 +47,7 @@
 
 ## Task 1: Jaccard similarity + `PlanComparison` struct
 
-**Files:** `redist/crates/bisect-analysis/src/comparison.rs`
+**Files:** `BISECT/crates/bisect-analysis/src/comparison.rs`
 
 - [ ] **L0: Write failing Jaccard tests (from Spec 2 + Scenario 3)**
 
@@ -181,7 +181,7 @@ pub fn format_comparison_csv(comparison: &PlanComparison) -> String { ... }
 
 ## Task 2: Enacted tract assignment — centroid PIP with nearest-polygon fallback
 
-**Files:** `redist/crates/bisect-data/src/enacted.rs`
+**Files:** `BISECT/crates/bisect-data/src/enacted.rs`
 
 - [ ] **L0: Write failing enacted assignment tests**
 
@@ -322,7 +322,7 @@ pub fn assign_single_centroid(
 
 ## Task 3: Contiguity analysis — BFS per-district
 
-**Files:** `redist/crates/bisect-analysis/src/contiguity.rs`
+**Files:** `BISECT/crates/bisect-analysis/src/contiguity.rs`
 
 - [ ] **L0: Write failing contiguity tests (from Spec 3 + Scenario 4)**
 
@@ -452,7 +452,7 @@ pub fn bfs_component_count(
 
 ## Task 4: County + municipal split analysis
 
-**Files:** `redist/crates/bisect-analysis/src/splits.rs`, `redist/crates/bisect-analysis/src/split_standards.rs`
+**Files:** `BISECT/crates/bisect-analysis/src/splits.rs`, `BISECT/crates/bisect-analysis/src/split_standards.rs`
 
 - [ ] **L0: Write failing split tests (from Spec 3)**
 
@@ -620,7 +620,7 @@ pub fn analyze_municipal_splits(
 
 ## Task 5: Per-state split standards lookup table
 
-**Files:** `redist/crates/bisect-analysis/src/split_standards.rs`
+**Files:** `BISECT/crates/bisect-analysis/src/split_standards.rs`
 
 - [ ] **L0: Write failing split standard tests (from Scenario 1)**
 
@@ -735,7 +735,7 @@ pub fn get_split_standard(state_code: &str) -> Option<SplitStandard> {
 
 ## Task 6: Composable bitfield exit codes
 
-**Files:** `redist/crates/bisect-analysis/src/exit_codes.rs`, `redist/crates/bisect-cli/src/analyze.rs`
+**Files:** `BISECT/crates/bisect-analysis/src/exit_codes.rs`, `BISECT/crates/bisect-cli/src/analyze.rs`
 
 - [ ] **L0: Write failing exit code tests (from Scenario 4)**
 
@@ -862,7 +862,7 @@ pub fn compute_exit_code_with_flags(
 
 ## Task 7: `bisect fetch --type enacted` and `--type geography`
 
-**Files:** `redist/crates/bisect-cli/src/fetch.rs`, `redist/crates/bisect-cli/src/args.rs`
+**Files:** `BISECT/crates/bisect-cli/src/fetch.rs`, `BISECT/crates/bisect-cli/src/args.rs`
 
 - [ ] **L0: Write failing fetch type tests**
 
@@ -895,7 +895,7 @@ fn test_geography_url_pattern_wa_2020() {
 #[test]
 fn test_enacted_fetch_args_parsed() {
     let args = FetchArgs::try_parse_from([
-        "redist", "fetch", "--type", "enacted",
+        "BISECT", "fetch", "--type", "enacted",
         "--year", "2020", "--states", "WA"
     ]).unwrap();
     assert!(matches!(args.fetch_type, FetchType::Enacted));
@@ -912,23 +912,23 @@ fn test_enacted_fetch_args_parsed() {
 
 ---
 
-## Task 8: `redist compare` command
+## Task 8: `BISECT compare` command
 
-**Files:** `redist/crates/bisect-cli/src/compare.rs`, `redist/crates/bisect-cli/src/args.rs`, `redist/crates/bisect-cli/src/main.rs`
+**Files:** `BISECT/crates/bisect-cli/src/compare.rs`, `BISECT/crates/bisect-cli/src/args.rs`, `BISECT/crates/bisect-cli/src/main.rs`
 
 - [ ] **L0: Write failing compare CLI tests**
 
 ```rust
 #[test]
 fn test_compare_args_plan_a_required() {
-    let result = CompareArgs::try_parse_from(["redist", "compare", "--plan-b", "plan2"]);
+    let result = CompareArgs::try_parse_from(["BISECT", "compare", "--plan-b", "plan2"]);
     assert!(result.is_err(), "--plan-a is required");
 }
 
 #[test]
 fn test_compare_args_plan_b_or_enacted_required() {
     let result = CompareArgs::try_parse_from([
-        "redist", "compare", "--plan-a", "plan1"
+        "BISECT", "compare", "--plan-a", "plan1"
     ]);
     // Must fail: neither --plan-b nor --enacted provided
     assert!(result.is_err() || {
@@ -941,7 +941,7 @@ fn test_compare_args_plan_b_or_enacted_required() {
 #[test]
 fn test_compare_format_json_parsed() {
     let args = CompareArgs::try_parse_from([
-        "redist", "compare",
+        "BISECT", "compare",
         "--plan-a", "plan1", "--plan-b", "plan2",
         "--format", "json",
     ]).unwrap();
@@ -951,7 +951,7 @@ fn test_compare_format_json_parsed() {
 #[test]
 fn test_compare_format_csv_parsed() {
     let args = CompareArgs::try_parse_from([
-        "redist", "compare",
+        "BISECT", "compare",
         "--plan-a", "plan1", "--plan-b", "plan2",
         "--format", "csv",
     ]).unwrap();
@@ -999,13 +999,13 @@ pub enum CompareFormat { Table, Json, Csv }
 - [ ] **Implement `run_compare()` in `compare.rs`**: load both plan assignments, call `compare_plans()`, format output
 - [ ] **Handle `--enacted`**: download if absent, call `assign_tracts_to_enacted()`
 - [ ] **Run tests** — expect PASS
-- [ ] **Commit:** `git commit -m "feat(cli): redist compare --plan-a --plan-b / --enacted with table/json/csv output"`
+- [ ] **Commit:** `git commit -m "feat(cli): BISECT compare --plan-a --plan-b / --enacted with table/json/csv output"`
 
 ---
 
 ## Task 9: Wire `contiguity` and `splits` into `bisect analyze`
 
-**Files:** `redist/crates/bisect-cli/src/analyze.rs`
+**Files:** `BISECT/crates/bisect-cli/src/analyze.rs`
 
 - [ ] **L0: Write failing analyze dispatch tests**
 
@@ -1013,7 +1013,7 @@ pub enum CompareFormat { Table, Json, Csv }
 #[test]
 fn test_analyze_types_includes_contiguity() {
     let args = AnalyzeArgs::try_parse_from([
-        "redist", "analyze",
+        "BISECT", "analyze",
         "--state", "WA", "--year", "2020", "--version", "v1",
         "--types", "contiguity",
     ]).unwrap();
@@ -1023,7 +1023,7 @@ fn test_analyze_types_includes_contiguity() {
 #[test]
 fn test_analyze_types_includes_splits() {
     let args = AnalyzeArgs::try_parse_from([
-        "redist", "analyze",
+        "BISECT", "analyze",
         "--state", "WA", "--year", "2020", "--version", "v1",
         "--types", "splits",
     ]).unwrap();
@@ -1033,7 +1033,7 @@ fn test_analyze_types_includes_splits() {
 #[test]
 fn test_analyze_all_includes_contiguity_and_splits() {
     let args = AnalyzeArgs::try_parse_from([
-        "redist", "analyze",
+        "BISECT", "analyze",
         "--state", "WA", "--year", "2020", "--version", "v1",
         "--types", "all",
     ]).unwrap();
@@ -1045,7 +1045,7 @@ fn test_analyze_all_includes_contiguity_and_splits() {
 #[test]
 fn test_allow_noncontiguous_flag_parsed() {
     let args = AnalyzeArgs::try_parse_from([
-        "redist", "analyze",
+        "BISECT", "analyze",
         "--state", "WA", "--year", "2020", "--version", "v1",
         "--types", "contiguity", "--allow-noncontiguous",
     ]).unwrap();
@@ -1081,20 +1081,20 @@ from pathlib import Path
 
 # --- Spec 2: Plan Comparison ---
 
-def test_compare_two_generated_plans_jaccard_less_than_1(tmp_redist_output):
+def test_compare_two_generated_plans_jaccard_less_than_1(tmp_BISECT_output):
     """Two VT runs with different seeds → Jaccard < 1.0 (different assignments)."""
     for seed, label in [(42, "vt_cmp_s42"), (99, "vt_cmp_s99")]:
         subprocess.run([
-            "redist", "state",
+            "BISECT", "state",
             "--state", "VT", "--year", "2020", "--version", "spec2_test",
             "--label", label, "--seed", str(seed),
-            "--output-dir", str(tmp_redist_output),
+            "--output-dir", str(tmp_BISECT_output),
         ], check=True)
     result = subprocess.run([
-        "redist", "compare",
+        "BISECT", "compare",
         "--plan-a", "vt_cmp_s42", "--plan-b", "vt_cmp_s99",
         "--year", "2020", "--version", "spec2_test",
-        "--format", "json", "--output-dir", str(tmp_redist_output),
+        "--format", "json", "--output-dir", str(tmp_BISECT_output),
     ], capture_output=True, text=True, check=True)
     data = json.loads(result.stdout)
     assert "jaccard_similarity" in data["metrics"]
@@ -1103,63 +1103,63 @@ def test_compare_two_generated_plans_jaccard_less_than_1(tmp_redist_output):
     # Just verify the metric is present and in [0,1]
     assert 0.0 <= jaccard <= 1.0
 
-def test_compare_plan_vs_self_jaccard_1(tmp_redist_output):
+def test_compare_plan_vs_self_jaccard_1(tmp_BISECT_output):
     """Same plan vs itself → Jaccard = 1.0, all population metrics equal."""
     subprocess.run([
-        "redist", "state",
+        "BISECT", "state",
         "--state", "VT", "--year", "2020", "--version", "spec2_self",
         "--label", "vt_self_test",
-        "--output-dir", str(tmp_redist_output),
+        "--output-dir", str(tmp_BISECT_output),
     ], check=True)
     result = subprocess.run([
-        "redist", "compare",
+        "BISECT", "compare",
         "--plan-a", "vt_self_test", "--plan-b", "vt_self_test",
         "--year", "2020", "--version", "spec2_self",
-        "--format", "json", "--output-dir", str(tmp_redist_output),
+        "--format", "json", "--output-dir", str(tmp_BISECT_output),
     ], capture_output=True, text=True, check=True)
     data = json.loads(result.stdout)
     assert data["metrics"]["jaccard_similarity"] == pytest.approx(1.0)
     pop = data["metrics"]["population"]
     assert pop["plan_a_max_dev"] == pytest.approx(pop["plan_b_max_dev"])
 
-def test_compare_output_no_winner_framing(tmp_redist_output):
+def test_compare_output_no_winner_framing(tmp_BISECT_output):
     """Comparison table output must not contain 'Winner:' (legally dangerous)."""
     subprocess.run([
-        "redist", "state",
+        "BISECT", "state",
         "--state", "VT", "--year", "2020", "--version", "spec2_frame",
         "--label", "vt_frame_a", "--seed", "42",
-        "--output-dir", str(tmp_redist_output),
+        "--output-dir", str(tmp_BISECT_output),
     ], check=True)
     subprocess.run([
-        "redist", "state",
+        "BISECT", "state",
         "--state", "VT", "--year", "2020", "--version", "spec2_frame",
         "--label", "vt_frame_b", "--seed", "99",
-        "--output-dir", str(tmp_redist_output),
+        "--output-dir", str(tmp_BISECT_output),
     ], check=True)
     result = subprocess.run([
-        "redist", "compare",
+        "BISECT", "compare",
         "--plan-a", "vt_frame_a", "--plan-b", "vt_frame_b",
         "--year", "2020", "--version", "spec2_frame",
-        "--format", "table", "--output-dir", str(tmp_redist_output),
+        "--format", "table", "--output-dir", str(tmp_BISECT_output),
     ], capture_output=True, text=True, check=True)
     assert "Winner:" not in result.stdout, \
         "Comparison output must not contain 'Winner:' framing"
     assert "No single metric determines legal compliance" in result.stdout, \
         "Comparison output must include legal disclaimer"
 
-def test_compare_all_metrics_present_in_json(tmp_redist_output):
+def test_compare_all_metrics_present_in_json(tmp_BISECT_output):
     """JSON comparison output contains all required top-level metric keys."""
     subprocess.run([
-        "redist", "state",
+        "BISECT", "state",
         "--state", "VT", "--year", "2020", "--version", "spec2_keys",
         "--label", "vt_keys_a",
-        "--output-dir", str(tmp_redist_output),
+        "--output-dir", str(tmp_BISECT_output),
     ], check=True)
     result = subprocess.run([
-        "redist", "compare",
+        "BISECT", "compare",
         "--plan-a", "vt_keys_a", "--plan-b", "vt_keys_a",
         "--year", "2020", "--version", "spec2_keys",
-        "--format", "json", "--output-dir", str(tmp_redist_output),
+        "--format", "json", "--output-dir", str(tmp_BISECT_output),
     ], capture_output=True, text=True, check=True)
     data = json.loads(result.stdout)
     assert "plan_a" in data
@@ -1172,43 +1172,43 @@ def test_compare_all_metrics_present_in_json(tmp_redist_output):
 
 # --- Spec 3: Constraint Analysis ---
 
-def test_wa_contiguity_all_pass(tmp_redist_output):
+def test_wa_contiguity_all_pass(tmp_BISECT_output):
     """WA 10-district congressional plan → all_contiguous: true."""
     subprocess.run([
-        "redist", "state",
+        "BISECT", "state",
         "--state", "WA", "--year", "2020", "--version", "spec3_contiguity",
         "--label", "wa_contiguity_test",
-        "--output-dir", str(tmp_redist_output),
+        "--output-dir", str(tmp_BISECT_output),
     ], check=True)
     result = subprocess.run([
-        "redist", "analyze",
+        "BISECT", "analyze",
         "--state", "WA", "--year", "2020", "--version", "spec3_contiguity",
         "--label", "wa_contiguity_test", "--types", "contiguity",
-        "--output-dir", str(tmp_redist_output),
+        "--output-dir", str(tmp_BISECT_output),
     ], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
-    contiguity_path = (tmp_redist_output / "2020" / "plans" /
+    contiguity_path = (tmp_BISECT_output / "2020" / "plans" /
                        "wa_contiguity_test" / "analysis" / "contiguity.json")
     assert contiguity_path.exists()
     data = json.loads(contiguity_path.read_text())
     assert data["all_contiguous"] is True
     assert len(data["districts"]) == 10
 
-def test_wa_county_splits_count_reasonable(tmp_redist_output):
+def test_wa_county_splits_count_reasonable(tmp_BISECT_output):
     """WA generated plan → split count present and ≥ 0."""
     subprocess.run([
-        "redist", "state",
+        "BISECT", "state",
         "--state", "WA", "--year", "2020", "--version", "spec3_splits",
         "--label", "wa_splits_test",
-        "--output-dir", str(tmp_redist_output),
+        "--output-dir", str(tmp_BISECT_output),
     ], check=True)
     subprocess.run([
-        "redist", "analyze",
+        "BISECT", "analyze",
         "--state", "WA", "--year", "2020", "--version", "spec3_splits",
         "--label", "wa_splits_test", "--types", "splits",
-        "--output-dir", str(tmp_redist_output),
+        "--output-dir", str(tmp_BISECT_output),
     ], check=True)
-    splits_path = (tmp_redist_output / "2020" / "plans" /
+    splits_path = (tmp_BISECT_output / "2020" / "plans" /
                    "wa_splits_test" / "analysis" / "splits.json")
     assert splits_path.exists()
     data = json.loads(splits_path.read_text())
@@ -1217,22 +1217,22 @@ def test_wa_county_splits_count_reasonable(tmp_redist_output):
     assert data["counties"]["total"] == 39  # WA has 39 counties
     assert 0.0 <= data["counties"]["preservation_score"] <= 1.0
 
-def test_splits_json_structure_required_fields(tmp_redist_output):
+def test_splits_json_structure_required_fields(tmp_BISECT_output):
     """splits.json contains all required top-level fields."""
     subprocess.run([
-        "redist", "state",
+        "BISECT", "state",
         "--state", "VT", "--year", "2020", "--version", "spec3_struct",
         "--label", "vt_splits_struct",
-        "--output-dir", str(tmp_redist_output),
+        "--output-dir", str(tmp_BISECT_output),
     ], check=True)
     subprocess.run([
-        "redist", "analyze",
+        "BISECT", "analyze",
         "--state", "VT", "--year", "2020", "--version", "spec3_struct",
         "--label", "vt_splits_struct", "--types", "splits",
-        "--output-dir", str(tmp_redist_output),
+        "--output-dir", str(tmp_BISECT_output),
     ], check=True)
     data = json.loads(
-        (tmp_redist_output / "2020" / "plans" / "vt_splits_struct" /
+        (tmp_BISECT_output / "2020" / "plans" / "vt_splits_struct" /
          "analysis" / "splits.json").read_text()
     )
     assert "analyzer" in data and data["analyzer"] == "splits"
@@ -1242,10 +1242,10 @@ def test_splits_json_structure_required_fields(tmp_redist_output):
     assert "preservation_score" in counties
     assert "split_list" in counties
 
-def test_contiguity_exits_2_on_violation(tmp_redist_output):
+def test_contiguity_exits_2_on_violation(tmp_BISECT_output):
     """Synthesized disconnected plan → analyze exits with code 2 (bit 1 contiguity)."""
     # Write a fake disconnected plan JSON directly (no actual redistricting run)
-    plan_dir = tmp_redist_output / "2020" / "plans" / "vt_disconnected"
+    plan_dir = tmp_BISECT_output / "2020" / "plans" / "vt_disconnected"
     plan_dir.mkdir(parents=True, exist_ok=True)
     (plan_dir / "manifest.json").write_text(json.dumps({
         "label": "vt_disconnected", "state_code": "VT", "year": "2020",
@@ -1256,22 +1256,22 @@ def test_contiguity_exits_2_on_violation(tmp_redist_output):
     # This test may need a test fixture generator in the CLI — skip if not supported
     pytest.skip("Requires test fixture support for synthesized disconnected plans")
 
-def test_wa_splits_has_legal_standard_field(tmp_redist_output):
+def test_wa_splits_has_legal_standard_field(tmp_BISECT_output):
     """WA splits.json includes legal_standard referencing WA Const."""
     subprocess.run([
-        "redist", "state",
+        "BISECT", "state",
         "--state", "WA", "--year", "2020", "--version", "spec3_legal",
         "--label", "wa_legal_test",
-        "--output-dir", str(tmp_redist_output),
+        "--output-dir", str(tmp_BISECT_output),
     ], check=True)
     subprocess.run([
-        "redist", "analyze",
+        "BISECT", "analyze",
         "--state", "WA", "--year", "2020", "--version", "spec3_legal",
         "--label", "wa_legal_test", "--types", "splits",
-        "--output-dir", str(tmp_redist_output),
+        "--output-dir", str(tmp_BISECT_output),
     ], check=True)
     data = json.loads(
-        (tmp_redist_output / "2020" / "plans" / "wa_legal_test" /
+        (tmp_BISECT_output / "2020" / "plans" / "wa_legal_test" /
          "analysis" / "splits.json").read_text()
     )
     counties = data["counties"]
@@ -1280,19 +1280,19 @@ def test_wa_splits_has_legal_standard_field(tmp_redist_output):
     assert "disclaimer" in counties
     assert len(counties["disclaimer"]) > 0
 
-def test_exit_code_0_when_all_constraints_satisfied(tmp_redist_output):
+def test_exit_code_0_when_all_constraints_satisfied(tmp_BISECT_output):
     """VT 1-district plan (always contiguous, always balanced) → exit code 0."""
     subprocess.run([
-        "redist", "state",
+        "BISECT", "state",
         "--state", "VT", "--year", "2020", "--version", "spec3_exit",
         "--label", "vt_exit_test",
-        "--output-dir", str(tmp_redist_output),
+        "--output-dir", str(tmp_BISECT_output),
     ], check=True)
     result = subprocess.run([
-        "redist", "analyze",
+        "BISECT", "analyze",
         "--state", "VT", "--year", "2020", "--version", "spec3_exit",
         "--label", "vt_exit_test", "--types", "contiguity splits",
-        "--output-dir", str(tmp_redist_output),
+        "--output-dir", str(tmp_BISECT_output),
     ], capture_output=True, text=True)
     assert result.returncode == 0, \
         f"Expected exit 0, got {result.returncode}. stderr: {result.stderr}"
@@ -1393,7 +1393,7 @@ fn test_balance_and_nesting_exit_code() {
 5. Task 5 — Split standards table (no deps)
 6. Task 6 — Exit codes (depends on Tasks 3+4)
 7. Task 7 — `bisect fetch --type enacted/geography` (depends on Task 2)
-8. Task 8 — `redist compare` command (depends on Tasks 1+2+7)
+8. Task 8 — `BISECT compare` command (depends on Tasks 1+2+7)
 9. Task 9 — Wire contiguity + splits into `bisect analyze` (depends on Tasks 3+4+5+6)
 10. Task 10 — L2 acceptance tests (depends on all above)
 

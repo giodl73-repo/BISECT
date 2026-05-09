@@ -1,7 +1,7 @@
+use serde::Serialize;
 /// Chamber adjacency graph construction and nesting validation.
 /// Spec 5 — board amendments R3 applied.
 use std::collections::{HashMap, HashSet, VecDeque};
-use serde::Serialize;
 
 // ---------------------------------------------------------------------------
 // Chamber adjacency
@@ -74,8 +74,18 @@ pub fn build_chamber_adjacency(
                 return size_cmp;
             }
             // Tie-break: component with minimum GEOID wins (board amendment MERIDIAN)
-            let min_a = a.iter().map(|&i| &tract_ids[i]).min().map(|s| s.as_str()).unwrap_or("");
-            let min_b = b.iter().map(|&i| &tract_ids[i]).min().map(|s| s.as_str()).unwrap_or("");
+            let min_a = a
+                .iter()
+                .map(|&i| &tract_ids[i])
+                .min()
+                .map(|s| s.as_str())
+                .unwrap_or("");
+            let min_b = b
+                .iter()
+                .map(|&i| &tract_ids[i])
+                .min()
+                .map(|s| s.as_str())
+                .unwrap_or("");
             min_a.cmp(min_b) // lexicographically smaller geoid comes first
         });
 
@@ -104,7 +114,7 @@ pub fn build_chamber_adjacency(
                 if let Some(geoid) = tract_ids.get(neighbor) {
                     if let Some(&dist_b) = house_assignments.get(geoid) {
                         let dist_b_idx = dist_b - 1; // convert to 0-indexed
-                        // Verify neighbor is in that district's primary component
+                                                     // Verify neighbor is in that district's primary component
                         if dist_b_idx != dist_a_idx
                             && dist_b_idx < num_house_districts
                             && primary_tract_sets[dist_b_idx].contains(&neighbor)
@@ -159,8 +169,14 @@ pub fn validate_nesting(
 
     for (geoid, &senate_dist) in senate_assignments {
         if let Some(&house_dist) = house_assignments.get(geoid) {
-            senate_to_house.entry(senate_dist).or_default().insert(house_dist);
-            house_to_senate.entry(house_dist).or_default().insert(senate_dist);
+            senate_to_house
+                .entry(senate_dist)
+                .or_default()
+                .insert(house_dist);
+            house_to_senate
+                .entry(house_dist)
+                .or_default()
+                .insert(senate_dist);
         }
     }
 
@@ -246,7 +262,11 @@ pub fn compute_exit_code(
 
 /// Alias for the nesting-specific exit code check (bit 2 = 4).
 pub fn nesting_exit_code(nesting_violation: bool) -> u8 {
-    if nesting_violation { 4 } else { 0 }
+    if nesting_violation {
+        4
+    } else {
+        0
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -260,25 +280,39 @@ mod tests {
     #[test]
     fn test_build_chamber_adjacency_simple() {
         let house_asgn: HashMap<String, usize> = [
-            ("t0".into(), 1), ("t1".into(), 1), ("t2".into(), 2), ("t3".into(), 2),
-        ].into();
+            ("t0".into(), 1),
+            ("t1".into(), 1),
+            ("t2".into(), 2),
+            ("t3".into(), 2),
+        ]
+        .into();
         // Linear chain: t0-t1, t1-t2, t2-t3
         let tract_adj: Vec<Vec<usize>> = vec![vec![1], vec![0, 2], vec![1, 3], vec![2]];
         let tract_ids: Vec<String> = vec!["t0".into(), "t1".into(), "t2".into(), "t3".into()];
         let house_adj = build_chamber_adjacency(&house_asgn, &tract_adj, &tract_ids, 2);
-        assert!(house_adj[0].contains(&1), "house dist 0 must be adjacent to house dist 1");
+        assert!(
+            house_adj[0].contains(&1),
+            "house dist 0 must be adjacent to house dist 1"
+        );
         assert!(house_adj[1].contains(&0), "adjacency must be symmetric");
     }
 
     #[test]
     fn test_build_chamber_adjacency_no_cross_adjacency() {
         let house_asgn: HashMap<String, usize> = [
-            ("t0".into(), 1), ("t1".into(), 1), ("t2".into(), 2), ("t3".into(), 2),
-        ].into();
+            ("t0".into(), 1),
+            ("t1".into(), 1),
+            ("t2".into(), 2),
+            ("t3".into(), 2),
+        ]
+        .into();
         let tract_adj: Vec<Vec<usize>> = vec![vec![1], vec![0], vec![3], vec![2]]; // no t1-t2 edge
         let tract_ids: Vec<String> = vec!["t0".into(), "t1".into(), "t2".into(), "t3".into()];
         let house_adj = build_chamber_adjacency(&house_asgn, &tract_adj, &tract_ids, 2);
-        assert!(house_adj[0].is_empty(), "no cross-district boundary -> no adjacency");
+        assert!(
+            house_adj[0].is_empty(),
+            "no cross-district boundary -> no adjacency"
+        );
         assert!(house_adj[1].is_empty());
     }
 
@@ -286,13 +320,17 @@ mod tests {
     fn test_build_chamber_adjacency_primary_component_only() {
         // House district 1 has two disconnected components: t0 (isolated) and t3 (adjacent to t2 in dist2)
         let house_asgn: HashMap<String, usize> = [
-            ("t0".into(), 1), ("t1".into(), 2), ("t2".into(), 2), ("t3".into(), 1),
-        ].into();
+            ("t0".into(), 1),
+            ("t1".into(), 2),
+            ("t2".into(), 2),
+            ("t3".into(), 1),
+        ]
+        .into();
         let tract_adj: Vec<Vec<usize>> = vec![
-            vec![],       // t0: isolated
-            vec![2],      // t1: adj to t2
-            vec![1, 3],   // t2: adj to t1, t3
-            vec![2],      // t3: adj to t2 (secondary component of dist1)
+            vec![],     // t0: isolated
+            vec![2],    // t1: adj to t2
+            vec![1, 3], // t2: adj to t1, t3
+            vec![2],    // t3: adj to t2 (secondary component of dist1)
         ];
         let tract_ids: Vec<String> = vec!["t0".into(), "t1".into(), "t2".into(), "t3".into()];
         let house_adj = build_chamber_adjacency(&house_asgn, &tract_adj, &tract_ids, 2);
@@ -314,11 +352,12 @@ mod tests {
             ("53001".into(), 1),
             ("53002".into(), 1),
             ("53003".into(), 2),
-        ].into();
+        ]
+        .into();
         let tract_adj: Vec<Vec<usize>> = vec![
-            vec![],      // "53001": isolated
-            vec![2],     // "53002": adj to "53003" (dist2)
-            vec![1],     // "53003": adj to "53002"
+            vec![],  // "53001": isolated
+            vec![2], // "53002": adj to "53003" (dist2)
+            vec![1], // "53003": adj to "53002"
         ];
         let tract_ids: Vec<String> = vec!["53001".into(), "53002".into(), "53003".into()];
         let house_adj = build_chamber_adjacency(&house_asgn, &tract_adj, &tract_ids, 2);
@@ -332,13 +371,27 @@ mod tests {
     #[test]
     fn test_nesting_validation_perfect() {
         let house: HashMap<String, usize> = [
-            ("t0".into(), 1), ("t1".into(), 1), ("t2".into(), 2), ("t3".into(), 2),
-            ("t4".into(), 3), ("t5".into(), 3), ("t6".into(), 4), ("t7".into(), 4),
-        ].into();
+            ("t0".into(), 1),
+            ("t1".into(), 1),
+            ("t2".into(), 2),
+            ("t3".into(), 2),
+            ("t4".into(), 3),
+            ("t5".into(), 3),
+            ("t6".into(), 4),
+            ("t7".into(), 4),
+        ]
+        .into();
         let senate: HashMap<String, usize> = [
-            ("t0".into(), 1), ("t1".into(), 1), ("t2".into(), 1), ("t3".into(), 1),
-            ("t4".into(), 2), ("t5".into(), 2), ("t6".into(), 2), ("t7".into(), 2),
-        ].into();
+            ("t0".into(), 1),
+            ("t1".into(), 1),
+            ("t2".into(), 1),
+            ("t3".into(), 1),
+            ("t4".into(), 2),
+            ("t5".into(), 2),
+            ("t6".into(), 2),
+            ("t7".into(), 2),
+        ]
+        .into();
         let result = validate_nesting(&house, &senate, 2);
         assert!(result.valid);
         assert!(result.violations.is_empty());
@@ -347,12 +400,10 @@ mod tests {
 
     #[test]
     fn test_nesting_validation_violation() {
-        let house: HashMap<String, usize> = [
-            ("t0".into(), 1), ("t1".into(), 2), ("t2".into(), 3),
-        ].into();
-        let senate: HashMap<String, usize> = [
-            ("t0".into(), 1), ("t1".into(), 1), ("t2".into(), 1),
-        ].into();
+        let house: HashMap<String, usize> =
+            [("t0".into(), 1), ("t1".into(), 2), ("t2".into(), 3)].into();
+        let senate: HashMap<String, usize> =
+            [("t0".into(), 1), ("t1".into(), 1), ("t2".into(), 1)].into();
         let result = validate_nesting(&house, &senate, 2);
         assert!(!result.valid);
         assert!(!result.violations.is_empty());
@@ -373,23 +424,51 @@ mod tests {
         // Senate 3 contains tracts from house districts 3, 5, 6, 7 (4 total).
         // With required_ratio=2, this is a violation regardless of count.
         let house: HashMap<String, usize> = [
-            ("t0".into(), 1), ("t1".into(), 2), ("t2".into(), 3), ("t3".into(), 3),
-            ("t4".into(), 5), ("t5".into(), 5), ("t6".into(), 6), ("t7".into(), 6),
-            ("t8".into(), 7), ("t9".into(), 7),
-        ].into();
+            ("t0".into(), 1),
+            ("t1".into(), 2),
+            ("t2".into(), 3),
+            ("t3".into(), 3),
+            ("t4".into(), 5),
+            ("t5".into(), 5),
+            ("t6".into(), 6),
+            ("t7".into(), 6),
+            ("t8".into(), 7),
+            ("t9".into(), 7),
+        ]
+        .into();
         let senate: HashMap<String, usize> = [
-            ("t0".into(), 1), ("t1".into(), 1),
-            ("t2".into(), 3), ("t3".into(), 3), ("t4".into(), 3), ("t5".into(), 3),
-            ("t6".into(), 3), ("t7".into(), 3), ("t8".into(), 3), ("t9".into(), 3),
-        ].into();
+            ("t0".into(), 1),
+            ("t1".into(), 1),
+            ("t2".into(), 3),
+            ("t3".into(), 3),
+            ("t4".into(), 3),
+            ("t5".into(), 3),
+            ("t6".into(), 3),
+            ("t7".into(), 3),
+            ("t8".into(), 3),
+            ("t9".into(), 3),
+        ]
+        .into();
         let result = validate_nesting(&house, &senate, 2);
-        assert!(!result.valid, "senate 3 spans multiple house districts — must be invalid");
-        let v = result.violations.iter().find(|v| v.senate_district == 3).unwrap();
+        assert!(
+            !result.valid,
+            "senate 3 spans multiple house districts — must be invalid"
+        );
+        let v = result
+            .violations
+            .iter()
+            .find(|v| v.senate_district == 3)
+            .unwrap();
         // Senate 3 contains house districts 3, 5, 6, 7 → 4 districts, not the required 2
-        assert!(v.house_districts.len() > 2,
+        assert!(
+            v.house_districts.len() > 2,
             "violation must show more than required_ratio (2) house districts, got {}",
-            v.house_districts.len());
-        assert_eq!(v.expected_count, 2, "expected_count must equal required_ratio");
+            v.house_districts.len()
+        );
+        assert_eq!(
+            v.expected_count, 2,
+            "expected_count must equal required_ratio"
+        );
     }
 
     #[test]
@@ -465,27 +544,34 @@ mod tests {
     fn test_nesting_validation_perfect_ratio_3() {
         // Senate 1 contains house districts 1, 2, 3 (ratio = 3)
         let house: HashMap<String, usize> = [
-            ("a".into(), 1), ("b".into(), 1),
-            ("c".into(), 2), ("d".into(), 2),
-            ("e".into(), 3), ("f".into(), 3),
-        ].into();
+            ("a".into(), 1),
+            ("b".into(), 1),
+            ("c".into(), 2),
+            ("d".into(), 2),
+            ("e".into(), 3),
+            ("f".into(), 3),
+        ]
+        .into();
         let senate: HashMap<String, usize> = [
-            ("a".into(), 1), ("b".into(), 1),
-            ("c".into(), 1), ("d".into(), 1),
-            ("e".into(), 1), ("f".into(), 1),
-        ].into();
+            ("a".into(), 1),
+            ("b".into(), 1),
+            ("c".into(), 1),
+            ("d".into(), 1),
+            ("e".into(), 1),
+            ("f".into(), 1),
+        ]
+        .into();
         let result = validate_nesting(&house, &senate, 3);
-        assert!(result.valid, "all 3 house districts nested in senate 1 — must be valid");
+        assert!(
+            result.valid,
+            "all 3 house districts nested in senate 1 — must be valid"
+        );
     }
 
     #[test]
     fn test_nesting_senate_to_house_map_populated() {
-        let house: HashMap<String, usize> = [
-            ("t0".into(), 1), ("t1".into(), 2),
-        ].into();
-        let senate: HashMap<String, usize> = [
-            ("t0".into(), 1), ("t1".into(), 1),
-        ].into();
+        let house: HashMap<String, usize> = [("t0".into(), 1), ("t1".into(), 2)].into();
+        let senate: HashMap<String, usize> = [("t0".into(), 1), ("t1".into(), 1)].into();
         let result = validate_nesting(&house, &senate, 2);
         assert!(result.senate_to_house_map.contains_key(&1));
         assert_eq!(result.senate_to_house_map[&1].len(), 2);

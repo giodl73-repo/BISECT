@@ -1,11 +1,10 @@
 /// Glossary overlay — floating block with 7 metric definitions.
-
 use ratatui::{
-    Frame,
     layout::Rect,
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Clear, Paragraph},
+    Frame,
 };
 
 use crate::app::App;
@@ -93,9 +92,9 @@ mod tests {
 
     #[test]
     fn test_glossary_has_polsby_popper_entry() {
-        let has_pp = GLOSSARY_ENTRIES
-            .iter()
-            .any(|(term, _)| term.contains("PP") || term.contains("Polsby-Popper") || term.contains("Polsby"));
+        let has_pp = GLOSSARY_ENTRIES.iter().any(|(term, _)| {
+            term.contains("PP") || term.contains("Polsby-Popper") || term.contains("Polsby")
+        });
         assert!(has_pp, "glossary must have a Polsby-Popper entry");
     }
 }

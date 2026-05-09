@@ -5,10 +5,12 @@
 /// Load mean Polsby-Popper compactness from a plan's analysis/compactness.json.
 pub fn load_mean_pp(plan_dir: &std::path::Path) -> Option<f64> {
     let path = plan_dir.join("analysis").join("compactness.json");
-    let v: serde_json::Value =
-        serde_json::from_str(&std::fs::read_to_string(&path).ok()?).ok()?;
+    let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&path).ok()?).ok()?;
     let d = v["districts"].as_array()?;
-    let vals: Vec<f64> = d.iter().filter_map(|x| x["polsby_popper"].as_f64()).collect();
+    let vals: Vec<f64> = d
+        .iter()
+        .filter_map(|x| x["polsby_popper"].as_f64())
+        .collect();
     if vals.is_empty() {
         None
     } else {
@@ -19,31 +21,26 @@ pub fn load_mean_pp(plan_dir: &std::path::Path) -> Option<f64> {
 /// Load max population deviation from a plan's analysis/summary.json.
 pub fn load_max_dev(plan_dir: &std::path::Path) -> Option<f64> {
     let path = plan_dir.join("analysis").join("summary.json");
-    let v: serde_json::Value =
-        serde_json::from_str(&std::fs::read_to_string(&path).ok()?).ok()?;
+    let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&path).ok()?).ok()?;
     v["max_deviation_pct"].as_f64()
 }
 
 /// Load county split count from a plan's analysis/splits.json.
 pub fn load_splits(plan_dir: &std::path::Path) -> Option<usize> {
     let path = plan_dir.join("analysis").join("splits.json");
-    let v: serde_json::Value =
-        serde_json::from_str(&std::fs::read_to_string(&path).ok()?).ok()?;
+    let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&path).ok()?).ok()?;
     v["split"].as_u64().map(|n| n as usize)
 }
 
 /// Load contiguity flag from a plan's analysis/contiguity.json.
 pub fn load_contiguous(plan_dir: &std::path::Path) -> Option<bool> {
     let path = plan_dir.join("analysis").join("contiguity.json");
-    let v: serde_json::Value =
-        serde_json::from_str(&std::fs::read_to_string(&path).ok()?).ok()?;
+    let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&path).ok()?).ok()?;
     v["all_contiguous"].as_bool()
 }
 
 /// Load tract→district assignments from a plan's data/final_assignments.json.
-fn load_assignments(
-    plan_dir: &std::path::Path,
-) -> std::collections::HashMap<String, usize> {
+fn load_assignments(plan_dir: &std::path::Path) -> std::collections::HashMap<String, usize> {
     let path = plan_dir.join("data").join("final_assignments.json");
     std::fs::read_to_string(&path)
         .ok()
@@ -89,11 +86,11 @@ pub fn compute_compare_result(
 // ── Render ────────────────────────────────────────────────────────────────────
 
 use ratatui::{
-    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Cell, Gauge, Paragraph, Row, Table},
+    Frame,
 };
 
 use crate::app::CompareState;
@@ -120,11 +117,21 @@ pub fn render(f: &mut Frame, area: Rect, state: &CompareState) {
     // Plan A and B header
     let header_lines = vec![
         Line::from(vec![
-            Span::styled("Plan A: ", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "Plan A: ",
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::raw(&state.plan_a),
         ]),
         Line::from(vec![
-            Span::styled("Plan B: ", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "Plan B: ",
+                Style::default()
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::raw(&state.plan_b_input),
             Span::styled("_", Style::default().fg(Color::White)), // cursor
         ]),
@@ -187,8 +194,16 @@ pub fn render(f: &mut Frame, area: Rect, state: &CompareState) {
             ),
             (
                 "Contiguous",
-                if result.contiguous_a { "Yes".to_string() } else { "No".to_string() },
-                if result.contiguous_b { "Yes".to_string() } else { "No".to_string() },
+                if result.contiguous_a {
+                    "Yes".to_string()
+                } else {
+                    "No".to_string()
+                },
+                if result.contiguous_b {
+                    "Yes".to_string()
+                } else {
+                    "No".to_string()
+                },
                 (result.contiguous_b as i8 - result.contiguous_a as i8) as f64,
                 true, // higher is better (true > false)
             ),
@@ -199,7 +214,9 @@ pub fn render(f: &mut Frame, area: Rect, state: &CompareState) {
             .map(|(metric, a, b, delta, higher_is_better)| {
                 let (delta_text, delta_style) = if delta.abs() < 1e-9 {
                     ("-- same".to_string(), Style::default().fg(Color::DarkGray))
-                } else if (*higher_is_better && *delta > 0.0) || (!*higher_is_better && *delta < 0.0) {
+                } else if (*higher_is_better && *delta > 0.0)
+                    || (!*higher_is_better && *delta < 0.0)
+                {
                     (
                         format!("+{:.2} better", delta.abs()),
                         Style::default().fg(Color::Green),
@@ -235,7 +252,9 @@ pub fn render(f: &mut Frame, area: Rect, state: &CompareState) {
         f.render_widget(table, rows[2]);
 
         // Most-changed districts
-        let changed_block = Block::default().title(" Most-changed Districts ").borders(Borders::TOP);
+        let changed_block = Block::default()
+            .title(" Most-changed Districts ")
+            .borders(Borders::TOP);
         let changed_inner = changed_block.inner(rows[3]);
         f.render_widget(changed_block, rows[3]);
 
@@ -246,7 +265,12 @@ pub fn render(f: &mut Frame, area: Rect, state: &CompareState) {
             .map(|(district_id, pct)| {
                 let bar_len = ((*pct * 20.0) as usize).clamp(0, 20);
                 let bar = format!("{}{}", "█".repeat(bar_len), "░".repeat(20 - bar_len));
-                Line::from(format!("  D{:>3}  {}  {:.0}% tracts moved", district_id, bar, pct * 100.0))
+                Line::from(format!(
+                    "  D{:>3}  {}  {:.0}% tracts moved",
+                    district_id,
+                    bar,
+                    pct * 100.0
+                ))
             })
             .collect();
         let changed_para = Paragraph::new(changed_lines);
@@ -269,14 +293,24 @@ mod tests {
     use super::*;
     use ratatui::{backend::TestBackend, Terminal};
 
-    fn render_to_string(width: u16, height: u16, f: impl FnOnce(&mut ratatui::Frame, ratatui::layout::Rect)) -> String {
+    fn render_to_string(
+        width: u16,
+        height: u16,
+        f: impl FnOnce(&mut ratatui::Frame, ratatui::layout::Rect),
+    ) -> String {
         let backend = TestBackend::new(width, height);
         let mut terminal = Terminal::new(backend).unwrap();
-        terminal.draw(|frame| {
-            let area = frame.area();
-            f(frame, area);
-        }).unwrap();
-        terminal.backend().buffer().content().iter()
+        terminal
+            .draw(|frame| {
+                let area = frame.area();
+                f(frame, area);
+            })
+            .unwrap();
+        terminal
+            .backend()
+            .buffer()
+            .content()
+            .iter()
             .map(|c| c.symbol().to_string())
             .collect::<String>()
     }
@@ -294,7 +328,7 @@ mod tests {
 
     #[test]
     fn test_compare_shows_jaccard_when_result_present() {
-        use crate::app::{CompareState, CompareResult};
+        use crate::app::{CompareResult, CompareState};
         let state = CompareState {
             plan_a: "plan_a".into(),
             result: Some(CompareResult {
@@ -304,7 +338,9 @@ mod tests {
             ..Default::default()
         };
         let content = render_to_string(120, 30, |f, area| render(f, area, &state));
-        assert!(content.contains("0.847") || content.contains("Jaccard") || content.contains("jaccard"));
+        assert!(
+            content.contains("0.847") || content.contains("Jaccard") || content.contains("jaccard")
+        );
     }
 
     // ── Task 2 new tests ──────────────────────────────────────────────────────
@@ -395,7 +431,7 @@ mod tests {
 
     #[test]
     fn test_compare_metrics_table_renders_with_result() {
-        use crate::app::{CompareState, CompareResult};
+        use crate::app::{CompareResult, CompareState};
         let state = CompareState {
             plan_a: "plan_a".into(),
             result: Some(CompareResult {
@@ -415,7 +451,9 @@ mod tests {
         let content = render_to_string(120, 30, |f, area| render(f, area, &state));
         // Table rows should show metric names
         assert!(
-            content.contains("PP") || content.contains("Compactness") || content.contains("deviation"),
+            content.contains("PP")
+                || content.contains("Compactness")
+                || content.contains("deviation"),
             "metrics table must appear: {}",
             &content[..200.min(content.len())]
         );

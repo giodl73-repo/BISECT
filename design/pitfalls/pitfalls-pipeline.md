@@ -58,11 +58,11 @@ Structural vulnerabilities in multi-script pipeline chains. The root pattern: a 
 
 **Why it's hard to catch:** The binary works when launched from the terminal (where the developer's shell profile sets PATH correctly). It fails in CI, tests, or when launched programmatically — where PATH comes from the test runner, not the developer's profile.
 
-**Structural solution:** Never use a short command name for a language runtime in a compiled binary. Accept the executable path via an environment variable (`REDIST_PYTHON`, `REDIST_NODE`) that the caller must set explicitly. Document this requirement in the binary's `--help` output.
+**Structural solution:** Never use a short command name for a language runtime in a compiled binary. Accept the executable path via an environment variable (`BISECT_PYTHON`, `BISECT_NODE`) that the caller must set explicitly. Document this requirement in the binary's `--help` output.
 
 **Status:** SOLVED for Python subprocess calls in bisect-cli
-**Proved by:** REDIST_PYTHON env var used in adjacency_loader.rs and runner.rs; acceptance tests set it to sys.executable
-**Test:** `tests/acceptance/test_pipeline_acceptance.py::TestRustCLIAcceptance` — fixtures pass REDIST_PYTHON=sys.executable
+**Proved by:** BISECT_PYTHON env var used in adjacency_loader.rs and runner.rs; acceptance tests set it to sys.executable
+**Test:** `tests/acceptance/test_pipeline_acceptance.py::TestRustCLIAcceptance` — fixtures pass BISECT_PYTHON=sys.executable
 
 ---
 
@@ -183,8 +183,8 @@ if !["2020", "2010", "2000"].contains(&year) {
 **Structural solution:** Place embedded assets in the same directory as the source file that includes them (`src/font_embed.ttf` next to `src/renderer.rs`), not in a sibling directory. Alternatively, use `concat!(env!("CARGO_MANIFEST_DIR"), "/assets/file")` inside a `build.rs` to generate an absolute path.
 
 **Status:** SOLVED
-**Proved by:** Font file moved to `redist/crates/bisect-map/src/font_embed.ttf` — `include_bytes!("font_embed.ttf")` works from any workspace build context
-**Test:** `cargo build --release --manifest-path redist/Cargo.toml` succeeds
+**Proved by:** Font file moved to `BISECT/crates/bisect-map/src/font_embed.ttf` — `include_bytes!("font_embed.ttf")` works from any workspace build context
+**Test:** `cargo build --release --manifest-path Cargo.toml` succeeds
 
 ## PP-12: WKB decode API surface mismatch across geospatial crate ecosystem
 
@@ -244,7 +244,7 @@ if !["2020", "2010", "2000"].contains(&year) {
 
 **Status:** SOLVED
 **Proved by:** `setup_env.bat` PATH preflight (Plan 01 entry-point cutover, Task 3.2)
-**Test:** Sourcing `setup_env.bat` without `redist` on PATH prints a named warning; sourcing with `redist` on PATH prints no warning.
+**Test:** Sourcing `setup_env.bat` without `BISECT` on PATH prints a named warning; sourcing with `BISECT` on PATH prints no warning.
 
 ---
 

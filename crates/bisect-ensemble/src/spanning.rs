@@ -32,9 +32,13 @@ impl SpanningTree {
         let mut children: Vec<Vec<u32>> = vec![vec![]; n];
         for v in 0..n as u32 {
             let p = self.parent[v as usize];
-            if p == u32::MAX { continue; }
+            if p == u32::MAX {
+                continue;
+            }
             // Skip the cut edge in both directions.
-            if (v == a && p == b) || (v == b && p == a) { continue; }
+            if (v == a && p == b) || (v == b && p == a) {
+                continue;
+            }
             children[p as usize].push(v);
             children[v as usize].push(p); // undirected — add both so BFS works
         }
@@ -43,8 +47,12 @@ impl SpanningTree {
         let mut adj: Vec<Vec<u32>> = vec![vec![]; n];
         for v in 0..n as u32 {
             let p = self.parent[v as usize];
-            if p == u32::MAX { continue; }
-            if (v == a && p == b) || (v == b && p == a) { continue; }
+            if p == u32::MAX {
+                continue;
+            }
+            if (v == a && p == b) || (v == b && p == a) {
+                continue;
+            }
             adj[v as usize].push(p);
             adj[p as usize].push(v);
         }
@@ -85,7 +93,9 @@ pub fn random_spanning_tree<R: Rng>(adj: &[Vec<u32>], rng: &mut R) -> SpanningTr
 
     // Loop-erased random walk from each not-yet-in-tree vertex.
     for start in 0..n as u32 {
-        if in_tree[start as usize] { continue; }
+        if in_tree[start as usize] {
+            continue;
+        }
 
         // Walk from `start` until we hit the tree.
         let mut path: Vec<u32> = vec![start];
@@ -139,14 +149,14 @@ pub fn random_spanning_tree<R: Rng>(adj: &[Vec<u32>], rng: &mut R) -> SpanningTr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand::SeedableRng;
     use rand::rngs::SmallRng;
+    use rand::SeedableRng;
 
     fn path_graph(n: usize) -> Vec<Vec<u32>> {
         let mut adj = vec![vec![]; n];
-        for i in 0..n-1 {
-            adj[i].push((i+1) as u32);
-            adj[i+1].push(i as u32);
+        for i in 0..n - 1 {
+            adj[i].push((i + 1) as u32);
+            adj[i + 1].push(i as u32);
         }
         adj
     }
@@ -157,8 +167,14 @@ mod tests {
         for r in 0..rows {
             for c in 0..cols {
                 let v = r * cols + c;
-                if c + 1 < cols { adj[v].push((v+1) as u32); adj[v+1].push(v as u32); }
-                if r + 1 < rows { adj[v].push((v+cols) as u32); adj[v+cols].push(v as u32); }
+                if c + 1 < cols {
+                    adj[v].push((v + 1) as u32);
+                    adj[v + 1].push(v as u32);
+                }
+                if r + 1 < rows {
+                    adj[v].push((v + cols) as u32);
+                    adj[v + cols].push(v as u32);
+                }
             }
         }
         adj
@@ -167,10 +183,14 @@ mod tests {
     fn is_spanning_tree(parent: &[u32], n: usize) -> bool {
         // Exactly one root (parent == MAX).
         let roots = parent.iter().filter(|&&p| p == u32::MAX).count();
-        if roots != 1 { return false; }
+        if roots != 1 {
+            return false;
+        }
         // n-1 edges.
         let edges = parent.iter().filter(|&&p| p != u32::MAX).count();
-        if edges != n - 1 { return false; }
+        if edges != n - 1 {
+            return false;
+        }
         // All vertices reachable from root (no cycles ↔ connected tree).
         let root = parent.iter().position(|&p| p == u32::MAX).unwrap();
         let mut visited = vec![false; n];
@@ -185,7 +205,10 @@ mod tests {
         visited[root] = true;
         while let Some(v) = stack.pop() {
             for &nb in &adj_tree[v] {
-                if !visited[nb] { visited[nb] = true; stack.push(nb); }
+                if !visited[nb] {
+                    visited[nb] = true;
+                    stack.push(nb);
+                }
             }
         }
         visited.iter().all(|&v| v)
@@ -219,7 +242,10 @@ mod tests {
         all.sort_unstable();
         let expected: Vec<u32> = (0..10).collect();
         assert_eq!(all, expected, "split must partition all vertices");
-        assert!(!ca.is_empty() && !cb.is_empty(), "both components must be non-empty");
+        assert!(
+            !ca.is_empty() && !cb.is_empty(),
+            "both components must be non-empty"
+        );
     }
 
     #[test]
@@ -229,7 +255,10 @@ mod tests {
         let mut rng2 = SmallRng::seed_from_u64(2);
         let t1 = random_spanning_tree(&adj, &mut rng1);
         let t2 = random_spanning_tree(&adj, &mut rng2);
-        assert_ne!(t1.parent, t2.parent, "different seeds should produce different trees");
+        assert_ne!(
+            t1.parent, t2.parent,
+            "different seeds should produce different trees"
+        );
     }
 
     // ── Additional L0 coverage ────────────────────────────────────────────────
@@ -245,7 +274,7 @@ mod tests {
 
     #[test]
     fn triangle_graph_is_valid_tree() {
-        let adj = vec![vec![1u32,2], vec![0,2], vec![0,1]];
+        let adj = vec![vec![1u32, 2], vec![0, 2], vec![0, 1]];
         let mut rng = SmallRng::seed_from_u64(5);
         let tree = random_spanning_tree(&adj, &mut rng);
         assert!(is_spanning_tree(&tree.parent, 3));
@@ -257,7 +286,11 @@ mod tests {
             let adj = path_graph(n);
             let mut rng = SmallRng::seed_from_u64(n as u64);
             let tree = random_spanning_tree(&adj, &mut rng);
-            assert_eq!(tree.edges().count(), n - 1, "tree must have n-1 edges for n={n}");
+            assert_eq!(
+                tree.edges().count(),
+                n - 1,
+                "tree must have n-1 edges for n={n}"
+            );
         }
     }
 
@@ -266,8 +299,12 @@ mod tests {
         let adj = grid_graph(4, 4);
         let mut rng = SmallRng::seed_from_u64(11);
         let tree = random_spanning_tree(&adj, &mut rng);
-        let roots: Vec<_> = tree.parent.iter().enumerate()
-            .filter(|(_, &p)| p == u32::MAX).collect();
+        let roots: Vec<_> = tree
+            .parent
+            .iter()
+            .enumerate()
+            .filter(|(_, &p)| p == u32::MAX)
+            .collect();
         assert_eq!(roots.len(), 1, "exactly one root");
     }
 
@@ -303,7 +340,10 @@ mod tests {
         // Hub (0) connected to 5 leaves.
         let n = 6;
         let mut adj = vec![vec![]; n];
-        for i in 1..n { adj[0].push(i as u32); adj[i].push(0); }
+        for i in 1..n {
+            adj[0].push(i as u32);
+            adj[i].push(0);
+        }
         let mut rng = SmallRng::seed_from_u64(77);
         let tree = random_spanning_tree(&adj, &mut rng);
         assert!(is_spanning_tree(&tree.parent, n));

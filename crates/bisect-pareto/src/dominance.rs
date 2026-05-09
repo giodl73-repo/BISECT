@@ -10,7 +10,9 @@ use crate::objectives::Objectives;
 /// Returns true if `a` dominates `b`:
 /// `a` is no worse than `b` on all objectives AND strictly better on at least one.
 pub fn dominates(a: &Objectives, b: &Objectives) -> bool {
-    a.ec <= b.ec && a.d_seats <= b.d_seats && a.vra_deficit <= b.vra_deficit
+    a.ec <= b.ec
+        && a.d_seats <= b.d_seats
+        && a.vra_deficit <= b.vra_deficit
         && (a.ec < b.ec || a.d_seats < b.d_seats || a.vra_deficit < b.vra_deficit)
 }
 
@@ -34,7 +36,9 @@ pub fn fast_non_dominated_sort(objectives: &[Objectives]) -> Vec<Vec<usize>> {
 
     for p in 0..n {
         for q in 0..n {
-            if p == q { continue; }
+            if p == q {
+                continue;
+            }
             if dominates(&objectives[p], &objectives[q]) {
                 dominates_set[p].push(q);
             } else if dominates(&objectives[q], &objectives[p]) {
@@ -44,9 +48,7 @@ pub fn fast_non_dominated_sort(objectives: &[Objectives]) -> Vec<Vec<usize>> {
     }
 
     let mut fronts: Vec<Vec<usize>> = Vec::new();
-    let mut current_front: Vec<usize> = (0..n)
-        .filter(|&p| domination_count[p] == 0)
-        .collect();
+    let mut current_front: Vec<usize> = (0..n).filter(|&p| domination_count[p] == 0).collect();
 
     while !current_front.is_empty() {
         fronts.push(current_front.clone());
@@ -124,8 +126,7 @@ pub fn crowding_distance(front: &[usize], objectives: &[Objectives]) -> Vec<f64>
         }
 
         for i in 1..n - 1 {
-            distances[sorted[i]] +=
-                (obj_val(sorted[i + 1]) - obj_val(sorted[i - 1])) / obj_range;
+            distances[sorted[i]] += (obj_val(sorted[i + 1]) - obj_val(sorted[i - 1])) / obj_range;
         }
     }
 
@@ -137,7 +138,11 @@ mod tests {
     use super::*;
 
     fn obj(ec: f64, d: f64, vra: f64) -> Objectives {
-        Objectives { ec, d_seats: d, vra_deficit: vra }
+        Objectives {
+            ec,
+            d_seats: d,
+            vra_deficit: vra,
+        }
     }
 
     #[test]
@@ -197,22 +202,38 @@ mod tests {
         // Plans at extremes of any objective get infinity
         let front = vec![0, 1, 2, 3];
         let objectives = vec![
-            obj(1.0, 5.0, 0.0),  // min EC, mid D, min VRA
-            obj(5.0, 1.0, 3.0),  // max EC, min D, mid VRA
-            obj(3.0, 3.0, 6.0),  // mid EC, mid D, max VRA
-            obj(2.0, 8.0, 2.0),  // low EC, max D, low VRA
+            obj(1.0, 5.0, 0.0), // min EC, mid D, min VRA
+            obj(5.0, 1.0, 3.0), // max EC, min D, mid VRA
+            obj(3.0, 3.0, 6.0), // mid EC, mid D, max VRA
+            obj(2.0, 8.0, 2.0), // low EC, max D, low VRA
         ];
         let dist = crowding_distance(&front, &objectives);
         assert_eq!(dist.len(), 4);
 
         // Index 0: min EC → infinity
-        assert!(dist[0].is_infinite(), "index 0 (min EC) must be infinite: {}", dist[0]);
+        assert!(
+            dist[0].is_infinite(),
+            "index 0 (min EC) must be infinite: {}",
+            dist[0]
+        );
         // Index 1: min D_seats → infinity
-        assert!(dist[1].is_infinite(), "index 1 (min D) must be infinite: {}", dist[1]);
+        assert!(
+            dist[1].is_infinite(),
+            "index 1 (min D) must be infinite: {}",
+            dist[1]
+        );
         // Index 2: max VRA → infinity
-        assert!(dist[2].is_infinite(), "index 2 (max VRA) must be infinite: {}", dist[2]);
+        assert!(
+            dist[2].is_infinite(),
+            "index 2 (max VRA) must be infinite: {}",
+            dist[2]
+        );
         // Index 3: max D_seats → infinity
-        assert!(dist[3].is_infinite(), "index 3 (max D) must be infinite: {}", dist[3]);
+        assert!(
+            dist[3].is_infinite(),
+            "index 3 (max D) must be infinite: {}",
+            dist[3]
+        );
     }
 
     #[test]

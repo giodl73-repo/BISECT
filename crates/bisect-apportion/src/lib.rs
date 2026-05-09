@@ -1,4 +1,4 @@
-//! `redist-apportion` — Huntington-Hill apportionment and prime-factor redistricting.
+//! `BISECT-apportion` — Huntington-Hill apportionment and prime-factor redistricting.
 //!
 //! Three things in one crate:
 //!
@@ -17,20 +17,24 @@
 //! The default implementation `MetisKwaySplit` uses the METIS k-way solver
 //! with population vertex weights and TIGER boundary-length edge weights.
 
-pub mod huntington_hill;
-pub mod prime;
-pub mod graph;
-pub mod split;
 pub mod compositor;
-pub mod nest;
 pub mod divisor_methods;
+pub mod graph;
+pub mod huntington_hill;
+pub mod nest;
 pub mod paradoxes;
+pub mod prime;
+pub mod split;
 
-pub use huntington_hill::huntington_hill;
-pub use prime::{prime_factor_sequence, split_prescription, pfr_tree_depth, SplitStep, MAX_DIRECT_SPLIT};
-pub use graph::SubGraph;
-pub use split::{SplitError, Partitioner, MetisPartitioner};
 pub use compositor::PfrCompositor;
-pub use nest::{compatible_spines, spine_compatibility_score, us_state_compatibility_table, StateCompatibility};
 pub use divisor_methods::{apportionment_divisor, RoundingRule};
+pub use graph::SubGraph;
+pub use huntington_hill::huntington_hill;
+pub use nest::{
+    compatible_spines, spine_compatibility_score, us_state_compatibility_table, StateCompatibility,
+};
 pub use paradoxes::check_alabama_paradox;
+pub use prime::{
+    pfr_tree_depth, prime_factor_sequence, split_prescription, SplitStep, MAX_DIRECT_SPLIT,
+};
+pub use split::{MetisPartitioner, Partitioner, SplitError};

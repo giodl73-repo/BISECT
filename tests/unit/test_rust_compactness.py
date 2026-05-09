@@ -1,5 +1,5 @@
 """
-L2 tests for redist_py compactness metrics and VRA analysis.
+L2 tests for bisect_py compactness metrics and VRA analysis.
 
 CRITICAL: all WKB polygons must be in projected coordinates (metres).
 These tests use coordinates in the millions (EPSG:5070-like).
@@ -16,16 +16,16 @@ import struct
 import math
 import pytest
 
-RUST_AVAILABLE = os.environ.get('REDIST_NO_RUST', '0') != '1'
+RUST_AVAILABLE = os.environ.get('BISECT_NO_RUST', '0') != '1'
 try:
-    import redist_py
-    REDIST_PY_IMPORTABLE = True
+    import bisect_py
+    BISECT_PY_IMPORTABLE = True
 except ImportError:
-    REDIST_PY_IMPORTABLE = False
+    BISECT_PY_IMPORTABLE = False
 
 pytestmark = pytest.mark.skipif(
-    not RUST_AVAILABLE or not REDIST_PY_IMPORTABLE,
-    reason='redist_py not available'
+    not RUST_AVAILABLE or not BISECT_PY_IMPORTABLE,
+    reason='bisect_py not available'
 )
 
 BASE = 1_000_000.0  # projected coord base (clearly not degrees)
@@ -67,19 +67,19 @@ class TestPolsbyPopper:
     def test_square_pp_is_pi_over_4(self):
         """1km square: PP = π/4 ≈ 0.7854."""
         wkb = square_wkb(BASE, BASE, 1000.0)
-        pp, perimeter = redist_py.compute_polsby_popper(wkb)
+        pp, perimeter = bisect_py.compute_polsby_popper(wkb)
         expected = math.pi / 4
         assert abs(pp - expected) < 1e-6, f"square PP={pp:.6f}, expected π/4={expected:.6f}"
 
     def test_square_perimeter(self):
         wkb = square_wkb(BASE, BASE, 1000.0)
-        _, perimeter = redist_py.compute_polsby_popper(wkb)
+        _, perimeter = bisect_py.compute_polsby_popper(wkb)
         assert abs(perimeter - 4000.0) < 0.01, f"perimeter={perimeter}, expected 4000m"
 
     def test_rectangle_2x1_matches_python(self):
         """2000×500m rectangle: PP = 4π×1e6 / 5000² ≈ 0.503."""
         wkb = rect_wkb(BASE, BASE, 2000.0, 500.0)
-        pp, perimeter = redist_py.compute_polsby_popper(wkb)
+        pp, perimeter = bisect_py.compute_polsby_popper(wkb)
         area = 2000.0 * 500.0
         p = 2 * (2000.0 + 500.0)
         expected = (4 * math.pi * area) / (p ** 2)
@@ -87,20 +87,20 @@ class TestPolsbyPopper:
 
     def test_pp_capped_at_1(self):
         wkb = square_wkb(BASE, BASE, 1000.0)
-        pp, _ = redist_py.compute_polsby_popper(wkb)
+        pp, _ = bisect_py.compute_polsby_popper(wkb)
         assert pp <= 1.0
 
     def test_pp_positive(self):
         wkb = square_wkb(BASE, BASE, 1000.0)
-        pp, _ = redist_py.compute_polsby_popper(wkb)
+        pp, _ = bisect_py.compute_polsby_popper(wkb)
         assert pp > 0.0
 
     def test_elongated_rectangle_lower_pp(self):
         """5:1 rectangle has lower PP than 2:1."""
         wkb_2x1 = rect_wkb(BASE, BASE, 2000.0, 1000.0)
         wkb_5x1 = rect_wkb(BASE, BASE, 5000.0, 1000.0)
-        pp_2x1, _ = redist_py.compute_polsby_popper(wkb_2x1)
-        pp_5x1, _ = redist_py.compute_polsby_popper(wkb_5x1)
+        pp_2x1, _ = bisect_py.compute_polsby_popper(wkb_2x1)
+        pp_5x1, _ = bisect_py.compute_polsby_popper(wkb_5x1)
         assert pp_5x1 < pp_2x1, "elongated rectangle must have lower PP"
 
 
@@ -113,18 +113,18 @@ class TestReock:
     def test_square_reock_is_2_over_pi(self):
         """Square: Reock = 2/π ≈ 0.6366."""
         wkb = square_wkb(BASE, BASE, 1000.0)
-        r = redist_py.compute_reock(wkb)
+        r = bisect_py.compute_reock(wkb)
         expected = 2.0 / math.pi
         assert abs(r - expected) < 0.001, f"Reock={r:.6f}, expected 2/π={expected:.6f}"
 
     def test_reock_capped_at_1(self):
         wkb = square_wkb(BASE, BASE, 1000.0)
-        r = redist_py.compute_reock(wkb)
+        r = bisect_py.compute_reock(wkb)
         assert r <= 1.0
 
     def test_reock_positive(self):
         wkb = square_wkb(BASE, BASE, 1000.0)
-        r = redist_py.compute_reock(wkb)
+        r = bisect_py.compute_reock(wkb)
         assert r > 0.0
 
 
@@ -136,7 +136,7 @@ class TestAllCompactness:
 
     def test_all_metrics_returns_dict(self):
         wkb = square_wkb(BASE, BASE, 1000.0)
-        m = redist_py.compute_all_compactness(1, wkb)
+        m = bisect_py.compute_all_compactness(1, wkb)
         assert isinstance(m, dict)
         for key in ['district', 'polsby_popper', 'reock', 'convex_hull_ratio',
                     'perimeter_m', 'area_m2']:
@@ -144,22 +144,22 @@ class TestAllCompactness:
 
     def test_district_id_preserved(self):
         wkb = square_wkb(BASE, BASE, 1000.0)
-        m = redist_py.compute_all_compactness(42, wkb)
+        m = bisect_py.compute_all_compactness(42, wkb)
         assert m['district'] == 42
 
     def test_area_m2_correct(self):
         wkb = square_wkb(BASE, BASE, 1000.0)
-        m = redist_py.compute_all_compactness(1, wkb)
+        m = bisect_py.compute_all_compactness(1, wkb)
         assert abs(m['area_m2'] - 1_000_000.0) < 0.01  # 1km² = 1e6 m²
 
     def test_convex_hull_ratio_square_is_1(self):
         wkb = square_wkb(BASE, BASE, 1000.0)
-        m = redist_py.compute_all_compactness(1, wkb)
+        m = bisect_py.compute_all_compactness(1, wkb)
         assert abs(m['convex_hull_ratio'] - 1.0) < 1e-6
 
     def test_all_values_in_range(self):
         wkb = square_wkb(BASE, BASE, 1000.0)
-        m = redist_py.compute_all_compactness(1, wkb)
+        m = bisect_py.compute_all_compactness(1, wkb)
         for metric in ['polsby_popper', 'reock', 'convex_hull_ratio']:
             assert 0.0 <= m[metric] <= 1.0, f"{metric}={m[metric]} out of [0,1]"
 
@@ -173,7 +173,7 @@ class TestVraAnalysis:
     def _run(self, assignments, pct_minority_per_tract, n_tracts=6, threshold=0.50):
         total_pops = [1000] * n_tracts
         minority_pops = [p * 1000 for p in pct_minority_per_tract]
-        return redist_py.compute_vra_analysis(
+        return bisect_py.compute_vra_analysis(
             assignments, total_pops, minority_pops, [0.0]*n_tracts, [0.0]*n_tracts, threshold
         )
 
@@ -194,26 +194,26 @@ class TestVraAnalysis:
     def test_threshold_exclusive_at_50pct(self):
         """Python vra_utils.py line 236: pct_minority > mm_threshold (exclusive).
         Exactly 50% is NOT MM; must strictly exceed the threshold."""
-        result = redist_py.compute_vra_analysis(
+        result = bisect_py.compute_vra_analysis(
             {0: 1}, [10000], [5000.0], [4000.0], [1000.0], 0.50
         )
         assert result['mm_count'] == 0, "50.00% must NOT be MM (Python uses >, exclusive)"
 
     def test_just_above_threshold_is_mm(self):
-        result = redist_py.compute_vra_analysis(
+        result = bisect_py.compute_vra_analysis(
             {0: 1}, [10000], [5001.0], [0.0], [0.0], 0.50
         )
         assert result['mm_count'] == 1, "50.01% must be MM"
 
     def test_just_below_threshold_not_mm(self):
-        result = redist_py.compute_vra_analysis(
+        result = bisect_py.compute_vra_analysis(
             {0: 1}, [10000], [4999.0], [0.0], [0.0], 0.50
         )
         assert result['mm_count'] == 0, "49.99% should not be MM"
 
     def test_returns_all_district_info(self):
         assignments = {i: i+1 for i in range(3)}
-        result = redist_py.compute_vra_analysis(
+        result = bisect_py.compute_vra_analysis(
             assignments, [1000]*3, [600.0, 300.0, 200.0], [0.0]*3, [0.0]*3, 0.50
         )
         assert len(result['districts']) == 3
@@ -224,13 +224,13 @@ class TestVraAnalysis:
 
     def test_mismatched_array_lengths_raise(self):
         with pytest.raises(ValueError, match='length mismatch'):
-            redist_py.compute_vra_analysis(
+            bisect_py.compute_vra_analysis(
                 {0: 1}, [1000], [500.0, 300.0], [0.0], [0.0], 0.50
             )
 
     def test_districts_sorted_by_id(self):
         assignments = {0: 3, 1: 1, 2: 2}
-        result = redist_py.compute_vra_analysis(
+        result = bisect_py.compute_vra_analysis(
             assignments, [1000]*3, [300.0]*3, [0.0]*3, [0.0]*3, 0.50
         )
         ids = [d['district'] for d in result['districts']]

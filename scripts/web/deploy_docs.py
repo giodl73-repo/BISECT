@@ -16,7 +16,7 @@ Usage:
     python scripts/web/deploy_docs.py --dry-run
 
 After running, commit docs/dashboard.html and push — GitHub Pages will
-serve it at: https://giodl73-repo.github.io/REDIST/dashboard.html
+serve it at: https://giodl73-repo.github.io/BISECT/dashboard.html
 
 Full workflow after completing a pipeline run:
     python scripts/web/generate_master_dashboard.py
@@ -162,7 +162,7 @@ def main():
     print(f'  git push origin master:main')
     print()
     print('GitHub Pages URL:')
-    print('  https://giodl73-repo.github.io/REDIST/dashboard.html')
+    print('  https://giodl73-repo.github.io/BISECT/dashboard.html')
 
 
 if __name__ == '__main__':

@@ -1,10 +1,10 @@
-# Manifest Conventions for `redist`
+# Manifest Conventions for `BISECT`
 
 **Status:** Living document — every plan that adds a new manifest type extends the inventory in §1.
 **Owner:** Court Submission Reports plan Task 1 (docs/superpowers/plans/2026-04-30-court-submission-reports.md)
 **v2.1 tracking:** M-03, D-01, 211-P1.3, 211-P1.4
 
-This is the single source of truth for every manifest emitted by the `redist` toolchain. It exists so that a special master, a §2 expert, an academic replicator, or a future maintainer can read ONE document and know how every audit-trail JSON the project produces is shaped, hashed, dated, and chained.
+This is the single source of truth for every manifest emitted by the `BISECT` toolchain. It exists so that a special master, a §2 expert, an academic replicator, or a future maintainer can read ONE document and know how every audit-trail JSON the project produces is shaped, hashed, dated, and chained.
 
 If you're adding a new manifest type, land a one-task edit to §1 in the same commit. CI will not enforce this (yet); reviewer enforcement will.
 
@@ -36,13 +36,13 @@ Every manifest type MUST carry the following fields. Per-manifest extensions are
 | Field | Type | Required when | Definition |
 |---|---|---|---|
 | `schema_version` | string (`"<kind> v<n>"`) | always | Schema-version string; readers MUST refuse unknown schemas. |
-| `redist_version` | string | always | The semver version of the `redist` binary that produced the manifest (e.g., `"0.1.0"`). Comes from `bisect-cli::provenance::Provenance::current()`. |
-| `redist_build_commit` | string (full 40-char SHA, may suffix `-dirty`) | always | The git SHA at build time (or `"unknown"` for builds outside a git checkout). |
-| `redist_build_commit_short` | string (7-12 char prefix of `redist_build_commit`) | when space-constrained (e.g., narrative manifest header, summary card footer) | Convenience short SHA. |
+| `BISECT_version` | string | always | The semver version of the `BISECT` binary that produced the manifest (e.g., `"0.1.0"`). Comes from `bisect-cli::provenance::Provenance::current()`. |
+| `BISECT_build_commit` | string (full 40-char SHA, may suffix `-dirty`) | always | The git SHA at build time (or `"unknown"` for builds outside a git checkout). |
+| `BISECT_build_commit_short` | string (7-12 char prefix of `BISECT_build_commit`) | when space-constrained (e.g., narrative manifest header, summary card footer) | Convenience short SHA. |
 | `rustc_version` | string | always | Output of `rustc --version` at build time. |
 | `created_at` (or `ingested_at`, `generated_at`, `approved_at`) | string (ISO-8601 UTC, seconds precision, with explicit `Z`) | always | When the manifest was emitted. The exact field name varies per manifest type to reflect the action; semantics are identical. |
 
-**Build-commit naming rule (v2.1.1 P1.4):** the canonical names are `redist_build_commit` (full) + `redist_build_commit_short` (short prefix). Plans that currently use `build_commit` (Civic, Callais bloc-voting summary header, Deposition log sidecar) MUST adopt `redist_build_commit` at implementation time. `binary_version` and `binary_sha256` in the legacy `PlanManifest` are pre-existing fields kept for backward compatibility; their semantics are documented in §3.1.
+**Build-commit naming rule (v2.1.1 P1.4):** the canonical names are `BISECT_build_commit` (full) + `BISECT_build_commit_short` (short prefix). Plans that currently use `build_commit` (Civic, Callais bloc-voting summary header, Deposition log sidecar) MUST adopt `BISECT_build_commit` at implementation time. `binary_version` and `binary_sha256` in the legacy `PlanManifest` are pre-existing fields kept for backward compatibility; their semantics are documented in §3.1.
 
 ---
 
@@ -66,13 +66,13 @@ Required fields beyond §2:
 | `population_source` | `"total"`, `"vap"`, `"cvap"`. Combined with `partition_mode` to detect Callais p.36 mutex violations (VRA-aware + partisan-weighted). |
 | `partition_mode` | `"edge-weighted"`, `"metis-vra"`, `"partisan-weighted"`. |
 | `seed` | Optional `i64`; populated for deterministic runs. |
-| `binary_version` | The shipped `redist_version` value at the time the plan was written. (Legacy name; `redist_version` is the canonical field per §2 going forward.) |
+| `binary_version` | The shipped `BISECT_version` value at the time the plan was written. (Legacy name; `BISECT_version` is the canonical field per §2 going forward.) |
 | `binary_sha256` | SHA-256 of the running binary's executable bytes. Optional. |
 | `binary_download_url` | GitHub release URL for the binary. Optional but recommended. |
 | `adjacency_file` | Filename only (NOT a full path), for platform-independent verification. |
 | `adjacency_sha256` | SHA-256 of the adjacency file bytes. |
 | `adjacency_build_command` | The command that produced the adjacency file (for international/non-TIGER builds). |
-| `adjacency_build_version` | `redist_version` of the binary that built the adjacency. |
+| `adjacency_build_version` | `BISECT_version` of the binary that built the adjacency. |
 | `tiger_source_url` | Census.gov TIGER URL for upstream provenance (NO local paths). |
 | `tiger_sha256` | Optional SHA-256 of the upstream TIGER zip. |
 | `balance_tolerance_pct` | Population balance tolerance applied during bisection, as a percentage (e.g., `0.5` for ±0.5%). |
@@ -82,11 +82,11 @@ Required fields beyond §2:
 | `electoral_system` | `"single_member"`, `"multi_member_party_list"`, etc. |
 | `gpmetis_version` | The METIS version invoked, or `"unknown"`. |
 
-**Migration to canonical naming:** at the next release, `binary_version` will be aliased as `redist_version` (additive); legacy field stays for compatibility.
+**Migration to canonical naming:** at the next release, `binary_version` will be aliased as `BISECT_version` (additive); legacy field stays for compatibility.
 
 ### 3.2 `tutorial-checksums v1` (Onboarding plan; shipped 2026-04-30)
 
-Source: `examples/{tutorial}-walkthrough/checksums.json`, consumed by `redist doctor --check-tutorial-data`.
+Source: `examples/{tutorial}-walkthrough/checksums.json`, consumed by `BISECT doctor --check-tutorial-data`.
 
 Required fields beyond §2:
 
@@ -116,7 +116,7 @@ See `docs/file-formats/race-of-candidate.md` for the full schema + curator-attes
 
 ### 3.4 `bloc-voting v1` (Callais Evidence Layer; shipped 2026-04-30)
 
-Source: `bisect-analysis::bloc_voting_writer::BlocVotingJson`. JSON Schema at `redist/crates/bisect-analysis/schemas/bloc_voting.schema.json`.
+Source: `bisect-analysis::bloc_voting_writer::BlocVotingJson`. JSON Schema at `BISECT/crates/bisect-analysis/schemas/bloc_voting.schema.json`.
 
 Required fields beyond §2:
 
@@ -220,5 +220,5 @@ The `tutorial-checksums v1` reader in `bisect-cli::doctor` is the reference impl
 - `docs/error-conventions.md` — error categories used when manifest reads fail
 - `docs/file-formats/race-of-candidate.md` — embedded `race-of-candidate v1` schema in detail
 - `docs/file-formats/citation-strings.md` — `accessed_date` consumer
-- `docs/REDIST_CLI.md` — `redist doctor --verify-manifest` and `--check-tutorial-data`
+- `docs/BISECT_CLI.md` — `BISECT doctor --verify-manifest` and `--check-tutorial-data`
 - `docs/superpowers/specs/2026-04-30-v21-tracking.md` — M-03, D-01, build-commit naming reconciliation

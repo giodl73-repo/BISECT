@@ -17,7 +17,7 @@ except ImportError:
 
 pytestmark = pytest.mark.skipif(
     not _APPORTIONMENT_AVAILABLE,
-    reason="apportionment.partition archived 2026-04-29; pending migration to redist_py PyO3 bindings"
+    reason="apportionment.partition archived 2026-04-29; pending migration to bisect_py PyO3 bindings"
 )
 
 

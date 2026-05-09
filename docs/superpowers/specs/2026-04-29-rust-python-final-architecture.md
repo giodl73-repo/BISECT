@@ -6,7 +6,7 @@
 
 ## Principle
 
-The `redist` Rust CLI is the production interface. Python is retained only for research, ad-hoc analysis, and HTML dashboard templating — work that does not need to ship and does not need to be fast.
+The `BISECT` Rust CLI is the production interface. Python is retained only for research, ad-hoc analysis, and HTML dashboard templating — work that does not need to ship and does not need to be fast.
 
 Phases 0-5 of the migration are complete (per `design/rust-port/migration-log.md`). Remaining work is **cutover and cleanup**, not new development. This spec defines the steady state, the deletion list, and the artifacts that must be preserved before deletion.
 
@@ -23,14 +23,14 @@ Phases 0-5 of the migration are complete (per `design/rust-port/migration-log.md
 | Interactive TUI (bisect-tui) | ✅ Complete (v1) |
 | Performance benchmark (see §Performance) | ✅ Validated (1 run; reproduction recipe pending) |
 | Migration parity record artifact | ⏭️ Skipped — no users to migrate |
-| Permanent acceptance tests for `redist` invariants | ✅ `tests/acceptance/test_redist_invariants.py` (Plan 01) |
+| Permanent acceptance tests for `BISECT` invariants | ✅ `tests/acceptance/test_BISECT_invariants.py` (Plan 01) |
 | Binary provenance embedding in outputs | ⚠️ Specced; doctor verify-manifest subcommand TODO |
-| Entry-point cutover (doskey/batch → `redist`) | ✅ Plan 01 complete |
+| Entry-point cutover (doskey/batch → `BISECT`) | ✅ Plan 01 complete |
 | Python deprecation notice | ⏭️ Skipped — no users to migrate |
 | Python deletion / archival | ✅ Plan 02 complete |
 | Partisan edge-weighting (Plan 03) | ✅ Module + CLI wiring + format spec; producer + e2e deferred |
 | File-format specs (`adj-bin`, `final-assignments`, `partisan-shares`) | ✅ Written under `docs/file-formats/` |
-| Reproducible-build pin (`redist/rust-toolchain.toml`) | ✅ Pinned to 1.95.0 |
+| Reproducible-build pin (`BISECT/rust-toolchain.toml`) | ✅ Pinned to 1.95.0 |
 | `bisect-web` crate | ⚠️ Stub — kept as documented placeholder |
 
 ## Steady-State Surface
@@ -47,7 +47,7 @@ Phases 0-5 of the migration are complete (per `design/rust-port/migration-log.md
 | `bisect-report` | HTML reports, plan manifests, audit, export, rplan roundtrip |
 | `bisect-tui` | Interactive ratatui frontend |
 | `bisect-web` | Documented stub crate; future Rust dashboard work would land here |
-| `redist_py` | PyO3 bridge — retained for research scripts and validation harness |
+| `bisect_py` | PyO3 bridge — retained for research scripts and validation harness |
 
 ### Python retained, scoped narrowly
 
@@ -62,31 +62,31 @@ Phases 0-5 of the migration are complete (per `design/rust-port/migration-log.md
 
 ### Maps: zero Python in the production path
 
-This is definitive. `bisect-map` is feature-complete. All matplotlib/cartopy code paths are dead — `src/apportionment/visualization/maps.py` is not imported by any active pipeline orchestrator. The only Python visualization that survives is `scripts/figures/` for LaTeX paper figures, which is **not** part of the production redistricting pipeline. After cutover, `import matplotlib` does not appear anywhere a `redist` invocation touches.
+This is definitive. `bisect-map` is feature-complete. All matplotlib/cartopy code paths are dead — `src/apportionment/visualization/maps.py` is not imported by any active pipeline orchestrator. The only Python visualization that survives is `scripts/figures/` for LaTeX paper figures, which is **not** part of the production redistricting pipeline. After cutover, `import matplotlib` does not appear anywhere a `BISECT` invocation touches.
 
 The three remaining map stubs (#62 choropleth real geometry, #63 rounds rendering, #64 splits) are tracked as Rust issues, not Python fallbacks.
 
 ### Algorithm: zero parallel implementations in active code
 
-After cutover, `bisect-core` is the only implementation of the bisection algorithm in the active code paths. The Python `RecursiveBisection` class is **archived, not deleted** (see §Python Algorithm Preservation). PyO3 bindings (`redist_py.build_vra_edge_weights`, etc.) remain so research scripts can call the Rust algorithm from Python without re-implementing it.
+After cutover, `bisect-core` is the only implementation of the bisection algorithm in the active code paths. The Python `RecursiveBisection` class is **archived, not deleted** (see §Python Algorithm Preservation). PyO3 bindings (`bisect_py.build_vra_edge_weights`, etc.) remain so research scripts can call the Rust algorithm from Python without re-implementing it.
 
 ## Provenance and Reproducibility
 
 ### Binary provenance (required before Plan 01)
 
-Every output JSON file produced by `redist` must include an embedded provenance block:
+Every output JSON file produced by `BISECT` must include an embedded provenance block:
 
 ```json
 {
-  "redist_version": "0.1.2",
-  "redist_build_commit": "<git sha>",
-  "redist_build_date": "2026-04-29T00:00:00Z",
+  "BISECT_version": "0.1.2",
+  "BISECT_build_commit": "<git sha>",
+  "BISECT_build_date": "2026-04-29T00:00:00Z",
   "rustc_version": "1.84.0",
   "manifest_sha256": "<hash of input manifest>"
 }
 ```
 
-A new `redist doctor --verify-manifest <output.json>` subcommand validates: (a) binary version recorded, (b) build commit reachable in git history, (c) input manifest hash matches recorded hash. This enables a special master to attest "this output was produced by the published `redist` source at commit X."
+A new `BISECT doctor --verify-manifest <output.json>` subcommand validates: (a) binary version recorded, (b) build commit reachable in git history, (c) input manifest hash matches recorded hash. This enables a special master to attest "this output was produced by the published `BISECT` source at commit X."
 
 ### Reproducible-build recipe
 
@@ -148,7 +148,7 @@ The "~213×" number is currently one run. Before the spec or any paper cites it 
 | `final_assignments.pkl` | Python pickle | **Deprecated legacy** | Written by the old Python pipeline. No active reader after Plan 02. Existing files remain readable from `archive/python-pipeline-final/` for forensic purposes only. |
 | `*.adj.bin` | RADJ binary | **Canonical** | Adjacency graph with vertex weights. Spec at `docs/file-formats/adj-bin.md` (REQUIRED, not yet written). |
 | `vra_analysis.json` | JSON | **Canonical** | Atomic write with assignments. Schema in bisect-cli output module. |
-| `district_summary.csv` | CSV | **Canonical** | Per-district metrics. Header documented in REDIST_CLI.md. |
+| `district_summary.csv` | CSV | **Canonical** | Per-district metrics. Header documented in BISECT_CLI.md. |
 
 ### Required new docs
 
@@ -163,17 +163,17 @@ Validate exports parse cleanly in:
 - Districtr (web; consumes assignment CSV with `geoid, district_id` columns)
 - PlanScore (web; consumes shapefile + assignment CSV)
 
-A compatibility matrix at `docs/file-formats/external-tool-matrix.md` documents what `redist export` produces for each, with smoke tests.
+A compatibility matrix at `docs/file-formats/external-tool-matrix.md` documents what `BISECT export` produces for each, with smoke tests.
 
 ## Entry Points
 
 | Entry | Today | After cutover |
 |---|---|---|
-| doskey `run` | `python run_complete_redistricting.py` | `redist run` |
-| doskey `runtest` | `python run_complete_redistricting.py --run-type test` | `redist run --run-type test` |
-| `run_redistricting.bat` | Python pipeline | `redist run` |
+| doskey `run` | `python run_complete_redistricting.py` | `BISECT run` |
+| doskey `runtest` | `python run_complete_redistricting.py --run-type test` | `BISECT run --run-type test` |
+| `run_redistricting.bat` | Python pipeline | `BISECT run` |
 | `deploy_web.bat` | `scripts/web/generate_dashboard.py` | unchanged (Python kept) |
-| `redist tui` | New | unchanged |
+| `BISECT tui` | New | unchanged |
 
 ## Deletion / Archive List (final state)
 
@@ -214,7 +214,7 @@ scripts/data/generate_adj_bin.py               # one-time bridge, conversion com
 ### Keep
 
 ```
-redist/crates/bisect-web/                      # documented stub; reserve namespace for future
+BISECT/crates/bisect-web/                      # documented stub; reserve namespace for future
 ```
 
 ## Verification Gates
@@ -233,7 +233,7 @@ These deliberately do **not** require bit-identical output (METIS has multiple v
 
 ### Permanent (required before validation-harness deletion)
 
-`tests/acceptance/test_redist_invariants.py` (new) — runs `redist run` against `--scope` VT and AL fixtures and asserts:
+`tests/acceptance/test_BISECT_invariants.py` (new) — runs `BISECT run` against `--scope` VT and AL fixtures and asserts:
 - Exit code 0
 - All districts within population balance
 - All districts contiguous
@@ -250,7 +250,7 @@ Run in CI on every PR.
 ## Related Docs
 
 - `design/rust-port/migration-log.md` — historical record of Phases 0-5
-- `docs/REDIST_CLI.md` — CLI reference (canonical)
+- `docs/BISECT_CLI.md` — CLI reference (canonical)
 - `docs/REPRODUCIBLE_BUILD.md` (new, required) — toolchain pin + build recipe
 - `docs/file-formats/` (new, required) — `.adj.bin`, `final_assignments.json`, manifest schemas
 - `docs/superpowers/specs/2026-04-28-bisect-cli-architecture.md` — CLI internal architecture
@@ -264,7 +264,7 @@ Incorporates findings from 7-role review (2026-04-29):
 - **BENCHMARK (BLOCK):** required permanent acceptance tests before validation harness deletion; spec'd quantitative invariant bounds
 - **MERIDIAN, COVENANT:** Python algorithm preserved via `archive/` rather than deleted
 - **DATUM:** "~213× faster" claim flagged as needing reproducible benchmark protocol
-- **SURVEY, COVENANT:** binary provenance embedding required in outputs; `redist doctor --verify-manifest` subcommand specified
+- **SURVEY, COVENANT:** binary provenance embedding required in outputs; `BISECT doctor --verify-manifest` subcommand specified
 - **SURVEY:** bisect-web stub kept rather than deleted (documented placeholder)
 - **LEDGER:** canonical assignment file is JSON; `.pkl` deprecated; `.adj.bin` formal spec required; external-tool compatibility matrix required
 - **TRENCH:** new pitfalls PP-15, PP-16, PP-17 added to design/pitfalls/pitfalls-pipeline.md

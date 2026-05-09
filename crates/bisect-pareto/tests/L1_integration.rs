@@ -3,18 +3,24 @@
 //! All tests use synthetic graphs and run unconditionally (no #[ignore]).
 //! Per spec §12 (L1 invariants).
 
-use bisect_pareto::{run_nsga2, ParetoConfig, ParetoResult};
-use bisect_pareto::dominance::{dominates, fast_non_dominated_sort};
 use bisect_pareto::crossover::{crossover, is_plan_valid};
+use bisect_pareto::dominance::{dominates, fast_non_dominated_sort};
 use bisect_pareto::mutation::mutate;
+use bisect_pareto::{run_nsga2, ParetoConfig, ParetoResult};
 
 fn path_adj(n: usize) -> Vec<Vec<usize>> {
-    (0..n).map(|i| {
-        let mut nb = Vec::new();
-        if i > 0 { nb.push(i - 1); }
-        if i < n - 1 { nb.push(i + 1); }
-        nb
-    }).collect()
+    (0..n)
+        .map(|i| {
+            let mut nb = Vec::new();
+            if i > 0 {
+                nb.push(i - 1);
+            }
+            if i < n - 1 {
+                nb.push(i + 1);
+            }
+            nb
+        })
+        .collect()
 }
 
 fn grid_adj(rows: usize, cols: usize) -> Vec<Vec<usize>> {
@@ -23,15 +29,23 @@ fn grid_adj(rows: usize, cols: usize) -> Vec<Vec<usize>> {
     for r in 0..rows {
         for c in 0..cols {
             let v = r * cols + c;
-            if c + 1 < cols { adj[v].push(v + 1); adj[v + 1].push(v); }
-            if r + 1 < rows { adj[v].push(v + cols); adj[v + cols].push(v); }
+            if c + 1 < cols {
+                adj[v].push(v + 1);
+                adj[v + 1].push(v);
+            }
+            if r + 1 < rows {
+                adj[v].push(v + cols);
+                adj[v + cols].push(v);
+            }
         }
     }
     adj
 }
 
 fn is_connected(tracts: &[usize], adj: &[Vec<usize>]) -> bool {
-    if tracts.is_empty() { return true; }
+    if tracts.is_empty() {
+        return true;
+    }
     let set: std::collections::HashSet<usize> = tracts.iter().copied().collect();
     let mut visited = std::collections::HashSet::new();
     let mut queue = std::collections::VecDeque::new();
@@ -52,8 +66,12 @@ fn check_plan_contiguous(plan: &[u32], k: usize, adj: &[Vec<usize>]) -> bool {
     let n = plan.len();
     for d in 1u32..=k as u32 {
         let tracts: Vec<usize> = (0..n).filter(|&t| plan[t] == d).collect();
-        if tracts.is_empty() { return false; }
-        if !is_connected(&tracts, adj) { return false; }
+        if tracts.is_empty() {
+            return false;
+        }
+        if !is_connected(&tracts, adj) {
+            return false;
+        }
     }
     true
 }
@@ -84,8 +102,10 @@ fn nsga2_4node_path_k2_returns_valid_frontier() {
         assert!(plan.iter().any(|&d| d == 1), "district 1 must be non-empty");
         assert!(plan.iter().any(|&d| d == 2), "district 2 must be non-empty");
         // Contiguous
-        assert!(check_plan_contiguous(plan, 2, &adj),
-            "all districts must be contiguous");
+        assert!(
+            check_plan_contiguous(plan, 2, &adj),
+            "all districts must be contiguous"
+        );
         // Not dominated
         assert!(!entry.dominated, "frontier plans must have dominated=false");
     }
@@ -105,14 +125,18 @@ fn frontier_is_mutually_non_dominated() {
     };
     let result = run_nsga2(&adj, &pop, 2, None, None, &[], config).unwrap();
 
-    let objectives: Vec<_> = result.frontier.iter()
+    let objectives: Vec<_> = result
+        .frontier
+        .iter()
         .map(|e| e.objectives.clone())
         .collect();
 
     // No plan in the frontier should be dominated by another plan in the frontier
     for i in 0..objectives.len() {
         for j in 0..objectives.len() {
-            if i == j { continue; }
+            if i == j {
+                continue;
+            }
             assert!(
                 !dominates(&objectives[j], &objectives[i]),
                 "plan {i} is dominated by plan {j} — frontier not Pareto-optimal"
@@ -137,8 +161,11 @@ fn nsga2_deterministic() {
     let r1 = run_nsga2(&adj, &pop, 2, None, None, &[], config.clone()).unwrap();
     let r2 = run_nsga2(&adj, &pop, 2, None, None, &[], config).unwrap();
 
-    assert_eq!(r1.frontier.len(), r2.frontier.len(),
-        "same seed -> same frontier size");
+    assert_eq!(
+        r1.frontier.len(),
+        r2.frontier.len(),
+        "same seed -> same frontier size"
+    );
 
     // Sort frontiers by plan content for deterministic comparison
     let mut plans1: Vec<Vec<u32>> = r1.frontier.iter().map(|e| e.plan.clone()).collect();
@@ -202,10 +229,14 @@ fn ndjson_lf_not_crlf() {
     let mut buf = Vec::new();
     result.write_ndjson(&mut buf).unwrap();
 
-    assert!(!buf.windows(2).any(|w| w == b"\r\n"),
-        "NDJSON output must not contain CRLF");
-    assert!(buf.iter().any(|&b| b == b'\n'),
-        "NDJSON output must contain LF");
+    assert!(
+        !buf.windows(2).any(|w| w == b"\r\n"),
+        "NDJSON output must not contain CRLF"
+    );
+    assert!(
+        buf.iter().any(|&b| b == b'\n'),
+        "NDJSON output must contain LF"
+    );
 }
 
 // ── L1.6: Crossover validity ──────────────────────────────────────────────────
@@ -220,12 +251,16 @@ fn crossover_validity() {
     for seed in [0u64, 1, 2, 42, 99, 12345] {
         let result = crossover(&pa, &pb, &adj, &pop, 2, 0.5, seed);
         assert_eq!(result.len(), 8, "result must have 8 tracts");
-        for &d in &result { assert!(d >= 1 && d <= 2, "invalid district: {d}"); }
+        for &d in &result {
+            assert!(d >= 1 && d <= 2, "invalid district: {d}");
+        }
         // Must be parent_a OR a valid plan
         let is_pa = result == pa;
         let is_valid = is_plan_valid(&result, &adj, &pop, 2, 0.5);
-        assert!(is_pa || is_valid,
-            "crossover must return parent_a or valid plan (seed={seed})");
+        assert!(
+            is_pa || is_valid,
+            "crossover must return parent_a or valid plan (seed={seed})"
+        );
     }
 }
 
@@ -240,11 +275,15 @@ fn mutation_validity() {
     for seed in [0u64, 1, 5, 42, 100, 999] {
         let result = mutate(&plan, &adj, &pop, 2, 0.5, seed);
         assert_eq!(result.len(), 8);
-        for &d in &result { assert!(d >= 1 && d <= 2, "invalid district: {d}"); }
+        for &d in &result {
+            assert!(d >= 1 && d <= 2, "invalid district: {d}");
+        }
         let is_unchanged = result == plan;
         let is_valid = is_plan_valid(&result, &adj, &pop, 2, 0.5);
-        assert!(is_unchanged || is_valid,
-            "mutation must return original or valid plan (seed={seed})");
+        assert!(
+            is_unchanged || is_valid,
+            "mutation must return original or valid plan (seed={seed})"
+        );
     }
 }
 
@@ -260,8 +299,10 @@ fn mutation_no_valid_flips_returns_unchanged() {
 
     for seed in [0u64, 1, 42, 99] {
         let result = mutate(&plan, &adj, &pop, 2, 0.0, seed);
-        assert_eq!(result, plan,
-            "degenerate graph: mutation must return unchanged plan (seed={seed})");
+        assert_eq!(
+            result, plan,
+            "degenerate graph: mutation must return unchanged plan (seed={seed})"
+        );
     }
 }
 
@@ -284,7 +325,8 @@ fn generation_found_within_bounds() {
         assert!(
             entry.generation_found <= n_gen,
             "generation_found {} must be <= n_generations {}",
-            entry.generation_found, n_gen
+            entry.generation_found,
+            n_gen
         );
     }
 }
@@ -304,8 +346,10 @@ fn frontier_all_dominated_false() {
     let result = run_nsga2(&adj, &pop, 2, None, None, &[], config).unwrap();
 
     for (i, entry) in result.frontier.iter().enumerate() {
-        assert!(!entry.dominated,
-            "frontier entry {i}: dominated must be false");
+        assert!(
+            !entry.dominated,
+            "frontier entry {i}: dominated must be false"
+        );
     }
 }
 
@@ -316,8 +360,16 @@ fn dominance_sort_lower_ec_wins() {
     use bisect_pareto::objectives::Objectives;
 
     // Plan A: lower EC, same D_seats, same VRA_deficit
-    let a = Objectives { ec: 100.0, d_seats: 5.0, vra_deficit: 0.0 };
-    let b = Objectives { ec: 200.0, d_seats: 5.0, vra_deficit: 0.0 };
+    let a = Objectives {
+        ec: 100.0,
+        d_seats: 5.0,
+        vra_deficit: 0.0,
+    };
+    let b = Objectives {
+        ec: 200.0,
+        d_seats: 5.0,
+        vra_deficit: 0.0,
+    };
 
     let fronts = fast_non_dominated_sort(&[a, b]);
     assert_eq!(fronts.len(), 2, "A dominates B -> 2 fronts");

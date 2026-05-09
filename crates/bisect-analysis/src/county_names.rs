@@ -309,17 +309,18 @@ mod tests {
         // Virginia has 38 independent cities with FIPS 51510–51840.
         // All must be in the lookup and all must end with "city".
         let va_city_fips = [
-            "51510", "51515", "51520", "51530", "51540", "51550",
-            "51570", "51580", "51590", "51595", "51600", "51610",
-            "51620", "51630", "51640", "51650", "51660", "51670",
-            "51678", "51680", "51683", "51685", "51690", "51700",
-            "51710", "51720", "51730", "51735", "51740", "51750",
-            "51760", "51770", "51775", "51790", "51800", "51810",
+            "51510", "51515", "51520", "51530", "51540", "51550", "51570", "51580", "51590",
+            "51595", "51600", "51610", "51620", "51630", "51640", "51650", "51660", "51670",
+            "51678", "51680", "51683", "51685", "51690", "51700", "51710", "51720", "51730",
+            "51735", "51740", "51750", "51760", "51770", "51775", "51790", "51800", "51810",
             "51820", "51830", "51840",
         ];
         for fips in &va_city_fips {
             let name = county_name(fips);
-            assert!(name.is_some(), "VA independent city FIPS {fips} missing from lookup");
+            assert!(
+                name.is_some(),
+                "VA independent city FIPS {fips} missing from lookup"
+            );
             assert!(
                 name.unwrap().ends_with("city") || name.unwrap().ends_with("City"),
                 "VA city FIPS {fips} name must end with 'city', got: {:?}",
@@ -337,7 +338,10 @@ mod tests {
         assert_eq!(city, Some("Richmond city"));
         // Henrico County FIPS — not covered in our static lookup, should be None
         let county = county_name("51087");
-        assert_ne!(city, county, "Richmond city and Henrico County must resolve differently");
+        assert_ne!(
+            city, county,
+            "Richmond city and Henrico County must resolve differently"
+        );
     }
 
     #[test]
@@ -345,12 +349,14 @@ mod tests {
         // Nevada has 16 counties + Carson City (32510 — consolidated city-county).
         // All 17 must be in the lookup.
         let nv_fips = [
-            "32001", "32003", "32005", "32007", "32009", "32011", "32013",
-            "32015", "32017", "32019", "32021", "32023", "32027", "32029",
-            "32031", "32033", "32510",
+            "32001", "32003", "32005", "32007", "32009", "32011", "32013", "32015", "32017",
+            "32019", "32021", "32023", "32027", "32029", "32031", "32033", "32510",
         ];
         for fips in &nv_fips {
-            assert!(county_name(fips).is_some(), "NV entity FIPS {fips} missing from lookup");
+            assert!(
+                county_name(fips).is_some(),
+                "NV entity FIPS {fips} missing from lookup"
+            );
         }
     }
 }

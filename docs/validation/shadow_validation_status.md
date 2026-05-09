@@ -9,7 +9,7 @@
 ## Readiness Summary
 
 ### Shadow Mode: Feature-Complete
-- **Location**: `redist/crates/bisect-apportion/src/split.rs` (lines 237-250, 290-303)
+- **Location**: `BISECT/crates/bisect-apportion/src/split.rs` (lines 237-250, 290-303)
 - **Design**: Rust METIS partitions normally; C METIS runs as quality oracle in parallel
 - **Comparison**: Logs to stderr if Rust edge cut exceeds C cut by >20%
 - **Format**: `[shadow-metis] k={k}: Rust cut {rust_cut} > C cut {c_cut} ({%} over)`
@@ -32,15 +32,15 @@ default = ["shadow-metis"]   # keep C dep during validation phase
 ### Pipeline Data: Available
 - **Adjacency graphs**: Present at `outputs/data/2020/adjacency/` (built 2026-02-08)
 - **Unit data**: Present at `outputs/data/2020/units/`
-- **Entry point**: `redist` binary not present in PATH; `run` alias not configured in environment
-  - Workaround: Build via `cargo build -p bisect-cli` in `redist/` directory
+- **Entry point**: `BISECT` binary not present in PATH; `run` alias not configured in environment
+  - Workaround: Build via `cargo build -p bisect-cli` in `BISECT/` directory
   - Impact: Cannot run full validation in current environment; documented below
 
 ## Blockers
 
-### Hard Blocker: Rust `redist` Binary Not Available
+### Hard Blocker: Rust `BISECT` Binary Not Available
 The user's environment does not have:
-- `redist` binary on PATH
+- `BISECT` binary on PATH
 - `run` or `runtest` doskey aliases configured (see `setup_env.bat`)
 
 **Impact**: Cannot execute the shadow validation sweep (would use `run -y 2020 -v shadow_test -st VT`).
@@ -106,7 +106,7 @@ run -y 2020 -v shadow_test
 1. **Setup Environment**:
    ```powershell
    C:\src\apportionment\setup_env.bat
-   cd C:\src\apportionment\redist
+   cd C:\src\apportionment\BISECT
    cargo build -p bisect-cli --release
    ```
 
@@ -133,8 +133,8 @@ run -y 2020 -v shadow_test
 
 ## References
 
-- **Shadow Mode Implementation**: `redist/crates/bisect-apportion/src/split.rs` (lines 88-307)
-- **Feature Flag**: `redist/crates/bisect-apportion/Cargo.toml` (lines 17-19)
+- **Shadow Mode Implementation**: `BISECT/crates/bisect-apportion/src/split.rs` (lines 88-307)
+- **Feature Flag**: `BISECT/crates/bisect-apportion/Cargo.toml` (lines 17-19)
 - **Validation Task**: Task #28 (in_progress)
 - **Cutover Task**: Task #29 (pending) — Remove C metis dep
 - **Task #21**: Validation gate + cutover

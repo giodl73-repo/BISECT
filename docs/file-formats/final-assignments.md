@@ -2,7 +2,7 @@
 
 **Status:** Canonical (2026-04-29)
 **Producer:** `bisect-cli::output::write_state_outputs`
-**Consumer:** dashboard generators, `bisect analyze`, `redist export`, post-processing scripts, court submissions
+**Consumer:** dashboard generators, `bisect analyze`, `BISECT export`, post-processing scripts, court submissions
 
 The canonical per-state output of a `bisect state` run. Maps each tract (or block group / block, depending on `--resolution`) to a district number.
 
@@ -88,7 +88,7 @@ In the same `data/` directory, you typically also find:
 | `vra_analysis.json` | runner (when `--partition-mode metis-vra`) | Per-district minority percentages, MM count |
 | `district_summary.csv` | runner | Per-district population, voting-age population, population balance pct |
 | `manifest.json` | runner (when `--manifest`) | Provenance: input adjacency hash, run parameters, binary version |
-| `provenance.json` | runner (always) | Sidecar with `redist_version`, `redist_build_commit`, `redist_build_date`, `rustc_version`. Written atomically with `final_assignments.json`. Verifiable via `redist doctor --verify-manifest`. |
+| `provenance.json` | runner (always) | Sidecar with `BISECT_version`, `BISECT_build_commit`, `BISECT_build_date`, `rustc_version`. Written atomically with `final_assignments.json`. Verifiable via `BISECT doctor --verify-manifest`. |
 
 ## Mapping back to GEOIDs
 
@@ -101,9 +101,9 @@ with open("final_assignments.json") as f:
     assignments = json.load(f)
 
 # Load index_to_geoid from the adjacency file (or wherever your tooling exposes it).
-# In Python via redist_py:
-import redist_py
-graph = redist_py.deserialize_adjacency(open("path/to/state.adj.bin", "rb").read())
+# In Python via bisect_py:
+import bisect_py
+graph = bisect_py.deserialize_adjacency(open("path/to/state.adj.bin", "rb").read())
 geoid_assignments = {
     graph.index_to_geoid[int(idx)]: district
     for idx, district in assignments.items()
@@ -116,8 +116,8 @@ In Rust, the adjacency `AdjacencyGraph::index_to_geoid` field gives the same map
 
 | Tool | Compatible? |
 |---|---|
-| GerryChain | No direct consumer. Convert via `redist export --format gerrychain` for a CSV with `geoid,district` columns. |
-| Districtr | Use `redist export --format csv` to produce the GEOID-keyed CSV Districtr expects. |
+| GerryChain | No direct consumer. Convert via `BISECT export --format gerrychain` for a CSV with `geoid,district` columns. |
+| Districtr | Use `BISECT export --format csv` to produce the GEOID-keyed CSV Districtr expects. |
 | pandas / polars | `pd.read_json("final_assignments.json", typ="series").to_frame("district")` |
 | Excel | Open via `Data → From Text/JSON`. |
 

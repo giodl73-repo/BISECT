@@ -119,11 +119,7 @@ pub enum BlocVotingError {
     #[error("[INPUT] insufficient precincts: got {got}, need at least {min}")]
     InsufficientPrecincts { got: usize, min: usize },
     #[error("[INPUT] non-positive weight at precinct {idx} (id={id}): {weight}")]
-    NonPositiveWeight {
-        idx: usize,
-        id: String,
-        weight: f64,
-    },
+    NonPositiveWeight { idx: usize, id: String, weight: f64 },
     #[error("[INTERNAL] singular design matrix (predictors collinear); try fewer covariates")]
     Singular,
     #[error("[INTERNAL] {0}")]
@@ -276,10 +272,7 @@ fn invert(m: &Mat) -> Result<Mat, BlocVotingError> {
 /// Build the design matrix X (n × (p+1)) with a leading intercept column from
 /// the named predictors of each precinct. Predictor names indicate which
 /// `Precinct` field to read.
-fn build_design(
-    precincts: &[Precinct],
-    predictor_names: &[String],
-) -> Mat {
+fn build_design(precincts: &[Precinct], predictor_names: &[String]) -> Mat {
     let n = precincts.len();
     let p1 = predictor_names.len() + 1;
     let mut x = Mat::zeros(n, p1);
@@ -311,10 +304,7 @@ pub fn fit_wls(
     let n = precincts.len();
     let p = predictor_names.len();
     if n < p + 2 {
-        return Err(BlocVotingError::InsufficientPrecincts {
-            got: n,
-            min: p + 2,
-        });
+        return Err(BlocVotingError::InsufficientPrecincts { got: n, min: p + 2 });
     }
     for (i, pr) in precincts.iter().enumerate() {
         if pr.total_votes <= 0.0 {
@@ -381,7 +371,12 @@ pub fn fit_wls(
 
     // Standardized β: weighted std on each predictor and on y.
     let weighted_std = |col: &[f64]| -> f64 {
-        let mean: f64 = w.iter().zip(col.iter()).map(|(wi, ci)| wi * ci).sum::<f64>() / total_w;
+        let mean: f64 = w
+            .iter()
+            .zip(col.iter())
+            .map(|(wi, ci)| wi * ci)
+            .sum::<f64>()
+            / total_w;
         let var: f64 = w
             .iter()
             .zip(col.iter())
@@ -453,10 +448,7 @@ pub fn fit_wls(
 ///
 /// where h_ii = w_i · x_i^T · (X^T W X)^{-1} · x_i is the WLS hat-matrix
 /// diagonal. Spec Task 1.3.
-pub fn hc3_stderr(
-    fit: &mut RegressionFit,
-    precincts: &[Precinct],
-) -> Result<(), BlocVotingError> {
+pub fn hc3_stderr(fit: &mut RegressionFit, precincts: &[Precinct]) -> Result<(), BlocVotingError> {
     let x = build_design(precincts, &fit.predictor_names);
     let n = precincts.len();
     let p1 = fit.predictor_names.len() + 1;
@@ -1037,9 +1029,10 @@ pub fn run_bloc_voting_family(
         let estimates: Vec<f64> = rs.iter().map(|r| r.race_coefficient.estimate).collect();
         let min = estimates.iter().copied().fold(f64::INFINITY, f64::min);
         let max = estimates.iter().copied().fold(f64::NEG_INFINITY, f64::max);
-        let all_sig = rs
-            .iter()
-            .all(|r| r.race_coefficient.p_value_holm.is_finite() && r.race_coefficient.p_value_holm < cfg.alpha);
+        let all_sig = rs.iter().all(|r| {
+            r.race_coefficient.p_value_holm.is_finite()
+                && r.race_coefficient.p_value_holm < cfg.alpha
+        });
         let mut variants: Vec<String> = rs.iter().map(|r| r.variant.clone()).collect();
         variants.sort();
         robustness.insert(
@@ -1191,7 +1184,10 @@ mod tests {
             .filter(|(_, p)| *p < 0.05)
             .map(|(n, _)| n.as_str())
             .collect();
-        assert!(!raw_sig.is_empty(), "fixture has at least one raw-significant test");
+        assert!(
+            !raw_sig.is_empty(),
+            "fixture has at least one raw-significant test"
+        );
         let some_lost = raw_sig.iter().any(|n| corrected[*n] >= 0.05);
         assert!(
             some_lost,
@@ -1333,9 +1329,7 @@ mod tests {
     #[test]
     fn test_holm_clamps_to_one() {
         // Single huge family with a near-1 p-value: corrected stays <= 1.
-        let raw: Vec<(String, f64)> = (0..100)
-            .map(|i| (format!("t{i}"), 0.95))
-            .collect();
+        let raw: Vec<(String, f64)> = (0..100).map(|i| (format!("t{i}"), 0.95)).collect();
         let corrected = holm_bonferroni(&raw);
         for (_, p) in corrected {
             assert!(p <= 1.0, "Holm must clamp to 1; got {p}");
@@ -1459,7 +1453,10 @@ mod tests {
         let names = vec!["pct_minority".to_string(), "pct_dem_baseline".to_string()];
         match cluster_bootstrap(&precincts, &names, 50, 0, 0.95) {
             Err(BlocVotingError::Numeric(msg)) => {
-                assert!(msg.contains("cluster"), "error msg should mention clusters: {msg}");
+                assert!(
+                    msg.contains("cluster"),
+                    "error msg should mention clusters: {msg}"
+                );
             }
             other => panic!("expected Numeric error, got {:?}", other),
         }

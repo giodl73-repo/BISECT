@@ -16,10 +16,10 @@
 //! - Accounting invariant: `steps_accepted + vra_rejections + mh_rejections
 //!   == steps_taken` holds after every call to [`VraRecomChain::step`].
 
-use std::collections::{HashMap, HashSet};
-use rand::Rng;
 use crate::forest_recom::ForestRecomChain;
 use crate::recom::StepRecord;
+use rand::Rng;
+use std::collections::{HashMap, HashSet};
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -110,11 +110,7 @@ impl VraRecomChain {
     /// District `d` is protected if its average minority VAP fraction
     /// (simple mean over tracts, since we only have per-tract fractions, not
     /// raw counts) is >= `threshold`.
-    fn compute_protected(
-        assignment: &[u32],
-        minority_vap: &[f64],
-        threshold: f64,
-    ) -> HashSet<u32> {
+    fn compute_protected(assignment: &[u32], minority_vap: &[f64], threshold: f64) -> HashSet<u32> {
         let mut minority_sum: HashMap<u32, f64> = HashMap::new();
         let mut tract_count: HashMap<u32, f64> = HashMap::new();
         for (t, &d) in assignment.iter().enumerate() {
@@ -258,8 +254,8 @@ impl VraRecomChain {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand::SeedableRng;
     use rand::rngs::SmallRng;
+    use rand::SeedableRng;
 
     // ── Graph helpers ─────────────────────────────────────────────────────────
 
@@ -427,11 +423,8 @@ mod tests {
         let pop = vec![1000i64; 16];
         let assignment: Vec<u32> = (0..16).map(|i| if i < 8 { 1 } else { 2 }).collect();
         // All tracts in d1 (0-7) have minority_vap=0.6; d2 (8-15) have 0.2.
-        let minority_vap: Vec<f64> = (0..16)
-            .map(|i| if i < 8 { 0.6 } else { 0.2 })
-            .collect();
-        let mut chain =
-            VraRecomChain::new(adj, pop, assignment, 2, 0.10, minority_vap, 0.5);
+        let minority_vap: Vec<f64> = (0..16).map(|i| if i < 8 { 0.6 } else { 0.2 }).collect();
+        let mut chain = VraRecomChain::new(adj, pop, assignment, 2, 0.10, minority_vap, 0.5);
         let (mut rf, mut rr) = make_rngs(99);
         for _ in 0..200 {
             chain.step(&mut rf, &mut rr);
@@ -449,8 +442,7 @@ mod tests {
         let pop = vec![1000i64; 16];
         let assignment: Vec<u32> = (0..16).map(|i| if i < 8 { 1 } else { 2 }).collect();
         let minority_vap: Vec<f64> = (0..16).map(|i| if i < 8 { 0.6 } else { 0.2 }).collect();
-        let mut chain =
-            VraRecomChain::new(adj, pop, assignment, 2, 0.10, minority_vap, 0.5);
+        let mut chain = VraRecomChain::new(adj, pop, assignment, 2, 0.10, minority_vap, 0.5);
         let (mut rf, mut rr) = make_rngs(7);
         for n in 1..=100u64 {
             chain.step(&mut rf, &mut rr);
@@ -471,8 +463,7 @@ mod tests {
         let assignment: Vec<u32> = (0..16).map(|i| if i < 8 { 1 } else { 2 }).collect();
         // All minority_vap = 0.1 < 0.5 threshold → no protected districts.
         let minority_vap = vec![0.1f64; 16];
-        let mut chain =
-            VraRecomChain::new(adj, pop, assignment, 2, 0.10, minority_vap, 0.5);
+        let mut chain = VraRecomChain::new(adj, pop, assignment, 2, 0.10, minority_vap, 0.5);
         assert!(
             chain.protected_districts.is_empty(),
             "must have 0 protected districts when all minority_vap < threshold"
@@ -517,15 +508,28 @@ mod tests {
                     (r.accepted, r.vra_rejected, r.mh_rejected)
                 })
                 .collect();
-            (records, chain.inner.assignment.clone(), chain.steps_accepted)
+            (
+                records,
+                chain.inner.assignment.clone(),
+                chain.steps_accepted,
+            )
         };
 
         let (recs1, assign1, acc1) = run(1234);
         let (recs2, assign2, acc2) = run(1234);
 
-        assert_eq!(recs1, recs2, "same seed must produce identical step records");
-        assert_eq!(assign1, assign2, "same seed must produce identical final assignment");
-        assert_eq!(acc1, acc2, "same seed must produce identical steps_accepted");
+        assert_eq!(
+            recs1, recs2,
+            "same seed must produce identical step records"
+        );
+        assert_eq!(
+            assign1, assign2,
+            "same seed must produce identical final assignment"
+        );
+        assert_eq!(
+            acc1, acc2,
+            "same seed must produce identical steps_accepted"
+        );
     }
 
     /// VraRecomChain inherits FR_FORWARD_ and FR_REVERSE_ seed prefixes from
@@ -572,8 +576,7 @@ mod tests {
         let pop = vec![1000i64; 16];
         let assignment: Vec<u32> = (0..16).map(|i| if i < 8 { 1 } else { 2 }).collect();
         let minority_vap: Vec<f64> = (0..16).map(|i| if i < 8 { 0.6 } else { 0.2 }).collect();
-        let mut chain =
-            VraRecomChain::new(adj, pop, assignment, 2, 0.10, minority_vap, 0.5);
+        let mut chain = VraRecomChain::new(adj, pop, assignment, 2, 0.10, minority_vap, 0.5);
         let (mut rf, mut rr) = make_rngs(55);
         for _ in 0..200 {
             chain.step(&mut rf, &mut rr);
@@ -610,8 +613,7 @@ mod tests {
         let pop = vec![1000i64; 16];
         let assignment: Vec<u32> = (0..16).map(|i| if i < 8 { 1 } else { 2 }).collect();
         let minority_vap: Vec<f64> = (0..16).map(|i| if i < 8 { 0.6 } else { 0.2 }).collect();
-        let mut chain =
-            VraRecomChain::new(adj, pop, assignment, 2, 0.10, minority_vap, 0.5);
+        let mut chain = VraRecomChain::new(adj, pop, assignment, 2, 0.10, minority_vap, 0.5);
         let (mut rf, mut rr) = make_rngs(88);
         for _ in 0..100 {
             chain.step(&mut rf, &mut rr);
@@ -629,8 +631,15 @@ mod tests {
         let assignment: Vec<u32> = (0..16).map(|i| if i < 8 { 1 } else { 2 }).collect();
         let minority_vap: Vec<f64> = (0..16).map(|i| if i < 8 { 0.6 } else { 0.2 }).collect();
         let threshold = 0.5;
-        let mut chain =
-            VraRecomChain::new(adj, pop, assignment, 2, 0.10, minority_vap.clone(), threshold);
+        let mut chain = VraRecomChain::new(
+            adj,
+            pop,
+            assignment,
+            2,
+            0.10,
+            minority_vap.clone(),
+            threshold,
+        );
         let (mut rf, mut rr) = make_rngs(333);
         for _ in 0..150 {
             let rec = chain.step(&mut rf, &mut rr);

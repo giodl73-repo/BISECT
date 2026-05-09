@@ -1,6 +1,6 @@
 # Partisan Metrics Guide
 
-How `redist` measures partisan fairness — what each metric means, how to read the output, and what thresholds matter legally.
+How `BISECT` measures partisan fairness — what each metric means, how to read the output, and what thresholds matter legally.
 
 ---
 
@@ -8,7 +8,7 @@ How `redist` measures partisan fairness — what each metric means, how to read 
 
 Redistricting plans affect which party wins seats. A plan can be geographically compact and legally balanced while still systematically advantaging one party. Courts, commissions, and the public increasingly expect quantitative evidence that a plan is not a partisan gerrymander.
 
-`redist` computes three widely-used metrics, each with 95% bootstrap confidence intervals. None of these metrics is a legal standard by itself — they are analytical tools that practitioners and experts use to evaluate fairness claims.
+`BISECT` computes three widely-used metrics, each with 95% bootstrap confidence intervals. None of these metrics is a legal standard by itself — they are analytical tools that practitioners and experts use to evaluate fairness claims.
 
 ---
 
@@ -18,7 +18,7 @@ Redistricting plans affect which party wins seats. A plan can be geographically 
 bisect analyze --label wa_house_v1 --year 2020 --version WA_Plans --types partisan
 ```
 
-This produces `analysis/partisan.json`. For state legislative chambers, `redist` uses 2020 presidential election results as a proxy (see Limitations below). To use state legislative election data, supply it directly:
+This produces `analysis/partisan.json`. For state legislative chambers, `BISECT` uses 2020 presidential election results as a proxy (see Limitations below). To use state legislative election data, supply it directly:
 
 ```bash
 bisect analyze --label wa_house_v1 --types partisan \
@@ -55,7 +55,7 @@ EG = (Wasted_Party_A - Wasted_Party_B) / Total_votes
 
 An EG of +0.031 means Democratic voters waste 3.1% more of their votes than Republican voters across all districts — a small advantage for Republicans.
 
-**The 8% threshold**: Stephanopoulos and McGhee (2015) proposed ±8% as a presumptive gerrymander threshold. The Supreme Court in *Gill v. Whitford* (2018) explicitly did not adopt this. `redist` reports it as an academic reference, not a legal standard.
+**The 8% threshold**: Stephanopoulos and McGhee (2015) proposed ±8% as a presumptive gerrymander threshold. The Supreme Court in *Gill v. Whitford* (2018) explicitly did not adopt this. `BISECT` reports it as an academic reference, not a legal standard.
 
 ---
 
@@ -160,7 +160,7 @@ Districts within ±5% (`dem_pct` between 0.45 and 0.55) are flagged as competiti
 
 ## Limitations
 
-**Presidential proxy**: When state legislative election data is not available, `redist` uses presidential results. Presidential elections have stronger partisan swings than legislative races, especially in urban areas. When presidential data is used for a non-congressional chamber, `partisan.json` includes:
+**Presidential proxy**: When state legislative election data is not available, `BISECT` uses presidential results. Presidential elections have stronger partisan swings than legislative races, especially in urban areas. When presidential data is used for a non-congressional chamber, `partisan.json` includes:
 
 ```json
 {

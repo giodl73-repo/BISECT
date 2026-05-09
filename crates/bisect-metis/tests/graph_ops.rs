@@ -1,4 +1,4 @@
-//! L0 tests for redist-metis graph construction, coarsening, bisection tree,
+//! L0 tests for BISECT-metis graph construction, coarsening, bisection tree,
 //! edge matching, balance checking, and pure math helpers.
 //!
 //! 30 new tests covering:

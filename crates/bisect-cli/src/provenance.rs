@@ -1,4 +1,4 @@
-//! Provenance metadata for the running `redist` binary.
+//! Provenance metadata for the running `bisect` binary.
 //!
 //! Values are baked at compile time by `build.rs` and exposed here as
 //! constants. They populate the `binary_version` / `binary_build_commit`
@@ -15,16 +15,16 @@ use serde::{Deserialize, Serialize};
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Full git commit at build time (40 hex chars, with optional "-dirty" suffix).
-pub const BUILD_COMMIT: &str = env!("REDIST_BUILD_COMMIT");
+pub const BUILD_COMMIT: &str = env!("BISECT_BUILD_COMMIT");
 
 /// Short (12-char) form of [`BUILD_COMMIT`], with optional "-dirty" suffix.
-pub const BUILD_COMMIT_SHORT: &str = env!("REDIST_BUILD_COMMIT_SHORT");
+pub const BUILD_COMMIT_SHORT: &str = env!("BISECT_BUILD_COMMIT_SHORT");
 
 /// Build timestamp as Unix seconds since epoch (string form, UTC).
-pub const BUILD_UNIX: &str = env!("REDIST_BUILD_UNIX");
+pub const BUILD_UNIX: &str = env!("BISECT_BUILD_UNIX");
 
 /// `rustc --version` output captured at build time.
-pub const RUSTC_VERSION: &str = env!("REDIST_RUSTC_VERSION");
+pub const RUSTC_VERSION: &str = env!("BISECT_RUSTC_VERSION");
 
 /// Provenance block embedded in output JSON files.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -34,7 +34,7 @@ pub struct Provenance {
     /// Git commit at build time (40-hex-char + optional "-dirty").
     pub build_commit: String,
     /// ISO-8601 UTC build timestamp.
-    pub redist_build_date: String,
+    pub bisect_build_date: String,
     /// rustc version that built this binary.
     pub rustc_version: String,
 }
@@ -45,7 +45,7 @@ impl Provenance {
         Self {
             version: VERSION.to_string(),
             build_commit: BUILD_COMMIT.to_string(),
-            redist_build_date: format_unix_iso8601(BUILD_UNIX),
+            bisect_build_date: format_unix_iso8601(BUILD_UNIX),
             rustc_version: RUSTC_VERSION.to_string(),
         }
     }
@@ -118,8 +118,14 @@ mod tests {
 
     #[test]
     fn test_constants_populated() {
-        assert!(!VERSION.is_empty(), "VERSION must be set from CARGO_PKG_VERSION");
-        assert!(!BUILD_COMMIT.is_empty(), "BUILD_COMMIT must be set by build.rs");
+        assert!(
+            !VERSION.is_empty(),
+            "VERSION must be set from CARGO_PKG_VERSION"
+        );
+        assert!(
+            !BUILD_COMMIT.is_empty(),
+            "BUILD_COMMIT must be set by build.rs"
+        );
         assert!(!RUSTC_VERSION.is_empty());
     }
 
@@ -134,13 +140,16 @@ mod tests {
     #[test]
     fn test_verify_version_matches_self() {
         let p = Provenance::current();
-        p.verify_version_matches(&p.version).expect("self-version must match");
+        p.verify_version_matches(&p.version)
+            .expect("self-version must match");
     }
 
     #[test]
     fn test_verify_version_mismatch() {
         let p = Provenance::current();
-        let err = p.verify_version_matches("999.999.999").expect_err("must reject mismatch");
+        let err = p
+            .verify_version_matches("999.999.999")
+            .expect_err("must reject mismatch");
         assert!(err.contains("999.999.999"));
         assert!(err.contains("mismatch"));
     }
@@ -174,8 +183,10 @@ mod tests {
         if full == "unknown" {
             assert_eq!(short, "unknown");
         } else {
-            assert!(full.starts_with(short),
-                "short commit must be a prefix of full: full={full} short={short}");
+            assert!(
+                full.starts_with(short),
+                "short commit must be a prefix of full: full={full} short={short}"
+            );
             assert!(short.len() <= 12);
         }
     }
@@ -185,8 +196,14 @@ mod tests {
     #[test]
     fn test_format_unix_epoch_is_utc_midnight() {
         let result = format_unix_iso8601("0");
-        assert!(result.ends_with("T00:00:00Z"), "epoch must be midnight UTC: {result}");
-        assert!(result.starts_with("1970-01-01"), "epoch must be 1970-01-01: {result}");
+        assert!(
+            result.ends_with("T00:00:00Z"),
+            "epoch must be midnight UTC: {result}"
+        );
+        assert!(
+            result.starts_with("1970-01-01"),
+            "epoch must be 1970-01-01: {result}"
+        );
     }
 
     #[test]
@@ -225,13 +242,23 @@ mod tests {
     fn test_format_unix_result_has_iso8601_format() {
         // Result must match YYYY-MM-DDTHH:MM:SSZ pattern
         let result = format_unix_iso8601("1000000000");
-        assert_eq!(result.len(), 20, "ISO-8601 timestamp must be 20 chars: {result}");
+        assert_eq!(
+            result.len(),
+            20,
+            "ISO-8601 timestamp must be 20 chars: {result}"
+        );
         assert!(result.contains('T'), "must contain T separator: {result}");
         assert!(result.ends_with('Z'), "must end with Z (UTC): {result}");
         let date_part = &result[..10];
         let time_part = &result[11..19];
-        assert!(date_part.contains('-'), "date part must have dashes: {date_part}");
-        assert!(time_part.contains(':'), "time part must have colons: {time_part}");
+        assert!(
+            date_part.contains('-'),
+            "date part must have dashes: {date_part}"
+        );
+        assert!(
+            time_part.contains(':'),
+            "time part must have colons: {time_part}"
+        );
     }
 
     #[test]
@@ -241,7 +268,10 @@ mod tests {
 
     #[test]
     fn test_is_leap_year_2100_not_leap() {
-        assert!(!is_leap(2100), "2100 is not a leap year (divisible by 100 but not 400)");
+        assert!(
+            !is_leap(2100),
+            "2100 is not a leap year (divisible by 100 but not 400)"
+        );
     }
 
     #[test]
@@ -259,35 +289,52 @@ mod tests {
         let p = Provenance::current();
         // Version must look like x.y.z (at least two dots)
         let dot_count = p.version.chars().filter(|&c| c == '.').count();
-        assert!(dot_count >= 2,
-            "version must be semver (x.y.z); got: {}", p.version);
+        assert!(
+            dot_count >= 2,
+            "version must be semver (x.y.z); got: {}",
+            p.version
+        );
     }
 
     #[test]
     fn test_provenance_build_date_looks_like_iso8601() {
         let p = Provenance::current();
         // Must be YYYY-MM-DDTHH:MM:SSZ
-        assert!(p.redist_build_date.len() == 20,
-            "build date must be 20-char ISO-8601; got: {}", p.redist_build_date);
-        assert!(p.redist_build_date.ends_with('Z'),
-            "build date must be UTC (ends with Z); got: {}", p.redist_build_date);
-        assert!(p.redist_build_date.contains('T'),
-            "build date must have T separator; got: {}", p.redist_build_date);
+        assert!(
+            p.bisect_build_date.len() == 20,
+            "build date must be 20-char ISO-8601; got: {}",
+            p.bisect_build_date
+        );
+        assert!(
+            p.bisect_build_date.ends_with('Z'),
+            "build date must be UTC (ends with Z); got: {}",
+            p.bisect_build_date
+        );
+        assert!(
+            p.bisect_build_date.contains('T'),
+            "build date must have T separator; got: {}",
+            p.bisect_build_date
+        );
     }
 
     #[test]
     fn test_provenance_rustc_version_contains_rustc() {
         let p = Provenance::current();
         // rustc_version is captured from `rustc --version` output like "rustc 1.x.y (...)"
-        assert!(p.rustc_version.contains("rustc"),
-            "rustc_version must contain 'rustc'; got: {}", p.rustc_version);
+        assert!(
+            p.rustc_version.contains("rustc"),
+            "rustc_version must contain 'rustc'; got: {}",
+            p.rustc_version
+        );
     }
 
     #[test]
     fn test_format_unix_non_numeric_returns_epoch() {
         // Non-numeric input → parse fails → secs=0 → epoch
         let result = format_unix_iso8601("not_a_number");
-        assert_eq!(result, "1970-01-01T00:00:00Z",
-            "non-numeric unix_secs must fall back to epoch");
+        assert_eq!(
+            result, "1970-01-01T00:00:00Z",
+            "non-numeric unix_secs must fall back to epoch"
+        );
     }
 }

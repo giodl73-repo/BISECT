@@ -1,6 +1,6 @@
-use std::collections::HashMap;
-use serde::{Deserialize, Serialize};
 use anyhow::Context;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 use crate::analyzer::{Analyzer, AnalyzerContext};
 
@@ -25,9 +25,9 @@ pub struct PoliticalDistrict {
     pub rep_votes: f64,
     pub dem_pct: f64,
     pub rep_pct: f64,
-    pub margin: f64,      // D - R (positive = Dem)
+    pub margin: f64, // D - R (positive = Dem)
     pub lean_dem: bool,
-    pub is_uncontested: bool,  // either party = 0 votes
+    pub is_uncontested: bool, // either party = 0 votes
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -63,26 +63,29 @@ pub fn aggregate_political(
         eprintln!("WARNING: {unmatched} political rows had no assignment match");
     }
 
-    let mut districts: Vec<PoliticalDistrict> = totals.into_iter().map(|(district, (dem, rep))| {
-        let total = dem + rep;
-        let (dem_pct, rep_pct) = if total == 0.0 {
-            (0.0, 0.0)
-        } else {
-            (dem / total, rep / total)
-        };
-        let margin = dem_pct - rep_pct;
-        PoliticalDistrict {
-            district,
-            total_votes: total,
-            dem_votes: dem,
-            rep_votes: rep,
-            dem_pct,
-            rep_pct,
-            margin,
-            lean_dem: margin >= 0.0,
-            is_uncontested: dem == 0.0 || rep == 0.0,
-        }
-    }).collect();
+    let mut districts: Vec<PoliticalDistrict> = totals
+        .into_iter()
+        .map(|(district, (dem, rep))| {
+            let total = dem + rep;
+            let (dem_pct, rep_pct) = if total == 0.0 {
+                (0.0, 0.0)
+            } else {
+                (dem / total, rep / total)
+            };
+            let margin = dem_pct - rep_pct;
+            PoliticalDistrict {
+                district,
+                total_votes: total,
+                dem_votes: dem,
+                rep_votes: rep,
+                dem_pct,
+                rep_pct,
+                margin,
+                lean_dem: margin >= 0.0,
+                is_uncontested: dem == 0.0 || rep == 0.0,
+            }
+        })
+        .collect();
     districts.sort_by_key(|d| d.district);
 
     PoliticalResult {
@@ -97,17 +100,23 @@ pub struct PoliticalAnalyzer;
 impl Analyzer for PoliticalAnalyzer {
     type Output = PoliticalResult;
 
-    fn name() -> &'static str { "political" }
+    fn name() -> &'static str {
+        "political"
+    }
 
     fn run(ctx: &AnalyzerContext<'_>) -> anyhow::Result<Self::Output> {
         // CSV: data/{year}/elections/presidential_by_tract.csv
-        let csv_path = ctx.data_root
+        let csv_path = ctx
+            .data_root
             .join(ctx.year)
             .join("elections")
             .join("presidential_by_tract.csv");
 
         if !csv_path.exists() {
-            eprintln!("WARNING: political data not found at {}", csv_path.display());
+            eprintln!(
+                "WARNING: political data not found at {}",
+                csv_path.display()
+            );
             return Ok(PoliticalResult {
                 analyzer: "political",
                 available: false,
@@ -118,11 +127,16 @@ impl Analyzer for PoliticalAnalyzer {
         let mut rdr = csv::Reader::from_path(&csv_path)
             .with_context(|| format!("cannot open political CSV: {}", csv_path.display()))?;
 
-        let rows: Vec<PoliticalRow> = rdr.deserialize()
+        let rows: Vec<PoliticalRow> = rdr
+            .deserialize()
             .collect::<Result<Vec<_>, _>>()
             .context("failed to parse political CSV rows")?;
 
-        Ok(aggregate_political(&rows, ctx.assignments, ctx.num_districts))
+        Ok(aggregate_political(
+            &rows,
+            ctx.assignments,
+            ctx.num_districts,
+        ))
     }
 }
 

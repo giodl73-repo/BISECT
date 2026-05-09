@@ -38,7 +38,7 @@ pub struct HtmlComparisonContext {
     pub template_sha256: String,
     /// Short build commit (first 8 chars of `build_commit`).
     pub build_commit_short: String,
-    /// `redist` version string (e.g. "0.1.0").
+    /// `BISECT` version string (e.g. "0.1.0").
     pub version: String,
     /// Approved-at timestamp (ISO-8601 UTC); shown in footer.
     pub approved_at: String,
@@ -109,8 +109,14 @@ fn render_civic_banner(report: &ComparisonReport) -> String {
     } else {
         &report.plan_a
     };
-    let submitter = civic_side.submitted_by.as_deref().unwrap_or("(unspecified)");
-    let when = civic_side.submitted_at.as_deref().unwrap_or("(unspecified)");
+    let submitter = civic_side
+        .submitted_by
+        .as_deref()
+        .unwrap_or("(unspecified)");
+    let when = civic_side
+        .submitted_at
+        .as_deref()
+        .unwrap_or("(unspecified)");
     format!(
         "<div class=\"civic-banner\" role=\"note\">\n\
          <strong>Civic counter-proposal.</strong> The map labeled \
@@ -131,8 +137,7 @@ fn render_header(report: &ComparisonReport, cfg: &NarrativeConfig) -> String {
             escape_html(cfg.approved_by.as_deref().unwrap_or(""))
         )
     } else {
-        "<span class=\"badge draft\">DRAFT &mdash; review before publication</span>"
-            .to_string()
+        "<span class=\"badge draft\">DRAFT &mdash; review before publication</span>".to_string()
     };
     format!(
         "<header class=\"report-header\">\n\
@@ -165,7 +170,11 @@ fn render_metrics_table(report: &ComparisonReport, cfg: &NarrativeConfig) -> Str
          <th scope=\"col\">Plan A</th><th scope=\"col\">Plan B</th></tr></thead>\n",
     );
     s.push_str("<tbody>\n");
-    s.push_str(&row("Districts", &report.plan_a.n_districts.to_string(), &report.plan_b.n_districts.to_string()));
+    s.push_str(&row(
+        "Districts",
+        &report.plan_a.n_districts.to_string(),
+        &report.plan_b.n_districts.to_string(),
+    ));
     s.push_str(&row(
         "Democratic-leaning seats",
         &report.plan_a.leaning_seats.to_string(),
@@ -421,7 +430,10 @@ mod tests {
             &NarrativeConfig::default(),
             &fixture_ctx(),
         );
-        assert!(html.starts_with("<!DOCTYPE html>"), "must start with HTML5 doctype");
+        assert!(
+            html.starts_with("<!DOCTYPE html>"),
+            "must start with HTML5 doctype"
+        );
         assert!(html.contains("<html lang=\"en\">"));
         assert!(html.contains("</html>"), "must close <html>");
         assert!(html.contains("<style>"), "CSS must be embedded inline");
@@ -434,9 +446,18 @@ mod tests {
             &NarrativeConfig::default(),
             &fixture_ctx(),
         );
-        assert!(html.contains("class=\"civic-banner\""), "civic banner must render");
-        assert!(html.contains("League of Women Voters Vermont"), "submitter name must appear in banner");
-        assert!(html.contains("not the state's official map"), "civic disclaimer must appear in banner");
+        assert!(
+            html.contains("class=\"civic-banner\""),
+            "civic banner must render"
+        );
+        assert!(
+            html.contains("League of Women Voters Vermont"),
+            "submitter name must appear in banner"
+        );
+        assert!(
+            html.contains("not the state's official map"),
+            "civic disclaimer must appear in banner"
+        );
     }
 
     #[test]
@@ -446,7 +467,10 @@ mod tests {
         report.plan_b.submitted_by = None;
         report.plan_b.submitted_at = None;
         let html = render_comparison_html(&report, &NarrativeConfig::default(), &fixture_ctx());
-        assert!(!html.contains("class=\"civic-banner\""), "civic banner must NOT render when no side is tagged");
+        assert!(
+            !html.contains("class=\"civic-banner\""),
+            "civic banner must NOT render when no side is tagged"
+        );
     }
 
     #[test]
@@ -465,9 +489,18 @@ mod tests {
         let mut cfg = NarrativeConfig::default();
         cfg.approved_by = Some("J. Doe".into());
         let html = render_comparison_html(&fixture_report(), &cfg, &fixture_ctx());
-        assert!(html.contains("badge approved"), "APPROVED badge must render when --approved-by set");
-        assert!(html.contains("J. Doe"), "approver name must appear in badge");
-        assert!(!html.contains("badge draft"), "DRAFT badge must NOT render when approved");
+        assert!(
+            html.contains("badge approved"),
+            "APPROVED badge must render when --approved-by set"
+        );
+        assert!(
+            html.contains("J. Doe"),
+            "approver name must appear in badge"
+        );
+        assert!(
+            !html.contains("badge draft"),
+            "DRAFT badge must NOT render when approved"
+        );
     }
 
     #[test]
@@ -478,12 +511,18 @@ mod tests {
             &fixture_ctx(),
         );
         assert!(html.contains("Districts"), "districts row");
-        assert!(html.contains("Democratic-leaning seats"), "leaning seats row");
+        assert!(
+            html.contains("Democratic-leaning seats"),
+            "leaning seats row"
+        );
         assert!(html.contains("Majority-minority districts"), "MM row");
         assert!(html.contains("Mean Polsby-Popper"), "PP row");
         assert!(html.contains("Total population"), "population row");
         // Comma-formatted population.
-        assert!(html.contains("643,077"), "population must use thousands separators");
+        assert!(
+            html.contains("643,077"),
+            "population must use thousands separators"
+        );
     }
 
     #[test]
@@ -492,8 +531,14 @@ mod tests {
         cfg.leaning_threshold = 0.52;
         cfg.close_call_band = 0.015;
         let html = render_comparison_html(&fixture_report(), &cfg, &fixture_ctx());
-        assert!(html.contains("52.0%"), "threshold disclosure must use cfg.leaning_threshold");
-        assert!(html.contains("1.5pp"), "close-call band must use cfg.close_call_band");
+        assert!(
+            html.contains("52.0%"),
+            "threshold disclosure must use cfg.leaning_threshold"
+        );
+        assert!(
+            html.contains("1.5pp"),
+            "close-call band must use cfg.close_call_band"
+        );
     }
 
     #[test]
@@ -504,7 +549,10 @@ mod tests {
             &fixture_ctx(),
         );
         assert!(html.contains("Tracts reassigned"));
-        assert!(html.contains("</strong> 12</li>"), "12 tracts changed appears in the diff list");
+        assert!(
+            html.contains("</strong> 12</li>"),
+            "12 tracts changed appears in the diff list"
+        );
         assert!(html.contains("1, 3, 5"), "district list");
     }
 
@@ -530,7 +578,9 @@ mod tests {
             &fixture_ctx(),
         );
         assert!(
-            html.contains("bisect compare --plan-a vt_state_proposal --plan-b lwv_civic_alt --format html"),
+            html.contains(
+                "bisect compare --plan-a vt_state_proposal --plan-b lwv_civic_alt --format html"
+            ),
             "footer must show the exact reproduction command"
         );
     }
@@ -543,7 +593,9 @@ mod tests {
             &fixture_ctx(),
         );
         // Each paragraph wrapped in <p>...</p>.
-        assert!(html.contains("<p>[DRAFT - review before publication] Plan A elects 5 Democratic-leaning seats"));
+        assert!(html.contains(
+            "<p>[DRAFT - review before publication] Plan A elects 5 Democratic-leaning seats"
+        ));
         assert!(html.contains("<p>This plan moves 12 tracts.</p>"));
     }
 
@@ -552,8 +604,14 @@ mod tests {
         let mut report = fixture_report();
         report.plan_a.label = "evil<script>alert(1)</script>".into();
         let html = render_comparison_html(&report, &NarrativeConfig::default(), &fixture_ctx());
-        assert!(!html.contains("<script>alert(1)</script>"), "raw script tag must NOT appear");
-        assert!(html.contains("evil&lt;script&gt;alert(1)&lt;/script&gt;"), "label must be escaped");
+        assert!(
+            !html.contains("<script>alert(1)</script>"),
+            "raw script tag must NOT appear"
+        );
+        assert!(
+            html.contains("evil&lt;script&gt;alert(1)&lt;/script&gt;"),
+            "label must be escaped"
+        );
     }
 
     #[test]
@@ -561,7 +619,10 @@ mod tests {
         let mut report = fixture_report();
         report.plan_b.submitted_by = Some("\"Bobby\" Tables".into());
         let html = render_comparison_html(&report, &NarrativeConfig::default(), &fixture_ctx());
-        assert!(html.contains("&quot;Bobby&quot; Tables"), "quotes in submitter name must be escaped");
+        assert!(
+            html.contains("&quot;Bobby&quot; Tables"),
+            "quotes in submitter name must be escaped"
+        );
     }
 
     #[test]
@@ -569,7 +630,10 @@ mod tests {
         let mut report = fixture_report();
         report.diff.districts_with_changes = vec![];
         let html = render_comparison_html(&report, &NarrativeConfig::default(), &fixture_ctx());
-        assert!(html.contains("(none)"), "empty district list must render as '(none)'");
+        assert!(
+            html.contains("(none)"),
+            "empty district list must render as '(none)'"
+        );
     }
 
     #[test]
@@ -577,7 +641,10 @@ mod tests {
         let mut report = fixture_report();
         report.plan_a.mean_pp = f64::NAN;
         let html = render_comparison_html(&report, &NarrativeConfig::default(), &fixture_ctx());
-        assert!(html.contains("(unavailable)"), "NaN mean_pp must render as '(unavailable)'");
+        assert!(
+            html.contains("(unavailable)"),
+            "NaN mean_pp must render as '(unavailable)'"
+        );
     }
 
     #[test]
@@ -586,6 +653,9 @@ mod tests {
         report.plan_a.total_population = 0;
         report.plan_b.total_population = 0;
         let html = render_comparison_html(&report, &NarrativeConfig::default(), &fixture_ctx());
-        assert!(!html.contains("Total population"), "population row must be hidden when unavailable for both plans");
+        assert!(
+            !html.contains("Total population"),
+            "population row must be hidden when unavailable for both plans"
+        );
     }
 }

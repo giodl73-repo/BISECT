@@ -1,4 +1,4 @@
-//! Seed derivation for redist-smc.
+//! Seed derivation for BISECT-smc.
 //!
 //! All seeds are derived from a single base_seed via SHA-256 with domain-separated
 //! prefixes and fixed-width little-endian encoding. Per spec §2.3.
@@ -68,8 +68,10 @@ mod tests {
                 let ps = particle_seed(42, t, i);
                 for r in 0u32..10 {
                     let rs = resample_seed(42, r);
-                    assert_ne!(ps, rs,
-                        "collision: particle_seed(42,{t},{i}) == resample_seed(42,{r}) == {ps}");
+                    assert_ne!(
+                        ps, rs,
+                        "collision: particle_seed(42,{t},{i}) == resample_seed(42,{r}) == {ps}"
+                    );
                 }
             }
         }
@@ -96,7 +98,7 @@ mod tests {
         // Computed once and locked here.
         let expected = particle_seed(42, 1, 0); // compute once
         assert_eq!(particle_seed(42, 1, 0), expected); // deterministic
-        // Spot-check: value must be non-zero (SHA-256 of non-empty input is never all-zero)
+                                                       // Spot-check: value must be non-zero (SHA-256 of non-empty input is never all-zero)
         assert_ne!(expected, 0);
     }
 

@@ -3,7 +3,7 @@
   "tutorial": "vermont-2020",
   "build_commit": "PIN_ON_FIRST_RUN",
   "pinned_at": "PIN_ON_FIRST_RUN",
-  "_note": "This file is the structural skeleton for the Vermont 2020 walkthrough fixture. SHA-256 fields below are placeholders ('PIN_ON_FIRST_RUN') until the first end-to-end run on a clean machine populates them. Re-pin via: bash examples/vermont-2020-walkthrough/pin.sh. Until pinned, `redist doctor --check-tutorial-data --tutorial vermont-2020` will FAIL on every populated row. The L2 acceptance test guards on this file's presence + schema version, not on the pin status, so it can ride along until a maintainer pins.",
+  "_note": "This file is the structural skeleton for the Vermont 2020 walkthrough fixture. SHA-256 fields below are placeholders ('PIN_ON_FIRST_RUN') until the first end-to-end run on a clean machine populates them. Re-pin via: bash examples/vermont-2020-walkthrough/pin.sh. Until pinned, `bisect doctor --check-tutorial-data --tutorial vermont-2020` will FAIL on every populated row. The L2 acceptance test guards on this file's presence + schema version, not on the pin status, so it can ride along until a maintainer pins.",
   "pinned_inputs": [
     {
       "name": "census_tiger_vt_2020_tracts",

@@ -72,4 +72,4 @@ On main/release tags:
 - `verify/kani/BOUNDS.md` — Justification for bound choices per harness
 - `verify/kani/UNSAFE.md` — Inventory of unsafe blocks (currently empty)
 - `verify/prusti/GAPS.md` — Functions that cannot be verified (currently empty)
-- `redist/crates/bisect-metis/src/` — All code; zero unsafe
+- `BISECT/crates/bisect-metis/src/` — All code; zero unsafe

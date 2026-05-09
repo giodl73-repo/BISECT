@@ -2,7 +2,7 @@
 //!
 //! Produces:
 //! - `bloc_voting.json` — schema `bloc-voting v1`, validates against
-//!   `redist-analysis/schemas/bloc_voting.schema.json`.
+//!   `BISECT-analysis/schemas/bloc_voting.schema.json`.
 //! - `bloc_voting_summary.md` — plain-English [DRAFT] summary with
 //!   ecology caveat, robustness table, and the anchor-4 caveat injection.
 //!
@@ -139,11 +139,7 @@ pub fn build_bloc_voting_json(
     family: &BlocVotingFamilyResult,
     ctx: &WriteContext<'_>,
 ) -> BlocVotingJson {
-    let n_precincts = family
-        .results
-        .first()
-        .map(|r| r.fit.n)
-        .unwrap_or(0);
+    let n_precincts = family.results.first().map(|r| r.fit.n).unwrap_or(0);
     let n_clusters = family
         .results
         .first()
@@ -249,10 +245,7 @@ pub fn write_bloc_voting_outputs(
     std::fs::create_dir_all(analysis_dir)?;
     write_atomic_json(analysis_dir.join("bloc_voting.json").as_path(), json)?;
     let md = render_summary_md(json);
-    write_atomic_str(
-        analysis_dir.join("bloc_voting_summary.md").as_path(),
-        &md,
-    )?;
+    write_atomic_str(analysis_dir.join("bloc_voting_summary.md").as_path(), &md)?;
     Ok(())
 }
 
@@ -308,7 +301,10 @@ pub fn render_summary_md(json: &BlocVotingJson) -> String {
         ));
     }
     s.push('\n');
-    if !json.race_of_candidate_provenance.annotations_independently_verified {
+    if !json
+        .race_of_candidate_provenance
+        .annotations_independently_verified
+    {
         s.push_str(
             "**[CAVEAT - annotations not independently verified]** at least one row \
              carries `independently_verified=false`. Headline numbers must be \
@@ -331,9 +327,14 @@ pub fn render_summary_md(json: &BlocVotingJson) -> String {
             .get("pct_dem_baseline")
             .cloned()
             .unwrap_or_else(Coef::new_unfit_public);
-        s.push_str(&format!("- **specification**: {}\n", c.regression.specification));
-        s.push_str(&format!("- **n_precincts**: {}, n_clusters: {}, R^2: {:.4}\n",
-            c.regression.n_precincts, c.regression.n_clusters, c.regression.r_squared));
+        s.push_str(&format!(
+            "- **specification**: {}\n",
+            c.regression.specification
+        ));
+        s.push_str(&format!(
+            "- **n_precincts**: {}, n_clusters: {}, R^2: {:.4}\n",
+            c.regression.n_precincts, c.regression.n_clusters, c.regression.r_squared
+        ));
         s.push_str(&format!(
             "- **diagnostics**: VIF(pct_minority|pct_dem_baseline) = {:.3} (underpowered={}); naive-vs-cluster CI diverged: {}\n",
             c.regression.diagnostics.vif_pct_minority_vs_baseline,
@@ -357,8 +358,7 @@ pub fn render_summary_md(json: &BlocVotingJson) -> String {
         ));
         s.push_str(&format!(
             "Race coefficient range across variants: [{:.4}, {:.4}]\n",
-            c.robustness_check.race_coefficient_min,
-            c.robustness_check.race_coefficient_max
+            c.robustness_check.race_coefficient_min, c.robustness_check.race_coefficient_max
         ));
         s.push_str(&format!(
             "**Significant under ALL variants (Holm-corrected p < alpha)**: {}\n\n",
@@ -404,7 +404,9 @@ impl Coef {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::bloc_voting::{run_bloc_voting_family, variants, BlocVotingConfig, BlocVotingTest, Precinct};
+    use crate::bloc_voting::{
+        run_bloc_voting_family, variants, BlocVotingConfig, BlocVotingTest, Precinct,
+    };
 
     fn synthetic_precincts(n: usize, beta_min: f64, seed: u64) -> Vec<Precinct> {
         use rand::rngs::SmallRng;
@@ -432,7 +434,8 @@ mod tests {
         RaceOfCandidateProvenance {
             schema_version: "race-of-candidate v1".into(),
             source_file: "test.csv".into(),
-            source_sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
+            source_sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+                .into(),
             annotations_independently_verified: true,
             curators: vec![],
             attestation_documents: vec![],
@@ -549,9 +552,16 @@ mod tests {
         let prov = fixture_provenance();
         let pblock = fixture_provenance_block();
         let ctx = WriteContext {
-            state: "VT", year: "2020", election: "x", party: "DEM", method: "wls",
-            minority_group: "black", alpha: 0.05, bootstrap_samples: 30,
-            provenance: &pblock, race_provenance: &prov,
+            state: "VT",
+            year: "2020",
+            election: "x",
+            party: "DEM",
+            method: "wls",
+            minority_group: "black",
+            alpha: 0.05,
+            bootstrap_samples: 30,
+            provenance: &pblock,
+            race_provenance: &prov,
         };
         let json = build_bloc_voting_json(&family, &ctx);
         let md = render_summary_md(&json);
@@ -587,8 +597,14 @@ mod tests {
         let family = run_bloc_voting_family(&tests, &cfg).unwrap();
         let pblock = fixture_provenance_block();
         let ctx = WriteContext {
-            state: "VT", year: "2020", election: "x", party: "DEM", method: "wls",
-            minority_group: "black", alpha: 0.05, bootstrap_samples: 30,
+            state: "VT",
+            year: "2020",
+            election: "x",
+            party: "DEM",
+            method: "wls",
+            minority_group: "black",
+            alpha: 0.05,
+            bootstrap_samples: 30,
             provenance: &pblock,
             race_provenance: cfg.provenance.as_ref().unwrap(),
         };
@@ -617,9 +633,16 @@ mod tests {
         let prov = fixture_provenance();
         let pblock = fixture_provenance_block();
         let ctx = WriteContext {
-            state: "VT", year: "2020", election: "x", party: "DEM", method: "wls",
-            minority_group: "black", alpha: 0.05, bootstrap_samples: 20,
-            provenance: &pblock, race_provenance: &prov,
+            state: "VT",
+            year: "2020",
+            election: "x",
+            party: "DEM",
+            method: "wls",
+            minority_group: "black",
+            alpha: 0.05,
+            bootstrap_samples: 20,
+            provenance: &pblock,
+            race_provenance: &prov,
         };
         let json = build_bloc_voting_json(&family, &ctx);
         write_bloc_voting_outputs(&json, tmp.path()).expect("write");
@@ -653,13 +676,23 @@ mod tests {
         let prov = fixture_provenance();
         let pblock = fixture_provenance_block();
         let ctx = WriteContext {
-            state: "VT", year: "2020", election: "x", party: "DEM", method: "wls",
-            minority_group: "black", alpha: 0.05, bootstrap_samples: 20,
-            provenance: &pblock, race_provenance: &prov,
+            state: "VT",
+            year: "2020",
+            election: "x",
+            party: "DEM",
+            method: "wls",
+            minority_group: "black",
+            alpha: 0.05,
+            bootstrap_samples: 20,
+            provenance: &pblock,
+            race_provenance: &prov,
         };
         let json = build_bloc_voting_json(&family, &ctx);
-        assert_eq!(json._family_detail.len(), 2,
-            "family with non-primary variants must populate _family_detail");
+        assert_eq!(
+            json._family_detail.len(),
+            2,
+            "family with non-primary variants must populate _family_detail"
+        );
     }
 
     #[test]
@@ -678,12 +711,21 @@ mod tests {
         let prov = fixture_provenance();
         let pblock = fixture_provenance_block();
         let ctx = WriteContext {
-            state: "VT", year: "2020", election: "x", party: "DEM", method: "wls",
-            minority_group: "black", alpha: 0.05, bootstrap_samples: 20,
-            provenance: &pblock, race_provenance: &prov,
+            state: "VT",
+            year: "2020",
+            election: "x",
+            party: "DEM",
+            method: "wls",
+            minority_group: "black",
+            alpha: 0.05,
+            bootstrap_samples: 20,
+            provenance: &pblock,
+            race_provenance: &prov,
         };
         let json = build_bloc_voting_json(&family, &ctx);
-        assert!(json._family_detail.is_empty(),
-            "primary-only family must have empty _family_detail");
+        assert!(
+            json._family_detail.is_empty(),
+            "primary-only family must have empty _family_detail"
+        );
     }
 }

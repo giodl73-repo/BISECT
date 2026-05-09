@@ -1,16 +1,22 @@
-//! L1 integration tests for redist-smc.
+//! L1 integration tests for BISECT-smc.
 //! All tests use synthetic graphs and run unconditionally (no #[ignore]).
 //! Per spec §7 L1 invariants.
 
 use bisect_smc::{run_smc, SmcConfig};
 
 fn path_adj(n: usize) -> Vec<Vec<usize>> {
-    (0..n).map(|i| {
-        let mut nb = Vec::new();
-        if i > 0 { nb.push(i - 1); }
-        if i < n - 1 { nb.push(i + 1); }
-        nb
-    }).collect()
+    (0..n)
+        .map(|i| {
+            let mut nb = Vec::new();
+            if i > 0 {
+                nb.push(i - 1);
+            }
+            if i < n - 1 {
+                nb.push(i + 1);
+            }
+            nb
+        })
+        .collect()
 }
 
 fn grid_adj(rows: usize, cols: usize) -> Vec<Vec<usize>> {
@@ -19,15 +25,23 @@ fn grid_adj(rows: usize, cols: usize) -> Vec<Vec<usize>> {
     for r in 0..rows {
         for c in 0..cols {
             let v = r * cols + c;
-            if c + 1 < cols { adj[v].push(v + 1); adj[v + 1].push(v); }
-            if r + 1 < rows { adj[v].push(v + cols); adj[v + cols].push(v); }
+            if c + 1 < cols {
+                adj[v].push(v + 1);
+                adj[v + 1].push(v);
+            }
+            if r + 1 < rows {
+                adj[v].push(v + cols);
+                adj[v + cols].push(v);
+            }
         }
     }
     adj
 }
 
 fn is_connected(tracts: &[usize], adj: &[Vec<usize>]) -> bool {
-    if tracts.is_empty() { return true; }
+    if tracts.is_empty() {
+        return true;
+    }
     let set: std::collections::HashSet<usize> = tracts.iter().copied().collect();
     let mut visited = std::collections::HashSet::new();
     let mut queue = std::collections::VecDeque::new();
@@ -50,7 +64,12 @@ fn is_connected(tracts: &[usize], adj: &[Vec<usize>]) -> bool {
 fn l1_path4_k2_n100_weights_sum_1() {
     let adj = path_adj(4);
     let pop = vec![100i64; 4];
-    let cfg = SmcConfig { n_particles: 100, base_seed: 42, pop_tolerance: 0.2, ..Default::default() };
+    let cfg = SmcConfig {
+        n_particles: 100,
+        base_seed: 42,
+        pop_tolerance: 0.2,
+        ..Default::default()
+    };
     let result = run_smc(&adj, &pop, 2, cfg).unwrap();
 
     let sum: f64 = result.weights.iter().sum();
@@ -61,7 +80,12 @@ fn l1_path4_k2_n100_weights_sum_1() {
 fn l1_path4_k2_n100_all_plans_valid() {
     let adj = path_adj(4);
     let pop = vec![100i64; 4];
-    let cfg = SmcConfig { n_particles: 100, base_seed: 42, pop_tolerance: 0.2, ..Default::default() };
+    let cfg = SmcConfig {
+        n_particles: 100,
+        base_seed: 42,
+        pop_tolerance: 0.2,
+        ..Default::default()
+    };
     let result = run_smc(&adj, &pop, 2, cfg).unwrap();
 
     for (idx, plan) in result.plans.iter().enumerate() {
@@ -80,9 +104,17 @@ fn l1_path4_k2_n100_all_plans_valid() {
 fn l1_path4_k2_n100_no_zero_weight_plans() {
     let adj = path_adj(4);
     let pop = vec![100i64; 4];
-    let cfg = SmcConfig { n_particles: 100, base_seed: 42, pop_tolerance: 0.2, ..Default::default() };
+    let cfg = SmcConfig {
+        n_particles: 100,
+        base_seed: 42,
+        pop_tolerance: 0.2,
+        ..Default::default()
+    };
     let result = run_smc(&adj, &pop, 2, cfg).unwrap();
-    assert!(result.weights.iter().all(|&w| w >= 0.0), "all weights non-negative");
+    assert!(
+        result.weights.iter().all(|&w| w >= 0.0),
+        "all weights non-negative"
+    );
 }
 
 // ── L1.2: Determinism ─────────────────────────────────────────────────────────
@@ -91,13 +123,21 @@ fn l1_path4_k2_n100_no_zero_weight_plans() {
 fn l1_determinism_same_seed_identical_output() {
     let adj = path_adj(8);
     let pop = vec![100i64; 8];
-    let cfg = SmcConfig { n_particles: 30, base_seed: 99, pop_tolerance: 0.3, ..Default::default() };
+    let cfg = SmcConfig {
+        n_particles: 30,
+        base_seed: 99,
+        pop_tolerance: 0.3,
+        ..Default::default()
+    };
     let r1 = run_smc(&adj, &pop, 2, cfg.clone()).unwrap();
     let r2 = run_smc(&adj, &pop, 2, cfg).unwrap();
 
     assert_eq!(r1.plans, r2.plans, "plans must be identical");
     assert_eq!(r1.weights, r2.weights, "weights must be identical");
-    assert_eq!(r1.resample_count, r2.resample_count, "resample_count must match");
+    assert_eq!(
+        r1.resample_count, r2.resample_count,
+        "resample_count must match"
+    );
     assert_eq!(r1.index_maps, r2.index_maps, "index_maps must match");
 }
 
@@ -107,11 +147,17 @@ fn l1_determinism_same_seed_identical_output() {
 fn l1_single_node_k1_trivial() {
     let adj = vec![vec![]];
     let pop = vec![1000i64];
-    let cfg = SmcConfig { n_particles: 10, base_seed: 0, ..Default::default() };
+    let cfg = SmcConfig {
+        n_particles: 10,
+        base_seed: 0,
+        ..Default::default()
+    };
     let result = run_smc(&adj, &pop, 1, cfg).unwrap();
 
-    assert!(result.plans.iter().all(|p| p == &[1u32]),
-        "k=1: all plans are [1]");
+    assert!(
+        result.plans.iter().all(|p| p == &[1u32]),
+        "k=1: all plans are [1]"
+    );
     let wsum: f64 = result.weights.iter().sum();
     assert!((wsum - 1.0).abs() < 1e-9, "k=1 weights sum 1.0: {wsum}");
     assert_eq!(result.resample_count, 0);
@@ -125,7 +171,12 @@ fn l1_population_balance_within_tolerance() {
     let adj = path_adj(6);
     let pop = vec![100i64; 6]; // total=600, ideal=300 per district
     let pop_tol = 0.2f64; // ±20% = ±60 pop per district
-    let cfg = SmcConfig { n_particles: 50, base_seed: 7, pop_tolerance: pop_tol, ..Default::default() };
+    let cfg = SmcConfig {
+        n_particles: 50,
+        base_seed: 7,
+        pop_tolerance: pop_tol,
+        ..Default::default()
+    };
     let result = run_smc(&adj, &pop, 2, cfg).unwrap();
 
     let ideal = 300.0f64;
@@ -133,10 +184,14 @@ fn l1_population_balance_within_tolerance() {
     for (idx, plan) in result.plans.iter().enumerate() {
         let pop_d1: i64 = (0..6).filter(|&i| plan[i] == 1).map(|i| pop[i]).sum();
         let pop_d2: i64 = (0..6).filter(|&i| plan[i] == 2).map(|i| pop[i]).sum();
-        assert!((pop_d1 as f64 - ideal).abs() <= tol_abs,
-            "plan {idx}: district 1 pop {pop_d1} outside ±{tol_abs} of {ideal}");
-        assert!((pop_d2 as f64 - ideal).abs() <= tol_abs,
-            "plan {idx}: district 2 pop {pop_d2} outside ±{tol_abs} of {ideal}");
+        assert!(
+            (pop_d1 as f64 - ideal).abs() <= tol_abs,
+            "plan {idx}: district 1 pop {pop_d1} outside ±{tol_abs} of {ideal}"
+        );
+        assert!(
+            (pop_d2 as f64 - ideal).abs() <= tol_abs,
+            "plan {idx}: district 2 pop {pop_d2} outside ±{tol_abs} of {ideal}"
+        );
     }
 }
 
@@ -146,7 +201,12 @@ fn l1_population_balance_within_tolerance() {
 fn l1_district_ids_in_range() {
     let adj = grid_adj(3, 3);
     let pop = vec![100i64; 9];
-    let cfg = SmcConfig { n_particles: 40, base_seed: 3, pop_tolerance: 0.4, ..Default::default() };
+    let cfg = SmcConfig {
+        n_particles: 40,
+        base_seed: 3,
+        pop_tolerance: 0.4,
+        ..Default::default()
+    };
     let result = run_smc(&adj, &pop, 3, cfg).unwrap();
 
     for (idx, plan) in result.plans.iter().enumerate() {
@@ -168,10 +228,19 @@ fn l1_district_ids_in_range() {
 fn l1_ess_trace_length_k_minus_1() {
     let adj = path_adj(6);
     let pop = vec![100i64; 6];
-    let cfg = SmcConfig { n_particles: 20, base_seed: 1, pop_tolerance: 0.3, ..Default::default() };
+    let cfg = SmcConfig {
+        n_particles: 20,
+        base_seed: 1,
+        pop_tolerance: 0.3,
+        ..Default::default()
+    };
     let result = run_smc(&adj, &pop, 3, cfg).unwrap();
-    assert_eq!(result.ess_trace.len(), 2,
-        "k=3: ESS trace length = k-1 = 2, got {}", result.ess_trace.len());
+    assert_eq!(
+        result.ess_trace.len(),
+        2,
+        "k=3: ESS trace length = k-1 = 2, got {}",
+        result.ess_trace.len()
+    );
 }
 
 // ── L1.7: index_map bounds ────────────────────────────────────────────────────
@@ -182,7 +251,8 @@ fn l1_index_map_bounds() {
     let adj = path_adj(8);
     let pop = vec![100i64; 8];
     let cfg = SmcConfig {
-        n_particles: 20, base_seed: 5,
+        n_particles: 20,
+        base_seed: 5,
         pop_tolerance: 0.3,
         resample_threshold: 0.99, // resample very aggressively
         ..Default::default()
@@ -190,7 +260,11 @@ fn l1_index_map_bounds() {
     let result = run_smc(&adj, &pop, 2, cfg).unwrap();
 
     for (r, imap) in result.index_maps.iter().enumerate() {
-        assert_eq!(imap.len(), 20, "resample {r}: index_map length must be n_particles");
+        assert_eq!(
+            imap.len(),
+            20,
+            "resample {r}: index_map length must be n_particles"
+        );
         for &i in imap {
             assert!(i < 20, "resample {r}: index {i} out of [0,20)");
         }
@@ -205,10 +279,18 @@ fn l1_ndjson_output_roundtrip() {
 
     let adj = path_adj(4);
     let pop = vec![100i64; 4];
-    let cfg = SmcConfig { n_particles: 5, base_seed: 42, pop_tolerance: 0.2, ..Default::default() };
+    let cfg = SmcConfig {
+        n_particles: 5,
+        base_seed: 42,
+        pop_tolerance: 0.2,
+        ..Default::default()
+    };
     let result = run_smc(&adj, &pop, 2, cfg).unwrap();
 
-    let write_cfg = WriteConfig { resample_threshold: 0.5, pop_tolerance: 0.2 };
+    let write_cfg = WriteConfig {
+        resample_threshold: 0.5,
+        pop_tolerance: 0.2,
+    };
     let mut buf = Vec::new();
     result.write_ndjson(&mut buf, &write_cfg).unwrap();
     let s = String::from_utf8(buf).unwrap();
@@ -217,8 +299,8 @@ fn l1_ndjson_output_roundtrip() {
     assert_eq!(s.lines().count(), 6, "5 particles + 1 metadata line");
 
     // Metadata is parseable and has correct fields
-    let meta = bisect_smc::SmcResult::read_metadata_from_ndjson(&s)
-        .expect("metadata must be present");
+    let meta =
+        bisect_smc::SmcResult::read_metadata_from_ndjson(&s).expect("metadata must be present");
     assert_eq!(meta.base_seed, 42);
     assert_eq!(meta.n_particles, 5);
     assert_eq!(meta.file_sha256.len(), 64, "SHA-256 = 64 hex chars");

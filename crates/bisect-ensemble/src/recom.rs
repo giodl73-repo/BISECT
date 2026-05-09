@@ -13,10 +13,10 @@
 //! The "full tree-resample on balance failure" approach matches GerryChain's
 //! stationary distribution: every balanced spanning-tree cut is equally likely.
 
-use std::collections::{HashMap, HashSet};
-use rand::Rng;
-use rand::seq::SliceRandom;
 use crate::spanning::{random_spanning_tree, SpanningTree};
+use rand::seq::SliceRandom;
+use rand::Rng;
+use std::collections::{HashMap, HashSet};
 
 /// Maximum number of spanning tree resamples before pair reselection.
 const MAX_TREE_RESAMPLES: usize = 10;
@@ -47,6 +47,7 @@ pub struct RecomChain {
     pub steps_taken: u64,
     // Pre-computed ideal population.
     ideal_pop: f64,
+    target_pops: Vec<f64>,
     // Total edges (for cut_fraction).
     total_edges: usize,
 }
@@ -63,8 +64,53 @@ impl RecomChain {
         assert_eq!(pop.len(), n);
         assert_eq!(assignment.len(), n);
         let ideal_pop = pop.iter().sum::<i64>() as f64 / k as f64;
+        let target_pops = vec![ideal_pop; k as usize];
         let total_edges = adj.iter().map(|nb| nb.len()).sum::<usize>() / 2;
-        Self { adj, pop, assignment, k, pop_tolerance, steps_taken: 0, ideal_pop, total_edges }
+        Self {
+            adj,
+            pop,
+            assignment,
+            k,
+            pop_tolerance,
+            steps_taken: 0,
+            ideal_pop,
+            target_pops,
+            total_edges,
+        }
+    }
+
+    pub fn new_with_target_pops(
+        adj: Vec<Vec<u32>>,
+        pop: Vec<i64>,
+        assignment: Vec<u32>,
+        target_pops: Vec<f64>,
+        pop_tolerance: f64,
+    ) -> Self {
+        let n = adj.len();
+        assert_eq!(pop.len(), n);
+        assert_eq!(assignment.len(), n);
+        assert!(!target_pops.is_empty());
+        let k = target_pops.len() as u32;
+        let ideal_pop = pop.iter().sum::<i64>() as f64 / k as f64;
+        let total_edges = adj.iter().map(|nb| nb.len()).sum::<usize>() / 2;
+        Self {
+            adj,
+            pop,
+            assignment,
+            k,
+            pop_tolerance,
+            steps_taken: 0,
+            ideal_pop,
+            target_pops,
+            total_edges,
+        }
+    }
+
+    fn target_pop(&self, district: u32) -> f64 {
+        self.target_pops
+            .get(district.saturating_sub(1) as usize)
+            .copied()
+            .unwrap_or(self.ideal_pop)
     }
 
     /// Run one ReCom step. Returns a `StepRecord` with outcome metrics.
@@ -89,7 +135,9 @@ impl RecomChain {
     /// Returns true if the assignment was updated.
     fn try_step<R: Rng>(&mut self, rng: &mut R) -> bool {
         let pairs = self.adjacent_pairs();
-        if pairs.is_empty() { return false; }
+        if pairs.is_empty() {
+            return false;
+        }
 
         // Shuffle pairs for random pair reselection.
         let mut pair_order: Vec<usize> = (0..pairs.len()).collect();
@@ -99,38 +147,52 @@ impl RecomChain {
             let (d_i, d_j) = pairs[pair_idx];
 
             // Extract region: all tracts in d_i ∪ d_j.
-            let region: Vec<u32> = self.assignment.iter().enumerate()
+            let region: Vec<u32> = self
+                .assignment
+                .iter()
+                .enumerate()
                 .filter(|(_, &d)| d == d_i || d == d_j)
                 .map(|(v, _)| v as u32)
                 .collect();
 
-            if region.len() < 2 { continue; }
+            if region.len() < 2 {
+                continue;
+            }
 
             // Build local subgraph adjacency (local indices 0..region.len()).
-            let local_idx: HashMap<u32, u32> = region.iter()
+            let local_idx: HashMap<u32, u32> = region
+                .iter()
                 .enumerate()
                 .map(|(local, &global)| (global, local as u32))
                 .collect();
 
-            let local_adj: Vec<Vec<u32>> = region.iter().map(|&g| {
-                self.adj[g as usize].iter()
-                    .filter_map(|&nb| local_idx.get(&nb).copied())
-                    .collect()
-            }).collect();
+            let local_adj: Vec<Vec<u32>> = region
+                .iter()
+                .map(|&g| {
+                    self.adj[g as usize]
+                        .iter()
+                        .filter_map(|&nb| local_idx.get(&nb).copied())
+                        .collect()
+                })
+                .collect();
 
             // Try up to MAX_TREE_RESAMPLES spanning trees.
             for _ in 0..MAX_TREE_RESAMPLES {
                 let tree = random_spanning_tree(&local_adj, rng);
 
                 // Collect all balanced cuts.
-                let balanced_cuts = self.balanced_cuts(&tree, &region);
+                let balanced_cuts = self.balanced_cuts(&tree, &region, d_i, d_j);
 
                 if !balanced_cuts.is_empty() {
                     // Pick one uniformly at random and apply it.
                     let &(local_a, local_b) = balanced_cuts.choose(rng).unwrap();
                     let (comp_a, comp_b) = tree.split_on(local_a, local_b);
-                    for &local in &comp_a { self.assignment[region[local as usize] as usize] = d_i; }
-                    for &local in &comp_b { self.assignment[region[local as usize] as usize] = d_j; }
+                    for &local in &comp_a {
+                        self.assignment[region[local as usize] as usize] = d_i;
+                    }
+                    for &local in &comp_b {
+                        self.assignment[region[local as usize] as usize] = d_j;
+                    }
                     return true;
                 }
                 // No balanced cut in this tree — resample.
@@ -141,18 +203,39 @@ impl RecomChain {
     }
 
     /// Find all tree edges whose removal produces two population-balanced components.
-    fn balanced_cuts(&self, tree: &SpanningTree, region: &[u32]) -> Vec<(u32, u32)> {
+    fn balanced_cuts(
+        &self,
+        tree: &SpanningTree,
+        region: &[u32],
+        d_i: u32,
+        d_j: u32,
+    ) -> Vec<(u32, u32)> {
         let mut balanced = Vec::new();
         let total_pop: i64 = region.iter().map(|&g| self.pop[g as usize]).sum();
 
         for (a, b) in tree.edges() {
-            let (comp_a, _) = tree.split_on(a, b);
-            let pop_a: i64 = comp_a.iter().map(|&local| self.pop[region[local as usize] as usize]).sum();
+            let (comp_a, comp_b) = tree.split_on(a, b);
+            let pop_a: i64 = comp_a
+                .iter()
+                .map(|&local| self.pop[region[local as usize] as usize])
+                .sum();
             let pop_b = total_pop - pop_a;
-            let dev_a = (pop_a as f64 - self.ideal_pop).abs() / self.ideal_pop;
-            let dev_b = (pop_b as f64 - self.ideal_pop).abs() / self.ideal_pop;
+            if comp_a.is_empty() || comp_b.is_empty() {
+                continue;
+            }
+            let target_a = self.target_pop(d_i);
+            let target_b = self.target_pop(d_j);
+            let dev_a = (pop_a as f64 - target_a).abs() / target_a;
+            let dev_b = (pop_b as f64 - target_b).abs() / target_b;
             if dev_a <= self.pop_tolerance && dev_b <= self.pop_tolerance {
                 balanced.push((a, b));
+                continue;
+            }
+
+            let rev_dev_a = (pop_a as f64 - target_b).abs() / target_b;
+            let rev_dev_b = (pop_b as f64 - target_a).abs() / target_a;
+            if rev_dev_a <= self.pop_tolerance && rev_dev_b <= self.pop_tolerance {
+                balanced.push((b, a));
             }
         }
         balanced
@@ -176,8 +259,12 @@ impl RecomChain {
         for (v, &d) in self.assignment.iter().enumerate() {
             *dist_pops.entry(d).or_default() += self.pop[v];
         }
-        dist_pops.values()
-            .map(|&p| (p as f64 - self.ideal_pop).abs() / self.ideal_pop)
+        dist_pops
+            .iter()
+            .map(|(&district, &p)| {
+                let target = self.target_pop(district);
+                (p as f64 - target).abs() / target
+            })
             .fold(0.0_f64, f64::max)
     }
 
@@ -203,22 +290,22 @@ impl RecomChain {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand::SeedableRng;
     use rand::rngs::SmallRng;
+    use rand::SeedableRng;
 
     /// Build a 4×2 grid assigned to 2 districts (left=1, right=2).
     fn grid_chain() -> RecomChain {
         // 8 nodes: 0-3 in district 1, 4-7 in district 2
         // Layout: 0-1-2-3 / 4-5-6-7 (rows), connected left-right
         let adj = vec![
-            vec![1u32, 4],    // 0
-            vec![0, 2, 5],    // 1
-            vec![1, 3, 6],    // 2
-            vec![2, 7],       // 3
-            vec![0, 5],       // 4
-            vec![4, 1, 6],    // 5
-            vec![5, 2, 7],    // 6
-            vec![6, 3],       // 7
+            vec![1u32, 4], // 0
+            vec![0, 2, 5], // 1
+            vec![1, 3, 6], // 2
+            vec![2, 7],    // 3
+            vec![0, 5],    // 4
+            vec![4, 1, 6], // 5
+            vec![5, 2, 7], // 6
+            vec![6, 3],    // 7
         ];
         let pop = vec![1000i64; 8];
         let assignment = vec![1, 1, 1, 1, 2, 2, 2, 2];
@@ -243,7 +330,10 @@ mod tests {
         for _ in 0..50 {
             chain.step(&mut rng);
             let dev = chain.max_pop_deviation();
-            assert!(dev <= 0.06, "population deviation {dev:.4} exceeds tolerance");
+            assert!(
+                dev <= 0.06,
+                "population deviation {dev:.4} exceeds tolerance"
+            );
         }
     }
 
@@ -261,24 +351,33 @@ mod tests {
     fn adjacent_pairs_finds_boundary() {
         let chain = grid_chain();
         let pairs = chain.adjacent_pairs();
-        assert!(!pairs.is_empty(), "grid with two districts must have adjacent pairs");
-        assert!(pairs.contains(&(1, 2)), "districts 1 and 2 share a boundary");
+        assert!(
+            !pairs.is_empty(),
+            "grid with two districts must have adjacent pairs"
+        );
+        assert!(
+            pairs.contains(&(1, 2)),
+            "districts 1 and 2 share a boundary"
+        );
     }
 
     // ── Additional L0 coverage ────────────────────────────────────────────────
 
     #[test]
     fn single_district_no_adjacent_pairs() {
-        let adj = vec![vec![1u32,2], vec![0,2], vec![0,1]];
+        let adj = vec![vec![1u32, 2], vec![0, 2], vec![0, 1]];
         let pop = vec![1000i64; 3];
         let assignment = vec![1u32, 1, 1]; // all same district
         let chain = RecomChain::new(adj, pop, assignment, 1, 0.05);
-        assert!(chain.adjacent_pairs().is_empty(), "no pairs when all in one district");
+        assert!(
+            chain.adjacent_pairs().is_empty(),
+            "no pairs when all in one district"
+        );
     }
 
     #[test]
     fn step_returns_false_when_no_adjacent_pairs() {
-        let adj = vec![vec![1u32,2], vec![0,2], vec![0,1]];
+        let adj = vec![vec![1u32, 2], vec![0, 2], vec![0, 1]];
         let pop = vec![1000i64; 3];
         let assignment = vec![1u32, 1, 1];
         let mut chain = RecomChain::new(adj, pop, assignment, 1, 0.05);
@@ -290,12 +389,18 @@ mod tests {
     #[test]
     fn k3_districts_preserved_over_many_steps() {
         // 6-node path split into 3 districts: [0,1], [2,3], [4,5]
-        let adj: Vec<Vec<u32>> = (0..6usize).map(|i| {
-            let mut nb = vec![];
-            if i > 0 { nb.push((i-1) as u32); }
-            if i < 5 { nb.push((i+1) as u32); }
-            nb
-        }).collect();
+        let adj: Vec<Vec<u32>> = (0..6usize)
+            .map(|i| {
+                let mut nb = vec![];
+                if i > 0 {
+                    nb.push((i - 1) as u32);
+                }
+                if i < 5 {
+                    nb.push((i + 1) as u32);
+                }
+                nb
+            })
+            .collect();
         let pop = vec![1000i64; 6];
         let assignment = vec![1u32, 1, 2, 2, 3, 3];
         let mut chain = RecomChain::new(adj, pop, assignment, 3, 0.05);
@@ -317,7 +422,10 @@ mod tests {
         for _ in 0..20 {
             let rec = chain.step(&mut rng);
             if !rec.accepted {
-                assert_eq!(chain.assignment, before, "rejected step must not change assignment");
+                assert_eq!(
+                    chain.assignment, before,
+                    "rejected step must not change assignment"
+                );
                 return; // found a rejection, test passes
             }
         }
@@ -350,7 +458,10 @@ mod tests {
         let assignment = vec![1u32, 2];
         let chain = RecomChain::new(adj, pop, assignment, 2, 0.01);
         let dev = chain.max_pop_deviation();
-        assert!(dev < 1e-10, "perfectly balanced partition has zero deviation");
+        assert!(
+            dev < 1e-10,
+            "perfectly balanced partition has zero deviation"
+        );
     }
 
     #[test]
@@ -381,7 +492,10 @@ mod tests {
         for _ in 0..100 {
             chain.step(&mut rng);
             let dev = chain.max_pop_deviation();
-            assert!(dev <= 0.06, "deviation {dev:.4} must not exceed tolerance+epsilon");
+            assert!(
+                dev <= 0.06,
+                "deviation {dev:.4} must not exceed tolerance+epsilon"
+            );
         }
     }
 
@@ -394,13 +508,47 @@ mod tests {
     }
 
     #[test]
+    fn unequal_targets_drive_max_population_deviation() {
+        let adj = vec![vec![1u32], vec![0]];
+        let pop = vec![70i64, 30];
+        let assignment = vec![1u32, 2];
+        let equal = RecomChain::new(adj.clone(), pop.clone(), assignment.clone(), 2, 0.01);
+        assert!((equal.max_pop_deviation() - 0.4).abs() < 1e-9);
+
+        let targeted =
+            RecomChain::new_with_target_pops(adj, pop, assignment, vec![70.0, 30.0], 0.01);
+        assert!(targeted.max_pop_deviation() < 1e-9);
+    }
+
+    #[test]
+    fn balanced_cuts_accepts_reverse_target_orientation() {
+        let adj = vec![vec![1u32], vec![0]];
+        let pop = vec![30i64, 70];
+        let assignment = vec![1u32, 2];
+        let chain = RecomChain::new_with_target_pops(adj, pop, assignment, vec![70.0, 30.0], 0.01);
+        let tree = SpanningTree {
+            parent: vec![1, u32::MAX],
+            n: 2,
+        };
+        let cuts = chain.balanced_cuts(&tree, &[0, 1], 1, 2);
+        assert_eq!(
+            cuts,
+            vec![(1, 0)],
+            "reverse-oriented cut should be retained"
+        );
+    }
+
+    #[test]
     fn step_cut_fraction_in_range() {
         let mut chain = grid_chain();
         let mut rng = SmallRng::seed_from_u64(55);
         for _ in 0..50 {
             let rec = chain.step(&mut rng);
-            assert!(rec.cut_fraction >= 0.0 && rec.cut_fraction <= 1.0,
-                "cut_fraction {} out of range", rec.cut_fraction);
+            assert!(
+                rec.cut_fraction >= 0.0 && rec.cut_fraction <= 1.0,
+                "cut_fraction {} out of range",
+                rec.cut_fraction
+            );
         }
     }
 }

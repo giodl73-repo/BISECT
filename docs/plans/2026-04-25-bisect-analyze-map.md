@@ -1,8 +1,8 @@
-# `bisect analyze` + `redist map` — Full E2E Native Rust Plan
+# `bisect analyze` + `BISECT map` — Full E2E Native Rust Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Full end-to-end analytics and map rendering in Rust. Zero Python subprocesses. `bisect analyze` produces per-district JSON for all metrics. `redist map` renders publication-quality PNG district maps with adaptive labels, coloring, and highlighting. `bisect-map` is a new crate with an extension model matching `bisect-analysis`.
+**Goal:** Full end-to-end analytics and map rendering in Rust. Zero Python subprocesses. `bisect analyze` produces per-district JSON for all metrics. `BISECT map` renders publication-quality PNG district maps with adaptive labels, coloring, and highlighting. `bisect-map` is a new crate with an extension model matching `bisect-analysis`.
 
 **Architecture:**
 - New `bisect-map` crate: geometry dissolve → projection → SVG → PNG pipeline
@@ -77,27 +77,27 @@ This works in resvg's full SVG spec support.
 
 | File | Action |
 |------|--------|
-| `redist/crates/bisect-map/Cargo.toml` | **Create** |
-| `redist/crates/bisect-map/src/lib.rs` | **Create** |
-| `redist/crates/bisect-map/src/dissolve.rs` | **Create** — union tract polygons into district polygons |
-| `redist/crates/bisect-map/src/projection.rs` | **Create** — WGS84 bbox → SVG pixel coordinates |
-| `redist/crates/bisect-map/src/colorscheme.rs` | **Create** — categorical + choropleth palettes |
-| `redist/crates/bisect-map/src/labeler.rs` | **Create** — adaptive font size, fit check, halo SVG |
-| `redist/crates/bisect-map/src/renderer.rs` | **Create** — SVG assembly + resvg PNG output |
-| `redist/crates/bisect-map/src/map_type.rs` | **Create** — `MapSpec` trait + all map type implementations |
-| `redist/crates/bisect-map/src/rounds.rs` | **Create** — bisection round progression maps |
-| `redist/crates/bisect-map/assets/LiberationSans-Regular.ttf` | **Add** — embedded open font |
-| `redist/crates/bisect-analysis/src/analyzer.rs` | **Create** — `Analyzer` trait + `AnalyzerType` enum |
-| `redist/crates/bisect-analysis/src/demographic.rs` | **Create** |
-| `redist/crates/bisect-analysis/src/political.rs` | **Create** |
-| `redist/crates/bisect-analysis/src/urban.rs` | **Create** |
-| `redist/crates/bisect-analysis/src/summary.rs` | **Create** |
-| `redist/crates/bisect-analysis/src/lib.rs` | **Modify** — expose new modules |
-| `redist/crates/bisect-cli/src/analyze.rs` | **Create** — dispatcher |
-| `redist/crates/bisect-cli/src/map_cmd.rs` | **Create** — `redist map` dispatcher |
-| `redist/crates/bisect-cli/src/args.rs` | **Modify** — `AnalyzeArgs`, `MapArgs` |
-| `redist/crates/bisect-cli/src/main.rs` | **Modify** — wire Commands |
-| `redist/Cargo.toml` | **Modify** — add `bisect-map` to workspace |
+| `BISECT/crates/bisect-map/Cargo.toml` | **Create** |
+| `BISECT/crates/bisect-map/src/lib.rs` | **Create** |
+| `BISECT/crates/bisect-map/src/dissolve.rs` | **Create** — union tract polygons into district polygons |
+| `BISECT/crates/bisect-map/src/projection.rs` | **Create** — WGS84 bbox → SVG pixel coordinates |
+| `BISECT/crates/bisect-map/src/colorscheme.rs` | **Create** — categorical + choropleth palettes |
+| `BISECT/crates/bisect-map/src/labeler.rs` | **Create** — adaptive font size, fit check, halo SVG |
+| `BISECT/crates/bisect-map/src/renderer.rs` | **Create** — SVG assembly + resvg PNG output |
+| `BISECT/crates/bisect-map/src/map_type.rs` | **Create** — `MapSpec` trait + all map type implementations |
+| `BISECT/crates/bisect-map/src/rounds.rs` | **Create** — bisection round progression maps |
+| `BISECT/crates/bisect-map/assets/LiberationSans-Regular.ttf` | **Add** — embedded open font |
+| `BISECT/crates/bisect-analysis/src/analyzer.rs` | **Create** — `Analyzer` trait + `AnalyzerType` enum |
+| `BISECT/crates/bisect-analysis/src/demographic.rs` | **Create** |
+| `BISECT/crates/bisect-analysis/src/political.rs` | **Create** |
+| `BISECT/crates/bisect-analysis/src/urban.rs` | **Create** |
+| `BISECT/crates/bisect-analysis/src/summary.rs` | **Create** |
+| `BISECT/crates/bisect-analysis/src/lib.rs` | **Modify** — expose new modules |
+| `BISECT/crates/bisect-cli/src/analyze.rs` | **Create** — dispatcher |
+| `BISECT/crates/bisect-cli/src/map_cmd.rs` | **Create** — `BISECT map` dispatcher |
+| `BISECT/crates/bisect-cli/src/args.rs` | **Modify** — `AnalyzeArgs`, `MapArgs` |
+| `BISECT/crates/bisect-cli/src/main.rs` | **Modify** — wire Commands |
+| `BISECT/Cargo.toml` | **Modify** — add `bisect-map` to workspace |
 | `tests/unit/test_map_engine.py` | **Create** — L0/L1 PyO3-accessible tests |
 | `tests/acceptance/test_analyze_map_acceptance.py` | **Create** — L2 end-to-end |
 
@@ -105,7 +105,7 @@ This works in resvg's full SVG spec support.
 
 ## Task 1: `bisect-map` crate scaffold + projection
 
-**Files:** `redist/crates/bisect-map/Cargo.toml`, `src/lib.rs`, `src/projection.rs`
+**Files:** `BISECT/crates/bisect-map/Cargo.toml`, `src/lib.rs`, `src/projection.rs`
 
 - [ ] **Create `Cargo.toml`**
 
@@ -543,7 +543,7 @@ pub fn group_dissolve(
 
 **Files:** `src/renderer.rs`, `assets/LiberationSans-Regular.ttf`
 
-- [ ] **Download Liberation Sans Regular** (OFL licensed, ~70KB) and save to `redist/crates/bisect-map/assets/LiberationSans-Regular.ttf`
+- [ ] **Download Liberation Sans Regular** (OFL licensed, ~70KB) and save to `BISECT/crates/bisect-map/assets/LiberationSans-Regular.ttf`
 
 - [ ] **L0: Write failing renderer tests**
 
@@ -816,7 +816,7 @@ fn test_summary_partial_inputs_dont_panic() {
 
 ---
 
-## Task 8: `bisect analyze` + `redist map` CLI wiring
+## Task 8: `bisect analyze` + `BISECT map` CLI wiring
 
 **Files:** `bisect-cli/src/analyze.rs`, `map_cmd.rs`, `args.rs`, `main.rs`
 
@@ -850,7 +850,7 @@ fn test_map_types_parse() {
 - [ ] **Implement `map_cmd.rs` dispatcher** — loads tract geometries from TIGER, loads assignments, dissolves, projects, renders, writes PNGs
 - [ ] **Wire into `main.rs`**
 - [ ] **Run:** `cargo build --release` — expect success
-- [ ] **Commit:** `git commit -m "feat(cli): bisect analyze + redist map subcommands wired"`
+- [ ] **Commit:** `git commit -m "feat(cli): bisect analyze + BISECT map subcommands wired"`
 
 ---
 
@@ -865,7 +865,7 @@ class TestAnalyzeAcceptance(unittest.TestCase):
     """L2: full binary invocation against real VT data."""
 
     def test_demographic_json_structure(self):
-        run(["redist", "analyze", "--state", "VT", "--year", "2020",
+        run(["BISECT", "analyze", "--state", "VT", "--year", "2020",
              "--version", "V3", "--types", "demographic"])
         data = load_json("outputs/V3/2020/vermont/analysis/demographic.json")
         assert "districts" in data
@@ -877,7 +877,7 @@ class TestAnalyzeAcceptance(unittest.TestCase):
                    d["pct_hispanic"] + d["pct_other"] - 1.0) < 0.01
 
     def test_political_json_structure(self):
-        run(["redist", "analyze", "--state", "VT", "--year", "2020",
+        run(["BISECT", "analyze", "--state", "VT", "--year", "2020",
              "--version", "V3", "--types", "political"])
         data = load_json("outputs/V3/2020/vermont/analysis/political.json")
         d = data["districts"][0]
@@ -885,29 +885,29 @@ class TestAnalyzeAcceptance(unittest.TestCase):
         assert isinstance(d["lean_dem"], bool)
 
     def test_all_types_produce_all_files(self):
-        run(["redist", "analyze", "--state", "VT", "--year", "2020",
+        run(["BISECT", "analyze", "--state", "VT", "--year", "2020",
              "--version", "V3", "--types", "all"])
         base = Path("outputs/V3/2020/vermont/analysis")
         for name in ["demographic.json", "political.json", "urban.json", "summary.json"]:
             assert (base / name).exists(), f"missing {name}"
 
     def test_skip_without_force(self):
-        run(["redist", "analyze", "--state", "VT", "--year", "2020",
+        run(["BISECT", "analyze", "--state", "VT", "--year", "2020",
              "--version", "V3", "--types", "demographic"])
         path = Path("outputs/V3/2020/vermont/analysis/demographic.json")
         mtime1 = path.stat().st_mtime
         time.sleep(0.05)
-        run(["redist", "analyze", "--state", "VT", "--year", "2020",
+        run(["BISECT", "analyze", "--state", "VT", "--year", "2020",
              "--version", "V3", "--types", "demographic"])
         assert path.stat().st_mtime == mtime1  # unchanged
 
     def test_force_regenerates(self):
-        run(["redist", "analyze", "--state", "VT", "--year", "2020",
+        run(["BISECT", "analyze", "--state", "VT", "--year", "2020",
              "--version", "V3", "--types", "demographic"])
         path = Path("outputs/V3/2020/vermont/analysis/demographic.json")
         mtime1 = path.stat().st_mtime
         time.sleep(0.05)
-        run(["redist", "analyze", "--state", "VT", "--year", "2020",
+        run(["BISECT", "analyze", "--state", "VT", "--year", "2020",
              "--version", "V3", "--types", "demographic", "--force"])
         assert path.stat().st_mtime > mtime1
 
@@ -916,7 +916,7 @@ class TestMapAcceptance(unittest.TestCase):
     """L2: map rendering — checks PNG existence, size, validity."""
 
     def test_districts_map_vt_produces_valid_png(self):
-        run(["redist", "map", "--state", "VT", "--year", "2020",
+        run(["BISECT", "map", "--state", "VT", "--year", "2020",
              "--version", "V3", "--types", "districts"])
         png = Path("outputs/V3/2020/vermont/maps/districts.png")
         assert png.exists()
@@ -924,7 +924,7 @@ class TestMapAcceptance(unittest.TestCase):
         assert png.read_bytes()[:4] == b"\x89PNG"
 
     def test_rounds_maps_vt_one_per_round(self):
-        run(["redist", "map", "--state", "VT", "--year", "2020",
+        run(["BISECT", "map", "--state", "VT", "--year", "2020",
              "--version", "V3", "--types", "rounds"])
         rounds_dir = Path("outputs/V3/2020/vermont/maps/rounds")
         pngs = sorted(rounds_dir.glob("round_*.png"))
@@ -934,28 +934,28 @@ class TestMapAcceptance(unittest.TestCase):
             assert p.stat().st_size > 5_000
 
     def test_political_map_produces_png(self):
-        run(["redist", "map", "--state", "VT", "--year", "2020",
+        run(["BISECT", "map", "--state", "VT", "--year", "2020",
              "--version", "V3", "--types", "political"])
         png = Path("outputs/V3/2020/vermont/maps/political.png")
         assert png.exists() and png.stat().st_size > 10_000
 
     def test_demographic_map_produces_png(self):
-        run(["redist", "map", "--state", "VT", "--year", "2020",
+        run(["BISECT", "map", "--state", "VT", "--year", "2020",
              "--version", "V3", "--types", "demographic"])
         png = Path("outputs/V3/2020/vermont/maps/demographic.png")
         assert png.exists()
 
     def test_al_districts_map_52_labeled(self):
         # Alabama has 7 districts — check that map generates for multi-district state
-        run(["redist", "map", "--state", "AL", "--year", "2020",
+        run(["BISECT", "map", "--state", "AL", "--year", "2020",
              "--version", "V3", "--types", "districts"])
         png = Path("outputs/V3/2020/alabama/maps/districts.png")
         assert png.exists() and png.stat().st_size > 50_000
 
     def test_dpi_flag_affects_output_size(self):
-        run(["redist", "map", "--state", "VT", "--year", "2020",
+        run(["BISECT", "map", "--state", "VT", "--year", "2020",
              "--version", "V3", "--types", "districts", "--dpi", "72"])
-        run(["redist", "map", "--state", "VT", "--year", "2020",
+        run(["BISECT", "map", "--state", "VT", "--year", "2020",
              "--version", "V3", "--types", "districts", "--dpi", "300",
              "--output-suffix", "_hires"])
         lo = Path("outputs/V3/2020/vermont/maps/districts.png").stat().st_size
@@ -964,7 +964,7 @@ class TestMapAcceptance(unittest.TestCase):
 ```
 
 - [ ] **Run:** `pytest tests/acceptance/test_analyze_map_acceptance.py -v` — expect PASS
-- [ ] **Commit:** `git commit -m "test(acceptance): bisect analyze + redist map L2 tests"`
+- [ ] **Commit:** `git commit -m "test(acceptance): bisect analyze + BISECT map L2 tests"`
 
 ---
 
@@ -1106,7 +1106,7 @@ Add `setUpClass` guard to all L2 acceptance tests:
 @classmethod
 def setUpClass(cls):
     if not Path("outputs/V3/2020/vermont/final_assignments.json").exists():
-        raise unittest.SkipTest("Run: redist run --year 2020 --version V3 --states VT")
+        raise unittest.SkipTest("Run: BISECT run --year 2020 --version V3 --states VT")
 ```
 Add `assert len(data["districts"]) == 1` to `test_demographic_json_structure`.
 

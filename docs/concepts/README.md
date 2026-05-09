@@ -1,6 +1,6 @@
 # Concepts
 
-Conceptual guides for understanding the REDIST project. Each guide has a "Short version" (TL;DR) followed by a deep dive.
+Conceptual guides for understanding the BISECT project. Each guide has a "Short version" (TL;DR) followed by a deep dive.
 
 ## Guides
 

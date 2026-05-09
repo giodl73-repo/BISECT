@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 /// audit.rs — chain-of-custody, SHA-256 hashing, verification command generation.
 ///
 /// Spec 6 / Board amendments:
@@ -6,7 +7,6 @@
 /// - External analyzer scripts must be SHA-256 hashed and recorded
 /// - Verification command must include sha256sum step for external analyzer scripts
 use std::path::Path;
-use serde::{Deserialize, Serialize};
 
 /// Compute SHA-256 of a file by streaming in 64KB chunks.
 /// Returns lowercase 64-character hex string.
@@ -54,7 +54,7 @@ impl ExternalAnalyzerRecord {
 /// Generate the machine-readable verification command from a plan manifest.
 ///
 /// Board amendments:
-/// - No local file paths — only relative paths and redist CLI flags
+/// - No local file paths — only relative paths and BISECT CLI flags
 /// - Must include --seed for reproducibility
 /// - Must include sha256sum step for external analyzer scripts (board amendment R3)
 /// - Format: a shell script fragment that can be embedded in audit.json
@@ -81,10 +81,7 @@ pub fn generate_verification_command(
             tiger_source_url, sha
         )
     } else {
-        format!(
-            "\n# Download TIGER source from:\n# {}",
-            tiger_source_url
-        )
+        format!("\n# Download TIGER source from:\n# {}", tiger_source_url)
     };
 
     let adj_check = format!(
@@ -98,9 +95,7 @@ pub fn generate_verification_command(
         .map(|rec| {
             format!(
                 "\n# Verify external analyzer script:\n# sha256sum {}  # expected: {}\n# {}",
-                rec.script,
-                rec.sha256,
-                rec.command
+                rec.script, rec.sha256, rec.command
             )
         })
         .collect();
@@ -128,7 +123,7 @@ pub fn generate_verification_command(
 /// Returns a shell script fragment containing only the commands that can be run directly
 /// (lines that do not start with `#` and are not empty).
 ///
-/// Used by `redist export --format reproducibility-package` to write `verify.sh`.
+/// Used by `BISECT export --format reproducibility-package` to write `verify.sh`.
 pub fn generate_verification_script(manifest: &crate::manifest::PlanManifest) -> String {
     let full_cmd = generate_verification_command_from_manifest(manifest);
     // Keep only lines that are NOT comments (don't start with #)
@@ -183,8 +178,8 @@ mod tests {
             seed: Some(42),
             binary_version: "0.1.0".into(),
             binary_sha256: "a".repeat(64),
-            binary_download_url:
-                "https://github.com/owner/redist/releases/download/v0.1.0/redist".into(),
+            binary_download_url: "https://github.com/owner/BISECT/releases/download/v0.1.0/BISECT"
+                .into(),
             adjacency_file: "wa_adjacency_2020.adj.bin".into(),
             adjacency_sha256: "b".repeat(64),
             adjacency_build_command: "python scripts/data/generate_adj_bin.py".into(),
@@ -209,10 +204,7 @@ mod tests {
         tmp.write_all(b"hello world").unwrap();
         let hash = sha256_file(tmp.path()).unwrap();
         assert_eq!(hash.len(), 64, "SHA-256 hex must be 64 chars");
-        assert!(
-            hash.chars().all(|c| c.is_ascii_hexdigit()),
-            "must be hex"
-        );
+        assert!(hash.chars().all(|c| c.is_ascii_hexdigit()), "must be hex");
         // Deterministic
         let hash2 = sha256_file(tmp.path()).unwrap();
         assert_eq!(hash, hash2);
@@ -240,16 +232,26 @@ mod tests {
     fn test_verification_command_no_local_paths() {
         let manifest = fixture_manifest_wa_house();
         let cmd = generate_verification_command_from_manifest(&manifest);
-        assert!(!cmd.contains("C:\\"), "must not contain Windows local paths");
+        assert!(
+            !cmd.contains("C:\\"),
+            "must not contain Windows local paths"
+        );
         assert!(!cmd.contains("/home/"), "must not contain Unix home paths");
-        assert!(!cmd.contains("/Users/"), "must not contain macOS home paths");
+        assert!(
+            !cmd.contains("/Users/"),
+            "must not contain macOS home paths"
+        );
     }
 
     #[test]
     fn test_manifest_has_tiger_sha256() {
         let manifest = fixture_manifest_wa_house();
         let tiger_sha = manifest.tiger_sha256.as_deref().unwrap_or("");
-        assert_eq!(tiger_sha.len(), 64, "tiger_sha256 must be 64-char SHA-256 hex");
+        assert_eq!(
+            tiger_sha.len(),
+            64,
+            "tiger_sha256 must be 64-char SHA-256 hex"
+        );
         assert!(tiger_sha.chars().all(|c| c.is_ascii_hexdigit()));
     }
 
@@ -277,11 +279,8 @@ mod tests {
         use std::io::Write;
         let mut tmp = tempfile::NamedTempFile::new().unwrap();
         tmp.write_all(b"print('hello')").unwrap();
-        let record = ExternalAnalyzerRecord::from_script(
-            tmp.path(),
-            "python {script} {args}",
-        )
-        .unwrap();
+        let record =
+            ExternalAnalyzerRecord::from_script(tmp.path(), "python {script} {args}").unwrap();
         assert_eq!(record.sha256.len(), 64);
         // Manifest round-trip preserves record
         let json = serde_json::to_string(&record).unwrap();
@@ -341,7 +340,10 @@ mod tests {
             None, // no tiger sha256
             &[],
         );
-        assert!(!cmd.contains("null"), "verification command must not contain raw 'null': {cmd}");
+        assert!(
+            !cmd.contains("null"),
+            "verification command must not contain raw 'null': {cmd}"
+        );
         assert!(
             cmd.contains("Download") || cmd.contains("download"),
             "must tell user to download TIGER file: {cmd}"
@@ -364,7 +366,7 @@ mod tests {
     }
 
     #[test]
-    fn test_verification_script_contains_redist_state() {
+    fn test_verification_script_contains_bisect_state() {
         let manifest = fixture_manifest_wa_house();
         let script = generate_verification_script(&manifest);
         assert!(
@@ -387,8 +389,8 @@ mod tests {
     fn test_audit_report_tiger_sha256_none_shows_descriptive_string() {
         // Scenario 36: In the assembled report audit section, tiger_sha256: None
         // must produce a descriptive placeholder, not a raw JSON null.
-        use crate::report::{assemble_report, ReportContext, REQUIRED_ANALYSIS_FILES};
         use crate::manifest::PlanManifest;
+        use crate::report::{assemble_report, ReportContext, REQUIRED_ANALYSIS_FILES};
         use tempfile::TempDir;
 
         let tmp = TempDir::new().unwrap();
@@ -396,8 +398,11 @@ mod tests {
         let analysis_dir = plan_dir.join("analysis");
         std::fs::create_dir_all(&analysis_dir).unwrap();
         for name in REQUIRED_ANALYSIS_FILES {
-            std::fs::write(analysis_dir.join(name),
-                serde_json::to_string(&serde_json::json!({"status": "ok"})).unwrap()).unwrap();
+            std::fs::write(
+                analysis_dir.join(name),
+                serde_json::to_string(&serde_json::json!({"status": "ok"})).unwrap(),
+            )
+            .unwrap();
         }
         let manifest = PlanManifest {
             label: "vt_test".into(),
@@ -411,7 +416,8 @@ mod tests {
         let audit_tiger = &report.sections.audit["tiger_sha256"];
         assert!(
             audit_tiger.is_string(),
-            "tiger_sha256 in audit must be a String, not null: {:?}", audit_tiger
+            "tiger_sha256 in audit must be a String, not null: {:?}",
+            audit_tiger
         );
         let s = audit_tiger.as_str().unwrap();
         assert!(
