@@ -1,0 +1,75 @@
+\section{Introduction}
+\label{sec:introduction}
+
+The redistricting ensemble literature has produced a rich empirical
+tradition: Markov chain Monte Carlo methods generate thousands of
+alternative plans, and an enacted plan's position in this distribution
+characterises its extremity.
+If the enacted plan's Democratic seat count falls in the 99th percentile
+of the ensemble, it is described as extreme.
+If it falls at the median, it is described as neutral.
+
+This framework is descriptive, not inferential.
+It does not provide p-values, confidence intervals, or power guarantees.
+It does not correct for multiple comparisons when dozens of metrics are
+evaluated.
+It does not tell a court whether the observed extremity is statistically
+significant at any specified level.
+
+These are not abstract methodological concerns.
+Courts operating under \textit{Rucho v.\ Common Cause}~\citep{rucho2019}
+at the federal level have rejected partisan gerrymandering claims partly
+because the plaintiffs could not identify a judicially manageable standard.
+State courts, which remain the principal venue for partisan gerrymandering
+litigation, are increasingly demanding formal statistical evidence rather
+than intuitive percentile claims.
+
+The expert who says ``the enacted plan is more extreme than 99\% of random
+plans'' will face the question: how many plans were in the ensemble?
+Were the random plans drawn from a converged Markov chain?
+What is the margin of error on that 99\% estimate?
+Did you correct for the fact that you tested eight different metrics?
+
+The S-track answers these questions with a unified statistical framework.
+
+\subsection{The State of Current Practice}
+
+A survey of redistricting expert reports filed in state courts between
+2016 and 2024~\citep{chen2013unintentional,herschlag2020quantifying}
+reveals four systematic gaps:
+
+\begin{enumerate}
+\item \textbf{No convergence certification}: Expert reports rarely
+  compute Gelman-Rubin $\hat{R}$ or effective sample size (ESS) for
+  their ensembles.
+  G.4~\citep{g4paper} shows that a typical 10,000-step NC ensemble
+  has ESS $\approx 695$ for Polsby-Popper compactness---the nominal
+  sample size overstates the effective sample by $14\times$.
+\item \textbf{No calibrated p-values}: Percentile claims are point
+  estimates with sampling uncertainty.
+  An ensemble with $\ess \approx 695$ and a plan at the 0.3rd percentile
+  has a 95\% confidence interval on the true percentile of approximately
+  $[0.0\%, 1.2\%]$.
+  The confidence interval matters: a plan at the 1.2\% boundary is
+  less extreme than one at 0.0\%.
+\item \textbf{No multiple testing correction}: A typical redistricting
+  analysis evaluates 7--12 metrics (compactness, efficiency gap,
+  mean-median, partisan bias, etc.).
+  At $\alpha = 0.05$, a 7-metric analysis expects 0.35 false positives
+  per state---which is small.
+  Across 50 states and 3 cycles, the expected number of false positives
+  grows to 52 (Section~\ref{sec:challenge3}).
+\item \textbf{No power analysis}: Expert reports do not typically specify
+  the probability that the ensemble would detect a genuine gerrymander
+  of a given severity if one were present.
+  S.3~\citep{s3paper} shows that a 10,000-step NC ensemble has 80\%
+  power to detect a 10pp partisan advantage but only 45\% power for
+  California.
+\end{enumerate}
+
+\subsection{Road Map}
+
+Section~\ref{sec:challenges} analyses the four challenges in detail.
+Section~\ref{sec:framework} proposes the three-component framework.
+Section~\ref{sec:track} describes the S-track contributions.
+Section~\ref{sec:conclusion} concludes.

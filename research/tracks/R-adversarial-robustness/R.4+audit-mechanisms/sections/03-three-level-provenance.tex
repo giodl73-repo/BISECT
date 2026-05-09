@@ -1,0 +1,85 @@
+\section{Three-Level Provenance Architecture}
+\label{sec:provenance}
+
+\subsection{Architecture Overview}
+
+The \bisect{} audit chain comprises three levels, each hashing the output
+of the previous level and the inputs at that level.
+
+\begin{definition}[bisect Manifest]
+A \bisect{} manifest $\mathcal{M}$ is a structured JSON document containing:
+\begin{align*}
+\mathcal{M} = \{&
+  \texttt{algorithm\_hash}: h_{\rm alg},\\
+  &\texttt{config\_hash}: h_{\rm cfg},\\
+  &\texttt{download\_hashes}: \{h_{\rm pl94171}, h_{\rm tiger}, h_{\rm acs}\},\\
+  &\texttt{adjacency\_hash}: h_{\rm adj},\\
+  &\texttt{plan\_hash}: h_{\rm plan},\\
+  &\texttt{manifest\_hash}: h_{\rm manifest}
+\}
+\end{align*}
+where $h_{\rm manifest} = \mathrm{SHA256}(\mathcal{M} \setminus \{h_{\rm manifest}\})$
+is a self-referential integrity hash.
+\end{definition}
+
+\subsection{Level 1: Data Provenance}
+
+Level 1 establishes that the algorithm used the Census Bureau's published
+data and not a modified version.
+The three Level 1 hashes are:
+\begin{itemize}
+\item $h_{\rm pl94171} = \mathrm{SHA256}(\text{P.L.\ 94-171 file})$:
+  verified against Census Bureau's published checksum at
+  \url{https://www2.census.gov/}.
+\item $h_{\rm tiger} = \mathrm{SHA256}(\text{TIGER/Line shapefile ZIP})$:
+  verified against Census Bureau's TIGER archive.
+\item $h_{\rm acs} = \mathrm{SHA256}(\text{ACS 5-year table CSV})$:
+  verified against Census Bureau's ACS data portal.
+\end{itemize}
+
+Any party can independently verify these hashes by downloading the same
+files from the Census Bureau and computing SHA-256.
+
+\subsection{Level 2: Computation Provenance}
+
+Level 2 establishes that the adjacency graph was correctly constructed
+from the Level 1 data.
+\[
+  h_{\rm adj} = \mathrm{SHA256}(G(h_{\rm tiger}))
+\]
+where $G(h_{\rm tiger})$ denotes the adjacency graph constructed from
+the TIGER shapefile identified by $h_{\rm tiger}$.
+
+Level 2 is verified by: (a) independently downloading the TIGER shapefile
+and verifying $h_{\rm tiger}$, then (b) running \bisect{}'s adjacency
+construction and checking that it produces $h_{\rm adj}$.
+
+\subsection{Level 3: Output Provenance}
+
+Level 3 establishes that the output plan was produced by running the
+specified algorithm binary with the specified parameters on the specified
+data.
+\[
+  h_{\rm plan} = \mathrm{SHA256}(\text{bisect}(h_{\rm alg}, h_{\rm cfg},
+  h_{\rm pl94171}, h_{\rm adj}))
+\]
+
+Level 3 is verified by \texttt{bisect label-verify}, which replays
+the full computation from the manifest and checks that the output hash
+matches $h_{\rm plan}$.
+
+\subsection{Chain Integrity}
+
+The manifest hash $h_{\rm manifest}$ binds all six hashes together.
+Any modification to any level---algorithm binary, configuration, download,
+adjacency, plan, or the manifest itself---changes $h_{\rm manifest}$.
+A modified manifest is detectable by anyone with the original manifest hash,
+which is filed with the Secretary of State under the \dia{} protocol.
+
+\begin{theorem}[Manifest Integrity]
+Given the SHA-256 collision resistance bound, an adversary cannot produce
+a modified manifest $\mathcal{M}'$ such that:
+(a) $\mathcal{M}' \neq \mathcal{M}$, and
+(b) $h_{\rm manifest}(\mathcal{M}') = h_{\rm manifest}(\mathcal{M})$,
+without performing $\geq 2^{80}$ hash evaluations.
+\end{theorem}

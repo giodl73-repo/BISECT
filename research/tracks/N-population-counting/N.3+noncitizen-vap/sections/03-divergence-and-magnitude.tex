@@ -1,0 +1,57 @@
+\section{Divergence Between Total Population and Citizen VAP}
+\label{sec:divergence}
+
+\subsection{The CVAP Special Tabulation}
+
+The Census Bureau publishes Citizen Voting Age Population (CVAP) estimates at the census-tract level through its CVAP special tabulation, derived from the American Community Survey 5-year estimates. The tabulation provides estimates of citizen VAP by race and ethnicity, enabling analysis of noncitizen concentration patterns. Because the CVAP is ACS-derived rather than decennial-census-derived, it carries sampling error at the tract level; this methodological limitation is discussed in Section~\ref{sec:bisect}.
+
+The CVAP is available for the redistricting-relevant 2019 ACS 5-year estimates (corresponding to the 2020 redistricting cycle) at the census-tract level. BISECT's \texttt{--population-source cvap} mode reads this tabulation and uses CVAP rather than total population as the balance constraint in recursive bisection.
+
+\subsection{State-Level Divergence Patterns}
+
+The gap between total population and citizen VAP is largest in states with large immigrant populations. Table~\ref{tab:state_divergence} shows the mean noncitizen fraction (total VAP minus citizen VAP, divided by total VAP) for the four highest-divergence states.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lcccc}
+\toprule
+\textbf{State} & \textbf{Total VAP} & \textbf{Citizen VAP} & \textbf{Noncitizen Pop} & \textbf{Mean Noncit. Frac.} \\
+\midrule
+California & 29,500,000 & 24,800,000 & 4,700,000 & 15.9\% \\
+Texas & 20,400,000 & 17,300,000 & 3,100,000 & 15.2\% \\
+New York & 15,300,000 & 13,100,000 & 2,200,000 & 14.4\% \\
+Florida & 16,200,000 & 14,000,000 & 2,200,000 & 13.6\% \\
+\midrule
+National & 258,300,000 & 232,400,000 & 25,900,000 & 10.0\% \\
+\bottomrule
+\end{tabular}
+\caption{Total VAP, Citizen VAP, noncitizen adult population, and mean noncitizen fraction for the four highest-divergence states and the national total, based on 2019 ACS 5-year CVAP tabulation. State figures are approximate.}
+\label{tab:state_divergence}
+\end{table}
+
+The national noncitizen fraction of approximately 10\% understates the redistricting relevance because noncitizens are concentrated in specific congressional districts. At the district level, noncitizen fractions exceeding 20\% are common in Los Angeles, South Texas, New York City, and Miami.
+
+\subsection{District-Level Divergence: The 80-District Threshold}
+
+For congressional redistricting, the relevant question is not the statewide noncitizen fraction but the distribution of noncitizens across congressional districts. A 5 percentage-point (pp) gap between total-population and citizen-VAP district shares---our threshold for redistricting relevance---is exceeded in approximately 80 of the 435 congressional districts.
+
+These 80 districts are highly concentrated: approximately 25 are in California (primarily Los Angeles metro and the Central Valley), 15 in Texas (primarily South Texas and Houston), 12 in New York (primarily New York City), and 8 in Florida (primarily Miami-Dade). The remaining 20 are distributed across New Jersey, Illinois, Arizona, Nevada, and Washington.
+
+The consequence of exceeding the 5pp threshold is that switching from total population to citizen VAP as the redistricting base forces these districts to draw substantially different boundaries. A district whose total population is at the state target ($\sim$760,000) but whose citizen VAP is only 600,000 (a noncitizen fraction of 21\%) would need to expand geographically under citizen-VAP balancing to reach the citizen-VAP target---absorbing additional territory with more citizens and fewer noncitizens, which typically means moving into more suburban and less immigrant-dense areas.
+
+\subsection{Intrastate Geographic Concentration}
+
+Within California, the total-population--citizen-VAP divergence is not uniform across counties. The highest divergence occurs in:
+\begin{itemize}
+    \item \textbf{Los Angeles County}: Several congressional district tracts have noncitizen fractions of 25--35\%, reflecting large unauthorized immigrant and legal permanent resident populations in East Los Angeles, Koreatown, and the San Gabriel Valley.
+    \item \textbf{San Bernardino and Riverside Counties} (Inland Empire): Growing immigrant communities with noncitizen fractions of 15--20\% in many tracts.
+    \item \textbf{Central Valley} (Fresno, Tulare, Kings Counties): Agricultural workforce with noncitizen fractions exceeding 20\% in many rural tracts.
+\end{itemize}
+
+In Texas, the highest divergence is in:
+\begin{itemize}
+    \item \textbf{South Texas} (Webb, Hidalgo, Cameron, Starr Counties): Border counties with noncitizen fractions of 20--30\% in urban tracts, reflecting large unauthorized and legal immigrant Mexican-American communities.
+    \item \textbf{Harris County} (Houston): Diverse immigrant community with noncitizen fractions of 15--20\% in several congressional district tracts.
+\end{itemize}
+
+These geographic patterns are not random: the high-noncitizen-fraction areas are disproportionately Hispanic and Asian-American communities, reflecting the demographic composition of post-1965 immigration to the United States.

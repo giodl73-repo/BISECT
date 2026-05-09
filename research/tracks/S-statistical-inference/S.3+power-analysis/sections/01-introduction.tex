@@ -1,0 +1,55 @@
+\section{Introduction}
+\label{sec:introduction}
+
+Statistical power is the probability that a test correctly rejects a
+false null hypothesis.
+In redistricting, the null hypothesis is that the enacted plan is a
+random draw from the space of valid plans (i.e., it was not gerrymandered).
+The alternative is that the plan was selected to produce a specific
+partisan advantage.
+
+Power depends on three quantities:
+(1) the significance level $\alpha$ (typically 0.05 for scientific
+claims, or the court's threshold for ``clear and convincing'' evidence);
+(2) the effect size $\delta$ (the partisan advantage in percentage points
+that the test is designed to detect);
+and (3) the effective sample size $\ess$ of the ensemble
+(which determines how precisely the null distribution can be estimated).
+
+Existing redistricting analyses report none of these quantities.
+They run a chain of $n$ steps, compute the enacted plan's percentile,
+and report it.
+The implicit power guarantee is undefined: a chain that has not converged
+may have essentially zero power to detect any effect, regardless of $n$.
+
+This paper derives the power function explicitly and translates it into
+minimum ensemble sizes for each state in the 2020 congressional redistricting.
+
+\subsection{Why Power Matters in Court}
+
+A defendant in a redistricting challenge can argue:
+``The expert's ensemble was too small to reliably detect the alleged
+gerrymander.
+Even if the enacted plan is at the 1st percentile, an underpowered
+ensemble cannot distinguish between a genuine gerrymander and random
+variation.''
+
+This argument is technically sound if the ensemble is indeed underpowered.
+A power-analysis defense requires the plaintiff's expert to demonstrate
+that the ensemble has adequate power to detect the alleged effect before
+the court can rely on the percentile claim.
+
+Conversely, an expert who demonstrates 80\% power at the observed effect
+size provides a defensible claim: ``Had this plan been drawn randomly,
+we would have 80\% probability of detecting it as an outlier at $\alpha = 0.05$.
+We did detect it. The probability of a false positive is at most 5\%.''
+
+\subsection{Road Map}
+
+Section~\ref{sec:power} derives the power function from first principles.
+Section~\ref{sec:ess} translates the ESS requirement into chain step requirements
+using G.4's autocorrelation estimates.
+Section~\ref{sec:table} provides the 50-state minimum ensemble table.
+Section~\ref{sec:current} evaluates current practice against the new standards.
+Section~\ref{sec:litigation} gives the litigation-grade recommendations.
+Section~\ref{sec:conclusion} concludes.

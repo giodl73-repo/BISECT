@@ -1,0 +1,103 @@
+\label{sec:stability}
+
+\subsection{The County Disruption Metric}
+
+Cross-census algorithmic stability measures how much redistricting plans change
+between two redistricting cycles, holding constant the algorithmic parameters.
+The B.18 paper introduced the \textit{county disruption metric} as the primary
+stability measure: the fraction of county-seat assignments that change between
+the two cycles.
+
+\begin{definition}[County Disruption]
+For state $s$ with county set $C_s$ and seat allocations $A^{(t)} = \{a_c^{(t)}\}$
+for census years $t$ and $t+10$, the county disruption $D_s$ is:
+
+\begin{equation}
+D_s = \frac{|\{c \in C_s : a_c^{(t)} \neq a_c^{(t+10)}\}|}{|C_s|}
+\end{equation}
+
+where $a_c^{(t)}$ is the district assignment of county $c$'s plurality census tract
+in cycle $t$.
+\end{definition}
+
+County disruption ranges from 0 (perfect stability: every county is in the same
+district across both cycles) to 1 (complete disruption: every county changes district
+assignment). For states where $k$ changes between cycles, disruption is computed
+using the larger-$k$ cycle's district assignments as the baseline and asking how many
+county assignments are maintained despite the structural change.
+
+\subsection{Projected 2020--2030 Disruption}
+
+We project county disruption for the 2020--2030 cycle using two inputs:
+(1) the 2020 \textsc{bisect} plans (from the 50-state sweep), which provide the
+baseline county-district assignments; and (2) Census Bureau projected population
+distribution across counties in 2030, which determines how the optimal redistricting
+changes.
+
+The projection method uses a partial-equilibrium approach: for each state, we apply
+the 2030 projected county-level populations to the 2020 adjacency graph and re-run
+the \textsc{bisect} algorithm with the 2030 $k$-value. Counties that change district
+assignment between the 2020 and projected-2030 optimal plans are counted as disrupted.
+
+\begin{table}[ht]
+\centering
+\caption{Projected County Disruption: 2020--2030 vs.\ Observed 2010--2020}
+\label{tab:disruption}
+\begin{tabular}{llrrr}
+\toprule
+Category & $n$ states & Disruption 2010--2020 & Projected 2020--2030 & Difference \\
+\midrule
+Gaining states & 8 & 78\% & 72\% & $-6$ pp \\
+Losing states & 10 & 71\% & 51\% & $-20$ pp \\
+Stable states & 32 & 61\% & 54\% & $-7$ pp \\
+\midrule
+All states & 50 & 66\% & 58\% & $-8$ pp \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item Disruption is fraction of counties changing district assignment.
+  2010--2020 values from B.18 (observed). 2020--2030 values are projections.
+\end{tablenotes}
+\end{table}
+
+The projected 2020--2030 disruption (58\%) is lower than the observed 2010--2020
+disruption (66\%) for three reasons:
+
+\textbf{Predictable Sun Belt growth}: Unlike the 2010 cycle, where several Sun Belt
+states had unexpected population surges (Texas grew 15.9\% vs.\ a projected 13\%),
+the 2030 projections extrapolate a well-established trend in Sun Belt growth. The
+county-level population distribution in 2030 Texas, Arizona, and Florida is more
+predictable from current trends, so the optimal county groupings change less
+dramatically.
+
+\textbf{Losing state contraction}: States losing seats (NY, IL, OH, PA, MI) are
+contracting at predictable rates. County disruption in losing states falls from 71\%
+to 51\% because the optimal redistricting plan for a state losing one seat typically
+involves merging two districts that are adjacent in the current plan, preserving most
+county assignments.
+
+\textbf{Stable state inertia}: States with unchanged $k$-values and moderate growth
+rates show modest disruption reduction. The largest within-cycle shifts are in
+fast-growing stable states (Georgia, Virginia, Nevada), where internal population
+redistribution changes optimal county groupings even without seat changes.
+
+\subsection{State-Specific Stability Highlights}
+
+\textbf{Texas}: Despite gaining 3 seats ($38 \to 41$), Texas shows projected disruption
+of 68\%---lower than the 81\% observed disruption in the 2010--2020 cycle when Texas
+also gained 4 seats. The lower disruption reflects more predictable growth patterns
+and the fact that the new seats accommodate growth in already-identified growth corridors
+(I-35 corridor from San Antonio to Austin, DFW exurbs).
+
+\textbf{New York}: Losing 2 seats ($27 \to 25$) produces projected disruption of 44\%,
+substantially below the 61\% observed disruption in the 2010--2020 cycle (when New York
+lost 2 seats then as well, $29 \to 27$). The lower projected disruption reflects that
+New York's population concentration in the New York City metro area makes the optimal
+county groupings relatively invariant: the outer boroughs and surrounding counties must
+be grouped together regardless of $k$.
+
+\textbf{Montana}: Gaining 1 seat ($2 \to 3$) triggers substantial projected disruption
+(88\%) because the current 2-seat configuration divides the state along a
+east-west axis, while the 3-seat configuration must create a third district, likely
+in the Billings corridor. The entire county assignment structure changes.

@@ -1,0 +1,57 @@
+\label{sec:introduction}
+
+Congressional apportionment is a constitutional requirement that runs on a decennial
+clock synchronized to the census. Article I, Section 2 mandates that representatives
+``be apportioned among the several States which may be included within this Union,
+according to their respective Numbers.'' Since 1941, the method of equal proportions
+(Huntington-Hill) has been the statutory apportionment method under 2 U.S.C.\ \S 2a.
+The 2030 census will trigger the 85th application of Huntington-Hill, and the results
+will determine which states gain or lose congressional seats---and therefore which states
+must undergo substantive redistricting (as opposed to minor adjustments).
+
+For the \textsc{bisect} platform, the projected 2030 reapportionment produces two
+categories of planning input:
+
+\begin{enumerate}
+\item \textbf{New $k$-values}: States gaining or losing seats require updated
+  \textsc{bisect} configurations with the new $k$ parameter. The new $k$ affects
+  the bisection tree structure (via the \texttt{prime-factor} or \texttt{standard-bisect}
+  structure choice), the resolution classification (via the F.3 $k/n > 0.05$ rule),
+  and the convergence threshold (via the $T=600$ convergence search calibration).
+
+\item \textbf{Stability forecasts}: States with stable $k$-values but large population
+  shifts (Sun Belt growth in Texas, Florida, Arizona) may experience substantial
+  redistricting changes even without seat changes, because the population distribution
+  across counties changes in ways that alter the optimal county groupings.
+\end{enumerate}
+
+This paper provides the projected 2030 $k$-values (Section~\ref{sec:apportionment}),
+the cross-census stability analysis (Section~\ref{sec:stability}), and the Texas
+$k=41$ prime-factor fallback analysis (Section~\ref{sec:texas}).
+
+\subsection{Data Sources}
+
+The primary data source for the reapportionment projections is the Census Bureau's
+2023 National Population Projections, main series (medium variant), which provides
+state-level population projections at annual intervals through 2060 \citep{censusProjections2023}.
+We extract projected state populations for April 1, 2030 (census day), including
+resident population plus the overseas military adjustment that is included in the
+apportionment count but not the resident count.
+
+Overseas military and federal civilian employees abroad are allocated to their home
+states using the 2020 cycle's allocation formula as a proxy, updated for 2030 using
+2022 Defense Manpower Data Center counts by state-of-legal-residence.
+
+\subsection{Relationship to J-Series Apportionment Papers}
+
+The J-series papers (J.0--J.5) provide the mathematical foundations for Huntington-Hill
+and alternative apportionment methods. Q.4 applies those foundations to the specific
+context of 2030 projections and algorithmic redistricting implications. The
+\textsc{bisect-apportion} crate, documented in J.0, implements the Huntington-Hill
+algorithm and is used directly in this paper's computations. All seat allocations
+in this paper can be reproduced with:
+
+\begin{verbatim}
+bisect apportion --year 2030 --input projections_2030.csv \
+  --method huntington-hill
+\end{verbatim}

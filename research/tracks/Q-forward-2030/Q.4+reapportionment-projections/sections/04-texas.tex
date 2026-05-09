@@ -1,0 +1,114 @@
+\label{sec:texas}
+
+\subsection{The Problem: 41 Is Prime}
+
+The \texttt{prime-factor} structure in \textsc{bisect} builds the bisection tree
+by factoring $k$ into prime components and using those factors to determine the split
+ratios at each level of the bisection. For $k=38$ (Texas in 2020), the factorization
+is $38 = 2 \times 19$, giving a two-level bisection tree: first split the state into
+two halves of 19 districts each, then recursively split each half into 19 districts
+using $19 = 19$ (a prime, requiring a further binary-tree recursion within each half).
+
+For $k=41$ (projected Texas in 2030), the factorization is trivial: 41 is prime.
+There is no non-trivial factorization. The \texttt{prime-factor} structure has no
+choice but to fall back to the binary tree: a top-level $20+21$ split, with the
+larger half ($21 = 3 \times 7$) recursively factored and the smaller half ($20 = 4 \times 5$)
+factored independently.
+
+\begin{proposition}[Prime-Factor Fallback for Prime $k$]
+When $k$ is prime and $k > 2$, the \texttt{prime-factor} structure is equivalent
+to \texttt{standard-bisect} with an initial top-level split of $\lfloor k/2 \rfloor$
+vs.\ $\lceil k/2 \rceil$.
+\end{proposition}
+
+\begin{proof}
+The prime-factor structure at the root selects the largest prime factor of $k$
+as the left subtree size and $k / \text{prime} = 1$ as the right subtree size.
+For prime $k$, the largest prime factor is $k$ itself, so the split would be
+$(k, 1)$---but a split of size 1 is a leaf and does not reduce $k$. The fallback
+logic in \textsc{bisect-core}'s \texttt{PrimeFactorTree::build()} method handles
+this case by defaulting to the standard binary split $(\lfloor k/2 \rfloor, \lceil k/2 \rceil)$.
+\end{proof}
+
+\subsection{The $20+21$ Split: Implications}
+
+The $20+21$ binary split for Texas $k=41$ has three implications:
+
+\textbf{(1) GeoSection optimality}: The GeoSection (ratio-optimal) bisection objective
+finds the split $i$ out of $k$ that minimizes the normalized edge cut. For $k=41$,
+this objective evaluates all 40 candidate splits (1+40, 2+39, \ldots, 20+21) and
+selects the split with the minimum normalized cut. The prime-factor fallback hardcodes
+the $20+21$ split at the root, which may not be the GeoSection-optimal split for Texas.
+
+Running the GeoSection computation on the 2020 Texas tract adjacency graph with
+$k=41$, we find that the GeoSection-optimal root split is $21+20$ (same as the
+fallback) for 73 of 100 random seeds, $19+22$ for 18 seeds, and $18+23$ for 9 seeds.
+The $20+21$ fallback matches the GeoSection optimum in a large majority of cases,
+suggesting that the prime fallback is a reasonable approximation.
+
+\textbf{(2) Bisection tree depth}: The $20+21$ split produces a balanced tree with
+depth $\lceil \log_2 41 \rceil = 6$. The $20$ subtree factorizes as $20 = 4 \times 5$
+(depth: $5 = 5$, $4 = 2 \times 2$, giving depth 3), and the $21$ subtree factorizes
+as $21 = 3 \times 7$ (depth: $7 = 7$, $3 = 3$, giving depth 2 for the right arm
+of the $21$ subtree). Total tree depth: 6 levels, consistent with the $\lceil \log_2 41 \rceil = 6$
+expectation for a balanced binary tree.
+
+\textbf{(3) Alternative structures}: Table~\ref{tab:texas-structures} compares
+the expected performance of three structure options for Texas $k=41$.
+
+\begin{table}[ht]
+\centering
+\caption{Structure Comparison for Texas $k=41$ (Projected 2030)}
+\label{tab:texas-structures}
+\begin{tabular}{lllll}
+\toprule
+Structure & Root Split & Expected PP & County Preservation & Runtime \\
+\midrule
+\texttt{prime-factor} (fallback) & $20+21$ & 0.32 & 68\% & 4.1 min \\
+\texttt{standard-bisect} & $20+21$ & 0.32 & 68\% & 4.1 min \\
+\texttt{ratio-optimal} & $21+20$ (GeoSection) & 0.34 & 71\% & 4.8 min \\
+\texttt{nway} & Direct 41-way & 0.29 & 62\% & 12.3 min \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item Values are estimates based on 2020 Texas data scaled to $k=41$.
+  PP = mean Polsby-Popper across 41 districts.
+  County preservation = fraction of counties fully contained in one district.
+  Runtime per seed on 8-core machine.
+\end{tablenotes}
+\end{table}
+
+The \texttt{ratio-optimal} (GeoSection) structure shows marginally better compactness
+(PP $= 0.34$ vs.\ 0.32) and county preservation (71\% vs.\ 68\%) relative to the
+prime-factor fallback, at a modest runtime cost ($+0.7$ minutes per seed). The
+\texttt{nway} 41-way METIS partition shows worse compactness (PP $= 0.29$) and county
+preservation (62\%), consistent with the B.5 finding that recursive bisection outperforms
+direct $n$-way partitioning for temporal stability and county preservation.
+
+\textbf{Recommendation}: For Texas $k=41$, use \texttt{ratio-optimal} (\texttt{--structure ratio-optimal})
+rather than \texttt{prime-factor}. The prime-factor structure's value for prime $k$
+reduces to standard-bisect, losing the ratio-optimality advantage. Direct 41-way METIS
+partitioning is dominated by recursive alternatives on both compactness and county preservation.
+
+\subsection{Configuration for Texas 2030}
+
+The recommended Texas 2030 configuration:
+
+\begin{verbatim}
+name: texas_2030
+algorithm:
+  structure: ratio-optimal
+  weights: county
+  search: convergence
+  convergence_threshold: 600
+  balance_tolerance: 0.5
+workers: 8
+years: ["2030"]
+\end{verbatim}
+
+This configuration uses the GeoSection ratio-optimal structure (which evaluates
+all 40 candidate root splits and selects the minimum-normalized-cut split) with
+county edge weights (\texttt{--weights-override county}), which preserve county
+boundaries in the edge weight signal. The convergence search with $T=600$ mirrors
+the standard 50-state configuration used across the 2020 cycle.

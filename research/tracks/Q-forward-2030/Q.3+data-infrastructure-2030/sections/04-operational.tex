@@ -1,0 +1,84 @@
+\label{sec:operational}
+
+\subsection{The 6-Month vs.\ 2-Month Redistricting Window}
+
+The central operational argument for pre-building block-group adjacency before
+census data release is the reduction of the effective redistricting window from
+6 months to 2 months. This section makes that argument precise.
+
+\textbf{Scenario A: No pre-build (adjacency construction during redistricting).}
+The 2031 redistricting window begins April 1 with census data release. The
+redistricting team begins block-group adjacency construction immediately.
+The estimated 21 CPU-hours of construction time for the 43 states requiring
+block-group resolution, running on an 8-core machine, requires approximately
+2.6 wall-clock hours per state if run sequentially. For 43 states run sequentially,
+that is 112 wall-clock hours, or approximately 4.7 days. Parallelizing across
+states (running 8 states simultaneously) reduces this to approximately 14 days.
+After construction, validation requires an additional 2 weeks (manual review
+of boundary length anomalies for all 43 states).
+
+Total time from data release to validated adjacency graphs: approximately 4--6 weeks.
+During this period, no redistricting can proceed. The effective redistricting window
+(from adjacency completion to deadline) is therefore 4--5 months.
+
+\textbf{Scenario B: Pre-build complete (adjacency available at data release).}
+The adjacency graphs are already built (using Census Bureau 2030 block-group
+geometry, which is publicly available before census data release as TIGER/Line
+shapefiles). When census data arrives, the redistricting team loads population
+data into the pre-built adjacency graphs (a process that takes hours, not weeks)
+and begins redistricting immediately.
+
+Total time from data release to redistricting start: approximately 1--2 days.
+The effective redistricting window is 5.9--6 months.
+
+The difference is 4 months of operational capacity---the difference between
+a comfortable redistricting timeline and a forced choice between quality and speed.
+
+\subsection{Resource Requirements for Pre-Build}
+
+Pre-building the 43-state block-group adjacency requires:
+
+\begin{itemize}
+\item \textbf{Compute}: 21 CPU-hours $\times$ 43 states = 903 CPU-hours. On an
+  8-core server, parallelized across states (8 states simultaneously), this is
+  approximately 113 wall-clock hours = 4.7 days of continuous computation.
+  On a 32-core server with 4 states per slot, approximately 1.2 days.
+
+\item \textbf{Storage}: 90 MB per state (compressed) $\times$ 43 states = 3.9 GB.
+  Including construction intermediates, peak storage is approximately 20 GB.
+
+\item \textbf{Memory}: Peak RAM of 14 GB per state (for the largest state, California,
+  at block-group resolution). If multiple states are processed simultaneously, 14 GB
+  $\times$ parallelism factor. A 64 GB machine supports 4 simultaneous states.
+
+\item \textbf{Validation time}: Approximately 2 weeks for 43 states (boundary length
+  manual review is the bottleneck).
+\end{itemize}
+
+Total elapsed time from start to validated adjacency: approximately 3--4 weeks
+with a single researcher and a 32-core machine. This is well within the 24-month
+preparation window (January 2029 to January 2031).
+
+\subsection{The \texttt{bisect fetch} Command for 2030}
+
+The infrastructure pre-build is initiated with the \textsc{bisect} fetch command.
+The 2030 block-group fetch will require a minor extension to the current CLI to
+support 2030 as a valid year and block-group as a valid resolution at the congressional
+level. The current command structure:
+
+\begin{verbatim}
+# Current (tract resolution, 2020 or earlier):
+bisect fetch --year 2020 --workers 8
+
+# Proposed 2030 block-group extension:
+bisect fetch --year 2030 --resolution block-group --workers 8
+
+# Single-state fetch for validation testing:
+bisect fetch --year 2030 --resolution block-group \
+  --state TX --workers 8
+\end{verbatim}
+
+The \texttt{--resolution} flag is currently used in the F-series (state legislative)
+contexts. Extending it to congressional redistricting for the 43 block-group states
+requires updating the \texttt{bisect-data} crate's state configuration to specify
+the resolution per state, year, and redistricting chamber.

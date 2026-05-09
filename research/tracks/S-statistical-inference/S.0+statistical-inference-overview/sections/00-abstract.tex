@@ -1,0 +1,29 @@
+Redistricting analysis has adopted the vocabulary of statistical inference
+without the infrastructure: ensembles produce percentiles, not p-values;
+analysts report ``the enacted plan is more extreme than 99\% of random plans''
+without specifying a null distribution or correcting for multiple comparisons.
+This paper identifies four challenges unique to redistricting inference
+and proposes a three-component framework that makes redistricting claims
+litigation-grade.
+
+The four challenges are: (C1)~the test statistic is a function of the entire
+plan (a complex combinatorial object, not a real number), so standard
+asymptotic theory does not apply; (C2)~the null distribution requires
+plan simulation, and simulation quality (chain convergence, ensemble size)
+determines inference validity; (C3)~multiple metrics are evaluated on each
+plan (compactness, efficiency gap, mean-median, partisan bias, seat-votes
+curve, and others), creating a multiple testing problem that standard
+practice ignores; and (C4)~ensembles are typically too small for reliable
+tail estimation---the 5th percentile of a 1,000-plan ensemble has
+standard error of approximately 1.5 percentage points.
+
+The three-component framework addresses each challenge:
+(F1)~a calibrated null distribution using the G.4 ESS-corrected ensemble
+that accounts for chain autocorrelation;
+(F2)~FDR-corrected test statistics using the Benjamini-Hochberg procedure
+for the full test battery;
+and (F3)~a power analysis (S.3) establishing minimum ensemble sizes for
+80\% power to detect a 10-percentage-point partisan advantage.
+
+The S-track (S.1--S.4) implements this framework with worked examples
+on North Carolina, Wisconsin, Georgia, Pennsylvania, and Texas.

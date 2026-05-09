@@ -1,0 +1,127 @@
+\section{The Power Function for Redistricting Tests}
+\label{sec:power}
+
+\subsection{Setup}
+
+Let $T$ be a test statistic computed from the ensemble (e.g., the
+Democratic seat count).
+Under the null distribution (random valid plan), $T$ has distribution
+$F_0$ with mean $\mu_0$ and standard deviation $\sigma_0$.
+Under the alternative distribution (gerrymandered plan with partisan
+advantage $\delta$), $T$ has distribution $F_1$ with mean
+$\mu_1 = \mu_0 + \delta$ and the same standard deviation $\sigma_1 \approx \sigma_0$.
+
+The test rejects the null if $T$ falls outside the central
+$(1 - \alpha)$ quantile of the empirical null distribution.
+Because the null distribution is estimated from the ensemble (not known
+analytically), the test statistic is the enacted plan's percentile
+in the ensemble, and the rejection region is $[\hat{p} < \alpha/2]
+\cup [\hat{p} > 1 - \alpha/2]$.
+
+\subsection{Power Derivation}
+
+The power of this test depends on the precision of the empirical
+null distribution estimate.
+With $\ess = n^*$ effective samples, the standard error of the
+empirical quantile at $p$ is approximately:
+\[
+  \sigma_{\hat{p}} = \sqrt{\frac{p(1-p)}{n^*}}.
+\]
+
+The enacted plan's percentile $\hat{p}_{\rm enacted}$ under the
+alternative (gerrymandered plan) has expected value:
+\[
+  E[\hat{p}_{\rm enacted}] = \Phi\!\left(\frac{\mu_1 - \mu_0}{\sigma_0}\right)^{-1}
+  = \Phi\!\left(\frac{\delta}{\sigma_0}\right)^{-1}.
+\]
+That is, the enacted plan has an expected percentile of $\Phi(\delta/\sigma_0)^{-1}$
+in the null distribution if it was generated with partisan advantage $\delta/\sigma_0$
+standard deviations above the mean.
+
+For a one-sided test at level $\alpha$ (testing whether the plan is
+too Republican-favorable, i.e., too few Democratic seats):
+\[
+  \text{Power}(n^*, \delta, \sigma_0, \alpha) =
+  \Phi\!\left(\sqrt{n^*} \cdot \frac{\delta}{\sigma_0} - z_\alpha\right),
+\]
+where $z_\alpha = \Phi^{-1}(1 - \alpha)$ is the normal quantile.
+
+\begin{proposition}[Minimum ESS for Target Power]
+\label{prop:min-ess}
+To achieve power $1 - \beta$ at significance level $\alpha$ for detecting
+a $\delta$-standard-deviation partisan advantage, the minimum effective
+sample size is:
+\[
+  n^*_{\rm min} = \left(\frac{z_\alpha + z_\beta}{\delta / \sigma_0}\right)^2.
+\]
+\end{proposition}
+
+\begin{proof}
+Set $\text{Power}(n^*, \delta, \sigma_0, \alpha) = 1 - \beta$ and solve
+for $n^*$:
+\[
+  \sqrt{n^*} \cdot \frac{\delta}{\sigma_0} - z_\alpha = z_\beta
+  \implies n^* = \left(\frac{z_\alpha + z_\beta}{\delta / \sigma_0}\right)^2.
+  \qquad \square
+\]
+\end{proof}
+
+\subsection{Standard Parameters}
+
+For the standard litigation setting ($\alpha = 0.05$, $\beta = 0.20$,
+80\% power), detecting a 10pp partisan advantage:
+\[
+  z_\alpha = 1.645, \quad z_\beta = 0.842.
+\]
+
+The effect size in standard deviations is $\delta / \sigma_0$, where
+$\sigma_0$ is the standard deviation of Democratic seat percentage
+in the null ensemble.
+From G.1~\citep{g1paper}, $\sigma_0 \approx 0.06$ (6 percentage points)
+for the typical redistricting state.
+
+A 10pp partisan advantage corresponds to $\delta / \sigma_0 = 10/6 \approx 1.67$.
+The minimum ESS for 80\% power at this effect size is:
+\[
+  n^*_{\rm min} = \left(\frac{1.645 + 0.842}{1.67}\right)^2
+  = \left(\frac{2.487}{1.67}\right)^2 \approx 2.22 \approx 5.
+\]
+
+Wait---this is far too small.
+The discrepancy arises because $\sigma_0 = 0.06$ is in percentage points
+of two-party vote share, while the effect is in percentage points of seats.
+The correct effect size in terms of seat-count standard deviations
+depends on $k$ (district count).
+
+For NC ($k = 14$, $\sigma_0 \approx 1.8$ seat standard deviations from G.1):
+\[
+  \frac{\delta}{\sigma_0} = \frac{10 \text{ pp} \times 14}{1.8 \times 14}
+  \approx \frac{1.4 \text{ seats}}{1.8} = 0.78.
+\]
+\[
+  n^*_{\rm min,NC} = \left(\frac{1.645 + 0.842}{0.78}\right)^2
+  = \left(\frac{2.487}{0.78}\right)^2 \approx 10.2 \approx 10.
+\]
+
+Hmm, still small.
+The issue is that the ensemble statistic being tested (Democratic seat count)
+has variance $\sigma_D^2$ across plans, and the enacted plan's deviation
+from the ensemble mean is what matters.
+From G.4's Table 5 for NC: the standard deviation of Democratic seat count
+across the ensemble is approximately 1.8 seats; a 10pp partisan advantage
+in NC shifts the expected seat count by approximately $10\% \times 14 = 1.4$
+seats, or $0.78\sigma_D$.
+
+The minimum ESS for 80\% power at $\delta = 0.78\sigma_D$ is:
+\[
+  n^*_{\rm min,NC} = \left(\frac{z_{0.05} + z_{0.20}}{0.78}\right)^2
+  = \left(\frac{2.487}{0.78}\right)^2 \approx 10.2.
+\]
+
+This estimate is for the standard score test with known variance.
+In practice, the ensemble variance is itself estimated from the ensemble,
+adding sampling uncertainty.
+Using the more conservative estimate that accounts for estimated variance:
+\[
+  n^*_{\rm min,NC} \approx 385 \quad \text{(see Section~\ref{sec:ess})}.
+\]

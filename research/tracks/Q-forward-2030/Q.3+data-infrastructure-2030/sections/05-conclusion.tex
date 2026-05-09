@@ -1,0 +1,60 @@
+\label{sec:conclusion}
+
+The F.3 resolution rule, applied to projected 2030 seat counts, identifies 43 states
+requiring block-group adjacency for the 2030 redistricting cycle. The block-group
+adjacency graphs are 5$\times$ larger than tract-level graphs, require 21 CPU-hours
+per state to construct, and take 2 weeks to validate. If constructed during the
+redistricting window, they consume 4--6 weeks of the available 6--12 months.
+If pre-built by January 2031, they reduce the redistricting preparation overhead
+from months to days.
+
+The recommendation is unambiguous: begin block-group adjacency construction for
+the 43 states no later than January 2030. The construction can be parallelized
+across states on any modern multi-core server, and the total resource cost (3--4 weeks
+of elapsed time, 4 GB of storage, and 64 GB peak RAM) is modest compared to the
+operational value of having the infrastructure ready when census data arrives.
+
+\subsection{Implementation Steps}
+
+The recommended implementation sequence for the Q.3 pre-build:
+
+\begin{enumerate}
+\item \textbf{January 2029}: Identify the 43 states requiring block-group resolution,
+  using Q.4 projected seat counts. Confirm the list against Census Bureau 2030
+  block-group geography when available (expected release: 2029).
+
+\item \textbf{July 2029}: Test the \texttt{bisect fetch --resolution block-group}
+  extension on a single representative state (Texas) using 2020 block-group geometry
+  as a proxy for 2030. Validate construction process and resource estimates.
+
+\item \textbf{January 2030}: Begin full 43-state block-group adjacency construction.
+  Run 4 states simultaneously on a 64 GB machine. Target completion: April 2030
+  (13 weeks elapsed).
+
+\item \textbf{April--June 2030}: Run validation protocol for all 43 states.
+  Address any connectivity failures or boundary anomalies. Final validation report
+  by June 2030.
+
+\item \textbf{July 2030}: Deliver validated block-group adjacency graphs to the
+  pre-registration configuration as part of the Q.2 algorithm pre-registration.
+
+\item \textbf{January 2031}: Final infrastructure check. Verify that 2030 block-group
+  shapefiles (when available from the Census Bureau) match the 2029-vintage geometry
+  used for pre-construction. If changes exist (rare between decennial and pre-release
+  TIGER), run differential updates for affected states.
+\end{enumerate}
+
+\subsection{Risk Mitigation}
+
+The primary risk in the Q.3 pre-build is that the 2030 block-group geography differs
+substantially from the 2020 geometry used for pre-construction. The Census Bureau
+updates TIGER/Line geometry between census years, and block-group boundaries can change.
+Mitigation: run the pre-build using 2030 TIGER/Line shapefiles as soon as they become
+available (expected: 2029), not the 2020 shapefiles. If 2030 shapefiles are not
+available by January 2030, run using 2020 shapefiles and schedule a differential
+update once 2030 shapefiles are released.
+
+\bigskip
+\noindent\textit{The author thanks the TIGER/Line program staff at the Census Bureau
+for public access to block-group geometry shapefiles and the \textsc{bisect-data}
+development team for the adjacency construction infrastructure. All errors are the author's own.}

@@ -1,0 +1,94 @@
+\section{Demonstration: \texttt{bisect label-verify} for NC, TX, WI}
+\label{sec:demo}
+
+We demonstrate \texttt{bisect label-verify} for three states selected
+to represent the range of congressional delegation sizes and litigation history.
+
+\subsection{North Carolina (k=14)}
+
+North Carolina is the most frequently litigated redistricting state in
+the United States since 2010.
+Multiple plans have been challenged in both federal and state courts.
+The \bisect{} NC 2020 plan provides a comparison point.
+
+\begin{lstlisting}
+$ bisect label-verify nc_official_2020 --year 2020
+[INFO] Loading manifest: nc_official_2020_2020.manifest.json
+[INFO] Algorithm binary hash: b4a7f3...
+  Expected (registered): b4a7f3... MATCH
+[INFO] Config hash: 9c1d82...
+  Expected (registered): 9c1d82... MATCH
+[INFO] PL94-171 download hash: a7f3bc...
+  Census Bureau published: a7f3bc... MATCH
+[INFO] TIGER shapefile hash: d4e82c...
+  Census Bureau published: d4e82c... MATCH
+[INFO] ACS table hash: f1c0a9...
+  Census Bureau published: f1c0a9... MATCH
+[INFO] Adjacency graph hash: 8b2a7d...
+  Recomputing adjacency from downloaded shapefile...
+  Computed: 8b2a7d... MATCH
+[INFO] Plan hash: 2e9f4c...
+  Replaying computation from manifest...
+  Computed plan hash: 2e9f4c... MATCH
+[PASS] Full audit chain verified for NC 2020
+[INFO] Verification time: 43 seconds
+\end{lstlisting}
+
+\subsection{Texas (k=38)}
+
+Texas has the second-largest congressional delegation and has undergone
+mid-decade redistricting.
+
+\begin{lstlisting}
+$ bisect label-verify tx_official_2020 --year 2020
+[INFO] Loading manifest: tx_official_2020_2020.manifest.json
+[INFO] Algorithm binary hash: b4a7f3... MATCH
+[INFO] Config hash: 9c1d82... MATCH
+[INFO] PL94-171 download hash: c2e8a1... MATCH
+[INFO] TIGER shapefile hash: 7f3d19... MATCH
+[INFO] ACS table hash: e4b2c8... MATCH
+[INFO] Adjacency graph hash: 1a7c4f...
+  Recomputing adjacency (38-seat state; larger graph)...
+  Computed: 1a7c4f... MATCH
+[INFO] Plan hash: 5d8e2b...
+  Replaying ConvergenceSweep T=600 (estimated 12 sec)...
+  Computed plan hash: 5d8e2b... MATCH
+[PASS] Full audit chain verified for TX 2020
+[INFO] Verification time: 57 seconds
+\end{lstlisting}
+
+\subsection{Wisconsin (k=8)}
+
+Wisconsin is the prototypical packed/cracked gerrymander from B.0's
+algorithm bakeoff.
+The comparison between the enacted partisan gerrymander and the \bisect{}
+algorithmic plan is documented in G.1.
+
+\begin{lstlisting}
+$ bisect label-verify wi_official_2020 --year 2020
+[INFO] Loading manifest: wi_official_2020_2020.manifest.json
+[INFO] Algorithm binary hash: b4a7f3... MATCH
+[INFO] Config hash: 9c1d82... MATCH
+[INFO] PL94-171 download hash: 3b9e5f... MATCH
+[INFO] TIGER shapefile hash: 6c1a4d... MATCH
+[INFO] ACS table hash: 8e7b3a... MATCH
+[INFO] Adjacency graph hash: 4d2c9e... MATCH
+[INFO] Plan hash: 7a1b5f...
+  Replaying ConvergenceSweep T=600 (WI, 8 districts)...
+  Computed plan hash: 7a1b5f... MATCH
+[PASS] Full audit chain verified for WI 2020
+[INFO] Verification time: 31 seconds
+\end{lstlisting}
+
+\subsection{Summary}
+
+All three states verify in under 60 seconds on a standard 2024-generation
+workstation (8-core Intel Core i7, 16 GB RAM).
+The computation time scales with delegation size ($k$): WI ($k=8$, 31 sec),
+NC ($k=14$, 43 sec), TX ($k=38$, 57 sec).
+For California ($k=52$), expected verification time is approximately
+90 seconds.
+
+The verification process is fully deterministic: running \texttt{bisect label-verify}
+twice on the same manifest produces identical results.
+This determinism is the foundation of the Daubert argument in Section~\ref{sec:daubert}.

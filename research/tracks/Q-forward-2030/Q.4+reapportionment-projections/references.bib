@@ -1,0 +1,173 @@
+%% Q.4 References — 2030 Reapportionment Projections and Algorithmic Stability
+
+%% J-SERIES APPORTIONMENT REFERENCES
+
+@misc{j0paper,
+  author = {Della-Libera, Gio},
+  title  = {Congressional Apportionment Methods: A Mathematical Framework
+            for the \textsc{bisect} Platform},
+  year   = {2026},
+  note   = {J.0 in Apportionment series. Implements \textsc{bisect-apportion} crate.},
+}
+
+@misc{j1paper,
+  author = {Della-Libera, Gio},
+  title  = {Huntington-Hill Equal Proportions: Mathematical Properties and
+            50-State Verification},
+  year   = {2026},
+  note   = {J.1 in Apportionment series.},
+}
+
+%% B-SERIES ALGORITHM REFERENCES
+
+@misc{b5paper,
+  author = {Della-Libera, Gio},
+  title  = {N-Way vs.\ Recursive Bisection: Temporal Stability and Compactness Tradeoffs},
+  year   = {2026},
+  note   = {B.5 in Algorithmic Redistricting series.
+            Recursive: $80\,\%$ tract retention; N-way: $66\,\%$.
+            Compactness equivalent ($p=0.08$).},
+}
+
+@misc{b8paper,
+  author = {Della-Libera, Gio},
+  title  = {{GeoSection}: Isoperimetrically-Normalised Ratio-Optimal Bisection
+            for Congressional Redistricting},
+  year   = {2026},
+  note   = {B.8 in Algorithmic Redistricting series.
+            Defines $\mathrm{EC}_\text{norm} = \mathrm{EC}/\sqrt{\min(i,k-i)}$.},
+}
+
+@misc{b11paper,
+  author = {Della-Libera, Gio},
+  title  = {{ApportionRegions}: Prime-Factorisation Bisection Trees
+            Linked to Huntington-Hill Apportionment},
+  year   = {2026},
+  note   = {B.11 in Algorithmic Redistricting series.
+            Documents \texttt{prime-factor} structure and fallback for prime $k$.},
+}
+
+@misc{b18paper,
+  author = {Della-Libera, Gio},
+  title  = {Multi-Reapportionment Stability of Recursive Bisection Plans},
+  year   = {2026},
+  note   = {B.18 in Algorithmic Redistricting series.
+            Introduces county disruption metric. 2010--2020 observed disruption: 66\,\%.},
+}
+
+%% Q-SERIES REFERENCES
+
+@misc{q0paper,
+  author = {Della-Libera, Gio},
+  title  = {Planning for 2030: Why Redistricting Infrastructure Must Begin Now},
+  year   = {2026},
+  note   = {Q.0 in Forward-2030 series. Overview paper.},
+}
+
+@misc{q3paper,
+  author = {Della-Libera, Gio},
+  title  = {Data Infrastructure for 2030: When Tracts Are No Longer Adequate},
+  year   = {2026},
+  note   = {Q.3 in Forward-2030 series.},
+}
+
+%% APPORTIONMENT LITERATURE
+
+@article{huntington1928,
+  author  = {Huntington, Edward V.},
+  title   = {The Apportionment of Representatives in Congress},
+  journal = {Transactions of the American Mathematical Society},
+  volume  = {30},
+  number  = {1},
+  pages   = {85--110},
+  year    = {1928},
+}
+
+@article{balinski1982,
+  author  = {Balinski, Michel L. and Young, H. Peyton},
+  title   = {Fair Representation: Meeting the Ideal of One Man, One Vote},
+  journal = {Yale University Press},
+  year    = {1982},
+}
+
+@article{ernst1994,
+  author  = {Ernst, Lawrence R.},
+  title   = {Apportionment Methods for the House of Representatives and the Court
+             Challenges},
+  journal = {Management Science},
+  volume  = {40},
+  number  = {10},
+  pages   = {1207--1227},
+  year    = {1994},
+}
+
+%% LEGAL BASIS
+
+@misc{usca2a,
+  title = {2 U.S.C. \S\S 2a--2b},
+  year  = {1941},
+  note  = {Statutory apportionment formula (Huntington-Hill equal proportions),
+           as applied since the Apportionment Act of 1941.},
+}
+
+@misc{wesberry1964,
+  title = {Wesberry v.\ Sanders},
+  year  = {1964},
+  note  = {376 U.S. 1 (1964). One person, one vote for congressional districts.},
+}
+
+%% CENSUS DATA AND PROJECTIONS
+
+@misc{censusProjections2023,
+  author = {{U.S. Census Bureau}},
+  title  = {2023 National Population Projections: Main Series},
+  year   = {2023},
+  note   = {Medium-series (50th percentile) projections by state through 2060.
+            Available from \url{https://www.census.gov/newsroom/press-kits/2023/national-population-projections.html}.},
+}
+
+@misc{census2020pl,
+  author = {{U.S. Census Bureau}},
+  title  = {2020 Census Redistricting Data (P.L. 94-171)},
+  year   = {2021},
+  note   = {Apportionment population by state (resident population
+            plus overseas civilian and military).},
+}
+
+@misc{dmdc2022,
+  author = {{Defense Manpower Data Center}},
+  title  = {Military and Civilian Personnel by State/Country, 2022},
+  year   = {2022},
+  note   = {Available from \url{https://www.dmdc.osd.mil/}.
+            Used for overseas military adjustment in apportionment population.},
+}
+
+%% SUN BELT GROWTH LITERATURE
+
+@article{green2017,
+  author  = {Green, Elliott},
+  title   = {What Are the Most-Cited Publications in the Social Sciences
+             (According to Google Scholar)?},
+  journal = {LSE Impact Blog},
+  year    = {2016},
+}
+
+@book{frey2018,
+  author    = {Frey, William H.},
+  title     = {Diversity Explosion: How New Racial Demographics Are Remaking America},
+  publisher = {Brookings Institution Press},
+  edition   = {Updated},
+  year      = {2018},
+}
+
+%% COMPUTATIONAL REFERENCES
+
+@article{karypis1998,
+  author  = {Karypis, George and Kumar, Vipin},
+  title   = {A Fast and High Quality Multilevel Scheme for Partitioning Irregular Graphs},
+  journal = {SIAM Journal on Scientific Computing},
+  volume  = {20},
+  number  = {1},
+  pages   = {359--392},
+  year    = {1998},
+}

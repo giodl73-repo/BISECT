@@ -1,0 +1,72 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\usepackage{booktabs}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{microtype}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{titlesec}
+
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+\setstretch{1.4}
+
+\newcommand{\bisect}{\textsc{bisect}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\dia}{\textsc{Districting Integrity Act}}
+\newcommand{\PP}{\ensuremath{\mathrm{PP}}}
+\newcommand{\ess}{\ensuremath{\mathrm{ESS}}}
+\newcommand{\bh}{\text{BH}}
+
+\title{%
+  \textbf{Statistical Inference in Redistricting:\\
+  Challenges and Framework}\\[0.8em]
+  \normalsize\textit{S.0 --- Statistical Inference Track}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Statistical inference, redistricting ensemble, gerrymandering detection,
+null distribution, multiple testing, FDR control, power analysis,
+effective sample size, calibrated p-value
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-four-challenges}
+\input{sections/03-framework}
+\input{sections/04-track-overview}
+\input{sections/05-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

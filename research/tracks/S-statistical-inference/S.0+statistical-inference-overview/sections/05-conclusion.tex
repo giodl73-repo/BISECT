@@ -1,0 +1,32 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+Redistricting analysis currently operates in an inferential gap:
+it produces descriptive percentile claims that lack the statistical
+rigour required for litigation-grade evidence.
+The four challenges identified in this paper---combinatorial test statistics,
+simulation-dependent null distributions, multiple testing, and small-tail
+ESS---are solvable with existing statistical methodology.
+
+The three-component framework (calibrated null distribution, FDR correction,
+power analysis) bridges this gap.
+It is not a new statistical theory; it is an application of well-established
+methods (Benjamini-Hochberg, ESS correction, permutation tests) to the
+redistricting domain.
+
+The S-track papers (S.1--S.4) implement each component with worked examples
+and provide reference implementations in \bisect{}.
+Together, they convert the redistricting ensemble from a descriptive tool
+into a rigorous inferential instrument---one that can support expert
+testimony meeting the Daubert standard and provide courts with the
+``judicially manageable standard'' that \textit{Rucho} found lacking
+in partisan gerrymandering claims.
+
+The practical recommendation for redistricting practitioners:
+(1)~certify ensemble convergence using G.4's diagnostics before
+reporting any percentile claim; (2)~use ESS-corrected sample sizes
+for confidence intervals; (3)~apply BH correction when reporting
+multiple metrics; and (4)~report power as a companion to any
+null-hypothesis test.
+These steps convert anecdotal evidence of extremity into statistically
+defensible claims.

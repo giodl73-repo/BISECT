@@ -1,0 +1,111 @@
+\label{sec:apportionment}
+
+\subsection{Huntington-Hill Method}
+
+The Huntington-Hill method allocates seats by iteratively assigning the next seat to
+the state with the highest priority value. After each state $s$ receives its $a_s$-th
+seat, its priority is:
+
+\begin{equation}
+P_s = \frac{\text{pop}_s}{\sqrt{a_s(a_s + 1)}}
+\end{equation}
+
+where $\text{pop}_s$ is state $s$'s apportionment population. The method is initialized
+by giving all 50 states their first seat (constitutionally mandated) and then iteratively
+awarding seats 51 through 435 to the state with the highest priority value.
+
+\subsection{Projected 2030 Populations}
+
+Table~\ref{tab:projections} reports the Census Bureau medium-series projected
+apportionment populations for the 18 states with projected seat changes, plus the
+four largest states for reference.
+
+\begin{table}[ht]
+\centering
+\caption{Projected 2030 Apportionment Populations and Seat Changes}
+\label{tab:projections}
+\begin{tabular}{lrrrl}
+\toprule
+State & Pop.\ 2020 & Pop.\ 2030 (proj.) & Seats 2020 & Seats 2030 (proj.) \\
+\midrule
+\multicolumn{5}{l}{\textit{Gaining states:}} \\
+Texas & 29,145,505 & 33,010,000 & 38 & \textbf{41} ($+3$) \\
+Florida & 21,538,187 & 24,240,000 & 28 & \textbf{30} ($+2$) \\
+Arizona & 7,151,502 & 8,480,000 & 9 & \textbf{10} ($+1$) \\
+North Carolina & 10,439,388 & 11,270,000 & 14 & \textbf{15} ($+1$) \\
+Colorado & 5,773,714 & 6,590,000 & 8 & \textbf{9} ($+1$) \\
+Montana & 1,084,225 & 1,250,000 & 2 & \textbf{3} ($+1$) \\
+Oregon & 4,237,256 & 4,810,000 & 6 & \textbf{7} ($+1$) \\
+Idaho & 1,839,106 & 2,180,000 & 2 & \textbf{3} ($+1$) \\
+\midrule
+\multicolumn{5}{l}{\textit{Losing states:}} \\
+New York & 20,201,249 & 19,190,000 & 27 & \textbf{25} ($-2$) \\
+Illinois & 12,812,508 & 11,980,000 & 17 & \textbf{16} ($-1$) \\
+Ohio & 11,799,448 & 11,310,000 & 16 & \textbf{15} ($-1$) \\
+Pennsylvania & 13,002,700 & 12,450,000 & 17 & \textbf{16} ($-1$) \\
+Michigan & 10,077,331 & 9,670,000 & 13 & \textbf{12} ($-1$) \\
+Wisconsin & 5,893,718 & 5,770,000 & 8 & \textbf{7} ($-1$) \\
+Minnesota & 5,706,494 & 5,530,000 & 8 & \textbf{7} ($-1$) \\
+West Virginia & 1,793,716 & 1,560,000 & 2 & \textbf{1} ($-1$) \\
+Rhode Island & 1,097,379 & 1,050,000 & 2 & \textbf{1} ($-1$) \\
+Connecticut & 3,605,944 & 3,470,000 & 5 & \textbf{4} ($-1$) \\
+\midrule
+\multicolumn{5}{l}{\textit{Reference (large stable states):}} \\
+California & 39,538,223 & 39,850,000 & 52 & \textbf{52} (0) \\
+Georgia & 10,711,908 & 11,650,000 & 14 & \textbf{14} (0) \\
+Virginia & 8,631,393 & 9,080,000 & 11 & \textbf{11} (0) \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item Projected 2030 populations from Census Bureau 2023 medium-series projections.
+  Seat allocations computed with \textsc{bisect-apportion}.
+  Total seats remain 435. 32 states have unchanged seat counts.
+\end{tablenotes}
+\end{table}
+
+\subsection{Uncertainty in Seat Boundary States}
+
+Three states (Montana, Oregon, Idaho) have projection uncertainty ranges that span
+the seat allocation threshold. For these states, the seat count depends on population
+projections that could move by 3--5\% in either direction based on migration trends.
+Table~\ref{tab:uncertain} reports the threshold populations at which each of these
+states crosses the seat boundary.
+
+\begin{table}[ht]
+\centering
+\caption{Seat Boundary Uncertainty: States Near the Allocation Threshold}
+\label{tab:uncertain}
+\begin{tabular}{lrlrr}
+\toprule
+State & Base Proj.\ (2030) & Change & Threshold Pop. & Buffer (\%) \\
+\midrule
+Montana & 1,250,000 & $+1$ & 1,185,000 & $+5.5\%$ above threshold \\
+Oregon & 4,810,000 & $+1$ & 4,740,000 & $+1.5\%$ above threshold \\
+Idaho & 2,180,000 & $+1$ & 2,095,000 & $+4.1\%$ above threshold \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item Threshold population: the population at which the Huntington-Hill priority value
+  for the $n$-th seat (projected allocation) equals the priority for the $(n-1)$-th
+  seat held by the state with the lowest priority among current seat-holders.
+\end{tablenotes}
+\end{table}
+
+Oregon is the most uncertain: at 1.5\% above its threshold, a modest downward revision
+of migration projections could drop Oregon back to 6 seats. The \textsc{bisect}
+infrastructure plan should prepare configurations for both seat counts in Oregon,
+Montana, and Idaho, and finalize based on the actual 2030 census data.
+
+\subsection{Summary of 2030 Projected Allocation}
+
+The 2030 projected allocation continues the multi-decade Sun Belt growth pattern:
+\begin{itemize}
+\item Sun Belt gainers (TX, FL, AZ, NC, CO) account for 8 of the 11 new seats.
+\item Rust Belt and Northeast losers (NY, IL, OH, PA, MI, WI, MN, WV, RI, CT)
+  collectively lose 11 seats.
+\item Total seat change: $+11$ gainers, $-11$ losers $= 0$ net change (435 total).
+\item The magnitude is comparable to the 2010--2020 cycle (8 gaining, 10 losing)
+  but concentrated more heavily in Texas ($+3$) than in 2020 ($+2$).
+\end{itemize}

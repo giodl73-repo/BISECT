@@ -1,0 +1,78 @@
+\section{Daubert Standard Analysis}
+\label{sec:daubert}
+
+\subsection{The Daubert Framework}
+
+In \textit{Daubert v.\ Merrell Dow Pharmaceuticals}~\citep{daubert1993},
+the Supreme Court established four criteria for admissibility of
+scientific expert testimony in federal courts:
+\begin{enumerate}
+\item \textbf{Testability}: The theory or technique can be and has been tested.
+\item \textbf{Peer review and publication}: The theory or technique has been
+  subjected to peer review and publication.
+\item \textbf{Known or potential error rate}: The known or potential error
+  rate of the technique is acceptable.
+\item \textbf{General acceptance}: The theory or technique is generally
+  accepted in the relevant scientific community.
+\end{enumerate}
+
+\textit{Daubert} applies directly to federal proceedings; most states
+have adopted similar standards.
+
+\subsection{The Audit Chain Under Daubert}
+
+\paragraph{Criterion 1: Testability.}
+The \bisect{} audit chain is maximally testable: any party with access to
+the public manifest and an internet connection can run \texttt{bisect label-verify}
+and independently confirm or refute the original expert's computation.
+This exceeds the typical testability requirement: most scientific techniques
+require specialized equipment or training to test, whereas \texttt{bisect label-verify}
+can be run by any qualified expert in redistricting or computer science.
+\textbf{Criterion 1: Satisfied.}
+
+\paragraph{Criterion 2: Peer review and publication.}
+The SHA-256 algorithm is standardized by NIST in FIPS PUB 180-4~\citep{fips180}
+and has been subjected to extensive peer review and cryptanalysis over two
+decades.
+The \bisect{} algorithm is documented in B.1~\citep{b1paper} and subsequent
+papers, and the audit chain architecture is described in this paper.
+\textbf{Criterion 2: Satisfied.}
+
+\paragraph{Criterion 3: Known error rate.}
+The false non-detection rate of the SHA-256 audit chain is bounded by
+$2^{-80}$ (probability that a tampered manifest passes verification under
+the birthday attack model).
+This error rate is $10^{-24}$, far below any reasonable threshold for
+legal evidence (which typically requires only that evidence be ``more
+probable than not'' or, for criminal cases, ``beyond reasonable doubt'').
+\textbf{Criterion 3: Satisfied.}
+
+\paragraph{Criterion 4: General acceptance.}
+SHA-256 is the most widely deployed cryptographic hash function in the world,
+used in TLS/SSL, code signing, version control (git), and government
+document integrity verification.
+It is accepted by NIST, FIPS, NSA, and the cryptographic research community.
+\textbf{Criterion 4: Satisfied.}
+
+\subsection{The Reproducibility Advantage}
+
+Beyond satisfying Daubert's four criteria, the audit chain provides a
+reproducibility guarantee that is unusual in redistricting expert testimony.
+Typically, an expert's computational analysis is reproducible in principle
+but impractical in practice: the opposing party would need to obtain the
+same software, same data, and same parameter settings, and then run the same
+analysis.
+
+With \bisect{}'s audit chain, reproducibility is:
+\begin{itemize}
+\item \textbf{Automatic}: \texttt{bisect label-verify} performs the reproduction.
+\item \textbf{Fast}: Under 60 seconds for any state (see Section~\ref{sec:demo}).
+\item \textbf{Exact}: The reproduction is bit-for-bit identical; there is no
+  ``reproduction with minor variations.''
+\item \textbf{Open}: The \bisect{} binary is open-source; the algorithm and
+  its implementation can be audited by any qualified expert.
+\end{itemize}
+
+This makes the expert's computation ``reproducibly falsifiable''---the
+opponent does not need to dispute the expert's methodology; they need only
+run \texttt{bisect label-verify} and check whether it passes or fails.

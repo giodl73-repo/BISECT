@@ -1,0 +1,67 @@
+\label{sec:conclusion}
+
+We have provided the first systematic analysis of 2030 projected reapportionment
+outcomes and their implications for the \textsc{bisect} redistricting platform.
+The main findings are:
+
+\begin{enumerate}
+\item The projected 2030 Huntington-Hill apportionment produces 8 gaining states
+  (TX $+3$, FL $+2$, plus 6 states gaining 1 seat each) and 10 losing states
+  (NY $-2$, plus 9 states losing 1 seat each), with 32 states unchanged.
+  Texas at $k=41$ and Florida at $k=30$ are the largest redistricting challenges.
+
+\item Projected 2020--2030 county disruption averages 58\%, lower than the observed
+  2010--2020 average of 66\%. The lower disruption reflects predictable Sun Belt
+  growth patterns and the contraction structure of losing states, both of which
+  make optimal county groupings more stable across cycles.
+
+\item Texas $k=41$ triggers the prime-factor fallback in the \texttt{prime-factor}
+  structure (since 41 is prime), producing a $20+21$ binary top-level split.
+  The ratio-optimal structure (\texttt{ratio-optimal}) is recommended for Texas 2030
+  because it evaluates all candidate root splits and selects the GeoSection-optimal
+  partition, providing marginal improvements in compactness (PP $+0.02$) and county
+  preservation ($+3$ pp) over the standard-bisect fallback.
+\end{enumerate}
+
+\subsection{Implications for Q-Series Infrastructure Planning}
+
+The Q.4 findings directly inform the other Q-series tasks:
+
+\begin{itemize}
+\item \textbf{Q.3 block-group resolution}: The four newly requiring block-group
+  resolution states (CO, NC, and two others based on finalized projections) are
+  identified by applying the F.3 rule to Q.4 $k$-values. Q.3 should begin adjacency
+  construction planning as soon as Q.4 $k$-values are confirmed.
+
+\item \textbf{Q.2 pre-registration}: The Texas \texttt{ratio-optimal} recommendation
+  and the three uncertain states (MT, OR, ID) requiring dual-configuration preparation
+  are inputs to Q.2's state-by-state configuration audit.
+
+\item \textbf{Q.1 data update}: States gaining seats (particularly TX, FL, AZ) will
+  show the largest demographic changes from 2021 to 2028, making the LODES/ACS update
+  most critical for these states.
+
+\subsection{Limitations and Robustness}
+
+The primary limitation is projection uncertainty. Census Bureau medium-series projections
+have historically over-estimated growth in states that subsequently experienced economic
+slowdowns (California 2000s) and under-estimated growth in fast-growing states
+(Arizona, Georgia 2010s). The 2030 projections may miss:
+
+\begin{itemize}
+\item Post-pandemic migration reversal from Sun Belt states (if remote work normalization
+  reverses the 2020--2022 domestic migration surge).
+\item Climate-driven migration from vulnerable coastal areas (FL, TX Gulf Coast).
+\item Immigration policy effects on Hispanic growth rates (major driver of TX, AZ, FL growth).
+\end{itemize}
+
+We recommend treating the Q.4 seat allocations as planning inputs with uncertainty
+ranges (Table~\ref{tab:uncertain}) rather than point predictions. Infrastructure
+preparation should proceed for the median projection while maintaining flexibility
+for adjacent seat allocations in the three boundary states.
+
+\bigskip
+\noindent\textit{The author thanks the Census Bureau's Population Division for public
+access to the 2023 National Population Projections and the Defense Manpower Data Center
+for 2022 state-of-legal-residence counts used for the overseas adjustment.
+All errors are the author's own.}

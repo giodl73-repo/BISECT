@@ -1,0 +1,94 @@
+\section{S-Track Contributions}
+\label{sec:track}
+
+The S-track comprises four papers (S.1--S.4) that implement the
+three-component framework with worked examples.
+
+\begin{table}[h]
+\centering
+\caption{S-track paper summary. Method and primary contribution for each paper.}
+\label{tab:track-overview}
+\begin{tabular}{llll}
+\toprule
+Paper & Title & Method & Primary contribution \\
+\midrule
+S.1 & Hypothesis testing & Permutation test & Calibrated p-values from \\
+    & for gerrymandering & + calibrated ensemble & G.1 ensemble data \\
+\midrule
+S.2 & Bayesian redistricting & Bayesian inference & Bayesian Detection Score \\
+    &                        & Beta posterior & (BDS) for courts \\
+\midrule
+S.3 & Power analysis for & Power-ESS formula & Min.\ ensemble sizes; \\
+    & ensemble sizing & (Section 3.2) & 50-state table \\
+\midrule
+S.4 & Multiple testing & Benjamini-Hochberg & BH applied to L-track \\
+    & FDR control & FDR at $q = 0.10$ & 1,050-test battery \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{S.1: Hypothesis Testing}
+
+S.1 develops a permutation test framework for partisan gerrymandering
+that converts G.1's ensemble percentiles into calibrated p-values.
+The key step is accounting for ensemble autocorrelation (C2) and
+tail-estimation uncertainty (C4) simultaneously.
+
+For North Carolina 2022 enacted plan:
+\begin{itemize}
+\item Nominal percentile (G.1): 0.4th percentile (Democratic seats)
+\item ESS correction (G.4): $n^* = 695$ (not 10,000)
+\item Calibrated p-value: $p_{\rm cal} = 0.008$
+\item 95\% CI on true percentile: $[0.2\%, 1.5\%]$
+\end{itemize}
+
+The calibrated p-value of 0.008 supports rejection at $\alpha = 0.05$
+even after correction, but the confidence interval shows the claim is
+``at most 1.5th percentile'' rather than exactly ``0.4th percentile.''
+
+\subsection{S.2: Bayesian Redistricting}
+
+S.2 provides the Bayesian Detection Score (BDS) developed in the
+S.2 paper~\citep{s2paper}.
+BDS converts the ensemble percentile and ESS into a posterior probability
+that the plan was intentionally selected for partisan advantage.
+For NC 2022 ($\hat{p} = 0.004$, $n^* \approx 695$): BDS $\approx 0.97$.
+
+\subsection{S.3: Power Analysis}
+
+S.3 derives minimum ensemble sizes for 80\% power at $\alpha = 0.05$
+to detect a 10pp partisan advantage.
+Key results (from the formula in Section~\ref{sec:framework}):
+\begin{itemize}
+\item NC ($k = 14$, $\rho_1 = 0.87$): minimum $\approx 5{,}000$ steps
+\item CA ($k = 52$, $\rho_1 = 0.94$): minimum $\approx 30{,}000$ steps
+\end{itemize}
+Current practice (10,000 steps) gives 80\% power for NC but only 45\%
+for California.
+
+\subsection{S.4: Multiple Testing}
+
+S.4 applies the Benjamini-Hochberg procedure to the L-track's 1,050-test
+battery (7 metrics $\times$ 50 states $\times$ 3 cycles).
+At $q = 0.10$, BH correction reduces significant findings from 147
+(uncorrected) to 89.
+All clear gerrymanders (NC, WI, TX enacted) remain significant.
+The 58 demoted cases were at the margin of significance under the
+uncorrected test, suggesting they are likely false positives.
+
+\subsection{Integration}
+
+The three components integrate as follows in a complete analysis:
+
+\begin{enumerate}
+\item Generate ensemble with minimum size from S.3's 50-state table
+\item Certify convergence using G.4's $\hat{R}$ and ESS diagnostics
+\item Compute calibrated p-values using S.1's ESS-corrected formula
+\item Apply S.4's BH procedure to the full test battery
+\item Report BDS from S.2 as a court-facing summary
+\end{enumerate}
+
+This pipeline converts the current practice (``plan at Xth percentile'')
+into litigation-grade inference (``plan is statistically significant at
+FDR $q = 0.10$, with 80\% power to detect the observed effect size,
+BDS = 0.97'').

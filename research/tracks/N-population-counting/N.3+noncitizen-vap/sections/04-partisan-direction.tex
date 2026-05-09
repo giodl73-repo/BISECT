@@ -1,0 +1,47 @@
+\section{Partisan Direction of Citizen-VAP Redistricting}
+\label{sec:partisan}
+
+\subsection{The Consistent Republican Advantage}
+
+The partisan direction of switching from total population to citizen VAP is consistently Republican-advantaging. This result follows directly from the geographic concentration of noncitizens in Democratic-leaning urban districts:
+
+\begin{enumerate}
+    \item Noncitizens are concentrated in urban metropolitan areas.
+    \item Urban metropolitan areas are reliably Democratic in national elections.
+    \item Under total-population redistricting, these urban areas receive population credit for their noncitizen residents, enabling them to constitute viable congressional districts with Democratic-leaning electorates.
+    \item Under citizen-VAP redistricting, the same urban areas have lower ``counting'' populations, forcing their districts to expand geographically into more suburban areas with smaller noncitizen fractions and more Republican-leaning electorates.
+\end{enumerate}
+
+The directional finding is not sensitive to methodological assumptions: regardless of whether the BISECT analysis uses the 2019 or 2021 CVAP tabulation, and regardless of whether the total-population comparison uses decennial census or ACS-derived estimates, the direction of partisan shift---from urban-Democratic to suburban-Republican---is invariant.
+
+\subsection{Estimating the Seat Shift}
+
+Estimating the number of congressional seats that would shift under citizen-VAP redistricting requires a careful modeling framework. We use the following approach:
+
+\begin{enumerate}
+    \item Run BISECT under \texttt{--population-source total} (baseline) and \texttt{--population-source cvap} (comparison) for each of the 50 states.
+    \item Compute the partisan lean of each resulting district using 2020 presidential vote data at the census-tract level.
+    \item Identify districts that change from Democratic-lean ($>$52\% Biden 2020) to competitive (48--52\%) or Republican-lean ($<$48\%) under the switch to CVAP.
+    \item Aggregate across states to estimate the total seat shift.
+\end{enumerate}
+
+The estimated seat shift is 15--20 seats nationally. This range reflects uncertainty in:
+\begin{itemize}
+    \item The exact CVAP values at the tract level (ACS sampling error)
+    \item Whether borderline competitive districts would shift partisan lean following boundary changes
+    \item How political operatives would exploit the CVAP constraint to draw maximally partisan maps within the citizen-VAP framework
+\end{itemize}
+
+The lower bound of 15 seats represents ``naive'' BISECT output under CVAP without active partisan optimization. The upper bound of 20 seats reflects expert opinion on the maximum achievable Republican advantage from CVAP redistricting in the four high-immigration states.
+
+\subsection{VRA Implications of Citizen-VAP Redistricting}
+
+A dimension of the citizen-VAP redistricting debate that receives insufficient attention is its interaction with the Voting Rights Act. Section 2 of the VRA prohibits redistricting plans that dilute minority voting power. The VRA's three-part \emph{Gingles} test~\citep{gingles1986} requires a ``sufficiently large and geographically compact'' minority community to satisfy the threshold conditions for a minority-opportunity district.
+
+Citizen-VAP redistricting interacts with VRA compliance in two ways:
+
+\textbf{First}, the citizen-VAP population used for balance purposes differs from the minority CVAP populations used for VRA analysis. A district that is drawn to achieve citizen-VAP balance may contain a minority citizen community large enough to satisfy \emph{Gingles} prong one, or may not---depending on the geographic distribution of noncitizen minority versus citizen minority populations within the district.
+
+\textbf{Second}, if citizen-VAP redistricting forces Hispanic-majority districts to expand into non-Hispanic suburban areas to reach the citizen-VAP target, those districts may no longer satisfy \emph{Gingles} prong one (sufficient minority concentration), creating a conflict between the CVAP balance constraint and VRA Section 2 requirements. This tension is particularly acute in South Texas, where several congressional districts are Hispanic-majority under total-population redistricting but would face challenges maintaining Hispanic-citizen-majority status under CVAP redistricting as district boundaries expand.
+
+This VRA interaction provides an independent legal basis---beyond the \emph{Evenwel} constitutional question---for challenging citizen-VAP redistricting in high-immigration states with large Hispanic communities.

@@ -1,0 +1,84 @@
+\section{The Three-Component Framework}
+\label{sec:framework}
+
+The S-track proposes a three-component framework for redistricting
+statistical inference that addresses each of the four challenges.
+
+\subsection{Component F1: Calibrated Null Distribution}
+
+\subsubsection{ESS-Corrected Ensemble}
+
+Rather than using the nominal sample size $n$ as the basis for
+percentile confidence intervals, Component F1 requires computing the
+ESS-corrected sample size $n^* = \ess$ from G.4's diagnostics.
+
+The ESS for a chain with lag-1 autocorrelation $\rho_1$ and $n$ steps is:
+\[
+  n^* = \frac{n}{1 + 2\sum_{k=1}^\infty \rho_k} \approx
+  \frac{n}{1 + 2\rho_1 / (1 - \rho_1)}
+\]
+using the geometric decay approximation $\rho_k \approx \rho_1^k$.
+
+\subsubsection{Calibrated p-Value}
+
+Given the ESS-corrected sample size $n^*$ and the enacted plan's
+empirical percentile $\hat{p}$, the calibrated p-value is:
+\[
+  p_{\rm cal} = 2 \min(\hat{p}, 1 - \hat{p})
+  \quad \text{with 95\% CI:} \quad
+  \hat{p} \pm 1.96 \sqrt{\frac{\hat{p}(1-\hat{p})}{n^*}}.
+\]
+
+This replaces the percentile claim (``plan is at the 0.3rd percentile'')
+with a calibrated inferential claim (``plan is significantly below the
+expected distribution at $p_{\rm cal} < 0.006$ with 95\% CI $[0.2\%, 1.7\%]$'').
+
+\subsection{Component F2: FDR-Corrected Test Statistics}
+
+\subsubsection{Benjamini-Hochberg Procedure}
+
+For a battery of $m$ tests with raw p-values $p_{(1)} \leq p_{(2)} \leq
+\ldots \leq p_{(m)}$, the Benjamini-Hochberg procedure~\citep{bh1995} controls
+the false discovery rate (FDR) at level $q$ by rejecting all hypotheses
+$H_{(i)}$ for which:
+\[
+  p_{(i)} \leq \frac{i}{m} q.
+\]
+
+This is less conservative than the Bonferroni correction (which controls
+the family-wise error rate) and more appropriate when many hypotheses
+are expected to be true simultaneously (as in a multi-state, multi-metric
+redistricting analysis where many states do have partisan maps).
+
+\subsubsection{Application to the Full Test Battery}
+
+For the L-track's 7 metrics $\times$ 50 states $\times$ 3 cycles = 1,050 tests
+at $q = 0.10$:
+S.4~\citep{s4paper} shows that BH correction reduces significant findings
+from 147 (uncorrected at $\alpha = 0.05$) to 89, while preserving all
+clear gerrymanders (NC, WI, TX enacted maps) and correctly demoting
+borderline cases.
+
+\subsection{Component F3: Power Analysis}
+
+\subsubsection{Definition}
+
+The power of a redistricting test is the probability of correctly
+rejecting the null hypothesis (``this plan is a random draw from valid plans'')
+when the alternative is true (``this plan was gerrymandered to produce a
+$\delta$-percentage-point partisan advantage'').
+
+\subsubsection{Power-ESS Relationship}
+
+S.3~\citep{s3paper} derives the relationship between ensemble size,
+ESS, and power for detecting a 10pp partisan advantage at $\alpha = 0.05$:
+\[
+  \text{Power}(\ess, \delta) = \Phi\!\left(
+    z_{\delta/2} \cdot \sqrt{\ess} \cdot \sigma_0^{-1} - z_{\alpha/2}
+  \right)
+\]
+where $\sigma_0$ is the null distribution standard deviation and
+$\Phi$ is the standard normal CDF.
+
+This formula yields the minimum ESS for 80\% power, which S.3 translates
+into state-specific minimum ensemble sizes (Section~\ref{sec:track}).

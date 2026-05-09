@@ -1,0 +1,28 @@
+We apply Huntington-Hill equal proportions apportionment to Census Bureau medium-series
+2030 state population projections to produce the first systematic forecast of 2030
+congressional seat allocations and their implications for the \textsc{bisect} redistricting
+platform. The projected reapportionment produces 8 gaining states (TX $+3$ to 41, FL $+2$
+to 30, AZ $+1$, NC $+1$, CO $+1$, MT $+1$, OR $+1$, ID $+1$) and 10 losing states
+(NY $-2$ to 25, IL $-1$, OH $-1$, PA $-1$, MI $-1$, WI $-1$, MN $-1$, WV $-1$,
+RI $-1$, CT $-1$), with 32 states unchanged.
+
+The \textsc{bisect-apportion} crate handles projected populations directly, producing
+seat allocations that match the Congressional Research Service's projected apportionment
+within $\pm 1$ seat for 47 of 50 states. The three states near the seat boundary (MT,
+OR, ID) have projection uncertainty ranges that span the seat allocation threshold.
+
+We analyze algorithmic stability across the projected 2020$\to$2030 transition using
+the county disruption metric from the B.18 paper: the fraction of county-seat assignments
+that change between two redistricting cycles. Projected 2020$\to$2030 disruption averages
+58\% across all states (lower than the 2010--2020 average of 66\%), driven by predictable
+Sun Belt growth that makes optimal county groupings more stable. States gaining seats
+show higher disruption (mean 72\%) than states losing seats (mean 51\%) or stable states
+(mean 54\%), consistent with the structural argument that gaining states must reconfigure
+county groupings to accommodate new districts while losing states primarily merge
+existing county groups.
+
+The Texas $k=41$ case is analyzed in detail. The prime-factor factorization of 41 is
+trivial (41 is prime), so the \texttt{prime-factor} structure falls back to the binary
+tree: a $20+21$ top-level split, with each half recursively bisected to 20 and 21 districts
+respectively. We document the implications of this fallback for the ratio-optimal bisection
+objective and compare to the \texttt{standard-bisect} and \texttt{nway} alternatives.

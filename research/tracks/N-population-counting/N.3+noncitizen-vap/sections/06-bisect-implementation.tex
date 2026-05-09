@@ -1,0 +1,52 @@
+\section{BISECT Implementation: The \texttt{--population-source cvap} Flag}
+\label{sec:bisect}
+
+\subsection{Data Source: The Census CVAP Special Tabulation}
+
+BISECT's CVAP mode uses the Census Bureau's Citizen Voting Age Population Special Tabulation as its population source. The tabulation is published annually (derived from 5-year ACS estimates) at the census-tract level, providing CVAP estimates by race/ethnicity category (total, Hispanic, non-Hispanic white, non-Hispanic Black, non-Hispanic Asian, non-Hispanic AIAN, and non-Hispanic NHOPI/other).
+
+The CVAP tabulation is distinct from the decennial census P.L. 94-171 redistricting file. Key differences:
+\begin{itemize}
+    \item \textbf{Source}: ACS 5-year estimates (CVAP) versus decennial census (total population)
+    \item \textbf{Accuracy}: ACS has sampling error at the tract level; decennial census is a near-complete enumeration
+    \item \textbf{Timeliness}: ACS is published annually; the relevant tabulation for 2020 redistricting is the 2019 ACS 5-year (covering 2015--2019)
+    \item \textbf{Geographic resolution}: Both are available at census-tract level; CVAP is not available at census-block level
+\end{itemize}
+
+The tract-level sampling error in CVAP estimates is the principal methodological limitation of citizen-VAP redistricting. In tracts with small populations ($<$500 persons), CVAP margin-of-error can exceed 30\% of the estimate, making the citizen-VAP population count unreliable for precise redistricting balance. BISECT handles this by using the point estimate with a warning flag when tract-level CVAP margin-of-error exceeds 20\%.
+
+\subsection{Implementation Details}
+
+The \texttt{--population-source cvap} flag modifies BISECT's balance constraint in recursive bisection. Under total-population balancing, each partition step requires:
+\[
+\left| P_i - \frac{P_{\text{total}}}{k} \right| \leq \epsilon \cdot \frac{P_{\text{total}}}{k}
+\]
+where $P_i$ is the total population of partition $i$, $P_{\text{total}}$ is the state total population, $k$ is the number of districts, and $\epsilon$ is the balance tolerance (default 0.005).
+
+Under \texttt{--population-source cvap}, the balance constraint becomes:
+\[
+\left| C_i - \frac{C_{\text{total}}}{k} \right| \leq \epsilon \cdot \frac{C_{\text{total}}}{k}
+\]
+where $C_i$ is the citizen VAP of partition $i$ and $C_{\text{total}}$ is the state citizen VAP total. Total population is not constrained; only citizen VAP is balanced.
+
+This implementation choice means that a CVAP-balanced plan may have substantially unequal total populations across districts---precisely the constitutionally problematic feature identified in Section~\ref{sec:congressional}. In California, where noncitizen fractions vary from near zero in rural inland districts to 25\%+ in Los Angeles urban districts, a CVAP-balanced plan could produce total-population differences exceeding 100,000 persons between the smallest and largest districts. This would almost certainly fail \emph{Wesberry v. Sanders} equal-population scrutiny for congressional districts.
+
+\subsection{CVAP vs. Total: Comparison Protocol}
+
+The standard comparison protocol for N-track CVAP analysis is:
+\begin{enumerate}
+    \item Run BISECT with \texttt{--population-source total} (baseline)
+    \item Run BISECT with \texttt{--population-source cvap} (comparison)
+    \item Compute tract-level assignment changes between the two plans
+    \item Compute district-level partisan lean change using 2020 presidential vote
+    \item Compute district-level compactness change (RSI metric)
+    \item Compute district-level total-population variance under the CVAP plan (constitutional exposure metric)
+\end{enumerate}
+
+The N.5 paper~\citep{dellalibera2026n5} presents the definitive 50-state results of this comparison protocol. The present paper focuses on the legal framework and high-immigration-state analysis.
+
+\subsection{Robustness: ACS Sampling Error}
+
+Because CVAP derives from ACS rather than decennial census, redistricting results under \texttt{--population-source cvap} carry sampling uncertainty not present in total-population runs. BISECT quantifies this uncertainty by running the CVAP analysis with both point estimates and 90\% confidence interval bounds, then reporting which district assignments are stable across the confidence interval range.
+
+In the four high-immigration states, approximately 15--20\% of census tracts have CVAP margins of error exceeding 15\% of the point estimate. These uncertain tracts are flagged in BISECT output; their assignments should be treated as less reliable than the assignments of tracts with precise CVAP estimates. A congressionally-approved citizen-VAP redistricting framework would need to address this data-quality problem, either through ACS oversampling (expensive) or block-level citizenship imputation from administrative records (legally contested since \emph{Department of Commerce v. New York}).

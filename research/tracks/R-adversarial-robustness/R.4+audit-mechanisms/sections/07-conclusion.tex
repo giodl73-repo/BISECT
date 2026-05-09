@@ -1,0 +1,33 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+The \bisect{} audit chain---three levels of SHA-256 hashes linking
+Census Bureau data through computation to final plan---is a cryptographically
+sound defense against all gaming vectors identified in Track R.
+
+The security argument is simple: SHA-256 collision resistance makes
+undetected manifest manipulation computationally infeasible at $2^{80}$
+operations.
+Any gaming attack that modifies input data, algorithm parameters, or
+computation outputs changes at least one hash in the chain.
+That change is detectable by any party who runs \texttt{bisect label-verify}.
+
+The Daubert analysis confirms that this audit chain meets all four criteria
+for admissible scientific evidence: testability, peer review, bounded error
+rate ($2^{-80}$), and general acceptance of SHA-256.
+This makes the audit chain not merely a technical safeguard but a
+litigation-grade provenance instrument.
+
+The model DIA statutory language in Section~\ref{sec:legal} translates
+the technical audit chain into enforceable legal obligations: 30-day
+manifest filing, 10-year retention, public verification rights, and
+a burden-shifting rule for verification failures.
+State legislatures can adopt this language directly.
+
+The Track R program's conclusion follows from R.0--R.4 in combination:
+when the DIA protocol is followed, the maximum achievable partisan shift
+from all gaming vectors combined is $\leq 0.5$ Democratic seats nationally
+(within the algorithmic noise floor), and any larger manipulation is
+detectable with probability approaching 1.
+Algorithmic redistricting under the DIA protocol is not merely partisan-blind;
+it is verifiably partisan-blind.

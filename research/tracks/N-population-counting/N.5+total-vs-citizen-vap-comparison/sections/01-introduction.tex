@@ -1,0 +1,31 @@
+\section{Introduction}
+\label{sec:introduction}
+
+Redistricting requires choosing a population base: a definition of which persons count toward the equal-population requirement. The Constitution requires that legislative districts contain approximately equal \emph{population}~\citep{reynolds1964}, but it does not specify what population means in this context. The Census Bureau provides several candidate definitions, and states have authority---within the limits set by the Supreme Court---to choose among them.
+
+The choice matters. Different population definitions produce different district boundaries, different partisan compositions, and different representational arrangements. Until now, this choice has been debated primarily in the abstract: legal arguments for and against citizen VAP redistricting have flourished, but systematic empirical comparisons of redistricting outcomes under different population definitions have been limited by the lack of an algorithmic redistricting system capable of running comparable plans under multiple population bases.
+
+BISECT's \texttt{--population-source} flag closes this gap. By running the identical recursive bisection algorithm---with identical structure, weight, and search parameters---under four different population sources, we can isolate the effect of the population definition choice from confounding factors like algorithmic differences or partisan intent. The result is an apples-to-apples comparison of redistricting outcomes under four definitions: total population, total VAP, citizen VAP (CVAP), and adjusted total (prison and college group-quarters corrections applied).
+
+\subsection{Four Population Definitions}
+
+The four population sources analyzed in this paper are:
+\begin{enumerate}
+    \item \textbf{Total population} (\texttt{--population-source total}): 2020 Census P.L. 94-171 total population. Includes all persons enumerated regardless of age, citizenship, or institutional status. The federal default for apportionment and the baseline for this comparison.
+
+    \item \textbf{Total VAP} (\texttt{--population-source total\_vap}): Total voting-age population (persons 18 and older) from the 2020 Census P.L. 94-171 file. Excludes minors; includes noncitizens and institutionalized adults.
+
+    \item \textbf{Citizen VAP} (\texttt{--population-source cvap}): Citizen voting-age population from the Census Bureau's 2019 ACS 5-year CVAP special tabulation. Excludes minors and noncitizens. Derived from ACS survey data rather than decennial census; carries sampling error.
+
+    \item \textbf{Adjusted total} (\texttt{--population-source adjusted}): 2020 Census total population after subtracting prison and jail group-quarters populations from their facility tracts and redistributing them to estimated home-county tracts; and optionally subtracting college student group-quarters populations from campus tracts and redistributing to home-state counties. The primary adjustment uses prison data only (the more legally established correction); college adjustment is analyzed separately.
+\end{enumerate}
+
+\subsection{Scope}
+
+This paper covers all 50 states for the 2020 redistricting cycle. We use BISECT with the \texttt{standard-bisect} structure and \texttt{geographic} edge weights---the default configuration---to isolate the population definition effect. Alternative configurations (prime-factor structure, county weights) produce similar directional findings; those sensitivity analyses are available in the supplemental appendix.
+
+States with a single congressional district (Wyoming, Vermont, Alaska, North Dakota, South Dakota, Montana, Delaware) are included in the national statistics but produce trivially identical plans under all four definitions (single-district states have no intrastate boundary decision to make). The redistricting-relevant analysis focuses on the 43 states with two or more congressional seats.
+
+\subsection{Significance}
+
+This paper is intended as a litigation reference. If a state adopts or contemplates citizen-VAP redistricting, the data in Section~\ref{sec:fifty_state_table} provides the empirical record of what such a change produces in that specific state. If a court evaluates the constitutionality of citizen-VAP redistricting, the partisan-direction analysis in Section~\ref{sec:partisan} provides quantitative evidence of systematic effect. If a legislature evaluates prison-count adjustment, the adjusted-total results in Sections~\ref{sec:tract_reassignment} and \ref{sec:partisan} provide the expected redistricting consequence.

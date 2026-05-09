@@ -1,0 +1,35 @@
+\section{Introduction}
+\label{sec:introduction}
+
+The question of whose population counts for redistricting has divided legal scholars, advocates, and political actors for generations. The most contested version of this question concerns noncitizens: approximately 22 million noncitizen adults reside in the United States, concentrated in urban metropolitan areas in a small number of high-immigration states. Whether those noncitizens should be counted for redistricting---and if so, whether they should count toward the total population or be excluded in favor of a citizen-only denominator---determines how political representation is distributed between urban immigrant communities and suburban citizen-majority communities.
+
+The Supreme Court addressed one dimension of this question in \emph{Evenwel v. Abbott}~\citep{evenwel2016}: states \emph{may} use total population as their redistricting base, and the challengers' argument that the Equal Protection Clause \emph{requires} citizen VAP was rejected unanimously. But the Court conspicuously declined to hold that total population is the \emph{only} permissible base, leaving open whether states \emph{may} use citizen VAP instead. A forthcoming legal battle---perhaps already underway in some state capitals---will contest the other side of \emph{Evenwel}: whether the Constitution or federal statute \emph{requires} citizen VAP, or at minimum \emph{permits} it as an alternative.
+
+This paper addresses four questions:
+\begin{enumerate}
+    \item What is the legal framework governing the choice between total population and citizen VAP, separately for congressional and state legislative redistricting?
+    \item How large is the empirical divergence between total population and citizen VAP in the high-immigration states, and which districts are most affected?
+    \item What is the partisan direction of switching from total population to citizen VAP, and how many congressional seats would plausibly shift?
+    \item How does BISECT's \texttt{--population-source cvap} implementation enable systematic empirical analysis of the redistricting consequences?
+\end{enumerate}
+
+\subsection{Definitions}
+
+\begin{itemize}
+    \item \textbf{Total population}: The Census Bureau's enumerated total, including all persons regardless of citizenship or immigration status.
+    \item \textbf{Total VAP}: Total voting-age population (persons 18 and older), including noncitizens.
+    \item \textbf{Citizen VAP (CVAP)}: Citizen voting-age population from the Census Bureau's CVAP special tabulation, derived from American Community Survey estimates and published at the census-tract level.
+    \item \textbf{Noncitizen VAP}: Total VAP minus citizen VAP; the population of voting-age noncitizens.
+    \item \textbf{Noncitizen fraction}: Noncitizen VAP divided by total VAP in a given jurisdiction.
+\end{itemize}
+
+\subsection{Contributions}
+
+\begin{itemize}
+    \item Legal analysis of the congressional--state legislative distinction in population-base choice, including the Article I textual argument and the \emph{Evenwel} framework
+    \item Empirical quantification of total-population--citizen-VAP divergence in California, Texas, New York, and Florida, at the congressional district and census-tract levels
+    \item Partisan direction analysis showing consistently Republican-advantaging effect of citizen-VAP redistricting
+    \item Estimate of 15--20 congressional seats affected by a nationwide shift to citizen-VAP redistricting
+    \item Description of BISECT's CVAP implementation (\texttt{--population-source cvap}) and its data source (Census CVAP special tabulation)
+    \item Analysis of \emph{Burns v. Richardson} and \emph{Evenwel} as the controlling legal anchors, with attention to their distinct constitutional logics
+\end{itemize}

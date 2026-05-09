@@ -1,0 +1,18 @@
+\begin{abstract}
+We present the first systematic 50-state comparison of congressional redistricting outcomes under four population definitions: (1) total population as enumerated by the 2020 Census, (2) total voting-age population (VAP), (3) citizen voting-age population (CVAP) from the Census CVAP special tabulation, and (4) total population adjusted for prison and college group-quarters populations (adjusted total). Using the BISECT recursive bisection algorithm with \texttt{--population-source} selection, we run the redistricting pipeline under each definition for all 50 states and measure tract reassignment rates, partisan direction shifts, and compactness changes.
+
+Our principal findings are:
+\begin{enumerate}
+    \item \textbf{Total vs. adjusted total}: Mean tract reassignment of 0.8\% nationally. Prison-dense rural states (Texas, Pennsylvania, Illinois) show up to 2.1\% reassignment. The adjustment consistently benefits urban-Democratic districts.
+
+    \item \textbf{Total vs. citizen VAP}: Mean tract reassignment of 3.2\% nationally. Reassignment is concentrated in the four high-immigration states (CA, TX, NY, FL), where it reaches 8--12\%. The switch to citizen VAP benefits suburban-Republican districts in all four high-immigration states without exception.
+
+    \item \textbf{Compactness}: RSI (Reock Shape Index) changes less than 2\% for all four definitions in 48 of 50 states. Population definition choice does not materially affect plan compactness; the bisect algorithm finds equally compact solutions under all four definitions.
+
+    \item \textbf{Partisan direction}: Citizen VAP consistently advantages Republican districts (mean +1.2 percentage points in Republican lean across districts that change) in high-immigration states. Adjusted total consistently advantages Democratic districts (mean +0.4pp Democratic lean) via prison-count correction. Total VAP is essentially neutral (mean 0.1pp difference from total population).
+\end{enumerate}
+
+Based on these findings, we recommend total population with prison adjustment (adjusted total) as the preferred redistricting population base. This choice: (1) is legally defensible under \emph{Reynolds v. Sims} and the 2030 Census Bureau's planned prison-adjusted redistricting file; (2) corrects a documented representational distortion (prison gerrymandering) without creating new ones; (3) produces minimal compactness effects; and (4) avoids the data-quality problems (ACS sampling error) inherent in CVAP-based redistricting. The citizen-VAP option, while legally permissible for state redistricting after \emph{Evenwel v. Abbott}, introduces large tract reassignments, systematic partisan distortions, and data-reliability concerns that make it unsuitable as a default redistricting standard.
+
+This paper provides the definitive empirical reference for any future litigation on population definition choice in congressional redistricting.
+\end{abstract}

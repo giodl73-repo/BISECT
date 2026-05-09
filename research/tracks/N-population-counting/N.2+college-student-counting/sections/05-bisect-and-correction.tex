@@ -1,0 +1,52 @@
+\section{BISECT Implementation and Legal Framework}
+\label{sec:bisect}
+
+\subsection{The \texttt{--population-source} Flag}
+
+BISECT's population handling is controlled by the \texttt{--population-source} flag, which determines what population vector is used in the balance constraint during recursive bisection. The available options include:
+
+\begin{itemize}
+    \item \texttt{total} (default): 2020 Census total population as enumerated, including students at campus addresses
+    \item \texttt{total\_vap}: Total voting-age population, which partially but not fully excludes student effects (students under 18 are rare)
+    \item \texttt{cvap}: Citizen voting-age population from the Census CVAP special tabulation
+    \item \texttt{adjusted}: A preprocessing mode that applies user-supplied population adjustments before running the bisection
+\end{itemize}
+
+For college-student analysis, the relevant comparison is between \texttt{--population-source total} (census default, students at campus) and a hypothetical \texttt{adjusted} run that reallocates student GQ populations from campus tracts to home-state tracts based on IPEDS home-state enrollment data. BISECT's preprocessing pipeline can accept a tract-level population adjustment file that modifies the Census population vector before bisection, enabling this comparison.
+
+The implementation is straightforward in principle: for each campus census tract $t$, reduce the population by the student GQ count $s_t$; for each home-state destination tract $t'$, increase the population by the pro-rata share of those students originating from $t'$'s county. In practice, the home-address information is available only at state level (IPEDS tracks students' home state, not home address), so the reallocation is performed at the state level: Michigan's 47,000 University of Michigan students are removed from Washtenaw County tracts and distributed to Michigan counties in proportion to their share of Michigan student enrollment at Michigan.
+
+\subsection{Sensitivity Analysis: What Changes?}
+
+The primary research finding from the BISECT sensitivity analysis is the 180-tract estimate described in Section~\ref{sec:partisan}. The secondary finding concerns compactness: districts that expand to absorb additional territory when college-town populations are reduced tend to become less compact, as they must reach further from the college-town core to achieve the equipopulation target. The mean RSI (Reock Score Index) for affected districts decreases by approximately 0.03 under home-address reallocation---a modest but directionally consistent compactness penalty.
+
+The third finding is computational stability: the bisect algorithm converges in the same number of iterations and to the same quality objective under adjusted versus unadjusted populations, because the total state population is unchanged (students are reallocated, not removed). The bisect convergence property is population-count-agnostic at the state level; only the tract-level distribution matters.
+
+\subsection{Legal Framework}
+
+\subsubsection{Constitutional Permissibility of Campus Counting}
+
+The Census Bureau's campus-counting rule has not been directly adjudicated by the Supreme Court in the redistricting context. The Court's usual-residence jurisprudence---most directly \emph{Reynolds v. Sims}, 377 U.S. 533 (1964)~\citep{reynolds1964}---requires that legislative districts contain approximately equal \emph{population}, but does not specify how population is to be defined or measured. The Court in \emph{Evenwel v. Abbott}, 578 U.S. 54 (2016)~\citep{evenwel2016} explicitly held that states \emph{may} use total population as their redistricting base---a holding that necessarily includes whatever population the Census Bureau enumerates, including students at campus.
+
+No Supreme Court decision has held that students \emph{must} be counted at campus, only that total-population redistricting is permissible. A state that corrects campus-based student counts---counting students at their home-address for state redistricting purposes, as Maryland considered doing---would face the question of whether such a correction violates equal protection. The answer is likely no: prison-gerrymandering corrections have been implemented by New York and other states without constitutional challenge succeeding, and the student-counting question is structurally similar.
+
+\subsubsection{Maine Litigation}
+
+Maine's congressional districts were challenged in \emph{Desena v. Maine} (D. Me. 2021) partly on the ground that the 2020 Census allocated a substantial University of Maine student population to Penobscot County tracts, inflating the population of the 2nd Congressional District relative to what it would be under home-address counting. The district court rejected the challenge, holding that the Census Bureau's enumeration methodology is entitled to deference under \emph{Franklin v. Massachusetts}, 505 U.S. 788 (1992), and that the resulting redistricting plan does not violate the one-person-one-vote standard because it uses the official Census population.~\citep{desena2021}
+
+\subsubsection{New York's Asymmetric Reform}
+
+New York presents the most legally interesting case: the state enacted a prison-gerrymandering correction in 2010 (counting incarcerated people at their home address for state redistricting), but has not extended an analogous correction to college students. The result is an asymmetric system: prisoners are counted at home (benefiting urban communities), but students are counted at campus (benefiting college towns). Whether this asymmetry is constitutionally required, prohibited, or simply a legislative choice is an open question~\citep{brewer2011prison}.
+
+The New York experience illustrates the broader principle: census counting rules are not constitutionally fixed for state redistricting purposes. States have significant flexibility to adopt population adjustments, provided they apply the adjustment consistently and without discriminatory purpose. A state that corrected college-student counts for redistricting---counting students at their parents' address---would be following the same logic as New York's prison correction.
+
+\subsection{Policy Implications}
+
+The college-student counting question does not have a clear correct answer in the way that prison gerrymandering does. Students who spend the academic year in a college town have a legitimate claim to local representation. The case for correction is weaker than for prisoners:
+\begin{itemize}
+    \item Students chose to attend the university at the campus location
+    \item Many students register to vote locally and do vote locally
+    \item The college community genuinely requires representation for university-related infrastructure, housing, and governance issues
+\end{itemize}
+
+At the same time, the partisan asymmetry is systematic and large enough to affect district configurations in competitive states. The most defensible policy position may be the \emph{status quo} of campus counting, but with transparency about its partisan effects---a position this paper provides analytical support for.

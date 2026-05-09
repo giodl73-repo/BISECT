@@ -1,0 +1,58 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{longtable}
+
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+\newtheorem{proposition}{Proposition}
+\newtheorem{definition}{Definition}
+
+\title{\textbf{2030 Reapportionment Projections and Algorithmic Stability}}
+
+\author{Giovanni Della-Libera}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Reapportionment, Huntington-Hill, 2030 census projections, \textsc{bisect-apportion},
+prime-factor bisection, Texas $k=41$, cross-census stability, Sun Belt growth,
+county disruption
+
+\section{Introduction}
+\input{sections/01-introduction}
+
+\section{Huntington-Hill on 2030 Projections}
+\input{sections/02-apportionment}
+
+\section{Algorithmic Stability Across Census Cycles}
+\input{sections/03-stability}
+
+\section{Texas $k=41$: The Prime-Factor Fallback}
+\input{sections/04-texas}
+
+\section{Conclusion}
+\input{sections/05-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

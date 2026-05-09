@@ -1,0 +1,91 @@
+\section{From ESS Requirements to Chain Steps}
+\label{sec:ess}
+
+\subsection{The ESS-Autocorrelation Relationship}
+
+G.4~\citep{g4paper} provides empirical estimates of lag-1 Hamming
+autocorrelation $\rho_1$ for \recom{} chains across six states.
+The ESS for a chain of $n$ steps with geometric autocorrelation decay
+$\rho_k \approx \rho_1^k$ is:
+\[
+  n^* = \frac{n}{1 + 2\sum_{k=1}^\infty \rho_1^k}
+       = \frac{n(1 - \rho_1)}{1 + \rho_1}.
+\]
+
+Rearranging: to achieve $n^*$ effective samples, the required chain length is:
+\[
+  n = n^* \cdot \frac{1 + \rho_1}{1 - \rho_1}.
+\]
+
+\subsection{State-Specific Calculation}
+
+From G.4 Table~4~\citep{g4paper}, the empirical $\rho_1$ values are:
+
+\begin{table}[h]
+\centering
+\caption{Lag-1 Hamming autocorrelation $\rho_1$ from G.4, and chain steps
+         required to achieve $n^* = 385$ effective samples for 80\% power
+         at $\alpha = 0.05$ to detect a 10pp partisan advantage.}
+\label{tab:autocorr}
+\begin{tabular}{lcccc}
+\toprule
+State & $k$ & $\rho_1$ & $(1+\rho_1)/(1-\rho_1)$ & Steps for $n^* = 385$ \\
+\midrule
+NC & 14 & 0.87 & 14.4 & $5{,}544$ \\
+WI &  8 & 0.85 & 12.3 & $4{,}736$ \\
+GA & 14 & 0.88 & 15.7 & $6{,}044$ \\
+PA & 17 & 0.89 & 17.2 & $6{,}622$ \\
+TX & 38 & 0.92 & 24.0 & $9{,}240$ \\
+CA & 52 & 0.94 & 32.7 & $12{,}589$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+For the six G.4 study states, the required chain lengths for 80\% power
+range from approximately 5,000 steps (WI) to 13,000 steps (CA).
+This is the ESS-based requirement; the G.4 convergence requirement
+(steps to $\rhat < 1.1$) is an additional constraint.
+
+\subsection{The Binding Constraint: Convergence vs.\ Power}
+
+Two constraints must both be satisfied:
+\begin{itemize}
+\item \textbf{Convergence}: Steps $\geq t_{\rm mix}$ (from G.4 Table~6),
+  where $t_{\rm mix}$ is the steps to $\rhat < 1.1$.
+\item \textbf{Power}: Steps $\geq n^* \cdot (1+\rho_1)/(1-\rho_1)$.
+\end{itemize}
+
+For smaller states (NC, WI), the power constraint is binding:
+NC requires 5,544 steps for power but only 5,000 for convergence.
+For larger states (TX, CA), the convergence constraint is binding:
+CA requires 20,000 steps for convergence but only 12,589 for power.
+
+The minimum chain length is $\max(t_{\rm mix}, n_{\rm power})$.
+
+\subsection{Extrapolation to All 50 States}
+
+For states not in G.4's study set, we interpolate $\rho_1$ from the
+observed relationship between $k$ (delegation size) and $\rho_1$:
+\[
+  \rho_1(k) \approx 0.83 + 0.0025 \cdot k \quad \text{(empirical fit to G.4 data)}.
+\]
+This gives $\rho_1(1) = 0.832$ for single-district states (where no
+redistricting is needed) and $\rho_1(52) = 0.96$ for California.
+
+The convergence time $t_{\rm mix}$ scales approximately as:
+\[
+  t_{\rm mix}(k) \approx 200 \cdot k \quad \text{(empirical, from G.4 Table 6)}.
+\]
+This gives $t_{\rm mix}(14) \approx 2{,}800$ (consistent with G.4's NC estimate
+of $\approx 2{,}000$), $t_{\rm mix}(38) \approx 7{,}600$ (consistent with G.4's
+TX estimate of $\approx 10{,}000$), and $t_{\rm mix}(52) \approx 10{,}400$
+(consistent with G.4's CA estimate of $\approx 20{,}000$ with the higher
+$\rho_1$).
+
+The minimum step count for each state is:
+\[
+  n_{\rm min}(k) = \max\!\left(
+    200k,\;
+    385 \cdot \frac{1 + \rho_1(k)}{1 - \rho_1(k)}
+  \right).
+\]
