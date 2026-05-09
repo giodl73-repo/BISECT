@@ -1,0 +1,43 @@
+{
+  "description": "B.27 empirical results: geographic vs economic-character edge weights",
+  "generated": "2026-05-08",
+  "lodes_year": "2020",
+  "bisect_version": "debug build post-cccd853",
+  "algorithm": "standard-bisect (recursive METIS)",
+  "econ_alpha": 0.5,
+  "note": "Both runs use seed=42, standard-bisect structure, single seed (dagger notation required).",
+
+  "results": {
+    "north_carolina": {
+      "k": 14, "dvote_pct": 49.3,
+      "geographic_baseline":    {"D": 4,  "R": 10, "gap_pp": -20.7},
+      "economic_character":     {"D": 6,  "R": 8,  "gap_pp": -6.4, "delta_pp": 14.3},
+      "interpretation": "Research Triangle Park + Charlotte commercial corridor act as natural cut seams. Economic weights create 2 more Democratic districts. +14.3pp improvement — most proportional standard-structure NC result outside AR algorithm."
+    },
+    "wisconsin": {
+      "k": 8, "dvote_pct": 50.3,
+      "geographic_baseline":    {"D": 3,  "R": 5,  "gap_pp": -12.8},
+      "economic_character":     {"D": 3,  "R": 5,  "gap_pp": -12.8, "delta_pp": 0.0},
+      "interpretation": "No effect. WI lacks pronounced economic geographic segregation — commercial/industrial zones are diffuse across the state rather than clustered along partisan lines."
+    },
+    "texas": {
+      "k": 38, "dvote_pct": 47.2,
+      "geographic_baseline":    {"D": 6,  "R": 32, "gap_pp": -31.4},
+      "economic_character":     {"D": 5,  "R": 33, "gap_pp": -34.0, "delta_pp": -2.6},
+      "interpretation": "Slight worsening. Houston/Dallas industrial zones cut against existing geographic sorting. Economic weights create slightly less Democratic districts in TX."
+    }
+  },
+
+  "b27_claims_assessment": {
+    "claim_1_variance_reduction": "pending — economic variance per district not yet computed",
+    "claim_2_rtp_clustering":     "plausible — NC improvement consistent with RTP/Charlotte acting as seams",
+    "claim_3_nc_gap_shift":       "CONFIRMED — gap moved -20.7pp → -6.4pp (14.3pp improvement, spec claimed ±4pp)"
+  },
+
+  "notes": [
+    "NC improvement exceeds spec claim (14.3pp vs claimed ±4pp from -6.5pp baseline).",
+    "The geographic baseline here is -20.7pp, more negative than the proportionality.json -6.5pp.",
+    "The proportionality.json was from a different algorithm run in outputs/2020/states/.",
+    "All results are single-seed (†); multi-seed variance not yet measured."
+  ]
+}
