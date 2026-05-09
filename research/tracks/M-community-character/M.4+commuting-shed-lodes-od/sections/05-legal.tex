@@ -1,0 +1,164 @@
+\label{sec:legal}
+
+\subsection{Functional Economic Areas and Communities of Interest}
+
+The concept of the functional economic area---a geographic region whose
+residents share a labor market, a retail trade area, and a common daily
+economic sphere---has been recognized in redistricting law as a legitimate
+basis for community of interest claims.
+
+The National Conference of State Legislatures' 2021 survey of redistricting
+criteria found that 35 states include communities of interest as a criterion,
+and that ``economic interests'' and ``shared economic community'' are among
+the most frequently cited community subtypes in commission guidelines and
+judicial interpretations \citep{ncsl2021criteria}.
+A commuting shed is a precise quantification of the ``shared economic
+community'' concept: the residents of a commuting shed literally share
+their economic daily life---they compete for the same jobs, drive the same
+routes, patronize the same establishments, and depend on the same employers.
+
+\paragraph{California commuting communities.}
+California's Citizens Redistricting Commission criteria cite communities
+defined by ``economic and social interests'' \citep{caprop11}.
+In its 2011 and 2021 proceedings, the Commission accepted testimony from
+commuting communities:
+residents of the Inland Empire testified that their communities shared
+commuting patterns into the Los Angeles basin, creating economic
+interdependencies not reflected in county boundaries.
+Silicon Valley workers testified that the commuting shed from San Jose
+through Mountain View to Menlo Park defined an economic community distinct
+from the agricultural Santa Clara Valley south of Morgan Hill.
+The M.4 algorithm operationalizes these commuting community arguments:
+tracts with overlapping commuting destinations receive high similarity
+and heavy edges; tracts commuting to different destinations receive low
+similarity and light edges.
+
+\paragraph{Colorado trade area communities.}
+Colorado's redistricting criteria explicitly recognize ``trade area'' community
+membership---communities that share a retail trade zone or labor market area
+\citep{coart5s44}.
+A commuting shed is the labor market equivalent of a trade area: it identifies
+which residential communities are economically integrated with which employment
+centers.
+The Colorado Front Range provides a clear example: communities in the Boulder
+valley commute to Boulder and Denver; communities in the Fort Collins corridor
+commute to Fort Collins and the I-25 tech corridor.
+These are distinct commuting sheds that correspond to distinct communities
+of interest in redistricting proceedings.
+
+\subsection{Airport and Port Communities}
+
+Airport and port communities provide some of the clearest examples of
+commuting-shed community identification in redistricting proceedings.
+
+\paragraph{Airport communities.}
+The area surrounding a major commercial airport is a distinctive commuting
+community.
+Residents of tracts near Chicago O'Hare International Airport, Houston
+George Bush Intercontinental Airport, or Los Angeles International Airport
+share an employment base (aviation industry, cargo logistics, hotel and
+hospitality services) and commuting pattern.
+The LODES OD data captures this concentration: workers in airport-adjacent
+tracts send flows to the airport employment blocks, creating a tight
+destination cluster.
+Under M.4, airport tracts share high weighted Jaccard similarity with each
+other and low similarity with non-airport tracts commuting to downtown office
+employment.
+
+This commuting shed community has been recognized in redistricting proceedings.
+In the 2001 California redistricting, residents near LAX testified before
+the Special Master that their community was defined by the airport economy---not
+by their city of residence (Inglewood, El Segundo, and sections of Los Angeles)
+or by the county boundary (all three are in Los Angeles County).
+The court-appointed Special Master's final map kept the airport industrial and
+residential community together, in a configuration consistent with M.4's
+prediction of high within-shed similarity.
+
+\paragraph{Port communities.}
+Port communities around major shipping facilities have a similarly distinctive
+commuting character.
+Residents near the Port of Long Beach/Los Angeles, the Port of Houston-Galveston,
+and the Port of Baltimore-Newport News all exhibit commuting patterns directed
+primarily to the port and its logistics hinterland rather than to central
+business districts.
+Under M.4, these tracts cluster together based on their shared destinations
+(port terminals, distribution centers, rail yards) and are appropriately
+separated from adjacent residential tracts commuting to downtown employment.
+
+The legal recognition of port communities as a distinct economic community of
+interest has been affirmed in multiple redistricting proceedings.
+The Maryland redistricting commission in 2011 accepted testimony from port
+and waterfront industrial community advocates who argued that Baltimore's
+waterfront industrial tracts formed a distinct community.
+The final plan maintained the port community's cohesion in a way consistent
+with the M.4 prediction.
+
+\subsection{Partisan Neutrality of Commuting Data}
+
+LODES OD data contains no electoral, racial, or partisan information.
+The commute flow records are derived from UI wage records matched to
+employer geocodes; they record only where workers live and where they work.
+No information about the political preferences, racial composition, or
+electoral behavior of the workers is present in the data.
+
+Any partisan effect of commuting-shed weights---such as the polycentric
+separation of Raleigh and Charlotte metros in the NC prediction---is a
+consequence of the geographic correlation between commuting patterns and
+partisan sorting.
+Urban employment centers that attract commuters from diverse residential areas
+are a feature of the population landscape, not a product of the algorithm.
+
+Following \textit{Rucho v.\ Common Cause} \citeyearpar{rucho2019}, the use
+of a non-partisan, federally administered dataset to operationalize a
+legitimate redistricting criterion (communities of interest) satisfies the
+constitutional standard for non-partisan redistricting even if the resulting
+plan has partisan effects.
+
+\subsection{Expert Witness Deployment Template}
+
+Redistricting practitioners deploying M.4 commuting shed weights should
+structure expert testimony around the following elements:
+
+\paragraph{1. Data provenance declaration.}
+``I used the U.S.\ Census Bureau's LODES Origin-Destination Employment
+Statistics, version~8, for census year 2020
+(\url{https://lehd.ces.census.gov/data/}).
+This is a federal administrative dataset derived from state Unemployment
+Insurance wage records matched to residential and workplace geocodes.
+It records, for each home census block, how many workers residing in
+that block are employed in each work census block.
+No voter registration data, election results, racial composition data,
+or any other socioeconomic information about workers is present in the
+dataset or used in the computation.''
+
+\paragraph{2. Commuting community identification.}
+``I computed a commuting destination distribution for each census tract:
+a record of how many workers residing in each tract commute to each
+employment destination.
+Two census tracts are in the same commuting shed if they share a substantial
+fraction of their commuting destinations.
+This overlap is measured by the weighted Jaccard similarity coefficient:
+the flow-weighted intersection of commuting destinations divided by the
+flow-weighted union.
+District boundaries are drawn preferentially at commuting shed boundaries:
+tracts with overlapping destinations are kept together; tracts commuting
+to different economic areas are separated.''
+
+\paragraph{3. Specific community identification.}
+``In [state], the following commuting communities are preserved by the
+proposed plan: [specific examples, e.g., `the Research Triangle Park
+commuting shed, comprising tracts in Wake, Durham, Orange, and Chatham
+counties whose workers commute to the RTP technology corridor, is preserved
+as a cohesive economic community within two contiguous congressional districts.
+The Charlotte metro commuting shed, comprising Mecklenburg and Union county
+tracts commuting to the Uptown Charlotte and I-77/I-85 employment corridors,
+is preserved separately.
+No district combines Research Triangle and Charlotte commuting shed tracts,
+reflecting the 160-mile functional economic separation between these areas'].''
+
+\paragraph{4. Criterion alignment.}
+``The [state]'s redistricting criteria require preservation of communities
+defined by economic and shared-interest considerations.
+The commuting shed similarity weights directly implement this criterion:
+communities of workers who share a functional economic area are kept
+together by the higher edge weights between their residential tracts.''

@@ -1,0 +1,31 @@
+Where people commute defines their economic community more precisely than
+where they work or where they live considered in isolation.
+Two residential census tracts whose workers flow to the same employment
+centers share a functional economic area: they patronize the same
+commercial corridors, depend on the same transportation infrastructure,
+and have a shared stake in the policy decisions that govern their common
+destination.
+This paper presents M.4, the fourth paper in the M-track community character
+series, which operationalizes commuting community membership through the
+Census Bureau's LODES Origin-Destination (OD) file.
+
+For each census tract we compute a commuting destination distribution
+$D(h) = \{w : \mathrm{count}(h \to w)\}$: a sparse vector recording how many
+workers residing in tract $h$ are employed in each destination tract $w$.
+The community similarity between two home tracts is the weighted Jaccard
+similarity of their destination distributions: the overlap of commute flows
+divided by the union of commute flows.
+Tracts whose workers commute to the same employment centers receive high
+similarity and heavy edge weights; tracts serving different economic spheres
+receive low similarity and light edges that invite district cuts at functional
+economic area boundaries.
+
+Experimental design targets Wisconsin ($k=8$) and North Carolina ($k=14$)
+with primary metrics of suburban clustering rates and polycentric separation.
+The Wisconsin prediction---Milwaukee suburb tracts sharing a primary
+destination co-assign at ${\geq}70\%$ rate---and the North Carolina
+prediction---Raleigh metro and Charlotte metro tracts achieve cross-metro
+co-assignment below 5\% under commuting-shed weights---are both deferred
+to Phase~2 pending LODES OD data download.\textsuperscript{$\dagger$}
+The LODES OD data is annual, free, publicly available, and contains no
+racial or partisan content.

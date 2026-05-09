@@ -33,11 +33,12 @@ their character vectors.
 \label{tab:prototypes}
 \begin{tabular}{llrrr}
 \toprule
-Type & Example & CI & IF & JPR \\
+Type & Example & CI & IF & JPR$^*$ \\
 \midrule
-Bedroom suburb & Cary, NC residential & 0.02 & 0.01 & 0.3 \\
-Commercial corridor & Charlotte retail strip & 0.45 & 0.05 & 2.1 \\
-Industrial park & RDU airport logistics & 0.08 & 0.62 & 4.8 \\
+Bedroom suburb & Cary, NC residential & 0.25 & 0.06 & 0.05 \\
+Commercial corridor & Charlotte retail strip & 0.42 & 0.04 & 0.30 \\
+Industrial park & RDU airport logistics & 0.03 & 0.58 & 0.80 \\
+\multicolumn{5}{l}{\small $^*$JPR = employment intensity proxy $= \min(\mathrm{C000}/10{,}000,\; 1.0)$. All components in $[0,1]$.}
 \bottomrule
 \end{tabular}
 \end{table}
@@ -56,45 +57,48 @@ Table~\ref{tab:similarity-matrix} shows the pairwise similarity matrix.
 \toprule
  & Bedroom & Commercial & Industrial \\
 \midrule
-Bedroom suburb     & 1.00 & 0.11 & 0.04 \\
-Commercial corridor & 0.11 & 1.00 & 0.28 \\
-Industrial park    & 0.04 & 0.28 & 1.00 \\
+Bedroom suburb     & 1.00 & 0.90 & 0.32 \\
+Commercial corridor & 0.90 & 1.00 & 0.54 \\
+Industrial park    & 0.32 & 0.54 & 1.00 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The similarity matrix encodes the economic community structure of the
-modern metropolitan area:
+The similarity matrix reveals which economic transitions the algorithm treats as cut-friendly.
+Cosine similarity in three dimensions does not produce extreme near-zero values
+between non-zero vectors unless the vectors point in nearly orthogonal directions.
+The economically meaningful differentiator is \emph{employment intensity} (JPR):
 \begin{itemize}
-  \item \textbf{Bedroom to bedroom (0.98 for identical vectors).}
-    Two residential suburbs are economically homogeneous.
-    They belong in the same district from an economic community perspective.
-    METIS strongly avoids cutting this edge.
-  \item \textbf{Bedroom to commercial (0.11).}
-    The boundary between a residential neighborhood and the commercial
-    corridor serving it is a natural cut seam.
-    The residents and the businesses are different communities: the residents
-    are customers and neighbors; the businesses are employers with different
-    policy interests (commercial property tax rates, zoning variance).
-  \item \textbf{Bedroom to industrial (0.04).}
-    An even harder natural cut.
-    The residents and the industrial park share almost no economic character.
-    District cuts at the residential-industrial transition are among the
-    strongest economic community signals the algorithm can exploit.
-  \item \textbf{Commercial to commercial (0.95 for similar vectors).}
-    Two commercial districts belong together.
-    They share customer bases, commercial zoning interests, and economic
-    policy concerns (retail leakage, big-box competition, downtown
-    revitalization).
-  \item \textbf{Commercial to industrial (0.28).}
-    A softer cut---commercial and industrial zones are both non-residential
-    but have genuinely different economic characters.
-    This boundary is a soft invitation to cut, not a hard cut seam.
-  \item \textbf{Industrial to industrial (0.95+ for similar vectors).}
-    Industrial communities belong together: they share zoning interests
-    (industrial land preservation), logistics infrastructure needs, and
-    employer-community relationships.
+  \item \textbf{Bedroom to industrial (0.32) --- strongest natural cut seam.}
+    Industrial parks have high JPR (0.80) and high IF (0.58), pointing
+    predominantly toward the industrial--employment pole.
+    Residential suburbs have low JPR (0.05) and balanced CI/IF, pointing
+    toward the mixed-low pole.
+    The angular distance is largest here: 0.32 is the most meaningful
+    cut invitation in the matrix.
+  \item \textbf{Commercial to industrial (0.54) --- moderate cut seam.}
+    Both are employment-intensive, but commercial (high CI=0.42) and industrial
+    (high IF=0.58) point in different sector directions.
+    This creates a softer invitation to cut at commercial--industrial transitions.
+  \item \textbf{Bedroom to commercial (0.90) --- weak cut signal.}
+    Commercial corridors (CI=0.42) are not strongly distinguished from
+    residential areas by the three-component vector.
+    Both have relatively similar CI/IF profiles; JPR difference (0.05 vs 0.30)
+    is modest after normalisation to $[0, 1]$.
+    Economic weights provide little additional differentiation at
+    residential--commercial transitions.
+  \item \textbf{Same type (1.00).}
+    Identical tracts are maximally similar; METIS is not invited to cut within
+    homogeneous economic zones.
 \end{itemize}
+
+\paragraph{Implication for NC.}
+The Research Triangle Park complex is industrial-type (high JPR, high technical
+manufacturing/services IF fraction).
+Residential suburbs surrounding the park have low JPR.
+The bedroom--industrial similarity of 0.32 reduces those boundary edges by
+approximately 32\% under the default $\alpha = 0.5$ blend, guiding METIS
+toward the RTP perimeter as a natural cut seam.
 
 \subsection{The Blend Formula}
 

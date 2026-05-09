@@ -1,0 +1,145 @@
+\label{sec:background}
+
+\subsection{The Seven M-Track Signals}
+
+Table~\ref{tab:signals} lists the seven component signals, their source data,
+their primary community type, and their default weight in the composite index.
+
+\begin{table}[ht]
+\centering
+\caption{M-track community character signals and composite weights.
+  All weights sum to 1.00.
+  Data sources are federal government public domain datasets.}
+\label{tab:signals}
+\small
+\begin{tabular}{rlllr}
+\toprule
+ID & Signal & Source & Community type & Weight \\
+\midrule
+M.6 & Zone co-membership & TIGER/Line (school, municipal, fire) & Administrative & 0.30 \\
+M.1 & Economic character & LODES WAC & Employment/workplace & 0.20 \\
+M.2 & Land use & NLCD 2021 & Physical landscape & 0.20 \\
+M.3 & Housing character & ACS 5-year & Residential fabric & 0.15 \\
+M.4 & Commuting shed & LODES OD & Functional economic area & 0.10 \\
+M.5 & Topographic & SRTM & Terrain community & 0.03 \\
+M.7 & Transit accessibility & GTFS & Transit-connected community & 0.02 \\
+\midrule
+ & & & Total & 1.00 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Each component signal $i$ produces a per-edge similarity score
+$\mathrm{sim}_i(u, v) \in [0, 1]$ for each adjacent tract pair $(u, v)$.
+The similarity functions are defined in the corresponding M-track papers:
+M.1 \citep{m1econchar}, M.2 \citep{m2landuse}, M.3 \citep{m3housing},
+M.4 \citep{m4commute}, M.5 \citep{m5topo}, M.6 \citep{m6zone},
+M.7 \citep{m7transit}.
+
+\subsection{The Composite Formula}
+
+The composite edge weight is:
+\begin{equation}
+  w_{\mathrm{comp}}(u, v)
+  = w_{\mathrm{base}}(u, v) \times
+    \frac{\displaystyle\sum_{i \in \mathcal{A}(u,v)} \omega_i \cdot \mathrm{sim}_i(u, v)}
+         {\displaystyle\sum_{i \in \mathcal{A}(u,v)} \omega_i}
+  \label{eq:composite}
+\end{equation}
+where:
+\begin{itemize}
+  \item $\omega_i$ is the weight for signal $i$ (default values in Table~\ref{tab:signals})
+  \item $\mathcal{A}(u, v)$ is the set of \emph{available} signals for edge $(u, v)$---signals for which both tracts $u$ and $v$ have non-missing data
+  \item $w_{\mathrm{base}}(u, v)$ is the geographic boundary-length weight
+\end{itemize}
+
+The denominator $\sum_{i \in \mathcal{A}} \omega_i$ normalizes over available
+signals only.
+When all seven signals are available, $\sum \omega_i = 1.00$ and the formula
+reduces to the weighted average of all similarity scores.
+When some signals are unavailable (e.g., no GTFS data for a rural state,
+no fire district data for a Western state), the formula re-normalizes over
+the available signals, so the available signals retain their relative
+proportions and the result remains in $[0, 1]$.
+
+This is \emph{graceful degradation}: missing data for a component causes
+that component to be dropped from both numerator and denominator.
+The composite does not fall back to a uniform default when components are
+missing; it computes the best available composite from whatever signals
+are present.
+
+\subsection{Minimum Signal Set}
+
+For a redistricting run to be described as ``composite-community weighted,''
+at least the following three signals must be available for the target state
+and year:
+\begin{enumerate}
+  \item M.6 zone co-membership (TIGER/Line school district boundaries, always
+    available for all states)
+  \item M.1 economic character (LODES WAC, available for all 50 states from
+    2002--2021)
+  \item M.2 land use (NLCD, available for all 50 states, CONUS coverage)
+\end{enumerate}
+These three signals have a combined weight of $0.30 + 0.20 + 0.20 = 0.70$.
+They represent administrative, economic, and physical community dimensions
+respectively.
+A three-signal composite covering all three dimensions provides substantially
+more defensible community analysis than any single-signal approach.
+
+The remaining four signals (M.3, M.4, M.5, M.7) are ``enhancement signals''
+that add weight when their data is available but whose absence does not
+invalidate the composite.
+
+\subsection{Interaction with the Hard-Cut Rule}
+
+The M.2 hard-cut rule (equation 4 in M.2) applies before composite weight
+computation.
+If $\min(p_{\mathrm{wat}}(u), p_{\mathrm{wat}}(v)) > 0.5$,
+the composite weight is forced to zero regardless of the component signal scores.
+This hard override takes priority over the weighted average.
+
+The hard-cut rule reflects the legal reality that some boundaries are
+absolute: no amount of economic or administrative similarity can justify
+placing communities separated by an open sound into the same congressional
+district.
+The zero-weight encoding ensures this constraint is enforced at the
+algorithmic level, not merely recommended by the weight signal.
+
+\subsection{CLI Invocation}
+
+\begin{verbatim}
+bisect state --state NC --year 2020 \
+    --weights-override composite-community \
+    --community-weights zone=0.30,economic=0.20,land=0.20,housing=0.15,\
+      commute=0.10,topo=0.03,transit=0.02 \
+    --version v_composite_test
+\end{verbatim}
+
+Individual weights can be overridden with the \texttt{--community-weights} flag.
+The normalization step in equation~\eqref{eq:composite} ensures that
+partially specified weights (e.g., \texttt{zone=0.5,economic=0.3}) do not
+need to sum to 1.0; the formula normalizes over whatever weights are provided.
+
+\subsection{Test Invariants}
+
+The following L0 unit test invariants must hold for any correct implementation:
+
+\begin{description}
+  \item[\texttt{composite\_nonneg}.]
+    $w_{\mathrm{comp}}(u, v) \geq 0.0$ for all tract pairs $(u, v)$.
+    (Follows from all $\mathrm{sim}_i \geq 0$ and $\omega_i > 0$.)
+  \item[\texttt{composite\_symmetric}.]
+    $w_{\mathrm{comp}}(u, v) = w_{\mathrm{comp}}(v, u)$ for all pairs.
+    (Follows from symmetry of all component similarity functions.)
+  \item[\texttt{all\_sims\_one\_gives\_max\_weight}.]
+    When all available $\mathrm{sim}_i(u, v) = 1.0$:
+    $w_{\mathrm{comp}}(u, v) = w_{\mathrm{base}}(u, v)$.
+    (The normalized weighted average of all-ones is 1.0.)
+  \item[\texttt{missing\_signal\_degrades\_gracefully}.]
+    Removing one signal and recomputing yields a composite weight in
+    $(0, w_{\mathrm{base}}]$; the result does not collapse to zero or
+    spike above $w_{\mathrm{base}}$.
+  \item[\texttt{weights\_sum\_to\_one\_normalized}.]
+    After normalization over available signals $\mathcal{A}$,
+    $\sum_{i \in \mathcal{A}} \omega_i / \sum_{j \in \mathcal{A}} \omega_j = 1.0$.
+\end{description}

@@ -180,8 +180,11 @@ pub fn load_lodes_wac_tract(
         } else {
             let ci  = (cns07 + cns09 + cns10 + cns11) / c000;
             let ind = (cns01 + cns02 + cns05 + cns08) / c000;
-            // Use c000 raw as proxy for jobs_per_resident, capped at 10.0
-            let jpr = (c000 / 1000.0_f64.max(1.0)).min(10.0);
+            // Employment intensity proxy: c000 / 10_000, clamped [0, 1].
+            // 10_000 jobs ≈ a large employment centre (Research Triangle Park–scale).
+            // This keeps all three components on [0, 1] so cosine similarity is not
+            // dominated by scale (i.e. CI and IF contribute proportionally to JPR).
+            let jpr = (c000 / 10_000.0_f64).min(1.0);
             (ci, ind, jpr)
         };
 

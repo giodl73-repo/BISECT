@@ -1,0 +1,159 @@
+\label{sec:legal}
+
+\subsection{Neighborhood Stability as a Community of Interest}
+
+The communities of interest doctrine, as codified in state redistricting
+criteria from California to Colorado to Arizona, does not enumerate the specific
+types of community that qualify~\citep{ncsl2021criteria}.
+California's definition---a ``contiguous population which shares common social
+and economic interests that would be best served by common representation''
+(Cal.\ Gov.\ Code \S 8252(c))---is functional, not categorical.
+Housing character satisfies this functional definition on multiple independent
+grounds.
+
+\paragraph{Homeowner financial stake.}
+A census tract in which 75\% of units are owner-occupied is a population with
+a direct and legally enforceable financial stake in federal housing finance
+policy, historic tax credits, Community Development Block Grant allocations,
+and infrastructure maintenance.
+These federal programs affect homeowner equity directly.
+Renters in an adjacent apartment corridor have no such equity stake and may
+have opposite preferences on, for example, housing voucher policy or
+inclusionary zoning mandates.
+The owner-occupancy rate is therefore a legally cognizable marker of shared
+political interest, distinct from and complementary to the economic character
+markers in M.1.
+
+\paragraph{Long-tenured homeowner representation.}
+Courts reviewing redistricting plans have accepted testimony about the
+representation interests of long-established communities as evidence of
+community of interest.
+In \textit{Harris v.\ Arizona Independent Redistricting Commission},
+136 S.Ct.\ 1301 (2016)~\citep{harris2016}, the Supreme Court upheld the
+Commission's plan against a partisan gerrymandering claim in part because
+the Commission had documented genuine community bonds among the affected
+populations.
+The housing vintage score operationalizes the long-tenured homeowner community:
+a tract with median year built before 1960 and high owner-occupancy is,
+by statistical inference, a community with residents who have owned their
+homes for decades.
+Their representation interests on matters of historic preservation, estate
+taxation, and infrastructure maintenance are shared and legally recognizable.
+
+\subsection{Historic Preservation Districts}
+
+The National Historic Preservation Act of 1966 (NHPA) established the
+framework for federal recognition of historic districts, codified at 16 U.S.C.\
+\S 470~\citep{nhpa1966}.
+State enabling legislation in all 50 states implements parallel historic
+preservation programs.
+North Carolina's State Historic Preservation Office maintains the National
+Register of Historic Places nominations for neighborhoods including Cameron Park
+in Raleigh, Trinity Park in Durham, and Dilworth in Charlotte.
+
+The relevance for redistricting is twofold.
+First, historic district designation is an administrative recognition that
+a neighborhood's built environment constitutes a community bond---precisely
+the kind of administrative zone co-membership that M.6 operationalizes.
+Second, and more directly relevant to M.3, the housing vintage score captures
+the underlying physical characteristic (age of construction) that qualifies
+a neighborhood for historic district designation.
+A redistricting plan that splits a pre-1940 neighborhood across district
+boundaries may disrupt the coordinated advocacy of historic preservation
+advocates for federal programs that require unified district representation.
+
+\paragraph{Oregon and Colorado precedents.}
+Oregon's 2011 redistricting criteria, as applied by the Legislative Assembly,
+accepted expert testimony citing historic neighborhood cohesion as a basis
+for keeping Portland's Northeast neighborhood together in a single district.
+Colorado's Independent Legislative Redistricting Commission in 2021 explicitly
+identified ``historic communities'' as a recognized sub-type of community of
+interest under Article V, Section 44 of the state constitution~\citep{coart5s44}.
+The housing vintage score provides a quantitative operationalization of the
+``historic community'' designation that is legally grounded and publicly verifiable.
+
+\subsection{Property Tax Fiscal Bond in the Housing Context}
+
+The property tax fiscal bond (M.0 and M.6) is most directly relevant to
+housing character in the school district context.
+Single-family homeowner neighborhoods are the primary funding base for
+local public schools: property tax revenue from owner-occupied single-family
+homes constitutes the majority of school district revenue in most states.
+A tract with high SF and high OO is a tract that is invested in local school
+quality in a way that a high-rental, high-MF tract is not.
+
+Colorado's redistricting criteria recognize this bond by listing ``economic
+interests'' and ``trade area'' community membership alongside traditional
+communities of interest~\citep{coart5s44}.
+The homevoter hypothesis~\citep{fischel2001} formalizes the connection:
+homeowners in a school district are co-investors in a fiscal commons that
+gives them shared political interests distinct from those of renters in
+adjacent rental-heavy tracts.
+
+\subsection{Partisan Neutrality Analysis}
+
+Housing character weights satisfy the Shaw-Miller neutrality requirement
+for the same structural reasons as all M-track signals: no electoral data,
+voter registration data, or racial composition data enters any component of
+the housing character vector.
+The inputs are:
+\begin{itemize}
+  \item ACS B25024 (housing units by structural type) --- survey data,
+    no racial or partisan content.
+  \item ACS B25003 (tenure) --- survey data, no racial or partisan content.
+  \item ACS B25035 (median year built) --- survey data, no racial or partisan content.
+\end{itemize}
+The correlation between housing character and race is incidental.
+Single-family homeowner neighborhoods are documented to be disproportionately
+white in many states~\citep{rothstein2017}, but the algorithm does not use
+race; it uses the housing characteristics that happen to correlate with race
+due to historical factors outside the algorithm's scope.
+Under \textit{Shaw v.\ Reno}~\citeyearpar{shaw1993} and \textit{Miller v.\
+Johnson}~\citeyearpar{miller1995}, the relevant question is whether race was
+the \emph{predominant} factor.
+An algorithm that uses only census-bureau-published housing survey data and
+applies a deterministic cosine similarity formula cannot be characterized as
+race-predominant redistricting.
+
+\subsection{Expert Witness Deployment Template}
+
+A redistricting practitioner deploying M.3 housing character weights should
+structure expert testimony around the following elements:
+
+\paragraph{1. Data provenance.}
+``I used three tables from the U.S.\ Census Bureau's American Community Survey
+5-Year Estimates: B25024 (units in structure), B25003 (tenure), and B25035
+(median year structure built), all at census tract geography.
+These are federal survey tables published at
+\url{https://www.census.gov/programs-surveys/acs}.
+No voter registration, election results, or racial composition data was used.''
+
+\paragraph{2. Criterion alignment.}
+``The [state]'s redistricting criteria require preservation of communities of
+interest, which I interpret to include homeowner communities with shared
+interests in neighborhood stability, historic preservation, and local school
+quality.
+I measured housing character as a four-component vector: the fraction of
+single-family units, the fraction of large-multifamily units, the
+owner-occupancy rate, and a vintage score reflecting the age of the housing stock.
+District boundaries are drawn preferentially at the boundaries between tracts
+with dissimilar housing character.''
+
+\paragraph{3. Specific community preservation.}
+``In the proposed plan, [specific historic neighborhood, e.g., `Cameron Park and
+Five Points in Raleigh'] are placed within a single congressional district.
+Both neighborhoods have median year built before 1955 and owner-occupancy rates
+above 65\%.
+Their housing character similarity score is [value].$^\dagger$
+In the challenger's plan, these neighborhoods are split across two districts,
+separating a community whose shared investment in historic preservation,
+property values, and school quality has been documented over decades.''
+
+\paragraph{4. When not to use M.3.}
+\begin{itemize}
+  \item States without a communities-of-interest criterion.
+  \item States with uniform housing stock (no meaningful within-state housing
+    character variation).
+  \item Contexts where housing character weights would reduce minority
+    opportunity districts below VRA thresholds.
+\end{itemize}

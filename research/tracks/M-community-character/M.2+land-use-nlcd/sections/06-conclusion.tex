@@ -1,0 +1,73 @@
+\label{sec:conclusion}
+
+M.2 operationalizes physical land use as a community character signal through
+the USGS NLCD 2021 land cover classification.
+The four-component land use vector---residential, commercial, open developed,
+and natural---captures the physical landscape character of each census tract.
+Cosine similarity between adjacent tracts modulates edge weights so that
+METIS cuts preferentially at physical land use transitions.
+The hard-cut rule for majority-water adjacencies encodes the well-established
+legal doctrine that water bodies are natural community boundaries.
+
+Together, these design choices address a gap in algorithmic redistricting:
+the widespread practice of weighting edges by boundary length, with no
+regard for the physical character of the communities on either side.
+A long shared boundary between a residential neighborhood and an adjacent
+commercial corridor is a natural cut seam, not a community bond.
+M.2 makes this distinction explicit and quantitative.
+
+\paragraph{Relationship to the M-track series.}
+M.2 addresses the physical layer of community character: what is actually
+built on the ground.
+It complements M.1 (economic character: what jobs are located there),
+M.3 (housing character: what kind of housing stock and households occupy
+it), and M.6 (administrative zone membership: what service districts
+govern it).
+These four signals together cover the primary community dimensions that
+residents identify when they describe why their neighborhood is a
+recognizable community.
+
+The M.8 composite index \citep{m8composite} assigns M.2 a default weight
+of 0.20 (tied with M.1 as the second-highest weight after M.6).
+This reflects two judgments: land use is a strong community signal
+(weight 0.20) but slightly weaker than zone co-membership in legal
+proceedings (weight 0.30), and at least as strong as economic character
+signals that are better supported by employment data (M.1 at 0.20).
+
+\paragraph{The hard-cut rule as a model for legal defensibility.}
+The water hard-cut rule in M.2 is a model for how legal doctrine can be
+encoded as an algorithmic constraint.
+Rather than treating water boundaries as a soft preference, the rule
+encodes the legal reality: cross-water districts are presumptively invalid
+and require specific geographic justification (a bridge, a tunnel, an
+established ferry service with contiguous community use).
+The zero-weight encoding means the algorithmic output either satisfies
+the water boundary constraint or is infeasible; there is no gradation
+between compliance and violation.
+
+Future M-track papers may adopt similar hard-cut rules for other legally
+established boundaries: county line preservation requirements (where
+applicable), school district preservation criteria (M.6), and
+VRA-required minimum threshold adjacencies.
+The pattern is: when a criterion is binary in legal practice
+(you may not split this boundary), encode it as a binary constraint
+in the algorithm, not as a soft weight.
+
+\paragraph{Phase 2 commitments.}
+Phase~2 will complete the following quantitative results, all currently
+marked ${}^{\dagger}$:
+\begin{enumerate}
+  \item Land-use boundary coincidence (LUB) metric for NC-14, WI-8,
+    and TX-38, comparing land-use weights to geographic baseline.
+  \item Hard-cut validation: zero cross-water districts in NC (Pamlico Sound)
+    and TX (Gulf Coast bays) under land-use weights.
+  \item Polsby-Popper compactness comparison between land-use and geographic
+    weight modes.
+  \item Multi-seed variance analysis for all three states (Phase~3 if
+    single-seed Phase~2 results are confirmatory).
+\end{enumerate}
+
+Phase~2 depends on NLCD 2021 GeoTIFF download and zonal statistics computation.
+Once the NLCD data is available in the bisect data cache, the full pipeline
+run can be completed in a single \texttt{bisect build} invocation with
+\texttt{--weights-override land-use}.

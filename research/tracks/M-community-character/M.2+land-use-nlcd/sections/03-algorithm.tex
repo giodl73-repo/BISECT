@@ -1,0 +1,214 @@
+\label{sec:algorithm}
+
+\subsection{Land Use Character Vector}
+
+The M-track framework (M.0) defines community character as a function
+$\mathbf{c}: \mathcal{T} \to \mathbb{R}^k_{\geq 0}$ mapping each census
+tract to a non-negative character vector \citep{m0framework}.
+For M.2, the character function is the land use fraction vector:
+\begin{equation}
+  \mathbf{l}(t) = \bigl(
+    p_{\mathrm{res}}(t),\;
+    p_{\mathrm{com}}(t),\;
+    p_{\mathrm{open}}(t),\;
+    p_{\mathrm{nat}}(t)
+  \bigr)
+  \label{eq:landuse}
+\end{equation}
+where the components are the fractions of NLCD pixels within tract $t$
+belonging to each M.2 category.
+
+\paragraph{Component definitions.}
+\begin{align}
+  p_{\mathrm{res}}(t)  &= \frac{n_{22}(t) + n_{23}(t)}{N(t)} \\
+  p_{\mathrm{com}}(t)  &= \frac{n_{24}(t)}{N(t)} \\
+  p_{\mathrm{open}}(t) &= \frac{n_{21}(t)}{N(t)} \\
+  p_{\mathrm{nat}}(t)  &= \frac{n_{31}(t) + n_{41}(t) + \cdots + n_{95}(t)}{N(t)}
+\end{align}
+where $n_k(t)$ is the count of class-$k$ pixels within tract $t$,
+and $N(t) = n_{21}(t) + n_{22}(t) + n_{23}(t) + n_{24}(t) + n_{31}(t) + \cdots + n_{95}(t)$
+is the total non-water pixel count.
+Water pixels (class~11) are excluded from the denominator $N(t)$.
+
+The four-component vector sums to 1.0 by construction:
+$p_{\mathrm{res}} + p_{\mathrm{com}} + p_{\mathrm{open}} + p_{\mathrm{nat}} = 1$.
+This normalization ensures that the cosine similarity between two purely
+residential tracts ($\mathbf{l} = (1, 0, 0, 0)$) is 1.0 regardless of
+their pixel density, which is the correct behavior: two densely developed
+residential neighborhoods are more similar to each other than either is
+to a commercial zone, regardless of how many 30-meter pixels each contains.
+
+\paragraph{Water fraction.}
+The per-tract water fraction is computed separately:
+\begin{equation}
+  p_{\mathrm{wat}}(t) = \frac{n_{11}(t)}{n_{11}(t) + N(t)}
+  \label{eq:waterfrac}
+\end{equation}
+and is stored alongside the four-component vector but excluded from the
+cosine similarity computation.
+It is used only for the hard-cut rule.
+
+\subsection{Cosine Similarity}
+
+The community similarity between adjacent tracts $u$ and $v$ is the cosine
+similarity of their land use character vectors:
+\begin{equation}
+  \mathrm{sim}(\mathbf{l}_u, \mathbf{l}_v)
+  = \frac{\mathbf{l}_u \cdot \mathbf{l}_v}{\|\mathbf{l}_u\| \|\mathbf{l}_v\|}
+  \label{eq:cosine}
+\end{equation}
+
+Table~\ref{tab:landuse-prototypes} shows the character vectors for five
+prototypical tract types encountered in American metropolitan areas.
+
+\begin{table}[ht]
+\centering
+\caption{Prototypical land use character vectors for five tract types.
+  All fractions sum to 1.0.}
+\label{tab:landuse-prototypes}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+Type & $p_{\mathrm{res}}$ & $p_{\mathrm{com}}$ & $p_{\mathrm{open}}$ & $p_{\mathrm{nat}}$ \\
+\midrule
+Dense residential suburb & 0.75 & 0.03 & 0.18 & 0.04 \\
+Strip-mall commercial corridor & 0.05 & 0.85 & 0.08 & 0.02 \\
+Industrial park / logistics & 0.02 & 0.88 & 0.08 & 0.02 \\
+Exurban open space & 0.12 & 0.01 & 0.35 & 0.52 \\
+Rural agricultural & 0.01 & 0.00 & 0.10 & 0.89 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Note that commercial corridor and industrial park have nearly identical
+vectors under the M.2 classification, because NLCD class~24 (high-intensity
+developed) does not distinguish commercial from industrial use at 30-meter
+resolution.
+The distinction between these economic character types is better captured
+by M.1 (LODES economic character) than by M.2.
+M.2's comparative strength is the residential-to-non-residential transition
+and the natural land cover spectrum, not the internal differentiation of
+developed zones.
+
+Table~\ref{tab:landuse-similarity} shows the pairwise cosine similarity
+between the five prototypical vectors.
+
+\begin{table}[ht]
+\centering
+\caption{Cosine similarity between prototypical land use tract types.
+  Values near 1.0 indicate strong community similarity; values near 0.0
+  indicate natural cut seams.}
+\label{tab:landuse-similarity}
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+ & Dense res. & Commercial & Industrial & Exurban & Rural \\
+\midrule
+Dense residential & 1.00 & 0.12 & 0.09 & 0.38 & 0.08 \\
+Commercial corridor & 0.12 & 1.00 & 0.99 & 0.11 & 0.04 \\
+Industrial park & 0.09 & 0.99 & 1.00 & 0.10 & 0.03 \\
+Exurban open space & 0.38 & 0.11 & 0.10 & 1.00 & 0.88 \\
+Rural agricultural & 0.08 & 0.04 & 0.03 & 0.88 & 1.00 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The similarity matrix reveals the geographic community structure:
+\begin{itemize}
+  \item \textbf{Residential to commercial (0.12).}
+    The sharpest community boundary in the M.2 framework is the edge between
+    a residential neighborhood and an adjacent commercial corridor.
+    This is the natural cut seam M.2 is designed to exploit.
+  \item \textbf{Commercial to industrial ($\approx$0.99).}
+    NLCD class~24 dominates both; the two tract types are nearly
+    indistinguishable from satellite imagery.
+    M.1 (economic character) is the appropriate tool for distinguishing these.
+  \item \textbf{Rural to exurban (0.88).}
+    A soft similarity; both are primarily natural land cover.
+    The gradient from agricultural to exurban residential is gentler than
+    the urban residential-to-commercial transition.
+  \item \textbf{Residential to rural (0.08).}
+    A moderate hard boundary between the developed suburban fabric and
+    agricultural or forested land: another strong M.2 cut seam.
+\end{itemize}
+
+\subsection{The Hard-Cut Rule for Water Boundaries}
+
+The M.2 algorithm imposes a hard override on any adjacency where both
+adjacent tracts have majority water classification:
+\begin{equation}
+  \text{if } \min\!\bigl(p_{\mathrm{wat}}(u),\, p_{\mathrm{wat}}(v)\bigr) > 0.5
+  \;\;\Rightarrow\;\; w(u, v) = 0
+  \label{eq:hardcut}
+\end{equation}
+
+This rule is applied \emph{before} the cosine similarity computation and
+takes absolute priority.
+Even if two water-adjacent tracts have identical land use vectors, the edge
+weight between them is forced to zero, preventing METIS from assigning them
+to the same district unless an explicit bridge adjacency overrides the rule.
+
+The threshold of 0.5 is conservative by design.
+A tract must be majority water for the hard-cut rule to activate.
+Tracts with 30--49\% water pixels (common in coastal areas and along rivers)
+do not trigger the hard cut; instead, their water fraction suppresses the
+non-water pixel counts, resulting in a naturally lower cosine similarity
+with inland tracts.
+
+\paragraph{Bridge adjacency override.}
+The \textsc{bisect} adjacency graph can record explicit bridge adjacency edges
+in addition to contiguity-derived edges.
+For coastal geographies where a bridge or causeway physically connects two
+majority-water tracts, the graph constructor can add a bridge edge with a
+user-specified weight.
+The hard-cut rule applies only to edges derived from polygon contiguity;
+bridge edges are not subject to the water cut override.
+
+\subsection{Edge Weight Formula}
+
+The M.2 edge weight follows the M-track blend formula:
+\begin{equation}
+  w_{\mathrm{lu}}(u, v)
+  = \begin{cases}
+      0 & \text{if hard-cut rule~\eqref{eq:hardcut} applies} \\[4pt]
+      w_{\mathrm{geo}}(u, v) \times
+        \bigl(\alpha + (1 - \alpha)\,\mathrm{sim}(\mathbf{l}_u, \mathbf{l}_v)\bigr)
+      & \text{otherwise}
+    \end{cases}
+  \label{eq:weight}
+\end{equation}
+with default $\alpha = 0.5$.
+The blend factor $\alpha$ prevents the weight from collapsing to zero for
+dissimilar non-water adjacent tracts, preserving geographic boundary length
+as a baseline constraint.
+
+\paragraph{CLI invocation.}
+\begin{verbatim}
+bisect state --state NC --year 2020 \
+    --weights-override land-use \
+    --version v_landuse_test
+\end{verbatim}
+The \texttt{land-use} weight mode reads precomputed NLCD fraction vectors
+from the bisect data cache.
+Vectors are computed offline using the zonal statistics pipeline described
+in Section~\ref{sec:background} and stored in Parquet format alongside
+the adjacency graph.
+
+\subsection{Test Invariants}
+
+The following L0 unit test invariants must hold for any correct implementation:
+
+\begin{description}
+  \item[\texttt{water\_majority\_gives\_zero\_weight}.]
+    For any tract pair $(u, v)$ where $p_{\mathrm{wat}}(u) > 0.5$ and
+    $p_{\mathrm{wat}}(v) > 0.5$: $w_{\mathrm{lu}}(u, v) = 0.0$.
+  \item[\texttt{identical\_landuse\_gives\_max\_weight}.]
+    For any two tracts with identical land use fraction vectors
+    $\mathbf{l}_u = \mathbf{l}_v$: $\mathrm{sim}(\mathbf{l}_u, \mathbf{l}_v) = 1.0$
+    and $w_{\mathrm{lu}}(u, v) = w_{\mathrm{geo}}(u, v)$ (blend reduces to $\alpha + (1-\alpha) = 1$).
+  \item[\texttt{residential\_vs\_commercial\_weight\_low}.]
+    For a tract pair where $p_{\mathrm{com}}(u) \geq 0.9$ and
+    $p_{\mathrm{res}}(v) \geq 0.9$: $w_{\mathrm{lu}}(u, v) < 0.3 \times w_{\mathrm{geo}}(u, v)$
+    (using $\alpha = 0.0$ for this test).
+\end{description}

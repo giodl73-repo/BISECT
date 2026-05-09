@@ -1,0 +1,113 @@
+\label{sec:conclusion}
+
+M.8 is the concluding paper in the M-track community character series.
+It defines the Composite Community Character Index: a weighted average of
+seven community similarity signals derived from federal government data sources,
+designed to operationalize the multi-dimensional community bond that
+redistricting commissions and courts have sought to preserve since the
+communities-of-interest doctrine was first articulated.
+
+The composite does something that no individual M-track signal can do alone:
+it provides simultaneous evidence of community cohesion across six distinct
+dimensions.
+A community that scores well on the composite is not merely economically
+coherent or physically coherent or administratively coherent; it is coherent
+on \emph{all measured dimensions}, which is the strongest possible argument
+for preserving it in a redistricting proceeding.
+
+\paragraph{The court usage template as the primary contribution.}
+The court usage template in Section~4 is the primary practical contribution
+of this paper.
+Each of the seven component signals provides a standalone expert witness
+template in its own paper.
+M.8 provides the synthesis: the complete expert statement that covers all
+seven dimensions at once, the non-partisan declaration that covers all
+seven data sources at once, and the brief citation template for practitioners
+who need a single sentence reference.
+
+The template is designed to be specific enough to be credible (it cites exact
+data sources, exact formulas, exact weight values) and flexible enough to be
+useful across states and proceedings (the community identification section
+uses fill-in-the-blank language that the expert adapts to the specific
+state and specific communities).
+
+\paragraph{Graceful degradation as a design principle.}
+The composite formula's most important technical property is graceful
+degradation over missing signals.
+A practitioner in a rural state without GTFS data and with minimal topographic
+variation can still deploy the composite using M.6 + M.1 + M.2 + M.3.
+A practitioner in a dense transit city can increase M.7's weight.
+A practitioner in a coastal state with significant water boundaries can rely
+on M.2's hard-cut rule as an absolute constraint.
+
+The formula normalizes over whatever signals are available, so the resulting
+weights always sum to 1.0 over the available components.
+This means the composite is always a valid weighted average---there is no
+``partial composite'' that needs special handling---and the court statement
+does not need to explain why some signals were omitted.
+
+\paragraph{Non-partisanship as an architecture requirement.}
+The M.8 composite was designed from the first component (M.0 framework) with
+partisan neutrality as a hard architectural requirement.
+No component signal uses electoral data.
+No weight was chosen to favor a particular partisan outcome.
+The calibration argument in Section~3 derives weights entirely from legal
+recognition, data quality, and empirical effect considerations.
+
+The partisan neutrality check in Section~5 (Pearson $r < 0.05$ between
+composite weights and tract-level Democratic vote fraction) is not an
+afterthought; it is the empirical verification of the architectural claim.
+If any component signal inadvertently encoded a partisan signal, the
+check would detect it.
+Passing this check is as important as demonstrating compactness improvement
+or within-district variance reduction.
+
+\paragraph{Phase 2 commitments.}
+Phase~2 will complete the following quantitative results, all currently
+marked ${}^{\dagger}$:
+\begin{enumerate}
+  \item Within-district economic variance reduction on NC-14.
+    Prediction: $\geq$25\% reduction vs.\ geographic baseline.
+  \item Zone boundary crossings on NC-14.
+    Prediction: zero school district boundary crossings.
+  \item Polsby-Popper compactness on NC-14, WI-8, TX-38.
+    Prediction: composite $\geq$ geographic.
+  \item Partisan neutrality check on NC-14.
+    Prediction: $|\rho| < 0.05$.
+  \item Partial-data composite validation: NC-14 using M.6 + M.1 + M.2 only
+    (three-signal minimum set), verifying graceful degradation.
+\end{enumerate}
+
+Phase~2 results will be incorporated into a revised version of this paper
+and used to support the M-track series as evidence in redistricting proceedings.
+The Phase~2 pipeline run will use:
+\begin{verbatim}
+bisect state --state NC --year 2020 \
+    --weights-override composite-community \
+    --version v_m8_phase2
+\end{verbatim}
+
+\paragraph{The broader M-track contribution.}
+The M-track series (M.0--M.8) is the first systematic operationalization of
+communities of interest in algorithmic redistricting.
+Prior work in the field has addressed compactness, partisan fairness, racial
+equity, and population balance.
+Communities of interest---the community type most often cited by residents
+in redistricting testimony, and the criterion most directly tied to the
+lived experience of people in the affected districts---has been treated as
+a qualitative goal that cannot be made quantitative.
+
+The M-track series demonstrates that it can.
+Seven distinct community dimensions can be measured, weighted, and combined
+into a single composite score for every adjacent tract pair in the country.
+That score can be used as an input to a graph partitioning algorithm that
+respects communities automatically, without requiring anyone to draw lines
+by hand.
+And the composite score can be presented to courts and commissions as
+specific, quantitative, non-partisan evidence that the submitted plan
+preserves the communities it claims to preserve.
+
+This is the promise of algorithmic redistricting: not that algorithms make
+better decisions than humans, but that they make decisions that can be
+explained, verified, and defended.
+The composite community character index is that explanation.

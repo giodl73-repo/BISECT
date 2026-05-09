@@ -1,0 +1,136 @@
+\label{sec:results}
+
+\subsection{Experimental Design}
+
+Quantitative results for M.2 land use weights are deferred to Phase~2,
+pending download and zonal statistics computation from the NLCD 2021
+GeoTIFF.\footnote{Phase~2 will be triggered after the NLCD 2021 GeoTIFF is
+downloaded to the bisect data cache.
+The data URL is
+\url{https://www.mrlc.gov/data/nlcd-2021-land-cover-conus}.
+Estimated download size: $\sim$2\,GB compressed.}
+This section describes the experimental protocol that will govern Phase~2
+execution.
+
+\paragraph{States.}
+Three states are selected to represent distinct land use geography profiles:
+
+\begin{itemize}
+  \item \textbf{North Carolina ($k=14$).}
+    NC provides coastal water complexity (Outer Banks, Pamlico Sound, Albemarle
+    Sound), inland development transition zones (Research Triangle residential-commercial
+    edge), and agricultural land in the Coastal Plain.
+    The hard-cut rule is expected to produce tangible effects on the Pamlico
+    Sound adjacencies where mainland tracts and Outer Banks tracts are
+    technically contiguous through narrow water passages.
+  \item \textbf{Wisconsin ($k=8$).}
+    WI provides a test for diffuse land use patterns.
+    Milwaukee's urban core has a defined commercial-residential transition;
+    the rest of the state is a mixture of agricultural land, small cities,
+    and forest.
+    This provides a partial contrast to NC: the hard-cut rule may affect
+    Green Bay coastal adjacencies; the cosine similarity signal may have
+    modest effect in Milwaukee but not statewide.
+  \item \textbf{Texas ($k=38$).}
+    TX provides the full land use diversity spectrum: Gulf Coast water
+    boundaries (Galveston Bay, Matagorda Bay, Corpus Christi Bay), dense
+    urban commercial corridors (Houston Loop 610, Dallas Galleria), extensive
+    agricultural and ranchland, and desert/scrub in West Texas.
+    The hard-cut rule is expected to affect numerous coastal and bay adjacencies.
+    The cosine similarity signal may produce strong effects in the Houston and
+    Dallas commercial transition zones.
+\end{itemize}
+
+All experiments use:
+\begin{itemize}
+  \item Algorithm: \texttt{standard-bisect} structure
+  \item Seed: 42 (single seed; multi-seed variance designated Phase~3)
+  \item Blend factor: $\alpha = 0.5$ (\texttt{--land-alpha 0.5})
+  \item Year: 2020 decennial census population
+  \item Comparison baseline: \texttt{--weights-override geographic}
+    on identical plan configuration
+\end{itemize}
+
+\subsection{Primary Metric: Land-Use Boundary Coincidence}
+
+The M-track primary metric for M.2 is the \emph{fraction of district
+boundaries coinciding with NLCD land-use class transitions}.
+
+A district boundary segment is said to coincide with a land-use transition
+if the two tracts separated by that boundary segment have cosine similarity
+$\mathrm{sim}(\mathbf{l}_u, \mathbf{l}_v) < 0.4$ under the M.2 vector definition.
+Equivalently: the boundary is at a point where the physical land use type
+changes substantially (residential-to-commercial, developed-to-natural,
+or natural-to-agricultural).
+
+Formally:
+\begin{equation}
+  \mathrm{LUB} = \frac{\#\{(u,v) \in \partial(\pi) :
+    \mathrm{sim}(\mathbf{l}_u, \mathbf{l}_v) < 0.4\}}
+  {\#\partial(\pi)}
+  \label{eq:lub}
+\end{equation}
+where $\partial(\pi)$ denotes the set of cut edges in the plan $\pi$.
+A higher LUB score means district boundaries fall more consistently at
+natural physical transitions, indicating higher physical community coherence.
+
+The prediction for Phase~2:
+\begin{itemize}
+  \item LUB under land-use weights $\geq$ LUB under geographic weights
+    (land-use weights are specifically designed to prefer cuts at transitions).
+  \item The improvement in LUB should be at least 20 percentage points on
+    NC-14, where the coastal and development-transition geographies are
+    well-suited to the signal.
+    This target is marked ${}^{\dagger}$Phase~2.
+\end{itemize}
+
+\subsection{Secondary Metric: Compactness}
+
+Polsby-Popper compactness \citep{polsby1991third} is the secondary metric.
+The prediction is that land-use weights should not reduce compactness:
+cutting at physical transition zones tends to produce rounder district shapes
+because transition zones are often linear features (shorelines, commercial
+strips, ridge lines) that serve as cleaner boundary segments than arbitrary
+internal boundaries.
+
+Formally, the M.2 compactness prediction:
+\begin{equation}
+  \overline{PP}_{\mathrm{landuse}} \geq \overline{PP}_{\mathrm{geographic}}
+  \label{eq:pp}
+\end{equation}
+where $\overline{PP}$ is mean Polsby-Popper across all districts in the plan.
+This prediction will be confirmed or refuted in Phase~2.\textsuperscript{$\dagger$}
+
+\subsection{Hard-Cut Validation}
+
+An additional validation metric is specific to the hard-cut rule:
+
+\begin{quote}
+  \textit{Zero districts in the final plan cross a majority-water edge
+  as defined by equation~\eqref{eq:hardcut}.}
+\end{quote}
+
+This is a hard constraint, not a soft metric.
+Any plan produced by \texttt{bisect} with \texttt{--weights-override land-use}
+must satisfy this constraint by construction (the hard-cut weight of zero
+means METIS cannot assign both endpoints of a water edge to the same
+partition component under the minimum-cut objective).
+Phase~2 will verify this property on the NC Pamlico Sound adjacencies
+and the Texas Gulf Coast bay adjacencies as an integration test.
+
+\subsection{Phase 2 Timeline}
+
+All quantitative results in this section are marked ${}^{\dagger}$Phase~2
+and will be populated when the following prerequisites are met:
+
+\begin{enumerate}
+  \item NLCD 2021 GeoTIFF downloaded to \texttt{data/nlcd/} in the
+    bisect data directory.
+  \item Zonal statistics computation completed for NC, WI, and TX census
+    tracts using the bisect NLCD pipeline (\texttt{bisect fetch --type nlcd}).
+  \item Land use Parquet files verified against L0 test invariants
+    (Section~\ref{sec:algorithm}).
+  \item Single-seed redistricting runs completed under both
+    \texttt{land-use} and \texttt{geographic} weight modes.
+  \item LUB and Polsby-Popper metrics computed from plan output.
+\end{enumerate}

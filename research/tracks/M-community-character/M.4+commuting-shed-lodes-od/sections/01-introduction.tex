@@ -1,0 +1,90 @@
+\label{sec:introduction}
+
+The citizens of Waukesha County, Wisconsin testified before the Wisconsin
+Redistricting Commission in 2021 that their communities belonged in the same
+legislative district as the other Milwaukee suburban counties to the north
+and east.
+Their argument was not about geography alone---Waukesha is not adjacent to
+all the communities they claimed to share a district with.
+Their argument was about daily life: tens of thousands of Waukesha residents
+drive the same freeways, park in the same lots, and work in the same office
+parks in Milwaukee's western suburbs.
+They were, they testified, part of the same economic community.
+The Commission heard the testimony, found it compelling, but had no quantitative
+tool to measure the strength of the commuting community bond.
+
+This paper provides that measurement.
+
+The commuting shed concept has a long history in regional science.
+\citet{tolbert1996labor} defined functional economic areas on the basis of
+inter-county commuting flows, arguing that the daily commuting sphere---not
+the municipal or county boundary---is the appropriate unit of economic community.
+This work has been applied to labor market delineation, retail trade area
+analysis, and economic development planning.
+But it has not been applied to redistricting, where the relevant question is
+not ``what is the optimal functional economic area size?'' but ``do these two
+adjacent tracts belong to the same economic community?''
+
+The M-track community character framework, introduced in M.0
+\citep{m0framework}, operationalizes diverse community signals as edge
+weights in the census-tract adjacency graph.
+M.4 is the commuting shed implementation paper.
+It uses the Census Bureau's LODES Origin-Destination (OD) file---which records
+home-block to work-block commute flows for all UI-covered employees---to
+compute a per-tract commuting destination distribution and measure the
+similarity between adjacent tracts' distributions using the weighted
+Jaccard coefficient.
+
+Commuting shed similarity is the right M-track signal for polycentric
+metropolitan areas for several reasons:
+
+\begin{enumerate}
+  \item \textbf{Functional community, not just residential proximity.}
+    Two adjacent census tracts may be geographically contiguous but serve
+    completely different employment centers.
+    Tract A's workers commute north to a technology corridor; tract B's workers
+    commute south to a port logistics hub.
+    Geographic proximity implies no community bond; commuting destination
+    overlap captures the functional difference.
+  \item \textbf{Revealed preference.}
+    Unlike survey-based community identification or administrative zone
+    membership, commute flows are behavioral data.
+    They reflect what workers actually do, not what planners designate or
+    what residents aspire to.
+    The commuting shed is the economic community as expressed through daily
+    behavior.
+  \item \textbf{Complementary to M.1.}
+    M.1 (economic character, \citep{m1econchar}) weights tracts by their
+    employment profile: where jobs are located.
+    M.4 weights tracts by their residential commuting profile: where workers
+    from each tract actually go.
+    M.1 identifies employment centers; M.4 identifies their residential
+    catchment areas.
+    Together they provide a complete picture of the economic community.
+  \item \textbf{Partisan neutrality.}
+    LODES OD data contains no electoral, racial, or demographic information.
+    The commute flow records are administrative data derived from state
+    UI wage records matched to employer geocodes.
+\end{enumerate}
+
+\paragraph{Distinction from M.1 economic character.}
+A high-employment tract (M.1 jobs per resident $> 5$) represents an employment
+center.
+M.4 identifies which residential tracts send workers to that center.
+Two residential tracts that both send workers primarily to the same tech park
+have a commuting-shed community bond; two residential tracts that send workers
+to different employment centers do not---even if they are adjacent.
+The M.4 signal fires where M.1 is silent: in residential areas with low JPR
+values that cannot be distinguished by economic character but can be
+distinguished by the direction of their daily commute.
+
+\paragraph{Paper organization.}
+Section~\ref{sec:background} describes the LODES OD data structure and
+the functional economic area concept.
+Section~\ref{sec:algorithm} defines the commuting destination distribution,
+weighted Jaccard similarity, sparsity handling, and edge weight formula.
+Section~\ref{sec:results} describes the experimental design and defers
+quantitative results to Phase~2.
+Section~\ref{sec:legal} provides a legal usage guide including airport
+communities, port communities, and economic commuting shed recognition.
+Section~\ref{sec:conclusion} concludes.

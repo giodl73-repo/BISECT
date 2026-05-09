@@ -1,0 +1,122 @@
+\label{sec:background}
+
+\subsection{LODES Origin-Destination Data}
+
+The Longitudinal Employer-Household Dynamics (LEHD) program at the U.S.\
+Census Bureau compiles the LODES (LEHD Origin-Destination Employment Statistics)
+dataset from state Unemployment Insurance wage records matched to employer
+and residential address geocodes \citep{abowd2009lodes}.
+
+The LODES dataset has three file types:
+\begin{itemize}
+  \item \textbf{WAC} (Workplace Area Characteristics): jobs by census block
+    of work, used in M.1 \citep{m1econchar}.
+  \item \textbf{RAC} (Residence Area Characteristics): workers by census block
+    of residence.
+  \item \textbf{OD} (Origin-Destination): job counts by home block and work
+    block pair.
+\end{itemize}
+M.4 uses the OD file, which is the most granular LODES product.
+
+\paragraph{OD file structure.}
+The OD main file (job type JT00, all jobs) has the following primary columns:
+\begin{itemize}
+  \item \texttt{h\_geocode} (15-character block GEOID of home location)
+  \item \texttt{w\_geocode} (15-character block GEOID of work location)
+  \item \texttt{S000} (total number of jobs with this home-work pair)
+\end{itemize}
+Additional columns (\texttt{SA01}--\texttt{SA03}) break the job count by
+age group; these are not used in M.4.
+Each row records how many workers live in block \texttt{h\_geocode} and
+work in block \texttt{w\_geocode}.
+The 2020 vintage is used.
+File naming convention:
+\begin{center}
+  \texttt{\{state\}\_od\_main\_JT00\_2020.csv.gz}
+\end{center}
+available at
+\url{https://lehd.ces.census.gov/data/lodes/LODES8/{state}/od/}.
+
+\paragraph{Block-to-tract aggregation.}
+Both \texttt{h\_geocode} and \texttt{w\_geocode} are 15-character block GEOIDs.
+The first 11 characters identify the census tract (state 2 + county 3 +
+tract 6).
+Block-to-tract aggregation proceeds in two steps:
+\begin{enumerate}
+  \item Truncate \texttt{h\_geocode} and \texttt{w\_geocode} to 11 characters
+    to obtain home tract $h$ and work tract $w$.
+  \item Sum \texttt{S000} for all block pairs within the same $(h, w)$ tract pair.
+\end{enumerate}
+The result is a sparse matrix $F$ where $F[h, w]$ is the total number of
+workers residing in home tract $h$ and employed in work tract $w$.
+
+\paragraph{File size and sparsity.}
+The OD file for a large state can be substantial.
+The 2020 NC OD file has approximately 2.1 million rows before tract
+aggregation; after aggregation to the 2,655 NC census tracts, the resulting
+matrix has at most $2655^2 \approx 7$M cells but is highly sparse.
+The average NC home tract has commuting flows to approximately 15--30
+distinct work tracts; most home-work tract pairs have zero flow.
+This sparsity is exploited in the weighted Jaccard computation
+(Section~\ref{sec:algorithm}).
+
+\paragraph{Cross-state flows.}
+LODES OD files are produced per state and record only intra-state commuting
+flows.
+Cross-state commuters (e.g., New Jersey residents commuting to New York City)
+are partially captured in both states' files but with geographic coverage gaps.
+For single-state redistricting runs, cross-state flow omission means that
+border tracts may have artificially low commuting destination overlap with
+tracts that would be captured if inter-state flows were included.
+This is an acceptable limitation for the purpose of the M.4 edge weight:
+the within-state commuting pattern still provides a meaningful community signal,
+and border-state anomalies affect a small fraction of tracts.
+
+\subsection{Functional Economic Areas and Commuting Sheds}
+
+\paragraph{Tolbert-Sizer functional economic areas.}
+\citet{tolbert1996labor} defined functional economic areas (FEAs) for the
+entire United States by identifying county-level ``nodal clusters'' where
+commuting flows indicated economic integration.
+Their 1996 analysis produced 741 FEAs covering all U.S.\ counties.
+The methodology has been updated periodically and provides the intellectual
+foundation for Metropolitan Statistical Area delineation by the Office
+of Management and Budget.
+
+FEAs are defined at the county level; M.4 extends this concept to the
+census tract level.
+Two adjacent census tracts that share a commuting destination cluster belong to
+the same functional economic community at the sub-county scale.
+This captures a finer-grained community structure than FEA analysis:
+within a single FEA, there may be multiple distinct sub-communities with
+different primary employment destinations.
+
+\paragraph{Research Triangle as a test case.}
+The Research Triangle Park (RTP) area in North Carolina provides a well-studied
+example of commuting shed community structure.
+Workers residing in Raleigh, Durham, Chapel Hill, Cary, and Research Triangle
+Park itself all commute to the same concentration of pharmaceutical,
+biotechnology, and information technology employers located in the RTP
+complex and the I-40/US-1 corridor.
+This creates a natural commuting shed that spans four counties (Wake, Durham,
+Orange, Chatham) but excludes the Charlotte metro tracts 100 miles to the
+southwest, which commute to a completely different employment cluster
+(finance in Uptown Charlotte, distribution in the I-85/I-77 corridor).
+
+The M.4 algorithm is expected to assign high weighted Jaccard similarity to
+Wake-Durham-Orange tract pairs that share RTP as a primary destination
+and low similarity to pairs that span the RTP/Charlotte employment divide.
+This prediction is the basis for the NC-14 polycentric separation test
+in Section~\ref{sec:results}.
+
+\paragraph{Milwaukee suburban commuting sheds.}
+Waukesha County (west of Milwaukee) and the northern Milwaukee suburbs
+(Ozaukee, Washington counties) both exhibit high commuting flows to
+downtown Milwaukee and the western suburban employment corridor (Brookfield,
+Wauwatosa, Menomonee Falls).
+Despite not being geographically contiguous with each other, tracts in these
+three counties share destination overlap through their common primary
+destinations.
+The M.4 algorithm is expected to assign similarity scores above 0.5 to
+pairs of tracts from these counties that share Milwaukee-area primary
+destinations.

@@ -1,0 +1,234 @@
+\label{sec:results}
+
+\subsection{Purpose of the Court Usage Template}
+
+The court usage template in this section is the primary contribution of M.8.
+Individual M-track papers (M.1--M.7) each provide a single-signal expert
+witness template.
+M.8 provides the synthesis template: the complete statement an expert witness
+should make when the composite community character index was used to draw
+the map.
+
+The template is written for use in:
+\begin{itemize}
+  \item Congressional redistricting proceedings before federal or state courts
+  \item State legislative redistricting proceedings before state courts or
+    redistricting commissions
+  \item Special master proceedings in cases where a court has assumed
+    redistricting authority
+  \item Commission public comment and expert report contexts where quantitative
+    community-of-interest evidence is solicited
+\end{itemize}
+
+The template has five sections: data provenance, community index description,
+non-partisan declaration, specific community identification, and algorithmic
+transparency.
+
+\subsection{Expert Witness Statement Template}
+
+\subsubsection*{Section 1: Data Provenance}
+
+\begin{quote}
+``The submitted congressional plan was drawn using the \textsc{bisect}
+algorithmic redistricting platform, which is a public-domain computational
+tool for graph-partitioning-based congressional district design.
+The plan was produced by optimizing the Composite Community Character Index
+(CCCI), a quantitative measure of community bond strength derived from
+seven federal government administrative and remote sensing datasets.
+No electoral, racial, or partisan data entered any component of the index.
+
+The seven data sources are:
+\begin{enumerate}
+  \item U.S.\ Census Bureau TIGER/Line shapefiles (school district, municipal,
+    and fire district boundaries), 2020.
+    Source: \url{https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html}.
+  \item U.S.\ Census Bureau LEHD LODES Workplace Area Characteristics
+    (WAC), version~8, 2020.
+    Source: \url{https://lehd.ces.census.gov/data/}.
+  \item USGS National Land Cover Database (NLCD) 2021, 30-meter resolution.
+    Source: \url{https://www.mrlc.gov/data/nlcd-2021-land-cover-conus}.
+  \item U.S.\ Census Bureau American Community Survey 5-year estimates,
+    2016--2020 (housing tenure, age, value, and renter fraction by tract).
+    Source: \url{https://www.census.gov/programs-surveys/acs/}.
+  \item U.S.\ Census Bureau LEHD LODES Origin-Destination file (OD),
+    version~8, 2020.
+    Source: \url{https://lehd.ces.census.gov/data/}.
+  \item USGS Shuttle Radar Topography Mission (SRTM) 30-meter elevation data.
+    Source: \url{https://earthexplorer.usgs.gov/}.
+  \item GTFS (General Transit Feed Specification) public transit schedules
+    for applicable metropolitan areas, 2020 vintage.
+    Source: TransitFeeds.com and individual transit authority GTFS publications.
+\end{enumerate}
+
+All datasets are public domain or publicly licensed federal government products.
+None contains voter registration data, election results, precinct boundaries,
+or any other information about the political preferences of the populations
+within the census tracts.''
+\end{quote}
+
+\subsubsection*{Section 2: Community Index Description}
+
+\begin{quote}
+``The Composite Community Character Index assigns a numerical score to every
+pair of adjacent census tracts reflecting the strength of the community bond
+between those tracts.
+The score is a weighted average of seven component similarity measures,
+each derived from one of the federal data sources listed above.
+
+The seven components and their default weights are:
+(1) zone co-membership (school district, municipal boundary, fire district),
+weight 30\%; (2) economic character (commercial intensity, industrial fraction,
+jobs per resident), weight 20\%; (3) land use similarity (residential,
+commercial, open, and natural fractions from NLCD), weight 20\%;
+(4) housing character (tenure, age, value, renter fraction), weight 15\%;
+(5) commuting shed membership (weighted Jaccard similarity of LODES OD
+destination distributions), weight 10\%;
+(6) topographic community (terrain profile similarity from SRTM), weight 3\%;
+(7) transit accessibility (GTFS-based transit service similarity), weight 2\%.
+
+The weights sum to 100\%.
+When data for a component is unavailable for a given state or tract pair,
+that component is omitted from the average and the remaining weights are
+renormalized.
+The minimum signal set required for a valid composite run is zone
+co-membership, economic character, and land use.
+
+Adjacent census tracts with a high composite score (close to 1.0) are
+strongly bonded communities on multiple dimensions.
+Adjacent census tracts with a low composite score (close to 0.0) are
+communities that differ substantially on multiple dimensions.
+The \textsc{bisect} algorithm assigns district boundaries preferentially
+to low-composite-score adjacencies---the natural seams between community
+types---and keeps high-composite-score adjacencies within the same district.''
+\end{quote}
+
+\subsubsection*{Section 3: Non-Partisan Declaration}
+
+\begin{quote}
+``No electoral, racial, or partisan data entered any component signal of
+the Composite Community Character Index.
+The following data types were considered and explicitly excluded from
+the computation:
+\begin{itemize}
+  \item Voter registration records (state or county election authority data)
+  \item Election results (any precinct, county, or district level)
+  \item Precinct boundary shapefiles used as a proxy for electoral geography
+  \item Racial or ethnic composition data (decennial census P1/P2 tables or
+    ACS race tables)
+  \item Partisan lean indices (Cook, Sabato, or any other partisan rating)
+\end{itemize}
+
+Any correlation between the submitted plan and partisan outcomes is a consequence
+of the geographic correlation between community character signals (employment
+concentration, land use type, administrative zone membership) and partisan
+sorting patterns in the American electorate.
+That correlation is a feature of the population landscape, not a product of
+the algorithm.
+The algorithm did not have access to, and did not use, any information about
+partisan voting patterns.
+
+This satisfies the standard articulated in \textit{Rucho v.\ Common Cause},
+588 U.S.\ 684 (2019), that federal courts evaluate partisan gerrymandering
+by asking whether partisan considerations predominated in the drawing of
+district lines.
+No partisan consideration entered any component of the index.''
+\end{quote}
+
+\subsubsection*{Section 4: Specific Community Identification}
+
+\begin{quote}
+``The following communities of interest are preserved in the submitted plan
+as demonstrated by the Composite Community Character Index:
+
+[PRACTITIONER NOTE: Insert specific communities from the state's CCCI analysis.
+Use the tract-level CCCI output to identify adjacency pairs with high composite
+scores that are kept within the same district. For each preserved community,
+cite at least two component signals. Example language:]
+
+`The [community name] community in [county/counties] is preserved as a cohesive
+unit within [district number].
+This community has a composite score above 0.75 on the following dimensions:
+zone co-membership (tracts in [community] share the [school district name]
+school district and the [municipality] municipal service boundary, zone
+co-membership score 0.95); economic character (tracts in [community] share
+a [residential/commercial/industrial] employment profile, economic character
+score 0.88); and land use similarity (tracts in [community] are predominantly
+[residential/commercial/agricultural], land use score 0.82).
+The composite score of 0.84 reflects a strongly bonded community on three
+independent dimensions.'
+
+[For water-separated communities using the M.2 hard-cut rule:]
+
+`The [Outer Banks / barrier island / coastal peninsula] community in [county]
+is separated from mainland tracts by a zero-weight water boundary.
+Both the [community tracts] and the adjacent mainland tracts have majority
+water classification under NLCD (open water fraction exceeds 50\%), triggering
+the land use hard-cut rule.
+This boundary corresponds to [body of water name], which this commission and
+its predecessors have consistently recognized as a community-defining natural
+boundary.'
+''
+\end{quote}
+
+\subsubsection*{Section 5: Algorithmic Transparency}
+
+\begin{quote}
+``The \textsc{bisect} platform computes district assignments by solving the
+following optimization problem: partition the census tract adjacency graph
+into $k$ connected components of approximately equal population, minimizing
+the total weight of edges that are cut.
+The composite community character weights modify the edge weights so that
+cuts are cheaper at community seams and more expensive within communities.
+
+The specific formulas are:
+\begin{align*}
+  w_{\mathrm{comp}}(u, v) &=
+    w_{\mathrm{geo}}(u, v) \times
+    \frac{\sum_{i \in \mathcal{A}} \omega_i \cdot \mathrm{sim}_i(u, v)}
+         {\sum_{i \in \mathcal{A}} \omega_i}
+\end{align*}
+where $w_{\mathrm{geo}}$ is the geographic boundary length between tracts
+$u$ and $v$, $\omega_i$ are the component weights (zone 0.30, economic 0.20,
+land 0.20, housing 0.15, commute 0.10, topographic 0.03, transit 0.02),
+$\mathcal{A}$ is the set of available signals for this edge, and
+$\mathrm{sim}_i(u, v)$ is the component similarity score for signal $i$.
+
+The formula is symmetric ($w(u,v) = w(v,u)$), non-negative, and bounded
+above by $w_{\mathrm{geo}}(u, v)$.
+It has been implemented in the \textsc{bisect} Rust codebase and verified
+by a suite of L0 unit tests including invariants for non-negativity,
+symmetry, and graceful degradation.
+
+The graph partitioning is performed by the METIS library
+\citep{karypis1998fast} using the minimum-cut objective with population-balance
+constraints.
+METIS is a well-established, peer-reviewed graph partitioning library used
+in high-performance computing, finite element analysis, and computational
+science.
+Its application to redistricting is a natural extension of its graph
+partitioning capabilities.
+
+The population balance constraint is set at $\pm$[X]\% of ideal population,
+where the ideal population is the state's total population divided by $k$.
+This constraint is enforced by METIS during the partitioning step.
+Equal population is the first criterion; community character weights apply
+only within the space of legally valid equal-population plans.''
+\end{quote}
+
+\subsection{Brief Citation Template}
+
+For use in redistricting briefs, the following formulation provides a concise
+reference to the composite index analysis:
+
+\begin{quote}
+``The proposed congressional plan was produced using an algorithmic tool
+(the \textsc{bisect} platform) that operationalizes communities of interest
+through the Composite Community Character Index, a weighted average of seven
+federally-sourced community character signals.
+Expert testimony establishing the quantitative basis for community-of-interest
+preservation under the composite index is provided in [expert report reference].
+The composite index contains no electoral, racial, or partisan data.
+The plan satisfies the [state] redistricting criterion of [cite specific
+criterion language] by preserving communities with composite scores above
+[threshold] within single districts.''
+\end{quote}

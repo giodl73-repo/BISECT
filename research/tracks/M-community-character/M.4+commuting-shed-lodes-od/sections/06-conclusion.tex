@@ -1,0 +1,71 @@
+\label{sec:conclusion}
+
+M.4 operationalizes commuting shed community membership as an edge weight
+signal through the Census Bureau's LODES Origin-Destination file.
+The weighted Jaccard similarity of commuting destination distributions
+measures the overlap between two tracts' daily economic spheres: tracts
+whose workers commute to the same employment centers share a functional
+economic area and receive heavy edges that METIS avoids cutting.
+
+The signal fills a gap that M.1 (economic character) leaves open.
+M.1 identifies employment centers---where jobs are concentrated.
+M.4 identifies which residential communities belong to which employment
+center's catchment area.
+In polycentric metropolitan areas, where multiple large employment centers
+compete for workers from the same residential zones, M.4 provides the
+signal that correctly assigns residential tracts to their primary functional
+economic community.
+
+\paragraph{Relationship to M.1.}
+The complementarity between M.1 and M.4 is a design feature of the M-track
+series.
+M.1 fires at residential-employment center boundaries (the RTP campus
+tract has high JPR, its residential neighbors have low JPR: a strong
+M.1 cut seam).
+M.4 fires at commuting shed boundaries (the RTP residential catchment
+area has high Triangle destination overlap; Charlotte residential tracts
+have low Triangle destination overlap: a strong M.4 cut seam further from
+the employment center).
+Together, M.1 and M.4 define the economic community at two different
+geographic scales: the employment cluster boundary (M.1) and the
+residential catchment boundary (M.4).
+The M.8 composite index \citep{m8composite} assigns M.1 a weight of 0.20
+and M.4 a weight of 0.10, reflecting the judgment that M.4 is a meaningful
+but more indirect community signal than the direct economic character
+differentiation of M.1.
+
+\paragraph{Commuting data and the daily life argument.}
+The commuting shed argument for communities of interest is grounded in
+the observation that daily economic behavior---not formal administrative
+membership or physical proximity---defines the economic community most
+people live in.
+The farmer who drives an hour to a market town, the suburban worker who
+commutes to an office park, the airport employee who drives the same
+route to the same terminal every morning: these are the daily economic
+communities that redistricting commissions are asked to preserve.
+The LODES OD data makes these communities measurable for the first time
+in an algorithmic redistricting system.
+
+\paragraph{Phase 2 commitments.}
+Phase~2 will complete the following quantitative results, all currently
+marked ${}^{\dagger}$:
+\begin{enumerate}
+  \item Milwaukee suburban co-assignment rate (SCR) for WI-8,
+    comparing commuting-shed weights to geographic baseline.
+    Prediction: $\mathrm{SCR}_{\mathrm{commute}} \geq 0.70$ vs.\
+    $\mathrm{SCR}_{\mathrm{geographic}} \leq 0.50$.
+  \item Research Triangle / Charlotte cross-metro co-assignment rate (CMR)
+    for NC-14.
+    Prediction: $\mathrm{CMR}_{\mathrm{commute}} < 0.05$ vs.\
+    $\mathrm{CMR}_{\mathrm{geographic}} \leq 0.15$.
+  \item Weighted Jaccard wall time for NC.
+    Prediction: $< 60$ seconds on 8 workers.
+  \item Proportionality gap comparison for WI-8 and NC-14 (secondary metric;
+    predicted to show improvement for NC and null for WI).
+\end{enumerate}
+
+Phase~2 depends on LODES OD data download via
+\texttt{bisect fetch --type lodes-od --year 2020}.
+The same LEHD infrastructure used for M.1 WAC data handles this download;
+the OD file uses the same authentication and the same Parquet caching
+pipeline.

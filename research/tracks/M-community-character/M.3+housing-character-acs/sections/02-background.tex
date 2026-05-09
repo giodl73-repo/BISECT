@@ -1,0 +1,157 @@
+\label{sec:background}
+
+\subsection{ACS 5-Year Estimates: Methodology and Reliability}
+
+The American Community Survey (ACS) is a continuous demographic survey conducted
+by the U.S.\ Census Bureau, collecting information from approximately 3.5~million
+housing units annually~\citep{acs2020}.
+The 5-year estimates aggregate five calendar years of data to produce reliable
+tract-level estimates; single-year ACS estimates are not published at the census
+tract level because the sample is too small.
+The 2016--2020 five-year estimates (``2020 ACS 5-year'') represent the most
+recent tract-level housing data available as of this writing and correspond
+to the 2020 census tract boundaries used by \textsc{bisect}'s redistricting pipeline.
+
+\paragraph{Margin of error.}
+Because ACS estimates are survey-based, each published figure carries a margin
+of error (MOE) at the 90\% confidence interval.
+For housing-stock variables at the census tract level, MOEs are typically within
+10--15\% of the estimate for tracts with population above 2,000.
+Smaller tracts and tracts in rural areas may have larger relative MOEs.
+For the purposes of the housing character vector, we treat the published point
+estimates as the true values and note that MOE-based weighting of the similarity
+metric is a potential extension.
+All empirical results in this paper are designated Phase~2 pending ACS pipeline
+extension and accordingly carry the $^\dagger$ dagger notation.
+
+\paragraph{Tables used.}
+Table~\ref{tab:acs-tables} lists the three ACS tables from which the housing
+character components are derived.
+All three are available at census tract geography for every state, published
+in the ACS 5-year series.
+
+\begin{table}[ht]
+\centering
+\caption{ACS 5-year tables used for housing character vector construction.}
+\label{tab:acs-tables}
+\small
+\begin{tabularx}{\textwidth}{llX}
+\toprule
+Table & Name & Housing character component \\
+\midrule
+B25024 & Units in Structure & Single-family fraction, multifamily fraction \\
+B25003 & Tenure & Owner-occupancy rate \\
+B25035 & Median Year Structure Built & Housing vintage score \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Why Housing Type Predicts Community Structure}
+
+\subsubsection{Homeownership and Civic Participation}
+
+The relationship between homeownership and civic engagement is one of the most
+studied questions in American political sociology.
+DiPasquale and Glaeser~\citeyearpar{dipasquale1999} find in a national panel
+that homeowners are significantly more likely to know their congressional
+representative, participate in local organizations, and vote in local elections
+than otherwise-identical renters.
+The authors attribute the effect to the financial stake homeowners hold in
+local government outcomes: school quality, property tax rates, zoning variances,
+and infrastructure maintenance all directly affect property values in a way
+they do not affect rental costs.
+
+Fischel~\citeyearpar{fischel2001} elaborates this mechanism through the concept
+of the ``homevoter hypothesis'': homeowners, unlike renters, cannot diversify
+their housing investment, so they vote as if their home equity were their
+primary financial asset.
+They vote for school board candidates, against upzoning proposals, and for
+infrastructure maintenance bonds with a consistency that non-homeowners do not
+exhibit.
+The political implication for redistricting is direct: a tract that is
+predominantly owner-occupied has a recognizably different political interest
+profile from an adjacent tract that is predominantly rental.
+They are not members of the same community of interest on housing and land-use
+policy.
+
+\subsubsection{Neighborhood Stability and the Filtering Theory}
+
+The lifecycle of the housing stock---its vintage---is another dimension of
+community structure.
+The ``filtering'' theory of housing markets~\citep{rosenthal2014} holds that
+new construction at the high end of the market gradually filters down to lower
+income occupants as the housing ages.
+A tract built before 1940 and still predominantly owner-occupied is a community
+that has resisted the filtering dynamic: it has maintained its character across
+multiple generations of residents.
+Historic preservation districts, which are legally recognized institutional
+forms of this resistance, are typically composed of pre-1940 housing stock.
+
+The community stability of pre-1960 neighborhoods is not merely a function
+of the age of their buildings; it is a function of the long tenures of their
+residents~\citep{weaver2020}.
+Long-tenured homeowners have different representation interests from recent
+arrivals: they are invested in the long-run trajectory of local institutions,
+they have organized around neighborhood associations with multi-decade histories,
+and they have fought and won (or lost) land-use battles that shaped the
+current built environment.
+Splitting such a neighborhood across congressional district boundaries fragments
+a community of interest in the most literal sense.
+
+\subsubsection{NIMBYism as a Community Signal}
+
+Einstein, Palmer, and Glick~\citeyearpar{einstein2019} analyze 2015--2017
+local planning board meeting minutes from Massachusetts and find that
+participants who speak against housing development proposals are disproportionately
+homeowners, older, and white, while the broader community they claim to represent
+is more diverse and more renting.
+Their finding---that homeowner communities systematically mobilize against
+density increases---documents the political homogeneity of single-family
+homeowner communities.
+This homogeneity is precisely what the housing character vector is designed
+to measure: tracts where the homeowner fraction and single-family fraction
+are both high share a political interest profile that low-SF, high-rental
+tracts do not.
+
+The NIMBYism signal is partisan-neutral in origin.
+Single-family homeowner communities with strong opposition to upzoning
+are documented in liberal San Francisco~\citep{einstein2019},
+moderate suburban New Jersey~\citep{fischel2001}, and conservative
+Houston~\citep{nolo2022zoning}.
+The housing character signal does not predict partisan vote share;
+it predicts community cohesion on the housing-and-land-use dimension
+of political interest.
+
+\subsubsection{Implementation Position in the M-Track Framework}
+
+The M-track framework (M.0) defines a family of community character signals
+from M.1 (economic character) to M.7 (transit accessibility).
+Table~\ref{tab:mtrack-position} places M.3 within that family.
+M.3 occupies the residential built environment dimension, which is not covered
+by any other M-track signal.
+M.1 covers the workplace-side economic character; M.3 covers the residential-side
+physical character.
+M.6 covers administrative zone co-membership, which overlaps with M.3 in the
+school district dimension (school district membership correlates strongly with
+single-family homeowner neighborhoods) but is legally and computationally
+distinct.
+
+\begin{table}[ht]
+\centering
+\caption{Position of M.3 in the M-track signal taxonomy.}
+\label{tab:mtrack-position}
+\small
+\begin{tabular}{lll}
+\toprule
+Paper & Signal & Data source \\
+\midrule
+M.1 & Economic character (workplace) & LODES WAC \\
+M.2 & Land use character & NLCD \\
+M.3 & Housing character (residential) & ACS B25024/B25003/B25035 \\
+M.4 & Commuting shed & LODES OD \\
+M.5 & Topographic character & USGS 3DEP \\
+M.6 & Administrative zone co-membership & TIGER/Line special districts \\
+M.7 & Transit accessibility & NTD / GTFS \\
+\bottomrule
+\end{tabular}
+\end{table}

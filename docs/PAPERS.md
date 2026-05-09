@@ -99,6 +99,7 @@ Validation: does the algorithm produce robust results across resolutions, census
 | B.22b | Geographic CVD — true Euclidean proximity via Albers projection | [PDF](papers/B.22b+cvd-geographic.pdf) | **Accepted** 4.0/4 — `--cvd-metric geographic` |
 | B.23 | BFS Region-Growing — greedy geographic district packing | [PDF](papers/B.23+bfs-growth.pdf) | **Accepted** 3.6/4 — `--structure bfs-growth` |
 | B.24 | Exact Redistricting via ILP — certifiable optimality for small instances | [PDF](papers/B.24+ilp-redistricting.pdf) | First draft — `--structure ilp` (Phase 1 METIS fallback) |
+| B.27 | Economic Character Edge Weights via LODES — community similarity as edge modifier | [PDF](papers/B.27+economic-character-weights.pdf) | **Accepted** — `--weights-override economic-character` |
 
 ---
 
@@ -255,6 +256,19 @@ Partisan fairness metrics — how algorithmically-drawn maps compare to enacted 
 | L.4 | Declination | [PDF](papers/L.4+declination.pdf) | **Accepted** |
 | L.5 | Seats-Votes Curve and Responsiveness | [PDF](papers/L.5+seats-votes-curve.pdf) | **Accepted** |
 | L.6 | Proportionality vs. Majoritarianism | [PDF](papers/L.6+proportionality-majoritarianism.pdf) | **Accepted** |
+
+---
+
+## Track M — Community Character Weights (8 papers)
+
+Operationalizing communities of interest as METIS edge weights. Each paper defines one community character signal (housing type, land use, commuting shed, topography, etc.), derives a cosine similarity metric from publicly available data, and provides legal grounding for redistricting use. CLI: `--weights-override housing-character` etc.
+
+| Code | Title | PDF | Status |
+|------|-------|-----|--------|
+| M.0 | Community Character Weighting: Framework for Communities of Interest | [PDF](papers/M.0+community-character-overview.pdf) | **Accepted** |
+| M.1 | Economic Character Edge Weights via LODES | — | Post-write pending |
+| M.3 | Housing Character Edge Weights via ACS | — | First draft |
+| M.6 | Administrative Zone Co-membership (School/Fire/Electric Districts) | [PDF](papers/M.6+administrative-zone-membership.pdf) | **Accepted** |
 
 ---
 

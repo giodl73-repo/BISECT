@@ -1,0 +1,58 @@
+\label{sec:conclusion}
+
+This paper has introduced M.3, the housing character implementation of the
+M-track community character framework.
+Three ACS tables---B25024 (units in structure), B25003 (tenure), and B25035
+(median year structure built)---produce a four-component vector that captures
+the single-family/multifamily dimension, the owner/renter dimension, and
+the historic/new-construction dimension of residential built environment
+character.
+The cosine similarity of housing character vectors modifies METIS edge weights
+via the M-track blend formula, causing district boundaries to fall preferentially
+at the transitions between single-family homeowner communities and multifamily
+rental corridors, and between historic pre-war neighborhoods and postwar
+suburban tracts.
+
+Several features make M.3 distinctive within the M-track family.
+
+\paragraph{Zero implementation cost.}
+M.3 requires no new data download infrastructure.
+The three ACS tables are available from the same Census API endpoint already
+used by \texttt{bisect fetch}.
+Four new columns extend the existing demographics CSV without restructuring
+the pipeline.
+This makes M.3 the fastest M-track signal to move from specification to
+implementation.
+
+\paragraph{Legal recognition depth.}
+The housing character signal has unusually deep legal recognition as a
+community-of-interest indicator.
+Homeownership creates a legally enforceable fiscal bond through property
+taxation.
+Historic district designation creates an administrative recognition of
+community cohesion.
+The homevoter hypothesis~\citep{fischel2001} provides theoretical grounding
+for why housing character predicts shared political interests.
+Expert testimony from redistricting proceedings in Oregon and Colorado has
+accepted historic neighborhood cohesion as a community of interest.
+
+\paragraph{Orthogonality to existing signals.}
+M.3 is orthogonal to M.1 (economic character): M.1 describes the workplace
+side of a census tract, while M.3 describes the residential built environment.
+A residential tract can have low economic character (few jobs) but high housing
+character homogeneity.
+M.3 is also largely orthogonal to M.6 (administrative zone co-membership),
+though the two signals correlate in the school district dimension.
+Composing M.3 and M.6 weights would capture both the physical built environment
+and the administrative fiscal bond dimensions of community cohesion simultaneously.
+
+\paragraph{Future work.}
+Three natural extensions follow from this paper.
+First, Phase~2 empirical validation using the extended ACS pipeline will
+test the within-district homogeneity hypotheses (H1--H3) on North Carolina.
+Second, a multi-state sweep comparing housing-character weights to geographic
+baseline across all 50 states will identify which states have sufficient
+housing character variation to benefit from M.3.
+Third, the composition of M.3 with M.1 and M.6---a three-signal composite
+community character weight---is the natural next experiment for states with
+strong communities-of-interest criteria and diverse built environments.

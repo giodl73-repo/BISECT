@@ -1,0 +1,168 @@
+\label{sec:algorithm}
+
+\subsection{Commuting Destination Distribution}
+
+For each home census tract $h$, the commuting destination distribution
+is a sparse vector:
+\begin{equation}
+  D(h) = \bigl\{ w : F[h, w] > 0 \bigr\}
+  \quad\text{with values } D(h)[w] = F[h, w]
+  \label{eq:distribution}
+\end{equation}
+where $F[h, w]$ is the number of workers residing in tract $h$ and employed
+in tract $w$, aggregated from the LODES OD block-level records as described
+in Section~\ref{sec:background}.
+
+The distribution is stored in unnormalized count form.
+Normalization to a probability distribution (dividing by $\sum_w D(h)[w]$)
+is performed at similarity computation time, not at storage time,
+to avoid floating-point precision issues in the sparse representation.
+
+\subsection{Weighted Jaccard Similarity}
+
+The community similarity between two home tracts $h_1$ and $h_2$ is
+the weighted Jaccard similarity of their commuting destination distributions:
+\begin{equation}
+  \mathrm{sim}(h_1, h_2)
+  = \frac{\sum_{w} \min\!\bigl(D(h_1)[w],\, D(h_2)[w]\bigr)}
+         {\sum_{w} \max\!\bigl(D(h_1)[w],\, D(h_2)[w]\bigr)}
+  \label{eq:jaccard}
+\end{equation}
+where the sums run over all work tracts $w$ that appear in either $D(h_1)$
+or $D(h_2)$.
+The $\min$ and $\max$ functions operate element-wise: for $w$ present in
+$D(h_1)$ but not $D(h_2)$, $\min(\cdot) = 0$ and $\max(\cdot) = D(h_1)[w]$.
+
+\paragraph{Properties of weighted Jaccard similarity.}
+\begin{itemize}
+  \item \textbf{Bounded.} $\mathrm{sim}(h_1, h_2) \in [0, 1]$ for all pairs.
+  \item \textbf{Symmetric.} $\mathrm{sim}(h_1, h_2) = \mathrm{sim}(h_2, h_1)$
+    because $\min$ and $\max$ are symmetric.
+  \item \textbf{Self-similarity.} $\mathrm{sim}(h, h) = 1.0$ for any tract with
+    at least one commuting flow.
+  \item \textbf{Disjoint zero.} $\mathrm{sim}(h_1, h_2) = 0.0$ when $D(h_1)$ and
+    $D(h_2)$ have no destination tract in common ($\sum \min = 0$).
+\end{itemize}
+
+\paragraph{Interpretation.}
+The weighted Jaccard similarity measures the overlap of commuting flows
+rather than binary destination co-membership.
+If $h_1$ sends 100 workers to downtown Milwaukee and 20 to Brookfield,
+and $h_2$ sends 80 workers to downtown Milwaukee and 60 to Brookfield:
+\begin{align}
+  \sum_w \min &= \min(100, 80) + \min(20, 60) = 80 + 20 = 100 \\
+  \sum_w \max &= \max(100, 80) + \max(20, 60) = 100 + 60 = 160 \\
+  \mathrm{sim}(h_1, h_2) &= 100 / 160 = 0.625
+\end{align}
+This is a meaningful community bond: both tracts primarily commute to the same
+Milwaukee employment areas, even though the proportions differ.
+
+If the same $h_1$ is compared to a tract $h_3$ that sends workers to
+Port of Milwaukee logistics hubs rather than downtown Milwaukee:
+$\mathrm{sim}(h_1, h_3) \approx 0$ because the destination sets are
+disjoint.
+The algorithm correctly identifies the community boundary.
+
+\subsection{Computational Complexity}
+
+For a home tract $h$, the commuting distribution $D(h)$ has at most $W$
+non-zero entries, where $W$ is the number of distinct work tracts
+receiving commute flows from $h$.
+Empirically, $W \approx 15$--$30$ per home tract based on LODES OD
+density analysis for mid-sized states.
+
+The weighted Jaccard for a pair $(h_1, h_2)$ requires iterating over the
+union of their destination sets, which has at most $W_1 + W_2$ elements.
+For all $n$ adjacent tract pairs in a state graph (approximately $4n$--$6n$
+edges for typical tract adjacency graphs), the total computation is:
+\begin{equation}
+  O\!\bigl(n \times (W_1 + W_2)\bigr) \approx O(n \times 2 \bar{W})
+\end{equation}
+For NC ($n = 2{,}655$ tracts, approximately 7{,}000 adjacency edges,
+$\bar{W} \approx 20$):
+\begin{equation}
+  \text{operations} \approx 7000 \times 40 = 280{,}000
+\end{equation}
+This is trivially fast; the dominant cost is the initial block-to-tract
+aggregation and sparse matrix construction.
+The Phase~2 performance target of under 60 seconds wall time for NC on
+8 workers is expected to be achieved comfortably.
+
+\subsection{Sparsity Handling}
+
+\paragraph{Tracts with no OD data.}
+Some census tracts have no OD records in the LODES file.
+This occurs for:
+\begin{itemize}
+  \item Very low-population tracts (fewer than 3 workers to protect privacy;
+    LODES suppresses records with cell counts below 3).
+  \item Institutional population tracts: prisons, dormitories, military
+    barracks where residents are present but UI-covered commuting is not
+    recorded.
+  \item Tracts that are entirely non-residential (airports, industrial parks,
+    commercial cores with no residential population).
+\end{itemize}
+For pairs where one or both tracts have empty distributions, the weighted
+Jaccard is undefined (denominator is zero).
+The implementation handles this with a neutral default:
+\begin{equation}
+  \mathrm{sim}(h_1, h_2) = 0.0 \quad \text{if } D(h_1) = \emptyset \text{ or } D(h_2) = \emptyset
+  \label{eq:sparsity}
+\end{equation}
+A similarity of 0.0 corresponds to a neutral edge: the M.4 weight falls to
+$\alpha \times w_{\mathrm{geo}}(h_1, h_2)$, meaning geographic boundary
+length governs with the M.4 blend factor applied.
+This is the correct behavior: a tract with no commuting data should not be
+treated as similar or dissimilar to its neighbors; it should simply not
+participate in the commuting shed signal.
+
+\paragraph{Low-count tracts.}
+Tracts with very few commuting records ($\sum_w D(h)[w] < 10$) have
+statistically unreliable distributions.
+The implementation applies a minimum count threshold: tracts with fewer
+than 10 total workers in the OD file are treated as empty distributions
+(similarity defaults to 0.0).
+
+\subsection{Edge Weight Formula}
+
+The M.4 edge weight applies the M-track blend formula:
+\begin{equation}
+  w_{\mathrm{cs}}(h_1, h_2)
+  = w_{\mathrm{geo}}(h_1, h_2) \times
+    \bigl(\alpha + (1 - \alpha)\,\mathrm{sim}(h_1, h_2)\bigr)
+  \label{eq:weight}
+\end{equation}
+with default blend factor $\alpha = 0.5$.
+
+The blend preserves geographic boundary length as a baseline constraint and
+adds commuting shed community signal on top.
+For tracts with zero commuting similarity (disjoint destination sets),
+the edge weight is $\alpha \times w_{\mathrm{geo}}$, reducing the boundary
+cost by half.
+For tracts with perfect commuting similarity (identical destination
+distributions), the edge weight is $w_{\mathrm{geo}}$, preserving the
+full geographic cost.
+
+\paragraph{CLI invocation.}
+\begin{verbatim}
+bisect state --state NC --year 2020 \
+    --weights-override commuting-shed \
+    --version v_commute_test
+\end{verbatim}
+
+\subsection{Test Invariants}
+
+The following L0 unit test invariants must hold for any correct implementation:
+
+\begin{description}
+  \item[\texttt{same\_tract\_similarity\_is\_one}.]
+    For any home tract $h$ with $\sum_w D(h)[w] > 0$:
+    $\mathrm{sim}(h, h) = 1.0$.
+    (Minimum and maximum are identical, so the ratio is 1.0.)
+  \item[\texttt{disjoint\_destinations\_similarity\_is\_zero}.]
+    For two tracts $h_1, h_2$ where $D(h_1)$ and $D(h_2)$ have no
+    destination tract in common: $\mathrm{sim}(h_1, h_2) = 0.0$.
+  \item[\texttt{jaccard\_symmetric}.]
+    For all tract pairs: $\mathrm{sim}(h_1, h_2) = \mathrm{sim}(h_2, h_1)$.
+    (Follows from commutativity of $\min$ and $\max$.)
+\end{description}

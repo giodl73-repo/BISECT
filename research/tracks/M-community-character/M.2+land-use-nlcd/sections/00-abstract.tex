@@ -1,0 +1,33 @@
+Physical land use---the actual pattern of residential neighborhoods,
+commercial corridors, industrial zones, open land, and water bodies on
+the ground---is among the oldest and most intuitive bases for community
+of interest recognition in American redistricting.
+Yet algorithmic redistricting systems have historically operationalized
+geographic community only through boundary length, ignoring the land cover
+character of the tracts on either side of each boundary.
+This paper presents M.2, the second paper in the M-track community character
+series, which operationalizes physical land use through the USGS National
+Land Cover Database (NLCD) 2021 30-meter raster.
+
+For each census tract we compute a four-fraction land use character vector:
+fraction of pixels classified as residential (NLCD classes 22--23), commercial
+and industrial (class 24), open developed (class 21), and natural (all other
+non-water classes including forest, wetland, shrub, and agricultural).
+Edge weights between adjacent tracts are modulated by the cosine similarity
+of their land use vectors: residentially similar tracts receive heavier edges;
+residential-to-commercial transitions receive lighter edges that serve as
+natural district cut seams.
+A hard-cut rule enforces water boundaries: any adjacency where both tracts
+have majority water classification (class 11) receives an edge weight of zero,
+preventing the algorithm from assigning cross-water tracts to the same district
+in the absence of explicit bridge adjacency.
+
+Experimental design targets North Carolina ($k=14$), Wisconsin ($k=8$), and
+Texas ($k=38$) with the primary metric of fraction of district boundaries
+coinciding with NLCD land-use class transitions.
+Compactness comparison (Polsby-Popper) is the secondary metric.
+All quantitative results are deferred to Phase~2 pending NLCD GeoTIFF
+download and zonal statistics computation.
+The NLCD data is annual, free, publicly available, and contains no
+racial or partisan content, making physical land use one of the most
+legally defensible community-of-interest signals available.

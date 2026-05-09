@@ -1,0 +1,93 @@
+\label{sec:introduction}
+
+At a 2021 public hearing of North Carolina's redistricting commission, a resident
+of Raleigh's Cameron Park neighborhood testified that splitting her historic
+district across two congressional seats would deprive the neighborhood's
+long-tenured homeowners of a coherent representative voice on federal preservation
+funding, housing finance policy, and historic tax credit renewal.
+Her testimony was noted but could not be quantified.
+The commission had no tool that could measure whether Cameron Park and the
+adjacent Five Points neighborhood shared a community bond that the Oakwood
+tract across the freeway did not.
+
+This paper provides that measurement.
+
+The M-track community character framework, introduced in M.0~\citep{m0framework},
+operationalizes diverse community character signals as edge weights in the
+census-tract adjacency graph used by \textsc{bisect}.
+Tracts whose character vectors are similar receive heavy edges; tracts with
+dissimilar character receive light edges.
+METIS's minimum-cut objective then respects community structure automatically:
+cuts run along light edges (natural community transitions) and avoid heavy
+edges (strong community bonds).
+
+M.3 implements the housing character signal.
+It is the third M-track implementation paper, addressing a community character
+dimension that neither M.1 (economic character, workplace-side LODES data)
+nor M.6 (administrative zone co-membership) capture: the residential built
+environment.
+How old is the housing stock?
+Is it predominantly detached single-family, attached rowhouses, or large
+multifamily buildings?
+Do residents own or rent?
+These three questions---answered by three ACS tables---define a housing
+character vector that separates single-family homeowner suburbs from
+apartment corridors, postwar subdivisions from pre-war rowhouse neighborhoods,
+and owner-occupied historic districts from transient rental enclaves.
+
+\paragraph{Why housing type predicts community.}
+The connection between housing type and community structure is not sociological
+speculation; it is encoded in law.
+A single-family homeowner is, by definition, a property taxpayer with a direct
+financial stake in local school quality, infrastructure maintenance, and
+zoning stability.
+A multifamily renter in the same tract shares none of these fiscal bonds.
+The two populations have different relationships to local government, different
+sensitivities to federal housing finance policy, different interests in
+historic tax credit programs, and different vulnerabilities to local zoning
+variance decisions~\citep{fischel2001}.
+They may be geographically contiguous---a rowhouse block and an adjacent
+apartment tower may literally share a property line---but they are not members
+of the same community of interest in the legally relevant sense.
+
+\paragraph{The NIMBYism signal.}
+One empirically documented mechanism through which housing character becomes
+a community signal is the politics of land-use opposition, commonly abbreviated
+as NIMBYism (Not In My Back Yard).
+Communities that are predominantly single-family and owner-occupied share
+a strong revealed preference for maintaining the existing housing stock character:
+they oppose upzoning, density increases, and new multifamily permitting at high
+rates~\citep{fischel2001,einstein2019}.
+This shared political preference is partisan-neutral---NIMBYism is documented
+in liberal San Francisco and conservative Houston alike---but it is a strong
+predictor of community cohesion and shared political interest.
+Tracts with similar housing character (both highly single-family-and-owner)
+share political interests that cross-character tracts (one single-family,
+one large multifamily) do not.
+
+\paragraph{Contribution.}
+This paper makes the following contributions:
+\begin{enumerate}
+  \item \textbf{Four-component housing character vector} derived from three
+    ACS tables (B25024, B25003, B25035), with a precise formula for each
+    component and a rationale grounded in community structure theory
+    (\S\ref{sec:algorithm}).
+  \item \textbf{Zero-cost implementation path}: M.3 requires no new data
+    download infrastructure; it extends the existing ACS demographics CSV
+    with four additional columns (\S\ref{sec:algorithm}).
+  \item \textbf{Empirical design}: a pre-specified experimental protocol for
+    North Carolina, with falsifiable predictions about within-district housing
+    homogeneity and historic neighborhood clustering (\S\ref{sec:empirical}).
+  \item \textbf{Legal grounding}: a practitioner-oriented analysis of
+    neighborhood stability doctrine, historic preservation district law,
+    and the homeowner representation interest (\S\ref{sec:legal}).
+\end{enumerate}
+
+\paragraph{Paper organization.}
+Section~\ref{sec:background} reviews the ACS methodology and the political
+science literature linking housing type to community.
+Section~\ref{sec:algorithm} defines the four-component character vector and
+the blend formula.
+Section~\ref{sec:empirical} describes the deferred empirical design.
+Section~\ref{sec:legal} provides legal grounding.
+Section~\ref{sec:conclusion} concludes.

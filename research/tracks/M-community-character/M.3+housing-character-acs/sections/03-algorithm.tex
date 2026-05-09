@@ -1,0 +1,231 @@
+\label{sec:algorithm}
+
+\subsection{ACS Table Structure}
+
+\paragraph{B25024 --- Units in Structure.}
+Table B25024 reports the number of housing units in each census tract broken
+down by structural type.
+The categories are:
+1-unit detached (B25024\_002),
+1-unit attached (B25024\_003),
+2 units (B25024\_004),
+3 or 4 units (B25024\_005),
+5 to 9 units (B25024\_006),
+10 to 19 units (B25024\_007),
+20 or more units (B25024\_008),
+mobile home (B25024\_009),
+boat, RV, van, etc.\ (B25024\_010).
+The universe is all housing units in the tract.
+The total is B25024\_001.
+
+\paragraph{B25003 --- Tenure.}
+Table B25003 reports the number of occupied housing units by tenure:
+owner-occupied (B25003\_002) and renter-occupied (B25003\_003).
+The universe is occupied housing units.
+The total is B25003\_001.
+
+\paragraph{B25035 --- Median Year Structure Built.}
+Table B25035 reports the median calendar year in which the housing structures
+in the tract were built, as a single integer.
+This is a tract-level median, not a microdata file.
+The universe is all housing units.
+
+\subsection{Four-Component Housing Character Vector}
+
+For each census tract $t$, we define the housing character vector
+\begin{equation}
+  \mathbf{h}(t) = \bigl(\mathrm{SF}(t),\ \mathrm{MF}(t),\ \mathrm{OO}(t),\ \mathrm{VT}(t)\bigr)
+  \in [0,1]^4,
+  \label{eq:housingvec}
+\end{equation}
+where the four components are defined as follows.
+
+\paragraph{Single-family fraction (SF).}
+\begin{equation}
+  \mathrm{SF}(t) = \frac{\text{B25024\_002}(t) + \text{B25024\_003}(t)}{\text{B25024\_001}(t)},
+  \label{eq:sf}
+\end{equation}
+the fraction of units in 1-unit detached or attached structures.
+$\mathrm{SF}(t) \in [0,1]$.
+High values ($> 0.80$) characterize suburban single-family neighborhoods and
+urban rowhouse districts.
+Low values ($< 0.20$) characterize high-rise apartment corridors and
+dense urban cores.
+
+\paragraph{Large-multifamily fraction (MF).}
+\begin{equation}
+  \mathrm{MF}(t) = \frac{\text{B25024\_007}(t) + \text{B25024\_008}(t)}{\text{B25024\_001}(t)},
+  \label{eq:mf}
+\end{equation}
+the fraction of units in structures with 10 or more units.
+$\mathrm{MF}(t) \in [0,1]$.
+High values ($> 0.50$) characterize apartment corridors, urban high-density
+residential zones, and transit-oriented development nodes.
+The MF component distinguishes apartment-corridor communities from
+small-multifamily neighborhoods (duplexes, triplexes) that may share
+more community characteristics with single-family areas.
+
+\paragraph{Owner-occupancy rate (OO).}
+\begin{equation}
+  \mathrm{OO}(t) = \frac{\text{B25003\_002}(t)}{\text{B25003\_001}(t)},
+  \label{eq:oo}
+\end{equation}
+the fraction of occupied units that are owner-occupied.
+$\mathrm{OO}(t) \in [0,1]$.
+High values ($> 0.70$) characterize established homeowner communities.
+Low values ($< 0.30$) characterize predominantly rental communities such as
+university neighborhoods, downtown cores, and transit-oriented apartment
+districts.
+
+\paragraph{Housing vintage score (VT).}
+\begin{equation}
+  \mathrm{VT}(t) = \max\!\left(0,\; \min\!\left(1,\; 1.0 - \frac{\text{B25035}(t) - 1940}{2020 - 1940}\right)\right),
+  \label{eq:vt}
+\end{equation}
+a score that maps the median year built to the interval $[0,1]$, where higher
+values indicate older housing stock.
+The formula is calibrated so that:
+\begin{itemize}
+  \item Median year 1940 or earlier: $\mathrm{VT} = 1.0$ (fully historic).
+  \item Median year 1980: $\mathrm{VT} = 0.5$ (mid-century suburban).
+  \item Median year 2010: $\mathrm{VT} \approx 0.375$ (new suburban).
+  \item Median year 2020 or later: $\mathrm{VT} = 0.0$ (new construction, clamped).
+\end{itemize}
+The $\max(0, \min(1, \cdot))$ clamp handles the edge cases of tracts with
+B25035 values outside the 1940--2020 calibration range.
+
+\subsection{Cosine Similarity and Edge Weight}
+
+The housing character similarity between adjacent tracts $u$ and $v$ is the
+standard cosine similarity of their housing character vectors:
+\begin{equation}
+  \mathrm{sim}_h(u,v) = \frac{\mathbf{h}(u) \cdot \mathbf{h}(v)}{\|\mathbf{h}(u)\| \, \|\mathbf{h}(v)\|}
+  \in [0,1],
+  \label{eq:cosine}
+\end{equation}
+which is well-defined when neither vector is the zero vector.
+Because all four components are non-negative by construction, the cosine
+similarity is always in $[0,1]$.
+
+\paragraph{Zero-vector handling.}
+A census tract can produce a zero housing character vector only if all four
+of B25024\_001, B25003\_001, and B25035 are zero or missing---in practice, a
+tract with no housing units (e.g., an industrial or parkland tract with
+residential census population assigned to it).
+Such tracts receive the conservative substitution $\mathrm{sim}_h = 1.0$
+(treat as perfectly similar to any neighbor), leaving the edge weight
+governed entirely by the geographic base weight.
+
+\paragraph{Edge weight blend formula.}
+Following the M-track blend convention established in M.1 and B.27, the
+housing-character edge weight is:
+\begin{equation}
+  w_h(u,v) = w_{\mathrm{geo}}(u,v) \times \bigl(\alpha + (1 - \alpha)\,\mathrm{sim}_h(u,v)\bigr),
+  \label{eq:blend}
+\end{equation}
+with default $\alpha = 0.5$.
+At $\alpha = 0.5$ and $\mathrm{sim}_h = 1.0$ (identical housing characters),
+the weight equals $w_{\mathrm{geo}}$: maximum community bond.
+At $\alpha = 0.5$ and $\mathrm{sim}_h = 0.0$ (orthogonal housing characters),
+the weight equals $0.5 \times w_{\mathrm{geo}}$: the geographic bond is
+halved rather than zeroed, preventing free-cut instability in METIS.
+
+\subsection{Prototypical Housing Character Vectors}
+
+Table~\ref{tab:prototypes} gives three prototypical tract types and their
+housing character vectors to build intuition for the cosine similarity geometry.
+
+\begin{table}[ht]
+\centering
+\caption{Prototypical housing character vectors for three tract types.
+  SF = single-family fraction, MF = large-multifamily fraction,
+  OO = owner-occupancy rate, VT = vintage score.}
+\label{tab:prototypes}
+\begin{tabular}{llrrrr}
+\toprule
+Type & Example & SF & MF & OO & VT \\
+\midrule
+Single-family suburb & Cary, NC residential & 0.88 & 0.02 & 0.75 & 0.30 \\
+Historic rowhouse district & Raleigh Cameron Park & 0.72 & 0.05 & 0.65 & 0.85 \\
+Apartment corridor & Charlotte South End & 0.08 & 0.72 & 0.18 & 0.20 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The cosine similarity matrix reveals the community geometry.
+
+\begin{table}[ht]
+\centering
+\caption{Cosine similarity between prototypical housing character tract types.}
+\label{tab:similarity}
+\begin{tabular}{lrrr}
+\toprule
+ & Single-family suburb & Historic rowhouse & Apartment corridor \\
+\midrule
+Single-family suburb & 1.00 & 0.94 & 0.11 \\
+Historic rowhouse    & 0.94 & 1.00 & 0.20 \\
+Apartment corridor   & 0.11 & 0.20 & 1.00 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The similarity matrix encodes a central finding of the housing character framework:
+\begin{itemize}
+  \item \textbf{Single-family suburb to historic rowhouse (0.94).}
+    Both are predominantly single-family, owner-occupied communities.
+    Despite the vintage difference, they share housing character.
+    METIS should strongly avoid cutting the edge between them.
+  \item \textbf{Suburb or rowhouse to apartment corridor ($<$0.20).}
+    The housing character community boundary is the sharpest possible
+    cut seam: single-family owner versus large-multifamily renter.
+    METIS is invited to place the district boundary here.
+  \item \textbf{Apartment corridor to apartment corridor (1.00 for identical vectors).}
+    Apartment corridor communities belong together: they share rental market
+    dynamics, transit-oriented mobility patterns, and land-use policy interests.
+\end{itemize}
+
+\subsection{No New Download Infrastructure Required}
+
+A key practical advantage of M.3 is that the three ACS tables (B25024, B25003,
+B25035) are available from the same Census API endpoint already used by
+\texttt{bisect fetch} to populate the demographics CSV.
+The current ACS fetch retrieves tables covering race, age, income, and
+educational attainment at the census tract level.
+Adding B25024, B25003, and B25035 requires:
+\begin{enumerate}
+  \item Extending the \texttt{acs\_fetch} module's table list with the new
+    table identifiers.
+  \item Adding four output columns to the demographics CSV:
+    \texttt{pct\_single\_family}, \texttt{pct\_multifamily},
+    \texttt{pct\_owner\_occupied}, \texttt{housing\_vintage}.
+  \item Implementing the four formulas (Equations~\ref{eq:sf}--\ref{eq:vt})
+    in the demographics preprocessing step.
+  \item Implementing the cosine similarity and blend formula (Equations~\ref{eq:cosine}
+    and~\ref{eq:blend}) in the \texttt{housing-character} weight mode.
+\end{enumerate}
+No new API calls to new endpoints, no new file formats, and no changes to
+the adjacency graph pipeline are required.
+The CLI flag is \texttt{--weights-override housing-character}.
+
+\subsection{Test Invariants (L0)}
+
+The following invariants must hold on every build:
+
+\begin{description}
+  \item[\texttt{single\_family\_tracts\_high\_similarity}]
+    For two tracts with $\mathrm{SF} > 0.85$, $\mathrm{OO} > 0.70$,
+    and $|\mathrm{VT}_u - \mathrm{VT}_v| < 0.20$:
+    $\mathrm{sim}_h(u,v) > 0.85$.
+  \item[\texttt{mixed\_tenure\_vs\_homogeneous\_low\_similarity}]
+    For $u$ with $\mathrm{OO} = 0.9, \mathrm{SF} = 0.9$ and
+    $v$ with $\mathrm{OO} = 0.1, \mathrm{MF} = 0.8$:
+    $\mathrm{sim}_h(u,v) < 0.30$.
+  \item[\texttt{vintage\_far\_apart\_low\_similarity}]
+    For $u$ with $\mathrm{VT} = 0.10$ (built $\approx$2014) and $v$ with
+    $\mathrm{VT} = 0.80$ (built $\approx$1948), holding SF and OO equal:
+    $\mathrm{sim}_h(u,v) < 0.50$.
+  \item[\texttt{similarity\_symmetric}]
+    $\mathrm{sim}_h(u,v) = \mathrm{sim}_h(v,u)$ for all tract pairs.
+  \item[\texttt{weight\_stays\_nonneg}]
+    $w_h(u,v) \geq 0$ for all edges after blending.
+\end{description}

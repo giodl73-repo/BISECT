@@ -1,0 +1,142 @@
+\label{sec:algorithm}
+
+\subsection{Calibration Approach}
+
+The default weights in Table~\ref{tab:signals} were not assigned arbitrarily.
+They reflect a calibration argument that balances three considerations:
+(1) legal recognition of the community type, (2) data quality and coverage,
+and (3) empirical effect size on known test cases.
+This section justifies each weight tier.
+
+\subsection{Zone Co-membership: 0.30 (Highest)}
+
+M.6 zone co-membership receives the highest weight because administrative
+zone co-membership is the most consistently and explicitly recognized
+community type in redistricting law.
+
+\paragraph{Legal recognition.}
+School district co-membership is cited as a redistricting criterion in
+California Proposition 11 \citeyearpar{caprop11}, Colorado Article V
+Section 44 \citeyearpar{coart5s44}, Arizona Proposition 106
+\citeyearpar{azircprop106}, and Washington RCW 44.05.090 \citeyearpar{warcw44}.
+In these states, splitting a school district across congressional districts
+is a recognized harm that must be justified.
+No other M-track signal has this direct statutory expression.
+
+\paragraph{Mechanism.}
+School district co-membership is a binary signal: two tracts are either
+in the same school district or they are not.
+This binary character makes the legal argument precise: if the plan splits
+school district $X$, the expert can identify the specific tracts that were
+separated and the specific school district boundary that was crossed.
+The argument is not ``these tracts have similar economic character''; it is
+``these tracts are governed by the same school board and their residents vote
+in the same school board elections.''
+
+\paragraph{Coverage.}
+TIGER/Line school district boundaries are available for all 50 states and
+cover virtually all census tracts.
+This universal availability justifies placing M.6 in the minimum signal set.
+
+\subsection{Economic Character and Land Use: 0.20 Each (Tied)}
+
+M.1 (economic character) and M.2 (land use) share the second tier at 0.20 each.
+
+\paragraph{M.1 justification.}
+Economic character receives 0.20 because:
+\begin{itemize}
+  \item It has the clearest empirical effect among all M-track signals
+    (14.3\,pp NC-14 proportionality gap improvement in the M.1/B.27 single-run
+    result).
+  \item Economic communities of interest are explicitly recognized in five
+    or more state redistricting criteria.
+  \item LODES WAC data has the highest data quality among all M-track sources:
+    near-complete UI coverage, no sampling error, annual release.
+\end{itemize}
+
+\paragraph{M.2 justification.}
+Land use receives 0.20 because:
+\begin{itemize}
+  \item Physical land use is the oldest recognized geographic community signal
+    in redistricting, predating the modern communities-of-interest doctrine.
+  \item The hard-cut rule for water boundaries provides a legally enforceable
+    constraint not available in any other M-track signal.
+  \item NLCD data is publicly available, CONUS-complete, and produced by
+    the USGS with documented classification accuracy.
+\end{itemize}
+
+The parity between M.1 and M.2 reflects the judgment that economic and
+physical community signals are equally important in the absence of a state-specific
+argument for weighting one over the other.
+Practitioners in states with strong land use transition evidence (coastal states,
+states with clear urban-rural boundaries) may want to increase M.2's weight;
+practitioners in states with concentrated employment clusters may want to
+increase M.1's weight.
+
+\subsection{Housing Character: 0.15}
+
+M.3 receives a somewhat lower weight than economic character and land use
+for two reasons.
+First, housing character is slightly more correlated with race and income
+than land use or employment data, creating a marginally higher legal exposure
+in states with VRA-sensitive redistricting.
+Second, the housing signal is partially redundant with M.2 (land use residential
+classification and ACS housing density correlate), so some information is
+double-counted.
+The 0.15 weight captures the genuine additional information in M.3 (housing
+tenure, age of housing stock, rental fraction) without over-weighting signals
+that are correlated with M.2.
+
+\subsection{Commuting Shed: 0.10}
+
+M.4 receives 0.10 because commuting shed membership is a meaningful but
+more indirect community signal than the other primary signals.
+Two adjacent tracts may have different primary commuting destinations but
+still be a coherent community by land use, housing, and economic character.
+The commuting shed signal is most valuable for distinguishing between
+adjacent residential tracts that look similar on all physical dimensions
+but belong to different functional economic areas.
+The 0.10 weight ensures this distinction contributes to the composite
+without dominating it.
+
+\subsection{Topographic and Transit: 0.03 and 0.02}
+
+M.5 (topographic community) and M.7 (transit accessibility) receive minimal
+weights (3\% and 2\%) for similar reasons:
+\begin{itemize}
+  \item Their data coverage is more limited than the primary signals
+    (GTFS is unavailable for many rural states; SRTM elevation is most
+    informative in mountainous states).
+  \item Their community type is narrower: topographic community matters
+    for redistricting in Colorado, West Virginia, and Alaska but adds
+    little in Iowa or Delaware.
+  \item Transit accessibility matters for urban redistricting (New York City,
+    Chicago, Los Angeles) but is nearly uniform in most of the country.
+\end{itemize}
+The low weights mean these signals contribute when present without distorting
+the composite when absent.
+In New York City redistricting, a practitioner might increase M.7 weight
+substantially; the \texttt{--community-weights} override supports this.
+
+\subsection{Weight Override Policy}
+
+The default weights represent a general-purpose, jurisdiction-agnostic
+calibration.
+For specific redistricting proceedings, practitioners should consider:
+
+\begin{itemize}
+  \item \textbf{Increase M.6 (zone)} if the state has explicit school district
+    preservation criteria or if school district splitting is a hot-button
+    issue in the proceeding.
+  \item \textbf{Increase M.2 (land use)} if the state has significant water
+    boundaries, mountain communities, or sharp urban-rural land use transitions.
+  \item \textbf{Increase M.7 (transit)} for city-focused redistricting in
+    dense transit cities (New York, Chicago, San Francisco).
+  \item \textbf{Decrease M.4 (commuting shed)} for single-employment-center
+    states where commuting is uniform (most workers commute to the same CBD).
+\end{itemize}
+
+Any weight specification must be declared in advance of the redistricting run
+and justified on neutral, non-partisan grounds.
+Weight specifications that are chosen to favor specific partisan outcomes
+would undermine the legal defensibility of the composite approach.

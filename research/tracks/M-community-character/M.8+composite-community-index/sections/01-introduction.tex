@@ -1,0 +1,81 @@
+\label{sec:introduction}
+
+In the 2011 California Citizens Redistricting Commission proceedings,
+communities testified about their community bonds along six different
+dimensions simultaneously.
+Farmers in the San Joaquin Valley cited shared agricultural water rights
+(economic), shared open farmland landscape (physical), shared agricultural
+zoning districts (administrative), and shared markets (commuting shed).
+Tech workers in Silicon Valley cited shared employment corridors (economic),
+shared high-density commercial land use (physical), shared transit access
+to Caltrain stations (transit), and shared municipal service districts (zone).
+Coastal fishing communities in Monterey cited shared ocean access (physical),
+shared fishing industry economy (economic), and shared county coastline
+administration (zone).
+
+Each of these communities was making a multi-dimensional argument.
+The strength of the community bond was not that the community scored highest
+on any single dimension but that it scored highly on \emph{multiple} dimensions
+simultaneously---that the economic, physical, administrative, and behavioral
+signals all agreed.
+
+The M-track series, M.1 through M.7, defines seven individual community
+character signals, each measured by a single cosine or Jaccard similarity
+function on a different feature vector.
+Each paper in the series provides a standalone signal that can be deployed
+individually when the relevant data is available and the relevant community
+type is present in the state being redistricted.
+
+But the complete analytical tool is the composite index defined in this paper.
+A plan drawn with all seven signals simultaneously produces communities that
+are economically coherent, physically coherent, administratively coherent,
+and transit-connected.
+The composite index provides a single number that quantifies multi-dimensional
+community cohesion for every adjacent tract pair in the state.
+
+\paragraph{Why a composite rather than an ensemble.}
+One alternative to the composite index is an ensemble approach: run
+\textsc{bisect} with each individual signal separately and choose the plan
+that satisfies the most criteria.
+This is a reasonable approach but has two limitations:
+
+\begin{enumerate}
+  \item \textbf{Inconsistency.}
+    A plan that is optimal for M.1 may be suboptimal for M.6.
+    Selecting among plans that optimize different criteria requires
+    a meta-criterion that is not clearly defined.
+  \item \textbf{Legal exposure.}
+    Selecting a plan because it scores well on a partisan criterion
+    (even if that criterion is justified as a community-of-interest
+    measure) creates legal exposure.
+    The composite index approach selects a plan by simultaneously
+    optimizing a weighted combination of non-partisan criteria,
+    which is a cleaner legal position.
+\end{enumerate}
+
+The composite index resolves both limitations: it specifies the
+meta-criterion (the weighted sum) explicitly and in advance of any
+redistricting run, and it produces a single plan that can be defended
+on all dimensions simultaneously.
+
+\paragraph{The legal argument for a composite.}
+Courts in redistricting cases have generally accepted evidence that a plan
+preserves communities of interest when the evidence is specific, quantitative,
+and non-partisan.
+A composite index that is constructed from federal government data sources
+(Census Bureau LODES, USGS NLCD, U.S.\ EIA Form 861, TIGER/Line) and
+assigned weights that reflect the legal recognition of different community
+types provides exactly this: specific (down to the tract pair), quantitative
+(a number between 0 and 1), and non-partisan (no electoral data enters any
+component).
+
+\paragraph{Paper organization.}
+Section~\ref{sec:background} defines the composite formula and its
+normalization over available signals.
+Section~\ref{sec:algorithm} justifies the default weights through a
+calibration argument.
+Section~\ref{sec:results} provides the complete court usage template,
+including expert witness statement language for redistricting briefs
+and testimony.
+Section~\ref{sec:legal} describes the experimental design for Phase~2.
+Section~\ref{sec:conclusion} concludes.

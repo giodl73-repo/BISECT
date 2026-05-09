@@ -1,0 +1,85 @@
+\label{sec:introduction}
+
+When the Ohio Redistricting Commission drew state legislative maps in 2021,
+residents of the Cuyahoga River valley testified that their community identity
+was shaped more by the physical landscape---the valley floor, the bluffs, the
+river itself---than by county or municipal boundaries.
+The Commission noted the testimony and then, lacking any computational mechanism
+to encode physical land use as a community signal, drew lines based on population
+equality and VRA compliance.
+The valley communities were divided across three districts that reflected none of
+the physical geography that defined them.
+
+This paper provides that computational mechanism.
+
+Physical land use differs from administrative community signals (M.6 zone
+co-membership) and economic community signals (M.1 economic character) in an
+important respect: it is what actually exists on the ground.
+Zoning maps reflect what a municipality \emph{permits}; land use maps reflect
+what has actually been built.
+A census tract may be zoned for mixed use but be entirely developed as a
+residential neighborhood; the NLCD classification captures the residential
+reality, not the zoning aspiration.
+For redistricting purposes---where the question is what kind of community
+actually lives within a proposed district---the physical reality is the
+appropriate input.
+
+The M-track community character framework, introduced in M.0
+\citep{m0framework}, operationalizes diverse community signals as edge
+weights in the census-tract adjacency graph.
+Communities that belong together receive heavy edges that METIS avoids
+cutting; communities that are naturally distinct receive light edges that
+invite cuts at community transitions.
+M.2 is the land use implementation paper.
+It applies the M-track framework using the USGS National Land Cover Database
+(NLCD) 2021, the most comprehensive and authoritative land use classification
+of the contiguous United States.
+
+Physical land use is the right M-track signal for several reasons.
+
+\begin{enumerate}
+  \item \textbf{Empirical grounding.}
+    NLCD is a remote sensing product derived from Landsat satellite imagery.
+    It measures what is actually on the ground, not what jurisdictions say
+    should be there.
+    Classification accuracy for the developed land classes is above 85\%
+    based on the MRLC validation protocol \citep{homer2020nlcd}.
+  \item \textbf{Legal recognition.}
+    Physical geography---including natural boundaries such as rivers, mountain
+    ridges, and coastal features---is one of the oldest recognized redistricting
+    criteria.
+    Courts have consistently upheld plans that follow natural boundaries
+    and struck down plans that cross natural boundaries without geographic
+    justification.
+  \item \textbf{Water boundary doctrine.}
+    The hard-cut rule for majority-water adjacencies (discussed in
+    Section~\ref{sec:algorithm}) implements a well-established legal doctrine:
+    that water bodies are natural community boundaries and that cross-water
+    districts require specific justification.
+  \item \textbf{Partisan neutrality.}
+    No electoral, racial, or demographic data enters the computation.
+    The signal is the physical character of the land surface.
+\end{enumerate}
+
+\paragraph{Distinction from M.3 housing character.}
+The M.3 paper \citep{m3housing} operationalizes housing character through
+ACS survey data on housing tenure, age, and value.
+M.2 operationalizes the physical structure of what is built.
+The signals overlap---residential development concentration (M.2)
+correlates with single-family housing density (M.3)---but are not
+redundant.
+M.2 captures the spatial pattern of development types as seen from satellite;
+M.3 captures the socioeconomic character of the households living in
+that development.
+Both contribute to the M.8 composite index \citep{m8composite}.
+
+\paragraph{Paper organization.}
+Section~\ref{sec:background} describes the NLCD 2021 data and the
+physical geography of communities of interest.
+Section~\ref{sec:algorithm} defines the land use character vector,
+cosine similarity, hard-cut rule, and edge weight formula.
+Section~\ref{sec:results} describes the experimental design and
+defers quantitative results to Phase~2.
+Section~\ref{sec:legal} provides a legal usage guide including the
+water boundary doctrine and natural boundary case law.
+Section~\ref{sec:conclusion} concludes.

@@ -1,0 +1,144 @@
+\label{sec:background}
+
+\subsection{NLCD 2021: Data and Coverage}
+
+The National Land Cover Database (NLCD) is produced by the Multi-Resolution
+Land Characteristics (MRLC) Consortium, a partnership of federal agencies
+including the USGS, EPA, USDA Forest Service, and National Park Service
+\citep{homer2020nlcd}.
+NLCD provides a consistent, wall-to-wall classification of land cover for
+the contiguous United States at 30-meter spatial resolution, derived from
+Landsat 8 satellite imagery supplemented by ancillary datasets (building
+footprints, impervious surface maps, canopy cover estimates).
+
+The 2021 vintage is the most recent NLCD release as of 2024.
+It is available as a single GeoTIFF covering CONUS (approximately 2~GB
+compressed), in Albers Equal Area projection (EPSG:5070), with 30-meter
+pixel resolution.
+The data is published at \url{https://www.mrlc.gov/data/nlcd-2021-land-cover-conus}
+and is public domain under U.S.\ government work provisions.
+
+\paragraph{NLCD class hierarchy.}
+NLCD uses a hierarchical 16-category system derived from the Anderson
+Level II classification \citep{anderson1976land}.
+Table~\ref{tab:nlcd-classes} lists all classes with their integer codes
+and the M.2 category assignment.
+
+\begin{table}[ht]
+\centering
+\caption{NLCD 2021 land cover classes and M.2 category assignments.
+  Class~11 is excluded from the cosine similarity vector and used only
+  for the hard-cut rule.}
+\label{tab:nlcd-classes}
+\small
+\begin{tabular}{rll}
+\toprule
+Code & NLCD class name & M.2 category \\
+\midrule
+11   & Open Water & Hard-cut trigger (not in vector) \\
+21   & Developed, Open Space & \texttt{pct\_open} \\
+22   & Developed, Low Intensity & \texttt{pct\_residential} \\
+23   & Developed, Medium Intensity & \texttt{pct\_residential} \\
+24   & Developed, High Intensity & \texttt{pct\_commercial} \\
+31   & Barren Land & \texttt{pct\_natural} \\
+41   & Deciduous Forest & \texttt{pct\_natural} \\
+42   & Evergreen Forest & \texttt{pct\_natural} \\
+43   & Mixed Forest & \texttt{pct\_natural} \\
+52   & Shrub/Scrub & \texttt{pct\_natural} \\
+71   & Grassland/Herbaceous & \texttt{pct\_natural} \\
+81   & Pasture/Hay & \texttt{pct\_natural} \\
+82   & Cultivated Crops & \texttt{pct\_natural} \\
+90   & Woody Wetlands & \texttt{pct\_natural} \\
+95   & Emergent Herbaceous Wetlands & \texttt{pct\_natural} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The NLCD ``developed'' classes (21--24) form a gradient of impervious surface
+density.
+Class~21 (developed, open space, $<$20\% impervious) includes suburban lawns,
+golf courses, parks in developed areas, and cemeteries.
+Class~22 (low intensity, 20--49\% impervious) is the predominant classification
+for single-family residential neighborhoods.
+Class~23 (medium intensity, 50--79\% impervious) captures denser residential
+development: row houses, townhouses, multi-family housing, and mixed-use
+residential buildings.
+Class~24 (high intensity, $\geq$80\% impervious) captures commercial districts,
+industrial parks, transportation hubs, and urban core blocks where nearly
+the entire land surface is covered by buildings, pavement, or other
+impervious materials.
+
+\paragraph{Zonal statistics computation.}
+NLCD is a raster product; census tracts are polygon features from TIGER/Line
+shapefiles \citep{census2020tiger}.
+Computing land use character vectors requires zonal statistics: for each tract
+polygon, count the number of 30-meter pixels of each NLCD class within the
+polygon boundary.
+
+The computation proceeds as follows:
+\begin{enumerate}
+  \item Reproject TIGER/Line tract polygons from EPSG:4326 to EPSG:5070
+    (NLCD native projection) to avoid reprojection artifacts in the raster
+    sampling.
+  \item For each tract, use the GDAL \texttt{zonal\_stats} function to count
+    pixels within the polygon boundary (all-touched: false; pixel center
+    must fall within polygon).
+  \item Aggregate pixel counts by M.2 category to produce five per-tract
+    counts: \texttt{n\_residential}, \texttt{n\_commercial},
+    \texttt{n\_open}, \texttt{n\_natural}, \texttt{n\_water}.
+  \item Divide by total pixel count to produce fractions.
+\end{enumerate}
+
+\paragraph{Edge cases.}
+Census tracts in coastal areas or along large rivers may have substantial water
+pixels (class~11) within their polygons even if the residential area of the
+tract is inland.
+The water fraction is excluded from the cosine similarity vector to prevent
+high water pixel counts from suppressing similarity between two inland
+residential tracts that happen to border the same body of water.
+Instead, water is handled by the hard-cut rule described in
+Section~\ref{sec:algorithm}.
+
+\subsection{Physical Geography as Communities of Interest}
+
+The use of physical geography as a redistricting criterion predates the modern
+communities-of-interest doctrine.
+The first American redistricting practitioners drew district lines along rivers,
+mountain ridges, and coastal features because those were the natural divisions
+visible on maps and meaningful to the communities they were drawing.
+
+\citet{schwartzberg1966reapportionment} noted the relationship between
+geographic compactness and natural land use boundaries: compact districts tend
+to follow natural divisions, and natural divisions tend to reflect the physical
+landscape that shapes community identity.
+The connection is not merely aesthetic.
+Communities that share a physical landscape share infrastructure needs
+(flood management, shoreline erosion, wildfire risk, agricultural water
+management) that translate directly into shared legislative interests.
+
+\paragraph{Urban-rural transitions.}
+The transition from residential suburban development to commercial corridor,
+or from developed land to agricultural land, is one of the most consistent
+physical geographic community boundaries in American metropolitan areas.
+Residents of a suburban neighborhood and workers in an adjacent industrial
+park may share a common boundary on a map but live in economically and
+physically distinct communities.
+The NLCD classification makes this distinction explicit: one side of the
+boundary is class~22 (low-intensity residential), the other is class~24
+(high-intensity developed, commercial/industrial).
+
+\paragraph{Water bodies as community barriers.}
+Rivers, bays, sounds, and lakes create natural community boundaries by
+imposing travel barriers and defining watershed communities with shared
+environmental concerns.
+North Carolina's Pamlico Sound divides the coastal mainland from the
+Outer Banks, creating communities whose access, infrastructure, and
+economic character are fundamentally different.
+Louisiana's bayou network defines communities more precisely than parish
+boundaries.
+Texas's Gulf Coast bays and barrier islands define distinct communities
+not well captured by county lines.
+The hard-cut rule in M.2 encodes this physical reality as a zero-weight
+edge: communities separated by majority-water adjacencies are prevented
+from being placed in the same district unless explicit bridge adjacency
+is recorded in the graph structure.

@@ -21,10 +21,16 @@ M.2 & Land use mix & NLCD & Cosine & 100\% \\
 M.3 & Housing character & ACS & Cosine & 100\% \\
 M.4 & Commuting shed & LODES OD & Jaccard & 100\% \\
 M.5 & Topographic zone & USGS 3DEP & Valley/ridge & 100\% \\
-M.6 & Zone co-membership & TIGER/EIA 861 & Count ratio & 100\%\tablefootnote{School district + county subdivision + electric utility provide 100\% national coverage. Fire and water districts cover approximately 60\% and 40\% of states, respectively.} \\
+M.6 & Zone co-membership & TIGER/EIA 861 & Count ratio & 100\%$^a$ \\
 M.7 & Transit accessibility & GTFS & Isochrone overlap & $\sim$70\% \\
 \bottomrule
 \end{tabularx}
+\smallskip
+\begin{minipage}{\textwidth}
+  \small $^a$ School district + county subdivision + electric utility provide
+  100\% national coverage. Fire and water districts cover approximately 60\%
+  and 40\% of states, respectively.
+\end{minipage}
 \end{table}
 
 \subsection{M.1 --- Economic Character (LODES WAC)}

@@ -1,0 +1,203 @@
+\label{sec:legal}
+
+\subsection{Physical Geography and Natural Boundaries in Redistricting Law}
+
+The doctrine that redistricting should follow natural geographic boundaries
+is among the oldest redistricting criteria in American law.
+Before the one-person-one-vote revolution of the 1960s, courts and legislatures
+regularly cited rivers, mountain ridges, and coastlines as the appropriate
+boundaries for legislative districts.
+After \textit{Reynolds v.\ Sims} \citeyearpar{reynolds1964} established
+the equal population requirement, natural boundaries could no longer govern
+district shape, but they remained a legitimate \emph{secondary} criterion
+that plans could follow when doing so was consistent with population equality.
+
+\paragraph{Communities of interest and physical geography.}
+In the modern redistricting framework, physical geography arguments are most
+commonly presented as a community-of-interest rationale.
+Residents sharing a physical landscape share environmental concerns (flood risk,
+wildfire exposure, agricultural water rights), infrastructure needs (coastal
+access, mountain pass maintenance), and economic dependencies (tourism,
+agriculture, fishing) that constitute a genuine community of interest for
+legislative purposes.
+
+The NLCD-based M.2 signal operationalizes this doctrine by treating the
+physical character of the land cover as a community signal:
+tracts that share the same development type (residential, commercial,
+agricultural, forested) share a physical community.
+Tracts at a development type transition are not a community; they are a
+boundary.
+
+\subsection{Water Boundary Doctrine and Case Law}
+
+The hard-cut rule in M.2 (equation~\ref{eq:hardcut}) implements a
+well-established legal doctrine: water bodies are natural community
+boundaries that should not be crossed by district lines without
+geographic justification.
+
+\paragraph{Judicial recognition of water boundaries.}
+Several redistricting cases have addressed water boundaries directly.
+In \textit{Carstens v.\ Lamm}, 543 F.\ Supp.\ 68 (D.\ Colo.\ 1982),
+the district court approved a congressional plan that followed the
+Colorado River as a district boundary, noting that the river constituted
+a natural geographic division between communities with distinct economic
+and environmental interests.
+The court observed that plan proponents could rely on natural geographic
+features as a neutral, non-partisan rationale for boundary placement.
+
+In \textit{In re Reapportionment of the Colorado General Assembly},
+828 P.2d 185 (Colo.\ 1992), the Colorado Supreme Court affirmed that
+natural geographic features, including rivers and ridgelines, are among
+the legitimate criteria for district boundary placement, and that a plan
+that follows such features faces a lower burden of justification than
+one that crosses them arbitrarily.
+
+\paragraph{Outer Banks and barrier island communities.}
+North Carolina's Outer Banks provides a recurring example in redistricting
+litigation and commission proceedings.
+The Outer Banks communities---Dare County, Hyde County waterfront, Currituck
+Banks---are separated from the mainland by Pamlico Sound and Albemarle Sound,
+bodies of water with no fixed bridge crossings for most of their length.
+Commission testimony in the 2001, 2011, and 2021 North Carolina redistricting
+cycles consistently identified Outer Banks communities as a distinct community
+of interest defined by their physical isolation, coastal economy, and
+hurricane vulnerability.
+
+Under the M.2 hard-cut rule, Pamlico Sound and Albemarle Sound adjacencies
+receive zero edge weight, preventing the \textsc{bisect} algorithm from
+assigning mainland tracts and Outer Banks tracts to the same district.
+This directly implements the community-of-interest rationale that North
+Carolina commissions have accepted in multiple cycles.
+
+\paragraph{Louisiana coastal communities.}
+Louisiana's coastal parishes demonstrate the broader application of the
+water boundary principle.
+The bayou network south of New Orleans creates communities (Isle de Jean
+Charles, Cocodrie, Grand Isle) that are physically accessible only by water
+or narrow causeways.
+Redistricting plans that bundle these communities with inland parishes far
+to the north cross physical barriers that define the coastal community's
+distinct identity.
+The NLCD water classification captures the bayou network's dominant land
+cover character: tracts with majority water classification ($p_{\mathrm{wat}} > 0.5$)
+along the coastal bayou zone would receive the hard-cut override in any
+M.2 application to Louisiana.
+
+\subsection{The Natural Boundary Doctrine}
+
+Beyond water, the broader natural boundary doctrine encompasses any
+well-defined physical transition that creates meaningfully distinct
+communities on either side.
+
+\paragraph{Mountain ridgelines.}
+Colorado's redistricting commission has cited the Continental Divide as a
+natural district boundary in every redistricting cycle since 2001.
+The Divide separates communities with distinct water rights (Pacific versus
+Atlantic watershed), ski industry versus ranching economies, and different
+transportation networks.
+NLCD captures the mountainous terrain through the forest and shrub/scrub
+classifications (codes 41--52) that dominate high-altitude tracts.
+A tract that is 90\% evergreen forest ($p_{\mathrm{nat}} \approx 0.90$) has
+very low cosine similarity with an adjacent Front Range urban tract
+($p_{\mathrm{res}} \approx 0.70$), making the transition a natural
+M.2 cut seam.
+
+\paragraph{Agricultural-suburban boundary.}
+The transition from cultivated crops (NLCD class~82) and pasture (class~81)
+to low-intensity residential development (class~22) marks the rural-suburban
+boundary that has been recognized in countless redistricting proceedings as
+a meaningful community division.
+The California Citizens Redistricting Commission, in its 2011 and 2021
+proceedings, consistently drew district boundaries along the
+agricultural-suburban edge of the Central Valley, citing the distinct
+economic and policy interests of farming communities versus suburban commuter
+communities.
+The M.2 signal captures this division through the contrast between
+$p_{\mathrm{nat}} \approx 0.90$ (agricultural tracts) and
+$p_{\mathrm{res}} \approx 0.70$ (suburban tracts).
+
+\subsection{Partisan Neutrality}
+
+NLCD data contains no electoral, racial, or demographic information.
+The land cover classification is derived from satellite imagery and
+calibrated against ground-truth reference points; it has no knowledge
+of the voting history or racial composition of the tracts it classifies.
+
+Any partisan effect of M.2 weights---such as the preference for cutting
+at commercial-residential transitions---is a consequence of the geographic
+correlation between land use types and partisan voting patterns.
+This correlation is an empirical fact about the American population
+landscape (urban commercial cores tend to vote differently from
+residential suburbs), not a product of the algorithm's choices.
+Under \textit{Rucho v.\ Common Cause} \citeyearpar{rucho2019}, the
+use of a non-partisan criterion that happens to have partisan effects
+does not constitute partisan gerrymandering if the criterion is
+independently justified.
+Physical land use is an independently justified criterion with deep
+roots in redistricting practice.
+
+\subsection{Expert Witness Deployment Template}
+
+Redistricting practitioners deploying M.2 land use weights should
+structure expert testimony around the following elements:
+
+\paragraph{1. Data provenance declaration.}
+``I used the USGS National Land Cover Database (NLCD) 2021, produced
+by the Multi-Resolution Land Characteristics Consortium under contract
+with the U.S.\ Geological Survey.
+The NLCD classifies the land surface of the contiguous United States
+at 30-meter resolution from Landsat satellite imagery.
+It contains no voter registration data, election results, racial
+composition data, or any other socioeconomic information about the
+populations living within the classified areas.''
+
+\paragraph{2. Hard-cut rule justification.}
+``The \textsc{bisect} algorithm assigns a zero-weight edge to any pair
+of adjacent census tracts where both tracts have majority water
+classification (more than 50\% of their land surface classified as
+open water by NLCD).
+This prevents the algorithm from placing such tracts in the same district.
+This encoding reflects the longstanding redistricting principle that
+water bodies are natural community boundaries.
+The water classification is objective and derived from satellite imagery,
+not from any political or demographic data.''
+
+\paragraph{3. Community boundary identification.}
+``In [state], the following physical land use transitions are preserved as
+district boundaries by the proposed plan: [specific examples, e.g.,
+`the Pamlico Sound water boundary separates the Outer Banks tracts in
+Dare County from the mainland, consistent with the commission's recognition
+of the Outer Banks as a distinct coastal community in its 2011 and 2021
+redistricting cycles'].''
+
+\paragraph{4. Criterion alignment.}
+``The [state]'s redistricting criteria require preservation of communities
+defined by geographic and natural boundary considerations.
+The land use character weights directly implement this criterion: district
+cuts run preferentially at land use transitions that correspond to recognized
+natural boundaries between communities.''
+
+\subsection{When Not to Use M.2}
+
+Land use weights should not be used in the following contexts:
+
+\begin{itemize}
+  \item \textbf{Dense urban cores.}
+    In highly urbanized census tracts where most of the land is class~24
+    (high-intensity developed), the M.2 vector becomes near-degenerate
+    ($p_{\mathrm{com}} \approx 1.0$ for all tracts).
+    All tracts look similar under M.2, and the signal adds no information.
+    M.1 (economic character) is more informative in this context.
+  \item \textbf{States with no significant natural boundaries.}
+    In states with uniform terrain and no significant water bodies
+    (e.g., Kansas, Iowa), the M.2 signal will produce modest or zero
+    effect.
+    The agricultural uniformity of the Great Plains means most adjacent
+    tracts have similar NLCD vectors; there are no sharp land use
+    transitions to exploit.
+  \item \textbf{When hard cuts conflict with VRA compliance.}
+    In rare cases, the hard-cut rule may prevent contiguous assignment
+    of tracts needed for a majority-minority district.
+    In such cases, the hard-cut rule must be overridden via bridge
+    adjacency encoding, and the VRA requirement takes priority.
+\end{itemize}

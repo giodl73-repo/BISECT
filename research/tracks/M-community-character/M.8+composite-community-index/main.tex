@@ -1,0 +1,62 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{url}
+\usepackage{xcolor}
+
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+\title{\textbf{Composite Community Character Index:\\
+Synthesizing Economic, Physical, Administrative, and Transit Signals}}
+
+\author{Giovanni Della-Libera}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Composite index, Communities of interest, Edge weights, METIS,
+Multi-signal aggregation, Court usage, Expert witness, Redistricting
+
+\section{Introduction}
+\input{sections/01-introduction}
+
+\section{The Composite Formula}
+\input{sections/02-background}
+
+\section{Calibration and Default Weights}
+\input{sections/03-algorithm}
+
+\section{Court Usage Template}
+\input{sections/04-results}
+
+\section{Empirical Design}
+\input{sections/05-legal}
+
+\section{Conclusion}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,126 @@
+\label{sec:results}
+
+\subsection{Experimental Design}
+
+Quantitative results for M.4 commuting shed weights are deferred to Phase~2,
+pending download of LODES OD data for the target states.\footnote{Phase~2
+will be triggered after LODES OD files are downloaded.
+The data URL pattern is
+\texttt{https://lehd.ces.census.gov/data/lodes/LODES8/\{state\}/od/\{state\}\_od\_main\_JT00\_2020.csv.gz}.
+Files are downloaded via \texttt{bisect fetch --type lodes-od --year 2020}.}
+This section describes the experimental protocol governing Phase~2 execution.
+
+\paragraph{States.}
+Two states are selected to test distinct aspects of the commuting shed signal:
+
+\begin{itemize}
+  \item \textbf{Wisconsin ($k=8$).}
+    WI provides the suburban clustering test.
+    The Milwaukee metro is characterized by distinct commuting sheds:
+    the western suburbs (Waukesha County) commute primarily to Milwaukee
+    and the western suburban employment corridor (Brookfield, Wauwatosa,
+    Menomonee Falls, Pewaukee); the northern suburbs (Ozaukee, Washington
+    counties) commute primarily to Milwaukee and the northern suburban
+    corridor (Glendale, Brown Deer, Menomonee Falls).
+    Both sheds overlap at downtown Milwaukee as a common destination.
+    The prediction: tracts in these suburban sheds co-assign to the same
+    district at ${\geq}70\%$ under commuting-shed weights, versus
+    ${\leq}50\%$ under geographic weights.
+  \item \textbf{North Carolina ($k=14$).}
+    NC provides the polycentric separation test.
+    The Research Triangle (Wake + Durham + Orange + Chatham counties) and
+    the Charlotte metro (Mecklenburg + Union counties) are two distinct
+    functional economic areas separated by 160 miles of Piedmont geography.
+    Under geographic weights, a plan that bundles some Piedmont tracts with
+    the Triangle or with Charlotte can produce cross-metro district assignments.
+    Under commuting-shed weights, the disjoint destination distributions of
+    Triangle-commuting and Charlotte-commuting tracts should prevent such
+    cross-metro assignments.
+\end{itemize}
+
+All experiments use:
+\begin{itemize}
+  \item Algorithm: \texttt{standard-bisect} structure
+  \item Seed: 42 (single seed; multi-seed variance designated Phase~3)
+  \item Blend factor: $\alpha = 0.5$
+  \item Year: 2020 decennial census population and 2020 LODES OD
+  \item Comparison baseline: \texttt{--weights-override geographic}
+    on identical plan configuration
+\end{itemize}
+
+\subsection{Primary Metric: Suburban Clustering (Wisconsin)}
+
+The WI primary metric is the \emph{Milwaukee suburban co-assignment rate}:
+the fraction of tract pairs $(h_1, h_2)$ drawn from the Milwaukee
+suburban counties (Waukesha, Ozaukee, Washington) that are assigned to
+the same district.
+
+\begin{equation}
+  \mathrm{SCR} = \frac{\#\{(h_1, h_2) : h_1, h_2 \in \mathcal{S},\, \pi(h_1) = \pi(h_2)\}}
+  {\#\{(h_1, h_2) : h_1, h_2 \in \mathcal{S}\}}
+  \label{eq:scr}
+\end{equation}
+where $\mathcal{S}$ is the set of Milwaukee suburban tracts and
+$\pi(h)$ is the district assignment of tract $h$.
+
+The Phase~2 prediction:
+$\mathrm{SCR}_{\mathrm{commute}} \geq 0.70$ and
+$\mathrm{SCR}_{\mathrm{geographic}} \leq 0.50$.\textsuperscript{$\dagger$}
+
+\subsection{Primary Metric: Polycentric Separation (North Carolina)}
+
+The NC primary metric is the \emph{cross-metro co-assignment rate}:
+the fraction of tract pairs $(h_1, h_2)$ where $h_1$ is in the
+Research Triangle metro and $h_2$ is in the Charlotte metro that are
+assigned to the same district.
+
+\begin{equation}
+  \mathrm{CMR} = \frac{\#\{(h_1, h_2) : h_1 \in \mathcal{T},\, h_2 \in \mathcal{C},\, \pi(h_1) = \pi(h_2)\}}
+  {\#\{(h_1, h_2) : h_1 \in \mathcal{T},\, h_2 \in \mathcal{C}\}}
+  \label{eq:cmr}
+\end{equation}
+where $\mathcal{T}$ is the set of Research Triangle metro tracts and
+$\mathcal{C}$ is the set of Charlotte metro tracts.
+
+The Phase~2 prediction:
+$\mathrm{CMR}_{\mathrm{commute}} < 0.05$ and
+$\mathrm{CMR}_{\mathrm{geographic}} \leq 0.15$.\textsuperscript{$\dagger$}
+
+A cross-metro co-assignment rate below 5\% under commuting-shed weights
+would confirm that the weighted Jaccard similarity correctly identifies
+the Triangle and Charlotte as distinct functional economic areas that should
+not be bundled into the same district.
+
+\subsection{Performance Validation}
+
+A third metric validates the computational cost claim:
+
+\begin{quote}
+  \textit{Wall time for weighted Jaccard computation across all NC tract
+  adjacency edges: $<60$ seconds on 8 workers.}
+\end{quote}
+
+This is measured by the \textsc{bisect} internal timer for the weight
+construction phase, reported in the \texttt{bisect state} diagnostic
+output.
+The prediction follows from the $O(n \times 2\bar{W})$ complexity analysis
+in Section~\ref{sec:algorithm}: with $n \approx 7{,}000$ NC adjacency edges
+and $\bar{W} \approx 20$, approximately 280,000 operations are required,
+a trivially fast computation even on a single thread.\textsuperscript{$\dagger$}
+
+\subsection{Phase 2 Timeline}
+
+All quantitative results in this section are marked ${}^{\dagger}$Phase~2
+and will be populated when the following prerequisites are met:
+
+\begin{enumerate}
+  \item LODES OD files for NC and WI downloaded via
+    \texttt{bisect fetch --type lodes-od --year 2020}.
+  \item Block-to-tract aggregation completed and sparse commuting
+    distribution matrices stored in Parquet format.
+  \item L0 test invariants verified for the aggregated distributions
+    (Section~\ref{sec:algorithm}).
+  \item Single-seed redistricting runs completed for both states under
+    both \texttt{commuting-shed} and \texttt{geographic} weight modes.
+  \item SCR, CMR, and wall time metrics computed from plan output.
+\end{enumerate}

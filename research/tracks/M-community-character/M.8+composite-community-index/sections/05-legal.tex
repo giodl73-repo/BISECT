@@ -1,0 +1,146 @@
+\label{sec:legal}
+
+\subsection{Experimental Design}
+
+Quantitative results for M.8 composite community weights are deferred to
+Phase~2, pending completion of all component signal data pipelines.
+This section describes the experimental protocol governing Phase~2 execution.
+
+\paragraph{Component data availability.}
+The M.8 composite activates signals as their data becomes available.
+For the Phase~2 experiments, the following data availability is assumed:
+
+\begin{itemize}
+  \item M.6 zone co-membership: available immediately (TIGER/Line, no download
+    required beyond standard \textsc{bisect} data fetch).
+  \item M.1 economic character: available immediately (LODES WAC already
+    downloaded for NC, WI, TX).
+  \item M.2 land use: available after NLCD GeoTIFF download and zonal statistics
+    computation (Phase~2 M.2 prerequisite).
+  \item M.3 housing character: available after ACS tract-level download
+    (Phase~2 M.3 prerequisite).
+  \item M.4 commuting shed: available after LODES OD download (Phase~2 M.4
+    prerequisite).
+  \item M.5 topographic: available after SRTM download (Phase~2 M.5 prerequisite).
+  \item M.7 transit: available only for states with GTFS data; may be unavailable
+    for initial NC and WI runs.
+\end{itemize}
+
+Phase~2 will run the composite using the minimum three-signal set (M.6 + M.1 + M.2)
+as soon as NLCD data is available, and progressively add signals as their data
+pipelines complete.
+
+\paragraph{States.}
+Three states are selected for Phase~2 composite evaluation:
+
+\begin{itemize}
+  \item \textbf{North Carolina ($k=14$).}
+    NC provides the richest test environment for the composite.
+    NC has coastal water boundaries (M.2 hard cut), concentrated employment
+    clusters (M.1 economic character), mixed rural-urban land use (M.2 land use),
+    diverse school district patterns (M.6 zone), distinct commuting sheds
+    (M.4 Research Triangle vs.\ Charlotte), and modest topographic variety
+    (Piedmont vs.\ Mountains vs.\ Coastal Plain).
+    All six non-transit signals are expected to be meaningful for NC.
+  \item \textbf{Wisconsin ($k=8$).}
+    WI provides a partial test.
+    M.4 commuting shed is expected to show a Milwaukee suburban clustering effect.
+    M.2 land use will be tested for the urban-agricultural boundary.
+    M.1 economic character showed a null result in B.27, which is correctly
+    expected behavior.
+    WI tests whether the composite aggregates meaningfully when one component
+    contributes no signal.
+  \item \textbf{Texas ($k=38$).}
+    TX provides the large-state test.
+    TX has Gulf Coast water boundaries (M.2), petroleum and logistics
+    industrial concentrations (M.1), diverse land cover from East Texas
+    forest to West Texas desert (M.2), and distinct metro commuting sheds
+    (Houston, Dallas-Fort Worth, San Antonio, Austin are non-overlapping
+    functional economic areas, M.4).
+    TX also has the largest census tract count (6,877 tracts), providing
+    a computational scalability test.
+\end{itemize}
+
+\subsection{Primary Metrics}
+
+Four primary metrics will be reported for Phase~2.
+
+\paragraph{Within-district economic variance.}
+The M.8 composite claims a $\geq$25\% reduction in mean within-district
+economic variance compared to standard-bisect geographic weights on NC-14:
+\begin{equation}
+  \frac{\overline{\sigma}_{\mathrm{JPR}}^{\mathrm{geographic}} -
+        \overline{\sigma}_{\mathrm{JPR}}^{\mathrm{composite}}}
+       {\overline{\sigma}_{\mathrm{JPR}}^{\mathrm{geographic}}}
+  \geq 0.25
+  \label{eq:variance-reduction}
+\end{equation}
+This prediction extends the M.1 finding: adding zone co-membership (M.6),
+land use (M.2), and housing character (M.3) signals on top of M.1 should
+produce additional economic coherence within districts.\textsuperscript{$\dagger$}
+
+\paragraph{Zone boundary crossings.}
+The M.8 composite claims zero school district boundary crossings in the
+NC-14 plan, given the 0.30 weight assigned to M.6 zone co-membership.
+This is a strong claim: even a 30\% weight contribution from a signal that
+assigns zero similarity to cross-school-district adjacencies should be
+sufficient to prevent the algorithm from cutting within school districts.
+Phase~2 will verify this by counting the number of NC school district
+boundaries crossed by district lines in the composite-weighted plan.\textsuperscript{$\dagger$}
+
+\paragraph{Polsby-Popper compactness.}
+The M.8 composite predicts Polsby-Popper compactness equal to or greater
+than geographic weights for NC-14, WI-8, and TX-38.
+The mechanism is the same as in M.1 and M.2: cutting at community seams
+(economic transitions, land use boundaries, administrative zone edges)
+tends to produce cleaner, rounder districts than cutting at arbitrary
+population-balance boundaries.\textsuperscript{$\dagger$}
+
+\paragraph{Partisan neutrality check.}
+The M.8 composite claims a correlation below 0.05 (Pearson $r$) between
+composite edge weights and tract-level Democratic vote share:
+\begin{equation}
+  \bigl|\rho\bigl(w_{\mathrm{comp}}(u,v),\, V_D(u) + V_D(v)\bigr)\bigr| < 0.05
+  \label{eq:partisan-check}
+\end{equation}
+where $V_D(t)$ is the Democratic vote fraction in tract $t$ from the 2020
+presidential election.
+This correlation measures whether the composite systematically assigns
+higher or lower weights to edges in Democratic or Republican-leaning
+neighborhoods.
+A correlation below 0.05 confirms that no partisan signal is embedded
+in the composite.
+
+Note that this check uses election data only for \emph{validation}, not
+as an input.
+The validation computes the correlation after the weights are finalized;
+election data is never used to compute the weights themselves.
+The validation data is used to confirm that the claim ``no partisan signal
+entered the composite'' is empirically true, not merely asserted.\textsuperscript{$\dagger$}
+
+\subsection{Comparison Baseline}
+
+All Phase~2 metrics compare the composite-community-weighted plan against
+the geographic-weights baseline on the same state, year, seed, and algorithm
+configuration.
+No multi-seed comparison is performed in Phase~2 (designated Phase~3).
+
+\subsection{Phase 2 Timeline}
+
+All quantitative results in this section are marked ${}^{\dagger}$Phase~2.
+Prerequisites for Phase~2 execution:
+\begin{enumerate}
+  \item M.2 land use data pipeline complete (NLCD GeoTIFF downloaded and
+    zonal statistics computed for NC, WI, TX).
+  \item M.3 housing character data pipeline complete (ACS 5-year estimates
+    downloaded for NC, WI, TX).
+  \item M.4 commuting shed data pipeline complete (LODES OD downloaded
+    for NC, WI, TX).
+  \item M.5 topographic data pipeline complete (SRTM downloaded for NC, WI, TX).
+  \item M.6 zone co-membership weights verified for NC, WI, TX (already
+    available pending M.6 paper completion).
+  \item Composite formula implemented in Rust with all five L0 test invariants
+    passing.
+\end{enumerate}
+The composite run for NC-14 using the minimum three-signal set (M.6 + M.1 + M.2)
+can proceed as soon as step~1 is complete.
