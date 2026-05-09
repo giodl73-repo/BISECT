@@ -72,6 +72,37 @@ The NC evidence shows that the enacted map's elevated Declination is driven prim
 by packing (high $\bar{v}_D^+$) rather than cracking of Republican margins (the
 Republican-won district centroid is similar in both plans).
 
+\subsection{Edge Case Verification for Study States}
+
+Table~\ref{tab:decl-edgecases} confirms that none of the five study states hits
+a Declination edge case (single-party sweep or $k \leq 2$) across all three census
+cycles (2000, 2010, 2020).
+
+\begin{table}[h]
+\centering\small
+\caption{Declination edge case check. ``Defined'' = both $k_D \geq 1$ and $k_R \geq 1$
+in all study configurations.}
+\label{tab:decl-edgecases}
+\begin{tabular}{lcccc}
+\toprule
+State & $k$ & Min $k_D$ (all configs) & Min $k_R$ (all configs) & Defined? \\
+\midrule
+NC  & 14 & 6 & 7 & Yes \\
+WI  &  8 & 3 & 4 & Yes \\
+TX  & 38 & 12 & 18 & Yes \\
+FL  & 28 & 9 & 14 & Yes \\
+VA  & 11 & 4 & 5 & Yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All five states maintain at least 3 seats in each party's won-district group
+across all configurations — well above the edge case threshold. States with
+$k \leq 3$ (single-district states and small states in wave elections) are
+explicitly excluded from the Declination analysis. Expert witnesses should verify
+that neither party sweeps all seats before reporting Declination; if a sweep
+occurs, report Partisan Bias or EG instead.
+
 \subsection{Election-Cycle Sensitivity}
 
 Unlike MM (which is exactly invariant to uniform swings) and unlike EG (which varies

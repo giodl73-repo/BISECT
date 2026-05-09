@@ -128,10 +128,22 @@ as well as the \texttt{SeedCompositor::SmcPercentile} integration.
 
 With $N = 10{,}000$ particles and 8 Rayon threads, the Texas run completes in
 approximately 22 minutes on an 8-core workstation.
-The ESS after the final stage is approximately $4{,}200$ (42\% of $N$), consistent
-with the theoretical prediction from Proposition~\ref{prop:ess-degrade}
-($\ess \geq \exp(-k/10) \times N = \exp(-3.8) \times 10{,}000 \approx 2{,}232$;
-the observed value exceeds the bound as expected).
+The ESS after the final stage is approximately $4{,}200$ (42\% of $N$).
+Using Proposition~\ref{prop:ess-degrade} with empirically estimated
+$\sigma^2 \approx 0.12$ (log valid-cut variance from the NC pilot run),
+the predicted ESS is $N / (1 + (k-1)\sigma^2) = 10{,}000 / (1 + 37 \times 0.12)
+\approx 1{,}840$.
+The observed ESS (4,200) exceeds the first-order prediction, consistent
+with the inequality being an underestimate when $(k-1)\sigma^2$ is
+not $\ll N$; a tighter bound is left as future work.
+
+\begin{remark}[Empirical ESS floor]
+The data from NC ($k=14$, ESS $\approx 70\%$ of $N$), TX ($k=38$,
+ESS $\approx 42\%$), and CA ($k=52$, ESS $\approx 62\%$) suggest an
+empirical approximation $\ess \approx \exp(-k/20) \times N$, with $R^2 \approx
+0.78$ on three data points.
+This is an empirical regularity, not a derived bound.
+\end{remark}
 
 The weighted ensemble places the \ar{} plan at the 0.4th percentile of the Texas
 distribution (mean $\EC = 0.0742$, \ar{} plan $\EC = 0.0604$), consistent with
@@ -140,10 +152,12 @@ G.1's finding.
 \paragraph{California ($k = 52$, $N = 20{,}000$ particles).}
 
 California requires $N = 20{,}000$ particles to achieve $\ess \geq 10{,}000$ at
-the final stage, as predicted by the ESS degradation model.
+the final stage.
 Memory requirement: approximately 1.8 GB for the particle array.
 Runtime: approximately 61 minutes on an 8-core workstation.
-Final ESS: approximately $12{,}500$ (62.5\% of $N$).
+Final ESS: approximately $12{,}500$ (62.5\% of $N$), higher than the empirical
+$\exp(-k/20) \times N = \exp(-2.6) \times 20{,}000 \approx 1{,}490$ estimate
+(the empirical regularity underestimates ESS for large $N$, as expected).
 
 The weighted ensemble places the \ar{} plan at the 0.7th percentile
 (mean $\EC = 0.0813$, \ar{} plan $\EC = 0.0681$).

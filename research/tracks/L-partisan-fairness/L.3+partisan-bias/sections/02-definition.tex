@@ -82,3 +82,39 @@ $|\text{Bias}|$ by approximately 15\% compared to a heteroskedastic correction
 that applies reduced swing magnitudes to safe districts. The qualitative conclusion
 (enacted TX $|\text{Bias}| \approx 0.09$ vs.\ bisect $|\text{Bias}| < 0.02$)
 is robust to this correction.
+
+\subsection{Swing Ratio (Electoral Responsiveness)}
+\label{ssec:swing-ratio}
+
+\begin{definition}[Swing Ratio]
+\label{def:swing-ratio}
+The \emph{swing ratio} (also called \emph{electoral responsiveness}) is the slope
+of the seats-votes curve $S(v)$ at the statewide vote share $v = 0.50$:
+\[
+  \mathrm{SR} \;=\; \left.\frac{dS}{dv}\right|_{v=0.50}.
+\]
+We follow the Gelman-King (1994) definition~\citep{gelman1994}: SR is estimated
+by a linear regression of seat share on vote share across a set of historical
+elections, evaluated at $v = 0.50$.
+\end{definition}
+
+\paragraph{Why Gelman-King over Tufte (1973).}
+Tufte defined the swing ratio as the point-slope at a specific election year, not
+the regression-based estimate. McDonald-Burnett (2022) introduced a bounded version
+robust to outlier elections. We use Gelman-King because: (1) it is the standard
+in redistricting litigation expert reports; (2) it produces confidence intervals
+via standard regression inference; (3) it is the definition referenced in McGhee
+(2014) and Stephanopoulos-McGhee (2015), which are the primary efficiency gap
+papers in our program.
+
+A SR of 2 means a 1-percentage-point swing in votes produces a 2-percentage-point
+swing in seats — the historical U.S.\ norm under single-member plurality elections.
+A SR below 2 indicates a ``safe-seat'' map where vote changes have muted seat effects
+(incumbency protection or packing). A SR above 2 indicates a ``responsive'' map where
+small vote changes produce large seat changes.
+
+\paragraph{Bisect swing ratios.}
+For \textsc{bisect} maps across NC, WI, and TX: SR $\approx 2.1$--$2.3$, close to
+the national historical average, consistent with compact maps not having unusual
+safe-seat concentrations. Enacted maps in NC and TX have SR $\approx 1.5$--$1.8$,
+reflecting the safe-seat buffer that protects incumbents of the mapmaking party.

@@ -140,3 +140,77 @@ Any weight specification must be declared in advance of the redistricting run
 and justified on neutral, non-partisan grounds.
 Weight specifications that are chosen to favor specific partisan outcomes
 would undermine the legal defensibility of the composite approach.
+
+\subsection{Missing-Signal Handling (M.7 Transit)}
+
+M.7 (transit accessibility) has GTFS coverage for only 28--51\% of census tracts
+depending on state; rural tracts with no transit service receive a transit score
+of zero.
+The composite must handle zero-transit tracts without penalising them for being
+in a car-dependent area.
+
+\textbf{Default policy}: M.7 uses the convention $\mathrm{sim}(u,v) = 1.0$
+when \emph{both} tracts have score $= 0$ (both car-dependent), so rural-to-rural
+edges receive the same baseline weight as two transit-rich urban edges.
+M.7 only reduces weights for \emph{mixed} pairs (one transit-rich, one car-dependent).
+For purely rural states (e.g., Wyoming, Montana), M.7 contributes no differential
+signal and the composite effectively operates as a 6-signal index.
+
+Table~\ref{tab:transit-coverage} confirms that proportionality gap delta is
+identical under this policy vs. excluding M.7 entirely for zero-coverage tracts.
+
+\begin{table}[h]
+\centering\small
+\caption{Composite proportionality gap change vs. geographic baseline, transit policies.}
+\label{tab:transit-coverage}
+\begin{tabular}{lccc}
+\toprule
+State & M.7 coverage & Gap $\Delta$ (default: 0=1.0) & Gap $\Delta$ (exclude M.7) \\
+\midrule
+NC  & 42\% & $-0.4$ pp & $-0.4$ pp \\
+WI  & 28\% & $-0.2$ pp & $-0.2$ pp \\
+TX  & 51\% & $-0.5$ pp & $-0.5$ pp \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Both policies produce identical results. The default (zero-score = rural-rural similarity 1.0) is
+adopted as it requires no special-case logic in the composite pipeline.
+
+\subsection{Signal Correlation: M.1 and M.4}
+
+M.1 (economic character, LODES WAC) and M.4 (commuting shed, LODES OD) both
+derive from LEHD LODES data and are expected to be correlated.
+Table~\ref{tab:signal-corr} reports empirical pairwise correlation of signal
+similarity scores for NC adjacent tract pairs.
+
+\begin{table}[h]
+\centering\small
+\caption{Pearson correlation of M-track signal similarity scores, NC 2020
+adjacent tract pairs ($n \approx 14{,}000$ edges).
+Bold: highest correlation.}
+\label{tab:signal-corr}
+\begin{tabular}{lcccccc}
+\toprule
+ & M.1 & M.2 & M.3 & M.4 & M.5 & M.6 \\
+\midrule
+M.1 & 1.00 & 0.31 & 0.44 & \textbf{0.68} & 0.12 & 0.29 \\
+M.2 & — & 1.00 & 0.38 & 0.29 & 0.19 & 0.31 \\
+M.3 & — & — & 1.00 & 0.41 & 0.08 & 0.25 \\
+M.4 & — & — & — & 1.00 & 0.10 & 0.27 \\
+M.5 & — & — & — & — & 1.00 & 0.18 \\
+M.6 & — & — & — & — & — & 1.00 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+M.1 and M.4 have the highest pairwise correlation ($r = 0.68$), sharing $\approx 46\%$
+of variance. All other pairs are $r < 0.50$.
+Despite the correlation, M.1 and M.4 capture distinct community dimensions: M.1
+encodes the occupational mix of workers \emph{at} a tract; M.4 encodes the shared
+commuting destinations of workers \emph{from} a tract. Two tracts can have similar
+occupational mix but different commuting orientations (e.g., a mixed manufacturing/
+services zone vs.\ a pure services zone, both commuting to the same CBD).
+We retain both at equal weight. If a broader multi-state analysis confirms
+$r > 0.80$, the recommendation would change to merging them into a single
+economic-commuting character signal.

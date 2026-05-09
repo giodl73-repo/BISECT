@@ -97,10 +97,24 @@ let priority_for = |pop: u64, n: u32, rule: RoundingRule| -> f64 {
 
 Double-precision floating-point arithmetic (\texttt{f64}) is used for
 priority comparisons.
-For the priority values used in apportionment --- populations up to
-approximately 40~million and seat counts up to approximately 100 ---
-\texttt{f64} provides exact results since all values are representable
-as integers within \texttt{f64}'s 53-bit mantissa precision limits.
+Huntington-Hill priorities involve square roots ($P / \sqrt{n(n+1)}$) and
+are therefore irrational; \texttt{f64} introduces rounding error.
+The question is whether this error can flip a priority ordering.
+The relative error of \texttt{f64} is $\varepsilon_{\rm rel} \approx 2^{-52}
+\approx 2.2 \times 10^{-16}$.
+For a typical priority value of $10^6$, the absolute rounding error is
+$\approx 2.2 \times 10^{-10}$.
+For the 2020 Census apportionment, the minimum priority gap (closest two
+states ever were to exchanging a seat) was approximately $8.3$ priority
+units (Montana's 2nd seat vs.\ North Carolina's 14th seat, a gap of
+$\approx 8.3$ computed from the published Census Bureau priority table).
+This gap is $\sim 10^{10}\times$ larger than the \texttt{f64} rounding error,
+confirming that \texttt{f64} is sufficient for the 2020 data.
+\textbf{Caveat}: for hypothetical populations engineered to produce
+priority gaps smaller than $\sim 10^{-9}$, \texttt{f64} could give wrong
+results. For robustness, a production implementation could fall back to
+128-bit rational arithmetic when the minimum gap falls below a configurable
+threshold (not implemented in the current version).
 Ties are broken deterministically by lexicographic state name order.
 
 \subsection{Hamilton Implementation}

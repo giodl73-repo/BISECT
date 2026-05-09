@@ -1,5 +1,60 @@
 \label{sec:results}
 
+\subsection{Multi-Seed Validation}
+
+Table~\ref{tab:pairing-seeds} reports incumbent pairing rates across 5 seeds
+($s \in \{42, 43, 44, 45, 46\}$) for NC, WI, and TX.
+
+\begin{table}[h]
+\centering\small
+\caption{Bisect incumbent pairing rate across 5 seeds.
+Mean $\pm$ SD; seed-42 value shown for reference.}
+\label{tab:pairing-seeds}
+\begin{tabular}{lcccc}
+\toprule
+State & Seed-42 $R$ & Mean $R$ (5 seeds) & SD & Within geo-adjusted CI? \\
+\midrule
+NC & 0.141 & 0.143 & 0.028 & Yes \\
+WI & 0.107 & 0.109 & 0.019 & Yes \\
+TX & 0.105 & 0.107 & 0.014 & Yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Seed-42 rates are within 0.01 of the 5-seed mean in all states; SD is small
+relative to the mean. The conclusion — bisect produces pairing rates within the
+geographically adjusted random CI — holds across all 5 seeds.
+
+\subsection{GerryChain Ensemble Comparison}
+
+To validate the analytical baseline against an empirical ensemble, we compute
+incumbent pairing rates for all 1{,}000 plans in G.1's NC GerryChain ensemble.
+
+\begin{table}[h]
+\centering\small
+\caption{NC incumbent pairing rate: bisect, GerryChain ensemble, and analytical baseline.}
+\label{tab:pairing-gc}
+\begin{tabular}{lcc}
+\toprule
+Method & $\bar{R}$ & 95\% CI \\
+\midrule
+Analytical uniform baseline & 0.214 & $[0.147, 0.281]$ \\
+Analytical geo-adjusted baseline & 0.182 & $[0.118, 0.246]$ \\
+GerryChain ensemble (G.1, $N=1{,}000$) & 0.179 & $[0.131, 0.227]$ \\
+Bisect (5-seed mean) & 0.143 & $[0.087, 0.199]$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The GerryChain ensemble mean ($0.179$) closely matches the geographically adjusted
+analytical baseline ($0.182$), validating that the geo-adjustment correctly accounts
+for geographic constraints.
+The bisect mean ($0.143$) sits in the lower tail of the GerryChain ensemble distribution
+but within the 95\% CI, confirming that bisect's pairing rate is geometrically
+consistent with a random compact plan.
+
+\subsection{Primary Results}
+
 Table~\ref{tab:pairing-results} presents the main empirical results: pairing counts
 and rates for \textsc{bisect} algorithmic maps and enacted 2022 congressional maps,
 compared to the geographically adjusted random baseline.
