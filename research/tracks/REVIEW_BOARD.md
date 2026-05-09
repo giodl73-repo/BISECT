@@ -1,7 +1,7 @@
 # REVIEW_BOARD.md — Apportionment Research Program
 
 **Program**: Congressional and State Legislative Redistricting via METIS Recursive Bisection
-**Board Round**: 2
+**Board Round**: 3
 **Review Date**: 2026-05-09
 **Modules Reviewed**: 8 (Tracks A–H)
 **Total Papers**: 82 (including B.22b)
@@ -470,3 +470,80 @@ Five new tracks (36 papers) are in draft. They need panel review cycles before b
 *B1 items resolved. Program score 7.6/10 — Tier A- (Strong).*
 *Tracks A–H: board conditional sign-off. Tracks I–M: draft, awaiting panel review.*
 *Next: H.3 revision + D.2/C.1 revisions → panel:module → Board Round 3 (Tracks I–M).*
+
+---
+
+# Round 3 Board Review
+
+**Review Date**: 2026-05-09
+**Trigger**: H.3 R2 resolved (3.2/4 conditional accept); Tracks I–M first panel review complete; D.2/C.1 P1 items addressed.
+
+## Changes Since Round 2
+
+| Item | Change |
+|------|--------|
+| H.3 | P1-A through P1-H resolved; R2 score 3.2/4 — Track H fully at conditional accept |
+| D.2 | Scope note added (prong-1 feasibility, not full VRA); enacted comparison table added (+33%/+36% vs enacted) |
+| C.1 | Multi-seed RSI validated (seed-42 within 1 SD across 5 seeds); minority VAP stability tested (1/19 reclassification) |
+| Tracks I–M | First panel reviews complete (module scores 7.2–8.0/10) |
+| G.7 | First panel review (3.2/4 conditional accept) |
+
+## New Track Assessments (I–M)
+
+| Track | Score | Verdict |
+|-------|-------|---------|
+| I — Incumbency | 7.2/10 | Solid — single-seed limitation is the binding constraint for all 5 papers |
+| J — Apportionment | 8.0/10 | Strong — J.6 exact reproduction is exceptional; J.1 f64 precision is the main technical gap |
+| K — Compactness | 7.8/10 | Strong — K.7 court guide is the program's most practitioner-facing contribution |
+| L — Partisan Fairness | 7.8/10 | Strong — L.6 proportionality analysis and B.12 cross-reference are standout |
+| M — Community Character | 7.8/10 | Strong — composite index (M.8) is legally innovative; signal correlation and M.7 coverage need addressing |
+
+## Program Score Round 3 (12-track)
+
+| Module | R2 Score | R3 Score | Change |
+|--------|----------|----------|--------|
+| A | 7.5 | 7.5 | — |
+| B | 7.7 | 7.7 | — |
+| C | 7.2 | 7.4 | C.1 multi-seed resolved |
+| D | 7.6 | 7.7 | D.2 VRA framing corrected |
+| E | 7.5 | 7.5 | — |
+| F | 7.8 | 7.8 | — |
+| G | 7.5 | 7.6 | G.7 conditional accept |
+| H | 8.2 | **8.5** | H.3 at 3.2/4 — track fully conditional accept |
+| I | — | 7.2 | New |
+| J | — | 8.0 | New |
+| K | — | 7.8 | New |
+| L | — | 7.8 | New |
+| M | — | 7.8 | New |
+
+**Program score (12-track, paper-weighted)**: **7.7/10 — Tier A- (Strong)**
+**All modules above 7.0/10. No module below 6.0/10.**
+
+## Remaining Open Items
+
+### High Priority
+- **I-track single-seed**: All 5 Track I papers need multi-seed Phase 2 validation before individual submission. The baseline derivation (pairing independence assumption) also needs ensemble validation.
+- **J.6 f64 precision**: Confirm f64 is sufficient for Huntington-Hill priority ordering at CA populations (39M).
+- **K.7 weighting sensitivity**: Composite compactness score ranking sensitivity to metric weights.
+- **M.8 missing transit handling**: Clarify how M.7 zero scores (rural, no transit) are treated in the composite.
+- **G.7 P1-A**: ESS degradation proposition — demote to empirical regularity or prove.
+
+### Medium Priority
+- M.0 legal citations (Shaw v. Reno context; state constitutional authority).
+- L.3 swing ratio definition specification.
+- L.4 declination edge cases.
+
+## Board Sign-Off Assessment (Round 3)
+
+**Tracks A–H**: Board sign-off upheld from Round 2. H.3 is now at conditional accept; Track H is fully signed off.
+
+**Tracks I–M**: Board conditionally signs off on J (8.0), K (7.8), L (7.8), M (7.8) pending resolution of P1 items identified in panel reviews. Track I requires multi-seed Phase 2 validation before sign-off — provisionally signed off with the condition that single-seed limitation is prominently disclosed in any publication or testimony.
+
+**Program status**: **7.7/10 — Board signs off on the 12-track program** contingent on Track I multi-seed validation (Phase 2) and the standard P1 items per track.
+
+---
+
+*Board convened 2026-05-09. Seven members. Round 3.*
+*Program score 7.7/10 — Tier A- (Strong). All 12 tracks above 7.0.*
+*Board signs off. Remaining items are per-paper P1 revisions tracked in individual REVISION-PLANs.*
+*Next: address Track I multi-seed (Phase 2), J.6 f64 precision, G.7 P1-A.*

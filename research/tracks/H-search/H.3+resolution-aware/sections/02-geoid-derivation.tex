@@ -25,6 +25,13 @@ coarser level $\ell_c$:
 \]
 that is, the coarse GEOID is the exact length-$|g(\cdot,\ell_c)|$ prefix
 of the fine GEOID.
+
+\textbf{Precondition (within-year use only)}: Definition~\ref{def:geoid} applies
+to GEOID files from the \emph{same census year}.
+Tract GEOIDs are reassigned between decennial censuses when tracts split or merge;
+a 2010 county GEOID file paired with a 2020 tract GEOID file may produce
+incorrect prefix matches at the split/merge boundaries.
+The implementation asserts year consistency at startup (see \S\ref{sec:geoid}).
 \end{definition}
 
 This prefix property holds by construction for all three adjacent pairs:
@@ -133,9 +140,10 @@ share an edge in $\ec$ if and only if they share a geographic boundary.
 ($\Rightarrow$) Suppose counties $A$ and $B$ share a geographic boundary.
 Then there exist two regions --- one wholly within $A$ and one wholly
 within $B$ --- that share a positive-length boundary segment.
-Census tracts are non-crossing polygons that tile each county; any
-county boundary segment is covered by a sequence of tract boundary
-segments.
+Census tracts are non-crossing polygons that tile each county without
+gaps or overlaps along county boundaries~\citep[TIGER/Line Technical
+Documentation \S3.2]{tigertechnicaldoc2020}; any county boundary
+segment is therefore covered by a sequence of tract boundary segments.
 Therefore there exist tracts $u \in A$ and $v \in B$ that share a
 positive-length boundary segment, so $(u, v) \in E_T$, giving
 $\{A, B\} \in E_C$.

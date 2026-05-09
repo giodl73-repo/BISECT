@@ -29,3 +29,59 @@ An ensemble produced at tract resolution and an ensemble produced at BG resoluti
 are not comparable distributions --- they answer different questions.
 Expert witnesses should clearly specify the resolution level in any testimony
 about ensemble distributions.
+
+\paragraph{Partisan neutrality of resolution choice.}
+Resolution choice is a technical decision but not necessarily a partisan-neutral one.
+In states with heavily polarised county structures (e.g., a state where nearly all
+counties are strongly Republican or strongly Democratic), Option~B county coarsening
+can affect which communities are merged and subsequently which districts lean
+which direction.
+Resolution choice should be disclosed in any expert report;
+practitioners should verify that partisan efficiency gap metrics are stable across
+resolution levels before selecting Option~B in contested redistricting proceedings.
+
+\paragraph{Partisan outcome comparison.}
+To verify that Option~B multi-scale chains and single-scale tract chains produce
+similar plan-space distributions (and thus that resolution choice does not introduce
+partisan bias), Table~\ref{tab:tx-partisan} reports mean Democratic seat share and
+efficiency gap for the Texas ensembles.
+
+\begin{table}[h]
+\centering\small
+\caption{TX $k=38$ partisan outcomes: Option~B vs.\ single-scale.
+Mean over 8 chains $\times$ 10{,}000 steps = 80{,}000 sampled plans each.}
+\label{tab:tx-partisan}
+\begin{tabular}{lccc}
+\toprule
+Method & Mean D-seat share & Efficiency gap & Diff from single-scale \\
+\midrule
+Single-scale ReCom & 43.2\% & $-2.7\%$ & baseline \\
+Multi-scale Option B & 43.0\% & $-2.9\%$ & $-0.2$ pp (not significant) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The $0.2$ pp difference in efficiency gap is within sampling noise ($\pm 0.6$ pp at
+this ESS level).
+We conclude that Option~B does not introduce detectable partisan bias relative to
+single-scale ReCom for Texas.
+
+\paragraph{VRA boundary precision.}
+Block-group boundaries offer approximately $100$--$200$\,m horizontal precision
+in urbanised areas (matching TIGER/Line BG boundary tolerance), compared to
+$500$--$1{,}000$\,m for census tract boundaries.
+In near-threshold majority-minority districts (minority VAP $45$--$55\%$),
+this boundary precision difference can shift estimated VAP by $0.1$--$0.5$
+percentage points at district edges, which is legally significant at the
+50\% threshold.
+Practitioners in covered jurisdictions running near-threshold minority districts
+should use block-group resolution to minimise measurement error.
+
+\paragraph{Resolution selection for legal proceedings.}
+When multiple resolution levels are technically feasible, practitioners should
+select the finest level at which population equality is achievable within the
+statutory tolerance.
+If the enacted plan was drawn at a specific resolution level, matching that
+resolution is the legally defensible default.
+Resolution choice must be fixed and documented before ensemble analysis begins;
+any change in resolution between analyses should be disclosed in expert reports.

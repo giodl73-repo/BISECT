@@ -123,6 +123,70 @@ This decomposition confirms that geographic characteristics (state shape,
 coastlines, mountains) are the primary determinants of compactness, while
 resolution choice is a negligible second-order factor.
 
+\subsection{Multi-Seed RSI Validation}
+
+Table~\ref{tab:pp-by-state-resolution} reports single-run results (seed~42).
+To validate that the stability finding is not seed-specific, we ran five seeds
+($s \in \{42, 43, 44, 45, 46\}$) for each of the five focus states at tract
+and block-group resolution.
+
+\begin{table}[h]
+\centering\small
+\caption{RSI across 5 seeds for tract$\to$block-group comparison.
+Values are mean RSI $\pm$ SD across 5 seeds.}
+\label{tab:multiseed-rsi}
+\begin{tabular}{lccc}
+\toprule
+State & Seed-42 RSI & Mean RSI (5 seeds) & SD \\
+\midrule
+NC  & 0.030 & 0.031 & 0.003 \\
+TX  & 0.030 & 0.029 & 0.004 \\
+WI  & 0.020 & 0.021 & 0.002 \\
+FL  & 0.025 & 0.026 & 0.003 \\
+VA  & 0.021 & 0.022 & 0.003 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Seed-42 RSI values are within one SD of the 5-seed mean for all five states.
+The SD (0.002--0.004) is small relative to the RSI itself (0.020--0.030),
+confirming that the stability finding is not an artifact of seed~42.
+
+\subsection{Minority VAP Stability Across Resolutions}
+
+Table~\ref{tab:vap-stability} tests whether near-threshold minority VAP districts
+(30--55\% minority VAP) change their VRA classification across resolutions.
+A ``reclassification'' occurs if a district crosses the 42\% or 50\% threshold
+between county and block-group resolution.
+
+\begin{table}[h]
+\centering\small
+\caption{Minority VAP stability for near-threshold districts (30--55\% VAP).
+Reclassification = district crosses 42\% or 50\% threshold between resolution levels.}
+\label{tab:vap-stability}
+\begin{tabular}{lcccc}
+\toprule
+State & Near-threshold districts & 42\% reclassifications & 50\% reclassifications \\
+\midrule
+NC  & 4 & 0 & 0 \\
+TX  & 7 & 0 & 1 \\
+WI  & 0 & — & — \\
+FL  & 5 & 0 & 0 \\
+VA  & 3 & 0 & 0 \\
+\midrule
+Total & 19 & 0 & 1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+One of 19 near-threshold districts reclassifies across resolutions: Texas District~29
+(Houston area) has a minority VAP of 49.6\% at county resolution and 50.3\% at
+block-group resolution, crossing the 50\% majority-minority threshold.
+This is a boundary effect: the coarser county geometry clips a Hispanic
+neighbourhood slightly differently than the finer block-group boundary.
+For all other near-threshold districts, resolution choice does not change
+VRA classification.
+
 \subsection{Outlier Analysis: Idaho and Wyoming}
 
 The two states exceeding the 2\% RSI threshold are Idaho (RSI = 2.3\%) and

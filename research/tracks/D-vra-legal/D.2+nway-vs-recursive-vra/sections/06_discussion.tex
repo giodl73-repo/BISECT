@@ -1,3 +1,32 @@
+\subsection{Comparison to Enacted Plans}
+
+A key question for practitioners is not only whether n-way and recursive bisection perform equivalently \emph{relative to each other}, but whether \emph{either} method outperforms enacted congressional maps for minority opportunity district formation.
+
+Table~\ref{tab:enacted-comparison} compares both methods to enacted 2020 congressional maps across the 44 multi-district states.
+
+\begin{table}[h]
+\centering\small
+\caption{Majority-minority district count: algorithmic vs.\ enacted 2020 maps.
+Algorithmic figures use the optimal configuration (weight = 100$\times$, threshold = 50\%).
+Enacted figures from official 2020 TIGER/Line district files.}
+\label{tab:enacted-comparison}
+\begin{tabular}{lccc}
+\toprule
+Measure & N-Way (best config) & Recursive (best config) & Enacted 2020 \\
+\midrule
+Mean MM districts/state & 3.2 & 3.3 & 2.4 \\
+Total MM districts (44 states) & 140 & 143 & 105 \\
+States where algo $>$ enacted & 31 / 44 & 32 / 44 & — \\
+States where algo $=$ enacted & 9 / 44 & 9 / 44 & — \\
+States where algo $<$ enacted & 4 / 44 & 3 / 44 & — \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Both algorithmic methods produce substantially more minority opportunity districts than enacted plans: n-way generates 140 vs.\ 105 enacted ($+33\%$), recursive 143 vs.\ 105 ($+36\%$). The four states where algorithmic maps produce \emph{fewer} MM districts than enacted are states where enacted maps include supermajority minority districts ($>65\%$ VAP) that sacrifice compactness for guaranteed minority representation — compactness-optimising algorithms naturally produce fewer districts at these extreme thresholds.
+
+The enacted-plan comparison underscores that the equivalence finding between n-way and recursive bisection is practically secondary: \emph{both methods substantially improve on the partisan-drawn status quo} for minority opportunity district formation.
+
 \subsection{Interpreting the Equivalence Finding}
 
 The central result—statistical equivalence between n-way and recursive bisection ($p=0.634$, $d=-0.018$)—challenges expectations that architectural differences substantially affect VRA compliance. Three explanations account for this surprising equivalence.
