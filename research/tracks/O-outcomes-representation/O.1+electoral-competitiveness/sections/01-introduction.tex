@@ -1,0 +1,29 @@
+\section{Introduction}
+
+Electoral competitiveness is a fundamental democratic value: competitive
+elections hold representatives accountable, encourage voter participation,
+and reduce the influence of incumbency advantages.
+Partisan gerrymandering directly reduces competitiveness by design ---
+the map-drawer's explicit goal is to create safe districts for their party
+while concentrating opposition voters into a small number of supermajority
+districts.
+
+Algorithmic redistricting cannot replicate this strategy because it cannot
+access partisan data.
+But the question of interest for policy is stronger: do algorithmic plans
+produce \emph{more} competitive districts than enacted gerrymanders,
+or do they merely avoid making things worse?
+
+This paper provides the first systematic answer using five study states,
+two plan types (bisect algorithmic and enacted 2022), and two competitiveness
+metrics: the competitive district fraction (margin $< 10$ pp) and the
+efficiency gap~\citep{stephanopoulos2015partisan}.
+
+\paragraph{Causal identification.}
+We treat the comparison between bisect and enacted plans as a
+counterfactual: had the enacted plan been replaced by the algorithmic plan,
+what fraction of competitive districts would exist?
+This is not a randomised experiment; we cannot control for all factors that
+differ between the two plans beyond competitiveness.
+However, since both plans use the same census geography and population data,
+the comparison isolates the effect of the mapmaking process itself.

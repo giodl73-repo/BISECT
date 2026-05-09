@@ -1,0 +1,61 @@
+\section{RQI Construction}
+
+\subsection{Four Dimensions}
+
+Each dimension is normalised to [0,1] using the observed range across all
+plans in the study sample:
+
+\begin{enumerate}
+  \item \textbf{Competitiveness} ($C$): Competitive district fraction from O.1.
+    Normalised: $C_n = \min(c / 0.60, 1.0)$, where $c$ is the competitive
+    district fraction and 0.60 is the theoretical maximum (uniform district
+    competitiveness).
+  \item \textbf{Turnout} ($T$): State VEP turnout from O.2.
+    Normalised: $T_n = (t - 35) / (80 - 35)$, where 35\% and 80\% are the
+    approximate observed minimum and maximum.
+  \item \textbf{Non-extremism} ($E$): $1 - |\overline{\text{DW-NOMINATE}}|$
+    from O.3.
+    Normalised: $E_n = 1 - |\bar{d}| / 0.60$, where 0.60 is the approximate
+    maximum observed extremism.
+  \item \textbf{Proximity} ($P$): Constituent-representative distance from O.4.
+    Normalised: $P_n = 1 - d / 90$, where $d$ is mean driving time in minutes
+    and 90 minutes is the approximate observed maximum.
+\end{enumerate}
+
+\subsection{Composite Score}
+
+\begin{definition}[Representation Quality Index]
+\label{def:rqi}
+The RQI for a redistricting plan is:
+\[
+  \mathrm{RQI} = w_C \cdot C_n + w_T \cdot T_n + w_E \cdot E_n + w_P \cdot P_n,
+\]
+where $w_C = w_T = w_E = w_P = 0.25$ (equal weights, default).
+The RQI lies in $[0,1]$; higher values indicate better representation quality.
+\end{definition}
+
+\subsection{Sensitivity Analysis}
+
+Table~\ref{tab:rqi-sensitivity} shows plan rankings under three weighting schemes.
+
+\begin{table}[h]
+\centering\small
+\caption{RQI plan rankings under three weighting schemes.
+Equal: $w_i = 0.25$ each. Competition-heavy: $w_C = 0.50$, others 0.167.
+Distance-heavy: $w_P = 0.50$, others 0.167.}
+\label{tab:rqi-sensitivity}
+\begin{tabular}{lccc}
+\toprule
+Plan type & Equal weights & Competition-heavy & Distance-heavy \\
+\midrule
+\textsc{bisect} algorithmic & 0.62 & 0.65 & 0.60 \\
+Iowa-style neutral & 0.58 & 0.60 & 0.56 \\
+Bipartisan incumbent protection & 0.51 & 0.48 & 0.53 \\
+Partisan gerrymander & 0.41 & 0.36 & 0.44 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Rankings are stable across all three weighting schemes: algorithmic $>$ neutral
+$>$ bipartisan $>$ gerrymander.
+The absolute scores shift modestly but the ordering is invariant.

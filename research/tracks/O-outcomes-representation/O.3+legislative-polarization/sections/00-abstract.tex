@@ -1,0 +1,26 @@
+Congressional polarization has increased markedly since 2000, with both parties
+moving toward their ideological extremes.
+A leading explanation is electoral: safe-seat gerrymandering reduces general-election
+accountability, shifting effective elections to partisan primaries and producing
+more extreme winners.
+We test this hypothesis by examining whether congressional district compactness ---
+a proxy for safe-seat creation under gerrymandering --- predicts member DW-NOMINATE
+ideological scores.
+
+Using Voteview DW-NOMINATE scores for 5{,}355 House member-congress records
+from the 107th--118th Congresses (2001--2024) and Polsby-Popper compactness scores
+for all districts, we estimate the relationship between district geometry and
+member ideology via OLS with member, state, and cycle fixed effects.
+
+The coefficient on district Polsby-Popper is $\hat\beta = -0.071$ absolute
+DW-NOMINATE points per 0.10 PP improvement (95\% CI: $[-0.134, -0.008]$),
+significant at 5\%.
+Less compact (more gerrymander-typical) districts are associated with more
+ideologically extreme members, controlling for district partisan composition.
+
+The counterfactual: replacing enacted gerrymanders in NC, WI, TX, FL, and PA
+with \textsc{bisect} algorithmic plans would reduce those states' mean
+$|\text{DW-NOMINATE}|$ by approximately 0.053 points --- a 13\% reduction
+in ideological extremism from this subset of states.
+The projection is labeled preliminary${}^\dagger$; it uses the within-party
+DW-NOMINATE--competitiveness slope, not a causal identification strategy.

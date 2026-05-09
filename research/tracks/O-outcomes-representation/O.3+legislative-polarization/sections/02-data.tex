@@ -1,0 +1,31 @@
+\section{Data}
+
+\subsection{Voteview DW-NOMINATE}
+
+We use the Voteview.com DW-NOMINATE first-dimension ideal point estimates
+for all House members from the 107th through 118th Congresses (2001--2024),
+downloaded from \url{https://voteview.com/static/data/out/members/HSall\_members.csv}~\citep{lewis2024voteview}.
+The dataset contains 5{,}355 member-congress records, excluding members
+with fewer than 10 votes (insufficient data).
+
+DW-NOMINATE dim1 ranges approximately from $-1$ (most liberal)
+to $+1$ (most conservative).
+We use the absolute value $|\text{dim1}|$ as the polarization measure
+(higher = more extreme from the centre).
+
+\subsection{Compactness Data}
+
+District Polsby-Popper scores by congress are derived from the corresponding
+redistricting cycle's enacted boundary files.
+For the 107th--112th Congresses (2001--2012): the 2000 cycle enacted maps.
+For the 113th--117th Congresses (2013--2022): the 2010 cycle enacted maps.
+For the 118th Congress (2023--2024): the 2020 cycle enacted maps.
+\textsc{bisect} compactness scores are from the 2020 algorithmic maps.
+
+\subsection{District Partisan Composition}
+
+We control for district partisan composition using the presidential vote
+share from the most recent presidential election preceding each Congress.
+Source: VEST precinct returns areal-interpolated to districts.
+For states where full VEST data is unavailable, we use MIT Election Lab
+county presidential returns.

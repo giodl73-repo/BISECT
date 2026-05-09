@@ -1,0 +1,49 @@
+\section{Data and Method}
+
+\subsection{District Partisan Composition}
+
+District-level presidential vote shares are derived from VEST 2020 precinct
+returns~\citep{vest2022} areal-interpolated to district assignments via
+\texttt{bisect label-analyze --types partisan}.
+For enacted plans: interpolated to the 2022 enacted district boundaries.
+For bisect plans: interpolated to the 2020 bisect district assignments.
+
+\paragraph{Note on data availability.}
+VEST precinct data for NC, WI, TX, FL, and PA (2020) were used in prior bisect
+analysis (L-track partisan metrics, B.11 NC results).
+The partisan analysis here uses the district-level outputs already computed
+by the bisect pipeline rather than raw precinct data.
+
+\subsection{Competitiveness Measures}
+
+\begin{definition}[Competitive district]
+A district is \emph{competitive} if the two-party presidential vote margin is
+less than 10 percentage points: $|v_i^D - 0.50| < 0.10$, where $v_i^D$ is
+the Democratic presidential vote share in district $i$.
+\end{definition}
+
+\begin{definition}[Efficiency gap]
+Following Stephanopoulos \& McGhee~\citep{stephanopoulos2015partisan}:
+$\mathrm{EG} = (\text{D wasted votes} - \text{R wasted votes}) / \text{total votes}$.
+Negative EG indicates Democratic advantage (Republicans waste more votes);
+positive indicates Republican advantage.
+\end{definition}
+
+\subsection{Plans Compared}
+
+\begin{table}[h]
+\centering\small
+\caption{Plans compared for each study state.}
+\label{tab:plans-compared}
+\begin{tabular}{lll}
+\toprule
+State & Bisect plan & Enacted plan \\
+\midrule
+NC & \texttt{bisect state --state NC --year 2020} & NC 2022 enacted (post-Harper v.\ Hall) \\
+WI & \texttt{bisect state --state WI --year 2020} & WI 2022 enacted \\
+TX & \texttt{bisect state --state TX --year 2020} & TX 2021 enacted \\
+FL & \texttt{bisect state --state FL --year 2020} & FL 2022 enacted \\
+PA & \texttt{bisect state --state PA --year 2020} & PA 2022 enacted (Commonwealth Court) \\
+\bottomrule
+\end{tabular}
+\end{table}

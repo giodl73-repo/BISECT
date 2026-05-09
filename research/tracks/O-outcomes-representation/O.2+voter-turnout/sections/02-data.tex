@@ -1,0 +1,49 @@
+\section{Data}
+
+\subsection{Turnout Data}
+
+We use state-level VEP (voting-eligible population) turnout from the
+United States Elections Project~\citep{mcdonald2002turnout}, which
+compiles official certified vote totals and Census-based VEP estimates.
+VEP turnout is the preferred measure because it excludes ineligible voters
+(non-citizens, felons in restricted states) from the denominator.
+
+Table~\ref{tab:turnout-summary} reports state-level VEP turnout for the
+five study states across four election cycles.
+
+\begin{table}[h]
+\centering\small
+\caption{VEP turnout (\%) for study states, 2016--2022.
+Source: United States Elections Project.}
+\label{tab:turnout-summary}
+\begin{tabular}{lccccc}
+\toprule
+State & 2016 & 2018 & 2020 & 2022 & Mean (cycles) \\
+\midrule
+NC & 64.5 & 49.7 & 74.5 & 48.3 & 59.3 \\
+WI & 70.8 & 59.5 & 75.8 & 57.4 & 65.9 \\
+TX & 51.6 & 46.3 & 60.0 & 38.8 & 49.2 \\
+FL & 65.4 & 52.2 & 71.7 & 54.0 & 60.8 \\
+PA & 69.2 & 52.8 & 72.8 & 47.8 & 60.7 \\
+\midrule
+Study state mean & 64.3 & 52.1 & 71.0 & 49.3 & 59.2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{County-level approximation.}
+For the district-level regression, we use county-level VEP estimates
+derived from the state-level totals and county presidential vote shares
+from VEST~\citep{vest2022}. This introduces measurement error in the
+dependent variable; we treat the OLS coefficient as an attenuated estimate
+of the true district-level effect.
+
+\subsection{Compactness Data}
+
+District-level Polsby-Popper scores are from the bisect pipeline's
+compactness analysis (\texttt{bisect label-analyze --types compactness}).
+For enacted plans: from the 2020 cycle enacted map.
+For bisect plans: from the 2020 congressional configuration
+(\texttt{bisect build official\_2020 --year 2020}).
+
+National means: bisect plans 0.361, enacted gerrymanders 0.286.

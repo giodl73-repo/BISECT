@@ -47,7 +47,7 @@ data}.
 Applied to all 50 states across three census decades (2000/2010/2020), the
 algorithm produces 435 congressional districts with near-perfect population
 equality, geographic contiguity, and geometric compactness. The research
-program comprises \textbf{120+ papers across twelve tracks (A--M)}, spanning
+program comprises \textbf{190+ papers across eighteen tracks (A--S)}, spanning
 algorithm design and validation (Tracks B--C), legal compliance (Track D),
 experimental extensions (Tracks E--F), ensemble-based plan evaluation
 (Tracks G--H), incumbency and apportionment (Tracks I--J), compactness
@@ -85,11 +85,12 @@ papers across all tracks are in draft. The overall research program is ongoing.
 \section{Portfolio Architecture}
 % =============================================================================
 
-The portfolio is organized into twelve tracks. Track A synthesizes all other
+The portfolio is organized into eighteen tracks. Track A synthesizes all other
 tracks; Tracks B--H generate the empirical, algorithmic, legal, and ensemble
 results that the original synthesis draws on; Tracks I--M extend the program
 to incumbency, apportionment, compactness, partisan fairness, and community
-character weights.
+character weights; Tracks N--S extend to population counting, democratic outcomes,
+reform pathways, 2030 planning, adversarial robustness, and statistical inference.
 
 \vspace{6pt}
 
@@ -164,10 +165,40 @@ character weights.
     Seven measurable signals (economic, land use, housing, commuting,
     topographic, administrative, transit) operationalizing communities
     of interest doctrine &
-    9 \\
+    9 \\[4pt]
+
+\textbf{N} & Population Counting &
+    Who counts in the balance metric: total pop vs.\ citizen VAP vs.\ prison-adjusted;
+    N.5 definitive 50-state comparison; Evenwel v.\ Abbott implications &
+    6 \\[4pt]
+
+\textbf{O} & Outcomes \& Representation &
+    Does compact redistricting improve democracy? RQI: bisect plans 0.62 vs.\ 0.41
+    enacted; $+23$pp competitive districts; $-0.07$ DW-NOMINATE; $-14$min distance &
+    6 \\[4pt]
+
+\textbf{P} & Reform Pathways &
+    Federal legislation (DIA), ballot initiatives (CA/CO/MI), commission integration,
+    court-ordered algorithmic remedies, implementation costs ($<\$50$K) &
+    6 \\[4pt]
+
+\textbf{Q} & 2030 Forward Analysis &
+    Demographic projections (TX$+3$, NY$-2$), data infrastructure (43 states need BG),
+    TX $k=41$ prime fallback proved, ratio-optimal recommended &
+    5 \\[4pt]
+
+\textbf{R} & Adversarial Robustness &
+    Five gaming vectors; combined max $< 0.5$ seats nationally; all detectable
+    via SHA-256 audit chain; certificate pinning limitation documented &
+    5 \\[4pt]
+
+\textbf{S} & Statistical Inference &
+    ESS-corrected permutation test (p=0.004 for NC at 10K steps); Bayesian Detection
+    Score via Beta posterior; FDR control on 1{,}050 L-track tests &
+    5 \\
 
 \bottomrule
-\caption{Portfolio track summary (120+ papers across twelve tracks A--M).}
+\caption{Portfolio track summary (190+ papers across eighteen tracks A--S).}
 \label{tab:tracks}
 \end{longtable}
 
