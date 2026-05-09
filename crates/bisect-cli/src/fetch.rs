@@ -117,9 +117,10 @@ pub fn build_fetch_list(
     let want_tiger  = all_types || data_types.iter().any(|t| matches!(t, DataType::Tiger));
     let want_pl     = all_types || data_types.iter().any(|t| matches!(t, DataType::Redistricting));
     let want_adj    = all_types || data_types.iter().any(|t| matches!(t, DataType::Adjacency));
-    let want_lodes  = data_types.iter().any(|t| matches!(t, DataType::Lodes));
-    let want_school = data_types.iter().any(|t| matches!(t, DataType::SchoolDistricts));
-    let want_eia    = data_types.iter().any(|t| matches!(t, DataType::Eia861));
+    let want_lodes    = data_types.iter().any(|t| matches!(t, DataType::Lodes));
+    let want_lodes_od = data_types.iter().any(|t| matches!(t, DataType::LodesOd));
+    let want_school   = data_types.iter().any(|t| matches!(t, DataType::SchoolDistricts));
+    let want_eia      = data_types.iter().any(|t| matches!(t, DataType::Eia861));
 
     // Data types that exist as CLI flags but are not yet downloaded by `bisect fetch`.
     let want_elections = !all_types && data_types.iter().any(|t| matches!(t, DataType::Elections));
@@ -226,6 +227,29 @@ pub fn build_fetch_list(
                 state_code: code.clone(),
                 year: year.to_string(),
                 kind: "lodes-wac".to_string(),
+                url: Some(url),
+                available_locally: local_path.exists(),
+                local_path,
+                done_marker,
+            });
+        }
+
+        // LODES OD (Origin-Destination) — one CSV.gz per state per year.
+        // URL: https://lehd.ces.census.gov/data/lodes/LODES8/{abbr}/od/{abbr}_od_main_JT00_{year}.csv.gz
+        // Aggregated block-pair->tract-pair CSV saved to data/{year}/lodes/{state}_od_tract.csv
+        if want_lodes_od {
+            let abbr = code.to_lowercase();
+            let url = format!(
+                "https://lehd.ces.census.gov/data/lodes/LODES8/{abbr}/od/{abbr}_od_main_JT00_{year}.csv.gz"
+            );
+            let local_path = data_dir.join(year).join("lodes")
+                .join(format!("{}_od_tract.csv", state_lower));
+            let done_marker = data_dir.join(year).join("lodes")
+                .join(format!("{}_od_tract.done", state_lower));
+            items.push(FetchItem {
+                state_code: code.clone(),
+                year: year.to_string(),
+                kind: "lodes-od".to_string(),
                 url: Some(url),
                 available_locally: local_path.exists(),
                 local_path,
@@ -395,13 +419,23 @@ pub fn download_items(
             }
 
             "lodes-wac" => {
-                // LODES WAC: download .csv.gz, decompress, aggregate blocks→tracts, save CSV
+                // LODES WAC: download .csv.gz, decompress, aggregate blocks->tracts, save CSV
                 let url = item.url.as_deref().unwrap();
                 let dest_dir = item.local_path.parent().unwrap();
                 println!("[DOWN] {} {} lodes-wac <- {}", item.state_code, item.year,
                     url.split('/').last().unwrap_or(url));
                 std::fs::create_dir_all(dest_dir).map_err(|e| e.to_string())?;
                 download_lodes_wac(url, &item.local_path)?;
+            }
+
+            "lodes-od" => {
+                // LODES OD: download .csv.gz, decompress, aggregate block pairs->tract pairs, save CSV
+                let url = item.url.as_deref().unwrap();
+                let dest_dir = item.local_path.parent().unwrap();
+                println!("[DOWN] {} {} lodes-od <- {}", item.state_code, item.year,
+                    url.split('/').last().unwrap_or(url));
+                std::fs::create_dir_all(dest_dir).map_err(|e| e.to_string())?;
+                download_lodes_od(url, &item.local_path)?;
             }
 
             _ => {
@@ -516,6 +550,93 @@ pub fn download_lodes_wac(url: &str, dest_path: &Path) -> Result<(), String> {
             .map_err(|e| e.to_string())?;
     }
     println!("[OK] LODES WAC aggregated to {}", dest_path.display());
+    Ok(())
+}
+
+/// Download LODES OD .csv.gz, decompress, aggregate census block-pair rows to tract-pair level,
+/// and save a compact tract-level OD CSV to `dest_path`.
+///
+/// Input format: h_geocode (15-char home block GEOID), w_geocode (15-char work block GEOID),
+///               S000 (total jobs for this home/work pair), plus other job-type columns
+/// Output format: home_geoid (11-char tract), work_geoid (11-char tract), s000 (total jobs)
+///
+/// Aggregation: for each row, take h_geocode[:11] as home_tract and w_geocode[:11] as
+/// work_tract; sum S000 for each (home_tract, work_tract) pair.
+/// Output sorted by home_geoid then work_geoid.
+///
+/// Graceful 404 skip: LODES OD is not available for all states/years — treated as soft skip.
+pub fn download_lodes_od(url: &str, dest_path: &std::path::Path) -> Result<(), String> {
+    use std::collections::HashMap;
+    use std::io::{BufRead, BufReader};
+
+    let response = reqwest::blocking::get(url)
+        .map_err(|e| format!("HTTP GET {url}: {e}"))?;
+    if !response.status().is_success() {
+        // LODES OD not available for all states/years — treat 404 as soft skip
+        if response.status().as_u16() == 404 {
+            println!("[WARN] LODES OD not available for this state/year (404). Skipping.");
+            // Write empty CSV so done marker still gets created
+            std::fs::write(dest_path, "home_geoid,work_geoid,s000\n")
+                .map_err(|e| format!("write empty lodes-od: {e}"))?;
+            return Ok(());
+        }
+        return Err(format!("HTTP {}: {url}", response.status()));
+    }
+
+    // Decompress gzip stream
+    let gz = flate2::read::GzDecoder::new(response);
+    let reader = BufReader::new(gz);
+
+    // Aggregate block-pair rows to tract-pair level
+    // (home_tract, work_tract) -> total S000 jobs
+    let mut od_pairs: HashMap<(String, String), u64> = HashMap::new();
+
+    let mut lines = reader.lines();
+    let header = match lines.next() {
+        Some(Ok(h)) => h,
+        _ => return Err("LODES OD: empty or unreadable file".to_string()),
+    };
+
+    // Find column indices from header
+    let cols: Vec<&str> = header.split(',').collect();
+    let idx = |name: &str| -> Result<usize, String> {
+        cols.iter().position(|c| c.trim_matches('"') == name)
+            .ok_or_else(|| format!("LODES OD: column '{name}' not found in header"))
+    };
+    let i_home = idx("h_geocode")?;
+    let i_work = idx("w_geocode")?;
+    let i_s000 = idx("S000")?;
+
+    for line in lines {
+        let line = line.map_err(|e| format!("LODES OD read: {e}"))?;
+        if line.trim().is_empty() { continue; }
+        let fields: Vec<&str> = line.split(',').collect();
+        if fields.len() <= i_s000 { continue; }
+
+        let home_block = fields[i_home].trim_matches('"');
+        let work_block = fields[i_work].trim_matches('"');
+        if home_block.len() < 11 || work_block.len() < 11 { continue; }
+
+        let home_tract = home_block[..11].to_string();
+        let work_tract = work_block[..11].to_string();
+        let jobs: u64 = fields[i_s000].trim_matches('"').parse::<u64>().unwrap_or(0);
+
+        *od_pairs.entry((home_tract, work_tract)).or_insert(0) += jobs;
+    }
+
+    // Write output CSV: sorted by home_geoid then work_geoid
+    let mut out = std::fs::File::create(dest_path)
+        .map_err(|e| format!("create {}: {e}", dest_path.display()))?;
+    use std::io::Write as IoWrite;
+    writeln!(out, "home_geoid,work_geoid,s000")
+        .map_err(|e| e.to_string())?;
+    let mut sorted: Vec<_> = od_pairs.into_iter().collect();
+    sorted.sort_by(|a, b| a.0.cmp(&b.0));
+    for ((home, work), jobs) in sorted {
+        writeln!(out, "{home},{work},{jobs}")
+            .map_err(|e| e.to_string())?;
+    }
+    println!("[OK] LODES OD aggregated to {}", dest_path.display());
     Ok(())
 }
 
@@ -1090,6 +1211,88 @@ w_geocode,C000,CNS01,CNS02,CNS05,CNS07,CNS08,CNS09,CNS10,CNS11\n\
         let _header = lines.next().unwrap().unwrap();
         let remaining: Vec<_> = lines.collect();
         assert!(remaining.is_empty(), "no data rows → aggregation produces empty tract map");
+    }
+
+    // ── L0: LODES OD fetch list + aggregation ────────────────────────────────
+
+    #[test]
+    fn test_build_fetch_list_lodes_od_url_pattern() {
+        use crate::args::DataType;
+        let manifest = load_manifest().unwrap();
+        let items = build_fetch_list(
+            &manifest, &["NC".to_string()], "2020", &[DataType::LodesOd]
+        );
+        assert_eq!(items.len(), 1);
+        let url = items[0].url.as_deref().unwrap();
+        assert!(url.contains("lehd.ces.census.gov"), "LODES OD URL must use LEHD server");
+        assert!(url.contains("/od/"), "LODES OD URL must contain /od/ path segment");
+        assert!(url.ends_with(".csv.gz"), "LODES OD must be .csv.gz");
+        assert_eq!(items[0].kind, "lodes-od");
+        assert!(items[0].local_path.to_string_lossy().contains("lodes"),
+            "LODES OD local path must be under lodes/ directory");
+        assert!(items[0].local_path.to_string_lossy().ends_with("_od_tract.csv"),
+            "LODES OD local path must end with _od_tract.csv");
+    }
+
+    #[test]
+    fn test_lodes_od_aggregation_sums_by_tract_pair() {
+        use std::io::Write;
+        use flate2::write::GzEncoder;
+        use flate2::Compression;
+
+        // 3 block-pair rows aggregating to 2 tract pairs:
+        //   row 1: h=010010201000001, w=010010301000001 -> home=01001020100, work=01001030100, S000=50
+        //   row 2: h=010010201000002, w=010010301000001 -> home=01001020100, work=01001030100, S000=30
+        //   row 3: h=010010202000001, w=010010401000001 -> home=01001020200, work=01001040100, S000=80
+        // Expected tract pairs: (01001020100, 01001030100)=80, (01001020200, 01001040100)=80
+        let csv_content = "\
+h_geocode,w_geocode,S000,SA01,SA02,SA03,SE01,SE02,SE03,SI01,SI02,SI03,createdate\n\
+\"010010201000001\",\"010010301000001\",50,10,20,20,15,20,15,10,20,20,20200101\n\
+\"010010201000002\",\"010010301000001\",30,5,10,15,10,10,10,5,15,10,20200101\n\
+\"010010202000001\",\"010010401000001\",80,20,30,30,25,30,25,20,30,30,20200101\n";
+
+        let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+        encoder.write_all(csv_content.as_bytes()).unwrap();
+        let gz_bytes = encoder.finish().unwrap();
+
+        // Decompress and parse to verify aggregation logic
+        let gz = flate2::read::GzDecoder::new(std::io::Cursor::new(gz_bytes));
+        let reader = std::io::BufReader::new(gz);
+        let mut lines = std::io::BufRead::lines(reader);
+
+        let header = lines.next().unwrap().unwrap();
+        let cols: Vec<&str> = header.split(',').collect();
+        let idx = |name: &str| cols.iter().position(|c| c.trim_matches('"') == name).unwrap();
+        let (i_home, i_work, i_s000) = (idx("h_geocode"), idx("w_geocode"), idx("S000"));
+
+        let mut od: std::collections::HashMap<(String, String), u64> = std::collections::HashMap::new();
+        for line in lines {
+            let line = line.unwrap();
+            if line.trim().is_empty() { continue; }
+            let fields: Vec<&str> = line.split(',').collect();
+            let home = fields[i_home].trim_matches('"');
+            let work = fields[i_work].trim_matches('"');
+            let home_tract = home[..11].to_string();
+            let work_tract = work[..11].to_string();
+            let jobs: u64 = fields[i_s000].trim_matches('"').parse().unwrap_or(0);
+            *od.entry((home_tract, work_tract)).or_insert(0) += jobs;
+        }
+
+        // Two rows with same home+work tract pair collapse to one: 50+30=80
+        assert_eq!(od.len(), 2, "3 block rows -> 2 tract pairs");
+        assert_eq!(
+            od[&("01001020100".to_string(), "01001030100".to_string())],
+            80,
+            "two block rows (S000=50,30) in same tract pair must sum to 80"
+        );
+        assert_eq!(
+            od[&("01001020200".to_string(), "01001040100".to_string())],
+            80,
+            "single block row S000=80 -> tract pair = 80"
+        );
+        // Total preserved: 50+30+80=160
+        let total: u64 = od.values().sum();
+        assert_eq!(total, 160, "aggregation must preserve total job count");
     }
 
     // ── L2: Real LODES download (requires internet, marked #[ignore]) ─────────

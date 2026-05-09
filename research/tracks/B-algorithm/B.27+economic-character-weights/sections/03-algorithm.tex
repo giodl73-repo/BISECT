@@ -13,13 +13,19 @@ We define three scalar signals:
     \label{eq:ci} \\
   \mathrm{IF}(t) &= \frac{C_{01}(t) + C_{02}(t) + C_{05}(t) + C_{08}(t)}{C_{0}(t)}
     \label{eq:if} \\
-  \mathrm{JPR}(t) &= \min\!\left(\frac{C_{0}(t)}{P(t)},\ 10.0\right)
+  \mathrm{JPR}(t) &= \min\!\left(\frac{C_{0}(t)}{10{,}000},\ 1.0\right)
     \label{eq:jpr}
 \end{align}
-where $P(t)$ is the total population of tract $t$ from the 2020 decennial
-census, and the cap of 10.0 in equation~(\ref{eq:jpr}) prevents
-pathologically high values in tracts with extremely high job concentration
-and very low residential population (e.g., airport tarmacs, data centers).
+where the fixed denominator of 10,000 jobs serves as an employment intensity
+scale factor (10,000 jobs $\approx$ a large employment centre at Research
+Triangle Park scale), and the cap of 1.0 ensures all three components of
+$\mathbf{e}(t)$ lie in $[0,1]$, so that cosine similarity is not dominated
+by scale differences between CI/IF and JPR.
+This is an \emph{employment intensity proxy} rather than the literal
+jobs-per-resident ratio; it provides ordinal information about whether a tract
+is predominantly residential (JPR~$\approx 0$), a moderate employment center
+(JPR~$\approx 0.3$), or a major employment concentration
+(JPR~$\rightarrow 1.0$).
 
 \paragraph{Sector groupings.}
 Equation~(\ref{eq:ci}) captures \emph{commercial intensity}: the fraction
@@ -34,18 +40,19 @@ of jobs in agriculture and forestry (CNS01), mining and oil extraction
 These are the sectors characteristic of industrial parks, logistics hubs,
 and extractive industry zones.
 
-Equation~(\ref{eq:jpr}) captures \emph{jobs per resident}: the ratio of
-total workplace jobs to resident population, capped at 10.
-Values near zero indicate bedroom suburbs or rural residential areas.
-Values above 1.0 indicate employment centers (more workers commute in than
-residents).
-Values above 5.0 indicate major employment concentrations such as university
+Equation~(\ref{eq:jpr}) captures \emph{employment intensity}: the total
+job count in a tract scaled to a $[0,1]$ proxy, where 1.0 represents a major
+employment concentration ($\geq$10,000 jobs).
+Values near zero indicate bedroom suburbs or rural residential areas with few
+workplace establishments.
+Values around 0.03--0.10 indicate moderate mixed-use areas.
+Values above 0.50 indicate major employment concentrations such as university
 research parks, hospital campuses, or industrial zones.
 
 The economic character vector is
 \begin{equation}
   \mathbf{e}(t) = \bigl(\mathrm{CI}(t),\ \mathrm{IF}(t),\ \mathrm{JPR}(t)\bigr)
-  \in [0,1] \times [0,1] \times [0, 10].
+  \in [0,1] \times [0,1] \times [0,1].
   \label{eq:econ-char}
 \end{equation}
 

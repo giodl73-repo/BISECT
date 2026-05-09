@@ -1309,6 +1309,10 @@ pub enum WeightMode {
     /// Download: bisect fetch --type lodes --year 2020 --states <STATE>
     #[value(name = "economic-character")]
     EconomicCharacter,
+    /// Administrative zone co-membership weights (M.6). Requires TIGER school districts
+    /// and EIA Form 861. Download: bisect fetch --type school-districts --type eia-861
+    #[value(name = "zone-membership")]
+    ZoneMembership,
 }
 
 /// Layer 3 compositor: how to search the seed space.
@@ -2752,11 +2756,13 @@ mod tests {
     fn weight_mode_all_variants() {
         use clap::ValueEnum;
         let cases: &[(&str, WeightMode)] = &[
-            ("unweighted",   WeightMode::Unweighted),
-            ("geographic",   WeightMode::Geographic),
-            ("county",       WeightMode::County),
-            ("vra-aligned",  WeightMode::VraAligned),
-            ("proportional", WeightMode::Proportional),
+            ("unweighted",        WeightMode::Unweighted),
+            ("geographic",        WeightMode::Geographic),
+            ("county",            WeightMode::County),
+            ("vra-aligned",       WeightMode::VraAligned),
+            ("proportional",      WeightMode::Proportional),
+            ("economic-character",WeightMode::EconomicCharacter),
+            ("zone-membership",   WeightMode::ZoneMembership),
         ];
         for (s, expected) in cases {
             let parsed = WeightMode::from_str(s, true)
@@ -2997,6 +3003,11 @@ pub enum DataType {
     /// Source: U.S. Energy Information Administration, https://www.eia.gov/electricity/data/eia861/
     #[value(name = "eia-861")]
     Eia861,
+    /// LODES OD (Origin-Destination) data — home/work tract pairs with job counts.
+    /// Used for M.4 commuting shed similarity weights.
+    /// Source: Census Bureau LEHD program, same as LODES WAC.
+    #[value(name = "lodes-od")]
+    LodesOd,
     #[value(name = "all")]
     All,
 }
@@ -3013,7 +3024,7 @@ pub struct FetchArgs {
     pub states: Vec<String>,
 
     /// Data types: tiger, redistricting, adjacency, enacted, geography, elections,
-    /// lodes, school-districts, eia-861, all [default: all]
+    /// lodes, lodes-od, school-districts, eia-861, all [default: all]
     #[arg(long = "type", num_args = 0.., value_delimiter = ' ')]
     pub data_types: Vec<DataType>,
 

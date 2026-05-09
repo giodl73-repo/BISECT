@@ -11,7 +11,7 @@ For each census tract we compute a three-dimensional economic character vector:
 commercial intensity (fraction of jobs in retail, finance, information, and
 real estate), industrial fraction (fraction of jobs in agriculture, mining,
 manufacturing, and transportation), and jobs per resident (total jobs divided
-by resident population, capped at 10).
+as an employment intensity proxy capped at 1.0, keeping all components on $[0,1]$).
 Edge weights between adjacent tracts are modulated by the cosine similarity
 between their character vectors: similar tracts (both residential, both
 commercial, both industrial) receive heavier edges that METIS avoids cutting;

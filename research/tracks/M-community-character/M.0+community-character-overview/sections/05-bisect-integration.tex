@@ -67,6 +67,14 @@ When $\alpha = 0$, the final weight is entirely determined by community characte
 similarity.
 The default in M-track configurations is $\alpha = 0.5$, which gives equal weight
 to geographic boundaries and community character.
+
+\textbf{Operational formula:} Equation~\ref{eq:alpha-blend} is the formula
+implemented in \texttt{crates/bisect-cli/src/edge\_weights.rs}
+(\texttt{EconomicCharacterWeighter}). Equation~\ref{eq:general-similarity} in
+\S\ref{sec:framework} is the conceptual intermediate: the pure cosine similarity
+case corresponds to $\alpha = 0$ with $w_{\mathrm{char}} = w_{\mathrm{base}} \times \mathrm{sim}$.
+In practice, $\alpha > 0$ is always used so that edges are never reduced to zero
+by a low-similarity pairing alone.
 The alpha parameter is tunable per plan configuration in the YAML config:
 \begin{verbatim}
 algorithm:

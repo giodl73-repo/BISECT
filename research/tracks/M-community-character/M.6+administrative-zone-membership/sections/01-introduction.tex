@@ -75,10 +75,9 @@ This paper is an instantiation of the community character framework defined in
 M.0~\citep{m0framework}.
 M.0 established the general form $w(u,v) = w_{\mathrm{base}} \times \mathrm{sim}(\mathbf{c}_u, \mathbf{c}_v)$.
 M.6 replaces cosine similarity with the zone co-membership ratio formula, which
-satisfies the same mathematical properties (symmetry, $[0,1]$ range, graceful
-degradation) but is more directly interpretable for legal purposes: it counts
-shared administrative relationships rather than computing a geometric angle between
-character vectors.
+satisfies the same core properties (symmetry, graceful degradation to $w_{\mathrm{base}}$ when no zones are shared) but uses an \emph{additive boost} variant rather than M.0's multiplicative attenuation (see \S\ref{sec:formula} Remark for full reconciliation).
+M.6's minimum weight is $w_{\mathrm{base}}$ (zone-membership never reduces an edge below baseline),
+whereas M.0's multiplicative formula can reduce edges toward zero for orthogonal character vectors.
 
 \subsection{Paper Organization}
 

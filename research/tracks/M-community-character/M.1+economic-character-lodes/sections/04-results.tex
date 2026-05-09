@@ -52,17 +52,17 @@ features that act as natural cut seams under M.1 weights:
 \paragraph{Research Triangle Park.}
 The RTP complex---spanning tracts in Durham, Orange, and Wake counties---is one
 of the largest planned research and development parks in the world.
-Its census tracts have \texttt{jobs\_per\_resident} values well above 5.0,
-reflecting the thousands of pharmaceutical, biotechnology, and information
+Its census tracts have employment intensity (JPR) values well above 0.50,
+reflecting tens of thousands of pharmaceutical, biotechnology, and information
 technology jobs concentrated in facilities that employ far more workers than
 live on-site.
 Under geographic weights, these high-JPR tracts are bundled with their
 residential neighbors: the geographic boundary length between RTP tracts
 and adjacent Cary or Morrisville residential tracts is long (they share
 extensive perimeter), so METIS treats them as expensive to cut.
-Under M.1 economic character weights, the JPR contrast ($\mathrm{JPR}_{\mathrm{RTP}} \approx 7$
-vs.\ $\mathrm{JPR}_{\mathrm{suburb}} \approx 0.3$) produces very low cosine
-similarity between these adjacent tracts, making the cut cheaper.
+Under M.1 economic character weights, the JPR contrast ($\mathrm{JPR}_{\mathrm{RTP}} \approx 0.7$
+vs.\ $\mathrm{JPR}_{\mathrm{suburb}} \approx 0.03$) produces very low cosine
+similarity between these adjacent tracts (approximately 0.23), making the cut cheaper.
 The resulting partition separates RTP from its residential neighbors more cleanly,
 producing districts that either contain the employment cluster or the residential
 neighborhoods surrounding it---not both.

@@ -96,15 +96,16 @@ port and logistics zones, and agricultural processing areas.
 These are the zones where a significant fraction of the working population is
 employed in production, extraction, or movement of physical goods.
 
-\paragraph{Jobs per resident (JPR).}
-Measures the total job count relative to tract population.
-Values below 0.3 indicate bedroom suburbs where most residents commute out.
-Values between 1.0 and 3.0 indicate employment centers that attract net
+\paragraph{Employment intensity (JPR).}
+Measures the total job count as an employment intensity proxy, scaled to $[0,1]$
+by dividing by 10,000 (a large employment centre threshold) and capping at 1.0.
+Values below 0.03 indicate bedroom suburbs where most residents commute out.
+Values between 0.10 and 0.30 indicate employment centers that attract net
 in-commuting.
-Values above 5.0 indicate major employment concentrations: university research
+Values above 0.50 indicate major employment concentrations: university research
 parks, hospital campuses, data centers, airport zones.
-JPR is capped at 10.0 to prevent numerical instability in tracts with
-very high job density and very low population.
+The fixed-denominator normalization keeps all three character-vector components
+on $[0,1]$, ensuring that cosine similarity is not dominated by scale differences.
 
 \paragraph{Why these three signals?}
 The three signals together cover the primary economic character dimensions

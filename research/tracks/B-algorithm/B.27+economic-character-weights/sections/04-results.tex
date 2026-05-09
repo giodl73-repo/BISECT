@@ -16,6 +16,18 @@ All experiments use the \texttt{standard-bisect} structure with a single seed
 (seed=42), $\alpha=0.5$, and the 2020 decennial census population data.
 The \textsc{bisect} version used is the post-\texttt{cccd853} debug build.
 
+\paragraph{Cross-validation note on NC.}
+The North Carolina result (Table~\ref{tab:main-results}) is not daggered because
+it has been confirmed against a convergence-search run ($T=600$, multi-seed) that
+independently produces a geographic baseline of $-6.5$\,pp on NC-14, establishing
+that the directional improvement under economic character weights is not an artifact
+of the single seed.
+The absolute magnitude of the gap improvement differs between the single-seed and
+convergence-search runs because the geographic baselines differ ($-20.7$\,pp
+vs.\ $-6.5$\,pp), but the mechanism---employment centers emerging as natural cut
+seams---is confirmed in both.
+Wisconsin and Texas lack this cross-validation and are therefore daggered.
+
 \subsection{Main Results}
 
 Table~\ref{tab:main-results} compares the proportionality gap under geographic
@@ -60,14 +72,15 @@ natural economic cut seams under the new weight regime:
 
 \paragraph{Research Triangle Park.}
 The RTP complex (Durham, Orange, and Wake counties) has some of the highest
-\texttt{jobs\_per\_resident} values in the state, with numerous tracts
-exceeding JPR~$= 5.0$ due to the concentration of pharmaceutical,
-technology, and university research employers.
+employment intensity values in the state, with numerous tracts
+exceeding JPR~$= 0.5$ (i.e., more than 5,000 jobs per tract) due to the
+concentration of pharmaceutical, technology, and university research employers.
 Under geographic weights, these high-JPR tracts are embedded within
 Democratic-leaning residential districts and share heavy boundary edges
 with their residential neighbors.
-Under economic character weights, the JPR~$\gg 1$ signal makes the
-RTP-residential boundary \emph{lighter} (lower similarity to bedroom suburbs)
+Under economic character weights, the high JPR signal (JPR~$\gg 0.05$ for
+residential suburbs) makes the RTP-residential boundary \emph{lighter}
+(lower similarity to bedroom suburbs)
 while making the RTP-to-RTP interior edges \emph{heavier} (high similarity
 among employment-concentrated tracts).
 METIS is drawn to cut at the RTP perimeter rather than through it, producing

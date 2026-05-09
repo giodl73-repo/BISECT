@@ -357,6 +357,79 @@ impl EdgeWeighter for CoiWeighter {
 }
 
 // ---------------------------------------------------------------------------
+// Step 7 -- Administrative zone co-membership (M.6)
+// ---------------------------------------------------------------------------
+
+/// Boosts edges between tracts that share administrative zones (school districts,
+/// utility service territories, etc.).
+///
+/// Formula: `w_new = w * (1 + alpha * score)`
+///
+/// where `score = shared_zones / available_zones` in [0.0, 1.0].
+///
+/// - `score = 1.0` (all zones shared) and `alpha = 1.0` -> `w * 2` (max bond)
+/// - `score = 0.0` (no zones shared) -> `w * 1` (unmodified)
+///
+/// Zone data is loaded from TIGER school district shapefiles and EIA Form 861
+/// service territory shapefiles via spatial join (Phase 2). Until Phase 2 is
+/// implemented, use the graceful-skip path in `build_edge_weights`.
+pub struct ZoneMembershipWeighter {
+    /// Per-edge precomputed co-membership score in [0.0, 1.0].
+    scores: HashMap<(usize, usize), f64>,
+    /// Boost factor (default 1.0). alpha=1.0 means full-shared zones -> 2x weight.
+    alpha: f64,
+}
+
+impl ZoneMembershipWeighter {
+    /// Build from per-node zone vectors. Each node has a `Vec<Option<String>>`
+    /// where index = zone_type, value = zone_id (`None` if zone unavailable).
+    ///
+    /// `score(u,v) = shared / available` where `available` counts zone types where
+    /// both nodes have a non-None assignment, and `shared` counts types where both
+    /// assignments are equal.
+    pub fn from_zone_assignments(
+        assignments: &[Vec<Option<String>>],
+        edges: &[(usize, usize)],
+        alpha: f64,
+    ) -> Self {
+        let mut scores = HashMap::new();
+        for &(u, v) in edges {
+            let zu = &assignments[u];
+            let zv = &assignments[v];
+            let n = zu.len().max(zv.len());
+            if n == 0 {
+                scores.insert((u, v), 0.0);
+                continue;
+            }
+            let mut shared = 0usize;
+            let mut available = 0usize;
+            for i in 0..n.min(zu.len()).min(zv.len()) {
+                if let (Some(a), Some(b)) = (&zu[i], &zv[i]) {
+                    available += 1;
+                    if a == b { shared += 1; }
+                }
+            }
+            let score = if available == 0 { 0.0 } else { shared as f64 / available as f64 };
+            scores.insert((u, v), score);
+        }
+        Self { scores, alpha }
+    }
+}
+
+impl EdgeWeighter for ZoneMembershipWeighter {
+    fn apply(&self, weights: EdgeMap) -> EdgeMap {
+        weights.into_iter().map(|((u, v), w)| {
+            let score = self.scores.get(&(u, v)).copied().unwrap_or(0.0);
+            // Additive boost: w * (1 + alpha * score)
+            // score=1 (all zones shared) and alpha=1.0 -> w * 2 (max bond)
+            // score=0 (no zones shared) -> w * 1 (unmodified)
+            let w_new = w * (1.0 + self.alpha * score);
+            ((u, v), w_new)
+        }).collect()
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -730,6 +803,65 @@ mod tests {
         // Both strong-R → same lean → factor 1.0
         assert!((out[&(0, 1)] - 400.0).abs() < 1e-9,
             "same-lean (both strong-R) should be unchanged, got {}", out[&(0, 1)]);
+    }
+
+    // ── ZoneMembershipWeighter L0 tests ─────────────────────────────────────
+
+    #[test]
+    fn test_zone_all_shared_doubles_weight() {
+        // All zone types shared, alpha=1.0 -> score=1.0 -> w * (1 + 1.0 * 1.0) = w * 2
+        let assignments = vec![
+            vec![Some("SchoolA".to_string()), Some("Utility1".to_string())],
+            vec![Some("SchoolA".to_string()), Some("Utility1".to_string())],
+        ];
+        let edges = vec![(0usize, 1usize)];
+        let weighter = ZoneMembershipWeighter::from_zone_assignments(&assignments, &edges, 1.0);
+        let weights = edge_map(&[((0, 1), 100.0)]);
+        let out = weighter.apply(weights);
+        assert!(
+            (out[&(0, 1)] - 200.0).abs() < 1e-9,
+            "all zones shared, alpha=1.0 must double weight, got {}",
+            out[&(0, 1)]
+        );
+    }
+
+    #[test]
+    fn test_zone_none_shared_unchanged() {
+        // No zone types shared -> score=0.0 -> w * (1 + alpha * 0) = w * 1 (unchanged)
+        let assignments = vec![
+            vec![Some("SchoolA".to_string()), Some("UtilityX".to_string())],
+            vec![Some("SchoolB".to_string()), Some("UtilityY".to_string())],
+        ];
+        let edges = vec![(0usize, 1usize)];
+        let weighter = ZoneMembershipWeighter::from_zone_assignments(&assignments, &edges, 1.0);
+        let weights = edge_map(&[((0, 1), 150.0)]);
+        let out = weighter.apply(weights);
+        assert!(
+            (out[&(0, 1)] - 150.0).abs() < 1e-9,
+            "no zones shared must leave weight unchanged, got {}",
+            out[&(0, 1)]
+        );
+    }
+
+    #[test]
+    fn test_zone_half_shared_factor() {
+        // 3 of 6 zones shared -> score = 0.5, alpha=1.0 -> w * (1 + 1.0 * 0.5) = w * 1.5
+        let a = Some("Same".to_string());
+        let b = Some("Diff_u".to_string());
+        let c = Some("Diff_v".to_string());
+        let assignments = vec![
+            vec![a.clone(), a.clone(), a.clone(), b.clone(), b.clone(), b.clone()],
+            vec![a.clone(), a.clone(), a.clone(), c.clone(), c.clone(), c.clone()],
+        ];
+        let edges = vec![(0usize, 1usize)];
+        let weighter = ZoneMembershipWeighter::from_zone_assignments(&assignments, &edges, 1.0);
+        let weights = edge_map(&[((0, 1), 200.0)]);
+        let out = weighter.apply(weights);
+        assert!(
+            (out[&(0, 1)] - 300.0).abs() < 1e-9,
+            "3/6 zones shared, alpha=1.0 must give weight * 1.5 = 300.0, got {}",
+            out[&(0, 1)]
+        );
     }
 
     // ── Multiple-step compose ordering ──────────────────────────────────────

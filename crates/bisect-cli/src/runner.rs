@@ -283,6 +283,12 @@ pub struct WeightSpec {
     /// Blend factor for economic character weighter [0.0, 1.0]. Default 0.5.
     /// alpha=1.0 → no effect; alpha=0.0 → fully similarity-driven.
     pub econ_alpha: f64,
+    /// Enable administrative zone co-membership weights (M.6). Requires TIGER school districts
+    /// and EIA Form 861 spatial join (Phase 2 — not yet implemented).
+    pub zone_membership: bool,
+    /// Boost factor for zone co-membership weighter. Default 1.0.
+    /// score=1 (all zones shared) → w * (1 + zone_alpha). score=0 → w unchanged.
+    pub zone_alpha: f64,
 }
 
 impl Default for WeightSpec {
@@ -300,6 +306,8 @@ impl Default for WeightSpec {
             directional_lambda: 0.0,
             economic_character: false,
             econ_alpha: 0.5,
+            zone_membership: false,
+            zone_alpha: 1.0,
         }
     }
 }
@@ -568,6 +576,7 @@ impl AlgorithmConfig {
                 WM::VraAligned         => WeightSpec { geographic: true,  minority_weighting: true, ..WeightSpec::default() },
                 WM::Proportional       => WeightSpec { geographic: true,  partisan_shares: args.partisan_shares.as_ref().map(std::path::PathBuf::from), ..WeightSpec::default() },
                 WM::EconomicCharacter  => WeightSpec { geographic: true,  economic_character: true, econ_alpha: 0.5, ..WeightSpec::default() },
+                WM::ZoneMembership     => WeightSpec { geographic: true,  zone_membership: true, zone_alpha: 1.0, ..WeightSpec::default() },
             };
         }
 
@@ -2428,6 +2437,14 @@ fn build_edge_weights(
                 eprintln!("WARNING: LODES WAC load error: {e}. Falling back to geographic weights.");
             }
         }
+    }
+
+    // Step 6: Zone co-membership (M.6).
+    if spec.zone_membership {
+        // Zone data loading deferred to Phase 2 — TIGER/EIA spatial join not yet implemented.
+        // For now: warn and skip gracefully. The weighter struct and CLI flag are wired.
+        eprintln!("WARNING: --weights-override zone-membership requires TIGER school district \
+                   and EIA Form 861 spatial join (Phase 2). Falling back to geographic weights.");
     }
 
     // If nothing was added to the composer, fall back to geographic weights
