@@ -1,0 +1,74 @@
+\section{The Multiple Testing Problem in Redistricting}
+\label{sec:testing}
+
+\subsection{The L-Track Test Battery}
+
+The L-track reports metrics for every state across every available
+census cycle.
+For the 2020 cycle, the 7-metric battery is applied to all 43 states
+with $k \geq 2$ districts.
+The 7 metrics and their null hypotheses are listed in Table~\ref{tab:metrics}.
+
+\begin{table}[h]
+\centering
+\caption{The seven L-track partisan fairness metrics with null hypothesis
+         and tail direction. PP: Polsby-Popper. EG: Efficiency Gap (Stephanopoulos and McGhee).
+         MM: Mean-Median. PB: Partisan Bias. SV: Seats-Votes curve slope.
+         $D$: Democratic seat count. DG: Declination.}
+\label{tab:metrics}
+\begin{tabular}{lllc}
+\toprule
+ID & Metric & Null hypothesis & Rejection tail \\
+\midrule
+$H_{\PP}$ & Polsby-Popper & Plan compactness $\in$ ensemble range & Low (gerrymandered = less compact) \\
+$H_{\rm EG}$ & Efficiency gap & EG $\in$ ensemble range & Both (favors either party) \\
+$H_{\rm MM}$ & Mean-median & MM $\in$ ensemble range & Both \\
+$H_{\rm PB}$ & Partisan bias & Bias $\in$ ensemble range & Both \\
+$H_{\rm SV}$ & Seats-votes slope & Slope $\in$ ensemble range & Both \\
+$H_D$ & Dem.\ seat count & $D$-seats $\in$ ensemble range & Both \\
+$H_{\rm DG}$ & Declination & $\in$ ensemble range & Both \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Expected False Positives at Each Scale}
+
+Table~\ref{tab:fp-scale} shows the expected number of false positives
+at each level of the analysis, assuming the null hypothesis is true
+for all tests (no state has a partisan gerrymander) and $\alpha = 0.05$.
+
+\begin{table}[h]
+\centering
+\caption{Expected false positives at different levels of the L-track analysis.}
+\label{tab:fp-scale}
+\begin{tabular}{lcccc}
+\toprule
+Level & Tests & $\alpha$ & E[FP] & FWER \\
+\midrule
+Single state, single metric & 1 & 0.05 & 0.05 & 5\% \\
+Single state, 7 metrics & 7 & 0.05 & 0.35 & 30\% \\
+Single cycle, 43 states, 7 metrics & 301 & 0.05 & 15.1 & $>99\%$ \\
+All 3 cycles, 50 states, 7 metrics & 1,050 & 0.05 & 52.5 & $>99\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The FWER (probability of at least one false positive) exceeds 99\% for
+any analysis involving more than a few states.
+This means that any claim of ``at least one significant finding'' in a
+50-state, 7-metric, 3-cycle analysis is virtually guaranteed to include
+at least one false positive---regardless of whether any state has
+actually been gerrymandered.
+
+\subsection{The Type I / Type II Tradeoff}
+
+Uncorrected testing at $\alpha = 0.05$ has high Type I error (false positives).
+The obvious correction---Bonferroni, which requires $p < 0.05/1{,}050 = 0.0000476$
+for significance---has very low Type I error but also very low power.
+A state at the 0.3rd percentile ($p = 0.003$) would not survive
+Bonferroni correction (which requires $p < 0.000048$).
+
+The Benjamini-Hochberg FDR procedure occupies the middle ground:
+it controls the expected fraction of significant findings that are false
+positives (at level $q$) while maintaining substantially more power
+than Bonferroni.

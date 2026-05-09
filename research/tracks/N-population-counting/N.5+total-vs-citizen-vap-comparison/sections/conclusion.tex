@@ -1,0 +1,15 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper has presented the first systematic 50-state empirical comparison of congressional redistricting outcomes under four population definitions: total population, total VAP, citizen VAP, and adjusted total (prison-corrected). The findings are clear and consistent.
+
+The choice of population definition matters---but asymmetrically. The total-vs.-citizen-VAP switch produces the largest redistricting disruption (3.2\% mean tract reassignment nationally, reaching 11.8\% in California) with a consistent Republican-advantaging partisan direction in all four high-immigration states. The prison adjustment produces a smaller disruption (0.8\%) with a consistent Democratic-advantaging correction that addresses a documented representation distortion. Compactness is robust across all four definitions in 48 of 50 states.
+
+Our recommendation---total population with prison adjustment---is grounded in these empirical findings: it corrects the most legally and morally problematic counting distortion (counting prisoners where they cannot vote, against their will) while avoiding the large disruptions, data-quality problems, and constitutional exposure of citizen-VAP redistricting. It also aligns with the Census Bureau's announced plans for the 2030 redistricting file.
+
+The 50-state table in Section~\ref{sec:fifty_state_table} is intended as a permanent litigation reference. Any court, legislature, or redistricting commission evaluating a population definition change for a specific state can find that state's row in Table~\ref{tab:fifty_state} to determine the expected magnitude of redistricting disruption, partisan direction, and compactness effect under each alternative. The data speaks for itself: population definition choice is not a technical detail but a redistricting decision with measurable, predictable, and directionally consistent political consequences.
+
+Future work should extend this analysis to the 2030 Census redistricting cycle, where the Census Bureau's prison-adjusted file will be available as an official data product and where ACS data quality improvements may narrow the CVAP sampling-error problems identified here. The bisect architecture---with \texttt{--population-source} as a first-class flag---is designed to accommodate these future data products without algorithmic modification.
+
+\paragraph{Acknowledgments.}
+The author thanks the Census Bureau for the P.L. 94-171 redistricting data and CVAP special tabulation, the Prison Policy Initiative for the 2020 facility database, and the Voting and Election Science Team for precinct-level presidential vote data.

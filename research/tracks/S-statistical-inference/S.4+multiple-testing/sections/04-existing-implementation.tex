@@ -1,0 +1,77 @@
+\section{The Existing Holm-Bonferroni Implementation}
+\label{sec:impl}
+
+\subsection{Current Implementation in bisect-analysis}
+
+The \bisect{} codebase already implements Holm-Bonferroni correction
+in the bloc voting analysis module.
+The relevant code is in:
+\begin{verbatim}
+crates/bisect-analysis/src/bloc_voting.rs
+\end{verbatim}
+
+The \texttt{BlocVotingResult} struct includes:
+\begin{verbatim}
+pub struct BlocVotingResult {
+    pub district_id: u32,
+    pub metric: String,
+    pub p_value_raw: f64,
+    pub p_value_bonferroni: f64,
+    pub p_value_holm: f64,  // Holm-Bonferroni corrected
+    pub significant_holm: bool,
+}
+\end{verbatim}
+
+The \texttt{p\_value\_holm} field is computed using the standard
+Holm-Bonferroni algorithm: sort p-values in ascending order, then
+for each p-value $p_{(k)}$, the Holm-corrected p-value is:
+\[
+  p_{(k)}^{\rm Holm} = \max_{j \leq k} \min\!\left[(m - j + 1) p_{(j)}, 1\right].
+\]
+
+\subsection{Why Holm Is Appropriate for Bloc Voting but Not L-Track}
+
+The Holm-Bonferroni procedure controls the FWER, which is appropriate
+for bloc voting analysis because:
+\begin{enumerate}
+\item The number of tests per state is small (typically $m = 5$--$20$
+  districts tested for VRA compliance).
+\item A false positive in VRA analysis has serious legal consequences:
+  incorrectly certifying a district as a majority-minority district when
+  it is not could constitute a VRA violation.
+\item FWER control ensures that the probability of any false VRA claim
+  is $\leq \alpha$.
+\end{enumerate}
+
+For the L-track portfolio analysis, these conditions do not hold:
+\begin{enumerate}
+\item The number of tests is large ($m = 1{,}050$), making FWER control
+  overly conservative.
+\item The consequence of a false positive (one borderline state is
+  flagged as potentially gerrymandered when it is not) is manageable:
+  further litigation will resolve the false positive.
+\item Many hypotheses are expected to be true (the 2010 and 2020 cycles
+  include genuinely gerrymandered maps), making FDR control more
+  powerful.
+\end{enumerate}
+
+\subsection{S.4's Extension}
+
+S.4 extends the existing implementation by adding a BH FDR module to
+\texttt{bisect-analysis}:
+\begin{verbatim}
+crates/bisect-analysis/src/fdr_correction.rs
+\end{verbatim}
+
+The module implements:
+\begin{itemize}
+\item Benjamini-Hochberg FDR at configurable level $q$
+\item Benjamini-Yekutieli correction for dependent tests
+\item Q-value computation~\citep{storey2002direct} for adaptive FDR estimation
+\item Integration with the L-track metric battery
+\end{itemize}
+
+The module is invoked via:
+\begin{verbatim}
+bisect analyze --types partisan-fdr --year 2020
+\end{verbatim}

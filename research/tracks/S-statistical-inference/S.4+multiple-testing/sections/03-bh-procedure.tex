@@ -1,0 +1,72 @@
+\section{The Benjamini-Hochberg Procedure}
+\label{sec:bh}
+
+\subsection{Definition}
+
+\begin{definition}[False Discovery Rate]
+Let $R$ be the number of rejected hypotheses and $V$ be the number of
+false rejections (false positives).
+The false discovery rate is:
+\[
+  \fdr = E\!\left[\frac{V}{\max(R, 1)}\right].
+\]
+The FDR is the expected proportion of rejections that are false positives.
+\end{definition}
+
+\begin{theorem}[Benjamini-Hochberg Procedure~\citep{bh1995}]
+\label{thm:bh}
+Let $p_{(1)} \leq p_{(2)} \leq \ldots \leq p_{(m)}$ be the ordered
+p-values for $m$ hypothesis tests.
+Define the BH threshold:
+\[
+  k^* = \max\left\{ k : p_{(k)} \leq \frac{k}{m} q \right\}.
+\]
+Reject all hypotheses $H_{(1)}, H_{(2)}, \ldots, H_{(k^*)}$.
+If no such $k^*$ exists, reject nothing.
+
+Under this procedure, $\fdr \leq q$ when the p-values for
+the true null hypotheses are independent (or positively correlated).
+\end{theorem}
+
+\begin{proof}
+See Benjamini and Hochberg~\citep{bh1995}, Theorem 1.
+The proof uses a representation of $V/R$ in terms of the spacings of
+the null p-values and applies a martingale argument.
+$\square$
+\end{proof}
+
+\subsection{Properties Relevant to Redistricting}
+
+\paragraph{Power advantage over Bonferroni.}
+The Bonferroni correction requires $p_{(k)} \leq \alpha/m$ for any
+rejection.
+The BH procedure's threshold for the $k$th smallest p-value is
+$kq/m$, which is $k$ times larger than Bonferroni for the same $\alpha = q$.
+For the ordered hypotheses at the bottom of the list ($k$ close to $m$),
+the BH threshold is close to $q$---much less conservative than Bonferroni.
+
+\paragraph{FDR vs.\ FWER.}
+Bonferroni controls FWER: $P(\text{any false positive}) \leq \alpha$.
+BH controls FDR: $E[\text{fraction of positives that are false}] \leq q$.
+FDR control is the appropriate objective when the goal is to identify
+a set of significant findings (e.g., ``these states have gerrymandered maps'')
+while accepting that a small fraction of the set may be false positives.
+FWER control is appropriate when any false positive is catastrophic
+(e.g., approving an unsafe drug).
+
+For redistricting, the goal is to identify states with partisan maps
+for further legal scrutiny.
+A small fraction of false identifications (demoted in subsequent
+litigation) is acceptable; missing genuine gerrymanders (false negatives)
+is the more costly error.
+FDR control at $q = 0.10$ is appropriate.
+
+\paragraph{Positive dependence.}
+The BH procedure's FDR guarantee extends to positively correlated
+p-values under the Benjamini-Yekutieli (BY) correction~\citep{by2001}.
+For redistricting metrics within a single state, the p-values are
+positively correlated (a genuinely gerrymandered map tends to be
+extreme on multiple metrics simultaneously).
+The BY correction would be more conservative than BH; we use BH
+as the primary procedure and note that it provides a lower bound
+on the FDR guarantee under positive correlation.

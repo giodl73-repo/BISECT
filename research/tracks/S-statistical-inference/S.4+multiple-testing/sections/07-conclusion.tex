@@ -1,0 +1,49 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+The multiple testing problem in redistricting is real and consequential.
+Without correction, a 50-state, 7-metric, 3-cycle analysis produces
+52 expected false positives at $\alpha = 0.05$---approximately one-third
+of the 147 uncorrected significant findings.
+The BH FDR procedure at $q = 0.10$ reduces this to at most 8.9 expected
+false positives while retaining 89 significant findings (60\% of the
+uncorrected set).
+
+The key result is substantively important: all clear gerrymanders
+(NC, WI, TX, PA enacted maps) remain significant after any reasonable
+correction procedure.
+These are genuine statistical outliers whose p-values ($< 0.004$) are
+far below any multiple testing threshold.
+The correction procedure accurately identifies the borderline cases
+as likely false positives, providing a principled basis for prioritising
+which states warrant further legal scrutiny.
+
+Three implementation recommendations follow from this analysis:
+
+\begin{enumerate}
+\item The BH FDR procedure (at $q = 0.10$) should be the default
+  for any multi-state, multi-metric redistricting analysis.
+  It is more powerful than Holm-Bonferroni for large-scale portfolio
+  analysis and controls a meaningful error rate.
+
+\item The existing Holm-Bonferroni implementation in \texttt{bloc\_voting.rs}
+  is appropriate for single-state VRA compliance analysis (where FWER
+  control is required) and should remain unchanged.
+  The new BH module in \texttt{fdr\_correction.rs} is for the L-track
+  portfolio analysis only.
+
+\item Expert reports should specify the correction procedure used and
+  report both the uncorrected and corrected significance levels.
+  A finding that is significant uncorrected but not after BH correction
+  should be flagged as ``borderline, not significant after FDR correction
+  at $q = 0.10$.''
+\end{enumerate}
+
+The Track S program's overall conclusion: redistricting inference can
+be made litigation-grade by applying three existing statistical tools---
+ESS correction (Component F1), calibrated p-values (S.1), and BH FDR
+correction (S.4)---to the standard ensemble analysis.
+None of these tools is novel; all are well-established in the statistical
+literature.
+What is novel is their application to the redistricting context with
+explicit state-specific parameters derived from G.4's diagnostic framework.

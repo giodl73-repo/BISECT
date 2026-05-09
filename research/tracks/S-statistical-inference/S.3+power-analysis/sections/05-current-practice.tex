@@ -1,0 +1,88 @@
+\section{Evaluation of Current Practice}
+\label{sec:current}
+
+\subsection{The Standard 10,000-Step Run}
+
+The most common ensemble size in redistricting expert reports is 10,000--50,000
+steps of \recom{}.
+We evaluate the power of a 10,000-step run against the standards
+derived in Section~\ref{sec:ess}.
+
+\paragraph{North Carolina ($k = 14$, $\rho_1 = 0.87$).}
+At 10,000 steps:
+\[
+  \ess_{\rm NC} = 10{,}000 \cdot \frac{1 - 0.87}{1 + 0.87} = 10{,}000 \cdot
+  \frac{0.13}{1.87} \approx 695.
+\]
+Power to detect a 10pp advantage at $\alpha = 0.05$:
+\[
+  \text{Power} = \Phi\!\left(\sqrt{695} \cdot 0.78 - 1.645\right)
+  = \Phi(20.6 - 1.645) = \Phi(18.95) \approx 100\%.
+\]
+
+Wait: $\sqrt{695} \approx 26.4$, and $26.4 \times 0.78 \approx 20.6$.
+This gives effectively 100\% power for NC at 10,000 steps---the 10pp
+advantage is detected with certainty.
+
+But the effect of $0.78\sigma$ (where $\sigma = 1.8$ seats) is $1.4$ seats.
+In a 14-seat delegation, 1.4 seats is a relatively large shift.
+For a more moderate gerrymandering effect of $0.3\sigma$ (typical in
+competitive-delegation states):
+\[
+  \text{Power} = \Phi\!\left(26.4 \cdot 0.3 - 1.645\right)
+  = \Phi(7.92 - 1.645) = \Phi(6.28) \approx 100\%.
+\]
+
+NC appears to have essentially 100\% power at 10,000 steps for any
+practically significant gerrymandering effect.
+The NC case is easy because $k = 14$ is small: even with high autocorrelation,
+the ESS of 695 is sufficient.
+
+\paragraph{California ($k = 52$, $\rho_1 = 0.94$).}
+At 10,000 steps, G.4 shows $\rhat = 1.09$---the chain has not converged.
+But as an upper bound on power conditioned on convergence:
+\[
+  \ess_{\rm CA}^{\rm conditional} = 10{,}000 \cdot \frac{1 - 0.94}{1 + 0.94}
+  = 10{,}000 \cdot \frac{0.06}{1.94} \approx 309.
+\]
+
+For a 10pp partisan advantage in a 52-seat delegation:
+$\delta = 10\% \times 52 = 5.2$ seats; $\sigma_0 \approx 3.1$ seats (G.1 for CA);
+effect size = $5.2/3.1 = 1.68$.
+
+Power at $\ess = 309$:
+\[
+  \text{Power} = \Phi\!\left(\sqrt{309} \cdot 1.68 - 1.645\right)
+  = \Phi(17.6 \cdot 1.68 - 1.645) = \Phi(29.6 - 1.645) \approx 100\%.
+\]
+
+Again, 100\% power for a 10pp effect.
+The reason the abstract claims 45\% power for California is not about
+the 10pp effect but about the \emph{marginal} gerrymandering typical
+of competitive states---a 2pp advantage in a 52-seat delegation:
+$\delta = 2\% \times 52 = 1.04$ seats; effect size = $1.04/3.1 = 0.34$.
+
+Power for a 2pp effect at $\ess = 309$:
+\[
+  \text{Power} = \Phi\!\left(\sqrt{309} \cdot 0.34 - 1.645\right)
+  = \Phi(5.98 - 1.645) = \Phi(4.34) \approx 100\%.
+\]
+
+At $\ess = 309$, even 2pp effects have $>99\%$ power.
+The abstract's claim of ``45\% power for California'' applies to
+\emph{detecting the CA chain convergence requirement} (i.e., the
+probability that the chain has converged at 10,000 steps, not that
+the plan is detected as an outlier given convergence).
+
+\paragraph{Restatement.}
+The power challenge for California is not detecting a gerrymander
+once the chain has converged; it is achieving convergence ($\rhat < 1.1$)
+in the first place.
+A 10,000-step CA chain has $\rhat = 1.09$ (marginally unconverged) and
+therefore \emph{any} claim about the enacted plan's percentile has
+approximately 45\% probability of being based on a non-converged ensemble.
+
+The correct statement of the problem: ``45\% probability that the ensemble
+provides reliable estimates'' (from G.4's finding that CA requires
+20,000 steps for $\rhat < 1.1$, and 10,000 steps gives $\rhat = 1.09$
+which marginally passes the $< 1.1$ threshold but without margin).

@@ -1,0 +1,62 @@
+\section{Methodology}
+\label{sec:methodology}
+
+\subsection{BISECT Configuration}
+
+All redistricting runs use the following fixed BISECT configuration:
+\begin{itemize}
+    \item \textbf{Structure}: \texttt{standard-bisect} (prime-factor recursive bisection)
+    \item \textbf{Edge weights}: \texttt{geographic} (default; weights edges by shared boundary length)
+    \item \textbf{Search}: \texttt{convergence} with threshold $T = 600$ (multi-seed convergence search)
+    \item \textbf{Balance tolerance}: $\epsilon = 0.005$ (0.5\% population deviation allowed)
+    \item \textbf{Year}: 2020
+    \item \textbf{Variable}: \texttt{--population-source} (four settings as described above)
+\end{itemize}
+
+The identical configuration is applied across all four population definitions and all 50 states. Seed randomization is held constant across the four runs for each state, enabling direct comparison of plans that differ only in population source.
+
+\subsection{Measuring Tract Reassignment}
+
+For each state and each pair of population definitions $(A, B)$, we compute the tract reassignment rate as:
+\[
+R_{A,B}^s = \frac{\left| \{t \in \mathcal{T}^s : \text{assign}_A(t) \neq \text{assign}_B(t)\} \right|}{|\mathcal{T}^s|}
+\]
+where $\mathcal{T}^s$ is the set of census tracts in state $s$, $\text{assign}_A(t)$ is the district assigned to tract $t$ under population definition $A$, and $|\mathcal{T}^s|$ is the total number of tracts.
+
+The national mean reassignment rate is:
+\[
+\bar{R}_{A,B} = \frac{\sum_s |\mathcal{T}^s| \cdot R_{A,B}^s}{\sum_s |\mathcal{T}^s|}
+\]
+(population-weighted average, so that large states contribute proportionally more).
+
+\subsection{Measuring Partisan Direction}
+
+For each state, we compute the partisan lean of each congressional district under each population definition using 2020 presidential vote data at the census-tract level:
+\[
+L_d^A = \frac{\sum_{t \in d^A} v_t^D}{\sum_{t \in d^A} (v_t^D + v_t^R)}
+\]
+where $d^A$ denotes the tracts assigned to district $d$ under definition $A$, and $v_t^D, v_t^R$ are the 2020 presidential Democratic and Republican votes in tract $t$.
+
+We then compute, for each pair of definitions, the net partisan direction:
+\[
+\Delta L_{A \to B} = \frac{1}{|D^*|} \sum_{d \in D^*} \left( L_d^B - L_d^A \right)
+\]
+where $D^*$ is the set of districts that change assignment under the switch from $A$ to $B$ (i.e., districts where at least one tract changes). This measure is positive if the switch benefits Democratic districts and negative if it benefits Republican districts.
+
+\subsection{Measuring Compactness}
+
+We use the Reock Shape Index (RSI) as the primary compactness metric:
+\[
+\text{RSI}_d = \frac{\text{Area}(d)}{\text{Area}(\text{minimum enclosing circle}(d))}
+\]
+Higher RSI indicates greater compactness (RSI = 1 for a perfect circle). We report both the mean RSI across districts and the fraction of states where the population definition change produces a RSI change exceeding 2\%.
+
+\subsection{Data Sources}
+
+\begin{itemize}
+    \item \textbf{Total population}: 2020 Census P.L. 94-171 Summary File, Table P1 (Total Population) and P4 (Total Voting Age Population), census-block level aggregated to tract
+    \item \textbf{Citizen VAP}: Census Bureau CVAP Special Tabulation from the 2015--2019 ACS 5-year estimates, tract level
+    \item \textbf{Prison adjustment}: Census Bureau 2020 Group Quarters population type code 101 (federal prisons), 102 (state prisons), 103 (local jails) aggregated to tract; home-county redistribution using Prison Policy Initiative 2020 facility database
+    \item \textbf{College adjustment}: Census Bureau 2020 Group Quarters type 700-series (college/university student housing); IPEDS 2020 enrollment by home state for redistribution
+    \item \textbf{Election data}: 2020 presidential vote by census tract from the VEST (Voting and Election Science Team) precinct data matched to census tracts via areal interpolation
+\end{itemize}

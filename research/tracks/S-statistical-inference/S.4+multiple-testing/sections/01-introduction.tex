@@ -1,0 +1,78 @@
+\section{Introduction}
+\label{sec:introduction}
+
+A redistricting analysis that evaluates the enacted map against seven
+fairness metrics is simultaneously testing seven hypotheses:
+\begin{enumerate}
+\item $H_{\PP}$: The plan's Polsby-Popper compactness is within the
+  normal range for valid plans.
+\item $H_{\rm EG}$: The plan's efficiency gap is within the normal range.
+\item $H_{\rm MM}$: The plan's mean-median difference is within the
+  normal range.
+\item $H_{\rm PB}$: The plan's partisan bias (at the 50\% vote-share
+  threshold) is within the normal range.
+\item $H_{\rm SV}$: The plan's seats-votes curve slope is within the
+  normal range.
+\item $H_D$: The plan's Democratic seat count is within the normal range.
+\item $H_{\rm DG}$: The plan's declination metric is within the normal range.
+\end{enumerate}
+
+If any one of these hypotheses is rejected, the analyst might claim
+evidence of a gerrymander.
+But testing seven hypotheses simultaneously at $\alpha = 0.05$ creates
+a family-wise error rate of $1 - (0.95)^7 \approx 30\%$: a 30\% chance
+of falsely concluding that the plan is extreme on at least one metric
+even if it was drawn randomly.
+
+This paper addresses the multiple testing problem systematically by
+applying the Benjamini-Hochberg (BH) FDR procedure~\citep{bh1995} to
+the full L-track test battery.
+
+\subsection{Scale of the Testing Problem}
+
+The L-track's complete test battery for the 2020 redistricting cycle
+involves:
+\begin{itemize}
+\item 7 partisan fairness metrics
+\item 50 states (including 7 with $k > 1$ and redistricting obligations)
+\item 3 census cycles (2000, 2010, 2020)
+\item Total tests: $7 \times 50 \times 3 = 1{,}050$
+\end{itemize}
+
+At $\alpha = 0.05$ without correction:
+\[
+  E[\text{false positives}] = 1{,}050 \times 0.05 = 52.5.
+\]
+Over 50 tests are expected to show ``significant'' gerrymandering evidence
+in a world where no state has been gerrymandered.
+
+\subsection{The Holm Implementation}
+
+\bisect{}'s \texttt{bisect-analysis/src/bloc\_voting.rs} already implements
+Holm-Bonferroni correction for bloc voting analysis.
+The Rust code computes a \texttt{p\_value\_holm} field alongside the
+raw p-value and the Bonferroni-corrected p-value.
+
+The Holm-Bonferroni procedure controls the FWER: the probability that any
+single test is a false positive.
+This is appropriate for the bloc voting context (where we want to ensure
+that no VRA district claim is a false positive) but overly conservative
+for the L-track portfolio analysis.
+
+The BH FDR procedure is more appropriate for the portfolio analysis:
+it allows a controlled proportion of false positives (FDR $\leq q$)
+rather than requiring that the probability of any false positive be
+$\leq \alpha$ (FWER control).
+When many hypotheses are expected to be true (as in a multi-state
+analysis where many states do have partisan maps), FDR control provides
+substantially more power than FWER control.
+
+\subsection{Road Map}
+
+Section~\ref{sec:testing} describes the testing problem in detail.
+Section~\ref{sec:bh} presents the BH procedure.
+Section~\ref{sec:impl} describes the existing Holm implementation and
+how S.4 extends it.
+Section~\ref{sec:application} applies BH to the L-track battery.
+Section~\ref{sec:results} presents the corrected findings.
+Section~\ref{sec:conclusion} concludes.

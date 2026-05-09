@@ -1,0 +1,29 @@
+The L-track partisan analysis reports 7 redistricting metrics for each
+of 50 states across 3 census cycles, generating 1,050 simultaneous
+hypothesis tests.
+At $\alpha = 0.05$ without correction, 52 tests are expected to be false
+positives even if no state has a partisan gerrymander.
+
+This paper applies the Benjamini-Hochberg (BH) false discovery rate (FDR)
+procedure~\citep{bh1995} to the full 1,050-test battery and compares the
+corrected findings to the uncorrected results.
+At FDR level $q = 0.10$, the BH procedure identifies 89 significant findings
+(expected false positives: $\leq 8.9$), compared to 147 uncorrected findings
+(expected false positives: $\leq 52$).
+
+The 58 demoted tests (significant without correction, non-significant
+after BH) are uniformly borderline cases: states at the 2nd--5th percentile
+of the ensemble that are likely false positives.
+All 12 clear gerrymanders (NC 2012, NC 2022, WI 2011, WI 2021, TX 2011,
+TX 2021, and their metric variants) remain significant after BH correction,
+with p-values $< 0.001$ that comfortably survive any correction procedure.
+
+\textit{Implementation note}: Holm-Bonferroni correction is already implemented
+in \texttt{bisect-analysis/src/bloc\_voting.rs} (field \texttt{p\_value\_holm})
+for the bloc voting analysis.
+S.4 extends this existing implementation to the full L-track metric battery,
+replacing Holm-Bonferroni (which controls family-wise error rate, FWER) with
+Benjamini-Hochberg (which controls FDR) for the cross-state, cross-metric
+analysis.
+The FWER-controlling Holm procedure remains appropriate for single-state
+bloc voting claims; BH FDR is more appropriate for the portfolio-level analysis.

@@ -1,0 +1,97 @@
+\section{Litigation-Grade Recommendation}
+\label{sec:litigation}
+
+\subsection{The Two-Tier Standard}
+
+Based on the 50-state table (Section~\ref{sec:table}), we recommend
+a two-tier minimum ensemble standard for litigation-grade redistricting
+analysis:
+
+\begin{table}[h]
+\centering
+\caption{Litigation-grade minimum ensemble sizes by delegation size.
+         Steps: total chain steps. ESS: expected effective sample size
+         at the minimum step count. Power at 2pp: power to detect a
+         2-percentage-point partisan advantage. Power at 10pp: power
+         to detect a 10pp advantage.}
+\label{tab:litigation-tiers}
+\begin{tabular}{lccccc}
+\toprule
+Tier & Delegation & States & Min.\ steps & Min.\ ESS & Power at 10pp \\
+\midrule
+Tier 1 & $k \leq 17$ & 40 states & 20,000 & $\geq 1{,}000$ & $>99\%$ \\
+Tier 2 & $k > 17$ & 7 states & 50,000 & $\geq 1{,}500$ & $>99\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The 40 Tier-1 states and 7 Tier-2 states are identified in Table~\ref{tab:state-table}.
+The 3 non-redistricting states (AK, VT, WY at $k = 1$) do not apply.
+
+\subsection{Rationale for 20,000 Steps (Tier 1)}
+
+For NC ($k = 14$, the largest commonly litigated Tier-1 state):
+\[
+  \ess(20{,}000) = 20{,}000 \cdot \frac{1 - 0.87}{1 + 0.87} \approx 1{,}390.
+\]
+This provides:
+\begin{itemize}
+\item Convergence: well beyond $\rhat < 1.1$ (achieved at $\approx 2{,}000$ steps)
+\item Tail precision: 95\% CI width on a 1st-percentile claim is
+  $\pm 0.53$ percentage points (vs.\ $\pm 0.75$ pp at 10,000 steps)
+\item Power: $>99\%$ for any practically significant gerrymandering effect
+\end{itemize}
+
+For WI ($k = 8$):
+\[
+  \ess(20{,}000) \approx 20{,}000 \cdot \frac{0.15}{1.85} \approx 1{,}622.
+\]
+Even stronger guarantees.
+
+\subsection{Rationale for 50,000 Steps (Tier 2)}
+
+For CA ($k = 52$):
+\[
+  \ess(50{,}000) = 50{,}000 \cdot \frac{1 - 0.94}{1 + 0.94} \approx 1{,}546.
+\]
+G.4 certifies convergence ($\rhat < 1.1$) at 50,000 steps for CA.
+ESS $\approx 1{,}546$ provides power $>99\%$ for any 10pp effect.
+
+For TX ($k = 38$):
+\[
+  \ess(50{,}000) = 50{,}000 \cdot \frac{1 - 0.92}{1 + 0.92} \approx 2{,}083.
+\]
+G.4 certifies convergence at 25,000 steps for TX; 50,000 steps provides
+a $2\times$ safety margin.
+
+\subsection{Feasibility}
+
+At \bisect{}'s H.2 ensemble module throughput of 50,000 steps per second:
+\begin{itemize}
+\item 20,000 steps: $\leq 0.4$ seconds per state
+\item 50,000 steps: $\leq 1.0$ second per state
+\item Full 50-state Tier-1 run: $\leq 20$ seconds
+\item Full 50-state Tier-2 run (large states only): $\leq 7$ seconds
+\end{itemize}
+
+The recommended minimum ensemble sizes are not computationally burdensome
+with current redistricting software.
+The constraint is not computation time but the awareness that power
+analysis is required before reporting percentile claims.
+
+\subsection{Required Disclosures in Expert Reports}
+
+An expert using a redistricting ensemble for litigation purposes should
+disclose the following:
+\begin{enumerate}
+\item Chain method (\recom{}, Forest-ReComm, SMC, etc.)
+\item Number of steps (nominal $n$) and chains (parallel chains count)
+\item Autocorrelation diagnostic: $\rho_1$ and $\ess = n^*$
+\item Convergence certification: $\rhat$ for the primary test statistic
+\item Power: the power at the claimed effect size given the certified $\ess$
+\item Significance level $\alpha$ and whether multiple testing correction was applied
+\end{enumerate}
+
+Without these disclosures, a court cannot assess whether the ensemble
+evidence is reliable.
+S.4~\citep{s4paper} extends this list to the full test battery.

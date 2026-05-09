@@ -1,0 +1,26 @@
+\section{Compactness Analysis}
+\label{sec:compactness}
+
+\subsection{RSI Stability Across Population Definitions}
+
+One of the most important findings of this analysis is the compactness robustness of algorithmic redistricting under different population definitions. The BISECT algorithm optimizes for compactness (via edge-cut minimization in the geographic-weight mode) independently of the population balance constraint. As long as the geographic structure of the tract adjacency graph is unchanged---which it is across all four population definitions, since we are only changing the vertex weight vector, not the graph topology---the algorithm can find equally compact solutions.
+
+The empirical results confirm this expectation: RSI changes less than 2\% in 48 of 50 states for all four population definition comparisons. The two exceptions are:
+\begin{itemize}
+    \item \textbf{Hawaii}: RSI changes by 2.3\% under citizen-VAP redistricting, reflecting Hawaii's high noncitizen fraction in Honolulu County (driven by large Filipino and Japanese immigrant communities) and the geographic constraints of island-based redistricting.
+    \item \textbf{Nevada}: RSI changes by 2.1\% under citizen-VAP redistricting, reflecting Clark County's high noncitizen fraction (Las Vegas hospitality workforce) and the compact-to-sprawl geographic transition as districts expand from the urban core.
+\end{itemize}
+
+Even in these two exceptions, the 2.1--2.3\% RSI change is well within the range of compactness variation expected from different redistricting algorithms applied to the same state---not a meaningful degradation in plan quality.
+
+\subsection{Why Compactness Is Robust}
+
+The compactness robustness result has a simple explanation: population definition affects which census tracts are balanced across districts, but the bisect algorithm's edge-cut objective pushes toward the same geographic boundaries regardless. When the algorithm is forced to expand a district geographically (due to lower CVAP in the original territory), it selects the most compact expansion path---the tracts with the highest-weight edges to the existing district, which are the geographically adjacent tracts forming the most natural boundary.
+
+This is a key advantage of the recursive bisection approach over purely population-driven redistricting methods (such as grid-based cell assignment). A grid-based method would produce more jagged boundaries when expanding into new territory to meet a CVAP constraint. The bisect algorithm's graph-based optimization finds compact expansions naturally.
+
+\subsection{Implications for Litigation}
+
+The compactness robustness finding has a direct litigation implication: a party challenging a citizen-VAP redistricting plan on compactness grounds is unlikely to prevail, since the bisect algorithm produces equally compact plans under all four population definitions in 48 of 50 states. Conversely, a party defending a citizen-VAP plan can rely on this analysis to demonstrate that CVAP redistricting does not require compactness sacrifices.
+
+This contrasts with the partisan-direction findings, which are robust and consistent: citizen-VAP redistricting consistently disadvantages Democratic districts in high-immigration states, and this disadvantage is not driven by compactness tradeoffs. The partisan effect is purely a consequence of the population definition choice, not an artifact of algorithmic constraints.

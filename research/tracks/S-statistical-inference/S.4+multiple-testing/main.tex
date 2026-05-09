@@ -1,0 +1,76 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{definition}{Definition}
+\newtheorem{corollary}{Corollary}[theorem]
+\usepackage{booktabs}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{microtype}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{xcolor}
+\usepackage{titlesec}
+
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+\setstretch{1.4}
+
+\newcommand{\bisect}{\textsc{bisect}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\dia}{\textsc{Districting Integrity Act}}
+\newcommand{\PP}{\ensuremath{\mathrm{PP}}}
+\newcommand{\bh}{\mathrm{BH}}
+\newcommand{\fdr}{\mathrm{FDR}}
+
+\title{%
+  \textbf{Multiple Testing in Redistricting Analysis:\\
+  FDR Control Across Metrics and States}\\[0.8em]
+  \normalsize\textit{S.4 --- Statistical Inference Track}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Multiple testing, false discovery rate, Benjamini-Hochberg, Holm-Bonferroni,
+redistricting metrics, L-track, FDR control, gerrymandering detection,
+partisan fairness metrics
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-testing-problem}
+\input{sections/03-bh-procedure}
+\input{sections/04-existing-implementation}
+\input{sections/05-application}
+\input{sections/06-results}
+\input{sections/07-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

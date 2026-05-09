@@ -1,0 +1,46 @@
+\section{Partisan Effects}
+\label{sec:partisan}
+
+\subsection{Citizen VAP: Consistently Republican-Advantaging}
+
+The switch from total population to citizen VAP benefits Republican districts in all four high-immigration states without exception. Table~\ref{tab:partisan_direction} summarizes the mean partisan lean change ($\Delta L$, as defined in Section~\ref{sec:methodology}) for each comparison.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lccc}
+\toprule
+\textbf{Comparison} & \textbf{Mean $\Delta L$ (affected districts)} & \textbf{Direction} & \textbf{States Showing Effect} \\
+\midrule
+Total $\to$ Citizen VAP & $-1.2$pp & Republican & 14/43 (significantly) \\
+Total $\to$ Adj. Total (prison) & $+0.4$pp & Democratic & 22/43 (significantly) \\
+Total $\to$ Adj. Total (prison+college) & $+0.1$pp & Marginally D & 18/43 (significantly) \\
+Total $\to$ Total VAP & $-0.3$pp & Marginally R & 11/43 (significantly) \\
+\bottomrule
+\end{tabular}
+\caption{Mean partisan lean change ($\Delta L$) for districts that change assignment under each population comparison. Positive values indicate Democratic advantage; negative values indicate Republican advantage. ``Significantly'' means $>$0.5pp mean shift in affected districts.}
+\label{tab:partisan_direction}
+\end{table}
+
+The citizen-VAP shift of $-1.2$pp means that, among the districts that change assignment when switching from total population to CVAP, the average district becomes 1.2 percentage points more Republican in lean. This is the average; in the four high-immigration states, the shift among affected districts is considerably larger:
+\begin{itemize}
+    \item California: $-3.1$pp (affected districts become more Republican by 3.1pp on average)
+    \item Texas: $-2.4$pp
+    \item New York: $-1.8$pp
+    \item Florida: $-1.5$pp
+\end{itemize}
+
+\subsection{Mechanism: Geographic Expansion of Urban Districts}
+
+The mechanism driving the Republican advantage under citizen-VAP redistricting is geographic expansion of urban districts. Under total-population redistricting, an urban district centered on a high-noncitizen-fraction area (e.g., East Los Angeles) reaches its population target within the urban core. Under citizen-VAP redistricting, the same district has a lower citizen-VAP total within the urban core---because noncitizens are not counted---and must expand geographically into adjacent, less-immigrant-dense (and more Republican-leaning) suburban areas to reach the citizen-VAP target.
+
+This expansion dilutes the district's Democratic lean in two ways: (1) directly, by adding more Republican-leaning suburban tracts to the district, and (2) indirectly, by shifting the removed urban tracts to adjacent districts, which become more urban-Democratic and thereby ``pack'' Democratic voters. The double effect---expansion of competitive districts into suburbs, packing of urban tracts into adjacent districts---produces the systematic Republican advantage.
+
+\subsection{Prison Adjustment: Consistently Democratic-Advantaging}
+
+The prison-count adjustment produces a smaller but directionally consistent Democratic advantage. By removing incarcerated populations from rural facility tracts and redistributing them to urban home-county tracts, the adjustment increases the redistricting-relevant population of urban areas. Rural prison counties lose population and must draw on more adjacent rural territory; urban home counties gain population and can sustain their existing district configurations with slightly smaller geographic footprints.
+
+The mean $+0.4$pp Democratic advantage among affected districts is consistent across all 22 states showing significant effects. In Texas, where both the prison-dense rural counties and the urban home counties are concentrated, the effect is largest ($+0.8$pp among affected districts).
+
+\subsection{No Partisan Effect of Compactness Change}
+
+One concern about population-definition sensitivity analysis is that changes in district boundaries driven by population definitions might be confounded with changes in district compactness that themselves have partisan implications. We address this by reporting compactness changes separately (Section~\ref{sec:compactness}) and confirming that the partisan direction findings are not driven by compactness changes: the $\Delta L$ values reported above are not correlated with the RSI changes in affected districts ($r = 0.08$, $p = 0.31$ for the citizen-VAP comparison).

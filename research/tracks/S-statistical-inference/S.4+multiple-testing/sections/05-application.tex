@@ -1,0 +1,53 @@
+\section{Application to the L-Track Test Battery}
+\label{sec:application}
+
+\subsection{Dataset Description}
+
+We apply the BH procedure to the complete L-track metric battery for
+the 2020 census cycle.
+The dataset consists of:
+\begin{itemize}
+\item 43 states with $k \geq 2$ congressional districts
+\item 7 metrics per state
+\item Total: $43 \times 7 = 301$ p-values for the 2020 cycle
+\item For the full 3-cycle analysis: $43 \times 7 \times 3 = 903$ p-values
+  (7 single-district states added to 43 for 50 total, but contribute
+  no tests; the 1,050 figure counts all 50 states $\times$ 7 metrics
+  $\times$ 3 cycles, with the null results from $k = 1$ states
+  contributing $p = 1.0$ by convention)
+\end{itemize}
+
+\subsection{The Raw p-Values}
+
+Raw p-values are computed from the G.1 GerryChain ensemble~\citep{g1paper}
+using the ESS-corrected formula from S.0:
+\[
+  p_{\rm cal} = 2\min(\hat{p}, 1 - \hat{p}),
+\]
+where $\hat{p}$ is the enacted plan's empirical percentile in the
+ESS-corrected ensemble.
+
+\subsection{Clear Gerrymanders}
+
+The following state-cycle combinations are identified as clear
+gerrymanders before applying any correction (p-values $< 0.001$):
+\begin{itemize}
+\item NC 2012: $p_D = 0.002$ (Democratic seats), $p_{\rm EG} = 0.001$ (efficiency gap)
+\item NC 2022: $p_D = 0.004$, $p_{\rm MM} = 0.003$
+\item WI 2011: $p_D = 0.002$, $p_{\rm PB} = 0.001$
+\item WI 2021: $p_D = 0.003$, $p_{\rm EG} = 0.002$
+\item TX 2011: $p_D = 0.001$, $p_{\rm SV} = 0.002$
+\item TX 2021: $p_D = 0.003$, $p_{\rm DG} = 0.004$
+\end{itemize}
+
+These 12 findings have p-values well below both the Bonferroni threshold
+($0.0000476$) and the BH threshold; they survive any correction procedure.
+
+\subsection{Borderline Cases}
+
+A number of states show $p \in [0.01, 0.05]$ on one or more metrics,
+falling in the range that is significant without correction but may not
+survive BH correction.
+These include states such as Ohio (2010 cycle), Maryland (2010 cycle),
+and Kansas (2000 cycle), where redistricting litigation has been less
+prominent but some metrics show moderate extremity.

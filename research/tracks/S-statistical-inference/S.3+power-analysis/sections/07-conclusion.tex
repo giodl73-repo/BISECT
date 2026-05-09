@@ -1,0 +1,31 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+Power analysis is a standard component of any rigorous statistical study
+but has been absent from redistricting expert testimony.
+This paper fills the gap by deriving the power function for redistricting
+tests from first principles, translating it into state-specific minimum
+ensemble sizes, and evaluating current practice.
+
+The main finding is that ensemble size adequacy depends on the state.
+For small delegations ($k \leq 17$), the power challenge is primarily
+convergence: once the chain has mixed (5,000--10,000 steps), ESS of
+300--1,000 provides high power for any practically significant
+gerrymandering effect.
+For large delegations ($k > 17$), the power challenge is mixing:
+California requires 20,000--50,000 steps to achieve $\rhat < 1.1$,
+and the effective ESS at 10,000 steps is based on a chain that is not
+fully converged.
+
+The two-tier recommendation---20,000 steps for $k \leq 17$ and 50,000
+steps for $k > 17$---provides a clear, state-independent standard that
+is computationally feasible (under 1 second per state with \bisect{}'s
+ensemble module).
+
+The practical implication for redistricting litigation is that experts
+should report power alongside percentile claims.
+``The enacted plan is at the 0.4th percentile of a converged ensemble
+with $\ess = 1{,}390$ and 99\% power to detect the observed effect''
+is a substantially stronger claim than ``the plan is at the 0.4th percentile
+of 10,000 plans.''
+The former tells the court how reliable the estimate is; the latter does not.
