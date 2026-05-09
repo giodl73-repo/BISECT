@@ -1,0 +1,47 @@
+\label{sec:conclusion}
+
+This paper has established the framework for the O-series investigation of redistricting
+and democratic outcomes. Three contributions merit emphasis.
+
+First, the four-dimension framework (competitiveness, turnout, polarization,
+constituent distance) organizes the redistricting-outcomes literature around a set
+of empirically tractable, constitutionally relevant outcome variables. Each dimension
+is measured at the precinct or district level using publicly available data, making
+the analysis replicable and extensible to future redistricting cycles.
+
+Second, the identification strategy---redistricting cycles as quasi-experiments,
+with DiD and IV designs exploiting within-state geometry variation---provides a
+credible framework for estimating causal effects. The algorithmic instrument
+(\textsc{bisect} geometry as an instrument for enacted geometry) is particularly
+novel: it leverages the fact that algorithmic redistricting is computed without
+reference to any outcome variable to achieve exclusion restriction by design.
+
+Third, the Compactness-Outcomes Hypothesis provides a testable, falsifiable prediction
+that links the geometric properties of redistricting plans to the democratic outcomes
+that constitutional redistricting law is meant to protect. If the hypothesis is
+confirmed in O.1--O.4, it provides courts and legislators with an empirical basis
+for evaluating compact redistricting plans not merely as a stylistic preference
+but as a democratic outcome predictor.
+
+\subsection{Roadmap for O.1--O.4}
+
+\begin{itemize}
+\item \textbf{O.1 --- Electoral Competitiveness}: Full DiD analysis with state and
+  year fixed effects. Primary result: the fraction of competitive seats under
+  \textsc{bisect} vs.\ enacted plans in 12 gerrymandered states.
+\item \textbf{O.2 --- Voter Turnout}: Shift-share IV for precinct-level turnout.
+  Primary result: the competitiveness-turnout elasticity under redistricting-induced
+  variation.
+\item \textbf{O.3 --- Legislative Polarization}: Event-study DW-NOMINATE analysis.
+  Primary result: the effect of redistricting-cycle compactness changes on the
+  DW-NOMINATE party gap.
+\item \textbf{O.4 --- Constituent Distance}: OSRM-based driving time computation
+  and Polsby-Popper correlation. Primary result: the $r = -0.67$ correlation between
+  district compactness and mean constituent travel time; \textsc{bisect} mean of
+  34 minutes vs.\ enacted gerrymander mean of 48 minutes.
+\end{itemize}
+
+\bigskip
+\noindent\textit{The author thanks the redistricting research team for \textsc{bisect}
+plan outputs, VEST data stewards for election return data access, and Matt Streb for
+comments on the turnout identification strategy. All errors are the author's own.}

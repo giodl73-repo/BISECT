@@ -1,0 +1,26 @@
+We introduce constituent-representative geographic distance as an outcome measure for
+evaluating congressional redistricting plans. For each of the 435 congressional districts
+in the 2022 enacted maps, we compute the mean driving time from each census tract's
+population-weighted centroid to the representative's primary district office address,
+as listed on \texttt{house.gov}. Routing is performed via the OSRM (Open Source Routing
+Machine) API over the full OpenStreetMap road network. We document a correlation of
+$r = -0.67$ (95\% CI: $[-0.72, -0.61]$) between district Polsby-Popper compactness and
+mean constituent driving time across all 435 districts: less compact districts impose
+longer travel times on their constituents.
+
+Comparing enacted maps to \textsc{bisect} algorithmic plans computed from the same
+census data, we find that \textsc{bisect} districts achieve a mean constituent driving
+time of 34 minutes vs.\ 48 minutes for enacted gerrymanders in the 12 states with
+documented partisan gerrymandering (Efficiency Gap $|EG| > 0.08$). The gap is driven
+by the ``neck'' mechanism: gerrymandered districts connect geographically distant
+communities through narrow corridors, inflating the perimeter-to-area ratio (reducing
+Polsby-Popper) while simultaneously stretching the maximum distance between district
+constituents. We characterize this mechanism geometrically and show that the correlation
+between district ``neck width'' (minimum corridor width as a fraction of district diameter)
+and mean constituent driving time is $r = 0.71$, stronger than the Polsby-Popper
+correlation.
+
+The result has practical implications for redistricting litigation: constituent travel
+distance is a direct, welfare-relevant harm that is predictable from map geometry without
+requiring election data. Courts evaluating compact redistricting criteria can cite
+constituent access as a concrete, non-partisan outcome that compactness promotes.

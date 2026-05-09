@@ -1,0 +1,77 @@
+\section{Algorithmic Correction in BISECT}
+\label{sec:algorithmic}
+
+\subsection{Current BISECT Behavior}
+
+BISECT's redistricting pipeline uses 2020 Census PL 94-171 data as its default population source. This data includes the Census Group Quarters population, of which correctional facility residents are the largest component (approximately 60\% of all Group Quarters). BISECT does not currently adjust for prison location versus home address; it uses Census population as reported.
+
+The consequence is that BISECT, like all redistricting systems that use Census population without correction, inherits the prison-gerrymandering distortion. When partitioning a state graph, BISECT's METIS engine seeks to equalize the sum of vertex weights across partitions; if census tracts containing prisons have inflated vertex weights, those tracts receive proportionally less district-level adjacency from other tracts---they are ``heavier'' and require fewer neighbors to reach the target district size.
+
+\subsection{The Planned \texttt{--balance-metric prison\_adjusted} Mode}
+
+We describe here a planned preprocessing extension to BISECT that would implement prison-population correction before the graph partitioning step. This mode is not currently implemented; the description here is intended to specify the technical requirements and document the methodological choices that would be required.
+
+The preprocessing pipeline would operate as follows:
+
+\begin{enumerate}
+    \item \textbf{Identify correctional facilities}: Using the BJS Census of State and Federal Correctional Facilities and the Prison Policy Initiative's facility geocode database, identify all census tracts containing correctional facilities with population $\geq$ 50 inmates.
+    \item \textbf{Obtain home-address data}: Source prisoner home-address data from state DOC administrative records (where available and public) or from PPI's LSPC (Let's Count Separately in the Census) adjusted dataset, which provides census-tract-level home-address allocations for all 50 states.
+    \item \textbf{Reallocate population}: For each facility tract, subtract the correctional population from the tract weight and add it back to the prisoner's home address tracts, using the PPI allocation proportions.
+    \item \textbf{Run standard BISECT}: The adjusted tract weights are passed to the METIS partitioner without further modification; the graph structure is unchanged.
+\end{enumerate}
+
+\begin{verbatim}
+# Planned (not yet implemented) usage:
+bisect fetch --year 2020 --metric prison_adjusted --ppi-data /path/to/ppi/
+bisect build prison_corrected --year 2020 \
+    --balance-metric prison_adjusted \
+    --structure prime-factor \
+    --search convergence
+
+# Compare to uncorrected baseline:
+bisect label-analyze prison_corrected \
+    --compare official_2020 \
+    --year 2020 \
+    --types all
+\end{verbatim}
+
+\subsection{Data Requirements and Challenges}
+
+Implementing the prison-adjusted mode requires resolving several data challenges:
+
+\textbf{Home-address availability}: Only New York provides comprehensive prisoner home-address data in a form suitable for redistricting use. Most states do not publish prisoner home addresses even in aggregated form, citing security and privacy concerns. The PPI's LSPC dataset addresses this by using statistical models calibrated to states with known data, but model-based estimates introduce uncertainty that should be reported in any analysis.
+
+\textbf{Federal versus state facilities}: The BJS facility data covers both state and federal correctional facilities, but federal prisoners are subject to federal rather than state redistricting. The correction should exclude federal prisoners for state congressional redistricting purposes while including them for states where federal prisons represent a large fraction of the Group Quarters population.
+
+\textbf{Jail versus prison}: County jails house short-term detainees, many of whom are legally innocent (awaiting trial). Their inclusion in a residence-address correction is methodologically debatable; New York's law covers only state prisoners, not county jail detainees. BISECT's implementation should provide a flag for jail-inclusion (\texttt{--include-jails}) with the default set to exclude them, matching New York's approach.
+
+\textbf{Temporal mismatch}: The 2020 Census was conducted in April 2020; COVID-19 emergency releases had reduced prison populations by approximately 15\% from their 2019 baseline. PPI's 2020 LSPC dataset accounts for this, but researchers should note that the 2020 Census prison counts are atypically low and may not reflect the long-term equilibrium.
+
+\subsection{Expected Results: Simulation}
+
+Based on the state-level data in Tables~\ref{tab:inflation} and \ref{tab:cross-state}, we can estimate the expected effect of prison adjustment on BISECT's output for key states:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lccl}
+\toprule
+\textbf{State} & \textbf{Districts} & \textbf{Prisoners Reallocated} & \textbf{Expected Boundary Shift} \\
+\midrule
+Texas & 38 & $\sim$130,000 & 1--2 districts gain urban-rural mix \\
+California & 52 & $\sim$80,000 & Minimal; high-density origins diluted \\
+New York & 26 & $\sim$46,000 & Minimal; already corrected in PL data \\
+Pennsylvania & 17 & $\sim$37,000 & 1 district shifts toward Philadelphia \\
+Illinois & 17 & $\sim$25,000 & 1 district shifts toward Chicago \\
+\bottomrule
+\end{tabular}
+\caption{Estimated effect of prison-adjustment preprocessing on BISECT congressional district output by state. ``Boundary shift'' refers to movement of district edges, not wholesale reassignment.}
+\label{tab:expected}
+\end{table}
+
+The Texas case is most consequential. Reallocating 130,000 prisoners from rural East Texas counties back to Houston, Dallas, and San Antonio ZIP codes effectively removes one congressional district's worth of population from rural East Texas and adds it to the already-large urban districts. BISECT's partitioner would respond by expanding rural districts to compensate---pulling in more rural territory---and contracting urban districts slightly. The net effect would likely be to reduce the number of reliably Republican rural districts from the current configuration.
+
+\subsection{Legal Context: \emph{Department of Commerce v. New York} (2019)}
+
+The Trump administration's attempt to add a citizenship question to the 2020 Census was motivated in part by a desire to produce CVAP data usable for redistricting, which legal advocates believed would favor Republican redistricting outcomes. The Supreme Court in \emph{Department of Commerce v. New York}, 588 U.S. 752 (2019), upheld Secretary Ross's legal authority to add such a question but found that the stated rationale (improving VRA enforcement) was pretextual, barring implementation.
+
+The prison-gerrymandering context is distinct: the Census Bureau's usual-residence rule was not adopted for partisan reasons and has been uniformly applied. But \emph{Dep't of Commerce} establishes that courts will scrutinize census methodology changes with attention to partisan motivation. Any legislative or administrative change to how prisoners are counted should be framed in neutral, methodological terms and should apply uniformly regardless of partisan consequence.

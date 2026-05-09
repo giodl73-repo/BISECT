@@ -1,0 +1,73 @@
+\section{Bayesian Framework}
+
+\subsection{Prior and Posterior}
+
+Let $\pi^*$ be the true percentile of the enacted plan in the distribution
+of all valid redistricting plans. We assume a uniform prior:
+$\pi^* \sim \mathrm{Uniform}(0, 1)$.
+
+The ensemble provides an estimate $\hat{p}$ of $\pi^*$, based on a sample
+of $N$ plans with effective sample size $n^* = \mathrm{ESS}$.
+Under the Beta-Binomial model, the likelihood of observing $k = \lfloor \hat{p} \cdot N \rfloor$
+plans more compact than the enacted plan (out of $N$ total) is:
+\[
+  P(k \mid \pi^*) = \binom{N}{k} (\pi^*)^k (1-\pi^*)^{N-k}.
+\]
+
+With a uniform prior ($\mathrm{Beta}(1,1)$), the posterior is:
+\[
+  \pi^* \mid k, N \;\sim\; \mathrm{Beta}(k+1, N-k+1).
+\]
+
+In practice we use $n^*$ in place of $N$ to account for autocorrelation:
+\[
+  \pi^* \mid \hat{p}, n^* \;\sim\; \mathrm{Beta}(\hat{p} \cdot n^* + 1,\;
+  (1-\hat{p})\cdot n^* + 1).
+\]
+
+\subsection{The Bayesian Detection Score}
+
+\begin{definition}[Bayesian Detection Score]
+\label{def:bds}
+The BDS at threshold $\tau$ is:
+\[
+  \mathrm{BDS}(\tau) = P(\pi^* < \tau \mid \hat{p}, n^*)
+  = I_\tau(\hat{p}\cdot n^* + 1,\; (1-\hat{p})\cdot n^* + 1),
+\]
+where $I_\tau(a, b)$ is the regularised incomplete Beta function (the CDF of
+$\mathrm{Beta}(a, b)$ evaluated at $\tau$).
+We use $\tau = 0.05$ (the plan is in the most compact 5\%) as the default
+threshold.
+\end{definition}
+
+BDS$(\tau) > 0.95$ means the posterior probability exceeds 95\% that the plan
+is genuinely in the most compact $\tau$-fraction. This is analogous to $p < 0.05$
+in frequentist testing, but incorporates the ensemble's finite size via $n^*$.
+
+\subsection{The Geography Defense and Bayesian Reasoning}
+
+The geography defense argues that the enacted plan's compactness is explained
+by geographic sorting, not partisan intent. In the Bayesian framework, the
+geography defense is absorbed into the \emph{prior}: the ensemble is constructed
+by running ReCom on the actual census-tract graph, which already incorporates
+all geographic constraints. The posterior therefore measures only the residual
+above and beyond what geography predicts.
+
+A BDS near 1.0 means the plan is extreme even within the geography-constrained
+space of valid plans — the geography defense does not explain the plan's position.
+A BDS near 0.0 means the plan is consistent with a geographically-constrained
+neutral draw.
+
+\subsection{Comparison to Frequentist Percentile}
+
+The frequentist percentile $\hat{p}$ is a point estimate with no uncertainty
+quantification. The BDS uses the posterior distribution to incorporate:
+\begin{enumerate}
+  \item The uncertainty from finite $N$ (small ensembles have wide posteriors)
+  \item The ESS correction (autocorrelated chains give less information than
+    their nominal $N$ suggests)
+\end{enumerate}
+For large, well-mixed ensembles ($n^* \gg 1/\hat{p}$), the BDS converges to
+an indicator function ($\approx 1$ if $\hat{p} < \tau$, $\approx 0$ if
+$\hat{p} > \tau$). For small ensembles (typical in current practice), the BDS
+provides a meaningful probability rather than a threshold answer.

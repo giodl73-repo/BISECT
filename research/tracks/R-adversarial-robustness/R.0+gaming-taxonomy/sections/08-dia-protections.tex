@@ -1,0 +1,81 @@
+\section{DIA Protections Against All Five Vectors}
+\label{sec:dia}
+
+\subsection{The Pre-Registration Protocol}
+
+The \dia{} pre-registration protocol is the primary countermeasure against
+all five gaming vectors.
+Pre-registration works by requiring all design choices (parameters, algorithm
+version, geographic definitions) to be publicly filed and SHA-256 hashed
+before the Census Bureau releases P.L.\ 94-171 redistricting data.
+
+The pre-registration timeline is:
+\begin{enumerate}
+\item \textbf{T-12 months}: \dia{} administrator files the parameter
+  configuration and algorithm version hash with the Secretary of State.
+\item \textbf{T-6 months}: Public comment period on the filed configuration.
+  Any party can challenge parameters as inconsistent with the statutory
+  specification.
+\item \textbf{T-0}: Census redistricting data released; the algorithm
+  runs immediately from the pre-registered configuration.
+\item \textbf{T+30 days}: Final plan and manifest filed for public
+  verification.
+\end{enumerate}
+
+Under this timeline, the adversary cannot observe the partisan implications
+of different parameter choices before the parameters are locked.
+V1 is therefore eliminated before the first byte of Census data is processed.
+
+\subsection{Cryptographic Chain}
+
+The \dia{} manifest contains:
+\begin{enumerate}
+\item SHA-256 hash of the algorithm binary ($\delta_5 = 1.00$)
+\item SHA-256 hash of the parameter configuration ($\delta_1 = 1.00$)
+\item SHA-256 hash of each downloaded Census P.L.\ 94-171 file ($\delta_2 \approx 1.00$)
+\item SHA-256 hash of the adjacency graph ($\delta_3 = 0.95$)
+\item SHA-256 hash of the final plan assignment ($\delta_4 = 0.80$, bounded
+  by the ability to detect unreported runs)
+\end{enumerate}
+
+\texttt{bisect label-verify} replays the full computation chain and checks
+each hash in sequence.
+Any discrepancy at any level is reported as a verification failure.
+
+\subsection{The Impossibility Theorem}
+
+\begin{theorem}[Gaming Impossibility under DIA Protocol]
+\label{thm:gaming-impossibility}
+Let $\mathcal{A}$ be an adversary who knows the full \bisect{} algorithm
+specification, has read access to all Census data, and has write access
+to the deployment environment.
+Under the \dia{} pre-registration protocol, $\mathcal{A}$ cannot produce a
+plan with expected partisan shift $> 0.5$ Democratic seats from the
+pre-registered baseline without generating a manifest hash mismatch
+detectable by \texttt{bisect label-verify}.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+To produce a shift $> 0.5$ seats without a parameter change, $\mathcal{A}$
+must modify (a) the input data beyond the $\pm 1\%$ per-tract noise floor,
+(b) the adjacency definition beyond the statutory rule, or (c) the algorithm
+binary.
+Each modification produces a detectable hash change.
+The claim that the shift is $> 0.5$ under the undetectable $\pm 1\%$ noise
+bound follows from the empirical V2 bound derived in Section~\ref{sec:v2}
+and the saturation argument of Section~\ref{sec:combined}.
+$\square$
+\end{proof}
+
+\subsection{Mandatory Disclosure for V4}
+
+The \dia{} requires that all redistricting computations be logged and
+that the manifest identify the submitted plan's run index.
+If more than one run was performed, all run hashes must be disclosed.
+Cherry-picking the most partisan-favorable run without disclosing
+the distribution of outcomes is a protocol violation.
+
+Enforcement: any party can subpoena computational logs and compare
+against the disclosed run hashes.
+The \texttt{bisect label-verify} tool can replay any run identified
+by its seed hash.

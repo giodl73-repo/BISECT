@@ -1,0 +1,75 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}[theorem]
+\usepackage{booktabs}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{microtype}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{verbatim}
+\usepackage{listings}
+\usepackage{titlesec}
+
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+\lstset{basicstyle=\small\ttfamily, breaklines=true, frame=single}
+
+\setstretch{1.4}
+
+\newcommand{\bisect}{\textsc{bisect}}
+\newcommand{\dia}{\textsc{Districting Integrity Act}}
+\newcommand{\cs}{\textsc{ConvergenceSweep}}
+
+\title{%
+  \textbf{The Audit Chain as a Gaming Defense:\\
+  Provenance, Reproducibility, and Tamper Detection}\\[0.8em]
+  \normalsize\textit{R.4 --- Adversarial Robustness Track}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+SHA-256, audit chain, provenance, reproducibility, Daubert standard,
+tamper detection, FIPS 180-4, bisect label-verify, manifest, DIA
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-sha256-analysis}
+\input{sections/03-three-level-provenance}
+\input{sections/04-label-verify-demo}
+\input{sections/05-daubert}
+\input{sections/06-legal-language}
+\input{sections/07-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

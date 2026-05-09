@@ -1,0 +1,37 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+Input data manipulation is a genuine gaming vector for algorithmic
+redistricting: an adversary with access to the data pipeline can modify
+population counts, shapefile boundaries, or demographic tables before
+the algorithm processes them.
+However, the vector is both bounded and defended.
+
+Bounded: even a combined attack across all three data sources produces
+at most $\Delta D \leq 0.4$ Democratic seats nationally, well within
+the B.7 seed-variance noise floor.
+The constraint is geometric---competitive-district geography cannot
+absorb more than a small fraction of the adversary's manipulation
+before the districts are non-competitive anyway.
+
+Defended: \bisect{}'s three-level SHA-256 audit chain (download hash,
+adjacency hash, plan hash) makes undetected manipulation computationally
+infeasible.
+Any modification that exceeds the $\pm 1\%$ noise threshold produces
+a hash mismatch detectable by any party who independently downloads
+and verifies the Census source files.
+
+The disclosed TLS limitation (no certificate pinning) is a real but
+bounded risk.
+It requires infrastructure-level compromise of the redistricting
+computing environment, which is a broader security failure not specific
+to the data manipulation gaming vector.
+The recommended mitigation (multi-source hash verification) eliminates
+this risk for litigation-grade deployments.
+
+The combined finding of R.1 and R.2 for the Track R program: neither
+parameter gaming nor input data manipulation can produce a meaningful
+partisan outcome undetected.
+The remaining plan-affecting gaming vector (V3: geographic definition)
+is analysed in R.3; the audit chain formalization as a legal defense
+is developed in R.4.

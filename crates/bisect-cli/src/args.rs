@@ -1653,7 +1653,13 @@ pub struct StateArgs {
     #[arg(long)]
     pub label: Option<String>,
 
-    /// Population source: total, vap, cvap
+    /// Population source for balance metric.
+    /// Values: total (default), vap (total voting-age population),
+    /// cvap (citizen voting-age population, requires CVAP special tabulation download),
+    /// prison_adjusted (total population minus incarcerated-at-prison, requires
+    ///   Prison Policy Initiative LSPC adjustment table preprocessing; see N.1).
+    /// Note: "cvap" = "citizen_vap" in the N-track research papers.
+    /// Falls back to "total" if the required data file is not present.
     #[arg(long, default_value = "total")]
     pub population_source: String,
 

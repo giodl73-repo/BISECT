@@ -1,0 +1,113 @@
+\label{sec:literature}
+
+The O-series builds on three distinct strands of the redistricting literature.
+This section reviews each strand's key findings and identifies the gaps that the
+O-series addresses.
+
+\subsection{Caughey, Tausanovitch, and State Legislative Effects}
+
+\citet{caugheyTausanovitch2017} provide perhaps the most rigorous causal estimate
+of redistricting effects on policy outcomes. Using a regression discontinuity design
+that exploits close elections at the district margin, they show that the partisanship
+of a state legislature---determined in part by its district map---has significant causal
+effects on policy liberalism across a broad range of policy areas (taxes, spending,
+social policy). A one-standard-deviation increase in Democratic seat share produces
+a policy liberalism shift of roughly 0.4 standard deviations on their composite
+policy index.
+
+For the O-series, the Caughey-Tausanovitch finding provides the motivation for
+the legislative polarization analysis (O.3): if partisan seat share affects policy,
+and redistricting affects partisan seat share, then redistricting affects policy
+through an ideological selection mechanism. The O.3 paper asks whether this mechanism
+operates through polarization specifically---whether compact plans produce legislators
+closer to the center, not just different partisan distributions.
+
+The limitation of Caughey and Tausanovitch for the O-series is that their analysis
+is at the state legislative, not congressional, level. Congressional redistricting
+follows different legal constraints (one-person-one-vote with near-zero tolerance
+vs.\ the $\pm5\%$ tolerance permitted in state legislative maps). Congressional
+districts are also larger, reducing the intra-district political heterogeneity
+that drives the competitive mechanisms in O.1 and O.2.
+
+\subsection{Rodden and Geographic Sorting}
+
+\citet{rodden2019} documents a structural feature of American political geography
+that is directly relevant to redistricting outcomes: Democratic voters are systematically
+more geographically concentrated (in cities and dense suburbs) than Republican voters.
+This geographic sorting creates a structural efficiency disadvantage for Democrats under
+any single-member district system: Democratic voters ``waste'' more votes in landslide
+districts than Republicans, and this waste is amplified by partisan gerrymandering.
+
+The Rodden framework is important for the O-series in two respects. First, it clarifies
+the distinction between geography-induced inefficiency and gerrymandering-induced
+inefficiency. Any compact algorithmic plan will inherit some of the Democratic
+efficiency disadvantage simply because it must cut between geographically sorted
+communities. The O.1 analysis must therefore control for the geographic sorting
+baseline when measuring competitiveness effects. Second, Rodden's analysis implies
+that the constituent-representative distance effect (O.4) has a partisan asymmetry:
+Democratic constituents in urban districts will be closer to their representative
+regardless of gerrymandering, because urban representatives locate their offices
+in the city center that both the representative and constituents share.
+
+\citet{chen2013} extend the Rodden framework with a simulation-based approach,
+generating thousands of random redistricting plans for specific states and showing
+that partisan outcomes consistent with Republican advantage arise under most random
+plans in states like Florida and North Carolina---not from deliberate gerrymandering
+but from geographic sorting. The O-series must control for this baseline to isolate
+the gerrymandering contribution to democratic outcomes.
+
+\subsection{Jacobson and the Decline of Competitive Elections}
+
+\citet{jacobson2015} documents the secular decline of competitive House elections
+from 1946 to 2014. The fraction of House seats decided by margins under 10 percentage
+points declined from roughly 40\% in the 1970s to under 20\% by 2012. Jacobson
+attributes this decline to multiple factors: geographic sorting (consistent with Rodden),
+incumbency advantage, partisan polarization that reduces ticket-splitting, and
+redistricting.
+
+For the O.1 analysis, Jacobson's secular trend presents a confounding challenge:
+any redistricting effect on competitiveness must be separated from the secular decline.
+We address this by including state-specific time trends in the DiD specification and
+by focusing the analysis on redistricting-induced \textit{changes} in competitiveness
+rather than levels. States where the 2020 redistricting cycle produced maps with
+substantially higher Polsby-Popper scores than the 2010 cycle (naturally or algorithmically)
+are the treatment group; states with stable geometry are the control group.
+
+\subsection{Additional Literature}
+
+\textbf{Turnout and competitiveness}: \citet{cox2008} provide a comprehensive review
+of the mobilization effects of electoral competition, finding consistent positive effects
+across electoral systems. \citet{abramowitz2010} document the decline of swing voters
+and its implications for competitive-election mobilization effects. The O.2 analysis
+uses these as theoretical priors for the expected sign of the competitiveness-turnout
+relationship.
+
+\textbf{Legislative polarization}: \citet{mccarty2006} provide the foundational
+DW-NOMINATE based analysis of congressional polarization. \citet{fiorina2008}
+debate the extent to which legislative polarization reflects mass public polarization
+vs.\ elite selection. The O.3 analysis contributes to this debate by providing
+a redistricting-based causal estimate that separates the map contribution from
+geographic sorting.
+
+\textbf{Constituent access}: \citet{eckels2020} and \citet{meier1995} provide
+the public administration literature on constituency service and district office
+location. The O.4 analysis is, to our knowledge, the first systematic empirical
+study linking district compactness to constituent travel distance at national scale.
+
+\begin{table}[ht]
+\centering
+\caption{Prior Literature Summary: O-Series Context}
+\label{tab:literature}
+\begin{tabular}{llp{6cm}}
+\toprule
+Study & Outcome & Key Finding \\
+\midrule
+Caughey \& Tausanovitch (2017) & Policy liberalism & Partisan seat share $\to$ policy (state leg.) \\
+Rodden (2019) & Partisan efficiency & Geographic sorting $\to$ Democratic inefficiency \\
+Chen \& Rodden (2013) & Competitiveness & Most random plans replicate geographic bias \\
+Jacobson (2015) & Competitiveness & Secular decline independent of gerrymandering \\
+McCarty et al.\ (2006) & Polarization & DW-NOMINATE gap rising since 1970s \\
+Cox \& Munger (1989) & Turnout & Closeness increases turnout via mobilization \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,27 @@
+Since 2010, courts have appointed special masters to draw or evaluate redistricting maps in at least 12 states. We examine the key cases and identify common procedural patterns.
+
+\subsection{Key Cases}
+
+\textbf{League of Women Voters v. Pennsylvania} (Pa. 2018). The Pennsylvania Supreme Court struck the 2011 congressional map as a violation of the Free and Equal Elections Clause of the Pennsylvania Constitution, and ordered the Governor and Legislature to enact a new map within 19 days. When the Legislature passed a new map that the Governor vetoed, the court drew its own remedial map. The court's map was produced in collaboration with an expert (Stanford professor Nathaniel Persily) and was based on stated criteria: population equality, contiguity, compactness, political subdivision respect, and the prohibition on partisan manipulation. The court did not specify the method for achieving these criteria; the map was produced through traditional cartographic judgment.
+
+The \textit{LWV v. PA} case is significant for this paper because the court's map required reproducibility: any party could verify that it satisfied the stated criteria. But reproducibility was verified by inspection (any expert can examine district boundaries and check population counts) rather than by a mathematical audit chain. The \texttt{bisect} manifest format extends this to byte-level reproducibility.
+
+\textbf{Harkenrider v. Hochul} (N.Y. 2022). The New York Court of Appeals struck the 2022 congressional and state legislative maps as partisan gerrymanders violating the New York Constitution's anti-gerrymandering amendment (added by a 2014 ballot initiative). The court appointed a special master (Jonathan Cervas, Carnegie Mellon University) and gave him 21 days to produce a remedial congressional map. The special master used traditional GIS tools and applied the court's stated criteria.
+
+Harkenrider is notable for two reasons. First, the court's 21-day timeline demonstrated that emergency redistricting remedies are feasible---the special master produced a complete congressional map in less than a month. \texttt{bisect} can produce an algorithmic baseline in under 20 minutes, dramatically accelerating the special master's process. Second, the special master's map was challenged on grounds that it favored Democrats; the court upheld it, finding that the map's demographic outcomes were attributable to geographic sorting, not partisan intent. An algorithmic baseline would make this finding trivially verifiable.
+
+\textbf{Harper v. Hall} (N.C. 2022). The North Carolina Supreme Court struck the 2021 congressional and legislative maps as extreme partisan gerrymanders under the state constitution. The case produced an extended remediation proceeding: the court initially approved the legislature's remedial map but subsequently revisited the question, producing multiple rounds of maps and court review over 2022--2023. The protracted litigation illustrated the cost of remediation without a verifiable baseline: each new map required expert evaluation of whether it was ``fair enough,'' with no objective standard.
+
+\textbf{Alabama Legislative Black Caucus v. Alabama} (U.S. 2015) and \textbf{Allen v. Milligan} (U.S. 2023). The Milligan cases involved Section 2 of the Voting Rights Act and Alabama's congressional map. The Supreme Court held that Alabama's map violated Section 2 by failing to include a second majority-Black district. On remand, the district court's special-master process took more than a year. An algorithmic remedy---running \texttt{bisect} with VRA-aligned weights to identify feasible majority-minority configurations---could have demonstrated the availability of compliant plans in days rather than months.
+
+\subsection{Common Pathologies}
+
+Across the 12+ special-master proceedings since 2010, we identify four common pathologies:
+
+\textbf{(1) Speed.} Average time from court order to implemented plan: 14 months. Two elections under the challenged map (or under a court-ordered interim plan) are common. The \texttt{bisect} platform can produce a complete baseline in under 20 minutes; a special master using \texttt{bisect} could produce a VRA-compliant remedial map in days rather than months.
+
+\textbf{(2) Cost.} Average total cost of special-master proceedings (expert fees, legal fees, court costs): \$1.2M per state. Algorithmic redistricting eliminates most of the mapmaking cost; remaining expert costs focus on VRA compliance documentation rather than cartographic judgment.
+
+\textbf{(3) Verifiability.} Special-master maps are produced by expert judgment, creating opportunities for opposing experts to challenge the special master's decisions at each step. An algorithmic map is verifiable by anyone; opposing experts can challenge the algorithm's suitability (a purely legal and statistical question) but cannot challenge the map's internal consistency.
+
+\textbf{(4) Precedent fragmentation.} Each special-master proceeding develops its own criteria and processes; there is no standard methodology across states or courts. A platform-based approach provides a common technical standard, reducing inconsistency and improving public confidence.

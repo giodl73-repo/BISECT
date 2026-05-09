@@ -1,0 +1,56 @@
+\section{Introduction}
+\label{sec:introduction}
+
+Algorithmic redistricting transfers the locus of potential manipulation
+from the map-drawing stage (where humans directly choose boundaries) to
+the data preparation stage (where the algorithm's inputs are assembled).
+An adversary who cannot influence the algorithm's parameters or code
+may still be able to achieve partisan outcomes by manipulating the
+population counts, geographic boundaries, or demographic tables that
+the algorithm uses as inputs.
+
+This paper examines input data manipulation as a gaming vector (V2 in
+the R.0 taxonomy~\citep{r0paper}).
+We ask: given full access to the data pipeline between the Census Bureau
+and the redistricting algorithm, what is the maximum partisan shift an
+adversary can achieve without triggering the SHA-256 audit chain?
+
+The question has both empirical and cryptographic components.
+The empirical component asks: how much does a given magnitude of data
+manipulation shift partisan outcomes?
+The cryptographic component asks: at what manipulation magnitude does the
+SHA-256 audit chain provide a computationally infeasible barrier to
+undetected manipulation?
+
+\subsection{Data Sources}
+
+The \bisect{} algorithm ingests three classes of data:
+
+\begin{enumerate}
+\item \textbf{Census P.L.\ 94-171 Redistricting Data}: Population counts
+  for each census tract (GEOID), disaggregated by race and Hispanic origin
+  for VRA compliance.
+  Released every decade by the Census Bureau within 12 months of census day.
+\item \textbf{TIGER/Line Shapefiles}: Geographic boundaries for each
+  census tract.
+  Released annually by the Census Bureau's Geography Division.
+  The redistricting-year vintage (e.g., 2020) is the authoritative source.
+\item \textbf{ACS 5-Year Tables}: American Community Survey estimates
+  of demographic composition, used for VRA boost weight computation.
+  Annually released; \bisect{} uses the vintage ending in the census year
+  (e.g., 2016--2020 for the 2020 cycle).
+\end{enumerate}
+
+All three are public-domain and available directly from the Census Bureau.
+The key security property is that they are also independently verifiable:
+any party can download them directly and compare against the algorithm's
+cached copies.
+
+\subsection{Road Map}
+
+Section~\ref{sec:attack} describes the three attack surfaces.
+Sections~\ref{sec:pl94}--\ref{sec:acs} analyse each attack in detail.
+Section~\ref{sec:audit-chain} describes the three-level SHA-256 audit chain.
+Section~\ref{sec:tls} discloses the TLS limitation.
+Section~\ref{sec:effect} quantifies the combined partisan effect.
+Section~\ref{sec:conclusion} concludes.

@@ -1,0 +1,88 @@
+\section{The DIA Pre-Registration Defense}
+\label{sec:preregistration}
+
+\subsection{Why 0.3 Seats Is Not Enough Justification for No Defense}
+
+Even though 0.3 seats of parameter-based variation is below the noise floor,
+the DIA should still eliminate this gaming vector.
+The reason is not the magnitude of the effect; it is the \emph{appearance}
+of manipulation.
+If parameters are chosen after Census data are released, an opponent can
+always argue---even without evidence---that the parameter choices were
+motivated by their partisan implications.
+This argument is difficult to rebut in litigation: the defendant cannot
+prove they did not observe partisan implications before setting parameters.
+
+Pre-registration converts this he-said/she-said dispute into a
+cryptographic fact.
+
+\subsection{The Pre-Registration Mechanism}
+
+The DIA's pre-registration protocol for parameters operates as follows:
+
+\begin{enumerate}
+\item \textbf{Twelve months before Census day}: The redistricting
+  administrator files a parameter configuration document containing
+  all five parameters and their values.
+  The document is hashed with SHA-256 and the hash is filed with the
+  Secretary of State.
+  The hash is computed as:
+  \[
+    h = \mathrm{SHA256}(\texttt{ufactor} \| \texttt{acounty} \| T
+    \| \texttt{aswing} \| \texttt{wvra} \| \texttt{algorithm\_binary\_hash}).
+  \]
+\item \textbf{Six months before Census day}: A public comment period
+  opens.
+  Any party can challenge parameter values as inconsistent with the
+  statutory specification or as technically unjustified.
+  The administrator must respond to all challenges.
+\item \textbf{Census day}: Redistricting data released.
+  Parameters cannot be changed.
+\item \textbf{Computation day}: The algorithm runs using the pre-registered
+  parameters.
+  The manifest records the pre-registration hash alongside the computation
+  output hash.
+\item \textbf{Verification}: Any party can verify that the deployed
+  parameters match the pre-registered hash using \texttt{bisect label-verify}.
+\end{enumerate}
+
+\subsection{What Pre-Registration Guarantees}
+
+Pre-registration provides three guarantees:
+
+\begin{theorem}[Pre-Registration Eliminates V1 Gaming]
+Under the DIA pre-registration protocol, no parameter gaming vector
+can produce a partisan outcome differing from the pre-registered
+default by more than the seed-variance noise floor ($\sigma \approx 0.8$ seats).
+\end{theorem}
+
+\begin{proof}
+The parameter values are fixed before Census data are released.
+Any change to parameters after release changes the manifest hash.
+The maximum effect of parameter variation within admissible ranges is
+0.3 seats (from the 50-state sweep).
+Since 0.3 $<$ 0.8 = $\sigma$, even the maximum effect is within
+the noise floor.
+$\square$
+\end{proof}
+
+Guarantee 1: No post-data parameter optimization is possible.
+Guarantee 2: Any deviation from pre-registered parameters is
+cryptographically detectable.
+Guarantee 3: The maximum undetectable effect (from parameters within
+the pre-registered values) is zero by definition.
+
+\subsection{Challenge-Period Safeguard}
+
+The six-month challenge period serves a second purpose beyond public
+accountability: it recruits opponents as algorithm auditors.
+Any party who suspects the pre-registered parameters are partisan-motivated
+can challenge them during the comment period.
+If the challenge identifies a credible partisan motivation (e.g., the
+submitted $\acounty = 10$ is the value that minimizes Democratic seats
+in a specific state), the administrator must either justify the choice
+on technical grounds or resubmit different parameters.
+
+This self-enforcing mechanism does not require a neutral arbitrator
+to evaluate each parameter choice; it relies on adversarial scrutiny
+to surface problems before they affect the map.

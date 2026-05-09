@@ -1,0 +1,82 @@
+\section{BISECT Pipeline Behavior and Partisan Direction}
+\label{sec:bisect-partisan}
+
+\subsection{How BISECT Handles Military Population}
+
+BISECT's default pipeline uses 2020 Census PL 94-171 total population, which includes all Group Quarters categories. Military Group Quarters (type 210) are included in the tract-level vertex weights without modification. This means:
+
+\begin{enumerate}
+    \item \textbf{On-base tracts} receive full credit for the military Group Quarters population in their vertex weight, making them ``heavier'' and reducing the geographic territory required to reach the district size target.
+    \item \textbf{Overseas military} do not appear in any census tract weight; they are allocated only to the state's total apportionment count. BISECT's partitioner sees only tract-level data, so overseas military are effectively invisible to the algorithm.
+    \item \textbf{Off-base military} are counted at their civilian address and are indistinguishable from any other civilian resident in BISECT's data.
+\end{enumerate}
+
+The net effect is that BISECT compresses installation-adjacent congressional districts geographically, exactly as a human mapmaker would if using Census total population. This is the correct behavior if the intent is to use total population as the balance metric---military personnel are residents of those districts and their representative serves them regardless of their home-of-record for voting purposes.
+
+\subsection{The \texttt{--balance-metric civilian\_only} Sensitivity Flag}
+
+For research purposes, it is useful to ask: how would BISECT's district boundaries change if military Group Quarters population were excluded from the balance metric? This question is analogous to the prison-adjusted question in N.1, and the implementation approach is similar: a preprocessing step that removes military Group Quarters counts from census tract weights and redistributes them proportionally across the state (approximating their political effect as diffuse voters in a statewide pool).
+
+\begin{verbatim}
+# Planned research sensitivity mode (not currently implemented):
+bisect build military_sensitivity --year 2020 \
+    --balance-metric civilian_only \
+    --exclude-gq-types 210 \
+    --gq-redistribution proportional
+
+# Compare to baseline:
+bisect label-analyze military_sensitivity \
+    --compare official_2020 \
+    --year 2020
+\end{verbatim}
+
+The \texttt{--exclude-gq-types 210} flag would instruct the preprocessing module to zero out Group Quarters type 210 (military quarters) in all census tracts before computing vertex weights. The \texttt{--gq-redistribution proportional} option specifies that the excluded population should be redistributed proportionally across all tracts (diffusing the military population rather than dropping it entirely, preserving state-level totals). This mode is intended for research sensitivity analysis only; it is not a legally defensible redistricting methodology because military personnel are legitimate residents of their installation districts.
+
+\subsection{Partisan Direction of Military Population Counting}
+
+The active-duty military has historically leaned Republican. Multiple surveys and voter registration data analyses from military-heavy counties support this characterization:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Source} & \textbf{R Lean (estimated)} & \textbf{Notes} \\
+\midrule
+Military Times 2020 poll & $+12$ R & Among active-duty voters \\
+Military Times 2016 poll & $+19$ R & Declined from 2012 \\
+CCES 2018 (military household) & $+14$ R & All military households \\
+Cumberland County (NC) 2020 vote & $+8$ R & County-level; includes civilian population \\
+Bell County (TX) 2020 vote & $+34$ R & County-level; heavy military \\
+\bottomrule
+\end{tabular}
+\caption{Estimates of Republican partisan lean among active-duty military and military-affiliated voters. The $+12$ to $+19$ R range is consistent across sources for active-duty personnel specifically. County-level data reflects the full civilian-plus-military population.}
+\label{tab:partisan-lean}
+\end{table}
+
+The Republican lean of the active military is mild by the standards of demographic group partisanship (Black voters lean D by $\sim$80 points; evangelical White Protestants lean R by $\sim$60 points). But it is consistent and directional. The consequence for redistricting is that including military Group Quarters in total-population counts systematically makes installation-heavy districts more Republican than they would otherwise be, and the geographic compression caused by military population (making those districts smaller and more concentrated around installations) amplifies this effect by reducing the diluting effect of neighboring civilian communities.
+
+The estimated partisan direction of military population counting at the national level:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Scenario} & \textbf{Estimated D Seats} & \textbf{Estimated R Seats} \\
+\midrule
+Total population (baseline, with military) & --- & --- \\
+Civilian-only (military removed from districts) & $+1$ to $+2$ & $-1$ to $-2$ \\
+\bottomrule
+\end{tabular}
+\caption{Estimated partisan direction of removing military population from district balance metric, relative to total-population baseline. Effect is mild but consistent in direction. These are rough estimates based on the partisan-lean analysis and installation-concentration data; precise figures would require full BISECT simulation.}
+\label{tab:military-partisan}
+\end{table}
+
+The effect is substantially smaller than the CVAP-versus-total-population effect estimated in N.0. Military population counting is a second-order effect; CVAP substitution is a first-order effect. Nonetheless, for the specific congressional districts containing major installations---NC-9 (Fort Liberty), VA-2 (Hampton Roads), TX-31 (Fort Cavazos)---the military population effect is large enough to affect district competitiveness.
+
+\subsection{Interaction with BISECT's Algorithmic Neutrality}
+
+BISECT is structurally unable to see partisan data, meaning it cannot explicitly favor Republican or Democratic outcomes. But partisan effects can enter through input data. The military population effect illustrates a category of input-data effects that are directional without being manipulative: nobody designed the Census Group Quarters classification to help Republicans, but the combination of (1) military Republican lean, (2) installation geographic concentration, and (3) Census counting at installation location produces a mild systematic R-advantage in installation-heavy districts.
+
+The appropriate response is not to exclude military personnel from the balance metric---they are legitimate residents---but to document the effect transparently. BISECT's \texttt{--balance-metric civilian\_only} sensitivity mode is designed for this purpose: to quantify the military population effect without endorsing civilian-only redistricting as a policy recommendation.
+
+This is consistent with the broader principle in Track N: algorithmic redistricting cannot guarantee input-data neutrality, only algorithmic-process neutrality. Every population-counting choice embeds substantive values; the algorithm's role is to apply those choices consistently and transparently.

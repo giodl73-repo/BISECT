@@ -1,0 +1,96 @@
+We provide a model procurement specification that state redistricting offices can use to contract for algorithmic redistricting services or to evaluate vendor proposals. The specification is designed for a state with 10--20 congressional districts; it should be adapted for larger or smaller states.
+
+\subsection{Model Procurement Specification: Algorithmic Congressional Redistricting Services}
+
+\begin{quote}
+\textbf{SOLICITATION TITLE}: Algorithmic Congressional Redistricting Services, [Year] Decennial Census Cycle
+
+\textbf{ISSUING AUTHORITY}: [State] Legislative Services Bureau / Redistricting Commission / [other appropriate body]
+
+\textbf{PROCUREMENT TYPE}: Professional Services Contract
+
+\textbf{CONTRACT PERIOD}: [Census data release date] through [18 months after data release]
+
+\textbf{ESTIMATED CONTRACT VALUE}: \$35,000--\$75,000 (see Section 3 below)
+
+\rule{\linewidth}{0.4pt}
+
+\textbf{Section 1: Background and Purpose}
+
+[State] [Commission/Legislature/Bureau] seeks to procure algorithmic redistricting services for the [Year] congressional redistricting cycle. The successful contractor will produce an algorithmic baseline map for [State]'s [N] congressional districts from the [Year] decennial census redistricting data, using a deterministic, partisan-blind algorithm whose output is publicly verifiable from recorded inputs.
+
+The algorithmic baseline map will serve as the starting point for [State]'s redistricting process, subject to modifications required by the Voting Rights Act and [State] constitutional or statutory requirements. The contractor's deliverable is the baseline map and associated documentation, not the final redistricting plan.
+
+\rule{\linewidth}{0.4pt}
+
+\textbf{Section 2: Required Deliverables}
+
+The contractor shall deliver, within [60] days of receiving the decennial census redistricting data release:
+
+\textbf{(a) Algorithmic Baseline Map.} District assignments for each census tract in [State], assigning each tract to one of [N] congressional districts, with the following properties:
+  \begin{enumerate}[label=(\roman*)]
+    \item Population balance within 0.5\% of ideal district population ([State population / N]);
+    \item Geographic contiguity of all districts;
+    \item Compactness optimization using recursive bisection with METIS edge-cut minimization;
+    \item No use of partisan registration data, election results, race, ethnicity, or incumbency information as algorithm inputs.
+  \end{enumerate}
+
+\textbf{(b) Reproducibility Manifest.} A machine-readable file (\texttt{manifest.json}) recording: contractor software version (identified by SHA-256 hash of the distributable binary); census data release identifier; TIGER adjacency file SHA-256 hash; population source; balance tolerance; seed; district count; and creation timestamp.
+
+\textbf{(c) Population Balance Certification.} Output of the \texttt{bisect label-verify} command demonstrating that each district satisfies the population balance requirement.
+
+\textbf{(d) Analysis Report.} A report including: population statistics by district; compactness scores (Polsby-Popper and Reock) by district; political subdivision split analysis (counties and municipalities split across district boundaries); and minority VAP percentages by district.
+
+\textbf{(e) Technical Documentation.} Written documentation sufficient to allow [State] technical staff to independently reproduce the baseline map using the contractor's software and the recorded manifest parameters.
+
+\textbf{(f) Training.} Not fewer than 4 hours of training for [State] technical staff in operating the contractor's software, interpreting the manifest, and running the verification command.
+
+\rule{\linewidth}{0.4pt}
+
+\textbf{Section 3: Pricing Structure}
+
+Offerors shall provide firm-fixed prices for:
+
+\begin{enumerate}[label=(\alph*)]
+  \item Baseline map production, manifest, and population certification: \$[bid amount]
+  \item Analysis report: \$[bid amount]
+  \item Technical documentation: \$[bid amount]
+  \item Training (per hour, up to 8 hours): \$[bid amount per hour]
+  \item Optional: Departure certification---re-running population balance after commission modifications (per modification): \$[bid amount per modification]
+  \item Optional: VRA demographic analysis to inform modification decisions (per district): \$[bid amount per district]
+\end{enumerate}
+
+\rule{\linewidth}{0.4pt}
+
+\textbf{Section 4: Minimum Technical Requirements}
+
+Offers will be evaluated only if the offeror's proposed software satisfies all of the following requirements:
+
+\begin{enumerate}[label=(\alph*)]
+  \item The software shall be open-source (source code publicly available) or shall include a provision allowing [State] to escrow the source code for independent audit.
+  \item The software shall produce a manifest satisfying the format requirements in Section 2(b).
+  \item The software shall include a verification command that any person can run to confirm that the recorded manifest parameters reproduce the published baseline map.
+  \item The software shall not require any input other than census redistricting data, TIGER boundary files, the target district count, the population balance tolerance, and a random seed. The software shall be incapable of accepting partisan registration data, election results, race, ethnicity, or incumbency data as inputs.
+  \item The software shall have been used to produce redistricting maps in at least one prior redistricting proceeding, or the offeror shall provide independent technical evaluation by a qualified academic institution confirming its suitability.
+\end{enumerate}
+
+\rule{\linewidth}{0.4pt}
+
+\textbf{Section 5: Evaluation Criteria}
+
+Offers will be evaluated on: (1) Technical approach (40\%): compliance with minimum requirements; clarity of verification process; quality of prior redistricting applications; (2) Price (40\%): total price for deliverables (a)-(d) above; (3) Past performance (20\%): references from prior redistricting applications; responsiveness to questions and modification requests.
+
+\rule{\linewidth}{0.4pt}
+
+\textbf{Section 6: Data Rights}
+
+[State] shall retain ownership of all deliverables and shall have the right to publish all deliverables on its public website without restriction. The contractor shall retain no proprietary rights in the census data, TIGER data, or derived district assignments. The contractor's software and algorithms remain the contractor's property, subject to the escrow or open-source requirement in Section 4(a).
+\end{quote}
+
+\subsection{Notes for Procurement Officers}
+
+The minimum technical requirements in Section 4 are designed to ensure that the \texttt{bisect} platform (or any equivalent open-source platform) qualifies, while excluding closed-source tools whose internal operations cannot be independently verified.
+
+The price structure in Section 3 allows states to scale the contract to their needs: small states with few congressional districts may need only deliverables (a)--(c); states with substantial minority populations may need the optional VRA demographic analysis.
+
+The training requirement (4 hours minimum) is essential for ensuring that state technical staff can independently verify the baseline, operate the software for departure certification, and maintain the administrative record. Training costs should not be omitted from the budget.

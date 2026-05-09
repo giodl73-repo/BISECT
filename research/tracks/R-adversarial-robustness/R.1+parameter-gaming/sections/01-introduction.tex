@@ -1,0 +1,80 @@
+\section{Introduction}
+\label{sec:introduction}
+
+The political feasibility of the \dia{} depends partly on whether
+skeptics can credibly argue that algorithm parameters can be tuned
+to produce partisan outcomes.
+A hostile legislator or redistricting commission might argue: ``We are
+just setting technical parameters.
+Our choices of population tolerance, county preservation weight, and
+convergence threshold are standard algorithmic practice.
+The partisan outcome of our parameter choices is coincidental.''
+
+B.17~\citep{b17paper} answered the descriptive version of this question:
+what is the observed variation in partisan outcomes as parameters vary?
+The answer was reassuring: at most 0.3 seats nationally across the full
+parameter range.
+But B.17 did not frame the question adversarially.
+It asked ``what happens when we vary parameters one at a time?'' not
+``what is the maximum a hostile actor can achieve by jointly optimizing
+all parameters for partisan advantage?''
+
+This paper addresses the adversarial framing directly.
+
+\subsection{Adversarial Threat Model}
+
+We model a hostile redistricting administrator who:
+\begin{enumerate}
+\item Knows the full \bisect{} algorithm specification;
+\item Has freedom to set any parameter within its admissible range;
+\item Can run the algorithm with different parameter settings before
+  Census data are released (to understand the distribution of partisan
+  outcomes without actually observing them), or after release
+  (if pre-registration is not required);
+\item Will choose the parameter setting that maximizes partisan advantage
+  for their preferred party.
+\end{enumerate}
+
+The administrator is constrained only by the requirement that parameters
+fall within their technically-justified ranges.
+They cannot set $\ufactor = 50\%$ (which would produce grossly
+unequal population districts) or $\acounty = 1{,}000$ (which would
+effectively prevent any county splits, violating the one-person-one-vote
+requirement in multi-county districts).
+
+\subsection{Main Contributions}
+
+\begin{enumerate}
+\item We define the \emph{most partisan parameter configurations}
+  (one Republican-favorable, one Democratic-favorable) for the \bisect{}
+  five-parameter space (Section~\ref{sec:most-partisan}).
+\item We report the end-to-end partisan outcome difference between the two
+  configurations across all 50 states (Section~\ref{sec:results}).
+\item We explain \emph{why} partisanship is parameter-insensitive by
+  decomposing the mechanism at the census-tract level
+  (Section~\ref{sec:adversarial}).
+\item We describe the \dia{} pre-registration defense and show it
+  eliminates the gaming vector regardless of the 0.3-seat bound
+  (Section~\ref{sec:preregistration}).
+\end{enumerate}
+
+\subsection{Relationship to B.17}
+
+This paper uses B.17's 50-state dataset as its empirical foundation
+but reorganises the analysis around the adversarial question.
+B.17's primary finding---``parameter tuning produces $\leq 0.3$ seats of
+variation nationally''---becomes this paper's \emph{answer} to the
+question: ``what is the maximum a hostile actor can achieve?''
+We add the adversarial interpretation, the worst-case configuration
+analysis, and the DIA defense.
+
+\subsection{Road Map}
+
+Section~\ref{sec:parameters} reviews the five parameters and their
+admissible ranges.
+Section~\ref{sec:adversarial} frames the reanalysis adversarially.
+Section~\ref{sec:most-partisan} defines the most partisan parameter
+configurations.
+Section~\ref{sec:results} reports the 50-state outcome comparison.
+Section~\ref{sec:preregistration} describes the DIA defense.
+Section~\ref{sec:conclusion} concludes.

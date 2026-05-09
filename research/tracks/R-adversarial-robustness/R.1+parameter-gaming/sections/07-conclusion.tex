@@ -1,0 +1,29 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper answers the adversarial reframing of B.17's parameter-sensitivity
+finding: the maximum partisan shift achievable by optimizing all five
+\bisect{} parameters for partisan advantage is 0.3 Democratic seats nationally.
+
+This is a tight bound for three structural reasons:
+(1)~parameters affect leaf-level cut quality within a fixed bisection tree,
+not the tree structure itself;
+(2)~competitive-district geography is not sensitive to 1--3 tract boundary
+shifts in non-competitive regions;
+and (3)~the five parameters interact on the same geometric bottleneck,
+producing saturation rather than amplification.
+
+The DIA pre-registration protocol eliminates this gaming vector entirely
+by requiring all parameters to be fixed and publicly recorded before Census
+redistricting data are released.
+Under pre-registration, the question ``could they have set parameters to
+favor their party?'' is converted from an unprovable allegation into a
+verifiable cryptographic fact: either the deployed parameters match the
+pre-registered hash or they do not.
+
+The broader lesson for algorithmic redistricting design is that parameter
+gaming is a minor concern relative to algorithm-structure gaming (B.0's
+18-seat gap) and geographic-definition gaming (R.3's 1.5-seat gap).
+The DIA should concentrate its structural constraints on algorithm
+pre-specification and geographic definition mandates, treating parameter
+pre-registration as a lower-stakes but still necessary safeguard.

@@ -1,0 +1,80 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}[theorem]
+\usepackage{booktabs}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{microtype}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{titlesec}
+
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+\setstretch{1.4}
+
+%% Macros
+\newcommand{\bisect}{\textsc{bisect}}
+\newcommand{\dia}{\textsc{Districting Integrity Act}}
+\newcommand{\cs}{\textsc{ConvergenceSweep}}
+\newcommand{\PP}{\ensuremath{\mathrm{PP}}}
+\newcommand{\ufactor}{\ensuremath{u_{\mathrm{factor}}}}
+\newcommand{\acounty}{\ensuremath{\alpha_{\mathrm{county}}}}
+\newcommand{\aswing}{\ensuremath{a_{\mathrm{swing}}}}
+\newcommand{\wvra}{\ensuremath{w_{\mathrm{vra}}}}
+\newcommand{\Dnat}{\ensuremath{D_{\mathrm{nat}}}}
+
+\title{%
+  \textbf{Parameter Gaming: Can Parameter Tuning\\
+  Produce Partisan Plans?}\\[0.8em]
+  \normalsize\textit{R.1 --- Adversarial Robustness Track}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Parameter gaming, algorithmic redistricting, adversarial robustness,
+partisan neutrality, DIA pre-registration, SHA-256, METIS imbalance factor,
+convergence sweep threshold
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-parameters}
+\input{sections/03-adversarial-reframing}
+\input{sections/04-most-partisan-settings}
+\input{sections/05-results}
+\input{sections/06-preregistration-defense}
+\input{sections/07-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,22 @@
+\section{Introduction}
+
+B.17 established that parameter gaming is bounded ($< 0.3$ seats nationally);
+R.2 established that input data manipulation is detectable via SHA-256.
+R.3 examines the third and most subtle gaming vector: geographic definition choices
+that appear to be neutral technical decisions but may be strategically chosen.
+
+Two geographic decisions are relevant:
+\begin{enumerate}
+  \item \textbf{Resolution choice}: whether to use census tracts or block groups
+    as the atomic unit. F.3 establishes a $k/n > 0.05$ threshold rule, but
+    an adversary might argue for a different threshold to shift a state from
+    one resolution level to another.
+  \item \textbf{Adjacency definition}: whether two geographically adjacent tracts
+    share an adjacency edge. The standard definition (any shared TIGER/Line boundary)
+    is objective, but an adversary might use a different adjacency criterion
+    (e.g., require minimum shared boundary length) to exclude specific cross-partisan
+    edges.
+\end{enumerate}
+
+This paper tests the maximum partisan shift achievable via each vector and shows
+that the audit chain makes the manipulation detectable.

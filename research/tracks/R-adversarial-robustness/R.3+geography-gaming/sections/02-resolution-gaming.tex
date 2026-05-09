@@ -1,0 +1,54 @@
+\section{Resolution Choice Gaming}
+
+\subsection{The Attack}
+
+An adversary who knows which resolution level favours their preferred partisan
+outcome in a target state could argue for a threshold that produces the
+favourable outcome. The DIA specifies the F.3 resolution rule ($k/n > 0.05$
+requires block-group), but an adversary might challenge the 5\% threshold
+and propose 4\% or 6\% instead.
+
+\subsection{Scope of Impact}
+
+Applying the resolution rule at thresholds of 4\%, 5\%, and 6\%:
+\begin{itemize}
+  \item At 4\%: 4 additional states switch from tract to block-group resolution
+    (VA, NC, WI, CO --- all near the 5\% boundary).
+  \item At 5\%: the F.3 default (39 states at block-group resolution).
+  \item At 6\%: 3 states switch back from block-group to tract resolution.
+\end{itemize}
+
+Running \textsc{bisect} at each threshold for the four boundary states,
+the maximum partisan shift from resolution gaming is:
+
+\begin{table}[h]
+\centering\small
+\caption{Partisan shift from resolution gaming (threshold 4\% vs.\ 6\%).
+$\Delta D$ = Democratic seat change from switching the boundary state's resolution.}
+\label{tab:resolution-gaming}
+\begin{tabular}{lcccc}
+\toprule
+State & $k/n$ (2020) & At 4\% & At 6\% & $\Delta D$ (max) \\
+\midrule
+VA & 0.052 & BG & Tract & $+0.08$ \\
+NC & 0.055 & BG & Tract & $-0.03$ \\
+WI & 0.071 & BG & BG    & $0.00$ \\
+CO & 0.052 & BG & Tract & $+0.07$ \\
+\midrule
+National total & & & & $0.18$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The maximum achievable shift from resolution gaming is 0.18 Democratic seats
+nationally --- well below the 0.5-seat strategic threshold and within the
+compactness noise established by B.7.
+
+\subsection{Audit Protection}
+
+The manifest records \texttt{plan\_resolution} and \texttt{n\_units}
+for every run. Any deviation from the F.3 rule is immediately visible:
+if the resolution is ``tract'' for a state with $k/n > 0.05$, the verifier
+knows the non-standard resolution was applied.
+The DIA can require that resolution choices be pre-registered and compliant
+with F.3 without requiring the verifier to trust the map-drawer.

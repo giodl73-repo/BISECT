@@ -1,0 +1,20 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+Prison gerrymandering is a structural feature of the American redistricting system, not a manipulation by any individual actor. The Census Bureau's usual-residence rule is applied consistently and in good faith; no legislature designed the prison-counting convention to dilute minority votes. Yet the cumulative effect of counting 2.1 million people at their incarceration locations rather than their home communities is a systematic transfer of political representation from predominantly Black and Hispanic urban communities to predominantly white rural communities.
+
+New York's experience demonstrates that residence-address correction is technically feasible and legally uncontroversial at the state level: New York has used corrected populations in both the 2010 and 2020 redistricting cycles without litigation successfully challenging the correction itself. The barriers in Pennsylvania and Texas are political, not technical---rural legislators who benefit from the current counting convention have blocked reform despite bipartisan recognition of the underlying distortion.
+
+For algorithmic redistricting systems like BISECT, prison gerrymandering presents a clean illustration of the distinction between \emph{algorithmic neutrality} and \emph{input neutrality}. BISECT's graph-bisection algorithm is structurally incapable of gerrymandering because it cannot see partisan data. But if the input population data contains a systematic distortion---counting prisoners at the wrong location---the output will reproduce that distortion faithfully. Algorithmic objectivity cannot substitute for input integrity.
+
+Three conclusions follow:
+
+\begin{enumerate}
+    \item \textbf{Disclosure requirement}: Any redistricting plan, algorithmic or manual, should disclose whether it uses unadjusted Census population (including prisoners at facility locations) or residence-address-corrected population. This is a methodological choice with distributional consequences that should be visible to courts and the public.
+
+    \item \textbf{Federal data improvement}: Congress should direct the Census Bureau to publish, as part of the PL 94-171 redistricting file, a parallel table allocating correctional facility populations to prisoner home-address geographies, based on DOC administrative records. This would provide a Census-official correction dataset rather than requiring each state to construct its own.
+
+    \item \textbf{BISECT implementation priority}: The \texttt{--balance-metric prison\_adjusted} preprocessing mode described in Section~\ref{sec:algorithmic} should be implemented in the BISECT pipeline as a high-priority enhancement, using the Prison Policy Initiative's LSPC dataset as the default reallocation source until Census-official data is available.
+\end{enumerate}
+
+The approximately 2.1 million incarcerated people counted in the decennial Census are among the most politically disenfranchised members of American society: they cannot vote in most states, they are counted far from their communities, and their communities lose political representation as a result of their incarceration. An algorithmic redistricting system that claims to advance democratic legitimacy cannot treat this systematic distortion as a detail.

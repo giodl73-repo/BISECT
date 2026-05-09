@@ -1,0 +1,28 @@
+\section{Introduction}
+
+Courts evaluating gerrymandering claims need p-values, not percentile positions.
+``More compact than 99.7\% of valid plans'' is not a standard statistical statement ---
+it does not account for the precision of the 99.7\% estimate, which depends on
+the ensemble's effective sample size.
+
+The G.4 analysis established that a 1{,}000-step GerryChain ensemble for NC has
+$\ess \approx 70$ (accounting for lag-1 autocorrelation $\rho_1 \approx 0.87$).
+This means the ensemble provides approximately 70 independent plan observations,
+not 1{,}000.
+The nominal percentile of $\hat{p} = 0.003$ (3 plans more compact than the enacted
+plan out of 1{,}000) has substantial uncertainty when derived from only 70
+effective observations.
+
+The permutation test framework corrects this: it converts the raw percentile into
+an ESS-corrected p-value using the Beta posterior introduced in S.2.
+The implementation is in \texttt{bisect-analysis::permutation::permutation\_test\_lower\_tail},
+which takes a query plan's test statistic, the ensemble plans, and the ESS estimate
+from G.4, and returns a \texttt{PermutationTestResult} with both raw and corrected p-values.
+
+\paragraph{Null hypothesis.}
+$H_0$: the query plan's test statistic is drawn from the same distribution
+as the ensemble plans (the query plan is a random draw from the plan space).
+
+\paragraph{Test statistic.}
+We use the normalised edge-cut fraction $\mathcal{E}$ (lower = more compact)
+as the primary test statistic, consistent with G.1.

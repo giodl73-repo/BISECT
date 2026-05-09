@@ -1,0 +1,40 @@
+The most powerful precedent for the DIA is not a redistricting case but an apportionment statute: the Act of November 15, 1941 (55 Stat.\ 761), now codified at 2 U.S.C.\ \S2a(a), which mandated the Huntington-Hill equal-proportions method for allocating House seats among states after each decennial census.
+
+\subsection{The Problem the 1941 Act Solved}
+
+Before 1941, Congress had repeatedly failed to apportion House seats after the 1920 census. The dispute was not about population data---the census was uncontested---but about the method. Different mathematical formulas (Webster's major fractions, Hamilton's largest remainders, Dean's harmonic mean) produced different allocations in closely contested cases, and each method happened to favor different regional or partisan coalitions. Congress deadlocked for a decade.
+
+The impasse was resolved by algorithm specification. The National Academy of Sciences was asked to evaluate competing methods on neutral mathematical grounds. It recommended Huntington-Hill equal-proportions as the method that minimized relative representation differences among states. Congress enacted that specific method in 1941 and has not changed it since. The statute is brief---the relevant operative language is fewer than 200 words---but it is mathematically precise.
+
+\subsection{Structural Parallels to the DIA}
+
+The Huntington-Hill statute and the DIA share five structural features:
+
+\textbf{(1) Algorithm rather than criteria.} The 1941 Act does not say that apportionment should be ``proportional'' or ``fair.'' It specifies the exact mathematical operation: assign $a_i = \sqrt{P_i / (n_i \cdot (n_i + 1))}$ for each state $i$, where $P_i$ is population and $n_i$ is the current number of seats, then assign the next seat to the state with the highest priority value. The DIA likewise specifies recursive bisection with METIS edge-cut optimization, not merely ``compact and equal-population districts.''
+
+\textbf{(2) Delegated technical parameters.} The 1941 Act delegates to the Census Bureau the responsibility for applying the formula and certifying the results. The DIA delegates to the Census Director the authority to specify the reference binary version and seed. Both delegations are ministerial, not policymaking.
+
+\textbf{(3) Verifiable output.} Huntington-Hill apportionment is verifiable by any person with a spreadsheet. The DIA's bisection output is verifiable by any person with the reference binary. In both cases, verification is mechanical, not expert-dependent.
+
+\textbf{(4) Preserved state role.} The 1941 Act determines how many seats each state receives; states then draw their own district lines. The DIA determines how district lines are drawn; states manage the VRA modification process. In both cases, the federal law establishes a floor and delegates execution to states.
+
+\textbf{(5) Successful congressional resolution of a ``political'' question.} The apportionment dispute was, like partisan gerrymandering, a question where interested parties had strong stakes in the outcome. Congress resolved it by delegating to a mathematical algorithm. The DIA applies the same political judo: rather than asking Congress to pick between competing partisan visions of fair maps, it asks Congress to pick an algorithm that has no partisan vision at all.
+
+\subsection{The 1941 Act's Constitutional Track Record}
+
+The Huntington-Hill statute has never been successfully challenged on constitutional grounds. It has been applied in every apportionment since 1950. It has survived challenges arguing that other methods would produce more proportional outcomes (\textit{United States Department of Commerce v. Montana}, 503 U.S.\ 442 (1992), which rejected a constitutional mandate for perfect proportionality) and that the method disadvantaged particular states (\textit{Department of Commerce v. U.S. House of Representatives}, 525 U.S.\ 316 (1999), upholding the method but not the proposed use of statistical sampling).
+
+The statute's constitutional durability over 80 years, through multiple party changes in Congress and multiple Supreme Court compositions, is the best available evidence that algorithm-specification is within Congress's Elections Clause authority. The DIA cites this precedent explicitly in its findings section (\S101(c)).
+
+\subsection{Limitations of the Analogy}
+
+The analogy is powerful but imperfect. Apportionment allocates seats among states (a federal problem with states as the affected parties) while redistricting allocates voters among districts within a state (a state problem with individuals as the affected parties). The constitutional bases differ---apportionment is grounded in Article I, \S2; redistricting is grounded in Article I, \S4 and the Fourteenth Amendment.
+
+The analogy also breaks down in one practical respect: Huntington-Hill's inputs are minimal (state populations) while bisection's inputs are extensive (tract adjacency graph, population data). The \texttt{bisect} platform manages this complexity automatically via:
+\begin{verbatim}
+bisect fetch --year 2020 --workers 8
+bisect build <label> --year 2020
+\end{verbatim}
+But the greater input complexity creates more surface area for disputes about data quality, adjacency definitions, and boundary conditions. The DIA addresses this by locking the TIGER adjacency graph and census population data to specific federal releases, with an errata mechanism for corrections.
+
+Despite these limitations, the 1941 analogy provides the strongest available historical argument for the DIA's constitutional validity and political precedent. Congress has done this before. It can do it again.

@@ -1,0 +1,75 @@
+We present three model court orders, each appropriate for different procedural circumstances. All three orders specify use of the \texttt{bisect} platform and require publication of the reproducibility manifest.
+
+\subsection{Model Order 1: Mandatory Algorithmic Remedy}
+
+\textit{Appropriate when}: The court is drawing the remedial map itself (as in \textit{LWV v. PA}), there is no time for a full special-master proceeding, and the VRA does not require modification of the algorithmic output.
+
+\begin{quote}
+\textbf{MODEL ORDER 1 --- MANDATORY ALGORITHMIC REMEDY}
+
+IT IS ORDERED that the [State] congressional districts for the [Year] election cycle shall be determined by the following procedure:
+
+1. The State shall run the \texttt{bisect} redistricting platform, version [X.Y.Z], using the following parameters: (a) 2020 decennial census redistricting data; (b) TIGER census tract boundary files, release [Date]; (c) recursive bisection with METIS edge-cut optimization; (d) population balance tolerance of 0.5\%; (e) seed [N], as specified in the parameter table appended hereto.
+
+2. The State shall publish the algorithmic output and its reproducibility manifest within 5 business days of this Order.
+
+3. Any party claiming that the algorithmic output does not satisfy the reproducibility requirements of this Order shall demonstrate the claim by running the \texttt{bisect} platform with the parameters specified in \P1 and submitting a declaration showing that the output differs from the published plan.
+
+4. The algorithmic output shall become the [State] congressional redistricting plan effective for the [Year] elections, unless this Court modifies it pursuant to \P5.
+
+5. Within 15 days of publication, any party may petition this Court to modify the algorithmic output to satisfy an identified Voting Rights Act, \S2 requirement. Any petition shall be accompanied by: (a) identification of the specific minority community and \textit{Gingles} prong analysis; (b) a proposed modification identifying each census tract to be reassigned; and (c) a declaration from a qualified demographic expert that the proposed modification satisfies the narrowly tailored standard of \textit{Miller v. Johnson}.
+
+6. Modified tracts shall be certified for population balance by re-running the \texttt{bisect} population verification command before any modification is adopted.
+\end{quote}
+
+\subsection{Model Order 2: Special-Master-Input Order}
+
+\textit{Appropriate when}: The court wants to retain oversight and the opportunity for VRA modifications, but prefers to delegate map production to a special master who uses algorithmic methods.
+
+\begin{quote}
+\textbf{MODEL ORDER 2 --- SPECIAL MASTER USING ALGORITHMIC INPUT}
+
+IT IS ORDERED that [Name], Special Master, is appointed to produce a remedial congressional redistricting plan for [State] using the following procedure:
+
+1. The Special Master shall produce an algorithmic baseline map using the \texttt{bisect} platform and publish it, with reproducibility manifest, within 10 business days of appointment.
+
+2. The Special Master shall hold not fewer than 3 public hearings within 20 days of appointment, at which members of the public and the parties may present evidence relevant to: (a) Voting Rights Act, \S2 compliance; (b) political subdivision integrity; and (c) geographic communities of interest.
+
+3. The Special Master may modify the algorithmic baseline map solely on the grounds identified in \P2. Each modification shall be accompanied by a written Departure Finding satisfying the requirements of Appendix A to this Order.
+
+4. The Special Master shall submit the proposed remedial plan, with all Departure Findings and the population balance re-certification, to this Court within 35 days of appointment.
+
+5. The parties shall have 7 days to file objections to the proposed plan. The Special Master shall have 5 days to respond. This Court shall adopt or modify the proposed plan within 10 days of receiving the response.
+
+6. The total time from appointment to adopted plan shall not exceed 60 days absent extraordinary circumstances.
+
+\textit{Appendix A: Departure Finding Requirements.} [Incorporates the Commission Adjustment Protocol from P.3, \S4, with judicial-supervision modifications.]
+\end{quote}
+
+\subsection{Model Order 3: Adequacy-Standard Order}
+
+\textit{Appropriate when}: The court is returning the map-drawing authority to the legislature or commission but wants to establish objective criteria that the new map must satisfy.
+
+\begin{quote}
+\textbf{MODEL ORDER 3 --- ADEQUACY STANDARD}
+
+IT IS ORDERED that any redistricting plan proposed by [State] for the [Year] election cycle must satisfy the following requirements to be approved by this Court:
+
+1. \textit{Population equality}: Each congressional district must have a population within 0.5\% of the ideal district population ($n = $ total state population $/$ number of districts).
+
+2. \textit{Compactness}: No congressional district may have a Polsby-Popper compactness score (area/$\pi \cdot r^2$ where $r$ is the radius of the circumscribed circle) below 0.10, and the mean Polsby-Popper score of all districts must exceed 0.20.
+
+3. \textit{Algorithmic reference}: The State shall produce an algorithmic baseline map using the \texttt{bisect} platform (parameters specified in Appendix B) and submit it to this Court simultaneously with any proposed plan.
+
+4. Any congressional district in the proposed plan whose Polsby-Popper score is more than 30\% lower than the corresponding district in the algorithmic baseline map must be accompanied by a written justification identifying the Voting Rights Act requirement or other compelling interest that requires the less-compact district.
+
+5. The Court's retained jurisdiction includes authority to reject any proposed plan and order production of an algorithmic baseline map as the operative plan pursuant to Model Order 1.
+
+\textit{Appendix B: Algorithmic Parameters.} [Specifies bisect version, census release, TIGER file hash, tolerance, seed.]
+\end{quote}
+
+\subsection{Selecting Among Model Orders}
+
+Model Order 1 is most powerful but requires the court to commit to an algorithmic plan without legislative input---politically contentious in states where courts are reluctant to assume the legislative function. Model Order 3 is most deferential but provides the weakest structural protection against manipulation.
+
+Model Order 2 strikes the best balance for most redistricting remediation proceedings: it uses the algorithm to produce a neutral baseline, gives VRA-interested parties opportunity to be heard, imposes a 60-day timeline (dramatically faster than the current average of 14 months), and retains court oversight of the final plan. For courts facing active redistricting litigation, we recommend Model Order 2 as the starting point.

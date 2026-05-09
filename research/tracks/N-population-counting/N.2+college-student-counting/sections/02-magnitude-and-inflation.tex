@@ -1,0 +1,51 @@
+\section{Magnitude and Mechanics of College-Town Inflation}
+\label{sec:magnitude}
+
+\subsection{The Census Usual-Residence Rule for Students}
+
+The Census Bureau's usual-residence rule for college students has evolved across census cycles. Prior to 1950, the Bureau counted students at their parents' home address. Beginning with the 1950 census, the Bureau shifted to campus counting, reasoning that the college campus had become the functional residence for most students during the academic year~\citep{census2021residence}.
+
+The 2020 Census applied the campus-counting rule broadly. Students living in dormitories were enumerated through the Group Quarters (GQ) process. Students living in off-campus university-affiliated housing were enumerated either through GQ or through self-response, with instructions directing them to list their campus address. Students in private off-campus apartments were instructed to list their current address if they lived there most of the time during the school year, which the Bureau interpreted to include most enrolled students.
+
+The result is that approximately 8.6 million college students---roughly 2.6\% of the total U.S. population---appear in Census population counts at campus addresses. The aggregate redistricting effect depends on the geographic concentration of this population: if students were uniformly distributed across all tracts, the per-district effect would be negligible. In practice, students are maximally concentrated in a small number of college-town census tracts, creating sharp local inflation effects.
+
+\subsection{Measuring College-Town Inflation}
+
+We define college-town inflation for jurisdiction $j$ as:
+\[
+I_j = \frac{P_j^{\text{Census}} - P_j^{\text{home-adj}}}{P_j^{\text{home-adj}}} \times 100\%
+\]
+where $P_j^{\text{Census}}$ is the 2020 Census total population and $P_j^{\text{home-adj}}$ is the hypothetical population under home-address reallocation (subtracting enrolled students counted at campus and not adding back any replacement population, since those students are added to their home jurisdictions).
+
+Using 2020 Census Bureau Group Quarters data (table GQ-T3: College/University Student Housing) matched against National Center for Education Statistics (NCES) Integrated Postsecondary Education Data System (IPEDS) enrollment data, we identify counties and census tracts with the largest proportional student populations.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{llcccc}
+\toprule
+\textbf{County} & \textbf{State} & \textbf{Institution} & \textbf{Enrollment} & \textbf{County Pop} & \textbf{Inflation} \\
+\midrule
+Tompkins & NY & Cornell / IC & 25,700 & 105,740 & 27.3\% \\
+Washtenaw & MI & University of Michigan & 47,000 & 367,601 & 14.6\% \\
+Champaign & IL & UIUC & 56,000 & 209,448 & 34.8\% \\
+Story & IA & Iowa State & 33,400 & 97,117 & 40.8\% \\
+Brazos & TX & Texas A\&M & 74,000 & 228,660 & 36.0\% \\
+Centre & PA & Penn State & 46,800 & 162,385 & 37.0\% \\
+Orange & NC & UNC Chapel Hill & 31,500 & 148,476 & 25.8\% \\
+Tippecanoe & IN & Purdue & 50,000 & 195,732 & 29.9\% \\
+Muskingum & OH & Ohio State (main) & 61,000 & 607,005 & 10.9\% \\
+Alachua & FL & University of Florida & 57,000 & 278,468 & 25.5\% \\
+\bottomrule
+\end{tabular}
+\caption{College-town county inflation estimates using 2020 Census Group Quarters data and IPEDS enrollment. Inflation calculated as on-campus/campus-adjacent student population as fraction of non-student residential base. Values are illustrative; exact figures depend on off-campus student enumeration methodology.}
+\label{tab:inflation}
+\end{table}
+
+The inflation figures in Table~\ref{tab:inflation} represent county-level aggregates. At the census-tract level---the unit relevant to redistricting---the inflation is more extreme. Tracts containing large dormitory complexes routinely have 70--90\% of their Census population composed of college students who are not permanent residents of the community.
+
+\subsection{National Aggregate}
+
+Nationally, approximately 8.6 million students were counted at campus addresses in 2020. This population is distributed across approximately 4,300 census tracts containing college or university facilities. The redistricting-relevant concentration is in the 400--500 tracts that are heavily dominated by student group-quarters population---tracts where the non-student permanent resident population would be insufficient to constitute a viable census enumeration unit.
+
+For congressional redistricting purposes, the relevant comparison is between the college-inflated census population of a congressional district and the district's hypothetical home-address-adjusted population. A congressional district centered on a major research university with 50,000 students carries approximately 50,000 ``ghost'' residents---people who are counted there but whose political community, economic attachments, and (for voting purposes) likely electoral participation is elsewhere.

@@ -1,0 +1,67 @@
+\section{Adversarial Reframing}
+\label{sec:adversarial}
+
+\subsection{Why Parameters Might Be Partisan}
+
+Before measuring the actual partisan effect of parameter tuning, it is
+worth asking: \emph{why might parameters be partisan at all?}
+If the algorithm cannot see partisan data, how could parameter choices
+produce partisan outcomes?
+
+The answer lies in the correlation between parameter-sensitive outcomes
+and political geography.
+Parameters that affect compactness indirectly affect partisanship because
+urban areas (which vote heavily Democratic) are geographically compact.
+A parameter that increases compactness also increases the tendency to
+pack Democratic voters into fewer districts.
+A parameter that decreases compactness does the opposite.
+
+This correlation suggests a mechanism: by setting parameters that produce
+maximally compact districts, a Republican-preferring actor might increase
+the packing of Democrats and produce a more Republican-favorable map.
+Conversely, a Democrat-preferring actor might set parameters that reduce
+compactness and spread Democratic voters across more districts.
+
+\subsection{The Geographic Continuity Argument}
+
+B.17~\citep{b17paper} identifies the structural reason why this mechanism
+is weaker than intuition suggests: the bisection tree structure is determined
+by the prime factorisation of the district count $k$ and the graph topology,
+not by parameter values.
+Parameter changes alter \emph{leaf-level cut quality} within a fixed tree
+structure, not the tree structure itself.
+
+In practice, the difference between a compact leaf-level cut and a less
+compact one involves moving $1$--$3$ census tracts across a district
+boundary.
+Competitive-district geography---the geography of swing districts that
+determine which party controls the delegation---is not sensitive to
+such small boundary shifts.
+The tracts that move across boundaries are typically in non-competitive
+regions of the state, where a shift does not change the partisan winner.
+
+\subsection{Formal Decomposition}
+
+Let $D_i(\theta)$ denote the Democratic vote share in district $i$ under
+parameter vector $\theta = (\ufactor, \acounty, T, \aswing, \wvra)$.
+The expected number of Democratic seats nationally is:
+\[
+  \Dnat(\theta) = \sum_{s=1}^{50} \sum_{i \in s} \mathbf{1}[D_i(\theta) > 0.5].
+\]
+
+A parameter change $\theta \to \theta'$ shifts $\Dnat$ by:
+\[
+  \Delta \Dnat = \sum_{s=1}^{50} \sum_{i \in s}
+  \left( \mathbf{1}[D_i(\theta') > 0.5] - \mathbf{1}[D_i(\theta) > 0.5] \right).
+\]
+
+A district $i$ changes partisan outcome only if $D_i(\theta)$ crosses 0.5
+between $\theta$ and $\theta'$.
+This requires that district $i$ is competitive (close to the 50\% threshold)
+and that the parameter change moves boundary tracts with partisan
+composition different from the district's current majority.
+Both conditions must hold simultaneously.
+
+The empirical rarity of this conjunction---competitive districts whose
+boundaries shift across parameters AND whose shifting tracts contain
+enough partisan votes to flip the district---explains the 0.3-seat bound.

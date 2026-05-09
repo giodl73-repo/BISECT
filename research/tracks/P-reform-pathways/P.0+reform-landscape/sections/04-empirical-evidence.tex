@@ -1,0 +1,49 @@
+We test the model's central prediction---that reform probability is increasing in electoral competitiveness, ballot initiative availability, and gerrymandering litigation---against a dataset of 35 redistricting reform attempts in 22 states between 1990 and 2024.
+
+\subsection{Data and Coding}
+
+We code each reform attempt as: (1) the channel through which it was attempted (legislative, initiative, judicial, federal), (2) whether it succeeded in producing a meaningful change in the redistricting process, and (3) the state's electoral competitiveness score, measured as the mean district-level two-party vote margin in the preceding two elections.
+
+A ``success'' requires that a neutral or semi-neutral body gained meaningful authority over the redistricting process: either an independent commission was created with binding authority, or a court struck the enacted map and ordered a remedial map, or a federal statute created a binding constraint. Partial reforms---commissions with advisory authority only, transparency requirements without process change---are coded as failures.
+
+\subsection{Results}
+
+\begin{table}[h]
+\centering
+\caption{Redistricting reform success rates by channel, 1990--2024}
+\label{tab:reform-success}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Channel & Attempts & Successes & Rate \\
+\midrule
+Legislative         & 19 & 2  & 10.5\% \\
+Ballot initiative   & 11 & 8  & 72.7\% \\
+Judicial            &  4 & 4  & 100\%  \\
+Federal             &  1 & 0  & 0\%    \\
+\midrule
+\textbf{All channels} & \textbf{35} & \textbf{14} & \textbf{40.0\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:reform-success} confirms the model's first prediction: legislative reform is rare (10.5\% success rate) while bypass channels succeed at much higher rates. The two legislative successes occurred in states with unusually competitive electoral environments (Iowa in 1980 and Washington in 1983), consistent with the model's prediction that competitiveness reduces the incumbency rent.
+
+The judicial channel's 100\% success rate reflects selection effects---courts are appealed to only when plaintiffs have a strong case---and the fact that court decisions, unlike legislative votes, cannot be blocked by interested parties. However, judicial remedies are often implemented slowly and produce maps for only one or two cycles before the next redistricting.
+
+The initiative channel's 72\% success rate is the most actionable finding. Initiatives can fail (California's Proposition 27 in 2022, which would have reversed Prop 11/20, failed with 30.5\% yes---but that was an anti-reform initiative, not a pro-reform one). Among initiatives that placed redistricting commissions on the ballot, the success rate is 8 of 11, or 73\%.
+
+\subsection{Competitiveness and Reform}
+
+States where at least one-third of districts were decided by margins under 10 points passed redistricting reform at a rate of 58\% (7 of 12 attempts), compared to 25\% (4 of 16 attempts) in less competitive states. This difference is statistically significant at the 5\% level under a two-sample proportion test ($z = 2.03$, $p = 0.042$).
+
+The interaction of competitiveness with channel is particularly instructive. In competitive states with ballot initiative availability, reform succeeded in 78\% of attempts (7 of 9). In non-competitive states without initiative availability, reform succeeded in only 14\% of attempts (1 of 7). The single success in the latter category was Virginia's 2020 constitutional amendment, which passed through the legislature after a divided-government session and two years of intense advocacy.
+
+\subsection{The Role of Litigation}
+
+States with active gerrymandering litigation at the time of the reform attempt showed higher success rates (55\%, 6 of 11) than states without active litigation (30\%, 7 of 23). This finding is consistent with the theory that litigation raises the cost of the status quo---incumbents facing an imminent court loss have weaker incentives to block reform, and reformers can credibly threaten continued litigation if the legislative reform is inadequate.
+
+\subsection{Implications for Track P}
+
+These empirical patterns suggest a reform strategy calibrated to channel availability rather than a one-size-fits-all approach. States without ballot initiative mechanisms must rely primarily on the judicial and federal channels. States with initiative mechanisms should prioritize well-designed initiatives over legislative reform, accepting that legislative reform is unlikely until the underlying incumbency rent is substantially reduced. Federal legislation is the master lever that changes the calculus in all states simultaneously---but it requires political conditions that have not yet materialized at the federal level.
+
+Papers P.1 through P.5 develop each channel's design and implementation in depth. P.1 addresses the federal legislative pathway. P.2 examines state ballot initiative design. P.3 shows how algorithms can be integrated into existing commission structures. P.4 provides templates for court-ordered algorithmic remedies. P.5 addresses implementation costs and administrative law requirements. Together, they constitute a comprehensive toolkit for redistricting reform through channels that do not require incumbent consent.

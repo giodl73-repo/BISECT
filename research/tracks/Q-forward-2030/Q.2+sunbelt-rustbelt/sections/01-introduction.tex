@@ -1,0 +1,20 @@
+\section{Introduction}
+
+The 2030 congressional reapportionment will be the most geographically significant
+since the 1990 cycle, when the Sun Belt's post-WWII growth first produced major
+reapportionment from the Northeast and Midwest. The 2020-2030 shift is projected to
+be even larger in seat magnitude (13+ seats changing states) because the Sun Belt
+growth rate has accelerated relative to the pre-2000 period.
+
+This paper examines the algorithmic implications of the projected changes,
+focusing on two categories of states: gainers (TX, FL, AZ, GA, CO, NC, WA, OR)
+whose seat allocations will require new bisection tree designs, and losers (NY, CA,
+IL, OH, MI, PA, WV, MN, RI, MT) whose seat reductions will require district mergers
+or major boundary redesigns.
+
+The central algorithmic finding: GeoSection (\texttt{--structure ratio-optimal})
+is the recommended structure for the two largest gainers (TX k=41, FL k=30) because
+it handles non-standard prime factorizations naturally. ApportionRegions (prime-factor
+tree) works correctly for both via its binary fallback, but GeoSection produces
+more geographically coherent results in fast-growth states where the natural
+urban-suburban-rural gradient aligns with ratio-optimal bisection.

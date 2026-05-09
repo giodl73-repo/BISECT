@@ -1,0 +1,116 @@
+\label{sec:data}
+
+\subsection{District Office Addresses}
+
+We collected district office addresses for all 435 members of the 118th Congress
+from \texttt{house.gov} during March 2024. Each member's page lists one or more
+district offices with full street addresses. For members with multiple district offices,
+we designate the \textit{primary} district office as follows: (1) if one office is
+explicitly labeled ``primary'' on the member's website, we use that office; (2) if
+no explicit designation exists, we use the office located in the city with the
+largest population within the district; (3) for districts containing a single large
+city, we use the office located within that city, or the nearest office if all offices
+are in the city.
+
+The 435 primary district office addresses were geocoded using the Census Bureau
+Geocoder API (\texttt{geocoding.geo.census.gov}), which returns latitude/longitude
+coordinates matched to the TIGER/Line road network. Match rates: 428 of 435 addresses
+geocoded automatically; 7 required manual coordinate assignment using Google Maps
+street-level verification.
+
+\textbf{Alaska and Hawaii}: The OSRM routing API covers only the contiguous 48 states
+and therefore cannot compute driving times to Alaska ($k=1$) and Hawaii ($k=2$).
+These three districts are excluded from the main analysis. All other 432 districts
+are included.
+
+\subsection{Census Tract Centroids}
+
+We compute population-weighted centroids for all 74,134 census tracts in the
+contiguous 48 states using 2020 P.L. 94-171 block-level population counts from
+the Census Bureau. For each tract, the centroid is computed as:
+
+\begin{equation}
+(\bar{\lambda}_t, \bar{\phi}_t) = \frac{\sum_{b \in t} p_b \cdot (\lambda_b, \phi_b)}{\sum_{b \in t} p_b}
+\end{equation}
+
+where $p_b$ is block population and $(\lambda_b, \phi_b)$ is the latitude/longitude
+of the block's internal point (as provided in the Census Bureau's block-level
+TIGER/Line data). Population-weighted centroids differ from geographic centroids for
+tracts with irregular population distributions---this matters particularly for large
+rural tracts where most population is concentrated in a small area.
+
+\subsection{OSRM Routing}
+
+Driving times are computed using the Open Source Routing Machine (OSRM) API,
+version 5.27, with the full North America OpenStreetMap road network snapshot from
+January 2024. OSRM uses Contraction Hierarchies for fast shortest-path computation
+over the road network. The routing request for each (tract centroid, district office)
+pair returns the estimated driving time in seconds, which we convert to minutes.
+
+The full routing computation involves $74{,}134$ tract--office pairs. At OSRM's
+average throughput of approximately 10{,}000 route computations per second for
+the contiguous U.S. network, the full computation requires approximately 7.5 seconds
+wall time with parallel requests. We parallelized the requests across 32 threads.
+
+\textbf{Routing limitations}: OSRM computes door-to-door driving time on the road network
+and does not account for traffic, parking, or building entry time. For the purpose of
+this study---comparing relative district-level means across maps---these omissions
+cancel out and do not affect the cross-district correlations.
+
+\subsection{District Compactness}
+
+District Polsby-Popper scores are computed from the Census Bureau's 2022 congressional
+district shapefiles (TIGER/Line) as:
+
+\begin{equation}
+\text{PP} = \frac{4\pi A}{P^2}
+\end{equation}
+
+where $A$ is district area (in square meters) and $P$ is district perimeter (in meters),
+computed using the \texttt{bisect-analysis} crate's \texttt{polsby\_popper()} function.
+We also compute Reock (ratio of district area to circumscribed circle area) and
+Schwartzberg (perimeter ratio normalized by equivalent circle) for robustness.
+
+\subsection{Algorithmic Comparison}
+
+For the comparison between enacted and \textsc{bisect} plans, we generate \textsc{bisect}
+congressional plans for all 48 contiguous states using the 2020 census data with
+the \texttt{geographic} weights-override and \texttt{convergence} search strategy
+($T=600$):
+
+\begin{verbatim}
+bisect build official_2020 --year 2020 \
+  --structure prime-factor \
+  --weights-override geographic \
+  --search convergence \
+  --workers 8
+\end{verbatim}
+
+For each \textsc{bisect} district, we assign the district office location as the
+population-weighted centroid of the district (since \textsc{bisect} plans are
+counterfactual and have no associated real office addresses). This is a conservative
+choice: actual representatives would likely locate their offices closer to the
+population centroid than the worst-case distance, so our estimate of the \textsc{bisect}
+driving time benefit is a lower bound on the actual benefit that would materialize
+if algorithmic plans were enacted.
+
+\begin{table}[ht]
+\centering
+\caption{Summary Statistics: Constituent Driving Time by Plan Type}
+\label{tab:summary}
+\begin{tabular}{lrrrrr}
+\toprule
+Plan Type & $n$ & Mean (min) & Median (min) & SD & P90 \\
+\midrule
+Enacted 2022 (all) & 432 & 41.2 & 38.7 & 15.4 & 62.1 \\
+Enacted 2022 (gerrymanders) & 180 & 48.3 & 45.2 & 17.6 & 71.8 \\
+Enacted 2022 (neutral/commission) & 252 & 36.4 & 35.1 & 11.2 & 52.3 \\
+\textsc{bisect} 2020 (gerrymander states) & 180 & 34.1 & 32.8 & 12.1 & 52.7 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item Note: ``Gerrymanders'' are states with $|\text{EG}| > 0.08$ in the enacted 2022 map.
+  Driving time for \textsc{bisect} uses population centroid as representative office location.
+\end{tablenotes}
+\end{table}

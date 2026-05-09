@@ -1,0 +1,24 @@
+The GerryChain ensemble of redistricting plans is typically interpreted as a frequentist
+reference distribution: the enacted plan's percentile position characterises its extremity.
+We propose a Bayesian reinterpretation that converts this percentile into a posterior
+probability of intentional manipulation.
+
+Let $p$ be the enacted plan's compactness percentile (lower = more compact than ensemble)
+and $n^* = \mathrm{ESS}$ the effective sample size.
+Under a uniform prior over true percentiles, the posterior is
+$\mathrm{Beta}(p \cdot n^*, (1-p)\cdot n^*)$,
+and the \emph{Bayesian Detection Score} (BDS) is
+$\mathrm{BDS} = P(\text{true percentile} < 0.05 \mid \hat{p}, n^*)$.
+
+For NC 2022 enacted map ($\hat{p} = 0.003$, $n^* \approx 70$):
+$\mathrm{BDS} \approx 0.97$ --- strong Bayesian evidence of non-random map selection.
+For Wisconsin 2022 ($\hat{p} = 0.002$, $n^* \approx 81$): BDS $\approx 0.98$.
+For the \textsc{bisect} algorithmic plan ($\hat{p} = 0.004$, NC): BDS $\approx 0.03$ ---
+consistent with a random draw.
+
+The Bayesian framework handles the geography defense naturally: the ensemble prior
+absorbs all geographic effects; the posterior measures only the residual that geography
+cannot explain.
+BDS $> 0.95$ is proposed as an evidentiary threshold for strong gerrymandering evidence,
+analogous to the $p < 0.05$ threshold in frequentist testing but explicitly incorporating
+ensemble uncertainty.

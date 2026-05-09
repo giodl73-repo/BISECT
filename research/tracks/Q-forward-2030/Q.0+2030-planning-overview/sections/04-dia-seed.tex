@@ -1,0 +1,84 @@
+\label{sec:dia-seed}
+
+\subsection{The DIA Seed Formula}
+
+The model federal statute (\textit{Democratic Integrity Act}, \texttt{docs/legal/model-federal-statute.md})
+specifies a \textit{statutory seed formula} for algorithmic redistricting. The seed
+is the initial partition from which \textsc{bisect}'s recursive bisection begins.
+Because different seeds can produce different optimal partitions---the solution space
+analysis in B.7 shows that convergence search at $T=600$ produces seat-count variance
+$< 0.3$ across 50 seeds, but the specific partition varies---the seed formula is
+a critical parameter that must be fixed before redistricting begins.
+
+The DIA seed formula specifies:
+
+\begin{equation}
+\text{seed} = \text{SHA-256}(\text{state\_fips} \| \text{year} \| \text{census\_hash}) \mod 2^{64}
+\end{equation}
+
+where \texttt{census\_hash} is the SHA-256 hash of the P.L.\ 94-171 redistricting
+data file as released by the Census Bureau, \texttt{state\_fips} is the two-digit
+FIPS code for the state, and \texttt{year} is the census year. This formula ensures that:
+
+\begin{enumerate}
+\item The seed is deterministic: the same census data always produces the same seed.
+\item The seed is unpredictable before census data release: no party can compute
+  the seed in advance and pre-calculate optimal gerrymandering strategies.
+\item The seed is verifiable after census data release: any party can verify the
+  computation independently.
+\end{enumerate}
+
+\subsection{Why Last-Minute Changes Are Prohibited}
+
+The DIA seed formula makes the seed a function of the census data itself, which is not
+available until census data release. This means that the algorithm cannot be fully
+configured until the census data arrives. However, everything \textit{except} the seed
+can and must be pre-registered: the structure, weights, search strategy, balance tolerance,
+and all other configuration parameters.
+
+The legal significance is this: if any configuration parameter other than the seed
+is changed after census data release, the redistricting authority must explain why
+the change was made. Any change that increases the partisan advantage of the resulting
+map triggers a rebuttable presumption of gerrymandering under the DIA's transparency
+provisions. Courts have interpreted similar provisions in state redistricting statutes
+as creating a burden-shifting framework: changes to algorithmic parameters after
+census data is available are presumptively partisan unless the redistricting authority
+can demonstrate a non-partisan technical justification.
+
+The practical consequence: if the \textsc{bisect} infrastructure for 2030 is not
+pre-registered by July 2030, the redistricting authority will either use un-registered
+configurations (risking legal challenge) or delay redistricting past constitutional
+deadlines (also risking legal challenge). There is no third option.
+
+\subsection{Configuration Stability and Pre-Registration Strategy}
+
+The B-series algorithm papers demonstrate that the key configuration choices---structure
+(\texttt{prime-factor} for most states), weights (\texttt{geographic} for geographic
+compactness, \texttt{county} for subdivision preservation), and search (\texttt{convergence}
+at $T=600$)---produce stable results across the 2000--2020 redistricting cycles. This
+stability is the empirical foundation for pre-registration: we can pre-register
+configurations based on 2020 performance and have reasonable confidence that the
+same configurations will perform appropriately on 2030 census data.
+
+States with unusual geographic configurations (Montana, Wyoming, Alaska, Hawaii)
+require case-by-case configuration review. The Q.2 paper provides a state-by-state
+configuration audit for the 2030 pre-registration.
+
+\begin{table}[ht]
+\centering
+\caption{Pre-Registration Schedule: Key Dates}
+\label{tab:registration}
+\begin{tabular}{ll}
+\toprule
+Date & Milestone \\
+\midrule
+January 2029 & Reapportionment projections finalized; $k$-values locked \\
+July 2029 & ACS 2026--2028 data available; demographic validation complete \\
+January 2030 & Block-group adjacency construction begins \\
+July 2030 & Pre-registration deadline for 2031 cycle (DIA, 6-month rule) \\
+December 2030 & LODES 2028 data available; incorporated in registered config \\
+January 2031 & Block-group adjacency validation complete; final infrastructure check \\
+April 2031 & Census data release; seed computation; redistricting begins \\
+\bottomrule
+\end{tabular}
+\end{table}

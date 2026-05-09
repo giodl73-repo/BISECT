@@ -1,0 +1,27 @@
+B.17's 50-state parameter sweep established that redistricting algorithm
+parameters are insensitive: across five key parameters, the maximum
+variation in expected Democratic seats nationally is $\leq 0.3$.
+This paper reframes that result adversarially.
+The question is not ``what happens when parameters vary?'' but
+``what is the maximum partisan shift a hostile actor can achieve by
+optimizing parameters after observing partisan implications?''
+
+We define the most Republican-favorable parameter configuration
+($\ufactor = 5\%$, $\acounty = 10$, $T = 1{,}000$, $\aswing = 1.20$,
+$\wvra = 0.6$) and the most Democratic-favorable configuration
+($\ufactor = 0.1\%$, $\acounty = 1$, $T = 100$, $\aswing = 1.05$,
+$\wvra = 0.2$), and report the partisan outcome difference between the
+two extremes.
+
+The main result: the most Republican-favorable parameters produce
+$\Dnat = 210.7$ expected Democratic seats; the most Democratic-favorable
+parameters produce $\Dnat = 211.0$ seats.
+The difference is 0.3 seats nationally---well within the B.7 seed-variance
+noise floor (one standard deviation $\sigma \approx 0.8$ seats).
+
+The \dia{}'s parameter pre-registration protocol eliminates this gaming vector
+entirely: parameters are fixed in a SHA-256 formula before Census P.L.\ 94-171
+data are released, preventing post-data optimization.
+Even if pre-registration were absent, the 0.3-seat maximum effect is smaller
+than any individual state's seat-level uncertainty, making parameter-based
+gerrymandering both non-manipulative and non-attributable.

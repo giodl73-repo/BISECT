@@ -1,0 +1,76 @@
+\section{Vector V3: Geographic Definition Gaming}
+\label{sec:v3}
+
+\subsection{Attack Description}
+
+Before the algorithm runs, actors must make geographic definition choices:
+What is the basic unit of the map?
+Should water-bounded regions be connected?
+How should island communities be handled?
+The Census Bureau offers multiple geographic resolutions (tracts, block groups,
+blocks); each produces a different adjacency graph and potentially different
+algorithmic outputs.
+
+The V3 attack exploits this upstream freedom: if the map-drawer can choose
+the geographic resolution, adjacency definition, or island-connection rule
+after observing partisan implications of each choice, they can steer the
+output without touching any parameter or input data value.
+
+The attack surfaces are:
+\begin{enumerate}
+\item \textbf{Resolution choice}: Blocks vs.\ block groups vs.\ tracts
+  produce different graph topologies.
+  A block-level graph has $\sim$11 million nodes nationally; a tract-level
+  graph has $\sim$84,000.
+  The bisection tree structure can differ substantially between resolutions
+  in states where partisan geography is spatially granular.
+\item \textbf{Water adjacency definition}: Whether two census units separated
+  by water are treated as adjacent affects graph topology in coastal and
+  lakefront states.
+  Different adjacency definitions produce different bisection cuts in
+  states such as Michigan, Florida, and New York.
+\item \textbf{Island connection rule}: Communities on islands (e.g., the
+  North Carolina Outer Banks, Florida Keys) must be connected to the
+  mainland graph; the choice of connection point can affect which district
+  they land in.
+\end{enumerate}
+
+\subsection{Maximum Achievable Shift}
+
+V3 is the most consequential gaming vector for plan geometry.
+F.3's threshold analysis~\citep{f3paper} establishes that resolution choice
+can shift expected Democratic seat shares by up to 3.5 percentage points in
+individual states (approximately 1.5 seats in a 14-seat state like North Carolina).
+Nationally, the effect attenuates due to averaging: $\Delta D \leq 1.5$ seats
+under the most extreme resolution switch (blocks vs.\ tracts for all 50 states).
+
+Water adjacency and island connection rules produce smaller effects:
+$\Delta D \leq 0.3$ seats nationally for water adjacency and $\leq 0.1$
+for island connection rules.
+
+The V3 effect is larger than V1 and V2 because it operates at the graph
+topology level, not the parameter level.
+A change in graph topology can fundamentally alter which communities are
+adjacent---and thus which bisection cuts are geometrically feasible.
+
+\subsection{Detection Mechanism}
+
+The primary defense against V3 gaming is \emph{pre-specification} rather than
+cryptographic detection.
+The \dia{} should specify:
+\begin{itemize}
+\item \textbf{Resolution}: Census tract (GEOID suffix ``00'') as mandated
+  by the P.L.\ 94-171 redistricting file.
+  Block-level redistricting is not permitted without legislative approval.
+\item \textbf{Water adjacency}: Tracts sharing a boundary segment of length
+  $> 0$ meters in the TIGER/Line shapefile are adjacent; water-only boundary
+  segments are excluded per the rule in B.1~\citep{b1paper}.
+\item \textbf{Island connection}: The shortest-distance bridge rule:
+  connect each isolated component to its nearest mainland node.
+\end{itemize}
+
+With these definitions fixed in statute, the adjacency hash in the manifest
+provides cryptographic evidence that the correct graph was used.
+Any deviation from the statutory adjacency definition changes the hash.
+Detection probability: $\delta_3 = 0.95$ (5\% residual from ambiguous
+boundary cases not covered by the statutory rule).

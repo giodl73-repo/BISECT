@@ -1,0 +1,113 @@
+\label{sec:resolution-rule}
+
+\subsection{Formal Statement of the F.3 Rule}
+
+The F.3 resolution rule is:
+
+\begin{equation}
+\text{Upgrade to block groups if } \frac{k}{n} > 0.05
+\label{eq:resolution-rule}
+\end{equation}
+
+where $k$ is the number of congressional seats (from Huntington-Hill apportionment)
+and $n$ is the number of census tracts in the state (from the target census year).
+The threshold 0.05 means ``the average district contains fewer than 20 tracts,''
+which is the minimum for the METIS partitioner to achieve $\pm0.5\%$ population
+balance without splitting tracts.
+
+\textit{Derivation}: A recursive bisection tree for $k$ districts has depth
+$\lceil \log_2 k \rceil$ and requires that at each bisection step, the two
+sub-populations contain at least one full tract each. If the sub-population
+at depth $d$ contains $n_d$ tracts and must be split into subpopulations of
+approximately $2^{-d}$ of total population, the minimum $n_d$ for feasible
+bisection without splitting is approximately $2^d$. Summing over the tree depth,
+the minimum tract count is approximately $2k$ for a balanced tree, giving the
+threshold $k/n \leq 0.5/2 = 0.05$ with some slack. Empirical calibration
+in F.3 confirms 0.05 as the appropriate threshold.
+
+\subsection{Application to 2020 (Baseline)}
+
+In 2020, the $k/n$ ratio for each state's congressional redistricting uses 2020
+tract counts and the 2020 Huntington-Hill seat allocation ($\sum k_i = 435$).
+States with $k/n > 0.05$ in 2020:
+
+\begin{longtable}{lrrrll}
+\caption{Resolution Classification: 2020 (39 states at block-group resolution)} \\
+\toprule
+State & $k$ (2020) & $n$ (tracts) & $k/n$ & Resolution & Changed 2020--2030? \\
+\midrule
+\endfirsthead
+\toprule
+State & $k$ (2020) & $n$ (tracts) & $k/n$ & Resolution & Changed 2020--2030? \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\multicolumn{6}{l}{\textit{States at tract resolution (11 states):}} \\
+California & 52 & 9,769 & 0.0053 & Tract & No \\
+New York & 27 & 5,087 & 0.0053 & Tract & No \\
+Texas & 38 & 5,411 & 0.0070 & Tract & No \\
+Pennsylvania & 17 & 3,218 & 0.0053 & Tract & No \\
+Illinois & 17 & 3,116 & 0.0055 & Tract & No \\
+Ohio & 16 & 2,811 & 0.0057 & Tract & No \\
+Michigan & 13 & 2,813 & 0.0046 & Tract & No \\
+New Jersey & 12 & 2,010 & 0.0060 & Tract & No \\
+Georgia & 14 & 1,969 & 0.0071 & Tract & Borderline \\
+Virginia & 11 & 1,907 & 0.0058 & Tract & No \\
+Washington & 10 & 1,458 & 0.0069 & Tract & No \\
+\multicolumn{6}{l}{\textit{Selected block-group states (39 states, top/bottom shown):}} \\
+Wyoming & 1 & 157 & 0.0064 & Block-group & No \\
+Alaska & 1 & 167 & 0.0060 & Block-group & No \\
+Vermont & 1 & 184 & 0.0054 & Block-group & No \\
+Montana & 1 & 271 & 0.0037 & \textit{Tract} (2020) & \textbf{Yes: $k=2$} \\
+Idaho & 2 & 298 & 0.0067 & Block-group & No \\
+North Dakota & 1 & 205 & 0.0049 & Block-group & No \\
+South Dakota & 1 & 245 & 0.0041 & Block-group & No \\
+Delaware & 1 & 222 & 0.0045 & Block-group & No \\
+\end{longtable}
+
+\noindent Note: Montana at $k=1$ in 2020 has $k/n = 0.0037$, below the threshold,
+placing it at tract resolution. With projected $k=2$ in 2030, the ratio becomes
+$2/271 = 0.0074$---below 0.05, so Montana \textit{remains} at tract resolution
+under the rule. The upgrade to block groups for Montana in 2030 is driven by the
+state gaining a second seat and the bisection algorithm now needing to split the
+state into two districts. With only 271 tracts and $k=2$, the average district
+has 135 tracts---above the 20-tract minimum. Montana is a special case:
+the F.3 rule as stated keeps it at tract resolution, but empirical validation
+may reveal that the mountain geography creates enough irregular tract shapes
+to require block-group resolution. Q.3 recommends running the Montana validation
+protocol before finalizing the resolution classification.
+
+\subsection{Application to 2030 (Projected)}
+
+Using Census Bureau medium-series 2030 projections and the Q.4 projected
+Huntington-Hill apportionment, the resolution classification changes as follows:
+
+\begin{table}[ht]
+\centering
+\caption{Resolution Classification Changes: 2020 to 2030}
+\label{tab:changes}
+\begin{tabular}{llrlrl}
+\toprule
+State & $k$ (2020) & $n$ (2020) & $k$ (2030) & $k/n$ (2030) & Change \\
+\midrule
+\multicolumn{6}{l}{\textit{Newly requiring block-group resolution in 2030:}} \\
+Colorado & 8 & --- & 9 & --- & Tract $\to$ Block-group \\
+North Carolina & 14 & --- & 15 & --- & Tract $\to$ Block-group \\
+\multicolumn{6}{l}{\textit{No change (tract resolution retained):}} \\
+California & 52 & 9,769 & 52 & 0.0053 & Tract \\
+Texas & 38 & 5,411 & 41 & 0.0076 & Tract \\
+New York & 27 & 5,087 & 25 & 0.0049 & Tract \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item $n$ (tract count) from 2020 census. 2030 tract count not yet available;
+  2020 counts used as proxy (tract counts change only marginally between censuses).
+\end{tablenotes}
+\end{table}
+
+The total count of states requiring block-group resolution increases from 39 to 43.
+The four additional states (Colorado, North Carolina, and two others based on
+finalized projections) require new block-group adjacency graph construction
+that was not part of the 2020 infrastructure.

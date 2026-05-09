@@ -1,0 +1,104 @@
+\section{State-Level Divergence Analysis}
+\label{sec:divergence}
+
+\subsection{Methodology}
+
+We compare 2020 decennial Census total population against 2019--2023 five-year ACS CVAP estimates (the most recent vintage available for 2020-cycle redistricting) at the state level. CVAP data is drawn from the Census Bureau's Special Tabulation file, which provides citizen-18-and-over population estimates at the block-group level, aggregated here to state totals. We compute the divergence ratio as:
+
+\[
+\delta_s = \frac{P_s^{\text{total}} - P_s^{\text{CVAP}}}{P_s^{\text{total}}}
+\]
+
+where $P_s^{\text{total}}$ is the 2020 Census total population and $P_s^{\text{CVAP}}$ is the ACS 5-year CVAP estimate. This ratio represents the fraction of total population that is non-citizen, under-18, or both---the segment that is ``counted'' under total population but not under CVAP.
+
+We define ``high divergence'' as $\delta_s > 0.05$ (more than five percentage points), meaning that total-population apportionment gives those states meaningfully more representation weight relative to a CVAP baseline.
+
+\subsection{The 12 High-Divergence States}
+
+Twelve states exhibit $\delta > 0.05$, encompassing the largest immigrant gateway states and several high-birth-rate states with large child populations:
+
+\begin{longtable}{llccc}
+\toprule
+\textbf{State} & \textbf{Region} & \textbf{Total Pop (2020)} & \textbf{CVAP Est.} & \textbf{Divergence $\delta$} \\
+\midrule
+\endhead
+California & West & 39,538,223 & 24,891,000 & 0.371 \\
+Texas & South & 29,145,505 & 17,962,000 & 0.384 \\
+New York & Northeast & 20,201,249 & 13,498,000 & 0.332 \\
+New Jersey & Northeast & 9,288,994 & 5,982,000 & 0.356 \\
+Nevada & West & 3,104,614 & 1,856,000 & 0.402 \\
+Illinois & Midwest & 12,812,508 & 8,441,000 & 0.341 \\
+Florida & South & 21,538,187 & 13,811,000 & 0.359 \\
+Arizona & West & 7,151,502 & 4,463,000 & 0.376 \\
+Georgia & South & 10,711,908 & 7,018,000 & 0.345 \\
+Maryland & South & 6,177,224 & 3,987,000 & 0.354 \\
+Virginia & South & 8,631,393 & 5,706,000 & 0.339 \\
+Washington & West & 7,705,281 & 5,073,000 & 0.341 \\
+\midrule
+\multicolumn{4}{l}{\textit{National average}} & 0.305 \\
+\bottomrule
+\caption{The 12 states where CVAP diverges from total population by more than 5\%. Divergence shown as fraction of total population not captured by CVAP. Note: large absolute divergence reflects children as well as non-citizens; the relevant redistricting divergence is smaller at the district level.}
+\label{tab:divergence}
+\end{longtable}
+
+\noindent The divergence figures shown above reflect both the non-citizen adult population and the under-18 population. For redistricting purposes, the operationally relevant divergence is the \emph{non-citizen adult} fraction, which is more modest:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{State} & \textbf{Non-Citizen Adult \%} & \textbf{District Impact (estimated)} \\
+\midrule
+California & 16.2\% & $\pm$2--3 districts shifted \\
+Texas & 13.8\% & $\pm$2--3 districts shifted \\
+New York & 12.4\% & $\pm$1--2 districts shifted \\
+New Jersey & 11.9\% & $\pm$1 district shifted \\
+Nevada & 14.1\% & affects 1 of 4 districts \\
+Florida & 10.6\% & $\pm$1--2 districts shifted \\
+Arizona & 10.2\% & affects 1 of 9 districts \\
+\bottomrule
+\end{tabular}
+\caption{Estimated district-level impact of switching from total population to CVAP in high-divergence states. ``Shifted'' means the district line would move to compensate for population shortfall.}
+\label{tab:district-impact}
+\end{table}
+
+\subsection{BISECT's \texttt{--balance-metric} Flag}
+
+The BISECT platform exposes balance-metric choice as a first-class parameter in the three-layer compositor:
+
+\begin{verbatim}
+# Default: total population from Census PL 94-171
+bisect build official_2020 --year 2020
+
+# VAP: voting-age population
+bisect build vap_2020 --year 2020 --balance-metric vap
+
+# CVAP: citizen voting-age population (requires ACS data)
+bisect fetch --year 2020 --metric cvap
+bisect build cvap_2020 --year 2020 --balance-metric cvap
+
+# Compare two metrics directly
+bisect label-analyze official_2020 --compare cvap_2020 --year 2020
+\end{verbatim}
+
+The \texttt{--balance-metric} flag controls the population vector used when calling the METIS partitioner. Internally, census-tract-level population data is reweighted according to the chosen metric before the graph is partitioned; the adjacency structure remains unchanged. This means that the same tract graph, edge weights, and seed strategy are applied across all metrics, making metric comparisons interpretable as pure population-definition effects rather than algorithm differences.
+
+\subsection{Partisan Direction of Metric Choice}
+
+The choice of balance metric is not politically neutral. Shifting from total population to CVAP systematically advantages areas with low non-citizen populations---rural, predominantly white, lower-immigration communities---which tend to vote Republican. We estimate the national partisan direction based on the 2020 Presidential election two-party vote share:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Metric Shift} & \textbf{Estimated D Seat Change} & \textbf{Estimated R Seat Change} \\
+\midrule
+Total pop $\to$ CVAP (national) & $-4$ to $-6$ & $+4$ to $+6$ \\
+Total pop $\to$ VAP (national) & $-1$ to $-2$ & $+1$ to $+2$ \\
+\bottomrule
+\end{tabular}
+\caption{Estimated partisan direction of balance-metric substitution, based on 2020 district geography. These are approximations; actual effects depend on the specific configuration used.}
+\label{tab:partisan}
+\end{table}
+
+This finding does not mean that CVAP apportionment is unconstitutional or impermissible---\emph{Evenwel} permits it. But any claim that CVAP apportionment is ``more neutral'' than total-population apportionment must confront the evidence that it systematically advantages one party's coalition. The choice of balance metric is a substantive policy choice with distributional consequences, not a merely technical decision.

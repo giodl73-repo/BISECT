@@ -1,0 +1,37 @@
+We define three distinct modes for integrating the \texttt{bisect} algorithm into commission redistricting processes, each representing a different allocation of authority between the algorithm and the commission.
+
+\subsection{Mode (a): Algorithm-as-Sole-Mapmaker}
+
+In Mode~(a), the commission's role is limited to approving or rejecting the algorithmic output. The algorithm runs on census data and produces a map. The commission may, on a supermajority vote, reject the map and instruct the algorithm to re-run with different parameters. But the commission may not modify individual district lines: the algorithm's output is the map, subject only to rejection.
+
+\textbf{Advantages.} Mode~(a) provides the strongest protection against partisan manipulation: because the commission cannot amend individual lines, there is no mechanism by which commissioners can introduce partisan bias through the adjustment process. The algorithm's structural neutrality is fully preserved.
+
+\textbf{Disadvantages.} Mode~(a) is politically difficult: commissioners, advocacy groups, and legislators who believe the commission should exercise judgment (for VRA compliance, community of interest, and political subdivision integrity) will resist a mode that eliminates commission discretion. More substantively, VRA compliance sometimes requires that specific minority communities be included in a single district, and an algorithm constrained only to population balance and compactness may not always achieve this. A pure Mode~(a) design requires a VRA-override mechanism that restores the ability to modify specific lines, which substantially weakens the mode's structural protection.
+
+\textbf{Best suited for.} States without substantial minority populations requiring VRA modification (analogous to Iowa); states where the legislature retains a post-commission approval role (the legislature's veto constrains the commission's discretion); courts ordering remedial maps (P.4 develops court-ordered Mode~(a) in detail).
+
+\subsection{Mode (b): Algorithm-as-First-Draft}
+
+In Mode~(b), the algorithm produces a baseline map that the commission modifies under documented criteria. The commission retains full authority to adjust individual district lines, but must document each departure from the algorithmic baseline with a written justification. For VRA-motivated adjustments, the documentation must satisfy the \textit{Gingles} three-prong framework. For other adjustments, the documentation must identify the statutory criterion satisfied (political subdivision integrity, community of interest, etc.) and the specific boundary change made.
+
+\textbf{Advantages.} Mode~(b) preserves the commission's deliberative function---the human judgment that voters and advocacy groups value---while providing a verifiable baseline that makes the distributional consequences of commission decisions transparent. The documentation requirement creates a record that courts can evaluate, limiting the commission's discretion to adjustments grounded in statutory criteria. The algorithm's integrity is maintained as a verifiable reference point even when the commission departs from it.
+
+\textbf{Disadvantages.} Mode~(b) requires more administrative capacity than Mode~(a) (the commission must manage the documentation process) and more than Mode~(c) (the commission must consult the algorithmic baseline throughout its deliberations, not merely at the end). The documentation requirement may slow the commission's process if commissioners are unfamiliar with the \textit{Gingles} framework and other legal standards.
+
+\textbf{Best suited for.} States with independent commissions and substantial minority populations requiring VRA compliance (California, Michigan, Colorado, Arizona); commissions with legal counsel competent in VRA; situations where the commission's public legitimacy depends on demonstrable deliberation.
+
+\subsection{Mode (c): Algorithm-as-Audit}
+
+In Mode~(c), the commission draws maps through its normal process, then uses the \texttt{bisect} platform to verify that the final map satisfies the criteria the commission claims to have applied. The algorithm serves as a post-hoc validity check rather than a starting point. If the algorithmic audit reveals that the final map departs significantly from the criteria-optimal baseline, the commission must explain the departure.
+
+\textbf{Advantages.} Mode~(c) requires no change to the commission's existing process. It imposes minimal administrative burden during the map-drawing phase. It provides an audit mechanism that can detect if the commission's stated justifications are inconsistent with the algorithmic analysis (e.g., if the commission claims to have optimized compactness but the algorithmic audit shows multiple districts with substantially lower compactness than the algorithm achieves).
+
+\textbf{Disadvantages.} Mode~(c) does not constrain the commission during map-drawing; it can only expose inconsistencies after the fact. A commission that draws a partisan map can satisfy the audit by providing pretextual explanations for each departure. The audit's force depends on the threat of litigation or public criticism---it is a transparency mechanism, not a structural constraint. Mode~(c) is the weakest of the three modes for preventing manipulation.
+
+\textbf{Best suited for.} States where political constraints prevent requiring algorithmic baselines; commissions where algorithm integration is being piloted before full Mode~(b) adoption; external audits by good-government organizations reviewing commission maps after adoption.
+
+\subsection{Feasibility Assessment}
+
+Mode~(b) is our recommended integration mode for existing commissions. It achieves the most important goal---a verifiable, neutral baseline that constrains manipulation while preserving legitimate commission discretion---with a feasible administrative process that existing commissions can implement without legislative action.
+
+The California Citizens Redistricting Commission could adopt Mode~(b) through a standing rule or operating procedure, without a ballot initiative, by designating the algorithmic baseline as the starting point for its map-drawing process and adopting the Commission Adjustment Protocol in Section~4. The amendment to California Government Code described in P.2, Section~4 would formalize this approach constitutionally.

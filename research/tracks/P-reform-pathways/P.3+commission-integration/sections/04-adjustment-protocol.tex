@@ -1,0 +1,70 @@
+The Commission Adjustment Protocol (CAP) specifies the procedures, documentation requirements, and certification steps for Mode~(b) integration of the \texttt{bisect} platform into commission redistricting. It is designed to be adopted as a commission operating rule; it does not require statutory change.
+
+\subsection{Step 1: Baseline Generation}
+
+The commission's technical staff runs the \texttt{bisect} platform to generate the algorithmic baseline map:
+\begin{verbatim}
+bisect fetch --year 2030 --workers 8
+bisect build [state]_baseline --year 2030 --workers 8
+bisect label-analyze [state]_baseline --year 2030 --types all
+bisect label-report  [state]_baseline --year 2030 --format html json
+\end{verbatim}
+
+The baseline map and its reproducibility manifest are published on the commission's public website within 30 days of receiving the decennial census redistricting data. The manifest records the binary version, census data release, TIGER adjacency file hash, balance tolerance, and seed. Any member of the public may verify the baseline by running the platform with the recorded parameters.
+
+\subsection{Step 2: Public Review of Baseline}
+
+The commission holds at least three public hearings to present the algorithmic baseline and receive comment. Comments specifically addressing departures from the baseline---requests that the commission modify specific district lines for VRA, community of interest, or political subdivision reasons---are logged in a public comment register. The commission designates a specific deadline for departure requests.
+
+\subsection{Step 3: Departure Deliberation}
+
+For each requested or proposed departure from the baseline, the commission records a Departure Finding that includes:
+
+\begin{enumerate}
+  \item \textbf{Affected districts}: GEOID-level identification of the census tracts to be moved from one district to another.
+  \item \textbf{Criterion invoked}: The statutory criterion (VRA compliance, political subdivision integrity, community of interest, compactness, contiguity) that justifies the departure.
+  \item \textbf{VRA departures}: For departures motivated by Section 2 of the Voting Rights Act, the Departure Finding must satisfy the \textit{Gingles} three-prong framework \citep{gingles1986}:
+    \begin{enumerate}[label=(\roman*)]
+      \item The minority group is ``sufficiently large and geographically compact'' to constitute a majority in a single-member district;
+      \item The minority group is ``politically cohesive''; and
+      \item The majority votes sufficiently as a bloc ``to enable it to defeat the minority's preferred candidate.''
+    \end{enumerate}
+    For coalition-district claims, the finding must also identify the specific coalition communities and the evidence of their combined political cohesion, consistent with \textit{Allen v. Milligan}, 599 U.S.\ 1 (2023).
+  \item \textbf{Population impact}: The departure must maintain population balance within the commission's adopted tolerance (typically \textpm 0.5\% of ideal district population).
+  \item \textbf{Compactness impact}: The departure finding must report the change in Polsby-Popper score for each affected district.
+\end{enumerate}
+
+\subsection{Step 4: Re-Certification}
+
+After recording all departures, the commission's technical staff re-runs the \texttt{bisect} population-balance certification:
+\begin{verbatim}
+bisect label-analyze [state]_final --year 2030 --types population
+bisect label-verify  [state]_final --year 2030
+\end{verbatim}
+
+The verification command confirms that the final map (incorporating all departures) satisfies population balance. Any district that fails the population balance check must be re-drawn before adoption. The re-certification is published as a supplement to the original manifest.
+
+\subsection{Step 5: Final Publication}
+
+The commission publishes the following artifacts before adopting the final map:
+
+\begin{itemize}
+  \item The algorithmic baseline manifest (\texttt{manifest.json} from the baseline run)
+  \item The Departure Registry (all Departure Findings, with evidence supporting VRA prongs)
+  \item The final map's population balance certification
+  \item A difference file identifying each census tract moved from the baseline assignment to the final assignment
+\end{itemize}
+
+These artifacts are retained for 12 years (one and a half redistricting cycles) to support any litigation challenging the final map.
+
+\subsection{Anticipated Legal Scrutiny}
+
+Courts reviewing commission maps adopted under the CAP should evaluate:
+
+\textbf{VRA departures}: Whether the Departure Finding identifies a specific minority community, satisfies the \textit{Gingles} prongs with record evidence, and makes a narrowly tailored modification consistent with \textit{Miller v. Johnson}, 515 U.S.\ 900 (1995)'s requirement that race not be the predominant factor.
+
+\textbf{Non-VRA departures}: Whether the Departure Finding identifies a specific statutory criterion and whether the modification is consistent with the commission's adopted criteria hierarchy. Courts should apply deferential review to non-VRA departures, as commission discretion in applying criteria is the purpose of the commission structure.
+
+\textbf{Baseline integrity}: Whether the algorithmic baseline manifest is reproducible. Any party claiming the baseline was manipulated must demonstrate that running the \texttt{bisect} platform with the recorded parameters produces a different map. If verification succeeds, the baseline's integrity is established.
+
+The CAP's documentation requirements are designed to satisfy the record-keeping standards of \textit{Daubert v. Merrell Dow Pharmaceuticals}, 509 U.S.\ 579 (1993), applicable to expert testimony, and the administrative record requirements of \textit{Motor Vehicle Manufacturers Association v. State Farm Mutual Automobile Insurance Co.}, 463 U.S.\ 29 (1983), applicable to formal agency proceedings.

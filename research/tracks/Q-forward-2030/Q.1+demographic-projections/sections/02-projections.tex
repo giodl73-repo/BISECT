@@ -1,0 +1,68 @@
+\section{Seat Allocation Projections}
+
+\subsection{Huntington-Hill on Projected Populations}
+
+We apply the bisect-apportion Huntington-Hill implementation (\texttt{bisect apportion})
+to the 2030 medium-series state populations. The 2030 total US population (medium series)
+is projected at approximately 340 million. With 435 seats, the ideal district size is
+approximately 781,600.
+
+\begin{table}[h]
+\centering\small
+\caption{Projected 2030 congressional seat changes (medium series, Huntington-Hill).
+Confidence column shows range across low/medium/high series.}
+\label{tab:2030seats}
+\begin{tabular}{lcccc}
+\toprule
+State & 2020 Seats & 2030 Projected & Change & CI (low--high) \\
+\midrule
+Texas & 38 & 41 & $+3$ & $+2$ to $+3$ \\
+Florida & 28 & 30 & $+2$ & $+2$ to $+3$ \\
+Arizona & 9 & 10 & $+1$ & $+1$ to $+1$ \\
+Georgia & 14 & 15 & $+1$ & $+1$ to $+1$ \\
+Colorado & 8 & 9 & $+1$ & $+0$ to $+1$ \\
+North Carolina & 14 & 15 & $+1$ & $+1$ to $+1$ \\
+Washington & 10 & 11 & $+1$ & $+1$ to $+1$ \\
+Oregon & 6 & 7 & $+1$ & $+0$ to $+1$ \\
+\midrule
+New York & 26 & 24 & $-2$ & $-3$ to $-2$ \\
+California & 52 & 51 & $-1$ & $-1$ to $+0$ \\
+Illinois & 17 & 16 & $-1$ & $-1$ to $-1$ \\
+Ohio & 15 & 14 & $-1$ & $-1$ to $-1$ \\
+Michigan & 13 & 12 & $-1$ & $-1$ to $-1$ \\
+Pennsylvania & 17 & 16 & $-1$ & $-1$ to $-1$ \\
+West Virginia & 2 & 1 & $-1$ & $-1$ to $-1$ \\
+Minnesota & 8 & 7 & $-1$ & $-1$ to $-0$ \\
+Rhode Island & 2 & 1 & $-1$ & $-1$ to $-1$ \\
+Montana & 2 & 1 & $-1$ & $-1$ to $-0$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Algorithmic Implications of Seat Changes}
+
+Each seat change requires designing a new bisection tree.
+The ApportionRegions bisection tree depends on the prime factorization of $k$:
+
+\begin{itemize}
+  \item \textbf{TX $k = 41$}: 41 is prime. The bisect-apportion binary fallback
+    splits 41 into $\lfloor 41/2 \rfloor = 20$ and $\lceil 41/2 \rceil = 21$,
+    avoiding a direct 41-way METIS partition. Both 20 and 21 are composite
+    ($20 = 4\times5$, $21 = 3\times7$) and handled efficiently.
+  \item \textbf{FL $k = 30$}: $30 = 2\times3\times5$. ApportionRegions splits
+    30 into two 15-way partitions or three 10-way partitions depending on the
+    factorization ordering (smallest-prime-first vs.\ largest-prime-first).
+  \item \textbf{GA $k = 15$}: $15 = 3\times5$. Three groups of 5 each.
+  \item \textbf{NC $k = 15$}: Same as GA. A significant change from $k=14$
+    (which uses $14 = 2\times7$).
+  \item \textbf{NY $k = 24$}: $24 = 2^3\times3$. Eight groups of 3 each.
+  \item \textbf{WV $k = 1$}: Single district; no redistricting needed.
+\end{itemize}
+
+\subsection{Confidence in the Projection}
+
+The medium series is used as the primary projection. The low--high range
+represents the 80\% confidence interval around the medium series.
+Six states have uncertain seat allocations (marked $\pm1$ in the CI column).
+For planning purposes, the bisect team should pre-build bisection trees for
+both the baseline and $\pm1$ scenarios for these six states.

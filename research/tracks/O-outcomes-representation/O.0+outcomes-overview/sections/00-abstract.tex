@@ -1,0 +1,28 @@
+Congressional redistricting determines not only who represents each community but shapes the
+democratic health of the legislature itself. Yet most algorithmic redistricting research evaluates
+maps on geometric properties---compactness, population equality, minority representation---without
+connecting these properties to the downstream democratic outcomes that redistricting is ultimately
+meant to serve. This paper establishes a framework linking map geometry to four downstream outcome
+dimensions: electoral competitiveness (the frequency and margin of competitive elections), voter
+turnout (participation rates conditional on district competitiveness), legislative polarization
+(the ideological distance between parties' median members), and constituent-representative
+geographic distance (mean travel time from constituent to representative office).
+
+We survey prior literature across all four dimensions, with particular attention to the
+quasi-experimental identification strategies that exploit redistricting cycles to establish
+causal rather than merely correlational relationships. Key priors: \citet{caugheyTausanovitch2017}
+show that state legislative maps affect policy outcomes through ideological selection;
+\citet{rodden2019} demonstrates that geographic sorting produces a structural Democratic
+efficiency disadvantage that gerrymandering amplifies; \citet{jacobson2015} documents
+the secular decline of competitive seats from the 1990s through the 2020 cycle.
+
+The central prediction of the O-series, developed formally in O.1--O.4, is that compact
+algorithmic plans produced by \textsc{bisect} predict better outcomes on all four dimensions
+independent of partisan composition. The mechanism: gerrymandering requires non-compact geometry
+to achieve its effects (packing and cracking create district ``necks'' that increase travel
+distance, reduce intra-district political heterogeneity, reduce competitiveness, and select for
+ideologically extreme candidates). Compact plans disrupt these mechanisms even when they are
+not drawn to produce any particular partisan outcome.
+
+This framework paper synthesizes the O.1--O.4 companion papers and provides the identification
+strategy, theoretical foundations, and measurement protocols used throughout the O-series.

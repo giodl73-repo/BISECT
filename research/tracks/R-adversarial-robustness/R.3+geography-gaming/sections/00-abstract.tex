@@ -1,0 +1,24 @@
+Geographic gaming --- manipulating the resolution level or adjacency graph definition
+to produce a partisan outcome while maintaining algorithmic neutrality as cover ---
+is the most subtle attack vector against algorithmic redistricting.
+We test two geographic gaming scenarios: resolution choice gaming (varying the
+$k/n$ threshold that determines tract vs.\ block-group resolution) and adjacency
+manipulation (selectively removing cross-partisan tract boundaries from the
+adjacency graph).
+
+For resolution gaming: varying the threshold from 4\% to 6\% (a plausible
+dispute range) changes the resolution choice for 3--4 states and produces a
+maximum national partisan shift of 0.18 Democratic seats.
+
+For adjacency manipulation: a synthetic ``poisoned'' NC adjacency graph that
+excludes 50 strategically chosen cross-partisan tract edges (the maximum
+manipulation feasible without violating contiguity) produces a partisan shift
+of 0.15 Democratic seats.
+
+Both gaming vectors are bounded well below strategic significance ($< 0.5$ seats)
+and both are detectable via the \texttt{bisect} audit chain:
+resolution choice is recorded in the plan manifest (\texttt{plan\_resolution}),
+and adjacency modifications produce a different SHA-256 hash from the
+standard TIGER/Line adjacency graph.
+The audit chain converts the geographic gaming threat from a covert manipulation
+to a detectable deviation.

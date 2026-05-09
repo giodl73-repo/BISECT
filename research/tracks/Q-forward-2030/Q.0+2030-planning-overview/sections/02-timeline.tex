@@ -1,0 +1,79 @@
+\label{sec:timeline}
+
+\subsection{Statutory Timeline Under P.L.\ 94-171}
+
+The Redistricting Data Program (P.L.\ 94-171, codified at 13 U.S.C.\ \S 141(c))
+requires the Census Bureau to deliver redistricting data to state governors and
+legislative leaders within one year of census day (April 1, 2030). In practice:
+
+\begin{itemize}
+\item \textbf{Census Day}: April 1, 2030.
+\item \textbf{P.L.\ 94-171 Statutory Deadline}: April 1, 2031 (one year after census day).
+\item \textbf{Historical Release Pattern}: The 2020 census data was released August 12, 2021
+  (133 days after the April 1, 2021 statutory deadline, which had been extended from April 1,
+  2021 to September 30, 2021 due to COVID-19). Under normal conditions, the 2010 census
+  redistricting data was released February 3, 2011, approximately one month early.
+\item \textbf{2030 Projection}: Assuming no exceptional delays, redistricting data release
+  in March--April 2031. The analysis in this paper uses April 1, 2031 as the baseline
+  release date.
+\end{itemize}
+
+\subsection{State Redistricting Deadlines}
+
+Following data release, states must complete redistricting by their own constitutional
+and statutory deadlines. These deadlines vary:
+
+\begin{table}[ht]
+\centering
+\caption{Representative State Redistricting Deadlines Post-2031 Data Release}
+\label{tab:deadlines}
+\begin{tabular}{lll}
+\toprule
+State & Deadline Type & Approximate Deadline \\
+\midrule
+Texas & Legislative session calendar & June 2031 \\
+Florida & Commission ($\sim$180 days) & October 2031 \\
+North Carolina & Court order / legislative & December 2031 \\
+California & Commission (174 days from data) & September 2031 \\
+Michigan & Commission (360 days from data) & March 2032 \\
+New York & Legislative / commission & January 2032 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item Deadlines are approximate; states may adjust based on litigation.
+  Texas's legislative session calendar creates the tightest effective deadline.
+\end{tablenotes}
+\end{table}
+
+The operational consequence is that states with early legislative session deadlines
+(Texas, Ohio, Georgia) have effectively shorter redistricting windows than the
+12-month statutory limit. Texas has a biennial regular session ending May 31; if
+redistricting is not completed by then, a special session (which the Governor must
+call) is required at additional cost and political difficulty. The 2021 redistricting
+cycle saw Texas complete its congressional maps in October 2021 via special session.
+
+For \textsc{bisect} to be useful in the most time-constrained states, the platform
+must be capable of producing validated plans within weeks of data release, not months.
+This requires that all infrastructure be in place before April 2031.
+
+\subsection{The 2030 Infrastructure Preparation Window}
+
+Working backward from April 2031:
+
+\begin{itemize}
+\item \textbf{April 2031}: Census data released; redistricting begins.
+\item \textbf{January 2031}: Final validation of block-group adjacency graphs complete.
+  No new graph construction should occur during the redistricting window.
+\item \textbf{July 2030}: Algorithm version pre-registration complete (see Section~\ref{sec:dia-seed}).
+  Configuration locked for 2031 redistricting.
+\item \textbf{January 2030}: Block-group adjacency graph construction begins for all 50 states.
+  Target completion: January 2031 (12 months for construction + validation).
+\item \textbf{July 2029}: LODES 2028 and ACS 2026--2028 data available; demographic update
+  pipeline deployed and validated.
+\item \textbf{January 2029}: Reapportionment projection analysis complete (Q.4).
+  States projected to gain/lose seats identified; $k$-values pre-configured.
+\end{itemize}
+
+The 2029--2031 preparation window is 24 months. It is tight but achievable.
+The Q-series documents the work required in each phase.

@@ -1,0 +1,88 @@
+\section{Vectors V4 and V5: Presentation and Version Selection}
+\label{sec:v45}
+
+\subsection{Vector V4: Selective Result Presentation}
+\label{sec:v4}
+
+\subsubsection{Attack Description}
+
+The \bisect{} algorithm produces a single deterministic plan given a fixed
+random seed (or uses \cs{} to find the optimal seed).
+However, a hostile actor running the algorithm multiple times with
+different seeds, or across different convergence thresholds, will
+observe a distribution of outputs.
+The attack consists of selecting the run with the most partisan-favorable
+outcome and presenting only that run to courts and the public.
+
+This attack does not affect the plan geometry for any individual run;
+it exploits the selection process across runs.
+It is analogous to publication bias in scientific research:
+by reporting only the most favorable result from many trials, the actor
+presents a biased sample of the algorithm's output distribution.
+
+\subsubsection{Effect Estimate}
+
+From B.7's seed variance analysis~\citep{b7paper}, the standard deviation
+of Democratic seat outcomes across random seeds is $\sigma \approx 0.8$
+seats nationally for a 50-state run.
+If an adversary runs the algorithm $m$ times and selects the most favorable
+outcome, the expected maximum shift is:
+\[
+  \Delta D_{V4}(m) \approx \sigma \cdot \Phi^{-1}\!\left(\frac{m-1}{m+1}\right),
+\]
+where $\Phi^{-1}$ is the standard normal quantile.
+For $m = 10$ runs: $\Delta D_{V4}(10) \approx 0.8 \times 1.54 \approx 1.2$ seats.
+For $m = 100$ runs: $\Delta D_{V4}(100) \approx 0.8 \times 2.33 \approx 1.9$ seats.
+
+This is larger than V1--V3 in absolute terms but does not change any
+individual plan's geometry.
+Whether V4 constitutes gerrymandering depends on whether the act of selection
+is itself the manipulative act.
+
+\subsubsection{Detection Mechanism}
+
+The \dia{} pre-registration protocol eliminates V4 by requiring that the
+plan submitted for certification be the \emph{first} run under the
+pre-registered seed (or the \cs{} optimal plan, which is deterministic).
+The manifest's SHA-256 chain locks the submitted plan to a specific seed
+and run configuration.
+Any evidence that additional runs were performed and the results withheld
+constitutes a protocol violation.
+Detection probability: $\delta_4 = 0.80$ (limited by the ability to
+audit whether additional runs were performed without access to the
+computational logs).
+
+\subsection{Vector V5: Algorithm Version Selection}
+\label{sec:v5}
+
+\subsubsection{Attack Description}
+
+The \bisect{} binary evolves over time; new versions may produce
+different outputs from the same inputs due to algorithmic improvements,
+bug fixes, or interface changes.
+A hostile actor could run multiple versions of the algorithm, observe
+partisan outcomes for each, and deploy the version producing the most
+favorable outcome while claiming the version selection was a routine
+software update decision.
+
+\subsubsection{Effect Estimate}
+
+Version-to-version variation in the \bisect{} binary is bounded by
+the B.0 bakeoff result~\citep{b0paper}: within the GeoSection algorithm
+family (which is the statutory default), version changes affect only
+implementation details (optimization speedups, tie-breaking rules) but
+not the fundamental algorithm structure.
+We estimate $\Delta D_{V5} \leq 0.3$ seats nationally for version changes
+within the same algorithm family.
+Cross-family changes (e.g., switching from GeoSection to ApportionRegions)
+produce much larger effects (up to $\sim$18 seats) but are structurally
+detectable as algorithm-class changes.
+
+\subsubsection{Detection Mechanism}
+
+The manifest includes a SHA-256 hash of the \bisect{} binary itself.
+Any change to the binary changes the hash.
+The \dia{} protocol requires that the deployed binary hash match the
+hash of the statutorily approved algorithm version.
+Detection probability: $\delta_5 = 1.00$ (cryptographic guarantee).
+Binary version selection is thus the easiest V5 attack to prevent.

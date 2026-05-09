@@ -1,0 +1,19 @@
+Congressional redistricting after the 2030 Census will occur in a substantially different
+demographic landscape than 2020. Using the Census Bureau's 2020 vintage population
+projections (medium series) through 2030, we estimate state-level populations and apply
+Huntington-Hill apportionment to project the 2030 congressional seat allocation.
+
+The headline results: Texas gains 3 seats (38 to 41), Florida gains 2 (28 to 30),
+Arizona and Georgia each gain 1. New York loses 2 seats (26 to 24), California loses 1
+(52 to 51), and six additional states each lose 1. Eight states gain, ten states lose;
+thirty-two states retain their 2020 allocations.
+
+Confidence intervals from the low/medium/high projection series show the allocation
+is robust for most states but uncertain for six states at the margin. Key algorithmic
+implications: TX k=41 (prime) uses ApportionRegions' binary fallback (20+21 split),
+not a 41-way METIS partition. FL k=30 requires a new prime factorization (2$\times$3$\times$5).
+These structural changes should be validated before 2031 redistricting begins.
+
+The 2030 national congressional map will be substantially more Sun Belt-dominated
+than 2020, with implications for algorithmic compactness and VRA compliance in
+fast-growing metro areas.

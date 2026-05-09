@@ -1,0 +1,30 @@
+The F.3 resolution rule establishes when block-group resolution is required for
+congressional redistricting: when $k/n > 0.05$ (where $k$ is the number of congressional
+seats and $n$ is the number of census tracts in the state), tract-level redistricting
+produces insufficient internal partitioning choices for the recursive bisection algorithm
+to achieve population balance without excessive within-tract splits. Applying this rule
+to Census Bureau medium-series 2030 population projections and projected Huntington-Hill
+reapportionment outcomes, we find that 43 states will require block-group resolution
+in 2030, up from 39 states in 2020. The four newly upgraded states are Montana ($k$: $1\to2$),
+Idaho ($k$: $2\to3$), Colorado ($k$: $8\to9$), and North Carolina ($k$: $14\to15$).
+
+Block-group adjacency graphs are approximately 5$\times$ larger than tract adjacency
+graphs ($\sim$1.2 million vertices vs.\ $\sim$240{,}000 vertices nationally). The additional
+scale affects three operational parameters: construction time (estimated 20 CPU-hours
+vs.\ 4 CPU-hours for tracts), memory footprint per state (estimated peak 14 GB for Texas
+vs.\ 2.8 GB at tract resolution), and full-sweep redistricting runtime (estimated 90 minutes
+at block-group resolution vs.\ 90 minutes at tract resolution, since the bisection time
+scales with adjacency complexity, not raw vertex count).
+
+Pre-building the 43-state block-group adjacency by January 2031 reduces the effective
+2031 redistricting window from 6 months (if adjacency construction occurs during
+redistricting) to 2 months (loading pre-built graphs and running bisection). This
+4-month reduction is the operational motivation for the Q.3 infrastructure investment.
+The \textsc{bisect} CLI command for block-group adjacency construction is:
+
+\begin{verbatim}
+bisect fetch --year 2030 --resolution block-group --workers 8
+\end{verbatim}
+
+We document the state-by-state resolution classification, construction resource
+estimates, and validation protocols for the 43-state block-group adjacency build.

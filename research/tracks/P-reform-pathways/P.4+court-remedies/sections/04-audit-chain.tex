@@ -1,0 +1,59 @@
+The \texttt{bisect} platform's SHA-256 audit chain is designed to satisfy the reproducibility standards that courts have implicitly or explicitly required in redistricting proceedings. This section explains the technical mechanism and its legal significance.
+
+\subsection{The Manifest Format}
+
+Every plan produced by the \texttt{bisect} platform is accompanied by a \texttt{manifest.json} file that records:
+
+\begin{itemize}
+  \item \texttt{BISECT\_version}: The semantic version of the \texttt{bisect} binary (e.g., \texttt{2.1.4})
+  \item \texttt{BISECT\_build\_commit}: The Git commit hash of the source code used to build the binary, with a \texttt{-dirty} suffix if built from uncommitted changes
+  \item \texttt{rustc\_version}: The Rust compiler version used to build the binary
+  \item \texttt{adjacency\_sha256}: The SHA-256 hash of the input census tract adjacency file
+  \item \texttt{tiger\_source\_url}: The URL of the TIGER boundary data used to construct the adjacency file
+  \item \texttt{population\_source}: Which population metric was used (\texttt{total}, \texttt{vap}, or \texttt{cvap})
+  \item \texttt{balance\_tolerance}: The permitted population deviation (default \texttt{0.005}, i.e., 0.5\%)
+  \item \texttt{seed}: The random seed used for tie-breaking
+  \item \texttt{district\_count}: The number of districts produced
+  \item \texttt{timestamp}: ISO-8601 UTC timestamp of plan creation
+\end{itemize}
+
+Any party can verify a plan by running:
+\begin{verbatim}
+bisect doctor --verify-manifest path/to/manifest.json
+\end{verbatim}
+
+If the running binary's SHA-256 matches the manifest's \texttt{BISECT\_build\_commit}, the adjacency file's SHA-256 matches the manifest's \texttt{adjacency\_sha256}, and running the algorithm with the recorded parameters produces the same district assignments, verification succeeds. If any check fails, the platform reports which check failed and why.
+
+\subsection{The Daubert Standard}
+
+In federal courts (and analogously in most state courts), expert evidence must satisfy the \textit{Daubert} framework: the methodology must be testable, peer-reviewed, have known error rates, and be generally accepted in the relevant scientific community. \textit{Daubert v. Merrell Dow Pharmaceuticals}, 509 U.S.\ 579 (1993).
+
+Algorithmic redistricting satisfies the \textit{Daubert} criteria more directly than traditional cartographic expertise:
+
+\textbf{Testability}: The algorithm is testable in the strongest possible sense---anyone can run it and verify the output independently.
+
+\textbf{Peer review}: Recursive bisection with METIS graph partitioning has been extensively peer-reviewed in the computational geometry and operations research literature. The METIS algorithm is the subject of hundreds of peer-reviewed publications.
+
+\textbf{Known error rates}: The algorithm's population balance guarantee is exact within the specified tolerance (\textpm 0.5\%) by construction. There are no stochastic error rates.
+
+\textbf{General acceptance}: Graph partitioning methods are standard tools in computational geometry. Their application to redistricting has been analyzed by computational social scientists, computer scientists, and election law scholars across dozens of peer-reviewed publications.
+
+Traditional cartographic expertise, by contrast, often fails on testability (two qualified experts examining the same criteria can produce different maps) and known error rates (there is no objective metric for how much a human expert's judgment deviates from a neutral baseline).
+
+\subsection{The Reproducibility Standard from \textit{LWV v. PA}}
+
+\textit{League of Women Voters v. Pennsylvania} established that a court-ordered redistricting map must be capable of independent verification. The court's expert-produced map was verified by inspecting district boundaries and checking population counts against census data. This is a weaker form of reproducibility than the \texttt{bisect} manifest provides: inspection-based verification cannot detect subtle manipulations that satisfy stated criteria while deviating from the criteria-optimal solution.
+
+The \texttt{bisect} manifest's byte-level reproducibility standard is stronger: not merely ``does this map satisfy the criteria,'' but ``is this map the output of the algorithm applied to these inputs with these parameters.'' The stronger standard forecloses a larger class of potential manipulations and provides courts with a more definitive basis for resolving disputes about map authenticity.
+
+\subsection{Implications for Opposing Experts}
+
+When an algorithmic map is produced under a court order, opposing experts cannot challenge the map's internal consistency---any claim that the map does not satisfy its stated criteria is resolved by running the verification command. Opposing experts are limited to three categories of legitimate challenge:
+
+\textbf{(1) Input data disputes}: Claims that the census data or TIGER adjacency file used as input is incorrect. These are resolved by checking the adjacency file's SHA-256 against the Census Bureau's published hash for the relevant release.
+
+\textbf{(2) Parameter disputes}: Claims that the specified parameters (balance tolerance, seed, edge-weight schema) are not appropriate for the state's geographic and demographic circumstances. These are resolved by expert debate about criteria rather than about map authenticity.
+
+\textbf{(3) VRA compliance}: Claims that the algorithmic output fails to satisfy Section 2 of the Voting Rights Act by not creating an available majority-minority district. These are resolved by producing evidence satisfying the \textit{Gingles} three-prong test and demonstrating a specific modification. The Commission Adjustment Protocol (P.3, \S4) specifies this process.
+
+The elimination of map-authenticity disputes substantially reduces the cost and duration of redistricting litigation. Courts spend less time on cartographic expert battles and more time on the legally interesting questions of VRA compliance and criteria interpretation.

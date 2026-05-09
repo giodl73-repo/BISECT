@@ -1,0 +1,33 @@
+\section{Conclusion}
+
+The Bayesian Detection Score (BDS) converts a redistricting ensemble percentile
+into a court-interpretable posterior probability. The key advantages over the
+standard frequentist percentile:
+
+\begin{enumerate}
+  \item \textbf{Uncertainty quantification}: BDS incorporates the ensemble's
+    ESS rather than treating $N$ nominal plans as $N$ independent observations.
+  \item \textbf{Probabilistic interpretation}: ``BDS = 0.97'' is directly
+    interpretable as ``97\% probability the plan is in the extreme 5\%,'' which
+    is what courts want to know.
+  \item \textbf{Geography absorption}: the ensemble prior absorbs geographic
+    effects, so the posterior measures only the residual above geographic constraints.
+  \item \textbf{Threshold clarity}: BDS $> 0.95$ as the evidentiary threshold
+    has a clear probabilistic meaning, analogous to $p < 0.05$ but more honest
+    about the uncertainty.
+\end{enumerate}
+
+Applied to five study states, the BDS confirms strong Bayesian evidence that
+NC, WI, GA, and PA enacted plans are genuinely extreme (BDS $> 0.97$), while
+the \textsc{bisect} algorithmic plans are consistent with neutral random draws
+(BDS $< 0.10$). Texas presents an intermediate case (BDS = 0.89), reflecting
+its geographic complexity.
+
+The BDS is implemented as a three-line computation from standard statistical
+libraries:
+\begin{verbatim}
+from scipy.stats import beta
+bds = beta.cdf(0.05, p_hat*ess + 1, (1 - p_hat)*ess + 1)
+\end{verbatim}
+No new redistricting-specific software is required; the computation runs on
+any GerryChain ensemble output with an ESS estimate from G.4.

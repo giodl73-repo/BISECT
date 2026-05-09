@@ -1,0 +1,28 @@
+Algorithmic redistricting depends on three data sources: the Census
+P.L.\ 94-171 redistricting file, TIGER/Line shapefiles, and optionally
+American Community Survey 5-year tables.
+A hostile actor who can modify any of these sources before the algorithm
+processes them can potentially steer partisan outcomes without touching
+algorithm code or parameters.
+
+We analyse the three attack surfaces---population count manipulation,
+shapefile boundary modification, and ACS demographic table alteration---
+and show that (1)~even a $\pm 1\%$ per-tract population manipulation
+produces at most $\Delta D \leq 0.4$ expected Democratic seats nationally,
+placing the effect within the B.7 seed-variance noise floor;
+(2)~all three attack surfaces are protected by \bisect{}'s three-level
+SHA-256 audit chain: Census download hash, adjacency construction hash,
+and final plan hash; and (3)~any manipulation that exceeds the noise floor
+requires modifications large enough to produce detectable hash mismatches.
+
+A disclosed limitation: \bisect{} uses TLS certificate validation via
+the system trust store but does not implement certificate pinning.
+A sophisticated man-in-the-middle attacker with TLS spoofing capability
+could intercept Census downloads without changing the algorithm's behavior.
+We recommend supplementary out-of-band hash verification for litigation-grade deployments.
+
+The three-level audit chain---implemented via \texttt{bisect fetch}
+and \texttt{bisect label-verify}---provides a computationally infeasible
+barrier to undetected manipulation: SHA-256 collision resistance
+requires $2^{80}$ operations under the birthday bound
+(FIPS PUB 180-4~\citep{fips180}).

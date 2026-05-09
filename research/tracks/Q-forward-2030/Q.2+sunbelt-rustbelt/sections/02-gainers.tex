@@ -1,0 +1,69 @@
+\section{Sun Belt Gainers: New Tree Designs}
+
+\subsection{Texas: From $k = 38$ to $k = 41$}
+
+Texas is the program's largest redistricting state and the most consequential
+2030 change. The shift from $k = 38 = 2\times19$ to $k = 41$ (prime) is a
+significant structural change.
+
+\textbf{ApportionRegions (prime-factor) handling}: $k = 41$ is prime and $> 3$,
+so the binary fallback applies: two regions of $\lfloor 41/2 \rfloor = 20$ and
+$\lceil 41/2 \rceil = 21$.
+Both 20 and 21 are composite: $20 = 4\times5$ and $21 = 3\times7$.
+The full tree produces: $41 \to [20, 21] \to [5\times4, 3\times7] \to \ldots$
+This is a valid tree with three levels of factorization.
+
+\textbf{GeoSection alternative}: \texttt{--structure ratio-optimal} bypasses
+prime factorization entirely, using the ratio-optimal bisection that iteratively
+finds the cut point minimising the ratio of population shares to district shares.
+For Texas's irregular geography (Gulf Coast, border region, Hill Country,
+Panhandle), ratio-optimal bisection aligns the first cut with the major
+geographic-demographic gradient (coastal urban vs.\ interior rural) more naturally
+than the prime-factor tree.
+
+\textbf{Recommendation}: Use \texttt{--structure ratio-optimal} for TX 2030.
+The prime-factor binary fallback works but the geographic alignment is suboptimal
+for the projected 2030 district configuration.
+
+\subsection{Florida: From $k = 28$ to $k = 30$}
+
+$30 = 2\times3\times5$. The smallest-prime-first tree splits 30 into
+$[15, 15] \to [5, 10; 5, 10] \to \ldots$, producing five groups of 6.
+This is algebraically clean but may not align with Florida's geographic
+structure (two Panhandle districts, central corridor, multiple coastal metros).
+
+GeoSection is again recommended: Florida's peninsular geography with long
+north-south extent and coastline complexity makes the ratio-optimal first cut
+more meaningful than any prime-factorization cut.
+
+\subsection{Smaller Gainers (AZ, GA, CO, NC, WA, OR)}
+
+Each gains one seat. The $+1$ change requires redesigning the entire bisection
+tree (k changes the full tree structure). Key examples:
+\begin{itemize}
+  \item \textbf{AZ $k=10$}: $10 = 2\times5$. Two groups of 5, then 5-way.
+  \item \textbf{GA $k=15$}: $15 = 3\times5$. Three groups of 5.
+  \item \textbf{NC $k=15$}: Same as GA. Note: NC's mountain-piedmont-coastal
+    structure maps naturally onto a 3-region first split.
+\end{itemize}
+
+\section{Rust Belt Losers: District Mergers}
+
+\subsection{New York: $k = 26$ to $k = 24$}
+
+NY loses 2 seats --- the largest single-state decline. The $k=24 = 2^3\times3$
+factorization (eight groups of 3) is different from the current $k=26 = 2\times13$
+(two groups of 13 or GeoSection). The tree redesign is complete.
+
+The algorithmic advantage of the bisect approach for seat-loss states: the algorithm
+produces the globally optimal plan for $k=24$ without any reference to the $k=26$
+plan. There is no ``incumbent protection'' or ``district continuity'' constraint
+that gerrymandering commissions typically impose. This means bisect produces a
+genuinely new optimal plan rather than an incumbency-protecting merger.
+
+\subsection{West Virginia: $k = 2$ to $k = 1$}
+
+WV's second seat is projected to be lost entirely. A state with $k=1$ has a
+trivial redistricting: the entire state is one district. bisect handles this
+correctly (single-district states are excluded from the bisection and simply
+reported as the full-state assignment).

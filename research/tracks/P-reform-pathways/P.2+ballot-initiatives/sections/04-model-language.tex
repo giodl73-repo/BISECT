@@ -1,0 +1,41 @@
+We develop model ballot initiative language for California that would add an algorithmic redistricting requirement---specifically, recursive bisection using the \texttt{bisect} platform---to the existing California Citizens Redistricting Commission framework established by Propositions 11 and 20. The model language is designed to be incorporated as an amendment to California Government Code \S8252 et seq. (the CCRC enabling statute).
+
+\subsection{Core Operative Language}
+
+The following language would amend Government Code \S8252.5 to add a new subdivision:
+
+\begin{quote}
+\textbf{\S8252.5(e) Algorithmic Baseline Requirement.}
+
+(1) In developing the maps required under this section, the Commission shall, as a first step, obtain and review an \emph{algorithmic baseline map} produced by the \texttt{bisect} redistricting platform (or a successor platform designated by the State Auditor) using the most recent decennial census redistricting data and TIGER census tract boundary files.
+
+(2) The algorithmic baseline map shall be produced using the following parameters: recursive bisection with METIS edge-cut optimization; population balance tolerance not to exceed 0.5\% of the ideal district population; no inputs reflecting partisan registration, election results, race, ethnicity, or incumbency.
+
+(3) The Commission shall publish the algorithmic baseline map, together with the reproducibility manifest described in subdivision (4), within 30 days of receiving the decennial census redistricting data.
+
+(4) The reproducibility manifest shall record: (a) the \texttt{bisect} platform version, identified by SHA-256 hash of the reference binary; (b) the census data release identifier; (c) the TIGER adjacency file SHA-256 hash; and (d) the balance tolerance and seed used. Any member of the public may verify the baseline map by running the \texttt{bisect} platform with the recorded parameters.
+
+(5) The Commission may depart from the algorithmic baseline map. Each departure shall be documented in a written finding that: (a) identifies the specific district or boundary affected; (b) states the criteria under \S8252.5 that required the departure; and (c) for departures motivated by Voting Rights Act compliance, identifies the applicable \textit{Gingles} prong satisfied and the minority community served.
+
+(6) The Commission shall, before adopting a final map, re-run the \texttt{bisect} platform on any district modified under subdivision (5) to certify that the modified district satisfies the population balance requirement of subdivision (2). A modification that fails this certification may not be adopted.
+
+(7) The algorithmic baseline map and all reproducibility manifests shall be published on the Commission's public website and retained for at least 12 years.
+\end{quote}
+
+\subsection{Framing Notes for Public Communication}
+
+The model language has two properties that make it politically defensible against the three barriers identified in Section~3.
+
+First, it preserves the CCRC's human deliberation. The algorithm produces a \emph{baseline}, not a final map. The Commission retains authority to adjust the baseline for VRA compliance, political subdivision integrity, and community of interest considerations. This addresses the algorithmic-skeptic wing of the reform coalition.
+
+Second, it creates a verifiable audit trail. Any person---including minority advocacy organizations---can check whether the Commission's VRA modifications were documented, whether they were re-certified for population balance, and whether they satisfy the stated \textit{Gingles} prongs. This addresses concerns that algorithmic redistricting will be used to override VRA requirements under the guise of neutrality.
+
+Third, the partisan fairness concern is addressed by the algorithm's design: recursive bisection is structurally blind to partisan data. The algorithm cannot systematically disadvantage either party because it has no information about which party's voters live in which tracts. This is not a policy claim---it is an architectural property that can be independently verified.
+
+\subsection{Legal Analysis}
+
+The model language is consistent with California's existing constitutional framework. California Constitution Article XXI, \S2 vests the redistricting authority in the CCRC and requires maps to comply with specified criteria. The model language does not change the CCRC's authority or the criteria hierarchy; it adds a procedural requirement (produce and publish a baseline; document departures) that supports rather than limits the Commission's discretion.
+
+The model language is also consistent with the Voting Rights Act. VRA \S2 compliance remains a mandatory criterion (the second-highest priority after federal constitutional requirements). The documentation requirement for VRA departures from the algorithmic baseline is designed to strengthen, not weaken, VRA enforcement: it creates a record that courts can review to determine whether the Commission applied the \textit{Gingles} test correctly.
+
+The reproducibility requirement is consistent with California's Public Records Act and creates no new privacy concerns---all input data (census tracts, population counts, boundary files) are public federal data.

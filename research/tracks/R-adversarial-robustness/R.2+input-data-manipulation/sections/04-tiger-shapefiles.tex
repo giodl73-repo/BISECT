@@ -1,0 +1,91 @@
+\section{Attack Surface 2: TIGER/Line Shapefiles}
+\label{sec:tiger}
+
+\subsection{The Data Format}
+
+TIGER/Line shapefiles define the geographic boundaries of each census tract
+as a sequence of latitude/longitude coordinate pairs.
+Two tracts are adjacent if their boundary polygons share a segment of
+positive length (the ``shared edge'' criterion used by \bisect{}).
+The adjacency graph $G = (V, E)$ is constructed from these shapefiles:
+$V$ is the set of census tracts, and $(u, v) \in E$ iff tracts $u$ and $v$
+share a boundary segment.
+
+\subsection{The Attack}
+
+A hostile actor who can modify TIGER/Line shapefiles can rewire the
+adjacency graph without changing population counts.
+Specifically:
+\begin{enumerate}
+\item \textbf{Adjacency insertion}: Slightly modify the boundary
+  coordinates of two non-adjacent tracts so that they appear to share
+  a boundary segment.
+  This adds an edge to the adjacency graph, potentially enabling
+  a bisection cut that was previously infeasible.
+\item \textbf{Adjacency deletion}: Remove boundary coordinates shared
+  between two adjacent tracts, breaking their adjacency.
+  This removes an edge, forcing the bisection to find alternative cuts.
+\item \textbf{Boundary shift}: Move a boundary line between two tracts
+  (one heavily Democratic, one heavily Republican) by a small amount,
+  effectively moving some people from one tract to the other
+  without changing the total population.
+\end{enumerate}
+
+Attack~3 (boundary shift) is the most potent because it operates below
+the GEOID level: the adversary does not change which GEOID a tract has or
+what its total population is, only where its geographic boundary lies.
+If the algorithm uses centroid-based population assignment (which
+\bisect{} does not---it uses census-provided population counts per GEOID),
+this attack could effectively move people between tracts.
+
+\subsection{Why Bisect Is Resistant to Boundary Shifts}
+
+The critical design decision in \bisect{} is that population is taken from
+the P.L.\ 94-171 file keyed by GEOID, not derived from shapefile geometry.
+A shapefile boundary shift does not change the P.L.\ 94-171 GEOID record
+and therefore does not change the population count used by the algorithm.
+
+The only effect of a shapefile boundary shift is to change the adjacency
+relationship between tracts.
+This is the adjacency insertion/deletion attack described above.
+
+\subsection{Effect Magnitude}
+
+Adding or removing individual adjacency edges in the census tract graph
+has limited partisan effect because:
+\begin{itemize}
+\item Congressional district boundaries are determined by sequences of
+  hundreds to thousands of edges in the graph; single-edge changes
+  affect only the local margin of a bisection cut.
+\item The ConvergenceSweep algorithm~\citep{b16paper} optimises over
+  many possible cuts; a single spurious edge is unlikely to become
+  the preferred cut unless it is in a highly competitive region.
+\item TIGER/Line shapefiles use high-precision coordinate pairs
+  (6 decimal places of latitude/longitude, approximately 10-meter
+  precision).
+  Inserting a false shared edge requires introducing coordinate pairs
+  that are inconsistent with the surrounding polygon geometry;
+  a geometric consistency check can detect such insertions.
+\end{itemize}
+
+We estimate the maximum effect of a plausible (undetected) shapefile
+manipulation at $\Delta D \leq 0.4$ seats nationally.
+A manipulation producing a larger effect would require altering dozens of
+adjacency relationships in competitive states, which is geometrically
+implausible (non-convex polygon corners, sub-meter boundary precision).
+
+\subsection{Detection}
+
+\texttt{bisect} computes the adjacency graph hash:
+\begin{verbatim}
+SHA256(adjacency_graph_state_XX_2020.json) -> manifest
+\end{verbatim}
+The adjacency graph is a deterministic function of the TIGER/Line shapefile.
+Any modification to the shapefile that changes adjacency relationships
+changes the adjacency hash.
+
+Detection probability: $\delta = 0.98$.
+The 2\% residual corresponds to modifications that change shapefile
+coordinates but do not change adjacency relationships (e.g., interior
+smoothing of non-boundary coordinates), which are genuinely undetectable
+but also have zero effect on the algorithm's output.

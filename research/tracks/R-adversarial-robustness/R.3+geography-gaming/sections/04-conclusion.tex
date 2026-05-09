@@ -1,0 +1,22 @@
+\section{Conclusion}
+
+Geographic gaming is bounded and detectable:
+\begin{enumerate}
+  \item \textbf{Resolution gaming} produces at most $0.18$ seat shift nationally
+    from varying the F.3 threshold across its plausible range.
+  \item \textbf{Adjacency manipulation} (removing 50 cross-partisan edges in NC)
+    produces a $0.15$ seat shift.
+  \item \textbf{Combined maximum}: even if an adversary simultaneously chose the
+    most favourable resolution threshold and manipulated the adjacency graph,
+    the national partisan shift would be $< 0.35$ seats --- within sampling noise.
+  \item \textbf{Detectability}: both vectors are detectable via the audit chain.
+    Resolution is recorded in the manifest; adjacency is hashed against the
+    standard TIGER/Line construction.
+\end{enumerate}
+
+The key design principle: geographic definition choices are a pre-registration
+problem, not a manipulation-resistance problem.
+If the resolution rule and adjacency definition are specified and pre-registered
+before the Census data is released (as the DIA requires), there is no opportunity
+for post-data geographic gaming.
+The audit chain detects any deviation from the pre-registered specification.

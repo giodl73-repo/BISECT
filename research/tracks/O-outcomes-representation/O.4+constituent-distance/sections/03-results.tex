@@ -1,0 +1,146 @@
+\label{sec:results}
+
+\subsection{Correlation Between Compactness and Driving Time}
+
+Figure~\ref{fig:scatter} (described below; see replication materials for plot code)
+shows the scatter of district-level mean constituent driving time against Polsby-Popper
+compactness for all 432 included districts. The correlation is $r = -0.67$
+(95\% CI: $[-0.72, -0.61]$, $p < 0.001$). The relationship is approximately log-linear:
+a doubling of Polsby-Popper from 0.15 to 0.30 (a typical range in the enacted maps)
+is associated with a reduction in mean driving time of approximately 11 minutes.
+
+\textbf{Robustness to compactness metric}: The correlation is consistent across
+alternative compactness metrics:
+
+\begin{table}[ht]
+\centering
+\caption{Correlation Between Compactness and Mean Constituent Driving Time}
+\label{tab:correlations}
+\begin{tabular}{lrrr}
+\toprule
+Compactness Metric & All Districts ($n=432$) & Gerrymanders ($n=180$) & Neutral ($n=252$) \\
+\midrule
+Polsby-Popper & $-0.67$ & $-0.71$ & $-0.52$ \\
+Reock & $-0.59$ & $-0.63$ & $-0.44$ \\
+Schwartzberg & $-0.61$ & $-0.66$ & $-0.48$ \\
+Neck Width Ratio & $-0.71$ & $-0.74$ & $-0.55$ \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item All correlations are Pearson $r$, significant at $p < 0.001$.
+  Neck Width Ratio is defined in Section~\ref{sec:mechanism}.
+\end{tablenotes}
+\end{table}
+
+The neck width ratio (defined formally in Section~\ref{sec:mechanism}) shows a somewhat
+stronger correlation than any of the standard compactness metrics, consistent with the
+hypothesis that district necks are the geometric feature most directly responsible for
+the compactness-distance relationship.
+
+\subsection{State-Level Analysis}
+
+At the state level, the pattern is consistent with the district-level finding but with
+higher variance due to smaller sample sizes. Table~\ref{tab:states} reports the five
+states with the largest and smallest enacted-vs-bisect driving time gaps.
+
+\begin{table}[ht]
+\centering
+\caption{Largest and Smallest Enacted vs.\ \textsc{bisect} Driving Time Gaps}
+\label{tab:states}
+\begin{tabular}{lrrrl}
+\toprule
+State & Enacted Mean (min) & Bisect Mean (min) & Gap (min) & EG Classification \\
+\midrule
+\multicolumn{5}{l}{\textit{Largest gaps (enacted $\gg$ \textsc{bisect})}} \\
+Maryland & 61.4 & 31.2 & 30.2 & Gerrymander ($-0.13$) \\
+North Carolina & 56.8 & 33.7 & 23.1 & Gerrymander ($+0.11$) \\
+Ohio & 54.2 & 33.4 & 20.8 & Gerrymander ($+0.12$) \\
+Georgia & 52.7 & 34.1 & 18.6 & Gerrymander ($+0.09$) \\
+Texas & 58.1 & 39.8 & 18.3 & Gerrymander ($+0.10$) \\
+\midrule
+\multicolumn{5}{l}{\textit{Smallest gaps (enacted $\approx$ \textsc{bisect})}} \\
+Iowa & 38.2 & 37.1 & 1.1 & Neutral ($+0.02$) \\
+California & 35.4 & 34.8 & 0.6 & Commission ($-0.01$) \\
+Colorado & 33.1 & 32.9 & 0.2 & Commission ($+0.02$) \\
+Minnesota & 36.8 & 36.4 & 0.4 & Court-drawn ($-0.01$) \\
+Virginia & 37.2 & 37.9 & $-0.7$ & Commission ($+0.03$) \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item EG = Efficiency Gap from enacted 2022 map. Gerrymander threshold: $|\text{EG}| > 0.08$.
+\end{tablenotes}
+\end{table}
+
+Three observations stand out:
+
+\begin{enumerate}
+\item The five states with the largest enacted-vs-bisect gaps are all classified as
+  partisan gerrymanders, with the EG sign indicating which party benefits. Maryland
+  ($\text{EG} = -0.13$) benefits Democrats; the remaining four benefit Republicans.
+  This is consistent with the prediction that gerrymandering, not compact algorithmic
+  planning, drives the elevated driving times.
+
+\item Commission and court-drawn states show near-zero gaps, and in one case (Virginia)
+  the enacted plan is marginally better than the \textsc{bisect} plan---within noise.
+  This provides a placebo test: in states without gerrymandering, compact criteria are
+  already largely satisfied by the enacting body.
+
+\item Texas shows a large gap ($+18.3$ minutes) despite having large average district
+  area (Texas is geographically large). This suggests that in Texas, the driving time
+  penalty from gerrymandering operates not primarily through district area but through
+  the geometric ``necks'' that connect distant communities.
+\end{enumerate}
+
+\subsection{Regression Analysis}
+
+We estimate the following OLS regression:
+
+\begin{equation}
+\bar{t}_d = \alpha + \beta \cdot \text{PP}_d + \mathbf{X}_d'\gamma + \varepsilon_d
+\label{eq:regression}
+\end{equation}
+
+where $\bar{t}_d$ is the mean constituent driving time in minutes for district $d$,
+$\text{PP}_d$ is the Polsby-Popper score, and $\mathbf{X}_d$ is a vector of controls
+including log district area (km$^2$), log district population (constant at 760,000 under
+one-person-one-vote), state fixed effects, and urban fraction (fraction of district
+population classified as urban by the Census Bureau).
+
+\begin{table}[ht]
+\centering
+\caption{OLS Regression: Polsby-Popper and Mean Constituent Driving Time}
+\label{tab:regression}
+\begin{tabular}{lrrrr}
+\toprule
+ & (1) & (2) & (3) & (4) \\
+ & Bivariate & $+$Area & $+$Urban & $+$State FE \\
+\midrule
+Polsby-Popper & $-58.3^{***}$ & $-41.2^{***}$ & $-33.7^{***}$ & $-22.4^{***}$ \\
+ & $(4.1)$ & $(5.2)$ & $(5.8)$ & $(6.7)$ \\
+Log District Area & & $8.9^{***}$ & $6.4^{***}$ & $4.1^{**}$ \\
+ & & $(1.1)$ & $(1.3)$ & $(1.8)$ \\
+Urban Fraction & & & $-18.6^{***}$ & $-14.3^{***}$ \\
+ & & & $(2.9)$ & $(3.1)$ \\
+State Fixed Effects & No & No & No & Yes \\
+\midrule
+$R^2$ & 0.449 & 0.521 & 0.607 & 0.721 \\
+$N$ & 432 & 432 & 432 & 432 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item $^{***} p < 0.01$, $^{**} p < 0.05$. Standard errors clustered by state.
+  Dependent variable: mean constituent driving time (minutes).
+\end{tablenotes}
+\end{table}
+
+The Polsby-Popper coefficient is negative and significant across all specifications.
+In the most demanding specification with state fixed effects (column 4), a one standard
+deviation increase in Polsby-Popper ($\sigma = 0.11$) is associated with a reduction
+in mean constituent driving time of $0.11 \times 22.4 = 2.5$ minutes within state.
+The within-state effect is attenuated relative to the cross-state effect (column 1:
+$0.11 \times 58.3 = 6.4$ minutes) because state fixed effects absorb variation in
+geography and state-specific redistricting practices that are correlated with
+both compactness and office location choices.

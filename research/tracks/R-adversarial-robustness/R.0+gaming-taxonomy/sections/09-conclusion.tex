@@ -1,0 +1,36 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+Algorithmic redistricting does not eliminate gaming opportunities;
+it restructures them.
+A hostile actor cannot use an algorithm to gerrymander in the traditional
+sense---the algorithm cannot see partisan data.
+But a hostile actor with control over the deployment context can attempt to
+exploit parameter choices, input data, geographic definitions, result selection,
+and version selection.
+
+This paper's taxonomy shows that all five gaming vectors are bounded and
+detectable under the \dia{} pre-registration and audit protocol.
+The plan-affecting vectors (V1--V3, V5) produce a combined maximum shift
+of $\leq 0.5$ Democratic seats nationally under simultaneous optimization---a
+shift that is (a) smaller than the algorithm's seed-variance noise floor,
+(b) far smaller than the 18-seat algorithm-structure effect that B.0 shows
+is controlled by statutory pre-specification, and (c) detectable via the
+SHA-256 audit chain.
+
+The practical implication for the \dia{}: the pre-registration protocol and
+audit chain are not merely bureaucratic safeguards.
+They are the mechanism by which algorithmic neutrality is converted from
+a property of the computation into a verifiable guarantee about the entire
+deployment context.
+Without pre-registration, parameter gaming is possible; with it, the
+maximum achievable effect is below the noise floor.
+
+Three directions for future work follow from this taxonomy.
+R.1 provides a complete adversarial analysis of V1 (parameter gaming)
+using B.17's 50-state dataset.
+R.2 provides a detailed cryptographic analysis of the V2 (input data)
+attack surface, including the TLS limitation and alternative verification paths.
+R.4 formalizes Theorem~\ref{thm:gaming-impossibility} as a full
+cryptographic argument suitable for Daubert-standard expert testimony,
+with worked examples for North Carolina, Texas, and Wisconsin.

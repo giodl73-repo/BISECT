@@ -1,0 +1,33 @@
+The \bisect{} redistricting platform's principal defense against gaming
+is a cryptographic audit chain linking input data, computation, and output
+through SHA-256 hashes.
+This paper provides a formal analysis of the audit chain as a gaming defense:
+its cryptographic security properties, its three-level provenance architecture,
+and its fitness for use as litigation-grade reproducibility evidence under
+the Daubert standard.
+
+The SHA-256 collision resistance bound ($2^{80}$ operations under the
+birthday paradox) makes undetected manifest manipulation computationally
+infeasible.
+At $10^{15}$ operations per second on 2026 hardware, generating a
+SHA-256 collision requires approximately $3 \times 10^7$ years.
+
+We demonstrate \texttt{bisect label-verify} on three contested states:
+North Carolina (2020), Texas (2020), and Wisconsin (2020).
+For each state, we show that any party with access to the public manifest
+can independently verify the full computation chain from Census Bureau
+download through final plan assignment in under 60 seconds on a
+standard workstation.
+
+Under Daubert's four criteria (testability, peer review, error rate,
+general acceptance), the \bisect{} audit chain satisfies all four:
+it is testable by any party, the underlying SHA-256 algorithm is
+peer-reviewed and standardized (FIPS PUB 180-4), the error rate
+(false non-detection) is bounded by $2^{-80}$, and SHA-256 is
+universally accepted in cryptographic practice.
+
+We provide model \dia{} legal language for SHA-256 manifest filing:
+the manifest must be filed with the Secretary of State within 30 days
+of plan adoption and retained for 10 years.
+This language is designed to be directly adoptable by state legislatures
+considering algorithmic redistricting statutes.

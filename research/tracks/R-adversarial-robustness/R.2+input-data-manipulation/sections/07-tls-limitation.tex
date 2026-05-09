@@ -1,0 +1,65 @@
+\section{Disclosed Limitation: TLS Certificate Validation}
+\label{sec:tls}
+
+\subsection{The Limitation}
+
+\bisect{} uses HTTPS for all Census Bureau downloads.
+TLS certificate validation is performed against the system trust store
+(the operating system's certificate authority database).
+\bisect{} does \emph{not} implement certificate pinning---it does not
+hard-code the specific TLS certificate or public key of the Census Bureau's
+server.
+
+This creates a potential attack surface for man-in-the-middle (MITM)
+interception:
+\begin{enumerate}
+\item An adversary who can add a certificate authority to the system trust
+  store (requires administrator access to the redistricting machine) could
+  intercept TLS connections to \texttt{www2.census.gov} and serve
+  manipulated data.
+\item The manipulated data would be downloaded with a valid TLS certificate
+  (from the adversary's CA) and would not trigger a TLS validation error.
+\item The \bisect{} SHA-256 hash would record the hash of the \emph{manipulated}
+  file, not the original.
+  This hash would not match the Census Bureau's published checksum,
+  but the adversary controls the comparison too (if they also control
+  the manifest).
+\end{enumerate}
+
+This attack chain requires the adversary to simultaneously:
+(a) compromise the system trust store;
+(b) intercept network traffic to the Census Bureau;
+(c) serve manipulated data that is plausible enough to pass visual inspection;
+(d) modify the comparison checksum source.
+
+\subsection{Risk Assessment}
+
+This attack requires infrastructure-level compromise of the redistricting
+authority's computing environment---comparable to compromising the system
+running the redistricting algorithm entirely.
+An adversary with this level of access could also directly modify the
+algorithm binary, the parameter files, or the output plan, bypassing the
+data layer entirely.
+
+In the context of the \dia{}'s deployment model (redistricting run by
+a certified neutral authority with audited computing infrastructure),
+this attack is not plausible without a broader security failure.
+
+\subsection{Recommended Mitigation}
+
+For litigation-grade deployments, we recommend supplementary out-of-band
+hash verification:
+\begin{enumerate}
+\item Download Census P.L.\ 94-171 files via two independent network paths
+  (e.g., direct download and Census FTP mirror).
+\item Compare SHA-256 hashes between the two copies.
+\item Additionally compare against hashes published by independent
+  redistricting data services (e.g., IPUMS NHGIS, Harvard Election Data Archive).
+\end{enumerate}
+This multi-source verification eliminates the TLS limitation without
+requiring certificate pinning.
+
+Future versions of \bisect{} may implement certificate pinning using the
+Census Bureau's published TLSA DNS records (RFC 6698), which would
+eliminate the attack surface entirely.
+This is tracked as a known limitation in the \bisect{} security documentation.

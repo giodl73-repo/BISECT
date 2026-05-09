@@ -1,0 +1,47 @@
+Iowa is the United States' most successful example of non-partisan legislative redistricting. Since 1980, Iowa's congressional and state legislative districts have been drawn by the Legislative Services Agency (LSA), a nonpartisan staff office of the Iowa Legislature, subject to legislative approval. The process is constrained by Iowa Code \S42.4, which specifies the criteria in strict priority order and prohibits the LSA from considering any political data.
+
+\subsection{How the Iowa Model Works}
+
+After each census, the LSA draws congressional and state legislative maps satisfying the following criteria in order:
+
+\begin{enumerate}
+  \item Population equality (congressional districts must satisfy strict one-person, one-vote; state districts allow up to 1\% deviation)
+  \item Contiguity
+  \item Compactness (explicitly defined as length-width ratio minimization)
+  \item Political subdivision respect (county and municipal boundary preservation)
+\end{enumerate}
+
+The LSA draws maps without access to voter registration data, party registration, election results, or incumbency information. The LSA staff are career civil servants who have no electoral stake in the outcome.
+
+The legislature receives the LSA map and votes it up or down without amendment. If the legislature rejects the first map, the LSA draws a second map on the same criteria. If the second map is rejected, the LSA draws a third map. If the third map is rejected, the courts take over. In practice, Iowa has never reached the third map: the first or second LSA map has always been adopted. The legislature's ability to reject maps without power to amend them creates a take-it-or-leave-it dynamic that substantially limits gaming.
+
+\subsection{Iowa's Track Record}
+
+Iowa's redistricting has been remarkably controversy-free compared to other states. Since 1980:
+\begin{itemize}
+  \item No Iowa redistricting has been struck down in federal court for constitutional violations.
+  \item Iowa's congressional districts consistently rank among the most compact in the nation (mean Polsby-Popper score of approximately 0.38, compared to a national congressional average of 0.25).
+  \item Iowa's maps have been drawn and adopted within approximately three months of receiving census data, far faster than the average commission or legislative process.
+  \item Iowa spent approximately \$3 million on the 2021 redistricting cycle, including legislative hearings and legal review---a fraction of the \$20M+ spent by California and the \$40M+ spent on redistricting litigation in states like North Carolina.
+\end{itemize}
+
+\subsection{Iowa's Limitations}
+
+The Iowa model has three limitations relevant to algorithm integration.
+
+First, the LSA's ``non-partisan'' process still involves human judgment: mapmakers make decisions about how to apply the criteria (which subdivision boundary to preserve when preserving all of them is geometrically impossible; which compact shape to prefer when multiple compact shapes satisfy the compactness criterion). These decisions are not transparent and are not verifiable.
+
+Second, Iowa does not have VRA obligations comparable to states with large minority populations. Iowa's racial demographics---85\% non-Hispanic white---mean the VRA rarely requires majority-minority districts. In states with substantial minority populations (Alabama, Georgia, Texas), the Iowa model as written would be legally insufficient without an explicit VRA criterion and a documented modification process.
+
+Third, Iowa's legislative approval-or-reject structure is not replicable in states where the legislature is strongly motivated to gerrymander. The threat of court takeover is credible in Iowa because the courts would likely produce maps similar to the LSA's. In states where courts have not historically been active in redistricting, the credibility of the court-takeover threat is lower.
+
+\subsection{The Algorithmic Extension of the Iowa Model}
+
+The \texttt{bisect} platform extends the Iowa model by replacing the LSA's manual map-drawing with deterministic algorithmic output. Under algorithmic Iowa-style redistricting:
+\begin{verbatim}
+bisect build iowa_congressional --year 2030 --workers 8
+bisect label-verify iowa_congressional --year 2030
+\end{verbatim}
+The verification step produces a manifest confirming that the map was drawn from public census data, without partisan inputs, with a compactness-optimizing algorithm. The LSA (or equivalent body in other states) retains authority to document VRA modifications using the Commission Adjustment Protocol in Section~4. The legislature receives the algorithmic output plus the VRA modification documentation and votes up or down.
+
+This combination eliminates the residual human manipulation space in the Iowa model while preserving the institutional structure---bipartisan staff, legislative approval, criteria-based constraint---that has made Iowa's process politically legitimate.

@@ -1,0 +1,49 @@
+\label{sec:conclusion}
+
+We have documented a strong negative correlation ($r = -0.67$) between district
+Polsby-Popper compactness and mean constituent driving time across 432 congressional
+districts, a 14-minute advantage in mean driving time for \textsc{bisect} algorithmic
+plans relative to enacted gerrymanders in the 12-state partisan gerrymandering subsample,
+and a geometric mechanism---the district neck---that explains why compact maps produce
+shorter constituent travel distances.
+
+\subsection{Implications for Redistricting Law}
+
+The constituent distance finding has a straightforward legal implication: compactness
+requirements, properly enforced, protect constituents from a concrete, welfare-relevant
+harm. Courts that have hesitated to operationalize compactness requirements (beyond
+prohibiting ``bizarre'' shapes) now have empirical content for the requirement: a
+compact district is one that does not impose excessive constituent travel burdens.
+
+This implication is non-partisan. The 14-minute advantage in mean driving time under
+\textsc{bisect} plans benefits constituents in Democratic and Republican districts
+equally---what matters is the geometry, not the partisan composition. In states where
+the gerrymander benefits Democrats (Maryland), Democratic constituents in non-compact
+districts face the same elevated travel times as Republican constituents in non-compact
+districts in states where the gerrymander benefits Republicans (North Carolina, Ohio,
+Texas). The harm is geometric, not partisan.
+
+\subsection{Limitations}
+
+Several limitations qualify the analysis. First, we use the population centroid as the
+representative office location for \textsc{bisect} plans, which understates the
+true benefit if actual representatives under algorithmic plans would choose office
+locations optimally. Second, OSRM driving times do not account for traffic,
+parking, or transit alternatives for urban constituents who may prefer transit.
+Third, the analysis covers driving time only; access by mail, phone, and email
+is not captured but is increasingly the primary constituent interaction modality.
+
+\subsection{Future Work}
+
+The O.4 analysis will be extended in two directions. First, we will apply the analysis
+to \textsc{bisect} plans for all 50 states across all three census years (2000, 2010, 2020)
+to provide a temporal view of whether enacted maps have diverged from compact algorithmic
+alternatives in their constituent access properties. Second, we will analyze transit
+travel times for urban districts using OSRM's public transit routing mode, providing
+a more complete picture of access for urban constituents who do not primarily travel
+by car.
+
+\bigskip
+\noindent\textit{The author thanks the OpenStreetMap contributors for the road network
+data and the OSRM project for routing infrastructure. District office address data
+was collected from the public \texttt{house.gov} website. All errors are the author's own.}

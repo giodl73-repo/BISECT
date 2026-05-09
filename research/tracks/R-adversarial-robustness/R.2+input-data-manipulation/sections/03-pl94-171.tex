@@ -1,0 +1,83 @@
+\section{Attack Surface 1: Census P.L.\ 94-171 Population Counts}
+\label{sec:pl94}
+
+\subsection{The Data Format}
+
+The Census P.L.\ 94-171 redistricting data file provides population counts
+for every census geographic unit from the state level to the block level.
+For \bisect{}, the relevant unit is the census tract (GEOID prefix ending
+in ``00'', indicating a 2020 census tract).
+Each tract record contains:
+\begin{itemize}
+\item Total population (P1\_001N)
+\item Population by race (P1\_002N through P1\_009N)
+\item Hispanic or Latino origin (P2\_002N)
+\item Voting-age population by race (P3, P4 tables)
+\end{itemize}
+
+The algorithm uses P1\_001N (total population) for the equal-population
+constraint and the P3/P4 tables for VRA boost weight computation.
+
+\subsection{The Attack}
+
+A hostile actor who controls the P.L.\ 94-171 file could systematically:
+\begin{enumerate}
+\item Inflate population counts in tracts that vote heavily Republican
+  (rural areas, outer suburbs).
+\item Deflate population counts in tracts that vote heavily Democratic
+  (urban cores, college towns).
+\end{enumerate}
+
+This distortion biases the equal-population constraint: the algorithm
+will split tracts into districts that are ``equal'' in the manipulated
+population counts but systematically different in true population.
+The practical effect is that Republican-heavy tracts become overrepresented
+in the sense that the algorithm assigns fewer such tracts per district
+than warranted by their true population.
+
+\subsection{Effect Magnitude}
+
+The key constraint on this attack is averaging.
+A $\pm 1\%$ manipulation per tract produces a distortion of $\pm 0.01 \times
+p_i$ people in tract $i$ (where $p_i$ is the true population).
+For an average-sized congressional district ($\sim$760,000 people, drawn
+from $\sim$18 tracts in a 14-district state):
+\[
+  \text{District-level distortion} = \pm 1\% \times \frac{p_{\rm state}}{k}
+  \approx \pm 7{,}600 \text{ people}.
+\]
+
+To flip one competitive district from Democratic to Republican using
+population manipulation alone, the adversary must bias the boundaries
+enough to systematically include Republican-heavy tracts at the expense
+of Democratic-heavy tracts.
+Given that competitive districts are typically within 2--3\% of the
+partisan threshold ($D$-vote share $\in [47\%, 53\%]$), and given that
+the algorithm adds $\pm 7{,}600$ people per district through manipulation,
+the expected vote-share change in a competitive district is approximately:
+\[
+  \Delta D\text{-share per district} \approx \pm 1\% \times R = \pm 0.3\%,
+\]
+where $R$ is the ratio of partisan correlation with the manipulation to
+the district size.
+This is far below the 3--6\% margin of a competitive district.
+
+Nationally, summing across all competitive districts and applying the
+saturation argument from R.0~\citep{r0paper}: $\Delta D \leq 0.4$ seats.
+
+\subsection{Detection}
+
+\texttt{bisect fetch} computes:
+\begin{verbatim}
+SHA256(pl94171_state_XX_2020.pl) -> stored in manifest
+\end{verbatim}
+and compares against the Census Bureau's published checksum at:
+\begin{verbatim}
+https://www2.census.gov/programs-surveys/decennial/2020/
+  data/01-Redistricting_File--PL_94-171/
+  [StateXX]/2020.pl.sha256
+\end{verbatim}
+
+Any byte-level modification to the P.L.\ 94-171 file changes the SHA-256
+hash with probability $1 - 2^{-256}$ (i.e., with certainty for any
+practical computation).

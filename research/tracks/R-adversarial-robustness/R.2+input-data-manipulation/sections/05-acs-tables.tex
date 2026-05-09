@@ -1,0 +1,59 @@
+\section{Attack Surface 3: ACS Demographic Tables}
+\label{sec:acs}
+
+\subsection{The Data Format}
+
+American Community Survey (ACS) 5-year tables provide demographic
+estimates for census tracts, including:
+\begin{itemize}
+\item B02001: Race alone
+\item B03002: Hispanic or Latino origin by race
+\item B05001: Nativity and citizenship status
+\end{itemize}
+
+\bisect{} uses ACS tables to compute the VRA boost weight $w_{\rm vra}$
+for census tracts in states with significant minority populations.
+The boost weight increases the edge weight between tracts that are both
+in VRA-eligible minority communities, encouraging the bisection to keep
+such communities intact.
+
+\subsection{The Attack}
+
+An adversary could manipulate ACS minority population estimates to:
+\begin{enumerate}
+\item Artificially inflate minority percentages in tracts in non-competitive
+  areas, spreading VRA boost weights broadly and diluting their effect
+  in areas where minority community protection matters.
+\item Artificially deflate minority percentages in tracts in competitive
+  areas with high minority concentrations, weakening the VRA boost and
+  allowing the bisection to divide minority communities.
+\end{enumerate}
+
+\subsection{Effect Magnitude}
+
+From B.17's $w_{\rm vra}$ sweep~\citep{b17paper}, the partisan effect
+of VRA boost weight variation across its full range is $\Delta D \leq 0.2$
+seats nationally.
+An ACS manipulation that effectively sets $w_{\rm vra}$ to zero for
+specific tracts would be at most as consequential as removing VRA boost
+entirely, which B.17 shows produces $\leq 0.2$ seats of shift.
+
+More precisely: ACS manipulation affects only the weight assigned to
+VRA-eligible edges.
+From B.17 Table~5, the total VRA boost effect ranges from $w_{\rm vra} = 0.2$
+(minimal) to $w_{\rm vra} = 0.6$ (strong).
+ACS manipulation can simulate any value in this range.
+The maximum effect is therefore $\Delta D \leq 0.2$ seats.
+
+Combining with the saturation argument, ACS manipulation contributes
+$\Delta D \leq 0.1$ seats to the combined attack, as listed in
+Table~\ref{tab:attacks}.
+
+\subsection{Detection}
+
+\texttt{bisect fetch} computes SHA-256 hashes for all ACS tables used.
+ACS tables are also available for independent download at:
+\begin{verbatim}
+https://www2.census.gov/programs-surveys/acs/
+\end{verbatim}
+Detection probability: $\approx 1.00$.

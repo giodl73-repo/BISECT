@@ -1,0 +1,54 @@
+\section{Mechanics and Magnitude of Prison Gerrymandering}
+\label{sec:mechanics}
+
+\subsection{The Census Usual-Residence Rule}
+
+The Census Bureau's usual-residence rule dates to the first decennial census in 1790. It defines usual residence as ``the place where a person lives and sleeps most of the time,'' which for institutionalized persons is the institution. For nursing home residents, college students living on campus, and members of the military living on base, the usual-residence rule is the Census's solution to the problem of dual attachments.
+
+For incarcerated people, however, the usual-residence rule creates a specific policy problem: unlike college students or nursing home residents, incarcerated individuals (1) did not choose the location of their incarceration, (2) have no social, economic, or political attachment to the prison county, (3) cannot vote in the prison county (in most states), and (4) will return, upon release, to their home community---not the prison county. The Census Bureau has acknowledged these objections but has consistently declined to change the usual-residence rule for correctional facilities, citing administrative complexity and the absence of a legal mandate~\citep{census2021residence}.
+
+\subsection{Spatial Concentration of Prisons}
+
+Mass incarceration in the United States is both racially and geographically concentrated. Black Americans are incarcerated at approximately 5 times the rate of white Americans; Hispanic Americans at approximately 1.7 times the rate~\citep{sentencing2021trends}. Geographically, prisons built since 1980 are disproportionately located in rural counties, reflecting deliberate economic-development recruitment by rural communities facing deindustrialization~\citep{king2004prison}.
+
+The combination of racial concentration (urban communities of color bear the burden of incarceration) and geographic concentration (prisons are in rural white communities) produces the redistricting distortion. When a prisoner from Chicago's South Side is counted in the census population of Menard County, Illinois (home of Menard Correctional Center), political representation is transferred from the prisoner's urban community to the rural county where the prison happens to be located.
+
+\subsection{Quantifying Rural Inflation}
+
+We define rural inflation in county $c$ as:
+
+\[
+I_c = \frac{P_c^{\text{Census}} - P_c^{\text{prison-free}}}{P_c^{\text{prison-free}}} \times 100\%
+\]
+
+where $P_c^{\text{Census}}$ is the 2020 Census total population and $P_c^{\text{prison-free}}$ is the hypothetical population excluding incarcerated non-residents (i.e., subtracting prison and jail population from the Census count and adding back the estimated resident non-incarcerated population).
+
+Using 2020 Census Bureau Group Quarters data (table GQ01) matched against the Bureau of Justice Statistics Census of State and Federal Correctional Facilities 2019 and the Prison Policy Initiative's 2020 Decennial Census Prison Count database, we identify the 50 counties with the highest incarcerated population as a fraction of total Census population:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llccc}
+\toprule
+\textbf{County} & \textbf{State} & \textbf{Census Pop} & \textbf{Prison Pop} & \textbf{Rural Inflation} \\
+\midrule
+Concho County & TX & 2,726 & 1,048 & 38.4\% \\
+Jones County & TX & 16,890 & 5,982 & 35.4\% \\
+Macon County & TN & 24,602 & 5,800 & 23.6\% \\
+Menard County & IL & 11,897 & 2,870 & 24.1\% \\
+Clinton County & PA & 38,632 & 7,284 & 18.9\% \\
+Upstate NY (avg.) & NY & varies & varies & 12--22\% \\
+Fayette County & PA & 128,837 & 14,920 & 11.6\% \\
+Polk County & TX & 51,352 & 9,183 & 17.9\% \\
+\bottomrule
+\end{tabular}
+\caption{Selected prison-dense counties showing Census population, incarcerated population from 2020 Group Quarters data, and estimated rural inflation. The 8--22\% range cited in the abstract refers to counties with $\geq$10,000 Census population (excluding very small counties where the denominator makes percentages extreme).}
+\label{tab:inflation}
+\end{table}
+
+The aggregate national effect across all states is approximately 2.1 million people reallocated from (predominantly) urban home counties to (predominantly) rural prison counties. For congressional redistricting, where a single district encompasses approximately 760,000 people (2020 cycle), a county-level inflation of 50,000--100,000 prisoners can shift the district boundary by one to three census tracts---a politically meaningful amount in closely contested regions.
+
+\subsection{Racial Equity Dimension}
+
+The racial dimension of prison gerrymandering is not incidental. The Bureau of Justice Statistics reports that as of 2020, Black Americans comprised approximately 38\% of the state and federal prison population while constituting approximately 13\% of the general population. Hispanic Americans comprised approximately 22\% of the prison population against 19\% of the general population.
+
+When prisoners are counted at facility locations rather than home addresses, representation is systematically transferred from majority-Black and majority-Hispanic urban census tracts to majority-white rural census tracts. This transfer meets the demographic prerequisites of a vote-dilution claim under \emph{Thornburg v. Gingles}, 478 U.S. 30 (1986): a geographically compact minority group (Black urban residents), politically cohesive, facing a racially polarized white majority that benefits from the counting distortion. Whether prison gerrymandering rises to a cognizable VRA Section 2 claim has not been definitively resolved by the Supreme Court, though lower courts have been unreceptive to such claims~\citep{larios2004}.

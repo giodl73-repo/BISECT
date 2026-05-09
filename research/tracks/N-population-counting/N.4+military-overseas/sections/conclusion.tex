@@ -1,0 +1,20 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+Military and overseas populations represent a population-counting challenge distinct from the prison gerrymandering problem analyzed in N.1 and the CVAP-versus-total-population question addressed in N.0, but related to both. Like prison gerrymandering, the military population effect arises from the Census Bureau's usual-residence rule applied to a mobile, institutionalized population. Unlike prison gerrymandering, the redistricting consequence of military population counting is broadly accepted as legitimate: active-duty personnel genuinely reside at their installation locations, receive services from their installation's congressional representative, and have a civic presence in the community.
+
+The analytical findings of this paper are:
+
+\begin{enumerate}
+    \item \textbf{Installation-adjacent districts are inflated 6--8\% in the most affected cases} (Cumberland County, NC; Bell County, TX; Hampton Roads, VA), requiring geographic compression that affects neighboring districts.
+    \item \textbf{Overseas military are invisible to BISECT's partitioner}, entering only as state-level apportionment credits. Their redistricting effect is diffuse and proportional; no specific district is inflated.
+    \item \textbf{The UOCAVA voting-rights framework creates a disconnect} between where military personnel are counted (installation district) and where they vote (home-of-record state), a structural feature that neither BISECT nor any redistricting algorithm can resolve.
+    \item \textbf{The partisan direction of military population counting is mild R-advantaging}, estimated at one to two seats nationally, consistent across analysis methods.
+    \item \textbf{The \texttt{--balance-metric civilian\_only} sensitivity flag} is proposed for BISECT as a research tool to quantify this effect, not as a policy recommendation.
+\end{enumerate}
+
+The military population effect is smaller in magnitude than the effects of CVAP substitution (N.0) or prison gerrymandering (N.1), but it is more politically sensitive because the legitimacy of counting military personnel at installation locations is broadly accepted. No serious legal or policy movement challenges military-location counting; the partisan-direction analysis in this paper is descriptive, not prescriptive.
+
+For BISECT users, the actionable implication is straightforward: when analyzing redistricting outcomes in high-military states (VA, NC, TX), document the military population share of each congressional district. A district where 8\% of the population is military Group Quarters residents is functionally different from a district of the same total population composed entirely of civilians. The representative's constituent base, the district's partisan lean, and the district's geographic extent are all shaped by that military concentration.
+
+Future work should implement the \texttt{--balance-metric civilian\_only} mode in the BISECT pipeline and run the full 50-state simulation to produce precise estimates of the military population effect on district configurations across all high-military states. A companion analysis of installation closures and openings (BRAC rounds) would allow estimation of how military population shifts between census decades affect redistricting stability---a natural extension of the temporal stability analysis in Track C.

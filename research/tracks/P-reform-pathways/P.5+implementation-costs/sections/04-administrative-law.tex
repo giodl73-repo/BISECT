@@ -1,0 +1,46 @@
+State redistricting processes are quasi-legislative in most states: they are conducted by the legislature or by commissions that exercise delegated legislative authority. Some states, however, have treated redistricting commissions as administrative agencies subject to state administrative procedure act (APA) requirements. Federal redistricting under the DIA (P.1) would involve administrative action by the Census Bureau subject to the federal APA. This section analyzes how the \texttt{bisect} manifest format satisfies APA record-keeping requirements.
+
+\subsection{The APA Factual Record Standard}
+
+The federal APA requires that agency action be based on a ``factual record'' that supports the agency's decision, and that the agency explain its reasoning in a manner reviewable by courts. \textit{Motor Vehicle Manufacturers Association v. State Farm Mutual Automobile Insurance Co.}, 463 U.S.\ 29 (1983), established that courts must invalidate agency action that is ``arbitrary, capricious, an abuse of discretion, or otherwise not in accordance with law'' based on the agency's own record. The agency must have ``examine[d] the relevant data and articulate[d] a satisfactory explanation for its action including a rational connection between the facts found and the choice made.'' \textit{Id.} at 43.
+
+Redistricting decisions---whether by a commission, by a court-appointed special master, or by an agency under a federal statute---must satisfy an analogous standard. The decision-maker must have examined the relevant data (population, geography, VRA demographic information), must have applied the stated criteria (population equality, compactness, political subdivision integrity, VRA compliance), and must explain departures from neutrality.
+
+\subsection{How the bisect Manifest Satisfies the Standard}
+
+The \texttt{bisect} manifest satisfies the APA factual record standard in three ways.
+
+\textbf{(1) Complete data provenance.} The manifest records the specific data sources used---the census release identifier, the TIGER adjacency file SHA-256 hash, and the population source (total, VAP, or CVAP). Any reviewing court can verify that the decision-maker used the correct data by checking the manifest's recorded hashes against the Census Bureau's published hashes for the same releases. This establishes the completeness and accuracy of the factual record with mathematical certainty.
+
+\textbf{(2) Criteria application.} The manifest records the algorithmic parameters (balance tolerance, edge-weight schema, seed) that implement the stated redistricting criteria (population equality within tolerance, compactness optimization). The manifest's parameters are the criteria in quantitative form: there is a direct, auditable connection between the stated criteria and the recorded parameters.
+
+\textbf{(3) Departure documentation.} The Commission Adjustment Protocol (P.3, \S4) requires written Departure Findings for each modification of the algorithmic baseline. These findings are the ``satisfactory explanation'' the APA requires: they identify the specific data (VRA demographic data, community of interest evidence) that motivated each departure and the specific statutory criterion (VRA \S2, political subdivision integrity) that authorized it. The difference file comparing the baseline to the final map quantifies the extent of each departure.
+
+\subsection{State APA Requirements}
+
+Most states have APAs that closely follow the federal model. The \texttt{bisect} manifest satisfies these requirements for the same reasons it satisfies the federal standard: data provenance, criteria application, and departure documentation are all recorded.
+
+Some state APAs require that agency rules be subject to notice-and-comment rulemaking. If the adoption of algorithmic parameters (balance tolerance, edge-weight schema) constitutes ``rulemaking'' under the applicable state APA, the state redistricting authority must publish proposed parameters in the state register, accept public comment, and publish a final parameters document with responses to significant comments before the redistricting run. The \texttt{bisect} platform supports this process: parameters can be specified in a YAML configuration file that is published for comment:
+
+\begin{verbatim}
+# configs/state_congressional_2030.yml
+name: state_congressional_2030
+algorithm:
+  structure: prime-factor
+  weights: county
+  search: convergence
+  convergence_threshold: 600
+  balance_tolerance: 0.5
+workers: 8
+years: ["2030"]
+\end{verbatim}
+
+The YAML configuration file is a complete and human-readable specification of the algorithmic parameters, suitable for inclusion in a notice-and-comment rulemaking record.
+
+\subsection{12-Year Data Retention}
+
+APA record-keeping requirements typically require agency records to be retained for the period during which decisions can be challenged. Redistricting decisions are challengeable until the next redistricting cycle (10 years) plus the time for litigation to conclude (2--4 years). We recommend 12-year retention as a conservative standard covering one full redistricting cycle plus a full litigation window.
+
+The \texttt{bisect} platform's output artifacts---district assignments (\texttt{algorithm\_output.json}), manifests (\texttt{manifest.json}), analysis reports, and departure documentation---together constitute the complete administrative record. These should be archived in a publicly accessible location (state government website or state archives) for the required retention period. Storage costs for 12 years of retention are under \$20 (Section~2 cost accounting).
+
+The DIA model statute requires 12-year data preservation explicitly (\S105(e)), and states adopting algorithmic redistricting through other pathways should adopt equivalent retention periods through commission operating rules or statutory mandate.

@@ -1,0 +1,31 @@
+Algorithmic redistricting replaces human mapmakers with deterministic computation,
+but algorithms can still be gamed if the adversary has freedom to choose input
+data, parameters, geographic definitions, which results to present, or which
+algorithm version to deploy.
+We systematically enumerate five gaming vectors for the \bisect{} redistricting
+platform and measure the maximum achievable partisan shift under each vector
+individually and in combination.
+
+The five vectors are: (V1)~parameter manipulation, (V2)~input data manipulation,
+(V3)~geographic definition gaming, (V4)~selective result presentation, and
+(V5)~algorithm version selection.
+Vectors V1--V3 affect the generated plan itself; V4 and V5 affect only how
+results are reported, not the underlying plan geometry.
+
+Empirical analysis across all 50 states reveals that the combined maximum
+partisan effect of all plan-affecting vectors (V1--V3) is at most 0.5
+Democratic seats nationally under additive worst-case assumptions and
+at most 0.3 seats in practice.
+This is comparable to the seed-noise floor established in B.7 (CV $<$ 2\%)
+and far smaller than the 18-seat gap between algorithm structures documented
+in B.0.
+
+The \dia{} pre-registration protocol eliminates all five vectors for
+certified plans: parameters are fixed in a SHA-256 formula before
+Census data are released, input data are verified against Census Bureau
+hashes, geographic definitions are mandated by statute, result presentation
+follows a mandatory disclosure standard, and the algorithm version is
+pinned in the manifest.
+We conclude that when the \dia{} protocol is followed, no gaming vector
+can produce an undetectable partisan outcome larger than the algorithm's
+inherent sampling noise.

@@ -1,0 +1,100 @@
+\section{Three-State Case Studies}
+\label{sec:case-studies}
+
+\subsection{New York: Reform Enacted}
+
+New York is the only large state to have enacted and implemented a prison-population correction for both state legislative and congressional redistricting. The New York Law on Counting Incarcerated People, enacted in 2010 (N.Y. Legislative Law \S~83-m), requires that incarcerated individuals be allocated to their last home address rather than the facility location when drawing state legislative districts. The state's 2012 redistricting was the first in the nation to use adjusted population counts at scale.
+
+The practical effect in New York is concentrated in three regions:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lccc}
+\toprule
+\textbf{Region} & \textbf{Prison Pop Relocated} & \textbf{Source Community} & \textbf{Seat Effect} \\
+\midrule
+North Country (upstate NY) & $\sim$32,000 & NYC (Bronx, Brooklyn) & $-$0.4 State Senate seats \\
+Southern Tier & $\sim$8,000 & NYC, Upstate cities & Marginal \\
+Mid-Hudson Valley & $\sim$6,000 & NYC Metro & Marginal \\
+\midrule
+\textbf{Total} & \textbf{$\sim$46,000} & \textbf{Predominantly NYC} & \textbf{$\sim$1 State Senate seat} \\
+\bottomrule
+\end{tabular}
+\caption{New York prison population reallocation under 2010 residence-address correction law. Approximately 46,000 state prisoners were relocated from upstate prison counties to NYC home communities, reducing upstate legislative representation by roughly one state senate seat equivalent.}
+\label{tab:ny-reform}
+\end{table}
+
+For congressional redistricting, New York's 26 congressional districts (2020 cycle) encompass the same reallocation. The practical effect on congressional boundaries is smaller because congressional districts are approximately 20 times the size of state senate districts, so a 46,000-person reallocation spread across multiple NYC districts and multiple upstate districts produces boundary shifts of a few census tracts rather than district-level changes.
+
+New York's reform required two technical components: (1) a list of all state prisoners with their last home address, obtained from the Department of Corrections; and (2) a geocoding process to assign those home addresses to census geographies. The state faced significant data quality challenges---approximately 8\% of prisoner home addresses were incomplete or unmatchable---requiring imputation using the methodology developed by the Prison Policy Initiative~\citep{PPI2020}.
+
+\subsection{Pennsylvania: Reform Rejected}
+
+Pennsylvania houses approximately 37,000 state prisoners in facilities concentrated in rural north-central and western counties. Multiple bills to require residence-address correction have been introduced in the Pennsylvania General Assembly; all have failed.
+
+The political dynamics are predictable: rural Republican legislators who represent prison-county districts benefit from the current counting convention and oppose correction. Urban Democratic legislators representing the source communities (Philadelphia, Pittsburgh) support correction. The issue has not reached the Pennsylvania Supreme Court, which has shown willingness to intervene in redistricting disputes on other grounds~\citep{comwlthpa2018}.
+
+Three Pennsylvania counties illustrate the problem:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lccc}
+\toprule
+\textbf{County} & \textbf{2020 Census Pop} & \textbf{State Prison Pop} & \textbf{Inflation \%} \\
+\midrule
+Clinton County & 38,632 & 7,284 & 18.9\% \\
+Centre County & 153,990 & 5,612 & 3.6\% \\
+Huntingdon County & 45,144 & 8,219 & 18.2\% \\
+\bottomrule
+\end{tabular}
+\caption{Selected Pennsylvania prison counties. Clinton and Huntingdon counties have prisoner populations equal to roughly one-fifth of their Census total, with most prisoners originating from Philadelphia and Pittsburgh.}
+\label{tab:pa-counties}
+\end{table}
+
+Pennsylvania's 17 congressional districts under the 2022 map place several of these rural prison counties in the 15th Congressional District (north-central Pennsylvania), a safe Republican district whose population base includes roughly 15,000 state prisoners who last lived, predominantly, in Philadelphia. Without those prisoners, the district would require boundary expansion into additional rural communities or a reduction in the number of north-central Pennsylvania districts.
+
+\subsection{Texas: Reform Rejected, Largest System}
+
+Texas operates the largest state prison system in the United States, with approximately 136,000 prisoners in state facilities (excluding county jails and federal facilities) as of 2020. Texas prisons are concentrated in small rural counties in East Texas, South Texas, and the Panhandle, far from the Houston, Dallas, and San Antonio metro areas that generate the overwhelming majority of prisoners.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lccc}
+\toprule
+\textbf{County} & \textbf{2020 Census Pop} & \textbf{Prison Pop} & \textbf{Source Metro} \\
+\midrule
+Jones County & 16,890 & 5,982 & Dallas-Fort Worth \\
+Anderson County & 58,218 & 14,204 & Houston, DFW \\
+Walker County & 72,971 & 15,397 & Houston \\
+Rusk County & 54,406 & 11,876 & Houston, East TX cities \\
+Concho County & 2,726 & 1,048 & Multiple \\
+\bottomrule
+\end{tabular}
+\caption{Selected Texas prison counties. Walker County (home of the Huntsville prison cluster) has a prison population equal to approximately 21\% of its Census total.}
+\label{tab:tx-counties}
+\end{table}
+
+Texas's 38 congressional districts (2020 cycle) include several rural East Texas districts whose population bases are substantially inflated by prisoners from Houston and Dallas. The 14th Congressional District (East Texas, Michael McCaul region at time of writing) encompasses parts of Walker, Madison, and Leon counties, all of which contain major prison facilities. An estimated 18,000--22,000 of the district's approximately 780,000 Census residents are state prisoners whose last home addresses were in Houston-area zip codes.
+
+The Texas legislature has not enacted any prison population correction legislation. In 2013, advocacy organizations challenged Texas's state legislative districts in federal court on prison-gerrymandering grounds, but the case was dismissed for lack of standing~\citep{larios2004}. State legislators from prison counties have argued that prison economic activity benefits their communities and that prisoners are ``legitimate'' constituents, a claim that elides the distinction between economic presence and civic belonging.
+
+\subsection{Cross-State Comparison}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcccl}
+\toprule
+\textbf{State} & \textbf{State Prison Pop} & \textbf{Reform Status} & \textbf{Congressional Effect} & \textbf{Key Barrier} \\
+\midrule
+New York & $\sim$46,000 & \textbf{Reformed} (2010) & $<$1 seat equivalent & Implemented \\
+Pennsylvania & $\sim$37,000 & Not reformed & 0.5--1 seat equiv. & Rural GOP opposition \\
+Texas & $\sim$136,000 & Not reformed & 1--2 seat equivalents & Rural GOP opposition \\
+\midrule
+California & $\sim$90,000 & Partially reformed & 1--2 seat equivalents & AB 420 (2011) partial \\
+Maryland & $\sim$18,000 & Not reformed & $<$0.5 seat equiv. & Pending legislation \\
+Illinois & $\sim$25,000 & Not reformed & $<$0.5 seat equiv. & Pending legislation \\
+\bottomrule
+\end{tabular}
+\caption{Cross-state comparison of prison gerrymandering reform status and estimated congressional seat effects. ``Seat equivalent'' refers to the fraction of a 760,000-person congressional district accounted for by reallocated prisoner population.}
+\label{tab:cross-state}
+\end{table}

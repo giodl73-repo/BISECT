@@ -1,0 +1,90 @@
+We provide a full cost accounting for a complete \texttt{bisect} redistricting run for a typical state (14 congressional districts; approximately 3,000 census tracts). All costs are in 2026 dollars.
+
+\subsection{Data Acquisition}
+
+\textbf{Census redistricting data (PL 94-171 file)}: Free. The Census Bureau publishes PL 94-171 data in a standard format for all 50 states. The \texttt{bisect} platform fetches this data automatically:
+\begin{verbatim}
+bisect fetch --year 2020 --workers 8
+\end{verbatim}
+Total download volume: approximately 40GB for all 50 states. For a single state: 0.5--2GB depending on state size. Download time: 5--20 minutes on a broadband connection. Cost: \$0 (data charges) + staff time to initiate and monitor the download.
+
+\textbf{TIGER census tract boundary files}: Free. The Census Bureau publishes TIGER/Line shapefiles for all geographic units. These are downloaded automatically as part of the \texttt{bisect fetch} process. Total volume for all states: approximately 3GB.
+
+\textbf{Adjacency graph construction}: Automatic. The \texttt{bisect} platform constructs the tract adjacency graph from the TIGER files as part of the build process. No additional data acquisition is required.
+
+\textbf{Total data acquisition cost}: \$0 in licensing fees. Staff time: approximately 2 hours to initiate, monitor, and verify the data fetch.
+
+\subsection{Compute}
+
+\textbf{Hardware}: The \texttt{bisect} platform runs on any modern x86-64 Linux or Windows machine. A cloud instance with 8 cores and 32GB RAM (e.g., AWS \texttt{c5.2xlarge} at \$0.34/hour in 2026 pricing) is sufficient for all 50 states.
+
+\textbf{Wall-clock runtime}: A full 50-state congressional redistricting run on an 8-core machine completes in approximately 18 minutes:
+\begin{verbatim}
+bisect build congressional_2030 --year 2030 --workers 8
+\end{verbatim}
+A single state completes in seconds to minutes depending on state size.
+
+\textbf{Cloud compute cost}: 18 minutes at \$0.34/hour = \$0.10. For a full analysis pipeline including all analysis types and report generation:
+\begin{verbatim}
+bisect label-analyze congressional_2030 --year 2030 --types all
+bisect label-report  congressional_2030 --year 2030 --format html json
+\end{verbatim}
+Total compute time: approximately 2 hours. Cost: \$0.68.
+
+\textbf{Storage}: Output files for a 50-state run (district assignments, manifests, analysis reports): approximately 5GB. Cloud storage at \$0.023/GB/month for 12 years: approximately \$16.
+
+\textbf{Total compute cost}: Under \$20.
+
+\subsection{Staff Time}
+
+Staff time is the dominant cost. We estimate the following components for a state redistricting office implementing algorithmic redistricting for the first time:
+
+\begin{table}[h]
+\centering
+\caption{Staff time estimate for first-cycle algorithmic redistricting implementation}
+\label{tab:staff-time}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Activity & FTE Fraction & Duration & Cost \\
+\midrule
+Software installation and training          & 1.0 & 2 weeks & \$3,800 \\
+Data fetch and quality verification         & 0.25 & 2 weeks & \$950 \\
+Baseline run and output review              & 0.5 & 1 week  & \$950 \\
+Public hearing preparation and facilitation & 1.0 & 4 weeks & \$7,600 \\
+Departure documentation (if any)           & 0.5 & 2 weeks & \$1,900 \\
+Legal review of baseline and departures    & (outside counsel) & 3 weeks & \$15,000 \\
+VRA demographic analysis                   & (outside demographer) & 3 weeks & \$12,000 \\
+Independent technical audit                & (university or contractor) & 2 weeks & \$8,000 \\
+Public website and documentation           & 0.5 & 2 weeks & \$1,900 \\
+\midrule
+\textbf{Total (first cycle)}               & & & \textbf{\$52,100} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Staff cost assumptions: in-house GIS analyst at \$95,000/year loaded cost (\$1,900/week); outside counsel at \$5,000/week; outside demographer at \$4,000/week; technical audit contractor at \$4,000/week.
+
+\textbf{Subsequent cycles}: Staff familiarity with the process and pre-established legal and audit relationships reduce repeat-cycle costs substantially. We estimate subsequent cycles at 50\% of first-cycle cost (\$26,000).
+
+\subsection{Summary}
+
+\begin{table}[h]
+\centering
+\caption{Total cost estimate for algorithmic redistricting (\texttt{bisect} platform)}
+\label{tab:total-cost}
+\begin{tabular}{@{}lr@{}}
+\toprule
+Component & Cost \\
+\midrule
+Data acquisition & \$0 \\
+Compute (cloud) & \$20 \\
+Storage (12-year retention) & \$20 \\
+Staff time (first cycle) & \$52,100 \\
+\midrule
+\textbf{Total (first cycle)} & \textbf{\$52,140} \\
+\textbf{Total (subsequent cycles)} & \textbf{\$26,000} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The cost estimate in Table~\ref{tab:total-cost} reflects a competent, properly resourced implementation. States that already have GIS staff familiar with census data (most do) and existing relationships with election law counsel will spend less. States starting from scratch will spend somewhat more. The range is approximately \$35,000--\$75,000 for a first-cycle implementation.

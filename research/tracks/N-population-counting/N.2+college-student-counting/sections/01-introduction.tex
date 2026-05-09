@@ -1,0 +1,41 @@
+\section{Introduction}
+\label{sec:introduction}
+
+Every ten years, the Census Bureau must decide where to count college students. The question is not rhetorical: approximately 8.6 million students resided on or near college campuses during the 2020 Census reference week, a figure large enough to materially affect congressional apportionment and district-boundary drawing in dozens of states. The Bureau's answer has been consistent since the 1950 census: students are counted at their campus address, not their parents' home address, on the grounds that the campus is where they live and sleep most of the time during the school year.
+
+This paper examines the redistricting consequences of that choice. Unlike prison gerrymandering---where incarcerated people did not choose their location, cannot vote locally, and have no attachment to the facility county---the case for counting students at campus has genuine administrative and policy merit. Students who spend nine months per year in a college town do, in some meaningful sense, reside there. Many become locally engaged: they shop, use local services, and in states without student-disenfranchisement barriers, vote in local elections.
+
+Yet the political consequences of campus counting are asymmetric in a way that prison gerrymandering's critics would recognize. College towns are among the most reliably Democratic-voting localities in the United States~\citep{rodden2019why}. Students overwhelmingly originate from suburban communities that lean Republican~\citep{levine2020college}. Counting students at campus therefore systematically inflates Democratic-leaning college-district populations at the expense of suburban districts that represent the students' home communities.
+
+The inflation is not trivial. Cornell University's enrollment of approximately 25,000 students inflates Ithaca's Tompkins County population by roughly 27\%. The University of Michigan's 47,000 students inflate Ann Arbor's Washtenaw County similarly. In states where a single college-town district would otherwise fall below the equipopulation target, the student count can determine whether the district is viable at all.
+
+\subsection{Scope and Definitions}
+
+We use the following terms throughout:
+\begin{itemize}
+    \item \textbf{Campus counting}: The Census Bureau's practice of enumerating college students at their campus address (dormitory, off-campus university housing, or other collegiate group-quarters facility) rather than their home address.
+    \item \textbf{College-town inflation}: The percentage by which a college town's Census population exceeds what it would be if students were counted at their pre-enrollment home addresses.
+    \item \textbf{Home-address reallocation}: A hypothetical correction that reassigns student census counts from the campus location to the student's home address of record, analogous to the prison-gerrymandering corrections adopted by New York and other states.
+    \item \textbf{College district}: A congressional district whose boundaries encompass a major research university with enrollment exceeding 10,000 students.
+\end{itemize}
+
+\subsection{Research Questions}
+
+\begin{enumerate}
+    \item How large is the college-town inflation effect across the 50 states, and which college towns are most affected?
+    \item What is the partisan direction of the distortion: does campus counting systematically inflate Democratic-leaning district populations at Republican-leaning suburban districts' expense?
+    \item How many census tracts would change district assignment if student populations were reallocated to home addresses under the 2020 redistricting cycle?
+    \item How has litigation in Maine and New York addressed the campus-counting rule, and what legal arguments are available?
+    \item How does BISECT's \texttt{--population-source} implementation enable sensitivity analysis?
+\end{enumerate}
+
+\subsection{Contributions}
+
+\begin{itemize}
+    \item Systematic quantification of college-town population inflation across the 50 largest college-town counties using 2020 Census Group Quarters data
+    \item Three extended case studies: Ithaca (New York), Ann Arbor (Michigan), and Champaign-Urbana (Illinois)
+    \item Partisan direction analysis using 2020 presidential vote by census tract, showing directional asymmetry of campus-counting effects
+    \item Estimate of $\sim$180 tracts nationally that would change district assignment under home-address reallocation
+    \item Review of Maine and New York college-counting litigation and constitutional analysis
+    \item Description of BISECT's \texttt{--population-source} implementation for sensitivity analysis
+\end{itemize}

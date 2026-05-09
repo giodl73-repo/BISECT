@@ -1,0 +1,87 @@
+\section{Introduction}
+\label{sec:introduction}
+
+The promise of algorithmic redistricting rests on a claim of structural
+impartiality: if the algorithm cannot see partisan data, the maps it draws
+cannot be deliberately gerrymandered.
+This claim is widely accepted in the literature~\citep{chen2013unintentional,
+browdy1990computer, altman2011bard} and is embedded in the logic of proposed
+legislative remedies such as the \dia{}.
+
+A sophisticated objection, however, runs as follows: even if the \emph{algorithm}
+cannot use partisan data, the \emph{actors who deploy the algorithm} can still
+game the outcome by manipulating the inputs, parameters, geographic definitions,
+or presentation of results.
+Algorithmic neutrality of the core computation is not sufficient if the surrounding
+context allows a hostile actor to steer outcomes.
+
+This paper takes the objection seriously.
+Rather than dismissing it, we systematically enumerate every gaming vector
+available to a hostile actor who:
+\begin{enumerate}
+\item Knows the \bisect{} algorithm in full (the algorithm is open-source);
+\item Controls the parameters passed to the algorithm;
+\item Has access to the input data pipeline (Census files, shapefiles);
+\item Decides which results to present to courts, legislatures, and the public;
+\item Can choose which version of the algorithm to run.
+\end{enumerate}
+
+For each gaming vector, we answer three questions: (a)~what is the attack?
+(b)~how much partisan shift can the attack produce? and (c)~what is the
+detection mechanism that catches the attack?
+
+\subsection{Main Findings}
+
+The central finding is that all plan-affecting gaming vectors combined produce
+at most 0.5 Democratic seats of variation nationally under additive worst-case
+assumptions, and at most 0.3 seats in practice (Section~\ref{sec:combined}).
+This is comparable to the noise floor established by B.7's seed-variance analysis
+(coefficient of variation $<$ 2\%) and is far smaller than the partisan
+effects of algorithm \emph{structure} documented in B.0 (approximately
+18 seats in a worst-case comparison of algorithm families).
+
+The finding is significant for two reasons.
+First, it shows that parameter tuning within a fixed algorithm is not a
+meaningful gaming vector---a hostile actor who knows the bisect algorithm
+cannot use parameter choices to manufacture a meaningfully partisan outcome
+while maintaining the appearance of algorithmic neutrality.
+Second, it clarifies where the real design choices lie: in algorithm structure
+(which B.0 shows should be pre-specified in statute) and geographic definitions
+(which F.3's threshold rule constrains).
+
+\subsection{The DIA Response}
+
+The \dia{} protocol converts each gaming vector from a threat to a
+formality~(Section~\ref{sec:dia}).
+Parameters are fixed in a SHA-256 formula before Census data are released,
+eliminating post-data optimization.
+Input data integrity is verified by hashing against Census Bureau-published
+checksums.
+Geographic definitions are specified by statute and locked into the manifest.
+Result presentation follows a mandatory disclosure standard.
+Algorithm version is pinned in the reproducibility manifest and must match
+the SHA-256 of the deployed binary.
+
+Under the \dia{} protocol, no gaming vector can produce an undetectable
+partisan outcome.
+Detected deviations from the manifest are automatic grounds for plan rejection.
+
+\subsection{Track R Structure}
+
+This paper (R.0) provides the taxonomy and establishes the maximum effect
+bounds.
+Subsequent papers treat each major plan-affecting vector in detail:
+R.1 analyzes parameter gaming using B.17's 50-state sweep;
+R.2 analyzes input data manipulation and the Census P.L.\ 94-171 integrity chain;
+R.3 analyzes geographic definition gaming and resolution choices;
+R.4 analyzes the audit chain as a formal gaming defense, including
+cryptographic analysis and Daubert-standard reproducibility.
+
+\subsection{Road Map}
+
+Section~\ref{sec:taxonomy} introduces the five-vector taxonomy.
+Sections~\ref{sec:v1}--\ref{sec:v5} treat each vector with attack
+description, effect measurement, and defense.
+Section~\ref{sec:combined} quantifies the joint maximum effect.
+Section~\ref{sec:dia} describes the \dia{} countermeasures.
+Section~\ref{sec:conclusion} concludes.

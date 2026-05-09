@@ -1,0 +1,64 @@
+\label{sec:introduction}
+
+The decennial redistricting cycle is not an event---it is a process that begins
+the moment the prior census data arrives and extends through years of litigation
+over the resulting maps. The planning literature on redistricting has focused
+almost entirely on the process \textit{after} census data release: how maps are
+drawn, what criteria apply, who decides, and how courts review the outcome.
+What the literature has largely neglected is the preparation process \textit{before}
+census data release: the infrastructure, data, and algorithmic foundations that
+must be in place before the redistricting window opens.
+
+For human mapmakers, this preparation neglect is partially defensible. Human mappers
+draw maps using the census data itself; the main prerequisite is software training
+and political strategy, neither of which requires years of advance preparation.
+For algorithmic redistricting systems like \textsc{bisect}, the situation is categorically
+different. Algorithmic redistricting requires:
+
+\begin{enumerate}
+\item \textbf{Geographic adjacency graphs} built from the census geography of the
+  target year. These graphs encode which census units share borders, and they take
+  weeks to months to construct at the block-group level.
+\item \textbf{Validated demographic data} for every census unit in every state,
+  including total population, minority VAP, and commuting flows. The data validation
+  process catches geographic anomalies (water tracts, zero-population tracts,
+  prison population allocation) that cause algorithmic errors.
+\item \textbf{Tested algorithm configuration} specifying the structure, weights,
+  and search parameters for each state's redistricting. Changes to this configuration
+  after census data release trigger legal transparency challenges.
+\item \textbf{Computational infrastructure} capable of running 50-state sweeps within
+  the redistricting window. At \textsc{bisect}'s current performance of $\sim$90 minutes
+  for a 50-state tract-resolution sweep, the block-group resolution sweep estimated
+  for 2030 will require $\sim$90 minutes as well, but with substantially more
+  memory requirements.
+\end{enumerate}
+
+None of these prerequisites can be assembled in weeks. The adjacency graph construction
+alone requires months of computation and manual validation. The implication is direct:
+if redistricting infrastructure is not substantially complete before the 2031 census
+data release, the 6--12 month redistricting window will be consumed by infrastructure
+construction rather than redistricting itself.
+
+\subsection{The Current State of \textsc{bisect} Infrastructure}
+
+As of 2026, the \textsc{bisect} platform has:
+\begin{itemize}
+\item Tract-level adjacency graphs for all 50 states, validated for 2000, 2010, and 2020.
+\item 50-state congressional redistricting capability at tract resolution.
+\item Block-group adjacency graphs for zero states (not yet constructed).
+\item 2020 census data fully loaded and validated.
+\item LODES 2021 commuting data and ACS 2019--2021 5-year data loaded.
+\end{itemize}
+
+The infrastructure gap for 2030 is therefore primarily the block-group adjacency graphs
+and the updated demographic data. This paper provides the timeline and resource estimates
+for closing this gap before the 2031 redistricting window opens.
+
+\subsection{Organization}
+
+Section~\ref{sec:timeline} describes the 2030 redistricting timeline, including the
+key statutory deadlines and the uncertainty ranges around census data release.
+Section~\ref{sec:preparation} describes the four preparation tasks in detail.
+Section~\ref{sec:dia-seed} explains the DIA statutory seed formula and why it
+prohibits last-minute algorithm changes. Section~\ref{sec:conclusion} provides
+the roadmap for Q.1--Q.4 and the recommended preparation schedule.

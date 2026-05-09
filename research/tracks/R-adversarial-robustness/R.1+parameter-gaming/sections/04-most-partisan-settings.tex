@@ -1,0 +1,60 @@
+\section{The Most Partisan Parameter Configurations}
+\label{sec:most-partisan}
+
+\subsection{Defining Most-Partisan Configurations}
+
+To identify the most partisan parameter settings, we need to understand
+which direction each parameter favors.
+From B.17's single-parameter sweeps:
+
+\begin{table}[h]
+\centering
+\caption{Direction of partisan effect for each parameter.
+         ``Rep-favorable'' means higher setting produces fewer Democratic seats;
+         ``Dem-favorable'' means higher setting produces more Democratic seats.
+         $\hat{\Delta}D$ per unit is the estimated marginal effect on $\Dnat$
+         per unit change in the parameter.}
+\label{tab:param-direction}
+\begin{tabular}{lcccl}
+\toprule
+Parameter & Symbol & Rep-favorable end & Dem-favorable end & Effect direction \\
+\midrule
+$\ufactor$ & $u_{\rm factor}$ & 5.0\% ($\Dnat = 210.8$) & 0.1\% ($\Dnat = 211.2$) & Higher = less compact = Dem \\
+$\acounty$ & $\alpha_{\rm county}$ & 10.0 ($\Dnat = 210.9$) & 1.0 ($\Dnat = 211.1$) & Higher = more county-split resistance = Rep \\
+$T$ & $T$ & 100 ($\Dnat = 211.1$) & 600+ ($\Dnat = 211.0$) & Lower = less optimized = Dem \\
+$\aswing$ & $a_{\rm swing}$ & 1.20 ($\Dnat = 210.9$) & 1.05 ($\Dnat = 211.1$) & Higher = more area imbalance = Rep \\
+$\wvra$ & $w_{\rm vra}$ & 0.6 ($\Dnat = 210.9$) & 0.2 ($\Dnat = 211.1$) & Higher VRA = Rep (packs minority communities) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Most Republican-Favorable Configuration}
+
+Setting all parameters to their most Republican-favorable values:
+\[
+  \theta_{\rm Rep} = (\ufactor = 5\%, \; \acounty = 10, \; T = 1{,}000,
+  \; \aswing = 1.20, \; \wvra = 0.6).
+\]
+Note: $T = 1{,}000$ at the Republican-favorable end because the single-parameter
+sweep shows no partisan effect from $T$ at $T \geq 200$; we include it at the
+extreme for completeness but expect no marginal contribution from this choice.
+
+\subsection{Most Democratic-Favorable Configuration}
+
+Setting all parameters to their most Democratic-favorable values:
+\[
+  \theta_{\rm Dem} = (\ufactor = 0.1\%, \; \acounty = 1, \; T = 100,
+  \; \aswing = 1.05, \; \wvra = 0.2).
+\]
+
+\subsection{Expected Additive Bound}
+
+If the five parameters were independent and additively partisan, the expected
+difference between $\theta_{\rm Rep}$ and $\theta_{\rm Dem}$ would be:
+\begin{align*}
+  \Delta \Dnat^{\rm additive} &=
+  |210.8 - 211.2| + |210.9 - 211.1| + |211.1 - 211.0| \\
+  &\quad + |210.9 - 211.1| + |210.9 - 211.1| \\
+  &= 0.4 + 0.2 + 0.1 + 0.2 + 0.2 = 1.1 \text{ seats}.
+\end{align*}
+The empirical joint effect will be smaller due to saturation and correlation.

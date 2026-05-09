@@ -1,0 +1,50 @@
+\section{Legal and Statistical Counting Framework}
+\label{sec:framework}
+
+\subsection{Statutory Basis: 13 U.S.C. \S\,141 and the Federal Employees Overseas Rule}
+
+The Census Bureau's authority to count federal employees overseas derives from 13 U.S.C. \S\,141, which authorizes the decennial Census, and the implementing regulations at 13 C.F.R. Part 5. The Federal Employees Overseas Rule (FEOR), first applied in 1990, requires the Bureau to allocate the following populations to their home-of-record state for apportionment:
+
+\begin{itemize}
+    \item Active-duty military personnel stationed abroad, on ships at sea, or at overseas installations
+    \item Their overseas dependents
+    \item Federal civilian employees assigned overseas
+    \item Their overseas dependents
+\end{itemize}
+
+The FEOR was added to the Census process following the Supreme Court's resolution of Utah v. Evans, 536 U.S. 452 (2002), which upheld the Bureau's use of statistical methods in the Census. The overseas population has been consistently applied in the 2000, 2010, and 2020 Censuses.
+
+The key implication for redistricting is that overseas military are \emph{not} allocated to specific census tracts. They are allocated only to the state level, increasing the state's total apportionment population but adding no weight to any specific redistricting unit. When a state receives, say, 20,000 additional population credits from overseas military, those credits are distributed across all congressional districts proportionally to avoid any specific tract-level inflation.
+
+\subsection{Domestic Military: The Group Quarters Treatment}
+
+For domestic installations, the Census Bureau treats military housing units and barracks as a distinct category of Group Quarters (type code 210: Military Quarters). Personnel living in on-installation housing are counted at their installation address. Personnel living off-base (approximately 50--60\% of active-duty personnel) are counted at their civilian rental or owned residence, which may be in the installation county or an adjacent county.
+
+This treatment means that domestic military population inflates installation-adjacent census tracts in two ways: (1) directly, through the on-base Group Quarters count, and (2) indirectly, through the off-base civilian-address count of personnel who cluster near installations due to commute requirements. The combined effect makes installation-county census tracts substantially denser than they would be if military personnel were counted at their home-of-record.
+
+\subsection{UOCAVA and Voting Rights}
+
+The Uniformed and Overseas Citizens Absentee Voting Act (UOCAVA), 52 U.S.C. \S\,20301 et seq., governs voting rights for military and overseas civilians. Under UOCAVA, overseas military personnel vote by absentee ballot in their home-of-record state, not in the state where their installation is located. This creates a fundamental disconnect: a service member stationed at Fort Liberty, North Carolina, whose home-of-record is Texas, is counted in North Carolina's census population for redistricting purposes but votes in Texas.
+
+This UOCAVA-Census disconnect has a structural consequence: the North Carolina congressional district containing Fort Liberty contains voters who will mostly vote in North Carolina (civilian residents and military with NC home-of-record) plus a significant population of military with out-of-state home-of-records who vote elsewhere. The NC district is thus ``larger'' in population than in electorate, systematically different from a comparable civilian district.
+
+\subsection{Data Sources for Military Population}
+
+The following data sources are relevant to analyzing military redistricting effects:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Source} & \textbf{Granularity} & \textbf{Use} \\
+\midrule
+Census PL 94-171 GQ type 210 & Census tract & On-base military Group Quarters \\
+DOD Dependents Schools enrollment & Installation & Dependent children by installation \\
+DMDC Active Duty by State report & State & Home-of-record by state \\
+ACS 5-year Table B21001 & PUMA & Veterans and military status \\
+Pentagon Installation Locator & Installation coordinates & Geocoding facilities \\
+\bottomrule
+\end{tabular}
+\caption{Data sources for military population analysis. The Census PL 94-171 Group Quarters type 210 is the primary source for installation-level redistricting analysis.}
+\label{tab:data-sources}
+\end{table}

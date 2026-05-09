@@ -1,0 +1,31 @@
+\section{Introduction}
+
+The one-person, one-vote principle is the foundational axiom of American redistricting law. Since \emph{Reynolds v. Sims}, 377 U.S. 533 (1964), courts have required that congressional districts contain substantially equal populations. Yet this requirement conceals a prior question that courts have consistently declined to answer: equal in what?
+
+The ambiguity is not trivial. A person who is a non-citizen, a child, a disenfranchised former felon, or a resident who simply does not vote is still a person enumerated in the decennial census. The Census Bureau counts total resident population---including non-citizens, incarcerated people, children under 18, and institutionalized individuals---and it is this total-population figure that has governed redistricting in every state since the Warren Court era. But critics on both sides of the partisan divide have challenged whether total population is the right unit. Conservatives argue that only citizens should count for democratic representation; progressives argue that counting incarcerated people at their prison locations rather than their home communities distorts rural representation; others argue that only registered or actual voters should anchor the equality requirement.
+
+These are not merely theoretical disputes. In states with large non-citizen immigrant populations---California, Texas, New York, New Jersey, Nevada, and others---the choice between total population and citizen VAP can shift the entire map. An analysis of Texas alone suggests that using citizen VAP rather than total population would increase the number of safe Republican districts from roughly 22 to 25 out of 38, a shift of three seats, without any change in district boundaries.
+
+\subsection{Research Questions}
+
+This survey paper addresses three questions:
+
+\begin{enumerate}
+    \item \textbf{What are the five legally and practically relevant population definitions, and what is the current state of law regarding each?}
+    \item \textbf{Where does the choice of balance metric produce divergent results, and by how much?}
+    \item \textbf{How does BISECT's \texttt{--balance-metric} flag allow researchers to test population-definition sensitivity algorithmically?}
+\end{enumerate}
+
+\subsection{Contributions}
+
+\begin{itemize}
+    \item A structured typology of five population definitions with their legal status and constitutional rationale
+    \item A 50-state table showing CVAP divergence from total population, identifying the 12 states where the gap exceeds 5\%
+    \item Legal analysis of \emph{Evenwel v. Abbott} and its implications for state discretion
+    \item A description of BISECT's \texttt{--balance-metric} flag and its role in the three-layer compositor architecture
+    \item An assessment of the partisan direction of balance-metric choice
+\end{itemize}
+
+\subsection{Organization}
+
+Section~\ref{sec:five-defs} introduces the five population definitions. Section~\ref{sec:legal} traces the legal landscape from \emph{Reynolds} through \emph{Evenwel}. Section~\ref{sec:divergence} presents the 50-state divergence analysis and identifies the 12 high-divergence states. Section~\ref{sec:conclusion} discusses implications for algorithmic redistricting and the BISECT platform.

@@ -1,0 +1,34 @@
+\section{Introduction}
+
+When the Census Bureau counts the population of a county, it counts every person physically present at the time of enumeration---including the 2.1 million people housed in state prisons, federal penitentiaries, county jails, and other correctional facilities. The Bureau's ``usual residence'' rule defines a person's home as the place where they live and sleep most of the time, and for incarcerated people, that is the facility, not their pre-incarceration address.
+
+This counting convention has a redistributive consequence that was invisible when mass incarceration was small and geographically diffuse. As the carceral population grew from approximately 500,000 in 1980 to over 2 million by 2008, and as prisons became concentrated in rural areas (partly due to economic development strategies in struggling rural communities), the political effect became measurable: rural districts containing large prisons receive population credit---and therefore political representation---for constituents who cannot vote, who typically cannot access local government services at the prison location, and who overwhelmingly originate from urban areas hundreds of miles away.
+
+The Prison Policy Initiative has documented this effect comprehensively for state legislative redistricting~\citep{wagner2002importing, wagner2004prison}. Our contribution is to quantify the effect for congressional redistricting and to analyze how algorithmic redistricting systems handle---and could handle---prison-population corrections.
+
+\subsection{Scope and Definitions}
+
+We use the following terms throughout:
+\begin{itemize}
+    \item \textbf{Prison gerrymandering}: The distortion of district boundaries caused by counting incarcerated people at their facility location rather than their home address.
+    \item \textbf{Rural inflation}: The percentage increase in a county's or district's Census population attributable to incarcerated non-residents.
+    \item \textbf{Residence-address correction}: The reallocation of prisoner population counts from the facility location to the prisoner's last home address, using administrative records or statistical models.
+\end{itemize}
+
+\subsection{Research Questions}
+
+\begin{enumerate}
+    \item How large is the rural inflation effect in prison-dense counties, and which states are most affected?
+    \item What is the demonstrated experience of New York (reformed) versus Pennsylvania and Texas (not reformed) in managing prison gerrymandering?
+    \item How would BISECT's algorithmic redistricting change under a prison-adjusted balance metric, and what implementation challenges does such a correction present?
+\end{enumerate}
+
+\subsection{Contributions}
+
+\begin{itemize}
+    \item Quantification of prison-county population inflation (8--22\%) across the 50 largest prison-dense counties using 2020 Census and DOJ facility data
+    \item Three-state comparative case study: New York (reformed 2010), Pennsylvania (unreformed), Texas (unreformed, largest state prison system)
+    \item Description of BISECT's planned \texttt{--balance-metric prison\_adjusted} preprocessing mode and its methodological requirements
+    \item Legal analysis connecting prison gerrymandering to the VRA's vote-dilution standard
+    \item Racial equity analysis demonstrating that prison gerrymandering transfers representation from Black and Hispanic communities to white communities
+\end{itemize}

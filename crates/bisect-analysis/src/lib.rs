@@ -1,5 +1,6 @@
 pub mod analyzer;
 pub mod bloc_voting;
+pub mod permutation;
 pub mod bloc_voting_writer;
 pub mod compactness;
 pub mod comparison;

@@ -1,0 +1,72 @@
+\label{sec:introduction}
+
+Every member of the House of Representatives maintains district offices---physical
+offices located within the district where constituents can meet with staff, receive
+assistance with federal agency matters, and engage with their representative's
+legislative work. The number of district offices per member ranges from one to seven,
+depending on district geography and appropriated office budgets. For the average
+constituent, the district office is the primary point of physical contact with
+their congressional representative; the Capitol Hill office is accessible only by
+traveling to Washington.
+
+The geographic distance between a constituent and their representative's district
+office is therefore a direct measure of representational access---not a proxy
+for it. A constituent who lives 15 minutes from their representative's office can
+drop in without losing a workday; a constituent who lives 90 minutes away faces
+a significant barrier to in-person engagement. This access asymmetry compounds
+across the approximately 200 million Americans who contact their congressional
+representatives annually for constituent services.
+
+Despite the intuitive importance of this access dimension, we are not aware of any
+systematic empirical study linking district geography to constituent travel distance
+at national scale. The redistricting literature has extensively studied compactness
+as a legal and aesthetic criterion \citep{polsby1991,young1988}, documented its
+correlation with partisan gerrymandering \citep{chen2013}, and used it as a predictor
+of various electoral outcomes \citep{levin2019}. But the direct welfare interpretation
+of compactness---that compact districts reduce the travel burden on constituents---has
+not been quantified.
+
+This paper fills that gap. Our analysis has four components:
+
+\begin{enumerate}
+\item We collect the district office addresses for all 435 members of the 118th Congress
+  from \texttt{house.gov} (the official U.S. House website), identifying the primary
+  district office address for each member.
+
+\item We compute population-weighted centroid coordinates for all 74,134 census tracts
+  in the contiguous 48 states using 2020 P.L. 94-171 population data.
+
+\item We route each tract centroid to the relevant representative's primary district
+  office address using the OSRM routing API with the OpenStreetMap North America
+  road network, recording the estimated driving time in minutes.
+
+\item We aggregate tract-level driving times to district-level means (weighted by
+  tract population) and analyze the correlation with district Polsby-Popper compactness.
+\end{enumerate}
+
+The key finding---a correlation of $r = -0.67$ between Polsby-Popper and mean driving
+time---is robust across different compactness metrics (Reock: $r = -0.59$, Schwartzberg:
+$r = -0.61$) and is substantially larger in the subset of districts with documented
+partisan gerrymandering. The \textsc{bisect} comparison shows a 14-minute reduction
+in mean constituent driving time under algorithmic plans relative to enacted gerrymanders.
+
+\subsection{Relationship to the O-Series Framework}
+
+This paper is the fourth in the O-series (O.0--O.4), which investigates redistricting
+effects on democratic outcomes. The O.0 framework paper establishes the four outcome
+dimensions and identification strategy. The O.4 analysis is distinctive within the
+series in two respects: it measures an outcome (travel time) that is directly computable
+from geography rather than requiring electoral data, and it provides a causal mechanism
+(the ``neck'' geometry) rather than relying on the quasi-experimental design used in
+O.1--O.3. This makes the O.4 findings less subject to the confounding concerns that
+motivate the DiD and IV designs in O.1--O.3.
+
+\subsection{Policy Significance}
+
+The finding has immediate policy applications. Several state redistricting statutes
+require that districts be ``compact,'' but courts have struggled to give this
+requirement operational content \citep{levin2019}. The constituent distance metric
+provides a concrete, welfare-relevant definition: a compact district is one whose
+constituents can efficiently access their representative. This definition is
+non-partisan, directly measurable, and explains why compactness matters as a
+criterion beyond its role in preventing partisan manipulation.

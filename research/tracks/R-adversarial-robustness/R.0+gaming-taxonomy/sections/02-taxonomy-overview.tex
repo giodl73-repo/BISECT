@@ -1,0 +1,78 @@
+\section{The Five-Vector Taxonomy}
+\label{sec:taxonomy}
+
+We define a \emph{gaming vector} as any degree of freedom available to
+the actor responsible for deploying the redistricting algorithm that can
+be varied to influence the partisan composition of the output.
+Gaming vectors are distinct from design choices: a design choice is a
+single, publicly documented decision made before any partisan outcome is
+known; a gaming vector requires the hostile actor to observe partisan
+implications before exercising the freedom.
+
+\begin{definition}[Gaming Vector]
+A \emph{gaming vector} is a tuple $(X, \Delta D, \delta)$ where:
+$X$ is the degree of freedom that can be manipulated;
+$\Delta D$ is the maximum achievable partisan shift (measured in expected
+Democratic seats nationally) when $X$ is optimized for partisan advantage;
+and $\delta$ is the detectability---the probability that the manipulation
+is detected under the \dia{} audit protocol.
+\end{definition}
+
+Table~\ref{tab:taxonomy} summarises the five vectors, their attack surfaces,
+estimated maximum effects, and detection mechanisms.
+
+\begin{table}[h]
+\centering
+\caption{The five gaming vectors. $\Delta D$: maximum expected partisan
+         shift, national 435-seat delegation. Detectability: probability of
+         detection under the \dia{} audit protocol after pre-registration.
+         Vectors V1--V3 affect the plan geometry; V4--V5 affect only presentation.}
+\label{tab:taxonomy}
+\begin{tabular}{clccc}
+\toprule
+ID & Gaming Vector & $\Delta D$ & Detectability & Plan-affecting? \\
+\midrule
+V1 & Parameter manipulation & $\leq 0.3$ & 1.00 & Yes \\
+V2 & Input data manipulation & $\leq 0.4$ & $\approx 1.00$ & Yes \\
+V3 & Geographic definition gaming & $\leq 1.5$ & 0.95 & Yes \\
+V4 & Selective result presentation & N/A & 0.80 & No \\
+V5 & Algorithm version selection & $\leq 0.3^*$ & 1.00 & Yes (indirectly) \\
+\midrule
+\multicolumn{2}{l}{V1--V3 combined (additive upper bound)} & $\leq 2.2$ & & \\
+\multicolumn{2}{l}{V1--V3 combined (empirical)} & $\leq 0.5$ & & \\
+\bottomrule
+\end{tabular}
+\begin{flushleft}
+\small $^*$Within the same algorithm family (GeoSection); cross-family
+differences are $\leq 18$ seats but are constrained by B.0's structure pre-specification.
+\end{flushleft}
+\end{table}
+
+\subsection{Classification by Plan Impact}
+
+Vectors V1, V2, and V5 affect the plan geometry because they change the
+computational process that generates the plan.
+Vector V3 (geographic definition gaming) affects the plan geometry through
+the adjacency graph structure.
+Vector V4 (selective result presentation) does not change the plan geometry
+at all; it only changes which plan is reported to adjudicators.
+
+The distinction is important for \dia{} design.
+V4 and V5 are controlled entirely by disclosure requirements and binary
+pinning; they do not require any analysis of the computational outputs.
+V1--V3 require that the computation be reproducible from independently
+verifiable inputs.
+
+\subsection{Interaction Between Vectors}
+
+A sophisticated adversary might ask: can multiple vectors be combined
+to amplify the partisan effect beyond the individual maxima?
+Section~\ref{sec:combined} shows that the answer is no---the interaction
+structure of the \bisect{} algorithm ensures that the combined effect is
+subadditive.
+The geometric reason is that parameter effects operate on leaf-level
+METIS cuts within a fixed bisection tree structure; input data effects
+change the vertex weights within the same graph; geographic effects change
+the graph topology.
+All three effects converge on the same geometric bottleneck---the
+competitive-district geography---and cannot compound each other.

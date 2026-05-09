@@ -1,0 +1,73 @@
+\label{sec:introduction}
+
+Congressional redistricting is, at bottom, an exercise in democratic engineering.
+Mapmakers decide---whether deliberately or through algorithmic neutrality---which communities
+share a representative, which elections will be competitive, which incumbents face meaningful
+challenges, and how far constituents must travel to access their representative's office.
+The academic redistricting literature has devoted substantial effort to measuring the partisan
+properties of maps (the L-series), evaluating their compactness (the K-series), and analyzing
+their VRA compliance (the D-series). What it has devoted less effort to is systematically
+linking geometric map properties to the downstream democratic outcomes that redistricting is
+constitutionally required to serve.
+
+This gap matters practically. Courts evaluating redistricting plans ask not just whether a
+map is partisan but whether it harms democratic representation. State constitutional provisions
+guaranteeing ``free and equal elections'' (Pennsylvania), ``fair districts'' (Michigan), or
+requiring that districts ``not dilute'' minority voting strength (Voting Rights Act) are
+ultimately about outcomes, not geometry. The geometric metrics we can compute from a shapefile
+are useful only insofar as they predict the outcomes that the constitutional provisions care about.
+If compactness predicts electoral competitiveness and travel distance but not legislative
+polarization, then compactness arguments in court are appropriately limited.
+
+The O-series papers (O.1 through O.4) investigate four outcome dimensions, each in dedicated
+empirical analysis. This overview paper provides the integrating framework:
+
+\begin{itemize}
+\item \textbf{O.1 --- Electoral Competitiveness}: The distribution of competitive seats under
+  enacted vs.\ \textsc{bisect} plans, using VEST precinct-level data and a within-state
+  difference-in-differences identification across redistricting cycles.
+\item \textbf{O.2 --- Voter Turnout}: Precinct-level turnout as a function of district
+  competitiveness, instrumented by the redistricting-induced variation in predicted margin.
+\item \textbf{O.3 --- Legislative Polarization}: DW-NOMINATE score gaps between the two
+  parties' congressional medians, using redistricting-cycle reshuffling as a natural
+  experiment.
+\item \textbf{O.4 --- Constituent-Representative Distance}: Mean driving time from census
+  tract centroid to the representative's district office address, computed via OSRM
+  routing API, with Polsby-Popper as the predictor.
+\end{itemize}
+
+The organizing prediction across all four papers is stated at the end of this paper
+(Section~\ref{sec:prediction}): \textit{compact algorithmic plans predict better outcomes
+on all four dimensions, independent of partisan composition}. This prediction is testable,
+falsifiable, and has policy implications that extend beyond the typical gerrymandering debate.
+Even in a world without partisan gerrymandering, the choice between compact and non-compact
+maps would matter for democratic quality.
+
+\subsection{Why Outcomes, Not Just Geometry}
+
+The academic literature on gerrymandering has generated a rich set of geometric measures
+(Section~\ref{sec:literature}), but geometric measures are not self-justifying. A court
+that invalidates a map because its Polsby-Popper score is 0.12 is making an implicit
+empirical claim: that Polsby-Popper scores of 0.12 are associated with democratic harms
+that the constitution prohibits. Without the empirical link from geometry to outcomes,
+the constitutional argument is incomplete. Courts have sometimes rejected compactness
+arguments precisely because the link was asserted but not demonstrated \citep{veith2004}.
+
+The \textsc{bisect} platform provides a natural test bed for establishing this link.
+Because \textsc{bisect} maps are generated without partisan data, any differences in
+democratic outcomes between \textsc{bisect} plans and enacted plans that survive
+controls for partisan geography must be attributable to geometric features of the maps
+themselves. This identification logic---partisan geography controlled, geometry varied---is
+the backbone of the O-series.
+
+\subsection{The 2020 Redistricting Cycle as Primary Dataset}
+
+The O-series uses the 2020 redistricting cycle as its primary dataset because it is
+the first cycle for which all of the following are simultaneously available:
+(1) \textsc{bisect} algorithmic plans for all 50 states; (2) VEST 2020 precinct-level
+election returns; (3) ACS 2019--2021 5-year estimates for tract-level demographic covariates;
+(4) LODES commuting data for travel distance validation; and (5) enacted plans that can
+be compared to algorithmic alternatives using a controlled before-after design.
+
+The 2010 cycle serves as the pre-period for difference-in-differences estimates in O.1 and O.2.
+The 2000 cycle is used for robustness checks where VEST data coverage allows.

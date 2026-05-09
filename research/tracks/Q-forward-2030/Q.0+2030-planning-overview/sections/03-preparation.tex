@@ -1,0 +1,123 @@
+\label{sec:preparation}
+
+The four preparation tasks for the 2030 redistricting cycle are interconnected:
+the block-group adjacency graphs depend on the ACS demographic data for validation;
+the reapportionment projections determine which states require block-group resolution;
+and the algorithm pre-registration requires knowing which $k$-values and structure
+parameters will be used. Table~\ref{tab:tasks} summarizes the four tasks.
+
+\begin{table}[ht]
+\centering
+\caption{2030 Preparation Tasks: Summary}
+\label{tab:tasks}
+\begin{tabular}{llll}
+\toprule
+Task & Q-Paper & Target Completion & Primary Output \\
+\midrule
+Block-group adjacency (43 states) & Q.3 & Jan 2031 & Adjacency graph files \\
+LODES/ACS update to 2028 & Q.1 & Jul 2029 & Updated data pipeline \\
+Reapportionment projections & Q.4 & Jan 2029 & $k$-values for all 50 states \\
+Algorithm pre-registration & Q.2 & Jul 2030 & Registered config files \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Task 1: Block-Group Adjacency Pre-Build}
+
+The F.3 resolution rule establishes when block-group resolution is required: when
+$k/n > 0.05$, where $k$ is the number of congressional districts and $n$ is the
+number of census tracts, block-group resolution is necessary because the average
+district contains fewer than 20 tracts---too few for the recursive bisection tree
+to achieve population balance without frequently splitting tracts.
+
+Applying this rule to Census Bureau medium-series 2030 population projections with
+the projected reapportionment results from Q.4, we find that 43 states will require
+block-group resolution in 2030 (up from 39 states in 2020, driven by Sun Belt
+population growth increasing $k$ in several states). The 7 states that can remain
+at tract resolution are: California ($k=52$, $n=9{,}769$), New York ($k=26$,
+$n=5{,}087$), Texas ($k=41$, $n=5{,}411$), Pennsylvania ($k=17$, $n=3{,}218$),
+Illinois ($k=17$, $n=3{,}116$), Ohio ($k=15$, $n=2{,}811$), and Michigan ($k=13$,
+$n=2{,}813$).
+
+Block-group adjacency graphs for all 50 states can be constructed using the
+\textsc{bisect} fetch command with resolution flag:
+
+\begin{verbatim}
+bisect fetch --year 2030 --resolution block-group --workers 8
+\end{verbatim}
+
+At block-group resolution, the adjacency graph has approximately 1.2 million vertices
+(nationwide block groups) compared to 240,000 vertices at tract resolution---a 5x
+increase. The construction time scales approximately linearly with graph size;
+the 2020 tract adjacency for all 50 states required approximately 4 hours on an
+8-core machine. The 2030 block-group adjacency is estimated to require 20 hours
+of computation plus 80 hours of manual validation.
+
+\subsection{Task 2: LODES and ACS Data Update}
+
+The LODES (Longitudinal Employer-Household Dynamics Origin-Destination Employment
+Statistics) and ACS (American Community Survey) data used in \textsc{bisect} for
+edge weighting (LODES commuting flows) and VRA compliance (ACS minority VAP) require
+updating to the 2028 vintage. This matters because:
+
+\begin{itemize}
+\item Sun Belt population growth has shifted commuting patterns substantially since 2021.
+  Using 2021 LODES data for 2031 redistricting would misrepresent the commuting flows
+  that county-edge weights encode.
+\item The ACS 2019--2021 5-year minority VAP estimates will be more than 10 years old
+  by the time 2031 redistricting begins. The Census Bureau recommends using the most
+  recent 5-year ACS that predates census day; for 2030, that is ACS 2026--2028.
+\end{itemize}
+
+The LODES 2028 data is scheduled for release in December 2029 under the Census Bureau's
+annual LODES release schedule. The ACS 2026--2028 5-year data is released in December 2028.
+The Q.1 paper documents the data update pipeline and the expected magnitude of changes
+from 2021 to 2028 based on interim ACS 1-year estimates.
+
+\subsection{Task 3: Reapportionment Projections}
+
+The projected 2030 seat allocations under Huntington-Hill apportionment require
+Census Bureau medium-series 2030 population projections by state. The Q.4 paper
+provides a full analysis; the key outputs for infrastructure planning are:
+
+\begin{itemize}
+\item States projected to gain seats: TX ($+3$, to 41), FL ($+2$, to 30), AZ ($+1$),
+  NC ($+1$), CO ($+1$), MT ($+1$), OR ($+1$), ID ($+1$). Total: 8 states gaining.
+\item States projected to lose seats: NY ($-2$), IL ($-1$), OH ($-1$), PA ($-1$),
+  MI ($-1$), WI ($-1$), MN ($-1$), WV ($-1$), RI ($-1$), CT ($-1$). Total: 10 states losing.
+\item 32 states with unchanged seat counts.
+\end{itemize}
+
+These projections inform Task 1 (which states require block-group resolution depends
+on the new $k$-values) and Task 4 (algorithm configuration must be pre-registered
+with the new $k$-values).
+
+\subsection{Task 4: Algorithm Pre-Registration}
+
+The DIA (Democratic Integrity Act, model federal statute documented in
+\texttt{docs/legal/}) requires that the algorithm version used for redistricting
+be pre-registered with the state's redistricting authority no later than 6 months
+before census data release. Pre-registration includes: the specific \textsc{bisect}
+binary version (SHA-256 hash), the configuration YAML for each state (specifying
+structure, weights, search parameters), and the DIA seed formula parameters.
+
+Any change to the algorithm configuration after pre-registration triggers a
+public comment period of 60 days, making last-minute changes operationally
+infeasible within a 6-month redistricting window. The Q.2 paper documents
+the pre-registration process, including the configuration templates for each
+state's redistricting criteria.
+
+\begin{verbatim}
+# Example pre-registration config (texas_2030.yml)
+name: texas_2030
+algorithm:
+  structure: prime-factor
+  weights: county
+  search: convergence
+  convergence_threshold: 600
+  balance_tolerance: 0.5
+workers: 8
+years: ["2030"]
+registration_date: "2030-07-01"
+binary_sha256: "<hash>"
+\end{verbatim}

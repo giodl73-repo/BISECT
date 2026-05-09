@@ -1,0 +1,43 @@
+\section{Partisan Direction of College-Town Inflation}
+\label{sec:partisan}
+
+\subsection{The Democratic Lean of College Towns}
+
+The partisan direction of college-town inflation is not contested empirically. College towns are among the most reliably Democratic-voting jurisdictions in the United States. In 2020, the five largest college-town counties---Washtenaw (MI), Champaign (IL), Centre (PA), Brazos (TX), and Tompkins (NY)---each gave Joe Biden vote margins of 20--50 percentage points over Donald Trump, even in states where Trump was competitive or victorious statewide.
+
+The mechanism is straightforward: college students in 2020 voted Democratic at approximately 60--65\% rates in the two-party split~\citep{nces2021voting}. Since students both vote at campus and are counted at campus for redistricting purposes, their political weight is concentrated in the college-town district rather than distributed across their home communities.
+
+\subsection{Quantifying the Directional Effect}
+
+We can formalize the partisan direction of the distortion. Let $d$ be a college-district and $d'$ be the adjacent suburban district from which students originate. Define:
+\begin{align*}
+\Delta P_d &= \text{student population counted at campus} \approx 50{,}000 \\
+D_s &= \text{Democratic vote fraction among students} \approx 0.62 \\
+D_r &= \text{Democratic vote fraction in adjacent suburban district} \approx 0.45
+\end{align*}
+
+The partisan effect of transferring $\Delta P_d$ persons from $d'$ to $d$ under campus counting (relative to home-address counting) is:
+\[
+\Delta \text{EG}_{d \to d'} = \Delta P_d \cdot (D_s - D_r) \approx 50{,}000 \times (0.62 - 0.45) = 8{,}500 \text{ excess Democratic votes in } d
+\]
+
+This is a rough upper bound; it assumes all students vote and that the relevant comparison is between student Democratic preference and suburban Republican preference. The directional conclusion---campus counting systematically shifts effective representation from Republican-leaning suburban districts to Democratic-leaning college-town districts---is robust to reasonable variation in these parameters.
+
+\subsection{The 180-Tract Estimate}
+
+We estimate that approximately 180 census tracts nationally would receive a different district assignment if student populations were reallocated to home addresses for the 2020 redistricting cycle. This estimate is derived as follows:
+
+\begin{enumerate}
+    \item Identify all census tracts with $>$30\% of their Census population in College/University Student Housing group-quarters (GQ type 700 series). Approximately 420 tracts meet this threshold nationally.
+    \item For each such tract, compute the home-address-adjusted population (Census population minus student GQ population).
+    \item Run BISECT with the adjusted population vector for each affected state and compare district assignments tract by tract.
+    \item Count tracts where the district assignment changes under the adjusted versus unadjusted run.
+\end{enumerate}
+
+The 180-tract figure reflects states where college-town tracts are located near district boundaries---the precise location where population adjustments can tip a tract from one district to another. In states where the college town is safely interior to a large, compact district, student-population adjustments do not change tract assignments because the district boundaries are not drawn near the campus.
+
+\subsection{Geographic Concentration of Affected Tracts}
+
+The 180 tracts are not uniformly distributed. Approximately 60\% are concentrated in six states: Michigan, Illinois, Pennsylvania, North Carolina, Wisconsin, and Iowa---states with major flagship universities and competitive congressional maps. In states like Massachusetts and California, where college towns are located in reliably Democratic regions regardless of student population, the adjustment affects fewer tracts because the district assignment is robust to population shifts.
+
+The geographic concentration in competitive states---particularly Michigan, Pennsylvania, and Wisconsin---means that the college-town inflation effect is most relevant precisely where redistricting decisions have the most electoral consequence.

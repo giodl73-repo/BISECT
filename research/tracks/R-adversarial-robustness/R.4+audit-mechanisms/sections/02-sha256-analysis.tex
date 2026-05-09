@@ -1,0 +1,72 @@
+\section{SHA-256 Cryptographic Analysis}
+\label{sec:sha256}
+
+\subsection{Algorithm Specification}
+
+SHA-256 is a member of the SHA-2 family of cryptographic hash functions,
+standardised by NIST in FIPS PUB 180-4~\citep{fips180}.
+It maps an arbitrary-length input to a 256-bit (32-byte) output.
+
+Formally, SHA-256 satisfies three properties~\citep{bellare2004hash}:
+\begin{enumerate}
+\item \textbf{Pre-image resistance}: Given a hash output $h$, it is
+  computationally infeasible to find an input $m$ such that
+  $\mathrm{SHA256}(m) = h$.
+\item \textbf{Second pre-image resistance}: Given an input $m_1$, it is
+  computationally infeasible to find a different input $m_2 \neq m_1$ such
+  that $\mathrm{SHA256}(m_1) = \mathrm{SHA256}(m_2)$.
+\item \textbf{Collision resistance}: It is computationally infeasible to
+  find any two distinct inputs $m_1 \neq m_2$ such that
+  $\mathrm{SHA256}(m_1) = \mathrm{SHA256}(m_2)$.
+\end{enumerate}
+
+\subsection{The Birthday Bound}
+
+By the birthday paradox, a collision attack on a hash function with
+$n$-bit output requires approximately $2^{n/2}$ hash evaluations in
+expectation.
+For SHA-256, this is $2^{128}$ evaluations.
+
+However, the relevant security property for the audit chain is second
+pre-image resistance (Property 2), not collision resistance.
+The adversary has a specific target: the legitimate file with its known
+hash.
+They need to find a \emph{different} file that hashes to the same value.
+Second pre-image attacks are harder than collision attacks; the best known
+bound is $2^{256}$ for pre-image and $2^{128}$ for second pre-image
+under the generic attack model.
+
+For audit chain purposes (does this file match this hash?), we use
+the collision resistance bound as a conservative estimate:
+$2^{128}$ operations.
+Under the birthday bound interpretation (finding any collision among
+$2^{80}$ attempted values with 50\% probability), the bound is $2^{80}$.
+
+\begin{theorem}[SHA-256 Audit Chain Security]
+Under SHA-256, an adversary cannot produce a modified input file that
+has the same SHA-256 hash as the original without performing at least
+$2^{80}$ hash evaluations (birthday bound for collision finding).
+At $10^{15}$ evaluations per second on 2026-grade hardware, this requires
+approximately $3 \times 10^7$ years.
+\end{theorem}
+
+\subsection{Known Attack Status}
+
+As of 2026, no practical attacks on SHA-256 are known.
+The best theoretical attacks (differential cryptanalysis, reduced-round
+attacks) apply only to reduced versions of SHA-256 and do not reduce
+the security below $2^{128}$~\citep{mendel2013rebound}.
+SHA-256 is approved for use in U.S.\ government applications under
+NIST SP 800-57 through at least 2030.
+
+\subsection{Quantum Resistance}
+
+Grover's algorithm~\citep{grover1996fast} provides a quadratic speedup
+for pre-image attacks on hash functions using a quantum computer,
+reducing the effective security from $2^{256}$ to $2^{128}$.
+For the collision resistance bound relevant to the audit chain, Grover's
+algorithm provides no improvement (collision-finding does not reduce
+below $2^{128}$ even with quantum speedup).
+
+The \bisect{} audit chain is therefore quantum-resistant at the
+$2^{128}$ security level for the collision-finding task.

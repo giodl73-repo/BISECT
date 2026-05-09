@@ -1,0 +1,29 @@
+The 2030 decennial census will trigger the next congressional redistricting cycle.
+Based on the Census Bureau's statutory timeline under P.L.\ 94-171, block-level
+redistricting data will be released in April 2031, after which state legislatures,
+courts, and commissions must complete redistricting by late 2031. This creates
+a 6--12 month operational window that is structurally incompatible with beginning
+redistricting infrastructure construction after the census data arrives.
+
+This paper argues that \textsc{bisect} redistricting infrastructure for 2030 must
+begin construction no later than 2029, and that waiting until 2031 will produce
+one of two outcomes: (1) redistricting plans of degraded quality due to unvalidated
+algorithms and incomplete data pipelines, or (2) redistricting plans delayed past
+constitutional deadlines, triggering judicial intervention. The argument rests on
+four empirically grounded claims.
+
+First, the block-group adjacency graphs required for the 43 states that will require
+block-group resolution in 2030 (up from 39 in 2020) take 12--18 months to construct,
+validate, and certify. Second, the LODES commuting data and ACS demographic data
+must be updated to 2028 vintages to reflect the population distribution at the time
+of redistricting. Third, projected 2030 seat counts must be validated against
+Census Bureau medium-series projections, with particular attention to the 8 states
+gaining seats (TX, FL, AZ, NC, CO, MT, OR, ID) and 10 states losing seats. Fourth,
+the DIA statutory seed formula---which determines the initial partition seed from
+which \textsc{bisect} begins its recursive bisection---is hard-coded in statute for
+pre-registered algorithm versions and cannot be changed after census data release
+without triggering a judicial transparency challenge.
+
+The Q-series papers (Q.1--Q.4) provide detailed analyses of each preparation task.
+This overview paper provides the timeline, task dependencies, and resource estimates
+that frame the series.

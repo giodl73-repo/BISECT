@@ -1,0 +1,95 @@
+\section{Vector V2: Input Data Manipulation}
+\label{sec:v2}
+
+\subsection{Attack Description}
+
+The \bisect{} algorithm ingests three data sources: the Census P.L.\ 94-171
+redistricting file (population counts), TIGER/Line shapefiles (geographic
+boundaries), and optionally American Community Survey 5-year tables
+(demographic composition).
+A hostile actor with control over the data pipeline could modify population
+counts, tract boundaries, or demographic tables before the algorithm
+processes them.
+
+The three attack surfaces are:
+\begin{enumerate}
+\item \textbf{Population inflation/deflation}: Systematically inflate tract
+  populations in areas favorable to one party and deflate in areas favorable
+  to the other.
+  This biases the equal-population constraint toward partisan outcomes.
+\item \textbf{Shapefile manipulation}: Modify tract boundary coordinates to
+  change adjacency relationships, effectively rewiring the graph without
+  changing population counts.
+\item \textbf{ACS table manipulation}: Alter minority population percentages
+  used in VRA boost weighting to weaken or strengthen minority community
+  protections in targeted areas.
+\end{enumerate}
+
+\subsection{Maximum Achievable Shift}
+
+\paragraph{Population manipulation.}
+A $\pm 1\%$ population shift per tract, applied strategically to all tracts
+in competitive states, produces at most $\Delta D \leq 0.3$ seats nationally.
+This bound comes from the observation that the algorithm's equal-population
+constraint ensures that any distortion propagates across multiple districts
+within a state, partially canceling the partisan effect.
+Furthermore, a $\pm 1\%$ distortion is within the margin of B.7's seed
+noise floor and would be essentially undetectable without the SHA-256 chain.
+
+Larger distortions (e.g., $\pm 5\%$) would produce larger effects
+but are detectable at high probability through the verification chain
+(Section~\ref{sec:v2-detection}).
+
+\paragraph{Shapefile manipulation.}
+Modifying tract boundaries to alter adjacency relationships is the most
+consequential V2 attack.
+Merging two adjacent tracts of different partisan compositions into a
+single node, then splitting them differently, can effectively pre-gerrymander
+the graph before the algorithm runs.
+We estimate this attack can produce at most $\Delta D \leq 0.4$ seats
+nationally before the adjacency changes become geometrically implausible
+(creating non-contiguous tracts or implausible boundary shapes).
+
+\paragraph{ACS manipulation.}
+VRA boost weighting affects compactness slightly but has negligible partisan
+effect ($\Delta D \leq 0.1$ nationally from B.17's $w_{\rm vra}$ sweep).
+ACS manipulation thus does not constitute a meaningful partisan gaming vector;
+it is primarily a VRA compliance concern.
+
+\subsection{Detection Mechanism}
+\label{sec:v2-detection}
+
+The \bisect{} fetch and verification chain provides three levels of defense:
+\begin{enumerate}
+\item \textbf{Download hash}: \texttt{bisect fetch} computes a SHA-256 hash
+  of each downloaded Census P.L.\ 94-171 file and TIGER/Line shapefile
+  immediately upon download.
+  These hashes are stored in the manifest and compared against the Census
+  Bureau's published checksums (available at
+  \url{https://www2.census.gov/}).
+\item \textbf{Adjacency hash}: \texttt{bisect} computes a hash of the
+  adjacency graph constructed from the TIGER/Line shapefiles.
+  Any modification to shapefile boundaries that changes adjacency
+  relationships will change the adjacency hash.
+\item \textbf{Plan verification}: \texttt{bisect label-verify} replays the
+  entire computation from the stored hashes and checks that the output
+  plan's hash matches the manifest.
+  Any inconsistency in the chain---from raw Census file through adjacency
+  construction to final plan---is flagged.
+\end{enumerate}
+
+\paragraph{Security limitation.}
+\bisect{} uses TLS certificate validation via the system trust store for
+Census Bureau downloads but does \emph{not} implement certificate pinning.
+This is a disclosed limitation: a sophisticated man-in-the-middle attacker
+with the ability to spoof TLS certificates could intercept downloads.
+In practice, the Census Bureau's P.L.\ 94-171 files are also available
+on physical media and through state redistricting data services, providing
+alternative verification paths.
+For maximum security, practitioners should verify download hashes against
+multiple independent sources.
+
+Detection probability under normal \dia{} deployment: $\delta_2 \approx 1.00$
+for population and ACS manipulation; $\delta_2 \approx 0.98$ for shapefile
+manipulation (bounded by the fraction of adjacency changes that also produce
+geometrically implausible boundaries).

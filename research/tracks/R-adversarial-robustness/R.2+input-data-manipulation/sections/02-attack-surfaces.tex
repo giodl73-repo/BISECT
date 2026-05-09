@@ -1,0 +1,38 @@
+\section{Attack Surfaces}
+\label{sec:attack}
+
+Three attack surfaces correspond to the three data sources.
+Table~\ref{tab:attacks} summarises the attacks, their magnitude, and
+their detectability under the \bisect{} audit chain.
+
+\begin{table}[h]
+\centering
+\caption{Input data manipulation attack surfaces.
+         Detection probability under \bisect{} audit chain.
+         $\Delta D$: estimated maximum Democratic seat shift, national.}
+\label{tab:attacks}
+\begin{tabular}{llccc}
+\toprule
+Attack & Data source & $\Delta D$ & Detection & Method \\
+\midrule
+Population inflation/deflation & P.L.\ 94-171 & $\leq 0.4$ & $\approx 1.00$ & Download hash \\
+Shapefile boundary modification & TIGER/Line & $\leq 0.4$ & $\approx 0.98$ & Adjacency hash \\
+ACS demographic alteration & ACS 5-year & $\leq 0.1$ & $\approx 1.00$ & Download hash \\
+\midrule
+Combined (empirical, saturated) & All three & $\leq 0.4$ & $\approx 0.98$ & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All three attacks require the adversary to control the data pipeline
+between the Census Bureau's servers and the \bisect{} computation.
+This typically means the adversary must either (a) compromise the
+redistricting authority's internal data storage, (b) intercept network
+traffic during the download phase (the TLS limitation discussed in
+Section~\ref{sec:tls}), or (c) substitute files after download but
+before the hash is computed.
+
+Option (c) is the most feasible in practice but is prevented by computing
+the SHA-256 hash immediately upon download and storing it in the manifest.
+Options (a) and (b) require infrastructure-level compromise that is
+beyond the scope of redistricting-specific gaming.

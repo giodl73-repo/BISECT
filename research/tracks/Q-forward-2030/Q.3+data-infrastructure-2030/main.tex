@@ -1,0 +1,56 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{longtable}
+
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+\title{\textbf{Data Infrastructure for 2030:\\
+When Tracts Are No Longer Adequate}}
+
+\author{Giovanni Della-Libera}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Block-group resolution, census tracts, redistricting infrastructure, F.3 resolution rule,
+adjacency graphs, \textsc{bisect fetch}, 2030 census, block-group adjacency,
+congressional redistricting
+
+\section{Introduction}
+\input{sections/01-introduction}
+
+\section{The F.3 Resolution Rule and Its 2030 Implications}
+\input{sections/02-resolution-rule}
+
+\section{Block-Group Adjacency: Scale and Construction}
+\input{sections/03-construction}
+
+\section{Operational Impact: From 6 Months to 2 Months}
+\input{sections/04-operational}
+
+\section{Conclusion}
+\input{sections/05-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

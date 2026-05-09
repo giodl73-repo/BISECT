@@ -1,0 +1,29 @@
+\section{Introduction}
+
+The standard use of a redistricting ensemble is frequentist: an expert generates
+$N$ plans from the ReCom Markov chain, computes a summary statistic (compactness,
+partisan share) for each plan, and reports the enacted plan's percentile position.
+A plan at the 0.3rd percentile is described as ``more compact than 99.7\% of valid plans.''
+
+This framing has two limitations.
+First, the percentile is a point estimate with sampling uncertainty (G.4 establishes
+that a 1,000-step NC ensemble has ESS $\approx 70$, giving substantial uncertainty
+on any tail percentile).
+Second, the court wants to know: \emph{how probable is it that this plan was
+intentionally chosen for a specific outcome?}
+A frequentist percentile does not directly answer this question.
+
+The Bayesian framework answers it directly.
+The prior distribution over redistricting plans is the ensemble.
+The observation is the enacted plan's position in the ensemble.
+The posterior is the updated probability distribution over how extreme the plan
+truly is, accounting for the ensemble's finite size and ESS.
+
+The Bayesian Detection Score (BDS) is a summary of this posterior: the probability
+that the plan's true compactness percentile is below 5\% (i.e., in the most
+compact 5\% of all valid plans), given the ensemble evidence.
+BDS $> 0.95$ means there is strong Bayesian evidence the plan is genuinely extreme;
+BDS $< 0.20$ means the plan is consistent with a random neutral draw.
+
+This paper develops the BDS formally and applies it to five study states
+(NC, WI, GA, PA, TX) using the G.1 GerryChain ensemble data.

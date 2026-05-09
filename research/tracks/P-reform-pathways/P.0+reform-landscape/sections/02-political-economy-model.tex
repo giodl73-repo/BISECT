@@ -1,0 +1,40 @@
+\subsection{The Incumbency Rent}
+
+We model redistricting as a one-shot interaction in the post-census year, followed by five election cycles using the resulting map. Let $N$ be the number of legislative seats in a chamber and $M \leq N$ the number of incumbents from the majority party. Each incumbent $i$ has an underlying electoral quality $q_i$ drawn from a distribution with mean $\mu$ and variance $\sigma^2$.
+
+Under a neutrally drawn map, incumbent $i$ wins re-election if $q_i \geq q^*$, where $q^*$ is the competitive threshold. Under a favorable map---one designed to pack opposition voters and crack opposition communities---the effective threshold is reduced to $q^*_G < q^*$. The difference $\rho_i = q^* - q^*_G > 0$ is the \emph{incumbency rent}: the electoral cushion provided by favorable district lines.
+
+The present value of incumbency rents over five election cycles, discounted at rate $\delta$, is:
+\begin{equation}
+  V_i = \rho_i \cdot \sum_{t=1}^{5} \delta^t \cdot \Pr(\text{win in cycle } t \mid q_i + \rho_i \geq q^*)
+  \label{eq:rent}
+\end{equation}
+
+For a typical congressional incumbent in a safely drawn district, empirical estimates suggest $\rho_i$ is equivalent to a 6--8 percentage point improvement in the two-party vote margin \citep{chen2013}. At a discount rate of $\delta = 0.85$ (reflecting both time preference and the probability of remaining in the chamber), the present value of five cycles of incumbency rent is substantial.
+
+\subsection{The Reform Vote}
+
+Reform is a binary decision: the legislature either passes or defeats a redistricting reform bill. Each legislator votes to pass if and only if the expected benefit from reform exceeds the expected cost. For majority-party incumbents, reform reduces their incumbency rent: a neutral algorithm produces maps with lower $\rho_i$ than maps drawn to maximize partisan advantage. The expected cost of reform for incumbent $i$ is therefore $V_i - V_i'$, where $V_i'$ is the present value of incumbency rents under the reform regime.
+
+Because $V_i > V_i'$ for all majority incumbents under a gerrymander, no majority incumbent has a private incentive to vote for reform. The collective action problem is complete: reform requires a majority of legislators who individually each benefit from blocking it.
+
+\subsection{Why Minority Party Incumbents Don't Solve the Problem}
+
+A natural objection: the minority party should vote for reform unanimously, since they bear the cost of the gerrymander. In a two-party chamber where the majority holds $M$ seats and the minority holds $N - M$ seats, reform passes if and only if a sufficient number of majority incumbents defect. The minority cannot pass reform alone.
+
+Moreover, minority incumbents face a subtler incentive problem: a neutral algorithm does not necessarily improve their situation. It eliminates the majority party's gerrymander, but it also eliminates the \emph{minority's} safe seats (those created by packing minority voters to limit their statewide influence). Some minority incumbents represent highly packed districts and would face greater competition under a neutral map. Their support for reform is therefore contingent, not guaranteed \citep{grofman2004}.
+
+\subsection{Competitiveness as a Reform Catalyst}
+
+The model generates one important prediction: reform is more likely when the majority is small and competitive seats are numerous. When $M$ is close to $N/2$, individual incumbents face higher electoral uncertainty and the gerrymander's protective value is less reliable---a small shift in the uniform partisan swing can still flip a ``safe'' seat. This reduces the present value of incumbency rents, lowering the cost of voting for reform.
+
+Formally, reform probability is increasing in state-level electoral competitiveness $c$, defined as the fraction of districts with two-party vote margin below 10 percentage points:
+\begin{equation}
+  \Pr(\text{reform}) = f(c, \text{initiative}, \text{litigation})
+  \label{eq:reform-prob}
+\end{equation}
+where \textit{initiative} indicates the availability of the ballot initiative mechanism and \textit{litigation} indicates active gerrymandering litigation. We estimate this relationship empirically in Section~4.
+
+\subsection{Why the Legislature Cannot Be the Reform Vehicle}
+
+Equation~\eqref{eq:reform-prob} implies that ordinary legislative reform is possible but requires unusual conditions---an extremely competitive state combined with cross-party agreement on procedural fairness norms. These conditions are rarely observed simultaneously. The structural solution is to bypass the legislature entirely, using mechanisms that do not require incumbent consent. The three bypass channels analyzed in the remainder of this paper are characterized by exactly this property.

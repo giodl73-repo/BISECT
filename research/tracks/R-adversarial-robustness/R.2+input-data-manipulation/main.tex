@@ -1,0 +1,72 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\usepackage{booktabs}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{microtype}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{verbatim}
+\usepackage{titlesec}
+
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+\setstretch{1.4}
+
+\newcommand{\bisect}{\textsc{bisect}}
+\newcommand{\dia}{\textsc{Districting Integrity Act}}
+\newcommand{\PP}{\ensuremath{\mathrm{PP}}}
+
+\title{%
+  \textbf{Input Data Manipulation: Census Data,\\
+  GEOID, and Shapefile Integrity}\\[0.8em]
+  \normalsize\textit{R.2 --- Adversarial Robustness Track}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Input data integrity, SHA-256, Census P.L.\ 94-171, TIGER/Line shapefiles,
+ACS tables, audit chain, GEOID, TLS verification, bisect fetch, adversarial robustness
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-attack-surfaces}
+\input{sections/03-pl94-171}
+\input{sections/04-tiger-shapefiles}
+\input{sections/05-acs-tables}
+\input{sections/06-audit-chain}
+\input{sections/07-tls-limitation}
+\input{sections/08-effect-analysis}
+\input{sections/09-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

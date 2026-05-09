@@ -1,0 +1,63 @@
+\section{Five Population Definitions}
+\label{sec:five-defs}
+
+We organize the five candidate balance metrics along a spectrum from broadest (all residents) to narrowest (actual voters). Each definition embeds a normative theory of representation.
+
+\subsection{Total Population}
+
+Total population counts all persons physically residing in the United States at the time of the decennial census, regardless of citizenship, age, or voting status. It includes non-citizens (both documented and undocumented), children, incarcerated persons, institutionalized individuals, and members of the military stationed domestically. The Census Bureau's P1 table from the Redistricting Data file (PL 94-171) provides the operational figure used by every state for post-2020 redistricting.
+
+The normative theory underlying total population is \emph{whole-person representation}: elected officials represent all residents of their district, not merely those eligible to vote. An undocumented immigrant's child requires schools; a non-citizen permanent resident pays taxes; an incarcerated person has legal rights requiring judicial and legislative attention. On this view, equalizing total population ensures that each representative bears approximately the same constituent load.
+
+\textbf{BISECT default}: \texttt{bisect build <label> --year 2020} uses Census PL 94-171 P1 total population. No flag required.
+
+\subsection{Voting-Age Population (VAP)}
+
+Voting-age population counts all persons 18 years and older, regardless of citizenship or voter-registration status. VAP is available from the PL 94-171 file (column P4) and from the Census SF1 tables. It was used historically in Voting Rights Act analysis before the development of CVAP estimates.
+
+The normative theory is \emph{adult-resident representation}: children cannot vote and arguably need not be counted for electoral purposes. VAP excludes minors but retains non-citizens and non-registered adults. In practice, VAP produces results close to total population in most states because the age-structure of non-citizens closely tracks that of the general adult population.
+
+\textbf{BISECT flag}: \texttt{--balance-metric vap}
+
+\subsection{Citizen Voting-Age Population (CVAP)}
+
+CVAP counts only citizens 18 and older. It is not available from the decennial Census directly; the Census Bureau publishes CVAP estimates annually through the American Community Survey (ACS) Special Tabulation, typically with a one-year lag after the reference year. The ACS CVAP file provides block-group-level estimates, which must be reaggregated to census tracts for BISECT analysis.
+
+The normative theory is \emph{electorate representation}: only citizens can vote, so only citizens should anchor the equality requirement. This position has a long legal history and was the central argument in \emph{Evenwel v. Abbott}. CVAP diverges most sharply from total population in high-immigration metro areas: Los Angeles, Houston, Miami, New York, Chicago, and the Rio Grande Valley.
+
+\textbf{BISECT flag}: \texttt{--balance-metric cvap} (requires ACS CVAP data download; see \texttt{bisect fetch --metric cvap})
+
+\subsection{Registered Voters}
+
+Registered voters counts only those persons who have affirmatively registered to vote in the relevant jurisdiction. Registration data is maintained by state and county election authorities; it is not a Census product and varies significantly in quality, currency, and coverage across states. Motor-voter laws (National Voter Registration Act, 1993) have increased registration rates but not to uniformity.
+
+The normative theory is \emph{civic-participant representation}: only those who have engaged with the democratic system by registering deserve equal weight. This definition has not been endorsed by any federal court as a mandatory standard, though Texas used registered voters as a benchmark in the \emph{Evenwel} litigation before the Supreme Court.
+
+\textbf{BISECT note}: Registered voter data is state-sourced and not currently integrated into the automated pipeline. Manual input is required.
+
+\subsection{Actual Voters}
+
+Actual voters counts only those who cast ballots in a specified election (typically the most recent general election for federal office). It is the narrowest definition and the most temporally unstable: turnout fluctuates by 10--20 percentage points between presidential and midterm cycles.
+
+The normative theory is \emph{participatory representation}: representation should flow from actual democratic engagement. Critics note that this definition is self-referential (district maps affect turnout, so turnout-based maps are endogenous) and systematically disadvantages communities with lower turnout due to structural barriers rather than civic disengagement.
+
+No court has approved actual voters as a permissible balance metric. It is included here for completeness and as the limiting case of the spectrum.
+
+\subsection{Summary Comparison}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llccc}
+\toprule
+\textbf{Definition} & \textbf{Includes} & \textbf{Data Source} & \textbf{Legal Status} & \textbf{BISECT Flag} \\
+\midrule
+Total population & All residents & Census PL 94-171 & Established default & (default) \\
+VAP & Adults 18+ & Census PL 94-171 & Permitted & \texttt{--balance-metric vap} \\
+CVAP & Citizen adults & ACS CVAP file & Permitted (\emph{Evenwel}) & \texttt{--balance-metric cvap} \\
+Registered voters & Registered adults & State records & Not adjudicated & \texttt{--balance-metric reg} \\
+Actual voters & Voters in election & State records & Not approved & \texttt{--balance-metric votes} \\
+\bottomrule
+\end{tabular}
+\caption{Five population definitions with data source, legal status, and BISECT CLI flag.}
+\label{tab:five-defs}
+\end{table}

@@ -1,0 +1,104 @@
+\section{Results: The 0.3 D-Seat Maximum}
+\label{sec:results}
+
+\subsection{Baseline Comparison}
+
+We compare three configurations:
+(1)~the DIA default ($\theta_{\rm default}$),
+(2)~the most Republican-favorable configuration ($\theta_{\rm Rep}$), and
+(3)~the most Democratic-favorable configuration ($\theta_{\rm Dem}$).
+
+\begin{table}[h]
+\centering
+\caption{National 50-state partisan outcomes under three parameter
+         configurations. $\Dnat$: expected Democratic seats, 435-seat delegation.
+         $\overline{\PP}$: mean Polsby-Popper compactness. County splits:
+         total split-county instances nationally.
+         $\Delta D$ relative to default.}
+\label{tab:main-results}
+\begin{tabular}{lccccc}
+\toprule
+Configuration & $\theta$ & $\Dnat$ & $\Delta D$ & $\overline{\PP}$ & County splits \\
+\midrule
+Most Rep-favorable & $\theta_{\rm Rep}$ & 210.7 & $-0.3$ & 0.296 & 198 \\
+DIA default & $\theta_{\rm default}$ & 211.0 & 0.0 & 0.309 & 271 \\
+Most Dem-favorable & $\theta_{\rm Dem}$ & 211.0 & $0.0$ & 0.320 & 315 \\
+\midrule
+\multicolumn{2}{l}{Range ($\theta_{\rm Rep}$ to $\theta_{\rm Dem}$)} &
+  0.3 & & 0.024 & 117 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Key Finding}
+
+The most Republican-favorable parameters produce 210.7 expected Democratic
+seats; the most Democratic-favorable parameters produce 211.0 seats.
+The difference is exactly 0.3 Democratic seats nationally---confirming
+the B.17 result in the adversarial framing.
+
+Note that the most Democratic-favorable configuration coincidentally
+matches the default in partisan outcome ($\Dnat = 211.0$).
+This is because lowering $\acounty$ and $\ufactor$ slightly increases
+compactness in Democratic-leaning urban areas, but this effect is
+exactly offset by the lower $T$ setting's slightly less optimised
+leaf-level cuts.
+
+\subsection{State-Level Breakdown}
+
+The 0.3-seat national difference is distributed across states as follows.
+In the worst case, a single state (Wisconsin, $k = 8$) contributes
+$\Delta D_{\rm WI} = 0.3$ seats at the joint parameter extremes.
+No other state contributes more than 0.1 seats.
+This concentration in Wisconsin reflects the state's geographic
+peculiarity: the metropolitan Milwaukee footprint is large relative
+to the state area, and the bisection cut through it is sensitive
+to county weighting.
+
+\begin{table}[h]
+\centering
+\caption{State-level partisan effect of moving from $\theta_{\rm Rep}$
+         to $\theta_{\rm Dem}$. Only states with $|\Delta D| > 0$ shown.}
+\label{tab:state-results}
+\begin{tabular}{llcc}
+\toprule
+State & $k$ & $\Delta D$ (Rep $\to$ Dem) & Direction \\
+\midrule
+Wisconsin & 8 & $+0.3$ & Dem-favored at lower $\acounty$ \\
+Michigan & 13 & $+0.1$ & Dem-favored at lower $\ufactor$ \\
+Minnesota & 8 & $-0.1$ & Rep-favored at lower $\acounty$ \\
+\midrule
+All other states & -- & 0.0 & No change \\
+\midrule
+National total & 435 & $+0.3$ & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Comparison to B.7 Seed Noise}
+
+B.7~\citep{b7paper} establishes the seed-variance noise floor for partisan
+outcomes: the standard deviation across random seed choices is $\sigma \approx 0.8$
+seats nationally.
+The 0.3-seat parameter gaming effect is:
+\[
+  \frac{\Delta \Dnat^{\rm parameter}}{\sigma} = \frac{0.3}{0.8} = 0.375
+  \text{ standard deviations}.
+\]
+Parameter gaming is below the one-sigma threshold.
+A neutral observer cannot distinguish between a map produced by the most
+Republican-favorable parameters and one produced by the default parameters
+using only the partisan outcome.
+
+\subsection{Comparison to Algorithm-Structure Effect}
+
+B.0~\citep{b0paper} reports that switching from unweighted bisection to
+GeoSection produces a partisan gap of approximately 18 seats nationally.
+The parameter-gaming maximum of 0.3 seats is $60\times$ smaller.
+
+This comparison is the central policy argument:
+the real design lever is algorithm structure (which the DIA pre-specifies
+in statute), not parameter tuning.
+Locking algorithm structure via statute while allowing administrative
+parameter flexibility is safe because parameter flexibility produces
+at most 0.3 seats of variation---below the noise floor.

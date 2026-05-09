@@ -1,0 +1,92 @@
+\section{The Three-Level Audit Chain}
+\label{sec:audit-chain}
+
+\bisect{} implements a three-level SHA-256 audit chain that provides
+layered protection against data manipulation.
+
+\subsection{Level 1: Census Bureau Download Hash}
+
+\texttt{bisect fetch --year 2020 --workers 8} downloads all required
+Census files and computes SHA-256 hashes immediately upon receipt.
+The hashes are stored in the manifest alongside the Census Bureau's
+published checksums.
+
+\begin{verbatim}
+bisect fetch --year 2020 --state NC
+[INFO] Downloading pl94171_nc_2020.pl
+[INFO] SHA256: a7f3bc91...
+[INFO] Comparing against Census Bureau checksum: MATCH
+[INFO] Downloading tl_2020_37_tract.zip
+[INFO] SHA256: d4e82ca5...
+[INFO] ACS B02001 5-year: 2016-2020
+[INFO] SHA256: f1c0a9b7...
+[INFO] Manifest written: nc_2020_fetch.manifest.json
+\end{verbatim}
+
+A party wishing to independently verify the download can fetch the
+same files directly from the Census Bureau website and compare hashes.
+
+\subsection{Level 2: Adjacency Construction Hash}
+
+After downloading shapefiles, \bisect{} constructs the census tract
+adjacency graph.
+The graph construction is deterministic: given the same TIGER/Line shapefile,
+the same adjacency graph is always produced.
+The SHA-256 hash of the adjacency graph is stored in the manifest.
+
+\begin{verbatim}
+bisect build nc_2020 --year 2020
+[INFO] Building adjacency graph for NC
+[INFO] Tracts: 2,672  Edges: 7,841
+[INFO] Adjacency SHA256: 8b2a7d43...
+[INFO] Adjacency hash stored in manifest
+\end{verbatim}
+
+An independent party can verify the adjacency hash by running the same
+adjacency construction algorithm on their independently downloaded shapefile.
+Any discrepancy indicates shapefile manipulation.
+
+\subsection{Level 3: Final Plan Hash}
+
+The completed district assignment (one GEOID to district mapping per state)
+is hashed and stored in the manifest.
+
+\begin{verbatim}
+bisect label-verify nc_2020 --year 2020
+[INFO] Replaying computation from manifest
+[INFO] Census download hash: MATCH
+[INFO] Adjacency hash: MATCH
+[INFO] Plan hash: MATCH
+[INFO] Verification: PASS
+\end{verbatim}
+
+The three-level chain provides end-to-end provenance:
+any modification at any level propagates into a hash mismatch at
+that level and all subsequent levels.
+
+\subsection{Chain Security}
+
+\begin{theorem}[Audit Chain Security]
+Under SHA-256 (FIPS PUB 180-4~\citep{fips180}), an adversary cannot
+produce a modified input file that has the same SHA-256 hash as the
+original file without performing at least $2^{80}$ hash operations
+(birthday bound for collision resistance).
+At $10^{15}$ hash operations per second on current hardware, this
+requires $>3 \times 10^7$ years of computation.
+\end{theorem}
+
+This is not a formal proof of SHA-256 collision resistance (which remains
+an open problem) but reflects the current state of cryptographic knowledge.
+No practical collision attack on SHA-256 is known as of 2026.
+
+\subsection{Verification by Third Parties}
+
+The \dia{} requires the redistricting manifest to be filed publicly
+with the Secretary of State.
+Any party---opposing counsel, expert witnesses, journalists, academic
+researchers---can independently verify the manifest using:
+\begin{verbatim}
+bisect label-verify <label> --year <year> --manifest <path>
+\end{verbatim}
+This converts the audit chain from a self-certification into a
+publicly verifiable claim.

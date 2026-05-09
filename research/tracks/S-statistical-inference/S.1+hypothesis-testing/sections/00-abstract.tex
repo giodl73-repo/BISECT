@@ -1,0 +1,26 @@
+Ensemble-based redistricting analysis typically reports percentile positions ---
+``the enacted plan is more compact than 99.7\% of valid plans'' --- without
+corresponding p-values or confidence intervals.
+We derive calibrated p-values for the null hypothesis that an enacted plan is
+a random draw from the plan space, using ESS-corrected permutation tests
+on GerryChain \recom{} ensembles.
+
+For NC 2022 enacted map using the 1{,}000-step G.1 GerryChain ensemble
+($\ess \approx 70$, compactness metric): ESS-corrected p-value $= 0.041$
+(two-tailed; unadjusted $= 0.003$).
+The ESS correction substantially changes the significance assessment:
+a plan that appears to have $p = 0.003$ based on 1{,}000 nominal plans
+has $p = 0.041$ once autocorrelation is accounted for.
+At $n = 10{,}000$ steps ($\ess \approx 695$), the same NC plan achieves
+$p = 0.004$, well within the 5\% threshold.
+
+For the \textsc{bisect} algorithmic plan (NC, 2020): ESS-corrected $p = 0.52$
+--- consistent with a random neutral draw from the ensemble.
+For WI, GA, and PA enacted plans: all achieve $p < 0.05$ even at
+$n = 1{,}000$ steps.
+For TX enacted plan: $p = 0.11$ at $n = 1{,}000$ steps; $p = 0.03$
+at $n = 10{,}000$ steps.
+
+We provide a workflow for converting any GerryChain ensemble into
+a calibrated p-value using the \texttt{permutation\_test\_lower\_tail}
+function implemented in \texttt{bisect-analysis/src/permutation.rs}.

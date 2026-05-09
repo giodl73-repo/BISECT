@@ -1,0 +1,48 @@
+\label{sec:introduction}
+
+The 2020 redistricting cycle demonstrated that census geographic units are not
+created equal for redistricting purposes. Census tracts---the primary unit for
+\textsc{bisect} redistricting---average approximately 4{,}000 people with a typical
+area of a few square miles. They are designed as statistical units, not as building
+blocks for congressional districts. For states with many congressional seats, the
+tract resolution is adequate: California ($k=52$, $n=9{,}769$ tracts, ratio $= 0.0053$)
+has nearly 200 tracts per congressional district on average, giving the bisection
+algorithm abundant flexibility to achieve population balance. For states with few
+congressional seats, the tract resolution creates problems: Wyoming ($k=1$, $n=157$
+tracts, ratio $= 0.0064$) is an extreme case but illustrates the general pattern
+that small-delegation states have fewer tracts per district.
+
+The F.3 paper \citep{f3paper} established the $k/n > 0.05$ resolution rule through
+empirical analysis of redistricting failures in high-$k/n$ state legislative chambers.
+When this ratio exceeds 0.05, the recursive bisection tree encounters partitions where
+the two sub-graphs have incompatible population levels---the algorithm must split
+a single tract between two districts, violating the geographic integrity requirement.
+The resolution rule says: upgrade to block groups when this happens.
+
+For congressional redistricting in 2020, 39 states required block-group resolution.
+In 2030, the number rises to 43. This paper documents the technical implications
+of that expansion.
+
+\subsection{Block Groups vs.\ Tracts: Geographic Definitions}
+
+Census block groups are a geographic level between tracts and individual blocks.
+By definition, every block group is entirely contained within a single tract,
+and every tract contains between one and nine block groups (median: four).
+Block groups average approximately 1{,}000--3{,}000 people and are designed to
+match recognizable neighborhood boundaries in urban areas.
+
+For redistricting purposes, the key advantage of block groups over tracts is their
+smaller size: a congressional district that contains only 15 tracts may contain
+60 block groups, providing the bisection algorithm with 4$\times$ more partition
+choices. The key disadvantage is data volume: 240{,}000 tracts nationally vs.\
+roughly 1.2 million block groups. Adjacency graphs at block-group resolution are
+5$\times$ larger, requiring proportionally more computation and storage.
+
+\subsection{Relationship to Q-Series}
+
+This paper is Q.3 in the Forward-2030 series. It assumes the reapportionment
+projections from Q.4 (which provide the $k$-values used in the resolution rule
+application) and the data update pipeline from Q.1 (which provides the ACS and
+LODES data at block-group resolution). The construction timeline is coordinated
+with the pre-registration schedule documented in Q.0 (overview) and Q.2
+(algorithm pre-registration).

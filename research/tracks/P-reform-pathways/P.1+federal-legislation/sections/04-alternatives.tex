@@ -1,0 +1,54 @@
+We evaluate the DIA against four alternative federal legislative designs. Each has genuine merits and specific weaknesses.
+
+\begin{table}[h]
+\centering
+\caption{Alternative federal redistricting bill designs compared}
+\label{tab:designs}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Design & Constitutional & Political & VRA & Technical \\
+       & Durability     & Feasibility & Compat. & Implement. \\
+\midrule
+DIA (algorithm-specifying) & High & Medium & High & High \\
+Criteria-only              & High & High   & Medium & Low \\
+Commission-mandating       & Medium & Low   & High & Medium \\
+Court-remedy               & High & High   & High & Medium \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Design A: Algorithm-Specifying (the DIA)}
+
+The DIA specifies recursive bisection as the redistricting algorithm. As analyzed in Section~3, this design is constitutionally strong, technically implementable, and VRA-compatible with the modification protocol. Its primary limitation is political feasibility: many members of Congress---particularly those from safe seats---are unlikely to vote for legislation that could make their districts more competitive, and the algorithm specification is novel enough to generate concerns from members who are skeptical of ``computer-drawn maps.''
+
+The political barrier can be partially mitigated by framing: the DIA does not eliminate human judgment, it structures it. The algorithm produces a neutral baseline; humans apply the VRA modification protocol. This framing is accurate and politically more accessible than ``the computer draws the maps.''
+
+\subsection{Design B: Criteria-Only}
+
+A criteria-only statute specifies the requirements a map must meet---contiguity, population equality, compactness, political subdivision respect---without specifying how the mapmaker achieves those criteria. The For the People Act (H.R.\ 1 in several Congresses) adopted this general approach, requiring independent commissions and listing criteria but leaving the drawing method to the commission.
+
+The criteria-only design has high political feasibility because it is less technically specific and avoids ``computer draws maps'' concerns. Its weakness is technical: criteria-only statutes do not eliminate partisan manipulation. A sufficiently skilled mapmaker can satisfy all listed criteria while still maximizing partisan advantage---this is precisely what North Carolina did in the maps challenged in \textit{Rucho}. The map satisfied all state-law criteria; it was also, the district court found, ``one of the largest partisan gerrymanders in modern American history.''
+
+Criteria-only statutes can be strengthened by adding measurable thresholds (e.g., no map with an efficiency gap above 7\% may be adopted) or by requiring the criteria-satisfying map to minimize a neutral objective function. But once you have a neutral objective function and a minimization requirement, you are most of the way to an algorithm-specifying statute.
+
+\subsection{Design C: Commission-Mandating}
+
+A commission-mandating statute requires states to create independent redistricting commissions but does not specify how commissions draw maps. The model here is the For the People Act's commission provisions, which establish structural requirements (balanced partisan representation, no elected official members, public hearing requirements) without specifying a drawing methodology.
+
+Commission-mandating statutes face a significant constitutional uncertainty: \textit{Rucho} is a federal-court case, but several state courts have held that state constitutional provisions vesting legislative authority in the ``legislature'' preclude voter-initiative commissions. \textit{Arizona State Legislature v. Arizona Independent Redistricting Commission}, 576 U.S.\ 787 (2015), upheld the Arizona commission against a federal Elections Clause challenge, but the decision was narrow and a future Court could reconsider it. Congress mandating commissions in all states raises the same structural question at the federal level.
+
+Commission-mandating statutes also face political feasibility challenges: members of Congress who draw their own districts are unlikely to vote for legislation requiring them to cede that authority to commissions, even commissions with balanced partisan representation. At least an algorithm-specifying statute might be framed as being ``fair to both parties''; a commission adds a layer of partisan negotiation over the commission's composition and operating rules.
+
+\subsection{Design D: Court-Remedy Statute}
+
+A court-remedy statute does not mandate a particular redistricting method but provides federal courts with a clear legal standard and remedy when states fail to meet it. The statute would define actionable partisan gerrymandering (e.g., any map with a two-standard-deviation efficiency gap outlier), establish a judicial remedy (the federal court appoints a special master who uses the \texttt{bisect} algorithm), and provide expedited procedures to reduce the delay problem identified in P.4.
+
+This design is politically feasible because it does not mandate any particular state action in the absence of litigation---states that draw fair maps face no constraint. It is constitutionally strong because it simply creates a federal cause of action, a traditional judicial function. Its weakness is that it preserves the same slow, expensive litigation dynamic that currently characterizes redistricting disputes. It helps when litigation occurs but does not prevent the underlying gerrymandering.
+
+A court-remedy statute could be combined with either the DIA or the criteria-only design: the substantive mandate establishes what states must do, and the court-remedy provisions specify what happens when they don't. P.4 analyzes court-ordered algorithmic remedies in depth.
+
+\subsection{Selecting Among Designs}
+
+For Congress that lacks the political will for the DIA, we recommend the criteria-only design with quantitative thresholds as a second-best option. Thresholds---efficiency gap bounds, minimum compactness scores---are more gameable than an algorithm but substantially less gameable than qualitative criteria. A court-remedy statute should be included in any design to provide enforcement mechanisms.
+
+The DIA remains the preferred design because it eliminates the residual manipulation space present in all criteria-based approaches. The algorithm-analogy to Huntington-Hill provides the most powerful historical precedent, and the technical implementation---as demonstrated by the \texttt{bisect} platform---is fully mature. The political barrier is real but surmountable; Section~6 suggests a political strategy.

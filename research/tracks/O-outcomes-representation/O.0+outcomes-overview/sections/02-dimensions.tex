@@ -1,0 +1,103 @@
+\label{sec:dimensions}
+
+The four outcome dimensions of the O-series are chosen to span the major empirical
+literature on redistricting and democratic representation. Table~\ref{tab:dimensions}
+summarizes each dimension's definition, measurement unit, data source, and the
+O-series paper that provides the primary analysis.
+
+\begin{table}[ht]
+\centering
+\caption{Four Outcome Dimensions: O-Series Framework}
+\label{tab:dimensions}
+\begin{tabular}{lllll}
+\toprule
+Dimension & Outcome Variable & Unit & Data Source & Paper \\
+\midrule
+Competitiveness & Margin $< 10\%$ seats & Fraction of seats & VEST 2020 & O.1 \\
+Turnout & Precinct VAP turnout & Percentage points & VEST 2020 & O.2 \\
+Polarization & DW-NOMINATE gap & Score units & VoteView & O.3 \\
+Const.-Rep.\ Distance & Mean driving time & Minutes & OSRM/OSM & O.4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Dimension 1: Electoral Competitiveness}
+
+A district is \textit{competitive} if the two-party vote margin in a given election
+falls within 10 percentage points of the 50\% threshold. We use the two-party presidential
+vote share as the competitiveness predictor rather than the congressional vote share, because
+presidential vote is more stable across elections and less subject to incumbency effects.
+The fraction of competitive seats in a state's congressional delegation is the aggregate
+competitiveness measure.
+
+Partisan gerrymandering systematically reduces competitiveness by design: the optimal
+partisan map packs opposition voters into a small number of safe seats while cracking
+remaining opposition voters into a larger number of seats where they lose by modest
+margins. Both moves reduce competitive seats. Compactness disrupts this: compact
+districts tend to include geographically proximate communities that are more
+politically similar, creating more homogeneous districts that are either safe or
+marginal---but the marginal districts are not chosen by the mapmaker.
+
+The theoretical prediction for O.1 is that \textsc{bisect} plans produce more competitive
+seats on average relative to enacted gerrymanders in states where the enacted map
+has a documented partisan slant ($|\text{EG}| > 0.08$), but that the direction of the
+competitiveness difference is unpredictable in states without documented partisan
+gerrymandering. This asymmetric prediction is important: compact plans are not
+maximally competitive. They are competitive-neutral, which means they produce
+more competitive seats than gerrymandered plans but not necessarily more than the
+maximum achievable under algorithmic competitive maximization.
+
+\subsection{Dimension 2: Voter Turnout}
+
+Voter turnout at the precinct level is a function of multiple factors: mobilization,
+registration accessibility, partisan intensity, candidate quality, and---the channel
+of interest here---district competitiveness. The ``stimulation hypothesis'' in electoral
+participation research \citep{hays1997} posits that competitive elections increase
+turnout by raising the perceived electoral stakes for individual voters. If redistricting
+affects competitiveness (O.1), it may affect turnout through this channel.
+
+The identification challenge for O.2 is separating the redistricting-induced competitiveness
+variation from the confounding of partisan geography. A precinct moved from a safe district
+into a competitive district may show increased turnout not because of the redistricting
+change per se but because competitive districts attract more campaign resources and
+candidate quality. We address this using a shift-share instrument: the precinct-level
+predicted margin under the new map, constructed from the precinct's presidential vote
+history and the new district boundaries, serves as the instrument for realized competitiveness.
+
+\subsection{Dimension 3: Legislative Polarization}
+
+Legislative polarization---the ideological distance between the parties' congressional
+medians---has increased monotonically since the 1970s \citep{mccarty2006}. The
+redistricting literature's claim is that partisan gerrymandering contributes to
+polarization by reducing competitive seats, which in turn selects for more
+ideologically extreme candidates in safe-seat primaries \citep{fiorina2008}. The
+mechanism has two steps: (1) fewer competitive seats $\to$ more safe seats $\to$
+more primary-determined general elections; (2) primary electorates are more ideologically
+extreme than general electorates $\to$ extreme candidates win safe-seat primaries.
+
+The empirical evidence for both steps is weaker than the theory suggests.
+\citet{caugheyTausanovitch2017} find that redistricting affects state legislative
+outcomes through ideological selection in some contexts but not universally.
+\citet{mccarty2009} find that polarization has increased even in states without
+gerrymandering, suggesting geographic sorting as an independent driver.
+The O.3 analysis uses a DW-NOMINATE based approach with state-level controls
+for geographic sorting to isolate the redistricting contribution.
+
+\subsection{Dimension 4: Constituent-Representative Geographic Distance}
+
+Geographic distance between constituents and their representative is a direct measure
+of representational access that has received surprisingly little empirical attention.
+The intuition is straightforward: a constituent living in a district drawn as a narrow
+corridor connecting two distant communities faces a longer trip to the representative's
+local district office than a constituent in a geographically compact district. This
+matters because district office access is the primary channel through which constituents
+raise constituent services issues (visa applications, Social Security disputes, veterans'
+benefits, and similar casework).
+
+We operationalize this as mean driving time from each census tract's population-weighted
+centroid to the representative's primary district office address, as listed on house.gov.
+OSRM (Open Source Routing Machine) with OpenStreetMap road network data provides the
+routing computation. The O.4 analysis, the most novel in the O-series, documents a
+correlation of $r = -0.67$ between district Polsby-Popper compactness and mean constituent
+driving time across the 435 congressional districts, and shows that \textsc{bisect} plans
+reduce mean driving time from 48 minutes (enacted gerrymanders) to 34 minutes.

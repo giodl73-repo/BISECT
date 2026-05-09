@@ -1,0 +1,23 @@
+\section{Conclusion}
+
+The 2030 Sun Belt redistricting challenge requires two structural changes to the
+bisect pipeline:
+\begin{enumerate}
+  \item For TX and FL: switch from ApportionRegions (prime-factor) to
+    GeoSection (\texttt{--structure ratio-optimal}). GeoSection handles any $k$
+    and produces better geographic alignment for the irregular geometry of
+    fast-growing coastal and urban states.
+  \item For seat-loss states (NY, CA, IL, OH, MI, PA, others): rebuild the
+    bisection tree from scratch for the new $k$, without any continuity
+    constraint from the 2020 plan. This is a feature, not a limitation: the
+    algorithmically optimal 2030 plan is better than an incumbency-protecting
+    merger.
+\end{enumerate}
+
+The key algorithmic insight: the binary fallback for prime $k$ in ApportionRegions
+(lines 11--16 of prime.rs) means no state will ever require a direct $k$-way
+METIS partition for prime $k > 3$. This design choice makes the pipeline robust
+to any projected seat count, including TX $k=41$.
+
+All bisection tree designs for the 2030 seat allocations should be pre-built
+and validated by 2029, well before the April 2031 Census data release.

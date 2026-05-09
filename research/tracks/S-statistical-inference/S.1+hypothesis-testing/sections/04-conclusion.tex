@@ -1,0 +1,29 @@
+\section{Conclusion}
+
+The ESS-corrected permutation test converts a redistricting ensemble percentile
+into a court-admissible p-value. The key practical implications:
+
+\begin{enumerate}
+  \item \textbf{1{,}000-step ensembles are underpowered for North Carolina.}
+    NC's ESS of 70 at 1K steps means the 0.003 percentile position corresponds
+    to a borderline-significant $p = 0.041$.
+    Courts should not treat 1{,}000-step NC ensemble results as conclusive.
+  \item \textbf{10{,}000-step ensembles are reliable for most states.}
+    NC, WI, GA, PA all achieve $p < 0.01$ at 10K steps.
+    Texas requires 30K steps for similar reliability (S.3).
+  \item \textbf{The \texttt{bisect-analysis::permutation} module provides
+    a drop-in implementation.}
+    Any user with a GerryChain ensemble JSON output and the G.4 ESS estimate
+    can compute the calibrated p-value with three lines of Rust
+    (or the equivalent Python/scipy Beta CDF computation from S.2).
+  \item \textbf{Two-sided tests are appropriate for partisan fairness metrics.}
+    The lower-tail test is appropriate for compactness (lower = more compact
+    = more extreme). For partisan efficiency gap (which can be extreme in either
+    direction), use the two-sided version: $p = 2 \times \min(\hat{p}, 1-\hat{p})$
+    with ESS correction.
+\end{enumerate}
+
+The permutation test framework completes the G-track's statistical foundation:
+G.7 provides the ensemble (SMC for calibrated inference), G.4 provides the ESS
+estimate, and S.1 provides the hypothesis test that converts the ensemble into
+a legally interpretable p-value.

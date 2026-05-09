@@ -1,0 +1,25 @@
+\section{Introduction}
+
+The decennial Census drives congressional redistricting, but the demographic changes
+that will shape the 2030 map are already visible in current ACS and Census Bureau
+projection data. Acting on this information now allows redistricting infrastructure
+to be built, validated, and ready before the April 2031 Census data release.
+
+This paper uses the Census Bureau's 2020 Vintage Population Projections --- the
+most recent long-range projections available, extending through 2060 --- to project
+2030 state populations and apply Huntington-Hill apportionment. The projections come
+in three series (low, medium, high), reflecting different assumptions about fertility,
+mortality, and net international migration.
+
+The practical stakes: a state that gains seats (TX, FL) needs new bisection tree
+designs; a state that loses seats (NY, CA) may see major district mergers that
+challenge algorithmic compactness. The bisect pipeline's bisection tree structure
+--- the ApportionRegions hierarchy --- is determined entirely by the seat count $k$
+and its prime factorization. Changes in $k$ cascade through the entire tree design.
+
+\paragraph{Data source.}
+Census Bureau National Population Projections, 2020 Vintage: Table NP2020-T1
+(state-level projections by year, all series). Available at
+\texttt{census.gov/programs-surveys/popproj.html}. We extract the 2030 column
+from the medium (middle) series for the main projections, and the low and high
+series for confidence bounds.

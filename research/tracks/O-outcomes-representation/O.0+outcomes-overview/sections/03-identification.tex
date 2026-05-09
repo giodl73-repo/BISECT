@@ -1,0 +1,103 @@
+\label{sec:identification}
+
+The central identification challenge for all four O-series papers is establishing
+causal rather than correlational relationships between map geometry and democratic
+outcomes. This section describes the identification strategies used across the series,
+with particular emphasis on the features that make redistricting cycles well-suited
+as quasi-experiments.
+
+\subsection{Redistricting Cycles as Natural Experiments}
+
+The decennial redistricting cycle generates a near-ideal natural experiment for
+studying the effects of map geometry on democratic outcomes. The experiment has
+three favorable properties:
+
+\textbf{Sharp discontinuity in treatment.} District boundaries change abruptly
+following redistricting, creating a sharp discontinuity in treatment assignment
+(which district a precinct belongs to) at a known calendar date. Precincts whose
+boundaries are unchanged across the redistricting cycle serve as a natural comparison
+group, while precincts that change district assignment receive the treatment.
+This design is related to geographic regression discontinuity \citep{keeleTimmons2016}
+but exploits temporal rather than spatial variation.
+
+\textbf{Pre-redistricting baseline.} Outcomes from the two election cycles immediately
+before redistricting (typically four House elections spanning eight years) provide
+a pre-period baseline against which post-redistricting outcomes can be compared.
+Because redistricting occurs at the start of each decade, a full two-term congressional
+cycle is available in both the pre- and post-period under the same map.
+
+\textbf{Plausible exogeneity of assignment mechanism.} While the decision to gerrymander
+is endogenous, the specific boundary placement within a gerrymandered map is driven by
+complex political calculations that include geographic constraints, VRA requirements,
+incumbent protection, and intra-party negotiation. This complexity makes the specific
+precinct-level district assignment difficult to fully anticipate from precinct-level
+outcome data, supporting an approximate exogeneity assumption for precinct-level analysis
+(distinct from the plan-level analysis, where endogeneity of gerrymandering is severe).
+
+\subsection{Difference-in-Differences Design}
+
+The primary identification strategy for O.1 and O.2 is a difference-in-differences (DiD)
+design that compares changes in outcomes for precincts that experienced a large district
+geometry change to precincts that experienced a small change, before and after redistricting.
+
+Let $Y_{pt}$ be the outcome (turnout, competitiveness indicator) for precinct $p$ in
+election year $t$. Let $\Delta\text{PP}_{p}$ be the change in the Polsby-Popper score
+of the district containing precinct $p$ between the pre- and post-redistricting cycles.
+The DiD estimator is:
+
+\begin{equation}
+Y_{pt} = \alpha + \beta \cdot \text{Post}_t + \gamma \cdot \Delta\text{PP}_p
+  + \delta \cdot (\text{Post}_t \times \Delta\text{PP}_p) + \mathbf{X}_{pt}'\theta + \varepsilon_{pt}
+\end{equation}
+
+where $\text{Post}_t = 1$ for election years after redistricting, $\mathbf{X}_{pt}$ is
+a vector of precinct-level covariates (median income, racial composition, urban-rural
+classification), and $\delta$ is the parameter of interest: the effect of a one-unit
+increase in Polsby-Popper change on the outcome change following redistricting.
+
+Standard errors are clustered at the district level to account for within-district
+correlation in outcomes, and at the state-year level to account for state-specific
+electoral shocks.
+
+\subsection{Instrumental Variables: The Algorithmic Instrument}
+
+For outcomes where the DiD design is subject to selection concerns (e.g., if states
+that gerrymander more aggressively also have systematically different political cultures
+that affect turnout independently of redistricting), we supplement the DiD with an
+instrumental variables design.
+
+The instrument is the \textit{algorithmic counterfactual geometry}: the Polsby-Popper
+score of the \textsc{bisect} district that contains each precinct in the algorithmic
+plan, net of the enacted district Polsby-Popper. This instrument satisfies the
+relevance condition by construction (algorithmic geometry is highly correlated with
+actual geometry in states without gerrymandering, and systematically higher in
+gerrymandered states) and the exclusion restriction by design (the algorithmic plan
+is computed without reference to any outcome variable; partisan and turnout data
+play no role in \textsc{bisect}'s partitioning).
+
+The IV estimand recovers a local average treatment effect (LATE) for the subpopulation
+of precincts whose district assignment is affected by the compactness difference between
+the enacted and algorithmic plans---in practice, precincts near the district boundaries
+where gerrymandering produces the most non-compact geometry.
+
+\subsection{Event Study Design for Polarization (O.3)}
+
+For legislative polarization, the DiD design must be applied at the legislator level
+rather than the precinct level. The design uses redistricting-cycle transitions as
+event dates: for each member of Congress, we record their DW-NOMINATE score in each
+term and interact this with whether they entered the House after a redistricting cycle
+that changed their district's geometry substantially.
+
+The event study specification:
+
+\begin{equation}
+\text{DW-NOMINATE}_{it} = \alpha_i + \alpha_t
+  + \sum_{\tau=-4}^{4} \beta_\tau \cdot \mathbb{1}[\text{cycle}_t = \tau] \cdot \Delta\text{PP}_i
+  + \varepsilon_{it}
+\end{equation}
+
+where $\alpha_i$ is a member fixed effect, $\alpha_t$ is a Congress fixed effect,
+$\tau$ indexes election cycles relative to the redistricting event, and $\Delta\text{PP}_i$
+is the Polsby-Popper change for member $i$'s district in the redistricting event.
+Coefficients $\beta_\tau$ for $\tau < 0$ serve as pre-trend tests; $\beta_\tau$ for
+$\tau \geq 0$ estimate the dynamic treatment effect of compactness changes on polarization.

@@ -1,0 +1,64 @@
+\section{Combined Effect Analysis}
+\label{sec:effect}
+
+\subsection{Individual Bounds}
+
+From the preceding sections:
+\begin{itemize}
+\item Population manipulation ($\pm 1\%$ per tract): $\Delta D \leq 0.4$ seats
+\item Shapefile adjacency manipulation: $\Delta D \leq 0.4$ seats
+\item ACS demographic manipulation: $\Delta D \leq 0.1$ seats
+\end{itemize}
+
+\subsection{Why the Combined Effect Does Not Exceed 0.4 Seats}
+
+All three attacks share the same geometric bottleneck: competitive-district
+geography.
+A competitive district is one where the Democratic vote share is within
+3--5 percentage points of 50\%.
+In 2020, there were approximately 45 competitive congressional districts
+nationally.
+
+Each of the three attacks can, at most, flip one or two of these districts.
+But flipping the same district via two different attacks does not double
+the effect---a district either flips or it doesn't.
+The attacks are therefore largely substitutes, not complements.
+
+Furthermore, the three attacks require different kinds of data access:
+population manipulation requires write access to P.L.\ 94-171 files;
+shapefile manipulation requires write access to TIGER/Line files;
+ACS manipulation requires write access to ACS tables.
+An adversary who has write access to all three simultaneously has
+effectively compromised the entire data pipeline---which is already
+detected by the audit chain.
+
+\subsection{The $\pm 1\%$ Threshold}
+
+We use $\pm 1\%$ as the attack magnitude because:
+\begin{itemize}
+\item It is within the Census Bureau's acknowledged margin of error
+  for tract-level population estimates (differential privacy noise
+  at the block level, aggregated to tracts).
+\item It is small enough that a manipulation of this magnitude might be
+  attributed to legitimate data correction rather than intentional gaming.
+\item It is precisely the threshold at which the effect is still within
+  B.7's noise floor.
+\end{itemize}
+
+For manipulations $> 1\%$ per tract, the effect grows approximately
+linearly until saturation at competitive-district thresholds.
+At $\pm 5\%$ per tract, $\Delta D$ might reach 1--2 seats nationally,
+but such a manipulation would be easily detectable through comparison
+with independently-sourced Census data.
+
+\subsection{Below the Noise Floor}
+
+B.7~\citep{b7paper} establishes that the seed-variance noise floor for
+\bisect{} is approximately $\sigma \approx 0.8$ seats nationally.
+The combined V2 attack maximum of 0.4 seats is within $0.5\sigma$ of zero---
+indistinguishable from natural algorithmic variation.
+
+This means that even a successful (undetected) combined V2 attack would
+produce partisan outcomes that cannot be confidently attributed to the
+attack rather than to legitimate algorithmic variation.
+The attack is both bounded and non-attributable.

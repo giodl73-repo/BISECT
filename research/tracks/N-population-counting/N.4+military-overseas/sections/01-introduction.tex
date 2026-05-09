@@ -1,0 +1,35 @@
+\section{Introduction}
+
+The United States military is, by some measures, the largest geographically mobile institution in the country. Active-duty personnel are assigned to installations by orders they cannot refuse; they live where the military places them, often far from the states and communities they call home. Their dependents follow. When the decennial Census enumerates the population, it must make a choice: count military personnel where they are physically located, or count them where their home-of-record indicates they belong.
+
+The answer is neither simple nor uniform. For domestic personnel stationed in the United States, the Census counts them at their installation residence---the barracks, base housing, or off-base apartment where they live while stationed. For overseas personnel (deployed abroad, stationed at foreign bases, or on ships at sea), the Census uses a different rule: it counts them at their home-of-record state for the purpose of congressional apportionment, then allocates them to their home-state at the state level for apportionment purposes, but does not allocate them to specific tracts for redistricting purposes.
+
+The result is a two-tier treatment with distinct redistricting consequences:
+
+\begin{enumerate}
+    \item \textbf{Domestically stationed military} are counted at their physical location, inflating the population of installation-adjacent census tracts and congressional districts.
+    \item \textbf{Overseas military and dependents} are counted at the state level but do not add to any specific census tract, meaning they do not directly inflate any specific congressional district.
+\end{enumerate}
+
+Both effects have measurable redistricting consequences. This paper focuses primarily on the first---domestic installation concentrations---because it produces the tract-level distortions that propagate through algorithmic redistricting. We address the overseas population as context and for the purpose of explaining BISECT's data handling.
+
+\subsection{Scale of the Population}
+
+As of the 2020 Census, the military and dependent population relevant to redistricting includes:
+\begin{itemize}
+    \item Approximately 1.4 million active-duty personnel stationed domestically
+    \item Approximately 700,000 dependents of domestically stationed active-duty personnel
+    \item Approximately 600,000 overseas active-duty personnel and their dependents (counted at home-of-record state, not at tract level)
+    \item Approximately 800,000 National Guard and Reserve personnel (counted at their civilian residence, not installation; not discussed further here)
+\end{itemize}
+
+The approximately 2.1 million domestically stationed military and dependents are distributed across hundreds of installations in every state, but with extreme concentration: the 20 largest installations account for approximately 60\% of the total.
+
+\subsection{Research Questions}
+
+\begin{enumerate}
+    \item How does the Census Bureau's military population counting framework affect census-tract-level population weights, and therefore BISECT's graph partitioning?
+    \item Which states and districts are most affected by military population concentration?
+    \item What is the partisan direction of military population counting, and how does it interact with algorithmic redistricting's partisan neutrality?
+    \item How should BISECT handle military populations in sensitivity analyses?
+\end{enumerate}

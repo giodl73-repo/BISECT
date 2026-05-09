@@ -1,0 +1,67 @@
+\section{The Five Parameters and Their Ranges}
+\label{sec:parameters}
+
+The \bisect{} algorithm exposes five parameters that a deploying authority
+must choose.
+Table~\ref{tab:params} lists the parameters, their technical roles, default
+values, and admissible ranges.
+
+\begin{table}[h]
+\centering
+\caption{The five \bisect{} parameters. Default is the DIA-recommended value.
+         Admissible range is the technically valid range for which the algorithm
+         produces legally compliant districts (contiguous, population-balanced,
+         VRA-compliant).}
+\label{tab:params}
+\begin{tabular}{llccl}
+\toprule
+Parameter & Symbol & Default & Admissible range & Technical role \\
+\midrule
+METIS imbalance & $\ufactor$ & 1.0\% & 0.1\%--5.0\% & Population balance tolerance \\
+County edge weight & $\acounty$ & 3.0 & 1.0--10.0 & County integrity preservation \\
+Convergence threshold & $T$ & 600 & 100--1{,}000 & \cs{} stopping criterion \\
+Area swing & $\aswing$ & 1.10 & 1.05--1.20 & Area/compactness tradeoff \\
+VRA boost weight & $\wvra$ & 0.40 & 0.2--0.6 & Minority community protection \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Parameter Interpretations}
+
+\paragraph{$\ufactor$ (METIS imbalance factor).}
+METIS's $k$-way partition algorithm accepts a population imbalance tolerance.
+At $\ufactor = 1\%$, no district may deviate more than 1\% from ideal
+population.
+At $\ufactor = 5\%$, deviations up to 5\% are permitted.
+Higher $\ufactor$ gives the partitioner more freedom to optimise compactness
+at the cost of population equality.
+Federal courts require districts to be ``as equal as practicable'';
+$\ufactor \leq 1\%$ is the standard for congressional plans.
+
+\paragraph{$\acounty$ (county edge weight).}
+Edges between census tracts in the same county receive weight $\acounty$
+(default: 3) relative to cross-county edges (weight: 1).
+Higher $\acounty$ encourages the bisection to avoid splitting counties.
+At $\acounty = 1$, county membership is ignored; at $\acounty = 10$,
+county boundaries are strongly preferred.
+
+\paragraph{$T$ (convergence sweep threshold).}
+The \cs{} algorithm~\citep{b16paper} sweeps seeds until $T$ consecutive
+seeds produce no improvement in the objective function.
+Higher $T$ gives a more thorough search at the cost of longer runtime.
+At $T = 100$, the algorithm occasionally misses the global optimum
+(B.7 shows the tail extends to 511 consecutive non-improving seeds for Georgia).
+At $T = 1{,}000$, runtime is nearly $10\times$ the default.
+
+\paragraph{$\aswing$ (area swing).}
+In the GeoSection (ratio-optimal) algorithm, the area tolerance parameter
+controls the permitted deviation from the ideal area-to-population ratio
+when splitting a region.
+Higher $\aswing$ permits more area imbalance in exchange for better
+population balance.
+
+\paragraph{$\wvra$ (VRA boost weight).}
+Edges adjacent to VRA-eligible minority communities receive an additional
+weight $\wvra$ to encourage the bisection to keep minority communities
+intact.
+Higher $\wvra$ provides stronger VRA protection at some compactness cost.

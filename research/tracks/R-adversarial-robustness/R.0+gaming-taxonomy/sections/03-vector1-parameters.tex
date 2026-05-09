@@ -1,0 +1,69 @@
+\section{Vector V1: Parameter Manipulation}
+\label{sec:v1}
+
+\subsection{Attack Description}
+
+The \bisect{} algorithm exposes five tunable parameters: METIS imbalance
+factor $u_{\rm factor}$, county edge weight $\alpha_{\rm county}$,
+\cs{} threshold $T$, area swing $a_{\rm swing}$, and VRA boost weight
+$w_{\rm vra}$.
+A hostile actor could observe partisan implications of each parameter setting
+and then select parameter values that favor their preferred party while
+claiming the choices are technical rather than political.
+
+The attack is particularly insidious because each parameter has a legitimate
+technical justification:
+$u_{\rm factor}$ controls population balance tolerance;
+$\alpha_{\rm county}$ controls county integrity preservation;
+$T$ controls convergence completeness;
+$a_{\rm swing}$ controls area-vs-compactness tradeoff in GeoSection;
+$w_{\rm vra}$ controls minority community protection weighting.
+
+\subsection{Maximum Achievable Shift}
+
+B.17's 50-state sweep~\citep{b17paper} provides the definitive empirical
+answer.
+Across all five parameters varied independently from most Democrat-favorable
+to most Republican-favorable settings:
+\begin{itemize}
+\item $u_{\rm factor}$: $\Delta D \leq 0.4$ nationally (0.1\% vs.\ 5\%)
+\item $\alpha_{\rm county}$: $\Delta D \leq 0.2$ nationally (1.0 vs.\ 10.0)
+\item $T$: $\Delta D \leq 0.1$ nationally (100 vs.\ 1000)
+\item $a_{\rm swing}$: $\Delta D \leq 0.2$ nationally (1.05 vs.\ 1.20)
+\item $w_{\rm vra}$: $\Delta D \leq 0.2$ nationally (0.2 vs.\ 0.6)
+\end{itemize}
+The combined maximum (additive bound): $\Delta D \leq 0.5$ seats.
+The empirical combined effect from B.17's joint sweep: $\Delta D \leq 0.3$ seats.
+
+This is comparable to the seed-variance noise floor from B.7, which
+finds a coefficient of variation below 2\% in partisan outcomes across
+random seed choices.
+
+\subsection{Why the Effect Is So Small}
+
+The insensitivity of partisan outcomes to parameter tuning reflects the
+following structural features of the algorithm (B.17, Section~5):
+\begin{enumerate}
+\item \textbf{Population neutrality}: Parameters affect how well population
+  constraints are satisfied, not which tracts land in which districts.
+\item \textbf{Geographic continuity}: The bisection tree structure is
+  determined by the prime factorisation of the district count $k$ and the
+  graph topology, not by parameter values.
+  Parameter changes alter leaf-level cut quality within a fixed tree,
+  not the tree itself.
+\item \textbf{Competitive-district geography}: Partisan outcomes depend
+  primarily on how the algorithm handles geographically marginal competitive
+  regions.
+  A parameter change that uniformly shifts district boundaries by 1--2
+  tracts will not systematically favor one party in swing regions.
+\end{enumerate}
+
+\subsection{Detection Mechanism}
+
+Under the \dia{} protocol, parameters are fixed in a publicly registered
+formula before Census redistricting data are released.
+Any parameter deviation from the formula is detectable by comparing
+the deployment manifest against the registered formula.
+The manifest includes a SHA-256 hash of the parameter configuration file;
+any change to any parameter changes the hash.
+Detection probability: $\delta_1 = 1.00$ (cryptographic guarantee).

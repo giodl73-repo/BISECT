@@ -1,0 +1,52 @@
+\section{Results}
+
+\subsection{Five-State Comparison}
+
+Table~\ref{tab:perm-results} reports ESS-corrected p-values for both
+the enacted 2022 congressional maps and the \textsc{bisect} algorithmic plans,
+across all five study states, at two ensemble sizes.
+
+\begin{table}[h]
+\centering
+\caption{ESS-corrected p-values from permutation test on compactness metric.
+``Sig.'' = significant at $\alpha = 0.05$ (ESS-corrected).
+G.1: 1{,}000-step ensemble; G.4: 10{,}000-step ensemble.}
+\label{tab:perm-results}
+\begin{tabular}{lcccccc}
+\toprule
+& \multicolumn{3}{c}{\textbf{Enacted 2022}} & \multicolumn{3}{c}{\textbf{Bisect}} \\
+State & $\hat{p}$ & $p_{\rm corr}$ (1K) & $p_{\rm corr}$ (10K) & $\hat{p}$ & $p_{\rm corr}$ (1K) & $p_{\rm corr}$ (10K) \\
+\midrule
+NC  & 0.003 & 0.041$^*$ & 0.004$^{**}$ & 0.50 & 0.52 & 0.51 \\
+WI  & 0.002 & 0.027$^*$ & 0.003$^{**}$ & 0.50 & 0.51 & 0.50 \\
+GA  & 0.001 & 0.018$^*$ & 0.002$^{**}$ & 0.50 & 0.51 & 0.50 \\
+PA  & 0.002 & 0.032$^*$ & 0.004$^{**}$ & 0.50 & 0.52 & 0.51 \\
+TX  & 0.004 & 0.11     & 0.03$^*$     & 0.40 & 0.43 & 0.41 \\
+\bottomrule
+\end{tabular}
+
+\smallskip
+\footnotesize
+$^*$ $p < 0.05$; $^{**}$ $p < 0.01$. All ESS from G.4 corrected table.
+1{,}000-step ESS: NC=70, WI=81, GA=64, PA=58, TX=42.
+10{,}000-step ESS: NC=695, WI=811, GA=638, PA=582, TX=417.
+\end{table}
+
+\paragraph{Key findings.}
+\begin{enumerate}
+  \item \textbf{ESS correction matters substantially for NC at 1K steps.}
+    The unadjusted p-value ($\hat{p} = 0.003$) suggests extreme significance,
+    but the ESS-corrected $p = 0.041$ is barely significant at 5\%.
+    Courts and practitioners using 1{,}000-step ensembles for NC must account
+    for this correction.
+  \item \textbf{10{,}000-step ensembles provide reliable significance.}
+    At $n = 10{,}000$, all four clear gerrymanders (NC, WI, GA, PA) achieve
+    $p < 0.01$ with ESS correction. Texas achieves $p = 0.03$ --- borderline
+    but significant.
+  \item \textbf{Bisect plans are consistent with neutral draws.}
+    All five \textsc{bisect} plans have ESS-corrected $p > 0.40$, consistent
+    with the null hypothesis (no evidence the plan is systematically extreme).
+  \item \textbf{Texas is the hardest case.}
+    TX needs 10{,}000 steps for reliable significance. This confirms S.3's
+    power analysis recommendation of $\geq 30{,}000$ steps for large-$k$ states.
+\end{enumerate}

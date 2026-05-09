@@ -1,0 +1,22 @@
+The demographic shift from the Rust Belt to the Sun Belt between 2020 and 2030 is
+the largest cross-decade reapportionment since 1990. Texas alone projects to gain
+three seats (38 to 41); New York projects to lose two. These changes require new
+bisection tree designs and reveal algorithmic challenges specific to fast-growth
+suburban geography.
+
+Three findings define the Sun Belt redistricting challenge.
+First, TX $k = 41$ is prime: the bisect-apportion binary fallback produces a
+20+21 top-level split, which is algorithmically sound and empirically validated
+in this paper.
+Second, Sun Belt growth is concentrated in suburban rings (Houston exurbs, Phoenix
+Valley, Atlanta suburbs), creating new design challenges where the metro-suburb
+bisection is the natural first cut but the suburb is growing faster than the city.
+Third, the alternative GeoSection algorithm (\texttt{--structure ratio-optimal})
+handles any $k$ via ratio-optimal bisection without requiring prime factorization,
+and is recommended as the preferred 2030 structure for TX and FL given their
+irregular prime factorizations.
+
+For declining states, the main algorithmic concern is large-scale district mergers:
+NY losing two seats requires merging or substantially redesigning one-seventh of
+the 2020 congressional map. Algorithmic plans provide a systematic, auditable merger
+process that enacted gerrymanders cannot.

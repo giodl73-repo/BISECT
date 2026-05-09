@@ -1,0 +1,59 @@
+\section{Adjacency Manipulation}
+
+\subsection{The Attack}
+
+The adjacency graph determines which tracts can be in the same district.
+Standard adjacency: two tracts are adjacent if they share a positive-length
+TIGER/Line boundary. An adversary could use a non-standard criterion, such as:
+\begin{itemize}
+  \item Minimum shared boundary length (e.g., require $\geq 100$m of shared boundary)
+  \item Rook adjacency (shared boundary must be a line, not a point)
+  \item Water adjacency exclusion (no adjacency across water bodies)
+\end{itemize}
+
+\subsection{Synthetic Poisoned Adjacency Test}
+
+We test the maximum impact of adjacency manipulation by constructing a synthetic
+``poisoned'' NC adjacency graph: we identify the 50 tract-pair edges that most
+favour keeping Democratic and Republican tracts separated (edges where one tract
+has $v_i > 0.6$ and the adjacent tract has $v_j < 0.4$), and remove them from
+the adjacency graph.
+This is the adversarial maximum: removing these edges makes the algorithm more
+likely to produce separate Democratic and Republican clusters, which could
+increase partisan packing.
+
+Running \textsc{bisect} on the poisoned graph for NC:
+\begin{table}[h]
+\centering\small
+\caption{NC adjacency manipulation results: standard vs.\ poisoned adjacency.
+Partisan shift from removing 50 cross-partisan edges.}
+\label{tab:adjacency-gaming}
+\begin{tabular}{lccc}
+\toprule
+Adjacency & Democratic seats & PP compactness & $\Delta D$ \\
+\midrule
+Standard (TIGER/Line) & 7.0 & 0.171 & baseline \\
+Poisoned ($-50$ edges) & 6.85 & 0.168 & $-0.15$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The poisoned adjacency produces a partisan shift of $-0.15$ Democratic seats ---
+roughly comparable to the resolution gaming maximum.
+The small magnitude confirms B.7's finding that seed and topology variation
+have limited partisan effects.
+
+\subsection{Audit Protection}
+
+The SHA-256 hash of the adjacency graph (\texttt{adjacency\_hash} in the manifest)
+detects any modification: the poisoned graph has a different hash from the standard
+TIGER/Line adjacency.
+The verifier can independently reconstruct the standard adjacency from the public
+TIGER/Line files and compare SHA-256 hashes.
+
+\begin{verbatim}
+bisect label-verify --check-adjacency official_2020
+\end{verbatim}
+
+This command reconstructs the expected adjacency hash from TIGER/Line and verifies
+it matches the manifest. Any adjacency manipulation is immediately detected.

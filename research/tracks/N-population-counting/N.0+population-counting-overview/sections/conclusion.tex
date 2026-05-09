@@ -1,0 +1,18 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+The question of who counts in congressional redistricting is simultaneously a constitutional question, a statistical question, and a political question. The Supreme Court's decision in \emph{Evenwel v. Abbott} resolved the immediate legal challenge to total-population apportionment while deliberately leaving open whether alternatives are permissible or required. The result is a legally stable but politically contested status quo in which total population remains the universal practice for congressional districts while the underlying normative debate continues.
+
+Our analysis of the 50-state divergence between total population and CVAP confirms that the metric choice is not academic. In 12 states---covering approximately 40\% of the U.S. House of Representatives---the non-citizen population is large enough to shift district boundaries, change the number of competitive districts, and affect the partisan balance of the state delegation. The effect is directional: CVAP apportionment systematically advantages Republican-leaning communities relative to the total-population baseline.
+
+For algorithmic redistricting research, the balance metric is a critical design choice that deserves explicit documentation. The BISECT platform's \texttt{--balance-metric} flag makes this choice visible and testable. Any published redistricting study should specify which balance metric was used; any comparison across studies should check whether metric differences explain observed result differences.
+
+Three recommendations follow from this analysis:
+
+\begin{enumerate}
+    \item \textbf{Transparency as a minimum standard}: Redistricting algorithms and commission reports should explicitly state their balance metric. ``We used total population'' is a statement that requires justification, not a neutral default.
+    \item \textbf{Sensitivity reporting}: Published redistricting plans should include a CVAP sensitivity analysis showing how district boundaries would shift under alternative metrics, even if the primary plan uses total population.
+    \item \textbf{Legislative clarity}: Congress or the courts should eventually resolve whether states may use CVAP for congressional redistricting; the current ambiguity invites strategic litigation without providing policy guidance.
+\end{enumerate}
+
+Track N of the BISECT research program continues this investigation with two companion papers: N.1 examines the specific distortion caused by counting incarcerated people at prison locations (prison gerrymandering), and N.4 analyzes the treatment of overseas military populations. Together, these papers establish that the balance metric question is not singular but multidimensional: even under a total-population standard, \emph{where} people are counted is as consequential as \emph{who} is counted.

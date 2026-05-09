@@ -1,0 +1,62 @@
+\section{Introduction}
+\label{sec:introduction}
+
+The Track R program (R.0--R.3) has established that all gaming vectors
+available to a hostile actor deploying the \bisect{} redistricting platform
+are either bounded below the noise floor (R.1: parameter gaming, $\leq 0.3$
+seats; R.2: input data manipulation, $\leq 0.4$ seats) or pre-specified
+by statute (R.3: geographic definitions).
+
+But bounding the maximum effect of a gaming attack is not sufficient
+for legal purposes.
+A court needs to know: given this specific plan, can we verify that no
+gaming occurred?
+This is a question of \emph{provenance}---the ability to trace the plan
+from its inputs to its outputs and verify that the computation was performed
+as claimed.
+
+Provenance has a long history in forensic science and litigation.
+The chain of custody for physical evidence establishes provenance: who
+had the evidence, when, and what they did with it.
+For algorithmic redistricting, the analogous chain of custody is
+cryptographic: SHA-256 hashes link the Census Bureau's public data releases
+through the computation to the final plan, with each link in the chain
+independently verifiable.
+
+This paper formalises the \bisect{} audit chain as a legal defense.
+We address three questions:
+\begin{enumerate}
+\item \textbf{Cryptographic}: How strong is the SHA-256 guarantee?
+  What is the probability that an adversary can tamper with any link
+  in the chain without detection?
+  (Section~\ref{sec:sha256})
+\item \textbf{Technical}: How does the three-level provenance architecture
+  work in practice, and how does \texttt{bisect label-verify} demonstrate
+  it for a specific plan?
+  (Sections~\ref{sec:provenance}--\ref{sec:demo})
+\item \textbf{Legal}: Does the audit chain satisfy the Daubert standard
+  for admissibility of scientific evidence?
+  What statutory language should a state legislature adopt to make the
+  manifest filing enforceable?
+  (Sections~\ref{sec:daubert}--\ref{sec:legal})
+\end{enumerate}
+
+\subsection{Why Reproducibility Matters in Redistricting Litigation}
+
+Expert witnesses in redistricting cases routinely present computational
+analyses to courts.
+The opposing party can challenge such analyses on the grounds that the
+expert's results are not reproducible: that running the same algorithm
+on the same data would not produce the same results, or that the expert
+has not disclosed the inputs and parameters used.
+
+The \bisect{} audit chain addresses this challenge directly.
+The manifest contains everything needed to reproduce the analysis:
+algorithm version hash, parameter configuration, data download hashes,
+adjacency construction hash, and output plan hash.
+Any qualified expert can run \texttt{bisect label-verify} and confirm---
+or refute---the original expert's claim.
+
+This converts redistricting expert testimony from a credibility contest
+(whose algorithm is more trustworthy?) into a verifiable computation
+(does the manifest check out?).

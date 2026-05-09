@@ -1,0 +1,76 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\usepackage{booktabs}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{microtype}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{titlesec}
+
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+\setstretch{1.4}
+
+%% Macros
+\newcommand{\bisect}{\textsc{bisect}}
+\newcommand{\dia}{\textsc{Districting Integrity Act}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\ar}{\textsc{ApportionRegions}}
+\newcommand{\cs}{\textsc{ConvergenceSweep}}
+
+\title{%
+  \textbf{A Taxonomy of Gaming Vectors\\
+  in Algorithmic Redistricting}\\[0.8em]
+  \normalsize\textit{R.0 --- Adversarial Robustness Track}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\section*{Keywords}
+Algorithmic redistricting, gerrymandering, adversarial robustness,
+gaming resistance, audit chain, SHA-256, parameter pre-registration,
+Districting Integrity Act
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-taxonomy-overview}
+\input{sections/03-vector1-parameters}
+\input{sections/04-vector2-input-data}
+\input{sections/05-vector3-geography}
+\input{sections/06-vectors4-5-presentation-version}
+\input{sections/07-combined-effect}
+\input{sections/08-dia-protections}
+\input{sections/09-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

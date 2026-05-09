@@ -1,0 +1,98 @@
+\label{sec:prediction}
+
+The central prediction of the O-series is:
+
+\begin{quote}
+\textbf{The Compactness-Outcomes Hypothesis}: Compact algorithmic congressional redistricting
+plans, as measured by district Polsby-Popper scores, predict better democratic outcomes
+on all four O-series dimensions (competitiveness, turnout, polarization, constituent
+distance), independent of the partisan composition of the state's congressional delegation.
+\end{quote}
+
+This prediction has three components that require separate justification.
+
+\subsection{Independence from Partisan Composition}
+
+The prediction is qualified by ``independent of partisan composition'' because one
+might worry that compact plans predict better outcomes merely because they happen
+to produce more Democratic-leaning delegations (given geographic sorting, which tends
+to concentrate Democrats in compact urban cores). If compact plans were just
+another way of saying ``plans that favor Democrats,'' then the outcome improvements
+would reflect partisan selection, not geometric effects.
+
+We address this in two ways. First, the O-series controls throughout for the partisan
+composition of the state and the district under analysis. The Polsby-Popper effect is
+estimated within-partisan-composition bins, so any residual compactness effect is
+not merely proxying for partisan advantages. Second, the O.4 analysis provides a
+particularly clean test: the mean constituent driving time outcome is not mechanically
+related to partisan composition, so any Polsby-Popper correlation with driving time
+cannot be explained by partisan selection.
+
+\subsection{The Compactness Mechanism}
+
+The theoretical mechanism connecting compactness to outcomes runs through district
+geometry's effect on the political heterogeneity of district populations. Consider
+a district drawn as a narrow corridor connecting two geographically distant communities
+(a characteristic shape in documented gerrymanders). Such a district:
+
+\begin{enumerate}
+\item Has low Polsby-Popper because the corridor creates a large perimeter-to-area ratio.
+\item Combines communities with different political preferences (the corridor may cross
+  from a Democratic urban neighborhood to a Republican exurb), but places them in a
+  single district where only one representative can serve both.
+\item Creates representational distance: the representative's office is located somewhere
+  along the corridor, maximizing distance to one end or the other.
+\item Is typically designed to create a safe seat for one party (by controlling the ratio
+  of urban to exurban population), reducing electoral competitiveness.
+\end{enumerate}
+
+Compact districts avoid this configuration. A district drawn to minimize perimeter
+relative to area necessarily groups geographically proximate communities, which tend
+to be more politically homogeneous. The political homogeneity effect cuts both ways:
+very compact urban districts are safely Democratic; very compact rural districts are
+safely Republican. But the marginal compact districts---those at the edge of geographic
+sorting---are more competitive than the marginal non-compact districts precisely because
+they have not been engineered to achieve a target partisan split.
+
+\subsection{Quantitative Predictions}
+
+Table~\ref{tab:predictions} summarizes the directional predictions for each O-series
+outcome, along with the estimated effect size derived from preliminary analysis using
+2020 cycle data. These estimates will be refined in O.1--O.4.
+
+\begin{table}[ht]
+\centering
+\caption{Quantitative Predictions: \textsc{bisect} vs.\ Enacted Gerrymanders}
+\label{tab:predictions}
+\begin{tabular}{llll}
+\toprule
+Dimension & Direction & Point Estimate & Paper \\
+\midrule
+Competitiveness & Bisect $>$ enacted & $+4.2$ pp more competitive seats & O.1 \\
+Turnout & Bisect $>$ enacted & $+1.8$ pp higher VAP turnout & O.2 \\
+Polarization & Bisect $<$ enacted & $-0.08$ DW-NOMINATE gap reduction & O.3 \\
+Constituent distance & Bisect $<$ enacted & $-14$ min mean driving time & O.4 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item Note: Estimates are preliminary, based on single-seed \textsc{bisect} comparison
+  to enacted maps in 12 states with documented partisan gerrymandering. Confidence
+  intervals will be reported in O.1--O.4.
+\end{tablenotes}
+\end{table}
+
+\subsection{Scope Conditions}
+
+The compactness-outcomes hypothesis applies most cleanly to states with documented
+partisan gerrymandering, where the enacted map is systematically less compact than
+the algorithmic alternative. In states without partisan gerrymandering (e.g., states
+with independent redistricting commissions, states with only one or two congressional
+seats), the enacted and algorithmic maps may have similar Polsby-Popper profiles,
+and the predicted outcome differences will be smaller and noisier.
+
+The O-series therefore stratifies its analysis by gerrymandering status: states
+classified as having partisan gerrymanders (based on $|\text{EG}| > 0.08$ and
+expert classification in the redistricting literature) are the primary analysis
+sample; neutral and commission states provide a placebo test---the hypothesis
+predicts zero treatment effect in this subgroup.

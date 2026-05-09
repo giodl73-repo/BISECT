@@ -1,0 +1,107 @@
+\label{sec:mechanism}
+
+\subsection{The Neck Geometry}
+
+The mechanism connecting low compactness to high constituent driving time operates
+primarily through what we call the district ``neck''---the narrow corridor that
+connects two geographically distant population centers in a non-compact district.
+A canonical gerrymandered district has the following geometric structure:
+
+\begin{enumerate}
+\item A \textit{core} region containing one population group (typically urban, Democratic-leaning
+  in a Republican gerrymander).
+\item A \textit{neck} corridor of minimal width connecting the core to an arm.
+\item An \textit{arm} region containing the other population group (typically suburban
+  or exurban).
+\end{enumerate}
+
+This structure minimizes the perimeter-to-area ratio \textit{of the core and arm} while
+maximizing political homogeneity within each subregion---but the neck dramatically
+increases the overall perimeter, reducing Polsby-Popper. Simultaneously, the neck
+creates a geographic stretch: the population-weighted centroid of the district falls
+somewhere along the neck (because population is distributed between core and arm),
+but no one lives on the neck itself, and the representative's district office is
+located in either the core or the arm.
+
+Formally, we define the \textit{neck width ratio} as:
+
+\begin{equation}
+\text{NWR} = \frac{w_{\text{min}}}{d_{\text{max}}}
+\end{equation}
+
+where $w_{\text{min}}$ is the minimum width of the district (the minimum diameter of
+any cross-section perpendicular to the district's long axis) and $d_{\text{max}}$ is
+the maximum internal distance (the diameter of the district's convex hull). A compact
+district with a roughly convex shape has NWR $\approx 0.5$--$0.8$; a district with
+a narrow neck has NWR $< 0.15$.
+
+We compute NWR for all 432 districts using the following procedure:
+(1) generate the district's convex hull; (2) find the diameter of the convex hull
+(the pair of vertices with maximum distance); (3) project the district polygon onto
+the axis perpendicular to the diameter direction; (4) identify the minimum width along
+this projection. Computationally, this requires generating 180 rotated projections
+per district (at 1-degree intervals) and taking the minimum.
+
+The NWR distribution across the 432 districts has median 0.44 (SD = 0.21), with 41
+districts (9.5\%) having NWR $< 0.15$ (indicating clear neck geometry). These
+41 districts have a mean driving time of 68.3 minutes, compared to 38.1 minutes
+for districts with NWR $> 0.30$.
+
+\subsection{Office Location Choices Under Neck Geometry}
+
+An important secondary effect of neck geometry is that representatives from non-compact
+districts must make a choice of office location that systematically disadvantages one
+sub-community. A representative whose district contains a urban core in the north and
+a rural arm in the south, connected by a narrow corridor, will locate their primary
+office in whichever sub-community contains more voters. The other sub-community faces
+dramatically elevated driving times.
+
+To measure this effect, we compute the \textit{office location bias}: for each district,
+the ratio of the 90th-percentile tract driving time to the 10th-percentile tract driving
+time. A perfectly central office location would produce a ratio near 1; an office
+located at one end of a non-compact district produces a ratio substantially above 1.
+
+\begin{table}[ht]
+\centering
+\caption{Office Location Bias by Compactness Quartile}
+\label{tab:bias}
+\begin{tabular}{lrrrr}
+\toprule
+Compactness Quartile & Mean PP & Mean Driving Time & P90/P10 Ratio & $n$ \\
+\midrule
+Q1 (least compact) & 0.09 & 56.2 & 3.8 & 108 \\
+Q2 & 0.18 & 43.7 & 2.9 & 108 \\
+Q3 & 0.28 & 37.4 & 2.4 & 108 \\
+Q4 (most compact) & 0.41 & 31.8 & 1.9 & 108 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item P90/P10 Ratio: ratio of 90th-percentile tract driving time to 10th-percentile
+  tract driving time within district. Higher values indicate more unequal access.
+\end{tablenotes}
+\end{table}
+
+The P90/P10 ratio---a measure of within-district access inequality---rises monotonically
+from 1.9 in the most compact quartile to 3.8 in the least compact quartile. Constituents
+in non-compact districts not only face longer average travel times but face more unequal
+access: in the least compact quartile, a constituent at the 90th percentile of travel
+time faces a journey 3.8 times longer than a constituent at the 10th percentile within
+the same district. This within-district inequality is a distinct harm from the aggregate
+driving time effect.
+
+\subsection{Comparison with \textsc{bisect} Plans}
+
+The \textsc{bisect} algorithm's minimum-edge-cut objective naturally avoids neck geometry.
+A neck corridor represents a small number of edges connecting large sub-communities;
+cutting those edges is precisely what the METIS partitioner seeks to minimize. As a result,
+\textsc{bisect} plans have substantially fewer districts with NWR $< 0.15$: only 8 of
+180 \textsc{bisect} districts in the gerrymandered states have NWR $< 0.15$, compared to
+28 of 180 enacted districts ($p < 0.001$, Fisher exact test).
+
+The absence of neck geometry in \textsc{bisect} plans is not a design choice but an
+emergent consequence of the objective function: minimum edge cuts on the geographic
+adjacency graph produce districts where each pair of adjacent tracts shares a substantive
+border, eliminating the single-edge connections that create geographic necks. This
+provides a mechanism explanation for the driving time reduction in \textsc{bisect}
+plans that does not require any additional assumptions about representative behavior.

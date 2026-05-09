@@ -1,0 +1,106 @@
+\label{sec:construction}
+
+\subsection{The Block-Group Adjacency Build Process}
+
+Building a block-group adjacency graph for a state requires four steps:
+
+\begin{enumerate}
+\item \textbf{Download block-group shapefiles}: The Census Bureau's TIGER/Line program
+  distributes block-group shapefiles at the state level for each census year. Each shapefile
+  contains the polygon geometry for every block group in the state. File sizes range
+  from $\sim$1 MB (Wyoming) to $\sim$85 MB (California) for the 2020 geometries.
+
+\item \textbf{Compute shared boundaries}: For each pair of block groups, determine whether
+  they share a positive-length border. Two block groups are adjacent if their polygons
+  share at least one edge segment of positive length. This is computed using the
+  \textsc{bisect-data} crate's \texttt{SharedBoundaryDetector}, which uses a spatial
+  index (R-tree) to identify candidate pairs and then computes exact boundary lengths
+  using geometric intersection.
+
+\item \textbf{Filter water adjacency}: Block groups separated only by water bodies
+  (rivers, lakes, coastal waters) are not considered adjacent for redistricting purposes.
+  The TIGER/Line water area shapefiles are used to identify and remove water-crossing
+  adjacency edges.
+
+\item \textbf{Validate connectivity}: The resulting adjacency graph must be fully connected
+  for each state (every block group reachable from every other). Island block groups
+  (physically separated from the mainland) require special handling: they are connected
+  to their nearest mainland neighbor by a pseudo-edge, with a weight of 0 to indicate
+  that no actual shared boundary exists.
+\end{enumerate}
+
+The \textsc{bisect} CLI command encapsulates this process:
+
+\begin{verbatim}
+bisect fetch --year 2030 --resolution block-group \
+  --state <FIPS> --workers 8
+\end{verbatim}
+
+Running without \texttt{--state} processes all 50 states sequentially. The \texttt{--workers}
+flag parallelizes the spatial intersection computation within each state.
+
+\subsection{Scale Comparison: Tract vs.\ Block Group}
+
+\begin{table}[ht]
+\centering
+\caption{Adjacency Graph Scale: Tract vs.\ Block-Group Resolution}
+\label{tab:scale}
+\begin{tabular}{lrrrr}
+\toprule
+ & \multicolumn{2}{c}{Tract Resolution} & \multicolumn{2}{c}{Block-Group Resolution} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+Metric & National & TX & National & TX (est.) \\
+\midrule
+Vertices (geographic units) & 242,335 & 5,411 & $\sim$1,220,000 & $\sim$27,200 \\
+Edges (adjacency pairs) & $\sim$712,000 & $\sim$16,800 & $\sim$3,580,000 & $\sim$85,000 \\
+Graph file size (compressed) & 18 MB & 0.4 MB & $\sim$90 MB & $\sim$2.0 MB \\
+Peak RAM during construction & $\sim$2.8 GB & $\sim$0.06 GB & $\sim$14 GB & $\sim$0.3 GB \\
+Construction time (8 cores) & 4.2 hrs & 0.09 hrs & $\sim$21 hrs & $\sim$0.45 hrs \\
+\midrule
+50-state bisect sweep time & \multicolumn{2}{c}{87 min} & \multicolumn{2}{c}{$\sim$90 min (est.)} \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item Block-group estimates based on 5$\times$ scaling from tract measurements.
+  Actual times will depend on 2030 block-group geography and hardware configuration.
+  Bisect sweep time at block-group resolution is similar to tract because METIS runtime
+  scales with adjacency complexity (edges), not raw vertex count.
+\end{tablenotes}
+\end{table}
+
+The most important observation in Table~\ref{tab:scale} is that the 50-state redistricting
+sweep time at block-group resolution is estimated to be approximately the same as at
+tract resolution (90 minutes). This is because the bottleneck in the bisection process
+is not loading the adjacency graph but running METIS partitioning, which scales with
+the number of adjacency edges cut in each bisection step. For a state with $n$ block
+groups and $k$ districts, each METIS call operates on a subgraph of size $n/2^d$ at
+depth $d$; the total work is $O(n \log k)$ at both resolutions, with a constant factor
+determined by the edge density.
+
+\subsection{Validation Protocol}
+
+Each block-group adjacency graph requires validation before it can be used for
+redistricting. The validation protocol has three checks:
+
+\textbf{Connectivity check}: Run BFS from an arbitrary start block group; verify
+that all block groups are reachable. Failure indicates a missing pseudo-edge
+for an island block group.
+
+\textbf{Population balance check}: Verify that the sum of block-group populations
+equals the state's P.L.\ 94-171 total population (within rounding). Large discrepancies
+indicate group quarters allocation errors or misaligned geography vintage.
+
+\textbf{Boundary length check}: For the 1\% of adjacent pairs with the largest shared
+boundary lengths, manually verify that the computed boundary makes geographic sense
+using the Census Bureau's TIGER/Line viewer. This catches projection errors (where
+two block groups in different parts of the state have an apparent boundary due to
+coordinate system issues) that are rare but have caused redistricting errors in
+prior cycles.
+
+The full validation protocol is documented in \texttt{bisect-data/validation/}
+and can be run as:
+
+\begin{verbatim}
+bisect label-verify <label> --year 2030 --resolution block-group
+\end{verbatim}

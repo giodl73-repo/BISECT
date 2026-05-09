@@ -1,0 +1,37 @@
+The DIA is structured around five core architectural choices, each of which responds to a specific legal or political constraint.
+
+\subsection{Algorithm Specification, Not Criteria}
+
+The DIA specifies a particular algorithm---recursive bisection with METIS edge-cut optimization---rather than criteria that a map must satisfy. This is the DIA's most distinctive and controversial design choice. Alternative designs that specify only criteria (contiguity, compactness, population equality) leave substantial room for partisan manipulation within those criteria: a skilled mapmaker can produce maps that satisfy all listed criteria while still dramatically favoring one party.
+
+The algorithm-specification approach eliminates this residual manipulation space. Once the algorithm, its inputs, and its parameters are fixed, the output is deterministic. There is no manipulation space because there is no human mapmaker making choices about how to satisfy the criteria.
+
+The precedent for algorithm specification is the Apportionment Act of 1941, discussed in Section~5. Congress specified not merely that apportionment should be ``proportional'' but that it should use the equal-proportions method with specific mathematical formulation. This level of specificity is both constitutionally permissible and practically necessary to prevent gaming.
+
+\subsection{Byte-Reproducibility as the Verification Standard}
+
+The DIA's verification standard is byte-reproducibility: any person, using the reference binary distributed by the Census Bureau, can run the algorithm on public inputs and produce a map that is identical, byte-for-byte, to the officially adopted plan. This standard is more demanding than the ``reasonable person'' standard common in administrative law, but it is achievable and it resolves disputes mechanically rather than judicially.
+
+The manifest format in the \texttt{bisect} platform implements this standard. The manifest records the binary version (SHA-256 hash), the input adjacency file (SHA-256 hash), and the census release identifier. Any party can verify a plan by:
+\begin{verbatim}
+bisect label-verify <label> --year 2020
+\end{verbatim}
+If verification fails, the plan is presumptively invalid. If it succeeds, the plan satisfies the statutory requirement. Courts do not need to evaluate cartographic expertise; they evaluate a hash.
+
+\subsection{VRA Preservation: The Modification Protocol}
+
+The DIA requires that the algorithm's output serve as the baseline from which VRA-required modifications are made. Where \textit{Thornburg v. Gingles}, 478 U.S.\ 30 (1986), and the three-part test it established compel creation or preservation of majority-minority districts, the state may---and under DIA \S106(b), \emph{shall}---modify the baseline to comply.
+
+Critically, each modification must be documented: the specific \textit{Gingles} prongs satisfied, the minority community affected, and the tract-level changes made. This documentation requirement serves two purposes. It limits modification to VRA-required adjustments (preventing use of the VRA exception as a general escape hatch) and it creates a record for subsequent litigation. Under \textit{Allen v. Milligan}, 599 U.S.\ 1 (2023), Section 2 of the VRA remains a robust constraint; the DIA's modification protocol implements that constraint in a verifiable way.
+
+\subsection{State Execution, Federal Floor}
+
+The DIA does not draw maps for states. States retain responsibility for running the algorithm, publishing the outputs, and managing the VRA modification process. The federal government distributes the reference binary, maintains the parameter table, and provides a safe harbor against liability for binary defects. This structure preserves state sovereignty in execution while establishing a federal floor below which states cannot fall.
+
+The ``safe harbor for binary defects'' provision (DIA \S107(d)) addresses a practical concern: if the reference binary has a bug, states that relied on it in good faith should not be penalized. This provision is necessary for states to trust the federal binary and is analogous to good-faith reliance doctrines in tax and regulatory contexts.
+
+\subsection{Timeline and Enforcement}
+
+The DIA requires publication of the baseline plan within 180 days of receiving the decennial census redistricting data for states with eight or fewer congressional districts, and within 270 days for larger states. This tiered timeline reflects the difference in computational and administrative complexity between small and large states.
+
+Enforcement is through private right of action in three-judge district courts, with asymmetric fee-shifting: plaintiffs who successfully enforce VRA-protective provisions recover fees; plaintiffs who challenge the algorithm itself on partisan grounds do not. A 30-day cure period applies to non-VRA technical defects, giving states opportunity to correct errors without immediate litigation exposure. Criminal penalties apply to any state official who attempts to substitute a politically drawn map for the algorithm's output.
