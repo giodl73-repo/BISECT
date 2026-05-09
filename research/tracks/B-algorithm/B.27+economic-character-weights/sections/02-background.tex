@@ -1,0 +1,98 @@
+\label{sec:background}
+
+\subsection{LODES Workplace Area Characteristics}
+
+The Longitudinal Employer-Household Dynamics (LEHD) program at the U.S.\
+Census Bureau publishes the Origin-Destination Employment Statistics (LODES)
+dataset annually \citep{abowd2009lodes}.
+LODES version~8 covers employment years 2002--2021 and provides, among
+other files, the Workplace Area Characteristics (WAC) table.
+The WAC file contains one row per census block, identified by a
+15-character GEOID (\texttt{w\_geocode}), and reports the count of jobs
+located in that block broken down by NAICS sector (\texttt{CNS01}--\texttt{CNS20})
+as well as the total (\texttt{C000}).
+
+LODES WAC is designed to characterize the economic activity \emph{located at}
+a workplace, not the residences of the workers.
+This distinction is critical for redistricting: we want to know what kind of
+economic activity happens in a given tract, which is what WAC measures.
+The complementary Origin Area Characteristics (OAC) file would measure the
+economic activities of workers who live in each tract---a different, less
+relevant question for geographic community character.
+
+Block-level data are aggregated to census tracts by taking the first 11
+characters of the 15-character block GEOID, which is the standard
+Census Bureau encoding of the state (2 digits), county (3 digits),
+and census tract (6 digits) identifiers.
+After aggregation, each tract has a total job count and a breakdown across
+20 NAICS sectors.
+
+\paragraph{Data availability.}
+WAC files are available for all 50 states from the LEHD portal
+(\url{https://lehd.ces.census.gov/data/}).
+The 2020 vintage used in this paper aggregates jobs reported during
+calendar year 2020.
+For a state like North Carolina, the WAC data covers 2,655 tracts after
+block-to-tract aggregation; Wisconsin covers 1,527 tracts; Texas covers
+6,877 tracts.
+Tracts that appear in the census geography but have no WAC records are
+purely residential (no workplace establishments) and receive a zero
+character vector, handled gracefully by the implementation
+(Section~\ref{sec:algorithm}).
+
+\subsection{Related Work: Economic Geography and Redistricting}
+
+The relationship between economic geography and partisan sorting has been
+documented extensively in the redistricting literature.
+\citet{rodden2019} shows that the residential segregation of urban and
+rural economic communities---the dense, mixed-use employment centers of
+cities versus the dispersed residential and agricultural economy of
+exurbs---is a primary driver of the urban-suburban partisan gap that makes
+geographic compactness criteria structurally disadvantageous to Democratic voters.
+Standard geographic boundary-length weights encode and reinforce this
+sorting, because the boundaries that METIS most avoids cutting are precisely
+those that run along the dense urban-suburban economic transition.
+
+Economic character weights offer a potential partial correction.
+If commercial corridors and employment centers are used as cut seams rather
+than as interior territory of residential districts, the resulting districts
+may better reflect the actual community structure of the state.
+This is not a partisan adjustment---no electoral data enters the
+computation---but a community-structure adjustment that may incidentally
+improve proportionality where economic and partisan geographies are aligned.
+
+\citet{altman2011modeling} proposed using socioeconomic indicators as
+community-of-interest proxies in redistricting.
+Their approach relied on American Community Survey (ACS) socioeconomic
+variables at the census-tract level.
+LODES WAC provides a different and arguably more direct signal: observed
+workplace employment by sector, rather than inferred socioeconomic status
+from residential survey data.
+
+\citet{stephanopoulos2012redistricting} argues for a ``territorial community''
+framework in redistricting law that would require districts to reflect
+coherent economic and social communities rather than merely minimizing
+boundary disruption.
+Economic character edge weights can be understood as a computational
+implementation of this principle within the existing algorithmic framework.
+
+\subsection{Edge Weight Design in Algorithmic Redistricting}
+
+The \textsc{bisect} platform uses a three-layer compositor
+\citep{bisect2024}.
+Layer~2 (edge and vertex weights) has evolved over the course of the
+B-track papers.
+B.10 introduced subdivision-respecting (county) weights that strengthen
+edges between tracts sharing the same county \citep{b10county}.
+B.14 introduced VRA-aligned weights that strengthen edges between
+minority-majority tracts to protect majority-minority districts \citep{b14vra}.
+Economic character (B.27) introduces a third class of Layer~2 modification:
+similarity-based weights that depend on the economic profile of the tracts
+being connected rather than on their administrative membership or
+demographic composition.
+
+The cosine similarity formulation used here follows standard practice in
+information retrieval and machine learning for comparing non-negative
+document vectors \citep{manning2008ir}.
+Its application to geographic tract comparison is, to our knowledge, novel
+in the redistricting literature.

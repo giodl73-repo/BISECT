@@ -1,0 +1,37 @@
+Economic communities of interest---workers in the same industry cluster,
+residents sharing a commercial corridor, communities organized around a
+manufacturing employer---are among the oldest recognized forms of community
+of interest in redistricting law.
+Yet most algorithmic redistricting systems have no mechanism to preserve them.
+This paper presents M.1, the first paper in the M-track community character
+series, which operationalizes economic community membership through the
+Census Bureau's LODES Workplace Area Characteristics (WAC) data.
+
+For each census tract we compute a three-dimensional economic character vector:
+commercial intensity (fraction of jobs in retail, finance, information, and
+real estate), industrial fraction (fraction of jobs in agriculture, mining,
+manufacturing, and transportation), and jobs per resident (total jobs divided
+by resident population, capped at 10).
+Edge weights between adjacent tracts are modulated by the cosine similarity
+between their character vectors: similar tracts (both residential, both
+commercial, both industrial) receive heavier edges that METIS avoids cutting;
+dissimilar tracts receive lighter edges that invite cuts at economic zone
+transitions.
+
+Evaluated on North Carolina ($k=14$), Wisconsin ($k=8$), and Texas ($k=38$),
+the method produces a 14.3\,pp proportionality gap improvement in North
+Carolina (from $-$20.7\,pp to $-$6.4\,pp) as the Research Triangle Park
+employment concentration and the Charlotte commercial corridor emerge as
+natural cut seams.
+Wisconsin shows no effect, as expected when economic geography is diffuse.
+Texas shows a 2.6\,pp worsening, consistent with industrial clusters being
+embedded in Republican-leaning suburban areas.
+
+The M-track primary metric---mean within-district standard deviation of
+\texttt{jobs\_per\_resident}---captures economic community coherence directly.
+NC results are confirmed from an actual pipeline run; full 50-state
+within-district variance analysis is Phase~2.
+The LEHD LODES data is annual, free, publicly available, and contains no
+racial or partisan content, making this signal among the most legally
+defensible community-of-interest operationalizations available to
+redistricting practitioners.

@@ -1,0 +1,163 @@
+\label{sec:legal}
+
+\subsection{Communities of Interest Doctrine and Economic Communities}
+
+The redistricting criterion of preserving ``communities of interest'' has
+deep roots in American redistricting practice.
+The National Conference of State Legislatures surveyed state redistricting
+criteria in 2021 and found that 35 states include some form of communities
+of interest as a redistricting criterion, either in state constitutions,
+statutes, or commission guidelines \citep{ncsl2021criteria}.
+
+Economic community membership---workers and residents sharing an economic
+zone, an industrial employer, a commercial district, or a labor market
+area---is among the most widely recognized subcategories.
+The legal foundation is explicit in multiple states.
+
+\paragraph{California Proposition 11 (2008).}
+The Voters First Act established California's Citizens Redistricting
+Commission and listed communities of interest as the second redistricting
+criterion (after equal population and VRA compliance) \citep{caprop11}.
+The Commission's 2011 and 2021 proceedings both accepted economic community
+characterizations from public testimony, including testimony about
+agricultural communities in the Central Valley and tech industry communities
+in Silicon Valley.
+The LODES WAC-based economic character vector operationalizes these
+characterizations: a Central Valley agricultural tract ($\mathrm{IF} > 0.4$)
+and an adjacent residential suburb ($\mathrm{IF} < 0.05$) have low cosine
+similarity, making the district boundary between them more natural.
+
+\paragraph{Arizona Proposition 106 (2000).}
+Arizona's Independent Redistricting Commission criteria list ``communities
+of interest'' including ``economic and social interests'' \citep{azircprop106}.
+The Commission's proceedings have accepted testimony about economic communities
+since its first redistricting cycle in 2001.
+Arizona's ranching and farming communities, technology corridors in
+Scottsdale and Tempe, and copper mining towns in southeastern Arizona are
+all recognizable in the LODES WAC data.
+
+\paragraph{Colorado Constitution, Article V, Section 44.}
+Colorado's independent redistricting commission criteria explicitly list
+``communities of interest'' and provide examples that include ``economic
+interests'' and ``trade area'' community membership \citep{coart5s44}.
+The trade area concept---communities that share a retail trade zone or
+labor market area---maps directly onto the JPR and CI signals in the
+economic character vector.
+
+\paragraph{Washington RCW 44.05.090.}
+Washington's redistricting law requires preservation of ``communities
+of related and mutual interests'' and has been interpreted to include
+economic communities in Commission practice \citep{warcw44}.
+Washington's port communities (Seattle, Tacoma, Bellingham), agricultural
+communities (Eastern Washington irrigated farmland), and technology
+corridors (Redmond, Bellevue) are all distinguishable through the
+LODES WAC economic character signals.
+
+\subsection{Partisan Neutrality: The Legal Requirement}
+
+Following \textit{Rucho v.\ Common Cause} \citeyearpar{rucho2019}, federal
+courts cannot adjudicate partisan gerrymandering claims.
+State courts in North Carolina, Wisconsin, Pennsylvania, and elsewhere
+have increasingly applied state constitutional standards.
+The most common standard is that maps must not have been drawn predominantly
+to achieve a partisan advantage.
+
+Economic character weights satisfy this standard structurally because no
+electoral data enters the computation.
+The inputs are:
+\begin{itemize}
+  \item NAICS-sector job counts (LODES WAC, Census Bureau administrative data)
+  \item Total population (2020 decennial census)
+  \item Tract-to-tract adjacency (TIGER/Line shapefiles)
+\end{itemize}
+None of these inputs contains voter registration data, election results,
+precinct boundaries, or any other partisan signal.
+
+Any partisan effect of economic character weights---such as the NC-14 gap
+improvement demonstrated in Section~\ref{sec:results}---is a consequence of
+the geographic correlation between economic activity and partisan sorting.
+This correlation is a feature of the population landscape, not a product of
+the algorithm's choices.
+Under \textit{Shaw v.\ Reno} \citeyearpar{shaw1993} and \textit{Miller v.\
+Johnson} \citeyearpar{miller1995}, a similar analysis applies to racial effects:
+the relevant question is whether race (or partisanship) was the \emph{predominant
+factor}, not whether effects exist.
+Economic character weights with no electoral inputs cannot be characterized
+as partisan redistricting tools any more than geographic boundary-length
+weights can.
+
+\subsection{Expert Witness Deployment Template}
+
+Redistricting practitioners deploying M.1 economic character weights in a
+proceeding should structure expert testimony around four elements:
+
+\paragraph{1. Data provenance declaration.}
+``I used the U.S.\ Census Bureau's LODES Workplace Area Characteristics data,
+version~8, for census year 2020 (\url{https://lehd.ces.census.gov/data/}).
+This is a federal administrative dataset derived from state Unemployment
+Insurance wage records.
+It records the number of jobs, by NAICS sector, in each census block.
+No voter registration data, election results, or racial composition data
+is present in this dataset or used in the computation.''
+
+\paragraph{2. Criterion alignment.}
+``The [state]'s redistricting criteria require preservation of communities
+of interest, including economic communities.
+I computed an economic character vector for each census tract representing
+its commercial intensity, industrial fraction, and employment density.
+District boundaries are drawn preferentially at the boundaries between
+economically dissimilar tracts---at the transition from residential
+neighborhoods to commercial corridors, or from commercial zones to
+industrial parks.
+This respects the [state]'s statutory criterion.''
+
+\paragraph{3. Specific community identification.}
+``In [state], the following economic communities are preserved by the
+proposed plan: [specific examples from LODES data analysis, e.g.,
+`the Research Triangle Park employment cluster in Durham, Orange, and
+Wake counties is contained within a single district rather than split
+across three districts as in the challenger's map'].''
+
+\paragraph{4. Algorithmic transparency.}
+``The blend formula is $w(u,v) = w_{\mathrm{geo}}(u,v) \times (\alpha +
+(1-\alpha) \times \mathrm{sim}(\mathbf{e}_u, \mathbf{e}_v))$ where
+$\alpha = 0.5$ and $\mathrm{sim}$ is the cosine similarity of the economic
+character vectors.
+The geographic boundary-length weight is preserved at full weight for
+economically similar adjacent tracts and at half weight for the most
+economically dissimilar adjacent tracts.
+The formula is symmetric, non-negative, and bounded.
+It has been implemented in the \textsc{bisect} platform and verified by
+unit tests.''
+
+\subsection{When Not to Use M.1}
+
+Economic character weights should \emph{not} be used in the following contexts:
+
+\begin{itemize}
+  \item \textbf{States without a communities-of-interest criterion.}
+    If the state's redistricting statute does not include communities of
+    interest as a criterion, the weight modification lacks a statutory hook
+    and may be challenged as an unauthorized departure from the statutory criteria.
+  \item \textbf{States with diffuse economic geography.}
+    As demonstrated by the Wisconsin null result, states without concentrated
+    employment clusters will see no benefit.
+    Presenting a zero-effect weight modification to a commission or court
+    as a communities-of-interest tool is not credible.
+  \item \textbf{When economic geography cuts against VRA compliance.}
+    If economic character weights would reduce minority opportunity districts
+    below VRA-required thresholds, geographic or VRA-aligned weights must
+    take priority.
+    The three-layer compositor in \textsc{bisect} supports combining
+    \texttt{economic-character} with \texttt{vra-aligned} for contexts
+    where both criteria apply.
+\end{itemize}
+
+The practitioner's checklist before deploying M.1:
+\begin{enumerate}
+  \item Confirm that the state has a communities-of-interest criterion.
+  \item Confirm that the state has identifiable economic concentration clusters
+    visible in the LODES data.
+  \item Confirm that the resulting plan satisfies VRA and equal population constraints.
+  \item Prepare LODES data documentation for the expert declaration.
+\end{enumerate}

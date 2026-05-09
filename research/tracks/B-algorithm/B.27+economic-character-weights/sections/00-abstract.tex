@@ -1,0 +1,33 @@
+Standard geographic boundary-length edge weights treat all tract boundaries
+equivalently, regardless of the communities on either side.
+This paper introduces \emph{economic character} edge weights: adjacent census
+tracts with similar economic profiles---both predominantly residential, both
+dominated by commercial activity, both industrial---receive heavy edges that
+METIS avoids cutting, while tracts of different economic character receive
+light edges that invite cuts at natural economic zone transitions.
+
+Economic character is operationalized through the Census Bureau's
+Longitudinal Employer-Household Dynamics (LEHD) Origin-Destination Employment
+Statistics (LODES) Workplace Area Characteristics (WAC) data.
+Three signals are computed per tract from raw NAICS-sector job counts:
+\emph{commercial intensity}, \emph{industrial fraction}, and
+\emph{jobs per resident}.
+Edge similarity is computed as the cosine of the angle between the two tracts'
+three-dimensional character vectors, and blended with the geographic boundary
+weight at a tunable $\alpha$ parameter (default 0.5).
+
+We evaluate the method on North Carolina ($k=14$), Wisconsin ($k=8$), and
+Texas ($k=38$) against the standard geographic weight baseline.
+In North Carolina, economic character weights shift the proportionality gap
+from $-20.7$\,pp (geographic) to $-6.4$\,pp (economic character), a
+14.3\,pp improvement, as the Research Triangle Park and Charlotte commercial
+corridor emerge as natural cut seams.
+In Wisconsin, where commercial and industrial zones are diffuse, the method
+produces no effect.
+In Texas, industrial clusters in Houston and Dallas cut against existing
+geographic sorting, yielding a slight 2.6\,pp worsening.
+The key finding is state-specificity: economic character weights are most
+effective when a state's economic geography aligns with---and thus can help
+correct---its partisan geographic sorting.
+The weight computation is $O(n)$ after LODES aggregation and adds under
+50\,ms overhead on a 2000-tract state.

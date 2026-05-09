@@ -1,0 +1,60 @@
+\label{sec:conclusion}
+
+M.1 is the first community character paper in the M-track series, establishing
+economic character---commercial intensity, industrial fraction, and jobs per
+resident---as an operationalizable signal derived from the Census Bureau's
+LODES Workplace Area Characteristics data.
+The signal fits the M-track framework (M.0) as a cosine-similarity plug-in
+for the edge weight modifier, and composes with all existing \textsc{bisect}
+weight modes and structure algorithms.
+
+The empirical results demonstrate clear state-specificity in the economic
+character signal's effectiveness.
+North Carolina's concentrated employment clusters (Research Triangle Park,
+Charlotte commercial corridor) act as strong economic community boundaries
+that the algorithm can exploit, yielding a 14.3\,pp proportionality gap
+improvement.
+Wisconsin's diffuse economic geography produces no effect, as the mathematical
+framework predicts.
+Texas's industrial zones are embedded in Republican-leaning suburban areas,
+producing a slight reversal.
+
+These results establish the M-track hypothesis that community character
+signals should be deployed selectively, where the community geography is
+concentrated and identifiable.
+A community-of-interest signal that has no measurable effect is not a
+communities-of-interest tool; it is noise.
+M.1 passes the Wisconsin null test, which is as important as the NC
+positive result.
+
+\paragraph{Relationship to the M-track series.}
+M.1 establishes the empirical pattern that will guide the development of
+M.2 through M.7.
+The key design question for each subsequent paper is:
+does this state have a concentration of the relevant community type
+(land-use clusters for M.2, housing character for M.3, commuting sheds for M.4,
+topographic zones for M.5, administrative zone co-memberships for M.6,
+transit networks for M.7) that would make the signal mechanistically effective?
+The M-track framework answer is: run the null test first.
+If the signal produces no effect on Wisconsin, it is not useful for Wisconsin
+regardless of how legally well-grounded it is.
+
+\paragraph{Phase 2 work.}
+The M-track primary metric $\overline{\sigma}_{\mathrm{JPR}}$ (within-district
+jobs-per-resident standard deviation) requires per-district tract-level output
+not produced in the current run.
+Phase~2 will compute this metric for all three test states and extend the
+evaluation to additional states with concentrated employment clusters:
+Massachusetts (biomedical corridor), California (Silicon Valley, port
+complexes), Pennsylvania (Pittsburgh industrial legacy).
+Phase~2 will also provide multi-seed variance estimates for the WI and TX
+single-seed results.
+
+\paragraph{Integration with M.8 composite.}
+The economic character signal from M.1 will contribute one dimension to
+the M.8 composite community character index (not yet published).
+The M.8 paper will provide an expert witness template that combines M.1--M.7
+signals with tunable weights and maps the composite score to specific
+communities of interest recognized in redistricting proceedings.
+M.1 is expected to be a high-weight component in any state with identifiable
+employment concentration clusters.

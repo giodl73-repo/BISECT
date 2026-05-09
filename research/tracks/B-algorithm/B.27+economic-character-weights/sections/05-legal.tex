@@ -1,0 +1,129 @@
+\label{sec:legal}
+
+\subsection{Communities of Interest in Redistricting Law}
+
+Economic community membership is one of the oldest recognized forms of
+``communities of interest'' in redistricting law.
+The doctrine requires that district lines not unnecessarily divide
+communities whose members share common social, cultural, economic, or
+geographic interests \citep{ncsl2021criteria}.
+
+Several states have codified economic communities as an explicit criterion:
+
+\paragraph{California Proposition 11 (2008).}
+The Voters First Act, which established California's independent Citizens
+Redistricting Commission, lists ``communities of interest'' as a primary
+criterion and explicitly identifies economic interests as a component
+\citep{caprop11}.
+The Commission's implementation guidelines have treated shared commercial
+corridors, agricultural communities, and employment districts as qualifying
+economic communities.
+
+\paragraph{Colorado Constitution, Article V, Section 44.}
+Colorado's independent redistricting commission criteria require that
+districts preserve communities of interest to the extent possible, with
+guidance that explicitly includes economic communities \citep{coart5s44}.
+
+\paragraph{Arizona Proposition 106 (2000).}
+Arizona's Independent Redistricting Commission criteria list
+``communities of interest'' including economic and social interests \citep{azircprop106}.
+
+\paragraph{Washington RCW 44.05.090.}
+Washington's redistricting law requires preservation of ``communities of
+related and mutual interests,'' with economic community membership
+recognized in Commission practice \citep{warcw44}.
+
+At the federal level, \textit{Rucho v.\ Common Cause} \citeyearpar{rucho2019}
+established that federal courts cannot adjudicate partisan gerrymandering claims.
+Economic character weights are relevant to this context because they provide
+a \emph{partisan-neutral} rationale for district lines: the weight
+modification uses no electoral data, no voter registration data, and no
+racial or ethnic composition data.
+The inputs are NAICS-sector job counts from a federal government
+administrative dataset (LODES WAC) that are published annually by the
+Census Bureau's LEHD program.
+
+\subsection{The Partisan-Neutrality Defense}
+
+The legal defensibility of algorithmic redistricting depends in part on
+demonstrating that the inputs to the algorithm are partisan-neutral.
+Economic character weights satisfy this requirement structurally:
+
+\begin{itemize}
+  \item \textbf{Data source.} LEHD LODES WAC data reports workplace
+    employment counts by NAICS sector.
+    No racial, ethnic, or partisan data is present in the WAC file.
+  \item \textbf{Computation.} The economic character vector
+    $\mathbf{e}(t) = (\mathrm{CI}(t), \mathrm{IF}(t), \mathrm{JPR}(t))$
+    is computed purely from job counts and population.
+    No electoral geography, no voter file, no precinct boundary data enters
+    the computation.
+  \item \textbf{Causation direction.} The economic character signal
+    influences district boundaries only through the economic profile of
+    tracts, not through their partisan voting history.
+    Any partisan effect is a consequence of the geographic correlation
+    between economic activity and partisan sorting---a correlation that
+    exists independently of the algorithm's choices.
+\end{itemize}
+
+This structure allows an expert witness to testify that ``district boundaries
+follow natural economic zone transitions, not partisan boundaries,'' which is
+legally stronger than asserting a proportionality outcome.
+
+\subsection{Expert Witness Framing}
+
+For expert witnesses using economic character weights in a redistricting
+proceeding, we recommend the following framing elements:
+
+\begin{enumerate}
+  \item \textbf{Data provenance.} ``The edge weight modification uses the
+    Census Bureau's LODES Workplace Area Characteristics data, a federal
+    administrative dataset published annually by the LEHD program.
+    The data records the number of jobs by NAICS sector in each census block.
+    No electoral, racial, or demographic data enters the weight computation.''
+
+  \item \textbf{Criterion alignment.} ``Preserving economic community character
+    serves the [state]'s stated redistricting criterion of maintaining
+    communities of interest.
+    Tracts with similar economic profiles---both residential, both commercial,
+    both industrial---are kept together where possible; district cuts are
+    drawn at economic zone transitions, which are natural community boundaries.''
+
+  \item \textbf{Mechanistic transparency.} ``The weight formula assigns
+    a cosine similarity score between 0 and 1 to each pair of adjacent tracts
+    based on their economic character vectors.
+    High similarity (similar economic profile) makes the edge harder to cut;
+    low similarity (different economic profiles) makes the edge easier to cut.
+    The $\alpha = 0.5$ blend factor ensures that geographic contiguity
+    remains the dominant consideration.''
+
+  \item \textbf{State-specificity.} ``In North Carolina, this modification
+    reduces the degree to which major employment centers (Research Triangle
+    Park, Charlotte commercial corridor) are embedded within residential
+    partisan districts, producing districts that more cleanly separate
+    employment zones from residential zones.
+    In states without concentrated employment clusters, the modification
+    is appropriately neutral.''
+\end{enumerate}
+
+\subsection{When to Use Economic Character Weights}
+
+Economic character weights are most valuable, and most legally supportable,
+in states that satisfy the following conditions:
+
+\begin{itemize}
+  \item The state has an explicit communities-of-interest criterion in its
+    redistricting law or commission criteria.
+  \item The state has concentrated employment centers (university research
+    parks, hospital campuses, industrial corridors) that are currently being
+    split by district lines drawn primarily on geographic compactness grounds.
+  \item LODES data coverage for the state is complete (all states are covered).
+  \item The practitioner can demonstrate, from the LODES data, that the
+    employment concentration pattern exists and that the proposed plan
+    respects it.
+\end{itemize}
+
+Conversely, in states like Wisconsin where economic geography is diffuse,
+economic character weights add no value and should not be used as a
+justification for a specific plan; the null result will undermine rather
+than support the communities-of-interest argument.

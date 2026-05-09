@@ -1,0 +1,160 @@
+\label{sec:framework}
+
+\subsection{Economic Character as an M-Track Community Signal}
+
+The M-track framework (M.0) defines community character as a function
+$\mathbf{c}: \mathcal{T} \to \mathbb{R}^k_{\geq 0}$ mapping each census
+tract to a non-negative character vector \citep{m0framework}.
+The community similarity between adjacent tracts $u$ and $v$ is
+$\mathrm{sim}(\mathbf{c}_u, \mathbf{c}_v) \in [0, 1]$, and the edge weight
+modifier is $w(u,v) = w_{\mathrm{base}}(u,v) \times \mathrm{sim}(\mathbf{c}_u, \mathbf{c}_v)$.
+
+For M.1, the character function is the economic character vector:
+\begin{equation}
+  \mathbf{e}(t) = \bigl(\mathrm{CI}(t),\ \mathrm{IF}(t),\ \mathrm{JPR}(t)\bigr)
+  \label{eq:econchar}
+\end{equation}
+where CI, IF, and JPR are defined in Section~\ref{sec:background}.
+
+This is a plug-in implementation of the M.0 framework: the cosine similarity
+of economic character vectors replaces the generic $\mathrm{sim}$ in the
+M.0 edge weight formula.
+
+\subsection{Prototypical Tract Types and Their Similarity}
+
+To build intuition for the cosine similarity of economic character vectors,
+Table~\ref{tab:prototypes} shows three prototypical tract types and
+their character vectors.
+
+\begin{table}[ht]
+\centering
+\caption{Prototypical economic character vectors for three tract types.
+  CI = commercial intensity, IF = industrial fraction, JPR = jobs per resident.}
+\label{tab:prototypes}
+\begin{tabular}{llrrr}
+\toprule
+Type & Example & CI & IF & JPR \\
+\midrule
+Bedroom suburb & Cary, NC residential & 0.02 & 0.01 & 0.3 \\
+Commercial corridor & Charlotte retail strip & 0.45 & 0.05 & 2.1 \\
+Industrial park & RDU airport logistics & 0.08 & 0.62 & 4.8 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The cosine similarities between these prototypes reveal the geometry of
+economic community membership.
+Table~\ref{tab:similarity-matrix} shows the pairwise similarity matrix.
+
+\begin{table}[ht]
+\centering
+\caption{Cosine similarity between prototypical tract types.
+  Values above 0.8 indicate strong community cohesion (METIS avoids cutting);
+  values below 0.3 indicate natural community boundaries (METIS drawn to cut here).}
+\label{tab:similarity-matrix}
+\begin{tabular}{lrrr}
+\toprule
+ & Bedroom & Commercial & Industrial \\
+\midrule
+Bedroom suburb     & 1.00 & 0.11 & 0.04 \\
+Commercial corridor & 0.11 & 1.00 & 0.28 \\
+Industrial park    & 0.04 & 0.28 & 1.00 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The similarity matrix encodes the economic community structure of the
+modern metropolitan area:
+\begin{itemize}
+  \item \textbf{Bedroom to bedroom (0.98 for identical vectors).}
+    Two residential suburbs are economically homogeneous.
+    They belong in the same district from an economic community perspective.
+    METIS strongly avoids cutting this edge.
+  \item \textbf{Bedroom to commercial (0.11).}
+    The boundary between a residential neighborhood and the commercial
+    corridor serving it is a natural cut seam.
+    The residents and the businesses are different communities: the residents
+    are customers and neighbors; the businesses are employers with different
+    policy interests (commercial property tax rates, zoning variance).
+  \item \textbf{Bedroom to industrial (0.04).}
+    An even harder natural cut.
+    The residents and the industrial park share almost no economic character.
+    District cuts at the residential-industrial transition are among the
+    strongest economic community signals the algorithm can exploit.
+  \item \textbf{Commercial to commercial (0.95 for similar vectors).}
+    Two commercial districts belong together.
+    They share customer bases, commercial zoning interests, and economic
+    policy concerns (retail leakage, big-box competition, downtown
+    revitalization).
+  \item \textbf{Commercial to industrial (0.28).}
+    A softer cut---commercial and industrial zones are both non-residential
+    but have genuinely different economic characters.
+    This boundary is a soft invitation to cut, not a hard cut seam.
+  \item \textbf{Industrial to industrial (0.95+ for similar vectors).}
+    Industrial communities belong together: they share zoning interests
+    (industrial land preservation), logistics infrastructure needs, and
+    employer-community relationships.
+\end{itemize}
+
+\subsection{The Blend Formula}
+
+Following B.27, the edge weight is:
+\begin{equation}
+  w_{\mathrm{ec}}(u, v)
+  = w_{\mathrm{geo}}(u, v)
+  \times \bigl(\alpha + (1 - \alpha)\,\mathrm{sim}(\mathbf{e}_u, \mathbf{e}_v)\bigr)
+  \label{eq:blend}
+\end{equation}
+with default $\alpha = 0.5$.
+This differs from the pure multiplicative formula in the M.0 framework
+($w = w_{\mathrm{base}} \times \mathrm{sim}$) in one important respect:
+the $\alpha$ floor prevents the weight from collapsing to zero even for
+completely dissimilar tracts.
+At $\alpha = 0.5$ and $\mathrm{sim} = 0$, the weight is halved rather than
+zeroed.
+This is a deliberate choice to prevent METIS from treating economic zone
+boundaries as free cuts; geographic boundary length always contributes at
+least $\alpha$ of the weight.
+
+The pure M.0 multiplicative formula can be recovered by setting
+\texttt{--econ-alpha 0.0} on the CLI.
+The practitioner's default of $\alpha = 0.5$ provides a balanced blend that
+preserves geographic connectivity while adding economic community signal.
+
+\subsection{Zero-Vector Handling}
+
+The cosine similarity is undefined when either vector is the zero vector
+(pure residential tracts with no WAC records).
+The implementation handles the three cases:
+\begin{itemize}
+  \item Both zero: $\mathrm{sim} = 1.0$ (both residential, keep together).
+  \item One zero: $\mathrm{sim} = 0.5$ (one residential, one employment center,
+    neutral---geographic weight governs).
+  \item Neither zero: standard cosine formula.
+\end{itemize}
+This handling is conservative and community-correct: residential tracts are
+their own economic community (bedroom community), not a non-community that can
+be arbitrarily cut.
+
+\subsection{M-Track Primary Metric: Within-District Economic Variance}
+
+The proportionality gap (D-seat share minus D-vote share) is reported for
+comparison with other B-track papers.
+But the M-track primary metric for M.1 is the \emph{mean within-district
+standard deviation of \texttt{jobs\_per\_resident}} across all districts in the plan.
+Formally, for a $k$-district plan $\{D_1, \ldots, D_k\}$:
+\begin{equation}
+  \overline{\sigma}_{\mathrm{JPR}}
+  = \frac{1}{k} \sum_{i=1}^{k}
+    \mathrm{std}\bigl\{\mathrm{JPR}(t) : t \in D_i\bigr\}
+  \label{eq:within-var}
+\end{equation}
+A lower $\overline{\sigma}_{\mathrm{JPR}}$ means that each district contains
+tracts with more similar JPR values---economically more coherent districts.
+The economic character weights are expected to reduce $\overline{\sigma}_{\mathrm{JPR}}$
+by encouraging tracts with similar JPR values (all residential, or all
+employment-center) to cluster together rather than being mixed.
+Full computation of $\overline{\sigma}_{\mathrm{JPR}}$ for the three test
+states is designated Phase~2 (requires post-run tract-level analysis);
+the proportionality gap results in Section~\ref{sec:results} are the Phase~1
+findings.

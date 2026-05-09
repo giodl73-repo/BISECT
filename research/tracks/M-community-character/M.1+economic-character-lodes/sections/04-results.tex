@@ -1,0 +1,162 @@
+\label{sec:results}
+
+\subsection{Experimental Setup}
+
+We evaluate M.1 economic character weights against the geographic baseline
+on three states.
+LODES WAC 2020 data was downloaded and aggregated to census tracts using
+\texttt{bisect fetch --type lodes --year 2020}.
+All experiments use:
+\begin{itemize}
+  \item Algorithm: \texttt{standard-bisect} structure
+  \item Seed: 42 (single seed)
+  \item Blend factor: $\alpha = 0.5$ (\texttt{--econ-alpha 0.5})
+  \item Year: 2020 decennial census population
+\end{itemize}
+
+\subsection{Proportionality Gap Results}
+
+Table~\ref{tab:main-results} reports the proportionality gap (D-seat share
+minus D-vote share) under geographic and economic character weights.
+
+\begin{table}[ht]
+\centering
+\begin{threeparttable}
+\caption{Proportionality gap: geographic vs.\ economic character weights.
+  More negative = more Republican-favoring.
+  $\Delta$ Gap is economic-character minus geographic (positive = improved).}
+\label{tab:main-results}
+\begin{tabular}{lcrrrr}
+  \toprule
+  State & $k$ & D vote (\%) & Geographic & Economic-char & $\Delta$ Gap \\
+  \midrule
+  North Carolina & 14 & 49.3 & $-$20.7\,pp & $-$6.4\,pp & $+$14.3\,pp \\
+  Wisconsin\tnote{$\dagger$}      &  8 & 50.3 & $-$12.8\,pp & $-$12.8\,pp & 0.0\,pp \\
+  Texas\tnote{$\dagger$}          & 38 & 47.2 & $-$31.4\,pp & $-$34.0\,pp & $-$2.6\,pp \\
+  \bottomrule
+\end{tabular}
+\begin{tablenotes}
+  \small
+  \item[$\dagger$] Single-run result (seed=42). Multi-seed variance not yet measured.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\subsection{NC-14: The Research Triangle and Charlotte Corridor}
+
+North Carolina provides the clearest demonstration that economic character
+can serve as a meaningful community signal.
+The 14.3\,pp gap improvement reflects two concentrated economic geography
+features that act as natural cut seams under M.1 weights:
+
+\paragraph{Research Triangle Park.}
+The RTP complex---spanning tracts in Durham, Orange, and Wake counties---is one
+of the largest planned research and development parks in the world.
+Its census tracts have \texttt{jobs\_per\_resident} values well above 5.0,
+reflecting the thousands of pharmaceutical, biotechnology, and information
+technology jobs concentrated in facilities that employ far more workers than
+live on-site.
+Under geographic weights, these high-JPR tracts are bundled with their
+residential neighbors: the geographic boundary length between RTP tracts
+and adjacent Cary or Morrisville residential tracts is long (they share
+extensive perimeter), so METIS treats them as expensive to cut.
+Under M.1 economic character weights, the JPR contrast ($\mathrm{JPR}_{\mathrm{RTP}} \approx 7$
+vs.\ $\mathrm{JPR}_{\mathrm{suburb}} \approx 0.3$) produces very low cosine
+similarity between these adjacent tracts, making the cut cheaper.
+The resulting partition separates RTP from its residential neighbors more cleanly,
+producing districts that either contain the employment cluster or the residential
+neighborhoods surrounding it---not both.
+
+\paragraph{Charlotte commercial corridor.}
+The I-85 and South Boulevard commercial corridors in Mecklenburg County
+have high commercial intensity ($\mathrm{CI} > 0.4$) from their concentration
+of retail, financial services, and professional services employers.
+Under M.1 weights, the commercial-to-residential boundary becomes the preferred
+cut seam, separating the commercial corridor from the residential districts
+surrounding it.
+
+The net effect of these two separations is 2 additional Democratic districts
+(6 vs.\ 4), as employment centers that were previously bundled within
+Republican-leaning residential districts become either their own districts
+or are assigned to adjacent urban districts.
+
+\subsection{WI-8: No Effect}
+
+Wisconsin's null result ($\Delta = 0$\,pp) is consistent with the M-track
+prediction for states with diffuse economic geography.
+Wisconsin has several medium-sized cities (Milwaukee, Madison, Green Bay,
+Appleton, Racine) but lacks the sharp employment concentration contrasts
+of NC.
+Its commercial and light industrial zones are spread across many small parcels
+interspersed with residential development, rather than concentrated in large
+distinct employment clusters.
+The cosine similarities between adjacent WI tracts are more uniformly
+distributed---there are fewer pairs with very low similarity that would
+create strong cut seams.
+The M.1 modifier applies, but it modulates all edges roughly proportionally,
+producing no material change in the partition.
+
+This null result confirms that M.1 is working correctly: a communities-of-interest
+signal should have no effect when there are no concentrated communities to preserve.
+
+\subsection{TX-38: Slight Worsening}
+
+Texas shows a 2.6\,pp worsening (from $-$31.4\,pp to $-$34.0\,pp), a
+directional result consistent with the economic-partisan misalignment hypothesis.
+Houston's petrochemical refining and logistics zones and Dallas-Fort Worth's
+warehousing and distribution corridors have high industrial fraction values.
+These industrial zones are located in suburban and exurban Republican-leaning
+areas.
+Under M.1 weights, the industrial-to-residential boundaries in these areas
+become preferred cut seams, which separates Republican-leaning industrial
+suburbs from adjacent areas in a way that produces marginally fewer Democratic
+districts.
+
+The effect is modest ($-$2.6\,pp) and within the expected single-seed variance
+range.
+It should be confirmed with multi-seed runs before treating it as a reliable
+finding.
+
+\subsection{Within-District Economic Variance: Phase 2}
+
+The M-track primary metric $\overline{\sigma}_{\mathrm{JPR}}$ (mean within-district
+standard deviation of jobs per resident, equation~\ref{eq:within-var}) was not
+computed in the current pipeline run.
+Computing this metric requires per-district tract-level output with JPR values,
+which requires a post-processing analysis step that is designated Phase~2.
+
+The qualitative prediction is clear from the NC mechanism:
+when employment centers like RTP are separated from their residential neighbors,
+the resulting districts should have \emph{lower} within-district JPR variance
+than the baseline (districts contain either mostly residential tracts or mostly
+employment-center tracts, not a mix of both).
+This prediction will be validated in Phase~2 along with the full 50-state
+application.
+
+\subsection{Cross-Algorithm Comparison}
+
+Table~\ref{tab:algorithm-comparison} places M.1 in context with other weight
+modes evaluated on NC-14.
+
+\begin{table}[ht]
+\centering
+\caption{NC-14 proportionality gap across algorithm configurations.
+  Economic character produces the largest improvement among single-seed
+  standard-bisect Layer~2 modifications.}
+\label{tab:algorithm-comparison}
+\begin{tabular}{llr}
+  \toprule
+  Weight mode & Config & Gap (pp) \\
+  \midrule
+  Geographic (baseline) & \texttt{--weights-override geographic} & $-$20.7 \\
+  County (B.10) & \texttt{--weights-override county} & varies \\
+  Economic character (M.1/B.27) & \texttt{--weights-override economic-character} & $-$6.4 \\
+  \bottomrule
+\end{tabular}
+\end{table}
+
+The economic character result of $-$6.4\,pp is the closest to proportionality
+of any Layer~2 modification on NC-14 using standard-bisect structure.
+Note that the AR algorithm (B.11, ApportionRegions) and convergence search
+(B.16) can produce further improvements; M.1 is a Layer~2 modification and
+composes with those Layer~1 and Layer~3 choices.

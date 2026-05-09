@@ -1,0 +1,77 @@
+\label{sec:introduction}
+
+Every graph-based redistricting algorithm must assign a weight to each edge
+in the census-tract adjacency graph before partitioning.
+The dominant choice is \emph{geographic boundary length}: the length of the
+shared boundary between two adjacent tracts, as computed from TIGER/Line
+shapefiles \citep{census2020tiger}.
+Longer shared boundaries receive heavier weights; METIS minimizes the total
+cut weight, which under geographic weighting corresponds to minimizing total
+boundary disruption.
+
+Geographic boundary length is intuitive and well-grounded: long shared
+boundaries indicate that two tracts are deeply adjacent, and separating them
+imposes a greater perimeter cost on the resulting districts.
+But it carries a systematic blind spot.
+The weight depends entirely on the geometry of the boundary, not on the
+character of the communities on either side.
+Two tracts that are perfectly matched economically---both residential suburbs,
+both dominated by retail---are weighted identically to two tracts that are
+economically opposite---a bedroom suburb next to an industrial logistics hub.
+The algorithm cannot distinguish between a natural community boundary and an
+artificial cut through homogeneous territory.
+
+This paper proposes a remedy.
+We introduce \emph{economic character edge weights}: an additional signal
+derived from the Census Bureau's LEHD Workplace Area Characteristics (WAC)
+data that encodes the economic profile of each census tract.
+Tracts with similar economic profiles receive heavier edges (harder to cut),
+while tracts with dissimilar profiles receive lighter edges (easier to cut).
+The result is a weight signal that encourages district cuts to run
+along natural economic zone transitions---the boundary between a
+commercial corridor and the residential neighborhoods surrounding it,
+or the line separating an industrial park from adjacent agricultural tracts---
+rather than treating all boundaries as fungible.
+
+\paragraph{Motivation from redistricting criteria.}
+Most states and redistricting commissions explicitly list
+\emph{communities of interest} as a criteria to preserve when drawing
+districts \citep{ncsl2021criteria}.
+Economic community membership---workers in the same industry sector,
+residents sharing a commercial corridor, communities whose livelihoods
+depend on the same industrial employer---is one of the oldest and most
+legally established forms of community of interest \citep{caprop11,azircprop106}.
+Economic character weights operationalize this criterion algorithmically,
+using only federal government employment data with no racial or partisan content.
+
+\paragraph{Relationship to existing weight modes.}
+The \textsc{bisect} platform supports a three-layer compositor
+\citep{bisect2024} in which Layer~2 (edge and vertex weights) is modular.
+Economic character is a new \texttt{--weights-override economic-character}
+option that composes with the existing geographic, county, and
+VRA-aligned weight modes.
+It does not change the bisection algorithm (Layer~1) or the seed selection
+strategy (Layer~3).
+
+\paragraph{Contributions.}
+\begin{enumerate}
+  \item An $O(n)$ algorithm for computing per-tract economic character vectors
+        from LODES WAC NAICS-sector job counts (Section~\ref{sec:algorithm}).
+  \item A cosine-similarity-based edge weight blending formula with well-defined
+        behavior for zero-vector (purely residential) tracts
+        (Section~\ref{sec:algorithm}).
+  \item Empirical evaluation on NC-14, WI-8, and TX-38 demonstrating
+        state-specific effects driven by the alignment of economic and
+        partisan geographies (Section~\ref{sec:results}).
+  \item A legal and practitioner analysis establishing economic character weights
+        as a defensible communities-of-interest signal under existing
+        redistricting criteria (Section~\ref{sec:legal}).
+\end{enumerate}
+
+\paragraph{Paper organization.}
+Section~\ref{sec:background} reviews LODES data and related work on economic
+geography in redistricting.
+Section~\ref{sec:algorithm} defines the algorithm formally.
+Section~\ref{sec:results} presents empirical results.
+Section~\ref{sec:legal} discusses legal and practitioner considerations.
+Section~\ref{sec:conclusion} concludes.

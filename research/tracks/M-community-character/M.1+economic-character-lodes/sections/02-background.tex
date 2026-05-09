@@ -1,0 +1,135 @@
+\label{sec:background}
+
+\subsection{LODES Workplace Area Characteristics}
+
+The Longitudinal Employer-Household Dynamics (LEHD) program at the U.S.\
+Census Bureau compiles employment records from state Unemployment Insurance
+(UI) wage files and matches them to address-level employer geocodes
+\citep{abowd2009lodes}.
+The result is a block-level employment dataset with near-complete private-sector
+coverage (UI-covered employment, approximately 95\% of all wage and salary jobs).
+
+The Workplace Area Characteristics (WAC) file is one of three LODES output
+tables.
+It answers the question: ``For each census block, how many jobs are located
+there, broken down by industry?''
+This is the workplace perspective---where people work, not where they live
+(the Origin Area Characteristics, OAC, answers the residential question).
+
+\paragraph{WAC structure.}
+Each row in the WAC file represents one census block.
+The primary columns are:
+\begin{itemize}
+  \item \texttt{w\_geocode} (15-character block GEOID)
+  \item \texttt{C000} (total jobs, all types)
+  \item \texttt{CNS01}--\texttt{CNS20} (jobs by NAICS supersector)
+\end{itemize}
+
+The 20 NAICS sectors cover the full private economy from agriculture
+(CNS01) to public administration (CNS20).
+Table~\ref{tab:cns-sectors} lists the four sectors used for the commercial
+intensity and industrial fraction signals.
+
+\begin{table}[ht]
+\centering
+\caption{LODES WAC NAICS sector columns used for economic character computation.}
+\label{tab:cns-sectors}
+\small
+\begin{tabular}{lll}
+\toprule
+Column & NAICS description & Signal \\
+\midrule
+CNS07 & Retail Trade & Commercial intensity \\
+CNS09 & Information & Commercial intensity \\
+CNS10 & Finance and Insurance & Commercial intensity \\
+CNS11 & Real Estate and Rental and Leasing & Commercial intensity \\
+\midrule
+CNS01 & Agriculture, Forestry, Fishing, and Hunting & Industrial fraction \\
+CNS02 & Mining, Quarrying, and Oil and Gas Extraction & Industrial fraction \\
+CNS05 & Manufacturing & Industrial fraction \\
+CNS08 & Transportation and Warehousing & Industrial fraction \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Block-to-tract aggregation.}
+Census block GEOIDs are 15 characters: state (2) + county (3) + census tract
+(6) + block (4).
+Aggregating to census tracts requires summing all block-level counts within
+each unique 11-character prefix.
+After aggregation, each tract has a total job count \texttt{C000} and sector
+subtotals \texttt{CNS01}--\texttt{CNS20}.
+
+\paragraph{Geographic scope and availability.}
+LODES WAC is available for all 50 states (plus DC and Puerto Rico) from 2002
+through 2021 in LODES version~8 \citep{lodes2022}.
+Download format: gzip-compressed CSV, one file per state per year.
+The 2020 vintage is used in this paper.
+Tract counts after aggregation from the 2020 run:
+North Carolina 2,655; Wisconsin 1,527; Texas 6,877.
+
+\paragraph{Tracts with zero jobs.}
+Purely residential tracts with no employer establishments appear in the
+LODES geographic coverage but have no WAC records.
+These tracts receive a zero character vector $(0, 0, 0)$ by definition;
+the cosine similarity for two zero-vector tracts is set to 1.0
+(both residential, keep together).
+This is the most common case in rural and low-density suburban areas.
+
+\subsection{The Three Economic Character Signals}
+
+\paragraph{Commercial intensity (CI).}
+Measures the fraction of jobs in the service economy sectors that characterize
+commercial districts: retail trade (CNS07), information technology and media
+(CNS09), financial services (CNS10), and real estate (CNS11).
+High CI values ($>$0.4) are found in downtown retail cores, suburban
+strip-mall corridors, financial district nodes, and mixed-use commercial zones.
+Low CI values ($<$0.05) are found in residential tracts, agricultural areas,
+and industrial parks.
+
+\paragraph{Industrial fraction (IF).}
+Measures the fraction of jobs in goods-producing and logistics sectors:
+agriculture and forestry (CNS01), extractive industries (CNS02),
+manufacturing (CNS05), and transportation and warehousing (CNS08).
+High IF values ($>$0.5) are found in factory towns, industrial parks,
+port and logistics zones, and agricultural processing areas.
+These are the zones where a significant fraction of the working population is
+employed in production, extraction, or movement of physical goods.
+
+\paragraph{Jobs per resident (JPR).}
+Measures the total job count relative to tract population.
+Values below 0.3 indicate bedroom suburbs where most residents commute out.
+Values between 1.0 and 3.0 indicate employment centers that attract net
+in-commuting.
+Values above 5.0 indicate major employment concentrations: university research
+parks, hospital campuses, data centers, airport zones.
+JPR is capped at 10.0 to prevent numerical instability in tracts with
+very high job density and very low population.
+
+\paragraph{Why these three signals?}
+The three signals together cover the primary economic character dimensions
+that divide land into recognizably distinct zones:
+the division between residential and workplace land (JPR),
+the division between service economy and goods economy (CI vs.\ IF),
+and the internal division within the service economy between
+consumer-facing retail and professional services.
+Together they produce meaningful separation between the four most common
+tract economic types: bedroom suburb, commercial corridor, industrial park,
+and mixed employment center.
+
+\subsection{Geographic Coverage Adequacy}
+
+LODES data has near-complete coverage of private-sector employment.
+The primary coverage gaps are:
+\begin{itemize}
+  \item Federal civilian employees (excluded from UI wage records).
+    Military bases and federal office complexes are undercounted.
+  \item Self-employed workers (not covered by UI).
+    Agricultural tracts with many self-employed farmers may have
+    low apparent job counts.
+  \item Tracts that cross state boundaries.
+    LODES is processed per state; cross-state GEOID issues are rare but exist.
+\end{itemize}
+For the purpose of edge weight computation, these gaps are handled gracefully:
+tracts with missing or zero WAC records receive zero character vectors and
+are treated as residential (high mutual similarity with other zero-vector tracts).

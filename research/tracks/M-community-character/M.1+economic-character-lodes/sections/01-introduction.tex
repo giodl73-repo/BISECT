@@ -1,0 +1,72 @@
+\label{sec:introduction}
+
+When the Maricopa County Citizens Redistricting Commission drew Arizona's
+legislative districts in 2011, it held dozens of public hearings at which
+residents testified about the economic communities that deserved to be kept
+whole in a single district.
+Ranchers and farmers in Yuma testified that their water rights, commodity
+markets, and co-op memberships made them an economic community distinct from
+suburban Tucson.
+Autoworkers in Maricopa County testified that their union locals, plant
+bargaining units, and supplier relationships made them a community distinct
+from adjacent white-collar suburbs.
+The Commission listened, noted the testimony, and then---lacking any
+computational tool to operationalize economic community membership---drew
+lines based primarily on population equality and VRA compliance.
+The economic communities were an aspiration, not an input.
+
+This paper provides the computational input.
+
+The M-track community character framework, introduced in M.0
+\citep{m0framework}, operationalizes diverse community character signals
+as edge weights in the census-tract adjacency graph.
+Communities that belong together get heavy edges; communities that are
+naturally distinct get light edges.
+METIS's minimum-cut objective then respects community structure automatically:
+cuts run along light edges (natural community transitions) and avoid heavy
+edges (strong community bonds).
+
+M.1 is the first M-track implementation paper.
+It focuses on \emph{economic character}: the mix of commercial, industrial,
+and residential activity in a census tract, as measured by the Census
+Bureau's LODES Workplace Area Characteristics (WAC) data
+\citep{abowd2009lodes}.
+Economic character is the right first M-track signal because:
+
+\begin{enumerate}
+  \item \textbf{Data quality.} LODES WAC is derived from administrative
+    payroll records (Unemployment Insurance wage records) with near-complete
+    employer coverage, not survey estimates with sampling error.
+  \item \textbf{Legal recognition.} Economic communities of interest are
+    explicitly recognized in redistricting criteria in California, Colorado,
+    Arizona, Washington, and multiple other states
+    \citep{caprop11,coart5s44,azircprop106,warcw44}.
+  \item \textbf{Partisan neutrality.} No electoral, racial, or demographic
+    data enters the computation.
+    The signal is the economic profile of the workplace geography.
+  \item \textbf{Empirical effect.} As this paper demonstrates, the signal
+    produces a substantial proportionality improvement in NC-14, the largest
+    improvement from any Layer~2 modification we have tested on that state.
+\end{enumerate}
+
+\paragraph{Distinction from B.27.}
+The companion paper B.27 \citep{b27econchar} presents the same algorithm
+from an implementation and benchmarking perspective: data pipeline, Rust code
+structure, test invariants, computational performance, and comparative analysis
+of the three test states.
+M.1 presents the same algorithm from the community character perspective:
+which economic communities does it preserve, how does it fit the M-track
+framework, what is the primary M-track metric (within-district economic
+variance), and how is it legally deployed.
+
+\paragraph{Paper organization.}
+Section~\ref{sec:background} describes the LODES WAC data source and the
+three economic character signals.
+Section~\ref{sec:framework} defines the character vectors, cosine similarity,
+and edge weight formula within the M-track framework.
+Section~\ref{sec:results} presents empirical results including the
+proportionality gap comparison and a discussion of within-district economic
+variance.
+Section~\ref{sec:legal} provides a detailed legal usage guide for redistricting
+practitioners.
+Section~\ref{sec:conclusion} concludes.

@@ -1,0 +1,50 @@
+\label{sec:conclusion}
+
+We have introduced economic character edge weights for congressional redistricting,
+operationalized through LODES Workplace Area Characteristics data from the
+Census Bureau's LEHD program.
+The method computes a three-dimensional economic character vector
+(commercial intensity, industrial fraction, jobs per resident) for each
+census tract, then weights adjacency-graph edges by the cosine similarity
+between adjacent tracts' character vectors.
+The blend formula preserves geographic boundary length as the dominant signal
+while modulating it with economic zone structure.
+
+Empirical results on three states establish the method's core behavioral pattern:
+\begin{itemize}
+  \item \textbf{NC-14}: 14.3\,pp proportionality gap improvement as employment
+    centers emerge as natural cut seams.
+  \item \textbf{WI-8}: No effect, as expected in a state with diffuse economic
+    geography.
+  \item \textbf{TX-38}: Slight 2.6\,pp worsening, consistent with industrial
+    zones being embedded in Republican-leaning areas.
+\end{itemize}
+
+The state-specificity of these results is the paper's central practical
+contribution.
+Economic character weights should be applied selectively, in states where
+the economic and partisan geographies are aligned in a way that allows
+employment-center boundaries to serve as natural community boundaries.
+They should not be applied indiscriminately across all states as a universal
+proportionality booster.
+
+The legal analysis establishes that economic character weights are defensible
+under communities-of-interest criteria in California, Colorado, Arizona,
+Washington, and other states with explicit economic community language
+in their redistricting criteria.
+The partisan-neutral data inputs (LODES WAC, no electoral data) and the
+transparent algorithmic mechanism support expert witness testimony framing
+the weight modification as a community-structure criterion, not a partisan
+adjustment.
+
+\paragraph{Limitations and future work.}
+All results are single-seed (seed=42).
+Future work should evaluate multi-seed variance to confirm that the NC
+improvement is robust and not seed-specific.
+The within-district economic variance metric (mean standard deviation of
+\texttt{jobs\_per\_resident} across tracts in each district) was not computed
+in this evaluation run; the M.1 companion paper will track this as the
+primary metric for the community character framework.
+Extension to state legislative districts and to other years of LODES data
+(2002--2021) would provide additional evidence on the method's stability
+across electoral cycles.
