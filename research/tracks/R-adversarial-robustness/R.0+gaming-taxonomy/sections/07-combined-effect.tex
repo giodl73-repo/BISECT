@@ -84,3 +84,25 @@ This claim has four components:
 \end{enumerate}
 The combined empirical effect, accounting for saturation on the same
 competitive-district bottleneck, is $\leq 0.5$ seats.
+
+\paragraph{Correlation caveat.}
+The 0.5-seat bound assumes vectors are sub-additive (saturate on the same
+competitive-district bottleneck). If vectors are positively correlated ---
+e.g., a hostile actor simultaneously uses favourable resolution choice (V3)
+and favourable parameter settings (V1) in the same target state --- the combined
+effect could be additive for that state rather than sub-additive.
+
+For example: in a state where V1 alone produces $+0.15$ seats and V3 alone
+produces $+0.18$ seats, the additive combination would be $+0.33$ seats if
+the vectors affect different districts. The sub-additive argument applies
+only if both vectors target the same marginal competitive district.
+
+Empirically, V1 (parameter gaming) and V3 (resolution gaming) tend to affect
+different sets of districts: parameter gaming primarily affects states near the
+CS threshold, while resolution gaming affects states near the $k/n = 0.05$
+threshold. The two sets have limited overlap in the 2020 configuration.
+However, an adversary could, in principle, design a state redistricting challenge
+where both vectors amplify each other. The 0.5-seat bound should be read as
+the expected combined effect, not a worst-case guarantee in all possible adversarial
+configurations. The DIA's pre-registration requirement prevents post-data
+coordination of these vectors, which is the primary protection.

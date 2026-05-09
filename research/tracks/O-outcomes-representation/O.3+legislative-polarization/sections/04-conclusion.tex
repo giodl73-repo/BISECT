@@ -21,7 +21,17 @@ Two caveats deserve emphasis.
 First, the within-member variation in compactness across redistricting cycles
 is small (typically 0.05--0.15 PP), limiting statistical precision.
 Second, the projection assumes the within-member slope applies to
-between-plan comparisons; this extrapolation requires causal identification
-that the present analysis cannot provide.
-These limitations motivate a Phase~2 analysis using redistricting cycle
-boundaries as instruments.
+between-plan comparisons.
+\textbf{Formal statement of the identifying assumption}: we assume
+$\mathbb{E}[|\text{NOMINATE}|_{\text{bisect plan}}] - \mathbb{E}[|\text{NOMINATE}|_{\text{enacted}}]
+= \hat\beta \times \Delta\mathrm{PP}$,
+where $\hat\beta$ is the within-member OLS coefficient.
+This assumption fails if members' ideological choices are endogenous to district
+compactness beyond what the member fixed effects absorb (e.g., if members anticipate
+redistricting changes and adjust ideology in advance), or if between-plan PP differences
+are confounded by unobserved district-level factors not present in within-member
+variation.
+The projection is therefore labeled preliminary${}^\dagger$;
+a Phase~2 analysis using redistricting cycle boundaries as an instrumental
+variable for compactness change would provide the causal identification
+this projection cannot.

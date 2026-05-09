@@ -25,7 +25,14 @@ Estimating the number of congressional seats that would shift under citizen-VAP 
     \item Aggregate across states to estimate the total seat shift.
 \end{enumerate}
 
-The estimated seat shift is 15--20 seats nationally. This range reflects uncertainty in:
+The estimated seat shift is 15--20 seats nationally (90\% uncertainty interval:
+[11, 24] seats).
+This interval is derived from 1{,}000 bootstrap simulations over the key
+modeling uncertainties: (1) ACS CVAP sampling error ($\pm$3\% at the tract level,
+Census Bureau 2020 B05001 documentation); (2) sensitivity of district boundaries to
+the balance metric; (3) uncertainty in which borderline districts would flip.
+The interval is wide because the analysis combines three independent sources of
+uncertainty. This range reflects:
 \begin{itemize}
     \item The exact CVAP values at the tract level (ACS sampling error)
     \item Whether borderline competitive districts would shift partisan lean following boundary changes

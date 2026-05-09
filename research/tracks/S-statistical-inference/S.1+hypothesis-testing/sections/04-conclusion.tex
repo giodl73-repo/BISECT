@@ -10,7 +10,10 @@ into a court-admissible p-value. The key practical implications:
     Courts should not treat 1{,}000-step NC ensemble results as conclusive.
   \item \textbf{10{,}000-step ensembles are reliable for most states.}
     NC, WI, GA, PA all achieve $p < 0.01$ at 10K steps.
-    Texas requires 30K steps for similar reliability (S.3).
+    Texas achieves $p = 0.03$ at 10K steps (significant at 5\% but not 1\%);
+    30K steps are needed for $p < 0.01$ reliability in TX (S.3).
+    Note: TX's 1K-step result ($p = 0.11$) is not significant --- consistent with the
+    abstract's finding that 1K-step ensembles are insufficient for TX.
   \item \textbf{The \texttt{bisect-analysis::permutation} module provides
     a drop-in implementation.}
     Any user with a GerryChain ensemble JSON output and the G.4 ESS estimate
