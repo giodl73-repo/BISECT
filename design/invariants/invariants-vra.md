@@ -15,7 +15,7 @@ Properties of the Voting Rights Act compliance implementation that must be maint
 **Enforcement:** `is_mm = pct_minority > mm_threshold` in vra_analysis.rs. Test verifies that exactly 50% is NOT MM.
 
 **Test:** `tests/unit/test_rust_compactness.py::TestVraAnalysis::test_threshold_exclusive_at_50pct`
-`redist/crates/bisect-analysis/src/vra_analysis.rs::test_threshold_boundary_exclusive`
+`BISECT/crates/bisect-analysis/src/vra_analysis.rs::test_threshold_boundary_exclusive`
 
 **Status:** ENFORCED
 
@@ -80,7 +80,7 @@ Properties of the Voting Rights Act compliance implementation that must be maint
 
 **When it can be violated:** Adding a Python fallback that reimplements the formula; reverting the Phase 1a deletion.
 
-**Enforcement:** The Python call site (run_state_redistricting.py) now calls `redist_py.build_vra_edge_weights()` — no formula present. If someone adds a fallback, the parity tests will catch drift when they disagree.
+**Enforcement:** The Python call site (run_state_redistricting.py) now calls `bisect_py.build_vra_edge_weights()` — no formula present. If someone adds a fallback, the parity tests will catch drift when they disagree.
 
 **Test:** `tests/unit/test_vra_edge_weighting.py::TestRustFormulaParity` (would fail if Python reimplementation differs from Rust)
 

@@ -13,9 +13,9 @@ use sha2::{Digest, Sha256};
 /// Input: 12 + 4 + 1 + 8 = 25 bytes total
 pub fn init_seed(base_seed: u64, i: u32) -> u64 {
     let mut hasher = Sha256::new();
-    hasher.update(b"PARETO_INIT_");       // 12 bytes
-    hasher.update(i.to_le_bytes());       // 4 bytes
-    hasher.update(b"_");                  // 1 byte
+    hasher.update(b"PARETO_INIT_"); // 12 bytes
+    hasher.update(i.to_le_bytes()); // 4 bytes
+    hasher.update(b"_"); // 1 byte
     hasher.update(base_seed.to_le_bytes()); // 8 bytes
     let digest = hasher.finalize();
     u64::from_le_bytes(digest[..8].try_into().unwrap())
@@ -28,11 +28,11 @@ pub fn init_seed(base_seed: u64, i: u32) -> u64 {
 /// Input: 13 + 4 + 1 + 4 + 1 + 8 = 31 bytes total
 pub fn cross_seed(base_seed: u64, gen: u32, i: u32) -> u64 {
     let mut hasher = Sha256::new();
-    hasher.update(b"PARETO_CROSS_");      // 13 bytes
-    hasher.update(gen.to_le_bytes());     // 4 bytes
-    hasher.update(b"_");                  // 1 byte
-    hasher.update(i.to_le_bytes());       // 4 bytes
-    hasher.update(b"_");                  // 1 byte
+    hasher.update(b"PARETO_CROSS_"); // 13 bytes
+    hasher.update(gen.to_le_bytes()); // 4 bytes
+    hasher.update(b"_"); // 1 byte
+    hasher.update(i.to_le_bytes()); // 4 bytes
+    hasher.update(b"_"); // 1 byte
     hasher.update(base_seed.to_le_bytes()); // 8 bytes
     let digest = hasher.finalize();
     u64::from_le_bytes(digest[..8].try_into().unwrap())
@@ -45,11 +45,11 @@ pub fn cross_seed(base_seed: u64, gen: u32, i: u32) -> u64 {
 /// Input: 11 + 4 + 1 + 4 + 1 + 8 = 29 bytes total
 pub fn mut_seed(base_seed: u64, gen: u32, i: u32) -> u64 {
     let mut hasher = Sha256::new();
-    hasher.update(b"PARETO_MUT_");        // 11 bytes
-    hasher.update(gen.to_le_bytes());     // 4 bytes
-    hasher.update(b"_");                  // 1 byte
-    hasher.update(i.to_le_bytes());       // 4 bytes
-    hasher.update(b"_");                  // 1 byte
+    hasher.update(b"PARETO_MUT_"); // 11 bytes
+    hasher.update(gen.to_le_bytes()); // 4 bytes
+    hasher.update(b"_"); // 1 byte
+    hasher.update(i.to_le_bytes()); // 4 bytes
+    hasher.update(b"_"); // 1 byte
     hasher.update(base_seed.to_le_bytes()); // 8 bytes
     let digest = hasher.finalize();
     u64::from_le_bytes(digest[..8].try_into().unwrap())
@@ -62,9 +62,21 @@ mod tests {
     #[test]
     fn init_seeds_distinct() {
         let s = 42u64;
-        assert_ne!(init_seed(s, 0), init_seed(s, 1), "init_seed(s,0) != init_seed(s,1)");
-        assert_ne!(init_seed(s, 0), init_seed(s, 2), "init_seed(s,0) != init_seed(s,2)");
-        assert_ne!(init_seed(s, 1), init_seed(s, 2), "init_seed(s,1) != init_seed(s,2)");
+        assert_ne!(
+            init_seed(s, 0),
+            init_seed(s, 1),
+            "init_seed(s,0) != init_seed(s,1)"
+        );
+        assert_ne!(
+            init_seed(s, 0),
+            init_seed(s, 2),
+            "init_seed(s,0) != init_seed(s,2)"
+        );
+        assert_ne!(
+            init_seed(s, 1),
+            init_seed(s, 2),
+            "init_seed(s,1) != init_seed(s,2)"
+        );
     }
 
     #[test]
@@ -72,8 +84,11 @@ mod tests {
         let s = 42u64;
         let gen = 0u32;
         let i = 0u32;
-        assert_ne!(cross_seed(s, gen, i), mut_seed(s, gen, i),
-            "cross_seed != mut_seed for same inputs");
+        assert_ne!(
+            cross_seed(s, gen, i),
+            mut_seed(s, gen, i),
+            "cross_seed != mut_seed for same inputs"
+        );
     }
 
     #[test]
@@ -92,7 +107,11 @@ mod tests {
     #[test]
     fn init_seed_deterministic() {
         let s = 99u64;
-        assert_eq!(init_seed(s, 5), init_seed(s, 5), "same inputs → same output");
+        assert_eq!(
+            init_seed(s, 5),
+            init_seed(s, 5),
+            "same inputs → same output"
+        );
     }
 
     #[test]
@@ -111,21 +130,30 @@ mod tests {
     fn cross_seeds_distinct_across_gen() {
         let s = 42u64;
         let i = 0u32;
-        assert_ne!(cross_seed(s, 0, i), cross_seed(s, 1, i),
-            "different gen → different cross_seed");
+        assert_ne!(
+            cross_seed(s, 0, i),
+            cross_seed(s, 1, i),
+            "different gen → different cross_seed"
+        );
     }
 
     #[test]
     fn mut_seeds_distinct_across_gen() {
         let s = 42u64;
         let i = 0u32;
-        assert_ne!(mut_seed(s, 0, i), mut_seed(s, 1, i),
-            "different gen → different mut_seed");
+        assert_ne!(
+            mut_seed(s, 0, i),
+            mut_seed(s, 1, i),
+            "different gen → different mut_seed"
+        );
     }
 
     #[test]
     fn different_base_seeds_give_different_outputs() {
-        assert_ne!(init_seed(0, 0), init_seed(1, 0),
-            "different base_seed → different init_seed");
+        assert_ne!(
+            init_seed(0, 0),
+            init_seed(1, 0),
+            "different base_seed → different init_seed"
+        );
     }
 }

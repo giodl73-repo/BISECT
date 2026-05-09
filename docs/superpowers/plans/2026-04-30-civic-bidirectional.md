@@ -27,22 +27,22 @@
 
 ## Pre-Conditions
 
-- `redist` builds clean from `cargo build --release --locked`
-- `redist import --as-civic-counter-proposal` is wired (State Staff Interop plan)
-- `redist compare --comments-label <LABEL>` is wired (Plan Comparison plan)
+- `BISECT` builds clean from `cargo build --release --locked`
+- `BISECT import --as-civic-counter-proposal` is wired (State Staff Interop plan)
+- `BISECT compare --comments-label <LABEL>` is wired (Plan Comparison plan)
 - Callais Evidence Layer plan has landed `race_of_candidate_provenance.json` v1 schema and the parallel-curator-runs path (we extend it; we do not introduce it)
 - Census tract-set lookup for `(year, state)` is reachable from `bisect-data` (used by `bisect fetch` today)
 
 ---
 
-## Task 1: `redist civic` subcommand scaffolding + manifest schema
+## Task 1: `BISECT civic` subcommand scaffolding + manifest schema
 
-**Files:** `redist/crates/bisect-cli/src/civic/{mod.rs, ingest.rs, list_show.rs, conflicts.rs, candidate_race.rs, manifest.rs}`, `redist/crates/bisect-cli/src/args.rs`, `redist/crates/bisect-cli/src/main.rs`, `redist/crates/bisect-cli/src/lib.rs`, `docs/file-formats/civic-coi-csv.md`
+**Files:** `BISECT/crates/bisect-cli/src/civic/{mod.rs, ingest.rs, list_show.rs, conflicts.rs, candidate_race.rs, manifest.rs}`, `BISECT/crates/bisect-cli/src/args.rs`, `BISECT/crates/bisect-cli/src/main.rs`, `BISECT/crates/bisect-cli/src/lib.rs`, `docs/file-formats/civic-coi-csv.md`
 
 The scaffolding follows the existing subcommand pattern in `args.rs` (`SuiteCommands` enum + `SuiteArgs` wrapper).
 
 - [ ] **1.1** Add `Civic(CivicArgs)` to `Commands` in `args.rs`. `CivicArgs` wraps `#[command(subcommand)] pub command: CivicCommands`. Variants: `Ingest`, `AddCandidateRace`, `List`, `Show`, `Conflicts`. Each variant is a `#[derive(Parser)]` struct mirroring spec §"CLI surface".
-- [ ] **1.2** Wire dispatch in `main.rs` under `Commands::Civic(civic_args) => match civic_args.command { ... }`, calling into a new `redist_cli::civic` module. Errors flow through the same `eprintln!("ERROR: {e}"); std::process::exit(1);` envelope as siblings, with categorized `[INPUT]` / `[CONFIG]` / `[NETWORK]` prefixes per `docs/error-conventions.md` (see Onboarding plan Task 6).
+- [ ] **1.2** Wire dispatch in `main.rs` under `Commands::Civic(civic_args) => match civic_args.command { ... }`, calling into a new `BISECT_cli::civic` module. Errors flow through the same `eprintln!("ERROR: {e}"); std::process::exit(1);` envelope as siblings, with categorized `[INPUT]` / `[CONFIG]` / `[NETWORK]` prefixes per `docs/error-conventions.md` (see Onboarding plan Task 6).
 - [ ] **1.3** Define `CivicManifest` in `civic/manifest.rs` with `serde::{Serialize, Deserialize}`. Required fields:
   ```jsonc
   {
@@ -71,20 +71,20 @@ The scaffolding follows the existing subcommand pattern in `args.rs` (`SuiteComm
     },
     "url_snapshots": [ /* see Task 5 */ ],
     "build_commit": "<SHA>",
-    "redist_version": "..."
+    "BISECT_version": "..."
   }
   ```
-- [ ] **1.4** Output layout exactly per spec: `outputs/{version}/civic_inputs/{label}/{manifest.json, normalized.csv, original.csv, validation_log.txt, conflicts.json, snapshots/}`. Directory creation uses the same `io_utils.rs` helpers `redist export` uses; `--output-base` defaults to `outputs`.
-- [ ] **1.5** `docs/file-formats/civic-coi-csv.md` — **early deliverable** (resolves v2.1.1 P1 soft cycle: Plan Comparison consumes this schema and must not redefine it). Land before Task 2 implementation; commit alongside `redist civic --help` scaffolding so Plan Comparison Task 10.1 can import the canonical schema by reference. Contents: column schema (`geoid, comment_id, label, source, source_url, confidence, submitted_at`), validation policy modes, canonical-CSV byte-stability rules, BOM/encoding policy, leading-zero remediation. Linked from `docs/REDIST_CLI.md`, from the new `docs/civic/HOWTO.md` (Task 9), AND from Plan Comparison Task 10.
+- [ ] **1.4** Output layout exactly per spec: `outputs/{version}/civic_inputs/{label}/{manifest.json, normalized.csv, original.csv, validation_log.txt, conflicts.json, snapshots/}`. Directory creation uses the same `io_utils.rs` helpers `BISECT export` uses; `--output-base` defaults to `outputs`.
+- [ ] **1.5** `docs/file-formats/civic-coi-csv.md` — **early deliverable** (resolves v2.1.1 P1 soft cycle: Plan Comparison consumes this schema and must not redefine it). Land before Task 2 implementation; commit alongside `BISECT civic --help` scaffolding so Plan Comparison Task 10.1 can import the canonical schema by reference. Contents: column schema (`geoid, comment_id, label, source, source_url, confidence, submitted_at`), validation policy modes, canonical-CSV byte-stability rules, BOM/encoding policy, leading-zero remediation. Linked from `docs/BISECT_CLI.md`, from the new `docs/civic/HOWTO.md` (Task 9), AND from Plan Comparison Task 10.
 - [ ] **1.6** L0 unit tests: `civic ingest --help`, `civic list --help`, etc. all parse without panicking; `CivicManifest` round-trips through serde with both required-only and full payloads.
 
-**Exit:** `redist civic --help` lists the five subcommands. Manifest schema is documented + serde-tested.
+**Exit:** `BISECT civic --help` lists the five subcommands. Manifest schema is documented + serde-tested.
 
 ---
 
 ## Task 2: CSV reader with BOM tolerance + canonicalization (PP-27)
 
-**Files:** `redist/crates/bisect-cli/src/civic/csv_io.rs`, `redist/crates/bisect-cli/src/civic/canonical.rs`
+**Files:** `BISECT/crates/bisect-cli/src/civic/csv_io.rs`, `BISECT/crates/bisect-cli/src/civic/canonical.rs`
 
 The COI CSV reader is the single chokepoint for civic input. Every byte that flows downstream goes through it.
 
@@ -108,7 +108,7 @@ The COI CSV reader is the single chokepoint for civic input. Every byte that flo
 
 ## Task 3: GEOID typo + leading-zero detection (PP-28)
 
-**Files:** `redist/crates/bisect-cli/src/civic/geoid_validate.rs`
+**Files:** `BISECT/crates/bisect-cli/src/civic/geoid_validate.rs`
 
 The spec calls leading-zero loss "the single most common Excel error." This task implements the detector that names it explicitly.
 
@@ -130,7 +130,7 @@ The spec calls leading-zero loss "the single most common Excel error." This task
 
 ## Task 4: URL parser with parsed-IP loopback rejection (PP-29)
 
-**Files:** `redist/crates/bisect-cli/src/civic/url_validate.rs`
+**Files:** `BISECT/crates/bisect-cli/src/civic/url_validate.rs`
 
 String-match rejection of `"localhost"` is *insufficient*; the spec lists `127.x`, `0.0.0.0`, `::1`, `[::ffff:127.0.0.1]`, `192.168/16`, `10/8`, `172.16/12`, `169.254/16`. The fix is to parse the URL, resolve the host, and inspect the `IpAddr`.
 
@@ -150,11 +150,11 @@ String-match rejection of `"localhost"` is *insufficient*; the spec lists `127.x
 
 ## Task 5: URL snapshot protocol (PP-30 / C-02)
 
-**Files:** `redist/crates/bisect-cli/src/civic/snapshot.rs`, `redist/crates/bisect-cli/Cargo.toml`
+**Files:** `BISECT/crates/bisect-cli/src/civic/snapshot.rs`, `BISECT/crates/bisect-cli/Cargo.toml`
 
 The snapshot is the trial-time record. A 404 between submission and trial is the failure mode this task closes.
 
-- [ ] **5.1** HTTP client: `reqwest = "0.12"` is already in `bisect-cli/Cargo.toml` (blocking). Construct a dedicated `reqwest::blocking::Client` per ingest with: `connect_timeout(10s)`, `timeout(30s)` (total deadline), `redirect::Policy::limited(5)`, `cookie_store(false)`, custom `User-Agent: redist-civic/<version>`.
+- [ ] **5.1** HTTP client: `reqwest = "0.12"` is already in `bisect-cli/Cargo.toml` (blocking). Construct a dedicated `reqwest::blocking::Client` per ingest with: `connect_timeout(10s)`, `timeout(30s)` (total deadline), `redirect::Policy::limited(5)`, `cookie_store(false)`, custom `User-Agent: BISECT-civic/<version>`.
 - [ ] **5.2** Bounded fetch: stream the response body. Read `Body` chunks accumulated into a `Vec<u8>` capped at **1 MB**. On cap hit, drop the rest, set `truncated=true`. Larger HTTP `content-length` headers are logged but not used to short-circuit; we always cap on bytes read so a server lying about length cannot bypass the cap.
 - [ ] **5.3** No-creds policy:
   - Strip `Cookie` and `Authorization` headers on every request.
@@ -164,7 +164,7 @@ The snapshot is the trial-time record. A 404 between submission and trial is the
   - **WARC path (preferred)**: optional dependency `warc = "0.3"` (or equivalent crate) gated behind a `warc` Cargo feature. When the feature is enabled, write `snapshot.warc` containing one `WARC-Type: response` record with the request, response headers, and (possibly truncated) body.
   - **Fallback path (default, no extra deps)**: write `headers.txt` (one HTTP header per line, status line first) + `body.bin` (raw bytes, possibly truncated). The fallback is the spec's contract; WARC is the upgrade.
   - Both paths produce the same manifest fields: `url, fetched_at (ISO-8601 UTC), http_status, content_type, content_length_bytes, truncated, body_sha256, snapshot_path, snapshot_format ("warc" | "headers-body")`.
-- [ ] **5.6** Dynamic-page heuristic per spec line 123: if `body_size < 4096 || content_type not in {text/html, application/pdf, text/plain}`, set `manifest.url_snapshots[i].suspicious = true` and append validation note `"URL snapshot may be incomplete; submitter should attach a PDF via --source-pdf <PATH>"`. Strict refuses; lenient/advisory accepts. The `--source-pdf` argument on `redist civic ingest` accepts a path that is hashed and stored alongside the snapshot.
+- [ ] **5.6** Dynamic-page heuristic per spec line 123: if `body_size < 4096 || content_type not in {text/html, application/pdf, text/plain}`, set `manifest.url_snapshots[i].suspicious = true` and append validation note `"URL snapshot may be incomplete; submitter should attach a PDF via --source-pdf <PATH>"`. Strict refuses; lenient/advisory accepts. The `--source-pdf` argument on `BISECT civic ingest` accepts a path that is hashed and stored alongside the snapshot.
 - [ ] **5.7** Reproducibility-package inclusion: snapshot files are referenced by relative path from `manifest.json` (per M-04 / PP-31 path-portability rule); the Court Reports zipper picks them up automatically when the civic input is referenced.
 - [ ] **5.8** L0 tests using a localhost test server (`hyper::server` in a thread bound to `127.0.0.1:0`): assert the truncation cap, the timeout behavior (a server that hangs > 30s), the `WWW-Authenticate` rejection, the dynamic-page heuristic firing on a 200-byte HTML response. **Note**: localhost test servers are an explicit allowed-exception to PP-29 — the test bypasses the URL validator and calls `snapshot::fetch_and_store_internal` directly, which is `#[cfg(test)] pub(crate)`-visible only.
 
@@ -172,15 +172,15 @@ The snapshot is the trial-time record. A 404 between submission and trial is the
 
 ---
 
-## Task 6: `redist civic add-candidate-race` with attestation-doc handling (BD-R2)
+## Task 6: `BISECT civic add-candidate-race` with attestation-doc handling (BD-R2)
 
-**Files:** `redist/crates/bisect-cli/src/civic/candidate_race.rs`, the matching edit in the Callais Evidence Layer plan to land `attestation_doc_sha256` + `attestation_doc_format` in `race_of_candidate_provenance.json`
+**Files:** `BISECT/crates/bisect-cli/src/civic/candidate_race.rs`, the matching edit in the Callais Evidence Layer plan to land `attestation_doc_sha256` + `attestation_doc_format` in `race_of_candidate_provenance.json`
 
 This task ships the BD-R2 matched edit. Both this plan and the Callais plan must agree on the schema fields, accepted formats, and zip-inclusion semantics.
 
 - [ ] **6.1** CLI surface per spec:
   ```
-  redist civic add-candidate-race candidates.csv \
+  BISECT civic add-candidate-race candidates.csv \
     --year 2020 --state LA \
     --submitter "NAACP Louisiana State Conference" \
     --attestation-doc path/to/letter.pdf
@@ -198,11 +198,11 @@ This task ships the BD-R2 matched edit. Both this plan and the Callais plan must
 
 ## Task 7: Conflict detection + sensitivity-result asserting test (B-08)
 
-**Files:** `redist/crates/bisect-cli/src/civic/conflicts.rs`, `redist/crates/bisect-cli/tests/civic_conflict_sensitivity.rs`
+**Files:** `BISECT/crates/bisect-cli/src/civic/conflicts.rs`, `BISECT/crates/bisect-cli/tests/civic_conflict_sensitivity.rs`
 
 This is the B-08 fix: the test asserts the *result*, not just that the conflict-detection code path was invoked.
 
-- [ ] **7.1** `redist civic conflicts --label LABEL_A --label LABEL_B [--label ...]` reads each label's `normalized.csv`, joins on GEOID, and emits `conflicts.json` with three categories per spec line 191:
+- [ ] **7.1** `BISECT civic conflicts --label LABEL_A --label LABEL_B [--label ...]` reads each label's `normalized.csv`, joins on GEOID, and emits `conflicts.json` with three categories per spec line 191:
   - `coi_overlap`: same GEOID in different `comment_id`s across labels. Surface; do not adjudicate.
   - `coi_label_mismatch`: same `comment_id` (across labels) with different `label` strings. Surface.
   - `candidate_race_disagreement`: same candidate, different race, different submitter. Surface.
@@ -222,20 +222,20 @@ This is the B-08 fix: the test asserts the *result*, not just that the conflict-
 
 ## Task 8: Civic-counter-proposal flow integration
 
-**Files:** `examples/civic-counter-proposal/{README.md, run.sh, run.bat, plan.json, comments.csv, expected_outputs/}`, `redist/crates/bisect-cli/tests/civic_counter_proposal_e2e.rs`
+**Files:** `examples/civic-counter-proposal/{README.md, run.sh, run.bat, plan.json, comments.csv, expected_outputs/}`, `BISECT/crates/bisect-cli/tests/civic_counter_proposal_e2e.rs`
 
 The flow chains three already-shipped commands; this task ships a worked example + an L1 end-to-end smoke.
 
 - [ ] **8.1** `examples/civic-counter-proposal/` is the flow from spec lines 80-91 on synthetic Vermont data (small, deterministic, fast):
   ```
-  redist import --format districtr theirplan.json \
+  BISECT import --format districtr theirplan.json \
     --as-civic-counter-proposal \
     --submitted-by "League of Women Voters Vermont" \
     --label lwvvt_alternative_2026
-  redist civic ingest community_comments.csv --label lwvvt_comments \
+  BISECT civic ingest community_comments.csv --label lwvvt_comments \
     --submitter "Lake Champlain Neighborhood Council" \
     --year 2020 --state VT
-  redist compare --plan-a vt_state_proposal --plan-b lwvvt_alternative_2026 \
+  BISECT compare --plan-a vt_state_proposal --plan-b lwvvt_alternative_2026 \
     --comments-label lwvvt_comments \
     --format html,narrative,card
   ```
@@ -267,7 +267,7 @@ The CM-03 demand: the templates ship *with* this plan, not after. Civic groups w
   - "What you need" (just a spreadsheet program; we explicitly do not require git/Rust/Python)
   - "Step 1: Fill in the template" — screenshot of the XLSX with arrows
   - "Step 2: Save as UTF-8 CSV" — explicit Excel / Sheets / Numbers instructions per app
-  - "Step 3: Send it to your contact" — alternative: "if you have technical staff, here's the `redist civic ingest` command"
+  - "Step 3: Send it to your contact" — alternative: "if you have technical staff, here's the `BISECT civic ingest` command"
   - "Common mistakes" — leading zeros (link to the PP-28 rationale), wrong year, mixing two communities into one row
   - "Where to get help" — issue tracker URL; not "open a PR"
 - [ ] **9.5** `docs/civic/templates/README.md` records the template version + the SHA of the canonical template content, so a downstream consumer can detect template drift.
@@ -278,7 +278,7 @@ The CM-03 demand: the templates ship *with* this plan, not after. Civic groups w
 
 ## Task 10: Tests including hermetic LA fixture (B-04)
 
-**Files:** `tests/fixtures/civic/la_2024_round/{README.md, comments.csv, expected_normalized.csv, expected_manifest_keys.json, SANITIZATION.md}`, `redist/crates/bisect-cli/tests/civic_la_fixture.rs`
+**Files:** `tests/fixtures/civic/la_2024_round/{README.md, comments.csv, expected_normalized.csv, expected_manifest_keys.json, SANITIZATION.md}`, `BISECT/crates/bisect-cli/tests/civic_la_fixture.rs`
 
 B-04 replaces the spec's L2 "if available" with a checked-in, sanitized fixture. CI runs it on every PR.
 
@@ -287,7 +287,7 @@ B-04 replaces the spec's L2 "if available" with a checked-in, sanitized fixture.
 - [ ] **10.3** `expected_normalized.csv` is the byte-stable canonical form. Test asserts SHA-256 equality, not just structural equality — that is the full PP-27 contract.
 - [ ] **10.4** `expected_manifest_keys.json` lists the manifest keys + types (not values; ingestion timestamps differ). The test asserts presence + types, not concrete values.
 - [ ] **10.5** L1 hermetic test at `tests/civic_la_fixture.rs`:
-  - Runs `redist civic ingest tests/fixtures/civic/la_2024_round/comments.csv --year 2020 --state LA --label la_2024_test --validate strict`
+  - Runs `BISECT civic ingest tests/fixtures/civic/la_2024_round/comments.csv --year 2020 --state LA --label la_2024_test --validate strict`
   - Asserts exit 0
   - Asserts `outputs/{version}/civic_inputs/la_2024_test/normalized.csv` SHA matches `expected_normalized.csv` SHA
   - Asserts manifest key inventory matches `expected_manifest_keys.json`
@@ -314,7 +314,7 @@ CM-04: dogfood with a *neighborhood association*, not a state chapter. State cha
   - Hand the volunteer the Sheets template + HOWTO from Task 9. No verbal walkthrough.
   - Ask them to fill in 5-10 rows for a real neighborhood they know
   - Time them; do not help unless they ask
-  - When they hit `redist civic ingest`, observe failure modes — every failure is a docs/error-message bug filed against this plan's exit
+  - When they hit `BISECT civic ingest`, observe failure modes — every failure is a docs/error-message bug filed against this plan's exit
 - [ ] **11.3** Capture friction in `docs/civic/dogfood-test-report.md`: per-step time, per-step "did they need help?", per-error "did the error message tell them what to do?" The DoD edit (CM-04) is that this report exists and links the exact issue numbers we filed.
 - [ ] **11.4** Re-runnable: at least one of the project's quarterly dogfood loops uses this protocol again with a different neighborhood association.
 
@@ -324,7 +324,7 @@ CM-04: dogfood with a *neighborhood association*, not a state chapter. State cha
 
 ## Definition of Done
 
-- `redist civic ingest`, `add-candidate-race`, `list`, `show`, `conflicts` all parse + dispatch + produce the documented output layout
+- `BISECT civic ingest`, `add-candidate-race`, `list`, `show`, `conflicts` all parse + dispatch + produce the documented output layout
 - BOM-tolerant UTF-8 reader; UTF-16 rejected with a documented remediation message (PP-27)
 - GEOID leading-zero detection names the Excel cause and the column-format-as-Text fix (PP-28)
 - URL parser rejects every literal-IP loopback / private / link-local form by parsed-IP, never by string-match (PP-29)

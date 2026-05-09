@@ -1,14 +1,12 @@
+use anyhow::Context;
+use serde::{Deserialize, Serialize};
 /// Multi-chamber suite: draw and validate nested legislative plans.
 /// Spec 5 — board amendments R3 applied.
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
-use serde::{Deserialize, Serialize};
-use anyhow::Context;
 
-use bisect_analysis::{
-    build_chamber_adjacency, validate_nesting, NestingValidation,
-};
+use bisect_analysis::{build_chamber_adjacency, validate_nesting, NestingValidation};
 
 // ---------------------------------------------------------------------------
 // Nest mode
@@ -88,10 +86,7 @@ pub fn build_constitutional_nesting_table() -> HashMap<String, NestedRatio> {
 
 /// Resolve required nesting ratio for a state, given optional user override.
 /// Board amendment (WARD): IL requires explicit --nest-ratio; exits non-zero if missing.
-pub fn resolve_nesting_ratio(
-    state_code: &str,
-    user_ratio: Option<usize>,
-) -> anyhow::Result<usize> {
+pub fn resolve_nesting_ratio(state_code: &str, user_ratio: Option<usize>) -> anyhow::Result<usize> {
     let table = build_constitutional_nesting_table();
     match table.get(state_code) {
         Some(NestedRatio::Fixed(r)) => {
@@ -110,26 +105,32 @@ pub fn resolve_nesting_ratio(
         Some(NestedRatio::Variable) => {
             // Provide state-specific guidance for common variable-ratio states
             let hint = match state_code {
-                "IL" => " Illinois uses 2:1 or 3:1 depending on district geometry. \
+                "IL" => {
+                    " Illinois uses 2:1 or 3:1 depending on district geometry. \
                           Historically most senate districts nest 2 house districts. \
-                          Try --nest-ratio 2 first; use --nest-ratio 3 if nesting fails.",
-                "MD" => " Maryland senate districts typically contain 3 house delegates, \
+                          Try --nest-ratio 2 first; use --nest-ratio 3 if nesting fails."
+                }
+                "MD" => {
+                    " Maryland senate districts typically contain 3 house delegates, \
                           though some have sub-districts with fewer. \
-                          Try --nest-ratio 3.",
+                          Try --nest-ratio 3."
+                }
                 _ => " Check your state constitution for the required ratio.",
             };
-            user_ratio.ok_or_else(|| anyhow::anyhow!(
+            user_ratio.ok_or_else(|| {
+                anyhow::anyhow!(
                 "{state_code} nesting ratio is variable by statute — must be specified explicitly.\
                  {hint}\n\
                  Use: --nest-ratio N  (integer house districts per senate district)"
-            ))
+            )
+            })
         }
-        None => {
-            user_ratio.ok_or_else(|| anyhow::anyhow!(
+        None => user_ratio.ok_or_else(|| {
+            anyhow::anyhow!(
                 "No constitutional nesting ratio defined for {state_code}. \
                  Check your state constitution and use --nest-ratio N."
-            ))
-        }
+            )
+        }),
     }
 }
 
@@ -260,7 +261,10 @@ pub fn generate_suite_export(suite: &PlanSuite) -> SuiteExport {
         plans: plan_files.clone(),
     };
 
-    SuiteExport { envelope, plan_files }
+    SuiteExport {
+        envelope,
+        plan_files,
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -304,7 +308,11 @@ pub fn run_suite_validate_with_overrides(
             let plan_dir = plans_base.join(label);
             let data_path = plan_dir.join("data").join("final_assignments.json");
             let flat_path = plan_dir.join("final_assignments.json");
-            let chosen = if data_path.exists() { data_path } else { flat_path };
+            let chosen = if data_path.exists() {
+                data_path
+            } else {
+                flat_path
+            };
             let content = std::fs::read_to_string(&chosen)
                 .with_context(|| format!("Reading house plan from {}", chosen.display()))?;
             serde_json::from_str::<HashMap<String, usize>>(&content)
@@ -330,7 +338,11 @@ pub fn run_suite_validate_with_overrides(
             let plan_dir = plans_base.join(label);
             let data_path = plan_dir.join("data").join("final_assignments.json");
             let flat_path = plan_dir.join("final_assignments.json");
-            let chosen = if data_path.exists() { data_path } else { flat_path };
+            let chosen = if data_path.exists() {
+                data_path
+            } else {
+                flat_path
+            };
             let content = std::fs::read_to_string(&chosen)
                 .with_context(|| format!("Reading senate plan from {}", chosen.display()))?;
             serde_json::from_str::<HashMap<String, usize>>(&content)
@@ -390,7 +402,11 @@ pub fn run_suite_validate_with_overrides(
     // Count districts for ratio
     let num_house = house_assignments.values().cloned().max().unwrap_or(0);
     let num_senate = senate_assignments.values().cloned().max().unwrap_or(0);
-    let ratio = if num_senate > 0 { num_house / num_senate.max(1) } else { 2 };
+    let ratio = if num_senate > 0 {
+        num_house / num_senate.max(1)
+    } else {
+        2
+    };
 
     let nesting = validate_nesting(&house_assignments, &senate_assignments, ratio);
 
@@ -409,10 +425,10 @@ fn load_rplan_assignments(
     if !path.exists() {
         anyhow::bail!("RPLAN file not found: {}", path.display());
     }
-    let content = std::fs::read_to_string(&path)
-        .with_context(|| format!("Reading {}", path.display()))?;
-    let json: serde_json::Value = serde_json::from_str(&content)
-        .with_context(|| format!("Parsing {}", path.display()))?;
+    let content =
+        std::fs::read_to_string(&path).with_context(|| format!("Reading {}", path.display()))?;
+    let json: serde_json::Value =
+        serde_json::from_str(&content).with_context(|| format!("Parsing {}", path.display()))?;
     let assignments: HashMap<String, usize> = json["assignments"]
         .as_object()
         .ok_or_else(|| anyhow::anyhow!("No 'assignments' object in {}", path.display()))?
@@ -509,7 +525,9 @@ pub fn run_suite_draw(
                 args.name,
                 violation_strs.join("\n")
             );
-            return Err(anyhow::anyhow!("Nesting validation failed — see violations above"));
+            return Err(anyhow::anyhow!(
+                "Nesting validation failed — see violations above"
+            ));
         }
     }
 
@@ -568,15 +586,16 @@ pub fn run_suite_stability(
             .join("data")
             .join("final_assignments.json");
 
-        let content = std::fs::read_to_string(&path)
-            .map_err(|e| anyhow::anyhow!(
+        let content = std::fs::read_to_string(&path).map_err(|e| {
+            anyhow::anyhow!(
                 "Cannot load assignments for label '{}' from {}: {e}",
-                label, path.display()
-            ))?;
-        let assignments: HashMap<String, usize> = serde_json::from_str(&content)
-            .map_err(|e| anyhow::anyhow!(
-                "Invalid JSON in assignments for label '{}': {e}", label
-            ))?;
+                label,
+                path.display()
+            )
+        })?;
+        let assignments: HashMap<String, usize> = serde_json::from_str(&content).map_err(|e| {
+            anyhow::anyhow!("Invalid JSON in assignments for label '{}': {e}", label)
+        })?;
         all_assignments.push((label.clone(), assignments));
     }
 
@@ -604,7 +623,10 @@ pub fn run_suite_stability(
         0.0
     };
     let min = similarities.iter().cloned().fold(f64::INFINITY, f64::min);
-    let max = similarities.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+    let max = similarities
+        .iter()
+        .cloned()
+        .fold(f64::NEG_INFINITY, f64::max);
 
     let result = SuiteStabilityResult {
         num_plans: n,
@@ -616,13 +638,22 @@ pub fn run_suite_stability(
         unstable_pairs,
     };
 
-    eprintln!("[bisect suite stability] {} plans, {} pairs", result.num_plans, result.num_pairs);
-    eprintln!("  mean={:.4}  min={:.4}  max={:.4}",
-        result.mean_similarity, result.min_similarity, result.max_similarity);
+    eprintln!(
+        "[bisect suite stability] {} plans, {} pairs",
+        result.num_plans, result.num_pairs
+    );
+    eprintln!(
+        "  mean={:.4}  min={:.4}  max={:.4}",
+        result.mean_similarity, result.min_similarity, result.max_similarity
+    );
     if result.stable {
         eprintln!("  [STABLE] All pairs >= {:.2}", STABILITY_THRESHOLD);
     } else {
-        eprintln!("  [UNSTABLE] {} pairs below {:.2}:", result.unstable_pairs.len(), STABILITY_THRESHOLD);
+        eprintln!(
+            "  [UNSTABLE] {} pairs below {:.2}:",
+            result.unstable_pairs.len(),
+            STABILITY_THRESHOLD
+        );
         for (a, b, sim) in &result.unstable_pairs {
             eprintln!("    {} <-> {}: {:.4}", a, b, sim);
         }
@@ -632,12 +663,12 @@ pub fn run_suite_stability(
 }
 
 /// Compute Jaccard similarity between two assignment maps (used internally by stability).
-fn compute_jaccard_similarity(
-    a: &HashMap<String, usize>,
-    b: &HashMap<String, usize>,
-) -> f64 {
-    if a.is_empty() || b.is_empty() { return 0.0; }
-    let matching = a.iter()
+fn compute_jaccard_similarity(a: &HashMap<String, usize>, b: &HashMap<String, usize>) -> f64 {
+    if a.is_empty() || b.is_empty() {
+        return 0.0;
+    }
+    let matching = a
+        .iter()
         .filter(|(geoid, &d)| b.get(*geoid) == Some(&d))
         .count();
     let union = a.len().max(b.len());
@@ -654,7 +685,10 @@ mod tests {
 
     #[test]
     fn test_nest_mode_from_str() {
-        assert_eq!("senate-in-house".parse::<NestMode>().unwrap(), NestMode::SenateInHouse);
+        assert_eq!(
+            "senate-in-house".parse::<NestMode>().unwrap(),
+            NestMode::SenateInHouse
+        );
         assert_eq!("none".parse::<NestMode>().unwrap(), NestMode::None);
         assert!("invalid".parse::<NestMode>().is_err());
     }
@@ -675,24 +709,32 @@ mod tests {
     fn test_constitutional_nesting_table_includes_nv() {
         // NV has senate_contains_two_house, 2:1 in state_policy.json
         let table = build_constitutional_nesting_table();
-        assert_eq!(table.get("NV"), Some(&NestedRatio::Fixed(2)),
-            "NV must have 2:1 nesting ratio from state policy");
+        assert_eq!(
+            table.get("NV"),
+            Some(&NestedRatio::Fixed(2)),
+            "NV must have 2:1 nesting ratio from state policy"
+        );
     }
 
     #[test]
     fn test_constitutional_nesting_table_excludes_test_states() {
         // _TEST_EL (Eldoria) should not appear in the nesting table
         let table = build_constitutional_nesting_table();
-        assert!(!table.contains_key("_TEST_EL"),
-            "test states must be excluded from nesting table");
+        assert!(
+            !table.contains_key("_TEST_EL"),
+            "test states must be excluded from nesting table"
+        );
     }
 
     #[test]
     fn test_constitutional_nesting_table_has_multiple_states() {
         // Policy-driven table should have more than just WA and IL
         let table = build_constitutional_nesting_table();
-        assert!(table.len() >= 4,
-            "nesting table must cover at least 4 states (WA, IL, NV, AK...), got {}", table.len());
+        assert!(
+            table.len() >= 4,
+            "nesting table must cover at least 4 states (WA, IL, NV, AK...), got {}",
+            table.len()
+        );
     }
 
     #[test]
@@ -728,15 +770,21 @@ mod tests {
     fn test_nv_nesting_ratio_resolved_from_policy() {
         // NV senate contains two house districts (2:1), driven by state_policy.json
         let result = resolve_nesting_ratio("NV", None);
-        assert_eq!(result.unwrap(), 2,
-            "NV must resolve 2:1 nesting from policy without explicit --nest-ratio");
+        assert_eq!(
+            result.unwrap(),
+            2,
+            "NV must resolve 2:1 nesting from policy without explicit --nest-ratio"
+        );
     }
 
     #[test]
     fn test_md_variable_requires_explicit_nest_ratio() {
         // MD has variable nesting ratio (some senate districts have 3 delegates)
         let result = resolve_nesting_ratio("MD", None);
-        assert!(result.is_err(), "MD variable nesting must require explicit --nest-ratio");
+        assert!(
+            result.is_err(),
+            "MD variable nesting must require explicit --nest-ratio"
+        );
     }
 
     #[test]
@@ -761,14 +809,26 @@ mod tests {
             year: "2020".into(),
             nest_mode: NestMode::SenateInHouse,
             plans: vec![
-                PlanEntry { chamber: "congressional".into(), file: "wa_v1_congressional.rplan".into() },
-                PlanEntry { chamber: "house".into(), file: "wa_v1_house.rplan".into() },
-                PlanEntry { chamber: "senate".into(), file: "wa_v1_senate.rplan".into() },
+                PlanEntry {
+                    chamber: "congressional".into(),
+                    file: "wa_v1_congressional.rplan".into(),
+                },
+                PlanEntry {
+                    chamber: "house".into(),
+                    file: "wa_v1_house.rplan".into(),
+                },
+                PlanEntry {
+                    chamber: "senate".into(),
+                    file: "wa_v1_senate.rplan".into(),
+                },
             ],
         };
         let export = generate_suite_export(&suite);
         assert_eq!(export.plan_files.len(), 3);
-        assert!(export.plan_files.iter().any(|p| p.chamber == "congressional"));
+        assert!(export
+            .plan_files
+            .iter()
+            .any(|p| p.chamber == "congressional"));
         assert!(export.plan_files.iter().any(|p| p.chamber == "house"));
         assert!(export.plan_files.iter().any(|p| p.chamber == "senate"));
     }
@@ -794,7 +854,7 @@ mod tests {
         let n = plans.len();
         let mut similarities: Vec<f64> = Vec::new();
         for i in 0..n {
-            for j in (i+1)..n {
+            for j in (i + 1)..n {
                 let sim = compute_jaccard_similarity(&plans[i].1, &plans[j].1);
                 similarities.push(sim);
             }
@@ -802,10 +862,16 @@ mod tests {
 
         assert_eq!(similarities.len(), 3, "3 plans → 3 pairs");
         for &s in &similarities {
-            assert!((s - 1.0).abs() < 1e-9, "identical plans must all have similarity 1.0, got {s}");
+            assert!(
+                (s - 1.0).abs() < 1e-9,
+                "identical plans must all have similarity 1.0, got {s}"
+            );
         }
         let mean = similarities.iter().sum::<f64>() / similarities.len() as f64;
-        assert!((mean - 1.0).abs() < 1e-9, "mean must be 1.0 for identical plans");
+        assert!(
+            (mean - 1.0).abs() < 1e-9,
+            "mean must be 1.0 for identical plans"
+        );
     }
 
     /// Verify stability analysis with completely different plans returns low similarity.
@@ -826,7 +892,10 @@ mod tests {
         plan_b.insert("T4".to_string(), 2usize);
 
         let sim = compute_jaccard_similarity(&plan_a, &plan_b);
-        assert!(sim < 0.1, "completely different assignments must have similarity < 0.1, got {sim}");
+        assert!(
+            sim < 0.1,
+            "completely different assignments must have similarity < 0.1, got {sim}"
+        );
 
         // 2 plans → 1 pair
         let pairs_count = 1; // n*(n-1)/2 = 2*1/2 = 1
@@ -846,7 +915,10 @@ mod tests {
         let result = run_suite_stability(&args);
         assert!(result.is_err(), "should fail with only 1 label");
         let msg = result.unwrap_err().to_string();
-        assert!(msg.contains("At least 2"), "error must mention 2 labels: {msg}");
+        assert!(
+            msg.contains("At least 2"),
+            "error must mention 2 labels: {msg}"
+        );
     }
 
     /// Verify pairwise count formula: n*(n-1)/2 pairs.
@@ -882,17 +954,31 @@ mod tests {
             year: "2020".into(),
             nest_mode: NestMode::SenateInHouse,
             plans: vec![
-                PlanEntry { chamber: "congressional".into(), file: "wa_congressional.rplan".into() },
-                PlanEntry { chamber: "house".into(), file: "wa_house.rplan".into() },
-                PlanEntry { chamber: "senate".into(), file: "wa_senate.rplan".into() },
+                PlanEntry {
+                    chamber: "congressional".into(),
+                    file: "wa_congressional.rplan".into(),
+                },
+                PlanEntry {
+                    chamber: "house".into(),
+                    file: "wa_house.rplan".into(),
+                },
+                PlanEntry {
+                    chamber: "senate".into(),
+                    file: "wa_senate.rplan".into(),
+                },
             ],
         };
         // Congressional chamber must appear in the plan list
-        assert!(suite.plans.iter().any(|p| p.chamber == "congressional"),
-            "congressional plan must be present in suite");
+        assert!(
+            suite.plans.iter().any(|p| p.chamber == "congressional"),
+            "congressional plan must be present in suite"
+        );
         // The nest_mode field belongs to state legislative plans only
-        assert_eq!(suite.nest_mode, NestMode::SenateInHouse,
-            "nest_mode is stored but applies only to house/senate");
+        assert_eq!(
+            suite.nest_mode,
+            NestMode::SenateInHouse,
+            "nest_mode is stored but applies only to house/senate"
+        );
         // Nesting validation is NOT called for the congressional plan.
         // The congressional plan is always drawn independently.
         // Verified by the guard in run_suite_draw: only house + senate assignments
@@ -912,12 +998,18 @@ mod tests {
              recursive bisection approach.\n\
              To file a feature request: https://github.com/giodl73-repo/BISECT/issues\n\
              Proceeding without congressional-in-senate nesting.";
-        assert!(note.contains("Congressional-in-senate nesting is not yet supported"),
-            "note must say nesting is unsupported");
-        assert!(note.contains("fractional ratios"),
-            "note must explain fractional ratios");
-        assert!(note.contains("recursive bisection"),
-            "note must mention the algorithm constraint");
+        assert!(
+            note.contains("Congressional-in-senate nesting is not yet supported"),
+            "note must say nesting is unsupported"
+        );
+        assert!(
+            note.contains("fractional ratios"),
+            "note must explain fractional ratios"
+        );
+        assert!(
+            note.contains("recursive bisection"),
+            "note must mention the algorithm constraint"
+        );
     }
 
     #[test]
@@ -928,9 +1020,18 @@ mod tests {
             year: "2020".into(),
             nest_mode: NestMode::SenateInHouse,
             plans: vec![
-                PlanEntry { chamber: "congressional".into(), file: "wa_v1_congressional.rplan".into() },
-                PlanEntry { chamber: "house".into(), file: "wa_v1_house.rplan".into() },
-                PlanEntry { chamber: "senate".into(), file: "wa_v1_senate.rplan".into() },
+                PlanEntry {
+                    chamber: "congressional".into(),
+                    file: "wa_v1_congressional.rplan".into(),
+                },
+                PlanEntry {
+                    chamber: "house".into(),
+                    file: "wa_v1_house.rplan".into(),
+                },
+                PlanEntry {
+                    chamber: "senate".into(),
+                    file: "wa_v1_senate.rplan".into(),
+                },
             ],
         };
         let export = generate_suite_export(&suite);
@@ -938,7 +1039,8 @@ mod tests {
         let v: serde_json::Value = serde_json::from_str(&json).unwrap();
         let plans = v["plans"].as_array().unwrap();
         assert_eq!(plans.len(), 3);
-        let chambers: Vec<&str> = plans.iter()
+        let chambers: Vec<&str> = plans
+            .iter()
             .map(|p| p["chamber"].as_str().unwrap())
             .collect();
         assert!(chambers.contains(&"congressional"));
@@ -981,9 +1083,14 @@ mod tests {
     fn test_nest_mode_parse_unknown_gives_error_with_name() {
         let err = "unicameral".parse::<NestMode>().unwrap_err();
         let msg = err.to_string();
-        assert!(msg.contains("unicameral"), "error must echo the bad value: {msg}");
-        assert!(msg.contains("senate-in-house") || msg.contains("none"),
-            "error must list valid values: {msg}");
+        assert!(
+            msg.contains("unicameral"),
+            "error must echo the bad value: {msg}"
+        );
+        assert!(
+            msg.contains("senate-in-house") || msg.contains("none"),
+            "error must list valid values: {msg}"
+        );
     }
 
     // -- PlanSuite / PlanEntry construction ----------------------------------
@@ -996,8 +1103,14 @@ mod tests {
             year: "2020".into(),
             nest_mode: NestMode::None,
             plans: vec![
-                PlanEntry { chamber: "house".into(), file: "tx_house.rplan".into() },
-                PlanEntry { chamber: "senate".into(), file: "tx_senate.rplan".into() },
+                PlanEntry {
+                    chamber: "house".into(),
+                    file: "tx_house.rplan".into(),
+                },
+                PlanEntry {
+                    chamber: "senate".into(),
+                    file: "tx_senate.rplan".into(),
+                },
             ],
         };
         let json = serde_json::to_string(&suite).unwrap();
@@ -1028,10 +1141,15 @@ mod tests {
     fn test_validate_house_for_nesting_rejects_empty() {
         let empty: HashMap<String, usize> = HashMap::new();
         let result = validate_house_for_nesting(&empty);
-        assert!(result.is_err(), "empty house assignments must fail nesting validation");
+        assert!(
+            result.is_err(),
+            "empty house assignments must fail nesting validation"
+        );
         let msg = result.unwrap_err().to_string();
-        assert!(msg.contains("empty") || msg.contains("empty"),
-            "error must mention empty: {msg}");
+        assert!(
+            msg.contains("empty") || msg.contains("empty"),
+            "error must mention empty: {msg}"
+        );
     }
 
     #[test]
@@ -1040,7 +1158,10 @@ mod tests {
         m.insert("53001000100".into(), 1);
         m.insert("53001000200".into(), 2);
         let result = validate_house_for_nesting(&m);
-        assert!(result.is_ok(), "non-empty assignments must pass house nesting check");
+        assert!(
+            result.is_ok(),
+            "non-empty assignments must pass house nesting check"
+        );
     }
 
     // -- compute_jaccard_similarity ------------------------------------------
@@ -1067,7 +1188,10 @@ mod tests {
         a.insert("T1".into(), 1);
         let b = a.clone();
         let sim = compute_jaccard_similarity(&a, &b);
-        assert!((sim - 1.0).abs() < 1e-9, "single matching element must give 1.0");
+        assert!(
+            (sim - 1.0).abs() < 1e-9,
+            "single matching element must give 1.0"
+        );
     }
 
     #[test]
@@ -1077,7 +1201,10 @@ mod tests {
         let mut b: HashMap<String, usize> = HashMap::new();
         b.insert("T1".into(), 2);
         let sim = compute_jaccard_similarity(&a, &b);
-        assert_eq!(sim, 0.0, "single element with different district must be 0.0");
+        assert_eq!(
+            sim, 0.0,
+            "single element with different district must be 0.0"
+        );
     }
 
     // -- resolve_nesting_ratio edge cases ------------------------------------
@@ -1086,16 +1213,21 @@ mod tests {
     fn test_resolve_nesting_ratio_unknown_state_no_user_ratio() {
         // A state not in the policy table with no user override must fail
         let result = resolve_nesting_ratio("XX_FAKE_STATE", None);
-        assert!(result.is_err(),
-            "unknown state without --nest-ratio must error");
+        assert!(
+            result.is_err(),
+            "unknown state without --nest-ratio must error"
+        );
     }
 
     #[test]
     fn test_resolve_nesting_ratio_unknown_state_with_user_ratio() {
         // A state not in the policy table WITH a user override must succeed
         let result = resolve_nesting_ratio("XX_FAKE_STATE", Some(2));
-        assert_eq!(result.unwrap(), 2,
-            "unknown state with explicit --nest-ratio must use user value");
+        assert_eq!(
+            result.unwrap(),
+            2,
+            "unknown state with explicit --nest-ratio must use user value"
+        );
     }
 
     // -- generate_suite_export -----------------------------------------------
@@ -1108,8 +1240,14 @@ mod tests {
             year: "2020".into(),
             nest_mode: NestMode::None,
             plans: vec![
-                PlanEntry { chamber: "house".into(), file: "vt_house.rplan".into() },
-                PlanEntry { chamber: "senate".into(), file: "vt_senate.rplan".into() },
+                PlanEntry {
+                    chamber: "house".into(),
+                    file: "vt_house.rplan".into(),
+                },
+                PlanEntry {
+                    chamber: "senate".into(),
+                    file: "vt_senate.rplan".into(),
+                },
             ],
         };
         let export = generate_suite_export(&suite);
@@ -1129,7 +1267,10 @@ mod tests {
 
     #[test]
     fn test_plan_entry_clone() {
-        let e = PlanEntry { chamber: "house".into(), file: "wa_house.rplan".into() };
+        let e = PlanEntry {
+            chamber: "house".into(),
+            file: "wa_house.rplan".into(),
+        };
         let c = e.clone();
         assert_eq!(c.chamber, e.chamber);
         assert_eq!(c.file, e.file);
@@ -1142,7 +1283,10 @@ mod tests {
             state: "WA".into(),
             year: "2020".into(),
             nest_mode: NestMode::SenateInHouse,
-            plans: vec![PlanEntry { chamber: "house".into(), file: "wa_house.rplan".into() }],
+            plans: vec![PlanEntry {
+                chamber: "house".into(),
+                file: "wa_house.rplan".into(),
+            }],
         };
         let c = suite.clone();
         assert_eq!(c.suite_name, suite.suite_name);
@@ -1168,7 +1312,10 @@ mod tests {
         // Must return a HashMap (even if empty on a minimal policy file)
         // and must not contain test states
         for key in table.keys() {
-            assert!(!key.starts_with('_'), "nesting table must not include test states: {key}");
+            assert!(
+                !key.starts_with('_'),
+                "nesting table must not include test states: {key}"
+            );
         }
     }
 
@@ -1179,7 +1326,11 @@ mod tests {
         let r = SuiteValidateResult {
             suite_name: "wa_test".into(),
             valid: true,
-            nesting: NestingValidation { valid: true, violations: vec![], senate_to_house_map: HashMap::new() },
+            nesting: NestingValidation {
+                valid: true,
+                violations: vec![],
+                senate_to_house_map: HashMap::new(),
+            },
         };
         assert!(r.valid);
         assert_eq!(r.suite_name, "wa_test");
@@ -1205,24 +1356,27 @@ mod tests {
     fn test_stability_unstable_pair_tracking() {
         // An unstable pair with similarity below 0.95 is flagged
         let mut a: HashMap<String, usize> = HashMap::new();
-        for i in 0..10 { a.insert(format!("G{i}"), 1); }
+        for i in 0..10 {
+            a.insert(format!("G{i}"), 1);
+        }
         let mut b: HashMap<String, usize> = HashMap::new();
-        for i in 0..10 { b.insert(format!("G{i}"), if i < 8 { 1 } else { 2 }); }
+        for i in 0..10 {
+            b.insert(format!("G{i}"), if i < 8 { 1 } else { 2 });
+        }
         let sim = compute_jaccard_similarity(&a, &b);
         // 8 out of 10 match → 0.8 < 0.95 → unstable
-        assert!((sim - 0.8).abs() < 1e-9, "expected 0.8 similarity, got {sim}");
+        assert!(
+            (sim - 0.8).abs() < 1e-9,
+            "expected 0.8 similarity, got {sim}"
+        );
         assert!(sim < 0.95, "should be flagged as unstable");
     }
 
     #[test]
     fn test_jaccard_all_same_values_different_keys() {
         // Completely disjoint key sets → 0 matching → 0.0
-        let a: HashMap<String, usize> = (0..5)
-            .map(|i| (format!("A{i}"), 1usize))
-            .collect();
-        let b: HashMap<String, usize> = (0..5)
-            .map(|i| (format!("B{i}"), 1usize))
-            .collect();
+        let a: HashMap<String, usize> = (0..5).map(|i| (format!("A{i}"), 1usize)).collect();
+        let b: HashMap<String, usize> = (0..5).map(|i| (format!("B{i}"), 1usize)).collect();
         let sim = compute_jaccard_similarity(&a, &b);
         assert_eq!(sim, 0.0, "disjoint key sets must give 0.0 similarity");
     }

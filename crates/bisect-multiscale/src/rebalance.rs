@@ -25,10 +25,10 @@ pub fn rebalance(
         }
 
         // Check if all districts are within tolerance
-        let all_balanced = (1..=k as usize).all(|d| {
-            (dist_pop[d] - ideal as i64).abs() <= tol_abs
-        });
-        if all_balanced { return true; }
+        let all_balanced = (1..=k as usize).all(|d| (dist_pop[d] - ideal as i64).abs() <= tol_abs);
+        if all_balanced {
+            return true;
+        }
 
         // Find the most overweight district
         let (heavy, _) = (1..=k as usize)
@@ -36,10 +36,14 @@ pub fn rebalance(
             .filter(|&(_, excess)| excess > 0)
             .max_by_key(|&(_, excess)| excess)
             .unwrap_or((0, 0));
-        if heavy == 0 { return true; }
+        if heavy == 0 {
+            return true;
+        }
 
         // Find a boundary tract in `heavy` adjacent to an underweight district
-        let moved = assignment.iter().enumerate()
+        let moved = assignment
+            .iter()
+            .enumerate()
             .filter(|&(_, &d)| d == heavy as u32)
             .find_map(|(t, _)| {
                 adj[t].iter().find_map(|&nb| {
@@ -74,11 +78,15 @@ fn is_connected_without(
     exclude_tract: usize,
     district: u32,
 ) -> bool {
-    let tracts: Vec<usize> = assignment.iter().enumerate()
+    let tracts: Vec<usize> = assignment
+        .iter()
+        .enumerate()
         .filter(|&(t, &d)| d == district && t != exclude_tract)
         .map(|(t, _)| t)
         .collect();
-    if tracts.is_empty() { return false; }
+    if tracts.is_empty() {
+        return false;
+    }
 
     let set: std::collections::HashSet<usize> = tracts.iter().copied().collect();
     let mut visited = std::collections::HashSet::new();
@@ -101,12 +109,18 @@ mod tests {
     use super::*;
 
     fn path_adj(n: usize) -> Vec<Vec<usize>> {
-        (0..n).map(|i| {
-            let mut nb = Vec::new();
-            if i > 0 { nb.push(i-1); }
-            if i < n-1 { nb.push(i+1); }
-            nb
-        }).collect()
+        (0..n)
+            .map(|i| {
+                let mut nb = Vec::new();
+                if i > 0 {
+                    nb.push(i - 1);
+                }
+                if i < n - 1 {
+                    nb.push(i + 1);
+                }
+                nb
+            })
+            .collect()
     }
 
     #[test]
@@ -127,10 +141,26 @@ mod tests {
         let result = rebalance(&mut asgn, &adj, &pop, 2, 0.1, 200);
         assert!(result);
         // After rebalancing: 2+2 split (within 10% tolerance of 200 each)
-        let pop1: i64 = asgn.iter().enumerate().filter(|&(_, &d)| d == 1).map(|(t, _)| pop[t]).sum();
-        let pop2: i64 = asgn.iter().enumerate().filter(|&(_, &d)| d == 2).map(|(t, _)| pop[t]).sum();
-        assert!((pop1 - 200).abs() <= 40, "district 1 pop {pop1} not within 10% of 200");
-        assert!((pop2 - 200).abs() <= 40, "district 2 pop {pop2} not within 10% of 200");
+        let pop1: i64 = asgn
+            .iter()
+            .enumerate()
+            .filter(|&(_, &d)| d == 1)
+            .map(|(t, _)| pop[t])
+            .sum();
+        let pop2: i64 = asgn
+            .iter()
+            .enumerate()
+            .filter(|&(_, &d)| d == 2)
+            .map(|(t, _)| pop[t])
+            .sum();
+        assert!(
+            (pop1 - 200).abs() <= 40,
+            "district 1 pop {pop1} not within 10% of 200"
+        );
+        assert!(
+            (pop2 - 200).abs() <= 40,
+            "district 2 pop {pop2} not within 10% of 200"
+        );
     }
 
     #[test]

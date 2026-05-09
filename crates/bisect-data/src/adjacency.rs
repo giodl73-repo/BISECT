@@ -1,3 +1,6 @@
+use geo::{BoundingRect, EuclideanLength, Intersects};
+use geo_types::{Coord, Polygon, Rect};
+use rayon::prelude::*;
 /// Parallel spatial adjacency builder.
 ///
 /// Replaces the single-threaded Python Shapely intersection loop in adjacency.py.
@@ -10,16 +13,15 @@
 /// 3. Rayon parallel map over candidate pairs → intersection classification
 /// 4. Return adjacency list + edge weights (boundary lengths in metres)
 use std::collections::HashMap;
-use geo::{BoundingRect, Intersects, EuclideanLength};
-use geo_types::{Polygon, Rect, Coord};
-use rayon::prelude::*;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum AdjacencyError {
     #[error("WKB parse error at index {0}: {1}")]
     WkbParseError(usize, String),
-    #[error("expected projected coordinates (metres), got values suggesting degrees: ({0:.4}, {1:.4})")]
+    #[error(
+        "expected projected coordinates (metres), got values suggesting degrees: ({0:.4}, {1:.4})"
+    )]
     LikelyUnprojected(f64, f64),
     #[error("empty polygon at index {0}")]
     EmptyPolygon(usize),
@@ -62,23 +64,36 @@ impl AdjacencyGraph {
     /// Returns None if geometry data is not loaded (vertex_areas is empty).
     /// Returns 0.0 if P(S) = 0 (degenerate; should not occur with real TIGER data).
     pub fn subgraph_pp(&self, vertices: &std::collections::HashSet<usize>) -> Option<f64> {
-        if self.vertex_areas.is_empty() { return None; }
+        if self.vertex_areas.is_empty() {
+            return None;
+        }
 
         let area: f64 = vertices.iter().map(|&v| self.vertex_areas[v]).sum();
 
         // External perimeter contribution from each tract's non-shared boundary
-        let ext: f64 = vertices.iter().map(|&v| self.vertex_ext_perimeters[v]).sum();
+        let ext: f64 = vertices
+            .iter()
+            .map(|&v| self.vertex_ext_perimeters[v])
+            .sum();
 
         // Internal boundary: edges where one endpoint is in S and the other is not
-        let boundary: f64 = vertices.iter().flat_map(|&v| {
-            self.adjacency[v].iter().filter(|&&u| !vertices.contains(&u)).map(move |&u| {
-                let key = if v < u { (v, u) } else { (u, v) };
-                self.edge_weights.get(&key).copied().unwrap_or(0.0)
+        let boundary: f64 = vertices
+            .iter()
+            .flat_map(|&v| {
+                self.adjacency[v]
+                    .iter()
+                    .filter(|&&u| !vertices.contains(&u))
+                    .map(move |&u| {
+                        let key = if v < u { (v, u) } else { (u, v) };
+                        self.edge_weights.get(&key).copied().unwrap_or(0.0)
+                    })
             })
-        }).sum();
+            .sum();
 
         let perimeter = ext + boundary;
-        if perimeter == 0.0 { return Some(0.0); }
+        if perimeter == 0.0 {
+            return Some(0.0);
+        }
         Some(4.0 * std::f64::consts::PI * area / (perimeter * perimeter))
     }
 
@@ -86,8 +101,13 @@ impl AdjacencyGraph {
     /// Must be called after `build_adjacency_graph` if CompactBisect is desired.
     /// Panics if `areas.len() != self.n_vertices`.
     pub fn set_areas(&mut self, areas: Vec<f64>) {
-        assert_eq!(areas.len(), self.n_vertices,
-            "set_areas: got {} areas for {} vertices", areas.len(), self.n_vertices);
+        assert_eq!(
+            areas.len(),
+            self.n_vertices,
+            "set_areas: got {} areas for {} vertices",
+            areas.len(),
+            self.n_vertices
+        );
         self.vertex_areas = areas;
     }
 
@@ -134,7 +154,9 @@ pub fn build_adjacency_graph(
     let n = polygons_wkb.len();
 
     // Parse WKB → geo Polygons
-    let polygons: Vec<Polygon<f64>> = polygons_wkb.iter().enumerate()
+    let polygons: Vec<Polygon<f64>> = polygons_wkb
+        .iter()
+        .enumerate()
         .map(|(i, wkb)| parse_wkb_polygon(wkb, i))
         .collect::<Result<Vec<_>, _>>()?;
 
@@ -144,10 +166,10 @@ pub fn build_adjacency_graph(
             let cx = bbox.center().x;
             let cy = bbox.center().y;
             // Heuristic: if BOTH x and y are in degree range AND x is in longitude range,
-        // the input is likely WGS84/NAD83 degrees rather than projected metres.
-        // Valid US projected CRS (EPSG:5070, 3338, 6364, UTM) have at least one
-        // coordinate >> 1000 metres. This check is imperfect for very small areas;
-        // callers should use explicit CRS documentation.
+            // the input is likely WGS84/NAD83 degrees rather than projected metres.
+            // Valid US projected CRS (EPSG:5070, 3338, 6364, UTM) have at least one
+            // coordinate >> 1000 metres. This check is imperfect for very small areas;
+            // callers should use explicit CRS documentation.
             if cx.abs() <= 180.0 && cy.abs() <= 90.0 {
                 return Err(AdjacencyError::LikelyUnprojected(cx, cy));
             }
@@ -155,10 +177,14 @@ pub fn build_adjacency_graph(
     }
 
     // Build bounding boxes for R-tree style candidate detection
-    let bboxes: Vec<Rect<f64>> = polygons.iter()
-        .map(|p| p.bounding_rect().unwrap_or(Rect::new(
-            Coord { x: 0.0, y: 0.0 }, Coord { x: 0.0, y: 0.0 }
-        )))
+    let bboxes: Vec<Rect<f64>> = polygons
+        .iter()
+        .map(|p| {
+            p.bounding_rect().unwrap_or(Rect::new(
+                Coord { x: 0.0, y: 0.0 },
+                Coord { x: 0.0, y: 0.0 },
+            ))
+        })
         .collect();
 
     // Find candidate pairs via bounding-box overlap (O(n²) scan — replace with
@@ -177,13 +203,12 @@ pub fn build_adjacency_graph(
     // Parallel intersection computation — the O(E) Shapely bottleneck
     let edge_results: Vec<Option<((usize, usize), EdgeType)>> = candidate_pairs
         .par_iter()
-        .map(|&(i, j)| {
-            classify_edge(&polygons[i], &polygons[j], i, j)
-        })
+        .map(|&(i, j)| classify_edge(&polygons[i], &polygons[j], i, j))
         .collect();
 
     // Collect land boundary lengths for median computation
-    let mut land_lengths: Vec<f64> = edge_results.iter()
+    let mut land_lengths: Vec<f64> = edge_results
+        .iter()
         .filter_map(|r| match r {
             Some((_, EdgeType::Land(len))) => Some(*len),
             _ => None,
@@ -234,22 +259,32 @@ pub fn build_adjacency_graph(
     // remain empty and CompactBisect gracefully degrades to edge-cut selection.
     let (vertex_areas, vertex_ext_perimeters) = {
         // Total perimeter of each polygon = sum of all ring exterior lengths
-        let total_perimeters: Vec<f64> = polygons.iter().map(|poly| {
-            let ext_len = poly.exterior().euclidean_length();
-            let holes_len: f64 = poly.interiors().iter()
-                .map(|ring| ring.euclidean_length())
-                .sum();
-            ext_len + holes_len
-        }).collect();
+        let total_perimeters: Vec<f64> = polygons
+            .iter()
+            .map(|poly| {
+                let ext_len = poly.exterior().euclidean_length();
+                let holes_len: f64 = poly
+                    .interiors()
+                    .iter()
+                    .map(|ring| ring.euclidean_length())
+                    .sum();
+                ext_len + holes_len
+            })
+            .collect();
 
         // External perimeter = total perimeter − shared boundaries with neighbors
-        let ext_perimeters: Vec<f64> = (0..n).map(|v| {
-            let shared: f64 = adjacency[v].iter().map(|&u| {
-                let key = (v.min(u), v.max(u));
-                edge_weights.get(&key).copied().unwrap_or(0.0)
-            }).sum();
-            (total_perimeters[v] - shared).max(0.0) // clamp: float errors can give -ε
-        }).collect();
+        let ext_perimeters: Vec<f64> = (0..n)
+            .map(|v| {
+                let shared: f64 = adjacency[v]
+                    .iter()
+                    .map(|&u| {
+                        let key = (v.min(u), v.max(u));
+                        edge_weights.get(&key).copied().unwrap_or(0.0)
+                    })
+                    .sum();
+                (total_perimeters[v] - shared).max(0.0) // clamp: float errors can give -ε
+            })
+            .collect();
 
         (Vec::<f64>::new(), ext_perimeters) // areas filled in by caller via set_areas()
     };
@@ -258,8 +293,11 @@ pub fn build_adjacency_graph(
     let _ = vertex_areas; // suppress warning; see set_areas() below
 
     Ok(AdjacencyGraph {
-        adjacency, vertex_weights, edge_weights,
-        n_vertices: n, n_edges,
+        adjacency,
+        vertex_weights,
+        edge_weights,
+        n_vertices: n,
+        n_edges,
         vertex_areas: Vec::new(),
         vertex_ext_perimeters,
     })
@@ -273,14 +311,18 @@ pub fn parse_wkb_polygon_pub(wkb: &[u8], idx: usize) -> Result<Polygon<f64>, Adj
 /// Parse a WKB-encoded polygon (little-endian, type 3).
 fn parse_wkb_polygon(wkb: &[u8], idx: usize) -> Result<Polygon<f64>, AdjacencyError> {
     if wkb.len() < 9 {
-        return Err(AdjacencyError::WkbParseError(idx, "WKB too short".to_string()));
+        return Err(AdjacencyError::WkbParseError(
+            idx,
+            "WKB too short".to_string(),
+        ));
     }
     // byte 0: byte order (1 = little-endian)
     // bytes 1-4: geometry type (3 = Polygon)
     let wkb_type = u32::from_le_bytes([wkb[1], wkb[2], wkb[3], wkb[4]]);
     if wkb_type != 3 {
         return Err(AdjacencyError::WkbParseError(
-            idx, format!("expected WKB type 3 (Polygon), got {wkb_type}")
+            idx,
+            format!("expected WKB type 3 (Polygon), got {wkb_type}"),
         ));
     }
     // bytes 5-8: number of rings
@@ -294,20 +336,29 @@ fn parse_wkb_polygon(wkb: &[u8], idx: usize) -> Result<Polygon<f64>, AdjacencyEr
 
     for _ in 0..n_rings {
         if offset + 4 > wkb.len() {
-            return Err(AdjacencyError::WkbParseError(idx, "truncated ring header".to_string()));
+            return Err(AdjacencyError::WkbParseError(
+                idx,
+                "truncated ring header".to_string(),
+            ));
         }
         let n_points = u32::from_le_bytes([
-            wkb[offset], wkb[offset+1], wkb[offset+2], wkb[offset+3]
+            wkb[offset],
+            wkb[offset + 1],
+            wkb[offset + 2],
+            wkb[offset + 3],
         ]) as usize;
         offset += 4;
         let needed = n_points * 16; // 2 f64 per point
         if offset + needed > wkb.len() {
-            return Err(AdjacencyError::WkbParseError(idx, "truncated ring data".to_string()));
+            return Err(AdjacencyError::WkbParseError(
+                idx,
+                "truncated ring data".to_string(),
+            ));
         }
         let mut coords = Vec::with_capacity(n_points);
         for _ in 0..n_points {
-            let x = f64::from_le_bytes(wkb[offset..offset+8].try_into().unwrap());
-            let y = f64::from_le_bytes(wkb[offset+8..offset+16].try_into().unwrap());
+            let x = f64::from_le_bytes(wkb[offset..offset + 8].try_into().unwrap());
+            let y = f64::from_le_bytes(wkb[offset + 8..offset + 16].try_into().unwrap());
             coords.push(Coord { x, y });
             offset += 16;
         }
@@ -315,10 +366,8 @@ fn parse_wkb_polygon(wkb: &[u8], idx: usize) -> Result<Polygon<f64>, AdjacencyEr
     }
 
     let exterior = geo_types::LineString::new(rings.remove(0));
-    let interiors: Vec<geo_types::LineString<f64>> = rings
-        .into_iter()
-        .map(geo_types::LineString::new)
-        .collect();
+    let interiors: Vec<geo_types::LineString<f64>> =
+        rings.into_iter().map(geo_types::LineString::new).collect();
 
     Ok(Polygon::new(exterior, interiors))
 }
@@ -383,9 +432,18 @@ mod tests {
         Polygon::new(
             LineString::new(vec![
                 Coord { x: x0, y: y0 },
-                Coord { x: x0 + size, y: y0 },
-                Coord { x: x0 + size, y: y0 + size },
-                Coord { x: x0, y: y0 + size },
+                Coord {
+                    x: x0 + size,
+                    y: y0,
+                },
+                Coord {
+                    x: x0 + size,
+                    y: y0 + size,
+                },
+                Coord {
+                    x: x0,
+                    y: y0 + size,
+                },
                 Coord { x: x0, y: y0 },
             ]),
             vec![],
@@ -414,9 +472,18 @@ mod tests {
         let graph = build_adjacency_graph(&wkbs, 10.0).unwrap();
         assert_eq!(graph.n_vertices, 3);
         // p0-p1 adjacent, p0-p2 and p1-p2 not
-        assert!(graph.adjacency[0].contains(&1), "p0 and p1 should be adjacent");
-        assert!(!graph.adjacency[0].contains(&2), "p0 and p2 should not be adjacent");
-        assert!(!graph.adjacency[1].contains(&2), "p1 and p2 should not be adjacent");
+        assert!(
+            graph.adjacency[0].contains(&1),
+            "p0 and p1 should be adjacent"
+        );
+        assert!(
+            !graph.adjacency[0].contains(&2),
+            "p0 and p2 should not be adjacent"
+        );
+        assert!(
+            !graph.adjacency[1].contains(&2),
+            "p1 and p2 should not be adjacent"
+        );
     }
 
     #[test]
@@ -425,7 +492,11 @@ mod tests {
         let p0 = square_polygon(1_000_000.0, 1_000_000.0, 1000.0);
         let p1 = square_polygon(1_001_000.0, 1_000_000.0, 1000.0);
         let p2 = square_polygon(1_002_000.0, 1_000_000.0, 1000.0);
-        let wkbs = vec![polygon_to_wkb(&p0), polygon_to_wkb(&p1), polygon_to_wkb(&p2)];
+        let wkbs = vec![
+            polygon_to_wkb(&p0),
+            polygon_to_wkb(&p1),
+            polygon_to_wkb(&p2),
+        ];
         let graph = build_adjacency_graph(&wkbs, 10.0).unwrap();
         assert_eq!(graph.n_edges, 2);
     }
@@ -473,8 +544,10 @@ mod tests {
         // Use tiger module's WKB writer
         let wkbs = vec![polygon_to_wkb(&p0), polygon_to_wkb(&p1)];
         let result = build_adjacency_graph(&wkbs, 10.0);
-        assert!(matches!(result, Err(AdjacencyError::LikelyUnprojected(_, _))),
-            "WGS84 coordinates should be rejected");
+        assert!(
+            matches!(result, Err(AdjacencyError::LikelyUnprojected(_, _))),
+            "WGS84 coordinates should be rejected"
+        );
     }
 
     #[test]
@@ -494,10 +567,18 @@ mod tests {
         let p0 = square_polygon(1_001_000.0, 1_000_000.0, 1000.0);
         let p1 = square_polygon(1_000_000.0, 1_000_000.0, 1000.0); // left
         let p2 = square_polygon(1_002_000.0, 1_000_000.0, 1000.0); // right
-        let wkbs = vec![polygon_to_wkb(&p0), polygon_to_wkb(&p1), polygon_to_wkb(&p2)];
+        let wkbs = vec![
+            polygon_to_wkb(&p0),
+            polygon_to_wkb(&p1),
+            polygon_to_wkb(&p2),
+        ];
         let graph = build_adjacency_graph(&wkbs, 10.0).unwrap();
         let nbrs = &graph.adjacency[0];
-        let sorted = {let mut s = nbrs.clone(); s.sort(); s};
+        let sorted = {
+            let mut s = nbrs.clone();
+            s.sort();
+            s
+        };
         assert_eq!(*nbrs, sorted, "neighbor lists should be sorted");
     }
 }

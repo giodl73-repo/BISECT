@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-BINARY = Path("redist/target/release/redist.exe") if sys.platform == "win32" else Path("redist/target/release/redist")
+BINARY = Path("target/release/bisect.exe") if sys.platform == "win32" else Path("target/release/bisect")
 BASE_DIR = Path(".")
 
 
@@ -31,7 +31,7 @@ def vt_plan_exists() -> bool:
 
 
 skip_no_binary = pytest.mark.skipif(
-    not binary_available(), reason="redist binary not built"
+    not binary_available(), reason="BISECT binary not built"
 )
 skip_no_vt_fixture = pytest.mark.skipif(
     not vt_plan_exists(), reason="VT fixture plan not available"
@@ -64,12 +64,12 @@ class TestRplanGeoids:
                 f"Assignment key {key!r} must be numeric"
 
     def test_vt_rplan_geoid_format_validated_at_rust_level(self):
-        """GEOID format validation is covered by Rust unit tests in redist-report::rplan.
+        """GEOID format validation is covered by Rust unit tests in BISECT-report::rplan.
         This marker test documents that Scenario 3 GEOID validation is implemented at the
-        Rust library level (see redist-report tests: test_rplan_all_assignments_11char_geoids,
+        Rust library level (see BISECT-report tests: test_rplan_all_assignments_11char_geoids,
         test_validate_rplan_rejects_12char_geoid, test_validate_rplan_rejects_alpha_geoid).
         """
-        pytest.skip("Covered by Rust unit tests in redist-report::rplan — see cargo test -p redist-report")
+        pytest.skip("Covered by Rust unit tests in BISECT-report::rplan — see cargo test -p BISECT-report")
 
 
 @skip_no_binary
@@ -103,7 +103,7 @@ class TestGerryChainRoundtrip:
     def test_gerrychain_export_all_keys_numeric(self, vt_plan_label, binary, tmp_path):
         """GerryChain export 'assignment' keys must all be numeric (node IDs or GEOIDs).
         Note: The existing VT fixture uses graph node IDs (not 11-char GEOIDs).
-        11-char GEOID validation is enforced at the RPLAN write layer (redist-report::rplan).
+        11-char GEOID validation is enforced at the RPLAN write layer (BISECT-report::rplan).
         """
         result = subprocess.run(
             [

@@ -3,7 +3,7 @@ name = "bisect-tui"
 version = "0.1.0"
 edition = "2021"
 authors = ["Gio Della-Libera"]
-description = "Interactive TUI for the redist redistricting CLI"
+description = "Interactive TUI for the bisect redistricting CLI"
 
 [[bin]]
 name = "bisect-tui"

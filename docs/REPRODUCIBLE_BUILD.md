@@ -1,16 +1,16 @@
-# Reproducible Build of `redist`
+# Reproducible Build of `BISECT`
 
 **Status:** v1 (2026-04-29) — Plan 01 Task 7 deliverable.
 
-This document defines the procedure for building the `redist` Rust binary from source in a way that can be independently verified. Required for court admissibility (a special master must be able to reproduce the binary that produced a contested map) and for the binary-provenance block embedded in output files.
+This document defines the procedure for building the `BISECT` Rust binary from source in a way that can be independently verified. Required for court admissibility (a special master must be able to reproduce the binary that produced a contested map) and for the binary-provenance block embedded in output files.
 
 ## Inputs
 
 | Input | Source | Verification |
 |---|---|---|
 | Source code | This repository at a tagged commit | `git rev-parse HEAD` |
-| Rust toolchain | Pinned via `redist/rust-toolchain.toml` (if absent, use the version recorded in CI) | `rustc --version` must match |
-| Cargo lockfile | `redist/Cargo.lock` (committed) | `--locked` build flag fails on lockfile mismatch |
+| Rust toolchain | Pinned via `BISECT/rust-toolchain.toml` (if absent, use the version recorded in CI) | `rustc --version` must match |
+| Cargo lockfile | `BISECT/Cargo.lock` (committed) | `--locked` build flag fails on lockfile mismatch |
 | METIS C library | System install (apt/brew/winget); subprocess'd at run time, not linked | `gpmetis --version` |
 
 ## Build
@@ -19,9 +19,9 @@ This document defines the procedure for building the `redist` Rust binary from s
 git clone <repo-url>
 cd apportionment
 git checkout <tag-or-commit>
-cd redist
+cd <repo-root>
 cargo build --release --locked
-# Binary: target/release/redist (or redist.exe on Windows)
+# Binary: target/release/BISECT (or BISECT.exe on Windows)
 ```
 
 The `--locked` flag ensures `Cargo.lock` is honored exactly. If the lockfile is missing or stale, the build fails rather than silently resolving newer versions.
@@ -50,7 +50,7 @@ A release commit is tagged `v0.X.Y`. To verify a released binary matches its sou
 ```bash
 # 1. Build from source at the tag
 git checkout v0.X.Y
-cd redist && cargo build --release --locked
+cargo build --release --locked
 
 # 2. Run the binary on a known input
 ./target/release/bisect state --state VT --year 2020 --output-dir /tmp/verify
@@ -62,22 +62,22 @@ diff /tmp/verify/v1/states/vermont/data/final_assignments.json \
 
 ## Provenance Block
 
-Every output JSON file produced by `redist` SHOULD embed a provenance block (TODO: implement, currently a spec-level requirement only):
+Every output JSON file produced by `BISECT` SHOULD embed a provenance block (TODO: implement, currently a spec-level requirement only):
 
 ```json
 {
-  "redist_version": "0.1.2",
-  "redist_build_commit": "<git sha>",
-  "redist_build_date": "2026-04-29T00:00:00Z",
+  "BISECT_version": "0.1.2",
+  "BISECT_build_commit": "<git sha>",
+  "BISECT_build_date": "2026-04-29T00:00:00Z",
   "rustc_version": "1.95.0"
 }
 ```
 
-This is what `redist doctor --verify-manifest <output.json>` (planned) will check.
+This is what `BISECT doctor --verify-manifest <output.json>` (planned) will check.
 
 ## Toolchain Pin
 
-`redist/rust-toolchain.toml` exists and pins to `1.95.0`. Cargo respects this automatically: `cargo build` from inside `redist/` (or any subdir of it) will use rustc 1.95.0 even if a different stable is installed system-wide. If the pinned version is not installed, `rustup` will install it on first use.
+`BISECT/rust-toolchain.toml` exists and pins to `1.95.0`. Cargo respects this automatically: `cargo build` from inside `BISECT/` (or any subdir of it) will use rustc 1.95.0 even if a different stable is installed system-wide. If the pinned version is not installed, `rustup` will install it on first use.
 
 ```toml
 [toolchain]
@@ -90,13 +90,13 @@ Without this file, builds would use whatever stable rustc the developer has inst
 
 ## Linkage
 
-- `redist` binary is statically linked Rust dependencies; only system libraries (libc, libm) are dynamic.
+- `BISECT` binary is statically linked Rust dependencies; only system libraries (libc, libm) are dynamic.
 - METIS is invoked as a subprocess (`gpmetis`), not linked. Pin via `gpmetis --version` if reproducibility across machines matters.
-- PyO3 bridge (`redist_py`) is built separately and is not part of the production binary.
+- PyO3 bridge (`bisect_py`) is built separately and is not part of the production binary.
 
 ## Open Items
 
 - Pin `rustc` toolchain in a committed `rust-toolchain.toml` (Plan 01 Task 7.1)
 - Embed provenance block in output JSON files (Spec v2 §Provenance)
-- `redist doctor --verify-manifest <path>` subcommand (Spec v2 §Provenance)
+- `BISECT doctor --verify-manifest <path>` subcommand (Spec v2 §Provenance)
 - Deterministic-build recipe for byte-identical reproduction (out of scope for v1; functional equivalence sufficient)

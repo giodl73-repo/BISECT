@@ -43,18 +43,21 @@ pub fn build_partisan_weights(
     debug_assert!(
         dem_threshold >= rep_threshold,
         "dem_threshold ({}) must be >= rep_threshold ({})",
-        dem_threshold, rep_threshold
+        dem_threshold,
+        rep_threshold
     );
 
     // Step 1: compute fraction of units that are strongly partisan (non-swing).
-    let n_partisan = dem_shares.iter()
+    let n_partisan = dem_shares
+        .iter()
         .filter(|&&s| s >= dem_threshold || s <= rep_threshold)
         .count();
     let f_partisan = n_partisan as f64 / dem_shares.len() as f64;
     let alpha = 3.0_f64.max(10.0 * (1.0 - 0.7 * f_partisan));
 
     // Step 2: boost only edges where BOTH endpoints share a non-swing lean.
-    edges.iter()
+    edges
+        .iter()
         .filter(|&&(u, v)| {
             let s_u = dem_shares.get(u).copied().unwrap_or(0.5);
             let s_v = dem_shares.get(v).copied().unwrap_or(0.5);
@@ -195,9 +198,11 @@ mod tests {
     #[test]
     fn test_adaptive_formula_polarized_state() {
         // 100% partisan (no swing) → α = max(3.0, 10*(1-0.7)) = 3.0
-        let dem_shares = vec![0.70; 50].into_iter()
-            .chain(vec![0.30; 50]).collect::<Vec<f64>>();
-        let edges: Vec<(usize, usize)> = (0..49).map(|i| (i, i+1)).collect();
+        let dem_shares = vec![0.70; 50]
+            .into_iter()
+            .chain(vec![0.30; 50])
+            .collect::<Vec<f64>>();
+        let edges: Vec<(usize, usize)> = (0..49).map(|i| (i, i + 1)).collect();
         let weights = build_partisan_weights(&edges, &dem_shares, 0.55, 0.45);
         // All boosted edges (D-D within first 50) should have α = 3.0
         for &alpha in weights.values() {
@@ -209,13 +214,24 @@ mod tests {
     fn test_adaptive_formula_swing_heavy_state() {
         // 20% partisan, 80% swing → α = max(3.0, 10*(1-0.7*0.2)) = 8.6
         let dem_shares: Vec<f64> = (0..100)
-            .map(|i| if i < 10 { 0.70 } else if i < 20 { 0.30 } else { 0.50 })
+            .map(|i| {
+                if i < 10 {
+                    0.70
+                } else if i < 20 {
+                    0.30
+                } else {
+                    0.50
+                }
+            })
             .collect();
         let edges = vec![(0usize, 1usize)]; // both strong-D
         let weights = build_partisan_weights(&edges, &dem_shares, 0.55, 0.45);
         let alpha = weights[&(0, 1)];
         let expected = 3.0_f64.max(10.0 * (1.0 - 0.7 * 0.20));
-        assert!((alpha - expected).abs() < 1e-9, "swing-heavy: alpha={alpha} expected={expected}");
+        assert!(
+            (alpha - expected).abs() < 1e-9,
+            "swing-heavy: alpha={alpha} expected={expected}"
+        );
     }
 
     #[test]
@@ -255,9 +271,18 @@ mod tests {
         let dem_shares = vec![0.55, 0.55, 0.45, 0.45];
         let edges = vec![(0, 1), (2, 3), (0, 2)];
         let weights = build_partisan_weights(&edges, &dem_shares, 0.55, 0.45);
-        assert!(weights.contains_key(&(0, 1)), "exact-D boundary edge boosted");
-        assert!(weights.contains_key(&(2, 3)), "exact-R boundary edge boosted");
-        assert!(!weights.contains_key(&(0, 2)), "boundary D + boundary R not boosted");
+        assert!(
+            weights.contains_key(&(0, 1)),
+            "exact-D boundary edge boosted"
+        );
+        assert!(
+            weights.contains_key(&(2, 3)),
+            "exact-R boundary edge boosted"
+        );
+        assert!(
+            !weights.contains_key(&(0, 2)),
+            "boundary D + boundary R not boosted"
+        );
     }
 
     #[test]
@@ -266,16 +291,35 @@ mod tests {
         // as the mirror state with 30% strong-R and 30% strong-D.
         let n = 100;
         let dem_shares_a: Vec<f64> = (0..n)
-            .map(|i| if i < 30 { 0.70 } else if i < 60 { 0.30 } else { 0.50 })
+            .map(|i| {
+                if i < 30 {
+                    0.70
+                } else if i < 60 {
+                    0.30
+                } else {
+                    0.50
+                }
+            })
             .collect();
         let dem_shares_b: Vec<f64> = (0..n)
-            .map(|i| if i < 30 { 0.30 } else if i < 60 { 0.70 } else { 0.50 })
+            .map(|i| {
+                if i < 30 {
+                    0.30
+                } else if i < 60 {
+                    0.70
+                } else {
+                    0.50
+                }
+            })
             .collect();
         let edges = vec![(0usize, 1usize)]; // strong same-party in both
         let w_a = build_partisan_weights(&edges, &dem_shares_a, 0.55, 0.45);
         let w_b = build_partisan_weights(&edges, &dem_shares_b, 0.55, 0.45);
-        assert_eq!(w_a[&(0,1)].to_bits(), w_b[&(0,1)].to_bits(),
-            "alpha must be identical when D/R labels are swapped");
+        assert_eq!(
+            w_a[&(0, 1)].to_bits(),
+            w_b[&(0, 1)].to_bits(),
+            "alpha must be identical when D/R labels are swapped"
+        );
     }
 
     // ── E.4 partisan-similarity edge weights ──────────────────────────────────
@@ -309,8 +353,10 @@ mod tests {
         let dem_shares = vec![0.55, 0.40]; // |0.55 - 0.40| = 0.15
         let edges = vec![(0usize, 1usize)];
         let w = build_partisan_similarity_weights(&edges, &dem_shares, 5.0, 0.15);
-        assert!(!w.contains_key(&(0, 1)),
-            "similarity exactly at threshold must not be boosted");
+        assert!(
+            !w.contains_key(&(0, 1)),
+            "similarity exactly at threshold must not be boosted"
+        );
     }
 
     #[test]
@@ -321,8 +367,10 @@ mod tests {
         let edges = vec![(0usize, 1usize)];
         for alpha in [1.0, 5.0, 10.0, 25.0, 50.0, 100.0] {
             let w = build_partisan_similarity_weights(&edges, &dem_shares, alpha, 0.10);
-            assert!((w[&(0, 1)] - alpha).abs() < 1e-9,
-                "alpha={alpha} must be returned verbatim");
+            assert!(
+                (w[&(0, 1)] - alpha).abs() < 1e-9,
+                "alpha={alpha} must be returned verbatim"
+            );
         }
     }
 
@@ -397,7 +445,13 @@ mod tests {
         let dem_shares = vec![0.50, 0.53, 0.60];
         let edges = vec![(0usize, 1usize), (1usize, 2usize)];
         let w = build_partisan_similarity_weights(&edges, &dem_shares, 100.0, 0.05);
-        assert!(w.contains_key(&(0, 1)), "|0.50-0.53|=0.03 < 0.05 -> boosted");
-        assert!(!w.contains_key(&(1, 2)), "|0.53-0.60|=0.07 >= 0.05 -> not boosted");
+        assert!(
+            w.contains_key(&(0, 1)),
+            "|0.50-0.53|=0.03 < 0.05 -> boosted"
+        );
+        assert!(
+            !w.contains_key(&(1, 2)),
+            "|0.53-0.60|=0.07 >= 0.05 -> not boosted"
+        );
     }
 }

@@ -2,10 +2,10 @@
 ///
 /// Given k districts, computes the binary tree of (k_left, k_right) splits
 /// by depth level. This is the scheduling layer — which k goes where.
-/// Actual METIS calls happen in the Python pipeline or (Phase 3) in redist-cli.
+/// Actual METIS calls happen in the Python pipeline or (Phase 3) in BISECT-cli.
 ///
 /// Split rule: k_left = k/2 (floor), k_right = k - k_left.
-/// Example for k=7: [4,3] → [2,2],[2,1] → [1,1],[1,1],[1,1]
+/// Example for k=7: [3,4] → [1,2],[2,2] → [1,1],[1,1],[1,1]
 
 /// A single non-leaf node in the bisection tree.
 #[derive(Debug, Clone, PartialEq)]
@@ -68,7 +68,11 @@ impl BisectionTree {
             queue.push_back((k_right, depth + 1, format!("{path}1")));
         }
 
-        BisectionTree { k, max_depth, nodes }
+        BisectionTree {
+            k,
+            max_depth,
+            nodes,
+        }
     }
 
     /// Nodes that need splitting at a given depth level.
@@ -206,8 +210,12 @@ mod tests {
         for k in [2, 3, 4, 7, 8, 14, 52] {
             let tree = BisectionTree::from_k(k);
             for node in &tree.nodes {
-                assert_eq!(node.k_left + node.k_right, node.k,
-                    "k={k} node.k={}", node.k);
+                assert_eq!(
+                    node.k_left + node.k_right,
+                    node.k,
+                    "k={k} node.k={}",
+                    node.k
+                );
             }
         }
     }
@@ -256,24 +264,45 @@ mod tests {
     fn test_wa_house_k98_total_splits() {
         // WA house: 98 districts → exactly 97 internal bisections
         let tree = BisectionTree::from_k(98);
-        assert_eq!(tree.total_splits(), 97, "k=98 (WA house) must have 97 splits");
-        assert_eq!(tree.max_depth, 7, "k=98 needs 7 depth levels (2^7=128 ≥ 98)");
+        assert_eq!(
+            tree.total_splits(),
+            97,
+            "k=98 (WA house) must have 97 splits"
+        );
+        assert_eq!(
+            tree.max_depth, 7,
+            "k=98 needs 7 depth levels (2^7=128 ≥ 98)"
+        );
     }
 
     #[test]
     fn test_tx_house_k150_total_splits() {
         // TX house: 150 districts → 149 splits, depth 8 (2^8=256 ≥ 150)
         let tree = BisectionTree::from_k(150);
-        assert_eq!(tree.total_splits(), 149, "k=150 (TX house) must have 149 splits");
-        assert_eq!(tree.max_depth, 8, "k=150 needs 8 depth levels (2^8=256 ≥ 150)");
+        assert_eq!(
+            tree.total_splits(),
+            149,
+            "k=150 (TX house) must have 149 splits"
+        );
+        assert_eq!(
+            tree.max_depth, 8,
+            "k=150 needs 8 depth levels (2^8=256 ≥ 150)"
+        );
     }
 
     #[test]
     fn test_congressional_k435_total_splits() {
         // US Congress: 435 districts → 434 splits, depth 9 (2^9=512 ≥ 435)
         let tree = BisectionTree::from_k(435);
-        assert_eq!(tree.total_splits(), 434, "k=435 (congressional) must have 434 splits");
-        assert_eq!(tree.max_depth, 9, "k=435 needs 9 depth levels (2^9=512 ≥ 435)");
+        assert_eq!(
+            tree.total_splits(),
+            434,
+            "k=435 (congressional) must have 434 splits"
+        );
+        assert_eq!(
+            tree.max_depth, 9,
+            "k=435 needs 9 depth levels (2^9=512 ≥ 435)"
+        );
     }
 
     #[test]
@@ -283,8 +312,10 @@ mod tests {
             let tree = BisectionTree::from_k(k);
             for node in &tree.nodes {
                 assert_eq!(
-                    node.k_left + node.k_right, node.k,
-                    "k={k} node.k={} violated balance invariant", node.k
+                    node.k_left + node.k_right,
+                    node.k,
+                    "k={k} node.k={} violated balance invariant",
+                    node.k
                 );
             }
         }
@@ -302,15 +333,15 @@ mod tests {
 
     #[test]
     fn test_max_depth_hard_states() {
-        assert_eq!(max_depth_for_k(98), 7);   // WA house (2^7=128)
-        assert_eq!(max_depth_for_k(99), 7);   // WA senate (49*2+1 = also 7 levels)
-        assert_eq!(max_depth_for_k(100), 7);  // VA house, FL house
-        assert_eq!(max_depth_for_k(120), 7);  // CA house
-        assert_eq!(max_depth_for_k(128), 7);  // exact power of 2
-        assert_eq!(max_depth_for_k(129), 8);  // one more than exact
-        assert_eq!(max_depth_for_k(150), 8);  // TX house
-        assert_eq!(max_depth_for_k(236), 8);  // TX senate via house nesting
-        assert_eq!(max_depth_for_k(435), 9);  // congressional
+        assert_eq!(max_depth_for_k(98), 7); // WA house (2^7=128)
+        assert_eq!(max_depth_for_k(99), 7); // WA senate (49*2+1 = also 7 levels)
+        assert_eq!(max_depth_for_k(100), 7); // VA house, FL house
+        assert_eq!(max_depth_for_k(120), 7); // CA house
+        assert_eq!(max_depth_for_k(128), 7); // exact power of 2
+        assert_eq!(max_depth_for_k(129), 8); // one more than exact
+        assert_eq!(max_depth_for_k(150), 8); // TX house
+        assert_eq!(max_depth_for_k(236), 8); // TX senate via house nesting
+        assert_eq!(max_depth_for_k(435), 9); // congressional
     }
 
     // ── New bisection.rs tests ────────────────────────────────────────────────

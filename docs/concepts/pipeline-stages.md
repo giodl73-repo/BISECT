@@ -2,7 +2,7 @@
 
 ## Short version
 
-Four stages run in sequence: build → analyze → report → verify. Each stage records a SHA-256 hash of the previous stage's output, forming a tamper-evident audit chain suitable for court submission. The `redist` binary manages all stages; no Python orchestration is required.
+Four stages run in sequence: build → analyze → report → verify. Each stage records a SHA-256 hash of the previous stage's output, forming a tamper-evident audit chain suitable for court submission. The `BISECT` binary manages all stages; no Python orchestration is required.
 
 ---
 
@@ -212,7 +212,7 @@ For rapid iteration during research, omit the report and verify steps until resu
 
 ## Further reading
 
-- `docs/REDIST_CLI.md` — complete CLI reference (all commands, flags, env vars)
+- `docs/BISECT_CLI.md` — complete CLI reference (all commands, flags, env vars)
 - `docs/concepts/recursive-bisection.md` — algorithm detail
 - `docs/concepts/census-data.md` — data sources and structure
 - `CLAUDE.md` — quick reference for all run commands

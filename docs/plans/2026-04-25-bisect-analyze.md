@@ -1,10 +1,10 @@
-# `bisect analyze` + `redist map` Implementation Plan
+# `bisect analyze` + `BISECT map` Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add `bisect analyze` and `redist map` subcommands to the CLI, with an extension model that makes adding new analyzers a one-file addition.
+**Goal:** Add `bisect analyze` and `BISECT map` subcommands to the CLI, with an extension model that makes adding new analyzers a one-file addition.
 
-**Architecture:** An `Analyzer` trait in `bisect-analysis` defines the contract. Each analyzer is a self-contained module implementing the trait. The CLI dispatcher loads final assignments + data files then runs requested analyzers, writing results to `{state}/analysis/{type}.json`. Maps stay Python — `redist map` is a thin subprocess shim around the existing `visualize_*.py` scripts.
+**Architecture:** An `Analyzer` trait in `bisect-analysis` defines the contract. Each analyzer is a self-contained module implementing the trait. The CLI dispatcher loads final assignments + data files then runs requested analyzers, writing results to `{state}/analysis/{type}.json`. Maps stay Python — `BISECT map` is a thin subprocess shim around the existing `visualize_*.py` scripts.
 
 **Tech Stack:** Rust, serde_json, csv crate, `bisect-analysis` crate, Python subprocess (maps only)
 
@@ -20,7 +20,7 @@
 | `urban` | `outputs/{version}/data/{year}/units/{state}_*.parquet` place names, assignments | cities per district |
 | `summary` | all of the above | rolled-up `district_summary.json` mirroring Python `district_summary.csv` |
 
-Maps (`redist map`): subprocess calls to `scripts/pipeline/visualize_*.py` — no Rust rendering.
+Maps (`BISECT map`): subprocess calls to `scripts/pipeline/visualize_*.py` — no Rust rendering.
 
 ---
 
@@ -28,16 +28,16 @@ Maps (`redist map`): subprocess calls to `scripts/pipeline/visualize_*.py` — n
 
 | File | Action | Responsibility |
 |------|--------|----------------|
-| `redist/crates/bisect-analysis/src/analyzer.rs` | **Create** | `Analyzer` trait + `AnalyzerType` enum |
-| `redist/crates/bisect-analysis/src/demographic.rs` | **Create** | demographic analysis |
-| `redist/crates/bisect-analysis/src/political.rs` | **Create** | political (partisan) analysis |
-| `redist/crates/bisect-analysis/src/urban.rs` | **Create** | largest city per district |
-| `redist/crates/bisect-analysis/src/summary.rs` | **Create** | rolled-up district_summary.json |
-| `redist/crates/bisect-analysis/src/lib.rs` | **Modify** | expose new modules |
-| `redist/crates/bisect-cli/src/analyze.rs` | **Create** | `run_analyze()` dispatcher |
-| `redist/crates/bisect-cli/src/map.rs` | **Create** | `run_map()` Python subprocess shim |
-| `redist/crates/bisect-cli/src/args.rs` | **Modify** | `AnalyzeArgs`, `MapArgs` added to `Commands` |
-| `redist/crates/bisect-cli/src/main.rs` | **Modify** | wire `Commands::Analyze` and `Commands::Map` |
+| `BISECT/crates/bisect-analysis/src/analyzer.rs` | **Create** | `Analyzer` trait + `AnalyzerType` enum |
+| `BISECT/crates/bisect-analysis/src/demographic.rs` | **Create** | demographic analysis |
+| `BISECT/crates/bisect-analysis/src/political.rs` | **Create** | political (partisan) analysis |
+| `BISECT/crates/bisect-analysis/src/urban.rs` | **Create** | largest city per district |
+| `BISECT/crates/bisect-analysis/src/summary.rs` | **Create** | rolled-up district_summary.json |
+| `BISECT/crates/bisect-analysis/src/lib.rs` | **Modify** | expose new modules |
+| `BISECT/crates/bisect-cli/src/analyze.rs` | **Create** | `run_analyze()` dispatcher |
+| `BISECT/crates/bisect-cli/src/map.rs` | **Create** | `run_map()` Python subprocess shim |
+| `BISECT/crates/bisect-cli/src/args.rs` | **Modify** | `AnalyzeArgs`, `MapArgs` added to `Commands` |
+| `BISECT/crates/bisect-cli/src/main.rs` | **Modify** | wire `Commands::Analyze` and `Commands::Map` |
 | `tests/acceptance/test_analyze_acceptance.py` | **Create** | end-to-end acceptance tests |
 
 ---
@@ -76,7 +76,7 @@ Each JSON file has a `districts` array + top-level metadata:
 
 ## Task 1: `Analyzer` trait and `AnalyzerType` enum
 
-**Files:** Create `redist/crates/bisect-analysis/src/analyzer.rs`
+**Files:** Create `BISECT/crates/bisect-analysis/src/analyzer.rs`
 
 - [ ] **Write the trait and enum**
 
@@ -150,7 +150,7 @@ fn test_analyzer_type_all_variants() {
 
 ## Task 2: Demographic analyzer
 
-**Files:** Create `redist/crates/bisect-analysis/src/demographic.rs`
+**Files:** Create `BISECT/crates/bisect-analysis/src/demographic.rs`
 
 Input: `data/{year}/demographics/{state_name}_demographics_{year}.csv`
 Columns: `GEOID,state,county,tract,total_pop,male,female,white_non_hispanic,black_non_hispanic,asian_non_hispanic,hispanic,other`
@@ -278,7 +278,7 @@ impl Analyzer for DemographicAnalyzer {
 
 ## Task 3: Political analyzer
 
-**Files:** Create `redist/crates/bisect-analysis/src/political.rs`
+**Files:** Create `BISECT/crates/bisect-analysis/src/political.rs`
 
 Input: `data/{year}/elections/presidential_by_tract.csv`
 Columns: `geoid,dem_votes,rep_votes,lib_votes,grn_votes,oth_votes`
@@ -349,7 +349,7 @@ pub struct PoliticalDistrict {
 
 ## Task 4: Urban analyzer (largest city per district)
 
-**Files:** Create `redist/crates/bisect-analysis/src/urban.rs`
+**Files:** Create `BISECT/crates/bisect-analysis/src/urban.rs`
 
 Input: `outputs/{version}/data/{year}/units/{state_code_lower}_units_{year}.parquet` — has `GEOID` and `place_name` columns.
 
@@ -401,7 +401,7 @@ pub struct CityEntry {
 
 ## Task 5: Summary analyzer
 
-**Files:** Create `redist/crates/bisect-analysis/src/summary.rs`
+**Files:** Create `BISECT/crates/bisect-analysis/src/summary.rs`
 
 Rolls up demographic + political + compactness + urban into one `district_summary.json` that mirrors what the Python pipeline writes to `district_summary.csv`.
 
@@ -435,7 +435,7 @@ fn test_summary_merge() {
 
 ## Task 6: `bisect analyze` CLI subcommand
 
-**Files:** Create `redist/crates/bisect-cli/src/analyze.rs`, modify `args.rs` and `main.rs`
+**Files:** Create `BISECT/crates/bisect-cli/src/analyze.rs`, modify `args.rs` and `main.rs`
 
 - [ ] **Add `AnalyzeArgs` to `args.rs`**
 
@@ -518,7 +518,7 @@ Note on compactness: the existing `bisect-analysis` `all_metrics()` takes WKB ge
 
 ```rust
 Commands::Analyze(args) => {
-    redist_cli::analyze::run_analyze(&args)
+    BISECT_cli::analyze::run_analyze(&args)
         .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
 }
 ```
@@ -529,11 +529,11 @@ Commands::Analyze(args) => {
 
 ---
 
-## Task 7: `redist map` — Python subprocess shim
+## Task 7: `BISECT map` — Python subprocess shim
 
-**Files:** Create `redist/crates/bisect-cli/src/map.rs`, add `MapArgs` to `args.rs`
+**Files:** Create `BISECT/crates/bisect-cli/src/map.rs`, add `MapArgs` to `args.rs`
 
-`redist map` is a thin wrapper that calls the existing Python visualization scripts as subprocesses. It does not render any geometry in Rust.
+`BISECT map` is a thin wrapper that calls the existing Python visualization scripts as subprocesses. It does not render any geometry in Rust.
 
 - [ ] **Add `MapArgs` to `args.rs`**
 
@@ -575,7 +575,7 @@ pub enum MapType {
 ```rust
 // bisect-cli/src/map.rs
 pub fn run_map(args: &MapArgs) -> anyhow::Result<()> {
-    let python = std::env::var("REDIST_PYTHON").unwrap_or_else(|_| "python".to_string());
+    let python = std::env::var("BISECT_PYTHON").unwrap_or_else(|_| "python".to_string());
     let types = resolve_map_types(&args.types);
     
     for map_type in &types {
@@ -598,9 +598,9 @@ pub fn run_map(args: &MapArgs) -> anyhow::Result<()> {
 
 - [ ] **Wire into `main.rs`**
 
-- [ ] **Manual test:** `redist map --state VT --year 2020 --version V3 --types districts` — expect Python script runs and map PNG appears in correct location.
+- [ ] **Manual test:** `BISECT map --state VT --year 2020 --version V3 --types districts` — expect Python script runs and map PNG appears in correct location.
 
-- [ ] **Commit:** `git commit -m "feat(cli): redist map Python subprocess shim"`
+- [ ] **Commit:** `git commit -m "feat(cli): BISECT map Python subprocess shim"`
 
 ---
 
@@ -613,7 +613,7 @@ pub fn run_map(args: &MapArgs) -> anyhow::Result<()> {
 ```python
 class TestAnalyzeAcceptance(unittest.TestCase):
     def setUp(self):
-        self.binary = find_redist_binary()
+        self.binary = find_BISECT_binary()
         self.outdir = tmp_state_with_assignments("VT", "2020", "V3")
 
     def test_demographic_produces_json(self):
@@ -688,7 +688,7 @@ class TestAnalyzeAcceptance(unittest.TestCase):
 
 To add a new analyzer (e.g., `maup` for MAUP sensitivity):
 
-1. Create `redist/crates/bisect-analysis/src/maup.rs` implementing `Analyzer`
+1. Create `BISECT/crates/bisect-analysis/src/maup.rs` implementing `Analyzer`
 2. Add `Maup` variant to `AnalyzerType` in `analyzer.rs`
 3. Add one match arm in `analyze.rs` dispatcher
 4. Add to `lib.rs` exports

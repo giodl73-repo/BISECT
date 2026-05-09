@@ -143,7 +143,7 @@ class TestRplanRoundTrip(unittest.TestCase):
 
 def _load_policy():
     """Load state_policy.json from the committed data file."""
-    policy_path = Path("redist/data/state_policy.json")
+    policy_path = Path("BISECT/data/state_policy.json")
     if not policy_path.exists():
         return None
     return json.loads(policy_path.read_text(encoding="utf-8"))
@@ -153,7 +153,7 @@ _POLICY = _load_policy()
 _POLICY_MISSING = _POLICY is None
 
 
-@unittest.skipIf(_POLICY_MISSING, "state_policy.json not found at redist/data/state_policy.json")
+@unittest.skipIf(_POLICY_MISSING, "state_policy.json not found at BISECT/data/state_policy.json")
 class TestStatePolicy(unittest.TestCase):
     """State policy JSON: vocabulary, required fields, and special-state contracts."""
 

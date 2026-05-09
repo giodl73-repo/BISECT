@@ -156,7 +156,7 @@ Fractional votes are allowed (precinct-to-tract interpolation produces them).
 **Integration**: `bisect analyze --types partisan --also-submit-to planscore` option (future). For v1, we produce a GeoJSON export compatible with PlanScore's input format:
 
 ```bash
-redist export --label wa_house_draft1 --format geojson \
+BISECT export --label wa_house_draft1 --format geojson \
   --out wa_house_draft1_planscore.geojson
 # → Submit this file to planscore.org for independent verification
 ```

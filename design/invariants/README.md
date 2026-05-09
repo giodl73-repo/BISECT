@@ -1,4 +1,4 @@
-# REDIST System Invariants
+# BISECT System Invariants
 
 Properties the system must always satisfy. Unlike pitfalls (failure patterns), invariants state what is always true — and prove it with a test.
 
@@ -42,7 +42,7 @@ An invariant is **ENFORCED** when a test would fail if the invariant were violat
 | AC-05 | Target partition weights sum to 1.0 (2-way and n-way) | PARTIAL | bisection_runner.rs::test_invariant_target_weights_sum_to_one_2way; n-way OPEN |
 | IP-01 | STATUS output is ASCII-only (no Unicode) | ENFORCED | test_rust_cli.py::test_no_unicode_in_help_output |
 | IP-02 | Error propagation from parallel tasks: no silent filter | ENFORCED | TestRustCLIAcceptance (Alabama run would show error not silent empty) |
-| IP-03 | REDIST_PYTHON used for all Python subprocess calls | ENFORCED | TestRustCLIAcceptance fixtures set REDIST_PYTHON=sys.executable |
+| IP-03 | BISECT_PYTHON used for all Python subprocess calls | ENFORCED | TestRustCLIAcceptance fixtures set BISECT_PYTHON=sys.executable |
 | IP-04 | CWD must equal project root when using relative manifest paths | PARTIAL | test_fetch.py::TestCheckOnly (uses cwd=str(tmp_path)) |
 
 ---

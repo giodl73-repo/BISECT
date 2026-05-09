@@ -16,24 +16,24 @@ A redistricting commission submitting a plan to a court or legislature needs:
 3. **Expert witness package** — data formatted for academic/legal expert analysis
 4. **Public-facing summary** — readable HTML for public comment periods
 
-Today `redist` produces JSON files and PNGs. No formal report output exists.
+Today `BISECT` produces JSON files and PNGs. No formal report output exists.
 
 ---
 
-## New subcommand: `redist report`
+## New subcommand: `BISECT report`
 
 ```bash
 # Full commission report for a single plan
-redist report --label wa_house_draft1 --year 2020 --version WA_Plans \
+BISECT report --label wa_house_draft1 --year 2020 --version WA_Plans \
   --format html pdf json \
   --out reports/wa_house_draft1_report/
 
 # Full suite report
-redist report --suite wa_commission_v1 --year 2020 --version WA_Plans \
+BISECT report --suite wa_commission_v1 --year 2020 --version WA_Plans \
   --format html --out reports/wa_commission_v1/
 
 # Audit-only (no charts, just chain-of-custody JSON)
-redist report --label wa_house_draft1 --audit-only --out reports/audit.json
+BISECT report --label wa_house_draft1 --audit-only --out reports/audit.json
 ```
 
 ---
@@ -137,10 +137,10 @@ Machine-readable structured report. Same data as HTML but in JSON. Primary forma
 
 The report command also exports plan assignments in formats compatible with other redistricting tools, so external auditors can independently verify using their preferred tool.
 
-### `redist export`
+### `BISECT export`
 
 ```bash
-redist export --label wa_house_draft1 --year 2020 --version WA_Plans \
+BISECT export --label wa_house_draft1 --year 2020 --version WA_Plans \
   --format geojson shapefile csv mggg davesredistricting
 
 # Produces:
@@ -160,13 +160,13 @@ redist export --label wa_house_draft1 --year 2020 --version WA_Plans \
 
 ```bash
 # Import a plan from DRA, PlanScore, or any GeoJSON source
-redist import --file wa_house_external.geojson \
+BISECT import --file wa_house_external.geojson \
   --state WA --year 2020 --label wa_house_external \
   --version WA_Plans
 
 # After import, run full analysis suite
 bisect analyze --label wa_house_external --types all
-redist report --label wa_house_external --format html
+BISECT report --label wa_house_external --format html
 ```
 
 Import workflow:
@@ -179,7 +179,7 @@ Once imported, the plan is treated identically to a generated plan for all analy
 
 ### Calling external analysis methods
 
-For organizations with their own split-scoring or constraint methods, `redist` supports an **external analyzer hook**:
+For organizations with their own split-scoring or constraint methods, `BISECT` supports an **external analyzer hook**:
 
 ```bash
 bisect analyze --label wa_house_draft1 --types external \
@@ -192,7 +192,7 @@ The external analyzer receives:
 
 The output JSON must conform to the standard analyzer schema (have `analyzer` and `districts` fields). The report will include it as an additional section.
 
-This allows organizations to plug in their own proprietary split-scoring algorithms, community-of-interest tools, or court-mandated analysis methods without modifying the `redist` binary.
+This allows organizations to plug in their own proprietary split-scoring algorithms, community-of-interest tools, or court-mandated analysis methods without modifying the `BISECT` binary.
 
 ---
 
@@ -203,7 +203,7 @@ The audit section includes a complete verification command:
 ```
 To reproduce this plan exactly:
 
-1. Install: redist v0.1.0 (SHA-256: abc123...)
+1. Install: BISECT v0.1.0 (SHA-256: abc123...)
 2. Verify input data:
    sha256sum outputs/V3/data/2020/adjacency/wa_adjacency_2020.adj.bin
    # Expected: def456...
@@ -227,7 +227,7 @@ This is machine-generated from `PlanManifest` — no human writes it.
 ### New crate: `bisect-report`
 
 ```
-redist/crates/bisect-report/
+BISECT/crates/bisect-report/
   src/
     lib.rs
     report.rs        ← Report struct, section assembly
@@ -276,7 +276,7 @@ shapefile = "0.6"    # already a dependency in bisect-data
 - **Spec 3**: contiguity + splits feed Sections 3 and geographic constraint compliance
 - **Spec 4**: partisan metrics feed Section 4
 - **Spec 5**: nesting validation feeds Section 8
-- **All**: the `external analyzer hook` and `import` mechanism make `redist` an open platform for any tool chain
+- **All**: the `external analyzer hook` and `import` mechanism make `BISECT` an open platform for any tool chain
 
 ---
 
@@ -287,12 +287,12 @@ The manifest hashes input data but not the binary itself. A court-appointed spec
 Fix: `PlanManifest` gains:
 ```json
 {
-  "binary_download_url": "https://github.com/giodl73-repo/REDIST/releases/tag/v0.1.0",
+  "binary_download_url": "https://github.com/giodl73-repo/BISECT/releases/tag/v0.1.0",
   "binary_release_sha256": "hash from GitHub release page",
   "binary_build_commit": "git SHA"
 }
 ```
-Release process must publish SHA-256 hashes for each platform binary on the GitHub Releases page. The manifest verification command in the report includes: `curl -L {binary_download_url}/redist.exe | sha256sum` → must match `binary_release_sha256`.
+Release process must publish SHA-256 hashes for each platform binary on the GitHub Releases page. The manifest verification command in the report includes: `curl -L {binary_download_url}/BISECT.exe | sha256sum` → must match `binary_release_sha256`.
 
 **[COVENANT] CONCERN — External analyzer hook breaks audit integrity**
 `--external-analyzer` passes assignments to a mutable external script. This breaks the self-contained reproducibility guarantee. Every report using an external analyzer has a gap in chain of custody.
@@ -300,7 +300,7 @@ Fix: External analyzer invocations must also SHA-256 hash the script file and re
 ```json
 {"external_analyzers": [{"script": "my_splits.py", "sha256": "abc123...", "command": "python my_splits.py {args}"}]}
 ```
-Reports with external analyzers include a visible disclaimer: "This report includes analysis from external tools not part of the redist binary. Independent reproducibility requires access to the external scripts listed in the manifest."
+Reports with external analyzers include a visible disclaimer: "This report includes analysis from external tools not part of the BISECT binary. Independent reproducibility requires access to the external scripts listed in the manifest."
 
 **[LEDGER] CRITICAL — GerryChain export schema must be pinned to a specific version**
 GerryChain changed its partition JSON schema between v2 and v3 (field `assignment` vs `part`; dict vs list format). An incompatible export silently produces wrong analysis.
@@ -317,4 +317,4 @@ Fix: MGGG export is pinned to GerryChain v2.3+ schema explicitly. The export for
 (Confirmed addressed in R2: external analyzer scripts must be hashed and recorded in manifest.)
 
 **[DATUM] CONCERN — Analysis file paths never formally defined across specs**
-`redist report` assembles outputs from `contiguity.json`, `splits.json`, `partisan.json` etc. These filenames are defined only within their individual specs — never consolidated. If any spec changes a filename, the report assembler silently finds nothing. Fix: Normative producer/consumer table added to the overview spec (see overview R3 amendments). `redist report` validates all expected files exist before assembly and reports which are missing.
+`BISECT report` assembles outputs from `contiguity.json`, `splits.json`, `partisan.json` etc. These filenames are defined only within their individual specs — never consolidated. If any spec changes a filename, the report assembler silently finds nothing. Fix: Normative producer/consumer table added to the overview spec (see overview R3 amendments). `BISECT report` validates all expected files exist before assembly and reports which are missing.

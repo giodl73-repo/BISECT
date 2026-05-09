@@ -32,10 +32,7 @@ mod integration_pipeline_tests {
         // Write fake assignments: num_districts districts, each with some tracts
         let mut assignments = serde_json::Map::new();
         for i in 0..num_districts * 5 {
-            assignments.insert(
-                format!("530330{:06}", i),
-                serde_json::json!(i / 5 + 1),
-            );
+            assignments.insert(format!("530330{:06}", i), serde_json::json!(i / 5 + 1));
         }
         std::fs::write(
             data_dir.join("final_assignments.json"),
@@ -91,10 +88,13 @@ mod integration_pipeline_tests {
 
         // Load the assignments and verify they have 5 distinct districts
         let raw = std::fs::read_to_string(ctx.assignments_path()).unwrap();
-        let asgn: std::collections::HashMap<String, usize> =
-            serde_json::from_str(&raw).unwrap();
+        let asgn: std::collections::HashMap<String, usize> = serde_json::from_str(&raw).unwrap();
         let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
-        assert_eq!(districts.len(), 5, "test data must have exactly 5 districts");
+        assert_eq!(
+            districts.len(),
+            5,
+            "test data must have exactly 5 districts"
+        );
     }
 
     #[test]
@@ -104,12 +104,8 @@ mod integration_pipeline_tests {
         make_house_plan(&tmp, "wa_house_v1", 98);
         make_house_plan(&tmp, "wa_senate_v1", 49);
 
-        let result = crate::plan_context::PlanContext::from_label(
-            tmp.path(),
-            "v1",
-            "2020",
-            "wa_house_typo",
-        );
+        let result =
+            crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "wa_house_typo");
 
         assert!(result.is_err());
         let msg = result.unwrap_err().to_string();
@@ -128,18 +124,30 @@ mod integration_pipeline_tests {
         make_house_plan(&tmp, "wa_house_report_test", 98);
 
         // Add required analysis stubs
-        let plan_dir = tmp.path().join("v1").join("2020").join("plans").join("wa_house_report_test");
+        let plan_dir = tmp
+            .path()
+            .join("v1")
+            .join("2020")
+            .join("plans")
+            .join("wa_house_report_test");
         let analysis_dir = plan_dir.join("analysis");
         std::fs::create_dir_all(&analysis_dir).unwrap();
         for name in &["summary.json", "contiguity.json", "compactness.json"] {
-            std::fs::write(analysis_dir.join(name),
-                serde_json::json!({"status": "ok", "districts": [], "all_contiguous": true}).to_string()
-            ).unwrap();
+            std::fs::write(
+                analysis_dir.join(name),
+                serde_json::json!({"status": "ok", "districts": [], "all_contiguous": true})
+                    .to_string(),
+            )
+            .unwrap();
         }
 
         let ctx = crate::plan_context::PlanContext::from_label(
-            tmp.path(), "v1", "2020", "wa_house_report_test"
-        ).unwrap();
+            tmp.path(),
+            "v1",
+            "2020",
+            "wa_house_report_test",
+        )
+        .unwrap();
 
         // PlanContext provides the manifest — assert it has 98 districts
         assert_eq!(ctx.manifest.num_districts, 98);
@@ -147,12 +155,12 @@ mod integration_pipeline_tests {
 
         // If we were to build ReportContext from PlanContext, it would correctly
         // use 98 districts (not 10 from congressional manifest)
-        let report_ctx = bisect_report::ReportContext::new(
-            ctx.plan_dir.clone(),
-            ctx.manifest.clone()
+        let report_ctx =
+            bisect_report::ReportContext::new(ctx.plan_dir.clone(), ctx.manifest.clone());
+        assert_eq!(
+            report_ctx.manifest.num_districts, 98,
+            "ReportContext built from PlanContext must have 98 districts"
         );
-        assert_eq!(report_ctx.manifest.num_districts, 98,
-            "ReportContext built from PlanContext must have 98 districts");
     }
 
     #[test]
@@ -165,22 +173,36 @@ mod integration_pipeline_tests {
         make_house_plan(&tmp, "plan_for_compare_b", 5);
 
         let ctx_a = crate::plan_context::PlanContext::from_label(
-            tmp.path(), "v1", "2020", "plan_for_compare_a"
-        ).unwrap();
+            tmp.path(),
+            "v1",
+            "2020",
+            "plan_for_compare_a",
+        )
+        .unwrap();
         let ctx_b = crate::plan_context::PlanContext::from_label(
-            tmp.path(), "v1", "2020", "plan_for_compare_b"
-        ).unwrap();
+            tmp.path(),
+            "v1",
+            "2020",
+            "plan_for_compare_b",
+        )
+        .unwrap();
 
         // Both assignments must be loadable
-        assert!(ctx_a.assignments_path().exists(), "plan_a assignments must exist");
-        assert!(ctx_b.assignments_path().exists(), "plan_b assignments must exist");
+        assert!(
+            ctx_a.assignments_path().exists(),
+            "plan_a assignments must exist"
+        );
+        assert!(
+            ctx_b.assignments_path().exists(),
+            "plan_b assignments must exist"
+        );
 
-        let raw_a: std::collections::HashMap<String, usize> = serde_json::from_str(
-            &std::fs::read_to_string(ctx_a.assignments_path()).unwrap()
-        ).unwrap();
-        let raw_b: std::collections::HashMap<String, usize> = serde_json::from_str(
-            &std::fs::read_to_string(ctx_b.assignments_path()).unwrap()
-        ).unwrap();
+        let raw_a: std::collections::HashMap<String, usize> =
+            serde_json::from_str(&std::fs::read_to_string(ctx_a.assignments_path()).unwrap())
+                .unwrap();
+        let raw_b: std::collections::HashMap<String, usize> =
+            serde_json::from_str(&std::fs::read_to_string(ctx_b.assignments_path()).unwrap())
+                .unwrap();
 
         // Both plans have 5 districts
         let districts_a: std::collections::HashSet<usize> = raw_a.values().copied().collect();
@@ -189,7 +211,8 @@ mod integration_pipeline_tests {
         assert_eq!(districts_b.len(), 5);
 
         // Jaccard between identical plans = 1.0 (same tracts, same districts)
-        let matching = raw_a.iter()
+        let matching = raw_a
+            .iter()
             .filter(|(geoid, &d)| raw_b.get(*geoid) == Some(&d))
             .count();
         let union = raw_a.len().max(raw_b.len());

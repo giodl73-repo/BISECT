@@ -1,15 +1,13 @@
+use anyhow::Context;
+use serde::{Deserialize, Serialize};
 /// Partisan analyzer runner — load election CSV, aggregate, compute metrics,
 /// write analysis/partisan.json.
 /// Spec 4 — board amendments R3 applied.
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use serde::{Deserialize, Serialize};
-use anyhow::Context;
 
-use bisect_analysis::{
-    DistrictElection, compute_partisan_metrics,
-};
 use crate::io_utils::write_json_atomic;
+use bisect_analysis::{compute_partisan_metrics, DistrictElection};
 
 // ---------------------------------------------------------------------------
 // Election CSV record
@@ -121,7 +119,14 @@ pub fn aggregate_election_to_districts(
     totals
         .into_iter()
         .map(|(district, (dem_votes, rep_votes))| {
-            (district, DistrictElection { district, dem_votes, rep_votes })
+            (
+                district,
+                DistrictElection {
+                    district,
+                    dem_votes,
+                    rep_votes,
+                },
+            )
         })
         .collect()
 }
@@ -200,11 +205,17 @@ pub fn run_partisan(args: &PartisanArgs<'_>) -> anyhow::Result<()> {
 
     // Methodology warning for non-congressional
     let methodology_warning = if args.chamber != "congressional" {
-        Some("Presidential election results used as proxy for state legislative elections. \
-              Caution: turnout and candidate effects may differ significantly.".to_string())
+        Some(
+            "Presidential election results used as proxy for state legislative elections. \
+              Caution: turnout and candidate effects may differ significantly."
+                .to_string(),
+        )
     } else {
-        Some("Presidential election results used as proxy for congressional elections. \
-              Results are indicative only and may not reflect actual partisan performance.".to_string())
+        Some(
+            "Presidential election results used as proxy for congressional elections. \
+              Results are indicative only and may not reflect actual partisan performance."
+                .to_string(),
+        )
     };
 
     let total_votes: f64 = districts_vec.iter().map(|d| d.total()).sum();
@@ -275,19 +286,33 @@ mod tests {
         let result = load_election_data(Path::new("/nonexistent/file.csv"), "2020");
         assert!(result.is_err());
         let msg = result.unwrap_err().to_string();
-        assert!(msg.contains("bisect fetch --type elections"), "error must guide user to fetch: {msg}");
+        assert!(
+            msg.contains("bisect fetch --type elections"),
+            "error must guide user to fetch: {msg}"
+        );
     }
 
     #[test]
     fn test_aggregate_to_districts_correct_sum() {
         let election = vec![
-            ElectionRecord { geoid: "t1".into(), dem_votes: 100.0, rep_votes: 50.0 },
-            ElectionRecord { geoid: "t2".into(), dem_votes: 200.0, rep_votes: 150.0 },
-            ElectionRecord { geoid: "t3".into(), dem_votes: 80.0, rep_votes: 120.0 },
+            ElectionRecord {
+                geoid: "t1".into(),
+                dem_votes: 100.0,
+                rep_votes: 50.0,
+            },
+            ElectionRecord {
+                geoid: "t2".into(),
+                dem_votes: 200.0,
+                rep_votes: 150.0,
+            },
+            ElectionRecord {
+                geoid: "t3".into(),
+                dem_votes: 80.0,
+                rep_votes: 120.0,
+            },
         ];
-        let assignments: HashMap<String, usize> = [
-            ("t1".into(), 1usize), ("t2".into(), 1), ("t3".into(), 2),
-        ].into();
+        let assignments: HashMap<String, usize> =
+            [("t1".into(), 1usize), ("t2".into(), 1), ("t3".into(), 2)].into();
         let by_district = aggregate_election_to_districts(&election, &assignments);
         assert!((by_district[&1].dem_votes - 300.0).abs() < 1e-9);
         assert!((by_district[&1].rep_votes - 200.0).abs() < 1e-9);
@@ -346,7 +371,10 @@ mod tests {
         // Leading-zero GEOIDs must be preserved as strings, not parsed as integers.
         let csv = "geoid,dem_votes,rep_votes\n01001020100,500.0,400.0\n";
         let records = parse_election_csv(Cursor::new(csv.as_bytes())).unwrap();
-        assert_eq!(records[0].geoid, "01001020100", "leading-zero GEOID must be preserved");
+        assert_eq!(
+            records[0].geoid, "01001020100",
+            "leading-zero GEOID must be preserved"
+        );
     }
 
     // ── aggregate_election_to_districts ──────────────────────────────────────
@@ -362,9 +390,11 @@ mod tests {
     #[test]
     fn test_aggregate_geoid_not_in_assignments_is_ignored() {
         // GEOIDs in the election file that have no assignment are silently dropped.
-        let election = vec![
-            ElectionRecord { geoid: "t_unassigned".into(), dem_votes: 999.0, rep_votes: 111.0 },
-        ];
+        let election = vec![ElectionRecord {
+            geoid: "t_unassigned".into(),
+            dem_votes: 999.0,
+            rep_votes: 111.0,
+        }];
         let assignments: HashMap<String, usize> = HashMap::new();
         let result = aggregate_election_to_districts(&election, &assignments);
         assert!(result.is_empty(), "unassigned GEOIDs must be dropped");
@@ -372,9 +402,11 @@ mod tests {
 
     #[test]
     fn test_aggregate_single_district_single_tract() {
-        let election = vec![
-            ElectionRecord { geoid: "t1".into(), dem_votes: 300.0, rep_votes: 200.0 },
-        ];
+        let election = vec![ElectionRecord {
+            geoid: "t1".into(),
+            dem_votes: 300.0,
+            rep_votes: 200.0,
+        }];
         let assignments: HashMap<String, usize> = [("t1".to_string(), 1usize)].into();
         let result = aggregate_election_to_districts(&election, &assignments);
         assert_eq!(result.len(), 1);
@@ -385,13 +417,28 @@ mod tests {
     #[test]
     fn test_aggregate_three_tracts_same_district() {
         let election = vec![
-            ElectionRecord { geoid: "a".into(), dem_votes: 100.0, rep_votes: 50.0 },
-            ElectionRecord { geoid: "b".into(), dem_votes: 200.0, rep_votes: 100.0 },
-            ElectionRecord { geoid: "c".into(), dem_votes: 150.0, rep_votes: 75.0 },
+            ElectionRecord {
+                geoid: "a".into(),
+                dem_votes: 100.0,
+                rep_votes: 50.0,
+            },
+            ElectionRecord {
+                geoid: "b".into(),
+                dem_votes: 200.0,
+                rep_votes: 100.0,
+            },
+            ElectionRecord {
+                geoid: "c".into(),
+                dem_votes: 150.0,
+                rep_votes: 75.0,
+            },
         ];
         let assignments: HashMap<String, usize> = [
-            ("a".to_string(), 1usize), ("b".to_string(), 1), ("c".to_string(), 1)
-        ].into();
+            ("a".to_string(), 1usize),
+            ("b".to_string(), 1),
+            ("c".to_string(), 1),
+        ]
+        .into();
         let result = aggregate_election_to_districts(&election, &assignments);
         assert_eq!(result.len(), 1);
         assert!((result[&1].dem_votes - 450.0).abs() < 1e-9);
@@ -400,21 +447,28 @@ mod tests {
 
     #[test]
     fn test_aggregate_district_id_is_preserved() {
-        let election = vec![
-            ElectionRecord { geoid: "x".into(), dem_votes: 10.0, rep_votes: 5.0 },
-        ];
+        let election = vec![ElectionRecord {
+            geoid: "x".into(),
+            dem_votes: 10.0,
+            rep_votes: 5.0,
+        }];
         let assignments: HashMap<String, usize> = [("x".to_string(), 7usize)].into();
         let result = aggregate_election_to_districts(&election, &assignments);
-        assert!(result.contains_key(&7), "district_id from assignment must be preserved");
+        assert!(
+            result.contains_key(&7),
+            "district_id from assignment must be preserved"
+        );
         assert_eq!(result[&7].district, 7);
     }
 
     #[test]
     fn test_aggregate_all_dem_votes_zero() {
         // Completely uncontested R race — district gets 0 dem, all rep.
-        let election = vec![
-            ElectionRecord { geoid: "t".into(), dem_votes: 0.0, rep_votes: 1000.0 },
-        ];
+        let election = vec![ElectionRecord {
+            geoid: "t".into(),
+            dem_votes: 0.0,
+            rep_votes: 1000.0,
+        }];
         let assignments: HashMap<String, usize> = [("t".to_string(), 1usize)].into();
         let result = aggregate_election_to_districts(&election, &assignments);
         assert_eq!(result[&1].dem_votes, 0.0);
@@ -432,9 +486,8 @@ mod tests {
                 rep_votes: 8.0,
             });
         }
-        let assignments: HashMap<String, usize> = (0..500)
-            .map(|i| (format!("g{i}"), 1usize))
-            .collect();
+        let assignments: HashMap<String, usize> =
+            (0..500).map(|i| (format!("g{i}"), 1usize)).collect();
         let result = aggregate_election_to_districts(&election, &assignments);
         assert_eq!(result.len(), 1);
         assert!((result[&1].dem_votes - 5000.0).abs() < 1e-6);
@@ -453,7 +506,10 @@ mod tests {
             rep_votes: 0.0,
         };
         let pct = d.dem_pct();
-        assert!((pct - 1.0).abs() < 1e-9, "100% dem: pct should be 1.0, got {pct}");
+        assert!(
+            (pct - 1.0).abs() < 1e-9,
+            "100% dem: pct should be 1.0, got {pct}"
+        );
     }
 
     #[test]
@@ -464,7 +520,10 @@ mod tests {
             rep_votes: 500.0,
         };
         let pct = d.dem_pct();
-        assert!((pct - 0.5).abs() < 1e-9, "50/50 split: pct should be 0.5, got {pct}");
+        assert!(
+            (pct - 0.5).abs() < 1e-9,
+            "50/50 split: pct should be 0.5, got {pct}"
+        );
     }
 
     #[test]
@@ -474,7 +533,11 @@ mod tests {
             dem_votes: 300.0,
             rep_votes: 200.0,
         };
-        assert!((d.total() - 500.0).abs() < 1e-9, "total should be 500.0, got {}", d.total());
+        assert!(
+            (d.total() - 500.0).abs() < 1e-9,
+            "total should be 500.0, got {}",
+            d.total()
+        );
     }
 
     #[test]
@@ -496,7 +559,11 @@ mod tests {
 
     #[test]
     fn test_election_record_debug_roundtrip() {
-        let r = ElectionRecord { geoid: "12345".into(), dem_votes: 100.0, rep_votes: 200.0 };
+        let r = ElectionRecord {
+            geoid: "12345".into(),
+            dem_votes: 100.0,
+            rep_votes: 200.0,
+        };
         let debug_str = format!("{r:?}");
         assert!(debug_str.contains("12345"));
         assert!(debug_str.contains("100"));

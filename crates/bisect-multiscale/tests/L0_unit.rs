@@ -1,12 +1,12 @@
-//! L0/L1/L2 integration tests for the redist-multiscale crate.
+//! L0/L1/L2 integration tests for the BISECT-multiscale crate.
 //!
 //! L0: inline unit properties (no external data).
 //! L1: synthetic adjacency — small graphs, observable behaviour.
 //! L2: real-data TX k=38 (marked #[ignore], requires census data).
 
 use bisect_multiscale::{
-    hierarchy::HierarchyLevel,
     chain::{MultiScaleConfig, MultiScaleError},
+    hierarchy::HierarchyLevel,
     rebalance::rebalance,
     seeds::step_seed,
 };

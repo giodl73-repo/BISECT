@@ -27,7 +27,11 @@ use crate::prime::prime_factor_sequence;
 // ---------------------------------------------------------------------------
 
 fn gcd2(a: u32, b: u32) -> u32 {
-    if b == 0 { a } else { gcd2(b, a % b) }
+    if b == 0 {
+        a
+    } else {
+        gcd2(b, a % b)
+    }
 }
 
 fn gcd3(a: u32, b: u32, c: u32) -> u32 {
@@ -259,9 +263,18 @@ mod tests {
     fn test_ca_trunk() {
         // CA: gcd=4=[2,2] — all three spines must start with [2,2]
         let (c, s, h) = compatible_spines(52, 40, 80);
-        assert!(c.starts_with(&[2, 2]), "CA congressional spine starts with trunk [2,2]");
-        assert!(s.starts_with(&[2, 2]), "CA senate spine starts with trunk [2,2]");
-        assert!(h.starts_with(&[2, 2]), "CA house spine starts with trunk [2,2]");
+        assert!(
+            c.starts_with(&[2, 2]),
+            "CA congressional spine starts with trunk [2,2]"
+        );
+        assert!(
+            s.starts_with(&[2, 2]),
+            "CA senate spine starts with trunk [2,2]"
+        );
+        assert!(
+            h.starts_with(&[2, 2]),
+            "CA house spine starts with trunk [2,2]"
+        );
     }
 
     #[test]
@@ -303,15 +316,15 @@ mod tests {
         assert_eq!(g, 6, "OR gcd should be 6");
 
         let score = spine_compatibility_score(6, 30, 60);
-        assert!(
-            score.abs() < 1e-9,
-            "OR score should be 0.0, got {score}"
-        );
+        assert!(score.abs() < 1e-9, "OR score should be 0.0, got {score}");
 
         // All three spines must be identical (same trunk, no tails)
         let (c, s, h) = compatible_spines(6, 30, 60);
         // trunk = [2,3] (factors of 6)
-        assert!(c.starts_with(&[2, 3]), "OR congressional spine starts with [2,3]");
+        assert!(
+            c.starts_with(&[2, 3]),
+            "OR congressional spine starts with [2,3]"
+        );
         assert!(s.starts_with(&[2, 3]), "OR senate spine starts with [2,3]");
         assert!(h.starts_with(&[2, 3]), "OR house spine starts with [2,3]");
 
@@ -335,7 +348,10 @@ mod tests {
 
         let (c, s, h) = compatible_spines(14, 50, 120);
         // trunk = [2] (factors of gcd=2)
-        assert!(c.starts_with(&[2]), "NC congressional spine starts with trunk [2]");
+        assert!(
+            c.starts_with(&[2]),
+            "NC congressional spine starts with trunk [2]"
+        );
         assert!(s.starts_with(&[2]), "NC senate spine starts with trunk [2]");
         assert!(h.starts_with(&[2]), "NC house spine starts with trunk [2]");
 
@@ -369,16 +385,22 @@ mod tests {
         for row in &table {
             let (c, s, h) = compatible_spines(row.congressional, row.senate, row.house);
             assert_eq!(
-                spine_product(&c), row.congressional,
-                "{} congressional spine product mismatch", row.state_code
+                spine_product(&c),
+                row.congressional,
+                "{} congressional spine product mismatch",
+                row.state_code
             );
             assert_eq!(
-                spine_product(&s), row.senate,
-                "{} senate spine product mismatch", row.state_code
+                spine_product(&s),
+                row.senate,
+                "{} senate spine product mismatch",
+                row.state_code
             );
             assert_eq!(
-                spine_product(&h), row.house,
-                "{} house spine product mismatch", row.state_code
+                spine_product(&h),
+                row.house,
+                "{} house spine product mismatch",
+                row.state_code
             );
         }
     }
@@ -393,7 +415,9 @@ mod tests {
         for row in &table {
             assert!(
                 row.score >= 0.0 && row.score <= 100.0,
-                "{} score out of [0,100]: {}", row.state_code, row.score
+                "{} score out of [0,100]: {}",
+                row.state_code,
+                row.score
             );
         }
     }
@@ -405,8 +429,10 @@ mod tests {
             assert!(
                 w[0].score <= w[1].score,
                 "table not sorted: {} ({}) > {} ({})",
-                w[0].state_code, w[0].score,
-                w[1].state_code, w[1].score
+                w[0].state_code,
+                w[0].score,
+                w[1].state_code,
+                w[1].score
             );
         }
     }
@@ -415,7 +441,10 @@ mod tests {
     fn test_or_strictly_compatible() {
         let table = us_state_compatibility_table();
         let or_row = table.iter().find(|r| r.state_code == "OR").unwrap();
-        assert!(or_row.strictly_compatible, "OR should be strictly compatible");
+        assert!(
+            or_row.strictly_compatible,
+            "OR should be strictly compatible"
+        );
         assert_eq!(or_row.gcd, 6);
     }
 
@@ -423,7 +452,10 @@ mod tests {
     fn test_tx_not_strictly_compatible() {
         let table = us_state_compatibility_table();
         let tx_row = table.iter().find(|r| r.state_code == "TX").unwrap();
-        assert!(!tx_row.strictly_compatible, "TX should not be strictly compatible");
+        assert!(
+            !tx_row.strictly_compatible,
+            "TX should not be strictly compatible"
+        );
         assert_eq!(tx_row.gcd, 1);
     }
 
@@ -442,17 +474,23 @@ mod tests {
             assert!(
                 c.starts_with(&trunk),
                 "{} congressional spine does not start with trunk {:?}: {:?}",
-                row.state_code, trunk, c
+                row.state_code,
+                trunk,
+                c
             );
             assert!(
                 s.starts_with(&trunk),
                 "{} senate spine does not start with trunk {:?}: {:?}",
-                row.state_code, trunk, s
+                row.state_code,
+                trunk,
+                s
             );
             assert!(
                 h.starts_with(&trunk),
                 "{} house spine does not start with trunk {:?}: {:?}",
-                row.state_code, trunk, h
+                row.state_code,
+                trunk,
+                h
             );
         }
     }
@@ -464,16 +502,16 @@ mod tests {
     #[test]
     fn test_known_gcd_values() {
         let cases: &[(&str, u32)] = &[
-            ("AL",  7), // gcd(7,35,105)=7
-            ("AZ",  3), // gcd(9,30,60)=3
-            ("CA",  4), // gcd(52,40,80)=4
-            ("FL",  4), // gcd(28,40,120)=4
-            ("GA",  2), // gcd(14,56,180)=2
-            ("ID",  1), // gcd(2,35,70): gcd(2,35)=1 → 1
-            ("MT",  2), // gcd(2,50,100)=2
-            ("NJ",  4), // gcd(12,40,80)=4
-            ("OR",  6), // gcd(6,30,60)=6
-            ("TX",  1), // gcd(38,31,150)=1
+            ("AL", 7), // gcd(7,35,105)=7
+            ("AZ", 3), // gcd(9,30,60)=3
+            ("CA", 4), // gcd(52,40,80)=4
+            ("FL", 4), // gcd(28,40,120)=4
+            ("GA", 2), // gcd(14,56,180)=2
+            ("ID", 1), // gcd(2,35,70): gcd(2,35)=1 → 1
+            ("MT", 2), // gcd(2,50,100)=2
+            ("NJ", 4), // gcd(12,40,80)=4
+            ("OR", 6), // gcd(6,30,60)=6
+            ("TX", 1), // gcd(38,31,150)=1
         ];
 
         let table = us_state_compatibility_table();
@@ -481,7 +519,8 @@ mod tests {
             let row = table.iter().find(|r| r.state_code == code).unwrap();
             assert_eq!(
                 row.gcd, expected_gcd,
-                "{} gcd: expected {expected_gcd}, got {}", code, row.gcd
+                "{} gcd: expected {expected_gcd}, got {}",
+                code, row.gcd
             );
         }
     }
@@ -518,7 +557,7 @@ mod tests {
     fn compatible_spines_product_invariant_single_seat() {
         // AK: C=1, S=20, H=40. gcd(1,20,40)=1 — trunk is empty.
         let (c, s, h) = compatible_spines(1, 20, 40);
-        assert_eq!(spine_product(&c), 1,  "AK-like: congressional spine product");
+        assert_eq!(spine_product(&c), 1, "AK-like: congressional spine product");
         assert_eq!(spine_product(&s), 20, "AK-like: senate spine product");
         assert_eq!(spine_product(&h), 40, "AK-like: house spine product");
     }
@@ -541,8 +580,8 @@ mod tests {
         if !c.is_empty() && !s.is_empty() {
             // They may or may not share a common first factor; the gcd IS 1,
             // so at least one pair of spines starts differently.
-            let shared_prefix_len = c.iter().zip(s.iter()).take_while(|(a,b)| a==b).count()
-                + c.iter().zip(h.iter()).take_while(|(a,b)| a==b).count();
+            let shared_prefix_len = c.iter().zip(s.iter()).take_while(|(a, b)| a == b).count()
+                + c.iter().zip(h.iter()).take_while(|(a, b)| a == b).count();
             // Not both pairs can share a long prefix when gcd=1
             let _ = shared_prefix_len; // just verify compilation & product correctness
         }
@@ -573,7 +612,9 @@ mod tests {
         for row in &table {
             assert!(
                 row.score >= 0.0,
-                "{} score should be non-negative, got {}", row.state_code, row.score
+                "{} score should be non-negative, got {}",
+                row.state_code,
+                row.score
             );
         }
     }
@@ -596,8 +637,14 @@ mod tests {
         let s1 = spine_compatibility_score(52, 40, 80);
         let s2 = spine_compatibility_score(40, 52, 80);
         let s3 = spine_compatibility_score(80, 40, 52);
-        assert!((s1 - s2).abs() < 1e-9, "score should be symmetric: {s1} vs {s2}");
-        assert!((s1 - s3).abs() < 1e-9, "score should be symmetric: {s1} vs {s3}");
+        assert!(
+            (s1 - s2).abs() < 1e-9,
+            "score should be symmetric: {s1} vs {s2}"
+        );
+        assert!(
+            (s1 - s3).abs() < 1e-9,
+            "score should be symmetric: {s1} vs {s3}"
+        );
     }
 
     /// strictly_compatible flag matches score==0.0 invariant.
@@ -608,7 +655,8 @@ mod tests {
             let expect = row.score.abs() < 1e-9;
             assert_eq!(
                 row.strictly_compatible, expect,
-                "{} strictly_compatible={} but score={}", row.state_code, row.strictly_compatible, row.score
+                "{} strictly_compatible={} but score={}",
+                row.state_code, row.strictly_compatible, row.score
             );
         }
     }

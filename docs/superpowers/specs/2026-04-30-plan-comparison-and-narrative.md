@@ -3,12 +3,12 @@
 **Updated:** 2026-04-30 (v2 — incorporates 7-role consensus on narrative guardrails + COVENANT versioning)
 **Status:** Revised; pending re-review
 **Closes gap for:** civic advocacy (★★→★★★★★), state staff, special master
-**Depends on:** existing redist compare + redist map; existing analyze JSON outputs
+**Depends on:** existing BISECT compare + BISECT map; existing analyze JSON outputs
 **Estimated effort:** 3-4 days
 
 ## Why this exists
 
-Today the project has `redist compare` (computes Jaccard, population diff, compactness diff between two plans) but no:
+Today the project has `BISECT compare` (computes Jaccard, population diff, compactness diff between two plans) but no:
 - Side-by-side visual that a non-technical person can read
 - Diff view showing which districts changed
 - Narrative paragraphs explaining what the comparison means in plain English ("Plan A would elect 5 Republicans and 1 Democrat; Plan B would elect 4 Republicans and 2 Democrats; the change is concentrated in Districts 3 and 6 around Baton Rouge")
@@ -39,13 +39,13 @@ A civic advocacy group, a journalist, or a member of the public can't pick up th
      - "[DRAFT — review before publication] Statewide partisan composition (using 55% Dem-share threshold): Plan A elects [A_DEM]/[A_REP]; Plan B elects [B_DEM]/[B_REP]."
      - "Compactness (Polsby-Popper, mean across districts): Plan A=[X], Plan B=[Y]."
 
-4. **Historical-baseline overlay** — `redist compare --baseline ENACTED` compares a proposed plan against the state's currently-enacted map (downloaded via existing fetcher infrastructure)
+4. **Historical-baseline overlay** — `BISECT compare --baseline ENACTED` compares a proposed plan against the state's currently-enacted map (downloaded via existing fetcher infrastructure)
 
 5. **CLI surface** (MERIDIAN — uses `--plan-label` family, not bare `--label`):
    ```
-   redist compare --plan-a LABEL_A --plan-b LABEL_B --format html|narrative|both
-   redist compare --plan-a LABEL_A --baseline ENACTED --year 2020
-   redist compare --plan-a LABEL_A --plan-b LABEL_B --comments-label LWV_COMMENTS_2026
+   BISECT compare --plan-a LABEL_A --plan-b LABEL_B --format html|narrative|both
+   BISECT compare --plan-a LABEL_A --baseline ENACTED --year 2020
+   BISECT compare --plan-a LABEL_A --plan-b LABEL_B --comments-label LWV_COMMENTS_2026
    ```
    Across the spec set: `--plan-a` / `--plan-b` for plan labels, `--comments-label` for civic comment labels, `--ensemble-label` for ensembles. Bare `--label` is reserved for write-side commands (`import`, `civic ingest`) where there's only one referent.
 
@@ -57,11 +57,11 @@ A civic advocacy group, a journalist, or a member of the public can't pick up th
    - **Plan manifest SHA-256s (COVENANT C-3)**: `plan_a_label`, `plan_a_manifest_sha256`, `plan_b_label`, `plan_b_manifest_sha256`, and `baseline_label` + `baseline_manifest_sha256` when `--baseline ENACTED` is used. Labels alone are not provenance — they can be re-bound to new content. The SHAs pin exactly what was compared.
    - Source analysis JSON SHAs (partisan.json, vra_analysis.json, compactness.json) for both plans
    - `approved_by` (string or `null` when `[DRAFT]`) + `approved_at` ISO-8601 UTC
-   - `redist` build commit + version + `rustc_version`
+   - `BISECT` build commit + version + `rustc_version`
    - **Civic-counter-proposal tag passthrough**: when either plan's manifest carries `submission_type=civic_counter_proposal`, the narrative manifest records this and the rendered narrative + summary card carry a visible "civic counter-proposal" framing label (not just a hidden manifest field — see §3 framing rules).
    - Re-running the same template against the same inputs (with `SOURCE_DATE_EPOCH` pinned, see Risks) MUST produce a byte-identical narrative; CI asserts this. The manifest is the audit trail a court or newsroom can check before publishing.
 
-8. **Public-comment overlay (v2 — COMMONS)** — `redist compare --comments-label <LABEL>` consumes the output of `redist civic ingest` (canonical schema defined in `2026-04-30-civic-bidirectional.md` §1; this spec does NOT redefine it). The comparison report:
+8. **Public-comment overlay (v2 — COMMONS)** — `BISECT compare --comments-label <LABEL>` consumes the output of `BISECT civic ingest` (canonical schema defined in `2026-04-30-civic-bidirectional.md` §1; this spec does NOT redefine it). The comparison report:
    - Flags districts where Plan A preserves a labeled community but Plan B splits it (and vice versa)
    - Tallies the percentage of comment-flagged tracts kept whole vs. split per plan
    - Includes a "comments incorporated" appendix listing each `comment_id` and which plan honored it
@@ -110,7 +110,7 @@ A 1200×675 PNG that fits Twitter/Facebook share previews:
 - Two thumbnail maps side by side
 - One-sentence headline ("Plan B yields 1 more Democratic-leaning district while reducing the average compactness by 4%")
 - Key stats row: "Dem seats: 5→6", "MM districts: 1→1", "PP: 0.42→0.40"
-- Footer: Generated by redist · {date} · {git commit short}
+- Footer: Generated by BISECT · {date} · {git commit short}
 
 Built via bisect-map (existing infrastructure) + a small layout-on-PNG helper.
 
@@ -134,15 +134,15 @@ Built via bisect-map (existing infrastructure) + a small layout-on-PNG helper.
 | Auto-generated text could mislead on close cases | Always include the underlying numbers; flag close calls (e.g., "within margin of error") |
 | Civic-facing card is one image, can be cherry-picked | Add a citation footer; document that the full report is the audit reference |
 | Different states / chambers have different "what matters" lists | One default template; allow `--narrative-template <PATH>` override |
-| Byte-identical re-render gate flakes on PDF/timestamp/git-SHA leaks (BENCHMARK P1) | Build with `SOURCE_DATE_EPOCH` pinned to the manifest's `approved_at` (or `0` for `[DRAFT]`); embed git short-SHA via env var `REDIST_BUILD_COMMIT_SHORT` so tests can pin it; deterministic Typst seed |
+| Byte-identical re-render gate flakes on PDF/timestamp/git-SHA leaks (BENCHMARK P1) | Build with `SOURCE_DATE_EPOCH` pinned to the manifest's `approved_at` (or `0` for `[DRAFT]`); embed git short-SHA via env var `BISECT_BUILD_COMMIT_SHORT` so tests can pin it; deterministic Typst seed |
 
 ## Definition of done
 
-- `redist compare --plan-a X --plan-b Y --format html` produces all output artifacts (including `narrative_manifest.json`)
+- `BISECT compare --plan-a X --plan-b Y --format html` produces all output artifacts (including `narrative_manifest.json`)
 - HTML side-by-side renders cleanly in Chrome/Firefox/Safari
 - Narrative reads as professional plain-English (vetted by at least one non-technical reader)
 - Every auto-generated paragraph starts with `[DRAFT — review before publication]` until `--approved-by` is supplied
 - Re-running the same `compare` command on the same inputs produces a byte-identical narrative (CI gate)
 - `--comments <CSV>` overlay produces a "comments incorporated" appendix
 - Comparison card looks good at Twitter/Facebook preview sizes
-- Tutorial in docs/REDIST_CLI.md shows one full comparison
+- Tutorial in docs/BISECT_CLI.md shows one full comparison

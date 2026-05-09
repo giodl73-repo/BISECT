@@ -1,14 +1,13 @@
 /// LocationRegistry — runtime lookup for the location_policy.json database.
 ///
 /// Load order:
-///   1. REDIST_LOCATION_POLICY env var (path to JSON file)
-///   2. REDIST_STATE_POLICY env var (backward-compat alias)
-///   3. ~/.config/redist/location_policy.json
+///   1. BISECT_LOCATION_POLICY env var (path to JSON file)
+///   2. BISECT_STATE_POLICY env var (backward-compat alias)
+///   3. ~/.config/BISECT/location_policy.json
 ///   4. Embedded fallback (compiled into binary via include_str!)
 ///
 /// The registry keeps the raw serde_json::Value so it remains compatible with
 /// the existing policy.rs functions that read fields directly from the JSON.
-
 use std::path::{Path, PathBuf};
 
 /// Embedded fallback — compiled into the binary at build time.
@@ -23,24 +22,29 @@ impl LocationRegistry {
 
     /// Load the registry using the standard search order.
     pub fn load() -> Self {
-        // 1. REDIST_LOCATION_POLICY env var
-        if let Ok(path) = std::env::var("REDIST_LOCATION_POLICY") {
-            if let Some(reg) = Self::try_load_file(&path, "REDIST_LOCATION_POLICY") {
+        // 1. BISECT_LOCATION_POLICY env var
+        if let Ok(path) = std::env::var("BISECT_LOCATION_POLICY") {
+            if let Some(reg) = Self::try_load_file(&path, "BISECT_LOCATION_POLICY") {
                 return reg;
             }
         }
         // 2. Backward-compat alias (old env var name)
-        if let Ok(path) = std::env::var("REDIST_STATE_POLICY") {
-            if let Some(reg) = Self::try_load_file(&path, "REDIST_STATE_POLICY") {
+        if let Ok(path) = std::env::var("BISECT_STATE_POLICY") {
+            if let Some(reg) = Self::try_load_file(&path, "BISECT_STATE_POLICY") {
                 return reg;
             }
         }
         // 3. User config directory
         if let Some(home) = std::env::var_os("HOME").or_else(|| std::env::var_os("USERPROFILE")) {
             let config_path = PathBuf::from(home)
-                .join(".config").join("bisect").join("location_policy.json");
+                .join(".config")
+                .join("bisect")
+                .join("location_policy.json");
             if config_path.exists() {
-                if let Some(reg) = Self::try_load_file(config_path.to_str().unwrap_or(""), "~/.config/bisect/location_policy.json") {
+                if let Some(reg) = Self::try_load_file(
+                    config_path.to_str().unwrap_or(""),
+                    "~/.config/bisect/location_policy.json",
+                ) {
                     return reg;
                 }
             }
@@ -63,14 +67,18 @@ impl LocationRegistry {
             Ok(content) => match serde_json::from_str::<serde_json::Value>(&content) {
                 Ok(raw) => Some(Self { raw }),
                 Err(e) => {
-                    eprintln!("WARNING: {env_name}={path} could not be parsed ({e}); \
-                               falling back to embedded policy.");
+                    eprintln!(
+                        "WARNING: {env_name}={path} could not be parsed ({e}); \
+                               falling back to embedded policy."
+                    );
                     None
                 }
             },
             Err(e) => {
-                eprintln!("WARNING: {env_name}={path} could not be read ({e}); \
-                           falling back to embedded policy.");
+                eprintln!(
+                    "WARNING: {env_name}={path} could not be read ({e}); \
+                           falling back to embedded policy."
+                );
                 None
             }
         }
@@ -98,12 +106,15 @@ impl LocationRegistry {
     /// Returns empty vec if location not found or `census_years` is absent.
     pub fn available_years(&self, code: &str) -> Vec<String> {
         let key = self.resolve_key(code);
-        self.raw.get(&key)
+        self.raw
+            .get(&key)
             .and_then(|e| e.get("census_years"))
             .and_then(|v| v.as_array())
-            .map(|arr| arr.iter()
-                .filter_map(|v| v.as_str().map(String::from))
-                .collect())
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|v| v.as_str().map(String::from))
+                    .collect()
+            })
             .unwrap_or_default()
     }
 
@@ -155,7 +166,8 @@ impl LocationRegistry {
             "congressional" => self.congressional_districts(code, year),
             "house" | "lower" | "assembly" => {
                 let key = self.resolve_key(code);
-                self.raw.get(&key)
+                self.raw
+                    .get(&key)
                     .and_then(|e| e.get("house_districts"))
                     .and_then(|v| v.as_u64())
                     .filter(|&n| n > 0)
@@ -163,7 +175,8 @@ impl LocationRegistry {
             }
             "senate" | "upper" => {
                 let key = self.resolve_key(code);
-                self.raw.get(&key)
+                self.raw
+                    .get(&key)
                     .and_then(|e| e.get("senate_districts"))
                     .and_then(|v| v.as_u64())
                     .filter(|&n| n > 0)
@@ -239,9 +252,9 @@ impl LocationRegistry {
                 let template = convention_obj
                     .and_then(|c| c.get("path_template"))
                     .and_then(|v| v.as_str())
-                    .ok_or_else(|| format!(
-                        "no path_template in adjacency_convention for '{code}'"
-                    ))?;
+                    .ok_or_else(|| {
+                        format!("no path_template in adjacency_convention for '{code}'")
+                    })?;
                 let path = apply_template(template, year, &state_lower, &state_upper);
                 Ok((PathBuf::from(path), build_command))
             }
@@ -269,8 +282,7 @@ impl LocationRegistry {
         if n <= 25 {
             return None;
         }
-        let state_name = self.state_name(code)
-            .unwrap_or_else(|| code.to_string());
+        let state_name = self.state_name(code).unwrap_or_else(|| code.to_string());
         Some(format!(
             "{state_name} house has {n} districts. \
              Tract resolution may hit the granularity floor (~1 tract/2 districts). \
@@ -281,7 +293,8 @@ impl LocationRegistry {
     /// Return the human-readable name for a location code (e.g. "Washington").
     pub fn state_name(&self, code: &str) -> Option<String> {
         let key = self.resolve_key(code);
-        self.raw.get(&key)
+        self.raw
+            .get(&key)
             .and_then(|e| e.get("name"))
             .and_then(|v| v.as_str())
             .map(String::from)
@@ -317,24 +330,26 @@ impl LocationRegistry {
         build_hint: &str,
     ) -> Result<(PathBuf, String), String> {
         let (adj_filename, is_block_group) = match resolution {
-            "block_group" | "block-group" => (
-                format!("{state_lower}_bg_adjacency_{year}.pkl"),
-                true,
-            ),
-            _ => (
-                format!("{state_lower}_adjacency_{year}.pkl"),
-                false,
-            ),
+            "block_group" | "block-group" => {
+                (format!("{state_lower}_bg_adjacency_{year}.pkl"), true)
+            }
+            _ => (format!("{state_lower}_adjacency_{year}.pkl"), false),
         };
 
         let canonical = outputs_base
-            .join("V3").join("data").join(year).join("adjacency")
+            .join("V3")
+            .join("data")
+            .join(year)
+            .join("adjacency")
             .join(&adj_filename);
         if canonical.exists() {
             return Ok((canonical, build_hint.to_string()));
         }
         let v4 = outputs_base
-            .join("V4").join("data").join(year).join("adjacency")
+            .join("V4")
+            .join("data")
+            .join(year)
+            .join("adjacency")
             .join(&adj_filename);
         if v4.exists() {
             return Ok((v4, build_hint.to_string()));
@@ -344,13 +359,19 @@ impl LocationRegistry {
             // Graceful fallback to tract
             let tract_filename = format!("{state_lower}_adjacency_{year}.pkl");
             let tract_v3 = outputs_base
-                .join("V3").join("data").join(year).join("adjacency")
+                .join("V3")
+                .join("data")
+                .join(year)
+                .join("adjacency")
                 .join(&tract_filename);
             if tract_v3.exists() {
                 return Ok((tract_v3, build_hint.to_string()));
             }
             let tract_v4 = outputs_base
-                .join("V4").join("data").join(year).join("adjacency")
+                .join("V4")
+                .join("data")
+                .join(year)
+                .join("adjacency")
                 .join(&tract_filename);
             if tract_v4.exists() {
                 return Ok((tract_v4, build_hint.to_string()));
@@ -473,9 +494,14 @@ mod tests {
         let result = registry().validate_year("WA", "2024");
         assert!(result.is_err());
         let msg = result.unwrap_err();
-        assert!(msg.contains("2024"), "error should mention the invalid year: {msg}");
-        assert!(msg.contains("2020") || msg.contains("2010") || msg.contains("2000"),
-            "error should mention available years: {msg}");
+        assert!(
+            msg.contains("2024"),
+            "error should mention the invalid year: {msg}"
+        );
+        assert!(
+            msg.contains("2020") || msg.contains("2010") || msg.contains("2000"),
+            "error should mention available years: {msg}"
+        );
     }
 
     #[test]
@@ -520,7 +546,10 @@ mod tests {
 
     #[test]
     fn test_congressional_districts_eldoria() {
-        assert_eq!(registry().congressional_districts("_TEST_EL", "2099"), Some(13));
+        assert_eq!(
+            registry().congressional_districts("_TEST_EL", "2099"),
+            Some(13)
+        );
     }
 
     #[test]
@@ -532,17 +561,26 @@ mod tests {
 
     #[test]
     fn test_chamber_districts_wa_house() {
-        assert_eq!(registry().chamber_districts("WA", "house", "2020"), Some(98));
+        assert_eq!(
+            registry().chamber_districts("WA", "house", "2020"),
+            Some(98)
+        );
     }
 
     #[test]
     fn test_chamber_districts_wa_senate() {
-        assert_eq!(registry().chamber_districts("WA", "senate", "2020"), Some(49));
+        assert_eq!(
+            registry().chamber_districts("WA", "senate", "2020"),
+            Some(49)
+        );
     }
 
     #[test]
     fn test_chamber_districts_wa_congressional() {
-        assert_eq!(registry().chamber_districts("WA", "congressional", "2020"), Some(10));
+        assert_eq!(
+            registry().chamber_districts("WA", "congressional", "2020"),
+            Some(10)
+        );
     }
 
     #[test]
@@ -559,7 +597,10 @@ mod tests {
 
     #[test]
     fn test_state_name_eldoria() {
-        assert_eq!(registry().state_name("_TEST_EL"), Some("Eldoria".to_string()));
+        assert_eq!(
+            registry().state_name("_TEST_EL"),
+            Some("Eldoria".to_string())
+        );
     }
 
     #[test]
@@ -575,7 +616,10 @@ mod tests {
         let warn = registry().granularity_warning("WA", "2020", "house", "tract");
         assert!(warn.is_some(), "WA house at tract resolution should warn");
         let msg = warn.unwrap();
-        assert!(msg.contains("98") || msg.contains("house"), "warning should mention districts: {msg}");
+        assert!(
+            msg.contains("98") || msg.contains("house"),
+            "warning should mention districts: {msg}"
+        );
     }
 
     #[test]
@@ -584,7 +628,9 @@ mod tests {
         let warn = registry().granularity_warning("VT", "2020", "house", "tract");
         // VT house has 150 districts — this SHOULD warn
         // Actually checking: VT house_districts from policy.json
-        let n = registry().chamber_districts("VT", "house", "2020").unwrap_or(0);
+        let n = registry()
+            .chamber_districts("VT", "house", "2020")
+            .unwrap_or(0);
         if n > 60 {
             assert!(warn.is_some());
         } else {
@@ -620,8 +666,10 @@ mod tests {
                 assert!(path.to_str().unwrap().contains("wa"));
             }
             Err(msg) => {
-                assert!(msg.contains("adjacency") || msg.contains("not found"),
-                    "error should mention adjacency: {msg}");
+                assert!(
+                    msg.contains("adjacency") || msg.contains("not found"),
+                    "error should mention adjacency: {msg}"
+                );
             }
         }
     }
@@ -636,8 +684,10 @@ mod tests {
         match result {
             Ok((path, _)) => {
                 let path_str = path.to_str().unwrap();
-                assert!(path_str.contains("ie") || path_str.contains("international"),
-                    "IE path should reference international: {path_str}");
+                assert!(
+                    path_str.contains("ie") || path_str.contains("international"),
+                    "IE path should reference international: {path_str}"
+                );
             }
             Err(_) => {
                 // OK — file doesn't exist in test env
@@ -733,7 +783,10 @@ mod tests {
 
         // Simulate the hint logic from Commands::State
         let should_hint = chamber == "congressional" && districts_override.is_none();
-        assert!(should_hint, "hint condition must fire when chamber==congressional and no --districts");
+        assert!(
+            should_hint,
+            "hint condition must fire when chamber==congressional and no --districts"
+        );
 
         let house = reg.chamber_districts(state_code, "house", year);
         let senate = reg.chamber_districts(state_code, "senate", year);
@@ -742,11 +795,21 @@ mod tests {
 
         // Verify hint parts would be constructed correctly
         let mut hint_parts: Vec<String> = Vec::new();
-        if let Some(h) = house { hint_parts.push(format!("house ({}D)", h)); }
-        if let Some(s) = senate { hint_parts.push(format!("senate ({}D)", s)); }
+        if let Some(h) = house {
+            hint_parts.push(format!("house ({}D)", h));
+        }
+        if let Some(s) = senate {
+            hint_parts.push(format!("senate ({}D)", s));
+        }
         let hint_str = hint_parts.join(" and ");
-        assert!(hint_str.contains("house (98D)"), "hint must mention house: {hint_str}");
-        assert!(hint_str.contains("senate (49D)"), "hint must mention senate: {hint_str}");
+        assert!(
+            hint_str.contains("house (98D)"),
+            "hint must mention house: {hint_str}"
+        );
+        assert!(
+            hint_str.contains("senate (49D)"),
+            "hint must mention senate: {hint_str}"
+        );
     }
 
     // ── Gap 2: doctor build hint uses bisect fetch not Python script ──────────
@@ -781,12 +844,17 @@ mod tests {
         let result = reg.adjacency_path("WA", "2020", "tract", base);
         match result {
             Ok((path, _)) => {
-                assert!(!path.to_string_lossy().contains("_bg_"),
-                    "tract path must not contain bg: {}", path.display());
+                assert!(
+                    !path.to_string_lossy().contains("_bg_"),
+                    "tract path must not contain bg: {}",
+                    path.display()
+                );
             }
             Err(msg) => {
-                assert!(!msg.contains("_bg_adjacency"),
-                    "tract error must not reference bg path: {msg}");
+                assert!(
+                    !msg.contains("_bg_adjacency"),
+                    "tract error must not reference bg path: {msg}"
+                );
             }
         }
     }
@@ -807,11 +875,10 @@ mod tests {
             .expect("manifest must load for district count agreement test");
 
         let us_state_codes: &[&str] = &[
-            "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
-            "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
-            "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
-            "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
-            "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+            "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN",
+            "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV",
+            "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN",
+            "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
         ];
 
         let mut mismatches: Vec<String> = Vec::new();
@@ -826,7 +893,9 @@ mod tests {
 
             for year in &["2020", "2010"] {
                 // Ground truth: manifest.json (Congress.gov-aligned, hand-verified)
-                let manifest_count = manifest.states.get(code)
+                let manifest_count = manifest
+                    .states
+                    .get(code)
                     .and_then(|s| s.districts.get(*year).copied());
 
                 // Registry value from congressional_districts_by_year in policy
@@ -874,15 +943,27 @@ mod tests {
     fn test_reapportionment_states_2010_vs_2020() {
         let reg = registry();
         // TX: 36 in 2010, 38 in 2020
-        assert_eq!(reg.congressional_districts("TX", "2010"), Some(36),
-            "TX must have 36 districts in 2010");
-        assert_eq!(reg.congressional_districts("TX", "2020"), Some(38),
-            "TX must have 38 districts in 2020");
+        assert_eq!(
+            reg.congressional_districts("TX", "2010"),
+            Some(36),
+            "TX must have 36 districts in 2010"
+        );
+        assert_eq!(
+            reg.congressional_districts("TX", "2020"),
+            Some(38),
+            "TX must have 38 districts in 2020"
+        );
         // WA: 10 in 2010, 10 in 2020 (gained from 9 to 10 after 2000 cycle)
-        assert_eq!(reg.congressional_districts("WA", "2010"), Some(10),
-            "WA must have 10 districts in 2010");
-        assert_eq!(reg.congressional_districts("WA", "2020"), Some(10),
-            "WA must have 10 districts in 2020");
+        assert_eq!(
+            reg.congressional_districts("WA", "2010"),
+            Some(10),
+            "WA must have 10 districts in 2010"
+        );
+        assert_eq!(
+            reg.congressional_districts("WA", "2020"),
+            Some(10),
+            "WA must have 10 districts in 2020"
+        );
         // CO: 7 in 2010, 8 in 2020
         let co_2020 = reg.congressional_districts("CO", "2020");
         assert!(co_2020.is_some(), "CO must have district count for 2020");

@@ -1,11 +1,11 @@
-/// `redist migrate` — copy a legacy state plan into the plans/{label}/ tree.
+use bisect_report::{check_plan_collision, create_plan_dir, write_manifest_atomic, PlanManifest};
+/// `BISECT migrate` — copy a legacy state plan into the plans/{label}/ tree.
 ///
 /// Source: `{base}/states/{state_name}/`
 /// Destination: `{base}/plans/{label}/`
 ///
 /// A minimal manifest.json is written to the destination.
 use std::path::Path;
-use bisect_report::{PlanManifest, create_plan_dir, write_manifest_atomic, check_plan_collision};
 
 /// Migrate a legacy state directory into a labeled plan directory.
 ///
@@ -16,7 +16,12 @@ use bisect_report::{PlanManifest, create_plan_dir, write_manifest_atomic, check_
 ///   - a 2-letter state code ("WA") — will look up full name via manifest
 ///   - a full lowercase state name ("washington")
 /// `force`: if true, overwrite an existing plan directory without error.
-pub fn run_migrate(base: &Path, state_identifier: &str, label: &str, force: bool) -> anyhow::Result<()> {
+pub fn run_migrate(
+    base: &Path,
+    state_identifier: &str,
+    label: &str,
+    force: bool,
+) -> anyhow::Result<()> {
     // Try the identifier as given (lowercase), then try to resolve via manifest
     let candidate_lower = state_identifier.to_lowercase();
     let source_dir_direct = base.join("states").join(&candidate_lower);
@@ -27,8 +32,8 @@ pub fn run_migrate(base: &Path, state_identifier: &str, label: &str, force: bool
         source_dir_direct
     } else {
         // Try to resolve via manifest (for 2-letter codes like "WA" → "washington")
-        let resolved = try_resolve_state_name(state_identifier)
-            .map(|name| base.join("states").join(&name));
+        let resolved =
+            try_resolve_state_name(state_identifier).map(|name| base.join("states").join(&name));
 
         match resolved {
             Some(dir) if dir.exists() => dir,
@@ -78,7 +83,7 @@ pub fn run_migrate(base: &Path, state_identifier: &str, label: &str, force: bool
         num_districts,
         population_source: "total".to_string(),
         partition_mode: "edge-weighted".to_string(),
-        binary_download_url: "https://github.com/owner/redist/releases".to_string(),
+        binary_download_url: "https://github.com/owner/BISECT/releases".to_string(),
         adjacency_file: format!("{}_adjacency.adj.bin", state_dir_name),
         tiger_source_url: "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/".to_string(),
         created_at: chrono_now(),
@@ -99,9 +104,10 @@ fn try_resolve_state_name(state_code: &str) -> Option<String> {
     // Try loading the manifest to get the full state name
     let manifest = crate::fetch::load_manifest().ok()?;
     let code_upper = state_code.to_uppercase();
-    manifest.states.get(&code_upper).map(|s| {
-        s.name.to_lowercase().replace(' ', "_")
-    })
+    manifest
+        .states
+        .get(&code_upper)
+        .map(|s| s.name.to_lowercase().replace(' ', "_"))
 }
 
 /// Copy all files (non-recursively for data dir) from src to dst.
@@ -135,7 +141,13 @@ fn chrono_now() -> String {
     let minutes = (rem % 3600) / 60;
     let seconds = rem % 60;
     // epoch day → approx date (simplified; precise enough for manifest timestamps)
-    format!("{}T{:02}:{:02}:{:02}Z", epoch_days_to_date(days), hours, minutes, seconds)
+    format!(
+        "{}T{:02}:{:02}:{:02}Z",
+        epoch_days_to_date(days),
+        hours,
+        minutes,
+        seconds
+    )
 }
 
 fn epoch_days_to_date(days: u64) -> String {
@@ -203,10 +215,7 @@ mod tests {
         assert!(manifest_path.exists());
         let manifest: serde_json::Value =
             serde_json::from_str(&std::fs::read_to_string(manifest_path).unwrap()).unwrap();
-        assert_eq!(
-            manifest["label"].as_str().unwrap(),
-            "wa_congressional_2020"
-        );
+        assert_eq!(manifest["label"].as_str().unwrap(), "wa_congressional_2020");
     }
 
     #[test]
@@ -251,7 +260,8 @@ mod tests {
         std::fs::write(
             state_dir.join("final_assignments.json"),
             r#"{"53033000100":1,"53033000200":2,"53033000300":3}"#,
-        ).unwrap();
+        )
+        .unwrap();
 
         run_migrate(tmp.path(), "washington", "wa_congressional_2020", false).unwrap();
 
@@ -292,8 +302,13 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         setup_legacy_state_dir(tmp.path(), "vermont");
         run_migrate(tmp.path(), "vermont", "vt_congressional_2020", false).unwrap();
-        let manifest_path = tmp.path().join("plans").join("vt_congressional_2020").join("manifest.json");
-        let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(manifest_path).unwrap()).unwrap();
+        let manifest_path = tmp
+            .path()
+            .join("plans")
+            .join("vt_congressional_2020")
+            .join("manifest.json");
+        let v: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(manifest_path).unwrap()).unwrap();
         assert_eq!(v["label"].as_str().unwrap(), "vt_congressional_2020");
     }
 
@@ -302,8 +317,13 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         setup_legacy_state_dir(tmp.path(), "vermont");
         run_migrate(tmp.path(), "vermont", "vt_plan", false).unwrap();
-        let manifest_path = tmp.path().join("plans").join("vt_plan").join("manifest.json");
-        let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(manifest_path).unwrap()).unwrap();
+        let manifest_path = tmp
+            .path()
+            .join("plans")
+            .join("vt_plan")
+            .join("manifest.json");
+        let v: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(manifest_path).unwrap()).unwrap();
         // state_code is set from state_identifier.to_uppercase()
         assert_eq!(v["state_code"].as_str().unwrap(), "VERMONT");
     }
@@ -314,7 +334,10 @@ mod tests {
         setup_legacy_state_dir(tmp.path(), "delaware");
         run_migrate(tmp.path(), "delaware", "de_plan", false).unwrap();
         let analysis_dir = tmp.path().join("plans").join("de_plan").join("analysis");
-        assert!(analysis_dir.exists(), "migrate must create analysis/ subdirectory");
+        assert!(
+            analysis_dir.exists(),
+            "migrate must create analysis/ subdirectory"
+        );
     }
 
     #[test]
@@ -331,8 +354,15 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         setup_legacy_state_dir(tmp.path(), "delaware");
         run_migrate(tmp.path(), "delaware", "de_plan3", false).unwrap();
-        let int_dir = tmp.path().join("plans").join("de_plan3").join("intermediate");
-        assert!(int_dir.exists(), "migrate must create intermediate/ subdirectory");
+        let int_dir = tmp
+            .path()
+            .join("plans")
+            .join("de_plan3")
+            .join("intermediate");
+        assert!(
+            int_dir.exists(),
+            "migrate must create intermediate/ subdirectory"
+        );
     }
 
     #[test]
@@ -344,10 +374,16 @@ mod tests {
         std::fs::write(
             state_dir.join("final_assignments.json"),
             r#"{"41000001":1,"41000002":2,"41000003":3,"41000004":4,"41000005":5}"#,
-        ).unwrap();
+        )
+        .unwrap();
         run_migrate(tmp.path(), "oregon", "or_plan", false).unwrap();
-        let manifest_path = tmp.path().join("plans").join("or_plan").join("manifest.json");
-        let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(manifest_path).unwrap()).unwrap();
+        let manifest_path = tmp
+            .path()
+            .join("plans")
+            .join("or_plan")
+            .join("manifest.json");
+        let v: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(manifest_path).unwrap()).unwrap();
         assert_eq!(v["num_districts"].as_u64().unwrap(), 5);
     }
 
@@ -356,8 +392,13 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         setup_legacy_state_dir(tmp.path(), "alaska"); // only 1 assignment → 1 district
         run_migrate(tmp.path(), "alaska", "ak_plan", false).unwrap();
-        let manifest_path = tmp.path().join("plans").join("ak_plan").join("manifest.json");
-        let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(manifest_path).unwrap()).unwrap();
+        let manifest_path = tmp
+            .path()
+            .join("plans")
+            .join("ak_plan")
+            .join("manifest.json");
+        let v: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(manifest_path).unwrap()).unwrap();
         assert_eq!(v["num_districts"].as_u64().unwrap(), 1);
     }
 
@@ -368,10 +409,18 @@ mod tests {
         let state_dir = tmp.path().join("states").join("wyoming");
         std::fs::create_dir_all(&state_dir).unwrap();
         run_migrate(tmp.path(), "wyoming", "wy_plan", false).unwrap();
-        let manifest_path = tmp.path().join("plans").join("wy_plan").join("manifest.json");
-        let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(manifest_path).unwrap()).unwrap();
-        assert_eq!(v["num_districts"].as_u64().unwrap(), 1,
-            "missing assignments file must default to 1 district");
+        let manifest_path = tmp
+            .path()
+            .join("plans")
+            .join("wy_plan")
+            .join("manifest.json");
+        let v: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(manifest_path).unwrap()).unwrap();
+        assert_eq!(
+            v["num_districts"].as_u64().unwrap(),
+            1,
+            "missing assignments file must default to 1 district"
+        );
     }
 
     #[test]
@@ -381,14 +430,26 @@ mod tests {
         let state_dir = tmp.path().join("states").join("nevada");
         let data_dir = state_dir.join("data");
         std::fs::create_dir_all(&data_dir).unwrap();
-        std::fs::write(state_dir.join("final_assignments.json"), r#"{"32001000100":1}"#).unwrap();
+        std::fs::write(
+            state_dir.join("final_assignments.json"),
+            r#"{"32001000100":1}"#,
+        )
+        .unwrap();
         std::fs::write(data_dir.join("summary.json"), r#"{"districts":[]}"#).unwrap();
 
         run_migrate(tmp.path(), "nevada", "nv_plan", false).unwrap();
 
         // data/summary.json must be copied under the plan dir
-        let copied = tmp.path().join("plans").join("nv_plan").join("data").join("summary.json");
-        assert!(copied.exists(), "subdirectory files must be copied recursively");
+        let copied = tmp
+            .path()
+            .join("plans")
+            .join("nv_plan")
+            .join("data")
+            .join("summary.json");
+        assert!(
+            copied.exists(),
+            "subdirectory files must be copied recursively"
+        );
     }
 
     #[test]
@@ -397,7 +458,11 @@ mod tests {
         // Must look like 2026-05-02T12:00:00Z
         assert!(ts.contains('T'), "timestamp must contain T separator");
         assert!(ts.ends_with('Z'), "timestamp must end with Z");
-        assert_eq!(ts.len(), 20, "timestamp must be exactly 20 chars (YYYY-MM-DDTHH:MM:SSZ)");
+        assert_eq!(
+            ts.len(),
+            20,
+            "timestamp must be exactly 20 chars (YYYY-MM-DDTHH:MM:SSZ)"
+        );
     }
 
     #[test]
@@ -421,10 +486,21 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         setup_legacy_state_dir(tmp.path(), "utah");
         run_migrate(tmp.path(), "utah", "ut_plan", false).unwrap();
-        let manifest_path = tmp.path().join("plans").join("ut_plan").join("manifest.json");
-        let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(manifest_path).unwrap()).unwrap();
+        let manifest_path = tmp
+            .path()
+            .join("plans")
+            .join("ut_plan")
+            .join("manifest.json");
+        let v: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(manifest_path).unwrap()).unwrap();
         let adj_file = v["adjacency_file"].as_str().unwrap_or("");
-        assert!(adj_file.contains("adjacency"), "adjacency_file must contain 'adjacency'");
-        assert!(adj_file.ends_with(".adj.bin"), "adjacency_file must end with .adj.bin");
+        assert!(
+            adj_file.contains("adjacency"),
+            "adjacency_file must contain 'adjacency'"
+        );
+        assert!(
+            adj_file.ends_with(".adj.bin"),
+            "adjacency_file must end with .adj.bin"
+        );
     }
 }

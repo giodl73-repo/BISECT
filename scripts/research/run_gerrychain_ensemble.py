@@ -2,7 +2,7 @@
 GerryChain ensemble runner for G-series papers.
 
 Runs ReCom MCMC chains for 6 key states and records:
-- Polsby-Popper distribution (where does the redist plan fall?)
+- Polsby-Popper distribution (where does the BISECT plan fall?)
 - Partisan seat distribution (using 2020 presidential vote)
 - Convergence diagnostics (R-hat, ESS, Hamming autocorrelation)
 
@@ -55,11 +55,11 @@ ADJ_BASE = Path("C:/src/apportionment/outputs/V3/data/2020/adjacency")
 OUTPUT_BASE = Path("C:/src/apportionment/research")
 
 # ---------------------------------------------------------------------------
-# Build NetworkX graph from redist pkl
+# Build NetworkX graph from BISECT pkl
 # ---------------------------------------------------------------------------
 
-def load_redist_graph(state: str) -> nx.Graph:
-    """Load the redist adjacency pkl and build a NetworkX graph."""
+def load_BISECT_graph(state: str) -> nx.Graph:
+    """Load the BISECT adjacency pkl and build a NetworkX graph."""
     abbr = STATE_CONFIG[state]["abbr"]
     pkl_path = ADJ_BASE / f"{abbr}_adjacency_2020.pkl"
 
@@ -118,10 +118,10 @@ def run_ensemble(state: str, n_steps: int = 2000, n_chains: int = 2) -> dict:
     k = cfg["seats"]
 
     print(f"\n[{state}] Loading graph...")
-    G = load_redist_graph(state)
+    G = load_BISECT_graph(state)
     n = G.number_of_nodes()
 
-    # Initial partition: load from redist output if available, else use
+    # Initial partition: load from BISECT output if available, else use
     # a geoid-based hash assignment that spreads districts geographically
     abbr = STATE_CONFIG[state]["abbr"]
     # Map state abbr to full name used in outputs/
@@ -130,13 +130,13 @@ def run_ensemble(state: str, n_steps: int = 2000, n_chains: int = 2) -> dict:
         "pa": "pennsylvania",   "tx": "texas",      "ca": "california",
     }
     full_name = state_name_map.get(abbr, abbr)
-    redist_outputs = sorted(Path("C:/src/apportionment/outputs").glob(
+    BISECT_outputs = sorted(Path("C:/src/apportionment/outputs").glob(
         f"*/2020/states/{full_name}/data/final_assignments.json"
     ))
 
-    if redist_outputs:
-        assign_path = redist_outputs[0]
-        print(f"[{state}] Loading redist initial partition from {assign_path.parent.parent.name}...")
+    if BISECT_outputs:
+        assign_path = BISECT_outputs[0]
+        print(f"[{state}] Loading BISECT initial partition from {assign_path.parent.parent.name}...")
         with open(assign_path) as f:
             raw_assigns = json.load(f)
         # Keys are string integer indices (e.g. "0", "1", ..., "2671")
@@ -146,7 +146,7 @@ def run_ensemble(state: str, n_steps: int = 2000, n_chains: int = 2) -> dict:
             if node not in initial_assignment:
                 initial_assignment[node] = 1
     else:
-        print(f"[{state}] No redist output found; using geographic hash assignment...")
+        print(f"[{state}] No BISECT output found; using geographic hash assignment...")
         # Spread districts based on node index sorted by population region
         sorted_nodes = sorted(G.nodes(), key=lambda n: G.nodes[n].get("population", 0))
         chunk = len(sorted_nodes) // k

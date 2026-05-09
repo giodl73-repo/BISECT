@@ -1,7 +1,7 @@
 """L0 unit tests for RPLAN v0.1 format.
 
 Tests the RPLAN JSON structure from Python's perspective — ensuring the
-format written by the Rust redist-report crate can be parsed and validated
+format written by the Rust BISECT-report crate can be parsed and validated
 by Python consumers (e.g., dashboards, court submissions, third-party tools).
 """
 import json

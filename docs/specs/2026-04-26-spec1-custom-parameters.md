@@ -9,7 +9,7 @@
 
 ## Problem
 
-The `redist` CLI currently draws congressional districts using hardcoded counts from `config_{year}.py`. A Washington state redistricting commission needs to draw:
+The `BISECT` CLI currently draws congressional districts using hardcoded counts from `config_{year}.py`. A Washington state redistricting commission needs to draw:
 - 98 state house districts
 - 49 state senate districts
 - 10 congressional districts (for comparison/audit)
@@ -29,7 +29,7 @@ outputs/{version}/{year}/plans/{label}/
   manifest.json          ← PlanManifest (provenance, signed)
   final_assignments.json ← tract → district map
   analysis/              ← outputs of Specs 3, 4
-  maps/                  ← outputs of redist map
+  maps/                  ← outputs of BISECT map
   intermediate/          ← bisection rounds
 ```
 
@@ -65,7 +65,7 @@ Written alongside every plan. Provides full audit chain of custody.
 
 ## New CLI Flags
 
-### `bisect state` / `bisect states` / `redist run`
+### `bisect state` / `bisect states` / `BISECT run`
 
 | Flag | Default | Description |
 |------|---------|-------------|
@@ -84,7 +84,7 @@ Written alongside every plan. Provides full audit chain of custody.
 | `vap` | Voting-age population (18+) | `data/{year}/demographics/{state}_demographics_{year}.csv` col `vap` |
 | `cvap` | Citizen voting-age population (state legislature standard in some states) | `data/{year}/demographics/{state}_demographics_{year}.csv` col `cvap` |
 
-If `vap` or `cvap` is requested but the data column is absent, `redist` exits with a clear error: `ERROR: --population-source vap requires 'vap' column in demographics CSV. Column not found.`
+If `vap` or `cvap` is requested but the data column is absent, `BISECT` exits with a clear error: `ERROR: --population-source vap requires 'vap' column in demographics CSV. Column not found.`
 
 ### Examples
 
@@ -200,7 +200,7 @@ Fix: `PlanManifest` gains two additional fields:
 {
   "tiger_sha256": "hash of data/2020/tiger/tracts/{fips}/tl_2020_{fips}_tract.shp",
   "adjacency_build_command": "python scripts/data/geography/build_tract_adjacency.py ...",
-  "adjacency_build_version": "redist_py 0.1.0 (abi3)"
+  "adjacency_build_version": "bisect_py 0.1.0 (abi3)"
 }
 ```
 
@@ -231,4 +231,4 @@ Recording `"adjacency_file": "outputs/V3/data/2020/adjacency/..."` embeds a loca
 Running `bisect state --state WA --chamber house` twice uses the same default label and overwrites the first plan's manifest without warning. Fix: At plan directory creation, if `manifest.json` already exists and `--force` is not set, exit non-zero: "ERROR: Plan 'washington_house_2020' already exists (created {timestamp}). Use --force to overwrite or choose a different --label." `--force` skips this check.
 
 **[SURVEY] — Commands::Validate wiring**
-Add `Validate(ValidateArgs)` to the Commands enum. `ValidateArgs` takes `--file <PATH>` and optional `--strict`. Validation dispatches to `redist_report::validate_rplan()`.
+Add `Validate(ValidateArgs)` to the Commands enum. `ValidateArgs` takes `--file <PATH>` and optional `--strict`. Validation dispatches to `BISECT_report::validate_rplan()`.

@@ -34,7 +34,7 @@ Today the project has the infrastructure (race-blind illustrative maps, partisan
    - Returns coefficients, standard errors, and bootstrap CIs
    - Writes `analysis/bloc_voting.json` and `analysis/bloc_voting_summary.md`
 
-5. **Documentation** — A `docs/file-formats/race-of-candidate.md` spec, an updated `docs/REDIST_CLI.md` section, and an example end-to-end run for Louisiana 2020 primaries (uses the existing OpenElections fetcher).
+5. **Documentation** — A `docs/file-formats/race-of-candidate.md` spec, an updated `docs/BISECT_CLI.md` section, and an example end-to-end run for Louisiana 2020 primaries (uses the existing OpenElections fetcher).
 
 ### Out of scope (deferred to future work)
 
@@ -196,7 +196,7 @@ For close-margin annotations (any candidate where the regression coefficient cha
 
 ### Reproducibility-package inclusion (BOUNDARY blocker)
 
-The race-of-candidate CSV **must be included** in the reproducibility package emitted by `redist report` (see Court Submission Reports spec v2). Without it, the analysis is not Daubert-defensible.
+The race-of-candidate CSV **must be included** in the reproducibility package emitted by `BISECT report` (see Court Submission Reports spec v2). Without it, the analysis is not Daubert-defensible.
 
 ### Dispute-resolution
 
@@ -220,4 +220,4 @@ When two curators disagree on an annotation, the file format supports multiple r
 - Output JSON validates against schema
 - Plain-English summary reads as defensible §2 testimony language
 - L0/L1 tests passing
-- Tutorial in docs/REDIST_CLI.md walks through one full run
+- Tutorial in docs/BISECT_CLI.md walks through one full run

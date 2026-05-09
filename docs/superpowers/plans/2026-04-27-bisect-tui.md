@@ -1,10 +1,10 @@
-# redist TUI Implementation Plan
+# BISECT TUI Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build `bisect-tui`, a pure ratatui TUI binary that lets redistricting practitioners run the full redist workflow — plan generation, analysis, comparison, verification — through interactive menus without memorising CLI flags.
+**Goal:** Build `bisect-tui`, a pure ratatui TUI binary that lets redistricting practitioners run the full BISECT workflow — plan generation, analysis, comparison, verification — through interactive menus without memorising CLI flags.
 
-**Architecture:** New binary crate `redist/crates/bisect-tui/` added to the workspace. Uses ratatui + crossterm for terminal rendering. Reads redist output files directly for browse/compare/verify; spawns `bisect state` subprocess only for the Run screen, consuming STATUS: lines to drive live progress bars. Zero changes to `bisect-cli` or its existing tests.
+**Architecture:** New binary crate `BISECT/crates/bisect-tui/` added to the workspace. Uses ratatui + crossterm for terminal rendering. Reads BISECT output files directly for browse/compare/verify; spawns `bisect state` subprocess only for the Run screen, consuming STATUS: lines to drive live progress bars. Zero changes to `bisect-cli` or its existing tests.
 
 **Tech Stack:** Rust, ratatui 0.28+, crossterm 0.28+, toml 0.8, serde (for session config), bisect-cli (lib), bisect-report (lib), serde_json.
 
@@ -13,12 +13,12 @@
 ## File Map
 
 ```
-redist/crates/bisect-tui/
+BISECT/crates/bisect-tui/
 ├── Cargo.toml
 └── src/
     ├── main.rs          — terminal init, event loop, top-level key dispatch
     ├── app.rs           — App struct, Screen enum, all shared state
-    ├── session.rs       — ~/.config/redist/tui.toml load/save
+    ├── session.rs       — ~/.config/BISECT/tui.toml load/save
     ├── plans.rs         — scan plans/ dir, build Vec<PlanSummary>
     ├── screens/
     │   ├── mod.rs       — re-exports
@@ -36,36 +36,36 @@ redist/crates/bisect-tui/
 ```
 
 **Modified:**
-- `redist/Cargo.toml` — add `bisect-tui` to `[workspace.members]`
-- `redist/crates/bisect-cli/src/args.rs` — add `Tui(TuiArgs)` to `Commands`
-- `redist/crates/bisect-cli/src/main.rs` — wire `Commands::Tui` to exec `bisect-tui`
+- `BISECT/Cargo.toml` — add `bisect-tui` to `[workspace.members]`
+- `BISECT/crates/bisect-cli/src/args.rs` — add `Tui(TuiArgs)` to `Commands`
+- `BISECT/crates/bisect-cli/src/main.rs` — wire `Commands::Tui` to exec `bisect-tui`
 
 ---
 
 ## Task 1: Crate scaffold + workspace wiring
 
 **Files:**
-- Create: `redist/crates/bisect-tui/Cargo.toml`
-- Modify: `redist/Cargo.toml`
-- Create: `redist/crates/bisect-tui/src/main.rs`
+- Create: `BISECT/crates/bisect-tui/Cargo.toml`
+- Modify: `BISECT/Cargo.toml`
+- Create: `BISECT/crates/bisect-tui/src/main.rs`
 
 - [ ] **Step 1.1: Add to workspace**
 
-In `redist/Cargo.toml`, find the `[workspace]` `members` array and add:
+In `BISECT/Cargo.toml`, find the `[workspace]` `members` array and add:
 ```toml
 "crates/bisect-tui",
 ```
 
 - [ ] **Step 1.2: Create Cargo.toml**
 
-Create `redist/crates/bisect-tui/Cargo.toml`:
+Create `BISECT/crates/bisect-tui/Cargo.toml`:
 ```toml
 [package]
 name = "bisect-tui"
 version = "0.1.0"
 edition = "2021"
 authors = ["Gio Della-Libera"]
-description = "Interactive TUI for the redist redistricting CLI"
+description = "Interactive TUI for the BISECT redistricting CLI"
 
 [[bin]]
 name = "bisect-tui"
@@ -84,7 +84,7 @@ anyhow      = "1"
 
 - [ ] **Step 1.3: Create minimal main.rs**
 
-Create `redist/crates/bisect-tui/src/main.rs`:
+Create `BISECT/crates/bisect-tui/src/main.rs`:
 ```rust
 fn main() -> anyhow::Result<()> {
     println!("bisect-tui v0.1.0 — not yet implemented");
@@ -100,7 +100,7 @@ Expected: compiles with no errors.
 - [ ] **Step 1.5: Commit**
 
 ```bash
-git add redist/Cargo.toml redist/crates/bisect-tui/
+git add BISECT/Cargo.toml BISECT/crates/bisect-tui/
 git commit -m "feat: scaffold bisect-tui crate"
 ```
 
@@ -109,12 +109,12 @@ git commit -m "feat: scaffold bisect-tui crate"
 ## Task 2: App state and Screen enum
 
 **Files:**
-- Create: `redist/crates/bisect-tui/src/app.rs`
-- Modify: `redist/crates/bisect-tui/src/main.rs`
+- Create: `BISECT/crates/bisect-tui/src/app.rs`
+- Modify: `BISECT/crates/bisect-tui/src/main.rs`
 
 - [ ] **Step 2.1: Write the failing test**
 
-Create `redist/crates/bisect-tui/src/app.rs` with a test module at the bottom:
+Create `BISECT/crates/bisect-tui/src/app.rs` with a test module at the bottom:
 ```rust
 #[cfg(test)]
 mod tests {
@@ -152,7 +152,7 @@ Expected: compile error — `App`, `Screen`, `RunState` not defined.
 
 - [ ] **Step 2.3: Implement App state**
 
-Fill in `redist/crates/bisect-tui/src/app.rs`:
+Fill in `BISECT/crates/bisect-tui/src/app.rs`:
 ```rust
 use serde::{Deserialize, Serialize};
 
@@ -447,7 +447,7 @@ mod tests {
 
 - [ ] **Step 2.4: Wire app into main.rs**
 
-Replace `redist/crates/bisect-tui/src/main.rs`:
+Replace `BISECT/crates/bisect-tui/src/main.rs`:
 ```rust
 mod app;
 
@@ -468,7 +468,7 @@ Expected: 5 tests pass.
 - [ ] **Step 2.6: Commit**
 
 ```bash
-git add redist/crates/bisect-tui/src/app.rs redist/crates/bisect-tui/src/main.rs
+git add BISECT/crates/bisect-tui/src/app.rs BISECT/crates/bisect-tui/src/main.rs
 git commit -m "feat(tui): App state, Screen enum, navigation"
 ```
 
@@ -477,12 +477,12 @@ git commit -m "feat(tui): App state, Screen enum, navigation"
 ## Task 3: Session config (TOML load/save)
 
 **Files:**
-- Create: `redist/crates/bisect-tui/src/session.rs`
-- Modify: `redist/crates/bisect-tui/src/main.rs`
+- Create: `BISECT/crates/bisect-tui/src/session.rs`
+- Modify: `BISECT/crates/bisect-tui/src/main.rs`
 
 - [ ] **Step 3.1: Write failing tests**
 
-Create `redist/crates/bisect-tui/src/session.rs`:
+Create `BISECT/crates/bisect-tui/src/session.rs`:
 ```rust
 use serde::{Deserialize, Serialize};
 
@@ -545,7 +545,7 @@ pub fn config_path() -> Option<std::path::PathBuf> {
     let home = std::env::var_os("HOME")
         .or_else(|| std::env::var_os("USERPROFILE"))?;
     Some(std::path::PathBuf::from(home)
-        .join(".config").join("redist").join("tui.toml"))
+        .join(".config").join("BISECT").join("tui.toml"))
 }
 
 /// Load session from disk. Returns Default if file absent or unparseable.
@@ -614,7 +614,7 @@ mod tests {
 
 - [ ] **Step 3.2: Add tempfile dev-dependency**
 
-In `redist/crates/bisect-tui/Cargo.toml`, add:
+In `BISECT/crates/bisect-tui/Cargo.toml`, add:
 ```toml
 [dev-dependencies]
 tempfile = "3"
@@ -630,7 +630,7 @@ Expected: 3 tests pass.
 - [ ] **Step 3.4: Commit**
 
 ```bash
-git add redist/crates/bisect-tui/
+git add BISECT/crates/bisect-tui/
 git commit -m "feat(tui): session config load/save (TOML)"
 ```
 
@@ -639,11 +639,11 @@ git commit -m "feat(tui): session config load/save (TOML)"
 ## Task 4: Plan discovery (scan plans/ directory)
 
 **Files:**
-- Create: `redist/crates/bisect-tui/src/plans.rs`
+- Create: `BISECT/crates/bisect-tui/src/plans.rs`
 
 - [ ] **Step 4.1: Write failing tests**
 
-Create `redist/crates/bisect-tui/src/plans.rs`:
+Create `BISECT/crates/bisect-tui/src/plans.rs`:
 ```rust
 use std::path::{Path, PathBuf};
 use crate::app::PlanSummary;
@@ -686,7 +686,7 @@ fn load_plan_summary(plan_dir: PathBuf) -> Option<PlanSummary> {
 
     // Look up state name from location registry
     let state_name = {
-        let reg = redist_cli::policy::LocationRegistry::load();
+        let reg = BISECT_cli::policy::LocationRegistry::load();
         reg.state_name(&state_code).unwrap_or_else(|| state_code.clone())
     };
 
@@ -833,7 +833,7 @@ Add `mod plans;` and `mod session;` to `main.rs`.
 - [ ] **Step 4.4: Commit**
 
 ```bash
-git add redist/crates/bisect-tui/src/plans.rs redist/crates/bisect-tui/src/main.rs
+git add BISECT/crates/bisect-tui/src/plans.rs BISECT/crates/bisect-tui/src/main.rs
 git commit -m "feat(tui): plan discovery — scan plans/ dir, read manifests + analysis"
 ```
 
@@ -842,15 +842,15 @@ git commit -m "feat(tui): plan discovery — scan plans/ dir, read manifests + a
 ## Task 5: Terminal setup and main event loop
 
 **Files:**
-- Modify: `redist/crates/bisect-tui/src/main.rs`
-- Create: `redist/crates/bisect-tui/src/screens/mod.rs`
-- Create: `redist/crates/bisect-tui/src/screens/home.rs` (stub)
-- Create: `redist/crates/bisect-tui/src/widgets/mod.rs`
-- Create: `redist/crates/bisect-tui/src/widgets/status_bar.rs`
+- Modify: `BISECT/crates/bisect-tui/src/main.rs`
+- Create: `BISECT/crates/bisect-tui/src/screens/mod.rs`
+- Create: `BISECT/crates/bisect-tui/src/screens/home.rs` (stub)
+- Create: `BISECT/crates/bisect-tui/src/widgets/mod.rs`
+- Create: `BISECT/crates/bisect-tui/src/widgets/status_bar.rs`
 
 - [ ] **Step 5.1: Create screen module stubs**
 
-Create `redist/crates/bisect-tui/src/screens/mod.rs`:
+Create `BISECT/crates/bisect-tui/src/screens/mod.rs`:
 ```rust
 pub mod home;
 pub mod run;
@@ -859,7 +859,7 @@ pub mod verify;
 pub mod doctor;
 ```
 
-Create stub files for each screen (run, compare, verify, doctor) with just a `pub fn render()` signature for now. For example `redist/crates/bisect-tui/src/screens/run.rs`:
+Create stub files for each screen (run, compare, verify, doctor) with just a `pub fn render()` signature for now. For example `BISECT/crates/bisect-tui/src/screens/run.rs`:
 ```rust
 use ratatui::{Frame, layout::Rect};
 use crate::app::App;
@@ -872,7 +872,7 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
 ```
 Repeat for `compare.rs`, `verify.rs`, `doctor.rs` with appropriate titles.
 
-Create `redist/crates/bisect-tui/src/widgets/mod.rs`:
+Create `BISECT/crates/bisect-tui/src/widgets/mod.rs`:
 ```rust
 pub mod status_bar;
 pub mod command_palette;
@@ -880,7 +880,7 @@ pub mod error_banner;
 pub mod glossary;
 ```
 
-Create `redist/crates/bisect-tui/src/widgets/status_bar.rs`:
+Create `BISECT/crates/bisect-tui/src/widgets/status_bar.rs`:
 ```rust
 use ratatui::{
     Frame,
@@ -914,14 +914,14 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
 
 - [ ] **Step 5.2: Create home.rs stub**
 
-Create `redist/crates/bisect-tui/src/screens/home.rs`:
+Create `BISECT/crates/bisect-tui/src/screens/home.rs`:
 ```rust
 use ratatui::{Frame, layout::Rect};
 use crate::app::App;
 
 pub fn render(f: &mut Frame, app: &App, area: Rect) {
     use ratatui::widgets::{Block, Borders, Paragraph};
-    let block = Block::default().title(" redist tui ").borders(Borders::ALL);
+    let block = Block::default().title(" BISECT tui ").borders(Borders::ALL);
     let content = if app.plans.is_empty() {
         "No plans found. Press [r] to run your first plan.".to_string()
     } else {
@@ -933,7 +933,7 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
 
 - [ ] **Step 5.3: Implement main event loop**
 
-Replace `redist/crates/bisect-tui/src/main.rs`:
+Replace `BISECT/crates/bisect-tui/src/main.rs`:
 ```rust
 mod app;
 mod plans;
@@ -1077,7 +1077,7 @@ Expected: no errors. (Don't run it yet — terminal interaction requires a real 
 - [ ] **Step 5.5: Commit**
 
 ```bash
-git add redist/crates/bisect-tui/src/
+git add BISECT/crates/bisect-tui/src/
 git commit -m "feat(tui): terminal event loop, screen routing, status bar"
 ```
 
@@ -1086,13 +1086,13 @@ git commit -m "feat(tui): terminal event loop, screen routing, status bar"
 ## Task 6: Home screen — plan browser table
 
 **Files:**
-- Modify: `redist/crates/bisect-tui/src/screens/home.rs`
+- Modify: `BISECT/crates/bisect-tui/src/screens/home.rs`
 
 This is the primary screen. Two-panel layout: left=plan list table (65%), right=detail panel (35%).
 
 - [ ] **Step 6.1: Implement home screen render**
 
-Replace `redist/crates/bisect-tui/src/screens/home.rs`:
+Replace `BISECT/crates/bisect-tui/src/screens/home.rs`:
 ```rust
 use ratatui::{
     Frame,
@@ -1328,7 +1328,7 @@ Expected: no errors.
 - [ ] **Step 6.3: Commit**
 
 ```bash
-git add redist/crates/bisect-tui/src/screens/home.rs
+git add BISECT/crates/bisect-tui/src/screens/home.rs
 git commit -m "feat(tui): home screen — plan browser table + detail panel with gauges"
 ```
 
@@ -1337,12 +1337,12 @@ git commit -m "feat(tui): home screen — plan browser table + detail panel with
 ## Task 7: Run screen — form and inline doctor
 
 **Files:**
-- Modify: `redist/crates/bisect-tui/src/screens/run.rs`
-- Modify: `redist/crates/bisect-tui/src/main.rs` (Run screen key handling)
+- Modify: `BISECT/crates/bisect-tui/src/screens/run.rs`
+- Modify: `BISECT/crates/bisect-tui/src/main.rs` (Run screen key handling)
 
 - [ ] **Step 7.1: Implement run form render**
 
-Replace `redist/crates/bisect-tui/src/screens/run.rs`:
+Replace `BISECT/crates/bisect-tui/src/screens/run.rs`:
 ```rust
 use ratatui::{
     Frame,
@@ -1664,7 +1664,7 @@ In `run_app()` in `main.rs`, add handling for `Screen::Run` state — Tab cycles
 - [ ] **Step 7.4: Commit**
 
 ```bash
-git add redist/crates/bisect-tui/src/screens/run.rs redist/crates/bisect-tui/src/main.rs
+git add BISECT/crates/bisect-tui/src/screens/run.rs BISECT/crates/bisect-tui/src/main.rs
 git commit -m "feat(tui): run screen — form, live progress, completion card"
 ```
 
@@ -1673,14 +1673,14 @@ git commit -m "feat(tui): run screen — form, live progress, completion card"
 ## Task 8: STATUS: subprocess integration (live progress)
 
 **Files:**
-- Create: `redist/crates/bisect-tui/src/runner.rs`
-- Modify: `redist/crates/bisect-tui/src/main.rs`
+- Create: `BISECT/crates/bisect-tui/src/runner.rs`
+- Modify: `BISECT/crates/bisect-tui/src/main.rs`
 
 This task makes the Run screen actually launch `bisect state` and pipe STATUS: output back to update progress bars.
 
 - [ ] **Step 8.1: Write failing tests**
 
-Create `redist/crates/bisect-tui/src/runner.rs`:
+Create `BISECT/crates/bisect-tui/src/runner.rs`:
 ```rust
 use crate::app::RunProgress;
 
@@ -1776,13 +1776,13 @@ use std::io::{BufRead, BufReader};
 /// Launch `bisect state` with the given parameters.
 /// Spawns a thread that reads stdout/stderr and appends to `log_lines`.
 /// Returns a handle that can be joined; sets `done` flag when complete.
-pub fn launch_redist_state(
+pub fn launch_BISECT_state(
     form: &crate::app::RunForm,
     log_lines: Arc<Mutex<Vec<String>>>,
     done: Arc<Mutex<bool>>,
     success: Arc<Mutex<bool>>,
 ) -> std::thread::JoinHandle<()> {
-    let mut cmd = Command::new("redist");
+    let mut cmd = Command::new("BISECT");
 
     cmd.args(["state",
         "--state", &form.location,
@@ -1810,7 +1810,7 @@ pub fn launch_redist_state(
             Ok(c) => c,
             Err(e) => {
                 let mut lines = log_lines.lock().unwrap();
-                lines.push(format!("ERROR: failed to launch redist: {e}"));
+                lines.push(format!("ERROR: failed to launch BISECT: {e}"));
                 *done.lock().unwrap() = true;
                 return;
             }
@@ -1852,7 +1852,7 @@ Add Enter key handling for Run form in `run_app()`:
 - [ ] **Step 8.5: Commit**
 
 ```bash
-git add redist/crates/bisect-tui/src/runner.rs redist/crates/bisect-tui/src/main.rs
+git add BISECT/crates/bisect-tui/src/runner.rs BISECT/crates/bisect-tui/src/main.rs
 git commit -m "feat(tui): STATUS: subprocess integration, progress parsing"
 ```
 
@@ -1861,11 +1861,11 @@ git commit -m "feat(tui): STATUS: subprocess integration, progress parsing"
 ## Task 9: Compare screen
 
 **Files:**
-- Modify: `redist/crates/bisect-tui/src/screens/compare.rs`
+- Modify: `BISECT/crates/bisect-tui/src/screens/compare.rs`
 
 - [ ] **Step 9.1: Implement compare screen**
 
-Replace `redist/crates/bisect-tui/src/screens/compare.rs`:
+Replace `BISECT/crates/bisect-tui/src/screens/compare.rs`:
 ```rust
 use ratatui::{
     Frame,
@@ -2013,7 +2013,7 @@ Expected: no errors.
 - [ ] **Step 9.3: Commit**
 
 ```bash
-git add redist/crates/bisect-tui/src/screens/compare.rs
+git add BISECT/crates/bisect-tui/src/screens/compare.rs
 git commit -m "feat(tui): compare screen — side-by-side metrics, Jaccard bar, most-changed"
 ```
 
@@ -2022,11 +2022,11 @@ git commit -m "feat(tui): compare screen — side-by-side metrics, Jaccard bar, 
 ## Task 10: Verify screen
 
 **Files:**
-- Modify: `redist/crates/bisect-tui/src/screens/verify.rs`
+- Modify: `BISECT/crates/bisect-tui/src/screens/verify.rs`
 
 - [ ] **Step 10.1: Implement verify screen**
 
-Replace `redist/crates/bisect-tui/src/screens/verify.rs`:
+Replace `BISECT/crates/bisect-tui/src/screens/verify.rs`:
 ```rust
 use ratatui::{
     Frame,
@@ -2188,7 +2188,7 @@ Expected: no errors.
 - [ ] **Step 10.3: Commit**
 
 ```bash
-git add redist/crates/bisect-tui/src/screens/verify.rs
+git add BISECT/crates/bisect-tui/src/screens/verify.rs
 git commit -m "feat(tui): verify screen — PASS/FAIL box, chain of custody table"
 ```
 
@@ -2197,11 +2197,11 @@ git commit -m "feat(tui): verify screen — PASS/FAIL box, chain of custody tabl
 ## Task 11: Doctor screen
 
 **Files:**
-- Modify: `redist/crates/bisect-tui/src/screens/doctor.rs`
+- Modify: `BISECT/crates/bisect-tui/src/screens/doctor.rs`
 
 - [ ] **Step 11.1: Implement doctor screen**
 
-Replace `redist/crates/bisect-tui/src/screens/doctor.rs`:
+Replace `BISECT/crates/bisect-tui/src/screens/doctor.rs`:
 ```rust
 use ratatui::{
     Frame,
@@ -2211,7 +2211,7 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
 };
 use crate::app::{App, CheckStatus, DoctorState, Screen};
-use redist_cli::policy::LocationRegistry;
+use BISECT_cli::policy::LocationRegistry;
 
 pub fn render(f: &mut Frame, app: &App, area: Rect) {
     let Screen::Doctor(ref state) = app.screen else { return };
@@ -2281,7 +2281,7 @@ fn run_doctor_checks(state: &DoctorState) -> Vec<(CheckStatus, String, Option<St
     } else {
         checks.push((CheckStatus::Fail,
             format!("Location '{}' not found in location_policy.json", state.location),
-            Some("Edit redist/data/location_policy.json to add it".to_string())));
+            Some("Edit BISECT/data/location_policy.json to add it".to_string())));
         return checks;
     }
 
@@ -2310,7 +2310,7 @@ fn run_doctor_checks(state: &DoctorState) -> Vec<(CheckStatus, String, Option<St
     }
 
     // 4. Balance tolerance
-    let tol = redist_cli::runner::chamber_balance_tolerance(&state.location, &state.chamber);
+    let tol = BISECT_cli::runner::chamber_balance_tolerance(&state.location, &state.chamber);
     checks.push((CheckStatus::Info,
         format!("Balance tolerance: {:.1}% (from policy)", tol * 100.0),
         None));
@@ -2336,7 +2336,7 @@ fn run_doctor_checks(state: &DoctorState) -> Vec<(CheckStatus, String, Option<St
                 if nesting != "null" {
                     let ratio = loc.get("nesting_ratio").and_then(|v| v.as_str()).unwrap_or("?");
                     checks.push((CheckStatus::Info,
-                        format!("Nesting: {} ({} ratio). Use redist suite for multi-chamber.", nesting, ratio),
+                        format!("Nesting: {} ({} ratio). Use BISECT suite for multi-chamber.", nesting, ratio),
                         None));
                 }
             }
@@ -2357,7 +2357,7 @@ Expected: no errors.
 - [ ] **Step 11.3: Commit**
 
 ```bash
-git add redist/crates/bisect-tui/src/screens/doctor.rs
+git add BISECT/crates/bisect-tui/src/screens/doctor.rs
 git commit -m "feat(tui): doctor screen — live checks from LocationRegistry"
 ```
 
@@ -2366,14 +2366,14 @@ git commit -m "feat(tui): doctor screen — live checks from LocationRegistry"
 ## Task 12: Command palette overlay
 
 **Files:**
-- Create: `redist/crates/bisect-tui/src/widgets/command_palette.rs`
-- Create: `redist/crates/bisect-tui/src/widgets/error_banner.rs`
-- Create: `redist/crates/bisect-tui/src/widgets/glossary.rs`
-- Modify: `redist/crates/bisect-tui/src/main.rs`
+- Create: `BISECT/crates/bisect-tui/src/widgets/command_palette.rs`
+- Create: `BISECT/crates/bisect-tui/src/widgets/error_banner.rs`
+- Create: `BISECT/crates/bisect-tui/src/widgets/glossary.rs`
+- Modify: `BISECT/crates/bisect-tui/src/main.rs`
 
 - [ ] **Step 12.1: Command palette widget**
 
-Create `redist/crates/bisect-tui/src/widgets/command_palette.rs`:
+Create `BISECT/crates/bisect-tui/src/widgets/command_palette.rs`:
 ```rust
 use ratatui::{
     Frame,
@@ -2475,7 +2475,7 @@ mod tests {
 
 - [ ] **Step 12.2: Error banner widget**
 
-Create `redist/crates/bisect-tui/src/widgets/error_banner.rs`:
+Create `BISECT/crates/bisect-tui/src/widgets/error_banner.rs`:
 ```rust
 use ratatui::{
     Frame, layout::Rect,
@@ -2509,7 +2509,7 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
 
 - [ ] **Step 12.3: Glossary widget**
 
-Create `redist/crates/bisect-tui/src/widgets/glossary.rs`:
+Create `BISECT/crates/bisect-tui/src/widgets/glossary.rs`:
 ```rust
 use ratatui::{
     Frame, layout::Rect,
@@ -2607,21 +2607,21 @@ Expected: all tests pass (including 4 palette tests + 2 glossary tests).
 - [ ] **Step 12.6: Commit**
 
 ```bash
-git add redist/crates/bisect-tui/src/widgets/
+git add BISECT/crates/bisect-tui/src/widgets/
 git commit -m "feat(tui): command palette, error banner, metric glossary overlays"
 ```
 
 ---
 
-## Task 13: Wire `redist tui` into the main CLI
+## Task 13: Wire `BISECT tui` into the main CLI
 
 **Files:**
-- Modify: `redist/crates/bisect-cli/src/args.rs`
-- Modify: `redist/crates/bisect-cli/src/main.rs`
+- Modify: `BISECT/crates/bisect-cli/src/args.rs`
+- Modify: `BISECT/crates/bisect-cli/src/main.rs`
 
 - [ ] **Step 13.1: Add TUI subcommand to args.rs**
 
-In `redist/crates/bisect-cli/src/args.rs`, add to the `Commands` enum:
+In `BISECT/crates/bisect-cli/src/args.rs`, add to the `Commands` enum:
 ```rust
 /// Launch the interactive terminal UI
 Tui(TuiArgs),
@@ -2640,7 +2640,7 @@ pub struct TuiArgs {
 
 - [ ] **Step 13.2: Wire into main.rs**
 
-In `redist/crates/bisect-cli/src/main.rs`, add to the match:
+In `BISECT/crates/bisect-cli/src/main.rs`, add to the match:
 ```rust
 Commands::Tui(args) => {
     // Find the bisect-tui binary alongside this binary
@@ -2680,8 +2680,8 @@ Expected: no errors. Two binaries produced.
 - [ ] **Step 13.5: Commit**
 
 ```bash
-git add redist/crates/bisect-cli/src/args.rs redist/crates/bisect-cli/src/main.rs
-git commit -m "feat: redist tui subcommand — launches bisect-tui binary"
+git add BISECT/crates/bisect-cli/src/args.rs BISECT/crates/bisect-cli/src/main.rs
+git commit -m "feat: BISECT tui subcommand — launches bisect-tui binary"
 ```
 
 ---
@@ -2689,12 +2689,12 @@ git commit -m "feat: redist tui subcommand — launches bisect-tui binary"
 ## Task 14: Integration smoke test and polish
 
 **Files:**
-- Create: `redist/crates/bisect-tui/src/main.rs` (add `--version` flag)
+- Create: `BISECT/crates/bisect-tui/src/main.rs` (add `--version` flag)
 - Various: fix any compilation warnings
 
 - [ ] **Step 14.1: Add --version and --help to TUI binary**
 
-Add to `main()` in `redist/crates/bisect-tui/src/main.rs`:
+Add to `main()` in `BISECT/crates/bisect-tui/src/main.rs`:
 ```rust
 let args: Vec<String> = std::env::args().collect();
 if args.iter().any(|a| a == "--version" || a == "-V") {
@@ -2726,7 +2726,7 @@ Expected: all tests pass (792 + new TUI tests).
 
 Verify:
 ```bash
-grep "bisect-tui" redist/Cargo.toml
+grep "bisect-tui" BISECT/Cargo.toml
 ```
 Expected: `"crates/bisect-tui"` present in members.
 
@@ -2748,7 +2748,7 @@ git push origin master:main
 |-----------------|------|
 | bisect-tui binary crate | Task 1 |
 | App state + Screen enum | Task 2 |
-| Session config ~/.config/redist/tui.toml | Task 3 |
+| Session config ~/.config/BISECT/tui.toml | Task 3 |
 | Plan discovery | Task 4 |
 | Terminal event loop | Task 5 |
 | Home screen plan browser + detail panel | Task 6 |
@@ -2761,7 +2761,7 @@ git push origin master:main
 | Error banner summary+raw | Task 12 |
 | Metric glossary `?` | Task 12 |
 | Status bar always visible | Task 5 |
-| `redist tui` subcommand in CLI | Task 13 |
+| `BISECT tui` subcommand in CLI | Task 13 |
 | `--no-session` flag | Tasks 3, 13 |
 | No changes to bisect-cli tests | Task 13 (verified in 13.3) |
 

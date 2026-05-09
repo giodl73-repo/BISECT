@@ -15,7 +15,9 @@ pub struct HierarchyLevel {
 
 impl HierarchyLevel {
     /// Number of nodes at this resolution.
-    pub fn n(&self) -> usize { self.adj.len() }
+    pub fn n(&self) -> usize {
+        self.adj.len()
+    }
 
     /// Build from fine-level adjacency + a partition of fine tracts into coarse nodes.
     /// coarse_partition[fine_tract] = coarse_node_index (0-based).
@@ -32,12 +34,14 @@ impl HierarchyLevel {
         }
 
         // Build coarse populations
-        let pop: Vec<i64> = coarse_to_fine.iter()
+        let pop: Vec<i64> = coarse_to_fine
+            .iter()
             .map(|tracts| tracts.iter().map(|&t| fine_pop[t]).sum())
             .collect();
 
         // Build coarse adjacency (two coarse nodes are adjacent if any fine tracts are adjacent)
-        let mut adj_set: Vec<std::collections::HashSet<u32>> = vec![std::collections::HashSet::new(); n_coarse];
+        let mut adj_set: Vec<std::collections::HashSet<u32>> =
+            vec![std::collections::HashSet::new(); n_coarse];
         for (fine_v, fine_nbs) in fine_adj.iter().enumerate() {
             let cv = coarse_partition[fine_v];
             for &fine_nb in fine_nbs {
@@ -48,8 +52,13 @@ impl HierarchyLevel {
                 }
             }
         }
-        let adj: Vec<Vec<u32>> = adj_set.into_iter()
-            .map(|s| { let mut v: Vec<u32> = s.into_iter().collect(); v.sort_unstable(); v })
+        let adj: Vec<Vec<u32>> = adj_set
+            .into_iter()
+            .map(|s| {
+                let mut v: Vec<u32> = s.into_iter().collect();
+                v.sort_unstable();
+                v
+            })
             .collect();
 
         Self {
@@ -66,12 +75,18 @@ mod tests {
     use super::*;
 
     fn path_adj_usize(n: usize) -> Vec<Vec<usize>> {
-        (0..n).map(|i| {
-            let mut nb = Vec::new();
-            if i > 0 { nb.push(i-1); }
-            if i < n-1 { nb.push(i+1); }
-            nb
-        }).collect()
+        (0..n)
+            .map(|i| {
+                let mut nb = Vec::new();
+                if i > 0 {
+                    nb.push(i - 1);
+                }
+                if i < n - 1 {
+                    nb.push(i + 1);
+                }
+                nb
+            })
+            .collect()
     }
 
     #[test]

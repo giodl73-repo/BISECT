@@ -50,7 +50,7 @@ bisect build official_2020 --year 2020
 
 This is equivalent to:
 ```bash
-redist run --year 2020 \
+BISECT run --year 2020 \
     --version official_2020 \
     --partition-mode apportion-regions \
     --weights county \
@@ -58,7 +58,7 @@ redist run --year 2020 \
     --workers 12
 ```
 
-Expected time: 15–30 minutes on a 4-core laptop (the `redist` binary is ~200x faster than the archived Python pipeline).
+Expected time: 15–30 minutes on a 4-core laptop (the `BISECT` binary is ~200x faster than the archived Python pipeline).
 
 Expected output: `outputs/official_2020/2020/{state}/final_assignments.json` for all 50 states.
 
@@ -75,14 +75,14 @@ bisect label-verify official_2020 --year 2020
 This re-hashes every input file (TIGER shapefiles, PL 94-171 data) and compares against the SHA-256 values recorded in `manifest.json` at run time. A passing result means:
 
 1. The input data has not changed since the run
-2. The binary version matches the manifest's `redist_build_commit`
+2. The binary version matches the manifest's `BISECT_build_commit`
 3. `algorithm_output.json` is byte-identical to what the reference implementation produces from those inputs
 
 A failing result means the run is not reproducible from the stated inputs -- which is the core finding the DIA's private right of action would allow any citizen to litigate.
 
 For a single state:
 ```bash
-redist doctor --verify-manifest outputs/official_2020/2020/north_carolina/manifest.json
+BISECT doctor --verify-manifest outputs/official_2020/2020/north_carolina/manifest.json
 ```
 
 ---

@@ -14,8 +14,8 @@ use std::path::PathBuf;
 
 use anyhow::Context;
 
-use crate::args::ParetoArgs;
 use crate::adjacency_loader::load_adjacency_pkl;
+use crate::args::ParetoArgs;
 use crate::fetch::load_manifest;
 use crate::runner::load_all_states;
 
@@ -32,23 +32,32 @@ pub fn run_pareto(args: &ParetoArgs) -> anyhow::Result<()> {
         all.iter()
             .find(|(code, _, _)| code == &state_upper)
             .map(|(_, _, n)| *n)
-            .ok_or_else(|| anyhow::anyhow!(
-                "no district count for '{}'. Use bisect fetch --year {}",
-                state_upper, year
-            ))?
+            .ok_or_else(|| {
+                anyhow::anyhow!(
+                    "no district count for '{}'. Use bisect fetch --year {}",
+                    state_upper,
+                    year
+                )
+            })?
     };
 
     // ── Load adjacency graph ─────────────────────────────────────────────────
     let adj_path = resolve_adj_path(&state_lower, &year)?;
-    eprintln!("[bisect pareto] {} {} — loading {} adjacency tracts",
-        state_upper, year, adj_path.file_name().unwrap_or_default().to_string_lossy());
+    eprintln!(
+        "[bisect pareto] {} {} — loading {} adjacency tracts",
+        state_upper,
+        year,
+        adj_path.file_name().unwrap_or_default().to_string_lossy()
+    );
 
     let graph = load_adjacency_pkl(&adj_path)
         .map_err(|e| anyhow::anyhow!("failed to load adjacency {}: {e}", adj_path.display()))?;
 
     let n = graph.adjacency.len();
-    eprintln!("[bisect pareto] n={n} tracts, k={k} districts, population={}, generations={}",
-        args.population, args.generations);
+    eprintln!(
+        "[bisect pareto] n={n} tracts, k={k} districts, population={}, generations={}",
+        args.population, args.generations
+    );
 
     // ── Derive base seed ─────────────────────────────────────────────────────
     let base_seed = args.base_seed.unwrap_or_else(|| {
@@ -74,45 +83,61 @@ pub fn run_pareto(args: &ParetoArgs) -> anyhow::Result<()> {
         &graph.adjacency,
         &graph.vertex_weights,
         k,
-        None,  // d_votes: not loaded in Phase 1
-        None,  // minority_vap: not loaded in Phase 1
+        None, // d_votes: not loaded in Phase 1
+        None, // minority_vap: not loaded in Phase 1
         &[],
         config,
-    ).map_err(|e| anyhow::anyhow!("NSGA-II failed: {e}"))?;
+    )
+    .map_err(|e| anyhow::anyhow!("NSGA-II failed: {e}"))?;
 
-    eprintln!("[bisect pareto] frontier size: {} Pareto-optimal plans in {:.1}s",
-        result.frontier.len(), result.runtime_secs);
+    eprintln!(
+        "[bisect pareto] frontier size: {} Pareto-optimal plans in {:.1}s",
+        result.frontier.len(),
+        result.runtime_secs
+    );
 
     // ── Write NDJSON output ──────────────────────────────────────────────────
-    let output_path = args.output.clone().unwrap_or_else(|| {
-        format!("{}_pareto_{}.ndjson", state_lower, year)
-    });
+    let output_path = args
+        .output
+        .clone()
+        .unwrap_or_else(|| format!("{}_pareto_{}.ndjson", state_lower, year));
     let path = PathBuf::from(&output_path);
     let file = fs::File::create(&path)
         .with_context(|| format!("cannot create output file: {}", path.display()))?;
     let mut writer = BufWriter::new(file);
 
-    result.write_ndjson(&mut writer)
+    result
+        .write_ndjson(&mut writer)
         .with_context(|| format!("failed to write NDJSON to {}", path.display()))?;
 
-    eprintln!("[bisect pareto] wrote {} plans to {}", result.frontier.len(), path.display());
+    eprintln!(
+        "[bisect pareto] wrote {} plans to {}",
+        result.frontier.len(),
+        path.display()
+    );
     Ok(())
 }
 
 /// Resolve the adjacency .pkl file path (same logic as ensemble.rs).
 fn resolve_adj_path(state_lower: &str, year: &str) -> anyhow::Result<PathBuf> {
-    let manifest = load_manifest()
-        .map_err(|e| anyhow::anyhow!("cannot load manifest: {e}"))?;
+    let manifest = load_manifest().map_err(|e| anyhow::anyhow!("cannot load manifest: {e}"))?;
     let outputs_dir = PathBuf::from(&manifest.local_outputs_dir);
     let filename = format!("{state_lower}_adjacency_{year}.pkl");
 
     for version in ["V3", "V4"] {
-        let path = outputs_dir.join(version).join("data").join(year).join("adjacency").join(&filename);
+        let path = outputs_dir
+            .join(version)
+            .join("data")
+            .join(year)
+            .join("adjacency")
+            .join(&filename);
         if path.exists() {
             return Ok(path);
         }
     }
-    anyhow::bail!("adjacency file not found for {state_lower} {year}. Run: bisect fetch --year {year}")
+    anyhow::bail!(
+        "adjacency file not found for {state_lower} {year}. Run: bisect fetch --year {year}"
+    )
 }
 
 #[cfg(test)]
@@ -136,7 +161,9 @@ mod tests {
         };
         let cmd = Commands::Pareto(pa);
         // Verify it matches as expected.
-        assert!(matches!(cmd, Commands::Pareto(_)),
-            "Commands::Pareto must match the Pareto variant");
+        assert!(
+            matches!(cmd, Commands::Pareto(_)),
+            "Commands::Pareto must match the Pareto variant"
+        );
     }
 }

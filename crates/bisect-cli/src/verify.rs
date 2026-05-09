@@ -1,4 +1,4 @@
-/// `redist verify` — reproduce a plan from its manifest.json and verify it matches the original.
+/// `bisect verify` — reproduce a plan from its manifest.json and verify it matches the original.
 use crate::args::VerifyArgs;
 use bisect_report::PlanManifest;
 use std::collections::HashMap;
@@ -28,7 +28,9 @@ pub fn check_binary_sha256(manifest_sha256: &str, skip_binary_check: bool) {
     {
         Some(sha) => sha,
         None => {
-            eprintln!("WARNING: Could not compute SHA-256 of current executable — binary check skipped.");
+            eprintln!(
+                "WARNING: Could not compute SHA-256 of current executable — binary check skipped."
+            );
             return;
         }
     };
@@ -52,12 +54,18 @@ pub fn run_verify(args: &VerifyArgs) -> anyhow::Result<()> {
             .map_err(|e| anyhow::anyhow!("cannot read manifest: {e}"))?;
         let manifest: PlanManifest = serde_json::from_str(&content)?;
 
-        eprintln!("=== bisect verify (assignments only): {} ===", args.manifest.display());
-        eprintln!("Plan: {} ({} {} {}D)",
-            manifest.label, manifest.state_code, manifest.chamber, manifest.num_districts);
+        eprintln!(
+            "=== bisect verify (assignments only): {} ===",
+            args.manifest.display()
+        );
+        eprintln!(
+            "Plan: {} ({} {} {}D)",
+            manifest.label, manifest.state_code, manifest.chamber, manifest.num_districts
+        );
 
         // Find original assignments via load_original_assignments
-        let original = load_original_assignments(&manifest, &args.output_base, args.label.as_deref())?;
+        let original =
+            load_original_assignments(&manifest, &args.output_base, args.label.as_deref())?;
         if original.is_empty() {
             eprintln!("WARNING: Original plan not found — cannot compare.");
             eprintln!("Use --plan-ref to specify a reference assignments file.");
@@ -69,27 +77,40 @@ pub fn run_verify(args: &VerifyArgs) -> anyhow::Result<()> {
             let content = std::fs::read_to_string(ref_path)?;
             serde_json::from_str::<HashMap<String, usize>>(&content)?
         } else {
-            eprintln!("ERROR: --verify-assignments-only requires --plan-ref <path> \
-                pointing to a reference final_assignments.json file.");
+            eprintln!(
+                "ERROR: --verify-assignments-only requires --plan-ref <path> \
+                pointing to a reference final_assignments.json file."
+            );
             std::process::exit(1);
         };
 
         // Compute Jaccard
-        let matching = original.iter()
+        let matching = original
+            .iter()
             .filter(|(geoid, &d)| reference.get(*geoid) == Some(&d))
             .count();
         let union = original.len().max(reference.len());
-        let similarity = if union == 0 { 0.0 } else { matching as f64 / union as f64 };
+        let similarity = if union == 0 {
+            0.0
+        } else {
+            matching as f64 / union as f64
+        };
 
-        eprintln!("Jaccard similarity: {:.4} ({}/{} tracts match)",
-            similarity, matching, union);
+        eprintln!(
+            "Jaccard similarity: {:.4} ({}/{} tracts match)",
+            similarity, matching, union
+        );
 
         if similarity >= args.min_similarity {
-            eprintln!("[PASS] Assignments match (similarity={:.4} >= {:.4})",
-                similarity, args.min_similarity);
+            eprintln!(
+                "[PASS] Assignments match (similarity={:.4} >= {:.4})",
+                similarity, args.min_similarity
+            );
         } else {
-            eprintln!("[FAIL] Assignments differ (similarity={:.4} < {:.4})",
-                similarity, args.min_similarity);
+            eprintln!(
+                "[FAIL] Assignments differ (similarity={:.4} < {:.4})",
+                similarity, args.min_similarity
+            );
             std::process::exit(1);
         }
         return Ok(());
@@ -104,10 +125,13 @@ pub fn run_verify(args: &VerifyArgs) -> anyhow::Result<()> {
         .map_err(|e| anyhow::anyhow!("invalid manifest JSON: {e}"))?;
 
     // 2. Print equivalent CLI command
-    let verify_label = args.verify_label.clone()
+    let verify_label = args
+        .verify_label
+        .clone()
         .unwrap_or_else(|| format!("{}_verify", manifest.label));
 
-    let seed_flag = manifest.seed
+    let seed_flag = manifest
+        .seed
         .map(|s| format!(" --seed {s}"))
         .unwrap_or_default();
 
@@ -148,49 +172,64 @@ pub fn run_verify(args: &VerifyArgs) -> anyhow::Result<()> {
     }
 
     // 3. Load original assignments
-    let original_assignments = load_original_assignments(&manifest, &args.output_base, args.label.as_deref())?;
+    let original_assignments =
+        load_original_assignments(&manifest, &args.output_base, args.label.as_deref())?;
     if original_assignments.is_empty() {
         eprintln!("WARNING: Original plan has no assignments — cannot compare.");
         eprintln!("The original plan may be at a different path. Verification aborted.");
         return Ok(());
     }
 
-    // 4. Find redist binary
-    let redist_bin = find_redist_binary()?;
+    // 4. Find bisect binary
+    let bisect_bin = find_bisect_binary()?;
 
     // 5. Run the re-verification
     eprintln!("Running re-verification...");
-    let status = std::process::Command::new(&redist_bin)
+    let status = std::process::Command::new(&bisect_bin)
         .args([
             "state",
-            "--state", &manifest.state_code,
-            "--year", &manifest.year,
-            "--chamber", &manifest.chamber,
-            "--districts", &manifest.num_districts.to_string(),
-            "--label", &verify_label,
-            "--version", "verify",
+            "--state",
+            &manifest.state_code,
+            "--year",
+            &manifest.year,
+            "--chamber",
+            &manifest.chamber,
+            "--districts",
+            &manifest.num_districts.to_string(),
+            "--label",
+            &verify_label,
+            "--version",
+            "verify",
             "--force",
-            "--output-dir", &args.output_base,
+            "--output-dir",
+            &args.output_base,
         ])
         .status()
-        .map_err(|e| anyhow::anyhow!("failed to run {}: {e}", redist_bin.display()))?;
+        .map_err(|e| anyhow::anyhow!("failed to run {}: {e}", bisect_bin.display()))?;
 
     if !status.success() {
         anyhow::bail!("FAIL: re-run exited with status {status}");
     }
 
     // 6. Load re-run assignments
-    let verify_assignments = load_verify_assignments(&verify_label, &manifest.year, &args.output_base)?;
+    let verify_assignments =
+        load_verify_assignments(&verify_label, &manifest.year, &args.output_base)?;
 
     // 7. Compute Jaccard similarity
     let similarity = jaccard_similarity(&original_assignments, &verify_assignments);
 
-    eprintln!("Original assignments: {} tracts", original_assignments.len());
+    eprintln!(
+        "Original assignments: {} tracts",
+        original_assignments.len()
+    );
     eprintln!("Verified assignments: {} tracts", verify_assignments.len());
     eprintln!("Jaccard similarity: {similarity:.4}");
 
     if similarity >= args.min_similarity {
-        eprintln!("[PASS] Verification succeeded (similarity={similarity:.4} >= {:.4})", args.min_similarity);
+        eprintln!(
+            "[PASS] Verification succeeded (similarity={similarity:.4} >= {:.4})",
+            args.min_similarity
+        );
         Ok(())
     } else {
         anyhow::bail!(
@@ -201,14 +240,16 @@ pub fn run_verify(args: &VerifyArgs) -> anyhow::Result<()> {
     }
 }
 
-fn find_redist_binary() -> anyhow::Result<PathBuf> {
+fn find_bisect_binary() -> anyhow::Result<PathBuf> {
     for candidate in [
-        "bisect/target/release/bisect.exe",
-        "bisect/target/release/bisect",
+        "target/release/bisect.exe",
+        "target/release/bisect",
         "bisect",
     ] {
         let p = PathBuf::from(candidate);
-        if p.exists() { return Ok(p); }
+        if p.exists() {
+            return Ok(p);
+        }
     }
     // Try current executable
     if let Ok(exe) = std::env::current_exe() {
@@ -226,7 +267,10 @@ fn load_original_assignments(
     if let Some(label) = explicit_label {
         for version in &["v1", "verify", "international"] {
             if let Ok(ctx) = crate::plan_context::PlanContext::from_label(
-                std::path::Path::new(output_base), version, &manifest.year, label
+                std::path::Path::new(output_base),
+                version,
+                &manifest.year,
+                label,
             ) {
                 if ctx.assignments_path().exists() {
                     let content = std::fs::read_to_string(ctx.assignments_path())?;
@@ -276,13 +320,13 @@ fn load_verify_assignments(
 ///
 /// A "match" is defined as: same GEOID → same district number.
 /// The denominator is the larger of the two plan sizes (union-style).
-pub fn jaccard_similarity(
-    a: &HashMap<String, usize>,
-    b: &HashMap<String, usize>,
-) -> f64 {
-    if a.is_empty() || b.is_empty() { return 0.0; }
+pub fn jaccard_similarity(a: &HashMap<String, usize>, b: &HashMap<String, usize>) -> f64 {
+    if a.is_empty() || b.is_empty() {
+        return 0.0;
+    }
     // Same GEOID → same district assignment = agreement
-    let matching = a.iter()
+    let matching = a
+        .iter()
         .filter(|(geoid, &d)| b.get(*geoid) == Some(&d))
         .count();
     let union = a.len().max(b.len());
@@ -299,7 +343,10 @@ mod tests {
         a.insert("53001000100".to_string(), 1usize);
         a.insert("53001000200".to_string(), 2usize);
         let similarity = jaccard_similarity(&a, &a);
-        assert!((similarity - 1.0).abs() < 1e-9, "identical plans must have similarity 1.0");
+        assert!(
+            (similarity - 1.0).abs() < 1e-9,
+            "identical plans must have similarity 1.0"
+        );
     }
 
     #[test]
@@ -331,9 +378,12 @@ mod tests {
         b.insert("G2".to_string(), 1usize); // mismatch
         b.insert("G3".to_string(), 1usize); // match
         b.insert("G4".to_string(), 1usize); // mismatch
-        // 2 matching out of 4 union → 0.5
+                                            // 2 matching out of 4 union → 0.5
         let s = jaccard_similarity(&a, &b);
-        assert!((s - 0.5).abs() < 1e-9, "expected 0.5 partial match, got {s}");
+        assert!(
+            (s - 0.5).abs() < 1e-9,
+            "expected 0.5 partial match, got {s}"
+        );
     }
 
     #[test]
@@ -377,14 +427,16 @@ mod tests {
         let result = run_verify(&args);
         assert!(result.is_err());
         let msg = result.unwrap_err().to_string();
-        assert!(msg.contains("manifest") || msg.contains("nonexistent"),
-            "error should be about manifest, not binary: {msg}");
+        assert!(
+            msg.contains("manifest") || msg.contains("nonexistent"),
+            "error should be about manifest, not binary: {msg}"
+        );
     }
 
     #[test]
     fn test_verify_dry_run_with_valid_manifest_returns_ok() {
-        use tempfile::TempDir;
         use bisect_report::PlanManifest;
+        use tempfile::TempDir;
 
         // Write a minimal valid manifest to a temp file
         let tmp = TempDir::new().unwrap();
@@ -414,7 +466,11 @@ mod tests {
         };
         // dry_run=true: must return Ok after printing command (no binary execution)
         let result = run_verify(&args);
-        assert!(result.is_ok(), "dry_run with valid manifest must return Ok: {:?}", result);
+        assert!(
+            result.is_ok(),
+            "dry_run with valid manifest must return Ok: {:?}",
+            result
+        );
     }
 
     #[test]
@@ -422,8 +478,7 @@ mod tests {
         // When verify_label is None, the label should be "{original_label}_verify"
         let verify_label = None::<String>;
         let original_label = "vt_congressional_2020";
-        let computed = verify_label
-            .unwrap_or_else(|| format!("{}_verify", original_label));
+        let computed = verify_label.unwrap_or_else(|| format!("{}_verify", original_label));
         assert_eq!(computed, "vt_congressional_2020_verify");
     }
 
@@ -431,8 +486,7 @@ mod tests {
     fn test_verify_label_custom_overrides_default() {
         let verify_label = Some("my_custom_label".to_string());
         let original_label = "vt_congressional_2020";
-        let computed = verify_label
-            .unwrap_or_else(|| format!("{}_verify", original_label));
+        let computed = verify_label.unwrap_or_else(|| format!("{}_verify", original_label));
         assert_eq!(computed, "my_custom_label");
     }
 
@@ -445,7 +499,10 @@ mod tests {
         let output_base = "/nonexistent_gap8_test/outputs";
         let output_base_path = std::path::PathBuf::from(output_base);
 
-        assert!(!output_base_path.exists(), "test path must not exist: {output_base}");
+        assert!(
+            !output_base_path.exists(),
+            "test path must not exist: {output_base}"
+        );
 
         let warning = format!(
             "WARNING: output directory '{}' not found on this machine.\n\
@@ -475,8 +532,12 @@ mod tests {
         use crate::args::VerifyArgs;
         use clap::Parser;
         let args = VerifyArgs::parse_from([
-            "verify", "--manifest", "manifest.json",
-            "--verify-assignments-only", "--plan-ref", "ref.json"
+            "verify",
+            "--manifest",
+            "manifest.json",
+            "--verify-assignments-only",
+            "--plan-ref",
+            "ref.json",
         ]);
         assert!(args.verify_assignments_only);
         assert_eq!(args.plan_ref, Some("ref.json".to_string()));
@@ -501,13 +562,17 @@ mod tests {
 
         let b = a.clone();
 
-        let matching = a.iter()
+        let matching = a
+            .iter()
             .filter(|(geoid, &d)| b.get(*geoid) == Some(&d))
             .count();
         let union = a.len().max(b.len());
         let similarity = matching as f64 / union as f64;
 
-        assert!((similarity - 1.0).abs() < 1e-9, "identical assignments must have Jaccard 1.0");
+        assert!(
+            (similarity - 1.0).abs() < 1e-9,
+            "identical assignments must have Jaccard 1.0"
+        );
     }
 
     #[test]
@@ -517,23 +582,27 @@ mod tests {
         a.insert("tract2".to_string(), 2usize);
 
         let mut b = std::collections::HashMap::new();
-        b.insert("tract1".to_string(), 2usize);  // different district
-        b.insert("tract2".to_string(), 1usize);  // different district
+        b.insert("tract1".to_string(), 2usize); // different district
+        b.insert("tract2".to_string(), 1usize); // different district
 
-        let matching = a.iter()
+        let matching = a
+            .iter()
             .filter(|(geoid, &d)| b.get(*geoid) == Some(&d))
             .count();
         let union = a.len().max(b.len());
         let similarity = matching as f64 / union as f64;
 
-        assert_eq!(similarity, 0.0, "completely swapped assignments must have Jaccard 0.0");
+        assert_eq!(
+            similarity, 0.0,
+            "completely swapped assignments must have Jaccard 0.0"
+        );
     }
 
     /// --verify-assignments-only with valid manifest+reference runs successfully.
     #[test]
     fn test_verify_assignments_only_with_valid_files() {
-        use tempfile::TempDir;
         use bisect_report::PlanManifest;
+        use tempfile::TempDir;
 
         let tmp = TempDir::new().unwrap();
 
@@ -555,19 +624,34 @@ mod tests {
         let assignments: HashMap<String, usize> = [
             ("50001000100".to_string(), 1usize),
             ("50001000200".to_string(), 1usize),
-        ].into_iter().collect();
-        let plan_dir = tmp.path().join("v1").join("2020").join("plans").join("vt_congressional_2020").join("data");
+        ]
+        .into_iter()
+        .collect();
+        let plan_dir = tmp
+            .path()
+            .join("v1")
+            .join("2020")
+            .join("plans")
+            .join("vt_congressional_2020")
+            .join("data");
         std::fs::create_dir_all(&plan_dir).unwrap();
         std::fs::write(
             plan_dir.join("final_assignments.json"),
             serde_json::to_string(&assignments).unwrap(),
-        ).unwrap();
+        )
+        .unwrap();
         // Write manifest.json next to plan dir too (for PlanContext)
-        let plan_manifest_dir = tmp.path().join("v1").join("2020").join("plans").join("vt_congressional_2020");
+        let plan_manifest_dir = tmp
+            .path()
+            .join("v1")
+            .join("2020")
+            .join("plans")
+            .join("vt_congressional_2020");
         std::fs::write(
             plan_manifest_dir.join("manifest.json"),
             serde_json::to_string(&manifest).unwrap(),
-        ).unwrap();
+        )
+        .unwrap();
 
         // Write reference (same as original → perfect match)
         let ref_path = tmp.path().join("ref_assignments.json");
@@ -586,7 +670,11 @@ mod tests {
         };
 
         let result = run_verify(&args);
-        assert!(result.is_ok(), "--verify-assignments-only with identical plans must pass: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "--verify-assignments-only with identical plans must pass: {:?}",
+            result.err()
+        );
     }
 
     // ── Task 133: --skip-binary-check ────────────────────────────────────────
@@ -597,21 +685,25 @@ mod tests {
         use clap::Parser;
         let args = VerifyArgs::parse_from([
             "verify",
-            "--manifest", "/tmp/manifest.json",
+            "--manifest",
+            "/tmp/manifest.json",
             "--skip-binary-check",
         ]);
-        assert!(args.skip_binary_check, "--skip-binary-check flag must parse to true");
+        assert!(
+            args.skip_binary_check,
+            "--skip-binary-check flag must parse to true"
+        );
     }
 
     #[test]
     fn test_verify_skip_binary_check_default_false() {
         use crate::args::VerifyArgs;
         use clap::Parser;
-        let args = VerifyArgs::parse_from([
-            "verify",
-            "--manifest", "/tmp/manifest.json",
-        ]);
-        assert!(!args.skip_binary_check, "--skip-binary-check must default to false");
+        let args = VerifyArgs::parse_from(["verify", "--manifest", "/tmp/manifest.json"]);
+        assert!(
+            !args.skip_binary_check,
+            "--skip-binary-check must default to false"
+        );
     }
 
     #[test]
@@ -638,7 +730,7 @@ mod tests {
         // We can't capture eprintln output in unit tests, but we verify no panic.
         let bogus_sha = "a".repeat(64); // 64 hex chars (valid format, wrong value)
         check_binary_sha256(&bogus_sha, true); // skip_binary_check=true
-        // No panic = pass
+                                               // No panic = pass
     }
 
     #[test]
@@ -647,7 +739,7 @@ mod tests {
         // The exe hash won't match "a"*64, so a warning is emitted (to stderr — not testable).
         let bogus_sha = "a".repeat(64);
         check_binary_sha256(&bogus_sha, false); // should emit WARNING but not panic
-        // No panic = pass
+                                                // No panic = pass
     }
 
     // ── 15 additional L0 tests ───────────────────────────────────────────────
@@ -684,22 +776,23 @@ mod tests {
             .map(|i| (format!("G{:05}", i), (i % 5) + 1))
             .collect();
         let sim = jaccard_similarity(&plan, &plan);
-        assert!((sim - 1.0).abs() < 1e-9, "identical 100-tract plan must have Jaccard 1.0");
+        assert!(
+            (sim - 1.0).abs() < 1e-9,
+            "identical 100-tract plan must have Jaccard 1.0"
+        );
     }
 
     #[test]
     fn test_jaccard_larger_plan_dominates_union() {
         // Plan A: 4 tracts; plan B: 8 tracts. Union = 8 (the larger).
-        let a: HashMap<String, usize> = (0..4)
-            .map(|i| (format!("G{i}"), 1usize))
-            .collect();
-        let b: HashMap<String, usize> = (0..8)
-            .map(|i| (format!("G{i}"), 1usize))
-            .collect();
+        let a: HashMap<String, usize> = (0..4).map(|i| (format!("G{i}"), 1usize)).collect();
+        let b: HashMap<String, usize> = (0..8).map(|i| (format!("G{i}"), 1usize)).collect();
         let sim = jaccard_similarity(&a, &b);
         // 4 matching GEOIDs out of 8 union → 0.5
-        assert!((sim - 0.5).abs() < 1e-9,
-            "union-style Jaccard with 4 of 8 common GEOIDs+values must be 0.5, got {sim}");
+        assert!(
+            (sim - 0.5).abs() < 1e-9,
+            "union-style Jaccard with 4 of 8 common GEOIDs+values must be 0.5, got {sim}"
+        );
     }
 
     // -- check_binary_sha256 thoroughness -----------------------------------
@@ -715,7 +808,12 @@ mod tests {
     #[test]
     fn test_check_binary_sha256_not_available_variants() {
         // Various "(not …" strings must all be silently skipped
-        for s in &["(not computed)", "(not available)", "(not set)", "(not-hashed)"] {
+        for s in &[
+            "(not computed)",
+            "(not available)",
+            "(not set)",
+            "(not-hashed)",
+        ] {
             check_binary_sha256(s, false);
             check_binary_sha256(s, true);
         }
@@ -727,16 +825,14 @@ mod tests {
     #[test]
     fn test_verify_label_with_none_and_complex_original_label() {
         let original = "ca_congressional_2020_vra";
-        let label = None::<String>
-            .unwrap_or_else(|| format!("{}_verify", original));
+        let label = None::<String>.unwrap_or_else(|| format!("{}_verify", original));
         assert_eq!(label, "ca_congressional_2020_vra_verify");
     }
 
     #[test]
     fn test_verify_label_with_some_takes_priority() {
         let original = "ca_congressional_2020";
-        let label = Some("my_label".to_string())
-            .unwrap_or_else(|| format!("{}_verify", original));
+        let label = Some("my_label".to_string()).unwrap_or_else(|| format!("{}_verify", original));
         assert_eq!(label, "my_label");
     }
 
@@ -747,8 +843,11 @@ mod tests {
         use crate::args::VerifyArgs;
         use clap::Parser;
         let args = VerifyArgs::parse_from(["verify", "--manifest", "manifest.json"]);
-        assert!((args.min_similarity - 0.99).abs() < 1e-9,
-            "default min_similarity must be 0.99, got {}", args.min_similarity);
+        assert!(
+            (args.min_similarity - 0.99).abs() < 1e-9,
+            "default min_similarity must be 0.99, got {}",
+            args.min_similarity
+        );
     }
 
     #[test]
@@ -756,8 +855,10 @@ mod tests {
         use crate::args::VerifyArgs;
         use clap::Parser;
         let args = VerifyArgs::parse_from(["verify", "--manifest", "manifest.json"]);
-        assert_eq!(args.output_base, "outputs",
-            "default output_base must be 'outputs'");
+        assert_eq!(
+            args.output_base, "outputs",
+            "default output_base must be 'outputs'"
+        );
     }
 
     #[test]
@@ -773,11 +874,17 @@ mod tests {
         use crate::args::VerifyArgs;
         use clap::Parser;
         let args = VerifyArgs::parse_from([
-            "verify", "--manifest", "manifest.json",
-            "--min-similarity", "0.85",
+            "verify",
+            "--manifest",
+            "manifest.json",
+            "--min-similarity",
+            "0.85",
         ]);
-        assert!((args.min_similarity - 0.85).abs() < 1e-9,
-            "custom min_similarity must be accepted: {}", args.min_similarity);
+        assert!(
+            (args.min_similarity - 0.85).abs() < 1e-9,
+            "custom min_similarity must be accepted: {}",
+            args.min_similarity
+        );
     }
 
     // -- run_verify with nonexistent manifest --------------------------------
@@ -813,7 +920,10 @@ mod tests {
             plan_ref: Some("ref.json".to_string()),
         };
         let result = run_verify(&args);
-        assert!(result.is_err(), "--verify-assignments-only with missing manifest must return Err");
+        assert!(
+            result.is_err(),
+            "--verify-assignments-only with missing manifest must return Err"
+        );
     }
 
     // ── 9 bonus tests ────────────────────────────────────────────────────────
@@ -830,18 +940,17 @@ mod tests {
         b.insert("G4".to_string(), 1);
         let sim = jaccard_similarity(&a, &b);
         // 3 matching out of 4 union → 0.75
-        assert!((sim - 0.75).abs() < 1e-9, "3/4 matching must give 0.75, got {sim}");
+        assert!(
+            (sim - 0.75).abs() < 1e-9,
+            "3/4 matching must give 0.75, got {sim}"
+        );
     }
 
     #[test]
     fn test_jaccard_asymmetric_sizes_larger_denominator() {
         // a=3 tracts, b=6 tracts; all of a's are in b with same district
-        let a: HashMap<String, usize> = (0..3)
-            .map(|i| (format!("G{i}"), 1usize))
-            .collect();
-        let b: HashMap<String, usize> = (0..6)
-            .map(|i| (format!("G{i}"), 1usize))
-            .collect();
+        let a: HashMap<String, usize> = (0..3).map(|i| (format!("G{i}"), 1usize)).collect();
+        let b: HashMap<String, usize> = (0..6).map(|i| (format!("G{i}"), 1usize)).collect();
         let sim = jaccard_similarity(&a, &b);
         // 3 matching, union = 6 → 0.5
         assert!((sim - 0.5).abs() < 1e-9, "3 of 6 must give 0.5, got {sim}");
@@ -849,9 +958,7 @@ mod tests {
 
     #[test]
     fn test_jaccard_reflexive() {
-        let plan: HashMap<String, usize> = (0..20)
-            .map(|i| (format!("T{i}"), i % 4 + 1))
-            .collect();
+        let plan: HashMap<String, usize> = (0..20).map(|i| (format!("T{i}"), i % 4 + 1)).collect();
         let s1 = jaccard_similarity(&plan, &plan);
         let s2 = jaccard_similarity(&plan, &plan);
         assert!((s1 - s2).abs() < 1e-9, "jaccard must be deterministic");
@@ -863,7 +970,10 @@ mod tests {
         use crate::args::VerifyArgs;
         use clap::Parser;
         let args = VerifyArgs::parse_from(["verify", "--manifest", "m.json"]);
-        assert!(args.verify_label.is_none(), "--verify-label must default to None");
+        assert!(
+            args.verify_label.is_none(),
+            "--verify-label must default to None"
+        );
     }
 
     #[test]
@@ -904,9 +1014,7 @@ mod tests {
     fn test_verify_dry_run_flag_parse() {
         use crate::args::VerifyArgs;
         use clap::Parser;
-        let args = VerifyArgs::parse_from([
-            "verify", "--manifest", "m.json", "--dry-run",
-        ]);
+        let args = VerifyArgs::parse_from(["verify", "--manifest", "m.json", "--dry-run"]);
         assert!(args.dry_run, "--dry-run flag must parse to true");
     }
 }

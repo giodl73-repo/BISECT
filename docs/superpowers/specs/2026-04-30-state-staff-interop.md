@@ -3,7 +3,7 @@
 **Updated:** 2026-04-30 (v2 — incorporates 6-role consensus on atomic import + version handshake + Callais preflight)
 **Status:** Revised; pending re-review
 **Closes gap for:** state legislative staff (★★→★★★★), civic group submitting a counter-proposal (bypass-staff path)
-**Depends on:** existing redist export + existing redist import (partial)
+**Depends on:** existing BISECT export + existing BISECT import (partial)
 **Estimated effort:** 3-4 days (v2: atomic import + version handshake + civic bypass)
 
 ## Why this exists
@@ -14,9 +14,9 @@ The honest move: ship clean import/export so staff use Districtr (or DRA, or QGI
 
 A staffer's workflow becomes:
 1. Draw the map in Districtr, save as JSON
-2. `redist import --format districtr <PATH> --label senate_proposal_v3`
+2. `BISECT import --format districtr <PATH> --label senate_proposal_v3`
 3. `bisect analyze --label senate_proposal_v3 --types all`
-4. `redist report --label senate_proposal_v3 --format pdf`
+4. `BISECT report --label senate_proposal_v3 --format pdf`
 5. Iterate in Districtr; repeat
 
 The staffer never sees Rust, Python, or our internal data formats. They get fast analysis + court-quality reports out of a familiar GUI.
@@ -25,37 +25,37 @@ The staffer never sees Rust, Python, or our internal data formats. They get fast
 
 ### In scope
 
-1. **Districtr import** — `redist import --format districtr <PATH>`
+1. **Districtr import** — `BISECT import --format districtr <PATH>`
    - Districtr exports plans as JSON with assignment by precinct or block
    - We map their geometry IDs to our GEOIDs
    - Validate population balance, contiguity (warn but don't fail)
    - Write a plan label with manifest
 
-2. **Districtr export** — `redist export --format districtr --label LABEL`
+2. **Districtr export** — `BISECT export --format districtr --label LABEL`
    - Produce a Districtr-compatible JSON that can be loaded back into the web app
    - Useful for: "I drew a plan via the CLI; load it into Districtr to share/edit"
 
 3. **DRA (Dave's Redistricting App) import/export**
    - DRA's CSV export format: `geoid, district`
    - We already export `--format csv`; verify it's DRA-compatible
-   - Import: `redist import --format dra <PATH>`
+   - Import: `BISECT import --format dra <PATH>`
 
 4. **QGIS / Shapefile interop**
    - Export plan as shapefile (district polygons + attribute table)
    - Import: same — accept a shapefile with a `district` column
 
 5. **State staff quickstart** (extends Onboarding spec)
-   - `quickstart-state-staff.md`: 5-step walkthrough using Districtr → redist → PDF
+   - `quickstart-state-staff.md`: 5-step walkthrough using Districtr → BISECT → PDF
 
 6. **Round-trip property tests (v2 — formal equality)**
-   - **Definition of round-trip equality**: for each upstream tool T ∈ {Districtr, DRA, GerryChain}, a plan P satisfies `T(redist(T(P))) == P` iff for every geometry ID g in T's source format, the destination district assigned to g is identical, after canonicalizing district labels (district numbers can be permuted by the tool but the partition must be the same).
+   - **Definition of round-trip equality**: for each upstream tool T ∈ {Districtr, DRA, GerryChain}, a plan P satisfies `T(BISECT(T(P))) == P` iff for every geometry ID g in T's source format, the destination district assigned to g is identical, after canonicalizing district labels (district numbers can be permuted by the tool but the partition must be the same).
    - **Canonical form**: assignments are compared after re-numbering districts in increasing order of their lowest-GEOID member.
    - **Test scope**: assignment-only equality. Metadata (color, name, comment) is not required to round-trip; if it does, that's a bonus.
-   - Districtr → redist → Districtr: passes round-trip equality
-   - DRA → redist → DRA: passes round-trip equality
-   - GerryChain → redist → GerryChain: already in Researcher spec; cross-reference
+   - Districtr → BISECT → Districtr: passes round-trip equality
+   - DRA → BISECT → DRA: passes round-trip equality
+   - GerryChain → BISECT → GerryChain: already in Researcher spec; cross-reference
 
-7. **Atomic import (v2 — TRENCH PP-22)** — `redist import` writes to a tmp directory and renames into place only after every validation passes. Half-imported plan labels MUST NOT be visible to subsequent commands. On failure: tmp directory is deleted, no plan label is created, exit code is non-zero, and the error message names the validation that failed.
+7. **Atomic import (v2 — TRENCH PP-22)** — `BISECT import` writes to a tmp directory and renames into place only after every validation passes. Half-imported plan labels MUST NOT be visible to subsequent commands. On failure: tmp directory is deleted, no plan label is created, exit code is non-zero, and the error message names the validation that failed.
 
 8. **Schema version handshake (v2 — TRENCH/COVENANT)**
    - Districtr export JSON has a top-level `schema_version` field (or we infer the Districtr build from a known set of fingerprints when it's missing)
@@ -64,9 +64,9 @@ The staffer never sees Rust, Python, or our internal data formats. They get fast
    - We pin a tested-against version range per format; out-of-range raises a warning naming the supported range
    - The pinned ranges live in `bisect-cli/src/import_compat.json` so they're a one-line bump
 
-9. **Callais p.36 mutex preflight (v2 — BOUNDARY)** — every `redist import` (and every subsequent `bisect analyze`) checks the plan's manifest for both VRA-aware bisection markers and partisan-weighted bisection markers. If both appear, the command exits with the Callais p.36 disentanglement error before any analysis runs. State-staff workflows are the highest-volume entry point for this footgun; we catch it here.
+9. **Callais p.36 mutex preflight (v2 — BOUNDARY)** — every `BISECT import` (and every subsequent `bisect analyze`) checks the plan's manifest for both VRA-aware bisection markers and partisan-weighted bisection markers. If both appear, the command exits with the Callais p.36 disentanglement error before any analysis runs. State-staff workflows are the highest-volume entry point for this footgun; we catch it here.
 
-10. **Civic-group bypass path (v2 — COMMONS)** — `redist import --as-civic-counter-proposal` flag tags the import manifest with `submission_type=civic_counter_proposal` and:
+10. **Civic-group bypass path (v2 — COMMONS)** — `BISECT import --as-civic-counter-proposal` flag tags the import manifest with `submission_type=civic_counter_proposal` and:
     - Skips the "is this from an authoritative state mapping tool" warning
     - Records `submitted_by` (free text) + `submitted_at` (ISO-8601)
     - Wires the plan into the Plan Comparison + Civic Bidirectional pipelines so the public counter-proposal becomes a first-class comparable plan, not a second-class import
@@ -101,14 +101,14 @@ Warnings get written to the plan's manifest so subsequent analyze/report command
 ### The CLI surface
 
 ```
-redist import --format <FORMAT> <PATH> --label <LABEL> [--year YYYY]
+BISECT import --format <FORMAT> <PATH> --label <LABEL> [--year YYYY]
   formats: districtr, dra, gerrychain, shapefile, geojson, csv
 
-redist export --format <FORMAT> --label <LABEL> [--out <PATH>]
+BISECT export --format <FORMAT> --label <LABEL> [--out <PATH>]
   formats: districtr, dra, gerrychain, shapefile, geojson, csv, reproducibility-package
 ```
 
-`redist export --format districtr` is the new addition (we already have geojson, gerrychain, csv, reproducibility-package).
+`BISECT export --format districtr` is the new addition (we already have geojson, gerrychain, csv, reproducibility-package).
 
 ## Outputs
 
@@ -125,12 +125,12 @@ outputs/{version}/imports/{label}/
 - L0: schema validation for each format (JSON / CSV / shapefile readers)
 - L0: GEOID translation logic (tract↔block↔precinct) on synthetic small graph
 - L0 **atomic import failure**: inject a contiguity validation failure mid-import; assert no plan label is visible in `outputs/` and the tmp directory is gone
-- L0 **canonical-form round-trip**: Districtr → redist → Districtr on a 5-district synthetic plan where district labels are permuted; assert canonical-form equality
+- L0 **canonical-form round-trip**: Districtr → BISECT → Districtr on a 5-district synthetic plan where district labels are permuted; assert canonical-form equality
 - L0 **Callais p.36 preflight**: import a plan whose manifest claims both VRA + partisan markers; assert the import exits non-zero with the disentanglement error string
 - L0 **schema-version handshake**: import a Districtr file with `schema_version` outside the pinned range; assert the warning fires and names the supported range
 - L0 **civic bypass path**: import with `--as-civic-counter-proposal --submitted-by "League of Women Voters"`; assert manifest has `submission_type=civic_counter_proposal` and the submitter is recorded
-- L1: round-trip Districtr → redist → Districtr on a small Vermont sample
-- L1: round-trip DRA → redist → DRA on the same sample
+- L1: round-trip Districtr → BISECT → Districtr on a small Vermont sample
+- L1: round-trip DRA → BISECT → DRA on the same sample
 - L2: skipped-by-default — fetch a real Districtr plan from their public examples and validate the import
 
 ## Risks
@@ -148,11 +148,11 @@ outputs/{version}/imports/{label}/
 
 ## Definition of done
 
-- `redist import --format districtr` round-trips a sample Districtr export under the canonical-form definition
-- `redist export --format districtr` produces a file that re-loads in Districtr's web app
+- `BISECT import --format districtr` round-trips a sample Districtr export under the canonical-form definition
+- `BISECT export --format districtr` produces a file that re-loads in Districtr's web app
 - DRA import/export verified on a sample DRA plan
 - Shapefile import/export verified with QGIS as an external test client
 - Atomic-import + Callais preflight + schema-version handshake all enforced and tested
 - `--as-civic-counter-proposal` produces a tagged plan that flows through Plan Comparison + Civic Bidirectional pipelines
-- `quickstart-state-staff.md` walks through the full Districtr → redist → PDF flow
+- `quickstart-state-staff.md` walks through the full Districtr → BISECT → PDF flow
 - A real state staffer (not us) gets through the quickstart in under 15 minutes

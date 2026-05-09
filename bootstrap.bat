@@ -1,5 +1,5 @@
 @echo off
-REM bootstrap.bat — Windows one-shot setup for the redist project.
+REM bootstrap.bat — Windows one-shot setup for the bisect project.
 REM
 REM Onboarding plan Task 4. Mirrors bootstrap.sh.
 REM ASCII-only (CP1252 console policy / PP-34).
@@ -43,23 +43,19 @@ echo [OK] rustup present
 REM ── Step 2: pinned toolchain ──────────────────────────────────────────────
 echo.
 echo [step 2] Installing pinned toolchain...
-pushd redist
 rustup show >NUL
-popd
 echo [OK] toolchain ready
 
-REM ── Step 3: build redist ──────────────────────────────────────────────────
+REM ── Step 3: build bisect ──────────────────────────────────────────────────
 echo.
-echo [step 3] Building redist ^(release, --locked^)...
-pushd redist
-cargo build --release --locked --bin redist
-if errorlevel 1 (popd & echo [FAIL] cargo build failed & exit /b 1)
-popd
+echo [step 3] Building bisect ^(release, --locked^)...
+cargo build --release --locked --bin bisect
+if errorlevel 1 (echo [FAIL] cargo build failed & exit /b 1)
 
 REM ── Step 4: PATH preflight (PP-18) ────────────────────────────────────────
 echo.
 echo [step 4] PATH preflight...
-set "EXPECTED_BIN=%REPO_ROOT%\redist\target\release\redist.exe"
+set "EXPECTED_BIN=%REPO_ROOT%\target\release\bisect.exe"
 if not exist "%EXPECTED_BIN%" (
     echo [FAIL] build succeeded but binary not at expected path: %EXPECTED_BIN%
     exit /b 1
@@ -69,18 +65,18 @@ echo [OK] binary at %EXPECTED_BIN%
 REM ── Step 5: PATH update (current shell only) ──────────────────────────────
 echo.
 echo [step 5] PATH update...
-set "PATH=%REPO_ROOT%\redist\target\release;%PATH%"
-where redist >NUL 2>&1
-if errorlevel 1 (echo [FAIL] redist still not on PATH after update & exit /b 1)
-echo [OK] redist on PATH for this shell session
+set "PATH=%REPO_ROOT%\target\release;%PATH%"
+where bisect >NUL 2>&1
+if errorlevel 1 (echo [FAIL] bisect still not on PATH after update & exit /b 1)
+echo [OK] bisect on PATH for this shell session
 echo.
 echo     To make this permanent ^(System Properties -^> Environment Variables^):
-echo       Add %REPO_ROOT%\redist\target\release to your User PATH
+echo       Add %REPO_ROOT%\target\release to your User PATH
 
 REM ── Step 6 (optional): Python wheel via maturin ───────────────────────────
 if "%WITH_PYTHON%"=="1" (
     echo.
-    echo [step 6] Building redist_py PyO3 wheel via maturin...
+    echo [step 6] Building bisect_py PyO3 wheel via maturin...
     where py >NUL 2>&1
     if errorlevel 1 (echo [FAIL] python ^(py launcher^) required for --with-python & exit /b 1)
     where maturin >NUL 2>&1
@@ -89,20 +85,20 @@ if "%WITH_PYTHON%"=="1" (
         py -m pip install --user --quiet maturin
         if errorlevel 1 (echo [FAIL] maturin install failed & exit /b 1)
     )
-    pushd redist\python\redist_py
+    pushd python\bisect_py
     maturin develop --release
     if errorlevel 1 (popd & echo [FAIL] maturin build failed & exit /b 1)
     popd
-    py -c "import redist_py; print('redist_py:', redist_py.__version__)"
-    if errorlevel 1 (echo [FAIL] redist_py import failed after build & exit /b 1)
-    echo [OK] redist_py importable
+    py -c "import bisect_py; print('bisect_py:', bisect_py.__version__)"
+    if errorlevel 1 (echo [FAIL] bisect_py import failed after build & exit /b 1)
+    echo [OK] bisect_py importable
 )
 
 REM ── Step 7 (optional): API key with round-trip validation (PP-19) ─────────
 if "%WITH_API_KEY%"=="1" (
     echo.
     echo [step 7] Dataverse API key setup...
-    set "CRED_DIR=%APPDATA%\redist"
+    set "CRED_DIR=%APPDATA%\bisect"
     set "CRED_FILE=!CRED_DIR!\credentials.toml"
     if not exist "!CRED_DIR!" mkdir "!CRED_DIR!"
     set /p "DATAVERSE_API_KEY=Enter your Harvard Dataverse API key (or press Enter to skip): "
@@ -133,9 +129,9 @@ if "%SKIP_SMOKE%"=="1" (
 )
 echo.
 echo [step 8] Smoke test ^(real run^)...
-set "SMOKE_DIR=%TEMP%\redist-bootstrap-smoke-%RANDOM%"
+set "SMOKE_DIR=%TEMP%\bisect-bootstrap-smoke-%RANDOM%"
 mkdir "%SMOKE_DIR%"
-redist state --state VT --year 2020 --label bootstrap_test --output-base "%SMOKE_DIR%" --version v1
+bisect state --state VT --year 2020 --label bootstrap_test --output-base "%SMOKE_DIR%" --version v1
 if errorlevel 1 (
     rmdir /S /Q "%SMOKE_DIR%" 2>NUL
     echo [FAIL] smoke test bisection failed
@@ -162,8 +158,8 @@ echo ==================================================
 echo Bootstrap complete.
 echo.
 echo Try:
-echo   redist state --state VT --year 2020
-echo   redist doctor --state VT --year 2020
+echo   bisect state --state VT --year 2020
+echo   bisect doctor --state VT --year 2020
 echo   examples\vermont-2020-walkthrough\run.bat
 echo.
 echo First-time docs: docs\quickstart\
@@ -172,7 +168,7 @@ endlocal
 exit /b 0
 
 :show_help
-echo bootstrap.bat — Windows one-shot setup for the redist project.
+echo bootstrap.bat — Windows one-shot setup for the bisect project.
 echo.
 echo Usage:
 echo   bootstrap.bat [--with-python] [--with-api-key] [--skip-smoke]

@@ -47,7 +47,7 @@ pub fn check_alabama_paradox(
         let h_after = window[1];
 
         let seats_before = apportionment_divisor(populations, h_before, rule);
-        let seats_after  = apportionment_divisor(populations, h_after,  rule);
+        let seats_after = apportionment_divisor(populations, h_after, rule);
 
         // Build lookup maps keyed by state name.
         let before_map: HashMap<&str, u32> =
@@ -123,7 +123,10 @@ mod tests {
     fn single_house_size_returns_empty() {
         let pops = make_pops(&[("A", 1_000_000), ("B", 500_000)]);
         let events = check_alabama_paradox(&pops, &[10], RoundingRule::Webster);
-        assert!(events.is_empty(), "Single house size: no comparison possible");
+        assert!(
+            events.is_empty(),
+            "Single house size: no comparison possible"
+        );
     }
 
     #[test]
@@ -138,11 +141,7 @@ mod tests {
     #[test]
     fn seat_counts_never_decrease_for_any_divisor_method() {
         // A property test: for each state, seats[h] <= seats[h+1] for all h.
-        let pops = make_pops(&[
-            ("X", 10_000_000),
-            ("Y", 5_000_000),
-            ("Z", 1_000_000),
-        ]);
+        let pops = make_pops(&[("X", 10_000_000), ("Y", 5_000_000), ("Z", 1_000_000)]);
         let house_sizes: Vec<u32> = (3..=30).collect();
 
         for rule in [

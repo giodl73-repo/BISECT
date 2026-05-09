@@ -23,13 +23,13 @@
 
 3. **Sweep N seeds** with the same parameters, keep the top-K by a metric:
    ```bash
-   redist sweep --state VT --year 2020 --n 50 --keep 5 --metric polsby_popper --label-prefix vt_sweep
+   BISECT sweep --state VT --year 2020 --n 50 --keep 5 --metric polsby_popper --label-prefix vt_sweep
    ```
    Expected: 50 plans run; 5 best by mean Polsby-Popper retained under `outputs/v1/2020/plans/vt_sweep_*`.
 
 4. **Aggregate the results** for off-line analysis:
    ```bash
-   redist aggregate --year 2020 --version v1 --states VT
+   BISECT aggregate --year 2020 --version v1 --states VT
    ```
    Produces `outputs/v1/2020/aggregated/{state_summary.csv, district_summary.csv, ...}` — one row per plan or district, ready to load in pandas.
 
@@ -52,16 +52,16 @@ done
 
 Then aggregate:
 ```bash
-redist aggregate --year 2020 --version v1 --states NC \
+BISECT aggregate --year 2020 --version v1 --states NC \
     --labels nc_pct_00 nc_pct_01 nc_pct_02 nc_pct_03 nc_pct_04 \
              nc_pct_05 nc_pct_06 nc_pct_07 nc_pct_08 nc_pct_09
 ```
 
 The resulting `district_summary.csv` gives you a 10-row table: edge-cut (proxy for compactness) and Democratic-seat count per percentile. Typical finding: the compactness-to-partisan tradeoff is largely flat between `0.0` and `0.4`, then the partisan composition shifts as the solver departs the compact extremum.
 
-**Best-K aggregate shortcut:** Run the percentile sweep with `--keep 3` and let `redist aggregate` find the best plan per percentile level automatically:
+**Best-K aggregate shortcut:** Run the percentile sweep with `--keep 3` and let `BISECT aggregate` find the best plan per percentile level automatically:
 ```bash
-redist sweep --state NC --year 2020 \
+BISECT sweep --state NC --year 2020 \
     --n 200 --keep 5 \
     --metric polsby_popper \
     --percentile 0.5 \
@@ -72,7 +72,7 @@ redist sweep --state NC --year 2020 \
 
 ## Section: Ensemble diagnostics — characterising the feasible space
 
-Before reporting a plan's partisan composition as a finding, use the ensemble command to characterise where that plan sits in the feasible space. The `bisect ensemble` command generates multiple independent MCMC chains, computes Gelman-Rubin R-hat and ESS, and produces the `diagnostics/` artifact directory required by `redist research validate-ensemble`.
+Before reporting a plan's partisan composition as a finding, use the ensemble command to characterise where that plan sits in the feasible space. The `bisect ensemble` command generates multiple independent MCMC chains, computes Gelman-Rubin R-hat and ESS, and produces the `diagnostics/` artifact directory required by `BISECT research validate-ensemble`.
 
 ```bash
 # Generate a 4-chain ensemble for NC (5000 steps each)
@@ -96,7 +96,7 @@ outputs/v1/ensembles/nc_ensemble_2020/
 
 Then compare your target plan against the ensemble:
 ```bash
-redist research validate-ensemble \
+BISECT research validate-ensemble \
     --plan-label vt_baseline \
     --ensemble-label nc_ensemble_2020
 ```
@@ -133,7 +133,7 @@ What this does:
 
 ```bash
 # After running BisectionEnsemble, aggregate across all 200 plans
-redist aggregate --year 2020 --version v1 --states NC \
+BISECT aggregate --year 2020 --version v1 --states NC \
     --ensemble-label nc_bisect_ensemble \
     --output outputs/v1/2020/aggregated/nc_bisect_ensemble_summary.csv
 ```
@@ -149,11 +149,11 @@ redist aggregate --year 2020 --version v1 --states NC \
 
 ## Where to go next
 
-- Sweep tuning: `redist sweep --help` (metric choices, parallelism)
+- Sweep tuning: `BISECT sweep --help` (metric choices, parallelism)
 - Ensemble diagnostics reference: `docs/research/ensemble-diagnostics.md`
 - Reproducibility for publication: `bisect analyze --paper-mode` (AEA-compliant replication package)
 - Statistical rigour on bloc voting: `bisect analyze --types bloc-voting` (Callais Evidence Layer)
-- GerryChain interop: `redist research check-compat` then notebook `04_gerrychain_interop.ipynb`
+- GerryChain interop: `BISECT research check-compat` then notebook `04_gerrychain_interop.ipynb`
 
 ## Performance notes
 

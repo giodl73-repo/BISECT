@@ -16,7 +16,7 @@
 //! - `seeds.json` — master seed (or `null` if unseeded). Per-step seeds will
 //!   be added when the broader seed-derivation system ships.
 //! - `CITATION.bib` / `CITATION.apa.txt` / `CITATION.chicago.txt` — citation
-//!   strings for the `redist` binary itself per
+//!   strings for the `BISECT` binary itself per
 //!   `docs/file-formats/citation-strings.md` §3.3.
 //! - `README.md` — replication walkthrough rendered for this specific run.
 //!
@@ -91,44 +91,62 @@ pub fn emit_replication_package(inputs: &PaperModeInputs<'_>) -> Result<PathBuf,
     let toolchain_sha = sha_of_optional_repo_file("bisect/rust-toolchain.toml");
     let requirements_sha = sha_of_optional_repo_file("requirements.lock");
 
-    write_text(&pkg_dir.join("REPRODUCE.sh"), &render_reproduce_sh(
-        &prov,
-        &cargo_lock_sha,
-        &toolchain_sha,
-        &requirements_sha,
-        &inputs.analyze_invocation,
-        "paper_mode/expected_outputs.sha256.json",
-    ))?;
+    write_text(
+        &pkg_dir.join("REPRODUCE.sh"),
+        &render_reproduce_sh(
+            &prov,
+            &cargo_lock_sha,
+            &toolchain_sha,
+            &requirements_sha,
+            &inputs.analyze_invocation,
+            "paper_mode/expected_outputs.sha256.json",
+        ),
+    )?;
 
-    write_json(&pkg_dir.join("inputs.sha256.json"), &ShaManifest {
-        schema_version: SCHEMA_VERSION,
-        kind: "inputs",
-        files: inputs_sha,
-    })?;
+    write_json(
+        &pkg_dir.join("inputs.sha256.json"),
+        &ShaManifest {
+            schema_version: SCHEMA_VERSION,
+            kind: "inputs",
+            files: inputs_sha,
+        },
+    )?;
 
-    write_json(&pkg_dir.join("expected_outputs.sha256.json"), &ShaManifest {
-        schema_version: SCHEMA_VERSION,
-        kind: "expected_outputs",
-        files: outputs_sha,
-    })?;
+    write_json(
+        &pkg_dir.join("expected_outputs.sha256.json"),
+        &ShaManifest {
+            schema_version: SCHEMA_VERSION,
+            kind: "expected_outputs",
+            files: outputs_sha,
+        },
+    )?;
 
-    write_json(&pkg_dir.join("environment.json"), &EnvironmentRecord::from_provenance(&prov))?;
+    write_json(
+        &pkg_dir.join("environment.json"),
+        &EnvironmentRecord::from_provenance(&prov),
+    )?;
 
-    write_json(&pkg_dir.join("seeds.json"), &SeedsRecord {
-        schema_version: SCHEMA_VERSION,
-        master_seed: inputs.seed,
-    })?;
+    write_json(
+        &pkg_dir.join("seeds.json"),
+        &SeedsRecord {
+            schema_version: SCHEMA_VERSION,
+            master_seed: inputs.seed,
+        },
+    )?;
 
     let citations = build_citations(&prov);
     write_text(&pkg_dir.join("CITATION.bib"), &citations.bib)?;
     write_text(&pkg_dir.join("CITATION.apa.txt"), &citations.apa)?;
     write_text(&pkg_dir.join("CITATION.chicago.txt"), &citations.chicago)?;
 
-    write_text(&pkg_dir.join("README.md"), &render_readme(
-        &prov,
-        &inputs.analyze_invocation,
-        inputs.citation_style_default,
-    ))?;
+    write_text(
+        &pkg_dir.join("README.md"),
+        &render_readme(
+            &prov,
+            &inputs.analyze_invocation,
+            inputs.citation_style_default,
+        ),
+    )?;
 
     Ok(pkg_dir)
 }
@@ -138,7 +156,8 @@ pub fn emit_replication_package(inputs: &PaperModeInputs<'_>) -> Result<PathBuf,
 // ---------------------------------------------------------------------------
 
 fn create_dir(p: &Path) -> Result<(), PaperModeError> {
-    std::fs::create_dir_all(p).map_err(|e| PaperModeError::Io(p.display().to_string(), e.to_string()))
+    std::fs::create_dir_all(p)
+        .map_err(|e| PaperModeError::Io(p.display().to_string(), e.to_string()))
 }
 
 fn write_text(path: &Path, body: &str) -> Result<(), PaperModeError> {
@@ -180,7 +199,7 @@ fn sha_of_optional_repo_file(rel: &str) -> String {
                 return sha256_hex(&bytes);
             }
         }
-        // Walk up — `cargo test` may run from inside redist/.
+        // Walk up — `cargo test` may run from inside BISECT/.
         let mut walk = cwd.clone();
         for _ in 0..5 {
             if walk.join(rel).is_file() {
@@ -260,8 +279,8 @@ fn render_reproduce_sh(
     expected_outputs_relpath: &str,
 ) -> String {
     REPRODUCE_TEMPLATE
-        .replace("{{REDIST_VERSION}}", &prov.version)
-        .replace("{{REDIST_BUILD_COMMIT}}", &prov.build_commit)
+        .replace("{{BISECT_VERSION}}", &prov.version)
+        .replace("{{BISECT_BUILD_COMMIT}}", &prov.build_commit)
         .replace("{{CARGO_LOCK_SHA256}}", cargo_lock_sha)
         .replace("{{RUST_TOOLCHAIN_SHA256}}", toolchain_sha)
         .replace("{{REQUIREMENTS_LOCK_SHA256}}", requirements_sha)
@@ -317,24 +336,24 @@ struct CitationStrings {
     chicago: String,
 }
 
-/// Build citation strings for the `redist` binary itself per
+/// Build citation strings for the `BISECT` binary itself per
 /// `docs/file-formats/citation-strings.md` §3.3.
 fn build_citations(prov: &Provenance) -> CitationStrings {
     let short: String = prov.build_commit.chars().take(8).collect();
     let v = &prov.version;
     // Year derived from build date (ISO-8601 prefix "YYYY-").
-    let year = prov.redist_build_date.get(..4).unwrap_or("2026");
+    let year = prov.bisect_build_date.get(..4).unwrap_or("2026");
 
     let bib = format!(
-        "@software{{redist_v{v},\n  author  = {{Della-Libera, Gio}},\n  title   = {{redist}},\n  version = {{{v}}},\n  note    = {{commit {short}}},\n  year    = {{{year}}},\n  url     = {{https://github.com/<owner>/redist}}\n}}\n",
+        "@software{{BISECT_v{v},\n  author  = {{Della-Libera, Gio}},\n  title   = {{BISECT}},\n  version = {{{v}}},\n  note    = {{commit {short}}},\n  year    = {{{year}}},\n  url     = {{https://github.com/<owner>/BISECT}}\n}}\n",
         v = v, short = short, year = year
     );
     let apa = format!(
-        "Della-Libera, G. ({year}). redist (Version {v}, commit {short}) [Computer software]. https://github.com/<owner>/redist\n",
+        "Della-Libera, G. ({year}). BISECT (Version {v}, commit {short}) [Computer software]. https://github.com/<owner>/BISECT\n",
         year = year, v = v, short = short
     );
     let chicago = format!(
-        "Della-Libera, Gio. {year}. \"redist (Version {v}, commit {short}).\" https://github.com/<owner>/redist.\n",
+        "Della-Libera, Gio. {year}. \"BISECT (Version {v}, commit {short}).\" https://github.com/<owner>/BISECT.\n",
         year = year, v = v, short = short
     );
     CitationStrings { bib, apa, chicago }
@@ -448,7 +467,10 @@ mod tests {
     use std::fs;
     use tempfile::TempDir;
 
-    fn fixture_inputs<'a>(tmp: &'a TempDir, analysis_dir: &'a Path) -> (PaperModeInputs<'a>, PathBuf) {
+    fn fixture_inputs<'a>(
+        tmp: &'a TempDir,
+        analysis_dir: &'a Path,
+    ) -> (PaperModeInputs<'a>, PathBuf) {
         let assignments = tmp.path().join("final_assignments.json");
         fs::write(&assignments, r#"{"50001000100": 1}"#).unwrap();
         // Pre-populate analysis_dir with one fake output so collect_output_shas has work.
@@ -506,14 +528,35 @@ mod tests {
 
         let sh = fs::read_to_string(pkg_dir.join("REPRODUCE.sh")).unwrap();
         // No raw {{ }} placeholders should remain.
-        assert!(!sh.contains("{{REDIST_VERSION}}"), "REDIST_VERSION not substituted");
-        assert!(!sh.contains("{{TARGET_PLATFORM}}"), "TARGET_PLATFORM not substituted");
-        assert!(!sh.contains("{{ANALYZE_INVOCATION}}"), "ANALYZE_INVOCATION not substituted");
-        assert!(!sh.contains("{{EXPECTED_OUTPUTS_JSON}}"), "EXPECTED_OUTPUTS_JSON not substituted");
+        assert!(
+            !sh.contains("{{BISECT_VERSION}}"),
+            "BISECT_VERSION not substituted"
+        );
+        assert!(
+            !sh.contains("{{TARGET_PLATFORM}}"),
+            "TARGET_PLATFORM not substituted"
+        );
+        assert!(
+            !sh.contains("{{ANALYZE_INVOCATION}}"),
+            "ANALYZE_INVOCATION not substituted"
+        );
+        assert!(
+            !sh.contains("{{EXPECTED_OUTPUTS_JSON}}"),
+            "EXPECTED_OUTPUTS_JSON not substituted"
+        );
         // Substituted values appear.
-        assert!(sh.contains(TARGET_PLATFORM), "TARGET_PLATFORM constant must appear in script");
-        assert!(sh.contains("bisect analyze --label vt_2020"), "analyze invocation must appear");
-        assert!(sh.contains("paper_mode/expected_outputs.sha256.json"), "expected_outputs path must appear");
+        assert!(
+            sh.contains(TARGET_PLATFORM),
+            "TARGET_PLATFORM constant must appear in script"
+        );
+        assert!(
+            sh.contains("bisect analyze --label vt_2020"),
+            "analyze invocation must appear"
+        );
+        assert!(
+            sh.contains("paper_mode/expected_outputs.sha256.json"),
+            "expected_outputs path must appear"
+        );
     }
 
     #[test]
@@ -532,7 +575,10 @@ mod tests {
         let files = v["files"].as_object().unwrap();
         let assignments_sha = files.get("assignments").unwrap().as_str().unwrap();
         assert_eq!(assignments_sha.len(), 64, "SHA-256 must be 64 hex chars");
-        assert!(!files.contains_key("election_file"), "absent inputs must not be recorded");
+        assert!(
+            !files.contains_key("election_file"),
+            "absent inputs must not be recorded"
+        );
     }
 
     #[test]
@@ -543,11 +589,15 @@ mod tests {
         let (inputs, _) = fixture_inputs(&tmp, &analysis_dir);
         let pkg_dir = emit_replication_package(&inputs).unwrap();
 
-        let v: serde_json::Value =
-            serde_json::from_str(&fs::read_to_string(pkg_dir.join("expected_outputs.sha256.json")).unwrap())
-                .unwrap();
+        let v: serde_json::Value = serde_json::from_str(
+            &fs::read_to_string(pkg_dir.join("expected_outputs.sha256.json")).unwrap(),
+        )
+        .unwrap();
         let files = v["files"].as_object().unwrap();
-        assert!(files.contains_key("summary.json"), "summary.json must be checksummed");
+        assert!(
+            files.contains_key("summary.json"),
+            "summary.json must be checksummed"
+        );
         // Paper-mode dir contents must NOT appear (collect_output_shas is one-level only).
         assert!(!files.contains_key("REPRODUCE.sh"));
         assert!(!files.contains_key("paper_mode"));
@@ -562,7 +612,8 @@ mod tests {
         let pkg_dir = emit_replication_package(&inputs).unwrap();
 
         let v: serde_json::Value =
-            serde_json::from_str(&fs::read_to_string(pkg_dir.join("environment.json")).unwrap()).unwrap();
+            serde_json::from_str(&fs::read_to_string(pkg_dir.join("environment.json")).unwrap())
+                .unwrap();
         assert_eq!(v["schema_version"].as_str(), Some(SCHEMA_VERSION));
         assert_eq!(v["target_platform"].as_str(), Some(TARGET_PLATFORM));
         assert!(!v["version"].as_str().unwrap().is_empty());
@@ -589,8 +640,12 @@ mod tests {
         inputs.seed = None;
         let pkg_dir2 = emit_replication_package(&inputs).unwrap();
         let v2: serde_json::Value =
-            serde_json::from_str(&fs::read_to_string(pkg_dir2.join("seeds.json")).unwrap()).unwrap();
-        assert!(v2["master_seed"].is_null(), "unset seed must serialize as null");
+            serde_json::from_str(&fs::read_to_string(pkg_dir2.join("seeds.json")).unwrap())
+                .unwrap();
+        assert!(
+            v2["master_seed"].is_null(),
+            "unset seed must serialize as null"
+        );
     }
 
     #[test]
@@ -624,9 +679,21 @@ mod tests {
         let pkg_dir = emit_replication_package(&inputs).unwrap();
 
         let readme = fs::read_to_string(pkg_dir.join("README.md")).unwrap();
-        assert!(readme.contains("bisect analyze --label vt_2020"), "invocation must appear in README");
-        assert!(readme.contains(TARGET_PLATFORM), "target platform must appear in README");
-        assert!(readme.contains("AEA Replication Package"), "README title must mark this as AEA-compliant");
-        assert!(readme.contains("apa"), "default citation style must be mentioned");
+        assert!(
+            readme.contains("bisect analyze --label vt_2020"),
+            "invocation must appear in README"
+        );
+        assert!(
+            readme.contains(TARGET_PLATFORM),
+            "target platform must appear in README"
+        );
+        assert!(
+            readme.contains("AEA Replication Package"),
+            "README title must mark this as AEA-compliant"
+        );
+        assert!(
+            readme.contains("apa"),
+            "default citation style must be mentioned"
+        );
     }
 }

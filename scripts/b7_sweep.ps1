@@ -74,13 +74,13 @@ foreach ($entry in $statesToRun) {
         $mPath = "outputs\$ver\2020\states\$stName\manifest.json"
 
         if (-not (Test-Path $aPath)) {
-            $null = .\redist\target\release\redist.exe state --state $code --year 2020 --version $ver --seed $seed --manifest 2>&1
+            $null = .\target\release\bisect.exe state --state $code --year 2020 --version $ver --seed $seed --manifest 2>&1
             if ($LASTEXITCODE -ne 0) { $fail++; continue }
         }
 
         $pPath = "outputs\$ver\2020\states\$stName\analysis\proportionality.json"
         if (-not (Test-Path $pPath)) {
-            $null = .\redist\target\release\redist.exe analyze --state $code --year 2020 --version $ver --types proportionality 2>&1
+            $null = .\target\release\bisect.exe analyze --state $code --year 2020 --version $ver --types proportionality 2>&1
         }
 
         if ((Test-Path $mPath) -and (Test-Path $pPath)) {

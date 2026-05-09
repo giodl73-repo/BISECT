@@ -1,4 +1,4 @@
-# REDIST Pitfalls Collection
+# BISECT Pitfalls Collection
 
 Structural vulnerabilities in the redistricting system — not bug reports, but the patterns that make whole classes of bugs possible. Each pitfall describes a general failure mode, a structural solution that makes it impossible (not just unlikely), and a test that proves the solution holds.
 
@@ -42,7 +42,7 @@ A bug that led to a pitfall discovery is noted in the pitfall, but the pitfall i
 | DP-03 | Identifier representation ambiguity at system boundaries | **SOLVED** | TestRustCLIAcceptance::test_vt_rust_final_assignments_exists |
 | RP-01 | Threshold sensitivity presented as a point result | **OPEN** | — |
 | RP-02 | Claim-to-data drift across pipeline evolution | **MITIGATED** | test_vra_compliance.py (partial) |
-| PP-04 | Cross-language subprocess environment locality | **SOLVED** | TestRustCLIAcceptance — REDIST_PYTHON=sys.executable |
+| PP-04 | Cross-language subprocess environment locality | **SOLVED** | TestRustCLIAcceptance — BISECT_PYTHON=sys.executable |
 | PP-05 | Dual-purpose path parameter creates read/write coupling | **SOLVED** | TestRustCLIAcceptance — tmp dir + V3 adjacency |
 | PP-06 | Parallel task failure invisibility via silent filter | **SOLVED** | TestRustCLIAcceptance::test_al_rust_mm_count |
 | PP-07 | External tool parameter unit mismatch at boundary | **SOLVED** | TestRustCLIAcceptance::test_al_rust_population_balance |

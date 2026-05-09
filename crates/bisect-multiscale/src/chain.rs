@@ -47,8 +47,13 @@ pub struct MultiScaleChain {
 }
 
 impl MultiScaleChain {
-    pub fn new(_fine_adj: Vec<Vec<usize>>, _fine_pop: Vec<i64>,
-               _assignment: Vec<u32>, _k: u32, _config: MultiScaleConfig) -> Self {
+    pub fn new(
+        _fine_adj: Vec<Vec<usize>>,
+        _fine_pop: Vec<i64>,
+        _assignment: Vec<u32>,
+        _k: u32,
+        _config: MultiScaleConfig,
+    ) -> Self {
         unimplemented!("MultiScaleChain::new -- task #128")
     }
 }
@@ -102,8 +107,10 @@ mod tests {
     #[test]
     fn multiscale_config_coarse_tol_is_twice_pop_tolerance() {
         let cfg = MultiScaleConfig::default();
-        assert!((cfg.coarse_tol - 2.0 * cfg.pop_tolerance).abs() < 1e-12,
-            "coarse_tol must be 2 x pop_tolerance by default");
+        assert!(
+            (cfg.coarse_tol - 2.0 * cfg.pop_tolerance).abs() < 1e-12,
+            "coarse_tol must be 2 x pop_tolerance by default"
+        );
     }
 
     #[test]
@@ -123,7 +130,9 @@ mod tests {
         assert!(
             (cfg.coarse_tol - 3.0 * cfg.pop_tolerance).abs() < 1e-12,
             "AdaptiveMultiScaleConfig::default() coarse_tol must be 3 x pop_tolerance, \
-             got coarse_tol={} pop_tolerance={}", cfg.coarse_tol, cfg.pop_tolerance
+             got coarse_tol={} pop_tolerance={}",
+            cfg.coarse_tol,
+            cfg.pop_tolerance
         );
     }
 
@@ -137,7 +146,8 @@ mod tests {
         };
         assert!(
             (cfg.coarse_tol - 0.03).abs() < 1e-12,
-            "custom pop_tolerance=0.01 must yield coarse_tol=0.03, got {}", cfg.coarse_tol
+            "custom pop_tolerance=0.01 must yield coarse_tol=0.03, got {}",
+            cfg.coarse_tol
         );
     }
 }

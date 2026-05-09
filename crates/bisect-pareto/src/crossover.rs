@@ -6,9 +6,9 @@
 //!
 //! Per spec §4.
 
-use rand::SeedableRng;
 use rand::rngs::SmallRng;
 use rand::Rng;
+use rand::SeedableRng;
 
 use bisect_ensemble::spanning::random_spanning_tree;
 
@@ -75,16 +75,21 @@ pub fn crossover(
 
     // Build local adjacency for the region
     let region_pop: i64 = region.iter().map(|&t| pop[t]).sum();
-    let region_idx: std::collections::HashMap<usize, usize> = region.iter()
+    let region_idx: std::collections::HashMap<usize, usize> = region
+        .iter()
         .enumerate()
         .map(|(li, &gi)| (gi, li))
         .collect();
 
-    let local_adj: Vec<Vec<u32>> = region.iter().map(|&v| {
-        adjacency[v].iter()
-            .filter_map(|&u| region_idx.get(&u).map(|&li| li as u32))
-            .collect()
-    }).collect();
+    let local_adj: Vec<Vec<u32>> = region
+        .iter()
+        .map(|&v| {
+            adjacency[v]
+                .iter()
+                .filter_map(|&u| region_idx.get(&u).map(|&li| li as u32))
+                .collect()
+        })
+        .collect();
 
     // Try up to 5 spanning trees to find a balanced cut
     for attempt in 0..5u32 {
@@ -151,11 +156,15 @@ pub fn is_plan_valid(
 
     for d in 1u32..=k as u32 {
         let tracts: Vec<usize> = (0..n).filter(|&t| plan[t] == d).collect();
-        if tracts.is_empty() { return false; }
+        if tracts.is_empty() {
+            return false;
+        }
 
         // Check population balance
         let dp: i64 = tracts.iter().map(|&t| pop[t]).sum();
-        if (dp as f64 - target_pop).abs() > tol_abs { return false; }
+        if (dp as f64 - target_pop).abs() > tol_abs {
+            return false;
+        }
 
         // Check contiguity via BFS
         let tract_set: std::collections::HashSet<usize> = tracts.iter().copied().collect();
@@ -171,7 +180,9 @@ pub fn is_plan_valid(
                 }
             }
         }
-        if visited.len() != tracts.len() { return false; }
+        if visited.len() != tracts.len() {
+            return false;
+        }
     }
     true
 }
@@ -181,12 +192,18 @@ mod tests {
     use super::*;
 
     fn path_adj(n: usize) -> Vec<Vec<usize>> {
-        (0..n).map(|i| {
-            let mut nb = Vec::new();
-            if i > 0 { nb.push(i - 1); }
-            if i < n - 1 { nb.push(i + 1); }
-            nb
-        }).collect()
+        (0..n)
+            .map(|i| {
+                let mut nb = Vec::new();
+                if i > 0 {
+                    nb.push(i - 1);
+                }
+                if i < n - 1 {
+                    nb.push(i + 1);
+                }
+                nb
+            })
+            .collect()
     }
 
     #[test]
@@ -199,7 +216,9 @@ mod tests {
         // Must be parent_a or a valid plan
         assert_eq!(result.len(), 4);
         // Sanity: every tract assigned
-        for &d in &result { assert!(d >= 1 && d <= 2); }
+        for &d in &result {
+            assert!(d >= 1 && d <= 2);
+        }
     }
 
     #[test]

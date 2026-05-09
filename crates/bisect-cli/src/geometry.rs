@@ -1,3 +1,7 @@
+use bisect_core::state_code_to_fips;
+use bisect_data::tiger::read_tiger_tracts;
+use bisect_map::{group_dissolve, wkb_to_geometry};
+use geo_types::{Geometry, MultiPolygon};
 /// Shared district geometry helper.
 ///
 /// Both map_cmd.rs (rendering) and the compactness analyzer need to:
@@ -8,10 +12,6 @@
 /// This module is the single place that does all three steps.
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use geo_types::{Geometry, MultiPolygon};
-use bisect_map::{wkb_to_geometry, group_dissolve};
-use bisect_data::tiger::read_tiger_tracts;
-use bisect_core::state_code_to_fips;
 
 /// Resolve raw assignments (may be index-keyed or GEOID-keyed) to GEOID-keyed form.
 /// If keys are shorter than 11 chars, treats them as adjacency indices and resolves
@@ -29,29 +29,45 @@ pub fn resolve_to_geoid_assignments(
     let state_code_lower = state_code.to_lowercase();
     let geoid_file = format!("{state_code_lower}_adjacency_{year}_geoids.json");
     let geoid_candidates = [
-        output_root.join("data").join(year).join("adjacency").join(&geoid_file),
-        PathBuf::from("outputs/V3/data").join(year).join("adjacency").join(&geoid_file),
-        PathBuf::from("outputs/V4/data").join(year).join("adjacency").join(&geoid_file),
+        output_root
+            .join("data")
+            .join(year)
+            .join("adjacency")
+            .join(&geoid_file),
+        PathBuf::from("outputs/V3/data")
+            .join(year)
+            .join("adjacency")
+            .join(&geoid_file),
+        PathBuf::from("outputs/V4/data")
+            .join(year)
+            .join("adjacency")
+            .join(&geoid_file),
     ];
     let geoid_path = geoid_candidates.iter().find(|p| p.exists());
     if let Some(geoid_path) = geoid_path {
-        let raw_geoids: HashMap<String, String> =
-            match std::fs::read_to_string(geoid_path)
-                .and_then(|s| serde_json::from_str(&s)
-                    .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e)))
-            {
-                Ok(m) => m,
-                Err(e) => {
-                    eprintln!("WARNING: could not read geoid mapping {}: {e}", geoid_path.display());
-                    return raw;
-                }
-            };
-        raw_geoids.into_iter()
+        let raw_geoids: HashMap<String, String> = match std::fs::read_to_string(geoid_path)
+            .and_then(|s| {
+                serde_json::from_str(&s)
+                    .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
+            }) {
+            Ok(m) => m,
+            Err(e) => {
+                eprintln!(
+                    "WARNING: could not read geoid mapping {}: {e}",
+                    geoid_path.display()
+                );
+                return raw;
+            }
+        };
+        raw_geoids
+            .into_iter()
             .filter_map(|(idx, geoid)| raw.get(&idx).map(|&d| (geoid, d)))
             .collect()
     } else {
-        eprintln!("WARNING: geoid mapping not found for {state_code_lower} {year}; \
-            run: python scripts/data/generate_adj_bin.py --year {year} --states {state_code}");
+        eprintln!(
+            "WARNING: geoid mapping not found for {state_code_lower} {year}; \
+            run: python scripts/data/generate_adj_bin.py --year {year} --states {state_code}"
+        );
         raw
     }
 }
@@ -89,7 +105,8 @@ pub fn load_district_geometries(
         .ok_or_else(|| anyhow::anyhow!("Unknown state code: {state_code}"))?;
 
     // Determine if assignments use tract indices or GEOIDs
-    let uses_index_keys = assignments.keys()
+    let uses_index_keys = assignments
+        .keys()
         .next()
         .map(|k| k.len() < 11)
         .unwrap_or(false);
@@ -107,25 +124,36 @@ pub fn load_district_geometries(
         };
         // Geoid files live in the shared data directory, not the year-specific states dir
         let geoid_candidates = [
-            PathBuf::from("outputs").join(version).join("data").join(year).join("adjacency").join(&geoid_file),
-            PathBuf::from("outputs/V3/data").join(year).join("adjacency").join(&geoid_file),
-            PathBuf::from("outputs/V4/data").join(year).join("adjacency").join(&geoid_file),
+            PathBuf::from("outputs")
+                .join(version)
+                .join("data")
+                .join(year)
+                .join("adjacency")
+                .join(&geoid_file),
+            PathBuf::from("outputs/V3/data")
+                .join(year)
+                .join("adjacency")
+                .join(&geoid_file),
+            PathBuf::from("outputs/V4/data")
+                .join(year)
+                .join("adjacency")
+                .join(&geoid_file),
         ];
-        let geoid_path = geoid_candidates.iter()
+        let geoid_path = geoid_candidates
+            .iter()
             .find(|p| p.exists())
-            .ok_or_else(|| anyhow::anyhow!(
-                "Geoid mapping not found for {state_name} ({resolution} resolution). \
+            .ok_or_else(|| {
+                anyhow::anyhow!(
+                    "Geoid mapping not found for {state_name} ({resolution} resolution). \
                  Run: python scripts/data/generate_adj_bin.py --year {year} --states {state_code}"
-            ))?;
+                )
+            })?;
 
-        let raw: HashMap<String, String> = serde_json::from_str(
-            &std::fs::read_to_string(geoid_path)?
-        )?;
+        let raw: HashMap<String, String> =
+            serde_json::from_str(&std::fs::read_to_string(geoid_path)?)?;
         // raw: {"0": "50005957100", ...} — join with assignments on index
         raw.into_iter()
-            .filter_map(|(idx, geoid)| {
-                assignments.get(&idx).map(|&dist| (geoid, dist))
-            })
+            .filter_map(|(idx, geoid)| assignments.get(&idx).map(|&dist| (geoid, dist)))
             .collect()
     } else {
         // Assignments already keyed by GEOID
@@ -138,12 +166,9 @@ pub fn load_district_geometries(
     let (stem, subdir) = match resolution {
         "block_group" | "block-group" => (
             format!("tl_{year}_{fips}_bg"),
-            "tracts",  // block group shapefiles live alongside tracts
+            "tracts", // block group shapefiles live alongside tracts
         ),
-        _ => (
-            format!("tl_{year}_{fips}_tract"),
-            "tracts",
-        ),
+        _ => (format!("tl_{year}_{fips}_tract"), "tracts"),
     };
     let tiger_path = data_root
         .join(year)
@@ -164,22 +189,27 @@ pub fn load_district_geometries(
     let tract_records = read_tiger_tracts(&tiger_path)
         .map_err(|e| anyhow::anyhow!("Failed to read TIGER shapefile: {e}"))?;
 
-    let geoms: Vec<Geometry<f64>> = tract_records.iter()
+    let geoms: Vec<Geometry<f64>> = tract_records
+        .iter()
         .map(|tr| wkb_to_geometry(&tr.geometry_wkb))
         .collect::<anyhow::Result<Vec<_>>>()?;
 
-    let tract_assignments: Vec<usize> = tract_records.iter()
+    let tract_assignments: Vec<usize> = tract_records
+        .iter()
         .map(|tr| geoid_to_district.get(&tr.geoid).copied().unwrap_or(0))
         .collect();
 
     let num_districts = assignments.values().copied().max().unwrap_or(1);
 
-    let unmatched = tract_records.iter()
+    let unmatched = tract_records
+        .iter()
         .filter(|tr| !geoid_to_district.contains_key(&tr.geoid))
         .count();
     if unmatched > 0 {
-        eprintln!("WARNING: {unmatched}/{} {resolution} units had no assignment match for {state_name}",
-            tract_records.len());
+        eprintln!(
+            "WARNING: {unmatched}/{} {resolution} units had no assignment match for {state_name}",
+            tract_records.len()
+        );
     }
 
     Ok(group_dissolve(&geoms, &tract_assignments, num_districts))
@@ -188,23 +218,57 @@ pub fn load_district_geometries(
 /// Reverse-lookup: state directory name (e.g. "rhode_island") → 2-letter code (e.g. "RI").
 pub fn state_name_to_code(name: &str) -> Option<&'static str> {
     match name {
-        "alabama" => Some("AL"), "alaska" => Some("AK"), "arizona" => Some("AZ"),
-        "arkansas" => Some("AR"), "california" => Some("CA"), "colorado" => Some("CO"),
-        "connecticut" => Some("CT"), "delaware" => Some("DE"), "florida" => Some("FL"),
-        "georgia" => Some("GA"), "hawaii" => Some("HI"), "idaho" => Some("ID"),
-        "illinois" => Some("IL"), "indiana" => Some("IN"), "iowa" => Some("IA"),
-        "kansas" => Some("KS"), "kentucky" => Some("KY"), "louisiana" => Some("LA"),
-        "maine" => Some("ME"), "maryland" => Some("MD"), "massachusetts" => Some("MA"),
-        "michigan" => Some("MI"), "minnesota" => Some("MN"), "mississippi" => Some("MS"),
-        "missouri" => Some("MO"), "montana" => Some("MT"), "nebraska" => Some("NE"),
-        "nevada" => Some("NV"), "new_hampshire" => Some("NH"), "new_jersey" => Some("NJ"),
-        "new_mexico" => Some("NM"), "new_york" => Some("NY"), "north_carolina" => Some("NC"),
-        "north_dakota" => Some("ND"), "ohio" => Some("OH"), "oklahoma" => Some("OK"),
-        "oregon" => Some("OR"), "pennsylvania" => Some("PA"), "rhode_island" => Some("RI"),
-        "south_carolina" => Some("SC"), "south_dakota" => Some("SD"), "tennessee" => Some("TN"),
-        "texas" => Some("TX"), "utah" => Some("UT"), "vermont" => Some("VT"),
-        "virginia" => Some("VA"), "washington" => Some("WA"), "west_virginia" => Some("WV"),
-        "wisconsin" => Some("WI"), "wyoming" => Some("WY"), "district_of_columbia" => Some("DC"),
+        "alabama" => Some("AL"),
+        "alaska" => Some("AK"),
+        "arizona" => Some("AZ"),
+        "arkansas" => Some("AR"),
+        "california" => Some("CA"),
+        "colorado" => Some("CO"),
+        "connecticut" => Some("CT"),
+        "delaware" => Some("DE"),
+        "florida" => Some("FL"),
+        "georgia" => Some("GA"),
+        "hawaii" => Some("HI"),
+        "idaho" => Some("ID"),
+        "illinois" => Some("IL"),
+        "indiana" => Some("IN"),
+        "iowa" => Some("IA"),
+        "kansas" => Some("KS"),
+        "kentucky" => Some("KY"),
+        "louisiana" => Some("LA"),
+        "maine" => Some("ME"),
+        "maryland" => Some("MD"),
+        "massachusetts" => Some("MA"),
+        "michigan" => Some("MI"),
+        "minnesota" => Some("MN"),
+        "mississippi" => Some("MS"),
+        "missouri" => Some("MO"),
+        "montana" => Some("MT"),
+        "nebraska" => Some("NE"),
+        "nevada" => Some("NV"),
+        "new_hampshire" => Some("NH"),
+        "new_jersey" => Some("NJ"),
+        "new_mexico" => Some("NM"),
+        "new_york" => Some("NY"),
+        "north_carolina" => Some("NC"),
+        "north_dakota" => Some("ND"),
+        "ohio" => Some("OH"),
+        "oklahoma" => Some("OK"),
+        "oregon" => Some("OR"),
+        "pennsylvania" => Some("PA"),
+        "rhode_island" => Some("RI"),
+        "south_carolina" => Some("SC"),
+        "south_dakota" => Some("SD"),
+        "tennessee" => Some("TN"),
+        "texas" => Some("TX"),
+        "utah" => Some("UT"),
+        "vermont" => Some("VT"),
+        "virginia" => Some("VA"),
+        "washington" => Some("WA"),
+        "west_virginia" => Some("WV"),
+        "wisconsin" => Some("WI"),
+        "wyoming" => Some("WY"),
+        "district_of_columbia" => Some("DC"),
         _ => None,
     }
 }
@@ -212,8 +276,8 @@ pub fn state_name_to_code(name: &str) -> Option<&'static str> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use geo_types::polygon;
     use geo::Area;
+    use geo_types::polygon;
 
     #[test]
     fn test_fips_lookup_vt() {
@@ -235,16 +299,16 @@ mod tests {
         use geozero::{CoordDimensions, ToWkb};
 
         let p1: Geometry<f64> = Geometry::Polygon(
-            polygon![(x:0.,y:0.),(x:1.,y:0.),(x:1.,y:1.),(x:0.,y:1.),(x:0.,y:0.)]
+            polygon![(x:0.,y:0.),(x:1.,y:0.),(x:1.,y:1.),(x:0.,y:1.),(x:0.,y:0.)],
         );
         let p2: Geometry<f64> = Geometry::Polygon(
-            polygon![(x:1.,y:0.),(x:2.,y:0.),(x:2.,y:1.),(x:1.,y:1.),(x:1.,y:0.)]
+            polygon![(x:1.,y:0.),(x:2.,y:0.),(x:2.,y:1.),(x:1.,y:1.),(x:1.,y:0.)],
         );
         let p3: Geometry<f64> = Geometry::Polygon(
-            polygon![(x:0.,y:1.),(x:1.,y:1.),(x:1.,y:2.),(x:0.,y:2.),(x:0.,y:1.)]
+            polygon![(x:0.,y:1.),(x:1.,y:1.),(x:1.,y:2.),(x:0.,y:2.),(x:0.,y:1.)],
         );
         let p4: Geometry<f64> = Geometry::Polygon(
-            polygon![(x:1.,y:1.),(x:2.,y:1.),(x:2.,y:2.),(x:1.,y:2.),(x:1.,y:1.)]
+            polygon![(x:1.,y:1.),(x:2.,y:1.),(x:2.,y:2.),(x:1.,y:2.),(x:1.,y:1.)],
         );
 
         let geoms = vec![p1, p2, p3, p4];
@@ -328,19 +392,62 @@ mod tests {
     fn state_name_to_code_all_50_have_some() {
         // Quick smoke test: none of the 50 canonical lowercase names returns None.
         let names = [
-            "alabama", "alaska", "arizona", "arkansas", "california", "colorado",
-            "connecticut", "delaware", "florida", "georgia", "hawaii", "idaho",
-            "illinois", "indiana", "iowa", "kansas", "kentucky", "louisiana",
-            "maine", "maryland", "massachusetts", "michigan", "minnesota",
-            "mississippi", "missouri", "montana", "nebraska", "nevada",
-            "new_hampshire", "new_jersey", "new_mexico", "new_york",
-            "north_carolina", "north_dakota", "ohio", "oklahoma", "oregon",
-            "pennsylvania", "rhode_island", "south_carolina", "south_dakota",
-            "tennessee", "texas", "utah", "vermont", "virginia", "washington",
-            "west_virginia", "wisconsin", "wyoming",
+            "alabama",
+            "alaska",
+            "arizona",
+            "arkansas",
+            "california",
+            "colorado",
+            "connecticut",
+            "delaware",
+            "florida",
+            "georgia",
+            "hawaii",
+            "idaho",
+            "illinois",
+            "indiana",
+            "iowa",
+            "kansas",
+            "kentucky",
+            "louisiana",
+            "maine",
+            "maryland",
+            "massachusetts",
+            "michigan",
+            "minnesota",
+            "mississippi",
+            "missouri",
+            "montana",
+            "nebraska",
+            "nevada",
+            "new_hampshire",
+            "new_jersey",
+            "new_mexico",
+            "new_york",
+            "north_carolina",
+            "north_dakota",
+            "ohio",
+            "oklahoma",
+            "oregon",
+            "pennsylvania",
+            "rhode_island",
+            "south_carolina",
+            "south_dakota",
+            "tennessee",
+            "texas",
+            "utah",
+            "vermont",
+            "virginia",
+            "washington",
+            "west_virginia",
+            "wisconsin",
+            "wyoming",
         ];
         for name in &names {
-            assert!(state_name_to_code(name).is_some(), "expected Some for: {name}");
+            assert!(
+                state_name_to_code(name).is_some(),
+                "expected Some for: {name}"
+            );
         }
     }
 
@@ -366,12 +473,8 @@ mod tests {
     #[test]
     fn resolve_to_geoid_assignments_empty_map_passthrough() {
         let raw: HashMap<String, usize> = HashMap::new();
-        let result = resolve_to_geoid_assignments(
-            raw,
-            std::path::Path::new("/nonexistent"),
-            "VT",
-            "2020",
-        );
+        let result =
+            resolve_to_geoid_assignments(raw, std::path::Path::new("/nonexistent"), "VT", "2020");
         assert!(result.is_empty(), "empty input must produce empty output");
     }
 
@@ -406,12 +509,19 @@ mod tests {
                 (x: x0,     y: y0)
             ])
         };
-        let geoms = vec![make_sq(0.0,0.0), make_sq(1.0,0.0), make_sq(2.0,0.0), make_sq(3.0,0.0)];
+        let geoms = vec![
+            make_sq(0.0, 0.0),
+            make_sq(1.0, 0.0),
+            make_sq(2.0, 0.0),
+            make_sq(3.0, 0.0),
+        ];
         let assignments = vec![1usize, 1, 1, 1];
         let districts = group_dissolve(&geoms, &assignments, 1);
         assert_eq!(districts.len(), 1);
-        assert!((districts[&1].unsigned_area() - 4.0).abs() < 1e-9,
-            "four unit squares in one district should have area 4.0");
+        assert!(
+            (districts[&1].unsigned_area() - 4.0).abs() < 1e-9,
+            "four unit squares in one district should have area 4.0"
+        );
     }
 
     #[test]
@@ -431,8 +541,10 @@ mod tests {
         let districts = group_dissolve(&geoms, &assignments, 3);
         assert_eq!(districts.len(), 3);
         for d in 1..=3 {
-            assert!((districts[&d].unsigned_area() - 1.0).abs() < 1e-9,
-                "district {d} should have area 1.0");
+            assert!(
+                (districts[&d].unsigned_area() - 1.0).abs() < 1e-9,
+                "district {d} should have area 1.0"
+            );
         }
     }
 }

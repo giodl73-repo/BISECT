@@ -9,8 +9,8 @@
 /// This eliminates the vra_mode premature-clear class of bugs where
 /// vra_analysis.pkl was not written.
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
 use std::fs;
+use std::path::{Path, PathBuf};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -76,40 +76,52 @@ pub fn write_state_outputs(
     }
 
     // Write assignments to temp file
-    let assignments_json = serde_json::to_string_pretty(assignments)
-        .map_err(|e| OutputError::Json(e.to_string()))?;
-    fs::write(&tmp_assignments, &assignments_json)
-        .map_err(|e| OutputError::Io { path: tmp_assignments.clone(), source: e })?;
+    let assignments_json =
+        serde_json::to_string_pretty(assignments).map_err(|e| OutputError::Json(e.to_string()))?;
+    fs::write(&tmp_assignments, &assignments_json).map_err(|e| OutputError::Io {
+        path: tmp_assignments.clone(),
+        source: e,
+    })?;
 
     // Write VRA analysis to temp file (if VRA mode)
     if let Some(vra_data) = vra {
-        let vra_json = serde_json::to_string_pretty(vra_data)
-            .map_err(|e| OutputError::Json(e.to_string()))?;
-        fs::write(&tmp_vra, &vra_json)
-            .map_err(|e| OutputError::Io { path: tmp_vra.clone(), source: e })?;
+        let vra_json =
+            serde_json::to_string_pretty(vra_data).map_err(|e| OutputError::Json(e.to_string()))?;
+        fs::write(&tmp_vra, &vra_json).map_err(|e| OutputError::Io {
+            path: tmp_vra.clone(),
+            source: e,
+        })?;
     }
 
     // Write provenance sidecar (always — captures binary identity for audit trail)
     let provenance = crate::provenance::Provenance::current();
-    let provenance_json = serde_json::to_string_pretty(&provenance)
-        .map_err(|e| OutputError::Json(e.to_string()))?;
-    fs::write(&tmp_provenance, &provenance_json)
-        .map_err(|e| OutputError::Io { path: tmp_provenance.clone(), source: e })?;
+    let provenance_json =
+        serde_json::to_string_pretty(&provenance).map_err(|e| OutputError::Json(e.to_string()))?;
+    fs::write(&tmp_provenance, &provenance_json).map_err(|e| OutputError::Io {
+        path: tmp_provenance.clone(),
+        source: e,
+    })?;
 
     // All writes succeeded — now rename atomically
     let final_assignments = data_dir.join("final_assignments.json");
-    fs::rename(&tmp_assignments, &final_assignments)
-        .map_err(|e| OutputError::Io { path: final_assignments, source: e })?;
+    fs::rename(&tmp_assignments, &final_assignments).map_err(|e| OutputError::Io {
+        path: final_assignments,
+        source: e,
+    })?;
 
     if vra.is_some() {
         let final_vra = data_dir.join("vra_analysis.json");
-        fs::rename(&tmp_vra, &final_vra)
-            .map_err(|e| OutputError::Io { path: final_vra, source: e })?;
+        fs::rename(&tmp_vra, &final_vra).map_err(|e| OutputError::Io {
+            path: final_vra,
+            source: e,
+        })?;
     }
 
     let final_provenance = data_dir.join("provenance.json");
-    fs::rename(&tmp_provenance, &final_provenance)
-        .map_err(|e| OutputError::Io { path: final_provenance, source: e })?;
+    fs::rename(&tmp_provenance, &final_provenance).map_err(|e| OutputError::Io {
+        path: final_provenance,
+        source: e,
+    })?;
 
     Ok(())
 }
@@ -135,17 +147,22 @@ pub fn write_district_summary(
     content.push_str(&headers.join(","));
     content.push('\n');
     for row in rows {
-        let values: Vec<&str> = headers.iter()
+        let values: Vec<&str> = headers
+            .iter()
             .map(|h| row.get(*h).map(|s| s.as_str()).unwrap_or(""))
             .collect();
         content.push_str(&values.join(","));
         content.push('\n');
     }
 
-    fs::write(&tmp_csv, &content)
-        .map_err(|e| OutputError::Io { path: tmp_csv.clone(), source: e })?;
-    fs::rename(&tmp_csv, &csv_path)
-        .map_err(|e| OutputError::Io { path: csv_path, source: e })?;
+    fs::write(&tmp_csv, &content).map_err(|e| OutputError::Io {
+        path: tmp_csv.clone(),
+        source: e,
+    })?;
+    fs::rename(&tmp_csv, &csv_path).map_err(|e| OutputError::Io {
+        path: csv_path,
+        source: e,
+    })?;
 
     Ok(())
 }
@@ -187,8 +204,20 @@ mod tests {
             mm_count: 1,
             mm_districts: vec![1],
             districts: vec![
-                VraDistrict { district: 1, pct_minority: 0.511, pct_black: 0.42, pct_hispanic: 0.09, is_mm: true },
-                VraDistrict { district: 2, pct_minority: 0.25, pct_black: 0.15, pct_hispanic: 0.10, is_mm: false },
+                VraDistrict {
+                    district: 1,
+                    pct_minority: 0.511,
+                    pct_black: 0.42,
+                    pct_hispanic: 0.09,
+                    is_mm: true,
+                },
+                VraDistrict {
+                    district: 2,
+                    pct_minority: 0.25,
+                    pct_black: 0.15,
+                    pct_hispanic: 0.10,
+                    is_mm: false,
+                },
             ],
         }
     }
@@ -234,12 +263,15 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         write_state_outputs(tmp.path(), &sample_assignments(), None).unwrap();
         let prov_path = tmp.path().join("provenance.json");
-        assert!(prov_path.exists(), "provenance.json should be written even without VRA");
+        assert!(
+            prov_path.exists(),
+            "provenance.json should be written even without VRA"
+        );
         let parsed: serde_json::Value =
             serde_json::from_str(&std::fs::read_to_string(&prov_path).unwrap()).unwrap();
         assert!(parsed["version"].is_string());
         assert!(parsed["build_commit"].is_string());
-        assert!(parsed["redist_build_date"].is_string());
+        assert!(parsed["bisect_build_date"].is_string());
         assert!(parsed["rustc_version"].is_string());
     }
 
@@ -292,11 +324,8 @@ mod tests {
 
     #[test]
     fn test_missing_directory_error() {
-        let result = write_state_outputs(
-            Path::new("/nonexistent/path"),
-            &sample_assignments(),
-            None,
-        );
+        let result =
+            write_state_outputs(Path::new("/nonexistent/path"), &sample_assignments(), None);
         assert!(matches!(result, Err(OutputError::DirectoryMissing(_))));
     }
 
@@ -304,10 +333,18 @@ mod tests {
     fn test_write_district_summary_creates_csv() {
         let tmp = TempDir::new().unwrap();
         let rows = vec![
-            [("district".into(), "1".into()), ("polsby_popper".into(), "0.34".into())]
-                .into_iter().collect::<HashMap<String, String>>(),
-            [("district".into(), "2".into()), ("polsby_popper".into(), "0.28".into())]
-                .into_iter().collect::<HashMap<String, String>>(),
+            [
+                ("district".into(), "1".into()),
+                ("polsby_popper".into(), "0.34".into()),
+            ]
+            .into_iter()
+            .collect::<HashMap<String, String>>(),
+            [
+                ("district".into(), "2".into()),
+                ("polsby_popper".into(), "0.28".into()),
+            ]
+            .into_iter()
+            .collect::<HashMap<String, String>>(),
         ];
         write_district_summary(tmp.path(), &rows).unwrap();
         let content = std::fs::read_to_string(tmp.path().join("district_summary.csv")).unwrap();
@@ -335,7 +372,10 @@ mod tests {
             headers_seen.push(header);
         }
         for h in &headers_seen[1..] {
-            assert_eq!(h, &headers_seen[0], "column order must be deterministic across runs");
+            assert_eq!(
+                h, &headers_seen[0],
+                "column order must be deterministic across runs"
+            );
         }
     }
 
@@ -373,9 +413,12 @@ mod tests {
         );
         match result {
             Err(OutputError::DirectoryMissing(p)) => {
-                assert!(p.to_str().unwrap().contains("does/not/exist")
-                    || p.to_str().unwrap().contains("does\\not\\exist"),
-                    "error path must echo the bad directory: {:?}", p);
+                assert!(
+                    p.to_str().unwrap().contains("does/not/exist")
+                        || p.to_str().unwrap().contains("does\\not\\exist"),
+                    "error path must echo the bad directory: {:?}",
+                    p
+                );
             }
             other => panic!("expected DirectoryMissing, got {:?}", other),
         }
@@ -388,8 +431,10 @@ mod tests {
         std::fs::write(tmp.path().join(".vra_analysis.tmp.json"), b"corrupt").unwrap();
         assert!(has_corrupt_state(tmp.path()));
         let result = write_state_outputs(tmp.path(), &sample_assignments(), None);
-        assert!(matches!(result, Err(OutputError::CorruptState(_))),
-            "vra tmp file must trigger CorruptState");
+        assert!(
+            matches!(result, Err(OutputError::CorruptState(_))),
+            "vra tmp file must trigger CorruptState"
+        );
     }
 
     #[test]
@@ -413,7 +458,10 @@ mod tests {
         write_state_outputs(tmp.path(), &empty, None).unwrap();
         let content = std::fs::read_to_string(tmp.path().join("final_assignments.json")).unwrap();
         let parsed: HashMap<String, usize> = serde_json::from_str(&content).unwrap();
-        assert!(parsed.is_empty(), "empty assignments must round-trip as empty map");
+        assert!(
+            parsed.is_empty(),
+            "empty assignments must round-trip as empty map"
+        );
     }
 
     #[test]
@@ -447,7 +495,10 @@ mod tests {
         write_state_outputs(tmp.path(), &one_dist, None).unwrap();
         let content = std::fs::read_to_string(tmp.path().join("final_assignments.json")).unwrap();
         let parsed: HashMap<String, usize> = serde_json::from_str(&content).unwrap();
-        assert!(parsed.values().all(|&d| d == 1), "all tracts must map to district 1");
+        assert!(
+            parsed.values().all(|&d| d == 1),
+            "all tracts must map to district 1"
+        );
     }
 
     // -- VraDistrict / VraAnalysis struct construction and field access -------
@@ -464,9 +515,16 @@ mod tests {
         assert_eq!(d.district, 5);
         assert!((d.pct_minority - 0.611).abs() < 1e-9);
         assert!(d.is_mm);
-        assert!(!VraDistrict {
-            district: 1, pct_minority: 0.1, pct_black: 0.05, pct_hispanic: 0.05, is_mm: false
-        }.is_mm);
+        assert!(
+            !VraDistrict {
+                district: 1,
+                pct_minority: 0.1,
+                pct_black: 0.05,
+                pct_hispanic: 0.05,
+                is_mm: false
+            }
+            .is_mm
+        );
     }
 
     #[test]
@@ -498,9 +556,27 @@ mod tests {
             mm_count: 3,
             mm_districts: vec![2, 5, 9],
             districts: vec![
-                VraDistrict { district: 2, pct_minority: 0.56, pct_black: 0.30, pct_hispanic: 0.26, is_mm: true },
-                VraDistrict { district: 5, pct_minority: 0.52, pct_black: 0.40, pct_hispanic: 0.12, is_mm: true },
-                VraDistrict { district: 9, pct_minority: 0.53, pct_black: 0.25, pct_hispanic: 0.28, is_mm: true },
+                VraDistrict {
+                    district: 2,
+                    pct_minority: 0.56,
+                    pct_black: 0.30,
+                    pct_hispanic: 0.26,
+                    is_mm: true,
+                },
+                VraDistrict {
+                    district: 5,
+                    pct_minority: 0.52,
+                    pct_black: 0.40,
+                    pct_hispanic: 0.12,
+                    is_mm: true,
+                },
+                VraDistrict {
+                    district: 9,
+                    pct_minority: 0.53,
+                    pct_black: 0.25,
+                    pct_hispanic: 0.28,
+                    is_mm: true,
+                },
             ],
         };
         assert_eq!(vra.mm_count, 3);
@@ -513,8 +589,10 @@ mod tests {
     #[test]
     fn test_has_corrupt_state_false_when_directory_empty() {
         let tmp = TempDir::new().unwrap();
-        assert!(!has_corrupt_state(tmp.path()),
-            "fresh empty dir must not be corrupt");
+        assert!(
+            !has_corrupt_state(tmp.path()),
+            "fresh empty dir must not be corrupt"
+        );
     }
 
     #[test]
@@ -531,8 +609,10 @@ mod tests {
         std::fs::write(tmp.path().join(".district_summary.tmp.csv"), b"x").unwrap();
         // has_corrupt_state only checks the three JSON temps — district_summary tmp is extra
         clean_corrupt_state(tmp.path()).unwrap();
-        assert!(!tmp.path().join(".district_summary.tmp.csv").exists(),
-            "district_summary tmp must be removed by clean_corrupt_state");
+        assert!(
+            !tmp.path().join(".district_summary.tmp.csv").exists(),
+            "district_summary tmp must be removed by clean_corrupt_state"
+        );
     }
 
     // -- district_summary helpers --------------------------------------------
@@ -542,8 +622,10 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         write_district_summary(tmp.path(), &[]).unwrap();
         // When rows is empty, no file is written
-        assert!(!tmp.path().join("district_summary.csv").exists(),
-            "empty rows must not create CSV file");
+        assert!(
+            !tmp.path().join("district_summary.csv").exists(),
+            "empty rows must not create CSV file"
+        );
     }
 
     #[test]
@@ -560,7 +642,10 @@ mod tests {
         let lines: Vec<&str> = content.lines().collect();
         assert_eq!(lines.len(), 3, "header + 2 data rows");
         // The second data row must have a trailing comma or empty value for missing column
-        assert!(lines[2].contains(','), "row with missing column must still have comma separator");
+        assert!(
+            lines[2].contains(','),
+            "row with missing column must still have comma separator"
+        );
     }
 
     #[test]
@@ -591,7 +676,7 @@ mod tests {
         // Must have all four required provenance fields
         assert!(val["version"].is_string());
         assert!(val["build_commit"].is_string());
-        assert!(val["redist_build_date"].is_string());
+        assert!(val["bisect_build_date"].is_string());
         assert!(val["rustc_version"].is_string());
     }
 
@@ -601,27 +686,38 @@ mod tests {
         write_state_outputs(tmp.path(), &sample_assignments(), None).unwrap();
         let content = std::fs::read_to_string(tmp.path().join("final_assignments.json")).unwrap();
         let v: serde_json::Value = serde_json::from_str(&content).unwrap();
-        assert!(v.is_object(), "final_assignments.json must be a JSON object");
+        assert!(
+            v.is_object(),
+            "final_assignments.json must be a JSON object"
+        );
     }
 
     #[test]
     fn test_output_error_display_directory_missing() {
         let err = OutputError::DirectoryMissing(PathBuf::from("/bad/path"));
         let msg = err.to_string();
-        assert!(msg.contains("bad/path") || msg.contains("bad\\path"),
-            "error message must include path: {msg}");
-        assert!(msg.contains("does not exist"),
-            "error message must say does not exist: {msg}");
+        assert!(
+            msg.contains("bad/path") || msg.contains("bad\\path"),
+            "error message must include path: {msg}"
+        );
+        assert!(
+            msg.contains("does not exist"),
+            "error message must say does not exist: {msg}"
+        );
     }
 
     #[test]
     fn test_output_error_display_corrupt_state() {
         let err = OutputError::CorruptState(PathBuf::from("/tmp/.final_assignments.tmp.json"));
         let msg = err.to_string();
-        assert!(msg.contains("corrupt") || msg.contains("temp"),
-            "CorruptState error must mention corrupt/temp: {msg}");
-        assert!(msg.contains("clean_corrupt_state") || msg.contains("--reset"),
-            "CorruptState error must mention recovery path: {msg}");
+        assert!(
+            msg.contains("corrupt") || msg.contains("temp"),
+            "CorruptState error must mention corrupt/temp: {msg}"
+        );
+        assert!(
+            msg.contains("clean_corrupt_state") || msg.contains("--reset"),
+            "CorruptState error must mention recovery path: {msg}"
+        );
     }
 
     // ── 8 bonus tests ───────────────────────────────────────────────────────
@@ -653,16 +749,20 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         write_state_outputs(tmp.path(), &sample_assignments(), None).unwrap();
         // Without VRA, vra_analysis.json must NOT be created
-        assert!(!tmp.path().join("vra_analysis.json").exists(),
-            "vra_analysis.json must not exist when vra=None");
+        assert!(
+            !tmp.path().join("vra_analysis.json").exists(),
+            "vra_analysis.json must not exist when vra=None"
+        );
     }
 
     #[test]
     fn test_has_corrupt_state_only_provenance_tmp() {
         let tmp = TempDir::new().unwrap();
         std::fs::write(tmp.path().join(".provenance.tmp.json"), b"x").unwrap();
-        assert!(has_corrupt_state(tmp.path()),
-            "only provenance tmp must still register as corrupt");
+        assert!(
+            has_corrupt_state(tmp.path()),
+            "only provenance tmp must still register as corrupt"
+        );
     }
 
     #[test]
@@ -683,7 +783,10 @@ mod tests {
         write_state_outputs(tmp.path(), &sample_assignments(), Some(&sample_vra())).unwrap();
         let content = std::fs::read_to_string(tmp.path().join("final_assignments.json")).unwrap();
         let v: serde_json::Value = serde_json::from_str(&content).unwrap();
-        assert!(v.is_object(), "final_assignments.json must be a JSON object, not array");
+        assert!(
+            v.is_object(),
+            "final_assignments.json must be a JSON object, not array"
+        );
     }
 
     #[test]
@@ -702,9 +805,13 @@ mod tests {
     fn test_output_error_json_message() {
         let err = OutputError::Json("unexpected end of file".to_string());
         let msg = err.to_string();
-        assert!(msg.contains("JSON") || msg.contains("serialization"),
-            "Json error must mention JSON: {msg}");
-        assert!(msg.contains("unexpected end of file"),
-            "Json error must include original message: {msg}");
+        assert!(
+            msg.contains("JSON") || msg.contains("serialization"),
+            "Json error must mention JSON: {msg}"
+        );
+        assert!(
+            msg.contains("unexpected end of file"),
+            "Json error must include original message: {msg}"
+        );
     }
 }

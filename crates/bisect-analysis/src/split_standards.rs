@@ -36,16 +36,14 @@ pub fn get_split_standard(state_code: &str) -> Option<SplitStandard> {
             subdivision_term: "county".into(),
             subdivision_term_plural: "counties".into(),
             legal_standard: "CA Const. Art. XXI §2(d) — minimize county and city splits".into(),
-            compliance_assessment_template:
-                "{n} county splits, {m} city splits present".into(),
+            compliance_assessment_template: "{n} county splits, {m} city splits present".into(),
             disclaimer: "Legal compliance determination requires counsel".into(),
         }),
         "TX" => Some(SplitStandard {
             state_code: "TX".into(),
             subdivision_term: "county".into(),
             subdivision_term_plural: "counties".into(),
-            legal_standard:
-                "TX Const. Art. III §26 — counties preserved where practicable".into(),
+            legal_standard: "TX Const. Art. III §26 — counties preserved where practicable".into(),
             compliance_assessment_template: "{n} county splits present".into(),
             disclaimer: "Legal compliance determination requires counsel".into(),
         }),
@@ -71,7 +69,7 @@ pub fn get_split_standard(state_code: &str) -> Option<SplitStandard> {
             compliance_assessment_template:
                 "{n} splits present across counties and independent cities (133 total entities). \
                  VA Const. requires preserving both."
-                .into(),
+                    .into(),
             disclaimer: "Legal compliance determination requires counsel. \
                 Virginia's independent cities are distinct jurisdictions with no \
                 county affiliation — they must be preserved on equal footing with counties."
@@ -185,7 +183,11 @@ mod tests {
     fn test_standard_always_includes_disclaimer() {
         for state in &["WA", "CA", "TX", "CO", "VT"] {
             let s = get_split_standard(state).unwrap();
-            assert!(!s.disclaimer.is_empty(), "State {} must have a disclaimer field", state);
+            assert!(
+                !s.disclaimer.is_empty(),
+                "State {} must have a disclaimer field",
+                state
+            );
             assert!(
                 s.disclaimer.contains("counsel") || s.disclaimer.contains("consult"),
                 "Disclaimer must recommend legal counsel for state {}",
@@ -244,7 +246,10 @@ mod tests {
         // The legal standard must document this to prevent practitioners from
         // only counting counties and missing the 38 independent cities.
         let s = get_split_standard("VA").unwrap();
-        let full_text = format!("{} {} {}", s.legal_standard, s.disclaimer, s.compliance_assessment_template);
+        let full_text = format!(
+            "{} {} {}",
+            s.legal_standard, s.disclaimer, s.compliance_assessment_template
+        );
         assert!(
             full_text.contains("133") || full_text.contains("38"),
             "VA standard must document 133 total entities (95 counties + 38 cities)"

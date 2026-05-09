@@ -113,11 +113,7 @@ mod tests {
     #[test]
     fn test_allow_noncontiguous_suppresses_bit1() {
         let code = compute_exit_code_with_flags(
-            true,
-            true,
-            false,
-            false,
-            /*allow_noncontiguous=*/ true,
+            true, true, false, false, /*allow_noncontiguous=*/ true,
             /*allow_imbalance=*/ false,
         );
         // bit 1 (contiguity=2) suppressed; only bit 0 (balance=1) remains
@@ -127,11 +123,7 @@ mod tests {
     #[test]
     fn test_allow_imbalance_suppresses_bit0() {
         let code = compute_exit_code_with_flags(
-            true,
-            false,
-            false,
-            false,
-            /*allow_noncontiguous=*/ false,
+            true, false, false, false, /*allow_noncontiguous=*/ false,
             /*allow_imbalance=*/ true,
         );
         assert_eq!(code, 0);
@@ -158,15 +150,17 @@ mod tests {
         // Simulate: optional data missing (demographics/election) → missing_optional_data=true
         //           required data present                         → missing_data=false
         let missing_data = false; // adjacency present (required data OK)
-        // missing_optional_data is tracked separately and does NOT enter compute_exit_code
+                                  // missing_optional_data is tracked separately and does NOT enter compute_exit_code
         let exit_code = compute_exit_code(
-            false, // balance_violation
-            false, // contiguity_violation
-            false, // nesting_violation
+            false,        // balance_violation
+            false,        // contiguity_violation
+            false,        // nesting_violation
             missing_data, // only required-data flag goes here
         );
-        assert_eq!(exit_code, 0,
-            "exit code must be 0 when only optional data (election/demographics) is missing");
+        assert_eq!(
+            exit_code, 0,
+            "exit code must be 0 when only optional data (election/demographics) is missing"
+        );
     }
 
     #[test]
@@ -174,7 +168,9 @@ mod tests {
         // When REQUIRED data (adjacency) is missing, exit code must be non-zero (bit 3 = 8).
         let missing_data = true; // adjacency not available
         let exit_code = compute_exit_code(false, false, false, missing_data);
-        assert_eq!(exit_code, 8,
-            "missing required data (adjacency) must set exit code bit 3 (value 8)");
+        assert_eq!(
+            exit_code, 8,
+            "missing required data (adjacency) must set exit code bit 3 (value 8)"
+        );
     }
 }

@@ -1,14 +1,14 @@
 """
-L2 acceptance tests for: redist compare, redist export, redist policy, redist report.
+L2 acceptance tests for: BISECT compare, BISECT export, BISECT policy, BISECT report.
 
 These tests cover commands not yet exercised by earlier L2 files:
-  - redist policy  (state_policy.json lookup, table and JSON output)
-  - redist export  (CSV and GerryChain from the existing ChamberTest plan)
-  - redist compare (Jaccard similarity between plans)
-  - redist report  (JSON/HTML from the existing ChamberTest VT plan)
+  - BISECT policy  (state_policy.json lookup, table and JSON output)
+  - BISECT export  (CSV and GerryChain from the existing ChamberTest plan)
+  - BISECT compare (Jaccard similarity between plans)
+  - BISECT report  (JSON/HTML from the existing ChamberTest VT plan)
 
 Requires:
-  - redist binary built: cargo build -p redist-cli --release
+  - BISECT binary built: cargo build -p bisect-cli --release
   - VT plan at outputs/ChamberTest/2020/plans/vt_cong_chamber_test/ (created by L2 acceptance test)
 
 The existing plan at outputs/ChamberTest/2020/plans/vt_cong_chamber_test/ is used
@@ -30,9 +30,9 @@ import pytest
 # ---------------------------------------------------------------------------
 
 BINARY = (
-    Path("redist/target/release/redist.exe")
+    Path("target/release/bisect.exe")
     if sys.platform == "win32"
-    else Path("redist/target/release/redist")
+    else Path("target/release/bisect")
 )
 BASE_DIR = Path(".")
 
@@ -54,7 +54,7 @@ def existing_plan_ready() -> bool:
 
 skip_no_binary = pytest.mark.skipif(
     not binary_available(),
-    reason="redist binary not built — run: cargo build -p redist-cli --release",
+    reason="BISECT binary not built — run: cargo build -p bisect-cli --release",
 )
 skip_no_plan = pytest.mark.skipif(
     not existing_plan_ready(),
@@ -66,7 +66,7 @@ skip_no_plan = pytest.mark.skipif(
 
 
 def run_cmd(args: list, check: bool = False) -> subprocess.CompletedProcess:
-    """Run a redist sub-command, capturing all output."""
+    """Run a BISECT sub-command, capturing all output."""
     return subprocess.run(
         [str(BINARY)] + args,
         capture_output=True,
@@ -77,13 +77,13 @@ def run_cmd(args: list, check: bool = False) -> subprocess.CompletedProcess:
 
 
 # ---------------------------------------------------------------------------
-# redist policy
+# BISECT policy
 # ---------------------------------------------------------------------------
 
 
 @skip_no_binary
 class TestRedistPolicy:
-    """redist policy — reads state_policy.json embedded in the binary."""
+    """BISECT policy — reads state_policy.json embedded in the binary."""
 
     def test_policy_la_shows_parishes(self):
         r = run_cmd(["policy", "--state", "LA"])
@@ -177,14 +177,14 @@ class TestRedistPolicy:
 
 
 # ---------------------------------------------------------------------------
-# redist export (ChamberTest VT plan)
+# BISECT export (ChamberTest VT plan)
 # ---------------------------------------------------------------------------
 
 
 @skip_no_binary
 @skip_no_plan
 class TestRedistExport:
-    """redist export — produces CSV and GerryChain JSON from the existing VT plan."""
+    """BISECT export — produces CSV and GerryChain JSON from the existing VT plan."""
 
     def _export(self, tmp_path: Path, fmt: str) -> subprocess.CompletedProcess:
         return run_cmd(
@@ -273,14 +273,14 @@ class TestRedistExport:
 
 
 # ---------------------------------------------------------------------------
-# redist compare (ChamberTest VT plan vs itself)
+# BISECT compare (ChamberTest VT plan vs itself)
 # ---------------------------------------------------------------------------
 
 
 @skip_no_binary
 @skip_no_plan
 class TestRedistCompare:
-    """redist compare — Jaccard similarity between plans."""
+    """BISECT compare — Jaccard similarity between plans."""
 
     def _compare(self, plan_a: str, plan_b: str, fmt: str = "table", extra: list = None) -> subprocess.CompletedProcess:
         cmd = [
@@ -381,14 +381,14 @@ class TestRedistCompare:
 
 
 # ---------------------------------------------------------------------------
-# redist report (ChamberTest VT plan)
+# BISECT report (ChamberTest VT plan)
 # ---------------------------------------------------------------------------
 
 
 @skip_no_binary
 @skip_no_plan
 class TestRedistReport:
-    """redist report — generates JSON and HTML commission reports."""
+    """BISECT report — generates JSON and HTML commission reports."""
 
     @classmethod
     def setup_class(cls):

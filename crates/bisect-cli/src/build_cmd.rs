@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 /// build_cmd.rs — `bisect build X` implementation (Spec 7 Phase 2).
 ///
 /// Orchestrates a label-based multi-year redistricting run.
@@ -12,12 +13,13 @@
 /// reports/{label}/{year}/          ← cascade-invalidated on --force
 /// ```
 use std::path::PathBuf;
-use std::collections::HashMap;
 
 use crate::algo_config::AlgoYaml;
-use crate::label::{validate_label_name, year_runs_dir, year_analysis_dir, year_reports_dir, state_runs_dir};
+use crate::label::{
+    state_runs_dir, validate_label_name, year_analysis_dir, year_reports_dir, year_runs_dir,
+};
 use crate::run_registry::Registry;
-use crate::runner::{load_all_states, run_states_parallel, StateConfig, AlgorithmConfig};
+use crate::runner::{load_all_states, run_states_parallel, AlgorithmConfig, StateConfig};
 
 // ---------------------------------------------------------------------------
 // BuildArgs
@@ -51,8 +53,10 @@ pub struct BuildArgs {
 
 /// Clap derive struct for `bisect build` — see `Commands::Build` in args.rs.
 #[derive(Debug, clap::Args)]
-#[command(disable_version_flag = true,
-          about = "Build (run redistricting) for a label across one or more census years")]
+#[command(
+    disable_version_flag = true,
+    about = "Build (run redistricting) for a label across one or more census years"
+)]
 pub struct BuildCliArgs {
     /// Label name (e.g., official_proposal).
     pub label: String,
@@ -93,9 +97,9 @@ pub struct BuildCliArgs {
 impl BuildCliArgs {
     /// Convert into a `BuildArgs`, resolving the config path default.
     pub fn into_build_args(self) -> BuildArgs {
-        let config = self.config.unwrap_or_else(|| {
-            PathBuf::from("configs").join(format!("{}.yml", self.label))
-        });
+        let config = self
+            .config
+            .unwrap_or_else(|| PathBuf::from("configs").join(format!("{}.yml", self.label)));
         BuildArgs {
             label: self.label,
             config,
@@ -134,7 +138,7 @@ pub struct BuildSummary {
 /// `runs/{label}/{year}/index.json` — build provenance record.
 ///
 /// Written after every successful (or partial) build so that downstream
-/// commands (`bisect analyze`, `redist report`) can verify provenance.
+/// commands (`bisect analyze`, `BISECT report`) can verify provenance.
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct BuildIndex {
     pub label: String,
@@ -211,16 +215,22 @@ pub fn run_build(args: BuildArgs) -> Result<(), String> {
 
             // Cascade-delete analysis and reports for this year.
             let analysis_year = year_analysis_dir(label, year);
-            let reports_year  = year_reports_dir(label, year);
+            let reports_year = year_reports_dir(label, year);
             if analysis_year.exists() {
                 std::fs::remove_dir_all(&analysis_year).map_err(|e| {
-                    format!("[INTERNAL] build: failed to remove '{}': {e}", analysis_year.display())
+                    format!(
+                        "[INTERNAL] build: failed to remove '{}': {e}",
+                        analysis_year.display()
+                    )
                 })?;
                 eprintln!("[build] removed: {}", analysis_year.display());
             }
             if reports_year.exists() {
                 std::fs::remove_dir_all(&reports_year).map_err(|e| {
-                    format!("[INTERNAL] build: failed to remove '{}': {e}", reports_year.display())
+                    format!(
+                        "[INTERNAL] build: failed to remove '{}': {e}",
+                        reports_year.display()
+                    )
                 })?;
                 eprintln!("[build] removed: {}", reports_year.display());
             }
@@ -248,11 +258,8 @@ pub fn run_build(args: BuildArgs) -> Result<(), String> {
         let all_states = load_all_states(year)?;
 
         // Normalise the state filter to uppercase for comparison.
-        let state_filter: std::collections::HashSet<String> = args
-            .states
-            .iter()
-            .map(|s| s.to_uppercase())
-            .collect();
+        let state_filter: std::collections::HashSet<String> =
+            args.states.iter().map(|s| s.to_uppercase()).collect();
 
         let configs: Vec<StateConfig> = all_states
             .into_iter()
@@ -267,7 +274,7 @@ pub fn run_build(args: BuildArgs) -> Result<(), String> {
                     name.clone(),
                     districts,
                     year.clone(),
-                    label.clone(),   // version field repurposed as label in bulk builds
+                    label.clone(), // version field repurposed as label in bulk builds
                     output_dir,
                     (i + 2) as i32,
                 );
@@ -301,10 +308,8 @@ pub fn run_build(args: BuildArgs) -> Result<(), String> {
         let results = run_states_parallel(configs.clone(), workers);
 
         let succeeded = results.iter().filter(|r| r.success).count();
-        let failed    = results.iter().filter(|r| !r.success).count();
-        eprintln!(
-            "[build] {label}/{year} complete: {succeeded} succeeded, {failed} failed"
-        );
+        let failed = results.iter().filter(|r| !r.success).count();
+        eprintln!("[build] {label}/{year} complete: {succeeded} succeeded, {failed} failed");
 
         for r in results.iter().filter(|r| !r.success) {
             eprintln!(
@@ -357,10 +362,8 @@ pub fn build_build_index(
     results: &[crate::runner::StateResult],
 ) -> Result<BuildIndex, String> {
     // Build a lookup from state_code → StateResult.
-    let result_map: HashMap<String, &crate::runner::StateResult> = results
-        .iter()
-        .map(|r| (r.state_code.clone(), r))
-        .collect();
+    let result_map: HashMap<String, &crate::runner::StateResult> =
+        results.iter().map(|r| (r.state_code.clone(), r)).collect();
 
     // Build per-state entries using state_name (lowercase) as the key.
     let mut state_entries: HashMap<String, StateIndexEntry> = HashMap::new();
@@ -368,33 +371,42 @@ pub fn build_build_index(
         let key = cfg.state_name.clone();
         match result_map.get(&cfg.state_code) {
             Some(r) if r.success => {
-                state_entries.insert(key, StateIndexEntry {
-                    status: "ok".to_string(),
-                    districts: Some(cfg.num_districts),
-                    error: None,
-                });
+                state_entries.insert(
+                    key,
+                    StateIndexEntry {
+                        status: "ok".to_string(),
+                        districts: Some(cfg.num_districts),
+                        error: None,
+                    },
+                );
             }
             Some(r) => {
-                state_entries.insert(key, StateIndexEntry {
-                    status: "failed".to_string(),
-                    districts: Some(cfg.num_districts),
-                    error: r.error.clone(),
-                });
+                state_entries.insert(
+                    key,
+                    StateIndexEntry {
+                        status: "failed".to_string(),
+                        districts: Some(cfg.num_districts),
+                        error: r.error.clone(),
+                    },
+                );
             }
             None => {
                 // State was in the config list but produced no result (shouldn't happen).
-                state_entries.insert(key, StateIndexEntry {
-                    status: "missing".to_string(),
-                    districts: Some(cfg.num_districts),
-                    error: Some("no result returned from runner".to_string()),
-                });
+                state_entries.insert(
+                    key,
+                    StateIndexEntry {
+                        status: "missing".to_string(),
+                        districts: Some(cfg.num_districts),
+                        error: Some("no result returned from runner".to_string()),
+                    },
+                );
             }
         }
     }
 
-    let total     = results.len();
+    let total = results.len();
     let succeeded = results.iter().filter(|r| r.success).count();
-    let failed    = total - succeeded;
+    let failed = total - succeeded;
 
     // Snapshot the algorithm section as a JSON value for the index.
     let algo_section = algorithm_section_to_json(yaml);
@@ -419,7 +431,11 @@ pub fn build_build_index(
         config_sha256: config_sha256.to_string(),
         algorithm: algo_section,
         states: state_entries,
-        summary: BuildSummary { total, succeeded, failed },
+        summary: BuildSummary {
+            total,
+            succeeded,
+            failed,
+        },
     })
 }
 
@@ -427,7 +443,10 @@ pub fn build_build_index(
 fn algorithm_section_to_json(yaml: &AlgoYaml) -> serde_json::Value {
     let sec = &yaml.algorithm;
     let mut map = serde_json::Map::new();
-    map.insert("structure".to_string(), serde_json::Value::String(sec.structure.clone()));
+    map.insert(
+        "structure".to_string(),
+        serde_json::Value::String(sec.structure.clone()),
+    );
     if let Some(w) = &sec.weights {
         map.insert("weights".to_string(), serde_json::Value::String(w.clone()));
     }
@@ -469,9 +488,9 @@ fn algorithm_section_to_json(yaml: &AlgoYaml) -> serde_json::Value {
 /// Avoids pulling in `chrono` for a single timestamp in the build index.
 /// Accurate for 2000-2100 (all census years used by this project).
 fn unix_to_ymd_hms(secs: u64) -> (u64, u64, u64, u64, u64, u64) {
-    let s   = secs % 60;
+    let s = secs % 60;
     let min = (secs / 60) % 60;
-    let h   = (secs / 3600) % 24;
+    let h = (secs / 3600) % 24;
     // Days since Unix epoch
     let days = secs / 86400;
     // Gregorian calendar calculation — valid for modern dates.
@@ -606,8 +625,8 @@ years: ["2020"]
             no_interactive: false,
         };
         // dry_run tries to access the registry (to check already-built),
-        // which uses the CWD .redist file. In a clean directory there's no
-        // .redist, so Registry::get returns Ok(None) — year is not built.
+        // which uses the CWD .bisect file. In a clean directory there's no
+        // .bisect, so Registry::get returns Ok(None) — year is not built.
         // Then the dry_run branch fires and returns Ok(()).
         //
         // This confirms the dry_run path doesn't crash and doesn't try to
@@ -615,7 +634,11 @@ years: ["2020"]
         // We can't verify the directory isn't created without controlling the CWD,
         // but the code path correctness is verified by the Ok(()) return.
         let result = run_build(args);
-        assert!(result.is_ok(), "dry_run must not error for valid label+config: {:?}", result);
+        assert!(
+            result.is_ok(),
+            "dry_run must not error for valid label+config: {:?}",
+            result
+        );
     }
 
     // ── Test 5: config sha256 is 64-char hex ──────────────────────────────────
@@ -640,7 +663,7 @@ years: ["2020"]
     fn test_config_sha256_in_build_index() {
         let f = write_yaml(MINIMAL_YAML);
         let yaml = AlgoYaml::from_file(f.path()).unwrap();
-        let sha  = AlgoYaml::file_sha256(f.path()).unwrap();
+        let sha = AlgoYaml::file_sha256(f.path()).unwrap();
 
         let index = build_build_index(
             "my_plan",
@@ -649,7 +672,8 @@ years: ["2020"]
             &yaml,
             &[], // no states — empty run
             &[], // no results
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(
             index.config_sha256, sha,
@@ -663,7 +687,7 @@ years: ["2020"]
     fn test_state_config_output_dir_convention() {
         // Verify that the output_dir we would construct follows label.rs conventions.
         let label = "official_proposal";
-        let year  = "2020";
+        let year = "2020";
         let state_name = "vermont";
 
         let expected = state_runs_dir(label, year, state_name);
@@ -693,12 +717,18 @@ years: ["2020"]
 
         // force=true: invalidation should run
         let force_on = true;
-        assert!(already_built && force_on, "force path: invalidate_year must be called");
+        assert!(
+            already_built && force_on,
+            "force path: invalidate_year must be called"
+        );
 
         // force=false: skip branch fires, invalidation does NOT run
         let force_off = false;
         let invalidation_runs = already_built && force_off;
-        assert!(!invalidation_runs, "no-force path: invalidate_year must NOT be called");
+        assert!(
+            !invalidation_runs,
+            "no-force path: invalidate_year must NOT be called"
+        );
     }
 
     // ── Test 9: build index has expected fields ────────────────────────────────
@@ -707,21 +737,17 @@ years: ["2020"]
     fn test_build_index_required_fields() {
         let f = write_yaml(MINIMAL_YAML);
         let yaml = AlgoYaml::from_file(f.path()).unwrap();
-        let sha  = AlgoYaml::file_sha256(f.path()).unwrap();
+        let sha = AlgoYaml::file_sha256(f.path()).unwrap();
 
-        let index = build_build_index(
-            "official_proposal",
-            "2020",
-            &sha,
-            &yaml,
-            &[],
-            &[],
-        ).unwrap();
+        let index = build_build_index("official_proposal", "2020", &sha, &yaml, &[], &[]).unwrap();
 
         assert_eq!(index.label, "official_proposal");
-        assert_eq!(index.year,  "2020");
+        assert_eq!(index.year, "2020");
         assert!(!index.version.is_empty(), "version must not be empty");
-        assert!(!index.config_sha256.is_empty(), "config_sha256 must not be empty");
+        assert!(
+            !index.config_sha256.is_empty(),
+            "config_sha256 must not be empty"
+        );
         // Timestamp must look like an ISO 8601 datetime.
         assert!(
             index.created.contains('T') && index.created.ends_with('Z'),
@@ -738,18 +764,44 @@ years: ["2020"]
 
         let f = write_yaml(MINIMAL_YAML);
         let yaml = AlgoYaml::from_file(f.path()).unwrap();
-        let sha  = AlgoYaml::file_sha256(f.path()).unwrap();
+        let sha = AlgoYaml::file_sha256(f.path()).unwrap();
 
         // Two mock results: one success, one failure.
         let results = vec![
-            StateResult { state_code: "VT".into(), success: true,  error: None,                  elapsed_ms: 100 },
-            StateResult { state_code: "CA".into(), success: false, error: Some("oops".into()), elapsed_ms: 200 },
+            StateResult {
+                state_code: "VT".into(),
+                success: true,
+                error: None,
+                elapsed_ms: 100,
+            },
+            StateResult {
+                state_code: "CA".into(),
+                success: false,
+                error: Some("oops".into()),
+                elapsed_ms: 200,
+            },
         ];
 
         // Two matching StateConfigs (state_name maps to lowercase state_code for this test).
         let cfgs: Vec<StateConfig> = vec![
-            StateConfig::new_bulk("VT".into(), "vermont".into(),    1, "2020".into(), "lbl".into(), PathBuf::from("runs/lbl/2020/vermont"), 1),
-            StateConfig::new_bulk("CA".into(), "california".into(), 52, "2020".into(), "lbl".into(), PathBuf::from("runs/lbl/2020/california"), 2),
+            StateConfig::new_bulk(
+                "VT".into(),
+                "vermont".into(),
+                1,
+                "2020".into(),
+                "lbl".into(),
+                PathBuf::from("runs/lbl/2020/vermont"),
+                1,
+            ),
+            StateConfig::new_bulk(
+                "CA".into(),
+                "california".into(),
+                52,
+                "2020".into(),
+                "lbl".into(),
+                PathBuf::from("runs/lbl/2020/california"),
+                2,
+            ),
         ];
 
         let index = build_build_index("lbl", "2020", &sha, &yaml, &cfgs, &results).unwrap();
@@ -773,19 +825,23 @@ years: ["2020"]
     #[test]
     fn test_unix_to_ymd_hms_epoch() {
         let (y, mo, d, h, mi, s) = unix_to_ymd_hms(0);
-        assert_eq!((y, mo, d, h, mi, s), (1970, 1, 1, 0, 0, 0), "epoch must be 1970-01-01");
+        assert_eq!(
+            (y, mo, d, h, mi, s),
+            (1970, 1, 1, 0, 0, 0),
+            "epoch must be 1970-01-01"
+        );
     }
 
     #[test]
     fn test_unix_to_ymd_hms_known_date() {
         // 2020-01-01 00:00:00 UTC = 1577836800
         let (y, mo, d, h, mi, s) = unix_to_ymd_hms(1_577_836_800);
-        assert_eq!(y,  2020, "year");
-        assert_eq!(mo, 1,    "month");
-        assert_eq!(d,  1,    "day");
-        assert_eq!(h,  0,    "hour");
-        assert_eq!(mi, 0,    "minute");
-        assert_eq!(s,  0,    "second");
+        assert_eq!(y, 2020, "year");
+        assert_eq!(mo, 1, "month");
+        assert_eq!(d, 1, "day");
+        assert_eq!(h, 0, "hour");
+        assert_eq!(mi, 0, "minute");
+        assert_eq!(s, 0, "second");
     }
 
     // ── Test 12: algorithm section JSON contains structure key ─────────────────
@@ -795,7 +851,9 @@ years: ["2020"]
         let f = write_yaml(MINIMAL_YAML);
         let yaml = AlgoYaml::from_file(f.path()).unwrap();
         let val = algorithm_section_to_json(&yaml);
-        let obj = val.as_object().expect("algorithm section must be a JSON object");
+        let obj = val
+            .as_object()
+            .expect("algorithm section must be a JSON object");
         assert!(
             obj.contains_key("structure"),
             "algorithm JSON must contain 'structure' key: {val:?}"
@@ -839,14 +897,17 @@ years: ["2020"]
     fn test_already_built_without_force_prints_config_hint() {
         // Simulate the message produced inside run_build's "already built, no force" branch.
         let label = "my_plan";
-        let year  = "2020";
+        let year = "2020";
         let msg = format!(
             "[CONFIG] build: '{label}/{year}' already exists in the registry.\n\
              Use --force to overwrite and re-run."
         );
-        assert!(msg.contains("[CONFIG]"),     "must have [CONFIG] prefix: {msg}");
-        assert!(msg.contains("my_plan/2020"), "must mention label/year: {msg}");
-        assert!(msg.contains("--force"),      "must mention --force flag: {msg}");
+        assert!(msg.contains("[CONFIG]"), "must have [CONFIG] prefix: {msg}");
+        assert!(
+            msg.contains("my_plan/2020"),
+            "must mention label/year: {msg}"
+        );
+        assert!(msg.contains("--force"), "must mention --force flag: {msg}");
     }
 
     // ── Test 15: build_build_index with failed states records error text ──────
@@ -857,22 +918,23 @@ years: ["2020"]
 
         let f = write_yaml(MINIMAL_YAML);
         let yaml = AlgoYaml::from_file(f.path()).unwrap();
-        let sha  = AlgoYaml::file_sha256(f.path()).unwrap();
+        let sha = AlgoYaml::file_sha256(f.path()).unwrap();
 
-        let results = vec![
-            StateResult {
-                state_code: "TX".into(),
-                success: false,
-                error: Some("METIS failed with exit code 127".into()),
-                elapsed_ms: 500,
-            },
-        ];
-        let cfgs: Vec<StateConfig> = vec![
-            StateConfig::new_bulk(
-                "TX".into(), "texas".into(), 38, "2020".into(), "lbl".into(),
-                PathBuf::from("runs/lbl/2020/texas"), 1
-            ),
-        ];
+        let results = vec![StateResult {
+            state_code: "TX".into(),
+            success: false,
+            error: Some("METIS failed with exit code 127".into()),
+            elapsed_ms: 500,
+        }];
+        let cfgs: Vec<StateConfig> = vec![StateConfig::new_bulk(
+            "TX".into(),
+            "texas".into(),
+            38,
+            "2020".into(),
+            "lbl".into(),
+            PathBuf::from("runs/lbl/2020/texas"),
+            1,
+        )];
 
         let index = build_build_index("lbl", "2020", &sha, &yaml, &cfgs, &results).unwrap();
         assert_eq!(index.states["texas"].status, "failed");
@@ -889,13 +951,16 @@ years: ["2020"]
     fn test_build_index_empty_run_has_zero_summary() {
         let f = write_yaml(MINIMAL_YAML);
         let yaml = AlgoYaml::from_file(f.path()).unwrap();
-        let sha  = AlgoYaml::file_sha256(f.path()).unwrap();
+        let sha = AlgoYaml::file_sha256(f.path()).unwrap();
 
         let index = build_build_index("lbl", "2020", &sha, &yaml, &[], &[]).unwrap();
-        assert_eq!(index.summary.total,     0);
+        assert_eq!(index.summary.total, 0);
         assert_eq!(index.summary.succeeded, 0);
-        assert_eq!(index.summary.failed,    0);
-        assert!(index.states.is_empty(), "states map must be empty for empty run");
+        assert_eq!(index.summary.failed, 0);
+        assert!(
+            index.states.is_empty(),
+            "states map must be empty for empty run"
+        );
     }
 
     // ── Test 17: days_to_ymd — known leap year date ───────────────────────────
@@ -919,10 +984,19 @@ years: ["2020"]
         let obj = val.as_object().expect("must be object");
 
         // Keys that were not set in MINIMAL_YAML must be absent
-        assert!(!obj.contains_key("alpha_county"),          "alpha_county must be absent when not set");
-        assert!(!obj.contains_key("convergence_threshold"), "convergence_threshold must be absent");
-        assert!(!obj.contains_key("seeds"),                 "seeds must be absent");
-        assert!(!obj.contains_key("balance_tolerance"),     "balance_tolerance must be absent");
+        assert!(
+            !obj.contains_key("alpha_county"),
+            "alpha_county must be absent when not set"
+        );
+        assert!(
+            !obj.contains_key("convergence_threshold"),
+            "convergence_threshold must be absent"
+        );
+        assert!(!obj.contains_key("seeds"), "seeds must be absent");
+        assert!(
+            !obj.contains_key("balance_tolerance"),
+            "balance_tolerance must be absent"
+        );
     }
 
     // ── Test 19: BuildCliArgs with explicit config path ───────────────────────
@@ -941,8 +1015,11 @@ years: ["2020"]
             no_interactive: true,
         };
         let args = cli.into_build_args();
-        assert_eq!(args.config, explicit, "explicit config path must be preserved");
-        assert!(args.force,          "force flag must be preserved");
+        assert_eq!(
+            args.config, explicit,
+            "explicit config path must be preserved"
+        );
+        assert!(args.force, "force flag must be preserved");
         assert!(args.no_interactive, "no_interactive flag must be preserved");
         assert_eq!(args.workers, Some(8), "workers must be preserved");
     }

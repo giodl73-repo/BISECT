@@ -1,10 +1,10 @@
-# The `redist` Fairness Doctrine
+# The `BISECT` Fairness Doctrine
 
 **Status:** v1, 2026-04-30
 **Audience:** litigators preparing redistricting cases, expert witnesses, special masters, journalists evaluating claims about this tool, civic-advocacy groups, opposing counsel.
-**Companion docs:** `docs/legal/CALLAIS_REFERENCE.md` (race-related grounding), `docs/file-formats/manifests.md` (chain of custody), `docs/REDIST_CLI.md` (the user-facing surface).
+**Companion docs:** `docs/legal/CALLAIS_REFERENCE.md` (race-related grounding), `docs/file-formats/manifests.md` (chain of custody), `docs/BISECT_CLI.md` (the user-facing surface).
 
-This document states what the `redist` toolchain claims about fairness, what it does not claim, and what a court can verify. It is the citable artifact for the project's neutrality posture.
+This document states what the `BISECT` toolchain claims about fairness, what it does not claim, and what a court can verify. It is the citable artifact for the project's neutrality posture.
 
 If you are arguing that this tool is biased, **read §6 first** — it lists the things this project explicitly does not claim. Many criticisms aimed at "computational redistricting" generally do not apply to this project specifically because we do not assert them.
 
@@ -12,11 +12,11 @@ If you are arguing that this tool is biased, **read §6 first** — it lists the
 
 ## 1. The procedural-fairness claim
 
-The `redist` recursive-bisection algorithm is **procedurally neutral by construction**: it takes a tract adjacency graph and per-tract population as input, and produces a partition into N districts. Five properties make this neutrality verifiable.
+The `BISECT` recursive-bisection algorithm is **procedurally neutral by construction**: it takes a tract adjacency graph and per-tract population as input, and produces a partition into N districts. Five properties make this neutrality verifiable.
 
 ### 1.1 Input minimality
 
-The core bisection (`redist/crates/bisect-core/src/bisection.rs`) sees ONLY:
+The core bisection (`BISECT/crates/bisect-core/src/bisection.rs`) sees ONLY:
 
 - The tract adjacency graph (pairs of tracts that share a non-trivial border)
 - Per-tract total population (or VAP/CVAP when the operator opts into a population-source change)
@@ -44,8 +44,8 @@ The geometric output happens to correlate with traditional compactness metrics (
 
 Every plan written by `bisect state` ships with a `manifest.json` (schema documented at `docs/file-formats/manifests.md` §3.1). The manifest records:
 
-- Binary version (`redist_version`)
-- Build commit (`redist_build_commit`, with `-dirty` suffix when built from uncommitted changes)
+- Binary version (`BISECT_version`)
+- Build commit (`BISECT_build_commit`, with `-dirty` suffix when built from uncommitted changes)
 - Rust compiler version (`rustc_version`)
 - SHA-256 of the input adjacency file (`adjacency_sha256`)
 - Census TIGER source URL (`tiger_source_url`)
@@ -54,7 +54,7 @@ Every plan written by `bisect state` ships with a `manifest.json` (schema docume
 - Balance tolerance, seed, district count
 - ISO-8601 UTC timestamp of plan creation
 
-Verification command: `redist doctor --verify-manifest path/to/manifest.json` cross-checks every recorded field against the running binary and surfaces any mismatch.
+Verification command: `BISECT doctor --verify-manifest path/to/manifest.json` cross-checks every recorded field against the running binary and surfaces any mismatch.
 
 This is the chain-of-custody Daubert demands (*Daubert v. Merrell Dow Pharmaceuticals*, 509 U.S. 579 (1993)). An opposing expert who cannot reproduce a published plan from its manifest is reporting a real failure; an opposing expert who can reproduce it has confirmed the chain.
 
@@ -62,12 +62,12 @@ This is the chain-of-custody Daubert demands (*Daubert v. Merrell Dow Pharmaceut
 
 The bisection accepts additional constraints — VRA-awareness (`partition-mode metis-vra`), county integrity, contiguity, chamber nesting — that tighten the feasible region but do NOT introduce partisan signals. The constraint code is in:
 
-- `redist/crates/bisect-core/src/vra.rs` — VRA-aware edge weighting (race-conscious, but partisan-blind)
-- `redist/crates/bisect-analysis/src/contiguity.rs` — contiguity check
-- `redist/crates/bisect-analysis/src/splits.rs` — county/municipal split analysis
-- `redist/crates/bisect-analysis/src/nesting.rs` — chamber nesting validation
+- `BISECT/crates/bisect-core/src/vra.rs` — VRA-aware edge weighting (race-conscious, but partisan-blind)
+- `BISECT/crates/bisect-analysis/src/contiguity.rs` — contiguity check
+- `BISECT/crates/bisect-analysis/src/splits.rs` — county/municipal split analysis
+- `BISECT/crates/bisect-analysis/src/nesting.rs` — chamber nesting validation
 
-**The Callais p.36 mutex matters here.** A single run of `bisect state` cannot enable BOTH race-conscious mode AND partisan-weighted mode. The mutex is enforced at three places (`bisect state` runtime per `runner::validate_partisan_config`; `redist import` and `bisect analyze` via `bisect-report::manifest::callais_preflight`). The downstream consequence: a "neutral" baseline produced by this tool for a state-court partisan gerrymandering challenge is provably free of race-conscious signals.
+**The Callais p.36 mutex matters here.** A single run of `bisect state` cannot enable BOTH race-conscious mode AND partisan-weighted mode. The mutex is enforced at three places (`bisect state` runtime per `runner::validate_partisan_config`; `BISECT import` and `bisect analyze` via `bisect-report::manifest::callais_preflight`). The downstream consequence: a "neutral" baseline produced by this tool for a state-court partisan gerrymandering challenge is provably free of race-conscious signals.
 
 ### 1.5 Falsifiability via ensemble + convergence diagnostics
 
@@ -87,14 +87,14 @@ The ensemble GENERATION (MCMC wrapper around GerryChain) is a deferred Researche
 
 | Question a court might ask | What this tool produces today |
 |---|---|
-| "Was this plan generated by the algorithm its manifest claims?" | `redist doctor --verify-manifest <PATH>` (binary version, build commit, input SHA cross-check) |
+| "Was this plan generated by the algorithm its manifest claims?" | `BISECT doctor --verify-manifest <PATH>` (binary version, build commit, input SHA cross-check) |
 | "Is this plan internally consistent (population balance, contiguity)?" | `bisect analyze --types summary,contiguity` produces validation booleans |
 | "What are the partisan metrics on this plan?" | `bisect analyze --types partisan` (efficiency gap, mean-median, partisan bias, with bootstrap CIs) |
 | "Are minority districts of opportunity present?" | `bisect analyze --types vra` (MM-district count by configurable BVAP threshold) |
-| "How does this plan compare to that plan?" | `redist compare --plan-a A --plan-b B` (Jaccard similarity, population diff, compactness diff, splits diff) |
+| "How does this plan compare to that plan?" | `BISECT compare --plan-a A --plan-b B` (Jaccard similarity, population diff, compactness diff, splits diff) |
 | "Does this state's racial bloc voting survive partisan controls (Callais p.36)?" | `bisect analyze --types bloc-voting --candidate-race-csv ...` (WLS+HC3, cluster bootstrap by county, Holm-Bonferroni, robustness across 3 baselines, race-of-candidate provenance chain) |
 | "Are this plan's race-of-candidate annotations defensibly attested?" | `bloc_voting.json::race_of_candidate_provenance` (curator name + credentials + signed attestation document SHA-256, BD-R2 reconciled format whitelist) |
-| "Is the analysis chain free of post-Callais inadmissible mixing?" | `callais_preflight` runs at `bisect state`, `redist import`, `bisect analyze` — refuses any plan whose manifest carries both VRA and partisan markers |
+| "Is the analysis chain free of post-Callais inadmissible mixing?" | `callais_preflight` runs at `bisect state`, `BISECT import`, `bisect analyze` — refuses any plan whose manifest carries both VRA and partisan markers |
 
 ---
 
@@ -104,7 +104,7 @@ The full Rucho-overcoming methodology requires a small number of additional piec
 
 | Question | What's needed | Deferred by |
 |---|---|---|
-| "Where does this plan fall in the distribution of all neutral alternatives?" | MCMC ensemble generator + percentile-rank computation | Researcher Toolkit Task 5 + 6 (`redist research validate-ensemble`, `scripts/research/mcmc_ensemble.py`) |
+| "Where does this plan fall in the distribution of all neutral alternatives?" | MCMC ensemble generator + percentile-rank computation | Researcher Toolkit Task 5 + 6 (`BISECT research validate-ensemble`, `scripts/research/mcmc_ensemble.py`) |
 | "Did the ensemble explore enough partition space to bound neutrality?" | R-hat / ESS / Hamming tau_int on the actual generated ensemble | Researcher Toolkit Task 7 (the math just shipped — needs ensemble generation to consume it) |
 | "Court-formatted PDF/A-2b expert report" | Typst rendering + verapdf gate | Court Submission Reports Tasks 4-7 |
 | "Civic-friendly comparison narrative for press release / public-comment record" | Narrative renderer + `[DRAFT]` gate (shipped as library); CLI dispatch | Plan Comparison Task 11 |
@@ -145,9 +145,9 @@ This project's stack is engineered to produce exactly the evidence these courts 
 1. Generate an ensemble of partisan-blind plans for the state in question (deferred — Researcher Toolkit Task 6)
 2. Validate the ensemble's convergence (`ensemble_diagnostics` — shipped)
 3. Compute the enacted plan's percentile rank for partisan metrics (`bisect analyze --types partisan` shipped; percentile reporting deferred)
-4. Generate a comparison report (`redist compare`, narrative renderer shipped as library; CLI dispatch deferred)
+4. Generate a comparison report (`BISECT compare`, narrative renderer shipped as library; CLI dispatch deferred)
 5. Produce a court-formatted PDF (Court Submission Reports — Typst path deferred)
-6. Verify chain of custody at trial (`redist doctor --verify-manifest` — shipped)
+6. Verify chain of custody at trial (`BISECT doctor --verify-manifest` — shipped)
 
 ### 4.3 Federal racial claims after Callais
 
@@ -240,16 +240,16 @@ A court-appointed special master or opposing expert verifying a plan produced by
 
 ```bash
 # 1. Clone the repository at the build commit recorded in the manifest.
-git clone https://github.com/<owner>/redist.git
-cd redist
-git checkout <redist_build_commit from manifest.json>
+git clone https://github.com/<owner>/BISECT.git
+cd <repo-root>
+git checkout <BISECT_build_commit from manifest.json>
 
 # 2. Build the binary with the locked dependency tree.
-cd redist
+cd <repo-root>
 cargo build --release --locked
 
 # 3. Verify the manifest matches the rebuilt binary.
-./target/release/redist doctor --verify-manifest path/to/manifest.json
+./target/release/BISECT doctor --verify-manifest path/to/manifest.json
 
 # Expected: [PASS] binary_version matches running binary.
 # If [FAIL]: the published plan was NOT produced by this commit.
@@ -263,7 +263,7 @@ cargo build --release --locked
     --output-base /tmp/repro
 
 # 5. Compare the rebuilt plan against the published one.
-./target/release/redist compare \
+./target/release/BISECT compare \
     --plan-a <published plan dir> \
     --plan-b <rebuilt plan dir> \
     --format json
@@ -282,7 +282,7 @@ python scripts/research/mcmc_ensemble.py \
     --output-dir /tmp/repro/ensemble
 
 # 7. Validate convergence.
-./target/release/redist research validate-ensemble \
+./target/release/BISECT research validate-ensemble \
     --plan-label <enacted plan> --ensemble-label /tmp/repro/ensemble
 
 # Expected: rhat.json shows R-hat < 1.05 across all summary metrics;
@@ -298,7 +298,7 @@ The output `target_plan_percentiles.json` is the document an expert witness cite
 
 ## 8. The legitimate concrete claim
 
-> **`redist` provides a procedurally neutral baseline — partisan-blind by default, race-blind by default, constraint-compliant, reproducible, and (when ensembles are generated) convergence-validated. We do not draw the line between "fair" and "unfair" enacted maps. We provide the statistical tools a court needs to draw that line under whatever standard the court adopts.**
+> **`BISECT` provides a procedurally neutral baseline — partisan-blind by default, race-blind by default, constraint-compliant, reproducible, and (when ensembles are generated) convergence-validated. We do not draw the line between "fair" and "unfair" enacted maps. We provide the statistical tools a court needs to draw that line under whatever standard the court adopts.**
 
 That is the claim this project will defend. Anything stronger is overreach; anything weaker undersells the work.
 
@@ -330,8 +330,8 @@ The doctrine's credibility rests on §6 being complete. If you are reading this 
 - `docs/file-formats/race-of-candidate.md` — the curator-attested annotation protocol
 - `docs/file-formats/citation-strings.md` — Bluebook / APA / Chicago templates per source class
 - `docs/error-conventions.md` — the categorized error model used in CLI output
-- `docs/REDIST_CLI.md` — the user-facing CLI reference with the §"What courts can verify today" surface
+- `docs/BISECT_CLI.md` — the user-facing CLI reference with the §"What courts can verify today" surface
 - `docs/superpowers/specs/2026-04-30-roadmap-five-star.md` — the persona-driven capability roadmap
-- `redist/crates/bisect-analysis/src/ensemble_diagnostics.rs` — R-hat, ESS, Hamming autocorrelation implementations
-- `redist/crates/bisect-analysis/src/bloc_voting.rs` — WLS+HC3+Holm+cluster-bootstrap (Callais Evidence)
-- `redist/crates/bisect-report/src/manifest.rs::callais_preflight` — the post-Callais p.36 mutex enforcement
+- `BISECT/crates/bisect-analysis/src/ensemble_diagnostics.rs` — R-hat, ESS, Hamming autocorrelation implementations
+- `BISECT/crates/bisect-analysis/src/bloc_voting.rs` — WLS+HC3+Holm+cluster-bootstrap (Callais Evidence)
+- `BISECT/crates/bisect-report/src/manifest.rs::callais_preflight` — the post-Callais p.36 mutex enforcement

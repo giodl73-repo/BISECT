@@ -53,9 +53,9 @@ The novel federal contribution is the **reproducibility regime**: the State publ
 
 ## Implementation status
 
-The reference implementation already exists and is mature. This project (`redist`, github.com/<owner>/redist) has produced validated 50-state output for 2000 / 2010 / 2020, with per-plan provenance manifests, AEA-compliant replication packages, plan-comparison narrative reports, and bloc-voting analysis for VRA § 2.
+The reference implementation already exists and is mature. This project (`BISECT`, github.com/<owner>/BISECT) has produced validated 50-state output for 2000 / 2010 / 2020, with per-plan provenance manifests, AEA-compliant replication packages, plan-comparison narrative reports, and bloc-voting analysis for VRA § 2.
 
-**Algorithmic risk: zero.** The METIS graph-partitioning library has been in production scientific computing since 1997. The recursive bisection method is described in any graduate algorithms textbook. The `redist` reference implementation is open-source, MIT-licensed, and continuously tested.
+**Algorithmic risk: zero.** The METIS graph-partitioning library has been in production scientific computing since 1997. The recursive bisection method is described in any graduate algorithms textbook. The `BISECT` reference implementation is open-source, MIT-licensed, and continuously tested.
 
 ## Implementation timeline
 
@@ -79,4 +79,4 @@ Introduce a freestanding, single-issue Reproducible Congressional Districting Ac
 
 ---
 
-**Contact:** [project maintainer]. **Reference implementation:** github.com/<owner>/redist. **Licensure:** MIT. **Cost:** zero (the reference implementation already exists; the federal contribution is administrative — Census Bureau panel + parameter publication).
+**Contact:** [project maintainer]. **Reference implementation:** github.com/<owner>/BISECT. **Licensure:** MIT. **Cost:** zero (the reference implementation already exists; the federal contribution is administrative — Census Bureau panel + parameter publication).

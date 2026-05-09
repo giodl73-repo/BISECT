@@ -26,8 +26,8 @@ The algorithm is the same in all three modes; the constraints encoded are what d
 ## Naming Conflict
 
 Two files named `partisan.rs` already exist in the workspace:
-- `redist/crates/bisect-analysis/src/partisan.rs` — post-hoc metrics on completed partitions
-- `redist/crates/bisect-cli/src/partisan.rs` — CLI subcommand wiring
+- `BISECT/crates/bisect-analysis/src/partisan.rs` — post-hoc metrics on completed partitions
+- `BISECT/crates/bisect-cli/src/partisan.rs` — CLI subcommand wiring
 
 The stashed work introduces a third partisan module in `bisect-core` that does **constraint encoding for the bisection** (a different layer entirely). To avoid confusion, the stashed file is renamed:
 
@@ -64,9 +64,9 @@ The Callais PDF is being deliberately not committed (`.gitignore` excludes `*.pd
    partisan goals could have been achieved with better minority outcomes.
    ```
 - [ ] **1.4** Add a pre-commit hook at `.git/hooks/pre-commit` (and document in `docs/CONTRIBUTING.md`) that blocks any `*.pdf` file from being staged unless `ALLOW_PDF=1` env var is set. This is structural prevention of PP-17.
-- [ ] **1.5** Pop the stash: `git stash pop`. Expect conflicts on `bisect-core/src/lib.rs` and `redist_py/src/lib.rs` because both have evolved on the merged main.
+- [ ] **1.5** Pop the stash: `git stash pop`. Expect conflicts on `bisect-core/src/lib.rs` and `bisect_py/src/lib.rs` because both have evolved on the merged main.
 - [ ] **1.6** Resolve `bisect-core/src/lib.rs`: the merged file has `population.rs`, `fips.rs`, etc. Re-apply the partisan module declaration and `pub use` against the current structure.
-- [ ] **1.7** Resolve `redist_py/src/lib.rs`: re-apply the PyO3 wrapper for `build_partisan_edge_weights` against the current import block.
+- [ ] **1.7** Resolve `bisect_py/src/lib.rs`: re-apply the PyO3 wrapper for `build_partisan_edge_weights` against the current import block.
 - [ ] **1.8** Move the `.callais_ruling.pdf` to a personal location outside the repo. The reference doc + SHA stays.
 
 **Exit:** Stash popped, conflicts resolved, working tree compiles. Callais reference doc committed. Pre-commit hook installed.
@@ -75,7 +75,7 @@ The Callais PDF is being deliberately not committed (`.gitignore` excludes `*.pd
 
 ## Task 2: Rename the module
 
-**File:** `redist/crates/bisect-core/src/partisan.rs` → `redist/crates/bisect-core/src/partisan_weights.rs`
+**File:** `BISECT/crates/bisect-core/src/partisan.rs` → `BISECT/crates/bisect-core/src/partisan_weights.rs`
 
 - [ ] **2.1** Rename the file with `git mv`.
 - [ ] **2.2** Update `bisect-core/src/lib.rs`: `pub mod partisan_weights;` and `pub use partisan_weights::build_partisan_weights;`.
@@ -103,7 +103,7 @@ The merged main has `bisect-core/src/population.rs` and `fips.rs` — modules I 
 
 **Per MERIDIAN review:** Callais p. 36 requires that race-conscious and partisan signals not be mixed in production map runs. Make this structurally impossible, not merely documented.
 
-The existing `redist/crates/bisect-cli/src/partisan.rs` handles partisan analysis (post-hoc). It needs to gain a new path: when invoked with constraint inputs, it produces a partition that respects them.
+The existing `BISECT/crates/bisect-cli/src/partisan.rs` handles partisan analysis (post-hoc). It needs to gain a new path: when invoked with constraint inputs, it produces a partition that respects them.
 
 - [ ] **4.1** Add a CLI flag: `bisect state --partition-mode partisan-weighted` activates the new path. Mode enum entries are mutually exclusive in the type system — `partisan-weighted` and `metis-vra` (existing VRA mode) cannot both be active. The compiler enforces this; no runtime check needed.
 - [ ] **4.2** Define the input format: per-tract D-share TSV per the spec's File Formats section. Header: `geoid<tab>dem_share`. GEOIDs are 11-character TIGER strings with leading zeros. dem_share is float in [0.0, 1.0].
@@ -117,7 +117,7 @@ The existing `redist/crates/bisect-cli/src/partisan.rs` handles partisan analysi
 
 **Files (new):**
 ```
-redist/crates/bisect-data/src/partisan_shares.rs
+BISECT/crates/bisect-data/src/partisan_shares.rs
 docs/file-formats/partisan-shares.md  (format spec)
 ```
 
@@ -157,10 +157,10 @@ Produces per-tract Democratic vote share by joining precinct-level election resu
 
 ## Task 7: Documentation
 
-- [ ] **7.1** Update `docs/REDIST_CLI.md` with the new flag(s) and example invocation.
+- [ ] **7.1** Update `docs/BISECT_CLI.md` with the new flag(s) and example invocation.
 - [ ] **7.2** Add a short section to the architecture spec at `docs/superpowers/specs/2026-04-29-rust-python-final-architecture.md` noting partisan edge-weighting is now in the production crate.
 - [ ] **7.3** Cite *Louisiana v. Callais* via the reference doc (`docs/legal/CALLAIS_REFERENCE.md`) as the legal grounding.
-- [ ] **7.4** Add a section to `docs/REDIST_CLI.md` clearly stating that `--partisan-shares` and `--partition-mode metis-vra` cannot be used in the same run, and why (Callais p. 36 disentanglement).
+- [ ] **7.4** Add a section to `docs/BISECT_CLI.md` clearly stating that `--partisan-shares` and `--partition-mode metis-vra` cannot be used in the same run, and why (Callais p. 36 disentanglement).
 
 ---
 

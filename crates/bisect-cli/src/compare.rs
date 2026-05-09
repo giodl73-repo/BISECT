@@ -1,12 +1,14 @@
-/// `redist compare` dispatcher — load two plans and compare them.
+/// `BISECT compare` dispatcher — load two plans and compare them.
 ///
 /// Supports plan-a vs plan-b (both labels) or plan-a vs enacted districts.
 /// Output formats: table (default), json, csv, narrative, both.
 use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
 
+use crate::args::{CompareArgs, CompareFormat};
+use crate::provenance::Provenance;
 use bisect_analysis::{
-    compare_plans, format_comparison_json, format_comparison_csv, format_comparison_table,
+    compare_plans, format_comparison_csv, format_comparison_json, format_comparison_table,
 };
 use bisect_report::comparison::{
     diff_from_assignments, load_plan_side_from_dir, AssembleError, ComparisonReport,
@@ -17,8 +19,6 @@ use bisect_report::narrative_manifest::{
     build_narrative_manifest_with_clock, serialize_manifest, NarrativeManifestInputs,
 };
 use sha2::{Digest, Sha256};
-use crate::args::{CompareArgs, CompareFormat};
-use crate::provenance::Provenance;
 
 /// SHA-256 of the embedded narrative renderer source. Anchors `template_sha256`
 /// in `narrative_manifest.json` to the exact Rust code that produced the
@@ -56,16 +56,19 @@ fn load_plan_assignments(
         // Parse as generic JSON to extract assignments (map of GEOID → district_id as integer)
         let v: serde_json::Value = serde_json::from_str(&content)
             .map_err(|e| anyhow::anyhow!("failed to parse .rplan '{}': {}", label, e))?;
-        let assignments_obj = v["assignments"]
-            .as_object()
-            .ok_or_else(|| anyhow::anyhow!(".rplan file '{}' missing 'assignments' field", label))?;
+        let assignments_obj = v["assignments"].as_object().ok_or_else(|| {
+            anyhow::anyhow!(".rplan file '{}' missing 'assignments' field", label)
+        })?;
         let assignments: HashMap<String, usize> = assignments_obj
             .iter()
             .map(|(geoid, dist_val)| {
-                let dist = dist_val.as_u64()
-                    .ok_or_else(|| anyhow::anyhow!(
-                        "assignment value for GEOID {} must be integer, got {}", geoid, dist_val
-                    ))?;
+                let dist = dist_val.as_u64().ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "assignment value for GEOID {} must be integer, got {}",
+                        geoid,
+                        dist_val
+                    )
+                })?;
                 Ok((geoid.clone(), dist as usize))
             })
             .collect::<anyhow::Result<_>>()?;
@@ -123,22 +126,20 @@ fn load_plan_assignments(
 
     // If label looks like an absolute or relative file path, try it directly as
     // final_assignments.json (or a directory containing data/final_assignments.json).
-    let is_path_like = label.starts_with('/') || label.starts_with('\\')
+    let is_path_like = label.starts_with('/')
+        || label.starts_with('\\')
         || label.starts_with('.')
         || (label.len() >= 3 && label.chars().nth(1) == Some(':'));
     if is_path_like {
         let p = PathBuf::from(label);
         let direct = p.join("data").join("final_assignments.json");
         if direct.exists() {
-            let raw: HashMap<String, usize> = serde_json::from_str(
-                &std::fs::read_to_string(&direct)?
-            )?;
+            let raw: HashMap<String, usize> =
+                serde_json::from_str(&std::fs::read_to_string(&direct)?)?;
             return Ok(raw);
         }
         if p.is_file() {
-            let raw: HashMap<String, usize> = serde_json::from_str(
-                &std::fs::read_to_string(&p)?
-            )?;
+            let raw: HashMap<String, usize> = serde_json::from_str(&std::fs::read_to_string(&p)?)?;
             return Ok(raw);
         }
     }
@@ -147,14 +148,16 @@ fn load_plan_assignments(
     // This ensures the assignments path is derived from the manifest, not reconstructed.
     {
         let ctx_result = crate::plan_context::PlanContext::from_label(
-            PathBuf::from(output_base).as_path(), version, year, label,
+            PathBuf::from(output_base).as_path(),
+            version,
+            year,
+            label,
         );
         if let Ok(ctx) = ctx_result {
             let asgn_path = ctx.assignments_path();
             if asgn_path.exists() {
-                let raw: HashMap<String, usize> = serde_json::from_str(
-                    &std::fs::read_to_string(&asgn_path)?
-                )?;
+                let raw: HashMap<String, usize> =
+                    serde_json::from_str(&std::fs::read_to_string(&asgn_path)?)?;
                 return Ok(raw);
             }
         }
@@ -169,9 +172,8 @@ fn load_plan_assignments(
         .join("data")
         .join("final_assignments.json");
     if plan_path.exists() {
-        let raw: HashMap<String, usize> = serde_json::from_str(
-            &std::fs::read_to_string(&plan_path)?
-        )?;
+        let raw: HashMap<String, usize> =
+            serde_json::from_str(&std::fs::read_to_string(&plan_path)?)?;
         return Ok(raw);
     }
 
@@ -182,18 +184,18 @@ fn load_plan_assignments(
         .join(label)
         .join("final_assignments.json");
     if flat_path.exists() {
-        let raw: HashMap<String, usize> = serde_json::from_str(
-            &std::fs::read_to_string(&flat_path)?
-        )?;
+        let raw: HashMap<String, usize> =
+            serde_json::from_str(&std::fs::read_to_string(&flat_path)?)?;
         return Ok(raw);
     }
 
     // Also accept a bare directory path as label
-    let direct_data = PathBuf::from(label).join("data").join("final_assignments.json");
+    let direct_data = PathBuf::from(label)
+        .join("data")
+        .join("final_assignments.json");
     if direct_data.exists() {
-        let raw: HashMap<String, usize> = serde_json::from_str(
-            &std::fs::read_to_string(&direct_data)?
-        )?;
+        let raw: HashMap<String, usize> =
+            serde_json::from_str(&std::fs::read_to_string(&direct_data)?)?;
         return Ok(raw);
     }
 
@@ -231,7 +233,11 @@ fn read_plan_year(
     } else {
         PathBuf::from(output_base).join(version)
     };
-    let manifest_path = base.join(year).join("plans").join(label).join("manifest.json");
+    let manifest_path = base
+        .join(year)
+        .join("plans")
+        .join(label)
+        .join("manifest.json");
     let content = std::fs::read_to_string(&manifest_path).ok()?;
     let v: serde_json::Value = serde_json::from_str(&content).ok()?;
     v.get("year")?.as_str().map(String::from)
@@ -241,7 +247,8 @@ fn read_plan_year(
 /// Returns None if the file is absent or unreadable.
 fn load_analysis_json(plan_base: &std::path::Path, filename: &str) -> Option<serde_json::Value> {
     let path = plan_base.join("analysis").join(filename);
-    std::fs::read_to_string(&path).ok()
+    std::fs::read_to_string(&path)
+        .ok()
         .and_then(|s| serde_json::from_str(&s).ok())
 }
 
@@ -274,18 +281,25 @@ pub fn run_multi_plan_summary(args: &CompareArgs) -> anyhow::Result<()> {
         // summary.json → population deviation
         let summary = load_analysis_json(&plan_base, "summary.json");
         let max_dev_pct = summary.as_ref().and_then(|v| {
-            v.get("max_deviation_pct").and_then(|d| d.as_f64())
-                .or_else(|| v.get("population_max_deviation_pct").and_then(|d| d.as_f64()))
+            v.get("max_deviation_pct")
+                .and_then(|d| d.as_f64())
+                .or_else(|| {
+                    v.get("population_max_deviation_pct")
+                        .and_then(|d| d.as_f64())
+                })
         });
 
         // compactness.json → mean polsby_popper
         let compactness = load_analysis_json(&plan_base, "compactness.json");
         let mean_pp = compactness.as_ref().and_then(|v| {
             v.get("districts").and_then(|d| d.as_array()).map(|arr| {
-                let vals: Vec<f64> = arr.iter()
+                let vals: Vec<f64> = arr
+                    .iter()
                     .filter_map(|d| d.get("polsby_popper").and_then(|p| p.as_f64()))
                     .collect();
-                if vals.is_empty() { return f64::NAN; }
+                if vals.is_empty() {
+                    return f64::NAN;
+                }
                 vals.iter().sum::<f64>() / vals.len() as f64
             })
         });
@@ -293,20 +307,35 @@ pub fn run_multi_plan_summary(args: &CompareArgs) -> anyhow::Result<()> {
         // splits.json → total splits count
         let splits = load_analysis_json(&plan_base, "splits.json");
         let county_splits = splits.as_ref().and_then(|v| {
-            v.get("counties").and_then(|c| c.get("split")).and_then(|s| s.as_u64())
+            v.get("counties")
+                .and_then(|c| c.get("split"))
+                .and_then(|s| s.as_u64())
         });
 
         // contiguity.json → all_contiguous
         let contiguity = load_analysis_json(&plan_base, "contiguity.json");
-        let contiguous = contiguity.as_ref()
+        let contiguous = contiguity
+            .as_ref()
             .and_then(|v| v.get("all_contiguous").and_then(|c| c.as_bool()));
 
         // balance_tolerance_pct → from PlanContext manifest
         let balance_tol = crate::plan_context::PlanContext::from_label(
-            std::path::Path::new(&args.output_base), version, &args.year, label,
-        ).ok().map(|ctx| ctx.manifest.balance_tolerance_pct);
+            std::path::Path::new(&args.output_base),
+            version,
+            &args.year,
+            label,
+        )
+        .ok()
+        .map(|ctx| ctx.manifest.balance_tolerance_pct);
 
-        rows.push(PlanRow { label: label.clone(), mean_pp, max_dev_pct, county_splits, contiguous, balance_tol });
+        rows.push(PlanRow {
+            label: label.clone(),
+            mean_pp,
+            max_dev_pct,
+            county_splits,
+            contiguous,
+            balance_tol,
+        });
     }
 
     let is_csv = matches!(args.format, crate::args::CompareFormat::Csv);
@@ -314,35 +343,83 @@ pub fn run_multi_plan_summary(args: &CompareArgs) -> anyhow::Result<()> {
     if is_csv {
         println!("Label,Mean PP,Max Dev%,County Splits,Bal Tol%,Contiguous");
         for row in &rows {
-            let pp: String = row.mean_pp.map_or_else(|| "N/A".to_string(), |v| format!("{:.3}", v));
-            let dev: String = row.max_dev_pct.map_or_else(|| "N/A".to_string(), |v| format!("{:.1}%", v));
-            let splits: String = row.county_splits.map_or_else(|| "N/A".to_string(), |v| v.to_string());
-            let tol: String = row.balance_tol.map_or_else(|| "-".to_string(), |v| format!("{:.1}%", v));
-            let cont: String = row.contiguous.map_or_else(|| "N/A".to_string(), |v| if v { "Yes".to_string() } else { "No".to_string() });
+            let pp: String = row
+                .mean_pp
+                .map_or_else(|| "N/A".to_string(), |v| format!("{:.3}", v));
+            let dev: String = row
+                .max_dev_pct
+                .map_or_else(|| "N/A".to_string(), |v| format!("{:.1}%", v));
+            let splits: String = row
+                .county_splits
+                .map_or_else(|| "N/A".to_string(), |v| v.to_string());
+            let tol: String = row
+                .balance_tol
+                .map_or_else(|| "-".to_string(), |v| format!("{:.1}%", v));
+            let cont: String = row.contiguous.map_or_else(
+                || "N/A".to_string(),
+                |v| {
+                    if v {
+                        "Yes".to_string()
+                    } else {
+                        "No".to_string()
+                    }
+                },
+            );
             println!("{},{},{},{},{},{}", row.label, pp, dev, splits, tol, cont);
         }
     } else {
         // Table format
-        let col1 = rows.iter().map(|r| r.label.len()).max().unwrap_or(5).max(23);
-        println!("{:<col1$} | Mean PP | Max Dev% | Splits | Bal Tol% | Contiguous",
-            "Label", col1 = col1);
-        println!("{:-<col1$}-+---------+----------+--------+----------+------------",
-            "", col1 = col1);
+        let col1 = rows
+            .iter()
+            .map(|r| r.label.len())
+            .max()
+            .unwrap_or(5)
+            .max(23);
+        println!(
+            "{:<col1$} | Mean PP | Max Dev% | Splits | Bal Tol% | Contiguous",
+            "Label",
+            col1 = col1
+        );
+        println!(
+            "{:-<col1$}-+---------+----------+--------+----------+------------",
+            "",
+            col1 = col1
+        );
         for row in &rows {
-            let pp: String = row.mean_pp.map_or_else(|| " N/A ".to_string(), |v| format!(" {:.3} ", v));
-            let dev: String = row.max_dev_pct.map_or_else(|| "  N/A  ".to_string(), |v| format!("  {:.1}% ", v));
-            let splits: String = row.county_splits.map_or_else(|| "  N/A ".to_string(), |v| format!("  {:3}  ", v));
-            let tol: String = row.balance_tol.map_or_else(|| "   -    ".to_string(), |v| format!("  {:.1}%  ", v));
-            let cont: String = row.contiguous.map_or_else(|| "  N/A ".to_string(), |v| if v { "  Yes ".to_string() } else { "  No  ".to_string() });
-            println!("{:<col1$} |{pp}|{dev}|{splits}|{tol}|{cont}",
-                row.label, col1 = col1);
+            let pp: String = row
+                .mean_pp
+                .map_or_else(|| " N/A ".to_string(), |v| format!(" {:.3} ", v));
+            let dev: String = row
+                .max_dev_pct
+                .map_or_else(|| "  N/A  ".to_string(), |v| format!("  {:.1}% ", v));
+            let splits: String = row
+                .county_splits
+                .map_or_else(|| "  N/A ".to_string(), |v| format!("  {:3}  ", v));
+            let tol: String = row
+                .balance_tol
+                .map_or_else(|| "   -    ".to_string(), |v| format!("  {:.1}%  ", v));
+            let cont: String = row.contiguous.map_or_else(
+                || "  N/A ".to_string(),
+                |v| {
+                    if v {
+                        "  Yes ".to_string()
+                    } else {
+                        "  No  ".to_string()
+                    }
+                },
+            );
+            println!(
+                "{:<col1$} |{pp}|{dev}|{splits}|{tol}|{cont}",
+                row.label,
+                col1 = col1
+            );
         }
     }
 
     Ok(())
 }
 
-/// Run the `redist compare` command.
+/// Run the `BISECT compare` command.
 pub fn run_compare(args: &CompareArgs) -> anyhow::Result<()> {
     // When --labels is provided with >= 2 entries, run multi-plan summary instead
     if !args.labels.is_empty() {
@@ -381,20 +458,33 @@ pub fn run_compare(args: &CompareArgs) -> anyhow::Result<()> {
              (3) GeoJSON:      bisect import --file enacted.geojson --label enacted\n\
                                bisect compare --plan-a {} --plan-b enacted\n\
              Note: 'bisect fetch --type enacted' is not yet available.",
-            args.plan_a, args.plan_a, args.plan_a
+            args.plan_a,
+            args.plan_a,
+            args.plan_a
         );
     } else {
-        anyhow::bail!(
-            "Must provide either --plan-b <label> or --enacted"
-        );
+        anyhow::bail!("Must provide either --plan-b <label> or --enacted");
     };
 
     // Cross-year comparison guard: warn if plans are from different census years
     // (Jaccard similarity is meaningless across years — different tract GEOIDs)
     if !args.allow_cross_year {
-        let year_a = read_plan_year(&args.plan_a, &args.output_base, version, &args.year, args.output_dir.as_ref());
-        let year_b = args.plan_b.as_deref()
-            .and_then(|b| read_plan_year(b, &args.output_base, version, &args.year, args.output_dir.as_ref()));
+        let year_a = read_plan_year(
+            &args.plan_a,
+            &args.output_base,
+            version,
+            &args.year,
+            args.output_dir.as_ref(),
+        );
+        let year_b = args.plan_b.as_deref().and_then(|b| {
+            read_plan_year(
+                b,
+                &args.output_base,
+                version,
+                &args.year,
+                args.output_dir.as_ref(),
+            )
+        });
         if let (Some(ya), Some(yb)) = (year_a, year_b) {
             if ya != yb {
                 eprintln!(
@@ -413,27 +503,44 @@ pub fn run_compare(args: &CompareArgs) -> anyhow::Result<()> {
     let mut comparison = compare_plans(&assignments_a, &assignments_b);
     // Set labels from args
     comparison.plan_a.label = args.plan_a.clone();
-    comparison.plan_b.label = args
-        .plan_b
-        .clone()
-        .unwrap_or_else(|| "enacted".to_string());
+    comparison.plan_b.label = args.plan_b.clone().unwrap_or_else(|| "enacted".to_string());
 
     // Format output
     match args.format {
         CompareFormat::Json => emit_text(&format_comparison_json(&comparison), args.out.as_ref())?,
         CompareFormat::Csv => emit_text(&format_comparison_csv(&comparison), args.out.as_ref())?,
-        CompareFormat::Table => emit_text(&format_comparison_table(&comparison), args.out.as_ref())?,
+        CompareFormat::Table => {
+            emit_text(&format_comparison_table(&comparison), args.out.as_ref())?
+        }
         CompareFormat::Narrative => {
-            run_narrative_dispatch(args, version, /*also_print_table=*/ false, &comparison, /*also_html=*/ false)?;
+            run_narrative_dispatch(
+                args,
+                version,
+                /*also_print_table=*/ false,
+                &comparison,
+                /*also_html=*/ false,
+            )?;
         }
         CompareFormat::Both => {
             // Print the table to stdout, then emit narrative.md + manifest to disk.
             print!("{}", format_comparison_table(&comparison));
-            run_narrative_dispatch(args, version, /*also_print_table=*/ true, &comparison, /*also_html=*/ false)?;
+            run_narrative_dispatch(
+                args,
+                version,
+                /*also_print_table=*/ true,
+                &comparison,
+                /*also_html=*/ false,
+            )?;
         }
         CompareFormat::Html => {
             // Emit narrative.md + manifest + comparison.html.
-            run_narrative_dispatch(args, version, /*also_print_table=*/ false, &comparison, /*also_html=*/ true)?;
+            run_narrative_dispatch(
+                args,
+                version,
+                /*also_print_table=*/ false,
+                &comparison,
+                /*also_html=*/ true,
+            )?;
         }
     }
 
@@ -494,13 +601,12 @@ fn run_narrative_dispatch(
 ) -> anyhow::Result<()> {
     let _ = also_print_table; // reserved — caller already printed
 
-    let plan_b_label = args
-        .plan_b
-        .as_deref()
-        .ok_or_else(|| anyhow::anyhow!(
+    let plan_b_label = args.plan_b.as_deref().ok_or_else(|| {
+        anyhow::anyhow!(
             "[CONFIG] --format narrative requires --plan-b <label-or-path>; \
              --enacted is not yet supported by the narrative dispatcher"
-        ))?;
+        )
+    })?;
 
     let version_b = args.version_b.as_deref().unwrap_or(version);
 
@@ -511,11 +617,16 @@ fn run_narrative_dispatch(
         &args.year,
         args.output_dir.as_ref(),
     )
-    .ok_or_else(|| anyhow::anyhow!(
-        "[INPUT] cannot locate plan-a manifest for '{}' under {} (version {}, year {}); \
+    .ok_or_else(|| {
+        anyhow::anyhow!(
+            "[INPUT] cannot locate plan-a manifest for '{}' under {} (version {}, year {}); \
          --format narrative requires a plan directory containing manifest.json",
-        args.plan_a, args.output_base, version, args.year
-    ))?;
+            args.plan_a,
+            args.output_base,
+            version,
+            args.year
+        )
+    })?;
     let plan_b_dir = resolve_plan_dir(
         plan_b_label,
         &args.output_base,
@@ -523,11 +634,16 @@ fn run_narrative_dispatch(
         &args.year,
         args.output_dir.as_ref(),
     )
-    .ok_or_else(|| anyhow::anyhow!(
-        "[INPUT] cannot locate plan-b manifest for '{}' under {} (version {}, year {}); \
+    .ok_or_else(|| {
+        anyhow::anyhow!(
+            "[INPUT] cannot locate plan-b manifest for '{}' under {} (version {}, year {}); \
          --format narrative requires a plan directory containing manifest.json",
-        plan_b_label, args.output_base, version_b, args.year
-    ))?;
+            plan_b_label,
+            args.output_base,
+            version_b,
+            args.year
+        )
+    })?;
 
     let side_a = load_plan_side_from_dir(&plan_a_dir, args.leaning_threshold)
         .map_err(|e: AssembleError| anyhow::anyhow!("plan-a: {e}"))?;
@@ -721,19 +837,17 @@ mod tests {
 
     #[test]
     fn test_compare_format_json_parsed() {
-        let args = parse_compare_args(&[
-            "--plan-a", "plan1", "--plan-b", "plan2",
-            "--format", "json",
-        ]).unwrap();
+        let args =
+            parse_compare_args(&["--plan-a", "plan1", "--plan-b", "plan2", "--format", "json"])
+                .unwrap();
         assert!(matches!(args.format, CompareFormat::Json));
     }
 
     #[test]
     fn test_compare_format_csv_parsed() {
-        let args = parse_compare_args(&[
-            "--plan-a", "plan1", "--plan-b", "plan2",
-            "--format", "csv",
-        ]).unwrap();
+        let args =
+            parse_compare_args(&["--plan-a", "plan1", "--plan-b", "plan2", "--format", "csv"])
+                .unwrap();
         assert!(matches!(args.format, CompareFormat::Csv));
     }
 
@@ -779,7 +893,8 @@ mod tests {
         );
         // Must NOT start with the old message that suggested fetch --type enacted
         assert!(
-            !enacted_error.starts_with("Enacted district comparison requires `bisect fetch --type enacted`"),
+            !enacted_error
+                .starts_with("Enacted district comparison requires `bisect fetch --type enacted`"),
             "error must NOT suggest 'bisect fetch --type enacted' as primary action"
         );
         // Must mention that fetch --type enacted is not available (as a note)
@@ -822,8 +937,11 @@ mod tests {
 
         let path_str = rplan_path.to_str().unwrap();
         let year = read_plan_year(path_str, "outputs", "v1", "2020", None);
-        assert_eq!(year, Some("2010".to_string()),
-            "should read year 2010 from .rplan metadata, not manifest.json");
+        assert_eq!(
+            year,
+            Some("2010".to_string()),
+            "should read year 2010 from .rplan metadata, not manifest.json"
+        );
     }
 
     /// Task 113: cross-year warning fires when comparing .rplan files with different years.
@@ -861,30 +979,50 @@ mod tests {
         let year_a = read_plan_year(plan_a_path.to_str().unwrap(), "outputs", "v1", "2020", None);
         let year_b = read_plan_year(plan_b_path.to_str().unwrap(), "outputs", "v1", "2020", None);
 
-        assert_eq!(year_a, Some("2020".to_string()), "plan A year should be 2020");
-        assert_eq!(year_b, Some("2010".to_string()), "plan B year should be 2010");
+        assert_eq!(
+            year_a,
+            Some("2020".to_string()),
+            "plan A year should be 2020"
+        );
+        assert_eq!(
+            year_b,
+            Some("2010".to_string()),
+            "plan B year should be 2010"
+        );
 
         // The warning condition: years differ
         let should_warn = year_a.as_deref() != year_b.as_deref();
-        assert!(should_warn, "cross-year warning should fire when rplan years differ");
+        assert!(
+            should_warn,
+            "cross-year warning should fire when rplan years differ"
+        );
     }
 
     /// Task 116: --allow-cross-year flag parses correctly.
     #[test]
     fn test_allow_cross_year_flag_parsed() {
         let args = parse_compare_args(&[
-            "--plan-a", "plan1",
-            "--plan-b", "plan2",
+            "--plan-a",
+            "plan1",
+            "--plan-b",
+            "plan2",
             "--allow-cross-year",
-        ]).unwrap();
-        assert!(args.allow_cross_year, "--allow-cross-year flag should be true when provided");
+        ])
+        .unwrap();
+        assert!(
+            args.allow_cross_year,
+            "--allow-cross-year flag should be true when provided"
+        );
     }
 
     /// Task 116: --allow-cross-year defaults to false.
     #[test]
     fn test_allow_cross_year_flag_defaults_false() {
         let args = parse_compare_args(&["--plan-a", "plan1", "--plan-b", "plan2"]).unwrap();
-        assert!(!args.allow_cross_year, "--allow-cross-year should default to false");
+        assert!(
+            !args.allow_cross_year,
+            "--allow-cross-year should default to false"
+        );
     }
 
     /// Task 136: GerryChain flat format
@@ -900,7 +1038,11 @@ mod tests {
         });
         std::fs::write(&path, json.to_string()).unwrap();
         let result = load_plan_assignments(path.to_str().unwrap(), "outputs", "v1", "2020", None);
-        assert!(result.is_ok(), "flat GerryChain JSON should load: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "flat GerryChain JSON should load: {:?}",
+            result.err()
+        );
         let assignments = result.unwrap();
         assert_eq!(assignments.len(), 3);
         assert_eq!(assignments["53001000100"], 1);
@@ -922,7 +1064,11 @@ mod tests {
         });
         std::fs::write(&path, json.to_string()).unwrap();
         let result = load_plan_assignments(path.to_str().unwrap(), "outputs", "v1", "2020", None);
-        assert!(result.is_ok(), "nested GerryChain JSON should load: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "nested GerryChain JSON should load: {:?}",
+            result.err()
+        );
         let assignments = result.unwrap();
         assert_eq!(assignments.len(), 3);
         assert_eq!(assignments["53033000100"], 3);
@@ -947,7 +1093,7 @@ mod tests {
             output_base: "outputs".into(),
             output_dir: None,
             allow_cross_year: false,
-            labels: vec!["only_one".into()],  // fewer than 2
+            labels: vec!["only_one".into()], // fewer than 2
             version_b: None,
             leaning_threshold: 0.55,
             close_call_band: 0.02,
@@ -957,7 +1103,10 @@ mod tests {
         let result = run_multi_plan_summary(&args);
         assert!(result.is_err(), "fewer than 2 labels must return error");
         let msg = result.unwrap_err().to_string();
-        assert!(msg.contains("at least 2"), "error must mention 'at least 2': {msg}");
+        assert!(
+            msg.contains("at least 2"),
+            "error must mention 'at least 2': {msg}"
+        );
     }
 
     /// Output contains column headers.
@@ -968,8 +1117,13 @@ mod tests {
         // Create minimal plan directories (no analysis files — N/A values expected)
         for label in &["plan_a", "plan_b"] {
             std::fs::create_dir_all(
-                tmp.path().join("sweep").join("2020").join("plans").join(label)
-            ).unwrap();
+                tmp.path()
+                    .join("sweep")
+                    .join("2020")
+                    .join("plans")
+                    .join(label),
+            )
+            .unwrap();
         }
         let args = CompareArgs {
             plan_a: "plan_a".into(),
@@ -992,7 +1146,11 @@ mod tests {
         };
         // run_multi_plan_summary should succeed and emit header — just check it doesn't error
         let result = run_multi_plan_summary(&args);
-        assert!(result.is_ok(), "multi-plan summary with 2 valid labels must succeed: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "multi-plan summary with 2 valid labels must succeed: {:?}",
+            result.err()
+        );
     }
 
     // ── Task 207: N-plan summary includes Bal Tol% column ────────────────────
@@ -1028,7 +1186,8 @@ mod tests {
         std::fs::write(
             plan_dir.join("manifest.json"),
             serde_json::to_string_pretty(&manifest).unwrap(),
-        ).unwrap();
+        )
+        .unwrap();
     }
 
     /// Task 207: multi-plan summary table includes Bal Tol% column with tolerance values.
@@ -1038,8 +1197,18 @@ mod tests {
 
         let tmp = tempfile::TempDir::new().unwrap();
         // Create two plans with different tolerances
-        let plan_dir_a = tmp.path().join("sweep").join("2020").join("plans").join("wa_house_tol_0_5");
-        let plan_dir_b = tmp.path().join("sweep").join("2020").join("plans").join("wa_house_tol_5_0");
+        let plan_dir_a = tmp
+            .path()
+            .join("sweep")
+            .join("2020")
+            .join("plans")
+            .join("wa_house_tol_0_5");
+        let plan_dir_b = tmp
+            .path()
+            .join("sweep")
+            .join("2020")
+            .join("plans")
+            .join("wa_house_tol_5_0");
         write_plan_manifest(&plan_dir_a, "wa_house_tol_0_5", 0.5);
         write_plan_manifest(&plan_dir_b, "wa_house_tol_5_0", 5.0);
 
@@ -1085,26 +1254,42 @@ mod tests {
 
         // (a) table format must succeed
         let result_table = run_multi_plan_summary(&args_table);
-        assert!(result_table.is_ok(), "multi-plan summary (table) with tolerances must succeed: {:?}", result_table.err());
+        assert!(
+            result_table.is_ok(),
+            "multi-plan summary (table) with tolerances must succeed: {:?}",
+            result_table.err()
+        );
 
         // (b) CSV format must also succeed
         let result_csv = run_multi_plan_summary(&args_csv);
-        assert!(result_csv.is_ok(), "multi-plan summary (CSV) with tolerances must succeed: {:?}", result_csv.err());
+        assert!(
+            result_csv.is_ok(),
+            "multi-plan summary (CSV) with tolerances must succeed: {:?}",
+            result_csv.err()
+        );
     }
 
     /// Task 207: balance_tol reads correctly from manifest via PlanContext.
     #[test]
     fn test_multi_plan_summary_tolerance_from_manifest() {
         let tmp = tempfile::TempDir::new().unwrap();
-        let plan_dir = tmp.path().join("v1").join("2020").join("plans").join("tol_plan");
+        let plan_dir = tmp
+            .path()
+            .join("v1")
+            .join("2020")
+            .join("plans")
+            .join("tol_plan");
         write_plan_manifest(&plan_dir, "tol_plan", 2.5);
 
         // Verify PlanContext reads balance_tolerance_pct correctly
-        let ctx = crate::plan_context::PlanContext::from_label(
-            tmp.path(), "v1", "2020", "tol_plan",
-        ).unwrap();
-        assert!((ctx.manifest.balance_tolerance_pct - 2.5).abs() < 1e-9,
-            "balance_tolerance_pct must be 2.5, got {}", ctx.manifest.balance_tolerance_pct);
+        let ctx =
+            crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "tol_plan")
+                .unwrap();
+        assert!(
+            (ctx.manifest.balance_tolerance_pct - 2.5).abs() < 1e-9,
+            "balance_tolerance_pct must be 2.5, got {}",
+            ctx.manifest.balance_tolerance_pct
+        );
     }
 
     /// Task 207: when PlanContext fails, Bal Tol% shows "-".
@@ -1114,9 +1299,8 @@ mod tests {
         let tmp = tempfile::TempDir::new().unwrap();
         // Create plan directories without manifests
         for label in &["plan_no_manifest_a", "plan_no_manifest_b"] {
-            std::fs::create_dir_all(
-                tmp.path().join("v1").join("2020").join("plans").join(label)
-            ).unwrap();
+            std::fs::create_dir_all(tmp.path().join("v1").join("2020").join("plans").join(label))
+                .unwrap();
         }
 
         let args = CompareArgs {
@@ -1141,7 +1325,11 @@ mod tests {
 
         // Should succeed — missing PlanContext just shows "-"
         let result = run_multi_plan_summary(&args);
-        assert!(result.is_ok(), "summary without manifests must still succeed: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "summary without manifests must still succeed: {:?}",
+            result.err()
+        );
     }
 
     /// Scenario 14: External .rplan compare
@@ -1177,7 +1365,11 @@ mod tests {
 
         let path_str = rplan_path.to_str().unwrap();
         let result = load_plan_assignments(path_str, "outputs", "v1", "2020", None);
-        assert!(result.is_ok(), "should load .rplan file: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "should load .rplan file: {:?}",
+            result.err()
+        );
         let assignments = result.unwrap();
         assert_eq!(assignments.len(), 3, "should have 3 assignments");
         assert_eq!(assignments["53033000100"], 1);
@@ -1207,8 +1399,10 @@ mod tests {
         let err = load_plan_assignments(label, "outputs", "v1", "2020", None)
             .unwrap_err()
             .to_string();
-        assert!(err.contains(label),
-            "error message must mention the missing label '{label}': {err}");
+        assert!(
+            err.contains(label),
+            "error message must mention the missing label '{label}': {err}"
+        );
     }
 
     /// rplan with missing 'assignments' field returns Err.
@@ -1223,7 +1417,10 @@ mod tests {
         });
         std::fs::write(&path, json.to_string()).unwrap();
         let result = load_plan_assignments(path.to_str().unwrap(), "outputs", "v1", "2020", None);
-        assert!(result.is_err(), ".rplan without 'assignments' must return Err");
+        assert!(
+            result.is_err(),
+            ".rplan without 'assignments' must return Err"
+        );
     }
 
     /// rplan with invalid (non-integer) district values returns Err.
@@ -1240,7 +1437,10 @@ mod tests {
         });
         std::fs::write(&path, json.to_string()).unwrap();
         let result = load_plan_assignments(path.to_str().unwrap(), "outputs", "v1", "2020", None);
-        assert!(result.is_err(), "non-integer assignment value must return Err");
+        assert!(
+            result.is_err(),
+            "non-integer assignment value must return Err"
+        );
     }
 
     /// GerryChain flat format with district 0 is handled.
@@ -1254,7 +1454,11 @@ mod tests {
         });
         std::fs::write(&path, json.to_string()).unwrap();
         let result = load_plan_assignments(path.to_str().unwrap(), "outputs", "v1", "2020", None);
-        assert!(result.is_ok(), "district 0 must be valid: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "district 0 must be valid: {:?}",
+            result.err()
+        );
         let assignments = result.unwrap();
         assert_eq!(assignments["53001000100"], 0);
     }
@@ -1264,8 +1468,10 @@ mod tests {
     fn test_sha256_hex_produces_64_char_hex() {
         let hash = sha256_hex(b"hello world");
         assert_eq!(hash.len(), 64, "SHA-256 hex must be 64 chars");
-        assert!(hash.chars().all(|c| c.is_ascii_hexdigit()),
-            "SHA-256 hex must be all hex digits: {hash}");
+        assert!(
+            hash.chars().all(|c| c.is_ascii_hexdigit()),
+            "SHA-256 hex must be all hex digits: {hash}"
+        );
     }
 
     /// sha256_hex is deterministic for the same input.
@@ -1288,8 +1494,14 @@ mod tests {
     #[test]
     fn test_pick_civic_attribution_b_wins_when_b_is_civic() {
         let (typ, attr) = pick_civic_attribution(
-            None, "plan_a", None, None,
-            Some("civic_counter_proposal"), "civic_plan", Some("ACLU"), Some("2026-01-01"),
+            None,
+            "plan_a",
+            None,
+            None,
+            Some("civic_counter_proposal"),
+            "civic_plan",
+            Some("ACLU"),
+            Some("2026-01-01"),
         );
         assert_eq!(typ.as_deref(), Some("civic_counter_proposal"));
         let a = attr.unwrap();
@@ -1301,8 +1513,14 @@ mod tests {
     #[test]
     fn test_pick_civic_attribution_a_wins_when_only_a_is_civic() {
         let (typ, attr) = pick_civic_attribution(
-            Some("civic_counter_proposal"), "civic_plan_a", Some("NAACP"), Some("2026-02-01"),
-            None, "plan_b", None, None,
+            Some("civic_counter_proposal"),
+            "civic_plan_a",
+            Some("NAACP"),
+            Some("2026-02-01"),
+            None,
+            "plan_b",
+            None,
+            None,
         );
         assert_eq!(typ.as_deref(), Some("civic_counter_proposal"));
         let a = attr.unwrap();
@@ -1313,10 +1531,8 @@ mod tests {
     /// pick_civic_attribution: neither tagged → both None.
     #[test]
     fn test_pick_civic_attribution_neither_tagged_returns_none() {
-        let (typ, attr) = pick_civic_attribution(
-            None, "plan_a", None, None,
-            None, "plan_b", None, None,
-        );
+        let (typ, attr) =
+            pick_civic_attribution(None, "plan_a", None, None, None, "plan_b", None, None);
         assert!(typ.is_none(), "no civic tag → submission_type must be None");
         assert!(attr.is_none(), "no civic tag → attribution must be None");
     }
@@ -1331,8 +1547,10 @@ mod tests {
             "2020",
             None,
         );
-        assert!(result.is_none(),
-            "resolve_plan_dir for nonexistent label must return None");
+        assert!(
+            result.is_none(),
+            "resolve_plan_dir for nonexistent label must return None"
+        );
     }
 
     /// resolve_plan_dir with a directory containing manifest.json returns Some.
@@ -1340,15 +1558,11 @@ mod tests {
     fn test_resolve_plan_dir_finds_manifest_in_directory() {
         let tmp = tempfile::TempDir::new().unwrap();
         std::fs::write(tmp.path().join("manifest.json"), r#"{"label":"test"}"#).unwrap();
-        let result = resolve_plan_dir(
-            tmp.path().to_str().unwrap(),
-            "outputs",
-            "v1",
-            "2020",
-            None,
+        let result = resolve_plan_dir(tmp.path().to_str().unwrap(), "outputs", "v1", "2020", None);
+        assert!(
+            result.is_some(),
+            "resolve_plan_dir must find manifest.json in a real directory"
         );
-        assert!(result.is_some(),
-            "resolve_plan_dir must find manifest.json in a real directory");
     }
 
     /// load_plan_assignments resolves from output_dir override.
@@ -1356,13 +1570,32 @@ mod tests {
     fn test_load_plan_assignments_from_output_dir_override() {
         let tmp = tempfile::TempDir::new().unwrap();
         // Create: {tmp}/2020/plans/my_plan/data/final_assignments.json
-        let plan_data = tmp.path().join("2020").join("plans").join("my_plan").join("data");
+        let plan_data = tmp
+            .path()
+            .join("2020")
+            .join("plans")
+            .join("my_plan")
+            .join("data");
         std::fs::create_dir_all(&plan_data).unwrap();
         let assignments = serde_json::json!({"53001000100": 1, "53001000200": 2});
-        std::fs::write(plan_data.join("final_assignments.json"), assignments.to_string()).unwrap();
+        std::fs::write(
+            plan_data.join("final_assignments.json"),
+            assignments.to_string(),
+        )
+        .unwrap();
 
-        let result = load_plan_assignments("my_plan", "outputs", "v1", "2020", Some(&tmp.path().to_path_buf()));
-        assert!(result.is_ok(), "output_dir override must find plan: {:?}", result.err());
+        let result = load_plan_assignments(
+            "my_plan",
+            "outputs",
+            "v1",
+            "2020",
+            Some(&tmp.path().to_path_buf()),
+        );
+        assert!(
+            result.is_ok(),
+            "output_dir override must find plan: {:?}",
+            result.err()
+        );
         let a = result.unwrap();
         assert_eq!(a.len(), 2, "must load 2 assignments");
     }
@@ -1382,13 +1615,21 @@ mod tests {
     fn test_read_plan_year_from_manifest_json() {
         let tmp = tempfile::TempDir::new().unwrap();
         // Create: {tmp}/v1/2020/plans/my_plan/manifest.json
-        let plan_dir = tmp.path().join("v1").join("2020").join("plans").join("my_plan");
+        let plan_dir = tmp
+            .path()
+            .join("v1")
+            .join("2020")
+            .join("plans")
+            .join("my_plan");
         std::fs::create_dir_all(&plan_dir).unwrap();
         let manifest = serde_json::json!({"label": "my_plan", "year": "2020", "state_code": "WA"});
         std::fs::write(plan_dir.join("manifest.json"), manifest.to_string()).unwrap();
 
         let year = read_plan_year("my_plan", tmp.path().to_str().unwrap(), "v1", "2020", None);
-        assert_eq!(year, Some("2020".to_string()),
-            "read_plan_year must read year from manifest.json");
+        assert_eq!(
+            year,
+            Some("2020".to_string()),
+            "read_plan_year must read year from manifest.json"
+        );
     }
 }

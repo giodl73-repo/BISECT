@@ -3,9 +3,9 @@ requires = ["maturin>=1.5,<2"]
 build-backend = "maturin"
 
 [project]
-name = "redist_py"
+name = "bisect_py"
 version = "0.1.0"
-description = "PyO3 bindings for the redist redistricting engine"
+description = "PyO3 bindings for the bisect redistricting engine"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 

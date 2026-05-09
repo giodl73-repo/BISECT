@@ -1,6 +1,6 @@
 # Practitioner Quick Start
 
-This guide walks a redistricting commission or state legislature through using `redist` to draw, analyze, and submit a redistricting plan.
+This guide walks a redistricting commission or state legislature through using `BISECT` to draw, analyze, and submit a redistricting plan.
 
 **Example**: Washington state redistricting commission drawing house (98 districts), senate (49), and congressional (10) maps for 2020 census data.
 
@@ -10,7 +10,7 @@ This guide walks a redistricting commission or state legislature through using `
 
 ```bash
 # Build the binary (one-time, ~2 minutes)
-cargo build --release --manifest-path redist/Cargo.toml
+cargo build --release --manifest-path Cargo.toml
 
 # Download 2020 census data (TIGER shapefiles + population data)
 bisect fetch --year 2020
@@ -19,7 +19,7 @@ bisect fetch --year 2020
 python scripts/data/generate_adj_bin.py --year 2020
 
 # Verify setup
-redist --version
+BISECT --version
 ```
 
 ---
@@ -31,7 +31,7 @@ redist --version
 A suite draws all three chambers in the right order, validates that senate districts nest inside house districts, and produces a single named plan package:
 
 ```bash
-redist suite --state WA --year 2020 --version WA_Plans \
+BISECT suite --state WA --year 2020 --version WA_Plans \
   --name wa_commission_v1 \
   --house-districts 98 \
   --senate-districts 49 \
@@ -115,7 +115,7 @@ bisect analyze --label wa_house_v1 --year 2020 --version WA_Plans \
 bisect fetch --type enacted --year 2020 --states WA
 
 # Compare your plan to enacted
-redist compare --plan-a wa_house_v1 --enacted \
+BISECT compare --plan-a wa_house_v1 --enacted \
   --year 2020 --version WA_Plans \
   --format table json
 ```
@@ -133,12 +133,12 @@ This shows side-by-side:
 
 ```bash
 # Full formal report (HTML + JSON)
-redist report --label wa_house_v1 --year 2020 --version WA_Plans \
+BISECT report --label wa_house_v1 --year 2020 --version WA_Plans \
   --format html json \
   --out reports/wa_house_v1/
 
 # Suite report (all three chambers)
-redist report --suite wa_commission_v1 --year 2020 --version WA_Plans \
+BISECT report --suite wa_commission_v1 --year 2020 --version WA_Plans \
   --format html --out reports/wa_commission_v1/
 ```
 
@@ -150,27 +150,27 @@ The HTML report is self-contained — email it, print it, or submit it to the pu
 
 ```bash
 # GeoJSON (for DRA, PlanScore, QGIS)
-redist export --label wa_house_v1 --year 2020 --version WA_Plans \
+BISECT export --label wa_house_v1 --year 2020 --version WA_Plans \
   --format geojson --out exports/
 
 # Shapefile (for Maptitude, ArcGIS)
-redist export --label wa_house_v1 --format shapefile --out exports/
+BISECT export --label wa_house_v1 --format shapefile --out exports/
 
 # RPLAN (open format, verifiable by any tool)
-redist export --label wa_house_v1 --format rplan --out exports/
+BISECT export --label wa_house_v1 --format rplan --out exports/
 
 # All formats at once
-redist export --label wa_house_v1 --format geojson shapefile rplan csv \
+BISECT export --label wa_house_v1 --format geojson shapefile rplan csv \
   --out exports/wa_house_v1/
 ```
 
-Submit `exports/wa_house_v1/wa_house_v1.rplan` to the public record. Any party can independently verify the plan using `redist validate`.
+Submit `exports/wa_house_v1/wa_house_v1.rplan` to the public record. Any party can independently verify the plan using `BISECT validate`.
 
 ---
 
 ## Step 6: Audit trail
 
-Every plan produced by `redist` has a machine-verifiable audit trail. Check `manifest.json` in the plan directory:
+Every plan produced by `BISECT` has a machine-verifiable audit trail. Check `manifest.json` in the plan directory:
 
 ```bash
 cat outputs/WA_Plans/2020/plans/wa_house_v1/manifest.json
@@ -210,7 +210,7 @@ bisect state --state WA --districts 98 --chamber house \
   --label wa_house_draft2 --seed 7823 --version WA_Plans
 
 # Compare the two drafts
-redist compare --plan-a wa_house_draft1 --plan-b wa_house_draft2 \
+BISECT compare --plan-a wa_house_draft1 --plan-b wa_house_draft2 \
   --year 2020 --version WA_Plans
 
 # Analyze both
@@ -218,7 +218,7 @@ bisect analyze --label wa_house_draft1 --types all
 bisect analyze --label wa_house_draft2 --types all
 
 # Side-by-side report
-redist report --label wa_house_draft1 wa_house_draft2 --format html
+BISECT report --label wa_house_draft1 wa_house_draft2 --format html
 ```
 
 ---

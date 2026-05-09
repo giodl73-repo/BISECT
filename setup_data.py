@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Download data for the REDIST Congressional Redistricting project.
+Download data for the BISECT Congressional Redistricting project.
 
 Three categories of data:
 
@@ -34,7 +34,7 @@ import sys
 import os
 from pathlib import Path
 
-REPO = "giodl73-repo/REDIST"
+REPO = "giodl73-repo/BISECT"
 
 RELEASES = {
     "inputs": {
@@ -98,7 +98,7 @@ def download_census(year):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Set up REDIST project data")
+    parser = argparse.ArgumentParser(description="Set up BISECT project data")
     parser.add_argument("--inputs", action="store_true",
                         help="Download curated inputs + adjacency graphs")
     parser.add_argument("--outputs", choices=["v3", "v4", "both"],

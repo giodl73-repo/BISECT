@@ -9,7 +9,7 @@ param(
 )
 
 Set-Location C:\src\apportionment
-$env:REDIST_LOCATION_POLICY = "C:\src\apportionment\redist\data\location_policy.json"
+$env:BISECT_LOCATION_POLICY = "C:\src\apportionment\BISECT\data\location_policy.json"
 
 $outDir = "outputs\b7_sweep"
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
@@ -44,7 +44,7 @@ $statesToProcess = if ($Only) {
 
 Write-Output "B.7 CSV rebuild — processing $($statesToProcess.Count) states"
 Write-Output "Output: $csvPath"
-if ($DryRun) { Write-Output "(DRY RUN — no redist calls)" }
+if ($DryRun) { Write-Output "(DRY RUN — no BISECT calls)" }
 Write-Output ""
 
 $rows = [System.Collections.Generic.List[string]]::new()
@@ -76,7 +76,7 @@ foreach ($entry in $statesToProcess) {
             $ver = "b7_${code}_s${seed}"
             $aPath = "outputs\$ver\2020\states\$stName\data\final_assignments.json"
             if (-not (Test-Path $aPath)) {
-                $null = .\redist\target\release\redist.exe state --state $code --year 2020 --version $ver --seed $seed --manifest 2>&1
+                $null = .\target\release\bisect.exe state --state $code --year 2020 --version $ver --seed $seed --manifest 2>&1
             }
             $pPath = "outputs\$ver\2020\states\$stName\analysis\proportionality.json"
             if (-not (Test-Path "outputs\$ver\2020\states\$stName\manifest.json")) {
@@ -84,7 +84,7 @@ foreach ($entry in $statesToProcess) {
                 continue
             }
             if (-not (Test-Path $pPath)) {
-                $null = .\redist\target\release\redist.exe analyze --state $code --year 2020 --version $ver --types proportionality 2>&1
+                $null = .\target\release\bisect.exe analyze --state $code --year 2020 --version $ver --types proportionality 2>&1
             }
             if ($seed % 50 -eq 0) { Write-Output "  ... seed $seed done" }
         }
@@ -105,7 +105,7 @@ foreach ($entry in $statesToProcess) {
 
         # Run proportionality analysis if missing
         if ((Test-Path $mPath) -and (-not (Test-Path $pPath)) -and -not $DryRun) {
-            $null = .\redist\target\release\redist.exe analyze --state $code --year 2020 `
+            $null = .\target\release\bisect.exe analyze --state $code --year 2020 `
                 --version $runDir.Name --types proportionality 2>&1
         }
 

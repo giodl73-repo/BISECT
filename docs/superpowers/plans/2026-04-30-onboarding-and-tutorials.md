@@ -7,7 +7,7 @@
 **v2.1 tracking ref:** `docs/superpowers/specs/2026-04-30-v21-tracking.md`
 **Goal:** Get bootstrap-to-first-useful-run to ≤ 5 minutes for the happy path on a clean Windows VM and a clean Linux container, with one worked quickstart per persona and an L2 acceptance test that runs the canonical Vermont walkthrough end-to-end with pinned data checksums.
 
-**Depends on:** spec v2.1 approval. No code dependencies (existing `redist` CLI surface is sufficient).
+**Depends on:** spec v2.1 approval. No code dependencies (existing `BISECT` CLI surface is sufficient).
 **Blocks:** none directly. Other plans cite quickstart paths but do not require them to ship first.
 
 **v2.1 items addressed by this plan:**
@@ -20,10 +20,10 @@
 
 ## Pre-Conditions
 
-- `redist` binary builds clean on Windows + Linux from `cargo build --release --locked`
+- `BISECT` binary builds clean on Windows + Linux from `cargo build --release --locked`
 - Census 2020 TIGER data for VT is fetchable via existing `bisect fetch` infrastructure
 - Fekrazad DOI 10.7910/DVN/Z8TSH3 is reachable (verified by network-marked integration tests)
-- `redist doctor` exists and supports `--verify-manifest`; this plan extends it with `--check-tutorial-data`
+- `BISECT doctor` exists and supports `--verify-manifest`; this plan extends it with `--check-tutorial-data`
 
 ---
 
@@ -31,7 +31,7 @@
 
 **Files:** `examples/vermont-walkthrough/{README.md, run.sh, checksums.json, expected_outputs/}`
 
-The walkthrough is the load-bearing artifact: every quickstart links to it, the L2 acceptance test runs it, and `redist doctor --check-tutorial-data` verifies it.
+The walkthrough is the load-bearing artifact: every quickstart links to it, the L2 acceptance test runs it, and `BISECT doctor --check-tutorial-data` verifies it.
 
 - [ ] **1.1** Run the full canonical pipeline once locally on VT 2020 with the pinned Census TIGER URL + Fekrazad DOI; capture every command, every output checksum, every wall-clock time.
 - [ ] **1.2** Write `examples/vermont-walkthrough/run.sh` (and a `run.bat` equivalent) executing the pinned commands in order. No interactive prompts; everything declarative.
@@ -58,16 +58,16 @@ The walkthrough is the load-bearing artifact: every quickstart links to it, the 
 
 ---
 
-## Task 2: Implement `redist doctor --check-tutorial-data`
+## Task 2: Implement `BISECT doctor --check-tutorial-data`
 
-**Files:** `redist/crates/bisect-cli/src/doctor.rs`, `redist/crates/bisect-cli/src/main.rs`
+**Files:** `BISECT/crates/bisect-cli/src/doctor.rs`, `BISECT/crates/bisect-cli/src/main.rs`
 
-- [ ] **2.1** Extend `redist doctor` with the `--check-tutorial-data` flag accepting an optional `--tutorial <NAME>` (default: `vermont-2020`).
+- [ ] **2.1** Extend `BISECT doctor` with the `--check-tutorial-data` flag accepting an optional `--tutorial <NAME>` (default: `vermont-2020`).
 - [ ] **2.2** The command reads `examples/{tutorial}-walkthrough/checksums.json`, hashes each pinned input + expected output that exists locally, reports per-row PASS/FAIL/MISSING, exits 0 only if all PASS.
-- [ ] **2.3** On any FAIL, print the actionable message from the spec ("Data has drifted from tutorial baseline. Either: (a) re-fetch with the pinned commands above; (b) Run `redist doctor --check-tutorial-data` for diagnosis").
+- [ ] **2.3** On any FAIL, print the actionable message from the spec ("Data has drifted from tutorial baseline. Either: (a) re-fetch with the pinned commands above; (b) Run `BISECT doctor --check-tutorial-data` for diagnosis").
 - [ ] **2.4** L0 unit tests: synthetic 3-row checksums file with one PASS / one FAIL / one MISSING; assert exit code + per-row output.
 
-**Exit:** `redist doctor --check-tutorial-data` correctly identifies drift; tests cover all three row outcomes.
+**Exit:** `BISECT doctor --check-tutorial-data` correctly identifies drift; tests cover all three row outcomes.
 
 ---
 
@@ -78,9 +78,9 @@ The walkthrough is the load-bearing artifact: every quickstart links to it, the 
 The script implements the spec's §"Bootstrap script structure" with the v2.1 PP-20 fix (real smoke test, not `--print-only`).
 
 - [ ] **3.1** Write `bootstrap.sh` per the v2.1 spec. The smoke test asserts `final_assignments.json` exists AND `jq 'length' ... -eq 193`. ASCII-only output (`[OK]`, `[FAIL]`, `->`).
-- [ ] **3.2** PATH preflight (PP-18): after `cargo build`, verify `target/release/redist` exists at the expected path BEFORE adding to PATH. After PATH update, verify `which redist` finds it. If not, exit non-zero with a clear "build succeeded but binary not at expected path" message.
-- [ ] **3.3** Optional Python wheel build via maturin: gated by `--with-python` flag. After build, verify `python -c "import redist_py"` succeeds before claiming success.
-- [ ] **3.4** Optional Dataverse API key prompt: gated by `--with-api-key` flag. PP-19 requires validating the key with one Dataverse round-trip BEFORE writing to `~/.config/redist/credentials.toml`. On validation failure, do NOT write the key; print the actionable error from Dataverse.
+- [ ] **3.2** PATH preflight (PP-18): after `cargo build`, verify `target/release/BISECT` exists at the expected path BEFORE adding to PATH. After PATH update, verify `which BISECT` finds it. If not, exit non-zero with a clear "build succeeded but binary not at expected path" message.
+- [ ] **3.3** Optional Python wheel build via maturin: gated by `--with-python` flag. After build, verify `python -c "import bisect_py"` succeeds before claiming success.
+- [ ] **3.4** Optional Dataverse API key prompt: gated by `--with-api-key` flag. PP-19 requires validating the key with one Dataverse round-trip BEFORE writing to `~/.config/BISECT/credentials.toml`. On validation failure, do NOT write the key; print the actionable error from Dataverse.
 - [ ] **3.5** Run smoke test (Task 1's `run.sh` is the canonical smoke; bootstrap.sh runs an abbreviated version: `bisect state --state VT --year 2020 --label bootstrap_test --output-dir /tmp/bootstrap_smoke` and asserts the tract count).
 - [ ] **3.6** Print final summary: time elapsed, what was installed, what to try next.
 
@@ -92,8 +92,8 @@ The script implements the spec's §"Bootstrap script structure" with the v2.1 PP
 
 **Files:** `bootstrap.bat`
 
-- [ ] **4.1** Mirror Task 3 in cmd.exe / PowerShell-bridge syntax. Use `where redist` instead of `which redist`. Use `%TEMP%\bootstrap_smoke` instead of `/tmp/bootstrap_smoke`. ASCII-only output (CP1252 console).
-- [ ] **4.2** Credentials path: `%APPDATA%\redist\credentials.toml`. Same PP-19 validation before write.
+- [ ] **4.1** Mirror Task 3 in cmd.exe / PowerShell-bridge syntax. Use `where BISECT` instead of `which BISECT`. Use `%TEMP%\bootstrap_smoke` instead of `/tmp/bootstrap_smoke`. ASCII-only output (CP1252 console).
+- [ ] **4.2** Credentials path: `%APPDATA%\BISECT\credentials.toml`. Same PP-19 validation before write.
 - [ ] **4.3** Test on a clean Windows 11 VM (no Rust, no Python, no Visual Studio Build Tools — bootstrap should detect missing build tools and surface the install URL, not fail with a cryptic linker error).
 
 **Exit:** On a clean Windows 11 VM, `bootstrap.bat` completes in ≤ 10 minutes wall-clock and the smoke test passes.
@@ -106,12 +106,12 @@ The script implements the spec's §"Bootstrap script structure" with the v2.1 PP
 
 Each follows the spec's template (Who you are / What you'll have / Time / Steps / Expected output / Where to go next).
 
-- [ ] **5.1** `quickstart-special-master.md` — verify a submitted plan against its manifest using `redist doctor --verify-manifest`. Use the Vermont walkthrough's output as the example plan.
+- [ ] **5.1** `quickstart-special-master.md` — verify a submitted plan against its manifest using `BISECT doctor --verify-manifest`. Use the Vermont walkthrough's output as the example plan.
 - [ ] **5.2** `quickstart-researcher.md` — run a parameter sweep + analyze. Cross-references the (future) Researcher Toolkit notebooks but ships a CLI-only path.
 - [ ] **5.3** `quickstart-callais-expert.md` — full §2 evidence kit; explicitly framed as advanced; references the Louisiana walkthrough fixture.
-- [ ] **5.4** `quickstart-state-staff.md` — Districtr → `redist import` → `bisect analyze` → `redist report` round trip.
+- [ ] **5.4** `quickstart-state-staff.md` — Districtr → `BISECT import` → `bisect analyze` → `BISECT report` round trip.
 - [ ] **5.5** `quickstart-civic-advocate.md` — produce a comparison narrative for the public.
-  - **CM-01**: include explicit guidance on obtaining the state's official plan when not Districtr-published — shapefile path (`redist import --format shapefile`), GeoJSON path, and "if all you have is a PDF, here's how to ask the state for a machine-readable export" template language.
+  - **CM-01**: include explicit guidance on obtaining the state's official plan when not Districtr-published — shapefile path (`BISECT import --format shapefile`), GeoJSON path, and "if all you have is a PDF, here's how to ask the state for a machine-readable export" template language.
 - [ ] **5.6** Each quickstart manually walked end-to-end on a clean machine; record actual wall-clock time at the top.
 
 **Exit:** All 5 quickstarts exist, render cleanly via markdown lint, walk end-to-end manually.
@@ -120,7 +120,7 @@ Each follows the spec's template (Who you are / What you'll have / Time / Steps 
 
 ## Task 6: Error-message audit + `docs/error-conventions.md`
 
-**Files:** `docs/error-conventions.md`, `redist/crates/bisect-cli/src/**/*.rs`
+**Files:** `docs/error-conventions.md`, `BISECT/crates/bisect-cli/src/**/*.rs`
 
 - [ ] **6.1** Walk every `unwrap()`, `expect()`, and bare `?` in `bisect-cli/src/`. For each user-facing path (top-of-main return paths, CLI argument parsing, file I/O on user-supplied paths), replace stack-trace exits with `[INPUT]` / `[CONFIG]` / `[INTERNAL]` / `[NETWORK]` categorized errors that include an actionable hint.
 - [ ] **6.2** Document the four categories in `docs/error-conventions.md`: when each is appropriate, what an actionable hint looks like, examples per category.
@@ -138,7 +138,7 @@ Each follows the spec's template (Who you are / What you'll have / Time / Steps 
 - [ ] **7.1** First 30 seconds: persona table mapping `What you want to do` → `Where to start` → `Time`. Five rows, one per persona.
 - [ ] **7.2** Next 5 minutes: link tree to the bootstrap script + the 5 quickstarts.
 - [ ] **7.3** Architecture diagram (one image — reuse the existing one if it's accurate; otherwise a 5-box block diagram is fine).
-- [ ] **7.4** Link to deeper docs (REDIST_CLI.md, architecture spec, CLAUDE.md for contributors).
+- [ ] **7.4** Link to deeper docs (BISECT_CLI.md, architecture spec, CLAUDE.md for contributors).
 - [ ] **7.5** "What this is NOT" section: not a GUI; not a real-time multiplayer drawer; not a litigation predictor. Manage expectations.
 
 **Exit:** A first-time visitor reaches the bootstrap script + their persona's quickstart in ≤ 60 seconds of reading.
@@ -150,7 +150,7 @@ Each follows the spec's template (Who you are / What you'll have / Time / Steps 
 **Files:** `tests/acceptance/test_walkthrough_vermont.py`
 
 - [ ] **8.1** Pytest test marked `@pytest.mark.network` and `@pytest.mark.slow` (default-skipped per spec).
-- [ ] **8.2** The test invokes `bash examples/vermont-walkthrough/run.sh` (or shell-equivalent on Windows runners), then runs `redist doctor --check-tutorial-data`. Assert exit code 0.
+- [ ] **8.2** The test invokes `bash examples/vermont-walkthrough/run.sh` (or shell-equivalent on Windows runners), then runs `BISECT doctor --check-tutorial-data`. Assert exit code 0.
 - [ ] **8.3** On failure, the test prints the diff between expected and got checksums (don't just assert — surface the drift for debugging).
 - [ ] **8.4** Wire into the nightly CI workflow (per roadmap §CI strategy): runs on `ubuntu-latest-large` with the `network` and `slow` markers selected.
 
@@ -160,11 +160,11 @@ Each follows the spec's template (Who you are / What you'll have / Time / Steps 
 
 ## Task 9: Documentation cross-wiring
 
-**Files:** `CLAUDE.md`, `docs/REDIST_CLI.md`, `docs/CHANGELOG.md`
+**Files:** `CLAUDE.md`, `docs/BISECT_CLI.md`, `docs/CHANGELOG.md`
 
 - [ ] **9.1** CLAUDE.md "Common Commands" section gets a "First time here?" subsection at the top pointing at `bootstrap.sh` / `bootstrap.bat`.
 - [ ] **9.2** CLAUDE.md "Recent Changes" entry for this plan's completion date.
-- [ ] **9.3** `docs/REDIST_CLI.md` documents `--check-tutorial-data` and the `bootstrap` flow.
+- [ ] **9.3** `docs/BISECT_CLI.md` documents `--check-tutorial-data` and the `bootstrap` flow.
 - [ ] **9.4** `docs/CHANGELOG.md` entry.
 
 **Exit:** A contributor reading CLAUDE.md cold lands on the bootstrap path.
@@ -175,7 +175,7 @@ Each follows the spec's template (Who you are / What you'll have / Time / Steps 
 
 - `bootstrap.sh` + `bootstrap.bat` succeed on a clean VM in ≤ 10 minutes wall-clock (verified, not aspirational)
 - All 5 `quickstart-*.md` exist, lint-clean, and have been manually walked end-to-end
-- Vermont walkthrough committed under `examples/vermont-walkthrough/` with `checksums.json` consumed by `redist doctor --check-tutorial-data`
+- Vermont walkthrough committed under `examples/vermont-walkthrough/` with `checksums.json` consumed by `BISECT doctor --check-tutorial-data`
 - Louisiana walkthrough exists separately under `examples/louisiana-callais-walkthrough/` and is framed as "advanced post-Callais §2 evidence kit"
 - `tests/acceptance/test_walkthrough_vermont.py` passes nightly
 - README.md leads with the persona table; no broken links

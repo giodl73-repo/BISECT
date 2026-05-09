@@ -1,14 +1,14 @@
-/// import_cmd.rs — `redist import` command dispatch.
+use crate::args::ImportArgs;
+use bisect_core::state_code_to_fips;
+use bisect_report::{
+    import_geojson_plan, import_gerrychain_to_assignments, validate_geoid_format_batch,
+    write_rplan, RplanFile, RplanMetadata,
+};
+/// import_cmd.rs — `BISECT import` command dispatch.
 ///
 /// Imports a GeoJSON plan (or GerryChain JSON) into the RPLAN format.
 /// Dispatches to bisect_report::import_plan_to_rplan or import_gerrychain_to_assignments.
 use std::path::PathBuf;
-use crate::args::ImportArgs;
-use bisect_core::state_code_to_fips;
-use bisect_report::{
-    RplanFile, RplanMetadata, import_geojson_plan, import_gerrychain_to_assignments,
-    write_rplan, validate_geoid_format_batch,
-};
 
 /// Return true if the path has a shapefile-family extension (.shp, .shx, .dbf, .prj, .zip).
 pub fn is_shapefile_extension(path: &std::path::Path) -> bool {
@@ -96,7 +96,9 @@ pub fn run_import(args: &ImportArgs) -> anyhow::Result<()> {
 
     let metadata = RplanMetadata {
         label: args.label.clone(),
-        state_fips: state_code_to_fips(&args.state.to_uppercase()).unwrap_or("00").to_string(),
+        state_fips: state_code_to_fips(&args.state.to_uppercase())
+            .unwrap_or("00")
+            .to_string(),
         state_code: args.state.to_uppercase(),
         year: args.year.clone(),
         chamber: "imported".into(),
@@ -114,7 +116,10 @@ pub fn run_import(args: &ImportArgs) -> anyhow::Result<()> {
 
     // Also write final_assignments.json for compatibility with analyze command
     let assignments_path = plan_dir.join("final_assignments.json");
-    std::fs::write(&assignments_path, serde_json::to_string_pretty(&assignments)?)?;
+    std::fs::write(
+        &assignments_path,
+        serde_json::to_string_pretty(&assignments)?,
+    )?;
 
     // SSI Task 7 (civic-bypass) — validation: --as-civic-counter-proposal
     // requires --submitted-by, otherwise the manifest tag becomes meaningless.
@@ -190,15 +195,13 @@ fn import_assignments_from_geojson_properties(
         let mut assignments = std::collections::HashMap::new();
         for feature in arr {
             let props = &feature["properties"];
-            if let (Some(geoid), Some(district)) = (
-                props["geoid"].as_str(),
-                props["district"].as_u64(),
-            ) {
+            if let (Some(geoid), Some(district)) =
+                (props["geoid"].as_str(), props["district"].as_u64())
+            {
                 assignments.insert(geoid.to_string(), district as usize);
-            } else if let (Some(geoid), Some(district)) = (
-                props["GEOID"].as_str(),
-                props["district"].as_u64(),
-            ) {
+            } else if let (Some(geoid), Some(district)) =
+                (props["GEOID"].as_str(), props["district"].as_u64())
+            {
                 assignments.insert(geoid.to_string(), district as usize);
             }
         }
@@ -237,15 +240,27 @@ pub fn import_assignments_from_dra_csv(
     // Detect header row by checking whether the first token is numeric.
     let first_line = *lines.peek().unwrap();
     let first_fields: Vec<&str> = first_line.splitn(2, ',').collect();
-    let has_header = !first_fields.get(0).map(|f| f.trim()).unwrap_or("").chars()
-        .next().map(|c| c.is_ascii_digit()).unwrap_or(false);
+    let has_header = !first_fields
+        .get(0)
+        .map(|f| f.trim())
+        .unwrap_or("")
+        .chars()
+        .next()
+        .map(|c| c.is_ascii_digit())
+        .unwrap_or(false);
 
     // Determine column order from header (or default to GEOID=0, DISTRICT=1).
     let (geoid_col, district_col) = if has_header {
         let header_line = lines.next().unwrap(); // consume the header
         let headers: Vec<&str> = header_line.split(',').collect();
-        let h0 = headers.get(0).map(|h| h.trim().to_uppercase()).unwrap_or_default();
-        let h1 = headers.get(1).map(|h| h.trim().to_uppercase()).unwrap_or_default();
+        let h0 = headers
+            .get(0)
+            .map(|h| h.trim().to_uppercase())
+            .unwrap_or_default();
+        let h1 = headers
+            .get(1)
+            .map(|h| h.trim().to_uppercase())
+            .unwrap_or_default();
         // Detect reversed order: first column is DISTRICT (small-int-like name)
         let geoid_first = h0.contains("GEOID") || h0.contains("GEO_ID");
         let district_first = h0.contains("DISTRICT") || h0.contains("DIST") || h0 == "ID";
@@ -264,21 +279,29 @@ pub fn import_assignments_from_dra_csv(
     let mut assignments = std::collections::HashMap::new();
     for (lineno, line) in lines.enumerate() {
         let line = line.trim();
-        if line.is_empty() { continue; }
+        if line.is_empty() {
+            continue;
+        }
         let fields: Vec<&str> = line.split(',').collect();
         let geoid_raw = fields.get(geoid_col).map(|f| f.trim()).unwrap_or("");
         let district_raw = fields.get(district_col).map(|f| f.trim()).unwrap_or("");
 
         // If auto-detect failed and geoid looks numeric with small value, swap
-        let (geoid, district_str) =
-            if geoid_raw.len() < 5 && district_raw.len() == 11 && district_raw.chars().all(|c| c.is_ascii_digit()) {
-                (district_raw, geoid_raw)
-            } else {
-                (geoid_raw, district_raw)
-            };
+        let (geoid, district_str) = if geoid_raw.len() < 5
+            && district_raw.len() == 11
+            && district_raw.chars().all(|c| c.is_ascii_digit())
+        {
+            (district_raw, geoid_raw)
+        } else {
+            (geoid_raw, district_raw)
+        };
 
         let district: usize = district_str.parse().map_err(|_| {
-            anyhow::anyhow!("DRA CSV line {}: cannot parse district '{}' as integer", lineno + 1, district_str)
+            anyhow::anyhow!(
+                "DRA CSV line {}: cannot parse district '{}' as integer",
+                lineno + 1,
+                district_str
+            )
         })?;
         assignments.insert(geoid.to_string(), district);
     }
@@ -336,8 +359,14 @@ mod tests {
         let result = run_import(&args);
         assert!(result.is_err(), "importing .shp should fail");
         let msg = result.unwrap_err().to_string();
-        assert!(msg.contains("ogr2ogr"), "error should mention ogr2ogr, got: {msg}");
-        assert!(msg.contains("GeoJSON"), "error should mention GeoJSON conversion, got: {msg}");
+        assert!(
+            msg.contains("ogr2ogr"),
+            "error should mention ogr2ogr, got: {msg}"
+        );
+        assert!(
+            msg.contains("GeoJSON"),
+            "error should mention GeoJSON conversion, got: {msg}"
+        );
     }
 
     #[test]
@@ -357,7 +386,10 @@ mod tests {
         let result = run_import(&args);
         assert!(result.is_err(), "importing .zip should fail");
         let msg = result.unwrap_err().to_string();
-        assert!(msg.contains("ogr2ogr"), "error should mention ogr2ogr, got: {msg}");
+        assert!(
+            msg.contains("ogr2ogr"),
+            "error should mention ogr2ogr, got: {msg}"
+        );
     }
 
     #[test]
@@ -386,7 +418,11 @@ mod tests {
     fn test_import_dra_csv_with_header() {
         let csv = "GEOID,DISTRICT\n53001000100,1\n53001000200,2\n53001000300,1\n";
         let result = import_assignments_from_dra_csv(csv);
-        assert!(result.is_ok(), "should parse DRA CSV with header: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "should parse DRA CSV with header: {:?}",
+            result.err()
+        );
         let assignments = result.unwrap();
         assert_eq!(assignments.len(), 3);
         assert_eq!(assignments["53001000100"], 1);
@@ -398,7 +434,11 @@ mod tests {
     fn test_import_dra_csv_without_header() {
         let csv = "53001000100,1\n53001000200,2\n53001000300,3\n";
         let result = import_assignments_from_dra_csv(csv);
-        assert!(result.is_ok(), "should parse headerless DRA CSV: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "should parse headerless DRA CSV: {:?}",
+            result.err()
+        );
         let assignments = result.unwrap();
         assert_eq!(assignments.len(), 3);
         assert_eq!(assignments["53001000100"], 1);
@@ -408,7 +448,11 @@ mod tests {
     fn test_import_dra_csv_reversed_columns() {
         let csv = "DISTRICT,GEOID\n1,53001000100\n2,53001000200\n";
         let result = import_assignments_from_dra_csv(csv);
-        assert!(result.is_ok(), "should parse reversed-column DRA CSV: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "should parse reversed-column DRA CSV: {:?}",
+            result.err()
+        );
         let assignments = result.unwrap();
         assert_eq!(assignments.len(), 2);
         assert_eq!(assignments["53001000100"], 1);
@@ -452,12 +496,16 @@ mod tests {
 
     #[test]
     fn test_is_shapefile_extension_zip() {
-        assert!(is_shapefile_extension(std::path::Path::new("tiger_2020.zip")));
+        assert!(is_shapefile_extension(std::path::Path::new(
+            "tiger_2020.zip"
+        )));
     }
 
     #[test]
     fn test_is_shapefile_extension_geojson_not_shapefile() {
-        assert!(!is_shapefile_extension(std::path::Path::new("plan.geojson")));
+        assert!(!is_shapefile_extension(std::path::Path::new(
+            "plan.geojson"
+        )));
     }
 
     #[test]
@@ -467,20 +515,27 @@ mod tests {
 
     #[test]
     fn test_is_shapefile_extension_csv_not_shapefile() {
-        assert!(!is_shapefile_extension(std::path::Path::new("dra_export.csv")));
+        assert!(!is_shapefile_extension(std::path::Path::new(
+            "dra_export.csv"
+        )));
     }
 
     #[test]
     fn test_shapefile_error_message_shp_mentions_qgis() {
         let msg = shapefile_error_message(std::path::Path::new("plan.shp"));
-        assert!(msg.contains("qgis") || msg.contains("QGIS") || msg.contains("qgis"),
-            "error must mention QGIS alternative: {msg}");
+        assert!(
+            msg.contains("qgis") || msg.contains("QGIS") || msg.contains("qgis"),
+            "error must mention QGIS alternative: {msg}"
+        );
     }
 
     #[test]
     fn test_shapefile_error_message_contains_python_geopandas() {
         let msg = shapefile_error_message(std::path::Path::new("plan.shp"));
-        assert!(msg.contains("geopandas"), "error must mention geopandas Python option: {msg}");
+        assert!(
+            msg.contains("geopandas"),
+            "error must mention geopandas Python option: {msg}"
+        );
     }
 
     #[test]
@@ -500,8 +555,10 @@ mod tests {
         let result = run_import(&args);
         assert!(result.is_err(), "importing .dbf should fail");
         let msg = result.unwrap_err().to_string();
-        assert!(msg.contains("Shapefile") || msg.contains("shapefile"),
-            "error must mention shapefile format: {msg}");
+        assert!(
+            msg.contains("Shapefile") || msg.contains("shapefile"),
+            "error must mention shapefile format: {msg}"
+        );
     }
 
     #[test]
@@ -517,7 +574,10 @@ mod tests {
         // Header line only, no data
         let csv = "GEOID,DISTRICT\n";
         let result = import_assignments_from_dra_csv(csv);
-        assert!(result.is_err(), "CSV with header only must fail with no assignments");
+        assert!(
+            result.is_err(),
+            "CSV with header only must fail with no assignments"
+        );
     }
 
     #[test]
@@ -539,7 +599,11 @@ mod tests {
         // Let's test the actual auto-swap: small district val on left, 11-char geoid on right.
         let csv = "1,53001000100\n2,53001000200\n";
         let result = import_assignments_from_dra_csv(csv);
-        assert!(result.is_ok(), "auto-swap must handle reversed no-header CSV: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "auto-swap must handle reversed no-header CSV: {:?}",
+            result.err()
+        );
         let assignments = result.unwrap();
         assert_eq!(assignments["53001000100"], 1);
         assert_eq!(assignments["53001000200"], 2);
@@ -564,7 +628,11 @@ mod tests {
             ]
         });
         let result = import_assignments_from_geojson_properties(&geojson.to_string());
-        assert!(result.is_ok(), "must handle both geoid and GEOID: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "must handle both geoid and GEOID: {:?}",
+            result.err()
+        );
         let assignments = result.unwrap();
         assert_eq!(assignments.len(), 2);
         assert_eq!(assignments["53001000100"], 1);

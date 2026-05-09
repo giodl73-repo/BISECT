@@ -1,10 +1,10 @@
+use bisect_core::{build_partisan_weights, build_vra_edge_weights, Graph, Partition};
 /// L1 integration tests: Graph + Partition + VRA working together.
 ///
-/// These test the full data flow through redist-core modules, not individual
+/// These test the full data flow through BISECT-core modules, not individual
 /// functions in isolation. A bug that requires two modules to interact would
 /// only be caught here, not in L0 unit tests.
 use std::collections::HashMap;
-use bisect_core::{Graph, Partition, build_vra_edge_weights, build_partisan_weights};
 
 // ---------------------------------------------------------------------------
 // Shared fixtures
@@ -20,13 +20,13 @@ use bisect_core::{Graph, Partition, build_vra_edge_weights, build_partisan_weigh
 /// Populations sum to 700_000 (ideal per district = 350_000 for k=2).
 fn alabama_toy() -> (Graph, Vec<f64>) {
     let adjacency = vec![
-        vec![1, 4],     // 0: minority tract, pop 120_000
-        vec![0, 2],     // 1: minority tract, pop 130_000
-        vec![1, 3],     // 2: non-minority,   pop 90_000
-        vec![2, 6],     // 3: non-minority,   pop 80_000
-        vec![0, 5],     // 4: non-minority,   pop 100_000
-        vec![4, 6],     // 5: non-minority,   pop 90_000
-        vec![5, 3],     // 6: non-minority,   pop 90_000
+        vec![1, 4], // 0: minority tract, pop 120_000
+        vec![0, 2], // 1: minority tract, pop 130_000
+        vec![1, 3], // 2: non-minority,   pop 90_000
+        vec![2, 6], // 3: non-minority,   pop 80_000
+        vec![0, 5], // 4: non-minority,   pop 100_000
+        vec![4, 6], // 5: non-minority,   pop 90_000
+        vec![5, 3], // 6: non-minority,   pop 90_000
     ];
     let vertex_weights = vec![120_000i64, 130_000, 90_000, 80_000, 100_000, 90_000, 90_000];
     let minority_fracs = vec![0.55, 0.60, 0.25, 0.20, 0.30, 0.20, 0.25];
@@ -43,16 +43,28 @@ fn test_vra_weights_only_boost_minority_minority_edges() {
     let (graph, minority_fracs) = alabama_toy();
 
     // Collect all edges from the graph
-    let edges: Vec<(usize, usize)> = graph.adjacency.iter().enumerate()
+    let edges: Vec<(usize, usize)> = graph
+        .adjacency
+        .iter()
+        .enumerate()
         .flat_map(|(u, nbrs)| nbrs.iter().filter(move |&&v| v > u).map(move |&v| (u, v)))
         .collect();
 
     let weights = build_vra_edge_weights(&edges, &minority_fracs, 0.40);
 
     // Only edge (0,1) connects two minority tracts — that's the only one that should be boosted
-    assert!(weights.contains_key(&(0, 1)), "edge (0,1) both minority → must be boosted");
-    assert!(!weights.contains_key(&(0, 4)), "edge (0,4): tract 4 not minority → not boosted");
-    assert!(!weights.contains_key(&(1, 2)), "edge (1,2): tract 2 not minority → not boosted");
+    assert!(
+        weights.contains_key(&(0, 1)),
+        "edge (0,1) both minority → must be boosted"
+    );
+    assert!(
+        !weights.contains_key(&(0, 4)),
+        "edge (0,4): tract 4 not minority → not boosted"
+    );
+    assert!(
+        !weights.contains_key(&(1, 2)),
+        "edge (1,2): tract 2 not minority → not boosted"
+    );
 
     // Total boosted edges = 1
     assert_eq!(weights.len(), 1);
@@ -61,7 +73,10 @@ fn test_vra_weights_only_boost_minority_minority_edges() {
 #[test]
 fn test_vra_alpha_correct_for_toy_state() {
     let (graph, minority_fracs) = alabama_toy();
-    let edges: Vec<(usize, usize)> = graph.adjacency.iter().enumerate()
+    let edges: Vec<(usize, usize)> = graph
+        .adjacency
+        .iter()
+        .enumerate()
         .flat_map(|(u, nbrs)| nbrs.iter().filter(move |&&v| v > u).map(move |&v| (u, v)))
         .collect();
 
@@ -70,8 +85,10 @@ fn test_vra_alpha_correct_for_toy_state() {
     // f_minority = 2/7 ≈ 0.2857 → α = max(3.0, 10*(1-0.7*0.2857)) = max(3.0, 10*0.800) = 8.0
     let expected_alpha = 3.0_f64.max(10.0 * (1.0 - 0.7 * (2.0 / 7.0)));
     let actual = weights[&(0, 1)];
-    assert!((actual - expected_alpha).abs() < 1e-9,
-        "alpha={actual:.4}, expected={expected_alpha:.4}");
+    assert!(
+        (actual - expected_alpha).abs() < 1e-9,
+        "alpha={actual:.4}, expected={expected_alpha:.4}"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -83,10 +100,10 @@ fn test_partition_balance_on_real_graph() {
     let (graph, _) = alabama_toy();
 
     // Assign vertices 0,1,4 to district 0 (pop = 350_000) and 2,3,5,6 to district 1 (pop = 350_000)
-    let assignments: HashMap<usize, usize> = [
-        (0, 0), (1, 0), (4, 0),
-        (2, 1), (3, 1), (5, 1), (6, 1),
-    ].into_iter().collect();
+    let assignments: HashMap<usize, usize> =
+        [(0, 0), (1, 0), (4, 0), (2, 1), (3, 1), (5, 1), (6, 1)]
+            .into_iter()
+            .collect();
     let p = Partition::from_assignments(assignments);
 
     // Perfectly balanced — assert_balanced must pass
@@ -94,8 +111,10 @@ fn test_partition_balance_on_real_graph() {
         p.assert_balanced(&graph.vertex_weights, 2, 0.005).is_ok(),
         "50/50 split should be within ±0.5%"
     );
-    assert!(p.population_balance(&graph.vertex_weights, 2) < 1e-9,
-        "perfect split → deviation ~0");
+    assert!(
+        p.population_balance(&graph.vertex_weights, 2) < 1e-9,
+        "perfect split → deviation ~0"
+    );
 }
 
 #[test]
@@ -104,13 +123,23 @@ fn test_partition_imbalance_detected_on_real_graph() {
 
     // All tracts to district 0 except one small one — extreme imbalance
     let assignments: HashMap<usize, usize> = [
-        (0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0),
-        (6, 1),  // only tract 6 (pop=90_000) in district 1
-    ].into_iter().collect();
+        (0, 0),
+        (1, 0),
+        (2, 0),
+        (3, 0),
+        (4, 0),
+        (5, 0),
+        (6, 1), // only tract 6 (pop=90_000) in district 1
+    ]
+    .into_iter()
+    .collect();
     let p = Partition::from_assignments(assignments);
 
     let result = p.assert_balanced(&graph.vertex_weights, 2, 0.005);
-    assert!(result.is_err(), "610k vs 90k split should fail balance check");
+    assert!(
+        result.is_err(),
+        "610k vs 90k split should fail balance check"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -122,7 +151,10 @@ fn test_full_flow_graph_vra_partition_balance() {
     let (graph, minority_fracs) = alabama_toy();
 
     // Step 1: build VRA edge weights
-    let edges: Vec<(usize, usize)> = graph.adjacency.iter().enumerate()
+    let edges: Vec<(usize, usize)> = graph
+        .adjacency
+        .iter()
+        .enumerate()
         .flat_map(|(u, nbrs)| nbrs.iter().filter(move |&&v| v > u).map(move |&v| (u, v)))
         .collect();
     let vra_weights = build_vra_edge_weights(&edges, &minority_fracs, 0.40);
@@ -132,14 +164,15 @@ fn test_full_flow_graph_vra_partition_balance() {
     assert!(vra_weights.contains_key(&(0, 1)));
 
     // Step 3: create a balanced partition (simulating what METIS would produce)
-    let assignments: HashMap<usize, usize> = [
-        (0, 0), (1, 0), (4, 0),
-        (2, 1), (3, 1), (5, 1), (6, 1),
-    ].into_iter().collect();
+    let assignments: HashMap<usize, usize> =
+        [(0, 0), (1, 0), (4, 0), (2, 1), (3, 1), (5, 1), (6, 1)]
+            .into_iter()
+            .collect();
     let partition = Partition::from_assignments(assignments);
 
     // Step 4: assert constitutional balance
-    partition.assert_balanced(&graph.vertex_weights, 2, 0.005)
+    partition
+        .assert_balanced(&graph.vertex_weights, 2, 0.005)
         .expect("well-balanced partition should pass ±0.5% check");
 
     // Step 5: verify district 0 is the higher-minority district.
@@ -156,8 +189,10 @@ fn test_full_flow_graph_vra_partition_balance() {
     let d1_minority: f64 = [2, 3, 5, 6].iter().map(|&i| minority_pops[i]).sum();
     let d0_pct = d0_minority / d0_pop as f64;
     let d1_pct = d1_minority / d1_pop as f64;
-    assert!(d0_pct > d1_pct,
-        "district 0 ({d0_pct:.3}) should have more minority than district 1 ({d1_pct:.3})");
+    assert!(
+        d0_pct > d1_pct,
+        "district 0 ({d0_pct:.3}) should have more minority than district 1 ({d1_pct:.3})"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -176,18 +211,25 @@ fn alabama_toy_partisan() -> (Graph, Vec<f64>) {
 #[test]
 fn test_partisan_weights_only_boost_same_party_edges() {
     let (graph, dem_shares) = alabama_toy_partisan();
-    let edges: Vec<(usize, usize)> = graph.adjacency.iter().enumerate()
+    let edges: Vec<(usize, usize)> = graph
+        .adjacency
+        .iter()
+        .enumerate()
         .flat_map(|(u, nbrs)| nbrs.iter().filter(move |&&v| v > u).map(move |&v| (u, v)))
         .collect();
 
     let weights = build_partisan_weights(&edges, &dem_shares, 0.55, 0.45);
 
     // Edge (0,1) connects two strong-D tracts → boosted
-    assert!(weights.contains_key(&(0, 1)),
-        "edge (0,1) both strong-D → must be boosted");
+    assert!(
+        weights.contains_key(&(0, 1)),
+        "edge (0,1) both strong-D → must be boosted"
+    );
     // Edge (0,4) connects strong-D to swing → not boosted
-    assert!(!weights.contains_key(&(0, 4)),
-        "edge (0,4): tract 4 swing → not boosted");
+    assert!(
+        !weights.contains_key(&(0, 4)),
+        "edge (0,4): tract 4 swing → not boosted"
+    );
     // No two strong-R tracts in this topology, so only one boosted edge total
     assert_eq!(weights.len(), 1);
 }
@@ -195,7 +237,10 @@ fn test_partisan_weights_only_boost_same_party_edges() {
 #[test]
 fn test_partisan_alpha_correct_for_toy_state() {
     let (graph, dem_shares) = alabama_toy_partisan();
-    let edges: Vec<(usize, usize)> = graph.adjacency.iter().enumerate()
+    let edges: Vec<(usize, usize)> = graph
+        .adjacency
+        .iter()
+        .enumerate()
         .flat_map(|(u, nbrs)| nbrs.iter().filter(move |&&v| v > u).map(move |&v| (u, v)))
         .collect();
 
@@ -205,8 +250,10 @@ fn test_partisan_alpha_correct_for_toy_state() {
     // α = max(3.0, 10*(1 - 0.7*3/7)) = max(3.0, 10*0.7) = 7.0
     let expected_alpha = 3.0_f64.max(10.0 * (1.0 - 0.7 * (3.0 / 7.0)));
     let actual = weights[&(0, 1)];
-    assert!((actual - expected_alpha).abs() < 1e-9,
-        "alpha={actual:.4}, expected={expected_alpha:.4}");
+    assert!(
+        (actual - expected_alpha).abs() < 1e-9,
+        "alpha={actual:.4}, expected={expected_alpha:.4}"
+    );
 }
 
 #[test]
@@ -214,7 +261,10 @@ fn test_partisan_full_flow_graph_to_partition() {
     let (graph, dem_shares) = alabama_toy_partisan();
 
     // Step 1: build partisan edge weights
-    let edges: Vec<(usize, usize)> = graph.adjacency.iter().enumerate()
+    let edges: Vec<(usize, usize)> = graph
+        .adjacency
+        .iter()
+        .enumerate()
         .flat_map(|(u, nbrs)| nbrs.iter().filter(move |&&v| v > u).map(move |&v| (u, v)))
         .collect();
     let partisan_weights = build_partisan_weights(&edges, &dem_shares, 0.55, 0.45);
@@ -223,14 +273,15 @@ fn test_partisan_full_flow_graph_to_partition() {
     assert!(partisan_weights.contains_key(&(0, 1)));
 
     // Step 3: a balanced partition that groups D-cluster (0,1) together
-    let assignments: HashMap<usize, usize> = [
-        (0, 0), (1, 0), (4, 0),
-        (2, 1), (3, 1), (5, 1), (6, 1),
-    ].into_iter().collect();
+    let assignments: HashMap<usize, usize> =
+        [(0, 0), (1, 0), (4, 0), (2, 1), (3, 1), (5, 1), (6, 1)]
+            .into_iter()
+            .collect();
     let partition = Partition::from_assignments(assignments);
 
     // Step 4: balance check
-    partition.assert_balanced(&graph.vertex_weights, 2, 0.005)
+    partition
+        .assert_balanced(&graph.vertex_weights, 2, 0.005)
         .expect("balanced partition passes ±0.5%");
 
     // Step 5: verify D-cluster (0,1) ended up in same district (cluster preservation)
@@ -247,7 +298,10 @@ fn test_partisan_and_vra_produce_independent_outputs() {
     // (the production runner enforces they're never both used in the same run).
     let (graph, minority_fracs) = alabama_toy();
     let (_, dem_shares) = alabama_toy_partisan();
-    let edges: Vec<(usize, usize)> = graph.adjacency.iter().enumerate()
+    let edges: Vec<(usize, usize)> = graph
+        .adjacency
+        .iter()
+        .enumerate()
         .flat_map(|(u, nbrs)| nbrs.iter().filter(move |&&v| v > u).map(move |&v| (u, v)))
         .collect();
 
@@ -261,6 +315,8 @@ fn test_partisan_and_vra_produce_independent_outputs() {
     // high-minority AND high-D. The numerical alphas differ (different f_*).
     let vra_alpha = vra_weights[&(0, 1)];
     let partisan_alpha = partisan_weights[&(0, 1)];
-    assert!(vra_alpha != partisan_alpha,
-        "alphas should differ: vra={vra_alpha} partisan={partisan_alpha}");
+    assert!(
+        vra_alpha != partisan_alpha,
+        "alphas should differ: vra={vra_alpha} partisan={partisan_alpha}"
+    );
 }

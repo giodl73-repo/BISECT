@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "description": "Registry of US election-data sources used (or usable) by the redistricting pipeline. Each source's `fetcher` is the script that downloads from it; null means manual / not yet automated. Required by `redist analyze --types political` (consumes tract-level CSV: geoid, dem_votes, rep_votes).",
+  "description": "Registry of US election-data sources used (or usable) by the redistricting pipeline. Each source's `fetcher` is the script that downloads from it; null means manual / not yet automated. Required by `BISECT analyze --types political` (consumes tract-level CSV: geoid, dem_votes, rep_votes).",
   "sources": [
     {
       "id": "harvard-fekrazad-2020",

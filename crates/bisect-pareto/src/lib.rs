@@ -7,14 +7,14 @@
 //!
 //! Spec: docs/specs/2026-05-07-pareto-redistricting.md (Accepted, R2 avg 3.75/4)
 
-pub mod objectives;
-pub mod dominance;
-pub mod crossover;
-pub mod mutation;
-pub mod seeds;
 pub mod algorithm;
+pub mod crossover;
+pub mod dominance;
+pub mod mutation;
+pub mod objectives;
 pub mod output;
+pub mod seeds;
 
 pub use algorithm::{run_nsga2, ParetoConfig, ParetoError};
-pub use output::{ParetoEntry, ParetoResult};
 pub use objectives::Objectives;
+pub use output::{ParetoEntry, ParetoResult};

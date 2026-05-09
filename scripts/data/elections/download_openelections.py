@@ -37,8 +37,8 @@ The new Gingles 2/3 standard requires controlling for partisan affiliation
 when proving racial-bloc voting. Primary-election precinct data is the most
 direct evidence; OpenElections is the canonical opensource source. Use this
 to fetch raw state archives, then build per-state aggregators that produce
-the partisan-shares.tsv format consumed by `redist state --partisan-shares`
-or the election CSV consumed by `redist analyze --types political`.
+the partisan-shares.tsv format consumed by `BISECT state --partisan-shares`
+or the election CSV consumed by `BISECT analyze --types political`.
 """
 
 from __future__ import annotations

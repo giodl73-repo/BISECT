@@ -104,7 +104,11 @@ pub fn evaluate(
             .map(|d| {
                 if total_pop[d] > 0.0 {
                     let frac = minority_pop[d] / total_pop[d];
-                    if frac < 0.5 { 0.5 - frac } else { 0.0 }
+                    if frac < 0.5 {
+                        0.5 - frac
+                    } else {
+                        0.0
+                    }
                 } else {
                     0.0
                 }
@@ -114,7 +118,11 @@ pub fn evaluate(
         0.0
     };
 
-    Objectives { ec, d_seats, vra_deficit }
+    Objectives {
+        ec,
+        d_seats,
+        vra_deficit,
+    }
 }
 
 #[cfg(test)]
@@ -122,12 +130,18 @@ mod tests {
     use super::*;
 
     fn path_adj(n: usize) -> Vec<Vec<usize>> {
-        (0..n).map(|i| {
-            let mut nb = Vec::new();
-            if i > 0 { nb.push(i - 1); }
-            if i < n - 1 { nb.push(i + 1); }
-            nb
-        }).collect()
+        (0..n)
+            .map(|i| {
+                let mut nb = Vec::new();
+                if i > 0 {
+                    nb.push(i - 1);
+                }
+                if i < n - 1 {
+                    nb.push(i + 1);
+                }
+                nb
+            })
+            .collect()
     }
 
     #[test]
@@ -183,7 +197,10 @@ mod tests {
         // District 2: minority_vap = 0.6 (no deficit)
         let minority_vap = vec![0.3f64, 0.3, 0.6, 0.6];
         let obj = evaluate(&plan, &adj, &pop, 2, None, Some(&minority_vap), &[]);
-        assert!((obj.vra_deficit - 0.2).abs() < 1e-9,
-            "vra_deficit = {}", obj.vra_deficit);
+        assert!(
+            (obj.vra_deficit - 0.2).abs() < 1e-9,
+            "vra_deficit = {}",
+            obj.vra_deficit
+        );
     }
 }

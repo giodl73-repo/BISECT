@@ -46,7 +46,7 @@ After each phase, re-run and record in `migration-log.md`. Compare:
 ```bash
 hyperfine --warmup 1 \
   'python scripts/pipeline/run_state_redistricting.py --state CA --year 2020 --version V3 --position 0' \
-  'redist run --state CA --year 2020 --version V3'
+  'BISECT run --state CA --year 2020 --version V3'
 ```
 
 ## Adjacency bottleneck detail

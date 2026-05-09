@@ -1,4 +1,4 @@
-//! redist-web — RESERVED for future Rust dashboard work.
+//! BISECT-web — RESERVED for future Rust dashboard work.
 //!
 //! Currently empty. Dashboard generation is performed by Python
 //! (`scripts/web/generate_dashboard.py`, Jinja2 templating). If/when a

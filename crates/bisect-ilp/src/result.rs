@@ -83,7 +83,9 @@ mod tests {
 
     #[test]
     fn solver_status_gap_reached_carries_value() {
-        let s = SolverStatus::GapReached { achieved_gap: 0.005 };
+        let s = SolverStatus::GapReached {
+            achieved_gap: 0.005,
+        };
         if let SolverStatus::GapReached { achieved_gap } = s {
             assert!((achieved_gap - 0.005).abs() < 1e-10);
         } else {

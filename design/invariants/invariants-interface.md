@@ -15,7 +15,7 @@ Properties of the CLI interface and inter-process communication protocol.
 **Enforcement:** status() in status.rs auto-sanitizes non-ASCII via ascii_safe() before printing. In debug builds, additional check was added.
 
 **Test:** `tests/unit/test_rust_cli.py::TestStatusProtocol::test_no_unicode_in_help_output`
-`redist/crates/bisect-cli/src/status.rs::test_status_sanitizes_non_ascii_not_panic`
+`BISECT/crates/bisect-cli/src/status.rs::test_status_sanitizes_non_ascii_not_panic`
 
 **Status:** ENFORCED
 
@@ -37,17 +37,17 @@ Properties of the CLI interface and inter-process communication protocol.
 
 ---
 
-## IP-03: REDIST_PYTHON used for all Python subprocess calls
+## IP-03: BISECT_PYTHON used for all Python subprocess calls
 
-**Invariant:** Every subprocess call to a Python interpreter in bisect-cli must use the REDIST_PYTHON environment variable as the command, falling back to 'py' (Windows) or 'python3' (Unix). The bare 'python' command is prohibited.
+**Invariant:** Every subprocess call to a Python interpreter in bisect-cli must use the BISECT_PYTHON environment variable as the command, falling back to 'py' (Windows) or 'python3' (Unix). The bare 'python' command is prohibited.
 
-**Why it must hold:** Compiled binaries resolve command names against their own PATH, which differs from the user's shell environment. `python` may resolve to a system Python without the required packages (numpy, pickle). REDIST_PYTHON lets the caller specify the exact interpreter.
+**Why it must hold:** Compiled binaries resolve command names against their own PATH, which differs from the user's shell environment. `python` may resolve to a system Python without the required packages (numpy, pickle). BISECT_PYTHON lets the caller specify the exact interpreter.
 
 **When it can be violated:** Adding a new subprocess call that uses `Command::new("python")` directly; copying adjacency_loader.py's python_cmd logic incorrectly.
 
-**Enforcement:** Both adjacency_loader.rs and runner.rs read `REDIST_PYTHON` env var. Acceptance test fixtures set `env['REDIST_PYTHON'] = sys.executable`.
+**Enforcement:** Both adjacency_loader.rs and runner.rs read `BISECT_PYTHON` env var. Acceptance test fixtures set `env['BISECT_PYTHON'] = sys.executable`.
 
-**Test:** `tests/acceptance/test_pipeline_acceptance.py::TestRustCLIAcceptance` — all fixtures pass REDIST_PYTHON=sys.executable; tests would fail with ImportError if bare 'python' were used.
+**Test:** `tests/acceptance/test_pipeline_acceptance.py::TestRustCLIAcceptance` — all fixtures pass BISECT_PYTHON=sys.executable; tests would fail with ImportError if bare 'python' were used.
 
 **Status:** ENFORCED
 
@@ -55,13 +55,13 @@ Properties of the CLI interface and inter-process communication protocol.
 
 ## IP-04: CWD must equal project root when using relative manifest paths
 
-**Invariant:** When `bisect fetch` or `bisect state` is run, the working directory must be the project root (the directory containing `data/`, `outputs/`, and `redist/`). All manifest paths (`local_data_dir: "data"`, `local_outputs_dir: "outputs"`) are relative to CWD.
+**Invariant:** When `bisect fetch` or `bisect state` is run, the working directory must be the project root (the directory containing `data/`, `outputs/`, and `BISECT/`). All manifest paths (`local_data_dir: "data"`, `local_outputs_dir: "outputs"`) are relative to CWD.
 
 **Why it must hold:** The manifest stores paths as relative strings to avoid hardcoding user-specific absolute paths. If the binary is launched from a different directory (e.g., `/home/user` instead of `/home/user/apportionment`), all data lookups and writes go to the wrong location. Done-marker checks fail; downloads appear missing even after fetching.
 
 **When it can be violated:** Running `bisect fetch` from a different directory than the project root. Calling the binary via a wrapper script that changes CWD. Containerised deployments where CWD is `/` or `/app`.
 
-**Enforcement:** Document in `--help` output. Future: support absolute paths in manifest via `REDIST_DATA_DIR` and `REDIST_OUTPUTS_DIR` env vars.
+**Enforcement:** Document in `--help` output. Future: support absolute paths in manifest via `BISECT_DATA_DIR` and `BISECT_OUTPUTS_DIR` env vars.
 
 **Test:** `tests/integration/test_fetch.py::TestCheckOnly::test_check_only_marks_existing_files_as_available` — tests pass `cwd=str(tmp_path)` explicitly, verifying CWD-relative path resolution works correctly.
 

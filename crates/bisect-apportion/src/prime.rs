@@ -30,14 +30,23 @@ pub enum SplitStep {
 impl SplitStep {
     /// Number of sub-regions this step produces.
     pub fn parts(&self) -> u32 {
-        match self { Self::Uniform { parts, .. } => *parts, Self::Binary { .. } => 2 }
+        match self {
+            Self::Uniform { parts, .. } => *parts,
+            Self::Binary { .. } => 2,
+        }
     }
 
     /// Target district count for sub-region i (0-based).
     pub fn sub_k(&self, i: usize) -> u32 {
         match self {
-            Self::Uniform  { sub_k, .. } => *sub_k,
-            Self::Binary   { k_left, k_right } => if i == 0 { *k_left } else { *k_right },
+            Self::Uniform { sub_k, .. } => *sub_k,
+            Self::Binary { k_left, k_right } => {
+                if i == 0 {
+                    *k_left
+                } else {
+                    *k_right
+                }
+            }
         }
     }
 
@@ -65,21 +74,34 @@ pub fn split_prescription(k: u32) -> SplitStep {
     }
     if is_prime(k) {
         let k_left = k / 2;
-        SplitStep::Binary { k_left, k_right: k - k_left }
+        SplitStep::Binary {
+            k_left,
+            k_right: k - k_left,
+        }
     } else {
         // Composite: split by LARGEST prime factor first to maximise reuse.
         // k=34=2×17 → parts=17, sub_k=2 (same 17-map as k=51=3×17)
         // k=51=3×17 → parts=17, sub_k=3
         // k=52=4×13 → parts=13, sub_k=4 (same 13-map as k=26=2×13)
         let p = largest_prime_factor(k);
-        SplitStep::Uniform { parts: p, sub_k: k / p }
+        SplitStep::Uniform {
+            parts: p,
+            sub_k: k / p,
+        }
     }
 }
 
 fn smallest_prime_factor(mut n: u32) -> u32 {
-    if n % 2 == 0 { return 2; }
+    if n % 2 == 0 {
+        return 2;
+    }
     let mut d = 3u32;
-    while d * d <= n { if n % d == 0 { return d; } d += 2; }
+    while d * d <= n {
+        if n % d == 0 {
+            return d;
+        }
+        d += 2;
+    }
     n
 }
 
@@ -88,10 +110,17 @@ fn largest_prime_factor(n: u32) -> u32 {
     let mut largest = 1u32;
     let mut d = 2u32;
     while d * d <= n {
-        while n % d == 0 { largest = d; n /= d; }
+        while n % d == 0 {
+            largest = d;
+            n /= d;
+        }
         d += 1;
     }
-    if n > 1 { n } else { largest }
+    if n > 1 {
+        n
+    } else {
+        largest
+    }
 }
 
 /// Returns the canonical factorization sequence of `n`: prime factors in
@@ -133,17 +162,28 @@ pub fn prime_factor_sequence(mut n: u32) -> Vec<u32> {
 pub fn common_prefix_len(n: u32, m: u32) -> usize {
     let fn_ = prime_factor_sequence(n);
     let fm = prime_factor_sequence(m);
-    fn_.iter().zip(fm.iter()).take_while(|(a, b)| a == b).count()
+    fn_.iter()
+        .zip(fm.iter())
+        .take_while(|(a, b)| a == b)
+        .count()
 }
 
 /// Returns true if `n` is prime.
 pub fn is_prime(n: u32) -> bool {
-    if n < 2 { return false; }
-    if n == 2 { return true; }
-    if n % 2 == 0 { return false; }
+    if n < 2 {
+        return false;
+    }
+    if n == 2 {
+        return true;
+    }
+    if n % 2 == 0 {
+        return false;
+    }
     let mut d = 3u32;
     while d * d <= n {
-        if n % d == 0 { return false; }
+        if n % d == 0 {
+            return false;
+        }
         d += 2;
     }
     true
@@ -158,7 +198,9 @@ pub fn is_prime(n: u32) -> bool {
 ///
 /// Examples: k=8→3, k=17→4, k=38→5, k=52→3.
 pub fn pfr_tree_depth(k: u32) -> u32 {
-    if k <= 1 { return 0; }
+    if k <= 1 {
+        return 0;
+    }
     let step = split_prescription(k);
     let max_sub = (0..step.parts())
         .map(|i| pfr_tree_depth(step.sub_k(i as usize)))
@@ -238,49 +280,133 @@ mod tests {
     #[test]
     fn test_split_prescription_small() {
         // k ≤ 3: direct uniform splits
-        assert_eq!(split_prescription(1), SplitStep::Uniform { parts: 1, sub_k: 1 });
-        assert_eq!(split_prescription(2), SplitStep::Uniform { parts: 2, sub_k: 1 });
-        assert_eq!(split_prescription(3), SplitStep::Uniform { parts: 3, sub_k: 1 });
+        assert_eq!(
+            split_prescription(1),
+            SplitStep::Uniform { parts: 1, sub_k: 1 }
+        );
+        assert_eq!(
+            split_prescription(2),
+            SplitStep::Uniform { parts: 2, sub_k: 1 }
+        );
+        assert_eq!(
+            split_prescription(3),
+            SplitStep::Uniform { parts: 3, sub_k: 1 }
+        );
     }
 
     #[test]
     fn test_split_prescription_composite() {
         // k=4=2²: largest prime=2, parts=2, sub_k=2
-        assert_eq!(split_prescription(4), SplitStep::Uniform { parts: 2, sub_k: 2 });
+        assert_eq!(
+            split_prescription(4),
+            SplitStep::Uniform { parts: 2, sub_k: 2 }
+        );
         // k=6=2×3: largest prime=3, parts=3, sub_k=2
-        assert_eq!(split_prescription(6), SplitStep::Uniform { parts: 3, sub_k: 2 });
+        assert_eq!(
+            split_prescription(6),
+            SplitStep::Uniform { parts: 3, sub_k: 2 }
+        );
         // k=9=3²: largest prime=3, parts=3, sub_k=3
-        assert_eq!(split_prescription(9), SplitStep::Uniform { parts: 3, sub_k: 3 });
+        assert_eq!(
+            split_prescription(9),
+            SplitStep::Uniform { parts: 3, sub_k: 3 }
+        );
         // k=52=4×13: largest prime=13, parts=13, sub_k=4
-        assert_eq!(split_prescription(52), SplitStep::Uniform { parts: 13, sub_k: 4 });
+        assert_eq!(
+            split_prescription(52),
+            SplitStep::Uniform {
+                parts: 13,
+                sub_k: 4
+            }
+        );
         // k=34=2×17: largest prime=17, parts=17, sub_k=2
-        assert_eq!(split_prescription(34), SplitStep::Uniform { parts: 17, sub_k: 2 });
+        assert_eq!(
+            split_prescription(34),
+            SplitStep::Uniform {
+                parts: 17,
+                sub_k: 2
+            }
+        );
         // k=51=3×17: largest prime=17, parts=17, sub_k=3
-        assert_eq!(split_prescription(51), SplitStep::Uniform { parts: 17, sub_k: 3 });
+        assert_eq!(
+            split_prescription(51),
+            SplitStep::Uniform {
+                parts: 17,
+                sub_k: 3
+            }
+        );
         // k=26=2×13: largest prime=13, parts=13, sub_k=2  (same top level as k=52)
-        assert_eq!(split_prescription(26), SplitStep::Uniform { parts: 13, sub_k: 2 });
+        assert_eq!(
+            split_prescription(26),
+            SplitStep::Uniform {
+                parts: 13,
+                sub_k: 2
+            }
+        );
     }
 
     #[test]
     fn test_split_prescription_large_prime() {
         // k=17 (prime >3): binary 8+9
-        assert_eq!(split_prescription(17), SplitStep::Binary { k_left: 8, k_right: 9 });
+        assert_eq!(
+            split_prescription(17),
+            SplitStep::Binary {
+                k_left: 8,
+                k_right: 9
+            }
+        );
         // k=11: binary 5+6
-        assert_eq!(split_prescription(11), SplitStep::Binary { k_left: 5, k_right: 6 });
+        assert_eq!(
+            split_prescription(11),
+            SplitStep::Binary {
+                k_left: 5,
+                k_right: 6
+            }
+        );
         // k=13: binary 6+7
-        assert_eq!(split_prescription(13), SplitStep::Binary { k_left: 6, k_right: 7 });
+        assert_eq!(
+            split_prescription(13),
+            SplitStep::Binary {
+                k_left: 6,
+                k_right: 7
+            }
+        );
         // k=5 (prime >3): binary 2+3
-        assert_eq!(split_prescription(5), SplitStep::Binary { k_left: 2, k_right: 3 });
+        assert_eq!(
+            split_prescription(5),
+            SplitStep::Binary {
+                k_left: 2,
+                k_right: 3
+            }
+        );
     }
 
     #[test]
     fn test_split_prescription_trace_17() {
         // k=17 (prime): binary (8, 9) — unchanged
-        assert_eq!(split_prescription(17), SplitStep::Binary { k_left: 8, k_right: 9 });
+        assert_eq!(
+            split_prescription(17),
+            SplitStep::Binary {
+                k_left: 8,
+                k_right: 9
+            }
+        );
         // k=34=2×17: parts=17 (largest prime), sub_k=2 — REUSES k=17 map
-        assert_eq!(split_prescription(34), SplitStep::Uniform { parts: 17, sub_k: 2 });
+        assert_eq!(
+            split_prescription(34),
+            SplitStep::Uniform {
+                parts: 17,
+                sub_k: 2
+            }
+        );
         // k=51=3×17: parts=17 (largest prime), sub_k=3 — SAME k=17 map
-        assert_eq!(split_prescription(51), SplitStep::Uniform { parts: 17, sub_k: 3 });
+        assert_eq!(
+            split_prescription(51),
+            SplitStep::Uniform {
+                parts: 17,
+                sub_k: 3
+            }
+        );
     }
 
     #[test]
@@ -296,12 +422,12 @@ mod tests {
     #[test]
     fn test_pfr_tree_depth() {
         assert_eq!(pfr_tree_depth(1), 0);
-        assert_eq!(pfr_tree_depth(2), 1);  // one 2-cut
-        assert_eq!(pfr_tree_depth(3), 1);  // one 3-cut
-        assert_eq!(pfr_tree_depth(4), 2);  // 2-cut → 2-cut
-        assert_eq!(pfr_tree_depth(8), 3);  // 2→2→2
-        assert_eq!(pfr_tree_depth(9), 2);  // 3-cut → 3-cut
-        // k=17 (prime): Binary(8,9). depth = 1 + max(depth(8), depth(9)) = 1+max(3,2) = 4
+        assert_eq!(pfr_tree_depth(2), 1); // one 2-cut
+        assert_eq!(pfr_tree_depth(3), 1); // one 3-cut
+        assert_eq!(pfr_tree_depth(4), 2); // 2-cut → 2-cut
+        assert_eq!(pfr_tree_depth(8), 3); // 2→2→2
+        assert_eq!(pfr_tree_depth(9), 2); // 3-cut → 3-cut
+                                          // k=17 (prime): Binary(8,9). depth = 1 + max(depth(8), depth(9)) = 1+max(3,2) = 4
         assert_eq!(pfr_tree_depth(17), 4);
         // k=52=4×13: Uniform{parts:13, sub_k:4}. depth = 1 + depth(4) = 1+2 = 3
         assert_eq!(pfr_tree_depth(52), 3);
@@ -313,7 +439,9 @@ mod tests {
     #[test]
     fn test_all_seat_counts_compile() {
         // Verify factorizations for all current US congressional seat counts
-        let counts = [1u32, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 26, 28, 38, 52];
+        let counts = [
+            1u32, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 26, 28, 38, 52,
+        ];
         for &n in &counts {
             let seq = prime_factor_sequence(n);
             assert!(!seq.is_empty() || n == 1);
@@ -329,18 +457,27 @@ mod tests {
     fn split_step_parts_both_variants() {
         let u = SplitStep::Uniform { parts: 5, sub_k: 3 };
         assert_eq!(u.parts(), 5);
-        let b = SplitStep::Binary { k_left: 7, k_right: 8 };
+        let b = SplitStep::Binary {
+            k_left: 7,
+            k_right: 8,
+        };
         assert_eq!(b.parts(), 2);
     }
 
     /// SplitStep::sub_k(i) returns correct value per index.
     #[test]
     fn split_step_sub_k_both_variants() {
-        let u = SplitStep::Uniform { parts: 4, sub_k: 13 };
+        let u = SplitStep::Uniform {
+            parts: 4,
+            sub_k: 13,
+        };
         assert_eq!(u.sub_k(0), 13);
         assert_eq!(u.sub_k(3), 13); // all slots the same
 
-        let b = SplitStep::Binary { k_left: 6, k_right: 7 };
+        let b = SplitStep::Binary {
+            k_left: 6,
+            k_right: 7,
+        };
         assert_eq!(b.sub_k(0), 6);
         assert_eq!(b.sub_k(1), 7);
     }
@@ -354,7 +491,10 @@ mod tests {
         let frac_sum: f32 = (0..step.parts() as usize)
             .map(|i| step.fraction(i, total_k))
             .sum();
-        assert!((frac_sum - 1.0).abs() < 1e-5, "fractions should sum to 1.0, got {frac_sum}");
+        assert!(
+            (frac_sum - 1.0).abs() < 1e-5,
+            "fractions should sum to 1.0, got {frac_sum}"
+        );
     }
 
     /// first_divergence_level for same n returns len+1 (all-common prefix).
@@ -396,7 +536,10 @@ mod tests {
     /// split_prescription for k=2: direct Uniform{parts:2, sub_k:1}.
     #[test]
     fn split_prescription_k2_direct_cut() {
-        assert_eq!(split_prescription(2), SplitStep::Uniform { parts: 2, sub_k: 1 });
+        assert_eq!(
+            split_prescription(2),
+            SplitStep::Uniform { parts: 2, sub_k: 1 }
+        );
     }
 
     /// common_prefix_len for identical n: full length.
@@ -430,13 +573,25 @@ mod tests {
     /// k=7 (prime) → binary 3+4.
     #[test]
     fn split_prescription_k7_binary() {
-        assert_eq!(split_prescription(7), SplitStep::Binary { k_left: 3, k_right: 4 });
+        assert_eq!(
+            split_prescription(7),
+            SplitStep::Binary {
+                k_left: 3,
+                k_right: 4
+            }
+        );
     }
 
     /// k=19 (prime) → binary 9+10.
     #[test]
     fn split_prescription_k19_binary() {
-        assert_eq!(split_prescription(19), SplitStep::Binary { k_left: 9, k_right: 10 });
+        assert_eq!(
+            split_prescription(19),
+            SplitStep::Binary {
+                k_left: 9,
+                k_right: 10
+            }
+        );
     }
 
     /// pfr_tree_depth for k=6=2×3 → Uniform{parts:3, sub_k:2};
@@ -499,7 +654,9 @@ mod tests {
         let step = split_prescription(17); // Binary { k_left: 8, k_right: 9 }
         let total_k = 17u32;
         let frac_sum: f32 = (0..2).map(|i| step.fraction(i, total_k)).sum();
-        assert!((frac_sum - 1.0).abs() < 1e-5,
-            "Binary fractions must sum to 1.0, got {frac_sum}");
+        assert!(
+            (frac_sum - 1.0).abs() < 1e-5,
+            "Binary fractions must sum to 1.0, got {frac_sum}"
+        );
     }
 }

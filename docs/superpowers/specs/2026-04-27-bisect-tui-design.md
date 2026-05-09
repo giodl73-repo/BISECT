@@ -1,4 +1,4 @@
-# redist TUI — Design Spec
+# BISECT TUI — Design Spec
 **Date:** 2026-04-27  
 **Updated:** 2026-04-28  
 **Status:** v1 partially implemented — 3 gaps remaining before v1 complete
@@ -28,7 +28,7 @@
 
 ## Problem
 
-The redist CLI has 18 subcommands and ~30 flags. Practitioners — commission staff, researchers, legal teams, international electoral officers — must memorise flag syntax to do their work. The TUI eliminates that barrier without dumbing the tool down: informed users navigate freely; wizards are available but never forced.
+The BISECT CLI has 18 subcommands and ~30 flags. Practitioners — commission staff, researchers, legal teams, international electoral officers — must memorise flag syntax to do their work. The TUI eliminates that barrier without dumbing the tool down: informed users navigate freely; wizards are available but never forced.
 
 ---
 
@@ -54,7 +54,7 @@ Six personas were interviewed across 10 questions. Design decisions trace direct
 5. Policy/Doctor in a side panel overlay, never full-screen takeover
 6. Legal needs PASS/FAIL in a large box, not a table row
 7. Empty state shows data status (adjacency files, years, location config)
-8. Session config in `~/.config/redist/tui.toml`, editable manually
+8. Session config in `~/.config/BISECT/tui.toml`, editable manually
 9. Legal gets `--no-session` for fresh-start sessions
 10. US jargon softened — "TIGER file" → "census geometry file"
 11. Graduate Student gets inline metric explanations via `[?]`
@@ -66,7 +66,7 @@ Six personas were interviewed across 10 questions. Design decisions trace direct
 
 ### New crate: `bisect-tui`
 
-Binary crate at `redist/crates/bisect-tui/`. Added to the workspace. Zero changes to `bisect-cli` or its 792 tests. `bisect-cli` gains a `tui` subcommand that execs `bisect-tui`.
+Binary crate at `BISECT/crates/bisect-tui/`. Added to the workspace. Zero changes to `bisect-cli` or its 792 tests. `bisect-cli` gains a `tui` subcommand that execs `bisect-tui`.
 
 ```
 bisect-tui/src/
@@ -101,7 +101,7 @@ ratatui's built-in widgets cover all metric display needs: `Gauge` and `LineGaug
 
 ### Session persistence
 
-`~/.config/redist/tui.toml`:
+`~/.config/BISECT/tui.toml`:
 ```toml
 [session]
 location = "WA"
@@ -121,7 +121,7 @@ adjacency_override = ""
 seats_per_district = 1
 ```
 
-`redist tui --no-session` ignores this file for Legal's clean-slate sessions.
+`BISECT tui --no-session` ignores this file for Legal's clean-slate sessions.
 
 ---
 
@@ -170,7 +170,7 @@ seats_per_district = 1
 Two-panel layout: plan list (65%) + selected plan detail (35%).
 
 ```
-┌─ redist tui ──────────────────────────────────────────────────────────────────┐
+┌─ BISECT tui ──────────────────────────────────────────────────────────────────┐
 │  [r] Run  [a] Analyze  [c] Compare  [v] Verify  [d] Doctor  [/] Search  [:] │
 ├───────────────────────────────────────────────┬───────────────────────────────┤
 │  Plans  12 total   filter: ▌                  │  wa_house_seed_42             │

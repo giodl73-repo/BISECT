@@ -1,6 +1,6 @@
 # Multi-Chamber Nesting Guide
 
-How to draw house and senate districts that nest correctly, which states require nesting, and how `redist` validates it.
+How to draw house and senate districts that nest correctly, which states require nesting, and how `BISECT` validates it.
 
 ---
 
@@ -35,10 +35,10 @@ This creates a clean hierarchy: voters in one senate district are always represe
 
 ---
 
-## Drawing nested districts with `redist suite`
+## Drawing nested districts with `BISECT suite`
 
 ```bash
-redist suite --state WA --year 2020 --version WA_Plans \
+BISECT suite --state WA --year 2020 --version WA_Plans \
   --name wa_commission_v1 \
   --house-districts 98 \
   --senate-districts 49 \
@@ -47,17 +47,17 @@ redist suite --state WA --year 2020 --version WA_Plans \
 ```
 
 What happens:
-1. `redist` draws 98 house districts first (using METIS on census tracts)
+1. `BISECT` draws 98 house districts first (using METIS on census tracts)
 2. It builds a new adjacency graph where **nodes are house districts** (not tracts)
 3. METIS runs again on this house-district graph with k=49
 4. Each senate district = 2 whole house districts — nesting is guaranteed by construction
-5. `redist` validates the nesting and exits with an error if any violation is detected
+5. `BISECT` validates the nesting and exits with an error if any violation is detected
 
 ### For variable-ratio states
 
 ```bash
 # Illinois: variable ratio, must specify explicitly
-redist suite --state IL --year 2020 --version IL_Plans \
+BISECT suite --state IL --year 2020 --version IL_Plans \
   --name il_commission_v1 \
   --house-districts 118 \
   --senate-districts 59 \
@@ -66,7 +66,7 @@ redist suite --state IL --year 2020 --version IL_Plans \
   --seed 42
 ```
 
-For variable-ratio states, `--nest-ratio` is required. `redist` exits with an error if you omit it:
+For variable-ratio states, `--nest-ratio` is required. `BISECT` exits with an error if you omit it:
 
 ```
 ERROR: IL nesting ratio is variable by statute. Specify --nest-ratio N:M (e.g. --nest-ratio 2:1).
@@ -84,7 +84,7 @@ METIS partitions census tracts into 98 districts using the standard algorithm. T
 
 Two house districts are adjacent if any of their constituent tracts share a boundary. This creates a new graph where each node is a house district.
 
-**Primary-component rule**: If a house district is noncontiguous (which should not happen — `redist` enforces contiguity), only the largest connected component of that district's tracts is used to determine adjacency. Secondary components are excluded from the senate adjacency graph.
+**Primary-component rule**: If a house district is noncontiguous (which should not happen — `BISECT` enforces contiguity), only the largest connected component of that district's tracts is used to determine adjacency. Secondary components are excluded from the senate adjacency graph.
 
 ### Step 3: Draw senate districts on the house-district graph
 
@@ -96,10 +96,10 @@ This guarantees nesting by construction — senate districts are defined entirel
 
 ## Validating nesting
 
-After drawing, `redist suite validate` checks that nesting holds:
+After drawing, `BISECT suite validate` checks that nesting holds:
 
 ```bash
-redist suite validate --name wa_commission_v1 --version WA_Plans --year 2020
+BISECT suite validate --name wa_commission_v1 --version WA_Plans --year 2020
 ```
 
 Output:
@@ -135,7 +135,7 @@ If a violation is detected:
 }
 ```
 
-`redist suite validate` exits with code 4 (nesting violation bit) if any violation is found.
+`BISECT suite validate` exits with code 4 (nesting violation bit) if any violation is found.
 
 ---
 
@@ -150,7 +150,7 @@ The `senate_to_house_map` in the suite manifest is the official record of which 
 
 ## What if my house plan has a noncontiguous district?
 
-If any house district fails contiguity — even with `--allow-noncontiguous` — `redist suite` will refuse to draw senate districts:
+If any house district fails contiguity — even with `--allow-noncontiguous` — `BISECT suite` will refuse to draw senate districts:
 
 ```
 ERROR: Senate nesting requires all house districts to be contiguous.
@@ -165,7 +165,7 @@ Noncontiguous house districts make the senate adjacency graph undefined — the 
 ## Exporting a suite
 
 ```bash
-redist export --suite wa_commission_v1 --year 2020 --version WA_Plans \
+BISECT export --suite wa_commission_v1 --year 2020 --version WA_Plans \
   --format geojson shapefile rplan \
   --out exports/wa_commission_v1/
 ```
@@ -191,5 +191,5 @@ No. The nesting algorithm requires house districts to exist first — senate dis
 **Q: What if the state requires a 2:1 ratio but the district count doesn't divide evenly?**
 It doesn't apply to Washington (98/49 = 2 exactly). States like Minnesota (134 house / 67 senate = 2 exactly) and Wisconsin (99 house / 33 senate = 3 exactly) have counts designed to allow exact nesting. States with variable ratios (New York, Illinois) handle non-divisible cases by allowing some senate districts to contain 2 house districts and others to contain 3.
 
-**Q: Does `redist` support three-level nesting (congressional → senate → house)?**
-Not yet. The current `redist suite` supports congressional + house + senate as three independent plans. True three-level nesting (where senate districts must also nest inside congressional districts) requires additional constraint logic that is not yet implemented.
+**Q: Does `BISECT` support three-level nesting (congressional → senate → house)?**
+Not yet. The current `BISECT suite` supports congressional + house + senate as three independent plans. True three-level nesting (where senate districts must also nest inside congressional districts) requires additional constraint logic that is not yet implemented.

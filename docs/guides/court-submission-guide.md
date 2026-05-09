@@ -1,6 +1,6 @@
 # Court Submission Guide
 
-How to prepare a `redist`-generated plan for submission to a court or redistricting commission, including the audit trail and expert witness package.
+How to prepare a `BISECT`-generated plan for submission to a court or redistricting commission, including the audit trail and expert witness package.
 
 ---
 
@@ -13,7 +13,7 @@ A redistricting plan submitted as evidence needs to be:
 3. **Documented** — the methodology is explained and the parameters are recorded
 4. **Legally compliant** — population balance, contiguity, and applicable state constitutional requirements are documented
 
-`redist` produces all of this automatically.
+`BISECT` produces all of this automatically.
 
 ---
 
@@ -32,7 +32,7 @@ Every plan has a `manifest.json` in its plan directory. This is the chain of cus
   "balance_tolerance_pct": 5.0,
   "seed": 42,
   "created_at": "2026-04-26T14:23:00Z",
-  "created_by": "redist v0.1.0",
+  "created_by": "BISECT v0.1.0",
   "binary_download_url": "https://github.com/...",
   "binary_release_sha256": "abc123...",
   "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_53_tract.zip",
@@ -81,7 +81,7 @@ This produces all required analysis files: population balance, contiguity verifi
 ### 3. Generate the formal report
 
 ```bash
-redist report --label wa_house_submission --year 2020 --version WA_Plans \
+BISECT report --label wa_house_submission --year 2020 --version WA_Plans \
   --format html json \
   --out submission/wa_house_submission_report/
 ```
@@ -91,18 +91,18 @@ The HTML file is a self-contained single-page document — no internet connectio
 ### 4. Export for the record
 
 ```bash
-redist export --label wa_house_submission --year 2020 --version WA_Plans \
+BISECT export --label wa_house_submission --year 2020 --version WA_Plans \
   --format geojson shapefile rplan \
   --out submission/exports/
 ```
 
-Submit `wa_house_submission.rplan` as the official machine-readable plan file. This format is independently verifiable by any party with `redist validate`.
+Submit `wa_house_submission.rplan` as the official machine-readable plan file. This format is independently verifiable by any party with `BISECT validate`.
 
 ### 5. Verify the audit trail is complete
 
 ```bash
 # Validate the RPLAN file
-redist validate --file submission/exports/wa_house_submission.rplan
+BISECT validate --file submission/exports/wa_house_submission.rplan
 
 # Expected output:
 # PASS: valid RPLAN v0.1 (2489 tracts, 98 districts, WA 2020 house)
@@ -128,7 +128,7 @@ redist validate --file submission/exports/wa_house_submission.rplan
 
 The manifest's `verification_command` is designed to be cited in an expert witness declaration:
 
-> "The plan was generated using `redist` version 0.1.0 (SHA-256: {binary_sha256}), available at {binary_download_url}. The source geographic data is the 2020 Census TIGER/Line tract shapefile for Washington state (SHA-256: {tiger_sha256}), downloaded from {tiger_source_url}. The plan can be reproduced exactly by any party using the command: `{verification_command}`. I have verified that running this command produces a plan with maximum population deviation of 2.1% from the ideal of 761,169 persons per district, within the ±5% constitutional tolerance for state legislative districts."
+> "The plan was generated using `BISECT` version 0.1.0 (SHA-256: {binary_sha256}), available at {binary_download_url}. The source geographic data is the 2020 Census TIGER/Line tract shapefile for Washington state (SHA-256: {tiger_sha256}), downloaded from {tiger_source_url}. The plan can be reproduced exactly by any party using the command: `{verification_command}`. I have verified that running this command produces a plan with maximum population deviation of 2.1% from the ideal of 761,169 persons per district, within the ±5% constitutional tolerance for state legislative districts."
 
 ---
 
@@ -138,15 +138,15 @@ Any party can independently verify the plan:
 
 ```bash
 # 1. Download the binary at the stated version
-curl -L {binary_download_url} -o redist_verify.exe
-sha256sum redist_verify.exe  # must match binary_release_sha256
+curl -L {binary_download_url} -o BISECT_verify.exe
+sha256sum BISECT_verify.exe  # must match binary_release_sha256
 
 # 2. Verify the source data
 curl -L {tiger_source_url} -o tiger_wa_2020.zip
 sha256sum tiger_wa_2020.zip  # must match tiger_sha256
 
 # 3. Reproduce the plan
-./redist_verify.exe state --state WA --year 2020 --version WA_Plans \
+./BISECT_verify.exe state --state WA --year 2020 --version WA_Plans \
   --districts 98 --chamber house \
   --label wa_house_independent_verify \
   --balance-tolerance 5.0 \

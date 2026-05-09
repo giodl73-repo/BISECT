@@ -1,3 +1,20 @@
+use crate::adjacency_loader::load_adjacency_pkl;
+use crate::bisection_runner::{
+    run_all_splits, run_all_splits_compact, run_all_splits_percentile, run_all_splits_with_search,
+    run_flip_chain, run_forest_recom, run_geosection, run_merge_split, run_multiscale,
+    run_multiscale_adaptive, run_nway_partition, run_parallel_tempering, run_short_burst,
+    run_short_burst_forest, run_short_burst_merge_split, run_vra_recom, AdaptiveConfig,
+    CompactBisectOpts,
+};
+use crate::demographics::{align_demographics_to_adjacency, load_demographics};
+use crate::fetch::load_manifest;
+use crate::output::{clean_corrupt_state, write_state_outputs, VraAnalysis, VraDistrict};
+use crate::partisan_shares::load_partisan_shares;
+use crate::status::{ascii_safe, status};
+use crate::vertex_weights::{build_vertex_weights, VertexConstraintKind};
+use bisect_analysis::analyze_mm_districts;
+use bisect_core::{state_code_to_fips, Partition};
+use bisect_report;
 /// Multi-state Rayon parallel runner + single-state implementation.
 ///
 /// `run_states_parallel` dispatches states across Rayon threads.
@@ -9,17 +26,6 @@
 use rayon::prelude::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use crate::adjacency_loader::load_adjacency_pkl;
-use crate::bisection_runner::{run_all_splits, run_all_splits_with_search, run_all_splits_compact, run_all_splits_percentile, run_geosection, run_nway_partition, run_flip_chain, run_short_burst, run_short_burst_forest, run_short_burst_merge_split, run_forest_recom, run_multiscale, run_multiscale_adaptive, AdaptiveConfig, run_merge_split, run_parallel_tempering, run_vra_recom, CompactBisectOpts};
-use crate::demographics::{load_demographics, align_demographics_to_adjacency};
-use crate::partisan_shares::load_partisan_shares;
-use crate::fetch::load_manifest;
-use crate::output::{write_state_outputs, clean_corrupt_state, VraAnalysis, VraDistrict};
-use crate::status::{status, ascii_safe};
-use bisect_core::{Partition, state_code_to_fips};
-use bisect_analysis::analyze_mm_districts;
-use bisect_report;
-use crate::vertex_weights::{VertexConstraintKind, build_vertex_weights};
 
 /// Result of processing a single state.
 #[derive(Debug, Clone)]
@@ -74,20 +80,36 @@ pub enum SeedCompositor {
     /// full-state k-way assignment. Keep the chain endpoint from each burst (not the
     /// minimum). Chain restarts from the previous burst's endpoint. Sort endpoints by
     /// EC ASC; return the plan at rank floor(p * n_bursts). (G.6)
-    ShortBurst { burst_length: usize, n_bursts: usize, p: f64 },
+    ShortBurst {
+        burst_length: usize,
+        n_bursts: usize,
+        p: f64,
+    },
     /// Short-Burst using ForestRecomChain (two-tree MH) as the burst chain.
     /// Provides compactness optimization with approximate distributional correctness. (G.12)
-    ShortBurstForest { burst_length: usize, n_bursts: usize, p: f64 },
+    ShortBurstForest {
+        burst_length: usize,
+        n_bursts: usize,
+        p: f64,
+    },
     /// Short-Burst using MergeSplitChain as the burst chain. (G.12)
-    ShortBurstMergeSplit { burst_length: usize, n_bursts: usize, p: f64 },
+    ShortBurstMergeSplit {
+        burst_length: usize,
+        n_bursts: usize,
+        p: f64,
+    },
     /// Run `steps` Forest ReCom MH steps; collect accepted plans; return at percentile p of EC.
     /// Two-tree Metropolis-Hastings — targets uniform distribution (G.9 spec accepted 3.0/4).
     ForestRecom { steps: usize, p: f64 },
     /// Multi-scale MCMC — interleaves fine (tract) and coarse (block-group) ReCom moves.
     /// Requires block-group adjacency (run: bisect fetch --resolution block_group).
     /// CLI: --search multiscale --multiscale-steps 2000 --multiscale-alpha 0.3
-    /// (G.11 spec accepted 3.0/4; full implementation pending redist-multiscale crate completion)
-    MultiScale { total_steps: usize, p: f64, alpha: f64 },
+    /// (G.11 spec accepted 3.0/4; full implementation pending BISECT-multiscale crate completion)
+    MultiScale {
+        total_steps: usize,
+        p: f64,
+        alpha: f64,
+    },
     /// Run `steps` Merge-Split MH steps; collect accepted plans; return at percentile p.
     /// Two-tree MH with explicit ratio — O(m log m) per step (G.10 spec accepted 3.0/4).
     MergeSplit { steps: usize, p: f64 },
@@ -114,11 +136,11 @@ pub enum SeedCompositor {
     /// Requires minority VAP data via --weights-override vra-aligned or explicit minority column.
     /// (G.13 spec accepted 3.75/4)
     VraRecom {
-        steps: usize,        // total chain steps (default: 1000)
-        p: f64,              // percentile of EC distribution (default: 0.0)
-        vap_threshold: f64,  // minority VAP fraction threshold (default: 0.50)
+        steps: usize,       // total chain steps (default: 1000)
+        p: f64,             // percentile of EC distribution (default: 0.0)
+        vap_threshold: f64, // minority VAP fraction threshold (default: 0.50)
     },
-    /// SMC weighted ensemble — runs redist-smc and selects plan at p-th weighted EC quantile.
+    /// SMC weighted ensemble — runs BISECT-smc and selects plan at p-th weighted EC quantile.
     /// The only compositor mode with a calibrated (importance-weighted) stationary distribution.
     /// (SmcPercentile spec accepted 3.88/4)
     SmcPercentile { n_particles: usize, p: f64 },
@@ -153,7 +175,9 @@ impl SeedCompositor {
 }
 
 impl Default for SeedCompositor {
-    fn default() -> Self { Self::Multi { seeds: 50 } }
+    fn default() -> Self {
+        Self::Multi { seeds: 50 }
+    }
 }
 
 /// Warm-start strategy for AreaSection (B.9) ratio selection.
@@ -189,7 +213,10 @@ pub enum SplitStrategy {
     CompactBisect { epsilon: f64 },
     /// AreaSection (B.9): ratio-optimal bisection with dual population+area constraint.
     /// `area_section_init` controls the warm-start strategy (default: RatioOptimal).
-    AreaSection { area_swing: f64, area_section_init: AreaSectionInit },
+    AreaSection {
+        area_swing: f64,
+        area_section_init: AreaSectionInit,
+    },
     /// ProportionalSection (B.12): ncon=2 [pop, D_votes] with HH-derived tpwgts.
     ProportionalSection { eta: f64 },
     /// ApportionRegions (B.11): prime-factorisation tree — Huntington-Hill geographic completion.
@@ -202,7 +229,11 @@ pub enum SplitStrategy {
     /// steps_per_tract: n_steps = steps_per_tract * |subgraph| (default: 10).
     /// t0_factor: T_0 = max(1.0, t0_factor * EC(initial)) (default: 0.01).
     /// t_final: near-zero final temperature (default: 1e-4).
-    SimulatedAnnealing { steps_per_tract: usize, t0_factor: f64, t_final: f64 },
+    SimulatedAnnealing {
+        steps_per_tract: usize,
+        t0_factor: f64,
+        t_final: f64,
+    },
     /// Centroidal Voronoi Districts — geometric packing via graph-distance Voronoi (B.22 spec).
     /// Seeds placed by k-farthest spread, iteratively moved to medoid of each Voronoi region.
     /// n_iter: max CVD iterations before returning (default: 20).
@@ -210,7 +241,10 @@ pub enum SplitStrategy {
     /// Seeds placed by k-farthest spread, iteratively moved to medoid/centroid of each Voronoi region.
     /// n_iter: max CVD iterations before returning (default: 20).
     /// metric: GraphDistance (Phase 1, default) or Geographic (Phase 2, requires tract_centroids).
-    CentroidalVoronoi { n_iter: usize, metric: crate::bisection_runner::VoronoiMetric },
+    CentroidalVoronoi {
+        n_iter: usize,
+        metric: crate::bisection_runner::VoronoiMetric,
+    },
     /// BFS Region-Growing — greedy geographic packing from k-farthest seeds (B.23 spec 4.0/4).
     /// Seeds placed by maximum BFS spread; tracts assigned to most population-deficient district.
     BfsGrowth,
@@ -218,15 +252,15 @@ pub enum SplitStrategy {
     /// Only practical for n <= max_tracts (default 500). Falls back to METIS for larger nodes.
     /// (B.24 spec accepted 3.38/4)
     Ilp {
-        time_limit_secs: u64,   // solver time limit (default: 300)
-        optimality_gap: f64,    // acceptable gap from optimal (default: 0.01)
-        max_tracts: usize,      // size guard (default: 500; fallback to METIS if exceeded)
+        time_limit_secs: u64, // solver time limit (default: 300)
+        optimality_gap: f64,  // acceptable gap from optimal (default: 0.01)
+        max_tracts: usize,    // size guard (default: 500; fallback to METIS if exceeded)
     },
     /// Moving-Knife Algorithm — maximises Reock compactness via sweep (B.25 spec 3.75/4).
     /// Tests n_orientations candidate sweep directions; picks angle with best min(Reock_L, Reock_R).
     MovingKnife {
-        n_orientations: usize,  // sweep granularity (default: 180 = every 1°)
-        metric: String,         // "reock" (default) | "polsby"
+        n_orientations: usize, // sweep granularity (default: 180 = every 1°)
+        metric: String,        // "reock" (default) | "polsby"
     },
 }
 
@@ -234,19 +268,19 @@ impl SplitStrategy {
     /// Human-readable mode name (for logging and manifest).
     pub fn mode_name(&self) -> &'static str {
         match self {
-            Self::Bisect                  => "edge-weighted",
-            Self::NWay                    => "metis-vra",
-            Self::GeoSection              => "geosection",
-            Self::CompactBisect    { .. } => "compact-bisect",
-            Self::AreaSection      { .. } => "areasection",
+            Self::Bisect => "edge-weighted",
+            Self::NWay => "metis-vra",
+            Self::GeoSection => "geosection",
+            Self::CompactBisect { .. } => "compact-bisect",
+            Self::AreaSection { .. } => "areasection",
             Self::ProportionalSection { .. } => "proportional-section",
-            Self::ApportionRegions        => "apportion-regions",
-            Self::VraSection       { .. } => "vra-section",
+            Self::ApportionRegions => "apportion-regions",
+            Self::VraSection { .. } => "vra-section",
             Self::SimulatedAnnealing { .. } => "simulated-annealing",
-            Self::CentroidalVoronoi { .. }  => "centroidal-voronoi",
-            Self::BfsGrowth                 => "bfs-growth",
-            Self::Ilp              { .. }   => "ilp",
-            Self::MovingKnife      { .. }   => "moving-knife",
+            Self::CentroidalVoronoi { .. } => "centroidal-voronoi",
+            Self::BfsGrowth => "bfs-growth",
+            Self::Ilp { .. } => "ilp",
+            Self::MovingKnife { .. } => "moving-knife",
         }
     }
 }
@@ -325,7 +359,12 @@ pub struct MetisParams {
 
 impl Default for MetisParams {
     fn default() -> Self {
-        Self { ufactor: 5, niter: 100, seed: None, engine: bisect_apportion::split::MetisEngine::default() }
+        Self {
+            ufactor: 5,
+            niter: 100,
+            seed: None,
+            engine: bisect_apportion::split::MetisEngine::default(),
+        }
     }
 }
 
@@ -375,10 +414,13 @@ impl AlgorithmConfig {
     /// ufactor, niter, seed, and mode-specific knobs explicitly.
     pub fn from_state_args(args: &crate::args::StateArgs) -> Self {
         use crate::args::PartitionMode as PM;
-        let engine = args.metis_engine
-            .map(|e| e.into())
-            .unwrap_or_default();
-        let metis = MetisParams { ufactor: args.ufactor, niter: args.niter, seed: args.seed, engine };
+        let engine = args.metis_engine.map(|e| e.into()).unwrap_or_default();
+        let metis = MetisParams {
+            ufactor: args.ufactor,
+            niter: args.niter,
+            seed: args.seed,
+            engine,
+        };
         let base_weights = WeightSpec {
             alpha_county: args.alpha_county,
             ..WeightSpec::default()
@@ -389,7 +431,11 @@ impl AlgorithmConfig {
             PM::Unweighted => Self {
                 split: SplitStrategy::Bisect,
                 seeds: SeedCompositor::default(),
-                weights: WeightSpec { geographic: false, alpha_county: args.alpha_county, ..WeightSpec::default() },
+                weights: WeightSpec {
+                    geographic: false,
+                    alpha_county: args.alpha_county,
+                    ..WeightSpec::default()
+                },
                 vertex_constraints: pop_only,
                 metis,
                 mode_label: Some("unweighted"),
@@ -405,9 +451,16 @@ impl AlgorithmConfig {
             PM::MetisVra => Self {
                 split: SplitStrategy::NWay,
                 seeds: SeedCompositor::default(),
-                weights: WeightSpec { minority_weighting: true, alpha_county: args.alpha_county, ..WeightSpec::default() },
+                weights: WeightSpec {
+                    minority_weighting: true,
+                    alpha_county: args.alpha_county,
+                    ..WeightSpec::default()
+                },
                 vertex_constraints: pop_only,
-                metis: MetisParams { seed: None, ..metis },
+                metis: MetisParams {
+                    seed: None,
+                    ..metis
+                },
                 mode_label: None,
             },
             PM::PartisanWeighted => Self {
@@ -440,18 +493,32 @@ impl AlgorithmConfig {
             },
             PM::CompactBisect => Self {
                 split: SplitStrategy::CompactBisect { epsilon: 0.05 },
-                seeds: SeedCompositor::Multi { seeds: args.compact_seeds.max(1) },
+                seeds: SeedCompositor::Multi {
+                    seeds: args.compact_seeds.max(1),
+                },
                 weights: base_weights,
                 vertex_constraints: pop_only,
-                metis: MetisParams { seed: None, ..metis },
+                metis: MetisParams {
+                    seed: None,
+                    ..metis
+                },
                 mode_label: None,
             },
             PM::GeoSection => Self {
                 split: SplitStrategy::GeoSection,
-                seeds: SeedCompositor::Multi { seeds: args.geosection_seeds.max(1) },
-                weights: WeightSpec { directional_lambda: 0.0, alpha_county: args.alpha_county, ..WeightSpec::default() },
+                seeds: SeedCompositor::Multi {
+                    seeds: args.geosection_seeds.max(1),
+                },
+                weights: WeightSpec {
+                    directional_lambda: 0.0,
+                    alpha_county: args.alpha_county,
+                    ..WeightSpec::default()
+                },
                 vertex_constraints: pop_only,
-                metis: MetisParams { seed: None, ..metis },
+                metis: MetisParams {
+                    seed: None,
+                    ..metis
+                },
                 mode_label: None,
             },
             PM::AreaSection => Self {
@@ -459,34 +526,55 @@ impl AlgorithmConfig {
                     area_swing: args.area_swing,
                     area_section_init: args.area_section_init.into(),
                 },
-                seeds: SeedCompositor::Multi { seeds: args.geosection_seeds.max(1) },
+                seeds: SeedCompositor::Multi {
+                    seeds: args.geosection_seeds.max(1),
+                },
                 weights: base_weights,
-                vertex_constraints: pop_and_area,  // ncon=2: population + land area
-                metis: MetisParams { seed: None, ..metis },
+                vertex_constraints: pop_and_area, // ncon=2: population + land area
+                metis: MetisParams {
+                    seed: None,
+                    ..metis
+                },
                 mode_label: None,
             },
             PM::ApportionRegions => Self {
                 split: SplitStrategy::ApportionRegions,
-                seeds: SeedCompositor::Single,  // federal statute: single content-derived seed
+                seeds: SeedCompositor::Single, // federal statute: single content-derived seed
                 weights: base_weights,
                 vertex_constraints: pop_only,
-                metis: MetisParams { seed: None, ..metis },
+                metis: MetisParams {
+                    seed: None,
+                    ..metis
+                },
                 mode_label: None,
             },
             PM::ProportionalSection => Self {
                 split: SplitStrategy::ProportionalSection { eta: args.eta },
-                seeds: SeedCompositor::Multi { seeds: args.geosection_seeds.max(1) },
+                seeds: SeedCompositor::Multi {
+                    seeds: args.geosection_seeds.max(1),
+                },
                 weights: base_weights,
                 vertex_constraints: vec![VertexConstraintKind::Population],
-                metis: MetisParams { seed: None, ..metis },
+                metis: MetisParams {
+                    seed: None,
+                    ..metis
+                },
                 mode_label: None,
             },
             PM::VraSection => Self {
                 split: SplitStrategy::VraSection { w_vra: args.w_vra },
-                seeds: SeedCompositor::Multi { seeds: args.geosection_seeds.max(1) },
-                weights: WeightSpec { alpha_county: args.alpha_county, ..WeightSpec::default() },
+                seeds: SeedCompositor::Multi {
+                    seeds: args.geosection_seeds.max(1),
+                },
+                weights: WeightSpec {
+                    alpha_county: args.alpha_county,
+                    ..WeightSpec::default()
+                },
                 vertex_constraints: vec![VertexConstraintKind::Population],
-                metis: MetisParams { seed: None, ..metis },
+                metis: MetisParams {
+                    seed: None,
+                    ..metis
+                },
                 mode_label: None,
             },
             PM::SimulatedAnnealing => Self {
@@ -502,7 +590,13 @@ impl AlgorithmConfig {
                 mode_label: None,
             },
             PM::CentroidalVoronoi => Self {
-                split: SplitStrategy::CentroidalVoronoi { n_iter: args.cvd_iters, metric: args.cvd_metric.parse::<crate::bisection_runner::VoronoiMetric>().unwrap_or(crate::bisection_runner::VoronoiMetric::GraphDistance) },
+                split: SplitStrategy::CentroidalVoronoi {
+                    n_iter: args.cvd_iters,
+                    metric: args
+                        .cvd_metric
+                        .parse::<crate::bisection_runner::VoronoiMetric>()
+                        .unwrap_or(crate::bisection_runner::VoronoiMetric::GraphDistance),
+                },
                 seeds: SeedCompositor::Single,
                 weights: base_weights,
                 vertex_constraints: pop_only,
@@ -545,23 +639,44 @@ impl AlgorithmConfig {
         // ── Apply compositor layer overrides ──────────────────────────────────
         // Explicit --structure / --weights-override / --search flags override
         // the corresponding layer set by the --partition-mode preset above.
-        use crate::args::{StructureMode as SM, WeightMode as WM, SearchMode as SeM};
+        use crate::args::{SearchMode as SeM, StructureMode as SM, WeightMode as WM};
 
         // Layer 1: structure override
         if let Some(structure) = args.structure {
             let pop_only = vec![VertexConstraintKind::Population];
-            let pop_area  = vec![VertexConstraintKind::Population, VertexConstraintKind::Area];
+            let pop_area = vec![VertexConstraintKind::Population, VertexConstraintKind::Area];
             let (new_split, new_vc) = match structure {
-                SM::StandardBisect       => (SplitStrategy::Bisect, pop_only),
-                SM::NWay                 => (SplitStrategy::NWay, pop_only),
-                SM::RatioOptimal         => (SplitStrategy::GeoSection, pop_only),
-                SM::RatioOptimalArea     => (SplitStrategy::AreaSection { area_swing: args.area_swing, area_section_init: args.area_section_init.into() }, pop_area),
-                SM::RatioOptimalVra      => (SplitStrategy::VraSection { w_vra: args.w_vra }, pop_only),
-                SM::PrimeFactor          => (SplitStrategy::ApportionRegions, pop_only),
-                SM::CompactPolsby        => (SplitStrategy::CompactBisect { epsilon: 0.05 }, pop_only),
-                SM::CentroidalVoronoi    => (SplitStrategy::CentroidalVoronoi { n_iter: args.cvd_iters, metric: args.cvd_metric.parse::<crate::bisection_runner::VoronoiMetric>().unwrap_or(crate::bisection_runner::VoronoiMetric::GraphDistance) }, pop_only),
-                SM::BfsGrowth            => (SplitStrategy::BfsGrowth, pop_only),
-                SM::MovingKnife          => (SplitStrategy::MovingKnife { n_orientations: args.mka_orientations, metric: args.mka_metric.clone() }, pop_only),
+                SM::StandardBisect => (SplitStrategy::Bisect, pop_only),
+                SM::NWay => (SplitStrategy::NWay, pop_only),
+                SM::RatioOptimal => (SplitStrategy::GeoSection, pop_only),
+                SM::RatioOptimalArea => (
+                    SplitStrategy::AreaSection {
+                        area_swing: args.area_swing,
+                        area_section_init: args.area_section_init.into(),
+                    },
+                    pop_area,
+                ),
+                SM::RatioOptimalVra => (SplitStrategy::VraSection { w_vra: args.w_vra }, pop_only),
+                SM::PrimeFactor => (SplitStrategy::ApportionRegions, pop_only),
+                SM::CompactPolsby => (SplitStrategy::CompactBisect { epsilon: 0.05 }, pop_only),
+                SM::CentroidalVoronoi => (
+                    SplitStrategy::CentroidalVoronoi {
+                        n_iter: args.cvd_iters,
+                        metric: args
+                            .cvd_metric
+                            .parse::<crate::bisection_runner::VoronoiMetric>()
+                            .unwrap_or(crate::bisection_runner::VoronoiMetric::GraphDistance),
+                    },
+                    pop_only,
+                ),
+                SM::BfsGrowth => (SplitStrategy::BfsGrowth, pop_only),
+                SM::MovingKnife => (
+                    SplitStrategy::MovingKnife {
+                        n_orientations: args.mka_orientations,
+                        metric: args.mka_metric.clone(),
+                    },
+                    pop_only,
+                ),
             };
             algo.split = new_split;
             algo.vertex_constraints = new_vc;
@@ -570,28 +685,62 @@ impl AlgorithmConfig {
         // Layer 2: weight override
         if let Some(weight) = args.weights_override {
             algo.weights = match weight {
-                WM::Unweighted         => WeightSpec { geographic: false, alpha_county: 0.0, ..WeightSpec::default() },
-                WM::Geographic         => WeightSpec { geographic: true,  alpha_county: 0.0, ..WeightSpec::default() },
-                WM::County             => WeightSpec { geographic: true,  alpha_county: args.alpha_county.max(1.0), ..WeightSpec::default() },
-                WM::VraAligned         => WeightSpec { geographic: true,  minority_weighting: true, ..WeightSpec::default() },
-                WM::Proportional       => WeightSpec { geographic: true,  partisan_shares: args.partisan_shares.as_ref().map(std::path::PathBuf::from), ..WeightSpec::default() },
-                WM::EconomicCharacter  => WeightSpec { geographic: true,  economic_character: true, econ_alpha: 0.5, ..WeightSpec::default() },
-                WM::ZoneMembership     => WeightSpec { geographic: true,  zone_membership: true, zone_alpha: 1.0, ..WeightSpec::default() },
+                WM::Unweighted => WeightSpec {
+                    geographic: false,
+                    alpha_county: 0.0,
+                    ..WeightSpec::default()
+                },
+                WM::Geographic => WeightSpec {
+                    geographic: true,
+                    alpha_county: 0.0,
+                    ..WeightSpec::default()
+                },
+                WM::County => WeightSpec {
+                    geographic: true,
+                    alpha_county: args.alpha_county.max(1.0),
+                    ..WeightSpec::default()
+                },
+                WM::VraAligned => WeightSpec {
+                    geographic: true,
+                    minority_weighting: true,
+                    ..WeightSpec::default()
+                },
+                WM::Proportional => WeightSpec {
+                    geographic: true,
+                    partisan_shares: args.partisan_shares.as_ref().map(std::path::PathBuf::from),
+                    ..WeightSpec::default()
+                },
+                WM::EconomicCharacter => WeightSpec {
+                    geographic: true,
+                    economic_character: true,
+                    econ_alpha: 0.5,
+                    ..WeightSpec::default()
+                },
+                WM::ZoneMembership => WeightSpec {
+                    geographic: true,
+                    zone_membership: true,
+                    zone_alpha: 1.0,
+                    ..WeightSpec::default()
+                },
             };
         }
 
         // Layer 3: search strategy override
         if let Some(search) = args.search {
-            let n = args.seeds.unwrap_or(args.geosection_seeds.max(args.compact_seeds).max(50));
+            let n = args
+                .seeds
+                .unwrap_or(args.geosection_seeds.max(args.compact_seeds).max(50));
             algo.seeds = match search {
-                SeM::Single             => SeedCompositor::Single,
-                SeM::Multi              => SeedCompositor::Multi { seeds: n },
-                SeM::Convergence        => SeedCompositor::ConvergenceSweep { threshold: args.convergence_threshold },
-                SeM::Percentile         => SeedCompositor::Percentile {
+                SeM::Single => SeedCompositor::Single,
+                SeM::Multi => SeedCompositor::Multi { seeds: n },
+                SeM::Convergence => SeedCompositor::ConvergenceSweep {
+                    threshold: args.convergence_threshold,
+                },
+                SeM::Percentile => SeedCompositor::Percentile {
                     p: args.percentile.clamp(0.0, 1.0),
                     seeds: n,
                 },
-                SeM::BisectionEnsemble  => SeedCompositor::BisectionEnsemble {
+                SeM::BisectionEnsemble => SeedCompositor::BisectionEnsemble {
                     p: args.percentile.clamp(0.0, 1.0),
                     ensemble_steps: args.ensemble_steps,
                 },
@@ -668,7 +817,10 @@ impl AlgorithmConfig {
             PM::Unweighted => Self {
                 split: SplitStrategy::Bisect,
                 seeds: SeedCompositor::default(),
-                weights: WeightSpec { geographic: false, ..WeightSpec::default() },
+                weights: WeightSpec {
+                    geographic: false,
+                    ..WeightSpec::default()
+                },
                 vertex_constraints: pop,
                 metis,
                 mode_label: Some("unweighted"),
@@ -677,7 +829,10 @@ impl AlgorithmConfig {
             PM::MetisVra => Self {
                 split: SplitStrategy::NWay,
                 seeds: SeedCompositor::default(),
-                weights: WeightSpec { minority_weighting: true, ..WeightSpec::default() },
+                weights: WeightSpec {
+                    minority_weighting: true,
+                    ..WeightSpec::default()
+                },
                 vertex_constraints: pop,
                 metis,
                 mode_label: None,
@@ -719,22 +874,28 @@ impl AlgorithmConfig {
             PM::GeoSection => Self {
                 split: SplitStrategy::GeoSection,
                 seeds: SeedCompositor::Multi { seeds: 50 },
-                weights: WeightSpec { directional_lambda: 0.0, ..WeightSpec::default() },
+                weights: WeightSpec {
+                    directional_lambda: 0.0,
+                    ..WeightSpec::default()
+                },
                 vertex_constraints: pop,
                 metis,
                 mode_label: None,
             },
             PM::AreaSection => Self {
-                split: SplitStrategy::AreaSection { area_swing: 1.10, area_section_init: AreaSectionInit::RatioOptimal },
+                split: SplitStrategy::AreaSection {
+                    area_swing: 1.10,
+                    area_section_init: AreaSectionInit::RatioOptimal,
+                },
                 seeds: SeedCompositor::Multi { seeds: 50 },
                 weights: WeightSpec::default(),
-                vertex_constraints: pop_area,  // ncon=2: population + land area
+                vertex_constraints: pop_area, // ncon=2: population + land area
                 metis,
                 mode_label: None,
             },
             PM::ApportionRegions => Self {
                 split: SplitStrategy::ApportionRegions,
-                seeds: SeedCompositor::Single,  // federal statute: single content-derived seed
+                seeds: SeedCompositor::Single, // federal statute: single content-derived seed
                 weights: WeightSpec::default(),
                 vertex_constraints: pop,
                 metis,
@@ -769,7 +930,10 @@ impl AlgorithmConfig {
                 mode_label: None,
             },
             PM::CentroidalVoronoi => Self {
-                split: SplitStrategy::CentroidalVoronoi { n_iter: 20, metric: crate::bisection_runner::VoronoiMetric::GraphDistance },
+                split: SplitStrategy::CentroidalVoronoi {
+                    n_iter: 20,
+                    metric: crate::bisection_runner::VoronoiMetric::GraphDistance,
+                },
                 seeds: SeedCompositor::Single,
                 weights: WeightSpec::default(),
                 vertex_constraints: pop,
@@ -950,9 +1114,8 @@ impl StateConfig {
     /// 2. Chamber-specific value from state policy database
     /// 3. Fallback: 0.5% congressional / 5% state legislative
     pub fn effective_balance_tolerance(&self) -> f64 {
-        self.balance_tolerance.unwrap_or_else(|| {
-            chamber_balance_tolerance(&self.state_code, &self.chamber)
-        })
+        self.balance_tolerance
+            .unwrap_or_else(|| chamber_balance_tolerance(&self.state_code, &self.chamber))
     }
 
     /// Returns the effective label for this plan run.
@@ -1042,7 +1205,10 @@ pub fn chamber_district_count(
                 // Zero means this chamber doesn't exist (e.g., NE unicameral has no senate)
                 let notes = state.get("notes").and_then(|v| v.as_str()).unwrap_or("");
                 let hint = if notes.to_lowercase().contains("unicameral") {
-                    format!(" {} has a unicameral legislature — use --chamber house.", state_code)
+                    format!(
+                        " {} has a unicameral legislature — use --chamber house.",
+                        state_code
+                    )
                 } else {
                     format!(" {} has no {} chamber.", state_code, chamber)
                 };
@@ -1068,10 +1234,14 @@ pub fn load_all_states(year: &str) -> Result<Vec<(String, String, usize)>, Strin
         ));
     }
     let manifest = crate::fetch::load_manifest()?;
-    let mut states: Vec<(String, String, usize)> = manifest.states.into_iter()
+    let mut states: Vec<(String, String, usize)> = manifest
+        .states
+        .into_iter()
         .filter_map(|(code, state)| {
             let districts = *state.districts.get(year)?;
-            if districts == 0 { return None; }
+            if districts == 0 {
+                return None;
+            }
             let name = state.name.to_lowercase().replace(' ', "_");
             Some((code, name, districts))
         })
@@ -1101,25 +1271,32 @@ pub fn run_states_parallel(configs: Vec<StateConfig>, workers: usize) -> Vec<Sta
         .expect("failed to build Rayon thread pool");
 
     pool.install(|| {
-        configs.par_iter().map(|cfg| {
-            let start = std::time::Instant::now();
-            let result = run_single_state(cfg);
-            let elapsed_ms = start.elapsed().as_millis() as u64;
-            match result {
-                Ok(()) => StateResult {
-                    state_code: cfg.state_code.clone(),
-                    success: true,
-                    error: None,
-                    elapsed_ms,
-                },
-                Err(e) => StateResult {
-                    state_code: cfg.state_code.clone(),
-                    success: false,
-                    error: Some(format!("{}: {}", cfg.state_code, ascii_safe(&e.to_string()))),
-                    elapsed_ms,
+        configs
+            .par_iter()
+            .map(|cfg| {
+                let start = std::time::Instant::now();
+                let result = run_single_state(cfg);
+                let elapsed_ms = start.elapsed().as_millis() as u64;
+                match result {
+                    Ok(()) => StateResult {
+                        state_code: cfg.state_code.clone(),
+                        success: true,
+                        error: None,
+                        elapsed_ms,
+                    },
+                    Err(e) => StateResult {
+                        state_code: cfg.state_code.clone(),
+                        success: false,
+                        error: Some(format!(
+                            "{}: {}",
+                            cfg.state_code,
+                            ascii_safe(&e.to_string())
+                        )),
+                        elapsed_ms,
+                    },
                 }
-            }
-        }).collect()
+            })
+            .collect()
     })
 }
 
@@ -1143,9 +1320,7 @@ pub fn extract_year_from_adj_filename(filename: &str) -> Option<&'static str> {
 /// A mismatch can occur when the user requests --year 2020 but only a 2010
 /// adjacency file is available and is used as fallback.
 pub fn check_adjacency_year_mismatch(path: &PathBuf, requested_year: &str, state_code: &str) {
-    let filename = path.file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("");
+    let filename = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
     if let Some(file_year) = extract_year_from_adj_filename(filename) {
         if file_year != requested_year {
             eprintln!(
@@ -1165,7 +1340,7 @@ pub fn check_adjacency_year_mismatch(path: &PathBuf, requested_year: &str, state
 ///
 /// The manifest's `local_outputs_dir` + "V3/data/{year}/adjacency/" is the
 /// canonical adjacency store — the same path that `bisect fetch --release` downloads to.
-/// Override with REDIST_MANIFEST env var for custom data layouts.
+/// Override with BISECT_MANIFEST env var for custom data layouts.
 ///
 /// Returns `(path, effective_resolution)` where `effective_resolution` may differ from
 /// the requested resolution if a graceful fallback to tract occurred.
@@ -1174,31 +1349,32 @@ fn resolve_adjacency_path(
     year: &str,
     resolution: &str,
 ) -> Result<(PathBuf, String), String> {
-    let manifest = load_manifest()
-        .map_err(|e| format!("cannot load manifest: {e}"))?;
+    let manifest = load_manifest().map_err(|e| format!("cannot load manifest: {e}"))?;
     let outputs_dir = PathBuf::from(&manifest.local_outputs_dir);
 
     // Choose filename based on requested resolution
     let (adj_filename, is_block_group) = match resolution {
-        "block_group" | "block-group" => (
-            format!("{state_code_lower}_bg_adjacency_{year}.pkl"),
-            true,
-        ),
-        _ => (
-            format!("{state_code_lower}_adjacency_{year}.pkl"),
-            false,
-        ),
+        "block_group" | "block-group" => {
+            (format!("{state_code_lower}_bg_adjacency_{year}.pkl"), true)
+        }
+        _ => (format!("{state_code_lower}_adjacency_{year}.pkl"), false),
     };
 
     // Try V3 then V4 canonical stores
     let canonical = outputs_dir
-        .join("V3").join("data").join(year).join("adjacency")
+        .join("V3")
+        .join("data")
+        .join(year)
+        .join("adjacency")
         .join(&adj_filename);
     if canonical.exists() {
         return Ok((canonical, resolution.to_string()));
     }
     let v4 = outputs_dir
-        .join("V4").join("data").join(year).join("adjacency")
+        .join("V4")
+        .join("data")
+        .join(year)
+        .join("adjacency")
         .join(&adj_filename);
     if v4.exists() {
         return Ok((v4, resolution.to_string()));
@@ -1211,17 +1387,24 @@ fn resolve_adjacency_path(
              not found for {state_code_lower} {year}.\n\
              To get block_group data: bisect fetch --type adjacency --states {} --year {}\n\
              Falling back to tract resolution.",
-            state_code_lower.to_uppercase(), year
+            state_code_lower.to_uppercase(),
+            year
         );
         let tract_filename = format!("{state_code_lower}_adjacency_{year}.pkl");
         let tract_canonical = outputs_dir
-            .join("V3").join("data").join(year).join("adjacency")
+            .join("V3")
+            .join("data")
+            .join(year)
+            .join("adjacency")
             .join(&tract_filename);
         if tract_canonical.exists() {
             return Ok((tract_canonical, "tract".to_string()));
         }
         let tract_v4 = outputs_dir
-            .join("V4").join("data").join(year).join("adjacency")
+            .join("V4")
+            .join("data")
+            .join(year)
+            .join("adjacency")
             .join(&tract_filename);
         if tract_v4.exists() {
             return Ok((tract_v4, "tract".to_string()));
@@ -1251,8 +1434,8 @@ fn resolve_adjacency_path(
 pub fn validate_multiscale_levels(fine: &str, coarse: &str) -> Result<(), String> {
     let rank = |level: &str| match level {
         "bg" | "block_group" => Ok(0usize),
-        "tract"              => Ok(1usize),
-        "county"             => Ok(2usize),
+        "tract" => Ok(1usize),
+        "county" => Ok(2usize),
         other => Err(format!(
             "unknown multiscale level '{other}'. Valid values: bg, tract, county"
         )),
@@ -1370,8 +1553,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             plan_root.display()
         );
         if data_dir.exists() {
-            std::fs::remove_dir_all(&data_dir)
-                .map_err(|e| format!("reset failed: {e}"))?;
+            std::fs::remove_dir_all(&data_dir).map_err(|e| format!("reset failed: {e}"))?;
         }
     }
     // Create plan directory structure if labeled
@@ -1379,31 +1561,36 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
         bisect_report::create_plan_dir(&year_base, &label)
             .map_err(|e| format!("cannot create plan dir: {e}"))?;
     }
-    std::fs::create_dir_all(&data_dir)
-        .map_err(|e| format!("cannot create data dir: {e}"))?;
+    std::fs::create_dir_all(&data_dir).map_err(|e| format!("cannot create data dir: {e}"))?;
 
-    status(cfg.position, &format!("{}: loading adjacency", cfg.state_code));
+    status(
+        cfg.position,
+        &format!("{}: loading adjacency", cfg.state_code),
+    );
 
     // 1. Load adjacency graph
     // Adjacency path comes from the manifest (same source as `bisect fetch`).
     // The manifest's local_outputs_dir + "V3/data/{year}/adjacency/" is the
-    // canonical store. REDIST_MANIFEST can override this for custom setups.
+    // canonical store. BISECT_MANIFEST can override this for custom setups.
     let state_code_lower = cfg.state_code.to_lowercase();
     let adj_pkl = if let Some(ref override_path) = cfg.adjacency_override {
         override_path.clone()
     } else {
-        let (path, _effective_resolution) = resolve_adjacency_path(&state_code_lower, &cfg.year, &cfg.resolution)?;
+        let (path, _effective_resolution) =
+            resolve_adjacency_path(&state_code_lower, &cfg.year, &cfg.resolution)?;
         // Task 135: warn when adjacency file year doesn't match requested year
         check_adjacency_year_mismatch(&path, &cfg.year, &cfg.state_code);
         path
     };
 
-    let graph = load_adjacency_pkl(&adj_pkl)
-        .map_err(|e| format!("adjacency load failed: {e}"))?;
+    let graph = load_adjacency_pkl(&adj_pkl).map_err(|e| format!("adjacency load failed: {e}"))?;
 
     // Check for isolated nodes (no adjacency neighbors) — common with island tracts.
     // Isolated tracts will always form non-contiguous districts.
-    let isolated: Vec<usize> = graph.adjacency.iter().enumerate()
+    let isolated: Vec<usize> = graph
+        .adjacency
+        .iter()
+        .enumerate()
         .filter(|(_, nbrs)| nbrs.is_empty())
         .map(|(i, _)| i)
         .collect();
@@ -1412,7 +1599,8 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             "WARNING: {}: {} isolated tract(s) with no adjacency neighbors. \
              These will form non-contiguous districts. \
              For island states (AK, HI, international), rebuild adjacency with water bridges.",
-            cfg.state_code, isolated.len()
+            cfg.state_code,
+            isolated.len()
         );
     }
 
@@ -1431,19 +1619,30 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
         && !cfg.algo.weights.minority_weighting
         && cfg.algo.weights.partisan_shares.is_none()
         && cfg.algo.weights.alpha_county < 1e-10
-        && cfg.algo.weights.alpha_mcd    < 1e-10
-        && cfg.algo.weights.alpha_place  < 1e-10
-        && cfg.algo.weights.alpha_vtd    < 1e-10
+        && cfg.algo.weights.alpha_mcd < 1e-10
+        && cfg.algo.weights.alpha_place < 1e-10
+        && cfg.algo.weights.alpha_vtd < 1e-10
     {
-        status(cfg.position, &format!("{}: unweighted mode", cfg.state_code));
+        status(
+            cfg.position,
+            &format!("{}: unweighted mode", cfg.state_code),
+        );
         HashMap::new()
     } else if num_districts == 1 {
-        status(cfg.position, &format!("{}: single district — skipping weighting", cfg.state_code));
+        status(
+            cfg.position,
+            &format!("{}: single district — skipping weighting", cfg.state_code),
+        );
         graph.edge_weights.clone()
     } else {
         build_edge_weights(
-            &cfg.algo.weights, &graph, &cfg.state_code, state_name,
-            &cfg.year, &cfg.output_dir, cfg.position,
+            &cfg.algo.weights,
+            &graph,
+            &cfg.state_code,
+            state_name,
+            &cfg.year,
+            &cfg.output_dir,
+            cfg.position,
         )?
     };
 
@@ -1463,12 +1662,18 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
 
     // 3. Build vertex weights from constraint spec + graph data.
     // Load TIGER areas only if the Area constraint is requested.
-    let needs_area = cfg.algo.vertex_constraints
+    let needs_area = cfg
+        .algo
+        .vertex_constraints
         .contains(&VertexConstraintKind::Area);
     let tiger_areas: Vec<f64> = if needs_area {
         let (areas, _) = load_tiger_geometry(
-            &cfg.state_code, &cfg.year, &graph.index_to_geoid,
-            &graph.adjacency, &graph.edge_weights);
+            &cfg.state_code,
+            &cfg.year,
+            &graph.index_to_geoid,
+            &graph.adjacency,
+            &graph.edge_weights,
+        );
         areas
     } else {
         vec![]
@@ -1507,397 +1712,741 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
     'retry: for attempt in 0..=MAX_BALANCE_RETRIES {
         if attempt > 0 {
             seed = Some(base_seed.unwrap_or(0).wrapping_add(attempt as u64));
-            status(cfg.position, &format!("{}: balance retry {}/{} (seed {:?})",
-                cfg.state_code, attempt, MAX_BALANCE_RETRIES, seed));
+            status(
+                cfg.position,
+                &format!(
+                    "{}: balance retry {}/{} (seed {:?})",
+                    cfg.state_code, attempt, MAX_BALANCE_RETRIES, seed
+                ),
+            );
         }
 
-    let partition_t0 = std::time::Instant::now();
-    let assignments_attempt = match &cfg.algo.split {
-        SplitStrategy::NWay if num_districts > 1 => {
-            status(cfg.position, &format!("{}: n-way into {} districts", cfg.state_code, num_districts));
-            run_nway_partition(
-                &graph.adjacency, &vwgt, &edge_weights,
-                num_districts, 1.0 + ufactor as f64 / 1000.0, niter, seed,
-            ).map_err(|e| format!("n-way partition failed: {e}"))?
-        }
-        SplitStrategy::GeoSection => {
-            let seeds_per_ratio = cfg.algo.seeds.seed_count();
-            let lambda = cfg.algo.weights.directional_lambda;
-            let centroids = if lambda > 1e-10 {
-                crate::geosection_orientation::load_centroids_from_tiger(
-                    &cfg.state_code, &cfg.year, &graph.index_to_geoid)
-            } else {
-                crate::geosection_orientation::CentroidMap::new()
-            };
-            if lambda > 1e-10 {
-                status(cfg.position, &format!("{}: GeoSection λ={:.1} ({} centroids loaded)",
-                       cfg.state_code, lambda, centroids.len()));
-            } else {
-                status(cfg.position, &format!("{}: GeoSection {} ratios × {} seeds",
-                       cfg.state_code, num_districts / 2, seeds_per_ratio));
+        let partition_t0 = std::time::Instant::now();
+        let assignments_attempt = match &cfg.algo.split {
+            SplitStrategy::NWay if num_districts > 1 => {
+                status(
+                    cfg.position,
+                    &format!("{}: n-way into {} districts", cfg.state_code, num_districts),
+                );
+                run_nway_partition(
+                    &graph.adjacency,
+                    &vwgt,
+                    &edge_weights,
+                    num_districts,
+                    1.0 + ufactor as f64 / 1000.0,
+                    niter,
+                    seed,
+                )
+                .map_err(|e| format!("n-way partition failed: {e}"))?
             }
-            let (asgn, nat_left, nat_right, nat_ec) = run_geosection(
-                &graph.adjacency, &vwgt, &edge_weights,
-                num_districts, balance_tolerance_frac, niter,
-                seeds_per_ratio, Some(&intermediate_dir),
-                &centroids, lambda, None, 1.10, None, 0.0,
-                None,  // GeoSection does not use MKA override
-            ).map_err(|e| format!("geosection failed: {e}"))?;
-            status(cfg.position, &format!("{}: natural ratio {}:{} at {:.0}km",
-                   cfg.state_code, nat_left, nat_right, nat_ec / 1000.0));
-            asgn
-        }
-        SplitStrategy::AreaSection { area_swing, area_section_init } => {
-            let seeds_per_ratio = cfg.algo.seeds.seed_count();
-            if tiger_areas.is_empty() {
-                return Err(format!("{}: AreaSection requires TIGER ALAND data — not found",
-                                   cfg.state_code));
-            }
-
-            // ── MKA warm-start: compute theta* for directional edge pre-bias ──
-            //
-            // When MKA init is active and centroid data is present, call
-            // split_subgraph_mka_direction() to get the Reock-optimal cut angle.
-            // That angle is then passed to run_geosection as mka_theta_override,
-            // which uses it to pre-bias edge weights via apply_directional_penalty.
-            //
-            // When centroids are absent, fall back to ratio-optimal with a warning.
-            let mka_theta_override: Option<f64> = if *area_section_init == AreaSectionInit::MovingKnife {
-                if graph.tract_centroids.is_empty() {
-                    eprintln!("WARNING: --area-section-init moving-knife requires tract centroids; falling back to ratio-optimal");
-                    None
-                } else {
-                    let all_tracts: std::collections::HashSet<usize> = (0..graph.adjacency.len()).collect();
-                    let theta = crate::bisection_runner::split_subgraph_mka_direction(
-                        &all_tracts, &graph.tract_centroids, 180,
-                    );
-                    eprintln!("[areasection-mka] theta*={:.4} rad ({:.1} deg) — using as directional bias",
-                              theta, theta.to_degrees());
-                    Some(theta)
-                }
-            } else {
-                None
-            };
-
-            // When MKA init is active and centroids are available, build a CentroidMap
-            // (HashMap<usize, (f64, f64)>) so run_geosection can apply the directional bias
-            // via apply_directional_penalty. This converts the Vec<(f64,f64)> to the map form.
-            let mka_centroid_map: crate::geosection_orientation::CentroidMap =
-                if mka_theta_override.is_some() && !graph.tract_centroids.is_empty() {
-                    graph.tract_centroids.iter().enumerate()
-                        .map(|(i, &pt)| (i, pt))
-                        .collect()
+            SplitStrategy::GeoSection => {
+                let seeds_per_ratio = cfg.algo.seeds.seed_count();
+                let lambda = cfg.algo.weights.directional_lambda;
+                let centroids = if lambda > 1e-10 {
+                    crate::geosection_orientation::load_centroids_from_tiger(
+                        &cfg.state_code,
+                        &cfg.year,
+                        &graph.index_to_geoid,
+                    )
                 } else {
                     crate::geosection_orientation::CentroidMap::new()
                 };
-            let empty_centroids = crate::geosection_orientation::CentroidMap::new();
-            let (centroids_ref, lambda_val): (&crate::geosection_orientation::CentroidMap, f64) =
-                if mka_theta_override.is_some() && !graph.tract_centroids.is_empty() {
-                    (&mka_centroid_map, 1.0)  // lambda=1.0: moderate directional bias
+                if lambda > 1e-10 {
+                    status(
+                        cfg.position,
+                        &format!(
+                            "{}: GeoSection λ={:.1} ({} centroids loaded)",
+                            cfg.state_code,
+                            lambda,
+                            centroids.len()
+                        ),
+                    );
+                } else {
+                    status(
+                        cfg.position,
+                        &format!(
+                            "{}: GeoSection {} ratios × {} seeds",
+                            cfg.state_code,
+                            num_districts / 2,
+                            seeds_per_ratio
+                        ),
+                    );
+                }
+                let (asgn, nat_left, nat_right, nat_ec) = run_geosection(
+                    &graph.adjacency,
+                    &vwgt,
+                    &edge_weights,
+                    num_districts,
+                    balance_tolerance_frac,
+                    niter,
+                    seeds_per_ratio,
+                    Some(&intermediate_dir),
+                    &centroids,
+                    lambda,
+                    None,
+                    1.10,
+                    None,
+                    0.0,
+                    None, // GeoSection does not use MKA override
+                )
+                .map_err(|e| format!("geosection failed: {e}"))?;
+                status(
+                    cfg.position,
+                    &format!(
+                        "{}: natural ratio {}:{} at {:.0}km",
+                        cfg.state_code,
+                        nat_left,
+                        nat_right,
+                        nat_ec / 1000.0
+                    ),
+                );
+                asgn
+            }
+            SplitStrategy::AreaSection {
+                area_swing,
+                area_section_init,
+            } => {
+                let seeds_per_ratio = cfg.algo.seeds.seed_count();
+                if tiger_areas.is_empty() {
+                    return Err(format!(
+                        "{}: AreaSection requires TIGER ALAND data — not found",
+                        cfg.state_code
+                    ));
+                }
+
+                // ── MKA warm-start: compute theta* for directional edge pre-bias ──
+                //
+                // When MKA init is active and centroid data is present, call
+                // split_subgraph_mka_direction() to get the Reock-optimal cut angle.
+                // That angle is then passed to run_geosection as mka_theta_override,
+                // which uses it to pre-bias edge weights via apply_directional_penalty.
+                //
+                // When centroids are absent, fall back to ratio-optimal with a warning.
+                let mka_theta_override: Option<f64> = if *area_section_init
+                    == AreaSectionInit::MovingKnife
+                {
+                    if graph.tract_centroids.is_empty() {
+                        eprintln!("WARNING: --area-section-init moving-knife requires tract centroids; falling back to ratio-optimal");
+                        None
+                    } else {
+                        let all_tracts: std::collections::HashSet<usize> =
+                            (0..graph.adjacency.len()).collect();
+                        let theta = crate::bisection_runner::split_subgraph_mka_direction(
+                            &all_tracts,
+                            &graph.tract_centroids,
+                            180,
+                        );
+                        eprintln!("[areasection-mka] theta*={:.4} rad ({:.1} deg) — using as directional bias",
+                              theta, theta.to_degrees());
+                        Some(theta)
+                    }
+                } else {
+                    None
+                };
+
+                // When MKA init is active and centroids are available, build a CentroidMap
+                // (HashMap<usize, (f64, f64)>) so run_geosection can apply the directional bias
+                // via apply_directional_penalty. This converts the Vec<(f64,f64)> to the map form.
+                let mka_centroid_map: crate::geosection_orientation::CentroidMap =
+                    if mka_theta_override.is_some() && !graph.tract_centroids.is_empty() {
+                        graph
+                            .tract_centroids
+                            .iter()
+                            .enumerate()
+                            .map(|(i, &pt)| (i, pt))
+                            .collect()
+                    } else {
+                        crate::geosection_orientation::CentroidMap::new()
+                    };
+                let empty_centroids = crate::geosection_orientation::CentroidMap::new();
+                let (centroids_ref, lambda_val): (
+                    &crate::geosection_orientation::CentroidMap,
+                    f64,
+                ) = if mka_theta_override.is_some() && !graph.tract_centroids.is_empty() {
+                    (&mka_centroid_map, 1.0) // lambda=1.0: moderate directional bias
                 } else {
                     (&empty_centroids, 0.0)
                 };
-            status(cfg.position, &format!(
-                "{}: AreaSection {} ratios x {} seeds (pop+area dual, ncon=2, init={:?})",
-                cfg.state_code, num_districts / 2, seeds_per_ratio, area_section_init));
-            let (asgn, nat_left, nat_right, nat_ec) = run_geosection(
-                &graph.adjacency, &graph.vertex_weights, &edge_weights,
-                num_districts, balance_tolerance_frac, niter,
-                seeds_per_ratio, Some(&intermediate_dir),
-                centroids_ref, lambda_val, Some(&tiger_areas), *area_swing, None, 0.0,
-                mka_theta_override,
-            ).map_err(|e| format!("areasection failed: {e}"))?;
-            status(cfg.position, &format!("{}: natural ratio {}:{} at {:.0}km",
-                   cfg.state_code, nat_left, nat_right, nat_ec / 1000.0));
-            asgn
-        }
-        SplitStrategy::VraSection { w_vra } => {
-            let seeds_per_ratio = cfg.algo.seeds.seed_count();
-            // Load minority VAP data from demographics CSV.
-            // Minority fraction = (total_pop - white_non_hispanic) / total_pop,
-            // multiplied by tract population to get approximate minority VAP counts.
-            // (This is a spatial distribution proxy — not exact VAP data, but legally
-            //  defensible because no racial targeting occurs: only the geographic
-            //  distribution of existing minority concentrations is observed.)
-            let demo_path = std::path::Path::new("data")
-                .join(&cfg.year).join("demographics")
-                .join(format!("{state_name}_demographics_{}.csv", cfg.year));
-            let minority_vap_vec: Vec<f64> = if demo_path.exists() {
-                let demo = crate::demographics::load_demographics(&demo_path)
-                    .map_err(|e| format!("{}: VRASection demographics load failed: {e}", cfg.state_code))?;
-                let fracs = crate::demographics::align_demographics_to_adjacency(
-                    &demo, &graph.index_to_geoid, graph.n_vertices);
-                // Convert fraction × population → approximate minority VAP count
-                fracs.iter().zip(graph.vertex_weights.iter())
-                    .map(|(&frac, &pop)| frac * pop as f64)
-                    .collect()
-            } else {
-                eprintln!("WARNING: {}: VRASection demographics not found at {} — running as plain GeoSection",
-                          cfg.state_code, demo_path.display());
-                vec![]
-            };
-            let mvap_opt: Option<&[f64]> = if minority_vap_vec.is_empty() { None } else { Some(&minority_vap_vec) };
-            let empty_centroids = crate::geosection_orientation::CentroidMap::new();
-            status(cfg.position, &format!(
-                "{}: VRASection {} ratios x {} seeds w_vra={:.2}",
-                cfg.state_code, num_districts / 2, seeds_per_ratio, w_vra));
-            let (asgn, nat_left, nat_right, nat_ec) = run_geosection(
-                &graph.adjacency, &vwgt, &edge_weights,
-                num_districts, balance_tolerance_frac, niter,
-                seeds_per_ratio, Some(&intermediate_dir),
-                &empty_centroids, 0.0, None, 1.10, mvap_opt, *w_vra,
-                None,  // VRASection does not use MKA override
-            ).map_err(|e| format!("vra-section failed: {e}"))?;
-            status(cfg.position, &format!("{}: natural ratio {}:{} at {:.0}km",
-                   cfg.state_code, nat_left, nat_right, nat_ec / 1000.0));
-            asgn
-        }
-        SplitStrategy::ProportionalSection { eta } => {
-            let seeds = cfg.algo.seeds.seed_count();
-            // Load D_votes from presidential_by_tract.csv
-            let election_path = std::path::PathBuf::from(format!(
-                "data/{}/elections/presidential_by_tract.csv", cfg.year));
-            if !election_path.exists() {
-                return Err(format!("{}: ProportionalSection requires {} — not found",
-                                   cfg.state_code, election_path.display()));
-            }
-            let (d_votes, two_party) = crate::partisan_shares::load_dem_vote_counts(
-                &election_path, &graph.index_to_geoid, graph.n_vertices)
-                .map_err(|e| format!("{}: load_dem_vote_counts failed: {e}", cfg.state_code))?;
-            status(cfg.position, &format!(
-                "{}: ProportionalSection {} seeds eta={:.2} (pop+D_votes ncon=2)",
-                cfg.state_code, seeds, eta));
-            let (asgn, k_d, k_r, best_ec, d_state) =
-                crate::bisection_runner::run_proportional_section(
-                    &graph.adjacency, &graph.vertex_weights, &d_votes, &two_party, &edge_weights,
-                    num_districts, balance_tolerance_frac, niter, seeds, *eta,
+                status(
+                    cfg.position,
+                    &format!(
+                        "{}: AreaSection {} ratios x {} seeds (pop+area dual, ncon=2, init={:?})",
+                        cfg.state_code,
+                        num_districts / 2,
+                        seeds_per_ratio,
+                        area_section_init
+                    ),
+                );
+                let (asgn, nat_left, nat_right, nat_ec) = run_geosection(
+                    &graph.adjacency,
+                    &graph.vertex_weights,
+                    &edge_weights,
+                    num_districts,
+                    balance_tolerance_frac,
+                    niter,
+                    seeds_per_ratio,
                     Some(&intermediate_dir),
-                ).map_err(|e| format!("proportional-section failed: {e}"))?;
-            status(cfg.position, &format!(
-                "{}: proportional {}/{}D d={:.3} EC={:.0}km",
-                cfg.state_code, k_d, k_r, d_state, best_ec / 1000.0));
-            asgn
-        }
-        SplitStrategy::CompactBisect { epsilon } => {
-            let seeds_per_level = cfg.algo.seeds.seed_count();
-            let (vertex_areas, vertex_ext_perimeters) =
-                load_tiger_geometry(&cfg.state_code, &cfg.year, &graph.index_to_geoid,
-                                    &graph.adjacency, &edge_weights);
-            let opts = CompactBisectOpts { seeds_per_level, epsilon: *epsilon };
-            run_all_splits_compact(
-                &graph.adjacency, &vwgt, &edge_weights,
-                &vertex_areas, &vertex_ext_perimeters,
-                num_districts, balance_tolerance_frac, niter, None, &opts,
-                Some(&intermediate_dir),
-            ).map_err(|e| format!("compact-bisect failed: {e}"))?
-        }
-        SplitStrategy::ApportionRegions => {
-            use bisect_apportion::{PfrCompositor, MetisPartitioner, pfr_tree_depth};
-            let factor_seq = bisect_apportion::prime_factor_sequence(num_districts as u32);
-            let depth = pfr_tree_depth(num_districts as u32).max(1);
-            status(cfg.position, &format!("{}: apportion-regions partition into {} districts \
-                (F={:?}, depth={})", cfg.state_code, num_districts, factor_seq, depth));
-            // Per-level tolerance: (1 + per_level)^depth ≤ 1 + final_tol.
-            // Use depth+1 in denominator for margin (METIS can slightly exceed ufactor).
-            // Clamped to METIS minimum 0.1% (ufactor=1).
-            // Note: PFR is a research algorithm; the final balance check uses a relaxed
-            // 2% tolerance so we can measure actual balance rather than reject runs.
-            let per_level_tol = (balance_tolerance_frac / (depth + 1) as f64).max(0.001);
-            let partitioner = MetisPartitioner {
-                balance_tolerance: per_level_tol,
-                niter: niter as i32,
-                engine: cfg.algo.metis.engine,
-            };
-            let compositor = PfrCompositor::new(partitioner);
-            let result = compositor.compose(
-                &graph.adjacency, &graph.vertex_weights, &edge_weights,
-                num_districts as u32,
-                seed,
-            ).map_err(|e| format!("apportion-regions failed: {e}"))?;
-            // Check balance at relaxed 2% — report actual deviation in manifest.
-            let pfr_assignments: std::collections::HashMap<usize, usize> = result.assignment
-                .iter().enumerate().map(|(t, &d)| (t, d as usize + 1)).collect();
-            let pfr_partition = bisect_core::Partition::from_assignments(pfr_assignments.clone());
-            let pfr_balance = pfr_partition.population_balance(&graph.vertex_weights, num_districts);
-            if pfr_balance > 0.03 {
-                return Err(format!("apportion-regions balance {:.1}% exceeds 3% research limit",
-                    pfr_balance * 100.0));
+                    centroids_ref,
+                    lambda_val,
+                    Some(&tiger_areas),
+                    *area_swing,
+                    None,
+                    0.0,
+                    mka_theta_override,
+                )
+                .map_err(|e| format!("areasection failed: {e}"))?;
+                status(
+                    cfg.position,
+                    &format!(
+                        "{}: natural ratio {}:{} at {:.0}km",
+                        cfg.state_code,
+                        nat_left,
+                        nat_right,
+                        nat_ec / 1000.0
+                    ),
+                );
+                asgn
             }
-            status(cfg.position, &format!("{}: balance {:.2}% (cache hits={})",
-                cfg.state_code, pfr_balance * 100.0, result.cache_hits));
-            pfr_assignments
-        }
-        SplitStrategy::SimulatedAnnealing { steps_per_tract, t0_factor, t_final } => {
-            let base_seed_val = seed.unwrap_or(0);
-            status(cfg.position, &format!(
+            SplitStrategy::VraSection { w_vra } => {
+                let seeds_per_ratio = cfg.algo.seeds.seed_count();
+                // Load minority VAP data from demographics CSV.
+                // Minority fraction = (total_pop - white_non_hispanic) / total_pop,
+                // multiplied by tract population to get approximate minority VAP counts.
+                // (This is a spatial distribution proxy — not exact VAP data, but legally
+                //  defensible because no racial targeting occurs: only the geographic
+                //  distribution of existing minority concentrations is observed.)
+                let demo_path = std::path::Path::new("data")
+                    .join(&cfg.year)
+                    .join("demographics")
+                    .join(format!("{state_name}_demographics_{}.csv", cfg.year));
+                let minority_vap_vec: Vec<f64> = if demo_path.exists() {
+                    let demo = crate::demographics::load_demographics(&demo_path).map_err(|e| {
+                        format!(
+                            "{}: VRASection demographics load failed: {e}",
+                            cfg.state_code
+                        )
+                    })?;
+                    let fracs = crate::demographics::align_demographics_to_adjacency(
+                        &demo,
+                        &graph.index_to_geoid,
+                        graph.n_vertices,
+                    );
+                    // Convert fraction × population → approximate minority VAP count
+                    fracs
+                        .iter()
+                        .zip(graph.vertex_weights.iter())
+                        .map(|(&frac, &pop)| frac * pop as f64)
+                        .collect()
+                } else {
+                    eprintln!("WARNING: {}: VRASection demographics not found at {} — running as plain GeoSection",
+                          cfg.state_code, demo_path.display());
+                    vec![]
+                };
+                let mvap_opt: Option<&[f64]> = if minority_vap_vec.is_empty() {
+                    None
+                } else {
+                    Some(&minority_vap_vec)
+                };
+                let empty_centroids = crate::geosection_orientation::CentroidMap::new();
+                status(
+                    cfg.position,
+                    &format!(
+                        "{}: VRASection {} ratios x {} seeds w_vra={:.2}",
+                        cfg.state_code,
+                        num_districts / 2,
+                        seeds_per_ratio,
+                        w_vra
+                    ),
+                );
+                let (asgn, nat_left, nat_right, nat_ec) = run_geosection(
+                    &graph.adjacency,
+                    &vwgt,
+                    &edge_weights,
+                    num_districts,
+                    balance_tolerance_frac,
+                    niter,
+                    seeds_per_ratio,
+                    Some(&intermediate_dir),
+                    &empty_centroids,
+                    0.0,
+                    None,
+                    1.10,
+                    mvap_opt,
+                    *w_vra,
+                    None, // VRASection does not use MKA override
+                )
+                .map_err(|e| format!("vra-section failed: {e}"))?;
+                status(
+                    cfg.position,
+                    &format!(
+                        "{}: natural ratio {}:{} at {:.0}km",
+                        cfg.state_code,
+                        nat_left,
+                        nat_right,
+                        nat_ec / 1000.0
+                    ),
+                );
+                asgn
+            }
+            SplitStrategy::ProportionalSection { eta } => {
+                let seeds = cfg.algo.seeds.seed_count();
+                // Load D_votes from presidential_by_tract.csv
+                let election_path = std::path::PathBuf::from(format!(
+                    "data/{}/elections/presidential_by_tract.csv",
+                    cfg.year
+                ));
+                if !election_path.exists() {
+                    return Err(format!(
+                        "{}: ProportionalSection requires {} — not found",
+                        cfg.state_code,
+                        election_path.display()
+                    ));
+                }
+                let (d_votes, two_party) = crate::partisan_shares::load_dem_vote_counts(
+                    &election_path,
+                    &graph.index_to_geoid,
+                    graph.n_vertices,
+                )
+                .map_err(|e| format!("{}: load_dem_vote_counts failed: {e}", cfg.state_code))?;
+                status(
+                    cfg.position,
+                    &format!(
+                        "{}: ProportionalSection {} seeds eta={:.2} (pop+D_votes ncon=2)",
+                        cfg.state_code, seeds, eta
+                    ),
+                );
+                let (asgn, k_d, k_r, best_ec, d_state) =
+                    crate::bisection_runner::run_proportional_section(
+                        &graph.adjacency,
+                        &graph.vertex_weights,
+                        &d_votes,
+                        &two_party,
+                        &edge_weights,
+                        num_districts,
+                        balance_tolerance_frac,
+                        niter,
+                        seeds,
+                        *eta,
+                        Some(&intermediate_dir),
+                    )
+                    .map_err(|e| format!("proportional-section failed: {e}"))?;
+                status(
+                    cfg.position,
+                    &format!(
+                        "{}: proportional {}/{}D d={:.3} EC={:.0}km",
+                        cfg.state_code,
+                        k_d,
+                        k_r,
+                        d_state,
+                        best_ec / 1000.0
+                    ),
+                );
+                asgn
+            }
+            SplitStrategy::CompactBisect { epsilon } => {
+                let seeds_per_level = cfg.algo.seeds.seed_count();
+                let (vertex_areas, vertex_ext_perimeters) = load_tiger_geometry(
+                    &cfg.state_code,
+                    &cfg.year,
+                    &graph.index_to_geoid,
+                    &graph.adjacency,
+                    &edge_weights,
+                );
+                let opts = CompactBisectOpts {
+                    seeds_per_level,
+                    epsilon: *epsilon,
+                };
+                run_all_splits_compact(
+                    &graph.adjacency,
+                    &vwgt,
+                    &edge_weights,
+                    &vertex_areas,
+                    &vertex_ext_perimeters,
+                    num_districts,
+                    balance_tolerance_frac,
+                    niter,
+                    None,
+                    &opts,
+                    Some(&intermediate_dir),
+                )
+                .map_err(|e| format!("compact-bisect failed: {e}"))?
+            }
+            SplitStrategy::ApportionRegions => {
+                use bisect_apportion::{pfr_tree_depth, MetisPartitioner, PfrCompositor};
+                let factor_seq = bisect_apportion::prime_factor_sequence(num_districts as u32);
+                let depth = pfr_tree_depth(num_districts as u32).max(1);
+                status(
+                    cfg.position,
+                    &format!(
+                        "{}: apportion-regions partition into {} districts \
+                (F={:?}, depth={})",
+                        cfg.state_code, num_districts, factor_seq, depth
+                    ),
+                );
+                // Per-level tolerance: (1 + per_level)^depth ≤ 1 + final_tol.
+                // Use depth+1 in denominator for margin (METIS can slightly exceed ufactor).
+                // Clamped to METIS minimum 0.1% (ufactor=1).
+                // Note: PFR is a research algorithm; the final balance check uses a relaxed
+                // 2% tolerance so we can measure actual balance rather than reject runs.
+                let per_level_tol = (balance_tolerance_frac / (depth + 1) as f64).max(0.001);
+                let partitioner = MetisPartitioner {
+                    balance_tolerance: per_level_tol,
+                    niter: niter as i32,
+                    engine: cfg.algo.metis.engine,
+                };
+                let compositor = PfrCompositor::new(partitioner);
+                let result = compositor
+                    .compose(
+                        &graph.adjacency,
+                        &graph.vertex_weights,
+                        &edge_weights,
+                        num_districts as u32,
+                        seed,
+                    )
+                    .map_err(|e| format!("apportion-regions failed: {e}"))?;
+                // Check balance at relaxed 2% — report actual deviation in manifest.
+                let pfr_assignments: std::collections::HashMap<usize, usize> = result
+                    .assignment
+                    .iter()
+                    .enumerate()
+                    .map(|(t, &d)| (t, d as usize + 1))
+                    .collect();
+                let pfr_partition =
+                    bisect_core::Partition::from_assignments(pfr_assignments.clone());
+                let pfr_balance =
+                    pfr_partition.population_balance(&graph.vertex_weights, num_districts);
+                if pfr_balance > 0.03 {
+                    return Err(format!(
+                        "apportion-regions balance {:.1}% exceeds 3% research limit",
+                        pfr_balance * 100.0
+                    ));
+                }
+                status(
+                    cfg.position,
+                    &format!(
+                        "{}: balance {:.2}% (cache hits={})",
+                        cfg.state_code,
+                        pfr_balance * 100.0,
+                        result.cache_hits
+                    ),
+                );
+                pfr_assignments
+            }
+            SplitStrategy::SimulatedAnnealing {
+                steps_per_tract,
+                t0_factor,
+                t_final,
+            } => {
+                let base_seed_val = seed.unwrap_or(0);
+                status(cfg.position, &format!(
                 "{}: simulated-annealing {} steps/tract t0_factor={:.4} t_final={:.2e} into {} districts",
                 cfg.state_code, steps_per_tract, t0_factor, t_final, num_districts));
-            crate::bisection_runner::run_all_splits_sa(
-                &graph.adjacency, &vwgt, &edge_weights,
-                num_districts, balance_tolerance_frac, niter, seed,
-                Some(&intermediate_dir),
-                *steps_per_tract, *t0_factor, *t_final, base_seed_val,
-            ).map_err(|e| format!("simulated-annealing failed: {e}"))?
-        }
-        SplitStrategy::BfsGrowth => {
-            let base_seed_val = seed.unwrap_or(0);
-            status(cfg.position, &format!(
-                "{}: bfs-growth into {} districts",
-                cfg.state_code, num_districts));
-            crate::bisection_runner::run_all_splits_bfs(
-                &graph.adjacency, &vwgt,
-                num_districts, balance_tolerance_frac,
-                Some(&intermediate_dir),
-                base_seed_val,
-            ).map_err(|e| format!("bfs-growth: {e}"))?
-        }
-        SplitStrategy::Ilp { time_limit_secs, optimality_gap, max_tracts } => {
-            let base_seed_val = seed.unwrap_or(0);
-            status(cfg.position, &format!(
+                crate::bisection_runner::run_all_splits_sa(
+                    &graph.adjacency,
+                    &vwgt,
+                    &edge_weights,
+                    num_districts,
+                    balance_tolerance_frac,
+                    niter,
+                    seed,
+                    Some(&intermediate_dir),
+                    *steps_per_tract,
+                    *t0_factor,
+                    *t_final,
+                    base_seed_val,
+                )
+                .map_err(|e| format!("simulated-annealing failed: {e}"))?
+            }
+            SplitStrategy::BfsGrowth => {
+                let base_seed_val = seed.unwrap_or(0);
+                status(
+                    cfg.position,
+                    &format!(
+                        "{}: bfs-growth into {} districts",
+                        cfg.state_code, num_districts
+                    ),
+                );
+                crate::bisection_runner::run_all_splits_bfs(
+                    &graph.adjacency,
+                    &vwgt,
+                    num_districts,
+                    balance_tolerance_frac,
+                    Some(&intermediate_dir),
+                    base_seed_val,
+                )
+                .map_err(|e| format!("bfs-growth: {e}"))?
+            }
+            SplitStrategy::Ilp {
+                time_limit_secs,
+                optimality_gap,
+                max_tracts,
+            } => {
+                let base_seed_val = seed.unwrap_or(0);
+                status(cfg.position, &format!(
                 "{}: ilp exact redistricting (time_limit={}s gap={:.3} max_tracts={}) into {} districts",
                 cfg.state_code, time_limit_secs, optimality_gap, max_tracts, num_districts));
-            crate::bisection_runner::run_all_splits_ilp(
-                &graph.adjacency, &vwgt, &edge_weights,
-                num_districts, balance_tolerance_frac,
-                *time_limit_secs, *optimality_gap, *max_tracts,
-            ).map_err(|e| format!("ilp: {e}"))?
-        }
-        SplitStrategy::MovingKnife { n_orientations, metric } => {
-            let base_seed_val = seed.unwrap_or(0);
-            if graph.tract_centroids.is_empty() {
-                return Err(
-                    "[CONFIG] --structure moving-knife requires tract centroid data. \
-                     Run: bisect fetch --type centroids".to_string()
+                crate::bisection_runner::run_all_splits_ilp(
+                    &graph.adjacency,
+                    &vwgt,
+                    &edge_weights,
+                    num_districts,
+                    balance_tolerance_frac,
+                    *time_limit_secs,
+                    *optimality_gap,
+                    *max_tracts,
+                )
+                .map_err(|e| format!("ilp: {e}"))?
+            }
+            SplitStrategy::MovingKnife {
+                n_orientations,
+                metric,
+            } => {
+                let base_seed_val = seed.unwrap_or(0);
+                if graph.tract_centroids.is_empty() {
+                    return Err(
+                        "[CONFIG] --structure moving-knife requires tract centroid data. \
+                     Run: bisect fetch --type centroids"
+                            .to_string(),
+                    );
+                }
+                let metric_enum = if metric == "polsby" {
+                    crate::bisection_runner::MkaMetric::PolsbyPopper
+                } else {
+                    crate::bisection_runner::MkaMetric::Reock
+                };
+                status(
+                    cfg.position,
+                    &format!(
+                        "{}: moving-knife ({} orientations, metric={}) into {} districts",
+                        cfg.state_code, n_orientations, metric, num_districts
+                    ),
                 );
+                crate::bisection_runner::run_all_splits_mka(
+                    &graph.adjacency,
+                    &vwgt,
+                    num_districts,
+                    balance_tolerance_frac,
+                    Some(&intermediate_dir),
+                    *n_orientations,
+                    metric_enum,
+                    base_seed_val,
+                    &graph.tract_centroids,
+                )
+                .map_err(|e| format!("moving-knife: {e}"))?
             }
-            let metric_enum = if metric == "polsby" {
-                crate::bisection_runner::MkaMetric::PolsbyPopper
-            } else {
-                crate::bisection_runner::MkaMetric::Reock
-            };
-            status(cfg.position, &format!(
-                "{}: moving-knife ({} orientations, metric={}) into {} districts",
-                cfg.state_code, n_orientations, metric, num_districts));
-            crate::bisection_runner::run_all_splits_mka(
-                &graph.adjacency, &vwgt,
-                num_districts, balance_tolerance_frac,
-                Some(&intermediate_dir),
-                *n_orientations, metric_enum, base_seed_val,
-                &graph.tract_centroids,
-            ).map_err(|e| format!("moving-knife: {e}"))?
-        }
-        SplitStrategy::CentroidalVoronoi { n_iter, metric } => {
-            use crate::bisection_runner::VoronoiMetric;
-            let base_seed_val = seed.unwrap_or(0);
-            let metric_name = match metric {
-                VoronoiMetric::GraphDistance => "graph-distance",
-                VoronoiMetric::Geographic    => "geographic",
-            };
-            if *metric == VoronoiMetric::Geographic && graph.tract_centroids.is_empty() {
-                return Err("[CONFIG] --cvd-metric geographic requires centroid data. \
-                            Run: bisect fetch --type centroids".to_string());
+            SplitStrategy::CentroidalVoronoi { n_iter, metric } => {
+                use crate::bisection_runner::VoronoiMetric;
+                let base_seed_val = seed.unwrap_or(0);
+                let metric_name = match metric {
+                    VoronoiMetric::GraphDistance => "graph-distance",
+                    VoronoiMetric::Geographic => "geographic",
+                };
+                if *metric == VoronoiMetric::Geographic && graph.tract_centroids.is_empty() {
+                    return Err("[CONFIG] --cvd-metric geographic requires centroid data. \
+                            Run: bisect fetch --type centroids"
+                        .to_string());
+                }
+                status(
+                    cfg.position,
+                    &format!(
+                        "{}: centroidal-voronoi ({}) {} iters into {} districts",
+                        cfg.state_code, metric_name, n_iter, num_districts
+                    ),
+                );
+                crate::bisection_runner::run_all_splits_cvd(
+                    &graph.adjacency,
+                    &vwgt,
+                    num_districts,
+                    balance_tolerance_frac,
+                    Some(&intermediate_dir),
+                    *n_iter,
+                    base_seed_val,
+                    *metric,
+                    &graph.tract_centroids,
+                )
+                .map_err(|e| format!("centroidal-voronoi: {e}"))?
             }
-            status(cfg.position, &format!(
-                "{}: centroidal-voronoi ({}) {} iters into {} districts",
-                cfg.state_code, metric_name, n_iter, num_districts));
-            crate::bisection_runner::run_all_splits_cvd(
-                &graph.adjacency, &vwgt,
-                num_districts, balance_tolerance_frac,
-                Some(&intermediate_dir),
-                *n_iter, base_seed_val,
-                *metric,
-                &graph.tract_centroids,
-            ).map_err(|e| format!("centroidal-voronoi: {e}"))?
-        }
-        _ => {
-            match &cfg.algo.seeds {
-                SeedCompositor::Percentile { p, seeds } => {
-                    let base = seed.unwrap_or(0);
-                    status(cfg.position, &format!("{}: percentile-sweep p={:.2} {} seeds into {} districts",
-                           cfg.state_code, p, seeds, num_districts));
-                    run_all_splits_percentile(
-                        &graph.adjacency, &vwgt, &edge_weights,
-                        num_districts, balance_tolerance_frac, niter,
-                        base, *seeds, *p,
-                        Some(&intermediate_dir),
-                    ).map_err(|e| format!("percentile-sweep failed: {e}"))?
-                }
-                SeedCompositor::BisectionEnsemble { p, ensemble_steps } => {
-                    status(cfg.position, &format!("{}: bisection-ensemble p={:.2} {} steps/node into {} districts",
-                           cfg.state_code, p, ensemble_steps, num_districts));
-                    run_all_splits_with_search(
-                        &graph.adjacency, &vwgt, &edge_weights,
-                        num_districts, balance_tolerance_frac, niter, seed,
-                        Some(&intermediate_dir),
-                        Some((*p, *ensemble_steps)),
-                    ).map_err(|e| format!("bisection-ensemble failed: {e}"))?
-                }
-                SeedCompositor::Flip { flip_steps, p } => {
-                    let base = seed.unwrap_or(0);
-                    status(cfg.position, &format!("{}: flip-chain p={:.2} {} steps into {} districts",
-                           cfg.state_code, p, flip_steps, num_districts));
-                    let (result, visited_count, selected_rank) = run_flip_chain(
-                        &graph.adjacency, &vwgt, &edge_weights,
-                        num_districts, balance_tolerance_frac, *flip_steps, base, *p,
-                    ).map_err(|e| format!("flip-chain failed: {e}"))?;
-                    flip_visited_count = Some(visited_count);
-                    flip_selected_rank = Some(selected_rank);
-                    result
-                }
-                SeedCompositor::ShortBurst { burst_length, n_bursts, p } => {
-                    let base = seed.unwrap_or(0);
-                    status(cfg.position, &format!("{}: short-burst p={:.2} {} bursts x {} steps into {} districts",
+            _ => {
+                match &cfg.algo.seeds {
+                    SeedCompositor::Percentile { p, seeds } => {
+                        let base = seed.unwrap_or(0);
+                        status(
+                            cfg.position,
+                            &format!(
+                                "{}: percentile-sweep p={:.2} {} seeds into {} districts",
+                                cfg.state_code, p, seeds, num_districts
+                            ),
+                        );
+                        run_all_splits_percentile(
+                            &graph.adjacency,
+                            &vwgt,
+                            &edge_weights,
+                            num_districts,
+                            balance_tolerance_frac,
+                            niter,
+                            base,
+                            *seeds,
+                            *p,
+                            Some(&intermediate_dir),
+                        )
+                        .map_err(|e| format!("percentile-sweep failed: {e}"))?
+                    }
+                    SeedCompositor::BisectionEnsemble { p, ensemble_steps } => {
+                        status(
+                            cfg.position,
+                            &format!(
+                                "{}: bisection-ensemble p={:.2} {} steps/node into {} districts",
+                                cfg.state_code, p, ensemble_steps, num_districts
+                            ),
+                        );
+                        run_all_splits_with_search(
+                            &graph.adjacency,
+                            &vwgt,
+                            &edge_weights,
+                            num_districts,
+                            balance_tolerance_frac,
+                            niter,
+                            seed,
+                            Some(&intermediate_dir),
+                            Some((*p, *ensemble_steps)),
+                        )
+                        .map_err(|e| format!("bisection-ensemble failed: {e}"))?
+                    }
+                    SeedCompositor::Flip { flip_steps, p } => {
+                        let base = seed.unwrap_or(0);
+                        status(
+                            cfg.position,
+                            &format!(
+                                "{}: flip-chain p={:.2} {} steps into {} districts",
+                                cfg.state_code, p, flip_steps, num_districts
+                            ),
+                        );
+                        let (result, visited_count, selected_rank) = run_flip_chain(
+                            &graph.adjacency,
+                            &vwgt,
+                            &edge_weights,
+                            num_districts,
+                            balance_tolerance_frac,
+                            *flip_steps,
+                            base,
+                            *p,
+                        )
+                        .map_err(|e| format!("flip-chain failed: {e}"))?;
+                        flip_visited_count = Some(visited_count);
+                        flip_selected_rank = Some(selected_rank);
+                        result
+                    }
+                    SeedCompositor::ShortBurst {
+                        burst_length,
+                        n_bursts,
+                        p,
+                    } => {
+                        let base = seed.unwrap_or(0);
+                        status(
+                            cfg.position,
+                            &format!(
+                                "{}: short-burst p={:.2} {} bursts x {} steps into {} districts",
+                                cfg.state_code, p, n_bursts, burst_length, num_districts
+                            ),
+                        );
+                        let (result, b_seeds, b_idx) = run_short_burst(
+                            &graph.adjacency,
+                            &vwgt,
+                            &edge_weights,
+                            num_districts,
+                            balance_tolerance_frac,
+                            niter,
+                            base,
+                            *burst_length,
+                            *n_bursts,
+                            *p,
+                        )
+                        .map_err(|e| format!("short-burst failed: {e}"))?;
+                        short_burst_burst_seeds = Some(b_seeds);
+                        short_burst_selected_burst_idx = Some(b_idx);
+                        result
+                    }
+                    SeedCompositor::ShortBurstForest {
+                        burst_length,
+                        n_bursts,
+                        p,
+                    } => {
+                        let base = seed.unwrap_or(0);
+                        status(cfg.position, &format!("{}: short-burst-forest p={:.2} {} bursts x {} steps into {} districts",
                            cfg.state_code, p, n_bursts, burst_length, num_districts));
-                    let (result, b_seeds, b_idx) = run_short_burst(
-                        &graph.adjacency, &vwgt, &edge_weights,
-                        num_districts, balance_tolerance_frac, niter,
-                        base, *burst_length, *n_bursts, *p,
-                    ).map_err(|e| format!("short-burst failed: {e}"))?;
-                    short_burst_burst_seeds = Some(b_seeds);
-                    short_burst_selected_burst_idx = Some(b_idx);
-                    result
-                }
-                SeedCompositor::ShortBurstForest { burst_length, n_bursts, p } => {
-                    let base = seed.unwrap_or(0);
-                    status(cfg.position, &format!("{}: short-burst-forest p={:.2} {} bursts x {} steps into {} districts",
+                        run_short_burst_forest(
+                            &graph.adjacency,
+                            &vwgt,
+                            &edge_weights,
+                            num_districts,
+                            balance_tolerance_frac,
+                            niter,
+                            base,
+                            *burst_length,
+                            *n_bursts,
+                            *p,
+                        )
+                        .map_err(|e| format!("short-burst-forest: {e}"))?
+                    }
+                    SeedCompositor::ShortBurstMergeSplit {
+                        burst_length,
+                        n_bursts,
+                        p,
+                    } => {
+                        let base = seed.unwrap_or(0);
+                        status(cfg.position, &format!("{}: short-burst-merge-split p={:.2} {} bursts x {} steps into {} districts",
                            cfg.state_code, p, n_bursts, burst_length, num_districts));
-                    run_short_burst_forest(
-                        &graph.adjacency, &vwgt, &edge_weights,
-                        num_districts, balance_tolerance_frac, niter,
-                        base, *burst_length, *n_bursts, *p,
-                    ).map_err(|e| format!("short-burst-forest: {e}"))?
-                }
-                SeedCompositor::ShortBurstMergeSplit { burst_length, n_bursts, p } => {
-                    let base = seed.unwrap_or(0);
-                    status(cfg.position, &format!("{}: short-burst-merge-split p={:.2} {} bursts x {} steps into {} districts",
-                           cfg.state_code, p, n_bursts, burst_length, num_districts));
-                    run_short_burst_merge_split(
-                        &graph.adjacency, &vwgt, &edge_weights,
-                        num_districts, balance_tolerance_frac, niter,
-                        base, *burst_length, *n_bursts, *p,
-                    ).map_err(|e| format!("short-burst-merge-split: {e}"))?
-                }
-                SeedCompositor::ForestRecom { steps, p } => {
-                    let base = seed.unwrap_or(0);
-                    status(cfg.position, &format!("{}: forest-recom p={:.2} {} steps into {} districts",
-                           cfg.state_code, p, steps, num_districts));
-                    run_forest_recom(
-                        &graph.adjacency, &vwgt, &edge_weights,
-                        num_districts, balance_tolerance_frac, niter,
-                        base, *steps, *p,
-                    ).map_err(|e| format!("forest-recom failed: {e}"))?
-                }
-                SeedCompositor::MultiScale { total_steps, p, alpha } => {
-                    let base = seed.unwrap_or(0);
-                    let fine = cfg.multiscale_fine.as_str();
-                    let coarse = cfg.multiscale_coarse.as_str();
-                    status(cfg.position, &format!(
+                        run_short_burst_merge_split(
+                            &graph.adjacency,
+                            &vwgt,
+                            &edge_weights,
+                            num_districts,
+                            balance_tolerance_frac,
+                            niter,
+                            base,
+                            *burst_length,
+                            *n_bursts,
+                            *p,
+                        )
+                        .map_err(|e| format!("short-burst-merge-split: {e}"))?
+                    }
+                    SeedCompositor::ForestRecom { steps, p } => {
+                        let base = seed.unwrap_or(0);
+                        status(
+                            cfg.position,
+                            &format!(
+                                "{}: forest-recom p={:.2} {} steps into {} districts",
+                                cfg.state_code, p, steps, num_districts
+                            ),
+                        );
+                        run_forest_recom(
+                            &graph.adjacency,
+                            &vwgt,
+                            &edge_weights,
+                            num_districts,
+                            balance_tolerance_frac,
+                            niter,
+                            base,
+                            *steps,
+                            *p,
+                        )
+                        .map_err(|e| format!("forest-recom failed: {e}"))?
+                    }
+                    SeedCompositor::MultiScale {
+                        total_steps,
+                        p,
+                        alpha,
+                    } => {
+                        let base = seed.unwrap_or(0);
+                        let fine = cfg.multiscale_fine.as_str();
+                        let coarse = cfg.multiscale_coarse.as_str();
+                        status(cfg.position, &format!(
                         "{}: multiscale({fine}->{coarse}) p={:.2} {} steps alpha={:.2} into {} districts",
                         cfg.state_code, p, total_steps, alpha, num_districts
                     ));
-                    // Load BG adjacency for Options A (bg->tract) and C (bg->county)
-                    let bg_graph_opt = if fine == "bg" || fine == "block_group" {
-                        match resolve_adjacency_path(&state_code_lower, &cfg.year, "block_group") {
+                        // Load BG adjacency for Options A (bg->tract) and C (bg->county)
+                        let bg_graph_opt = if fine == "bg" || fine == "block_group" {
+                            match resolve_adjacency_path(&state_code_lower, &cfg.year, "block_group") {
                             Ok((bg_path, _)) => {
                                 match crate::adjacency_loader::load_adjacency_pkl(&bg_path) {
                                     Ok(g) => Some(g),
@@ -1911,37 +2460,52 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                                 cfg.state_code, cfg.year
                             )),
                         }
-                    } else {
-                        None
-                    };
-                    use crate::bisection_runner::MultiscaleFineLevel;
-                    let fine_level = MultiscaleFineLevel::from_str(fine)
-                        .map_err(|e| format!("multiscale: {e}"))?;
-                    run_multiscale(
-                        &graph.adjacency, &vwgt, &edge_weights,
-                        num_districts, balance_tolerance_frac, niter,
-                        base, *total_steps, *alpha, *p,
-                        Some(&graph.index_to_geoid),
-                        fine_level,
-                        coarse,
-                        bg_graph_opt.as_ref().map(|g| (
-                            g.adjacency.as_slice(),
-                            g.vertex_weights.as_slice(),
-                            &g.index_to_geoid,
-                        )),
-                    ).map_err(|e| format!("multiscale: {e}"))?
-                }
-                SeedCompositor::MultiScaleAdaptive { total_steps, p, target_accept, adapt_interval } => {
-                    let base = seed.unwrap_or(0);
-                    let fine = cfg.multiscale_fine.as_str();
-                    let coarse = cfg.multiscale_coarse.as_str();
-                    status(cfg.position, &format!(
+                        } else {
+                            None
+                        };
+                        use crate::bisection_runner::MultiscaleFineLevel;
+                        let fine_level = MultiscaleFineLevel::from_str(fine)
+                            .map_err(|e| format!("multiscale: {e}"))?;
+                        run_multiscale(
+                            &graph.adjacency,
+                            &vwgt,
+                            &edge_weights,
+                            num_districts,
+                            balance_tolerance_frac,
+                            niter,
+                            base,
+                            *total_steps,
+                            *alpha,
+                            *p,
+                            Some(&graph.index_to_geoid),
+                            fine_level,
+                            coarse,
+                            bg_graph_opt.as_ref().map(|g| {
+                                (
+                                    g.adjacency.as_slice(),
+                                    g.vertex_weights.as_slice(),
+                                    &g.index_to_geoid,
+                                )
+                            }),
+                        )
+                        .map_err(|e| format!("multiscale: {e}"))?
+                    }
+                    SeedCompositor::MultiScaleAdaptive {
+                        total_steps,
+                        p,
+                        target_accept,
+                        adapt_interval,
+                    } => {
+                        let base = seed.unwrap_or(0);
+                        let fine = cfg.multiscale_fine.as_str();
+                        let coarse = cfg.multiscale_coarse.as_str();
+                        status(cfg.position, &format!(
                         "{}: multiscale-adaptive({fine}->{coarse}) p={:.2} {} steps target_accept={:.2} adapt_interval={} into {} districts",
                         cfg.state_code, p, total_steps, target_accept, adapt_interval, num_districts
                     ));
-                    // Load BG adjacency for Options A and C
-                    let bg_graph_opt = if fine == "bg" || fine == "block_group" {
-                        match resolve_adjacency_path(&state_code_lower, &cfg.year, "block_group") {
+                        // Load BG adjacency for Options A and C
+                        let bg_graph_opt = if fine == "bg" || fine == "block_group" {
+                            match resolve_adjacency_path(&state_code_lower, &cfg.year, "block_group") {
                             Ok((bg_path, _)) => {
                                 match crate::adjacency_loader::load_adjacency_pkl(&bg_path) {
                                     Ok(g) => Some(g),
@@ -1955,179 +2519,281 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                                 cfg.state_code, cfg.year
                             )),
                         }
-                    } else {
-                        None
-                    };
-                    use crate::bisection_runner::MultiscaleFineLevel;
-                    let fine_level = MultiscaleFineLevel::from_str(fine)
+                        } else {
+                            None
+                        };
+                        use crate::bisection_runner::MultiscaleFineLevel;
+                        let fine_level = MultiscaleFineLevel::from_str(fine)
+                            .map_err(|e| format!("multiscale-adaptive: {e}"))?;
+                        let acfg = AdaptiveConfig {
+                            total_steps: *total_steps,
+                            target_accept: *target_accept,
+                            initial_alpha: *target_accept, // start at target
+                            adapt_interval: *adapt_interval,
+                            gamma_0: 0.10,
+                            pop_tolerance: balance_tolerance_frac,
+                            coarse_tol_factor: 3.0,
+                            p: *p,
+                        };
+                        let (plan, _adaptive_result) = run_multiscale_adaptive(
+                            &graph.adjacency,
+                            &vwgt,
+                            &edge_weights,
+                            num_districts,
+                            niter,
+                            base,
+                            acfg,
+                            Some(&graph.index_to_geoid),
+                            fine_level,
+                            coarse,
+                            bg_graph_opt.as_ref().map(|g| {
+                                (
+                                    g.adjacency.as_slice(),
+                                    g.vertex_weights.as_slice(),
+                                    &g.index_to_geoid,
+                                )
+                            }),
+                        )
                         .map_err(|e| format!("multiscale-adaptive: {e}"))?;
-                    let acfg = AdaptiveConfig {
-                        total_steps: *total_steps,
-                        target_accept: *target_accept,
-                        initial_alpha: *target_accept, // start at target
-                        adapt_interval: *adapt_interval,
-                        gamma_0: 0.10,
-                        pop_tolerance: balance_tolerance_frac,
-                        coarse_tol_factor: 3.0,
-                        p: *p,
-                    };
-                    let (plan, _adaptive_result) = run_multiscale_adaptive(
-                        &graph.adjacency, &vwgt, &edge_weights,
-                        num_districts, niter, base, acfg,
-                        Some(&graph.index_to_geoid),
-                        fine_level,
-                        coarse,
-                        bg_graph_opt.as_ref().map(|g| (
-                            g.adjacency.as_slice(),
-                            g.vertex_weights.as_slice(),
-                            &g.index_to_geoid,
-                        )),
-                    ).map_err(|e| format!("multiscale-adaptive: {e}"))?;
-                    plan
-                }
-                SeedCompositor::MergeSplit { steps, p } => {
-                    let base = seed.unwrap_or(0);
-                    status(cfg.position, &format!("{}: merge-split p={:.2} {} steps into {} districts",
-                           cfg.state_code, p, steps, num_districts));
-                    run_merge_split(
-                        &graph.adjacency, &vwgt, &edge_weights,
-                        num_districts, balance_tolerance_frac, niter,
-                        base, *steps, *p,
-                    ).map_err(|e| format!("merge-split failed: {e}"))?
-                }
-                SeedCompositor::ParallelTempering { n_replicas, swap_interval, cold_tolerance, hot_tolerance, steps, p } => {
-                    let base = seed.unwrap_or(0);
-                    status(cfg.position, &format!(
+                        plan
+                    }
+                    SeedCompositor::MergeSplit { steps, p } => {
+                        let base = seed.unwrap_or(0);
+                        status(
+                            cfg.position,
+                            &format!(
+                                "{}: merge-split p={:.2} {} steps into {} districts",
+                                cfg.state_code, p, steps, num_districts
+                            ),
+                        );
+                        run_merge_split(
+                            &graph.adjacency,
+                            &vwgt,
+                            &edge_weights,
+                            num_districts,
+                            balance_tolerance_frac,
+                            niter,
+                            base,
+                            *steps,
+                            *p,
+                        )
+                        .map_err(|e| format!("merge-split failed: {e}"))?
+                    }
+                    SeedCompositor::ParallelTempering {
+                        n_replicas,
+                        swap_interval,
+                        cold_tolerance,
+                        hot_tolerance,
+                        steps,
+                        p,
+                    } => {
+                        let base = seed.unwrap_or(0);
+                        status(
+                            cfg.position,
+                            &format!(
                         "{}: parallel-tempering p={:.2} {} steps {} replicas into {} districts",
                         cfg.state_code, p, steps, n_replicas, num_districts
-                    ));
-                    run_parallel_tempering(
-                        &graph.adjacency, &vwgt, &edge_weights,
-                        num_districts, niter, base,
-                        *n_replicas, *swap_interval, *cold_tolerance, *hot_tolerance, *steps, *p,
-                    ).map_err(|e| format!("parallel-tempering: {e}"))?
-                }
-                SeedCompositor::VraRecom { steps, p, vap_threshold } => {
-                    let base = seed.unwrap_or(0);
-                    // Load minority VAP fractions from demographics CSV (same as VRASection).
-                    // Minority fraction = (total_pop - white_non_hispanic) / total_pop.
-                    let demo_path = std::path::Path::new("data")
-                        .join(&cfg.year).join("demographics")
-                        .join(format!("{state_name}_demographics_{}.csv", cfg.year));
-                    let minority_vap: Vec<f64> = if demo_path.exists() {
-                        let demo = load_demographics(&demo_path)
-                            .map_err(|e| format!("{}: vra-recom demographics load failed: {e}", cfg.state_code))?;
-                        align_demographics_to_adjacency(
-                            &demo, &graph.index_to_geoid, graph.n_vertices)
-                    } else {
-                        if cfg.algo.weights.minority_weighting {
-                            eprintln!("WARNING: {}: vra-recom demographics not found at {} — VRA enforcement is a no-op.",
-                                      cfg.state_code, demo_path.display());
+                    ),
+                        );
+                        run_parallel_tempering(
+                            &graph.adjacency,
+                            &vwgt,
+                            &edge_weights,
+                            num_districts,
+                            niter,
+                            base,
+                            *n_replicas,
+                            *swap_interval,
+                            *cold_tolerance,
+                            *hot_tolerance,
+                            *steps,
+                            *p,
+                        )
+                        .map_err(|e| format!("parallel-tempering: {e}"))?
+                    }
+                    SeedCompositor::VraRecom {
+                        steps,
+                        p,
+                        vap_threshold,
+                    } => {
+                        let base = seed.unwrap_or(0);
+                        // Load minority VAP fractions from demographics CSV (same as VRASection).
+                        // Minority fraction = (total_pop - white_non_hispanic) / total_pop.
+                        let demo_path = std::path::Path::new("data")
+                            .join(&cfg.year)
+                            .join("demographics")
+                            .join(format!("{state_name}_demographics_{}.csv", cfg.year));
+                        let minority_vap: Vec<f64> = if demo_path.exists() {
+                            let demo = load_demographics(&demo_path).map_err(|e| {
+                                format!(
+                                    "{}: vra-recom demographics load failed: {e}",
+                                    cfg.state_code
+                                )
+                            })?;
+                            align_demographics_to_adjacency(
+                                &demo,
+                                &graph.index_to_geoid,
+                                graph.n_vertices,
+                            )
                         } else {
-                            eprintln!("WARNING: --search vra-recom without --weights-override vra-aligned will have 0 protected districts.");
-                        }
-                        vec![0.0; graph.adjacency.len()]
-                    };
-                    status(cfg.position, &format!(
+                            if cfg.algo.weights.minority_weighting {
+                                eprintln!("WARNING: {}: vra-recom demographics not found at {} — VRA enforcement is a no-op.",
+                                      cfg.state_code, demo_path.display());
+                            } else {
+                                eprintln!("WARNING: --search vra-recom without --weights-override vra-aligned will have 0 protected districts.");
+                            }
+                            vec![0.0; graph.adjacency.len()]
+                        };
+                        status(
+                            cfg.position,
+                            &format!(
                         "{}: vra-recom p={:.2} {} steps vap_threshold={:.2} into {} districts",
                         cfg.state_code, p, steps, vap_threshold, num_districts
-                    ));
-                    crate::bisection_runner::run_vra_recom(
-                        &graph.adjacency, &vwgt, &edge_weights,
-                        num_districts, niter, base,
-                        *steps, *p, *vap_threshold, &minority_vap,
-                    ).map_err(|e| format!("vra-recom: {e}"))?
-                }
-                SeedCompositor::SmcPercentile { n_particles, p } => {
-                    let base = seed.unwrap_or(0);
-                    let resample_threshold = cfg.smc_resample_threshold;
-                    status(cfg.position, &format!(
-                        "{}: smc-percentile p={:.2} {} particles into {} districts",
-                        cfg.state_code, p, n_particles, num_districts
-                    ));
-                    crate::bisection_runner::run_smc_percentile(
-                        &graph.adjacency, &vwgt,
-                        num_districts, base, *n_particles, *p, resample_threshold,
-                    ).map_err(|e| format!("smc-percentile: {e}"))?
-                }
-                _ => {
-                    status(cfg.position, &format!("{}: recursive bisection into {} districts",
-                           cfg.state_code, num_districts));
-                    run_all_splits(
-                        &graph.adjacency, &vwgt, &edge_weights,
-                        num_districts, balance_tolerance_frac, niter, seed,
-                        Some(&intermediate_dir),
-                    ).map_err(|e| format!("bisection failed: {e}"))?
+                    ),
+                        );
+                        crate::bisection_runner::run_vra_recom(
+                            &graph.adjacency,
+                            &vwgt,
+                            &edge_weights,
+                            num_districts,
+                            niter,
+                            base,
+                            *steps,
+                            *p,
+                            *vap_threshold,
+                            &minority_vap,
+                        )
+                        .map_err(|e| format!("vra-recom: {e}"))?
+                    }
+                    SeedCompositor::SmcPercentile { n_particles, p } => {
+                        let base = seed.unwrap_or(0);
+                        let resample_threshold = cfg.smc_resample_threshold;
+                        status(
+                            cfg.position,
+                            &format!(
+                                "{}: smc-percentile p={:.2} {} particles into {} districts",
+                                cfg.state_code, p, n_particles, num_districts
+                            ),
+                        );
+                        crate::bisection_runner::run_smc_percentile(
+                            &graph.adjacency,
+                            &vwgt,
+                            num_districts,
+                            base,
+                            *n_particles,
+                            *p,
+                            resample_threshold,
+                        )
+                        .map_err(|e| format!("smc-percentile: {e}"))?
+                    }
+                    _ => {
+                        status(
+                            cfg.position,
+                            &format!(
+                                "{}: recursive bisection into {} districts",
+                                cfg.state_code, num_districts
+                            ),
+                        );
+                        run_all_splits(
+                            &graph.adjacency,
+                            &vwgt,
+                            &edge_weights,
+                            num_districts,
+                            balance_tolerance_frac,
+                            niter,
+                            seed,
+                            Some(&intermediate_dir),
+                        )
+                        .map_err(|e| format!("bisection failed: {e}"))?
+                    }
                 }
             }
-        }
-    };
+        };
 
-    if cfg.time_partition {
-        let partition_elapsed_ms = partition_t0.elapsed().as_secs_f64() * 1000.0;
-        eprintln!(
-            "[partition-time] {}: k={} n={} -> {:.1}ms",
-            cfg.state_code, num_districts, graph.n_vertices, partition_elapsed_ms
-        );
-    }
+        if cfg.time_partition {
+            let partition_elapsed_ms = partition_t0.elapsed().as_secs_f64() * 1000.0;
+            eprintln!(
+                "[partition-time] {}: k={} n={} -> {:.1}ms",
+                cfg.state_code, num_districts, graph.n_vertices, partition_elapsed_ms
+            );
+        }
 
-    // 4. Assert population balance — retry loop closes here.
-    let effective_tolerance = if matches!(cfg.algo.split, SplitStrategy::ApportionRegions) {
-        0.03
-    } else {
-        balance_tolerance
-    };
-    let partition = Partition::from_assignments(assignments_attempt.clone());
-    let balance_ok = partition.assert_balanced(&graph.vertex_weights, num_districts, effective_tolerance);
-    match balance_ok {
-        Ok(_) => {
-            assignments = assignments_attempt;
-            break 'retry;
+        // 4. Assert population balance — retry loop closes here.
+        let effective_tolerance = if matches!(cfg.algo.split, SplitStrategy::ApportionRegions) {
+            0.03
+        } else {
+            balance_tolerance
+        };
+        let partition = Partition::from_assignments(assignments_attempt.clone());
+        let balance_ok =
+            partition.assert_balanced(&graph.vertex_weights, num_districts, effective_tolerance);
+        match balance_ok {
+            Ok(_) => {
+                assignments = assignments_attempt;
+                break 'retry;
+            }
+            Err(e) => {
+                last_balance_err = format!(
+                    "population balance violation (tolerance {:.1}%): {e}",
+                    effective_tolerance * 100.0
+                );
+                // continue retry loop
+            }
         }
-        Err(e) => {
-            last_balance_err = format!("population balance violation (tolerance {:.1}%): {e}",
-                effective_tolerance * 100.0);
-            // continue retry loop
-        }
-    }
     } // end 'retry loop
 
     if assignments.is_empty() {
         return Err(last_balance_err);
     }
 
-    status(cfg.position, &format!("{}: balance OK, writing outputs", cfg.state_code));
+    status(
+        cfg.position,
+        &format!("{}: balance OK, writing outputs", cfg.state_code),
+    );
 
     // 5. VRA analysis (if VRA mode and multi-district)
     let vra = if matches!(&cfg.algo.split, SplitStrategy::NWay) && num_districts > 1 {
         let demo_path = std::path::Path::new("data")
-            .join(&cfg.year).join("demographics")
+            .join(&cfg.year)
+            .join("demographics")
             .join(format!("{state_name}_demographics_{}.csv", cfg.year));
         let demo = load_demographics(&demo_path)
             .map_err(|e| format!("demographics reload for VRA analysis failed: {e}"))?;
-        let minority_fracs = align_demographics_to_adjacency(
-            &demo, &graph.index_to_geoid, graph.n_vertices
-        );
+        let minority_fracs =
+            align_demographics_to_adjacency(&demo, &graph.index_to_geoid, graph.n_vertices);
         let total_pops = graph.vertex_weights.clone();
-        let minority_pops: Vec<f64> = minority_fracs.iter()
+        let minority_pops: Vec<f64> = minority_fracs
+            .iter()
             .zip(total_pops.iter())
             .map(|(f, &t)| f * t as f64)
             .collect();
         let zeros = vec![0.0f64; graph.n_vertices];
         let analysis = analyze_mm_districts(
-            &assignments, &total_pops, &minority_pops, &zeros, &zeros, 0.50
+            &assignments,
+            &total_pops,
+            &minority_pops,
+            &zeros,
+            &zeros,
+            0.50,
         );
-        status(cfg.position, &format!("{}: {} MM districts", cfg.state_code, analysis.mm_count));
+        status(
+            cfg.position,
+            &format!("{}: {} MM districts", cfg.state_code, analysis.mm_count),
+        );
         Some(VraAnalysis {
             mm_count: analysis.mm_count,
             mm_districts: analysis.mm_districts,
-            districts: analysis.districts.iter().map(|d| VraDistrict {
-                district: d.district,
-                pct_minority: d.pct_minority,
-                pct_black: d.pct_black,
-                pct_hispanic: d.pct_hispanic,
-                is_mm: d.is_mm,
-            }).collect(),
+            districts: analysis
+                .districts
+                .iter()
+                .map(|d| VraDistrict {
+                    district: d.district,
+                    pct_minority: d.pct_minority,
+                    pct_black: d.pct_black,
+                    pct_hispanic: d.pct_hispanic,
+                    is_mm: d.is_mm,
+                })
+                .collect(),
         })
     } else {
         None
@@ -2140,17 +2806,26 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
     // 6b. Compute edge-cut of the final partition.
     // Sum edge weights for all edges (u, v) whose endpoints are in different districts.
     // Stored in the manifest for seed-sensitivity research (B.7).
-    let edge_cut: f64 = edge_weights.iter().map(|(&(u, v), &w)| {
-        let du = assignments.get(&u).copied().unwrap_or(0);
-        let dv = assignments.get(&v).copied().unwrap_or(0);
-        if du != dv { w } else { 0.0 }
-    }).sum();
+    let edge_cut: f64 = edge_weights
+        .iter()
+        .map(|(&(u, v), &w)| {
+            let du = assignments.get(&u).copied().unwrap_or(0);
+            let dv = assignments.get(&v).copied().unwrap_or(0);
+            if du != dv {
+                w
+            } else {
+                0.0
+            }
+        })
+        .sum();
 
     // 7. Write manifest.json atomically (manifest.tmp → manifest.json).
     // Board amendment: atomic write (manifest.tmp + rename) prevents partial manifests.
     if cfg.write_manifest || cfg.label.is_some() {
         let adj_filename = format!("{}_adjacency_{}.adj.bin", state_name, cfg.year);
-        let state_fips = state_code_to_fips(&cfg.state_code).unwrap_or("00").to_string();
+        let state_fips = state_code_to_fips(&cfg.state_code)
+            .unwrap_or("00")
+            .to_string();
         let tiger_url = bisect_report::tiger_source_url(&state_fips, &cfg.year);
         let gpmetis_version = crate::bisection_runner::detect_gpmetis_version();
         let manifest = bisect_report::PlanManifest {
@@ -2165,7 +2840,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             binary_version: env!("CARGO_PKG_VERSION").to_string(),
             binary_sha256: String::new(), // populated by installer/release only
             binary_download_url: format!(
-                "https://github.com/owner/redist/releases/download/v{}/redist",
+                "https://github.com/owner/BISECT/releases/download/v{}/BISECT",
                 env!("CARGO_PKG_VERSION")
             ),
             adjacency_file: adj_filename,
@@ -2190,16 +2865,15 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             gpmetis_version,
             // AlgorithmConfig reproducibility fields
             ufactor: cfg.algo.metis.ufactor,
-            niter:   cfg.algo.metis.niter,
+            niter: cfg.algo.metis.niter,
             alpha_county: cfg.algo.weights.alpha_county,
             directional_lambda: cfg.algo.weights.directional_lambda,
             split_seeds: match &cfg.algo.split {
                 SplitStrategy::GeoSection
-                | SplitStrategy::AreaSection   { .. }
-                | SplitStrategy::VraSection    { .. }
+                | SplitStrategy::AreaSection { .. }
+                | SplitStrategy::VraSection { .. }
                 | SplitStrategy::CompactBisect { .. }
-                | SplitStrategy::ProportionalSection { .. }
-                    => Some(cfg.algo.seeds.seed_count()),
+                | SplitStrategy::ProportionalSection { .. } => Some(cfg.algo.seeds.seed_count()),
                 SplitStrategy::ApportionRegions => Some(cfg.algo.seeds.seed_count()),
                 _ => None,
             },
@@ -2248,7 +2922,9 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             short_burst_search: match &cfg.algo.seeds {
                 SeedCompositor::ShortBurst { .. } => Some("short-burst".to_string()),
                 SeedCompositor::ShortBurstForest { .. } => Some("short-burst-forest".to_string()),
-                SeedCompositor::ShortBurstMergeSplit { .. } => Some("short-burst-merge-split".to_string()),
+                SeedCompositor::ShortBurstMergeSplit { .. } => {
+                    Some("short-burst-merge-split".to_string())
+                }
                 _ => None,
             },
             burst_length: match &cfg.algo.seeds {
@@ -2286,17 +2962,26 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 _ => "census tract".to_string(),
             },
             // Multi-scale fields
-            multiscale_fine: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. } | SeedCompositor::MultiScaleAdaptive { .. }) {
+            multiscale_fine: if matches!(
+                &cfg.algo.seeds,
+                SeedCompositor::MultiScale { .. } | SeedCompositor::MultiScaleAdaptive { .. }
+            ) {
                 Some(cfg.multiscale_fine.clone())
             } else {
                 None
             },
-            multiscale_coarse: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. } | SeedCompositor::MultiScaleAdaptive { .. }) {
+            multiscale_coarse: if matches!(
+                &cfg.algo.seeds,
+                SeedCompositor::MultiScale { .. } | SeedCompositor::MultiScaleAdaptive { .. }
+            ) {
                 Some(cfg.multiscale_coarse.clone())
             } else {
                 None
             },
-            fine_to_coarse_formula: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. } | SeedCompositor::MultiScaleAdaptive { .. }) {
+            fine_to_coarse_formula: if matches!(
+                &cfg.algo.seeds,
+                SeedCompositor::MultiScale { .. } | SeedCompositor::MultiScaleAdaptive { .. }
+            ) {
                 // BG->tract uses prefix[:11]; all county coarsenings use prefix[:5]
                 let formula = if cfg.multiscale_coarse == "tract" {
                     "geoid_prefix[:11]"
@@ -2307,20 +2992,29 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             } else {
                 None
             },
-            fine_to_coarse_comment: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. } | SeedCompositor::MultiScaleAdaptive { .. }) {
+            fine_to_coarse_comment: if matches!(
+                &cfg.algo.seeds,
+                SeedCompositor::MultiScale { .. } | SeedCompositor::MultiScaleAdaptive { .. }
+            ) {
                 let comment = match (cfg.multiscale_fine.as_str(), cfg.multiscale_coarse.as_str()) {
-                    ("bg", "tract")  => "first 11 chars of 12-char BG GEOID = parent tract GEOID",
+                    ("bg", "tract") => "first 11 chars of 12-char BG GEOID = parent tract GEOID",
                     ("bg", "county") => "first 5 chars of 12-char BG GEOID = parent county FIPS",
-                    _                => "first 5 chars of 11-char tract GEOID = parent county FIPS",
+                    _ => "first 5 chars of 11-char tract GEOID = parent county FIPS",
                 };
                 Some(comment.to_string())
             } else {
                 None
             },
-            index_to_geoid_file: if matches!(&cfg.algo.seeds, SeedCompositor::MultiScale { .. } | SeedCompositor::MultiScaleAdaptive { .. }) {
+            index_to_geoid_file: if matches!(
+                &cfg.algo.seeds,
+                SeedCompositor::MultiScale { .. } | SeedCompositor::MultiScaleAdaptive { .. }
+            ) {
                 // BG-fine options use the BG geoids file; tract-fine uses tract geoids file
                 if cfg.multiscale_fine == "bg" {
-                    Some(format!("{}_bg_adjacency_{}_geoids.json", state_name, cfg.year))
+                    Some(format!(
+                        "{}_bg_adjacency_{}_geoids.json",
+                        state_name, cfg.year
+                    ))
                 } else {
                     Some(format!("{}_adjacency_{}_geoids.json", state_name, cfg.year))
                 }
@@ -2332,23 +3026,39 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             .map_err(|e| format!("manifest write failed: {e}"))?;
     }
 
-    status(cfg.position, &format!("{}: complete ({num_districts}D, {}ms)", cfg.state_code, 0));
+    status(
+        cfg.position,
+        &format!("{}: complete ({num_districts}D, {}ms)", cfg.state_code, 0),
+    );
     Ok(())
 }
 
 /// Check if a state's outputs already exist and are complete.
-pub fn state_already_complete(output_dir: &PathBuf, state_code: &str, year: &str, reprocess: bool) -> bool {
-    if reprocess { return false; }
+pub fn state_already_complete(
+    output_dir: &PathBuf,
+    state_code: &str,
+    year: &str,
+    reprocess: bool,
+) -> bool {
+    if reprocess {
+        return false;
+    }
     let data_dir = output_dir
-        .join(year).join("states").join(state_code.to_lowercase()).join("data");
+        .join(year)
+        .join("states")
+        .join(state_code.to_lowercase())
+        .join("data");
     data_dir.join("final_assignments.json").exists()
         || data_dir.join("final_assignments.pkl").exists()
 }
 
 /// Filter configs to only those needing processing.
 pub fn filter_incomplete(configs: Vec<StateConfig>) -> Vec<StateConfig> {
-    configs.into_iter()
-        .filter(|cfg| !state_already_complete(&cfg.output_dir, &cfg.state_code, &cfg.year, cfg.reprocess))
+    configs
+        .into_iter()
+        .filter(|cfg| {
+            !state_already_complete(&cfg.output_dir, &cfg.state_code, &cfg.year, cfg.reprocess)
+        })
         .collect()
 }
 
@@ -2371,12 +3081,14 @@ fn build_edge_weights(
     position: i32,
 ) -> Result<HashMap<(usize, usize), f64>, String> {
     use crate::edge_weights::{
-        ComposedWeighter, GeographicWeighter,
-        MinorityOverrideWeighter, PartisanOverrideWeighter,
+        ComposedWeighter, GeographicWeighter, MinorityOverrideWeighter, PartisanOverrideWeighter,
         SubdivisionWeighter,
     };
 
-    let edges: Vec<(usize, usize)> = graph.adjacency.iter().enumerate()
+    let edges: Vec<(usize, usize)> = graph
+        .adjacency
+        .iter()
+        .enumerate()
         .flat_map(|(i, nbrs)| nbrs.iter().filter(move |&&j| j > i).map(move |&j| (i, j)))
         .collect();
 
@@ -2389,25 +3101,43 @@ fn build_edge_weights(
 
     // Step 2: Minority / VRA — override variant (from scratch, historic behaviour).
     if spec.minority_weighting {
-        status(position, &format!("{state_code}: VRA mode — loading demographics"));
+        status(
+            position,
+            &format!("{state_code}: VRA mode — loading demographics"),
+        );
         let demo_path = std::path::Path::new("data")
-            .join(year).join("demographics")
+            .join(year)
+            .join("demographics")
             .join(format!("{state_name}_demographics_{year}.csv"));
-        let demo = load_demographics(&demo_path)
-            .map_err(|e| format!("demographics load failed: {e}"))?;
-        let minority_fracs = align_demographics_to_adjacency(
-            &demo, &graph.index_to_geoid, graph.n_vertices);
-        composer = composer.push(MinorityOverrideWeighter::new(edges.clone(), minority_fracs, 0.40));
+        let demo =
+            load_demographics(&demo_path).map_err(|e| format!("demographics load failed: {e}"))?;
+        let minority_fracs =
+            align_demographics_to_adjacency(&demo, &graph.index_to_geoid, graph.n_vertices);
+        composer = composer.push(MinorityOverrideWeighter::new(
+            edges.clone(),
+            minority_fracs,
+            0.40,
+        ));
     }
 
     // Step 3: Partisan signal — override variant (from scratch, historic behaviour).
     if let Some(ref partisan_path) = spec.partisan_shares {
         if !partisan_path.as_os_str().is_empty() {
-            status(position, &format!("{state_code}: partisan-weighted — loading {}", partisan_path.display()));
-            let dem_shares = load_partisan_shares(partisan_path, &graph.index_to_geoid, graph.n_vertices)
-                .map_err(|e| format!("partisan shares load failed: {e}"))?;
+            status(
+                position,
+                &format!(
+                    "{state_code}: partisan-weighted — loading {}",
+                    partisan_path.display()
+                ),
+            );
+            let dem_shares =
+                load_partisan_shares(partisan_path, &graph.index_to_geoid, graph.n_vertices)
+                    .map_err(|e| format!("partisan shares load failed: {e}"))?;
             composer = composer.push(PartisanOverrideWeighter::new(
-                edges.clone(), dem_shares, spec.dem_threshold, spec.rep_threshold,
+                edges.clone(),
+                dem_shares,
+                spec.dem_threshold,
+                spec.rep_threshold,
             ));
         }
     }
@@ -2415,26 +3145,37 @@ fn build_edge_weights(
     // Step 4: Subdivision stickiness (B.10) — augment on whatever base is set.
     if spec.alpha_county > 1e-10 {
         composer = composer.push(SubdivisionWeighter::county_only(
-            &graph.index_to_geoid, graph.n_vertices, spec.alpha_county,
+            &graph.index_to_geoid,
+            graph.n_vertices,
+            spec.alpha_county,
         ));
     }
 
     // Step 5: Economic character similarity (B.27/M.1).
     if spec.economic_character {
-        use crate::lodes::{load_lodes_wac_tract, align_lodes_to_adjacency};
         use crate::edge_weights::EconomicCharacterWeighter;
-        status(position, &format!("{state_code}: economic-character -- loading LODES WAC"));
+        use crate::lodes::{align_lodes_to_adjacency, load_lodes_wac_tract};
+        status(
+            position,
+            &format!("{state_code}: economic-character -- loading LODES WAC"),
+        );
         match load_lodes_wac_tract(state_name, year) {
             Ok(lodes_chars) if !lodes_chars.is_empty() => {
-                let node_chars = align_lodes_to_adjacency(&lodes_chars, &graph.index_to_geoid, graph.n_vertices);
-                composer = composer.push(EconomicCharacterWeighter::new(node_chars, spec.econ_alpha));
+                let node_chars =
+                    align_lodes_to_adjacency(&lodes_chars, &graph.index_to_geoid, graph.n_vertices);
+                composer =
+                    composer.push(EconomicCharacterWeighter::new(node_chars, spec.econ_alpha));
             }
             Ok(_) => {
-                eprintln!("WARNING: LODES WAC not found for {state_name} {year}. \
-                           Run: bisect fetch --type lodes --year {year} --states {state_code}");
+                eprintln!(
+                    "WARNING: LODES WAC not found for {state_name} {year}. \
+                           Run: bisect fetch --type lodes --year {year} --states {state_code}"
+                );
             }
             Err(e) => {
-                eprintln!("WARNING: LODES WAC load error: {e}. Falling back to geographic weights.");
+                eprintln!(
+                    "WARNING: LODES WAC load error: {e}. Falling back to geographic weights."
+                );
             }
         }
     }
@@ -2443,8 +3184,10 @@ fn build_edge_weights(
     if spec.zone_membership {
         // Zone data loading deferred to Phase 2 — TIGER/EIA spatial join not yet implemented.
         // For now: warn and skip gracefully. The weighter struct and CLI flag are wired.
-        eprintln!("WARNING: --weights-override zone-membership requires TIGER school district \
-                   and EIA Form 861 spatial join (Phase 2). Falling back to geographic weights.");
+        eprintln!(
+            "WARNING: --weights-override zone-membership requires TIGER school district \
+                   and EIA Form 861 spatial join (Phase 2). Falling back to geographic weights."
+        );
     }
 
     // If nothing was added to the composer, fall back to geographic weights
@@ -2475,7 +3218,8 @@ pub fn apply_coi_weights(
 
     // Build a geoid -> weight lookup by index
     let get_weight = |idx: usize| -> f64 {
-        index_to_geoid.get(&idx)
+        index_to_geoid
+            .get(&idx)
             .and_then(|geoid| coi_map.get(geoid))
             .copied()
             .unwrap_or(1.0)
@@ -2513,10 +3257,16 @@ pub fn load_tiger_geometry(
     // Try TIGER path: data/{year}/tiger/tracts/tl_{year}_{fips}_tract/
     let tiger_path = state_fips.as_deref().and_then(|fips| {
         let p = std::path::PathBuf::from("data")
-            .join(year).join("tiger").join("tracts")
+            .join(year)
+            .join("tiger")
+            .join("tracts")
             .join(format!("tl_{year}_{fips}_tract"))
             .join(format!("tl_{year}_{fips}_tract.shp"));
-        if p.exists() { Some(p) } else { None }
+        if p.exists() {
+            Some(p)
+        } else {
+            None
+        }
     });
 
     let tiger_path = match tiger_path {
@@ -2536,7 +3286,8 @@ pub fn load_tiger_geometry(
         }
     };
 
-    let geoid_to_aland: std::collections::HashMap<String, f64> = records.iter()
+    let geoid_to_aland: std::collections::HashMap<String, f64> = records
+        .iter()
         .map(|r| (r.geoid.clone(), r.aland as f64))
         .collect();
 
@@ -2545,20 +3296,27 @@ pub fn load_tiger_geometry(
     let mut vertex_ext_perimeters = vec![0.0f64; n];
 
     for (&idx, geoid) in index_to_geoid {
-        if idx >= n { continue; }
+        if idx >= n {
+            continue;
+        }
         let aland = *geoid_to_aland.get(geoid).unwrap_or(&0.0);
         vertex_areas[idx] = aland;
 
         // Circular approximation of total perimeter: 2√(π·A)
         let total_perim_approx = if aland > 0.0 {
             2.0 * (std::f64::consts::PI * aland).sqrt()
-        } else { 0.0 };
+        } else {
+            0.0
+        };
 
         // Subtract shared boundaries (in metres from adjacency edge weights)
-        let shared: f64 = adjacency[idx].iter().map(|&j| {
-            let key = (idx.min(j), idx.max(j));
-            edge_weights.get(&key).copied().unwrap_or(0.0)
-        }).sum();
+        let shared: f64 = adjacency[idx]
+            .iter()
+            .map(|&j| {
+                let key = (idx.min(j), idx.max(j));
+                edge_weights.get(&key).copied().unwrap_or(0.0)
+            })
+            .sum();
 
         vertex_ext_perimeters[idx] = (total_perim_approx - shared).max(0.0);
     }
@@ -2580,7 +3338,12 @@ mod tests {
             version: "V3".to_string(),
             output_dir: PathBuf::from("/tmp/test"),
             algo: AlgorithmConfig {
-                metis: MetisParams { ufactor: 5, niter: 100, seed: Some(42), ..MetisParams::default() },
+                metis: MetisParams {
+                    ufactor: 5,
+                    niter: 100,
+                    seed: Some(42),
+                    ..MetisParams::default()
+                },
                 ..AlgorithmConfig::default()
             },
             position: 999,
@@ -2661,12 +3424,18 @@ mod tests {
         // For single-member districts, total_seats must equal num_districts
         for n in [1usize, 5, 10, 52] {
             let cfg = StateConfig::new_bulk(
-                "CA".to_string(), "california".to_string(), n,
-                "2020".to_string(), "v1".to_string(),
-                PathBuf::from("/tmp"), 0,
+                "CA".to_string(),
+                "california".to_string(),
+                n,
+                "2020".to_string(),
+                "v1".to_string(),
+                PathBuf::from("/tmp"),
+                0,
             );
-            assert_eq!(cfg.total_seats, n,
-                "total_seats must equal num_districts ({n}) for new_bulk");
+            assert_eq!(
+                cfg.total_seats, n,
+                "total_seats must equal num_districts ({n}) for new_bulk"
+            );
         }
     }
 
@@ -2690,8 +3459,10 @@ mod tests {
 
         let ew = result[&(0, 1)];
         let expected = (0.9_f64 * 0.9_f64).sqrt(); // ~0.9
-        assert!((ew - expected).abs() < 1e-9,
-            "edge weight should be ~{expected:.4}, got {ew:.4}");
+        assert!(
+            (ew - expected).abs() < 1e-9,
+            "edge weight should be ~{expected:.4}, got {ew:.4}"
+        );
     }
 
     #[test]
@@ -2714,8 +3485,10 @@ mod tests {
         // original edge weight=2.0 → result = 2.0 * sqrt(0.5)
         let ew = result[&(0, 1)];
         let expected = 2.0 * (0.5_f64).sqrt();
-        assert!((ew - expected).abs() < 1e-9,
-            "missing GEOID should default to w=1.0, got {ew:.4}");
+        assert!(
+            (ew - expected).abs() < 1e-9,
+            "missing GEOID should default to w=1.0, got {ew:.4}"
+        );
     }
 
     #[test]
@@ -2748,9 +3521,21 @@ mod tests {
         // International locations (IE, MT-PARLIAMENT, etc.) are in location_policy.json
         // but NOT in the manifest — they must never appear in bulk runs.
         let states = load_all_states("2020").expect("manifest should load");
-        assert_eq!(states.len(), 50, "exactly 50 US states expected, got {}", states.len());
+        assert_eq!(
+            states.len(),
+            50,
+            "exactly 50 US states expected, got {}",
+            states.len()
+        );
         // No international location codes
-        let international = ["IE", "MT-PARLIAMENT", "DE-WAHLKREIS", "NZ-ELECTORATE", "GB-ENG", "CA-PROV"];
+        let international = [
+            "IE",
+            "MT-PARLIAMENT",
+            "DE-WAHLKREIS",
+            "NZ-ELECTORATE",
+            "GB-ENG",
+            "CA-PROV",
+        ];
         for code in &international {
             assert!(
                 !states.iter().any(|(c, _, _)| c == code),
@@ -2760,45 +3545,81 @@ mod tests {
         // All codes are 2-letter uppercase (US state convention)
         for (code, _, _) in &states {
             assert_eq!(code.len(), 2, "state code '{code}' must be 2 chars");
-            assert!(code.chars().all(|c| c.is_uppercase()), "code '{code}' must be uppercase");
+            assert!(
+                code.chars().all(|c| c.is_uppercase()),
+                "code '{code}' must be uppercase"
+            );
         }
     }
 
     #[test]
     fn test_load_all_states_invalid_year_returns_err() {
         let result = load_all_states("2024");
-        assert!(result.is_err(), "year 2024 must be rejected for bulk US runs");
+        assert!(
+            result.is_err(),
+            "year 2024 must be rejected for bulk US runs"
+        );
         let msg = result.unwrap_err();
-        assert!(msg.contains("2020") || msg.contains("2010"), "error must list valid years: {msg}");
+        assert!(
+            msg.contains("2020") || msg.contains("2010"),
+            "error must list valid years: {msg}"
+        );
     }
 
     #[test]
     fn test_state_already_complete_reprocess() {
-        assert!(!state_already_complete(&PathBuf::from("/nonexistent"), "VT", "2020", true));
+        assert!(!state_already_complete(
+            &PathBuf::from("/nonexistent"),
+            "VT",
+            "2020",
+            true
+        ));
     }
 
     #[test]
     fn test_state_already_complete_missing() {
-        assert!(!state_already_complete(&PathBuf::from("/nonexistent"), "VT", "2020", false));
+        assert!(!state_already_complete(
+            &PathBuf::from("/nonexistent"),
+            "VT",
+            "2020",
+            false
+        ));
     }
 
     #[test]
     fn test_state_already_complete_with_json_marker() {
         let tmp = TempDir::new().unwrap();
-        let data = tmp.path().join("2020").join("states").join("vt").join("data");
+        let data = tmp
+            .path()
+            .join("2020")
+            .join("states")
+            .join("vt")
+            .join("data");
         std::fs::create_dir_all(&data).unwrap();
         std::fs::write(data.join("final_assignments.json"), b"{}").unwrap();
-        assert!(state_already_complete(&tmp.path().to_path_buf(), "VT", "2020", false));
+        assert!(state_already_complete(
+            &tmp.path().to_path_buf(),
+            "VT",
+            "2020",
+            false
+        ));
     }
 
     #[test]
     fn test_filter_incomplete() {
         let tmp = TempDir::new().unwrap();
-        let marker = tmp.path().join("2020").join("states").join("vt").join("data");
+        let marker = tmp
+            .path()
+            .join("2020")
+            .join("states")
+            .join("vt")
+            .join("data");
         std::fs::create_dir_all(&marker).unwrap();
         std::fs::write(marker.join("final_assignments.json"), b"{}").unwrap();
         let mut configs = vec![make_config("VT"), make_config("DE")];
-        for c in &mut configs { c.output_dir = tmp.path().to_path_buf(); }
+        for c in &mut configs {
+            c.output_dir = tmp.path().to_path_buf();
+        }
         let remaining = filter_incomplete(configs);
         assert_eq!(remaining.len(), 1);
         assert_eq!(remaining[0].state_code, "DE");
@@ -2947,8 +3768,11 @@ mod tests {
     fn test_effective_balance_tolerance_congressional_default() {
         let cfg = make_config("VT");
         // Congressional default: 0.5%
-        assert!((cfg.effective_balance_tolerance() - 0.005).abs() < 1e-9,
-            "congressional default must be 0.5%, got {}", cfg.effective_balance_tolerance());
+        assert!(
+            (cfg.effective_balance_tolerance() - 0.005).abs() < 1e-9,
+            "congressional default must be 0.5%, got {}",
+            cfg.effective_balance_tolerance()
+        );
     }
 
     #[test]
@@ -2959,8 +3783,11 @@ mod tests {
             ..make_config("WA")
         };
         // House default: 5.0%
-        assert!((cfg.effective_balance_tolerance() - 0.05).abs() < 1e-9,
-            "house default must be 5.0%, got {}", cfg.effective_balance_tolerance());
+        assert!(
+            (cfg.effective_balance_tolerance() - 0.05).abs() < 1e-9,
+            "house default must be 5.0%, got {}",
+            cfg.effective_balance_tolerance()
+        );
     }
 
     #[test]
@@ -2970,8 +3797,11 @@ mod tests {
             balance_tolerance: Some(0.08), // 8% explicit override
             ..make_config("WA")
         };
-        assert!((cfg.effective_balance_tolerance() - 0.08).abs() < 1e-9,
-            "explicit override must win, got {}", cfg.effective_balance_tolerance());
+        assert!(
+            (cfg.effective_balance_tolerance() - 0.08).abs() < 1e-9,
+            "explicit override must win, got {}",
+            cfg.effective_balance_tolerance()
+        );
     }
 
     #[test]
@@ -2981,8 +3811,10 @@ mod tests {
             balance_tolerance: None,
             ..make_config("IL")
         };
-        assert!((cfg.effective_balance_tolerance() - 0.05).abs() < 1e-9,
-            "senate default must be 5.0%");
+        assert!(
+            (cfg.effective_balance_tolerance() - 0.05).abs() < 1e-9,
+            "senate default must be 5.0%"
+        );
     }
 
     // ── Group seats: seats_per_district / total_seats ────────────────────────
@@ -3017,7 +3849,7 @@ mod tests {
     #[test]
     fn test_ideal_pop_per_seat_single_member() {
         let cfg = make_config("VT"); // seats_per_district=1, total_seats=1
-        // For single-member: ideal_pop_per_seat = total_pop / 1 = total_pop
+                                     // For single-member: ideal_pop_per_seat = total_pop / 1 = total_pop
         let ideal = cfg.ideal_pop_per_seat(643503);
         assert!((ideal - 643503.0).abs() < 1.0);
     }
@@ -3051,33 +3883,48 @@ mod tests {
     fn test_chamber_balance_tolerance_wa_house_is_5pct() {
         // WA house_districts balance_tolerance_house_pct = 5.0%
         let tol = chamber_balance_tolerance("WA", "house");
-        assert!((tol - 0.05).abs() < 1e-6, "WA house tolerance must be 5%, got {tol}");
+        assert!(
+            (tol - 0.05).abs() < 1e-6,
+            "WA house tolerance must be 5%, got {tol}"
+        );
     }
 
     #[test]
     fn test_chamber_balance_tolerance_wa_congressional_is_half_pct() {
         // WA balance_tolerance_congressional_pct = 0.5%
         let tol = chamber_balance_tolerance("WA", "congressional");
-        assert!((tol - 0.005).abs() < 1e-6, "WA congressional tolerance must be 0.5%, got {tol}");
+        assert!(
+            (tol - 0.005).abs() < 1e-6,
+            "WA congressional tolerance must be 0.5%, got {tol}"
+        );
     }
 
     #[test]
     fn test_chamber_balance_tolerance_nv_house_is_10pct() {
         // NV allows 10% house tolerance (policy explicitly documents this)
         let tol = chamber_balance_tolerance("NV", "house");
-        assert!((tol - 0.10).abs() < 1e-6, "NV house tolerance must be 10%, got {tol}");
+        assert!(
+            (tol - 0.10).abs() < 1e-6,
+            "NV house tolerance must be 10%, got {tol}"
+        );
     }
 
     #[test]
     fn test_chamber_balance_tolerance_unknown_state_uses_default() {
         let tol = chamber_balance_tolerance("ZZ", "house");
-        assert!((tol - 0.05).abs() < 1e-6, "unknown state must fall back to 5% default");
+        assert!(
+            (tol - 0.05).abs() < 1e-6,
+            "unknown state must fall back to 5% default"
+        );
     }
 
     #[test]
     fn test_chamber_balance_tolerance_unknown_chamber_uses_default() {
         let tol = chamber_balance_tolerance("WA", "council");
-        assert!((tol - 0.05).abs() < 1e-6, "unknown chamber must fall back to 5% default");
+        assert!(
+            (tol - 0.05).abs() < 1e-6,
+            "unknown chamber must fall back to 5% default"
+        );
     }
 
     #[test]
@@ -3090,8 +3937,10 @@ mod tests {
             ..make_config("VT")
         };
         let tol = cfg.effective_balance_tolerance();
-        assert!((tol - 0.10).abs() < 1e-6,
-            "NV house must use policy tolerance 10%, got {tol}");
+        assert!(
+            (tol - 0.10).abs() < 1e-6,
+            "NV house must use policy tolerance 10%, got {tol}"
+        );
     }
 
     #[test]
@@ -3104,7 +3953,10 @@ mod tests {
             ..make_config("VT")
         };
         let tol = cfg.effective_balance_tolerance();
-        assert!((tol - 0.02).abs() < 1e-9, "explicit override must win, got {tol}");
+        assert!(
+            (tol - 0.02).abs() < 1e-9,
+            "explicit override must win, got {tol}"
+        );
     }
 
     // ── Group: chamber_district_count ─────────────────────────────────────────
@@ -3120,49 +3972,70 @@ mod tests {
     fn test_chamber_district_count_house_wa_returns_98() {
         // WA house has 98 districts per state_policy.json
         let result = chamber_district_count("WA", "house", 10);
-        assert_eq!(result, 98, "WA house must use 98 districts from state policy, got {result}");
+        assert_eq!(
+            result, 98,
+            "WA house must use 98 districts from state policy, got {result}"
+        );
     }
 
     #[test]
     fn test_chamber_district_count_senate_wa_returns_49() {
         // WA senate has 49 districts (2:1 nesting with 98 house)
         let result = chamber_district_count("WA", "senate", 10);
-        assert_eq!(result, 49, "WA senate must use 49 districts from state policy, got {result}");
+        assert_eq!(
+            result, 49,
+            "WA senate must use 49 districts from state policy, got {result}"
+        );
     }
 
     #[test]
     fn test_chamber_district_count_house_nv_returns_42() {
         // NV house has 42 districts per state_policy.json
         let result = chamber_district_count("NV", "house", 4);
-        assert_eq!(result, 42, "NV house must use 42 districts from state policy, got {result}");
+        assert_eq!(
+            result, 42,
+            "NV house must use 42 districts from state policy, got {result}"
+        );
     }
 
     #[test]
     fn test_chamber_district_count_house_va_returns_100() {
         // VA house has 100 delegates
         let result = chamber_district_count("VA", "house", 11);
-        assert_eq!(result, 100, "VA house must use 100 from state policy, got {result}");
+        assert_eq!(
+            result, 100,
+            "VA house must use 100 from state policy, got {result}"
+        );
     }
 
     #[test]
     fn test_chamber_district_count_house_la_returns_105() {
         // LA house has 105 representatives
         let result = chamber_district_count("LA", "house", 6);
-        assert_eq!(result, 105, "LA house must use 105 from state policy, got {result}");
+        assert_eq!(
+            result, 105,
+            "LA house must use 105 from state policy, got {result}"
+        );
     }
 
     #[test]
     fn test_chamber_district_count_unknown_state_uses_fallback() {
         // Unknown state code falls back to congressional count
         let result = chamber_district_count("ZZ", "house", 7);
-        assert_eq!(result, 7, "unknown state ZZ must fall back to congressional count");
+        assert_eq!(
+            result, 7,
+            "unknown state ZZ must fall back to congressional count"
+        );
     }
 
     #[test]
     fn test_chamber_district_count_unknown_chamber_uses_fallback() {
         // Unrecognized chamber name falls back
         let result = chamber_district_count("WA", "council", 10);
-        assert_eq!(result, 10, "unknown chamber type must fall back to congressional count");
+        assert_eq!(
+            result, 10,
+            "unknown chamber type must fall back to congressional count"
+        );
     }
 
     // ── Group 5: adjacency fallback / resolve_adjacency_path ─────────────────
@@ -3185,7 +4058,10 @@ mod tests {
         let plan_root_labeled = output_dir.join(year).join("plans").join(label);
         let expected = "/tmp/outputs/v1/2020/plans/wa_house_2020";
         assert!(
-            plan_root_labeled.to_string_lossy().replace('\\', "/").contains("wa_house_2020"),
+            plan_root_labeled
+                .to_string_lossy()
+                .replace('\\', "/")
+                .contains("wa_house_2020"),
             "labeled plan_root must contain label: {}",
             plan_root_labeled.display()
         );
@@ -3193,8 +4069,14 @@ mod tests {
             "WARNING: --reset will delete {} and all its contents before re-running.",
             plan_root_labeled.display()
         );
-        assert!(warning.contains("wa_house_2020"), "warning must mention the plan label: {warning}");
-        assert!(warning.contains("--reset will delete"), "warning must mention --reset: {warning}");
+        assert!(
+            warning.contains("wa_house_2020"),
+            "warning must mention the plan label: {warning}"
+        );
+        assert!(
+            warning.contains("--reset will delete"),
+            "warning must mention --reset: {warning}"
+        );
 
         // Legacy (unlabeled) state path
         let state_name = "washington";
@@ -3203,7 +4085,10 @@ mod tests {
             "WARNING: --reset will delete {} and all its contents before re-running.",
             plan_root_legacy.display()
         );
-        assert!(warning_legacy.contains("washington"), "legacy warning must mention state: {warning_legacy}");
+        assert!(
+            warning_legacy.contains("washington"),
+            "legacy warning must mention state: {warning_legacy}"
+        );
     }
 
     #[test]
@@ -3230,7 +4115,11 @@ mod tests {
         let file_year = extract_year_from_adj_filename(filename);
         assert_eq!(file_year, Some("2010"), "should extract 2010 from filename");
         // Mismatch: requested 2020, file is 2010
-        assert_ne!(file_year, Some("2020"), "2010 file != 2020 requested — mismatch detected");
+        assert_ne!(
+            file_year,
+            Some("2020"),
+            "2010 file != 2020 requested — mismatch detected"
+        );
     }
 
     #[test]
@@ -3241,7 +4130,11 @@ mod tests {
         let file_year = extract_year_from_adj_filename(filename);
         assert_eq!(file_year, Some("2020"), "should extract 2020 from filename");
         // No mismatch: requested 2020, file is 2020
-        assert_eq!(file_year, Some("2020"), "2020 file == 2020 requested — no mismatch");
+        assert_eq!(
+            file_year,
+            Some("2020"),
+            "2020 file == 2020 requested — no mismatch"
+        );
     }
 
     #[test]
@@ -3287,18 +4180,33 @@ mod tests {
         assert_eq!(failed, 0, "0 configs: failed must be 0");
 
         // Verify the summary line format
-        let summary = format!("[bisect states] Complete: {} succeeded, {} failed", succeeded, failed);
-        assert!(summary.contains("Complete:"), "summary must contain 'Complete:'");
-        assert!(summary.contains("succeeded"), "summary must contain 'succeeded'");
+        let summary = format!(
+            "[bisect states] Complete: {} succeeded, {} failed",
+            succeeded, failed
+        );
+        assert!(
+            summary.contains("Complete:"),
+            "summary must contain 'Complete:'"
+        );
+        assert!(
+            summary.contains("succeeded"),
+            "summary must contain 'succeeded'"
+        );
         assert!(summary.contains("failed"), "summary must contain 'failed'");
-        assert!(summary.contains("[bisect states]"), "summary must be prefixed with [bisect states]");
+        assert!(
+            summary.contains("[bisect states]"),
+            "summary must be prefixed with [bisect states]"
+        );
 
         // Verify the queued banner format
         let queued = format!(
             "[bisect states] {} states queued — {} workers — year {} — version {}",
             0usize, 4usize, "2020", "v1"
         );
-        assert!(queued.contains("states queued"), "banner must contain 'states queued'");
+        assert!(
+            queued.contains("states queued"),
+            "banner must contain 'states queued'"
+        );
         assert!(queued.contains("workers"), "banner must contain 'workers'");
         assert!(queued.contains("year"), "banner must contain 'year'");
         assert!(queued.contains("version"), "banner must contain 'version'");
@@ -3318,12 +4226,25 @@ mod tests {
              not found for {state_code_lower} {year}.\n\
              To get block_group data: bisect fetch --type adjacency --states {} --year {}\n\
              Falling back to tract resolution.",
-            state_code_lower.to_uppercase(), year
+            state_code_lower.to_uppercase(),
+            year
         );
-        assert!(warning.contains("--resolution block_group"), "must mention flag");
-        assert!(warning.contains("bisect fetch"), "must mention fetch command");
-        assert!(warning.contains("block_group"), "must mention resolution type");
-        assert!(warning.contains("Falling back to tract resolution"), "must mention fallback");
+        assert!(
+            warning.contains("--resolution block_group"),
+            "must mention flag"
+        );
+        assert!(
+            warning.contains("bisect fetch"),
+            "must mention fetch command"
+        );
+        assert!(
+            warning.contains("block_group"),
+            "must mention resolution type"
+        );
+        assert!(
+            warning.contains("Falling back to tract resolution"),
+            "must mention fallback"
+        );
         assert!(warning.contains("WA"), "must mention uppercase state code");
     }
 
@@ -3358,8 +4279,10 @@ mod tests {
         // Should fail (no ZZ adjacency) but with a helpful error message
         assert!(result.is_err(), "unknown state ZZ should fail");
         let err = result.unwrap_err();
-        assert!(err.contains("adjacency") || err.contains("not found") || err.contains("manifest"),
-            "error should mention adjacency: {err}");
+        assert!(
+            err.contains("adjacency") || err.contains("not found") || err.contains("manifest"),
+            "error should mention adjacency: {err}"
+        );
     }
 
     /// Scenario 17: Isolated node warning logic — verify that an adjacency with
@@ -3369,13 +4292,15 @@ mod tests {
         // Simulate the isolated-node detection logic from run_single_state.
         // adjacency[0] has neighbors, adjacency[1] is isolated, adjacency[2] is isolated.
         let adjacency: Vec<Vec<usize>> = vec![
-            vec![2],     // node 0: connected
-            vec![],      // node 1: isolated
-            vec![0],     // node 2: connected
-            vec![],      // node 3: isolated
+            vec![2], // node 0: connected
+            vec![],  // node 1: isolated
+            vec![0], // node 2: connected
+            vec![],  // node 3: isolated
         ];
 
-        let isolated: Vec<usize> = adjacency.iter().enumerate()
+        let isolated: Vec<usize> = adjacency
+            .iter()
+            .enumerate()
             .filter(|(_, nbrs)| nbrs.is_empty())
             .map(|(i, _)| i)
             .collect();
@@ -3387,16 +4312,17 @@ mod tests {
         assert!(!isolated.contains(&2), "node 2 is connected, not isolated");
 
         // Verify a fully-connected graph produces no isolated nodes
-        let connected: Vec<Vec<usize>> = vec![
-            vec![1, 2],
-            vec![0, 2],
-            vec![0, 1],
-        ];
-        let isolated_none: Vec<usize> = connected.iter().enumerate()
+        let connected: Vec<Vec<usize>> = vec![vec![1, 2], vec![0, 2], vec![0, 1]];
+        let isolated_none: Vec<usize> = connected
+            .iter()
+            .enumerate()
             .filter(|(_, nbrs)| nbrs.is_empty())
             .map(|(i, _)| i)
             .collect();
-        assert!(isolated_none.is_empty(), "fully connected graph has no isolated nodes");
+        assert!(
+            isolated_none.is_empty(),
+            "fully connected graph has no isolated nodes"
+        );
     }
 
     // ── Task 131: CVAP fallback warning ──────────────────────────────────────
@@ -3405,23 +4331,33 @@ mod tests {
     fn test_cvap_missing_falls_back_to_total() {
         // With no CVAP file on disk, requesting "cvap" should fall back to "total".
         let result = check_cvap_availability("cvap", "vermont", "2020", "VT");
-        assert_eq!(result, "total",
-            "should fall back to total when CVAP file is absent, got {result}");
+        assert_eq!(
+            result, "total",
+            "should fall back to total when CVAP file is absent, got {result}"
+        );
     }
 
     #[test]
     fn test_population_source_cvap_falls_back_to_total() {
         // Synonym test — same logic as above but more explicit assertion.
         let source = check_cvap_availability("cvap", "nonexistent_state", "2020", "XX");
-        assert_eq!(source, "total",
-            "CVAP fallback must produce 'total', got '{source}'");
+        assert_eq!(
+            source, "total",
+            "CVAP fallback must produce 'total', got '{source}'"
+        );
     }
 
     #[test]
     fn test_non_cvap_source_unchanged() {
         // "total" and "vap" should be returned unchanged regardless of file presence.
-        assert_eq!(check_cvap_availability("total", "vermont", "2020", "VT"), "total");
-        assert_eq!(check_cvap_availability("vap", "vermont", "2020", "VT"), "vap");
+        assert_eq!(
+            check_cvap_availability("total", "vermont", "2020", "VT"),
+            "total"
+        );
+        assert_eq!(
+            check_cvap_availability("vap", "vermont", "2020", "VT"),
+            "vap"
+        );
     }
 
     // ── Task 130: Worker cap reporting ───────────────────────────────────────
@@ -3433,8 +4369,10 @@ mod tests {
         // logic: if requested > actual, the note should fire.
         let requested = usize::MAX; // always exceeds available threads
         let actual = effective_workers(requested);
-        assert!(actual < requested,
-            "effective_workers(MAX) must be < MAX (got {actual})");
+        assert!(
+            actual < requested,
+            "effective_workers(MAX) must be < MAX (got {actual})"
+        );
     }
 
     #[test]
@@ -3447,7 +4385,10 @@ mod tests {
         assert!(actual >= 1, "effective_workers(1) must be >= 1");
         // When actual == requested, no cap note fires (logical condition)
         let would_print = actual < requested;
-        assert!(!would_print, "no note when requested ({requested}) == actual ({actual})");
+        assert!(
+            !would_print,
+            "no note when requested ({requested}) == actual ({actual})"
+        );
     }
 
     // ── Plan 03: validate_partisan_config (Callais disentanglement) ──────────
@@ -3465,8 +4406,16 @@ mod tests {
         let cfg = StateConfig {
             algo: AlgorithmConfig {
                 split: SplitStrategy::NWay,
-                weights: WeightSpec { minority_weighting: true, ..WeightSpec::default() },
-                metis: MetisParams { ufactor: 5, niter: 100, seed: None, ..MetisParams::default() },
+                weights: WeightSpec {
+                    minority_weighting: true,
+                    ..WeightSpec::default()
+                },
+                metis: MetisParams {
+                    ufactor: 5,
+                    niter: 100,
+                    seed: None,
+                    ..MetisParams::default()
+                },
                 mode_label: None,
                 ..AlgorithmConfig::default()
             },
@@ -3480,7 +4429,10 @@ mod tests {
         // AlgorithmConfig carries mode identity — no separate string field needed.
         let unweighted = AlgorithmConfig {
             split: SplitStrategy::Bisect,
-            weights: WeightSpec { geographic: false, ..WeightSpec::default() },
+            weights: WeightSpec {
+                geographic: false,
+                ..WeightSpec::default()
+            },
             mode_label: Some("unweighted"),
             ..AlgorithmConfig::default()
         };
@@ -3491,7 +4443,10 @@ mod tests {
 
         let metis_vra = AlgorithmConfig {
             split: SplitStrategy::NWay,
-            weights: WeightSpec { minority_weighting: true, ..WeightSpec::default() },
+            weights: WeightSpec {
+                minority_weighting: true,
+                ..WeightSpec::default()
+            },
             mode_label: None,
             ..AlgorithmConfig::default()
         };
@@ -3515,7 +4470,12 @@ mod tests {
     #[test]
     fn test_algo_metis_params_extraction() {
         let cfg = AlgorithmConfig {
-            metis: MetisParams { ufactor: 7, niter: 200, seed: Some(42), ..MetisParams::default() },
+            metis: MetisParams {
+                ufactor: 7,
+                niter: 200,
+                seed: Some(42),
+                ..MetisParams::default()
+            },
             ..AlgorithmConfig::default()
         };
         assert_eq!(cfg.metis.ufactor, 7);
@@ -3524,8 +4484,16 @@ mod tests {
 
         let vra = AlgorithmConfig {
             split: SplitStrategy::NWay,
-            weights: WeightSpec { minority_weighting: true, ..WeightSpec::default() },
-            metis: MetisParams { ufactor: 3, niter: 50, seed: None, ..MetisParams::default() },
+            weights: WeightSpec {
+                minority_weighting: true,
+                ..WeightSpec::default()
+            },
+            metis: MetisParams {
+                ufactor: 3,
+                niter: 50,
+                seed: None,
+                ..MetisParams::default()
+            },
             ..AlgorithmConfig::default()
         };
         assert_eq!(vra.metis.ufactor, 3);
@@ -3549,19 +4517,23 @@ mod tests {
     fn test_algo_all_modes_have_mode_name() {
         use crate::args::PartitionMode as PM;
         let cases = [
-            (PM::Unweighted,       "unweighted"),
-            (PM::EdgeWeighted,     "edge-weighted"),
-            (PM::MetisVra,         "metis-vra"),
+            (PM::Unweighted, "unweighted"),
+            (PM::EdgeWeighted, "edge-weighted"),
+            (PM::MetisVra, "metis-vra"),
             (PM::PartisanWeighted, "partisan-weighted"),
-            (PM::Proportional,     "proportional"),
-            (PM::CompactBisect,    "compact-bisect"),
-            (PM::GeoSection,       "geosection"),
-            (PM::AreaSection,      "areasection"),
+            (PM::Proportional, "proportional"),
+            (PM::CompactBisect, "compact-bisect"),
+            (PM::GeoSection, "geosection"),
+            (PM::AreaSection, "areasection"),
         ];
         for (mode, expected_name) in &cases {
             let algo = AlgorithmConfig::defaults_for_mode(mode);
-            assert_eq!(algo.mode_name(), *expected_name,
-                "mode_name mismatch for {:?}", expected_name);
+            assert_eq!(
+                algo.mode_name(),
+                *expected_name,
+                "mode_name mismatch for {:?}",
+                expected_name
+            );
         }
     }
 
@@ -3571,19 +4543,22 @@ mod tests {
         // Every mode must produce a valid AlgorithmConfig via defaults_for_mode.
         // The mode_name of the result must match the input mode's string.
         let cases = [
-            (PM::Unweighted,      "unweighted"),
-            (PM::EdgeWeighted,    "edge-weighted"),
-            (PM::MetisVra,        "metis-vra"),
-            (PM::PartisanWeighted,"partisan-weighted"),
-            (PM::Proportional,    "proportional"),
-            (PM::CompactBisect,   "compact-bisect"),
-            (PM::GeoSection,      "geosection"),
-            (PM::AreaSection,     "areasection"),
+            (PM::Unweighted, "unweighted"),
+            (PM::EdgeWeighted, "edge-weighted"),
+            (PM::MetisVra, "metis-vra"),
+            (PM::PartisanWeighted, "partisan-weighted"),
+            (PM::Proportional, "proportional"),
+            (PM::CompactBisect, "compact-bisect"),
+            (PM::GeoSection, "geosection"),
+            (PM::AreaSection, "areasection"),
         ];
         for (mode, name) in &cases {
             let algo = AlgorithmConfig::defaults_for_mode(mode);
-            assert_eq!(algo.mode_name(), *name,
-                "defaults_for_mode({name}) produced wrong mode_name");
+            assert_eq!(
+                algo.mode_name(),
+                *name,
+                "defaults_for_mode({name}) produced wrong mode_name"
+            );
         }
     }
 
@@ -3592,9 +4567,14 @@ mod tests {
         // Every mode must produce ufactor > 0 and niter > 0 from defaults_for_mode.
         use crate::args::PartitionMode as PM;
         let modes = [
-            PM::Unweighted, PM::EdgeWeighted, PM::MetisVra,
-            PM::PartisanWeighted, PM::Proportional,
-            PM::CompactBisect, PM::GeoSection, PM::AreaSection,
+            PM::Unweighted,
+            PM::EdgeWeighted,
+            PM::MetisVra,
+            PM::PartisanWeighted,
+            PM::Proportional,
+            PM::CompactBisect,
+            PM::GeoSection,
+            PM::AreaSection,
         ];
         for mode in &modes {
             let algo = AlgorithmConfig::defaults_for_mode(mode);
@@ -3620,11 +4600,15 @@ mod tests {
         use crate::args::PartitionMode as PM;
         let algo = AlgorithmConfig::defaults_for_mode(&PM::GeoSection);
         assert_eq!(algo.mode_name(), "geosection");
-        assert!(matches!(algo.split, SplitStrategy::GeoSection),
-            "defaults_for_mode(GeoSection) returned wrong split strategy");
+        assert!(
+            matches!(algo.split, SplitStrategy::GeoSection),
+            "defaults_for_mode(GeoSection) returned wrong split strategy"
+        );
         assert!(algo.seeds.seed_count() > 0, "geosection needs seeds > 0");
-        assert_eq!(algo.weights.directional_lambda, 0.0,
-            "default lambda should be 0 (no directional penalty)");
+        assert_eq!(
+            algo.weights.directional_lambda, 0.0,
+            "default lambda should be 0 (no directional penalty)"
+        );
     }
 
     // ── Poison values — testing defensive behaviour ───────────────────────────
@@ -3635,17 +4619,34 @@ mod tests {
     fn test_algo_poison_zero_seeds_not_silently_fixed() {
         let poison = AlgorithmConfig {
             split: SplitStrategy::GeoSection,
-            weights: WeightSpec { directional_lambda: f64::INFINITY, ..WeightSpec::default() },
-            metis: MetisParams { ufactor: 0, niter: 0, seed: None, ..MetisParams::default() },
+            weights: WeightSpec {
+                directional_lambda: f64::INFINITY,
+                ..WeightSpec::default()
+            },
+            metis: MetisParams {
+                ufactor: 0,
+                niter: 0,
+                seed: None,
+                ..MetisParams::default()
+            },
             ..AlgorithmConfig::default()
         };
         // mode_name must still work (no panic)
         assert_eq!(poison.mode_name(), "geosection");
         // MetisParams fields must reflect the bad values as-is (caller can validate)
-        assert_eq!(poison.metis.ufactor, 0, "poison ufactor=0 must not be silently corrected");
-        assert_eq!(poison.metis.niter, 0, "poison niter=0 must not be silently corrected");
+        assert_eq!(
+            poison.metis.ufactor, 0,
+            "poison ufactor=0 must not be silently corrected"
+        );
+        assert_eq!(
+            poison.metis.niter, 0,
+            "poison niter=0 must not be silently corrected"
+        );
         if let SeedCompositor::Multi { seeds } = poison.seeds {
-            assert_eq!(seeds, 50, "default seeds=50 preserved even with poison metis params");
+            assert_eq!(
+                seeds, 50,
+                "default seeds=50 preserved even with poison metis params"
+            );
         }
     }
 
@@ -3655,16 +4656,28 @@ mod tests {
         // updating this list, the COMPILER will reject this test — compile-time safety.
         let all: &[(&str, SplitStrategy)] = &[
             ("edge-weighted", SplitStrategy::Bisect),
-            ("metis-vra",     SplitStrategy::NWay),
-            ("geosection",    SplitStrategy::GeoSection),
-            ("compact-bisect",SplitStrategy::CompactBisect { epsilon: 0.05 }),
-            ("areasection",   SplitStrategy::AreaSection { area_swing: 1.10, area_section_init: AreaSectionInit::RatioOptimal }),
-            ("apportion-regions",  SplitStrategy::ApportionRegions),
-            ("vra-section",   SplitStrategy::VraSection { w_vra: 0.40 }),
+            ("metis-vra", SplitStrategy::NWay),
+            ("geosection", SplitStrategy::GeoSection),
+            (
+                "compact-bisect",
+                SplitStrategy::CompactBisect { epsilon: 0.05 },
+            ),
+            (
+                "areasection",
+                SplitStrategy::AreaSection {
+                    area_swing: 1.10,
+                    area_section_init: AreaSectionInit::RatioOptimal,
+                },
+            ),
+            ("apportion-regions", SplitStrategy::ApportionRegions),
+            ("vra-section", SplitStrategy::VraSection { w_vra: 0.40 }),
         ];
         for (expected_name, variant) in all {
-            assert_eq!(variant.mode_name(), *expected_name,
-                "new SplitStrategy variant added without updating this exhaustive list!");
+            assert_eq!(
+                variant.mode_name(),
+                *expected_name,
+                "new SplitStrategy variant added without updating this exhaustive list!"
+            );
         }
     }
 
@@ -3678,7 +4691,10 @@ mod tests {
         } else {
             panic!("defaults_for_mode(CompactBisect) returned wrong split strategy");
         }
-        assert!(algo.seeds.seed_count() > 0, "compact-bisect needs seeds > 0");
+        assert!(
+            algo.seeds.seed_count() > 0,
+            "compact-bisect needs seeds > 0"
+        );
     }
 
     #[test]
@@ -3708,7 +4724,10 @@ mod tests {
     fn test_algo_unweighted_mode_detection() {
         // Unweighted: mode_label overrides → "unweighted"
         let algo = AlgorithmConfig {
-            weights: WeightSpec { geographic: false, ..WeightSpec::default() },
+            weights: WeightSpec {
+                geographic: false,
+                ..WeightSpec::default()
+            },
             mode_label: Some("unweighted"),
             ..AlgorithmConfig::default()
         };
@@ -3733,14 +4752,18 @@ mod tests {
     fn test_algo_alpha_county_propagates_from_state_args() {
         use crate::args::{PartitionMode, StateArgs};
         use clap::Parser;
-        let args = StateArgs::parse_from([
-            "state", "--state", "VT", "--alpha-county", "2.5"
-        ]);
-        assert!((args.alpha_county - 2.5).abs() < 1e-9,
-            "alpha_county must be parsed from CLI, got {}", args.alpha_county);
+        let args = StateArgs::parse_from(["state", "--state", "VT", "--alpha-county", "2.5"]);
+        assert!(
+            (args.alpha_county - 2.5).abs() < 1e-9,
+            "alpha_county must be parsed from CLI, got {}",
+            args.alpha_county
+        );
         let algo = AlgorithmConfig::from_state_args(&args);
-        assert!((algo.weights.alpha_county - 2.5).abs() < 1e-9,
-            "alpha_county must propagate into WeightSpec, got {}", algo.weights.alpha_county);
+        assert!(
+            (algo.weights.alpha_county - 2.5).abs() < 1e-9,
+            "alpha_county must propagate into WeightSpec, got {}",
+            algo.weights.alpha_county
+        );
     }
 
     #[test]
@@ -3748,11 +4771,16 @@ mod tests {
         use crate::args::StateArgs;
         use clap::Parser;
         let args = StateArgs::parse_from(["state", "--state", "VT"]);
-        assert!(args.alpha_county < 1e-10,
-            "alpha_county default must be 0.0, got {}", args.alpha_county);
+        assert!(
+            args.alpha_county < 1e-10,
+            "alpha_county default must be 0.0, got {}",
+            args.alpha_county
+        );
         let algo = AlgorithmConfig::from_state_args(&args);
-        assert!(algo.weights.alpha_county < 1e-10,
-            "alpha_county must default to 0.0 in WeightSpec");
+        assert!(
+            algo.weights.alpha_county < 1e-10,
+            "alpha_county must default to 0.0 in WeightSpec"
+        );
     }
 
     #[test]
@@ -3777,11 +4805,17 @@ mod tests {
         let out = composer.apply();
 
         // (0,1): same county → 100 × (1 + 3) = 400
-        assert!((out[&(0,1)] - 400.0).abs() < 1e-9,
-            "same-county edge should be 4× more expensive, got {}", out[&(0,1)]);
+        assert!(
+            (out[&(0, 1)] - 400.0).abs() < 1e-9,
+            "same-county edge should be 4× more expensive, got {}",
+            out[&(0, 1)]
+        );
         // (1,2): cross-county → unchanged
-        assert!((out[&(1,2)] - 100.0).abs() < 1e-9,
-            "cross-county edge should be unchanged, got {}", out[&(1,2)]);
+        assert!(
+            (out[&(1, 2)] - 100.0).abs() < 1e-9,
+            "cross-county edge should be unchanged, got {}",
+            out[&(1, 2)]
+        );
     }
 
     #[test]
@@ -3793,9 +4827,9 @@ mod tests {
             minority_weighting: false,
             partisan_shares: None,
             alpha_county: 0.0,
-            alpha_mcd:    2.0, // only mcd set — must not early-exit to empty map
-            alpha_place:  0.0,
-            alpha_vtd:    0.0,
+            alpha_mcd: 2.0, // only mcd set — must not early-exit to empty map
+            alpha_place: 0.0,
+            alpha_vtd: 0.0,
             ..WeightSpec::default()
         };
         // The early-exit condition: all four alphas < 1e-10 AND no geographic/partisan/minority.
@@ -3804,11 +4838,13 @@ mod tests {
             && !spec.minority_weighting
             && spec.partisan_shares.is_none()
             && spec.alpha_county < 1e-10
-            && spec.alpha_mcd    < 1e-10
-            && spec.alpha_place  < 1e-10
-            && spec.alpha_vtd    < 1e-10;
-        assert!(!should_early_exit,
-            "alpha_mcd=2.0 must prevent early-exit to empty edge map");
+            && spec.alpha_mcd < 1e-10
+            && spec.alpha_place < 1e-10
+            && spec.alpha_vtd < 1e-10;
+        assert!(
+            !should_early_exit,
+            "alpha_mcd=2.0 must prevent early-exit to empty edge map"
+        );
     }
 
     // ── Group 1: SeedCompositor ───────────────────────────────────────────────
@@ -3816,43 +4852,57 @@ mod tests {
     #[test]
     fn seed_count_single_returns_1() {
         let sc = SeedCompositor::Single;
-        assert_eq!(sc.seed_count(), 1,
-            "Single seed_count must return 1");
+        assert_eq!(sc.seed_count(), 1, "Single seed_count must return 1");
     }
 
     #[test]
     fn seed_count_multi_returns_seeds() {
         let sc = SeedCompositor::Multi { seeds: 77 };
-        assert_eq!(sc.seed_count(), 77,
-            "Multi seed_count must return the seeds field");
+        assert_eq!(
+            sc.seed_count(),
+            77,
+            "Multi seed_count must return the seeds field"
+        );
     }
 
     #[test]
     fn seed_count_convergence_sweep_returns_threshold() {
         let sc = SeedCompositor::ConvergenceSweep { threshold: 250 };
-        assert_eq!(sc.seed_count(), 250,
-            "ConvergenceSweep seed_count must return threshold as usize");
+        assert_eq!(
+            sc.seed_count(),
+            250,
+            "ConvergenceSweep seed_count must return threshold as usize"
+        );
     }
 
     #[test]
     fn is_single_true_for_single() {
-        assert!(SeedCompositor::Single.is_single(),
-            "is_single must be true for Single variant");
+        assert!(
+            SeedCompositor::Single.is_single(),
+            "is_single must be true for Single variant"
+        );
     }
 
     #[test]
     fn is_single_false_for_multi() {
-        assert!(!SeedCompositor::Multi { seeds: 10 }.is_single(),
-            "is_single must be false for Multi variant");
-        assert!(!SeedCompositor::ConvergenceSweep { threshold: 100 }.is_single(),
-            "is_single must be false for ConvergenceSweep variant");
+        assert!(
+            !SeedCompositor::Multi { seeds: 10 }.is_single(),
+            "is_single must be false for Multi variant"
+        );
+        assert!(
+            !SeedCompositor::ConvergenceSweep { threshold: 100 }.is_single(),
+            "is_single must be false for ConvergenceSweep variant"
+        );
     }
 
     #[test]
     fn default_is_multi_50() {
         let sc = SeedCompositor::default();
         if let SeedCompositor::Multi { seeds } = sc {
-            assert_eq!(seeds, 50, "Default SeedCompositor must be Multi{{seeds: 50}}");
+            assert_eq!(
+                seeds, 50,
+                "Default SeedCompositor must be Multi{{seeds: 50}}"
+            );
         } else {
             panic!("Default SeedCompositor must be Multi, got a different variant");
         }
@@ -3866,7 +4916,10 @@ mod tests {
 
     #[test]
     fn seed_count_bisection_ensemble_returns_steps() {
-        let sc = SeedCompositor::BisectionEnsemble { p: 0.5, ensemble_steps: 200 };
+        let sc = SeedCompositor::BisectionEnsemble {
+            p: 0.5,
+            ensemble_steps: 200,
+        };
         assert_eq!(sc.seed_count(), 200);
     }
 
@@ -3876,23 +4929,36 @@ mod tests {
         // Verify the variant can be constructed with boundary values.
         let sc_min = SeedCompositor::Percentile { p: 0.0, seeds: 10 };
         let sc_max = SeedCompositor::Percentile { p: 1.0, seeds: 10 };
-        if let SeedCompositor::Percentile { p, .. } = sc_min { assert_eq!(p, 0.0); }
-        if let SeedCompositor::Percentile { p, .. } = sc_max { assert_eq!(p, 1.0); }
+        if let SeedCompositor::Percentile { p, .. } = sc_min {
+            assert_eq!(p, 0.0);
+        }
+        if let SeedCompositor::Percentile { p, .. } = sc_max {
+            assert_eq!(p, 1.0);
+        }
     }
 
     #[test]
     fn bisection_ensemble_stores_p_and_steps() {
-        let sc = SeedCompositor::BisectionEnsemble { p: 0.75, ensemble_steps: 500 };
+        let sc = SeedCompositor::BisectionEnsemble {
+            p: 0.75,
+            ensemble_steps: 500,
+        };
         if let SeedCompositor::BisectionEnsemble { p, ensemble_steps } = sc {
             assert_eq!(p, 0.75);
             assert_eq!(ensemble_steps, 500);
-        } else { panic!("wrong variant"); }
+        } else {
+            panic!("wrong variant");
+        }
     }
 
     #[test]
     fn is_single_false_for_percentile_and_bisection_ensemble() {
         assert!(!SeedCompositor::Percentile { p: 0.5, seeds: 10 }.is_single());
-        assert!(!SeedCompositor::BisectionEnsemble { p: 0.5, ensemble_steps: 100 }.is_single());
+        assert!(!SeedCompositor::BisectionEnsemble {
+            p: 0.5,
+            ensemble_steps: 100
+        }
+        .is_single());
     }
 
     #[test]
@@ -3900,7 +4966,10 @@ mod tests {
         let orig = SeedCompositor::ConvergenceSweep { threshold: 999 };
         let cloned = orig.clone();
         if let SeedCompositor::ConvergenceSweep { threshold } = cloned {
-            assert_eq!(threshold, 999, "Clone must preserve ConvergenceSweep threshold");
+            assert_eq!(
+                threshold, 999,
+                "Clone must preserve ConvergenceSweep threshold"
+            );
         } else {
             panic!("Clone must preserve the ConvergenceSweep variant");
         }
@@ -3920,31 +4989,54 @@ mod tests {
     fn split_strategy_geosection_has_no_fields() {
         // GeoSection carries no seeds field — seeds live in SeedCompositor now.
         let s = SplitStrategy::GeoSection;
-        assert_eq!(s.mode_name(), "geosection",
-            "GeoSection mode_name must be 'geosection'");
+        assert_eq!(
+            s.mode_name(),
+            "geosection",
+            "GeoSection mode_name must be 'geosection'"
+        );
         // Confirm it matches the enum variant (compiler enforces no extra fields).
-        assert!(matches!(s, SplitStrategy::GeoSection),
-            "GeoSection must match the bare variant");
+        assert!(
+            matches!(s, SplitStrategy::GeoSection),
+            "GeoSection must match the bare variant"
+        );
     }
 
     #[test]
     fn split_strategy_apportion_regions_has_no_fields() {
         let s = SplitStrategy::ApportionRegions;
-        assert_eq!(s.mode_name(), "apportion-regions",
-            "ApportionRegions mode_name must be 'apportion-regions'");
+        assert_eq!(
+            s.mode_name(),
+            "apportion-regions",
+            "ApportionRegions mode_name must be 'apportion-regions'"
+        );
         assert!(matches!(s, SplitStrategy::ApportionRegions));
     }
 
     #[test]
     fn split_strategy_area_section_has_area_swing() {
-        let s = SplitStrategy::AreaSection { area_swing: 1.15, area_section_init: AreaSectionInit::RatioOptimal };
-        assert_eq!(s.mode_name(), "areasection",
-            "AreaSection mode_name must be 'areasection'");
-        if let SplitStrategy::AreaSection { area_swing, area_section_init } = s {
-            assert!((area_swing - 1.15).abs() < 1e-9,
-                "area_swing field must round-trip, got {area_swing}");
-            assert_eq!(area_section_init, AreaSectionInit::RatioOptimal,
-                "area_section_init must round-trip");
+        let s = SplitStrategy::AreaSection {
+            area_swing: 1.15,
+            area_section_init: AreaSectionInit::RatioOptimal,
+        };
+        assert_eq!(
+            s.mode_name(),
+            "areasection",
+            "AreaSection mode_name must be 'areasection'"
+        );
+        if let SplitStrategy::AreaSection {
+            area_swing,
+            area_section_init,
+        } = s
+        {
+            assert!(
+                (area_swing - 1.15).abs() < 1e-9,
+                "area_swing field must round-trip, got {area_swing}"
+            );
+            assert_eq!(
+                area_section_init,
+                AreaSectionInit::RatioOptimal,
+                "area_section_init must round-trip"
+            );
         } else {
             panic!("AreaSection variant destructure failed");
         }
@@ -3953,11 +5045,16 @@ mod tests {
     #[test]
     fn split_strategy_vra_section_has_w_vra() {
         let s = SplitStrategy::VraSection { w_vra: 0.30 };
-        assert_eq!(s.mode_name(), "vra-section",
-            "VraSection mode_name must be 'vra-section'");
+        assert_eq!(
+            s.mode_name(),
+            "vra-section",
+            "VraSection mode_name must be 'vra-section'"
+        );
         if let SplitStrategy::VraSection { w_vra } = s {
-            assert!((w_vra - 0.30).abs() < 1e-9,
-                "w_vra field must round-trip, got {w_vra}");
+            assert!(
+                (w_vra - 0.30).abs() < 1e-9,
+                "w_vra field must round-trip, got {w_vra}"
+            );
         } else {
             panic!("VraSection variant destructure failed");
         }
@@ -3967,18 +5064,33 @@ mod tests {
     fn all_variants_mode_name_stable() {
         // Exhaustive: new variants added without updating this list → compile error.
         let all: &[(&str, SplitStrategy)] = &[
-            ("edge-weighted",      SplitStrategy::Bisect),
-            ("metis-vra",          SplitStrategy::NWay),
-            ("geosection",         SplitStrategy::GeoSection),
-            ("compact-bisect",     SplitStrategy::CompactBisect { epsilon: 0.05 }),
-            ("areasection",        SplitStrategy::AreaSection { area_swing: 1.10, area_section_init: AreaSectionInit::RatioOptimal }),
-            ("proportional-section", SplitStrategy::ProportionalSection { eta: 1.10 }),
-            ("apportion-regions",  SplitStrategy::ApportionRegions),
-            ("vra-section",        SplitStrategy::VraSection { w_vra: 0.40 }),
+            ("edge-weighted", SplitStrategy::Bisect),
+            ("metis-vra", SplitStrategy::NWay),
+            ("geosection", SplitStrategy::GeoSection),
+            (
+                "compact-bisect",
+                SplitStrategy::CompactBisect { epsilon: 0.05 },
+            ),
+            (
+                "areasection",
+                SplitStrategy::AreaSection {
+                    area_swing: 1.10,
+                    area_section_init: AreaSectionInit::RatioOptimal,
+                },
+            ),
+            (
+                "proportional-section",
+                SplitStrategy::ProportionalSection { eta: 1.10 },
+            ),
+            ("apportion-regions", SplitStrategy::ApportionRegions),
+            ("vra-section", SplitStrategy::VraSection { w_vra: 0.40 }),
         ];
         for (expected_name, variant) in all {
-            assert_eq!(variant.mode_name(), *expected_name,
-                "SplitStrategy variant added without updating exhaustive list!");
+            assert_eq!(
+                variant.mode_name(),
+                *expected_name,
+                "SplitStrategy variant added without updating exhaustive list!"
+            );
         }
     }
 
@@ -3999,11 +5111,15 @@ mod tests {
     fn apportion_regions_defaults_to_single_seed() {
         use crate::args::PartitionMode as PM;
         let algo = AlgorithmConfig::defaults_for_mode(&PM::ApportionRegions);
-        assert!(algo.seeds.is_single(),
+        assert!(
+            algo.seeds.is_single(),
             "ApportionRegions defaults_for_mode must use SeedCompositor::Single \
-             (federal statute requires deterministic single-seed)");
-        assert!(matches!(algo.split, SplitStrategy::ApportionRegions),
-            "defaults_for_mode(ApportionRegions) split must be ApportionRegions");
+             (federal statute requires deterministic single-seed)"
+        );
+        assert!(
+            matches!(algo.split, SplitStrategy::ApportionRegions),
+            "defaults_for_mode(ApportionRegions) split must be ApportionRegions"
+        );
     }
 
     #[test]
@@ -4011,8 +5127,10 @@ mod tests {
         use crate::args::PartitionMode as PM;
         let algo = AlgorithmConfig::defaults_for_mode(&PM::GeoSection);
         if let SeedCompositor::Multi { seeds } = algo.seeds {
-            assert_eq!(seeds, 50,
-                "GeoSection defaults_for_mode must produce Multi{{seeds: 50}}, got {seeds}");
+            assert_eq!(
+                seeds, 50,
+                "GeoSection defaults_for_mode must produce Multi{{seeds: 50}}, got {seeds}"
+            );
         } else {
             panic!("GeoSection defaults_for_mode seeds must be Multi, not Single or Sweep");
         }
@@ -4023,8 +5141,10 @@ mod tests {
         use crate::args::PartitionMode as PM;
         let algo = AlgorithmConfig::defaults_for_mode(&PM::CompactBisect);
         if let SeedCompositor::Multi { seeds } = algo.seeds {
-            assert_eq!(seeds, 50,
-                "CompactBisect defaults_for_mode must produce Multi{{seeds: 50}}, got {seeds}");
+            assert_eq!(
+                seeds, 50,
+                "CompactBisect defaults_for_mode must produce Multi{{seeds: 50}}, got {seeds}"
+            );
         } else {
             panic!("CompactBisect defaults_for_mode seeds must be Multi, not Single or Sweep");
         }
@@ -4038,13 +5158,23 @@ mod tests {
         use clap::Parser;
         // No --structure flag: split comes from --partition-mode preset.
         let args = StateArgs::parse_from([
-            "state", "--state", "VT", "--partition-mode", "geosection",
-            "--geosection-seeds", "30",
+            "state",
+            "--state",
+            "VT",
+            "--partition-mode",
+            "geosection",
+            "--geosection-seeds",
+            "30",
         ]);
-        assert!(args.structure.is_none(), "no --structure flag → structure must be None");
+        assert!(
+            args.structure.is_none(),
+            "no --structure flag → structure must be None"
+        );
         let algo = AlgorithmConfig::from_state_args(&args);
-        assert!(matches!(algo.split, SplitStrategy::GeoSection),
-            "without --structure override, GeoSection preset must set GeoSection split");
+        assert!(
+            matches!(algo.split, SplitStrategy::GeoSection),
+            "without --structure override, GeoSection preset must set GeoSection split"
+        );
     }
 
     #[test]
@@ -4053,47 +5183,83 @@ mod tests {
         use clap::Parser;
         // --structure prime-factor overrides the split regardless of --partition-mode.
         let args = StateArgs::parse_from([
-            "state", "--state", "VT", "--partition-mode", "geosection",
-            "--structure", "prime-factor",
+            "state",
+            "--state",
+            "VT",
+            "--partition-mode",
+            "geosection",
+            "--structure",
+            "prime-factor",
         ]);
-        assert_eq!(args.structure, Some(StructureMode::PrimeFactor),
-            "parsed structure must be PrimeFactor");
+        assert_eq!(
+            args.structure,
+            Some(StructureMode::PrimeFactor),
+            "parsed structure must be PrimeFactor"
+        );
         let algo = AlgorithmConfig::from_state_args(&args);
-        assert!(matches!(algo.split, SplitStrategy::ApportionRegions),
-            "prime-factor structure override must set ApportionRegions split");
+        assert!(
+            matches!(algo.split, SplitStrategy::ApportionRegions),
+            "prime-factor structure override must set ApportionRegions split"
+        );
     }
 
     #[test]
     fn search_override_single_sets_single_compositor() {
-        use crate::args::{StateArgs, SearchMode};
+        use crate::args::{SearchMode, StateArgs};
         use clap::Parser;
         let args = StateArgs::parse_from([
-            "state", "--state", "VT", "--partition-mode", "geosection",
-            "--geosection-seeds", "30", "--search", "single",
+            "state",
+            "--state",
+            "VT",
+            "--partition-mode",
+            "geosection",
+            "--geosection-seeds",
+            "30",
+            "--search",
+            "single",
         ]);
-        assert_eq!(args.search, Some(SearchMode::Single),
-            "parsed search must be Single");
+        assert_eq!(
+            args.search,
+            Some(SearchMode::Single),
+            "parsed search must be Single"
+        );
         let algo = AlgorithmConfig::from_state_args(&args);
-        assert!(algo.seeds.is_single(),
-            "--search single must produce SeedCompositor::Single");
+        assert!(
+            algo.seeds.is_single(),
+            "--search single must produce SeedCompositor::Single"
+        );
     }
 
     #[test]
     fn search_override_convergence_sets_sweep() {
-        use crate::args::{StateArgs, SearchMode};
+        use crate::args::{SearchMode, StateArgs};
         use clap::Parser;
         let args = StateArgs::parse_from([
-            "state", "--state", "VT", "--partition-mode", "geosection",
-            "--search", "convergence", "--convergence-threshold", "300",
+            "state",
+            "--state",
+            "VT",
+            "--partition-mode",
+            "geosection",
+            "--search",
+            "convergence",
+            "--convergence-threshold",
+            "300",
         ]);
-        assert_eq!(args.search, Some(SearchMode::Convergence),
-            "parsed search must be Convergence");
-        assert_eq!(args.convergence_threshold, 300,
-            "convergence_threshold must be 300");
+        assert_eq!(
+            args.search,
+            Some(SearchMode::Convergence),
+            "parsed search must be Convergence"
+        );
+        assert_eq!(
+            args.convergence_threshold, 300,
+            "convergence_threshold must be 300"
+        );
         let algo = AlgorithmConfig::from_state_args(&args);
         if let SeedCompositor::ConvergenceSweep { threshold } = algo.seeds {
-            assert_eq!(threshold, 300,
-                "--search convergence must set ConvergenceSweep with the parsed threshold");
+            assert_eq!(
+                threshold, 300,
+                "--search convergence must set ConvergenceSweep with the parsed threshold"
+            );
         } else {
             panic!("--search convergence must produce SeedCompositor::ConvergenceSweep");
         }
@@ -4101,20 +5267,31 @@ mod tests {
 
     #[test]
     fn search_override_multi_with_seeds() {
-        use crate::args::{StateArgs, SearchMode};
+        use crate::args::{SearchMode, StateArgs};
         use clap::Parser;
         let args = StateArgs::parse_from([
-            "state", "--state", "VT", "--partition-mode", "geosection",
-            "--search", "multi", "--seeds", "100",
+            "state",
+            "--state",
+            "VT",
+            "--partition-mode",
+            "geosection",
+            "--search",
+            "multi",
+            "--seeds",
+            "100",
         ]);
-        assert_eq!(args.search, Some(SearchMode::Multi),
-            "parsed search must be Multi");
-        assert_eq!(args.seeds, Some(100),
-            "--seeds 100 must be parsed");
+        assert_eq!(
+            args.search,
+            Some(SearchMode::Multi),
+            "parsed search must be Multi"
+        );
+        assert_eq!(args.seeds, Some(100), "--seeds 100 must be parsed");
         let algo = AlgorithmConfig::from_state_args(&args);
         if let SeedCompositor::Multi { seeds } = algo.seeds {
-            assert_eq!(seeds, 100,
-                "--search multi --seeds 100 must produce Multi{{seeds: 100}}");
+            assert_eq!(
+                seeds, 100,
+                "--search multi --seeds 100 must produce Multi{{seeds: 100}}"
+            );
         } else {
             panic!("--search multi must produce SeedCompositor::Multi");
         }
@@ -4126,12 +5303,13 @@ mod tests {
     fn weights_override_unweighted_disables_geographic() {
         use crate::args::StateArgs;
         use clap::Parser;
-        let args = StateArgs::parse_from([
-            "state", "--state", "VT", "--weights-override", "unweighted",
-        ]);
+        let args =
+            StateArgs::parse_from(["state", "--state", "VT", "--weights-override", "unweighted"]);
         let algo = AlgorithmConfig::from_state_args(&args);
-        assert!(!algo.weights.geographic,
-            "--weights-override unweighted must set geographic=false, got true");
+        assert!(
+            !algo.weights.geographic,
+            "--weights-override unweighted must set geographic=false, got true"
+        );
     }
 
     #[test]
@@ -4140,13 +5318,19 @@ mod tests {
         use clap::Parser;
         // Start with unweighted mode so the preset would disable geographic.
         let args = StateArgs::parse_from([
-            "state", "--state", "VT",
-            "--partition-mode", "unweighted",
-            "--weights-override", "geographic",
+            "state",
+            "--state",
+            "VT",
+            "--partition-mode",
+            "unweighted",
+            "--weights-override",
+            "geographic",
         ]);
         let algo = AlgorithmConfig::from_state_args(&args);
-        assert!(algo.weights.geographic,
-            "--weights-override geographic must set geographic=true even when preset is unweighted");
+        assert!(
+            algo.weights.geographic,
+            "--weights-override geographic must set geographic=true even when preset is unweighted"
+        );
     }
 
     #[test]
@@ -4154,14 +5338,20 @@ mod tests {
         use crate::args::StateArgs;
         use clap::Parser;
         let args = StateArgs::parse_from([
-            "state", "--state", "VT",
-            "--weights-override", "county",
-            "--alpha-county", "3.0",
+            "state",
+            "--state",
+            "VT",
+            "--weights-override",
+            "county",
+            "--alpha-county",
+            "3.0",
         ]);
         let algo = AlgorithmConfig::from_state_args(&args);
-        assert!(algo.weights.alpha_county >= 1.0,
+        assert!(
+            algo.weights.alpha_county >= 1.0,
             "--weights-override county must set alpha_county >= 1.0, got {}",
-            algo.weights.alpha_county);
+            algo.weights.alpha_county
+        );
     }
 
     #[test]
@@ -4169,15 +5359,17 @@ mod tests {
         use crate::args::StateArgs;
         use clap::Parser;
         // Without --weights-override, --partition-mode unweighted keeps geographic=false.
-        let args = StateArgs::parse_from([
-            "state", "--state", "VT",
-            "--partition-mode", "unweighted",
-        ]);
-        assert!(args.weights_override.is_none(),
-            "no --weights-override flag must leave weights_override=None");
+        let args =
+            StateArgs::parse_from(["state", "--state", "VT", "--partition-mode", "unweighted"]);
+        assert!(
+            args.weights_override.is_none(),
+            "no --weights-override flag must leave weights_override=None"
+        );
         let algo = AlgorithmConfig::from_state_args(&args);
-        assert!(!algo.weights.geographic,
-            "unweighted preset without override must keep geographic=false");
+        assert!(
+            !algo.weights.geographic,
+            "unweighted preset without override must keep geographic=false"
+        );
     }
 
     #[test]
@@ -4185,12 +5377,17 @@ mod tests {
         use crate::args::StateArgs;
         use clap::Parser;
         let args = StateArgs::parse_from([
-            "state", "--state", "VT",
-            "--weights-override", "vra-aligned",
+            "state",
+            "--state",
+            "VT",
+            "--weights-override",
+            "vra-aligned",
         ]);
         let algo = AlgorithmConfig::from_state_args(&args);
-        assert!(algo.weights.minority_weighting,
-            "--weights-override vra-aligned must set minority_weighting=true");
+        assert!(
+            algo.weights.minority_weighting,
+            "--weights-override vra-aligned must set minority_weighting=true"
+        );
     }
 
     // ── Group 6: AlgorithmConfig.mode_name() method ───────────────────────────
@@ -4201,20 +5398,28 @@ mod tests {
         // mode_name() from AlgorithmConfig must agree with SplitStrategy::mode_name()
         // for every preset that doesn't use mode_label.
         let cases = [
-            (PM::EdgeWeighted,     "edge-weighted"),
-            (PM::MetisVra,         "metis-vra"),
-            (PM::GeoSection,       "geosection"),
-            (PM::CompactBisect,    "compact-bisect"),
-            (PM::AreaSection,      "areasection"),
+            (PM::EdgeWeighted, "edge-weighted"),
+            (PM::MetisVra, "metis-vra"),
+            (PM::GeoSection, "geosection"),
+            (PM::CompactBisect, "compact-bisect"),
+            (PM::AreaSection, "areasection"),
             (PM::ApportionRegions, "apportion-regions"),
         ];
         for (mode, expected) in &cases {
             let algo = AlgorithmConfig::defaults_for_mode(mode);
-            assert_eq!(algo.mode_name(), *expected,
+            assert_eq!(
+                algo.mode_name(),
+                *expected,
                 "AlgorithmConfig::mode_name() must match SplitStrategy::mode_name() \
-                 for mode {:?}", expected);
-            assert_eq!(algo.mode_name(), algo.split.mode_name(),
-                "AlgorithmConfig and SplitStrategy mode_name must agree for {:?}", expected);
+                 for mode {:?}",
+                expected
+            );
+            assert_eq!(
+                algo.mode_name(),
+                algo.split.mode_name(),
+                "AlgorithmConfig and SplitStrategy mode_name must agree for {:?}",
+                expected
+            );
         }
     }
 
@@ -4225,15 +5430,25 @@ mod tests {
         // --structure prime-factor overrides split to ApportionRegions.
         // mode_name must reflect the overridden split.
         let args = StateArgs::parse_from([
-            "state", "--state", "VT",
-            "--partition-mode", "geosection",
-            "--structure", "prime-factor",
+            "state",
+            "--state",
+            "VT",
+            "--partition-mode",
+            "geosection",
+            "--structure",
+            "prime-factor",
         ]);
         let algo = AlgorithmConfig::from_state_args(&args);
-        assert_eq!(algo.mode_name(), "apportion-regions",
-            "after prime-factor structure override, mode_name must be 'apportion-regions'");
-        assert_eq!(algo.mode_name(), algo.split.mode_name(),
-            "AlgorithmConfig and SplitStrategy mode_name must agree after structure override");
+        assert_eq!(
+            algo.mode_name(),
+            "apportion-regions",
+            "after prime-factor structure override, mode_name must be 'apportion-regions'"
+        );
+        assert_eq!(
+            algo.mode_name(),
+            algo.split.mode_name(),
+            "AlgorithmConfig and SplitStrategy mode_name must agree after structure override"
+        );
     }
 
     #[test]
@@ -4246,8 +5461,11 @@ mod tests {
             mode_label: Some("custom"),
             ..AlgorithmConfig::default()
         };
-        assert_eq!(algo.mode_name(), "custom",
-            "mode_label=Some('custom') must take priority over split strategy");
+        assert_eq!(
+            algo.mode_name(),
+            "custom",
+            "mode_label=Some('custom') must take priority over split strategy"
+        );
     }
 
     // ── Group 7: ConvergenceSweep properties ─────────────────────────────────
@@ -4255,15 +5473,17 @@ mod tests {
     #[test]
     fn convergence_sweep_threshold_preserved() {
         let sc = SeedCompositor::ConvergenceSweep { threshold: 500 };
-        assert_eq!(sc.seed_count(), 500,
-            "ConvergenceSweep{{threshold: 500}}.seed_count() must return 500");
+        assert_eq!(
+            sc.seed_count(),
+            500,
+            "ConvergenceSweep{{threshold: 500}}.seed_count() must return 500"
+        );
     }
 
     #[test]
     fn convergence_sweep_is_not_single() {
         let sc = SeedCompositor::ConvergenceSweep { threshold: 500 };
-        assert!(!sc.is_single(),
-            "ConvergenceSweep must not be is_single()");
+        assert!(!sc.is_single(), "ConvergenceSweep must not be is_single()");
     }
 
     #[test]
@@ -4271,14 +5491,13 @@ mod tests {
         use crate::args::StateArgs;
         use clap::Parser;
         // --search convergence without explicit --convergence-threshold uses default 500.
-        let args = StateArgs::parse_from([
-            "state", "--state", "VT",
-            "--search", "convergence",
-        ]);
+        let args = StateArgs::parse_from(["state", "--state", "VT", "--search", "convergence"]);
         let algo = AlgorithmConfig::from_state_args(&args);
         if let SeedCompositor::ConvergenceSweep { threshold } = algo.seeds {
-            assert_eq!(threshold, 500,
-                "default convergence threshold must be 500, got {threshold}");
+            assert_eq!(
+                threshold, 500,
+                "default convergence threshold must be 500, got {threshold}"
+            );
         } else {
             panic!("--search convergence must produce ConvergenceSweep");
         }
@@ -4289,16 +5508,24 @@ mod tests {
         use crate::args::StateArgs;
         use clap::Parser;
         let args = StateArgs::parse_from([
-            "state", "--state", "VT",
-            "--search", "convergence",
-            "--convergence-threshold", "200",
+            "state",
+            "--state",
+            "VT",
+            "--search",
+            "convergence",
+            "--convergence-threshold",
+            "200",
         ]);
-        assert_eq!(args.convergence_threshold, 200,
-            "convergence_threshold must be parsed as 200");
+        assert_eq!(
+            args.convergence_threshold, 200,
+            "convergence_threshold must be parsed as 200"
+        );
         let algo = AlgorithmConfig::from_state_args(&args);
         if let SeedCompositor::ConvergenceSweep { threshold } = algo.seeds {
-            assert_eq!(threshold, 200,
-                "--convergence-threshold 200 must produce ConvergenceSweep{{threshold: 200}}");
+            assert_eq!(
+                threshold, 200,
+                "--convergence-threshold 200 must produce ConvergenceSweep{{threshold: 200}}"
+            );
         } else {
             panic!("--search convergence must produce ConvergenceSweep");
         }
@@ -4312,14 +5539,21 @@ mod tests {
         use clap::Parser;
         // ApportionRegions preset → Single seed (federal statute determinism).
         let args = StateArgs::parse_from([
-            "state", "--state", "VT",
-            "--partition-mode", "apportion-regions",
+            "state",
+            "--state",
+            "VT",
+            "--partition-mode",
+            "apportion-regions",
         ]);
         let algo = AlgorithmConfig::from_state_args(&args);
-        assert!(algo.seeds.is_single(),
-            "apportion-regions from_state_args must produce SeedCompositor::Single");
-        assert!(matches!(algo.split, SplitStrategy::ApportionRegions),
-            "apportion-regions split must be ApportionRegions");
+        assert!(
+            algo.seeds.is_single(),
+            "apportion-regions from_state_args must produce SeedCompositor::Single"
+        );
+        assert!(
+            matches!(algo.split, SplitStrategy::ApportionRegions),
+            "apportion-regions split must be ApportionRegions"
+        );
     }
 
     #[test]
@@ -4329,15 +5563,23 @@ mod tests {
         // compact-bisect preset normally yields Multi seeds.
         // --search convergence must override that to ConvergenceSweep.
         let args = StateArgs::parse_from([
-            "state", "--state", "VT",
-            "--partition-mode", "compact-bisect",
-            "--search", "convergence",
+            "state",
+            "--state",
+            "VT",
+            "--partition-mode",
+            "compact-bisect",
+            "--search",
+            "convergence",
         ]);
         let algo = AlgorithmConfig::from_state_args(&args);
-        assert!(matches!(algo.seeds, SeedCompositor::ConvergenceSweep { .. }),
-            "--search convergence must override compact-bisect Multi preset to ConvergenceSweep");
-        assert!(!algo.seeds.is_single(),
-            "ConvergenceSweep must not be is_single()");
+        assert!(
+            matches!(algo.seeds, SeedCompositor::ConvergenceSweep { .. }),
+            "--search convergence must override compact-bisect Multi preset to ConvergenceSweep"
+        );
+        assert!(
+            !algo.seeds.is_single(),
+            "ConvergenceSweep must not be is_single()"
+        );
     }
 }
 
@@ -4359,12 +5601,12 @@ mod label_pipeline_tests {
     use std::path::{Path, PathBuf};
     use tempfile::TempDir;
 
-    use crate::label;
-    use crate::run_registry::Registry;
     use crate::algo_config::AlgoYaml;
     use crate::build_cmd::{BuildArgs, BuildIndex};
     use crate::import_label::run_label_import;
+    use crate::label;
     use crate::label_cmd::run_mv;
+    use crate::run_registry::Registry;
 
     // ── Helper: switch CWD to a TempDir for registry isolation ───────────────
     //
@@ -4412,13 +5654,12 @@ mod label_pipeline_tests {
     //
     // Mirrors §9.2 Steps 2-6: mark_built → mark_analyzed → mark_reported
     // all complete successfully, registry entry reflects all three stages,
-    // and `.redist` is valid JSON.
+    // and `.bisect` is valid JSON.
     #[test]
     fn test_registry_full_pipeline_in_tempdir() {
         let dir = with_tempdir(|| {
             // Step 1: mark built
-            Registry::mark_built("pipeline_test", "2020")
-                .expect("mark_built must succeed");
+            Registry::mark_built("pipeline_test", "2020").expect("mark_built must succeed");
 
             // Step 2: mark analyzed (requires built)
             Registry::mark_analyzed("pipeline_test", "2020")
@@ -4438,25 +5679,27 @@ mod label_pipeline_tests {
 
             assert!(
                 entry.built.contains(&"2020".to_string()),
-                "built must contain 2020: {:?}", entry.built
+                "built must contain 2020: {:?}",
+                entry.built
             );
             assert!(
                 entry.analyzed.contains(&"2020".to_string()),
-                "analyzed must contain 2020: {:?}", entry.analyzed
+                "analyzed must contain 2020: {:?}",
+                entry.analyzed
             );
             assert!(
                 entry.reported.contains(&"2020".to_string()),
-                "reported must contain 2020: {:?}", entry.reported
+                "reported must contain 2020: {:?}",
+                entry.reported
             );
 
-            // Verify .redist exists and is valid JSON.
-            let registry_path = PathBuf::from(".redist");
-            assert!(registry_path.exists(), ".redist must exist after pipeline");
-            let content = std::fs::read_to_string(&registry_path)
-                .expect("read .redist");
-            let parsed: serde_json::Value = serde_json::from_str(&content)
-                .expect(".redist must be valid JSON");
-            assert!(parsed.is_object(), ".redist must be a JSON object");
+            // Verify .bisect exists and is valid JSON.
+            let registry_path = PathBuf::from(".bisect");
+            assert!(registry_path.exists(), ".bisect must exist after pipeline");
+            let content = std::fs::read_to_string(&registry_path).expect("read .bisect");
+            let parsed: serde_json::Value =
+                serde_json::from_str(&content).expect(".bisect must be valid JSON");
+            assert!(parsed.is_object(), ".bisect must be a JSON object");
         });
         drop(dir);
     }
@@ -4469,7 +5712,10 @@ mod label_pipeline_tests {
     fn test_registry_mark_analyzed_fails_without_build() {
         let dir = with_tempdir(|| {
             let result = Registry::mark_analyzed("not_built", "2020");
-            assert!(result.is_err(), "mark_analyzed must fail when year not built");
+            assert!(
+                result.is_err(),
+                "mark_analyzed must fail when year not built"
+            );
 
             let msg = result.unwrap_err();
             assert!(
@@ -4486,29 +5732,35 @@ mod label_pipeline_tests {
     // and verifies all required keys are present with the correct types.
     #[test]
     fn test_build_index_schema_valid() {
-        use std::io::Write;
         use crate::build_cmd::build_build_index;
+        use std::io::Write;
 
         let mut f = tempfile::NamedTempFile::new().unwrap();
-        f.write_all(b"name: test_plan\nalgorithm:\n  structure: apportion-regions\n  search: single\n").unwrap();
+        f.write_all(
+            b"name: test_plan\nalgorithm:\n  structure: apportion-regions\n  search: single\n",
+        )
+        .unwrap();
 
         let yaml = AlgoYaml::from_file(f.path()).expect("parse YAML");
         let sha = AlgoYaml::file_sha256(f.path()).expect("sha256");
 
-        let index = build_build_index(
-            "test_plan",
-            "2020",
-            &sha,
-            &yaml,
-            &[],
-            &[],
-        ).expect("build_build_index");
+        let index = build_build_index("test_plan", "2020", &sha, &yaml, &[], &[])
+            .expect("build_build_index");
 
         // Verify the JSON representation has all required keys.
         let json_val = serde_json::to_value(&index).expect("serialize");
         let obj = json_val.as_object().expect("must be object");
 
-        for key in &["label", "year", "created", "version", "config_sha256", "algorithm", "states", "summary"] {
+        for key in &[
+            "label",
+            "year",
+            "created",
+            "version",
+            "config_sha256",
+            "algorithm",
+            "states",
+            "summary",
+        ] {
             assert!(
                 obj.contains_key(*key),
                 "BuildIndex JSON must contain key '{}', got keys: {:?}",
@@ -4518,7 +5770,9 @@ mod label_pipeline_tests {
         }
 
         // SHA is 64-char hex.
-        let sha_in_index = obj["config_sha256"].as_str().expect("config_sha256 must be string");
+        let sha_in_index = obj["config_sha256"]
+            .as_str()
+            .expect("config_sha256 must be string");
         assert_eq!(sha_in_index.len(), 64, "config_sha256 must be 64 chars");
         assert!(
             sha_in_index.chars().all(|c| c.is_ascii_hexdigit()),
@@ -4528,7 +5782,10 @@ mod label_pipeline_tests {
         // Summary has total/succeeded/failed.
         let summary = obj["summary"].as_object().expect("summary must be object");
         assert!(summary.contains_key("total"), "summary must have 'total'");
-        assert!(summary.contains_key("succeeded"), "summary must have 'succeeded'");
+        assert!(
+            summary.contains_key("succeeded"),
+            "summary must have 'succeeded'"
+        );
         assert!(summary.contains_key("failed"), "summary must have 'failed'");
     }
 
@@ -4554,12 +5811,17 @@ mod label_pipeline_tests {
                 .expect("import_test must be in registry");
             assert!(
                 entry.built.contains(&"2020".to_string()),
-                "registry must mark import_test/2020 as built: {:?}", entry.built
+                "registry must mark import_test/2020 as built: {:?}",
+                entry.built
             );
 
             // runs/import_test/2020/index.json must exist with algorithm.structure="external".
             let index_path = PathBuf::from("runs/import_test/2020/index.json");
-            assert!(index_path.exists(), "index.json must exist: {}", index_path.display());
+            assert!(
+                index_path.exists(),
+                "index.json must exist: {}",
+                index_path.display()
+            );
             let content = std::fs::read_to_string(&index_path).expect("read index.json");
             let val: serde_json::Value = serde_json::from_str(&content).expect("parse JSON");
             assert_eq!(
@@ -4582,7 +5844,7 @@ mod label_pipeline_tests {
 
     // ── Test 6: mv label updates registry and filesystem ─────────────────────
     //
-    // §9.2-adjacent: label renaming (run_mv) must update both the `.redist`
+    // §9.2-adjacent: label renaming (run_mv) must update both the `.bisect`
     // registry and the `runs/` directory on disk.
     #[test]
     fn test_mv_label_updates_registry() {
@@ -4609,7 +5871,8 @@ mod label_pipeline_tests {
                 .expect("new_label must be in registry after mv");
             assert!(
                 entry.built.contains(&"2020".to_string()),
-                "new_label must carry the built years: {:?}", entry.built
+                "new_label must carry the built years: {:?}",
+                entry.built
             );
 
             // runs/new_label/ must exist; runs/old_label/ must not.
@@ -4658,8 +5921,7 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
         f.write_all(yaml_content.as_bytes()).unwrap();
 
         // Load and parse.
-        let yaml = AlgoYaml::from_file(f.path())
-            .expect("official_proposal YAML must parse");
+        let yaml = AlgoYaml::from_file(f.path()).expect("official_proposal YAML must parse");
 
         // Verify structure == "apportion-regions".
         assert_eq!(
@@ -4675,7 +5937,8 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
         );
 
         // Round-trip to AlgorithmConfig must succeed.
-        let algo = yaml.to_algorithm_config()
+        let algo = yaml
+            .to_algorithm_config()
             .expect("to_algorithm_config must succeed for official_proposal YAML");
 
         // Confirm the split strategy is ApportionRegions.
@@ -4717,7 +5980,11 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
 
             // run_build with dry_run=true must succeed.
             let result = crate::build_cmd::run_build(args);
-            assert!(result.is_ok(), "dry_run run_build must succeed: {:?}", result);
+            assert!(
+                result.is_ok(),
+                "dry_run run_build must succeed: {:?}",
+                result
+            );
 
             // runs/test_run/ must NOT exist (dry run creates nothing).
             assert!(
@@ -4729,7 +5996,8 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
             let labels = Registry::list_labels().expect("list_labels");
             assert!(
                 labels.is_empty(),
-                "registry must be empty after dry_run build: {:?}", labels
+                "registry must be empty after dry_run build: {:?}",
+                labels
             );
         });
         drop(dir);
@@ -4738,7 +6006,7 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
     // ════════════════════════════════════════════════════════════════════════
     // L1 TESTS — real file I/O in a temp directory, no METIS / census data
     //
-    // Run with `cargo +stable test -p redist-cli -- --test-threads=1`
+    // Run with `cargo +stable test -p BISECT-cli -- --test-threads=1`
     // (set_current_dir is process-wide; serial execution is mandatory).
     // ════════════════════════════════════════════════════════════════════════
 
@@ -4755,7 +6023,8 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
     fn test_import_csv_full_pipeline_in_tempdir() {
         let dir = with_tempdir(|| {
             // Write CSV with 4 Wisconsin tracts (FIPS "55")
-            let csv = "GEOID,district\n55001010100,1\n55001010200,1\n55009010100,2\n55009010200,2\n";
+            let csv =
+                "GEOID,district\n55001010100,1\n55001010200,1\n55009010100,2\n55009010200,2\n";
             let csv_path = PathBuf::from("test_plan.csv");
             std::fs::write(&csv_path, csv).expect("write CSV");
 
@@ -4776,8 +6045,7 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
             assert!(v.is_object(), "index.json must be a JSON object");
 
             // Verify assignments.json exists
-            let asgn_path =
-                PathBuf::from("runs/csv_import_test/2020/wisconsin/assignments.json");
+            let asgn_path = PathBuf::from("runs/csv_import_test/2020/wisconsin/assignments.json");
             assert!(
                 asgn_path.exists(),
                 "wisconsin/assignments.json must exist: {}",
@@ -4790,7 +6058,8 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
                 .expect("csv_import_test must be in registry");
             assert!(
                 entry.built.contains(&"2020".to_string()),
-                "registry must mark csv_import_test/2020 as built: {:?}", entry.built
+                "registry must mark csv_import_test/2020 as built: {:?}",
+                entry.built
             );
 
             // Verify algorithm.structure == "external"
@@ -4825,8 +6094,7 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
             // Create runs/source_label/2020/ with a sentinel file
             let src_year_dir = PathBuf::from("runs/source_label/2020");
             std::fs::create_dir_all(&src_year_dir).expect("create source dir");
-            std::fs::write(src_year_dir.join("sentinel.txt"), "data")
-                .expect("write sentinel");
+            std::fs::write(src_year_dir.join("sentinel.txt"), "data").expect("write sentinel");
 
             // Write runs/source_label/index.json (top-level) with label field
             let src_index_dir = PathBuf::from("runs/source_label");
@@ -4842,8 +6110,7 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
             .expect("write source index.json");
 
             // Execute mv
-            run_mv("source_label", "dest_label", false)
-                .expect("run_mv must succeed");
+            run_mv("source_label", "dest_label", false).expect("run_mv must succeed");
 
             // runs/dest_label/2020/ must exist
             assert!(
@@ -4860,8 +6127,7 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
             // runs/dest_label/index.json must have label == "dest_label"
             let dst_index_path = PathBuf::from("runs/dest_label/index.json");
             if dst_index_path.exists() {
-                let raw = std::fs::read_to_string(&dst_index_path)
-                    .expect("read dest index.json");
+                let raw = std::fs::read_to_string(&dst_index_path).expect("read dest index.json");
                 let v: serde_json::Value =
                     serde_json::from_str(&raw).expect("parse dest index.json");
                 assert_eq!(
@@ -4881,7 +6147,8 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
                 .expect("dest_label must be in registry after mv");
             assert!(
                 dest_entry.built.contains(&"2020".to_string()),
-                "dest_label must carry built years: {:?}", dest_entry.built
+                "dest_label must carry built years: {:?}",
+                dest_entry.built
             );
         });
         drop(dir);
@@ -4900,8 +6167,8 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
     //   6. Call run_label_verify → Ok (VERIFIED).
     #[test]
     fn test_verify_full_sha_chain_tempdir() {
-        use sha2::{Digest, Sha256};
         use crate::label_cmd::run_verify;
+        use sha2::{Digest, Sha256};
 
         let dir = with_tempdir(|| {
             // Step 1: Write config file and compute its SHA-256
@@ -4985,7 +6252,8 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
             let result = run_verify("test_verify", Some("2020"));
             assert!(
                 result.is_ok(),
-                "full matching SHA chain must return VERIFIED: {:?}", result
+                "full matching SHA chain must return VERIFIED: {:?}",
+                result
             );
         });
         drop(dir);
@@ -5000,7 +6268,7 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
     //   4. Verify registry has no entry for "dry_run_test".
     #[test]
     fn test_build_dry_run_creates_no_files() {
-        use crate::build_cmd::{BuildArgs, run_build};
+        use crate::build_cmd::{run_build, BuildArgs};
 
         let dir = with_tempdir(|| {
             // Write minimal config YAML
@@ -5034,7 +6302,8 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
             let entry = Registry::get("dry_run_test").expect("registry get");
             assert!(
                 entry.is_none(),
-                "registry must not contain dry_run_test after dry_run build: {:?}", entry
+                "registry must not contain dry_run_test after dry_run build: {:?}",
+                entry
             );
         });
         drop(dir);
@@ -5057,8 +6326,7 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
             Registry::mark_built("mock_analyze_test", "2020").expect("mark_built");
 
             // Step 2: Create final_assignments.json (run_analyze_state looks for this)
-            let state_dir =
-                PathBuf::from("runs/mock_analyze_test/2020/vermont");
+            let state_dir = PathBuf::from("runs/mock_analyze_test/2020/vermont");
             std::fs::create_dir_all(&state_dir).expect("create state dir");
             let assignments = serde_json::json!({"1": [1, 2, 3], "2": [4, 5, 6]});
             std::fs::write(
@@ -5085,13 +6353,8 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
             // Step 4: Call run_label_analyze
             let types: Vec<String> = vec!["summary".to_string()];
             let states: Vec<String> = vec![];
-            let result = run_label_analyze(
-                "mock_analyze_test",
-                &types,
-                Some("2020"),
-                &states,
-                false,
-            );
+            let result =
+                run_label_analyze("mock_analyze_test", &types, Some("2020"), &states, false);
 
             // Regardless of Ok or Err, check what was written
             match result {
@@ -5100,8 +6363,8 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
                     let analysis_index =
                         PathBuf::from("analysis/mock_analyze_test/2020/index.json");
                     if analysis_index.exists() {
-                        let raw = std::fs::read_to_string(&analysis_index)
-                            .expect("read analysis index");
+                        let raw =
+                            std::fs::read_to_string(&analysis_index).expect("read analysis index");
                         let v: serde_json::Value =
                             serde_json::from_str(&raw).expect("parse analysis index");
                         assert!(
@@ -5129,10 +6392,7 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
                     );
                     // At minimum: verify the function doesn't panic and produces
                     // a human-readable error message.
-                    assert!(
-                        !e.is_empty(),
-                        "error message must not be empty"
-                    );
+                    assert!(!e.is_empty(), "error message must not be empty");
                 }
             }
         });
@@ -5145,11 +6405,11 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
     //   1. mark_built("label_a", "2020")
     //   2. mark_built("label_b", "2020")
     //   3. list_labels() contains both
-    //   4. .redist file is valid JSON with both entries
+    //   4. .bisect file is valid JSON with both entries
     //
     // Note: true concurrency testing requires threads but set_current_dir
     // is process-wide; this test verifies sequential write correctness and
-    // that the atomic rename leaves no .redist.tmp artifact.
+    // that the atomic rename leaves no .bisect.tmp artifact.
     #[test]
     fn test_registry_concurrent_write_sequential_simulation() {
         let dir = with_tempdir(|| {
@@ -5169,25 +6429,24 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
                 "registry must contain label_b: {names:?}"
             );
 
-            // .redist must be valid JSON with both entries
-            let content =
-                std::fs::read_to_string(".redist").expect(".redist must exist");
+            // .bisect must be valid JSON with both entries
+            let content = std::fs::read_to_string(".bisect").expect(".bisect must exist");
             let v: serde_json::Value =
-                serde_json::from_str(&content).expect(".redist must be valid JSON");
-            assert!(v.is_object(), ".redist must be a JSON object");
+                serde_json::from_str(&content).expect(".bisect must be valid JSON");
+            assert!(v.is_object(), ".bisect must be a JSON object");
             assert!(
                 v.get("label_a").is_some(),
-                "label_a must appear in .redist JSON: {v}"
+                "label_a must appear in .bisect JSON: {v}"
             );
             assert!(
                 v.get("label_b").is_some(),
-                "label_b must appear in .redist JSON: {v}"
+                "label_b must appear in .bisect JSON: {v}"
             );
 
-            // .redist.tmp must not exist after successful save (atomic rename)
+            // .bisect.tmp must not exist after successful save (atomic rename)
             assert!(
-                !PathBuf::from(".redist.tmp").exists(),
-                ".redist.tmp must not exist after atomic rename"
+                !PathBuf::from(".bisect.tmp").exists(),
+                ".bisect.tmp must not exist after atomic rename"
             );
         });
         drop(dir);
@@ -5201,7 +6460,7 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
     //   (or copy VT adjacency from outputs/V3/data/2020/adjacency/)
     //
     // Run with:
-    //   cargo +stable test -p redist-cli label_pipeline_tests::test_build_label_ \
+    //   cargo +stable test -p BISECT-cli label_pipeline_tests::test_build_label_ \
     //       -- --ignored --test-threads=1
     // ════════════════════════════════════════════════════════════════════════
 
@@ -5212,7 +6471,7 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
     #[test]
     #[ignore = "requires adjacency data: bisect fetch --type adjacency --states VT --year 2020"]
     fn test_build_label_vermont_2020() {
-        use crate::build_cmd::{BuildArgs, run_build};
+        use crate::build_cmd::{run_build, BuildArgs};
 
         let dir = with_tempdir(|| {
             // Write configs/vt_l2_test.yml
@@ -5262,8 +6521,7 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
             }
 
             // If build succeeded: verify outputs
-            let assignments =
-                PathBuf::from("runs/vt_l2_test/2020/vermont/assignments.json");
+            let assignments = PathBuf::from("runs/vt_l2_test/2020/vermont/assignments.json");
             assert!(
                 assignments.exists(),
                 "vermont/assignments.json must exist after VT build"
@@ -5274,17 +6532,15 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
             let content = std::fs::read_to_string(&index_path).expect("read index.json");
             let v: serde_json::Value = serde_json::from_str(&content).expect("parse index.json");
             let succeeded = v["summary"]["succeeded"].as_u64().unwrap_or(0);
-            assert!(
-                succeeded >= 1,
-                "summary.succeeded must be >= 1 for VT: {v}"
-            );
+            assert!(succeeded >= 1, "summary.succeeded must be >= 1 for VT: {v}");
 
             let entry = Registry::get("vt_l2_test")
                 .expect("registry get")
                 .expect("vt_l2_test must be in registry");
             assert!(
                 entry.built.contains(&"2020".to_string()),
-                "registry must mark vt_l2_test/2020 as built: {:?}", entry.built
+                "registry must mark vt_l2_test/2020 as built: {:?}",
+                entry.built
             );
         });
         drop(dir);
@@ -5299,7 +6555,7 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
     #[test]
     #[ignore = "requires adjacency data: bisect fetch --type adjacency --states VT --year 2020"]
     fn test_build_then_verify_sha_chain_vermont() {
-        use crate::build_cmd::{BuildArgs, run_build};
+        use crate::build_cmd::{run_build, BuildArgs};
         use crate::label_cmd::run_verify;
 
         let dir = with_tempdir(|| {
@@ -5360,7 +6616,7 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
     #[test]
     #[ignore = "requires adjacency data: bisect fetch --type adjacency --states VT --year 2020"]
     fn test_build_mv_then_analyze_vermont() {
-        use crate::build_cmd::{BuildArgs, run_build};
+        use crate::build_cmd::{run_build, BuildArgs};
         use crate::label_cmd::run_mv;
 
         let dir = with_tempdir(|| {
@@ -5397,10 +6653,7 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
 
             // Execute mv: rename vt_l2_test → vt_l2_renamed
             let mv_result = run_mv("vt_l2_test", "vt_l2_renamed", false);
-            assert!(
-                mv_result.is_ok(),
-                "run_mv must succeed: {:?}", mv_result
-            );
+            assert!(mv_result.is_ok(), "run_mv must succeed: {:?}", mv_result);
 
             // Registry must show new name
             assert!(
@@ -5412,7 +6665,8 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
                 .expect("vt_l2_renamed must be in registry");
             assert!(
                 renamed_entry.built.contains(&"2020".to_string()),
-                "vt_l2_renamed must carry built years: {:?}", renamed_entry.built
+                "vt_l2_renamed must carry built years: {:?}",
+                renamed_entry.built
             );
 
             // Old directories gone, new directories present

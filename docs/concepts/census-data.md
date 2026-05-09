@@ -26,7 +26,7 @@ The Census Bureau publishes special redistricting files after each decennial cen
 - Race/ethnicity counts (for VRA analysis)
 - Voting-age population counts
 
-These are tab-separated files with cryptic column names defined in the PL 94-171 technical documentation. The `redist` data layer parses and merges them automatically during the build stage.
+These are tab-separated files with cryptic column names defined in the PL 94-171 technical documentation. The `BISECT` data layer parses and merges them automatically during the build stage.
 
 ### 3. ACS demographics (`data/{year}/demographics/`)
 

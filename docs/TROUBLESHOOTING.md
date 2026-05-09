@@ -561,7 +561,7 @@ taskkill /F /IM python.exe
 
 **Warning**: Force killing may leave incomplete output files. Use `--reset` on next run to clean up.
 
-**Rust CLI**: The `redist` binary responds correctly to Ctrl+C — no force kill needed.
+**Rust CLI**: The `BISECT` binary responds correctly to Ctrl+C — no force kill needed.
 
 ## Getting Help
 

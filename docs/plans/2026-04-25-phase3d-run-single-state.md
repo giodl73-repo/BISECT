@@ -35,13 +35,13 @@ The Python pipeline (`run_state_redistricting.py`) does this sequence for each s
 
 | File | Action | Responsibility |
 |---|---|---|
-| `redist/crates/bisect-cli/src/runner.rs` | **Modify** | Implement `run_single_state` and helpers |
-| `redist/crates/bisect-cli/src/adjacency_loader.rs` | **Create** | Load `.pkl` adjacency graph via Python subprocess shim |
-| `redist/crates/bisect-cli/src/demographics.rs` | **Create** | Read demographics CSV, compute per-tract minority fracs |
-| `redist/crates/bisect-cli/src/bisection_runner.rs` | **Create** | Level-parallel METIS bisection loop |
-| `redist/crates/bisect-cli/src/lib.rs` | **Modify** | Expose new modules |
-| `redist/crates/bisect-cli/src/main.rs` | **Modify** | Wire `Commands::State` to actual runner |
-| `redist/crates/bisect-cli/Cargo.toml` | **Modify** | Add `bisect-analysis` dependency |
+| `BISECT/crates/bisect-cli/src/runner.rs` | **Modify** | Implement `run_single_state` and helpers |
+| `BISECT/crates/bisect-cli/src/adjacency_loader.rs` | **Create** | Load `.pkl` adjacency graph via Python subprocess shim |
+| `BISECT/crates/bisect-cli/src/demographics.rs` | **Create** | Read demographics CSV, compute per-tract minority fracs |
+| `BISECT/crates/bisect-cli/src/bisection_runner.rs` | **Create** | Level-parallel METIS bisection loop |
+| `BISECT/crates/bisect-cli/src/lib.rs` | **Modify** | Expose new modules |
+| `BISECT/crates/bisect-cli/src/main.rs` | **Modify** | Wire `Commands::State` to actual runner |
+| `BISECT/crates/bisect-cli/Cargo.toml` | **Modify** | Add `bisect-analysis` dependency |
 | `tests/acceptance/test_pipeline_acceptance.py` | **Modify** | Add `TestRustCLIAcceptance` class using `bisect state` binary |
 
 ---
@@ -60,8 +60,8 @@ Option A is implemented here. Option B is straightforward once the full pipeline
 ## Task 1: Adjacency loader — pkl → JSON shim
 
 **Files:**
-- Create: `redist/crates/bisect-cli/src/adjacency_loader.rs`
-- Modify: `redist/crates/bisect-cli/src/lib.rs`
+- Create: `BISECT/crates/bisect-cli/src/adjacency_loader.rs`
+- Modify: `BISECT/crates/bisect-cli/src/lib.rs`
 
 ### What it does
 Invokes a one-liner Python process to dump the pkl adjacency as JSON, reads the JSON back into Rust types.
@@ -90,7 +90,7 @@ Expected: FAIL — `load_adjacency_pkl` not defined.
 - [ ] **Step 2: Create `adjacency_loader.rs`**
 
 ```rust
-// redist/crates/bisect-cli/src/adjacency_loader.rs
+// BISECT/crates/bisect-cli/src/adjacency_loader.rs
 use std::collections::HashMap;
 use std::path::Path;
 use std::process::Command;
@@ -170,7 +170,7 @@ pub fn load_adjacency_pkl(pkl_path: &Path) -> Result<LoadedGraph, String> {
 - [ ] **Step 3: Add to `lib.rs`**
 
 ```rust
-// redist/crates/bisect-cli/src/lib.rs
+// BISECT/crates/bisect-cli/src/lib.rs
 pub mod adjacency_loader;
 ```
 
@@ -185,7 +185,7 @@ Expected: PASS for VT (193 vertices, 500 edges).
 - [ ] **Step 5: Commit**
 
 ```bash
-git add redist/crates/bisect-cli/src/adjacency_loader.rs redist/crates/bisect-cli/src/lib.rs
+git add BISECT/crates/bisect-cli/src/adjacency_loader.rs BISECT/crates/bisect-cli/src/lib.rs
 git commit -m "Phase 3d Task 1: adjacency loader (pkl -> python shim -> Rust)"
 ```
 
@@ -194,8 +194,8 @@ git commit -m "Phase 3d Task 1: adjacency loader (pkl -> python shim -> Rust)"
 ## Task 2: Demographics reader (CSV → per-tract minority fracs)
 
 **Files:**
-- Create: `redist/crates/bisect-cli/src/demographics.rs`
-- Modify: `redist/crates/bisect-cli/src/lib.rs`
+- Create: `BISECT/crates/bisect-cli/src/demographics.rs`
+- Modify: `BISECT/crates/bisect-cli/src/lib.rs`
 
 ### What it does
 Reads `data/{year}/demographics/{state_name}_demographics_{year}.csv`, joins to adjacency by GEOID, returns `Vec<f64>` of per-tract minority fractions in adjacency index order.
@@ -221,7 +221,7 @@ fn test_demographics_vermont() {
 - [ ] **Step 2: Create `demographics.rs`**
 
 ```rust
-// redist/crates/bisect-cli/src/demographics.rs
+// BISECT/crates/bisect-cli/src/demographics.rs
 use std::collections::HashMap;
 use std::path::Path;
 
@@ -294,7 +294,7 @@ Expected: PASS — 193 tracts, all fracs in [0, 1].
 - [ ] **Step 5: Commit**
 
 ```bash
-git add redist/crates/bisect-cli/src/demographics.rs redist/crates/bisect-cli/src/lib.rs
+git add BISECT/crates/bisect-cli/src/demographics.rs BISECT/crates/bisect-cli/src/lib.rs
 git commit -m "Phase 3d Task 2: demographics CSV reader + adjacency alignment"
 ```
 
@@ -303,9 +303,9 @@ git commit -m "Phase 3d Task 2: demographics CSV reader + adjacency alignment"
 ## Task 3: METIS subprocess runner (subgraph bisection)
 
 **Files:**
-- Create: `redist/crates/bisect-cli/src/bisection_runner.rs`
-- Modify: `redist/crates/bisect-cli/src/lib.rs`
-- Modify: `redist/crates/bisect-cli/Cargo.toml` (add `bisect-analysis`)
+- Create: `BISECT/crates/bisect-cli/src/bisection_runner.rs`
+- Modify: `BISECT/crates/bisect-cli/src/lib.rs`
+- Modify: `BISECT/crates/bisect-cli/Cargo.toml` (add `bisect-analysis`)
 
 ### What it does
 Given a subgraph (subset of tract indices), write it as a METIS file, invoke `gpmetis`, parse output, return left/right partition sets. This is the core operation called once per node in the bisection tree.
@@ -348,11 +348,11 @@ fn test_split_four_node_graph() {
 - [ ] **Step 2: Create `bisection_runner.rs`**
 
 ```rust
-// redist/crates/bisect-cli/src/bisection_runner.rs
+// BISECT/crates/bisect-cli/src/bisection_runner.rs
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use std::process::Command;
-use redist_core::metis_format::{write_metis_graph, parse_metis_partition};
+use BISECT_core::metis_format::{write_metis_graph, parse_metis_partition};
 
 /// Find the gpmetis executable (cross-platform).
 pub fn find_gpmetis() -> Option<String> {
@@ -486,7 +486,7 @@ pub mod bisection_runner;
 - [ ] **Step 4: Add tempfile dev dependency to Cargo.toml**
 
 ```toml
-# redist/crates/bisect-cli/Cargo.toml
+# BISECT/crates/bisect-cli/Cargo.toml
 [dependencies]
 ...
 tempfile = "3"
@@ -505,7 +505,7 @@ If gpmetis not in PATH: test will return `Err("gpmetis not found")` — adjust t
 - [ ] **Step 6: Commit**
 
 ```bash
-git add redist/crates/bisect-cli/src/bisection_runner.rs redist/crates/bisect-cli/src/lib.rs redist/crates/bisect-cli/Cargo.toml
+git add BISECT/crates/bisect-cli/src/bisection_runner.rs BISECT/crates/bisect-cli/src/lib.rs BISECT/crates/bisect-cli/Cargo.toml
 git commit -m "Phase 3d Task 3: subgraph METIS splitter (gpmetis subprocess)"
 ```
 
@@ -514,7 +514,7 @@ git commit -m "Phase 3d Task 3: subgraph METIS splitter (gpmetis subprocess)"
 ## Task 4: Full bisection loop (`run_all_splits`)
 
 **Files:**
-- Modify: `redist/crates/bisect-cli/src/bisection_runner.rs`
+- Modify: `BISECT/crates/bisect-cli/src/bisection_runner.rs`
 
 ### What it does
 Iterates the `BisectionTree` level by level (level-parallel), calling `split_subgraph` for each node at that depth, accumulating the partition assignments.
@@ -542,7 +542,7 @@ fn test_run_all_splits_vermont_single_district() {
 - [ ] **Step 2: Add `run_all_splits` to `bisection_runner.rs`**
 
 ```rust
-use redist_core::{BisectionTree, max_depth_for_k};
+use BISECT_core::{BisectionTree, max_depth_for_k};
 
 /// Run the full level-parallel bisection for k districts.
 /// Returns HashMap<tract_index, district_id> (1-based district IDs).
@@ -582,7 +582,7 @@ pub fn run_all_splits(
         // KEY: extract node data sequentially BEFORE parallel section.
         // This moves ownership out of node_tracts, so par_iter closures
         // own their data entirely — no shared reference, no data race.
-        let nodes_with_tracts: Vec<(redist_core::BisectionNode, HashSet<usize>)> =
+        let nodes_with_tracts: Vec<(BISECT_core::BisectionNode, HashSet<usize>)> =
             nodes_at_depth.into_iter()
                 .filter_map(|node| {
                     node_tracts.remove(&node.path).map(|tracts| (node, tracts))
@@ -677,7 +677,7 @@ Expected: PASS (single-district test requires no gpmetis; two-district test skip
 - [ ] **Step 5: Commit**
 
 ```bash
-git add redist/crates/bisect-cli/src/bisection_runner.rs
+git add BISECT/crates/bisect-cli/src/bisection_runner.rs
 git commit -m "Phase 3d Task 4: level-parallel bisection loop (run_all_splits)"
 ```
 
@@ -686,8 +686,8 @@ git commit -m "Phase 3d Task 4: level-parallel bisection loop (run_all_splits)"
 ## Task 5: Implement `run_single_state`
 
 **Files:**
-- Modify: `redist/crates/bisect-cli/src/runner.rs`
-- Modify: `redist/crates/bisect-cli/Cargo.toml` (add `bisect-analysis`)
+- Modify: `BISECT/crates/bisect-cli/src/runner.rs`
+- Modify: `BISECT/crates/bisect-cli/Cargo.toml` (add `bisect-analysis`)
 
 ### What it does
 Wires all the pieces: load adjacency → (VRA: load demographics + build edge weights) → run_all_splits → assert_balanced → write_state_outputs.
@@ -695,7 +695,7 @@ Wires all the pieces: load adjacency → (VRA: load demographics + build edge we
 - [ ] **Step 1: Add `bisect-analysis` to Cargo.toml**
 
 ```toml
-# redist/crates/bisect-cli/Cargo.toml
+# BISECT/crates/bisect-cli/Cargo.toml
 [dependencies]
 bisect-analysis = { path = "../bisect-analysis" }
 ```
@@ -709,8 +709,8 @@ use crate::bisection_runner::run_all_splits;
 use crate::demographics::{load_demographics, align_demographics_to_adjacency};
 use crate::output::{write_state_outputs, clean_corrupt_state};
 use crate::status::status;
-use redist_core::{Partition, build_vra_edge_weights};
-use redist_analysis::analyze_mm_districts;
+use BISECT_core::{Partition, build_vra_edge_weights};
+use BISECT_analysis::analyze_mm_districts;
 
 fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
     let state_lower = cfg.state_code.to_lowercase();
@@ -806,10 +806,10 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
         let analysis = analyze_mm_districts(
             &assignments, &total_pops, &minority_pops, &zeros, &zeros, 0.50
         );
-        let vra_out = redist_cli::output::VraAnalysis {
+        let vra_out = BISECT_cli::output::VraAnalysis {
             mm_count: analysis.mm_count,
             mm_districts: analysis.mm_districts,
-            districts: analysis.districts.iter().map(|d| redist_cli::output::VraDistrict {
+            districts: analysis.districts.iter().map(|d| BISECT_cli::output::VraDistrict {
                 district: d.district,
                 pct_minority: d.pct_minority,
                 pct_black: d.pct_black,
@@ -872,10 +872,10 @@ fn state_name_for(state_code: &str) -> Result<String, String> {
 - [ ] **Step 3: Wire `main.rs` to call the real runner**
 
 ```rust
-// redist/crates/bisect-cli/src/main.rs
+// BISECT/crates/bisect-cli/src/main.rs
 use clap::Parser;
-use redist_cli::args::{Cli, Commands};
-use redist_cli::runner::{StateConfig, run_states_parallel};
+use BISECT_cli::args::{Cli, Commands};
+use BISECT_cli::runner::{StateConfig, run_states_parallel};
 
 fn main() {
     let cli = Cli::parse();
@@ -907,7 +907,7 @@ fn main() {
             }
         }
         Commands::Run(args) => {
-            eprintln!("redist run: full multi-year pipeline not yet implemented");
+            eprintln!("BISECT run: full multi-year pipeline not yet implemented");
             std::process::exit(1);
         }
         Commands::States(args) => {
@@ -921,7 +921,7 @@ fn main() {
 - [ ] **Step 4: Build**
 
 ```
-cd redist && cargo build -p bisect-cli --release 2>&1 | tail -5
+cargo build -p bisect-cli --release 2>&1 | tail -5
 ```
 
 Expected: compiles. Warnings OK; errors not OK.
@@ -929,7 +929,7 @@ Expected: compiles. Warnings OK; errors not OK.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add redist/crates/bisect-cli/src/runner.rs redist/crates/bisect-cli/src/main.rs redist/crates/bisect-cli/Cargo.toml
+git add BISECT/crates/bisect-cli/src/runner.rs BISECT/crates/bisect-cli/src/main.rs BISECT/crates/bisect-cli/Cargo.toml
 git commit -m "Phase 3d Task 5: implement run_single_state and wire main.rs"
 ```
 
@@ -945,11 +945,11 @@ git commit -m "Phase 3d Task 5: implement run_single_state and wire main.rs"
 ```python
 # Add to tests/acceptance/test_pipeline_acceptance.py
 
-REDIST_BIN = Path('redist/target/release/redist.exe'
+BISECT_BIN = Path('target/release/bisect.exe'
                   if sys.platform == 'win32'
-                  else 'redist/target/release/redist')
+                  else 'target/release/bisect')
 
-@pytest.mark.skipif(not REDIST_BIN.exists(), reason='redist binary not built')
+@pytest.mark.skipif(not BISECT_BIN.exists(), reason='BISECT binary not built')
 @pytest.mark.skipif(not adjacency_exists('VT'), reason='VT adjacency not found')
 class TestRustCLIAcceptance:
     """Verify `bisect state` produces correct output via the Rust binary."""
@@ -957,7 +957,7 @@ class TestRustCLIAcceptance:
     @pytest.fixture(scope='class')
     def vt_rust_output(self, tmp_dir):
         result = subprocess.run(
-            [str(REDIST_BIN), 'state',
+            [str(BISECT_BIN), 'state',
              '--state', 'VT', '--year', '2020', '--version', 'V3',
              '--output-dir', str(tmp_dir / 'rust_vt'),
              '--position', '999'],
@@ -1003,7 +1003,7 @@ Expected: 3 passed.
 @pytest.fixture(scope='class')
 def al_rust_output(self, tmp_dir):
     result = subprocess.run(
-        [str(REDIST_BIN), 'state',
+        [str(BISECT_BIN), 'state',
          '--state', 'AL', '--year', '2020', '--version', 'V4',
          '--partition-mode', 'metis-vra',
          '--output-dir', str(tmp_dir / 'rust_al'),
@@ -1063,7 +1063,7 @@ git commit -m "Phase 3d Task 6: end-to-end acceptance tests for Rust CLI"
 $env:PATH += ";$env:USERPROFILE\.cargo\bin"
 hyperfine --warmup 1 --runs 3 \
   'python scripts/pipeline/run_state_redistricting.py --state VT --year 2020 --version V3 --position 999' \
-  'redist/target/release/bisect state --state VT --year 2020 --version V3 --position 999'
+  'target/release/bisect state --state VT --year 2020 --version V3 --position 999'
 ```
 
 Record output in `design/rust-port/migration-log.md`.
@@ -1136,7 +1136,7 @@ git commit -m "Phase 3d: record benchmarks and update migration log"
 ## Task 8: Wire `bisect states` — 50-state parallel runner
 
 **Files:**
-- Modify: `redist/crates/bisect-cli/src/main.rs`
+- Modify: `BISECT/crates/bisect-cli/src/main.rs`
 
 ### What it does
 `Commands::States` already calls `run_states_parallel` but exits with "not yet implemented". Once `run_single_state` works (Task 5), this is a direct wiring job: build a `Vec<StateConfig>` for every state in the 2020 config and pass it to `run_states_parallel`.
@@ -1147,10 +1147,10 @@ State list comes from `scripts/config_2020.py` via a Python subprocess (same pat
 
 ```python
 # tests/acceptance/test_pipeline_acceptance.py — add to TestRustCLIAcceptance
-def test_redist_states_runs_vermont_and_delaware(self, tmp_dir):
+def test_BISECT_states_runs_vermont_and_delaware(self, tmp_dir):
     """bisect states processes a subset of states without crashing."""
     result = subprocess.run(
-        [str(REDIST_BIN), 'states',
+        [str(BISECT_BIN), 'states',
          '--year', '2020', '--version', 'V3',
          '--output-dir', str(tmp_dir / 'rust_states'),
          '--states', 'VT', 'DE',
@@ -1163,7 +1163,7 @@ def test_redist_states_runs_vermont_and_delaware(self, tmp_dir):
         assert (tmp_dir / 'rust_states' / 'states' / state / 'data' / 'final_assignments.json').exists()
 ```
 
-Run: `pytest tests/acceptance/ -k test_redist_states -v`
+Run: `pytest tests/acceptance/ -k test_BISECT_states -v`
 Expected: FAIL — "not yet implemented".
 
 - [ ] **Step 2: Load state list helper**
@@ -1196,14 +1196,14 @@ pub fn load_all_states(year: &str) -> Result<Vec<(String, usize)>, String> {
 
 ```rust
 Commands::States(args) => {
-    let all_states = redist_cli::runner::load_all_states(&args.year.to_string())
+    let all_states = BISECT_cli::runner::load_all_states(&args.year.to_string())
         .unwrap_or_else(|e| { eprintln!("failed to load state list: {e}"); std::process::exit(1); });
 
     // Filter to requested states if --states provided
     let states_filter: std::collections::HashSet<String> = args.states
         .iter().map(|s| s.to_uppercase()).collect();
 
-    let configs: Vec<redist_cli::runner::StateConfig> = all_states.into_iter()
+    let configs: Vec<BISECT_cli::runner::StateConfig> = all_states.into_iter()
         .filter(|(code, _)| states_filter.is_empty() || states_filter.contains(code))
         .enumerate()
         .map(|(i, (code, districts))| {
@@ -1211,7 +1211,7 @@ Commands::States(args) => {
             // to avoid spawning Python once per state inside the parallel pool.
             let state_name = code.to_lowercase().replace(' ', "_");  // simple fallback
             // For accurate name (e.g., "new_york"), use load_all_states to return names too.
-            redist_cli::runner::StateConfig {
+            BISECT_cli::runner::StateConfig {
                 state_code: code,
                 state_name,
                 num_districts: districts,
@@ -1230,10 +1230,10 @@ Commands::States(args) => {
         })
         .collect();
 
-    let filtered = redist_cli::runner::filter_incomplete(configs);
+    let filtered = BISECT_cli::runner::filter_incomplete(configs);
     eprintln!("[bisect states] processing {} states with {} workers", filtered.len(), args.workers);
 
-    let results = redist_cli::runner::run_states_parallel(filtered, args.workers);
+    let results = BISECT_cli::runner::run_states_parallel(filtered, args.workers);
     let failures: Vec<_> = results.iter().filter(|r| !r.success).collect();
     for f in &failures {
         eprintln!("FAILED {}: {}", f.state_code, f.error.as_deref().unwrap_or(""));
@@ -1248,13 +1248,13 @@ Commands::States(args) => {
 - [ ] **Step 4: Build**
 
 ```
-cd redist && cargo build -p bisect-cli --release 2>&1 | tail -3
+cargo build -p bisect-cli --release 2>&1 | tail -3
 ```
 
 - [ ] **Step 5: Run acceptance test**
 
 ```
-pytest tests/acceptance/ -k test_redist_states -v --tb=short
+pytest tests/acceptance/ -k test_BISECT_states -v --tb=short
 ```
 
 Expected: PASS — VT and DE both produce `final_assignments.json`.
@@ -1262,7 +1262,7 @@ Expected: PASS — VT and DE both produce `final_assignments.json`.
 - [ ] **Step 6: Verify full 50-state dry-run (print only)**
 
 ```bash
-redist/target/release/bisect states \
+target/release/bisect states \
   --year 2020 --version V3 \
   --output-dir outputs/V3 \
   --workers 1 \
@@ -1274,17 +1274,17 @@ Confirm 3 states complete without error before committing.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add redist/crates/bisect-cli/src/main.rs redist/crates/bisect-cli/src/runner.rs
+git add BISECT/crates/bisect-cli/src/main.rs BISECT/crates/bisect-cli/src/runner.rs
 git add tests/acceptance/test_pipeline_acceptance.py
 git commit -m "Phase 3d Task 8: wire bisect states — 50-state parallel runner"
 ```
 
 ---
 
-## Task 9: Wire `redist run` — multi-year orchestrator
+## Task 9: Wire `BISECT run` — multi-year orchestrator
 
 **Files:**
-- Modify: `redist/crates/bisect-cli/src/main.rs`
+- Modify: `BISECT/crates/bisect-cli/src/main.rs`
 
 ### What it does
 `Commands::Run` is the outermost entry point: it runs `bisect states` for one or all census years (2020, 2010, 2000), optionally in parallel across years using Rayon's thread pool.
@@ -1295,17 +1295,17 @@ Years "all" = run 2020, 2010, 2000 **sequentially** (one year completes before t
 
 ```python
 # tests/acceptance/test_pipeline_acceptance.py — add to TestRustCLIAcceptance
-def test_redist_run_single_year_vermont(self, tmp_dir):
-    """redist run --year 2020 --states VT completes successfully."""
+def test_BISECT_run_single_year_vermont(self, tmp_dir):
+    """BISECT run --year 2020 --states VT completes successfully."""
     result = subprocess.run(
-        [str(REDIST_BIN), 'run',
+        [str(BISECT_BIN), 'run',
          '--year', '2020', '--version', 'V3',
          '--output-dir', str(tmp_dir / 'rust_run'),
          '--states', 'VT',
          '--workers', '1'],
         capture_output=True, text=True, timeout=120
     )
-    assert result.returncode == 0, f'redist run failed:\n{result.stderr}'
+    assert result.returncode == 0, f'BISECT run failed:\n{result.stderr}'
     assert (tmp_dir / 'rust_run' / 'states' / 'vermont' / 'data' / 'final_assignments.json').exists()
 ```
 
@@ -1326,18 +1326,18 @@ Commands::Run(args) => {
     // Years themselves run sequentially (inner parallelism handles states)
     let mut any_failure = false;
     for year in &years {
-        eprintln!("[redist run] year={year} version={} mode={}", args.version, args.partition_mode);
+        eprintln!("[BISECT run] year={year} version={} mode={}", args.version, args.partition_mode);
 
-        let all_states = redist_cli::runner::load_all_states(year)
+        let all_states = BISECT_cli::runner::load_all_states(year)
             .unwrap_or_else(|e| { eprintln!("state list failed for {year}: {e}"); vec![] });
 
         let states_filter: std::collections::HashSet<String> = args.states
             .iter().map(|s| s.to_uppercase()).collect();
 
-        let configs: Vec<redist_cli::runner::StateConfig> = all_states.into_iter()
+        let configs: Vec<BISECT_cli::runner::StateConfig> = all_states.into_iter()
             .filter(|(code, _)| states_filter.is_empty() || states_filter.contains(code))
             .enumerate()
-            .map(|(i, (code, _))| redist_cli::runner::StateConfig {
+            .map(|(i, (code, _))| BISECT_cli::runner::StateConfig {
                 state_code: code,
                 year: year.clone(),
                 version: args.version.clone(),
@@ -1355,8 +1355,8 @@ Commands::Run(args) => {
             })
             .collect();
 
-        let filtered = redist_cli::runner::filter_incomplete(configs);
-        let results = redist_cli::runner::run_states_parallel(filtered, args.workers);
+        let filtered = BISECT_cli::runner::filter_incomplete(configs);
+        let results = BISECT_cli::runner::run_states_parallel(filtered, args.workers);
         let failures: Vec<_> = results.iter().filter(|r| !r.success).collect();
         for f in &failures {
             eprintln!("FAILED {year}/{}: {}", f.state_code, f.error.as_deref().unwrap_or(""));
@@ -1364,15 +1364,15 @@ Commands::Run(args) => {
         }
     }
     if any_failure { std::process::exit(1); }
-    eprintln!("[OK] redist run complete");
+    eprintln!("[OK] BISECT run complete");
 }
 ```
 
 - [ ] **Step 3: Build and run acceptance test**
 
 ```
-cd redist && cargo build -p bisect-cli --release 2>&1 | tail -3
-pytest tests/acceptance/ -k test_redist_run_single_year_vermont -v
+cargo build -p bisect-cli --release 2>&1 | tail -3
+pytest tests/acceptance/ -k test_BISECT_run_single_year_vermont -v
 ```
 
 Expected: PASS.
@@ -1380,7 +1380,7 @@ Expected: PASS.
 - [ ] **Step 4: Run full 2020 single-state smoke test**
 
 ```bash
-redist/target/release/redist run \
+target/release/bisect run \
   --year 2020 --version V3 \
   --states VT --workers 4
 ```
@@ -1390,9 +1390,9 @@ Confirm output written to `outputs/V3/`.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add redist/crates/bisect-cli/src/main.rs
+git add BISECT/crates/bisect-cli/src/main.rs
 git add tests/acceptance/test_pipeline_acceptance.py
-git commit -m "Phase 3d Task 9: wire redist run — multi-year orchestrator"
+git commit -m "Phase 3d Task 9: wire BISECT run — multi-year orchestrator"
 ```
 
 ---
@@ -1467,15 +1467,15 @@ Record output.
 
 ```bash
 hyperfine --warmup 1 --runs 3 \
-  'redist/target/release/bisect state --state VT --year 2020 --version V3 --position 999' \
-  'redist/target/release/bisect state --state AL --year 2020 --version V4 --partition-mode metis-vra --position 999'
+  'target/release/bisect state --state VT --year 2020 --version V3 --position 999' \
+  'target/release/bisect state --state AL --year 2020 --version V4 --partition-mode metis-vra --position 999'
 ```
 
 - [ ] **Step 3: Update migration-log.md**
 
 ```markdown
 ## Phase 3d — Complete (DATE)
-run_single_state implemented. bisect state, bisect states, and redist run all wired.
+run_single_state implemented. bisect state, bisect states, and BISECT run all wired.
 
 ### Benchmarks (DATE, Windows 11, 12-core):
 
@@ -1502,7 +1502,7 @@ git commit -m "Phase 3d Task 11: record benchmarks and close migration log"
 **Spec coverage (full plan including gaps):**
 - ✓ `run_single_state` (Tasks 1–6)
 - ✓ `bisect states` — 50-state parallel (Task 8)
-- ✓ `redist run` — multi-year orchestrator (Task 9)
+- ✓ `BISECT run` — multi-year orchestrator (Task 9)
 - ✓ Pitfalls extraction (Task 10)
 - ✓ Benchmark recording (Task 11)
 - ✓ Acceptance tests for each new command (Tasks 6, 8, 9)
@@ -1515,20 +1515,20 @@ git commit -m "Phase 3d Task 11: record benchmarks and close migration log"
 ## Task 12: Data download integration — `bisect fetch`
 
 **Files:**
-- Create: `redist/crates/bisect-cli/src/fetch.rs`
-- Modify: `redist/crates/bisect-cli/src/lib.rs`
-- Modify: `redist/crates/bisect-cli/src/main.rs`
-- Modify: `redist/crates/bisect-cli/src/args.rs` (add `Commands::Fetch`)
-- Create: `redist/data/manifest.json` (shipped with binary)
-- Create: `redist/data/local_manifest.example.json`
+- Create: `BISECT/crates/bisect-cli/src/fetch.rs`
+- Modify: `BISECT/crates/bisect-cli/src/lib.rs`
+- Modify: `BISECT/crates/bisect-cli/src/main.rs`
+- Modify: `BISECT/crates/bisect-cli/src/args.rs` (add `Commands::Fetch`)
+- Create: `BISECT/data/manifest.json` (shipped with binary)
+- Create: `BISECT/data/local_manifest.example.json`
 
 ### What it does
 
-A user who installs `redist` can run `bisect fetch` to download all required data before running redistricting. The fetch command knows where every piece of data lives because a **manifest** is bundled with the binary.
+A user who installs `BISECT` can run `bisect fetch` to download all required data before running redistricting. The fetch command knows where every piece of data lives because a **manifest** is bundled with the binary.
 
 Three manifest sources (checked in priority order):
 
-1. **Local override** (`~/.config/redist/manifest.json` or `REDIST_MANIFEST` env var) — points to local paths. Set this on a machine where data is already downloaded. No network access needed.
+1. **Local override** (`~/.config/BISECT/manifest.json` or `BISECT_MANIFEST` env var) — points to local paths. Set this on a machine where data is already downloaded. No network access needed.
 2. **GitHub Releases** (`--release` flag) — pulls from the project's GitHub Releases (outputs-v3, outputs-v4, data-inputs-v1). Requires `gh auth login`.
 3. **Public Census Bureau URLs** (default) — downloads TIGER shapefiles and PL 94-171 redistricting files directly from census.gov.
 
@@ -1559,7 +1559,7 @@ Three manifest sources (checked in priority order):
 }
 ```
 
-Local manifest override (`~/.config/redist/manifest.json`):
+Local manifest override (`~/.config/BISECT/manifest.json`):
 ```json
 {
   "version": "1",
@@ -1631,20 +1631,20 @@ Record actual timings in `design/rust-port/migration-log.md` when Task 11 runs.
 - [ ] **Step 1: Create `manifest.json` embedded in binary**
 
 ```rust
-// redist/crates/bisect-cli/src/fetch.rs
+// BISECT/crates/bisect-cli/src/fetch.rs
 // Embed the manifest at compile time
 const BUILTIN_MANIFEST: &str = include_str!("../../../data/manifest.json");
 ```
 
-Create `redist/data/manifest.json` with the public URL patterns for all census data.
+Create `BISECT/data/manifest.json` with the public URL patterns for all census data.
 
 - [ ] **Step 2: Write manifest loading with local override**
 
 ```rust
 pub fn load_manifest(override_path: Option<&str>) -> Result<Manifest, String> {
-    // Priority: explicit --manifest > REDIST_MANIFEST env > local default > bundled
+    // Priority: explicit --manifest > BISECT_MANIFEST env > local default > bundled
     let path = override_path
-        .or_else(|| std::env::var("REDIST_MANIFEST").ok().as_deref())
+        .or_else(|| std::env::var("BISECT_MANIFEST").ok().as_deref())
         ...;
     if let Some(p) = path {
         // Load from file
@@ -1685,7 +1685,7 @@ Commands::Fetch(args) => { ... }
 ```python
 def test_fetch_check_only_lists_files():
     result = subprocess.run(
-        [str(REDIST_BIN), 'fetch', '--check-only', '--year', '2020', '--states', 'VT'],
+        [str(BISECT_BIN), 'fetch', '--check-only', '--year', '2020', '--states', 'VT'],
         capture_output=True, text=True, timeout=10
     )
     assert result.returncode == 0
@@ -1694,7 +1694,7 @@ def test_fetch_check_only_lists_files():
 
 ### User experience goal
 
-A new user installs `redist` and can run:
+A new user installs `BISECT` and can run:
 ```bash
 bisect fetch --year 2020               # downloads all data
 bisect states --year 2020 --version V3 # runs all 50 states
@@ -1703,6 +1703,6 @@ bisect states --year 2020 --version V3 # runs all 50 states
 Or on a machine with data already downloaded:
 ```bash
 echo '{"version":"1","local_overrides":{"adjacency_2020":{"local_path":"/data/adj/"}}}' \
-  > ~/.config/redist/manifest.json
+  > ~/.config/BISECT/manifest.json
 bisect states --year 2020 --version V3  # reads from local paths
 ```

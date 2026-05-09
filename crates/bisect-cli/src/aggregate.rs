@@ -1,6 +1,6 @@
-use std::path::PathBuf;
 use crate::args::AggregateArgs;
 use bisect_analysis::AnalyzerType;
+use std::path::PathBuf;
 
 /// Analyzers that produce one record per STATE (not per district).
 /// These need a different merge + CSV path than district-level analyzers.
@@ -19,7 +19,10 @@ pub fn run_aggregate(args: &AggregateArgs) -> anyhow::Result<()> {
     // Discover states with analysis outputs — year-specific path
     let states_dir = output_root.join(&year).join("states");
     if !states_dir.exists() {
-        anyhow::bail!("No states directory at {}. Run: bisect states --year {year} first.", states_dir.display());
+        anyhow::bail!(
+            "No states directory at {}. Run: bisect states --year {year} first.",
+            states_dir.display()
+        );
     }
     let mut state_dirs: Vec<(String, PathBuf)> = std::fs::read_dir(&states_dir)?
         .filter_map(|e| e.ok())
@@ -28,7 +31,11 @@ pub fn run_aggregate(args: &AggregateArgs) -> anyhow::Result<()> {
         .collect();
     state_dirs.sort_by_key(|(name, _)| name.clone());
 
-    eprintln!("[aggregate] {} states in {}", state_dirs.len(), states_dir.display());
+    eprintln!(
+        "[aggregate] {} states in {}",
+        state_dirs.len(),
+        states_dir.display()
+    );
 
     for typ in &types {
         let type_name = typ.name();
@@ -44,9 +51,10 @@ pub fn run_aggregate(args: &AggregateArgs) -> anyhow::Result<()> {
         for (state_name, state_dir) in &state_dirs {
             let json_path = state_dir.join("analysis").join(format!("{type_name}.json"));
             if json_path.exists() {
-                match std::fs::read_to_string(&json_path)
-                    .and_then(|s| serde_json::from_str(&s).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e)))
-                {
+                match std::fs::read_to_string(&json_path).and_then(|s| {
+                    serde_json::from_str(&s)
+                        .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
+                }) {
                     Ok(v) => state_data.push((state_name.clone(), v)),
                     Err(e) => eprintln!("[warn] {state_name}/{type_name}.json: {e}"),
                 }
@@ -58,9 +66,8 @@ pub fn run_aggregate(args: &AggregateArgs) -> anyhow::Result<()> {
             continue;
         }
 
-        let refs: Vec<(&str, &serde_json::Value)> = state_data.iter()
-            .map(|(n, v)| (n.as_str(), v))
-            .collect();
+        let refs: Vec<(&str, &serde_json::Value)> =
+            state_data.iter().map(|(n, v)| (n.as_str(), v)).collect();
 
         let merged = if is_state_level_analyzer(typ) {
             merge_state_level_outputs(&year, &refs)
@@ -75,11 +82,16 @@ pub fn run_aggregate(args: &AggregateArgs) -> anyhow::Result<()> {
 
         let n_states = merged["state_count"].as_u64().unwrap_or(0);
         if is_state_level_analyzer(typ) {
-            eprintln!("[OK] {type_name} -> {} ({n_states} states)", out_path.display());
+            eprintln!(
+                "[OK] {type_name} -> {} ({n_states} states)",
+                out_path.display()
+            );
         } else {
             let n_districts = merged["district_count"].as_u64().unwrap_or(0);
-            eprintln!("[OK] {type_name} -> {} ({n_states} states, {n_districts} districts)",
-                out_path.display());
+            eprintln!(
+                "[OK] {type_name} -> {} ({n_states} states, {n_districts} districts)",
+                out_path.display()
+            );
         }
 
         // CSV export
@@ -126,7 +138,8 @@ pub fn run_aggregate(args: &AggregateArgs) -> anyhow::Result<()> {
 /// Merge per-state analyzer JSONs into one national JSON.
 /// Adds "state" field to each district record.
 pub fn merge_analyzer_outputs(states: &[(&str, &serde_json::Value)]) -> serde_json::Value {
-    let analyzer = states.first()
+    let analyzer = states
+        .first()
         .and_then(|(_, v)| v.get("analyzer"))
         .and_then(|v| v.as_str())
         .unwrap_or("unknown")
@@ -155,8 +168,12 @@ pub fn merge_analyzer_outputs(states: &[(&str, &serde_json::Value)]) -> serde_js
 /// Merge per-state STATE-LEVEL analyzer JSONs (e.g. proportionality) into one
 /// national JSON. Each state's whole JSON becomes one record in the "states"
 /// array, with "state" and "year" fields injected.
-pub fn merge_state_level_outputs(year: &str, states: &[(&str, &serde_json::Value)]) -> serde_json::Value {
-    let analyzer = states.first()
+pub fn merge_state_level_outputs(
+    year: &str,
+    states: &[(&str, &serde_json::Value)],
+) -> serde_json::Value {
+    let analyzer = states
+        .first()
         .and_then(|(_, v)| v.get("analyzer"))
         .and_then(|v| v.as_str())
         .unwrap_or("unknown")
@@ -190,16 +207,23 @@ pub fn state_records_to_csv(merged: &serde_json::Value) -> String {
         Some(d) => d,
         None => return String::new(),
     };
-    if records.is_empty() { return String::new(); }
+    if records.is_empty() {
+        return String::new();
+    }
 
     // Build header: state + year first, then remaining fields in stable order
     let first = match records[0].as_object() {
         Some(o) => o,
         None => return String::new(),
     };
-    let mut extra_headers: Vec<String> = first.keys()
-        .filter(|k| *k != "state" && *k != "year" && *k != "analyzer"
-                    && *k != "per_district_dem_share_sorted")
+    let mut extra_headers: Vec<String> = first
+        .keys()
+        .filter(|k| {
+            *k != "state"
+                && *k != "year"
+                && *k != "analyzer"
+                && *k != "per_district_dem_share_sorted"
+        })
         .cloned()
         .collect();
     extra_headers.sort(); // stable ordering
@@ -208,18 +232,23 @@ pub fn state_records_to_csv(merged: &serde_json::Value) -> String {
 
     let mut out = headers.join(",") + "\n";
     for record in records {
-        let row: Vec<String> = headers.iter().map(|h| {
-            match record.get(h) {
+        let row: Vec<String> = headers
+            .iter()
+            .map(|h| match record.get(h) {
                 None => String::new(),
                 Some(serde_json::Value::String(s)) => {
-                    if s.contains(',') { format!("\"{}\"", s) } else { s.clone() }
+                    if s.contains(',') {
+                        format!("\"{}\"", s)
+                    } else {
+                        s.clone()
+                    }
                 }
                 Some(serde_json::Value::Bool(b)) => b.to_string(),
                 Some(serde_json::Value::Number(n)) => n.to_string(),
                 Some(serde_json::Value::Null) => String::new(),
                 Some(v) => v.to_string(),
-            }
-        }).collect();
+            })
+            .collect();
         out += &row.join(",");
         out += "\n";
     }
@@ -228,7 +257,8 @@ pub fn state_records_to_csv(merged: &serde_json::Value) -> String {
 
 /// Convert state-level national JSON to a JSON array.
 pub fn state_records_to_json_array(merged: &serde_json::Value) -> serde_json::Value {
-    let records = merged.get("states")
+    let records = merged
+        .get("states")
         .and_then(|d| d.as_array())
         .cloned()
         .unwrap_or_default();
@@ -241,28 +271,38 @@ pub fn districts_to_csv(merged: &serde_json::Value) -> String {
         Some(d) => d,
         None => return String::new(),
     };
-    if districts.is_empty() { return String::new(); }
+    if districts.is_empty() {
+        return String::new();
+    }
 
     // Collect all keys from first record
-    let headers: Vec<String> = districts[0].as_object()
+    let headers: Vec<String> = districts[0]
+        .as_object()
         .map(|o| o.keys().cloned().collect())
         .unwrap_or_default();
 
     let mut out = headers.join(",") + "\n";
     for d in districts {
-        let row: Vec<String> = headers.iter().map(|h| {
-            match d.get(h) {
-                None => String::new(),
-                Some(serde_json::Value::String(s)) => {
-                    // Quote strings containing commas
-                    if s.contains(',') { format!("\"{}\"", s) } else { s.clone() }
+        let row: Vec<String> = headers
+            .iter()
+            .map(|h| {
+                match d.get(h) {
+                    None => String::new(),
+                    Some(serde_json::Value::String(s)) => {
+                        // Quote strings containing commas
+                        if s.contains(',') {
+                            format!("\"{}\"", s)
+                        } else {
+                            s.clone()
+                        }
+                    }
+                    Some(serde_json::Value::Bool(b)) => b.to_string(),
+                    Some(serde_json::Value::Number(n)) => n.to_string(),
+                    Some(serde_json::Value::Null) => String::new(),
+                    Some(v) => v.to_string(),
                 }
-                Some(serde_json::Value::Bool(b)) => b.to_string(),
-                Some(serde_json::Value::Number(n)) => n.to_string(),
-                Some(serde_json::Value::Null) => String::new(),
-                Some(v) => v.to_string(),
-            }
-        }).collect();
+            })
+            .collect();
         out += &row.join(",");
         out += "\n";
     }
@@ -272,7 +312,8 @@ pub fn districts_to_csv(merged: &serde_json::Value) -> String {
 /// Convert national JSON districts array to a JSON array of objects.
 /// Each district record becomes a JSON object preserving all fields.
 pub fn districts_to_json_array(merged: &serde_json::Value) -> serde_json::Value {
-    let districts = merged.get("districts")
+    let districts = merged
+        .get("districts")
         .and_then(|d| d.as_array())
         .cloned()
         .unwrap_or_default();
@@ -345,7 +386,13 @@ mod tests {
         use clap::Parser;
         // Verify --format json is accepted as an arg
         let args = crate::args::AggregateArgs::parse_from([
-            "aggregate", "--year", "2020", "--version", "v1", "--format", "json",
+            "aggregate",
+            "--year",
+            "2020",
+            "--version",
+            "v1",
+            "--format",
+            "json",
         ]);
         assert_eq!(args.format, "json", "--format json should be accepted");
     }
@@ -355,7 +402,13 @@ mod tests {
         use clap::Parser;
         // Verify --format parquet parses (guidance emitted at runtime, not a parse error)
         let args = crate::args::AggregateArgs::parse_from([
-            "aggregate", "--year", "2020", "--version", "v1", "--format", "parquet",
+            "aggregate",
+            "--year",
+            "2020",
+            "--version",
+            "v1",
+            "--format",
+            "parquet",
         ]);
         assert_eq!(args.format, "parquet");
     }
@@ -371,7 +424,11 @@ mod tests {
         });
         let arr = districts_to_json_array(&merged);
         assert!(arr.is_array(), "output should be a JSON array");
-        assert_eq!(arr.as_array().unwrap().len(), 2, "should have 2 district objects");
+        assert_eq!(
+            arr.as_array().unwrap().len(),
+            2,
+            "should have 2 district objects"
+        );
         assert_eq!(arr[0]["district"].as_u64().unwrap(), 1);
         assert_eq!(arr[1]["total_pop"].as_u64().unwrap(), 600000);
     }
@@ -381,13 +438,13 @@ mod tests {
         // Test that parquet is accepted at the args level (guidance emitted at runtime).
         // We verify the format string parses without error.
         use clap::Parser;
-        let args = crate::args::AggregateArgs::parse_from([
-            "aggregate", "--format", "parquet",
-        ]);
+        let args = crate::args::AggregateArgs::parse_from(["aggregate", "--format", "parquet"]);
         // Parquet guidance fires at runtime inside run_aggregate when format=="parquet".
         // We verify the field is correctly stored.
-        assert_eq!(args.format, "parquet",
-            "parquet format should be stored for runtime guidance");
+        assert_eq!(
+            args.format, "parquet",
+            "parquet format should be stored for runtime guidance"
+        );
     }
 
     // ── State-level aggregation (proportionality) ─────────────────────────────
@@ -427,7 +484,10 @@ mod tests {
         let lines: Vec<&str> = csv.lines().collect();
         assert!(lines.len() >= 2);
         let header = lines[0];
-        assert!(header.starts_with("state,year"), "header must start with state,year; got: {header}");
+        assert!(
+            header.starts_with("state,year"),
+            "header must start with state,year; got: {header}"
+        );
         assert!(lines[1].contains("vermont"));
         assert!(lines[1].contains("2020"));
         assert!(lines[1].contains("33.5"));
@@ -442,8 +502,10 @@ mod tests {
         });
         let merged = merge_state_level_outputs("2020", &[("vermont", &vt)]);
         let csv = state_records_to_csv(&merged);
-        assert!(!csv.contains("per_district_dem_share_sorted"),
-            "per_district array must be excluded from CSV");
+        assert!(
+            !csv.contains("per_district_dem_share_sorted"),
+            "per_district array must be excluded from CSV"
+        );
     }
 
     #[test]
@@ -475,9 +537,18 @@ mod tests {
         let lines: Vec<&str> = csv.lines().collect();
         assert!(lines.len() >= 2, "need header + at least 1 row");
         assert!(lines[0].contains("state"), "header must contain 'state'");
-        assert!(lines[0].contains("district"), "header must contain 'district'");
-        assert!(lines[1].contains("vermont"), "data row must contain state name");
-        assert!(lines[1].contains("643077"), "data row must contain population");
+        assert!(
+            lines[0].contains("district"),
+            "header must contain 'district'"
+        );
+        assert!(
+            lines[1].contains("vermont"),
+            "data row must contain state name"
+        );
+        assert!(
+            lines[1].contains("643077"),
+            "data row must contain population"
+        );
     }
 
     // ── Additional aggregate.rs coverage ─────────────────────────────────────
@@ -508,10 +579,16 @@ mod tests {
         // A state JSON that lacks "districts" should contribute 0 records gracefully.
         let vt = serde_json::json!({"analyzer": "demographic"});
         let merged = merge_analyzer_outputs(&[("vermont", &vt)]);
-        assert_eq!(merged["district_count"].as_u64().unwrap(), 0,
-            "missing districts key must be treated as empty list");
-        assert_eq!(merged["state_count"].as_u64().unwrap(), 1,
-            "state count still reflects number of inputs");
+        assert_eq!(
+            merged["district_count"].as_u64().unwrap(),
+            0,
+            "missing districts key must be treated as empty list"
+        );
+        assert_eq!(
+            merged["state_count"].as_u64().unwrap(),
+            1,
+            "state count still reflects number of inputs"
+        );
     }
 
     #[test]
@@ -523,9 +600,8 @@ mod tests {
             (1..=38).map(|i| serde_json::json!({"district": i})).collect::<Vec<_>>()});
         let vt = serde_json::json!({"analyzer": "political", "districts":
             [serde_json::json!({"district": 1})]});
-        let merged = merge_analyzer_outputs(&[
-            ("california", &ca), ("texas", &tx), ("vermont", &vt),
-        ]);
+        let merged =
+            merge_analyzer_outputs(&[("california", &ca), ("texas", &tx), ("vermont", &vt)]);
         assert_eq!(merged["district_count"].as_u64().unwrap(), 52 + 38 + 1);
         assert_eq!(merged["state_count"].as_u64().unwrap(), 3);
     }
@@ -534,7 +610,10 @@ mod tests {
     fn test_districts_to_csv_empty_input_returns_empty_string() {
         let merged = serde_json::json!({"analyzer": "demographic", "districts": []});
         let csv = districts_to_csv(&merged);
-        assert!(csv.is_empty(), "empty districts array must return empty CSV string");
+        assert!(
+            csv.is_empty(),
+            "empty districts array must return empty CSV string"
+        );
     }
 
     #[test]
@@ -567,8 +646,10 @@ mod tests {
             ]
         });
         let csv = districts_to_csv(&merged);
-        assert!(csv.contains("\"new,state\""),
-            "strings containing commas must be quoted in CSV; got: {csv}");
+        assert!(
+            csv.contains("\"new,state\""),
+            "strings containing commas must be quoted in CSV; got: {csv}"
+        );
     }
 
     #[test]
@@ -584,8 +665,10 @@ mod tests {
         let merged = serde_json::json!({"analyzer": "demographic"});
         let arr = districts_to_json_array(&merged);
         assert!(arr.is_array());
-        assert!(arr.as_array().unwrap().is_empty(),
-            "missing districts key must produce empty array");
+        assert!(
+            arr.as_array().unwrap().is_empty(),
+            "missing districts key must produce empty array"
+        );
     }
 
     #[test]
@@ -607,11 +690,16 @@ mod tests {
         let vt = serde_json::json!({"analyzer": "proportionality", "n_districts": 1});
         let tx = serde_json::json!({"analyzer": "proportionality", "n_districts": 38});
         let ca = serde_json::json!({"analyzer": "proportionality", "n_districts": 52});
-        let merged = merge_state_level_outputs("2020",
-            &[("vermont", &vt), ("texas", &tx), ("california", &ca)]);
+        let merged = merge_state_level_outputs(
+            "2020",
+            &[("vermont", &vt), ("texas", &tx), ("california", &ca)],
+        );
         let arr = state_records_to_json_array(&merged);
-        assert_eq!(arr.as_array().unwrap().len(), 3,
-            "json array must contain one entry per state");
+        assert_eq!(
+            arr.as_array().unwrap().len(),
+            3,
+            "json array must contain one entry per state"
+        );
     }
 
     #[test]
@@ -624,8 +712,10 @@ mod tests {
         });
         let merged = merge_state_level_outputs("2020", &[("vermont", &vt)]);
         let state = &merged["states"][0];
-        assert!((state["dem_vote_share_statewide"].as_f64().unwrap() - 0.665).abs() < 1e-9,
-            "numeric fields must be preserved through merge");
+        assert!(
+            (state["dem_vote_share_statewide"].as_f64().unwrap() - 0.665).abs() < 1e-9,
+            "numeric fields must be preserved through merge"
+        );
         assert!((state["proportionality_gap_pp"].as_f64().unwrap() - 33.5).abs() < 1e-9);
         assert_eq!(state["n_districts"].as_u64().unwrap(), 1);
     }
@@ -643,10 +733,16 @@ mod tests {
         let csv = state_records_to_csv(&merged);
         let header = csv.lines().next().unwrap();
         // After state,year, the remaining columns must be alphabetically sorted
-        assert!(header.starts_with("state,year,"), "header must start with state,year");
+        assert!(
+            header.starts_with("state,year,"),
+            "header must start with state,year"
+        );
         let extra: Vec<&str> = header.splitn(3, ',').nth(2).unwrap().split(',').collect();
         let mut sorted = extra.clone();
         sorted.sort();
-        assert_eq!(extra, sorted, "extra columns must be in alphabetical order; got: {header}");
+        assert_eq!(
+            extra, sorted,
+            "extra columns must be in alphabetical order; got: {header}"
+        );
     }
 }

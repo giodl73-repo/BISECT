@@ -2,7 +2,7 @@
 L2 acceptance tests for chamber, resolution, label auto-resolution, and balance tolerance features.
 
 Requires:
-- redist binary built
+- BISECT binary built
 - VT 2020 run at tract level: outputs/V3/states/vermont/data/final_assignments.json
 - VT 2020 labeled run: outputs/V3/2020/plans/vt_congress_test/ (from earlier experiments)
 """
@@ -11,7 +11,7 @@ import json, subprocess, time, unittest
 from pathlib import Path
 
 def find_binary():
-    for p in [Path("redist/target/release/redist.exe"), Path("redist/target/release/redist")]:
+    for p in [Path("target/release/bisect.exe"), Path("target/release/bisect")]:
         if p.exists(): return str(p.resolve())
     raise RuntimeError("binary not found")
 

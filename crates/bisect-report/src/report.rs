@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 /// report.rs — 10-section report assembly.
 ///
 /// Spec 6 / Board amendments:
@@ -5,11 +7,9 @@
 /// - check_required_analysis_files() lists which files are missing before assembly
 /// - External analyzer disclaimer required in HTML when external_analyzers present
 use std::path::{Path, PathBuf};
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
-use crate::manifest::PlanManifest;
 use crate::audit::{generate_verification_command_from_manifest, generate_verification_script};
+use crate::manifest::PlanManifest;
 
 /// Context needed to assemble a report.
 /// Points to the plan directory containing manifest.json and analysis/ subdirectory.
@@ -22,16 +22,17 @@ pub struct ReportContext {
 impl ReportContext {
     pub fn new(plan_dir: PathBuf, manifest: PlanManifest) -> Self {
         let map_dir = Some(plan_dir.join("maps"));
-        Self { plan_dir, manifest, map_dir }
+        Self {
+            plan_dir,
+            manifest,
+            map_dir,
+        }
     }
 }
 
 /// Names of required analysis files (relative to plan_dir/analysis/).
-pub const REQUIRED_ANALYSIS_FILES: &[&str] = &[
-    "summary.json",
-    "contiguity.json",
-    "compactness.json",
-];
+pub const REQUIRED_ANALYSIS_FILES: &[&str] =
+    &["summary.json", "contiguity.json", "compactness.json"];
 
 /// Optional analysis files (not required — report section will note "unavailable").
 pub const OPTIONAL_ANALYSIS_FILES: &[&str] = &[
@@ -74,7 +75,8 @@ fn read_analysis_json(analysis_dir: &Path, name: &str) -> Option<Value> {
             .and_then(|s| serde_json::from_str::<Value>(&s).ok())
             .map(|mut v| {
                 if let Some(obj) = v.as_object_mut() {
-                    obj.entry("status").or_insert_with(|| serde_json::json!("ok"));
+                    obj.entry("status")
+                        .or_insert_with(|| serde_json::json!("ok"));
                 }
                 v
             })
@@ -282,8 +284,8 @@ mod tests {
             seed: Some(42),
             binary_version: "0.1.0".into(),
             binary_sha256: "a".repeat(64),
-            binary_download_url:
-                "https://github.com/owner/redist/releases/download/v0.1.0/redist".into(),
+            binary_download_url: "https://github.com/owner/BISECT/releases/download/v0.1.0/BISECT"
+                .into(),
             adjacency_file: "vt_adjacency_2020.adj.bin".into(),
             adjacency_sha256: "b".repeat(64),
             adjacency_build_command: "python scripts/data/generate_adj_bin.py".into(),
@@ -318,11 +320,7 @@ mod tests {
         ReportContext::new(plan_dir, manifest)
     }
 
-    fn setup_plan_dir_missing_file(
-        tmp: &TempDir,
-        label: &str,
-        skip_file: &str,
-    ) -> ReportContext {
+    fn setup_plan_dir_missing_file(tmp: &TempDir, label: &str, skip_file: &str) -> ReportContext {
         let plan_dir = tmp.path().join("plans").join(label);
         let analysis_dir = plan_dir.join("analysis");
         std::fs::create_dir_all(&analysis_dir).unwrap();
@@ -355,9 +353,18 @@ mod tests {
         let json = serde_json::to_string(&report).unwrap();
         let v: Value = serde_json::from_str(&json).unwrap();
         let sections = &v["sections"];
-        assert!(sections["population_equality"].is_object(), "section 2 missing");
-        assert!(sections["geographic_constraints"].is_object(), "section 3 missing");
-        assert!(sections["partisan_fairness"].is_object(), "section 4 missing");
+        assert!(
+            sections["population_equality"].is_object(),
+            "section 2 missing"
+        );
+        assert!(
+            sections["geographic_constraints"].is_object(),
+            "section 3 missing"
+        );
+        assert!(
+            sections["partisan_fairness"].is_object(),
+            "section 4 missing"
+        );
         assert!(sections["vra_compliance"].is_object(), "section 5 missing");
         assert!(sections["compactness"].is_object(), "section 6 missing");
         assert!(sections["audit"].is_object(), "section 9 missing");
@@ -376,8 +383,13 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let ctx = setup_plan_dir_with_all_required(&tmp, "vt_audit_test");
         let report = assemble_report(&ctx).unwrap();
-        let cmd = report.sections.audit["verification_command"].as_str().unwrap_or("");
-        assert!(!cmd.is_empty(), "audit section must contain verification_command");
+        let cmd = report.sections.audit["verification_command"]
+            .as_str()
+            .unwrap_or("");
+        assert!(
+            !cmd.is_empty(),
+            "audit section must contain verification_command"
+        );
         assert!(
             cmd.contains("bisect state"),
             "verification command must contain 'bisect state'"
@@ -450,47 +462,61 @@ mod tests {
 
     #[test]
     fn test_required_analysis_files_contains_summary() {
-        assert!(REQUIRED_ANALYSIS_FILES.contains(&"summary.json"),
-            "summary.json must be in REQUIRED_ANALYSIS_FILES");
+        assert!(
+            REQUIRED_ANALYSIS_FILES.contains(&"summary.json"),
+            "summary.json must be in REQUIRED_ANALYSIS_FILES"
+        );
     }
 
     #[test]
     fn test_required_analysis_files_contains_contiguity() {
-        assert!(REQUIRED_ANALYSIS_FILES.contains(&"contiguity.json"),
-            "contiguity.json must be in REQUIRED_ANALYSIS_FILES");
+        assert!(
+            REQUIRED_ANALYSIS_FILES.contains(&"contiguity.json"),
+            "contiguity.json must be in REQUIRED_ANALYSIS_FILES"
+        );
     }
 
     #[test]
     fn test_required_analysis_files_contains_compactness() {
-        assert!(REQUIRED_ANALYSIS_FILES.contains(&"compactness.json"),
-            "compactness.json must be in REQUIRED_ANALYSIS_FILES");
+        assert!(
+            REQUIRED_ANALYSIS_FILES.contains(&"compactness.json"),
+            "compactness.json must be in REQUIRED_ANALYSIS_FILES"
+        );
     }
 
     #[test]
     fn test_optional_analysis_files_contains_partisan() {
-        assert!(OPTIONAL_ANALYSIS_FILES.contains(&"partisan.json"),
-            "partisan.json must be in OPTIONAL_ANALYSIS_FILES");
+        assert!(
+            OPTIONAL_ANALYSIS_FILES.contains(&"partisan.json"),
+            "partisan.json must be in OPTIONAL_ANALYSIS_FILES"
+        );
     }
 
     #[test]
     fn test_optional_analysis_files_contains_vra() {
-        assert!(OPTIONAL_ANALYSIS_FILES.contains(&"vra_analysis.json"),
-            "vra_analysis.json must be in OPTIONAL_ANALYSIS_FILES");
+        assert!(
+            OPTIONAL_ANALYSIS_FILES.contains(&"vra_analysis.json"),
+            "vra_analysis.json must be in OPTIONAL_ANALYSIS_FILES"
+        );
     }
 
     #[test]
     fn test_optional_files_not_in_required() {
         for optional in OPTIONAL_ANALYSIS_FILES {
-            assert!(!REQUIRED_ANALYSIS_FILES.contains(optional),
-                "{optional} must not appear in both REQUIRED and OPTIONAL lists");
+            assert!(
+                !REQUIRED_ANALYSIS_FILES.contains(optional),
+                "{optional} must not appear in both REQUIRED and OPTIONAL lists"
+            );
         }
     }
 
     #[test]
     fn test_required_files_not_in_optional() {
         for required in REQUIRED_ANALYSIS_FILES {
-            assert!(!OPTIONAL_ANALYSIS_FILES.contains(required),
-                "{required} must not appear in both REQUIRED and OPTIONAL lists");
+            assert!(
+                !OPTIONAL_ANALYSIS_FILES.contains(required),
+                "{required} must not appear in both REQUIRED and OPTIONAL lists"
+            );
         }
     }
 
@@ -519,7 +545,10 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let ctx = setup_plan_dir_with_all_required(&tmp, "vt_full");
         let missing = check_required_analysis_files(&ctx);
-        assert!(missing.is_empty(), "all required files present → missing must be empty");
+        assert!(
+            missing.is_empty(),
+            "all required files present → missing must be empty"
+        );
     }
 
     #[test]
@@ -527,8 +556,10 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let ctx = setup_plan_dir_missing_file(&tmp, "vt_no_compact", "compactness.json");
         let missing = check_required_analysis_files(&ctx);
-        assert!(missing.contains(&"compactness.json"),
-            "missing compactness.json must be in missing list");
+        assert!(
+            missing.contains(&"compactness.json"),
+            "missing compactness.json must be in missing list"
+        );
     }
 
     #[test]
@@ -536,8 +567,10 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let ctx = setup_plan_dir_missing_file(&tmp, "vt_no_summary", "summary.json");
         let missing = check_required_analysis_files(&ctx);
-        assert!(missing.contains(&"summary.json"),
-            "missing summary.json must be in missing list");
+        assert!(
+            missing.contains(&"summary.json"),
+            "missing summary.json must be in missing list"
+        );
     }
 
     #[test]
@@ -569,8 +602,11 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let ctx = setup_plan_dir_with_all_required(&tmp, "vt_ts_check");
         let report = assemble_report(&ctx).unwrap();
-        assert_eq!(report.generated_at.len(), 20,
-            "generated_at must be 20-char ISO 8601 string");
+        assert_eq!(
+            report.generated_at.len(),
+            20,
+            "generated_at must be 20-char ISO 8601 string"
+        );
         assert!(report.generated_at.contains('T'));
         assert!(report.generated_at.ends_with('Z'));
     }
@@ -580,8 +616,10 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let ctx = setup_plan_dir_with_all_required(&tmp, "vt_ext_check");
         let report = assemble_report(&ctx).unwrap();
-        assert!(!report.has_external_analyzers,
-            "has_external_analyzers must be false by default");
+        assert!(
+            !report.has_external_analyzers,
+            "has_external_analyzers must be false by default"
+        );
     }
 
     #[test]
@@ -589,7 +627,9 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let ctx = setup_plan_dir_with_all_required(&tmp, "vt_exec_check");
         let report = assemble_report(&ctx).unwrap();
-        let label = report.sections.executive_summary["label"].as_str().unwrap_or("");
+        let label = report.sections.executive_summary["label"]
+            .as_str()
+            .unwrap_or("");
         assert_eq!(label, "vt_exec_check");
     }
 
@@ -598,8 +638,13 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let ctx = setup_plan_dir_with_all_required(&tmp, "vt_bin_check");
         let report = assemble_report(&ctx).unwrap();
-        let ver = report.sections.audit["binary_version"].as_str().unwrap_or("");
-        assert!(!ver.is_empty(), "audit section must have non-empty binary_version");
+        let ver = report.sections.audit["binary_version"]
+            .as_str()
+            .unwrap_or("");
+        assert!(
+            !ver.is_empty(),
+            "audit section must have non-empty binary_version"
+        );
     }
 
     #[test]
@@ -609,7 +654,10 @@ mod tests {
         let result = assemble_report(&ctx);
         assert!(result.is_err());
         let msg = result.unwrap_err().to_string();
-        assert!(msg.contains("contiguity.json"), "error must mention contiguity.json");
+        assert!(
+            msg.contains("contiguity.json"),
+            "error must mention contiguity.json"
+        );
     }
 
     #[test]
@@ -619,8 +667,13 @@ mod tests {
         // Remove vra_analysis.json (optional) to ensure it returns "unavailable"
         let _ = std::fs::remove_file(ctx.plan_dir.join("analysis").join("vra_analysis.json"));
         let report = assemble_report(&ctx).unwrap();
-        assert_eq!(report.sections.vra_compliance["status"].as_str().unwrap_or(""), "unavailable",
-            "vra_compliance must show 'unavailable' when file absent");
+        assert_eq!(
+            report.sections.vra_compliance["status"]
+                .as_str()
+                .unwrap_or(""),
+            "unavailable",
+            "vra_compliance must show 'unavailable' when file absent"
+        );
     }
 
     #[test]
@@ -629,7 +682,10 @@ mod tests {
         let ctx = setup_plan_dir_with_all_required(&tmp, "vt_comp_test");
         let _ = std::fs::remove_file(ctx.plan_dir.join("analysis").join("comparison.json"));
         let report = assemble_report(&ctx).unwrap();
-        assert_eq!(report.sections.comparison["status"].as_str().unwrap_or(""), "unavailable",
-            "comparison must show 'unavailable' when file absent");
+        assert_eq!(
+            report.sections.comparison["status"].as_str().unwrap_or(""),
+            "unavailable",
+            "comparison must show 'unavailable' when file absent"
+        );
     }
 }

@@ -13,8 +13,8 @@ use ratatui::{
     Terminal,
 };
 
-use redist_tui::{plans, session};
-use redist_tui::app::{App, DoctorState, RunPhase, RunProgress, RunResult, RunState, Screen};
+use bisect_tui::app::{App, DoctorState, RunPhase, RunProgress, RunResult, RunState, Screen};
+use bisect_tui::{plans, session};
 
 fn main() -> anyhow::Result<()> {
     let args: Vec<String> = std::env::args().collect();
@@ -37,7 +37,8 @@ fn main() -> anyhow::Result<()> {
     let no_session = args.iter().any(|a| a == "--no-session");
 
     // Parse --label LABEL (next arg after --label)
-    let startup_label: Option<String> = args.windows(2)
+    let startup_label: Option<String> = args
+        .windows(2)
         .find(|w| w[0] == "--label")
         .map(|w| w[1].clone());
 
@@ -45,7 +46,8 @@ fn main() -> anyhow::Result<()> {
     let startup_configure = args.iter().any(|a| a == "--configure");
 
     // Parse --config PATH (next arg after --config)
-    let startup_config: Option<String> = args.windows(2)
+    let startup_config: Option<String> = args
+        .windows(2)
         .find(|w| w[0] == "--config")
         .map(|w| w[1].clone());
 
@@ -54,10 +56,7 @@ fn main() -> anyhow::Result<()> {
     std::panic::set_hook(Box::new(move |panic_info| {
         // Always try to restore terminal — ignore errors
         let _ = crossterm::terminal::disable_raw_mode();
-        let _ = crossterm::execute!(
-            std::io::stderr(),
-            crossterm::terminal::LeaveAlternateScreen
-        );
+        let _ = crossterm::execute!(std::io::stderr(), crossterm::terminal::LeaveAlternateScreen);
         original_hook(panic_info);
     }));
 
@@ -88,7 +87,7 @@ fn main() -> anyhow::Result<()> {
     app.plans = plans::discover_plans(&sess.output_base, &sess.version, &sess.year);
 
     // Pre-populate run form from session
-    app.default_run_form = redist_tui::app::RunForm {
+    app.default_run_form = bisect_tui::app::RunForm {
         location: sess.location.clone(),
         chamber: sess.chamber.clone(),
         year: sess.year.clone(),
@@ -136,38 +135,38 @@ fn run_app(
             // Render current screen
             match &app.screen {
                 Screen::Home => {
-                    redist_tui::screens::home::render(f, main_area, app);
+                    bisect_tui::screens::home::render(f, main_area, app);
                 }
                 Screen::Run(state) => {
                     let state = state.clone();
-                    redist_tui::screens::run::render(f, main_area, &state);
+                    bisect_tui::screens::run::render(f, main_area, &state);
                 }
                 Screen::Compare(state) => {
                     let state = state.clone();
-                    redist_tui::screens::compare::render(f, main_area, &state);
+                    bisect_tui::screens::compare::render(f, main_area, &state);
                 }
                 Screen::Verify(state) => {
                     let state = state.clone();
-                    redist_tui::screens::verify::render(f, main_area, &state);
+                    bisect_tui::screens::verify::render(f, main_area, &state);
                 }
                 Screen::Doctor(state) => {
                     let state = state.clone();
-                    redist_tui::screens::doctor::render(f, main_area, &state);
+                    bisect_tui::screens::doctor::render(f, main_area, &state);
                 }
             }
 
             // Always-visible status bar
-            redist_tui::widgets::status_bar::render(f, status_area, app);
+            bisect_tui::widgets::status_bar::render(f, status_area, app);
 
             // Overlays (rendered on top in priority order)
             if app.show_glossary {
-                redist_tui::widgets::glossary::render(f, area, app);
+                bisect_tui::widgets::glossary::render(f, area, app);
             }
             if app.show_palette {
-                redist_tui::widgets::command_palette::render(f, area, app);
+                bisect_tui::widgets::command_palette::render(f, area, app);
             }
             if app.error.is_some() {
-                redist_tui::widgets::error_banner::render(f, area, app);
+                bisect_tui::widgets::error_banner::render(f, area, app);
             }
         })?;
 
@@ -179,8 +178,11 @@ fn run_app(
                     let mut log = app.subprocess_log.lock().unwrap();
                     for line in log.drain(..) {
                         // Parse STATUS: lines for progress
-                        if let Some(msg) = redist_tui::runner::parse_status_line(&line) {
-                            redist_tui::runner::update_progress_from_message(&mut run_state.progress, &msg);
+                        if let Some(msg) = bisect_tui::runner::parse_status_line(&line) {
+                            bisect_tui::runner::update_progress_from_message(
+                                &mut run_state.progress,
+                                &msg,
+                            );
                             run_state.log_lines.push(msg);
                         } else {
                             run_state.log_lines.push(line);
@@ -268,7 +270,8 @@ fn run_app(
         // Screen-specific key dispatch
         if let Event::Key(key) = evt {
             // Run form editing: intercept Tab/BackTab/Backspace/Char before generic dispatch
-            let is_run_form = matches!(&app.screen, Screen::Run(s) if matches!(s.phase, RunPhase::Form));
+            let is_run_form =
+                matches!(&app.screen, Screen::Run(s) if matches!(s.phase, RunPhase::Form));
             if is_run_form {
                 match key.code {
                     KeyCode::Esc => {
@@ -292,13 +295,17 @@ fn run_app(
                     }
                     KeyCode::Backspace => {
                         if let Screen::Run(ref mut s) = app.screen {
-                            edit_active_field(&mut s.form, |f| { f.pop(); });
+                            edit_active_field(&mut s.form, |f| {
+                                f.pop();
+                            });
                         }
                         continue;
                     }
                     KeyCode::Char(c) => {
                         if let Screen::Run(ref mut s) = app.screen {
-                            edit_active_field(&mut s.form, |f| { f.push(c); });
+                            edit_active_field(&mut s.form, |f| {
+                                f.push(c);
+                            });
                         }
                         continue;
                     }
@@ -331,7 +338,7 @@ fn run_app(
                             let form_clone = state.form.clone();
                             let log_arc = app.subprocess_log.clone();
                             let done_arc = app.subprocess_done.clone();
-                            redist_tui::runner::spawn_redist_state(&form_clone, log_arc, done_arc);
+                            bisect_tui::runner::spawn_bisect_state(&form_clone, log_arc, done_arc);
                         }
                     }
                     // Verify screen: Enter with non-empty path → run verify
@@ -340,7 +347,7 @@ fn run_app(
                             state.running = true;
                             state.result = None;
                             let path = state.manifest_path.clone();
-                            let result = redist_tui::runner::run_verify_subprocess(&path);
+                            let result = bisect_tui::runner::run_verify_subprocess(&path);
                             state.result = Some(result);
                             state.running = false;
                         }
@@ -361,7 +368,7 @@ fn run_app(
                                     }));
                                 }
                                 (KeyCode::Char('c'), _) => {
-                                    use redist_tui::app::CompareState;
+                                    use bisect_tui::app::CompareState;
                                     let plan_a = app
                                         .visible_plans()
                                         .get(app.selected_plan)
@@ -373,7 +380,7 @@ fn run_app(
                                     }));
                                 }
                                 (KeyCode::Char('v'), _) => {
-                                    use redist_tui::app::VerifyState;
+                                    use bisect_tui::app::VerifyState;
                                     app.navigate(Screen::Verify(VerifyState::default()));
                                 }
                                 (KeyCode::Char('d'), _) => {
@@ -407,60 +414,58 @@ fn run_app(
                                 _ => {}
                             }
                         }
-                        Screen::Run(_) => {
-                            match key.code {
-                                KeyCode::Esc => app.navigate_back(),
-                                KeyCode::Char('q') => return Ok(()),
-                                KeyCode::Char(':') => app.show_palette = true,
-                                KeyCode::Char('?') => app.show_glossary = !app.show_glossary,
-                                _ => {}
+                        Screen::Run(_) => match key.code {
+                            KeyCode::Esc => app.navigate_back(),
+                            KeyCode::Char('q') => return Ok(()),
+                            KeyCode::Char(':') => app.show_palette = true,
+                            KeyCode::Char('?') => app.show_glossary = !app.show_glossary,
+                            _ => {}
+                        },
+                        Screen::Compare(_) => match key.code {
+                            KeyCode::Esc => app.navigate_back(),
+                            KeyCode::Char('q') => return Ok(()),
+                            KeyCode::Char(':') => app.show_palette = true,
+                            KeyCode::Char('?') => app.show_glossary = !app.show_glossary,
+                            KeyCode::Backspace => {
+                                if let Screen::Compare(ref mut s) = app.screen {
+                                    s.plan_b_input.pop();
+                                }
                             }
-                        }
-                        Screen::Compare(_) => {
-                            match key.code {
-                                KeyCode::Esc => app.navigate_back(),
-                                KeyCode::Char('q') => return Ok(()),
-                                KeyCode::Char(':') => app.show_palette = true,
-                                KeyCode::Char('?') => app.show_glossary = !app.show_glossary,
-                                KeyCode::Backspace => {
-                                    if let Screen::Compare(ref mut s) = app.screen {
-                                        s.plan_b_input.pop();
-                                    }
+                            KeyCode::Char(c) => {
+                                if let Screen::Compare(ref mut s) = app.screen {
+                                    s.plan_b_input.push(c);
                                 }
-                                KeyCode::Char(c) => {
-                                    if let Screen::Compare(ref mut s) = app.screen {
-                                        s.plan_b_input.push(c);
-                                    }
-                                }
-                                KeyCode::Enter => {
-                                    if let Screen::Compare(ref mut s) = app.screen {
-                                        if !s.plan_b_input.is_empty() {
-                                            let base = std::path::PathBuf::from("outputs")
-                                                .join("v1").join("2020").join("plans");
-                                            let plan_a_dir = base.join(&s.plan_a);
-                                            let plan_b_dir = base.join(&s.plan_b_input);
-                                            if plan_a_dir.exists() && plan_b_dir.exists() {
-                                                let label_a = s.plan_a.clone();
-                                                let label_b = s.plan_b_input.clone();
-                                                let result = redist_tui::screens::compare::compute_compare_result(
+                            }
+                            KeyCode::Enter => {
+                                if let Screen::Compare(ref mut s) = app.screen {
+                                    if !s.plan_b_input.is_empty() {
+                                        let base = std::path::PathBuf::from("outputs")
+                                            .join("v1")
+                                            .join("2020")
+                                            .join("plans");
+                                        let plan_a_dir = base.join(&s.plan_a);
+                                        let plan_b_dir = base.join(&s.plan_b_input);
+                                        if plan_a_dir.exists() && plan_b_dir.exists() {
+                                            let label_a = s.plan_a.clone();
+                                            let label_b = s.plan_b_input.clone();
+                                            let result = bisect_tui::screens::compare::compute_compare_result(
                                                     &plan_a_dir, &plan_b_dir, &label_a, &label_b,
                                                 );
-                                                s.result = Some(result);
-                                            } else {
-                                                let plan_a = s.plan_a.clone();
-                                                let plan_b = s.plan_b_input.clone();
-                                                drop(s);
-                                                app.set_error(format!(
+                                            s.result = Some(result);
+                                        } else {
+                                            let plan_a = s.plan_a.clone();
+                                            let plan_b = s.plan_b_input.clone();
+                                            drop(s);
+                                            app.set_error(format!(
                                                     "Plan not found: '{}' or '{}'. Check label spelling.",
                                                     plan_a, plan_b
                                                 ));
-                                            }
                                         }
                                     }
                                 }
-                                _ => {}
                             }
-                        }
+                            _ => {}
+                        },
                         Screen::Verify(_) => {
                             // Text input for manifest path
                             match key.code {
@@ -481,28 +486,26 @@ fn run_app(
                                 _ => {}
                             }
                         }
-                        Screen::Doctor(_) => {
-                            match key.code {
-                                KeyCode::Esc => app.navigate_back(),
-                                KeyCode::Char('q') => return Ok(()),
-                                KeyCode::Char('r') => {
-                                    app.navigate(Screen::Run(RunState::default()));
-                                }
-                                KeyCode::Char(':') => app.show_palette = true,
-                                KeyCode::Char('?') => app.show_glossary = !app.show_glossary,
-                                KeyCode::Backspace => {
-                                    if let Screen::Doctor(ref mut state) = app.screen {
-                                        state.location.pop();
-                                    }
-                                }
-                                KeyCode::Char(c) => {
-                                    if let Screen::Doctor(ref mut state) = app.screen {
-                                        state.location.push(c.to_uppercase().next().unwrap_or(c));
-                                    }
-                                }
-                                _ => {}
+                        Screen::Doctor(_) => match key.code {
+                            KeyCode::Esc => app.navigate_back(),
+                            KeyCode::Char('q') => return Ok(()),
+                            KeyCode::Char('r') => {
+                                app.navigate(Screen::Run(RunState::default()));
                             }
-                        }
+                            KeyCode::Char(':') => app.show_palette = true,
+                            KeyCode::Char('?') => app.show_glossary = !app.show_glossary,
+                            KeyCode::Backspace => {
+                                if let Screen::Doctor(ref mut state) = app.screen {
+                                    state.location.pop();
+                                }
+                            }
+                            KeyCode::Char(c) => {
+                                if let Screen::Doctor(ref mut state) = app.screen {
+                                    state.location.push(c.to_uppercase().next().unwrap_or(c));
+                                }
+                            }
+                            _ => {}
+                        },
                     }
                 }
             }
@@ -510,7 +513,7 @@ fn run_app(
     }
 }
 
-fn edit_active_field(form: &mut redist_tui::app::RunForm, edit: impl FnOnce(&mut String)) {
+fn edit_active_field(form: &mut bisect_tui::app::RunForm, edit: impl FnOnce(&mut String)) {
     match form.active_field {
         0 => edit(&mut form.location),
         1 => edit(&mut form.chamber),
@@ -530,11 +533,11 @@ fn execute_palette_command(app: &mut App, cmd: &str) {
             app.navigate(Screen::Run(RunState::default()));
         }
         "compare" | "c" => {
-            use redist_tui::app::CompareState;
+            use bisect_tui::app::CompareState;
             app.navigate(Screen::Compare(CompareState::default()));
         }
         "verify" | "v" => {
-            use redist_tui::app::VerifyState;
+            use bisect_tui::app::VerifyState;
             app.navigate(Screen::Verify(VerifyState::default()));
         }
         "doctor" | "d" => {

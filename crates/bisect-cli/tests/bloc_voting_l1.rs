@@ -9,8 +9,8 @@
 //! - `analysis/bloc_voting/` staged with the CSV + the attestation doc (Task 5)
 //!
 //! Spec: `docs/superpowers/plans/2026-04-30-callais-evidence-layer.md` Tasks 7-8.
-//! ALSO satisfies B-02 anchor 1 end-to-end via `redist`'s production CLI path
-//! (the unit-level anchor is in `redist-analysis/src/bloc_voting.rs`).
+//! ALSO satisfies B-02 anchor 1 end-to-end via `BISECT`'s production CLI path
+//! (the unit-level anchor is in `BISECT-analysis/src/bloc_voting.rs`).
 
 use std::path::PathBuf;
 use std::process::Command;
@@ -141,24 +141,40 @@ fn bloc_voting_l1_synthetic_end_to_end() {
     // Invoke `bisect analyze --types bloc-voting`.
     let output = Command::new(BISECT)
         .arg("analyze")
-        .arg("--state").arg("VT")  // skips manifest auto-derivation path (its
-                                    // single-version vs from_label's double-version
-                                    // mismatch is pre-existing analyze.rs behavior)
-        .arg("--label").arg(label)
-        .arg("--year").arg("2020")
-        .arg("--version").arg("v1")
-        .arg("--output-base").arg(tmp.path().as_os_str())
-        .arg("--types").arg("bloc-voting")
-        .arg("--candidate-race-csv").arg(&csv_path)
-        .arg("--partisan-baseline").arg(&tsv_path)
-        .arg("--bootstrap-samples").arg("30")
-        .arg("--ci-level").arg("0.95")
-        .arg("--alpha").arg("0.05")
-        .arg("--election").arg("test-primary")
-        .arg("--party").arg("DEM")
-        .arg("--minority-group").arg("black")
-        .arg("--method").arg("wls")
-        .arg("--min-precincts").arg("50")
+        .arg("--state")
+        .arg("VT") // skips manifest auto-derivation path (its
+        // single-version vs from_label's double-version
+        // mismatch is pre-existing analyze.rs behavior)
+        .arg("--label")
+        .arg(label)
+        .arg("--year")
+        .arg("2020")
+        .arg("--version")
+        .arg("v1")
+        .arg("--output-base")
+        .arg(tmp.path().as_os_str())
+        .arg("--types")
+        .arg("bloc-voting")
+        .arg("--candidate-race-csv")
+        .arg(&csv_path)
+        .arg("--partisan-baseline")
+        .arg(&tsv_path)
+        .arg("--bootstrap-samples")
+        .arg("30")
+        .arg("--ci-level")
+        .arg("0.95")
+        .arg("--alpha")
+        .arg("0.05")
+        .arg("--election")
+        .arg("test-primary")
+        .arg("--party")
+        .arg("DEM")
+        .arg("--minority-group")
+        .arg("black")
+        .arg("--method")
+        .arg("wls")
+        .arg("--min-precincts")
+        .arg("50")
         .output()
         .expect("spawn bisect");
 
@@ -183,9 +199,15 @@ fn bloc_voting_l1_synthetic_end_to_end() {
     let spec = json["candidates"][0]["regression"]["specification"]
         .as_str()
         .unwrap();
-    assert!(spec.contains("WLS weighted by precinct vote count"), "spec: {spec}");
+    assert!(
+        spec.contains("WLS weighted by precinct vote count"),
+        "spec: {spec}"
+    );
     assert!(spec.contains("HC3 robust SE"), "spec: {spec}");
-    assert!(spec.contains("cluster-bootstrap by county B=30"), "spec: {spec}");
+    assert!(
+        spec.contains("cluster-bootstrap by county B=30"),
+        "spec: {spec}"
+    );
 
     // B-02 anchor 1 end-to-end: WLS recovers β_minority within ±0.04 of ground
     // truth (looser than the unit test's ±0.02 because the CLI fixture has
@@ -211,8 +233,15 @@ fn bloc_voting_l1_synthetic_end_to_end() {
         .join("analysis")
         .join("bloc_voting")
         .join("race_of_candidate.csv");
-    assert!(staged_csv.exists(), "missing staged CSV at {}", staged_csv.display());
-    let attest_dir = plan_dir.join("analysis").join("bloc_voting").join("attestations");
+    assert!(
+        staged_csv.exists(),
+        "missing staged CSV at {}",
+        staged_csv.display()
+    );
+    let attest_dir = plan_dir
+        .join("analysis")
+        .join("bloc_voting")
+        .join("attestations");
     let attest_count = std::fs::read_dir(&attest_dir).unwrap().count();
     assert_eq!(attest_count, 1, "expected 1 attestation doc staged");
 }
@@ -235,14 +264,20 @@ fn bloc_voting_l1_rejects_missing_candidate_race_csv() {
 
     let output = Command::new(BISECT)
         .arg("analyze")
-        .arg("--state").arg("VT")  // skips manifest auto-derivation path (its
-                                    // single-version vs from_label's double-version
-                                    // mismatch is pre-existing analyze.rs behavior)
-        .arg("--label").arg(label)
-        .arg("--year").arg("2020")
-        .arg("--version").arg("v1")
-        .arg("--output-base").arg(tmp.path().as_os_str())
-        .arg("--types").arg("bloc-voting")
+        .arg("--state")
+        .arg("VT") // skips manifest auto-derivation path (its
+        // single-version vs from_label's double-version
+        // mismatch is pre-existing analyze.rs behavior)
+        .arg("--label")
+        .arg(label)
+        .arg("--year")
+        .arg("2020")
+        .arg("--version")
+        .arg("v1")
+        .arg("--output-base")
+        .arg(tmp.path().as_os_str())
+        .arg("--types")
+        .arg("bloc-voting")
         .output()
         .expect("spawn bisect");
     assert!(
@@ -276,25 +311,30 @@ fn bloc_voting_l1_rejects_method_rxc_as_not_yet_implemented() {
     std::fs::create_dir_all(&inputs_dir).unwrap();
     let csv_path = write_race_of_candidate_csv(&inputs_dir, "Adams");
     let tsv_path = inputs_dir.join("precincts.tsv");
-    std::fs::write(
-        &tsv_path,
-        synthetic_precincts_tsv(60, "Adams", 0.5, 7),
-    )
-    .unwrap();
+    std::fs::write(&tsv_path, synthetic_precincts_tsv(60, "Adams", 0.5, 7)).unwrap();
 
     let output = Command::new(BISECT)
         .arg("analyze")
-        .arg("--state").arg("VT")  // skips manifest auto-derivation path (its
-                                    // single-version vs from_label's double-version
-                                    // mismatch is pre-existing analyze.rs behavior)
-        .arg("--label").arg(label)
-        .arg("--year").arg("2020")
-        .arg("--version").arg("v1")
-        .arg("--output-base").arg(tmp.path().as_os_str())
-        .arg("--types").arg("bloc-voting")
-        .arg("--candidate-race-csv").arg(&csv_path)
-        .arg("--partisan-baseline").arg(&tsv_path)
-        .arg("--method").arg("rxc")
+        .arg("--state")
+        .arg("VT") // skips manifest auto-derivation path (its
+        // single-version vs from_label's double-version
+        // mismatch is pre-existing analyze.rs behavior)
+        .arg("--label")
+        .arg(label)
+        .arg("--year")
+        .arg("2020")
+        .arg("--version")
+        .arg("v1")
+        .arg("--output-base")
+        .arg(tmp.path().as_os_str())
+        .arg("--types")
+        .arg("bloc-voting")
+        .arg("--candidate-race-csv")
+        .arg(&csv_path)
+        .arg("--partisan-baseline")
+        .arg(&tsv_path)
+        .arg("--method")
+        .arg("rxc")
         .output()
         .expect("spawn bisect");
     assert!(!output.status.success(), "--method rxc must fail");

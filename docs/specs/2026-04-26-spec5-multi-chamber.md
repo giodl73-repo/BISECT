@@ -31,11 +31,11 @@ outputs/{version}/{year}/suites/{suite_name}/
   senate/             ← plan labeled {suite}_senate
 ```
 
-### `redist suite` subcommand
+### `BISECT suite` subcommand
 
 ```bash
 # Create a new suite (draws all three chambers)
-redist suite --state WA --year 2020 --version WA_Plans \
+BISECT suite --state WA --year 2020 --version WA_Plans \
   --name wa_commission_v1 \
   --congressional-districts 10 \
   --house-districts 98 \
@@ -44,10 +44,10 @@ redist suite --state WA --year 2020 --version WA_Plans \
   --seed 42
 
 # Validate an existing suite
-redist suite validate --name wa_commission_v1 --version WA_Plans --year 2020
+BISECT suite validate --name wa_commission_v1 --version WA_Plans --year 2020
 
 # Add a single chamber to an existing suite
-redist suite add-plan --name wa_commission_v1 \
+BISECT suite add-plan --name wa_commission_v1 \
   --label wa_house_alt1 --chamber house
 ```
 
@@ -91,7 +91,7 @@ Two house districts are adjacent if any of their constituent tracts share a boun
 
 ## Suite validation
 
-`redist suite validate` runs all constraint checks and produces a suite-level report:
+`BISECT suite validate` runs all constraint checks and produces a suite-level report:
 
 ```json
 {
@@ -141,7 +141,7 @@ pub fn validate_nesting(
 
 ---
 
-## `redist suite draw` workflow
+## `BISECT suite draw` workflow
 
 When `--nest senate-in-house` is specified, the suite command runs chambers in sequence:
 
@@ -229,7 +229,7 @@ fn test_nesting_ratio_computed() {
 
 **[MERIDIAN] CRITICAL — Noncontiguous house plan silently breaks senate nesting**
 If `--allow-noncontiguous` is used to proceed with a noncontiguous house plan, the house-district adjacency graph used for senate nesting will be disconnected. METIS will produce an invalid senate plan with no error.
-Fix: `redist suite --nest` hard-fails if any house district fails contiguity check, regardless of `--allow-noncontiguous`. Error message: `ERROR: Senate nesting requires all house districts to be contiguous. District 7 has 2 components. Remove --allow-noncontiguous or fix the house plan before nesting.`
+Fix: `BISECT suite --nest` hard-fails if any house district fails contiguity check, regardless of `--allow-noncontiguous`. Error message: `ERROR: Senate nesting requires all house districts to be contiguous. District 7 has 2 components. Remove --allow-noncontiguous or fix the house plan before nesting.`
 
 **[WARD] CONCERN — Variable nesting ratios need constitutional validation**
 Several states have variable or non-integer nesting schemes. The `--nest-ratio N:M` flag exists but there is no validation against known constitutional requirements.
@@ -264,14 +264,14 @@ Fix: `build_chamber_adjacency` uses only the PRIMARY component of each house dis
 ```
 WARNING: House district N has disconnected components; only primary component used for senate adjacency.
 ```
-This ensures that senate nesting is computed from the geographically coherent portion of each house district. The full fix is: `redist suite --nest` hard-fails on noncontiguous house districts (per the MERIDIAN CRITICAL amendment above), making this defensive path a fallback for research use only.
+This ensures that senate nesting is computed from the geographically coherent portion of each house district. The full fix is: `BISECT suite --nest` hard-fails on noncontiguous house districts (per the MERIDIAN CRITICAL amendment above), making this defensive path a fallback for research use only.
 
 ---
 
 ## R3 Board Review Amendments (2026-04-26)
 
 **[LEDGER] CONCERN — Suite export format not defined**
-Spec 5 references `redist export --suite` but never defines what a suite export produces. Fix: Suite export produces three separate RPLAN files plus a `suite.json` envelope — NOT a multi-plan RPLAN (that waits for RPLAN v0.2). Structure:
+Spec 5 references `BISECT export --suite` but never defines what a suite export produces. Fix: Suite export produces three separate RPLAN files plus a `suite.json` envelope — NOT a multi-plan RPLAN (that waits for RPLAN v0.2). Structure:
 ```
 exports/wa_commission_v1/
   suite.json               <- {"suite_name": "wa_commission_v1", "plans": [{"chamber": "congressional", "file": "wa_congressional.rplan"}, {"chamber": "house", "file": "wa_house.rplan"}, {"chamber": "senate", "file": "wa_senate.rplan"}]}

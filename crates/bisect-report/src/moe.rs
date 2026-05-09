@@ -146,7 +146,10 @@ mod tests {
         // Plan A: 7 ± 0.3 seats. Plan B: 5 ± 0.3 seats. Clear gap; no overlap.
         let a = CiBand::new(7.0, 6.7, 7.3);
         let b = CiBand::new(5.0, 4.7, 5.3);
-        assert_eq!(suppress_or_emit("dem_seats", MetricMonotonicity::Monotone, a, b), None);
+        assert_eq!(
+            suppress_or_emit("dem_seats", MetricMonotonicity::Monotone, a, b),
+            None
+        );
     }
 
     #[test]
@@ -171,7 +174,10 @@ mod tests {
     fn test_monotone_a_less_than_b_no_overlap_emits_no_suppression() {
         let a = CiBand::new(3.0, 2.9, 3.1);
         let b = CiBand::new(5.0, 4.8, 5.2);
-        assert_eq!(suppress_or_emit("dem_seats", MetricMonotonicity::Monotone, a, b), None);
+        assert_eq!(
+            suppress_or_emit("dem_seats", MetricMonotonicity::Monotone, a, b),
+            None
+        );
     }
 
     #[test]
@@ -244,7 +250,7 @@ mod tests {
     #[test]
     fn test_count_indeterminate_districts_configurable_threshold() {
         // Hispanic-majority threshold might be different; allow caller to set.
-        let cis = vec![(0.62, 0.68)];  // straddles 0.65 but not 0.50
+        let cis = vec![(0.62, 0.68)]; // straddles 0.65 but not 0.50
         assert_eq!(count_indeterminate_districts(&cis, 0.50), 0);
         assert_eq!(count_indeterminate_districts(&cis, 0.65), 1);
     }
@@ -299,8 +305,14 @@ mod tests {
     #[test]
     fn test_metric_monotonicity_equality() {
         assert_eq!(MetricMonotonicity::Monotone, MetricMonotonicity::Monotone);
-        assert_eq!(MetricMonotonicity::NonMonotone, MetricMonotonicity::NonMonotone);
-        assert_ne!(MetricMonotonicity::Monotone, MetricMonotonicity::NonMonotone);
+        assert_eq!(
+            MetricMonotonicity::NonMonotone,
+            MetricMonotonicity::NonMonotone
+        );
+        assert_ne!(
+            MetricMonotonicity::Monotone,
+            MetricMonotonicity::NonMonotone
+        );
     }
 
     // ── Monotone: boundary and asymmetric cases ─────────────────────────────
@@ -310,8 +322,11 @@ mod tests {
         // A < B with no CI overlap: a.high < b.low → safe.
         let a = CiBand::new(3.0, 2.7, 3.3);
         let b = CiBand::new(6.0, 5.7, 6.3);
-        assert_eq!(suppress_or_emit("seats", MetricMonotonicity::Monotone, a, b), None,
-            "B clearly greater than A: no suppression");
+        assert_eq!(
+            suppress_or_emit("seats", MetricMonotonicity::Monotone, a, b),
+            None,
+            "B clearly greater than A: no suppression"
+        );
     }
 
     #[test]
@@ -337,8 +352,11 @@ mod tests {
         // Very tight CIs: a.low (6.99) > b.high (5.01) → safe.
         let a = CiBand::new(7.0, 6.99, 7.01);
         let b = CiBand::new(5.0, 4.99, 5.01);
-        assert_eq!(suppress_or_emit("seats", MetricMonotonicity::Monotone, a, b), None,
-            "tight non-overlapping CIs must not be suppressed");
+        assert_eq!(
+            suppress_or_emit("seats", MetricMonotonicity::Monotone, a, b),
+            None,
+            "tight non-overlapping CIs must not be suppressed"
+        );
     }
 
     // ── Non-monotone: additional cases ──────────────────────────────────────
@@ -370,29 +388,41 @@ mod tests {
     #[test]
     fn test_count_indeterminate_all_straddle() {
         let cis = vec![(0.40, 0.60), (0.45, 0.55), (0.49, 0.51)];
-        assert_eq!(count_indeterminate_districts(&cis, 0.50), 3,
-            "all three CIs straddle 0.50 → all indeterminate");
+        assert_eq!(
+            count_indeterminate_districts(&cis, 0.50),
+            3,
+            "all three CIs straddle 0.50 → all indeterminate"
+        );
     }
 
     #[test]
     fn test_count_indeterminate_empty_slice_zero() {
-        assert_eq!(count_indeterminate_districts(&[], 0.50), 0,
-            "empty slice must return 0 indeterminate districts");
+        assert_eq!(
+            count_indeterminate_districts(&[], 0.50),
+            0,
+            "empty slice must return 0 indeterminate districts"
+        );
     }
 
     #[test]
     fn test_count_indeterminate_threshold_at_low_boundary_not_counted() {
         // CI is [0.50, 0.60]: low == threshold, not strictly less → doesn't straddle.
         let cis = vec![(0.50, 0.60)];
-        assert_eq!(count_indeterminate_districts(&cis, 0.50), 0,
-            "low == threshold is not strictly below → not indeterminate");
+        assert_eq!(
+            count_indeterminate_districts(&cis, 0.50),
+            0,
+            "low == threshold is not strictly below → not indeterminate"
+        );
     }
 
     #[test]
     fn test_count_indeterminate_very_narrow_ci_straddling() {
         // CI = [0.4999, 0.5001]: tiny but straddles 0.5.
         let cis = vec![(0.4999, 0.5001)];
-        assert_eq!(count_indeterminate_districts(&cis, 0.50), 1,
-            "narrow CI straddling threshold must count as indeterminate");
+        assert_eq!(
+            count_indeterminate_districts(&cis, 0.50),
+            1,
+            "narrow CI straddling threshold must count as indeterminate"
+        );
     }
 }

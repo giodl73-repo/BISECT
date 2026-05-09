@@ -1,7 +1,7 @@
-/// `import_label.rs` — Spec 7 Phase 5: `redist import X --from FILE` and
-/// `redist label-compare A B`.
+/// `import_label.rs` — Spec 7 Phase 5: `BISECT import X --from FILE` and
+/// `BISECT label-compare A B`.
 ///
-/// ## `redist import X --from FILE [--year Y] [--format csv|geojson|shapefile|rplan]`
+/// ## `BISECT import X --from FILE [--year Y] [--format csv|geojson|shapefile|rplan]`
 ///
 /// Imports an external plan file into the label-based directory layout:
 ///
@@ -13,18 +13,17 @@
 /// The `algorithm.structure` field is set to `"external"` to distinguish
 /// externally-imported plans from plans produced by `bisect build`.
 ///
-/// ## `redist label-compare A B [--year Y] [--json] [--out PATH]`
+/// ## `BISECT label-compare A B [--year Y] [--json] [--out PATH]`
 ///
-/// Thin wrapper over `redist compare --plan-a A --plan-b B`:
+/// Thin wrapper over `BISECT compare --plan-a A --plan-b B`:
 /// validates both labels are built+analyzed, then delegates to the existing
 /// compare machinery for analysis/{A}/{year}/ vs analysis/{B}/{year}/.
-
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use sha2::{Digest, Sha256};
 
-use crate::label::{validate_label_name, year_runs_dir, state_runs_dir};
+use crate::label::{state_runs_dir, validate_label_name, year_runs_dir};
 use crate::run_registry::Registry;
 
 // ── FIPS → state name lookup ──────────────────────────────────────────────────
@@ -83,7 +82,7 @@ pub fn fips_to_state_name(fips: &str) -> Option<&'static str> {
         "54" => Some("west_virginia"),
         "55" => Some("wisconsin"),
         "56" => Some("wyoming"),
-        _    => None,
+        _ => None,
     }
 }
 
@@ -99,11 +98,11 @@ pub fn fips_to_state_name(fips: &str) -> Option<&'static str> {
 /// - anything else       → `None` (caller must specify `--format`)
 pub fn detect_format(path: &Path) -> Option<&'static str> {
     match path.extension().and_then(|e| e.to_str()) {
-        Some("csv")                => Some("csv"),
+        Some("csv") => Some("csv"),
         Some("geojson") | Some("json") => Some("geojson"),
-        Some("shp")                => Some("shapefile"),
-        Some("rplan")              => Some("rplan"),
-        _                          => None,
+        Some("shp") => Some("shapefile"),
+        Some("rplan") => Some("rplan"),
+        _ => None,
     }
 }
 
@@ -138,8 +137,14 @@ pub fn parse_csv_assignments(csv_str: &str) -> Result<HashMap<String, usize>, St
     let (geoid_col, district_col) = if is_header {
         let header = lines.next().unwrap(); // consume
         let headers: Vec<&str> = header.split(',').collect();
-        let h0 = headers.first().map(|h| h.trim().to_uppercase()).unwrap_or_default();
-        let h1 = headers.get(1).map(|h| h.trim().to_uppercase()).unwrap_or_default();
+        let h0 = headers
+            .first()
+            .map(|h| h.trim().to_uppercase())
+            .unwrap_or_default();
+        let h1 = headers
+            .get(1)
+            .map(|h| h.trim().to_uppercase())
+            .unwrap_or_default();
         if h0.contains("GEOID") || h0.contains("GEO_ID") {
             (0usize, 1usize)
         } else if h1.contains("GEOID") || h1.contains("GEO_ID") {
@@ -161,18 +166,17 @@ pub fn parse_csv_assignments(csv_str: &str) -> Result<HashMap<String, usize>, St
         }
         let fields: Vec<&str> = line.split(',').collect();
         let geoid_raw = fields.get(geoid_col).map(|f| f.trim()).unwrap_or("");
-        let dist_raw  = fields.get(district_col).map(|f| f.trim()).unwrap_or("");
+        let dist_raw = fields.get(district_col).map(|f| f.trim()).unwrap_or("");
 
         // Auto-swap: if geoid_raw is small (<5 chars) and dist_raw looks like a GEOID
-        let (geoid, dist_str) =
-            if geoid_raw.len() < 5
-                && dist_raw.len() >= 10
-                && dist_raw.chars().all(|c| c.is_ascii_digit())
-            {
-                (dist_raw, geoid_raw)
-            } else {
-                (geoid_raw, dist_raw)
-            };
+        let (geoid, dist_str) = if geoid_raw.len() < 5
+            && dist_raw.len() >= 10
+            && dist_raw.chars().all(|c| c.is_ascii_digit())
+        {
+            (dist_raw, geoid_raw)
+        } else {
+            (geoid_raw, dist_raw)
+        };
 
         let district: usize = dist_str.parse().map_err(|_| {
             format!(
@@ -185,7 +189,9 @@ pub fn parse_csv_assignments(csv_str: &str) -> Result<HashMap<String, usize>, St
     }
 
     if assignments.is_empty() {
-        return Err("[INPUT] CSV produced no GEOID→district assignments — check file format".to_string());
+        return Err(
+            "[INPUT] CSV produced no GEOID→district assignments — check file format".to_string(),
+        );
     }
     Ok(assignments)
 }
@@ -197,8 +203,8 @@ pub fn parse_csv_assignments(csv_str: &str) -> Result<HashMap<String, usize>, St
 /// Each feature must have a `district_id` (or `district`) property and a
 /// `GEOID` (or `geoid`) property in its `properties` object.
 pub fn parse_geojson_assignments(geojson_str: &str) -> Result<HashMap<String, usize>, String> {
-    let v: serde_json::Value = serde_json::from_str(geojson_str)
-        .map_err(|e| format!("[INPUT] invalid JSON: {e}"))?;
+    let v: serde_json::Value =
+        serde_json::from_str(geojson_str).map_err(|e| format!("[INPUT] invalid JSON: {e}"))?;
 
     let features = v["features"]
         .as_array()
@@ -209,9 +215,7 @@ pub fn parse_geojson_assignments(geojson_str: &str) -> Result<HashMap<String, us
         let props = &feature["properties"];
 
         // Resolve GEOID: try "GEOID" then "geoid"
-        let geoid = props["GEOID"]
-            .as_str()
-            .or_else(|| props["geoid"].as_str());
+        let geoid = props["GEOID"].as_str().or_else(|| props["geoid"].as_str());
 
         // Resolve district: try "district_id" then "district"
         let district = props["district_id"]
@@ -248,7 +252,7 @@ pub fn sha256_hex(bytes: &[u8]) -> String {
 
 // ── Core import function ──────────────────────────────────────────────────────
 
-/// Run `redist import X --from FILE [--year Y] [--format FORMAT]`.
+/// Run `BISECT import X --from FILE [--year Y] [--format FORMAT]`.
 ///
 /// Steps:
 /// 1. Validate `label`.
@@ -305,15 +309,13 @@ pub fn run_label_import(
             ));
         }
         "csv" => {
-            let content = std::fs::read_to_string(from).map_err(|e| {
-                format!("[INPUT] cannot read '{}': {e}", from.display())
-            })?;
+            let content = std::fs::read_to_string(from)
+                .map_err(|e| format!("[INPUT] cannot read '{}': {e}", from.display()))?;
             parse_csv_assignments(&content)?
         }
         "geojson" => {
-            let content = std::fs::read_to_string(from).map_err(|e| {
-                format!("[INPUT] cannot read '{}': {e}", from.display())
-            })?;
+            let content = std::fs::read_to_string(from)
+                .map_err(|e| format!("[INPUT] cannot read '{}': {e}", from.display()))?;
             parse_geojson_assignments(&content)?
         }
         other => {
@@ -325,9 +327,8 @@ pub fn run_label_import(
     };
 
     // ── SHA-256 of source file ─────────────────────────────────────────────────
-    let source_bytes = std::fs::read(from).map_err(|e| {
-        format!("[INPUT] cannot read '{}' for SHA-256: {e}", from.display())
-    })?;
+    let source_bytes = std::fs::read(from)
+        .map_err(|e| format!("[INPUT] cannot read '{}' for SHA-256: {e}", from.display()))?;
     let source_sha256 = sha256_hex(&source_bytes);
 
     // ── Step 4: Group assignments by state FIPS ────────────────────────────────
@@ -476,9 +477,9 @@ fn build_import_index(
 
 /// Format a Unix timestamp as RFC 3339 (`YYYY-MM-DDTHH:MM:SSZ`).
 fn format_rfc3339(secs: u64) -> String {
-    let s   = secs % 60;
+    let s = secs % 60;
     let min = (secs / 60) % 60;
-    let h   = (secs / 3600) % 24;
+    let h = (secs / 3600) % 24;
     let days = secs / 86400;
     let (y, mo, d) = days_to_ymd(days);
     format!("{y:04}-{mo:02}-{d:02}T{h:02}:{min:02}:{s:02}Z")
@@ -501,12 +502,12 @@ fn days_to_ymd(days: u64) -> (u64, u64, u64) {
 
 // ── label-compare ─────────────────────────────────────────────────────────────
 
-/// Run `redist label-compare A B [--year Y] [--json] [--out PATH]`.
+/// Run `BISECT label-compare A B [--year Y] [--json] [--out PATH]`.
 ///
 /// 1. Validates both labels.
 /// 2. Checks both are built for `year`.
 /// 3. Checks both are analyzed for `year`.
-/// 4. Delegates to `redist compare --plan-a A --plan-b B` using
+/// 4. Delegates to `BISECT compare --plan-a A --plan-b B` using
 ///    `analysis/{A}/{year}/` and `analysis/{B}/{year}/`.
 pub fn run_label_compare(
     label_a: &str,
@@ -588,12 +589,14 @@ pub fn run_label_compare(
 fn emit_output(text: &str, out: Option<&Path>) -> Result<(), String> {
     if let Some(path) = out {
         if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent).map_err(|e| {
-                format!("[INTERNAL] label-compare: cannot create output dir: {e}")
-            })?;
+            std::fs::create_dir_all(parent)
+                .map_err(|e| format!("[INTERNAL] label-compare: cannot create output dir: {e}"))?;
         }
         std::fs::write(path, text).map_err(|e| {
-            format!("[INTERNAL] label-compare: cannot write '{}': {e}", path.display())
+            format!(
+                "[INTERNAL] label-compare: cannot write '{}': {e}",
+                path.display()
+            )
         })?;
         eprintln!("[OK] label-compare -> {}", path.display());
     } else {
@@ -648,7 +651,11 @@ mod tests {
     fn test_csv_parsing_uppercase_geoid_header() {
         let csv = "GEOID,DISTRICT\n53001000100,3\n53001000200,4\n";
         let result = parse_csv_assignments(csv);
-        assert!(result.is_ok(), "uppercase header must parse: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "uppercase header must parse: {:?}",
+            result.err()
+        );
         let a = result.unwrap();
         assert_eq!(a["53001000100"], 3);
         assert_eq!(a["53001000200"], 4);
@@ -674,7 +681,11 @@ mod tests {
             ]
         });
         let result = parse_geojson_assignments(&geojson.to_string());
-        assert!(result.is_ok(), "district_id property must parse: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "district_id property must parse: {:?}",
+            result.err()
+        );
         let a = result.unwrap();
         assert_eq!(a.len(), 2);
         assert_eq!(a["48001000100"], 5);
@@ -696,7 +707,11 @@ mod tests {
             ]
         });
         let result = parse_geojson_assignments(&geojson.to_string());
-        assert!(result.is_ok(), "district fallback must parse: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "district fallback must parse: {:?}",
+            result.err()
+        );
         let a = result.unwrap();
         assert_eq!(a["06001000100"], 7);
     }
@@ -744,7 +759,10 @@ mod tests {
         let result = run_label_import("runs", &f, "2020", None);
         assert!(result.is_err(), "reserved label must return error");
         let msg = result.unwrap_err();
-        assert!(msg.contains("reserved"), "error must mention 'reserved': {msg}");
+        assert!(
+            msg.contains("reserved"),
+            "error must mention 'reserved': {msg}"
+        );
     }
 
     // ── 7. Unknown format → [CONFIG] error ───────────────────────────────────
@@ -791,8 +809,11 @@ mod tests {
             &by_state,
         );
         let structure = index["algorithm"]["structure"].as_str();
-        assert_eq!(structure, Some("external"),
-            "algorithm.structure must be 'external' for imported plans");
+        assert_eq!(
+            structure,
+            Some("external"),
+            "algorithm.structure must be 'external' for imported plans"
+        );
     }
 
     // ── 10. SHA-256 of source file in index ───────────────────────────────────
@@ -810,8 +831,10 @@ mod tests {
             &by_state,
         );
         let stored_sha = index["algorithm"]["source"].as_str().unwrap_or("");
-        assert_eq!(stored_sha, sha,
-            "algorithm.source must be the SHA-256 of the source file");
+        assert_eq!(
+            stored_sha, sha,
+            "algorithm.source must be the SHA-256 of the source file"
+        );
         assert_eq!(stored_sha.len(), 64, "SHA-256 must be 64 hex chars");
     }
 
@@ -823,7 +846,10 @@ mod tests {
         let h2 = sha256_hex(b"redistricting");
         assert_eq!(h1, h2, "sha256_hex must be deterministic");
         assert_eq!(h1.len(), 64, "sha256_hex must produce 64 chars");
-        assert!(h1.chars().all(|c| c.is_ascii_hexdigit()), "must be hex: {h1}");
+        assert!(
+            h1.chars().all(|c| c.is_ascii_hexdigit()),
+            "must be hex: {h1}"
+        );
     }
 
     // ── 12. CSV with no data rows → error ─────────────────────────────────────
@@ -858,7 +884,10 @@ mod tests {
             assert!(result.is_err(), "shapefile must return error");
             let msg = result.unwrap_err();
             assert!(msg.contains("[CONFIG]"), "must be [CONFIG] error: {msg}");
-            assert!(msg.contains("not yet implemented"), "must mention not yet implemented: {msg}");
+            assert!(
+                msg.contains("not yet implemented"),
+                "must mention not yet implemented: {msg}"
+            );
         });
     }
 
@@ -873,15 +902,27 @@ mod tests {
             std::fs::write(&f, csv).unwrap();
 
             let result = run_label_import("wis_test", &f, "2020", None);
-            assert!(result.is_ok(), "end-to-end import must succeed: {:?}", result.err());
+            assert!(
+                result.is_ok(),
+                "end-to-end import must succeed: {:?}",
+                result.err()
+            );
 
             // assignments.json must exist
             let asgn = PathBuf::from("runs/wis_test/2020/wisconsin/assignments.json");
-            assert!(asgn.exists(), "assignments.json must be written: {}", asgn.display());
+            assert!(
+                asgn.exists(),
+                "assignments.json must be written: {}",
+                asgn.display()
+            );
 
             // index.json must exist
             let idx = PathBuf::from("runs/wis_test/2020/index.json");
-            assert!(idx.exists(), "index.json must be written: {}", idx.display());
+            assert!(
+                idx.exists(),
+                "index.json must be written: {}",
+                idx.display()
+            );
 
             // index.json must have algorithm.structure = "external"
             let content = std::fs::read_to_string(&idx).unwrap();
@@ -889,12 +930,13 @@ mod tests {
             assert_eq!(v["algorithm"]["structure"].as_str(), Some("external"));
         });
         // Check registry using absolute path so we don't depend on CWD.
-        let registry_path = dir.path().join(".redist");
+        let registry_path = dir.path().join(".bisect");
         if registry_path.exists() {
             let content = std::fs::read_to_string(&registry_path).unwrap();
             let v: serde_json::Value = serde_json::from_str(&content).unwrap();
             assert!(
-                v["wis_test"]["built"].as_array()
+                v["wis_test"]["built"]
+                    .as_array()
                     .map(|a| a.iter().any(|y| y.as_str() == Some("2020")))
                     .unwrap_or(false),
                 "registry must mark wis_test/2020 as built; registry content: {v}"
@@ -983,8 +1025,10 @@ mod tests {
         let msg = result.unwrap_err();
         assert!(msg.contains("[INPUT]"), "[INPUT] prefix required: {msg}");
         // Must mention the bad value
-        assert!(msg.contains("not_a_number") || msg.contains("cannot parse"),
-            "error must identify the bad value: {msg}");
+        assert!(
+            msg.contains("not_a_number") || msg.contains("cannot parse"),
+            "error must identify the bad value: {msg}"
+        );
     }
 
     // ── 22. GeoJSON: all features missing GEOID+district → [INPUT] error ──────
@@ -1018,11 +1062,16 @@ mod tests {
             std::fs::write(&f, "data").unwrap();
 
             let result = run_label_import("my_plan", &f, "2020", None);
-            assert!(result.is_err(), "unknown extension must fail without --format");
+            assert!(
+                result.is_err(),
+                "unknown extension must fail without --format"
+            );
             let msg = result.unwrap_err();
             assert!(msg.contains("[CONFIG]"), "[CONFIG] prefix required: {msg}");
-            assert!(msg.contains("auto-detect") || msg.contains("format"),
-                "error must mention format detection: {msg}");
+            assert!(
+                msg.contains("auto-detect") || msg.contains("format"),
+                "error must mention format detection: {msg}"
+            );
         });
     }
 
@@ -1041,7 +1090,10 @@ mod tests {
             let msg = result.unwrap_err();
             assert!(msg.contains("[INPUT]"), "[INPUT] prefix required: {msg}");
             // Must mention a GEOID so the user can diagnose
-            assert!(msg.contains("99"), "error must mention the unrecognised GEOID prefix: {msg}");
+            assert!(
+                msg.contains("99"),
+                "error must mention the unrecognised GEOID prefix: {msg}"
+            );
         });
     }
 
@@ -1076,8 +1128,11 @@ mod tests {
             &"0".repeat(64),
             &by_state,
         );
-        assert_eq!(idx["label"].as_str(), Some("senate_draft2"),
-            "index label field must match the label argument");
+        assert_eq!(
+            idx["label"].as_str(),
+            Some("senate_draft2"),
+            "index label field must match the label argument"
+        );
     }
 
     // ── 27. build_import_index: summary.states count is correct ──────────────
@@ -1085,12 +1140,23 @@ mod tests {
     #[test]
     fn test_build_import_index_summary_states_count() {
         let mut by_state: HashMap<&'static str, HashMap<String, usize>> = HashMap::new();
-        by_state.insert("vermont", {let mut m = HashMap::new(); m.insert("50001".to_string(), 1); m});
-        by_state.insert("alaska",  {let mut m = HashMap::new(); m.insert("02001".to_string(), 1); m});
+        by_state.insert("vermont", {
+            let mut m = HashMap::new();
+            m.insert("50001".to_string(), 1);
+            m
+        });
+        by_state.insert("alaska", {
+            let mut m = HashMap::new();
+            m.insert("02001".to_string(), 1);
+            m
+        });
 
         let idx = build_import_index("p", "2020", Path::new("f.csv"), "csv", "sha", &by_state);
-        assert_eq!(idx["summary"]["states"].as_u64(), Some(2),
-            "summary.states must equal number of states in by_state map");
+        assert_eq!(
+            idx["summary"]["states"].as_u64(),
+            Some(2),
+            "summary.states must equal number of states in by_state map"
+        );
     }
 
     // ── 28. rplan format → [CONFIG] stub error ───────────────────────────────
@@ -1106,7 +1172,10 @@ mod tests {
             assert!(result.is_err(), "rplan must return error");
             let msg = result.unwrap_err();
             assert!(msg.contains("[CONFIG]"), "[CONFIG] prefix required: {msg}");
-            assert!(msg.contains("not yet implemented"), "must mention not implemented: {msg}");
+            assert!(
+                msg.contains("not yet implemented"),
+                "must mention not implemented: {msg}"
+            );
         });
     }
 
@@ -1139,7 +1208,11 @@ mod tests {
             Registry::mark_analyzed("plan_b", "2020").unwrap();
 
             let result = run_label_compare("plan_a", "plan_b", "2020", false, None);
-            assert!(result.is_ok(), "fully built+analyzed labels must compare without error: {:?}", result);
+            assert!(
+                result.is_ok(),
+                "fully built+analyzed labels must compare without error: {:?}",
+                result
+            );
         });
     }
 
@@ -1154,7 +1227,11 @@ mod tests {
             Registry::mark_analyzed("plan_b", "2020").unwrap();
 
             let result = run_label_compare("plan_a", "plan_b", "2020", true, None);
-            assert!(result.is_ok(), "json output mode must succeed: {:?}", result);
+            assert!(
+                result.is_ok(),
+                "json output mode must succeed: {:?}",
+                result
+            );
         });
     }
 }

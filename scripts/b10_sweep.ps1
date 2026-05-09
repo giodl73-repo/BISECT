@@ -10,7 +10,7 @@ param(
 )
 
 Set-Location C:\src\apportionment
-$redist = ".\redist\target\release\redist.exe"
+$BISECT = ".\target\release\bisect.exe"
 $outDir = "outputs\b10_sweep"
 $csv    = "$outDir\county_stickiness.csv"
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
@@ -65,12 +65,12 @@ function Run-State($code, $nD, $stName, $alpha) {
     $pPath = "outputs\$ver\2020\states\$stName\analysis\proportionality.json"
 
     if (-not (Test-Path $mPath)) {
-        $cmd = "$redist state --state $code --year 2020 --version $ver --seed $Seed --manifest --force $alphaStr"
+        $cmd = "$BISECT state --state $code --year 2020 --version $ver --seed $Seed --manifest --force $alphaStr"
         $null = Invoke-Expression $cmd 2>&1
         if ($LASTEXITCODE -ne 0) { return $null }
     }
     if (-not (Test-Path $pPath)) {
-        $null = & $redist analyze --state $code --year 2020 --version $ver --types proportionality 2>&1
+        $null = & $BISECT analyze --state $code --year 2020 --version $ver --types proportionality 2>&1
     }
 
     if (-not (Test-Path $mPath)) { return $null }

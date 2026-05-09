@@ -12,16 +12,16 @@ import pytest
 import numpy as np
 from unittest.mock import patch, MagicMock
 
-RUST_AVAILABLE = os.environ.get('REDIST_NO_RUST', '0') != '1'
+RUST_AVAILABLE = os.environ.get('BISECT_NO_RUST', '0') != '1'
 try:
-    import redist_py
-    REDIST_PY_IMPORTABLE = True
+    import bisect_py
+    BISECT_PY_IMPORTABLE = True
 except ImportError:
-    REDIST_PY_IMPORTABLE = False
+    BISECT_PY_IMPORTABLE = False
 
 pytestmark = pytest.mark.skipif(
-    not RUST_AVAILABLE or not REDIST_PY_IMPORTABLE,
-    reason='redist_py not available'
+    not RUST_AVAILABLE or not BISECT_PY_IMPORTABLE,
+    reason='bisect_py not available'
 )
 
 
@@ -31,7 +31,7 @@ class TestRustBalanceCheckInPipeline:
     def test_balanced_partition_passes(self):
         """A perfectly balanced partition does not raise."""
         # D0: tracts 0,1 → 1000+1000=2000, D1: tracts 2,3 → 1000+1000=2000
-        p = redist_py.Partition.from_dict({0: 1, 1: 1, 2: 2, 3: 2})
+        p = bisect_py.Partition.from_dict({0: 1, 1: 1, 2: 2, 3: 2})
         vw = np.array([1000, 1000, 1000, 1000], dtype=np.int64)
         # Should not raise
         p.assert_balanced(vw, n_districts=2, tolerance=0.005)
@@ -39,14 +39,35 @@ class TestRustBalanceCheckInPipeline:
     def test_imbalanced_partition_raises_valueerror(self):
         """An imbalanced partition raises ValueError before output is written."""
         # D0: 100, D1: 1900 → 90% deviation
-        p = redist_py.Partition.from_dict({0: 1, 1: 2, 2: 2, 3: 2})
+        p = bisect_py.Partition.from_dict({0: 1, 1: 2, 2: 2, 3: 2})
         vw = np.array([100, 600, 600, 700], dtype=np.int64)
         with pytest.raises(ValueError):
             p.assert_balanced(vw, n_districts=2, tolerance=0.005)
 
+    def test_incomplete_assignment_raises_valueerror(self):
+        """Missing tract assignments are rejected before balance math."""
+        p = bisect_py.Partition.from_dict({0: 1, 1: 2})
+        vw = np.array([100, 100, 100], dtype=np.int64)
+        with pytest.raises(ValueError, match='assignments'):
+            p.assert_balanced(vw, n_districts=2, tolerance=0.005)
+
+    def test_missing_district_raises_valueerror(self):
+        """A final partition must include every expected district label."""
+        p = bisect_py.Partition.from_dict({0: 1, 1: 1, 2: 1, 3: 1})
+        vw = np.array([100, 100, 100, 100], dtype=np.int64)
+        with pytest.raises(ValueError, match='missing'):
+            p.assert_balanced(vw, n_districts=2, tolerance=1.0)
+
+    def test_invalid_district_raises_valueerror(self):
+        """Out-of-range district IDs are not silently folded into balance."""
+        p = bisect_py.Partition.from_dict({0: 0, 1: 1, 2: 2, 3: 1})
+        vw = np.array([100, 100, 100, 100], dtype=np.int64)
+        with pytest.raises(ValueError, match='outside expected range'):
+            p.assert_balanced(vw, n_districts=2, tolerance=1.0)
+
     def test_error_message_names_deviation(self):
         """ValueError message includes 'deviates' for diagnosability."""
-        p = redist_py.Partition.from_dict({0: 1, 1: 2})
+        p = bisect_py.Partition.from_dict({0: 1, 1: 2})
         vw = np.array([100, 900], dtype=np.int64)
         with pytest.raises(ValueError, match='deviates'):
             p.assert_balanced(vw, n_districts=2, tolerance=0.005)
@@ -55,14 +76,14 @@ class TestRustBalanceCheckInPipeline:
         """Exactly at 0.5% passes; 0.5% + epsilon fails."""
         # Total=2000, ideal=1000, tolerance=0.005 → max allowed deviation=5
         # D0=1005, D1=995 → dev = 5/1000 = 0.005 → exactly at boundary
-        p = redist_py.Partition.from_dict({0: 1, 1: 1, 2: 2, 3: 2})
+        p = bisect_py.Partition.from_dict({0: 1, 1: 1, 2: 2, 3: 2})
         vw = np.array([505, 500, 498, 497], dtype=np.int64)
         # D0=1005, D1=995, total=2000, ideal=1000, dev=5/1000=0.005 → passes
         p.assert_balanced(vw, n_districts=2, tolerance=0.005)
 
         # D0=1006 → dev=6/1000=0.006 → fails
         vw2 = np.array([506, 500, 498, 496], dtype=np.int64)
-        p2 = redist_py.Partition.from_dict({0: 1, 1: 1, 2: 2, 3: 2})
+        p2 = bisect_py.Partition.from_dict({0: 1, 1: 1, 2: 2, 3: 2})
         with pytest.raises(ValueError):
             p2.assert_balanced(vw2, n_districts=2, tolerance=0.005)
 
@@ -75,7 +96,7 @@ class TestRustBalanceCheckInPipeline:
         while ±0.5% would fail — confirming the caller must choose the right moment.
         """
         # Simulated intermediate split: D0=1200, D1=800 → 20% deviation
-        p = redist_py.Partition.from_dict({0: 1, 1: 1, 2: 2})
+        p = bisect_py.Partition.from_dict({0: 1, 1: 1, 2: 2})
         vw = np.array([600, 600, 800], dtype=np.int64)
         # Final tolerance fails
         with pytest.raises(ValueError):
@@ -85,7 +106,7 @@ class TestRustBalanceCheckInPipeline:
 
     def test_single_district_trivially_balanced(self):
         """Single-district state (VT, DE, etc.) always passes — no split to check."""
-        p = redist_py.Partition.from_dict({0: 1, 1: 1, 2: 1})
+        p = bisect_py.Partition.from_dict({0: 1, 1: 1, 2: 1})
         vw = np.array([500, 700, 300], dtype=np.int64)
         # 1 district = everything in D1 → deviation vs ideal (total/1) = 0
         p.assert_balanced(vw, n_districts=1, tolerance=0.005)

@@ -57,8 +57,7 @@ pub fn load_population_weights(
     geoids: &[String],
 ) -> Result<HashMap<String, u64>, String> {
     let col = source.column_name();
-    let geoid_set: std::collections::HashSet<&str> =
-        geoids.iter().map(|s| s.as_str()).collect();
+    let geoid_set: std::collections::HashSet<&str> = geoids.iter().map(|s| s.as_str()).collect();
 
     let mut reader = csv::Reader::from_reader(csv_bytes);
     let headers = reader
@@ -72,18 +71,15 @@ pub fn load_population_weights(
         .position(|h| h == "geoid")
         .ok_or_else(|| "CSV missing 'geoid' column".to_string())?;
 
-    let col_idx = headers
-        .iter()
-        .position(|h| h == col)
-        .ok_or_else(|| {
-            format!(
-                "CSV missing '{}' column required by --population-source {}. \
+    let col_idx = headers.iter().position(|h| h == col).ok_or_else(|| {
+        format!(
+            "CSV missing '{}' column required by --population-source {}. \
                  Available columns: {}",
-                col,
-                col,
-                headers.iter().collect::<Vec<_>>().join(", ")
-            )
-        })?;
+            col,
+            col,
+            headers.iter().collect::<Vec<_>>().join(", ")
+        )
+    })?;
 
     let mut weights = HashMap::new();
     for result in reader.records() {
@@ -93,11 +89,7 @@ pub fn load_population_weights(
             .ok_or("missing geoid field in row")?
             .to_string();
         if geoid_set.is_empty() || geoid_set.contains(geoid.as_str()) {
-            let val: u64 = record
-                .get(col_idx)
-                .unwrap_or("0")
-                .parse()
-                .unwrap_or(0);
+            let val: u64 = record.get(col_idx).unwrap_or("0").parse().unwrap_or(0);
             weights.insert(geoid, val);
         }
     }
@@ -181,10 +173,22 @@ mod tests {
 
     #[test]
     fn test_population_source_from_str() {
-        assert_eq!(PopulationSource::from_str("total"), Some(PopulationSource::Total));
-        assert_eq!(PopulationSource::from_str("vap"), Some(PopulationSource::Vap));
-        assert_eq!(PopulationSource::from_str("cvap"), Some(PopulationSource::Cvap));
-        assert_eq!(PopulationSource::from_str("VAP"), Some(PopulationSource::Vap));
+        assert_eq!(
+            PopulationSource::from_str("total"),
+            Some(PopulationSource::Total)
+        );
+        assert_eq!(
+            PopulationSource::from_str("vap"),
+            Some(PopulationSource::Vap)
+        );
+        assert_eq!(
+            PopulationSource::from_str("cvap"),
+            Some(PopulationSource::Cvap)
+        );
+        assert_eq!(
+            PopulationSource::from_str("VAP"),
+            Some(PopulationSource::Vap)
+        );
         assert_eq!(PopulationSource::from_str("unknown"), None);
     }
 }

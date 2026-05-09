@@ -4,7 +4,7 @@
 
 **Date:** 2026-04-29
 **Updated:** 2026-04-29 (v2 — incorporates SURVEY, BENCHMARK, COVENANT review findings; Task 0 deprecation window removed since no external users)
-**Goal:** Switch the documented and default entry points from the Python pipeline to the `redist` Rust binary. After this plan, `run -y 2020 -v v1` produces full 50-state output via the Rust binary with no Python invoked for redistricting.
+**Goal:** Switch the documented and default entry points from the Python pipeline to the `BISECT` Rust binary. After this plan, `run -y 2020 -v v1` produces full 50-state output via the Rust binary with no Python invoked for redistricting.
 
 **Depends on:** spec v2 approval. Nothing else.
 **Blocks:** Plan 02 (deletion).
@@ -17,9 +17,9 @@ The Rust CLI already runs full 50-state in 18s vs ~55min Python (per `design/rus
 
 ---
 
-## Task 1: Audit `redist run` flag parity (semantics, not just presence)
+## Task 1: Audit `BISECT run` flag parity (semantics, not just presence)
 
-**Files:** `redist/crates/bisect-cli/src/args.rs`, `scripts/pipeline/run_complete_redistricting.py`
+**Files:** `BISECT/crates/bisect-cli/src/args.rs`, `scripts/pipeline/run_complete_redistricting.py`
 
 The Rust CLI's flag surface is a self-described mirror of the Python argparse surface (per the `MERIDIAN invariant` comment in `args.rs`). Verify before cutover.
 
@@ -27,7 +27,7 @@ The Rust CLI's flag surface is a self-described mirror of the Python argparse su
 - [ ] **1.2** For each flag in **both** Python and Rust: document not just that the flag *exists* in both, but that the *semantics match*. For example, `--seed 42` is documented as "reproducible run" in Python — confirm Rust produces the same output given the same seed, OR explicitly publish the difference. Add semantics-comparison column to the diff table.
 - [ ] **1.3** For each flag in Python but not in Rust (if any), decide: add to Rust, or document as deprecated.
 - [ ] **1.4** For each flag in Rust but not in Python: ensure it has a sensible default so existing scripts don't break.
-- [ ] **1.5** Run `redist run --help` and confirm the help text matches user expectation.
+- [ ] **1.5** Run `BISECT run --help` and confirm the help text matches user expectation.
 
 **Exit:** A diff table at the bottom of this plan listing every flag with: present-in-python, present-in-rust, semantics-match (yes/no/explained-difference).
 
@@ -38,7 +38,7 @@ The Rust CLI's flag surface is a self-described mirror of the Python argparse su
 **Files:** N/A (run-time validation)
 
 - [ ] **2.1** Run `python run_complete_redistricting.py -y 2020 -v cutover_python` (current default).
-- [ ] **2.2** Run `redist run -y 2020 -v cutover_rust` (target default).
+- [ ] **2.2** Run `BISECT run -y 2020 -v cutover_rust` (target default).
 - [ ] **2.3** Run `python scripts/pipeline/compare_rust_vs_python.py --python-version cutover_python --rust-version cutover_rust`. Confirm parity report passes the spec's quantitative gates: population imbalance ≤ 0.5% (both), district counts correct, contiguity, PP within ±3%, Reock within ±5%.
 - [ ] **2.4** Spot-check 3 states (VT, AL, CA) by opening district summaries and maps side by side.
 
@@ -50,27 +50,27 @@ The Rust CLI's flag surface is a self-described mirror of the Python argparse su
 
 **Files:** `setup_env.bat`, `run_redistricting.bat`, possibly `run_test.bat`
 
-- [ ] **3.1** Edit `run_redistricting.bat`. Replace `py -3.13 scripts/pipeline/run_complete_redistricting.py %*` with `redist run %*`. Add a comment documenting the cutover date and pointing to this plan.
-- [ ] **3.2** Edit `setup_env.bat`. Add a pre-flight check at the top: `where redist >NUL 2>&1 || echo WARNING: redist binary not on PATH` (mitigates PP-15). The doskey `run=run_redistricting.bat` line stays the same — it now resolves to Rust transitively.
-- [ ] **3.3** If `run_test.bat` is a thin wrapper of `run_redistricting.bat --run-type test`, decide: leave it (one-line wrapper, harmless) or delete it (consistency with `redist run --run-type test`).
+- [ ] **3.1** Edit `run_redistricting.bat`. Replace `py -3.13 scripts/pipeline/run_complete_redistricting.py %*` with `BISECT run %*`. Add a comment documenting the cutover date and pointing to this plan.
+- [ ] **3.2** Edit `setup_env.bat`. Add a pre-flight check at the top: `where BISECT >NUL 2>&1 || echo WARNING: BISECT binary not on PATH` (mitigates PP-15). The doskey `run=run_redistricting.bat` line stays the same — it now resolves to Rust transitively.
+- [ ] **3.3** If `run_test.bat` is a thin wrapper of `run_redistricting.bat --run-type test`, decide: leave it (one-line wrapper, harmless) or delete it (consistency with `BISECT run --run-type test`).
 - [ ] **3.4** Open a new shell, run `setup_env.bat`, observe the PATH warning if any, then `run -p -y 2020 -v test_cutover -st VT`. Confirm it runs the Rust binary in dry-run mode.
 
-**Exit:** doskey `run` invokes the Rust binary. Old shells need re-sourcing. PATH warning fires if `redist` not installed.
+**Exit:** doskey `run` invokes the Rust binary. Old shells need re-sourcing. PATH warning fires if `BISECT` not installed.
 
 ---
 
 ## Task 4: Update CLAUDE.md and README.md
 
-**Files:** `CLAUDE.md`, `README.md`, `docs/REDIST_CLI.md`
+**Files:** `CLAUDE.md`, `README.md`, `docs/BISECT_CLI.md`
 
-- [ ] **4.1** In CLAUDE.md, update "Critical Files" → "Pipeline (executable)" section. Replace the Python script paths with the corresponding `redist` subcommands. Note that the Python paths are now archived under `archive/python-pipeline-final/` (Plan 02 will move them) and link there for reference.
+- [ ] **4.1** In CLAUDE.md, update "Critical Files" → "Pipeline (executable)" section. Replace the Python script paths with the corresponding `BISECT` subcommands. Note that the Python paths are now archived under `archive/python-pipeline-final/` (Plan 02 will move them) and link there for reference.
 - [ ] **4.2** In CLAUDE.md "Common Commands" section, update example invocations. The `run -v v1` examples should explicitly state they run the Rust binary now.
-- [ ] **4.3** In CLAUDE.md "Recent Changes", add an entry for cutover date: "Entry-point cutover: doskey `run`/`runtest` now invoke `redist` binary directly. Python pipeline orchestrators archived under `archive/python-pipeline-final/`."
-- [ ] **4.4** In CLAUDE.md "Stack" line, change "Python 3.13+, METIS" to "Rust (`redist` CLI, primary) + Python 3.13+ (research/dashboard), METIS".
-- [ ] **4.5** README.md: scan for references to the Python pipeline as primary; update to point at `redist run`.
-- [ ] **4.6** `docs/REDIST_CLI.md`: replace the "Migration" section with a "Cutover record" section dated this plan's execution.
+- [ ] **4.3** In CLAUDE.md "Recent Changes", add an entry for cutover date: "Entry-point cutover: doskey `run`/`runtest` now invoke `BISECT` binary directly. Python pipeline orchestrators archived under `archive/python-pipeline-final/`."
+- [ ] **4.4** In CLAUDE.md "Stack" line, change "Python 3.13+, METIS" to "Rust (`BISECT` CLI, primary) + Python 3.13+ (research/dashboard), METIS".
+- [ ] **4.5** README.md: scan for references to the Python pipeline as primary; update to point at `BISECT run`.
+- [ ] **4.6** `docs/BISECT_CLI.md`: replace the "Migration" section with a "Cutover record" section dated this plan's execution.
 
-**Exit:** New contributors reading CLAUDE.md learn that `redist` is primary, not Python.
+**Exit:** New contributors reading CLAUDE.md learn that `BISECT` is primary, not Python.
 
 ---
 
@@ -79,7 +79,7 @@ The Rust CLI's flag surface is a self-described mirror of the Python argparse su
 **Files:** `.github/workflows/*.yml`, `tests/acceptance/`
 
 - [ ] **5.1** Check that CI runs both `pytest tests/acceptance/` and the Rust test suite. Confirm green.
-- [ ] **5.2** Add a test at `tests/acceptance/test_redist_invariants.py` that invokes `redist run -p -y 2020 -v ci_test -st VT` (dry run for CI speed) and a separate slower test that does a real `bisect state --state VT --year 2020` and asserts:
+- [ ] **5.2** Add a test at `tests/acceptance/test_BISECT_invariants.py` that invokes `BISECT run -p -y 2020 -v ci_test -st VT` (dry run for CI speed) and a separate slower test that does a real `bisect state --state VT --year 2020` and asserts:
    - Exit code 0
    - `final_assignments.json` exists and parses
    - District count exactly equals 1 (VT)
@@ -101,19 +101,19 @@ The Rust CLI's flag surface is a self-described mirror of the Python argparse su
 
 ## Task 7: Reproducible-build documentation (NEW in v2)
 
-**Files:** `docs/REPRODUCIBLE_BUILD.md` (new), `redist/rust-toolchain.toml`
+**Files:** `docs/REPRODUCIBLE_BUILD.md` (new), `BISECT/rust-toolchain.toml`
 
-A court-admissibility requirement (per SURVEY, COVENANT review): a third party must be able to reproduce the `redist` binary from source.
+A court-admissibility requirement (per SURVEY, COVENANT review): a third party must be able to reproduce the `BISECT` binary from source.
 
-- [ ] **7.1** Confirm `redist/rust-toolchain.toml` pins the rustc version. If absent, create it pinning to the version used in current CI.
+- [ ] **7.1** Confirm `BISECT/rust-toolchain.toml` pins the rustc version. If absent, create it pinning to the version used in current CI.
 - [ ] **7.2** Document in `docs/REPRODUCIBLE_BUILD.md`:
    - Pinned toolchain version
    - Build command (`cargo build --release --locked` from clean checkout)
    - How to verify two builds produce byte-identical binaries (or where deterministic-build limits live, e.g., timestamps)
    - Toolchain installation steps for Linux/macOS/Windows
-- [ ] **7.3** Add `redist --version` output format that exposes git commit + rustc version (so output provenance blocks can include them). Wire into the provenance block referenced in the spec.
+- [ ] **7.3** Add `BISECT --version` output format that exposes git commit + rustc version (so output provenance blocks can include them). Wire into the provenance block referenced in the spec.
 
-**Exit:** `docs/REPRODUCIBLE_BUILD.md` exists; `redist --version` shows commit + rustc; provenance block populated.
+**Exit:** `docs/REPRODUCIBLE_BUILD.md` exists; `BISECT --version` shows commit + rustc; provenance block populated.
 
 ---
 
@@ -130,7 +130,7 @@ If the deprecation notice (Task 0) needs to extend, simply update the cutover da
 
 ## Flag-Surface Diff (Task 1 result, 2026-04-29)
 
-Comparison of `scripts/pipeline/run_complete_redistricting.py` argparse vs `redist/crates/bisect-cli/src/args.rs::RunArgs`.
+Comparison of `scripts/pipeline/run_complete_redistricting.py` argparse vs `BISECT/crates/bisect-cli/src/args.rs::RunArgs`.
 
 | Flag | Python | Rust | Semantics match | Notes |
 |---|---|---|---|---|

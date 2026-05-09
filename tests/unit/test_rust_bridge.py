@@ -1,20 +1,20 @@
 """
-L2 tests for redist_py.connect_islands — island component bridging via PyO3.
+L2 tests for bisect_py.connect_islands — island component bridging via PyO3.
 """
 
 import os
 import pytest
 
-RUST_AVAILABLE = os.environ.get('REDIST_NO_RUST', '0') != '1'
+RUST_AVAILABLE = os.environ.get('BISECT_NO_RUST', '0') != '1'
 try:
-    import redist_py
-    REDIST_PY_IMPORTABLE = True
+    import bisect_py
+    BISECT_PY_IMPORTABLE = True
 except ImportError:
-    REDIST_PY_IMPORTABLE = False
+    BISECT_PY_IMPORTABLE = False
 
 pytestmark = pytest.mark.skipif(
-    not RUST_AVAILABLE or not REDIST_PY_IMPORTABLE,
-    reason='redist_py not available'
+    not RUST_AVAILABLE or not BISECT_PY_IMPORTABLE,
+    reason='bisect_py not available'
 )
 
 # GEOIDs: SS=50 (Vermont), CCC=001 (county 001), TTTTTT
@@ -28,7 +28,7 @@ class TestConnectIslands:
         adj = [[1], [0, 2], [1]]
         centroids = [(0.0, 0.0), (1.0, 0.0), (2.0, 0.0)]
         geoids = [geoid("001", "000100"), geoid("001", "000200"), geoid("001", "000300")]
-        edges = redist_py.connect_islands(adj, centroids, geoids)
+        edges = bisect_py.connect_islands(adj, centroids, geoids)
         assert edges == []
 
     def test_isolated_tract_gets_bridged(self):
@@ -36,7 +36,7 @@ class TestConnectIslands:
         adj = [[1], [0], []]
         centroids = [(0.0, 0.0), (1.0, 0.0), (0.5, 5.0)]
         geoids = [geoid("001", "000100"), geoid("001", "000200"), geoid("001", "000300")]
-        edges = redist_py.connect_islands(adj, centroids, geoids)
+        edges = bisect_py.connect_islands(adj, centroids, geoids)
         assert len(edges) == 1
         u, v = edges[0]
         # Tract 2 is isolated; should connect to tract 0 or 1
@@ -47,7 +47,7 @@ class TestConnectIslands:
         centroids = [(0.0, 0.0), (1.0, 0.0), (0.5, 5.0), (0.5, 6.0)]
         geoids = [geoid("001", "000100"), geoid("001", "000200"),
                   geoid("001", "000300"), geoid("001", "000400")]
-        edges = redist_py.connect_islands(adj, centroids, geoids)
+        edges = bisect_py.connect_islands(adj, centroids, geoids)
         for u, v in edges:
             assert u < v, f"edge ({u},{v}) not canonical (u must be < v)"
 
@@ -59,7 +59,7 @@ class TestConnectIslands:
                      (1_010_000.0, 1_000_000.0),
                      (1_001_000.0, 1_020_000.0)]  # closest to tract 0
         geoids = [geoid("001", "000100"), geoid("001", "000200"), geoid("001", "000300")]
-        edges = redist_py.connect_islands(adj, centroids, geoids)
+        edges = bisect_py.connect_islands(adj, centroids, geoids)
         assert len(edges) == 1
         u, v = edges[0]
         # Should connect 2 → 0 (nearest same-county)
@@ -70,7 +70,7 @@ class TestConnectIslands:
         adj = [[1], [0], []]
         centroids = [(0.0, 0.0), (1.0, 0.0), (0.5, 5.0)]
         geoids = [geoid("001", "000100"), geoid("001", "000200"), geoid("002", "000100")]
-        edges = redist_py.connect_islands(adj, centroids, geoids)
+        edges = bisect_py.connect_islands(adj, centroids, geoids)
         # Cross-county fallback should still produce a bridge
         assert len(edges) == 1
 
@@ -78,7 +78,7 @@ class TestConnectIslands:
         adj = [[1], [0], []]
         centroids = [(0.0, 0.0), (1.0, 0.0), (0.5, 5.0)]
         geoids = [geoid("001", "000100"), geoid("001", "000200"), geoid("001", "000300")]
-        edges = redist_py.connect_islands(adj, centroids, geoids)
+        edges = bisect_py.connect_islands(adj, centroids, geoids)
         assert isinstance(edges, list)
         if edges:
             assert isinstance(edges[0], tuple)

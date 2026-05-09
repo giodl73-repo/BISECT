@@ -20,7 +20,8 @@ pub fn load_demographics(csv_path: &Path) -> Result<HashMap<String, f64>, String
     let cols: Vec<&str> = header.split(',').collect();
 
     let col = |name: &str| -> Result<usize, String> {
-        cols.iter().position(|&c| c.trim() == name)
+        cols.iter()
+            .position(|&c| c.trim() == name)
             .ok_or_else(|| format!("column '{name}' not found in header: {}", header))
     };
 
@@ -30,12 +31,20 @@ pub fn load_demographics(csv_path: &Path) -> Result<HashMap<String, f64>, String
 
     let mut result = HashMap::new();
     for (line_num, line) in lines.enumerate() {
-        if line.trim().is_empty() { continue; }
+        if line.trim().is_empty() {
+            continue;
+        }
         let fields: Vec<&str> = line.split(',').collect();
 
         let geoid = format!("{:0>11}", fields.get(i_geoid).unwrap_or(&"").trim());
-        let total: f64 = fields.get(i_total).and_then(|f| f.trim().parse().ok()).unwrap_or(0.0);
-        let white: f64 = fields.get(i_white).and_then(|f| f.trim().parse().ok()).unwrap_or(0.0);
+        let total: f64 = fields
+            .get(i_total)
+            .and_then(|f| f.trim().parse().ok())
+            .unwrap_or(0.0);
+        let white: f64 = fields
+            .get(i_white)
+            .and_then(|f| f.trim().parse().ok())
+            .unwrap_or(0.0);
 
         if total <= 0.0 {
             result.insert(geoid, 0.0);
@@ -59,7 +68,8 @@ pub fn align_demographics_to_adjacency(
 ) -> Vec<f64> {
     (0..n_tracts)
         .map(|i| {
-            index_to_geoid.get(&i)
+            index_to_geoid
+                .get(&i)
                 .and_then(|geoid| demo.get(geoid))
                 .copied()
                 .unwrap_or(0.0)
@@ -77,7 +87,11 @@ mod tests {
         static COUNTER: AtomicUsize = AtomicUsize::new(0);
         let id = COUNTER.fetch_add(1, Ordering::SeqCst);
         let mut tmp = std::env::temp_dir();
-        tmp.push(format!("demographics_test_{}_{}.csv", std::process::id(), id));
+        tmp.push(format!(
+            "demographics_test_{}_{}.csv",
+            std::process::id(),
+            id
+        ));
         let mut f = std::fs::File::create(&tmp).expect("create tmp");
         f.write_all(content.as_bytes()).expect("write tmp");
         tmp
@@ -86,11 +100,16 @@ mod tests {
     #[test]
     fn test_demographics_vermont() {
         let path = std::path::Path::new("data/2020/demographics/vermont_demographics_2020.csv");
-        if !path.exists() { return; }
+        if !path.exists() {
+            return;
+        }
         let demo = load_demographics(path).expect("should load VT demographics");
         assert_eq!(demo.len(), 193, "VT has 193 tracts");
         for (geoid, frac) in &demo {
-            assert!(*frac >= 0.0 && *frac <= 1.0, "GEOID {geoid} frac {frac} out of range");
+            assert!(
+                *frac >= 0.0 && *frac <= 1.0,
+                "GEOID {geoid} frac {frac} out of range"
+            );
             assert_eq!(geoid.len(), 11, "GEOID must be 11 chars: {geoid}");
         }
     }
@@ -139,8 +158,10 @@ mod tests {
         let csv = "GEOID,total_pop,white_non_hispanic\n01001020100,0,0\n";
         let path = write_tmp_csv(csv);
         let demo = load_demographics(&path).expect("should parse");
-        assert_eq!(demo["01001020100"], 0.0,
-            "zero total_pop must produce 0.0 minority fraction");
+        assert_eq!(
+            demo["01001020100"], 0.0,
+            "zero total_pop must produce 0.0 minority fraction"
+        );
         std::fs::remove_file(&path).ok();
     }
 
@@ -149,8 +170,10 @@ mod tests {
         let csv = "GEOID,total_pop,white_non_hispanic\n01001020100,500,500\n";
         let path = write_tmp_csv(csv);
         let demo = load_demographics(&path).expect("should parse");
-        assert!((demo["01001020100"] - 0.0).abs() < 1e-9,
-            "all-white tract must have 0% minority fraction");
+        assert!(
+            (demo["01001020100"] - 0.0).abs() < 1e-9,
+            "all-white tract must have 0% minority fraction"
+        );
         std::fs::remove_file(&path).ok();
     }
 
@@ -159,8 +182,10 @@ mod tests {
         let csv = "GEOID,total_pop,white_non_hispanic\n01001020100,400,0\n";
         let path = write_tmp_csv(csv);
         let demo = load_demographics(&path).expect("should parse");
-        assert!((demo["01001020100"] - 1.0).abs() < 1e-9,
-            "all-minority tract must have 100% minority fraction");
+        assert!(
+            (demo["01001020100"] - 1.0).abs() < 1e-9,
+            "all-minority tract must have 100% minority fraction"
+        );
         std::fs::remove_file(&path).ok();
     }
 
@@ -170,8 +195,11 @@ mod tests {
         let csv = "GEOID,total_pop,white_non_hispanic\n1001020100,200,50\n";
         let path = write_tmp_csv(csv);
         let demo = load_demographics(&path).expect("should parse");
-        assert!(demo.contains_key("01001020100"),
-            "GEOID must be padded to 11 chars; got keys: {:?}", demo.keys().collect::<Vec<_>>());
+        assert!(
+            demo.contains_key("01001020100"),
+            "GEOID must be padded to 11 chars; got keys: {:?}",
+            demo.keys().collect::<Vec<_>>()
+        );
         std::fs::remove_file(&path).ok();
     }
 
@@ -181,15 +209,22 @@ mod tests {
         let csv = "GEOID,total_pop\n01001020100,1000\n";
         let path = write_tmp_csv(csv);
         let result = load_demographics(&path);
-        assert!(result.is_err(), "missing white_non_hispanic column must produce Err");
+        assert!(
+            result.is_err(),
+            "missing white_non_hispanic column must produce Err"
+        );
         let msg = result.unwrap_err();
-        assert!(msg.contains("white_non_hispanic"), "error must name the missing column: {msg}");
+        assert!(
+            msg.contains("white_non_hispanic"),
+            "error must name the missing column: {msg}"
+        );
         std::fs::remove_file(&path).ok();
     }
 
     #[test]
     fn test_load_demographics_skips_blank_lines() {
-        let csv = "GEOID,total_pop,white_non_hispanic\n01001020100,1000,600\n\n01001020200,500,300\n";
+        let csv =
+            "GEOID,total_pop,white_non_hispanic\n01001020100,1000,600\n\n01001020200,500,300\n";
         let path = write_tmp_csv(csv);
         let demo = load_demographics(&path).expect("should parse with blank line");
         assert_eq!(demo.len(), 2, "blank lines must be silently skipped");
@@ -203,8 +238,11 @@ mod tests {
         let path = write_tmp_csv(csv);
         let demo = load_demographics(&path).expect("should parse");
         // (100-200)/100 = -1.0 → clamped to 0.0 by .clamp(0.0, 1.0)
-        assert!((demo["01001020100"] - 0.0).abs() < 1e-9,
-            "negative minority frac must clamp to 0.0; got {}", demo["01001020100"]);
+        assert!(
+            (demo["01001020100"] - 0.0).abs() < 1e-9,
+            "negative minority frac must clamp to 0.0; got {}",
+            demo["01001020100"]
+        );
         std::fs::remove_file(&path).ok();
     }
 
@@ -223,8 +261,11 @@ mod tests {
         idx.insert(0usize, "50005957100".to_string());
         idx.insert(1usize, "50005957400".to_string());
         let result = align_demographics_to_adjacency(&demo, &idx, 2);
-        assert_eq!(result, vec![0.0, 0.0],
-            "empty demo map must produce all-zero alignment");
+        assert_eq!(
+            result,
+            vec![0.0, 0.0],
+            "empty demo map must produce all-zero alignment"
+        );
     }
 
     #[test]
@@ -265,8 +306,10 @@ mod tests {
         let path = write_tmp_csv(&csv);
         let demo = load_demographics(&path).expect("should parse");
         for (&ref geoid, &frac) in &demo {
-            assert!(frac >= 0.0 && frac <= 1.0,
-                "GEOID {geoid} minority frac {frac} out of [0,1]");
+            assert!(
+                frac >= 0.0 && frac <= 1.0,
+                "GEOID {geoid} minority frac {frac} out of [0,1]"
+            );
         }
         std::fs::remove_file(&path).ok();
     }

@@ -2,13 +2,13 @@
 //!
 //! Tasks shipped in this commit:
 //! - Task 1 (consumer): reads `data/whitelist_dependencies.json` (the DAG)
-//! - Task 2 (one-shot): `redist depo recompute --param KEY=VALUE` skeleton
+//! - Task 2 (one-shot): `BISECT depo recompute --param KEY=VALUE` skeleton
 //! - Task 5/6 (audit log): `DepoLogWriter` with canonical JSONL + hash chain;
-//!   `redist depo verify-log` walks the chain and surfaces any tampering
+//!   `BISECT depo verify-log` walks the chain and surfaces any tampering
 //!
 //! Deferred to next session:
 //! - Task 3: IPC abstraction (Unix socket / Windows named pipe)
-//! - Task 4: `redist deposition-server` daemon
+//! - Task 4: `BISECT deposition-server` daemon
 //! - Task 7: `--enforce-build-commit` + `--case-mode` defaults
 //! - Task 9: p99 benchmark methodology
 //! - Task 10: `examples/deposition-checklist.ipynb`
@@ -69,8 +69,7 @@ pub struct WhitelistParam {
 /// for raw Census downloads). The human-readable spec is at
 /// `docs/parameters/whitelist-dependencies.md`; the CI test (when wired)
 /// asserts the markdown table and this JSON declare the same parameter set.
-const EMBEDDED_WHITELIST_JSON: &str =
-    include_str!("../whitelist_dependencies.json");
+const EMBEDDED_WHITELIST_JSON: &str = include_str!("../whitelist_dependencies.json");
 
 /// Parse the embedded whitelist deps. Cached via `OnceLock`.
 pub fn whitelist_deps() -> &'static WhitelistDeps {
@@ -104,11 +103,24 @@ pub enum DepoError {
     #[error("[INPUT] parameter '{name}' not in whitelist. Allowed: {allowed:?}. See docs/parameters/whitelist-dependencies.md.")]
     UnknownParam { name: String, allowed: Vec<String> },
     #[error("[INPUT] parameter '{name}' value '{value}' is not a valid {ty}")]
-    BadParamValue { name: String, value: String, ty: String },
+    BadParamValue {
+        name: String,
+        value: String,
+        ty: String,
+    },
     #[error("[INPUT] parameter '{name}' value {value} out of range [{lo}, {hi}]")]
-    OutOfRange { name: String, value: f64, lo: f64, hi: f64 },
+    OutOfRange {
+        name: String,
+        value: f64,
+        lo: f64,
+        hi: f64,
+    },
     #[error("[INPUT] parameter '{name}' value '{value}' not in allowed enum {allowed:?}")]
-    BadEnum { name: String, value: String, allowed: Vec<String> },
+    BadEnum {
+        name: String,
+        value: String,
+        allowed: Vec<String>,
+    },
     #[error("[INTERNAL] {0}")]
     Internal(String),
 }
@@ -121,7 +133,11 @@ pub fn parse_param_kv(s: &str) -> Result<(String, serde_json::Value), DepoError>
         .ok_or_else(|| DepoError::BadParamKv(s.to_string()))?;
     let p = lookup_param(name).ok_or_else(|| DepoError::UnknownParam {
         name: name.to_string(),
-        allowed: whitelist_deps().params.iter().map(|p| p.name.clone()).collect(),
+        allowed: whitelist_deps()
+            .params
+            .iter()
+            .map(|p| p.name.clone())
+            .collect(),
     })?;
     match p.ty.as_str() {
         "float" => {
@@ -410,13 +426,11 @@ impl DepoLogWriter {
     fn write_sidecar(&self, closed_at: Option<String>) -> Result<(), DepoError> {
         let final_sha = if closed_at.is_some() {
             // Compute SHA-256 of the entire log file on shutdown.
-            std::fs::read(&self.path)
-                .ok()
-                .map(|b| {
-                    let mut h = Sha256::new();
-                    h.update(&b);
-                    hex_lower(&h.finalize())
-                })
+            std::fs::read(&self.path).ok().map(|b| {
+                let mut h = Sha256::new();
+                h.update(&b);
+                hex_lower(&h.finalize())
+            })
         } else {
             None
         };
@@ -496,7 +510,7 @@ fn recover_log_state(path: &Path) -> Result<(u64, String, u64, String), DepoErro
 // Verify-log (Task 6)
 // ===========================================================================
 
-/// Result of `redist depo verify-log <path>`.
+/// Result of `BISECT depo verify-log <path>`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VerifyOutcome {
     pub entries_verified: u64,
@@ -533,9 +547,8 @@ pub fn verify_log_bytes(bytes: &[u8]) -> Result<VerifyOutcome, DepoError> {
             continue;
         }
         let line_len_with_lf = line.len() + 1;
-        let entry: LogEntry = serde_json::from_str(line).map_err(|e| {
-            DepoError::Internal(format!("line at byte {byte_offset}: parse: {e}"))
-        })?;
+        let entry: LogEntry = serde_json::from_str(line)
+            .map_err(|e| DepoError::Internal(format!("line at byte {byte_offset}: parse: {e}")))?;
         // Check seq is strictly monotonic from 0.
         if entry.seq != expected_seq {
             return Ok(VerifyOutcome {
@@ -603,7 +616,11 @@ mod tests {
     fn test_whitelist_deps_loads_and_has_8_params() {
         let deps = whitelist_deps();
         assert_eq!(deps.schema_version, "whitelist-deps v1");
-        assert_eq!(deps.params.len(), 8, "whitelist must have all 8 params per the spec");
+        assert_eq!(
+            deps.params.len(),
+            8,
+            "whitelist must have all 8 params per the spec"
+        );
     }
 
     #[test]
@@ -620,7 +637,11 @@ mod tests {
             "compactness_metric",
             "partisan_efficiency_threshold",
         ] {
-            assert!(names.contains(n), "whitelist missing param {n}: {:?}", names);
+            assert!(
+                names.contains(n),
+                "whitelist missing param {n}: {:?}",
+                names
+            );
         }
     }
 
@@ -672,7 +693,10 @@ mod tests {
         let err = parse_param_kv("arbitrary_key=value").unwrap_err();
         let msg = err.to_string();
         assert!(msg.contains("not in whitelist"), "{msg}");
-        assert!(msg.contains("leaning_threshold"), "must list allowed params: {msg}");
+        assert!(
+            msg.contains("leaning_threshold"),
+            "must list allowed params: {msg}"
+        );
         assert!(
             msg.contains("docs/parameters/whitelist-dependencies.md"),
             "must point at the doc: {msg}"
@@ -818,7 +842,10 @@ mod tests {
             .unwrap();
         assert_eq!(seq, 0);
         let log_text = std::fs::read_to_string(&w.path).unwrap();
-        assert!(log_text.contains(GENESIS), "first entry must reference GENESIS prev_sha");
+        assert!(
+            log_text.contains(GENESIS),
+            "first entry must reference GENESIS prev_sha"
+        );
     }
 
     #[test]
@@ -859,8 +886,16 @@ mod tests {
             )
             .unwrap();
             for _ in 0..3 {
-                w.append("eval", BTreeMap::new(), vec![], serde_json::json!({}), None, 1, pinned_clock())
-                    .unwrap();
+                w.append(
+                    "eval",
+                    BTreeMap::new(),
+                    vec![],
+                    serde_json::json!({}),
+                    None,
+                    1,
+                    pinned_clock(),
+                )
+                .unwrap();
             }
         }
         // Second session: reopen and append; new entry must have seq=3 and
@@ -875,7 +910,15 @@ mod tests {
         )
         .unwrap();
         let seq = w2
-            .append("eval", BTreeMap::new(), vec![], serde_json::json!({}), None, 1, pinned_clock())
+            .append(
+                "eval",
+                BTreeMap::new(),
+                vec![],
+                serde_json::json!({}),
+                None,
+                1,
+                pinned_clock(),
+            )
             .unwrap();
         assert_eq!(seq, 3);
         let outcome = verify_log_file(&log).unwrap();
@@ -888,8 +931,16 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let mut w = make_writer(&tmp);
         for _ in 0..5 {
-            w.append("eval", BTreeMap::new(), vec![], serde_json::json!({}), None, 1, pinned_clock())
-                .unwrap();
+            w.append(
+                "eval",
+                BTreeMap::new(),
+                vec![],
+                serde_json::json!({}),
+                None,
+                1,
+                pinned_clock(),
+            )
+            .unwrap();
         }
         let path = w.path.clone();
         // Tamper: flip a single character in entry 2's `params` field.
@@ -912,7 +963,10 @@ mod tests {
         // The mutation breaks line 2's bytes; the failure surfaces at the NEXT
         // entry whose recorded prev_sha doesn't match the recomputed sha of
         // the (mutated) line 2. So failure at seq=3.
-        assert_eq!(f.seq, 3, "first divergence at the entry whose prev_sha no longer matches");
+        assert_eq!(
+            f.seq, 3,
+            "first divergence at the entry whose prev_sha no longer matches"
+        );
         assert!(f.reason.contains("prev_sha256 mismatch"), "{}", f.reason);
     }
 
@@ -921,8 +975,16 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let mut w = make_writer(&tmp);
         for _ in 0..3 {
-            w.append("eval", BTreeMap::new(), vec![], serde_json::json!({}), None, 1, pinned_clock())
-                .unwrap();
+            w.append(
+                "eval",
+                BTreeMap::new(),
+                vec![],
+                serde_json::json!({}),
+                None,
+                1,
+                pinned_clock(),
+            )
+            .unwrap();
         }
         let path = w.path.clone();
         // Delete the middle line (seq=1).
@@ -943,12 +1005,21 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let mut w = make_writer(&tmp);
         for _ in 0..2 {
-            w.append("eval", BTreeMap::new(), vec![], serde_json::json!({}), None, 1, pinned_clock())
-                .unwrap();
+            w.append(
+                "eval",
+                BTreeMap::new(),
+                vec![],
+                serde_json::json!({}),
+                None,
+                1,
+                pinned_clock(),
+            )
+            .unwrap();
         }
         let mani_path = w.manifest_path.clone();
         w.close("2026-04-30T13:00:00Z".into()).unwrap();
-        let mani: LogSidecarManifest = serde_json::from_slice(&std::fs::read(&mani_path).unwrap()).unwrap();
+        let mani: LogSidecarManifest =
+            serde_json::from_slice(&std::fs::read(&mani_path).unwrap()).unwrap();
         assert_eq!(mani.total_entries, 2);
         assert_eq!(mani.closed_at.as_deref(), Some("2026-04-30T13:00:00Z"));
         assert!(mani.final_sha256.is_some());
@@ -960,11 +1031,29 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let mut w = make_writer(&tmp);
         let mani_path = w.manifest_path.clone();
-        w.append("eval", BTreeMap::new(), vec![], serde_json::json!({}), None, 1, pinned_clock()).unwrap();
+        w.append(
+            "eval",
+            BTreeMap::new(),
+            vec![],
+            serde_json::json!({}),
+            None,
+            1,
+            pinned_clock(),
+        )
+        .unwrap();
         let mani1: LogSidecarManifest =
             serde_json::from_slice(&std::fs::read(&mani_path).unwrap()).unwrap();
         assert_eq!(mani1.total_entries, 1);
-        w.append("eval", BTreeMap::new(), vec![], serde_json::json!({}), None, 1, pinned_clock()).unwrap();
+        w.append(
+            "eval",
+            BTreeMap::new(),
+            vec![],
+            serde_json::json!({}),
+            None,
+            1,
+            pinned_clock(),
+        )
+        .unwrap();
         let mani2: LogSidecarManifest =
             serde_json::from_slice(&std::fs::read(&mani_path).unwrap()).unwrap();
         assert_eq!(mani2.total_entries, 2);
@@ -987,7 +1076,16 @@ mod tests {
         // without hitting the filesystem.
         let tmp = TempDir::new().unwrap();
         let mut w = make_writer(&tmp);
-        w.append("eval", BTreeMap::new(), vec![], serde_json::json!({}), None, 1, pinned_clock()).unwrap();
+        w.append(
+            "eval",
+            BTreeMap::new(),
+            vec![],
+            serde_json::json!({}),
+            None,
+            1,
+            pinned_clock(),
+        )
+        .unwrap();
         let bytes = std::fs::read(&w.path).unwrap();
         let outcome = verify_log_bytes(&bytes).unwrap();
         assert!(outcome.valid);
@@ -1000,8 +1098,10 @@ mod tests {
     #[test]
     fn test_parse_param_kv_empty_value_enum_rejected() {
         let err = parse_param_kv("bloc_p_value_method=").unwrap_err();
-        assert!(matches!(err, DepoError::BadEnum { .. }),
-            "empty value for enum must be BadEnum: {err}");
+        assert!(
+            matches!(err, DepoError::BadEnum { .. }),
+            "empty value for enum must be BadEnum: {err}"
+        );
     }
 
     /// parse_param_kv: boundary float (exactly at lower bound) must succeed.
@@ -1024,16 +1124,20 @@ mod tests {
     #[test]
     fn test_parse_param_kv_float_below_lower_bound_rejected() {
         let err = parse_param_kv("leaning_threshold=-0.1").unwrap_err();
-        assert!(matches!(err, DepoError::OutOfRange { .. }),
-            "value below lower bound must be OutOfRange: {err}");
+        assert!(
+            matches!(err, DepoError::OutOfRange { .. }),
+            "value below lower bound must be OutOfRange: {err}"
+        );
     }
 
     /// parse_param_kv: no '=' at all (empty string) must return BadParamKv.
     #[test]
     fn test_parse_param_kv_empty_string_rejected() {
         let err = parse_param_kv("").unwrap_err();
-        assert!(matches!(err, DepoError::BadParamKv(_)),
-            "empty string must be BadParamKv: {err}");
+        assert!(
+            matches!(err, DepoError::BadParamKv(_)),
+            "empty string must be BadParamKv: {err}"
+        );
     }
 
     /// overrides_hash: empty BTreeMap produces a deterministic 64-char SHA.
@@ -1042,8 +1146,10 @@ mod tests {
         let m: BTreeMap<String, serde_json::Value> = BTreeMap::new();
         let h = overrides_hash(&m);
         assert_eq!(h.len(), 64, "hash must be 64 hex chars");
-        assert!(h.chars().all(|c| c.is_ascii_hexdigit()),
-            "hash must be hex: {h}");
+        assert!(
+            h.chars().all(|c| c.is_ascii_hexdigit()),
+            "hash must be hex: {h}"
+        );
     }
 
     /// overrides_hash: two identical maps with different key insertion order
@@ -1053,9 +1159,15 @@ mod tests {
         let mut a = BTreeMap::new();
         a.insert("leaning_threshold".to_string(), serde_json::json!(0.55));
         a.insert("vra_min_bvap".to_string(), serde_json::json!(0.50));
-        a.insert("compactness_metric".to_string(), serde_json::json!("polsby_popper"));
+        a.insert(
+            "compactness_metric".to_string(),
+            serde_json::json!("polsby_popper"),
+        );
         let mut b = BTreeMap::new();
-        b.insert("compactness_metric".to_string(), serde_json::json!("polsby_popper"));
+        b.insert(
+            "compactness_metric".to_string(),
+            serde_json::json!("polsby_popper"),
+        );
         b.insert("vra_min_bvap".to_string(), serde_json::json!(0.50));
         b.insert("leaning_threshold".to_string(), serde_json::json!(0.55));
         assert_eq!(overrides_hash(&a), overrides_hash(&b));
@@ -1099,8 +1211,10 @@ mod tests {
         let pos_a = inner.find("\"a\"").unwrap();
         let pos_m = inner.find("\"m\"").unwrap();
         let pos_z = inner.find("\"z\"").unwrap();
-        assert!(pos_a < pos_m && pos_m < pos_z,
-            "nested keys must be sorted: {s}");
+        assert!(
+            pos_a < pos_m && pos_m < pos_z,
+            "nested keys must be sorted: {s}"
+        );
     }
 
     /// canonicalize_json: arrays preserve their order.
@@ -1109,11 +1223,19 @@ mod tests {
         let v = serde_json::json!({"arr": [3, 1, 2]});
         let s = canonicalize_json(&v).unwrap();
         // 3 must appear before 1 in the array
-        let pos3 = s.find("3,").or_else(|| s.find(",3")).or_else(|| s.find("[3"));
+        let pos3 = s
+            .find("3,")
+            .or_else(|| s.find(",3"))
+            .or_else(|| s.find("[3"));
         let pos1 = s.rfind(",1").or_else(|| s.rfind("1]"));
-        assert!(pos3.is_some() && pos1.is_some(), "array values must be present");
-        assert!(pos3.unwrap() < pos1.unwrap(),
-            "array order must be preserved (3 before 1): {s}");
+        assert!(
+            pos3.is_some() && pos1.is_some(),
+            "array values must be present"
+        );
+        assert!(
+            pos3.unwrap() < pos1.unwrap(),
+            "array order must be preserved (3 before 1): {s}"
+        );
     }
 
     /// WhatifManifest round-trips through serde correctly.
@@ -1150,7 +1272,16 @@ mod tests {
     fn test_log_sidecar_schema_version() {
         let tmp = TempDir::new().unwrap();
         let mut w = make_writer(&tmp);
-        w.append("eval", BTreeMap::new(), vec![], serde_json::json!({}), None, 1, pinned_clock()).unwrap();
+        w.append(
+            "eval",
+            BTreeMap::new(),
+            vec![],
+            serde_json::json!({}),
+            None,
+            1,
+            pinned_clock(),
+        )
+        .unwrap();
         let mani: LogSidecarManifest =
             serde_json::from_slice(&std::fs::read(&w.manifest_path).unwrap()).unwrap();
         assert_eq!(mani.schema_version, "depo-log v1");
@@ -1169,8 +1300,18 @@ mod tests {
             "a".repeat(64),
             "git1234".to_string(),
             pinned_clock(),
-        ).unwrap();
-        w.append("eval", BTreeMap::new(), vec![], serde_json::json!({}), None, 5, pinned_clock()).unwrap();
+        )
+        .unwrap();
+        w.append(
+            "eval",
+            BTreeMap::new(),
+            vec![],
+            serde_json::json!({}),
+            None,
+            5,
+            pinned_clock(),
+        )
+        .unwrap();
         let mani: LogSidecarManifest =
             serde_json::from_slice(&std::fs::read(&mani_path).unwrap()).unwrap();
         assert_eq!(mani.plan_label, "my_plan_label");
@@ -1197,8 +1338,12 @@ mod tests {
             Some("outputs/v1/whatif/abc1234".to_string()),
             10,
             pinned_clock(),
-        ).unwrap();
+        )
+        .unwrap();
         let text = std::fs::read_to_string(&w.path).unwrap();
-        assert!(text.contains("whatif/abc1234"), "result_path must appear in JSONL: {text}");
+        assert!(
+            text.contains("whatif/abc1234"),
+            "result_path must appear in JSONL: {text}"
+        );
     }
 }

@@ -1,4 +1,4 @@
-# redist Platform Architecture
+# BISECT Platform Architecture
 
 **Date**: 2026-04-26
 **Scope**: Full platform including practitioner toolkit (Specs 0–6)
@@ -8,7 +8,7 @@
 ## Crate workspace
 
 ```
-redist/ (Cargo workspace)
+BISECT/ (Cargo workspace)
 │
 ├── crates/
 │   │
@@ -80,11 +80,11 @@ redist/ (Cargo workspace)
 │   │   │                         TIGER source + binary provenance
 │   │   ├── analyze.rs            +contiguity, splits, partisan dispatch
 │   │   │                         +bitfield exit codes (1/2/4/8)
-│   │   ├── compare.rs            NEW (Spec 2) — redist compare dispatcher
-│   │   ├── suite.rs              NEW (Spec 5) — redist suite create/validate
+│   │   ├── compare.rs            NEW (Spec 2) — BISECT compare dispatcher
+│   │   ├── suite.rs              NEW (Spec 5) — BISECT suite create/validate
 │   │   ├── nesting.rs            NEW (Spec 5) — validate_nesting(),
 │   │   │                         build_chamber_adjacency() (primary component)
-│   │   ├── migrate.rs            NEW — redist migrate: states/ → plans/ tree
+│   │   ├── migrate.rs            NEW — BISECT migrate: states/ → plans/ tree
 │   │   ├── geometry.rs           shared dissolve helper (existing)
 │   │   ├── adjacency_loader.rs   .adj.bin + pkl shim (existing)
 │   │   ├── map_cmd.rs            state + national maps (existing)
@@ -93,7 +93,7 @@ redist/ (Cargo workspace)
 │   └── bisect-web/               STUB — dashboard HTML (Python still used)
 │
 └── python/
-    └── redist_py/                PyO3 bindings (unchanged)
+    └── bisect_py/                PyO3 bindings (unchanged)
 ```
 
 ---
@@ -180,18 +180,18 @@ bisect state   --state WA --year 2020 --version WA_Plans
                --seed 42               reproducible
 
 bisect states  --year 2020 --version WA_Plans --workers 8
-redist run     --year all --version RustV3 --workers 12
+BISECT run     --year all --version RustV3 --workers 12
 
 # Multi-chamber suite (Spec 5)
-redist suite   --state WA --year 2020 --version WA_Plans
+BISECT suite   --state WA --year 2020 --version WA_Plans
                --name wa_commission_v1
                --house-districts 98 --senate-districts 49
                --nest senate-in-house
                --seed 42
-redist suite validate --name wa_commission_v1
+BISECT suite validate --name wa_commission_v1
 
 # Plan comparison (Spec 2)
-redist compare --plan-a wa_house_v1 --plan-b wa_house_v2
+BISECT compare --plan-a wa_house_v1 --plan-b wa_house_v2
                --enacted              compare vs current enacted map
                --metrics all          population|compactness|splits|partisan
                --format table         table|json|csv
@@ -205,22 +205,22 @@ bisect analyze --state WA --year 2020 --version WA_Plans
                --allow-noncontiguous  suppress exit bit 2
 
 # Aggregation + national maps (existing, extended)
-redist aggregate --year 2020 --version WA_Plans --types all --csv
-redist map       --state WA --year 2020 --version WA_Plans --types all
-redist map       --scope national --version WA_Plans --year 2020
+BISECT aggregate --year 2020 --version WA_Plans --types all --csv
+BISECT map       --state WA --year 2020 --version WA_Plans --types all
+BISECT map       --scope national --version WA_Plans --year 2020
 
 # RPLAN format (Spec 0)
-redist validate  --file wa_house_v1.rplan
-redist export    --label wa_house_v1 --year 2020 --version WA_Plans
+BISECT validate  --file wa_house_v1.rplan
+BISECT export    --label wa_house_v1 --year 2020 --version WA_Plans
                  --format geojson shapefile gerrychain csv rplan
-redist import    --file external.rplan --state WA --year 2020 --label external_v1
-redist migrate   --state WA --year 2020 --version WA_Plans --label wa_congressional
+BISECT import    --file external.rplan --state WA --year 2020 --label external_v1
+BISECT migrate   --state WA --year 2020 --version WA_Plans --label wa_congressional
 
 # Commission reports (Spec 6)
-redist report    --label wa_house_v1 --year 2020 --version WA_Plans
+BISECT report    --label wa_house_v1 --year 2020 --version WA_Plans
                  --format html json pdf
                  --out reports/wa_house_v1/
-redist report    --suite wa_commission_v1 --format html
+BISECT report    --suite wa_commission_v1 --format html
 
 # Data download (extended)
 bisect fetch     --type enacted --year 2020 --states WA
@@ -262,8 +262,8 @@ Phase B (analytics — parallel):
 
 Phase C (multi-chamber):
   bisect-cli/nesting.rs         build_chamber_adjacency + validate_nesting (Spec 5)
-  bisect-cli/suite.rs           redist suite command (Spec 5)
-  bisect-cli/compare.rs         redist compare command (Spec 2)
+  bisect-cli/suite.rs           BISECT suite command (Spec 5)
+  bisect-cli/compare.rs         BISECT compare command (Spec 2)
 
 Phase D (reports — last, depends on all):
   bisect-report/export.rs       GeoJSON/shapefile/GerryChain (Spec 6)

@@ -5,29 +5,39 @@
 //!
 //! All tests are `#[ignore]` — run with:
 //! ```sh
-//! cargo test -p redist-ensemble --test ensemble_l2 -- --include-ignored --test-threads=1
+//! cargo test -p BISECT-ensemble --test ensemble_l2 -- --include-ignored --test-threads=1
 //! ```
 //!
-//! Set `REDIST_ADJ_NC` / `REDIST_ADJ_WI` env vars to override the default path.
+//! Set `BISECT_ADJ_NC` / `BISECT_ADJ_WI` env vars to override the default path.
 
+use bisect_ensemble::chain::{run_ensemble, EnsembleResult};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use bisect_ensemble::chain::{run_ensemble, EnsembleResult};
 
 // ── Data loading helpers ──────────────────────────────────────────────────────
 
 fn find_adj_bin(state_abbr: &str) -> Option<PathBuf> {
-    if let Ok(p) = std::env::var(format!("REDIST_ADJ_{}", state_abbr.to_uppercase())) {
+    if let Ok(p) = std::env::var(format!("BISECT_ADJ_{}", state_abbr.to_uppercase())) {
         let path = PathBuf::from(p);
-        if path.exists() { return Some(path); }
+        if path.exists() {
+            return Some(path);
+        }
     }
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let apportionment_root = manifest_dir.ancestors().nth(3)?;
     let candidate = apportionment_root
-        .join("outputs").join("V3").join("data").join("2020")
+        .join("outputs")
+        .join("V3")
+        .join("data")
+        .join("2020")
         .join("adjacency")
-        .join(format!("{}_adjacency_2020.adj.bin", state_abbr.to_lowercase()));
-    if candidate.exists() { return Some(candidate); }
+        .join(format!(
+            "{}_adjacency_2020.adj.bin",
+            state_abbr.to_lowercase()
+        ));
+    if candidate.exists() {
+        return Some(candidate);
+    }
     None
 }
 
@@ -40,10 +50,16 @@ fn find_final_assignments(state_name: &str) -> Option<PathBuf> {
     // Simple glob-like search
     for entry in std::fs::read_dir(&outputs).ok()? {
         let entry = entry.ok()?;
-        let candidate = entry.path()
-            .join("2020").join("states").join(state_name)
-            .join("data").join("final_assignments.json");
-        if candidate.exists() { return Some(candidate); }
+        let candidate = entry
+            .path()
+            .join("2020")
+            .join("states")
+            .join(state_name)
+            .join("data")
+            .join("final_assignments.json");
+        if candidate.exists() {
+            return Some(candidate);
+        }
     }
     None
 }
@@ -58,29 +74,35 @@ fn load_adj_and_pop(state_abbr: &str) -> Option<(Vec<Vec<u32>>, Vec<i64>, Vec<u3
     let adj_bin = find_adj_bin(state_abbr)?;
     let adj_dir = adj_bin.parent()?;
     let geoids_path = adj_dir.join(format!(
-        "{}_adjacency_2020_geoids.json", state_abbr.to_lowercase()
+        "{}_adjacency_2020_geoids.json",
+        state_abbr.to_lowercase()
     ));
 
     // Try loading a pre-dumped JSON version of the adjacency (created by the runner script).
-    let json_path = adj_dir.join(format!("{}_adjacency_2020_for_rust.json", state_abbr.to_lowercase()));
-    if !json_path.exists() { return None; }
+    let json_path = adj_dir.join(format!(
+        "{}_adjacency_2020_for_rust.json",
+        state_abbr.to_lowercase()
+    ));
+    if !json_path.exists() {
+        return None;
+    }
 
-    let json: serde_json::Value = serde_json::from_reader(
-        std::fs::File::open(&json_path).ok()?
-    ).ok()?;
+    let json: serde_json::Value =
+        serde_json::from_reader(std::fs::File::open(&json_path).ok()?).ok()?;
 
     let adj: Vec<Vec<u32>> = serde_json::from_value(json["adj"].clone()).ok()?;
     let pop: Vec<i64> = serde_json::from_value(json["pop"].clone()).ok()?;
     let n = adj.len();
 
     // Load final assignments if available.
-    let state_names: HashMap<&str, &str> = [("NC","north_carolina"),("WI","wisconsin")].into();
+    let state_names: HashMap<&str, &str> = [("NC", "north_carolina"), ("WI", "wisconsin")].into();
     let state_name = state_names.get(state_abbr)?;
     let assignment = if let Some(path) = find_final_assignments(state_name) {
-        let raw: HashMap<String, u32> = serde_json::from_reader(
-            std::fs::File::open(path).ok()?
-        ).ok()?;
-        (0..n).map(|i| *raw.get(&i.to_string()).unwrap_or(&1)).collect()
+        let raw: HashMap<String, u32> =
+            serde_json::from_reader(std::fs::File::open(path).ok()?).ok()?;
+        (0..n)
+            .map(|i| *raw.get(&i.to_string()).unwrap_or(&1))
+            .collect()
     } else {
         // Default: band assignment
         let k = if state_abbr == "NC" { 14usize } else { 8 };
@@ -97,7 +119,10 @@ fn load_adj_and_pop(state_abbr: &str) -> Option<(Vec<Vec<u32>>, Vec<i64>, Vec<u3
 fn nc_2020_100_steps_valid_ensemble() {
     let (adj, pop, assign, n) = match load_adj_and_pop("NC") {
         Some(d) => d,
-        None => { eprintln!("[SKIP] NC adjacency data not available"); return; }
+        None => {
+            eprintln!("[SKIP] NC adjacency data not available");
+            return;
+        }
     };
     eprintln!("[L2] NC: {n} tracts, k=14");
 
@@ -110,8 +135,13 @@ fn nc_2020_100_steps_valid_ensemble() {
     // R-hat: should be reasonable for only 100 steps (may not yet be converged)
     let rh = result.r_hat.unwrap();
     assert!(rh.is_finite() && rh > 0.0);
-    eprintln!("[L2] NC R-hat={:.4} ESS={:.1} mean_cut={:.4} std={:.4}",
-        rh, result.ess.unwrap_or(0.0), result.pooled_cut_mean, result.pooled_cut_std);
+    eprintln!(
+        "[L2] NC R-hat={:.4} ESS={:.1} mean_cut={:.4} std={:.4}",
+        rh,
+        result.ess.unwrap_or(0.0),
+        result.pooled_cut_mean,
+        result.pooled_cut_std
+    );
 
     // All step records valid.
     for rec in &result.chains[0].steps {
@@ -125,7 +155,10 @@ fn nc_2020_100_steps_valid_ensemble() {
 fn wi_2020_100_steps_valid_ensemble() {
     let (adj, pop, assign, n) = match load_adj_and_pop("WI") {
         Some(d) => d,
-        None => { eprintln!("[SKIP] WI adjacency data not available"); return; }
+        None => {
+            eprintln!("[SKIP] WI adjacency data not available");
+            return;
+        }
     };
     eprintln!("[L2] WI: {n} tracts, k=8");
 
@@ -142,31 +175,54 @@ fn nc_plan_cut_fraction_below_ensemble_mean() {
     // (it sits at the compactness extremum — ~50th percentile for NC due to geographic convergence).
     let (adj, pop, assign, _) = match load_adj_and_pop("NC") {
         Some(d) => d,
-        None => { eprintln!("[SKIP]"); return; }
+        None => {
+            eprintln!("[SKIP]");
+            return;
+        }
     };
 
-    let result = run_ensemble(adj.clone(), pop.clone(), assign.clone(), 14, 0.03, 1000, 1, 42, "NC".into());
+    let result = run_ensemble(
+        adj.clone(),
+        pop.clone(),
+        assign.clone(),
+        14,
+        0.03,
+        1000,
+        1,
+        42,
+        "NC".into(),
+    );
 
     // Compute initial plan cut fraction
     let n_edges: usize = adj.iter().map(|nb| nb.len()).sum::<usize>() / 2;
-    let cut: usize = adj.iter().enumerate()
+    let cut: usize = adj
+        .iter()
+        .enumerate()
         .flat_map(|(v, nb)| nb.iter().map(move |&u| (v as u32, u)))
         .filter(|&(v, u)| assign[v as usize] != assign[u as usize])
-        .count() / 2;
+        .count()
+        / 2;
     let plan_cut = cut as f64 / n_edges.max(1) as f64;
 
-    let all_cuts: Vec<f64> = result.chains[0].steps.iter()
-        .map(|s| s.cut_fraction as f64).collect();
-    let pct = all_cuts.iter().filter(|&&c| c <= plan_cut).count() as f64
-        / all_cuts.len() as f64 * 100.0;
+    let all_cuts: Vec<f64> = result.chains[0]
+        .steps
+        .iter()
+        .map(|s| s.cut_fraction as f64)
+        .collect();
+    let pct =
+        all_cuts.iter().filter(|&&c| c <= plan_cut).count() as f64 / all_cuts.len() as f64 * 100.0;
 
-    eprintln!("[L2] NC plan_cut={plan_cut:.4} ensemble_mean={:.4} percentile={pct:.1}th",
-        result.pooled_cut_mean);
+    eprintln!(
+        "[L2] NC plan_cut={plan_cut:.4} ensemble_mean={:.4} percentile={pct:.1}th",
+        result.pooled_cut_mean
+    );
 
     // NC should be near the 50th percentile (geographic convergence) — within 30-70th.
     // Looser bound since 1000 steps has noise.
-    assert!(pct >= 20.0 && pct <= 80.0,
-        "NC plan should be near ensemble median (20-80th pct), got {pct:.1}th");
+    assert!(
+        pct >= 20.0 && pct <= 80.0,
+        "NC plan should be near ensemble median (20-80th pct), got {pct:.1}th"
+    );
 }
 
 #[test]
@@ -174,15 +230,31 @@ fn nc_plan_cut_fraction_below_ensemble_mean() {
 fn nc_deterministic_across_runs() {
     let (adj, pop, assign, _) = match load_adj_and_pop("NC") {
         Some(d) => d,
-        None => { eprintln!("[SKIP]"); return; }
+        None => {
+            eprintln!("[SKIP]");
+            return;
+        }
     };
 
-    let r1 = run_ensemble(adj.clone(), pop.clone(), assign.clone(), 14, 0.03, 50, 1, 99, "NC".into());
+    let r1 = run_ensemble(
+        adj.clone(),
+        pop.clone(),
+        assign.clone(),
+        14,
+        0.03,
+        50,
+        1,
+        99,
+        "NC".into(),
+    );
     let r2 = run_ensemble(adj, pop, assign, 14, 0.03, 50, 1, 99, "NC".into());
 
     let cuts1: Vec<f32> = r1.chains[0].steps.iter().map(|s| s.cut_fraction).collect();
     let cuts2: Vec<f32> = r2.chains[0].steps.iter().map(|s| s.cut_fraction).collect();
-    assert_eq!(cuts1, cuts2, "NC ensemble must be deterministic with same seed");
+    assert_eq!(
+        cuts1, cuts2,
+        "NC ensemble must be deterministic with same seed"
+    );
 }
 
 #[test]
@@ -190,7 +262,10 @@ fn nc_deterministic_across_runs() {
 fn nc_acceptance_rate_reasonable() {
     let (adj, pop, assign, _) = match load_adj_and_pop("NC") {
         Some(d) => d,
-        None => { eprintln!("[SKIP]"); return; }
+        None => {
+            eprintln!("[SKIP]");
+            return;
+        }
     };
 
     let result = run_ensemble(adj, pop, assign, 14, 0.03, 200, 1, 42, "NC".into());
@@ -198,5 +273,8 @@ fn nc_acceptance_rate_reasonable() {
     let rate = accepted as f64 / 200.0;
     eprintln!("[L2] NC acceptance rate: {accepted}/200 = {rate:.2}");
     // Expect at least 5% acceptance (generous lower bound for 14 districts)
-    assert!(rate >= 0.05, "acceptance rate {rate:.2} too low for NC k=14");
+    assert!(
+        rate >= 0.05,
+        "acceptance rate {rate:.2} too low for NC k=14"
+    );
 }

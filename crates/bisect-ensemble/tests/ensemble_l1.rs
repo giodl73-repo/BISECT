@@ -3,7 +3,7 @@
 //! These tests exercise the full `run_ensemble` pipeline on synthetic graphs
 //! without requiring real census data. All tests run in CI with no `#[ignore]`.
 
-use bisect_ensemble::chain::{run_ensemble, chain_seed};
+use bisect_ensemble::chain::{chain_seed, run_ensemble};
 
 // ── Graph helpers ─────────────────────────────────────────────────────────────
 
@@ -13,8 +13,14 @@ fn grid_adj(rows: usize, cols: usize) -> Vec<Vec<u32>> {
     for r in 0..rows {
         for c in 0..cols {
             let v = r * cols + c;
-            if c + 1 < cols { adj[v].push((v+1) as u32); adj[v+1].push(v as u32); }
-            if r + 1 < rows { adj[v].push((v+cols) as u32); adj[v+cols].push(v as u32); }
+            if c + 1 < cols {
+                adj[v].push((v + 1) as u32);
+                adj[v + 1].push(v as u32);
+            }
+            if r + 1 < rows {
+                adj[v].push((v + cols) as u32);
+                adj[v + cols].push(v as u32);
+            }
         }
     }
     adj
@@ -27,10 +33,12 @@ fn equal_pop(n: usize, pop_each: i64) -> Vec<i64> {
 /// Split a row-major grid into k horizontal bands.
 fn band_assignment(rows: usize, cols: usize, k: u32) -> Vec<u32> {
     let n = rows * cols;
-    (0..n).map(|v| {
-        let row = v / cols;
-        (row * k as usize / rows) as u32 + 1
-    }).collect()
+    (0..n)
+        .map(|v| {
+            let row = v / cols;
+            (row * k as usize / rows) as u32 + 1
+        })
+        .collect()
 }
 
 // ── L1 tests ──────────────────────────────────────────────────────────────────
@@ -59,7 +67,8 @@ fn all_cut_fractions_in_unit_interval() {
     for rec in &result.chains[0].steps {
         assert!(
             rec.cut_fraction >= 0.0 && rec.cut_fraction <= 1.0,
-            "cut_fraction {} out of [0,1]", rec.cut_fraction
+            "cut_fraction {} out of [0,1]",
+            rec.cut_fraction
         );
     }
 }
@@ -74,7 +83,9 @@ fn pop_deviations_respect_tolerance() {
     for rec in &result.chains[0].steps {
         assert!(
             rec.pop_deviation as f64 <= tol + 0.01,
-            "pop_deviation {} exceeds tolerance {}", rec.pop_deviation, tol
+            "pop_deviation {} exceeds tolerance {}",
+            rec.pop_deviation,
+            tol
         );
     }
 }
@@ -99,7 +110,10 @@ fn at_least_some_steps_accepted() {
     let assign = band_assignment(6, 6, 4);
     let result = run_ensemble(adj, pop, assign, 4, 0.05, 500, 1, 42, "g".into());
     let accepted = result.chains[0].steps.iter().filter(|s| s.accepted).count();
-    assert!(accepted > 5, "expected at least 5 accepted steps out of 500, got {accepted}");
+    assert!(
+        accepted > 5,
+        "expected at least 5 accepted steps out of 500, got {accepted}"
+    );
 }
 
 #[test]
@@ -110,7 +124,10 @@ fn r_hat_finite_and_positive_for_two_chains() {
     let result = run_ensemble(adj, pop, assign, 4, 0.05, 200, 2, 11, "g".into());
     let rh = result.r_hat.expect("r_hat must be Some for 2 chains");
     // Valid: positive finite (normal), NaN (W=0, undefined), or 0 (both chains identical).
-    assert!(rh.is_nan() || rh.is_finite(), "r_hat must be finite or NaN, got {rh}");
+    assert!(
+        rh.is_nan() || rh.is_finite(),
+        "r_hat must be finite or NaN, got {rh}"
+    );
 }
 
 #[test]
@@ -132,7 +149,7 @@ fn hamming_autocorr_has_20_lags() {
     let result = run_ensemble(adj, pop, assign, 4, 0.05, 200, 1, 0, "g".into());
     assert_eq!(result.hamming_autocorr.len(), 20);
     for (i, &ac) in result.hamming_autocorr.iter().enumerate() {
-        assert!(ac.is_finite(), "autocorr at lag {} is not finite", i+1);
+        assert!(ac.is_finite(), "autocorr at lag {} is not finite", i + 1);
     }
 }
 
@@ -144,7 +161,8 @@ fn pooled_mean_in_unit_interval() {
     let result = run_ensemble(adj, pop, assign, 4, 0.05, 200, 2, 5, "g".into());
     assert!(
         result.pooled_cut_mean >= 0.0 && result.pooled_cut_mean <= 1.0,
-        "pooled_cut_mean {} out of range", result.pooled_cut_mean
+        "pooled_cut_mean {} out of range",
+        result.pooled_cut_mean
     );
     assert!(result.pooled_cut_std >= 0.0, "std must be non-negative");
 }
@@ -170,12 +188,25 @@ fn deterministic_with_same_seed() {
     let adj = grid_adj(5, 4);
     let pop = equal_pop(20, 1000);
     let assign = band_assignment(5, 4, 4);
-    let r1 = run_ensemble(adj.clone(), pop.clone(), assign.clone(), 4, 0.05, 100, 2, 99, "g".into());
+    let r1 = run_ensemble(
+        adj.clone(),
+        pop.clone(),
+        assign.clone(),
+        4,
+        0.05,
+        100,
+        2,
+        99,
+        "g".into(),
+    );
     let r2 = run_ensemble(adj, pop, assign, 4, 0.05, 100, 2, 99, "g".into());
     for ci in 0..2 {
         let cuts1: Vec<f32> = r1.chains[ci].steps.iter().map(|s| s.cut_fraction).collect();
         let cuts2: Vec<f32> = r2.chains[ci].steps.iter().map(|s| s.cut_fraction).collect();
-        assert_eq!(cuts1, cuts2, "chain {ci}: same seed must produce identical trace");
+        assert_eq!(
+            cuts1, cuts2,
+            "chain {ci}: same seed must produce identical trace"
+        );
     }
 }
 
@@ -185,11 +216,24 @@ fn different_seeds_produce_different_traces() {
     let adj = grid_adj(6, 6);
     let pop = equal_pop(36, 1000);
     let assign = band_assignment(6, 6, 4);
-    let r1 = run_ensemble(adj.clone(), pop.clone(), assign.clone(), 4, 0.05, 200, 1, 1, "g".into());
+    let r1 = run_ensemble(
+        adj.clone(),
+        pop.clone(),
+        assign.clone(),
+        4,
+        0.05,
+        200,
+        1,
+        1,
+        "g".into(),
+    );
     let r2 = run_ensemble(adj, pop, assign, 4, 0.05, 200, 1, 2, "g".into());
     let cuts1: Vec<f32> = r1.chains[0].steps.iter().map(|s| s.cut_fraction).collect();
     let cuts2: Vec<f32> = r2.chains[0].steps.iter().map(|s| s.cut_fraction).collect();
-    assert_ne!(cuts1, cuts2, "different base seeds should produce different cut-fraction sequences");
+    assert_ne!(
+        cuts1, cuts2,
+        "different base seeds should produce different cut-fraction sequences"
+    );
 }
 
 #[test]
@@ -200,7 +244,8 @@ fn chain_seeds_match_formula() {
     let result = run_ensemble(adj, pop, assign, 2, 0.1, 10, 3, 77, "g".into());
     for i in 0..3 {
         assert_eq!(
-            result.chain_seeds[i], chain_seed(77, i),
+            result.chain_seeds[i],
+            chain_seed(77, i),
             "chain_seeds[{i}] must match SHA-256 formula"
         );
     }

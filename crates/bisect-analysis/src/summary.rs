@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use serde::Serialize;
+use std::collections::HashMap;
 
 use crate::analyzer::{Analyzer, AnalyzerContext};
 use crate::demographic::{DemographicAnalyzer, DemographicDistrict};
@@ -38,9 +38,15 @@ pub fn merge_district(
     balance_tolerance: f64,
 ) -> SummaryDistrict {
     let total_pop = demo.map(|d| d.total_pop);
-    let pop_deviation_pct = total_pop.and_then(|tp| ideal_pop.map(|ip| {
-        if ip == 0 { 0.0 } else { (tp - ip).abs() as f64 / ip as f64 }
-    }));
+    let pop_deviation_pct = total_pop.and_then(|tp| {
+        ideal_pop.map(|ip| {
+            if ip == 0 {
+                0.0
+            } else {
+                (tp - ip).abs() as f64 / ip as f64
+            }
+        })
+    });
     let pop_balance_ok = pop_deviation_pct.map(|dev| dev <= balance_tolerance);
 
     SummaryDistrict {
@@ -62,7 +68,9 @@ pub struct SummaryAnalyzer;
 impl Analyzer for SummaryAnalyzer {
     type Output = SummaryResult;
 
-    fn name() -> &'static str { "summary" }
+    fn name() -> &'static str {
+        "summary"
+    }
 
     fn run(ctx: &AnalyzerContext<'_>) -> anyhow::Result<Self::Output> {
         // Run sub-analyzers (best-effort: political/urban may be unavailable)
@@ -71,16 +79,19 @@ impl Analyzer for SummaryAnalyzer {
         let urban_result = UrbanAnalyzer::run(ctx).ok();
 
         // Build lookup maps
-        let demo_map: HashMap<usize, &DemographicDistrict> = demo_result.as_ref()
+        let demo_map: HashMap<usize, &DemographicDistrict> = demo_result
+            .as_ref()
             .map(|r| r.districts.iter().map(|d| (d.district, d)).collect())
             .unwrap_or_default();
 
-        let pol_map: HashMap<usize, &PoliticalDistrict> = pol_result.as_ref()
+        let pol_map: HashMap<usize, &PoliticalDistrict> = pol_result
+            .as_ref()
             .filter(|r| r.available)
             .map(|r| r.districts.iter().map(|d| (d.district, d)).collect())
             .unwrap_or_default();
 
-        let urban_map: HashMap<usize, &UrbanDistrict> = urban_result.as_ref()
+        let urban_map: HashMap<usize, &UrbanDistrict> = urban_result
+            .as_ref()
             .filter(|r| r.available)
             .map(|r| r.districts.iter().map(|d| (d.district, d)).collect())
             .unwrap_or_default();
@@ -93,20 +104,21 @@ impl Analyzer for SummaryAnalyzer {
             None
         };
 
-        let mut districts: Vec<SummaryDistrict> = (1..=ctx.num_districts).map(|d| {
-            merge_district(
-                d,
-                demo_map.get(&d).copied(),
-                pol_map.get(&d).copied(),
-                ideal_pop,
-                urban_map.get(&d).copied(),
-                ctx.balance_tolerance,
-            )
-        }).collect();
+        let mut districts: Vec<SummaryDistrict> = (1..=ctx.num_districts)
+            .map(|d| {
+                merge_district(
+                    d,
+                    demo_map.get(&d).copied(),
+                    pol_map.get(&d).copied(),
+                    ideal_pop,
+                    urban_map.get(&d).copied(),
+                    ctx.balance_tolerance,
+                )
+            })
+            .collect();
         districts.sort_by_key(|d| d.district);
 
-        let population_balance_valid = districts.iter()
-            .all(|d| d.pop_balance_ok.unwrap_or(true));
+        let population_balance_valid = districts.iter().all(|d| d.pop_balance_ok.unwrap_or(true));
 
         Ok(SummaryResult {
             analyzer: "summary",
@@ -182,7 +194,7 @@ mod tests {
         // 2 districts 1000 and 1100 → deviation 9.5% → pop_balance_ok=false
         let d1 = make_demo(1, 1000, 0.1);
         let d2 = make_demo(2, 1100, 0.1);
-        let ideal = Some((1000 + 1100) / 2);  // 1050
+        let ideal = Some((1000 + 1100) / 2); // 1050
 
         let s1 = merge_district(1, Some(&d1), None, ideal, None, 0.005);
         let s2 = merge_district(2, Some(&d2), None, ideal, None, 0.005);
@@ -191,8 +203,7 @@ mod tests {
         assert!(!s2.pop_balance_ok.unwrap_or(true));
 
         // population_balance_valid = false
-        let population_balance_valid = [&s1, &s2].iter()
-            .all(|d| d.pop_balance_ok.unwrap_or(true));
+        let population_balance_valid = [&s1, &s2].iter().all(|d| d.pop_balance_ok.unwrap_or(true));
         assert!(!population_balance_valid);
     }
 
@@ -205,10 +216,16 @@ mod tests {
         let ideal = Some(1021i64);
 
         let strict = merge_district(1, Some(&d1), None, ideal, None, 0.005);
-        let loose  = merge_district(1, Some(&d1), None, ideal, None, 0.05);
+        let loose = merge_district(1, Some(&d1), None, ideal, None, 0.05);
 
-        assert!(!strict.pop_balance_ok.unwrap_or(true), "4% should fail at 0.5% tolerance");
-        assert!(loose.pop_balance_ok.unwrap_or(false), "4% should pass at 5% tolerance");
+        assert!(
+            !strict.pop_balance_ok.unwrap_or(true),
+            "4% should fail at 0.5% tolerance"
+        );
+        assert!(
+            loose.pop_balance_ok.unwrap_or(false),
+            "4% should pass at 5% tolerance"
+        );
         let _ = d2; // suppress unused warning
     }
 

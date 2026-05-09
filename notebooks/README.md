@@ -1,4 +1,4 @@
-# `redist` Research Notebooks
+# `BISECT` Research Notebooks
 
 **Status:** scaffolding shipped 2026-04-30; full GerryChain integration deferred (Researcher Toolkit plan Tasks 3–6).
 **Owner:** `docs/superpowers/plans/2026-04-30-researcher-toolkit.md`
@@ -10,7 +10,7 @@ This directory holds the five canonical Jupyter notebooks the Researcher Toolkit
 | `01_quickstart.ipynb` | Load adjacency, run a single bisection, plot. First-time researcher onboarding. | 60 |
 | `02_parameter_sweep.ipynb` | Run N seeds across a parameter grid, compare metrics. | 120 |
 | `03_callais_evidence.ipynb` | Load + run the within-party racial bloc voting analysis (cross-references the Callais Evidence Layer). | 300 |
-| `04_gerrychain_interop.ipynb` | Round-trip a GerryChain `Partition` through `redist` and back; demonstrates the import/export contract. | 120 |
+| `04_gerrychain_interop.ipynb` | Round-trip a GerryChain `Partition` through `BISECT` and back; demonstrates the import/export contract. | 120 |
 | `05_mcmc_ensemble.ipynb` | Generate an MCMC ensemble of plans, validate convergence diagnostics, compare a target plan to the ensemble. | 1800 (nightly only) |
 
 ## Conventions
@@ -38,14 +38,14 @@ import sys
 from packaging.specifiers import SpecifierSet
 
 # Pinned compatible ranges per Researcher Toolkit plan Task 2 / B-06.
-# These are RANGES (not single versions) so legitimate patch revs of redist_py
+# These are RANGES (not single versions) so legitimate patch revs of bisect_py
 # or gerrychain don't cause false-positive failures every release.
-REDIST_PY_RANGE = ">=0.4,<0.5"
+BISECT_PY_RANGE = ">=0.4,<0.5"
 GERRYCHAIN_RANGE = ">=0.3.2,<0.4"
 
-import redist_py
-assert redist_py.__version__ in SpecifierSet(REDIST_PY_RANGE), \
-    f"redist_py {redist_py.__version__} not in compatible range {REDIST_PY_RANGE}"
+import bisect_py
+assert bisect_py.__version__ in SpecifierSet(BISECT_PY_RANGE), \
+    f"bisect_py {bisect_py.__version__} not in compatible range {BISECT_PY_RANGE}"
 
 try:
     import gerrychain
@@ -70,10 +70,10 @@ CI greps for this exact string in stdout. If the notebook exited via exception i
 
 ## Launching
 
-After installing the `redist_py` PyO3 wheel:
+After installing the `bisect_py` PyO3 wheel:
 
 ```bash
-maturin develop --release  # from redist/python/redist_py/
+maturin develop --release  # from python/bisect_py/
 jupyter lab notebooks/
 ```
 
@@ -90,8 +90,8 @@ The exact pinned version is recorded in `requirements.lock` (Researcher Toolkit 
 Per `docs/superpowers/plans/2026-04-30-researcher-toolkit.md`:
 
 - **Notebook BODY content** — the cells inside each `.ipynb` beyond cell-1 metadata + cell-2 kernel attestation are TODO. The shipped notebooks are scaffolding.
-- **`redist research check-compat` CLI** (Task 3) — runs the round-trip property test against the user's installed GerryChain version.
-- **`redist research validate-ensemble` CLI** (Task 5, M-02 rename) — percentile-rank computation against an ensemble.
+- **`BISECT research check-compat` CLI** (Task 3) — runs the round-trip property test against the user's installed GerryChain version.
+- **`BISECT research validate-ensemble` CLI** (Task 5, M-02 rename) — percentile-rank computation against an ensemble.
 - **`scripts/research/mcmc_ensemble.py`** (Task 6) — GerryChain wrapper that generates the N-chain ensemble.
 - **Notebook execution in CI** (Task 1.5) — `.github/workflows/notebooks.yml` with the runtime-budget enforcement.
 - **`bisect analyze --paper-mode`** wiring (Task 8) — the AEA replication package emitter; the REPRODUCE.sh template is shipped at `scripts/research/paper_mode_template/REPRODUCE.sh`.

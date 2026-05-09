@@ -4,7 +4,7 @@ L2 acceptance test for the Vermont 2020 canonical walkthrough.
 Onboarding plan Task 8 (`docs/superpowers/plans/2026-04-30-onboarding-and-tutorials.md`).
 
 This test invokes `bash examples/vermont-2020-walkthrough/run.sh` end-to-end on a
-clean machine, then runs `redist doctor --check-tutorial-data --tutorial vermont-2020`
+clean machine, then runs `BISECT doctor --check-tutorial-data --tutorial vermont-2020`
 and asserts exit code 0. It is the load-bearing artifact for the Onboarding plan's
 Definition of Done line "Vermont walkthrough committed under examples/...".
 
@@ -37,10 +37,10 @@ WALKTHROUGH_DIR = REPO_ROOT / "examples" / "vermont-2020-walkthrough"
 CHECKSUMS_PATH = WALKTHROUGH_DIR / "checksums.json"
 
 
-def _redist_on_path() -> bool:
+def _BISECT_on_path() -> bool:
     """Best-effort check; pytest will skip with an actionable message if missing."""
     from shutil import which
-    return which("redist") is not None
+    return which("BISECT") is not None
 
 
 def _checksums_pinned() -> bool:
@@ -64,8 +64,8 @@ def _checksums_pinned() -> bool:
 @pytest.mark.slow
 def test_walkthrough_vermont_runs_end_to_end():
     """End-to-end Vermont walkthrough: run.sh -> doctor --check-tutorial-data."""
-    if not _redist_on_path():
-        pytest.skip("redist binary not on PATH; run bootstrap.sh first")
+    if not _BISECT_on_path():
+        pytest.skip("BISECT binary not on PATH; run bootstrap.sh first")
 
     # Fixture must exist (structural). Pin status is checked downstream.
     assert WALKTHROUGH_DIR.is_dir(), \
@@ -110,7 +110,7 @@ def test_walkthrough_vermont_runs_end_to_end():
     # If checksums are PIN_ON_FIRST_RUN placeholders, doctor will report FAIL
     # for every present file -> exit 1. We accept that until a maintainer pins.
     doctor = subprocess.run(
-        ["redist", "doctor", "--check-tutorial-data", "--tutorial", "vermont-2020"],
+        ["BISECT", "doctor", "--check-tutorial-data", "--tutorial", "vermont-2020"],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,

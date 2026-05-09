@@ -1,7 +1,7 @@
 /// Data fetch command: download census data needed to run redistricting.
 ///
 /// Three data sources in priority order:
-///   1. Local manifest override (~/.config/redist/manifest.json or REDIST_MANIFEST)
+///   1. Local manifest override (~/.config/BISECT/manifest.json or BISECT_MANIFEST)
 ///      Points to already-present local files — no network needed.
 ///   2. GitHub Releases (--release flag) — pulls adjacency data from project releases.
 ///      Requires `gh auth login`.
@@ -55,8 +55,8 @@ pub struct StateManifest {
 pub struct FetchItem {
     pub state_code: String,
     pub year: String,
-    pub kind: String,         // "tiger", "pl94171", "adjacency"
-    pub url: Option<String>,  // None = use github release or local only
+    pub kind: String,        // "tiger", "pl94171", "adjacency"
+    pub url: Option<String>, // None = use github release or local only
     pub local_path: PathBuf,
     pub done_marker: PathBuf,
     pub available_locally: bool,
@@ -73,15 +73,14 @@ impl FetchItem {
 // ---------------------------------------------------------------------------
 
 pub fn load_manifest() -> Result<Manifest, String> {
-    // Priority: REDIST_MANIFEST env > ~/.config/redist/manifest.json > builtin
-    if let Ok(path) = std::env::var("REDIST_MANIFEST") {
-        let content = std::fs::read_to_string(&path)
-            .map_err(|e| format!("REDIST_MANIFEST={path}: {e}"))?;
-        return serde_json::from_str(&content)
-            .map_err(|e| format!("manifest parse error: {e}"));
+    // Priority: BISECT_MANIFEST env > ~/.config/BISECT/manifest.json > builtin
+    if let Ok(path) = std::env::var("BISECT_MANIFEST") {
+        let content =
+            std::fs::read_to_string(&path).map_err(|e| format!("BISECT_MANIFEST={path}: {e}"))?;
+        return serde_json::from_str(&content).map_err(|e| format!("manifest parse error: {e}"));
     }
 
-    // Check ~/.config/redist/manifest.json
+    // Check ~/.config/BISECT/manifest.json
     if let Some(home) = dirs_next_home() {
         let local = home.join(".config").join("bisect").join("manifest.json");
         if local.exists() {
@@ -92,13 +91,14 @@ pub fn load_manifest() -> Result<Manifest, String> {
         }
     }
 
-    serde_json::from_str(BUILTIN_MANIFEST)
-        .map_err(|e| format!("builtin manifest parse error: {e}"))
+    serde_json::from_str(BUILTIN_MANIFEST).map_err(|e| format!("builtin manifest parse error: {e}"))
 }
 
 fn dirs_next_home() -> Option<PathBuf> {
-    std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE"))
-        .ok().map(PathBuf::from)
+    std::env::var("HOME")
+        .or_else(|_| std::env::var("USERPROFILE"))
+        .ok()
+        .map(PathBuf::from)
 }
 
 // ---------------------------------------------------------------------------
@@ -114,13 +114,18 @@ pub fn build_fetch_list(
 ) -> Vec<FetchItem> {
     use crate::args::DataType;
     let all_types = data_types.is_empty() || data_types.iter().any(|t| matches!(t, DataType::All));
-    let want_tiger  = all_types || data_types.iter().any(|t| matches!(t, DataType::Tiger));
-    let want_pl     = all_types || data_types.iter().any(|t| matches!(t, DataType::Redistricting));
-    let want_adj    = all_types || data_types.iter().any(|t| matches!(t, DataType::Adjacency));
-    let want_lodes       = data_types.iter().any(|t| matches!(t, DataType::Lodes));
-    let want_lodes_od    = data_types.iter().any(|t| matches!(t, DataType::LodesOd));
-    let want_school      = data_types.iter().any(|t| matches!(t, DataType::SchoolDistricts));
-    let want_eia         = data_types.iter().any(|t| matches!(t, DataType::Eia861));
+    let want_tiger = all_types || data_types.iter().any(|t| matches!(t, DataType::Tiger));
+    let want_pl = all_types
+        || data_types
+            .iter()
+            .any(|t| matches!(t, DataType::Redistricting));
+    let want_adj = all_types || data_types.iter().any(|t| matches!(t, DataType::Adjacency));
+    let want_lodes = data_types.iter().any(|t| matches!(t, DataType::Lodes));
+    let want_lodes_od = data_types.iter().any(|t| matches!(t, DataType::LodesOd));
+    let want_school = data_types
+        .iter()
+        .any(|t| matches!(t, DataType::SchoolDistricts));
+    let want_eia = data_types.iter().any(|t| matches!(t, DataType::Eia861));
     let want_acs_housing = data_types.iter().any(|t| matches!(t, DataType::AcsHousing));
 
     // Data types that exist as CLI flags but are not yet downloaded by `bisect fetch`.
@@ -141,7 +146,8 @@ pub fn build_fetch_list(
     let state_codes: Vec<&String> = if states.is_empty() {
         manifest.states.keys().collect()
     } else {
-        states.iter()
+        states
+            .iter()
             .filter(|s| manifest.states.contains_key(s.as_str()))
             .collect()
     };
@@ -159,8 +165,12 @@ pub fn build_fetch_list(
                 // Strip query params from URL before extracting filename (Critical 1)
                 let raw = url.split('/').last().unwrap_or("tract.zip");
                 let filename = raw.split('?').next().unwrap_or(raw);
-                let local_path = data_dir.join(year).join("tiger").join("tracts")
-                    .join(filename.replace(".zip", "")).join(filename.replace(".zip", ".shp"));
+                let local_path = data_dir
+                    .join(year)
+                    .join("tiger")
+                    .join("tracts")
+                    .join(filename.replace(".zip", ""))
+                    .join(filename.replace(".zip", ".shp"));
                 let done_marker = local_path.with_extension("done");
                 items.push(FetchItem {
                     state_code: code.clone(),
@@ -179,8 +189,11 @@ pub fn build_fetch_list(
             if let Some(url) = state.pl94171.get(year) {
                 let raw = url.split('/').last().unwrap_or("data.zip");
                 let filename = raw.split('?').next().unwrap_or(raw);
-                let local_path = data_dir.join(year).join("redistricting")
-                    .join(&state_lower).join(filename);
+                let local_path = data_dir
+                    .join(year)
+                    .join("redistricting")
+                    .join(&state_lower)
+                    .join(filename);
                 let done_marker = local_path.with_extension("done");
                 items.push(FetchItem {
                     state_code: code.clone(),
@@ -197,8 +210,12 @@ pub fn build_fetch_list(
         // Adjacency pkl (from GitHub Release or local)
         if want_adj {
             let adj_filename = format!("{}_adjacency_{year}.pkl", code.to_lowercase());
-            let local_path = outputs_dir.join("V3").join("data").join(year)
-                .join("adjacency").join(&adj_filename);
+            let local_path = outputs_dir
+                .join("V3")
+                .join("data")
+                .join(year)
+                .join("adjacency")
+                .join(&adj_filename);
             let done_marker = local_path.with_extension("done");
             items.push(FetchItem {
                 state_code: code.clone(),
@@ -220,9 +237,13 @@ pub fn build_fetch_list(
             let url = format!(
                 "https://lehd.ces.census.gov/data/lodes/LODES8/{abbr}/wac/{abbr}_wac_S000_JT00_{lodes_year}.csv.gz"
             );
-            let local_path = data_dir.join(year).join("lodes")
+            let local_path = data_dir
+                .join(year)
+                .join("lodes")
                 .join(format!("{}_wac_tract.csv", state_lower));
-            let done_marker = data_dir.join(year).join("lodes")
+            let done_marker = data_dir
+                .join(year)
+                .join("lodes")
                 .join(format!("{}_wac_tract.done", state_lower));
             items.push(FetchItem {
                 state_code: code.clone(),
@@ -243,9 +264,13 @@ pub fn build_fetch_list(
             let url = format!(
                 "https://lehd.ces.census.gov/data/lodes/LODES8/{abbr}/od/{abbr}_od_main_JT00_{year}.csv.gz"
             );
-            let local_path = data_dir.join(year).join("lodes")
+            let local_path = data_dir
+                .join(year)
+                .join("lodes")
                 .join(format!("{}_od_tract.csv", state_lower));
-            let done_marker = data_dir.join(year).join("lodes")
+            let done_marker = data_dir
+                .join(year)
+                .join("lodes")
                 .join(format!("{}_od_tract.done", state_lower));
             items.push(FetchItem {
                 state_code: code.clone(),
@@ -267,7 +292,10 @@ pub fn build_fetch_list(
                 let url = format!(
                     "https://www2.census.gov/geo/tiger/TIGER{year}/UNSD/tl_{year}_{fips}_unsd.zip"
                 );
-                let local_path = data_dir.join(year).join("tiger").join("school_districts")
+                let local_path = data_dir
+                    .join(year)
+                    .join("tiger")
+                    .join("school_districts")
                     .join(format!("tl_{year}_{fips}_unsd"))
                     .join(format!("tl_{year}_{fips}_unsd.shp"));
                 let done_marker = local_path.with_extension("done");
@@ -294,9 +322,13 @@ pub fn build_fetch_list(
 B25024_007E,B25024_008E,B25024_009E,B25024_010E,B25024_011E,B25003_001E,B25003_002E,\
 B25035_001E,NAME&for=tract:*&in=state:{fips}"
             );
-            let local_path = data_dir.join(year).join("acs_housing")
+            let local_path = data_dir
+                .join(year)
+                .join("acs_housing")
                 .join(format!("{state_lower}_housing_{year}.csv"));
-            let done_marker = data_dir.join(year).join("acs_housing")
+            let done_marker = data_dir
+                .join(year)
+                .join("acs_housing")
                 .join(format!("{state_lower}_housing_{year}.done"));
             items.push(FetchItem {
                 state_code: code.clone(),
@@ -314,10 +346,11 @@ B25035_001E,NAME&for=tract:*&in=state:{fips}"
     // URL: https://www.eia.gov/electricity/data/eia861/zip/f8612020.zip (year-specific)
     if want_eia {
         let eia_year = year;
-        let url = format!(
-            "https://www.eia.gov/electricity/data/eia861/zip/f861{eia_year}.zip"
-        );
-        let local_path = data_dir.join(year).join("eia861").join("service_territories.shp");
+        let url = format!("https://www.eia.gov/electricity/data/eia861/zip/f861{eia_year}.zip");
+        let local_path = data_dir
+            .join(year)
+            .join("eia861")
+            .join("service_territories.shp");
         let done_marker = data_dir.join(year).join("eia861").join("eia861.done");
         items.push(FetchItem {
             state_code: "US".to_string(),
@@ -352,9 +385,13 @@ pub fn print_check_report(items: &[FetchItem]) {
             "[NEED]"
         };
         let src = item.url.as_deref().unwrap_or("github-release");
-        println!("{status} {} {} {} -> {}",
-            item.state_code, item.year, item.kind,
-            item.local_path.display());
+        println!(
+            "{status} {} {} {} -> {}",
+            item.state_code,
+            item.year,
+            item.kind,
+            item.local_path.display()
+        );
         if status == "[NEED]" {
             println!("       src: {src}");
         }
@@ -387,14 +424,19 @@ pub fn download_items(
     let mut downloaded_count = 0usize;
     for item in items {
         if !force && item.is_done() {
-            println!("[SKIP] {} {} {} (already present)", item.state_code, item.year, item.kind);
+            println!(
+                "[SKIP] {} {} {} (already present)",
+                item.state_code, item.year, item.kind
+            );
             continue;
         }
         // Polite delay between requests — inserted before each real download
         // (not before skips). Respects federal server access expectations.
         if downloaded_count > 0 && polite_delay_secs > 0 {
-            println!("[WAIT] {}s before next request (--polite-delay-secs {})",
-                polite_delay_secs, polite_delay_secs);
+            println!(
+                "[WAIT] {}s before next request (--polite-delay-secs {})",
+                polite_delay_secs, polite_delay_secs
+            );
             std::thread::sleep(std::time::Duration::from_secs(polite_delay_secs));
         }
 
@@ -405,27 +447,42 @@ pub fn download_items(
 
         match item.kind.as_str() {
             "adjacency" if use_release => {
-                // GitHub Releases: use gh CLI (or REDIST_GH override for testing).
-                // REDIST_GH may be "python /path/to/fake_gh.py" — split on first space.
-                let gh_raw = std::env::var("REDIST_GH").unwrap_or_else(|_| "gh".to_string());
+                // GitHub Releases: use gh CLI (or BISECT_GH override for testing).
+                // BISECT_GH may be "python /path/to/fake_gh.py" — split on first space.
+                let gh_raw = std::env::var("BISECT_GH").unwrap_or_else(|_| "gh".to_string());
                 let mut gh_parts = gh_raw.splitn(2, ' ');
                 let gh_cmd = gh_parts.next().unwrap_or("gh");
-                let gh_extra_args: Vec<&str> = gh_parts.next()
+                let gh_extra_args: Vec<&str> = gh_parts
+                    .next()
                     .map(|s| s.split_whitespace().collect())
                     .unwrap_or_default();
 
                 let release_tag = &manifest.releases.data_inputs;
                 let adj_dir = item.local_path.parent().unwrap();
                 std::fs::create_dir_all(adj_dir).map_err(|e| e.to_string())?;
-                println!("[DOWN] {} {} adjacency from release {release_tag}", item.state_code, item.year);
+                println!(
+                    "[DOWN] {} {} adjacency from release {release_tag}",
+                    item.state_code, item.year
+                );
                 let mut cmd = std::process::Command::new(gh_cmd);
                 cmd.args(&gh_extra_args);
                 let out = cmd
-                    .args(["release", "download", release_tag,
-                           "--pattern", &format!("{}_adjacency_{}.pkl", item.state_code.to_lowercase(), item.year),
-                           "--dir", adj_dir.to_str().unwrap(),
-                           "--repo", &manifest.github_repo,
-                           "--clobber"])
+                    .args([
+                        "release",
+                        "download",
+                        release_tag,
+                        "--pattern",
+                        &format!(
+                            "{}_adjacency_{}.pkl",
+                            item.state_code.to_lowercase(),
+                            item.year
+                        ),
+                        "--dir",
+                        adj_dir.to_str().unwrap(),
+                        "--repo",
+                        &manifest.github_repo,
+                        "--clobber",
+                    ])
                     .output()
                     .map_err(|e| format!("gh not found: {e}. Install: https://cli.github.com/"))?;
                 if !out.status.success() {
@@ -440,8 +497,13 @@ pub fn download_items(
                 // ZIP file: download and extract
                 let url = item.url.as_deref().unwrap();
                 let dest = item.local_path.parent().unwrap();
-                println!("[DOWN] {} {} {} <- {}", item.state_code, item.year, item.kind,
-                    url.split('/').last().unwrap_or(url));
+                println!(
+                    "[DOWN] {} {} {} <- {}",
+                    item.state_code,
+                    item.year,
+                    item.kind,
+                    url.split('/').last().unwrap_or(url)
+                );
                 download_and_extract_zip(url, dest)?;
             }
 
@@ -449,8 +511,12 @@ pub fn download_items(
                 // LODES WAC: download .csv.gz, decompress, aggregate blocks->tracts, save CSV
                 let url = item.url.as_deref().unwrap();
                 let dest_dir = item.local_path.parent().unwrap();
-                println!("[DOWN] {} {} lodes-wac <- {}", item.state_code, item.year,
-                    url.split('/').last().unwrap_or(url));
+                println!(
+                    "[DOWN] {} {} lodes-wac <- {}",
+                    item.state_code,
+                    item.year,
+                    url.split('/').last().unwrap_or(url)
+                );
                 std::fs::create_dir_all(dest_dir).map_err(|e| e.to_string())?;
                 download_lodes_wac(url, &item.local_path)?;
             }
@@ -459,8 +525,12 @@ pub fn download_items(
                 // LODES OD: download .csv.gz, decompress, aggregate block pairs->tract pairs, save CSV
                 let url = item.url.as_deref().unwrap();
                 let dest_dir = item.local_path.parent().unwrap();
-                println!("[DOWN] {} {} lodes-od <- {}", item.state_code, item.year,
-                    url.split('/').last().unwrap_or(url));
+                println!(
+                    "[DOWN] {} {} lodes-od <- {}",
+                    item.state_code,
+                    item.year,
+                    url.split('/').last().unwrap_or(url)
+                );
                 std::fs::create_dir_all(dest_dir).map_err(|e| e.to_string())?;
                 download_lodes_od(url, &item.local_path)?;
             }
@@ -469,15 +539,19 @@ pub fn download_items(
                 // ACS housing: fetch Census ACS JSON, compute derived columns, write CSV
                 let url = item.url.as_deref().unwrap();
                 let dest_dir = item.local_path.parent().unwrap();
-                println!("[DOWN] {} {} acs-housing <- ACS API (state {})",
-                    item.state_code, item.year, item.state_code);
+                println!(
+                    "[DOWN] {} {} acs-housing <- ACS API (state {})",
+                    item.state_code, item.year, item.state_code
+                );
                 std::fs::create_dir_all(dest_dir).map_err(|e| e.to_string())?;
                 download_acs_housing(url, &item.local_path)?;
             }
 
             _ => {
-                println!("[SKIP] {} {} {} (use --release to download from GitHub)",
-                    item.state_code, item.year, item.kind);
+                println!(
+                    "[SKIP] {} {} {} (use --release to download from GitHub)",
+                    item.state_code, item.year, item.kind
+                );
                 continue;
             }
         }
@@ -501,15 +575,17 @@ pub fn download_lodes_wac(url: &str, dest_path: &Path) -> Result<(), String> {
     use std::collections::HashMap;
     use std::io::{BufRead, BufReader};
 
-    let response = reqwest::blocking::get(url)
-        .map_err(|e| format!("HTTP GET {url}: {e}"))?;
+    let response = reqwest::blocking::get(url).map_err(|e| format!("HTTP GET {url}: {e}"))?;
     if !response.status().is_success() {
         // LODES data not available for all states/years — treat 404 as soft skip
         if response.status().as_u16() == 404 {
             println!("[WARN] LODES WAC not available for this state/year (404). Skipping.");
             // Write empty CSV so done marker still gets created
-            std::fs::write(dest_path, "geoid,c000,cns07,cns09,cns10,cns11,cns01,cns02,cns05,cns08\n")
-                .map_err(|e| format!("write empty lodes: {e}"))?;
+            std::fs::write(
+                dest_path,
+                "geoid,c000,cns07,cns09,cns10,cns11,cns01,cns02,cns05,cns08\n",
+            )
+            .map_err(|e| format!("write empty lodes: {e}"))?;
             return Ok(());
         }
         return Err(format!("HTTP {}: {url}", response.status()));
@@ -532,33 +608,38 @@ pub fn download_lodes_wac(url: &str, dest_path: &Path) -> Result<(), String> {
     // Find column indices from header
     let cols: Vec<&str> = header.split(',').collect();
     let idx = |name: &str| -> Result<usize, String> {
-        cols.iter().position(|c| c.trim_matches('"') == name)
+        cols.iter()
+            .position(|c| c.trim_matches('"') == name)
             .ok_or_else(|| format!("LODES WAC: column '{name}' not found in header"))
     };
-    let i_geo  = idx("w_geocode")?;
+    let i_geo = idx("w_geocode")?;
     let i_c000 = idx("C000")?;
-    let i_c07  = idx("CNS07")?;
-    let i_c09  = idx("CNS09")?;
-    let i_c10  = idx("CNS10")?;
-    let i_c11  = idx("CNS11")?;
-    let i_c01  = idx("CNS01")?;
-    let i_c02  = idx("CNS02")?;
-    let i_c05  = idx("CNS05")?;
-    let i_c08  = idx("CNS08")?;
+    let i_c07 = idx("CNS07")?;
+    let i_c09 = idx("CNS09")?;
+    let i_c10 = idx("CNS10")?;
+    let i_c11 = idx("CNS11")?;
+    let i_c01 = idx("CNS01")?;
+    let i_c02 = idx("CNS02")?;
+    let i_c05 = idx("CNS05")?;
+    let i_c08 = idx("CNS08")?;
 
     for line in lines {
         let line = line.map_err(|e| format!("LODES read: {e}"))?;
-        if line.trim().is_empty() { continue; }
+        if line.trim().is_empty() {
+            continue;
+        }
         let fields: Vec<&str> = line.split(',').collect();
-        if fields.len() <= i_c08 { continue; }
+        if fields.len() <= i_c08 {
+            continue;
+        }
 
         let block_geoid = fields[i_geo].trim_matches('"');
-        if block_geoid.len() < 11 { continue; }
+        if block_geoid.len() < 11 {
+            continue;
+        }
         let tract_geoid = &block_geoid[..11];
 
-        let parse = |i: usize| -> f64 {
-            fields[i].trim_matches('"').parse::<f64>().unwrap_or(0.0)
-        };
+        let parse = |i: usize| -> f64 { fields[i].trim_matches('"').parse::<f64>().unwrap_or(0.0) };
 
         let entry = tracts.entry(tract_geoid.to_string()).or_insert([0.0; 9]);
         entry[0] += parse(i_c000);
@@ -576,15 +657,28 @@ pub fn download_lodes_wac(url: &str, dest_path: &Path) -> Result<(), String> {
     let mut out = std::fs::File::create(dest_path)
         .map_err(|e| format!("create {}: {e}", dest_path.display()))?;
     use std::io::Write as IoWrite;
-    writeln!(out, "geoid,c000,cns07,cns09,cns10,cns11,cns01,cns02,cns05,cns08")
-        .map_err(|e| e.to_string())?;
+    writeln!(
+        out,
+        "geoid,c000,cns07,cns09,cns10,cns11,cns01,cns02,cns05,cns08"
+    )
+    .map_err(|e| e.to_string())?;
     let mut sorted: Vec<_> = tracts.into_iter().collect();
     sorted.sort_by(|a, b| a.0.cmp(&b.0));
     for (geoid, v) in sorted {
-        writeln!(out, "{geoid},{},{},{},{},{},{},{},{},{}",
-            v[0] as u64, v[1] as u64, v[2] as u64, v[3] as u64,
-            v[4] as u64, v[5] as u64, v[6] as u64, v[7] as u64, v[8] as u64)
-            .map_err(|e| e.to_string())?;
+        writeln!(
+            out,
+            "{geoid},{},{},{},{},{},{},{},{},{}",
+            v[0] as u64,
+            v[1] as u64,
+            v[2] as u64,
+            v[3] as u64,
+            v[4] as u64,
+            v[5] as u64,
+            v[6] as u64,
+            v[7] as u64,
+            v[8] as u64
+        )
+        .map_err(|e| e.to_string())?;
     }
     println!("[OK] LODES WAC aggregated to {}", dest_path.display());
     Ok(())
@@ -606,8 +700,7 @@ pub fn download_lodes_od(url: &str, dest_path: &std::path::Path) -> Result<(), S
     use std::collections::HashMap;
     use std::io::{BufRead, BufReader};
 
-    let response = reqwest::blocking::get(url)
-        .map_err(|e| format!("HTTP GET {url}: {e}"))?;
+    let response = reqwest::blocking::get(url).map_err(|e| format!("HTTP GET {url}: {e}"))?;
     if !response.status().is_success() {
         // LODES OD not available for all states/years — treat 404 as soft skip
         if response.status().as_u16() == 404 {
@@ -637,7 +730,8 @@ pub fn download_lodes_od(url: &str, dest_path: &std::path::Path) -> Result<(), S
     // Find column indices from header
     let cols: Vec<&str> = header.split(',').collect();
     let idx = |name: &str| -> Result<usize, String> {
-        cols.iter().position(|c| c.trim_matches('"') == name)
+        cols.iter()
+            .position(|c| c.trim_matches('"') == name)
             .ok_or_else(|| format!("LODES OD: column '{name}' not found in header"))
     };
     let i_home = idx("h_geocode")?;
@@ -646,13 +740,19 @@ pub fn download_lodes_od(url: &str, dest_path: &std::path::Path) -> Result<(), S
 
     for line in lines {
         let line = line.map_err(|e| format!("LODES OD read: {e}"))?;
-        if line.trim().is_empty() { continue; }
+        if line.trim().is_empty() {
+            continue;
+        }
         let fields: Vec<&str> = line.split(',').collect();
-        if fields.len() <= i_s000 { continue; }
+        if fields.len() <= i_s000 {
+            continue;
+        }
 
         let home_block = fields[i_home].trim_matches('"');
         let work_block = fields[i_work].trim_matches('"');
-        if home_block.len() < 11 || work_block.len() < 11 { continue; }
+        if home_block.len() < 11 || work_block.len() < 11 {
+            continue;
+        }
 
         let home_tract = home_block[..11].to_string();
         let work_tract = work_block[..11].to_string();
@@ -665,13 +765,11 @@ pub fn download_lodes_od(url: &str, dest_path: &std::path::Path) -> Result<(), S
     let mut out = std::fs::File::create(dest_path)
         .map_err(|e| format!("create {}: {e}", dest_path.display()))?;
     use std::io::Write as IoWrite;
-    writeln!(out, "home_geoid,work_geoid,s000")
-        .map_err(|e| e.to_string())?;
+    writeln!(out, "home_geoid,work_geoid,s000").map_err(|e| e.to_string())?;
     let mut sorted: Vec<_> = od_pairs.into_iter().collect();
     sorted.sort_by(|a, b| a.0.cmp(&b.0));
     for ((home, work), jobs) in sorted {
-        writeln!(out, "{home},{work},{jobs}")
-            .map_err(|e| e.to_string())?;
+        writeln!(out, "{home},{work},{jobs}").map_err(|e| e.to_string())?;
     }
     println!("[OK] LODES OD aggregated to {}", dest_path.display());
     Ok(())
@@ -705,15 +803,15 @@ pub fn download_acs_housing(url: &str, dest_path: &Path) -> Result<(), String> {
         .build()
         .map_err(|e| format!("HTTP client build: {e}"))?;
 
-    let response = client.get(url)
+    let response = client
+        .get(url)
         .send()
         .map_err(|e| format!("HTTP GET ACS housing {url}: {e}"))?;
 
     if !response.status().is_success() {
         if response.status().as_u16() == 404 {
             println!("[WARN] ACS housing data not available for this state/year (404). Skipping.");
-            std::fs::write(dest_path,
-                "geoid,pct_sf,pct_mf,pct_owner,housing_vintage\n")
+            std::fs::write(dest_path, "geoid,pct_sf,pct_mf,pct_owner,housing_vintage\n")
                 .map_err(|e| format!("write empty acs-housing: {e}"))?;
             return Ok(());
         }
@@ -721,38 +819,42 @@ pub fn download_acs_housing(url: &str, dest_path: &Path) -> Result<(), String> {
     }
 
     // ACS API returns a JSON array-of-arrays: first row is header, rest are data.
-    let body = response.text().map_err(|e| format!("ACS response body: {e}"))?;
-    let rows: Vec<Vec<serde_json::Value>> = serde_json::from_str(&body)
-        .map_err(|e| format!("ACS JSON parse: {e}\nURL: {url}"))?;
+    let body = response
+        .text()
+        .map_err(|e| format!("ACS response body: {e}"))?;
+    let rows: Vec<Vec<serde_json::Value>> =
+        serde_json::from_str(&body).map_err(|e| format!("ACS JSON parse: {e}\nURL: {url}"))?;
 
     if rows.is_empty() {
-        std::fs::write(dest_path,
-            "geoid,pct_sf,pct_mf,pct_owner,housing_vintage\n")
+        std::fs::write(dest_path, "geoid,pct_sf,pct_mf,pct_owner,housing_vintage\n")
             .map_err(|e| format!("write empty acs-housing: {e}"))?;
         return Ok(());
     }
 
     // Build column index from header row.
-    let header_row: Vec<String> = rows[0].iter()
+    let header_row: Vec<String> = rows[0]
+        .iter()
         .map(|v| v.as_str().unwrap_or("").to_string())
         .collect();
     let find_col = |name: &str| -> Result<usize, String> {
-        header_row.iter().position(|c| c == name)
+        header_row
+            .iter()
+            .position(|c| c == name)
             .ok_or_else(|| format!("ACS housing: column '{name}' not found in response header"))
     };
 
-    let i_sf_det  = find_col("B25024_002E")?;
-    let i_sf_att  = find_col("B25024_003E")?;
-    let i_mf_5_9  = find_col("B25024_007E")?;
+    let i_sf_det = find_col("B25024_002E")?;
+    let i_sf_att = find_col("B25024_003E")?;
+    let i_mf_5_9 = find_col("B25024_007E")?;
     let i_mf_1019 = find_col("B25024_008E")?;
     let i_mf_2049 = find_col("B25024_009E")?;
-    let i_mf_50p  = find_col("B25024_010E")?;
+    let i_mf_50p = find_col("B25024_010E")?;
     let i_occ_tot = find_col("B25003_001E")?;
     let i_occ_own = find_col("B25003_002E")?;
     let i_vintage = find_col("B25035_001E")?;
-    let i_state   = find_col("state")?;
-    let i_county  = find_col("county")?;
-    let i_tract   = find_col("tract")?;
+    let i_state = find_col("state")?;
+    let i_county = find_col("county")?;
+    let i_tract = find_col("tract")?;
 
     // Helper: parse a JSON value as f64, returning 0.0 on null/error.
     let parse_f64 = |v: &serde_json::Value| -> f64 {
@@ -766,34 +868,37 @@ pub fn download_acs_housing(url: &str, dest_path: &Path) -> Result<(), String> {
     let mut out = std::fs::File::create(dest_path)
         .map_err(|e| format!("create {}: {e}", dest_path.display()))?;
     use std::io::Write as IoWrite;
-    writeln!(out, "geoid,pct_sf,pct_mf,pct_owner,housing_vintage")
-        .map_err(|e| e.to_string())?;
+    writeln!(out, "geoid,pct_sf,pct_mf,pct_owner,housing_vintage").map_err(|e| e.to_string())?;
 
     let mut row_count = 0usize;
     for row in rows.iter().skip(1) {
-        if row.len() <= i_tract { continue; }
+        if row.len() <= i_tract {
+            continue;
+        }
 
         // Build 11-char GEOID: state(2) + county(3) + tract(6)
-        let state_fips  = row[i_state].as_str().unwrap_or("");
+        let state_fips = row[i_state].as_str().unwrap_or("");
         let county_fips = row[i_county].as_str().unwrap_or("");
-        let tract_code  = row[i_tract].as_str().unwrap_or("");
+        let tract_code = row[i_tract].as_str().unwrap_or("");
         if state_fips.len() != 2 || county_fips.len() != 3 || tract_code.len() != 6 {
-            eprintln!("[WARN] ACS housing: skipping row with malformed FIPS \
-                ({state_fips}/{county_fips}/{tract_code})");
+            eprintln!(
+                "[WARN] ACS housing: skipping row with malformed FIPS \
+                ({state_fips}/{county_fips}/{tract_code})"
+            );
             continue;
         }
         let geoid = format!("{state_fips}{county_fips}{tract_code}");
 
         // Housing type fractions
-        let sf_det  = parse_f64(&row[i_sf_det]).max(0.0);
-        let sf_att  = parse_f64(&row[i_sf_att]).max(0.0);
-        let mf_5_9  = parse_f64(&row[i_mf_5_9]).max(0.0);
+        let sf_det = parse_f64(&row[i_sf_det]).max(0.0);
+        let sf_att = parse_f64(&row[i_sf_att]).max(0.0);
+        let mf_5_9 = parse_f64(&row[i_mf_5_9]).max(0.0);
         let mf_1019 = parse_f64(&row[i_mf_1019]).max(0.0);
         let mf_2049 = parse_f64(&row[i_mf_2049]).max(0.0);
-        let mf_50p  = parse_f64(&row[i_mf_50p]).max(0.0);
+        let mf_50p = parse_f64(&row[i_mf_50p]).max(0.0);
 
-        let sf_units  = sf_det + sf_att;
-        let mf_units  = mf_5_9 + mf_1019 + mf_2049 + mf_50p;
+        let sf_units = sf_det + sf_att;
+        let mf_units = mf_5_9 + mf_1019 + mf_2049 + mf_50p;
         let total_units = sf_units + mf_units;
 
         let pct_sf = if total_units > 0.0 {
@@ -827,12 +932,18 @@ pub fn download_acs_housing(url: &str, dest_path: &Path) -> Result<(), String> {
             v.clamp(0.0, 1.0)
         };
 
-        writeln!(out, "{geoid},{pct_sf:.6},{pct_mf:.6},{pct_owner:.6},{housing_vintage:.6}")
-            .map_err(|e| e.to_string())?;
+        writeln!(
+            out,
+            "{geoid},{pct_sf:.6},{pct_mf:.6},{pct_owner:.6},{housing_vintage:.6}"
+        )
+        .map_err(|e| e.to_string())?;
         row_count += 1;
     }
 
-    println!("[OK] ACS housing: {row_count} tracts written to {}", dest_path.display());
+    println!(
+        "[OK] ACS housing: {row_count} tracts written to {}",
+        dest_path.display()
+    );
     Ok(())
 }
 
@@ -857,7 +968,9 @@ pub fn verify_file_sha256(path: &std::path::Path, expected: &str) -> Result<(), 
         return Err(format!(
             "SHA-256 mismatch for {}:\n  expected: {}\n  actual:   {}\n\
              Corrupt file deleted. Re-run to re-download.",
-            path.display(), expected, actual
+            path.display(),
+            expected,
+            actual
         ));
     }
     Ok(())
@@ -867,8 +980,7 @@ pub fn verify_file_sha256(path: &std::path::Path, expected: &str) -> Result<(), 
 /// Streams response to a temp file to avoid OOM for large ZIPs (Critical 3).
 /// California PL 94-171 can be 80MB+ — in-memory loading would OOM on constrained systems.
 pub fn download_and_extract_zip(url: &str, dest_dir: &Path) -> Result<(), String> {
-    let mut response = reqwest::blocking::get(url)
-        .map_err(|e| format!("HTTP GET {url}: {e}"))?;
+    let mut response = reqwest::blocking::get(url).map_err(|e| format!("HTTP GET {url}: {e}"))?;
 
     if !response.status().is_success() {
         return Err(format!("HTTP {}: {url}", response.status()));
@@ -878,16 +990,15 @@ pub fn download_and_extract_zip(url: &str, dest_dir: &Path) -> Result<(), String
     let tmp_dir = tempfile::TempDir::new().map_err(|e| e.to_string())?;
     let tmp_zip = tmp_dir.path().join("download.zip");
     {
-        let mut out = std::fs::File::create(&tmp_zip)
-            .map_err(|e| format!("tmp file create: {e}"))?;
-        std::io::copy(&mut response, &mut out)
-            .map_err(|e| format!("streaming download: {e}"))?;
+        let mut out =
+            std::fs::File::create(&tmp_zip).map_err(|e| format!("tmp file create: {e}"))?;
+        std::io::copy(&mut response, &mut out).map_err(|e| format!("streaming download: {e}"))?;
     }
 
     // Extract from temp file
     let zip_file = std::fs::File::open(&tmp_zip).map_err(|e| e.to_string())?;
-    let mut archive = zip::ZipArchive::new(zip_file)
-        .map_err(|e| format!("invalid ZIP from {url}: {e}"))?;
+    let mut archive =
+        zip::ZipArchive::new(zip_file).map_err(|e| format!("invalid ZIP from {url}: {e}"))?;
 
     std::fs::create_dir_all(dest_dir).map_err(|e| e.to_string())?;
 
@@ -921,16 +1032,25 @@ mod tests {
     #[test]
     fn test_manifest_has_vermont() {
         let manifest = load_manifest().unwrap();
-        let vt = manifest.states.get("VT").expect("Vermont must be in manifest");
+        let vt = manifest
+            .states
+            .get("VT")
+            .expect("Vermont must be in manifest");
         assert_eq!(vt.fips, "50", "Vermont FIPS is 50");
-        assert!(vt.tiger["2020"].contains("tl_2020_50_tract"), "VT TIGER URL");
+        assert!(
+            vt.tiger["2020"].contains("tl_2020_50_tract"),
+            "VT TIGER URL"
+        );
         assert!(vt.pl94171["2020"].contains("vermont"), "VT PL URL");
     }
 
     #[test]
     fn test_manifest_has_alabama() {
         let manifest = load_manifest().unwrap();
-        let al = manifest.states.get("AL").expect("Alabama must be in manifest");
+        let al = manifest
+            .states
+            .get("AL")
+            .expect("Alabama must be in manifest");
         assert_eq!(al.fips, "01", "Alabama FIPS is 01");
         assert_eq!(al.districts["2020"], 7, "Alabama has 7 districts in 2020");
     }
@@ -951,12 +1071,14 @@ mod tests {
     fn test_build_fetch_list_tiger_only() {
         use crate::args::DataType;
         let manifest = load_manifest().unwrap();
-        let items = build_fetch_list(
-            &manifest, &["VT".to_string()], "2020", &[DataType::Tiger]
-        );
+        let items = build_fetch_list(&manifest, &["VT".to_string()], "2020", &[DataType::Tiger]);
         assert_eq!(items.len(), 1);
         assert_eq!(items[0].kind, "tiger");
-        assert!(items[0].url.as_deref().unwrap().contains("tl_2020_50_tract"));
+        assert!(items[0]
+            .url
+            .as_deref()
+            .unwrap()
+            .contains("tl_2020_50_tract"));
     }
 
     #[test]
@@ -982,9 +1104,14 @@ mod tests {
     fn test_all_50_states_have_tiger_2020_url() {
         let manifest = load_manifest().unwrap();
         for (code, state) in &manifest.states {
-            let url = state.tiger.get("2020")
+            let url = state
+                .tiger
+                .get("2020")
                 .unwrap_or_else(|| panic!("{code} missing tiger 2020 URL"));
-            assert!(url.starts_with("https://"), "{code} tiger URL must be https");
+            assert!(
+                url.starts_with("https://"),
+                "{code} tiger URL must be https"
+            );
             assert!(url.ends_with(".zip"), "{code} tiger URL must end in .zip");
         }
     }
@@ -1000,9 +1127,16 @@ mod tests {
         // Known SHA-256 of "hello world"
         let expected = "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9";
         let result = verify_file_sha256(&path, expected);
-        assert!(result.is_ok(), "correct hash should pass: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "correct hash should pass: {:?}",
+            result.err()
+        );
         // File must still exist after a passing check
-        assert!(path.exists(), "file must still exist after passing verification");
+        assert!(
+            path.exists(),
+            "file must still exist after passing verification"
+        );
     }
 
     #[test]
@@ -1015,10 +1149,15 @@ mod tests {
         let result = verify_file_sha256(&path, &wrong_hash);
         assert!(result.is_err(), "wrong hash must return Err");
         let msg = result.unwrap_err();
-        assert!(msg.contains("mismatch") || msg.contains("SHA-256"),
-            "error must mention mismatch: {msg}");
+        assert!(
+            msg.contains("mismatch") || msg.contains("SHA-256"),
+            "error must mention mismatch: {msg}"
+        );
         // File must be deleted after mismatch
-        assert!(!path.exists(), "corrupt file must be deleted after mismatch");
+        assert!(
+            !path.exists(),
+            "corrupt file must be deleted after mismatch"
+        );
     }
 
     #[test]
@@ -1028,19 +1167,25 @@ mod tests {
         std::fs::write(&path, b"any content").unwrap();
         // Empty expected = no check performed
         let result = verify_file_sha256(&path, "");
-        assert!(result.is_ok(), "empty expected hash must skip check and return Ok");
-        assert!(path.exists(), "file must not be deleted when check is skipped");
+        assert!(
+            result.is_ok(),
+            "empty expected hash must skip check and return Ok"
+        );
+        assert!(
+            path.exists(),
+            "file must not be deleted when check is skipped"
+        );
     }
 
     #[test]
     fn test_verify_downloads_flag_parses() {
         use crate::args::FetchArgs;
         use clap::Parser;
-        let args = FetchArgs::parse_from([
-            "fetch",
-            "--verify-downloads",
-        ]);
-        assert!(args.verify_downloads, "--verify-downloads flag must parse to true");
+        let args = FetchArgs::parse_from(["fetch", "--verify-downloads"]);
+        assert!(
+            args.verify_downloads,
+            "--verify-downloads flag must parse to true"
+        );
     }
 
     #[test]
@@ -1048,16 +1193,24 @@ mod tests {
         use crate::args::FetchArgs;
         use clap::Parser;
         let args = FetchArgs::parse_from(["fetch"]);
-        assert!(!args.verify_downloads, "--verify-downloads must default to false");
+        assert!(
+            !args.verify_downloads,
+            "--verify-downloads must default to false"
+        );
     }
 
     #[test]
     fn test_all_50_states_have_pl94171_2020_url() {
         let manifest = load_manifest().unwrap();
         for (code, state) in &manifest.states {
-            let url = state.pl94171.get("2020")
+            let url = state
+                .pl94171
+                .get("2020")
                 .unwrap_or_else(|| panic!("{code} missing pl94171 2020 URL"));
-            assert!(url.contains("census.gov"), "{code} PL URL must be census.gov");
+            assert!(
+                url.contains("census.gov"),
+                "{code} PL URL must be census.gov"
+            );
         }
     }
 
@@ -1079,7 +1232,10 @@ mod tests {
             done_marker, // does not exist
             available_locally: true,
         };
-        assert!(!item.is_done(), "is_done must be false when done_marker is absent");
+        assert!(
+            !item.is_done(),
+            "is_done must be false when done_marker is absent"
+        );
     }
 
     #[test]
@@ -1097,7 +1253,10 @@ mod tests {
             done_marker,
             available_locally: false,
         };
-        assert!(!item.is_done(), "is_done must be false when local file is absent");
+        assert!(
+            !item.is_done(),
+            "is_done must be false when local file is absent"
+        );
     }
 
     #[test]
@@ -1106,8 +1265,11 @@ mod tests {
         // Passing empty states slice means "all states"
         let items = build_fetch_list(&manifest, &[], "2020", &[]);
         // With 50 states and 3 types each: expect 150 items
-        assert_eq!(items.len(), 50 * 3,
-            "empty state list must fetch all 50 states × 3 types = 150 items");
+        assert_eq!(
+            items.len(),
+            50 * 3,
+            "empty state list must fetch all 50 states × 3 types = 150 items"
+        );
     }
 
     #[test]
@@ -1115,12 +1277,17 @@ mod tests {
         use crate::args::DataType;
         let manifest = load_manifest().unwrap();
         let items = build_fetch_list(
-            &manifest, &["VT".to_string()], "2020", &[DataType::Redistricting]
+            &manifest,
+            &["VT".to_string()],
+            "2020",
+            &[DataType::Redistricting],
         );
         assert_eq!(items.len(), 1);
         assert_eq!(items[0].kind, "pl94171");
-        assert!(items[0].url.as_deref().unwrap().contains("census.gov"),
-            "PL URL must be from census.gov");
+        assert!(
+            items[0].url.as_deref().unwrap().contains("census.gov"),
+            "PL URL must be from census.gov"
+        );
     }
 
     #[test]
@@ -1128,23 +1295,28 @@ mod tests {
         use crate::args::DataType;
         let manifest = load_manifest().unwrap();
         let items = build_fetch_list(
-            &manifest, &["VT".to_string()], "2020", &[DataType::Adjacency]
+            &manifest,
+            &["VT".to_string()],
+            "2020",
+            &[DataType::Adjacency],
         );
         assert_eq!(items.len(), 1);
         assert_eq!(items[0].kind, "adjacency");
         // Adjacency items have no direct URL (come from GitHub Release)
-        assert!(items[0].url.is_none(),
-            "adjacency items must have url=None (fetched from GitHub Release)");
+        assert!(
+            items[0].url.is_none(),
+            "adjacency items must have url=None (fetched from GitHub Release)"
+        );
     }
 
     #[test]
     fn test_build_fetch_list_unknown_state_is_ignored() {
         let manifest = load_manifest().unwrap();
-        let items = build_fetch_list(
-            &manifest, &["XX".to_string()], "2020", &[]
+        let items = build_fetch_list(&manifest, &["XX".to_string()], "2020", &[]);
+        assert!(
+            items.is_empty(),
+            "unknown state code must produce zero fetch items"
         );
-        assert!(items.is_empty(),
-            "unknown state code must produce zero fetch items");
     }
 
     #[test]
@@ -1152,21 +1324,31 @@ mod tests {
         use crate::args::DataType;
         let manifest = load_manifest().unwrap();
         let items = build_fetch_list(
-            &manifest, &["VT".to_string()], "2020", &[DataType::Adjacency]
+            &manifest,
+            &["VT".to_string()],
+            "2020",
+            &[DataType::Adjacency],
         );
         let path_str = items[0].local_path.to_string_lossy().to_lowercase();
-        assert!(path_str.contains("vt"), "adjacency path must contain state code");
-        assert!(path_str.contains("2020"), "adjacency path must contain year");
-        assert!(path_str.ends_with(".pkl"), "adjacency file must have .pkl extension");
+        assert!(
+            path_str.contains("vt"),
+            "adjacency path must contain state code"
+        );
+        assert!(
+            path_str.contains("2020"),
+            "adjacency path must contain year"
+        );
+        assert!(
+            path_str.ends_with(".pkl"),
+            "adjacency file must have .pkl extension"
+        );
     }
 
     #[test]
     fn test_build_fetch_list_tiger_url_has_fips_code() {
         use crate::args::DataType;
         let manifest = load_manifest().unwrap();
-        let items = build_fetch_list(
-            &manifest, &["VT".to_string()], "2020", &[DataType::Tiger]
-        );
+        let items = build_fetch_list(&manifest, &["VT".to_string()], "2020", &[DataType::Tiger]);
         let url = items[0].url.as_deref().unwrap();
         assert!(url.contains("50"), "VT tiger URL must contain FIPS '50'");
         assert!(url.contains("2020"), "tiger URL must contain year");
@@ -1175,42 +1357,63 @@ mod tests {
     #[test]
     fn test_manifest_releases_fields_present() {
         let manifest = load_manifest().unwrap();
-        assert!(!manifest.releases.data_inputs.is_empty(),
-            "releases.data_inputs must not be empty");
-        assert!(!manifest.releases.outputs_v3.is_empty(),
-            "releases.outputs_v3 must not be empty");
-        assert!(!manifest.releases.outputs_v4.is_empty(),
-            "releases.outputs_v4 must not be empty");
+        assert!(
+            !manifest.releases.data_inputs.is_empty(),
+            "releases.data_inputs must not be empty"
+        );
+        assert!(
+            !manifest.releases.outputs_v3.is_empty(),
+            "releases.outputs_v3 must not be empty"
+        );
+        assert!(
+            !manifest.releases.outputs_v4.is_empty(),
+            "releases.outputs_v4 must not be empty"
+        );
     }
 
     #[test]
     fn test_manifest_github_repo_field_present() {
         let manifest = load_manifest().unwrap();
-        assert!(!manifest.github_repo.is_empty(), "github_repo must not be empty");
+        assert!(
+            !manifest.github_repo.is_empty(),
+            "github_repo must not be empty"
+        );
         // Must look like an owner/repo slug
-        assert!(manifest.github_repo.contains('/'),
-            "github_repo must be owner/repo format; got: {}", manifest.github_repo);
+        assert!(
+            manifest.github_repo.contains('/'),
+            "github_repo must be owner/repo format; got: {}",
+            manifest.github_repo
+        );
     }
 
     #[test]
     fn test_manifest_local_dirs_fields_present() {
         let manifest = load_manifest().unwrap();
-        assert!(!manifest.local_data_dir.is_empty(),
-            "local_data_dir must be set in manifest");
-        assert!(!manifest.local_outputs_dir.is_empty(),
-            "local_outputs_dir must be set in manifest");
+        assert!(
+            !manifest.local_data_dir.is_empty(),
+            "local_data_dir must be set in manifest"
+        );
+        assert!(
+            !manifest.local_outputs_dir.is_empty(),
+            "local_outputs_dir must be set in manifest"
+        );
     }
 
     #[test]
     fn test_all_states_have_name_and_fips() {
         let manifest = load_manifest().unwrap();
         for (code, state) in &manifest.states {
-            assert!(!state.name.is_empty(),
-                "{code} must have a non-empty name");
-            assert!(!state.fips.is_empty(),
-                "{code} must have a non-empty FIPS code");
-            assert_eq!(state.fips.len(), 2,
-                "{code} FIPS code must be exactly 2 digits; got '{}'", state.fips);
+            assert!(!state.name.is_empty(), "{code} must have a non-empty name");
+            assert!(
+                !state.fips.is_empty(),
+                "{code} must have a non-empty FIPS code"
+            );
+            assert_eq!(
+                state.fips.len(),
+                2,
+                "{code} FIPS code must be exactly 2 digits; got '{}'",
+                state.fips
+            );
         }
     }
 
@@ -1218,10 +1421,15 @@ mod tests {
     fn test_all_states_have_districts_2020() {
         let manifest = load_manifest().unwrap();
         for (code, state) in &manifest.states {
-            let n = state.districts.get("2020")
+            let n = state
+                .districts
+                .get("2020")
                 .unwrap_or_else(|| panic!("{code} missing districts.2020"));
             assert!(*n >= 1, "{code} must have at least 1 district in 2020");
-            assert!(*n <= 53, "{code} must have at most 53 districts (CA=52 + potential rounding)");
+            assert!(
+                *n <= 53,
+                "{code} must have at most 53 districts (CA=52 + potential rounding)"
+            );
         }
     }
 
@@ -1229,8 +1437,10 @@ mod tests {
     fn test_verify_file_sha256_nonexistent_file_returns_err() {
         let path = std::path::Path::new("/nonexistent/path/file.bin");
         let result = verify_file_sha256(path, "abc123");
-        assert!(result.is_err(),
-            "verify_file_sha256 on nonexistent file must return Err");
+        assert!(
+            result.is_err(),
+            "verify_file_sha256 on nonexistent file must return Err"
+        );
     }
 
     #[test]
@@ -1242,8 +1452,12 @@ mod tests {
             "2020",
             &[], // all types → 3 per state
         );
-        assert_eq!(items.len(), 6,
-            "2 states × 3 types must produce 6 fetch items; got {}", items.len());
+        assert_eq!(
+            items.len(),
+            6,
+            "2 states × 3 types must produce 6 fetch items; got {}",
+            items.len()
+        );
     }
 
     // ── L0: LODES + school-districts + EIA-861 fetch list ─────────────────────
@@ -1252,21 +1466,32 @@ mod tests {
     fn test_build_fetch_list_lodes_url_pattern() {
         use crate::args::DataType;
         let manifest = load_manifest().unwrap();
-        let items = build_fetch_list(
-            &manifest, &["NC".to_string()], "2020", &[DataType::Lodes]
-        );
+        let items = build_fetch_list(&manifest, &["NC".to_string()], "2020", &[DataType::Lodes]);
         assert_eq!(items.len(), 1);
         let url = items[0].url.as_deref().unwrap();
-        assert!(url.contains("lehd.ces.census.gov"), "LODES URL must use LEHD server");
-        assert!(url.contains("nc"), "LODES URL must contain lowercase state code");
+        assert!(
+            url.contains("lehd.ces.census.gov"),
+            "LODES URL must use LEHD server"
+        );
+        assert!(
+            url.contains("nc"),
+            "LODES URL must contain lowercase state code"
+        );
         assert!(url.contains("wac"), "LODES URL must be WAC file");
         assert!(url.contains("2020"), "LODES URL must contain year");
         assert!(url.ends_with(".csv.gz"), "LODES WAC must be .csv.gz");
         assert_eq!(items[0].kind, "lodes-wac");
-        assert!(items[0].local_path.to_string_lossy().contains("lodes"),
-            "LODES local path must be under lodes/ directory");
-        assert!(items[0].local_path.to_string_lossy().ends_with("_wac_tract.csv"),
-            "LODES local path must end with _wac_tract.csv");
+        assert!(
+            items[0].local_path.to_string_lossy().contains("lodes"),
+            "LODES local path must be under lodes/ directory"
+        );
+        assert!(
+            items[0]
+                .local_path
+                .to_string_lossy()
+                .ends_with("_wac_tract.csv"),
+            "LODES local path must end with _wac_tract.csv"
+        );
     }
 
     #[test]
@@ -1274,13 +1499,25 @@ mod tests {
         use crate::args::DataType;
         let manifest = load_manifest().unwrap();
         let items = build_fetch_list(
-            &manifest, &["NC".to_string()], "2020", &[DataType::SchoolDistricts]
+            &manifest,
+            &["NC".to_string()],
+            "2020",
+            &[DataType::SchoolDistricts],
         );
         assert_eq!(items.len(), 1);
         let url = items[0].url.as_deref().unwrap();
-        assert!(url.contains("census.gov"), "school district URL must use Census server");
-        assert!(url.contains("UNSD"), "school district URL must reference UNSD directory");
-        assert!(url.contains("unsd"), "school district filename must contain 'unsd'");
+        assert!(
+            url.contains("census.gov"),
+            "school district URL must use Census server"
+        );
+        assert!(
+            url.contains("UNSD"),
+            "school district URL must reference UNSD directory"
+        );
+        assert!(
+            url.contains("unsd"),
+            "school district filename must contain 'unsd'"
+        );
         assert!(url.ends_with(".zip"), "school district must be ZIP");
         assert_eq!(items[0].kind, "school-districts");
     }
@@ -1291,7 +1528,10 @@ mod tests {
         let manifest = load_manifest().unwrap();
         // EIA-861 is one national file, not per-state — only 1 item regardless of state filter
         let items = build_fetch_list(
-            &manifest, &["NC".to_string(), "WI".to_string()], "2020", &[DataType::Eia861]
+            &manifest,
+            &["NC".to_string(), "WI".to_string()],
+            "2020",
+            &[DataType::Eia861],
         );
         assert_eq!(items.len(), 1, "EIA-861 produces exactly one national item");
         assert_eq!(items[0].state_code, "US", "EIA-861 state_code must be 'US'");
@@ -1307,8 +1547,10 @@ mod tests {
         use crate::args::FetchArgs;
         use clap::Parser;
         let args = FetchArgs::parse_from(["fetch"]);
-        assert_eq!(args.polite_delay_secs, 1,
-            "polite_delay_secs default must be 1 second");
+        assert_eq!(
+            args.polite_delay_secs, 1,
+            "polite_delay_secs default must be 1 second"
+        );
     }
 
     #[test]
@@ -1323,9 +1565,9 @@ mod tests {
 
     #[test]
     fn test_lodes_wac_aggregation_sums_blocks_to_tract() {
-        use std::io::Write;
         use flate2::write::GzEncoder;
         use flate2::Compression;
+        use std::io::Write;
 
         // Build a minimal LODES WAC CSV in memory:
         // 3 blocks in 2 tracts (blocks 01001020100001, 01001020100002 → tract 01001020100;
@@ -1361,7 +1603,11 @@ w_geocode,C000,CNS01,CNS02,CNS05,CNS07,CNS08,CNS09,CNS10,CNS11\n\
 
         let header = lines.next().unwrap().unwrap();
         let cols: Vec<&str> = header.split(',').collect();
-        let idx = |name: &str| cols.iter().position(|c| c.trim_matches('"') == name).unwrap();
+        let idx = |name: &str| {
+            cols.iter()
+                .position(|c| c.trim_matches('"') == name)
+                .unwrap()
+        };
         let (i_geo, i_c000) = (idx("w_geocode"), idx("C000"));
 
         let mut tracts: std::collections::HashMap<String, u64> = std::collections::HashMap::new();
@@ -1375,15 +1621,22 @@ w_geocode,C000,CNS01,CNS02,CNS05,CNS07,CNS08,CNS09,CNS10,CNS11\n\
         }
 
         // Verify aggregation: tract 01001020100 = 100+50=150, tract 01001020200 = 200
-        assert_eq!(tracts["01001020100"], 150,
-            "two blocks in same tract must be summed: 100+50=150");
-        assert_eq!(tracts["01001020200"], 200,
-            "single block in tract = block value");
+        assert_eq!(
+            tracts["01001020100"], 150,
+            "two blocks in same tract must be summed: 100+50=150"
+        );
+        assert_eq!(
+            tracts["01001020200"], 200,
+            "single block in tract = block value"
+        );
         assert_eq!(tracts.len(), 2, "two distinct tracts");
 
         // Verify totals preserved: 100+50+200 = 350
         let total: u64 = tracts.values().sum();
-        assert_eq!(total, 350, "L0 invariant: aggregation preserves total job count");
+        assert_eq!(
+            total, 350,
+            "L0 invariant: aggregation preserves total job count"
+        );
 
         let _ = output_path; // suppress unused warning
     }
@@ -1393,9 +1646,9 @@ w_geocode,C000,CNS01,CNS02,CNS05,CNS07,CNS08,CNS09,CNS10,CNS11\n\
         // A state with no jobs (e.g., uninhabited areas) should produce a valid
         // header-only CSV rather than crashing.
         let csv_content = "w_geocode,C000,CNS01,CNS02,CNS05,CNS07,CNS08,CNS09,CNS10,CNS11\n";
-        use std::io::Write;
         use flate2::write::GzEncoder;
         use flate2::Compression;
+        use std::io::Write;
         let mut enc = GzEncoder::new(Vec::new(), Compression::default());
         enc.write_all(csv_content.as_bytes()).unwrap();
         let gz_bytes = enc.finish().unwrap();
@@ -1406,7 +1659,10 @@ w_geocode,C000,CNS01,CNS02,CNS05,CNS07,CNS08,CNS09,CNS10,CNS11\n\
         let mut lines = std::io::BufRead::lines(reader);
         let _header = lines.next().unwrap().unwrap();
         let remaining: Vec<_> = lines.collect();
-        assert!(remaining.is_empty(), "no data rows → aggregation produces empty tract map");
+        assert!(
+            remaining.is_empty(),
+            "no data rows → aggregation produces empty tract map"
+        );
     }
 
     // ── L0: LODES OD fetch list + aggregation ────────────────────────────────
@@ -1415,26 +1671,37 @@ w_geocode,C000,CNS01,CNS02,CNS05,CNS07,CNS08,CNS09,CNS10,CNS11\n\
     fn test_build_fetch_list_lodes_od_url_pattern() {
         use crate::args::DataType;
         let manifest = load_manifest().unwrap();
-        let items = build_fetch_list(
-            &manifest, &["NC".to_string()], "2020", &[DataType::LodesOd]
-        );
+        let items = build_fetch_list(&manifest, &["NC".to_string()], "2020", &[DataType::LodesOd]);
         assert_eq!(items.len(), 1);
         let url = items[0].url.as_deref().unwrap();
-        assert!(url.contains("lehd.ces.census.gov"), "LODES OD URL must use LEHD server");
-        assert!(url.contains("/od/"), "LODES OD URL must contain /od/ path segment");
+        assert!(
+            url.contains("lehd.ces.census.gov"),
+            "LODES OD URL must use LEHD server"
+        );
+        assert!(
+            url.contains("/od/"),
+            "LODES OD URL must contain /od/ path segment"
+        );
         assert!(url.ends_with(".csv.gz"), "LODES OD must be .csv.gz");
         assert_eq!(items[0].kind, "lodes-od");
-        assert!(items[0].local_path.to_string_lossy().contains("lodes"),
-            "LODES OD local path must be under lodes/ directory");
-        assert!(items[0].local_path.to_string_lossy().ends_with("_od_tract.csv"),
-            "LODES OD local path must end with _od_tract.csv");
+        assert!(
+            items[0].local_path.to_string_lossy().contains("lodes"),
+            "LODES OD local path must be under lodes/ directory"
+        );
+        assert!(
+            items[0]
+                .local_path
+                .to_string_lossy()
+                .ends_with("_od_tract.csv"),
+            "LODES OD local path must end with _od_tract.csv"
+        );
     }
 
     #[test]
     fn test_lodes_od_aggregation_sums_by_tract_pair() {
-        use std::io::Write;
         use flate2::write::GzEncoder;
         use flate2::Compression;
+        use std::io::Write;
 
         // 3 block-pair rows aggregating to 2 tract pairs:
         //   row 1: h=010010201000001, w=010010301000001 -> home=01001020100, work=01001030100, S000=50
@@ -1458,13 +1725,20 @@ h_geocode,w_geocode,S000,SA01,SA02,SA03,SE01,SE02,SE03,SI01,SI02,SI03,createdate
 
         let header = lines.next().unwrap().unwrap();
         let cols: Vec<&str> = header.split(',').collect();
-        let idx = |name: &str| cols.iter().position(|c| c.trim_matches('"') == name).unwrap();
+        let idx = |name: &str| {
+            cols.iter()
+                .position(|c| c.trim_matches('"') == name)
+                .unwrap()
+        };
         let (i_home, i_work, i_s000) = (idx("h_geocode"), idx("w_geocode"), idx("S000"));
 
-        let mut od: std::collections::HashMap<(String, String), u64> = std::collections::HashMap::new();
+        let mut od: std::collections::HashMap<(String, String), u64> =
+            std::collections::HashMap::new();
         for line in lines {
             let line = line.unwrap();
-            if line.trim().is_empty() { continue; }
+            if line.trim().is_empty() {
+                continue;
+            }
             let fields: Vec<&str> = line.split(',').collect();
             let home = fields[i_home].trim_matches('"');
             let work = fields[i_work].trim_matches('"');
@@ -1498,22 +1772,49 @@ h_geocode,w_geocode,S000,SA01,SA02,SA03,SE01,SE02,SE03,SI01,SI02,SI03,createdate
         use crate::args::DataType;
         let manifest = load_manifest().unwrap();
         let items = build_fetch_list(
-            &manifest, &["NC".to_string()], "2020", &[DataType::AcsHousing]
+            &manifest,
+            &["NC".to_string()],
+            "2020",
+            &[DataType::AcsHousing],
         );
-        assert_eq!(items.len(), 1, "ACS housing must produce exactly 1 item per state");
+        assert_eq!(
+            items.len(),
+            1,
+            "ACS housing must produce exactly 1 item per state"
+        );
         assert_eq!(items[0].kind, "acs-housing");
         let url = items[0].url.as_deref().unwrap();
-        assert!(url.contains("api.census.gov"), "ACS URL must use api.census.gov");
-        assert!(url.contains("B25024_002E"), "ACS URL must include B25024_002E (1-unit detached)");
-        assert!(url.contains("for=tract"), "ACS URL must request tract-level data");
+        assert!(
+            url.contains("api.census.gov"),
+            "ACS URL must use api.census.gov"
+        );
+        assert!(
+            url.contains("B25024_002E"),
+            "ACS URL must include B25024_002E (1-unit detached)"
+        );
+        assert!(
+            url.contains("for=tract"),
+            "ACS URL must request tract-level data"
+        );
         // NC FIPS is "37"
-        assert!(url.contains("state:37"), "ACS URL must include NC FIPS state code");
+        assert!(
+            url.contains("state:37"),
+            "ACS URL must include NC FIPS state code"
+        );
         assert!(url.contains("2020"), "ACS URL must include year");
         let path_str = items[0].local_path.to_string_lossy().to_lowercase();
-        assert!(path_str.contains("acs_housing"), "local path must be under acs_housing/");
-        assert!(path_str.contains("north_carolina"), "local path must include state name");
-        assert!(path_str.ends_with("_housing_2020.csv"),
-            "local path must end with _housing_2020.csv; got: {path_str}");
+        assert!(
+            path_str.contains("acs_housing"),
+            "local path must be under acs_housing/"
+        );
+        assert!(
+            path_str.contains("north_carolina"),
+            "local path must include state name"
+        );
+        assert!(
+            path_str.ends_with("_housing_2020.csv"),
+            "local path must end with _housing_2020.csv; got: {path_str}"
+        );
     }
 
     /// housing_vintage formula: 1.0 - (year - 1940) / (2020 - 1940)
@@ -1526,28 +1827,38 @@ h_geocode,w_geocode,S000,SA01,SA02,SA03,SE01,SE02,SE03,SI01,SI02,SI03,createdate
 
         // year=1960: (1-(1960-1940)/(2020-1940)) = 1 - 20/80 = 0.75
         let v1960 = vintage(1960.0);
-        assert!((v1960 - 0.75).abs() < 1e-9,
-            "vintage(1960) must be 0.75; got {v1960}");
+        assert!(
+            (v1960 - 0.75).abs() < 1e-9,
+            "vintage(1960) must be 0.75; got {v1960}"
+        );
 
         // year=2020: (1-(2020-1940)/80) = 0.0
         let v2020 = vintage(2020.0);
-        assert!((v2020 - 0.0).abs() < 1e-9,
-            "vintage(2020) must be 0.0; got {v2020}");
+        assert!(
+            (v2020 - 0.0).abs() < 1e-9,
+            "vintage(2020) must be 0.0; got {v2020}"
+        );
 
         // year=1940: (1-0/80) = 1.0
         let v1940 = vintage(1940.0);
-        assert!((v1940 - 1.0).abs() < 1e-9,
-            "vintage(1940) must be 1.0; got {v1940}");
+        assert!(
+            (v1940 - 1.0).abs() < 1e-9,
+            "vintage(1940) must be 1.0; got {v1940}"
+        );
 
         // year=1939: pre-1940, raw=1.0125 -> clamped to 1.0
         let v1939 = vintage(1939.0);
-        assert!((v1939 - 1.0).abs() < 1e-9,
-            "vintage(1939) must clamp to 1.0; got {v1939}");
+        assert!(
+            (v1939 - 1.0).abs() < 1e-9,
+            "vintage(1939) must clamp to 1.0; got {v1939}"
+        );
 
         // year=2025: post-2020, raw<0 -> clamped to 0.0
         let v2025 = vintage(2025.0);
-        assert!((v2025 - 0.0).abs() < 1e-9,
-            "vintage(2025) must clamp to 0.0; got {v2025}");
+        assert!(
+            (v2025 - 0.0).abs() < 1e-9,
+            "vintage(2025) must clamp to 0.0; got {v2025}"
+        );
     }
 
     /// Unreliable Census code -666666666 must yield housing_vintage = 0.5 (neutral)
@@ -1561,8 +1872,10 @@ h_geocode,w_geocode,S000,SA01,SA02,SA03,SE01,SE02,SE03,SI01,SI02,SI03,createdate
             let v = 1.0 - (unreliable - 1940.0) / (2020.0 - 1940.0);
             v.clamp(0.0, 1.0)
         };
-        assert!((housing_vintage - 0.5).abs() < 1e-9,
-            "unreliable code -666666666 must yield vintage=0.5; got {housing_vintage}");
+        assert!(
+            (housing_vintage - 0.5).abs() < 1e-9,
+            "unreliable code -666666666 must yield vintage=0.5; got {housing_vintage}"
+        );
     }
 
     /// Verify pct_sf defaults to 0.5 when total_units == 0
@@ -1576,8 +1889,10 @@ h_geocode,w_geocode,S000,SA01,SA02,SA03,SE01,SE02,SE03,SI01,SI02,SI03,createdate
         } else {
             0.5
         };
-        assert!((pct_sf - 0.5).abs() < 1e-9,
-            "pct_sf must default to 0.5 when total_units=0; got {pct_sf}");
+        assert!(
+            (pct_sf - 0.5).abs() < 1e-9,
+            "pct_sf must default to 0.5 when total_units=0; got {pct_sf}"
+        );
     }
 
     /// Verify pct_owner defaults to 0.5 when total_occupied == 0
@@ -1590,8 +1905,10 @@ h_geocode,w_geocode,S000,SA01,SA02,SA03,SE01,SE02,SE03,SI01,SI02,SI03,createdate
         } else {
             0.5
         };
-        assert!((pct_owner - 0.5).abs() < 1e-9,
-            "pct_owner must default to 0.5 when total_occupied=0; got {pct_owner}");
+        assert!(
+            (pct_owner - 0.5).abs() < 1e-9,
+            "pct_owner must default to 0.5 when total_occupied=0; got {pct_owner}"
+        );
     }
 
     // ── L2: Real LODES download (requires internet, marked #[ignore]) ─────────
@@ -1604,20 +1921,30 @@ h_geocode,w_geocode,S000,SA01,SA02,SA03,SE01,SE02,SE03,SI01,SI02,SI03,createdate
         // HTTP GET → gzip decompress → block→tract aggregation → CSV write.
         let tmp_dir = tempfile::TempDir::new().unwrap();
         let output = tmp_dir.path().join("vermont_wac_tract.csv");
-        let url = "https://lehd.ces.census.gov/data/lodes/LODES8/vt/wac/vt_wac_S000_JT00_2020.csv.gz";
+        let url =
+            "https://lehd.ces.census.gov/data/lodes/LODES8/vt/wac/vt_wac_S000_JT00_2020.csv.gz";
         download_lodes_wac(url, &output).expect("VT LODES download must succeed");
         assert!(output.exists(), "output CSV must be created");
         let content = std::fs::read_to_string(&output).unwrap();
         let lines: Vec<_> = content.lines().collect();
         assert!(lines.len() > 1, "must have header + at least one tract row");
-        assert_eq!(lines[0], "geoid,c000,cns07,cns09,cns10,cns11,cns01,cns02,cns05,cns08",
-            "header must match expected columns");
+        assert_eq!(
+            lines[0], "geoid,c000,cns07,cns09,cns10,cns11,cns01,cns02,cns05,cns08",
+            "header must match expected columns"
+        );
         // VT has ~790 tracts — all jobs should aggregate to fewer rows than blocks
         assert!(lines.len() < 5000, "VT should have <5000 tracts");
         // Total jobs in VT 2020 should be in the range 200k-400k
-        let total: u64 = lines.iter().skip(1).map(|l| {
-            l.split(',').nth(1).and_then(|v| v.parse::<u64>().ok()).unwrap_or(0)
-        }).sum();
+        let total: u64 = lines
+            .iter()
+            .skip(1)
+            .map(|l| {
+                l.split(',')
+                    .nth(1)
+                    .and_then(|v| v.parse::<u64>().ok())
+                    .unwrap_or(0)
+            })
+            .sum();
         assert!(total > 100_000, "VT total jobs must be >100k; got {total}");
         assert!(total < 600_000, "VT total jobs must be <600k; got {total}");
     }

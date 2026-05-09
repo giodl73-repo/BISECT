@@ -275,14 +275,14 @@ def build_adjacency(gdf: gpd.GeoDataFrame) -> dict:
 
 def convert_to_bin(pkl_path: Path) -> Path | None:
     try:
-        import redist_py
+        import bisect_py
         with open(pkl_path, "rb") as f:
             d = pickle.load(f)
         adj = d["adjacency"]
         vw = [int(x) for x in d["vertex_weights"]]
         ew = {(min(i, j), max(i, j)): float(w) for (i, j), w in d.get("edge_weights", {}).items()}
         ig = {int(k): str(v) for k, v in d.get("index_to_geoid", {}).items()}
-        bin_data = redist_py.adjacency_to_bin(adj, vw, ew, len(adj), len(ew))
+        bin_data = bisect_py.adjacency_to_bin(adj, vw, ew, len(adj), len(ew))
         bin_path = pkl_path.with_suffix(".adj.bin")
         bin_path.write_bytes(bin_data)
         geoid_path = pkl_path.with_name("de_adjacency_2021_geoids.json")
@@ -290,8 +290,8 @@ def convert_to_bin(pkl_path: Path) -> Path | None:
         print(f"  [OK] {bin_path} ({len(bin_data)/1e3:.1f} KB)")
         return bin_path
     except ImportError:
-        print("  [WARN] redist_py not available — .adj.bin not generated")
-        print("  Build with: cd redist/python/redist_py && maturin develop")
+        print("  [WARN] bisect_py not available — .adj.bin not generated")
+        print("  Build with: cd python/bisect_py && maturin develop")
         return None
 
 
@@ -348,20 +348,20 @@ def main():
     print(f"  Total pop: {sum(graph_dict['vertex_weights']):,}")
     print(f"  Target: {GERMANY_WAHLKREISE} Wahlkreise, ±25% tolerance")
     print(f"\nNext — run redistricting:")
-    print(f"  redist state --state DE --year 2021 --version international \\")
+    print(f"  BISECT state --state DE --year 2021 --version international \\")
     print(f"    --adjacency {bin_path or pkl_path} --state-name germany \\")
     print(f"    --districts {GERMANY_WAHLKREISE} --seats-per-district 1 \\")
     print(f"    --chamber parliamentary --balance-tolerance 25 --label germany_bundestag_2021")
 
     if args.run and bin_path:
         print("\nStep 5: Running redistricting...")
-        redist = next((p for p in [
-            Path("redist/target/release/redist.exe"),
-            Path("redist/target/release/redist"),
+        BISECT = next((p for p in [
+            Path("target/release/bisect.exe"),
+            Path("target/release/bisect"),
         ] if p.exists()), None)
-        if redist:
+        if BISECT:
             result = subprocess.run([
-                str(redist), "state",
+                str(BISECT), "state",
                 "--state", "DE", "--year", "2020", "--version", "international",
                 "--adjacency", str(bin_path), "--state-name", "germany",
                 "--districts", str(GERMANY_WAHLKREISE),
@@ -370,7 +370,7 @@ def main():
             ], capture_output=True, text=True)
             print(result.stderr)
         else:
-            print("  [WARN] redist binary not found")
+            print("  [WARN] BISECT binary not found")
 
 
 if __name__ == "__main__":

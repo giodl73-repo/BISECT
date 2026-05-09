@@ -1,13 +1,13 @@
-use std::path::Path;
 use std::collections::HashMap;
+use std::path::Path;
 
 pub struct AnalyzerContext<'a> {
-    pub assignments: &'a HashMap<String, usize>,  // GEOID -> district_id (1-based)
+    pub assignments: &'a HashMap<String, usize>, // GEOID -> district_id (1-based)
     pub state_name: &'a str,
     pub state_code: &'a str,
     pub year: &'a str,
     pub version: &'a str,
-    pub num_districts: usize,  // BOUNDARY-R2-01: required for ideal_pop
+    pub num_districts: usize, // BOUNDARY-R2-01: required for ideal_pop
     pub data_root: &'a Path,
     pub output_root: &'a Path,
     /// Maximum allowed per-district population deviation as a fraction (not percent).
@@ -18,8 +18,12 @@ pub struct AnalyzerContext<'a> {
 
 pub trait Analyzer {
     type Output: serde::Serialize;
-    fn name() -> &'static str where Self: Sized;
-    fn run(ctx: &AnalyzerContext<'_>) -> anyhow::Result<Self::Output> where Self: Sized;
+    fn name() -> &'static str
+    where
+        Self: Sized;
+    fn run(ctx: &AnalyzerContext<'_>) -> anyhow::Result<Self::Output>
+    where
+        Self: Sized;
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, clap::ValueEnum)]
@@ -126,8 +130,10 @@ mod tests {
         // not silently include it (would fail-by-default for users without the
         // annotation file).
         let concrete = AnalyzerType::all_concrete();
-        assert!(!concrete.contains(&AnalyzerType::BlocVoting),
-            "bloc-voting must be opt-in via explicit --types bloc-voting");
+        assert!(
+            !concrete.contains(&AnalyzerType::BlocVoting),
+            "bloc-voting must be opt-in via explicit --types bloc-voting"
+        );
     }
 
     #[test]

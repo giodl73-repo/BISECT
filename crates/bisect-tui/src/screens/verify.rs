@@ -1,10 +1,9 @@
 /// Verify screen — chain-of-custody audit with PASS/FAIL result box.
-
 use ratatui::{
-    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     widgets::{Block, Borders, Cell, Paragraph, Row, Table},
+    Frame,
 };
 
 use crate::app::VerifyState;
@@ -65,9 +64,7 @@ pub fn render(f: &mut Frame, area: Rect, state: &VerifyState) {
         let pass_content = Paragraph::new(vec![
             ratatui::text::Line::from(ratatui::text::Span::styled(
                 pass_text,
-                Style::default()
-                    .fg(pass_color)
-                    .add_modifier(Modifier::BOLD),
+                Style::default().fg(pass_color).add_modifier(Modifier::BOLD),
             )),
             ratatui::text::Line::from(jaccard_text),
             ratatui::text::Line::from(label_text),
@@ -84,9 +81,11 @@ pub fn render(f: &mut Frame, area: Rect, state: &VerifyState) {
             ("Seed", result.seed_recorded),
         ];
 
-        let header = Row::new(["Item", "Status"].iter().map(|h| {
-            Cell::from(*h).style(Style::default().add_modifier(Modifier::BOLD))
-        }));
+        let header = Row::new(
+            ["Item", "Status"]
+                .iter()
+                .map(|h| Cell::from(*h).style(Style::default().add_modifier(Modifier::BOLD))),
+        );
 
         let check_rows: Vec<Row> = checks
             .iter()
@@ -103,16 +102,13 @@ pub fn render(f: &mut Frame, area: Rect, state: &VerifyState) {
             })
             .collect();
 
-        let table = Table::new(
-            check_rows,
-            [Constraint::Min(20), Constraint::Length(10)],
-        )
-        .header(header)
-        .block(
-            Block::default()
-                .title(" Chain of Custody ")
-                .borders(Borders::TOP),
-        );
+        let table = Table::new(check_rows, [Constraint::Min(20), Constraint::Length(10)])
+            .header(header)
+            .block(
+                Block::default()
+                    .title(" Chain of Custody ")
+                    .borders(Borders::TOP),
+            );
         f.render_widget(table, rows[2]);
 
         // Likely causes (only on FAIL)
@@ -149,21 +145,31 @@ mod tests {
     use super::*;
     use ratatui::{backend::TestBackend, Terminal};
 
-    fn render_to_string(width: u16, height: u16, f: impl FnOnce(&mut ratatui::Frame, ratatui::layout::Rect)) -> String {
+    fn render_to_string(
+        width: u16,
+        height: u16,
+        f: impl FnOnce(&mut ratatui::Frame, ratatui::layout::Rect),
+    ) -> String {
         let backend = TestBackend::new(width, height);
         let mut terminal = Terminal::new(backend).unwrap();
-        terminal.draw(|frame| {
-            let area = frame.area();
-            f(frame, area);
-        }).unwrap();
-        terminal.backend().buffer().content().iter()
+        terminal
+            .draw(|frame| {
+                let area = frame.area();
+                f(frame, area);
+            })
+            .unwrap();
+        terminal
+            .backend()
+            .buffer()
+            .content()
+            .iter()
             .map(|c| c.symbol().to_string())
             .collect::<String>()
     }
 
     #[test]
     fn test_verify_pass_shows_pass_text() {
-        use crate::app::{VerifyState, VerifyResult};
+        use crate::app::{VerifyResult, VerifyState};
         let mut state = VerifyState::default();
         state.result = Some(VerifyResult {
             passed: true,
@@ -174,12 +180,15 @@ mod tests {
             ..Default::default()
         });
         let content = render_to_string(120, 30, |f, area| render(f, area, &state));
-        assert!(content.contains("PASS") || content.contains("pass"), "PASS must appear: {content}");
+        assert!(
+            content.contains("PASS") || content.contains("pass"),
+            "PASS must appear: {content}"
+        );
     }
 
     #[test]
     fn test_verify_fail_shows_fail_text() {
-        use crate::app::{VerifyState, VerifyResult};
+        use crate::app::{VerifyResult, VerifyState};
         let mut state = VerifyState::default();
         state.result = Some(VerifyResult {
             passed: false,
@@ -187,7 +196,10 @@ mod tests {
             ..Default::default()
         });
         let content = render_to_string(120, 30, |f, area| render(f, area, &state));
-        assert!(content.contains("FAIL") || content.contains("fail"), "FAIL must appear: {content}");
+        assert!(
+            content.contains("FAIL") || content.contains("fail"),
+            "FAIL must appear: {content}"
+        );
     }
 
     #[test]
@@ -195,7 +207,9 @@ mod tests {
         let state = VerifyState::default();
         let content = render_to_string(120, 20, |f, area| render(f, area, &state));
         assert!(
-            content.contains("Manifest") || content.contains("manifest") || content.contains("path"),
+            content.contains("Manifest")
+                || content.contains("manifest")
+                || content.contains("path"),
             "manifest input must show: {content}"
         );
     }

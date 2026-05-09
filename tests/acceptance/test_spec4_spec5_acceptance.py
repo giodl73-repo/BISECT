@@ -1,8 +1,8 @@
 """L2 acceptance tests for Spec 4 (Partisan Metrics) + Spec 5 (Multi-Chamber / Nested Plans).
 
 These tests verify end-to-end behavior of:
-  - redist analyze --types partisan
-  - redist suite draw + validate
+  - BISECT analyze --types partisan
+  - BISECT suite draw + validate
 
 Board amendments applied:
   - bootstrap_ci: --bootstrap-samples flag (default 1000), progress printed
@@ -10,8 +10,8 @@ Board amendments applied:
   - IL variable nesting: require explicit --nest-ratio, exit non-zero without it
 
 Requirements:
-  - redist binary must be on PATH or at redist/target/release/redist
-  - VT data must be present (from `redist fetch`)
+  - BISECT binary must be on PATH or at target/release/bisect
+  - VT data must be present (from `BISECT fetch`)
   - Election CSV data at data/2020/elections/presidential_by_tract.csv (for VT tests)
 
 Run with: pytest tests/acceptance/test_spec4_spec5_acceptance.py -v
@@ -28,36 +28,36 @@ from pathlib import Path
 # Binary location
 # ---------------------------------------------------------------------------
 
-def _find_redist_bin():
-    found = shutil.which("redist")
+def _find_bisect_bin():
+    found = shutil.which("BISECT")
     if found:
         return found
     candidates = [
-        "redist/target/release/redist.exe",
-        "redist/target/release/redist",
+        "target/release/bisect.exe",
+        "target/release/bisect",
     ]
     project_root = Path(__file__).parent.parent.parent
     for c in candidates:
         p = project_root / c
         if p.exists():
             return str(p)
-    return "redist"
+    return "BISECT"
 
-REDIST_BIN = _find_redist_bin()
+BISECT_BIN = _find_bisect_bin()
 
 pytestmark = pytest.mark.skipif(
-    not Path(REDIST_BIN).exists(),
-    reason=f"redist binary not found at {REDIST_BIN}"
+    not Path(BISECT_BIN).exists(),
+    reason=f"BISECT binary not found at {BISECT_BIN}"
 )
 
 
-def run_redist(args: list[str], check=False, capture=True) -> subprocess.CompletedProcess:
-    cmd = [REDIST_BIN] + args
+def run_bisect(args: list[str], check=False, capture=True) -> subprocess.CompletedProcess:
+    cmd = [BISECT_BIN] + args
     return subprocess.run(cmd, capture_output=capture, text=True, check=check)
 
 
 def has_vt_data() -> bool:
-    result = run_redist(
+    result = run_bisect(
         ["state", "--state", "VT", "--year", "2020", "--version", "spec_check", "--print-only"],
         check=False
     )
@@ -73,11 +73,11 @@ def has_election_data(year: str = "2020") -> bool:
 # ---------------------------------------------------------------------------
 
 class TestSpec4PartisanAnalyzer:
-    """Tests for redist analyze --types partisan."""
+    """Tests for BISECT analyze --types partisan."""
 
     def test_partisan_analyzer_type_parsed(self):
-        """redist analyze --types partisan is a valid analyzer type (no parse error)."""
-        result = run_redist([
+        """BISECT analyze --types partisan is a valid analyzer type (no parse error)."""
+        result = run_bisect([
             "analyze", "--state", "VT", "--year", "2020",
             "--version", "spec4_parse_test", "--types", "partisan", "--help",
         ], check=False)
@@ -89,7 +89,7 @@ class TestSpec4PartisanAnalyzer:
         if not has_vt_data():
             pytest.skip("VT redistricting data not available")
 
-        result = run_redist([
+        result = run_bisect([
             "analyze", "--state", "VT", "--year", "2020",
             "--version", "spec4_vt_ci",
             "--types", "partisan", "--force",
@@ -117,7 +117,7 @@ class TestSpec4PartisanAnalyzer:
         if not has_vt_data():
             pytest.skip("VT redistricting data not available")
 
-        result = run_redist([
+        result = run_bisect([
             "analyze", "--state", "VT", "--year", "2020",
             "--version", "spec4_vt_metrics",
             "--types", "partisan", "--force",
@@ -146,7 +146,7 @@ class TestSpec4PartisanAnalyzer:
         if not has_vt_data():
             pytest.skip("VT redistricting data not available")
 
-        result = run_redist([
+        result = run_bisect([
             "analyze", "--state", "VT", "--year", "2020",
             "--version", "spec4_vt_nofield",
             "--types", "partisan", "--force",
@@ -175,7 +175,7 @@ class TestSpec4PartisanAnalyzer:
             pytest.skip("VT redistricting data not available")
 
         # Run with a nonexistent election file to trigger unavailable
-        result = run_redist([
+        result = run_bisect([
             "analyze", "--state", "VT", "--year", "2020",
             "--version", "spec4_missing_election",
             "--types", "partisan", "--force",
@@ -193,7 +193,7 @@ class TestSpec4PartisanAnalyzer:
         assert result.returncode == 0, f"Missing election must exit 0, got {result.returncode}: {result.stderr}"
         data = json.loads(partisan_path.read_text())
         assert data["available"] is False, "missing election file must produce available=false"
-        assert "redist fetch --type elections" in data.get("unavailable_reason", ""), \
+        assert "BISECT fetch --type elections" in data.get("unavailable_reason", ""), \
             "unavailable_reason must guide user to fetch command"
         assert "required_file" in data, "required_file must be present"
 
@@ -202,7 +202,7 @@ class TestSpec4PartisanAnalyzer:
         election_csv = tmp_path / "test_election.csv"
         election_csv.write_text("geoid,dem_votes,rep_votes\n50001000100,1000.0,800.0\n")
 
-        result = run_redist([
+        result = run_bisect([
             "analyze", "--state", "VT", "--year", "2020",
             "--version", "spec4_election_flag",
             "--types", "partisan",
@@ -218,7 +218,7 @@ class TestSpec4PartisanAnalyzer:
 
     def test_partisan_bootstrap_samples_flag(self, tmp_path):
         """--bootstrap-samples flag is accepted by the CLI."""
-        result = run_redist([
+        result = run_bisect([
             "analyze", "--state", "VT", "--year", "2020",
             "--version", "spec4_bootstrap",
             "--types", "partisan",
@@ -236,7 +236,7 @@ class TestSpec4PartisanAnalyzer:
         if not has_vt_data():
             pytest.skip("VT redistricting data not available")
 
-        result = run_redist([
+        result = run_bisect([
             "analyze", "--state", "VT", "--year", "2020",
             "--version", "spec4_vt_name",
             "--types", "partisan", "--force",
@@ -258,7 +258,7 @@ class TestSpec4PartisanAnalyzer:
         if not has_vt_data():
             pytest.skip("VT redistricting data not available")
 
-        result = run_redist([
+        result = run_bisect([
             "analyze", "--state", "VT", "--year", "2020",
             "--version", "spec4_ci_text",
             "--types", "partisan", "--force",
@@ -286,21 +286,21 @@ class TestSpec4PartisanAnalyzer:
 # ---------------------------------------------------------------------------
 
 class TestSpec5SuiteCLI:
-    """Tests for redist suite draw/validate CLI parsing and basic behavior."""
+    """Tests for BISECT suite draw/validate CLI parsing and basic behavior."""
 
     def test_suite_draw_help(self):
-        """redist suite draw --help exits 0."""
-        result = run_redist(["suite", "draw", "--help"], check=False)
+        """BISECT suite draw --help exits 0."""
+        result = run_bisect(["suite", "draw", "--help"], check=False)
         assert result.returncode == 0
 
     def test_suite_validate_help(self):
-        """redist suite validate --help exits 0."""
-        result = run_redist(["suite", "validate", "--help"], check=False)
+        """BISECT suite validate --help exits 0."""
+        result = run_bisect(["suite", "validate", "--help"], check=False)
         assert result.returncode == 0
 
     def test_suite_nest_mode_senate_in_house_parsed(self):
         """--nest senate-in-house is a valid CLI argument."""
-        result = run_redist([
+        result = run_bisect([
             "suite", "draw",
             "--state", "WA", "--year", "2020", "--version", "test",
             "--name", "wa_parse_test",
@@ -315,8 +315,8 @@ class TestSpec5SuiteCLI:
         assert result.returncode == 0
 
     def test_suite_draw_creates_suite_json(self, tmp_path):
-        """redist suite draw creates suite.json manifest."""
-        result = run_redist([
+        """BISECT suite draw creates suite.json manifest."""
+        result = run_bisect([
             "suite", "draw",
             "--state", "VT", "--year", "2020", "--version", "spec5_draw",
             "--name", "vt_draw_test",
@@ -335,7 +335,7 @@ class TestSpec5SuiteCLI:
 
     def test_suite_manifest_nest_mode_recorded(self, tmp_path):
         """suite.json records nest_mode correctly."""
-        result = run_redist([
+        result = run_bisect([
             "suite", "draw",
             "--state", "VT", "--year", "2020", "--version", "spec5_nestmode",
             "--name", "vt_nestmode_test",
@@ -351,8 +351,8 @@ class TestSpec5SuiteCLI:
         assert data.get("nest_mode") == "none"
 
     def test_suite_validate_missing_suite_errors(self, tmp_path):
-        """redist suite validate on nonexistent suite exits non-zero."""
-        result = run_redist([
+        """BISECT suite validate on nonexistent suite exits non-zero."""
+        result = run_bisect([
             "suite", "validate",
             "--name", "nonexistent_suite_xyz",
             "--version", "v1",
@@ -362,8 +362,8 @@ class TestSpec5SuiteCLI:
         assert result.returncode != 0, "Validate on nonexistent suite must fail"
 
     def test_suite_draw_senate_in_house_nest_mode(self, tmp_path):
-        """redist suite draw --nest senate-in-house records the mode in suite.json."""
-        result = run_redist([
+        """BISECT suite draw --nest senate-in-house records the mode in suite.json."""
+        result = run_bisect([
             "suite", "draw",
             "--state", "VT", "--year", "2020", "--version", "spec5_sih",
             "--name", "vt_sih_test",
@@ -393,7 +393,7 @@ class TestSpec5BoardAmendments:
 
     def test_il_nest_without_nest_ratio_exits_nonzero(self, tmp_path):
         """IL suite draw without --nest-ratio exits non-zero (WARD amendment)."""
-        result = run_redist([
+        result = run_bisect([
             "suite", "draw",
             "--state", "IL", "--year", "2020", "--version", "spec5_il",
             "--name", "il_no_ratio",
@@ -408,7 +408,7 @@ class TestSpec5BoardAmendments:
 
     def test_il_nest_with_nest_ratio_accepted(self, tmp_path):
         """IL suite draw with --nest-ratio N is accepted."""
-        result = run_redist([
+        result = run_bisect([
             "suite", "draw",
             "--state", "IL", "--year", "2020", "--version", "spec5_il_ratio",
             "--name", "il_with_ratio",
@@ -425,7 +425,7 @@ class TestSpec5BoardAmendments:
 
     def test_wa_nest_wrong_ratio_warns_but_proceeds(self, tmp_path):
         """WA with --nest-ratio 3 (not 2:1 constitutional) warns but proceeds."""
-        result = run_redist([
+        result = run_bisect([
             "suite", "draw",
             "--state", "WA", "--year", "2020", "--version", "spec5_wa_warn",
             "--name", "wa_warn_test",
@@ -440,7 +440,7 @@ class TestSpec5BoardAmendments:
 
     def test_bootstrap_samples_flag_accepted(self):
         """--bootstrap-samples flag is accepted by analyze command."""
-        result = run_redist(["analyze", "--state", "VT", "--bootstrap-samples", "500", "--help"],
+        result = run_bisect(["analyze", "--state", "VT", "--bootstrap-samples", "500", "--help"],
                            check=False)
         assert result.returncode == 0
         combined = result.stderr + result.stdout

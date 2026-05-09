@@ -117,7 +117,7 @@ pub fn load_lodes_wac_tract(
     };
 
     let idx_geoid = col("geoid")?;
-    let idx_c000  = col("c000")?;
+    let idx_c000 = col("c000")?;
     let idx_cns07 = col("cns07")?;
     let idx_cns09 = col("cns09")?;
     let idx_cns10 = col("cns10")?;
@@ -164,7 +164,7 @@ pub fn load_lodes_wac_tract(
             })?
             .to_string();
 
-        let c000  = get(idx_c000)?;
+        let c000 = get(idx_c000)?;
         let cns07 = get(idx_cns07)?;
         let cns09 = get(idx_cns09)?;
         let cns10 = get(idx_cns10)?;
@@ -178,7 +178,7 @@ pub fn load_lodes_wac_tract(
             // Zero-job tract — pure residential
             (0.0, 0.0, 0.0)
         } else {
-            let ci  = (cns07 + cns09 + cns10 + cns11) / c000;
+            let ci = (cns07 + cns09 + cns10 + cns11) / c000;
             let ind = (cns01 + cns02 + cns05 + cns08) / c000;
             // Employment intensity proxy: c000 / 10_000, clamped [0, 1].
             // 10_000 jobs ≈ a large employment centre (Research Triangle Park–scale).
@@ -326,7 +326,10 @@ mod tests {
         // File definitely does not exist in the test environment
         let result = load_lodes_wac_tract("__nonexistent_state__", "9999");
         assert!(result.is_ok(), "missing file should not be an error");
-        assert!(result.unwrap().is_empty(), "missing file should return empty map");
+        assert!(
+            result.unwrap().is_empty(),
+            "missing file should return empty map"
+        );
     }
 
     // ── align_lodes_to_adjacency_zero_for_missing ─────────────────────────────
@@ -344,12 +347,24 @@ mod tests {
         assert_eq!(result.len(), 2);
 
         let found = &result[0];
-        assert!((found.commercial_intensity - 0.4).abs() < 1e-10, "node 0 should have ci=0.4");
+        assert!(
+            (found.commercial_intensity - 0.4).abs() < 1e-10,
+            "node 0 should have ci=0.4"
+        );
 
         let missing = &result[1];
-        assert!((missing.commercial_intensity).abs() < 1e-10, "missing node should have zero ci");
-        assert!((missing.industrial_fraction).abs() < 1e-10, "missing node should have zero ind");
-        assert!((missing.jobs_per_resident).abs() < 1e-10, "missing node should have zero jpr");
+        assert!(
+            (missing.commercial_intensity).abs() < 1e-10,
+            "missing node should have zero ci"
+        );
+        assert!(
+            (missing.industrial_fraction).abs() < 1e-10,
+            "missing node should have zero ind"
+        );
+        assert!(
+            (missing.jobs_per_resident).abs() < 1e-10,
+            "missing node should have zero jpr"
+        );
     }
 
     #[test]

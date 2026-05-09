@@ -7,11 +7,11 @@
 //! Cache key: `(region_hash, n_parts, seed)`. Two `compose` calls on the same
 //! compositor share the cache, so computing k=34 first makes k=51 faster.
 
+use crate::{split_prescription, Partitioner, SplitError, SplitStep, SubGraph};
+use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
-use std::collections::hash_map::DefaultHasher;
 use std::sync::Mutex;
-use crate::{split_prescription, SplitStep, Partitioner, SplitError, SubGraph};
 
 /// Stable hash of a sorted slice of global tract indices.
 fn hash_region(sorted_verts: &[usize]) -> u64 {
@@ -54,7 +54,10 @@ pub struct PfrCompositor<P: Partitioner> {
 
 impl<P: Partitioner> PfrCompositor<P> {
     pub fn new(strategy: P) -> Self {
-        Self { strategy, cache: Mutex::new(HashMap::new()) }
+        Self {
+            strategy,
+            cache: Mutex::new(HashMap::new()),
+        }
     }
 
     /// Discard all cached partitions (e.g. after a seed change).
@@ -82,7 +85,9 @@ impl<P: Partitioner> PfrCompositor<P> {
         base_seed: Option<u64>,
     ) -> Result<PfrResult, SplitError> {
         let n_tracts = adjacency.len();
-        if n_districts == 0 { return Err(SplitError::ZeroParts); }
+        if n_districts == 0 {
+            return Err(SplitError::ZeroParts);
+        }
 
         if n_districts == 1 {
             return Ok(PfrResult {
@@ -99,10 +104,17 @@ impl<P: Partitioner> PfrCompositor<P> {
         let mut leaves: Vec<(usize, Vec<usize>)> = Vec::new();
 
         self.recurse(
-            &all_verts, n_districts, 0,
-            adjacency, vertex_weights, edge_weights,
-            base_seed, 0,
-            &mut leaves, &mut total_edge_cut, &mut cache_hits,
+            &all_verts,
+            n_districts,
+            0,
+            adjacency,
+            vertex_weights,
+            edge_weights,
+            base_seed,
+            0,
+            &mut leaves,
+            &mut total_edge_cut,
+            &mut cache_hits,
         )?;
 
         leaves.sort_by_key(|(id, _)| *id);
@@ -115,7 +127,12 @@ impl<P: Partitioner> PfrCompositor<P> {
         }
 
         debug_assert_eq!(leaves.len(), n_districts as usize);
-        Ok(PfrResult { assignment, n_districts, total_edge_cut, cache_hits })
+        Ok(PfrResult {
+            assignment,
+            n_districts,
+            total_edge_cut,
+            cache_hits,
+        })
     }
 
     fn recurse(
@@ -143,7 +160,8 @@ impl<P: Partitioner> PfrCompositor<P> {
         // Seed for this depth level — same depth always produces the same seed
         // regardless of k, so k=34 and k=51 at depth=0 see the same METIS seed.
         let level_seed = base_seed.map(|s| {
-            s.wrapping_mul(0x9e37_79b9_7f4a_7c15).wrapping_add(depth as u64)
+            s.wrapping_mul(0x9e37_79b9_7f4a_7c15)
+                .wrapping_add(depth as u64)
         });
         let seed_key = level_seed.unwrap_or(0);
 
@@ -162,9 +180,7 @@ impl<P: Partitioner> PfrCompositor<P> {
             hit
         } else {
             // Build subgraph and call partitioner.
-            let subgraph = SubGraph::build(
-                region_verts, adjacency, vertex_weights, edge_weights,
-            )?;
+            let subgraph = SubGraph::build(region_verts, adjacency, vertex_weights, edge_weights)?;
 
             let assignment = match &step {
                 SplitStep::Uniform { parts, .. } => {
@@ -173,7 +189,8 @@ impl<P: Partitioner> PfrCompositor<P> {
                 SplitStep::Binary { k_left, k_right } => {
                     let total = (*k_left + *k_right) as f32;
                     let fracs = [*k_left as f32 / total, *k_right as f32 / total];
-                    self.strategy.split_weighted(&subgraph, &fracs, level_seed)?
+                    self.strategy
+                        .split_weighted(&subgraph, &fracs, level_seed)?
                 }
             };
 
@@ -181,10 +198,12 @@ impl<P: Partitioner> PfrCompositor<P> {
             let mut ec: i64 = 0;
             for local in 0..subgraph.n_vertices() {
                 let start = subgraph.xadj[local] as usize;
-                let end   = subgraph.xadj[local + 1] as usize;
+                let end = subgraph.xadj[local + 1] as usize;
                 for (edge_idx, &nb) in subgraph.adjncy[start..end].iter().enumerate() {
                     if assignment[local] != assignment[nb as usize] {
-                        ec += subgraph.adjwgt.as_ref()
+                        ec += subgraph
+                            .adjwgt
+                            .as_ref()
                             .map(|ew| ew[start + edge_idx] as i64)
                             .unwrap_or(1);
                     }
@@ -193,7 +212,10 @@ impl<P: Partitioner> PfrCompositor<P> {
             *total_ec += ec / 2;
 
             // Store in cache.
-            self.cache.lock().unwrap().insert(cache_key, assignment.clone());
+            self.cache
+                .lock()
+                .unwrap()
+                .insert(cache_key, assignment.clone());
             assignment
         };
 
@@ -208,10 +230,17 @@ impl<P: Partitioner> PfrCompositor<P> {
         for (i, sub_verts) in sub_regions.into_iter().enumerate() {
             let sub_k = step.sub_k(i);
             self.recurse(
-                &sub_verts, sub_k, next_base,
-                adjacency, vertex_weights, edge_weights,
-                base_seed, depth + 1,
-                leaves, total_ec, cache_hits,
+                &sub_verts,
+                sub_k,
+                next_base,
+                adjacency,
+                vertex_weights,
+                edge_weights,
+                base_seed,
+                depth + 1,
+                leaves,
+                total_ec,
+                cache_hits,
             )?;
             next_base += sub_k as usize;
         }
@@ -225,14 +254,20 @@ mod tests {
     use crate::split::MetisPartitioner;
 
     fn line_graph(n: usize) -> (Vec<Vec<usize>>, Vec<i64>, HashMap<(usize, usize), f64>) {
-        let adj: Vec<Vec<usize>> = (0..n).map(|i| {
-            let mut nb = Vec::new();
-            if i > 0 { nb.push(i - 1); }
-            if i + 1 < n { nb.push(i + 1); }
-            nb
-        }).collect();
+        let adj: Vec<Vec<usize>> = (0..n)
+            .map(|i| {
+                let mut nb = Vec::new();
+                if i > 0 {
+                    nb.push(i - 1);
+                }
+                if i + 1 < n {
+                    nb.push(i + 1);
+                }
+                nb
+            })
+            .collect();
         let vw = vec![100i64; n];
-        let ew: HashMap<_, _> = (0..n-1).map(|i| ((i, i+1), 1000.0)).collect();
+        let ew: HashMap<_, _> = (0..n - 1).map(|i| ((i, i + 1), 1000.0)).collect();
         (adj, vw, ew)
     }
 
@@ -282,8 +317,11 @@ mod tests {
         assert_eq!(r51.n_districts, 51);
         // The top-level 17-partition (and deeper 17-internal splits) should be
         // reused from k=34's run.
-        assert!(r51.cache_hits > 0,
-            "k=51 should reuse cached partitions from k=34 (hits={})", r51.cache_hits);
+        assert!(
+            r51.cache_hits > 0,
+            "k=51 should reuse cached partitions from k=34 (hits={})",
+            r51.cache_hits
+        );
     }
 
     #[test]
@@ -304,6 +342,9 @@ mod tests {
         let r1 = c.compose(&adj, &vw, &ew, 6, Some(99)).unwrap();
         let r2 = c.compose(&adj, &vw, &ew, 6, Some(99)).unwrap();
         assert_eq!(r1.assignment, r2.assignment);
-        assert!(r2.cache_hits > 0, "second identical call should be fully cached");
+        assert!(
+            r2.cache_hits > 0,
+            "second identical call should be fully cached"
+        );
     }
 }

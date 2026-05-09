@@ -1,7 +1,7 @@
 //! Canonical-form assignment helpers (State Staff Interop plan Task 8).
 //!
 //! Round-trip equality definition (spec §6): for an upstream tool T and a plan
-//! P, `T(redist(T(P))) == P` iff for every geometry ID g in T's source format,
+//! P, `T(BISECT(T(P))) == P` iff for every geometry ID g in T's source format,
 //! the destination district assigned to g is identical, AFTER canonicalizing
 //! district labels (district numbers may be permuted by the tool, but the
 //! partition must be the same).
@@ -20,9 +20,7 @@ use std::collections::{BTreeMap, HashMap};
 ///
 /// This collapses pairs of assignments that differ only by district-label
 /// permutation into the same canonical form.
-pub fn canonicalize_assignments(
-    assignments: &HashMap<String, usize>,
-) -> BTreeMap<String, usize> {
+pub fn canonicalize_assignments(assignments: &HashMap<String, usize>) -> BTreeMap<String, usize> {
     if assignments.is_empty() {
         return BTreeMap::new();
     }
@@ -73,10 +71,7 @@ impl AssignmentDiff {
 
 /// Compute the canonical-form diff between two assignment maps.
 /// Returns an empty diff iff the two are canonically equal.
-pub fn diff_assignments(
-    a: &HashMap<String, usize>,
-    b: &HashMap<String, usize>,
-) -> AssignmentDiff {
+pub fn diff_assignments(a: &HashMap<String, usize>, b: &HashMap<String, usize>) -> AssignmentDiff {
     let ca = canonicalize_assignments(a);
     let cb = canonicalize_assignments(b);
     let mut missing_in_a: Vec<String> = Vec::new();
@@ -191,18 +186,17 @@ mod tests {
         let b = map(&[("01001", 2), ("01002", 2), ("02002", 1), ("02003", 1)]);
         let ca = canonicalize_assignments(&a);
         let cb = canonicalize_assignments(&b);
-        assert_eq!(ca, cb, "label-permuted assignments must canonicalize to the same map");
+        assert_eq!(
+            ca, cb,
+            "label-permuted assignments must canonicalize to the same map"
+        );
     }
 
     #[test]
     fn test_canonicalize_collapses_three_way_permutation() {
-        let a = map(&[
-            ("01001", 1), ("02002", 2), ("03003", 3),
-        ]);
+        let a = map(&[("01001", 1), ("02002", 2), ("03003", 3)]);
         // Permute (1->3, 2->1, 3->2)
-        let b = map(&[
-            ("01001", 3), ("02002", 1), ("03003", 2),
-        ]);
+        let b = map(&[("01001", 3), ("02002", 1), ("03003", 2)]);
         assert_eq!(canonicalize_assignments(&a), canonicalize_assignments(&b));
     }
 
@@ -246,7 +240,7 @@ mod tests {
     #[test]
     fn test_assert_canonical_equal_ok() {
         let a = map(&[("01001", 1), ("02002", 2)]);
-        let b = map(&[("01001", 99), ("02002", 100)]);  // arbitrary labels
+        let b = map(&[("01001", 99), ("02002", 100)]); // arbitrary labels
         assert!(assert_canonical_equal(&a, &b).is_ok());
     }
 
@@ -255,7 +249,13 @@ mod tests {
         let a = map(&[("01001", 1)]);
         let b = map(&[("01001", 1), ("02002", 2)]);
         let err = assert_canonical_equal(&a, &b).unwrap_err();
-        assert!(err.starts_with("[INPUT]"), "error must use [INPUT] category: {err}");
-        assert!(err.contains("02002"), "error must name the offending GEOID: {err}");
+        assert!(
+            err.starts_with("[INPUT]"),
+            "error must use [INPUT] category: {err}"
+        );
+        assert!(
+            err.contains("02002"),
+            "error must name the offending GEOID: {err}"
+        );
     }
 }

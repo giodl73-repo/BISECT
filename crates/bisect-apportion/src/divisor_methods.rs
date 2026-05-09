@@ -14,8 +14,8 @@
 //!
 //! The constitutional minimum of **1 seat per state** is enforced for all methods.
 
-use std::collections::BinaryHeap;
 use std::cmp::Ordering;
+use std::collections::BinaryHeap;
 
 /// Which divisor-method rounding rule to apply.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -81,9 +81,9 @@ pub fn apportionment_divisor(
         let p = pop as f64;
         match rule {
             RoundingRule::HuntingtonHill => p / (n * (n + 1.0)).sqrt(),
-            RoundingRule::Webster       => p / (n + 0.5),
-            RoundingRule::Adams         => p / n,
-            RoundingRule::Jefferson     => p / (n + 1.0),
+            RoundingRule::Webster => p / (n + 0.5),
+            RoundingRule::Adams => p / n,
+            RoundingRule::Jefferson => p / (n + 1.0),
         }
     };
 
@@ -324,12 +324,7 @@ mod tests {
         ] {
             let result = apportionment_divisor(&pops, 10, rule);
             for (name, seats) in &result {
-                assert!(
-                    *seats >= 1,
-                    "State {} got 0 seats under {:?}",
-                    name,
-                    rule
-                );
+                assert!(*seats >= 1, "State {} got 0 seats under {:?}", name, rule);
             }
         }
     }

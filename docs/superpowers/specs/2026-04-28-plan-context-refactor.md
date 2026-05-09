@@ -27,7 +27,7 @@ Introduce `PlanContext` as the single source of truth for per-plan metadata in a
 ### Out of scope
 - `StateConfig` field count reduction (separate refactor, lower priority)
 - Output path centralization (follow-on task)
-- `bisect states` / `redist run` bulk commands (Class A, not affected)
+- `bisect states` / `BISECT run` bulk commands (Class A, not affected)
 
 ---
 
@@ -37,7 +37,7 @@ Introduce `PlanContext` as the single source of truth for per-plan metadata in a
 
 ```rust
 use std::path::{Path, PathBuf};
-use redist_report::PlanManifest;
+use BISECT_report::PlanManifest;
 
 /// Single source of truth for all metadata about an existing redistricting plan.
 /// Loaded from the plan's manifest.json — never from global registry or manifest.

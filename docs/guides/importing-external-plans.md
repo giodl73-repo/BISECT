@@ -1,6 +1,6 @@
 # Importing External Plans
 
-How to import redistricting plans from other tools into `redist` for analysis, comparison, and reporting.
+How to import redistricting plans from other tools into `BISECT` for analysis, comparison, and reporting.
 
 ---
 
@@ -17,10 +17,10 @@ How to import redistricting plans from other tools into `redist` for analysis, c
 
 | Format | Source | Command |
 |--------|--------|---------|
-| RPLAN (`.rplan`) | Any RPLAN-compliant tool | `redist import --file plan.rplan` |
-| GeoJSON (`.geojson`) | DRA, PlanScore, QGIS, etc. | `redist import --file plan.geojson` |
-| Shapefile (`.shp`) | Maptitude, ArcGIS, Census | `redist import --file plan.shp` |
-| CSV (GEOID,district) | Any tool | `redist import --file assignments.csv` |
+| RPLAN (`.rplan`) | Any RPLAN-compliant tool | `BISECT import --file plan.rplan` |
+| GeoJSON (`.geojson`) | DRA, PlanScore, QGIS, etc. | `BISECT import --file plan.geojson` |
+| Shapefile (`.shp`) | Maptitude, ArcGIS, Census | `BISECT import --file plan.shp` |
+| CSV (GEOID,district) | Any tool | `BISECT import --file assignments.csv` |
 
 ---
 
@@ -31,7 +31,7 @@ How to import redistricting plans from other tools into `redist` for analysis, c
 3. Import and analyze:
 
 ```bash
-redist import \
+BISECT import \
   --file dra_plan.geojson \
   --state WA --year 2020 \
   --label wa_house_dra_v1 \
@@ -39,7 +39,7 @@ redist import \
 
 # Now analyze it like any other plan
 bisect analyze --label wa_house_dra_v1 --year 2020 --version WA_Plans --types all
-redist compare --plan-a wa_house_dra_v1 --plan-b wa_house_draft1 --year 2020 --version WA_Plans
+BISECT compare --plan-a wa_house_dra_v1 --plan-b wa_house_draft1 --year 2020 --version WA_Plans
 ```
 
 ---
@@ -49,7 +49,7 @@ redist compare --plan-a wa_house_dra_v1 --plan-b wa_house_draft1 --year 2020 --v
 PlanScore exports GeoJSON via its web interface. Download the plan GeoJSON and import:
 
 ```bash
-redist import \
+BISECT import \
   --file planscore_wa_house.geojson \
   --state WA --year 2020 \
   --label wa_house_planscore \
@@ -60,10 +60,10 @@ redist import \
 
 ## Importing from Maptitude / ArcGIS
 
-Export as a shapefile with a district ID attribute. The shapefile should contain district polygons (not tracts). `redist` will assign each census tract to the district polygon containing its centroid.
+Export as a shapefile with a district ID attribute. The shapefile should contain district polygons (not tracts). `BISECT` will assign each census tract to the district polygon containing its centroid.
 
 ```bash
-redist import \
+BISECT import \
   --file maptitude_export.shp \
   --state WA --year 2020 \
   --label wa_house_maptitude \
@@ -112,7 +112,7 @@ json.dump(rplan, open("gerrychain_plan.rplan", "w"))
 
 Then import normally:
 ```bash
-redist import --file gerrychain_plan.rplan --label wa_house_gc --state WA --year 2020 --version WA_Plans
+BISECT import --file gerrychain_plan.rplan --label wa_house_gc --state WA --year 2020 --version WA_Plans
 ```
 
 ---
@@ -129,7 +129,7 @@ geoid,district
 ```
 
 ```bash
-redist import \
+BISECT import \
   --file assignments.csv \
   --state WA --year 2020 \
   --label wa_house_csv \
@@ -141,7 +141,7 @@ redist import \
 
 ## What happens during import
 
-1. **GeoJSON/Shapefile**: `redist` finds each census tract's centroid and determines which district polygon contains it (point-in-polygon). Tracts on district boundaries use the nearest polygon as a fallback.
+1. **GeoJSON/Shapefile**: `BISECT` finds each census tract's centroid and determines which district polygon contains it (point-in-polygon). Tracts on district boundaries use the nearest polygon as a fallback.
 2. **RPLAN**: Assignments are read directly — no spatial computation needed.
 3. **CSV**: Assignments are read directly.
 
@@ -153,7 +153,7 @@ After import, a `manifest.json` is written noting `"source": "imported"` and the
 
 ```bash
 # Validate an RPLAN file before importing
-redist validate --file external_plan.rplan
+BISECT validate --file external_plan.rplan
 
 # After import, run contiguity check
 bisect analyze --label wa_house_dra_v1 --types contiguity

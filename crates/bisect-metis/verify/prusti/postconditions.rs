@@ -1,8 +1,8 @@
 //! Prusti postcondition documentation and activation file.
 //!
 //! These annotations are the three legally-cited properties from the
-//! redist-metis deposition quote. Activate with:
-//!   cargo prusti -p redist-metis
+//! BISECT-metis deposition quote. Activate with:
+//!   cargo prusti -p BISECT-metis
 //!
 //! Prusti version: 0.2.x (Viper backend, ETH Zurich)
 //! See verify/prusti/GAPS.md for functions that cannot be verified.

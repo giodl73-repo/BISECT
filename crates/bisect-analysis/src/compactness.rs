@@ -1,3 +1,5 @@
+use geo::{Area, Centroid, ConvexHull, EuclideanLength};
+use geo_types::{Coord, Point, Polygon};
 /// Compactness metrics: Polsby-Popper, Reock, Convex Hull Ratio,
 /// Schwartzberg, Length-Width Ratio, and Population-Weighted Compactness.
 ///
@@ -14,8 +16,6 @@
 ///   reock → centroid + max boundary distance → A / πr²
 ///   convex_hull_ratio → A / convex_hull.area
 use std::f64::consts::PI;
-use geo::{Area, EuclideanLength, Centroid, ConvexHull};
-use geo_types::{Polygon, Coord, Point};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -67,7 +67,7 @@ pub fn polsby_popper(polygon: &Polygon<f64>) -> Result<(f64, f64), CompactnessEr
         return Err(CompactnessError::ZeroPerimeter);
     }
     let score = (4.0 * PI * area) / (perimeter * perimeter);
-    Ok((score.min(1.0), perimeter))  // cap at 1.0 like Python
+    Ok((score.min(1.0), perimeter)) // cap at 1.0 like Python
 }
 
 /// Reock score: A / (π × r²) where r = max distance from centroid to boundary.
@@ -80,8 +80,7 @@ pub fn reock(polygon: &Polygon<f64>) -> Result<f64, CompactnessError> {
     if area == 0.0 {
         return Err(CompactnessError::EmptyGeometry);
     }
-    let centroid = polygon.centroid()
-        .ok_or(CompactnessError::EmptyGeometry)?;
+    let centroid = polygon.centroid().ok_or(CompactnessError::EmptyGeometry)?;
     let radius = max_distance_to_boundary(polygon, centroid);
     if radius == 0.0 {
         return Ok(0.0);
@@ -177,12 +176,20 @@ pub fn length_width_ratio(polygon: &Polygon<f64>) -> Result<f64, CompactnessErro
         let mut y_max = f64::MIN;
 
         for c in &coords[..n] {
-            let xr =  c.x * cos_a + c.y * sin_a;
+            let xr = c.x * cos_a + c.y * sin_a;
             let yr = -c.x * sin_a + c.y * cos_a;
-            if xr < x_min { x_min = xr; }
-            if xr > x_max { x_max = xr; }
-            if yr < y_min { y_min = yr; }
-            if yr > y_max { y_max = yr; }
+            if xr < x_min {
+                x_min = xr;
+            }
+            if xr > x_max {
+                x_max = xr;
+            }
+            if yr < y_min {
+                y_min = yr;
+            }
+            if yr > y_max {
+                y_max = yr;
+            }
         }
 
         let w = x_max - x_min; // dimension along edge
@@ -238,12 +245,16 @@ pub fn population_weighted_compactness(
     }
 
     let (cx, cy) = district_centroid;
-    let weighted_sum: f64 = centroids.iter().zip(populations.iter()).map(|(&(x, y), &pop)| {
-        let dx = x - cx;
-        let dy = y - cy;
-        let d2 = dx * dx + dy * dy;
-        d2 * pop as f64
-    }).sum();
+    let weighted_sum: f64 = centroids
+        .iter()
+        .zip(populations.iter())
+        .map(|(&(x, y), &pop)| {
+            let dx = x - cx;
+            let dy = y - cy;
+            let d2 = dx * dx + dy * dy;
+            d2 * pop as f64
+        })
+        .sum();
 
     weighted_sum / total_pop as f64
 }
@@ -287,7 +298,9 @@ fn polygon_perimeter(polygon: &Polygon<f64>) -> f64 {
 /// Max Euclidean distance from centroid to any exterior boundary coordinate.
 /// Matches Python's `minimum_bounding_circle` approximation.
 fn max_distance_to_boundary(polygon: &Polygon<f64>, centroid: Point<f64>) -> f64 {
-    polygon.exterior().coords()
+    polygon
+        .exterior()
+        .coords()
         .map(|coord| {
             let dx = coord.x - centroid.x();
             let dy = coord.y - centroid.y();
@@ -304,10 +317,15 @@ mod tests {
     /// A perfect circle approximated as a 360-gon.
     fn circle_polygon(cx: f64, cy: f64, r: f64) -> Polygon<f64> {
         let n = 360usize;
-        let coords: Vec<Coord<f64>> = (0..=n).map(|i| {
-            let theta = 2.0 * PI * i as f64 / n as f64;
-            Coord { x: cx + r * theta.cos(), y: cy + r * theta.sin() }
-        }).collect();
+        let coords: Vec<Coord<f64>> = (0..=n)
+            .map(|i| {
+                let theta = 2.0 * PI * i as f64 / n as f64;
+                Coord {
+                    x: cx + r * theta.cos(),
+                    y: cy + r * theta.sin(),
+                }
+            })
+            .collect();
         Polygon::new(LineString::new(coords), vec![])
     }
 
@@ -318,11 +336,14 @@ mod tests {
         let s = 1000.0_f64;
         Polygon::new(
             LineString::new(vec![
-                Coord { x: x0,     y: y0 },
+                Coord { x: x0, y: y0 },
                 Coord { x: x0 + s, y: y0 },
-                Coord { x: x0 + s, y: y0 + s },
-                Coord { x: x0,     y: y0 + s },
-                Coord { x: x0,     y: y0 },
+                Coord {
+                    x: x0 + s,
+                    y: y0 + s,
+                },
+                Coord { x: x0, y: y0 + s },
+                Coord { x: x0, y: y0 },
             ]),
             vec![],
         )
@@ -345,8 +366,10 @@ mod tests {
         let poly = unit_square(1_000_000.0, 1_000_000.0);
         let (pp, _) = polsby_popper(&poly).unwrap();
         let expected = PI / 4.0;
-        assert!((pp - expected).abs() < 1e-6,
-            "square PP should be π/4={expected:.6}, got {pp:.6}");
+        assert!(
+            (pp - expected).abs() < 1e-6,
+            "square PP should be π/4={expected:.6}, got {pp:.6}"
+        );
     }
 
     #[test]
@@ -354,13 +377,19 @@ mod tests {
         let poly = unit_square(1_000_000.0, 1_000_000.0);
         let (_, perimeter) = polsby_popper(&poly).unwrap();
         // 4 × 1000m = 4000m
-        assert!((perimeter - 4000.0).abs() < 0.001, "perimeter should be 4000m, got {perimeter}");
+        assert!(
+            (perimeter - 4000.0).abs() < 0.001,
+            "perimeter should be 4000m, got {perimeter}"
+        );
     }
 
     #[test]
     fn test_pp_empty_geometry_error() {
         let empty = Polygon::new(LineString::new(vec![]), vec![]);
-        assert!(matches!(polsby_popper(&empty), Err(CompactnessError::EmptyGeometry)));
+        assert!(matches!(
+            polsby_popper(&empty),
+            Err(CompactnessError::EmptyGeometry)
+        ));
     }
 
     #[test]
@@ -389,14 +418,19 @@ mod tests {
         let poly = unit_square(1_000_000.0, 1_000_000.0);
         let r = reock(&poly).unwrap();
         let expected = 2.0 / PI;
-        assert!((r - expected).abs() < 0.001,
-            "square Reock should be 2/π={expected:.6}, got {r:.6}");
+        assert!(
+            (r - expected).abs() < 0.001,
+            "square Reock should be 2/π={expected:.6}, got {r:.6}"
+        );
     }
 
     #[test]
     fn test_reock_empty_error() {
         let empty = Polygon::new(LineString::new(vec![]), vec![]);
-        assert!(matches!(reock(&empty), Err(CompactnessError::EmptyGeometry)));
+        assert!(matches!(
+            reock(&empty),
+            Err(CompactnessError::EmptyGeometry)
+        ));
     }
 
     // ── Convex Hull Ratio ────────────────────────────────────────────────────
@@ -406,7 +440,10 @@ mod tests {
         // A square is already convex — hull ratio = 1
         let poly = unit_square(1_000_000.0, 1_000_000.0);
         let chr = convex_hull_ratio(&poly).unwrap();
-        assert!((chr - 1.0).abs() < 1e-6, "square CHR should be 1.0, got {chr:.6}");
+        assert!(
+            (chr - 1.0).abs() < 1e-6,
+            "square CHR should be 1.0, got {chr:.6}"
+        );
     }
 
     #[test]
@@ -414,13 +451,34 @@ mod tests {
         // L-shaped polygon: area < convex hull area → CHR < 1
         let l_shape = Polygon::new(
             LineString::new(vec![
-                Coord { x: 1_000_000.0, y: 1_000_000.0 },
-                Coord { x: 1_002_000.0, y: 1_000_000.0 },
-                Coord { x: 1_002_000.0, y: 1_001_000.0 },
-                Coord { x: 1_001_000.0, y: 1_001_000.0 },
-                Coord { x: 1_001_000.0, y: 1_002_000.0 },
-                Coord { x: 1_000_000.0, y: 1_002_000.0 },
-                Coord { x: 1_000_000.0, y: 1_000_000.0 },
+                Coord {
+                    x: 1_000_000.0,
+                    y: 1_000_000.0,
+                },
+                Coord {
+                    x: 1_002_000.0,
+                    y: 1_000_000.0,
+                },
+                Coord {
+                    x: 1_002_000.0,
+                    y: 1_001_000.0,
+                },
+                Coord {
+                    x: 1_001_000.0,
+                    y: 1_001_000.0,
+                },
+                Coord {
+                    x: 1_001_000.0,
+                    y: 1_002_000.0,
+                },
+                Coord {
+                    x: 1_000_000.0,
+                    y: 1_002_000.0,
+                },
+                Coord {
+                    x: 1_000_000.0,
+                    y: 1_000_000.0,
+                },
             ]),
             vec![],
         );
@@ -436,8 +494,10 @@ mod tests {
         // Circle: PP → 1.0, so S = 1/√1 = 1.0
         let poly = circle_polygon(1_000_000.0, 1_000_000.0, 5000.0);
         let s = schwartzberg(&poly).unwrap();
-        assert!(s > 0.999 && s <= 1.001,
-            "circle Schwartzberg should be ~1.0, got {s:.6}");
+        assert!(
+            s > 0.999 && s <= 1.001,
+            "circle Schwartzberg should be ~1.0, got {s:.6}"
+        );
     }
 
     #[test]
@@ -446,8 +506,10 @@ mod tests {
         let poly = unit_square(1_000_000.0, 1_000_000.0);
         let s = schwartzberg(&poly).unwrap();
         let expected = 2.0 / PI.sqrt(); // = 2/√π ≈ 1.1284
-        assert!((s - expected).abs() < 1e-6,
-            "square Schwartzberg should be 2/√π={expected:.6}, got {s:.6}");
+        assert!(
+            (s - expected).abs() < 1e-6,
+            "square Schwartzberg should be 2/√π={expected:.6}, got {s:.6}"
+        );
     }
 
     #[test]
@@ -455,19 +517,36 @@ mod tests {
         // Identity: S = 1/√PP — verify for an arbitrary polygon (2:1 rectangle)
         let rect = Polygon::new(
             LineString::new(vec![
-                Coord { x: 1_000_000.0, y: 1_000_000.0 },
-                Coord { x: 1_002_000.0, y: 1_000_000.0 },
-                Coord { x: 1_002_000.0, y: 1_001_000.0 },
-                Coord { x: 1_000_000.0, y: 1_001_000.0 },
-                Coord { x: 1_000_000.0, y: 1_000_000.0 },
+                Coord {
+                    x: 1_000_000.0,
+                    y: 1_000_000.0,
+                },
+                Coord {
+                    x: 1_002_000.0,
+                    y: 1_000_000.0,
+                },
+                Coord {
+                    x: 1_002_000.0,
+                    y: 1_001_000.0,
+                },
+                Coord {
+                    x: 1_000_000.0,
+                    y: 1_001_000.0,
+                },
+                Coord {
+                    x: 1_000_000.0,
+                    y: 1_000_000.0,
+                },
             ]),
             vec![],
         );
         let (pp, _) = polsby_popper(&rect).unwrap();
         let s = schwartzberg(&rect).unwrap();
         let s_from_identity = 1.0 / pp.sqrt();
-        assert!((s - s_from_identity).abs() < 1e-12,
-            "S={s:.9} must equal 1/√PP={s_from_identity:.9}");
+        assert!(
+            (s - s_from_identity).abs() < 1e-12,
+            "S={s:.9} must equal 1/√PP={s_from_identity:.9}"
+        );
     }
 
     #[test]
@@ -481,7 +560,10 @@ mod tests {
     #[test]
     fn test_schwartzberg_empty_error() {
         let empty = Polygon::new(LineString::new(vec![]), vec![]);
-        assert!(matches!(schwartzberg(&empty), Err(CompactnessError::EmptyGeometry)));
+        assert!(matches!(
+            schwartzberg(&empty),
+            Err(CompactnessError::EmptyGeometry)
+        ));
     }
 
     // ── Length-Width Ratio ───────────────────────────────────────────────────
@@ -491,8 +573,10 @@ mod tests {
         // Square: MBR is the square itself → w = h → ratio = 1.0
         let poly = unit_square(1_000_000.0, 1_000_000.0);
         let lw = length_width_ratio(&poly).unwrap();
-        assert!((lw - 1.0).abs() < 1e-6,
-            "square LW ratio should be 1.0, got {lw:.6}");
+        assert!(
+            (lw - 1.0).abs() < 1e-6,
+            "square LW ratio should be 1.0, got {lw:.6}"
+        );
     }
 
     #[test]
@@ -500,17 +584,34 @@ mod tests {
         // 2000m × 1000m rectangle: MBR has sides 2000 and 1000 → ratio = 2.0
         let rect = Polygon::new(
             LineString::new(vec![
-                Coord { x: 1_000_000.0, y: 1_000_000.0 },
-                Coord { x: 1_002_000.0, y: 1_000_000.0 },
-                Coord { x: 1_002_000.0, y: 1_001_000.0 },
-                Coord { x: 1_000_000.0, y: 1_001_000.0 },
-                Coord { x: 1_000_000.0, y: 1_000_000.0 },
+                Coord {
+                    x: 1_000_000.0,
+                    y: 1_000_000.0,
+                },
+                Coord {
+                    x: 1_002_000.0,
+                    y: 1_000_000.0,
+                },
+                Coord {
+                    x: 1_002_000.0,
+                    y: 1_001_000.0,
+                },
+                Coord {
+                    x: 1_000_000.0,
+                    y: 1_001_000.0,
+                },
+                Coord {
+                    x: 1_000_000.0,
+                    y: 1_000_000.0,
+                },
             ]),
             vec![],
         );
         let lw = length_width_ratio(&rect).unwrap();
-        assert!((lw - 2.0).abs() < 1e-6,
-            "2:1 rectangle LW ratio should be 2.0, got {lw:.6}");
+        assert!(
+            (lw - 2.0).abs() < 1e-6,
+            "2:1 rectangle LW ratio should be 2.0, got {lw:.6}"
+        );
     }
 
     #[test]
@@ -518,10 +619,15 @@ mod tests {
         // Circle approximated as 32-gon → MBR is nearly square → ratio ≈ 1.0
         let n = 32usize;
         let r = 5000.0_f64;
-        let coords: Vec<Coord<f64>> = (0..=n).map(|i| {
-            let theta = 2.0 * PI * i as f64 / n as f64;
-            Coord { x: 1_000_000.0 + r * theta.cos(), y: 1_000_000.0 + r * theta.sin() }
-        }).collect();
+        let coords: Vec<Coord<f64>> = (0..=n)
+            .map(|i| {
+                let theta = 2.0 * PI * i as f64 / n as f64;
+                Coord {
+                    x: 1_000_000.0 + r * theta.cos(),
+                    y: 1_000_000.0 + r * theta.sin(),
+                }
+            })
+            .collect();
         let poly = Polygon::new(LineString::new(coords), vec![]);
         let lw = length_width_ratio(&poly).unwrap();
         // A 32-gon is very close to a circle — LW should be close to 1.0
@@ -544,7 +650,10 @@ mod tests {
     #[test]
     fn test_lw_ratio_empty_error() {
         let empty = Polygon::new(LineString::new(vec![]), vec![]);
-        assert!(matches!(length_width_ratio(&empty), Err(CompactnessError::EmptyGeometry)));
+        assert!(matches!(
+            length_width_ratio(&empty),
+            Err(CompactnessError::EmptyGeometry)
+        ));
     }
 
     // ── Population-Weighted Compactness ──────────────────────────────────────
@@ -573,8 +682,10 @@ mod tests {
         let district_centroid = (1_000_000.0, 1_000_000.0);
         let pwc = population_weighted_compactness(&centroids, &populations, district_centroid);
         let expected = d * d; // = 1_000_000.0
-        assert!((pwc - expected).abs() < 1e-6,
-            "two equal-pop equidistant points: PWC should be d²={expected}, got {pwc}");
+        assert!(
+            (pwc - expected).abs() < 1e-6,
+            "two equal-pop equidistant points: PWC should be d²={expected}, got {pwc}"
+        );
     }
 
     #[test]
@@ -599,8 +710,10 @@ mod tests {
         let district_centroid = (1_000_000.0, 1_000_000.0);
         let pwc = population_weighted_compactness(&centroids, &populations, district_centroid);
         let expected = 3.0;
-        assert!((pwc - expected).abs() < 1e-9,
-            "PWC should be {expected}, got {pwc}");
+        assert!(
+            (pwc - expected).abs() < 1e-9,
+            "PWC should be {expected}, got {pwc}"
+        );
     }
 
     // ── all_metrics ──────────────────────────────────────────────────────────
@@ -614,12 +727,18 @@ mod tests {
         assert!((m.area_m2 - 1_000_000.0).abs() < 0.001); // 1km² in m²
         assert!((m.perimeter_m - 4000.0).abs() < 0.001);
         assert!(m.convex_hull_ratio > 0.99); // square is convex
-        // Schwartzberg for square: 2/√π ≈ 1.1284
-        assert!((m.schwartzberg - 2.0 / PI.sqrt()).abs() < 1e-6,
-            "all_metrics schwartzberg for square, got {}", m.schwartzberg);
+                                             // Schwartzberg for square: 2/√π ≈ 1.1284
+        assert!(
+            (m.schwartzberg - 2.0 / PI.sqrt()).abs() < 1e-6,
+            "all_metrics schwartzberg for square, got {}",
+            m.schwartzberg
+        );
         // LW ratio for square: 1.0
-        assert!((m.length_width_ratio - 1.0).abs() < 1e-6,
-            "all_metrics LW ratio for square, got {}", m.length_width_ratio);
+        assert!(
+            (m.length_width_ratio - 1.0).abs() < 1e-6,
+            "all_metrics LW ratio for square, got {}",
+            m.length_width_ratio
+        );
     }
 
     // ── Bounds and Python parity ─────────────────────────────────────────────
@@ -644,25 +763,57 @@ mod tests {
         // Polygon with a hole: Python .length returns only exterior (4000m)
         // Rust must match — do NOT add hole perimeters
         let exterior = LineString::new(vec![
-            Coord { x: 1_000_000.0, y: 1_000_000.0 },
-            Coord { x: 1_001_000.0, y: 1_000_000.0 },
-            Coord { x: 1_001_000.0, y: 1_001_000.0 },
-            Coord { x: 1_000_000.0, y: 1_001_000.0 },
-            Coord { x: 1_000_000.0, y: 1_000_000.0 },
+            Coord {
+                x: 1_000_000.0,
+                y: 1_000_000.0,
+            },
+            Coord {
+                x: 1_001_000.0,
+                y: 1_000_000.0,
+            },
+            Coord {
+                x: 1_001_000.0,
+                y: 1_001_000.0,
+            },
+            Coord {
+                x: 1_000_000.0,
+                y: 1_001_000.0,
+            },
+            Coord {
+                x: 1_000_000.0,
+                y: 1_000_000.0,
+            },
         ]);
         let hole = LineString::new(vec![
-            Coord { x: 1_000_250.0, y: 1_000_250.0 },
-            Coord { x: 1_000_750.0, y: 1_000_250.0 },
-            Coord { x: 1_000_750.0, y: 1_000_750.0 },
-            Coord { x: 1_000_250.0, y: 1_000_750.0 },
-            Coord { x: 1_000_250.0, y: 1_000_250.0 },
+            Coord {
+                x: 1_000_250.0,
+                y: 1_000_250.0,
+            },
+            Coord {
+                x: 1_000_750.0,
+                y: 1_000_250.0,
+            },
+            Coord {
+                x: 1_000_750.0,
+                y: 1_000_750.0,
+            },
+            Coord {
+                x: 1_000_250.0,
+                y: 1_000_750.0,
+            },
+            Coord {
+                x: 1_000_250.0,
+                y: 1_000_250.0,
+            },
         ]);
         let poly = Polygon::new(exterior, vec![hole]);
         let (_, perimeter) = polsby_popper(&poly).unwrap();
         // Exterior only = 4000m; hole = 2000m
         // Must be 4000m, NOT 6000m
-        assert!((perimeter - 4000.0).abs() < 0.001,
-            "perimeter should be 4000m (exterior only), got {perimeter}");
+        assert!(
+            (perimeter - 4000.0).abs() < 0.001,
+            "perimeter should be 4000m (exterior only), got {perimeter}"
+        );
     }
 
     // ── Python parity ────────────────────────────────────────────────────────
@@ -673,11 +824,26 @@ mod tests {
         // For a 2000×500m rectangle: A=1,000,000, P=5000
         let rect = Polygon::new(
             LineString::new(vec![
-                Coord { x: 1_000_000.0, y: 1_000_000.0 },
-                Coord { x: 1_002_000.0, y: 1_000_000.0 },
-                Coord { x: 1_002_000.0, y: 1_000_500.0 },
-                Coord { x: 1_000_000.0, y: 1_000_500.0 },
-                Coord { x: 1_000_000.0, y: 1_000_000.0 },
+                Coord {
+                    x: 1_000_000.0,
+                    y: 1_000_000.0,
+                },
+                Coord {
+                    x: 1_002_000.0,
+                    y: 1_000_000.0,
+                },
+                Coord {
+                    x: 1_002_000.0,
+                    y: 1_000_500.0,
+                },
+                Coord {
+                    x: 1_000_000.0,
+                    y: 1_000_500.0,
+                },
+                Coord {
+                    x: 1_000_000.0,
+                    y: 1_000_000.0,
+                },
             ]),
             vec![],
         );
@@ -685,8 +851,14 @@ mod tests {
         let perimeter = 2.0 * (2000.0 + 500.0);
         let expected_pp = (4.0 * PI * area) / (perimeter * perimeter);
         let (pp, p) = polsby_popper(&rect).unwrap();
-        assert!((pp - expected_pp).abs() < 1e-9, "PP {pp} != expected {expected_pp}");
-        assert!((p - perimeter).abs() < 0.001, "perimeter {p} != {perimeter}");
+        assert!(
+            (pp - expected_pp).abs() < 1e-9,
+            "PP {pp} != expected {expected_pp}"
+        );
+        assert!(
+            (p - perimeter).abs() < 0.001,
+            "perimeter {p} != {perimeter}"
+        );
     }
 
     // ── Scenario 27: 1-district (VT congressional) does not panic ────────────
@@ -697,7 +869,11 @@ mod tests {
         // all_metrics() must return Ok (not panic or divide-by-zero).
         let whole_state = unit_square(1_000_000.0, 1_000_000.0);
         let result = all_metrics(1, &whole_state);
-        assert!(result.is_ok(), "single-district all_metrics must not fail: {:?}", result);
+        assert!(
+            result.is_ok(),
+            "single-district all_metrics must not fail: {:?}",
+            result
+        );
         let m = result.unwrap();
         assert_eq!(m.district, 1);
         assert!(m.polsby_popper > 0.0 && m.polsby_popper <= 1.0);

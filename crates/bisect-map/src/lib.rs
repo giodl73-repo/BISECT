@@ -6,9 +6,13 @@ pub mod projection;
 pub mod renderer;
 pub mod rounds;
 
-pub use projection::{Projection, InsetProjection};
-pub use colorscheme::{CategoricalScheme, PoliticalScheme, DemographicScheme, CompactnessScheme, graph_color};
-pub use labeler::{LabelSpec, adaptive_font_size, label_fits, round_label, round_label_with_lineage,
-                  political_label, demographic_label, compactness_label, halo_text_svg, largest_component};
-pub use dissolve::{wkb_to_geometry, dissolve_geometries, group_dissolve};
-pub use renderer::{build_svg, svg_to_png, default_font_db, canvas_size_from_dpi};
+pub use colorscheme::{
+    graph_color, CategoricalScheme, CompactnessScheme, DemographicScheme, PoliticalScheme,
+};
+pub use dissolve::{dissolve_geometries, group_dissolve, wkb_to_geometry};
+pub use labeler::{
+    adaptive_font_size, compactness_label, demographic_label, halo_text_svg, label_fits,
+    largest_component, political_label, round_label, round_label_with_lineage, LabelSpec,
+};
+pub use projection::{InsetProjection, Projection};
+pub use renderer::{build_svg, canvas_size_from_dpi, default_font_db, svg_to_png};

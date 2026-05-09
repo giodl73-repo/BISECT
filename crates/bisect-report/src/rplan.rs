@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 /// RPLAN v0.1 — redistricting plan interchange format.
 ///
 /// RPLAN is a JSON file with:
@@ -9,7 +10,6 @@
 /// Supported GEOID format: exactly 11 numeric characters (Census tract GEOIDs).
 use std::collections::HashMap;
 use std::path::Path;
-use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -17,7 +17,10 @@ pub enum RplanError {
     #[error("GEOID format error: {0}")]
     InvalidGeoid(String),
     #[error("District range error: district {district} out of range [1, {num_districts}]")]
-    InvalidDistrictRange { district: usize, num_districts: usize },
+    InvalidDistrictRange {
+        district: usize,
+        num_districts: usize,
+    },
     #[error("Schema validation error: {0}")]
     SchemaError(String),
     #[error("Version error: {0}")]
@@ -69,9 +72,7 @@ pub struct ValidationResult {
 }
 
 /// Validate all GEOIDs in an assignments map. Returns Err on first invalid GEOID.
-pub fn validate_geoid_format_batch(
-    assignments: &HashMap<String, usize>,
-) -> Result<(), RplanError> {
+pub fn validate_geoid_format_batch(assignments: &HashMap<String, usize>) -> Result<(), RplanError> {
     for geoid in assignments.keys() {
         validate_geoid_format(geoid)?;
     }
@@ -104,7 +105,10 @@ pub fn validate_district_range(
     num_districts: usize,
 ) -> Result<(), RplanError> {
     if district == 0 || district > num_districts {
-        return Err(RplanError::InvalidDistrictRange { district, num_districts });
+        return Err(RplanError::InvalidDistrictRange {
+            district,
+            num_districts,
+        });
     }
     Ok(())
 }
@@ -200,10 +204,7 @@ pub fn validate_rplan(rplan: &RplanFile) -> Result<ValidationResult, RplanError>
                 errors.push(msg);
             } else {
                 // max < num_districts: could be unused trailing districts
-                warnings.push(format!(
-                    "{} — some districts may be empty (unused)",
-                    msg
-                ));
+                warnings.push(format!("{} — some districts may be empty (unused)", msg));
             }
         }
 
@@ -233,7 +234,11 @@ pub fn validate_rplan(rplan: &RplanFile) -> Result<ValidationResult, RplanError>
 
     let valid = errors.is_empty();
     if valid {
-        Ok(ValidationResult { valid, warnings, errors })
+        Ok(ValidationResult {
+            valid,
+            warnings,
+            errors,
+        })
     } else {
         Err(RplanError::SchemaError(errors.join("; ")))
     }
@@ -476,7 +481,10 @@ mod tests {
         // Should succeed with a warning, not fail
         assert!(result.is_ok());
         let vr = result.unwrap();
-        assert!(!vr.warnings.is_empty(), "Should have a warning about newer minor version");
+        assert!(
+            !vr.warnings.is_empty(),
+            "Should have a warning about newer minor version"
+        );
     }
 
     // --- write_rplan integration ---
@@ -508,7 +516,10 @@ mod tests {
 
     // ── Semantic validation (scenario 43) ────────────────────────────────────
 
-    fn make_rplan_with_assignments(num_districts: usize, assignments: &[(&str, usize)]) -> RplanFile {
+    fn make_rplan_with_assignments(
+        num_districts: usize,
+        assignments: &[(&str, usize)],
+    ) -> RplanFile {
         let mut map = std::collections::HashMap::new();
         for &(geoid, d) in assignments {
             map.insert(geoid.to_string(), d);
@@ -536,9 +547,10 @@ mod tests {
     #[test]
     fn test_semantic_all_districts_used_passes() {
         // 3 districts, 3 tracts each assigned to distinct district
-        let rplan = make_rplan_with_assignments(3, &[
-            ("53001000100", 1), ("53001000200", 2), ("53001000300", 3),
-        ]);
+        let rplan = make_rplan_with_assignments(
+            3,
+            &[("53001000100", 1), ("53001000200", 2), ("53001000300", 3)],
+        );
         let result = validate_rplan(&rplan);
         assert!(result.is_ok(), "all districts used must pass: {:?}", result);
     }
@@ -546,9 +558,7 @@ mod tests {
     #[test]
     fn test_semantic_missing_district_warns() {
         // num_districts=3 but only districts 1 and 2 assigned (3 is empty)
-        let rplan = make_rplan_with_assignments(3, &[
-            ("53001000100", 1), ("53001000200", 2),
-        ]);
+        let rplan = make_rplan_with_assignments(3, &[("53001000100", 1), ("53001000200", 2)]);
         let result = validate_rplan(&rplan);
         // Should pass (warnings only) or warn about missing district 3
         match result {
@@ -573,9 +583,7 @@ mod tests {
     #[test]
     fn test_semantic_max_district_exceeds_num_districts_fails() {
         // num_districts=2 but assignment uses district 5
-        let rplan = make_rplan_with_assignments(2, &[
-            ("53001000100", 1), ("53001000200", 5),
-        ]);
+        let rplan = make_rplan_with_assignments(2, &[("53001000100", 1), ("53001000200", 5)]);
         let result = validate_rplan(&rplan);
         assert!(result.is_err(), "max_assigned > num_districts must fail");
         let msg = result.unwrap_err().to_string();
@@ -588,13 +596,17 @@ mod tests {
     #[test]
     fn test_semantic_max_district_less_than_num_districts_warns() {
         // num_districts=5 but max assigned is 3 (districts 4 and 5 empty)
-        let rplan = make_rplan_with_assignments(5, &[
-            ("53001000100", 1), ("53001000200", 2), ("53001000300", 3),
-        ]);
+        let rplan = make_rplan_with_assignments(
+            5,
+            &[("53001000100", 1), ("53001000200", 2), ("53001000300", 3)],
+        );
         let result = validate_rplan(&rplan);
         match result {
             Ok(vr) => {
-                assert!(!vr.warnings.is_empty(), "unused trailing districts must warn");
+                assert!(
+                    !vr.warnings.is_empty(),
+                    "unused trailing districts must warn"
+                );
             }
             Err(_) => {} // error is also acceptable
         }

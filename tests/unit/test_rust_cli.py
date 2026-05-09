@@ -1,5 +1,5 @@
 """
-L2 tests for the `redist` CLI binary — argument parsing and STATUS protocol.
+L2 tests for the `BISECT` CLI binary — argument parsing and STATUS protocol.
 
 Tests the compiled binary directly via subprocess, verifying:
 - All subcommands parse correctly (parity with Python argparse)
@@ -7,7 +7,7 @@ Tests the compiled binary directly via subprocess, verifying:
 - STATUS protocol produces ASCII-only output
 - --help output contains expected flags
 
-Requires redist binary to exist at redist/target/release/redist[.exe].
+Requires BISECT binary to exist at target/release/bisect[.exe].
 Skip if not compiled.
 """
 
@@ -17,18 +17,18 @@ import sys
 import pytest
 from pathlib import Path
 
-REDIST_BIN = Path('redist/target/release/redist.exe' if sys.platform == 'win32'
-                  else 'redist/target/release/redist')
+BISECT_BIN = Path('target/release/bisect.exe' if sys.platform == 'win32'
+                  else 'target/release/bisect')
 
 pytestmark = pytest.mark.skipif(
-    not REDIST_BIN.exists(),
-    reason=f'redist binary not found at {REDIST_BIN} — run: cargo build -p redist-cli --release'
+    not BISECT_BIN.exists(),
+    reason=f'BISECT binary not found at {BISECT_BIN} — run: cargo build -p bisect-cli --release'
 )
 
 
 def run(args: list[str], **kwargs) -> subprocess.CompletedProcess:
     return subprocess.run(
-        [str(REDIST_BIN)] + args,
+        [str(BISECT_BIN)] + args,
         capture_output=True, text=True, timeout=10, **kwargs
     )
 

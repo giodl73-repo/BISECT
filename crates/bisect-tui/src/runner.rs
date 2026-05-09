@@ -1,8 +1,7 @@
-/// STATUS subprocess integration — parse progress messages from redist subprocesses.
+/// STATUS subprocess integration — parse progress messages from bisect subprocesses.
 ///
 /// The Python pipeline emits STATUS:{position}:{message} lines to stdout.
 /// This module parses those lines and maps them to RunProgress updates.
-
 use crate::app::RunProgress;
 
 /// Parse a STATUS:{position}:{message} line.
@@ -88,7 +87,9 @@ fn parse_depth_index(msg: &str) -> Option<usize> {
     let depth_pos = lower.find("depth")?;
     let after = &msg[depth_pos + 5..].trim_start();
     // Read digits
-    let end = after.find(|c: char| !c.is_ascii_digit()).unwrap_or(after.len());
+    let end = after
+        .find(|c: char| !c.is_ascii_digit())
+        .unwrap_or(after.len());
     let num_str = &after[..end];
     let n: usize = num_str.parse().ok()?;
     Some(n.saturating_sub(1)) // convert 1-based to 0-based
@@ -98,9 +99,7 @@ fn parse_depth_index(msg: &str) -> Option<usize> {
 fn parse_elapsed_secs(msg: &str) -> Option<u64> {
     // Look for a number followed by optional 's'
     for token in msg.split_whitespace() {
-        let digits: String = token.chars()
-            .take_while(|c| c.is_ascii_digit())
-            .collect();
+        let digits: String = token.chars().take_while(|c| c.is_ascii_digit()).collect();
         if !digits.is_empty() {
             if let Ok(n) = digits.parse::<u64>() {
                 return Some(n);
@@ -113,23 +112,35 @@ fn parse_elapsed_secs(msg: &str) -> Option<u64> {
 /// Spawn `bisect state` subprocess in a background thread.
 /// Returns immediately. Progress is written to `log_lines` and `done`.
 /// done: None = still running, Some(true) = success, Some(false) = failed.
-pub fn spawn_redist_state(
+pub fn spawn_bisect_state(
     form: &crate::app::RunForm,
     log_lines: std::sync::Arc<std::sync::Mutex<Vec<String>>>,
     done: std::sync::Arc<std::sync::Mutex<Option<bool>>>,
 ) {
-    // Find the redist binary alongside us
-    let redist_bin = std::env::current_exe()
-        .map(|mut p| { p.set_file_name(if cfg!(windows) { "bisect.exe" } else { "bisect" }); p })
+    // Find the bisect binary alongside us
+    let bisect_bin = std::env::current_exe()
+        .map(|mut p| {
+            p.set_file_name(if cfg!(windows) {
+                "bisect.exe"
+            } else {
+                "bisect"
+            });
+            p
+        })
         .unwrap_or_else(|_| std::path::PathBuf::from("bisect"));
 
     let mut args = vec![
         "state".to_string(),
-        "--state".to_string(), form.location.clone(),
-        "--chamber".to_string(), form.chamber.clone(),
-        "--year".to_string(), form.year.clone(),
-        "--resolution".to_string(), form.resolution.clone(),
-        "--version".to_string(), form.version.clone(),
+        "--state".to_string(),
+        form.location.clone(),
+        "--chamber".to_string(),
+        form.chamber.clone(),
+        "--year".to_string(),
+        form.year.clone(),
+        "--resolution".to_string(),
+        form.resolution.clone(),
+        "--version".to_string(),
+        form.version.clone(),
         "--force".to_string(),
     ];
     if !form.seed.is_empty() {
@@ -147,7 +158,7 @@ pub fn spawn_redist_state(
 
     std::thread::spawn(move || {
         use std::io::BufRead;
-        let result = std::process::Command::new(&redist_bin)
+        let result = std::process::Command::new(&bisect_bin)
             .args(&args)
             .stderr(std::process::Stdio::piped())
             .stdout(std::process::Stdio::piped())
@@ -162,7 +173,10 @@ pub fn spawn_redist_state(
             Ok(mut child) => {
                 // Read stderr (STATUS: lines come here)
                 if let Some(stderr) = child.stderr.take() {
-                    for line in std::io::BufReader::new(stderr).lines().map_while(Result::ok) {
+                    for line in std::io::BufReader::new(stderr)
+                        .lines()
+                        .map_while(Result::ok)
+                    {
                         log_lines.lock().unwrap().push(line);
                     }
                 }
@@ -173,14 +187,21 @@ pub fn spawn_redist_state(
     });
 }
 
-/// Run `redist verify --manifest {path}` and return VerifyResult.
+/// Run `bisect verify --manifest {path}` and return VerifyResult.
 /// This blocks — call from a background thread.
 pub fn run_verify_subprocess(manifest_path: &str) -> crate::app::VerifyResult {
-    let redist_bin = std::env::current_exe()
-        .map(|mut p| { p.set_file_name(if cfg!(windows) { "bisect.exe" } else { "bisect" }); p })
+    let bisect_bin = std::env::current_exe()
+        .map(|mut p| {
+            p.set_file_name(if cfg!(windows) {
+                "bisect.exe"
+            } else {
+                "bisect"
+            });
+            p
+        })
         .unwrap_or_else(|_| std::path::PathBuf::from("bisect"));
 
-    let result = std::process::Command::new(&redist_bin)
+    let result = std::process::Command::new(&bisect_bin)
         .args(["verify", "--manifest", manifest_path, "--dry-run"])
         .stderr(std::process::Stdio::piped())
         .stdout(std::process::Stdio::piped())
@@ -203,7 +224,9 @@ pub fn run_verify_subprocess(manifest_path: &str) -> crate::app::VerifyResult {
             // Parse Jaccard score: "Jaccard similarity: 0.9987"
             for line in combined.lines() {
                 if line.contains("Jaccard similarity") || line.contains("Jaccard:") {
-                    if let Some(val) = line.split_whitespace().last()
+                    if let Some(val) = line
+                        .split_whitespace()
+                        .last()
                         .and_then(|s| s.parse::<f64>().ok())
                     {
                         vr.jaccard = val;
@@ -216,7 +239,8 @@ pub fn run_verify_subprocess(manifest_path: &str) -> crate::app::VerifyResult {
             }
 
             if !vr.passed && vr.fail_reason.is_none() {
-                vr.fail_reason = Some("Verification failed — check manifest path and binary".to_string());
+                vr.fail_reason =
+                    Some("Verification failed — check manifest path and binary".to_string());
                 vr.likely_causes = vec![
                     "METIS version differs from manifest".to_string(),
                     "Different adjacency file (check sha256)".to_string(),
@@ -310,7 +334,10 @@ mod tests {
     fn test_update_progress_balance_ok_case_insensitive() {
         let mut progress = RunProgress::default();
         update_progress_from_message(&mut progress, "BALANCE OK — convergence reached");
-        assert!(progress.balance_ok, "balance_ok must be set regardless of case");
+        assert!(
+            progress.balance_ok,
+            "balance_ok must be set regardless of case"
+        );
     }
 
     #[test]

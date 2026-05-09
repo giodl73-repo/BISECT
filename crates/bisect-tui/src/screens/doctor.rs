@@ -1,11 +1,10 @@
 /// Doctor screen — live policy checks for a location/chamber/year.
-
 use ratatui::{
-    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
+    Frame,
 };
 
 use crate::app::{CheckStatus, DoctorCheck, DoctorState};
@@ -17,7 +16,8 @@ pub fn run_checks(location: &str, chamber: &str, year: &str) -> Vec<DoctorCheck>
 
     // 1. has_location
     if registry.has_location(location) {
-        let name = registry.state_name(location)
+        let name = registry
+            .state_name(location)
             .unwrap_or_else(|| location.to_string());
         checks.push(DoctorCheck {
             status: CheckStatus::Pass,
@@ -28,7 +28,10 @@ pub fn run_checks(location: &str, chamber: &str, year: &str) -> Vec<DoctorCheck>
         checks.push(DoctorCheck {
             status: CheckStatus::Fail,
             message: format!("Location '{location}' not found in policy database"),
-            hint: Some("Check REDIST_LOCATION_POLICY or add the location to location_policy.json".to_string()),
+            hint: Some(
+                "Check BISECT_LOCATION_POLICY or add the location to location_policy.json"
+                    .to_string(),
+            ),
         });
         // Early return — remaining checks are meaningless without a valid location
         return checks;
@@ -47,7 +50,10 @@ pub fn run_checks(location: &str, chamber: &str, year: &str) -> Vec<DoctorCheck>
             checks.push(DoctorCheck {
                 status: CheckStatus::Fail,
                 message: msg.clone(),
-                hint: Some(format!("Available years: {}", registry.available_years(location).join(", "))),
+                hint: Some(format!(
+                    "Available years: {}",
+                    registry.available_years(location).join(", ")
+                )),
             });
         }
     }
@@ -117,7 +123,10 @@ pub fn run_checks(location: &str, chamber: &str, year: &str) -> Vec<DoctorCheck>
 
         // 7. nesting from raw()
         if let Some(nr) = entry.get("nesting_requirement").and_then(|v| v.as_str()) {
-            let ratio = entry.get("nesting_ratio").and_then(|v| v.as_str()).unwrap_or("?");
+            let ratio = entry
+                .get("nesting_ratio")
+                .and_then(|v| v.as_str())
+                .unwrap_or("?");
             checks.push(DoctorCheck {
                 status: CheckStatus::Info,
                 message: format!("Nesting requirement: {nr} ({ratio})"),
@@ -163,7 +172,11 @@ pub fn render(f: &mut Frame, area: Rect, state: &DoctorState) {
 
     let rows = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(1), Constraint::Min(0), Constraint::Length(1)])
+        .constraints([
+            Constraint::Length(1),
+            Constraint::Min(0),
+            Constraint::Length(1),
+        ])
         .split(inner);
 
     // Location input line with cursor
@@ -222,14 +235,24 @@ mod tests {
     use super::*;
     use ratatui::{backend::TestBackend, Terminal};
 
-    fn render_to_string(width: u16, height: u16, f: impl FnOnce(&mut ratatui::Frame, ratatui::layout::Rect)) -> String {
+    fn render_to_string(
+        width: u16,
+        height: u16,
+        f: impl FnOnce(&mut ratatui::Frame, ratatui::layout::Rect),
+    ) -> String {
         let backend = TestBackend::new(width, height);
         let mut terminal = Terminal::new(backend).unwrap();
-        terminal.draw(|frame| {
-            let area = frame.area();
-            f(frame, area);
-        }).unwrap();
-        terminal.backend().buffer().content().iter()
+        terminal
+            .draw(|frame| {
+                let area = frame.area();
+                f(frame, area);
+            })
+            .unwrap();
+        terminal
+            .backend()
+            .buffer()
+            .content()
+            .iter()
             .map(|c| c.symbol().to_string())
             .collect::<String>()
     }
@@ -240,7 +263,11 @@ mod tests {
         let state = DoctorState::default();
         let content = render_to_string(120, 20, |f, area| render(f, area, &state));
         assert!(
-            content.contains("location") || content.contains("Location") || content.contains("WA") || content.contains("IE") || content.contains("Doctor"),
+            content.contains("location")
+                || content.contains("Location")
+                || content.contains("WA")
+                || content.contains("IE")
+                || content.contains("Doctor"),
             "doctor must show location prompt: {content}"
         );
     }

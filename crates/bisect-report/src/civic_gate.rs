@@ -155,7 +155,7 @@ pub fn refusal_message(offending: &[NonStrictRow]) -> String {
          docs/superpowers/plans/2026-04-30-court-submission-reports.md Task 8.",
     );
     // ASCII-only per PP-34 (Windows CP1252 console policy). The error string
-    // flows through anyhow::Error -> stderr, which the redist-cli envelope
+    // flows through anyhow::Error -> stderr, which the BISECT-cli envelope
     // writes via eprintln! — must not contain non-ASCII bytes.
     s
 }
@@ -425,8 +425,11 @@ mod tests {
         let outcome = classify(vec![(PathBuf::from("a/manifest.json"), m)], false).unwrap();
         match outcome {
             CivicGateOutcome::NonStrictRefused { offending } => {
-                assert!(offending[0].validate_mode.starts_with("unknown:"),
-                    "unknown mode must be prefixed: {}", offending[0].validate_mode);
+                assert!(
+                    offending[0].validate_mode.starts_with("unknown:"),
+                    "unknown mode must be prefixed: {}",
+                    offending[0].validate_mode
+                );
                 assert!(offending[0].validate_mode.contains("experimental"));
             }
             other => panic!("expected NonStrictRefused, got {:?}", other),
@@ -463,7 +466,11 @@ mod tests {
         let outcome = classify(manifests, false).unwrap();
         match outcome {
             CivicGateOutcome::NonStrictRefused { offending } => {
-                assert_eq!(offending.len(), 2, "both lenient inputs must appear in offending");
+                assert_eq!(
+                    offending.len(),
+                    2,
+                    "both lenient inputs must appear in offending"
+                );
             }
             other => panic!("expected NonStrictRefused, got {:?}", other),
         }
@@ -505,7 +512,10 @@ mod tests {
             label: "naacp_coi".into(),
         }];
         let msg = refusal_message(&offending);
-        assert!(msg.starts_with("[BOUNDARY]"), "must start with [BOUNDARY]: {msg}");
+        assert!(
+            msg.starts_with("[BOUNDARY]"),
+            "must start with [BOUNDARY]: {msg}"
+        );
     }
 
     #[test]
@@ -525,8 +535,14 @@ mod tests {
         let msg = refusal_message(&offending);
         assert!(msg.contains("org1"), "org1 must appear in refusal message");
         assert!(msg.contains("org2"), "org2 must appear in refusal message");
-        assert!(msg.contains("lenient"), "lenient must appear in refusal message");
-        assert!(msg.contains("advisory"), "advisory must appear in refusal message");
+        assert!(
+            msg.contains("lenient"),
+            "lenient must appear in refusal message"
+        );
+        assert!(
+            msg.contains("advisory"),
+            "advisory must appear in refusal message"
+        );
     }
 
     #[test]
@@ -538,7 +554,10 @@ mod tests {
             label: "lwv".into(),
         }];
         let msg = refusal_message(&offending);
-        assert!(msg.is_ascii(), "refusal_message must be ASCII-only per PP-34");
+        assert!(
+            msg.is_ascii(),
+            "refusal_message must be ASCII-only per PP-34"
+        );
     }
 
     #[test]
@@ -549,7 +568,10 @@ mod tests {
             label: "lwv".into(),
         }];
         let msg = refusal_message(&offending);
-        assert!(msg.contains("court-submission-reports"), "must cite court-submission-reports plan doc");
+        assert!(
+            msg.contains("court-submission-reports"),
+            "must cite court-submission-reports plan doc"
+        );
     }
 
     #[test]
@@ -560,7 +582,10 @@ mod tests {
             label: "lwv_lenient".into(),
         };
         let json = serde_json::to_value(&row).unwrap();
-        assert!(json.get("validate_mode").is_some(), "validate_mode must be serialized");
+        assert!(
+            json.get("validate_mode").is_some(),
+            "validate_mode must be serialized"
+        );
         assert!(json.get("label").is_some(), "label must be serialized");
         assert_eq!(json["validate_mode"], "lenient");
         assert_eq!(json["label"], "lwv_lenient");
@@ -613,8 +638,11 @@ mod tests {
         // Write a file that is NOT manifest.json
         std::fs::write(empty_subdir.join("readme.txt"), b"ignore me").unwrap();
         let outcome = check_civic_inputs(Some(&root), false).unwrap();
-        assert_eq!(outcome, CivicGateOutcome::NoneFound,
-            "subdir without manifest.json must be silently ignored");
+        assert_eq!(
+            outcome,
+            CivicGateOutcome::NoneFound,
+            "subdir without manifest.json must be silently ignored"
+        );
     }
 
     #[test]
@@ -627,8 +655,10 @@ mod tests {
         let outcome = classify(vec![(PathBuf::from("path/manifest.json"), m)], false).unwrap();
         match outcome {
             CivicGateOutcome::NonStrictRefused { offending } => {
-                assert_eq!(offending[0].label, "naacp_vra_coi",
-                    "label from manifest must be preserved in NonStrictRow");
+                assert_eq!(
+                    offending[0].label, "naacp_vra_coi",
+                    "label from manifest must be preserved in NonStrictRow"
+                );
             }
             other => panic!("expected NonStrictRefused, got {:?}", other),
         }
@@ -645,7 +675,10 @@ mod tests {
         let outcome = classify(vec![(path.clone(), m)], false).unwrap();
         match outcome {
             CivicGateOutcome::NonStrictRefused { offending } => {
-                assert_eq!(offending[0].path, path, "path must be preserved in NonStrictRow");
+                assert_eq!(
+                    offending[0].path, path,
+                    "path must be preserved in NonStrictRow"
+                );
             }
             other => panic!("expected NonStrictRefused, got {:?}", other),
         }

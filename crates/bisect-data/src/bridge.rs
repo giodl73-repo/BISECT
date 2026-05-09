@@ -41,7 +41,9 @@ impl UnionFind {
     fn union(&mut self, x: usize, y: usize) {
         let rx = self.find(x);
         let ry = self.find(y);
-        if rx == ry { return; }
+        if rx == ry {
+            return;
+        }
         if self.rank[rx] < self.rank[ry] {
             self.parent[rx] = ry;
         } else if self.rank[rx] > self.rank[ry] {
@@ -107,7 +109,8 @@ pub fn connect_island_components(
             let tract_centroid = centroids[tract_idx];
 
             // Find same-county candidates in main component
-            let same_county: Vec<usize> = main_component.iter()
+            let same_county: Vec<usize> = main_component
+                .iter()
                 .copied()
                 .filter(|&idx| counties[idx] == tract_county)
                 .collect();
@@ -120,7 +123,8 @@ pub fn connect_island_components(
             };
 
             // Find nearest candidate by Euclidean distance
-            let closest = candidates.iter()
+            let closest = candidates
+                .iter()
                 .copied()
                 .min_by(|&a, &b| {
                     dist2(centroids[a], tract_centroid)
@@ -204,9 +208,9 @@ mod tests {
         // Island: tract 2 (county 50001) — should connect to nearest in main
         let adj = vec![vec![1], vec![0], vec![]]; // tract 2 is isolated
         let centroids = vec![
-            (1_000_000.0, 1_000_000.0),  // 0
-            (1_001_000.0, 1_000_000.0),  // 1
-            (1_000_500.0, 1_010_000.0),  // 2 — closer to 0 than 1
+            (1_000_000.0, 1_000_000.0), // 0
+            (1_001_000.0, 1_000_000.0), // 1
+            (1_000_500.0, 1_010_000.0), // 2 — closer to 0 than 1
         ];
         let geoids = vec![
             "50001000100".to_string(),
@@ -217,7 +221,10 @@ mod tests {
         assert_eq!(edges.len(), 1);
         // Tract 2 should connect to tract 0 (closer centroid)
         let (u, v) = edges[0];
-        assert!(u == 0 || v == 0, "bridge should connect to tract 0 (nearest)");
+        assert!(
+            u == 0 || v == 0,
+            "bridge should connect to tract 0 (nearest)"
+        );
     }
 
     #[test]
@@ -270,7 +277,8 @@ mod tests {
         // Two isolated tracts connecting to same main tract
         let adj = vec![vec![1], vec![0], vec![], vec![]];
         let centroids = vec![
-            (0.0, 0.0), (1.0, 0.0),
+            (0.0, 0.0),
+            (1.0, 0.0),
             (0.5, 5.0), // isolates close to tract 0
             (0.5, 6.0), // also closest to tract 0
         ];
@@ -326,7 +334,9 @@ mod tests {
         // Main: 0-1-2. Islands: 3 and 4.
         let adj = vec![vec![1], vec![0, 2], vec![1], vec![], vec![]];
         let centroids = vec![
-            (0.0, 0.0), (1.0, 0.0), (2.0, 0.0),
+            (0.0, 0.0),
+            (1.0, 0.0),
+            (2.0, 0.0),
             (1.5, 10.0), // island near 2
             (0.5, 10.0), // island near 0
         ];

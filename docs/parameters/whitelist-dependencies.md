@@ -1,16 +1,16 @@
 # Whitelist Parameter Dependency DAG
 
-**Status:** Source of truth (consumed by `redist depo recompute` and the future deposition daemon).
+**Status:** Source of truth (consumed by `BISECT depo recompute` and the future deposition daemon).
 **Owner:** Deposition Prep plan Task 1 (`docs/superpowers/plans/2026-04-30-deposition-prep.md`)
 **v2.1 tracking:** S-01
 
-This document is the explicit dependency graph for the eight parameters exposed via `redist depo recompute --param KEY=VALUE`. The orchestrator consults this map to decide:
+This document is the explicit dependency graph for the eight parameters exposed via `BISECT depo recompute --param KEY=VALUE`. The orchestrator consults this map to decide:
 
 - **Which downstream computations a parameter change invalidates** (the analyzer must be re-run)
 - **Which guardrails fire** (some parameter values block headline-significance language)
 - **Which warnings surface** (some combinations are statistically anti-conservative)
 
-The machine-readable counterpart is at `redist/crates/bisect-cli/whitelist_dependencies.json` (compile-time embedded; the repo's top-level `/data/` is gitignored for raw Census downloads). The CI test asserts that the markdown table below and the JSON file declare the same parameter set with the same defaults; drift is impossible-to-merge.
+The machine-readable counterpart is at `BISECT/crates/bisect-cli/whitelist_dependencies.json` (compile-time embedded; the repo's top-level `/data/` is gitignored for raw Census downloads). The CI test asserts that the markdown table below and the JSON file declare the same parameter set with the same defaults; drift is impossible-to-merge.
 
 If you're adding a new whitelist parameter: edit the table below AND the JSON in the same commit. CI will reject the PR if they disagree.
 
@@ -92,7 +92,7 @@ Per the table:
 
 2. **`bloc_robust_se_type=hc1` AND `n_clusters < 30`** triggers a one-line stderr warning at:
    - `bisect analyze --types bloc-voting` invocation
-   - `redist depo eval` (when daemon ships)
+   - `BISECT depo eval` (when daemon ships)
 
 These guardrails are not auto-enforced today (the bloc-voting analyzer doesn't yet read these whitelist parameters as overrides — that wiring is the depo daemon's Task 4/5). The doc + machine-readable map are the contract; the enforcement code lands when the daemon does.
 

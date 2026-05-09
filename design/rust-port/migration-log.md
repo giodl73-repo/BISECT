@@ -25,7 +25,7 @@ Full CLI binary. `bisect state VT` and `bisect state AL --partition-mode metis-v
 both pass end-to-end acceptance tests. Python subprocess calls eliminated.
 
 ### Phase 3 key implementation fixes (bugs found, not in plan):
-- `REDIST_PYTHON` env var: Rust binary uses caller's Python (PP-04 pitfall)
+- `BISECT_PYTHON` env var: Rust binary uses caller's Python (PP-04 pitfall)
 - Adjacency path separate from output_dir (PP-05 pitfall)
 - State directory uses `state_name` not `state_code.lower()` (DP-03 pitfall)
 - Error propagation from par_iter: `filter_map(.ok()?)` → `collect::<Result>()` (PP-06 pitfall)
@@ -58,7 +58,7 @@ Notes:
 - `manifest.json` embedded in binary: 50 states, TIGER + PL 94-171 URLs
 - `reqwest::blocking` for HTTP downloads (no Python subprocess)
 - `zip` crate for extraction
-- `REDIST_MANIFEST` env var for local manifest override
+- `BISECT_MANIFEST` env var for local manifest override
 - 22 integration tests with stdlib HTTP fixture server (no external deps)
 - TIGER fixture files committed: VT (1 district, 193 tracts) + RI (2 districts, 250 tracts)
 
@@ -68,7 +68,7 @@ Exposed via PyO3. Role review caught: MM threshold `>` not `>=` (VA-01 invariant
 perimeter excludes holes, deterministic FP aggregation, array length validation.
 
 ## Phase 5 — Complete (2026-04-25)
-`bisect analyze` + `redist map` — analytics extension model + native Rust map rendering.
+`bisect analyze` + `BISECT map` — analytics extension model + native Rust map rendering.
 
 ### New crate: `bisect-map`
 - `projection.rs`: WGS84 bbox → SVG pixel coords (equirectangular, display only)
@@ -87,7 +87,7 @@ perimeter excludes holes, deterministic FP aggregation, array length validation.
 
 ### New CLI subcommands
 - `bisect analyze` — dispatches typed analyzers, atomic JSON write, exits 2 on balance failure
-- `redist map` — PNG rendering via `bisect-map` crate
+- `BISECT map` — PNG rendering via `bisect-map` crate
 
 ### Shared geometry helper: `bisect-cli/src/geometry.rs`
 `load_district_geometries()` — TIGER → WKB decode → `group_dissolve` → `HashMap<district_id, MultiPolygon>`.
@@ -102,7 +102,7 @@ exit code 2 on imbalance, pop_basis metadata, WGS84 display-projection note.
 ### Still pending (Phase 5 stubs)
 - Choropleth maps with real geometry + analysis data (#62)
 - `bisect analyze --types compactness` (#63)
-- `redist map --types rounds` real bisection rendering (#64)
+- `BISECT map --types rounds` real bisection rendering (#64)
 - `bisect-web` crate (dashboard generation) remains stub
 
 ## Phase 6 (native METIS, optional)

@@ -1,6 +1,6 @@
 // Task #53 — stub
-use geo_types::{MultiPolygon, Polygon};
 use geo::Area;
+use geo_types::{MultiPolygon, Polygon};
 
 #[derive(Debug, Clone)]
 pub struct LabelSpec {
@@ -22,12 +22,22 @@ pub fn label_fits(text: &str, font_px: f64, inscribed_radius_px: f64) -> bool {
 pub fn round_label(district_id: usize, districts_in_region: usize, _total: usize) -> LabelSpec {
     LabelSpec {
         main: district_id.to_string(),
-        annotation: if districts_in_region > 1 { Some(districts_in_region.to_string()) } else { None },
-        stat: None, lineage_superscript: None,
+        annotation: if districts_in_region > 1 {
+            Some(districts_in_region.to_string())
+        } else {
+            None
+        },
+        stat: None,
+        lineage_superscript: None,
     }
 }
 
-pub fn round_label_with_lineage(district_id: usize, districts_in_region: usize, total: usize, parent: Option<usize>) -> LabelSpec {
+pub fn round_label_with_lineage(
+    district_id: usize,
+    districts_in_region: usize,
+    total: usize,
+    parent: Option<usize>,
+) -> LabelSpec {
     let mut l = round_label(district_id, districts_in_region, total);
     l.lineage_superscript = parent;
     l
@@ -35,24 +45,42 @@ pub fn round_label_with_lineage(district_id: usize, districts_in_region: usize, 
 
 pub fn political_label(district: usize, dem_frac: f64) -> LabelSpec {
     let margin = ((dem_frac - 0.5) * 200.0).round() as i32;
-    let stat = if margin >= 0 { format!("D+{}%", margin) } else { format!("R+{}%", -margin) };
-    LabelSpec { main: district.to_string(), annotation: None, stat: Some(stat), lineage_superscript: None }
+    let stat = if margin >= 0 {
+        format!("D+{}%", margin)
+    } else {
+        format!("R+{}%", -margin)
+    };
+    LabelSpec {
+        main: district.to_string(),
+        annotation: None,
+        stat: Some(stat),
+        lineage_superscript: None,
+    }
 }
 
 pub fn demographic_label(district: usize, minority_frac: f64) -> LabelSpec {
-    LabelSpec { main: district.to_string(), annotation: None,
-        stat: Some(format!("{}% min", (minority_frac * 100.0).round() as u32)), lineage_superscript: None }
+    LabelSpec {
+        main: district.to_string(),
+        annotation: None,
+        stat: Some(format!("{}% min", (minority_frac * 100.0).round() as u32)),
+        lineage_superscript: None,
+    }
 }
 
 pub fn compactness_label(district: usize, pp: f64) -> LabelSpec {
-    LabelSpec { main: district.to_string(), annotation: None,
-        stat: Some(format!("PP: {:.2}", pp)), lineage_superscript: None }
+    LabelSpec {
+        main: district.to_string(),
+        annotation: None,
+        stat: Some(format!("PP: {:.2}", pp)),
+        lineage_superscript: None,
+    }
 }
 
 pub fn halo_text_svg(cx: f64, cy: f64, main: &str, stat: &str, font_px: f64) -> String {
     let stat_size = font_px * 0.65;
     let stat_dy = font_px * 1.2;
-    let common = format!(r#"x="{cx:.1}" text-anchor="middle" font-family="Liberation Sans, sans-serif""#);
+    let common =
+        format!(r#"x="{cx:.1}" text-anchor="middle" font-family="Liberation Sans, sans-serif""#);
     let halo = format!(
         r#"<text {common} y="{cy:.1}" font-size="{font_px:.1}" stroke="white" stroke-width="3" fill="white" paint-order="stroke"><tspan>{main}</tspan><tspan x="{cx:.1}" dy="{stat_dy:.1}" font-size="{stat_size:.1}">{stat}</tspan></text>"#
     );
@@ -63,9 +91,8 @@ pub fn halo_text_svg(cx: f64, cy: f64, main: &str, stat: &str, font_px: f64) -> 
 }
 
 pub fn largest_component(mp: &MultiPolygon<f64>) -> Option<&Polygon<f64>> {
-    mp.0.iter().max_by(|a, b| {
-        a.unsigned_area().partial_cmp(&b.unsigned_area()).unwrap()
-    })
+    mp.0.iter()
+        .max_by(|a, b| a.unsigned_area().partial_cmp(&b.unsigned_area()).unwrap())
 }
 
 pub fn labels_overlap(a: (&str, f64, f64), b: (&str, f64, f64), font_px: f64) -> bool {

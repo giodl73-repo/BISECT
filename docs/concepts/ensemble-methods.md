@@ -4,9 +4,9 @@
 
 The redistricting feasible space is the set of all valid plans for a state —
 all plans that satisfy population balance, contiguity, and any applicable legal
-constraints. There are billions of such plans for any large state. The `redist`
+constraints. There are billions of such plans for any large state. The `BISECT`
 algorithm finds a plan at the compactness extremum of this space. An ensemble
-samples the space randomly to characterise it. Comparing the `redist` plan to
+samples the space randomly to characterise it. Comparing the `BISECT` plan to
 the ensemble certifies its position: more compact than 99%+ of valid plans
 in most states, or at the geographic median in constrained states like North
 Carolina.
@@ -15,16 +15,16 @@ Carolina.
 
 ## Two complementary tools
 
-The `redist` algorithm and the ensemble method answer different questions:
+The `BISECT` algorithm and the ensemble method answer different questions:
 
 | Tool | Question answered |
 |---|---|
-| `redist` (METIS-based) | "What is the most compact valid plan?" |
+| `BISECT` (METIS-based) | "What is the most compact valid plan?" |
 | GerryChain / ReCom | "What does the distribution of valid plans look like?" |
 
-These tools are complementary, not competing. `redist` finds the optimum.
+These tools are complementary, not competing. `BISECT` finds the optimum.
 The ensemble characterises where the optimum sits within the feasible space.
-Together, they produce a certificate: the `redist` plan is at the compactness
+Together, they produce a certificate: the `BISECT` plan is at the compactness
 extremum, and the ensemble confirms this.
 
 ---
@@ -34,7 +34,7 @@ extremum, and the ensemble confirms this.
 GerryChain implements the ReCom (Recombination) Markov chain, which samples
 valid redistricting plans approximately uniformly at random over contiguous
 population-balanced plans (exact stationarity requires ergodicity, which holds
-for connected graphs with sufficient plan diversity). Unlike `redist`,
+for connected graphs with sufficient plan diversity). Unlike `BISECT`,
 it does not optimise for any objective: each step is a random local move that
 preserves population balance and contiguity.
 
@@ -59,8 +59,8 @@ allows rigorous inference about the feasible space.
   achievable under compact, balanced redistricting? What is the baseline
   Republican advantage in a state given its geography?
 
-- **Certifying the `redist` plan**: After generating an ensemble of valid plans,
-  compare the `redist` plan's compactness to the distribution. The percentile
+- **Certifying the `BISECT` plan**: After generating an ensemble of valid plans,
+  compare the `BISECT` plan's compactness to the distribution. The percentile
   position is the certificate.
 
 **GerryChain speed**: Approximately 21 steps per second for North Carolina
@@ -222,7 +222,7 @@ the chain is stuck and needs longer steps or a different initialisation.
 
 ## The legal argument
 
-Ensemble evidence is used to certify the `redist` plan in legal proceedings.
+Ensemble evidence is used to certify the `BISECT` plan in legal proceedings.
 The argument structure differs by state type.
 
 ### Maximum-compactness certificate (WI, GA, PA)

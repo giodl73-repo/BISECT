@@ -1,8 +1,8 @@
-# `redist aggregate` + `redist map --scope national` Implementation Plan
+# `BISECT aggregate` + `BISECT map --scope national` Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Close the last two Python-only gaps in the pipeline. `redist aggregate` merges all 50 state analysis JSONs into national datasets (replacing `create_us_aggregate.py`). `redist map --scope national` renders the full 435-district national map with Alaska and Hawaii insets (replacing `visualize_national_districts.py` and the national choropleth scripts).
+**Goal:** Close the last two Python-only gaps in the pipeline. `BISECT aggregate` merges all 50 state analysis JSONs into national datasets (replacing `create_us_aggregate.py`). `BISECT map --scope national` renders the full 435-district national map with Alaska and Hawaii insets (replacing `visualize_national_districts.py` and the national choropleth scripts).
 
 **Architecture:**
 - New `Commands::Aggregate` in `bisect-cli` — walks `outputs/{version}/states/*/analysis/` and merges
@@ -18,12 +18,12 @@
 
 | Python task | Rust equivalent | Plan task |
 |-------------|-----------------|-----------|
-| `create_us_aggregate.py` — combine 50 state CSVs | `redist aggregate` — merge state analysis JSONs + write CSV | Task 1–2 |
-| `create_us_rounds_hierarchy.py` — national rounds CSV | `redist aggregate --types rounds` | Task 2 |
-| `visualize_national_districts.py` — 435-district map | `redist map --scope national --types districts` | Task 3–4 |
-| `visualize_partisan_lean.py --scope national` | `redist map --scope national --types political` | Task 4 |
-| `visualize_district_demographics.py --scope national` | `redist map --scope national --types demographic` | Task 4 |
-| `visualize_compactness.py --scope national` | `redist map --scope national --types compactness` | Task 4 |
+| `create_us_aggregate.py` — combine 50 state CSVs | `BISECT aggregate` — merge state analysis JSONs + write CSV | Task 1–2 |
+| `create_us_rounds_hierarchy.py` — national rounds CSV | `BISECT aggregate --types rounds` | Task 2 |
+| `visualize_national_districts.py` — 435-district map | `BISECT map --scope national --types districts` | Task 3–4 |
+| `visualize_partisan_lean.py --scope national` | `BISECT map --scope national --types political` | Task 4 |
+| `visualize_district_demographics.py --scope national` | `BISECT map --scope national --types demographic` | Task 4 |
+| `visualize_compactness.py --scope national` | `BISECT map --scope national --types compactness` | Task 4 |
 
 Dashboard generation (`process_nation.py` task 7) stays Python — `bisect-web` is future work.
 
@@ -60,19 +60,19 @@ The continental US fits a standard equirectangular bbox. Alaska and Hawaii are p
 
 | File | Action |
 |------|--------|
-| `redist/crates/bisect-map/src/projection.rs` | **Modify** — add `InsetProjection` struct |
-| `redist/crates/bisect-cli/src/aggregate.rs` | **Create** — `run_aggregate()` dispatcher |
-| `redist/crates/bisect-cli/src/args.rs` | **Modify** — `AggregateArgs`, `--scope` flag on `MapArgs` |
-| `redist/crates/bisect-cli/src/lib.rs` | **Modify** — expose `aggregate` module |
-| `redist/crates/bisect-cli/src/main.rs` | **Modify** — wire `Commands::Aggregate` |
-| `redist/crates/bisect-cli/src/map_cmd.rs` | **Modify** — national map rendering path |
-| `redist/tests/acceptance/test_aggregate_national.py` | **Create** — L2 acceptance tests |
+| `BISECT/crates/bisect-map/src/projection.rs` | **Modify** — add `InsetProjection` struct |
+| `BISECT/crates/bisect-cli/src/aggregate.rs` | **Create** — `run_aggregate()` dispatcher |
+| `BISECT/crates/bisect-cli/src/args.rs` | **Modify** — `AggregateArgs`, `--scope` flag on `MapArgs` |
+| `BISECT/crates/bisect-cli/src/lib.rs` | **Modify** — expose `aggregate` module |
+| `BISECT/crates/bisect-cli/src/main.rs` | **Modify** — wire `Commands::Aggregate` |
+| `BISECT/crates/bisect-cli/src/map_cmd.rs` | **Modify** — national map rendering path |
+| `BISECT/tests/acceptance/test_aggregate_national.py` | **Create** — L2 acceptance tests |
 
 ---
 
 ## Task 1: `InsetProjection` for national maps
 
-**Files:** `redist/crates/bisect-map/src/projection.rs`
+**Files:** `BISECT/crates/bisect-map/src/projection.rs`
 
 - [ ] **Write failing L0 tests**
 
@@ -206,9 +206,9 @@ pub use projection::{Projection, InsetProjection};
 
 ---
 
-## Task 2: `redist aggregate` subcommand
+## Task 2: `BISECT aggregate` subcommand
 
-**Files:** `redist/crates/bisect-cli/src/aggregate.rs`, `args.rs`, `lib.rs`, `main.rs`
+**Files:** `BISECT/crates/bisect-cli/src/aggregate.rs`, `args.rs`, `lib.rs`, `main.rs`
 
 Walks `outputs/{version}/states/*/analysis/` for all present states, merges all per-type JSONs into national datasets.
 
@@ -363,7 +363,7 @@ pub fn merge_analyzer_outputs(states: &[(&str, &serde_json::Value)]) -> serde_js
 
 - [ ] **Run tests** — expect PASS
 - [ ] **Wire into `main.rs` and `lib.rs`**
-- [ ] **Commit:** `git commit -m "feat(cli): redist aggregate — merge state analysis JSONs into national datasets"`
+- [ ] **Commit:** `git commit -m "feat(cli): BISECT aggregate — merge state analysis JSONs into national datasets"`
 
 ---
 
@@ -401,9 +401,9 @@ fn test_csv_export_demographic_headers() {
 
 ---
 
-## Task 4: `redist map --scope national`
+## Task 4: `BISECT map --scope national`
 
-**Files:** `redist/crates/bisect-cli/src/args.rs`, `map_cmd.rs`
+**Files:** `BISECT/crates/bisect-cli/src/args.rs`, `map_cmd.rs`
 
 - [ ] **Add `--scope` flag to `MapArgs`**
 
@@ -443,7 +443,7 @@ MapScope::National => run_national_map(args, &font_db)?,
 
 ```rust
 fn run_national_map(args: &MapArgs, font_db: &FontDb) -> anyhow::Result<()> {
-    use redist_map::InsetProjection;
+    use BISECT_map::InsetProjection;
 
     let output_root = PathBuf::from("outputs").join(&args.version);
     let national_maps_dir = output_root.join("national").join("maps");
@@ -523,7 +523,7 @@ fn run_national_map(args: &MapArgs, font_db: &FontDb) -> anyhow::Result<()> {
 
 - [ ] **Implement `state_name_to_code`** — reverse lookup of STATE_NAMES map.
 
-- [ ] **Commit:** `git commit -m "feat(cli): redist map --scope national with InsetProjection (AK+HI insets)"`
+- [ ] **Commit:** `git commit -m "feat(cli): BISECT map --scope national with InsetProjection (AK+HI insets)"`
 
 ---
 
@@ -550,7 +550,7 @@ class TestAggregateAcceptance(unittest.TestCase):
                 "Need at least 2 states with analysis. "
                 "Run: bisect analyze --state VT --types all && bisect analyze --state AL --types all"
             )
-        cls.binary = find_redist_binary()
+        cls.binary = find_BISECT_binary()
         cls.n_states = len(states_with_analysis)
 
     def test_aggregate_demographic_produces_json(self):
@@ -608,7 +608,7 @@ class TestNationalMapAcceptance(unittest.TestCase):
         ]
         if len(states_with_data) < 2:
             raise unittest.SkipTest("Need at least 2 states with assignments.")
-        cls.binary = find_redist_binary()
+        cls.binary = find_BISECT_binary()
 
     def test_national_districts_map_valid_png(self):
         r = run([binary, "map", "--scope", "national", "--version", "V3",
@@ -633,7 +633,7 @@ class TestNationalMapAcceptance(unittest.TestCase):
 ```
 
 - [ ] **Run:** `pytest tests/acceptance/test_aggregate_national.py -v` — expect PASS
-- [ ] **Commit:** `git commit -m "test(acceptance): redist aggregate + national map L2 tests"`
+- [ ] **Commit:** `git commit -m "test(acceptance): BISECT aggregate + national map L2 tests"`
 
 ---
 
@@ -662,10 +662,10 @@ done
 # Or: run all at once (future: bisect analyze --states all)
 
 # Step 3: Aggregate into national datasets
-redist aggregate --version V3 --types all --csv
+BISECT aggregate --version V3 --types all --csv
 
 # Step 4: Render national maps
-redist map --scope national --version V3 --types districts political demographic compactness
+BISECT map --scope national --version V3 --types districts political demographic compactness
 
 # Outputs:
 # outputs/V3/national/us_demographic.json + .csv

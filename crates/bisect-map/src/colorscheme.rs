@@ -1,29 +1,43 @@
 // Task #52 — full implementation
-pub struct CategoricalScheme { colors: [(u8,u8,u8); 12] }
+pub struct CategoricalScheme {
+    colors: [(u8, u8, u8); 12],
+}
 pub struct PoliticalScheme;
 pub struct DemographicScheme;
 pub struct CompactnessScheme;
 
 impl Default for CategoricalScheme {
     fn default() -> Self {
-        Self { colors: [
-            (141,211,199),(255,255,179),(190,186,218),(251,128,114),
-            (128,177,211),(253,180,98),(179,222,105),(252,205,229),
-            (217,217,217),(188,128,189),(204,235,197),(255,237,111),
-        ]}
+        Self {
+            colors: [
+                (141, 211, 199),
+                (255, 255, 179),
+                (190, 186, 218),
+                (251, 128, 114),
+                (128, 177, 211),
+                (253, 180, 98),
+                (179, 222, 105),
+                (252, 205, 229),
+                (217, 217, 217),
+                (188, 128, 189),
+                (204, 235, 197),
+                (255, 237, 111),
+            ],
+        }
     }
 }
 impl CategoricalScheme {
-    pub fn color(&self, district_id: usize) -> (u8,u8,u8) { self.colors[district_id % 12] }
+    pub fn color(&self, district_id: usize) -> (u8, u8, u8) {
+        self.colors[district_id % 12]
+    }
 }
 
 impl PoliticalScheme {
     /// t=0.0 → Rep red (220,50,47), t=0.5 → near-white (240,240,240), t=1.0 → Dem blue (31,119,180)
-    pub fn color(&self, dem_frac: f64) -> (u8,u8,u8) {
+    pub fn color(&self, dem_frac: f64) -> (u8, u8, u8) {
         let t = dem_frac.clamp(0.0, 1.0);
-        let lerp = |a: u8, b: u8, t: f64| -> u8 {
-            (a as f64 + (b as f64 - a as f64) * t).round() as u8
-        };
+        let lerp =
+            |a: u8, b: u8, t: f64| -> u8 { (a as f64 + (b as f64 - a as f64) * t).round() as u8 };
         if t <= 0.5 {
             // Rep red → near-white: t=0 → (220,50,47), t=0.5 → (240,240,240)
             let s = t * 2.0;
@@ -38,33 +52,34 @@ impl PoliticalScheme {
 
 impl DemographicScheme {
     /// Yellow → Brown sequential
-    pub fn color(&self, frac: f64) -> (u8,u8,u8) {
+    pub fn color(&self, frac: f64) -> (u8, u8, u8) {
         let t = frac.clamp(0.0, 1.0);
-        let lerp = |a: u8, b: u8, t: f64| -> u8 {
-            (a as f64 + (b as f64 - a as f64) * t).round() as u8
-        };
+        let lerp =
+            |a: u8, b: u8, t: f64| -> u8 { (a as f64 + (b as f64 - a as f64) * t).round() as u8 };
         (lerp(255, 102, t), lerp(255, 51, t), lerp(178, 0, t))
     }
 }
 
 impl CompactnessScheme {
     /// Green sequential: light green → dark green
-    pub fn color(&self, score: f64) -> (u8,u8,u8) {
+    pub fn color(&self, score: f64) -> (u8, u8, u8) {
         let t = score.clamp(0.0, 1.0);
-        let lerp = |a: u8, b: u8, t: f64| -> u8 {
-            (a as f64 + (b as f64 - a as f64) * t).round() as u8
-        };
+        let lerp =
+            |a: u8, b: u8, t: f64| -> u8 { (a as f64 + (b as f64 - a as f64) * t).round() as u8 };
         (lerp(229, 0, t), lerp(245, 109, t), lerp(224, 44, t))
     }
 }
 
 /// Greedy graph coloring using the categorical scheme. Returns color per node.
-pub fn graph_color(adjacency: &[Vec<usize>], scheme: &CategoricalScheme) -> Vec<(u8,u8,u8)> {
+pub fn graph_color(adjacency: &[Vec<usize>], scheme: &CategoricalScheme) -> Vec<(u8, u8, u8)> {
     let n = adjacency.len();
     let mut assigned = vec![usize::MAX; n];
     for i in 0..n {
-        let used: std::collections::HashSet<usize> = adjacency[i].iter()
-            .filter(|&&j| assigned[j] != usize::MAX).map(|&j| assigned[j]).collect();
+        let used: std::collections::HashSet<usize> = adjacency[i]
+            .iter()
+            .filter(|&&j| assigned[j] != usize::MAX)
+            .map(|&j| assigned[j])
+            .collect();
         assigned[i] = (0..).find(|c| !used.contains(c)).unwrap();
     }
     assigned.iter().map(|&c| scheme.color(c)).collect()
@@ -205,8 +220,12 @@ mod tests {
     fn test_categorical_color_24_cycles_twice() {
         let scheme = CategoricalScheme::default();
         for i in 0..12 {
-            assert_eq!(scheme.color(i), scheme.color(i + 24),
-                "color({i}) should equal color({})", i + 24);
+            assert_eq!(
+                scheme.color(i),
+                scheme.color(i + 24),
+                "color({i}) should equal color({})",
+                i + 24
+            );
         }
     }
 
@@ -220,12 +239,7 @@ mod tests {
     #[test]
     fn test_graph_coloring_path_uses_two_colors() {
         // 4-node path: 0-1-2-3 — only 2 colors needed
-        let adjacency = vec![
-            vec![1usize],
-            vec![0, 2],
-            vec![1, 3],
-            vec![2usize],
-        ];
+        let adjacency = vec![vec![1usize], vec![0, 2], vec![1, 3], vec![2usize]];
         let colors = graph_color(&adjacency, &CategoricalScheme::default());
         assert_ne!(colors[0], colors[1]);
         assert_ne!(colors[1], colors[2]);

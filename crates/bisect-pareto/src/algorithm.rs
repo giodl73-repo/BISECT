@@ -15,9 +15,9 @@ use crate::objectives::{evaluate, Objectives};
 use crate::output::{ParetoEntry, ParetoResult};
 use crate::seeds::{cross_seed, init_seed, mut_seed};
 
-use rand::SeedableRng;
 use rand::rngs::SmallRng;
 use rand::Rng;
+use rand::SeedableRng;
 
 /// Configuration for the NSGA-II run.
 #[derive(Debug, Clone)]
@@ -78,10 +78,14 @@ pub fn run_nsga2(
     let n_gen = config.n_generations;
 
     if k == 0 {
-        return Err(ParetoError::InvalidConfig { msg: "k must be >= 1".into() });
+        return Err(ParetoError::InvalidConfig {
+            msg: "k must be >= 1".into(),
+        });
     }
     if n_pop == 0 {
-        return Err(ParetoError::InvalidConfig { msg: "n_population must be >= 1".into() });
+        return Err(ParetoError::InvalidConfig {
+            msg: "n_population must be >= 1".into(),
+        });
     }
 
     // ── Initialise population ─────────────────────────────────────────────────
@@ -100,8 +104,19 @@ pub fn run_nsga2(
     // ── Main NSGA-II loop ─────────────────────────────────────────────────────
     for gen in 0..n_gen {
         // Evaluate objectives for all plans
-        let objectives: Vec<Objectives> = population.iter()
-            .map(|p| evaluate(p, adjacency, vertex_weights, k, d_votes, minority_vap, protected_districts))
+        let objectives: Vec<Objectives> = population
+            .iter()
+            .map(|p| {
+                evaluate(
+                    p,
+                    adjacency,
+                    vertex_weights,
+                    k,
+                    d_votes,
+                    minority_vap,
+                    protected_districts,
+                )
+            })
             .collect();
 
         // Non-dominated sort
@@ -160,17 +175,26 @@ pub fn run_nsga2(
         }
 
         // Combine parent + offspring (2 * n_pop plans)
-        let combined: Vec<Vec<u32>> = population.iter()
-            .chain(offspring.iter())
-            .cloned()
-            .collect();
-        let combined_gen: Vec<usize> = generation_found.iter()
+        let combined: Vec<Vec<u32>> = population.iter().chain(offspring.iter()).cloned().collect();
+        let combined_gen: Vec<usize> = generation_found
+            .iter()
             .chain(offspring_gen.iter())
             .copied()
             .collect();
 
-        let combined_obj: Vec<Objectives> = combined.iter()
-            .map(|p| evaluate(p, adjacency, vertex_weights, k, d_votes, minority_vap, protected_districts))
+        let combined_obj: Vec<Objectives> = combined
+            .iter()
+            .map(|p| {
+                evaluate(
+                    p,
+                    adjacency,
+                    vertex_weights,
+                    k,
+                    d_votes,
+                    minority_vap,
+                    protected_districts,
+                )
+            })
             .collect();
         let combined_fronts = fast_non_dominated_sort(&combined_obj);
 
@@ -191,8 +215,19 @@ pub fn run_nsga2(
     }
 
     // ── Final Pareto front extraction ─────────────────────────────────────────
-    let final_obj: Vec<Objectives> = population.iter()
-        .map(|p| evaluate(p, adjacency, vertex_weights, k, d_votes, minority_vap, protected_districts))
+    let final_obj: Vec<Objectives> = population
+        .iter()
+        .map(|p| {
+            evaluate(
+                p,
+                adjacency,
+                vertex_weights,
+                k,
+                d_votes,
+                minority_vap,
+                protected_districts,
+            )
+        })
         .collect();
     let final_fronts = fast_non_dominated_sort(&final_obj);
 
@@ -205,7 +240,8 @@ pub fn run_nsga2(
 
     let runtime_secs = start.elapsed().as_secs_f64();
 
-    let frontier: Vec<ParetoEntry> = front_0.iter()
+    let frontier: Vec<ParetoEntry> = front_0
+        .iter()
         .map(|&i| ParetoEntry {
             plan: population[i].clone(),
             objectives: final_obj[i].clone(),
@@ -255,11 +291,7 @@ fn tournament_select(
 
 /// Select top N plans from combined population by NSGA-II truncation.
 /// Fill by front, then by crowding distance (descending) for the last partial front.
-fn select_top_n(
-    fronts: &[Vec<usize>],
-    objectives: &[Objectives],
-    n: usize,
-) -> Vec<usize> {
+fn select_top_n(fronts: &[Vec<usize>], objectives: &[Objectives], n: usize) -> Vec<usize> {
     let mut selected = Vec::with_capacity(n);
 
     for front in fronts {
@@ -269,7 +301,8 @@ fn select_top_n(
             // Partial front: rank by crowding distance descending
             let remaining = n - selected.len();
             let dists = crowding_distance(front, objectives);
-            let mut indexed: Vec<(usize, f64)> = front.iter()
+            let mut indexed: Vec<(usize, f64)> = front
+                .iter()
                 .enumerate()
                 .map(|(fi, &pi)| (pi, dists[fi]))
                 .collect();
@@ -304,14 +337,15 @@ fn initialise_plan(
 
     // Use Wilson's spanning tree + sequential bisection for plan initialisation.
     // Build a spanning tree over the full graph, then partition by even population splits.
-    use rand::SeedableRng;
     use rand::rngs::SmallRng;
+    use rand::SeedableRng;
 
     let total_pop: i64 = pop.iter().sum();
     let target_per_district = total_pop as f64 / k as f64;
 
     // Build adjacency as Vec<Vec<u32>> for the spanning tree function
-    let adj_u32: Vec<Vec<u32>> = adjacency.iter()
+    let adj_u32: Vec<Vec<u32>> = adjacency
+        .iter()
         .map(|nb| nb.iter().map(|&u| u as u32).collect())
         .collect();
 
@@ -320,12 +354,14 @@ fn initialise_plan(
     // Try to produce a valid plan by greedy seed+BFS growth
     // Seeds: pick k evenly-spaced nodes as district seeds
     let step = n / k;
-    let seed_tracts: Vec<usize> = (0..k).map(|i| {
-        // Add some randomness to seed selection
-        let base = i * step;
-        let offset = rng.gen_range(0..step.max(1));
-        (base + offset) % n
-    }).collect();
+    let seed_tracts: Vec<usize> = (0..k)
+        .map(|i| {
+            // Add some randomness to seed selection
+            let base = i * step;
+            let offset = rng.gen_range(0..step.max(1));
+            (base + offset) % n
+        })
+        .collect();
 
     let mut plan = vec![0u32; n];
     let mut assigned = vec![false; n];
@@ -337,7 +373,8 @@ fn initialise_plan(
     }
 
     // BFS growth: each district grows in round-robin until all tracts assigned
-    let mut queues: Vec<std::collections::VecDeque<usize>> = seed_tracts.iter()
+    let mut queues: Vec<std::collections::VecDeque<usize>> = seed_tracts
+        .iter()
         .map(|&t| {
             let mut q = std::collections::VecDeque::new();
             q.push_back(t);
@@ -400,22 +437,44 @@ mod tests {
     use super::*;
 
     fn path_adj(n: usize) -> Vec<Vec<usize>> {
-        (0..n).map(|i| {
-            let mut nb = Vec::new();
-            if i > 0 { nb.push(i - 1); }
-            if i < n - 1 { nb.push(i + 1); }
-            nb
-        }).collect()
+        (0..n)
+            .map(|i| {
+                let mut nb = Vec::new();
+                if i > 0 {
+                    nb.push(i - 1);
+                }
+                if i < n - 1 {
+                    nb.push(i + 1);
+                }
+                nb
+            })
+            .collect()
     }
 
     #[test]
     fn select_top_n_basic() {
         let fronts = vec![vec![0usize, 1], vec![2, 3]];
         let objectives = vec![
-            Objectives { ec: 1.0, d_seats: 1.0, vra_deficit: 0.0 },
-            Objectives { ec: 2.0, d_seats: 1.0, vra_deficit: 0.0 },
-            Objectives { ec: 3.0, d_seats: 2.0, vra_deficit: 0.0 },
-            Objectives { ec: 4.0, d_seats: 3.0, vra_deficit: 0.0 },
+            Objectives {
+                ec: 1.0,
+                d_seats: 1.0,
+                vra_deficit: 0.0,
+            },
+            Objectives {
+                ec: 2.0,
+                d_seats: 1.0,
+                vra_deficit: 0.0,
+            },
+            Objectives {
+                ec: 3.0,
+                d_seats: 2.0,
+                vra_deficit: 0.0,
+            },
+            Objectives {
+                ec: 4.0,
+                d_seats: 3.0,
+                vra_deficit: 0.0,
+            },
         ];
         let selected = select_top_n(&fronts, &objectives, 3);
         assert_eq!(selected.len(), 3);
@@ -433,7 +492,9 @@ mod tests {
         // Both districts non-empty
         assert!(plan.iter().any(|&d| d == 1), "district 1 must be non-empty");
         assert!(plan.iter().any(|&d| d == 2), "district 2 must be non-empty");
-        for &d in &plan { assert!(d >= 1 && d <= 2, "invalid district {d}"); }
+        for &d in &plan {
+            assert!(d >= 1 && d <= 2, "invalid district {d}");
+        }
     }
 
     #[test]

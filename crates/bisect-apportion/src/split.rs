@@ -17,14 +17,12 @@
 //! the high-level bisection mode. This module's `Partitioner` trait is the
 //! lower-level primitive that `PfrCompositor` calls at each tree level.
 
+use crate::graph::SubGraph;
 use std::collections::HashMap;
 use thiserror::Error;
-use crate::graph::SubGraph;
 
 use metis_core::api::{
-    MetisPartitioner as RustMetisPartitioner,
-    MetisParams,
-    Partitioner as RustPartitioner,
+    MetisParams, MetisPartitioner as RustMetisPartitioner, Partitioner as RustPartitioner,
 };
 use metis_core::graph::CsrGraph;
 
@@ -64,27 +62,31 @@ impl Default for MetisEngine {
         // When building without c-ffi (pure-Rust / portable), fall back to RedistMetis
         // so that MetisPartitioner::default() works without a C toolchain.
         #[cfg(feature = "c-ffi")]
-        { MetisEngine::CFfi }
+        {
+            MetisEngine::CFfi
+        }
         #[cfg(not(feature = "c-ffi"))]
-        { MetisEngine::RedistMetis }
+        {
+            MetisEngine::RedistMetis
+        }
     }
 }
 
 impl MetisEngine {
     pub fn as_str(self) -> &'static str {
         match self {
-            MetisEngine::CFfi        => "c-ffi",
+            MetisEngine::CFfi => "c-ffi",
             MetisEngine::RedistMetis => "metis-core",
-            MetisEngine::Gpmetis     => "gpmetis",
+            MetisEngine::Gpmetis => "gpmetis",
         }
     }
 
     pub fn from_str(s: &str) -> Option<Self> {
         match s {
             "c-ffi" | "c" | "metis-rs" => Some(MetisEngine::CFfi),
-            "metis-core" | "rust"      => Some(MetisEngine::RedistMetis),
-            "gpmetis" | "subprocess"   => Some(MetisEngine::Gpmetis),
-            _                          => None,
+            "metis-core" | "rust" => Some(MetisEngine::RedistMetis),
+            "gpmetis" | "subprocess" => Some(MetisEngine::Gpmetis),
+            _ => None,
         }
     }
 }
@@ -113,12 +115,7 @@ pub enum SplitError {
 /// parts `k`. The seed, if any, is forwarded to the backend's internal RNG.
 pub trait Partitioner: Send + Sync {
     /// Split `region` into `k` parts with **equal** population targets.
-    fn split(
-        &self,
-        region: &SubGraph,
-        k: u32,
-        seed: Option<u64>,
-    ) -> Result<Vec<u32>, SplitError>;
+    fn split(&self, region: &SubGraph, k: u32, seed: Option<u64>) -> Result<Vec<u32>, SplitError>;
 
     /// Split `region` into `target_fracs.len()` parts with **specified**
     /// population fractions (must sum to ~1.0).  Used for the binary
@@ -166,13 +163,20 @@ pub struct MetisPartitioner {
 
 impl Default for MetisPartitioner {
     fn default() -> Self {
-        Self { balance_tolerance: 0.005, niter: 10, engine: MetisEngine::default() }
+        Self {
+            balance_tolerance: 0.005,
+            niter: 10,
+            engine: MetisEngine::default(),
+        }
     }
 }
 
 impl MetisPartitioner {
     pub fn with_engine(engine: MetisEngine) -> Self {
-        Self { engine, ..Self::default() }
+        Self {
+            engine,
+            ..Self::default()
+        }
     }
 
     /// UFactor encoding: ufactor = balance_tolerance * 1000 (clamped to [1, 1000]).
@@ -199,7 +203,11 @@ impl MetisPartitioner {
             .map_err(|e| SplitError::Metis(e.to_string()))?
             .set_vwgt(&region.vwgt)
             .set_tpwgts(&tpwgts);
-        let graph = if let Some(ref ew) = region.adjwgt { graph.set_adjwgt(ew) } else { graph };
+        let graph = if let Some(ref ew) = region.adjwgt {
+            graph.set_adjwgt(ew)
+        } else {
+            graph
+        };
         let graph = graph
             .set_option(metis::option::UFactor(uf_int))
             .set_option(metis::option::NIter(self.niter))
@@ -207,13 +215,17 @@ impl MetisPartitioner {
             .set_option(metis::option::MinConn(true));
         let graph = if let Some(s) = seed {
             graph.set_option(metis::option::Seed(((s & 0x7FFF_FFFF) as i32).max(1)))
-        } else { graph };
+        } else {
+            graph
+        };
 
         if k == 2 {
-            graph.part_recursive(&mut part)
+            graph
+                .part_recursive(&mut part)
                 .map_err(|e| SplitError::Metis(format!("c-ffi bisection: {e}")))?;
         } else {
-            graph.part_kway(&mut part)
+            graph
+                .part_kway(&mut part)
                 .map_err(|e| SplitError::Metis(format!("c-ffi kway k={k}: {e}")))?;
         }
 
@@ -236,7 +248,11 @@ impl MetisPartitioner {
             .map_err(|e| SplitError::Metis(e.to_string()))?
             .set_vwgt(&region.vwgt)
             .set_tpwgts(target_fracs);
-        let graph = if let Some(ref ew) = region.adjwgt { graph.set_adjwgt(ew) } else { graph };
+        let graph = if let Some(ref ew) = region.adjwgt {
+            graph.set_adjwgt(ew)
+        } else {
+            graph
+        };
         let graph = graph
             .set_option(metis::option::UFactor(uf_int))
             .set_option(metis::option::NIter(self.niter))
@@ -244,9 +260,12 @@ impl MetisPartitioner {
             .set_option(metis::option::MinConn(true));
         let graph = if let Some(s) = seed {
             graph.set_option(metis::option::Seed(((s & 0x7FFF_FFFF) as i32).max(1)))
-        } else { graph };
+        } else {
+            graph
+        };
 
-        graph.part_kway(&mut part)
+        graph
+            .part_kway(&mut part)
             .map_err(|e| SplitError::Metis(format!("c-ffi weighted kway k={k}: {e}")))?;
 
         Ok(part.iter().map(|&p| p as u32).collect())
@@ -262,11 +281,11 @@ impl MetisPartitioner {
         seed: Option<u64>,
     ) -> Result<Vec<u32>, SplitError> {
         let params = MetisParams {
-            ufactor:    self.ufactor(),
-            niter:      self.niter as u32,
+            ufactor: self.ufactor(),
+            niter: self.niter as u32,
             seed,
             coarsen_to: 20,
-            tpwgts:     None,
+            tpwgts: None,
             ..MetisParams::default()
         };
         RustMetisPartitioner::with_params(params, k)
@@ -285,11 +304,11 @@ impl MetisPartitioner {
         seed: Option<u64>,
     ) -> Result<Vec<u32>, SplitError> {
         let params = MetisParams {
-            ufactor:    self.ufactor(),
-            niter:      self.niter as u32,
+            ufactor: self.ufactor(),
+            niter: self.niter as u32,
             seed,
             coarsen_to: 20,
-            tpwgts:     None,
+            tpwgts: None,
             ..MetisParams::default()
         };
         RustMetisPartitioner::with_params(params, k)
@@ -302,24 +321,28 @@ impl MetisPartitioner {
 // ── Partitioner impl ──────────────────────────────────────────────────────────
 
 impl Partitioner for MetisPartitioner {
-    fn split(
-        &self,
-        region: &SubGraph,
-        k: u32,
-        seed: Option<u64>,
-    ) -> Result<Vec<u32>, SplitError> {
-        if k == 0 { return Err(SplitError::ZeroParts); }
+    fn split(&self, region: &SubGraph, k: u32, seed: Option<u64>) -> Result<Vec<u32>, SplitError> {
+        if k == 0 {
+            return Err(SplitError::ZeroParts);
+        }
         let n = region.n_vertices();
-        if n == 0 { return Err(SplitError::EmptyRegion); }
-        if k == 1 { return Ok(vec![0u32; n]); }
-        if k as usize >= n { return Ok((0..n as u32).collect()); }
+        if n == 0 {
+            return Err(SplitError::EmptyRegion);
+        }
+        if k == 1 {
+            return Ok(vec![0u32; n]);
+        }
+        if k as usize >= n {
+            return Ok((0..n as u32).collect());
+        }
 
         match self.engine {
             MetisEngine::CFfi => {
                 #[cfg(not(feature = "c-ffi"))]
                 return Err(SplitError::Metis(
                     "bisect-apportion was compiled without the c-ffi feature; \
-                     rebuild with --features c-ffi or use --metis-engine metis-core".into()
+                     rebuild with --features c-ffi or use --metis-engine metis-core"
+                        .into(),
                 ));
                 #[cfg(feature = "c-ffi")]
                 {
@@ -329,7 +352,7 @@ impl Partitioner for MetisPartitioner {
                     {
                         let g = CsrGraph::from(region);
                         if let Ok(rust_assignment) = self.split_metis_core(&g, k, seed) {
-                            let c_cut    = compute_cut(&g, &assignment);
+                            let c_cut = compute_cut(&g, &assignment);
                             let rust_cut = compute_cut(&g, &rust_assignment);
                             if rust_cut > 0 && c_cut > rust_cut * 12 / 10 {
                                 eprintln!(
@@ -352,7 +375,8 @@ impl Partitioner for MetisPartitioner {
 
             MetisEngine::Gpmetis => Err(SplitError::Metis(
                 "gpmetis subprocess engine is not yet implemented; \
-                 use c-ffi (default) or metis-core".into()
+                 use c-ffi (default) or metis-core"
+                    .into(),
             )),
         }
     }
@@ -364,16 +388,23 @@ impl Partitioner for MetisPartitioner {
         seed: Option<u64>,
     ) -> Result<Vec<u32>, SplitError> {
         let k = target_fracs.len() as u32;
-        if k == 0 { return Err(SplitError::ZeroParts); }
-        if region.n_vertices() == 0 { return Err(SplitError::EmptyRegion); }
-        if k == 1 { return Ok(vec![0u32; region.n_vertices()]); }
+        if k == 0 {
+            return Err(SplitError::ZeroParts);
+        }
+        if region.n_vertices() == 0 {
+            return Err(SplitError::EmptyRegion);
+        }
+        if k == 1 {
+            return Ok(vec![0u32; region.n_vertices()]);
+        }
 
         match self.engine {
             MetisEngine::CFfi => {
                 #[cfg(not(feature = "c-ffi"))]
                 return Err(SplitError::Metis(
                     "bisect-apportion was compiled without the c-ffi feature; \
-                     rebuild with --features c-ffi or use --metis-engine metis-core".into()
+                     rebuild with --features c-ffi or use --metis-engine metis-core"
+                        .into(),
                 ));
                 #[cfg(feature = "c-ffi")]
                 {
@@ -389,7 +420,7 @@ impl Partitioner for MetisPartitioner {
                         if let Ok(rust_assignment) =
                             self.split_metis_core_weighted(&g, k, &fracs_u32, seed)
                         {
-                            let c_cut    = compute_cut(&g, &assignment);
+                            let c_cut = compute_cut(&g, &assignment);
                             let rust_cut = compute_cut(&g, &rust_assignment);
                             if rust_cut > 0 && c_cut > rust_cut * 12 / 10 {
                                 eprintln!(
@@ -416,7 +447,8 @@ impl Partitioner for MetisPartitioner {
 
             MetisEngine::Gpmetis => Err(SplitError::Metis(
                 "gpmetis subprocess engine is not yet implemented; \
-                 use c-ffi (default) or metis-core".into()
+                 use c-ffi (default) or metis-core"
+                    .into(),
             )),
         }
     }

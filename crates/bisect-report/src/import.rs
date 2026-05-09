@@ -1,3 +1,5 @@
+use bisect_core::state_code_to_fips as core_fips;
+use serde_json::Value;
 /// import.rs — GeoJSON district polygon → PIP tract assignment + nearest fallback.
 ///
 /// Spec 6 / Scenario 3:
@@ -5,8 +7,6 @@
 /// - If no polygon contains the centroid, fall back to nearest polygon centroid
 /// - source="imported" is recorded in RPLAN metadata
 use std::collections::HashMap;
-use serde_json::Value;
-use bisect_core::state_code_to_fips as core_fips;
 
 /// Assign each census tract centroid to the district polygon containing it.
 /// Falls back to the nearest polygon centroid for tracts outside all polygons.
@@ -20,8 +20,8 @@ pub fn import_geojson_plan(
     geojson_str: &str,
     tract_centroids: &HashMap<String, (f64, f64)>,
 ) -> anyhow::Result<HashMap<String, usize>> {
-    use geo::{Contains, Point};
     use geo::algorithm::centroid::Centroid;
+    use geo::{Contains, Point};
 
     let fc: Value = serde_json::from_str(geojson_str)?;
     if fc["type"].as_str() != Some("FeatureCollection") {
@@ -39,7 +39,8 @@ pub fn import_geojson_plan(
     for feature in features {
         let district_id = feature["properties"]["district_id"]
             .as_u64()
-            .ok_or_else(|| anyhow::anyhow!("Feature missing 'district_id' property"))? as usize;
+            .ok_or_else(|| anyhow::anyhow!("Feature missing 'district_id' property"))?
+            as usize;
 
         let geom = &feature["geometry"];
         if geom.is_null() {
@@ -117,11 +118,7 @@ pub fn import_geojson_plan(
 }
 
 /// Find the nearest district centroid to (lon, lat).
-fn nearest_centroid(
-    lon: f64,
-    lat: f64,
-    centroids: &[(usize, (f64, f64))],
-) -> Option<usize> {
+fn nearest_centroid(lon: f64, lat: f64, centroids: &[(usize, (f64, f64))]) -> Option<usize> {
     centroids
         .iter()
         .min_by(|a, b| {
@@ -175,10 +172,7 @@ fn parse_polygon(geom: &Value) -> Option<geo::Polygon> {
         })
         .collect();
 
-    Some(geo::Polygon::new(
-        geo::LineString::new(exterior),
-        interiors,
-    ))
+    Some(geo::Polygon::new(geo::LineString::new(exterior), interiors))
 }
 
 /// Full import pipeline: GeoJSON file path → RplanFile written in memory.
@@ -204,7 +198,9 @@ pub fn import_plan_to_rplan(
 
     let mut metadata = crate::rplan::RplanMetadata {
         label: label.to_string(),
-        state_fips: core_fips(&state_code.to_uppercase()).unwrap_or("00").to_string(),
+        state_fips: core_fips(&state_code.to_uppercase())
+            .unwrap_or("00")
+            .to_string(),
         state_code: state_code.to_uppercase(),
         year: year.to_string(),
         chamber: "imported".to_string(),
@@ -356,9 +352,7 @@ mod tests {
     #[test]
     fn test_import_writes_source_imported_in_notes() {
         let geojson_str = fixture_2_district_geojson();
-        let centroids = HashMap::from([
-            ("53001001000".to_string(), (-122.5, 47.5)),
-        ]);
+        let centroids = HashMap::from([("53001001000".to_string(), (-122.5, 47.5))]);
         // Write geojson to temp file
         let tmp = tempfile::NamedTempFile::new().unwrap();
         std::io::Write::write_all(&mut tmp.as_file(), geojson_str.as_bytes()).unwrap();

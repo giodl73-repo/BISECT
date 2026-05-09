@@ -25,7 +25,11 @@ pub enum Year {
 
 impl std::fmt::Display for Year {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self { Self::Y2020 => write!(f, "2020"), Self::Y2010 => write!(f, "2010"), Self::Y2000 => write!(f, "2000") }
+        match self {
+            Self::Y2020 => write!(f, "2020"),
+            Self::Y2010 => write!(f, "2010"),
+            Self::Y2000 => write!(f, "2000"),
+        }
     }
 }
 
@@ -113,22 +117,22 @@ pub enum PartitionMode {
 impl std::fmt::Display for PartitionMode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Unweighted       => write!(f, "unweighted"),
-            Self::EdgeWeighted     => write!(f, "edge-weighted"),
-            Self::MetisVra         => write!(f, "metis-vra"),
+            Self::Unweighted => write!(f, "unweighted"),
+            Self::EdgeWeighted => write!(f, "edge-weighted"),
+            Self::MetisVra => write!(f, "metis-vra"),
             Self::PartisanWeighted => write!(f, "partisan-weighted"),
-            Self::Proportional     => write!(f, "proportional"),
-            Self::CompactBisect    => write!(f, "compact-bisect"),
-            Self::GeoSection       => write!(f, "geosection"),
-            Self::AreaSection           => write!(f, "areasection"),
-            Self::ProportionalSection   => write!(f, "proportional-section"),
-            Self::ApportionRegions      => write!(f, "apportion-regions"),
-            Self::VraSection            => write!(f, "vra-section"),
-            Self::SimulatedAnnealing    => write!(f, "simulated-annealing"),
-            Self::BfsGrowth             => write!(f, "bfs-growth"),
-            Self::CentroidalVoronoi     => write!(f, "centroidal-voronoi"),
-            Self::Ilp                   => write!(f, "ilp"),
-            Self::MovingKnife           => write!(f, "moving-knife"),
+            Self::Proportional => write!(f, "proportional"),
+            Self::CompactBisect => write!(f, "compact-bisect"),
+            Self::GeoSection => write!(f, "geosection"),
+            Self::AreaSection => write!(f, "areasection"),
+            Self::ProportionalSection => write!(f, "proportional-section"),
+            Self::ApportionRegions => write!(f, "apportion-regions"),
+            Self::VraSection => write!(f, "vra-section"),
+            Self::SimulatedAnnealing => write!(f, "simulated-annealing"),
+            Self::BfsGrowth => write!(f, "bfs-growth"),
+            Self::CentroidalVoronoi => write!(f, "centroidal-voronoi"),
+            Self::Ilp => write!(f, "ilp"),
+            Self::MovingKnife => write!(f, "moving-knife"),
         }
     }
 }
@@ -154,9 +158,9 @@ pub enum Resolution {
 impl std::fmt::Display for Resolution {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Tract      => write!(f, "tract"),
+            Self::Tract => write!(f, "tract"),
             Self::BlockGroup => write!(f, "block_group"),
-            Self::Block      => write!(f, "block"),
+            Self::Block => write!(f, "block"),
         }
     }
 }
@@ -178,7 +182,7 @@ impl From<AreaSectionInitArg> for crate::runner::AreaSectionInit {
     fn from(a: AreaSectionInitArg) -> Self {
         match a {
             AreaSectionInitArg::RatioOptimal => crate::runner::AreaSectionInit::RatioOptimal,
-            AreaSectionInitArg::MovingKnife  => crate::runner::AreaSectionInit::MovingKnife,
+            AreaSectionInitArg::MovingKnife => crate::runner::AreaSectionInit::MovingKnife,
         }
     }
 }
@@ -229,7 +233,7 @@ pub enum Stage {
     about = "Congressional redistricting pipeline -- compact, population-balanced districts",
     before_help = "QUICKSTART:\n  1. bisect fetch --type adjacency --states VT --year 2020\n  2. bisect state --state VT --year 2020 --label vt_test\n  3. bisect analyze --label vt_test --types all\n  4. bisect report --label vt_test --format html\n  5. bisect tui   (interactive interface)\n  6. bisect doctor --label vt_test  (diagnose plan)\n\nSee: bisect <command> --help for detailed options.\n",
     version,
-    propagate_version = true,
+    propagate_version = true
 )]
 pub struct Cli {
     #[command(subcommand)]
@@ -288,7 +292,7 @@ pub enum Commands {
     Config(ConfigArgs),
     /// Build (run redistricting) for a label across one or more census years (Spec 7 Phase 2)
     Build(crate::build_cmd::BuildCliArgs),
-    /// List all labels from the .redist registry with stage completion (Spec 7 Phase 4)
+    /// List all labels from the .bisect registry with stage completion (Spec 7 Phase 4)
     Ls(LsArgs),
     /// Show detailed info for a label: years, status, resolved paths (Spec 7 Phase 4)
     Show(ShowArgs),
@@ -302,10 +306,10 @@ pub enum Commands {
     LabelReport(LabelReportArgs),
     /// Import an external plan file (CSV/GeoJSON) into the label-based layout
     /// without running the redistricting algorithm (Spec 7 Phase 5).
-    /// `redist import X --from FILE [--year Y] [--format csv|geojson|shapefile|rplan]`
+    /// `BISECT import X --from FILE [--year Y] [--format csv|geojson|shapefile|rplan]`
     LabelImport(LabelImportArgs),
     /// Compare two label-based plans using existing analysis outputs (Spec 7 Phase 5).
-    /// `redist label-compare A B [--year Y] [--json] [--out PATH]`
+    /// `BISECT label-compare A B [--year Y] [--json] [--out PATH]`
     LabelCompare(LabelCompareArgs),
     /// Interactive TUI hub — label-aware frontend for the full pipeline (Spec 7 Phase 6).
     /// With no label: shows label picker. With a label: pre-scoped to that label.
@@ -321,7 +325,7 @@ pub enum Commands {
 }
 
 // ---------------------------------------------------------------------------
-// `redist policy` — state policy lookup
+// `BISECT policy` — state policy lookup
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Parser)]
@@ -336,7 +340,7 @@ pub struct PolicyArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist doctor` — pre-flight check for a location+year
+// `BISECT doctor` — pre-flight check for a location+year
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Parser)]
@@ -386,7 +390,7 @@ pub struct DoctorArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist validate` — validate a .rplan file
+// `BISECT validate` — validate a .rplan file
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, clap::Args)]
@@ -401,7 +405,7 @@ pub struct ValidateArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist migrate` — copy legacy state plan into plans/{label}/ tree
+// `BISECT migrate` — copy legacy state plan into plans/{label}/ tree
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, clap::Args)]
@@ -425,10 +429,10 @@ pub struct MigrateArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist report` — commission report (HTML / JSON)
+// `BISECT report` — commission report (HTML / JSON)
 // ---------------------------------------------------------------------------
 
-/// Output format for `redist report`.
+/// Output format for `BISECT report`.
 #[derive(Debug, Clone, PartialEq, Eq, clap::ValueEnum)]
 pub enum ReportFormat {
     /// Self-contained HTML (no external dependencies)
@@ -474,7 +478,7 @@ pub struct ReportArgs {
     // and the persona docs can demonstrate the full invocation today. The
     // PDF rendering path itself (Typst + verapdf) is scaffolded but NOT
     // executable until Typst is installed and templates are authored — see
-    // redist-report/typst-templates/README.md.
+    // BISECT-report/typst-templates/README.md.
     /// Expert witness name for the report cover page + signature block (court mode).
     #[arg(long)]
     pub expert_name: Option<String>,
@@ -511,10 +515,10 @@ pub struct ReportArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist export` — plan export (GeoJSON, GerryChain, CSV)
+// `BISECT export` — plan export (GeoJSON, GerryChain, CSV)
 // ---------------------------------------------------------------------------
 
-/// Export format for `redist export`.
+/// Export format for `BISECT export`.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, clap::ValueEnum)]
 pub enum ExportFormat {
     /// RFC 7946 GeoJSON FeatureCollection
@@ -555,7 +559,7 @@ pub struct ExportArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist import` — import GeoJSON plan
+// `BISECT import` — import GeoJSON plan
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, clap::Args)]
@@ -599,7 +603,7 @@ pub struct ImportArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist civic` — Civic Bidirectional Input
+// `BISECT civic` — Civic Bidirectional Input
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Parser)]
@@ -610,7 +614,7 @@ pub struct CivicArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist research` — Researcher Toolkit (RT plan)
+// `BISECT research` — Researcher Toolkit (RT plan)
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Parser)]
@@ -621,7 +625,7 @@ pub struct ResearchArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist ensemble` — weighted plan ensemble generation (G.7 SMC, future methods)
+// `BISECT ensemble` — weighted plan ensemble generation (G.7 SMC, future methods)
 // ---------------------------------------------------------------------------
 
 /// Ensemble method to use.
@@ -653,7 +657,6 @@ pub struct EnsembleArgs {
     pub output: Option<String>,
 
     // ── SMC parameters ────────────────────────────────────────────────────────
-
     /// Number of SMC particles (plans in the weighted sample). Default: 5000.
     /// Use 1000 for quick checks, 50000+ for publication-quality inference.
     #[arg(long, default_value_t = 5000)]
@@ -843,7 +846,7 @@ pub struct AnalyzeArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist suite` — multi-chamber suite draw and validate
+// `BISECT suite` — multi-chamber suite draw and validate
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Parser)]
@@ -973,7 +976,7 @@ pub struct SuiteArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist compare` — plan comparison
+// `BISECT compare` — plan comparison
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Clone, PartialEq, Eq, clap::ValueEnum)]
@@ -1076,7 +1079,7 @@ pub struct CompareArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist map` — PNG map rendering
+// `BISECT map` — PNG map rendering
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Clone, PartialEq, Eq, clap::ValueEnum)]
@@ -1093,13 +1096,13 @@ pub enum MapType {
 impl MapType {
     pub fn name(&self) -> &'static str {
         match self {
-            Self::Districts   => "districts",
-            Self::Rounds      => "rounds",
-            Self::Political   => "political",
+            Self::Districts => "districts",
+            Self::Rounds => "rounds",
+            Self::Political => "political",
             Self::Demographic => "demographic",
             Self::Compactness => "compactness",
-            Self::Splits      => "splits",
-            Self::All         => "all",
+            Self::Splits => "splits",
+            Self::All => "all",
         }
     }
 }
@@ -1156,7 +1159,7 @@ pub struct MapArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist run` — full pipeline (run_complete_redistricting.py)
+// `BISECT run` — full pipeline (run_complete_redistricting.py)
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Parser)]
@@ -1164,7 +1167,7 @@ pub struct MapArgs {
 pub struct RunArgs {
     /// Census year: 2020, 2010, 2000, or "all" (default: all)
     #[arg(short = 'y', long, default_value = "all")]
-    pub year: String,  // "all" or one of Year enum
+    pub year: String, // "all" or one of Year enum
 
     /// Version identifier (default: v1)
     #[arg(short = 'v', long, default_value = "v1")]
@@ -1408,9 +1411,9 @@ pub enum MetisEngineArg {
 impl From<MetisEngineArg> for bisect_apportion::split::MetisEngine {
     fn from(arg: MetisEngineArg) -> Self {
         match arg {
-            MetisEngineArg::CFfi        => Self::CFfi,
+            MetisEngineArg::CFfi => Self::CFfi,
             MetisEngineArg::RedistMetis => Self::RedistMetis,
-            MetisEngineArg::Gpmetis     => Self::Gpmetis,
+            MetisEngineArg::Gpmetis => Self::Gpmetis,
         }
     }
 }
@@ -1542,7 +1545,6 @@ pub struct StateArgs {
     // ── Compositor overrides (Layer 1/2/3 explicit flags) ─────────────────────
     // These override the corresponding layer from --partition-mode when set.
     // Allows mixing presets with individual layer customization.
-
     /// COMPOSITOR Layer 1 — override the split structure independent of --partition-mode.
     /// Possible values: standard-bisect, nway, ratio-optimal, ratio-optimal-area,
     /// ratio-optimal-vra, prime-factor, compact-polsby.
@@ -1637,7 +1639,6 @@ pub struct StateArgs {
     pub metis_engine: Option<MetisEngineArg>,
 
     // ── Spec 1: custom parameters ─────────────────────────────────────────────
-
     /// Override district count. For house/senate chambers, count is auto-resolved
     /// from state policy (e.g., WA house=98) when this flag is not provided.
     #[arg(long)]
@@ -1682,7 +1683,6 @@ pub struct StateArgs {
     pub force: bool,
 
     // ── International / research use ─────────────────────────────────────────
-
     /// Direct path to .adj.bin adjacency file (bypasses manifest lookup).
     /// Required for international states not in the embedded US manifest.
     /// Example: --adjacency outputs/international/mt_adjacency_2021.adj.bin
@@ -1715,7 +1715,6 @@ pub struct StateArgs {
     pub w_vra: f64,
 
     // ── Simulated Annealing (SA) parameters ───────────────────────────────────
-
     /// SA: steps per tract per bisection node. n_steps = sa_steps_per_tract * |subgraph|.
     /// Default 10. Higher = more refinement, slower.
     /// Requires --partition-mode simulated-annealing.
@@ -1734,7 +1733,6 @@ pub struct StateArgs {
     pub sa_t_final: f64,
 
     // ── Parallel Tempering (PT) parameters ───────────────────────────────────
-
     /// Number of replicas for --search parallel-tempering. Default: 4.
     #[arg(long, default_value_t = 4)]
     pub pt_replicas: usize,
@@ -1752,13 +1750,11 @@ pub struct StateArgs {
     pub pt_hot_tol: f64,
 
     // ── VRA-ReCom parameters ─────────────────────────────────────────────────
-
     /// Minority VAP fraction threshold for --search vra-recom. Default: 0.50.
     #[arg(long, default_value_t = 0.50)]
     pub vra_threshold: f64,
 
     // ── Centroidal Voronoi Districts (CVD) parameters ─────────────────────────
-
     /// CVD: maximum Voronoi iterations per bisection node. Default: 20.
     /// Seeds move to medoid of each district until stable or n_iter reached.
     /// Requires --partition-mode centroidal-voronoi or --structure centroidal-voronoi.
@@ -1772,7 +1768,6 @@ pub struct StateArgs {
     pub cvd_metric: String,
 
     // ── ILP parameters ────────────────────────────────────────────────────────
-
     /// ILP time limit in seconds (default: 300).
     #[arg(long, default_value_t = 300u64)]
     pub ilp_time_limit: u64,
@@ -1786,7 +1781,6 @@ pub struct StateArgs {
     pub ilp_max_tracts: usize,
 
     // ── Moving-Knife Algorithm (MKA) parameters ───────────────────────────────
-
     /// MKA: number of sweep orientations (default: 180 = every 1°).
     /// Higher = finer angle resolution, slower. 36 (every 5°) is fast but coarser.
     /// Requires --partition-mode moving-knife or --structure moving-knife.
@@ -1800,7 +1794,6 @@ pub struct StateArgs {
     pub mka_metric: String,
 
     // ── SMC-Percentile parameters ─────────────────────────────────────────────
-
     /// Number of SMC particles for --search smc-percentile (default: 5000).
     /// Use 1000 for quick checks, 50000+ for publication-quality inference.
     #[arg(long)]
@@ -1968,7 +1961,6 @@ pub struct StatesArgs {
     pub merge_split_steps: usize,
 
     // ── Parallel Tempering (PT) parameters ───────────────────────────────────
-
     /// Number of replicas for --search parallel-tempering. Default: 4.
     #[arg(long, default_value_t = 4)]
     pub pt_replicas: usize,
@@ -1986,13 +1978,11 @@ pub struct StatesArgs {
     pub pt_hot_tol: f64,
 
     // ── VRA-ReCom parameters ─────────────────────────────────────────────────
-
     /// Minority VAP fraction threshold for --search vra-recom. Default: 0.50.
     #[arg(long, default_value_t = 0.50)]
     pub vra_threshold: f64,
 
     // ── Centroidal Voronoi Districts (CVD) parameters ─────────────────────────
-
     /// CVD: maximum Voronoi iterations per bisection node. Default: 20.
     /// Requires --partition-mode centroidal-voronoi or --structure centroidal-voronoi.
     #[arg(long, default_value_t = 20)]
@@ -2005,7 +1995,6 @@ pub struct StatesArgs {
     pub cvd_metric: String,
 
     // ── ILP parameters ────────────────────────────────────────────────────────
-
     /// ILP time limit in seconds (default: 300).
     #[arg(long, default_value_t = 300u64)]
     pub ilp_time_limit: u64,
@@ -2019,7 +2008,6 @@ pub struct StatesArgs {
     pub ilp_max_tracts: usize,
 
     // ── Moving-Knife Algorithm (MKA) parameters ───────────────────────────────
-
     /// MKA: number of sweep orientations (default: 180 = every 1°).
     #[arg(long, default_value_t = 180usize)]
     pub mka_orientations: usize,
@@ -2029,7 +2017,6 @@ pub struct StatesArgs {
     pub mka_metric: String,
 
     // ── SMC-Percentile parameters ─────────────────────────────────────────────
-
     /// Number of SMC particles for --search smc-percentile (default: 5000).
     #[arg(long)]
     pub particles: Option<usize>,
@@ -2079,16 +2066,21 @@ mod tests {
 
     #[test]
     fn test_partition_mode_values() {
-        let args = StateArgs::parse_from([
-            "state", "--state", "AL", "--partition-mode", "metis-vra"
-        ]);
+        let args =
+            StateArgs::parse_from(["state", "--state", "AL", "--partition-mode", "metis-vra"]);
         assert_eq!(args.partition_mode, PartitionMode::MetisVra);
     }
 
     #[test]
     fn test_states_args_required_fields() {
         let args = StatesArgs::parse_from([
-            "states", "--year", "2020", "--version", "V3", "--output-dir", "/tmp/out"
+            "states",
+            "--year",
+            "2020",
+            "--version",
+            "V3",
+            "--output-dir",
+            "/tmp/out",
         ]);
         assert_eq!(args.year, Year::Y2020);
         assert_eq!(args.version, "V3");
@@ -2098,17 +2090,13 @@ mod tests {
 
     #[test]
     fn test_year_enum_2010() {
-        let args = StateArgs::parse_from([
-            "state", "--state", "CA", "--year", "2010"
-        ]);
+        let args = StateArgs::parse_from(["state", "--state", "CA", "--year", "2010"]);
         assert_eq!(args.year, "2010");
     }
 
     #[test]
     fn test_states_filter_list() {
-        let args = RunArgs::parse_from([
-            "run", "--states", "VT", "DE", "AK"
-        ]);
+        let args = RunArgs::parse_from(["run", "--states", "VT", "DE", "AK"]);
         assert_eq!(args.states, vec!["VT", "DE", "AK"]);
     }
 
@@ -2124,8 +2112,12 @@ mod tests {
     fn test_stages_default_all_three() {
         let args = RunArgs::parse_from(["run"]);
         // Must default to all three stages, not empty — empty Vec silently skips all stages
-        assert_eq!(args.stages.len(), 3,
-            "stages should default to [data, states, nation], got {:?}", args.stages);
+        assert_eq!(
+            args.stages.len(),
+            3,
+            "stages should default to [data, states, nation], got {:?}",
+            args.stages
+        );
         assert!(args.stages.contains(&Stage::Data));
         assert!(args.stages.contains(&Stage::States));
         assert!(args.stages.contains(&Stage::Nation));
@@ -2141,11 +2133,23 @@ mod tests {
     #[test]
     fn test_workers_defaults_match_python() {
         let run_args = RunArgs::parse_from(["run"]);
-        assert_eq!(run_args.workers, 12, "run_complete_redistricting.py defaults to 12");
+        assert_eq!(
+            run_args.workers, 12,
+            "run_complete_redistricting.py defaults to 12"
+        );
         let states_args = StatesArgs::parse_from([
-            "states", "--year", "2020", "--version", "v1", "--output-dir", "/tmp"
+            "states",
+            "--year",
+            "2020",
+            "--version",
+            "v1",
+            "--output-dir",
+            "/tmp",
         ]);
-        assert_eq!(states_args.workers, 4, "run_states_parallel.py defaults to 4");
+        assert_eq!(
+            states_args.workers, 4,
+            "run_states_parallel.py defaults to 4"
+        );
     }
 
     #[test]
@@ -2184,10 +2188,19 @@ mod tests {
     #[test]
     fn test_analyze_explicit_types() {
         let args = AnalyzeArgs::parse_from([
-            "analyze", "--state", "AL", "--types", "demographic", "political"
+            "analyze",
+            "--state",
+            "AL",
+            "--types",
+            "demographic",
+            "political",
         ]);
-        assert!(args.types.contains(&bisect_analysis::AnalyzerType::Demographic));
-        assert!(args.types.contains(&bisect_analysis::AnalyzerType::Political));
+        assert!(args
+            .types
+            .contains(&bisect_analysis::AnalyzerType::Demographic));
+        assert!(args
+            .types
+            .contains(&bisect_analysis::AnalyzerType::Political));
         assert!(!args.types.contains(&bisect_analysis::AnalyzerType::All));
     }
 
@@ -2210,15 +2223,14 @@ mod tests {
 
     #[test]
     fn test_map_output_base_override() {
-        let args = MapArgs::parse_from(["map", "--state", "VT", "--output-base", "/custom/outputs"]);
+        let args =
+            MapArgs::parse_from(["map", "--state", "VT", "--output-base", "/custom/outputs"]);
         assert_eq!(args.output_base, "/custom/outputs");
     }
 
     #[test]
     fn test_map_types_parse() {
-        let args = MapArgs::parse_from([
-            "map", "--state", "VT", "--types", "districts", "rounds"
-        ]);
+        let args = MapArgs::parse_from(["map", "--state", "VT", "--types", "districts", "rounds"]);
         assert!(args.types.contains(&MapType::Districts));
         assert!(args.types.contains(&MapType::Rounds));
     }
@@ -2226,7 +2238,15 @@ mod tests {
     // --- Task 7: Spec 1 flag parsing tests ---
 
     fn parse_state_args(extra: &[&str]) -> StateArgs {
-        let mut base = vec!["bisect", "--state", "WA", "--year", "2020", "--version", "v1"];
+        let mut base = vec![
+            "bisect",
+            "--state",
+            "WA",
+            "--year",
+            "2020",
+            "--version",
+            "v1",
+        ];
         base.extend_from_slice(extra);
         StateArgs::try_parse_from(base).expect("failed to parse StateArgs")
     }
@@ -2358,8 +2378,13 @@ mod tests {
     fn test_suite_validate_args_has_label_overrides() {
         use crate::args::SuiteValidateCliArgs;
         let args = SuiteValidateCliArgs::parse_from([
-            "validate", "--name", "wa_suite_v1", "--state", "WA",
-            "--house-label", "wa_house_custom",
+            "validate",
+            "--name",
+            "wa_suite_v1",
+            "--state",
+            "WA",
+            "--house-label",
+            "wa_house_custom",
         ]);
         assert_eq!(args.house_label, Some("wa_house_custom".into()));
         assert!(args.senate_label.is_none());
@@ -2369,9 +2394,13 @@ mod tests {
     fn test_suite_validate_args_both_label_overrides() {
         use crate::args::SuiteValidateCliArgs;
         let args = SuiteValidateCliArgs::parse_from([
-            "validate", "--name", "wa_suite_v1",
-            "--house-label", "wa_house_custom",
-            "--senate-label", "wa_senate_custom",
+            "validate",
+            "--name",
+            "wa_suite_v1",
+            "--house-label",
+            "wa_house_custom",
+            "--senate-label",
+            "wa_senate_custom",
         ]);
         assert_eq!(args.house_label, Some("wa_house_custom".into()));
         assert_eq!(args.senate_label, Some("wa_senate_custom".into()));
@@ -2380,9 +2409,7 @@ mod tests {
     #[test]
     fn test_suite_validate_args_no_labels_defaults_to_none() {
         use crate::args::SuiteValidateCliArgs;
-        let args = SuiteValidateCliArgs::parse_from([
-            "validate", "--name", "wa_suite_v1",
-        ]);
+        let args = SuiteValidateCliArgs::parse_from(["validate", "--name", "wa_suite_v1"]);
         assert!(args.house_label.is_none());
         assert!(args.senate_label.is_none());
     }
@@ -2392,16 +2419,25 @@ mod tests {
     #[test]
     fn test_compare_labels_flag_parsed() {
         let args = CompareArgs::parse_from([
-            "compare", "--plan-a", "plan1",
-            "--labels", "wa_house_plan_a,wa_house_plan_b,wa_house_plan_c",
+            "compare",
+            "--plan-a",
+            "plan1",
+            "--labels",
+            "wa_house_plan_a,wa_house_plan_b,wa_house_plan_c",
         ]);
-        assert_eq!(args.labels, vec!["wa_house_plan_a", "wa_house_plan_b", "wa_house_plan_c"]);
+        assert_eq!(
+            args.labels,
+            vec!["wa_house_plan_a", "wa_house_plan_b", "wa_house_plan_c"]
+        );
     }
 
     #[test]
     fn test_compare_labels_default_empty() {
         let args = CompareArgs::parse_from(["compare", "--plan-a", "plan1", "--plan-b", "plan2"]);
-        assert!(args.labels.is_empty(), "--labels should default to empty Vec");
+        assert!(
+            args.labels.is_empty(),
+            "--labels should default to empty Vec"
+        );
     }
 
     // ── Task 134: splits map type ─────────────────────────────────────────────
@@ -2409,7 +2445,10 @@ mod tests {
     #[test]
     fn test_map_type_splits_recognized() {
         let args = MapArgs::parse_from(["map", "--state", "WA", "--types", "splits"]);
-        assert!(args.types.contains(&MapType::Splits), "splits must be a valid MapType");
+        assert!(
+            args.types.contains(&MapType::Splits),
+            "splits must be a valid MapType"
+        );
     }
 
     #[test]
@@ -2422,7 +2461,11 @@ mod tests {
     #[test]
     fn test_external_analyzer_flag_parsed() {
         let args = AnalyzeArgs::parse_from([
-            "analyze", "--state", "WA", "--external-analyzer", "my_script.py",
+            "analyze",
+            "--state",
+            "WA",
+            "--external-analyzer",
+            "my_script.py",
         ]);
         assert_eq!(args.external_analyzer.as_deref(), Some("my_script.py"));
     }
@@ -2437,9 +2480,8 @@ mod tests {
 
     #[test]
     fn test_election_format_flag_parses() {
-        let args = AnalyzeArgs::parse_from([
-            "analyze", "--state", "IE", "--election-format", "ie-dail",
-        ]);
+        let args =
+            AnalyzeArgs::parse_from(["analyze", "--state", "IE", "--election-format", "ie-dail"]);
         assert_eq!(args.election_format, "ie-dail");
     }
 
@@ -2460,7 +2502,10 @@ mod tests {
     #[test]
     fn test_paper_mode_flag_parses() {
         let args = AnalyzeArgs::parse_from(["analyze", "--state", "VT", "--paper-mode"]);
-        assert!(args.paper_mode, "--paper-mode flag must set paper_mode = true");
+        assert!(
+            args.paper_mode,
+            "--paper-mode flag must set paper_mode = true"
+        );
     }
 
     #[test]
@@ -2475,8 +2520,11 @@ mod tests {
     #[test]
     fn test_paper_mode_citation_style_overridable() {
         let args = AnalyzeArgs::parse_from([
-            "analyze", "--state", "VT",
-            "--paper-mode-citation-style", "chicago",
+            "analyze",
+            "--state",
+            "VT",
+            "--paper-mode-citation-style",
+            "chicago",
         ]);
         assert_eq!(args.paper_mode_citation_style, "chicago");
     }
@@ -2492,7 +2540,10 @@ mod tests {
             format
         );
         assert!(note.contains("ie-dail"), "note must mention the format");
-        assert!(note.contains("us-presidential"), "note must mention the supported format");
+        assert!(
+            note.contains("us-presidential"),
+            "note must mention the supported format"
+        );
     }
 
     // ── Task 141: reproducibility-package format ──────────────────────────────
@@ -2514,7 +2565,11 @@ mod tests {
     #[test]
     fn test_coi_weights_flag_parsed() {
         let args = StateArgs::parse_from([
-            "state", "--state", "WA", "--coi-weights", "coi_weights.json",
+            "state",
+            "--state",
+            "WA",
+            "--coi-weights",
+            "coi_weights.json",
         ]);
         assert_eq!(args.coi_weights.as_deref(), Some("coi_weights.json"));
     }
@@ -2530,7 +2585,11 @@ mod tests {
     #[test]
     fn test_nest_congressional_in_senate_flag_parsed() {
         let args = SuiteDrawCliArgs::parse_from([
-            "draw", "--state", "WA", "--name", "wa_suite",
+            "draw",
+            "--state",
+            "WA",
+            "--name",
+            "wa_suite",
             "--nest-congressional-in-senate",
         ]);
         assert!(args.nest_congressional_in_senate);
@@ -2538,9 +2597,7 @@ mod tests {
 
     #[test]
     fn test_nest_congressional_in_senate_default_false() {
-        let args = SuiteDrawCliArgs::parse_from([
-            "draw", "--state", "WA", "--name", "wa_suite",
-        ]);
+        let args = SuiteDrawCliArgs::parse_from(["draw", "--state", "WA", "--name", "wa_suite"]);
         assert!(!args.nest_congressional_in_senate);
     }
 
@@ -2550,8 +2607,15 @@ mod tests {
     fn test_sweep_args_parse() {
         use crate::args::SweepArgs;
         let args = SweepArgs::parse_from([
-            "sweep", "--state", "WA", "--seeds", "20", "--keep-top", "5",
-            "--optimize-by", "splits",
+            "sweep",
+            "--state",
+            "WA",
+            "--seeds",
+            "20",
+            "--keep-top",
+            "5",
+            "--optimize-by",
+            "splits",
         ]);
         assert_eq!(args.state, "WA");
         assert_eq!(args.seeds, 20);
@@ -2585,7 +2649,13 @@ mod tests {
 
     #[test]
     fn test_verify_args_label_parsed() {
-        let args = VerifyArgs::parse_from(["verify", "--manifest", "manifest.json", "--label", "wa_house_v1"]);
+        let args = VerifyArgs::parse_from([
+            "verify",
+            "--manifest",
+            "manifest.json",
+            "--label",
+            "wa_house_v1",
+        ]);
         assert_eq!(args.label, Some("wa_house_v1".to_string()));
     }
 
@@ -2600,7 +2670,8 @@ mod tests {
 
     #[test]
     fn test_doctor_label_with_version_flag() {
-        let args = DoctorArgs::parse_from(["doctor", "--label", "wa_house_2020", "--version", "v2"]);
+        let args =
+            DoctorArgs::parse_from(["doctor", "--label", "wa_house_2020", "--version", "v2"]);
         assert_eq!(args.label.as_deref(), Some("wa_house_2020"));
         assert_eq!(args.version, "v2");
     }
@@ -2625,8 +2696,11 @@ mod tests {
         use clap::CommandFactory;
         let mut cmd = Cli::command();
         let help = format!("{}", cmd.render_long_help());
-        assert!(help.contains("QUICKSTART") || help.contains("fetch"),
-            "CLI help must contain quickstart instructions: {}", &help[..200.min(help.len())]);
+        assert!(
+            help.contains("QUICKSTART") || help.contains("fetch"),
+            "CLI help must contain quickstart instructions: {}",
+            &help[..200.min(help.len())]
+        );
     }
 
     // ── Task 203: doctor --all flag ───────────────────────────────────────────
@@ -2648,7 +2722,13 @@ mod tests {
     #[test]
     fn test_compare_version_b_flag_parsed() {
         let args = CompareArgs::parse_from([
-            "compare", "--plan-a", "plan_a", "--plan-b", "plan_b", "--version-b", "v2"
+            "compare",
+            "--plan-a",
+            "plan_a",
+            "--plan-b",
+            "plan_b",
+            "--version-b",
+            "v2",
         ]);
         assert_eq!(args.version_b, Some("v2".to_string()));
     }
@@ -2681,22 +2761,25 @@ mod tests {
         // If a new variant is added without updating this list the test
         // will fail to compile — compile-time safety net.
         let cases: &[(PartitionMode, &str)] = &[
-            (PartitionMode::Unweighted,          "unweighted"),
-            (PartitionMode::EdgeWeighted,         "edge-weighted"),
-            (PartitionMode::MetisVra,             "metis-vra"),
-            (PartitionMode::PartisanWeighted,     "partisan-weighted"),
-            (PartitionMode::Proportional,         "proportional"),
-            (PartitionMode::CompactBisect,        "compact-bisect"),
-            (PartitionMode::GeoSection,           "geosection"),
-            (PartitionMode::AreaSection,          "areasection"),
-            (PartitionMode::ProportionalSection,  "proportional-section"),
-            (PartitionMode::ApportionRegions,     "apportion-regions"),
-            (PartitionMode::VraSection,           "vra-section"),
-            (PartitionMode::MovingKnife,          "moving-knife"),
+            (PartitionMode::Unweighted, "unweighted"),
+            (PartitionMode::EdgeWeighted, "edge-weighted"),
+            (PartitionMode::MetisVra, "metis-vra"),
+            (PartitionMode::PartisanWeighted, "partisan-weighted"),
+            (PartitionMode::Proportional, "proportional"),
+            (PartitionMode::CompactBisect, "compact-bisect"),
+            (PartitionMode::GeoSection, "geosection"),
+            (PartitionMode::AreaSection, "areasection"),
+            (PartitionMode::ProportionalSection, "proportional-section"),
+            (PartitionMode::ApportionRegions, "apportion-regions"),
+            (PartitionMode::VraSection, "vra-section"),
+            (PartitionMode::MovingKnife, "moving-knife"),
         ];
         for (variant, expected) in cases {
-            assert_eq!(format!("{variant}"), *expected,
-                "PartitionMode::{variant:?} Display must be '{expected}'");
+            assert_eq!(
+                format!("{variant}"),
+                *expected,
+                "PartitionMode::{variant:?} Display must be '{expected}'"
+            );
         }
     }
 
@@ -2705,21 +2788,24 @@ mod tests {
         // StructureMode is a ValueEnum — every variant must parse from its string value.
         use clap::ValueEnum;
         let cases: &[(&str, StructureMode)] = &[
-            ("standard-bisect",    StructureMode::StandardBisect),
-            ("nway",               StructureMode::NWay),
-            ("ratio-optimal",      StructureMode::RatioOptimal),
+            ("standard-bisect", StructureMode::StandardBisect),
+            ("nway", StructureMode::NWay),
+            ("ratio-optimal", StructureMode::RatioOptimal),
             ("ratio-optimal-area", StructureMode::RatioOptimalArea),
-            ("ratio-optimal-vra",  StructureMode::RatioOptimalVra),
-            ("prime-factor",       StructureMode::PrimeFactor),
-            ("compact-polsby",     StructureMode::CompactPolsby),
-            ("bfs-growth",         StructureMode::BfsGrowth),
-            ("moving-knife",       StructureMode::MovingKnife),
+            ("ratio-optimal-vra", StructureMode::RatioOptimalVra),
+            ("prime-factor", StructureMode::PrimeFactor),
+            ("compact-polsby", StructureMode::CompactPolsby),
+            ("bfs-growth", StructureMode::BfsGrowth),
+            ("moving-knife", StructureMode::MovingKnife),
         ];
         for (s, expected) in cases {
             let parsed = StructureMode::from_str(s, true)
                 .unwrap_or_else(|_| panic!("StructureMode must parse from '{s}'"));
-            assert_eq!(parsed, *expected,
-                "StructureMode parsed from '{s}' must equal {:?}", expected);
+            assert_eq!(
+                parsed, *expected,
+                "StructureMode parsed from '{s}' must equal {:?}",
+                expected
+            );
         }
     }
 
@@ -2727,28 +2813,31 @@ mod tests {
     fn search_mode_all_variants() {
         use clap::ValueEnum;
         let cases: &[(&str, SearchMode)] = &[
-            ("single",                  SearchMode::Single),
-            ("multi",                   SearchMode::Multi),
-            ("convergence",             SearchMode::Convergence),
-            ("percentile",              SearchMode::Percentile),
-            ("bisection-ensemble",      SearchMode::BisectionEnsemble),
-            ("short-burst",             SearchMode::ShortBurst),
-            ("short-burst-forest",      SearchMode::ShortBurstForest),
+            ("single", SearchMode::Single),
+            ("multi", SearchMode::Multi),
+            ("convergence", SearchMode::Convergence),
+            ("percentile", SearchMode::Percentile),
+            ("bisection-ensemble", SearchMode::BisectionEnsemble),
+            ("short-burst", SearchMode::ShortBurst),
+            ("short-burst-forest", SearchMode::ShortBurstForest),
             ("short-burst-merge-split", SearchMode::ShortBurstMergeSplit),
-            ("flip",                    SearchMode::Flip),
-            ("forest-recom",            SearchMode::ForestRecom),
-            ("multiscale",              SearchMode::MultiScale),
-            ("merge-split",             SearchMode::MergeSplit),
-            ("multiscale-adaptive",     SearchMode::MultiScaleAdaptive),
-            ("parallel-tempering",      SearchMode::ParallelTempering),
-            ("vra-recom",               SearchMode::VraRecom),
-            ("smc-percentile",          SearchMode::SmcPercentile),
+            ("flip", SearchMode::Flip),
+            ("forest-recom", SearchMode::ForestRecom),
+            ("multiscale", SearchMode::MultiScale),
+            ("merge-split", SearchMode::MergeSplit),
+            ("multiscale-adaptive", SearchMode::MultiScaleAdaptive),
+            ("parallel-tempering", SearchMode::ParallelTempering),
+            ("vra-recom", SearchMode::VraRecom),
+            ("smc-percentile", SearchMode::SmcPercentile),
         ];
         for (s, expected) in cases {
             let parsed = SearchMode::from_str(s, true)
                 .unwrap_or_else(|_| panic!("SearchMode must parse from '{s}'"));
-            assert_eq!(parsed, *expected,
-                "SearchMode parsed from '{s}' must equal {:?}", expected);
+            assert_eq!(
+                parsed, *expected,
+                "SearchMode parsed from '{s}' must equal {:?}",
+                expected
+            );
         }
     }
 
@@ -2756,25 +2845,28 @@ mod tests {
     fn weight_mode_all_variants() {
         use clap::ValueEnum;
         let cases: &[(&str, WeightMode)] = &[
-            ("unweighted",        WeightMode::Unweighted),
-            ("geographic",        WeightMode::Geographic),
-            ("county",            WeightMode::County),
-            ("vra-aligned",       WeightMode::VraAligned),
-            ("proportional",      WeightMode::Proportional),
-            ("economic-character",WeightMode::EconomicCharacter),
-            ("zone-membership",   WeightMode::ZoneMembership),
+            ("unweighted", WeightMode::Unweighted),
+            ("geographic", WeightMode::Geographic),
+            ("county", WeightMode::County),
+            ("vra-aligned", WeightMode::VraAligned),
+            ("proportional", WeightMode::Proportional),
+            ("economic-character", WeightMode::EconomicCharacter),
+            ("zone-membership", WeightMode::ZoneMembership),
         ];
         for (s, expected) in cases {
             let parsed = WeightMode::from_str(s, true)
                 .unwrap_or_else(|_| panic!("WeightMode must parse from '{s}'"));
-            assert_eq!(parsed, *expected,
-                "WeightMode parsed from '{s}' must equal {:?}", expected);
+            assert_eq!(
+                parsed, *expected,
+                "WeightMode parsed from '{s}' must equal {:?}",
+                expected
+            );
         }
     }
 }
 
 // ---------------------------------------------------------------------------
-// `redist sweep` — N-seed optimization planning tool
+// `BISECT sweep` — N-seed optimization planning tool
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Parser)]
@@ -2813,7 +2905,7 @@ pub struct SweepArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist verify` — reproduce plan from manifest.json and verify
+// `BISECT verify` — reproduce plan from manifest.json and verify
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Parser)]
@@ -2851,7 +2943,7 @@ pub struct VerifyArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist tui` — interactive terminal UI
+// `BISECT tui` — interactive terminal UI
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Parser)]
@@ -2863,10 +2955,10 @@ pub struct TuiArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist plan` — interactive TUI hub with label awareness (Spec 7 Phase 6)
+// `BISECT plan` — interactive TUI hub with label awareness (Spec 7 Phase 6)
 // ---------------------------------------------------------------------------
 
-/// Args for `redist plan [X] [--configure]`.
+/// Args for `BISECT plan [X] [--configure]`.
 #[derive(Debug, Parser)]
 #[command(disable_version_flag = true)]
 pub struct PlanArgs {
@@ -2883,18 +2975,21 @@ pub struct PlanArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist config` — algorithm config management (Spec 7 §7.3)
+// `BISECT config` — algorithm config management (Spec 7 §7.3)
 // ---------------------------------------------------------------------------
 
-/// Top-level args for `redist config <subcommand>`.
+/// Top-level args for `BISECT config <subcommand>`.
 #[derive(Debug, Parser)]
-#[command(disable_version_flag = true, about = "Create or validate algorithm config YAML files")]
+#[command(
+    disable_version_flag = true,
+    about = "Create or validate algorithm config YAML files"
+)]
 pub struct ConfigArgs {
     #[command(subcommand)]
     pub command: ConfigCommands,
 }
 
-/// Subcommands for `redist config`.
+/// Subcommands for `BISECT config`.
 #[derive(Debug, Subcommand)]
 pub enum ConfigCommands {
     /// Generate a template config YAML and write it to configs/{name}.yml
@@ -2903,7 +2998,7 @@ pub enum ConfigCommands {
     Validate(ConfigValidateArgs),
 }
 
-/// Args for `redist config new`.
+/// Args for `BISECT config new`.
 #[derive(Debug, Parser)]
 #[command(disable_version_flag = true)]
 pub struct ConfigNewArgs {
@@ -2964,7 +3059,7 @@ pub struct ConfigNewArgs {
     pub force: bool,
 }
 
-/// Args for `redist config validate`.
+/// Args for `BISECT config validate`.
 #[derive(Debug, Parser)]
 #[command(disable_version_flag = true)]
 pub struct ConfigValidateArgs {
@@ -3038,7 +3133,7 @@ pub struct FetchArgs {
     #[arg(long)]
     pub release: bool,
 
-    /// Custom manifest file path (overrides REDIST_MANIFEST env var)
+    /// Custom manifest file path (overrides BISECT_MANIFEST env var)
     #[arg(long)]
     pub manifest: Option<String>,
 
@@ -3067,7 +3162,7 @@ pub struct FetchArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist aggregate` — merge state analysis into national datasets
+// `BISECT aggregate` — merge state analysis into national datasets
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Parser)]
@@ -3100,13 +3195,13 @@ pub struct AggregateArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist ls` — list labels (Spec 7 Phase 4)
+// `BISECT ls` — list labels (Spec 7 Phase 4)
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Parser)]
 #[command(
     disable_version_flag = true,
-    about = "List all labels in the .redist registry with their stage completion"
+    about = "List all labels in the .bisect registry with their stage completion"
 )]
 pub struct LsArgs {
     /// Output the raw registry as JSON instead of the human-readable table
@@ -3115,7 +3210,7 @@ pub struct LsArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist show` — show label details (Spec 7 Phase 4)
+// `BISECT show` — show label details (Spec 7 Phase 4)
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Parser)]
@@ -3133,7 +3228,7 @@ pub struct ShowArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist mv` — rename a label (Spec 7 Phase 4)
+// `BISECT mv` — rename a label (Spec 7 Phase 4)
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Parser)]
@@ -3154,7 +3249,7 @@ pub struct MvArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist label-verify` — SHA chain integrity check (Spec 7 Phase 4)
+// `BISECT label-verify` — SHA chain integrity check (Spec 7 Phase 4)
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Parser)]
@@ -3172,7 +3267,7 @@ pub struct LabelVerifyArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist label-analyze` — label-aware analysis (Spec 7 Phase 3)
+// `BISECT label-analyze` — label-aware analysis (Spec 7 Phase 3)
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Parser)]
@@ -3204,7 +3299,7 @@ pub struct LabelAnalyzeArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist label-report` — label-aware report generation (Spec 7 Phase 3)
+// `BISECT label-report` — label-aware report generation (Spec 7 Phase 3)
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Parser)]
@@ -3213,7 +3308,7 @@ pub struct LabelAnalyzeArgs {
     about = "Generate a report for a label across one or more analyzed census years (Spec 7 Phase 3)"
 )]
 pub struct LabelReportArgs {
-    /// Label to report (must have been analyzed with `redist label-analyze X`)
+    /// Label to report (must have been analyzed with `BISECT label-analyze X`)
     pub label: String,
 
     /// Restrict to a single census year (default: all analyzed years)
@@ -3230,14 +3325,14 @@ pub struct LabelReportArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist label-import` — import external plan into label layout (Spec 7 Phase 5)
+// `BISECT label-import` — import external plan into label layout (Spec 7 Phase 5)
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Parser)]
 #[command(
     disable_version_flag = true,
     about = "Import an external plan file (CSV/GeoJSON) into the label-based directory layout \
-             (Spec 7 Phase 5). Writes runs/{label}/{year}/... and marks the label built in .redist."
+             (Spec 7 Phase 5). Writes runs/{label}/{year}/... and marks the label built in .bisect."
 )]
 pub struct LabelImportArgs {
     /// Label to import into (e.g., official_proposal, senate_draft)
@@ -3258,7 +3353,7 @@ pub struct LabelImportArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `redist label-compare` — compare two label-based plans (Spec 7 Phase 5)
+// `BISECT label-compare` — compare two label-based plans (Spec 7 Phase 5)
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Parser)]

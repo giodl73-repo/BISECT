@@ -1,5 +1,5 @@
 """
-Integration tests for `redist fetch` — comprehensive coverage of all download
+Integration tests for `BISECT fetch` — comprehensive coverage of all download
 variants using a local HTTP fixture server (no network calls).
 
 Test matrix:
@@ -8,7 +8,7 @@ Test matrix:
   - PL 94-171 download (reqwest + zip extract)
   - Incremental fetch (skip already-present files)
   - --force re-download
-  - Custom manifest (REDIST_MANIFEST env var)
+  - Custom manifest (BISECT_MANIFEST env var)
   - Missing state in manifest
   - Server returns 404
   - Server returns malformed zip
@@ -32,17 +32,17 @@ from pathlib import Path
 
 import pytest
 
-REDIST_BIN = Path('redist/target/release/redist.exe'
+BISECT_BIN = Path('target/release/bisect.exe'
                   if sys.platform == 'win32'
-                  else 'redist/target/release/redist')
+                  else 'target/release/bisect')
 
 # Resolve relative to this file so it works regardless of pytest CWD
 _HERE = Path(__file__).parent
 TIGER_FIXTURES = _HERE.parent / 'fixtures' / 'tiger'
 
 pytestmark = pytest.mark.skipif(
-    not REDIST_BIN.exists(),
-    reason='redist binary not built — run: cargo build -p redist-cli --release'
+    not BISECT_BIN.exists(),
+    reason='BISECT binary not built — run: cargo build -p bisect-cli --release'
 )
 
 # ---------------------------------------------------------------------------
@@ -126,11 +126,11 @@ def make_manifest(server_url: str, states: dict) -> dict:
 
 
 def run_fetch(args: list, env: dict, cwd: str = None) -> subprocess.CompletedProcess:
-    """Run `redist fetch` with given args and env."""
+    """Run `BISECT fetch` with given args and env."""
     base_env = os.environ.copy()
     base_env.update(env)
     return subprocess.run(
-        [str(REDIST_BIN), 'fetch'] + args,
+        [str(BISECT_BIN), 'fetch'] + args,
         capture_output=True, text=True, timeout=60,
         cwd=cwd or str(Path.cwd()),
         env=base_env
@@ -147,7 +147,7 @@ class TestCheckOnly:
     def test_check_only_vermont_lists_three_items(self, tmp_path):
         result = run_fetch(
             ['--check-only', '--states', 'VT', '--year', '2020'],
-            env={'REDIST_PYTHON': sys.executable}
+            env={'BISECT_PYTHON': sys.executable}
         )
         assert result.returncode == 0, result.stderr
         # Must list tiger, pl94171, adjacency
@@ -158,7 +158,7 @@ class TestCheckOnly:
     def test_check_only_shows_correct_vermont_tiger_url(self):
         result = run_fetch(
             ['--check-only', '--states', 'VT', '--year', '2020', '--type', 'tiger'],
-            env={'REDIST_PYTHON': sys.executable}
+            env={'BISECT_PYTHON': sys.executable}
         )
         assert result.returncode == 0
         assert 'tl_2020_50_tract' in result.stdout  # VT FIPS=50
@@ -166,7 +166,7 @@ class TestCheckOnly:
     def test_check_only_shows_correct_rhode_island_url(self):
         result = run_fetch(
             ['--check-only', '--states', 'RI', '--year', '2020', '--type', 'tiger'],
-            env={'REDIST_PYTHON': sys.executable}
+            env={'BISECT_PYTHON': sys.executable}
         )
         assert result.returncode == 0
         assert 'tl_2020_44_tract' in result.stdout  # RI FIPS=44
@@ -176,7 +176,7 @@ class TestCheckOnly:
         before = set(tmp_path.rglob('*'))
         run_fetch(
             ['--check-only', '--states', 'VT', '--year', '2020'],
-            env={'REDIST_PYTHON': sys.executable},
+            env={'BISECT_PYTHON': sys.executable},
             cwd=str(tmp_path)
         )
         after = set(tmp_path.rglob('*'))
@@ -191,7 +191,7 @@ class TestCheckOnly:
 
         result = run_fetch(
             ['--check-only', '--states', 'VT', '--year', '2020', '--type', 'tiger'],
-            env={'REDIST_PYTHON': sys.executable},
+            env={'BISECT_PYTHON': sys.executable},
             cwd=str(tmp_path)
         )
         assert result.returncode == 0
@@ -200,7 +200,7 @@ class TestCheckOnly:
     def test_check_only_summary_shows_counts(self):
         result = run_fetch(
             ['--check-only', '--states', 'VT', 'RI', '--year', '2020'],
-            env={'REDIST_PYTHON': sys.executable}
+            env={'BISECT_PYTHON': sys.executable}
         )
         assert result.returncode == 0
         assert 'available' in result.stdout
@@ -222,7 +222,7 @@ class TestTigerDownload:
             'VT': {
                 'name': 'Vermont', 'fips': '50',
                 'districts': {'2020': 1, '2010': 1, '2000': 1},
-                'tiger': {},  # overridden by REDIST_MANIFEST pointing to server
+                'tiger': {},  # overridden by BISECT_MANIFEST pointing to server
                 'pl94171': {},
             }
         })
@@ -236,7 +236,7 @@ class TestTigerDownload:
             result = run_fetch(
                 ['--states', 'VT', '--year', '2020', '--type', 'tiger',
                  '--manifest', str(manifest_file)],
-                env={'REDIST_PYTHON': sys.executable},
+                env={'BISECT_PYTHON': sys.executable},
                 cwd=str(tmp_path)
             )
 
@@ -268,7 +268,7 @@ class TestTigerDownload:
             result = run_fetch(
                 ['--states', 'RI', '--year', '2020', '--type', 'tiger',
                  '--manifest', str(manifest_file)],
-                env={'REDIST_PYTHON': sys.executable},
+                env={'BISECT_PYTHON': sys.executable},
                 cwd=str(tmp_path)
             )
 
@@ -295,7 +295,7 @@ class TestTigerDownload:
             run_fetch(
                 ['--states', 'VT', '--year', '2020', '--type', 'tiger',
                  '--manifest', str(manifest_file)],
-                env={'REDIST_PYTHON': sys.executable},
+                env={'BISECT_PYTHON': sys.executable},
                 cwd=str(tmp_path)
             )
 
@@ -330,7 +330,7 @@ class TestTigerDownload:
             result = run_fetch(
                 ['--states', 'VT', '--year', '2020', '--type', 'tiger',
                  '--manifest', str(manifest_file)],
-                env={'REDIST_PYTHON': sys.executable},
+                env={'BISECT_PYTHON': sys.executable},
                 cwd=str(tmp_path)
             )
 
@@ -365,7 +365,7 @@ class TestTigerDownload:
             result = run_fetch(
                 ['--states', 'VT', '--year', '2020', '--type', 'tiger',
                  '--force', '--manifest', str(manifest_file)],
-                env={'REDIST_PYTHON': sys.executable},
+                env={'BISECT_PYTHON': sys.executable},
                 cwd=str(tmp_path)
             )
 
@@ -392,7 +392,7 @@ class TestTigerDownload:
             result = run_fetch(
                 ['--states', 'VT', '--year', '2020', '--type', 'tiger',
                  '--manifest', str(manifest_file)],
-                env={'REDIST_PYTHON': sys.executable},
+                env={'BISECT_PYTHON': sys.executable},
                 cwd=str(tmp_path)
             )
 
@@ -417,7 +417,7 @@ class TestTigerDownload:
             result = run_fetch(
                 ['--states', 'VT', '--year', '2020', '--type', 'tiger',
                  '--manifest', str(manifest_file)],
-                env={'REDIST_PYTHON': sys.executable},
+                env={'BISECT_PYTHON': sys.executable},
                 cwd=str(tmp_path)
             )
 
@@ -453,13 +453,13 @@ class TestManifest:
 
         result = run_fetch(
             ['--check-only', '--manifest', str(manifest_file)],
-            env={'REDIST_PYTHON': sys.executable}
+            env={'BISECT_PYTHON': sys.executable}
         )
         assert result.returncode == 0
         assert 'XX' in result.stdout  # custom state from custom manifest
 
     def test_custom_manifest_via_env(self, tmp_path):
-        """REDIST_MANIFEST env var overrides builtin manifest."""
+        """BISECT_MANIFEST env var overrides builtin manifest."""
         manifest = {
             'version': '1',
             'github_repo': 'test/repo',
@@ -480,7 +480,7 @@ class TestManifest:
 
         result = run_fetch(
             ['--check-only'],
-            env={'REDIST_PYTHON': sys.executable, 'REDIST_MANIFEST': str(manifest_file)}
+            env={'BISECT_PYTHON': sys.executable, 'BISECT_MANIFEST': str(manifest_file)}
         )
         assert result.returncode == 0
         assert 'YY' in result.stdout
@@ -489,7 +489,7 @@ class TestManifest:
         """The builtin manifest (embedded in binary) covers all 50 states."""
         result = run_fetch(
             ['--check-only', '--year', '2020'],
-            env={'REDIST_PYTHON': sys.executable}
+            env={'BISECT_PYTHON': sys.executable}
         )
         assert result.returncode == 0
         # Count unique state codes in output
@@ -504,7 +504,7 @@ class TestManifest:
 
         result = run_fetch(
             ['--check-only', '--manifest', str(bad_manifest)],
-            env={'REDIST_PYTHON': sys.executable}
+            env={'BISECT_PYTHON': sys.executable}
         )
         assert result.returncode != 0
         assert result.stderr  # must have error message
@@ -520,7 +520,7 @@ class TestMultiState:
         """VT (1 district) and RI (2 districts) both appear in check-only."""
         result = run_fetch(
             ['--check-only', '--states', 'VT', 'RI', '--year', '2020'],
-            env={'REDIST_PYTHON': sys.executable}
+            env={'BISECT_PYTHON': sys.executable}
         )
         assert result.returncode == 0
         assert 'VT' in result.stdout
@@ -532,7 +532,7 @@ class TestMultiState:
         """--year all lists 2020, 2010, and 2000."""
         result = run_fetch(
             ['--check-only', '--states', 'VT', '--year', 'all'],
-            env={'REDIST_PYTHON': sys.executable}
+            env={'BISECT_PYTHON': sys.executable}
         )
         assert result.returncode == 0
         assert '2020' in result.stdout
@@ -542,7 +542,7 @@ class TestMultiState:
         """--type tiger skips pl94171 and adjacency."""
         result = run_fetch(
             ['--check-only', '--states', 'VT', '--year', '2020', '--type', 'tiger'],
-            env={'REDIST_PYTHON': sys.executable}
+            env={'BISECT_PYTHON': sys.executable}
         )
         assert result.returncode == 0
         assert 'tiger' in result.stdout
@@ -553,7 +553,7 @@ class TestMultiState:
         """Rhode Island must have 2 districts in 2020 manifest."""
         result = run_fetch(
             ['--check-only', '--states', 'RI', '--year', '2020'],
-            env={'REDIST_PYTHON': sys.executable}
+            env={'BISECT_PYTHON': sys.executable}
         )
         assert result.returncode == 0
         # RI should appear — if manifest has 0 districts for 2020, it'd be skipped
@@ -565,7 +565,7 @@ class TestMultiState:
 # ---------------------------------------------------------------------------
 
 class TestFetchThenRun:
-    """After fetching data, `redist state` should work end-to-end."""
+    """After fetching data, `BISECT state` should work end-to-end."""
 
     @pytest.mark.skipif(
         not (Path('outputs/V3/data/2020/adjacency/vt_adjacency_2020.pkl').exists()),
@@ -604,7 +604,7 @@ class TestFetchThenRun:
             fetch_result = run_fetch(
                 ['--states', 'VT', '--year', '2020', '--type', 'tiger',
                  '--manifest', str(manifest_file)],
-                env={'REDIST_PYTHON': sys.executable},
+                env={'BISECT_PYTHON': sys.executable},
                 cwd=str(tmp_path)
             )
             assert fetch_result.returncode == 0, f'fetch failed:\n{fetch_result.stderr}'
@@ -614,15 +614,15 @@ class TestFetchThenRun:
         assert tiger_shp.exists(), 'TIGER .shp not extracted'
         assert tiger_shp.stat().st_size > 1000, 'TIGER .shp too small — probably stub'
 
-        # Step 2: read it with the Rust TIGER reader (via redist_py)
+        # Step 2: read it with the Rust TIGER reader (via bisect_py)
         try:
-            import redist_py
-            records = redist_py.read_tiger_shp(str(tiger_shp.parent.parent / 'tl_2020_50_tract' / 'tl_2020_50_tract.shp'))
+            import bisect_py
+            records = bisect_py.read_tiger_shp(str(tiger_shp.parent.parent / 'tl_2020_50_tract' / 'tl_2020_50_tract.shp'))
             # Actually the shp is one level up
-            records = redist_py.read_tiger_shp(str(tiger_shp))
+            records = bisect_py.read_tiger_shp(str(tiger_shp))
             assert len(records) == 193, f'VT should have 193 tracts, got {len(records)}'
         except ImportError:
-            pytest.skip('redist_py not available')
+            pytest.skip('bisect_py not available')
 
 
 # ---------------------------------------------------------------------------
@@ -653,7 +653,7 @@ class TestRoleReviewFixes:
             result = run_fetch(
                 ['--check-only', '--states', 'VT', '--year', '2020', '--type', 'tiger',
                  '--manifest', str(manifest_file)],
-                env={'REDIST_PYTHON': sys.executable},
+                env={'BISECT_PYTHON': sys.executable},
                 cwd=str(tmp_path)
             )
 
@@ -670,7 +670,7 @@ class TestRoleReviewFixes:
         """PP-10: Invalid year should fail with clear error, not silent empty list."""
         result = run_fetch(
             ['--check-only', '--year', '2030', '--states', 'VT'],
-            env={'REDIST_PYTHON': sys.executable}
+            env={'BISECT_PYTHON': sys.executable}
         )
         assert result.returncode != 0, 'Invalid year 2030 should cause non-zero exit'
         combined = result.stdout + result.stderr
@@ -680,7 +680,7 @@ class TestRoleReviewFixes:
         """PP-10: Year typo (202a) must not silently produce empty output."""
         result = run_fetch(
             ['--check-only', '--year', '202a', '--states', 'VT'],
-            env={'REDIST_PYTHON': sys.executable}
+            env={'BISECT_PYTHON': sys.executable}
         )
         assert result.returncode != 0
 
@@ -688,7 +688,7 @@ class TestRoleReviewFixes:
         """Year 2000 is in the allowlist."""
         result = run_fetch(
             ['--check-only', '--year', '2000', '--states', 'VT'],
-            env={'REDIST_PYTHON': sys.executable}
+            env={'BISECT_PYTHON': sys.executable}
         )
         assert result.returncode == 0
 
@@ -717,7 +717,7 @@ class TestRoleReviewFixes:
             result = run_fetch(
                 ['--states', 'VT', '--year', '2020', '--type', 'tiger',
                  '--manifest', str(manifest_file)],
-                env={'REDIST_PYTHON': sys.executable},
+                env={'BISECT_PYTHON': sys.executable},
                 cwd=str(tmp_path)
             )
 

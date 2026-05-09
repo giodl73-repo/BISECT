@@ -14,14 +14,14 @@ A redistricting commission needs to compare:
 2. **Plan A vs Plan B** (two runs of the algorithm with different seeds/parameters)
 3. **This year's plan vs the prior census plan** (2020 vs 2010 districts)
 
-Today `redist` has no comparison capability — you can generate plans but not evaluate them against alternatives. Practitioners need a `redist compare` subcommand that produces side-by-side metrics.
+Today `BISECT` has no comparison capability — you can generate plans but not evaluate them against alternatives. Practitioners need a `BISECT compare` subcommand that produces side-by-side metrics.
 
 ---
 
-## New subcommand: `redist compare`
+## New subcommand: `BISECT compare`
 
 ```
-redist compare --plan-a <LABEL_OR_PATH> --plan-b <LABEL_OR_PATH> [OPTIONS]
+BISECT compare --plan-a <LABEL_OR_PATH> --plan-b <LABEL_OR_PATH> [OPTIONS]
 ```
 
 One of `--plan-b` or `--enacted` is required.
@@ -41,17 +41,17 @@ One of `--plan-b` or `--enacted` is required.
 
 ```bash
 # Compare two generated plans
-redist compare \
+BISECT compare \
   --plan-a wa_house_draft1 --plan-b wa_house_draft2 \
   --year 2020 --version WA_Plans
 
 # Compare generated plan vs enacted
-redist compare \
+BISECT compare \
   --plan-a wa_house_draft1 --enacted \
   --year 2020 --version WA_Plans --metrics compactness splits
 
 # Compare 2020 plan vs 2010 plan (cross-year)
-redist compare \
+BISECT compare \
   --plan-a wa_house_2020 --plan-b wa_house_2010 \
   --metrics population compactness
 ```
@@ -166,7 +166,7 @@ COUNTY SPLITS
 
 ## Implementation
 
-### New crate: `redist-compare` (in `bisect-analysis`)
+### New crate: `BISECT-compare` (in `bisect-analysis`)
 
 Module `bisect-analysis/src/comparison.rs`:
 

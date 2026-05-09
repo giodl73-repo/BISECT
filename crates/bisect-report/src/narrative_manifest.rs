@@ -1,7 +1,7 @@
 //! Narrative manifest producer (Plan Comparison plan Task 9, COVENANT C-3).
 //!
 //! Writes `narrative_manifest.json` (schema `narrative-manifest v1`) sidecar
-//! alongside every `redist compare --format narrative` output. The manifest
+//! alongside every `BISECT compare --format narrative` output. The manifest
 //! pins:
 //! - The narrative template (path + sha256)
 //! - The threshold values used (leaning_threshold, close_call_band, MoE inputs)
@@ -163,11 +163,7 @@ pub fn build_narrative_manifest_with_clock(
     let approved_at = source_date_epoch
         .map(iso8601_from_unix_secs)
         .unwrap_or_else(|| "1970-01-01T00:00:00Z".to_string());
-    let short = inputs
-        .build_commit
-        .chars()
-        .take(8)
-        .collect::<String>();
+    let short = inputs.build_commit.chars().take(8).collect::<String>();
     NarrativeManifest {
         schema_version: "narrative-manifest v1".to_string(),
         template_path: inputs.template_path_rel,
@@ -196,8 +192,8 @@ pub fn build_narrative_manifest_with_clock(
 }
 
 /// Format a Unix seconds-since-epoch as ISO-8601 UTC without an external
-/// chrono dependency. Mirrors `redist-cli::provenance::format_unix_iso8601`
-/// (kept duplicated to avoid a redist-cli ↔ redist-report cycle).
+/// chrono dependency. Mirrors `BISECT-cli::provenance::format_unix_iso8601`
+/// (kept duplicated to avoid a BISECT-cli ↔ BISECT-report cycle).
 fn iso8601_from_unix_secs(secs: i64) -> String {
     if secs < 0 {
         return "1970-01-01T00:00:00Z".to_string();
@@ -213,7 +209,12 @@ fn iso8601_from_unix_secs(secs: i64) -> String {
     let (year, month, day) = days_to_ymd(days);
     format!(
         "{year:04}-{month:02}-{day:02}T{hour:02}:{min:02}:{sec:02}Z",
-        year = year, month = month, day = day, hour = hour, min = min, sec = sec
+        year = year,
+        month = month,
+        day = day,
+        hour = hour,
+        min = min,
+        sec = sec
     )
 }
 
@@ -359,7 +360,10 @@ mod tests {
         let pos_compactness = s.find("\"compactness.json\"").unwrap();
         let pos_partisan = s.find("\"partisan.json\"").unwrap();
         let pos_vra = s.find("\"vra_analysis.json\"").unwrap();
-        assert!(pos_compactness < pos_partisan, "compactness must precede partisan");
+        assert!(
+            pos_compactness < pos_partisan,
+            "compactness must precede partisan"
+        );
         assert!(pos_partisan < pos_vra, "partisan must precede vra_analysis");
     }
 
@@ -380,7 +384,10 @@ mod tests {
         let inputs = fixture_inputs();
         let m_no_baseline = build_narrative_manifest(inputs.clone());
         let s_no = serialize_manifest(&m_no_baseline).unwrap();
-        assert!(!s_no.contains("baseline_label"), "absent baseline must be omitted");
+        assert!(
+            !s_no.contains("baseline_label"),
+            "absent baseline must be omitted"
+        );
 
         let mut inputs_with = inputs;
         inputs_with.baseline_label = Some("vt_enacted".into());
@@ -403,7 +410,10 @@ mod tests {
         let m = build_narrative_manifest(inputs);
         let s = serialize_manifest(&m).unwrap();
         let parsed: NarrativeManifest = serde_json::from_str(&s).unwrap();
-        assert_eq!(parsed.submission_type.as_deref(), Some("civic_counter_proposal"));
+        assert_eq!(
+            parsed.submission_type.as_deref(),
+            Some("civic_counter_proposal")
+        );
         let attr = parsed.civic_counter_proposal_attribution.unwrap();
         assert_eq!(attr.submitted_by, "League of Women Voters Louisiana");
     }
@@ -434,9 +444,15 @@ mod tests {
         // 2000-01-01T00:00:00Z = 946,684,800
         assert_eq!(iso8601_from_unix_secs(946_684_800), "2000-01-01T00:00:00Z");
         // 1700000000 = 2023-11-14T22:13:20Z (the SOURCE_DATE_EPOCH fixture).
-        assert_eq!(iso8601_from_unix_secs(1_700_000_000), "2023-11-14T22:13:20Z");
+        assert_eq!(
+            iso8601_from_unix_secs(1_700_000_000),
+            "2023-11-14T22:13:20Z"
+        );
         // 2024-02-29T12:34:56Z (leap day) = 1709210096
-        assert_eq!(iso8601_from_unix_secs(1_709_210_096), "2024-02-29T12:34:56Z");
+        assert_eq!(
+            iso8601_from_unix_secs(1_709_210_096),
+            "2024-02-29T12:34:56Z"
+        );
     }
 
     #[test]

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Implement the RPLAN v0.1 interchange format and custom redistricting parameters. `bisect state`/`bisect states`/`redist run` gain `--districts`, `--chamber`, `--label`, `--population-source`, `--balance-tolerance` flags. A new `bisect-report` crate handles RPLAN read/write/validate. `redist validate --file plan.rplan` verifies format and coverage. `PlanManifest` provides a full audit chain. `plans/{label}/` output trees coexist with legacy `states/{state}/` paths. Label collision exits non-zero without `--force`. `redist migrate --state X --label Y` copies legacy plans into the new tree.
+**Goal:** Implement the RPLAN v0.1 interchange format and custom redistricting parameters. `bisect state`/`bisect states`/`BISECT run` gain `--districts`, `--chamber`, `--label`, `--population-source`, `--balance-tolerance` flags. A new `bisect-report` crate handles RPLAN read/write/validate. `BISECT validate --file plan.rplan` verifies format and coverage. `PlanManifest` provides a full audit chain. `plans/{label}/` output trees coexist with legacy `states/{state}/` paths. Label collision exits non-zero without `--force`. `BISECT migrate --state X --label Y` copies legacy plans into the new tree.
 
 **Specs:** Spec 0 (RPLAN Format), Spec 1 (Custom Parameters) + R3 board amendments
 
@@ -17,19 +17,19 @@
 
 | File | Action |
 |------|--------|
-| `redist/crates/bisect-report/Cargo.toml` | **Create** — new crate |
-| `redist/crates/bisect-report/src/lib.rs` | **Create** — public API |
-| `redist/crates/bisect-report/src/rplan.rs` | **Create** — RPLAN reader/writer/validator |
-| `redist/crates/bisect-report/src/manifest.rs` | **Create** — PlanManifest struct + SHA-256 hashing |
-| `redist/crates/bisect-core/src/config.rs` | **Modify** — add `StateConfig` fields: `num_districts_override`, `chamber`, `label`, `population_source`, `balance_tolerance`, `write_manifest`, `force` |
-| `redist/crates/bisect-core/src/balance.rs` | **Modify** — `assert_balanced(tolerance: f64)` accepts param |
-| `redist/crates/bisect-core/src/population.rs` | **Create** — `PopulationSource` enum + VAP/CVAP CSV loading |
-| `redist/crates/bisect-cli/src/args.rs` | **Modify** — add new flags to `StateArgs`; add `ValidateArgs`, `MigrateArgs` |
-| `redist/crates/bisect-cli/src/main.rs` | **Modify** — wire `Commands::Validate`, `Commands::Migrate`; pass new flags through |
-| `redist/crates/bisect-cli/src/validate.rs` | **Create** — `redist validate` dispatcher |
-| `redist/crates/bisect-cli/src/migrate.rs` | **Create** — `redist migrate` dispatcher |
-| `redist/crates/bisect-cli/src/paths.rs` | **Modify** — `plan_dir(label)` alongside `state_dir(state)` |
-| `redist/Cargo.toml` | **Modify** — add `bisect-report` to workspace |
+| `BISECT/crates/bisect-report/Cargo.toml` | **Create** — new crate |
+| `BISECT/crates/bisect-report/src/lib.rs` | **Create** — public API |
+| `BISECT/crates/bisect-report/src/rplan.rs` | **Create** — RPLAN reader/writer/validator |
+| `BISECT/crates/bisect-report/src/manifest.rs` | **Create** — PlanManifest struct + SHA-256 hashing |
+| `BISECT/crates/bisect-core/src/config.rs` | **Modify** — add `StateConfig` fields: `num_districts_override`, `chamber`, `label`, `population_source`, `balance_tolerance`, `write_manifest`, `force` |
+| `BISECT/crates/bisect-core/src/balance.rs` | **Modify** — `assert_balanced(tolerance: f64)` accepts param |
+| `BISECT/crates/bisect-core/src/population.rs` | **Create** — `PopulationSource` enum + VAP/CVAP CSV loading |
+| `BISECT/crates/bisect-cli/src/args.rs` | **Modify** — add new flags to `StateArgs`; add `ValidateArgs`, `MigrateArgs` |
+| `BISECT/crates/bisect-cli/src/main.rs` | **Modify** — wire `Commands::Validate`, `Commands::Migrate`; pass new flags through |
+| `BISECT/crates/bisect-cli/src/validate.rs` | **Create** — `BISECT validate` dispatcher |
+| `BISECT/crates/bisect-cli/src/migrate.rs` | **Create** — `BISECT migrate` dispatcher |
+| `BISECT/crates/bisect-cli/src/paths.rs` | **Modify** — `plan_dir(label)` alongside `state_dir(state)` |
+| `BISECT/Cargo.toml` | **Modify** — add `bisect-report` to workspace |
 | `tests/unit/test_rplan.py` | **Create** — L0 Python-accessible RPLAN tests |
 | `tests/unit/test_manifest.py` | **Create** — L0 manifest / SHA-256 tests |
 | `tests/acceptance/test_spec0_spec1_acceptance.py` | **Create** — L2 acceptance tests |
@@ -38,7 +38,7 @@
 
 ## Task 1: `bisect-report` crate scaffold + RPLAN writer
 
-**Files:** `redist/crates/bisect-report/Cargo.toml`, `src/lib.rs`, `src/rplan.rs`
+**Files:** `BISECT/crates/bisect-report/Cargo.toml`, `src/lib.rs`, `src/rplan.rs`
 
 - [ ] **Create `Cargo.toml`**
 
@@ -184,7 +184,7 @@ pub fn validate_district_range(value: usize, district: usize, num_districts: usi
 
 ## Task 2: RPLAN validator — schema + coverage
 
-**Files:** `redist/crates/bisect-report/src/rplan.rs` (continued)
+**Files:** `BISECT/crates/bisect-report/src/rplan.rs` (continued)
 
 - [ ] **L0: Write failing validator tests**
 
@@ -274,7 +274,7 @@ pub fn validate_rplan_str(json: &str) -> Result<ValidationResult, RplanError> {
 
 ## Task 3: `PlanManifest` with SHA-256 audit chain
 
-**Files:** `redist/crates/bisect-report/src/manifest.rs`
+**Files:** `BISECT/crates/bisect-report/src/manifest.rs`
 
 - [ ] **L0: Write failing manifest tests**
 
@@ -374,7 +374,7 @@ pub fn default_label(state_name: &str, chamber: &str, year: &str) -> String { ..
 
 ## Task 4: Chamber-aware balance tolerance + `StateConfig` additions
 
-**Files:** `redist/crates/bisect-core/src/config.rs`, `redist/crates/bisect-core/src/balance.rs`, `redist/crates/bisect-core/src/population.rs`
+**Files:** `BISECT/crates/bisect-core/src/config.rs`, `BISECT/crates/bisect-core/src/balance.rs`, `BISECT/crates/bisect-core/src/population.rs`
 
 - [ ] **L0: Write failing StateConfig and balance tests**
 
@@ -499,7 +499,7 @@ pub enum PopulationSource { #[default] Total, Vap, Cvap }
 
 ## Task 5: Label collision check + `plans/{label}/` path resolution
 
-**Files:** `redist/crates/bisect-cli/src/paths.rs`, `redist/crates/bisect-report/src/manifest.rs`
+**Files:** `BISECT/crates/bisect-cli/src/paths.rs`, `BISECT/crates/bisect-report/src/manifest.rs`
 
 - [ ] **L0: Write failing collision and path tests (from Scenario 6)**
 
@@ -589,9 +589,9 @@ pub fn state_output_dir(base: &Path, state_name: &str) -> PathBuf {
 
 ---
 
-## Task 6: `redist validate` command
+## Task 6: `BISECT validate` command
 
-**Files:** `redist/crates/bisect-cli/src/validate.rs`, `redist/crates/bisect-cli/src/args.rs`, `redist/crates/bisect-cli/src/main.rs`
+**Files:** `BISECT/crates/bisect-cli/src/validate.rs`, `BISECT/crates/bisect-cli/src/args.rs`, `BISECT/crates/bisect-cli/src/main.rs`
 
 - [ ] **L0: Write failing validate CLI tests**
 
@@ -650,58 +650,58 @@ pub struct ValidateArgs {
 ```
 
 - [ ] **Add `Commands::Validate(ValidateArgs)` to commands enum in `main.rs`**
-- [ ] **Implement `run_validate()` in `validate.rs`** — dispatches to `redist_report::validate_rplan()`
+- [ ] **Implement `run_validate()` in `validate.rs`** — dispatches to `BISECT_report::validate_rplan()`
 - [ ] **Wire `Commands::Validate => run_validate(args)` in `main.rs` match arm**
 - [ ] **Run tests** — expect PASS
-- [ ] **Commit:** `git commit -m "feat(cli): redist validate --file plan.rplan dispatches to redist_report::validate_rplan()"`
+- [ ] **Commit:** `git commit -m "feat(cli): BISECT validate --file plan.rplan dispatches to BISECT_report::validate_rplan()"`
 
 ---
 
-## Task 7: New CLI flags on `bisect state`/`bisect states`/`redist run`
+## Task 7: New CLI flags on `bisect state`/`bisect states`/`BISECT run`
 
-**Files:** `redist/crates/bisect-cli/src/args.rs`, `redist/crates/bisect-cli/src/main.rs`
+**Files:** `BISECT/crates/bisect-cli/src/args.rs`, `BISECT/crates/bisect-cli/src/main.rs`
 
 - [ ] **L0: Write failing flag-parsing tests**
 
 ```rust
 #[test]
 fn test_districts_flag_parsed() {
-    let args = StateArgs::try_parse_from(["redist", "state", "--state", "WA",
+    let args = StateArgs::try_parse_from(["BISECT", "state", "--state", "WA",
         "--year", "2020", "--version", "v1", "--districts", "98"]).unwrap();
     assert_eq!(args.districts, Some(98));
 }
 
 #[test]
 fn test_chamber_flag_default_is_congressional() {
-    let args = StateArgs::try_parse_from(["redist", "state", "--state", "WA",
+    let args = StateArgs::try_parse_from(["BISECT", "state", "--state", "WA",
         "--year", "2020", "--version", "v1"]).unwrap();
     assert_eq!(args.chamber, "congressional");
 }
 
 #[test]
 fn test_label_flag_parsed() {
-    let args = StateArgs::try_parse_from(["redist", "state", "--state", "WA",
+    let args = StateArgs::try_parse_from(["BISECT", "state", "--state", "WA",
         "--year", "2020", "--version", "v1", "--label", "wa_house_draft1"]).unwrap();
     assert_eq!(args.label.as_deref(), Some("wa_house_draft1"));
 }
 
 #[test]
 fn test_balance_tolerance_flag_parsed() {
-    let args = StateArgs::try_parse_from(["redist", "state", "--state", "WA",
+    let args = StateArgs::try_parse_from(["BISECT", "state", "--state", "WA",
         "--year", "2020", "--version", "v1", "--balance-tolerance", "5.0"]).unwrap();
     assert!((args.balance_tolerance.unwrap() - 5.0).abs() < 1e-9);
 }
 
 #[test]
 fn test_population_source_flag_parsed() {
-    let args = StateArgs::try_parse_from(["redist", "state", "--state", "WA",
+    let args = StateArgs::try_parse_from(["BISECT", "state", "--state", "WA",
         "--year", "2020", "--version", "v1", "--population-source", "vap"]).unwrap();
     assert_eq!(args.population_source, "vap");
 }
 
 #[test]
 fn test_force_flag_default_false() {
-    let args = StateArgs::try_parse_from(["redist", "state", "--state", "WA",
+    let args = StateArgs::try_parse_from(["BISECT", "state", "--state", "WA",
         "--year", "2020", "--version", "v1"]).unwrap();
     assert!(!args.force);
 }
@@ -747,7 +747,7 @@ pub struct StateArgs {
 
 ## Task 8: RPLAN writer integration + manifest writing after plan output
 
-**Files:** `redist/crates/bisect-cli/src/main.rs` (output path), `redist/crates/bisect-report/src/rplan.rs`
+**Files:** `BISECT/crates/bisect-cli/src/main.rs` (output path), `BISECT/crates/bisect-report/src/rplan.rs`
 
 - [ ] **L0: Write failing integration tests**
 
@@ -766,7 +766,7 @@ fn test_write_rplan_produces_valid_file() {
         population_source: "total".into(),
         balance_tolerance_pct: 0.5,
         created_at: "2026-04-26T00:00:00Z".into(),
-        created_by: "redist test".into(),
+        created_by: "BISECT test".into(),
         ..Default::default()
     };
     let path = tmp.path().join("plan.rplan");
@@ -802,9 +802,9 @@ fn test_manifest_sha256_is_deterministic() {
 
 ---
 
-## Task 9: `redist migrate` command
+## Task 9: `BISECT migrate` command
 
-**Files:** `redist/crates/bisect-cli/src/migrate.rs`, `redist/crates/bisect-cli/src/args.rs`, `redist/crates/bisect-cli/src/main.rs`
+**Files:** `BISECT/crates/bisect-cli/src/migrate.rs`, `BISECT/crates/bisect-cli/src/args.rs`, `BISECT/crates/bisect-cli/src/main.rs`
 
 - [ ] **L0: Write failing migrate tests**
 
@@ -871,7 +871,7 @@ pub struct MigrateArgs {
 - [ ] **Add `Commands::Migrate(MigrateArgs)` to commands enum**
 - [ ] **Implement `run_migrate()` in `migrate.rs`**: copy `states/{state}/` → `plans/{label}/`, write minimal manifest
 - [ ] **Run tests** — expect PASS
-- [ ] **Commit:** `git commit -m "feat(cli): redist migrate --state X --label Y copies legacy plan into plans/{label}/ tree"`
+- [ ] **Commit:** `git commit -m "feat(cli): BISECT migrate --state X --label Y copies legacy plan into plans/{label}/ tree"`
 
 ---
 
@@ -894,82 +894,82 @@ from pathlib import Path
 
 # --- Spec 1 acceptance ---
 
-def test_wa_house_98_districts_produces_manifest(tmp_redist_output):
+def test_wa_house_98_districts_produces_manifest(tmp_BISECT_output):
     """bisect state --state VT --districts 1 --chamber house produces manifest.json with correct fields."""
     # Use VT (1 district) with house chamber for fast acceptance run
     result = subprocess.run([
-        "redist", "state",
+        "BISECT", "state",
         "--state", "VT", "--year", "2020", "--version", "spec1_test",
         "--districts", "1", "--chamber", "house", "--label", "vt_house_test",
-        "--output-dir", str(tmp_redist_output),
+        "--output-dir", str(tmp_BISECT_output),
     ], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
-    manifest_path = tmp_redist_output / "2020" / "plans" / "vt_house_test" / "manifest.json"
+    manifest_path = tmp_BISECT_output / "2020" / "plans" / "vt_house_test" / "manifest.json"
     assert manifest_path.exists(), f"manifest.json not found at {manifest_path}"
     manifest = json.loads(manifest_path.read_text())
     assert manifest["chamber"] == "house"
     assert manifest["num_districts"] == 1
     assert manifest["balance_tolerance_pct"] == pytest.approx(5.0)
 
-def test_seed_produces_reproducible_assignments(tmp_redist_output):
+def test_seed_produces_reproducible_assignments(tmp_BISECT_output):
     """Same seed run twice → identical final_assignments.json."""
     for run_i in range(2):
         subprocess.run([
-            "redist", "state",
+            "BISECT", "state",
             "--state", "VT", "--year", "2020", "--version", "spec1_repro",
             "--label", f"vt_repro_run{run_i}", "--seed", "42",
-            "--output-dir", str(tmp_redist_output), "--force",
+            "--output-dir", str(tmp_BISECT_output), "--force",
         ], check=True)
-    run0 = json.loads((tmp_redist_output / "2020" / "plans" / "vt_repro_run0" / "final_assignments.json").read_text())
-    run1 = json.loads((tmp_redist_output / "2020" / "plans" / "vt_repro_run1" / "final_assignments.json").read_text())
+    run0 = json.loads((tmp_BISECT_output / "2020" / "plans" / "vt_repro_run0" / "final_assignments.json").read_text())
+    run1 = json.loads((tmp_BISECT_output / "2020" / "plans" / "vt_repro_run1" / "final_assignments.json").read_text())
     assert run0 == run1, "Reproducible seed must produce identical assignments"
 
-def test_balance_tolerance_in_manifest(tmp_redist_output):
+def test_balance_tolerance_in_manifest(tmp_BISECT_output):
     """--balance-tolerance 2.0 is recorded in manifest."""
     subprocess.run([
-        "redist", "state",
+        "BISECT", "state",
         "--state", "VT", "--year", "2020", "--version", "spec1_tol",
         "--label", "vt_tol_test", "--balance-tolerance", "2.0",
-        "--output-dir", str(tmp_redist_output),
+        "--output-dir", str(tmp_BISECT_output),
     ], check=True)
     manifest = json.loads(
-        (tmp_redist_output / "2020" / "plans" / "vt_tol_test" / "manifest.json").read_text()
+        (tmp_BISECT_output / "2020" / "plans" / "vt_tol_test" / "manifest.json").read_text()
     )
     assert manifest["balance_tolerance_pct"] == pytest.approx(2.0)
 
-def test_population_source_in_manifest(tmp_redist_output):
+def test_population_source_in_manifest(tmp_BISECT_output):
     """--population-source total is recorded in manifest."""
     subprocess.run([
-        "redist", "state",
+        "BISECT", "state",
         "--state", "VT", "--year", "2020", "--version", "spec1_pop",
         "--label", "vt_pop_test", "--population-source", "total",
-        "--output-dir", str(tmp_redist_output),
+        "--output-dir", str(tmp_BISECT_output),
     ], check=True)
     manifest = json.loads(
-        (tmp_redist_output / "2020" / "plans" / "vt_pop_test" / "manifest.json").read_text()
+        (tmp_BISECT_output / "2020" / "plans" / "vt_pop_test" / "manifest.json").read_text()
     )
     assert manifest["population_source"] == "total"
 
-def test_label_collision_exits_nonzero_without_force(tmp_redist_output):
+def test_label_collision_exits_nonzero_without_force(tmp_BISECT_output):
     """Running twice with same default label fails on second run without --force."""
     common_args = [
-        "redist", "state",
+        "BISECT", "state",
         "--state", "VT", "--year", "2020", "--version", "spec1_collision",
         "--label", "vt_collision_test",
-        "--output-dir", str(tmp_redist_output),
+        "--output-dir", str(tmp_BISECT_output),
     ]
     subprocess.run(common_args, check=True)
     result = subprocess.run(common_args, capture_output=True, text=True)
     assert result.returncode != 0, "Second run without --force must fail"
     assert "already exists" in result.stderr or "already exists" in result.stdout
 
-def test_force_flag_allows_second_run(tmp_redist_output):
+def test_force_flag_allows_second_run(tmp_BISECT_output):
     """--force on second run succeeds and overwrites."""
     common_args = [
-        "redist", "state",
+        "BISECT", "state",
         "--state", "VT", "--year", "2020", "--version", "spec1_force",
         "--label", "vt_force_test",
-        "--output-dir", str(tmp_redist_output),
+        "--output-dir", str(tmp_BISECT_output),
     ]
     subprocess.run(common_args, check=True)
     result = subprocess.run(common_args + ["--force"], capture_output=True, text=True)
@@ -977,75 +977,75 @@ def test_force_flag_allows_second_run(tmp_redist_output):
 
 # --- Spec 0 acceptance ---
 
-def test_rplan_all_assignments_11char_geoids(tmp_redist_output):
+def test_rplan_all_assignments_11char_geoids(tmp_BISECT_output):
     """Every GEOID key in exported RPLAN is exactly 11 numeric characters."""
     subprocess.run([
-        "redist", "state",
+        "BISECT", "state",
         "--state", "VT", "--year", "2020", "--version", "spec0_test",
         "--label", "vt_rplan_test", "--output-format", "rplan",
-        "--output-dir", str(tmp_redist_output),
+        "--output-dir", str(tmp_BISECT_output),
     ], check=True)
-    rplan_path = tmp_redist_output / "2020" / "plans" / "vt_rplan_test" / "vt_rplan_test.rplan"
+    rplan_path = tmp_BISECT_output / "2020" / "plans" / "vt_rplan_test" / "vt_rplan_test.rplan"
     rplan = json.loads(rplan_path.read_text())
     for geoid in rplan["assignments"]:
         assert len(geoid) == 11, f"GEOID {geoid!r} must be 11 chars"
         assert geoid.isdigit(), f"GEOID {geoid!r} must be numeric"
 
-def test_rplan_version_top_level_only(tmp_redist_output):
+def test_rplan_version_top_level_only(tmp_BISECT_output):
     """rplan_version must appear at root level only, not inside metadata."""
     subprocess.run([
-        "redist", "state",
+        "BISECT", "state",
         "--state", "VT", "--year", "2020", "--version", "spec0_ver",
         "--label", "vt_ver_test", "--output-format", "rplan",
-        "--output-dir", str(tmp_redist_output),
+        "--output-dir", str(tmp_BISECT_output),
     ], check=True)
-    rplan_path = tmp_redist_output / "2020" / "plans" / "vt_ver_test" / "vt_ver_test.rplan"
+    rplan_path = tmp_BISECT_output / "2020" / "plans" / "vt_ver_test" / "vt_ver_test.rplan"
     rplan = json.loads(rplan_path.read_text())
     assert "rplan_version" in rplan
     assert "rplan_version" not in rplan.get("metadata", {}), \
         "rplan_version must NOT appear inside metadata"
 
-def test_redist_validate_passes_for_generated_rplan(tmp_redist_output):
-    """redist validate --file plan.rplan exits 0 for a freshly generated plan."""
+def test_BISECT_validate_passes_for_generated_rplan(tmp_BISECT_output):
+    """BISECT validate --file plan.rplan exits 0 for a freshly generated plan."""
     subprocess.run([
-        "redist", "state",
+        "BISECT", "state",
         "--state", "VT", "--year", "2020", "--version", "spec0_val",
         "--label", "vt_val_test", "--output-format", "rplan",
-        "--output-dir", str(tmp_redist_output),
+        "--output-dir", str(tmp_BISECT_output),
     ], check=True)
-    rplan_path = tmp_redist_output / "2020" / "plans" / "vt_val_test" / "vt_val_test.rplan"
+    rplan_path = tmp_BISECT_output / "2020" / "plans" / "vt_val_test" / "vt_val_test.rplan"
     result = subprocess.run(
-        ["redist", "validate", "--file", str(rplan_path)],
+        ["BISECT", "validate", "--file", str(rplan_path)],
         capture_output=True, text=True
     )
     assert result.returncode == 0, result.stderr
     assert "PASS" in result.stdout
 
-def test_manifest_tiger_sha256_is_64_hex_chars(tmp_redist_output):
+def test_manifest_tiger_sha256_is_64_hex_chars(tmp_BISECT_output):
     """manifest.json tiger_sha256 is a 64-character hex string."""
     subprocess.run([
-        "redist", "state",
+        "BISECT", "state",
         "--state", "VT", "--year", "2020", "--version", "spec0_sha",
         "--label", "vt_sha_test",
-        "--output-dir", str(tmp_redist_output),
+        "--output-dir", str(tmp_BISECT_output),
     ], check=True)
     manifest = json.loads(
-        (tmp_redist_output / "2020" / "plans" / "vt_sha_test" / "manifest.json").read_text()
+        (tmp_BISECT_output / "2020" / "plans" / "vt_sha_test" / "manifest.json").read_text()
     )
     assert "tiger_sha256" in manifest
     assert len(manifest["tiger_sha256"]) == 64
     assert all(c in "0123456789abcdef" for c in manifest["tiger_sha256"])
 
-def test_manifest_adjacency_file_is_filename_not_path(tmp_redist_output):
+def test_manifest_adjacency_file_is_filename_not_path(tmp_BISECT_output):
     """manifest.json adjacency_file is a bare filename, not a local path."""
     subprocess.run([
-        "redist", "state",
+        "BISECT", "state",
         "--state", "VT", "--year", "2020", "--version", "spec0_adj",
         "--label", "vt_adj_test",
-        "--output-dir", str(tmp_redist_output),
+        "--output-dir", str(tmp_BISECT_output),
     ], check=True)
     manifest = json.loads(
-        (tmp_redist_output / "2020" / "plans" / "vt_adj_test" / "manifest.json").read_text()
+        (tmp_BISECT_output / "2020" / "plans" / "vt_adj_test" / "manifest.json").read_text()
     )
     adj = manifest["adjacency_file"]
     assert "/" not in adj and "\\" not in adj, \
@@ -1148,10 +1148,10 @@ fn test_label_force_flag_allows_overwrite() {
 3. Task 3 — `PlanManifest` + SHA-256 (no deps outside report crate)
 4. Task 4 — `StateConfig` additions + balance/population (bisect-core)
 5. Task 5 — Label collision + paths (depends on Tasks 3+4)
-6. Task 6 — `redist validate` command (depends on Tasks 1+2)
+6. Task 6 — `BISECT validate` command (depends on Tasks 1+2)
 7. Task 7 — New CLI flags (depends on Task 4)
 8. Task 8 — RPLAN writer integration + manifest writing (depends on Tasks 1+3+5+7)
-9. Task 9 — `redist migrate` command (depends on Task 5)
+9. Task 9 — `BISECT migrate` command (depends on Task 5)
 10. Task 10 — L2 acceptance tests (depends on all above)
 
 Tasks 1+3+4 can run in parallel. Tasks 2 and 5 and 6 each depend on one prior task only, so the critical path is 1→2→6 and 3+4→5→7→8→9→10.

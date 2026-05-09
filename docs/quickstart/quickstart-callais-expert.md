@@ -49,7 +49,7 @@
 
 6. **Generate the court PDF** (Court Submission Reports plan — when implemented):
    ```bash
-   redist report --label la_2020_callais --format pdf \
+   BISECT report --label la_2020_callais --format pdf \
        --jurisdiction "EDLA" \
        --expert-config expert.toml
    ```
@@ -57,7 +57,7 @@
 
 7. **Provenance receipt:** verify the manifest matches your binary, and embed the result in your Daubert disclosures:
    ```bash
-   redist doctor --verify-manifest outputs/v1/2020/plans/la_2020_callais/manifest.json
+   BISECT doctor --verify-manifest outputs/v1/2020/plans/la_2020_callais/manifest.json
    ```
 
 ---
@@ -72,7 +72,7 @@
 
 - Callais legal grounding: `docs/legal/CALLAIS_REFERENCE.md`
 - Race-of-candidate provenance protocol: `docs/file-formats/race-of-candidate.md` (when shipped)
-- Deposition prep: `redist depo` (Deposition Prep plan — fast iterative re-analysis daemon)
+- Deposition prep: `BISECT depo` (Deposition Prep plan — fast iterative re-analysis daemon)
 - AEA-compliant replication package for paper publication: `bisect analyze --paper-mode`
 
 ## Daubert warnings

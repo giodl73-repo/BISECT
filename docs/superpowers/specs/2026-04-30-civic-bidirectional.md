@@ -13,7 +13,7 @@ A neighborhood association in Lafayette knows which blocks belong to the same co
 
 Today, none of that flows into the analysis. The advocate can write a press release saying "Plan B splits our community" but they cannot put their *evidence* into the analytical record in a way that the report consumes. This spec opens the inbound pipe.
 
-The Plan Comparison spec already added `redist compare --comments <CSV>` (read side). This spec defines the write side: how civic groups produce that CSV, validate it, and submit it into the workflow without going through state staff.
+The Plan Comparison spec already added `BISECT compare --comments <CSV>` (read side). This spec defines the write side: how civic groups produce that CSV, validate it, and submit it into the workflow without going through state staff.
 
 ## Scope
 
@@ -33,9 +33,9 @@ The Plan Comparison spec already added `redist compare --comments <CSV>` (read s
    - `confidence` is `high|medium|low` — the submitter's self-assessment of how well-defined the boundary is
    - `submitted_at` is ISO-8601
 
-2. **`redist civic ingest` command**
+2. **`BISECT civic ingest` command**
    ```
-   redist civic ingest comments.csv \
+   BISECT civic ingest comments.csv \
      --year 2020 --state LA \
      --label public_comments_2026_round_1 \
      --validate strict
@@ -59,7 +59,7 @@ The Plan Comparison spec already added `redist compare --comments <CSV>` (read s
    - The `original.csv` is the verbatim input (BOM, CRLF, encoding preserved); `normalized.csv` is the audited form. Both SHAs are recorded in the manifest.
 
 3. **Public-comment-period report mode**
-   `redist report --comment-period --plan LABEL --comments-label LABEL` produces a report variant tailored to a public-comment hearing:
+   `BISECT report --comment-period --plan LABEL --comments-label LABEL` produces a report variant tailored to a public-comment hearing:
    - Front section: "comments received and addressed" (each `comment_id` + which districts honor vs. split it)
    - Per-district section: "communities of interest within this district per public comment"
    - Appendix: full submitter list with org name, URL, submission date — provenance for the public record
@@ -67,7 +67,7 @@ The Plan Comparison spec already added `redist compare --comments <CSV>` (read s
 4. **Race-of-candidate annotation contributions**
    Civic groups (NAACP-LDF chapters, ACLU, etc.) are the highest-quality source for candidate-race annotations in jurisdictions where the state board of elections refuses to publish them.
    ```
-   redist civic add-candidate-race candidates.csv --year 2020 --state LA \
+   BISECT civic add-candidate-race candidates.csv --year 2020 --state LA \
      --submitter "NAACP Louisiana State Conference" \
      --attestation-doc path/to/letter_of_attestation.pdf
    ```
@@ -79,12 +79,12 @@ The Plan Comparison spec already added `redist compare --comments <CSV>` (read s
 5. **Civic-counter-proposal flow** — combines this spec with State Staff Interop's `--as-civic-counter-proposal` and Plan Comparison's `--comments` overlay:
    ```
    # Civic group flow (no state staff in the loop):
-   redist import --format districtr theirplan.json \
+   BISECT import --format districtr theirplan.json \
      --as-civic-counter-proposal \
      --submitted-by "League of Women Voters Louisiana" \
      --label lwvla_alternative_2026
-   redist civic ingest community_comments.csv --label lwv_comments
-   redist compare --plan-a state_proposal --plan-b lwvla_alternative_2026 \
+   BISECT civic ingest community_comments.csv --label lwv_comments
+   BISECT compare --plan-a state_proposal --plan-b lwvla_alternative_2026 \
      --comments lwv_comments \
      --format html,narrative,card
    ```
@@ -158,19 +158,19 @@ outputs/{version}/states/{state}/reports/
 ## CLI surface
 
 ```
-redist civic ingest <CSV> --year YYYY --state ST --label LABEL \
+BISECT civic ingest <CSV> --year YYYY --state ST --label LABEL \
   [--validate {strict|lenient|advisory}] \
   [--submitter "Org Name"] \
   [--source-url URL]
 
-redist civic add-candidate-race <CSV> --year YYYY --state ST \
+BISECT civic add-candidate-race <CSV> --year YYYY --state ST \
   --submitter "Org Name" --attestation-doc PATH
 
-redist civic list                                # show ingested civic inputs
-redist civic show --label LABEL                  # show one input + validation
-redist civic conflicts --label LABEL_A --label LABEL_B   # show overlaps + disagreements
+BISECT civic list                                # show ingested civic inputs
+BISECT civic show --label LABEL                  # show one input + validation
+BISECT civic conflicts --label LABEL_A --label LABEL_B   # show overlaps + disagreements
 
-redist report --comment-period --plan LABEL --comments-label LABEL
+BISECT report --comment-period --plan LABEL --comments-label LABEL
 ```
 
 ## Tests
@@ -178,7 +178,7 @@ redist report --comment-period --plan LABEL --comments-label LABEL
 - L0 **schema validation**: malformed CSV rows produce specific error messages naming the offending row + column
 - L0 **GEOID typo guard**: include a fake GEOID; assert ingest fails in strict mode and warns in lenient
 - L0 **localhost URL rejection**: `source_url=http://127.0.0.1/...`; assert non-zero exit
-- L0 **conflict detection**: ingest two civic inputs that disagree on a tract's COI label; assert `redist civic conflicts` finds the disagreement
+- L0 **conflict detection**: ingest two civic inputs that disagree on a tract's COI label; assert `BISECT civic conflicts` finds the disagreement
 - L0 **race-of-candidate conflict**: two submitters disagree on a candidate's race; assert the Callais Evidence Layer flags + runs the with/without sensitivity check
 - L0 **report contains comments**: render a comment-period report on synthetic input; assert the "comments received and addressed" section names every `comment_id`
 - L1: full civic-counter-proposal flow on a synthetic VT plan + 5 civic comments; assert the comparison report's narrative honors the comment-incorporation appendix
@@ -188,8 +188,8 @@ redist report --comment-period --plan LABEL --comments-label LABEL
 
 | Risk | Mitigation |
 |---|---|
-| Civic groups submit garbage / spam to inflate their narrative | Validation modes; manifest records submitter; downstream reader sees the bar; bad submissions are visible in `redist civic list` |
-| Two groups submit overlapping but different communities (legitimate disagreement) | `redist civic conflicts` surfaces it; report shows both with attribution; we do not adjudicate |
+| Civic groups submit garbage / spam to inflate their narrative | Validation modes; manifest records submitter; downstream reader sees the bar; bad submissions are visible in `BISECT civic list` |
+| Two groups submit overlapping but different communities (legitimate disagreement) | `BISECT civic conflicts` surfaces it; report shows both with attribution; we do not adjudicate |
 | Race-of-candidate contributions become a vector for biased annotations | Attestation document required; conflict-aware sensitivity check; expert signs off on headline number |
 | Ingestion runs ahead of state-staff approval and confuses readers about authority | `as-civic-counter-proposal` tag is loud in every downstream report; comparison-report narrative leads with "civic counter-proposal" framing |
 | Submitter URL goes 404 between submission and trial | We snapshot the URL contents into the manifest at ingestion time (with submitter consent); reproducibility package embeds the snapshot |
@@ -197,9 +197,9 @@ redist report --comment-period --plan LABEL --comments-label LABEL
 
 ## Definition of done
 
-- `redist civic ingest` validates + normalizes a CSV submission with full provenance
-- `redist civic add-candidate-race` accepts a submission with an attestation document; conflicts trigger the sensitivity check
-- `redist report --comment-period` produces a non-evidentiary report that references every `comment_id` it consumed
+- `BISECT civic ingest` validates + normalizes a CSV submission with full provenance
+- `BISECT civic add-candidate-race` accepts a submission with an attestation document; conflicts trigger the sensitivity check
+- `BISECT report --comment-period` produces a non-evidentiary report that references every `comment_id` it consumed
 - A worked civic-counter-proposal example is committed under `examples/civic-counter-proposal/` with sample CSV + sample comparison output
 - Google Sheets template + plain-English how-to committed under `docs/civic/`
 - One real civic group (not us) ingests a sample CSV without our help; we record the friction

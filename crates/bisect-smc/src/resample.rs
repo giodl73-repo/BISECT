@@ -1,8 +1,8 @@
 //! ESS computation, Kahan softmax, and systematic resampling for SMC.
 //! Per spec §2.5 and §7 (L0 test invariants).
 
-use rand::{Rng, SeedableRng};
 use rand::rngs::SmallRng;
+use rand::{Rng, SeedableRng};
 
 /// Effective Sample Size from log-weights.
 ///
@@ -18,18 +18,26 @@ pub fn ess(log_weights: &[f64]) -> f64 {
     }
     // Normalise in log-space: subtract logsumexp
     let lse = logsumexp(log_weights);
-    let sum_sq: f64 = log_weights.iter()
+    let sum_sq: f64 = log_weights
+        .iter()
         .map(|&lw| {
             let w = (lw - lse).exp();
             w * w
         })
         .sum();
-    if sum_sq == 0.0 { 0.0 } else { 1.0 / sum_sq }
+    if sum_sq == 0.0 {
+        0.0
+    } else {
+        1.0 / sum_sq
+    }
 }
 
 /// Log-sum-exp of a slice, numerically stable.
 pub fn logsumexp(log_weights: &[f64]) -> f64 {
-    let max = log_weights.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+    let max = log_weights
+        .iter()
+        .cloned()
+        .fold(f64::NEG_INFINITY, f64::max);
     if max.is_infinite() {
         return f64::NEG_INFINITY;
     }
@@ -43,9 +51,7 @@ pub fn logsumexp(log_weights: &[f64]) -> f64 {
 /// ensuring sum ≤ 1.0 ± 1e-6 even for N = 50,000 (per spec §7 L0).
 pub fn kahan_softmax(log_weights: &[f64]) -> Vec<f64> {
     let lse = logsumexp(log_weights);
-    let weights: Vec<f64> = log_weights.iter()
-        .map(|&lw| (lw - lse).exp())
-        .collect();
+    let weights: Vec<f64> = log_weights.iter().map(|&lw| (lw - lse).exp()).collect();
 
     // Kahan-renormalise to guarantee sum == 1.0 ± eps
     let mut sum = 0.0f64;
@@ -124,8 +130,10 @@ mod tests {
         for n in [2usize, 10, 100, 1000] {
             let lw = uniform_log_weights(n);
             let e = ess(&lw);
-            assert!((e - n as f64).abs() < 1e-9,
-                "ESS({n} uniform weights) = {e}, expected {n}");
+            assert!(
+                (e - n as f64).abs() < 1e-9,
+                "ESS({n} uniform weights) = {e}, expected {n}"
+            );
         }
     }
 
@@ -135,7 +143,10 @@ mod tests {
         let mut lw = vec![f64::NEG_INFINITY; 10];
         lw[0] = 0.0;
         let e = ess(&lw);
-        assert!((e - 1.0).abs() < 1e-12, "ESS(degenerate) = {e}, expected 1.0");
+        assert!(
+            (e - 1.0).abs() < 1e-12,
+            "ESS(degenerate) = {e}, expected 1.0"
+        );
     }
 
     #[test]
@@ -159,7 +170,10 @@ mod tests {
             c = (t - s) - y;
             s = t;
         }
-        assert!((s - 1.0).abs() < 1e-6, "N=50000 sum = {s}, expected 1.0 ± 1e-6");
+        assert!(
+            (s - 1.0).abs() < 1e-6,
+            "N=50000 sum = {s}, expected 1.0 ± 1e-6"
+        );
     }
 
     #[test]
@@ -172,7 +186,10 @@ mod tests {
         assert_eq!(indices.len(), n);
         assert_eq!(index_map.len(), n);
         assert!(indices.iter().all(|&i| i < n), "all indices in [0,N-1]");
-        assert!(index_map.iter().all(|&i| i < n), "all index_map values in [0,N-1]");
+        assert!(
+            index_map.iter().all(|&i| i < n),
+            "all index_map values in [0,N-1]"
+        );
     }
 
     #[test]
@@ -202,7 +219,9 @@ mod tests {
         // (the single uniform draw u changes, shifting all targets).
         let n = 10usize;
         // Skewed weights: first 3 particles get ~60% of weight
-        let log_weights: Vec<f64> = (0..n).map(|i| if i < 3 { 0.0f64 } else { -2.0f64 }).collect();
+        let log_weights: Vec<f64> = (0..n)
+            .map(|i| if i < 3 { 0.0f64 } else { -2.0f64 })
+            .collect();
         let (i1, _) = systematic_resample(n, &log_weights, 1);
         let (i2, _) = systematic_resample(n, &log_weights, 999);
         // With skewed weights and different u values, the index sequences should differ
@@ -217,7 +236,10 @@ mod tests {
         let n = 8usize;
         let lw = uniform_log_weights(n);
         let (indices, _) = systematic_resample(n, &lw, 42);
-        assert_eq!(indices, (0..n).collect::<Vec<_>>(),
-            "uniform weights → identity permutation");
+        assert_eq!(
+            indices,
+            (0..n).collect::<Vec<_>>(),
+            "uniform weights → identity permutation"
+        );
     }
 }

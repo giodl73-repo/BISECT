@@ -4,12 +4,16 @@
 //! All tests run unconditionally (no #[ignore]).
 //! Per spec §12 (L0 invariants).
 
+use bisect_pareto::dominance::{crowding_distance, dominates, fast_non_dominated_sort};
 use bisect_pareto::objectives::Objectives;
-use bisect_pareto::dominance::{dominates, fast_non_dominated_sort, crowding_distance};
-use bisect_pareto::seeds::{init_seed, cross_seed, mut_seed};
+use bisect_pareto::seeds::{cross_seed, init_seed, mut_seed};
 
 fn obj(ec: f64, d: f64, vra: f64) -> Objectives {
-    Objectives { ec, d_seats: d, vra_deficit: vra }
+    Objectives {
+        ec,
+        d_seats: d,
+        vra_deficit: vra,
+    }
 }
 
 // ── Dominance tests ───────────────────────────────────────────────────────────
@@ -28,8 +32,14 @@ fn dominates_equal_not() {
     // A = B = (1,1,1): equal on all objectives → neither dominates
     let a = obj(1.0, 1.0, 1.0);
     let b = obj(1.0, 1.0, 1.0);
-    assert!(!dominates(&a, &b), "equal plans must not dominate each other");
-    assert!(!dominates(&b, &a), "equal plans must not dominate each other (B vs A)");
+    assert!(
+        !dominates(&a, &b),
+        "equal plans must not dominate each other"
+    );
+    assert!(
+        !dominates(&b, &a),
+        "equal plans must not dominate each other (B vs A)"
+    );
 }
 
 #[test]
@@ -46,7 +56,10 @@ fn dominates_one_objective_strict_rest_equal() {
     // A = (1,1,0), B = (2,1,0): A better on ec only, equal on rest → A dominates B
     let a = obj(1.0, 1.0, 0.0);
     let b = obj(2.0, 1.0, 0.0);
-    assert!(dominates(&a, &b), "A must dominate B (strictly better on ec)");
+    assert!(
+        dominates(&a, &b),
+        "A must dominate B (strictly better on ec)"
+    );
     assert!(!dominates(&b, &a));
 }
 
@@ -137,8 +150,14 @@ fn crowding_middle_plan_finite() {
     assert!(dist[0].is_infinite());
     assert!(dist[3].is_infinite());
     // Middle plans (index 1 and 2) should be finite
-    assert!(dist[1].is_finite(), "middle plan must have finite crowding distance");
-    assert!(dist[2].is_finite(), "middle plan must have finite crowding distance");
+    assert!(
+        dist[1].is_finite(),
+        "middle plan must have finite crowding distance"
+    );
+    assert!(
+        dist[2].is_finite(),
+        "middle plan must have finite crowding distance"
+    );
 }
 
 #[test]
@@ -179,9 +198,9 @@ fn seed_prefixes_distinct() {
     // PARETO_INIT_ (12b) != PARETO_CROSS_ (13b) != PARETO_MUT_ (11b)
     // With same "effective" gen/i/base, all three must differ
     let s = 0u64;
-    let a = init_seed(s, 0);      // PARETO_INIT_ prefix
-    let b = cross_seed(s, 0, 0);  // PARETO_CROSS_ prefix
-    let c = mut_seed(s, 0, 0);    // PARETO_MUT_ prefix
+    let a = init_seed(s, 0); // PARETO_INIT_ prefix
+    let b = cross_seed(s, 0, 0); // PARETO_CROSS_ prefix
+    let c = mut_seed(s, 0, 0); // PARETO_MUT_ prefix
     assert_ne!(a, b, "PARETO_INIT_ != PARETO_CROSS_");
     assert_ne!(a, c, "PARETO_INIT_ != PARETO_MUT_");
     assert_ne!(b, c, "PARETO_CROSS_ != PARETO_MUT_");
@@ -190,8 +209,16 @@ fn seed_prefixes_distinct() {
 #[test]
 fn init_seed_deterministic() {
     let s = 99u64;
-    assert_eq!(init_seed(s, 7), init_seed(s, 7), "same inputs -> same output");
-    assert_eq!(cross_seed(s, 3, 7), cross_seed(s, 3, 7), "cross deterministic");
+    assert_eq!(
+        init_seed(s, 7),
+        init_seed(s, 7),
+        "same inputs -> same output"
+    );
+    assert_eq!(
+        cross_seed(s, 3, 7),
+        cross_seed(s, 3, 7),
+        "cross deterministic"
+    );
     assert_eq!(mut_seed(s, 3, 7), mut_seed(s, 3, 7), "mut deterministic");
 }
 

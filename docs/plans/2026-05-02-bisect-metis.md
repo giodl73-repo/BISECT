@@ -18,7 +18,7 @@
 ## File map
 
 ```
-redist/crates/bisect-metis/
+BISECT/crates/bisect-metis/
   ALGORITHM.md
   Cargo.toml
   src/
@@ -120,8 +120,8 @@ git commit -m "ci: add Kani + Prusti verify jobs — separate from PR test suite
 ### Task 1: Create crate + Cargo.toml
 
 **Files:**
-- Create: `redist/crates/bisect-metis/Cargo.toml`
-- Modify: `redist/Cargo.toml`
+- Create: `BISECT/crates/bisect-metis/Cargo.toml`
+- Modify: `BISECT/Cargo.toml`
 
 - [ ] **Step 1: Create Cargo.toml**
 
@@ -150,7 +150,7 @@ harness = false
 
 - [ ] **Step 2: Add to workspace**
 
-In `redist/Cargo.toml`, add `"crates/bisect-metis"` to the `members` array.
+In `BISECT/Cargo.toml`, add `"crates/bisect-metis"` to the `members` array.
 
 - [ ] **Step 3: Create `src/lib.rs` stub**
 
@@ -362,7 +362,7 @@ Expected: 8 tests pass.
 - [ ] **Step 6: Commit**
 
 ```
-git add redist/crates/bisect-metis/ redist/Cargo.toml
+git add BISECT/crates/bisect-metis/ BISECT/Cargo.toml
 git commit -m "feat(bisect-metis): scaffold — CsrGraph, Partition, CoarseMap, PartitionError"
 ```
 
@@ -958,7 +958,7 @@ impl Coarsener for MinDegreeMatch {
 // L1: repeated coarsening reaches should_stop within MAX_LEVELS
 #[test]
 fn coarsening_terminates_path255() {
-    use redist_metis::coarsen::{Coarsener, shem::SortedHeavyEdgeMatchWithParams};
+    use BISECT_metis::coarsen::{Coarsener, shem::SortedHeavyEdgeMatchWithParams};
     let g = make_path(255);
     let coarsener = SortedHeavyEdgeMatchWithParams { coarsen_to: 20, k: 1 };
     let mut current = g;
@@ -1825,10 +1825,10 @@ git commit -m "feat(bisect-metis): CoarseningHierarchy arena with MAX_LEVELS=50 
 ```rust
 #[test]
 fn pipeline_full_run_path10_k2() {
-    use redist_metis::api::{MetisParams, RustMetisPartitioner};
-    use redist_metis::coarsen::shem::SortedHeavyEdgeMatchWithParams;
-    use redist_metis::init::grow::GrowBisect;
-    use redist_metis::refine::fm::FiducciaMattheyses;
+    use BISECT_metis::api::{MetisParams, RustMetisPartitioner};
+    use BISECT_metis::coarsen::shem::SortedHeavyEdgeMatchWithParams;
+    use BISECT_metis::init::grow::GrowBisect;
+    use BISECT_metis::refine::fm::FiducciaMattheyses;
 
     let g = path_graph(10);
     let params = MetisParams { ufactor: 5, niter: 10, seed: Some(42), coarsen_to: 20 };
@@ -2181,7 +2181,7 @@ fn golden_rng_determinism() {
 ```rust
 // tests/proptest_invariants.rs
 use proptest::prelude::*;
-use redist_metis::{graph::CsrGraph, coarsen::{Coarsener, shem::SortedHeavyEdgeMatch}};
+use BISECT_metis::{graph::CsrGraph, coarsen::{Coarsener, shem::SortedHeavyEdgeMatch}};
 
 fn arb_path(max_n: usize) -> impl Strategy<Value = CsrGraph> {
     (2usize..=max_n).prop_map(|n| {
@@ -2436,8 +2436,8 @@ git commit -m "verify(bisect-metis): Prusti postconditions — coverage, valid I
 ### Task 20: Shadow mode feature flag
 
 **Files:**
-- Modify: `redist/crates/bisect-apportion/Cargo.toml`
-- Modify: `redist/crates/bisect-apportion/src/split.rs`
+- Modify: `BISECT/crates/bisect-apportion/Cargo.toml`
+- Modify: `BISECT/crates/bisect-apportion/src/split.rs`
 
 - [ ] **Step 1: Add `bisect-metis` dep + shadow feature**
 
@@ -2502,7 +2502,7 @@ git commit -m "feat(bisect-apportion): shadow-metis feature flag — parallel C 
 
 **Files:**
 - Create: `scripts/validate_shadow_gate.py`
-- Modify: `redist/crates/bisect-apportion/Cargo.toml`
+- Modify: `BISECT/crates/bisect-apportion/Cargo.toml`
 
 - [ ] **Step 1: Run 50-state shadow validation**
 

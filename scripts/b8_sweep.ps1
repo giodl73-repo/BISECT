@@ -15,7 +15,7 @@ param(
 
 Set-Location C:\src\apportionment
 
-$redist  = ".\redist\target\release\redist.exe"
+$BISECT  = ".\target\release\bisect.exe"
 $outDir  = "outputs\b8_sweep"
 $csvPath = "$outDir\geosection.csv"
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
@@ -99,7 +99,7 @@ foreach ($entry in $statesToRun) {
 
     # Run GeoSection if not already done
     if (-not (Test-Path $mPath)) {
-        $out = & $redist state --state $code --year 2020 --version $ver `
+        $out = & $BISECT state --state $code --year 2020 --version $ver `
             --partition-mode geosection --geosection-seeds $Seeds --manifest --force 2>&1
         if ($LASTEXITCODE -ne 0) {
             Write-Output "  FAILED (exit $LASTEXITCODE)"
@@ -113,7 +113,7 @@ foreach ($entry in $statesToRun) {
 
     # Run proportionality if not done
     if (-not (Test-Path $pPath)) {
-        $null = & $redist analyze --state $code --year 2020 --version $ver --types proportionality 2>&1
+        $null = & $BISECT analyze --state $code --year 2020 --version $ver --types proportionality 2>&1
     }
 
     if (-not (Test-Path $mPath)) { Write-Output "  SKIP: no manifest"; continue }

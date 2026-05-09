@@ -3,7 +3,7 @@
 **Status**: Complete — all phases shipped 2026-04-25  
 **Author**: Gio Della-Libera  
 **Scope**: Progressive replacement of the Python redistricting pipeline with a Rust CLI  
-**Result**: `redist` binary, 50-state run in ~15.5 s (~213× faster than Python). See `migration-log.md`.
+**Result**: `BISECT` binary, 50-state run in ~15.5 s (~213× faster than Python). See `migration-log.md`.
 
 ---
 
@@ -13,7 +13,7 @@ The Python pipeline works. The Rust port targets three specific pain points:
 
 1. **Adjacency build time.** `adjacency.py` (661 lines) builds shared-boundary graphs in Python/GeoPandas. The bottleneck is the per-edge Shapely `intersection()` call — O(E) calls, each expensive. For 50 states this takes ~20 minutes. Rust parallelizes this across cores with no GIL.
 
-2. **Deployment portability.** The current pipeline requires Python 3.13, METIS binary, GeoPandas, and a complex dependency chain. A single `redist` binary makes court-submission reproducibility straightforward.
+2. **Deployment portability.** The current pipeline requires Python 3.13, METIS binary, GeoPandas, and a complex dependency chain. A single `BISECT` binary makes court-submission reproducibility straightforward.
 
 3. **Algorithm ground truth.** The adaptive boost formula (`max(3.0, 10.0*(1-0.7*f))`) currently lives only in `run_state_redistricting.py`. Moving it to `bisect-core` makes it a single authoritative implementation shared by the Python pipeline (via PyO3) and the Rust CLI — eliminating the paper/code drift that the D-track review found.
 
@@ -26,16 +26,16 @@ PyO3 bindings mean the Python pipeline continues working throughout the migratio
 ## Architecture: 5-Crate Workspace
 
 ```
-redist/                          # Cargo workspace root
+BISECT/                          # Cargo workspace root
 ├── Cargo.toml
 ├── crates/
 │   ├── bisect-core/             # Algorithm kernel (no I/O)
 │   ├── bisect-data/             # Census data loading and adjacency
-│   ├── bisect-cli/              # Binary: `redist` command
+│   ├── bisect-cli/              # Binary: `BISECT` command
 │   ├── bisect-analysis/         # Compactness, demographics, partisan metrics
 │   └── bisect-web/              # Static dashboard generation
 └── python/
-    └── redist_py/               # PyO3 bindings (wraps bisect-core)
+    └── bisect_py/               # PyO3 bindings (wraps bisect-core)
 ```
 
 ### Crate responsibilities
@@ -64,13 +64,13 @@ redist/                          # Cargo workspace root
 
 - [ ] `cargo init` workspace with 5 crate stubs
 - [ ] `bisect-core`: `Graph` struct (CSR adjacency list + vertex weights), `Partition` struct (tract→district map), round-trip serialize to/from Python dict
-- [ ] `redist_py`: PyO3 module exposing `Graph.from_csr()` and `Partition.to_dict()`
-- [ ] **Write new test** `tests/unit/test_rust_graph.py`: construct `redist_py.Graph` from a known 5-vertex CSR dict, assert `n_vertices()==5`, `n_edges()==correct`. This is the Phase 0 exit criterion test.
+- [ ] `bisect_py`: PyO3 module exposing `Graph.from_csr()` and `Partition.to_dict()`
+- [ ] **Write new test** `tests/unit/test_rust_graph.py`: construct `bisect_py.Graph` from a known 5-vertex CSR dict, assert `n_vertices()==5`, `n_edges()==correct`. This is the Phase 0 exit criterion test.
 - [ ] CI: add `rust-tests` job to `.github/workflows/` (see CI section below)
-- [ ] Set `REDIST_NO_RUST=1` in the **existing** `test` CI job so it keeps passing without Rust compiled
-- [ ] Python: replace `RecursiveBisection.__init__` graph-loading with `redist_py.Graph.from_csr()` only when `REDIST_NO_RUST` is unset
+- [ ] Set `BISECT_NO_RUST=1` in the **existing** `test` CI job so it keeps passing without Rust compiled
+- [ ] Python: replace `RecursiveBisection.__init__` graph-loading with `bisect_py.Graph.from_csr()` only when `BISECT_NO_RUST` is unset
 
-**Exit criterion**: `pytest tests/unit/test_rust_graph.py` passes (new test). Existing `tests/unit/` suite passes in both `REDIST_NO_RUST=1` mode (CI `test` job) and Rust-compiled mode (CI `rust-tests` job).
+**Exit criterion**: `pytest tests/unit/test_rust_graph.py` passes (new test). Existing `tests/unit/` suite passes in both `BISECT_NO_RUST=1` mode (CI `test` job) and Rust-compiled mode (CI `rust-tests` job).
 
 ---
 
@@ -100,7 +100,7 @@ pub fn build_vra_edge_weights(
 }
 ```
 
-Once this function exists in `bisect-core`, **delete** `run_state_redistricting.py:226-260` and replace with `redist_py.build_vra_edge_weights(...)`. The formula then lives in exactly one place.
+Once this function exists in `bisect-core`, **delete** `run_state_redistricting.py:226-260` and replace with `bisect_py.build_vra_edge_weights(...)`. The formula then lives in exactly one place.
 
 #### 1b. Bisection tree
 Port `RecursiveBisection` tree-building logic. Important: the current Python implementation is **level-parallel** — it processes all nodes at a given depth simultaneously via `ProcessPoolExecutor`. The Rust port must also be level-parallel, not depth-first recursive. Use Rayon for parallel splits at each level. A depth-first port would differ in split order and produce different (not just slower) results.
@@ -112,7 +112,7 @@ Port `metis_wrapper.py` to Rust: construct the METIS `.graph` file, invoke `gpme
 Add `Partition::assert_balanced(vertex_weights, n_districts, tolerance)` to `bisect-core`. Call it only on **final** leaf partitions (not intermediate bisection nodes, which use their own tighter `ufactor` tolerance). Called from both PyO3 (when Python pipeline finalizes a state) and from `bisect-cli` (Phase 3).
 
 **Exit criterion**: 
-- `pytest tests/unit/` passes with `REDIST_NO_RUST` unset (Rust formula called)
+- `pytest tests/unit/` passes with `BISECT_NO_RUST` unset (Rust formula called)
 - `run_state_redistricting.py` still works end-to-end for VT and AL
 - `run_state_redistricting.py:226-260` deleted (only one copy of formula exists)
 
@@ -146,12 +146,12 @@ Write adjacency as `.bin` (fast binary, Rust-to-Rust). For Python backward compa
 ---
 
 ### Phase 3 — CLI Binary (2 weeks)
-**Goal**: `redist run --state AL --year 2020 --version V3` works end-to-end from the `redist` binary.
+**Goal**: `BISECT run --state AL --year 2020 --version V3` works end-to-end from the `BISECT` binary.
 
 #### 3a. Argument parsing
 Mirror the current flag surface exactly using `clap` derive macros:
 ```
-redist run [--state <STATE>] [--year <YEAR>] [--version <VERSION>]
+BISECT run [--state <STATE>] [--year <YEAR>] [--version <VERSION>]
            [--partition-mode <MODE>] [--states <LIST>]
            [--reprocess] [--skip-analysis]
 ```
@@ -169,14 +169,14 @@ Rust CLI writes:
 - `states/{state}/data/vra_analysis.json`
 
 **New test required** (write before marking Phase 3 complete):  
-`tests/integration/test_cli_parity.py` — run `redist run --state VT ...` as a subprocess, check that `final_assignments.pkl` and `vra_analysis.json` exist, and that population balance passes. Do **not** reuse `TestVRACodePathIntegrity` (which invokes the Python script). New test must invoke the `redist` binary directly.
+`tests/integration/test_cli_parity.py` — run `BISECT run --state VT ...` as a subprocess, check that `final_assignments.pkl` and `vra_analysis.json` exist, and that population balance passes. Do **not** reuse `TestVRACodePathIntegrity` (which invokes the Python script). New test must invoke the `BISECT` binary directly.
 
 **Exit criterion**: `pytest tests/integration/test_cli_parity.py` passes for VT (1 district, trivial) and AL (7 districts, VRA target).
 
 ---
 
 ### Phase 4 — Analysis and Dashboard (2 weeks)
-**Goal**: `bisect analyze` and `redist dashboard` work from the binary.
+**Goal**: `bisect analyze` and `BISECT dashboard` work from the binary.
 
 #### 4a. Compactness metrics
 Port Polsby-Popper and Reock to `bisect-analysis`. **Critical requirement**: district polygons must be projected to an equal-area CRS (EPSG:5070 Albers Equal Area for CONUS, EPSG:3338 for Alaska, EPSG:6364 for Hawaii) before computing area/perimeter. The `geo` crate computes planar area from coordinate values — WGS84 degrees give area in square degrees, not square meters. Polsby-Popper is meaningless without projected coordinates.
@@ -208,7 +208,7 @@ This eliminates the `vra_mode` premature-clear class of bugs: analysis and parti
 #### 4c. Static dashboard
 Port `scripts/web/deploy_docs.py` to `bisect-web`.
 
-**Exit criterion**: `bisect analyze --state AL --version V4` produces `vra_analysis.json` with `mm_count==2`. `redist dashboard --version V4 --year 2020` matches current `docs/dashboard_vra.html` visually.
+**Exit criterion**: `bisect analyze --state AL --version V4` produces `vra_analysis.json` with `mm_count==2`. `BISECT dashboard --version V4 --year 2020` matches current `docs/dashboard_vra.html` visually.
 
 ---
 
@@ -231,7 +231,7 @@ Port `scripts/web/deploy_docs.py` to `bisect-web`.
 # Existing 'test' job: add env var so Python tests pass without Rust compiled
 test:
   env:
-    REDIST_NO_RUST: "1"
+    BISECT_NO_RUST: "1"
   # ... rest of existing job unchanged
 
 # New job
@@ -258,9 +258,9 @@ rust-tests:
 
 2. **VRA analysis atomicity**: `final_assignments` and `vra_analysis.json` are written via rename from temp files in `bisect-cli::write_state_outputs()`. Partial-write states are detectable and restartable. This is only enforceable from the CLI binary — not through PyO3 (Python controls I/O when calling via bindings).
 
-3. **Formula ground truth**: After Phase 1a, the adaptive boost formula exists only in `bisect-core/src/vra.rs`. `run_state_redistricting.py:226-260` is deleted. Both Python (via `redist_py.build_vra_edge_weights`) and the CLI use the same implementation. Any future change to the formula requires one edit in one place.
+3. **Formula ground truth**: After Phase 1a, the adaptive boost formula exists only in `bisect-core/src/vra.rs`. `run_state_redistricting.py:226-260` is deleted. Both Python (via `bisect_py.build_vra_edge_weights`) and the CLI use the same implementation. Any future change to the formula requires one edit in one place.
 
-4. **No silent fallback**: When `REDIST_NO_RUST` is unset and `redist_py` is not compiled, the Python pipeline raises `ImportError` immediately. Set `REDIST_NO_RUST=1` to use pure-Python path (slower, same results).
+4. **No silent fallback**: When `BISECT_NO_RUST` is unset and `bisect_py` is not compiled, the Python pipeline raises `ImportError` immediately. Set `BISECT_NO_RUST=1` to use pure-Python path (slower, same results).
 
 5. **Output format parity**: Python and Rust pipelines produce byte-compatible CSVs (±1e-6 float tolerance). Verified by `test_adjacency_parity.py` (Phase 2) and `test_cli_parity.py` (Phase 3) before each Python code path is deprecated.
 
@@ -273,9 +273,9 @@ Every phase **must** have a new test written before the phase is marked complete
 | Phase | Required new test | What it proves |
 |---|---|---|
 | 0 | `tests/unit/test_rust_graph.py` | `Graph.from_csr()` round-trips correctly |
-| 1 | extend `test_vra_edge_weighting.py` to call `redist_py.build_vra_edge_weights` | Rust formula matches Python formula output |
+| 1 | extend `test_vra_edge_weighting.py` to call `bisect_py.build_vra_edge_weights` | Rust formula matches Python formula output |
 | 2 | `tests/integration/test_adjacency_parity.py` | Rust adjacency byte-matches Python for VT + DE |
-| 3 | `tests/integration/test_cli_parity.py` | `redist` binary produces valid VRA outputs |
+| 3 | `tests/integration/test_cli_parity.py` | `BISECT` binary produces valid VRA outputs |
 | 4 | `tests/unit/test_rust_compactness.py` | PP values match Python within 1e-6 (projected input) |
 
 ---
@@ -309,6 +309,6 @@ Removed from original plan: `geos` (C bindings, portability issues), `kdtree` (n
 | PyO3 ABI breaks on Python 3.13 | Low | Pin `abi3`; test in CI |
 | Rust adjacency diverges on edge cases (islands, water) | Medium | `test_adjacency_parity.py` covers all 50 states |
 | Adaptive boost formula drift during migration | **Eliminated** | Python copy deleted at end of Phase 1a |
-| `REDIST_NO_RUST` breaks existing CI | **Eliminated** | Existing CI job sets it explicitly |
+| `BISECT_NO_RUST` breaks existing CI | **Eliminated** | Existing CI job sets it explicitly |
 | 55→10 min target not achievable without Phase 5 | Known | Realistic Phases 1-4 target: ~20-25 min |
 | METIS version unpinned (apt-get) | Low | Pin version in CI after Phase 5 decision |

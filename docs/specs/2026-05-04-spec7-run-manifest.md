@@ -11,7 +11,7 @@
 
 ### 1.1 Paths are the current API — and they break
 
-Every `redist` command today requires the user to manage paths explicitly:
+Every `BISECT` command today requires the user to manage paths explicitly:
 
 ```bash
 bisect states --year 2020 --output-dir outputs/official_proposal/2020 \
@@ -20,7 +20,7 @@ bisect states --year 2020 --output-dir outputs/official_proposal/2020 \
 
 bisect analyze --version official_proposal --year 2020 --types proportionality splits
 
-redist report --version official_proposal --year 2020 \
+BISECT report --version official_proposal --year 2020 \
   --out outputs/official_proposal/reports/
 ```
 
@@ -64,15 +64,15 @@ subcommand.
 **Core principle: names are the API; paths are the implementation.**
 
 A **label** is a short human name for a run (`official_proposal`, `senate_draft2`,
-`vt_test`). The user names runs once; every `redist` command resolves the label to
+`vt_test`). The user names runs once; every `BISECT` command resolves the label to
 the correct directory through fixed convention. There are no path arguments in
 normal use.
 
 ```bash
 bisect build   official_proposal --config configs/statute.yml --year 2020
 bisect analyze official_proposal --types proportionality splits
-redist report  official_proposal
-redist compare official_proposal senate_draft2 --year 2020
+BISECT report  official_proposal
+BISECT compare official_proposal senate_draft2 --year 2020
 bisect ls
 bisect show    official_proposal
 ```
@@ -91,10 +91,10 @@ Every command resolves its input and output directories from the label alone:
 No path arguments. No `--version` flags. No `--output-dir` strings. The label is
 the only identifier the user ever types.
 
-### 2.2 The `.redist` registry
+### 2.2 The `.bisect` registry
 
 A single JSON file at the repository root tracks what has been done to each label.
-It is never edited by the user — only written by `redist` commands.
+It is never edited by the user — only written by `BISECT` commands.
 
 ```json
 {
@@ -131,7 +131,7 @@ reports/official_proposal/index.json       ← report index (references analysis
 The **config file** (`configs/official_proposal.yml`) declares WHAT TO DO:
 algorithm parameters, years, workers. The user edits this before running.
 
-The **registry** (`.redist`) records WHAT WAS DONE: which years were built,
+The **registry** (`.bisect`) records WHAT WAS DONE: which years were built,
 analyzed, reported. The system writes this; the user never edits it.
 
 The **index files** (`runs/X/index.json`, `analysis/X/index.json`) record HOW IT
@@ -144,7 +144,7 @@ user reads them for diagnosis.
 existing build, the system MUST:
 1. Delete `analysis/X/Y/` (analysis outputs are stale)
 2. Delete `reports/X/Y/` (reports are stale)
-3. Remove year Y from `analyzed` and `reported` lists in `.redist` registry
+3. Remove year Y from `analyzed` and `reported` lists in `.bisect` registry
 4. Write a `runs/X/Y/STALE_ANALYSIS` sentinel file explaining why analysis was cleared
 
 This cascade prevents silent stale data. The operator is warned:
@@ -181,32 +181,32 @@ bisect build official_proposal --config configs/statute.yml --dry-run
 bisect build --label official_proposal --config configs/statute.yml
 ```
 
-`build` writes outputs to `runs/official_proposal/` and updates `.redist`
+`build` writes outputs to `runs/official_proposal/` and updates `.bisect`
 with the years successfully built.
 
-### 3.1a `redist import X --from FILE` — create a label from an external plan file
+### 3.1a `BISECT import X --from FILE` — create a label from an external plan file
 
 ```bash
-redist import commission_v3 --from commission_v3.csv --year 2020
-redist import minority_proposal --from minority_proposal.shp --year 2020 --format shapefile
-redist import civic_geojson --from civic_input.geojson --year 2020 --format geojson
-redist import partner_plan --from partner.rplan --year 2020 --format rplan
+BISECT import commission_v3 --from commission_v3.csv --year 2020
+BISECT import minority_proposal --from minority_proposal.shp --year 2020 --format shapefile
+BISECT import civic_geojson --from civic_input.geojson --year 2020 --format geojson
+BISECT import partner_plan --from partner.rplan --year 2020 --format rplan
 ```
 
 Creates `runs/X/` from an externally-produced plan file. Supported input formats:
 - `csv`: GEOID,district columns (standard state-legislative exchange format)
 - `geojson`: FeatureCollection with `district_id` property
 - `shapefile`: `.shp` + `.dbf` with GEOID and DISTRICT columns
-- `rplan`: native redist format (Spec 1)
+- `rplan`: native BISECT format (Spec 1)
 
 The imported run has `"algorithm": {"structure": "external", "source": FILE_SHA256}`.
 It appears in `bisect ls` as a label with `built: [Y]` but `algorithm: external`.
 All `analyze`, `report`, and `compare` commands work identically on imported plans.
 
 ```bash
-redist import commission_v3 --from commission_v3.csv --year 2020
+BISECT import commission_v3 --from commission_v3.csv --year 2020
 bisect analyze commission_v3 --year 2020
-redist compare official_proposal commission_v3 --year 2020
+BISECT compare official_proposal commission_v3 --year 2020
 ```
 
 This enables the adversarial plan review workflow used by state legislative staff.
@@ -228,8 +228,8 @@ bisect analyze official_proposal --types compactness --year 2020 --states CA TX 
 ```
 
 `analyze` reads from `runs/official_proposal/` and writes to
-`analysis/official_proposal/`. Requires the label to appear in `.redist` with at
-least one built year. If `--year Y` is requested but `Y` is not in `.redist`
+`analysis/official_proposal/`. Requires the label to appear in `.bisect` with at
+least one built year. If `--year Y` is requested but `Y` is not in `.bisect`
 `built` list, exits with:
 
 ```
@@ -237,21 +237,21 @@ least one built year. If `--year Y` is requested but `Y` is not in `.redist`
 Run: bisect build official_proposal --year 2010
 ```
 
-### 3.3 `redist report X` — generate reports for a label
+### 3.3 `BISECT report X` — generate reports for a label
 
 ```bash
 # HTML dashboard (default)
-redist report official_proposal
+BISECT report official_proposal
 
 # Single year
-redist report official_proposal --year 2020
+BISECT report official_proposal --year 2020
 
 # Format selection
-redist report official_proposal --year 2020 --format json
-redist report official_proposal --year 2020 --format html
+BISECT report official_proposal --year 2020 --format json
+BISECT report official_proposal --year 2020 --format html
 
 # Expert-witness mode (for court submission)
-redist report official_proposal --year 2020 --format pdf \
+BISECT report official_proposal --year 2020 --format pdf \
   --expert-name "Dr. Jane Smith" --jurisdiction "Wisconsin"
 ```
 
@@ -259,26 +259,26 @@ redist report official_proposal --year 2020 --format pdf \
 `reports/official_proposal/`. Requires the label to have been analyzed for the
 requested year.
 
-### 3.4 `redist compare A B` — compare two labels
+### 3.4 `BISECT compare A B` — compare two labels
 
 ```bash
 # Compare two runs for a year
-redist compare official_proposal senate_draft2 --year 2020
+BISECT compare official_proposal senate_draft2 --year 2020
 
 # Specific metrics
-redist compare official_proposal senate_draft2 --year 2020 \
+BISECT compare official_proposal senate_draft2 --year 2020 \
   --metrics compactness splits proportionality
 
 # Output to file
-redist compare official_proposal senate_draft2 --year 2020 \
+BISECT compare official_proposal senate_draft2 --year 2020 \
   --out comparison_2020.json
 
 # Compare against enacted districts (downloads if absent)
-redist compare official_proposal --enacted --year 2020
+BISECT compare official_proposal --enacted --year 2020
 ```
 
 `compare` reads from `analysis/A/` and `analysis/B/`. Both labels must appear
-in `.redist` with the requested year analyzed.
+in `.bisect` with the requested year analyzed.
 
 ### 3.5 `bisect ls` — list all labels and their stage completion
 
@@ -331,29 +331,29 @@ Machine-readable output for CI:
 bisect show official_proposal --json   # full index.json content + registry entry
 ```
 
-**CI/CD flag**: All `redist` commands accept `--no-interactive` to disable
+**CI/CD flag**: All `BISECT` commands accept `--no-interactive` to disable
 confirmation prompts for use in CI/CD pipelines. `--force` skips conflict checks;
 `--no-interactive` skips confirmation prompts. These flags are orthogonal:
 - `--force` — bypass guards (allow overwrite, allow cascade delete)
 - `--no-interactive` — suppress prompts (fail on ambiguity rather than asking)
 
-### 3.7 `redist rm X` — delete a stage
+### 3.7 `BISECT rm X` — delete a stage
 
 ```bash
 # Delete the report stage only
-redist rm official_proposal --stage report
+BISECT rm official_proposal --stage report
 
 # Delete the analysis stage (also deletes report if it exists)
-redist rm official_proposal --stage analyze
+BISECT rm official_proposal --stage analyze
 
 # Delete everything (build + analysis + report)
-redist rm official_proposal
+BISECT rm official_proposal
 
 # Delete a specific year's build outputs only
-redist rm official_proposal --stage build --year 2010
+BISECT rm official_proposal --stage build --year 2010
 ```
 
-`rm` updates `.redist` to reflect the deleted stages. Prompts for confirmation
+`rm` updates `.bisect` to reflect the deleted stages. Prompts for confirmation
 unless `--force` is set.
 
 ### 3.8 `bisect label X Y` — copy a label
@@ -368,9 +368,9 @@ as `official_proposal`. Useful for tagging a completed run before starting a new
 build under the same label.
 
 `bisect label X Y` is a registry-only alias: it does NOT rename directories or
-update index files. Use `redist mv X Y` (below) for a full rename.
+update index files. Use `BISECT mv X Y` (below) for a full rename.
 
-### 3.8a `redist mv X Y` — rename a label
+### 3.8a `BISECT mv X Y` — rename a label
 
 Renames label X to Y with full filesystem and registry consistency:
 1. Moves `runs/X/` → `runs/Y/` (filesystem rename)
@@ -381,30 +381,30 @@ Renames label X to Y with full filesystem and registry consistency:
 6. Errors if Y already exists in registry (use `--force` to overwrite)
 
 ```bash
-redist mv senate_draft2 senate_final
-redist mv senate_draft2 senate_final --force   # overwrite if Y exists
+BISECT mv senate_draft2 senate_final
+BISECT mv senate_draft2 senate_final --force   # overwrite if Y exists
 ```
 
 Distinction:
 ```
 bisect label X Y  # alias only — does NOT rename directories or update index.json
-redist mv X Y     # full rename — directories + indexes + registry
+BISECT mv X Y     # full rename — directories + indexes + registry
 ```
 
-### 3.9 `redist plan [X]` — interactive TUI for the full pipeline
+### 3.9 `BISECT plan [X]` — interactive TUI for the full pipeline
 
-`redist plan` is the interactive terminal frontend for the entire label system.
-It replaces `redist tui` with a label-aware, action-oriented interface.
+`BISECT plan` is the interactive terminal frontend for the entire label system.
+It replaces `BISECT tui` with a label-aware, action-oriented interface.
 
 ```bash
-redist plan                      # TUI — pick a label from registry
-redist plan official_proposal    # TUI — pre-scoped to this label
-redist plan official_proposal --configure  # TUI — edit algorithm config
+BISECT plan                      # TUI — pick a label from registry
+BISECT plan official_proposal    # TUI — pre-scoped to this label
+BISECT plan official_proposal --configure  # TUI — edit algorithm config
 ```
 
 **Entry screen (no label specified):**
 ```
-┌─ redist ─────────────────────────────────────────────────────┐
+┌─ BISECT ─────────────────────────────────────────────────────┐
 │ Labels                          Built    Analyzed   Reported  │
 │ ──────                          ──────   ────────   ──────── │
 │ official_proposal               2020–00  2020       —        │
@@ -414,7 +414,7 @@ redist plan official_proposal --configure  # TUI — edit algorithm config
 └──────────────────────────────────────────────────────────────┘
 ```
 
-**Label screen (`redist plan official_proposal`):**
+**Label screen (`BISECT plan official_proposal`):**
 ```
 ┌─ official_proposal ──────────────────────────────────────────┐
 │ Algorithm: ApportionRegions + County(α=2.0) + Convergence(600)│
@@ -429,7 +429,7 @@ redist plan official_proposal --configure  # TUI — edit algorithm config
 └──────────────────────────────────────────────────────────────┘
 ```
 
-**Configure screen (`redist plan official_proposal --configure`):**
+**Configure screen (`BISECT plan official_proposal --configure`):**
 
 Interactive three-layer compositor wizard:
 ```
@@ -463,25 +463,25 @@ it exposes the full `--structure` / `--weights-override` / `--search` flags
 through menus rather than CLI flags, making the algorithm choices visible and
 explorable without memorising flag names.
 
-**Implementation note:** `redist plan` calls the existing `bisect-tui` binary
+**Implementation note:** `BISECT plan` calls the existing `bisect-tui` binary
 (already in the workspace) with a new `--label` flag. The TUI crate handles
-terminal rendering; `redist plan` is a thin dispatcher. This makes `redist tui`
-an alias for `redist plan` with no label specified.
+terminal rendering; `BISECT plan` is a thin dispatcher. This makes `BISECT tui`
+an alias for `BISECT plan` with no label specified.
 
 ### 3.10 Escape hatches for power users
 
 **`--out` on `bisect build` is NOT supported.** Build always writes to `runs/X/`.
 This is intentional: allowing non-conventional paths would break the implicit
 contract that `analyze X` reads from `runs/X/`. Power users who need non-standard
-paths should use `redist mv X Y` after a build to relocate outputs while
+paths should use `BISECT mv X Y` after a build to relocate outputs while
 maintaining registry and index consistency.
 
-**`--out` on `redist report` IS supported**, since reports are terminal artifacts
+**`--out` on `BISECT report` IS supported**, since reports are terminal artifacts
 not read by any downstream command:
 
 ```bash
 # Write report to a custom directory
-redist report official_proposal --year 2020 --out /mnt/share/reports/
+BISECT report official_proposal --year 2020 --out /mnt/share/reports/
 
 # Show all resolved paths without running
 bisect show official_proposal
@@ -491,13 +491,13 @@ The `BuildArgs` struct (§8.6) retains the `--out` field declaration for forward
 compatibility but the build dispatcher rejects it at runtime with:
 ```
 [CONFIG] build: --out is not supported on 'bisect build'. Build always writes
-         to runs/{label}/. Use 'redist mv X Y' to relocate outputs after building.
+         to runs/{label}/. Use 'BISECT mv X Y' to relocate outputs after building.
 ```
 
-### 3.11 `redist verify X` — traverse the SHA chain for a label
+### 3.11 `BISECT verify X` — traverse the SHA chain for a label
 
 ```bash
-redist verify official_proposal --year 2020
+BISECT verify official_proposal --year 2020
 ```
 
 Output (all links intact):
@@ -530,7 +530,7 @@ Windows CP1252 console policy (PP-34).
 ## 4. Directory Structure
 
 ```
-.redist                                    ← registry JSON (git-ignored, auto-managed)
+.bisect                                    ← registry JSON (git-ignored, auto-managed)
 
 configs/
   official_proposal.yml                   ← algorithm config (git-tracked, user-edited)
@@ -613,7 +613,7 @@ Written by `bisect build` after each year completes. Updated atomically
   "config_file": "configs/official_proposal.yml",
   "config_sha256": "a3f8bc2d...",
   "created": "2026-05-04T18:30:00Z",
-  "redist_version": "0.1.0",
+  "BISECT_version": "0.1.0",
   "git_commit": "f263823a...",
   "years": {
     "2020": {
@@ -653,7 +653,7 @@ by label (not by path — the path is derived from the label by convention).
   "run_index_sha256": "d4e7a1c9...",
   "types": ["proportionality", "splits", "compactness", "summary"],
   "created": "2026-05-04T19:00:00Z",
-  "redist_version": "0.1.0",
+  "BISECT_version": "0.1.0",
   "git_commit": "f263823a...",
   "years": {
     "2020": {
@@ -684,7 +684,7 @@ analysis index knows exactly where to find the corresponding run outputs.
 
 ### 5.3 Report index (`reports/X/index.json`)
 
-Written by `redist report` after generation completes.
+Written by `BISECT report` after generation completes.
 
 ```json
 {
@@ -693,7 +693,7 @@ Written by `redist report` after generation completes.
   "analysis": "official_proposal",
   "analysis_index_sha256": "c9b2e3f1...",
   "created": "2026-05-04T20:00:00Z",
-  "redist_version": "0.1.0",
+  "BISECT_version": "0.1.0",
   "git_commit": "f263823a...",
   "years": {
     "2020": {
@@ -707,7 +707,7 @@ Written by `redist report` after generation completes.
 
 ---
 
-## 6. The `.redist` Registry
+## 6. The `.bisect` Registry
 
 ### 6.1 Format
 
@@ -741,8 +741,8 @@ Written by `redist report` after generation completes.
   the label by convention. The registry is read only to validate that prerequisites
   are met before a command runs.
 
-**Concurrency invariant**: All mutations to `.redist` MUST acquire an advisory
-file lock on `.redist.lock` before loading the registry, and release it after the
+**Concurrency invariant**: All mutations to `.bisect` MUST acquire an advisory
+file lock on `.bisect.lock` before loading the registry, and release it after the
 atomic rename. The `registry.rs` implementation uses `fs2::FileExt::lock_exclusive`
 (cross-platform) before every load-modify-save cycle. Read-only operations
 (`ls`, `show`) use `lock_shared`. This prevents the lost-update race when two
@@ -751,17 +751,17 @@ rename would silently discard the first writer's mark.
 
 ### 6.3 Location and gitignore
 
-`.redist` lives at the repository root. It is git-ignored:
+`.bisect` lives at the repository root. It is git-ignored:
 
 ```
 # .gitignore addition
-.redist
+.bisect
 runs/
 analysis/
 reports/
 ```
 
-If `.redist` does not exist, `bisect ls` prints an empty table and any command
+If `.bisect` does not exist, `bisect ls` prints an empty table and any command
 that reads the registry (e.g., `analyze`) treats all labels as having no prior work.
 
 ---
@@ -776,7 +776,7 @@ do when `bisect build` is called with this label. It is separate from the regist
 
 ```yaml
 # configs/official_proposal.yml
-# User-editable. Commit this. Do not confuse with .redist (auto-managed).
+# User-editable. Commit this. Do not confuse with .bisect (auto-managed).
 
 name: official_proposal
 description: >
@@ -836,7 +836,7 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
 
 ```bash
 # Generate a config interactively
-redist config new official_proposal \
+BISECT config new official_proposal \
   --structure apportion-regions \
   --weights county \
   --alpha-county 2.0 \
@@ -847,10 +847,10 @@ redist config new official_proposal \
   --out configs/official_proposal.yml
 
 # Print to stdout without writing
-redist config new official_proposal ... --dry-run
+BISECT config new official_proposal ... --dry-run
 
 # Validate an existing config
-redist config validate configs/official_proposal.yml
+BISECT config validate configs/official_proposal.yml
 ```
 
 ---
@@ -860,16 +860,16 @@ redist config validate configs/official_proposal.yml
 ### 8.1 New files
 
 ```
-redist/crates/bisect-cli/src/
+BISECT/crates/bisect-cli/src/
   label.rs            ← label resolution: label → path convention
-  registry.rs         ← .redist read/write, atomic update, file locking, invariant enforcement
+  registry.rs         ← .bisect read/write, atomic update, file locking, invariant enforcement
   build_cmd.rs        ← `bisect build` dispatcher (replaces/wraps states runner)
-  import_cmd.rs       ← `redist import` — ingest external plan files into label system
-  mv_cmd.rs           ← `redist mv` — atomic rename of label (dirs + indexes + registry)
+  import_cmd.rs       ← `BISECT import` — ingest external plan files into label system
+  mv_cmd.rs           ← `BISECT mv` — atomic rename of label (dirs + indexes + registry)
   verify_cmd.rs       ← `bisect verify` — traverse and validate SHA chain
-  config_cmd.rs       ← `redist config new/validate`
+  config_cmd.rs       ← `BISECT config new/validate`
   ls_cmd.rs           ← `bisect ls` and `bisect show` (with --json support)
-  rm_cmd.rs           ← `redist rm`
+  rm_cmd.rs           ← `BISECT rm`
 
 configs/
   official_proposal.yml   ← committed algorithm config (this spec's reference)
@@ -878,7 +878,7 @@ configs/
 ### 8.2 Modified files
 
 ```
-redist/crates/bisect-cli/src/
+BISECT/crates/bisect-cli/src/
   args.rs     ← add Build, Ls, Show, Rm, Label, Mv, Import, Verify, ConfigNew, ConfigValidate variants
   main.rs     ← dispatch new Commands variants
 ```
@@ -911,7 +911,7 @@ Verify(VerifyArgs),
 /// Config subcommand group (new, validate)
 Config(ConfigArgs),
 /// Interactive TUI for the full pipeline — label-aware frontend
-/// Replaces `redist tui`; `redist tui` becomes an alias for `redist plan`
+/// Replaces `BISECT tui`; `BISECT tui` becomes an alias for `BISECT plan`
 Plan(PlanArgs),
 ```
 
@@ -952,9 +952,9 @@ pub fn report_index_path(label: &str) -> PathBuf {
 }
 ```
 
-### 8.5 `registry.rs` — `.redist` read/write
+### 8.5 `registry.rs` — `.bisect` read/write
 
-All mutating functions MUST acquire an exclusive advisory lock on `.redist.lock`
+All mutating functions MUST acquire an exclusive advisory lock on `.bisect.lock`
 before loading the registry and release it after the atomic rename. Read-only
 functions acquire a shared lock. Uses `fs2::FileExt` (cross-platform).
 
@@ -977,11 +977,11 @@ pub struct LabelRecord {
     pub reported: Vec<String>,
 }
 
-/// Load .redist from the repository root. Returns empty registry if absent.
-/// Acquires shared lock on .redist.lock for the duration of the read.
+/// Load .bisect from the repository root. Returns empty registry if absent.
+/// Acquires shared lock on .bisect.lock for the duration of the read.
 pub fn load() -> Result<Registry, String> { ... }
 
-/// Write .redist atomically (write to .redist.tmp, rename).
+/// Write .bisect atomically (write to .bisect.tmp, rename).
 /// Caller must hold exclusive lock (acquired via with_exclusive_lock).
 pub fn save(registry: &Registry) -> Result<(), String> { ... }
 
@@ -992,7 +992,7 @@ where
     F: FnOnce(&mut Registry) -> Result<(), String>,
 {
     let lock_file = OpenOptions::new().create(true).write(true)
-        .open(".redist.lock")?;
+        .open(".bisect.lock")?;
     lock_file.lock_exclusive()?;
     let mut reg = load_unlocked()?;
     f(&mut reg)?;
@@ -1069,7 +1069,7 @@ pub struct BuildArgs {
 
 ### 8.7 Migration from existing commands
 
-The existing `bisect state`, `bisect states`, and `redist run` commands are
+The existing `bisect state`, `bisect states`, and `BISECT run` commands are
 **unchanged**. No deprecations are introduced in this spec. Label-based commands
 are new top-level verbs that call the same internal runner functions:
 
@@ -1077,8 +1077,8 @@ are new top-level verbs that call the same internal runner functions:
 |---------------|-------------|
 | `bisect build X` | `runner::run_states_parallel()` with resolved output dir |
 | `bisect analyze X` | existing analyze pipeline with resolved input/output dirs |
-| `redist report X` | existing report pipeline with resolved paths |
-| `redist compare A B` | existing compare with resolved analysis dirs |
+| `BISECT report X` | existing report pipeline with resolved paths |
+| `BISECT compare A B` | existing compare with resolved analysis dirs |
 
 The resolved output directory for `build` follows the same tree that `bisect states`
 produces: `runs/{label}/{year}/states/{state_name}/`. This means build outputs are
@@ -1151,7 +1151,7 @@ bisect ls
 bisect analyze official_proposal --year 2020
 
 # Step 5: Generate report
-redist report official_proposal --year 2020 --format html
+BISECT report official_proposal --year 2020 --format html
 
 # Step 6: Inspect status
 bisect show official_proposal
@@ -1163,7 +1163,7 @@ bisect show official_proposal
 # Step 7: Compare against an alternative plan
 bisect build senate_draft2 --config configs/senate_draft2.yml --year 2020
 bisect analyze senate_draft2 --year 2020
-redist compare official_proposal senate_draft2 --year 2020 \
+BISECT compare official_proposal senate_draft2 --year 2020 \
   --metrics compactness splits proportionality
 ```
 
@@ -1176,7 +1176,7 @@ $ bisect analyze official_proposal --year 2010
 Run: bisect build official_proposal --year 2010
 
 # Attempt to report before analyzing
-$ redist report official_proposal --year 2000
+$ BISECT report official_proposal --year 2000
 [CONFIG] report: 'official_proposal' has not been analyzed for year 2000.
 Run: bisect analyze official_proposal --year 2000
 
@@ -1190,13 +1190,13 @@ $ bisect build official_proposal --config configs/official_proposal.yml --year 2
 Use --force to overwrite.
 ```
 
-### 9.3 Interactive workflow via `redist plan`
+### 9.3 Interactive workflow via `BISECT plan`
 
 For operators who prefer a menu-driven interface rather than CLI flags:
 
 ```bash
 # Open the interactive planner for this label
-redist plan official_proposal
+BISECT plan official_proposal
 ```
 
 This opens the TUI showing current build/analyze/report status.
@@ -1204,14 +1204,14 @@ From inside the TUI:
 - Press `[c]` → opens the three-layer compositor wizard to view or modify `configs/official_proposal.yml`
 - Press `[b]` for year 2010 → runs `bisect build official_proposal --year 2010` in the background
 - Press `[a]` for year 2020 → runs `bisect analyze official_proposal --year 2020`
-- Press `[r]` for year 2020 → runs `redist report official_proposal --year 2020`
+- Press `[r]` for year 2020 → runs `BISECT report official_proposal --year 2020`
 - Navigate state table → drill into per-state metrics and maps
 
 The plan TUI is the operator's primary interface. CLI flags are the power-user
 and scripting interface. Both produce identical outputs — `plan` is a thin
 dispatcher over the same underlying commands.
 
-**Configure screen** (accessible via `[c]` or `redist plan X --configure`):
+**Configure screen** (accessible via `[c]` or `BISECT plan X --configure`):
 ```
 ┌─ Configure: official_proposal ───────────────────────────────┐
 │                                                              │
@@ -1256,7 +1256,7 @@ point of decision.
 | `test_registry_mark_analyzed_requires_built` | year not in `built` → Err |
 | `test_registry_mark_reported_requires_analyzed` | year not in `analyzed` → Err |
 | `test_registry_write_is_atomic` | tmp file renamed, no partial write |
-| `test_registry_load_missing_returns_empty` | absent `.redist` → empty registry |
+| `test_registry_load_missing_returns_empty` | absent `.bisect` → empty registry |
 | `test_registry_invariants_built_superset_of_analyzed` | invariant enforced |
 | `test_registry_invariants_analyzed_superset_of_reported` | invariant enforced |
 | `test_build_index_round_trip` | serialize → deserialize → serialize → identical JSON |
@@ -1269,7 +1269,7 @@ point of decision.
 | `test_require_analyzed_exits_with_actionable_message` | error message contains fix |
 | `test_label_collision_exits_with_timestamp` | error message shows `built` timestamp |
 | `test_dry_run_prints_all_years` | dry-run output lists all config years |
-| `test_ls_empty_registry_prints_empty_table` | no crash when `.redist` absent |
+| `test_ls_empty_registry_prints_empty_table` | no crash when `.bisect` absent |
 | `test_official_proposal_config_is_valid` | `load_config("configs/official_proposal.yml")` passes |
 | `test_registry_concurrent_mark_built_no_lost_update` | two concurrent `mark_built` calls both appear in registry |
 | `test_registry_exclusive_lock_blocks_concurrent_write` | second writer waits for first to release lock |
@@ -1293,13 +1293,13 @@ point of decision.
 | Test | What it checks |
 |------|---------------|
 | `test_build_vt_2020_produces_index_json` | `runs/vt_test/index.json` written after build |
-| `test_build_updates_registry_built_list` | `.redist` contains `vt_test.built: ["2020"]` |
+| `test_build_updates_registry_built_list` | `.bisect` contains `vt_test.built: ["2020"]` |
 | `test_analyze_vt_2020_produces_analysis_index` | `analysis/vt_test/index.json` written |
-| `test_analyze_updates_registry_analyzed_list` | `.redist` updated after analyze |
+| `test_analyze_updates_registry_analyzed_list` | `.bisect` updated after analyze |
 | `test_report_vt_2020_produces_dashboard` | `reports/vt_test/dashboard_2020.html` exists |
 | `test_show_vt_test_displays_correct_paths` | `bisect show vt_test` output matches actual paths |
-| `test_rm_stage_report_deletes_reports_dir` | `reports/vt_test/` removed, `.redist` updated |
-| `test_compare_two_labels_produces_output` | `redist compare A B` exits 0 with metric table |
+| `test_rm_stage_report_deletes_reports_dir` | `reports/vt_test/` removed, `.bisect` updated |
+| `test_compare_two_labels_produces_output` | `BISECT compare A B` exits 0 with metric table |
 
 ---
 
@@ -1308,15 +1308,15 @@ point of decision.
 | Spec/Plan | Alignment |
 |-----------|-----------|
 | **Spec 1 (Custom Parameters)** | `BuildArgs` passes `--balance-tolerance`, `--population-source` through to `StateConfig` unchanged |
-| **Spec 2 (Plan Comparison)** | `redist compare A B` is the label-aware replacement for `redist compare --plan-a --plan-b` |
+| **Spec 2 (Plan Comparison)** | `BISECT compare A B` is the label-aware replacement for `BISECT compare --plan-a --plan-b` |
 | **Spec 3 (Constraint Analysis)** | Analysis types in config file map to `--types` flag |
 | **Spec 4 (Partisan Metrics)** | `political` in `analysis_types` triggers partisan analysis |
 | **Spec 5 (Multi-chamber)** | `bisect build X --config configs/wa_house.yml` — label and config independent |
 | **Spec 6 (Reports)** | `PlanManifest` per-state is unchanged; `reports/X/index.json` is the new run-level audit anchor |
-| **Deposition Prep** | `git_commit` in every index uses `REDIST_BUILD_COMMIT_OVERRIDE`; `DepoLogWriter` can reference index files |
-| **State Staff Interop** | `redist import X --from FILE` is the ingestion path for externally-submitted plans; integrates with `redist compare` for adversarial review |
-| **Court Submission Reports** | `redist verify X` provides the mechanical SHA-chain traversal cited in expert witness reports |
-| **Civic Bidirectional Input** | `redist import X --from FILE --format csv` is the CSV ingestion path compatible with civic ingest |
+| **Deposition Prep** | `git_commit` in every index uses `BISECT_BUILD_COMMIT_OVERRIDE`; `DepoLogWriter` can reference index files |
+| **State Staff Interop** | `BISECT import X --from FILE` is the ingestion path for externally-submitted plans; integrates with `BISECT compare` for adversarial review |
+| **Court Submission Reports** | `BISECT verify X` provides the mechanical SHA-chain traversal cited in expert witness reports |
+| **Civic Bidirectional Input** | `BISECT import X --from FILE --format csv` is the CSV ingestion path compatible with civic ingest |
 | **B.10 (county weights)** | `algorithm.alpha_county` in config maps to `WeightSpec.alpha_county` |
 | **B.11 (ApportionRegions)** | `algorithm.structure: apportion-regions` maps to `SplitStrategy::ApportionRegions` |
 | **B.16 (convergence)** | `algorithm.search: convergence` + `convergence_threshold` maps to `SeedCompositor::ConvergenceSweep` |
@@ -1336,11 +1336,11 @@ point of decision.
    vs. `wa/senate_draft2`)? Deferred: flat namespace is simpler for v1. Subdirectory
    support in `runs/`, `analysis/`, `reports/` can be added transparently.
 
-4. **Registry signing**: Should `.redist` carry a signature so that tampering
+4. **Registry signing**: Should `.bisect` carry a signature so that tampering
    (e.g., manually marking a year as built) is detectable? Deferred: git history
    provides implicit tamper detection. Explicit signing can be added for deposition
    workflows.
 
-5. **Remote registry**: Should `.redist` be sharable (e.g., stored in S3 alongside
+5. **Remote registry**: Should `.bisect` be sharable (e.g., stored in S3 alongside
    outputs) so a team member can run `bisect ls` against a shared output tree without
    running `build` locally? Deferred: local-only for v1.

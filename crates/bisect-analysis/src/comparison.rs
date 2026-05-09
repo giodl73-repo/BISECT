@@ -188,8 +188,7 @@ fn population_max_dev_proxy(map: &HashMap<usize, HashSet<String>>) -> f64 {
 // Output formatting
 // ---------------------------------------------------------------------------
 
-const DISCLAIMER: &str =
-    "No single metric determines legal compliance. \
+const DISCLAIMER: &str = "No single metric determines legal compliance. \
      Consult redistricting counsel for legal assessment.";
 
 /// Format comparison as a human-readable table.
@@ -217,7 +216,10 @@ pub fn format_comparison_table(comparison: &PlanComparison) -> String {
         comparison.population.lower
     ));
     out.push('\n');
-    out.push_str(&format!("  Difference: {:.4}%\n", comparison.population.difference_pct * 100.0));
+    out.push_str(&format!(
+        "  Difference: {:.4}%\n",
+        comparison.population.difference_pct * 100.0
+    ));
     out.push('\n');
     out.push_str(DISCLAIMER);
     out.push('\n');

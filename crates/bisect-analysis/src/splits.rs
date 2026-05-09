@@ -5,8 +5,8 @@
 /// table (from `bisect fetch --type geography`).
 use std::collections::{HashMap, HashSet};
 
-use crate::split_standards::{get_split_standard, SplitStandard};
 use crate::county_names::county_name as lookup_county_name;
+use crate::split_standards::{get_split_standard, SplitStandard};
 
 // ---------------------------------------------------------------------------
 // County split types
@@ -268,10 +268,7 @@ mod tests {
     #[test]
     fn test_county_split_across_two_districts() {
         // King County split across districts 1 and 2
-        let assignments = make_assignments(&[
-            ("53033000001", 1),
-            ("53033000002", 2),
-        ]);
+        let assignments = make_assignments(&[("53033000001", 1), ("53033000002", 2)]);
         let result = analyze_county_splits(&assignments, None);
         assert_eq!(result.split, 1);
         assert_eq!(result.split_list[0].county_fips, "53033");
@@ -282,11 +279,8 @@ mod tests {
     #[test]
     fn test_county_split_severity_three_districts() {
         // One county split across three districts
-        let assignments = make_assignments(&[
-            ("53033000001", 1),
-            ("53033000002", 2),
-            ("53033000003", 3),
-        ]);
+        let assignments =
+            make_assignments(&[("53033000001", 1), ("53033000002", 2), ("53033000003", 3)]);
         let result = analyze_county_splits(&assignments, None);
         assert_eq!(result.split, 1);
         assert_eq!(result.split_list[0].split_severity, 3);
@@ -307,10 +301,7 @@ mod tests {
 
     #[test]
     fn test_municipal_split_detected() {
-        let assignments = make_assignments(&[
-            ("53033005000", 7),
-            ("53033005100", 9),
-        ]);
+        let assignments = make_assignments(&[("53033005000", 7), ("53033005100", 9)]);
         let mut place_to_tracts = HashMap::new();
         place_to_tracts.insert(
             "5363000".to_string(),
@@ -327,8 +318,7 @@ mod tests {
 
     #[test]
     fn test_municipal_data_absent_returns_unavailable() {
-        let result =
-            analyze_municipal_splits(&HashMap::new(), &HashMap::new(), &HashMap::new());
+        let result = analyze_municipal_splits(&HashMap::new(), &HashMap::new(), &HashMap::new());
         assert!(!result.available);
     }
 
@@ -345,20 +335,28 @@ mod tests {
             ("51087000001", 1), // Henrico County (adjacent), district 1 (not split)
         ]);
         let result = analyze_county_splits(&assignments, None);
-        assert_eq!(result.total, 2, "should see 2 entities: Richmond city + Henrico County");
-        assert_eq!(result.split, 1, "only Richmond city is split — Henrico is intact");
-        assert_eq!(result.split_list[0].county_fips, "51760", "split entity must be Richmond city");
+        assert_eq!(
+            result.total, 2,
+            "should see 2 entities: Richmond city + Henrico County"
+        );
+        assert_eq!(
+            result.split, 1,
+            "only Richmond city is split — Henrico is intact"
+        );
+        assert_eq!(
+            result.split_list[0].county_fips, "51760",
+            "split entity must be Richmond city"
+        );
         assert_eq!(result.split_list[0].split_severity, 2);
     }
 
     #[test]
     fn test_va_state_code_legal_standard_mentions_independent_cities() {
-        let assignments = make_assignments(&[
-            ("51760000001", 1),
-            ("51760000002", 2),
-        ]);
+        let assignments = make_assignments(&[("51760000001", 1), ("51760000002", 2)]);
         let result = analyze_county_splits_with_state(&assignments, None, Some("VA"));
-        let standard = result.legal_standard.expect("VA must have a legal standard");
+        let standard = result
+            .legal_standard
+            .expect("VA must have a legal standard");
         assert!(
             standard.contains("independent") || standard.contains("city"),
             "VA legal standard must mention independent cities, got: {standard}"
@@ -382,7 +380,10 @@ mod tests {
         assert_eq!(result.total, 2, "Clark + Washoe = 2 county entities");
         assert_eq!(result.split, 1, "only Clark County is split");
         assert_eq!(result.split_list[0].county_fips, "32003");
-        assert_eq!(result.split_list[0].split_severity, 3, "Clark spans districts 1, 2, 3");
+        assert_eq!(
+            result.split_list[0].split_severity, 3,
+            "Clark spans districts 1, 2, 3"
+        );
         // NV standard should acknowledge Clark County as expected split
         let disclaimer = result.disclaimer.expect("NV must have disclaimer");
         assert!(
@@ -393,10 +394,7 @@ mod tests {
 
     #[test]
     fn test_nv_clark_county_name_resolved_from_lookup() {
-        let assignments = make_assignments(&[
-            ("32003000001", 1),
-            ("32003000002", 2),
-        ]);
+        let assignments = make_assignments(&[("32003000001", 1), ("32003000002", 2)]);
         let result = analyze_county_splits(&assignments, None);
         let split = &result.split_list[0];
         // Clark County should resolve its name from the static lookup
@@ -418,15 +416,15 @@ mod tests {
         assert_eq!(result.split_list[0].county_fips, "22071");
         // LA standard should use "parish" terminology
         let standard = result.legal_standard.expect("LA must have legal standard");
-        assert!(standard.contains("parish"), "LA standard must use 'parish' term");
+        assert!(
+            standard.contains("parish"),
+            "LA standard must use 'parish' term"
+        );
     }
 
     #[test]
     fn test_la_parish_name_from_lookup() {
-        let assignments = make_assignments(&[
-            ("22071000001", 1),
-            ("22071000002", 2),
-        ]);
+        let assignments = make_assignments(&[("22071000001", 1), ("22071000002", 2)]);
         let result = analyze_county_splits(&assignments, None);
         let split = &result.split_list[0];
         assert_eq!(split.county_name.as_deref(), Some("Orleans Parish"));
@@ -439,8 +437,10 @@ mod tests {
         let result = analyze_county_splits(&HashMap::new(), None);
         assert_eq!(result.total, 0);
         assert_eq!(result.split, 0);
-        assert!((result.preservation_score - 1.0).abs() < 1e-9,
-            "empty plan must have preservation_score=1.0");
+        assert!(
+            (result.preservation_score - 1.0).abs() < 1e-9,
+            "empty plan must have preservation_score=1.0"
+        );
     }
 
     #[test]
@@ -460,11 +460,8 @@ mod tests {
     #[test]
     fn test_county_split_tract_count_reported() {
         // King County has 3 tracts but is split
-        let assignments = make_assignments(&[
-            ("53033000001", 1),
-            ("53033000002", 1),
-            ("53033000003", 2),
-        ]);
+        let assignments =
+            make_assignments(&[("53033000001", 1), ("53033000002", 1), ("53033000003", 2)]);
         let result = analyze_county_splits(&assignments, None);
         assert_eq!(result.split, 1);
         assert_eq!(result.split_list[0].tract_count, 3);
@@ -478,10 +475,7 @@ mod tests {
 
     #[test]
     fn test_municipal_split_no_split_when_place_in_single_district() {
-        let assignments = make_assignments(&[
-            ("53033005000", 3),
-            ("53033005100", 3),
-        ]);
+        let assignments = make_assignments(&[("53033005000", 3), ("53033005100", 3)]);
         let mut place_to_tracts = HashMap::new();
         place_to_tracts.insert(
             "5363000".to_string(),
@@ -497,10 +491,7 @@ mod tests {
     #[test]
     fn test_municipal_split_unknown_place_uses_fips_as_name() {
         // Place FIPS not in place_names → name falls back to FIPS
-        let assignments = make_assignments(&[
-            ("53033005000", 1),
-            ("53033005100", 2),
-        ]);
+        let assignments = make_assignments(&[("53033005000", 1), ("53033005100", 2)]);
         let mut place_to_tracts = HashMap::new();
         place_to_tracts.insert(
             "9999999".to_string(),

@@ -5,15 +5,15 @@
 //! Solomon 2021). Uses Wilson's loop-erased random walk for uniform random
 //! spanning trees.
 
-pub mod spanning;
-pub mod recom;
 pub mod chain;
-pub mod merge_split;
 pub mod forest_recom;
+pub mod merge_split;
 pub mod parallel_tempering;
+pub mod recom;
+pub mod spanning;
 pub mod vra_recom;
 
-pub use merge_split::MergeSplitChain;
 pub use forest_recom::ForestRecomChain;
+pub use merge_split::MergeSplitChain;
 pub use parallel_tempering::ParallelTemperingChain;
 pub use vra_recom::VraRecomChain;

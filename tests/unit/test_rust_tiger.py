@@ -1,5 +1,5 @@
 """
-L2 tests for redist_py.read_tiger_shp — TIGER shapefile reader via PyO3.
+L2 tests for bisect_py.read_tiger_shp — TIGER shapefile reader via PyO3.
 
 Verifies the Rust TIGER reader produces correct GEOIDs, WKB geometry,
 and area attributes for known shapefiles.
@@ -11,18 +11,18 @@ import os
 import pytest
 from pathlib import Path
 
-RUST_AVAILABLE = os.environ.get('REDIST_NO_RUST', '0') != '1'
+RUST_AVAILABLE = os.environ.get('BISECT_NO_RUST', '0') != '1'
 try:
-    import redist_py
-    REDIST_PY_IMPORTABLE = True
+    import bisect_py
+    BISECT_PY_IMPORTABLE = True
 except ImportError:
-    REDIST_PY_IMPORTABLE = False
+    BISECT_PY_IMPORTABLE = False
 
 TIGER_VT = Path('data/2020/tiger/tracts/tl_2020_50_tract/tl_2020_50_tract.shp')
 
 pytestmark = pytest.mark.skipif(
-    not RUST_AVAILABLE or not REDIST_PY_IMPORTABLE,
-    reason='redist_py not available'
+    not RUST_AVAILABLE or not BISECT_PY_IMPORTABLE,
+    reason='bisect_py not available'
 )
 
 
@@ -30,7 +30,7 @@ pytestmark = pytest.mark.skipif(
 def vt_records():
     if not TIGER_VT.exists():
         pytest.skip('Vermont TIGER shapefile not found (data/ not present)')
-    return redist_py.read_tiger_shp(str(TIGER_VT))
+    return bisect_py.read_tiger_shp(str(TIGER_VT))
 
 
 class TestTigerReaderVermont:
