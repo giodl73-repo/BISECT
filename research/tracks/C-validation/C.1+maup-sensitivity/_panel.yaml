@@ -1,11 +1,26 @@
 paper: 11+maup-sensitivity
 title: "Spatial Resolution and Algorithmic Redistricting: A Test of the Modifiable Areal Unit Problem"
 venue: "International Journal of Geographical Information Science (IJGIS)"
-stage: draft
-round: 0
-reviewers: []
-reviews: {}
-p1_items: []
+stage: revision
+round: 1
+score: 2.8
+reviewers:
+  - Karypis
+  - Duchin
+  - Rodden
+  - Pildes
+  - Liang
+reviews_completed: 5
+p1_items:
+  - id: P1-A
+    reviewer: Karypis
+    item: Multi-seed RSI estimates for five focus states
+  - id: P1-B
+    reviewer: Duchin
+    item: Multi-seed seat-count stability across resolutions
+  - id: P1-C
+    reviewer: Pildes
+    item: Minority VAP stability analysis across resolutions
 history:
   - stage: draft
     date: 2026-02-08

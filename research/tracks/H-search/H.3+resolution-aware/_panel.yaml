@@ -1,10 +1,13 @@
 paper: H.3+resolution-aware
 title: "Resolution-Aware Redistricting: Geographic Granularity as a First-Class Parameter"
 venue: GIS
-stage: panel
+stage: revision
 round: 1
+score: 2.2
 score_basis: panel-assessed
 reviews_completed: 5
+synthesis_completed: true
+revision_plan: REVISION-PLAN.md
 reviewers:
   - name: George Karypis
   - name: Jonathan Rodden

@@ -1,0 +1,15 @@
+\section{Introduction}
+
+Mountain ridges have defined community boundaries since before the founding of the United States. The Appalachian mountain chain separated colonial Atlantic settlement from the interior; the Allegheny Front divided Pennsylvania's eastern and western economies; the Blue Ridge separated the Virginia Piedmont from the Shenandoah Valley. These physical separations created distinct communities with different agricultural practices, different market towns, different migration histories, and, eventually, different political cultures. The redistricting criterion to ``preserve communities of interest'' was codified, in part, to ensure that geographic communities separated by natural features are not arbitrarily merged into the same legislative district.
+
+The \textsc{bisect} redistricting pipeline uses METIS graph partitioning, which minimises the number of adjacency-graph edges cut to form districts. Standard edge weights reflect geographic proximity — heavier weights keep census tracts that share long boundaries together. Topographic edge weights modify this by incorporating physical geography: tracts separated by a mountain ridge receive a much lighter edge weight (inviting METIS to cut between them), while tracts in the same valley receive a heavier weight (inviting METIS to keep them together).
+
+This paper makes three contributions:
+
+\begin{enumerate}
+  \item A definition of topographic similarity that is provably bounded in $[0,1]$, derived from public USGS 3DEP DEM data.
+  \item Empirical validation on NC mountain districts showing that ridge lines become natural cut boundaries under topographic weights.
+  \item Documentation that topographic weights degrade gracefully to near-baseline in flat states, preventing spurious effects.
+\end{enumerate}
+
+The topographic weight modifier is Track M paper 5 of 8. Together, the M.1--M.7 signals form a composite Community Character Index (M.8) for comprehensive communities-of-interest operationalisation.

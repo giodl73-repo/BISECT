@@ -36,6 +36,30 @@ census year, or two to four hours for all three census years.
 
 \bigskip
 
+\bigskip
+
+\noindent
+\begin{tabular}{@{}>{\bfseries\large}p{0.08\textwidth} p{0.86\textwidth}@{}}
+50 states &
+The algorithm scales from Vermont's one congressional district to New Hampshire's
+400-member state House.
+All 50 state lower chambers have been redistricted; 39 require block-group
+resolution (finer than the census-tract standard used for Congress).
+State house maps are 7.5\% more compact than congressional maps by construction---
+smaller districts follow geographic features more precisely.
+\textit{(Papers F.1, F.3)}\\[10pt]
+
+NestSection &
+For states whose senate-to-house seat ratio has a common factor (40 of 49
+bicameral states), the NestSection algorithm produces senate districts
+that are exact unions of house districts---ensuring that every senate
+constituent lives in exactly one house district, eliminating the
+double-gerrymandering problem that plagues bicameral states today.
+\textit{(Paper F.2)}\\
+\end{tabular}
+
+\bigskip
+
 \noindent Additional findings:
 the algorithm produces \textbf{more majority-minority districts}
 than enacted plans in states above the 42\% minority-population threshold

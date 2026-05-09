@@ -75,16 +75,19 @@ We model the measurement error as:
 \end{equation}
 based on the empirical calibration from C.1.
 
-For a national mean PP estimate $\hat{PP} = 0.441$ (2020 census),
-the measurement error CI is:
+For the national mean congressional algorithmic PP estimate
+$\hat{PP} = 0.361$ (2020 census, from C.0), we use a conservative
+asymmetric interval: the lower bound ignores the small positive bias
+(conservative for reporting) and the upper bound includes it:
 \begin{equation}
-  95\%\ \text{CI for } PP^{\text{true}}: [0.441 + 0.003 \pm 1.96 \times 0.003]
-  = [0.438, 0.450].
+  95\%\ \text{CI for } PP^{\text{true}}:
+  [\hat{PP} - 1.96 \times 0.003,\; \hat{PP} + 0.003 + 1.96 \times 0.003]
+  = [0.355, 0.370].
 \end{equation}
 
-The lower bound ($0.438$) is below the tract-level point estimate
-($0.441$) but above the enacted plan mean PP ($0.295$), confirming
-that the algorithmic advantage is robust to resolution measurement error.
+The lower bound ($0.355$) remains well above the enacted plan mean PP
+($0.295$, from C.5), confirming that the algorithmic advantage is
+robust to spatial resolution measurement error.
 
 Table~\ref{tab:pp-resolution-ci} reports measurement error CIs for
 selected states.

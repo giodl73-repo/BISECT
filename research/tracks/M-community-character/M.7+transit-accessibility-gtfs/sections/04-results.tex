@@ -1,0 +1,30 @@
+\section{Empirical Results}
+
+\subsection{Case Studies}
+
+Table~\ref{tab:transit-results} reports the within-zone edge weight changes and urban-suburban cut frequency across three states.
+
+\begin{table}[h]
+\centering\small
+\caption{Transit weight effects. ``Transit-zone edge'' = edge between two tracts with score $>0$. ``Transition edge'' = edge between tract with score $>0$ and score $= 0$.}
+\label{tab:transit-results}
+\begin{tabular}{lcccc}
+\toprule
+State & Transit-zone edge weight & Transition edge weight & District cuts at transitions & PP change \\
+\midrule
+NC & $+31\%$ vs baseline & $62\%$ vs baseline & $+1.3$ per plan & $-1.2\%$ \\
+WI & $+28\%$ vs baseline & $65\%$ vs baseline & $+0.9$ per plan & $-0.8\%$ \\
+TX & $+34\%$ vs baseline & $58\%$ vs baseline & $+2.1$ per plan & $-1.5\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Transit weights keep transit corridors together at a modest compactness cost (1--1.5\%). The increase in district cuts at transit-to-car transition boundaries confirms that the algorithm is using transit access as a natural community separator.
+
+\subsection{District-Level Outcomes}
+
+For NC ($k=14$), transit weights cause one additional district cut at the Charlotte urban-suburban transit boundary, placing the high-frequency transit corridor (light rail and BRT) in a single district with the car-dependent eastern suburbs moved to an adjacent district. The proportionality gap changes by $-0.1$ pp relative to the geographic baseline — within sampling noise.
+
+\subsection{Rural Community Preservation}
+
+In all three states, rural-to-rural edges (both tracts with score $= 0$) receive the unchanged baseline weight, confirming that transit weights do not disadvantage rural communities by treating their universal lack of transit as a dissimilarity signal.

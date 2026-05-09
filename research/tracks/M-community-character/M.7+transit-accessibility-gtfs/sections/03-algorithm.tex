@@ -1,0 +1,39 @@
+\section{Algorithm}
+
+\subsection{Transit Similarity Metric}
+
+For adjacent tracts $u$ and $v$ with transit scores $s_u$ and $s_v$:
+
+\[
+  \text{sim}(u,v) = \begin{cases}
+    1.0 & \text{if } s_u = 0 \text{ and } s_v = 0 \quad \text{(both car-dependent rural)} \\
+    1 - \dfrac{|s_u - s_v|}{\max(s_u, s_v)} & \text{otherwise}
+  \end{cases}
+\]
+
+The special case for two zero-score tracts ensures that rural-to-rural edges are not penalised for lacking transit: both tracts are similarly car-dependent, and the similarity is 1.0.
+
+The metric is bounded in $[0,1]$ by construction:
+\begin{itemize}
+  \item $\text{sim} = 1$ when $s_u = s_v$ (identical transit access)
+  \item $\text{sim} = 0$ when $s_u = 0$ and $s_v > 0$ (completely different access regimes)
+  \item $\text{sim} = 0.5$ when one tract has twice the transit score of the other
+\end{itemize}
+
+\subsection{Edge Weight}
+
+\[
+  w(u,v) = w_{\text{base}} \times \text{sim}(u,v)
+\]
+
+\paragraph{Effect by tract-pair type}:
+
+\begin{tabular}{lll}
+\toprule
+Pair type & Similarity & Weight effect \\
+\midrule
+Urban transit ↔ Urban transit & High & Heavy — keep together \\
+Rural ↔ Rural (both zero) & 1.0 & Baseline — no change \\
+Urban transit ↔ Car-dependent suburban & Low & Light — invite cut \\
+\bottomrule
+\end{tabular}

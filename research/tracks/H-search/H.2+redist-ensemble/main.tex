@@ -92,7 +92,11 @@ algorithm~\citep{wilson1996generating}.
 Wilson's algorithm runs in expected time equal to the cover time of
 a random walk on the subgraph; for planar graphs this is
 $O(|V|\log|V|)$~\citep{aldous1991random} (the planar bound is
-Aldous's result, not Wilson's), reducing the per-step cost to native
+Aldous's result, not Wilson's).
+Census-tract adjacency graphs are planar by construction from
+non-crossing TIGER shapefiles, so the $O(|V|\log|V|)$ bound applies
+directly to the redistricting setting.
+This reduces the per-step cost to native
 compiled arithmetic at roughly $50{,}000$\est\ steps per
 second---an estimated $2{,}300\times$\est\ speedup over \gc{}
 (measured without pair reselection).

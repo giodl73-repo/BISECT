@@ -65,13 +65,16 @@ the challenger must produce a plan more compact than 99.8\% of all valid
 plans.
 This is an extraordinarily high bar.
 
-This bar is computed from the G.1 \gc{} ensemble (10,000 steps per state).
-The percentile figures (0.1--0.7th percentile for most states) are point
-estimates from a single ensemble run; their precision depends on G.1's
-sample size and mixing time.
-A more conservative statement is that the $p{=}0.0$ plan is more compact
-than approximately 99\%+ of G.1 ensemble plans, with the exact percentile
-subject to sampling uncertainty.
+This bar is computed from the G.1 \gc{} ensemble (1{,}000 steps per state).
+The percentile figures (0.1--0.7th percentile for most states) are
+\emph{preliminary point estimates} from a single 1{,}000-step run.
+At $N = 1{,}000$ with $\rho_1 \approx 0.87$, the effective sample size is
+approximately $\ess \approx 70$, giving a standard error of $\approx 0.5$
+percentage points on the compactness percentile claim.
+The adversarial bar claim should therefore be read as: the $p{=}0.0$ plan is
+more compact than at least 99\% of G.1 ensemble plans, with the exact
+figure subject to Phase~2 multi-chain validation
+(see G.4~\citep{dellaLibera2026g4} for the ESS derivation).
 
 A related challenge argues that \emph{structural bias}---if the bisection
 tree structure systematically favours one party across all seeds---makes

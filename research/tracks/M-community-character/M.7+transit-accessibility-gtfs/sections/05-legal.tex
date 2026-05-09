@@ -1,0 +1,19 @@
+\section{Legal Usage}
+
+\subsection{Communities of Interest}
+
+Transit corridors are community anchors. Transit agencies serve geographically bounded communities; the political interests of transit users (fare levels, route expansion, capital investment) are specific to the transit corridor. Courts in New York, California, and Illinois have recognised transit corridors as legitimate communities-of-interest in redistricting proceedings.
+
+Transit weights operationalise this criterion by keeping high-frequency transit corridors in the same legislative district, ensuring that transit-corridor political interests are concentrated rather than dispersed across multiple districts.
+
+\subsection{Verifiability}
+
+GTFS data is published by transit agencies under open licences. The transit score formula is deterministic given the GTFS input. The \textsc{bisect} audit chain records the GTFS feed version and download date used in each run, enabling independent verification.
+
+\subsection{Limitations}
+
+\begin{enumerate}
+  \item GTFS coverage is uneven: rural areas with no transit agency receive score $= 0$ regardless of transportation patterns. Future work should incorporate on-demand transit and rideshare coverage.
+  \item GTFS represents scheduled frequency, not actual ridership. A route with high scheduled frequency but low ridership receives the same score as a high-ridership route. This limitation is shared by all GTFS-based accessibility metrics.
+  \item GTFS is updated frequently (agencies publish updated feeds quarterly to annually). The redistricting run should use the feed published closest to the Census data date to ensure temporal alignment.
+\end{enumerate}

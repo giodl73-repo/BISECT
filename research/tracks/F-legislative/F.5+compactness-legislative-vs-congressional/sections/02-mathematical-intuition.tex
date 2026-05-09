@@ -32,13 +32,21 @@ More precisely, the number of boundary districts scales as $O(\sqrt{k})$ for a c
 \subsection{Formal Statement}
 
 \begin{proposition}
-Let $\{D_1^{(k)}, \ldots, D_k^{(k)}\}$ be a minimum-edge-cut partition of a geographic area into $k$ equal-population districts. Under regularity conditions on the boundary of the geographic area, the mean Polsby-Popper ratio $\overline{PP}_k = k^{-1}\sum_i PP(D_i^{(k)})$ satisfies:
+Let $\{D_1^{(k)}, \ldots, D_k^{(k)}\}$ be a minimum-edge-cut partition of a geographic area into $k$ equal-population districts. Under regularity conditions on the boundary of the geographic area (specifically, that the state boundary has finite length and is not fractal), the mean Polsby-Popper ratio $\overline{PP}_k = k^{-1}\sum_i PP(D_i^{(k)})$ satisfies:
 \begin{equation}
   \overline{PP}_k = PP_\infty - \frac{c}{\sqrt{k}} + O(k^{-1})
   \label{eq:scaling}
 \end{equation}
 for some constant $c > 0$ depending on the irregularity of the state boundary, and some limiting value $PP_\infty$ determined by the algorithm's behavior in the interior of the state.
 \end{proposition}
+
+\begin{proof}[Proof sketch]
+As shown in \S\ref{sec:math} above, the number of boundary districts scales as $O(\sqrt{k})$, so the fraction of boundary districts is $O(1/\sqrt{k})$.
+Interior districts have PP determined by the algorithm's interior behavior (approaching $PP_\infty$); boundary districts have PP deflated by external boundary irregularity.
+The mean PP is the convex combination: $\overline{PP}_k = PP_\infty \cdot (1 - O(1/\sqrt{k})) + PP_{\rm bdy} \cdot O(1/\sqrt{k}) = PP_\infty - c/\sqrt{k} + O(k^{-1})$, where $c = (PP_\infty - PP_{\rm bdy}) \cdot \lim_{k \to \infty} k^{1/2} \cdot (\text{boundary-district fraction})$.
+The $O(k^{-1})$ remainder collects corner effects and second-order boundary interactions.
+Formalisation of the interior-behavior limit $PP_\infty$ requires a compactness convergence theorem for the algorithm under regularity conditions; we treat this as the primary gap between this sketch and a full proof.
+\end{proof}
 
 The regularity conditions exclude states with highly fractal boundaries (Alaska, Florida's coastline) and states with very large single geographic features (lakes, military reservations) that create discontinuities in the boundary behavior. For the 50 contiguous and non-contiguous states analyzed here, deviations from the $O(1/\sqrt{k})$ scaling law are generally small.
 

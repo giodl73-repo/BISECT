@@ -17,7 +17,7 @@ The mathematical and computational foundations. Start here if you are new to the
 | B.3 | Single-Objective vs. Multi-Constraint METIS | [PDF](papers/B.3+multi-vs-edge.pdf) |
 | B.4 | Equivalence of Recursive and N-Way Bisection | [PDF](papers/B.4+adaptive-bisection.pdf) |
 | B.5 | N-Way vs. Recursive Bisection: General Comparison | [PDF](papers/B.5+nway-vs-recursive-general.pdf) |
-| B.6 | Computational Complexity: O(n log² n), O(√log n) approximation | [PDF](papers/B.6+computational-complexity.pdf) |
+| B.6 | Computational Complexity: NP-hard (planar bisection), O(n log k) runtime, O(log n) approximation lower bound | [PDF](papers/B.6+computational-complexity.pdf) |
 | B.7 | Solution Space and Seed Sensitivity (CV < 2% for 96% of states) | [PDF](papers/B.7+solution-space-and-seed-sensitivity.pdf) |
 
 ---
@@ -95,8 +95,7 @@ Validation: does the algorithm produce robust results across resolutions, census
 | B.19 | Simulated Annealing Bisection — cooling the edge-cut objective in the bisection tree | [PDF](papers/B.19+simulated-annealing.pdf) | **Accepted** 3.6/4 — `--structure simulated-annealing` |
 | B.20 | Parallel Tempering — multi-chain replica exchange MCMC | [PDF](papers/B.20+parallel-tempering.pdf) | **Accepted** 3.6/4 — `--search parallel-tempering` |
 | B.21 | Adaptive Multi-scale MCMC — self-tuning alpha via Robbins-Monro | [PDF](papers/B.21+adaptive-multiscale.pdf) | **Accepted** 3.5/4 — `--search multiscale-adaptive` |
-| B.22 | Centroidal Voronoi Districts — geometric district construction | [PDF](papers/B.22+centroidal-voronoi.pdf) | **Accepted** 3.9/4 — `--structure centroidal-voronoi` |
-| B.22b | Geographic CVD — true Euclidean proximity via Albers projection | [PDF](papers/B.22b+cvd-geographic.pdf) | **Accepted** 4.0/4 — `--cvd-metric geographic` |
+| B.22 | Centroidal Voronoi Districts (Phase 1 + Phase 2) — graph-distance and geographic Euclidean CVD | [PDF](papers/B.22+centroidal-voronoi.pdf) | **Accepted** 3.9/4 — `--structure centroidal-voronoi`, `--cvd-metric geographic` |
 | B.23 | BFS Region-Growing — greedy geographic district packing | [PDF](papers/B.23+bfs-growth.pdf) | **Accepted** 3.6/4 — `--structure bfs-growth` |
 | B.24 | Exact Redistricting via ILP — certifiable optimality for small instances | [PDF](papers/B.24+ilp-redistricting.pdf) | First draft — `--structure ilp` (Phase 1 METIS fallback) |
 | B.27 | Economic Character Edge Weights via LODES — community similarity as edge modifier | [PDF](papers/B.27+economic-character-weights.pdf) | **Accepted** — `--weights-override economic-character` |

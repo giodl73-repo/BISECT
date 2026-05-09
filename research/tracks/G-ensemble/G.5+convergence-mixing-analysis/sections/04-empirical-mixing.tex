@@ -41,20 +41,24 @@ CA & 52 &  8{,}057 & 20{,}000 & $\ess$ \\
 
 \subsection{Scaling with State Size}
 
-The empirical mixing time scales approximately as:
+Log-log regression on the six study states gives an empirical power-law fit:
 \[
-  \hat{t}_{\rm mix} \approx 400 \cdot k,
+  \hat{t}_{\rm mix} \approx 60 \cdot k^{1.4},
 \]
-where $k$ is the district count.
+with slope $\hat\beta \approx 1.43$ (log-log OLS, six data points).
+The ratio $\hat{t}_{\rm mix}/k$ is not constant: it rises from $\approx$143
+for NC ($k=14$) to $\approx$385 for California ($k=52$), confirming
+super-linear scaling.
 This is a much more favorable scaling than the theoretical bound
-$O(n^2 \log n)$ (which scales with tract count, not district count).
-The practical rate-limiter is not graph geometry but district count:
-larger delegations have more districts to mix.
+$O(n^3 \log n)$ (which scales with tract count, not district count).
+The practical rate-limiter is district count, not graph geometry.
 
-The relationship $\hat{t}_{\rm mix} \approx 400k$ suggests that the
-relevant state space diameter, from the perspective of practical mixing,
-is $\approx 400$ \recom{} steps per district rather than the
-$O(n^2)$ steps suggested by spectral theory.
+The $k^{1.4}$ empirical scaling suggests that the relevant state space
+diameter, from the perspective of practical mixing, grows mildly
+super-linearly with delegation size rather than the $O(n^2)$ growth
+suggested by spectral theory.
+The six-point fit has limited statistical power; additional states
+(especially with $k \in [20,40]$) would tighten the exponent estimate.
 
 \subsection{Comparison to Published Practice}
 

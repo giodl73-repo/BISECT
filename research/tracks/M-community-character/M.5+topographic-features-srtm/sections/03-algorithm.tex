@@ -1,0 +1,41 @@
+\section{Algorithm}
+
+\subsection{Data Acquisition}
+
+We download the USGS 3DEP 1/3 arc-second national DEM ($\approx$10m horizontal resolution) via the USGS National Map API or the public AWS S3 bucket (\texttt{usgs-lidar}). Data is public domain with no licensing restrictions. For each census tract, we extract the DEM tile covering the tract centroid and compute three derived features:
+
+\begin{enumerate}
+  \item \textbf{Elevation} $e(t)$: mean elevation (metres above sea level) of the census-tract centroid, computed from a $3\times 3$ pixel neighbourhood to reduce point-measurement noise.
+  \item \textbf{Slope} $s(t)$: mean slope (degrees) within the tract boundary, computed via the standard 3$\times$3 finite-difference gradient.
+  \item \textbf{Watershed membership} $w(t)$: HUC-8 watershed identifier for the primary drainage basin of the tract centroid, from the USGS National Hydrography Dataset.
+\end{enumerate}
+
+\subsection{Ridge Detection}
+
+Two adjacent tracts $u$ and $v$ are classified as ridge-separated if:
+
+\[
+  w(u) \neq w(v) \quad \text{and} \quad |e(u) - e(v)| > 100 \text{ m or } \max(s(u), s(v)) > 25°
+\]
+
+The second condition ($\Delta e > 100$m or steep slope) prevents misclassifying flat watershed boundaries (often at river confluences) as ridges.
+
+\subsection{Edge Weight Derivation}
+
+For each adjacency edge $(u,v)$ in the tract graph:
+
+\begin{enumerate}
+  \item \textbf{Ridge crossing} (applied first): if $u$ and $v$ are ridge-separated, set $w(u,v) \leftarrow 0.1 \times w_{\text{base}}$.
+  \item \textbf{Elevation similarity} (applied to non-ridge edges):
+    \[
+      w(u,v) \leftarrow w_{\text{base}} \times \exp\!\left(-\frac{|e(u)-e(v)|}{300}\right)
+    \]
+    This gives weight $\approx 1.0$ for tracts within 50m of each other, and $\approx 0.07$ for tracts 850m apart.
+  \item \textbf{Valley clustering} (applied to same-watershed edges): if $w(u) = w(v)$ and both tracts are below the HUC-8 watershed ridge, multiply by 1.5.
+\end{enumerate}
+
+The range of the derived similarity measure is $[0.1, 1.5] \times w_{\text{base}}$ — bounded, monotone in topographic proximity, and non-negative.
+
+\subsection{Graceful Degradation in Flat States}
+
+In flat states where $|e(u)-e(v)| < 50$m for all adjacent pairs (e.g., Wisconsin plains, Texas coastal plain), the elevation-similarity factor is $\exp(-50/300) \approx 0.85$, and ridge detection finds zero pairs. The resulting weights are effectively uniform at $0.85 \times w_{\text{base}}$ — a 15\% uniform reduction that does not change the relative ordering of edges and thus does not change the METIS partition.

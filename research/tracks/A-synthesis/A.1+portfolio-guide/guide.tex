@@ -1,5 +1,5 @@
 %% Guide to the Algorithmic Redistricting Portfolio
-%% Track-based navigation guide for the 75+ paper research program
+%% Track-based navigation guide for the 120+ paper research program
 
 \documentclass[12pt]{article}
 
@@ -47,10 +47,12 @@ data}.
 Applied to all 50 states across three census decades (2000/2010/2020), the
 algorithm produces 435 congressional districts with near-perfect population
 equality, geographic contiguity, and geometric compactness. The research
-program comprises \textbf{75+ papers across eight tracks (A--H)}, spanning
+program comprises \textbf{120+ papers across twelve tracks (A--M)}, spanning
 algorithm design and validation (Tracks B--C), legal compliance (Track D),
-experimental extensions (Tracks E--F), and ensemble-based plan evaluation
-(Tracks G--H), with Track A providing cross-portfolio synthesis.
+experimental extensions (Tracks E--F), ensemble-based plan evaluation
+(Tracks G--H), incumbency and apportionment (Tracks I--J), compactness
+and partisan fairness metrics (Tracks K--L), and community character weights
+(Track M), with Track A providing cross-portfolio synthesis.
 
 Papers in this program are at varying stages of completion. Track B
 foundations, several Track G ensemble papers, all Track H papers, and selected
@@ -83,13 +85,15 @@ papers across all tracks are in draft. The overall research program is ongoing.
 \section{Portfolio Architecture}
 % =============================================================================
 
-The portfolio is organized into eight tracks. Track A synthesizes all other
+The portfolio is organized into twelve tracks. Track A synthesizes all other
 tracks; Tracks B--H generate the empirical, algorithmic, legal, and ensemble
-results that the synthesis draws on.
+results that the original synthesis draws on; Tracks I--M extend the program
+to incumbency, apportionment, compactness, partisan fairness, and community
+character weights.
 
 \vspace{6pt}
 
-\begin{longtable}{@{}llp{5.8cm}l@{}}
+\begin{longtable}{@{}llp{5.2cm}l@{}}
 \toprule
 \textbf{Track} & \textbf{Theme} & \textbf{Key Headline Result} &
     \textbf{Papers} \\
@@ -97,7 +101,7 @@ results that the synthesis draws on.
 \endhead
 
 \textbf{A} & Portfolio Synthesis &
-    66+ papers synthesized across 8 tracks; 50 states $\times$ 3 decades
+    120+ papers synthesized across 12 tracks; 50 states $\times$ 3 decades
     $\times$ $+22\%$ compactness at CV $<$ 2\% &
     6 \\[4pt]
 
@@ -114,7 +118,7 @@ results that the synthesis draws on.
 \textbf{D} & VRA \& Legal Implementation &
     +69 majority-minority district surplus; 42\% geographic threshold;
     model federal statute formalizing ApportionRegions &
-    6 \\[4pt]
+    9 \\[4pt]
 
 \textbf{E} & Experimental Extensions &
     Geometric cost of federalism quantified; proportionality gain from
@@ -129,15 +133,41 @@ results that the synthesis draws on.
 \textbf{G} & Ensemble Methods \& Comparison &
     Bisection plan at 0.1--0.7th compactness percentile (WI/GA/PA/CA),
     50th in NC; G.14 (practitioner ensemble comparison) accepted at 4.0/4 &
-    15 \\[4pt]
+    16 \\[4pt]
 
 \textbf{H} & Search Strategies &
     All 4 papers accepted (avg 3.35/4); PercentileSweep for statutory
     legal posture; Rust ReCom at 2500$\times$ Python speed &
-    4 \\
+    4 \\[4pt]
+
+\textbf{I} & Incumbency Effects &
+    Incumbent pairing probability, safe-seat dynamics, and legal treatment
+    of incumbency as redistricting criterion &
+    5 \\[4pt]
+
+\textbf{J} & Apportionment Methods &
+    Huntington-Hill through Jefferson/D'Hondt comparison; bisect-apportion
+    implementation verified against official 2020 apportionment &
+    7 \\[4pt]
+
+\textbf{K} & Compactness Taxonomy &
+    Polsby-Popper, Reock, Convex Hull, Schwartzberg, Length-Width,
+    population-weighted; multi-metric court guide &
+    8 \\[4pt]
+
+\textbf{L} & Partisan Fairness Metrics &
+    Efficiency gap, mean-median, declination, seats-votes curve;
+    proportionality paradox: sigma$\approx$0 for competitive states &
+    7 \\[4pt]
+
+\textbf{M} & Community Character Weights &
+    Seven measurable signals (economic, land use, housing, commuting,
+    topographic, administrative, transit) operationalizing communities
+    of interest doctrine &
+    9 \\
 
 \bottomrule
-\caption{Portfolio track summary (75+ papers across eight tracks A--H).}
+\caption{Portfolio track summary (120+ papers across twelve tracks A--M).}
 \label{tab:tracks}
 \end{longtable}
 

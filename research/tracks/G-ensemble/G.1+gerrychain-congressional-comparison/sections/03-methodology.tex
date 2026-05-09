@@ -58,22 +58,34 @@ relationship is not one-to-one.  We report edge-cut percentiles because:
 
 \subsection{Uncertainty Quantification}
 
-Sampling uncertainty is non-negligible: for the NC Herschlag chain
-($N = 24{,}518$), $\ess \approx 1{,}703$ (estimated from single-chain
-autocorrelation), yielding a 90\% confidence interval of approximately
-$\pm 3.5$ percentile points for the Democratic seat percentile claim.
-Ensemble-based percentile figures throughout this paper should be interpreted
-as point estimates subject to this sampling uncertainty.
-
-The standard error on a percentile estimate at the 0.2nd percentile, using
-the ESS-corrected sample size, is:
+\paragraph{Sampling uncertainty for G.1's 1{,}000-step runs.}
+Sampling uncertainty is substantial at $N = 1{,}000$ steps.
+Using the lag-1 autocorrelation estimates from G.4~\citep{dellaLibera2026g4}
+($\rho_1(\mathrm{PP}) \approx 0.87$ for NC-scale chains), the effective sample
+size for G.1's ensembles is approximately:
+\[
+  \ess \approx \frac{N(1-\rho_1)}{1+\rho_1}
+  = \frac{1{,}000 \times 0.13}{1.87} \approx 70.
+\]
+The standard error on the 0.2nd-percentile compactness claim is:
 \begin{equation}
-  \mathrm{SE} = \sqrt{\hat\pi(1-\hat\pi)/\mathrm{ESS}}
-  = \sqrt{0.002 \times 0.998 / 1703} \approx 0.0011,
+  \mathrm{SE}(\mathrm{PP}) = \sqrt{\hat\pi(1-\hat\pi)/\ess}
+  = \sqrt{0.002 \times 0.998 / 70} \approx 0.0053,
 \end{equation}
-or about 0.11 percentage points for the point estimate itself.
-Wider uncertainty on the underlying percentile claim (the $\pm 3.5$ figure
-above) arises from uncertainty in the ensemble mean due to finite mixing time.
+or about 0.5 percentage points for the compactness point estimate.
+For Democratic seat-count percentiles (D-seats $\rho_1 \approx 0.75$,
+$\ess_D \approx 143$), the 90\% confidence interval at the median is
+approximately $\pm\,6.9$ percentage points.
+\emph{All G.1 percentile figures are preliminary point estimates;
+multi-chain Phase~2 validation is required before these estimates
+can be cited as certified ensemble positions.}
 
-For Texas and California (pending), we report ``$< 5$th percentile'' as a
-design-based lower bound.
+\paragraph{Herschlag chain (reference only).}
+For context, the NC Herschlag chain ($N = 24{,}518$) yields
+$\ess \approx 1{,}703$, giving a 90\% CI of approximately
+$\pm 2.0$ percentile points at the seat-count median.
+This ESS applies to the Herschlag chain and should not be used to
+certify G.1's 1{,}000-step results.
+
+For Texas and California (pending Phase~2), we report ``$< 5$th percentile''
+as a design-based lower bound pending full ensemble runs.

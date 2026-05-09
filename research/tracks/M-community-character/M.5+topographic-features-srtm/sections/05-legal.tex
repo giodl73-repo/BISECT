@@ -1,0 +1,22 @@
+\section{Legal Usage}
+
+\subsection{Communities of Interest}
+
+The communities-of-interest criterion appears in redistricting guidelines across more than 30 states. Courts have interpreted this criterion broadly to include shared economics, shared culture, and shared natural geography. The redistricting guidelines of California, Colorado, Michigan, and Arizona explicitly cite geographic features including mountains and watersheds as defining features of communities.
+
+Topographic weights operationalise this criterion by making valley communities — which share drainage basins, watershed-level floodplain risk, agricultural characteristics, and often administrative membership (soil and water conservation districts, watershed authorities) — more likely to remain together in the same legislative district.
+
+\subsection{Verifiability}
+
+The topographic weight derivation is fully verifiable from public data:
+\begin{itemize}
+  \item USGS 3DEP DEM: public domain, static between elections
+  \item USGS NHD watershed boundaries: public domain
+  \item The weight formula is deterministic given these inputs
+\end{itemize}
+
+Any party can reproduce the weights independently. The \textsc{bisect} CLI's \texttt{bisect label-analyze --types compactness} output includes the topographic weight configuration used, enabling audit.
+
+\subsection{Non-Partisan Character}
+
+Topographic weights are derived entirely from physical geography. They contain no partisan information, no precinct-level election data, and no demographic data beyond the census adjacency graph. Ridge lines are not the exclusive territory of any party. The Appalachian communities that topographic weights cluster together are politically heterogeneous (parts of western NC are competitive or Democratic, despite the region's aggregate Republican lean).

@@ -48,19 +48,22 @@ at 10{,}000 steps, based on empirical lag-1 autocorrelation.
 \begin{table}[h]
 \centering
 \caption{Estimated ESS for 10{,}000 \recom{} steps. $\rho_1(\PP)$ from
-         empirical Hamming autocorrelation; $\ess$ computed via geometric
-         approximation.}
+         empirical Hamming autocorrelation; $\ess(\PP)$ computed via the
+         geometric approximation $n(1-\rho_1)/(1+\rho_1)$.
+         $\ess(D\text{-seats})$ uses a uniform assumed $\rho_1 = 0.75$
+         for all states (D-seat autocorrelation is lower than PP because
+         seat counts change discontinuously at district boundaries).}
 \label{tab:ess-estimates}
 \begin{tabular}{lcccc}
 \toprule
 State & $k$ & $\rho_1(\PP)$ & $\ess(\PP)$ & $\ess(D\text{-seats})$ \\
 \midrule
-NC & 14 & 0.87 & 769 & 1{,}538 \\
-WI &  8 & 0.85 & 1{,}000 & 1{,}765 \\
-GA & 14 & 0.88 & 714 & 1{,}429 \\
-PA & 17 & 0.89 & 667 & 1{,}250 \\
-TX & 38 & 0.92 & 444 & 909 \\
-CA & 52 & 0.94 & 333 & 769 \\
+NC & 14 & 0.87 & 695 & 1{,}429 \\
+WI &  8 & 0.85 & 811 & 1{,}429 \\
+GA & 14 & 0.88 & 638 & 1{,}429 \\
+PA & 17 & 0.89 & 582 & 1{,}429 \\
+TX & 38 & 0.92 & 417 & 1{,}429 \\
+CA & 52 & 0.94 & 309 & 1{,}429 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -71,19 +74,23 @@ lower $\ess$ for the same nominal step count.
 
 \subsection{Minimum ESS for Reliable Quantile Estimates}
 
-For a 95th-percentile tail estimate with standard error below 1 percentage
-point of the outcome range, the required $\ess$ is approximately:
+For a 95th-percentile tail estimate with standard error below 10 percentage
+points of the outcome range ($\delta = 0.10$), the required $\ess$ is approximately:
 \[
   \ess_{\min} \approx \frac{1}{4 \alpha (1-\alpha) \delta^2}
-  = \frac{1}{4 \times 0.05 \times 0.95 \times (0.01)^2} \approx 526.
+  = \frac{1}{4 \times 0.05 \times 0.95 \times (0.10)^2} \approx 526.
 \]
 
-This minimum is met by all six study states at 10{,}000 steps.
-To meet a more stringent requirement of $\delta = 0.005$ (half a
-percentage point precision), the required $\ess$ rises to approximately
-2{,}100, requiring roughly 40{,}000--60{,}000 steps for Texas and
-California.
+This minimum is met at 10{,}000 steps for four of six study states:
+NC (695), WI (811), GA (638), and PA (582) all exceed 526.
+Texas (417) and California (309) fall below this threshold, requiring
+approximately 15{,}000 and 20{,}000 steps respectively to achieve
+10-percentage-point precision.
+To meet a more stringent requirement of $\delta = 0.05$ (5 percentage
+points), the required $\ess$ rises to approximately 2{,}105, requiring
+roughly 60{,}000--90{,}000 steps for Texas and California.
 
 This analysis motivates a statutory minimum of 10{,}000 steps for
-5-percentile-point precision, consistent with the MCMC practice in the
+four-state precision and 15{,}000--20{,}000 steps when Texas or California
+are included in the ensemble, consistent with the MCMC practice in the
 redistricting literature.

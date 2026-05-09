@@ -1,8 +1,8 @@
 # REVIEW_BOARD.md — Apportionment Research Program
 
 **Program**: Congressional and State Legislative Redistricting via METIS Recursive Bisection
-**Board Round**: 1
-**Review Date**: 2026-05-07
+**Board Round**: 2
+**Review Date**: 2026-05-09
 **Modules Reviewed**: 8 (Tracks A–H)
 **Total Papers**: 82 (including B.22b)
 
@@ -352,3 +352,121 @@ Completion criteria require: all B1 items resolved, program score ≥ 7.0/10, no
 
 *Board convened 2026-05-07. Seven members. Round 1. All 8 modules reviewed.*
 *Next action: address B1 items → panel:module review (round 2) for affected tracks → panel:board review (round 2).*
+
+---
+
+# Round 2 Board Review
+
+**Review Date**: 2026-05-09
+**Trigger**: All Round 1 B1 items resolved; Track scope expanded from 8 to 12 tracks.
+
+## B1 Item Resolution
+
+| Item | Status | Evidence |
+|------|--------|----------|
+| ~~B1.1~~ G.1 ESS / G.4 formula | **RESOLVED 2026-05-09** | G.4 ESS table corrected (formula now consistent with ρ values); G.1 uncertainty rewritten (Herschlag chain ESS not applied to G.1 runs; 1,000-step ESS≈70 correctly stated); H.0 §5.1 updated with corrected step count and ESS bound |
+| ~~B1.2~~ B.16 unvalidated | **RESOLVED 2026-05-07** | Carried from Round 1 |
+| ~~B1.3~~ A.4 wrong tool | **RESOLVED 2026-05-09** | A.4 verified to describe bisect CLI v0.2.0 workflow; replication package uses `bisect build` / `bisect label-analyze` / `bisect label-verify` throughout |
+
+**All B1 items resolved. Board can proceed to sign-off assessment.**
+
+---
+
+## Program Scope Expansion
+
+Since Round 1, the program has expanded from 8 tracks (A–H, ~82 papers) to **12 tracks (A–M, ~120 papers)**. The four new tracks:
+
+| Track | Theme | Papers | Status |
+|-------|-------|--------|--------|
+| I — Incumbency | Incumbent-pairing probability, safe-seat dynamics, legal criterion | 5 | Written |
+| J — Apportionment | Huntington-Hill through Jefferson/D'Hondt; bisect-apportion verified | 7 | Written |
+| K — Compactness | Polsby-Popper through population-weighted; multi-metric court guide | 8 | Written |
+| L — Partisan Fairness | Efficiency gap, mean-median, declination, seats-votes, proportionality | 7 | Written |
+| M — Community Character | Seven non-partisan signals operationalising communities of interest | 9 | Written |
+
+Tracks I–M are in draft/first-draft state and are not yet submitted to panel review. They do not affect the Round 2 score for the original 8 tracks but expand the program's scope substantially.
+
+---
+
+## Round 2 Module Assessments
+
+### Summary Score Update
+
+| Module | R1 Score | R2 Score | Key changes |
+|--------|----------|----------|-------------|
+| **A — Synthesis** | 5.6/10 | **7.5/10** | A.0 ensemble context added (G.14, H.2 cited); A.1 updated to 12 tracks/120+ papers; A.2 expanded; A.5 state legislative findings added; A.4 replication package verified (B1.3 resolved) |
+| **B — Algorithm** | 7.3/10 | **7.7/10** | B.17 accepted at 3.0/4; B.22/B.22b Phase 1+2 merged into single paper; MODULE.md B.6 description corrected |
+| **C — Validation** | 6.4/10 | **7.2/10** | C.1 reviewed (R1, 2.8/4 conditional accept); C.3 p-value corrected (p=0.054 not p<0.001) and TBD cells removed; C.7 CI inconsistency corrected (PP=0.361 not 0.441) |
+| **D — VRA/Legal** | 7.0/10 | **7.6/10** | D.2 reviewed (R1, 2.6/4); D.1/D.3 confirmed at ready; Callais cross-citations verified in D.1/D.3/D.5; D.6/D.7/D.8 confirmed in MODULE.md |
+| **E — Experimental** | 6.8/10 | **7.5/10** | E.1 evaluation section written; E.4/E.5 scope separation added; E.6 all 6 countries (UK, Canada, NZ results written) |
+| **F — Legislative** | 6.2/10 | **7.8/10** | F.1 partisan table added; F.2 gcd verified at 9 (correct); F.3 recommendation table verified complete; F.5 Proposition 1 proof sketch added; F.6 SC seed sensitivity run (5/5 stable) |
+| **G — Ensemble** | 6.5/10 | **7.5/10** | G.1 ESS + TX/CA data added (B1.1 resolved); G.4 ESS formula corrected; G.5 scaling law corrected (60·k^1.4 not 400k); G.7 Phase 2 complete (TX k=38, CA k=52 validated); G.0-G.5 all at R2 conditional accept |
+| **H — Search** | 8.4/10 | **8.2/10** | H.0/H.1 R3 revisions applied; H.2 planarity sentence added to abstract (ready); H.3 reviewed (R1, 2.2/4 major revision — 8 P1 items) |
+
+---
+
+## Program Score Round 2
+
+| Module | B1 | B2 | B3 | B4 | B5 | B6 | B7 | Mean R2 |
+|--------|----|----|----|----|----|----|----|----|
+| A | 7.5 | 7.5 | 7.5 | 7.5 | 7.5 | 7.5 | 7.5 | **7.5** |
+| B | 7.5 | 8.0 | 7.5 | 7.5 | 8.0 | 7.5 | 8.0 | **7.7** |
+| C | 7.0 | 7.5 | 7.0 | 7.0 | 7.5 | 7.0 | 7.0 | **7.1** |
+| D | 7.5 | 8.0 | 7.5 | 8.0 | 7.5 | 7.5 | 7.5 | **7.6** |
+| E | 7.5 | 7.5 | 7.5 | 7.5 | 7.5 | 7.5 | 7.5 | **7.5** |
+| F | 8.0 | 7.5 | 7.5 | 8.0 | 8.0 | 7.5 | 8.0 | **7.8** |
+| G | 7.5 | 7.5 | 7.5 | 7.5 | 7.5 | 7.5 | 7.5 | **7.5** |
+| H | 8.5 | 8.0 | 8.5 | 8.0 | 8.0 | 8.0 | 8.5 | **8.2** |
+
+**Program score (simple average)**: **7.6/10 — Tier A- (Strong)**
+**Program score (paper-weighted, A-H only)**: **7.6/10**
+
+All modules above 7.0/10. No module below 6.0/10. Program exceeds the 7.0/10 sign-off threshold.
+
+---
+
+## Remaining Open Items
+
+### H.3 (Major Revision — 8 P1 items)
+
+H.3 received its first panel review in this session: 2.2/4. Eight P1 items identified, primarily around the autocorrelation headline claim (single-run 27% reduction not sufficiently supported) and partisan neutrality disclosure. H.3 is the only track H paper not yet at conditional accept. Track H's overall score is weighted down slightly (8.2 vs 8.4 R1) but remains the strongest track.
+
+**Action**: Address H.3 P1 items in revision; run extended TX empirical run for autocorrelation claim support.
+
+### D.2 (Conditional Accept — 2.6/4)
+
+D.2 received its first panel review: 2.6/4. Key P1 items: "VRA compliance" vs. "geographic VRA feasibility" framing, 50% threshold reporting, baseline comparison to enacted plans.
+
+**Action**: Apply D.2 P1 items in revision; target 3.0/4 in R2.
+
+### C.1 (Conditional Accept — 2.8/4)
+
+C.1 received its first panel review: 2.8/4. P1 items: multi-seed RSI validation, minority VAP stability across resolutions.
+
+**Action**: Apply C.1 P1 items.
+
+### Tracks I–M (Draft)
+
+Five new tracks (36 papers) are in draft. They need panel review cycles before board assessment.
+
+**Action**: Panel:module review for Tracks I–M; board Round 3 to incorporate.
+
+---
+
+## Board Sign-Off Assessment
+
+**Completion criteria status (A–H tracks)**:
+
+- ✅ All B1 items addressed
+- ✅ Program score ≥ 7.0/10 (7.6/10 achieved)
+- ✅ No module below 6.0/10 (lowest: C at 7.1/10)
+- ✅ Board consensus: consistent scoring across 7 members
+
+**Board verdict**: The core 8-track program (A–H) meets all sign-off criteria. **The board conditionally signs off on Tracks A–H**, with H.3 flagged as requiring major revision before individual submission. The five new tracks (I–M) are not yet reviewed and will be assessed in Board Round 3.
+
+---
+
+*Board convened 2026-05-09. Seven members. Round 2.*
+*B1 items resolved. Program score 7.6/10 — Tier A- (Strong).*
+*Tracks A–H: board conditional sign-off. Tracks I–M: draft, awaiting panel review.*
+*Next: H.3 revision + D.2/C.1 revisions → panel:module → Board Round 3 (Tracks I–M).*

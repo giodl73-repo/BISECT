@@ -1,0 +1,17 @@
+\section{Background and Data}
+
+\subsection{USGS 3DEP Digital Elevation Model}
+
+The USGS 3D Elevation Program (3DEP) provides the National Elevation Dataset at resolutions from 1/3 arc-second ($\approx$10m) to 1 arc-second ($\approx$30m). The 1/3 arc-second product covers the contiguous United States, Alaska, Hawaii, and US territories. Data is collected from airborne lidar, interferometric synthetic aperture radar (IfSAR), and photogrammetry. The dataset is public domain under a government works licence.
+
+For redistricting purposes, the 1/3 arc-second resolution is more than sufficient: at this resolution, individual census tracts (mean area $\approx 1.7$ km$^2$) are represented by hundreds of DEM pixels. The derived elevation, slope, and aspect statistics are well-conditioned.
+
+\subsection{USGS National Hydrography Dataset}
+
+The USGS National Hydrography Dataset (NHD) provides watershed delineations at multiple scales. We use HUC-8 (8-digit Hydrologic Unit Code) boundaries, which correspond to subbasins of approximately 700--2{,}000 km$^2$. For North Carolina, 28 HUC-8 subbasins span the state; the Appalachian mountain region contains 12 subbasins separated by the Eastern Continental Divide.
+
+HUC-8 is the appropriate scale for legislative redistricting: finer scales (HUC-10, HUC-12) produce subwatersheds smaller than census tracts, while coarser scales (HUC-4) are too large to capture meaningful community-scale topographic separation.
+
+\subsection{Relationship to Other M-Track Signals}
+
+Topographic signals (M.5) are complementary to administrative zone membership (M.6): watersheds often correspond to administrative districts (soil and water conservation districts, watershed authorities, irrigation districts). In practice, the M.5 and M.6 signals will often agree — providing reinforcing evidence that a topographic boundary also reflects an administrative boundary. They can disagree in irrigated western states, where water rights create administrative zones that cross topographic divides.

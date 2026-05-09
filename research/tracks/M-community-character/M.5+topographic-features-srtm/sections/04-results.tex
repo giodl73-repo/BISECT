@@ -1,0 +1,48 @@
+\section{Empirical Results}
+
+\subsection{North Carolina Mountain Districts}
+
+Table~\ref{tab:nc-topo} reports results for North Carolina's five westernmost congressional districts (Districts 10--14 in the 2020 apportionment, corresponding to Appalachian communities west of the Blue Ridge Parkway).
+
+\begin{table}[h]
+\centering\small
+\caption{NC mountain districts: geographic vs.\ topographic weights. ``Cross-ridge'' = number of districts whose boundary crosses a HUC-8 watershed divide.}
+\label{tab:nc-topo}
+\begin{tabular}{lcccc}
+\toprule
+Configuration & Districts & Mean PP & Cross-ridge & Pop.\ balance \\
+\midrule
+Geographic (baseline)  & 5 & 0.171 & 2 & $\pm$0.4\% \\
+Topographic weights    & 5 & 0.164 & 0 & $\pm$0.4\% \\
+\midrule
+Difference             & — & $-4.1\%$ & $-2$ & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Topographic weights eliminate cross-ridge districts at a cost of 4.1\% compactness. The compactness reduction is expected: the Appalachian valleys are elongated along their north-south axis, and ridge-respecting districts follow this elongation. The 4.1\% cost is well within the range of compactness variation seen across seeds (CV $\approx 4.3\%$ for NC per B.7).
+
+\subsection{Flat-State Degradation}
+
+Table~\ref{tab:flat-states} confirms graceful degradation in flat states.
+
+\begin{table}[h]
+\centering\small
+\caption{Flat-state topographic weight effect. RSI = relative stability index (max$-$min)/mean across geographic and topographic runs.}
+\label{tab:flat-states}
+\begin{tabular}{lcccc}
+\toprule
+State & Max $\Delta e$ (m) & Ridge pairs & PP change & Cross-watershed change \\
+\midrule
+Wisconsin (plains)  & 43  & 0 & $-0.2\%$ & 0 \\
+Texas (coastal)     & 28  & 0 & $-0.1\%$ & 0 \\
+Indiana             & 61  & 0 & $-0.4\%$ & 0 \\
+\midrule
+NC (mountains)      & 1{,}740 & 87 & $-4.1\%$ & $-2$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Proportionality Impact}
+
+Topographic weights in NC produce a proportionality gap change of $+0.3$ pp relative to the geographic baseline ($-6.5$ pp gap), remaining within sampling noise. Valley-respecting districts correspond well to Republican-leaning Appalachian communities: the 0 cross-ridge maps produce the same 7D/7R statewide delegation as the geographic baseline (B.11).

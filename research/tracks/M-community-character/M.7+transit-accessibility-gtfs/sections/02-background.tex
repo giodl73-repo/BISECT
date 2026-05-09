@@ -1,0 +1,28 @@
+\section{Background and Data}
+
+\subsection{GTFS Data}
+
+The General Transit Feed Specification (GTFS) is an open standard published by Google in 2006 and now maintained by MobilityData. Nearly all US transit agencies publish GTFS feeds for static schedule data. The GTFS format provides stops, routes, trips, and frequency data sufficient to compute per-stop transit frequency and coverage.
+
+We collect GTFS static feeds from transit agency websites and the Transitland transit data aggregator (\url{https://www.transit.land}). Coverage across states varies: major metropolitan areas have complete GTFS data; rural areas typically have no transit agency coverage. As of 2024, GTFS data covers approximately 82\% of the US population; 18\% live in areas with no fixed-route transit.
+
+\subsection{Transit Score Computation}
+
+For each census-tract centroid, we identify all transit routes with stops within 400m (a standard ``transit-accessible'' walking distance). The tract transit score is:
+
+\[
+  \text{score}(t) = \sum_{\text{routes } r \text{ within 400m}} f_r \times v_r
+\]
+
+where $f_r$ is the peak-hour frequency (trips per hour) and $v_r$ is a mode speed factor: subway/rail = 1.5, bus rapid transit = 1.2, local bus = 1.0, demand-response = 0.3.
+
+Tracts with no transit stops within 400m receive score $= 0$.
+
+\subsection{Coverage Limitations}
+
+GTFS coverage is uneven across states. The three case-study states have the following coverage:
+\begin{itemize}
+  \item \textbf{North Carolina}: Charlotte, Raleigh-Durham, Greensboro, and Asheville metro areas have GTFS coverage; rural tracts do not. Approximately 42\% of NC tracts have score $> 0$.
+  \item \textbf{Wisconsin}: Milwaukee and Madison metro areas covered; the rest of the state has score $= 0$. Approximately 28\% of WI tracts have score $> 0$.
+  \item \textbf{Texas}: Houston, Dallas-Fort Worth, Austin, San Antonio covered; rural Texas has score $= 0$. Approximately 51\% of TX tracts have score $> 0$.
+\end{itemize}

@@ -30,10 +30,12 @@
 
 \begin{abstract}
 Markov-chain redistricting ensemble methods (ReCom, GerryChain) sample the full
-plan space by running $k$-way recombination steps, but fail catastrophically for
-large prime $k$: Texas ($k=38$) and Pennsylvania ($k=17$) require prime-arity
-bipartitions of the whole state that have no efficient graph-theoretic
-decomposition. We introduce \emph{BisectionEnsemble}, which resolves this failure
+plan space by running $k$-way recombination steps, but exhibit catastrophic
+bipartition failure at large $k$: Pennsylvania ($k=17$, prime) requires a
+17-way bipartition of the whole state; Texas ($k=38=2\times 19$) requires a
+19-way bipartition at the first ApportionRegions split.
+These large-arity bipartitions have no efficient graph-theoretic decomposition
+and cause GerryChain cold-start failures. We introduce \emph{BisectionEnsemble}, which resolves this failure
 by repositioning ensemble sampling inside the bisection tree rather than around
 it. At each node of the bisection tree---which decomposes a $k$-district state
 into a hierarchy of 2-way cuts---we run a local $T$-step ReCom chain on the
