@@ -20,11 +20,11 @@ law must reproduce these official seat counts exactly.
 design choices:
 \begin{enumerate}
   \item \textbf{Double-precision arithmetic}: Priority values are compared
-    as \texttt{f64} floating-point, which provides exact results for the
-    integer-valued populations and seat counts used in apportionment.
+    as \texttt{f64} floating-point, which provides numerically stable
+    comparisons for the populations used in apportionment.
   \item \textbf{Output verification}: The crate's L2 tests compare its
     output string-by-string against the Census Bureau's published result;
-    SHA-256 cryptographic verification is planned for Phase~2.
+    SHA-256 cryptographic verification remains a future hardening step.
   \item \textbf{Comprehensive test suite}: 95 tests across the crate at
     L0/L1/L2 provide coverage of unit formulas, synthetic examples, and
     real-data regression; 24 tests specifically target apportionment

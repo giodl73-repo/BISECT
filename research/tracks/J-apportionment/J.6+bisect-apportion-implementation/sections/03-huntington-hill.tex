@@ -18,9 +18,8 @@ and current seat count respectively.
 Double-precision floating-point arithmetic (\texttt{f64}) is used for
 priority comparisons; for the priority values used in apportionment
 (populations up to approximately 40~million, seat counts up to
-approximately 100), \texttt{f64} provides exact results since all
-values are representable as integers within \texttt{f64}'s 53-bit
-mantissa precision limits.
+approximately 100), the observed priority gaps are large enough that the
+published seat allocations remain stable under the current representation.
 
 \subsection{Precision Analysis}
 
@@ -30,8 +29,8 @@ The maximum priority value is $p_{\text{CA}} / \sqrt{1 \times 2}
 = 39{,}538{,}223 / \sqrt{2} \approx 2.8 \times 10^7$.
 Since all populations and seat counts are integers within $[1, 10^8]$,
 and \texttt{f64}'s 53-bit mantissa can represent integers exactly up to
-$2^{53} \approx 9 \times 10^{15}$, all priority values used in
-U.S.\ apportionment are computed exactly without rounding error.
+$2^{53} \approx 9 \times 10^{15}$, the implementation has ample numeric
+headroom for the census-scale values used here.
 The precision stress test (L1) confirms this for populations up to
 $5 \times 10^7$.
 

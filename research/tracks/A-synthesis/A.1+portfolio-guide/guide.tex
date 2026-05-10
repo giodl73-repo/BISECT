@@ -41,8 +41,8 @@ partisan mapmakers manipulate district boundaries to predetermine election
 outcomes, eroding public confidence in representative democracy. This portfolio
 demonstrates that \textbf{recursive graph bisection}---a computational method
 used for supercomputer workload distribution---provides an algorithmic
-alternative that \emph{cannot gerrymander because it cannot access partisan
-data}.
+alternative that \emph{cannot be instructed to gerrymander because it cannot
+access partisan data}.
 
 Applied to all 50 states across three census decades (2000/2010/2020), the
 algorithm produces 435 congressional districts with near-perfect population
@@ -63,7 +63,9 @@ papers across all tracks are in draft. The overall research program is ongoing.
 
 \begin{itemize}[leftmargin=*,noitemsep,topsep=4pt]
     \item \textbf{Philosophical}: \emph{Impossibility defense}---the algorithm
-        cannot see partisan data, therefore cannot gerrymander by construction.
+        cannot see partisan data, therefore cannot be instructed to gerrymander
+        by construction. Compact neutral maps can still reflect geographic voter
+        concentration, as shown in Track C.5.
 
     \item \textbf{Technical}: Edge-weighted graph partitioning achieves
         $+22$--$44\%$ compactness improvement over enacted maps, with seed
@@ -102,7 +104,7 @@ reform pathways, 2030 planning, adversarial robustness, and statistical inferenc
 \endhead
 
 \textbf{A} & Portfolio Synthesis &
-    120+ papers synthesized across 12 tracks; 50 states $\times$ 3 decades
+    190+ papers synthesized across 18 tracks; 50 states $\times$ 3 decades
     $\times$ $+22\%$ compactness at CV $<$ 2\% &
     6 \\[4pt]
 
@@ -450,10 +452,11 @@ Paper track codes correspond directly to the folder names under
         to defeat minority candidates.
 
     \item[Impossibility defense] The core philosophical claim of the portfolio:
-        the METIS recursive bisection algorithm cannot gerrymander by
-        construction because it is not given access to partisan data. It
-        minimizes edge cuts in a geographic graph---a purely geometric
-        objective.
+        the METIS recursive bisection algorithm cannot be instructed to
+        gerrymander by construction because it is not given access to partisan
+        data. It minimizes edge cuts in a geographic graph---a purely geometric
+        objective. Compact neutral maps can still reflect geographic voter
+        concentration, as shown in Track C.5.
 
     \item[Majority-minority district] A district in which minority voters
         constitute at least 50\% of the voting-age population (VAP), satisfying

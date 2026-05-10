@@ -40,3 +40,7 @@ Every N.1–N.4 paper must:
 ## Algorithm Note
 
 The bisect pipeline's `--balance-metric` flag controls the population vector used for balancing. The default is `total_population` (Census P.L. 94-171 P1 table). N-track papers test `citizen_vap`, `total_vap`, and adjusted counts.
+
+## Publication Status
+
+The source draft is now internally consistent. N.2 and N.3 explicitly mark their key estimates as derived point estimates with uncertainty bands, N.4 is clearly labeled as a Phase 2 planning item, and N.5 carries the full 50-state comparison. The remaining work is compilation and packaging, not new research content.

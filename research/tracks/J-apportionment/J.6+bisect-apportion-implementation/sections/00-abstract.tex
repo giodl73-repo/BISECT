@@ -10,11 +10,13 @@ zero discrepancies across all 50 states.
 
 The priority computations use \texttt{f64} arithmetic.
 For the seat counts and population values in U.S.\ apportionment
-(populations $\leq 40$~million, seat counts $\leq 100$), priority comparisons
-are exact because no population/seat product exceeds $4\times10^9$, well within
-\texttt{f64}'s exact integer range of $2^{53} \approx 9\times10^{15}$.
-SHA-256 seed verification is planned for Phase~2; currently the implementation
-uses a deterministic seed formula without cryptographic verification.
+(populations $\leq 40$~million, seat counts $\leq 100$), the observed
+priority gaps are far larger than floating-point rounding error, so the
+computed seat allocations match the Census Bureau outputs exactly on the
+2020, 2010, and 2000 verification sets.
+SHA-256 seed verification remains a future hardening step; currently the
+implementation uses a deterministic seed formula without cryptographic
+verification.
 
 The test suite comprises 95 tests across the crate at three levels:
 L0 (unit tests on priority formulas and edge cases),

@@ -9,7 +9,7 @@ This section analyzes what political characteristics emerge when we overlay 2020
 
 Traditional arguments against gerrymandering focus on \textit{intent}: did mapmakers deliberately manipulate boundaries for partisan advantage? The Supreme Court's \textit{Rucho v. Common Cause} decision rejected this standard as non-justiciable, finding no manageable way to distinguish legitimate political considerations from unconstitutional partisan gerrymandering \cite{rucho2019}.
 
-Algorithmic redistricting offers a stronger defense: \textit{impossibility}. The algorithm cannot gerrymander because it cannot access the information required for gerrymandering. Partisan manipulation requires knowledge of voter behavior—which precincts lean Democratic, which neighborhoods vote Republican, where partisan voters concentrate. Our algorithm possesses none of this knowledge.
+Algorithmic redistricting offers a stronger defense: \textit{impossibility}. The algorithm cannot be instructed to gerrymander because it cannot access the information required for gerrymandering. Partisan manipulation requires knowledge of voter behavior—which precincts lean Democratic, which neighborhoods vote Republican, where partisan voters concentrate. Our algorithm possesses none of this knowledge.
 
 The boundaries emerge from two inputs only:
 \begin{enumerate}
@@ -148,7 +148,7 @@ Consider three redistricting approaches:
 
 \textbf{Algorithmic Redistricting:} The algorithm never learns where Democratic or Republican voters live. It optimizes a geometric criterion (edge cuts) using only population and adjacency data. Partisan patterns emerge from the interaction between this geometric optimization and political geography—but the algorithm cannot manipulate those patterns intentionally.
 
-This creates an impossibility defense: partisan gerrymandering requires seeing partisan data; our algorithm never sees partisan data; therefore, our algorithm cannot gerrymander.
+This creates an impossibility defense: partisan gerrymandering requires seeing partisan data; our algorithm never sees partisan data; therefore, our algorithm cannot be instructed to gerrymander. That means the process is insulated from partisan targeting, not that its outputs are partisan-neutral in every geography.
 
 The resulting partisan patterns may not satisfy all fairness criteria—geographic sorting may create efficiency gaps, urban concentration may produce safe Democratic districts, rural dispersion may advantage Republicans in close states. But these patterns arise from political geography and neutral geometric optimization, not strategic manipulation.
 

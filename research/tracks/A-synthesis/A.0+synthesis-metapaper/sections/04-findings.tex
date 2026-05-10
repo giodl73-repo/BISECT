@@ -50,7 +50,7 @@ Regional distribution of states meeting the 42\% threshold reveals stark geograp
 
 Without accessing partisan data, the algorithm produces districts with 56.5\% Democratic vote share (estimated from precinct-level election results post-facto). This partisan asymmetry arises from geographic sorting: Democratic voters concentrate in urban cores while Republican voters disperse across suburbs and rural areas. Recursive bisection, optimizing for geographic compactness, unavoidably packs urban Democrats while splitting rural Republicans---the opposite pattern emerges from geography, not algorithmic intent~\cite{chen2013unintentional,deluca2026edgeweighted}.
 
-This finding strengthens the impossibility defense. Critics might argue that ``neutral'' algorithms still produce partisan advantage, but the advantage reflects voter distribution, not gerrymandering. Human mapmakers can amplify or reverse geographic patterns by strategic cracking and packing; algorithms cannot. The efficiency gap---a metric measuring ``wasted votes''---measures geographic artifacts when the mapmaker cannot see partisan data~\cite{deluca2026edgeweighted}.
+This finding strengthens the impossibility defense. Critics might argue that ``neutral'' algorithms still produce partisan advantage, but the advantage reflects voter distribution, not gerrymandering. Human mapmakers can amplify or reverse geographic patterns by strategic cracking and packing; algorithms cannot be instructed to do that without partisan data. The efficiency gap---a metric measuring ``wasted votes''---measures geographic artifacts when the mapmaker cannot see partisan data~\cite{deluca2026edgeweighted}.
 
 \subsection{Finding 5: Reduced Partisan Bias Compared to Enacted Plans}
 

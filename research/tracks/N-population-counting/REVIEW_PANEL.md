@@ -17,6 +17,12 @@
 
 ## Module Score: 8.2/10
 
+## Post-Cleanup Status
+- **N.2**: The 180-tract estimate is now tied to the home-address sensitivity workflow in the abstract and Section 4, so it reads as a derived point estimate rather than a bare assertion.
+- **N.3**: The 15--20 seat shift estimate is now framed with uncertainty bounds in the body and with a tract-level point-estimate caveat in the divergence section.
+- **N.4**: The civilian_only / \texttt{--exclude-gq-types 210} mode remains Phase 2 by design; it is already labeled that way in the paper text.
+- **N.5**: The 50-state table now carries prison-adjusted values across the full state set, so the flagship comparison is no longer a pilot-only result.
+
 ## Track-Level Strengths
 - N.5 is the definitive reference paper on population definition choice in redistricting — the first 50-state empirical comparison across four balance metrics. The statutory recommendation (total population + prison adjustment only) is carefully argued and legally grounded.
 - N.1's three-state case study (NY reformed, PA/TX not) provides compelling evidence that prison gerrymandering is a solved problem administratively even if not federally.
@@ -34,4 +40,4 @@
 - N.3: Add Evenwel Thomas/Alito concurrence significance — their view that citizen VAP may be constitutionally required at state level is more legally live than the majority suggests. (Pildes)
 
 ## Next Action
-N.5 P1 (50-state coverage gap) is highest priority — it's the track's flagship paper. N.3 CI (P1) is the most litigation-critical fix. N.4 Phase 2 labeling is administrative.
+Source draft is now internally consistent. The remaining work is publication packaging: PDF rebuilds, bibliography refresh, and a final pass over the public research index once the compiled artifacts exist.

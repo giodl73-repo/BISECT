@@ -14,7 +14,7 @@
 
 % Title
 \title{\textbf{Algorithmic Redistricting Portfolio}\\
-\large 120+ Papers Across 12 Research Tracks}
+\large 190+ Papers Across 18 Research Tracks}
 
 \author{Giovanni Della-Libera}
 \date{February 2026}
@@ -25,14 +25,14 @@
 
 \section*{Overview}
 
-Congressional redistricting in the United States suffers a legitimacy crisis: partisan mapmakers manipulate district boundaries to predetermine election outcomes, eroding public confidence in representative democracy. This research program of 120+ Papers Across 12 Research Tracks demonstrates that \textbf{recursive graph bisection}---a computational method used for supercomputer workload distribution---provides an algorithmic alternative that \emph{cannot gerrymander because it cannot access partisan data}.
+Congressional redistricting in the United States suffers a legitimacy crisis: partisan mapmakers manipulate district boundaries to predetermine election outcomes, eroding public confidence in representative democracy. This research program of 190+ Papers Across 18 Research Tracks demonstrates that \textbf{recursive graph bisection}---a computational method used for supercomputer workload distribution---provides an algorithmic alternative that \emph{cannot be instructed to gerrymander because it cannot access partisan data}.
 
 Applied to all 50 states across three census decades (2000/2010/2020), this method produces 435 congressional districts with near-perfect population equality, geographic contiguity, and geometric compactness. Algorithmic plans create \textbf{69 more majority-minority districts} than enacted maps, exceeding Voting Rights Act requirements without explicit racial targeting. We identify a \textbf{42\% demographic threshold} determining where proportional minority representation becomes geographically feasible. Efficiency gap analysis reveals \textbf{62\% partisan bias reduction} compared to enacted plans, establishing empirical benchmarks for neutral redistricting.
 
 \subsection*{Four Core Contributions}
 
 \begin{itemize}[leftmargin=*,noitemsep,topsep=4pt]
-    \item \textbf{Philosophical}: \emph{Impossibility defense}---algorithm cannot see partisan data, therefore cannot gerrymander
+    \item \textbf{Philosophical}: \emph{Impossibility defense}---algorithm cannot see partisan data, therefore cannot be instructed to gerrymander; compact neutral maps can still reflect geographic voter concentration
     \item \textbf{Technical}: Edge-weighted graph partitioning achieves +56\% compactness improvement over unweighted METIS bisection while enabling VRA compliance
     \item \textbf{Empirical}: National-scale validation across 50 states and 3 census decades (150 redistricting scenarios)
     \item \textbf{Legal}: 42\% state minority threshold determines VRA feasibility; +69 majority-minority district surplus; 62\% partisan bias reduction
@@ -67,7 +67,7 @@ The following summaries cover the eleven foundation papers (B.1--B.11 / original
 
 \subsection*{Paper 01: Recursive Bisection for Congressional Redistricting}
 
-This foundation paper establishes the core method and philosophical framework. We demonstrate that recursive graph bisection---the same algorithm used to distribute workloads across supercomputer processors---can partition census tracts into congressional districts meeting all constitutional requirements. The method operates exclusively on population counts and geographic adjacency, structurally unable to access partisan voter data. This creates an \emph{impossibility defense}: the algorithm cannot gerrymander not because it chooses not to, but because it lacks the information required to do so. Applied to all 50 states, the method produces 435 districts with population equality within 0.5\%, full geographic contiguity, and Polsby-Popper compactness scores 23\% higher than enacted plans. The paper frames algorithmic redistricting as extending the Huntington-Hill precedent for congressional apportionment (successful since 1941) to the boundary design problem, demonstrating that mathematical governance can restore electoral legitimacy through structural objectivity rather than institutional reform.
+This foundation paper establishes the core method and philosophical framework. We demonstrate that recursive graph bisection---the same algorithm used to distribute workloads across supercomputer processors---can partition census tracts into congressional districts meeting all constitutional requirements. The method operates exclusively on population counts and geographic adjacency, structurally unable to access partisan voter data. This creates an \emph{impossibility defense}: the algorithm cannot be instructed to gerrymander not because it chooses not to, but because it lacks the information required to do so. Compact neutral maps can still reflect geographic voter concentration, as shown in Track C.5. Applied to all 50 states, the method produces 435 districts with population equality within 0.5\%, full geographic contiguity, and Polsby-Popper compactness scores 23\% higher than enacted plans. The paper frames algorithmic redistricting as extending the Huntington-Hill precedent for congressional apportionment (successful since 1941) to the boundary design problem, demonstrating that mathematical governance can restore electoral legitimacy through structural objectivity rather than institutional reform.
 
 \subsection*{Paper 02: Edge-Weighted Graph Partitioning for Compact Districts}
 
@@ -120,7 +120,7 @@ Track H translates Track G's ensemble science into deployable statutory tools. P
 \section*{Portfolio-Level Themes}
 
 \subsection*{Impossibility Defense (Papers 01, 11)}
-The core philosophical innovation: algorithms cannot gerrymander because they structurally lack access to partisan data. Paper 01 establishes this principle theoretically; Paper 11 validates it empirically by demonstrating 62\% bias reduction without any partisan fairness objective in the algorithm specification.
+The core philosophical innovation: algorithms cannot be instructed to gerrymander because they structurally lack access to partisan data. Paper 01 establishes this principle theoretically; Paper 11 validates it empirically by demonstrating 62\% bias reduction without any partisan fairness objective in the algorithm specification. Compact neutral maps can still reflect geographic voter concentration.
 
 \subsection*{VRA Compliance Without Racial Targeting (Papers 03, 04, 06)}
 Three papers demonstrate that demographic awareness through edge-weighting produces more MM districts than enacted plans (+69 surplus) without explicit racial quotas. Paper 03 establishes the method, Paper 04 identifies the 42\% threshold for feasibility, and Paper 06 debunks VRA-compactness tradeoff myths.
@@ -152,7 +152,7 @@ The portfolio advances three research frontiers: (1) computational political sci
     \item[Majority-minority (MM) districts] Districts where minority voters $\geq$ 50\% of voting-age population (VAP), satisfying VRA Section 2
     \item[Polsby-Popper (PP)] Compactness measure: $4\pi \times \text{Area} / \text{Perimeter}^2$. Range: [0,1], higher = more compact. Circle = 1.0, typical districts = 0.3-0.5
     \item[Recursive bisection] Hierarchical method splitting graph into two parts repeatedly (binary tree structure). Complexity: O($n$ log $k$) for $k$ districts
-    \item[Impossibility defense] Algorithm cannot gerrymander by design: it structurally cannot access partisan data, unlike commission-drawn maps
+    \item[Impossibility defense] Algorithm cannot be instructed to gerrymander by design: it structurally cannot access partisan data, unlike commission-drawn maps; compact neutral maps can still reflect geographic voter concentration
     \item[VRA] Voting Rights Act (1965)---federal law prohibiting practices that dilute minority voting strength. Section 2 requires proportional representation where geographically feasible
 \end{description}
 
@@ -168,12 +168,12 @@ The portfolio advances three research frontiers: (1) computational political sci
 
 \section*{Citation Guide}
 
-\textbf{Publication status}: This is an ongoing research program (120+ papers across 12 tracks). Track B foundations, several Track G ensemble papers, all Track H papers, and selected papers in Track B extensions are accepted or ready for submission. Remaining papers across all tracks are in draft. Preprints will be available on arXiv upon initial submission.
+\textbf{Publication status}: This is an ongoing research program (190+ papers across 18 tracks). Track B foundations, several Track G ensemble papers, all Track H papers, and selected papers in Track B extensions are accepted or ready for submission. Remaining papers across all tracks are in draft. Preprints will be available on arXiv upon initial submission.
 
 \textbf{For the entire research program}:
 
 \begin{quote}
-Della-Libera, G. (2026). Algorithmic redistricting: A 120+ paper research program across 12 tracks. Preprint series.
+Della-Libera, G. (2026). Algorithmic redistricting: A 190+ paper research program across 18 tracks. Preprint series.
 \end{quote}
 
 \textbf{For specific papers} (examples):
@@ -192,6 +192,6 @@ Della-Libera, G. (2026). Measuring partisan fairness in algorithmic redistrictin
 
 \vspace{6pt}
 
-\noindent\textbf{About this summary}: This 6-page research statement provides detailed descriptions of the foundation papers of the algorithmic redistricting portfolio (120+ Papers Across 12 Research Tracks). For a brief overview, see the 3-page \emph{Guide to the Algorithmic Redistricting Portfolio}. For full findings, see individual papers. For synthesis across papers, see Paper A.0 (Synthesis Metapaper for \emph{Science}).
+\noindent\textbf{About this summary}: This 6-page research statement provides detailed descriptions of the foundation papers of the algorithmic redistricting portfolio (190+ Papers Across 18 Research Tracks). For a brief overview, see the 3-page \emph{Guide to the Algorithmic Redistricting Portfolio}. For full findings, see individual papers. For synthesis across papers, see Paper A.0 (Synthesis Metapaper for \emph{Science}).
 
 \end{document}

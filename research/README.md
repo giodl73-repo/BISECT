@@ -3,6 +3,8 @@
 ## Overview
 This directory contains research papers on algorithmic redistricting, focusing on VRA compliance, graph partitioning methods, and practical tradeoffs in congressional redistricting.
 
+The current portfolio now includes Track N on population counting, which covers prison adjustment, student reassignment, noncitizen CVAP comparisons, military/overseas treatment, and the total-vs-citizen-VAP comparison paper that ties the track together.
+
 ## Papers
 
 ### Paper 1: Edge-Weighted VRA Compliance ✅ COMPLETE
@@ -134,6 +136,26 @@ This directory contains research papers on algorithmic redistricting, focusing o
 - Stability metrics: tract reassignment, population disruption, boundary stability
 
 **See:** `gerry-temporal-stability/PLAN.md` for detailed experiments and timeline
+
+---
+
+### Paper 8: Population Counting 📋 IN REVIEW
+**Directory:** `tracks/N-population-counting/`
+**Status:** 6-paper track drafted; review panels complete for seed state
+**Research Question:** Which population base should anchor redistricting: total population, prison-adjusted totals, home-address student counts, citizen VAP, or a metric-sensitive hybrid?
+
+**Key Contributions:**
+1. Legal and methodological treatment of whose population counts for redistricting
+2. State-level adjustments for prisons, students, noncitizens, and military populations
+3. 50-state comparison of total-population vs. citizen-VAP balancing
+4. Clear separation between point estimates, sensitivity runs, and publication-ready claims
+
+**Data Requirements:**
+- Final uncertainty bands for tract-assignment-sensitive estimates in N.2 and N.3
+- Full-state coverage for any remaining comparison tables
+- Consolidation of the preferred statutory recommendation into the public index
+
+**See:** `tracks/N-population-counting/REVIEW_PANEL.md` for panel notes and `MODULE.md` for the track contract
 
 ---
 

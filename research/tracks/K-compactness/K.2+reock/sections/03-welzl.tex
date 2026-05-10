@@ -1,6 +1,8 @@
 Computing the exact minimum bounding circle (MBC) of a polygon is equivalent to
 computing the smallest enclosing disk (SED) of its vertex set, solvable in
 $O(n)$ expected time by Welzl's randomised algorithm~\citep{welzl1991smallest}.
+The current \textsc{bisect} implementation does not yet call Welzl directly;
+it uses the centroid-plus-max-radius approximation described below.
 
 \subsection{Implementation in bisect}
 
@@ -12,8 +14,8 @@ This approximation matches the convention used in the Python redistricting
 pipeline that bisect supersedes, ensuring comparability of Reock scores across
 pipeline versions.
 
-\begin{remark}[Phase~2 extension]
-Exact Welzl MBC is a Phase~2 extension.
+\begin{remark}[Future work]
+Exact Welzl MBC remains future work.
 The centroid-plus-max-radius approximation yields a circle that contains the polygon
 but may be larger than the true MBC (the approximation errs toward over-coverage,
 producing Reock values that are conservative---i.e., slightly lower than true-MBC Reock).

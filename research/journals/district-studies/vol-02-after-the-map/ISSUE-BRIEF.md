@@ -2,28 +2,30 @@
 journal: District Studies
 volume: 2
 title: "After the Map"
-status: seed
-arc-position: 2 of 10 — proves the algorithm improves outcomes
-reader-promise: "When you replace a partisan gerrymander with an algorithmic map, elections get more competitive, voters turn out more, legislators become less extreme, and constituents live closer to their representatives."
+status: provisional-public-preview
+arc-position: 2 of 10 — tests outcome claims after the map
+reader-promise: "When an enacted map is compared with an algorithmic baseline, which democratic outcomes change, how much, and with what uncertainty?"
 target-reader: Policy researchers, political scientists, legislators considering reform
 excluded-claims: No legal arguments (that's The Evidence Standard). No "how to adopt" (that's The Districting Review Vol 3).
-terminal-connection: If algorithmic redistricting demonstrably improves democratic outcomes, the argument for a federal mandate gains empirical teeth beyond just "it's fair."
+terminal-connection: If outcome claims survive review, they add empirical support to the case for an algorithmic baseline.
 ---
+
+> Preview status: causal and downstream-democracy claims require source-chain, power, and uncertainty review before publication.
 
 ## Reader Promise (expanded)
 
-The geometry of congressional districts isn't just aesthetically interesting — it has measurable downstream effects on democratic participation and representation quality. This volume presents four of those effects together for the first time as a unified case. The Representation Quality Index (RQI) synthesizes them into a single score: bisect algorithmic plans score 0.62; enacted partisan gerrymanders score 0.41. The gap isn't just a technical finding — it represents real elections, real voters, real legislators.
+The geometry of congressional districts is not only aesthetically interesting; it may have measurable downstream effects on participation and representation quality. This volume auditions four such effects as a unified case. The Representation Quality Index (RQI) is a candidate synthesis metric; its scores and components need method review before they can be used as public findings.
 
 ## Slots (6-8 candidates, 2-3x pool)
 
 | Slot | Role | Claim class | Candidate papers |
 |------|------|-------------|-----------------|
 | Editorial | Opens with the "so what" question — if it's neutral, does it matter? | interpretive | — |
-| Formula | The RQI formula — four dimensions, one score | formal | O.5 (RQI composite) |
-| Competitiveness | +23pp more competitive districts — the headline finding | empirical | O.1 (electoral competitiveness) |
-| Turnout | +1.4pp turnout per 0.10 PP improvement | empirical | O.2 (voter turnout) |
-| Polarization | -0.07 DW-NOMINATE — less extreme legislators | empirical | O.3 (legislative polarization) |
-| Distance | -14 minutes constituent-to-representative travel time | empirical | O.4 (constituent distance) |
+| Formula | RQI as candidate synthesis — four dimensions, one score | formal | O.5 (RQI composite) |
+| Competitiveness | More competitive districts — the policy-relevant hook | empirical | O.1 (electoral competitiveness) |
+| Turnout | Turnout relationship — directionally suggestive only | empirical | O.2 (voter turnout) |
+| Polarization | Polarization projection — not observed causal behavior | empirical | O.3 (legislative polarization) |
+| Distance | Constituent travel distance — the cleanest directly measured outcome | empirical | O.4 (constituent distance) |
 | Measurement note | Caveats: O.2 is underpowered (N=20), O.3 is projected not observed | operational | O.2 §stat note, O.3 §caveat |
 
 ## Excluded from this volume
@@ -31,9 +33,11 @@ The geometry of congressional districts isn't just aesthetically interesting —
 - The algorithm mechanics — this volume is pure outcomes
 - Legal/court arguments
 - Adoption pathways
+- RQI as legal threshold or court-admissible claim
+- Causal claims from O.2 or O.3 before power and identification caveats are public
 
 ## Review lenses
 
-- HERALD: The RQI score (0.62 vs 0.41) is the front door — is it explained accessibly?
-- LOKI: O.3 polarization is projected, not observed — must not claim causation
-- SIGMA: Check O.2 coefficient CI and power disclosure
+- COMMONS: The RQI concept is a possible synthesis, but exact scores should not be the front door.
+- BOUNDARY: O.3 polarization is projected, not observed — must not claim causation
+- SCALE: Check O.2 coefficient CI and power disclosure

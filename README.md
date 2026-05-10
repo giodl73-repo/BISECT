@@ -42,9 +42,27 @@ It's also **transparent**. You can watch each round in the dashboard and see exa
 | State legislative staff | [docs/quickstart/quickstart-state-staff.md](docs/quickstart/quickstart-state-staff.md) | 5 min/iteration |
 | Civic advocacy group | [docs/quickstart/quickstart-civic-advocate.md](docs/quickstart/quickstart-civic-advocate.md) | 15–30 min |
 
-**[→ All 66 research papers with PDFs](docs/PAPERS.md)**
+**[→ All 190+ research papers across 18 tracks](docs/PAPERS.md)**
 
 First time? Run **`bash bootstrap.sh`** (Linux/macOS) or **`bootstrap.bat`** (Windows) — ≤ 10 minutes from `git clone` to first run.
+
+---
+
+## Public Research Press
+
+The workbench is large, so public-facing research is staged through
+`research/journals/`.
+
+| Journal | Purpose |
+|---------|---------|
+| [District Studies](research/journals/district-studies/) | What the research shows before adoption arguments. |
+| [The Districting Review](research/journals/the-districting-review/) | How practitioners would use or adopt an algorithmic baseline. |
+| [The Evidence Standard](research/journals/the-evidence-standard/) | How claims are verified, calibrated, and challenged. |
+
+District Studies Vol. 1 is currently in **audition**; the other nine planned
+issues remain **seed** issues. They are not yet locked public issues. Start with
+[the journal overview](research/journals/README.md) and
+[the factory queue](research/journals/FACTORY-QUEUE.md).
 
 ---
 
@@ -139,7 +157,7 @@ Drafts: [`docs/legal/`](docs/legal/) — bill text, policy memo, one-pager, and 
 
 ## Research papers
 
-66 papers across eight tracks. All PDFs are pre-built.
+190+ papers across eighteen tracks. Published PDFs are pre-built; some later-track drafts remain source-only in `research/tracks/`.
 **[→ Full index at docs/PAPERS.md](docs/PAPERS.md)**
 
 ### Track A — Synthesis
@@ -201,6 +219,16 @@ Drafts: [`docs/legal/`](docs/legal/) — bill text, policy memo, one-pager, and 
 | [E.4](docs/papers/E.4+partisan-similarity-districts.pdf) | Partisan similarity districts: geographic sorting creates safe seats |
 | [E.5](docs/papers/E.5+party-based-allocation.pdf) | Partisan fairness through algorithmic districting |
 | [E.6](docs/papers/E.6+international-applications.pdf) | International applications: parliamentary single-member systems |
+
+### Track N — Population Counting
+| | |
+|--|--|
+| [N.0](research/tracks/N-population-counting/N.0+population-counting-overview/) | Population definition overview: total population, prison adjustment, college students, noncitizens, military |
+| [N.1](research/tracks/N-population-counting/N.1+prison-gerrymandering/) | Prison-gerrymandering: adjustment mechanics and legal posture |
+| [N.2](research/tracks/N-population-counting/N.2+college-student-counting/) | College-student counting: home-address adjustment for campus tracts |
+| [N.3](research/tracks/N-population-counting/N.3+noncitizen-vap/) | Citizen-VAP comparison: where total population and CVAP diverge |
+| [N.4](research/tracks/N-population-counting/N.4+military-overseas/) | Military and overseas population treatment |
+| [N.5](research/tracks/N-population-counting/N.5+total-vs-citizen-vap-comparison/) | Total vs. citizen VAP: 50-state comparison and statutory recommendation |
 
 ---
 
@@ -289,7 +317,7 @@ docs/quickstart/    # Persona-specific quickstart guides
 ## Documentation
 
 - **[`docs/BISECT_CLI.md`](docs/BISECT_CLI.md)** — complete CLI reference
-- **[`docs/PAPERS.md`](docs/PAPERS.md)** — all 66 research papers with PDFs
+- **[`docs/PAPERS.md`](docs/PAPERS.md)** — all 190+ research papers across 18 tracks
 - **[`docs/legal/`](docs/legal/)** — model statute, fairness doctrine
 - **[`docs/quickstart/`](docs/quickstart/)** — persona guides
 - **[`docs/CHANGELOG.md`](docs/CHANGELOG.md)** — version history

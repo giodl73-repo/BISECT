@@ -66,6 +66,15 @@ The `context/` directory contains AI-optimized documentation (compact, token-eff
 | [DEPENDENCIES.md](DEPENDENCIES.md) | Software requirements | 10 min |
 | [CENSUS_DATA_ANALYSIS.md](CENSUS_DATA_ANALYSIS.md) | Census data details | 15 min |
 
+### Research Press & Public Curation
+
+| File | Purpose | Read Time |
+|------|---------|-----------|
+| [concepts/research-press.md](concepts/research-press.md) | Journal model, issue states, and review gates | 10 min |
+| [concepts/algorithmic-baseline.md](concepts/algorithmic-baseline.md) | Public terminology for Bisect as a redistricting baseline | 8 min |
+| [../research/journals/README.md](../research/journals/README.md) | Journal program overview | 10 min |
+| [../research/journals/FACTORY-QUEUE.md](../research/journals/FACTORY-QUEUE.md) | Live journal production queue | 5 min |
+
 ### Project Information
 
 | File | Purpose | Read Time |

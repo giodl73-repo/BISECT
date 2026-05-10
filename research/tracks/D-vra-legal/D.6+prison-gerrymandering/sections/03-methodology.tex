@@ -3,9 +3,10 @@
 \subsection{How \textsc{bisect} Handles Prison Population Adjustment}
 
 The \textsc{bisect} pipeline treats prison population adjustment as a
-data preprocessing step, implemented in the \texttt{bisect-data} crate
-and triggered by the \texttt{--adjust-prison-population} flag on
-\texttt{bisect fetch}. This design keeps the adjustment entirely outside
+data preprocessing step, implemented in the \texttt{bisect-data} crate.
+The current manuscript describes this as a proposed
+\texttt{--adjust-prison-population} preprocessing mode rather than a shipped
+CLI flag. This design keeps the adjustment entirely outside
 the redistricting algorithm itself: \textsc{bisect}'s partitioning engine
 operates on whatever population data is provided, and the adjustment
 determines what that data contains. The algorithm is neutral with respect
@@ -15,9 +16,9 @@ to the adjustment choice; the data layer implements whatever state law requires.
 # Download unadjusted Census data (default):
 bisect fetch --year 2020 --workers 8
 
-# Download with prison population adjustment
+# Apply prison population adjustment in the preprocessing workflow
 # (applied where state law requires):
-bisect fetch --year 2020 --workers 8 --adjust-prison-population
+bisect fetch --year 2020 --workers 8
 
 # Build plan on adjusted data:
 bisect build official_2020 --year 2020 --workers 8
@@ -88,6 +89,10 @@ This reallocation shifts approximately 900 people out of the 11th or
 in the plan year) and into the congressional districts covering Mecklenburg
 and Durham counties, which are the 12th and 4th districts respectively
 in the 2022 congressional plan.
+
+The Hoke County example is a single-facility illustration; the full North
+Carolina result in Section~\ref{sec:results} aggregates Hoke, Scotland, and
+Davidson facilities and totals approximately 1,800 incarcerated people.
 
 The shift is small---900 people against a congressional district target
 of approximately 745,000 in North Carolina---but it is not negligible in

@@ -8,7 +8,7 @@ apportionment step that litigation and commission contexts require.
 Three engineering decisions underpin the crate's correctness:
 \begin{enumerate}
   \item \textbf{Double-precision arithmetic}: \texttt{f64} priority values
-    provide exact comparisons for the integer-valued populations and seat
+    provide stable comparisons for the integer-valued populations and seat
     counts used in apportionment; ties are broken deterministically by
     lexicographic state name order.
   \item \textbf{Separate implementations}: \texttt{huntington\_hill()} and
@@ -39,7 +39,7 @@ run \texttt{bisect apportion --year \{year\} --method huntington-hill}
 before beginning any district-drawing computation to confirm that
 the seat counts match the Census Bureau's official apportionment.
 
-Future work includes Phase~2 SHA-256 seed verification and extension
+Future work includes SHA-256 seed verification and extension
 to state legislative apportionments (which may use different methods and
 different statutory seat counts) and to international PR seat allocations
 (using the d'Hondt and Sainte-Lagu\"{e} equivalences documented in J.2 and J.4).

@@ -4,17 +4,19 @@ volume: 2
 title: "The Audit Chain"
 status: seed
 arc-position: 9 of 10 — establishes how to prove it wasn't manipulated
-reader-promise: "The algorithm produces a SHA-256 fingerprint at every step — from the Census Bureau download to the final district assignments. Any party can verify the chain in 43 seconds. This is what tamper-evident democracy looks like."
+reader-promise: "A redistricting plan should come with provenance. This volume tests the SHA-256 audit chain from input data to final district assignments."
 target-reader: Courts, opposing counsel who will challenge the plan's provenance, redistricting administrators
 excluded-claims: No statistical inference (that's Vol 1). No algorithm design (that's The Districting Review).
-terminal-connection: The federal rule requires not just algorithmic process but auditable algorithmic process. The audit chain is how the DIA's compliance mechanism works.
+terminal-connection: A candidate federal rule would need not just algorithmic process but auditable algorithmic process. This volume tests that compliance mechanism.
 ---
+
+> Seed status: verification timing, Daubert framing, and statutory filing language require COVENANT and BOUNDARY review before publication.
 
 ## Reader Promise (expanded)
 
-In redistricting litigation, the question of map authenticity — was the submitted plan actually produced by the stated algorithm with the stated data? — has historically been unanswerable. The bisect audit chain makes it answerable in under a minute. The SHA-256 hash of the Census Bureau input file, the adjacency graph construction, and the final district assignments are recorded in the plan manifest. `bisect label-verify` reconstructs the chain from public data and confirms it. This has been demonstrated for NC (43 seconds), TX (57 seconds), and WI (31 seconds).
+In redistricting litigation, map authenticity matters: was the submitted plan actually produced by the stated algorithm with the stated data? The Bisect audit chain is designed to make that question testable. The SHA-256 hash of the input file, adjacency graph construction, and final district assignments are recorded in the plan manifest. `bisect label-verify` reconstructs the chain from public data and confirms it. Runtime examples are candidates until the exact hardware, data, and command context are documented.
 
-The Daubert standard for expert testimony requires reproducibility. The audit chain satisfies all four Daubert criteria. Model DIA statutory language mandating audit chain filing with the Secretary of State completes the chain of custody from algorithm to law.
+The Daubert standard for expert testimony makes reproducibility relevant. This volume auditions the argument that the audit chain supports admissibility and proposes model filing language for review.
 
 ## Slots (6-8 candidates, 2-3x pool)
 
@@ -30,6 +32,6 @@ The Daubert standard for expert testimony requires reproducibility. The audit ch
 
 ## Review lenses
 
-- HERALD: The 43-second verification demo is the front door — it makes the abstract concrete
-- LOKI: TLS limitation (no certificate pinning) must be disclosed, not buried in notes
-- CUSTODIAN: R.4 and A.4 share content — assign R.4 as the primary source, A.4 as supporting
+- COMMONS: The 43-second verification demo is the front door — it makes the abstract concrete
+- COVENANT: TLS limitation (no certificate pinning) must be disclosed, not buried in notes
+- DATUM: R.4 and A.4 share content — assign R.4 as the primary source, A.4 as supporting

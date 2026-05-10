@@ -352,7 +352,6 @@ pub fn compute_partisan_metrics(
     };
 
     // EG: positive = Republican-favoring (Wasted_D > Wasted_R).
-    // PB: positive = Republican-favoring (seat share at 50% vote favors Republicans).
     let direction_rep_pos = |v: f64| -> String {
         if v >= 0.0 {
             "Republican".into()
@@ -360,7 +359,7 @@ pub fn compute_partisan_metrics(
             "Democratic".into()
         }
     };
-    // MM: positive = Democratic-favoring (mean > median).
+    // MM and PB: positive = Democratic-favoring.
     let direction_dem_pos = |v: f64| -> String {
         if v >= 0.0 {
             "Democratic".into()

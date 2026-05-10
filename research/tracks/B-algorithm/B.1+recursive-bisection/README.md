@@ -16,7 +16,7 @@ A redistricting algorithm with **structural immunity to partisan manipulation**:
 - Cannot access partisan information (voting patterns, demographics, party affiliation)
 - Produces reproducible, verifiable results
 - Guarantees contiguity and achieves strong population balance (2.79% mean deviation)
-- The **impossibility defense**: algorithm cannot gerrymander because it cannot see partisan data
+- The **impossibility defense**: algorithm cannot be instructed to gerrymander because it cannot see partisan data; compact neutral maps can still reflect geographic voter concentration
 
 ## Key Findings
 

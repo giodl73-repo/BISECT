@@ -4,17 +4,19 @@ volume: 1
 title: "Calibrated Claims"
 status: seed
 arc-position: 8 of 10 — establishes how to prove it statistically
-reader-promise: "A GerryChain ensemble tells you a plan is at the 0.3rd percentile. A calibrated test tells you the p-value is 0.004. Courts need the second number, not the first — and this volume shows how to get it."
+reader-promise: "Raw ensemble percentiles are not automatically court-ready evidence. This volume tests how to calibrate percentiles into statistical claims with uncertainty."
 target-reader: Expert witnesses, litigators, federal judges and their clerks
 excluded-claims: No adoption mechanics. No policy advocacy. This volume is methodological.
-terminal-connection: A federal rule requires courts to evaluate compliance. Calibrated statistical evidence is how courts measure whether a plan deviates from the algorithmic standard. This volume gives courts the tools.
+terminal-connection: Any enforceable algorithmic standard needs a defensible evidence method. This volume auditions the statistical toolkit.
 ---
+
+> Seed status: p-values, BDS scores, power claims, and multiple-testing claims require SCALE review before publication.
 
 ## Reader Promise (expanded)
 
-The standard use of redistricting ensemble evidence presents a percentile: "the enacted plan is more compact than 99.7% of valid plans." Courts have started asking the obvious follow-up: "what's the p-value?" This volume answers that question and explains why the raw percentile is not the same as a p-value. The effective sample size of a 1,000-step GerryChain ensemble is approximately 70 — not 1,000. The ESS-corrected p-value for the NC 2022 enacted map is 0.041 (borderline significant), not the implied p < 0.001. At 10,000 steps, it becomes 0.004. Courts need to know the difference.
+The standard use of redistricting ensemble evidence presents a percentile: "the enacted plan is more compact than 99.7% of valid plans." Courts may ask the follow-up: "what's the p-value?" This volume auditions a method for answering that question and explains why the raw percentile is not the same as a p-value. Effective sample size, convergence, chain design, and multiple testing all need to be visible before any claim becomes public.
 
-The volume also introduces the Bayesian Detection Score (BDS): the probability that the enacted plan is genuinely in the extreme tail of the plan space, accounting for ensemble uncertainty. NC 2022: BDS = 0.97. Bisect algorithmic plan: BDS = 0.03.
+The volume also auditions the Bayesian Detection Score (BDS): a candidate way to express the probability that a plan is genuinely in the extreme tail of the plan space, accounting for ensemble uncertainty.
 
 ## Slots (6-8 candidates, 2-3x pool)
 
@@ -30,6 +32,6 @@ The volume also introduces the Bayesian Detection Score (BDS): the probability t
 
 ## Review lenses
 
-- HERALD: "ESS" needs a plain-language translation — "how many independent observations the chain actually gives you"
-- LOKI: S.2 BDS uses a uniform prior — must note prior sensitivity
-- SIGMA: S.1 abstract/table consistency on TX p-value (0.11 at 1K, 0.03 at 10K) — already fixed but verify
+- COMMONS: "ESS" needs a plain-language translation — "how many independent observations the chain actually gives you"
+- SCALE: S.2 BDS uses a uniform prior — must note prior sensitivity
+- DATUM: S.1 abstract/table consistency on TX p-value (0.11 at 1K, 0.03 at 10K) — already fixed but verify
