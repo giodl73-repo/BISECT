@@ -26,6 +26,8 @@ pub enum AuditError {
     CertificateContextHashMismatch { expected: String, found: String },
     #[error("certificate source hashes do not match context source hashes")]
     CertificateSourceHashesMismatch,
+    #[error("algorithm lineage extra uses reserved certificate field: {0}")]
+    AlgorithmLineageExtraReservedField(String),
     #[error("state legislative audit requires an explicit legal profile")]
     MissingStateLegislativeProfile,
 }
@@ -349,6 +351,9 @@ pub fn audit_plan_with_lineage(
     {
         return Err(AuditError::MissingStateLegislativeProfile);
     }
+    if let Some(lineage) = &algorithm_lineage {
+        validate_algorithm_lineage_extra(lineage)?;
+    }
 
     let requested: BTreeSet<AuditConstraint> = constraints.iter().cloned().collect();
     let mut checks = vec![check_plan_shape(plan, context)];
@@ -423,6 +428,9 @@ pub fn verify_audit_certificate(
             certificate.schema_version.clone(),
         ));
     }
+    if let Some(lineage) = &certificate.algorithm_lineage {
+        validate_algorithm_lineage_extra(lineage)?;
+    }
 
     let computed_content_hash = certificate_content_hash(certificate)?;
     if certificate.content_hash != computed_content_hash {
@@ -482,6 +490,37 @@ pub fn verify_audit_certificate(
         context_hash: certificate.context_hash.clone(),
         result: certificate.result.clone(),
     })
+}
+
+fn validate_algorithm_lineage_extra(lineage: &AlgorithmLineage) -> Result<(), AuditError> {
+    let Some(extra) = lineage.extra.as_object() else {
+        return Ok(());
+    };
+    const RESERVED_CERTIFICATE_FIELDS: &[&str] = &[
+        "schema_version",
+        "certificate_id",
+        "generated_at_utc",
+        "content_hash",
+        "plan_hash",
+        "plan_schema_version",
+        "context_hash",
+        "legal_profile_hash",
+        "legal_profile",
+        "source_hashes",
+        "runtime",
+        "algorithm_lineage",
+        "result",
+        "checks",
+        "warnings",
+    ];
+    for field in RESERVED_CERTIFICATE_FIELDS {
+        if extra.contains_key(*field) {
+            return Err(AuditError::AlgorithmLineageExtraReservedField(
+                (*field).to_string(),
+            ));
+        }
+    }
+    Ok(())
 }
 
 fn check_plan_shape(plan: &DistrictPlan, context: Option<&RplanContext>) -> AuditCheck {
@@ -1088,6 +1127,145 @@ mod tests {
         let json = serde_json::to_string(&cert_with_lineage).unwrap();
         let decoded: AuditCertificate = serde_json::from_str(&json).unwrap();
         assert_eq!(decoded.algorithm_lineage.unwrap().method, "branch-and-cut");
+    }
+
+    #[test]
+    fn algorithm_lineage_extra_rejects_reserved_certificate_fields() {
+        let lineage = AlgorithmLineage {
+            producer_crate: "mock-future-crate".to_string(),
+            producer_version: "0.1.0".to_string(),
+            method: "mock-search".to_string(),
+            parent_plan_hashes: vec![],
+            parameters_hash: "sha256:params".to_string(),
+            extra: serde_json::json!({
+                "plan_hash": "sha256:attempted-override"
+            }),
+        };
+
+        let err = audit_plan_with_lineage(
+            &plan(vec![0, 0, 0, 1, 1]),
+            Some(&context(
+                Some(vec![100, 100, 100, 150, 150]),
+                Some(path_graph()),
+            )),
+            &profile(),
+            runtime(),
+            &[AuditConstraint::Population],
+            "2026-05-10T00:00:00Z",
+            Some(lineage),
+        )
+        .unwrap_err();
+        assert!(matches!(
+            err,
+            AuditError::AlgorithmLineageExtraReservedField(field) if field == "plan_hash"
+        ));
+    }
+
+    #[test]
+    fn verify_rejects_certificate_with_reserved_lineage_extra() {
+        let plan = plan(vec![0, 0, 0, 1, 1]);
+        let mut context = context(Some(vec![100, 100, 100, 150, 150]), Some(path_graph()));
+        context.context_hash = context.compute_context_hash().unwrap();
+        let lineage = AlgorithmLineage {
+            producer_crate: "mock-future-crate".to_string(),
+            producer_version: "0.1.0".to_string(),
+            method: "mock-search".to_string(),
+            parent_plan_hashes: vec![],
+            parameters_hash: "sha256:params".to_string(),
+            extra: serde_json::json!({
+                "branch_count": 2
+            }),
+        };
+        let mut cert = audit_plan_with_lineage(
+            &plan,
+            Some(&context),
+            &profile(),
+            runtime(),
+            &[AuditConstraint::Population],
+            "2026-05-10T00:00:00Z",
+            Some(lineage),
+        )
+        .unwrap();
+        cert.algorithm_lineage.as_mut().unwrap().extra = serde_json::json!({
+            "source_hashes": {
+                "fixture": "sha256:attempted-override"
+            }
+        });
+        cert.content_hash = certificate_content_hash(&cert).unwrap();
+        cert.certificate_id = cert.content_hash.clone();
+
+        let err = verify_audit_certificate(&cert, Some(&plan), Some(&context)).unwrap_err();
+        assert!(matches!(
+            err,
+            AuditError::AlgorithmLineageExtraReservedField(field) if field == "source_hashes"
+        ));
+    }
+
+    #[test]
+    fn v1_reader_ignores_unknown_optional_certificate_fields() {
+        let plan = plan(vec![0, 0, 0, 1, 1]);
+        let mut context = context(Some(vec![100, 100, 100, 150, 150]), Some(path_graph()));
+        context.context_hash = context.compute_context_hash().unwrap();
+        let cert = audit_plan(
+            &plan,
+            Some(&context),
+            &profile(),
+            runtime(),
+            &[AuditConstraint::Population, AuditConstraint::Contiguity],
+            "2026-05-10T00:00:00Z",
+        )
+        .unwrap();
+        let mut value = serde_json::to_value(&cert).unwrap();
+        value.as_object_mut().unwrap().insert(
+            "future_optional_field".to_string(),
+            serde_json::json!({ "schema": "future-v2", "ignored_by_v1": true }),
+        );
+
+        let decoded: AuditCertificate = serde_json::from_value(value).unwrap();
+        let verification = verify_audit_certificate(&decoded, Some(&plan), Some(&context)).unwrap();
+        assert_eq!(verification.content_hash, cert.content_hash);
+    }
+
+    #[test]
+    fn v1_reader_rejects_unknown_check_status() {
+        let cert = audit_plan(
+            &plan(vec![0, 0, 0, 1, 1]),
+            Some(&context(
+                Some(vec![100, 100, 100, 150, 150]),
+                Some(path_graph()),
+            )),
+            &profile(),
+            runtime(),
+            &[AuditConstraint::Population],
+            "2026-05-10T00:00:00Z",
+        )
+        .unwrap();
+        let mut value = serde_json::to_value(&cert).unwrap();
+        value["checks"][0]["status"] = serde_json::Value::String("future-status".to_string());
+
+        let err = serde_json::from_value::<AuditCertificate>(value).unwrap_err();
+        assert!(err.to_string().contains("unknown variant"));
+    }
+
+    #[test]
+    fn v1_reader_rejects_unknown_severity() {
+        let cert = audit_plan(
+            &plan(vec![0, 0, 0, 1, 1]),
+            Some(&context(
+                Some(vec![100, 100, 100, 150, 150]),
+                Some(path_graph()),
+            )),
+            &profile(),
+            runtime(),
+            &[AuditConstraint::Population],
+            "2026-05-10T00:00:00Z",
+        )
+        .unwrap();
+        let mut value = serde_json::to_value(&cert).unwrap();
+        value["checks"][0]["severity"] = serde_json::Value::String("future-severity".to_string());
+
+        let err = serde_json::from_value::<AuditCertificate>(value).unwrap_err();
+        assert!(err.to_string().contains("unknown variant"));
     }
 
     #[test]
