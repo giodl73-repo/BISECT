@@ -118,3 +118,33 @@ fn state_house_without_profile_exits_two() {
     assert_eq!(output.status.code(), Some(2));
     assert!(String::from_utf8_lossy(&output.stderr).contains("--legal-profile is required"));
 }
+
+#[test]
+fn state_house_incomplete_profile_exits_two() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let plan_path = tmp.path().join("plan.rplan");
+    let profile_path = tmp.path().join("profile.json");
+    std::fs::write(&plan_path, plan("state-house", "[0, 0, 0, 1, 1]")).unwrap();
+    std::fs::write(
+        &profile_path,
+        include_str!("../../rplan-audit/profiles/incomplete-state-house-profile.json"),
+    )
+    .unwrap();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_rplan"))
+        .args([
+            "audit",
+            "--plan",
+            plan_path.to_str().unwrap(),
+            "--legal-profile",
+            profile_path.to_str().unwrap(),
+            "--constraints",
+            "plan-shape",
+        ])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(2));
+    assert!(String::from_utf8_lossy(&output.stderr)
+        .contains("state legislative audit requires an explicit legal profile"));
+}

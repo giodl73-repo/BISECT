@@ -941,6 +941,36 @@ mod tests {
     }
 
     #[test]
+    fn shipped_us_congressional_project_profile_matches_default() {
+        let shipped: LegalProfile =
+            serde_json::from_str(include_str!("../profiles/us-congressional-project-v1.json"))
+                .unwrap();
+        assert_eq!(shipped, LegalProfile::us_congressional_project_v1(2020));
+        assert!(shipped.hash().unwrap().starts_with("sha256:"));
+    }
+
+    #[test]
+    fn incomplete_state_house_profile_is_rejected() {
+        let incomplete: LegalProfile = serde_json::from_str(include_str!(
+            "../profiles/incomplete-state-house-profile.json"
+        ))
+        .unwrap();
+        let err = audit_plan(
+            &plan(vec![0, 0, 0, 1, 1]),
+            Some(&context(
+                Some(vec![100, 100, 100, 150, 150]),
+                Some(path_graph()),
+            )),
+            &incomplete,
+            runtime(),
+            &[AuditConstraint::PlanShape],
+            "2026-05-10T00:00:00Z",
+        )
+        .unwrap_err();
+        assert!(matches!(err, AuditError::MissingStateLegislativeProfile));
+    }
+
+    #[test]
     fn path_fixture_context_can_audit_contiguity() {
         let context =
             rplan_io::read_rctx_str(include_str!("../../rplan-io/src/fixtures/path5.rctx"))
