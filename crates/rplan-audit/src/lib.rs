@@ -971,6 +971,53 @@ mod tests {
     }
 
     #[test]
+    fn grid3x3_golden_certificates_verify() {
+        let valid_plan =
+            rplan_io::read_rplan_str(include_str!("../fixtures/grid3x3-valid.rplan")).unwrap();
+        let disconnected_plan =
+            rplan_io::read_rplan_str(include_str!("../fixtures/grid3x3-disconnected.rplan"))
+                .unwrap();
+        let context = rplan_io::read_rctx_str(include_str!("../fixtures/grid3x3.rctx")).unwrap();
+
+        let valid_cert: AuditCertificate =
+            serde_json::from_str(include_str!("../fixtures/grid3x3-valid-certificate.json"))
+                .unwrap();
+        assert_eq!(valid_cert.result, AuditResult::Pass);
+        assert_eq!(
+            certificate_content_hash(&valid_cert).unwrap(),
+            valid_cert.content_hash
+        );
+        verify_audit_certificate(&valid_cert, Some(&valid_plan.plan), Some(&context)).unwrap();
+
+        let disconnected_cert: AuditCertificate = serde_json::from_str(include_str!(
+            "../fixtures/grid3x3-disconnected-certificate.json"
+        ))
+        .unwrap();
+        assert_eq!(disconnected_cert.result, AuditResult::Fail);
+        assert_eq!(
+            certificate_content_hash(&disconnected_cert).unwrap(),
+            disconnected_cert.content_hash
+        );
+        verify_audit_certificate(
+            &disconnected_cert,
+            Some(&disconnected_plan.plan),
+            Some(&context),
+        )
+        .unwrap();
+
+        let missing_cert: AuditCertificate = serde_json::from_str(include_str!(
+            "../fixtures/grid3x3-missing-contiguity-certificate.json"
+        ))
+        .unwrap();
+        assert_eq!(missing_cert.result, AuditResult::Fail);
+        assert_eq!(
+            certificate_content_hash(&missing_cert).unwrap(),
+            missing_cert.content_hash
+        );
+        verify_audit_certificate(&missing_cert, Some(&valid_plan.plan), None).unwrap();
+    }
+
+    #[test]
     fn path_fixture_context_can_audit_contiguity() {
         let context =
             rplan_io::read_rctx_str(include_str!("../../rplan-io/src/fixtures/path5.rctx"))

@@ -1,5 +1,13 @@
 use std::process::Command;
 
+fn audit_fixture_path(name: &str) -> String {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../rplan-audit/fixtures")
+        .join(name)
+        .to_string_lossy()
+        .into_owned()
+}
+
 fn path_context() -> &'static str {
     include_str!("../../rplan-io/src/fixtures/path5.rctx")
 }
@@ -147,4 +155,81 @@ fn state_house_incomplete_profile_exits_two() {
     assert_eq!(output.status.code(), Some(2));
     assert!(String::from_utf8_lossy(&output.stderr)
         .contains("state legislative audit requires an explicit legal profile"));
+}
+
+#[test]
+fn grid3x3_valid_audit_matches_golden_certificate() {
+    let output = Command::new(env!("CARGO_BIN_EXE_rplan"))
+        .args([
+            "audit",
+            "--plan",
+            &audit_fixture_path("grid3x3-valid.rplan"),
+            "--context",
+            &audit_fixture_path("grid3x3.rctx"),
+            "--constraints",
+            "plan-shape,population,contiguity",
+            "--fixed-generated-at",
+            "2026-05-10T00:00:00Z",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(
+        String::from_utf8(output.stdout).unwrap().trim(),
+        include_str!("../../rplan-audit/fixtures/grid3x3-valid-certificate.json").trim()
+    );
+}
+
+#[test]
+fn grid3x3_disconnected_audit_matches_golden_certificate() {
+    let output = Command::new(env!("CARGO_BIN_EXE_rplan"))
+        .args([
+            "audit",
+            "--plan",
+            &audit_fixture_path("grid3x3-disconnected.rplan"),
+            "--context",
+            &audit_fixture_path("grid3x3.rctx"),
+            "--constraints",
+            "plan-shape,contiguity",
+            "--fixed-generated-at",
+            "2026-05-10T00:00:00Z",
+        ])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(1));
+    assert_eq!(
+        String::from_utf8(output.stdout).unwrap().trim(),
+        include_str!("../../rplan-audit/fixtures/grid3x3-disconnected-certificate.json").trim()
+    );
+    assert!(String::from_utf8_lossy(&output.stderr).contains("audit failed"));
+}
+
+#[test]
+fn grid3x3_missing_contiguity_audit_matches_golden_certificate() {
+    let output = Command::new(env!("CARGO_BIN_EXE_rplan"))
+        .args([
+            "audit",
+            "--plan",
+            &audit_fixture_path("grid3x3-valid.rplan"),
+            "--constraints",
+            "plan-shape,contiguity",
+            "--fixed-generated-at",
+            "2026-05-10T00:00:00Z",
+        ])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(1));
+    assert_eq!(
+        String::from_utf8(output.stdout).unwrap().trim(),
+        include_str!("../../rplan-audit/fixtures/grid3x3-missing-contiguity-certificate.json")
+            .trim()
+    );
+    assert!(String::from_utf8_lossy(&output.stderr).contains("audit failed"));
 }
