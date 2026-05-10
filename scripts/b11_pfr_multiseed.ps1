@@ -1,4 +1,4 @@
-# B.11 PFR multi-seed sensitivity sweep
+# T.4 PFR multi-seed sensitivity sweep
 # Runs PFR for N seeds per state, collects D/R outcome distribution.
 # Usage: pwsh -File scripts\b11_pfr_multiseed.ps1 [-N 20] [-States "NC,GA,..."]
 
@@ -52,7 +52,7 @@ if (Test-Path $csvPath) {
     $done = Import-Csv $csvPath | ForEach-Object { "$($_.state)_$($_.seed)" }
 }
 
-Write-Output "B.11 PFR seed sensitivity: $N seeds x $($statesToRun.Count) states"
+Write-Output "T.4 PFR seed sensitivity: $N seeds x $($statesToRun.Count) states"
 Write-Output "Output: $csvPath"
 Write-Output ""
 

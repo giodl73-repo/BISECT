@@ -4,7 +4,7 @@
 **Date**: 2026-05-07  
 **Reviewed R1**: MERIDIAN 3/4, BENCHMARK 4/4, SURVEY 3/4, COVENANT 3/4 → avg 3.25/4  
 **Extends**: `bisect-ensemble` crate (new `parallel_tempering.rs`)  
-**Related paper**: B.20  
+**Related paper**: U.4  
 **Depends on**: `bisect-ensemble::forest_recom` (ForestRecomChain), `bisect-ensemble::recom` (RecomChain)
 
 ---

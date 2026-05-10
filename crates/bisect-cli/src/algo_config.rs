@@ -65,14 +65,14 @@ pub struct AlgorithmSection {
     /// Values: unweighted | geographic | county | vra-aligned | proportional
     pub weights: Option<String>,
 
-    /// County stickiness factor (B.10). Required when weights == "county".
+    /// County stickiness factor (T.3). Required when weights == "county".
     pub alpha_county: Option<f64>,
 
     /// Layer 3: seed search strategy.
     /// Values: single | multi | convergence | short-burst
     pub search: Option<String>,
 
-    /// Consecutive non-improving seeds before stopping (B.7/B.16).
+    /// Consecutive non-improving seeds before stopping (B.7/U.1).
     /// Required when search == "convergence".
     pub convergence_threshold: Option<u32>,
 

@@ -14,7 +14,7 @@ R.0 (gaming taxonomy) → R.1 (parameter gaming) → R.2 (input data manipulatio
 | Paper | Title | Gaming Vector | Defense Mechanism |
 |-------|-------|--------------|------------------|
 | R.0 | A Taxonomy of Gaming Vectors in Algorithmic Redistricting | Overview | Audit chain |
-| R.1 | Parameter Gaming: Can Parameter Tuning Produce Partisan Plans? | Edge weights, tolerance | B.17 cross-reference; parameter disclosure |
+| R.1 | Parameter Gaming: Can Parameter Tuning Produce Partisan Plans? | Edge weights, tolerance | U.2 cross-reference; parameter disclosure |
 | R.2 | Input Data Manipulation: Census Data, GEOID, and Shapefile Integrity | Population counts, adjacency | SHA-256 audit chain; Census Bureau provenance |
 | R.3 | Geographic Gaming: Can Tract Definition Choices Produce Partisan Plans? | Resolution choice, adjacency definition | Resolution pre-registration; manifests |
 | R.4 | The Audit Chain as a Gaming Defense: Provenance, Reproducibility, Tamper Detection | All of the above | bisect label-verify; SHA-256; manifest schema |
@@ -38,7 +38,7 @@ R.4 formalizes these as a theorem: given the three structural properties, the on
 
 ## Expected Finding
 
-R.1 will reproduce B.17's result: parameter gaming produces at most 0.3 D-seats of variation nationally (well within sampling noise). R.2 will show that Census data manipulation is detectable via SHA-256 hash of the P.L. 94-171 file. R.3 will show that resolution choice is the most consequential design decision, but only within the range established by F.3's threshold rule.
+R.1 will reproduce U.2's result: parameter gaming produces at most 0.3 D-seats of variation nationally (well within sampling noise). R.2 will show that Census data manipulation is detectable via SHA-256 hash of the P.L. 94-171 file. R.3 will show that resolution choice is the most consequential design decision, but only within the range established by F.3's threshold rule.
 
 ## Legal Utility
 

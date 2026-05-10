@@ -1,4 +1,4 @@
-"""Generate Pareto frontier figure for B.10 paper."""
+"""Generate Pareto frontier figure for T.3 paper."""
 import csv, math, sys
 from pathlib import Path
 

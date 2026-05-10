@@ -20,7 +20,7 @@ provisional until three gates are handled.
 
 | Gate | Status | Note |
 |------|--------|------|
-| B.12 reproducibility | hold | Need METIS `niter`, `ncuts`, `numbering`, seed variance, and C(G) estimator. |
+| T.5 reproducibility | hold | Need METIS `niter`, `ncuts`, `numbering`, seed variance, and C(G) estimator. |
 | G.1 ensemble language | partial | ESS notes exist; public copy must avoid raw percentile/legal-certificate precision. |
 | C.5/L.1 measurement | hold | Current code appears aligned with paper convention, but board review records a P1 sign conflict that needs closure. |
 

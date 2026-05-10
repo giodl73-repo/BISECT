@@ -1,4 +1,4 @@
-# Round 2 Synthesis — B.10 Subdivision-Respecting Redistricting
+# Round 2 Synthesis — T.3 Subdivision-Respecting Redistricting
 
 **Round**: 2
 **Avg score**: 2.6 / 4

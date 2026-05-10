@@ -4,20 +4,20 @@ volume: 1
 title: "Geography Is Destiny"
 status: audit-note
 updated: 2026-05-09
-source: B.12 implementation search
+source: T.5 implementation search
 claim-class: reproducibility
 ---
 
-# B.12 Implementation Provenance Note
+# T.5 Implementation Provenance Note
 
 ## Result
 
-The repository does not currently contain enough evidence to close the B.12
+The repository does not currently contain enough evidence to close the T.5
 METIS parameter gate for the paper's reported Table 1 runs.
 
 The current implementation provides useful defaults, but those defaults cannot
-be assumed to be the exact B.12 paper-run vector without a run artifact or
-author note tying B.12 to that implementation state.
+be assumed to be the exact T.5 paper-run vector without a run artifact or
+author note tying T.5 to that implementation state.
 
 ## Current Rust Implementation Evidence
 
@@ -59,35 +59,35 @@ The wider repo contains multiple historical defaults and experiment settings:
 - `crates/bisect-report/src/manifest.rs` documents a manifest `niter` default
   of `100`.
 - Several older Python experiment scripts call partitioning with `niter=100`.
-- B.12 source text says METIS 5.1.0, `ncon=2`, 30 seeds, and 1.5 percent
+- T.5 source text says METIS 5.1.0, `ncon=2`, 30 seeds, and 1.5 percent
   balance tolerance, but does not report `niter`, `ncuts`, or `numbering`.
 
 Because these values differ across eras and layers, the journal should not infer
-the B.12 paper-run vector from the current Rust default alone.
+the T.5 paper-run vector from the current Rust default alone.
 
 ## What Can Be Said Now
 
 Safe:
 
 > The current Rust partition wrapper uses `niter=10`, contiguity and minimum
-> connectivity options, and explicit seed forwarding, but B.12's paper-run
+> connectivity options, and explicit seed forwarding, but T.5's paper-run
 > artifact does not yet identify whether those current defaults were used for
 > the reported Table 1 values.
 
 Unsafe:
 
-> B.12 used `niter=10`, `ncuts=1`, and default zero-based numbering.
+> T.5 used `niter=10`, `ncuts=1`, and default zero-based numbering.
 
 That may be true for the current implementation, but it is not yet proven for
-the B.12 paper-run table.
+the T.5 paper-run table.
 
 ## Closure Requirement
 
 Close DS1-001 only when one of these exists:
 
-1. A B.12 run artifact or manifest showing the exact METIS vector.
-2. An author note stating the exact B.12 run vector.
-3. A regenerated B.12 Table 1 under current implementation defaults.
+1. A T.5 run artifact or manifest showing the exact METIS vector.
+2. An author note stating the exact T.5 run vector.
+3. A regenerated T.5 Table 1 under current implementation defaults.
 
 The closure record should state:
 

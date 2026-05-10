@@ -37,7 +37,7 @@ The bridge section should either (a) formally define a new notion of "seed-sweep
 ## Secondary Issues
 
 - The percentile notation $\pi_f(P^*)$ conflicts with standard MCMC notation where $\pi$ denotes the stationary distribution. This needs to be changed throughout the G-series.
-- The claim that the AR plan is "constitutionally grounded" in Article I §2 is made in Section 6 but was presumably established in B.11. Framework papers should not introduce new constitutional claims without full argument.
+- The claim that the AR plan is "constitutionally grounded" in Article I §2 is made in Section 6 but was presumably established in T.4. Framework papers should not introduce new constitutional claims without full argument.
 - The phrase "local optimum under small perturbations" in Section 5.2 is ambiguous. METIS finds a local optimum under the Kernighan-Lin local search. The paper should specify what "small perturbations" means: perturbations of the seed, of district assignment of individual tracts, or of the graph structure.
 
 ## Recommendation

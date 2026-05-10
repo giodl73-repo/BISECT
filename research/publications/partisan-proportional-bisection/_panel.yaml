@@ -21,7 +21,7 @@ history:
     note: "Paper initialized. Core formula derived: tpwgts=[k_D/k, 1-k_R/(2dk), k_R/k, k_R/(2dk)] for ncon=2 [pop, D_votes] bisection achieving exact partisan proportionality."
   - stage: draft
     date: "2026-05-03"
-    note: "Proportionality paradox discovered: all competitive states have sigma<0.05. Tradeoff invariance theorem: B.12 cannot improve competitive-state gaps by more than C*sigma. 16-page PDF compiled clean."
+    note: "Proportionality paradox discovered: all competitive states have sigma<0.05. Tradeoff invariance theorem: T.5 cannot improve competitive-state gaps by more than C*sigma. 16-page PDF compiled clean."
   - stage: panel
     date: "2026-05-03"
     note: "Round 1: 5 reviews, avg 2.9/4. Common P1: empirical validation (C*sigma bound), formal gap metric definition, EG distinction, METIS parameter reporting."

@@ -1,4 +1,4 @@
-# Plan: New Algorithm Papers — B.25 Moving-Knife + B.26 Multi-Objective Pareto
+# Plan: New Algorithm Papers — T.13 Moving-Knife + U.7 Multi-Objective Pareto
 
 **Date**: 2026-05-07  
 **Status**: Draft — pending review  
@@ -6,7 +6,7 @@
 
 ---
 
-## Algorithm 1: Moving-Knife Algorithm (B.25)
+## Algorithm 1: Moving-Knife Algorithm (T.13)
 
 ### Background
 
@@ -19,7 +19,7 @@ MKA answers a different question than our current algorithms:
 - CVD: "minimise geographic distance to seeds" (proximity compactness)
 - **MKA: "maximise roundness" (Reock compactness)** — the most defensible in court
 
-### Integration with AreaSection (B.9)
+### Integration with AreaSection (T.2)
 
 AreaSection already has a "direction" concept (ratio-optimal bisection orientation). MKA provides the Reock-optimal direction geometrically; AreaSection then enforces population + area balance along that axis. The hybrid MKA-AreaSection addresses two objectives simultaneously:
 - MKA: natural geographic compactness axis
@@ -28,7 +28,7 @@ AreaSection already has a "direction" concept (ratio-optimal bisection orientati
 ### Task structure
 
 ```
-#160 Spec: B.25 Moving-Knife → panel review ≥3.0/4
+#160 Spec: T.13 Moving-Knife → panel review ≥3.0/4
     ↓
 #161 Implement SplitStrategy::MovingKnife
      - split_subgraph_mka(): sweep n_orientations, Welzl Reock, post-hoc rebalance
@@ -40,7 +40,7 @@ AreaSection already has a "direction" concept (ratio-optimal bisection orientati
      - AreaSection uses θ* as warm-start for ratio direction
      - CLI: --structure area-section --area-section-init moving-knife
     ↓
-#163 Write + panel-review B.25 paper
+#163 Write + panel-review T.13 paper
      - Cites Puppe & Tasnadi (2026) as theoretical foundation
      - Compare MKA vs METIS vs CVD-Geo vs SA on Reock for NC/FL/WA
      - MKA-AreaSection hybrid beats both standalone methods
@@ -58,7 +58,7 @@ AreaSection already has a "direction" concept (ratio-optimal bisection orientati
 
 ---
 
-## Algorithm 2: Multi-Objective Pareto Redistricting (B.26)
+## Algorithm 2: Multi-Objective Pareto Redistricting (U.7)
 
 ### Background
 
@@ -81,12 +81,12 @@ The Pareto frontier enables a powerful legal argument: "the enacted plan is Pare
 
 ### SMC connection
 
-SMC already produces a weighted sample from the uniform distribution over plans. Projecting SMC particles into objective space (EC, D-seats, VRA) gives an approximate Pareto frontier without running a GA. This "SMC-Pareto" is potentially faster and better-calibrated. B.26 compares NSGA-II vs SMC-Pareto.
+SMC already produces a weighted sample from the uniform distribution over plans. Projecting SMC particles into objective space (EC, D-seats, VRA) gives an approximate Pareto frontier without running a GA. This "SMC-Pareto" is potentially faster and better-calibrated. U.7 compares NSGA-II vs SMC-Pareto.
 
 ### Task structure
 
 ```
-#164 Spec: B.26 Multi-Objective Pareto → panel review ≥3.0/4
+#164 Spec: U.7 Multi-Objective Pareto → panel review ≥3.0/4
      - Design decision: NSGA-II full GA vs SMC-Pareto projection
      - Three objectives: EC, partisan, VRA
      - Output format: NDJSON Pareto frontier
@@ -96,7 +96,7 @@ SMC already produces a weighted sample from the uniform distribution over plans.
      - Rayon parallelism for objective evaluation
      - CLI: bisect pareto --state NC --year 2020 --population 100 --generations 200
     ↓
-#166 Write + panel-review B.26 paper
+#166 Write + panel-review U.7 paper
      - Compare: NSGA-II vs SMC-Pareto vs ILP-only vs VRA-only
      - Key result: enacted plan Pareto-dominance test
      - Legal framing: "no plan can be better on all criteria simultaneously"
@@ -117,7 +117,7 @@ SMC already produces a weighted sample from the uniform distribution over plans.
 
 ## Combined review checklist
 
-### B.25 Moving-Knife
+### T.13 Moving-Knife
 
 - [ ] Spec: geometric sweep definition on discrete tract graph is precise
 - [ ] Spec: Reock = district_area / MEC_area correctly defined
@@ -129,7 +129,7 @@ SMC already produces a weighted sample from the uniform distribution over plans.
 - [ ] Paper: Puppe & Tasnadi 2026 cited correctly
 - [ ] Paper: legal defensibility of Reock maximisation discussed
 
-### B.26 Multi-Objective Pareto
+### U.7 Multi-Objective Pareto
 
 - [ ] Spec: NSGA-II vs SMC-Pareto design decision resolved
 - [ ] Spec: three objectives defined (EC, D-seats, VRA_deficit) with formulas
@@ -147,22 +147,22 @@ SMC already produces a weighted sample from the uniform distribution over plans.
 | Task | Depends on |
 |------|-----------|
 | #161 MKA implement | LoadedGraph.tract_centroids (#150 ✓), albers_project() (#150 ✓) |
-| #162 MKA-AreaSection | AreaSection (B.9 ✓), MKA direction output (#161) |
+| #162 MKA-AreaSection | AreaSection (T.2 ✓), MKA direction output (#161) |
 | #165 Pareto crate | bisect-smc/bisect-smc (#157 ✓), Flip chain (G.8 ✓) |
-| B.25 paper (#163) | #161 ✓, #162 ✓ |
-| B.26 paper (#166) | #165 ✓ |
+| T.13 paper (#163) | #161 ✓, #162 ✓ |
+| U.7 paper (#166) | #165 ✓ |
 
 ---
 
 ## Open questions for review
 
-**B.25 MKA:**
+**T.13 MKA:**
 1. Should MKA be a pure Structure layer (stand-alone SplitStrategy) or always used as an AreaSection initialiser? Or both as separate modes?
 2. For the hybrid MKA-AreaSection: does the AreaSection spec need to be updated to accept an external direction parameter? (Currently ratio is computed internally)
 3. Is Reock the right metric to maximise, or should MKA maximise PP? Reock is easier (Welzl), PP requires perimeter computation.
 4. How does MKA handle non-convex subgraphs where no straight-line sweep cleanly separates tracts (e.g., a donut-shaped region)?
 
-**B.26 Pareto:**
+**U.7 Pareto:**
 1. Should the Pareto output be integrated into the `bisect ensemble` command (alongside SMC) or be a new `bisect pareto` subcommand?
 2. How many generations/population size is needed for NC k=14 to produce a meaningful frontier? (Estimate: 200 generations × 100 population = 20,000 objective evaluations × NC ~2200 tracts ≈ 30 minutes)
 3. Should D-seats be discrete (integer seat count) or continuous (expected partisan seat share)? Discrete creates Pareto ties; continuous is smoother but harder to interpret.

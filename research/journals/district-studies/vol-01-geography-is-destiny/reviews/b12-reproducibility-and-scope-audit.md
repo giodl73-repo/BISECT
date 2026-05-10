@@ -4,15 +4,15 @@ volume: 1
 title: "Geography Is Destiny"
 status: audit-note
 updated: 2026-05-09
-source: B.12 ProportionalSection
+source: T.5 ProportionalSection
 claim-class: formal/empirical
 ---
 
-# B.12 Reproducibility and Scope Audit
+# T.5 Reproducibility and Scope Audit
 
 ## Result
 
-B.12 remains the strongest lead source for the issue's formal geography claim,
+T.5 remains the strongest lead source for the issue's formal geography claim,
 but it should enter Vol. 1 as a reviewed summary with caveats, not as a locked
 result-bearing article. Three reproducibility gates remain open:
 
@@ -22,7 +22,7 @@ result-bearing article. Three reproducibility gates remain open:
 
 ## What The Source Supports
 
-B.12 supports this public-audition claim:
+T.5 supports this public-audition claim:
 
 > Proportional partisan outcomes can be geographically hard to achieve under
 > contiguous single-member districts. The difficulty is not just a matter of
@@ -35,7 +35,7 @@ turning that asymmetry into a legal conclusion.
 
 ## Current Evidence
 
-The current B.12 source reports:
+The current T.5 source reports:
 
 - 2020 Census data and 2020 presidential election results.
 - METIS 5.1.0.
@@ -62,7 +62,7 @@ Implementation search note:
 - `reviews/b12-implementation-provenance-note.md` records the current Rust
   wrapper defaults and the remaining mismatch with older manifest/Python
   defaults. Those implementation defaults are useful context, but they do not
-  prove the B.12 paper-run vector.
+  prove the T.5 paper-run vector.
 
 ## Review Evidence
 
@@ -79,14 +79,14 @@ Round 3 review records the same unresolved gates:
 Use:
 
 - "geography can constrain proportional outcomes";
-- "the B.12 source argues";
+- "the T.5 source argues";
 - "under the tested data and parameter settings";
 - "candidate explanation";
 - "source-chain gate remains open."
 
 Avoid:
 
-- "B.12 proves geography determines partisan outcomes";
+- "T.5 proves geography determines partisan outcomes";
 - "cannot gerrymander";
 - "algorithmic neutrality is established";
 - "courts can use this as a constitutional test";
@@ -94,10 +94,10 @@ Avoid:
 
 ## Legal-Scope Note
 
-B.12's `Scope of Claims` section is appropriate for Vol. 1. It explicitly says
+T.5's `Scope of Claims` section is appropriate for Vol. 1. It explicitly says
 the paper does not show that courts can order the method, that any outcome is
 constitutionally required, that the partisan-constrained method is neutral, or
-that B.12 always improves proportionality.
+that T.5 always improves proportionality.
 
 Later legal language in the source is stronger than District Studies should
 adopt. Vol. 1 should not say an algorithm "cannot gerrymander" or lacks the
@@ -106,7 +106,7 @@ receive BOUNDARY/WARD review before public use.
 
 ## Gate To Provisional
 
-Before B.12 can anchor a locked article, add one short source-chain appendix or
+Before T.5 can anchor a locked article, add one short source-chain appendix or
 review closure note with:
 
 1. METIS `niter`, `ncuts`, and `numbering`.

@@ -4,7 +4,7 @@
 **Date**: 2026-05-07  
 **Layer**: Structure (SplitStrategy) — alternative to METIS for small instances  
 **Reviewed R1**: MERIDIAN 2/4, BENCHMARK 3/4, SURVEY 2/4, COVENANT 3/4 → avg 2.5/4  
-**Related paper**: B.24  
+**Related paper**: U.6  
 **New crate**: `bisect-ilp` (Rust ILP formulation; output MPS format for external solver)
 
 ---
@@ -21,7 +21,7 @@ Tractable only for small instances (n ≤ 500 tracts). Primary use cases:
 
 **Relationship to existing structure strategies**:
 
-| Property | ILP (B.24) | METIS | BFS Growth (B.23) |
+| Property | ILP (U.6) | METIS | BFS Growth (T.12) |
 |---|---|---|---|
 | Optimality | Exact (provably optimal) | Heuristic | None (greedy) |
 | Contiguity guarantee | Yes (MTZ constraints) | No (post-processing) | Yes (BFS) |

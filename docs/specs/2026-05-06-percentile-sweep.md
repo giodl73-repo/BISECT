@@ -2,7 +2,7 @@
 
 **Status**: Proposed  
 **Date**: 2026-05-06  
-**Depends on**: B.16 (ConvergenceSweep), bisect-ensemble (ReCom crate, parallel spec)  
+**Depends on**: U.1 (ConvergenceSweep), bisect-ensemble (ReCom crate, parallel spec)  
 **Motivation**: ConvergenceSweep finds the minimum-edge-cut plan (compactness extremum, 0.1–0.7th percentile of ReCom ensemble for most states). PercentileSweep generalises this to target any percentile — enabling statutory choice of legal posture.
 
 ---
@@ -23,7 +23,7 @@ PercentileSweep gives the legislature or commission a knob: **choose your legal 
 
 ### Core idea: sort T plans by edge cut, pick rank p·T
 
-The SHA-256 seed formula from B.16 provides a deterministic sequence of T seeds. Instead of picking the minimum-EC plan, pick the plan at a specified rank:
+The SHA-256 seed formula from U.1 provides a deterministic sequence of T seeds. Instead of picking the minimum-EC plan, pick the plan at a specified rank:
 
 ```
 PercentileSweep(p, T):
@@ -113,14 +113,14 @@ algorithm:
 - **G.3 revision**: What is the compactness-partisan correlation WITHIN the bisection seed space (not just the ReCom ensemble)?
 
 ### New paper: H-series?
-**H.0 · PercentileSweep: Statutory Choice of Legal Posture in Algorithmic Redistricting**
+**U.8 · PercentileSweep: Statutory Choice of Legal Posture in Algorithmic Redistricting**
 - Empirical: run ConvergenceSweep, MedianSweep, and TargetedSweep(50th) for all 6 key states
 - Show: partisan outcomes are largely INSENSITIVE to percentile choice (the Rodden sorting effect dominates, not the cut level)
 - Legal: map percentile choice to legal doctrine (extremum → compactness doctrine; 50th → representativeness doctrine; targeted → proportionality doctrine)
 - Recommendation: DIA should specify TargetedSweep(50th) to avoid the "over-optimizing" critique while remaining fully deterministic
 
-### Connection to B.17 (Parameter Sensitivity):
-B.17 shows partisanship is insensitive to parameter tuning. PercentileSweep suggests the same about the SEARCH percentile — the key determinant of partisan outcomes is STRUCTURE (bisection tree), not which plan in the EC distribution you pick. This should be tested.
+### Connection to U.2 (Parameter Sensitivity):
+U.2 shows partisanship is insensitive to parameter tuning. PercentileSweep suggests the same about the SEARCH percentile — the key determinant of partisan outcomes is STRUCTURE (bisection tree), not which plan in the EC distribution you pick. This should be tested.
 
 ---
 
@@ -188,7 +188,7 @@ BisectionEnsemble is the strongest integration of the two specs: it combines the
 
 ## Implementation plan
 
-### Phase 1 — PercentileSweep (1-2 days, builds on B.16)
+### Phase 1 — PercentileSweep (1-2 days, builds on U.1)
 - [ ] Add `--search percentile --percentile P --seeds T` to CLI args
 - [ ] In runner.rs: run T seeds via SHA-256 chain, collect EC values, sort, pick rank ⌊P·T⌋
 - [ ] Add `SeedCompositor::Percentile { p: f64, seeds: usize }` variant
@@ -209,7 +209,7 @@ BisectionEnsemble is the strongest integration of the two specs: it combines the
 ### Phase 3 — Research (ongoing)
 - [ ] Run PercentileSweep for all 50 states at p=0.0, 0.25, 0.50, 0.75 — compare partisan outcomes
 - [ ] Run BisectionEnsemble for all 50 states at p=0.0, 0.25, 0.50, 0.75 — compare partisan outcomes
-- [ ] Write H.0 paper: confirm partisan insensitivity to percentile choice
+- [ ] Write U.8 paper: confirm partisan insensitivity to percentile choice
 - [ ] Update G.2/G.3 with bisection-space partisan/compactness correlation
 
 ---

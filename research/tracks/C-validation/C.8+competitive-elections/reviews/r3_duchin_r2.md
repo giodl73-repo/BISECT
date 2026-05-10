@@ -25,7 +25,7 @@ The *Davis v. Bandemer* citation is now present in the legal background (address
 
 ## Minor Issues
 
-- The forward citation to "dellaLibera2026stability" in Section 6.3 is now resolved: the paper either removes the stability claim or replaces it with a reference to B.18's specific finding, as the revision plan required. I confirm this is resolved.
+- The forward citation to "dellaLibera2026stability" in Section 6.3 is now resolved: the paper either removes the stability claim or replaces it with a reference to T.9's specific finding, as the revision plan required. I confirm this is resolved.
 - States with losses of competitive districts under algorithmic maps are now listed (Section 7.3): Rhode Island and Hawaii, where the algorithmic map produces fewer competitive districts than the enacted map due to the single-district or two-district structure. This is a welcome transparency addition.
 
 ## Recommendation

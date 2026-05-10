@@ -16,12 +16,12 @@ partisan data, without pretending that this alone settles legal neutrality?
 
 | Candidate | Source | Strength | Gate | Proposed use |
 |-----------|--------|----------|------|--------------|
-| B.17 | Parameter Sensitivity | Best empirical handle on bounded variation | SCALE: scope and scope limits must stay explicit | Formula/article |
+| U.2 | Parameter Sensitivity | Best empirical handle on bounded variation | SCALE: scope and scope limits must stay explicit | Formula/article |
 | R.1 | Parameter Gaming | Best adversarial proof-of-concept | COVENANT/BOUNDARY: pre-registration and legal overreach risk | Parameter test |
 | B.7 | Solution Space | Clean stability anchor | SCALE: CV scope must be stated exactly | Stability anchor |
 | B.0 | Algorithm Overview | Broad technical framing | DATUM: do not overload the overview with conclusion language | Measurement note |
 | A.4 | Software / Manifest | Reproducibility anchor | COVENANT: commands and hashes must be current | Pre-registration |
-| H.0 | Legal Posture | Court-facing language | BOUNDARY: do not claim impossibility as law | Legal framing |
+| U.8 | Legal Posture | Court-facing language | BOUNDARY: do not claim impossibility as law | Legal framing |
 
 ## Audition Recommendation
 

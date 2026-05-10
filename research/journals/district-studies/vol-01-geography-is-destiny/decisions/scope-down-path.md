@@ -19,16 +19,16 @@ quantitative source-chain gate before becoming useful.
 
 ## What This Allows
 
-- Use B.12 as the lead formal source for the geography/proportionality frame.
+- Use T.5 as the lead formal source for the geography/proportionality frame.
 - Use G.1 as a cautious ensemble-position example.
-- Use B.12 state contrasts qualitatively.
+- Use T.5 state contrasts qualitatively.
 - Publish article summaries that teach the frame without exact table values.
 - Keep L.1/C.5 as a deferred measurement problem.
 
 ## What This Blocks
 
-- Exact B.12 table values.
-- Claims about the exact B.12 paper-run METIS parameter vector.
+- Exact T.5 table values.
+- Claims about the exact T.5 paper-run METIS parameter vector.
 - Exact G.1 percentile claims.
 - Result-bearing L.1/C.5 efficiency-gap conclusions.
 - Legal or adoption conclusions.

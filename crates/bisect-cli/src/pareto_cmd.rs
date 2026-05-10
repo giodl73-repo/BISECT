@@ -1,4 +1,4 @@
-//! `bisect pareto` — Pareto-optimal redistricting ensemble via NSGA-II (B.26).
+//! `bisect pareto` — Pareto-optimal redistricting ensemble via NSGA-II (U.7).
 //!
 //! Generates the Pareto frontier over three objectives:
 //!   - Compactness (edge-cut minimisation)

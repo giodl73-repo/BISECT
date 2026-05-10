@@ -62,10 +62,10 @@ Section 2: Portfolio Architecture
 - Format: Track | Theme | Papers | Key Headline Result
 
 Section 3: Reading Paths (preserve and update)
-- For Political Scientists: A.3 → B.1 → D.0 → C.5 → B.11 → D.4
-- For Computer Scientists: B.1 → B.2 → B.3 → B.6 → G.14 → H.2 → B.19–B.23
+- For Political Scientists: A.3 → B.1 → D.0 → C.5 → T.4 → D.4
+- For Computer Scientists: B.1 → B.2 → B.3 → B.6 → G.14 → U.10 → U.3–T.12
 - For Legal Scholars: D.0 → D.1 → D.4 → D.5 → B.02 → A.5
-- For Practitioners (Commissions): A.3 → A.5 → B.1 → D.4 → H.0
+- For Practitioners (Commissions): A.3 → A.5 → B.1 → D.4 → U.8
 - For Judges / Legal Staff: A.3 → D.1 → D.5 → B.02 → C.5
 
 Section 4: Glossary (update to add: GerryChain/ensemble, efficiency gap, PercentileSweep, ApportionRegions, Polsby-Popper)

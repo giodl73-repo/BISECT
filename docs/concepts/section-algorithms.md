@@ -6,8 +6,8 @@ All algorithms in the B series are "section algorithms" — they define how the
 bisection tree is structured, how ratios are selected, and what constraints
 METIS optimises. The foundational result (B.1-B.7) establishes that
 edge-weighted recursive bisection is the correct baseline. The section
-algorithms (B.8-B.15) extend the baseline by varying structure or constraints.
-The search algorithms (B.16, H.0-H.1) vary how the seed space is explored.
+algorithms (T.1-T.8) extend the baseline by varying structure or constraints.
+The search algorithms (U.1, U.8-U.9) vary how the seed space is explored.
 
 ---
 
@@ -16,10 +16,10 @@ The search algorithms (B.16, H.0-H.1) vary how the seed space is explored.
 ```
 B-series
 ├── Foundations (B.1-B.7)           — standard bisection, correctness, complexity
-├── Structure algorithms (B.8-B.15) — varied tree topology or METIS constraints
-│   └── (excludes County-Sticky B.10 — see Weights layer below)
-├── Weights layer (B.10)            — edge weight modifications to standard bisection
-└── Search algorithms (B.16, H.0-H.1) — seed exploration strategies
+├── Structure algorithms (T.1-T.8) — varied tree topology or METIS constraints
+│   └── (excludes County-Sticky T.3 — see Weights layer below)
+├── Weights layer (T.3)            — edge weight modifications to standard bisection
+└── Search algorithms (U.1, U.8-U.9) — seed exploration strategies
 ```
 
 All section algorithms are composed through the three-layer compositor. The
@@ -57,13 +57,13 @@ runs in O(k * m log n) for k districts and a graph with n tracts and m edges.
 
 **B.7 (Seed Sensitivity)**: The last improving seed occurs before index 1,023
 for all 50 states across all three census years. This establishes the empirical
-basis for the T=600 stopping criterion in B.16.
+basis for the T=600 stopping criterion in U.1.
 
 ---
 
-## Structure algorithms (B.8-B.15)
+## Structure algorithms (T.1-T.8)
 
-### GeoSection (B.8)
+### GeoSection (T.1)
 
 **CLI**: `--partition-mode geosection` / `structure: ratio-optimal`
 
@@ -100,7 +100,7 @@ voters in the rural Piedmont and mountains.
 
 ---
 
-### AreaSection (B.9)
+### AreaSection (T.2)
 
 **CLI**: `--partition-mode areasection` / `structure: ratio-optimal-area`
 
@@ -131,7 +131,7 @@ area balance infeasible at strict tolerances.
 
 ---
 
-### ApportionRegions (B.11)
+### ApportionRegions (T.4)
 
 **CLI**: `--partition-mode apportion-regions` / `structure: prime-factor`
 
@@ -170,7 +170,7 @@ geographic convergence.
 
 ---
 
-### ProportionalSection (B.12)
+### ProportionalSection (T.5)
 
 **CLI**: `--partition-mode proportional-section` / `structure: standard-bisect`
 with `weights: proportional`
@@ -200,7 +200,7 @@ where proportionality standards apply.
 
 ---
 
-### NestSection (B.13)
+### NestSection (T.6)
 
 **CLI**: `structure: nest-section` (planned)
 
@@ -216,7 +216,7 @@ levels.
 
 ---
 
-### VRASection (B.14)
+### VRASection (T.7)
 
 **CLI**: `--partition-mode vra-section` / `structure: ratio-optimal-vra`
 
@@ -245,7 +245,7 @@ combined in the same weight formula.
 
 ---
 
-### StabilitySection (B.15)
+### StabilitySection (T.8)
 
 **CLI**: analysis mode, not a partition mode
 
@@ -257,9 +257,9 @@ states where the seat count's largest prime factor does not change.
 
 ---
 
-## Weights layer (B.10)
+## Weights layer (T.3)
 
-### County-Sticky (B.10)
+### County-Sticky (T.3)
 
 **CLI**: `structure: standard-bisect` + `weights: county` + `alpha_county: 3.0`
 
@@ -275,9 +275,9 @@ a meaningful legal claim.
 
 ---
 
-## Search algorithms (B.16, H.0-H.1)
+## Search algorithms (U.1, U.8-U.9)
 
-### ConvergenceSweep (B.16)
+### ConvergenceSweep (U.1)
 
 **CLI**: `search: convergence` + `convergence_threshold: 600`
 
@@ -295,7 +295,7 @@ plateau before seed index 1,023 means T=600 is conservative: the algorithm
 always terminates within the statutory window and always finds the true
 compactness optimum.
 
-### PercentileSweep (H.0)
+### PercentileSweep (U.8)
 
 **CLI**: `search: percentile` + `seeds: T` + `percentile: p`
 
@@ -305,7 +305,7 @@ plan, it allows callers to sample from the distribution of near-optimal plans.
 This is useful for legal analysis where the court may want to see the range of
 outcomes at different compactness percentiles.
 
-### BisectionEnsemble (H.1)
+### BisectionEnsemble (U.9)
 
 **CLI**: `search: bisection-ensemble` + `seeds: T` + `percentile: p`
 
@@ -331,4 +331,4 @@ the same tree depth are independent and can run concurrently).
 - [ensemble-methods.md](ensemble-methods.md) — GerryChain evaluation of section algorithm output
 - [recursive-bisection.md](recursive-bisection.md) — the foundation algorithm
 - [edge-weighted-bisection.md](edge-weighted-bisection.md) — the B.2 result
-- Papers B.8-B.15 in `research/`
+- Papers T.1-T.8 in `research/`

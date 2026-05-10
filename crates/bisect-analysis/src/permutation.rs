@@ -93,8 +93,12 @@ pub fn permutation_test_lower_tail(
 /// Regularised incomplete Beta function I_x(a, b) using continued fraction expansion.
 /// Used to compute the Bayesian Detection Score.
 fn regularized_incomplete_beta(x: f64, a: f64, b: f64) -> f64 {
-    if x <= 0.0 { return 0.0; }
-    if x >= 1.0 { return 1.0; }
+    if x <= 0.0 {
+        return 0.0;
+    }
+    if x >= 1.0 {
+        return 1.0;
+    }
 
     // Use the continued fraction expansion (Lentz's method).
     // Switch sides if x > (a+1)/(a+b+2) for numerical stability.
@@ -114,7 +118,9 @@ fn beta_continued_fraction(x: f64, a: f64, b: f64) -> f64 {
 
     let mut c = 1.0;
     let mut d = 1.0 - (a + b) * x / (a + 1.0);
-    if d.abs() < f64::MIN_POSITIVE { d = f64::MIN_POSITIVE; }
+    if d.abs() < f64::MIN_POSITIVE {
+        d = f64::MIN_POSITIVE;
+    }
     d = 1.0 / d;
     let mut result = d;
 
@@ -122,25 +128,35 @@ fn beta_continued_fraction(x: f64, a: f64, b: f64) -> f64 {
         let m = m as f64;
 
         // Even step
-        let dm = m * (b - m) * x / ((a + 2.0*m - 1.0) * (a + 2.0*m));
+        let dm = m * (b - m) * x / ((a + 2.0 * m - 1.0) * (a + 2.0 * m));
         d = 1.0 + dm * d;
-        if d.abs() < f64::MIN_POSITIVE { d = f64::MIN_POSITIVE; }
+        if d.abs() < f64::MIN_POSITIVE {
+            d = f64::MIN_POSITIVE;
+        }
         c = 1.0 + dm / c;
-        if c.abs() < f64::MIN_POSITIVE { c = f64::MIN_POSITIVE; }
+        if c.abs() < f64::MIN_POSITIVE {
+            c = f64::MIN_POSITIVE;
+        }
         d = 1.0 / d;
         result *= d * c;
 
         // Odd step
-        let dm = -(a + m) * (a + b + m) * x / ((a + 2.0*m) * (a + 2.0*m + 1.0));
+        let dm = -(a + m) * (a + b + m) * x / ((a + 2.0 * m) * (a + 2.0 * m + 1.0));
         d = 1.0 + dm * d;
-        if d.abs() < f64::MIN_POSITIVE { d = f64::MIN_POSITIVE; }
+        if d.abs() < f64::MIN_POSITIVE {
+            d = f64::MIN_POSITIVE;
+        }
         c = 1.0 + dm / c;
-        if c.abs() < f64::MIN_POSITIVE { c = f64::MIN_POSITIVE; }
+        if c.abs() < f64::MIN_POSITIVE {
+            c = f64::MIN_POSITIVE;
+        }
         d = 1.0 / d;
         let delta = d * c;
         result *= delta;
 
-        if (delta - 1.0).abs() < eps { break; }
+        if (delta - 1.0).abs() < eps {
+            break;
+        }
     }
     result
 }
@@ -168,10 +184,7 @@ fn lgamma(z: f64) -> f64 {
             x += ci / (z + i as f64 + 1.0);
         }
         let t = z + g + 0.5;
-        0.5 * (2.0 * std::f64::consts::PI).ln()
-            + (z + 0.5) * t.ln()
-            - t
-            + x.ln()
+        0.5 * (2.0 * std::f64::consts::PI).ln() + (z + 0.5) * t.ln() - t + x.ln()
     }
 }
 
@@ -195,14 +208,20 @@ mod tests {
         assert_eq!(result.n_as_extreme, 1); // only plan 0 (0.000) is ≤ 0.003
         assert!((result.p_value_raw - 0.01).abs() < 0.005);
         assert!(result.p_value_ess_corrected < 0.10);
-        assert!(result.bds_at_0_05 > 0.80, "BDS should be high for very extreme plan");
+        assert!(
+            result.bds_at_0_05 > 0.80,
+            "BDS should be high for very extreme plan"
+        );
     }
 
     #[test]
     fn test_permutation_test_neutral_plan() {
         // Neutral plan at median
         let ensemble: Vec<EnsemblePlan> = (0..1000)
-            .map(|i| EnsemblePlan { id: i, statistic: i as f64 / 1000.0 })
+            .map(|i| EnsemblePlan {
+                id: i,
+                statistic: i as f64 / 1000.0,
+            })
             .collect();
 
         let result = permutation_test_lower_tail(0.50, &ensemble, 500.0);

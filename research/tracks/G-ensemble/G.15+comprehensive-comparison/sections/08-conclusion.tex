@@ -80,7 +80,7 @@ A controlled experiment varying structure with fixed PT search, and varying
 search with fixed SA structure, would resolve this.
 
 \paragraph{Additional structure algorithms.}
-B.25 (in planning) will introduce a spectral bisection structure algorithm
+T.13 (in planning) will introduce a spectral bisection structure algorithm
 based on the Fiedler vector of the graph Laplacian.
 Spectral bisection is theoretically related to minimum-\ec{} bisection and
 may bridge the gap between METIS and ILP for moderate-$N$ instances.
@@ -110,7 +110,7 @@ All 15 algorithms are implemented in the \texttt{bisect} Rust workspace:
         (\texttt{metis.rs}, \texttt{simulated\_annealing.rs},
         \texttt{cvd\_graph.rs}, \texttt{cvd\_geographic.rs},
         \texttt{bfs\_growth.rs})
-  \item \texttt{crates/redist-ilp/} --- ILP redistricting crate (B.24)
+  \item \texttt{crates/redist-ilp/} --- ILP redistricting crate (U.6)
   \item \texttt{crates/redist-ensemble/src/} --- search algorithms
         (\texttt{shortburst.rs}, \texttt{flip.rs},
         \texttt{forest\_recom.rs}, \texttt{merge\_split.rs},

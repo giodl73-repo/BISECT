@@ -70,7 +70,7 @@ impl EdgeWeighter for GeographicWeighter {
 }
 
 // ---------------------------------------------------------------------------
-// Step 2 — Governmental subdivision stickiness (B.10)
+// Step 2 — Governmental subdivision stickiness (T.3)
 // ---------------------------------------------------------------------------
 
 /// Makes intra-jurisdiction edges more expensive to cut, so the algorithm
@@ -345,7 +345,7 @@ impl EdgeWeighter for MinorityAugmentWeighter {
 }
 
 // ---------------------------------------------------------------------------
-// Step 5 — Economic character similarity (B.27/M.1)
+// Step 5 — Economic character similarity (M.9/M.1)
 // ---------------------------------------------------------------------------
 
 /// Blends existing edge weights by the cosine similarity of adjacent tracts'

@@ -23,9 +23,9 @@ reform, adoption, or legal claims.
 | Order | Piece | Status | Gate |
 |-------|-------|--------|------|
 | 1 | The Shape of the Vote | draft note complete | COMMONS revision after final lineup |
-| 2 | Geography Constrains Proportionality | draft note complete | B.12 parameter, seed, and C(G) provenance |
+| 2 | Geography Constrains Proportionality | draft note complete | T.5 parameter, seed, and C(G) provenance |
 | 3 | The Ensemble Median Case | draft note complete | SCALE/DATUM review of ESS-safe language |
-| 4 | Three State Types | draft note complete | B.12 source-chain closure before exact values |
+| 4 | Three State Types | draft note complete | T.5 source-chain closure before exact values |
 | 5 | What This Issue Does Not Show | draft note complete | BOUNDARY/SCALE/DATUM review |
 
 The result-bearing measurement slot is deferred until L.1/C.5 numeric outputs
@@ -80,8 +80,8 @@ are regenerated or traced to post-fix artifacts.
 - [Final Risky-Claim Scan](reviews/final-risky-claim-scan.md)
 - [Final Lock Review](reviews/final-lock-review.md)
 - [Post-Copyedit Risky-Claim Scan](reviews/post-copyedit-risky-claim-scan.md)
-- [B.12 Reproducibility And Scope Audit](reviews/b12-reproducibility-and-scope-audit.md)
-- [B.12 Implementation Provenance Note](reviews/b12-implementation-provenance-note.md)
+- [T.5 Reproducibility And Scope Audit](reviews/b12-reproducibility-and-scope-audit.md)
+- [T.5 Implementation Provenance Note](reviews/b12-implementation-provenance-note.md)
 - [G.1 SCALE/DATUM Review](reviews/g1-scale-datum-review.md)
 - [L.1 Efficiency-Gap Sign Audit](reviews/l1-efficiency-gap-sign-audit.md)
 
@@ -89,7 +89,7 @@ are regenerated or traced to post-fix artifacts.
 
 To move from provisional public preview to locked publication:
 
-1. Keep B.12 exact table values out unless source-chain requests close.
+1. Keep T.5 exact table values out unless source-chain requests close.
 2. Keep G.1 exact percentile language out unless statistical review closes.
 3. Keep measurement claims deferred unless output provenance is closed.
 4. Convert provisional references into final citation format.

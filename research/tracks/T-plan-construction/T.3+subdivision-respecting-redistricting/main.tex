@@ -1,0 +1,49 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs,graphicx,hyperref,natbib,microtype}
+
+\title{\textbf{Subdivision-Respecting Redistricting:\\
+County-Sticky Edge Weights}\\[0.4em]
+\large T.3 --- Algorithm Track}
+\author{Gio Della-Libera \\ \textit{Apportionment Research Group}}
+\date{May 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Most state constitutions require congressional maps to ``preserve political
+subdivisions'' --- counties and municipalities --- as a secondary criterion
+after equal population.
+Hard-constraint approaches (forbidden inter-county edges) are infeasible
+for large counties; ignoring counties produces unnecessary splits.
+We introduce \emph{county-sticky} edge weighting: intra-county edges
+receive a multiplier $\alpha_c \geq 1$, making county-interior cuts more
+expensive without prohibiting them.
+We sweep $\alpha_c \in \{1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 5.0, 10.0\}$ on all 50
+states and find a sharp Pareto-frontier elbow at $\alpha_c = 3.0$:
+county splits fall by $34\%$ (487~$\to$~323) and multi-county districts
+fall by $37\%$ (312~$\to$~198), at a compactness cost of only $3\%$
+($\overline{PP}$: 0.361~$\to$~0.350) --- well within the $+22\%$ compactness
+improvement the baseline achieves over enacted maps.
+Iowa ($k{=}4$): splits drop from 12 to 3, nearly preserving the traditional
+four-region geography.
+Texas ($k{=}38$): splits drop from 89 to 61 (28 avoidable splits eliminated).
+This soft-constraint approach is implemented as
+\texttt{--weights-override county} in the \texttt{bisect} CLI and is the
+DIA default for states with constitutional subdivision-preservation requirements.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-methodology}
+\input{sections/04-results}
+\input{sections/05-discussion}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

@@ -131,15 +131,15 @@ Table~\ref{tab:cli} gives the CLI flags for all 15 algorithms.
 Algorithm & Layer & Flag & Paper \\
 \midrule
 Standard METIS       & Structure & \texttt{--structure standard-bisect}    & (default) \\
-Simulated Annealing  & Structure & \texttt{--structure simulated-annealing}  & B.19 \\
-CVD Graph-Distance   & Structure & \texttt{--structure centroidal-voronoi}   & B.22 \\
-CVD Geographic       & Structure & \texttt{--structure centroidal-voronoi --cvd-metric geographic} & B.22b \\
-BFS Growth           & Structure & \texttt{--structure bfs-growth}          & B.23 \\
-ILP Exact            & Structure & \texttt{--structure ilp}                 & B.24 \\
+Simulated Annealing  & Structure & \texttt{--structure simulated-annealing}  & U.3 \\
+CVD Graph-Distance   & Structure & \texttt{--structure centroidal-voronoi}   & T.10 \\
+CVD Geographic       & Structure & \texttt{--structure centroidal-voronoi --cvd-metric geographic} & T.11 \\
+BFS Growth           & Structure & \texttt{--structure bfs-growth}          & T.12 \\
+ILP Exact            & Structure & \texttt{--structure ilp}                 & U.6 \\
 \midrule
-ConvergenceSweep     & Search & \texttt{--search convergence}           & B.16 \\
-PercentileSweep      & Search & \texttt{--search percentile}            & H.0 \\
-BisectionEnsemble    & Search & \texttt{--search bisection-ensemble}    & H.1 \\
+ConvergenceSweep     & Search & \texttt{--search convergence}           & U.1 \\
+PercentileSweep      & Search & \texttt{--search percentile}            & U.8 \\
+BisectionEnsemble    & Search & \texttt{--search bisection-ensemble}    & U.9 \\
 Short-Burst          & Search & \texttt{--search short-burst}           & G.6 \\
 Flip                 & Search & \texttt{--search flip}                  & G.8 \\
 Forest ReCom         & Search & \texttt{--search forest-recom}          & G.9 \\
@@ -147,9 +147,9 @@ Merge-Split          & Search & \texttt{--search merge-split}           & G.10 \
 Multi-scale          & Search & \texttt{--search multiscale}            & G.11 \\
 ShortBurstForest     & Search & \texttt{--search short-burst-forest}    & G.12 \\
 VRA-Aware ReCom      & Search & \texttt{--search vra-recom}             & G.13 \\
-Parallel Tempering   & Search & \texttt{--search parallel-tempering}    & B.20 \\
+Parallel Tempering   & Search & \texttt{--search parallel-tempering}    & U.4 \\
 SMC-Percentile       & Search & \texttt{--search smc-percentile}        & G.7/new \\
-Adaptive Multi-scale & Search & \texttt{--search adaptive-multiscale}   & B.21 \\
+Adaptive Multi-scale & Search & \texttt{--search adaptive-multiscale}   & U.5 \\
 \bottomrule
 \end{tabular}
 \end{table}

@@ -10,7 +10,7 @@
 //!
 //! 3. **`PfrCompositor`** — hierarchically applies a pluggable `SplitStrategy`
 //!    to a census-tract graph, following the prime factorization of `n`.
-//!    The compositor is the algorithmic core of Paper B.11 (Prime-Factored Maps).
+//!    The compositor is the algorithmic core of Paper T.4 (Prime-Factored Maps).
 //!
 //! The `SplitStrategy` trait lets callers plug in different partitioning
 //! algorithms: min-edge-cut, compactness-maximising, proportional, etc.

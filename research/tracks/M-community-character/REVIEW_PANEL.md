@@ -28,7 +28,7 @@
 ## Cross-Paper Issues
 1. **Signal correlation**: M.1 (economic) and M.4 (commuting shed) are likely correlated — tracts with similar economic character often have similar commuting patterns. M.8 should address whether the composite index double-counts these correlated signals or weights them appropriately.
 2. **Geographic coverage**: M.7 (transit) has only 28–51% coverage across states (zero in rural areas). M.8 must address how the composite handles missing signals without penalising rural tracts.
-3. **Proportionality gap**: All papers report proportionality gap change vs. the −6.5pp NC baseline. The −6.5pp baseline should be cited to B.12 consistently — some papers cite it, others do not.
+3. **Proportionality gap**: All papers report proportionality gap change vs. the −6.5pp NC baseline. The −6.5pp baseline should be cited to T.5 consistently — some papers cite it, others do not.
 
 ## P1 Items by Paper
 - **M.0**: The legal citation to *Shaw v. Reno* (1993) as authority for communities of interest is correct but incomplete — *Shaw* was about racial classification, not communities of interest per se. Add *Thornburg v. Gingles* §2 communities-of-interest language and the relevant state cases (California Prop 11 (2008), Colorado Amendment Y (2018)).

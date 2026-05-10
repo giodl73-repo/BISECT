@@ -31,7 +31,7 @@ The partisan symmetry claim relies on the 43D/42R competitive-seat split, which 
 
 ### M4 — Forward Citation Resolution [Liang]
 "dellaLibera2026stability" is cited in Section 6.3 for temporal stability claims that the paper relies on for its cross-decade projection. This citation is not in the reference list.
-**Action:** Either (a) remove the cross-decade projection paragraph, replacing it with "B.18 (temporal stability) characterizes boundary changes across reapportionment cycles," or (b) include the stability analysis from B.18 directly.
+**Action:** Either (a) remove the cross-decade projection paragraph, replacing it with "T.9 (temporal stability) characterizes boundary changes across reapportionment cycles," or (b) include the stability analysis from T.9 directly.
 
 ## Minor Issues (Optional for R2)
 

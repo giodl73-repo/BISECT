@@ -282,7 +282,7 @@ None (the single-run caveat is properly disclosed throughout).
 1. **Binary/crate names throughout**: `redist` ensemble platform (section 01), `redist` data pipeline (section 03), `redist fetch` (section 03), `redist` CLI (section 06 line 246), `redist` algorithm portfolio (section 08), `redist-core`, `redist-ilp`, `redist-ensemble`, `redist-cli` (section 08 implementation reference), `redist` platform (section 08 conclusion). All must be updated to `bisect` equivalents. This is the primary revision needed.
 2. **Section 01 introduction** references "15 distinct algorithm identities" but then says "six structure algorithms and twelve search algorithms, totalling 15." Six plus twelve is eighteen, not fifteen. The count is wrong — clarify which algorithms are shared or overlap to arrive at 15.
 3. The SA runtime claim ("12× slower than METIS for NC") is derived from Table 3.1 (25.3s / 2.1s = 12.0×) — this is correct and appropriately calculated. However, the "10× the structure-layer compute budget for a 50-state sweep" needs a brief derivation (it is not 12× because of state-size variation). Add a footnote.
-4. B.25 future work paragraph mentions "spectral bisection based on the Fiedler vector" — per recent work B.25 is the Moving-Knife algorithm, not spectral. Update this reference.
+4. T.13 future work paragraph mentions "spectral bisection based on the Fiedler vector" — per recent work T.13 is the Moving-Knife algorithm, not spectral. Update this reference.
 5. Section 02 setup references `--weights geographic` at line 62 (partial context: "and `--weights geographic`) updated to the ApportionRegions composite") — verify whether this uses the correct `--weights-override geographic` flag or the stale `--weights geographic` form.
 
 ### P3 Items
@@ -347,5 +347,5 @@ G.2's `sections/04-proportionality-corridor.tex` is referenced in `main.tex` but
 3. **G.14**: Fix `--weights geographic` to `--weights-override geographic` (P1). Then binary names.
 4. **G.7**: Fix binary name inconsistency (abstract vs section 01). Complete Proposition 3 verification.
 5. **G.11**: Fix abstract ACF range conflation. Binary names.
-6. **G.15**: Binary names throughout. Fix the algorithm count (6+12≠15). Update B.25 future work paragraph.
+6. **G.15**: Binary names throughout. Fix the algorithm count (6+12≠15). Update T.13 future work paragraph.
 7. **G.10**: Accepted — minor binary name fix only.

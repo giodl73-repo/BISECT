@@ -399,7 +399,7 @@ redist label-verify b2_edgeweighted --year 2020
 
 ---
 
-**[Continue this pattern for all empirical papers: B.3–B.22, C.1–C.5, D.0–D.3, E.1–E.5, F, G, H series]**
+**[Continue this pattern for all empirical papers: B.3–T.10, C.1–C.5, D.0–D.3, E.1–E.5, F, G, H series]**
 
 ---
 

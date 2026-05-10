@@ -19,7 +19,7 @@ This is not an academic concern. The build hash is the foundation of the reprodu
 
 ## Election Data: Absent from Package
 
-For any paper in the portfolio that makes partisan claims (B.11, C.5, others), the election data used to evaluate partisan outcomes is just as important as the Census data for reproducibility. The paper documents only PL 94-171 and TIGER/Line sources. Election data sources — VEST election data, MIT Election Lab, or otherwise — are not documented anywhere in this package.
+For any paper in the portfolio that makes partisan claims (T.4, C.5, others), the election data used to evaluate partisan outcomes is just as important as the Census data for reproducibility. The paper documents only PL 94-171 and TIGER/Line sources. Election data sources — VEST election data, MIT Election Lab, or otherwise — are not documented anywhere in this package.
 
 A partisan result (7D/7R for NC) cannot be reproduced or verified without knowing which election results were used to classify districts. The paper should either (1) document the election data source and provide it in the replication archive or (2) explicitly note that partisan classifications use publicly available VEST data at the listed version, with download instructions.
 

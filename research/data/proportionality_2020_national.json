@@ -33,7 +33,7 @@
     "texas":          {"k": 38, "D": 8, "R": 30,"dvote_pct": 47.2, "gap_pp": -26.1}
   },
   "notes": [
-    "Default algorithm — NOT the prime-factor AR config used in B.11 (which gives 223D/209R).",
+    "Default algorithm — NOT the prime-factor AR config used in T.4 (which gives 223D/209R).",
     "IL and NY show full-D outcomes due to geographic concentration of Democratic voters in urban cores.",
     "Mean |gap| of 20.4pp reflects geographic sorting, not algorithmic bias.",
     "PA gap=-3.5pp is the most proportional large state under default algorithm."

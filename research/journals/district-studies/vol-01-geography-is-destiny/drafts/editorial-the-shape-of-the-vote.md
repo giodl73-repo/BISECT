@@ -37,7 +37,7 @@ The issue asks three questions:
    space?
 3. What remains after geography is accounted for?
 
-The first question belongs to B.12, which studies why proportional partisan
+The first question belongs to T.5, which studies why proportional partisan
 outcomes can be hard to achieve under contiguous single-member districts. The
 second belongs to G.1, which compares a Bisect plan against ReCom ensemble
 runs. The third is a measurement question, and it remains gated until the
@@ -76,7 +76,7 @@ responsibly.
 
 ## Open Dependencies
 
-- Final B.12 source-chain closure for parameter and seed-variance language.
+- Final T.5 source-chain closure for parameter and seed-variance language.
 - SCALE review of the G.1 ESS-safe summary.
 - Decision on whether the measurement slot is deferred or included as a method
   note.

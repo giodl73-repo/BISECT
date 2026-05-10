@@ -42,11 +42,11 @@ review?
 
 | Gate | Status | Effect |
 |------|--------|--------|
-| B.11 output | open | No unbounded national headline |
+| T.4 output | open | No unbounded national headline |
 | G.1 percentile | open | No raw percentile without ESS correction |
 | A.4/R.4 verification | open | No unsupported reproducibility claim |
 | D.1 VRA scope | caution | No universal legal result |
-| C.2/B.15 stability | caution | Keep scope to actual cycles compared |
+| C.2/T.8 stability | caution | Keep scope to actual cycles compared |
 
 ## Public Label
 

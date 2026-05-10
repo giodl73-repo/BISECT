@@ -6,13 +6,13 @@ title: "Three State Types"
 status: provisional-draft
 updated: 2026-05-09
 claim-class: empirical/interpretive
-source: B.12 ProportionalSection
-gate: B.12 provenance
+source: T.5 ProportionalSection
+gate: T.5 provenance
 ---
 
 # Three State Types
 
-B.12 works best here as a qualitative case-study frame. Instead of treating
+T.5 works best here as a qualitative case-study frame. Instead of treating
 geography as a single universal answer, the frame presents three state
 behaviors:
 
@@ -34,7 +34,7 @@ adjustment. In others, an added constraint may interact with geography in
 unexpected ways. In smaller delegations, one seat can be a large step, so the
 result changes in jumps rather than smooth fractions.
 
-Exact state table values remain gated until B.12 provenance is closed.
+Exact state table values remain gated until T.5 provenance is closed.
 
 ## Public Example
 
@@ -58,6 +58,6 @@ See `../REFERENCES.md`.
 
 ## Publication Boundary
 
-Do not name exact state table values until B.12 provenance is closed. The draft
+Do not name exact state table values until T.5 provenance is closed. The draft
 may describe the three behaviors qualitatively and explain why the same
 statewide vote split can imply different districting constraints.

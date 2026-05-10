@@ -11,11 +11,11 @@ This is a competent practitioner guide. The writing is clear, the track structur
 
 ## North Carolina: 7D/7R — Critical Concern
 
-The document's most prominent partisan headline — "North Carolina: 7 Democratic, 7 Republican" — is presented in Section 3 as evidence that the algorithm "closely matche[s] the state's roughly even partisan split." This framing is accurate for NC, but the guide does not tell the reader that the same algorithm applied to Georgia ($k=14$, similar partisan split at 50.1% D) produces **5D/9R** — a 14.4 percentage point bias. Paper B.11 reports both results with equal prominence and discusses the NC/GA divergence at length as the paper's central finding.
+The document's most prominent partisan headline — "North Carolina: 7 Democratic, 7 Republican" — is presented in Section 3 as evidence that the algorithm "closely matche[s] the state's roughly even partisan split." This framing is accurate for NC, but the guide does not tell the reader that the same algorithm applied to Georgia ($k=14$, similar partisan split at 50.1% D) produces **5D/9R** — a 14.4 percentage point bias. Paper T.4 reports both results with equal prominence and discusses the NC/GA divergence at length as the paper's central finding.
 
-A visual guide to the portfolio should not cherry-pick NC as the headline number while omitting Georgia. The honest way to present B.11's finding is: "When the factorization of $k$ aligns with a state's geographic partisan structure, the algorithm produces proportional outcomes; when it does not, it can produce outcomes as biased as human-drawn maps." That is what B.11 actually demonstrates, and a guide that elides this is misleading readers about the algorithm's political properties.
+A visual guide to the portfolio should not cherry-pick NC as the headline number while omitting Georgia. The honest way to present T.4's finding is: "When the factorization of $k$ aligns with a state's geographic partisan structure, the algorithm produces proportional outcomes; when it does not, it can produce outcomes as biased as human-drawn maps." That is what T.4 actually demonstrates, and a guide that elides this is misleading readers about the algorithm's political properties.
 
-I understand that guide papers do not report every finding. But the NC 7D/7R number — if cited by a judge, a legislator, or a journalist without reading B.11 — creates a false impression. This requires either adding a qualification sentence ("Results vary by state: see Paper B.11 for cases where geographic clustering produces less proportional outcomes") or replacing the NC example with the national aggregate (223D/209R, also from B.11).
+I understand that guide papers do not report every finding. But the NC 7D/7R number — if cited by a judge, a legislator, or a journalist without reading T.4 — creates a false impression. This requires either adding a qualification sentence ("Results vary by state: see Paper T.4 for cases where geographic clustering produces less proportional outcomes") or replacing the NC example with the national aggregate (223D/209R, also from T.4).
 
 ## The "No Partisan Data" Claim
 
@@ -33,4 +33,4 @@ Section 6 is valuable. The explanation of how to read bisection maps (round-by-r
 
 ## Recommendation
 
-Major revisions needed. The North Carolina finding, as presented, creates a materially misleading impression when read without Paper B.11's context. This is a significant problem in a document that will reach judges and commissioners who may not read the underlying paper. Either add a qualification or replace with the national aggregate. The "no partisan data" section also needs one sentence acknowledging persistent geographic partisan structure.
+Major revisions needed. The North Carolina finding, as presented, creates a materially misleading impression when read without Paper T.4's context. This is a significant problem in a document that will reach judges and commissioners who may not read the underlying paper. Either add a qualification or replace with the national aggregate. The "no partisan data" section also needs one sentence acknowledging persistent geographic partisan structure.

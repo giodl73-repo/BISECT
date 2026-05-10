@@ -15,9 +15,9 @@ The five headline numbers each carry a paper citation, which is good practice. T
 
 **The +22% claim.** As flagged by other reviewers, the compactness percentage cited (22%) does not match Paper B.2 (which reports 20% over enacted maps). This is a reproducibility failure: a researcher who reads this guide, checks B.2, and attempts to reproduce "22% improvement over enacted maps" will not find that number in the source. For a guide whose central claim is verifiability, this inconsistency undermines the document's own stated standard.
 
-**The NC 7D/7R claim.** Paper B.11 is cited. A researcher who reads B.11 will find the NC result, but will also find the GA 5D/9R result that this guide does not mention. The reproducibility standard here is met — the number is real and traceable — but the guide's presentation of the finding is selective.
+**The NC 7D/7R claim.** Paper T.4 is cited. A researcher who reads T.4 will find the NC result, but will also find the GA 5D/9R result that this guide does not mention. The reproducibility standard here is met — the number is real and traceable — but the guide's presentation of the finding is selective.
 
-**The T=600 claim.** Paper B.16 is cited. The claim that T=600 gives a firm "stopping rule" is consistent with B.16's stated result ($P(\text{tail} > 600) < 0.001$). Reproducible and accurate.
+**The T=600 claim.** Paper U.1 is cited. The claim that T=600 gives a firm "stopping rule" is consistent with U.1's stated result ($P(\text{tail} > 600) < 0.001$). Reproducible and accurate.
 
 **The 42% VRA threshold.** Paper D.1 is cited. The number is accurate and reproducible. No issue.
 

@@ -4,7 +4,7 @@
 **Reviewed R1**: MERIDIAN 3/4, BENCHMARK 3/4, SURVEY 3/4, COVENANT 3/4 → avg 3.0/4
 **Reviewed R2**: MERIDIAN 4/4, BENCHMARK 4/4, SURVEY 3/4, COVENANT 4/4 → avg 3.75/4
 **Date**: 2026-05-07
-**Related paper**: B.26
+**Related paper**: U.7
 **Depends on**: `bisect-core` (adjacency, population), `bisect-cli` (Flip chain mutation), `bisect-metis` (METIS plan generation)
 **Architecture**: Standalone command (`bisect pareto`) — not a `SeedCompositor` variant
 **Citation**: Deb et al. (2002) — "A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II"

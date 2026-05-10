@@ -47,17 +47,20 @@ access partisan data}.
 Applied to all 50 states across three census decades (2000/2010/2020), the
 algorithm produces 435 congressional districts with near-perfect population
 equality, geographic contiguity, and geometric compactness. The research
-program comprises \textbf{190+ papers across eighteen tracks (A--S)}, spanning
-algorithm design and validation (Tracks B--C), legal compliance (Track D),
-experimental extensions (Tracks E--F), ensemble-based plan evaluation
-(Tracks G--H), incumbency and apportionment (Tracks I--J), compactness
-and partisan fairness metrics (Tracks K--L), and community character weights
-(Track M), with Track A providing cross-portfolio synthesis.
+program comprises \textbf{190+ papers across twenty active tracks (A--G,
+I--U)}, spanning algorithm foundations (Track B), validation (Track C),
+legal compliance (Track D), experimental extensions (Tracks E--F),
+ensemble-based plan evaluation (Track G), incumbency and apportionment
+(Tracks I--J), compactness and partisan fairness metrics (Tracks K--L),
+community character weights (Track M), plan construction (Track T), and
+search and optimisation (Track U), with Track A providing cross-portfolio
+synthesis.
 
 Papers in this program are at varying stages of completion. Track B
-foundations, several Track G ensemble papers, all Track H papers, and selected
-papers in Tracks B extensions are accepted or ready for submission. Remaining
-papers across all tracks are in draft. The overall research program is ongoing.
+foundations, several Track G ensemble papers, the former Track H papers now
+merged into Track U, and selected Track T and U papers are accepted or ready
+for submission. Remaining papers across all tracks are in draft. The overall
+research program is ongoing.
 
 \subsection*{Four Core Contributions}
 
@@ -87,12 +90,14 @@ papers across all tracks are in draft. The overall research program is ongoing.
 \section{Portfolio Architecture}
 % =============================================================================
 
-The portfolio is organized into eighteen tracks. Track A synthesizes all other
-tracks; Tracks B--H generate the empirical, algorithmic, legal, and ensemble
-results that the original synthesis draws on; Tracks I--M extend the program
-to incumbency, apportionment, compactness, partisan fairness, and community
-character weights; Tracks N--S extend to population counting, democratic outcomes,
-reform pathways, 2030 planning, adversarial robustness, and statistical inference.
+The portfolio is organized into twenty active tracks. Track A synthesizes all
+other tracks; Tracks B--G generate the empirical, algorithmic, legal, and
+ensemble results that the original synthesis draws on; Tracks I--M extend the
+program to incumbency, apportionment, compactness, partisan fairness, and
+community character weights; Tracks N--S extend to population counting,
+democratic outcomes, reform pathways, 2030 planning, adversarial robustness,
+and statistical inference; Tracks T--U factor the overloaded algorithm material
+into plan construction and search/optimization.
 
 \vspace{6pt}
 
@@ -104,14 +109,14 @@ reform pathways, 2030 planning, adversarial robustness, and statistical inferenc
 \endhead
 
 \textbf{A} & Portfolio Synthesis &
-    190+ papers synthesized across 18 tracks; 50 states $\times$ 3 decades
+    190+ papers synthesized across 20 active tracks; 50 states $\times$ 3 decades
     $\times$ $+22\%$ compactness at CV $<$ 2\% &
     6 \\[4pt]
 
-\textbf{B} & Algorithm Design \& Variants &
-    $+22$--$44\%$ compactness; seed CV $<$ 2\% for 96\% of states;
-    NC 7D/7R and 223D/209R national via ApportionRegions &
-    25 \\[4pt]
+\textbf{B} & Algorithm Foundations &
+    Recursive bisection, edge weighting, METIS formulation, complexity,
+    n-way comparison, and seed-sensitivity foundations &
+    9 \\[4pt]
 
 \textbf{C} & Validation \& Robustness &
     Results robust across 130$\times$ unit-count range; near-zero efficiency
@@ -137,11 +142,6 @@ reform pathways, 2030 planning, adversarial robustness, and statistical inferenc
     Bisection plan at 0.1--0.7th compactness percentile (WI/GA/PA/CA),
     50th in NC; G.14 (practitioner ensemble comparison) accepted at 4.0/4 &
     16 \\[4pt]
-
-\textbf{H} & Search Strategies &
-    All 4 papers accepted (avg 3.35/4); PercentileSweep for statutory
-    legal posture; Rust ReCom at 2500$\times$ Python speed &
-    4 \\[4pt]
 
 \textbf{I} & Incumbency Effects &
     Incumbent pairing probability, safe-seat dynamics, and legal treatment
@@ -197,10 +197,20 @@ reform pathways, 2030 planning, adversarial robustness, and statistical inferenc
 \textbf{S} & Statistical Inference &
     ESS-corrected permutation test (p=0.004 for NC at 10K steps); Bayesian Detection
     Score via Beta posterior; FDR control on 1{,}050 L-track tests &
-    5 \\
+    5 \\[4pt]
+
+\textbf{T} & Plan Construction &
+    GeoSection, AreaSection, ApportionRegions, VRASection, CVD, BFS Growth,
+    and Moving-Knife structure methods factored out of the former B track &
+    13 \\[4pt]
+
+\textbf{U} & Search \& Optimization &
+    ConvergenceSweep, simulated annealing, tempering, ILP certificates,
+    Pareto/NSGA-II, and former Track H search strategies &
+    11 \\
 
 \bottomrule
-\caption{Portfolio track summary (190+ papers across eighteen tracks A--S).}
+\caption{Portfolio track summary (190+ papers across twenty active tracks A--G, I--U).}
 \label{tab:tracks}
 \end{longtable}
 
@@ -227,8 +237,9 @@ correspond to the three-layer compositor of the \texttt{bisect} binary:
 \end{tabular}
 \end{center}
 
-Track B addresses structure variants; Track G addresses ensemble algorithms;
-Track H addresses search strategies built on the ensemble foundations.
+Track B addresses algorithm foundations; Track T addresses plan-construction
+and structure variants; Track G addresses ensemble algorithms; Track U
+addresses search, optimization, certification, and algorithm selection.
 
 
 % =============================================================================
@@ -267,7 +278,7 @@ Paper track codes correspond directly to the folder names under
         maps produce 30\% more swing districts than enacted plans, addressing
         the competitive-elections objection directly.
 
-    \item \textbf{B.11} (ApportionRegions): Presents the prime-factor
+    \item \textbf{T.4} (ApportionRegions): Presents the prime-factor
         bisection tree producing NC 7D/7R and 223D/209R nationally---the
         clearest demonstration that geographic structure drives partisan
         outcome.
@@ -302,12 +313,12 @@ Paper track codes correspond directly to the folder names under
         redistricting ensemble algorithms; highest-scored paper in the
         portfolio at 4.0/4.
 
-    \item \textbf{H.2} (Redist-Ensemble): Presents the Rust ReCom
+    \item \textbf{U.10} (Redist-Ensemble): Presents the Rust ReCom
         implementation achieving 2500$\times$ speed over the Python
         GerryChain baseline.
 
-    \item \textbf{B.22} (Centroidal Voronoi): Geometric district construction
-        via CVD; accepted at 3.9/4. B.22b extends to Euclidean distance
+    \item \textbf{T.10} (Centroidal Voronoi): Geometric district construction
+        via CVD; accepted at 3.9/4. T.11 extends to Euclidean distance
         on EPSG:5070 projections for 2--6\% additional Polsby-Popper gain
         in coastal and elongated states.
 \end{enumerate}
@@ -356,15 +367,15 @@ Paper track codes correspond directly to the folder names under
     \item \textbf{B.2} (Edge-Weighted Bisection): Implementation details for
         compact districts using geographic proximity weights.
 
-    \item \textbf{B.11} (ApportionRegions): Prime-factor bisection tree for
+    \item \textbf{T.4} (ApportionRegions): Prime-factor bisection tree for
         balanced partisan outcomes; the algorithm most directly usable by
         commissions.
 
-    \item \textbf{B.16} (Convergence Sweep): The statutory seed formula
+    \item \textbf{U.1} (Convergence Sweep): The statutory seed formula
         (T=600) balancing computational cost against partisan variance
         reduction.
 
-    \item \textbf{H.0} (PercentileSweep): Statutory legal posture selection
+    \item \textbf{U.8} (PercentileSweep): Statutory legal posture selection
         via percentile position in the ensemble---the practitioner-facing
         search strategy.
 
@@ -415,7 +426,7 @@ Paper track codes correspond directly to the folder names under
     \item[Bisection tree] The hierarchical sequence of binary splits that
         defines how a state is partitioned into districts under recursive
         bisection. Structure variants (standard, prime-factor, ratio-optimal)
-        are the subject of Track B structure sub-track.
+        are the subject of Track T plan-construction sub-track.
 
     \item[Census tracts] Geographic units used as the atomic partitioning
         units ($\sim$4,000 residents each); the building blocks from which
@@ -467,16 +478,16 @@ Paper track codes correspond directly to the folder names under
         portfolio to bisect the census tract adjacency graph.
 
     \item[NestSection] Bisection tree structure enforcing senate $= 2\times$
-        house spine compatibility for bicameral redistricting (B.13, F.2).
+        house spine compatibility for bicameral redistricting (T.6, F.2).
 
-    \item[PercentileSweep] Search strategy (H.0) selecting among valid plans
+    \item[PercentileSweep] Search strategy (U.8) selecting among valid plans
         by their partisan percentile position in the ensemble, enabling
         commissions to choose a legal posture without targeting a specific
         partisan outcome.
 
     \item[Polsby-Popper] See \emph{Compactness}.
 
-    \item[VRASection] Bisection structure variant (B.14) that aligns bisection
+    \item[VRASection] Bisection structure variant (T.7) that aligns bisection
         cuts with minority geographic concentration, enabling VRA compliance
         post-\emph{Allen v.\ Milligan} (2023) and \emph{Callais} (2025).
 \end{description}

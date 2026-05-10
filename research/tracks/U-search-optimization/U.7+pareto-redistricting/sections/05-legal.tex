@@ -1,0 +1,202 @@
+\section{Legal Framing}
+\label{sec:legal}
+
+\subsection{The Dominance Certificate}
+
+When the \nsga{} run with \texttt{--enacted-plan} returns
+\texttt{is\_enacted\_dominated: true}, the NDJSON metadata record contains:
+
+\begin{verbatim}
+{
+  "type": "enacted",
+  "ec": 3891, "d_seats": 0.8, "vra_deficit": 0.12,
+  "is_dominated": true,
+  "dominating_plans": 7
+}
+\end{verbatim}
+
+This record supports the following legal assertion, which we call the
+\emph{Pareto dominance certificate}:
+
+\begin{quote}
+\textbf{Certificate of Multi-Objective Dominance.}
+\textit{A multi-objective optimisation algorithm (NSGA-II) with population size
+100 and 200 generations, base seed 42, was applied to North Carolina
+congressional redistricting ($k=14$, 2020 Census) across three objectives:
+edge-cut compactness ($\EC$), partisan proportionality ($\Dseats$), and
+VRA minority representation ($\VRA$).
+The algorithm identified 7 redistricting plans that are simultaneously more
+compact (lower $\EC$), at least as proportional (lower or equal $\Dseats$),
+and more VRA-compliant (lower $\VRA$) than the enacted 2020 congressional
+map.
+The algorithm found that the legislature could have enacted a plan that was
+provably better by all three stated criteria simultaneously.
+The complete output file and algorithm parameters are retained in
+\texttt{nc\_pareto\_2020.ndjson}; the file SHA-256 is recorded in the
+metadata line and can be independently verified.}
+\end{quote}
+
+This certificate has no heuristic or ensemble equivalent.
+A practitioner using ensemble analysis can show that the enacted plan is an
+outlier on \emph{one} criterion; the dominance certificate shows it is
+sub-optimal on \emph{all three criteria simultaneously}.
+
+\subsection{Strength of the Pareto Dominance Argument}
+
+\paragraph{Comparison with single-objective tests.}
+A single-objective compactness test (e.g., from ILP redistricting,
+U.6~\citep{dellaLibera2026ilp}) certifies that a more compact plan exists.
+This is a valid legal argument for compactness, but it does not address whether
+the more compact plan satisfies partisan proportionality or VRA requirements.
+Opposing counsel can respond: ``The more compact plan reduces minority
+representation.''
+
+The dominance certificate anticipates this response: all three criteria are
+optimised simultaneously.
+There is no trade-off to exploit: the dominating plans are better on
+compactness, proportionality, and VRA at once.
+Opposing counsel cannot argue that compactness came at the cost of VRA
+compliance, because the certificate demonstrates $\VRA$ also improves.
+
+\paragraph{Comparison with ensemble-based arguments.}
+Ensemble expert reports (Mattingly and Vaughn, DeFord et al.\ in redistricting
+litigation) use statistical arguments: the enacted plan is at the $P$th
+percentile of a distribution of valid plans.
+These arguments are strong but statistical: they assert that the enacted plan
+is \emph{unusual}, not that it is \emph{dominated}.
+
+The dominance certificate is a combinatorial argument, not a statistical one.
+It does not claim the enacted plan is unusual; it claims a specific set of
+plans are strictly better on all criteria.
+Whether this rises to the level of unconstitutional gerrymandering is a
+legal question --- but the mathematical result is definitive within the
+specified parameters.
+
+\paragraph{Federal vs.\ state court context.}
+In federal court, \textit{Rucho v.\ Common Cause}~\citep{rucho2019} held that
+federal partisan gerrymandering claims are non-justiciable political questions.
+The dominance certificate does not automatically convert a federal gerrymandering
+claim into a justiciable one: federal courts declined to adopt any mathematical
+standard.
+
+In state court, the picture is different.
+\textit{Common Cause v.\ Lewis}~\citeyear{common_cause_lewis} established that
+the North Carolina Constitution prohibits partisan gerrymandering and that
+quantitative evidence is relevant.
+In this context, the dominance certificate provides strong evidence:
+the enacted plan is worse than a discoverable alternative on the
+legislature's own stated criteria of compactness, proportionality, and
+VRA compliance.
+
+\subsection{Validity vs.\ Completeness}
+
+The dominance certificate makes a \emph{validity claim}, not a
+\emph{completeness claim}.
+This distinction is critical for accurate expert testimony.
+
+\paragraph{Validity (what the certificate asserts).}
+The 4-step verification protocol confirms:
+\begin{enumerate}
+\item The file SHA-256 matches (\texttt{file\_sha256} in metadata agrees
+  with a fresh hash of all preceding NDJSON lines).
+\item The plan assignments in the output are valid redistricting plans:
+  all districts are contiguous and within population balance tolerance.
+\item The objective values in the output are correct: \EC{}, $\Dseats$,
+  and $\VRA$ are recomputed from the plan assignments and census data
+  and agree with the recorded values.
+\item The returned plans are mutually non-dominating: no plan in the
+  frontier is dominated by any other plan in the frontier.
+\end{enumerate}
+These checks can be performed in minutes by any expert with access to the
+census data.
+They do not require the Rust implementation or access to the platform's
+source code.
+
+\paragraph{Completeness (what the certificate does not assert).}
+The certificate does not assert that the returned plans are the \emph{true}
+Pareto front of the redistricting feasible space.
+A manipulated implementation could return any set of mutually non-dominating
+plans that happen to dominate the enacted plan.
+The returned plans are verified to be valid and non-dominating, but the
+algorithm's convergence to the true Pareto front is not verified.
+
+A \emph{completeness check} requires re-running the full algorithm with the
+documented seeds on the same census data.
+This is possible (the seed specification in Section~\ref{sec:algorithm}
+provides everything needed for a verifier to reproduce the run) but
+computationally expensive: 15--60 minutes for a medium state.
+For litigation use, the completeness check can be performed by opposing
+counsel's expert with the documented parameters; the seed specification
+makes this straightforward.
+
+\paragraph{Practical implication.}
+An expert witness presenting the dominance certificate should qualify it as:
+``NSGA-II with the specified parameters identified 7 plans that are
+provably better than the enacted plan on all three stated criteria.
+These 7 plans have been independently verified to be valid plans with
+the stated objective values.
+The completeness of the Pareto front (whether additional such plans exist)
+was not verified, but opposing counsel may reproduce the run using the
+documented seed parameters.''
+
+\subsection{The SMC-Pareto Alternative as Legal Evidence}
+
+The SMC-Pareto projection (\texttt{--method smc-project}) uses the
+SMC particle cloud as the plan population.
+Its legal value is somewhat different from the \nsga{} dominance certificate:
+
+\begin{itemize}
+\item \textbf{Distribution calibration}: SMC particles are drawn from a
+  near-uniform distribution over valid plans, calibrated by importance
+  weights.
+  A dominating SMC plan is not just a searched-for extreme --- it is a
+  plan that appears in the natural distribution of valid plans.
+  This may make the SMC-Pareto dominance argument more intuitive to
+  a non-technical audience: ``even randomly drawn plans tend to be
+  better than the enacted map.''
+
+\item \textbf{Coverage limitation}: SMC may miss the extreme compactness
+  or VRA extremes of the Pareto front.
+  The \nsga{} dominance certificate is therefore stronger: it actively
+  searches for Pareto-optimal plans and is more likely to find a dominating
+  plan if one exists.
+
+\item \textbf{Combined use}: if both \nsga{} and SMC-Pareto find dominating
+  plans, this is stronger evidence than either alone.
+  The \nsga{} result shows dominating plans exist in the optimised frontier;
+  the SMC result shows dominating plans appear in the natural distribution.
+\end{itemize}
+
+\subsection{Scope and Limitations}
+
+\paragraph{Population balance tolerance.}
+The certificate is conditional on $\varepsilon_{\mathrm{bal}} = 0.005$.
+A certificate at $\pm 0.5\%$ does not certify dominance at $\pm 1.0\%$;
+relaxing the balance constraint expands the feasible space and may change
+which plans appear on the Pareto front.
+The tolerance must be disclosed alongside the certificate.
+
+\paragraph{Vote data vintage.}
+The $\Dseats$ objective uses 2020 presidential precinct returns.
+Results using 2016 or 2022 returns may differ; the choice of vote data is
+a methodological decision that practitioners should disclose and justify.
+
+\paragraph{Three-objective scope.}
+The certificate covers the three stated objectives: \EC{}, $\Dseats$, and
+$\VRA$.
+Practitioner-added criteria --- preservation of political subdivisions,
+communities of interest, or specific minority coalition structures ---
+are not in the objective set.
+A plan dominated on the three stated objectives may be non-dominated when
+additional objectives are included.
+Practitioners who argue from the dominance certificate should disclose
+which objectives were included and why.
+
+\paragraph{Legal caveat.}
+The dominance certificate addresses a mathematical question (multi-objective
+optimisation over the stated criteria) and does not constitute legal advice.
+Redistricting compliance requires assessment of criteria beyond those
+optimised here, including applicable state constitutional standards and
+specific Voting Rights Act section analyses.
+Practitioners should consult legal counsel before presenting the dominance
+certificate in litigation or regulatory proceedings.

@@ -21,7 +21,7 @@ other two unchanged:
 - Swap the search layer to change how many seeds you evaluate.
 
 This separation makes it straightforward to compare algorithms: a paper
-studying AreaSection (B.9) vs. GeoSection (B.8) holds the weights and search
+studying AreaSection (T.2) vs. GeoSection (T.1) holds the weights and search
 layers constant and varies only the structure layer.
 
 ---
@@ -34,17 +34,17 @@ parts each node splits into, and in what order.
 | Value | Description |
 |---|---|
 | `standard-bisect` | Split into two halves of size floor(k/2) and ceil(k/2) at every level. Default. |
-| `prime-factor` | Split according to the prime factorisation of k. k=14=7x2 produces a 7-way primary split followed by 7 bisections. k=17 (prime) falls back to a 9+8 binary split. Paper B.11 (ApportionRegions). |
-| `ratio-optimal` | At the first level, try all split ratios from 1:(k-1) through floor(k/2):ceil(k/2). Select the ratio with minimum EC/sqrt(min(i,k-i)). Subsequent levels use standard bisection. Paper B.8 (GeoSection). |
-| `ratio-optimal-area` | GeoSection with an added dual area-balance constraint (ncon=2). ubvec = [1.001, 1+area_swing]. Paper B.9 (AreaSection). |
-| `ratio-optimal-vra` | GeoSection with a minority geographic alignment score added to the ratio selection objective. No partisan data. Paper B.14 (VRASection). |
+| `prime-factor` | Split according to the prime factorisation of k. k=14=7x2 produces a 7-way primary split followed by 7 bisections. k=17 (prime) falls back to a 9+8 binary split. Paper T.4 (ApportionRegions). |
+| `ratio-optimal` | At the first level, try all split ratios from 1:(k-1) through floor(k/2):ceil(k/2). Select the ratio with minimum EC/sqrt(min(i,k-i)). Subsequent levels use standard bisection. Paper T.1 (GeoSection). |
+| `ratio-optimal-area` | GeoSection with an added dual area-balance constraint (ncon=2). ubvec = [1.001, 1+area_swing]. Paper T.2 (AreaSection). |
+| `ratio-optimal-vra` | GeoSection with a minority geographic alignment score added to the ratio selection objective. No partisan data. Paper T.7 (VRASection). |
 | `nway` | Direct k-way METIS partition of the whole state. No recursive tree. |
 | `compact-polsby` | Polsby-Popper-guided bisection: at each node, select the bisection that maximises the geometric-mean Polsby-Popper of the resulting districts. |
 
 The `prime-factor` structure is the geographic completion of the Huntington-Hill
 apportionment: just as Huntington-Hill determines how many seats each state
 gets by prime factorisation, `prime-factor` determines the shape of the
-bisection tree by the same factorisation (see paper B.11 for the formal
+bisection tree by the same factorisation (see paper T.4 for the formal
 derivation).
 
 **Note**: `--partition-mode` (legacy flag) and `structure:` YAML key use
@@ -61,10 +61,10 @@ means geographically.
 | Value | Description |
 |---|---|
 | `geographic` | Edge weight = shared boundary length in metres (TIGER). Minimises perimeter. Default. |
-| `county` | Multiplies intra-county edges by 3.0. Discourages cuts that cross county lines. 34% fewer county splits at 3% compactness cost. Paper B.10. |
+| `county` | Multiplies intra-county edges by 3.0. Discourages cuts that cross county lines. 34% fewer county splits at 3% compactness cost. Paper T.3. |
 | `unweighted` | All edge weights = 1. Pure population balance, no geometric signal. Used as a research baseline. |
 | `vra-aligned` | Minority-to-minority tract edges are boosted: edges where both tracts are at least 40% minority receive 3× to 10× weight (floor: 3.0, computed as max(3.0, 10.0 × (1 − 0.7 × minority_fraction))), tapered by the statewide minority fraction. No partisan data. |
-| `proportional` | ncon=2 vertex weights [population, D_votes]. Bisections are constrained to target both population and partisan vote balance simultaneously. Paper B.12. |
+| `proportional` | ncon=2 vertex weights [population, D_votes]. Bisections are constrained to target both population and partisan vote balance simultaneously. Paper T.5. |
 
 The `geographic` weight is the default for all production runs. It is the only
 weight mode that has been validated across all 50 states and all three census
@@ -87,9 +87,9 @@ minima. The search layer determines how that seed space is explored.
 |---|---|
 | `single` | One call with the SHA-256 content-derived seed. Fully deterministic. Used for statutory certification. |
 | `multi` | T seeds, each producing a candidate plan. Returns the plan with minimum normalised edge cut. |
-| `convergence` | Walks seeds starting from the content-derived seed. Stops after T consecutive seeds produce no improvement. T=600 is the proposed Districting Integrity Act stopping criterion (T=600, see B.02, B.16). |
-| `percentile` | T seeds. Returns the plan at rank floor(p * T) in the sorted edge-cut distribution, not the minimum. Used by H.0 (PercentileSweep) to sample from the distribution of near-optimal plans. |
-| `bisection-ensemble` | At each bisection node, runs a local ReCom chain of T steps and selects the bisection at percentile p. Combines METIS topology with ReCom sampling. Paper H.1. |
+| `convergence` | Walks seeds starting from the content-derived seed. Stops after T consecutive seeds produce no improvement. T=600 is the proposed Districting Integrity Act stopping criterion (T=600, see B.02, U.1). |
+| `percentile` | T seeds. Returns the plan at rank floor(p * T) in the sorted edge-cut distribution, not the minimum. Used by U.8 (PercentileSweep) to sample from the distribution of near-optimal plans. |
+| `bisection-ensemble` | At each bisection node, runs a local ReCom chain of T steps and selects the bisection at percentile p. Combines METIS topology with ReCom sampling. Paper U.9. |
 
 The `convergence` mode with T=600 is the recommended production setting. It
 is both legally defensible (the seed is publicly derivable from the census
@@ -109,13 +109,13 @@ Studied combinations:
 | Structure | Weights | Search | Paper |
 |---|---|---|---|
 | `standard-bisect` | `geographic` | `convergence` | B.1, B.7 |
-| `prime-factor` | `geographic` | `convergence` | B.11 |
-| `ratio-optimal` | `geographic` | `multi` | B.8 |
-| `ratio-optimal-area` | `geographic` | `multi` | B.9 |
-| `ratio-optimal-vra` | `vra-aligned` | `multi` | B.14 |
-| `standard-bisect` | `county` | `convergence` | B.10 |
-| `standard-bisect` | `proportional` | `multi` | B.12 |
-| `ratio-optimal` | `geographic` | `bisection-ensemble` | H.1 |
+| `prime-factor` | `geographic` | `convergence` | T.4 |
+| `ratio-optimal` | `geographic` | `multi` | T.1 |
+| `ratio-optimal-area` | `geographic` | `multi` | T.2 |
+| `ratio-optimal-vra` | `vra-aligned` | `multi` | T.7 |
+| `standard-bisect` | `county` | `convergence` | T.3 |
+| `standard-bisect` | `proportional` | `multi` | T.5 |
+| `ratio-optimal` | `geographic` | `bisection-ensemble` | U.9 |
 
 ---
 
@@ -209,6 +209,6 @@ seed.
 - [section-algorithms.md](section-algorithms.md) — the B-series algorithm taxonomy
 - [ensemble-methods.md](ensemble-methods.md) — how GerryChain evaluates the output
 - [label-pipeline.md](label-pipeline.md) — how configs, builds, and audits connect
-- Paper B.8: *GeoSection — Ratio-Optimal Bisection*
-- Paper B.11: *ApportionRegions — Prime-Factor Redistricting*
-- Paper B.16: *ConvergenceSweep — Statutory Stopping Criterion*
+- Paper T.1: *GeoSection — Ratio-Optimal Bisection*
+- Paper T.4: *ApportionRegions — Prime-Factor Redistricting*
+- Paper U.1: *ConvergenceSweep — Statutory Stopping Criterion*

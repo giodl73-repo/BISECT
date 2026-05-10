@@ -133,7 +133,7 @@ impl VertexWeighter for PopulationWeighter {
 }
 
 // ---------------------------------------------------------------------------
-// Land area (second constraint for AreaSection / B.9)
+// Land area (second constraint for AreaSection / T.2)
 // ---------------------------------------------------------------------------
 
 /// Land area balance: each vertex weight = ALAND in hectares (m² ÷ 10,000).

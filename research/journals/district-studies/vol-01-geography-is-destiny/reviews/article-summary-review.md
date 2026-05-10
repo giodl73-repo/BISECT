@@ -25,9 +25,9 @@ a theorem.
 |------|---------|--------------------|
 | BOUNDARY | The package avoids legal conclusion language. The guardrail article is necessary and should remain in the table of contents. | pass for audition |
 | WARD | No article currently asks courts, legislatures, or commissions to adopt a rule. Keep adoption language out of Vol. 1. | pass for audition |
-| COVENANT | B.12 and L.1/C.5 source-chain gaps are visible. Do not promote until source requests are closed or formally scoped out. | blocker for provisional |
+| COVENANT | T.5 and L.1/C.5 source-chain gaps are visible. Do not promote until source requests are closed or formally scoped out. | blocker for provisional |
 | CONTOUR | The issue now has a clear reader path from public title to caveated evidence. Add more concrete examples before public lock. | revision before lock |
-| MERIDIAN | The B.12 article is faithful at a high level but cannot carry exact table or parameter claims yet. | blocker for quantitative copy |
+| MERIDIAN | The T.5 article is faithful at a high level but cannot carry exact table or parameter claims yet. | blocker for quantitative copy |
 | BENCHMARK | The L.1 sign-convention fix is documented, but output provenance remains open. Keeping measurement deferred is correct. | pass |
 | SCALE | G.1 language is ESS-safe and avoids raw percentile certainty. Exact percentile wording remains blocked. | pass for audition |
 | PRECINCT | The three-state frame is stronger than leading with Texas for Vol. 1, but it needs state-specific source-chain closure before lock. | blocker for exact examples |
@@ -43,9 +43,9 @@ Do not promote Vol. 1 to provisional yet.
 
 Promote after one of these paths is complete:
 
-1. **Source-chain path**: close B.12 parameter/seed/C(G) gates and G.1 exact
+1. **Source-chain path**: close T.5 parameter/seed/C(G) gates and G.1 exact
    language gates, while keeping L.1/C.5 measurement deferred.
-2. **Scope-down path**: remove all quantitative B.12 table dependency from the
+2. **Scope-down path**: remove all quantitative T.5 table dependency from the
    first public issue, keep G.1 at qualitative ensemble-position language, and
    publish the issue as an explicitly diagnostic opening issue.
 
@@ -57,10 +57,10 @@ claims after the source chain is closed.
 
 | ID | Required edit | Owner lens | Status |
 |----|---------------|------------|--------|
-| ASR-001 | Add one concrete public example to the B.12 summary without exact table values | COMMONS/PRECINCT | complete |
+| ASR-001 | Add one concrete public example to the T.5 summary without exact table values | COMMONS/PRECINCT | complete |
 | ASR-002 | Add one source-note paragraph to each article summary | DATUM | complete |
 | ASR-003 | Decide source-chain path vs. scope-down path | BOUNDARY/DATUM | complete; scope-down path selected |
-| ASR-004 | Update paper ledger if B.12/G.1 become locked or are released | LEDGER | open |
+| ASR-004 | Update paper ledger if T.5/G.1 become locked or are released | LEDGER | open |
 | ASR-005 | Re-run board review after expanded summaries | BOUNDARY/SCALE/DATUM | complete; see `article-summary-review-round2.md` |
 
 ## Safe Public Description

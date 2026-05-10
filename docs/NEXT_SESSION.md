@@ -75,7 +75,7 @@ The other session added `AlgorithmParams` enum refactor (commit 3903c62):
 - `from_state_args()` / `defaults_for_mode()` constructors
 - All 115 tests passing
 
-CompactBisect, GeoSection (B.8), Proportional all in AlgorithmParams.
+CompactBisect, GeoSection (T.1), Proportional all in AlgorithmParams.
 Check runner.rs for dispatch — no more string matching on partition_mode.
 
 ## Key Paper Conclusions

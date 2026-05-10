@@ -20,7 +20,7 @@ checks and final citation format before lock.
 
 ## Lock Requirements
 
-- B.17 scope check.
+- U.2 scope check.
 - R.1 pre-registration and stress-test check.
 - A.4 manifest/hashes check.
 - Final citation-format pass.

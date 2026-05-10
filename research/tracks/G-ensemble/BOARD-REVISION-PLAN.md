@@ -4,11 +4,11 @@
 
 ## B1 Items (Blocking)
 
-**B1.1 [ensemble-search: G + H]** — G.1 ESS error propagates to H.0 adversarial bar
-G.4's ESS table has a calculation error (NC: should be 695, not 769). G.1's "negligible sampling error" is incorrect — actual 90% CI is 3.6× wider than reported. H.0 cites G.1 ensemble percentiles as an adversarial bar without qualifying they are point estimates. Complete G.4-C (ESS correction) and G.1-A (ESS-based uncertainty correction). Until these are done, H.0 cannot be submitted.
+**B1.1 [ensemble-search: G + H]** — G.1 ESS error propagates to U.8 adversarial bar
+G.4's ESS table has a calculation error (NC: should be 695, not 769). G.1's "negligible sampling error" is incorrect — actual 90% CI is 3.6× wider than reported. U.8 cites G.1 ensemble percentiles as an adversarial bar without qualifying they are point estimates. Complete G.4-C (ESS correction) and G.1-A (ESS-based uncertainty correction). Until these are done, U.8 cannot be submitted.
 
-**B1.2 [ConvergenceSweep: G cites unvalidated B.16]** — G.0 and G.14 cite B.16
-G.0 Section 6 and G.14 decision matrix both cite B.16's T=600 formula. B.16 has zero panel reviews. Until B.16 is reviewed, G.0 and G.14 must add footnotes: "The T=600 citation is contingent on B.16's panel review completion (scheduled; see Track B revision plan)."
+**B1.2 [ConvergenceSweep: G cites unvalidated U.1]** — G.0 and G.14 cite U.1
+G.0 Section 6 and G.14 decision matrix both cite U.1's T=600 formula. U.1 has zero panel reviews. Until U.1 is reviewed, G.0 and G.14 must add footnotes: "The T=600 citation is contingent on U.1's panel review completion (scheduled; see Track B revision plan)."
 
 ## B2 Items (Important)
 

@@ -5,8 +5,8 @@
 
 G.14 compared eight search algorithms on NC, WI, TX.
 This section extends the comparison with three new algorithms --- Parallel
-Tempering (\pt{}, B.20), SMC-Percentile (\smcp{}), and Adaptive Multi-scale
-(\ams{}, B.21) --- and adds two new states (FL, NH).
+Tempering (\pt{}, U.4), SMC-Percentile (\smcp{}), and Adaptive Multi-scale
+(\ams{}, U.5) --- and adds two new states (FL, NH).
 G.14 results for the original eight algorithms on NC, WI, TX are carried
 forward; all FL and NH results, and all results for the three new algorithms,
 are new (\dag{}).
@@ -58,9 +58,9 @@ Multi-scale (G.11)      & 4{,}488 & 0.229 & 1{,}894 & 0.241 & 12{,}694 & 0.219 &
 ShortBurstForest (G.12) & 4{,}274 & 0.236 & 1{,}856 & 0.253 & 12{,}814 & 0.224 & \dag{} 9{,}427 & \dag{}0.218 & \dag{}50 & \dag{}0.342 \\
 VRA-Aware (G.13)        & 4{,}558 & 0.226 & 1{,}908 & 0.240 & 13{,}287 & 0.213 & \dag{}10{,}091 & \dag{}0.206 & \dag{}53 & \dag{}0.339 \\
 \midrule
-Parallel Temp. (B.20)   & \dag{}4{,}243 & \dag{}0.228 & \dag{}\textbf{1{,}841} & \dag{}0.247 & \dag{}\textbf{12{,}441} & \dag{}0.220 & \dag{}\textbf{9{,}218} & \dag{}0.212 & \dag{}51 & \dag{}0.336 \\
+Parallel Temp. (U.4)   & \dag{}4{,}243 & \dag{}0.228 & \dag{}\textbf{1{,}841} & \dag{}0.247 & \dag{}\textbf{12{,}441} & \dag{}0.220 & \dag{}\textbf{9{,}218} & \dag{}0.212 & \dag{}51 & \dag{}0.336 \\
 SMC-Percentile          & \dag{}4{,}598 & \dag{}\textit{0.244} & \dag{}1{,}961 & \dag{}\textit{0.261} & \dag{}13{,}748 & \dag{}\textit{0.237} & \dag{}10{,}481 & \dag{}\textit{0.229} & \dag{}\textbf{49} & \dag{}\textit{0.352} \\
-Adaptive MS (B.21)      & \dag{}4{,}479 & \dag{}0.230 & \dag{}1{,}886 & \dag{}0.243 & \dag{}12{,}603 & \dag{}0.220 & \dag{} 9{,}538 & \dag{}0.211 & \dag{}--- & \dag{}--- \\
+Adaptive MS (U.5)      & \dag{}4{,}479 & \dag{}0.230 & \dag{}1{,}886 & \dag{}0.243 & \dag{}12{,}603 & \dag{}0.220 & \dag{} 9{,}538 & \dag{}0.211 & \dag{}--- & \dag{}--- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -70,7 +70,7 @@ as the coarse-level graph collapses to a single node at $k = 2$.
 
 \subsection{Parallel Tempering: Best EC for Large \texorpdfstring{$k$}{k}}
 
-\pt{} (B.20) achieves the lowest \ec{} for TX ($12{,}441$) and FL
+\pt{} (U.4) achieves the lowest \ec{} for TX ($12{,}441$) and FL
 ($9{,}218$), outperforming \sburst{} ($12{,}588$ and $9{,}319$ respectively).
 For NC and WI, \pt{} and \sburst{} are tied or within 0.6\%.
 
@@ -118,7 +118,7 @@ For NH ($k = 2$), \smcp{} achieves \ec{} = 49, slightly below ILP (47), and
 
 \subsection{Adaptive Multi-scale: Self-Tuning for TX}
 
-\ams{} (B.21) achieves \acf(100) = 0.31 for TX vs.\ 0.37 for fixed \ms{},
+\ams{} (U.5) achieves \acf(100) = 0.31 for TX vs.\ 0.37 for fixed \ms{},
 a 16\% reduction.
 For NC, \ams{} (0.28) and \ms{} (0.29) are indistinguishable.
 

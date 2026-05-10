@@ -1,0 +1,250 @@
+%% U.7 --- Pareto-Optimal Redistricting
+%% References
+
+%% ===================================================================
+%% B-SERIES SELF-CITATIONS
+%% ===================================================================
+
+@misc{b2paper,
+  author = {Della-Libera, Gio},
+  title  = {Edge-Weighted Bisection for Compact Congressional Districts:
+            Geographic Boundary Lengths as Compactness Signal},
+  year   = {2026},
+  note   = {B.2 in Algorithmic Redistricting series.
+            Key result: $+56\,\%$ Polsby-Popper improvement over unweighted.
+            Geographic boundary-length edge weights are the signal that
+            \EC{} in U.7 measures. The edge-cut objective evaluated
+            in NSGA-II is identical to the objective improved by geographic
+            weighting in B.2.},
+}
+
+@misc{b7paper,
+  author = {Della-Libera, Gio},
+  title  = {The Solution Space of Minimum-Edge-Cut Redistricting:
+            Seed Sensitivity and Partisan Variance},
+  year   = {2026},
+  note   = {B.7 in Algorithmic Redistricting series.
+            50-state 1{,}500-seed sweep establishing seed-sensitivity
+            baselines and partisan variance data. Provides the METIS
+            baseline EC values against which the NSGA-II Pareto front
+            is compared in U.7 Table~1.},
+}
+
+@misc{dellaLibera2026smc,
+  author = {Della-Libera, Gio},
+  title  = {Sequential Monte Carlo for Redistricting:
+            Calibrated Plan Ensembles via Importance Sampling},
+  year   = {2026},
+  note   = {G.7 in Algorithmic Redistricting series.
+            SMC companion paper for calibrated ensemble generation.
+            U.7 introduces an SMC-Pareto projection (--method smc-project)
+            as a faster alternative to NSGA-II: project the SMC particle
+            cloud onto objective space and extract the Pareto front.
+            The projection is faster but may miss extreme Pareto regions
+            that NSGA-II actively searches.},
+}
+
+@misc{dellaLibera2026comparison,
+  author = {Della-Libera, Gio},
+  title  = {A Comprehensive Comparison of Redistricting Algorithms:
+            Compactness, Proportionality, and VRA Compliance},
+  year   = {2026},
+  note   = {G.15 in Algorithmic Redistricting series.
+            Cross-method comparison. U.7 NSGA-II occupies a distinct
+            position in this comparison: it is the only method that
+            returns a frontier of plans rather than a single plan,
+            and the only method for which the enacted-plan dominance
+            test provides a multi-objective legal argument.},
+}
+
+@misc{dellaLibera2026ilp,
+  author = {Della-Libera, Gio},
+  title  = {Exact Redistricting via Integer Linear Programming:
+            Certifiable Optimality for Small Instances},
+  year   = {2026},
+  note   = {U.6 in Algorithmic Redistricting series.
+            ILP redistricting: the complementary exact method for
+            single-objective compactness certification.
+            U.7 positions NSGA-II as the multi-objective counterpart:
+            where ILP certifies that no plan has lower edge cut,
+            NSGA-II reveals the full trade-off between compactness,
+            proportionality, and VRA compliance simultaneously.},
+}
+
+%% ===================================================================
+%% MULTI-OBJECTIVE OPTIMISATION
+%% ===================================================================
+
+@article{deb2002,
+  author  = {Deb, Kalyanmoy and Pratap, Amrit and Agarwal, Sameer
+             and Meyarivan, T.},
+  title   = {A Fast and Elitist Multiobjective Genetic Algorithm:
+             {NSGA-II}},
+  journal = {IEEE Transactions on Evolutionary Computation},
+  volume  = {6},
+  number  = {2},
+  pages   = {182--197},
+  year    = {2002},
+  doi     = {10.1109/4235.996017},
+  note    = {Foundational NSGA-II paper. Introduces non-dominated sorting
+             (Algorithm~1), crowding distance, and tournament selection
+             with rank + crowding-distance as the two-tier tiebreaker.
+             U.7 implements NSGA-II exactly as described here, adapted
+             to redistricting plans as chromosomes. The fast non-dominated
+             sort runs in $O(MN^2)$ where $M$ is the number of objectives
+             and $N$ is the population size.},
+}
+
+@article{zitzler2000,
+  author  = {Zitzler, Eckart and Deb, Kalyanmoy and Thiele, Lothar},
+  title   = {Comparison of Multiobjective Evolutionary Algorithms:
+             Empirical Results},
+  journal = {Evolutionary Computation},
+  volume  = {8},
+  number  = {2},
+  pages   = {173--195},
+  year    = {2000},
+  doi     = {10.1162/106365600568202},
+  note    = {Benchmark comparison of NSGA, SPEA, PAES, and related
+             multi-objective evolutionary algorithms. Establishes that
+             algorithms maintaining diversity via crowding distance or
+             external archive consistently outperform single-population
+             methods on many-objective problems. Justifies the choice
+             of NSGA-II over simpler approaches such as random
+             multi-start with Pareto filtering.},
+}
+
+@book{deb2001book,
+  author    = {Deb, Kalyanmoy},
+  title     = {Multi-Objective Optimization Using Evolutionary Algorithms},
+  publisher = {Wiley},
+  year      = {2001},
+  note      = {Comprehensive text on evolutionary multi-objective
+               optimisation. Chapter~7 covers NSGA-II, crowding distance,
+               and elitism in detail. Chapter~9 discusses many-objective
+               problems where the number of objectives exceeds 3--4 and
+               the Pareto front becomes large. U.7 uses 3 objectives,
+               which is well within the range where NSGA-II performs
+               reliably (Chapters 7--8).},
+}
+
+%% ===================================================================
+%% REDISTRICTING ILP AND FAIRNESS
+%% ===================================================================
+
+@inproceedings{gurnee2021,
+  author    = {Gurnee, Wes and Shmoys, David B.},
+  title     = {Fairmandering: A Column Generation Heuristic for
+               Fairness-Optimized Political Districting},
+  booktitle = {Proceedings of the AAAI Workshop on AI for Social Good},
+  year      = {2021},
+  note      = {Introduces Fairmandering: column-generation heuristic for
+               fairness-optimised redistricting. Section~2 surveys ILP
+               redistricting formulations. Relevant to U.7 as the closest
+               prior work on multi-objective redistricting: Gurnee--Shmoys
+               use a weighted-sum objective, which U.7 replaces with
+               Pareto-optimal search. Their observation that practitioners
+               must specify weights a priori is the motivation for the
+               NSGA-II approach.},
+}
+
+%% ===================================================================
+%% REDISTRICTING ENSEMBLE METHODS
+%% ===================================================================
+
+@article{deford2021,
+  author  = {DeFord, Daryl and Duchin, Moon and Solomon, Justin},
+  title   = {Recombination: A Family of {Markov} Chains for Redistricting},
+  journal = {Harvard Data Science Review},
+  volume  = {3},
+  number  = {1},
+  year    = {2021},
+  doi     = {10.1162/99608f92.eb30390f},
+  note    = {ReCom redistricting sampler. The crossover operator in U.7
+             is a simplified ReCom step: merge two adjacent districts,
+             sample a random spanning tree of the merged region, find a
+             balanced cut. Unlike full ReCom (Metropolis-Hastings), the
+             U.7 crossover needs no acceptance ratio because NSGA-II
+             provides its own selection pressure. This simplification
+             is intentional and is noted in Section~3.4.},
+}
+
+%% ===================================================================
+%% GRAPH PARTITIONING
+%% ===================================================================
+
+@article{karypis1998,
+  author  = {Karypis, George and Kumar, Vipin},
+  title   = {A Fast and High Quality Multilevel Scheme for Partitioning
+             Irregular Graphs},
+  journal = {SIAM Journal on Scientific Computing},
+  volume  = {20},
+  number  = {1},
+  pages   = {359--392},
+  year    = {1998},
+  doi     = {10.1137/S1064827595287997},
+  note    = {Original METIS paper. METIS seeds the NSGA-II initial
+             population in U.7: $N_{\mathrm{pop}} = 100$ distinct METIS
+             plans with different random seeds form the generation-0
+             population. This gives NSGA-II a warm start in high-quality
+             plan space rather than beginning from random assignments.},
+}
+
+%% ===================================================================
+%% LEGAL REFERENCES
+%% ===================================================================
+
+@misc{rucho2019,
+  author = {{Supreme Court of the United States}},
+  title  = {Rucho v.\ Common Cause, 588 U.S.\ 684 (2019)},
+  year   = {2019},
+  note   = {Federal partisan gerrymandering claims are non-justiciable
+            political questions. The Court explicitly declined to
+            adopt a single mathematical standard, noting that ``an
+            appropriate legal standard'' for partisan gerrymandering
+            does not exist under federal law. U.7 addresses this
+            indeterminacy: the enacted-plan dominance test does not
+            require a legal standard for ``how partisan is too partisan'' ---
+            it requires only that the enacted plan be Pareto-dominated,
+            which is a purely mathematical result. However, Rucho applies
+            only in federal courts; state constitutional claims remain
+            available.},
+}
+
+@misc{common_cause_lewis,
+  author = {{Superior Court of Wake County, North Carolina}},
+  title  = {Common Cause v.\ Lewis, No.\ 18 CVS 014001 (N.C.\ Super.\ Ct.\ 2019)},
+  year   = {2019},
+  note   = {North Carolina state court struck down the 2017 legislative maps
+            as an unconstitutional partisan gerrymander under the North Carolina
+            Constitution. Expert testimony included quantitative analysis of
+            plan competitiveness and outlier analysis. The enacted-plan
+            dominance test in U.7 provides a multi-criteria complement to
+            the single-metric outlier analysis used in Common Cause v.\ Lewis:
+            rather than showing the plan is an outlier on one criterion,
+            dominance shows the plan is suboptimal on all criteria simultaneously.},
+}
+
+%% ===================================================================
+%% COMPACTNESS METRICS
+%% ===================================================================
+
+@article{polsby1991,
+  author  = {Polsby, Daniel D. and Popper, Robert D.},
+  title   = {The Third Criterion: Compactness as a Procedural Safeguard
+             Against Partisan Gerrymandering},
+  journal = {Yale Law and Policy Review},
+  volume  = {9},
+  number  = {2},
+  pages   = {301--353},
+  year    = {1991},
+  note    = {Polsby-Popper compactness ratio $\mathrm{PP} = 4\pi A / P^2$.
+             U.7 uses edge cuts (\EC) as the compactness objective rather
+             than Polsby-Popper. Edge cuts are the natural graph-theoretic
+             compactness measure; they are monotonically related to boundary
+             length and are computationally tractable as an optimisation
+             objective. The Pareto front over \EC{} does not directly produce
+             Polsby-Popper-optimal plans; practitioners who require PP
+             optimality should consult the \EC{}-to-PP relationship
+             established in B.2.},
+}

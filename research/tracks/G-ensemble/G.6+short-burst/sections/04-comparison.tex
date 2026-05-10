@@ -17,7 +17,7 @@ All methods use the \texttt{prime-factor} (\ar{}) structure and
 structure and weight settings~\citep{b11paper}.
 All Short-Burst results in Table~\ref{tab:comparison} use base seed
 $s = 42$; METIS results use the same seed for METIS initialisation;
-\cs{} uses the content-derived seed $s_0$ per B.16~\citep{b16paper}.
+\cs{} uses the content-derived seed $s_0$ per U.1~\citep{b16paper}.
 We use 2020 presidential two-party precinct returns
 (VEST Harvard Dataverse \citep{vest2020}) as the partisan metric;
 composite partisan indices would be preferable for legislative purposes
@@ -33,7 +33,7 @@ The step budget is allocated as follows:
 
 \item \textbf{\cs{}}: single \recom{} chain, $T = 1{,}000$ steps,
       returns the minimum-edge-cut plan encountered during the run.
-      (Note: the standard B.16 threshold is $T = 600$; we use $T = 1{,}000$
+      (Note: the standard U.1 threshold is $T = 600$; we use $T = 1{,}000$
       to match the total step budget.)
 
 \item \textbf{\shb{}}: $\ell = 20$ steps per burst, $m = 50$ bursts
@@ -61,8 +61,8 @@ standard single-seed METIS baseline.
 
 \subsection{Baseline Values}
 
-The baseline single-seed METIS Polsby-Popper scores (from B.11~\citep{b11paper})
-and \be{} results (from H.1~\citep{h1paper}) are:
+The baseline single-seed METIS Polsby-Popper scores (from T.4~\citep{b11paper})
+and \be{} results (from U.9~\citep{h1paper}) are:
 \begin{itemize}
 \item NC: baseline $\pp = 0.217$; \be{} at $p = 0.0$: $\pp = 0.261$
       ($+20.3\%$).
@@ -117,7 +117,7 @@ endpoint-retention mechanism explores the low-edge-cut neighborhood
 of the initial METIS plan.
 In these three states under prime-factor bisection structure, the
 selection mechanism does not alter partisan seat counts --- consistent
-with B.17's finding that structure dominates search, though this is an
+with U.2's finding that structure dominates search, though this is an
 empirical observation on single runs, not a general theorem.
 
 We also report the efficiency gap (EG)~\citep{stephanopoulos2015} to

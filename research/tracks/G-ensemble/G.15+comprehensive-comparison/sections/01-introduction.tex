@@ -43,28 +43,28 @@ bisection node.
         $k$-way partitioning~\citep{karypis1998}.
         Fast ($O(N \log N)$), well-tested, default structure algorithm.
 
-  \item \textbf{Simulated Annealing} (\sa{}, B.19): METIS initialisation
+  \item \textbf{Simulated Annealing} (\sa{}, U.3): METIS initialisation
         followed by SA improvement steps on the bisection
         graph~\citep{dellaLibera2026sa}.
         Best \ec{} among heuristic structure methods; 12$\times$ slower than
         METIS.
 
-  \item \textbf{CVD Graph-Distance} (\cvdg{}, B.22): Centroidal Voronoi
+  \item \textbf{CVD Graph-Distance} (\cvdg{}, T.10): Centroidal Voronoi
         Diagram bisection using graph hop-distance as the metric, requiring
         no geographic data beyond the
         adjacency graph~\citep{dellaLibera2026cvd}.
         Best \pp{} among structure methods when centroids are unavailable.
 
-  \item \textbf{CVD Geographic} (\cvdgeo{}, B.22b): CVD bisection using
+  \item \textbf{CVD Geographic} (\cvdgeo{}, T.11): CVD bisection using
         Euclidean distance from tract centroids~\citep{dellaLibera2026cvdgeo}.
         Best \pp{} among all structure methods; requires centroid data.
 
-  \item \textbf{BFS Growth} (\bfsgrow{}, B.23): Breadth-first search growth
+  \item \textbf{BFS Growth} (\bfsgrow{}, T.12): Breadth-first search growth
         from $k$ seeds, fastest structure
         method~\citep{dellaLibera2026bfsgrowth}.
         Zero hyperparameters, $O(N \log N)$; \pp{} competitive with \cvdg{}.
 
-  \item \textbf{ILP Exact} (\ilp{}, B.24): Integer linear program solving
+  \item \textbf{ILP Exact} (\ilp{}, U.6): Integer linear program solving
         the minimum-\ec{} bisection exactly for small
         instances~\citep{dellaLibera2026ilp}.
         Provides certified \ec{}-optimality; applicable only when $N \leq 500$
@@ -76,12 +76,12 @@ Eight algorithms were compared in G.14; this paper adds three new algorithms
 (marked with $\star$):
 
 \begin{enumerate}
-  \item \textbf{ConvergenceSweep} (\cs{}, B.16): Multi-seed convergence
+  \item \textbf{ConvergenceSweep} (\cs{}, U.1): Multi-seed convergence
         sweep; federal statute default~\citep{dellaLibera2026convSweep}.
-  \item \textbf{PercentileSweep} (\ps{}, H.0): Statutory choice of legal
+  \item \textbf{PercentileSweep} (\ps{}, U.8): Statutory choice of legal
         posture via percentile
         selection~\citep{dellaLibera2026percentileSweep}.
-  \item \textbf{BisectionEnsemble} (\be{}, H.1): Local ReCom at bisection
+  \item \textbf{BisectionEnsemble} (\be{}, U.9): Local ReCom at bisection
         nodes~\citep{dellaLibera2026bisectionEns}.
   \item \textbf{Short-Burst} (\sburst{}, G.6)~\citep{dellaLibera2026shortburst}.
   \item \textbf{Flip} (\flip{}, G.8)~\citep{dellaLibera2026flip}.
@@ -90,12 +90,12 @@ Eight algorithms were compared in G.14; this paper adds three new algorithms
   \item \textbf{Multi-scale} (\ms{}, G.11)~\citep{dellaLibera2026multiscale}.
   \item \textbf{ShortBurstForest} (\sburstf{}, G.12)~\citep{dellaLibera2026shortburstChains}.
   \item \textbf{VRA-Aware ReCom} (\vra{}, G.13)~\citep{dellaLibera2026vraAware}.
-  \item $\star$ \textbf{Parallel Tempering} (\pt{}, B.20): Replica exchange
+  \item $\star$ \textbf{Parallel Tempering} (\pt{}, U.4): Replica exchange
         across temperature ladder; best \ec{} for large
         $k$~\citep{dellaLibera2026pt}.
   \item $\star$ \textbf{SMC-Percentile} (\smcp{}, G.7/new): Calibrated SMC
         selecting the median plan by \pp{}~\citep{dellaLibera2026smcPercentile}.
-  \item $\star$ \textbf{Adaptive Multi-scale} (\ams{}, B.21): Self-tuning
+  \item $\star$ \textbf{Adaptive Multi-scale} (\ams{}, U.5): Self-tuning
         coarse fraction $\alpha$~\citep{dellaLibera2026adaptiveMS}.
 \end{enumerate}
 

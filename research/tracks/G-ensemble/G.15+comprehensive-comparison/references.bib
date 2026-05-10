@@ -26,7 +26,7 @@
   title  = {Simulated Annealing Bisection for Redistricting:
             {EC}-Optimal Heuristic Structure},
   year   = {2026},
-  note   = {B.19 in Algorithmic Redistricting series.
+  note   = {U.3 in Algorithmic Redistricting series.
             Implements METIS-initialised simulated annealing on the bisection
             graph. Achieves the best heuristic EC among structure methods
             (10--11\% below METIS); 12x slower than METIS baseline.
@@ -39,7 +39,7 @@
   title  = {Parallel Tempering for Redistricting Ensembles:
             Multi-Basin Search via Replica Exchange},
   year   = {2026},
-  note   = {B.20 in Algorithmic Redistricting series.
+  note   = {U.4 in Algorithmic Redistricting series.
             Implements replica exchange MCMC with 8 replicas across a
             temperature ladder. Achieves the lowest final EC among search
             algorithms for TX (k=38) and FL (k=28) by escaping compact-plan
@@ -52,7 +52,7 @@
   title  = {Adaptive Multi-scale {MCMC}: Self-Tuning Coarse Fraction
             for Large-$k$ Redistricting},
   year   = {2026},
-  note   = {B.21 in Algorithmic Redistricting series.
+  note   = {U.5 in Algorithmic Redistricting series.
             Extends Multi-scale MCMC (G.11) with real-time adaptation of
             the coarse fraction alpha. Monitors coarse acceptance rate and
             adjusts alpha upward during warm-up. Reduces ACF(100) to 0.31
@@ -65,7 +65,7 @@
   title  = {Centroidal {V}oronoi Diagram Redistricting:
             Graph-Distance Bisection},
   year   = {2026},
-  note   = {B.22 in Algorithmic Redistricting series.
+  note   = {T.10 in Algorithmic Redistricting series.
             Implements CVD bisection using graph hop-distance as the metric.
             Achieves higher mean Polsby-Popper than METIS without requiring
             centroid data. Recommended when PP is important and centroid
@@ -77,8 +77,8 @@
   title  = {Geographic {CVD} Redistricting: Euclidean-Distance Centroidal
             {V}oronoi Bisection},
   year   = {2026},
-  note   = {B.22b in Algorithmic Redistricting series. Phase 2 extension
-            of B.22. Uses Euclidean distance from tract centroids rather
+  note   = {T.11 in Algorithmic Redistricting series. Phase 2 extension
+            of T.10. Uses Euclidean distance from tract centroids rather
             than graph hop-distance, achieving the highest mean Polsby-Popper
             of any structure algorithm. Requires centroid data
             (INTPTLAT/INTPTLON fields). Recommended when PP is the primary
@@ -90,7 +90,7 @@
   title  = {{BFS} Growth Bisection: Zero-Hyperparameter Geographic
             District Construction},
   year   = {2026},
-  note   = {B.23 in Algorithmic Redistricting series.
+  note   = {T.12 in Algorithmic Redistricting series.
             Implements breadth-first search growth from k random seeds.
             Fastest structure method (O(N log N), zero hyperparameters),
             with PP competitive with CVD-Graph. Recommended when structure
@@ -103,7 +103,7 @@
   title  = {{ILP} Redistricting: Exact Minimum-{EC} Bisection for
             Small Instances},
   year   = {2026},
-  note   = {B.24 in Algorithmic Redistricting series.
+  note   = {U.6 in Algorithmic Redistricting series.
             Implements branch-and-bound ILP for certified-optimal minimum
             edge-cut bisection. Applicable when N <= 500 per bisection half
             (e.g., NH k=2 with N~260 tracts). Achieves EC = 47 for NH
@@ -120,7 +120,7 @@
   title  = {Convergence Sweep: Multi-Seed Federal Statute Default
             for Redistricting},
   year   = {2026},
-  note   = {B.16 in Algorithmic Redistricting series.
+  note   = {U.1 in Algorithmic Redistricting series.
             ConvergenceSweep runs multiple seeds and selects the plan
             that converges first. Implements the federal statute default
             (--search convergence, threshold T=600). Recommended for
@@ -132,7 +132,7 @@
   title  = {Percentile Sweep: Statutory Choice of Legal Posture
             via Percentile Selection},
   year   = {2026},
-  note   = {H.0 in Algorithmic Redistricting series.
+  note   = {U.8 in Algorithmic Redistricting series.
             PercentileSweep runs multiple seeds and selects the plan
             at the p-th percentile of the EC distribution, enabling
             practitioners to express a legal posture (conservative,
@@ -144,7 +144,7 @@
   author = {Della-Libera, Gio},
   title  = {Bisection Ensemble: Local {ReCom} at Bisection Nodes},
   year   = {2026},
-  note   = {H.1 in Algorithmic Redistricting series.
+  note   = {U.9 in Algorithmic Redistricting series.
             BisectionEnsemble runs a short ReCom chain at each node of
             the bisection tree during plan construction, selecting the
             best plan from each local ensemble. Combines structure-time
@@ -177,7 +177,7 @@
   note   = {G.6 in Algorithmic Redistricting series.
             Implements Short-Burst ReCom with burst length and restart
             schedule. Primary compactness optimisation algorithm for small-k
-            states (k < 20). For k >= 20, Parallel Tempering (B.20) achieves
+            states (k < 20). For k >= 20, Parallel Tempering (U.4) achieves
             lower final EC by escaping inter-basin barriers.},
 }
 
@@ -237,7 +237,7 @@
             Implements Multi-scale MCMC Option B (tract-county) using
             GEOID prefix coarsening. Recommended for k >= 15; reduces
             ACF(100) by 27--43\% relative to single-scale chains.
-            Adaptive Multi-scale (B.21) further improves ACF for TX.},
+            Adaptive Multi-scale (U.5) further improves ACF for TX.},
 }
 
 @misc{dellaLibera2026shortburstChains,
@@ -281,7 +281,7 @@
   year      = {2021},
   doi       = {10.1137/21M1407999},
   note      = {Theoretical foundation for Multi-scale MCMC (G.11) and
-               Adaptive Multi-scale (B.21). Proves ergodicity of the
+               Adaptive Multi-scale (U.5). Proves ergodicity of the
                combined chain. Empirical results on NC show 3x speedup
                in effective sample rate.},
 }
@@ -382,7 +382,7 @@
   doi     = {10.1143/JPSJ.65.1604},
   note    = {Original parallel tempering (replica exchange MCMC) paper.
              The theoretical foundation for Parallel Tempering search
-             (B.20). The exchange criterion used in B.20 follows the
+             (U.4). The exchange criterion used in U.4 follows the
              Metropolis-Hastings acceptance probability for replica swaps
              as derived here.},
 }
@@ -397,7 +397,7 @@
   publisher = {Wiley},
   year      = {1998},
   note      = {Standard reference for integer linear programming and
-               branch-and-bound algorithms. The ILP formulation in B.24
+               branch-and-bound algorithms. The ILP formulation in U.6
                follows the minimum edge-cut formulation discussed in
                Chapter 9, with population-balance constraints added as
                linear equality constraints on partition weight sums.},
@@ -418,7 +418,7 @@
   year    = {1999},
   doi     = {10.1137/S0036144599352836},
   note    = {Foundational paper on centroidal Voronoi tessellations.
-             The CVD-Graph (B.22) and CVD-Geographic (B.22b) structure
+             The CVD-Graph (T.10) and CVD-Geographic (T.11) structure
              algorithms adapt the Lloyd iteration for CVD generation to
              the discrete setting of census tract graphs, using graph
              hop-distance and Euclidean centroid distance respectively.},

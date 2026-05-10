@@ -6,7 +6,7 @@ status: source-requests
 
 # Source Requests
 
-## B.17 Parameter Sensitivity
+## U.2 Parameter Sensitivity
 
 - Confirm the exact scope of the coefficient-of-variation claim.
 - Identify which states and district types are included.
@@ -29,7 +29,7 @@ status: source-requests
 - Confirm the SHA-256 and version-binding language.
 - Keep the operational language tied to reproducibility, not legal admissibility.
 
-## H.0 Legal Posture
+## U.8 Legal Posture
 
 - Keep Rucho-context language focused on what courts can and cannot infer.
 - Separate architecture claims from constitutional conclusions.

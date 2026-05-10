@@ -23,7 +23,7 @@ The scope-down issue is safe, readable, and useful, but a locked issue should
 have a cleaner citation layer and final publication packaging. The current
 draft also intentionally carries unresolved quantitative gates:
 
-- B.12 exact values remain blocked.
+- T.5 exact values remain blocked.
 - G.1 exact percentile claims remain blocked.
 - L.1/C.5 result-bearing measurement claims remain blocked.
 
@@ -39,7 +39,7 @@ issue does not rely on them. They still prevent a final lock.
 | DATUM | Source-basis sections are consistent enough for preview, but need final reference form before lock. | hold lock |
 | COMMONS | The issue is readable and coherent as a public-facing staged draft. | preview pass |
 | COVENANT | Provenance blockers are visible, not hidden. That is acceptable for preview. | preview pass |
-| LEDGER | Do not mark B.12/G.1 as locked in the paper ledger yet. | hold lock |
+| LEDGER | Do not mark T.5/G.1 as locked in the paper ledger yet. | hold lock |
 
 ## Approved Public Label
 
@@ -53,7 +53,7 @@ Use this label if showing the issue:
 | ID | Requirement | Owner lens |
 |----|-------------|------------|
 | FLR-001 | Convert source-basis sections into final reference format | DATUM |
-| FLR-002 | Decide whether B.12/G.1 remain scope-down or quantitative claims reopen | BOUNDARY/SCALE |
+| FLR-002 | Decide whether T.5/G.1 remain scope-down or quantitative claims reopen | BOUNDARY/SCALE |
 | FLR-003 | Run final copyedit on `index.md`, `PROVISIONAL-PACKET.md`, and all articles | COMMONS |
 | FLR-004 | Update `PAPER-LEDGER.md` if sources become locked | LEDGER |
 | FLR-005 | Re-run risky-claim scan after final copyedit | BOUNDARY/SCALE |

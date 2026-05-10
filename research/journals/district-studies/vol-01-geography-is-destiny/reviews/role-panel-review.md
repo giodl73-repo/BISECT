@@ -18,7 +18,7 @@ turning that descriptive claim into a legal, causal, or inevitability claim.
 
 | Role | Review note | Gate |
 |------|-------------|------|
-| MERIDIAN | B.12 and G.1 need exact algorithm/run parameters before claim lock. | Confirm source/run reproducibility. |
+| MERIDIAN | T.5 and G.1 need exact algorithm/run parameters before claim lock. | Confirm source/run reproducibility. |
 | BOUNDARY | Geography findings cannot be treated as proof of constitutional validity or invalidity. | Remove legal conclusions from articles. |
 | CONTOUR | Any state case study needs data vintage, geography level, and run manifest. | Verify source chain for selected state cases. |
 | PRECINCT | Distinguish geographic sorting, intentional gerrymandering, and algorithm output. | Use plain taxonomy in editorial. |

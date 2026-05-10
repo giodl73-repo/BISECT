@@ -1,4 +1,4 @@
-# Review Synthesis — B.10 Subdivision-Respecting Redistricting
+# Review Synthesis — T.3 Subdivision-Respecting Redistricting
 
 **Round**: 1
 **Avg score**: 1.5 / 4

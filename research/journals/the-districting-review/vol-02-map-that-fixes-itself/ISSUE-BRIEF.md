@@ -21,12 +21,12 @@ Abstract arguments about algorithmic neutrality are necessary but not sufficient
 | Slot | Role | Claim class | Candidate papers |
 |------|------|-------------|-----------------|
 | Editorial | "Let me show you what it makes" -- the demonstration posture | interpretive | -- |
-| Formula | The ApportionRegions result -- prime-factor bisection, NC 7D/7R | empirical | B.11 (ApportionRegions) |
-| National picture | National map outcome candidate -- compactness and partisan outcome together | empirical | B.11 section national, A.0 finding 4 |
+| Formula | The ApportionRegions result -- prime-factor bisection, NC 7D/7R | empirical | T.4 (ApportionRegions) |
+| National picture | National map outcome candidate -- compactness and partisan outcome together | empirical | T.4 section national, A.0 finding 4 |
 | Ensemble position | Plans at a compactness percentile candidate -- more compact than most valid plans | empirical | G.1 (GerryChain comparison) |
 | Reproducibility | Any party can verify -- bisect label-verify, SHA-256, 20-minute replication | operational | A.4 (replication package), R.4 |
 | VRA | Majority-minority district counts under VRA mode vs. enacted maps -- scope and legal caveats required | empirical/legal | D.1, A.0 finding 2 |
-| Stability | The same algorithm applied to 2000/2010/2020 produces consistent results | empirical | C.2 (cross-census validation), B.15 |
+| Stability | The same algorithm applied to 2000/2010/2020 produces consistent results | empirical | C.2 (cross-census validation), T.8 |
 
 ## Review lenses
 

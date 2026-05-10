@@ -23,10 +23,10 @@ publication packaging:
 
 - final citation format;
 - final copyedit after any citation changes;
-- source ledger decision for B.12 and G.1;
+- source ledger decision for T.5 and G.1;
 - final post-packaging risky-claim scan.
 
-The unresolved B.12, G.1, L.1, and C.5 quantitative gates are acceptable for a
+The unresolved T.5, G.1, L.1, and C.5 quantitative gates are acceptable for a
 preview because the issue does not publish those claims. They still argue
 against a final lock.
 

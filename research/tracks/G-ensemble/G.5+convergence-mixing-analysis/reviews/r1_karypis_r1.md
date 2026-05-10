@@ -30,7 +30,7 @@ In practice, this distinction does not affect the empirical conclusions (both bo
 ## Minor Issues
 
 - The lazy chain assumption (probability $1/2$ at each step) in the reversible ReCom formulation adds a factor of 2 to the mixing time. The paper should state whether the empirical results (Table 3, 4) use the lazy chain or the standard non-lazy chain.
-- The comparison table (Table 1 in Section 5) correctly shows CS as "determined" (deterministic) and certified ReCom as having "only with fixed seed" determinism. But the table entry for "Theory basis" for CS is "Gumbel tail model" — this is correct but should reference the B.16 paper explicitly.
+- The comparison table (Table 1 in Section 5) correctly shows CS as "determined" (deterministic) and certified ReCom as having "only with fixed seed" determinism. But the table entry for "Theory basis" for CS is "Gumbel tail model" — this is correct but should reference the U.1 paper explicitly.
 
 ## Recommendation
 

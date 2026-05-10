@@ -7,11 +7,11 @@
 
 ## Summary Assessment
 
-Policy briefs inevitably simplify. I accept that. My question is whether this brief simplifies in ways that would mislead a legislator or commissioner, and I believe it does in two respects. First, the North Carolina partisan finding is presented without the Georgia counterexample that, together with NC, is B.11's actual finding. Second, the three adoption paths have constitutional viability issues that are not disclosed.
+Policy briefs inevitably simplify. I accept that. My question is whether this brief simplifies in ways that would mislead a legislator or commissioner, and I believe it does in two respects. First, the North Carolina partisan finding is presented without the Georgia counterexample that, together with NC, is T.4's actual finding. Second, the three adoption paths have constitutional viability issues that are not disclosed.
 
 ## Partisan Framing: North Carolina Without Georgia
 
-Section 3 presents the North Carolina 7D/7R finding as evidence that the algorithm produces proportional outcomes. As I noted in my review of A.3, Paper B.11 reports this alongside Georgia 5D/9R — the same algorithm, the same factorization ($k=14 = 7 \times 2$), and an almost identical partisan division (NC 49.3% D, GA 50.1% D), but dramatically different partisan outcomes. B.11 discusses this divergence as its central finding.
+Section 3 presents the North Carolina 7D/7R finding as evidence that the algorithm produces proportional outcomes. As I noted in my review of A.3, Paper T.4 reports this alongside Georgia 5D/9R — the same algorithm, the same factorization ($k=14 = 7 \times 2$), and an almost identical partisan division (NC 49.3% D, GA 50.1% D), but dramatically different partisan outcomes. T.4 discusses this divergence as its central finding.
 
 A policy brief that presents NC as evidence of proportional outcomes without disclosing the GA result is misleading. A legislator who reads this brief and then commissions an independent analysis of what the algorithm would produce for Georgia would find a 5D/9R outcome — 14 percentage points biased — and would reasonably conclude they had been deceived by the brief. This is not a matter of minor omission; it goes to the document's central claim of partisan fairness.
 

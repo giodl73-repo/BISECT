@@ -1,9 +1,9 @@
 ---
-title: "B.27 — Economic Character Edge Weights (LODES WAC)"
-series: B.27
+title: "M.9 — Economic Character Edge Weights (LODES WAC)"
+series: M.9
 status: Accepted 3.5/4
 date: 2026-05-08
-track: B-algorithm
+track: M-community-character
 layer: Structure (Layer 2 — edge weight modifier)
 target_audience: algorithms / practitioner
 ---
@@ -117,5 +117,5 @@ Metrics to report:
 
 Comparison algorithms:
 - standard-bisect + geographic weights (baseline)
-- standard-bisect + county weights (B.10)
+- standard-bisect + county weights (T.3)
 - standard-bisect + economic-character weights (this paper)

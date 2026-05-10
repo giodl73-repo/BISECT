@@ -23,12 +23,12 @@ and a final public-claims review.
 | Role | Finding | Result |
 |------|---------|--------|
 | BOUNDARY | No article makes a legal conclusion or adoption recommendation. The guardrail article is doing necessary work. | pass |
-| SCALE | Exact percentile and exact B.12 values remain out. The current wording is qualitative enough for the scope-down path. | pass |
+| SCALE | Exact percentile and exact T.5 values remain out. The current wording is qualitative enough for the scope-down path. | pass |
 | DATUM | Each draft has a source note. Before lock, convert source notes into consistent footnote or reference format. | revision before lock |
 | COMMONS | The drafts are readable and now have concrete public examples. They need copyediting, not structural rewrite. | pass |
 | COVENANT | Provenance blockers remain explicit. Do not hide the open source requests when packaging publicly. | pass with lock condition |
-| MERIDIAN | B.12 mechanism is described without false precision. Keep exact parameter claims out. | pass |
-| LEDGER | B.12 and G.1 reservations remain valid. Update the ledger if the issue locks. | pass |
+| MERIDIAN | T.5 mechanism is described without false precision. Keep exact parameter claims out. | pass |
+| LEDGER | T.5 and G.1 reservations remain valid. Update the ledger if the issue locks. | pass |
 
 ## Lock Conditions
 

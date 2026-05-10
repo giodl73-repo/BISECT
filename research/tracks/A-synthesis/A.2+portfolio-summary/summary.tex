@@ -47,7 +47,8 @@ The portfolio follows a track-based structure reflecting methodological dependen
     \item \textbf{Tracks B--C}: Algorithm design, variants, validation, and robustness
     \item \textbf{Track D}: VRA and legal compliance
     \item \textbf{Tracks E--F}: Experimental extensions and state legislative redistricting
-    \item \textbf{Tracks G--H}: Ensemble methods, comparison, and search strategies
+    \item \textbf{Track G}: Ensemble methods, comparison, and diagnostics
+    \item \textbf{Tracks T--U}: Plan construction plus search, optimization, and selection
     \item \textbf{Tracks I--J}: Incumbency effects and apportionment methods
     \item \textbf{Tracks K--L}: Compactness taxonomy and partisan fairness metrics
     \item \textbf{Track M}: Community character weights (economic, land use, housing, commuting, topographic, administrative, transit) — operationalises the ``communities of interest'' redistricting criterion through seven measurable, non-partisan edge-weight signals
@@ -59,11 +60,11 @@ The portfolio follows a track-based structure reflecting methodological dependen
     \item \textbf{Track S}: Statistical inference — ESS-corrected p-values, Bayesian Detection Score, FDR-corrected gerrymandering detection across all L-track metrics
 \end{itemize}
 
-This structure enables progressive deepening: Tracks B--H generate empirical, algorithmic, legal, and ensemble results; Tracks I--M extend the program to incumbency, apportionment, compactness, partisan fairness, and community character weights. Track A synthesizes across all twelve tracks.
+This structure enables progressive deepening: Tracks B--G generate empirical, algorithmic, legal, and ensemble results; Tracks I--M extend the program to incumbency, apportionment, compactness, partisan fairness, and community character weights; Tracks T--U separate plan construction from search, optimization, and selection. Track A synthesizes across the active tracks.
 
 \section*{Paper Summaries}
 
-The following summaries cover the eleven foundation papers (B.1--B.11 / original series) that initiated the program. The portfolio is an ongoing research program; papers across all twelve tracks are at varying stages of completion.
+The following summaries cover the eleven foundation papers (B.1--T.4 / original series) that initiated the program. The portfolio is an ongoing research program; papers across all twelve tracks are at varying stages of completion.
 
 \subsection*{Paper 01: Recursive Bisection for Congressional Redistricting}
 
@@ -113,9 +114,9 @@ This partisan fairness paper quantifies bias reduction through national-scale ef
 
 Track G answers the question: where does the bisection plan sit in the full space of all valid redistricting plans? The ensemble-baseline sub-track (G.0--G.5) establishes that bisection plans sit at the 0.1--0.7th compactness percentile in the feasible-plan ensemble for most states --- near the compactness extremum, not the partisan extremum. The MCMC-algorithms sub-track (G.6--G.13) contributes eight specific ensemble search methods, each implemented in the \texttt{bisect} Rust binary as a \texttt{--search} flag: short-burst optimisation (G.6), flip proposals for local sensitivity analysis (G.8), Forest ReCom via spanning forest sampling (G.9), merge-split MCMC with explicit reversibility (G.10), multiscale MCMC for large-$k$ chambers (G.11), short-burst with calibrated chains (G.12), and VRA-aware chains preserving majority-minority districts (G.13). The track's synthesis paper, G.14 (\emph{A Practitioner's Comparison of Redistricting Ensemble Algorithms}, accepted at 4.0/4), is the highest-scored paper in the full 82-paper portfolio, providing a decision tree that routes practitioners to the appropriate algorithm for their use case.
 
-\subsection*{Track H --- Ensemble Search Strategies (4 papers)}
+\subsection*{Track U --- Search and Optimization (11 papers)}
 
-Track H translates Track G's ensemble science into deployable statutory tools. PercentileSweep (H.0, \emph{Political Analysis}) provides statutory legal posture selection: by choosing a plan at the $p$th compactness percentile of the ensemble, practitioners can select among compactness doctrine ($p=0.0$), representativeness doctrine ($p=0.5$), or full ensemble representativeness. BisectionEnsemble (H.1, ICML) embeds local ReCom exploration at each bisection node, combining the bisection tree structure with ensemble sampling. The \texttt{redist-ensemble} Rust implementation (H.2, USENIX ATC) achieves 2,500$\times$ the speed of Python GerryChain, enabling real-time plan generation during commission deliberations. Resolution-Aware Redistricting (H.3) formalises geographic granularity as a first-class parameter with a manifest system enabling independent plan verification. All four Track H papers are accepted (mean 3.35/4).
+Track U translates Track G's ensemble science and Track T's construction methods into deployable search, optimization, and certification tools. PercentileSweep (U.8, \emph{Political Analysis}) provides statutory legal posture selection: by choosing a plan at the $p$th compactness percentile of the ensemble, practitioners can select among compactness doctrine ($p=0.0$), representativeness doctrine ($p=0.5$), or full ensemble representativeness. BisectionEnsemble (U.9, ICML) embeds local ReCom exploration at each bisection node, combining the bisection tree structure with ensemble sampling. The \texttt{redist-ensemble} Rust implementation (U.10, USENIX ATC) achieves 2,500$\times$ the speed of Python GerryChain, enabling real-time plan generation during commission deliberations. Resolution-Aware Redistricting (U.11) formalises geographic granularity as a first-class parameter with a manifest system enabling independent plan verification. Track U also houses ConvergenceSweep, parameter sensitivity, simulated annealing, parallel tempering, ILP certification, and Pareto/NSGA-II multi-objective search.
 
 \section*{Portfolio-Level Themes}
 
@@ -168,7 +169,7 @@ The portfolio advances three research frontiers: (1) computational political sci
 
 \section*{Citation Guide}
 
-\textbf{Publication status}: This is an ongoing research program (190+ papers across 18 tracks). Track B foundations, several Track G ensemble papers, all Track H papers, and selected papers in Track B extensions are accepted or ready for submission. Remaining papers across all tracks are in draft. Preprints will be available on arXiv upon initial submission.
+\textbf{Publication status}: This is an ongoing research program (190+ papers across 20 active tracks). Track B foundations, several Track G ensemble papers, the former Track H papers now merged into Track U, and selected Track T and U papers are accepted or ready for submission. Remaining papers across all tracks are in draft. Preprints will be available on arXiv upon initial submission.
 
 \textbf{For the entire research program}:
 

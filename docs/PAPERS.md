@@ -1,17 +1,18 @@
 # Research Papers
 
-190+ papers across eighteen tracks (A–S). PDFs open directly from the links below. LaTeX sources in [`research/tracks/`](../research/tracks/) — each series in its own track subdirectory. Some later-track drafts remain source-only and do not yet have PDFs in this index.
+190+ papers across twenty active tracks (A–G, I–U). PDFs open directly from the links below. LaTeX sources in [`research/tracks/`](../research/tracks/) — each series in its own track subdirectory. Some later-track drafts remain source-only and do not yet have PDFs in this index.
 
-Papers are organised by the question they answer. Each paper's series code (A–L) is shown for cross-reference. To recompile: `cd research && make docs`
+Papers are organised by the question they answer. Each paper's series code is shown for cross-reference. To recompile: `cd research && make docs`
 
 ---
 
-## What is the algorithm and why does it work?
+## Track B — Algorithm Foundations
 
 The mathematical and computational foundations. Start here if you are new to the project.
 
 | Code | Title | PDF |
 |------|-------|-----|
+| B.0 | Bakeoff — all 8 algorithm modes on 6 competitive states | [PDF](papers/B.0+algorithm-design-overview.pdf) |
 | B.1 | Recursive Bisection for Congressional Redistricting | [PDF](papers/B.1+recursive-bisection.pdf) |
 | B.2 | Edge-Weighted Recursive Bisection (+22% compactness) | [PDF](papers/B.2+edge-weighted-bisection.pdf) |
 | B.3 | Single-Objective vs. Multi-Constraint METIS | [PDF](papers/B.3+multi-vs-edge.pdf) |
@@ -22,32 +23,62 @@ The mathematical and computational foundations. Start here if you are new to the
 
 ---
 
-## How should the bisection tree be structured?
+## Track T — Plan Construction
 
-The "structure" layer of the compositor. Every paper here answers: given k districts, what shape is the recursion?
+The `--structure` layer of the compositor. Every paper here answers: given k districts, how is the map or bisection tree constructed?
 
 | Code | Title | PDF |
 |------|-------|-----|
-| B.0 | Bakeoff — all 8 algorithm modes on 6 competitive states | [PDF](papers/B.0+algorithm-design-overview.pdf) |
-| B.8 | GeoSection — ratio-optimal first bisection, isoperimetric normalisation | [PDF](papers/B.8+geosection-ratio-optimal-bisection.pdf) |
-| B.9 | AreaSection — dual [population, area] constraint | [PDF](papers/B.9+areasection-dual-population-area-constraint.pdf) |
-| B.10 | County-Sticky Weights — 34% fewer county splits at 3% compactness cost | [PDF](papers/B.10+subdivision-respecting-redistricting.pdf) |
-| B.11 | ApportionRegions — prime-factor bisection tree, NC 7D/7R | [PDF](papers/B.11+apportion-regions.pdf) |
-| B.12 | ProportionalSection — proportionality paradox and Rodden gap | [PDF](papers/B.12+proportional-section.pdf) |
-| B.13 | NestSection — senate = 2 × house spine compatibility | [PDF](papers/B.13+nestsection-nested-multi-chamber.pdf) |
-| B.14 | VRASection — minority geographic alignment, post-Callais | [PDF](papers/B.14+vrasection-minority-opportunity-bisection.pdf) |
-| B.15 | StabilitySection — bisection tree stability 2000–2020 | [PDF](papers/B.15+stabilitysection-cross-census-stability.pdf) |
+| T.1 | GeoSection — ratio-optimal first bisection, isoperimetric normalisation | [PDF](papers/T.1+geosection-ratio-optimal-bisection.pdf) |
+| T.2 | AreaSection — dual [population, area] constraint | [PDF](papers/T.2+areasection-dual-population-area-constraint.pdf) |
+| T.3 | County-Sticky Weights — 34% fewer county splits at 3% compactness cost | [PDF](papers/T.3+subdivision-respecting-redistricting.pdf) |
+| T.4 | ApportionRegions — prime-factor bisection tree, NC 7D/7R | [PDF](papers/T.4+apportion-regions.pdf) |
+| T.5 | ProportionalSection — proportionality paradox and Rodden gap | [PDF](papers/T.5+proportional-section.pdf) |
+| T.6 | NestSection — senate = 2 × house spine compatibility | [PDF](papers/T.6+nestsection-nested-multi-chamber.pdf) |
+| T.7 | VRASection — minority geographic alignment, post-Callais | [PDF](papers/T.7+vrasection-minority-opportunity-bisection.pdf) |
+| T.8 | StabilitySection — bisection tree stability 2000–2020 | [PDF](papers/T.8+stabilitysection-cross-census-stability.pdf) |
+| T.9 | Multi-Reapportionment Stability — what happens when states gain/lose seats | [PDF](papers/T.9+multi-reapportionment-stability.pdf) |
+| T.10 | Centroidal Voronoi Districts (Phase 1 + Phase 2) — graph-distance and geographic Euclidean CVD | [PDF](papers/T.10+centroidal-voronoi.pdf) |
+| T.11 | CVD Geographic — projected-centroid district construction | [PDF](papers/T.11+cvd-geographic.pdf) |
+| T.12 | BFS Region-Growing — greedy geographic district packing | [PDF](papers/T.12+bfs-growth.pdf) |
+| T.13 | Moving-Knife Redistricting — Reock-oriented fair-division construction | [PDF](papers/T.13+moving-knife.pdf) |
+
+Planned construction additions: T.14 spectral partitioning, T.15
+capacity-constrained clustering, T.16 hierarchical regionalization, and T.17
+flow-based construction. Implementation roadmap:
+[`2026-05-10-algorithm-family-roadmap.md`](specs/2026-05-10-algorithm-family-roadmap.md).
 
 ---
 
-## Which plan do you pick?
+## Track U — Search and Optimization
 
-The "search" layer. Once you have a structure, how do you select among valid plans?
+The search, optimization, certification, and algorithm-selection layer. Once construction methods exist, how do you choose, improve, certify, or compare candidate plans?
 
-| Code | Title | PDF |
-|------|-------|-----|
-| B.16 | ConvergenceSweep — T=600 statutory seed formula | [PDF](papers/B.16+convergence-sweep.pdf) |
-| B.17 | Parameter Sensitivity — partisanship insensitive to tuning | [PDF](papers/B.17+parameter-sensitivity.pdf) |
+| Code | Title | PDF | Note |
+|------|-------|-----|------|
+| U.1 | ConvergenceSweep — T=600 statutory seed formula | [PDF](papers/U.1+convergence-sweep.pdf) | `--search convergence` |
+| U.2 | Parameter Sensitivity — partisanship insensitive to tuning | [PDF](papers/U.2+parameter-sensitivity.pdf) | tuning/robustness |
+| U.3 | Simulated Annealing Bisection — cooling the edge-cut objective in the bisection tree | [PDF](papers/U.3+simulated-annealing.pdf) | `--structure simulated-annealing` |
+| U.4 | Parallel Tempering — multi-chain replica exchange MCMC | [PDF](papers/U.4+parallel-tempering.pdf) | `--search parallel-tempering` |
+| U.5 | Adaptive Multi-scale MCMC — self-tuning alpha via Robbins-Monro | [PDF](papers/U.5+adaptive-multiscale.pdf) | `--search multiscale-adaptive` |
+| U.6 | Exact Redistricting via ILP — certifiable optimality for small instances | [PDF](papers/U.6+ilp-redistricting.pdf) | `--structure ilp`; exact certification |
+| U.7 | Pareto-Optimal Redistricting — transparent trade-offs via NSGA-II | [PDF](papers/U.7+pareto-redistricting.pdf) | `bisect pareto` |
+| U.8 | PercentileSweep — Statutory Choice of Legal Posture | [PDF](papers/U.8+percentile-sweep.pdf) | legal posture selection |
+| U.9 | BisectionEnsemble — Local ReCom at Each Bisection Node | [PDF](papers/U.9+bisection-ensemble.pdf) | local ensemble search |
+| U.10 | bisect-ensemble — Rust ReCom at 2500× Speed | [PDF](papers/U.10+bisect-ensemble.pdf) | high-performance search implementation |
+| U.11 | Resolution-Aware Redistricting — Geographic Granularity as a First-Class Parameter | [PDF](papers/U.11+resolution-aware.pdf) | resolution selection |
+
+Planned search/optimization additions: U.0 overview, U.12 algorithm-selection
+matrix, U.13 exact-vs-heuristic certification, U.14 multi-objective selection,
+U.15 legal postures for search, U.16 branch-and-cut, U.17 branch-and-price,
+U.18 large-neighborhood/tabu/matheuristic search, U.19 evolutionary search
+comparison, and U.20 RPLAN plan-audit certificates. Implementation
+roadmap:
+[`2026-05-10-algorithm-family-roadmap.md`](specs/2026-05-10-algorithm-family-roadmap.md).
+RPLAN factoring and U.20 audit contract:
+[`2026-05-10-rplan-incubation.md`](specs/2026-05-10-rplan-incubation.md),
+[`2026-05-10-rplan-v0.2-schema.md`](specs/2026-05-10-rplan-v0.2-schema.md),
+[`2026-05-10-plan-audit-certificates.md`](specs/2026-05-10-plan-audit-certificates.md).
 
 ---
 
@@ -91,14 +122,6 @@ Validation: does the algorithm produce robust results across resolutions, census
 | C.5 | Efficiency Gap Analysis — near-zero EG as byproduct | [PDF](papers/C.5+efficiency-gap-analysis.pdf) |
 | C.6 | User Study — algorithmic maps rated fairer by public | [PDF](papers/C.6+user-study.pdf) |
 | C.7 | Uncertainty Quantification — 95% CI for +22% improvement: [+15%, +29%] | [PDF](papers/C.7+uncertainty-quantification.pdf) |
-| B.18 | Multi-Reapportionment Stability — what happens when states gain/lose seats | [PDF](papers/B.18+multi-reapportionment-stability.pdf) |
-| B.19 | Simulated Annealing Bisection — cooling the edge-cut objective in the bisection tree | [PDF](papers/B.19+simulated-annealing.pdf) | **Accepted** 3.6/4 — `--structure simulated-annealing` |
-| B.20 | Parallel Tempering — multi-chain replica exchange MCMC | [PDF](papers/B.20+parallel-tempering.pdf) | **Accepted** 3.6/4 — `--search parallel-tempering` |
-| B.21 | Adaptive Multi-scale MCMC — self-tuning alpha via Robbins-Monro | [PDF](papers/B.21+adaptive-multiscale.pdf) | **Accepted** 3.5/4 — `--search multiscale-adaptive` |
-| B.22 | Centroidal Voronoi Districts (Phase 1 + Phase 2) — graph-distance and geographic Euclidean CVD | [PDF](papers/B.22+centroidal-voronoi.pdf) | **Accepted** 3.9/4 — `--structure centroidal-voronoi`, `--cvd-metric geographic` |
-| B.23 | BFS Region-Growing — greedy geographic district packing | [PDF](papers/B.23+bfs-growth.pdf) | **Accepted** 3.6/4 — `--structure bfs-growth` |
-| B.24 | Exact Redistricting via ILP — certifiable optimality for small instances | [PDF](papers/B.24+ilp-redistricting.pdf) | First draft — `--structure ilp` (Phase 1 METIS fallback) |
-| B.27 | Economic Character Edge Weights via LODES — community similarity as edge modifier | [PDF](papers/B.27+economic-character-weights.pdf) | **Accepted** — `--weights-override economic-character` |
 
 ---
 
@@ -182,19 +205,6 @@ Synthesis, guides, and practitioner materials.
 
 ---
 
-## Track H — Ensemble Search Strategies (3 papers, panel reviews in progress)
-
-| Code | Title | PDF | Status |
-|------|-------|-----|--------|
-| H.0 | PercentileSweep — Statutory Choice of Legal Posture | [PDF](papers/H.0+percentile-sweep.pdf) | **Accepted** 3.4/4 |
-| H.1 | BisectionEnsemble — Local ReCom at Each Bisection Node | [PDF](papers/H.1+bisection-ensemble.pdf) | **Accepted** 3.0/4 |
-| H.2 | bisect-ensemble — Rust ReCom at 2500× Speed | [PDF](papers/H.2+bisect-ensemble.pdf) | **Accepted** 3.2/4 |
-| H.3 | Resolution-Aware Redistricting — Geographic Granularity as a First-Class Parameter | [PDF](papers/H.3+resolution-aware.pdf) | **Accepted** 3.8/4 |
-
----
-
----
-
 ## Track I — Incumbency (5 papers)
 
 How algorithmically-drawn maps affect incumbents — an algorithm with no incumbency input whose geometric outcomes can be measured against enacted maps.
@@ -258,7 +268,7 @@ Partisan fairness metrics — how algorithmically-drawn maps compare to enacted 
 
 ---
 
-## Track M — Community Character Weights (8 papers)
+## Track M — Community Character Weights (9 papers)
 
 Operationalizing communities of interest as METIS edge weights. Each paper defines one community character signal (housing type, land use, commuting shed, topography, etc.), derives a cosine similarity metric from publicly available data, and provides legal grounding for redistricting use. CLI: `--weights-override housing-character` etc.
 
@@ -266,6 +276,7 @@ Operationalizing communities of interest as METIS edge weights. Each paper defin
 |------|-------|-----|--------|
 | M.0 | Community Character Weighting: Framework for Communities of Interest | [PDF](papers/M.0+community-character-overview.pdf) | **Accepted** |
 | M.1 | Economic Character Edge Weights via LODES | — | Post-write pending |
+| M.9 | Economic Character Edge Weights via LODES — community similarity as edge modifier | [PDF](papers/M.9+economic-character-weights.pdf) | **Accepted** |
 | M.3 | Housing Character Edge Weights via ACS | — | First draft |
 | M.6 | Administrative Zone Co-membership (School/Fire/Electric Districts) | [PDF](papers/M.6+administrative-zone-membership.pdf) | **Accepted** |
 

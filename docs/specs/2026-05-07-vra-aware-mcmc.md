@@ -11,7 +11,7 @@
 
 ## Overview
 
-Standard MCMC methods (ReCom, Forest ReCom, Merge-Split) sample the full space of valid k-district plans, including plans that violate the Voting Rights Act by diluting minority voting strength. VRA compliance is currently enforced at the structure layer (VRASection, B.14), but this prevents sampling the distribution over compliant plans — it only produces a single compliant plan.
+Standard MCMC methods (ReCom, Forest ReCom, Merge-Split) sample the full space of valid k-district plans, including plans that violate the Voting Rights Act by diluting minority voting strength. VRA compliance is currently enforced at the structure layer (VRASection, T.7), but this prevents sampling the distribution over compliant plans — it only produces a single compliant plan.
 
 VRA-Aware MCMC samples the **conditional distribution** over plans that preserve all designated majority-minority districts. It extends ForestRecomChain with a hard rejection rule: if a proposed step would reduce the minority VAP fraction of any protected district below `vap_threshold`, reject unconditionally regardless of the MH ratio. This is the correct approach for litigation: the ensemble represents valid plans under both equal population and VRA constraints.
 
@@ -254,7 +254,7 @@ An auditor who knows `base_seed` and `protected_districts` can re-derive all see
 
 ---
 
-## 8. Relationship to VRASection (B.14)
+## 8. Relationship to VRASection (T.7)
 
 VRASection is a **structure layer** algorithm: it modifies the METIS edge weights to bias toward VRA-compliant splits during the initial bisection. VRA-Aware MCMC is a **search layer** algorithm: it samples the conditional distribution over already-VRA-compliant plans.
 

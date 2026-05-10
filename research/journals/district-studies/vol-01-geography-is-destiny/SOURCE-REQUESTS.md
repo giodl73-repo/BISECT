@@ -11,13 +11,13 @@ updated: 2026-05-09
 These are the concrete missing artifacts needed to promote the issue from
 audition toward provisional.
 
-## B.12 ProportionalSection
+## T.5 ProportionalSection
 
 Owner lens: MERIDIAN/SCALE.
 
 Needed:
 
-1. Exact B.12 METIS run vector:
+1. Exact T.5 METIS run vector:
    - backend/engine;
    - METIS version or implementation revision;
    - `niter`;
@@ -53,7 +53,7 @@ Needed:
    - exact percentile;
    - approximate percentile range; or
    - no number in public issue copy.
-3. Identify whether B.11 support is needed in the article body or only in a
+3. Identify whether T.4 support is needed in the article body or only in a
    source note.
 
 Current evidence:

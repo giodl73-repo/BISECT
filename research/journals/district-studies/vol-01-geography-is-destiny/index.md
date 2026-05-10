@@ -22,16 +22,16 @@ reform, adoption, or legal claims.
 | Order | Article | Current state |
 |-------|---------|---------------|
 | 1 | [The Shape of the Vote](articles/the-shape-of-the-vote.md) | provisional draft |
-| 2 | [Geography Constrains Proportionality](articles/geography-constrains-proportionality.md) | provisional draft; B.12 numeric claims gated |
+| 2 | [Geography Constrains Proportionality](articles/geography-constrains-proportionality.md) | provisional draft; T.5 numeric claims gated |
 | 3 | [The Ensemble Median Case](articles/the-ensemble-median-case.md) | provisional draft; exact percentile blocked |
-| 4 | [Three State Types](articles/three-state-types.md) | provisional draft; exact B.12 table values gated |
+| 4 | [Three State Types](articles/three-state-types.md) | provisional draft; exact T.5 table values gated |
 | 5 | [What This Issue Does Not Show](articles/what-this-issue-does-not-show.md) | provisional draft |
 
 ## Publication Notes
 
 - The title is a provocation, not a theorem.
 - The issue is descriptive. It does not argue for adoption of a federal rule.
-- B.12 is the lead formal source, but its exact numeric table values remain
+- T.5 is the lead formal source, but its exact numeric table values remain
   gated by source-chain questions.
 - G.1 can support cautious ensemble-position language, but exact percentile
   language remains blocked until the statistical review is closed.

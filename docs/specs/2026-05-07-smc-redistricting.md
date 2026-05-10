@@ -12,7 +12,7 @@
 
 ## 1. Motivation and positioning
 
-SMC is the only method in the G series that produces a **statistically correct** sample from the space of valid redistricting plans — i.e., a sample whose weights correctly represent the uniform distribution over all valid k-district plans of the state graph. ReCom (H.1, H.2) is a Markov chain whose stationary distribution is not the uniform distribution; its distributional properties depend on mixing time, which is hard to certify for large graphs. SMC provides calibrated posteriors without mixing assumptions.
+SMC is the only method in the G series that produces a **statistically correct** sample from the space of valid redistricting plans — i.e., a sample whose weights correctly represent the uniform distribution over all valid k-district plans of the state graph. ReCom (U.9, U.10) is a Markov chain whose stationary distribution is not the uniform distribution; its distributional properties depend on mixing time, which is hard to certify for large graphs. SMC provides calibrated posteriors without mixing assumptions.
 
 The cost is algorithmic complexity: SMC requires a sequential construction procedure, importance weighting, and systematic resampling — more moving parts than ReCom. The output is also different: not a single plan, but a population of N weighted plans.
 
@@ -260,7 +260,7 @@ bisect ensemble --method smc \
 | `--particles` | 5000 | Practical for 50-state sweep; 50K+ for publication |
 | `--resample-threshold` | 0.5 | ESS < 0.5 × N triggers resample |
 | `--pop-tolerance` | 0.005 | ±0.5% population balance (strict for congressional) |
-| `--base-seed` | content-derived | SHA-256(census\_release\_id \|\| "SMC\_SEED\_V1") where census\_release\_id = `{state}_{year}_{redistricting_data_release_date}` per B.16 §3.1 |
+| `--base-seed` | content-derived | SHA-256(census\_release\_id \|\| "SMC\_SEED\_V1") where census\_release\_id = `{state}_{year}_{redistricting_data_release_date}` per U.1 §3.1 |
 
 ### 4.2 Parameter scaling
 

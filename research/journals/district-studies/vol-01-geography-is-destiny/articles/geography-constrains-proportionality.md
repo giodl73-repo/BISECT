@@ -6,13 +6,13 @@ title: "Geography Constrains Proportionality"
 status: provisional-draft
 updated: 2026-05-09
 claim-class: formal/empirical
-source: B.12 ProportionalSection
-gate: B.12 provenance
+source: T.5 ProportionalSection
+gate: T.5 provenance
 ---
 
 # Geography Constrains Proportionality
 
-The B.12 contribution can be stated without importing unresolved numeric
+The T.5 contribution can be stated without importing unresolved numeric
 claims.
 
 The public-safe claim is that proportional partisan outcomes can be
@@ -28,11 +28,11 @@ geography asks where those votes are. Single-member districts convert a spatial
 distribution into seats. That conversion can make proportionality harder than a
 statewide vote share suggests.
 
-B.12 is the formal lead source for this point. It supplies the issue's central
+T.5 is the formal lead source for this point. It supplies the issue's central
 diagnostic idea: geography can set limits before policy choice or legal remedy
 enters the argument.
 
-Exact B.12 table values remain out of scope until the source request is closed
+Exact T.5 table values remain out of scope until the source request is closed
 for METIS parameters, seed treatment, and C(G) provenance.
 
 ## Public Example
@@ -43,8 +43,8 @@ expectation. If a party's voters are packed into a small number of dense places,
 contiguous compact districts may convert those votes into fewer seats than a
 statewide percentage alone would suggest.
 
-This example is qualitative. It should not be paired with exact B.12 state
-values until the B.12 source-chain requests are closed.
+This example is qualitative. It should not be paired with exact T.5 state
+values until the T.5 source-chain requests are closed.
 
 ## References
 
@@ -56,6 +56,6 @@ See `../REFERENCES.md`.
 
 ## Publication Boundary
 
-Do not publish exact B.12 table values, state rankings, or claims about the
-original paper-run parameters until the B.12 source requests are closed. The
+Do not publish exact T.5 table values, state rankings, or claims about the
+original paper-run parameters until the T.5 source requests are closed. The
 mechanism can be explained qualitatively.

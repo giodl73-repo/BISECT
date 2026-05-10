@@ -33,7 +33,7 @@ the first three previews.
 | JF-004 | Source-chain audit District Studies Vol 1 | CONTOUR/DATUM | in progress |
 | JF-005 | Legal-language audit for DIA/federal-rule references | BOUNDARY/WARD | next |
 | JF-006 | Audit public README for current-law and court-facing claims | BOUNDARY | next |
-| DS1-001 | Add B.12 METIS parameter vector to Vol. 1 source chain | MERIDIAN | audit note complete; values still needed |
+| DS1-001 | Add T.5 METIS parameter vector to Vol. 1 source chain | MERIDIAN | audit note complete; values still needed |
 | DS1-004 | Draft ESS-safe G.1 summary language | SCALE | reviewed for audition; exact percentile still blocked |
 | DS1-005 | Close L.1 efficiency-gap sign-convention discrepancy | SCALE/BENCHMARK | code closed; output provenance open |
 | DS1-006 | Decide measurement slot disposition | DATUM | result-bearing slot deferred |
@@ -99,12 +99,12 @@ the first three previews.
 | DS4-011 | Final risky-claim scan before preview | BOUNDARY/SCALE | open |
 | DS4-012 | Human editor approval of qualitative preview path | BOUNDARY/DATUM/COMMONS | open |
 | DS4-013 | Package Vol. 4 as provisional public preview if approved | DATUM/COMMONS | open |
-| TDR2-001 | Build audition pool from B.11/G.1/A.4/R.4/D.1/C.2/B.15/A.0 | DATUM | complete |
-| TDR2-002 | Audit B.11 NC output and national-picture language | DATUM/BOUNDARY | complete; headline wording must stay source-bound |
+| TDR2-001 | Build audition pool from T.4/G.1/A.4/R.4/D.1/C.2/T.8/A.0 | DATUM | complete |
+| TDR2-002 | Audit T.4 NC output and national-picture language | DATUM/BOUNDARY | complete; headline wording must stay source-bound |
 | TDR2-003 | Audit G.1 ensemble percentile language | SCALE | complete; ESS-corrected wording required |
 | TDR2-004 | Audit A.4/R.4 verification language | COVENANT | complete; reproducibility only |
 | TDR2-005 | Audit D.1 VRA caveat language | BOUNDARY/WARD | complete; no universal legal result |
-| TDR2-006 | Audit C.2/B.15 stability language | DATUM/SCALE | complete; cycle scope must stay explicit |
+| TDR2-006 | Audit C.2/T.8 stability language | DATUM/SCALE | complete; cycle scope must stay explicit |
 | TDR2-007 | Decide qualitative preview vs. source-chain path | BOUNDARY/DATUM/COMMONS | complete; qualitative preview path selected |
 | TDR2-008 | Draft article summaries after path decision | COMMONS/DATUM | complete |
 | TDR2-009 | Run role-panel review on article summaries | BOUNDARY/WARD/COVENANT/SCALE/DATUM/COMMONS | complete; passes for qualitative drafting |

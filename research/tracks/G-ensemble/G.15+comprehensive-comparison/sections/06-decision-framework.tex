@@ -26,8 +26,8 @@ this paper.
 
         \begin{itemize}
           \item If $N \leq 500$ per bisection half (applicable to NH $k = 2$
-                and very small custom jurisdictions): use \ilp{} (B.24).
-          \item If $N > 500$: ILP is not tractable. Use SA (B.19) for the
+                and very small custom jurisdictions): use \ilp{} (U.6).
+          \item If $N > 500$: ILP is not tractable. Use SA (U.3) for the
                 best available heuristic EC; the optimality gap is
                 approximately 8--12\% relative to ILP.
         \end{itemize}
@@ -39,7 +39,7 @@ this paper.
         useful for academic benchmarking and may support expert testimony
         in jurisdictions where edge-cut compactness is litigated, but does
         not directly satisfy Polsby-Popper or visual-compactness legal tests.
-        Consult B.24~\S5 for the precise certificate scope.
+        Consult U.6~\S5 for the precise certificate scope.
 
         \emph{Proceed to: \ilp{} or \sa{}. Then proceed to Q3 for search.}
 
@@ -56,11 +56,11 @@ this paper.
 
         \begin{itemize}
           \item If centroid data is available (standard for 2020 decennial
-                pipeline): use \cvdgeo{} (B.22b).
+                pipeline): use \cvdgeo{} (T.11).
           \item If centroid data is unavailable or the input graph is
-                non-standard: use \cvdg{} (B.22).
+                non-standard: use \cvdg{} (T.10).
           \item If PP is important but runtime is constrained: use
-                \bfsgrow{} (B.23); competitive PP, fastest structure method.
+                \bfsgrow{} (T.12); competitive PP, fastest structure method.
         \end{itemize}
 
         \emph{Proceed to: \cvdgeo{}, \cvdg{}, or \bfsgrow{}.
@@ -90,10 +90,10 @@ this paper.
 
         \begin{itemize}
           \item If \textbf{compactness optimisation} (lowest EC) is the goal:
-                use \pt{} (B.20). Requires multi-core hardware (8--16 cores).
+                use \pt{} (U.4). Requires multi-core hardware (8--16 cores).
                 For single-core constraint: use \sburst{} (G.6).
           \item If \textbf{fast mixing} (low ACF, broad distributional
-                coverage) is the goal: use \ams{} (B.21) for self-tuning, or
+                coverage) is the goal: use \ams{} (U.5) for self-tuning, or
                 \ms{} (G.11) for fixed $\alpha$.
           \item If \textbf{calibrated distribution} is required: use \smc{}
                 (G.7) or \smcp{} (new).
@@ -156,12 +156,12 @@ this paper.
   {Certified optimal EC?\\($N \le 500$?)};
 
 \node[result, right=2.0cm of q1, yshift=1.2cm] (ilp)
-  {\ilp{} (B.24)\\\footnotesize Exact optimality};
+  {\ilp{} (U.6)\\\footnotesize Exact optimality};
 \draw[arrow] (q1.north east)
   -- node[label, above, sloped]{\small Yes} (ilp.west);
 
 \node[result, right=2.0cm of q1, yshift=-0.5cm] (sa)
-  {\sa{} (B.19)\\\footnotesize Best heuristic EC};
+  {\sa{} (U.3)\\\footnotesize Best heuristic EC};
 \coordinate (branch1) at ($(q1.east) + (0.8cm, 0)$);
 \draw[arrow] (q1.east) -- (branch1);
 \draw[arrow] (branch1) |- node[label, right, pos=0.75]{\small N too large} (sa.west);
@@ -171,9 +171,9 @@ this paper.
 \draw[arrow] (q1.south) -- node[label, right]{\small No} (q2.north);
 
 \node[result, right=2.0cm of q2, yshift=1.4cm] (cvdgeo)
-  {\cvdgeo{} (B.22b)\\\footnotesize Best PP};
+  {\cvdgeo{} (T.11)\\\footnotesize Best PP};
 \node[result, right=2.0cm of q2, yshift=-0.2cm] (bfs)
-  {\bfsgrow{} (B.23)\\\footnotesize Fast, good PP};
+  {\bfsgrow{} (T.12)\\\footnotesize Fast, good PP};
 \coordinate (branch2) at ($(q2.east) + (0.8cm, 0)$);
 \draw[arrow] (q2.east) -- node[label, above]{\small Yes} (branch2);
 \draw[arrow] (branch2) |- node[label, right, pos=0.75]{\small Centroids} (cvdgeo.west);
@@ -200,7 +200,7 @@ this paper.
 \draw[arrow] (q3.south) -- node[label, right]{\small No} (q4.north);
 
 \node[result, right=2.0cm of q4, yshift=1.4cm] (pt)
-  {\pt{} / \ms{} (B.20/G.11)\\\footnotesize Large-$k$ mixing};
+  {\pt{} / \ms{} (U.4/G.11)\\\footnotesize Large-$k$ mixing};
 \draw[arrow] (q4.north east)
   -- node[label, above, sloped]{\small Yes} (pt.west);
 

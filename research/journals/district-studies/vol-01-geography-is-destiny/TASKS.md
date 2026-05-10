@@ -12,13 +12,13 @@ updated: 2026-05-09
 
 | ID | Task | Gate | Status |
 |----|------|------|--------|
-| DS1-001 | Add B.12 METIS `niter`, `ncuts`, and `numbering` to source chain | MERIDIAN | implementation defaults found; paper-run vector still open |
-| DS1-002 | Determine whether B.12 Table 1 values are deterministic or averaged across seeds | SCALE | open |
+| DS1-001 | Add T.5 METIS `niter`, `ncuts`, and `numbering` to source chain | MERIDIAN | implementation defaults found; paper-run vector still open |
+| DS1-002 | Determine whether T.5 Table 1 values are deterministic or averaged across seeds | SCALE | open |
 | DS1-003 | Identify C(G) estimator as Lorenz-analytical or METIS-empirical | MERIDIAN/SCALE | open |
 | DS1-004 | Write ESS-safe G.1 summary language for NC and compactness percentiles | SCALE | reviewed for audition; exact percentile still blocked |
 | DS1-005 | Close L.1 efficiency-gap sign-convention discrepancy in review record | SCALE/BENCHMARK | done-code; output provenance open |
 | DS1-006 | Decide whether measurement slot runs in Vol. 1 or is deferred to Vol. 2 | DATUM | done; result-bearing slot deferred |
-| DS1-007 | Choose state case study: B.12 GA/WI/NV vs. B.11/G.1 Texas | PRECINCT/DATUM | done; B.12 three-state frame selected |
+| DS1-007 | Choose state case study: T.5 GA/WI/NV vs. T.4/G.1 Texas | PRECINCT/DATUM | done; T.5 three-state frame selected |
 | DS1-008 | Draft editorial after DS1-001 through DS1-007 | COMMONS | draft-note complete; revise after lineup |
 | DS1-009 | Draft issue guardrail note | BOUNDARY/SCALE/DATUM | draft-note complete |
 | DS1-010 | Create source-request list for promotion gates | DATUM | complete |
@@ -48,7 +48,7 @@ updated: 2026-05-09
 Proceed with four core pieces first:
 
 1. Editorial: The Shape of the Vote.
-2. B.12 summary with explicit reproducibility caveat.
+2. T.5 summary with explicit reproducibility caveat.
 3. G.1 NC/ensemble summary using ESS-safe language.
 4. Correction note explaining what the issue does not show.
 
@@ -65,7 +65,7 @@ The article summaries passed audition review in
 quantitative claims, and use later issues for source-chain-heavy measurement
 claims.
 
-B.12 remains the lead formal source, but
+T.5 remains the lead formal source, but
 `reviews/b12-reproducibility-and-scope-audit.md` keeps DS1-001 through DS1-003
 open until the missing parameter, variance, and C(G) provenance fields are
 closed.

@@ -1,15 +1,15 @@
 ---
-title: "B.27-impl — Economic Character Weighter: cosine_similarity + EconomicCharacterWeighter"
-series: B.27-impl
+title: "M.9-impl — Economic Character Weighter: cosine_similarity + EconomicCharacterWeighter"
+series: M.9-impl
 status: Accepted 3.5/4
 date: 2026-05-08
-track: B-algorithm
+track: M-community-character
 layer: Structure (Layer 2 — EdgeWeighter plugin)
 ---
 
 ## Purpose
 
-Implementation spec for the B.27 economic character edge weights.
+Implementation spec for the M.9 economic character edge weights.
 Extends the existing `EdgeWeighter` trait pipeline in
 `crates/bisect-cli/src/edge_weights.rs`.
 
@@ -74,7 +74,7 @@ When geographic weighting is OFF (unweighted mode): w passed in = 1.0 uniform.
 
 ### 5. Wire into `build_edge_weights()` (`runner.rs`)
 ```rust
-// Step 5: Economic character (B.27/M.1) — similarity-weighted edges.
+// Step 5: Economic character (M.9/M.1) — similarity-weighted edges.
 if spec.economic_character {
     let lodes_chars = lodes::load_lodes_wac_tract(state_name, year, position)?;
     let node_chars = align_lodes_to_adjacency(&lodes_chars, &graph.index_to_geoid, graph.n_vertices);

@@ -1,4 +1,4 @@
-# B.11 Prime-Factor Redistricting sweep — all 50 states, 2020 seat counts
+# T.4 Prime-Factor Redistricting sweep — all 50 states, 2020 seat counts
 # Runs BISECT state --partition-mode prime-factor for each state.
 # Outputs: outputs/b11_sweep/pfr_results.csv
 #
@@ -70,7 +70,7 @@ if (-not (Test-Path $csvPath) -or $fullReset) {
     "state,n_districts,factor_sequence,split_tree,dem_vote_pct,dem_seats,rep_seats,proportionality_gap_pp,ec_km,available" | Set-Content $csvPath -Encoding utf8
 }
 
-Write-Output "B.11 PFR sweep: $($statesToRun.Count) states"
+Write-Output "T.4 PFR sweep: $($statesToRun.Count) states"
 Write-Output "Output: $csvPath"
 Write-Output ""
 

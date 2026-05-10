@@ -19,12 +19,12 @@ outcomes) to $\sigma > 0.2$ (expensive proportionality, geographic concentration
 makes proportional maps nearly impossible).
 
 \paragraph{Empirical tradeoff results.}
-Running the B.12 constraint at $\eta \in \{1.05, 1.10, 1.20\}$ across 6 competitive
+Running the T.5 constraint at $\eta \in \{1.05, 1.10, 1.20\}$ across 6 competitive
 states produces non-monotone, state-specific results:
 Wisconsin achieves $-0.3$\,pp at $\eta = 1.10$ (near-exact proportionality, from
 $-12.8$\,pp baseline), but $-25.3$\,pp at $\eta = 1.20$ (worse than baseline).
 North Carolina worsens at all $\eta$ values ($-6.5$\,pp baseline → $-13.6$\,pp):
-the HH 7:7 ratio forced by the constraint underperforms B.9's natural 6:8 ratio.
+the HH 7:7 ratio forced by the constraint underperforms T.2's natural 6:8 ratio.
 Arizona shows no change at any $\eta$ (geography insensitive).
 There is no universal optimal $\eta$.
 
@@ -57,7 +57,7 @@ This is a fact about geography.
 \paragraph{What this means.}
 For states with low $\sigma$ (cheap proportionality): geography-only algorithms
 are nearly proportional. Small improvements to the geographic constraint
-(B.9-style area balance or B.8-style isoperimetric normalisation) may close
+(T.2-style area balance or T.1-style isoperimetric normalisation) may close
 the remaining gap without partisan data.
 
 For states with high $\sigma$ (expensive proportionality): the proportionality
@@ -69,7 +69,7 @@ the gap is not evidence of manipulation, but of geography.
 \paragraph{Future work.}
 Three directions merit further investigation:
 \begin{enumerate}
-\item \textbf{Recursive proportionality}: applying the B.12 constraint at
+\item \textbf{Recursive proportionality}: applying the T.5 constraint at
   every level of the bisection tree to guarantee proportionality not just
   at the first split but throughout the entire district structure.
 
@@ -80,5 +80,5 @@ Three directions merit further investigation:
 \item \textbf{Multi-member districts}: for expensive-proportionality states,
   characterising how many seats per district are needed before geographic
   constraints stop blocking proportionality --- connecting this analysis to
-  the Huntington-Hill minimum from B.11.
+  the Huntington-Hill minimum from T.4.
 \end{enumerate}

@@ -25,11 +25,11 @@ Several technical claims are asserted without supporting data:
 
 3. Section 6.1 states that "total data preparation time for a single state is approximately 30 minutes to 4 hours depending on state size." This claim is credible for the redistricting/adjacency-building stage, but it should be broken down: download time (network-dependent), adjacency graph construction (computation-dependent), and validation time (dataset-dependent).
 
-The paper's treatment of the algorithm parameter choices for each jurisdiction (AZ, CA, NC) is vague. The workflow table lists "redist state --state AZ --year 2020 --version v1" but does not specify which parameter values (ufactor, acounty, aswing, wvra) would be used. For an implementation paper, this is a significant gap. The parameter choices should be justified for each jurisdiction, or the paper should note that parameter selection is covered by B.17 and cross-reference that paper.
+The paper's treatment of the algorithm parameter choices for each jurisdiction (AZ, CA, NC) is vague. The workflow table lists "redist state --state AZ --year 2020 --version v1" but does not specify which parameter values (ufactor, acounty, aswing, wvra) would be used. For an implementation paper, this is a significant gap. The parameter choices should be justified for each jurisdiction, or the paper should note that parameter selection is covered by U.2 and cross-reference that paper.
 
 ## Minor Issues
 
-- The VRASection threshold for VRA protection is described as "census blocks with ≥40% minority population" in B.17 but the C.9 paper notes that "the specific threshold for VRA protection can be set to reflect the CVAP percentages required by VRA analysis rather than the total population." This is an important distinction (CVAP vs. total population) that is inconsistent between papers and should be resolved.
+- The VRASection threshold for VRA protection is described as "census blocks with ≥40% minority population" in U.2 but the C.9 paper notes that "the specific threshold for VRA protection can be set to reflect the CVAP percentages required by VRA analysis rather than the total population." This is an important distinction (CVAP vs. total population) that is inconsistent between papers and should be resolved.
 - The county-sticky weight calibration for California ("larger counties receiving higher weights") is mentioned but not operationalized. What specifically is the recommended calibration for LA County vs. Alpine County?
 
 ## Recommendation

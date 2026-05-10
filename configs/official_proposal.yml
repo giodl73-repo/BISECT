@@ -4,8 +4,8 @@
 name: official_proposal
 description: >
   Reference implementation for the proposed federal redistricting statute.
-  Algorithm: ApportionRegions (B.11), county weights alpha=2.0 (B.10),
-  convergence search threshold=600 (B.7/B.16). All 50 states, 2020/2010/2000.
+  Algorithm: ApportionRegions (T.4), county weights alpha=2.0 (T.3),
+  convergence search threshold=600 (B.7/U.1). All 50 states, 2020/2010/2000.
   This config is the citable artifact defining the official proposal parameters.
   Any run claiming to reproduce these results must use this config unmodified.
 
@@ -19,14 +19,14 @@ algorithm:
   # Values: unweighted | geographic | county | vra-aligned | proportional
   weights: county
 
-  # County stickiness factor (B.10). Required when weights: county.
+  # County stickiness factor (T.3). Required when weights: county.
   alpha_county: 2.0
 
   # Layer 3: seed search strategy
   # Values: single | multi | convergence
   search: convergence
 
-  # Consecutive non-improving seeds before stopping (B.7/B.16).
+  # Consecutive non-improving seeds before stopping (B.7/U.1).
   # Required when search: convergence.
   convergence_threshold: 600
 

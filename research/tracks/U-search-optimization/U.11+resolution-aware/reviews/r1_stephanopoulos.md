@@ -1,0 +1,25 @@
+# R1 Review — Nicholas Stephanopoulos
+**Paper**: U.11 Resolution-Aware Redistricting: Geographic Granularity as a First-Class Parameter
+**Score**: 2/4
+**Verdict**: Major Revision
+
+## Summary
+The paper presents a technically sound resolution system for redistricting pipelines, with correct proofs for GEOID-prefix partition derivation and county adjacency construction. The audit manifest extensions (Section 4) are particularly relevant for legal proceedings. However, the paper significantly underweights the legal implications of resolution choice. In redistricting litigation, the choice of geographic unit is not a neutral computational parameter: it affects the demographic composition of districts, the achievability of majority-minority districts under the VRA, and the legal standard by which plans are evaluated. A paper targeting a GIS venue with a redistricting audience must address these dimensions.
+
+## Strengths
+- The manifest audit trail (Section 4) is the paper's most legally significant contribution: recording `plan_resolution`, `n_units`, and `fine_to_coarse_formula` enables courts and special masters to independently verify that a plan was generated at the stated resolution.
+- The correctness proof for `derive_partition` provides the formal foundation needed for courts to trust automated partition derivation — if challenged, the proof is auditable.
+- Section 5b (Legal Implications) is a good start: the county-preservation paragraph correctly distinguishes computational county use from legal county-preservation requirements, and the VRA paragraph correctly flags the threshold-crossing risk.
+- The three-option structure with clear Phase 2 delineation is legally useful: it prevents practitioners from attempting to use Option A or C in litigation before those options are validated.
+
+## Concerns
+- **Legal implications of resolution choice — depth**: Section 5b covers three paragraphs. For a redistricting paper, this is insufficient. The VRA paragraph identifies the threshold-crossing risk for near-threshold majority-minority districts but does not discuss how this interacts with the *Gingles* preconditions or Section 5 (now Section 3) preclearance standards for jurisdictions still subject to them. The county-preservation paragraph correctly notes the issue but does not discuss whether algorithmic county-level coarsening would be seen as "respecting" counties in the legal sense if challenged. These should be expanded.
+- **VRA interaction with boundary precision**: Option A (BG-level plans) enables finer boundary placement than tract-level plans. This is legally significant: in a district with a near-threshold minority VAP, the difference between a block-group boundary and a tract boundary can determine whether the district satisfies the *Gingles* compactness prong or the effective minority control standard. The paper acknowledges this but does not quantify the potential shift. Even an order-of-magnitude estimate (e.g., "boundary placement precision at BG level is approximately $X$ meters, compared to $Y$ meters at tract level") would help practitioners assess when the difference matters legally.
+- **Resolution as a contested parameter in litigation**: The paper does not address the adversarial context in which resolution choices occur. If one party's expert uses tract-level plans and another uses BG-level plans, courts will need to understand whether the choice is legally arbitrary or legally motivated. The paper should recommend a legal standard for resolution choice (e.g., match the census level used in the enacted plan, or use the finest level at which population equality can be achieved with a single-person tolerance).
+- **Manifest system and litigation hold**: The manifest's cryptographic hash system is valuable for reproducibility, but the paper does not address what happens when a practitioner switches resolution mid-analysis. If a plan is generated at tract level, analyzed, then regenerated at BG level and re-analyzed, the manifest will record two different hashes. Courts will need guidance on which manifest controls. The paper should address this.
+
+## Required Changes (P1/P2)
+- **P1**: Expand Section 5b to address VRA interaction more concretely: discuss how BG-level vs. tract-level boundary placement affects *Gingles* compactness and minority VAP calculations in near-threshold districts. Provide at least an order-of-magnitude estimate of boundary precision differences.
+- **P1**: Add a recommendation for resolution selection in litigation: when multiple resolution levels are plausible, the paper should recommend a legally defensible selection criterion (e.g., finest level supporting population equality, or level matching enacted plan).
+- **P2**: Address the adversarial context: if opposing experts use different resolutions, what can a court do? Recommend that resolution choice be pre-registered and disclosed in expert reports before analysis begins.
+- **P2**: Address the manifest/litigation-hold question: when resolution changes mid-analysis, which manifest controls, and how should practitioners document resolution changes in the audit chain?

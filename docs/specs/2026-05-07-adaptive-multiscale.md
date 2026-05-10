@@ -4,7 +4,7 @@
 **Date**: 2026-05-07  
 **Reviewed R1**: MERIDIAN 3/4, BENCHMARK 2/4, SURVEY 3/4, COVENANT 3/4 → avg 2.75/4  
 **Extends**: `bisect-multiscale` crate (extends MultiScaleChain)  
-**Related paper**: B.21  
+**Related paper**: U.5  
 **Depends on**: `bisect-multiscale` (MultiScaleChain, HierarchyLevel)
 
 ---
@@ -15,7 +15,7 @@ Adaptive Multi-scale MCMC extends MultiScaleChain by automatically tuning the co
 
 | Algorithm | `--search` value | Paper | Layer | Flag collision |
 |-----------|-----------------|-------|-------|----------------|
-| Adaptive Multi-scale MCMC | `multiscale-adaptive` | B.21 | Search | `--multiscale-steps`, `--ms-target-accept`, `--ms-adapt-interval` (distinct from all other flags) |
+| Adaptive Multi-scale MCMC | `multiscale-adaptive` | U.5 | Search | `--multiscale-steps`, `--ms-target-accept`, `--ms-adapt-interval` (distinct from all other flags) |
 
 ---
 

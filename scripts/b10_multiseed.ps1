@@ -1,4 +1,4 @@
-# B.10 Multi-seed sweep for focal states
+# T.3 Multi-seed sweep for focal states
 # Runs focal states with 25 seeds each at alpha=0 and alpha=5
 # Also runs alpha sweep {0,1,2,5,10,20} with 10 seeds for Pareto frontier
 

@@ -27,7 +27,7 @@ I will note that the A.3 note distinguished algorithm-choice variation (Apportio
 
 ## Remaining Concerns
 
-- **P2: NC without geographic variation disclosure.** The brief presents NC 7D/7R as the partisan result without noting that other states produce less proportional outcomes under the same algorithm. A one-sentence qualifier — "Results vary by state geography; see Paper B.11 for the full national picture" — would address this.
+- **P2: NC without geographic variation disclosure.** The brief presents NC 7D/7R as the partisan result without noting that other states produce less proportional outcomes under the same algorithm. A one-sentence qualifier — "Results vary by state geography; see Paper T.4 for the full national picture" — would address this.
 - **P2: Efficiency gap footnote missing the $-3.2\%$ magnitude.** A specific number would be more informative.
 - **P3: "Cannot gerrymander" phrasing** remains an output-neutrality implication concern.
 

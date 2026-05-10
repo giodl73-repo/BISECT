@@ -225,5 +225,5 @@
 - The F track is the most coherent track in the portfolio. All seven papers accept. F.3 is the strongest (3.5 avg); it makes a clean methods contribution that will survive independent replication.
 - F.6 has no P1 blockers but has a meaningful P2-1: the abstract and conclusion overclaim single-seed results as established findings. This is a minor but important correction before submission.
 - F.4 is the track's legal standout (R4 = 4.0), with accurate and sophisticated legal analysis across all 50 states. R5's concern about unvalidated YAML configurations is legitimate but addressable without major revision.
-- The cross-track dependency structure is healthy: F.1 correctly depends on F.3 for the resolution rule; F.2 depends on B.13 for NestSection; F.6 depends on D.1 for the 42% threshold. All cross-references are correctly attributed.
+- The cross-track dependency structure is healthy: F.1 correctly depends on F.3 for the resolution rule; F.2 depends on T.6 for NestSection; F.6 depends on D.1 for the 42% threshold. All cross-references are correctly attributed.
 - No `redist` binary name errors found in F-track papers (F.6 correctly uses `bisect fetch`). F.0 through F.6 consistently use `bisect`.

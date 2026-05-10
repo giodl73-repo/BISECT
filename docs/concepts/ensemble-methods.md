@@ -69,7 +69,7 @@ a run takes approximately 50 seconds. For 10,000 steps: approximately 8 minutes.
 
 ---
 
-## `bisect-ensemble` — the Rust ReCom engine (H.2)
+## `bisect-ensemble` — the Rust ReCom engine (U.10)
 
 `bisect-ensemble` is a native Rust implementation of the ReCom algorithm,
 designed for high-throughput ensemble generation. It implements the same
@@ -77,7 +77,7 @@ stationary distribution as GerryChain (Python) but achieves much higher
 throughput through Rust's zero-cost abstractions and efficient memory layout.
 
 **Estimated throughput**: ~50,000 steps per second for NC-scale graphs
-(estimated; measured benchmarks in H.2). This makes 1 million-step
+(estimated; measured benchmarks in U.10). This makes 1 million-step
 ensembles practical in minutes rather than days.
 
 ### Wilson's algorithm for uniform spanning trees
@@ -284,6 +284,6 @@ median, the plan is what geography produces regardless of method.
 - [section-algorithms.md](section-algorithms.md) — the B-series algorithms being evaluated
 - [three-layer-compositor.md](three-layer-compositor.md) — how to configure ensemble runs
 - Paper G.1: *GerryChain Congressional Comparison*
-- Paper H.2: *bisect-ensemble — Rust ReCom Engine*
+- Paper U.10: *bisect-ensemble — Rust ReCom Engine*
 - Paper G.4: *Ensemble Diagnostics*
 - `bisect-analysis::ensemble_diagnostics` — R-hat, ESS, Hamming implementation

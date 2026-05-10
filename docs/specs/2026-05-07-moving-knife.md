@@ -5,7 +5,7 @@
 **Reviewed R2**: MERIDIAN 4/4, BENCHMARK 4/4, SURVEY 3/4, COVENANT 4/4 → avg 3.75/4  
 **Date**: 2026-05-07  
 **Layer**: Structure (SplitStrategy::MovingKnife) — replaces METIS at each bisection node  
-**Related paper**: B.25  
+**Related paper**: T.13  
 **New crate**: Not needed — implemented in `bisect-cli/src/bisection_runner.rs`  
 **Citation**: Puppe & Tasnadi (2026, *Public Choice*) — "Moving-Knife Redistricting"  
 **Requires**: `tract_centroids` (same as CVD Phase 2; already in `LoadedGraph` from task #150)

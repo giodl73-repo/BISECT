@@ -6,7 +6,7 @@
 **Reviewed R2**: MERIDIAN 4/4, BENCHMARK 2/4, SURVEY 3/4, COVENANT 2/4 → avg 2.75/4  
 **Reviewed R3**: MERIDIAN 4/4, BENCHMARK 3/4, SURVEY 3/4, COVENANT 3/4 → avg 3.25/4  
 **Extends**: `bisect-ensemble` crate, `SeedCompositor` three-layer compositor  
-**Related papers**: G.6 (Short-Burst), G.7 (SMC), G.8 (Flip), B.19 (Simulated Annealing)
+**Related papers**: G.6 (Short-Burst), G.7 (SMC), G.8 (Flip), U.3 (Simulated Annealing)
 
 ---
 
@@ -20,7 +20,7 @@ All are **Layer 3 (Search)** — orthogonal to structure and weights.
 | Short-Burst | `short-burst` | G.6 | Search | `--burst-length` (distinct from `--ensemble-steps`) |
 | SMC | standalone only | G.7 | Standalone | not a `--search` flag — see §2 |
 | Flip | `flip` | G.8 | Search | `--flip-steps` (distinct from both above) |
-| Simulated Annealing | `simulated-annealing` | B.19 | **Structure** | `--sa-steps`, `--sa-t0`, `--sa-tf` |
+| Simulated Annealing | `simulated-annealing` | U.3 | **Structure** | `--sa-steps`, `--sa-t0`, `--sa-tf` |
 
 **Parameter scaling guidance** (for state staff and practitioners):
 
@@ -206,7 +206,7 @@ The `selected_plan_rank` enables verification: re-run with same seed, confirm `v
 
 ---
 
-## 4. Simulated Annealing (B.19)
+## 4. Simulated Annealing (U.3)
 
 **Note**: SA is a **Structure layer** variant (replaces METIS at each bisection node), not Search. `SplitStrategy::SimulatedAnnealing`, not `SeedCompositor`.
 

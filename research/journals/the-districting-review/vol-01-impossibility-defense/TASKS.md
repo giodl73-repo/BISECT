@@ -8,11 +8,11 @@ status: active-tasks
 
 | ID | Task | Owner lens | Status |
 |----|------|------------|--------|
-| TDR1-001 | Build audition pool from B.17/R.1/B.7/B.0/A.4/H.0 | DATUM | complete |
-| TDR1-002 | Audit B.17 bounded-variation language | SCALE | complete; scope must stay explicit |
+| TDR1-001 | Build audition pool from U.2/R.1/B.7/B.0/A.4/U.8 | DATUM | complete |
+| TDR1-002 | Audit U.2 bounded-variation language | SCALE | complete; scope must stay explicit |
 | TDR1-003 | Audit R.1 pre-registration and gaming language | COVENANT/BOUNDARY | complete; stress-test language only |
 | TDR1-004 | Audit A.4 manifest and hash language | COVENANT | complete; reproducibility only |
-| TDR1-005 | Audit H.0 court-facing framing | BOUNDARY/WARD | complete; no universal impossibility |
+| TDR1-005 | Audit U.8 court-facing framing | BOUNDARY/WARD | complete; no universal impossibility |
 | TDR1-006 | Decide qualitative preview vs. source-chain path | BOUNDARY/DATUM/COMMONS | complete; qualitative preview path selected |
 | TDR1-007 | Draft article summaries after path decision | COMMONS/DATUM | complete |
 | TDR1-008 | Run role-panel review on article summaries | BOUNDARY/WARD/COVENANT/SCALE/DATUM/COMMONS | complete; passes for qualitative drafting |

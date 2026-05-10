@@ -30,6 +30,7 @@ M.1–M.7 are independent signals; M.8 synthesises all seven.
 |-------|-------|-------------|-------|
 | M.0 | Community Character Weighting: Framework and Legal Grounding | — | planned |
 | M.1 | Economic Character Edge Weights (LODES WAC) | LEHD LODES | planned |
+| M.9 | Economic Character Edge Weights via LODES | LEHD LODES | accepted |
 | M.2 | Land Use Edge Weights (NLCD) | USGS NLCD | planned |
 | M.3 | Housing Character Edge Weights (ACS) | Census ACS | planned |
 | M.4 | Commuting Shed Similarity (LODES OD) | LEHD LODES OD | planned |

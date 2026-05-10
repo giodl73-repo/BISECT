@@ -17,7 +17,7 @@ The *Allen v. Milligan* VRA implication is now addressed in Section 4.2: the pap
 
 The effects-based state-court challenge vulnerability is now acknowledged in Section 4.3: the paper notes that Pennsylvania-style effects tests (under the free and equal elections clause) could challenge algorithmic maps that produce partisan outcomes, even without intent evidence. The response — that the C.8 finding of near-zero efficiency gap for algorithmic maps is the primary defense — is correct.
 
-The *Karcher v. Daggett* citation is present in the constitutional analysis, cross-referencing B.18's analysis.
+The *Karcher v. Daggett* citation is present in the constitutional analysis, cross-referencing T.9's analysis.
 
 ## Remaining Concerns
 

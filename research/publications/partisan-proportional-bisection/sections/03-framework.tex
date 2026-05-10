@@ -83,7 +83,7 @@ is enforced:
 \begin{itemize}
   \item $\mathtt{ubvec}[1] = 1.0$: hard constraint (exact proportionality required)
   \item $\mathtt{ubvec}[1] = 1.05$: 5\,\% tolerance around target
-  \item $\mathtt{ubvec}[1] \to \infty$: constraint disabled (reverts to B.9/B.8)
+  \item $\mathtt{ubvec}[1] \to \infty$: constraint disabled (reverts to T.2/T.1)
 \end{itemize}
 
 The \emph{compromise parameter} $\mathtt{ubvec}[1]$ traces a family of algorithms
@@ -92,12 +92,12 @@ Section~\ref{sec:eval} characterises the tradeoff curve for each state.
 
 \subsection{Connection to AreaSection}
 
-AreaSection (B.9) uses the identical $\mathtt{ncon}=2$ infrastructure with
+AreaSection (T.2) uses the identical $\mathtt{ncon}=2$ infrastructure with
 vertex weights $[\text{population},\, \text{area}]$ and
 $\mathtt{tpwgts} = [k_L/k,\; 0.5,\; k_R/k,\; 0.5]$ (targeting 50\,\%
 land area on each side).
 
-B.12 substitutes $D_{\text{votes}}$ for land area, and replaces the fixed
+T.5 substitutes $D_{\text{votes}}$ for land area, and replaces the fixed
 $0.5$ area target with the derived $\tau_D^*$ that achieves proportionality.
 
 The algorithmic infrastructure is identical.

@@ -5,7 +5,7 @@
 **Verdict**: Minor Revision
 
 ## Summary
-The geographic framing of incumbency effects is the paper's strongest contribution from a political geography perspective. The finding that bisect's incumbency-neutral outcomes arise from geographic structure (not partisan intent) is compelling and consistent with the broader geographic determinism thesis in B.7 and B.17.
+The geographic framing of incumbency effects is the paper's strongest contribution from a political geography perspective. The finding that bisect's incumbency-neutral outcomes arise from geographic structure (not partisan intent) is compelling and consistent with the broader geographic determinism thesis in B.7 and U.2.
 
 ## Concerns
 - **Urban incumbent vulnerability**: The paper notes that compact districts in urban areas may pair Democratic incumbents more often than rural Republican incumbents. This is an important finding that deserves more development — it could be misread as algorithmic partisan bias when it actually reflects geographic sorting.

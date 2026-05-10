@@ -13,15 +13,15 @@ This is not a locked issue lineup. It is the working shape for audition review.
 | Order | Piece | Source | Claim class | Status |
 |-------|-------|--------|-------------|--------|
 | 1 | [The Shape of the Vote](articles/the-shape-of-the-vote.md) | original | interpretive | draft summary complete; needs public-copy review |
-| 2 | [Geography Constrains Proportionality](articles/geography-constrains-proportionality.md) | B.12, with L.6 support | formal/empirical | draft summary complete; hold numeric claims until METIS parameter vector and seed-variance treatment are complete |
-| 3 | [The Ensemble Median Case](articles/the-ensemble-median-case.md) | G.1, with B.11 support | empirical | draft summary complete; usable with ESS-corrected language; no raw percentile certificate |
-| 4 | [Three State Types](articles/three-state-types.md) | B.12 GA/WI/NV | empirical/interpretive | draft summary complete; qualitative until B.12 source-chain closure |
+| 2 | [Geography Constrains Proportionality](articles/geography-constrains-proportionality.md) | T.5, with L.6 support | formal/empirical | draft summary complete; hold numeric claims until METIS parameter vector and seed-variance treatment are complete |
+| 3 | [The Ensemble Median Case](articles/the-ensemble-median-case.md) | G.1, with T.4 support | empirical | draft summary complete; usable with ESS-corrected language; no raw percentile certificate |
+| 4 | [Three State Types](articles/three-state-types.md) | T.5 GA/WI/NV | empirical/interpretive | draft summary complete; qualitative until T.5 source-chain closure |
 | 5 | [What This Issue Does Not Show](articles/what-this-issue-does-not-show.md) | G.1/L.1/board reviews | archival/review | draft summary complete; replaces result-bearing measurement slot for first issue |
 | Deferred | Measuring the Residual | C.5, L.1, L.0 | empirical/methodological | defer until numeric outputs are regenerated or traced to post-fix artifacts |
 
 ## Lock Criteria
 
-- B.12 claim scope verified against latest reviews.
+- T.5 claim scope verified against latest reviews.
 - G.1 ensemble claims use ESS-corrected language and avoid litigation-certificate wording.
 - C.5/L.1 result-bearing measurement claims are deferred unless numeric outputs are regenerated or traced to post-fix artifacts.
 - No adoption claim appears before the terminal connection.

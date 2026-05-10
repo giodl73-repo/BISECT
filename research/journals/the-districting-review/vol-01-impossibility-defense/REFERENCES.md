@@ -8,12 +8,12 @@ status: provisional-reference-index
 
 | Label | Source | Role | Current status |
 |-------|--------|------|----------------|
-| [B17] | Track B, Paper B.17: Parameter Sensitivity | Bounded variation anchor | audition-reserved |
+| [B17] | Track U, Paper U.2: Parameter Sensitivity | Bounded variation anchor | audition-reserved |
 | [R1] | Track R, Paper R.1: Parameter Gaming | Pre-registration anchor | audition-reserved |
 | [B7] | Track B, Paper B.7: Solution Space | Stability anchor | audition-support |
 | [B0] | Track B, Paper B.0: Algorithm Overview | Technical framing | audition-support |
 | [A4] | Track A, Paper A.4: Software / Manifest | Reproducibility anchor | audition-reserved |
-| [H0] | Track H, Paper H.0: Legal Posture | Court-facing framing | audition-caution |
+| [H0] | Track U, Paper U.8: Legal Posture | Court-facing framing | audition-caution |
 
 ## Citation Rules
 

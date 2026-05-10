@@ -14,7 +14,7 @@ decision: approve scope-down strategy
 Approve the scope-down strategy for District Studies Vol. 1 and move the issue
 from **audition** toward **provisional public preview**.
 
-The issue will not wait for exact B.12 table provenance, exact G.1 percentile
+The issue will not wait for exact T.5 table provenance, exact G.1 percentile
 language, or L.1/C.5 output regeneration. Those gates remain open, but they are
 out of scope for the first public version of this issue.
 
@@ -26,7 +26,7 @@ claim about reform, adoption, or legal proof.
 
 ## Locked Boundaries For Provisional Drafting
 
-- No exact B.12 table values.
+- No exact T.5 table values.
 - No exact G.1 percentile claims.
 - No L.1/C.5 result-bearing measurement claims.
 - No adoption recommendation.

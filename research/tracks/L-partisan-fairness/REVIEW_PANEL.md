@@ -21,7 +21,7 @@
 ## Track-Level Strengths
 - L.6 is the track's strongest paper — the Gallagher LSq analysis and the state constitutional variation survey (Pennsylvania, North Carolina free-elections clauses) are timely and practically important post-Rucho.
 - L.1's efficiency gap empirics are consistent with Stephanopoulos (2015) and provide important replication value.
-- L.6's cross-reference to B.12's proportionality paradox (sigma≈0 for competitive states) is an important connection that no other paper in the literature has made.
+- L.6's cross-reference to T.5's proportionality paradox (sigma≈0 for competitive states) is an important connection that no other paper in the literature has made.
 
 ## P1 Items by Paper
 - **L.3 (Partisan Bias + Swing Ratio)**: The swing ratio is defined differently in Tufte (1973), Gelman & King (1994), and McDonald & Burnett (2022). Specify which definition is implemented and why.
@@ -29,7 +29,7 @@
 - **L.1**: The efficiency gap formula is stated without noting that multiple definitions exist (Stephanopoulos-McGhee 2015, Chen-Cottrell 2016 clarified version). Specify which formula is implemented; differences matter for empirical comparisons.
 
 ## P2 Items
-- L.0: Cross-reference L.6 ↔ B.12 (proportionality paradox) explicitly in the overview — this is the most novel finding in the track.
+- L.0: Cross-reference L.6 ↔ T.5 (proportionality paradox) explicitly in the overview — this is the most novel finding in the track.
 - L.5: The seats-votes curve should show the empirical curve alongside the theoretical symmetric version; the deviation from symmetry quantifies the enacted partisan bias.
 - L.4: Consider recommending the partisan declination as a complement to efficiency gap for courts, since they measure different aspects of partisan asymmetry.
 

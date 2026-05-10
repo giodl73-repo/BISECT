@@ -20,7 +20,7 @@ discipline and final citation format before lock.
 
 ## Lock Requirements
 
-- B.11 source-bound output check.
+- T.4 source-bound output check.
 - G.1 ESS correction check.
 - A.4/R.4 verification check.
 - D.1 caveat check.

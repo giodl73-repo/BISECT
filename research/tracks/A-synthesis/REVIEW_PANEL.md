@@ -6,6 +6,8 @@
 **Reviewers**: 7-member panel
 **Review Round**: 1
 
+> Historical review snapshot. The comments below reflect the portfolio state at the time of review and are retained for revision history, not as current project status.
+
 ---
 
 ## Panel Composition
@@ -51,7 +53,7 @@ The panel cross-checked A.0's six headline findings against the Track B–H MODU
 | 137 MM districts vs. 68 enacted (+69 surplus) | D.0 | Accurate and consistent |
 | 42% demographic threshold | D.1 | Accurate; Gingles qualification now present |
 | 62% partisan bias reduction; EG -3.2% / +5.1% | C.5 | Accurate |
-| 80% temporal stability; 14 pp recursive advantage | C.3/B.15 | Accurate and consistent |
+| 80% temporal stability; 14 pp recursive advantage | C.3/T.8 | Accurate and consistent |
 | 3.2× variance decomposition (geography > time) | C.2 | Directionally consistent |
 
 #### Material Omissions
@@ -283,7 +285,7 @@ Four documents use inconsistent compactness improvement figures (+22%, +56%, +44
 C.6 (public rates algorithmic maps as fairer) and C.8 (30% more swing districts) should appear in Section 5 (Implications).
 
 **PP3.2 — A.0 Track H implementability context [A.0]**
-H.2's 2500× speed advantage and H.0's PercentileSweep are directly relevant to the implementability arguments in Section 5.3.
+U.10's 2500× speed advantage and U.8's PercentileSweep are directly relevant to the implementability arguments in Section 5.3.
 
 **PP3.3 — A.4 execution [A.4]**: After resolving PP1.1, execute the plan (8–12 weeks).
 

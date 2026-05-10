@@ -52,7 +52,7 @@
 ### G.0 — Ensemble Methodology Framework
 **Status**: draft | **Venue**: Political Analysis
 
-The paper correctly distinguishes ensemble characterisation from algorithmic plan selection. The statutory implications section (Section 6) is the paper's most original contribution — the bridge to B.16's ConvergenceSweep as a deterministic alternative.
+The paper correctly distinguishes ensemble characterisation from algorithmic plan selection. The statutory implications section (Section 6) is the paper's most original contribution — the bridge to U.1's ConvergenceSweep as a deterministic alternative.
 
 **Gaps**: R-hat threshold inconsistency — body text uses 1.05 while G.4 uses 1.1. All G-series papers must standardise to R-hat < 1.1. The "exactly one AR plan" claim requires precision: uniqueness holds for ConvergenceSweep at T=600 from a specified seed, not for METIS in general. NC PP percentile estimate "65th–75th" needs to be tightened to "68th" following G.1's R2 correction.
 

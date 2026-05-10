@@ -13,7 +13,7 @@ The ensemble analysis directly answers my primary methodological concern. The 5t
 
 The causal language has been softened throughout: "algorithmic maps produce approximately 85 competitive districts" is now "algorithmic maps are associated with approximately 85 competitive districts." The abstract, introduction, and conclusion all use associational language. The methodology section now includes a paragraph clarifying that the comparison between algorithmic and enacted maps is observational, not a randomized experiment, and that the difference could reflect the redistricting process, the specific parameter choices, or other factors. This is the methodological humility I requested.
 
-The forward citation to "dellaLibera2026stability" is now resolved: the paper replaces the cross-decade projection claim with a reference to B.18's specific finding about reapportionment-cycle boundary stability.
+The forward citation to "dellaLibera2026stability" is now resolved: the paper replaces the cross-decade projection claim with a reference to T.9's specific finding about reapportionment-cycle boundary stability.
 
 The reaggregation error note (whether block-level enacted maps vs. tract-level algorithmic maps create asymmetric measurement error) is now addressed in a footnote: the paper acknowledges the potential for asymmetric measurement error but notes that it would affect the competitive district count for both enacted and algorithmic maps in the same direction, reducing rather than inflating the observed difference.
 

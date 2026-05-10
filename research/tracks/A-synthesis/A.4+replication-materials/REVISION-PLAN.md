@@ -39,7 +39,7 @@
 
 ### P1-B: Add election data provenance
 **Location**: Section 3 (Data Provenance)
-**Issue**: The package documents Census redistricting files (PL 94-171) and TIGER/Line shapefiles but omits the election data source used for all partisan analyses (B.11, C.5, and others). A researcher trying to independently reproduce partisan results cannot do so without knowing which election dataset was used, at what version, and how it was processed.
+**Issue**: The package documents Census redistricting files (PL 94-171) and TIGER/Line shapefiles but omits the election data source used for all partisan analyses (T.4, C.5, and others). A researcher trying to independently reproduce partisan results cannot do so without knowing which election dataset was used, at what version, and how it was processed.
 **Fix**: Add a subsection "Election Data" documenting the source (VEST election data or MIT Election Lab, at the specific version used), the download path, and whether `redist fetch --type elections` retrieves it automatically. If election data is not part of the reproducible pipeline, this must be explicitly stated.
 **Flagged by**: Rodden
 

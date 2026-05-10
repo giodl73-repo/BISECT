@@ -2,6 +2,8 @@
 **Source**: REVIEW_BOARD.md Round 1 (2026-05-07)
 **Track score**: 5.6/10 → target 8.0/10
 
+> Historical revision plan. This document tracks the earlier 75-paper/12-track revision cycle and is retained for archive context only.
+
 ## B1 Items (Blocking)
 
 **B1.3 [replication: A ↔ program-wide]** — A.4 describes the wrong tool
@@ -14,7 +16,7 @@ Add ensemble context (G.1 finding) to A.0 §4; expand A.2 to cover Tracks C/E/F/
 
 ## B3 Items (Nice-to-have)
 
-**B3.A** — Execute A.4 and A.5; rewrite A.1 for current 75-paper scope; fix "cannot gerrymander" propagation across A.1/A.2/A.3.
+**B3.A** — Execute A.4 and A.5; rewrite A.1 for the then-current portfolio scope; fix "cannot gerrymander" propagation across A.1/A.2/A.3.
 
 ## Critical Path to 8.0/10
 B1.3 (A.4 tool fix) → A.4 execution → A.5 writing → A.1 rewrite → 8.0+

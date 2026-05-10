@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
-description = "Multi-objective Pareto redistricting via NSGA-II (B.26)"
+description = "Multi-objective Pareto redistricting via NSGA-II (U.7)"
 
 [dependencies]
 bisect-ensemble = { path = "../bisect-ensemble" }

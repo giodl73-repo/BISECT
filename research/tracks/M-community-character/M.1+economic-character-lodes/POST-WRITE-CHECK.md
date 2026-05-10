@@ -58,7 +58,7 @@ Key claims:
 - Blend formula: eq.(2) in §3.2 states `w_ec = w_geo × (α + (1−α) × sim)` with
   default α=0.5. **PASS**.
 - M-track framework formula: §3.1 states M.0 generic formula as
-  `w(u,v) = w_base(u,v) × sim(c_u, c_v)`. The B.27 blend (eq.2) differs from
+  `w(u,v) = w_base(u,v) × sim(c_u, c_v)`. The M.9 blend (eq.2) differs from
   this pure-multiplicative form, and §3.2 correctly acknowledges this difference
   and explains the design rationale. **PASS — well-handled**.
 
@@ -206,7 +206,7 @@ acknowledges this deviation but should provide clearer justification for why M.1
 departures from M.0 are acceptable without updating M.0.
 
 [I-05] The paper does not state which version of the bisect binary produced the
-empirical results. B.27 mentions "post-cccd853 debug build" — M.1 should include
+empirical results. M.9 mentions "post-cccd853 debug build" — M.1 should include
 the same provenance.
 
 ---
@@ -214,7 +214,7 @@ the same provenance.
 ### REFEREE 2 — Political Science Reviewer (APSR/JOP archetype)
 **Recommendation: Minor Revision**
 
-SUMMARY: The empirical results are consistent with B.27 (same three states, same
+SUMMARY: The empirical results are consistent with M.9 (same three states, same
 values). Dagger notation is correctly applied. The state-specificity finding is
 well-argued. The Arizona example in §1 (Maricopa County hearings) is effective
 motivation. Key political science concern is that the mechanism story (why does
@@ -262,7 +262,7 @@ MAJOR CONCERNS: None beyond the mathematical issue already flagged.
 
 MINOR CONCERNS:
 [I-09] §5.3 expert witness element 4 includes the blend formula with notation
-`w_geo` — same issue as B.27: a non-technical judge will need a parenthetical
+`w_geo` — same issue as M.9: a non-technical judge will need a parenthetical
 defining w_geo as "the geographic boundary-length weight."
 
 [I-10] The CA Proposition 11 discussion (§5.1) says the Commission "accepted
@@ -338,7 +338,7 @@ P1 BLOCKERS — MUST FIX BEFORE PANEL REVIEW
     choice (1.0 for both-zero; 0.5 for one-zero). If the implementation uses 0.0,
     fix the implementation. Update the spec's test invariant.
   Note: This may be a simple spec typo. The paper's design choice (1.0) is
-    correct and is also consistent with B.27. The spec invariant is likely wrong.
+    correct and is also consistent with M.9. The spec invariant is likely wrong.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -371,8 +371,8 @@ PRE-PANEL CHECKLIST:
 VERDICT: FIXES REQUIRED (major) — 2 P1 blockers must be resolved before panel
 Fixes required: 2 (P1 critical), 1 (P2), 6 (P3 optional)
 
-Root cause of both P1 issues: the M.1 spec was written before the B.27 impl spec
-was finalized. The B.27 impl spec has the correct zero-vector handling (1.0 for
+Root cause of both P1 issues: the M.1 spec was written before the M.9 impl spec
+was finalized. The M.9 impl spec has the correct zero-vector handling (1.0 for
 both-zero). The M.1 spec has a stale test invariant. The similarity matrix
 appears to have been computed with a normalization assumption not carried forward
 into the paper's formula description.

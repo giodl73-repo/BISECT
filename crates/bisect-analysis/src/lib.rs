@@ -1,6 +1,5 @@
 pub mod analyzer;
 pub mod bloc_voting;
-pub mod permutation;
 pub mod bloc_voting_writer;
 pub mod compactness;
 pub mod comparison;
@@ -12,6 +11,7 @@ pub mod ensemble_diagnostics;
 pub mod exit_codes;
 pub mod nesting;
 pub mod partisan;
+pub mod permutation;
 pub mod political;
 pub mod proportionality;
 pub mod race_of_candidate;

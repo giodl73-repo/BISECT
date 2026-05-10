@@ -41,11 +41,11 @@ for practitioners.
 
 | Gate | Status | Effect |
 |------|--------|--------|
-| B.17 scope | open | No universal variation claim |
+| U.2 scope | open | No universal variation claim |
 | R.1 pre-registration | open | No legal-proof claim |
 | B.7 scope | caution | Keep stability claim tied to listed scope |
 | A.4 manifest | caution | Keep reproducibility claim operational |
-| H.0 court posture | caution | No universal impossibility language |
+| U.8 court posture | caution | No universal impossibility language |
 
 ## Public Label
 

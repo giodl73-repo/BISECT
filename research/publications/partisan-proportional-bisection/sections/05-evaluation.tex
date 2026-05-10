@@ -3,7 +3,7 @@
 
 \subsection{Experimental Setup}
 
-We apply the B.12 dual-constraint framework to all 50 states using 2020 Census
+We apply the T.5 dual-constraint framework to all 50 states using 2020 Census
 data and 2020 presidential election results (precinct-to-tract interpolation
 via VEST/Fekrazad \citep{fekrazad2021}).
 Vertex weights are $[\text{population},\, D_{\text{votes}}]$;
@@ -12,15 +12,15 @@ $\mathtt{ubvec} = [1.001,\, \eta]$ where $\eta \in \{1.05, 1.10, 1.20, \infty\}$
 
 For comparison, we include:
 \begin{itemize}
-  \item B.8 GeoSection ($\eta = \infty$, geometry only)
-  \item B.9 AreaSection ($\mathtt{ncon}=2$ with land area, not $D_{\text{votes}}$)
-  \item B.12 Partisan at $\eta = 1.05, 1.10, 1.20$
+  \item T.1 GeoSection ($\eta = \infty$, geometry only)
+  \item T.2 AreaSection ($\mathtt{ncon}=2$ with land area, not $D_{\text{votes}}$)
+  \item T.5 Partisan at $\eta = 1.05, 1.10, 1.20$
   \item Theoretical proportional (exact $k_D/k_R$ by HH)
 \end{itemize}
 
-\subsection{The Proportionality Gap Baseline (B.9 Reference)}
+\subsection{The Proportionality Gap Baseline (T.2 Reference)}
 
-Table~\ref{tab:gap-baseline} reproduces the B.9 proportionality gaps for
+Table~\ref{tab:gap-baseline} reproduces the T.2 proportionality gaps for
 the 8 competitive states (46--55\,\% Democratic vote share).
 All 8 states show Republican over-representation under geography-only algorithms,
 with a mean gap of $-6.2$\,pp.
@@ -28,12 +28,12 @@ This is the target that the partisan constraint must close.
 
 \begin{table}[h]
 \centering
-\caption{Proportionality gap under B.9 (geography only) for competitive states.
+\caption{Proportionality gap under T.2 (geography only) for competitive states.
 Negative = Republican over-representation.}
 \label{tab:gap-baseline}
 \begin{tabular}{lrrrrr}
 \toprule
-State & D vote & k & B.9 D seats & Proportional & Gap \\
+State & D vote & k & T.2 D seats & Proportional & Gap \\
 \midrule
 Georgia   & 50.1\,\% & 14 & 5 & 7.0 & $-14.4$\,pp \\
 Wisconsin & 50.3\,\% &  8 & 3 & 4.0 & $-12.8$\,pp \\
@@ -78,22 +78,22 @@ for the R-bloc; feasibility requires the curve to be below this line at $x = k_R
 \subsection{The Tradeoff Curve: Analytical Result}
 
 Theorem~\ref{thm:invariance} (Tradeoff invariance) establishes analytically that
-for competitive states, the B.12 constraint cannot meaningfully close the
+for competitive states, the T.5 constraint cannot meaningfully close the
 proportionality gap regardless of $\eta$.
-Table~\ref{tab:tradeoff} reports the B.9 baseline gap, the $\sigma$ bound
-on B.12's maximum effect, and the implied upper bound on gap reduction.
+Table~\ref{tab:tradeoff} reports the T.2 baseline gap, the $\sigma$ bound
+on T.5's maximum effect, and the implied upper bound on gap reduction.
 
 \begin{table}[h]
 \centering
 \caption{Analytical tradeoff bounds for competitive states.
 ``Max gap reduction'' = $C \cdot \sigma$ under Theorem~\ref{thm:invariance};
-the B.12 constraint cannot improve the gap by more than this.
+the T.5 constraint cannot improve the gap by more than this.
 $C$ estimated from Lorenz curve slope at $x = k_R/k$.}
 \label{tab:tradeoff}
 \small
 \begin{tabular}{lrrrrr}
 \toprule
-State & D vote & B.9 Gap & $\sigma$ & Max gap reduction & New gap (lower bound) \\
+State & D vote & T.2 Gap & $\sigma$ & Max gap reduction & New gap (lower bound) \\
 \midrule
 Georgia       & 50.1\,\% & $-14.4$\,pp & 0.001 & $\leq 0.1$\,pp & $\geq -14.3$\,pp \\
 Wisconsin     & 50.3\,\% & $-12.8$\,pp & 0.003 & $\leq 0.4$\,pp & $\geq -12.4$\,pp \\
@@ -111,13 +111,13 @@ Table~\ref{tab:tradeoff-empirical} presents the actual METIS results.
 
 \begin{table}[h]
 \centering
-\caption{Empirical proportionality gap (pp) under B.12 at three $\eta$ values.
-Baseline is B.9 (geometry only). ↑ = improvement; ↓ = worsening.
+\caption{Empirical proportionality gap (pp) under T.5 at three $\eta$ values.
+Baseline is T.2 (geometry only). ↑ = improvement; ↓ = worsening.
 All runs: 30 seeds per ratio, 1.5\,\% balance tolerance, 2020 data.}
 \label{tab:tradeoff-empirical}
 \begin{tabular}{lrrrrrr}
 \toprule
-State & D vote & B.9 & $\eta=1.05$ & $\eta=1.10$ & $\eta=1.20$ & Best \\
+State & D vote & T.2 & $\eta=1.05$ & $\eta=1.10$ & $\eta=1.20$ & Best \\
 \midrule
 GA & 50.1\,\% & $-14.4$\,pp & $-7.3$\,pp \small{↑} & $-7.3$\,pp \small{↑} & $-14.4$\,pp & $-7.3$ at any \\
 \textbf{WI} & 50.3\,\% & $-12.8$\,pp & $-12.8$\,pp & $\mathbf{-0.3}$\,pp \small{↑↑} & $-25.3$\,pp \small{↓↓} & $-0.3$ at 1.10 \\
@@ -135,18 +135,18 @@ The empirical results reveal that the tradeoff is \emph{non-monotone and state-s
 At $\eta = 1.10$, Wisconsin achieves $-0.3$\,pp --- near-exact proportionality,
 dramatically improved from $-12.8$\,pp.
 At $\eta = 1.05$, the constraint is too tight and the partition reverts to the
-same geometry as B.9 ($-12.8$\,pp).
+same geometry as T.2 ($-12.8$\,pp).
 At $\eta = 1.20$, the constraint is too loose and the D-bloc shrinks to
 2 districts ($-25.3$\,pp) --- worse than the baseline.
 The sweet spot is $\eta = 1.10$ for WI.
 
 \paragraph{North Carolina (σ = 0.007).}
-All three $\eta$ values \emph{worsen} NC's proportionality gap relative to B.9
+All three $\eta$ values \emph{worsen} NC's proportionality gap relative to T.2
 ($-6.5$\,pp → $-13.6$\,pp).
-The B.12 partition attempts 7:7 (the proportional HH ratio) but the D-constraint
+The T.5 partition attempts 7:7 (the proportional HH ratio) but the D-constraint
 forces a partition where the D-bloc has insufficient Democratic concentration
 to win all 7 districts.
-B.9's 6:8 natural ratio actually gives \emph{more} D seats (6) than B.12's
+T.2's 6:8 natural ratio actually gives \emph{more} D seats (6) than T.5's
 forced 7:7 ratio (5).
 This is a case where the partisan constraint \emph{hurts} proportionality.
 
@@ -162,7 +162,7 @@ GA improves from $-14.4$\,pp to $-7.3$\,pp at $\eta \leq 1.10$, but the improvem
 plateaus --- Lorenz infeasibility prevents further improvement.
 
 \paragraph{Summary.}
-The B.12 constraint does not monotonically reduce the proportionality gap.
+The T.5 constraint does not monotonically reduce the proportionality gap.
 For some states (WI) and some $\eta$ values, it achieves near-proportional outcomes.
 For other states (NC) it worsens outcomes.
 For others (AZ) it has no effect.
@@ -176,7 +176,7 @@ all 42 multi-district states (excludes AK, DE, ND, SD, VT, WY, WY with $k=1$).
 \begin{table}[h]
 \centering
 \caption{Partisan signal strength $\sigma$, proportional seat allocation, and
-B.9 proportionality gap.  Sorted by $\sigma$. Single-seat states excluded.}
+T.2 proportionality gap.  Sorted by $\sigma$. Single-seat states excluded.}
 \label{tab:sigma}
 \small
 \begin{tabular}{lrrrrrl}
@@ -245,7 +245,7 @@ This is the \textbf{proportionality paradox}:
   even the near-neutral proportional target with contiguous districts.
 \end{enumerate}
 
-The B.12 formula tells us the target.
+The T.5 formula tells us the target.
 Lorenz feasibility tells us whether geography allows the target to be reached.
 For competitive states, the target is easy to specify but hard to achieve.
 

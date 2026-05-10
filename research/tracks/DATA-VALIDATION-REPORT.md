@@ -1,7 +1,7 @@
 # Data Validation Report
 
 **Date**: 2026-05-08  
-**Scope**: 6 papers — B.1, B.7, B.11, G.2, A.0, C.5  
+**Scope**: 6 papers — B.1, B.7, T.4, G.2, A.0, C.5  
 **Validator**: systematic cross-check of paper claims against pipeline outputs  
 **Real data sources**: `outputs/2020/states/*/analysis/proportionality.json` (44 states), `outputs/b11_ms_*/`, `outputs/b7_*/`
 
@@ -12,7 +12,7 @@
 ---
 
 ### Paper: B.1 (recursive-bisection)
-**File**: `research/tracks/B-algorithm/B.1+recursive-bisection/`
+**File**: `research/tracks/B-foundations/B.1+recursive-bisection/`
 
 ---
 
@@ -39,8 +39,8 @@ Additionally, B.1 states max deviation is 15.83% "in single-district states." Bu
 
 ---
 
-### Paper: B.11 (apportion-regions)
-**File**: `research/tracks/B-algorithm/B.11+apportion-regions/sections/04-evaluation.tex`
+### Paper: T.4 (apportion-regions)
+**File**: `research/tracks/T-plan-construction/T.4+apportion-regions/sections/04-evaluation.tex`
 
 ---
 
@@ -51,13 +51,13 @@ Additionally, B.1 states max deviation is 15.83% "in single-district states." Bu
 **Real data**:
 - NC AR: `outputs/b11_ms_NC_s1` through `b11_ms_NC_s20` — **7D/7R (+0.7pp) on ALL 20 seeds**. VERIFIED.
 - GA AR: `outputs/b11_ms_GA_s1` through `b11_ms_GA_s10` — **5D/9R (-14.4pp) on all 10 seeds**. VERIFIED.
-- NC MEC=5D/9R and GA MEC=7D/7R: These reference "dellaLibera2026mec" at convergence (1400 seeds for NC, 1000 seeds for GA). No such convergence output exists in `outputs/`. The bakeoff GeoSection single-seed run gives NC=7D/7R and GA=6D/8R — different from B.11's MEC claim, but single-seed is expected to differ from convergence. UNVERIFIABLE from available outputs.
+- NC MEC=5D/9R and GA MEC=7D/7R: These reference "dellaLibera2026mec" at convergence (1400 seeds for NC, 1000 seeds for GA). No such convergence output exists in `outputs/`. The bakeoff GeoSection single-seed run gives NC=7D/7R and GA=6D/8R — different from T.4's MEC claim, but single-seed is expected to differ from convergence. UNVERIFIABLE from available outputs.
 
-**Important context — algorithm specificity**: B.11 uses `prime-factor` (ApportionRegions) with unweighted geographic edges. The default 2020 run uses AR+county+convergence and gives NC=6D/8R. The B.11-specific AR run (`b11_ms_NC`) gives 7D/7R. These are internally consistent: different configs produce different results.
+**Important context — algorithm specificity**: T.4 uses `prime-factor` (ApportionRegions) with unweighted geographic edges. The default 2020 run uses AR+county+convergence and gives NC=6D/8R. The T.4-specific AR run (`b11_ms_NC`) gives 7D/7R. These are internally consistent: different configs produce different results.
 
-**Verdict (AR claims)**: VERIFIED. **Verdict (MEC comparison)**: UNVERIFIABLE from current outputs. B.11 is internally consistent — its claims are for a specific algorithm configuration that is correctly labeled.
+**Verdict (AR claims)**: VERIFIED. **Verdict (MEC comparison)**: UNVERIFIABLE from current outputs. T.4 is internally consistent — its claims are for a specific algorithm configuration that is correctly labeled.
 
-**Action**: OK — B.11's AR results are fully verified. No fix needed. MEC comparison numbers cannot be validated without re-running convergence, but are attributed to a cited companion paper.
+**Action**: OK — T.4's AR results are fully verified. No fix needed. MEC comparison numbers cannot be validated without re-running convergence, but are attributed to a cited companion paper.
 
 ---
 
@@ -68,7 +68,7 @@ Additionally, B.1 states max deviation is 15.83% "in single-district states." Bu
 **Real data**:
 - WI: `outputs/b11_ms_WI_s1` → **2D/6R (-25.3pp)**. VERIFIED.
 - National 48-state total: Computed from all `b11_ms_*_s1` outputs. Excluding AK (0D/1R) and HI (0D/2R): **223D/209R (51.6%D)**. VERIFIED exactly.
-- Spot-check state results: MN=4D ✓, TX=16D ✓, VA=6D ✓, OR=3D ✓, SC=2D ✓, NJ=9D ✓ — all match B.11 Table 2.
+- Spot-check state results: MN=4D ✓, TX=16D ✓, VA=6D ✓, OR=3D ✓, SC=2D ✓, NJ=9D ✓ — all match T.4 Table 2.
 
 **Verdict**: VERIFIED.
 
@@ -88,8 +88,8 @@ Additionally, B.1 states max deviation is 15.83% "in single-district states." Bu
 **Real data**:
 - NC AR=7D: **VERIFIED** (b11_ms_NC_s1-20 all give 7D).
 - GA AR=5D: **VERIFIED** (b11_ms_GA_s1-10 all give 5D).
-- WI AR=4D: **CONTRADICTED**. `outputs/b11_ms_WI_s1` through `b11_ms_WI_s5` all give **2D/6R**. B.11's zero-variance result at 20 seeds also confirms 2D/6R. The AR algorithm (ApportionRegions) gives 2D for Wisconsin, not 4D.
-- PA AR=8D: **CONTRADICTED**. `outputs/b11_ms_PA_s1` through `b11_ms_PA_s20` all give **7D/10R** uniformly. B.11 also reports PA AR=7D/10R. Standard bisect (b7_PA) seeds show mean ~7.6D, with 8D appearing frequently — suggesting G.2 may be reporting standard-bisect mean as if it were the AR result.
+- WI AR=4D: **CONTRADICTED**. `outputs/b11_ms_WI_s1` through `b11_ms_WI_s5` all give **2D/6R**. T.4's zero-variance result at 20 seeds also confirms 2D/6R. The AR algorithm (ApportionRegions) gives 2D for Wisconsin, not 4D.
+- PA AR=8D: **CONTRADICTED**. `outputs/b11_ms_PA_s1` through `b11_ms_PA_s20` all give **7D/10R** uniformly. T.4 also reports PA AR=7D/10R. Standard bisect (b7_PA) seeds show mean ~7.6D, with 8D appearing frequently — suggesting G.2 may be reporting standard-bisect mean as if it were the AR result.
 
 **Root cause**: G.2 cites G.1 ("Using the G.1 results") for the AR partisan position, but G.1 only contains edge-cut compactness data (no partisan seat outcomes). The WI=4D and PA=8D figures appear to be the **standard bisect (GeoSection) mean** across seeds, mistakenly labeled as AR (ApportionRegions) results. The standard bisect b7_WI seeds 1-20 show 2D–4D with mode 3D; b7_PA seeds 1-20 show 6D–9D with mode 8D. This is consistent with G.2 sourcing from GeoSection data rather than AR data.
 
@@ -133,7 +133,7 @@ Additionally, B.1 states max deviation is 15.83% "in single-district states." Bu
 ---
 
 ### Paper: B.7 (seed-sensitivity)
-**File**: `research/tracks/B-algorithm/B.7+solution-space-and-seed-sensitivity/sections/04-results.tex`
+**File**: `research/tracks/B-foundations/B.7+solution-space-and-seed-sensitivity/sections/04-results.tex`
 
 ---
 
@@ -214,8 +214,8 @@ B.7's CV<2% for 48/50 states is based on a 10,000-seed edge-cut sweep not preser
 **P2.3 — A.0 EG figures depend on C.5**  
 A.0's −3.2%/+5.1% EG claim (section 04-findings.tex line 55) is copied from C.5. If P1.4 (NC EG inconsistency in C.5) is resolved by changing national averages, A.0 must be updated. Flag this dependency.
 
-**P2.4 — B.11 MEC comparison unverifiable**  
-B.11's MEC comparison (NC MEC=5D/9R, GA MEC=7D/7R) references a convergence run that is not in `outputs/`. The bakeoff GeoSection single-seed gives different results (NC=7D/7R, GA=6D/8R) because convergence over 1000+ seeds changes the outcome. This is expected and documented in B.11, but the MEC reference numbers cannot be independently verified from available outputs.
+**P2.4 — T.4 MEC comparison unverifiable**  
+T.4's MEC comparison (NC MEC=5D/9R, GA MEC=7D/7R) references a convergence run that is not in `outputs/`. The bakeoff GeoSection single-seed gives different results (NC=7D/7R, GA=6D/8R) because convergence over 1000+ seeds changes the outcome. This is expected and documented in T.4, but the MEC reference numbers cannot be independently verified from available outputs.
 
 ---
 
@@ -225,13 +225,13 @@ B.11's MEC comparison (NC MEC=5D/9R, GA MEC=7D/7R) references a convergence run 
 |-------|-------|---------|--------|
 | B.1 | 2.79% mean pop deviation | UNVERIFIABLE (different algo run) | P2 |
 | B.1 | Max deviation 15.83% | INCONSISTENT (WY should be 24%) | P2 |
-| B.11 | NC AR=7D/7R (+0.7pp) | VERIFIED | OK |
-| B.11 | GA AR=5D/9R (-14.4pp) | VERIFIED | OK |
-| B.11 | WI AR=2D/6R (-25.3pp) | VERIFIED | OK |
-| B.11 | PA AR=7D/10R (-9.4pp) | VERIFIED | OK |
-| B.11 | National AR 223D/209R (48 states) | VERIFIED | OK |
-| B.11 | NC MEC=5D/9R | UNVERIFIABLE | P2 |
-| B.11 | GA MEC=7D/7R | UNVERIFIABLE | P2 |
+| T.4 | NC AR=7D/7R (+0.7pp) | VERIFIED | OK |
+| T.4 | GA AR=5D/9R (-14.4pp) | VERIFIED | OK |
+| T.4 | WI AR=2D/6R (-25.3pp) | VERIFIED | OK |
+| T.4 | PA AR=7D/10R (-9.4pp) | VERIFIED | OK |
+| T.4 | National AR 223D/209R (48 states) | VERIFIED | OK |
+| T.4 | NC MEC=5D/9R | UNVERIFIABLE | P2 |
+| T.4 | GA MEC=7D/7R | UNVERIFIABLE | P2 |
 | G.2 | NC AR=7D (54th pct) | VERIFIED | OK |
 | G.2 | GA AR=5D (38th pct) | VERIFIED | OK |
 | G.2 | WI AR=4D (61st pct) | CONTRADICTED (actual: 2D) | **P1** |
@@ -248,8 +248,8 @@ B.11's MEC comparison (NC MEC=5D/9R, GA MEC=7D/7R) references a convergence run 
 The `outputs/2020/` directory contains an **ApportionRegions + county weights + convergence** run (the official proposal). This is NOT the same algorithm as:
 - B.1's standard recursive bisect (unweighted, standard-bisect structure)
 - B.7's standard bisect seed sweep
-- B.11's pure ApportionRegions (unweighted, prime-factor structure, single seed)
+- T.4's pure ApportionRegions (unweighted, prime-factor structure, single seed)
 
-When validating claims from B.1 or B.7, the current `outputs/2020/` cannot be used. Claims specific to B.11's AR algorithm should use `outputs/b11_ms_*/`. Claims about the official proposal use `outputs/2020/`.
+When validating claims from B.1 or B.7, the current `outputs/2020/` cannot be used. Claims specific to T.4's AR algorithm should use `outputs/b11_ms_*/`. Claims about the official proposal use `outputs/2020/`.
 
 The `outputs/b0_bakeoff_unweighted/` (only 4 states: AL, GA, NC, WI) provides standard unweighted bisect results for those states.

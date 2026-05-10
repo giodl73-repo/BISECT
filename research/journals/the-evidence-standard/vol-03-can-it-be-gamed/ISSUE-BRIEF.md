@@ -22,7 +22,7 @@ The most sophisticated objection to algorithmic redistricting is not "it produce
 |------|------|-------------|-----------------|
 | Editorial | The "Trojan horse" objection — take it seriously before answering it | interpretive | — |
 | Taxonomy | Five gaming vectors, their attack surfaces, their DIA protections | operational | R.0 (gaming taxonomy) |
-| Parameter gaming | Adversarial B.17 — most-partisan parameters = 0.3 seats, detectable | empirical | R.1 (parameter gaming) |
+| Parameter gaming | Adversarial U.2 — most-partisan parameters = 0.3 seats, detectable | empirical | R.1 (parameter gaming) |
 | Input data | SHA-256 bounds input manipulation — ±1% population = noise floor | empirical | R.2 (input data manipulation) |
 | Geography | Resolution choice (0.18 seats) + adjacency manipulation (0.15 seats) | empirical | R.3 (geographic gaming) |
 | Combined | Candidate gaming bound — <= 0.5 seats combined, correlation caveat | formal | R.0 §combined, R.0 §correlation-caveat |

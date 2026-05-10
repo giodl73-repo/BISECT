@@ -47,7 +47,7 @@ Alternatively, cross-reference Paper D.4 explicitly: "Model statutory language w
 ### P1-C: Add NC/GA counterexample or replace with national aggregate
 **Location**: Section 3, results table, "7D/7R" row
 **Issue**: Presenting North Carolina's 7D/7R result as evidence of proportional outcomes without disclosing Georgia's 5D/9R result (same algorithm, same $k=14$ factorization, similar partisan split) is misleading for a policy audience. A legislator from Georgia who read this brief and then commissioned an independent analysis would find the brief's claim contradicted.
-**Fix**: Option A — add a parenthetical: "(Results vary by state geometry; see Paper B.11 for states where the factorization structure produces less proportional outcomes.)" Option B — replace the state example with the national aggregate: "National (48 contiguous states): 223 Democratic, 209 Republican seats — roughly matching the national popular vote split."
+**Fix**: Option A — add a parenthetical: "(Results vary by state geometry; see Paper T.4 for states where the factorization structure produces less proportional outcomes.)" Option B — replace the state example with the national aggregate: "National (48 contiguous states): 223 Democratic, 209 Republican seats — roughly matching the national popular vote split."
 **Flagged by**: Rodden
 
 ### P1-D: Qualify "closely proportional" in pull-quote

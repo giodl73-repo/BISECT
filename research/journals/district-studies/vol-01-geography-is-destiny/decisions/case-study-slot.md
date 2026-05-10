@@ -11,13 +11,13 @@ decision: use-b12-three-state-types
 
 ## Decision
 
-Use B.12's GA/WI/NV contrast as the Vol. 1 case-study frame. Do not lead with
+Use T.5's GA/WI/NV contrast as the Vol. 1 case-study frame. Do not lead with
 Texas in the first public issue.
 
 ## Reason
 
 The issue thesis is about geographic constraint, not state spectacle. The
-B.12 contrast provides a cleaner explanatory structure:
+T.5 contrast provides a cleaner explanatory structure:
 
 - one state where proportionality can improve under a narrow parameter setting;
 - one state where the added partisan constraint worsens the outcome;
@@ -30,7 +30,7 @@ parameter is not universal, and geography changes the feasible answer.
 ## Public-Copy Rule
 
 The case-study piece may describe the three state types qualitatively before
-B.12 source-chain closure. It may not lock exact Table 1 numeric claims until
+T.5 source-chain closure. It may not lock exact Table 1 numeric claims until
 the METIS parameter vector, seed treatment, and C(G) provenance are closed.
 
 ## Texas Disposition

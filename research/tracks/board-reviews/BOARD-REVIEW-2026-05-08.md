@@ -1,5 +1,5 @@
 BOARD REVIEW — 2026-05-08
-Portfolio: 12 tracks, A-L, 120+ papers
+Portfolio: historical 12-track snapshot, A-L, 120+ papers
 
 Reviewer: Board-level synthesis review (Claude Code)
 Scope: Portfolio coherence, coverage gaps, cross-track consistency, narrative arc, implementation alignment, open P1 blockers
@@ -22,7 +22,7 @@ The twelve tracks form a broadly complete research program. Core algorithmic wor
 
 **Gap 4 — Competitive states vs. safe states.** Almost all empirical work concentrates on NC, WI, TX, and FL. These are high-profile gerrymandering states that demonstrate large bisect-vs-enacted gaps. The portfolio would be more complete with a paper on low-partisan-salience states (e.g., VT, WY, ND single-at-large) and on states where bisect offers modest improvement.
 
-**Covered adequately, not exhaustively:** multi-member districts (E.1), international applications (E.6 — still major revision), parallel computing performance (H.2), uncertainty quantification (C.7), adoption pathways (D.4, B.02).
+**Covered adequately, not exhaustively:** multi-member districts (E.1), international applications (E.6 — still major revision), parallel computing performance (U.10), uncertainty quantification (C.7), adoption pathways (D.4, B.02).
 
 ---
 
@@ -44,7 +44,7 @@ B.1 and B.2 both use Polsby-Popper as their primary compactness metric. Reviewer
 
 **L-partisan-fairness should be cited by G-series papers:**
 
-G.2 (Partisan Outcome Distributions) and G.14 (Practitioner's Comparison, score 4.0/4) both discuss efficiency gap and seats-votes curve positioning of bisect plans within the ensemble. Neither cites L.1 (dedicated efficiency gap treatment), L.5 (seats-votes curve), or L.0 (framework). L.6's proportionality analysis directly complements B.12 (ProportionalSection), but no explicit cross-reference exists in either direction.
+G.2 (Partisan Outcome Distributions) and G.14 (Practitioner's Comparison, score 4.0/4) both discuss efficiency gap and seats-votes curve positioning of bisect plans within the ensemble. Neither cites L.1 (dedicated efficiency gap treatment), L.5 (seats-votes curve), or L.0 (framework). L.6's proportionality analysis directly complements T.5 (ProportionalSection), but no explicit cross-reference exists in either direction.
 
 **D-track MODULE.md is stale — missing D.6, D.7, D.8:**
 
@@ -54,7 +54,7 @@ The D-vra-legal MODULE.md lists only papers D.0–D.5. Papers D.6 (Prison Gerrym
 - A.0 does not cite J-track (apportionment prerequisite unlinked)
 - B.1 and B.2 do not cite K-track (compactness multi-metric critique unaddressed)
 - G.2, G.14 do not cite L-track (partisan metrics framework unlinked)
-- L.6 does not cite B.12 (ProportionalSection symmetry argument unlinked)
+- L.6 does not cite T.5 (ProportionalSection symmetry argument unlinked)
 
 ---
 

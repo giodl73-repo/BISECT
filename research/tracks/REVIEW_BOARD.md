@@ -4,7 +4,7 @@
 **Board Round**: 4
 **Review Date**: 2026-05-09
 **Modules Reviewed**: 8 (Tracks A–H)
-**Total Papers**: 82 (including B.22b)
+**Total Papers**: 82 (including T.11)
 
 ---
 
@@ -52,10 +52,10 @@ Seven members selected to span all eight tracks. Each member covers 2–4 module
 ## Module Rankings
 
 ### Tier: Strong (8.0–9.0)
-1. **Track H — Search Strategies**: 8.4/10 — All 4 papers accepted (avg 3.35/4). Most applied track; B.11 cross-citation handled correctly; clean arc. Minor prose revisions only.
+1. **Track H — Search Strategies**: 8.4/10 — All 4 papers accepted (avg 3.35/4). Most applied track; T.4 cross-citation handled correctly; clean arc. Minor prose revisions only.
 
 ### Tier: Solid (7.0–7.9)
-2. **Track B — Algorithm**: 7.3/10 — The program's methodological spine. Foundations and extensions sub-tracks are strong (many accepted papers). Weaknesses: search sub-track (B.16/B.17) unreviewed; B.22/B.22b redundancy unresolved; MODULE.md B.6 description error.
+2. **Track B — Algorithm**: 7.3/10 — The program's methodological spine. Foundations and extensions sub-tracks are strong (many accepted papers). Weaknesses: search sub-track (U.1/U.2) unreviewed; T.10/T.11 redundancy unresolved; MODULE.md B.6 description error.
 3. **Track D — VRA/Legal**: 7.0/10 — Best legal depth in the program. D.4 (unanimous 4.0/4 R2) and D.5 are strong. D.2 (zero reviews) and Round 2 gaps in D.1/D.3 are administrative, not substantive.
 
 ### Tier: Conditionally adequate (6.0–6.9)
@@ -77,14 +77,14 @@ The following tracks span multiple modules or have critical cross-module depende
 |-------------------|---------|--------|--------------|
 | Compactness: foundations → validation | B-foundations ↔ C-robustness | **subset** ✓ | Program strength: C validates B. Cross-citation from C.7 to B.1/B.2 is present. |
 | Compactness: baseline inconsistency | B ↔ C ↔ F | **parallel ⚠** | B2.1: +56% (B.2 vs. unweighted) vs. +22% (B.1 vs. enacted) vs. +20% (F.5 vs. enacted) — inconsistent across modules. Need canonical table. |
-| VRA analysis | B.14 ↔ D.0–D.3 ↔ F.6 ↔ G.13 | **parallel ⚠** | B2.2: Four modules address VRA with partially consistent methodology. D.1's 42% threshold feeds F.6; B.14 feeds D.0; G.13 feeds D.5. Cross-citation framework needed. |
-| ConvergenceSweep T=600 | B.16 ↔ G.0 ↔ G.14 ↔ H.0 | **aligned ✓** | ~~B1.2~~ **RESOLVED 2026-05-07**: B.16 R2 accepted (mean 3.67/4). T=600 formula validated. Contingency footnotes in G.0/G.14/H.0 updated to confirmed citations. |
-| Ensemble ESS certification | G.1 ↔ G.4 ↔ H.0 | **divergent ✗** | **B1.1**: G.4's ESS formula has inconsistencies; G.1's ESS-based uncertainty is incorrect. H.0 cites G.1 ensemble percentiles as if certified. Cross-track error propagation. |
-| Bisection tree → ensemble | B.11 → H.1 | **subset** ✓ | Program strength: H.1 explicitly cites B.11, correctly scopes BisectionEnsemble to 2-way nodes. |
-| NestSection → state legislative | B.13 → F.2 | **subset** ✓ | Program strength: F.2 explicitly builds on B.13. Bicameral nesting chain is coherent. |
+| VRA analysis | T.7 ↔ D.0–D.3 ↔ F.6 ↔ G.13 | **parallel ⚠** | B2.2: Four modules address VRA with partially consistent methodology. D.1's 42% threshold feeds F.6; T.7 feeds D.0; G.13 feeds D.5. Cross-citation framework needed. |
+| ConvergenceSweep T=600 | U.1 ↔ G.0 ↔ G.14 ↔ U.8 | **aligned ✓** | ~~B1.2~~ **RESOLVED 2026-05-07**: U.1 R2 accepted (mean 3.67/4). T=600 formula validated. Contingency footnotes in G.0/G.14/U.8 updated to confirmed citations. |
+| Ensemble ESS certification | G.1 ↔ G.4 ↔ U.8 | **divergent ✗** | **B1.1**: G.4's ESS formula has inconsistencies; G.1's ESS-based uncertainty is incorrect. U.8 cites G.1 ensemble percentiles as if certified. Cross-track error propagation. |
+| Bisection tree → ensemble | T.4 → U.9 | **subset** ✓ | Program strength: U.9 explicitly cites T.4, correctly scopes BisectionEnsemble to 2-way nodes. |
+| NestSection → state legislative | T.6 → F.2 | **subset** ✓ | Program strength: F.2 explicitly builds on T.6. Bicameral nesting chain is coherent. |
 | Replication package | A.4 ↔ B ↔ C ↔ G | **divergent ✗** | **B1.3**: A.4's replication plan describes the archived Python pipeline, not the production Rust binary (`redist`). The program currently has no valid replication package. |
 | Synthesis accuracy | A.0 ↔ B–H | **parallel ⚠** | A.0 covers only Tracks B, C, D (~40% of program). Tracks E, F, G, H entirely absent from the synthesis. Track A faithfully represents what it covers but covers too little. |
-| Proportionality paradox | B.12 ↔ C.5 | **aligned** ✓ | B.12's sigma→0 finding and C.5's -3.2% EG finding are consistent and mutually reinforcing. |
+| Proportionality paradox | T.5 ↔ C.5 | **aligned** ✓ | T.5's sigma→0 finding and C.5's -3.2% EG finding are consistent and mutually reinforcing. |
 | VRA × ensemble | D.0–D.3 ↔ G.13 | **aligned** ✓ | G.13's VRA-aware chain correctly references D.0 as the complementary structure-layer tool. D.5 cross-reference is missing (B2.3). |
 | Legal implementation ↔ synthesis | D.4 → A.5 | **subset** ✓ | D.4's model statute is the primary legal vehicle for A.5. But A.5 does not yet exist. |
 
@@ -96,13 +96,13 @@ The following tracks span multiple modules or have critical cross-module depende
 
 **Program score**: 7.1/10
 
-Track B is algorithmically sound — the edge-weighted bisection approach is correctly implemented and the METIS integration is technically appropriate. The foundations sub-track (B.1–B.4, accepted papers) is genuinely publishable work. The extensions sub-track (B.19–B.23) represents impressive ML/optimization integration.
+Track B is algorithmically sound — the edge-weighted bisection approach is correctly implemented and the METIS integration is technically appropriate. The foundations sub-track (B.1–B.4, accepted papers) is genuinely publishable work. The extensions sub-track (U.3–T.12) represents impressive ML/optimization integration.
 
-My primary concern is the search sub-track. B.16's T=600 ConvergenceSweep formula is cited as the program's statutory standard by G.0, G.14, and H.0, yet B.16 has never been panel-reviewed. If T=600 cannot be theoretically or empirically justified, the downstream program's convergence claims are fragile. This is not a minor gap — it is the load-bearing pillar of the entire multi-algorithm ecosystem.
+My primary concern is the search sub-track. U.1's T=600 ConvergenceSweep formula is cited as the program's statutory standard by G.0, G.14, and U.8, yet U.1 has never been panel-reviewed. If T=600 cannot be theoretically or empirically justified, the downstream program's convergence claims are fragile. This is not a minor gap — it is the load-bearing pillar of the entire multi-algorithm ecosystem.
 
 Track G's ESS table inconsistency (G.4: NC should be 695, not 769) and G.1's incorrect "negligible sampling error" claim represent mathematical errors in the ensemble certification framework. These must be corrected before any G or H track paper citing ensemble percentiles can be considered litigation-ready.
 
-Track H is the program's best execution example — four accepted papers, coherent arc, B.11 properly cited. The only gap is H.3's missing review trail.
+Track H is the program's best execution example — four accepted papers, coherent arc, T.4 properly cited. The only gap is U.11's missing review trail.
 
 **Module rankings (Karypis)**: H (8.5) > B (7.5) > D (7.2) > G (6.3) > C (6.5) > E (6.8) > F (6.0) > A (5.3)
 
@@ -112,7 +112,7 @@ Track H is the program's best execution example — four accepted papers, cohere
 
 **Program score**: 6.5/10
 
-From a political science standpoint, the program's headline result — compact neutral maps produce modest Democratic efficiency advantages (-3.2% EG) through geographic sorting, not algorithmic design — is the most important finding in the portfolio, and C.5 documents it correctly. The B.12 proportionality paradox (sigma→0 for competitive states) is a genuine theoretical contribution that the political science literature needs.
+From a political science standpoint, the program's headline result — compact neutral maps produce modest Democratic efficiency advantages (-3.2% EG) through geographic sorting, not algorithmic design — is the most important finding in the portfolio, and C.5 documents it correctly. The T.5 proportionality paradox (sigma→0 for competitive states) is a genuine theoretical contribution that the political science literature needs.
 
 My concerns are about Track F and Track A. Track F is the politically most important track for redistricting practitioners — state legislators and redistricting commissions primarily draw state maps, not congressional maps — yet it is the least mature track in the program. The absence of partisan outcome analysis in F.1 (the 50-state empirical paper) is particularly damaging: you're telling a story about gerrymandering but not showing whether your algorithm produces different partisan outcomes than the gerrymandered maps.
 
@@ -130,7 +130,7 @@ Track E is appropriately framed as exploratory, with E.0 and E.7 as strong booke
 
 The program's mathematical quality varies sharply across tracks. Track H's four papers are clean and well-scoped. Track G's G.14 (4.0/4) is exceptional. But the ensemble-baseline sub-track (G.0–G.5) is in a disturbing state: the foundation papers for the ensemble comparison framework are less developed than the MCMC algorithm papers that depend on them. G.4's ESS table inconsistency is a mathematical error, not a methodological choice, and it propagates to G.1's "negligible sampling error" claim.
 
-Track B's proportionality paradox (B.12) is a genuine mathematical result that the redistricting community has not yet fully appreciated. The VRASection (B.14) post-Callais framing is sound.
+Track B's proportionality paradox (T.5) is a genuine mathematical result that the redistricting community has not yet fully appreciated. The VRASection (T.7) post-Callais framing is sound.
 
 Track C's missing C.3 manuscript is a clean-up item, not a fundamental research gap — the data exists. But C.7's abstract/body CI inconsistency ([+18%,+26%] vs. [+15%,+29%]) is the kind of error that will cause problems in court testimony.
 
@@ -162,7 +162,7 @@ Track A's A.5 policy brief doesn't exist. For a research program targeting legis
 
 The most important methodological gap in the entire program is Track C's absence of ensemble comparison. C.1, C.4, and C.8 validate the algorithm's properties internally (across resolutions, years, and political science metrics) but never compare to the space of all valid plans. Without a GerryChain/ReCom comparison, the "robustness" claim has no comparison class. Track G provides this comparison for 6 states, but Track C does not reference it.
 
-Track B's core papers (B.1–B.4) are solid. The parameter insensitivity claim in B.17 is important but needs statistical power analysis — null findings require adequate power, and B.17 has not been panel-reviewed.
+Track B's core papers (B.1–B.4) are solid. The parameter insensitivity claim in U.2 is important but needs statistical power analysis — null findings require adequate power, and U.2 has not been panel-reviewed.
 
 Track F's partisan outcome analysis gap in F.1 is the same gap I identified in Track C: the program validates compactness and population equality internally but doesn't consistently show what partisan outcomes the algorithm produces compared to alternatives.
 
@@ -180,7 +180,7 @@ Track D is the program's legal crown jewel. The post-Callais methodology in D.5 
 
 The 42% threshold (D.1) deserves particular attention. The empirical derivation from 43 states (r=0.78, p<1e-08) is statistically sound, but the paper must be careful never to allow courts to treat 42% as a self-executing legal standard. The revised Discussion must consistently frame it as contextual guidance under the totality-of-circumstances standard.
 
-The VRA analysis across multiple tracks (B.14, D.0–D.3, F.6, G.13) is the most important cross-track issue in the program. These papers use overlapping but not identical VRA frameworks, and the inconsistencies (VAP vs. CVAP thresholds; 50% vs. 42% standards; prong 1 vs. prong 3 focus) will be exploited by opposing experts in litigation. A unified VRA methodology framework document should be created as a companion to D.5.
+The VRA analysis across multiple tracks (T.7, D.0–D.3, F.6, G.13) is the most important cross-track issue in the program. These papers use overlapping but not identical VRA frameworks, and the inconsistencies (VAP vs. CVAP thresholds; 50% vs. 42% standards; prong 1 vs. prong 3 focus) will be exploited by opposing experts in litigation. A unified VRA methodology framework document should be created as a companion to D.5.
 
 Track D is ready for submission on four of six papers after administrative items are resolved. The R2 review gaps for D.1 and D.3 are process issues, not content issues.
 
@@ -200,7 +200,7 @@ AEA-compliant reproducibility requires: (a) code that runs; (b) data that is acc
 
 The fix is known and the plan is sound — it just needs to be executed with the Rust binary, not the archived Python pipeline. Once A.4 is corrected and executed, it would likely be one of the most rigorous replication packages in the political redistricting literature.
 
-Track C's C.2 (R3 strong accept) and C.5 (unanimous R2 4.0/4) are the most reproducibility-ready papers in the program. Track H's H.2 with its SHA-256 audit chain and falsifiable Phase 2 benchmarks is a model for the program's computational papers.
+Track C's C.2 (R3 strong accept) and C.5 (unanimous R2 4.0/4) are the most reproducibility-ready papers in the program. Track H's U.10 with its SHA-256 audit chain and falsifiable Phase 2 benchmarks is a model for the program's computational papers.
 
 **Module rankings (Stodden)**: H (9.0) > D (7.5) > B (7.0) > C (6.5) > E (6.5) > G (6.0) > F (5.8) > A (4.5)
 
@@ -209,10 +209,10 @@ Track C's C.2 (R3 strong accept) and C.5 (unanimous R2 4.0/4) are the most repro
 ## Cross-Module Themes
 
 ### Theme 1: Geometric Determinism (program-wide strength)
-The program's most powerful scientific contribution is the consistent finding that geographic sorting — not algorithmic choice — determines partisan outcomes. This finding appears across B.7 (seed stability), B.12 (proportionality paradox), B.17 (parameter insensitivity), C.5 (efficiency gap), G.2 (partisan outcome distributions), and H.0 (percentile insensitivity). These papers form a coherent, mutually reinforcing case for the "impossibility defense" (the algorithm cannot be instructed to gerrymander because geography, not seeds, determines partisanship). The program should explicitly connect these findings with cross-citations.
+The program's most powerful scientific contribution is the consistent finding that geographic sorting — not algorithmic choice — determines partisan outcomes. This finding appears across B.7 (seed stability), T.5 (proportionality paradox), U.2 (parameter insensitivity), C.5 (efficiency gap), G.2 (partisan outcome distributions), and U.8 (percentile insensitivity). These papers form a coherent, mutually reinforcing case for the "impossibility defense" (the algorithm cannot be instructed to gerrymander because geography, not seeds, determines partisanship). The program should explicitly connect these findings with cross-citations.
 
 ### Theme 2: VRA Compliance as Multi-Layer Problem (cross-track coherence gap)
-VRA compliance appears in B.14, D.0–D.3, F.6, and G.13, but the layers don't consistently cite each other. The structure layer (B.14/VRASection), the empirical layer (D.0–D.3), the state legislative layer (F.6), and the ensemble layer (G.13/VraRecom) each address different aspects of the same legal requirement. A "VRA compliance synthesis" (either as a standalone paper or as a section in D.4 or A.0) would significantly strengthen the program's legal coherence.
+VRA compliance appears in T.7, D.0–D.3, F.6, and G.13, but the layers don't consistently cite each other. The structure layer (T.7/VRASection), the empirical layer (D.0–D.3), the state legislative layer (F.6), and the ensemble layer (G.13/VraRecom) each address different aspects of the same legal requirement. A "VRA compliance synthesis" (either as a standalone paper or as a section in D.4 or A.0) would significantly strengthen the program's legal coherence.
 
 ### Theme 3: Foundation Before Superstructure (G-track architectural problem)
 Track G illustrates the program's most significant architectural problem: accepted papers (G.6–G.13) rest on draft foundation papers (G.0–G.5). The MCMC algorithm papers cite G.1's ensemble baselines; G.14 recommends G.7 (first draft) for court submissions. This inverted maturity ordering affects credibility at the board level. The rule should be: foundation papers must reach conditional-accept status before the superstructure papers they support can be submitted.
@@ -226,12 +226,12 @@ Track H is the most applied track and the most mature. Track F is the most appli
 
 ### B1 — Blocking Items
 
-**B1.1 [ensemble-search: G + H]** — G.1 ESS error propagates to H.0 adversarial bar
-G.4's ESS table has a calculation error (NC row: reports 769, should be 695). G.1's "negligible sampling error" claim is incorrect given ESS ≈ 1,703, which gives a 90% CI approximately 3.6× wider than reported. H.0 (PercentileSweep) cites G.1 ensemble percentiles (0.1–0.7th compactness percentile) as the adversarial bar without qualifying that these are point estimates contingent on G.1's sampling adequacy. Until G.1-A (ESS correction) and G.4-C (ESS table fix) are complete, H.0 cannot be submitted to Political Analysis.
+**B1.1 [ensemble-search: G + H]** — G.1 ESS error propagates to U.8 adversarial bar
+G.4's ESS table has a calculation error (NC row: reports 769, should be 695). G.1's "negligible sampling error" claim is incorrect given ESS ≈ 1,703, which gives a 90% CI approximately 3.6× wider than reported. U.8 (PercentileSweep) cites G.1 ensemble percentiles (0.1–0.7th compactness percentile) as the adversarial bar without qualifying that these are point estimates contingent on G.1's sampling adequacy. Until G.1-A (ESS correction) and G.4-C (ESS table fix) are complete, U.8 cannot be submitted to Political Analysis.
 
-**Required action**: Complete G.4-C and G.1-A before H.0 submission; add G.1 point-estimate qualification to H.0 §5.1 (W9 from H.0 revision plan).
+**Required action**: Complete G.4-C and G.1-A before U.8 submission; add G.1 point-estimate qualification to U.8 §5.1 (W9 from U.8 revision plan).
 
-~~B1.2~~ **RESOLVED 2026-05-07**: B.16 completed R2 (mean 3.67/4, accepted). T=600 formula validated. Contingency footnotes in G.0/G.14/H.0 updated to confirmed citations.
+~~B1.2~~ **RESOLVED 2026-05-07**: U.1 completed R2 (mean 3.67/4, accepted). T=600 formula validated. Contingency footnotes in G.0/G.14/U.8 updated to confirmed citations.
 
 **B1.3 [replication: A ↔ B ↔ C ↔ G]** — A.4 describes the wrong tool
 A.4's replication plan describes the archived Python pipeline (`run_state_redistricting.py`) as the primary entry point. The production system is the `redist` Rust binary. Any researcher following A.4 will attempt to run an archived system. Until A.4 is corrected to describe the Rust CLI workflow and a working replication package exists, the program cannot claim AEA-compliant reproducibility.
@@ -250,13 +250,13 @@ Three modules report compactness improvement figures with different baselines th
 
 Track A's synthesis documents use all three figures inconsistently. A unified "compactness headline reference table" (proposed in A revision plan PP2.6) should be created and cited in every synthesis document and every paper reporting a compactness improvement figure.
 
-**B2.2 [VRA methodology: B.14 + D + F.6 + G.13]** — VRA cross-track citation framework missing
-B.14 (VRASection mechanism), D.0–D.3 (VRA empirical analysis), D.1 (42% threshold), D.5 (Gingles methodology), F.6 (42% threshold at state house scale), and G.13 (VRA-aware ensemble) all address VRA compliance with overlapping but not explicitly connected frameworks. F.6's 42% result at state house scale explicitly depends on D.1's 42% result at congressional scale, but this dependency is not stated in F.6. G.13 cites D.0 but not D.5. D.5 is the definitive expert witness methodology document but is not cited by G.13 or F.6.
+**B2.2 [VRA methodology: T.7 + D + F.6 + G.13]** — VRA cross-track citation framework missing
+T.7 (VRASection mechanism), D.0–D.3 (VRA empirical analysis), D.1 (42% threshold), D.5 (Gingles methodology), F.6 (42% threshold at state house scale), and G.13 (VRA-aware ensemble) all address VRA compliance with overlapping but not explicitly connected frameworks. F.6's 42% result at state house scale explicitly depends on D.1's 42% result at congressional scale, but this dependency is not stated in F.6. G.13 cites D.0 but not D.5. D.5 is the definitive expert witness methodology document but is not cited by G.13 or F.6.
 
 Recommended action: Add a unified "VRA cross-track dependency table" to MODULE.md files for B, D, F, G. In each paper's related-work section, add explicit cross-references to the other VRA modules.
 
 **B2.3 [synthesis-completeness: A ↔ E + F + G + H]** — Track A synthesis covers only 40% of program
-Track A's current documents cover Tracks B, C, D (the original 11-paper program) and ignore Tracks E, F, G, H (the subsequent 54 papers). The most scientifically significant results in the omitted tracks are: G.1 (bisection plan at 0.1–0.7th compactness percentile, not partisan extremum); G.14 (practitioner algorithm comparison); H.2 (2500× speed advantage); F.1 (state house results for all 50 chambers). These results are directly relevant to A.0's claims about national-scale demonstration and to A.5's target audience (state legislators).
+Track A's current documents cover Tracks B, C, D (the original 11-paper program) and ignore Tracks E, F, G, H (the subsequent 54 papers). The most scientifically significant results in the omitted tracks are: G.1 (bisection plan at 0.1–0.7th compactness percentile, not partisan extremum); G.14 (practitioner algorithm comparison); U.10 (2500× speed advantage); F.1 (state house results for all 50 chambers). These results are directly relevant to A.0's claims about national-scale demonstration and to A.5's target audience (state legislators).
 
 Recommended action: Complete A PP1.3 (ensemble context in A.0), A PP2.1 (A.2 scope expansion), and A PP2.2 (Track F findings in A.5 plan) as the highest-leverage additions.
 
@@ -265,13 +265,13 @@ Recommended action: Complete A PP1.3 (ensemble context in A.0), A PP2.1 (A.2 sco
 ### B3 — Nice-to-Have Items
 
 **B3.A [Track A]**: Execute A.4 and A.5; rewrite A.1 for current 75-paper scope
-**B3.B [Track B]**: Panel review for B.16/B.17 (search sub-track); resolve B.22/B.22b redundancy; correct MODULE.md B.6 description
+**B3.B [Track B]**: Panel review for U.1/U.2 (search sub-track); resolve T.10/T.11 redundancy; correct MODULE.md B.6 description
 **B3.C [Track C]**: Write C.3 manuscript (or formally demote to data archive) to close the temporal stability phantom citation
 **B3.D [Track D]**: D.2 full panel review; D.1/D.3 Round 2 reviews
 **B3.E [Track E]**: Write E.1 evaluation section, E.5 results section, E.6 international results
 **B3.F [Track F]**: F.2 gcd audit (count error), F.3 recommendation table (missing deliverable), F.6 seed sensitivity (South Carolina 5/5 claim)
 **B3.G [Track G]**: G.1 ESS correction + TX/CA data; G.7 Phase 2; G.5 abstract bound correction
-**B3.H [Track H]**: Generate H.3 review round (score is unverifiable without review files)
+**B3.H [Track H]**: Generate U.11 review round (score is unverifiable without review files)
 
 ---
 
@@ -282,8 +282,8 @@ Recommended action: Complete A PP1.3 (ensemble context in A.0), A PP2.1 (A.2 sco
 **Board verdict**: Needs significant work before board can sign off. B1.3 (replication) is the critical path item.
 
 ### Track B — Algorithm: 7.3/10 (Solid)
-**Board consensus**: The program's strongest research foundation. The B.11 NC 7D/7R result and B.12 proportionality paradox are the most politically significant findings in the full program. The search sub-track (B.16/B.17 unreviewed) is the primary weakness — it is foundational for three other tracks.
-**Board verdict**: Solid. B.16 panel review is the only B1 item.
+**Board consensus**: The program's strongest research foundation. The T.4 NC 7D/7R result and T.5 proportionality paradox are the most politically significant findings in the full program. The search sub-track (U.1/U.2 unreviewed) is the primary weakness — it is foundational for three other tracks.
+**Board verdict**: Solid. U.1 panel review is the only B1 item.
 
 ### Track C — Validation: 6.4/10 (Conditionally adequate)
 **Board consensus**: Five papers (C.2, C.5, C.6, C.8, C.9) are genuinely submission-ready and should be submitted immediately. C.3's phantom citation is administrative cleanup. C.7's CI inconsistency is a factual error that must be corrected. C.1's unreviewed revisions are a process failure that must be addressed.
@@ -306,8 +306,8 @@ Recommended action: Complete A PP1.3 (ensemble context in A.0), A PP2.1 (A.2 sco
 **Board verdict**: Conditionally adequate. G.1 ESS correction and G.4 formula fixes are the critical path items. G.7 Phase 2 completion determines whether G.14's primary recommendation remains valid.
 
 ### Track H — Search Strategies: 8.4/10 (Strong)
-**Board consensus**: The most polished track in the program. Four accepted papers, coherent arc, B.11 properly cited. Minor prose revisions for H.0 and H.1; one sentence for H.2; review trail generation for H.3. Track H is board-ready pending H.0 R3, H.1 R3, H.2 planarity sentence, and H.3 review round.
-**Board verdict**: Strong. Ready for submission (H.2 today; H.0/H.1 after R3; H.3 after review round). Track H can close all B1/B2/B3 items within 4 weeks.
+**Board consensus**: The most polished track in the program. Four accepted papers, coherent arc, T.4 properly cited. Minor prose revisions for U.8 and U.9; one sentence for U.10; review trail generation for U.11. Track H is board-ready pending U.8 R3, U.9 R3, U.10 planarity sentence, and U.11 review round.
+**Board verdict**: Strong. Ready for submission (U.10 today; U.8/U.9 after R3; U.11 after review round). Track H can close all B1/B2/B3 items within 4 weeks.
 
 ---
 
@@ -338,7 +338,7 @@ Completion criteria require: all B1 items resolved, program score ≥ 7.0/10, no
 
 **Current blockers**:
 1. B1.1 (G.1 ESS / G.4 formula): fixes G, H → both tracks improve
-2. ~~B1.2 (B.16 unvalidated)~~: **RESOLVED 2026-05-07** — B.16 R2 accepted; citations confirmed
+2. ~~B1.2 (U.1 unvalidated)~~: **RESOLVED 2026-05-07** — U.1 R2 accepted; citations confirmed
 3. B1.3 (A.4 wrong tool): correct and execute A.4 → program has a replication package
 
 **Score improvement path**:
@@ -346,7 +346,7 @@ Completion criteria require: all B1 items resolved, program score ≥ 7.0/10, no
 - Track F from 6.2 to 7.5+: fix P0 items, submit F.3/F.4 → +1.3 × (7/82) = +0.11 to program
 - Together these get program to ~7.0/10
 
-**Estimated time to board sign-off**: 16–24 weeks (B.16 panel review is the long path)
+**Estimated time to board sign-off**: 16–24 weeks (U.1 panel review is the long path)
 
 ---
 
@@ -364,8 +364,8 @@ Completion criteria require: all B1 items resolved, program score ≥ 7.0/10, no
 
 | Item | Status | Evidence |
 |------|--------|----------|
-| ~~B1.1~~ G.1 ESS / G.4 formula | **RESOLVED 2026-05-09** | G.4 ESS table corrected (formula now consistent with ρ values); G.1 uncertainty rewritten (Herschlag chain ESS not applied to G.1 runs; 1,000-step ESS≈70 correctly stated); H.0 §5.1 updated with corrected step count and ESS bound |
-| ~~B1.2~~ B.16 unvalidated | **RESOLVED 2026-05-07** | Carried from Round 1 |
+| ~~B1.1~~ G.1 ESS / G.4 formula | **RESOLVED 2026-05-09** | G.4 ESS table corrected (formula now consistent with ρ values); G.1 uncertainty rewritten (Herschlag chain ESS not applied to G.1 runs; 1,000-step ESS≈70 correctly stated); U.8 §5.1 updated with corrected step count and ESS bound |
+| ~~B1.2~~ U.1 unvalidated | **RESOLVED 2026-05-07** | Carried from Round 1 |
 | ~~B1.3~~ A.4 wrong tool | **RESOLVED 2026-05-09** | A.4 verified to describe bisect CLI v0.2.0 workflow; replication package uses `bisect build` / `bisect label-analyze` / `bisect label-verify` throughout |
 
 **All B1 items resolved. Board can proceed to sign-off assessment.**
@@ -394,14 +394,14 @@ Tracks I–M are in draft/first-draft state and are not yet submitted to panel r
 
 | Module | R1 Score | R2 Score | Key changes |
 |--------|----------|----------|-------------|
-| **A — Synthesis** | 5.6/10 | **7.5/10** | A.0 ensemble context added (G.14, H.2 cited); A.1 updated to 12 tracks/120+ papers; A.2 expanded; A.5 state legislative findings added; A.4 replication package verified (B1.3 resolved) |
-| **B — Algorithm** | 7.3/10 | **7.7/10** | B.17 accepted at 3.0/4; B.22/B.22b Phase 1+2 merged into single paper; MODULE.md B.6 description corrected |
+| **A — Synthesis** | 5.6/10 | **7.5/10** | A.0 ensemble context added (G.14, U.10 cited); A.1 updated to 12 tracks/120+ papers; A.2 expanded; A.5 state legislative findings added; A.4 replication package verified (B1.3 resolved) |
+| **B — Algorithm** | 7.3/10 | **7.7/10** | U.2 accepted at 3.0/4; T.10/T.11 Phase 1+2 merged into single paper; MODULE.md B.6 description corrected |
 | **C — Validation** | 6.4/10 | **7.2/10** | C.1 reviewed (R1, 2.8/4 conditional accept); C.3 p-value corrected (p=0.054 not p<0.001) and TBD cells removed; C.7 CI inconsistency corrected (PP=0.361 not 0.441) |
 | **D — VRA/Legal** | 7.0/10 | **7.6/10** | D.2 reviewed (R1, 2.6/4); D.1/D.3 confirmed at ready; Callais cross-citations verified in D.1/D.3/D.5; D.6/D.7/D.8 confirmed in MODULE.md |
 | **E — Experimental** | 6.8/10 | **7.5/10** | E.1 evaluation section written; E.4/E.5 scope separation added; E.6 all 6 countries (UK, Canada, NZ results written) |
 | **F — Legislative** | 6.2/10 | **7.8/10** | F.1 partisan table added; F.2 gcd verified at 9 (correct); F.3 recommendation table verified complete; F.5 Proposition 1 proof sketch added; F.6 SC seed sensitivity run (5/5 stable) |
 | **G — Ensemble** | 6.5/10 | **7.5/10** | G.1 ESS + TX/CA data added (B1.1 resolved); G.4 ESS formula corrected; G.5 scaling law corrected (60·k^1.4 not 400k); G.7 Phase 2 complete (TX k=38, CA k=52 validated); G.0-G.5 all at R2 conditional accept |
-| **H — Search** | 8.4/10 | **8.2/10** | H.0/H.1 R3 revisions applied; H.2 planarity sentence added to abstract (ready); H.3 reviewed (R1, 2.2/4 major revision — 8 P1 items) |
+| **H — Search** | 8.4/10 | **8.2/10** | U.8/U.9 R3 revisions applied; U.10 planarity sentence added to abstract (ready); U.11 reviewed (R1, 2.2/4 major revision — 8 P1 items) |
 
 ---
 
@@ -427,11 +427,11 @@ All modules above 7.0/10. No module below 6.0/10. Program exceeds the 7.0/10 sig
 
 ## Remaining Open Items
 
-### H.3 (Major Revision — 8 P1 items)
+### U.11 (Major Revision — 8 P1 items)
 
-H.3 received its first panel review in this session: 2.2/4. Eight P1 items identified, primarily around the autocorrelation headline claim (single-run 27% reduction not sufficiently supported) and partisan neutrality disclosure. H.3 is the only track H paper not yet at conditional accept. Track H's overall score is weighted down slightly (8.2 vs 8.4 R1) but remains the strongest track.
+U.11 received its first panel review in this session: 2.2/4. Eight P1 items identified, primarily around the autocorrelation headline claim (single-run 27% reduction not sufficiently supported) and partisan neutrality disclosure. U.11 is the only track H paper not yet at conditional accept. Track H's overall score is weighted down slightly (8.2 vs 8.4 R1) but remains the strongest track.
 
-**Action**: Address H.3 P1 items in revision; run extended TX empirical run for autocorrelation claim support.
+**Action**: Address U.11 P1 items in revision; run extended TX empirical run for autocorrelation claim support.
 
 ### D.2 (Conditional Accept — 2.6/4)
 
@@ -462,27 +462,27 @@ Five new tracks (36 papers) are in draft. They need panel review cycles before b
 - ✅ No module below 6.0/10 (lowest: C at 7.1/10)
 - ✅ Board consensus: consistent scoring across 7 members
 
-**Board verdict**: The core 8-track program (A–H) meets all sign-off criteria. **The board conditionally signs off on Tracks A–H**, with H.3 flagged as requiring major revision before individual submission. The five new tracks (I–M) are not yet reviewed and will be assessed in Board Round 3.
+**Board verdict**: The core 8-track program (A–H) meets all sign-off criteria. **The board conditionally signs off on Tracks A–H**, with U.11 flagged as requiring major revision before individual submission. The five new tracks (I–M) are not yet reviewed and will be assessed in Board Round 3.
 
 ---
 
 *Board convened 2026-05-09. Seven members. Round 2.*
 *B1 items resolved. Program score 7.6/10 — Tier A- (Strong).*
 *Tracks A–H: board conditional sign-off. Tracks I–M: draft, awaiting panel review.*
-*Next: H.3 revision + D.2/C.1 revisions → panel:module → Board Round 3 (Tracks I–M).*
+*Next: U.11 revision + D.2/C.1 revisions → panel:module → Board Round 3 (Tracks I–M).*
 
 ---
 
 # Round 3 Board Review
 
 **Review Date**: 2026-05-09
-**Trigger**: H.3 R2 resolved (3.2/4 conditional accept); Tracks I–M first panel review complete; D.2/C.1 P1 items addressed.
+**Trigger**: U.11 R2 resolved (3.2/4 conditional accept); Tracks I–M first panel review complete; D.2/C.1 P1 items addressed.
 
 ## Changes Since Round 2
 
 | Item | Change |
 |------|--------|
-| H.3 | P1-A through P1-H resolved; R2 score 3.2/4 — Track H fully at conditional accept |
+| U.11 | P1-A through P1-H resolved; R2 score 3.2/4 — Track H fully at conditional accept |
 | D.2 | Scope note added (prong-1 feasibility, not full VRA); enacted comparison table added (+33%/+36% vs enacted) |
 | C.1 | Multi-seed RSI validated (seed-42 within 1 SD across 5 seeds); minority VAP stability tested (1/19 reclassification) |
 | Tracks I–M | First panel reviews complete (module scores 7.2–8.0/10) |
@@ -495,7 +495,7 @@ Five new tracks (36 papers) are in draft. They need panel review cycles before b
 | I — Incumbency | 7.2/10 | Solid — single-seed limitation is the binding constraint for all 5 papers |
 | J — Apportionment | 8.0/10 | Strong — J.6 exact reproduction is exceptional; J.1 f64 precision is the main technical gap |
 | K — Compactness | 7.8/10 | Strong — K.7 court guide is the program's most practitioner-facing contribution |
-| L — Partisan Fairness | 7.8/10 | Strong — L.6 proportionality analysis and B.12 cross-reference are standout |
+| L — Partisan Fairness | 7.8/10 | Strong — L.6 proportionality analysis and T.5 cross-reference are standout |
 | M — Community Character | 7.8/10 | Strong — composite index (M.8) is legally innovative; signal correlation and M.7 coverage need addressing |
 
 ## Program Score Round 3 (12-track)
@@ -509,7 +509,7 @@ Five new tracks (36 papers) are in draft. They need panel review cycles before b
 | E | 7.5 | 7.5 | — |
 | F | 7.8 | 7.8 | — |
 | G | 7.5 | 7.6 | G.7 conditional accept |
-| H | 8.2 | **8.5** | H.3 at 3.2/4 — track fully conditional accept |
+| H | 8.2 | **8.5** | U.11 at 3.2/4 — track fully conditional accept |
 | I | — | 7.2 | New |
 | J | — | 8.0 | New |
 | K | — | 7.8 | New |
@@ -535,7 +535,7 @@ Five new tracks (36 papers) are in draft. They need panel review cycles before b
 
 ## Board Sign-Off Assessment (Round 3)
 
-**Tracks A–H**: Board sign-off upheld from Round 2. H.3 is now at conditional accept; Track H is fully signed off.
+**Tracks A–H**: Board sign-off upheld from Round 2. U.11 is now at conditional accept; Track H is fully signed off.
 
 **Tracks I–M**: Board conditionally signs off on J (8.0), K (7.8), L (7.8), M (7.8) pending resolution of P1 items identified in panel reviews. Track I requires multi-seed Phase 2 validation before sign-off — provisionally signed off with the condition that single-seed limitation is prominently disclosed in any publication or testimony.
 

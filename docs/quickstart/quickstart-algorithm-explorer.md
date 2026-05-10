@@ -120,4 +120,4 @@ This runs 4 structures x 2 weight modes x 2 search modes = 16 labeled plans and 
 - Full list of `--partition-mode` options: `bisect state --help`
 - Percentile sweep (compactness-partisan tradeoff): see `quickstart-researcher.md`
 - Understanding the prime-factorisation structure: `docs/RECURSIVE_BISECTION.md`
-- National 50-state bakeoff results: `docs/PAPERS.md` (B.11 paper)
+- National 50-state bakeoff results: `docs/PAPERS.md` (T.4 paper)

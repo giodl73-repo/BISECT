@@ -20,7 +20,7 @@ reform, adoption, or legal claims.
 ## Editorial Decision
 
 Use the scope-down path. Vol. 1 should introduce the diagnostic frame without
-publishing exact B.12 table values, exact G.1 percentile claims, or L.1/C.5
+publishing exact T.5 table values, exact G.1 percentile claims, or L.1/C.5
 result-bearing measurement claims.
 
 See [Scope-Down Path](decisions/scope-down-path.md).
@@ -30,9 +30,9 @@ See [Scope-Down Path](decisions/scope-down-path.md).
 | Order | Article | Purpose | Current state |
 |-------|---------|---------|---------------|
 | 1 | [The Shape of the Vote](articles/the-shape-of-the-vote.md) | Introduces voter geography as the issue frame | audition-ready summary |
-| 2 | [Geography Constrains Proportionality](articles/geography-constrains-proportionality.md) | Explains why proportional outcomes can be geographically constrained | audition-ready summary; B.12 exact values blocked |
+| 2 | [Geography Constrains Proportionality](articles/geography-constrains-proportionality.md) | Explains why proportional outcomes can be geographically constrained | audition-ready summary; T.5 exact values blocked |
 | 3 | [The Ensemble Median Case](articles/the-ensemble-median-case.md) | Shows how a baseline and ensemble can converge in broad placement | audition-ready summary; exact percentile blocked |
-| 4 | [Three State Types](articles/three-state-types.md) | Turns B.12 into a qualitative state-type frame | audition-ready summary; exact table values blocked |
+| 4 | [Three State Types](articles/three-state-types.md) | Turns T.5 into a qualitative state-type frame | audition-ready summary; exact table values blocked |
 | 5 | [What This Issue Does Not Show](articles/what-this-issue-does-not-show.md) | Keeps the issue diagnostic and prevents overclaiming | audition-ready summary |
 
 ## Current Review Result
@@ -46,16 +46,16 @@ See [Article Summary Review Round 2](reviews/article-summary-review-round2.md).
 
 | Gate | Status | Effect |
 |------|--------|--------|
-| B.12 METIS parameter vector | open | No exact B.12 table values |
-| B.12 seed treatment | open | No claim that the table is deterministic or averaged |
-| B.12 C(G) estimator | open | No source-chain-heavy quantitative explanation |
+| T.5 METIS parameter vector | open | No exact T.5 table values |
+| T.5 seed treatment | open | No claim that the table is deterministic or averaged |
+| T.5 C(G) estimator | open | No source-chain-heavy quantitative explanation |
 | G.1 ESS and percentile language | reviewed for audition | Use "near the middle" and "preliminary"; no exact percentile certificate |
 | L.1/C.5 output provenance | open | No result-bearing efficiency-gap claims |
 | Adoption/legal conclusion | out of scope | No federal-rule recommendation in Vol. 1 |
 
 ## Paper Reservations
 
-The central paper-use ledger reserves B.12 and G.1 for this audition issue while
+The central paper-use ledger reserves T.5 and G.1 for this audition issue while
 leaving support and deferred sources clearly marked.
 
 See [Paper Use Ledger](../../PAPER-LEDGER.md).
@@ -66,7 +66,7 @@ Reviewers should answer four questions:
 
 1. Is the issue promise clear enough for a public reader?
 2. Does any article accidentally imply legal, adoption, or proof claims?
-3. Are the B.12/G.1/L.1/C.5 gates visible enough?
+3. Are the T.5/G.1/L.1/C.5 gates visible enough?
 4. Should this remain a scope-down opening issue, or should it wait for the
    heavier quantitative source-chain work?
 

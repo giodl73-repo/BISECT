@@ -15,7 +15,7 @@ Before entering the four-question tree, practitioners should consider
 whether the task requires a single, reproducible, and certifiably optimal
 plan rather than an ensemble distribution.
 If so, \textsc{ConvergenceSweep} ($T = 600$, \texttt{--search convergence})~%
-\footnote{The T=600 ConvergenceSweep formula is certified in B.16~\cite{deluca2026convergence} (Round~2, accepted; mean reviewer score 3.67/4). The formula's theoretical foundations and 89-seed empirical margin above Georgia's certified tail are documented in that paper.}
+\footnote{The T=600 ConvergenceSweep formula is certified in U.1~\cite{deluca2026convergence} (Round~2, accepted; mean reviewer score 3.67/4). The formula's theoretical foundations and 89-seed empirical margin above Georgia's certified tail are documented in that paper.}
 is the appropriate tool: it produces the minimum-edge-cut plan deterministically
 from the SHA-256 content-derived seed and is not an ensemble method.
 The four questions below apply only when an ensemble distribution is required.
@@ -35,7 +35,7 @@ The four questions below apply only when an ensemble distribution is required.
     \begin{quote}\small
     \textit{Note:} \texttt{--search vra-recom} requires a VRA-compliant
     initial plan.
-    Use \texttt{--structure ratio-optimal-vra} (VRASection, B.14) to generate
+    Use \texttt{--structure ratio-optimal-vra} (VRASection, T.7) to generate
     this plan first.
     A non-compliant initial plan will trigger the empty protected-set warning
     and produce an unconstrained chain.
@@ -289,6 +289,6 @@ ShortBurstForest (G.12) is designed for exactly this middle ground, but
 the optimal balance point depends on the specific task.
 
 \textbf{Future algorithms.}
-CVD (B.22) and BFS Growth (B.23) will add geometric algorithms to the
+CVD (T.10) and BFS Growth (T.12) will add geometric algorithms to the
 comparison.
 When these are implemented, the decision tree will be updated accordingly.

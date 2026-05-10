@@ -6,7 +6,7 @@ status: source-requests
 
 # Source Requests
 
-## B.11 ApportionRegions
+## T.4 ApportionRegions
 
 - Confirm the exact NC output state split and the run context.
 - Replace any raw national headline with a source-bound wording if the numbers are not current.
@@ -29,7 +29,7 @@ status: source-requests
 - Keep the VRA mode as a scope-with-caveat example.
 - Avoid any universal legal claim about majority-minority outcomes.
 
-## C.2 and B.15 Stability
+## C.2 and T.8 Stability
 
 - Confirm the census cycles actually compared.
 - Keep the stability claim scoped to those cycles only.

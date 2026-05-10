@@ -86,7 +86,7 @@ fn run_smc_ensemble(args: &EnsembleArgs) -> anyhow::Result<()> {
         args.particles, args.pop_tolerance, args.resample_threshold
     );
 
-    // ── Content-derived base seed (mirrors B.16 §3.1 formula) ───────────────
+    // ── Content-derived base seed (mirrors U.1 §3.1 formula) ───────────────
     let base_seed = args.base_seed.unwrap_or_else(|| {
         use sha2::{Digest, Sha256};
         let mut h = Sha256::new();

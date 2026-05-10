@@ -1,5 +1,5 @@
 /// LODES (Longitudinal Employer-Household Dynamics) WAC (Workplace Area Characteristics)
-/// data loader for economic character edge weights (B.27/M.1).
+/// data loader for economic character edge weights (M.9/M.1).
 ///
 /// CSV format: `data/{year}/lodes/{state_name}_wac_tract.csv`
 /// Columns used: geoid, c000 (total jobs), cns07, cns09, cns10, cns11 (commercial),

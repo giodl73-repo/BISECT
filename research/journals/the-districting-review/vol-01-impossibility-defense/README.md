@@ -25,13 +25,13 @@ that accurately.
 
 | Slot | Working title | Source basis | Current posture |
 |------|---------------|--------------|-----------------|
-| 1 | The Trust Problem | H.0 frame | audition |
-| 2 | Input Exclusion Is the Point | B.17/R.1 | audition-reserved |
+| 1 | The Trust Problem | U.8 frame | audition |
+| 2 | Input Exclusion Is the Point | U.2/R.1 | audition-reserved |
 | 3 | Seed Sensitivity Is Bounded | B.7 | audition-reserved |
-| 4 | Parameter Gaming Is Limited | B.17/R.1 | audition-caution |
+| 4 | Parameter Gaming Is Limited | U.2/R.1 | audition-caution |
 | 5 | Pre-Registration Makes the Defense Verifiable | R.1/A.4 | audition-reserved |
-| 6 | How to Use the Defense in Court | H.0 | caution |
-| 7 | What the Algorithm Can Vary | B.0/H.0 | guardrail |
+| 6 | How to Use the Defense in Court | U.8 | caution |
+| 7 | What the Algorithm Can Vary | B.0/U.8 | guardrail |
 
 ## Gates
 

@@ -14,7 +14,7 @@ The issue is in **provisional public preview**, not locked publication.
 ## Approved Strategy
 
 The editor approved the scope-down path. Vol. 1 introduces the geography-first
-diagnostic frame without publishing exact B.12 table values, exact G.1
+diagnostic frame without publishing exact T.5 table values, exact G.1
 percentile claims, or L.1/C.5 result-bearing measurement claims.
 
 See [Editor Approval](decisions/editor-approval-scope-down.md).
@@ -30,9 +30,9 @@ reform, adoption, or legal claims.
 | Order | Article | Purpose | Current state |
 |-------|---------|---------|---------------|
 | 1 | [The Shape of the Vote](articles/the-shape-of-the-vote.md) | Introduces voter geography as the issue frame | provisional draft |
-| 2 | [Geography Constrains Proportionality](articles/geography-constrains-proportionality.md) | Explains why proportional outcomes can be geographically constrained | provisional draft; B.12 exact values blocked |
+| 2 | [Geography Constrains Proportionality](articles/geography-constrains-proportionality.md) | Explains why proportional outcomes can be geographically constrained | provisional draft; T.5 exact values blocked |
 | 3 | [The Ensemble Median Case](articles/the-ensemble-median-case.md) | Shows how a baseline and ensemble can converge in broad placement | provisional draft; exact percentile blocked |
-| 4 | [Three State Types](articles/three-state-types.md) | Turns B.12 into a qualitative state-type frame | provisional draft; exact table values blocked |
+| 4 | [Three State Types](articles/three-state-types.md) | Turns T.5 into a qualitative state-type frame | provisional draft; exact table values blocked |
 | 5 | [What This Issue Does Not Show](articles/what-this-issue-does-not-show.md) | Keeps the issue diagnostic and prevents overclaiming | provisional draft |
 
 ## Review State
@@ -49,7 +49,7 @@ See [References](REFERENCES.md) for the provisional source layer.
 | Gate | Status | Effect |
 |------|--------|--------|
 | Risky-claim scan | complete | Hits are boundary statements, not live overclaims |
-| B.12 exact values | blocked | Keep out unless source requests close |
+| T.5 exact values | blocked | Keep out unless source requests close |
 | G.1 exact percentile | blocked | Keep out unless statistical review closes |
 | L.1/C.5 measurement | blocked | Keep out unless post-fix output provenance closes |
 | Adoption/legal conclusion | out of scope | No federal-rule recommendation in Vol. 1 |

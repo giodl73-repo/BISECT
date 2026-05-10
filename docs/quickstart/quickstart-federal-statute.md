@@ -32,7 +32,7 @@ Example: North Carolina receives 14 seats.
 
 The ApportionRegions algorithm bisects NC into 7 parts first (each receiving 2 seats), then bisects each of those into 2. The bisection tree is derivable from the Huntington-Hill priority order: no new law is needed to justify the structure, only the recognition that the existing apportionment statute already implies it.
 
-This derivation is formalised in `docs/RECURSIVE_BISECTION.md` and defended in the B.11 paper (`docs/PAPERS.md`).
+This derivation is formalised in `docs/RECURSIVE_BISECTION.md` and defended in the T.4 paper (`docs/PAPERS.md`).
 
 ---
 
@@ -100,7 +100,7 @@ The 50-state DIA default sweep (`configs/official_proposal.yml`, 2020 census) pr
 
 NC is the headline case: k=14=7x2 forces a symmetric bisection tree. The algorithm gives 7D/7R with a 0.7 percentage-point partisan gap -- as close to perfectly proportional as geography permits. The enacted map gives 10R/4D.
 
-The 223D/209R national total is not a design target. It is the output of a partisan-blind, geographically compact algorithm applied to the 2020 population. The +3 Democratic seats relative to rough proportionality reflects the geographic sorting of the US population (Democrats cluster in cities; see `docs/PAPERS.md` B.11 for the Rodden-gap analysis).
+The 223D/209R national total is not a design target. It is the output of a partisan-blind, geographically compact algorithm applied to the 2020 population. The +3 Democratic seats relative to rough proportionality reflects the geographic sorting of the US population (Democrats cluster in cities; see `docs/PAPERS.md` T.4 for the Rodden-gap analysis).
 
 ---
 
@@ -110,6 +110,6 @@ The 223D/209R national total is not a design target. It is the output of a parti
 - Policy memo (why this approach is constitutional): `docs/legal/STATUTE_RATIONALE.md`
 - 90-second version: `docs/legal/STATUTE_ONE_PAGER.md`
 - B.02 paper (recursive bisection algorithm): `docs/PAPERS.md`
-- B.11 paper (prime factorisation and 50-state sweep): `docs/PAPERS.md`
+- T.4 paper (prime factorisation and 50-state sweep): `docs/PAPERS.md`
 - State-court companion strategy (post-Rucho): `docs/legal/FAIRNESS_DOCTRINE.md`
 - SHA chain and manifest format: `docs/file-formats/manifests.md`

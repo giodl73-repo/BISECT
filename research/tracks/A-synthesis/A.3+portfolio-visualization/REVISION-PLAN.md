@@ -39,8 +39,8 @@
 
 ### P1-B: Add NC/GA qualification to partisan headline
 **Location**: Section 3 (headline number 2)
-**Issue**: The "North Carolina: 7D/7R" headline presents only the most favorable partisan result from B.11. B.11 also reports Georgia ($k=14$, similar partisan split) producing 5D/9R — a 14.4 pp bias. Presenting NC without GA is selectively misleading for a practitioner audience.
-**Fix**: Add one sentence after the NC headline: "Results vary by state: Georgia, with the same seat count and a similar partisan division, produces a 5D/9R outcome under the same algorithm — see Paper B.11 for analysis of why geographic structure drives this divergence." Alternatively, replace with the national aggregate: 223D/209R (51.6% D).
+**Issue**: The "North Carolina: 7D/7R" headline presents only the most favorable partisan result from T.4. T.4 also reports Georgia ($k=14$, similar partisan split) producing 5D/9R — a 14.4 pp bias. Presenting NC without GA is selectively misleading for a practitioner audience.
+**Fix**: Add one sentence after the NC headline: "Results vary by state: Georgia, with the same seat count and a similar partisan division, produces a 5D/9R outcome under the same algorithm — see Paper T.4 for analysis of why geographic structure drives this divergence." Alternatively, replace with the national aggregate: 223D/209R (51.6% D).
 **Flagged by**: Rodden
 
 ### P1-C: Add VRA threshold Gingles qualification

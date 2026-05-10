@@ -24,13 +24,13 @@ replication, and caveats.
 
 | Slot | Working title | Source basis | Current posture |
 |------|---------------|--------------|-----------------|
-| 1 | Let Me Show You What It Makes | B.11 frame | preview |
-| 2 | The North Carolina Result | B.11 | preview-reserved |
-| 3 | The National Picture | B.11/A.0 | preview-reserved |
+| 1 | Let Me Show You What It Makes | T.4 frame | preview |
+| 2 | The North Carolina Result | T.4 | preview-reserved |
+| 3 | The National Picture | T.4/A.0 | preview-reserved |
 | 4 | What Compactness Looks Like in Ensemble Space | G.1/S.1 | preview-caution |
 | 5 | Any Party Can Verify This | A.4/R.4 | preview-reserved |
 | 6 | VRA Mode Needs Caveats | D.1/A.0 | preview-caution |
-| 7 | Stability Across Census Cycles | C.2/B.15 | preview-support |
+| 7 | Stability Across Census Cycles | C.2/T.8 | preview-support |
 | 8 | What the Numbers Do Not Prove | review panel | guardrail |
 
 ## Gates

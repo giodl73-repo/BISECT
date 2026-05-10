@@ -20,7 +20,7 @@ The paper introduces a governmental-hierarchy edge-weighting scheme (parameter �
 4. **Only two α values tested.** The parameter space is continuous; the jump from α=0 to α=5 may straddle a threshold where county preservation tips from neutral to systematically advantageous. Without an α sweep and seed ensemble, the bounded claim at +0.3pp is unsubstantiated.
 
 ## Detailed Comments
-The abstract uses "preserves" and "rather than choosing" in a way that implies a causal mechanism for neutrality — this conflates "not designed to favor a party" with "does not favor a party in expectation." The B.7 ensemble result for GA is the same paper series' own benchmark; the contradictory single-seed result in B.10 is unacknowledged. If counties systematically correlate with partisan lean, the compact-county-respecting boundary could produce non-random partisan outcomes even with no explicit partisan input.
+The abstract uses "preserves" and "rather than choosing" in a way that implies a causal mechanism for neutrality — this conflates "not designed to favor a party" with "does not favor a party in expectation." The B.7 ensemble result for GA is the same paper series' own benchmark; the contradictory single-seed result in T.3 is unacknowledged. If counties systematically correlate with partisan lean, the compact-county-respecting boundary could produce non-random partisan outcomes even with no explicit partisan input.
 
 Minimum standard for publishable neutrality claim: (a) ≥25 seeds per state per α to construct seat-count distributions, (b) a rank test on per-state gap change across seeds, (c) a geographic covariate (urban fraction, county size Gini) to detect heterogeneous effects.
 

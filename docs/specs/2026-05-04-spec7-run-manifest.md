@@ -436,17 +436,17 @@ Interactive three-layer compositor wizard:
 ┌─ Configure: official_proposal ───────────────────────────────┐
 │                                                              │
 │ Layer 1 — Structure                                         │
-│   ● apportion-regions   HH prime-factor tree (B.11)        │
-│   ○ ratio-optimal       GeoSection (B.8)                   │
-│   ○ ratio-optimal-area  AreaSection (B.9)                  │
+│   ● apportion-regions   HH prime-factor tree (T.4)        │
+│   ○ ratio-optimal       GeoSection (T.1)                   │
+│   ○ ratio-optimal-area  AreaSection (T.2)                  │
 │                                                              │
 │ Layer 2 — Weights                                           │
-│   ● county  α=[ 2.0 ]   County-sticky (B.10)              │
+│   ● county  α=[ 2.0 ]   County-sticky (T.3)              │
 │   ○ geographic           TIGER boundary lengths             │
-│   ○ vra-aligned          Minority alignment (B.14)         │
+│   ○ vra-aligned          Minority alignment (T.7)         │
 │                                                              │
 │ Layer 3 — Search                                            │
-│   ● convergence  T=[ 600 ]   Seed buster (B.16)           │
+│   ● convergence  T=[ 600 ]   Seed buster (U.1)           │
 │   ○ multi        N=[ 50  ]   Fixed seeds                   │
 │   ○ single                   Content-derived seed only     │
 │                                                              │
@@ -781,8 +781,8 @@ do when `bisect build` is called with this label. It is separate from the regist
 name: official_proposal
 description: >
   Federal redistricting proposal for all 50 states across three census years.
-  Uses ApportionRegions structure (B.11), county-stickiness weights (alpha=2.0,
-  B.10), and convergence search (threshold=600, B.7/B.16). Reference implementation
+  Uses ApportionRegions structure (T.4), county-stickiness weights (alpha=2.0,
+  T.3), and convergence search (threshold=600, B.7/U.1). Reference implementation
   for the proposed federal redistricting statute.
 
 algorithm:
@@ -795,14 +795,14 @@ algorithm:
   # Values: unweighted | geographic | county | vra-aligned | proportional
   weights: county
 
-  # County stickiness factor (B.10). Ignored if weights != county.
+  # County stickiness factor (T.3). Ignored if weights != county.
   alpha_county: 2.0
 
   # Layer 3: seed search strategy
   # Values: single | multi | convergence
   search: convergence
 
-  # Consecutive non-improving seeds before stopping (B.7/B.16).
+  # Consecutive non-improving seeds before stopping (B.7/U.1).
   # Required when search: convergence.
   convergence_threshold: 600
 
@@ -1115,8 +1115,8 @@ After `report` completes:
 name: official_proposal
 description: >
   Reference implementation for the proposed federal redistricting statute.
-  Algorithm: ApportionRegions (B.11), county weights alpha=2.0 (B.10),
-  convergence search threshold=600 (B.7/B.16). All 50 states, 2020/2010/2000.
+  Algorithm: ApportionRegions (T.4), county weights alpha=2.0 (T.3),
+  convergence search threshold=600 (B.7/U.1). All 50 states, 2020/2010/2000.
   This config is the citable artifact defining the official proposal parameters.
   Any run claiming to reproduce these results must use this config unmodified.
 
@@ -1216,17 +1216,17 @@ dispatcher over the same underlying commands.
 ┌─ Configure: official_proposal ───────────────────────────────┐
 │                                                              │
 │ Layer 1 — Structure                                         │
-│   ● apportion-regions   HH prime-factor tree (B.11)        │
-│   ○ ratio-optimal       GeoSection (B.8)                   │
-│   ○ ratio-optimal-area  AreaSection (B.9)                  │
+│   ● apportion-regions   HH prime-factor tree (T.4)        │
+│   ○ ratio-optimal       GeoSection (T.1)                   │
+│   ○ ratio-optimal-area  AreaSection (T.2)                  │
 │                                                              │
 │ Layer 2 — Weights                                           │
-│   ● county  α=[ 2.0 ]   County-sticky (B.10)              │
+│   ● county  α=[ 2.0 ]   County-sticky (T.3)              │
 │   ○ geographic           TIGER boundary lengths (default)   │
-│   ○ vra-aligned  w=[ 0.40 ]  Minority alignment (B.14)    │
+│   ○ vra-aligned  w=[ 0.40 ]  Minority alignment (T.7)    │
 │                                                              │
 │ Layer 3 — Search                                            │
-│   ● convergence  T=[ 600 ]   Certified optimal (B.16)     │
+│   ● convergence  T=[ 600 ]   Certified optimal (U.1)     │
 │   ○ multi        N=[ 50  ]   Fixed seed count              │
 │   ○ single                   Content-derived seed only     │
 │                                                              │
@@ -1237,7 +1237,7 @@ dispatcher over the same underlying commands.
 ```
 
 `[s]` writes to `configs/official_proposal.yml`. The in-TUI description
-("`HH prime-factor tree (B.11)`", "`Certified optimal (B.16)`") links each
+("`HH prime-factor tree (T.4)`", "`Certified optimal (U.1)`") links each
 choice to its research paper, making the legal justification visible at the
 point of decision.
 
@@ -1317,9 +1317,9 @@ point of decision.
 | **State Staff Interop** | `BISECT import X --from FILE` is the ingestion path for externally-submitted plans; integrates with `BISECT compare` for adversarial review |
 | **Court Submission Reports** | `BISECT verify X` provides the mechanical SHA-chain traversal cited in expert witness reports |
 | **Civic Bidirectional Input** | `BISECT import X --from FILE --format csv` is the CSV ingestion path compatible with civic ingest |
-| **B.10 (county weights)** | `algorithm.alpha_county` in config maps to `WeightSpec.alpha_county` |
-| **B.11 (ApportionRegions)** | `algorithm.structure: apportion-regions` maps to `SplitStrategy::ApportionRegions` |
-| **B.16 (convergence)** | `algorithm.search: convergence` + `convergence_threshold` maps to `SeedCompositor::ConvergenceSweep` |
+| **T.3 (county weights)** | `algorithm.alpha_county` in config maps to `WeightSpec.alpha_county` |
+| **T.4 (ApportionRegions)** | `algorithm.structure: apportion-regions` maps to `SplitStrategy::ApportionRegions` |
+| **U.1 (convergence)** | `algorithm.search: convergence` + `convergence_threshold` maps to `SeedCompositor::ConvergenceSweep` |
 
 ---
 

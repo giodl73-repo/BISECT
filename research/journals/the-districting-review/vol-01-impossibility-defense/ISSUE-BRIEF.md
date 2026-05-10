@@ -21,12 +21,12 @@ The standard objection to algorithmic redistricting is: "algorithms can be tuned
 | Slot | Role | Claim class | Candidate papers |
 |------|------|-------------|-----------------|
 | Editorial | The trust problem -- why "trust us" doesn't work and why architecture does | interpretive | -- |
-| Formula | The input-exclusion argument — no partisan input in the baseline workflow | formal | B.17 (parameter sensitivity), R.1 (parameter gaming) |
+| Formula | The input-exclusion argument — no partisan input in the baseline workflow | formal | U.2 (parameter sensitivity), R.1 (parameter gaming) |
 | Anchor | Seed sensitivity: CV < 2% for 96% of states — results are stable, not cherry-picked | empirical | B.7 (solution space) |
-| Parameter gaming | Adversarial test: most-partisan parameter combination = 0.3 seats nationally | empirical | B.17, R.1 |
+| Parameter gaming | Adversarial test: most-partisan parameter combination = 0.3 seats nationally | empirical | U.2, R.1 |
 | Pre-registration | The DIA seed formula -- parameters locked before Census data, SHA-256 binding | operational | R.1 §pre-registration, A.4 §software |
-| Legal framing | How to use the input-exclusion defense in court -- the Rucho context | interpretive | H.0 §legal posture |
-| Measurement note | What the algorithm CAN vary — compactness range, not partisan direction | empirical | B.0 (bakeoff), H.0 §results |
+| Legal framing | How to use the input-exclusion defense in court -- the Rucho context | interpretive | U.8 §legal posture |
+| Measurement note | What the algorithm CAN vary — compactness range, not partisan direction | empirical | B.0 (bakeoff), U.8 §results |
 
 ## Review lenses
 

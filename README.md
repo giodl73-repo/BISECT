@@ -157,7 +157,7 @@ Drafts: [`docs/legal/`](docs/legal/) — bill text, policy memo, one-pager, and 
 
 ## Research papers
 
-190+ papers across eighteen tracks. Published PDFs are pre-built; some later-track drafts remain source-only in `research/tracks/`.
+190+ papers across twenty active tracks. Published PDFs are pre-built; some later-track drafts remain source-only in `research/tracks/`.
 **[→ Full index at docs/PAPERS.md](docs/PAPERS.md)**
 
 ### Track A — Synthesis
@@ -167,7 +167,7 @@ Drafts: [`docs/legal/`](docs/legal/) — bill text, policy memo, one-pager, and 
 | [A.1](docs/papers/A.1+portfolio-guide.pdf) | Portfolio guide: how the tracks relate, reading order |
 | [A.2](docs/papers/A.2+portfolio-summary.pdf) | Portfolio summary: all major findings in one document |
 
-### Track B — Algorithm (all 18 papers have PDFs)
+### Track B — Algorithm Foundations
 | | |
 |--|--|
 | [B.0](docs/papers/B.0+algorithm-design-overview.pdf) | Bakeoff: compactness–proportionality paradox across 8 algorithm modes |
@@ -179,19 +179,46 @@ Drafts: [`docs/legal/`](docs/legal/) — bill text, policy memo, one-pager, and 
 | [B.5](docs/papers/B.5+nway-vs-recursive-general.pdf) | N-way vs. recursive: general comparison across all chambers |
 | [B.6](docs/papers/B.6+computational-complexity.pdf) | Computational complexity: O(n log² n), empirically O(n¹·⁰⁷) |
 | [B.7](docs/papers/B.7+solution-space-and-seed-sensitivity.pdf) | Seed sensitivity: CV < 2% for 96% of states |
-| [B.8](docs/papers/B.8+geosection-ratio-optimal-bisection.pdf) | GeoSection: ratio-optimal first bisection, isoperimetric normalisation |
-| [B.9](docs/papers/B.9+areasection-dual-population-area-constraint.pdf) | AreaSection: dual [population, area] constraint, 76% seat stability |
-| [B.10](docs/papers/B.10+subdivision-respecting-redistricting.pdf) | County-sticky weights: 34% fewer county splits at 3% compactness cost |
-| [B.11](docs/papers/B.11+apportion-regions.pdf) | ApportionRegions: prime-factor tree, NC 7D/7R, national 223D/209R |
-| [B.12](docs/papers/B.12+proportional-section.pdf) | ProportionalSection: proportionality paradox and Rodden-gap finding |
-| [B.13](docs/papers/B.13+nestsection-nested-multi-chamber.pdf) | NestSection: senate = 2 × house spine compatibility |
-| [B.14](docs/papers/B.14+vrasection-minority-opportunity-bisection.pdf) | VRASection: minority alignment, post-Callais disentanglement |
-| [B.15](docs/papers/B.15+stabilitysection-cross-census-stability.pdf) | StabilitySection: tree stability 2000–2020 |
-| [B.16](docs/papers/B.16+convergence-sweep.pdf) | ConvergenceSweep: T=600 sufficient, statutory seed formula |
-| [B.17](docs/papers/B.17+parameter-sensitivity.pdf) | Parameter sensitivity: partisanship insensitive to tuning |
-| [H.0](docs/papers/H.0+percentile-sweep.pdf) | PercentileSweep — statutory choice of legal posture |
-| [H.1](docs/papers/H.1+bisection-ensemble.pdf) | BisectionEnsemble — local ReCom at each bisection node |
-| [H.2](docs/papers/H.2+bisect-ensemble.pdf) | bisect-ensemble — Rust ReCom at 2500× speed |
+
+### Track T — Plan Construction
+| | |
+|--|--|
+| [T.1](docs/papers/T.1+geosection-ratio-optimal-bisection.pdf) | GeoSection: ratio-optimal first bisection, isoperimetric normalisation |
+| [T.2](docs/papers/T.2+areasection-dual-population-area-constraint.pdf) | AreaSection: dual [population, area] constraint, 76% seat stability |
+| [T.3](docs/papers/T.3+subdivision-respecting-redistricting.pdf) | County-sticky weights: 34% fewer county splits at 3% compactness cost |
+| [T.4](docs/papers/T.4+apportion-regions.pdf) | ApportionRegions: prime-factor tree, NC 7D/7R, national 223D/209R |
+| [T.5](docs/papers/T.5+proportional-section.pdf) | ProportionalSection: proportionality paradox and Rodden-gap finding |
+| [T.6](docs/papers/T.6+nestsection-nested-multi-chamber.pdf) | NestSection: senate = 2 × house spine compatibility |
+| [T.7](docs/papers/T.7+vrasection-minority-opportunity-bisection.pdf) | VRASection: minority alignment, post-Callais disentanglement |
+| [T.8](docs/papers/T.8+stabilitysection-cross-census-stability.pdf) | StabilitySection: tree stability 2000–2020 |
+| [T.9](docs/papers/T.9+multi-reapportionment-stability.pdf) | Multi-reapportionment stability under seat gains and losses |
+| [T.10](docs/papers/T.10+centroidal-voronoi.pdf) | Centroidal Voronoi district construction |
+| [T.11](docs/papers/T.11+cvd-geographic.pdf) | Geographic CVD with projected centroids |
+| [T.12](docs/papers/T.12+bfs-growth.pdf) | BFS region-growing construction baseline |
+| [T.13](docs/papers/T.13+moving-knife.pdf) | Moving-Knife redistricting for Reock-oriented construction |
+
+Planned construction slots: spectral partitioning, capacity-constrained
+clustering, hierarchical regionalization, and flow-based construction.
+
+### Track U — Search and Optimization
+| | |
+|--|--|
+| [U.1](docs/papers/U.1+convergence-sweep.pdf) | ConvergenceSweep: T=600 sufficient, statutory seed formula |
+| [U.2](docs/papers/U.2+parameter-sensitivity.pdf) | Parameter sensitivity: partisanship insensitive to tuning |
+| [U.3](docs/papers/U.3+simulated-annealing.pdf) | Simulated Annealing: heuristic edge-cut optimization |
+| [U.4](docs/papers/U.4+parallel-tempering.pdf) | Parallel Tempering: multi-chain optimization/search |
+| [U.5](docs/papers/U.5+adaptive-multiscale.pdf) | Adaptive Multiscale MCMC |
+| [U.6](docs/papers/U.6+ilp-redistricting.pdf) | Exact ILP redistricting and optimality certificates |
+| [U.7](docs/papers/U.7+pareto-redistricting.pdf) | Pareto / NSGA-II multi-objective search |
+| [U.8](docs/papers/U.8+percentile-sweep.pdf) | PercentileSweep — statutory choice of legal posture |
+| [U.9](docs/papers/U.9+bisection-ensemble.pdf) | BisectionEnsemble — local ReCom at each bisection node |
+| [U.10](docs/papers/U.10+bisect-ensemble.pdf) | bisect-ensemble — Rust ReCom at 2500× speed |
+| [U.11](docs/papers/U.11+resolution-aware.pdf) | Resolution-aware redistricting |
+
+Planned search/optimization slots: overview, algorithm-selection matrix,
+exact-vs-heuristic certification, multi-objective selection, legal postures,
+branch-and-cut, branch-and-price, large-neighborhood/tabu/matheuristics,
+evolutionary comparison, and RPLAN plan-audit certificates.
 
 ### Track C — Validation
 | | |
@@ -305,9 +332,9 @@ crates/
 configs/            # YAML plan configs
 docs/papers/        # 100+ compiled PDFs (committed)
 research/tracks/    # LaTeX sources organised by series:
-                    #   A-synthesis/  B-algorithm/  C-validation/
+                    #   A-synthesis/  B-foundations/  C-validation/
                     #   D-vra-legal/  E-experimental/ F-legislative/
-                    #   G-ensemble/   H-search/
+                    #   G-ensemble/   T-plan-construction/ U-search-optimization/
 docs/legal/         # Model federal statute, fairness doctrine
 docs/quickstart/    # Persona-specific quickstart guides
 ```

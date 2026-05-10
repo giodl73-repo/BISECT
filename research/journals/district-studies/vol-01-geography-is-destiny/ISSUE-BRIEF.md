@@ -21,10 +21,10 @@ The conventional narrative says gerrymandering is about politicians drawing snea
 | Slot | Role | Claim class | Candidate papers |
 |------|------|-------------|-----------------|
 | Editorial | Opens the volume; sets up the geography-first frame | interpretive | — |
-| Formula | "Geography constrains partisan outcomes" — the core equation | formal/empirical | B.12 (proportionality paradox), B.7 (seed sensitivity), B.17 (parameter insensitivity) |
-| Anchor | The ensemble-position case — in one reviewed run, the plan sits near the middle of the comparison distribution | empirical | G.1 (GerryChain comparison), B.11 (NC 7D/7R) |
+| Formula | "Geography constrains partisan outcomes" — the core equation | formal/empirical | T.5 (proportionality paradox), B.7 (seed sensitivity), U.2 (parameter insensitivity) |
+| Anchor | The ensemble-position case — in one reviewed run, the plan sits near the middle of the comparison distribution | empirical | G.1 (GerryChain comparison), T.4 (NC 7D/7R) |
 | Bridge | Rodden's geographic sorting argument — contextualize within political science literature | interpretive | O.3 intro, L.6 proportionality discussion |
-| Case study | Three state types — same algorithmic procedure, different geographic constraints | empirical/interpretive | B.12 GA/WI/NV, with B.11/G.1 Texas deferred |
+| Case study | Three state types — same algorithmic procedure, different geographic constraints | empirical/interpretive | T.5 GA/WI/NV, with T.4/G.1 Texas deferred |
 | Measurement | Measuring residual partisan effect after geography | empirical | C.5 (efficiency gap analysis), L.1; deferred until output provenance closes |
 | Guardrail note | What this issue does not show | archival/review | G.1 ESS notes, L.1 sign audit, role-panel reviews |
 
@@ -34,7 +34,7 @@ The conventional narrative says gerrymandering is about politicians drawing snea
 - Prison gerrymandering, citizen VAP — those are Vol 3
 - 2030 — that's Vol 4
 - What commissioners should do — that's The Districting Review
-- Exact B.12 table values until the source-chain gates close
+- Exact T.5 table values until the source-chain gates close
 - Exact G.1 percentile claims until statistical language is reviewed
 - Result-bearing L.1/C.5 measurement claims until output provenance closes
 
@@ -42,6 +42,6 @@ The conventional narrative says gerrymandering is about politicians drawing snea
 
 - COMMONS: Can a reader who does not know what "efficiency gap" means follow this?
 - BOUNDARY: Does "geography is destiny" overclaim? Treat it as a title, not a literal theorem.
-- MERIDIAN: Is the B.12 proportionality argument stated correctly?
+- MERIDIAN: Is the T.5 proportionality argument stated correctly?
 - SCALE: Are G.1 percentile and L.1/C.5 measurement claims caveated enough?
 - DATUM: Can every numeric value be traced to the current source chain?

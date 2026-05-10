@@ -3,7 +3,7 @@
 **Status**: Proposed (R1 reviewed, P1 fixes applied)  
 **Date**: 2026-05-07  
 **Layer**: Structure (SplitStrategy) — replaces METIS  
-**Related paper**: B.23  
+**Related paper**: T.12  
 **Implementation**: `bisect-cli/src/bisection_runner.rs` (no new crate)  
 **Reviewed R1**: MERIDIAN 4/4, BENCHMARK 3/4, SURVEY 3/4, COVENANT 4/4 → avg 3.5/4
 
@@ -25,7 +25,7 @@ BFS Growth is useful as:
 
 **Relationship to existing structure strategies**:
 
-| Property | BFS Growth (B.23) | CVD (B.22) |
+| Property | BFS Growth (T.12) | CVD (T.10) |
 |---|---|---|
 | Metric optimized | None (greedy) | Geographic distance |
 | Data needed | Adjacency only | Adjacency (Phase 1), Centroids (Phase 2) |

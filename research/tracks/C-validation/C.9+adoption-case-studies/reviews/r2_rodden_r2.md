@@ -19,7 +19,7 @@ The political feasibility discussion now acknowledges that the commission and st
 
 The generalizability claim remains somewhat overstated. The paper now qualifies it ("the three pathways analyzed here provide institutional templates") but the qualification is brief. A more systematic treatment of which states are plausible early adopters, based on their current redistricting frameworks, would strengthen the claim. The paper mentions Michigan, Colorado, and Virginia as candidates but does not analyze their specific institutional situations.
 
-The *Harper* reversal treatment (Section 4) is present and honest (see also Stephanopoulos's analysis). The paper correctly reframes the case study as illustrating the court-order pathway pattern rather than the current North Carolina situation. From a geographic perspective, the North Carolina case is still the right example: the I-35 corridor argument I raised in B.18 is less relevant here (C.9 is about institutional process, not geographic distribution of disruption), but the reframing is appropriate.
+The *Harper* reversal treatment (Section 4) is present and honest (see also Stephanopoulos's analysis). The paper correctly reframes the case study as illustrating the court-order pathway pattern rather than the current North Carolina situation. From a geographic perspective, the North Carolina case is still the right example: the I-35 corridor argument I raised in T.9 is less relevant here (C.9 is about institutional process, not geographic distribution of disruption), but the reframing is appropriate.
 
 ## Minor Issues
 

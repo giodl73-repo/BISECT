@@ -68,7 +68,7 @@ bisect state --state <CODE> [OPTIONS]
 | `--ufactor` | `5` | METIS imbalance tolerance (5 = ±0.5%) |
 | `--niter` | `100` | METIS refinement iterations |
 | `--seed` | *(random)* | METIS random seed for reproducible runs |
-| `--geosection-seeds` | `50` | Seeds per ratio for GeoSection (B.8) and AreaSection (B.9). Each ratio 1:k-1 through k/2:k/2 is tried with this many seeds; the minimum-normalised-EC ratio wins. Typical: 50–200. |
+| `--geosection-seeds` | `50` | Seeds per ratio for GeoSection (T.1) and AreaSection (T.2). Each ratio 1:k-1 through k/2:k/2 is tried with this many seeds; the minimum-normalised-EC ratio wins. Typical: 50–200. |
 | `--area-swing` | `1.10` | **AreaSection only.** METIS `ubvec[1]` for the land-area balance constraint: `1.10` = ±10% swing from 50/50. Empirically validated range: `1.05`–`1.15`. Below `1.05` forces near-equal splits for concentrated states (GA → 7:7). Above `1.15` allows urban peeling to return (WI → 2:6 at `1.20`). |
 | `--balance-tolerance` | `0.5` | Max deviation per district in percent (0.5 = ±0.5%, the congressional one-person-one-vote standard). Pass as percent, not fraction. |
 | `-r`, `--reset` | false | Delete output directory before starting |

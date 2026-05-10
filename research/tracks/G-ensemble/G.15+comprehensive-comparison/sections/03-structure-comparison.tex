@@ -91,7 +91,7 @@ ILP (exact)        & \textbf{47} & 0.371 & 12.8 \\
 
 \subsection{ILP: Certified Optimal for NH}
 
-\ilp{} (B.24) achieves \ec{} = 47 for NH, certified as the global minimum
+\ilp{} (U.6) achieves \ec{} = 47 for NH, certified as the global minimum
 by the ILP optimality certificate (branch-and-bound concluded with zero
 integrality gap).
 This is 8.5\% below Simulated Annealing (51), the nearest heuristic, and
@@ -108,7 +108,7 @@ geometric regularity of minimum-\ec{} bisections on small graphs.
 
 \subsection{Simulated Annealing: Best Heuristic EC}
 
-\sa{} (B.19) achieves the lowest \ec{} among heuristic structure algorithms
+\sa{} (U.3) achieves the lowest \ec{} among heuristic structure algorithms
 in all states: 10.7\% below METIS for NC, 10.6\% for WI, 10.5\% for TX,
 and 10.5\% for FL.
 The improvement is consistent across state sizes, reflecting that SA's
@@ -128,7 +128,7 @@ cross-district adjacencies, not an explicit objective.
 
 \subsection{CVD-Geographic: Best Heuristic PP}
 
-\cvdgeo{} (B.22b) achieves the highest mean \pp{} among all heuristic
+\cvdgeo{} (T.11) achieves the highest mean \pp{} among all heuristic
 structure algorithms across all states: 0.249 for NC, 0.267 for WI, 0.232
 for TX, 0.228 for FL.
 This exceeds even the best search-algorithm results for \pp{} (Section
@@ -152,7 +152,7 @@ sense), CVD-Geo is the correct structure choice.
 
 \subsection{CVD Graph-Distance: PP Without Centroids}
 
-\cvdg{} (B.22) achieves \pp{} = 0.231 for NC, below CVD-Geo (0.249) but
+\cvdg{} (T.10) achieves \pp{} = 0.231 for NC, below CVD-Geo (0.249) but
 substantially above METIS (0.201).
 The graph-hop metric approximates Euclidean distance on planar graphs;
 the approximation degrades for states with highly irregular tract shapes
@@ -163,7 +163,7 @@ inputs or non-standard geographic units.
 
 \subsection{BFS Growth: Fastest Structure Method}
 
-\bfsgrow{} (B.23) runs in wall-clock time 1.3 s for NC, 0.6 s for WI,
+\bfsgrow{} (T.12) runs in wall-clock time 1.3 s for NC, 0.6 s for WI,
 4.1 s for TX, 2.9 s for FL --- the fastest structure method by 1.6--2$\times$
 over METIS.
 \pp{} values (0.226 for NC, 0.241 for WI, 0.211 for TX, 0.203 for FL) are

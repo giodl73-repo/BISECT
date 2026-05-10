@@ -1,15 +1,15 @@
-# Panel Review: B.27 and M.1 — Economic Character Edge Weights
+# Panel Review: M.9 and M.1 — Economic Character Edge Weights
 
 **Date**: 2026-05-08
 **Papers**:
-- B.27 — Economic Character Edge Weights (LODES WAC)
-  `research/tracks/B-algorithm/B.27+economic-character-weights/`
+- M.9 — Economic Character Edge Weights (LODES WAC)
+  `research/tracks/M-community-character/M.9+economic-character-weights/`
 - M.1 — Economic Character Edge Weights via LODES (M-track)
   `research/tracks/M-community-character/M.1+economic-character-lodes/`
 
 **Panel**: Karypis (R1), Rodden (R2), Duchin (R3), Stephanopoulos (R4), Liang (R5)
 
-**Pre-review status**: Both papers passed post-write. B.27 had 2 P2 items (fixed
+**Pre-review status**: Both papers passed post-write. M.9 had 2 P2 items (fixed
 before this review). M.1's P1 blockers (similarity matrix, spec zero-vector
 contradiction) were resolved: JPR is normalized to `c000/10_000 ∈ [0,1]` in the
 implementation, all components are on [0,1], and the corrected similarity matrix
@@ -45,13 +45,13 @@ these vectors and the implementation formula.
 
 **Blend formula — CORRECT.**
 `edge_weights.rs` line 328: `let w_new = w * (self.alpha + (1.0 - self.alpha) * sim)`.
-This expands to `w * (α + (1−α)·sim)`, matching eq.(5) in B.27 §3 exactly.
+This expands to `w * (α + (1−α)·sim)`, matching eq.(5) in M.9 §3 exactly.
 The code comment in the implementation matches the paper's stated behavior:
 sim=1 → weight unchanged; sim=0 → weight × α.
 
-**B.27 §3 vs lodes.rs — MATCH.**
-The `EconChar` struct fields match B.27's three signals exactly (CI, IF, JPR).
-The code snippet in B.27 §3 (`let w_new = alpha * w + (1.0 - alpha) * sim * w`)
+**M.9 §3 vs lodes.rs — MATCH.**
+The `EconChar` struct fields match M.9's three signals exactly (CI, IF, JPR).
+The code snippet in M.9 §3 (`let w_new = alpha * w + (1.0 - alpha) * sim * w`)
 is algebraically equivalent to the implementation's `w * (alpha + (1-alpha) * sim)`.
 No discrepancy.
 
@@ -62,13 +62,13 @@ O(blocks) ≈ O(n); edge weight computation is O(|E|) ≈ O(3n) for planar graph
 Both claims are now consistent and technically precise.
 
 **L0 test invariants — VERIFIED.**
-All 8 named invariants (B.27 §3) exist in `lodes.rs` and `edge_weights.rs` and
+All 8 named invariants (M.9 §3) exist in `lodes.rs` and `edge_weights.rs` and
 pass structurally. The `econ_weighter_leaves_similar_tracts_unchanged` and
 `econ_weighter_halves_dissimilar_edges` tests in `edge_weights.rs` directly
 verify the blend formula's two extreme behaviors.
 
 **Minor issue: monotonicity claim lacks proof.**
-B.27 §3 states "the formula preserves the relative ordering of edge weights for
+M.9 §3 states "the formula preserves the relative ordering of edge weights for
 pairs with the same similarity" but does not formalize this as a proposition.
 For planar graph redistricting the intuition is clear: `w_new = w × f(sim)` for
 monotone `f` when sim is fixed. A two-line proof would eliminate any doubt.
@@ -95,13 +95,13 @@ because single-seed results are generally reliable. A political science reviewer
 can now clearly understand the asymmetric dagger treatment.
 
 **WI null result — HONESTLY REPORTED.**
-B.27 §4.4 and M.1 §4.3 both state the null result straightforwardly and explain
+M.9 §4.4 and M.1 §4.3 both state the null result straightforwardly and explain
 the mechanism (diffuse economic geography, no concentrated employment clusters).
 The papers correctly note this is "expected behavior" and do not claim the method
 works in WI. The dagger is correctly applied.
 
 **TX worsening — HONESTLY REPORTED.**
-The −2.6 pp change is described as a "slight worsening" (B.27 §4.5) and "modest
+The −2.6 pp change is described as a "slight worsening" (M.9 §4.5) and "modest
 effect...within the expected single-seed variance range" (M.1 §4.4). Both papers
 apply the dagger and recommend caution or convergence-search confirmation. This is
 appropriately conservative. The causal mechanism (industrial zones in Republican-
@@ -207,7 +207,7 @@ will actually be affected. P3 item only.
 **CA Proposition 11 (2008) — CORRECTLY CITED.**
 The Voters First Act (Prop 11, 2008) created the California Citizens Redistricting
 Commission and lists communities of interest as the second redistricting criterion
-after equal population and VRA. The citations in B.27 §5.1 and M.1 §5.1 correctly
+after equal population and VRA. The citations in M.9 §5.1 and M.1 §5.1 correctly
 describe this. The Commission's 2011 and 2021 proceedings accepted economic community
 testimony including Central Valley agricultural communities and Silicon Valley tech
 communities. One precision issue: M.1 §5.1 states the Commission "accepted economic
@@ -220,7 +220,7 @@ is a P3 precision issue; the legal foundation is real and correct.
 Colorado's independent redistricting commission criteria do explicitly include
 "communities of interest" and the Commission's guidance includes "economic interests"
 and "trade area" community membership. The citation `\citep{coart5s44}` maps to the
-correct constitutional provision. B.27 §5.1 correctly describes this. The M.1 §5.1
+correct constitutional provision. M.9 §5.1 correctly describes this. The M.1 §5.1
 treatment ("The trade area concept...maps directly onto the JPR and CI signals") is
 a legitimate characterization — Colorado's trade area concept is recognizable in
 employment density and commercial intensity data.
@@ -239,7 +239,7 @@ Real initiative, correctly described. Arizona's IRC criteria include "economic a
 social interests." No issues.
 
 **"Partisan neutrality" claim — DEFENSIBLE.**
-The B.27 §5.2 and M.1 §5.2 partisan neutrality defense rests on three correct
+The M.9 §5.2 and M.1 §5.2 partisan neutrality defense rests on three correct
 structural claims: (1) LODES WAC data contains no electoral, racial, or demographic
 data; (2) the character vector computation uses only job counts and population;
 (3) any partisan effect is a consequence of geographic correlation, not algorithmic
@@ -270,7 +270,7 @@ The implementation computes `jpr = (c000 / 10_000.0).min(1.0)`. The comment in
 similarity is not dominated by scale." This is the correct design choice for a
 cosine similarity computation where all components should contribute proportionally.
 
-The B.27 §3 paper states JPR is `min(C₀(t)/P(t), 10.0)` where P(t) is residential
+The M.9 §3 paper states JPR is `min(C₀(t)/P(t), 10.0)` where P(t) is residential
 population — but this is the **conceptual** description. The implementation uses
 `c000/10_000` as an employment intensity proxy (not the literal jobs-per-resident
 ratio). The two diverge: the paper's formula produces JPR in [0,10] while the
@@ -279,9 +279,9 @@ discrepancy**: the paper's equation (3) in §3 still shows `min(C₀(t)/P(t), 10
 with a cap of 10.0, not 1.0. The implementation computes something slightly
 different (it doesn't use population, it uses a fixed 10,000 denominator). The
 M.1 Table 1 footnote correctly describes the implemented formula (`min(C000/10,000, 1.0)`),
-but B.27 §3 eq.(3) still shows the population-based formula with cap 10.0.
+but M.9 §3 eq.(3) still shows the population-based formula with cap 10.0.
 
-**This is a P2-level inconsistency in B.27**: the paper's equation (3) does not
+**This is a P2-level inconsistency in M.9**: the paper's equation (3) does not
 match the implementation. The equation should be updated to reflect the actual
 computation: `JPR(t) = min(C₀(t)/10{,}000, 1.0)` with a note that this is an
 employment intensity proxy rather than the literal jobs-per-resident ratio. The
@@ -296,7 +296,7 @@ The values in M.1 Table 2 are internally consistent with the formula and vectors
 
 **alpha=0.5 motivation — ADEQUATE BUT LIGHTLY ARGUED.**
 Both papers state alpha=0.5 as a default without a formal justification. The
-reasoning in B.27 §3 is: "preserves geographic boundary length as the dominant
+reasoning in M.9 §3 is: "preserves geographic boundary length as the dominant
 consideration" and "geographic weight baseline dominates in the absence of strong
 economic contrast." This is a reasonable engineering choice but not a principled
 derivation. For an ML venue, a reviewer would expect at minimum a sensitivity
@@ -316,7 +316,7 @@ be P2 for an ML venue.
 
 ## Scores and Verdict
 
-| Reviewer | Role | B.27 Score | M.1 Score | Rec (B.27) | Rec (M.1) |
+| Reviewer | Role | M.9 Score | M.1 Score | Rec (M.9) | Rec (M.1) |
 |----------|------|-----------|-----------|-----------|-----------|
 | R1 Karypis | Algorithms | 3.5 | 3.5 | Accept | Accept |
 | R2 Rodden | Political Science | 3.5 | 3.5 | Accept | Accept |
@@ -331,7 +331,7 @@ be P2 for an ML venue.
 
 ## Action Items
 
-### B.27 — Fix Before Archival
+### M.9 — Fix Before Archival
 
 **P2 (required):**
 
@@ -343,9 +343,9 @@ be P2 for an ML venue.
    planar tract adjacency graphs."
 
 3. **[P2-new] §3 eq.(3) JPR formula inconsistency** (R5 finding):
-   B.27 §3 eq.(3) still shows `JPR(t) = min(C₀(t)/P(t), 10.0)` (population-based,
+   M.9 §3 eq.(3) still shows `JPR(t) = min(C₀(t)/P(t), 10.0)` (population-based,
    cap 10.0) but the implementation computes `min(c000/10_000, 1.0)` (fixed
-   denominator 10,000, cap 1.0). Update eq.(3) in B.27 §3 to:
+   denominator 10,000, cap 1.0). Update eq.(3) in M.9 §3 to:
    ```
    JPR(t) = min( C₀(t) / 10{,}000,\ 1.0 )
    ```
@@ -370,14 +370,14 @@ be P2 for an ML venue.
 
 **P2 (required):**
 
-1. **[P2-new] Same JPR formula discrepancy as B.27** — M.1 Table 1 footnote
+1. **[P2-new] Same JPR formula discrepancy as M.9** — M.1 Table 1 footnote
    correctly states `min(C000/10,000, 1.0)` but §2 background text and §3
    framework should consistently use this formula rather than any reference to
    the population-based `C₀(t)/P(t)` ratio. Verify no residual population-based
    JPR description survives in M.1.
 
 2. **[P2-P3] Add bisect build provenance to §4 experimental setup** — M.1 should
-   include "post-cccd853 debug build" matching B.27.
+   include "post-cccd853 debug build" matching M.9.
 
 **P3 (optional):**
 - Add "comparable economic community testimony" qualifier for CA Prop 11 in §5.1
@@ -399,7 +399,7 @@ Both papers report identical empirical results from the same pipeline run:
 - alpha=0.5, seed=42, standard-bisect, 2020 census ✓
 - LODES WAC 2020 data, tract counts NC=2,655 / WI=1,527 / TX=6,877 ✓
 
-B.27 and M.1 correctly distinguish their framing roles: B.27 owns the algorithmic
+M.9 and M.1 correctly distinguish their framing roles: M.9 owns the algorithmic
 description, implementation details, and performance benchmarks; M.1 owns the
 community character framing, similarity geometry, and practitioner/legal deployment.
 There is no contradiction between the papers.

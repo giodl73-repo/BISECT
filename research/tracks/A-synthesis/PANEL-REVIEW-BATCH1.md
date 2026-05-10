@@ -71,7 +71,7 @@ Add: which election years, which dataset (e.g., VEST precinct-level returns), ho
 The three-layer compositor table is accurate and consistent with the CLAUDE.md specification. The METIS attribution (Karypis & Kumar, 1998) is correct. The O(n log k) complexity claim is accurate. The guide correctly lists `--search` variants including `forest-recom` and `vra-recom`. One issue: "Code and Data" section references `the \texttt{bisect} binary, built from the \texttt{redist/} workspace in this repository." The crates directory contains `bisect-*` named crates (bisect-cli, bisect-core, etc.); there is no `redist/` workspace. This is a stale reference from before the rename.
 
 **R2 Rodden — 3.0**
-The reading paths are appropriately differentiated by audience. The NC 7D/7R result is correctly scoped to ApportionRegions with the note that GeoSection gives 5D/9R—this is an important disclosure that prevents misrepresentation. The 223D/209R national result via ApportionRegions is consistent with B.11's reported finding. The efficiency gap and majority-minority district counts are consistently stated throughout (−3.2%, +69 surplus, 137 vs 68). No partisan neutrality concerns; the guide is appropriately balanced.
+The reading paths are appropriately differentiated by audience. The NC 7D/7R result is correctly scoped to ApportionRegions with the note that GeoSection gives 5D/9R—this is an important disclosure that prevents misrepresentation. The 223D/209R national result via ApportionRegions is consistent with T.4's reported finding. The efficiency gap and majority-minority district counts are consistently stated throughout (−3.2%, +69 surplus, 137 vs 68). No partisan neutrality concerns; the guide is appropriately balanced.
 
 **R3 Duchin — 3.0**
 The Gingles test is correctly stated in the glossary (three prongs, correct citations). The Polsby-Popper formula is correctly given (4π·Area/Perimeter²). The glossary correctly distinguishes majority-minority districts as VAP-based, not CVAP-based. The VRASection glossary entry cites *Allen v. Milligan* (2023) and *Callais* (2025); the Callais year here is listed as 2025 (consistent with when it was argued, pre-decision), differing from A.0's "2026" citation. This inconsistency should be resolved across all papers.
@@ -99,7 +99,7 @@ Establish canonical treatment across all A-track papers. If decided, use the cor
 Add a sentence noting that D.5 presents a methodological framework, not pre-certified court testimony, and that practitioners should engage qualified experts for actual litigation.
 
 **P3 — Track H omitted from reading paths**
-The reading paths for Computer Scientists cite H.2 (Rust ReCom) but the guide does not include a dedicated H-track reading path. For completeness, add or note that Track H is covered under ensemble reading paths.
+The reading paths for Computer Scientists cite U.10 (Rust ReCom) but the guide does not include a dedicated H-track reading path. For completeness, add or note that Track H is covered under ensemble reading paths.
 
 ---
 
@@ -151,13 +151,13 @@ Name the test type and note n=50 states for the compactness and MM-district comp
 ### Reviewer scores
 
 **R1 Karypis — 3.0**
-The algorithm description in section 02 is accurate for a lay audience. The track-by-track summaries correctly characterize B.6 as O(n^1.07) complexity, B.2 as +22% compactness, and B.16 as T=600 convergence. The five headline numbers are internally consistent and correctly sourced to specific papers. The note distinguishing ApportionRegions (7D/7R NC) from GeoSection (5D/9R) is present and correctly placed—critical for technical accuracy.
+The algorithm description in section 02 is accurate for a lay audience. The track-by-track summaries correctly characterize B.6 as O(n^1.07) complexity, B.2 as +22% compactness, and U.1 as T=600 convergence. The five headline numbers are internally consistent and correctly sourced to specific papers. The note distinguishing ApportionRegions (7D/7R NC) from GeoSection (5D/9R) is present and correctly placed—critical for technical accuracy.
 
 **R2 Rodden — 2.5**
 Track G summary states algorithmic plans are "statistically indistinguishable from random draws on compactness and partisan metrics." This is too strong. A.0 reports bisection plans at the 0.1–0.7th compactness percentile in WI/GA/PA/CA—these are *extreme* compactness outliers in the ensemble, not random draws. Saying the plans are indistinguishable from random draws on compactness directly contradicts the core finding. What is presumably meant is that they are not partisan outliers in the ensemble; this should be stated precisely. This is a material misstatement of Track G's findings.
 
 **R3 Duchin — 3.0**
-The 42% threshold note correctly adds "not a legal bright line" and "five covered states" context. The five headline numbers are internally consistent with A.0 and A.1. The track summaries correctly cite paper codes (B.2, B.6, B.16, D.1). The visualization doc is appropriately targeted at lay audiences.
+The 42% threshold note correctly adds "not a legal bright line" and "five covered states" context. The five headline numbers are internally consistent with A.0 and A.1. The track summaries correctly cite paper codes (B.2, B.6, U.1, D.1). The visualization doc is appropriately targeted at lay audiences.
 
 **R4 Stephanopoulos — 2.5**
 The audience guide for judges directs them to `docs/quickstart/quickstart-callais-expert.md`. This is an internal repository file, not a public document. Judicial audiences cannot be expected to clone the repository; either provide the content inline or reference A.5 (Policy Brief) as the judicial entry point. The sentence about *Rucho* is accurate. No false legal citations found in this document.

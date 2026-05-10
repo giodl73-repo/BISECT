@@ -1,4 +1,4 @@
-# B.8 GeoSection 50-State Sweep
+# T.1 GeoSection 50-State Sweep
 # Runs GeoSection (ratio-optimal bisection) for all 50 states and records:
 #   state, n_districts, natural ratio, EC, D/R seats, proportionality gap
 # vs B.7 MEC baseline from outputs/b7_sweep/convergence.csv
@@ -71,7 +71,7 @@ $statesToRun = if ($States) {
     $allStates.GetEnumerator() | Where-Object { $done -notcontains $_.Key }
 }
 
-Write-Output "B.8 GeoSection sweep: $Seeds seeds/ratio × $($statesToRun.Count) states"
+Write-Output "T.1 GeoSection sweep: $Seeds seeds/ratio × $($statesToRun.Count) states"
 Write-Output "Results: $csvPath"
 Write-Output ""
 

@@ -3,7 +3,7 @@
 **Status**: Proposed (R1 reviewed, P1 fixes applied)  
 **Date**: 2026-05-07  
 **Layer**: Structure (SplitStrategy) — replaces METIS at each bisection node  
-**Related paper**: B.22  
+**Related paper**: T.10  
 **New crate**: Not needed — pure geometry, implemented in `bisect-cli/src/bisection_runner.rs`  
 **Reviewed R1**: MERIDIAN 4/4, BENCHMARK 3/4, SURVEY 3/4, COVENANT 3/4 → avg 3.25/4
 
@@ -27,7 +27,7 @@ CVD is fast: O(n × k × n_iter) where n_iter ≈ 20 typically suffices for conv
 | SA | Edge cut (graph) | Seeded | None | Done |
 | GeoSection | Direction + EC | Seeded | None | Done |
 | **CVD** | **Geographic distance** | Seeded | Centroids (Geo) | **This spec** |
-| BFS Growth | Population balance | Seeded | None | B.23 |
+| BFS Growth | Population balance | Seeded | None | T.12 |
 
 ---
 

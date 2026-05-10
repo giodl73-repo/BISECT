@@ -22,13 +22,13 @@ without overselling it.
 
 | Order | Piece | Source posture | Claim boundary |
 |-------|-------|----------------|----------------|
-| 1 | The Trust Problem | H.0 frame | No universal impossibility |
-| 2 | Input Exclusion Is the Point | B.17/R.1 | Baseline workflow only |
+| 1 | The Trust Problem | U.8 frame | No universal impossibility |
+| 2 | Input Exclusion Is the Point | U.2/R.1 | Baseline workflow only |
 | 3 | Seed Sensitivity Is Bounded | B.7 | Scope must be explicit |
-| 4 | Parameter Gaming Is Limited | B.17/R.1 | Stress test, not proof of law |
+| 4 | Parameter Gaming Is Limited | U.2/R.1 | Stress test, not proof of law |
 | 5 | Pre-Registration Makes the Defense Verifiable | R.1/A.4 | Reproducibility, not admissibility |
-| 6 | How to Use the Defense in Court | H.0 | Descriptive court framing only |
-| 7 | What the Algorithm Can Vary | B.0/H.0 | Guardrail article |
+| 6 | How to Use the Defense in Court | U.8 | Descriptive court framing only |
+| 7 | What the Algorithm Can Vary | B.0/U.8 | Guardrail article |
 
 ## Rationale
 

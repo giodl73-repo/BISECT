@@ -11,7 +11,7 @@ Each layer feeds the next; cross-citations must follow this dependency chain.
 
 | Layer | Paper(s) | What it addresses | Key result |
 |-------|----------|-------------------|------------|
-| **Structure** | B.14 (VRASection) | Algorithm for generating majority-minority districts | 42% minority VAP threshold enables district formation |
+| **Structure** | T.7 (VRASection) | Algorithm for generating majority-minority districts | 42% minority VAP threshold enables district formation |
 | **Empirical** | D.0–D.3 | Threshold analysis, compactness tradeoff, n-way comparison | 42% threshold (r=0.78, p<1e-08); +69 district surplus |
 | **State Legislative** | F.6 | VRASection at state house scale | 5/5 seed stable, same 42% threshold |
 | **Ensemble** | G.13 (VRA-aware ReCom) | Ensemble chains preserving majority-minority districts | Accepted 3.8/4; `--search vra-recom` |
@@ -45,25 +45,25 @@ Required text in G.13 §2:
 
 **Status**: [ADD TO G.13 §2 related work section]
 
-### D.3 → B.14 (VRASection algorithm)
+### D.3 → T.7 (VRASection algorithm)
 
 D.3 (compactness-VRA tradeoff) studies the tradeoff empirically but should
-cite B.14 as the source of the algorithm that enforces the VRA constraint.
+cite T.7 as the source of the algorithm that enforces the VRA constraint.
 Required text in D.3 §2:
 
 > The VRA constraint in our Pareto frontier analysis is implemented via
-> VRASection~\citep{dellaLibera2026vraSection} (Paper B.14), which enforces
+> VRASection~\citep{dellaLibera2026vraSection} (Paper T.7), which enforces
 > minimum minority VAP thresholds within the recursive bisection tree.
 
 **Status**: CHECK — may already be in D.3 §2.
 
-### B.14 → D.0 (empirical validation)
+### T.7 → D.0 (empirical validation)
 
-B.14 (VRASection algorithm) should cite D.0 as its empirical validation.
+T.7 (VRASection algorithm) should cite D.0 as its empirical validation.
 D.0 provides the 50-state empirical evidence that VRASection achieves
 majority-minority district formation at the constitutional threshold.
 
-**Status**: CHECK — may already be in B.14.
+**Status**: CHECK — may already be in T.7.
 
 ---
 
@@ -78,7 +78,7 @@ All VRA papers must acknowledge *Louisiana v. Callais* (2026).
 | D.5 | Implements the post-Callais WLS+HC3+Holm methodology. ✓ Already present |
 | F.6 | Add: "At state house scale, the Callais disentanglement requirement applies identically to the congressional analysis in D.5." |
 | G.13 | Add: "The VRA-aware chain produces plans that satisfy the geographic compactness prong; Callais disentanglement of racial/partisan bloc voting is addressed in D.5." |
-| B.14 | Add one-sentence Callais reference in §5 (legal implications). |
+| T.7 | Add one-sentence Callais reference in §5 (legal implications). |
 
 ---
 
@@ -90,5 +90,5 @@ Priority order (based on board B2.2):
 2. **G.13 §2**: Add D.5 bloc voting citation
 3. **F.6**: Add Callais sentence
 4. **G.13**: Add Callais sentence  
-5. **B.14**: Add Callais sentence in legal section
-6. Verify D.3 → B.14 and B.14 → D.0 cross-citations exist
+5. **T.7**: Add Callais sentence in legal section
+6. Verify D.3 → T.7 and T.7 → D.0 cross-citations exist

@@ -24,7 +24,7 @@
 //! - k=4 = 2×2 → ApportionRegions tree has two bisection levels
 //! - Actually exercises the METIS bisection and contiguity enforcement
 //! - ~1,542 census tracts (same order as Wisconsin used in papers)
-//! - Stable geography (B.15: Iowa is the most interesting unstable case)
+//! - Stable geography (T.8: Iowa is the most interesting unstable case)
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};

@@ -1,4 +1,4 @@
-# B.10 Governmental Edge Sweep — county stickiness
+# T.3 Governmental Edge Sweep — county stickiness
 # Runs each state twice: alpha=0 (baseline) and alpha=5 (county sticky)
 # Records county_splits, ec_km, d_seats, gap_pp for each.
 # Usage: pwsh -File scripts\b10_sweep.ps1 [-States "NC,GA,..."]
@@ -55,7 +55,7 @@ $statesToRun = if ($States) {
     $allStates.GetEnumerator()
 }
 
-Write-Output "B.10 county stickiness sweep: alpha=0 and alpha=$Alpha, seed=$Seed"
+Write-Output "T.3 county stickiness sweep: alpha=0 and alpha=$Alpha, seed=$Seed"
 
 function Run-State($code, $nD, $stName, $alpha) {
     $ver = "b10_${code}_a${alpha}_s${Seed}"

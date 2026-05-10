@@ -5,7 +5,7 @@ title: "Three State Types"
 status: draft-note
 updated: 2026-05-09
 claim-class: empirical/interpretive
-source: B.12 ProportionalSection
+source: T.5 ProportionalSection
 review-gate: MERIDIAN/SCALE/PRECINCT
 ---
 
@@ -13,7 +13,7 @@ review-gate: MERIDIAN/SCALE/PRECINCT
 
 ## Draft Claim
 
-B.12 is most useful to a public reader when it is not presented as a single
+T.5 is most useful to a public reader when it is not presented as a single
 formula with one universal answer. The better frame is state types:
 
 > Geography changes how much room an algorithm has to move. In some states, a
@@ -61,7 +61,7 @@ the same, but the geography is not, so the seat outcome may not be the same.
 
 ## What Must Wait
 
-Exact state values and table cells should wait for B.12 source-chain closure:
+Exact state values and table cells should wait for T.5 source-chain closure:
 
 - METIS `niter`, `ncuts`, and `numbering`.
 - Table 1 seed treatment.
@@ -73,6 +73,6 @@ Exact state values and table cells should wait for B.12 source-chain closure:
 - PRECINCT: Does the type structure distinguish geographic sorting from
   partisan manipulation?
 - SCALE: Does the piece avoid exact numeric claims before source-chain closure?
-- MERIDIAN: Are the state examples faithful to B.12's actual algorithmic setup?
+- MERIDIAN: Are the state examples faithful to T.5's actual algorithmic setup?
 - COMMONS: Can the reader understand why a non-universal answer is a strength,
   not a weakness?
