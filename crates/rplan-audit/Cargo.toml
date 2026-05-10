@@ -1,13 +1,15 @@
 [package]
-name = "bisect-ilp"
+name = "rplan-audit"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
-description = "Exact redistricting via Integer Linear Programming — generates MPS/LP files (U.6)"
+description = "Generic RPLAN audit checks and certificate generation"
 
 [dependencies]
-sha2.workspace = true
+rplan-core = { path = "../rplan-core" }
+rplan-io = { path = "../rplan-io" }
 serde.workspace = true
 serde_json.workspace = true
+sha2.workspace = true
 thiserror.workspace = true

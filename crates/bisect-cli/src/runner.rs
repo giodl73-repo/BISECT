@@ -24,7 +24,7 @@ use bisect_report;
 /// in StateConfig BEFORE the Rayon pool starts. This prevents 100+ Python
 /// subprocesses from being spawned simultaneously during a 50-state run.
 use rayon::prelude::*;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::path::PathBuf;
 
 /// Result of processing a single state.
@@ -66,11 +66,11 @@ pub enum SeedCompositor {
     ConvergenceSweep { threshold: u32 },
     /// Run `seeds` plans, sort by edge cut, return the plan at rank floor(p * seeds).
     /// p=0.0 → minimum EC (same as ConvergenceSweep), p=0.5 → median EC, p=1.0 → maximum EC.
-    /// Enables statutory choice of legal posture (B.7 / H.0).
+    /// Enables statutory choice of legal posture (B.7 / U.8).
     Percentile { p: f64, seeds: usize },
     /// At each bisection node, run a local `ensemble_steps`-step 2-way ReCom ensemble
     /// and pick the bisection at percentile `p` of the cut distribution.
-    /// Always k=2 at each node — eliminates prime-k bipartition failures. (H.1)
+    /// Always k=2 at each node — eliminates prime-k bipartition failures. (U.9)
     BisectionEnsemble { p: f64, ensemble_steps: usize },
     /// Flip individual boundary tracts to adjacent districts, collect all visited plans,
     /// return the plan at percentile `p` of the edge-cut distribution.
@@ -113,7 +113,7 @@ pub enum SeedCompositor {
     /// Run `steps` Merge-Split MH steps; collect accepted plans; return at percentile p.
     /// Two-tree MH with explicit ratio — O(m log m) per step (G.10 spec accepted 3.0/4).
     MergeSplit { steps: usize, p: f64 },
-    /// Adaptive Multi-scale MCMC — Robbins-Monro self-tuning alpha (B.21 spec accepted 3.75/4).
+    /// Adaptive Multi-scale MCMC — Robbins-Monro self-tuning alpha (U.5 spec accepted 3.75/4).
     /// Requires block-group adjacency (run: bisect fetch --resolution block_group).
     /// CLI: --search multiscale-adaptive --multiscale-steps 2000 --ms-target-accept 0.30 --ms-adapt-interval 50
     MultiScaleAdaptive {
@@ -123,7 +123,7 @@ pub enum SeedCompositor {
         adapt_interval: usize,
     },
     /// Parallel Tempering: N replicas at geometric tolerance ladder with replica exchange.
-    /// Cold chain (replica 0) provides the plan distribution. (B.20 spec accepted 4.0/4)
+    /// Cold chain (replica 0) provides the plan distribution. (U.4 spec accepted 4.0/4)
     ParallelTempering {
         n_replicas: usize,    // number of chains (default: 4)
         swap_interval: usize, // steps between swap proposals (default: 10)
@@ -180,7 +180,7 @@ impl Default for SeedCompositor {
     }
 }
 
-/// Warm-start strategy for AreaSection (B.9) ratio selection.
+/// Warm-start strategy for AreaSection (T.2) ratio selection.
 ///
 /// `RatioOptimal` uses the existing internal Lorenz-filtered ratio heuristic.
 /// `MovingKnife` calls `split_subgraph_mka_direction()` first to obtain theta*
@@ -206,23 +206,23 @@ pub enum SplitStrategy {
     Bisect,
     /// VRA-compliant n-way partitioning (minority opportunity districts).
     NWay,
-    /// GeoSection (B.8): ratio-optimal direction-aware bisection.
+    /// GeoSection (T.1): ratio-optimal direction-aware bisection.
     /// Seeds controlled by SeedCompositor.
     GeoSection,
     /// CompactBisect (B.7): greedy level-by-level geometric-mean PP selection.
     CompactBisect { epsilon: f64 },
-    /// AreaSection (B.9): ratio-optimal bisection with dual population+area constraint.
+    /// AreaSection (T.2): ratio-optimal bisection with dual population+area constraint.
     /// `area_section_init` controls the warm-start strategy (default: RatioOptimal).
     AreaSection {
         area_swing: f64,
         area_section_init: AreaSectionInit,
     },
-    /// ProportionalSection (B.12): ncon=2 [pop, D_votes] with HH-derived tpwgts.
+    /// ProportionalSection (T.5): ncon=2 [pop, D_votes] with HH-derived tpwgts.
     ProportionalSection { eta: f64 },
-    /// ApportionRegions (B.11): prime-factorisation tree — Huntington-Hill geographic completion.
+    /// ApportionRegions (T.4): prime-factorisation tree — Huntington-Hill geographic completion.
     /// Default seed strategy: Single (content-derived). ConvergenceSweep for federal statute.
     ApportionRegions,
-    /// VRASection (B.14): GeoSection modified by geographic minority-VAP alignment score.
+    /// VRASection (T.7): GeoSection modified by geographic minority-VAP alignment score.
     VraSection { w_vra: f64 },
     /// Simulated Annealing bisection: start from METIS, accept/reject boundary flips
     /// via Boltzmann criterion. Structure layer -- replaces METIS at each bisection node.
@@ -234,10 +234,10 @@ pub enum SplitStrategy {
         t0_factor: f64,
         t_final: f64,
     },
-    /// Centroidal Voronoi Districts — geometric packing via graph-distance Voronoi (B.22 spec).
+    /// Centroidal Voronoi Districts — geometric packing via graph-distance Voronoi (T.10 spec).
     /// Seeds placed by k-farthest spread, iteratively moved to medoid of each Voronoi region.
     /// n_iter: max CVD iterations before returning (default: 20).
-    /// Centroidal Voronoi Districts -- geometric packing via graph-distance or geographic Voronoi (B.22 spec).
+    /// Centroidal Voronoi Districts -- geometric packing via graph-distance or geographic Voronoi (T.10 spec).
     /// Seeds placed by k-farthest spread, iteratively moved to medoid/centroid of each Voronoi region.
     /// n_iter: max CVD iterations before returning (default: 20).
     /// metric: GraphDistance (Phase 1, default) or Geographic (Phase 2, requires tract_centroids).
@@ -245,18 +245,20 @@ pub enum SplitStrategy {
         n_iter: usize,
         metric: crate::bisection_runner::VoronoiMetric,
     },
-    /// BFS Region-Growing — greedy geographic packing from k-farthest seeds (B.23 spec 4.0/4).
+    /// BFS Region-Growing — greedy geographic packing from k-farthest seeds (T.12 spec 4.0/4).
     /// Seeds placed by maximum BFS spread; tracts assigned to most population-deficient district.
     BfsGrowth,
     /// ILP exact redistricting — provably optimal edge-cut plan via integer programming.
     /// Only practical for n <= max_tracts (default 500). Falls back to METIS for larger nodes.
-    /// (B.24 spec accepted 3.38/4)
+    /// (U.6 spec accepted 3.38/4)
     Ilp {
-        time_limit_secs: u64, // solver time limit (default: 300)
-        optimality_gap: f64,  // acceptable gap from optimal (default: 0.01)
-        max_tracts: usize,    // size guard (default: 500; fallback to METIS if exceeded)
+        method: crate::args::IlpMethod, // solver/certificate mode (default: formulation-only)
+        fallback: crate::args::IlpFallback, // behavior when no ILP plan is available
+        time_limit_secs: u64,           // solver time limit (default: 300)
+        optimality_gap: f64,            // acceptable gap from optimal (default: 0.01)
+        max_tracts: usize,              // size guard (default: 500; fallback to METIS if exceeded)
     },
-    /// Moving-Knife Algorithm — maximises Reock compactness via sweep (B.25 spec 3.75/4).
+    /// Moving-Knife Algorithm — maximises Reock compactness via sweep (T.13 spec 3.75/4).
     /// Tests n_orientations candidate sweep directions; picks angle with best min(Reock_L, Reock_R).
     MovingKnife {
         n_orientations: usize, // sweep granularity (default: 180 = every 1°)
@@ -302,7 +304,7 @@ pub struct WeightSpec {
     pub rep_threshold: f64,
     /// Enable minority (VRA) weighting signal.
     pub minority_weighting: bool,
-    /// County stickiness alpha (B.10). 0 = disabled.
+    /// County stickiness alpha (T.3). 0 = disabled.
     pub alpha_county: f64,
     /// MCD stickiness alpha. 0 = disabled.
     pub alpha_mcd: f64,
@@ -312,7 +314,7 @@ pub struct WeightSpec {
     pub alpha_vtd: f64,
     /// Directional lambda for GeoSection (0 = no penalty).
     pub directional_lambda: f64,
-    /// Enable economic character similarity weights (B.27/M.1). Requires LODES WAC data.
+    /// Enable economic character similarity weights (M.9/M.1). Requires LODES WAC data.
     pub economic_character: bool,
     /// Blend factor for economic character weighter [0.0, 1.0]. Default 0.5.
     /// alpha=1.0 → no effect; alpha=0.0 → fully similarity-driven.
@@ -613,6 +615,8 @@ impl AlgorithmConfig {
             },
             PM::Ilp => Self {
                 split: SplitStrategy::Ilp {
+                    method: args.ilp_method,
+                    fallback: args.ilp_fallback,
                     time_limit_secs: args.ilp_time_limit,
                     optimality_gap: args.ilp_gap,
                     max_tracts: args.ilp_max_tracts,
@@ -950,6 +954,8 @@ impl AlgorithmConfig {
             },
             PM::Ilp => Self {
                 split: SplitStrategy::Ilp {
+                    method: crate::args::IlpMethod::FormulationOnly,
+                    fallback: crate::args::IlpFallback::Metis,
                     time_limit_secs: 300,
                     optimality_gap: 0.01,
                     max_tracts: 500,
@@ -2177,23 +2183,28 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 .map_err(|e| format!("bfs-growth: {e}"))?
             }
             SplitStrategy::Ilp {
+                method,
+                fallback,
                 time_limit_secs,
                 optimality_gap,
                 max_tracts,
             } => {
-                let base_seed_val = seed.unwrap_or(0);
                 status(cfg.position, &format!(
-                "{}: ilp exact redistricting (time_limit={}s gap={:.3} max_tracts={}) into {} districts",
-                cfg.state_code, time_limit_secs, optimality_gap, max_tracts, num_districts));
+                "{}: ilp exact redistricting (method={} fallback={} time_limit={}s gap={:.3} max_tracts={}) into {} districts",
+                cfg.state_code, method, fallback, time_limit_secs, optimality_gap, max_tracts, num_districts));
+                let ilp_report_dir = intermediate_dir.join("ilp_solve_reports");
                 crate::bisection_runner::run_all_splits_ilp(
                     &graph.adjacency,
                     &vwgt,
                     &edge_weights,
                     num_districts,
                     balance_tolerance_frac,
+                    *method,
+                    *fallback,
                     *time_limit_secs,
                     *optimality_gap,
                     *max_tracts,
+                    Some(&ilp_report_dir),
                 )
                 .map_err(|e| format!("ilp: {e}"))?
             }
@@ -2822,12 +2833,37 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
     // 7. Write manifest.json atomically (manifest.tmp → manifest.json).
     // Board amendment: atomic write (manifest.tmp + rename) prevents partial manifests.
     if cfg.write_manifest || cfg.label.is_some() {
+        let ilp_solve_report_count = count_ilp_solve_reports(&intermediate_dir);
+        let ilp_audit_summary_path = intermediate_dir
+            .join("ilp_solve_reports")
+            .join("audit-summary.json");
+        let ilp_audit_summary_sha256 = if ilp_audit_summary_path.exists() {
+            Some(
+                bisect_report::sha256_file(&ilp_audit_summary_path)
+                    .map_err(|e| format!("hash ilp audit summary: {e}"))?,
+            )
+        } else {
+            None
+        };
         let adj_filename = format!("{}_adjacency_{}.adj.bin", state_name, cfg.year);
         let state_fips = state_code_to_fips(&cfg.state_code)
             .unwrap_or("00")
             .to_string();
         let tiger_url = bisect_report::tiger_source_url(&state_fips, &cfg.year);
         let gpmetis_version = crate::bisection_runner::detect_gpmetis_version();
+        let created_at = bisect_report::now_iso8601();
+        let audit_sidecars = write_rplan_audit_sidecars(
+            &plan_root,
+            cfg,
+            &label,
+            &graph,
+            &assignments,
+            &adj_filename,
+            &tiger_url,
+            balance_tolerance,
+            &created_at,
+        )?;
+
         let manifest = bisect_report::PlanManifest {
             label: label.clone(),
             state_code: cfg.state_code.clone(),
@@ -2852,7 +2888,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             adjacency_build_version: env!("CARGO_PKG_VERSION").to_string(),
             tiger_source_url: tiger_url,
             tiger_sha256: None, // expensive; computed separately if needed
-            created_at: bisect_report::now_iso8601(),
+            created_at,
             balance_tolerance_pct: balance_tolerance * 100.0,
             population_balance_valid: true,
             seats_per_district: cfg.effective_seats_per_district(),
@@ -2895,6 +2931,36 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             source_format_fingerprint: None,
             import_compat_sha256: None,
             edge_cut: Some(edge_cut),
+            ilp_method: match &cfg.algo.split {
+                SplitStrategy::Ilp { method, .. } => Some(method.to_string()),
+                _ => None,
+            },
+            ilp_fallback: match &cfg.algo.split {
+                SplitStrategy::Ilp { fallback, .. } => Some(fallback.to_string()),
+                _ => None,
+            },
+            ilp_solve_report_dir: match &cfg.algo.split {
+                SplitStrategy::Ilp { .. } if ilp_solve_report_count > 0 => {
+                    Some("intermediate/ilp_solve_reports".to_string())
+                }
+                _ => None,
+            },
+            ilp_solve_report_count: match &cfg.algo.split {
+                SplitStrategy::Ilp { .. } if ilp_solve_report_count > 0 => {
+                    Some(ilp_solve_report_count)
+                }
+                _ => None,
+            },
+            ilp_audit_summary_path: match &cfg.algo.split {
+                SplitStrategy::Ilp { .. } if ilp_audit_summary_sha256.is_some() => {
+                    Some("intermediate/ilp_solve_reports/audit-summary.json".to_string())
+                }
+                _ => None,
+            },
+            ilp_audit_summary_sha256: match &cfg.algo.split {
+                SplitStrategy::Ilp { .. } => ilp_audit_summary_sha256,
+                _ => None,
+            },
             // Flip search audit fields
             flip_search: if matches!(&cfg.algo.seeds, SeedCompositor::Flip { .. }) {
                 Some("flip".to_string())
@@ -3021,6 +3087,14 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             } else {
                 None
             },
+            rplan_path: Some(audit_sidecars.rplan_path),
+            rctx_path: Some(audit_sidecars.rctx_path),
+            audit_certificate_path: Some(audit_sidecars.audit_certificate_path),
+            audit_certificate_sha256: Some(audit_sidecars.audit_certificate_sha256),
+            audit_certificate_content_hash: Some(audit_sidecars.audit_certificate_content_hash),
+            audit_result: Some(audit_sidecars.audit_result),
+            legal_profile_id: Some(audit_sidecars.legal_profile_id),
+            context_hash: Some(audit_sidecars.context_hash),
         };
         bisect_report::write_manifest_atomic(&plan_root, &manifest)
             .map_err(|e| format!("manifest write failed: {e}"))?;
@@ -3031,6 +3105,350 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
         &format!("{}: complete ({num_districts}D, {}ms)", cfg.state_code, 0),
     );
     Ok(())
+}
+
+fn count_ilp_solve_reports(intermediate_dir: &std::path::Path) -> usize {
+    let report_root = intermediate_dir.join("ilp_solve_reports");
+    if !report_root.exists() {
+        return 0;
+    }
+
+    let mut stack = vec![report_root];
+    let mut count = 0usize;
+    while let Some(dir) = stack.pop() {
+        let Ok(entries) = std::fs::read_dir(dir) else {
+            continue;
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                stack.push(path);
+            } else if path
+                .extension()
+                .and_then(|ext| ext.to_str())
+                .is_some_and(|ext| ext.eq_ignore_ascii_case("json"))
+                && path.file_name().and_then(|name| name.to_str()) != Some("audit-summary.json")
+            {
+                count += 1;
+            }
+        }
+    }
+    count
+}
+
+#[derive(Debug, Clone)]
+struct RunnerAuditSidecars {
+    rplan_path: String,
+    rctx_path: String,
+    audit_certificate_path: String,
+    audit_certificate_sha256: String,
+    audit_certificate_content_hash: String,
+    audit_result: String,
+    legal_profile_id: String,
+    context_hash: String,
+}
+
+fn write_rplan_audit_sidecars(
+    plan_root: &std::path::Path,
+    cfg: &StateConfig,
+    label: &str,
+    graph: &crate::adjacency_loader::LoadedGraph,
+    assignments: &HashMap<usize, usize>,
+    adjacency_file: &str,
+    tiger_source_url: &str,
+    balance_tolerance: f64,
+    generated_at_utc: &str,
+) -> Result<RunnerAuditSidecars, String> {
+    let units = build_rplan_units(cfg, graph)?;
+    let assignment =
+        build_rplan_assignment(assignments, graph.n_vertices, cfg.effective_num_districts())?;
+    let plan = rplan_core::DistrictPlan {
+        schema_version: rplan_core::DISTRICT_PLAN_SCHEMA_VERSION.to_string(),
+        units: units.clone(),
+        assignment,
+        k: cfg.effective_num_districts(),
+        display_labels: (1..=cfg.effective_num_districts())
+            .map(|district_id| district_id.to_string())
+            .collect(),
+        allow_empty_districts: false,
+    };
+
+    let source_hashes = rplan_core::SourceHashes {
+        entries: BTreeMap::from([
+            ("adjacency_file".to_string(), adjacency_file.to_string()),
+            ("tiger_source_url".to_string(), tiger_source_url.to_string()),
+        ]),
+    };
+    let mut context = rplan_core::RplanContext {
+        rctx_version: rplan_core::RCTX_VERSION.to_string(),
+        context_hash: String::new(),
+        units: units.clone(),
+        graph: Some(build_rplan_graph(graph)),
+        populations: Some(graph.vertex_weights.clone()),
+        source_hashes: source_hashes.clone(),
+    };
+    context.context_hash = context
+        .compute_context_hash()
+        .map_err(|e| format!("context hash failed: {e}"))?;
+
+    let document = rplan_io::RplanDocument {
+        rplan_version: rplan_io::RPLAN_V02.to_string(),
+        plan: plan.clone(),
+        metadata: rplan_io::RplanMetadataV02 {
+            label: label.to_string(),
+            jurisdiction: cfg.state_code.clone(),
+            chamber: cfg.chamber.clone(),
+            created_at: generated_at_utc.to_string(),
+            description: Some(format!(
+                "Final plan emitted by bisect runner for {} {} {}",
+                cfg.state_code, cfg.chamber, cfg.year
+            )),
+        },
+        provenance: rplan_io::RplanProvenance {
+            producer: BTreeMap::from([
+                ("name".to_string(), serde_json::json!("bisect")),
+                (
+                    "version".to_string(),
+                    serde_json::json!(env!("CARGO_PKG_VERSION")),
+                ),
+            ]),
+            source_hashes: source_hashes.entries.clone(),
+            conversion_lineage: Vec::new(),
+        },
+        geometry: None,
+        extensions: BTreeMap::new(),
+    };
+
+    let profile = runner_legal_profile(cfg, balance_tolerance);
+    let algorithm_lineage = runner_algorithm_lineage(cfg, plan_root)?;
+    let certificate = rplan_audit::audit_plan_with_lineage(
+        &plan,
+        Some(&context),
+        &profile,
+        rplan_audit::RuntimeProvenance {
+            binary_name: "bisect".to_string(),
+            binary_version: env!("CARGO_PKG_VERSION").to_string(),
+            git_commit: option_env!("GIT_COMMIT").map(str::to_string),
+            build_profile: None,
+            solver: None,
+        },
+        &[
+            rplan_audit::AuditConstraint::PlanShape,
+            rplan_audit::AuditConstraint::Population,
+            rplan_audit::AuditConstraint::Contiguity,
+        ],
+        generated_at_utc,
+        algorithm_lineage,
+    )
+    .map_err(|e| format!("audit certificate generation failed: {e}"))?;
+
+    let rplan_rel = "plan.rplan".to_string();
+    let rctx_rel = "context.rctx".to_string();
+    let audit_rel = "audit-certificate.json".to_string();
+    let rplan_path = plan_root.join(&rplan_rel);
+    let rctx_path = plan_root.join(&rctx_rel);
+    let audit_path = plan_root.join(&audit_rel);
+
+    let rplan_json =
+        rplan_io::write_rplan_string(&document).map_err(|e| format!("RPLAN write failed: {e}"))?;
+    std::fs::write(&rplan_path, rplan_json)
+        .map_err(|e| format!("cannot write {}: {e}", rplan_path.display()))?;
+
+    let rctx_json =
+        rplan_io::write_rctx_string(&context).map_err(|e| format!("RCTX write failed: {e}"))?;
+    std::fs::write(&rctx_path, rctx_json)
+        .map_err(|e| format!("cannot write {}: {e}", rctx_path.display()))?;
+
+    let audit_json = serde_json::to_string_pretty(&certificate)
+        .map_err(|e| format!("audit certificate serialization failed: {e}"))?;
+    std::fs::write(&audit_path, audit_json)
+        .map_err(|e| format!("cannot write {}: {e}", audit_path.display()))?;
+    let audit_sha256 = bisect_report::sha256_file(&audit_path)
+        .map_err(|e| format!("cannot hash {}: {e}", audit_path.display()))?;
+
+    Ok(RunnerAuditSidecars {
+        rplan_path: rplan_rel,
+        rctx_path: rctx_rel,
+        audit_certificate_path: audit_rel,
+        audit_certificate_sha256: audit_sha256,
+        audit_certificate_content_hash: certificate.content_hash,
+        audit_result: audit_result_label(&certificate.result).to_string(),
+        legal_profile_id: profile.profile_id,
+        context_hash: certificate.context_hash.unwrap_or_default(),
+    })
+}
+
+fn build_rplan_units(
+    cfg: &StateConfig,
+    graph: &crate::adjacency_loader::LoadedGraph,
+) -> Result<rplan_core::PlanUnitIndex, String> {
+    let unit_kind = match cfg.plan_resolution.as_str() {
+        "bg" => rplan_core::UnitKind::BlockGroup,
+        "county" => rplan_core::UnitKind::County,
+        _ => rplan_core::UnitKind::Tract,
+    };
+    let mut unit_ids = Vec::with_capacity(graph.n_vertices);
+    for idx in 0..graph.n_vertices {
+        unit_ids.push(
+            graph
+                .index_to_geoid
+                .get(&idx)
+                .cloned()
+                .unwrap_or_else(|| idx.to_string()),
+        );
+    }
+    let mut units = rplan_core::PlanUnitIndex {
+        unit_kind,
+        state: Some(cfg.state_code.clone()),
+        year: cfg.year.parse().ok(),
+        canonical_order: rplan_core::CanonicalOrder::ExplicitUnitIds,
+        unit_ids,
+        unit_universe_hash: String::new(),
+        source_id: Some(format!("bisect-adjacency-{}-{}", cfg.state_code, cfg.year)),
+    };
+    if units.validate().is_err() {
+        units.unit_kind = rplan_core::UnitKind::Imported;
+    }
+    units.unit_universe_hash = units
+        .compute_unit_universe_hash()
+        .map_err(|e| format!("unit universe hash failed: {e}"))?;
+    units
+        .validate()
+        .map_err(|e| format!("RPLAN unit validation failed: {e}"))?;
+    Ok(units)
+}
+
+fn build_rplan_assignment(
+    assignments: &HashMap<usize, usize>,
+    n_vertices: usize,
+    k: usize,
+) -> Result<Vec<u32>, String> {
+    let mut out = Vec::with_capacity(n_vertices);
+    for idx in 0..n_vertices {
+        let one_based = assignments
+            .get(&idx)
+            .copied()
+            .ok_or_else(|| format!("missing final assignment for unit index {idx}"))?;
+        if one_based == 0 || one_based > k {
+            return Err(format!(
+                "final assignment for unit index {idx} has district {one_based}, expected 1..={k}"
+            ));
+        }
+        out.push((one_based - 1) as u32);
+    }
+    Ok(out)
+}
+
+fn build_rplan_graph(graph: &crate::adjacency_loader::LoadedGraph) -> rplan_core::UnitGraph {
+    let adjacency = graph
+        .adjacency
+        .iter()
+        .enumerate()
+        .map(|(from, neighbors)| {
+            neighbors
+                .iter()
+                .copied()
+                .map(|to| {
+                    let key = if from < to { (from, to) } else { (to, from) };
+                    rplan_core::UnitEdge {
+                        to: to as u32,
+                        kind: rplan_core::EdgeKind::Boundary,
+                        weight: graph.edge_weights.get(&key).copied(),
+                    }
+                })
+                .collect()
+        })
+        .collect();
+    rplan_core::UnitGraph {
+        edge_semantics: rplan_core::EdgeSemantics::Undirected,
+        adjacency,
+    }
+}
+
+fn runner_legal_profile(cfg: &StateConfig, balance_tolerance: f64) -> rplan_audit::LegalProfile {
+    rplan_audit::LegalProfile {
+        schema_version: rplan_audit::LEGAL_PROFILE_SCHEMA_VERSION.to_string(),
+        profile_id: "BISECT_RUNNER_PROFILE_V1".to_string(),
+        jurisdiction: cfg.state_code.clone(),
+        chamber: match cfg.chamber.as_str() {
+            "congressional" => rplan_audit::Chamber::Congressional,
+            "state-house" => rplan_audit::Chamber::StateHouse,
+            "state-senate" => rplan_audit::Chamber::StateSenate,
+            "local" => rplan_audit::Chamber::Local,
+            other => rplan_audit::Chamber::Custom(other.to_string()),
+        },
+        year: cfg.year.parse().unwrap_or(0),
+        population_tolerance: rplan_audit::PopulationToleranceRule::Percent {
+            max_deviation_percent: balance_tolerance * 100.0,
+        },
+        contiguity_required: true,
+        county_split_rule: rplan_audit::SplitRule::CountOnly,
+        municipal_split_rule: rplan_audit::SplitRule::NotEvaluated,
+        nesting_rule: rplan_audit::NestingRule::NotEvaluated,
+        vra_policy: rplan_audit::VraPolicy::NotEvaluated,
+    }
+}
+
+fn runner_algorithm_lineage(
+    cfg: &StateConfig,
+    plan_root: &std::path::Path,
+) -> Result<Option<rplan_audit::AlgorithmLineage>, String> {
+    let SplitStrategy::Ilp {
+        method,
+        fallback,
+        time_limit_secs,
+        optimality_gap,
+        max_tracts,
+    } = &cfg.algo.split
+    else {
+        return Ok(None);
+    };
+
+    let summary_path = plan_root
+        .join("intermediate")
+        .join("ilp_solve_reports")
+        .join("audit-summary.json");
+    let audit_summary_sha256 = if summary_path.exists() {
+        Some(
+            bisect_report::sha256_file(&summary_path)
+                .map_err(|e| format!("hash ILP audit summary for lineage failed: {e}"))?,
+        )
+    } else {
+        None
+    };
+
+    let mut extra = serde_json::json!({
+        "schema_version": "bisect-ilp-lineage-v1",
+        "method": method.to_string(),
+        "fallback": fallback.to_string(),
+        "time_limit_secs": time_limit_secs,
+        "optimality_gap": optimality_gap,
+        "max_tracts": max_tracts,
+        "solve_report_dir": "intermediate/ilp_solve_reports",
+        "audit_summary_path": "intermediate/ilp_solve_reports/audit-summary.json",
+    });
+    if let Some(sha256) = audit_summary_sha256 {
+        extra["audit_summary_sha256"] = serde_json::json!(sha256);
+    }
+    let parameters_hash = rplan_core::canonical_sha256(&extra)
+        .map_err(|e| format!("ILP lineage parameter hash failed: {e}"))?;
+
+    Ok(Some(rplan_audit::AlgorithmLineage {
+        producer_crate: "bisect-ilp".to_string(),
+        producer_version: env!("CARGO_PKG_VERSION").to_string(),
+        method: method.to_string(),
+        parent_plan_hashes: Vec::new(),
+        parameters_hash,
+        extra,
+    }))
+}
+
+fn audit_result_label(result: &rplan_audit::AuditResult) -> &'static str {
+    match result {
+        rplan_audit::AuditResult::Pass => "pass",
+        rplan_audit::AuditResult::Fail => "fail",
+        rplan_audit::AuditResult::PassWithWarnings => "pass-with-warnings",
+    }
 }
 
 /// Check if a state's outputs already exist and are complete.
@@ -3142,7 +3560,7 @@ fn build_edge_weights(
         }
     }
 
-    // Step 4: Subdivision stickiness (B.10) — augment on whatever base is set.
+    // Step 4: Subdivision stickiness (T.3) — augment on whatever base is set.
     if spec.alpha_county > 1e-10 {
         composer = composer.push(SubdivisionWeighter::county_only(
             &graph.index_to_geoid,
@@ -3151,7 +3569,7 @@ fn build_edge_weights(
         ));
     }
 
-    // Step 5: Economic character similarity (B.27/M.1).
+    // Step 5: Economic character similarity (M.9/M.1).
     if spec.economic_character {
         use crate::edge_weights::EconomicCharacterWeighter;
         use crate::lodes::{align_lodes_to_adjacency, load_lodes_wac_tract};
@@ -3368,6 +3786,142 @@ mod tests {
             multiscale_coarse: "county".to_string(),
             smc_resample_threshold: 0.5,
         }
+    }
+
+    fn path5_loaded_graph() -> crate::adjacency_loader::LoadedGraph {
+        crate::adjacency_loader::LoadedGraph {
+            adjacency: vec![vec![1], vec![0, 2], vec![1, 3], vec![2, 4], vec![3]],
+            vertex_weights: vec![100, 100, 100, 150, 150],
+            edge_weights: [((0, 1), 1.0), ((1, 2), 1.0), ((2, 3), 1.0), ((3, 4), 1.0)]
+                .into_iter()
+                .collect(),
+            index_to_geoid: [
+                (0, "53001000100".to_string()),
+                (1, "53001000200".to_string()),
+                (2, "53001000300".to_string()),
+                (3, "53001000400".to_string()),
+                (4, "53001000500".to_string()),
+            ]
+            .into_iter()
+            .collect(),
+            n_vertices: 5,
+            n_edges: 4,
+            tract_centroids: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn count_ilp_solve_reports_skips_audit_summary() {
+        let tmp = TempDir::new().unwrap();
+        let report_dir = tmp.path().join("ilp_solve_reports").join("depth_00");
+        std::fs::create_dir_all(&report_dir).unwrap();
+        std::fs::write(report_dir.join("node_root.json"), "{}").unwrap();
+        std::fs::write(
+            tmp.path()
+                .join("ilp_solve_reports")
+                .join("audit-summary.json"),
+            "{}",
+        )
+        .unwrap();
+
+        assert_eq!(count_ilp_solve_reports(tmp.path()), 1);
+    }
+
+    #[test]
+    fn test_write_rplan_audit_sidecars_emits_manifest_artifacts() {
+        let tmp = TempDir::new().unwrap();
+        let mut cfg = make_config("WA");
+        cfg.num_districts = 2;
+        cfg.label = Some("wa_path5".to_string());
+        let assignments: HashMap<usize, usize> = [(0, 1), (1, 1), (2, 1), (3, 2), (4, 2)]
+            .into_iter()
+            .collect();
+
+        let sidecars = write_rplan_audit_sidecars(
+            tmp.path(),
+            &cfg,
+            "wa_path5",
+            &path5_loaded_graph(),
+            &assignments,
+            "wa_adjacency_2020.adj.bin",
+            "https://www.census.gov/example.zip",
+            0.25,
+            "2026-05-10T00:00:00Z",
+        )
+        .unwrap();
+
+        assert_eq!(sidecars.rplan_path, "plan.rplan");
+        assert_eq!(sidecars.rctx_path, "context.rctx");
+        assert_eq!(sidecars.audit_certificate_path, "audit-certificate.json");
+        assert!(sidecars.context_hash.starts_with("sha256:"));
+        assert!(tmp.path().join("plan.rplan").exists());
+        assert!(tmp.path().join("context.rctx").exists());
+        assert!(tmp.path().join("audit-certificate.json").exists());
+
+        let context_text = std::fs::read_to_string(tmp.path().join("context.rctx")).unwrap();
+        let context = rplan_io::read_rctx_str(&context_text).unwrap();
+        assert_eq!(context.context_hash, sidecars.context_hash);
+
+        let cert_text = std::fs::read_to_string(tmp.path().join("audit-certificate.json")).unwrap();
+        let cert: rplan_audit::AuditCertificate = serde_json::from_str(&cert_text).unwrap();
+        assert_eq!(
+            cert.context_hash.as_deref(),
+            Some(sidecars.context_hash.as_str())
+        );
+        assert_eq!(cert.result, rplan_audit::AuditResult::Pass);
+    }
+
+    #[test]
+    fn test_write_rplan_audit_sidecars_records_ilp_lineage() {
+        let tmp = TempDir::new().unwrap();
+        let mut cfg = make_config("WA");
+        cfg.num_districts = 2;
+        cfg.algo.split = SplitStrategy::Ilp {
+            method: crate::args::IlpMethod::BranchAndCut,
+            fallback: crate::args::IlpFallback::Metis,
+            time_limit_secs: 60,
+            optimality_gap: 0.01,
+            max_tracts: 500,
+        };
+        let assignments: HashMap<usize, usize> = [(0, 1), (1, 1), (2, 1), (3, 2), (4, 2)]
+            .into_iter()
+            .collect();
+        let summary_path = tmp
+            .path()
+            .join("intermediate")
+            .join("ilp_solve_reports")
+            .join("audit-summary.json");
+        std::fs::create_dir_all(summary_path.parent().unwrap()).unwrap();
+        std::fs::write(&summary_path, r#"{"checked":1,"passed":1,"failed":0}"#).unwrap();
+        let summary_sha = bisect_report::sha256_file(&summary_path).unwrap();
+
+        write_rplan_audit_sidecars(
+            tmp.path(),
+            &cfg,
+            "wa_path5",
+            &path5_loaded_graph(),
+            &assignments,
+            "wa_adjacency_2020.adj.bin",
+            "https://www.census.gov/example.zip",
+            0.25,
+            "2026-05-10T00:00:00Z",
+        )
+        .unwrap();
+
+        let cert_text = std::fs::read_to_string(tmp.path().join("audit-certificate.json")).unwrap();
+        let cert: rplan_audit::AuditCertificate = serde_json::from_str(&cert_text).unwrap();
+        let lineage = cert.algorithm_lineage.unwrap();
+        assert_eq!(lineage.producer_crate, "bisect-ilp");
+        assert_eq!(lineage.method, "branch-and-cut");
+        assert!(lineage.parameters_hash.starts_with("sha256:"));
+        assert_eq!(lineage.extra["fallback"], "metis");
+        assert_eq!(lineage.extra["time_limit_secs"], 60);
+        assert_eq!(lineage.extra["max_tracts"], 500);
+        assert_eq!(
+            lineage.extra["audit_summary_path"],
+            "intermediate/ilp_solve_reports/audit-summary.json"
+        );
+        assert_eq!(lineage.extra["audit_summary_sha256"], summary_sha);
     }
 
     // ── Task 199: StateConfig::new_bulk constructor ───────────────────────────

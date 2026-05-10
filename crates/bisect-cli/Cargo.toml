@@ -25,6 +25,9 @@ bisect-apportion = { path = "../bisect-apportion", default-features = false }
 bisect-analysis  = { path = "../bisect-analysis" }
 bisect-map       = { path = "../bisect-map" }
 bisect-report    = { path = "../bisect-report" }
+rplan-audit      = { path = "../rplan-audit" }
+rplan-core       = { path = "../rplan-core" }
+rplan-io         = { path = "../rplan-io" }
 # metis is only compiled when the c-ffi-engine feature is enabled.
 metis            = { workspace = true, optional = true }
 geo.workspace         = true

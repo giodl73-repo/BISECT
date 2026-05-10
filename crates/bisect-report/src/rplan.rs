@@ -25,6 +25,8 @@ pub enum RplanError {
     SchemaError(String),
     #[error("Version error: {0}")]
     VersionError(String),
+    #[error("RPLAN v0.2 adapter error: {0}")]
+    RplanV02(String),
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
     #[error("JSON error: {0}")]
@@ -246,8 +248,24 @@ pub fn validate_rplan(rplan: &RplanFile) -> Result<ValidationResult, RplanError>
 
 /// Parse a JSON string as an RplanFile and validate it.
 pub fn validate_rplan_str(json: &str) -> Result<ValidationResult, RplanError> {
+    let value: serde_json::Value = serde_json::from_str(json)?;
+    if value["rplan_version"].as_str() == Some("0.2") {
+        rplan_io::read_rplan_str(json).map_err(|err| RplanError::RplanV02(err.to_string()))?;
+        return Ok(ValidationResult {
+            valid: true,
+            warnings: Vec::new(),
+            errors: Vec::new(),
+        });
+    }
     let rplan: RplanFile = serde_json::from_str(json)?;
     validate_rplan(&rplan)
+}
+
+/// Convert the legacy v0.1 report-layer representation into the generic
+/// RPLAN v0.2 document model used by `rplan-*` crates.
+pub fn to_rplan_v02_document(rplan: &RplanFile) -> Result<rplan_io::RplanDocument, RplanError> {
+    let json = serde_json::to_string(rplan)?;
+    rplan_io::read_rplan_str(&json).map_err(|err| RplanError::RplanV02(err.to_string()))
 }
 
 /// Write an RplanFile to disk at `path` (serialized as JSON).
@@ -485,6 +503,46 @@ mod tests {
             !vr.warnings.is_empty(),
             "Should have a warning about newer minor version"
         );
+    }
+
+    #[test]
+    fn test_validate_v02_rplan_str_uses_adapter() {
+        let json = r#"{
+          "rplan_version": "0.2",
+          "plan": {
+            "schema_version": "district-plan-v1",
+            "units": {
+              "unit_kind": "tract",
+              "state": "WA",
+              "year": 2020,
+              "canonical_order": "explicit-unit-ids",
+              "unit_ids": ["53001000100", "53001000200"],
+              "unit_universe_hash": "sha256:test"
+            },
+            "assignment": [0, 1],
+            "k": 2,
+            "display_labels": ["1", "2"],
+            "allow_empty_districts": false
+          },
+          "metadata": {
+            "label": "wa_test",
+            "jurisdiction": "WA",
+            "chamber": "congressional",
+            "created_at": "2026-05-10T00:00:00Z"
+          },
+          "provenance": {},
+          "geometry": null,
+          "extensions": {}
+        }"#;
+        assert!(validate_rplan_str(json).unwrap().valid);
+    }
+
+    #[test]
+    fn test_legacy_rplan_converts_to_v02_document() {
+        let legacy = make_rplan_with_assignments(2, &[("53001000100", 1), ("53001000200", 2)]);
+        let document = to_rplan_v02_document(&legacy).unwrap();
+        assert_eq!(document.rplan_version, "0.2");
+        assert_eq!(document.plan.assignment, vec![0, 1]);
     }
 
     // --- write_rplan integration ---

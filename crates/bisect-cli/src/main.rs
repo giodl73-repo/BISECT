@@ -8,6 +8,7 @@ use bisect_cli::doctor::run_doctor;
 use bisect_cli::ensemble::run_ensemble;
 use bisect_cli::export_cmd::run_export;
 use bisect_cli::fetch::{build_fetch_list, download_items, load_manifest, print_check_report};
+use bisect_cli::ilp_audit::run_ilp_audit;
 use bisect_cli::import_cmd::run_import;
 use bisect_cli::label_cmd::{run_ls, run_mv, run_show, run_verify as run_label_verify};
 use bisect_cli::map_cmd::run_map;
@@ -320,11 +321,15 @@ fn main() {
                     }
                     // Wire ILP parameters from CLI args
                     if let SplitStrategy::Ilp {
+                        method,
+                        fallback,
                         time_limit_secs,
                         optimality_gap,
                         max_tracts,
                     } = &mut cfg.algo.split
                     {
+                        *method = args.ilp_method;
+                        *fallback = args.ilp_fallback;
                         *time_limit_secs = args.ilp_time_limit;
                         *optimality_gap = args.ilp_gap;
                         *max_tracts = args.ilp_max_tracts;
@@ -796,7 +801,7 @@ fn main() {
             });
         }
 
-        // ── bisect pareto: Pareto-optimal redistricting ensemble (B.26) ───────
+        // ── bisect pareto: Pareto-optimal redistricting ensemble (U.7) ───────
         Commands::Pareto(args) => {
             run_pareto(&args).unwrap_or_else(|e| {
                 eprintln!("ERROR: {e}");
@@ -820,6 +825,14 @@ fn main() {
         // ── BISECT verify: reproduce plan from manifest and compare ───────────
         Commands::Verify(args) => {
             run_verify(&args).unwrap_or_else(|e| {
+                eprintln!("FAIL: {e}");
+                std::process::exit(1);
+            });
+        }
+
+        // ── BISECT ilp-audit: verify ILP model artifact hashes ───────────────
+        Commands::IlpAudit(args) => {
+            run_ilp_audit(&args).unwrap_or_else(|e| {
                 eprintln!("FAIL: {e}");
                 std::process::exit(1);
             });

@@ -3,10 +3,13 @@
 //! `IlpResult` carries the outcome of a solve attempt, including the
 //! assignment plan (if solved), solver status, and audit metadata.
 
+use crate::certificates::BranchAndCutCertificate;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Status of the ILP solve attempt.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case", tag = "status")]
 pub enum SolverStatus {
     /// Provably optimal solution found. No valid plan has lower edge cuts.
     Optimal,
@@ -23,10 +26,12 @@ pub enum SolverStatus {
     FormulationOnly,
     /// Subprocess solver not yet implemented (Phase 1 stub for GLPK/HiGHS).
     SubprocessNotImplemented,
+    /// U.16 branch-and-cut mode selected, but no external solve loop has run yet.
+    BranchAndCutNotImplemented,
 }
 
 /// Result of an ILP redistricting solve.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct IlpResult {
     /// Solver status.
     pub status: SolverStatus,
@@ -44,6 +49,8 @@ pub struct IlpResult {
     pub solver_used: String,
     /// Solver version string (empty if not available).
     pub solver_version: String,
+    /// Optional U.16 branch-and-cut separation/certificate metadata.
+    pub branch_and_cut: Option<BranchAndCutCertificate>,
 }
 
 // ── L0 inline unit tests ──────────────────────────────────────────────────────
@@ -62,6 +69,7 @@ mod tests {
             n_constraints: 0,
             solver_used: String::new(),
             solver_version: String::new(),
+            branch_and_cut: None,
         }
     }
 
@@ -120,10 +128,40 @@ mod tests {
             SolverStatus::FallbackMetis,
             SolverStatus::FormulationOnly,
             SolverStatus::SubprocessNotImplemented,
+            SolverStatus::BranchAndCutNotImplemented,
         ];
         for v in variants {
             let s = format!("{:?}", v);
             assert!(!s.is_empty());
         }
+    }
+
+    #[test]
+    fn solver_status_json_uses_stable_kebab_case_tag() {
+        let status = SolverStatus::GapReached {
+            achieved_gap: 0.005,
+        };
+        let json = serde_json::to_string(&status).unwrap();
+        assert_eq!(json, r#"{"status":"gap-reached","achieved_gap":0.005}"#);
+        let decoded: SolverStatus = serde_json::from_str(&json).unwrap();
+        assert_eq!(decoded, status);
+    }
+
+    #[test]
+    fn ilp_result_json_round_trips_without_branch_and_cut() {
+        let result = IlpResult {
+            status: SolverStatus::FormulationOnly,
+            plan: None,
+            optimal_ec: None,
+            solve_time_secs: 0.0,
+            n_variables: 10,
+            n_constraints: 20,
+            solver_used: "formulation_only".to_string(),
+            solver_version: String::new(),
+            branch_and_cut: None,
+        };
+        let json = serde_json::to_string(&result).unwrap();
+        let decoded: IlpResult = serde_json::from_str(&json).unwrap();
+        assert_eq!(decoded, result);
     }
 }

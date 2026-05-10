@@ -2,7 +2,7 @@
 use crate::args::VerifyArgs;
 use bisect_report::PlanManifest;
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// Check whether the binary SHA-256 in the manifest matches the current executable.
 ///
@@ -53,6 +53,9 @@ pub fn run_verify(args: &VerifyArgs) -> anyhow::Result<()> {
         let content = std::fs::read_to_string(&args.manifest)
             .map_err(|e| anyhow::anyhow!("cannot read manifest: {e}"))?;
         let manifest: PlanManifest = serde_json::from_str(&content)?;
+        let plan_root = manifest_plan_root(&args.manifest);
+        verify_manifest_ilp_audit_summary(&manifest, plan_root)?;
+        verify_manifest_rplan_audit_certificate(&manifest, plan_root)?;
 
         eprintln!(
             "=== bisect verify (assignments only): {} ===",
@@ -123,6 +126,9 @@ pub fn run_verify(args: &VerifyArgs) -> anyhow::Result<()> {
         .map_err(|e| anyhow::anyhow!("cannot read manifest '{}': {e}", args.manifest.display()))?;
     let manifest: PlanManifest = serde_json::from_str(&content)
         .map_err(|e| anyhow::anyhow!("invalid manifest JSON: {e}"))?;
+    let plan_root = manifest_plan_root(&args.manifest);
+    verify_manifest_ilp_audit_summary(&manifest, plan_root)?;
+    verify_manifest_rplan_audit_certificate(&manifest, plan_root)?;
 
     // 2. Print equivalent CLI command
     let verify_label = args
@@ -240,6 +246,159 @@ pub fn run_verify(args: &VerifyArgs) -> anyhow::Result<()> {
     }
 }
 
+fn manifest_plan_root(manifest_path: &Path) -> &Path {
+    manifest_path.parent().unwrap_or_else(|| Path::new(""))
+}
+
+pub fn verify_manifest_ilp_audit_summary(
+    manifest: &PlanManifest,
+    plan_root: &Path,
+) -> anyhow::Result<()> {
+    let Some(summary_rel) = manifest.ilp_audit_summary_path.as_deref() else {
+        return Ok(());
+    };
+
+    let summary_path = plan_root.join(summary_rel);
+    if let Some(expected_sha256) = manifest.ilp_audit_summary_sha256.as_deref() {
+        if !expected_sha256.is_empty() {
+            let actual_sha256 = bisect_report::sha256_file(&summary_path)
+                .map_err(|e| anyhow::anyhow!("hash ILP audit summary: {e}"))?;
+            if actual_sha256 != expected_sha256 {
+                anyhow::bail!(
+                    "ILP audit summary SHA-256 mismatch for {}: manifest={}, current={}",
+                    summary_path.display(),
+                    expected_sha256,
+                    actual_sha256
+                );
+            }
+        }
+    }
+
+    let report_dir = manifest
+        .ilp_solve_report_dir
+        .as_deref()
+        .map(|dir| plan_root.join(dir))
+        .or_else(|| summary_path.parent().map(Path::to_path_buf))
+        .ok_or_else(|| anyhow::anyhow!("cannot resolve ILP solve report directory"))?;
+
+    crate::ilp_audit::verify_ilp_audit_summary_for_dir(&report_dir, &summary_path)
+        .map_err(|e| anyhow::anyhow!("ILP audit summary verification failed: {e}"))?;
+    eprintln!("[PASS] ILP audit summary verified: {summary_rel}");
+    Ok(())
+}
+
+pub fn verify_manifest_rplan_audit_certificate(
+    manifest: &PlanManifest,
+    plan_root: &Path,
+) -> anyhow::Result<()> {
+    let Some(certificate_rel) = manifest.audit_certificate_path.as_deref() else {
+        return Ok(());
+    };
+
+    let certificate_path = plan_root.join(certificate_rel);
+    if let Some(expected_sha256) = manifest.audit_certificate_sha256.as_deref() {
+        if !expected_sha256.is_empty() {
+            let actual_sha256 = bisect_report::sha256_file(&certificate_path)
+                .map_err(|e| anyhow::anyhow!("hash RPLAN audit certificate: {e}"))?;
+            if actual_sha256 != expected_sha256 {
+                anyhow::bail!(
+                    "RPLAN audit certificate SHA-256 mismatch for {}: manifest={}, current={}",
+                    certificate_path.display(),
+                    expected_sha256,
+                    actual_sha256
+                );
+            }
+        }
+    }
+
+    let certificate_bytes = std::fs::read(&certificate_path).map_err(|e| {
+        anyhow::anyhow!(
+            "read RPLAN audit certificate {}: {e}",
+            certificate_path.display()
+        )
+    })?;
+    let certificate: rplan_audit::AuditCertificate = serde_json::from_slice(&certificate_bytes)
+        .map_err(|e| anyhow::anyhow!("parse RPLAN audit certificate: {e}"))?;
+
+    if let Some(expected_content_hash) = manifest.audit_certificate_content_hash.as_deref() {
+        if certificate.content_hash != expected_content_hash {
+            anyhow::bail!(
+                "RPLAN audit certificate content hash mismatch: manifest={}, certificate={}",
+                expected_content_hash,
+                certificate.content_hash
+            );
+        }
+    }
+    if let Some(expected_result) = manifest.audit_result.as_deref() {
+        let actual_result = rplan_audit_result_label(&certificate.result);
+        if actual_result != expected_result {
+            anyhow::bail!(
+                "RPLAN audit result mismatch: manifest={}, certificate={}",
+                expected_result,
+                actual_result
+            );
+        }
+    }
+    if let Some(expected_profile_id) = manifest.legal_profile_id.as_deref() {
+        if certificate.legal_profile.profile_id != expected_profile_id {
+            anyhow::bail!(
+                "RPLAN legal profile mismatch: manifest={}, certificate={}",
+                expected_profile_id,
+                certificate.legal_profile.profile_id
+            );
+        }
+    }
+    if let Some(expected_context_hash) = manifest.context_hash.as_deref() {
+        if certificate.context_hash.as_deref() != Some(expected_context_hash) {
+            anyhow::bail!(
+                "RPLAN context hash mismatch: manifest={}, certificate={}",
+                expected_context_hash,
+                certificate.context_hash.as_deref().unwrap_or_default()
+            );
+        }
+    }
+
+    let rplan_rel = manifest
+        .rplan_path
+        .as_deref()
+        .ok_or_else(|| anyhow::anyhow!("manifest has audit_certificate_path but no rplan_path"))?;
+    let rplan_text = std::fs::read_to_string(plan_root.join(rplan_rel))
+        .map_err(|e| anyhow::anyhow!("read RPLAN sidecar {rplan_rel}: {e}"))?;
+    let rplan_document = rplan_io::read_rplan_str(&rplan_text)
+        .map_err(|e| anyhow::anyhow!("parse RPLAN sidecar {rplan_rel}: {e}"))?;
+
+    let context = if certificate.context_hash.is_some() {
+        let rctx_rel = manifest.rctx_path.as_deref().ok_or_else(|| {
+            anyhow::anyhow!("manifest has contextual audit certificate but no rctx_path")
+        })?;
+        let rctx_text = std::fs::read_to_string(plan_root.join(rctx_rel))
+            .map_err(|e| anyhow::anyhow!("read RPLAN context sidecar {rctx_rel}: {e}"))?;
+        Some(
+            rplan_io::read_rctx_str(&rctx_text)
+                .map_err(|e| anyhow::anyhow!("parse RPLAN context sidecar {rctx_rel}: {e}"))?,
+        )
+    } else {
+        None
+    };
+
+    rplan_audit::verify_audit_certificate(
+        &certificate,
+        Some(&rplan_document.plan),
+        context.as_ref(),
+    )
+    .map_err(|e| anyhow::anyhow!("RPLAN audit certificate verification failed: {e}"))?;
+    eprintln!("[PASS] RPLAN audit certificate verified: {certificate_rel}");
+    Ok(())
+}
+
+fn rplan_audit_result_label(result: &rplan_audit::AuditResult) -> &'static str {
+    match result {
+        rplan_audit::AuditResult::Pass => "pass",
+        rplan_audit::AuditResult::Fail => "fail",
+        rplan_audit::AuditResult::PassWithWarnings => "pass-with-warnings",
+    }
+}
+
 fn find_bisect_binary() -> anyhow::Result<PathBuf> {
     for candidate in [
         "target/release/bisect.exe",
@@ -336,6 +495,148 @@ pub fn jaccard_similarity(a: &HashMap<String, usize>, b: &HashMap<String, usize>
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sha2::{Digest, Sha256};
+    use std::collections::BTreeMap;
+
+    fn sha256(bytes: &[u8]) -> String {
+        let mut hasher = Sha256::new();
+        hasher.update(bytes);
+        format!("{:x}", hasher.finalize())
+    }
+
+    fn write_ilp_report(dir: &Path, name: &str, lp_bytes: &[u8], sha256: String) -> PathBuf {
+        let formulation = bisect_ilp::build_formulation(&[vec![1], vec![0]], &[1, 1], 2, 0.05);
+        let result = bisect_ilp::solve(
+            &formulation,
+            &[vec![1], vec![0]],
+            &[1, 1],
+            2,
+            0.05,
+            bisect_ilp::IlpSolver::FormulationOnly,
+            0.01,
+        );
+        let lp_path = dir.join(format!("{name}.lp"));
+        std::fs::write(&lp_path, lp_bytes).unwrap();
+        let report = bisect_ilp::IlpSolveReport::with_model_artifact(
+            formulation,
+            result,
+            bisect_ilp::IlpModelArtifact {
+                format: "cplex-lp".to_string(),
+                path: format!("{name}.lp"),
+                sha256,
+            },
+        );
+        let report_path = dir.join(format!("{name}.json"));
+        std::fs::write(&report_path, report.to_json_string().unwrap()).unwrap();
+        report_path
+    }
+
+    fn write_rplan_audit_fixture(plan_root: &Path) -> PlanManifest {
+        let units = rplan_core::PlanUnitIndex {
+            unit_kind: rplan_core::UnitKind::Tract,
+            state: Some("WA".to_string()),
+            year: Some(2020),
+            canonical_order: rplan_core::CanonicalOrder::ExplicitUnitIds,
+            unit_ids: vec!["53001000100".to_string(), "53001000200".to_string()],
+            unit_universe_hash: "sha256:test".to_string(),
+            source_id: None,
+        };
+        let plan = rplan_core::DistrictPlan {
+            schema_version: rplan_core::DISTRICT_PLAN_SCHEMA_VERSION.to_string(),
+            units: units.clone(),
+            assignment: vec![0, 1],
+            k: 2,
+            display_labels: vec!["1".to_string(), "2".to_string()],
+            allow_empty_districts: false,
+        };
+        let mut context = rplan_core::RplanContext {
+            rctx_version: rplan_core::RCTX_VERSION.to_string(),
+            context_hash: String::new(),
+            units: units.clone(),
+            graph: Some(rplan_core::UnitGraph {
+                edge_semantics: rplan_core::EdgeSemantics::Undirected,
+                adjacency: vec![
+                    vec![rplan_core::UnitEdge {
+                        to: 1,
+                        kind: rplan_core::EdgeKind::Boundary,
+                        weight: None,
+                    }],
+                    vec![rplan_core::UnitEdge {
+                        to: 0,
+                        kind: rplan_core::EdgeKind::Boundary,
+                        weight: None,
+                    }],
+                ],
+            }),
+            populations: Some(vec![100, 100]),
+            source_hashes: rplan_core::SourceHashes {
+                entries: BTreeMap::from([("fixture".to_string(), "sha256:source".to_string())]),
+            },
+        };
+        context.context_hash = context.compute_context_hash().unwrap();
+
+        let document = rplan_io::RplanDocument {
+            rplan_version: rplan_io::RPLAN_V02.to_string(),
+            plan: plan.clone(),
+            metadata: rplan_io::RplanMetadataV02 {
+                label: "wa_fixture".to_string(),
+                jurisdiction: "WA".to_string(),
+                chamber: "congressional".to_string(),
+                created_at: "2026-05-10T00:00:00Z".to_string(),
+                description: None,
+            },
+            provenance: rplan_io::RplanProvenance::default(),
+            geometry: None,
+            extensions: BTreeMap::new(),
+        };
+        let profile = rplan_audit::LegalProfile::us_congressional_project_v1(2020);
+        let certificate = rplan_audit::audit_plan(
+            &plan,
+            Some(&context),
+            &profile,
+            rplan_audit::RuntimeProvenance {
+                binary_name: "bisect-test".to_string(),
+                binary_version: "0.1.0".to_string(),
+                ..rplan_audit::RuntimeProvenance::default()
+            },
+            &[
+                rplan_audit::AuditConstraint::Population,
+                rplan_audit::AuditConstraint::Contiguity,
+            ],
+            "2026-05-10T00:00:00Z",
+        )
+        .unwrap();
+
+        std::fs::write(
+            plan_root.join("plan.rplan"),
+            rplan_io::write_rplan_string(&document).unwrap(),
+        )
+        .unwrap();
+        std::fs::write(
+            plan_root.join("context.rctx"),
+            rplan_io::write_rctx_string(&context).unwrap(),
+        )
+        .unwrap();
+        std::fs::write(
+            plan_root.join("audit-certificate.json"),
+            serde_json::to_string_pretty(&certificate).unwrap(),
+        )
+        .unwrap();
+        let certificate_sha =
+            bisect_report::sha256_file(&plan_root.join("audit-certificate.json")).unwrap();
+
+        PlanManifest {
+            rplan_path: Some("plan.rplan".to_string()),
+            rctx_path: Some("context.rctx".to_string()),
+            audit_certificate_path: Some("audit-certificate.json".to_string()),
+            audit_certificate_sha256: Some(certificate_sha),
+            audit_certificate_content_hash: Some(certificate.content_hash),
+            audit_result: Some(rplan_audit_result_label(&certificate.result).to_string()),
+            legal_profile_id: Some(profile.profile_id),
+            context_hash: certificate.context_hash,
+            ..Default::default()
+        }
+    }
 
     #[test]
     fn test_jaccard_identical_plans() {
@@ -740,6 +1041,72 @@ mod tests {
         let bogus_sha = "a".repeat(64);
         check_binary_sha256(&bogus_sha, false); // should emit WARNING but not panic
                                                 // No panic = pass
+    }
+
+    #[test]
+    fn test_verify_manifest_ilp_audit_summary_passes_for_fresh_summary() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let report_dir = tmp.path().join("intermediate").join("ilp_solve_reports");
+        std::fs::create_dir_all(&report_dir).unwrap();
+        write_ilp_report(&report_dir, "node_root", b"lp text", sha256(b"lp text"));
+        let summary_path = report_dir.join("audit-summary.json");
+        crate::ilp_audit::write_ilp_audit_summary_for_dir(&report_dir, &summary_path).unwrap();
+        let summary_sha = bisect_report::sha256_file(&summary_path).unwrap();
+
+        let manifest = PlanManifest {
+            ilp_solve_report_dir: Some("intermediate/ilp_solve_reports".to_string()),
+            ilp_audit_summary_path: Some(
+                "intermediate/ilp_solve_reports/audit-summary.json".to_string(),
+            ),
+            ilp_audit_summary_sha256: Some(summary_sha),
+            ..Default::default()
+        };
+
+        verify_manifest_ilp_audit_summary(&manifest, tmp.path())
+            .expect("fresh ILP audit summary should verify from manifest paths");
+    }
+
+    #[test]
+    fn test_verify_manifest_ilp_audit_summary_rejects_sha_mismatch() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let report_dir = tmp.path().join("intermediate").join("ilp_solve_reports");
+        std::fs::create_dir_all(&report_dir).unwrap();
+        write_ilp_report(&report_dir, "node_root", b"lp text", sha256(b"lp text"));
+        let summary_path = report_dir.join("audit-summary.json");
+        crate::ilp_audit::write_ilp_audit_summary_for_dir(&report_dir, &summary_path).unwrap();
+
+        let manifest = PlanManifest {
+            ilp_solve_report_dir: Some("intermediate/ilp_solve_reports".to_string()),
+            ilp_audit_summary_path: Some(
+                "intermediate/ilp_solve_reports/audit-summary.json".to_string(),
+            ),
+            ilp_audit_summary_sha256: Some("0".repeat(64)),
+            ..Default::default()
+        };
+
+        let err = verify_manifest_ilp_audit_summary(&manifest, tmp.path())
+            .expect_err("stale manifest hash should fail ILP audit summary verification");
+        assert!(err.to_string().contains("SHA-256 mismatch"));
+    }
+
+    #[test]
+    fn test_verify_manifest_rplan_audit_certificate_passes_for_fresh_sidecars() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let manifest = write_rplan_audit_fixture(tmp.path());
+
+        verify_manifest_rplan_audit_certificate(&manifest, tmp.path())
+            .expect("fresh RPLAN audit sidecars should verify");
+    }
+
+    #[test]
+    fn test_verify_manifest_rplan_audit_certificate_rejects_sha_mismatch() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let mut manifest = write_rplan_audit_fixture(tmp.path());
+        manifest.audit_certificate_sha256 = Some("0".repeat(64));
+
+        let err = verify_manifest_rplan_audit_certificate(&manifest, tmp.path())
+            .expect_err("manifest certificate sha mismatch should fail verification");
+        assert!(err.to_string().contains("SHA-256 mismatch"));
     }
 
     // ── 15 additional L0 tests ───────────────────────────────────────────────

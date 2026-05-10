@@ -1,5 +1,9 @@
 [workspace]
 members = [
+    "crates/rplan-core",
+    "crates/rplan-io",
+    "crates/rplan-audit",
+    "crates/rplan-cli",
     "crates/bisect-core",
     "crates/bisect-data",
     "crates/bisect-apportion",

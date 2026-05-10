@@ -22,8 +22,10 @@
 //!      flow conservation at non-root tracts
 //!      flow at root supplies (n_d - 1) units
 
+use serde::{Deserialize, Serialize};
+
 /// Counts and summary of an ILP formulation (Phase 1: no actual MPS text).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct IlpFormulation {
     /// Number of tracts (nodes in the adjacency graph).
     pub n_tracts: usize,

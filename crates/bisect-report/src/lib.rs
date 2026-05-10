@@ -49,6 +49,7 @@ pub use report::{
     REQUIRED_ANALYSIS_FILES,
 };
 pub use rplan::{
-    validate_district_range, validate_geoid_format, validate_geoid_format_batch, validate_rplan,
-    validate_rplan_str, write_rplan, RplanError, RplanFile, RplanMetadata, ValidationResult,
+    to_rplan_v02_document, validate_district_range, validate_geoid_format,
+    validate_geoid_format_batch, validate_rplan, validate_rplan_str, write_rplan, RplanError,
+    RplanFile, RplanMetadata, ValidationResult,
 };

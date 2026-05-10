@@ -699,10 +699,10 @@ pub fn run_nway_partition(
 ///
 /// When `vertex_areas_m2` is Some, activates AreaSection mode (ncon=2):
 ///   - Interleaves population and area (hectares) as dual vertex weights.
-/// ProportionalSection (B.12): partisan-proportional bisection using HH seat allocation.
+/// ProportionalSection (T.5): partisan-proportional bisection using HH seat allocation.
 ///
 /// Uses ncon=2 with vertex weights [population, D_votes]. The tpwgts are set by
-/// the B.12 formula: [k_D/k, 1-k_R/(2dk), k_R/k, k_R/(2dk)] where d is the
+/// the T.5 formula: [k_D/k, 1-k_R/(2dk), k_R/k, k_R/(2dk)] where d is the
 /// statewide Democratic fraction and k_D/k_R are the Huntington-Hill seat counts.
 ///
 /// Only the HH-proportional ratio is tried (not all ratios). Multiple seeds.
@@ -763,7 +763,7 @@ pub fn run_proportional_section(
         d, k_d, k_r, eta
     );
 
-    // B.12 tpwgts: right (R-bloc) gets minimum D for 50% D concentration
+    // T.5 tpwgts: right (R-bloc) gets minimum D for 50% D concentration
     let d_right_target = (k_r as f64 / (2.0 * d * num_districts as f64)).clamp(0.01, 0.99);
     let d_left_target = 1.0 - d_right_target;
     let pop_left = k_d as f64 / num_districts as f64;
@@ -930,7 +930,7 @@ pub fn run_geosection(
     vertex_areas_m2: Option<&[f64]>,
     // AreaSection area imbalance tolerance (ubvec[1]). Default 1.10 = ±10%.
     area_swing: f64,
-    // VRASection (B.14): per-vertex minority VAP counts. None = standard GeoSection.
+    // VRASection (T.7): per-vertex minority VAP counts. None = standard GeoSection.
     // When Some, ratio selection score is: normalised - w_vra * alignment * normalised.max(1)
     // where alignment = |MVAP_frac(left) - MVAP_frac(right)|.
     minority_vap: Option<&[f64]>,
@@ -1169,7 +1169,7 @@ pub fn run_geosection(
         let smaller = left_k.min(right_k) as f64;
         let normalised = ratio_best / smaller.sqrt();
 
-        // VRASection (B.14): subtract alignment bonus from the normalised score.
+        // VRASection (T.7): subtract alignment bonus from the normalised score.
         // A(split) = |MVAP_frac(left) - MVAP_frac(right)| (0=equal, 1=fully concentrated)
         // score(ratio) = normalised - w_vra * alignment * normalised.max(1.0)
         // Lower score = preferred. Subtracting means concentrated splits win over dispersed.
@@ -2073,6 +2073,64 @@ fn write_intermediate_round(
     let json =
         serde_json::to_string(assignments).map_err(|e| format!("serialize intermediate: {e}"))?;
     std::fs::write(&path, json).map_err(|e| format!("write intermediate: {e}"))
+}
+
+fn write_ilp_solve_report(
+    path: &Path,
+    formulation: bisect_ilp::IlpFormulation,
+    result: bisect_ilp::IlpResult,
+    model_artifact: Option<bisect_ilp::IlpModelArtifact>,
+) -> Result<(), String> {
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| format!("create ilp report dir: {e}"))?;
+    }
+    let tmp_path = path.with_extension("tmp.json");
+    let json = if let Some(model_artifact) = model_artifact {
+        bisect_ilp::solve_report_json_with_model_artifact(formulation, result, model_artifact)
+    } else {
+        bisect_ilp::solve_report_json(formulation, result)
+    }
+    .map_err(|e| format!("serialize ilp solve report: {e}"))?;
+    std::fs::write(&tmp_path, json).map_err(|e| format!("write ilp solve report tmp: {e}"))?;
+    std::fs::rename(&tmp_path, path).map_err(|e| format!("publish ilp solve report: {e}"))
+}
+
+fn write_ilp_master_lp(
+    path: &Path,
+    adjacency: &[Vec<usize>],
+    pop: &[i64],
+    k: usize,
+    pop_tolerance: f64,
+) -> Result<(), String> {
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| format!("create ilp LP dir: {e}"))?;
+    }
+    let tmp_path = path.with_extension("tmp.lp");
+    let lp = bisect_ilp::master_lp_string(adjacency, pop, k, pop_tolerance)
+        .map_err(|e| format!("export ilp master LP: {e}"))?;
+    std::fs::write(&tmp_path, lp).map_err(|e| format!("write ilp master LP tmp: {e}"))?;
+    std::fs::rename(&tmp_path, path).map_err(|e| format!("publish ilp master LP: {e}"))
+}
+
+fn ilp_model_artifact_for_report(
+    report_path: &Path,
+    model_path: &Path,
+) -> Result<bisect_ilp::IlpModelArtifact, String> {
+    let parent = report_path
+        .parent()
+        .ok_or_else(|| format!("ilp report path has no parent: {}", report_path.display()))?;
+    let rel_path = model_path
+        .strip_prefix(parent)
+        .map_err(|e| format!("derive ilp model relative path: {e}"))?
+        .to_string_lossy()
+        .replace('\\', "/");
+    let sha256 = bisect_report::sha256_file(model_path)
+        .map_err(|e| format!("hash ilp model LP {}: {e}", model_path.display()))?;
+    Ok(bisect_ilp::IlpModelArtifact {
+        format: "cplex-lp".to_string(),
+        path: rel_path,
+        sha256,
+    })
 }
 
 // ── PercentileSweep ───────────────────────────────────────────────────────────
@@ -3273,7 +3331,7 @@ fn find_medoid(
     best_node
 }
 
-/// Centroidal Voronoi Districts — graph-distance variant (Phase 1, B.22 spec).
+/// Centroidal Voronoi Districts — graph-distance variant (Phase 1, T.10 spec).
 ///
 /// Seeds k=2 district centers by k-farthest spread, assigns tracts to nearest
 /// center by BFS hop count, iterates until seeds stabilise (medoid update),
@@ -3438,7 +3496,7 @@ pub fn split_subgraph_cvd(
     Ok((left, right))
 }
 
-/// Centroidal Voronoi Districts -- geographic Euclidean variant (Phase 2, B.22 spec).
+/// Centroidal Voronoi Districts -- geographic Euclidean variant (Phase 2, T.10 spec).
 ///
 /// Seeds k=2 district centers by k-farthest Euclidean spread on Albers-projected
 /// coordinates, assigns tracts to nearest center by Euclidean distance, iterates
@@ -3726,7 +3784,7 @@ pub fn run_all_splits_cvd(
     Ok(assignments)
 }
 
-// ── BFS Region-Growing (B.23) ─────────────────────────────────────────────────
+// ── BFS Region-Growing (T.12) ─────────────────────────────────────────────────
 
 /// Derive the BFS-algorithm seed from base_seed.
 ///
@@ -3760,7 +3818,7 @@ pub fn derive_bfs_seed(base_seed: u64, path: &str) -> u64 {
 
 /// Split a subgraph into two balanced parts using BFS Region-Growing.
 ///
-/// Algorithm (B.23 spec §1):
+/// Algorithm (T.12 spec §1):
 ///   1. Build local index (sorted, deterministic)
 ///   2. Select 2 seeds by k-farthest BFS spread:
 ///      - seed[0] = population-weighted random sample using bfs_growth_seed(base_seed)
@@ -3947,7 +4005,7 @@ pub fn split_subgraph_bfs(
     Ok((left, right))
 }
 
-/// Run the full bisection tree using BFS Region-Growing at each node (B.23).
+/// Run the full bisection tree using BFS Region-Growing at each node (T.12).
 ///
 /// Structurally identical to run_all_splits_sa/run_all_splits_cvd but calls
 /// split_subgraph_bfs at each bisection node instead of SA/CVD/METIS.
@@ -4038,7 +4096,7 @@ pub fn run_all_splits_bfs(
     Ok(assignments)
 }
 
-// ── Moving-Knife Algorithm (B.25) ────────────────────────────────────────────
+// ── Moving-Knife Algorithm (T.13) ────────────────────────────────────────────
 
 /// Compactness metric used by the Moving-Knife Algorithm.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -4298,7 +4356,7 @@ pub fn split_subgraph_mka_direction(
     best_theta
 }
 
-/// Moving-Knife Algorithm bisection (B.25 spec 3.75/4).
+/// Moving-Knife Algorithm bisection (T.13 spec 3.75/4).
 ///
 /// For each orientation θ ∈ [0°, 180°) in steps of 180/n_orientations degrees:
 ///   1. Project all tract centroids onto the sweep axis (cos θ, sin θ).
@@ -4614,12 +4672,12 @@ pub fn run_all_splits_mka(
     Ok(assignments)
 }
 
-// ── ILP Exact Redistricting (B.24) ────────────────────────────────────────────
+// ── ILP Exact Redistricting (U.6) ────────────────────────────────────────────
 
 /// Split a subgraph into two balanced parts using ILP (exact redistricting).
 ///
-/// Phase 1: build the ILP formulation and call `solve` with `FormulationOnly`.
-/// Since `FormulationOnly` returns `plan: None`, fall back to METIS (same as
+/// Phase 1: build the ILP formulation and call `solve`.
+/// Since the current backends return `plan: None`, fall back to METIS (same as
 /// the standard `split_subgraph` path with ncon=1).
 ///
 /// When `tract_indices.len() > max_tracts`, skips the ILP entirely and falls
@@ -4629,12 +4687,22 @@ pub fn split_subgraph_ilp(
     vertex_weights: &[i64],
     tract_indices: &HashSet<usize>,
     balance_tolerance: f64,
+    method: crate::args::IlpMethod,
+    fallback: crate::args::IlpFallback,
     time_limit_secs: u64,
     optimality_gap: f64,
     max_tracts: usize,
+    solve_report_path: Option<&Path>,
 ) -> Result<(HashSet<usize>, HashSet<usize>), String> {
     // Size guard: fall back to METIS when the subgraph is too large.
     if tract_indices.len() > max_tracts {
+        if matches!(fallback, crate::args::IlpFallback::Error) {
+            return Err(format!(
+                "ILP skipped for node ({} tracts > {} limit) and --ilp-fallback=error",
+                tract_indices.len(),
+                max_tracts
+            ));
+        }
         eprintln!(
             "WARNING: ILP solver skipped for node ({} tracts > {} limit). Falling back to METIS.",
             tract_indices.len(),
@@ -4674,17 +4742,44 @@ pub fn split_subgraph_ilp(
     // Build local population array (one value per local node).
     let local_pop: Vec<i64> = sorted.iter().map(|&g| vertex_weights[g].max(1)).collect();
 
-    // Phase 1: build formulation and solve (FormulationOnly -> plan: None).
+    // Phase 1: build formulation and solve (current methods return plan: None).
     let formulation = bisect_ilp::build_formulation(&local_adj, &local_pop, 2, balance_tolerance);
+    let solver = match method {
+        crate::args::IlpMethod::FormulationOnly => bisect_ilp::IlpSolver::FormulationOnly,
+        crate::args::IlpMethod::BranchAndCut => bisect_ilp::IlpSolver::BranchAndCut {
+            mode: bisect_ilp::BranchAndCutMode::LazyCallback,
+            incumbent_assignment: None,
+            solver_name: None,
+        },
+        crate::args::IlpMethod::IterativeSeparation => bisect_ilp::IlpSolver::BranchAndCut {
+            mode: bisect_ilp::BranchAndCutMode::IterativeSeparation,
+            incumbent_assignment: None,
+            solver_name: None,
+        },
+    };
     let result = bisect_ilp::solve(
         &formulation,
         &local_adj,
         &local_pop,
         2,
         balance_tolerance,
-        bisect_ilp::IlpSolver::FormulationOnly,
+        solver,
         optimality_gap,
     );
+
+    if let Some(path) = solve_report_path {
+        let lp_path = path.with_extension("lp");
+        write_ilp_master_lp(&lp_path, &local_adj, &local_pop, 2, balance_tolerance)?;
+        let model_artifact = ilp_model_artifact_for_report(path, &lp_path)?;
+        write_ilp_solve_report(
+            path,
+            formulation.clone(),
+            result.clone(),
+            Some(model_artifact),
+        )?;
+        bisect_ilp::verify_model_artifact_for_report(path)
+            .map_err(|e| format!("verify ilp model artifact: {e}"))?;
+    }
 
     if result.plan.is_some() {
         // Phase 2 (future): use the ILP plan directly.
@@ -4702,10 +4797,16 @@ pub fn split_subgraph_ilp(
         }
         Ok((left, right))
     } else {
-        // Phase 1: FormulationOnly returns plan: None — fall back to METIS.
+        if matches!(fallback, crate::args::IlpFallback::Error) {
+            return Err(format!(
+                "ILP {method}: no solver plan returned (status={:?}) and --ilp-fallback=error",
+                result.status
+            ));
+        }
         eprintln!(
-            "ILP Phase 1: FormulationOnly (no solver) — falling back to METIS \
+            "ILP {method}: no solver plan returned (status={:?}) — falling back to METIS \
              (vars={}, constraints={}, time_limit={}s gap={:.3})",
+            result.status,
             formulation.n_variables(),
             formulation.n_constraints,
             time_limit_secs,
@@ -4735,12 +4836,15 @@ pub fn split_subgraph_ilp(
 pub fn run_all_splits_ilp(
     adjacency: &[Vec<usize>],
     vertex_weights: &[i64],
-    edge_weights: &HashMap<(usize, usize), f64>,
+    _edge_weights: &HashMap<(usize, usize), f64>,
     num_districts: usize,
     balance_tolerance: f64,
+    method: crate::args::IlpMethod,
+    fallback: crate::args::IlpFallback,
     time_limit_secs: u64,
     optimality_gap: f64,
     max_tracts: usize,
+    solve_report_dir: Option<&Path>,
 ) -> Result<HashMap<usize, usize>, String> {
     let n = adjacency.len();
 
@@ -4764,14 +4868,26 @@ pub fn run_all_splits_ilp(
             .into_par_iter()
             .map(|(node, tracts)| {
                 let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
+                let solve_report_path = solve_report_dir.map(|dir| {
+                    let node_name = if node.path.is_empty() {
+                        "root".to_string()
+                    } else {
+                        node.path.clone()
+                    };
+                    dir.join(format!("depth_{depth:02}"))
+                        .join(format!("node_{node_name}.json"))
+                });
                 let (left, right) = split_subgraph_ilp(
                     adjacency,
                     vertex_weights,
                     &tracts,
                     node_ufactor,
+                    method,
+                    fallback,
                     time_limit_secs,
                     optimality_gap,
                     max_tracts,
+                    solve_report_path.as_deref(),
                 )
                 .map_err(|e| format!("depth {} node '{}' (ilp): {e}", depth, node.path))?;
                 Ok((node.path, left, right))
@@ -4801,6 +4917,9 @@ pub fn run_all_splits_ilp(
             "ilp bisection incomplete: {}/{n} tracts assigned",
             assignments.len()
         ));
+    }
+    if let Some(dir) = solve_report_dir {
+        crate::ilp_audit::write_ilp_audit_summary_for_dir(dir, &dir.join("audit-summary.json"))?;
     }
     Ok(assignments)
 }
@@ -5525,7 +5644,7 @@ pub struct AdaptiveConfig {
     pub gamma_0: f64,
     pub pop_tolerance: f64,
     /// Multiplier for coarse tolerance: coarse_tol = coarse_tol_factor × pop_tolerance.
-    /// Default: 3.0 (per B.21 spec; looser than MultiScale's 2× to avoid over-rejection
+    /// Default: 3.0 (per U.5 spec; looser than MultiScale's 2× to avoid over-rejection
     /// during early adaptation when alpha may be far from optimal).
     pub coarse_tol_factor: f64,
     pub p: f64,
@@ -5560,7 +5679,7 @@ pub struct AdaptiveResult {
     pub coarse_acceptance_rate: f64,
 }
 
-/// Run Adaptive Multi-scale MCMC with Robbins-Monro alpha self-tuning (B.21 spec).
+/// Run Adaptive Multi-scale MCMC with Robbins-Monro alpha self-tuning (U.5 spec).
 ///
 /// Extends `run_multiscale` by automatically adapting the coarse-move probability
 /// alpha toward `config.target_accept` every `config.adapt_interval` steps using
@@ -7374,7 +7493,7 @@ mod tests {
         );
     }
 
-    // ── VRASection (B.14): alignment score unit tests ─────────────────────────
+    // ── VRASection (T.7): alignment score unit tests ─────────────────────────
 
     /// Helper: compute the VRASection alignment score the same way run_geosection does.
     /// alignment = |MVAP_frac(left) - MVAP_frac(right)| normalised to [0, 1]
@@ -10086,7 +10205,7 @@ mod tests {
         // Skipped unless --include-ignored is passed.
     }
 
-    // ── Group: BFS Region-Growing (B.23) ─────────────────────────────────────
+    // ── Group: BFS Region-Growing (T.12) ─────────────────────────────────────
 
     // L0: 4x4 grid → valid 2-way split (all tracts assigned, two non-empty districts).
     #[test]
@@ -10396,7 +10515,7 @@ mod tests {
     /// L0: `--partition-mode ilp` parses to PartitionMode::Ilp.
     #[test]
     fn ilp_structure_mode_parses() {
-        use crate::args::PartitionMode;
+        use crate::args::{IlpFallback, IlpMethod, PartitionMode};
         use clap::ValueEnum;
         let parsed =
             PartitionMode::from_str("ilp", true).expect("'ilp' must be a valid PartitionMode");
@@ -10404,6 +10523,26 @@ mod tests {
             parsed,
             PartitionMode::Ilp,
             "parsed PartitionMode must be Ilp"
+        );
+        assert_eq!(
+            IlpMethod::from_str("formulation-only", true).unwrap(),
+            IlpMethod::FormulationOnly
+        );
+        assert_eq!(
+            IlpMethod::from_str("branch-and-cut", true).unwrap(),
+            IlpMethod::BranchAndCut
+        );
+        assert_eq!(
+            IlpMethod::from_str("iterative-separation", true).unwrap(),
+            IlpMethod::IterativeSeparation
+        );
+        assert_eq!(
+            IlpFallback::from_str("metis", true).unwrap(),
+            IlpFallback::Metis
+        );
+        assert_eq!(
+            IlpFallback::from_str("error", true).unwrap(),
+            IlpFallback::Error
         );
     }
 
@@ -10414,10 +10553,16 @@ mod tests {
         let (adj, pop) = small_grid(4, 4); // 16 tracts
         let tracts: HashSet<usize> = (0..16).collect();
         let result = split_subgraph_ilp(
-            &adj, &pop, &tracts, 1.05, // balance_tolerance
+            &adj,
+            &pop,
+            &tracts,
+            1.05, // balance_tolerance
+            crate::args::IlpMethod::FormulationOnly,
+            crate::args::IlpFallback::Metis,
             60,   // time_limit_secs
             0.01, // optimality_gap
             5,    // max_tracts: 16 > 5 => guard fires
+            None,
         );
         let (left, right) = result.expect("size-guard fallback must not fail");
         assert!(
@@ -10448,10 +10593,16 @@ mod tests {
         let pop = vec![100i64; 4];
         let tracts: HashSet<usize> = (0..4).collect();
         let result = split_subgraph_ilp(
-            &adj, &pop, &tracts, 1.05, // balance_tolerance
+            &adj,
+            &pop,
+            &tracts,
+            1.05, // balance_tolerance
+            crate::args::IlpMethod::FormulationOnly,
+            crate::args::IlpFallback::Metis,
             300,  // time_limit_secs
             0.01, // optimality_gap
             500,  // max_tracts (no guard)
+            None,
         );
         let (left, right) = result.expect("ilp phase1 must not fail");
         assert!(!left.is_empty(), "left partition must be non-empty");
@@ -10460,6 +10611,48 @@ mod tests {
         for t in &left {
             assert!(!right.contains(t), "partitions must be disjoint");
         }
+    }
+
+    #[test]
+    fn ilp_fallback_error_rejects_size_guard() {
+        let (adj, pop) = small_grid(4, 4);
+        let tracts: HashSet<usize> = (0..16).collect();
+        let err = split_subgraph_ilp(
+            &adj,
+            &pop,
+            &tracts,
+            1.05,
+            crate::args::IlpMethod::FormulationOnly,
+            crate::args::IlpFallback::Error,
+            60,
+            0.01,
+            5,
+            None,
+        )
+        .expect_err("fallback=error must reject size-guard fallback");
+        assert!(err.contains("--ilp-fallback=error"));
+    }
+
+    #[test]
+    fn ilp_fallback_error_rejects_missing_solver_plan() {
+        let adj = vec![vec![1usize], vec![0, 2], vec![1usize]];
+        let pop = vec![100i64; 3];
+        let tracts: HashSet<usize> = (0..3).collect();
+        let err = split_subgraph_ilp(
+            &adj,
+            &pop,
+            &tracts,
+            0.005,
+            crate::args::IlpMethod::BranchAndCut,
+            crate::args::IlpFallback::Error,
+            300,
+            0.01,
+            500,
+            None,
+        )
+        .expect_err("fallback=error must reject missing solver plan");
+        assert!(err.contains("no solver plan returned"));
+        assert!(err.contains("--ilp-fallback=error"));
     }
 
     /// L0: ILP formulation variable counts for 4-node path graph, k=2.
@@ -10491,11 +10684,17 @@ mod tests {
         let (adj, pop) = small_grid(4, 4); // 16 tracts
         let ew: HashMap<(usize, usize), f64> = HashMap::new();
         let result = run_all_splits_ilp(
-            &adj, &pop, &ew, 2,    // num_districts
+            &adj,
+            &pop,
+            &ew,
+            2,    // num_districts
             0.05, // balance_tolerance
+            crate::args::IlpMethod::FormulationOnly,
+            crate::args::IlpFallback::Metis,
             60,   // time_limit_secs
             0.01, // optimality_gap
             500,  // max_tracts (no size guard)
+            None,
         );
         let assignments = result.expect("run_all_splits_ilp must succeed on 4x4 grid");
         assert_eq!(assignments.len(), 16, "all 16 tracts must be assigned");
@@ -10503,7 +10702,76 @@ mod tests {
         assert_eq!(districts.len(), 2, "must produce exactly 2 districts");
     }
 
-    // ── Group: Moving-Knife Algorithm (B.25) ─────────────────────────────────
+    #[test]
+    fn run_all_splits_ilp_writes_solve_report() {
+        let (adj, pop) = small_grid(2, 2);
+        let ew: HashMap<(usize, usize), f64> = HashMap::new();
+        let tmp = tempfile::TempDir::new().unwrap();
+        let result = run_all_splits_ilp(
+            &adj,
+            &pop,
+            &ew,
+            2,
+            0.05,
+            crate::args::IlpMethod::BranchAndCut,
+            crate::args::IlpFallback::Metis,
+            60,
+            0.01,
+            500,
+            Some(tmp.path()),
+        );
+        result.expect("ilp run must succeed");
+        let report_path = tmp.path().join("depth_00").join("node_root.json");
+        let lp_path = tmp.path().join("depth_00").join("node_root.lp");
+        let summary_path = tmp.path().join("audit-summary.json");
+        let json = std::fs::read_to_string(&report_path).expect("read ilp solve report");
+        let value: serde_json::Value = serde_json::from_str(&json).expect("parse report json");
+        assert_eq!(value["schema_version"], "ilp-solve-report-v1");
+        assert_eq!(value["model_artifact"]["format"], "cplex-lp");
+        assert_eq!(value["model_artifact"]["path"], "node_root.lp");
+        assert_eq!(
+            value["model_artifact"]["sha256"].as_str().unwrap().len(),
+            64
+        );
+        assert_eq!(value["audit_summary"]["outcome"], "exact-plan");
+        assert_eq!(value["audit_summary"]["proof_status"], "proved-optimal");
+        assert_eq!(value["audit_summary"]["has_model_artifact"], true);
+        assert_eq!(value["audit_summary"]["fallback_required"], false);
+        assert_eq!(value["result"]["status"]["status"], "optimal");
+        assert_eq!(value["result"]["optimal_ec"], 2);
+        assert_eq!(value["result"]["branch_and_cut"]["cut_count"], 0);
+        assert_eq!(
+            value["result"]["branch_and_cut"]["exact_search"]["search_strategy"],
+            "k2-branch-and-bound"
+        );
+        assert!(
+            value["result"]["branch_and_cut"]["exact_search"]["nodes_visited"]
+                .as_u64()
+                .unwrap()
+                > 0
+        );
+
+        let lp = std::fs::read_to_string(&lp_path).expect("read ilp master LP");
+        assert!(lp.contains("BISECT U.16 branch-and-cut master LP"));
+        assert!(lp.contains("Minimize"));
+        assert!(lp.contains("Binary"));
+
+        let verified = bisect_ilp::verify_model_artifact_for_report(&report_path)
+            .expect("solve report model artifact should verify");
+        assert_eq!(verified.format, "cplex-lp");
+        assert_eq!(verified.path, lp_path);
+
+        let summary_json = std::fs::read_to_string(&summary_path).expect("read ilp audit summary");
+        let summary: serde_json::Value =
+            serde_json::from_str(&summary_json).expect("parse ilp audit summary");
+        assert_eq!(summary["checked"], 1);
+        assert_eq!(summary["passed"], 1);
+        assert_eq!(summary["failed"], 0);
+        assert_eq!(summary["outcomes"]["exact-plan"], 1);
+        assert_eq!(summary["proof_statuses"]["proved-optimal"], 1);
+    }
+
+    // ── Group: Moving-Knife Algorithm (T.13) ─────────────────────────────────
 
     /// Helper: build synthetic (lon, lat) centroids on a 4x4 grid spaced 0.01° apart.
     /// Global index = row * cols + col, origin at (-96.05, 37.45).

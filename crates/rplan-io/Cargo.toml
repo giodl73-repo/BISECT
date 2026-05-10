@@ -1,13 +1,13 @@
 [package]
-name = "bisect-ilp"
+name = "rplan-io"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
-description = "Exact redistricting via Integer Linear Programming — generates MPS/LP files (U.6)"
+description = "RPLAN v0.2/v0.1 read-write and context serialization"
 
 [dependencies]
-sha2.workspace = true
+rplan-core = { path = "../rplan-core" }
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true

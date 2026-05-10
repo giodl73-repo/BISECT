@@ -8,6 +8,7 @@ description = "RPLAN format, PlanManifest, validate/migrate, report/export/impor
 
 [dependencies]
 bisect-core = { path = "../bisect-core" }
+rplan-io = { path = "../rplan-io" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror.workspace = true

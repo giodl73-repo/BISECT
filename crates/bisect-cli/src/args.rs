@@ -57,28 +57,28 @@ pub enum PartitionMode {
     /// Polsby-Popper. Requires --compact-seeds N.
     #[value(name = "compact-bisect")]
     CompactBisect,
-    /// GeoSection (B.8): ratio-optimal first-level bisection.
+    /// GeoSection (T.1): ratio-optimal first-level bisection.
     /// Tries all split ratios (1:k-1 through k/2:k/2) at the first level,
     /// each with --geosection-seeds seeds. Selects the ratio with the minimum
     /// edge-cut. Subsequent levels use standard bisection.
     #[value(name = "geosection")]
     GeoSection,
-    /// AreaSection (B.9): dual population+area constraint bisection.
+    /// AreaSection (T.2): dual population+area constraint bisection.
     /// ncon=2: tight population balance AND 50/50 area (±10% swing allowed).
     #[value(name = "areasection")]
     AreaSection,
-    /// ProportionalSection (B.12): ncon=2 [pop, D_votes] bisection for partisan proportionality.
+    /// ProportionalSection (T.5): ncon=2 [pop, D_votes] bisection for partisan proportionality.
     /// Uses HH seat allocation to set tpwgts: right (R-bloc) gets minimum D votes for 50% D.
     /// Requires presidential_by_tract.csv in data/{year}/elections/.
     /// Use --eta to control D_votes constraint softness (1.05=tight, 1.20=loose).
     #[value(name = "proportional-section")]
     ProportionalSection,
-    /// ApportionRegions (B.11): hierarchical k-way partition driven by prime
+    /// ApportionRegions (T.4): hierarchical k-way partition driven by prime
     /// factorization of the seat count. Geographic completion of Huntington-Hill.
     /// Requires --compact-seeds N (seeds per level, default 1).
     #[value(name = "apportion-regions")]
     ApportionRegions,
-    /// VRASection (B.14): GeoSection + geographic alignment score.
+    /// VRASection (T.7): GeoSection + geographic alignment score.
     /// At the first bisection level, ratio selection is modified by how well
     /// minority VAP concentrates on one side (Gingles Prong 1 alignment).
     /// Uses only spatial minority-VAP distribution — no partisan data.
@@ -95,10 +95,10 @@ pub enum PartitionMode {
     SimulatedAnnealing,
     /// BFS Region-Growing — greedy geographic district packing. No hyperparameters.
     /// Seeds placed by maximum BFS spread; tracts assigned to most population-deficient district.
-    /// Inherits balance_tolerance from standard flags. (B.23)
+    /// Inherits balance_tolerance from standard flags. (T.12)
     #[value(name = "bfs-growth")]
     BfsGrowth,
-    /// Centroidal Voronoi Districts — geometric packing via graph-distance Voronoi (B.22).
+    /// Centroidal Voronoi Districts — geometric packing via graph-distance Voronoi (T.10).
     /// Seeds placed by k-farthest spread, iteratively moved to medoid of each Voronoi region.
     /// Use --cvd-iters to control max iterations (default: 20). No METIS call.
     #[value(name = "centroidal-voronoi")]
@@ -106,12 +106,54 @@ pub enum PartitionMode {
     /// ILP exact redistricting — provably optimal for small instances (n <= 500).
     #[value(name = "ilp")]
     Ilp,
-    /// Moving-Knife Algorithm — maximises Reock compactness via orientation sweep (B.25).
+    /// Moving-Knife Algorithm — maximises Reock compactness via orientation sweep (T.13).
     /// Tests n_orientations candidate sweep directions; picks angle that maximises
     /// min(Reock_left, Reock_right). Requires centroid data (bisect fetch --type centroids).
     /// Use --mka-orientations N (default 180) and --mka-metric [reock|polsby] (default reock).
     #[value(name = "moving-knife")]
     MovingKnife,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum IlpMethod {
+    /// Build and validate the ILP formulation, then fall back to METIS.
+    #[value(name = "formulation-only")]
+    FormulationOnly,
+    /// Branch-and-cut with lazy connectivity callbacks.
+    #[value(name = "branch-and-cut")]
+    BranchAndCut,
+    /// Branch-and-cut simulated by iterative separation rounds.
+    #[value(name = "iterative-separation")]
+    IterativeSeparation,
+}
+
+impl std::fmt::Display for IlpMethod {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::FormulationOnly => write!(f, "formulation-only"),
+            Self::BranchAndCut => write!(f, "branch-and-cut"),
+            Self::IterativeSeparation => write!(f, "iterative-separation"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum IlpFallback {
+    /// Fall back to METIS when ILP cannot produce a plan.
+    #[value(name = "metis")]
+    Metis,
+    /// Return an error instead of falling back when ILP cannot produce a plan.
+    #[value(name = "error")]
+    Error,
+}
+
+impl std::fmt::Display for IlpFallback {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Metis => write!(f, "metis"),
+            Self::Error => write!(f, "error"),
+        }
+    }
 }
 
 impl std::fmt::Display for PartitionMode {
@@ -284,6 +326,8 @@ pub enum Commands {
     Doctor(DoctorArgs),
     /// Reproduce a plan from its manifest.json and verify it matches the original
     Verify(VerifyArgs),
+    /// Verify ILP solve-report model artifacts and hashes
+    IlpAudit(IlpAuditArgs),
     /// Run N redistricting seeds and keep top-K plans by a metric
     Sweep(SweepArgs),
     /// Launch the interactive terminal UI
@@ -319,7 +363,7 @@ pub enum Commands {
     /// Currently supports: --method smc (Sequential Monte Carlo, G.7).
     /// Output: NDJSON with weighted plans + audit metadata.
     Ensemble(EnsembleArgs),
-    /// Generate a Pareto-optimal redistricting ensemble (B.26 spec).
+    /// Generate a Pareto-optimal redistricting ensemble (U.7 spec).
     /// Outputs NDJSON with all Pareto-optimal plans and objective values.
     Pareto(ParetoArgs),
 }
@@ -683,7 +727,7 @@ pub struct EnsembleArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `bisect pareto` — Pareto-optimal redistricting ensemble (B.26)
+// `bisect pareto` — Pareto-optimal redistricting ensemble (U.7)
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Parser)]
@@ -1270,20 +1314,20 @@ pub enum StructureMode {
     /// Ratio-optimal + VRA minority alignment score (VRASection)
     #[value(name = "ratio-optimal-vra")]
     RatioOptimalVra,
-    /// Prime-factorisation tree — ApportionRegions/Huntington-Hill extension (B.11)
+    /// Prime-factorisation tree — ApportionRegions/Huntington-Hill extension (T.4)
     #[value(name = "prime-factor")]
     PrimeFactor,
     /// Compact-by-Polsby-Popper greedy level selection (CompactBisect B.7)
     #[value(name = "compact-polsby")]
     CompactPolsby,
-    /// BFS Region-Growing — greedy geographic packing from k-farthest seeds (B.23)
+    /// BFS Region-Growing — greedy geographic packing from k-farthest seeds (T.12)
     #[value(name = "bfs-growth")]
     BfsGrowth,
-    /// Centroidal Voronoi Districts — graph-distance Voronoi iteration (B.22)
+    /// Centroidal Voronoi Districts — graph-distance Voronoi iteration (T.10)
     /// --structure centroidal-voronoi --cvd-iters 20
     #[value(name = "centroidal-voronoi")]
     CentroidalVoronoi,
-    /// Moving-Knife Algorithm — Reock-maximising orientation sweep (B.25).
+    /// Moving-Knife Algorithm — Reock-maximising orientation sweep (T.13).
     /// --structure moving-knife --mka-orientations 180 --mka-metric reock
     #[value(name = "moving-knife")]
     MovingKnife,
@@ -1308,7 +1352,7 @@ pub enum WeightMode {
     /// Geographic + D_votes constraint (ProportionalSection, requires partisan-shares)
     #[value(name = "proportional")]
     Proportional,
-    /// Economic character similarity weights (B.27/M.1). Requires LODES WAC data.
+    /// Economic character similarity weights (M.9/M.1). Requires LODES WAC data.
     /// Download: bisect fetch --type lodes --year 2020 --states <STATE>
     #[value(name = "economic-character")]
     EconomicCharacter,
@@ -1334,12 +1378,12 @@ pub enum SearchMode {
     Convergence,
     /// Run --seeds T plans, sort by edge cut, return plan at rank floor(--percentile * T).
     /// p=0.0 → minimum (like convergence), p=0.5 → median, p=1.0 → maximum.
-    /// Enables statutory choice of legal posture (H.0).
+    /// Enables statutory choice of legal posture (U.8).
     #[value(name = "percentile")]
     Percentile,
     /// At each bisection node run a local --ensemble-steps-step 2-way ReCom ensemble,
     /// pick the bisection at --percentile of the cut distribution.
-    /// Compatible with all structure modes; eliminates prime-k bipartition failures (H.1).
+    /// Compatible with all structure modes; eliminates prime-k bipartition failures (U.9).
     #[value(name = "bisection-ensemble")]
     BisectionEnsemble,
     /// Short-Burst: run --n-bursts short ReCom chains of --burst-length steps.
@@ -1374,7 +1418,7 @@ pub enum SearchMode {
     MergeSplit,
     /// Adaptive Multi-scale MCMC — Robbins-Monro self-tuning coarse-move probability.
     /// Requires block-group adjacency. Use --multiscale-steps N, --ms-target-accept F,
-    /// --ms-adapt-interval N (defaults: 2000, 0.30, 50). (B.21 spec accepted 3.75/4)
+    /// --ms-adapt-interval N (defaults: 2000, 0.30, 50). (U.5 spec accepted 3.75/4)
     #[value(name = "multiscale-adaptive")]
     MultiScaleAdaptive,
     /// Parallel Tempering: N replicas at geometric tolerance ladder. --pt-replicas, --pt-swap-interval.
@@ -1510,13 +1554,13 @@ pub struct StateArgs {
     #[arg(long, default_value = "0")]
     pub compact_seeds: usize,
 
-    /// GeoSection (B.8): seeds per ratio at the first bisection level.
+    /// GeoSection (T.1): seeds per ratio at the first bisection level.
     /// Requires --partition-mode geosection. Tries all ratios 1:k-1 through
     /// k/2:k/2 with this many seeds each; picks minimum-EC ratio. Typical: 50-200.
     #[arg(long, default_value = "0")]
     pub geosection_seeds: usize,
 
-    /// AreaSection (B.9): area imbalance tolerance multiplier (default: 1.10 = ±10%).
+    /// AreaSection (T.2): area imbalance tolerance multiplier (default: 1.10 = ±10%).
     /// ubvec[1] for the land-area balance constraint. Values <1.05 may cause
     /// convergence failures for concentrated states; >1.25 approaches GeoSection.
     #[arg(long, default_value_t = 1.10)]
@@ -1531,12 +1575,12 @@ pub struct StateArgs {
     #[arg(long, value_enum, default_value = "ratio-optimal")]
     pub area_section_init: AreaSectionInitArg,
 
-    /// ProportionalSection (B.12): D_votes constraint softness (ubvec[1]).
+    /// ProportionalSection (T.5): D_votes constraint softness (ubvec[1]).
     /// 1.05 = tight partisan constraint; 1.20 = loose. Default 1.10.
     #[arg(long, default_value_t = 1.10)]
     pub eta: f64,
 
-    /// Governmental subdivision stickiness — county level (B.10).
+    /// Governmental subdivision stickiness — county level (T.3).
     /// Makes intra-county edges more expensive to cut (alpha=0 disables).
     /// alpha=1 doubles the cost of cross-county cuts; alpha=5 = strong preference.
     #[arg(long, default_value_t = 0.0)]
@@ -1713,7 +1757,7 @@ pub struct StateArgs {
     #[arg(long, default_value_t = false)]
     pub time_partition: bool,
 
-    /// VRASection (B.14): alignment score weight.
+    /// VRASection (T.7): alignment score weight.
     /// Controls the trade-off between edge-cut compactness (60%) and geographic
     /// minority-VAP alignment (40%). Range [0.0, 1.0]. Default 0.40.
     /// Requires --partition-mode vra-section.
@@ -1774,6 +1818,16 @@ pub struct StateArgs {
     pub cvd_metric: String,
 
     // ── ILP parameters ────────────────────────────────────────────────────────
+    /// ILP method (default: formulation-only).
+    /// branch-and-cut and iterative-separation currently emit U.16 certificates
+    /// but still fall back until a concrete solver backend is enabled.
+    #[arg(long, value_enum, default_value_t = IlpMethod::FormulationOnly)]
+    pub ilp_method: IlpMethod,
+
+    /// ILP fallback when no solver plan is available (default: metis).
+    #[arg(long, value_enum, default_value_t = IlpFallback::Metis)]
+    pub ilp_fallback: IlpFallback,
+
     /// ILP time limit in seconds (default: 300).
     #[arg(long, default_value_t = 300u64)]
     pub ilp_time_limit: u64,
@@ -1895,7 +1949,7 @@ pub struct StatesArgs {
     #[arg(long)]
     pub balance_tolerance: Option<f64>,
 
-    /// County stickiness alpha for subdivision-respecting redistricting (B.10).
+    /// County stickiness alpha for subdivision-respecting redistricting (T.3).
     /// Default 0 = disabled. 2.0 = statutory default for the official proposal.
     #[arg(long, default_value_t = 0.0)]
     pub alpha_county: f64,
@@ -2001,6 +2055,14 @@ pub struct StatesArgs {
     pub cvd_metric: String,
 
     // ── ILP parameters ────────────────────────────────────────────────────────
+    /// ILP method (default: formulation-only).
+    #[arg(long, value_enum, default_value_t = IlpMethod::FormulationOnly)]
+    pub ilp_method: IlpMethod,
+
+    /// ILP fallback when no solver plan is available (default: metis).
+    #[arg(long, value_enum, default_value_t = IlpFallback::Metis)]
+    pub ilp_fallback: IlpFallback,
+
     /// ILP time limit in seconds (default: 300).
     #[arg(long, default_value_t = 300u64)]
     pub ilp_time_limit: u64,
@@ -2665,6 +2727,42 @@ mod tests {
         assert_eq!(args.label, Some("wa_house_v1".to_string()));
     }
 
+    #[test]
+    fn test_ilp_audit_args_parsed() {
+        let args = IlpAuditArgs::parse_from([
+            "ilp-audit",
+            "--dir",
+            "intermediate/ilp_solve_reports",
+            "--json",
+            "--out",
+            "intermediate/ilp_solve_reports/audit-summary.json",
+            "--verify-summary",
+            "intermediate/ilp_solve_reports/audit-summary.json",
+            "node_root.json",
+        ]);
+        assert_eq!(
+            args.dir.as_deref(),
+            Some(std::path::Path::new("intermediate/ilp_solve_reports"))
+        );
+        assert_eq!(
+            args.reports,
+            vec![std::path::PathBuf::from("node_root.json")]
+        );
+        assert!(args.json);
+        assert_eq!(
+            args.out.as_deref(),
+            Some(std::path::Path::new(
+                "intermediate/ilp_solve_reports/audit-summary.json"
+            ))
+        );
+        assert_eq!(
+            args.verify_summary.as_deref(),
+            Some(std::path::Path::new(
+                "intermediate/ilp_solve_reports/audit-summary.json"
+            ))
+        );
+    }
+
     // ── Doctor --label flag (plan diagnosis mode) ─────────────────────────────
 
     #[test]
@@ -2949,6 +3047,30 @@ pub struct VerifyArgs {
 }
 
 // ---------------------------------------------------------------------------
+// `BISECT ilp-audit` — verify ILP solve report model artifacts
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true)]
+pub struct IlpAuditArgs {
+    /// One or more ilp-solve-report-v1 JSON files to verify
+    #[arg(value_name = "REPORT")]
+    pub reports: Vec<std::path::PathBuf>,
+    /// Recursively verify JSON reports under this directory
+    #[arg(long, value_name = "DIR")]
+    pub dir: Option<std::path::PathBuf>,
+    /// Emit a machine-readable JSON summary
+    #[arg(long)]
+    pub json: bool,
+    /// Write the machine-readable audit summary to this path
+    #[arg(long, value_name = "PATH")]
+    pub out: Option<std::path::PathBuf>,
+    /// Verify an existing audit summary matches the current per-node reports
+    #[arg(long, value_name = "PATH")]
+    pub verify_summary: Option<std::path::PathBuf>,
+}
+
+// ---------------------------------------------------------------------------
 // `BISECT tui` — interactive terminal UI
 // ---------------------------------------------------------------------------
 
@@ -3092,7 +3214,7 @@ pub enum DataType {
     #[value(name = "elections")]
     Elections,
     /// LODES WAC (Workplace Area Characteristics) — jobs by NAICS sector per census block.
-    /// Used for M.1 economic character edge weights and B.27.
+    /// Used for M.1 economic character edge weights and M.9.
     /// Source: Census Bureau LEHD program, https://lehd.ces.census.gov/data/lodes/
     #[value(name = "lodes")]
     Lodes,

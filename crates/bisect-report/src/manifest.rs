@@ -119,6 +119,27 @@ pub struct PlanManifest {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub edge_cut: Option<f64>,
 
+    // ── ILP / exact optimization audit fields ────────────────────────────────
+    /// ILP method requested by the runner ("formulation-only", "branch-and-cut",
+    /// or "iterative-separation"). Absent for non-ILP plans.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ilp_method: Option<String>,
+    /// ILP fallback policy requested by the runner ("metis" or "error").
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ilp_fallback: Option<String>,
+    /// Relative directory containing per-node `ilp-solve-report-v1` JSON files.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ilp_solve_report_dir: Option<String>,
+    /// Number of per-node ILP solve reports written for this run.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ilp_solve_report_count: Option<usize>,
+    /// Relative path to the aggregate ILP audit summary JSON artifact.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ilp_audit_summary_path: Option<String>,
+    /// SHA-256 of the aggregate ILP audit summary JSON artifact.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ilp_audit_summary_sha256: Option<String>,
+
     // ── Flip search audit fields ──────────────────────────────────────────────
     /// Search mode string when Flip was used (value: "flip").
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -198,6 +219,32 @@ pub struct PlanManifest {
     /// Filename of the geoids.json file for independent verification
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub index_to_geoid_file: Option<String>,
+
+    // ── RPLAN audit-certificate fields ──────────────────────────────────────
+    /// Relative path to the emitted RPLAN v0.2 plan assignment artifact.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rplan_path: Option<String>,
+    /// Relative path to the emitted RPLAN context artifact used for audit.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rctx_path: Option<String>,
+    /// Relative path to the emitted audit certificate JSON.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub audit_certificate_path: Option<String>,
+    /// SHA-256 of the full audit certificate document as written.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub audit_certificate_sha256: Option<String>,
+    /// Stable canonical certificate content hash.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub audit_certificate_content_hash: Option<String>,
+    /// Audit result: pass, fail, or pass-with-warnings.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub audit_result: Option<String>,
+    /// Legal profile id used to produce the certificate.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub legal_profile_id: Option<String>,
+    /// Context hash used to audit the final plan.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub context_hash: Option<String>,
 }
 
 fn default_seats_per_district() -> usize {
@@ -1143,6 +1190,82 @@ mod tests {
         assert!((parsed.split_epsilon.unwrap() - 0.05).abs() < 1e-9);
         assert!((parsed.area_swing.unwrap() - 1.15).abs() < 1e-9);
         assert!((parsed.directional_lambda - 0.3).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_manifest_ilp_report_fields_round_trip() {
+        let tmp = TempDir::new().unwrap();
+        let manifest = PlanManifest {
+            partition_mode: "ilp".to_string(),
+            ilp_method: Some("branch-and-cut".to_string()),
+            ilp_fallback: Some("metis".to_string()),
+            ilp_solve_report_dir: Some("intermediate/ilp_solve_reports".to_string()),
+            ilp_solve_report_count: Some(3),
+            ilp_audit_summary_path: Some(
+                "intermediate/ilp_solve_reports/audit-summary.json".to_string(),
+            ),
+            ilp_audit_summary_sha256: Some("a".repeat(64)),
+            ..make_test_manifest("50")
+        };
+        write_manifest_atomic(tmp.path(), &manifest).unwrap();
+        let bytes = std::fs::read(tmp.path().join("manifest.json")).unwrap();
+        let parsed: PlanManifest = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(parsed.ilp_method.as_deref(), Some("branch-and-cut"));
+        assert_eq!(parsed.ilp_fallback.as_deref(), Some("metis"));
+        assert_eq!(
+            parsed.ilp_solve_report_dir.as_deref(),
+            Some("intermediate/ilp_solve_reports")
+        );
+        assert_eq!(parsed.ilp_solve_report_count, Some(3));
+        assert_eq!(
+            parsed.ilp_audit_summary_path.as_deref(),
+            Some("intermediate/ilp_solve_reports/audit-summary.json")
+        );
+        let expected_summary_hash = "a".repeat(64);
+        assert_eq!(
+            parsed.ilp_audit_summary_sha256.as_deref(),
+            Some(expected_summary_hash.as_str())
+        );
+    }
+
+    #[test]
+    fn test_manifest_rplan_audit_fields_round_trip() {
+        let tmp = TempDir::new().unwrap();
+        let manifest = PlanManifest {
+            rplan_path: Some("plan.rplan".to_string()),
+            rctx_path: Some("context.rctx".to_string()),
+            audit_certificate_path: Some("audit-certificate.json".to_string()),
+            audit_certificate_sha256: Some("a".repeat(64)),
+            audit_certificate_content_hash: Some("sha256:certificate".to_string()),
+            audit_result: Some("pass".to_string()),
+            legal_profile_id: Some("BISECT_RUNNER_PROFILE_V1".to_string()),
+            context_hash: Some("sha256:context".to_string()),
+            ..make_test_manifest("50")
+        };
+        write_manifest_atomic(tmp.path(), &manifest).unwrap();
+        let bytes = std::fs::read(tmp.path().join("manifest.json")).unwrap();
+        let parsed: PlanManifest = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(parsed.rplan_path.as_deref(), Some("plan.rplan"));
+        assert_eq!(parsed.rctx_path.as_deref(), Some("context.rctx"));
+        assert_eq!(
+            parsed.audit_certificate_path.as_deref(),
+            Some("audit-certificate.json")
+        );
+        let expected_sha256 = "a".repeat(64);
+        assert_eq!(
+            parsed.audit_certificate_sha256.as_deref(),
+            Some(expected_sha256.as_str())
+        );
+        assert_eq!(
+            parsed.audit_certificate_content_hash.as_deref(),
+            Some("sha256:certificate")
+        );
+        assert_eq!(parsed.audit_result.as_deref(), Some("pass"));
+        assert_eq!(
+            parsed.legal_profile_id.as_deref(),
+            Some("BISECT_RUNNER_PROFILE_V1")
+        );
+        assert_eq!(parsed.context_hash.as_deref(), Some("sha256:context"));
     }
 
     #[test]
