@@ -8,6 +8,23 @@ fn audit_fixture_path(name: &str) -> String {
         .into_owned()
 }
 
+fn run_grid3x3_valid_with_context(context_path: &str) -> std::process::Output {
+    Command::new(env!("CARGO_BIN_EXE_rplan"))
+        .args([
+            "audit",
+            "--plan",
+            &audit_fixture_path("grid3x3-valid.rplan"),
+            "--context",
+            context_path,
+            "--constraints",
+            "plan-shape,population,contiguity",
+            "--fixed-generated-at",
+            "2026-05-10T00:00:00Z",
+        ])
+        .output()
+        .unwrap()
+}
+
 fn path_context() -> &'static str {
     include_str!("../../rplan-io/src/fixtures/path5.rctx")
 }
@@ -232,4 +249,82 @@ fn grid3x3_missing_contiguity_audit_matches_golden_certificate() {
             .trim()
     );
     assert!(String::from_utf8_lossy(&output.stderr).contains("audit failed"));
+}
+
+#[test]
+fn grid3x3_audit_context_hash_changes_across_contexts() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let alt_context_path = tmp.path().join("grid3x3-alt.rctx");
+    let mut alt_context =
+        rplan_io::read_rctx_str(include_str!("../../rplan-audit/fixtures/grid3x3.rctx")).unwrap();
+    alt_context
+        .source_hashes
+        .entries
+        .insert("fixture".to_string(), "sha256:grid3x3-alt".to_string());
+    std::fs::write(
+        &alt_context_path,
+        rplan_io::write_rctx_string(&alt_context).unwrap(),
+    )
+    .unwrap();
+
+    let original_output = run_grid3x3_valid_with_context(&audit_fixture_path("grid3x3.rctx"));
+    let alt_output = run_grid3x3_valid_with_context(alt_context_path.to_str().unwrap());
+
+    assert!(
+        original_output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&original_output.stderr)
+    );
+    assert!(
+        alt_output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&alt_output.stderr)
+    );
+
+    let original: serde_json::Value =
+        serde_json::from_slice(&original_output.stdout).expect("original certificate JSON");
+    let alt: serde_json::Value =
+        serde_json::from_slice(&alt_output.stdout).expect("alternate certificate JSON");
+    assert_eq!(original["plan_hash"], alt["plan_hash"]);
+    assert_ne!(original["context_hash"], alt["context_hash"]);
+    assert_ne!(original["content_hash"], alt["content_hash"]);
+}
+
+#[test]
+fn malformed_plan_exits_two() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let plan_path = tmp.path().join("bad.rplan");
+    std::fs::write(&plan_path, "{ not-json").unwrap();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_rplan"))
+        .args([
+            "audit",
+            "--plan",
+            plan_path.to_str().unwrap(),
+            "--constraints",
+            "plan-shape",
+        ])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(2));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("parsing plan"));
+}
+
+#[test]
+fn fixed_generated_at_output_is_stable_across_identical_runs() {
+    let first = run_grid3x3_valid_with_context(&audit_fixture_path("grid3x3.rctx"));
+    let second = run_grid3x3_valid_with_context(&audit_fixture_path("grid3x3.rctx"));
+
+    assert!(
+        first.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&first.stderr)
+    );
+    assert!(
+        second.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&second.stderr)
+    );
+    assert_eq!(first.stdout, second.stdout);
 }
