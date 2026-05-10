@@ -638,6 +638,22 @@ mod tests {
         }
     }
 
+    fn write_full_audit_package_fixture(plan_root: &Path) -> PlanManifest {
+        let report_dir = plan_root.join("intermediate").join("ilp_solve_reports");
+        std::fs::create_dir_all(&report_dir).unwrap();
+        write_ilp_report(&report_dir, "node_root", b"lp text", sha256(b"lp text"));
+        let summary_path = report_dir.join("audit-summary.json");
+        crate::ilp_audit::write_ilp_audit_summary_for_dir(&report_dir, &summary_path).unwrap();
+        let summary_sha = bisect_report::sha256_file(&summary_path).unwrap();
+
+        let mut manifest = write_rplan_audit_fixture(plan_root);
+        manifest.ilp_solve_report_dir = Some("intermediate/ilp_solve_reports".to_string());
+        manifest.ilp_audit_summary_path =
+            Some("intermediate/ilp_solve_reports/audit-summary.json".to_string());
+        manifest.ilp_audit_summary_sha256 = Some(summary_sha);
+        manifest
+    }
+
     #[test]
     fn test_jaccard_identical_plans() {
         let mut a = HashMap::new();
@@ -1107,6 +1123,100 @@ mod tests {
         let err = verify_manifest_rplan_audit_certificate(&manifest, tmp.path())
             .expect_err("manifest certificate sha mismatch should fail verification");
         assert!(err.to_string().contains("SHA-256 mismatch"));
+    }
+
+    #[test]
+    fn test_l1_verify_full_audit_package_round_trip() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let manifest = write_full_audit_package_fixture(tmp.path());
+
+        verify_manifest_ilp_audit_summary(&manifest, tmp.path())
+            .expect("L1 package should verify ILP audit summary");
+        verify_manifest_rplan_audit_certificate(&manifest, tmp.path())
+            .expect("L1 package should verify RPLAN audit certificate");
+    }
+
+    #[test]
+    fn test_l1_verify_full_audit_package_rejects_tampered_artifacts() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let mut manifest = write_full_audit_package_fixture(tmp.path());
+
+        let summary_path = tmp
+            .path()
+            .join("intermediate")
+            .join("ilp_solve_reports")
+            .join("audit-summary.json");
+        std::fs::write(
+            &summary_path,
+            serde_json::json!({
+                "schema_version": 1,
+                "generated_at": "2026-05-10T00:00:00Z",
+                "report_count": 0,
+                "reports": []
+            })
+            .to_string(),
+        )
+        .unwrap();
+        manifest.ilp_audit_summary_sha256 =
+            Some(bisect_report::sha256_file(&summary_path).unwrap());
+
+        let ilp_err = verify_manifest_ilp_audit_summary(&manifest, tmp.path())
+            .expect_err("stale ILP audit summary should fail even with matching manifest sha");
+        assert!(
+            ilp_err
+                .to_string()
+                .contains("ILP audit summary verification failed"),
+            "{ilp_err}"
+        );
+
+        let mut manifest = write_full_audit_package_fixture(tmp.path());
+        let certificate_path = tmp.path().join("audit-certificate.json");
+        let mut certificate_json: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&certificate_path).unwrap()).unwrap();
+        certificate_json["content_hash"] = serde_json::Value::String("sha256:tampered".to_string());
+        std::fs::write(
+            &certificate_path,
+            serde_json::to_string_pretty(&certificate_json).unwrap(),
+        )
+        .unwrap();
+        manifest.audit_certificate_sha256 =
+            Some(bisect_report::sha256_file(&certificate_path).unwrap());
+
+        let certificate_err = verify_manifest_rplan_audit_certificate(&manifest, tmp.path())
+            .expect_err("tampered RPLAN audit certificate should fail with matching manifest sha");
+        assert!(
+            certificate_err
+                .to_string()
+                .contains("content hash mismatch")
+                || certificate_err
+                    .to_string()
+                    .contains("RPLAN audit certificate verification failed"),
+            "{certificate_err}"
+        );
+    }
+
+    #[test]
+    #[ignore = "L2: set BISECT_L2_AUDIT_PLAN_DIR to a real ILP/RPLAN audit package root"]
+    fn test_l2_verify_real_ilp_rplan_audit_package_from_env() {
+        let plan_root = std::env::var("BISECT_L2_AUDIT_PLAN_DIR")
+            .expect("set BISECT_L2_AUDIT_PLAN_DIR to a real plan package root");
+        let plan_root = PathBuf::from(plan_root);
+        let manifest_path = plan_root.join("manifest.json");
+        let manifest: PlanManifest =
+            serde_json::from_str(&std::fs::read_to_string(&manifest_path).unwrap()).unwrap();
+
+        assert!(
+            manifest.ilp_audit_summary_path.is_some(),
+            "L2 package must include an ILP audit summary"
+        );
+        assert!(
+            manifest.audit_certificate_path.is_some(),
+            "L2 package must include an RPLAN audit certificate"
+        );
+        verify_manifest_ilp_audit_summary(&manifest, &plan_root)
+            .expect("real ILP audit summary should verify");
+        verify_manifest_rplan_audit_certificate(&manifest, &plan_root)
+            .expect("real RPLAN audit certificate should verify");
     }
 
     // ── 15 additional L0 tests ───────────────────────────────────────────────
