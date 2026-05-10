@@ -106,17 +106,17 @@ impl SubGraph {
     }
 }
 
-impl From<&SubGraph> for metis_core::graph::CsrGraph {
+impl SubGraph {
     /// Convert a `SubGraph` (METIS FFI format with `i32` arrays) into the
-    /// `CsrGraph` type used by `BISECT-metis` (pure-Rust, `u32` xadj/adjncy).
-    fn from(sg: &SubGraph) -> Self {
-        metis_core::graph::CsrGraph {
-            xadj: sg.xadj.iter().map(|&x| x as u32).collect(),
-            adjncy: sg.adjncy.iter().map(|&x| x as u32).collect(),
-            ncon: 1,
-            vwgt: sg.vwgt.clone(),
-            adjwgt: sg.adjwgt.clone(),
-        }
+    /// validated `CsrGraph` type used by the pure-Rust `metis-core` backend.
+    pub fn to_metis_core_graph(&self) -> Result<metis_core::CsrGraph, metis_core::PartitionError> {
+        metis_core::CsrGraph::new(
+            self.xadj.iter().map(|&x| x as u32).collect(),
+            self.adjncy.iter().map(|&x| x as u32).collect(),
+            1,
+            self.vwgt.clone(),
+            self.adjwgt.clone(),
+        )
     }
 }
 

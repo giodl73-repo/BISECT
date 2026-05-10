@@ -21,10 +21,9 @@ use crate::graph::SubGraph;
 use std::collections::HashMap;
 use thiserror::Error;
 
-use metis_core::api::{
-    MetisParams, MetisPartitioner as RustMetisPartitioner, Partitioner as RustPartitioner,
+use metis_core::{
+    CsrGraph, MetisParams, MetisPartitioner as RustMetisPartitioner, Partitioner as RustPartitioner,
 };
-use metis_core::graph::CsrGraph;
 
 // ── MetisEngine ───────────────────────────────────────────────────────────────
 
@@ -138,9 +137,11 @@ pub trait Partitioner: Send + Sync {
 #[allow(dead_code)]
 fn compute_cut(g: &CsrGraph, assignment: &[u32]) -> usize {
     let mut cut = 0usize;
+    let xadj = g.xadj();
+    let adjncy = g.adjncy();
     for v in 0..g.n() {
-        for j in g.xadj[v] as usize..g.xadj[v + 1] as usize {
-            let u = g.adjncy[j] as usize;
+        for j in xadj[v] as usize..xadj[v + 1] as usize {
+            let u = adjncy[j] as usize;
             if assignment[v] != assignment[u] {
                 cut += 1;
             }
@@ -280,17 +281,16 @@ impl MetisPartitioner {
         k: u32,
         seed: Option<u64>,
     ) -> Result<Vec<u32>, SplitError> {
-        let params = MetisParams {
-            ufactor: self.ufactor(),
-            niter: self.niter as u32,
-            seed,
-            coarsen_to: 20,
-            tpwgts: None,
-            ..MetisParams::default()
-        };
+        let mut params = MetisParams::kway()
+            .with_ufactor(self.ufactor())
+            .with_niter(self.niter as u32)
+            .with_coarsen_to(20);
+        if let Some(seed) = seed {
+            params = params.with_seed(seed);
+        }
         RustMetisPartitioner::with_params(params, k)
             .split(g, k, seed)
-            .map(|r| r.assignment)
+            .map(|r| r.into_assignment())
             .map_err(|e| SplitError::Metis(format!("metis-core k={k}: {e}")))
     }
 
@@ -303,17 +303,16 @@ impl MetisPartitioner {
         fracs_u32: &[u32],
         seed: Option<u64>,
     ) -> Result<Vec<u32>, SplitError> {
-        let params = MetisParams {
-            ufactor: self.ufactor(),
-            niter: self.niter as u32,
-            seed,
-            coarsen_to: 20,
-            tpwgts: None,
-            ..MetisParams::default()
-        };
+        let mut params = MetisParams::kway()
+            .with_ufactor(self.ufactor())
+            .with_niter(self.niter as u32)
+            .with_coarsen_to(20);
+        if let Some(seed) = seed {
+            params = params.with_seed(seed);
+        }
         RustMetisPartitioner::with_params(params, k)
             .split_weighted(g, fracs_u32, seed)
-            .map(|r| r.assignment)
+            .map(|r| r.into_assignment())
             .map_err(|e| SplitError::Metis(format!("metis-core weighted k={k}: {e}")))
     }
 }
@@ -350,7 +349,9 @@ impl Partitioner for MetisPartitioner {
 
                     #[cfg(feature = "shadow-metis")]
                     {
-                        let g = CsrGraph::from(region);
+                        let g = region.to_metis_core_graph().map_err(|e| {
+                            SplitError::Metis(format!("metis-core graph conversion: {e}"))
+                        })?;
                         if let Ok(rust_assignment) = self.split_metis_core(&g, k, seed) {
                             let c_cut = compute_cut(&g, &assignment);
                             let rust_cut = compute_cut(&g, &rust_assignment);
@@ -369,7 +370,9 @@ impl Partitioner for MetisPartitioner {
             }
 
             MetisEngine::RedistMetis => {
-                let g = CsrGraph::from(region);
+                let g = region
+                    .to_metis_core_graph()
+                    .map_err(|e| SplitError::Metis(format!("metis-core graph conversion: {e}")))?;
                 self.split_metis_core(&g, k, seed)
             }
 
@@ -412,7 +415,9 @@ impl Partitioner for MetisPartitioner {
 
                     #[cfg(feature = "shadow-metis")]
                     {
-                        let g = CsrGraph::from(region);
+                        let g = region.to_metis_core_graph().map_err(|e| {
+                            SplitError::Metis(format!("metis-core graph conversion: {e}"))
+                        })?;
                         let fracs_u32: Vec<u32> = target_fracs
                             .iter()
                             .map(|&f| (f * 1000.0).round() as u32)
@@ -437,7 +442,9 @@ impl Partitioner for MetisPartitioner {
             }
 
             MetisEngine::RedistMetis => {
-                let g = CsrGraph::from(region);
+                let g = region
+                    .to_metis_core_graph()
+                    .map_err(|e| SplitError::Metis(format!("metis-core graph conversion: {e}")))?;
                 let fracs_u32: Vec<u32> = target_fracs
                     .iter()
                     .map(|&f| (f * 1000.0).round() as u32)

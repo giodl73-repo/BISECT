@@ -1998,12 +1998,10 @@ dependencies = [
 [[package]]
 name = "metis-core"
 version = "0.1.0"
-source = "git+https://github.com/giodl73-repo/METIS-CORE.git?branch=master#2a56c97f2b6fcd8149e4ece4400975caaf390fe0"
+source = "git+https://github.com/giodl73-repo/METIS-CORE.git?branch=master#e1a769bbcafef3dd7ed3107aa2e3e1712eead7fc"
 dependencies = [
  "rand",
  "rand_pcg",
- "serde",
- "serde_json",
  "thiserror 2.0.18",
 ]
 

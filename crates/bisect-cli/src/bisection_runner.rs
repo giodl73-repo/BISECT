@@ -347,27 +347,26 @@ pub fn split_subgraph(
                         .to_string(),
                 );
             }
-            use metis_core::api::{
-                MetisParams as RustBisectParams, MetisPartitioner as RustBisectPartitioner,
-                Partitioner as RustBisectTrait,
+            use metis_core::{
+                CsrGraph as RustCsrGraph, MetisParams as RustBisectParams,
+                MetisPartitioner as RustBisectPartitioner, Partitioner as RustBisectTrait,
             };
-            use metis_core::graph::CsrGraph as RustCsrGraph;
-            let g = RustCsrGraph {
-                xadj: xadj.iter().map(|&x| x as u32).collect(),
-                adjncy: adjncy.iter().map(|&x| x as u32).collect(),
-                ncon: 1,
-                vwgt: local_vwgt.clone(),
-                adjwgt: adjwgt.clone(),
-            };
+            let g = RustCsrGraph::new(
+                xadj.iter().map(|&x| x as u32).collect(),
+                adjncy.iter().map(|&x| x as u32).collect(),
+                1,
+                local_vwgt.clone(),
+                adjwgt.clone(),
+            )
+            .map_err(|e| format!("metis-core bisection graph: {e}"))?;
             let uf_u32 = (uf_int as u32).clamp(1, 1000);
-            let params = RustBisectParams {
-                ufactor: uf_u32,
-                niter,
-                seed,
-                coarsen_to: 20,
-                tpwgts: None,
-                ..RustBisectParams::default()
-            };
+            let mut params = RustBisectParams::kway()
+                .with_ufactor(uf_u32)
+                .with_niter(niter)
+                .with_coarsen_to(20);
+            if let Some(seed) = seed {
+                params = params.with_seed(seed);
+            }
             let partition = if let Some(ref tw) = tpwgts {
                 // Asymmetric split: convert f32 fracs (first 2 values) to u32 thousandths.
                 let fracs: Vec<u32> = tw
@@ -380,7 +379,7 @@ pub fn split_subgraph(
                 RustBisectPartitioner::with_params(params, 2).split(&g, 2, seed)
             }
             .map_err(|e| format!("metis-core bisection: {e}"))?;
-            partition.assignment.iter().map(|&p| p as i32).collect()
+            partition.assignment().iter().map(|&p| p as i32).collect()
         }
     };
 
@@ -635,39 +634,33 @@ pub fn run_nway_partition(
         }
         #[cfg(not(feature = "c-ffi-engine"))]
         {
-            use metis_core::api::{
-                MetisParams as RustNwayParams, MetisPartitioner as RustNwayPartitioner,
-                Partitioner as RustNwayTrait,
+            use metis_core::{
+                CsrGraph as RustNwayCsr, MetisParams as RustNwayParams,
+                MetisPartitioner as RustNwayPartitioner, Partitioner as RustNwayTrait,
             };
-            use metis_core::graph::CsrGraph as RustNwayCsr;
-            let g = RustNwayCsr {
-                xadj: xadj.iter().map(|&x| x as u32).collect(),
-                adjncy: adjncy.iter().map(|&x| x as u32).collect(),
-                ncon: 1,
-                vwgt: vwgt.clone(),
-                adjwgt: adjwgt.clone(),
-            };
+            let g = RustNwayCsr::new(
+                xadj.iter().map(|&x| x as u32).collect(),
+                adjncy.iter().map(|&x| x as u32).collect(),
+                1,
+                vwgt.clone(),
+                adjwgt.clone(),
+            )
+            .map_err(|e| format!("metis-core n-way graph: {e}"))?;
             let uf_u32 = (uf_int as u32).clamp(1, 1000);
-            let params = RustNwayParams {
-                ufactor: uf_u32,
-                niter: niter as u32,
-                seed,
-                coarsen_to: 20,
-                tpwgts: None,
-                // use_recursive=true: recursively bisects into balanced halves at every
-                // level. The default k-way pipeline (GrowBisect initial partitioner) can
-                // produce catastrophically unbalanced partitions on low-connectivity graphs
-                // (path graphs, trees) when all k seed nodes cluster together.
-                // Recursive bisection always balances each split into two equal halves,
-                // so balance compounds predictably regardless of graph topology.
-                use_recursive: true,
-                ..RustNwayParams::default()
-            };
+            // Recursive bisection balances each split into two equal halves, so balance
+            // compounds predictably on low-connectivity graphs.
+            let mut params = RustNwayParams::recursive()
+                .with_ufactor(uf_u32)
+                .with_niter(niter as u32)
+                .with_coarsen_to(20);
+            if let Some(seed) = seed {
+                params = params.with_seed(seed);
+            }
             let k = num_districts as u32;
             let partition = RustNwayPartitioner::with_params(params, k)
                 .split(&g, k, seed)
                 .map_err(|e| format!("metis-core n-way k={num_districts}: {e}"))?;
-            partition.assignment.iter().map(|&p| p as i32).collect()
+            partition.assignment().iter().map(|&p| p as i32).collect()
         }
     };
 
