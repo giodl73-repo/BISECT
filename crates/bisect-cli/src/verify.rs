@@ -380,6 +380,9 @@ pub fn verify_manifest_rplan_audit_certificate(
     } else {
         None
     };
+    if let Some(context) = context.as_ref() {
+        verify_manifest_rplan_source_hashes(manifest, context)?;
+    }
 
     rplan_audit::verify_audit_certificate(
         &certificate,
@@ -388,6 +391,39 @@ pub fn verify_manifest_rplan_audit_certificate(
     )
     .map_err(|e| anyhow::anyhow!("RPLAN audit certificate verification failed: {e}"))?;
     eprintln!("[PASS] RPLAN audit certificate verified: {certificate_rel}");
+    Ok(())
+}
+
+fn verify_manifest_rplan_source_hashes(
+    manifest: &PlanManifest,
+    context: &rplan_core::RplanContext,
+) -> anyhow::Result<()> {
+    if !manifest.adjacency_sha256.is_empty() {
+        let expected = format!("sha256:{}", manifest.adjacency_sha256);
+        let actual = context.source_hashes.entries.get("adjacency");
+        if actual != Some(&expected) {
+            anyhow::bail!(
+                "RPLAN context adjacency source hash mismatch: manifest={}, context={}",
+                expected,
+                actual.cloned().unwrap_or_else(|| "(missing)".to_string())
+            );
+        }
+    }
+
+    if let Some(tiger_sha256) = manifest.tiger_sha256.as_deref() {
+        if !tiger_sha256.is_empty() {
+            let expected = format!("sha256:{tiger_sha256}");
+            let actual = context.source_hashes.entries.get("geometry");
+            if actual != Some(&expected) {
+                anyhow::bail!(
+                    "RPLAN context geometry source hash mismatch: manifest={}, context={}",
+                    expected,
+                    actual.cloned().unwrap_or_else(|| "(missing)".to_string())
+                );
+            }
+        }
+    }
+
     Ok(())
 }
 
@@ -573,7 +609,10 @@ mod tests {
             demographics: None,
             geometry: None,
             source_hashes: rplan_core::SourceHashes {
-                entries: BTreeMap::from([("fixture".to_string(), "sha256:source".to_string())]),
+                entries: BTreeMap::from([(
+                    "adjacency".to_string(),
+                    format!("sha256:{}", "b".repeat(64)),
+                )]),
             },
         };
         context.context_hash = context.compute_context_hash().unwrap();
@@ -1111,10 +1150,25 @@ mod tests {
     #[test]
     fn test_verify_manifest_rplan_audit_certificate_passes_for_fresh_sidecars() {
         let tmp = tempfile::TempDir::new().unwrap();
-        let manifest = write_rplan_audit_fixture(tmp.path());
+        let mut manifest = write_rplan_audit_fixture(tmp.path());
+        manifest.adjacency_sha256 = "b".repeat(64);
 
         verify_manifest_rplan_audit_certificate(&manifest, tmp.path())
             .expect("fresh RPLAN audit sidecars should verify");
+    }
+
+    #[test]
+    fn test_verify_manifest_rplan_audit_certificate_rejects_source_hash_mismatch() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let mut manifest = write_rplan_audit_fixture(tmp.path());
+        manifest.adjacency_sha256 = "0".repeat(64);
+
+        let err = verify_manifest_rplan_audit_certificate(&manifest, tmp.path())
+            .expect_err("manifest/context source hash mismatch should fail verification");
+        assert!(
+            err.to_string().contains("adjacency source hash mismatch"),
+            "{err}"
+        );
     }
 
     #[test]
