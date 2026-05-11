@@ -254,8 +254,16 @@ pub struct SplitWitness {
     pub unit_count: usize,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
-pub struct VraWitness {}
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct VraWitness {
+    pub district_id: u32,
+    pub minority_group: String,
+    pub total_vap: f64,
+    pub minority_vap: f64,
+    pub minority_vap_percent: f64,
+    pub threshold_percent: f64,
+    pub is_opportunity_district: bool,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct GeometryWitness {}
@@ -374,10 +382,7 @@ pub fn audit_plan_with_lineage(
         checks.push(check_splits(plan, context, profile));
     }
     if requested.contains(&AuditConstraint::Vra) {
-        checks.push(not_evaluated_check(
-            "vra",
-            "VRA opportunity reporting is reserved in certificate v1 but not implemented in phase 1",
-        ));
+        checks.push(check_vra(plan, context, profile));
     }
 
     let warnings = provenance_warnings(context);
@@ -879,6 +884,121 @@ fn split_witnesses(
         .collect()
 }
 
+fn check_vra(
+    plan: &DistrictPlan,
+    context: Option<&RplanContext>,
+    profile: &LegalProfile,
+) -> AuditCheck {
+    let VraPolicy::ReportOpportunityDistricts {
+        minority_group,
+        vap_threshold,
+    } = &profile.vra_policy
+    else {
+        return not_evaluated_check(
+            "vra",
+            "VRA opportunity reporting is not requested by the supplied profile",
+        );
+    };
+    if !vap_threshold.is_finite() || *vap_threshold < 0.0 || *vap_threshold > 1.0 {
+        return missing_input_check(
+            "vra",
+            "legal_profile.vra_policy.vap_threshold",
+            "VRA opportunity threshold must be between 0 and 1",
+        );
+    }
+
+    let Some(demographics) = context.and_then(|ctx| ctx.demographics.as_ref()) else {
+        return missing_input_check(
+            "vra",
+            "demographics",
+            "VRA opportunity reporting requires context demographics",
+        );
+    };
+    let Some(total_vap) = demographics.total_vap.as_ref() else {
+        return missing_input_check(
+            "vra",
+            "demographics.total_vap",
+            "VRA opportunity reporting requires total VAP",
+        );
+    };
+    let Some(minority_vap) = demographics.minority_vap.as_ref() else {
+        return missing_input_check(
+            "vra",
+            "demographics.minority_vap",
+            "VRA opportunity reporting requires minority VAP",
+        );
+    };
+
+    let witnesses = vra_witnesses(
+        plan,
+        minority_group,
+        *vap_threshold,
+        total_vap,
+        minority_vap,
+    );
+    let opportunity_count = witnesses
+        .iter()
+        .filter(|witness| {
+            matches!(
+                witness,
+                Witness::Vra(VraWitness {
+                    is_opportunity_district: true,
+                    ..
+                })
+            )
+        })
+        .count();
+
+    AuditCheck {
+        name: "vra".to_string(),
+        status: CheckStatus::Pass,
+        severity: Severity::Info,
+        summary: format!("{opportunity_count} VRA opportunity districts reported"),
+        witnesses,
+    }
+}
+
+fn vra_witnesses(
+    plan: &DistrictPlan,
+    minority_group: &str,
+    vap_threshold: f64,
+    total_vap_by_unit: &[f64],
+    minority_vap_by_unit: &[f64],
+) -> Vec<Witness> {
+    let mut district_total_vap = vec![0.0; plan.k];
+    let mut district_minority_vap = vec![0.0; plan.k];
+    for (idx, &district_id) in plan.assignment.iter().enumerate() {
+        let district_idx = district_id as usize;
+        if district_idx >= plan.k {
+            continue;
+        }
+        district_total_vap[district_idx] += total_vap_by_unit[idx];
+        district_minority_vap[district_idx] += minority_vap_by_unit[idx];
+    }
+
+    (0..plan.k)
+        .map(|district_id| {
+            let total_vap = district_total_vap[district_id];
+            let minority_vap = district_minority_vap[district_id];
+            let minority_vap_percent = if total_vap > 0.0 {
+                minority_vap / total_vap * 100.0
+            } else {
+                0.0
+            };
+            Witness::Vra(VraWitness {
+                district_id: district_id as u32,
+                minority_group: minority_group.to_string(),
+                total_vap,
+                minority_vap,
+                minority_vap_percent,
+                threshold_percent: vap_threshold * 100.0,
+                is_opportunity_district: total_vap > 0.0
+                    && minority_vap / total_vap > vap_threshold,
+            })
+        })
+        .collect()
+}
+
 fn missing_input_check(name: &str, input: &str, reason: &str) -> AuditCheck {
     AuditCheck {
         name: name.to_string(),
@@ -938,8 +1058,8 @@ fn result_for(checks: &[AuditCheck], warnings: &[AuditWarning]) -> AuditResult {
 mod tests {
     use super::*;
     use rplan_core::{
-        CanonicalOrder, EdgeKind, EdgeSemantics, PlanUnitIndex, UnitEdge, UnitGraph, UnitKind,
-        DISTRICT_PLAN_SCHEMA_VERSION, RCTX_VERSION,
+        CanonicalOrder, DemographicContext, EdgeKind, EdgeSemantics, PlanUnitIndex, UnitEdge,
+        UnitGraph, UnitKind, DISTRICT_PLAN_SCHEMA_VERSION, RCTX_VERSION,
     };
     use std::collections::BTreeMap;
 
@@ -980,6 +1100,7 @@ mod tests {
             graph,
             populations,
             subdivisions: None,
+            demographics: None,
             source_hashes: SourceHashes {
                 entries: BTreeMap::from([("adjacency".to_string(), "sha256:abc".to_string())]),
             },
@@ -993,6 +1114,17 @@ mod tests {
     ) -> RplanContext {
         RplanContext {
             subdivisions: Some(subdivisions),
+            ..context(populations, graph)
+        }
+    }
+
+    fn context_with_demographics(
+        populations: Option<Vec<i64>>,
+        graph: Option<UnitGraph>,
+        demographics: DemographicContext,
+    ) -> RplanContext {
+        RplanContext {
+            demographics: Some(demographics),
             ..context(populations, graph)
         }
     }
@@ -1057,6 +1189,16 @@ mod tests {
                 max_deviation_percent: 25.0,
             },
             ..LegalProfile::us_congressional_project_v1(2020)
+        }
+    }
+
+    fn vra_profile() -> LegalProfile {
+        LegalProfile {
+            vra_policy: VraPolicy::ReportOpportunityDistricts {
+                minority_group: "coalition".to_string(),
+                vap_threshold: 0.50,
+            },
+            ..profile()
         }
     }
 
@@ -1322,6 +1464,70 @@ mod tests {
             }) if subdivision_kind == "county"
                 && subdivision_id == "county-a"
                 && district_ids == &vec![0, 1]
+        ));
+    }
+
+    #[test]
+    fn vra_reporting_without_demographics_is_missing_input() {
+        let cert = audit_plan(
+            &plan(vec![0, 0, 0, 1, 1]),
+            Some(&context(
+                Some(vec![100, 100, 100, 150, 150]),
+                Some(path_graph()),
+            )),
+            &vra_profile(),
+            runtime(),
+            &[AuditConstraint::Vra],
+            "2026-05-10T00:00:00Z",
+        )
+        .unwrap();
+
+        let vra = cert
+            .checks
+            .iter()
+            .find(|check| check.name == "vra")
+            .unwrap();
+        assert_eq!(vra.status, CheckStatus::MissingInput);
+        assert_eq!(cert.result, AuditResult::Fail);
+    }
+
+    #[test]
+    fn vra_reporting_emits_district_vap_witnesses() {
+        let cert = audit_plan(
+            &plan(vec![0, 0, 0, 1, 1]),
+            Some(&context_with_demographics(
+                Some(vec![100, 100, 100, 150, 150]),
+                Some(path_graph()),
+                DemographicContext {
+                    total_vap: Some(vec![100.0, 100.0, 100.0, 100.0, 100.0]),
+                    minority_vap: Some(vec![80.0, 80.0, 20.0, 40.0, 40.0]),
+                },
+            )),
+            &vra_profile(),
+            runtime(),
+            &[AuditConstraint::Vra],
+            "2026-05-10T00:00:00Z",
+        )
+        .unwrap();
+
+        let vra = cert
+            .checks
+            .iter()
+            .find(|check| check.name == "vra")
+            .unwrap();
+        assert_eq!(vra.status, CheckStatus::Pass);
+        assert_eq!(vra.summary, "1 VRA opportunity districts reported");
+        assert_eq!(vra.witnesses.len(), 2);
+        assert!(matches!(
+            &vra.witnesses[0],
+            Witness::Vra(VraWitness {
+                district_id: 0,
+                minority_group,
+                total_vap: 300.0,
+                minority_vap: 180.0,
+                is_opportunity_district: true,
+                ..
+            }) if minority_group == "coalition"
         ));
     }
 

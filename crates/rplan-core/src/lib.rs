@@ -46,6 +46,14 @@ pub enum RplanCoreError {
         subdivision_len: usize,
         unit_count: usize,
     },
+    #[error("{demographic_kind} demographic length {demographic_len} does not match unit count {unit_count}")]
+    DemographicLengthMismatch {
+        demographic_kind: String,
+        demographic_len: usize,
+        unit_count: usize,
+    },
+    #[error("demographic value must be finite and non-negative")]
+    InvalidDemographicValue,
     #[error("edge target {to} at vertex {from} is outside unit range")]
     InvalidEdgeTarget { from: usize, to: u32 },
     #[error("duplicate edge from {from} to {to}")]
@@ -145,6 +153,14 @@ pub struct SubdivisionContext {
     pub municipal_ids: Option<Vec<Option<String>>>,
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+pub struct DemographicContext {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub total_vap: Option<Vec<f64>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub minority_vap: Option<Vec<f64>>,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RplanContext {
     pub rctx_version: String,
@@ -154,6 +170,8 @@ pub struct RplanContext {
     pub populations: Option<Vec<i64>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub subdivisions: Option<SubdivisionContext>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub demographics: Option<DemographicContext>,
     pub source_hashes: SourceHashes,
 }
 
@@ -325,6 +343,9 @@ impl RplanContext {
         if let Some(subdivisions) = &self.subdivisions {
             subdivisions.validate(unit_count)?;
         }
+        if let Some(demographics) = &self.demographics {
+            demographics.validate(unit_count)?;
+        }
         Ok(())
     }
 
@@ -340,6 +361,12 @@ impl RplanContext {
                 .as_object_mut()
                 .expect("context hash projection is an object")
                 .insert("subdivisions".to_string(), to_value(subdivisions)?);
+        }
+        if let Some(demographics) = &self.demographics {
+            value
+                .as_object_mut()
+                .expect("context hash projection is an object")
+                .insert("demographics".to_string(), to_value(demographics)?);
         }
         canonical_sha256(&value)
     }
@@ -367,6 +394,47 @@ impl SubdivisionContext {
         }
         Ok(())
     }
+}
+
+impl DemographicContext {
+    pub fn validate(&self, unit_count: usize) -> Result<(), RplanCoreError> {
+        validate_demographic_series("total_vap", &self.total_vap, unit_count)?;
+        validate_demographic_series("minority_vap", &self.minority_vap, unit_count)?;
+        if let (Some(total_vap), Some(minority_vap)) = (&self.total_vap, &self.minority_vap) {
+            if total_vap
+                .iter()
+                .zip(minority_vap)
+                .any(|(total, minority)| minority > total)
+            {
+                return Err(RplanCoreError::InvalidDemographicValue);
+            }
+        }
+        Ok(())
+    }
+}
+
+fn validate_demographic_series(
+    kind: &str,
+    values: &Option<Vec<f64>>,
+    unit_count: usize,
+) -> Result<(), RplanCoreError> {
+    let Some(values) = values else {
+        return Ok(());
+    };
+    if values.len() != unit_count {
+        return Err(RplanCoreError::DemographicLengthMismatch {
+            demographic_kind: kind.to_string(),
+            demographic_len: values.len(),
+            unit_count,
+        });
+    }
+    if values
+        .iter()
+        .any(|value| !value.is_finite() || *value < 0.0)
+    {
+        return Err(RplanCoreError::InvalidDemographicValue);
+    }
+    Ok(())
 }
 
 pub fn valid_unit_id(kind: UnitKind, unit_id: &str) -> bool {
@@ -599,6 +667,7 @@ mod tests {
             }),
             populations: Some(vec![100, 100]),
             subdivisions: None,
+            demographics: None,
             source_hashes: SourceHashes::default(),
         };
         context.validate().unwrap();
@@ -620,6 +689,7 @@ mod tests {
                 county_ids: Some(vec![Some("001".to_string())]),
                 municipal_ids: None,
             }),
+            demographics: None,
             source_hashes: SourceHashes::default(),
         };
 
@@ -630,5 +700,26 @@ mod tests {
                 ..
             }) if subdivision_kind == "county"
         ));
+    }
+
+    #[test]
+    fn validates_demographic_lengths_and_values() {
+        let context = RplanContext {
+            rctx_version: RCTX_VERSION.to_string(),
+            context_hash: String::new(),
+            units: test_units(),
+            graph: None,
+            populations: None,
+            subdivisions: None,
+            demographics: Some(DemographicContext {
+                total_vap: Some(vec![100.0, f64::NAN]),
+                minority_vap: None,
+            }),
+            source_hashes: SourceHashes::default(),
+        };
+        assert_eq!(
+            context.validate(),
+            Err(RplanCoreError::InvalidDemographicValue)
+        );
     }
 }

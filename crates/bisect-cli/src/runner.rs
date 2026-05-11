@@ -3183,6 +3183,7 @@ fn write_rplan_audit_sidecars(
         graph: Some(build_rplan_graph(graph)),
         populations: Some(graph.vertex_weights.clone()),
         subdivisions: build_rplan_subdivisions(graph),
+        demographics: None,
         source_hashes: source_hashes.clone(),
     };
     context.context_hash = context
