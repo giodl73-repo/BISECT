@@ -6,6 +6,12 @@ Each run summary should name the model, objective, constraint profile,
 separation routine status, solve status, incumbent plan source, and any proof
 or bound metadata.
 
+The report is the boundary between implementation success and exactness. A run
+can be successful as software because it produced a valid audited plan, while
+still failing to support an exact optimization claim because the solver timed
+out, fell back, or never produced a bound. U.16 therefore requires every output
+to carry a status label before any exactness language is used.
+
 \begin{table}[htbp]
 \centering
 \small
@@ -20,4 +26,21 @@ Proof/bound & Carries exact evidence when available & Valid plan mistaken for pr
 \bottomrule
 \end{tabular}
 \caption{Minimum branch-and-cut report fields.}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.24\linewidth}p{0.34\linewidth}p{0.28\linewidth}}
+\toprule
+Status & Meaning & Allowed claim \\
+\midrule
+Formulation-only & Model built, no active separation proof & reproducible model contract \\
+Cut-active & Separation ran with cut metadata & branch-and-cut behavior observed \\
+Bounded & Solver reports incumbent and bound & scoped bound under model \\
+Proven & Solver reports proof under assumptions & scoped exact optimum/infeasibility \\
+Fallback & Heuristic or prior plan returned & valid audited fallback only \\
+\bottomrule
+\end{tabular}
+\caption{Status vocabulary for branch-and-cut outputs.}
 \end{table}

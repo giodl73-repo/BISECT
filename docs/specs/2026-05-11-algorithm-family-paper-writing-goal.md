@@ -129,6 +129,7 @@ Acceptance for each U spine paper:
 
 - [x] Add first-draft `main.tex`/`Makefile` skeletons for the Stage 3 U
       implementation papers.
+- [x] Complete U.16 round-1 simulated review, P1 revisions, and build check.
 - [ ] U.16 Branch-And-Cut Redistricting: separation routines, connectivity
       cuts, solve reports, and audit lineage.
 - [ ] U.17 Branch-And-Price Redistricting: column generation, pricing/master

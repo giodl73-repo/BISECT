@@ -4,3 +4,10 @@ The final-plan handoff is the RPLAN/RCTX fixed point. A branch-and-cut run can
 emit a valid RPLAN plus solver report, manifest, and audit certificate. The
 certificate verifies declared profile and lineage; it does not prove optimality
 unless the solver report also carries the relevant proof or bound.
+
+The audit package should retain both the plan artifact and the exact-method
+claim artifact. RPLAN/RCTX records the final assignment and context, while the
+solver report records whether separation, bounds, proof, timeout, or fallback
+occurred. Dropping either side creates ambiguity: a valid plan without a solver
+report is not an exact result, and a solver report without an auditable final
+plan is not a reusable BISECT output.

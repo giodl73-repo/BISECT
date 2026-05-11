@@ -19,6 +19,8 @@ This draft describes the BISECT branch-and-cut implementation contract for
 redistricting. The paper is an exact-optimization implementation paper: it
 separates formulation, separation metadata, solver status, fallback behavior,
 and RPLAN/RCTX audit lineage so exact claims require proof or bound metadata.
+It treats fallback and timeout reports as first-class outputs rather than
+failures to be hidden behind a valid final plan.
 \end{abstract}
 
 \input{sections/introduction}
