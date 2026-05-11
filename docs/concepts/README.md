@@ -16,6 +16,7 @@ statistical, or implementation claims. For public-facing claim discipline, use
 | [vra-compliance.md](vra-compliance.md) | Voting Rights Act districts, the 42% threshold, the metis-vra algorithm |
 | [census-data.md](census-data.md) | TIGER shapefiles, PL 94-171 files, GEOID format, downloading |
 | [pipeline-stages.md](pipeline-stages.md) | The five pipeline stages, how they connect, how to run individual stages |
+| [algorithm-family-layer-cake.md](algorithm-family-layer-cake.md) | The current crate-level taxonomy: construction, search, exact optimization, Pareto/evolution, audit, reports, and CLI orchestration |
 | [three-layer-compositor.md](three-layer-compositor.md) | The three orthogonal choices that define every run: structure, weights, search |
 | [section-algorithms.md](section-algorithms.md) | The B-series algorithm family: GeoSection, AreaSection, ApportionRegions, and more |
 | [label-pipeline.md](label-pipeline.md) | Label-based run management, directory layout, and the SHA-256 audit chain |

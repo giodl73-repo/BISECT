@@ -40,6 +40,11 @@ parts each node splits into, and in what order.
 | `ratio-optimal-vra` | GeoSection with a minority geographic alignment score added to the ratio selection objective. No partisan data. Paper T.7 (VRASection). |
 | `nway` | Direct k-way METIS partition of the whole state. No recursive tree. |
 | `compact-polsby` | Polsby-Popper-guided bisection: at each node, select the bisection that maximises the geometric-mean Polsby-Popper of the resulting districts. |
+| `spectral` | Deterministic Fiedler-vector approximation with population-balanced sweep cuts. Paper T.14. |
+| `capacity-clustering` | Capacity-constrained clustering with repair-aware summaries. Paper T.15. |
+| `regionalization` | Deterministic agglomerative regionalization over connected regions. Paper T.16. |
+| `flow-construction` | Flow-based constructive assignment with capacity/infeasibility witnesses. Paper T.17. |
+| `ilp` | Exact optimization structure backed by ILP branch-and-cut reports. Paper U.16. |
 
 The `prime-factor` structure is the geographic completion of the Huntington-Hill
 apportionment: just as Huntington-Hill determines how many seats each state
@@ -49,6 +54,10 @@ derivation).
 
 **Note**: `--partition-mode` (legacy flag) and `structure:` YAML key use
 different value namespaces. Use `--structure` for the Layer 1 compositor.
+Some newer algorithm families also expose dedicated subcommands outside
+`bisect state`: `bisect improve`, `bisect exact`, and `bisect pareto`. See
+[algorithm-family-layer-cake.md](algorithm-family-layer-cake.md) for the
+crate-level map.
 
 ---
 

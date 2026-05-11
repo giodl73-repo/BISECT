@@ -8,6 +8,8 @@ METIS optimises. The foundational result (B.1-B.7) establishes that
 edge-weighted recursive bisection is the correct baseline. The section
 algorithms (T.1-T.8) extend the baseline by varying structure or constraints.
 The search algorithms (U.1, U.8-U.9) vary how the seed space is explored.
+For the newer crate-level algorithm families added after the RPLAN audit
+refactor, see [algorithm-family-layer-cake.md](algorithm-family-layer-cake.md).
 
 ---
 
@@ -19,7 +21,11 @@ B-series
 ├── Structure algorithms (T.1-T.8) — varied tree topology or METIS constraints
 │   └── (excludes County-Sticky T.3 — see Weights layer below)
 ├── Weights layer (T.3)            — edge weight modifications to standard bisection
-└── Search algorithms (U.1, U.8-U.9) — seed exploration strategies
+├── Search algorithms (U.1, U.8-U.9) — seed exploration strategies
+└── New family layer (T.14-T.17, U.16-U.20)
+    ├── spectral, clustering, regionalization, flow construction
+    ├── branch-and-cut, branch-and-price, local search, Pareto/evolution
+    └── shared RPLAN/RCTX/audit certificates
 ```
 
 All section algorithms are composed through the three-layer compositor. The
