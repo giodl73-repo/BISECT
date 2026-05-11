@@ -1,7 +1,7 @@
 # U.20 - Plan Audit Certificates
 
 **Paper Type:** Audit/certification infrastructure  
-**Status:** Planning  
+**Status:** Round-1 review addressed
 **Track:** U - Search and Optimization / audit  
 **Code Home:** `rplan-core`, `rplan-io`, `rplan-audit`, `bisect verify`, `rplan-cli`
 
@@ -45,7 +45,7 @@ identity, unverifiable certificates, or inconsistent unit-order semantics.
 
 ## Panel Readiness Checklist
 
-- [ ] `main.tex` and sections exist.
-- [ ] RPLAN/RCTX distinction is clear.
-- [ ] Audit semantics and non-semantics are explicit.
-- [ ] P1 simulated feedback addressed.
+- [x] `main.tex` and sections exist.
+- [x] RPLAN/RCTX distinction is clear.
+- [x] Audit semantics and non-semantics are explicit.
+- [x] P1 simulated feedback addressed.

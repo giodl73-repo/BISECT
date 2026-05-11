@@ -4,3 +4,14 @@ The verifier contract is profile-scoped. It can confirm that declared
 constraints, lineage, canonical ordering, hashes, and package contents match
 the profile. It cannot certify fairness, neutrality, or legal sufficiency
 outside the declared audit profile and available context.
+
+Solver reports, heuristic transcripts, and selected-frontier manifests are
+upstream evidence. The certificate consumes their final exported artifacts and
+checks the package under a declared profile. This keeps exact proofs,
+heuristic-improvement summaries, and Pareto-selection records from being
+collapsed into one ambiguous claim.
+
+A successful verification should therefore be read as: this plan, with this
+context, under this profile, with these hashes and lineage records, passed the
+declared checks. It should not be read as: this plan is fair, legally adequate,
+or preferred among all available alternatives.

@@ -133,6 +133,7 @@ Acceptance for each U spine paper:
 - [x] Complete U.17 round-1 simulated review, P1 revisions, and build check.
 - [x] Complete U.18 round-1 simulated review, P1 revisions, and build check.
 - [x] Complete U.19 round-1 simulated review, P1 revisions, and build check.
+- [x] Complete U.20 round-1 simulated review, P1 revisions, and build check.
 - [ ] U.16 Branch-And-Cut Redistricting: separation routines, connectivity
       cuts, solve reports, and audit lineage.
 - [ ] U.17 Branch-And-Price Redistricting: column generation, pricing/master

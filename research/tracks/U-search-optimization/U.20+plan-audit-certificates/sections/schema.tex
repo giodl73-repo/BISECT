@@ -20,3 +20,24 @@ Manifest & files, hashes, package inventory & substantive validity by itself \\
 \end{tabular}
 \caption{RPLAN/RCTX fixed-point artifact responsibilities.}
 \end{table}
+
+The fixed point is a shared final-plan contract, not a new algorithmic claim.
+Construction, exact optimization, local search, and Pareto comparison may carry
+different upstream evidence, but their final packages must agree on the same
+artifact vocabulary.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.27\linewidth}p{0.38\linewidth}p{0.22\linewidth}}
+\toprule
+Invariant & Required check & Failure mode \\
+\midrule
+Canonical unit order & RPLAN assignments align with RCTX units & order mismatch \\
+Hash integrity & manifest hashes match files & tamper or stale file \\
+Profile scope & certificate names declared checks & unsupported claim \\
+Lineage & algorithm/run ids link to parent artifacts & broken provenance \\
+\bottomrule
+\end{tabular}
+\caption{Fixed-point invariants for verifier-facing packages.}
+\end{table}

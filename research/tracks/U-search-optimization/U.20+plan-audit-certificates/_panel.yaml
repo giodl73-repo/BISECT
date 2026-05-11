@@ -1,0 +1,42 @@
+paper: U.20+plan-audit-certificates
+title: Plan Audit Certificates as the RPLAN/RCTX Fixed Point
+type: publication
+stage: recheck
+round: 1
+content_mode: draft
+venue: technical report
+review_date: 2026-05-11
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - name: Ben Adida
+    profile_ref: simulated-verifiable-systems
+    score: 3
+  - name: Cynthia Dwork
+    profile_ref: simulated-accountability-fairness
+    score: 3
+  - name: David Applegate
+    profile_ref: simulated-combinatorial-optimization
+    score: 3
+  - name: Jon Kleinberg
+    profile_ref: simulated-algorithms-network-science
+    score: 3
+  - name: Wendy Tam Cho
+    profile_ref: simulated-political-methodology
+    score: 2
+reviews:
+  round_1:
+    avg_score: 2.8
+    min_score: 2
+    max_score: 3
+    synthesis: reviews/SYNTHESIS.md
+    revision_plan: REVISION-PLAN.md
+p1_items:
+  - id: P1.1
+    title: Define artifact ownership and canonical-order invariants.
+    addressed: true
+  - id: P1.2
+    title: Separate verifier profile semantics from fairness and legal conclusions.
+    addressed: true
+  - id: P1.3
+    title: Add an evidence ladder with tamper and failure-mode publication gaps.
+    addressed: true

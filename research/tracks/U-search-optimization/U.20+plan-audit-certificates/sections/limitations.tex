@@ -3,3 +3,10 @@
 Certificates verify a profile, not all law. Some constraints require data that
 may not be present in every RCTX. External tools must preserve canonical unit
 ordering, hashes, and package semantics for interoperation to remain valid.
+The fixed point also depends on honest profile naming: a package can be valid
+for one profile while lacking the context required by another.
+
+Publication-ready evidence still needs public examples and negative fixtures.
+Important negative cases include unit-order mismatch, hash mismatch, stale RCTX
+context, missing profile fields, unsupported constraint claims, and broken
+lineage pointers.
