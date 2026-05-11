@@ -32,12 +32,12 @@ contract that every algorithm family can land on.
 - [x] Add initial public valid 3x3 package.
 - [x] Add CLI coverage for missing context, plan tamper, context hash change,
       and canonical unit-order mismatch.
-- [ ] Add profile mismatch fixture.
-- [ ] Add stale RCTX fixture.
-- [ ] Add unsupported-constraint or missing-input fixture.
-- [ ] Add lineage-reserved-field or broken-lineage fixture if exposed through a
+- [x] Add profile mismatch fixture.
+- [x] Add stale RCTX fixture.
+- [x] Add unsupported-constraint or missing-input fixture.
+- [x] Add lineage-reserved-field or broken-lineage fixture if exposed through a
       public package surface.
-- [ ] Document each failure mode with expected command and expected failure
+- [x] Document each failure mode with expected command and expected failure
       class.
 
 ## Stage 3 - Golden Package Corpus By Family

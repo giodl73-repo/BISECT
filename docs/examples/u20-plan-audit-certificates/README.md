@@ -27,14 +27,17 @@ cargo run -p rplan-cli -- verify-certificate `
 ## Negative Fixtures Covered By Tests
 
 The executable negative fixtures live in `crates/rplan-cli/tests/audit_cli.rs`.
+The failure catalog is summarized in
+[`NEGATIVE-FIXTURES.md`](NEGATIVE-FIXTURES.md).
 They cover the U.20 failure catalog:
 
 - missing context for a contextual certificate
 - tampered plan assignment
 - changed context/source hash
 - canonical unit-order mismatch
-- profile mismatch remains covered by audit-profile CLI tests and should be
-  promoted into a public package fixture later
+- stale context with unchanged source label
+- profile mismatch at audit-generation time
+- missing-input constraint status
 
 Those failures are certificate-verification failures, not broad legal judgments.
 The certificate verifies only the declared profile, package hashes, context, and

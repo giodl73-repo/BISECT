@@ -472,6 +472,36 @@ fn verify_certificate_rejects_tampered_context_hash() {
 }
 
 #[test]
+fn verify_certificate_rejects_stale_context_with_same_source_hash() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let stale_context_path = tmp.path().join("grid3x3-stale.rctx");
+    let mut context =
+        rplan_io::read_rctx_str(include_str!("../../rplan-audit/fixtures/grid3x3.rctx")).unwrap();
+    context.populations.as_mut().unwrap()[0] = 101;
+    std::fs::write(
+        &stale_context_path,
+        rplan_io::write_rctx_string(&context).unwrap(),
+    )
+    .unwrap();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_rplan"))
+        .args([
+            "verify-certificate",
+            "--certificate",
+            &certificate_fixture_path("grid3x3-valid-certificate.json"),
+            "--plan",
+            &audit_fixture_path("grid3x3-valid.rplan"),
+            "--context",
+            stale_context_path.to_str().unwrap(),
+        ])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("context hash mismatch"));
+}
+
+#[test]
 fn verify_certificate_rejects_unit_order_mismatch() {
     let tmp = tempfile::TempDir::new().unwrap();
     let reordered_context_path = tmp.path().join("grid3x3-reordered.rctx");
@@ -499,4 +529,31 @@ fn verify_certificate_rejects_unit_order_mismatch() {
 
     assert_eq!(output.status.code(), Some(1));
     assert!(String::from_utf8_lossy(&output.stderr).contains("context hash mismatch"));
+}
+
+#[test]
+fn audit_missing_input_constraint_reports_failure() {
+    let output = Command::new(env!("CARGO_BIN_EXE_rplan"))
+        .args([
+            "audit",
+            "--plan",
+            &audit_fixture_path("grid3x3-valid.rplan"),
+            "--context",
+            &audit_fixture_path("grid3x3.rctx"),
+            "--constraints",
+            "splits",
+            "--fixed-generated-at",
+            "2026-05-10T00:00:00Z",
+            "--format",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(1));
+    let stdout: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(stdout["result"], "fail");
+    assert_eq!(stdout["checks"][1]["name"], "splits");
+    assert_eq!(stdout["checks"][1]["status"], "missing-input");
+    assert!(String::from_utf8_lossy(&output.stderr).contains("audit failed"));
 }
