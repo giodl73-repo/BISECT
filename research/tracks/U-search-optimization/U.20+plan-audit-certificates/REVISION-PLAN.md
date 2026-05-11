@@ -37,8 +37,8 @@ serve as the portfolio integration paper.
 
 ## P2: Substantial Enhancements
 
-- [ ] Add a concrete manifest and certificate snippet.
-- [ ] Add tamper tests for unit-order mismatch, hash mismatch, and profile mismatch.
+- [x] Add a concrete manifest and certificate snippet.
+- [x] Add tamper tests for unit-order mismatch, hash mismatch, and profile mismatch.
 - [ ] Archive public examples from construction, exact, local-search, and Pareto outputs.
 
 ## Quality Checkpoints

@@ -16,6 +16,21 @@ fn profile_fixture_path(name: &str) -> String {
         .into_owned()
 }
 
+fn certificate_fixture_path(name: &str) -> String {
+    audit_fixture_path(name)
+}
+
+fn public_u20_example_path(name: &str) -> String {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .ancestors()
+        .nth(2)
+        .unwrap()
+        .join("docs/examples/u20-plan-audit-certificates/grid3x3-valid")
+        .join(name)
+        .to_string_lossy()
+        .into_owned()
+}
+
 fn run_grid3x3_valid_with_context(context_path: &str) -> std::process::Output {
     Command::new(env!("CARGO_BIN_EXE_rplan"))
         .args([
@@ -358,4 +373,130 @@ fn fixed_generated_at_output_is_stable_across_identical_runs() {
         String::from_utf8_lossy(&second.stderr)
     );
     assert_eq!(first.stdout, second.stdout);
+}
+
+#[test]
+fn verify_certificate_accepts_matching_public_fixture_package() {
+    let output = Command::new(env!("CARGO_BIN_EXE_rplan"))
+        .args([
+            "verify-certificate",
+            "--certificate",
+            &public_u20_example_path("audit-certificate.json"),
+            "--plan",
+            &public_u20_example_path("plan.rplan"),
+            "--context",
+            &public_u20_example_path("context.rctx"),
+            "--format",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(stdout["verification"], "pass");
+    assert_eq!(stdout["result"], "pass");
+}
+
+#[test]
+fn verify_certificate_rejects_missing_context_for_contextual_certificate() {
+    let output = Command::new(env!("CARGO_BIN_EXE_rplan"))
+        .args([
+            "verify-certificate",
+            "--certificate",
+            &certificate_fixture_path("grid3x3-valid-certificate.json"),
+            "--plan",
+            &audit_fixture_path("grid3x3-valid.rplan"),
+        ])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("requires context hash"));
+}
+
+#[test]
+fn verify_certificate_rejects_tampered_plan_assignment() {
+    let output = Command::new(env!("CARGO_BIN_EXE_rplan"))
+        .args([
+            "verify-certificate",
+            "--certificate",
+            &certificate_fixture_path("grid3x3-valid-certificate.json"),
+            "--plan",
+            &audit_fixture_path("grid3x3-disconnected.rplan"),
+            "--context",
+            &audit_fixture_path("grid3x3.rctx"),
+        ])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("plan hash mismatch"));
+}
+
+#[test]
+fn verify_certificate_rejects_tampered_context_hash() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let alt_context_path = tmp.path().join("grid3x3-alt.rctx");
+    let mut alt_context =
+        rplan_io::read_rctx_str(include_str!("../../rplan-audit/fixtures/grid3x3.rctx")).unwrap();
+    alt_context
+        .source_hashes
+        .entries
+        .insert("fixture".to_string(), "sha256:grid3x3-reissued".to_string());
+    std::fs::write(
+        &alt_context_path,
+        rplan_io::write_rctx_string(&alt_context).unwrap(),
+    )
+    .unwrap();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_rplan"))
+        .args([
+            "verify-certificate",
+            "--certificate",
+            &certificate_fixture_path("grid3x3-valid-certificate.json"),
+            "--plan",
+            &audit_fixture_path("grid3x3-valid.rplan"),
+            "--context",
+            alt_context_path.to_str().unwrap(),
+        ])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("context hash mismatch"));
+}
+
+#[test]
+fn verify_certificate_rejects_unit_order_mismatch() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let reordered_context_path = tmp.path().join("grid3x3-reordered.rctx");
+    let mut context =
+        rplan_io::read_rctx_str(include_str!("../../rplan-audit/fixtures/grid3x3.rctx")).unwrap();
+    context.units.unit_ids.swap(0, 1);
+    std::fs::write(
+        &reordered_context_path,
+        rplan_io::write_rctx_string(&context).unwrap(),
+    )
+    .unwrap();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_rplan"))
+        .args([
+            "verify-certificate",
+            "--certificate",
+            &certificate_fixture_path("grid3x3-valid-certificate.json"),
+            "--plan",
+            &audit_fixture_path("grid3x3-valid.rplan"),
+            "--context",
+            reordered_context_path.to_str().unwrap(),
+        ])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("context hash mismatch"));
 }

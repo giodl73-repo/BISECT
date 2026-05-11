@@ -1,7 +1,8 @@
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand, ValueEnum};
 use rplan_audit::{
-    audit_plan, AuditConstraint, AuditResult, Chamber, LegalProfile, RuntimeProvenance,
+    audit_plan, verify_audit_certificate, AuditCertificate, AuditConstraint, AuditResult, Chamber,
+    LegalProfile, RuntimeProvenance,
 };
 use std::path::PathBuf;
 
@@ -16,6 +17,7 @@ struct Cli {
 #[derive(Debug, Subcommand)]
 enum Commands {
     Audit(AuditArgs),
+    VerifyCertificate(VerifyCertificateArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -40,6 +42,18 @@ struct AuditArgs {
     allow_warnings: bool,
     #[arg(long)]
     fixed_generated_at: Option<String>,
+}
+
+#[derive(Debug, Parser)]
+struct VerifyCertificateArgs {
+    #[arg(long)]
+    certificate: PathBuf,
+    #[arg(long)]
+    plan: Option<PathBuf>,
+    #[arg(long)]
+    context: Option<PathBuf>,
+    #[arg(long, value_enum, default_value = "pretty-json")]
+    format: OutputFormat,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -84,6 +98,7 @@ fn main() {
 fn run() -> Result<i32> {
     match Cli::parse().command {
         Commands::Audit(args) => run_audit(args),
+        Commands::VerifyCertificate(args) => run_verify_certificate(args),
     }
 }
 
@@ -179,6 +194,61 @@ fn run_audit(args: AuditArgs) -> Result<i32> {
         }
         AuditResult::Fail => {
             eprintln!("audit failed");
+            Ok(1)
+        }
+    }
+}
+
+fn run_verify_certificate(args: VerifyCertificateArgs) -> Result<i32> {
+    let cert_text = std::fs::read_to_string(&args.certificate)
+        .with_context(|| format!("reading certificate {}", args.certificate.display()))?;
+    let certificate = serde_json::from_str::<AuditCertificate>(&cert_text)
+        .with_context(|| format!("parsing certificate {}", args.certificate.display()))?;
+
+    let document = if let Some(path) = &args.plan {
+        let text = std::fs::read_to_string(path)
+            .with_context(|| format!("reading plan {}", path.display()))?;
+        Some(
+            rplan_io::read_rplan_str(&text)
+                .with_context(|| format!("parsing plan {}", path.display()))?,
+        )
+    } else {
+        None
+    };
+
+    let context = if let Some(path) = &args.context {
+        let text = std::fs::read_to_string(path)
+            .with_context(|| format!("reading context {}", path.display()))?;
+        Some(
+            rplan_io::read_rctx_str(&text)
+                .with_context(|| format!("parsing context {}", path.display()))?,
+        )
+    } else {
+        None
+    };
+
+    match verify_audit_certificate(
+        &certificate,
+        document.as_ref().map(|document| &document.plan),
+        context.as_ref(),
+    ) {
+        Ok(verification) => {
+            let output = serde_json::json!({
+                "verification": "pass",
+                "certificate_id": verification.certificate_id,
+                "content_hash": verification.content_hash,
+                "plan_hash": verification.plan_hash,
+                "context_hash": verification.context_hash,
+                "result": verification.result,
+            });
+            match args.format {
+                OutputFormat::Json => println!("{}", serde_json::to_string(&output)?),
+                OutputFormat::PrettyJson => println!("{}", serde_json::to_string_pretty(&output)?),
+            }
+            Ok(0)
+        }
+        Err(err) => {
+            eprintln!("certificate verification failed: {err}");
             Ok(1)
         }
     }

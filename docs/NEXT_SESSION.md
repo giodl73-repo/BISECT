@@ -28,11 +28,12 @@ The active goal doc is:
 
 ## Remaining Work
 
-Stage 5 portfolio integration is now the only remaining checklist area:
+The next residual work area is public fixture depth:
 
 - Keep `docs/PAPERS.md` current as paper titles or notes change.
-- Extend public fixture/package examples for U.16-U.20.
-- Add a U.20 tamper/failure-mode catalog for order, hash, context, profile, and lineage mismatches.
+- Extend public fixture/package examples for U.16-U.19.
+- Extend the U.20 public example set beyond the initial 3x3 package.
+- Add profile-mismatch and lineage-reserved-field CLI fixtures if those become public surfaces.
 - Add a visual dependency diagram for the T/U portfolio if needed for publication packaging.
 
 ## Verification Notes
@@ -43,8 +44,8 @@ warnings that resolved by final output, and MiKTeX update reminders.
 
 ## Good Next Move
 
-Start the empirical/public-example pass for U.16-U.20:
+Continue the empirical/public-example pass:
 
-1. Add small public package examples for each implementation paper.
-2. Add U.20 negative fixtures for tamper/failure modes.
+1. Add small public package examples for U.16-U.19.
+2. Promote more U.20 negative examples into `docs/examples/` if useful for readers.
 3. Re-run paper builds and update `docs/PAPERS.md` notes if the evidence level changes.

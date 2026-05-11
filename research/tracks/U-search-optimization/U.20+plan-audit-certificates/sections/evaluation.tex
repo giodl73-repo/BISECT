@@ -14,12 +14,14 @@ Claim & Current evidence & Publication gap \\
 \midrule
 RPLAN/RCTX separate plan identity from context & rplan-core and rplan-io tests
 & Public schema examples \\
-Certificates verify declared profiles and package integrity & rplan-audit and
-\texttt{bisect verify} tests & Manifest/certificate snippet \\
+Certificates verify declared profiles and package integrity & rplan-audit,
+\texttt{rplan verify-certificate}, and public 3x3 package tests & Additional
+manifest/certificate snippets \\
 Algorithm families converge to one final-plan path & Final-plan sidecar tests
 across U papers & Public examples by family \\
-Verifier catches tamper and mismatch failures & Partial failure tests & Tamper
-catalog for order, hash, context, and profile mismatch \\
+Verifier catches tamper and mismatch failures & CLI tests for missing context,
+plan tamper, context hash changes, and unit-order mismatch & Expanded tamper
+catalog for profile and lineage mismatch \\
 \bottomrule
 \end{tabular}
 \caption{Claim and evidence ladder for U.20.}
