@@ -123,13 +123,13 @@ Purpose: add constructive flow assignment once audit/repair patterns are stable.
 Purpose: extend Pareto/evolutionary comparison using the shared repair and audit
 contracts.
 
-- [ ] Write U.19 implementation spec and role-review notes.
-- [ ] Extend `bisect-pareto` with repair-aware evolutionary comparison.
-- [ ] Define crossover/mutation validity guarantees.
-- [ ] Emit frontier entries with per-plan validity status and lineage.
-- [ ] Ensure selected/exported plans receive full RPLAN audit packages.
-- [ ] Add L0 crossover/mutation/determinism tests.
-- [ ] Add L1 selected-frontier audit package test.
+- [x] Write U.19 implementation spec and role-review notes.
+- [x] Extend `bisect-pareto` with repair-aware evolutionary comparison.
+- [x] Define crossover/mutation validity guarantees.
+- [x] Emit frontier entries with per-plan validity status and lineage.
+- [x] Ensure selected/exported plans receive full RPLAN audit packages.
+- [x] Add L0 crossover/mutation/determinism tests.
+- [x] Add L1 selected-frontier audit package test.
 
 ## Final Acceptance
 

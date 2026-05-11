@@ -7,6 +7,7 @@ use bisect_pareto::crossover::{crossover, is_plan_valid};
 use bisect_pareto::dominance::{dominates, fast_non_dominated_sort};
 use bisect_pareto::mutation::mutate;
 use bisect_pareto::{run_nsga2, ParetoConfig, ParetoResult};
+use std::collections::BTreeMap;
 
 fn path_adj(n: usize) -> Vec<Vec<usize>> {
     (0..n)
@@ -380,4 +381,94 @@ fn dominance_sort_lower_ec_wins() {
     assert_eq!(fronts.len(), 2, "A dominates B -> 2 fronts");
     assert_eq!(fronts[0], vec![0], "A (lower EC) in front 0");
     assert_eq!(fronts[1], vec![1], "B in front 1");
+}
+
+#[test]
+fn selected_frontier_package_writes_verifiable_audit_sidecars() {
+    let adj = path_adj(4);
+    let pop = vec![100i64; 4];
+    let config = ParetoConfig {
+        n_population: 6,
+        n_generations: 2,
+        base_seed: 42,
+        balance_tolerance: 0.5,
+    };
+    let result = run_nsga2(&adj, &pop, 2, None, None, &[], config).unwrap();
+    let tmp = tempfile::TempDir::new().unwrap();
+    let context = path4_context();
+
+    let package = bisect_pareto::write_selected_frontier_package(
+        &result,
+        0,
+        &context,
+        2,
+        tmp.path(),
+        "pareto-selected",
+        50.0,
+        "2026-05-11T00:00:00Z",
+    )
+    .unwrap();
+
+    assert_eq!(package.rplan_path, "selected-frontier.rplan");
+    assert_eq!(package.audit_certificate_path, "audit-certificate.json");
+    let rplan_text = std::fs::read_to_string(tmp.path().join("selected-frontier.rplan")).unwrap();
+    let rctx_text = std::fs::read_to_string(tmp.path().join("selected-frontier.rctx")).unwrap();
+    let cert_text = std::fs::read_to_string(tmp.path().join("audit-certificate.json")).unwrap();
+    let manifest_text = std::fs::read_to_string(tmp.path().join("manifest.json")).unwrap();
+    let document = rplan_io::read_rplan_str(&rplan_text).unwrap();
+    let context = rplan_io::read_rctx_str(&rctx_text).unwrap();
+    let certificate: rplan_audit::AuditCertificate = serde_json::from_str(&cert_text).unwrap();
+    rplan_audit::verify_audit_certificate(&certificate, Some(&document.plan), Some(&context))
+        .unwrap();
+    let manifest: serde_json::Value = serde_json::from_str(&manifest_text).unwrap();
+    assert_eq!(manifest["schema_version"], package.schema_version);
+    assert_eq!(manifest["audit_result"], "pass");
+    assert_eq!(manifest["selected_frontier_index"], 0);
+}
+
+fn path4_context() -> rplan_core::RplanContext {
+    let mut units = rplan_core::PlanUnitIndex {
+        unit_kind: rplan_core::UnitKind::Imported,
+        state: Some("TT".to_string()),
+        year: Some(2020),
+        canonical_order: rplan_core::CanonicalOrder::ExplicitUnitIds,
+        unit_ids: (0..4).map(|idx| format!("u{idx}")).collect(),
+        unit_universe_hash: String::new(),
+        source_id: Some("pareto-fixture".to_string()),
+    };
+    units.unit_universe_hash = units.compute_unit_universe_hash().unwrap();
+    let mut context = rplan_core::RplanContext {
+        rctx_version: rplan_core::RCTX_VERSION.to_string(),
+        context_hash: String::new(),
+        units,
+        graph: Some(rplan_core::UnitGraph {
+            edge_semantics: rplan_core::EdgeSemantics::Undirected,
+            adjacency: vec![
+                vec![edge(1)],
+                vec![edge(0), edge(2)],
+                vec![edge(1), edge(3)],
+                vec![edge(2)],
+            ],
+        }),
+        populations: Some(vec![100, 100, 100, 100]),
+        subdivisions: None,
+        demographics: None,
+        geometry: None,
+        source_hashes: rplan_core::SourceHashes {
+            entries: BTreeMap::from([(
+                "fixture".to_string(),
+                format!("sha256:{}", "2".repeat(64)),
+            )]),
+        },
+    };
+    context.context_hash = context.compute_context_hash().unwrap();
+    context
+}
+
+fn edge(to: u32) -> rplan_core::UnitEdge {
+    rplan_core::UnitEdge {
+        to,
+        kind: rplan_core::EdgeKind::Boundary,
+        weight: None,
+    }
 }

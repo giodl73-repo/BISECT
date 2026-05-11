@@ -8,9 +8,15 @@ description = "Multi-objective Pareto redistricting via NSGA-II (U.7)"
 
 [dependencies]
 bisect-ensemble = { path = "../bisect-ensemble" }
+rplan-audit = { path = "../rplan-audit" }
+rplan-core = { path = "../rplan-core" }
+rplan-io = { path = "../rplan-io" }
 rand.workspace = true
 sha2.workspace = true
 rayon.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
