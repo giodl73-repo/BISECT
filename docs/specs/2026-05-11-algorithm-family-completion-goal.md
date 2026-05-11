@@ -90,13 +90,13 @@ Purpose: extend `bisect-clustering` beyond flat capacity assignment.
 
 Purpose: add heavier exact optimization with a distinct solver lifecycle.
 
-- [ ] Write U.17 implementation spec and role-review notes.
-- [ ] Add `bisect-column` crate.
-- [ ] Define column, pricing, master-problem, and fallback output contracts.
-- [ ] Implement formulation-only and small exact fixture paths first.
+- [x] Write U.17 implementation spec and role-review notes.
+- [x] Add `bisect-column` crate.
+- [x] Define column, pricing, master-problem, and fallback output contracts.
+- [x] Implement formulation-only and small exact fixture paths first.
 - [ ] Add `bisect exact --method branch-and-price`.
 - [ ] Emit solver provenance, gap/bound metadata, and `algorithm_lineage`.
-- [ ] Add L0 pricing/master fixtures.
+- [x] Add L0 pricing/master fixtures.
 - [ ] Add L1 audit package test for a small exact output.
 
 ## Stage 5 - T.17 Flow-Based Construction

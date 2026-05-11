@@ -257,6 +257,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "bisect-column"
+version = "0.1.0"
+dependencies = [
+ "rplan-audit",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "bisect-core"
 version = "0.1.0"
 dependencies = [
