@@ -3869,6 +3869,20 @@ mod tests {
             Some(sidecars.context_hash.as_str())
         );
         assert_eq!(cert.result, rplan_audit::AuditResult::Pass);
+
+        let rplan_text = std::fs::read_to_string(tmp.path().join("plan.rplan")).unwrap();
+        let rplan = rplan_io::read_rplan_str(&rplan_text).unwrap();
+        let verification =
+            rplan_audit::verify_audit_certificate(&cert, Some(&rplan.plan), Some(&context))
+                .unwrap();
+        assert_eq!(
+            verification.content_hash,
+            sidecars.audit_certificate_content_hash
+        );
+        assert_eq!(
+            bisect_report::sha256_file(&tmp.path().join("audit-certificate.json")).unwrap(),
+            sidecars.audit_certificate_sha256
+        );
     }
 
     #[test]
