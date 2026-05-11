@@ -3182,6 +3182,7 @@ fn write_rplan_audit_sidecars(
         units: units.clone(),
         graph: Some(build_rplan_graph(graph)),
         populations: Some(graph.vertex_weights.clone()),
+        subdivisions: None,
         source_hashes: source_hashes.clone(),
     };
     context.context_hash = context

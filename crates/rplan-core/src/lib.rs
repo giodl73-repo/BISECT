@@ -40,6 +40,12 @@ pub enum RplanCoreError {
         population_len: usize,
         unit_count: usize,
     },
+    #[error("{subdivision_kind} subdivision length {subdivision_len} does not match unit count {unit_count}")]
+    SubdivisionLengthMismatch {
+        subdivision_kind: String,
+        subdivision_len: usize,
+        unit_count: usize,
+    },
     #[error("edge target {to} at vertex {from} is outside unit range")]
     InvalidEdgeTarget { from: usize, to: u32 },
     #[error("duplicate edge from {from} to {to}")]
@@ -131,6 +137,14 @@ pub struct SourceHashes {
     pub entries: BTreeMap<String, String>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub struct SubdivisionContext {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub county_ids: Option<Vec<Option<String>>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub municipal_ids: Option<Vec<Option<String>>>,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RplanContext {
     pub rctx_version: String,
@@ -138,6 +152,8 @@ pub struct RplanContext {
     pub units: PlanUnitIndex,
     pub graph: Option<UnitGraph>,
     pub populations: Option<Vec<i64>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subdivisions: Option<SubdivisionContext>,
     pub source_hashes: SourceHashes,
 }
 
@@ -306,17 +322,50 @@ impl RplanContext {
                 });
             }
         }
+        if let Some(subdivisions) = &self.subdivisions {
+            subdivisions.validate(unit_count)?;
+        }
         Ok(())
     }
 
     pub fn compute_context_hash(&self) -> Result<String, RplanCoreError> {
-        let value = serde_json::json!({
+        let mut value = serde_json::json!({
             "units": self.units,
             "graph": self.graph,
             "populations": self.populations,
             "source_hashes": self.source_hashes,
         });
+        if let Some(subdivisions) = &self.subdivisions {
+            value
+                .as_object_mut()
+                .expect("context hash projection is an object")
+                .insert("subdivisions".to_string(), to_value(subdivisions)?);
+        }
         canonical_sha256(&value)
+    }
+}
+
+impl SubdivisionContext {
+    pub fn validate(&self, unit_count: usize) -> Result<(), RplanCoreError> {
+        if let Some(county_ids) = &self.county_ids {
+            if county_ids.len() != unit_count {
+                return Err(RplanCoreError::SubdivisionLengthMismatch {
+                    subdivision_kind: "county".to_string(),
+                    subdivision_len: county_ids.len(),
+                    unit_count,
+                });
+            }
+        }
+        if let Some(municipal_ids) = &self.municipal_ids {
+            if municipal_ids.len() != unit_count {
+                return Err(RplanCoreError::SubdivisionLengthMismatch {
+                    subdivision_kind: "municipal".to_string(),
+                    subdivision_len: municipal_ids.len(),
+                    unit_count,
+                });
+            }
+        }
+        Ok(())
     }
 }
 
@@ -549,6 +598,7 @@ mod tests {
                 ],
             }),
             populations: Some(vec![100, 100]),
+            subdivisions: None,
             source_hashes: SourceHashes::default(),
         };
         context.validate().unwrap();
@@ -556,5 +606,29 @@ mod tests {
             .compute_context_hash()
             .unwrap()
             .starts_with("sha256:"));
+    }
+
+    #[test]
+    fn validates_subdivision_lengths() {
+        let context = RplanContext {
+            rctx_version: RCTX_VERSION.to_string(),
+            context_hash: String::new(),
+            units: test_units(),
+            graph: None,
+            populations: None,
+            subdivisions: Some(SubdivisionContext {
+                county_ids: Some(vec![Some("001".to_string())]),
+                municipal_ids: None,
+            }),
+            source_hashes: SourceHashes::default(),
+        };
+
+        assert!(matches!(
+            context.validate(),
+            Err(RplanCoreError::SubdivisionLengthMismatch {
+                subdivision_kind,
+                ..
+            }) if subdivision_kind == "county"
+        ));
     }
 }

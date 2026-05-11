@@ -1,6 +1,6 @@
-use rplan_core::{canonical_sha256, DistrictPlan, RplanContext, SourceHashes};
+use rplan_core::{canonical_sha256, DistrictPlan, RplanContext, SourceHashes, SubdivisionContext};
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeSet, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use thiserror::Error;
 
 pub const AUDIT_CERTIFICATE_SCHEMA_VERSION: &str = "audit-certificate-v1";
@@ -246,8 +246,13 @@ pub struct MissingInputWitness {
     pub reason: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
-pub struct SplitWitness {}
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SplitWitness {
+    pub subdivision_kind: String,
+    pub subdivision_id: String,
+    pub district_ids: Vec<u32>,
+    pub unit_count: usize,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct VraWitness {}
@@ -366,10 +371,7 @@ pub fn audit_plan_with_lineage(
         checks.push(check_contiguity(plan, context, profile));
     }
     if requested.contains(&AuditConstraint::Splits) {
-        checks.push(not_evaluated_check(
-            "splits",
-            "split auditing is reserved in certificate v1 but not implemented in phase 1",
-        ));
+        checks.push(check_splits(plan, context, profile));
     }
     if requested.contains(&AuditConstraint::Vra) {
         checks.push(not_evaluated_check(
@@ -767,6 +769,116 @@ fn district_components(
     components
 }
 
+fn check_splits(
+    plan: &DistrictPlan,
+    context: Option<&RplanContext>,
+    profile: &LegalProfile,
+) -> AuditCheck {
+    let mut checks = Vec::new();
+    if !matches!(profile.county_split_rule, SplitRule::NotEvaluated) {
+        checks.push(("county", &profile.county_split_rule));
+    }
+    if !matches!(profile.municipal_split_rule, SplitRule::NotEvaluated) {
+        checks.push(("municipal", &profile.municipal_split_rule));
+    }
+    if checks.is_empty() {
+        return not_evaluated_check(
+            "splits",
+            "subdivision split reporting is not requested by the supplied profile",
+        );
+    }
+
+    let Some(subdivisions) = context.and_then(|ctx| ctx.subdivisions.as_ref()) else {
+        return missing_input_check(
+            "splits",
+            "subdivisions",
+            "split audit requires context subdivision memberships",
+        );
+    };
+
+    let mut witnesses = Vec::new();
+    let mut unsupported = Vec::new();
+    for (kind, rule) in checks {
+        if !matches!(rule, SplitRule::CountOnly) {
+            unsupported.push(kind);
+            continue;
+        }
+        let Some(ids) = subdivision_ids(subdivisions, kind) else {
+            return missing_input_check(
+                "splits",
+                &format!("subdivisions.{kind}_ids"),
+                &format!("split audit requires {kind} memberships"),
+            );
+        };
+        witnesses.extend(split_witnesses(kind, ids, &plan.assignment));
+    }
+
+    if !unsupported.is_empty() {
+        return AuditCheck {
+            name: "splits".to_string(),
+            status: CheckStatus::NotEvaluated,
+            severity: Severity::Warning,
+            summary: format!(
+                "split rules are not implemented for subdivision kinds {:?}",
+                unsupported
+            ),
+            witnesses,
+        };
+    }
+
+    let split_count = witnesses.len();
+    AuditCheck {
+        name: "splits".to_string(),
+        status: CheckStatus::Pass,
+        severity: Severity::Info,
+        summary: format!("{split_count} split subdivisions reported"),
+        witnesses,
+    }
+}
+
+fn subdivision_ids<'a>(
+    subdivisions: &'a SubdivisionContext,
+    kind: &str,
+) -> Option<&'a [Option<String>]> {
+    match kind {
+        "county" => subdivisions.county_ids.as_deref(),
+        "municipal" => subdivisions.municipal_ids.as_deref(),
+        _ => None,
+    }
+}
+
+fn split_witnesses(
+    kind: &str,
+    subdivision_ids: &[Option<String>],
+    assignment: &[u32],
+) -> Vec<Witness> {
+    let mut memberships: BTreeMap<String, (BTreeSet<u32>, usize)> = BTreeMap::new();
+    for (idx, subdivision_id) in subdivision_ids.iter().enumerate() {
+        let Some(subdivision_id) = subdivision_id else {
+            continue;
+        };
+        let entry = memberships
+            .entry(subdivision_id.clone())
+            .or_insert_with(|| (BTreeSet::new(), 0));
+        entry.0.insert(assignment[idx]);
+        entry.1 += 1;
+    }
+
+    memberships
+        .into_iter()
+        .filter_map(|(subdivision_id, (district_ids, unit_count))| {
+            (district_ids.len() > 1).then(|| {
+                Witness::Split(SplitWitness {
+                    subdivision_kind: kind.to_string(),
+                    subdivision_id,
+                    district_ids: district_ids.into_iter().collect(),
+                    unit_count,
+                })
+            })
+        })
+        .collect()
+}
+
 fn missing_input_check(name: &str, input: &str, reason: &str) -> AuditCheck {
     AuditCheck {
         name: name.to_string(),
@@ -867,9 +979,21 @@ mod tests {
             units: units(),
             graph,
             populations,
+            subdivisions: None,
             source_hashes: SourceHashes {
                 entries: BTreeMap::from([("adjacency".to_string(), "sha256:abc".to_string())]),
             },
+        }
+    }
+
+    fn context_with_subdivisions(
+        populations: Option<Vec<i64>>,
+        graph: Option<UnitGraph>,
+        subdivisions: SubdivisionContext,
+    ) -> RplanContext {
+        RplanContext {
+            subdivisions: Some(subdivisions),
+            ..context(populations, graph)
         }
     }
 
@@ -1124,7 +1248,7 @@ mod tests {
     }
 
     #[test]
-    fn requested_splits_and_vra_are_explicitly_not_evaluated() {
+    fn requested_splits_without_subdivision_context_is_missing_input() {
         let cert = audit_plan(
             &plan(vec![0, 0, 0, 1, 1]),
             Some(&context(
@@ -1143,8 +1267,9 @@ mod tests {
                 .find(|check| check.name == "splits")
                 .unwrap()
                 .status,
-            CheckStatus::NotEvaluated
+            CheckStatus::MissingInput
         );
+        assert_eq!(cert.result, AuditResult::Fail);
         assert_eq!(
             cert.checks
                 .iter()
@@ -1153,6 +1278,51 @@ mod tests {
                 .status,
             CheckStatus::NotEvaluated
         );
+    }
+
+    #[test]
+    fn county_split_count_reports_split_witnesses() {
+        let cert = audit_plan(
+            &plan(vec![0, 0, 1, 1, 1]),
+            Some(&context_with_subdivisions(
+                Some(vec![100, 100, 100, 150, 150]),
+                Some(path_graph()),
+                SubdivisionContext {
+                    county_ids: Some(vec![
+                        Some("county-a".to_string()),
+                        Some("county-a".to_string()),
+                        Some("county-a".to_string()),
+                        Some("county-b".to_string()),
+                        Some("county-b".to_string()),
+                    ]),
+                    municipal_ids: None,
+                },
+            )),
+            &profile(),
+            runtime(),
+            &[AuditConstraint::Splits],
+            "2026-05-10T00:00:00Z",
+        )
+        .unwrap();
+
+        let splits = cert
+            .checks
+            .iter()
+            .find(|check| check.name == "splits")
+            .unwrap();
+        assert_eq!(splits.status, CheckStatus::Pass);
+        assert_eq!(splits.summary, "1 split subdivisions reported");
+        assert!(matches!(
+            &splits.witnesses[0],
+            Witness::Split(SplitWitness {
+                subdivision_kind,
+                subdivision_id,
+                district_ids,
+                unit_count: 3,
+            }) if subdivision_kind == "county"
+                && subdivision_id == "county-a"
+                && district_ids == &vec![0, 1]
+        ));
     }
 
     #[test]

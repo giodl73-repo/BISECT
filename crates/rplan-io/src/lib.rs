@@ -373,6 +373,7 @@ mod tests {
                 ],
             }),
             populations: Some(vec![100, 100, 100, 100, 100]),
+            subdivisions: None,
             source_hashes: SourceHashes::default(),
         };
         let json = write_rctx_string(&context).unwrap();
