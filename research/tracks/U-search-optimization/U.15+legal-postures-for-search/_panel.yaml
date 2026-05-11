@@ -1,0 +1,42 @@
+paper: U.15+legal-postures-for-search
+title: Legal Postures for Search and Optimization in Redistricting
+type: publication
+stage: recheck
+round: 1
+content_mode: draft
+venue: technical report
+review_date: 2026-05-11
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - name: Heather Gerken
+    profile_ref: simulated-election-law
+    score: 3
+  - name: Guy-Uriel Charles
+    profile_ref: simulated-election-law-voting-rights
+    score: 3
+  - name: Cynthia Dwork
+    profile_ref: simulated-accountability-fairness
+    score: 3
+  - name: Wendy Tam Cho
+    profile_ref: simulated-political-methodology
+    score: 2
+  - name: Moon Duchin
+    profile_ref: simulated-redistricting-geometry
+    score: 2
+reviews:
+  round_1:
+    avg_score: 2.6
+    min_score: 2
+    max_score: 3
+    synthesis: reviews/SYNTHESIS.md
+    revision_plan: REVISION-PLAN.md
+p1_items:
+  - id: P1.1
+    title: Define posture as an evidence-backed argument position, not a legal conclusion.
+    addressed: true
+  - id: P1.2
+    title: Add a posture table with supporting records and common overclaims.
+    addressed: true
+  - id: P1.3
+    title: Require legal-facing audit packages to name omitted evidence and assumptions.
+    addressed: true

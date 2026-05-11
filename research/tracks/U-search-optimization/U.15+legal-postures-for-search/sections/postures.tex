@@ -4,3 +4,26 @@ Search can support posture claims such as transparency, robustness,
 least-change comparison, alternative-plan availability, or auditability. Each
 posture requires different evidence and should be tied to specific commands,
 artifacts, and limitations.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.22\linewidth}p{0.34\linewidth}p{0.28\linewidth}}
+\toprule
+Posture & Supporting record & Common overclaim \\
+\midrule
+Transparency & Parameters, seeds, constraints, and RCTX & The process is neutral \\
+Robustness & Alternative plans under declared protocols & The chosen plan is legally safe \\
+Least change & Baseline, distance metric, and comparison set & The change is justified by metric alone \\
+Alternative availability & Generated candidate set and filters & Any alternative is equally viable \\
+Auditability & RPLAN/RCTX, certificates, and manifests & Audit pass proves compliance \\
+\bottomrule
+\end{tabular}
+\caption{Legal/policy postures and the records they require.}
+\end{table}
+
+The posture vocabulary is useful because it keeps computational artifacts in
+their lane. A search workflow can show that many alternatives were considered,
+or that a selected plan survived a declared audit profile. It cannot decide
+which legal standard applies, which evidence a court or agency will credit, or
+whether unmodeled facts change the conclusion.
