@@ -48,7 +48,7 @@ capacity witness data for infeasible cases.
 
 ## Panel Readiness Checklist
 
-- [ ] `main.tex` and sections exist.
+- [x] `main.tex` and sections exist.
 - [ ] Capacity and repair witnesses are defined clearly.
 - [ ] Audit sidecar example included.
 - [ ] P1 simulated feedback addressed.

@@ -1,0 +1,7 @@
+\section{Audit Artifacts}
+
+Capacity-clustering outputs are framed as final-plan candidates only after the
+RPLAN/RCTX audit sidecars record assignments, capacity status, repair status,
+parameter hashes, and algorithm lineage. The verifier checks the declared audit
+profile; it does not certify that clustering choices satisfy fairness or legal
+requirements beyond the profile.

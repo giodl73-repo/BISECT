@@ -48,7 +48,7 @@ or lineage that cannot be verified through the audit path.
 
 ## Panel Readiness Checklist
 
-- [ ] `main.tex` and sections exist.
+- [x] `main.tex` and sections exist.
 - [ ] Flow network and witness definitions are reproducible.
 - [ ] Audit lineage path is shown.
 - [ ] P1 simulated feedback addressed.

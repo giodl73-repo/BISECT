@@ -49,7 +49,7 @@ stated fixtures, or recursive splits that mishandle uneven district counts.
 
 ## Panel Readiness Checklist
 
-- [ ] `main.tex` and sections exist.
+- [x] `main.tex` and sections exist.
 - [ ] Related work covers spectral graph partitioning and redistricting baselines.
 - [ ] Evaluation distinguishes fixture correctness from empirical sweeps.
 - [ ] P1 simulated feedback addressed.

@@ -48,7 +48,7 @@ uninformative merge witnesses.
 
 ## Panel Readiness Checklist
 
-- [ ] `main.tex` and sections exist.
+- [x] `main.tex` and sections exist.
 - [ ] Merge witness semantics are precise.
 - [ ] Evaluation separates fixtures from future empirical sweeps.
 - [ ] P1 simulated feedback addressed.

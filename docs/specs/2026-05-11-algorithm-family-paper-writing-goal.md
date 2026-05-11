@@ -1,6 +1,6 @@
 # Goal: Write Algorithm-Family Papers
 
-**Status:** Active - Stage 0 scaffolding in progress
+**Status:** Active - Stage 1 Track T drafting in progress
 **Track:** T/U algorithm-family publication  
 **Foundation:**
 [`2026-05-11-algorithm-family-completion-goal.md`](2026-05-11-algorithm-family-completion-goal.md),
@@ -82,12 +82,12 @@ discipline:
 Acceptance for each T paper:
 
 - [x] `main.tex` and section files exist.
-- [ ] `plan.md` lists hypotheses, scope, baselines, failure modes, figures,
+- [x] `plan.md` lists hypotheses, scope, baselines, failure modes, figures,
       and limitations.
-- [ ] The implementation section cites the crate/module boundary and CLI
+- [x] The implementation section cites the crate/module boundary and CLI
       surface.
-- [ ] The audit section explains final-plan RPLAN sidecars where applicable.
-- [ ] The evaluation section distinguishes synthetic L0/L1 fixtures from
+- [x] The audit section explains final-plan RPLAN sidecars where applicable.
+- [x] The evaluation section distinguishes synthetic L0/L1 fixtures from
       real-data or future benchmark claims.
 - [ ] Paper-level simulated review/revision artifacts meet panel readiness
       thresholds.
