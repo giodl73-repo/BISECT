@@ -4,3 +4,8 @@ Solved outputs should converge to the RPLAN/RCTX fixed point with certificate
 and manifest sidecars. Column-generation-specific evidence remains in the run
 context and solver report; the final RPLAN carries the assignment, not the
 entire proof history.
+
+The audit package should identify the column pool, selected columns, master
+objective, fixture or instance id, and certificate profile. This keeps the
+generic RPLAN assignment separate from the specialized column-generation
+evidence needed to interpret exactness.

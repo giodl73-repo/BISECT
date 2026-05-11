@@ -5,6 +5,12 @@ generates connected balanced columns or explicit failure statuses, a master
 contract that reports objective and bound state, and a package contract that
 turns solved fixture outputs into final-plan artifacts.
 
+The key reproducibility requirement is that a reader can tell which loop stage
+produced the artifact. A pricing artifact is not a solved partition; a master
+report is not necessarily a branch-and-price proof; and an exact fixture
+package is scoped to the fixture model, objective, and column universe recorded
+in the run context.
+
 \begin{table}[htbp]
 \centering
 \small
@@ -18,4 +24,21 @@ Package & final assignments, manifest, certificate & L1 audit path \\
 \bottomrule
 \end{tabular}
 \caption{Branch-and-price staged implementation contracts.}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.24\linewidth}p{0.34\linewidth}p{0.28\linewidth}}
+\toprule
+Status & Meaning & Allowed claim \\
+\midrule
+Pricing-valid & connected balanced columns generated & pricing contract works on fixture \\
+Pricing-failed & no valid column or explicit fallback & failure is reproducible \\
+Master-bounded & objective and bound reported & scoped bound under column pool \\
+Fixture-solved & exact fixture package emitted & exact fixture result \\
+Formulation-only & model/report built without solve & staged implementation only \\
+\bottomrule
+\end{tabular}
+\caption{Status vocabulary for branch-and-price outputs.}
 \end{table}
