@@ -53,10 +53,10 @@ later construction/evolutionary families.
 - [x] Add tabu/LNS scaffolding with structured parameters, even if advanced
       search is staged behind feature-complete tests.
 - [x] Emit local-search summaries and `algorithm_lineage`.
-- [ ] Wire `bisect improve` or `--search lns`/`--search tabu` surface.
+- [x] Wire `bisect improve` or `--search lns`/`--search tabu` surface.
 - [x] Add L0 fixtures for determinism, validity preservation, and no-op cases.
-- [ ] Add L1 CLI/RPLAN sidecar test.
-- [ ] Add L2 verify/report smoke path if the CLI surface emits final plans.
+- [x] Add L1 CLI/RPLAN sidecar test.
+- [x] Add L2 verify/report smoke path if the CLI surface emits final plans.
 
 ## Stage 2 - T.14 Spectral Partitioning
 

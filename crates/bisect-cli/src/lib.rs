@@ -20,6 +20,7 @@ pub mod geosection_orientation;
 pub mod ilp_audit;
 pub mod import_cmd;
 pub mod import_label;
+pub mod improve_cmd;
 #[cfg(test)]
 mod integration_pipeline_tests;
 pub mod io_utils;

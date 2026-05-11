@@ -10,6 +10,7 @@ use bisect_cli::export_cmd::run_export;
 use bisect_cli::fetch::{build_fetch_list, download_items, load_manifest, print_check_report};
 use bisect_cli::ilp_audit::run_ilp_audit;
 use bisect_cli::import_cmd::run_import;
+use bisect_cli::improve_cmd::run_improve;
 use bisect_cli::label_cmd::{run_ls, run_mv, run_show, run_verify as run_label_verify};
 use bisect_cli::map_cmd::run_map;
 use bisect_cli::migrate::run_migrate;
@@ -772,6 +773,14 @@ fn main() {
         // ── BISECT import: import GeoJSON plan ────────────────────────────────
         Commands::Import(args) => {
             run_import(&args).unwrap_or_else(|e| {
+                eprintln!("ERROR: {e}");
+                std::process::exit(1);
+            });
+        }
+
+        // ── BISECT improve: audited local-search improvement ─────────────────
+        Commands::Improve(args) => {
+            run_improve(&args).unwrap_or_else(|e| {
                 eprintln!("ERROR: {e}");
                 std::process::exit(1);
             });

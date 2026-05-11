@@ -210,6 +210,7 @@ dependencies = [
  "bisect-data",
  "bisect-ensemble",
  "bisect-ilp",
+ "bisect-local-search",
  "bisect-map",
  "bisect-multiscale",
  "bisect-pareto",

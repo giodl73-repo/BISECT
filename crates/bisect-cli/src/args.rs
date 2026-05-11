@@ -317,6 +317,8 @@ pub enum Commands {
     Export(ExportArgs),
     /// Import a GeoJSON plan into the RPLAN format
     Import(ImportArgs),
+    /// Improve an existing RPLAN plan with audited local search
+    Improve(ImproveArgs),
     /// Civic Bidirectional Input: ingest community-of-interest CSVs, detect
     /// cross-input conflicts, list/show ingested inputs, add candidate-race
     /// annotations. See `docs/superpowers/specs/2026-04-30-civic-bidirectional.md`.
@@ -649,6 +651,43 @@ pub struct ImportArgs {
     /// Submission timestamp (ISO-8601 UTC). Defaults to current time at import.
     #[arg(long)]
     pub submitted_at: Option<String>,
+}
+
+// ---------------------------------------------------------------------------
+// `BISECT improve` — local-search improvement for audited RPLAN plans
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, clap::ValueEnum)]
+pub enum ImproveMethodArg {
+    /// Deterministic one-vertex boundary move that improves edge cut.
+    #[value(name = "one-move")]
+    OneMove,
+}
+
+#[derive(Debug, clap::Args)]
+#[command(disable_version_flag = true)]
+pub struct ImproveArgs {
+    /// Input .rplan file.
+    #[arg(long)]
+    pub plan: std::path::PathBuf,
+    /// Input .rctx context file with graph and population data.
+    #[arg(long)]
+    pub context: std::path::PathBuf,
+    /// Output directory for improved.rplan, improved.rctx, summary, and certificate.
+    #[arg(long)]
+    pub out_dir: std::path::PathBuf,
+    /// Local-search method.
+    #[arg(long, default_value = "one-move")]
+    pub method: ImproveMethodArg,
+    /// Population tolerance as a percent. Example: 5.0 means +/-5%.
+    #[arg(long, default_value_t = 5.0)]
+    pub tolerance: f64,
+    /// Output label. Defaults to the input label with "-improved" appended.
+    #[arg(long)]
+    pub label: Option<String>,
+    /// Timestamp to record in emitted artifacts. Defaults to current UTC.
+    #[arg(long)]
+    pub generated_at: Option<String>,
 }
 
 // ---------------------------------------------------------------------------
