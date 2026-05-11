@@ -49,8 +49,10 @@ The `--structure` layer of the compositor. Every paper here answers: given k dis
 
 T.14-T.17 are implemented as audited vertical slices with draft PDFs and
 paper-level simulated review/revision artifacts. T.14 now also has a
-method-produced synthetic spectral RPLAN package with transcript and verifier
-manifest under `docs/examples/rplan-method-packages/`. Writing goal:
+method-produced synthetic spectral RPLAN package and a benchmark-tier 100-unit
+synthetic grid package with transcripts and verifier manifests under
+`docs/examples/rplan-method-packages/` and
+`docs/examples/rplan-benchmark-packages/`. Writing goal:
 [`2026-05-11-algorithm-family-paper-writing-goal.md`](specs/2026-05-11-algorithm-family-paper-writing-goal.md).
 Implementation roadmap:
 [`2026-05-10-algorithm-family-roadmap.md`](specs/2026-05-10-algorithm-family-roadmap.md).

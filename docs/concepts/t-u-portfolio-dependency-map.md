@@ -19,6 +19,7 @@ research/tracks/T-plan-construction/*
 research/tracks/U-search-optimization/*
 docs/examples/rplan-golden-packages/*
 docs/examples/rplan-method-packages/*
+docs/examples/rplan-benchmark-packages/*
 docs/examples/u20-plan-audit-certificates/*
           ^
           |
@@ -125,7 +126,7 @@ bisect-core + bisect-data
 | Tiny golden package | `docs/examples/rplan-golden-packages/` | Verifier-facing package shape, lineage, hashes, and certificate acceptance across implemented families | Method runtime, real-data quality, benchmark performance |
 | U.20 reference package | `docs/examples/u20-plan-audit-certificates/` | The audit-certificate fixed point and negative/positive verifier behavior | Algorithm production quality |
 | Method-produced package | `docs/examples/rplan-method-packages/` | A real CLI or crate workflow can generate package artifacts with transcripts and stable hashes | Large-instance performance, legal sufficiency, empirical superiority |
-| Benchmark package | future release/artifact bundle | Real-data runs with timing, data provenance, and larger-instance evidence | Final legal judgment or universal method ranking |
+| Benchmark package | `docs/examples/rplan-benchmark-packages/` or future release bundle | Larger verifier-scale or real-data runs with timing protocol, data provenance, and package-footprint notes | Final legal judgment or universal method ranking |
 
 ## Current Completed Public Packages
 
@@ -143,6 +144,9 @@ docs/examples/rplan-golden-packages/
 docs/examples/rplan-method-packages/
   T.14+spectral-generated-synthetic/
   U.18+local-search-generated-descendant/
+
+docs/examples/rplan-benchmark-packages/
+  T.14+spectral-grid10-benchmark/
 
 docs/examples/u20-plan-audit-certificates/
   grid3x3-valid/

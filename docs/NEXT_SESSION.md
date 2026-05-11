@@ -1,6 +1,6 @@
 # Next Session Handoff: Algorithm-Family Paper Portfolio
 
-**Status:** Method-produced RPLAN package expansion complete
+**Status:** Benchmark-tier RPLAN package frontier active
 **Owner:** maintainer (you)
 **Last update:** 2026-05-11
 
@@ -24,10 +24,16 @@ goals are complete:
   `docs/examples/rplan-method-packages/T.14+spectral-generated-synthetic/`.
 - The search-side method-produced package is
   `docs/examples/rplan-method-packages/U.18+local-search-generated-descendant/`.
+- The first benchmark-tier package is
+  `docs/examples/rplan-benchmark-packages/T.14+spectral-grid10-benchmark/`.
 
-The completed goal doc is:
+Completed goal doc:
 
 `docs/specs/2026-05-11-method-produced-rplan-package-goal.md`
+
+Active goal doc:
+
+`docs/specs/2026-05-11-benchmark-rplan-package-frontier-goal.md`
 
 ## Latest Commits
 
@@ -44,11 +50,12 @@ The completed goal doc is:
 
 ## Remaining Work
 
-The residual work area is public fixture depth and publication packaging:
+The residual work area is benchmark-tier public fixture depth and publication
+packaging:
 
 - Keep `docs/PAPERS.md` current as paper titles or notes change.
 - Extend public fixture/package examples beyond the current tiny golden corpus
-  and two method-produced packages.
+  two method-produced packages, and first benchmark-tier package.
 - Use `docs/concepts/t-u-portfolio-dependency-map.md` as the visual dependency
   map for T/U publication packaging.
 - Promote larger real method-produced packages when non-toy fixture outputs are
@@ -62,11 +69,9 @@ warnings that resolved by final output, and MiKTeX update reminders.
 
 ## Good Next Move
 
-Plan the benchmark-tier package frontier:
+Finish the first benchmark-tier package slice:
 
-1. Choose whether the first benchmark-tier package should be construction-side
-   or search/optimization-side.
-2. Prefer a pinned no-download or tiny pinned-data workflow before committing
-   to external TIGER/ACS-backed runs.
-3. Keep the claim boundary explicit: benchmark packages can raise empirical
-   evidence, but still do not prove legal sufficiency or universal superiority.
+1. Run `rplan verify-certificate` and `bisect verify --manifest` for
+   `T.14+spectral-grid10-benchmark`.
+2. Run focused corpus tests for benchmark packages.
+3. Commit and push the verified benchmark package slice.

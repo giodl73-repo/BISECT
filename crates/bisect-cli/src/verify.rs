@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::path::{Component, Path, PathBuf};
 
 const RPLAN_GOLDEN_PACKAGE_SCHEMA_VERSION: &str = "u20-public-example-manifest-v1";
+const RPLAN_BENCHMARK_PACKAGE_SCHEMA_VERSION: &str = "benchmark-rplan-package-manifest-v1";
 
 #[derive(Debug, Deserialize)]
 struct RplanGoldenPackageManifest {
@@ -69,9 +70,11 @@ fn parse_rplan_golden_package_manifest(
 ) -> anyhow::Result<Option<RplanGoldenPackageManifest>> {
     let value: serde_json::Value =
         serde_json::from_str(content).map_err(|e| anyhow::anyhow!("invalid manifest JSON: {e}"))?;
-    if value.get("schema_version").and_then(|v| v.as_str())
-        != Some(RPLAN_GOLDEN_PACKAGE_SCHEMA_VERSION)
-    {
+    let schema_version = value.get("schema_version").and_then(|v| v.as_str());
+    if !matches!(
+        schema_version,
+        Some(RPLAN_GOLDEN_PACKAGE_SCHEMA_VERSION | RPLAN_BENCHMARK_PACKAGE_SCHEMA_VERSION)
+    ) {
         return Ok(None);
     }
 
@@ -84,7 +87,10 @@ fn verify_rplan_golden_package_manifest(
     manifest_path: &Path,
     manifest: &RplanGoldenPackageManifest,
 ) -> anyhow::Result<()> {
-    if manifest.schema_version != RPLAN_GOLDEN_PACKAGE_SCHEMA_VERSION {
+    if !matches!(
+        manifest.schema_version.as_str(),
+        RPLAN_GOLDEN_PACKAGE_SCHEMA_VERSION | RPLAN_BENCHMARK_PACKAGE_SCHEMA_VERSION
+    ) {
         anyhow::bail!(
             "unsupported RPLAN package manifest schema_version: {}",
             manifest.schema_version
@@ -756,6 +762,13 @@ mod tests {
             .join("rplan-method-packages")
     }
 
+    fn public_benchmark_package_root() -> PathBuf {
+        repo_root()
+            .join("docs")
+            .join("examples")
+            .join("rplan-benchmark-packages")
+    }
+
     fn write_ilp_report(dir: &Path, name: &str, lp_bytes: &[u8], sha256: String) -> PathBuf {
         let formulation = bisect_ilp::build_formulation(&[vec![1], vec![0]], &[1, 1], 2, 0.05);
         let result = bisect_ilp::solve(
@@ -1130,6 +1143,39 @@ mod tests {
                 "U.18+local-search-generated-descendant",
             ]
         );
+    }
+
+    #[test]
+    fn test_verify_accepts_rplan_benchmark_package_manifest() {
+        let mut verified = Vec::new();
+        for entry in std::fs::read_dir(public_benchmark_package_root()).unwrap() {
+            let entry = entry.unwrap();
+            if !entry.file_type().unwrap().is_dir() {
+                continue;
+            }
+            let package_name = entry.file_name().to_string_lossy().into_owned();
+            let args = VerifyArgs {
+                manifest: entry.path().join("manifest.json"),
+                min_similarity: 0.99,
+                verify_label: None,
+                output_base: "outputs".to_string(),
+                dry_run: false,
+                skip_binary_check: true,
+                label: None,
+                verify_assignments_only: false,
+                plan_ref: None,
+            };
+
+            let result = run_verify(&args);
+            assert!(
+                result.is_ok(),
+                "bisect verify should accept public RPLAN benchmark package manifest {package_name}: {:?}",
+                result.err()
+            );
+            verified.push(package_name);
+        }
+        verified.sort();
+        assert_eq!(verified, vec!["T.14+spectral-grid10-benchmark"]);
     }
 
     #[test]

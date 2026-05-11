@@ -1,0 +1,56 @@
+# RPLAN Benchmark Packages
+
+Benchmark packages sit above tiny golden packages and method-produced fixtures.
+They are still small enough to review, but they carry benchmark-tier metadata:
+scale notes, timing protocol, hardware notes, method transcript, package
+manifest hashes, and RPLAN audit artifacts.
+
+## Claim Boundary
+
+A benchmark package can support:
+
+- verifier behavior on a larger committed package
+- replayable command and method transcripts
+- data-provenance and package-footprint claims
+- timing protocol documentation
+
+It does not prove legal sufficiency, fairness, optimality, real-data quality, or
+universal method superiority.
+
+## Package Shape
+
+```text
+package-name/
+  plan.rplan
+  context.rctx
+  audit-certificate.json
+  manifest.json
+  method-transcript.json
+  command-transcript.txt
+  benchmark-notes.json
+  method-specific-report.json
+```
+
+The manifest schema is `benchmark-rplan-package-manifest-v1`. It preserves the
+same `files` array with `path`, `sha256`, and `role` fields used by the public
+RPLAN package verifier bridge.
+
+## Verifier Commands
+
+```powershell
+cargo run -p rplan-cli -- verify-certificate `
+  --certificate docs/examples/rplan-benchmark-packages/<package>/audit-certificate.json `
+  --plan docs/examples/rplan-benchmark-packages/<package>/plan.rplan `
+  --context docs/examples/rplan-benchmark-packages/<package>/context.rctx
+```
+
+```powershell
+cargo run -p bisect-cli -- verify `
+  --manifest docs/examples/rplan-benchmark-packages/<package>/manifest.json
+```
+
+## Current Packages
+
+| Package | Source workflow | Status | Scope |
+|---|---|---|---|
+| `T.14+spectral-grid10-benchmark` | `cargo run -p bisect-cli --no-default-features --example spectral_grid10_benchmark_package` | 100-unit synthetic grid partition verifies | Benchmark-tier package contract and verifier scale smoke; no wall-clock or real-data claim |

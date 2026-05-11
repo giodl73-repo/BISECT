@@ -42,6 +42,10 @@ docs/examples/rplan-method-packages
   method-produced packages with transcripts for T.14 spectral construction
   and U.18 local-search improvement
 
+docs/examples/rplan-benchmark-packages
+  benchmark-tier packages with timing protocol and scale notes,
+  starting with the T.14 spectral 10x10 grid package
+
 bisect-core
   shared graph, population, partition, VRA/partisan primitives
 
@@ -229,7 +233,7 @@ The latest reviewed paper additions attach the layer cake to native T/U papers:
 | Exact implementation families | U.16-U.17 | Branch-and-cut and branch-and-price contracts |
 | Heuristic/evolutionary families | U.18-U.19 | Local improvement and selected-frontier comparison |
 | Audit fixed point | U.20 | RPLAN/RCTX/certificate convergence for final plans |
-| Public package corpus | T.14-T.17, U.16-U.20 | Tiny verifier-facing packages for each implemented family, plus method-produced T.14 and U.18 fixtures |
+| Public package corpus | T.14-T.17, U.16-U.20 | Tiny verifier-facing packages for each implemented family, method-produced T.14 and U.18 fixtures, and benchmark-tier T.14 scale-smoke package |
 
 ## Crate-To-Concept Index
 
