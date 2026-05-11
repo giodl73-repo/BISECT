@@ -38,6 +38,10 @@ docs/examples/rplan-golden-packages
   public package corpus for T.14-T.17 and U.16-U.19
   plus the U.20 audit-certificate reference package
 
+docs/examples/rplan-method-packages
+  method-produced packages with transcripts for T.14 spectral construction
+  and U.18 local-search improvement
+
 bisect-core
   shared graph, population, partition, VRA/partisan primitives
 
@@ -225,7 +229,7 @@ The latest reviewed paper additions attach the layer cake to native T/U papers:
 | Exact implementation families | U.16-U.17 | Branch-and-cut and branch-and-price contracts |
 | Heuristic/evolutionary families | U.18-U.19 | Local improvement and selected-frontier comparison |
 | Audit fixed point | U.20 | RPLAN/RCTX/certificate convergence for final plans |
-| Public package corpus | T.14-T.17, U.16-U.20 | Tiny verifier-facing packages for each implemented family |
+| Public package corpus | T.14-T.17, U.16-U.20 | Tiny verifier-facing packages for each implemented family, plus method-produced T.14 and U.18 fixtures |
 
 ## Crate-To-Concept Index
 
@@ -281,3 +285,5 @@ verification story into a separate bespoke process for every solver.
   evaluation.
 - [label-pipeline.md](label-pipeline.md) explains run labels, output layout,
   and the audit chain.
+- [t-u-portfolio-dependency-map.md](t-u-portfolio-dependency-map.md) maps the
+  T/U papers, crates, package tiers, and verifier path.

@@ -1,6 +1,6 @@
 # Next Session Handoff: Algorithm-Family Paper Portfolio
 
-**Status:** Method-produced RPLAN package expansion active
+**Status:** Method-produced RPLAN package expansion complete
 **Owner:** maintainer (you)
 **Last update:** 2026-05-11
 
@@ -18,14 +18,14 @@ goals are complete:
 - `rplan verify-certificate` verifies package certificates.
 - `bisect verify --manifest path/to/package/manifest.json` now consumes the
   same package manifest shape as a bridge surface.
-- The active goal is method-produced package expansion: small generated
+- The completed method-produced package goal added small generated
   packages with transcripts, not hand-sized verifier fixtures.
 - The construction-side method-produced package is
   `docs/examples/rplan-method-packages/T.14+spectral-generated-synthetic/`.
 - The search-side method-produced package is
   `docs/examples/rplan-method-packages/U.18+local-search-generated-descendant/`.
 
-The active goal doc is:
+The completed goal doc is:
 
 `docs/specs/2026-05-11-method-produced-rplan-package-goal.md`
 
@@ -44,17 +44,13 @@ The active goal doc is:
 
 ## Remaining Work
 
-The next active goal is:
-
-`docs/specs/2026-05-11-method-produced-rplan-package-goal.md`
-
 The residual work area is public fixture depth and publication packaging:
 
 - Keep `docs/PAPERS.md` current as paper titles or notes change.
-- Verify and commit the T.14 spectral method-produced package slice.
 - Extend public fixture/package examples beyond the current tiny golden corpus
   and two method-produced packages.
-- Add a visual dependency diagram for the T/U portfolio if needed for publication packaging.
+- Use `docs/concepts/t-u-portfolio-dependency-map.md` as the visual dependency
+  map for T/U publication packaging.
 - Promote larger real method-produced packages when non-toy fixture outputs are
   ready.
 
@@ -66,8 +62,11 @@ warnings that resolved by final output, and MiKTeX update reminders.
 
 ## Good Next Move
 
-Finish the current method-produced package slice:
+Plan the benchmark-tier package frontier:
 
-1. Run focused verifier tests for the T.14 and U.18 method package corpus.
-2. Keep `docs/specs/2026-05-11-method-produced-rplan-package-goal.md` current.
-3. Commit and push the verified construction-package artifact slice.
+1. Choose whether the first benchmark-tier package should be construction-side
+   or search/optimization-side.
+2. Prefer a pinned no-download or tiny pinned-data workflow before committing
+   to external TIGER/ACS-backed runs.
+3. Keep the claim boundary explicit: benchmark packages can raise empirical
+   evidence, but still do not prove legal sufficiency or universal superiority.
