@@ -1,6 +1,6 @@
 # Goal: Write Algorithm-Family Papers
 
-**Status:** Active - Stage 2 Track U spine drafting next
+**Status:** Active - Stage 2 Track U spine drafting in progress
 **Track:** T/U algorithm-family publication  
 **Foundation:**
 [`2026-05-11-algorithm-family-completion-goal.md`](2026-05-11-algorithm-family-completion-goal.md),
@@ -95,6 +95,8 @@ Acceptance for each T paper:
 
 ## Stage 2 - Track U Spine Papers
 
+- [x] Add first-draft `main.tex`/`Makefile` skeletons for the Stage 2 U spine
+      papers.
 - [ ] U.0 Search and Optimization Overview: taxonomy and bridge from existing
       U.1-U.11 papers to U.12-U.20.
 - [ ] U.12 Algorithm-Selection Matrix: when to use construction, search,

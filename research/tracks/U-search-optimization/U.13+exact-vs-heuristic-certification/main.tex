@@ -1,0 +1,34 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+
+\title{Exact and Heuristic Certification in Redistricting Algorithms}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This draft separates exact certificates, heuristic evidence, audit sidecars,
+and legal interpretation. It explains what bounds, witnesses, and verifier
+contracts can establish, and where empirical or legal claims remain outside the
+certificate.
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/certificates}
+\input{sections/audit}
+\input{sections/limitations}
+\input{sections/conclusion}
+
+\nocite{bisect-u13-plan}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

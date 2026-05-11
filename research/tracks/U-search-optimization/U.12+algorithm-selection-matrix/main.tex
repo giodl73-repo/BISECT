@@ -1,0 +1,34 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+
+\title{An Algorithm-Selection Matrix for Auditable Redistricting Workflows}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This draft defines a practitioner-facing matrix for choosing among construction,
+search, exact optimization, ensemble, Pareto, and audit paths. The central
+claim is methodological: algorithm choice should follow the claim type, data
+availability, required certificate, and RPLAN/RCTX audit surface.
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/matrix}
+\input{sections/audit}
+\input{sections/limitations}
+\input{sections/conclusion}
+
+\nocite{bisect-u12-plan}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

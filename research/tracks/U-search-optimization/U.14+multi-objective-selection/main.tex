@@ -1,0 +1,34 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+
+\title{Multi-Objective Selection for Auditable Redistricting Plans}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This draft frames selection among objective trade-offs after construction,
+ensemble sampling, SMC, or Pareto search. It emphasizes how selected plans
+should carry objective vectors, selection rationale, and RPLAN/RCTX audit
+lineage without overclaiming neutrality.
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/selection}
+\input{sections/audit}
+\input{sections/limitations}
+\input{sections/conclusion}
+
+\nocite{bisect-u14-plan}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}
