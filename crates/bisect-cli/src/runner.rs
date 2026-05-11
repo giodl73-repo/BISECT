@@ -3628,6 +3628,9 @@ fn runner_algorithm_lineage(
     if let Some(sha256) = audit_summary_sha256 {
         extra["audit_summary_sha256"] = serde_json::json!(sha256);
     }
+    if let Some(summary) = read_ilp_lineage_summary(&summary_path)? {
+        extra["audit_summary"] = summary;
+    }
     let parameters_hash = rplan_core::canonical_sha256(&extra)
         .map_err(|e| format!("ILP lineage parameter hash failed: {e}"))?;
 
@@ -3639,6 +3642,25 @@ fn runner_algorithm_lineage(
         parameters_hash,
         extra,
     }))
+}
+
+fn read_ilp_lineage_summary(path: &std::path::Path) -> Result<Option<serde_json::Value>, String> {
+    if !path.exists() {
+        return Ok(None);
+    }
+    let text = std::fs::read_to_string(path)
+        .map_err(|e| format!("read ILP audit summary for lineage failed: {e}"))?;
+    let summary: serde_json::Value = serde_json::from_str(&text)
+        .map_err(|e| format!("parse ILP audit summary for lineage failed: {e}"))?;
+    Ok(Some(serde_json::json!({
+        "checked": summary.get("checked").cloned().unwrap_or(serde_json::Value::Null),
+        "passed": summary.get("passed").cloned().unwrap_or(serde_json::Value::Null),
+        "failed": summary.get("failed").cloned().unwrap_or(serde_json::Value::Null),
+        "fallback_required": summary.get("fallback_required").cloned().unwrap_or(serde_json::Value::Null),
+        "outcomes": summary.get("outcomes").cloned().unwrap_or_else(|| serde_json::json!({})),
+        "proof_statuses": summary.get("proof_statuses").cloned().unwrap_or_else(|| serde_json::json!({})),
+        "exact_search_strategies": summary.get("exact_search_strategies").cloned().unwrap_or_else(|| serde_json::json!({})),
+    })))
 }
 
 fn audit_result_label(result: &rplan_audit::AuditResult) -> &'static str {
@@ -4284,6 +4306,9 @@ mod tests {
             "intermediate/ilp_solve_reports/audit-summary.json"
         );
         assert_eq!(lineage.extra["audit_summary_sha256"], summary_sha);
+        assert_eq!(lineage.extra["audit_summary"]["checked"], 1);
+        assert_eq!(lineage.extra["audit_summary"]["passed"], 1);
+        assert_eq!(lineage.extra["audit_summary"]["failed"], 0);
     }
 
     #[test]

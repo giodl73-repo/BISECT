@@ -179,6 +179,8 @@
 </div>
 <h3>RPLAN Source Hashes</h3>
 <pre>{{ audit.rplan_source_hashes | json_encode(pretty=true) }}</pre>
+<h3>Algorithm Lineage</h3>
+<pre>{{ audit.algorithm_lineage | json_encode(pretty=true) }}</pre>
 <h3>Verification Command</h3>
 <div class="audit-box">{{ audit.verification_command | default(value="(verification command not available)") }}</div>
 </div>

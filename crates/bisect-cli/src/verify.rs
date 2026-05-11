@@ -357,6 +357,7 @@ pub fn verify_manifest_rplan_audit_certificate(
             );
         }
     }
+    verify_manifest_rplan_algorithm_lineage(manifest, &certificate)?;
 
     let rplan_rel = manifest
         .rplan_path
@@ -391,6 +392,76 @@ pub fn verify_manifest_rplan_audit_certificate(
     )
     .map_err(|e| anyhow::anyhow!("RPLAN audit certificate verification failed: {e}"))?;
     eprintln!("[PASS] RPLAN audit certificate verified: {certificate_rel}");
+    Ok(())
+}
+
+fn verify_manifest_rplan_algorithm_lineage(
+    manifest: &PlanManifest,
+    certificate: &rplan_audit::AuditCertificate,
+) -> anyhow::Result<()> {
+    let expects_ilp_lineage = manifest.ilp_method.is_some() || manifest.ilp_fallback.is_some();
+    if !expects_ilp_lineage {
+        return Ok(());
+    }
+    let lineage = certificate.algorithm_lineage.as_ref().ok_or_else(|| {
+        anyhow::anyhow!(
+            "manifest records ILP audit metadata but certificate has no algorithm_lineage"
+        )
+    })?;
+    if lineage.producer_crate != "bisect-ilp" {
+        anyhow::bail!(
+            "RPLAN algorithm lineage producer mismatch: expected=bisect-ilp, certificate={}",
+            lineage.producer_crate
+        );
+    }
+    if let Some(expected_method) = manifest.ilp_method.as_deref() {
+        if lineage.method != expected_method {
+            anyhow::bail!(
+                "RPLAN algorithm lineage method mismatch: manifest={}, certificate={}",
+                expected_method,
+                lineage.method
+            );
+        }
+    }
+    if let Some(expected_fallback) = manifest.ilp_fallback.as_deref() {
+        let actual = lineage
+            .extra
+            .get("fallback")
+            .and_then(serde_json::Value::as_str);
+        if actual != Some(expected_fallback) {
+            anyhow::bail!(
+                "RPLAN algorithm lineage fallback mismatch: manifest={}, certificate={}",
+                expected_fallback,
+                actual.unwrap_or("(missing)")
+            );
+        }
+    }
+    if let Some(expected_sha256) = manifest.ilp_audit_summary_sha256.as_deref() {
+        let actual = lineage
+            .extra
+            .get("audit_summary_sha256")
+            .and_then(serde_json::Value::as_str);
+        if actual != Some(expected_sha256) {
+            anyhow::bail!(
+                "RPLAN algorithm lineage audit summary SHA-256 mismatch: manifest={}, certificate={}",
+                expected_sha256,
+                actual.unwrap_or("(missing)")
+            );
+        }
+    }
+    if let Some(expected_path) = manifest.ilp_audit_summary_path.as_deref() {
+        let actual = lineage
+            .extra
+            .get("audit_summary_path")
+            .and_then(serde_json::Value::as_str);
+        if actual != Some(expected_path) {
+            anyhow::bail!(
+                "RPLAN algorithm lineage audit summary path mismatch: manifest={}, certificate={}",
+                expected_path,
+                actual.unwrap_or("(missing)")
+            );
+        }
+    }
     Ok(())
 }
 
@@ -1169,6 +1240,17 @@ mod tests {
             err.to_string().contains("adjacency source hash mismatch"),
             "{err}"
         );
+    }
+
+    #[test]
+    fn test_verify_manifest_rplan_audit_certificate_requires_ilp_lineage_when_recorded() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let mut manifest = write_rplan_audit_fixture(tmp.path());
+        manifest.ilp_method = Some("branch-and-cut".to_string());
+
+        let err = verify_manifest_rplan_audit_certificate(&manifest, tmp.path())
+            .expect_err("ILP manifest metadata should require certificate lineage");
+        assert!(err.to_string().contains("algorithm_lineage"), "{err}");
     }
 
     #[test]

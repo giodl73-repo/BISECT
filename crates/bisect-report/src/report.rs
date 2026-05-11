@@ -239,7 +239,46 @@ fn build_audit_section(ctx: &ReportContext, m: &PlanManifest) -> Value {
         "legal_profile_id": m.legal_profile_id,
         "context_hash": m.context_hash,
         "rplan_source_hashes": read_rplan_source_hashes(ctx, m),
+        "algorithm_lineage": read_rplan_algorithm_lineage(ctx, m),
     })
+}
+
+fn read_rplan_algorithm_lineage(ctx: &ReportContext, m: &PlanManifest) -> Value {
+    let Some(certificate_rel) = m.audit_certificate_path.as_deref() else {
+        return serde_json::json!({
+            "status": "unavailable",
+            "reason": "audit_certificate_path not recorded in manifest",
+        });
+    };
+    let certificate_path = ctx.plan_dir.join(certificate_rel);
+    let text = match std::fs::read_to_string(&certificate_path) {
+        Ok(text) => text,
+        Err(e) => {
+            return serde_json::json!({
+                "status": "unavailable",
+                "reason": format!("cannot read {certificate_rel}: {e}"),
+            });
+        }
+    };
+    let certificate: Value = match serde_json::from_str(&text) {
+        Ok(certificate) => certificate,
+        Err(e) => {
+            return serde_json::json!({
+                "status": "unavailable",
+                "reason": format!("cannot parse {certificate_rel}: {e}"),
+            });
+        }
+    };
+    match certificate.get("algorithm_lineage") {
+        Some(Value::Null) | None => serde_json::json!({
+            "status": "unavailable",
+            "reason": "certificate has no algorithm_lineage",
+        }),
+        Some(lineage) => serde_json::json!({
+            "status": "ok",
+            "lineage": lineage,
+        }),
+    }
 }
 
 fn read_rplan_source_hashes(ctx: &ReportContext, m: &PlanManifest) -> Value {
@@ -745,6 +784,24 @@ mod tests {
             rplan_io::write_rctx_string(&context).unwrap(),
         )
         .unwrap();
+        std::fs::write(
+            ctx.plan_dir.join("audit-certificate.json"),
+            serde_json::json!({
+                "algorithm_lineage": {
+                    "producer_crate": "bisect-ilp",
+                    "producer_version": "0.1.0",
+                    "method": "branch-and-cut",
+                    "parent_plan_hashes": [],
+                    "parameters_hash": "sha256:params",
+                    "extra": {
+                        "fallback": "metis",
+                        "audit_summary_sha256": "d".repeat(64)
+                    }
+                }
+            })
+            .to_string(),
+        )
+        .unwrap();
 
         let report = assemble_report(&ctx).unwrap();
         assert_eq!(report.sections.audit["audit_result"], "pass");
@@ -756,6 +813,10 @@ mod tests {
         assert_eq!(
             report.sections.audit["rplan_source_hashes"]["entries"]["geometry"],
             format!("sha256:{}", "c".repeat(64))
+        );
+        assert_eq!(
+            report.sections.audit["algorithm_lineage"]["lineage"]["method"],
+            "branch-and-cut"
         );
     }
 
