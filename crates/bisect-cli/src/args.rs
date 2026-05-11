@@ -327,6 +327,8 @@ pub enum Commands {
     Import(ImportArgs),
     /// Improve an existing RPLAN plan with audited local search
     Improve(ImproveArgs),
+    /// Run exact optimization family reports
+    Exact(ExactArgs),
     /// Civic Bidirectional Input: ingest community-of-interest CSVs, detect
     /// cross-input conflicts, list/show ingested inputs, add candidate-race
     /// annotations. See `docs/superpowers/specs/2026-04-30-civic-bidirectional.md`.
@@ -696,6 +698,43 @@ pub struct ImproveArgs {
     /// Timestamp to record in emitted artifacts. Defaults to current UTC.
     #[arg(long)]
     pub generated_at: Option<String>,
+}
+
+// ---------------------------------------------------------------------------
+// `BISECT exact` — exact optimization family reports
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, clap::ValueEnum)]
+pub enum ExactMethodArg {
+    /// U.17 branch-and-price / column-generation report.
+    #[value(name = "branch-and-price")]
+    BranchAndPrice,
+}
+
+#[derive(Debug, clap::Args)]
+#[command(disable_version_flag = true)]
+pub struct ExactArgs {
+    /// Input .rctx context file with graph and population data.
+    #[arg(long)]
+    pub context: std::path::PathBuf,
+    /// Output directory for branch-price-report.json and algorithm-lineage.json.
+    #[arg(long)]
+    pub out_dir: std::path::PathBuf,
+    /// Exact method.
+    #[arg(long, value_enum, default_value_t = ExactMethodArg::BranchAndPrice)]
+    pub method: ExactMethodArg,
+    /// Number of districts/columns to select.
+    #[arg(long)]
+    pub districts: usize,
+    /// Population tolerance as a percent. Example: 1.0 means +/-1%.
+    #[arg(long, default_value_t = 1.0)]
+    pub tolerance: f64,
+    /// Emit formulation and pricing report without solving the master.
+    #[arg(long)]
+    pub formulation_only: bool,
+    /// Maximum unit count for deterministic tiny exact solving.
+    #[arg(long, default_value_t = 12usize)]
+    pub exact_fixture_limit: usize,
 }
 
 // ---------------------------------------------------------------------------

@@ -94,10 +94,10 @@ Purpose: add heavier exact optimization with a distinct solver lifecycle.
 - [x] Add `bisect-column` crate.
 - [x] Define column, pricing, master-problem, and fallback output contracts.
 - [x] Implement formulation-only and small exact fixture paths first.
-- [ ] Add `bisect exact --method branch-and-price`.
-- [ ] Emit solver provenance, gap/bound metadata, and `algorithm_lineage`.
+- [x] Add `bisect exact --method branch-and-price`.
+- [x] Emit solver provenance, gap/bound metadata, and `algorithm_lineage`.
 - [x] Add L0 pricing/master fixtures.
-- [ ] Add L1 audit package test for a small exact output.
+- [x] Add L1 audit package test for a small exact output.
 
 ## Stage 5 - T.17 Flow-Based Construction
 

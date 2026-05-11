@@ -12,6 +12,7 @@ path = "src/main.rs"
 
 [dependencies]
 bisect-core      = { path = "../bisect-core" }
+bisect-column    = { path = "../bisect-column" }
 bisect-clustering = { path = "../bisect-clustering" }
 bisect-local-search = { path = "../bisect-local-search" }
 bisect-data      = { path = "../bisect-data" }

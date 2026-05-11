@@ -13,6 +13,7 @@ pub mod depo;
 pub mod doctor;
 pub mod edge_weights;
 pub mod ensemble;
+pub mod exact_cmd;
 pub mod export_cmd;
 pub mod fetch;
 pub mod geometry;

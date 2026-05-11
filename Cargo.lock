@@ -207,6 +207,7 @@ dependencies = [
  "bisect-analysis",
  "bisect-apportion",
  "bisect-clustering",
+ "bisect-column",
  "bisect-core",
  "bisect-data",
  "bisect-ensemble",

@@ -6,6 +6,7 @@ use bisect_cli::args::{Cli, Commands, SuiteCommands};
 use bisect_cli::build_cmd::run_build;
 use bisect_cli::doctor::run_doctor;
 use bisect_cli::ensemble::run_ensemble;
+use bisect_cli::exact_cmd::run_exact;
 use bisect_cli::export_cmd::run_export;
 use bisect_cli::fetch::{build_fetch_list, download_items, load_manifest, print_check_report};
 use bisect_cli::ilp_audit::run_ilp_audit;
@@ -781,6 +782,14 @@ fn main() {
         // ── BISECT improve: audited local-search improvement ─────────────────
         Commands::Improve(args) => {
             run_improve(&args).unwrap_or_else(|e| {
+                eprintln!("ERROR: {e}");
+                std::process::exit(1);
+            });
+        }
+
+        // ── BISECT exact: exact optimization family reports ─────────────────
+        Commands::Exact(args) => {
+            run_exact(&args).unwrap_or_else(|e| {
                 eprintln!("ERROR: {e}");
                 std::process::exit(1);
             });
