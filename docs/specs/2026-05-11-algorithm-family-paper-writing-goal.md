@@ -170,13 +170,13 @@ Acceptance for each U implementation paper:
 
 ## Stage 5 - Portfolio Integration
 
-- [ ] Update `docs/PAPERS.md` with final titles, PDF links, and implementation
+- [x] Update `docs/PAPERS.md` with final titles, PDF links, and implementation
       notes.
-- [ ] Update `docs/concepts/algorithm-family-layer-cake.md` if paper framing
+- [x] Update `docs/concepts/algorithm-family-layer-cake.md` if paper framing
       changes the taxonomy.
-- [ ] Update `docs/NEXT_SESSION.md` with the next writing or empirical task.
-- [ ] Run paper builds or document any build blockers.
-- [ ] Commit and push each completed paper batch.
+- [x] Update `docs/NEXT_SESSION.md` with the next writing or empirical task.
+- [x] Run paper builds or document any build blockers.
+- [x] Commit and push each completed paper batch.
 
 ## Suggested `/goal`
 

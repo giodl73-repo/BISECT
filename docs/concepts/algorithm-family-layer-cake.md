@@ -209,6 +209,18 @@ objectives, and which frontier plan should be exported for audit?"
 The audit layer answers: "Regardless of how the plan was produced, can the
 artifact be independently checked against a declared context and legal profile?"
 
+## Paper Map
+
+The latest reviewed paper additions attach the layer cake to native T/U papers:
+
+| Layer | Papers | Role |
+|---|---|---|
+| Construction extensions | T.14-T.17 | Spectral, clustering, regionalization, and flow construction |
+| Search/optimization spine | U.0, U.12-U.15 | Vocabulary, selection, evidence, objectives, and posture |
+| Exact implementation families | U.16-U.17 | Branch-and-cut and branch-and-price contracts |
+| Heuristic/evolutionary families | U.18-U.19 | Local improvement and selected-frontier comparison |
+| Audit fixed point | U.20 | RPLAN/RCTX/certificate convergence for final plans |
+
 ## Crate-To-Concept Index
 
 | Crate | Conceptual role |
