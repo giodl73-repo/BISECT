@@ -112,6 +112,10 @@ pub enum PartitionMode {
     /// Use --mka-orientations N (default 180) and --mka-metric [reock|polsby] (default reock).
     #[value(name = "moving-knife")]
     MovingKnife,
+    /// Capacity-constrained clustering (T.15). Crate-level kernel is available;
+    /// full runner execution is staged behind repair/RPLAN integration.
+    #[value(name = "capacity-clustering")]
+    CapacityClustering,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
@@ -175,6 +179,7 @@ impl std::fmt::Display for PartitionMode {
             Self::CentroidalVoronoi => write!(f, "centroidal-voronoi"),
             Self::Ilp => write!(f, "ilp"),
             Self::MovingKnife => write!(f, "moving-knife"),
+            Self::CapacityClustering => write!(f, "capacity-clustering"),
         }
     }
 }
@@ -1331,6 +1336,10 @@ pub enum StructureMode {
     /// --structure moving-knife --mka-orientations 180 --mka-metric reock
     #[value(name = "moving-knife")]
     MovingKnife,
+    /// Capacity-constrained clustering (T.15).
+    /// --structure capacity-clustering
+    #[value(name = "capacity-clustering")]
+    CapacityClustering,
 }
 
 /// Layer 2 compositor: which edge/vertex weight signal to use.
@@ -2877,6 +2886,7 @@ mod tests {
             (PartitionMode::ApportionRegions, "apportion-regions"),
             (PartitionMode::VraSection, "vra-section"),
             (PartitionMode::MovingKnife, "moving-knife"),
+            (PartitionMode::CapacityClustering, "capacity-clustering"),
         ];
         for (variant, expected) in cases {
             assert_eq!(
@@ -2901,6 +2911,7 @@ mod tests {
             ("compact-polsby", StructureMode::CompactPolsby),
             ("bfs-growth", StructureMode::BfsGrowth),
             ("moving-knife", StructureMode::MovingKnife),
+            ("capacity-clustering", StructureMode::CapacityClustering),
         ];
         for (s, expected) in cases {
             let parsed = StructureMode::from_str(s, true)

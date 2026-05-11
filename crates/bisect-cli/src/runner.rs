@@ -268,6 +268,9 @@ pub enum SplitStrategy {
         n_orientations: usize, // sweep granularity (default: 180 = every 1°)
         metric: String,        // "reock" (default) | "polsby"
     },
+    /// Capacity-constrained clustering (T.15). Crate-level kernel is available;
+    /// runner execution is staged after direct k-way plan integration.
+    CapacityClustering,
 }
 
 impl SplitStrategy {
@@ -287,6 +290,7 @@ impl SplitStrategy {
             Self::BfsGrowth => "bfs-growth",
             Self::Ilp { .. } => "ilp",
             Self::MovingKnife { .. } => "moving-knife",
+            Self::CapacityClustering => "capacity-clustering",
         }
     }
 }
@@ -642,6 +646,14 @@ impl AlgorithmConfig {
                 metis,
                 mode_label: None,
             },
+            PM::CapacityClustering => Self {
+                split: SplitStrategy::CapacityClustering,
+                seeds: SeedCompositor::Single,
+                weights: base_weights,
+                vertex_constraints: pop_only,
+                metis,
+                mode_label: None,
+            },
         };
 
         // ── Apply compositor layer overrides ──────────────────────────────────
@@ -685,6 +697,7 @@ impl AlgorithmConfig {
                     },
                     pop_only,
                 ),
+                SM::CapacityClustering => (SplitStrategy::CapacityClustering, pop_only),
             };
             algo.split = new_split;
             algo.vertex_constraints = new_vc;
@@ -975,6 +988,14 @@ impl AlgorithmConfig {
                     n_orientations: 180,
                     metric: "reock".to_string(),
                 },
+                seeds: SeedCompositor::Single,
+                weights: WeightSpec::default(),
+                vertex_constraints: pop,
+                metis,
+                mode_label: None,
+            },
+            PM::CapacityClustering => Self {
+                split: SplitStrategy::CapacityClustering,
                 seeds: SeedCompositor::Single,
                 weights: WeightSpec::default(),
                 vertex_constraints: pop,
@@ -2280,6 +2301,13 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                     &graph.tract_centroids,
                 )
                 .map_err(|e| format!("centroidal-voronoi: {e}"))?
+            }
+            SplitStrategy::CapacityClustering => {
+                return Err(
+                    "[CONFIG] --structure capacity-clustering is parsed but runner execution \
+                     is staged behind direct k-way RPLAN sidecar integration"
+                        .to_string(),
+                );
             }
             _ => {
                 match &cfg.algo.seeds {
@@ -5782,6 +5810,7 @@ mod tests {
             ),
             ("apportion-regions", SplitStrategy::ApportionRegions),
             ("vra-section", SplitStrategy::VraSection { w_vra: 0.40 }),
+            ("capacity-clustering", SplitStrategy::CapacityClustering),
         ];
         for (expected_name, variant) in all {
             assert_eq!(
@@ -6195,6 +6224,7 @@ mod tests {
             ),
             ("apportion-regions", SplitStrategy::ApportionRegions),
             ("vra-section", SplitStrategy::VraSection { w_vra: 0.40 }),
+            ("capacity-clustering", SplitStrategy::CapacityClustering),
         ];
         for (expected_name, variant) in all {
             assert_eq!(
@@ -6261,6 +6291,15 @@ mod tests {
         }
     }
 
+    #[test]
+    fn capacity_clustering_defaults_to_single_seed_marker() {
+        use crate::args::PartitionMode as PM;
+        let algo = AlgorithmConfig::defaults_for_mode(&PM::CapacityClustering);
+        assert!(matches!(algo.split, SplitStrategy::CapacityClustering));
+        assert!(matches!(algo.seeds, SeedCompositor::Single));
+        assert_eq!(algo.mode_name(), "capacity-clustering");
+    }
+
     // ── Group 4: Compositor StructureMode / WeightMode / SearchMode overrides ──
 
     #[test]
@@ -6312,6 +6351,32 @@ mod tests {
             matches!(algo.split, SplitStrategy::ApportionRegions),
             "prime-factor structure override must set ApportionRegions split"
         );
+    }
+
+    #[test]
+    fn structure_override_capacity_clustering_sets_marker() {
+        use crate::args::{StateArgs, StructureMode};
+        use clap::Parser;
+        let args = StateArgs::parse_from([
+            "state",
+            "--state",
+            "VT",
+            "--partition-mode",
+            "edge-weighted",
+            "--structure",
+            "capacity-clustering",
+        ]);
+        assert_eq!(
+            args.structure,
+            Some(StructureMode::CapacityClustering),
+            "parsed structure must be CapacityClustering"
+        );
+        let algo = AlgorithmConfig::from_state_args(&args);
+        assert!(
+            matches!(algo.split, SplitStrategy::CapacityClustering),
+            "capacity-clustering structure override must set SplitStrategy::CapacityClustering"
+        );
+        assert_eq!(algo.mode_name(), "capacity-clustering");
     }
 
     #[test]
