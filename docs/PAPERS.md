@@ -43,9 +43,10 @@ The `--structure` layer of the compositor. Every paper here answers: given k dis
 | T.12 | BFS Region-Growing — greedy geographic district packing | [PDF](papers/T.12+bfs-growth.pdf) |
 | T.13 | Moving-Knife Redistricting — Reock-oriented fair-division construction | [PDF](papers/T.13+moving-knife.pdf) |
 
-Planned construction additions: T.14 spectral partitioning, T.15
+Implemented construction additions now include T.14 spectral partitioning, T.15
 capacity-constrained clustering, T.16 hierarchical regionalization, and T.17
-flow-based construction. Implementation roadmap:
+flow-based construction, each with audited vertical slices. Implementation
+roadmap:
 [`2026-05-10-algorithm-family-roadmap.md`](specs/2026-05-10-algorithm-family-roadmap.md).
 
 ---
@@ -68,12 +69,13 @@ The search, optimization, certification, and algorithm-selection layer. Once con
 | U.10 | bisect-ensemble — Rust ReCom at 2500× Speed | [PDF](papers/U.10+bisect-ensemble.pdf) | high-performance search implementation |
 | U.11 | Resolution-Aware Redistricting — Geographic Granularity as a First-Class Parameter | [PDF](papers/U.11+resolution-aware.pdf) | resolution selection |
 
-Planned search/optimization additions: U.0 overview, U.12 algorithm-selection
+Search/optimization additions through U.20 are now implemented as audited
+vertical slices where they touch final plans: U.16 branch-and-cut, U.17
+branch-and-price, U.18 local-search improvement, U.19 evolutionary selected
+frontier packaging, and U.20 RPLAN plan-audit certificates. Remaining paper
+draft/index additions include U.0 overview, U.12 algorithm-selection
 matrix, U.13 exact-vs-heuristic certification, U.14 multi-objective selection,
-U.15 legal postures for search, U.16 branch-and-cut, U.17 branch-and-price,
-U.18 large-neighborhood/tabu/matheuristic search, U.19 evolutionary search
-comparison, and U.20 RPLAN plan-audit certificates. Implementation
-roadmap:
+and U.15 legal postures for search. Implementation roadmap:
 [`2026-05-10-algorithm-family-roadmap.md`](specs/2026-05-10-algorithm-family-roadmap.md).
 RPLAN factoring and U.20 audit contract:
 [`2026-05-10-rplan-incubation.md`](specs/2026-05-10-rplan-incubation.md),

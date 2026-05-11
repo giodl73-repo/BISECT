@@ -1,7 +1,7 @@
 # Spec: Algorithm Family Roadmap for T/U Refactor
 
 **Date:** 2026-05-10  
-**Status:** Draft, Round 1 role-reviewed  
+**Status:** Implemented baseline, Round 1 role-reviewed
 **Scope:** New construction, search, and optimization algorithm families after the
 Track B split into `T-plan-construction` and `U-search-optimization`.
 
@@ -39,9 +39,10 @@ workspace:
 | ILP exact optimization | `bisect-ilp`, `--structure ilp` | implemented at baseline level |
 | Multiscale MCMC | `bisect-multiscale`, `--search multiscale*` | implemented |
 
-The missing work is not "add one more algorithm"; it is to round out the
-taxonomy so construction, exact optimization, local search, evolutionary search,
-and topology constraints have explicit homes.
+The implementation pass has rounded out the taxonomy so construction, exact
+optimization, local search, evolutionary search, and topology constraints have
+explicit homes. See the completion goal for the staged acceptance record:
+[`2026-05-11-algorithm-family-completion-goal.md`](2026-05-11-algorithm-family-completion-goal.md).
 
 ## Track And Crate Map
 
