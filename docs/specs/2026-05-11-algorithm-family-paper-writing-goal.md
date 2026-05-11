@@ -1,6 +1,6 @@
 # Goal: Write Algorithm-Family Papers
 
-**Status:** Active  
+**Status:** Active - Stage 0 scaffolding in progress
 **Track:** T/U algorithm-family publication  
 **Foundation:**
 [`2026-05-11-algorithm-family-completion-goal.md`](2026-05-11-algorithm-family-completion-goal.md),
@@ -56,15 +56,16 @@ discipline:
 
 ## Stage 0 - Writing Infrastructure
 
-- [ ] Create/update paper directories under `research/tracks/T-plan-construction`
+- [x] Create/update paper directories under `research/tracks/T-plan-construction`
       and `research/tracks/U-search-optimization`.
-- [ ] Add `plan.md` for every paper in this goal using the panel plan template.
-- [ ] Add or update per-track `MODULE.md` inventories to move papers out of
+- [x] Add `plan.md` for every paper in this goal using the panel plan template.
+- [x] Add or update per-track `MODULE.md` inventories to move papers out of
       "candidate" status.
-- [ ] Decide whether these papers share a common architecture figure based on
+- [x] Decide whether these papers share a common architecture figure based on
       `docs/concepts/algorithm-family-layer-cake.md`.
-- [ ] Add a paper evidence matrix mapping each paper to specs, crates, tests,
+- [x] Add a paper evidence matrix mapping each paper to specs, crates, tests,
       benchmarks, and figures.
+- [ ] Add first-draft `main.tex`/`Makefile` skeletons for the Stage 1 T papers.
 
 ## Stage 1 - Track T Construction Papers
 
