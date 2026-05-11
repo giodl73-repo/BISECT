@@ -3,3 +3,25 @@
 Selection should record objective definitions, weights or dominance rules,
 frontier position, candidate set provenance, and the reason a final plan was
 chosen. The goal is transparency, not automatic neutrality.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.24\linewidth}p{0.32\linewidth}p{0.28\linewidth}}
+\toprule
+Selection input & Required record & Main risk if omitted \\
+\midrule
+Objective vector & Metric definitions and computation command & Unclear trade-off meaning \\
+Candidate set & Generator, seed, filters, and count & Cherry-picking ambiguity \\
+Dominance rule & Pareto, weighted score, threshold, or tie-break & Hidden policy choice \\
+Chosen plan & Selection rationale and rank/frontier position & False neutrality claim \\
+Export package & RPLAN/RCTX plus objective sidecars & Unreproducible final plan \\
+\bottomrule
+\end{tabular}
+\caption{Minimum record for auditable multi-objective selection.}
+\end{table}
+
+The selected plan should therefore be accompanied by the rejected context. When
+only the final assignment is exported, readers cannot tell whether the plan was
+representative of the frontier, an extreme point, a compromise under declared
+weights, or a policy choice after inspection.

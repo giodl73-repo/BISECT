@@ -1,0 +1,42 @@
+paper: U.14+multi-objective-selection
+title: Multi-Objective Selection for Auditable Redistricting Plans
+type: publication
+stage: recheck
+round: 1
+content_mode: draft
+venue: technical report
+review_date: 2026-05-11
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - name: Kalyanmoy Deb
+    profile_ref: simulated-multi-objective-optimization
+    score: 3
+  - name: Jon Kleinberg
+    profile_ref: simulated-algorithms-network-science
+    score: 3
+  - name: Cynthia Dwork
+    profile_ref: simulated-accountability-fairness
+    score: 3
+  - name: Wendy Tam Cho
+    profile_ref: simulated-political-methodology
+    score: 2
+  - name: Kosuke Imai
+    profile_ref: simulated-statistical-methodology
+    score: 2
+reviews:
+  round_1:
+    avg_score: 2.6
+    min_score: 2
+    max_score: 3
+    synthesis: reviews/SYNTHESIS.md
+    revision_plan: REVISION-PLAN.md
+p1_items:
+  - id: P1.1
+    title: Add a minimum selection-record table.
+    addressed: true
+  - id: P1.2
+    title: State that choosing from a frontier is a documented decision.
+    addressed: true
+  - id: P1.3
+    title: Separate auditability from normative correctness of the trade-off.
+    addressed: true

@@ -4,3 +4,8 @@ Selected plans should export objective vectors, candidate lineage, selection
 parameters, and final assignments through the RPLAN/RCTX fixed point. Audit
 checks verify declared artifacts, not the normative correctness of the chosen
 trade-off.
+
+The audit package should include enough metadata to replay the decision at the
+artifact level: candidate identifiers, objective values, dominance or scoring
+rule, tie breaks, and the final selected RPLAN. This creates a reviewable
+record even when the selection rule itself is contested.
