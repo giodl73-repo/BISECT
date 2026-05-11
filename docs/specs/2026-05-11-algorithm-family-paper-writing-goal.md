@@ -161,11 +161,11 @@ Acceptance for each U implementation paper:
 
 ## Stage 4 - Module-Level Review
 
-- [ ] Run a Track T module-level simulated panel over T.14-T.17.
-- [ ] Address all Track T PP1 items.
-- [ ] Run a Track U module-level simulated panel over U.0 and U.12-U.20.
-- [ ] Address all Track U PP1 items.
-- [ ] Update `research/tracks/T-plan-construction/MODULE.md` and
+- [x] Run a Track T module-level simulated panel over T.14-T.17.
+- [x] Address all Track T PP1 items.
+- [x] Run a Track U module-level simulated panel over U.0 and U.12-U.20.
+- [x] Address all Track U PP1 items.
+- [x] Update `research/tracks/T-plan-construction/MODULE.md` and
       `research/tracks/U-search-optimization/MODULE.md` with final status.
 
 ## Stage 5 - Portfolio Integration

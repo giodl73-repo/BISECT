@@ -24,11 +24,19 @@ and practitioner algorithm selection.
 | U.9+bisection-ensemble | Local ReCom search at bisection nodes |
 | U.10+bisect-ensemble | High-performance Rust ensemble/search implementation |
 | U.11+resolution-aware | Resolution as a first-class search/selection parameter |
+| U.12+algorithm-selection-matrix | Choosing construction, search, exact, ensemble, and audit paths |
+| U.13+exact-vs-heuristic-certification | Proof, bound, audit, and heuristic claim boundaries |
+| U.14+multi-objective-selection | Selecting among trade-offs and sampled frontiers |
+| U.15+legal-postures-for-search | Claim discipline for search and optimization choices |
+| U.16+branch-and-cut-redistricting | Connectivity cuts, separation, and solver reports |
+| U.17+branch-and-price-redistricting | Column generation and exact fixture packages |
+| U.18+large-neighborhood-search | Local improvement, staged tabu/LNS, and repair hooks |
+| U.19+evolutionary-search-comparison | Validity-preserving crossover/mutation and selected frontier audits |
+| U.20+plan-audit-certificates | RPLAN/RCTX audit certificates and lineage fixed point |
 
-## Writing Queue - Spine Papers
+## Reviewed Spine Papers
 
-These should be added as native U-series papers now that the physical refactor
-and audit fixed point are in place:
+These native U-series papers provide the module vocabulary and claim discipline:
 
 - U.0+search-optimization-overview
 - U.12+algorithm-selection-matrix
@@ -36,10 +44,10 @@ and audit fixed point are in place:
 - U.14+multi-objective-selection
 - U.15+legal-postures-for-search
 
-## Writing Queue - Implementation Papers
+## Reviewed Implementation Papers
 
 These algorithm families are implemented as audited vertical slices and now
-need native manuscripts:
+have reviewed draft manuscripts and PDFs:
 
 - U.16+branch-and-cut-redistricting -- exact MIP formulations with connectivity
   cuts, separation routines, and certificate reporting. U.6 covers ILP at a
@@ -55,6 +63,27 @@ need native manuscripts:
   Implementation spec: `docs/specs/2026-05-10-plan-audit-certificates.md`.
   RPLAN factoring spec: `docs/specs/2026-05-10-rplan-incubation.md`.
   RPLAN v0.2 schema: `docs/specs/2026-05-10-rplan-v0.2-schema.md`.
+
+## Module Contract
+
+Track U owns the search, optimization, selection, and audit layer. The module
+role map is:
+
+- U.0 defines the vocabulary.
+- U.12 chooses among algorithm families.
+- U.13 separates exact, bounded, heuristic, and audit evidence.
+- U.14 records multi-objective selection.
+- U.15 states legal posture boundaries.
+- U.16-U.19 describe exact and heuristic implementation families.
+- U.20 is the verifier-facing fixed point for final plans.
+
+The core invariant is convergence: construction, search, exact optimization,
+heuristic improvement, and Pareto comparison may differ upstream, but final
+outputs should converge on RPLAN/RCTX/certificate/manifest packages whose
+claims are profile-scoped and auditable.
+
+Module-level simulated review for U.0 and U.12-U.20 is recorded in
+`reviews/MODULE-SYNTHESIS.md`; PP1 items are addressed in this module summary.
 
 Implementation boundaries, CLI surfaces, and crate placement are specified in
 `docs/specs/2026-05-10-algorithm-family-roadmap.md`.

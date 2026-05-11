@@ -25,11 +25,16 @@ optimization, certification, and plan-selection methods live in
 | T.11+cvd-geographic | Geographic CVD extension |
 | T.12+bfs-growth | BFS region-growing baseline |
 | T.13+moving-knife | Reock-oriented moving-knife construction |
+| T.14+spectral-partitioning | Deterministic Fiedler-vector construction baseline |
+| T.15+capacity-constrained-clustering | Population-capacity clusters with audit sidecars |
+| T.16+hierarchical-regionalization | Agglomerative connected-region construction |
+| T.17+flow-based-construction | Capacity/cost flow assignment with infeasibility witnesses |
 
-## Writing Queue
+## Reviewed Additions
 
-These construction families are implemented as audited vertical slices and now
-need native manuscripts:
+T.14-T.17 are implemented as audited vertical slices with reviewed draft
+manuscripts, PDFs in `docs/papers/`, and paper-level review/revision artifacts.
+Together they extend the construction family beyond recursive bisection:
 
 - T.14+spectral-partitioning -- Laplacian/Fiedler-vector graph partitioning as
   a deterministic construction baseline.
@@ -39,6 +44,17 @@ need native manuscripts:
   deterministic agglomerative construction methods.
 - T.17+flow-based-construction -- flow formulations used as constructive district
   builders rather than exact global optimizers.
+
+## Module Contract
+
+Track T owns methods that create candidate plans or construction trees. The
+newer construction papers share a common endpoint: whatever method generates
+the assignment, final outputs should be expressible as RPLAN/RCTX-facing
+artifacts with enough method metadata for downstream audit. Track U consumes
+those outputs for selection, improvement, exact comparison, and verification.
+
+Module-level simulated review for T.14-T.17 is recorded in
+`reviews/MODULE-SYNTHESIS.md`; PP1 items are addressed in this module summary.
 
 Implementation boundaries, CLI surfaces, and crate placement are specified in
 `docs/specs/2026-05-10-algorithm-family-roadmap.md`.
