@@ -4,3 +4,37 @@ The current evidence layer includes path, grid, two-clique, capacity, and
 determinism fixtures. The next evidence layer should compare regionalization
 against flat clustering, METIS, and flow construction on selected real-data
 smoke states.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llll}
+\toprule
+Claim & Evidence now & Missing evidence & Status \\
+\midrule
+Connected fixture output & L0 path/grid tests & None for fixtures & Current \\
+Deterministic merge logs & L0 determinism tests & Broader graph sweep & Current \\
+Capacity handling & L0 capacity fixtures & Real-data smoke & Current \\
+Audit lineage & L1 sidecar checks & Real export transcript & Current \\
+Quality vs. baselines & None in this paper & Commands and outputs & Future \\
+\bottomrule
+\end{tabular}
+\caption{Evidence ladder for T.16 claims. Connectedness, lineage, and empirical
+quality are separate evidence levels.}
+\end{table}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llll}
+\toprule
+Constructor & Primary witness & Failure artifact & Current role \\
+\midrule
+Regionalization & merge witness & no eligible merge/status & baseline \\
+Capacity clustering & repair/status & infeasibility witness & comparison \\
+Flow construction & flow summary & infeasibility witness & comparison \\
+Spectral & split lineage & validation failure & comparison \\
+METIS & partition manifest & validation result & comparison \\
+\bottomrule
+\end{tabular}
+\caption{Failure-behavior comparison framing. Quantitative comparisons remain
+future work until commands and outputs are recorded.}
+\end{table}

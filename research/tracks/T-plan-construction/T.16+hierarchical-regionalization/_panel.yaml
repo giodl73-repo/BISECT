@@ -1,0 +1,42 @@
+paper: T.16+hierarchical-regionalization
+title: Hierarchical Regionalization for Connected Redistricting Construction
+type: publication
+stage: recheck
+round: 1
+content_mode: draft
+venue: technical report
+review_date: 2026-05-11
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - name: Luc Anselin
+    profile_ref: simulated-spatial-regionalization
+    score: 3
+  - name: Serge Rey
+    profile_ref: simulated-geocomputation
+    score: 3
+  - name: Moon Duchin
+    profile_ref: simulated-redistricting-geometry
+    score: 2
+  - name: Wendy Tam Cho
+    profile_ref: simulated-political-methodology
+    score: 2
+  - name: Cynthia Dwork
+    profile_ref: simulated-accountability-audit
+    score: 3
+reviews:
+  round_1:
+    avg_score: 2.6
+    min_score: 2
+    max_score: 3
+    synthesis: reviews/SYNTHESIS.md
+    revision_plan: REVISION-PLAN.md
+p1_items:
+  - id: P1.1
+    title: Define merge scoring, tie breaking, and witness fields.
+    addressed: true
+  - id: P1.2
+    title: Separate connectedness and capacity checks from plan-quality claims.
+    addressed: true
+  - id: P1.3
+    title: State audit limits for merge lineage and legal/fairness claims.
+    addressed: true

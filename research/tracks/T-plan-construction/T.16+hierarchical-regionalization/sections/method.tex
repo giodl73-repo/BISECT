@@ -4,3 +4,39 @@ The staged baseline performs deterministic agglomerative merging while tracking
 merge witnesses. Each witness records enough information to explain why regions
 were combined and to distinguish valid construction from infeasible capacity
 cases.
+
+\subsection{Reproducible Procedure}
+
+The constructor operates on the adjacency graph emitted by the BISECT state
+pipeline. Connectedness is defined over that graph: candidate regions and final
+districts must be connected under the declared profile. Islands, disconnected
+components, and alternative adjacency definitions are therefore input-profile
+questions rather than claims solved by the merge routine.
+
+\begin{enumerate}
+  \item Initialize each unit as a singleton region with population and
+        adjacency metadata.
+  \item Enumerate adjacent candidate region pairs that remain eligible under
+        the declared capacity and connectedness profile.
+  \item Score candidate merges using the implementation's deterministic merge
+        scoring rule.
+  \item Select the best candidate, breaking ties by stable region identifiers.
+  \item Record a merge witness and repeat until the requested number of
+        regions is reached or no eligible merge remains.
+\end{enumerate}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ll}
+\toprule
+Witness field & Purpose \\
+\midrule
+Input region ids & Identifies the merged regions \\
+Candidate score & Explains merge ordering \\
+Constraint status & Records capacity/connectedness checks \\
+Result region id & Links the new region to descendants \\
+Parameter hash & Binds merge settings to the artifact \\
+\bottomrule
+\end{tabular}
+\caption{Minimum merge-witness fields for replayable regionalization lineage.}
+\end{table}
