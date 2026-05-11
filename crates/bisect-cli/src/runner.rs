@@ -2303,11 +2303,42 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 .map_err(|e| format!("centroidal-voronoi: {e}"))?
             }
             SplitStrategy::CapacityClustering => {
-                return Err(
-                    "[CONFIG] --structure capacity-clustering is parsed but runner execution \
-                     is staged behind direct k-way RPLAN sidecar integration"
-                        .to_string(),
+                status(
+                    cfg.position,
+                    &format!(
+                        "{}: capacity-clustering into {} districts",
+                        cfg.state_code, num_districts
+                    ),
                 );
+                let result = bisect_clustering::capacity_cluster_repaired(
+                    &graph.adjacency,
+                    &graph.vertex_weights,
+                    bisect_clustering::ClusterConfig {
+                        k: num_districts,
+                        tolerance: balance_tolerance_frac,
+                    },
+                )
+                .map_err(|e| format!("capacity-clustering failed: {e}"))?;
+                let summary_path = intermediate_dir.join("capacity_clustering_summary.json");
+                std::fs::write(
+                    &summary_path,
+                    serde_json::to_string_pretty(&result.summary).map_err(|e| {
+                        format!("serialize capacity-clustering summary failed: {e}")
+                    })?,
+                )
+                .map_err(|e| format!("write capacity-clustering summary failed: {e}"))?;
+                if result.status != bisect_clustering::ClusterStatus::Valid {
+                    return Err(format!(
+                        "[ALGO] capacity-clustering did not produce a valid plan: {:?}",
+                        result.status
+                    ));
+                }
+                result
+                    .assignment
+                    .into_iter()
+                    .enumerate()
+                    .map(|(idx, district)| (idx, district + 1))
+                    .collect()
             }
             _ => {
                 match &cfg.algo.seeds {
@@ -3619,55 +3650,88 @@ fn runner_algorithm_lineage(
     cfg: &StateConfig,
     plan_root: &std::path::Path,
 ) -> Result<Option<rplan_audit::AlgorithmLineage>, String> {
-    let SplitStrategy::Ilp {
-        method,
-        fallback,
-        time_limit_secs,
-        optimality_gap,
-        max_tracts,
-    } = &cfg.algo.split
-    else {
-        return Ok(None);
-    };
+    match &cfg.algo.split {
+        SplitStrategy::Ilp {
+            method,
+            fallback,
+            time_limit_secs,
+            optimality_gap,
+            max_tracts,
+        } => {
+            let summary_path = plan_root
+                .join("intermediate")
+                .join("ilp_solve_reports")
+                .join("audit-summary.json");
+            let audit_summary_sha256 = if summary_path.exists() {
+                Some(
+                    bisect_report::sha256_file(&summary_path)
+                        .map_err(|e| format!("hash ILP audit summary for lineage failed: {e}"))?,
+                )
+            } else {
+                None
+            };
 
-    let summary_path = plan_root
-        .join("intermediate")
-        .join("ilp_solve_reports")
-        .join("audit-summary.json");
-    let audit_summary_sha256 = if summary_path.exists() {
-        Some(
-            bisect_report::sha256_file(&summary_path)
-                .map_err(|e| format!("hash ILP audit summary for lineage failed: {e}"))?,
-        )
-    } else {
-        None
-    };
-
-    let mut extra = serde_json::json!({
-        "lineage_schema": "bisect-ilp-lineage-v1",
-        "method": method.to_string(),
-        "fallback": fallback.to_string(),
-        "time_limit_secs": time_limit_secs,
-        "optimality_gap": optimality_gap,
-        "max_tracts": max_tracts,
-        "solve_report_dir": "intermediate/ilp_solve_reports",
-        "audit_summary_path": "intermediate/ilp_solve_reports/audit-summary.json",
-    });
-    if let Some(sha256) = audit_summary_sha256 {
-        extra["audit_summary_sha256"] = serde_json::json!(sha256);
+            let mut extra = serde_json::json!({
+                "lineage_schema": "bisect-ilp-lineage-v1",
+                "method": method.to_string(),
+                "fallback": fallback.to_string(),
+                "time_limit_secs": time_limit_secs,
+                "optimality_gap": optimality_gap,
+                "max_tracts": max_tracts,
+                "solve_report_dir": "intermediate/ilp_solve_reports",
+                "audit_summary_path": "intermediate/ilp_solve_reports/audit-summary.json",
+            });
+            if let Some(sha256) = audit_summary_sha256 {
+                extra["audit_summary_sha256"] = serde_json::json!(sha256);
+            }
+            if let Some(summary) = read_ilp_lineage_summary(&summary_path)? {
+                extra["audit_summary"] = summary;
+            }
+            rplan_audit::AlgorithmLineage::new(
+                "bisect-ilp",
+                env!("CARGO_PKG_VERSION"),
+                method.to_string(),
+                Vec::new(),
+                extra,
+            )
+            .map(Some)
+            .map_err(|e| format!("ILP lineage construction failed: {e}"))
+        }
+        SplitStrategy::CapacityClustering => {
+            let summary_path = plan_root
+                .join("intermediate")
+                .join("capacity_clustering_summary.json");
+            let text = std::fs::read_to_string(&summary_path)
+                .map_err(|e| format!("read capacity-clustering summary for lineage failed: {e}"))?;
+            let summary: bisect_clustering::ClusterSummary =
+                serde_json::from_str(&text).map_err(|e| {
+                    format!("parse capacity-clustering summary for lineage failed: {e}")
+                })?;
+            let summary_sha256 = bisect_report::sha256_file(&summary_path)
+                .map_err(|e| format!("hash capacity-clustering summary for lineage failed: {e}"))?;
+            let mut extra = summary.algorithm_lineage_extra();
+            if let Some(obj) = extra.as_object_mut() {
+                obj.insert(
+                    "summary_path".to_string(),
+                    serde_json::json!("intermediate/capacity_clustering_summary.json"),
+                );
+                obj.insert(
+                    "summary_sha256".to_string(),
+                    serde_json::json!(summary_sha256),
+                );
+            }
+            rplan_audit::AlgorithmLineage::new(
+                "bisect-clustering",
+                env!("CARGO_PKG_VERSION"),
+                summary.method,
+                Vec::new(),
+                extra,
+            )
+            .map(Some)
+            .map_err(|e| format!("capacity-clustering lineage construction failed: {e}"))
+        }
+        _ => Ok(None),
     }
-    if let Some(summary) = read_ilp_lineage_summary(&summary_path)? {
-        extra["audit_summary"] = summary;
-    }
-    rplan_audit::AlgorithmLineage::new(
-        "bisect-ilp",
-        env!("CARGO_PKG_VERSION"),
-        method.to_string(),
-        Vec::new(),
-        extra,
-    )
-    .map(Some)
-    .map_err(|e| format!("ILP lineage construction failed: {e}"))
 }
 
 fn read_ilp_lineage_summary(path: &std::path::Path) -> Result<Option<serde_json::Value>, String> {
@@ -4335,6 +4399,70 @@ mod tests {
         assert_eq!(lineage.extra["audit_summary"]["checked"], 1);
         assert_eq!(lineage.extra["audit_summary"]["passed"], 1);
         assert_eq!(lineage.extra["audit_summary"]["failed"], 0);
+    }
+
+    #[test]
+    fn test_write_rplan_audit_sidecars_records_capacity_clustering_lineage() {
+        let tmp = TempDir::new().unwrap();
+        let mut cfg = make_config("WA");
+        cfg.num_districts = 2;
+        cfg.algo.split = SplitStrategy::CapacityClustering;
+
+        let graph = path5_loaded_graph();
+        let cluster = bisect_clustering::capacity_cluster_repaired(
+            &graph.adjacency,
+            &graph.vertex_weights,
+            bisect_clustering::ClusterConfig {
+                k: 2,
+                tolerance: 0.25,
+            },
+        )
+        .unwrap();
+        assert_eq!(cluster.status, bisect_clustering::ClusterStatus::Valid);
+        let assignments: HashMap<usize, usize> = cluster
+            .assignment
+            .iter()
+            .enumerate()
+            .map(|(idx, district)| (idx, district + 1))
+            .collect();
+        let summary_path = tmp
+            .path()
+            .join("intermediate")
+            .join("capacity_clustering_summary.json");
+        std::fs::create_dir_all(summary_path.parent().unwrap()).unwrap();
+        std::fs::write(
+            &summary_path,
+            serde_json::to_string_pretty(&cluster.summary).unwrap(),
+        )
+        .unwrap();
+        let summary_sha = bisect_report::sha256_file(&summary_path).unwrap();
+
+        write_rplan_audit_sidecars(
+            tmp.path(),
+            &cfg,
+            "wa_path5",
+            &graph,
+            &assignments,
+            "wa_adjacency_2020.adj.bin",
+            std::path::Path::new("missing-adjacency-fixture.adj.bin"),
+            "https://www.census.gov/example.zip",
+            0.25,
+            "2026-05-10T00:00:00Z",
+        )
+        .unwrap();
+
+        let cert_text = std::fs::read_to_string(tmp.path().join("audit-certificate.json")).unwrap();
+        let cert: rplan_audit::AuditCertificate = serde_json::from_str(&cert_text).unwrap();
+        let lineage = cert.algorithm_lineage.unwrap();
+        assert_eq!(lineage.producer_crate, "bisect-clustering");
+        assert_eq!(lineage.method, "capacity-clustering");
+        assert!(lineage.parameters_hash.starts_with("sha256:"));
+        assert_eq!(lineage.extra["capacity_status"], "valid");
+        assert_eq!(
+            lineage.extra["summary_path"],
+            "intermediate/capacity_clustering_summary.json"
+        );
+        assert_eq!(lineage.extra["summary_sha256"], summary_sha);
     }
 
     fn write_l2_ilp_audit_report(dir: &std::path::Path, name: &str) {
