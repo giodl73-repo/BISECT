@@ -1,8 +1,8 @@
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand, ValueEnum};
 use rplan_audit::{
-    audit_plan, verify_audit_certificate, AuditCertificate, AuditConstraint, AuditResult, Chamber,
-    LegalProfile, RuntimeProvenance,
+    audit_plan_with_lineage, verify_audit_certificate, AlgorithmLineage, AuditCertificate,
+    AuditConstraint, AuditResult, Chamber, LegalProfile, RuntimeProvenance,
 };
 use std::path::PathBuf;
 
@@ -42,6 +42,16 @@ struct AuditArgs {
     allow_warnings: bool,
     #[arg(long)]
     fixed_generated_at: Option<String>,
+    #[arg(long)]
+    lineage_producer_crate: Option<String>,
+    #[arg(long)]
+    lineage_producer_version: Option<String>,
+    #[arg(long)]
+    lineage_method: Option<String>,
+    #[arg(long, value_delimiter = ',')]
+    lineage_parent_plan_hash: Vec<String>,
+    #[arg(long)]
+    lineage_extra_json: Option<String>,
 }
 
 #[derive(Debug, Parser)]
@@ -164,15 +174,19 @@ fn run_audit(args: AuditArgs) -> Result<i32> {
     };
     let generated_at = args
         .fixed_generated_at
+        .as_deref()
+        .map(str::to_string)
         .unwrap_or_else(|| chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true));
 
-    let certificate = audit_plan(
+    let algorithm_lineage = build_algorithm_lineage(&args)?;
+    let certificate = audit_plan_with_lineage(
         &document.plan,
         context.as_ref(),
         &profile,
         runtime,
         &constraints,
         &generated_at,
+        algorithm_lineage,
     )?;
     let output = match args.format {
         OutputFormat::Json => serde_json::to_string(&certificate)?,
@@ -252,6 +266,40 @@ fn run_verify_certificate(args: VerifyCertificateArgs) -> Result<i32> {
             Ok(1)
         }
     }
+}
+
+fn build_algorithm_lineage(args: &AuditArgs) -> Result<Option<AlgorithmLineage>> {
+    let any_lineage = args.lineage_producer_crate.is_some()
+        || args.lineage_producer_version.is_some()
+        || args.lineage_method.is_some()
+        || !args.lineage_parent_plan_hash.is_empty()
+        || args.lineage_extra_json.is_some();
+    if !any_lineage {
+        return Ok(None);
+    }
+    let producer_crate = args
+        .lineage_producer_crate
+        .as_deref()
+        .context("--lineage-producer-crate is required when lineage fields are supplied")?;
+    let producer_version = args
+        .lineage_producer_version
+        .as_deref()
+        .unwrap_or(env!("CARGO_PKG_VERSION"));
+    let method = args
+        .lineage_method
+        .as_deref()
+        .context("--lineage-method is required when lineage fields are supplied")?;
+    let extra = match &args.lineage_extra_json {
+        Some(raw) => serde_json::from_str(raw).context("parsing --lineage-extra-json")?,
+        None => serde_json::json!({}),
+    };
+    Ok(Some(AlgorithmLineage::new(
+        producer_crate,
+        producer_version,
+        method,
+        args.lineage_parent_plan_hash.clone(),
+        extra,
+    )?))
 }
 
 fn validate_profile_applicability(

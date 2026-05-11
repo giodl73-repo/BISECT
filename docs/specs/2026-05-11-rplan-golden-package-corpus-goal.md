@@ -44,25 +44,25 @@ contract that every algorithm family can land on.
 
 Add one tiny public package per family, with tests that verify the package:
 
-- [ ] T.14 spectral construction package.
-- [ ] T.15 capacity-constrained clustering package.
-- [ ] T.16 hierarchical regionalization package.
-- [ ] T.17 flow construction package.
-- [ ] U.16 branch-and-cut package.
-- [ ] U.17 branch-and-price package.
-- [ ] U.18 local-search improvement package with parent/child lineage.
-- [ ] U.19 selected-frontier package.
-- [ ] U.20 audit-certificate reference package.
+- [x] T.14 spectral construction package.
+- [x] T.15 capacity-constrained clustering package.
+- [x] T.16 hierarchical regionalization package.
+- [x] T.17 flow construction package.
+- [x] U.16 branch-and-cut package.
+- [x] U.17 branch-and-price package.
+- [x] U.18 local-search improvement package with parent/child lineage.
+- [x] U.19 selected-frontier package.
+- [x] U.20 audit-certificate reference package.
 
 Acceptance for each package:
 
-- [ ] Package files are committed under `docs/examples/` or a documented
+- [x] Package files are committed under `docs/examples/` or a documented
       fixture corpus path.
-- [ ] Package has a manifest with SHA-256 file hashes.
-- [ ] `rplan verify-certificate` accepts the package.
-- [ ] If the package comes from a method family, lineage metadata names the
+- [x] Package has a manifest with SHA-256 file hashes.
+- [x] `rplan verify-certificate` accepts the package.
+- [x] If the package comes from a method family, lineage metadata names the
       producer family and method.
-- [ ] Documentation states what the package does and does not prove.
+- [x] Documentation states what the package does and does not prove.
 
 ## Stage 4 - Verifier Bridge
 

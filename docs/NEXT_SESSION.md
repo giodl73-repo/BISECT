@@ -35,8 +35,9 @@ The next active goal is:
 The residual work area is public fixture depth:
 
 - Keep `docs/PAPERS.md` current as paper titles or notes change.
-- Extend public fixture/package examples for U.16-U.19.
-- Extend the U.20 public example set beyond the initial 3x3 package.
+- Extend public fixture/package examples beyond the initial tiny 3x3 golden
+  package corpus.
+- Add real method-produced packages once larger fixture outputs are ready.
 - Add profile-mismatch and lineage-reserved-field CLI fixtures if those become public surfaces.
 - Add a visual dependency diagram for the T/U portfolio if needed for publication packaging.
 
@@ -52,5 +53,5 @@ Continue the RPLAN golden package corpus pass:
 
 1. Define the package contract in docs.
 2. Add U.20 profile/stale-context/missing-input negative fixtures.
-3. Add small public package examples for T.14-T.17 and U.16-U.19.
-4. Bridge `bisect verify` with `rplan verify-certificate` where appropriate.
+3. Bridge `bisect verify` with `rplan verify-certificate` where appropriate.
+4. Upgrade paper evidence tables after the verifier bridge lands.

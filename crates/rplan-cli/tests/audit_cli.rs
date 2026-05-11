@@ -31,6 +31,14 @@ fn public_u20_example_path(name: &str) -> String {
         .into_owned()
 }
 
+fn docs_examples_root() -> std::path::PathBuf {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .ancestors()
+        .nth(2)
+        .unwrap()
+        .join("docs/examples")
+}
+
 fn run_grid3x3_valid_with_context(context_path: &str) -> std::process::Output {
     Command::new(env!("CARGO_BIN_EXE_rplan"))
         .args([
@@ -403,6 +411,57 @@ fn verify_certificate_accepts_matching_public_fixture_package() {
 }
 
 #[test]
+fn verify_certificate_accepts_all_public_golden_packages() {
+    let corpus_root = docs_examples_root().join("rplan-golden-packages");
+    let mut verified = Vec::new();
+    for entry in std::fs::read_dir(&corpus_root).unwrap() {
+        let entry = entry.unwrap();
+        if !entry.file_type().unwrap().is_dir() {
+            continue;
+        }
+        let dir = entry.path();
+        let output = Command::new(env!("CARGO_BIN_EXE_rplan"))
+            .args([
+                "verify-certificate",
+                "--certificate",
+                dir.join("audit-certificate.json").to_str().unwrap(),
+                "--plan",
+                dir.join("plan.rplan").to_str().unwrap(),
+                "--context",
+                dir.join("context.rctx").to_str().unwrap(),
+                "--format",
+                "json",
+            ])
+            .output()
+            .unwrap();
+
+        assert!(
+            output.status.success(),
+            "{} stderr: {}",
+            dir.display(),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let stdout: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(stdout["verification"], "pass");
+        verified.push(entry.file_name().to_string_lossy().into_owned());
+    }
+    verified.sort();
+    assert_eq!(
+        verified,
+        vec![
+            "T.14+spectral-partitioning",
+            "T.15+capacity-constrained-clustering",
+            "T.16+hierarchical-regionalization",
+            "T.17+flow-construction",
+            "U.16+branch-and-cut",
+            "U.17+branch-and-price",
+            "U.18+local-search-improvement",
+            "U.19+selected-frontier",
+        ]
+    );
+}
+
+#[test]
 fn verify_certificate_rejects_missing_context_for_contextual_certificate() {
     let output = Command::new(env!("CARGO_BIN_EXE_rplan"))
         .args([
@@ -556,4 +615,70 @@ fn audit_missing_input_constraint_reports_failure() {
     assert_eq!(stdout["checks"][1]["name"], "splits");
     assert_eq!(stdout["checks"][1]["status"], "missing-input");
     assert!(String::from_utf8_lossy(&output.stderr).contains("audit failed"));
+}
+
+#[test]
+fn audit_with_lineage_emits_verifiable_certificate() {
+    let output = Command::new(env!("CARGO_BIN_EXE_rplan"))
+        .args([
+            "audit",
+            "--plan",
+            &audit_fixture_path("grid3x3-valid.rplan"),
+            "--context",
+            &audit_fixture_path("grid3x3.rctx"),
+            "--constraints",
+            "plan-shape,population,contiguity",
+            "--fixed-generated-at",
+            "2026-05-10T00:00:00Z",
+            "--lineage-producer-crate",
+            "bisect-local-search",
+            "--lineage-method",
+            "one-move-improvement",
+            "--lineage-extra-json",
+            r#"{"status":"fixture-solved"}"#,
+            "--format",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let cert: rplan_audit::AuditCertificate = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(
+        cert.algorithm_lineage.as_ref().unwrap().producer_crate,
+        "bisect-local-search"
+    );
+    let plan_text = std::fs::read_to_string(audit_fixture_path("grid3x3-valid.rplan")).unwrap();
+    let context_text = std::fs::read_to_string(audit_fixture_path("grid3x3.rctx")).unwrap();
+    let document = rplan_io::read_rplan_str(&plan_text).unwrap();
+    let context = rplan_io::read_rctx_str(&context_text).unwrap();
+    rplan_audit::verify_audit_certificate(&cert, Some(&document.plan), Some(&context)).unwrap();
+}
+
+#[test]
+fn audit_lineage_rejects_reserved_certificate_extra() {
+    let output = Command::new(env!("CARGO_BIN_EXE_rplan"))
+        .args([
+            "audit",
+            "--plan",
+            &audit_fixture_path("grid3x3-valid.rplan"),
+            "--context",
+            &audit_fixture_path("grid3x3.rctx"),
+            "--lineage-producer-crate",
+            "bisect-local-search",
+            "--lineage-method",
+            "bad-lineage",
+            "--lineage-extra-json",
+            r#"{"plan_hash":"sha256:attempted-override"}"#,
+        ])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(2));
+    assert!(String::from_utf8_lossy(&output.stderr)
+        .contains("algorithm lineage extra uses reserved certificate field"));
 }
