@@ -3,3 +3,12 @@
 Improved plans are descendants of an existing RPLAN input. The RCTX and audit
 certificate should preserve parent/child lineage, declared profile checks, and
 the improvement summary so a verifier can inspect both validity and provenance.
+The audit package must identify the parent RPLAN, emitted child RPLAN when one
+exists, method, status, objective before and after, objective delta, validation
+profile, and any random seed used by the method.
+
+Validity and improvement are separate claims. A valid child plan is not
+automatically a meaningful improvement, and an apparent objective improvement is
+not accepted unless the declared profile checks pass. No-op and staged-method
+records still belong in the audit trail because they explain why no descendant
+artifact was produced.

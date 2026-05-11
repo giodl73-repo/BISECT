@@ -1,5 +1,25 @@
 \section{Evaluation Plan}
 
-Current evidence is L0 improvement/no-op/staged-method behavior and L1
-CLI/RPLAN sidecar tests. Empirical distributions of accepted moves, objective
-deltas, and tabu/LNS comparisons are future evidence.
+Current evidence is L0 improvement/no-op/rejected-move/staged-method behavior
+and L1 CLI/RPLAN sidecar tests. Empirical distributions of accepted moves,
+objective deltas, and tabu/LNS comparisons are future evidence.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.30\linewidth}p{0.30\linewidth}p{0.28\linewidth}}
+\toprule
+Claim & Current evidence & Publication gap \\
+\midrule
+One-move search can emit valid descendants & L0 improvement fixtures and L1
+RPLAN sidecar tests & Public before/after package \\
+No-op and rejected moves are reproducible & L0 status fixtures & CLI
+transcripts for each status \\
+Staged LNS/tabu surfaces are honest roadmap boundaries & Staged-method status
+tests & Full method implementation \\
+Large-instance heuristic quality improves materially & Future evidence only &
+Benchmark protocol and comparison baselines \\
+\bottomrule
+\end{tabular}
+\caption{Claim and evidence ladder for U.18.}
+\end{table}

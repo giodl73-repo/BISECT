@@ -1,21 +1,30 @@
 \section{Implementation Contract}
 
 The current implementation centers on a one-move boundary improvement baseline
-plus structured statuses for no-improvement and staged-method paths. The
-summary must record parent plan id, attempted method, accepted move or no-op
-reason, objective delta, validity checks, and output artifact id.
+plus structured statuses for no-improvement, rejected-move, and staged-method
+paths. The summary must record parent plan id, attempted method, accepted move
+or rejection/no-op reason, objective delta, validity checks, and output artifact
+id when a child plan is emitted.
 
 \begin{table}[htbp]
 \centering
 \small
-\begin{tabular}{p{0.22\linewidth}p{0.34\linewidth}p{0.30\linewidth}}
+\begin{tabular}{p{0.20\linewidth}p{0.36\linewidth}p{0.30\linewidth}}
 \toprule
 Outcome & Required summary & Claim supported \\
 \midrule
-Improved & parent, move, delta, validity checks & local improvement \\
+Improved & parent, child, move, delta, validity checks & local improvement \\
+Rejected move & parent, candidate move, rejection reason & validity-preserving search \\
 No-op & parent, search status, reason & reproducible non-improvement \\
-Staged & requested method and unsupported scope & roadmap boundary \\
+Staged method & requested method and unsupported scope & roadmap boundary \\
 \bottomrule
 \end{tabular}
 \caption{Improvement-family statuses.}
 \end{table}
+
+The paper therefore does not treat every command invocation as a successful
+improvement. A no-op transcript is evidence that the search was run under a
+declared method and profile. A rejected-move transcript is evidence that the
+implementation preserved validity by refusing a candidate. Only an
+\emph{Improved} status supports the claim that a descendant plan was emitted
+with a measured local objective delta.

@@ -1,0 +1,42 @@
+paper: U.18+large-neighborhood-search
+title: Large-Neighborhood Search as Audited Plan Improvement
+type: publication
+stage: recheck
+round: 1
+content_mode: draft
+venue: technical report
+review_date: 2026-05-11
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - name: David Eppstein
+    profile_ref: simulated-graph-algorithms
+    score: 3
+  - name: Jon Kleinberg
+    profile_ref: simulated-algorithms-network-science
+    score: 3
+  - name: Cynthia Dwork
+    profile_ref: simulated-accountability-fairness
+    score: 2
+  - name: Wendy Tam Cho
+    profile_ref: simulated-political-methodology
+    score: 2
+  - name: Kosuke Imai
+    profile_ref: simulated-causal-political-methodology
+    score: 3
+reviews:
+  round_1:
+    avg_score: 2.6
+    min_score: 2
+    max_score: 3
+    synthesis: reviews/SYNTHESIS.md
+    revision_plan: REVISION-PLAN.md
+p1_items:
+  - id: P1.1
+    title: Define improvement, no-op, rejected-move, and staged-method statuses.
+    addressed: true
+  - id: P1.2
+    title: Make parent-child RPLAN lineage explicit for every output path.
+    addressed: true
+  - id: P1.3
+    title: Separate fixture one-move evidence from future LNS/tabu performance claims.
+    addressed: true

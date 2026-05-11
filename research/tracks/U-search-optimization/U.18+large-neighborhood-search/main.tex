@@ -16,9 +16,12 @@
 
 \begin{abstract}
 This draft documents the BISECT local-search and large-neighborhood-search
-improvement contract. It treats `bisect improve` as a lineage-preserving
-heuristic implementation: improved plans, no-op outcomes, and staged LNS/tabu
-paths must all produce reproducible summaries and RPLAN/RCTX descendants.
+improvement contract. It treats \texttt{bisect improve} as a
+lineage-preserving heuristic implementation: improved plans, rejected moves,
+no-op outcomes, and staged LNS/tabu paths must all produce reproducible
+summaries. Accepted improvements must produce RPLAN/RCTX descendants that name
+the parent plan, child artifact, method, status, objective delta, and
+validation profile.
 \end{abstract}
 
 \input{sections/introduction}

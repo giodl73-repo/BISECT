@@ -1,7 +1,7 @@
 # U.18 - Large-Neighborhood Search
 
 **Paper Type:** Heuristic improvement implementation  
-**Status:** Planning  
+**Status:** Round-1 review addressed
 **Track:** U - Search and Optimization  
 **Code Home:** `bisect-local-search`, `bisect-cli::improve_cmd`  
 **CLI Surface:** `bisect improve`; staged `--search lns` and `--search tabu`
@@ -45,7 +45,7 @@ lineage linking input and output.
 
 ## Panel Readiness Checklist
 
-- [ ] `main.tex` and sections exist.
-- [ ] Improvement and no-op cases are both documented.
-- [ ] Parent/child audit lineage is shown.
-- [ ] P1 simulated feedback addressed.
+- [x] `main.tex` and sections exist.
+- [x] Improvement and no-op cases are both documented.
+- [x] Parent/child audit lineage is shown.
+- [x] P1 simulated feedback addressed.
