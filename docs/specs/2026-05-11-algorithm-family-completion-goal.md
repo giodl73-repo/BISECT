@@ -77,10 +77,10 @@ Purpose: add a cheap deterministic construction baseline.
 
 Purpose: extend `bisect-clustering` beyond flat capacity assignment.
 
-- [ ] Write T.16 implementation spec and role-review notes.
-- [ ] Add regionalization module in `bisect-clustering`.
-- [ ] Implement deterministic agglomerative/regionalization baseline.
-- [ ] Add population-capacity and contiguity repair witnesses.
+- [x] Write T.16 implementation spec and role-review notes.
+- [x] Add regionalization module in `bisect-clustering`.
+- [x] Implement deterministic agglomerative/regionalization baseline.
+- [x] Add population-capacity and contiguity repair witnesses.
 - [ ] Add `--structure regionalization` and YAML `structure: regionalization`.
 - [ ] Emit regionalization summaries and `algorithm_lineage`.
 - [ ] Add L0 hierarchy/capacity/determinism fixtures.
