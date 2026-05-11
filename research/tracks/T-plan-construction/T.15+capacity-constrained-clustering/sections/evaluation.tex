@@ -4,3 +4,37 @@ The current evidence layer includes deterministic seed tests, infeasible
 capacity fixtures, connectedness checks, and RPLAN audit package tests. The
 next empirical layer should measure feasibility and quality on selected
 real-data smoke states.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llll}
+\toprule
+Claim & Evidence now & Missing evidence & Status \\
+\midrule
+Deterministic seeds & L0 seed fixtures & None for fixtures & Current \\
+Capacity status reporting & L0 infeasibility tests & Broader case sweep & Current \\
+RPLAN repair lineage & L1 sidecar tests & Real export transcript & Current \\
+Feasibility on states & None in this paper & Smoke commands and outputs & Future \\
+Plan quality vs. baselines & None in this paper & Metrics and datasets & Future \\
+\bottomrule
+\end{tabular}
+\caption{Evidence ladder for T.15 claims. Feasibility and quality are tracked
+separately.}
+\end{table}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llll}
+\toprule
+Constructor & Capacity behavior & Failure artifact & Current role \\
+\midrule
+Capacity clustering & explicit status/repair & witness or repair lineage & baseline \\
+Spectral & balance via sweep & validation failure & comparison \\
+Regionalization & capacity during merges & merge/status summary & comparison \\
+Flow construction & capacity flow status & infeasibility witness & comparison \\
+METIS & external partitioning & manifest/validation result & comparison \\
+\bottomrule
+\end{tabular}
+\caption{Failure-behavior comparison framing. Quantitative comparisons remain
+future work until commands and outputs are recorded.}
+\end{table}

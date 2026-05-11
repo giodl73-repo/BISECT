@@ -5,3 +5,10 @@ RPLAN/RCTX audit sidecars record assignments, capacity status, repair status,
 parameter hashes, and algorithm lineage. The verifier checks the declared audit
 profile; it does not certify that clustering choices satisfy fairness or legal
 requirements beyond the profile.
+
+The sidecar contract binds the exported assignment to the constructor family,
+declared parameters, capacity and repair status, validation result, and
+algorithm lineage. Parameter hashes are used to detect drift between the
+reported run configuration and the artifact under verification. If repair
+changes assignments, that status remains part of the lineage rather than being
+collapsed into an ordinary valid plan.

@@ -4,3 +4,39 @@ The staged method uses deterministic farthest-point seeds, assigns units subject
 to population capacity, and records whether the resulting assignment is valid,
 repaired, or infeasible. Small repair routines are treated as auditable
 post-processing rather than invisible cleanup.
+
+\subsection{Reproducible Procedure}
+
+The constructor operates on the graph and unit attributes supplied by the
+BISECT state pipeline. The current slice is graph-based and capacity-oriented:
+community-character weights and richer attribute clustering are future or
+optional inputs rather than claims of this baseline.
+
+\begin{enumerate}
+  \item Select deterministic farthest-point seeds from the available units,
+        breaking ties by stable unit identifier.
+  \item Assign remaining units to candidate clusters in deterministic order
+        while respecting target population capacity and declared slack.
+  \item Mark the assignment \texttt{valid} when all declared constraints pass.
+  \item Run bounded repair only when the initial assignment is close enough to
+        a valid profile for auditable post-processing.
+  \item Mark the result \texttt{repaired} when repair succeeds,
+        \texttt{infeasible} when capacity cannot be satisfied, and
+        \texttt{invalid} when validation fails after construction.
+\end{enumerate}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+Status & Meaning & Artifact behavior \\
+\midrule
+\texttt{valid} & Assignment satisfies declared profile & Write final sidecars \\
+\texttt{repaired} & Bounded repair changed assignment & Write repair lineage \\
+\texttt{infeasible} & Capacity cannot be satisfied & Write witness summary \\
+\texttt{invalid} & Validation fails after construction & Block final export \\
+\bottomrule
+\end{tabular}
+\caption{Capacity-clustering status taxonomy. Repair is visible lineage, not
+hidden cleanup.}
+\end{table}
