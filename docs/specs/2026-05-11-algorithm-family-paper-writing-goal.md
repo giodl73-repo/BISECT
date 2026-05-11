@@ -91,7 +91,7 @@ Acceptance for each T paper:
       real-data or future benchmark claims.
 - [x] Paper-level simulated review/revision artifacts meet panel readiness
       thresholds.
-- [ ] PDF is built and indexed in `docs/PAPERS.md`.
+- [x] PDF is built and indexed in `docs/PAPERS.md`.
 
 ## Stage 2 - Track U Spine Papers
 

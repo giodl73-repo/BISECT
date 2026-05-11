@@ -42,13 +42,13 @@ The `--structure` layer of the compositor. Every paper here answers: given k dis
 | T.11 | CVD Geographic — projected-centroid district construction | [PDF](papers/T.11+cvd-geographic.pdf) |
 | T.12 | BFS Region-Growing — greedy geographic district packing | [PDF](papers/T.12+bfs-growth.pdf) |
 | T.13 | Moving-Knife Redistricting — Reock-oriented fair-division construction | [PDF](papers/T.13+moving-knife.pdf) |
-| T.14 | Spectral Partitioning — deterministic Fiedler-vector construction baseline | — |
-| T.15 | Capacity-Constrained Clustering — population-capacity clusters with audit sidecars | — |
-| T.16 | Hierarchical Regionalization — agglomerative connected-region construction | — |
-| T.17 | Flow-Based Construction — capacity/cost flow assignment with infeasibility witnesses | — |
+| T.14 | Spectral Partitioning — deterministic Fiedler-vector construction baseline | [PDF](papers/T.14+spectral-partitioning.pdf) |
+| T.15 | Capacity-Constrained Clustering — population-capacity clusters with audit sidecars | [PDF](papers/T.15+capacity-constrained-clustering.pdf) |
+| T.16 | Hierarchical Regionalization — agglomerative connected-region construction | [PDF](papers/T.16+hierarchical-regionalization.pdf) |
+| T.17 | Flow-Based Construction — capacity/cost flow assignment with infeasibility witnesses | [PDF](papers/T.17+flow-based-construction.pdf) |
 
-T.14-T.17 are implemented as audited vertical slices and are now in the paper
-writing queue. Writing goal:
+T.14-T.17 are implemented as audited vertical slices with draft PDFs and
+paper-level simulated review/revision artifacts. Writing goal:
 [`2026-05-11-algorithm-family-paper-writing-goal.md`](specs/2026-05-11-algorithm-family-paper-writing-goal.md).
 Implementation roadmap:
 [`2026-05-10-algorithm-family-roadmap.md`](specs/2026-05-10-algorithm-family-roadmap.md).
