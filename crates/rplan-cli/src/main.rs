@@ -102,14 +102,16 @@ fn run_audit(args: AuditArgs) -> Result<i32> {
         None
     };
 
+    let plan_chamber = parse_chamber(&document.metadata.chamber)?;
     let profile = if let Some(path) = &args.legal_profile {
         let text = std::fs::read_to_string(path)
             .with_context(|| format!("reading legal profile {}", path.display()))?;
-        serde_json::from_str::<LegalProfile>(&text)
-            .with_context(|| format!("parsing legal profile {}", path.display()))?
+        let profile = serde_json::from_str::<LegalProfile>(&text)
+            .with_context(|| format!("parsing legal profile {}", path.display()))?;
+        validate_profile_applicability(&document, &plan_chamber, &profile)?;
+        profile
     } else {
-        let chamber = parse_chamber(&document.metadata.chamber)?;
-        if !matches!(chamber, Chamber::Congressional) {
+        if !matches!(plan_chamber, Chamber::Congressional) {
             anyhow::bail!(
                 "--legal-profile is required for non-congressional chamber '{}'",
                 document.metadata.chamber
@@ -178,6 +180,37 @@ fn run_audit(args: AuditArgs) -> Result<i32> {
             Ok(1)
         }
     }
+}
+
+fn validate_profile_applicability(
+    document: &rplan_io::RplanDocument,
+    plan_chamber: &Chamber,
+    profile: &LegalProfile,
+) -> Result<()> {
+    if &profile.chamber != plan_chamber {
+        anyhow::bail!(
+            "legal profile chamber {:?} does not match plan chamber {:?}",
+            profile.chamber,
+            plan_chamber
+        );
+    }
+    if profile.jurisdiction != "US" && profile.jurisdiction != document.metadata.jurisdiction {
+        anyhow::bail!(
+            "legal profile jurisdiction '{}' does not match plan jurisdiction '{}'",
+            profile.jurisdiction,
+            document.metadata.jurisdiction
+        );
+    }
+    if let Some(plan_year) = document.plan.units.year {
+        if profile.year != plan_year {
+            anyhow::bail!(
+                "legal profile year {} does not match plan year {}",
+                profile.year,
+                plan_year
+            );
+        }
+    }
+    Ok(())
 }
 
 fn parse_chamber(value: &str) -> Result<Chamber> {

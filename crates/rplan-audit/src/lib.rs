@@ -24,6 +24,8 @@ pub enum AuditError {
     CertificatePlanSchemaMismatch { expected: String, found: String },
     #[error("certificate context hash mismatch: expected {expected}, found {found}")]
     CertificateContextHashMismatch { expected: String, found: String },
+    #[error("certificate requires context hash {0}, but no context was supplied")]
+    CertificateContextMissing(String),
     #[error("certificate source hashes do not match context source hashes")]
     CertificateSourceHashesMismatch,
     #[error("algorithm lineage extra uses reserved certificate field: {0}")]
@@ -481,6 +483,8 @@ pub fn verify_audit_certificate(
         if certificate.source_hashes != context.source_hashes {
             return Err(AuditError::CertificateSourceHashesMismatch);
         }
+    } else if let Some(context_hash) = &certificate.context_hash {
+        return Err(AuditError::CertificateContextMissing(context_hash.clone()));
     }
 
     Ok(AuditCertificateVerification {
@@ -1459,5 +1463,24 @@ mod tests {
             err,
             AuditError::CertificatePlanHashMismatch { .. }
         ));
+    }
+
+    #[test]
+    fn verify_audit_certificate_rejects_missing_context_for_contextual_certificate() {
+        let plan = plan(vec![0, 0, 0, 1, 1]);
+        let mut context = context(Some(vec![100, 100, 100, 150, 150]), Some(path_graph()));
+        context.context_hash = context.compute_context_hash().unwrap();
+        let cert = audit_plan(
+            &plan,
+            Some(&context),
+            &profile(),
+            runtime(),
+            &[AuditConstraint::Population, AuditConstraint::Contiguity],
+            "2026-05-10T00:00:00Z",
+        )
+        .unwrap();
+
+        let err = verify_audit_certificate(&cert, Some(&plan), None).unwrap_err();
+        assert!(matches!(err, AuditError::CertificateContextMissing(_)));
     }
 }

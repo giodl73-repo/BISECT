@@ -3174,10 +3174,7 @@ fn write_rplan_audit_sidecars(
     };
 
     let source_hashes = rplan_core::SourceHashes {
-        entries: BTreeMap::from([
-            ("adjacency_file".to_string(), adjacency_file.to_string()),
-            ("tiger_source_url".to_string(), tiger_source_url.to_string()),
-        ]),
+        entries: BTreeMap::new(),
     };
     let mut context = rplan_core::RplanContext {
         rctx_version: rplan_core::RCTX_VERSION.to_string(),
@@ -3210,6 +3207,14 @@ fn write_rplan_audit_sidecars(
                 (
                     "version".to_string(),
                     serde_json::json!(env!("CARGO_PKG_VERSION")),
+                ),
+                (
+                    "adjacency_file".to_string(),
+                    serde_json::json!(adjacency_file),
+                ),
+                (
+                    "tiger_source_url".to_string(),
+                    serde_json::json!(tiger_source_url),
                 ),
             ]),
             source_hashes: source_hashes.entries.clone(),
@@ -3868,10 +3873,24 @@ mod tests {
             cert.context_hash.as_deref(),
             Some(sidecars.context_hash.as_str())
         );
-        assert_eq!(cert.result, rplan_audit::AuditResult::Pass);
+        assert_eq!(cert.result, rplan_audit::AuditResult::PassWithWarnings);
+        assert!(cert
+            .warnings
+            .iter()
+            .any(|warning| warning.code == "PROVENANCE_INCOMPLETE"));
 
         let rplan_text = std::fs::read_to_string(tmp.path().join("plan.rplan")).unwrap();
         let rplan = rplan_io::read_rplan_str(&rplan_text).unwrap();
+        assert!(context.source_hashes.entries.is_empty());
+        assert!(rplan.provenance.source_hashes.is_empty());
+        assert_eq!(
+            rplan.provenance.producer["adjacency_file"],
+            "wa_adjacency_2020.adj.bin"
+        );
+        assert_eq!(
+            rplan.provenance.producer["tiger_source_url"],
+            "https://www.census.gov/example.zip"
+        );
         let verification =
             rplan_audit::verify_audit_certificate(&cert, Some(&rplan.plan), Some(&context))
                 .unwrap();

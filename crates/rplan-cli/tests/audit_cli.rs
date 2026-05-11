@@ -8,6 +8,14 @@ fn audit_fixture_path(name: &str) -> String {
         .into_owned()
 }
 
+fn profile_fixture_path(name: &str) -> String {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../rplan-audit/profiles")
+        .join(name)
+        .to_string_lossy()
+        .into_owned()
+}
+
 fn run_grid3x3_valid_with_context(context_path: &str) -> std::process::Output {
     Command::new(env!("CARGO_BIN_EXE_rplan"))
         .args([
@@ -172,6 +180,29 @@ fn state_house_incomplete_profile_exits_two() {
     assert_eq!(output.status.code(), Some(2));
     assert!(String::from_utf8_lossy(&output.stderr)
         .contains("state legislative audit requires an explicit legal profile"));
+}
+
+#[test]
+fn state_house_with_congressional_profile_exits_two() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let plan_path = tmp.path().join("plan.rplan");
+    std::fs::write(&plan_path, plan("state-house", "[0, 0, 0, 1, 1]")).unwrap();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_rplan"))
+        .args([
+            "audit",
+            "--plan",
+            plan_path.to_str().unwrap(),
+            "--legal-profile",
+            &profile_fixture_path("us-congressional-project-v1.json"),
+            "--constraints",
+            "plan-shape",
+        ])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(2));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("legal profile chamber"));
 }
 
 #[test]
