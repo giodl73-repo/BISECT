@@ -26,6 +26,14 @@ pub struct ParetoEntry {
     pub dominated: bool,
     /// Generation index in which this plan first appeared on the Pareto front.
     pub generation_found: usize,
+    /// Plan-level validity status from the producing algorithm or audit layer.
+    pub validity_status: Option<String>,
+    /// Optional full audit certificate path for exported/selected frontier plans.
+    pub audit_certificate_path: Option<String>,
+    /// Optional SHA-256 of the full audit certificate document as written.
+    pub audit_certificate_sha256: Option<String>,
+    /// Optional stable canonical content hash for the audit certificate.
+    pub audit_certificate_content_hash: Option<String>,
 }
 
 /// Full result of an NSGA-II run.
@@ -50,6 +58,14 @@ struct PlanRecord {
     vra_deficit: f64,
     dominated: bool,
     generation_found: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    validity_status: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    audit_certificate_path: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    audit_certificate_sha256: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    audit_certificate_content_hash: Option<String>,
 }
 
 /// Final metadata record (last line of NDJSON).
@@ -88,6 +104,10 @@ impl ParetoResult {
                 vra_deficit: entry.objectives.vra_deficit,
                 dominated: entry.dominated,
                 generation_found: entry.generation_found,
+                validity_status: entry.validity_status.clone(),
+                audit_certificate_path: entry.audit_certificate_path.clone(),
+                audit_certificate_sha256: entry.audit_certificate_sha256.clone(),
+                audit_certificate_content_hash: entry.audit_certificate_content_hash.clone(),
             };
             let json = serde_json::to_string(&record)
                 .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
@@ -149,6 +169,10 @@ mod tests {
             },
             dominated: false,
             generation_found: 0,
+            validity_status: Some("valid".to_string()),
+            audit_certificate_path: None,
+            audit_certificate_sha256: None,
+            audit_certificate_content_hash: None,
         };
         ParetoResult {
             frontier: vec![entry; n],
@@ -249,6 +273,32 @@ mod tests {
                 v["generation_found"].is_number(),
                 "generation_found must be number"
             );
+            assert_eq!(v["validity_status"], "valid");
         }
+    }
+
+    #[test]
+    fn ndjson_plan_lines_can_carry_audit_certificate_identity() {
+        let mut result = make_result(1);
+        let entry = result.frontier.first_mut().unwrap();
+        entry.audit_certificate_path = Some("frontier/0001/audit-certificate.json".to_string());
+        entry.audit_certificate_sha256 = Some("a".repeat(64));
+        entry.audit_certificate_content_hash = Some(format!("sha256:{}", "b".repeat(64)));
+
+        let mut buf = Vec::new();
+        result.write_ndjson(&mut buf).unwrap();
+        let s = String::from_utf8(buf).unwrap();
+        let first = s.lines().next().unwrap();
+        let v: serde_json::Value = serde_json::from_str(first).unwrap();
+
+        assert_eq!(
+            v["audit_certificate_path"],
+            "frontier/0001/audit-certificate.json"
+        );
+        assert_eq!(v["audit_certificate_sha256"], "a".repeat(64));
+        assert_eq!(
+            v["audit_certificate_content_hash"],
+            format!("sha256:{}", "b".repeat(64))
+        );
     }
 }

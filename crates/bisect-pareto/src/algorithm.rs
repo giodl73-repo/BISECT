@@ -247,6 +247,10 @@ pub fn run_nsga2(
             objectives: final_obj[i].clone(),
             dominated: false,
             generation_found: generation_found[i],
+            validity_status: Some("valid".to_string()),
+            audit_certificate_path: None,
+            audit_certificate_sha256: None,
+            audit_certificate_content_hash: None,
         })
         .collect();
 

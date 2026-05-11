@@ -108,6 +108,11 @@ fn nsga2_4node_path_k2_returns_valid_frontier() {
         );
         // Not dominated
         assert!(!entry.dominated, "frontier plans must have dominated=false");
+        assert_eq!(
+            entry.validity_status.as_deref(),
+            Some("valid"),
+            "frontier plans should carry plan-level validity status"
+        );
     }
 }
 
