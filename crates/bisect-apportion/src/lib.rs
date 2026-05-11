@@ -24,6 +24,7 @@ pub mod huntington_hill;
 pub mod nest;
 pub mod paradoxes;
 pub mod prime;
+pub mod spectral;
 pub mod split;
 
 pub use compositor::PfrCompositor;
@@ -37,4 +38,5 @@ pub use paradoxes::check_alabama_paradox;
 pub use prime::{
     pfr_tree_depth, prime_factor_sequence, split_prescription, SplitStep, MAX_DIRECT_SPLIT,
 };
+pub use spectral::{spectral_bisect, SpectralConfig, SpectralError, SpectralResult};
 pub use split::{MetisPartitioner, Partitioner, SplitError};

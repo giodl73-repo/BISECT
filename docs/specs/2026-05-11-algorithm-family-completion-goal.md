@@ -62,15 +62,15 @@ later construction/evolutionary families.
 
 Purpose: add a cheap deterministic construction baseline.
 
-- [ ] Write T.14 implementation spec and role-review notes.
-- [ ] Add `bisect-apportion::spectral` module.
-- [ ] Implement deterministic Fiedler-vector approximation with convergence
+- [x] Write T.14 implementation spec and role-review notes.
+- [x] Add `bisect-apportion::spectral` module.
+- [x] Implement deterministic Fiedler-vector approximation with convergence
       metadata.
-- [ ] Implement population-balanced sweep cut and min-cut tie-breaking.
+- [x] Implement population-balanced sweep cut and min-cut tie-breaking.
 - [ ] Recurse through the existing bisection compositor.
 - [ ] Add `--structure spectral` and YAML `structure: spectral`.
 - [ ] Record spectral parameters in manifests and `algorithm_lineage`.
-- [ ] Add L0 path/two-clique/determinism tests.
+- [x] Add L0 path/two-clique/determinism tests.
 - [ ] Add L1 CLI/RPLAN sidecar test.
 
 ## Stage 3 - T.16 Hierarchical Regionalization
