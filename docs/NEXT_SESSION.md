@@ -28,7 +28,11 @@ The active goal doc is:
 
 ## Remaining Work
 
-The next residual work area is public fixture depth:
+The next active goal is:
+
+`docs/specs/2026-05-11-rplan-golden-package-corpus-goal.md`
+
+The residual work area is public fixture depth:
 
 - Keep `docs/PAPERS.md` current as paper titles or notes change.
 - Extend public fixture/package examples for U.16-U.19.
@@ -44,8 +48,9 @@ warnings that resolved by final output, and MiKTeX update reminders.
 
 ## Good Next Move
 
-Continue the empirical/public-example pass:
+Continue the RPLAN golden package corpus pass:
 
-1. Add small public package examples for U.16-U.19.
-2. Promote more U.20 negative examples into `docs/examples/` if useful for readers.
-3. Re-run paper builds and update `docs/PAPERS.md` notes if the evidence level changes.
+1. Define the package contract in docs.
+2. Add U.20 profile/stale-context/missing-input negative fixtures.
+3. Add small public package examples for T.14-T.17 and U.16-U.19.
+4. Bridge `bisect verify` with `rplan verify-certificate` where appropriate.
