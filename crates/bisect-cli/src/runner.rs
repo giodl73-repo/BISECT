@@ -6,7 +6,10 @@ use crate::bisection_runner::{
     run_short_burst_forest, run_short_burst_merge_split, run_vra_recom, AdaptiveConfig,
     CompactBisectOpts,
 };
-use crate::demographics::{align_demographics_to_adjacency, load_demographics};
+use crate::demographics::{
+    align_demographics_to_adjacency, align_vap_demographics_to_adjacency, load_demographics,
+    load_vap_demographics,
+};
 use crate::fetch::load_manifest;
 use crate::output::{clean_corrupt_state, write_state_outputs, VraAnalysis, VraDistrict};
 use crate::partisan_shares::load_partisan_shares;
@@ -3183,7 +3186,7 @@ fn write_rplan_audit_sidecars(
         graph: Some(build_rplan_graph(graph)),
         populations: Some(graph.vertex_weights.clone()),
         subdivisions: build_rplan_subdivisions(graph),
-        demographics: None,
+        demographics: build_rplan_demographics(cfg, graph)?,
         source_hashes: source_hashes.clone(),
     };
     context.context_hash = context
@@ -3392,6 +3395,35 @@ fn build_rplan_subdivisions(
             county_ids: Some(county_ids),
             municipal_ids: None,
         })
+}
+
+fn build_rplan_demographics(
+    cfg: &StateConfig,
+    graph: &crate::adjacency_loader::LoadedGraph,
+) -> Result<Option<rplan_core::DemographicContext>, String> {
+    let state_name = cfg.state_name.to_lowercase().replace(' ', "_");
+    let state_code = cfg.state_code.to_lowercase();
+    let candidates = [
+        format!("{state_name}_vap_{}.csv", cfg.year),
+        format!("{state_code}_vap_{}.csv", cfg.year),
+        format!("{state_name}_cvap_{}.csv", cfg.year),
+        format!("{state_code}_cvap_{}.csv", cfg.year),
+    ];
+    let demo_dir = std::path::Path::new("data")
+        .join(&cfg.year)
+        .join("demographics");
+    for candidate in candidates {
+        let path = demo_dir.join(candidate);
+        if !path.exists() {
+            continue;
+        }
+        let demo = load_vap_demographics(&path)
+            .map_err(|e| format!("VAP demographics load failed at {}: {e}", path.display()))?;
+        let context =
+            align_vap_demographics_to_adjacency(&demo, &graph.index_to_geoid, graph.n_vertices);
+        return Ok(Some(context));
+    }
+    Ok(None)
 }
 
 fn runner_legal_profile(cfg: &StateConfig, balance_tolerance: f64) -> rplan_audit::LegalProfile {
@@ -4017,6 +4049,37 @@ mod tests {
         assert_eq!(county_ids[0], None);
         assert_eq!(county_ids[1], None);
         assert_eq!(county_ids[2], Some("53001".to_string()));
+    }
+
+    #[test]
+    fn test_build_rplan_demographics_loads_explicit_vap_file() {
+        let mut cfg = make_config("WA");
+        cfg.year = "2999".to_string();
+        let demo_dir = std::path::Path::new("data")
+            .join(&cfg.year)
+            .join("demographics");
+        std::fs::create_dir_all(&demo_dir).unwrap();
+        let demo_path = demo_dir.join("wa_vap_2999.csv");
+        std::fs::write(
+            &demo_path,
+            "GEOID,total_vap,minority_vap\n53001000100,80,50\n53001000200,70,20\n",
+        )
+        .unwrap();
+
+        let demographics = build_rplan_demographics(&cfg, &path5_loaded_graph())
+            .unwrap()
+            .unwrap();
+
+        assert_eq!(
+            demographics.total_vap.as_ref().unwrap()[0..3],
+            [80.0, 70.0, 0.0]
+        );
+        assert_eq!(
+            demographics.minority_vap.as_ref().unwrap()[0..3],
+            [50.0, 20.0, 0.0]
+        );
+        std::fs::remove_file(demo_path).ok();
+        std::fs::remove_dir_all(std::path::Path::new("data").join("2999")).ok();
     }
 
     // ── Task 199: StateConfig::new_bulk constructor ───────────────────────────

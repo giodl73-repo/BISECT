@@ -9,6 +9,12 @@
 use std::collections::HashMap;
 use std::path::Path;
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct VapDemographicRecord {
+    pub total_vap: f64,
+    pub minority_vap: f64,
+}
+
 /// Load minority fraction per GEOID from a demographics CSV.
 /// Returns HashMap<GEOID (11-char), pct_minority>.
 pub fn load_demographics(csv_path: &Path) -> Result<HashMap<String, f64>, String> {
@@ -58,6 +64,80 @@ pub fn load_demographics(csv_path: &Path) -> Result<HashMap<String, f64>, String
     Ok(result)
 }
 
+/// Load true VAP/CVAP demographics from a CSV keyed by GEOID.
+///
+/// Required columns:
+/// - `GEOID` or `geoid`
+/// - `minority_vap`
+/// - one of `total_vap`, `vap`, or `cvap`
+pub fn load_vap_demographics(
+    csv_path: &Path,
+) -> Result<HashMap<String, VapDemographicRecord>, String> {
+    let content = std::fs::read_to_string(csv_path)
+        .map_err(|e| format!("cannot read {}: {e}", csv_path.display()))?;
+    load_vap_demographics_from_str(&content)
+}
+
+pub fn load_vap_demographics_from_str(
+    content: &str,
+) -> Result<HashMap<String, VapDemographicRecord>, String> {
+    let mut lines = content.lines();
+    let header = lines.next().ok_or("empty VAP demographics file")?;
+    let cols: Vec<&str> = header.split(',').map(str::trim).collect();
+
+    let col = |names: &[&str]| -> Result<usize, String> {
+        names
+            .iter()
+            .find_map(|name| cols.iter().position(|&c| c == *name))
+            .ok_or_else(|| {
+                format!(
+                    "VAP demographics missing required column; expected one of {:?} in header: {}",
+                    names, header
+                )
+            })
+    };
+
+    let i_geoid = col(&["GEOID", "geoid"])?;
+    let i_total_vap = col(&["total_vap", "vap", "cvap"])?;
+    let i_minority_vap = col(&["minority_vap"])?;
+
+    let mut result = HashMap::new();
+    for line in lines {
+        if line.trim().is_empty() {
+            continue;
+        }
+        let fields: Vec<&str> = line.split(',').collect();
+        let geoid = format!("{:0>11}", fields.get(i_geoid).unwrap_or(&"").trim());
+        let total_vap: f64 = fields
+            .get(i_total_vap)
+            .and_then(|field| field.trim().parse().ok())
+            .unwrap_or(0.0);
+        let minority_vap: f64 = fields
+            .get(i_minority_vap)
+            .and_then(|field| field.trim().parse().ok())
+            .unwrap_or(0.0);
+        if !total_vap.is_finite()
+            || !minority_vap.is_finite()
+            || total_vap < 0.0
+            || minority_vap < 0.0
+            || minority_vap > total_vap
+        {
+            return Err(format!(
+                "invalid VAP demographics for GEOID {geoid}: total_vap={total_vap}, minority_vap={minority_vap}"
+            ));
+        }
+        result.insert(
+            geoid,
+            VapDemographicRecord {
+                total_vap,
+                minority_vap,
+            },
+        );
+    }
+
+    Ok(result)
+}
+
 /// Align per-GEOID demographics to adjacency vertex index order.
 /// Returns Vec<f64> of length n_tracts; index matches adjacency vertex index.
 /// Tracts with no demographic data get 0.0 (conservative: won't trigger VRA boost).
@@ -75,6 +155,28 @@ pub fn align_demographics_to_adjacency(
                 .unwrap_or(0.0)
         })
         .collect()
+}
+
+pub fn align_vap_demographics_to_adjacency(
+    demo: &HashMap<String, VapDemographicRecord>,
+    index_to_geoid: &HashMap<usize, String>,
+    n_tracts: usize,
+) -> rplan_core::DemographicContext {
+    let mut total_vap = Vec::with_capacity(n_tracts);
+    let mut minority_vap = Vec::with_capacity(n_tracts);
+    for i in 0..n_tracts {
+        if let Some(record) = index_to_geoid.get(&i).and_then(|geoid| demo.get(geoid)) {
+            total_vap.push(record.total_vap);
+            minority_vap.push(record.minority_vap);
+        } else {
+            total_vap.push(0.0);
+            minority_vap.push(0.0);
+        }
+    }
+    rplan_core::DemographicContext {
+        total_vap: Some(total_vap),
+        minority_vap: Some(minority_vap),
+    }
 }
 
 #[cfg(test)]
@@ -136,6 +238,37 @@ mod tests {
         assert!((result[0] - 0.25).abs() < 1e-9);
         assert!((result[1] - 0.60).abs() < 1e-9);
         assert_eq!(result[2], 0.0, "missing geoid should default to 0.0");
+    }
+
+    #[test]
+    fn test_load_vap_demographics_from_str() {
+        let csv = "GEOID,total_vap,minority_vap\n01001020100,800,500\n01001020200,600,100\n";
+        let demo = load_vap_demographics_from_str(csv).unwrap();
+        assert_eq!(demo["01001020100"].total_vap, 800.0);
+        assert_eq!(demo["01001020100"].minority_vap, 500.0);
+    }
+
+    #[test]
+    fn test_load_vap_demographics_rejects_minority_above_total() {
+        let csv = "geoid,vap,minority_vap\n01001020100,100,120\n";
+        let err = load_vap_demographics_from_str(csv).unwrap_err();
+        assert!(err.contains("invalid VAP demographics"));
+    }
+
+    #[test]
+    fn test_align_vap_demographics_to_adjacency() {
+        let demo = load_vap_demographics_from_str(
+            "GEOID,total_vap,minority_vap\n01001020100,800,500\n01001020200,600,100\n",
+        )
+        .unwrap();
+        let mut idx = HashMap::new();
+        idx.insert(0usize, "01001020100".to_string());
+        idx.insert(1usize, "01001099999".to_string());
+        idx.insert(2usize, "01001020200".to_string());
+
+        let context = align_vap_demographics_to_adjacency(&demo, &idx, 3);
+        assert_eq!(context.total_vap.unwrap(), vec![800.0, 0.0, 600.0]);
+        assert_eq!(context.minority_vap.unwrap(), vec![500.0, 0.0, 100.0]);
     }
 
     // ── Additional demographics.rs tests ─────────────────────────────────────
