@@ -1,6 +1,6 @@
 # Goal: Write Algorithm-Family Papers
 
-**Status:** Active - Stage 1 Track T drafting in progress
+**Status:** Active - Stage 2 Track U spine drafting next
 **Track:** T/U algorithm-family publication  
 **Foundation:**
 [`2026-05-11-algorithm-family-completion-goal.md`](2026-05-11-algorithm-family-completion-goal.md),
