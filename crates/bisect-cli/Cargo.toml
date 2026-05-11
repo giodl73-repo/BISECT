@@ -14,6 +14,7 @@ path = "src/main.rs"
 bisect-core      = { path = "../bisect-core" }
 bisect-column    = { path = "../bisect-column" }
 bisect-clustering = { path = "../bisect-clustering" }
+bisect-flow      = { path = "../bisect-flow" }
 bisect-local-search = { path = "../bisect-local-search" }
 bisect-data      = { path = "../bisect-data" }
 bisect-ilp       = { path = "../bisect-ilp" }

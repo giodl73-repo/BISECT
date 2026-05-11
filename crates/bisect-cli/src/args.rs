@@ -122,6 +122,9 @@ pub enum PartitionMode {
     /// Hierarchical regionalization baseline (T.16).
     #[value(name = "regionalization")]
     Regionalization,
+    /// Flow-style constructive assignment baseline (T.17).
+    #[value(name = "flow-construction")]
+    FlowConstruction,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
@@ -188,6 +191,7 @@ impl std::fmt::Display for PartitionMode {
             Self::CapacityClustering => write!(f, "capacity-clustering"),
             Self::Spectral => write!(f, "spectral"),
             Self::Regionalization => write!(f, "regionalization"),
+            Self::FlowConstruction => write!(f, "flow-construction"),
         }
     }
 }
@@ -1434,6 +1438,10 @@ pub enum StructureMode {
     /// --structure regionalization
     #[value(name = "regionalization")]
     Regionalization,
+    /// Flow-style constructive assignment baseline (T.17).
+    /// --structure flow-construction
+    #[value(name = "flow-construction")]
+    FlowConstruction,
 }
 
 /// Layer 2 compositor: which edge/vertex weight signal to use.
@@ -2988,6 +2996,7 @@ mod tests {
             (PartitionMode::CapacityClustering, "capacity-clustering"),
             (PartitionMode::Spectral, "spectral"),
             (PartitionMode::Regionalization, "regionalization"),
+            (PartitionMode::FlowConstruction, "flow-construction"),
         ];
         for (variant, expected) in cases {
             assert_eq!(
@@ -3015,6 +3024,7 @@ mod tests {
             ("capacity-clustering", StructureMode::CapacityClustering),
             ("spectral", StructureMode::Spectral),
             ("regionalization", StructureMode::Regionalization),
+            ("flow-construction", StructureMode::FlowConstruction),
         ];
         for (s, expected) in cases {
             let parsed = StructureMode::from_str(s, true)

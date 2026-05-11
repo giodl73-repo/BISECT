@@ -107,16 +107,16 @@ Purpose: add heavier exact optimization with a distinct solver lifecycle.
 
 Purpose: add constructive flow assignment once audit/repair patterns are stable.
 
-- [ ] Write T.17 implementation spec and role-review notes.
-- [ ] Add `bisect-flow` crate.
-- [ ] Define flow network, capacities, costs, infeasibility witnesses, and
+- [x] Write T.17 implementation spec and role-review notes.
+- [x] Add `bisect-flow` crate.
+- [x] Define flow network, capacities, costs, infeasibility witnesses, and
       repair contract.
-- [ ] Implement small deterministic flow-construction baseline.
-- [ ] Add `--structure flow-construction` and YAML
+- [x] Implement small deterministic flow-construction baseline.
+- [x] Add `--structure flow-construction` and YAML
       `structure: flow-construction`.
-- [ ] Emit flow summaries and `algorithm_lineage`.
-- [ ] Add L0 capacity/infeasibility/determinism fixtures.
-- [ ] Add L1 CLI/RPLAN sidecar test.
+- [x] Emit flow summaries and `algorithm_lineage`.
+- [x] Add L0 capacity/infeasibility/determinism fixtures.
+- [x] Add L1 CLI/RPLAN sidecar test.
 
 ## Stage 6 - U.19 Evolutionary Comparison
 

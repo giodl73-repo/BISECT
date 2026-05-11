@@ -21,6 +21,7 @@ members = [
     "crates/bisect-clustering",
     "crates/bisect-local-search",
     "crates/bisect-column",
+    "crates/bisect-flow",
     "python/bisect_py",
 ]
 resolver = "2"
