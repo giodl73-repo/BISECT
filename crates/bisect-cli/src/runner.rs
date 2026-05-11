@@ -3631,17 +3631,15 @@ fn runner_algorithm_lineage(
     if let Some(summary) = read_ilp_lineage_summary(&summary_path)? {
         extra["audit_summary"] = summary;
     }
-    let parameters_hash = rplan_core::canonical_sha256(&extra)
-        .map_err(|e| format!("ILP lineage parameter hash failed: {e}"))?;
-
-    Ok(Some(rplan_audit::AlgorithmLineage {
-        producer_crate: "bisect-ilp".to_string(),
-        producer_version: env!("CARGO_PKG_VERSION").to_string(),
-        method: method.to_string(),
-        parent_plan_hashes: Vec::new(),
-        parameters_hash,
+    rplan_audit::AlgorithmLineage::new(
+        "bisect-ilp",
+        env!("CARGO_PKG_VERSION"),
+        method.to_string(),
+        Vec::new(),
         extra,
-    }))
+    )
+    .map(Some)
+    .map_err(|e| format!("ILP lineage construction failed: {e}"))
 }
 
 fn read_ilp_lineage_summary(path: &std::path::Path) -> Result<Option<serde_json::Value>, String> {

@@ -159,6 +159,27 @@ pub struct AlgorithmLineage {
     pub extra: serde_json::Value,
 }
 
+impl AlgorithmLineage {
+    pub fn new(
+        producer_crate: impl Into<String>,
+        producer_version: impl Into<String>,
+        method: impl Into<String>,
+        parent_plan_hashes: Vec<String>,
+        extra: serde_json::Value,
+    ) -> Result<Self, AuditError> {
+        let lineage = Self {
+            producer_crate: producer_crate.into(),
+            producer_version: producer_version.into(),
+            method: method.into(),
+            parent_plan_hashes,
+            parameters_hash: canonical_sha256(&extra).map_err(AuditError::from)?,
+            extra,
+        };
+        validate_algorithm_lineage_extra(&lineage)?;
+        Ok(lineage)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum AuditResult {
@@ -1684,17 +1705,18 @@ mod tests {
 
     #[test]
     fn algorithm_lineage_round_trips_and_affects_content_hash() {
-        let lineage = AlgorithmLineage {
-            producer_crate: "bisect-ilp".to_string(),
-            producer_version: "0.1.0".to_string(),
-            method: "branch-and-cut".to_string(),
-            parent_plan_hashes: vec![],
-            parameters_hash: "sha256:abc".to_string(),
-            extra: serde_json::json!({
+        let lineage = AlgorithmLineage::new(
+            "bisect-ilp",
+            "0.1.0",
+            "branch-and-cut",
+            vec![],
+            serde_json::json!({
                 "solve_report_dir": "intermediate/ilp_solve_reports",
                 "solve_report_count": 1
             }),
-        };
+        )
+        .unwrap();
+        assert!(lineage.parameters_hash.starts_with("sha256:"));
         let cert_with_lineage = audit_plan_with_lineage(
             &plan(vec![0, 0, 0, 1, 1]),
             Some(&context(
@@ -1735,6 +1757,24 @@ mod tests {
         let json = serde_json::to_string(&cert_with_lineage).unwrap();
         let decoded: AuditCertificate = serde_json::from_str(&json).unwrap();
         assert_eq!(decoded.algorithm_lineage.unwrap().method, "branch-and-cut");
+    }
+
+    #[test]
+    fn algorithm_lineage_builder_rejects_reserved_certificate_fields() {
+        let err = AlgorithmLineage::new(
+            "mock-future-crate",
+            "0.1.0",
+            "mock-search",
+            vec![],
+            serde_json::json!({
+                "plan_hash": "sha256:attempted-override"
+            }),
+        )
+        .unwrap_err();
+        assert!(matches!(
+            err,
+            AuditError::AlgorithmLineageExtraReservedField(field) if field == "plan_hash"
+        ));
     }
 
     #[test]
