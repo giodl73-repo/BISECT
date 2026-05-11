@@ -1,6 +1,6 @@
 # Goal: Method-Produced RPLAN Package Expansion
 
-**Status:** Active - Stage 0 goal setup
+**Status:** Active - first method package generated
 **Date:** 2026-05-11
 **Owner:** BISECT / RPLAN integration
 **Depends on:** `docs/specs/2026-05-11-rplan-golden-package-corpus-goal.md`
@@ -38,24 +38,24 @@ This goal targets the method-produced fixture tier.
 
 - [ ] Pick one construction package from T.14-T.17 that can be generated
       deterministically without external downloads.
-- [ ] Pick one search/optimization package from U.16-U.19 that can be generated
+- [x] Pick one search/optimization package from U.16-U.19 that can be generated
       deterministically without external downloads.
-- [ ] Decide whether U.20 needs a generated package beyond the existing public
+- [x] Decide whether U.20 needs a generated package beyond the existing public
       audit-certificate reference fixture.
-- [ ] Record any candidates that require external TIGER/ACS data as later
+- [x] Record any candidates that require external TIGER/ACS data as later
       benchmark-package work.
 
 ## Stage 2 - Transcript And Manifest Contract
 
-- [ ] Define the method-produced package shape:
+- [x] Define the method-produced package shape:
       `plan.rplan`, `context.rctx`, `audit-certificate.json`,
       `manifest.json`, `method-transcript.json`, and optional source command
       transcript.
-- [ ] Decide whether the existing example-local manifest schema is sufficient
+- [x] Decide whether the existing example-local manifest schema is sufficient
       or needs a method-produced schema version.
-- [ ] Ensure package transcripts record seed, command, crate version, method
+- [x] Ensure package transcripts record seed, command, crate version, method
       parameters, input source hashes, and verifier command.
-- [ ] Add hash verification for every committed package file.
+- [x] Add hash verification for every committed package file.
 
 ## Stage 3 - Generate First Method Package
 
@@ -67,12 +67,12 @@ This goal targets the method-produced fixture tier.
 
 ## Stage 4 - Generate Second Method Package
 
-- [ ] Generate the chosen search/optimization package from a real CLI/crate
+- [x] Generate the chosen search/optimization package from a real CLI/crate
       workflow.
-- [ ] Commit package artifacts under `docs/examples/rplan-method-packages/`.
-- [ ] Add or reuse tests showing `rplan verify-certificate` accepts it.
-- [ ] Add or reuse tests showing `bisect verify --manifest` accepts it.
-- [ ] Document what the package proves and what remains outside scope.
+- [x] Commit package artifacts under `docs/examples/rplan-method-packages/`.
+- [x] Add or reuse tests showing `rplan verify-certificate` accepts it.
+- [x] Add or reuse tests showing `bisect verify --manifest` accepts it.
+- [x] Document what the package proves and what remains outside scope.
 
 ## Stage 5 - Evidence Integration
 

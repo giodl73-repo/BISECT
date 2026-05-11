@@ -462,6 +462,45 @@ fn verify_certificate_accepts_all_public_golden_packages() {
 }
 
 #[test]
+fn verify_certificate_accepts_all_public_method_packages() {
+    let corpus_root = docs_examples_root().join("rplan-method-packages");
+    let mut verified = Vec::new();
+    for entry in std::fs::read_dir(&corpus_root).unwrap() {
+        let entry = entry.unwrap();
+        if !entry.file_type().unwrap().is_dir() {
+            continue;
+        }
+        let dir = entry.path();
+        let output = Command::new(env!("CARGO_BIN_EXE_rplan"))
+            .args([
+                "verify-certificate",
+                "--certificate",
+                dir.join("audit-certificate.json").to_str().unwrap(),
+                "--plan",
+                dir.join("plan.rplan").to_str().unwrap(),
+                "--context",
+                dir.join("context.rctx").to_str().unwrap(),
+                "--format",
+                "json",
+            ])
+            .output()
+            .unwrap();
+
+        assert!(
+            output.status.success(),
+            "{} stderr: {}",
+            dir.display(),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let stdout: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(stdout["verification"], "pass");
+        verified.push(entry.file_name().to_string_lossy().into_owned());
+    }
+    verified.sort();
+    assert_eq!(verified, vec!["U.18+local-search-generated-descendant"]);
+}
+
+#[test]
 fn verify_certificate_rejects_missing_context_for_contextual_certificate() {
     let output = Command::new(env!("CARGO_BIN_EXE_rplan"))
         .args([

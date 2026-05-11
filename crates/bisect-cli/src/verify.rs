@@ -749,6 +749,15 @@ mod tests {
             .join("manifest.json")
     }
 
+    fn public_method_package_manifest() -> PathBuf {
+        repo_root()
+            .join("docs")
+            .join("examples")
+            .join("rplan-method-packages")
+            .join("U.18+local-search-generated-descendant")
+            .join("manifest.json")
+    }
+
     fn write_ilp_report(dir: &Path, name: &str, lp_bytes: &[u8], sha256: String) -> PathBuf {
         let formulation = bisect_ilp::build_formulation(&[vec![1], vec![0]], &[1, 1], 2, 0.05);
         let result = bisect_ilp::solve(
@@ -1082,6 +1091,28 @@ mod tests {
         assert!(
             result.is_ok(),
             "bisect verify should accept public RPLAN package manifest: {:?}",
+            result.err()
+        );
+    }
+
+    #[test]
+    fn test_verify_accepts_rplan_method_package_manifest() {
+        let args = VerifyArgs {
+            manifest: public_method_package_manifest(),
+            min_similarity: 0.99,
+            verify_label: None,
+            output_base: "outputs".to_string(),
+            dry_run: false,
+            skip_binary_check: true,
+            label: None,
+            verify_assignments_only: false,
+            plan_ref: None,
+        };
+
+        let result = run_verify(&args);
+        assert!(
+            result.is_ok(),
+            "bisect verify should accept public RPLAN method package manifest: {:?}",
             result.err()
         );
     }

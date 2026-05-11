@@ -76,6 +76,12 @@ cargo run -p bisect-cli -- verify `
 | U.16/U.17 solver transcript package | Exact optimization | formulation-only or tiny exact fixture | no | useful after transcript schema settles |
 | Real state/chamber package | Any | `bisect state` on TIGER/ACS-backed data | yes | later benchmark package |
 
+## Current Packages
+
+| Package | Source workflow | Status | Verifier surface |
+|---|---|---|---|
+| `U.18+local-search-generated-descendant` | `bisect improve --method one-move` over the public grid3x3 RPLAN/RCTX fixture | no improving move found; package verifies | `rplan verify-certificate`; `bisect verify --manifest` |
+
 ## Naming
 
 Use paper-code plus method and source tier:

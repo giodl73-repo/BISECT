@@ -20,6 +20,8 @@ goals are complete:
   same package manifest shape as a bridge surface.
 - The next queued goal is method-produced package expansion: small generated
   packages with transcripts, not hand-sized verifier fixtures.
+- The first method-produced package is
+  `docs/examples/rplan-method-packages/U.18+local-search-generated-descendant/`.
 
 The active goal doc is:
 
@@ -30,6 +32,7 @@ The active goal doc is:
 - `5920074` Add lineage-bearing RPLAN golden package corpus
 - `82aec4c` Bridge bisect verify to RPLAN packages
 - `2e3b0ae` Upgrade RPLAN package evidence in U papers
+- `04f16fa` Queue method-produced RPLAN package goal
 - `0a7242e` Expand U20 negative package fixtures
 - `c1c1b9d` Define RPLAN golden package contract
 - `9bd5c60` Add RPLAN golden package corpus goal
@@ -63,6 +66,6 @@ warnings that resolved by final output, and MiKTeX update reminders.
 Start the method-produced package expansion:
 
 1. Add `docs/examples/rplan-method-packages/README.md`.
-2. Build a package selection matrix for deterministic no-download candidates.
-3. Choose one construction package and one search/optimization package to
-   generate from real workflows.
+2. Choose and generate one construction package from T.14-T.17.
+3. Keep the method-produced package checklist current and commit the next
+   verified artifact slice.
