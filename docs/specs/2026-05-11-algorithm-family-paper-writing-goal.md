@@ -69,14 +69,14 @@ discipline:
 
 ## Stage 1 - Track T Construction Papers
 
-- [ ] T.14 Spectral Partitioning: deterministic Laplacian/Fiedler-vector
+- [x] T.14 Spectral Partitioning: deterministic Laplacian/Fiedler-vector
       construction baseline, proportional recursive split hardening, CLI
       `--structure spectral`.
-- [ ] T.15 Capacity-Constrained Clustering: capacity assignment, repair-aware
+- [x] T.15 Capacity-Constrained Clustering: capacity assignment, repair-aware
       summaries, audited sidecars, CLI `--structure capacity-clustering`.
-- [ ] T.16 Hierarchical Regionalization: agglomerative connected-region
+- [x] T.16 Hierarchical Regionalization: agglomerative connected-region
       construction, merge witnesses, CLI `--structure regionalization`.
-- [ ] T.17 Flow-Based Construction: capacity/cost flow baseline,
+- [x] T.17 Flow-Based Construction: capacity/cost flow baseline,
       infeasibility witnesses, CLI `--structure flow-construction`.
 
 Acceptance for each T paper:
@@ -89,7 +89,7 @@ Acceptance for each T paper:
 - [x] The audit section explains final-plan RPLAN sidecars where applicable.
 - [x] The evaluation section distinguishes synthetic L0/L1 fixtures from
       real-data or future benchmark claims.
-- [ ] Paper-level simulated review/revision artifacts meet panel readiness
+- [x] Paper-level simulated review/revision artifacts meet panel readiness
       thresholds.
 - [ ] PDF is built and indexed in `docs/PAPERS.md`.
 
