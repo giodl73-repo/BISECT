@@ -98,6 +98,7 @@ Acceptance for each T paper:
 - [x] Add first-draft `main.tex`/`Makefile` skeletons for the Stage 2 U spine
       papers.
 - [x] Complete U.0 round-1 simulated review, P1 revisions, and build check.
+- [x] Complete U.12 round-1 simulated review, P1 revisions, and build check.
 - [ ] U.0 Search and Optimization Overview: taxonomy and bridge from existing
       U.1-U.11 papers to U.12-U.20.
 - [ ] U.12 Algorithm-Selection Matrix: when to use construction, search,

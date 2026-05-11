@@ -1,0 +1,42 @@
+paper: U.12+algorithm-selection-matrix
+title: An Algorithm-Selection Matrix for Auditable Redistricting Workflows
+type: publication
+stage: recheck
+round: 1
+content_mode: draft
+venue: technical report
+review_date: 2026-05-11
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - name: Jon Kleinberg
+    profile_ref: simulated-algorithms-network-science
+    score: 3
+  - name: Cynthia Dwork
+    profile_ref: simulated-accountability-fairness
+    score: 3
+  - name: Wendy Tam Cho
+    profile_ref: simulated-political-methodology
+    score: 2
+  - name: Kosuke Imai
+    profile_ref: simulated-statistical-methodology
+    score: 3
+  - name: Michael McDonald
+    profile_ref: simulated-election-administration
+    score: 2
+reviews:
+  round_1:
+    avg_score: 2.6
+    min_score: 2
+    max_score: 3
+    synthesis: reviews/SYNTHESIS.md
+    revision_plan: REVISION-PLAN.md
+p1_items:
+  - id: P1.1
+    title: Add the actual selection matrix with claim and artifact columns.
+    addressed: true
+  - id: P1.2
+    title: Add preflight questions that make operator use reproducible.
+    addressed: true
+  - id: P1.3
+    title: State that the matrix is not a ranking or legal sufficiency test.
+    addressed: true
