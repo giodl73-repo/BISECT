@@ -4026,6 +4026,33 @@ mod tests {
     }
 
     #[test]
+    fn test_manifest_and_rplan_source_hashes_share_source_digests() {
+        let tmp = TempDir::new().unwrap();
+        let adjacency_path = tmp.path().join("wa_adjacency_2020.adj.bin");
+        let tiger_path = tmp.path().join("tl_2020_53_tract.shp");
+        std::fs::write(&adjacency_path, b"adjacency fixture").unwrap();
+        std::fs::write(&tiger_path, b"tiger fixture").unwrap();
+
+        let adjacency_sha256 = bisect_report::sha256_file(&adjacency_path).unwrap();
+        let tiger_sha256 = bisect_report::sha256_file(&tiger_path).unwrap();
+        let manifest = bisect_report::PlanManifest {
+            adjacency_sha256: adjacency_sha256.clone(),
+            tiger_sha256: Some(tiger_sha256.clone()),
+            ..Default::default()
+        };
+        let source_hashes = build_rplan_source_hashes(&adjacency_path, Some(&tiger_path)).unwrap();
+
+        assert_eq!(
+            source_hashes.entries["adjacency"],
+            format!("sha256:{}", manifest.adjacency_sha256)
+        );
+        assert_eq!(
+            source_hashes.entries["geometry"],
+            format!("sha256:{}", manifest.tiger_sha256.as_ref().unwrap())
+        );
+    }
+
+    #[test]
     fn test_write_rplan_audit_sidecars_emits_manifest_artifacts() {
         let tmp = TempDir::new().unwrap();
         let mut cfg = make_config("WA");
