@@ -4,3 +4,37 @@ The current evidence layer includes path balance, infeasible capacity, and
 determinism fixtures. The next evidence layer should characterize scale limits
 and compare flow construction with clustering, regionalization, and METIS
 baselines.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llll}
+\toprule
+Claim & Evidence now & Missing evidence & Status \\
+\midrule
+Path fixture balance & L0 path tests & None for fixtures & Current \\
+Infeasible capacity witness & L0 infeasibility tests & Broader case sweep & Current \\
+Deterministic output & L0 determinism tests & Larger graph sweep & Current \\
+Audit lineage & L1 sidecar checks & Real export transcript & Current \\
+Scale and quality & None in this paper & Benchmarks and smoke states & Future \\
+\bottomrule
+\end{tabular}
+\caption{Evidence ladder for T.17 claims. Feasibility, witness generation, and
+plan quality are separate evidence levels.}
+\end{table}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llll}
+\toprule
+Constructor & Capacity behavior & Failure artifact & Current role \\
+\midrule
+Flow construction & model capacity bounds & infeasibility witness & baseline \\
+Capacity clustering & status/repair & witness or repair lineage & comparison \\
+Regionalization & merge constraints & merge/status summary & comparison \\
+Spectral & sweep balance & validation failure & comparison \\
+METIS & external partitioning & manifest/validation result & comparison \\
+\bottomrule
+\end{tabular}
+\caption{Failure-behavior comparison framing. Quantitative comparisons remain
+future work until commands and outputs are recorded.}
+\end{table}

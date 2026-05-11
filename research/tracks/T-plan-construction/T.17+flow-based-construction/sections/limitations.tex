@@ -3,3 +3,9 @@
 The current flow constructor is a baseline, not a mature min-cost-flow solver
 for every redistricting instance. Capacity feasibility and district quality
 must be evaluated separately.
+
+Flow feasibility is also model-relative. A successful flow assignment does not
+prove compactness, community preservation, partisan fairness, or legal
+compliance. An infeasibility witness explains failure under the declared graph,
+costs, capacities, and profile; it is not proof that no valid plan exists under
+another model.

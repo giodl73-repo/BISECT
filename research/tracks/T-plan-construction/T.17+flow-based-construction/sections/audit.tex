@@ -5,3 +5,9 @@ sidecar path: assignments, capacity status, infeasibility witnesses where
 present, parameter hashes, and algorithm lineage are preserved for verifier
 checks. Passing the audit profile confirms the recorded contract, not global
 optimality or legal compliance.
+
+The sidecar contract binds the exported assignment or witness to the declared
+flow model, costs, capacities, parameters, validation outcome, and algorithm
+lineage. Parameter hashes are intended to detect drift in the run
+configuration. An infeasibility witness is model-relative: it explains why the
+declared flow profile failed, not why no possible redistricting plan can exist.

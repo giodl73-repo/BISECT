@@ -4,3 +4,37 @@ The staged method constructs assignments under population-capacity constraints
 and records whether a valid assignment exists for the fixture. When capacity is
 infeasible, the output carries an explicit witness rather than emitting an
 invalid final plan.
+
+\subsection{Reproducible Procedure}
+
+The constructor uses the graph and unit attributes supplied by the BISECT state
+pipeline. The baseline is feasibility- and audit-oriented. It is not yet the
+branch-and-cut or branch-and-price machinery planned for U.16 and U.17.
+
+\begin{enumerate}
+  \item Create source-side supply from units and demand-side capacity targets
+        for districts or construction bins.
+  \item Add eligible arcs according to the declared graph/profile and attach
+        costs from the staged constructor configuration.
+  \item Enforce capacity bounds and extract assignments from selected flow.
+  \item Mark the result \texttt{valid} when assignment and validation checks
+        pass.
+  \item Mark the result \texttt{infeasible} when the declared flow model cannot
+        satisfy capacity, and \texttt{invalid} when validation fails after
+        extraction.
+\end{enumerate}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+Status & Meaning & Artifact behavior \\
+\midrule
+\texttt{valid} & Model produces a validated assignment & Write final sidecars \\
+\texttt{infeasible} & Model/profile cannot satisfy capacity & Write witness \\
+\texttt{invalid} & Extracted assignment fails validation & Block final export \\
+\bottomrule
+\end{tabular}
+\caption{Flow-construction status taxonomy. Infeasibility is relative to the
+declared model and profile.}
+\end{table}

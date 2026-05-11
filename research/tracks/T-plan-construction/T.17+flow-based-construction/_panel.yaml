@@ -1,0 +1,42 @@
+paper: T.17+flow-based-construction
+title: Flow-Based Construction for Auditable Redistricting Assignments
+type: publication
+stage: recheck
+round: 1
+content_mode: draft
+venue: technical report
+review_date: 2026-05-11
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - name: Eva Tardos
+    profile_ref: simulated-network-flow
+    score: 3
+  - name: David Shmoys
+    profile_ref: simulated-optimization-approximation
+    score: 3
+  - name: Moon Duchin
+    profile_ref: simulated-redistricting-geometry
+    score: 2
+  - name: Wendy Tam Cho
+    profile_ref: simulated-political-methodology
+    score: 2
+  - name: Cynthia Dwork
+    profile_ref: simulated-accountability-audit
+    score: 3
+reviews:
+  round_1:
+    avg_score: 2.6
+    min_score: 2
+    max_score: 3
+    synthesis: reviews/SYNTHESIS.md
+    revision_plan: REVISION-PLAN.md
+p1_items:
+  - id: P1.1
+    title: Define the flow network, capacities, costs, and status outputs.
+    addressed: true
+  - id: P1.2
+    title: Separate infeasibility witnesses from quality and optimality claims.
+    addressed: true
+  - id: P1.3
+    title: State the audit contract and limits for flow summaries.
+    addressed: true
