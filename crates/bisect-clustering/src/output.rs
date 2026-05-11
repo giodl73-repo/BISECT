@@ -57,4 +57,32 @@ impl ClusterSummary {
         let bytes = serde_json::to_vec(&payload).expect("cluster summary payload serializes");
         format!("sha256:{:x}", Sha256::digest(bytes))
     }
+
+    pub fn algorithm_lineage(
+        &self,
+        producer_version: impl Into<String>,
+        parent_plan_hashes: Vec<String>,
+    ) -> Result<rplan_audit::AlgorithmLineage, rplan_audit::AuditError> {
+        rplan_audit::AlgorithmLineage::new(
+            "bisect-clustering",
+            producer_version,
+            self.method.clone(),
+            parent_plan_hashes,
+            self.algorithm_lineage_extra(),
+        )
+    }
+
+    pub fn algorithm_lineage_extra(&self) -> serde_json::Value {
+        serde_json::json!({
+            "lineage_schema_version": self.schema_version,
+            "method": self.method,
+            "seed_method": self.seed_method,
+            "repair_method": self.repair_method,
+            "capacity_status": self.capacity_status,
+            "repair_status": self.repair_status,
+            "population_deviation": self.population_deviation,
+            "edge_cut": self.edge_cut,
+            "parameter_hash": self.parameter_hash,
+        })
+    }
 }

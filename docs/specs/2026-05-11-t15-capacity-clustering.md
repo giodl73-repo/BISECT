@@ -62,7 +62,7 @@ T.15 final plans must eventually attach `algorithm_lineage` using
 
 Required `algorithm_lineage.extra` fields:
 
-- `schema_version`
+- `lineage_schema_version`
 - `method`
 - `seed_method`
 - `repair_method`
@@ -112,7 +112,7 @@ Canonical fixtures for L0/L1:
 - [x] L0 tests cover path, grid, bridge, and impossible-capacity fixtures.
 - [x] L1 test produces a complete plan summary on `grid_3x3_k3`.
 - [x] Output summary is versioned and deterministic for fixed input.
-- [ ] Audit-lineage payload builder rejects reserved certificate fields.
+- [x] Audit-lineage payload builder rejects reserved certificate fields.
 - [ ] Stage 2 repair path proves final plans pass `rplan-audit`.
 - [ ] Stage 3 CLI wiring emits RPLAN sidecars and verifies through `bisect verify`.
 
