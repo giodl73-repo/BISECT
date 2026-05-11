@@ -77,16 +77,15 @@ The search, optimization, certification, and algorithm-selection layer. Once con
 | U.13 | Exact-vs-Heuristic Certification — what proofs, bounds, and audits establish | [PDF](papers/U.13+exact-vs-heuristic-certification.pdf) | reviewed draft |
 | U.14 | Multi-Objective Selection — selecting among trade-offs and sampled frontiers | [PDF](papers/U.14+multi-objective-selection.pdf) | reviewed draft |
 | U.15 | Legal Postures for Search — claim discipline for search and optimization choices | [PDF](papers/U.15+legal-postures-for-search.pdf) | reviewed draft |
-| U.16 | Branch-And-Cut Redistricting — connectivity cuts, separation, and solver reports | — | implemented slice |
-| U.17 | Branch-And-Price Redistricting — column generation and exact fixture packages | — | implemented slice |
-| U.18 | Large-Neighborhood Search — local improvement, tabu/LNS scaffolding, and repair hooks | — | implemented slice |
-| U.19 | Evolutionary Search Comparison — validity-preserving crossover/mutation and selected frontier audits | — | implemented slice |
-| U.20 | Plan Audit Certificates — RPLAN/RCTX audit certificates and lineage fixed point | — | implemented slice |
+| U.16 | Branch-And-Cut Redistricting — connectivity cuts, separation, and solver reports | [PDF](papers/U.16+branch-and-cut-redistricting.pdf) | reviewed draft |
+| U.17 | Branch-And-Price Redistricting — column generation and exact fixture packages | [PDF](papers/U.17+branch-and-price-redistricting.pdf) | reviewed draft |
+| U.18 | Large-Neighborhood Search — local improvement, tabu/LNS scaffolding, and repair hooks | [PDF](papers/U.18+large-neighborhood-search.pdf) | reviewed draft |
+| U.19 | Evolutionary Search Comparison — validity-preserving crossover/mutation and selected frontier audits | [PDF](papers/U.19+evolutionary-search-comparison.pdf) | reviewed draft |
+| U.20 | Plan Audit Certificates — RPLAN/RCTX audit certificates and lineage fixed point | [PDF](papers/U.20+plan-audit-certificates.pdf) | reviewed draft |
 
-U.0 and U.12-U.15 are reviewed spine drafts with PDFs and paper-level
-simulated review/revision artifacts. Search/optimization additions through U.20
-are implemented as audited vertical slices where they touch final plans and are
-in the paper writing queue. Writing goal:
+U.0 and U.12-U.20 are reviewed drafts with PDFs and paper-level simulated
+review/revision artifacts. Search/optimization additions through U.20 are
+implemented as audited vertical slices where they touch final plans. Writing goal:
 [`2026-05-11-algorithm-family-paper-writing-goal.md`](specs/2026-05-11-algorithm-family-paper-writing-goal.md).
 Implementation roadmap:
 [`2026-05-10-algorithm-family-roadmap.md`](specs/2026-05-10-algorithm-family-roadmap.md).

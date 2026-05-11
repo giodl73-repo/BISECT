@@ -134,30 +134,30 @@ Acceptance for each U spine paper:
 - [x] Complete U.18 round-1 simulated review, P1 revisions, and build check.
 - [x] Complete U.19 round-1 simulated review, P1 revisions, and build check.
 - [x] Complete U.20 round-1 simulated review, P1 revisions, and build check.
-- [ ] U.16 Branch-And-Cut Redistricting: separation routines, connectivity
+- [x] U.16 Branch-And-Cut Redistricting: separation routines, connectivity
       cuts, solve reports, and audit lineage.
-- [ ] U.17 Branch-And-Price Redistricting: column generation, pricing/master
+- [x] U.17 Branch-And-Price Redistricting: column generation, pricing/master
       contracts, exact fixture solution, and audit package.
-- [ ] U.18 Large-Neighborhood Search: one-move baseline, tabu/LNS scaffolding,
+- [x] U.18 Large-Neighborhood Search: one-move baseline, tabu/LNS scaffolding,
       validity preservation, `bisect improve`.
-- [ ] U.19 Evolutionary Search Comparison: NSGA-II lineage, validity-preserving
+- [x] U.19 Evolutionary Search Comparison: NSGA-II lineage, validity-preserving
       crossover/mutation, selected-frontier audit packaging.
-- [ ] U.20 Plan Audit Certificates: RPLAN/RCTX schema, audit certificates,
+- [x] U.20 Plan Audit Certificates: RPLAN/RCTX schema, audit certificates,
       algorithm lineage, verifier contract, and fixed-point role.
 
 Acceptance for each U implementation paper:
 
-- [ ] `main.tex` and section files exist.
-- [ ] `plan.md` lists hypotheses, scope, baselines, failure modes, figures,
+- [x] `main.tex` and section files exist.
+- [x] `plan.md` lists hypotheses, scope, baselines, failure modes, figures,
       and limitations.
-- [ ] The implementation section cites the crate/module boundary and CLI
+- [x] The implementation section cites the crate/module boundary and CLI
       surface.
-- [ ] The audit section explains RPLAN/RCTX/certificate/manifest artifacts.
-- [ ] The evaluation section cites the relevant L0/L1/L2 coverage and states
+- [x] The audit section explains RPLAN/RCTX/certificate/manifest artifacts.
+- [x] The evaluation section cites the relevant L0/L1/L2 coverage and states
       what remains empirical rather than proven.
-- [ ] Paper-level simulated review/revision artifacts meet panel readiness
+- [x] Paper-level simulated review/revision artifacts meet panel readiness
       thresholds.
-- [ ] PDF is built and indexed in `docs/PAPERS.md`.
+- [x] PDF is built and indexed in `docs/PAPERS.md`.
 
 ## Stage 4 - Module-Level Review
 
