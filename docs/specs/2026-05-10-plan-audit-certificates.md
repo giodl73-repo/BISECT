@@ -602,21 +602,44 @@ profile checks.
 
 ### `bisect-cli::runner`
 
-Before writing a final run manifest, `bisect-cli` should audit the final plan
-and write:
+Before writing a final run manifest, `bisect-cli` audits the final plan and
+writes:
 
 ```text
-runs/{label}/{year}/audit-certificate.json
+plan.rplan
+context.rctx
+audit-certificate.json
 ```
 
 The run manifest stores:
 
+- `rplan_path`
+- `rctx_path`
 - `audit_certificate_path`
 - `audit_certificate_sha256` for the full certificate document as written
 - `audit_certificate_content_hash` for the stable canonical certificate content
 - `audit_result`
 - `legal_profile_id`
 - `context_hash`, when a `.rctx` context was used
+
+The manifest also stores source hashes for legacy consumers:
+
+- `adjacency_sha256` as raw lowercase hex
+- `tiger_sha256` as raw lowercase hex when local TIGER geometry source exists
+
+The RPLAN context stores the same source identities with the canonical
+`sha256:` prefix:
+
+- `source_hashes.adjacency`
+- `source_hashes.geometry`, when TIGER geometry context exists
+
+`bisect verify` cross-checks these manifest source hashes against the `.rctx`
+source hashes, in addition to verifying certificate file hash, certificate
+content hash, result, legal profile, context hash, and certificate validity.
+
+`bisect report` surfaces the RPLAN sidecar paths, certificate identity, audit
+result, legal profile, context hash, and `.rctx` source hashes in the audit
+section.
 
 ### Algorithm Crates
 
