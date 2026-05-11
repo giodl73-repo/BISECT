@@ -128,6 +128,7 @@ contracts.
 - [x] Define crossover/mutation validity guarantees.
 - [x] Emit frontier entries with per-plan validity status and lineage.
 - [x] Ensure selected/exported plans receive full RPLAN audit packages.
+- [x] Expose selected-frontier audit packaging through `bisect pareto`.
 - [x] Add L0 crossover/mutation/determinism tests.
 - [x] Add L1 selected-frontier audit package test.
 

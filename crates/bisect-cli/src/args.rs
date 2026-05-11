@@ -851,6 +851,26 @@ pub struct ParetoArgs {
     /// Output file path for the NDJSON Pareto frontier (default: {state}_pareto_{year}.ndjson).
     #[arg(long)]
     pub output: Option<String>,
+
+    /// Also emit an audited RPLAN package for this zero-based frontier entry.
+    #[arg(long)]
+    pub selected_frontier_index: Option<usize>,
+
+    /// RCTX context used to audit the selected frontier plan.
+    #[arg(long, requires = "selected_frontier_index")]
+    pub selected_frontier_context: Option<std::path::PathBuf>,
+
+    /// Output directory for the selected frontier audit package.
+    #[arg(long, requires = "selected_frontier_index")]
+    pub selected_frontier_out: Option<std::path::PathBuf>,
+
+    /// Label for the selected frontier RPLAN package.
+    #[arg(long, requires = "selected_frontier_index")]
+    pub selected_frontier_label: Option<String>,
+
+    /// Population tolerance as a percent for the selected frontier audit package.
+    #[arg(long, default_value_t = 0.5)]
+    pub selected_frontier_tolerance: f64,
 }
 
 // ---------------------------------------------------------------------------

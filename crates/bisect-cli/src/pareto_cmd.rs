@@ -115,6 +115,55 @@ pub fn run_pareto(args: &ParetoArgs) -> anyhow::Result<()> {
         result.frontier.len(),
         path.display()
     );
+
+    if let Some(selected_index) = args.selected_frontier_index {
+        write_selected_frontier_package(args, &result, selected_index, k, &state_lower, &year)?;
+    }
+    Ok(())
+}
+
+fn write_selected_frontier_package(
+    args: &ParetoArgs,
+    result: &bisect_pareto::ParetoResult,
+    selected_index: usize,
+    k: usize,
+    state_lower: &str,
+    year: &str,
+) -> anyhow::Result<()> {
+    let context_path = args.selected_frontier_context.as_ref().ok_or_else(|| {
+        anyhow::anyhow!("--selected-frontier-context is required with --selected-frontier-index")
+    })?;
+    let context_text = std::fs::read_to_string(context_path)
+        .with_context(|| format!("read selected frontier RCTX {}", context_path.display()))?;
+    let context = rplan_io::read_rctx_str(&context_text)
+        .with_context(|| format!("parse selected frontier RCTX {}", context_path.display()))?;
+    let out_dir = args.selected_frontier_out.clone().unwrap_or_else(|| {
+        PathBuf::from(format!(
+            "{}_pareto_{}_selected_{selected_index}",
+            state_lower, year
+        ))
+    });
+    let label = args
+        .selected_frontier_label
+        .clone()
+        .unwrap_or_else(|| format!("{}_pareto_{}_selected_{selected_index}", state_lower, year));
+    let generated_at = bisect_report::now_iso8601();
+    let package = bisect_pareto::write_selected_frontier_package(
+        result,
+        selected_index,
+        &context,
+        k,
+        &out_dir,
+        &label,
+        args.selected_frontier_tolerance,
+        &generated_at,
+    )
+    .with_context(|| format!("write selected frontier package {}", out_dir.display()))?;
+    eprintln!(
+        "[bisect pareto] wrote selected frontier package {} ({})",
+        out_dir.display(),
+        package.audit_certificate_path
+    );
     Ok(())
 }
 
@@ -144,6 +193,8 @@ fn resolve_adj_path(state_lower: &str, year: &str) -> anyhow::Result<PathBuf> {
 mod tests {
     use super::*;
     use crate::args::{Commands, ParetoArgs};
+    use clap::Parser;
+    use std::collections::BTreeMap;
 
     /// L0: verify Commands::Pareto variant compiles and wraps ParetoArgs.
     #[test]
@@ -158,6 +209,11 @@ mod tests {
             generations: 200,
             base_seed: Some(42),
             output: None,
+            selected_frontier_index: None,
+            selected_frontier_context: None,
+            selected_frontier_out: None,
+            selected_frontier_label: None,
+            selected_frontier_tolerance: 0.5,
         };
         let cmd = Commands::Pareto(pa);
         // Verify it matches as expected.
@@ -165,5 +221,161 @@ mod tests {
             matches!(cmd, Commands::Pareto(_)),
             "Commands::Pareto must match the Pareto variant"
         );
+    }
+
+    #[test]
+    fn pareto_selected_frontier_args_parse() {
+        let cli = crate::args::Cli::parse_from([
+            "bisect",
+            "pareto",
+            "--state",
+            "TT",
+            "--selected-frontier-index",
+            "0",
+            "--selected-frontier-context",
+            "fixture.rctx",
+            "--selected-frontier-out",
+            "selected",
+            "--selected-frontier-label",
+            "chosen",
+            "--selected-frontier-tolerance",
+            "1.25",
+        ]);
+        let Commands::Pareto(args) = cli.command else {
+            panic!("expected pareto command");
+        };
+        assert_eq!(args.selected_frontier_index, Some(0));
+        assert_eq!(
+            args.selected_frontier_context.as_deref(),
+            Some(std::path::Path::new("fixture.rctx"))
+        );
+        assert_eq!(
+            args.selected_frontier_out.as_deref(),
+            Some(std::path::Path::new("selected"))
+        );
+        assert_eq!(args.selected_frontier_label.as_deref(), Some("chosen"));
+        assert_eq!(args.selected_frontier_tolerance, 1.25);
+    }
+
+    #[test]
+    fn pareto_selected_frontier_package_helper_writes_sidecars() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let context_path = tmp.path().join("fixture.rctx");
+        let out_dir = tmp.path().join("selected");
+        let context = path4_context();
+        std::fs::write(
+            &context_path,
+            rplan_io::write_rctx_string(&context).unwrap(),
+        )
+        .unwrap();
+        let args = ParetoArgs {
+            state: "TT".to_string(),
+            year: crate::args::Year::Y2020,
+            population: 4,
+            generations: 1,
+            base_seed: Some(7),
+            output: None,
+            selected_frontier_index: Some(0),
+            selected_frontier_context: Some(context_path),
+            selected_frontier_out: Some(out_dir.clone()),
+            selected_frontier_label: Some("selected-tt".to_string()),
+            selected_frontier_tolerance: 50.0,
+        };
+        let result = pareto_result_fixture();
+
+        write_selected_frontier_package(&args, &result, 0, 2, "tt", "2020").unwrap();
+
+        assert!(out_dir.join("selected-frontier.rplan").exists());
+        assert!(out_dir.join("selected-frontier.rctx").exists());
+        assert!(out_dir.join("audit-certificate.json").exists());
+        assert!(out_dir.join("manifest.json").exists());
+        let document = rplan_io::read_rplan_str(
+            &std::fs::read_to_string(out_dir.join("selected-frontier.rplan")).unwrap(),
+        )
+        .unwrap();
+        let context = rplan_io::read_rctx_str(
+            &std::fs::read_to_string(out_dir.join("selected-frontier.rctx")).unwrap(),
+        )
+        .unwrap();
+        let certificate: rplan_audit::AuditCertificate = serde_json::from_str(
+            &std::fs::read_to_string(out_dir.join("audit-certificate.json")).unwrap(),
+        )
+        .unwrap();
+        rplan_audit::verify_audit_certificate(&certificate, Some(&document.plan), Some(&context))
+            .unwrap();
+    }
+
+    fn pareto_result_fixture() -> bisect_pareto::ParetoResult {
+        bisect_pareto::ParetoResult {
+            frontier: vec![bisect_pareto::ParetoEntry {
+                plan: vec![1, 1, 2, 2],
+                objectives: bisect_pareto::Objectives {
+                    ec: 1.0,
+                    d_seats: 0.0,
+                    vra_deficit: 0.0,
+                },
+                dominated: false,
+                generation_found: 0,
+                validity_status: Some("valid".to_string()),
+                audit_certificate_path: None,
+                audit_certificate_sha256: None,
+                audit_certificate_content_hash: None,
+            }],
+            config: bisect_pareto::ParetoConfig {
+                n_population: 4,
+                n_generations: 1,
+                base_seed: 7,
+                balance_tolerance: 0.5,
+            },
+            runtime_secs: 0.0,
+            pareto_version: "1.0".to_string(),
+        }
+    }
+
+    fn path4_context() -> rplan_core::RplanContext {
+        let mut units = rplan_core::PlanUnitIndex {
+            unit_kind: rplan_core::UnitKind::Imported,
+            state: Some("TT".to_string()),
+            year: Some(2020),
+            canonical_order: rplan_core::CanonicalOrder::ExplicitUnitIds,
+            unit_ids: (0..4).map(|idx| format!("u{idx}")).collect(),
+            unit_universe_hash: String::new(),
+            source_id: Some("pareto-cli-fixture".to_string()),
+        };
+        units.unit_universe_hash = units.compute_unit_universe_hash().unwrap();
+        let mut context = rplan_core::RplanContext {
+            rctx_version: rplan_core::RCTX_VERSION.to_string(),
+            context_hash: String::new(),
+            units,
+            graph: Some(rplan_core::UnitGraph {
+                edge_semantics: rplan_core::EdgeSemantics::Undirected,
+                adjacency: vec![
+                    vec![edge(1)],
+                    vec![edge(0), edge(2)],
+                    vec![edge(1), edge(3)],
+                    vec![edge(2)],
+                ],
+            }),
+            populations: Some(vec![100, 100, 100, 100]),
+            subdivisions: None,
+            demographics: None,
+            geometry: None,
+            source_hashes: rplan_core::SourceHashes {
+                entries: BTreeMap::from([(
+                    "fixture".to_string(),
+                    format!("sha256:{}", "3".repeat(64)),
+                )]),
+            },
+        };
+        context.context_hash = context.compute_context_hash().unwrap();
+        context
+    }
+
+    fn edge(to: u32) -> rplan_core::UnitEdge {
+        rplan_core::UnitEdge {
+            to,
+            kind: rplan_core::EdgeKind::Boundary,
+            weight: None,
+        }
     }
 }
