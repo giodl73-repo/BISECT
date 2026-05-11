@@ -18,6 +18,7 @@ members = [
     "crates/bisect-pareto",
     "crates/bisect-ilp",
     "crates/bisect-multiscale",
+    "crates/bisect-clustering",
     "python/bisect_py",
 ]
 resolver = "2"
