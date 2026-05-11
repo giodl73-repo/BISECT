@@ -1,9 +1,9 @@
 # Quality Assessment: Spectral Partitioning as a Deterministic Redistricting Construction Baseline
 
-**AI Persona**: Wendy Tam Cho (simulated perspective based on political methodology and redistricting computation)  
-**Expertise Area**: Computational redistricting and political methodology  
-**Round**: 1  
-**Date**: 2026-05-11  
+**AI Persona**: Wendy Tam Cho (simulated perspective based on political methodology and redistricting computation)
+**Expertise Area**: Computational redistricting and political methodology
+**Round**: 1
+**Date**: 2026-05-11
 
 > **Simulation Notice**: This is AI-generated feedback for quality improvement, not a real peer review. The named person did not participate in or endorse this assessment.
 
@@ -50,5 +50,5 @@ metrics are intentionally omitted from this draft.
 - Add command placeholders for fixture and smoke runs.
 - Keep legal/policy interpretation outside the algorithm claim.
 
-**Verdict**: Major revisions required.  
+**Verdict**: Major revisions required.
 **Confidence**: High.

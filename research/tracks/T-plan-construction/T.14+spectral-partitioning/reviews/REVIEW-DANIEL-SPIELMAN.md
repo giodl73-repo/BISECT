@@ -1,9 +1,9 @@
 # Quality Assessment: Spectral Partitioning as a Deterministic Redistricting Construction Baseline
 
-**AI Persona**: Daniel Spielman (simulated perspective based on spectral graph theory)  
-**Expertise Area**: Spectral algorithms and graph partitioning  
-**Round**: 1  
-**Date**: 2026-05-11  
+**AI Persona**: Daniel Spielman (simulated perspective based on spectral graph theory)
+**Expertise Area**: Spectral algorithms and graph partitioning
+**Round**: 1
+**Date**: 2026-05-11
 
 > **Simulation Notice**: This is AI-generated feedback for quality improvement, not a real peer review. The named person did not participate in or endorse this assessment.
 
@@ -50,5 +50,5 @@ Clarify whether METIS is a reference baseline, a future benchmark, or both.
 - Add a short proof obligation list for determinism and balance checks.
 - Mark all quality comparisons beyond fixtures as future empirical work.
 
-**Verdict**: Accept with major revisions for draft maturity.  
+**Verdict**: Accept with major revisions for draft maturity.
 **Confidence**: High.

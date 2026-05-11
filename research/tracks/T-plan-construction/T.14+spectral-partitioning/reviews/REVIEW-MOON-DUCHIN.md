@@ -1,9 +1,9 @@
 # Quality Assessment: Spectral Partitioning as a Deterministic Redistricting Construction Baseline
 
-**AI Persona**: Moon Duchin (simulated perspective based on redistricting geometry)  
-**Expertise Area**: Redistricting, geometry, and ensembles  
-**Round**: 1  
-**Date**: 2026-05-11  
+**AI Persona**: Moon Duchin (simulated perspective based on redistricting geometry)
+**Expertise Area**: Redistricting, geometry, and ensembles
+**Round**: 1
+**Date**: 2026-05-11
 
 > **Simulation Notice**: This is AI-generated feedback for quality improvement, not a real peer review. The named person did not participate in or endorse this assessment.
 
@@ -51,5 +51,5 @@ ensemble comparison.
 - Strengthen limitations about geography and legal interpretation.
 - Connect spectral outputs to ensemble/search baselines without overclaiming.
 
-**Verdict**: Major revisions required.  
+**Verdict**: Major revisions required.
 **Confidence**: High.

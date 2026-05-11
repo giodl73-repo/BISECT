@@ -1,9 +1,9 @@
 # Quality Assessment - T.14 Spectral Partitioning
 
-**Paper**: `T.14+spectral-partitioning`  
-**Round**: 1  
-**Date**: 2026-05-11  
-**Simulated Reviewers**: 5  
+**Paper**: `T.14+spectral-partitioning`
+**Round**: 1
+**Date**: 2026-05-11
+**Simulated Reviewers**: 5
 
 > **Purpose**: This is a quality-improvement simulation using AI-generated feedback. It is not real peer review.
 
@@ -29,37 +29,37 @@
 ## Priority 1: Critical Improvements
 
 ### P1.1: State the spectral method precisely enough to reproduce.
-**Identified by**: Spielman, Kleinberg, Imai  
-**Description**: Define graph construction, Laplacian choice, Fiedler approximation, sweep objective, tie breaking, and recursive target propagation.  
+**Identified by**: Spielman, Kleinberg, Imai
+**Description**: Define graph construction, Laplacian choice, Fiedler approximation, sweep objective, tie breaking, and recursive target propagation.
 **Suggestion**: Add an algorithm box and a short determinism proof-obligation list.
 
 ### P1.2: Separate fixture correctness from empirical district-quality claims.
-**Identified by**: Cho, Imai, Duchin  
-**Description**: The draft distinguishes evidence levels informally but needs a claim-evidence table.  
+**Identified by**: Cho, Imai, Duchin
+**Description**: The draft distinguishes evidence levels informally but needs a claim-evidence table.
 **Suggestion**: Add a table with claim, current evidence, missing evidence, and publication status.
 
 ### P1.3: Make audit sidecar limits explicit in the contribution statement.
-**Identified by**: Duchin, Cho  
-**Description**: RPLAN/RCTX sidecars verify declared constraints and lineage, not fairness or legal compliance.  
+**Identified by**: Duchin, Cho
+**Description**: RPLAN/RCTX sidecars verify declared constraints and lineage, not fairness or legal compliance.
 **Suggestion**: Move this limitation into the abstract/conclusion as well as the audit section.
 
 ## Priority 2: Substantial Enhancements
 
 ### P2.1: Clarify the role of spectral construction in the algorithm portfolio.
-**Identified by**: Kleinberg, Spielman  
+**Identified by**: Kleinberg, Spielman
 **Suggestion**: Add a constructor comparison table covering spectral, METIS, GeoSection, clustering, and regionalization.
 
 ### P2.2: Name geographic graph assumptions and failure modes.
-**Identified by**: Duchin, Kleinberg  
+**Identified by**: Duchin, Kleinberg
 **Suggestion**: Add a paragraph on adjacency construction, weights, disconnected components, and nearly symmetric graphs.
 
 ## Priority 3: Refinements
 
 ### P3.1: Promote the odd-k recursive split tree to a required figure.
-**Identified by**: Kleinberg  
+**Identified by**: Kleinberg
 
 ### P3.2: Use "deterministic baseline" consistently.
-**Identified by**: Imai  
+**Identified by**: Imai
 
 ## Areas of Strength
 

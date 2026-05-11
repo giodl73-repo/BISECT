@@ -1,10 +1,10 @@
 # T.14 - Spectral Partitioning
 
-**Paper Type:** Algorithm implementation + deterministic construction baseline  
-**Status:** Planning  
-**Track:** T - Plan Construction  
-**Code Home:** `bisect-apportion::spectral`, `bisect-cli` runner  
-**CLI/YAML Surface:** `--structure spectral`, `structure: spectral`  
+**Paper Type:** Algorithm implementation + deterministic construction baseline
+**Status:** Planning
+**Track:** T - Plan Construction
+**Code Home:** `bisect-apportion::spectral`, `bisect-cli` runner
+**CLI/YAML Surface:** `--structure spectral`, `structure: spectral`
 **Primary Specs:** `docs/specs/2026-05-11-t14-spectral-partitioning.md`, `docs/specs/2026-05-10-algorithm-family-roadmap.md`
 
 ## Research Question

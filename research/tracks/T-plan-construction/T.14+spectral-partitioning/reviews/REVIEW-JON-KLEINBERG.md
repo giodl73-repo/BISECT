@@ -1,9 +1,9 @@
 # Quality Assessment: Spectral Partitioning as a Deterministic Redistricting Construction Baseline
 
-**AI Persona**: Jon Kleinberg (simulated perspective based on algorithms and network science)  
-**Expertise Area**: Graph algorithms and network structure  
-**Round**: 1  
-**Date**: 2026-05-11  
+**AI Persona**: Jon Kleinberg (simulated perspective based on algorithms and network science)
+**Expertise Area**: Graph algorithms and network structure
+**Round**: 1
+**Date**: 2026-05-11
 
 > **Simulation Notice**: This is AI-generated feedback for quality improvement, not a real peer review. The named person did not participate in or endorse this assessment.
 
@@ -50,5 +50,5 @@ required explanatory figure.
 - Add a paragraph on spectral failure modes.
 - Explain how audit artifacts make failure inspectable rather than hidden.
 
-**Verdict**: Accept with revisions.  
+**Verdict**: Accept with revisions.
 **Confidence**: Medium.

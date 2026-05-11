@@ -1,9 +1,9 @@
 # Quality Assessment: Spectral Partitioning as a Deterministic Redistricting Construction Baseline
 
-**AI Persona**: Kosuke Imai (simulated perspective based on statistical methodology)  
-**Expertise Area**: Statistical design, inference, and reproducibility  
-**Round**: 1  
-**Date**: 2026-05-11  
+**AI Persona**: Kosuke Imai (simulated perspective based on statistical methodology)
+**Expertise Area**: Statistical design, inference, and reproducibility
+**Round**: 1
+**Date**: 2026-05-11
 
 > **Simulation Notice**: This is AI-generated feedback for quality improvement, not a real peer review. The named person did not participate in or endorse this assessment.
 
@@ -50,5 +50,5 @@ properties unless a statistical estimand is defined.
 - Add expected fixture outcomes to the evaluation section.
 - Treat real-data sweeps as future evidence until commands and outputs exist.
 
-**Verdict**: Accept with revisions.  
+**Verdict**: Accept with revisions.
 **Confidence**: Medium.
