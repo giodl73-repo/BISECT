@@ -2863,6 +2863,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             &graph,
             &assignments,
             &adj_filename,
+            &adj_pkl,
             &tiger_url,
             balance_tolerance,
             &created_at,
@@ -3159,6 +3160,7 @@ fn write_rplan_audit_sidecars(
     graph: &crate::adjacency_loader::LoadedGraph,
     assignments: &HashMap<usize, usize>,
     adjacency_file: &str,
+    adjacency_path: &std::path::Path,
     tiger_source_url: &str,
     balance_tolerance: f64,
     generated_at_utc: &str,
@@ -3177,10 +3179,13 @@ fn write_rplan_audit_sidecars(
         allow_empty_districts: false,
     };
 
-    let source_hashes = rplan_core::SourceHashes {
-        entries: BTreeMap::new(),
-    };
     let geometry = build_rplan_geometry(cfg, graph);
+    let tiger_geometry_path = if geometry.is_some() {
+        rplan_tiger_tract_path(&cfg.state_code, &cfg.year)
+    } else {
+        None
+    };
+    let source_hashes = build_rplan_source_hashes(adjacency_path, tiger_geometry_path.as_deref())?;
     let mut context = rplan_core::RplanContext {
         rctx_version: rplan_core::RCTX_VERSION.to_string(),
         context_hash: String::new(),
@@ -3438,6 +3443,26 @@ fn build_rplan_demographics(
     Ok(None)
 }
 
+fn build_rplan_source_hashes(
+    adjacency_path: &std::path::Path,
+    tiger_geometry_path: Option<&std::path::Path>,
+) -> Result<rplan_core::SourceHashes, String> {
+    let mut entries = BTreeMap::new();
+    if adjacency_path.exists() {
+        let hash = bisect_report::sha256_file(adjacency_path)
+            .map_err(|e| format!("hash adjacency source {}: {e}", adjacency_path.display()))?;
+        entries.insert("adjacency".to_string(), format!("sha256:{hash}"));
+    }
+    if let Some(path) = tiger_geometry_path {
+        if path.exists() {
+            let hash = bisect_report::sha256_file(path)
+                .map_err(|e| format!("hash TIGER geometry source {}: {e}", path.display()))?;
+            entries.insert("geometry".to_string(), format!("sha256:{hash}"));
+        }
+    }
+    Ok(rplan_core::SourceHashes { entries })
+}
+
 fn build_rplan_geometry(
     cfg: &StateConfig,
     graph: &crate::adjacency_loader::LoadedGraph,
@@ -3579,7 +3604,7 @@ fn runner_algorithm_lineage(
     };
 
     let mut extra = serde_json::json!({
-        "schema_version": "bisect-ilp-lineage-v1",
+        "lineage_schema": "bisect-ilp-lineage-v1",
         "method": method.to_string(),
         "fallback": fallback.to_string(),
         "time_limit_secs": time_limit_secs,
@@ -3997,6 +4022,8 @@ mod tests {
         let assignments: HashMap<usize, usize> = [(0, 1), (1, 1), (2, 1), (3, 2), (4, 2)]
             .into_iter()
             .collect();
+        let adjacency_path = tmp.path().join("wa_adjacency_2020.adj.bin");
+        std::fs::write(&adjacency_path, b"adjacency fixture").unwrap();
 
         let sidecars = write_rplan_audit_sidecars(
             tmp.path(),
@@ -4005,6 +4032,7 @@ mod tests {
             &path5_loaded_graph(),
             &assignments,
             "wa_adjacency_2020.adj.bin",
+            &adjacency_path,
             "https://www.census.gov/example.zip",
             0.25,
             "2026-05-10T00:00:00Z",
@@ -4037,11 +4065,8 @@ mod tests {
             cert.context_hash.as_deref(),
             Some(sidecars.context_hash.as_str())
         );
-        assert_eq!(cert.result, rplan_audit::AuditResult::PassWithWarnings);
-        assert!(cert
-            .warnings
-            .iter()
-            .any(|warning| warning.code == "PROVENANCE_INCOMPLETE"));
+        assert_eq!(cert.result, rplan_audit::AuditResult::Pass);
+        assert!(cert.warnings.is_empty());
         let splits = cert
             .checks
             .iter()
@@ -4067,8 +4092,17 @@ mod tests {
 
         let rplan_text = std::fs::read_to_string(tmp.path().join("plan.rplan")).unwrap();
         let rplan = rplan_io::read_rplan_str(&rplan_text).unwrap();
-        assert!(context.source_hashes.entries.is_empty());
-        assert!(rplan.provenance.source_hashes.is_empty());
+        assert_eq!(
+            context.source_hashes.entries["adjacency"],
+            format!(
+                "sha256:{}",
+                bisect_report::sha256_file(&adjacency_path).unwrap()
+            )
+        );
+        assert_eq!(
+            rplan.provenance.source_hashes["adjacency"],
+            context.source_hashes.entries["adjacency"]
+        );
         assert_eq!(
             rplan.provenance.producer["adjacency_file"],
             "wa_adjacency_2020.adj.bin"
@@ -4122,6 +4156,7 @@ mod tests {
             &path5_loaded_graph(),
             &assignments,
             "wa_adjacency_2020.adj.bin",
+            std::path::Path::new("missing-adjacency-fixture.adj.bin"),
             "https://www.census.gov/example.zip",
             0.25,
             "2026-05-10T00:00:00Z",
@@ -4189,6 +4224,7 @@ mod tests {
             &path5_loaded_graph(),
             &assignments,
             "wa_adjacency_2020.adj.bin",
+            std::path::Path::new("missing-adjacency-fixture.adj.bin"),
             "https://www.census.gov/example.zip",
             0.25,
             "2026-05-10T00:00:00Z",
