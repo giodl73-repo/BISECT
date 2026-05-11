@@ -4,3 +4,25 @@ Exact certificates may include bounds, proofs of infeasibility, or solver
 reports for scoped instances. Heuristic evidence includes fixture correctness,
 repeatability, benchmark comparisons, and empirical sweeps. These evidence
 classes are useful but not interchangeable.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.21\linewidth}p{0.32\linewidth}p{0.31\linewidth}}
+\toprule
+Artifact & Can support & Does not establish alone \\
+\midrule
+Optimality bound & A scoped mathematical claim under a formulation & Fairness or legal sufficiency \\
+Infeasibility witness & No solution under stated constraints & No acceptable plan under other models \\
+Solver report & Reproducible run status and parameters & Correctness beyond trusted solver/model scope \\
+Heuristic trace & Validity-preserving search behavior & Global optimality \\
+Benchmark/sweep & Empirical comparison under protocol & Universal dominance \\
+Audit certificate & Declared profile and lineage checks & Normative or legal conclusion \\
+\bottomrule
+\end{tabular}
+\caption{Certificate and evidence classes used by exact and heuristic papers.}
+\end{table}
+
+A certificate is therefore a sentence with required nouns: instance, model,
+objective, constraint profile, producing method, verifier, and result. Omitting
+one of these nouns turns a scoped technical claim into an ambiguous assertion.

@@ -3,3 +3,9 @@
 Audit artifacts verify declared profiles, lineage, parameters, manifests, and
 certificate payloads. They do not transform a heuristic result into an exact
 optimality proof or a legal conclusion.
+
+At the RPLAN/RCTX fixed point, the verifier should be able to answer three
+questions: what plan or certificate is being checked, which declared profile is
+being applied, and which upstream run context produced the payload. This is an
+audit contract, not a substitution for the mathematical or empirical evidence
+named by the payload itself.
