@@ -1,13 +1,13 @@
 # Next Session Handoff: Algorithm-Family Paper Portfolio
 
-**Status:** RPLAN golden package evidence upgrades integrated
+**Status:** Method-produced RPLAN package expansion queued
 **Owner:** maintainer (you)
 **Last update:** 2026-05-11
 
 ## Current State
 
-The T/U algorithm-family writing goal is through Stage 4, and the follow-on
-RPLAN golden package corpus goal is through Stage 5:
+The T/U algorithm-family implementation, paper-writing, and tiny golden package
+goals are complete:
 
 - T.14-T.17 have reviewed draft PDFs and paper-level review/revision artifacts.
 - U.0 and U.12-U.20 have reviewed draft PDFs and paper-level review/revision artifacts.
@@ -18,15 +18,18 @@ RPLAN golden package corpus goal is through Stage 5:
 - `rplan verify-certificate` verifies package certificates.
 - `bisect verify --manifest path/to/package/manifest.json` now consumes the
   same package manifest shape as a bridge surface.
+- The next queued goal is method-produced package expansion: small generated
+  packages with transcripts, not hand-sized verifier fixtures.
 
 The active goal doc is:
 
-`docs/specs/2026-05-11-rplan-golden-package-corpus-goal.md`
+`docs/specs/2026-05-11-method-produced-rplan-package-goal.md`
 
 ## Latest Commits
 
 - `5920074` Add lineage-bearing RPLAN golden package corpus
 - `82aec4c` Bridge bisect verify to RPLAN packages
+- `2e3b0ae` Upgrade RPLAN package evidence in U papers
 - `0a7242e` Expand U20 negative package fixtures
 - `c1c1b9d` Define RPLAN golden package contract
 - `9bd5c60` Add RPLAN golden package corpus goal
@@ -37,7 +40,7 @@ The active goal doc is:
 
 The next active goal is:
 
-`docs/specs/2026-05-11-rplan-golden-package-corpus-goal.md`
+`docs/specs/2026-05-11-method-produced-rplan-package-goal.md`
 
 The residual work area is public fixture depth:
 
@@ -57,9 +60,9 @@ warnings that resolved by final output, and MiKTeX update reminders.
 
 ## Good Next Move
 
-Continue the RPLAN golden package corpus pass:
+Start the method-produced package expansion:
 
-1. Run final focused verification for Stage 6.
-2. Commit and push the evidence-upgrade slice.
-3. Review whether any larger empirical package work should become a follow-on
-   goal rather than part of the tiny golden corpus milestone.
+1. Add `docs/examples/rplan-method-packages/README.md`.
+2. Build a package selection matrix for deterministic no-download candidates.
+3. Choose one construction package and one search/optimization package to
+   generate from real workflows.

@@ -1,6 +1,6 @@
 # Goal: Complete Remaining Algorithm-Family Roadmap
 
-**Status:** Active  
+**Status:** Complete
 **Track:** T/U algorithm-family completion  
 **Foundation:** [`2026-05-10-algorithm-family-roadmap.md`](2026-05-10-algorithm-family-roadmap.md),
 [`2026-05-10-u20-goal.md`](2026-05-10-u20-goal.md),
