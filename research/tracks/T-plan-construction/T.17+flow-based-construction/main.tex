@@ -1,0 +1,36 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+
+\title{Flow-Based Construction for Auditable Redistricting Assignments}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This draft presents T.17, a flow-based construction baseline for BISECT. The
+paper focuses on capacity and cost structure, deterministic fixture behavior,
+infeasibility witnesses, and audit-compatible summaries. The staged
+implementation is intentionally modest: it establishes the contract for
+flow-family constructors before larger solvers are introduced.
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/method}
+\input{sections/implementation}
+\input{sections/evaluation}
+\input{sections/limitations}
+\input{sections/conclusion}
+
+\nocite{bisect-t17-spec}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

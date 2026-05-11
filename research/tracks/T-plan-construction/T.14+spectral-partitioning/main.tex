@@ -1,0 +1,38 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+
+\title{Spectral Partitioning as a Deterministic Redistricting Construction Baseline}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This draft studies spectral graph partitioning as a deterministic construction
+baseline for congressional redistricting. The paper focuses on the staged T.14
+implementation: Fiedler-vector approximation, population-balanced sweep cuts,
+recursive proportional target handling, and RPLAN audit sidecars through the
+BISECT CLI. The central claim is modest: spectral partitioning is a transparent
+baseline for comparison, not an exact optimizer or a replacement for
+METIS-family construction.
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/method}
+\input{sections/implementation}
+\input{sections/evaluation}
+\input{sections/limitations}
+\input{sections/conclusion}
+
+\nocite{bisect-t14-spec}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

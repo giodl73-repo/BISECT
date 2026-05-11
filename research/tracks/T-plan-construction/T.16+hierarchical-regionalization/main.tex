@@ -1,0 +1,35 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+
+\title{Hierarchical Regionalization for Connected Redistricting Construction}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This draft presents T.16, a hierarchical regionalization baseline for BISECT.
+The paper focuses on deterministic agglomeration, merge witnesses, capacity and
+contiguity checks, and RPLAN-compatible lineage. Regionalization is framed as a
+construction family that makes the sequence of region merges inspectable.
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/method}
+\input{sections/implementation}
+\input{sections/evaluation}
+\input{sections/limitations}
+\input{sections/conclusion}
+
+\nocite{bisect-t16-spec}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

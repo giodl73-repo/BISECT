@@ -1,0 +1,36 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+
+\title{Capacity-Constrained Clustering for Auditable Redistricting Construction}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This draft introduces T.15, a capacity-constrained clustering construction
+family for BISECT. The implementation emphasizes deterministic seeding,
+population-capacity status, repair-aware summaries, and RPLAN audit sidecars.
+The paper frames clustering as a construction alternative with explicit
+failure and repair states, not as a claim of global optimality.
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/method}
+\input{sections/implementation}
+\input{sections/evaluation}
+\input{sections/limitations}
+\input{sections/conclusion}
+
+\nocite{bisect-t15-spec}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

@@ -65,7 +65,7 @@ discipline:
       `docs/concepts/algorithm-family-layer-cake.md`.
 - [x] Add a paper evidence matrix mapping each paper to specs, crates, tests,
       benchmarks, and figures.
-- [ ] Add first-draft `main.tex`/`Makefile` skeletons for the Stage 1 T papers.
+- [x] Add first-draft `main.tex`/`Makefile` skeletons for the Stage 1 T papers.
 
 ## Stage 1 - Track T Construction Papers
 
@@ -81,7 +81,7 @@ discipline:
 
 Acceptance for each T paper:
 
-- [ ] `main.tex` and section files exist.
+- [x] `main.tex` and section files exist.
 - [ ] `plan.md` lists hypotheses, scope, baselines, failure modes, figures,
       and limitations.
 - [ ] The implementation section cites the crate/module boundary and CLI
