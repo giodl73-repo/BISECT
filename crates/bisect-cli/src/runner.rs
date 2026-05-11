@@ -3229,7 +3229,17 @@ fn write_rplan_audit_sidecars(
         extensions: BTreeMap::new(),
     };
 
-    let profile = runner_legal_profile(cfg, balance_tolerance);
+    let report_vra = context.demographics.is_some();
+    let profile = runner_legal_profile(cfg, balance_tolerance, report_vra);
+    let mut constraints = vec![
+        rplan_audit::AuditConstraint::PlanShape,
+        rplan_audit::AuditConstraint::Population,
+        rplan_audit::AuditConstraint::Contiguity,
+        rplan_audit::AuditConstraint::Splits,
+    ];
+    if report_vra {
+        constraints.push(rplan_audit::AuditConstraint::Vra);
+    }
     let algorithm_lineage = runner_algorithm_lineage(cfg, plan_root)?;
     let certificate = rplan_audit::audit_plan_with_lineage(
         &plan,
@@ -3242,12 +3252,7 @@ fn write_rplan_audit_sidecars(
             build_profile: None,
             solver: None,
         },
-        &[
-            rplan_audit::AuditConstraint::PlanShape,
-            rplan_audit::AuditConstraint::Population,
-            rplan_audit::AuditConstraint::Contiguity,
-            rplan_audit::AuditConstraint::Splits,
-        ],
+        &constraints,
         generated_at_utc,
         algorithm_lineage,
     )
@@ -3426,7 +3431,11 @@ fn build_rplan_demographics(
     Ok(None)
 }
 
-fn runner_legal_profile(cfg: &StateConfig, balance_tolerance: f64) -> rplan_audit::LegalProfile {
+fn runner_legal_profile(
+    cfg: &StateConfig,
+    balance_tolerance: f64,
+    report_vra: bool,
+) -> rplan_audit::LegalProfile {
     rplan_audit::LegalProfile {
         schema_version: rplan_audit::LEGAL_PROFILE_SCHEMA_VERSION.to_string(),
         profile_id: "BISECT_RUNNER_PROFILE_V1".to_string(),
@@ -3446,7 +3455,14 @@ fn runner_legal_profile(cfg: &StateConfig, balance_tolerance: f64) -> rplan_audi
         county_split_rule: rplan_audit::SplitRule::CountOnly,
         municipal_split_rule: rplan_audit::SplitRule::NotEvaluated,
         nesting_rule: rplan_audit::NestingRule::NotEvaluated,
-        vra_policy: rplan_audit::VraPolicy::NotEvaluated,
+        vra_policy: if report_vra {
+            rplan_audit::VraPolicy::ReportOpportunityDistricts {
+                minority_group: "minority".to_string(),
+                vap_threshold: 0.5,
+            }
+        } else {
+            rplan_audit::VraPolicy::NotEvaluated
+        },
     }
 }
 
@@ -3959,6 +3975,11 @@ mod tests {
                 && subdivision_id == "53001"
                 && district_ids == &vec![0, 1]
         ));
+        assert!(cert.checks.iter().all(|check| check.name != "vra"));
+        assert!(matches!(
+            cert.legal_profile.vra_policy,
+            rplan_audit::VraPolicy::NotEvaluated
+        ));
 
         let rplan_text = std::fs::read_to_string(tmp.path().join("plan.rplan")).unwrap();
         let rplan = rplan_io::read_rplan_str(&rplan_text).unwrap();
@@ -3983,6 +4004,74 @@ mod tests {
             bisect_report::sha256_file(&tmp.path().join("audit-certificate.json")).unwrap(),
             sidecars.audit_certificate_sha256
         );
+    }
+
+    #[test]
+    fn test_write_rplan_audit_sidecars_reports_vra_when_vap_context_exists() {
+        let tmp = TempDir::new().unwrap();
+        let mut cfg = make_config("WA");
+        cfg.year = "2998".to_string();
+        cfg.num_districts = 2;
+        let demo_dir = std::path::Path::new("data")
+            .join(&cfg.year)
+            .join("demographics");
+        std::fs::create_dir_all(&demo_dir).unwrap();
+        let demo_path = demo_dir.join("wa_vap_2998.csv");
+        std::fs::write(
+            &demo_path,
+            "GEOID,total_vap,minority_vap\n\
+             53001000100,80,50\n\
+             53001000200,70,20\n\
+             53001000300,60,10\n\
+             53001000400,90,70\n\
+             53001000500,90,70\n",
+        )
+        .unwrap();
+        let assignments: HashMap<usize, usize> = [(0, 1), (1, 1), (2, 1), (3, 2), (4, 2)]
+            .into_iter()
+            .collect();
+
+        write_rplan_audit_sidecars(
+            tmp.path(),
+            &cfg,
+            "wa_path5",
+            &path5_loaded_graph(),
+            &assignments,
+            "wa_adjacency_2020.adj.bin",
+            "https://www.census.gov/example.zip",
+            0.25,
+            "2026-05-10T00:00:00Z",
+        )
+        .unwrap();
+
+        let cert_text = std::fs::read_to_string(tmp.path().join("audit-certificate.json")).unwrap();
+        let cert: rplan_audit::AuditCertificate = serde_json::from_str(&cert_text).unwrap();
+        let vra = cert
+            .checks
+            .iter()
+            .find(|check| check.name == "vra")
+            .unwrap();
+
+        assert!(matches!(
+            cert.legal_profile.vra_policy,
+            rplan_audit::VraPolicy::ReportOpportunityDistricts { .. }
+        ));
+        assert_eq!(vra.status, rplan_audit::CheckStatus::Pass);
+        assert!(vra.summary.contains("1 VRA opportunity districts"));
+        assert_eq!(vra.witnesses.len(), 2);
+        assert!(vra.witnesses.iter().any(|witness| {
+            matches!(
+                witness,
+                rplan_audit::Witness::Vra(rplan_audit::VraWitness {
+                    district_id: 1,
+                    is_opportunity_district: true,
+                    ..
+                })
+            )
+        }));
+
+        std::fs::remove_file(demo_path).ok();
+        std::fs::remove_dir_all(std::path::Path::new("data").join("2998")).ok();
     }
 
     #[test]
