@@ -9,6 +9,7 @@ pub const SPECTRAL_SUMMARY_SCHEMA_VERSION: &str = "bisect-spectral-summary-v1";
 pub struct SpectralConfig {
     pub max_iters: usize,
     pub tolerance: f64,
+    pub target_fraction: f64,
 }
 
 impl Default for SpectralConfig {
@@ -16,6 +17,7 @@ impl Default for SpectralConfig {
         Self {
             max_iters: 200,
             tolerance: 0.05,
+            target_fraction: 0.5,
         }
     }
 }
@@ -30,6 +32,7 @@ pub struct SpectralSummary {
     pub edge_cut: usize,
     pub population_deviation: f64,
     pub tolerance: f64,
+    pub target_fraction: f64,
     pub parameter_hash: String,
 }
 
@@ -40,6 +43,7 @@ impl SpectralSummary {
         edge_cut: usize,
         population_deviation: f64,
         tolerance: f64,
+        target_fraction: f64,
     ) -> Self {
         let mut summary = Self {
             schema_version: SPECTRAL_SUMMARY_SCHEMA_VERSION.to_string(),
@@ -50,6 +54,7 @@ impl SpectralSummary {
             edge_cut,
             population_deviation,
             tolerance,
+            target_fraction,
             parameter_hash: String::new(),
         };
         summary.parameter_hash = summary.compute_parameter_hash();
@@ -66,6 +71,7 @@ impl SpectralSummary {
             "edge_cut": self.edge_cut,
             "population_deviation": self.population_deviation,
             "tolerance": self.tolerance,
+            "target_fraction": self.target_fraction,
         });
         let bytes = serde_json::to_vec(&payload).expect("spectral summary serializes");
         format!("sha256:{:x}", Sha256::digest(bytes))
@@ -94,12 +100,24 @@ pub fn spectral_bisect(
 ) -> Result<SpectralResult, SpectralError> {
     validate_inputs(adjacency, weights, &config)?;
     let (vector, iterations, converged) = smooth_spectral_vector(adjacency, config.max_iters);
-    let (assignment, cut, deviation) =
-        balanced_sweep(adjacency, weights, &vector, config.tolerance)?;
+    let (assignment, cut, deviation) = balanced_sweep(
+        adjacency,
+        weights,
+        &vector,
+        config.tolerance,
+        config.target_fraction,
+    )?;
     Ok(SpectralResult {
         assignment,
         vector,
-        summary: SpectralSummary::new(iterations, converged, cut, deviation, config.tolerance),
+        summary: SpectralSummary::new(
+            iterations,
+            converged,
+            cut,
+            deviation,
+            config.tolerance,
+            config.target_fraction,
+        ),
     })
 }
 
@@ -159,6 +177,7 @@ fn balanced_sweep(
     weights: &[i64],
     vector: &[f64],
     tolerance: f64,
+    target_fraction: f64,
 ) -> Result<(Vec<usize>, usize, f64), SpectralError> {
     let n = adjacency.len();
     let mut order: Vec<usize> = (0..n).collect();
@@ -170,7 +189,7 @@ fn balanced_sweep(
         let assignment: Vec<usize> = (0..n)
             .map(|idx| if left.contains(&idx) { 0 } else { 1 })
             .collect();
-        let deviation = population_deviation(weights, &assignment, 2);
+        let deviation = target_population_deviation(weights, &assignment, target_fraction);
         if deviation > tolerance {
             continue;
         }
@@ -203,16 +222,20 @@ fn edge_cut(adjacency: &[Vec<usize>], assignment: &[usize]) -> usize {
     cut
 }
 
-fn population_deviation(weights: &[i64], assignment: &[usize], k: usize) -> f64 {
+fn target_population_deviation(weights: &[i64], assignment: &[usize], target_fraction: f64) -> f64 {
     let total: i64 = weights.iter().sum();
-    let ideal = total as f64 / k as f64;
-    let mut district_pop = vec![0i64; k];
+    let targets = [
+        total as f64 * target_fraction,
+        total as f64 * (1.0 - target_fraction),
+    ];
+    let mut district_pop = [0i64; 2];
     for (&district, &weight) in assignment.iter().zip(weights.iter()) {
         district_pop[district] += weight;
     }
     district_pop
         .into_iter()
-        .map(|pop| (pop as f64 - ideal).abs() / ideal)
+        .zip(targets)
+        .map(|(pop, target)| (pop as f64 - target).abs() / target)
         .fold(0.0, f64::max)
 }
 
@@ -234,6 +257,11 @@ fn validate_inputs(
     if config.max_iters == 0 {
         return Err(SpectralError::InvalidInput(
             "max_iters must be greater than zero".to_string(),
+        ));
+    }
+    if !(0.0..1.0).contains(&config.target_fraction) {
+        return Err(SpectralError::InvalidInput(
+            "target_fraction must be greater than zero and less than one".to_string(),
         ));
     }
     for (node, neighbors) in adjacency.iter().enumerate() {
@@ -268,6 +296,25 @@ mod tests {
 
         assert_eq!(result.assignment, vec![0, 0, 0, 1, 1, 1]);
         assert_eq!(result.summary.edge_cut, 1);
+    }
+
+    #[test]
+    fn path_graph_honors_non_half_target_fraction() {
+        let result = spectral_bisect(
+            &path_adj(6),
+            &[100; 6],
+            SpectralConfig {
+                target_fraction: 1.0 / 3.0,
+                tolerance: 0.001,
+                ..SpectralConfig::default()
+            },
+        )
+        .unwrap();
+
+        assert_eq!(result.assignment, vec![0, 0, 1, 1, 1, 1]);
+        assert_eq!(result.summary.edge_cut, 1);
+        assert!(result.summary.population_deviation < 1.0e-12);
+        assert_eq!(result.summary.target_fraction, 1.0 / 3.0);
     }
 
     #[test]

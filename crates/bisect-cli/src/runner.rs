@@ -4029,12 +4029,15 @@ fn split_spectral_node(
         })
         .collect();
     let local_weights: Vec<i64> = vertices.iter().map(|&global| weights[global]).collect();
+    let left_k = k / 2;
+    let right_k = k - left_k;
     let result = bisect_apportion::spectral_bisect(
         &local_adjacency,
         &local_weights,
         bisect_apportion::SpectralConfig {
             max_iters,
             tolerance,
+            target_fraction: left_k as f64 / k as f64,
         },
     )
     .map_err(|e| format!("spectral split failed: {e}"))?;
@@ -4049,8 +4052,6 @@ fn split_spectral_node(
             right.push(global);
         }
     }
-    let left_k = k / 2;
-    let right_k = k - left_k;
     split_spectral_node(
         adjacency,
         weights,

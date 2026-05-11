@@ -72,6 +72,8 @@ Purpose: add a cheap deterministic construction baseline.
 - [x] Record spectral parameters in manifests and `algorithm_lineage`.
 - [x] Add L0 path/two-clique/determinism tests.
 - [x] Add L1 CLI/RPLAN sidecar test.
+- [x] Phase-review hardening: recursive spectral splits pass proportional
+      target fractions for odd/non-power-of-two district counts.
 
 ## Stage 3 - T.16 Hierarchical Regionalization
 
@@ -98,6 +100,8 @@ Purpose: add heavier exact optimization with a distinct solver lifecycle.
 - [x] Emit solver provenance, gap/bound metadata, and `algorithm_lineage`.
 - [x] Add L0 pricing/master fixtures.
 - [x] Add L1 audit package test for a small exact output.
+- [x] Phase-review hardening: exact fixture objective reports true partition
+      edge cut and solved outputs emit RPLAN/RCTX/audit certificate/manifest.
 
 ## Stage 5 - T.17 Flow-Based Construction
 

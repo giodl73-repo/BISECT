@@ -75,7 +75,9 @@ fn small_exact_master_solves_path_fixture() {
     assert_eq!(report.status, BranchPriceStatus::ExactFixtureOptimal);
     let solution = report.solution.unwrap();
     assert_eq!(solution.assignment, vec![0, 0, 1, 1]);
-    assert_eq!(solution.objective, 2);
+    assert_eq!(solution.objective, 1);
+    assert_eq!(report.lower_bound, Some(1.0));
+    assert_eq!(report.upper_bound, Some(1.0));
     assert_eq!(report.gap, Some(0.0));
 }
 

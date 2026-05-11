@@ -73,7 +73,8 @@ fn search_columns(
 ) {
     if selected.len() == master.k {
         if covered.iter().all(|&is_covered| is_covered) {
-            let objective = selected.iter().map(|column| column.edge_cut).sum();
+            let boundary_sum: usize = selected.iter().map(|column| column.edge_cut).sum();
+            let objective = boundary_sum / 2;
             let selected_column_ids = selected.iter().map(|column| column.id).collect();
             let assignment = assignment_from_columns(master.unit_count, selected);
             let candidate = MasterSolution {
