@@ -133,14 +133,14 @@ contracts.
 
 ## Final Acceptance
 
-- [ ] All roadmap families have specs and implementation boundaries.
-- [ ] All promised CLI/subcommand surfaces parse and run or return structured
+- [x] All roadmap families have specs and implementation boundaries.
+- [x] All promised CLI/subcommand surfaces parse and run or return structured
       staged errors only where explicitly documented.
-- [ ] Every final plan path emits RPLAN sidecars and passes `bisect verify`.
-- [ ] Reports surface audit identity and lineage for the new final-plan paths.
-- [ ] The algorithm-family roadmap and this goal checklist are updated to
+- [x] Every final plan path emits RPLAN sidecars and passes `bisect verify`.
+- [x] Reports surface audit identity and lineage for the new final-plan paths.
+- [x] The algorithm-family roadmap and this goal checklist are updated to
       reflect the completed state.
-- [ ] Final milestone commit and push are complete.
+- [x] Final milestone commit and push are complete.
 
 ## Suggested `/goal`
 
