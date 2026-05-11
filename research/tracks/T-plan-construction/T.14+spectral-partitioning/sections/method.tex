@@ -4,3 +4,30 @@ The staged method approximates a Fiedler vector, sorts units by the spectral
 coordinate, and evaluates population-balanced sweep cuts. Recursive calls pass
 proportional target fractions so odd and non-power-of-two district counts are
 handled without silently changing the intended seat allocation.
+
+\subsection{Reproducible Procedure}
+
+The constructor operates on the tract-adjacency graph supplied by the BISECT
+state pipeline. Vertices carry population weights, edges encode adjacency, and
+the current implementation treats edge weights as the graph weights available
+from that pipeline. For each recursive subproblem:
+
+\begin{enumerate}
+  \item Build the weighted graph induced by the current unit set.
+  \item Form the Laplacian used by \texttt{bisect-apportion::spectral}.
+  \item Approximate a Fiedler vector and sort units by spectral coordinate,
+        breaking ties by stable unit identifier.
+  \item Sweep prefixes in that order and select the cut whose population is
+        closest to the requested proportional target while satisfying the
+        declared tolerance.
+  \item Recurse on the two induced subgraphs with the requested left and right
+        seat counts until each leaf represents one district.
+\end{enumerate}
+
+This procedure makes determinism an implementation contract: the same graph,
+weights, target fractions, and tie-breaking identifiers must produce the same
+assignment and lineage. The graph assumptions are deliberately narrow. Water
+gaps, islands, disconnected components, and alternative adjacency definitions
+belong to the input graph construction layer, and near-symmetric graphs can
+make the spectral coordinate weakly informative even when the run remains
+deterministic.

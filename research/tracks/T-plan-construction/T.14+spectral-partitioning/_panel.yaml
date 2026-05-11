@@ -1,0 +1,42 @@
+paper: T.14+spectral-partitioning
+title: Spectral Partitioning as a Deterministic Redistricting Construction Baseline
+type: publication
+stage: recheck
+round: 1
+content_mode: draft
+venue: technical report
+review_date: 2026-05-11
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - name: Daniel Spielman
+    profile_ref: simulated-spectral-graph-theory
+    score: 3
+  - name: Jon Kleinberg
+    profile_ref: simulated-algorithms-network-science
+    score: 3
+  - name: Moon Duchin
+    profile_ref: simulated-redistricting-geometry
+    score: 2
+  - name: Wendy Tam Cho
+    profile_ref: simulated-political-methodology
+    score: 2
+  - name: Kosuke Imai
+    profile_ref: simulated-causal-inference-statistics
+    score: 3
+reviews:
+  round_1:
+    avg_score: 2.6
+    min_score: 2
+    max_score: 3
+    synthesis: reviews/SYNTHESIS.md
+    revision_plan: REVISION-PLAN.md
+p1_items:
+  - id: P1.1
+    title: State the spectral method precisely enough to reproduce.
+    addressed: true
+  - id: P1.2
+    title: Separate fixture correctness from empirical district-quality claims.
+    addressed: true
+  - id: P1.3
+    title: Make audit sidecar limits explicit in the contribution statement.
+    addressed: true
