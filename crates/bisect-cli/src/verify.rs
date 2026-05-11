@@ -571,6 +571,7 @@ mod tests {
             populations: Some(vec![100, 100]),
             subdivisions: None,
             demographics: None,
+            geometry: None,
             source_hashes: rplan_core::SourceHashes {
                 entries: BTreeMap::from([("fixture".to_string(), "sha256:source".to_string())]),
             },

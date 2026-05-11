@@ -27,6 +27,7 @@ use bisect_report;
 /// in StateConfig BEFORE the Rayon pool starts. This prevents 100+ Python
 /// subprocesses from being spawned simultaneously during a 50-state run.
 use rayon::prelude::*;
+use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, HashMap};
 use std::path::PathBuf;
 
@@ -3179,6 +3180,7 @@ fn write_rplan_audit_sidecars(
     let source_hashes = rplan_core::SourceHashes {
         entries: BTreeMap::new(),
     };
+    let geometry = build_rplan_geometry(cfg, graph);
     let mut context = rplan_core::RplanContext {
         rctx_version: rplan_core::RCTX_VERSION.to_string(),
         context_hash: String::new(),
@@ -3187,6 +3189,7 @@ fn write_rplan_audit_sidecars(
         populations: Some(graph.vertex_weights.clone()),
         subdivisions: build_rplan_subdivisions(graph),
         demographics: build_rplan_demographics(cfg, graph)?,
+        geometry,
         source_hashes: source_hashes.clone(),
     };
     context.context_hash = context
@@ -3230,6 +3233,7 @@ fn write_rplan_audit_sidecars(
     };
 
     let report_vra = context.demographics.is_some();
+    let report_geometry = context.geometry.is_some();
     let profile = runner_legal_profile(cfg, balance_tolerance, report_vra);
     let mut constraints = vec![
         rplan_audit::AuditConstraint::PlanShape,
@@ -3239,6 +3243,9 @@ fn write_rplan_audit_sidecars(
     ];
     if report_vra {
         constraints.push(rplan_audit::AuditConstraint::Vra);
+    }
+    if report_geometry {
+        constraints.push(rplan_audit::AuditConstraint::Geometry);
     }
     let algorithm_lineage = runner_algorithm_lineage(cfg, plan_root)?;
     let certificate = rplan_audit::audit_plan_with_lineage(
@@ -3429,6 +3436,83 @@ fn build_rplan_demographics(
         return Ok(Some(context));
     }
     Ok(None)
+}
+
+fn build_rplan_geometry(
+    cfg: &StateConfig,
+    graph: &crate::adjacency_loader::LoadedGraph,
+) -> Option<rplan_core::GeometryContext> {
+    let tiger_path = rplan_tiger_tract_path(&cfg.state_code, &cfg.year)?;
+    let records = bisect_data::read_tiger_tracts(&tiger_path).ok()?;
+    let geoid_to_hash: HashMap<String, String> = records
+        .iter()
+        .map(|record| (record.geoid.clone(), sha256_bytes(&record.geometry_wkb)))
+        .collect();
+
+    let mut unit_geometry_hashes = Vec::with_capacity(graph.n_vertices);
+    for idx in 0..graph.n_vertices {
+        let geoid = graph.index_to_geoid.get(&idx)?;
+        unit_geometry_hashes.push(geoid_to_hash.get(geoid)?.clone());
+    }
+
+    Some(rplan_core::GeometryContext {
+        source_id: Some(format!(
+            "tiger-tract-geometry-{}-{}",
+            cfg.state_code.to_uppercase(),
+            cfg.year
+        )),
+        crs: rplan_tiger_crs_label(&tiger_path),
+        unit_geometry_hashes: Some(unit_geometry_hashes),
+    })
+}
+
+fn rplan_tiger_tract_path(state_code: &str, year: &str) -> Option<std::path::PathBuf> {
+    let fips = state_code_to_fips(&state_code.to_uppercase())?;
+    let yy = year.get(2..4).unwrap_or(year);
+    let candidates = [
+        format!("tl_{year}_{fips}_tract"),
+        format!("tl_{year}_{fips}_tract{yy}"),
+        format!("tl_2010_{fips}_tract{yy}"),
+    ];
+    for stem in candidates {
+        let path = std::path::PathBuf::from("data")
+            .join(year)
+            .join("tiger")
+            .join("tracts")
+            .join(&stem)
+            .join(format!("{stem}.shp"));
+        if path.exists() {
+            return Some(path);
+        }
+    }
+    None
+}
+
+fn rplan_tiger_crs_label(shp_path: &std::path::Path) -> Option<String> {
+    let prj_path = shp_path.with_extension("prj");
+    let prj = std::fs::read_to_string(prj_path).ok()?;
+    if prj.contains("NAD_1983")
+        || prj.contains("North_American_1983")
+        || prj.contains("North_American_Datum_1983")
+    {
+        Some("EPSG:4269".to_string())
+    } else if prj.contains("WGS_1984") || prj.contains("WGS 84") {
+        Some("EPSG:4326".to_string())
+    } else {
+        Some("unknown".to_string())
+    }
+}
+
+fn sha256_bytes(bytes: &[u8]) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(bytes);
+    let digest = hasher.finalize();
+    let mut out = String::with_capacity("sha256:".len() + digest.len() * 2);
+    out.push_str("sha256:");
+    for byte in digest {
+        out.push_str(&format!("{byte:02x}"));
+    }
+    out
 }
 
 fn runner_legal_profile(
@@ -4169,6 +4253,36 @@ mod tests {
         );
         std::fs::remove_file(demo_path).ok();
         std::fs::remove_dir_all(std::path::Path::new("data").join("2999")).ok();
+    }
+
+    #[test]
+    fn test_build_rplan_geometry_missing_tiger_is_none() {
+        let mut cfg = make_config("WA");
+        cfg.year = "2997".to_string();
+        assert!(build_rplan_geometry(&cfg, &path5_loaded_graph()).is_none());
+    }
+
+    #[test]
+    fn test_rplan_tiger_crs_label_detects_nad83() {
+        let tmp = TempDir::new().unwrap();
+        let shp_path = tmp.path().join("fixture.shp");
+        std::fs::write(
+            tmp.path().join("fixture.prj"),
+            r#"GEOGCS["GCS_North_American_1983",DATUM["D_North_American_1983"]]"#,
+        )
+        .unwrap();
+        assert_eq!(
+            rplan_tiger_crs_label(&shp_path).as_deref(),
+            Some("EPSG:4269")
+        );
+    }
+
+    #[test]
+    fn test_sha256_bytes_uses_prefixed_lowercase_hex() {
+        assert_eq!(
+            sha256_bytes(b"abc"),
+            "sha256:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        );
     }
 
     // ── Task 199: StateConfig::new_bulk constructor ───────────────────────────

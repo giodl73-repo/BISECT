@@ -49,6 +49,7 @@ enum ConstraintArg {
     Contiguity,
     Splits,
     Vra,
+    Geometry,
 }
 
 impl From<ConstraintArg> for AuditConstraint {
@@ -59,6 +60,7 @@ impl From<ConstraintArg> for AuditConstraint {
             ConstraintArg::Contiguity => AuditConstraint::Contiguity,
             ConstraintArg::Splits => AuditConstraint::Splits,
             ConstraintArg::Vra => AuditConstraint::Vra,
+            ConstraintArg::Geometry => AuditConstraint::Geometry,
         }
     }
 }

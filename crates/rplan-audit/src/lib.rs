@@ -192,6 +192,7 @@ pub enum AuditConstraint {
     Contiguity,
     Splits,
     Vra,
+    Geometry,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -266,7 +267,13 @@ pub struct VraWitness {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
-pub struct GeometryWitness {}
+pub struct GeometryWitness {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub crs: Option<String>,
+    pub unit_geometry_hash_count: usize,
+}
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LegalProfileSummary {
@@ -383,6 +390,9 @@ pub fn audit_plan_with_lineage(
     }
     if requested.contains(&AuditConstraint::Vra) {
         checks.push(check_vra(plan, context, profile));
+    }
+    if requested.contains(&AuditConstraint::Geometry) {
+        checks.push(check_geometry(plan, context));
     }
 
     let warnings = provenance_warnings(context);
@@ -958,6 +968,64 @@ fn check_vra(
     }
 }
 
+fn check_geometry(plan: &DistrictPlan, context: Option<&RplanContext>) -> AuditCheck {
+    let Some(geometry) = context.and_then(|ctx| ctx.geometry.as_ref()) else {
+        return missing_input_check(
+            "geometry",
+            "geometry",
+            "geometry audit requires context geometry metadata",
+        );
+    };
+    let Some(unit_geometry_hashes) = geometry.unit_geometry_hashes.as_ref() else {
+        return missing_input_check(
+            "geometry",
+            "geometry.unit_geometry_hashes",
+            "geometry audit requires per-unit geometry hashes",
+        );
+    };
+
+    let unit_count = plan.units.unit_ids.len();
+    let mut failures = Vec::new();
+    if unit_geometry_hashes.len() != unit_count {
+        failures.push(format!(
+            "unit geometry hash length {} does not match unit count {unit_count}",
+            unit_geometry_hashes.len()
+        ));
+    }
+    if unit_geometry_hashes
+        .iter()
+        .any(|hash| !is_sha256_hash(hash))
+    {
+        failures.push("one or more unit geometry hashes are not sha256 hashes".to_string());
+    }
+
+    let witness = Witness::Geometry(GeometryWitness {
+        source_id: geometry.source_id.clone(),
+        crs: geometry.crs.clone(),
+        unit_geometry_hash_count: unit_geometry_hashes.len(),
+    });
+    if failures.is_empty() {
+        AuditCheck {
+            name: "geometry".to_string(),
+            status: CheckStatus::Pass,
+            severity: Severity::Info,
+            summary: format!(
+                "{} unit geometry hashes are aligned to the plan unit universe",
+                unit_geometry_hashes.len()
+            ),
+            witnesses: vec![witness],
+        }
+    } else {
+        AuditCheck {
+            name: "geometry".to_string(),
+            status: CheckStatus::Fail,
+            severity: Severity::Error,
+            summary: failures.join("; "),
+            witnesses: vec![witness],
+        }
+    }
+}
+
 fn vra_witnesses(
     plan: &DistrictPlan,
     minority_group: &str,
@@ -997,6 +1065,13 @@ fn vra_witnesses(
             })
         })
         .collect()
+}
+
+fn is_sha256_hash(value: &str) -> bool {
+    let Some(hex) = value.strip_prefix("sha256:") else {
+        return false;
+    };
+    hex.len() == 64 && hex.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
 
 fn missing_input_check(name: &str, input: &str, reason: &str) -> AuditCheck {
@@ -1058,8 +1133,8 @@ fn result_for(checks: &[AuditCheck], warnings: &[AuditWarning]) -> AuditResult {
 mod tests {
     use super::*;
     use rplan_core::{
-        CanonicalOrder, DemographicContext, EdgeKind, EdgeSemantics, PlanUnitIndex, UnitEdge,
-        UnitGraph, UnitKind, DISTRICT_PLAN_SCHEMA_VERSION, RCTX_VERSION,
+        CanonicalOrder, DemographicContext, EdgeKind, EdgeSemantics, GeometryContext,
+        PlanUnitIndex, UnitEdge, UnitGraph, UnitKind, DISTRICT_PLAN_SCHEMA_VERSION, RCTX_VERSION,
     };
     use std::collections::BTreeMap;
 
@@ -1101,6 +1176,7 @@ mod tests {
             populations,
             subdivisions: None,
             demographics: None,
+            geometry: None,
             source_hashes: SourceHashes {
                 entries: BTreeMap::from([("adjacency".to_string(), "sha256:abc".to_string())]),
             },
@@ -1125,6 +1201,17 @@ mod tests {
     ) -> RplanContext {
         RplanContext {
             demographics: Some(demographics),
+            ..context(populations, graph)
+        }
+    }
+
+    fn context_with_geometry(
+        populations: Option<Vec<i64>>,
+        graph: Option<UnitGraph>,
+        geometry: GeometryContext,
+    ) -> RplanContext {
+        RplanContext {
+            geometry: Some(geometry),
             ..context(populations, graph)
         }
     }
@@ -1528,6 +1615,70 @@ mod tests {
                 is_opportunity_district: true,
                 ..
             }) if minority_group == "coalition"
+        ));
+    }
+
+    #[test]
+    fn geometry_audit_without_geometry_context_is_missing_input() {
+        let cert = audit_plan(
+            &plan(vec![0, 0, 0, 1, 1]),
+            Some(&context(Some(vec![100; 5]), Some(path_graph()))),
+            &profile(),
+            runtime(),
+            &[AuditConstraint::Geometry],
+            "2026-05-10T00:00:00Z",
+        )
+        .unwrap();
+
+        let geometry = cert
+            .checks
+            .iter()
+            .find(|check| check.name == "geometry")
+            .unwrap();
+        assert_eq!(geometry.status, CheckStatus::MissingInput);
+        assert_eq!(cert.result, AuditResult::Fail);
+    }
+
+    #[test]
+    fn geometry_audit_reports_aligned_unit_hashes() {
+        let cert = audit_plan(
+            &plan(vec![0, 0, 0, 1, 1]),
+            Some(&context_with_geometry(
+                Some(vec![100; 5]),
+                Some(path_graph()),
+                GeometryContext {
+                    source_id: Some("tiger-line-2020".to_string()),
+                    crs: Some("EPSG:4326".to_string()),
+                    unit_geometry_hashes: Some(vec![
+                        format!("sha256:{}", "1".repeat(64)),
+                        format!("sha256:{}", "2".repeat(64)),
+                        format!("sha256:{}", "3".repeat(64)),
+                        format!("sha256:{}", "4".repeat(64)),
+                        format!("sha256:{}", "5".repeat(64)),
+                    ]),
+                },
+            )),
+            &profile(),
+            runtime(),
+            &[AuditConstraint::Geometry],
+            "2026-05-10T00:00:00Z",
+        )
+        .unwrap();
+
+        let geometry = cert
+            .checks
+            .iter()
+            .find(|check| check.name == "geometry")
+            .unwrap();
+        assert_eq!(geometry.status, CheckStatus::Pass);
+        assert!(geometry.summary.contains("5 unit geometry hashes"));
+        assert!(matches!(
+            &geometry.witnesses[0],
+            Witness::Geometry(GeometryWitness {
+                source_id: Some(source_id),
+                crs: Some(crs),
+                unit_geometry_hash_count: 5,
+            }) if source_id == "tiger-line-2020" && crs == "EPSG:4326"
         ));
     }
 

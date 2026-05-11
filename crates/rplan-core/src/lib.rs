@@ -54,6 +54,15 @@ pub enum RplanCoreError {
     },
     #[error("demographic value must be finite and non-negative")]
     InvalidDemographicValue,
+    #[error(
+        "unit geometry hash length {geometry_hash_len} does not match unit count {unit_count}"
+    )]
+    GeometryHashLengthMismatch {
+        geometry_hash_len: usize,
+        unit_count: usize,
+    },
+    #[error("unit geometry hash is invalid: {0}")]
+    InvalidGeometryHash(String),
     #[error("edge target {to} at vertex {from} is outside unit range")]
     InvalidEdgeTarget { from: usize, to: u32 },
     #[error("duplicate edge from {from} to {to}")]
@@ -161,6 +170,16 @@ pub struct DemographicContext {
     pub minority_vap: Option<Vec<f64>>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub struct GeometryContext {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub crs: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit_geometry_hashes: Option<Vec<String>>,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RplanContext {
     pub rctx_version: String,
@@ -172,6 +191,8 @@ pub struct RplanContext {
     pub subdivisions: Option<SubdivisionContext>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub demographics: Option<DemographicContext>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub geometry: Option<GeometryContext>,
     pub source_hashes: SourceHashes,
 }
 
@@ -346,6 +367,9 @@ impl RplanContext {
         if let Some(demographics) = &self.demographics {
             demographics.validate(unit_count)?;
         }
+        if let Some(geometry) = &self.geometry {
+            geometry.validate(unit_count)?;
+        }
         Ok(())
     }
 
@@ -367,6 +391,12 @@ impl RplanContext {
                 .as_object_mut()
                 .expect("context hash projection is an object")
                 .insert("demographics".to_string(), to_value(demographics)?);
+        }
+        if let Some(geometry) = &self.geometry {
+            value
+                .as_object_mut()
+                .expect("context hash projection is an object")
+                .insert("geometry".to_string(), to_value(geometry)?);
         }
         canonical_sha256(&value)
     }
@@ -413,6 +443,26 @@ impl DemographicContext {
     }
 }
 
+impl GeometryContext {
+    pub fn validate(&self, unit_count: usize) -> Result<(), RplanCoreError> {
+        let Some(unit_geometry_hashes) = &self.unit_geometry_hashes else {
+            return Ok(());
+        };
+        if unit_geometry_hashes.len() != unit_count {
+            return Err(RplanCoreError::GeometryHashLengthMismatch {
+                geometry_hash_len: unit_geometry_hashes.len(),
+                unit_count,
+            });
+        }
+        for hash in unit_geometry_hashes {
+            if !is_sha256_hash(hash) {
+                return Err(RplanCoreError::InvalidGeometryHash(hash.clone()));
+            }
+        }
+        Ok(())
+    }
+}
+
 fn validate_demographic_series(
     kind: &str,
     values: &Option<Vec<f64>>,
@@ -435,6 +485,13 @@ fn validate_demographic_series(
         return Err(RplanCoreError::InvalidDemographicValue);
     }
     Ok(())
+}
+
+fn is_sha256_hash(value: &str) -> bool {
+    let Some(hex) = value.strip_prefix("sha256:") else {
+        return false;
+    };
+    hex.len() == 64 && hex.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
 
 pub fn valid_unit_id(kind: UnitKind, unit_id: &str) -> bool {
@@ -668,6 +725,7 @@ mod tests {
             populations: Some(vec![100, 100]),
             subdivisions: None,
             demographics: None,
+            geometry: None,
             source_hashes: SourceHashes::default(),
         };
         context.validate().unwrap();
@@ -690,6 +748,7 @@ mod tests {
                 municipal_ids: None,
             }),
             demographics: None,
+            geometry: None,
             source_hashes: SourceHashes::default(),
         };
 
@@ -715,11 +774,51 @@ mod tests {
                 total_vap: Some(vec![100.0, f64::NAN]),
                 minority_vap: None,
             }),
+            geometry: None,
             source_hashes: SourceHashes::default(),
         };
         assert_eq!(
             context.validate(),
             Err(RplanCoreError::InvalidDemographicValue)
         );
+    }
+
+    #[test]
+    fn validates_geometry_hash_lengths_and_values() {
+        let context = RplanContext {
+            rctx_version: RCTX_VERSION.to_string(),
+            context_hash: String::new(),
+            units: test_units(),
+            graph: None,
+            populations: None,
+            subdivisions: None,
+            demographics: None,
+            geometry: Some(GeometryContext {
+                source_id: Some("fixture".to_string()),
+                crs: Some("EPSG:4326".to_string()),
+                unit_geometry_hashes: Some(vec!["not-a-hash".to_string()]),
+            }),
+            source_hashes: SourceHashes::default(),
+        };
+        assert!(matches!(
+            context.validate(),
+            Err(RplanCoreError::GeometryHashLengthMismatch { .. })
+        ));
+
+        let context = RplanContext {
+            geometry: Some(GeometryContext {
+                source_id: Some("fixture".to_string()),
+                crs: Some("EPSG:4326".to_string()),
+                unit_geometry_hashes: Some(vec![
+                    format!("sha256:{}", "a".repeat(64)),
+                    "not-a-hash".to_string(),
+                ]),
+            }),
+            ..context
+        };
+        assert!(matches!(
+            context.validate(),
+            Err(RplanCoreError::InvalidGeometryHash(hash)) if hash == "not-a-hash"
+        ));
     }
 }
