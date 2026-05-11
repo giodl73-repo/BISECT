@@ -34,6 +34,10 @@ rplan-audit
   audit certificates, legal profiles, contiguity/population checks,
   algorithm_lineage, certificate verification
 
+docs/examples/rplan-golden-packages
+  public package corpus for T.14-T.17 and U.16-U.19
+  plus the U.20 audit-certificate reference package
+
 bisect-core
   shared graph, population, partition, VRA/partisan primitives
 
@@ -158,7 +162,8 @@ bisect-cli
     selected frontier audit packages
 
   `bisect verify`
-    manifest, ILP audit summary, RPLAN certificate verification
+    manifest, ILP audit summary, RPLAN certificate verification,
+    RPLAN golden package bridge
 
   YAML config parsing
   run manifests
@@ -220,6 +225,7 @@ The latest reviewed paper additions attach the layer cake to native T/U papers:
 | Exact implementation families | U.16-U.17 | Branch-and-cut and branch-and-price contracts |
 | Heuristic/evolutionary families | U.18-U.19 | Local improvement and selected-frontier comparison |
 | Audit fixed point | U.20 | RPLAN/RCTX/certificate convergence for final plans |
+| Public package corpus | T.14-T.17, U.16-U.20 | Tiny verifier-facing packages for each implemented family |
 
 ## Crate-To-Concept Index
 
@@ -258,7 +264,8 @@ algorithm output
   -> RCTX context
   -> audit certificate
   -> manifest
-  -> verify/report
+  -> rplan verify-certificate or bisect verify --manifest
+  -> report
 ```
 
 That is what lets BISECT add new algorithm families without turning the

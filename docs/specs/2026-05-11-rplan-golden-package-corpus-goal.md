@@ -1,6 +1,6 @@
 # Goal: RPLAN Golden Package Corpus and Verifier Bridge
 
-**Status:** Active - Stage 4 verifier bridge complete
+**Status:** Complete
 **Date:** 2026-05-11  
 **Owner:** BISECT / RPLAN integration  
 **Depends on:** `docs/specs/2026-05-11-algorithm-family-paper-writing-goal.md`
@@ -75,20 +75,20 @@ Acceptance for each package:
 
 ## Stage 5 - Evidence Upgrades
 
-- [ ] Update U.16-U.20 manuscript evidence tables where public packages now
+- [x] Update U.16-U.20 manuscript evidence tables where public packages now
       exist.
-- [ ] Rebuild affected PDFs and update `docs/PAPERS.md` notes if evidence level
+- [x] Rebuild affected PDFs and update `docs/PAPERS.md` notes if evidence level
       changes.
-- [ ] Update `docs/concepts/algorithm-family-layer-cake.md` with the golden
+- [x] Update `docs/concepts/algorithm-family-layer-cake.md` with the golden
       package corpus if the taxonomy changes.
-- [ ] Update `docs/NEXT_SESSION.md` with any remaining empirical/package work.
+- [x] Update `docs/NEXT_SESSION.md` with any remaining empirical/package work.
 
 ## Stage 6 - Review, Commit, Push
 
-- [ ] Run focused Rust tests for touched crates.
-- [ ] Run `git diff --check`.
-- [ ] Commit coherent slices.
-- [ ] Push to `origin/main`.
+- [x] Run focused Rust tests for touched crates.
+- [x] Run `git diff --check`.
+- [x] Commit coherent slices.
+- [x] Push to `origin/main`.
 
 ## Suggested `/goal`
 

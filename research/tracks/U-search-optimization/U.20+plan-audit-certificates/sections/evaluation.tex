@@ -1,9 +1,8 @@
 \section{Evaluation Plan}
 
-Evidence includes `rplan-core`, `rplan-io`, and `rplan-audit` tests, `bisect
-verify` tests, and final-plan sidecars across construction, exact, local-search,
-and Pareto families. Public examples and a tamper/failure-mode catalog remain
-future publication-readiness evidence.
+Evidence includes RPLAN crate tests, certificate-verifier tests, BISECT bridge
+tests, final-plan sidecars across construction, exact, local-search, and Pareto
+families, public golden packages, and a tamper/failure-mode catalog.
 
 \begin{table}[htbp]
 \centering
@@ -13,15 +12,17 @@ future publication-readiness evidence.
 Claim & Current evidence & Publication gap \\
 \midrule
 RPLAN/RCTX separate plan identity from context & rplan-core and rplan-io tests
-& Public schema examples \\
+plus public schema examples & larger real-data packages \\
 Certificates verify declared profiles and package integrity & rplan-audit,
 \texttt{rplan verify-certificate}, and public 3x3 package tests & Additional
 manifest/certificate snippets \\
 Algorithm families converge to one final-plan path & Final-plan sidecar tests
-across U papers & Public examples by family \\
+across T/U papers and public packages by family & larger method-produced
+packages \\
 Verifier catches tamper and mismatch failures & CLI tests for missing context,
-plan tamper, context hash changes, and unit-order mismatch & Expanded tamper
-catalog for profile and lineage mismatch \\
+plan tamper, context hash changes, unit-order mismatch, profile mismatch, stale
+context, missing-input results, and lineage-reserved fields & more adversarial
+fixture variants \\
 \bottomrule
 \end{tabular}
 \caption{Claim and evidence ladder for U.20.}

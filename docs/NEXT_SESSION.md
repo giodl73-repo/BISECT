@@ -1,13 +1,13 @@
 # Next Session Handoff: Algorithm-Family Paper Portfolio
 
-**Status:** RPLAN golden package verifier bridge integrated
+**Status:** RPLAN golden package evidence upgrades integrated
 **Owner:** maintainer (you)
 **Last update:** 2026-05-11
 
 ## Current State
 
 The T/U algorithm-family writing goal is through Stage 4, and the follow-on
-RPLAN golden package corpus goal is through Stage 4:
+RPLAN golden package corpus goal is through Stage 5:
 
 - T.14-T.17 have reviewed draft PDFs and paper-level review/revision artifacts.
 - U.0 and U.12-U.20 have reviewed draft PDFs and paper-level review/revision artifacts.
@@ -26,6 +26,7 @@ The active goal doc is:
 ## Latest Commits
 
 - `5920074` Add lineage-bearing RPLAN golden package corpus
+- `82aec4c` Bridge bisect verify to RPLAN packages
 - `0a7242e` Expand U20 negative package fixtures
 - `c1c1b9d` Define RPLAN golden package contract
 - `9bd5c60` Add RPLAN golden package corpus goal
@@ -45,8 +46,8 @@ The residual work area is public fixture depth:
   package corpus.
 - Add real method-produced packages once larger fixture outputs are ready.
 - Add a visual dependency diagram for the T/U portfolio if needed for publication packaging.
-- Upgrade U.16-U.20 manuscript evidence tables now that public packages and the
-  verifier bridge exist.
+- Promote larger real method-produced packages when non-toy fixture outputs are
+  ready.
 
 ## Verification Notes
 
@@ -58,8 +59,7 @@ warnings that resolved by final output, and MiKTeX update reminders.
 
 Continue the RPLAN golden package corpus pass:
 
-1. Upgrade U.16-U.20 evidence tables and paper notes for the public packages.
-2. Rebuild affected PDFs if the evidence tables change.
-3. Update the algorithm-family layer cake only if the taxonomy needs a package
-   corpus row.
-4. Run focused verification, commit, and push the next coherent slice.
+1. Run final focused verification for Stage 6.
+2. Commit and push the evidence-upgrade slice.
+3. Review whether any larger empirical package work should become a follow-on
+   goal rather than part of the tiny golden corpus milestone.

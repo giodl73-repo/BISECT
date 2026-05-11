@@ -15,3 +15,9 @@ A successful verification should therefore be read as: this plan, with this
 context, under this profile, with these hashes and lineage records, passed the
 declared checks. It should not be read as: this plan is fair, legally adequate,
 or preferred among all available alternatives.
+
+The public verifier workflow is intentionally fixed point shaped: algorithm
+output becomes a package, the package certificate is checked, and the checked
+package can then be referenced by reports. The neutral surface is
+the RPLAN certificate verifier; the BISECT manifest verifier consumes the same
+package manifest shape as a bridge.
