@@ -1,0 +1,35 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+
+\title{Branch-and-Cut Redistricting with Auditable Solver Reports}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This draft describes the BISECT branch-and-cut implementation contract for
+redistricting. The paper is an exact-optimization implementation paper: it
+separates formulation, separation metadata, solver status, fallback behavior,
+and RPLAN/RCTX audit lineage so exact claims require proof or bound metadata.
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/implementation}
+\input{sections/audit}
+\input{sections/evaluation}
+\input{sections/limitations}
+\input{sections/conclusion}
+
+\nocite{bisect-u16-plan}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

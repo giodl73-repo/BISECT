@@ -1,0 +1,35 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+
+\title{Evolutionary Search Comparison with Selected-Frontier Audit Packages}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This draft documents the BISECT evolutionary and Pareto comparison path. It
+separates frontier quality from selected-plan validity and requires fixed-seed
+metadata, validity-preserving operators, and RPLAN/RCTX audit packages for any
+selected frontier entry.
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/implementation}
+\input{sections/audit}
+\input{sections/evaluation}
+\input{sections/limitations}
+\input{sections/conclusion}
+
+\nocite{bisect-u19-plan}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

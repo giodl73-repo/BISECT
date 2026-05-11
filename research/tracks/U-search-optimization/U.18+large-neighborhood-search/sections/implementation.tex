@@ -1,0 +1,21 @@
+\section{Implementation Contract}
+
+The current implementation centers on a one-move boundary improvement baseline
+plus structured statuses for no-improvement and staged-method paths. The
+summary must record parent plan id, attempted method, accepted move or no-op
+reason, objective delta, validity checks, and output artifact id.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.22\linewidth}p{0.34\linewidth}p{0.30\linewidth}}
+\toprule
+Outcome & Required summary & Claim supported \\
+\midrule
+Improved & parent, move, delta, validity checks & local improvement \\
+No-op & parent, search status, reason & reproducible non-improvement \\
+Staged & requested method and unsupported scope & roadmap boundary \\
+\bottomrule
+\end{tabular}
+\caption{Improvement-family statuses.}
+\end{table}

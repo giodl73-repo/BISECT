@@ -1,0 +1,21 @@
+\section{Implementation Contract}
+
+The branch-and-price surface has three contracts: a pricing contract that
+generates connected balanced columns or explicit failure statuses, a master
+contract that reports objective and bound state, and a package contract that
+turns solved fixture outputs into final-plan artifacts.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.23\linewidth}p{0.34\linewidth}p{0.29\linewidth}}
+\toprule
+Contract & Must report & Evidence level \\
+\midrule
+Pricing & column validity, balance, reduced-cost status & L0 fixture \\
+Master & selected columns, objective, bound status & L0/L1 exact package \\
+Package & final assignments, manifest, certificate & L1 audit path \\
+\bottomrule
+\end{tabular}
+\caption{Branch-and-price staged implementation contracts.}
+\end{table}

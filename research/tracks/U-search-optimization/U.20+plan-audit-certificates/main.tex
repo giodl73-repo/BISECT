@@ -1,0 +1,36 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+
+\title{Plan Audit Certificates as the RPLAN/RCTX Fixed Point}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This draft presents RPLAN, RCTX, audit certificates, manifests, and verifier
+integration as the BISECT fixed point for heterogeneous redistricting
+algorithms. It is an audit/certification infrastructure paper: certificates
+verify declared profiles and lineage, not political fairness or legal
+compliance beyond the recorded profile.
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/schema}
+\input{sections/audit}
+\input{sections/evaluation}
+\input{sections/limitations}
+\input{sections/conclusion}
+
+\nocite{bisect-u20-plan}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

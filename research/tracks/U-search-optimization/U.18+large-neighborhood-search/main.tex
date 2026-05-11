@@ -1,0 +1,35 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+
+\title{Large-Neighborhood Search as Audited Plan Improvement}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This draft documents the BISECT local-search and large-neighborhood-search
+improvement contract. It treats `bisect improve` as a lineage-preserving
+heuristic implementation: improved plans, no-op outcomes, and staged LNS/tabu
+paths must all produce reproducible summaries and RPLAN/RCTX descendants.
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/implementation}
+\input{sections/audit}
+\input{sections/evaluation}
+\input{sections/limitations}
+\input{sections/conclusion}
+
+\nocite{bisect-u18-plan}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

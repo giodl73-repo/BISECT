@@ -1,0 +1,22 @@
+\section{Schema Boundary}
+
+RPLAN stores plan identity and assignments. RCTX stores graph, population,
+canonical unit order, and context needed for verification. Certificates and
+manifests record declared profiles, verifier results, hashes, lineage, and
+algorithm metadata.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.20\linewidth}p{0.35\linewidth}p{0.31\linewidth}}
+\toprule
+Artifact & Owns & Must not own \\
+\midrule
+RPLAN & final assignments and plan identity & graph/population context \\
+RCTX & units, graph, population, canonical order & algorithm-specific proof \\
+Certificate & profile checks, verifier results, lineage & legal compliance claim \\
+Manifest & files, hashes, package inventory & substantive validity by itself \\
+\bottomrule
+\end{tabular}
+\caption{RPLAN/RCTX fixed-point artifact responsibilities.}
+\end{table}

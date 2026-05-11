@@ -1,0 +1,21 @@
+\section{Implementation Contract}
+
+The implementation contract has three parts: validity-preserving crossover and
+mutation operators, deterministic fixed-seed frontier metadata, and selected
+frontier export. Operators may return valid children or explicit valid
+fallbacks; invalid silent outputs falsify the contract.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.24\linewidth}p{0.32\linewidth}p{0.29\linewidth}}
+\toprule
+Layer & Record & Claim boundary \\
+\midrule
+Operator & parent ids, seed, validity/fallback status & child validity \\
+Frontier & objective vectors and dominance metadata & search result under budget \\
+Selection & chosen entry and audit package id & auditable final plan \\
+\bottomrule
+\end{tabular}
+\caption{Evolutionary comparison record layers.}
+\end{table}

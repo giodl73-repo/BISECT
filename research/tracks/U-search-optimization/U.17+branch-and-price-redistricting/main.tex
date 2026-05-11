@@ -1,0 +1,35 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+
+\title{Branch-and-Price Redistricting as an Audit-Ready Column-Generation Contract}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This draft presents the BISECT branch-and-price path as a staged exact
+optimization implementation. It describes pricing, master-problem, bound, exact
+fixture, and RPLAN/RCTX audit-package contracts without claiming mature
+large-instance branch-price performance.
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/implementation}
+\input{sections/audit}
+\input{sections/evaluation}
+\input{sections/limitations}
+\input{sections/conclusion}
+
+\nocite{bisect-u17-plan}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

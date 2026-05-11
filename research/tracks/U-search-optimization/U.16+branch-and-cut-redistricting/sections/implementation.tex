@@ -1,0 +1,23 @@
+\section{Implementation Contract}
+
+The implementation contract distinguishes formulation-only paths, active
+branch-and-cut paths, solver fallback paths, and completed proof/bound paths.
+Each run summary should name the model, objective, constraint profile,
+separation routine status, solve status, incumbent plan source, and any proof
+or bound metadata.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.25\linewidth}p{0.31\linewidth}p{0.30\linewidth}}
+\toprule
+Field & Purpose & Failure mode avoided \\
+\midrule
+Formulation id & Names variables and constraints & Ambiguous model claim \\
+Cut summary & Records separation activity & Hidden non-branch-and-cut path \\
+Solver status & Distinguishes solved, timed out, fallback & False exactness \\
+Proof/bound & Carries exact evidence when available & Valid plan mistaken for proof \\
+\bottomrule
+\end{tabular}
+\caption{Minimum branch-and-cut report fields.}
+\end{table}
