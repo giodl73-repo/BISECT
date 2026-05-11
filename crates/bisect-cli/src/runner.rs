@@ -2856,6 +2856,9 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
         let tiger_url = bisect_report::tiger_source_url(&state_fips, &cfg.year);
         let gpmetis_version = crate::bisection_runner::detect_gpmetis_version();
         let created_at = bisect_report::now_iso8601();
+        let adjacency_sha256 = bisect_report::sha256_file(&adj_pkl)
+            .map_err(|e| format!("hash adjacency source {}: {e}", adj_pkl.display()))?;
+        let tiger_sha256 = runner_tiger_sha256(cfg)?;
         let audit_sidecars = write_rplan_audit_sidecars(
             &plan_root,
             cfg,
@@ -2885,14 +2888,14 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 env!("CARGO_PKG_VERSION")
             ),
             adjacency_file: adj_filename,
-            adjacency_sha256: String::new(), // populated post-build
+            adjacency_sha256,
             adjacency_build_command: format!(
                 "python scripts/data/generate_adj_bin.py --year {} --states {}",
                 cfg.year, state_name
             ),
             adjacency_build_version: env!("CARGO_PKG_VERSION").to_string(),
             tiger_source_url: tiger_url,
-            tiger_sha256: None, // expensive; computed separately if needed
+            tiger_sha256,
             created_at,
             balance_tolerance_pct: balance_tolerance * 100.0,
             population_balance_valid: true,
@@ -3151,6 +3154,15 @@ struct RunnerAuditSidecars {
     audit_result: String,
     legal_profile_id: String,
     context_hash: String,
+}
+
+fn runner_tiger_sha256(cfg: &StateConfig) -> Result<Option<String>, String> {
+    let Some(path) = rplan_tiger_tract_path(&cfg.state_code, &cfg.year) else {
+        return Ok(None);
+    };
+    let hash = bisect_report::sha256_file(&path)
+        .map_err(|e| format!("hash TIGER source {}: {e}", path.display()))?;
+    Ok(Some(hash))
 }
 
 fn write_rplan_audit_sidecars(
