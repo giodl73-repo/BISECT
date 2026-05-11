@@ -497,7 +497,13 @@ fn verify_certificate_accepts_all_public_method_packages() {
         verified.push(entry.file_name().to_string_lossy().into_owned());
     }
     verified.sort();
-    assert_eq!(verified, vec!["U.18+local-search-generated-descendant"]);
+    assert_eq!(
+        verified,
+        vec![
+            "T.14+spectral-generated-synthetic",
+            "U.18+local-search-generated-descendant",
+        ]
+    );
 }
 
 #[test]

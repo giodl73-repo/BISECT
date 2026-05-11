@@ -80,6 +80,7 @@ cargo run -p bisect-cli -- verify `
 
 | Package | Source workflow | Status | Verifier surface |
 |---|---|---|---|
+| `T.14+spectral-generated-synthetic` | `cargo run -p bisect-cli --no-default-features --example spectral_path6_package` over a deterministic six-unit path graph | spectral bisection produced a balanced contiguous split; package verifies | `rplan verify-certificate`; `bisect verify --manifest` |
 | `U.18+local-search-generated-descendant` | `bisect improve --method one-move` over the public grid3x3 RPLAN/RCTX fixture | no improving move found; package verifies | `rplan verify-certificate`; `bisect verify --manifest` |
 
 ## Naming

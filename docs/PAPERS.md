@@ -48,7 +48,9 @@ The `--structure` layer of the compositor. Every paper here answers: given k dis
 | T.17 | Flow-Based Construction — capacity/cost flow assignment with infeasibility witnesses | [PDF](papers/T.17+flow-based-construction.pdf) |
 
 T.14-T.17 are implemented as audited vertical slices with draft PDFs and
-paper-level simulated review/revision artifacts. Writing goal:
+paper-level simulated review/revision artifacts. T.14 now also has a
+method-produced synthetic spectral RPLAN package with transcript and verifier
+manifest under `docs/examples/rplan-method-packages/`. Writing goal:
 [`2026-05-11-algorithm-family-paper-writing-goal.md`](specs/2026-05-11-algorithm-family-paper-writing-goal.md).
 Implementation roadmap:
 [`2026-05-10-algorithm-family-roadmap.md`](specs/2026-05-10-algorithm-family-roadmap.md).

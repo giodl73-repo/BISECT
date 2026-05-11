@@ -749,13 +749,11 @@ mod tests {
             .join("manifest.json")
     }
 
-    fn public_method_package_manifest() -> PathBuf {
+    fn public_method_package_root() -> PathBuf {
         repo_root()
             .join("docs")
             .join("examples")
             .join("rplan-method-packages")
-            .join("U.18+local-search-generated-descendant")
-            .join("manifest.json")
     }
 
     fn write_ilp_report(dir: &Path, name: &str, lp_bytes: &[u8], sha256: String) -> PathBuf {
@@ -1097,23 +1095,40 @@ mod tests {
 
     #[test]
     fn test_verify_accepts_rplan_method_package_manifest() {
-        let args = VerifyArgs {
-            manifest: public_method_package_manifest(),
-            min_similarity: 0.99,
-            verify_label: None,
-            output_base: "outputs".to_string(),
-            dry_run: false,
-            skip_binary_check: true,
-            label: None,
-            verify_assignments_only: false,
-            plan_ref: None,
-        };
+        let mut verified = Vec::new();
+        for entry in std::fs::read_dir(public_method_package_root()).unwrap() {
+            let entry = entry.unwrap();
+            if !entry.file_type().unwrap().is_dir() {
+                continue;
+            }
+            let package_name = entry.file_name().to_string_lossy().into_owned();
+            let args = VerifyArgs {
+                manifest: entry.path().join("manifest.json"),
+                min_similarity: 0.99,
+                verify_label: None,
+                output_base: "outputs".to_string(),
+                dry_run: false,
+                skip_binary_check: true,
+                label: None,
+                verify_assignments_only: false,
+                plan_ref: None,
+            };
 
-        let result = run_verify(&args);
-        assert!(
-            result.is_ok(),
-            "bisect verify should accept public RPLAN method package manifest: {:?}",
-            result.err()
+            let result = run_verify(&args);
+            assert!(
+                result.is_ok(),
+                "bisect verify should accept public RPLAN method package manifest {package_name}: {:?}",
+                result.err()
+            );
+            verified.push(package_name);
+        }
+        verified.sort();
+        assert_eq!(
+            verified,
+            vec![
+                "T.14+spectral-generated-synthetic",
+                "U.18+local-search-generated-descendant",
+            ]
         );
     }
 

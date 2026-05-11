@@ -1,6 +1,6 @@
 # Goal: Method-Produced RPLAN Package Expansion
 
-**Status:** Active - first method package generated
+**Status:** Complete
 **Date:** 2026-05-11
 **Owner:** BISECT / RPLAN integration
 **Depends on:** `docs/specs/2026-05-11-rplan-golden-package-corpus-goal.md`
@@ -36,7 +36,7 @@ This goal targets the method-produced fixture tier.
 
 ## Stage 1 - Select Small Generated Candidates
 
-- [ ] Pick one construction package from T.14-T.17 that can be generated
+- [x] Pick one construction package from T.14-T.17 that can be generated
       deterministically without external downloads.
 - [x] Pick one search/optimization package from U.16-U.19 that can be generated
       deterministically without external downloads.
@@ -59,11 +59,11 @@ This goal targets the method-produced fixture tier.
 
 ## Stage 3 - Generate First Method Package
 
-- [ ] Generate the chosen construction package from a real CLI/crate workflow.
-- [ ] Commit package artifacts under `docs/examples/rplan-method-packages/`.
-- [ ] Add or reuse tests showing `rplan verify-certificate` accepts it.
-- [ ] Add or reuse tests showing `bisect verify --manifest` accepts it.
-- [ ] Document what the package proves and what remains outside scope.
+- [x] Generate the chosen construction package from a real CLI/crate workflow.
+- [x] Commit package artifacts under `docs/examples/rplan-method-packages/`.
+- [x] Add or reuse tests showing `rplan verify-certificate` accepts it.
+- [x] Add or reuse tests showing `bisect verify --manifest` accepts it.
+- [x] Document what the package proves and what remains outside scope.
 
 ## Stage 4 - Generate Second Method Package
 
@@ -76,21 +76,21 @@ This goal targets the method-produced fixture tier.
 
 ## Stage 5 - Evidence Integration
 
-- [ ] Update affected T/U paper evidence tables if method-produced packages
+- [x] Update affected T/U paper evidence tables if method-produced packages
       raise any evidence row above tiny-fixture status.
-- [ ] Rebuild affected PDFs only when manuscript text changes.
-- [ ] Update `docs/PAPERS.md` notes if evidence labels change.
-- [ ] Update `docs/concepts/algorithm-family-layer-cake.md` only if the tier
+- [x] Rebuild affected PDFs only when manuscript text changes.
+- [x] Update `docs/PAPERS.md` notes if evidence labels change.
+- [x] Update `docs/concepts/algorithm-family-layer-cake.md` only if the tier
       distinction changes the taxonomy.
-- [ ] Update `docs/NEXT_SESSION.md` with remaining package or benchmark work.
+- [x] Update `docs/NEXT_SESSION.md` with remaining package or benchmark work.
 
 ## Stage 6 - Review, Commit, Push
 
-- [ ] Run focused Rust tests for touched verifier surfaces.
-- [ ] Run package verification commands documented in the package README.
-- [ ] Run `git diff --check`.
-- [ ] Commit coherent slices.
-- [ ] Push to `origin/main`.
+- [x] Run focused Rust tests for touched verifier surfaces.
+- [x] Run package verification commands documented in the package README.
+- [x] Run `git diff --check`.
+- [x] Commit coherent slices.
+- [x] Push to `origin/main`.
 
 ## Suggested `/goal`
 
