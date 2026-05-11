@@ -169,7 +169,16 @@
   <div class="meta-item"><span class="meta-label">TIGER SHA-256:</span> <code>{{ audit.tiger_sha256 | default(value="(not recorded)") }}</code></div>
   <div class="meta-item"><span class="meta-label">Seed:</span> {{ audit.seed | default(value="N/A") }}</div>
   <div class="meta-item"><span class="meta-label">Created At:</span> {{ audit.created_at | default(value="N/A") }}</div>
+  <div class="meta-item"><span class="meta-label">RPLAN:</span> {{ audit.rplan_path | default(value="N/A") }}</div>
+  <div class="meta-item"><span class="meta-label">RCTX:</span> {{ audit.rctx_path | default(value="N/A") }}</div>
+  <div class="meta-item"><span class="meta-label">Audit Certificate:</span> {{ audit.audit_certificate_path | default(value="N/A") }}</div>
+  <div class="meta-item"><span class="meta-label">Audit Result:</span> {{ audit.audit_result | default(value="N/A") }}</div>
+  <div class="meta-item"><span class="meta-label">Legal Profile:</span> {{ audit.legal_profile_id | default(value="N/A") }}</div>
+  <div class="meta-item"><span class="meta-label">Context Hash:</span> <code>{{ audit.context_hash | default(value="N/A") }}</code></div>
+  <div class="meta-item"><span class="meta-label">Certificate SHA-256:</span> <code>{{ audit.audit_certificate_sha256 | default(value="N/A") }}</code></div>
 </div>
+<h3>RPLAN Source Hashes</h3>
+<pre>{{ audit.rplan_source_hashes | json_encode(pretty=true) }}</pre>
 <h3>Verification Command</h3>
 <div class="audit-box">{{ audit.verification_command | default(value="(verification command not available)") }}</div>
 </div>

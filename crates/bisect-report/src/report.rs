@@ -188,21 +188,7 @@ pub fn assemble_report(ctx: &ReportContext) -> anyhow::Result<Report> {
         .unwrap_or_else(|| serde_json::json!({"status": "unavailable"}));
 
     // Section 9: Audit trail
-    let verification_command = generate_verification_command_from_manifest(m);
-    let verification_script = generate_verification_script(m);
-    let audit = serde_json::json!({
-        "verification_command": verification_command,
-        "verification_script": verification_script,
-        "binary_version": m.binary_version,
-        "binary_download_url": m.binary_download_url,
-        "binary_sha256": m.binary_sha256,
-        "adjacency_file": m.adjacency_file,
-        "adjacency_sha256": if m.adjacency_sha256.is_empty() { "(not computed — run: sha256sum adjacency_file)".to_string() } else { m.adjacency_sha256.clone() },
-        "tiger_source_url": m.tiger_source_url,
-        "tiger_sha256": m.tiger_sha256.clone().unwrap_or_else(|| format!("(not recorded — download from {} and compute manually)", m.tiger_source_url)),
-        "created_at": m.created_at,
-        "seed": m.seed,
-    });
+    let audit = build_audit_section(ctx, m);
 
     // Section 10: Maps (embed base64 PNG if available)
     let maps = build_maps_section(ctx);
@@ -227,6 +213,72 @@ pub fn assemble_report(ctx: &ReportContext) -> anyhow::Result<Report> {
             maps,
         },
     })
+}
+
+fn build_audit_section(ctx: &ReportContext, m: &PlanManifest) -> Value {
+    let verification_command = generate_verification_command_from_manifest(m);
+    let verification_script = generate_verification_script(m);
+    serde_json::json!({
+        "verification_command": verification_command,
+        "verification_script": verification_script,
+        "binary_version": m.binary_version,
+        "binary_download_url": m.binary_download_url,
+        "binary_sha256": m.binary_sha256,
+        "adjacency_file": m.adjacency_file,
+        "adjacency_sha256": if m.adjacency_sha256.is_empty() { "(not computed — run: sha256sum adjacency_file)".to_string() } else { m.adjacency_sha256.clone() },
+        "tiger_source_url": m.tiger_source_url,
+        "tiger_sha256": m.tiger_sha256.clone().unwrap_or_else(|| format!("(not recorded — download from {} and compute manually)", m.tiger_source_url)),
+        "created_at": m.created_at,
+        "seed": m.seed,
+        "rplan_path": m.rplan_path,
+        "rctx_path": m.rctx_path,
+        "audit_certificate_path": m.audit_certificate_path,
+        "audit_certificate_sha256": m.audit_certificate_sha256,
+        "audit_certificate_content_hash": m.audit_certificate_content_hash,
+        "audit_result": m.audit_result,
+        "legal_profile_id": m.legal_profile_id,
+        "context_hash": m.context_hash,
+        "rplan_source_hashes": read_rplan_source_hashes(ctx, m),
+    })
+}
+
+fn read_rplan_source_hashes(ctx: &ReportContext, m: &PlanManifest) -> Value {
+    let Some(rctx_rel) = m.rctx_path.as_deref() else {
+        return serde_json::json!({
+            "status": "unavailable",
+            "reason": "rctx_path not recorded in manifest",
+        });
+    };
+    let rctx_path = ctx.plan_dir.join(rctx_rel);
+    let text = match std::fs::read_to_string(&rctx_path) {
+        Ok(text) => text,
+        Err(e) => {
+            return serde_json::json!({
+                "status": "unavailable",
+                "reason": format!("cannot read {rctx_rel}: {e}"),
+            });
+        }
+    };
+    let context = match rplan_io::read_rctx_str(&text) {
+        Ok(context) => context,
+        Err(e) => {
+            return serde_json::json!({
+                "status": "unavailable",
+                "reason": format!("cannot parse {rctx_rel}: {e}"),
+            });
+        }
+    };
+    if context.source_hashes.entries.is_empty() {
+        serde_json::json!({
+            "status": "missing",
+            "reason": "context source_hashes is empty",
+        })
+    } else {
+        serde_json::json!({
+            "status": "ok",
+            "entries": context.source_hashes.entries,
+        })
+    }
 }
 
 /// Build the maps section (section 10) — embed PNG maps as base64 data URIs.
@@ -644,6 +696,66 @@ mod tests {
         assert!(
             !ver.is_empty(),
             "audit section must have non-empty binary_version"
+        );
+    }
+
+    #[test]
+    fn test_assemble_report_audit_section_surfaces_rplan_source_hashes() {
+        let tmp = TempDir::new().unwrap();
+        let mut ctx = setup_plan_dir_with_all_required(&tmp, "vt_rplan_audit");
+        ctx.manifest.rplan_path = Some("plan.rplan".to_string());
+        ctx.manifest.rctx_path = Some("context.rctx".to_string());
+        ctx.manifest.audit_certificate_path = Some("audit-certificate.json".to_string());
+        ctx.manifest.audit_certificate_sha256 = Some("d".repeat(64));
+        ctx.manifest.audit_certificate_content_hash =
+            Some("sha256:certificate-content".to_string());
+        ctx.manifest.audit_result = Some("pass".to_string());
+        ctx.manifest.legal_profile_id = Some("generic-v1".to_string());
+        ctx.manifest.context_hash = Some("sha256:context".to_string());
+
+        let mut source_entries = std::collections::BTreeMap::new();
+        source_entries.insert(
+            "adjacency".to_string(),
+            format!("sha256:{}", "b".repeat(64)),
+        );
+        source_entries.insert("geometry".to_string(), format!("sha256:{}", "c".repeat(64)));
+        let context = rplan_core::RplanContext {
+            rctx_version: rplan_core::RCTX_VERSION.to_string(),
+            context_hash: String::new(),
+            units: rplan_core::PlanUnitIndex {
+                unit_kind: rplan_core::UnitKind::Tract,
+                state: Some("VT".to_string()),
+                year: Some(2020),
+                canonical_order: rplan_core::CanonicalOrder::ExplicitUnitIds,
+                unit_ids: vec!["50001000100".to_string()],
+                unit_universe_hash: "sha256:test-universe".to_string(),
+                source_id: None,
+            },
+            graph: None,
+            populations: Some(vec![100]),
+            subdivisions: None,
+            demographics: None,
+            geometry: None,
+            source_hashes: rplan_core::SourceHashes {
+                entries: source_entries,
+            },
+        };
+        std::fs::write(
+            ctx.plan_dir.join("context.rctx"),
+            rplan_io::write_rctx_string(&context).unwrap(),
+        )
+        .unwrap();
+
+        let report = assemble_report(&ctx).unwrap();
+        assert_eq!(report.sections.audit["audit_result"], "pass");
+        assert_eq!(report.sections.audit["rplan_source_hashes"]["status"], "ok");
+        assert_eq!(
+            report.sections.audit["rplan_source_hashes"]["entries"]["adjacency"],
+            format!("sha256:{}", "b".repeat(64))
+        );
+        assert_eq!(
+            report.sections.audit["rplan_source_hashes"]["entries"]["geometry"],
+            format!("sha256:{}", "c".repeat(64))
         );
     }
 
