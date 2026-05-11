@@ -1,6 +1,6 @@
 # Goal: Write Algorithm-Family Papers
 
-**Status:** Active - Stage 2 Track U spine drafting in progress
+**Status:** Active - Stage 3 Track U implementation drafting next
 **Track:** T/U algorithm-family publication  
 **Foundation:**
 [`2026-05-11-algorithm-family-completion-goal.md`](2026-05-11-algorithm-family-completion-goal.md),
@@ -102,28 +102,28 @@ Acceptance for each T paper:
 - [x] Complete U.13 round-1 simulated review, P1 revisions, and build check.
 - [x] Complete U.14 round-1 simulated review, P1 revisions, and build check.
 - [x] Complete U.15 round-1 simulated review, P1 revisions, and build check.
-- [ ] U.0 Search and Optimization Overview: taxonomy and bridge from existing
+- [x] U.0 Search and Optimization Overview: taxonomy and bridge from existing
       U.1-U.11 papers to U.12-U.20.
-- [ ] U.12 Algorithm-Selection Matrix: when to use construction, search,
+- [x] U.12 Algorithm-Selection Matrix: when to use construction, search,
       ensemble, exact, Pareto, and audit paths.
-- [ ] U.13 Exact-vs-Heuristic Certification: what certificates, bounds, and
+- [x] U.13 Exact-vs-Heuristic Certification: what certificates, bounds, and
       audit sidecars do and do not prove.
-- [ ] U.14 Multi-Objective Selection: selection among objective trade-offs,
+- [x] U.14 Multi-Objective Selection: selection among objective trade-offs,
       including SMC/Pareto/exported-plan audit framing.
-- [ ] U.15 Legal Postures for Search: how search choices support or weaken
+- [x] U.15 Legal Postures for Search: how search choices support or weaken
       legal/policy claims without overstating neutrality.
 
 Acceptance for each U spine paper:
 
-- [ ] Paper states whether it is taxonomy, methodology, empirical, or legal
+- [x] Paper states whether it is taxonomy, methodology, empirical, or legal
       interpretation.
-- [ ] Claims are grounded in existing implementation or explicitly marked as
+- [x] Claims are grounded in existing implementation or explicitly marked as
       roadmap/future work.
-- [ ] Related-work and limitations sections separate computational claims from
+- [x] Related-work and limitations sections separate computational claims from
       legal interpretation.
-- [ ] Paper-level simulated review/revision artifacts meet panel readiness
+- [x] Paper-level simulated review/revision artifacts meet panel readiness
       thresholds.
-- [ ] PDF is built and indexed in `docs/PAPERS.md`.
+- [x] PDF is built and indexed in `docs/PAPERS.md`.
 
 ## Stage 3 - Track U Implementation Papers
 

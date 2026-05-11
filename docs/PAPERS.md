@@ -61,7 +61,7 @@ The search, optimization, certification, and algorithm-selection layer. Once con
 
 | Code | Title | PDF | Note |
 |------|-------|-----|------|
-| U.0 | Search and Optimization Overview — taxonomy from construction to certification | — | writing queue |
+| U.0 | Search and Optimization Overview — taxonomy from construction to certification | [PDF](papers/U.0+search-optimization-overview.pdf) | reviewed draft |
 | U.1 | ConvergenceSweep — T=600 statutory seed formula | [PDF](papers/U.1+convergence-sweep.pdf) | `--search convergence` |
 | U.2 | Parameter Sensitivity — partisanship insensitive to tuning | [PDF](papers/U.2+parameter-sensitivity.pdf) | tuning/robustness |
 | U.3 | Simulated Annealing Bisection — cooling the edge-cut objective in the bisection tree | [PDF](papers/U.3+simulated-annealing.pdf) | `--structure simulated-annealing` |
@@ -73,19 +73,20 @@ The search, optimization, certification, and algorithm-selection layer. Once con
 | U.9 | BisectionEnsemble — Local ReCom at Each Bisection Node | [PDF](papers/U.9+bisection-ensemble.pdf) | local ensemble search |
 | U.10 | bisect-ensemble — Rust ReCom at 2500× Speed | [PDF](papers/U.10+bisect-ensemble.pdf) | high-performance search implementation |
 | U.11 | Resolution-Aware Redistricting — Geographic Granularity as a First-Class Parameter | [PDF](papers/U.11+resolution-aware.pdf) | resolution selection |
-| U.12 | Algorithm-Selection Matrix — choosing construction, search, exact, ensemble, and audit paths | — | writing queue |
-| U.13 | Exact-vs-Heuristic Certification — what proofs, bounds, and audits establish | — | writing queue |
-| U.14 | Multi-Objective Selection — selecting among trade-offs and sampled frontiers | — | writing queue |
-| U.15 | Legal Postures for Search — claim discipline for search and optimization choices | — | writing queue |
+| U.12 | Algorithm-Selection Matrix — choosing construction, search, exact, ensemble, and audit paths | [PDF](papers/U.12+algorithm-selection-matrix.pdf) | reviewed draft |
+| U.13 | Exact-vs-Heuristic Certification — what proofs, bounds, and audits establish | [PDF](papers/U.13+exact-vs-heuristic-certification.pdf) | reviewed draft |
+| U.14 | Multi-Objective Selection — selecting among trade-offs and sampled frontiers | [PDF](papers/U.14+multi-objective-selection.pdf) | reviewed draft |
+| U.15 | Legal Postures for Search — claim discipline for search and optimization choices | [PDF](papers/U.15+legal-postures-for-search.pdf) | reviewed draft |
 | U.16 | Branch-And-Cut Redistricting — connectivity cuts, separation, and solver reports | — | implemented slice |
 | U.17 | Branch-And-Price Redistricting — column generation and exact fixture packages | — | implemented slice |
 | U.18 | Large-Neighborhood Search — local improvement, tabu/LNS scaffolding, and repair hooks | — | implemented slice |
 | U.19 | Evolutionary Search Comparison — validity-preserving crossover/mutation and selected frontier audits | — | implemented slice |
 | U.20 | Plan Audit Certificates — RPLAN/RCTX audit certificates and lineage fixed point | — | implemented slice |
 
-Search/optimization additions through U.20 are now implemented as audited
-vertical slices where they touch final plans and are in the paper writing
-queue. Writing goal:
+U.0 and U.12-U.15 are reviewed spine drafts with PDFs and paper-level
+simulated review/revision artifacts. Search/optimization additions through U.20
+are implemented as audited vertical slices where they touch final plans and are
+in the paper writing queue. Writing goal:
 [`2026-05-11-algorithm-family-paper-writing-goal.md`](specs/2026-05-11-algorithm-family-paper-writing-goal.md).
 Implementation roadmap:
 [`2026-05-10-algorithm-family-roadmap.md`](specs/2026-05-10-algorithm-family-roadmap.md).
