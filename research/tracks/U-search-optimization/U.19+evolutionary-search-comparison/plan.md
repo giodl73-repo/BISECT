@@ -1,7 +1,7 @@
 # U.19 - Evolutionary Search Comparison
 
 **Paper Type:** Evolutionary/multi-objective implementation  
-**Status:** Planning  
+**Status:** Round-1 review addressed
 **Track:** U - Search and Optimization  
 **Code Home:** `bisect-pareto`, `bisect-cli::pareto_cmd`  
 **CLI Surface:** `bisect pareto`, selected-frontier audit flags
@@ -45,7 +45,7 @@ selected packages that fail `bisect verify`-style certificate checks.
 
 ## Panel Readiness Checklist
 
-- [ ] `main.tex` and sections exist.
-- [ ] Frontier quality and selected-plan validity are separated.
+- [x] `main.tex` and sections exist.
+- [x] Frontier quality and selected-plan validity are separated.
 - [ ] Selected-frontier CLI example included.
-- [ ] P1 simulated feedback addressed.
+- [x] P1 simulated feedback addressed.

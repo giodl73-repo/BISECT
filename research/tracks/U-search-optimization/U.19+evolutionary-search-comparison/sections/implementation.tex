@@ -2,20 +2,28 @@
 
 The implementation contract has three parts: validity-preserving crossover and
 mutation operators, deterministic fixed-seed frontier metadata, and selected
-frontier export. Operators may return valid children or explicit valid
-fallbacks; invalid silent outputs falsify the contract.
+frontier export. Operators may return valid children, explicit valid fallbacks,
+or rejected-child records; invalid silent outputs falsify the contract.
 
 \begin{table}[htbp]
 \centering
 \small
-\begin{tabular}{p{0.24\linewidth}p{0.32\linewidth}p{0.29\linewidth}}
+\begin{tabular}{p{0.22\linewidth}p{0.34\linewidth}p{0.29\linewidth}}
 \toprule
 Layer & Record & Claim boundary \\
 \midrule
-Operator & parent ids, seed, validity/fallback status & child validity \\
-Frontier & objective vectors and dominance metadata & search result under budget \\
-Selection & chosen entry and audit package id & auditable final plan \\
+Operator-valid & parent ids, seed, parameters, validity status & child validity \\
+Operator-fallback & parent ids, failed operator, fallback reason & validity preservation \\
+Frontier-recorded & objective vectors and dominance metadata & search result under budget \\
+Selected-packaged & chosen entry and audit package id & auditable final plan \\
+Selection-deferred & frontier entry without selection record & comparison only \\
 \bottomrule
 \end{tabular}
 \caption{Evolutionary comparison record layers.}
 \end{table}
+
+The implementation therefore separates producing candidates, observing a
+frontier, and selecting an entry for downstream audit. Frontier membership is a
+search-output claim. Selected-package status is an audit-readiness claim.
+Selection-deferred status means the entry can be compared but should not be
+reported as a chosen plan without the U.14 selection record.

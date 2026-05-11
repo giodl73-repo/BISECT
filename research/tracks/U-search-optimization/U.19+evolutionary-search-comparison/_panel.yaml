@@ -1,0 +1,42 @@
+paper: U.19+evolutionary-search-comparison
+title: Evolutionary Search Comparison with Selected-Frontier Audit Packages
+type: publication
+stage: recheck
+round: 1
+content_mode: draft
+venue: technical report
+review_date: 2026-05-11
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - name: Kalyanmoy Deb
+    profile_ref: simulated-evolutionary-multiobjective-optimization
+    score: 3
+  - name: Debora Donato
+    profile_ref: simulated-graph-mining
+    score: 2
+  - name: Jon Kleinberg
+    profile_ref: simulated-algorithms-network-science
+    score: 3
+  - name: Cynthia Dwork
+    profile_ref: simulated-accountability-fairness
+    score: 2
+  - name: Wendy Tam Cho
+    profile_ref: simulated-political-methodology
+    score: 3
+reviews:
+  round_1:
+    avg_score: 2.6
+    min_score: 2
+    max_score: 3
+    synthesis: reviews/SYNTHESIS.md
+    revision_plan: REVISION-PLAN.md
+p1_items:
+  - id: P1.1
+    title: Define operator, frontier, selection, and package status boundaries.
+    addressed: true
+  - id: P1.2
+    title: Require deterministic fixed-seed metadata and lineage for selected entries.
+    addressed: true
+  - id: P1.3
+    title: Separate frontier-quality evidence from legal or policy preference claims.
+    addressed: true

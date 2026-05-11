@@ -4,3 +4,13 @@ A selected frontier entry should be exportable as RPLAN/RCTX with certificate
 and manifest sidecars. The audit package verifies the selected plan and lineage
 under a declared profile; it does not certify that the frontier is complete or
 that the selected trade-off is legally preferred.
+
+The manifest must include the fixed seed, population and generation identifiers,
+operator parameters, parent ids for generated descendants, selected entry id,
+objective vector, constraints profile, RPLAN path, RCTX path, certificate path,
+and verification transcript. If a candidate reached the frontier through a
+fallback or repair path, that path remains part of the selected-entry lineage.
+
+Selection criteria are separate audit inputs. U.19 can package a selected
+frontier entry for verification, but preference among valid non-dominated
+entries belongs to the U.14 selection record and the U.15 posture boundary.
