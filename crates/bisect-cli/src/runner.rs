@@ -4309,6 +4309,104 @@ mod tests {
         assert_eq!(lineage.extra["audit_summary"]["failed"], 0);
     }
 
+    fn write_l2_ilp_audit_report(dir: &std::path::Path, name: &str) {
+        let lp_bytes = b"l2 runner audit lp fixture";
+        let formulation = bisect_ilp::build_formulation(&[vec![1], vec![0]], &[1, 1], 2, 0.05);
+        let result = bisect_ilp::solve(
+            &formulation,
+            &[vec![1], vec![0]],
+            &[1, 1],
+            2,
+            0.05,
+            bisect_ilp::IlpSolver::FormulationOnly,
+            0.01,
+        );
+        let lp_path = dir.join(format!("{name}.lp"));
+        std::fs::write(&lp_path, lp_bytes).unwrap();
+        let report = bisect_ilp::IlpSolveReport::with_model_artifact(
+            formulation,
+            result,
+            bisect_ilp::IlpModelArtifact {
+                format: "cplex-lp".to_string(),
+                path: format!("{name}.lp"),
+                sha256: format!("{:x}", Sha256::digest(lp_bytes)),
+            },
+        );
+        std::fs::write(
+            dir.join(format!("{name}.json")),
+            report.to_json_string().unwrap(),
+        )
+        .unwrap();
+    }
+
+    #[test]
+    #[ignore = "L2: emits a runner audit package and verifies the full ILP/RPLAN audit chain"]
+    fn test_l2_runner_emits_and_verifies_full_audit_package() {
+        let tmp = TempDir::new().unwrap();
+        let mut cfg = make_config("WA");
+        cfg.num_districts = 2;
+        cfg.label = Some("wa_l2_runner_audit".to_string());
+        cfg.algo.split = SplitStrategy::Ilp {
+            method: crate::args::IlpMethod::BranchAndCut,
+            fallback: crate::args::IlpFallback::Metis,
+            time_limit_secs: 60,
+            optimality_gap: 0.01,
+            max_tracts: 500,
+        };
+        let assignments: HashMap<usize, usize> = [(0, 1), (1, 1), (2, 1), (3, 2), (4, 2)]
+            .into_iter()
+            .collect();
+        let adjacency_path = tmp.path().join("wa_adjacency_2020.adj.bin");
+        std::fs::write(&adjacency_path, b"l2 adjacency fixture").unwrap();
+        let adjacency_sha256 = bisect_report::sha256_file(&adjacency_path).unwrap();
+
+        let report_dir = tmp.path().join("intermediate").join("ilp_solve_reports");
+        std::fs::create_dir_all(&report_dir).unwrap();
+        write_l2_ilp_audit_report(&report_dir, "node_root");
+        let summary_path = report_dir.join("audit-summary.json");
+        crate::ilp_audit::write_ilp_audit_summary_for_dir(&report_dir, &summary_path).unwrap();
+        let summary_sha256 = bisect_report::sha256_file(&summary_path).unwrap();
+
+        let sidecars = write_rplan_audit_sidecars(
+            tmp.path(),
+            &cfg,
+            "wa_l2_runner_audit",
+            &path5_loaded_graph(),
+            &assignments,
+            "wa_adjacency_2020.adj.bin",
+            &adjacency_path,
+            "https://www.census.gov/example.zip",
+            0.25,
+            "2026-05-10T00:00:00Z",
+        )
+        .unwrap();
+
+        let manifest = bisect_report::PlanManifest {
+            rplan_path: Some(sidecars.rplan_path),
+            rctx_path: Some(sidecars.rctx_path),
+            audit_certificate_path: Some(sidecars.audit_certificate_path),
+            audit_certificate_sha256: Some(sidecars.audit_certificate_sha256),
+            audit_certificate_content_hash: Some(sidecars.audit_certificate_content_hash),
+            audit_result: Some(sidecars.audit_result),
+            legal_profile_id: Some(sidecars.legal_profile_id),
+            context_hash: Some(sidecars.context_hash),
+            adjacency_sha256,
+            ilp_method: Some("branch-and-cut".to_string()),
+            ilp_fallback: Some("metis".to_string()),
+            ilp_solve_report_dir: Some("intermediate/ilp_solve_reports".to_string()),
+            ilp_audit_summary_path: Some(
+                "intermediate/ilp_solve_reports/audit-summary.json".to_string(),
+            ),
+            ilp_audit_summary_sha256: Some(summary_sha256),
+            ..Default::default()
+        };
+
+        crate::verify::verify_manifest_ilp_audit_summary(&manifest, tmp.path())
+            .expect("runner-emitted ILP audit summary should verify");
+        crate::verify::verify_manifest_rplan_audit_certificate(&manifest, tmp.path())
+            .expect("runner-emitted RPLAN audit certificate should verify");
+    }
+
     #[test]
     fn test_build_rplan_subdivisions_ignores_missing_geoids() {
         let mut graph = path5_loaded_graph();
