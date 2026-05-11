@@ -303,6 +303,10 @@ mod tests {
         .unwrap();
         rplan_audit::verify_audit_certificate(&certificate, Some(&document.plan), Some(&context))
             .unwrap();
+        let manifest: bisect_report::PlanManifest =
+            serde_json::from_str(&std::fs::read_to_string(out_dir.join("manifest.json")).unwrap())
+                .unwrap();
+        crate::verify::verify_manifest_rplan_audit_certificate(&manifest, &out_dir).unwrap();
     }
 
     fn pareto_result_fixture() -> bisect_pareto::ParetoResult {

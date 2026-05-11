@@ -159,6 +159,25 @@ pub fn write_selected_frontier_package(
     let manifest = serde_json::json!({
         "schema_version": package.schema_version,
         "label": label,
+        "state_code": jurisdiction,
+        "year": document.plan.units.year.unwrap_or(2020).to_string(),
+        "chamber": document.metadata.chamber,
+        "num_districts": k,
+        "population_source": "rctx",
+        "partition_mode": "nsga2-selected-frontier",
+        "seed": i64::try_from(result.config.base_seed).ok(),
+        "binary_version": env!("CARGO_PKG_VERSION"),
+        "binary_sha256": "",
+        "binary_download_url": "",
+        "adjacency_file": "",
+        "adjacency_sha256": "",
+        "adjacency_build_command": "",
+        "adjacency_build_version": "",
+        "tiger_source_url": "",
+        "tiger_sha256": null,
+        "created_at": generated_at,
+        "balance_tolerance_pct": tolerance_percent,
+        "population_balance_valid": !matches!(certificate.result, rplan_audit::AuditResult::Fail),
         "selected_frontier_index": selected_frontier_index,
         "frontier_size": result.frontier.len(),
         "rplan_path": package.rplan_path,
@@ -264,5 +283,5 @@ fn sha256_file(path: &Path) -> Result<String, std::io::Error> {
         }
         hasher.update(&buffer[..n]);
     }
-    Ok(format!("sha256:{:x}", hasher.finalize()))
+    Ok(format!("{:x}", hasher.finalize()))
 }
