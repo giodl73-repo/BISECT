@@ -81,10 +81,10 @@ Purpose: extend `bisect-clustering` beyond flat capacity assignment.
 - [x] Add regionalization module in `bisect-clustering`.
 - [x] Implement deterministic agglomerative/regionalization baseline.
 - [x] Add population-capacity and contiguity repair witnesses.
-- [ ] Add `--structure regionalization` and YAML `structure: regionalization`.
-- [ ] Emit regionalization summaries and `algorithm_lineage`.
-- [ ] Add L0 hierarchy/capacity/determinism fixtures.
-- [ ] Add L1 CLI/RPLAN sidecar test.
+- [x] Add `--structure regionalization` and YAML `structure: regionalization`.
+- [x] Emit regionalization summaries and `algorithm_lineage`.
+- [x] Add L0 hierarchy/capacity/determinism fixtures.
+- [x] Add L1 CLI/RPLAN sidecar test.
 
 ## Stage 4 - U.17 Branch-And-Price / Column Generation
 

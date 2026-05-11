@@ -273,6 +273,8 @@ pub enum SplitStrategy {
     CapacityClustering,
     /// Spectral graph partitioning baseline (T.14).
     Spectral { max_iters: usize },
+    /// Hierarchical regionalization baseline (T.16).
+    Regionalization,
 }
 
 impl SplitStrategy {
@@ -294,6 +296,7 @@ impl SplitStrategy {
             Self::MovingKnife { .. } => "moving-knife",
             Self::CapacityClustering => "capacity-clustering",
             Self::Spectral { .. } => "spectral",
+            Self::Regionalization => "regionalization",
         }
     }
 }
@@ -667,6 +670,14 @@ impl AlgorithmConfig {
                 metis,
                 mode_label: None,
             },
+            PM::Regionalization => Self {
+                split: SplitStrategy::Regionalization,
+                seeds: SeedCompositor::Single,
+                weights: base_weights,
+                vertex_constraints: pop_only,
+                metis,
+                mode_label: None,
+            },
         };
 
         // ── Apply compositor layer overrides ──────────────────────────────────
@@ -717,6 +728,7 @@ impl AlgorithmConfig {
                     },
                     pop_only,
                 ),
+                SM::Regionalization => (SplitStrategy::Regionalization, pop_only),
             };
             algo.split = new_split;
             algo.vertex_constraints = new_vc;
@@ -1023,6 +1035,14 @@ impl AlgorithmConfig {
             },
             PM::Spectral => Self {
                 split: SplitStrategy::Spectral { max_iters: 200 },
+                seeds: SeedCompositor::Single,
+                weights: WeightSpec::default(),
+                vertex_constraints: pop,
+                metis,
+                mode_label: None,
+            },
+            PM::Regionalization => Self {
+                split: SplitStrategy::Regionalization,
                 seeds: SeedCompositor::Single,
                 weights: WeightSpec::default(),
                 vertex_constraints: pop,
@@ -2390,6 +2410,50 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 )
                 .map_err(|e| format!("write spectral summary failed: {e}"))?;
                 spectral_assignment
+                    .into_iter()
+                    .enumerate()
+                    .map(|(idx, district)| (idx, district + 1))
+                    .collect()
+            }
+            SplitStrategy::Regionalization => {
+                status(
+                    cfg.position,
+                    &format!(
+                        "{}: regionalization into {} districts",
+                        cfg.state_code, num_districts
+                    ),
+                );
+                let result = bisect_clustering::regionalize(
+                    &graph.adjacency,
+                    &graph.vertex_weights,
+                    bisect_clustering::ClusterConfig {
+                        k: num_districts,
+                        tolerance: balance_tolerance_frac,
+                    },
+                )
+                .map_err(|e| format!("regionalization failed: {e}"))?;
+                let summary_path = intermediate_dir.join("regionalization_summary.json");
+                std::fs::write(
+                    &summary_path,
+                    serde_json::to_string_pretty(&result.summary)
+                        .map_err(|e| format!("serialize regionalization summary failed: {e}"))?,
+                )
+                .map_err(|e| format!("write regionalization summary failed: {e}"))?;
+                let merge_path = intermediate_dir.join("regionalization_merges.json");
+                std::fs::write(
+                    &merge_path,
+                    serde_json::to_string_pretty(&result.merge_log)
+                        .map_err(|e| format!("serialize regionalization merges failed: {e}"))?,
+                )
+                .map_err(|e| format!("write regionalization merges failed: {e}"))?;
+                if result.status != bisect_clustering::ClusterStatus::Valid {
+                    return Err(format!(
+                        "[ALGO] regionalization did not produce a valid plan: {:?}",
+                        result.status
+                    ));
+                }
+                result
+                    .assignment
                     .into_iter()
                     .enumerate()
                     .map(|(idx, district)| (idx, district + 1))
@@ -3814,6 +3878,52 @@ fn runner_algorithm_lineage(
             .map(Some)
             .map_err(|e| format!("spectral lineage construction failed: {e}"))
         }
+        SplitStrategy::Regionalization => {
+            let summary_path = plan_root
+                .join("intermediate")
+                .join("regionalization_summary.json");
+            let text = std::fs::read_to_string(&summary_path)
+                .map_err(|e| format!("read regionalization summary for lineage failed: {e}"))?;
+            let summary: bisect_clustering::output::RegionalizationSummary =
+                serde_json::from_str(&text).map_err(|e| {
+                    format!("parse regionalization summary for lineage failed: {e}")
+                })?;
+            let summary_sha256 = bisect_report::sha256_file(&summary_path)
+                .map_err(|e| format!("hash regionalization summary for lineage failed: {e}"))?;
+            let merge_path = plan_root
+                .join("intermediate")
+                .join("regionalization_merges.json");
+            let merge_sha256 = bisect_report::sha256_file(&merge_path)
+                .map_err(|e| format!("hash regionalization merges for lineage failed: {e}"))?;
+            let mut extra = summary.algorithm_lineage_extra();
+            if let Some(obj) = extra.as_object_mut() {
+                obj.insert(
+                    "summary_path".to_string(),
+                    serde_json::json!("intermediate/regionalization_summary.json"),
+                );
+                obj.insert(
+                    "summary_sha256".to_string(),
+                    serde_json::json!(summary_sha256),
+                );
+                obj.insert(
+                    "merge_log_path".to_string(),
+                    serde_json::json!("intermediate/regionalization_merges.json"),
+                );
+                obj.insert(
+                    "merge_log_sha256".to_string(),
+                    serde_json::json!(merge_sha256),
+                );
+            }
+            rplan_audit::AlgorithmLineage::new(
+                "bisect-clustering",
+                env!("CARGO_PKG_VERSION"),
+                summary.method,
+                Vec::new(),
+                extra,
+            )
+            .map(Some)
+            .map_err(|e| format!("regionalization lineage construction failed: {e}"))
+        }
         _ => Ok(None),
     }
 }
@@ -4743,6 +4853,85 @@ mod tests {
         assert_eq!(lineage.extra["summary_sha256"], summary_sha);
         assert_eq!(lineage.extra["summary"]["max_iters"], 32);
         assert_eq!(lineage.extra["summary"]["edge_cut"], 1);
+    }
+
+    #[test]
+    fn test_write_rplan_audit_sidecars_records_regionalization_lineage() {
+        let tmp = TempDir::new().unwrap();
+        let mut cfg = make_config("WA");
+        cfg.num_districts = 2;
+        cfg.algo.split = SplitStrategy::Regionalization;
+
+        let graph = path5_loaded_graph();
+        let result = bisect_clustering::regionalize(
+            &graph.adjacency,
+            &graph.vertex_weights,
+            bisect_clustering::ClusterConfig {
+                k: 2,
+                tolerance: 0.25,
+            },
+        )
+        .unwrap();
+        assert_eq!(result.status, bisect_clustering::ClusterStatus::Valid);
+        let assignments: HashMap<usize, usize> = result
+            .assignment
+            .iter()
+            .enumerate()
+            .map(|(idx, district)| (idx, district + 1))
+            .collect();
+        let summary_path = tmp
+            .path()
+            .join("intermediate")
+            .join("regionalization_summary.json");
+        let merge_path = tmp
+            .path()
+            .join("intermediate")
+            .join("regionalization_merges.json");
+        std::fs::create_dir_all(summary_path.parent().unwrap()).unwrap();
+        std::fs::write(
+            &summary_path,
+            serde_json::to_string_pretty(&result.summary).unwrap(),
+        )
+        .unwrap();
+        std::fs::write(
+            &merge_path,
+            serde_json::to_string_pretty(&result.merge_log).unwrap(),
+        )
+        .unwrap();
+        let summary_sha = bisect_report::sha256_file(&summary_path).unwrap();
+        let merge_sha = bisect_report::sha256_file(&merge_path).unwrap();
+
+        write_rplan_audit_sidecars(
+            tmp.path(),
+            &cfg,
+            "wa_path5",
+            &graph,
+            &assignments,
+            "wa_adjacency_2020.adj.bin",
+            std::path::Path::new("missing-adjacency-fixture.adj.bin"),
+            "https://www.census.gov/example.zip",
+            0.25,
+            "2026-05-10T00:00:00Z",
+        )
+        .unwrap();
+
+        let cert_text = std::fs::read_to_string(tmp.path().join("audit-certificate.json")).unwrap();
+        let cert: rplan_audit::AuditCertificate = serde_json::from_str(&cert_text).unwrap();
+        let lineage = cert.algorithm_lineage.unwrap();
+        assert_eq!(lineage.producer_crate, "bisect-clustering");
+        assert_eq!(lineage.method, "regionalization");
+        assert!(lineage.parameters_hash.starts_with("sha256:"));
+        assert_eq!(
+            lineage.extra["summary_path"],
+            "intermediate/regionalization_summary.json"
+        );
+        assert_eq!(lineage.extra["summary_sha256"], summary_sha);
+        assert_eq!(
+            lineage.extra["merge_log_path"],
+            "intermediate/regionalization_merges.json"
+        );
+        assert_eq!(lineage.extra["merge_log_sha256"], merge_sha);
+        assert_eq!(lineage.extra["merge_count"], result.summary.merge_count);
     }
 
     fn write_l2_ilp_audit_report(dir: &std::path::Path, name: &str) {
@@ -6073,6 +6262,7 @@ mod tests {
             (PM::GeoSection, "geosection"),
             (PM::AreaSection, "areasection"),
             (PM::Spectral, "spectral"),
+            (PM::Regionalization, "regionalization"),
         ];
         for (mode, expected_name) in &cases {
             let algo = AlgorithmConfig::defaults_for_mode(mode);
@@ -6100,6 +6290,7 @@ mod tests {
             (PM::GeoSection, "geosection"),
             (PM::AreaSection, "areasection"),
             (PM::Spectral, "spectral"),
+            (PM::Regionalization, "regionalization"),
         ];
         for (mode, name) in &cases {
             let algo = AlgorithmConfig::defaults_for_mode(mode);
@@ -6125,6 +6316,7 @@ mod tests {
             PM::GeoSection,
             PM::AreaSection,
             PM::Spectral,
+            PM::Regionalization,
         ];
         for mode in &modes {
             let algo = AlgorithmConfig::defaults_for_mode(mode);
@@ -6223,6 +6415,7 @@ mod tests {
             ("vra-section", SplitStrategy::VraSection { w_vra: 0.40 }),
             ("capacity-clustering", SplitStrategy::CapacityClustering),
             ("spectral", SplitStrategy::Spectral { max_iters: 200 }),
+            ("regionalization", SplitStrategy::Regionalization),
         ];
         for (expected_name, variant) in all {
             assert_eq!(
@@ -6637,6 +6830,8 @@ mod tests {
             ("apportion-regions", SplitStrategy::ApportionRegions),
             ("vra-section", SplitStrategy::VraSection { w_vra: 0.40 }),
             ("capacity-clustering", SplitStrategy::CapacityClustering),
+            ("spectral", SplitStrategy::Spectral { max_iters: 200 }),
+            ("regionalization", SplitStrategy::Regionalization),
         ];
         for (expected_name, variant) in all {
             assert_eq!(
@@ -6722,6 +6917,15 @@ mod tests {
         ));
         assert!(matches!(algo.seeds, SeedCompositor::Single));
         assert_eq!(algo.mode_name(), "spectral");
+    }
+
+    #[test]
+    fn regionalization_defaults_to_single_seed_marker() {
+        use crate::args::PartitionMode as PM;
+        let algo = AlgorithmConfig::defaults_for_mode(&PM::Regionalization);
+        assert!(matches!(algo.split, SplitStrategy::Regionalization));
+        assert!(matches!(algo.seeds, SeedCompositor::Single));
+        assert_eq!(algo.mode_name(), "regionalization");
     }
 
     // ── Group 4: Compositor StructureMode / WeightMode / SearchMode overrides ──
@@ -6829,6 +7033,32 @@ mod tests {
             "spectral structure override must set SplitStrategy::Spectral"
         );
         assert_eq!(algo.mode_name(), "spectral");
+    }
+
+    #[test]
+    fn structure_override_regionalization_sets_marker() {
+        use crate::args::{StateArgs, StructureMode};
+        use clap::Parser;
+        let args = StateArgs::parse_from([
+            "state",
+            "--state",
+            "VT",
+            "--partition-mode",
+            "edge-weighted",
+            "--structure",
+            "regionalization",
+        ]);
+        assert_eq!(
+            args.structure,
+            Some(StructureMode::Regionalization),
+            "parsed structure must be Regionalization"
+        );
+        let algo = AlgorithmConfig::from_state_args(&args);
+        assert!(
+            matches!(algo.split, SplitStrategy::Regionalization),
+            "regionalization structure override must set SplitStrategy::Regionalization"
+        );
+        assert_eq!(algo.mode_name(), "regionalization");
     }
 
     #[test]

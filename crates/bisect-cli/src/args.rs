@@ -119,6 +119,9 @@ pub enum PartitionMode {
     /// Spectral graph partitioning baseline (T.14).
     #[value(name = "spectral")]
     Spectral,
+    /// Hierarchical regionalization baseline (T.16).
+    #[value(name = "regionalization")]
+    Regionalization,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
@@ -184,6 +187,7 @@ impl std::fmt::Display for PartitionMode {
             Self::MovingKnife => write!(f, "moving-knife"),
             Self::CapacityClustering => write!(f, "capacity-clustering"),
             Self::Spectral => write!(f, "spectral"),
+            Self::Regionalization => write!(f, "regionalization"),
         }
     }
 }
@@ -1387,6 +1391,10 @@ pub enum StructureMode {
     /// --structure spectral --spectral-iters 200
     #[value(name = "spectral")]
     Spectral,
+    /// Hierarchical regionalization baseline (T.16).
+    /// --structure regionalization
+    #[value(name = "regionalization")]
+    Regionalization,
 }
 
 /// Layer 2 compositor: which edge/vertex weight signal to use.
@@ -2940,6 +2948,7 @@ mod tests {
             (PartitionMode::MovingKnife, "moving-knife"),
             (PartitionMode::CapacityClustering, "capacity-clustering"),
             (PartitionMode::Spectral, "spectral"),
+            (PartitionMode::Regionalization, "regionalization"),
         ];
         for (variant, expected) in cases {
             assert_eq!(
@@ -2966,6 +2975,7 @@ mod tests {
             ("moving-knife", StructureMode::MovingKnife),
             ("capacity-clustering", StructureMode::CapacityClustering),
             ("spectral", StructureMode::Spectral),
+            ("regionalization", StructureMode::Regionalization),
         ];
         for (s, expected) in cases {
             let parsed = StructureMode::from_str(s, true)

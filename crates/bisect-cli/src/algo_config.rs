@@ -205,12 +205,17 @@ impl AlgoYaml {
                 SplitStrategy::Spectral { max_iters: 200 },
                 vec![VertexConstraintKind::Population],
             ),
+            "regionalization" => (
+                SplitStrategy::Regionalization,
+                vec![VertexConstraintKind::Population],
+            ),
             other => {
                 return Err(format!(
                     "[CONFIG] config: unknown structure '{}'. \
                      Valid values: standard-bisect | nway | ratio-optimal | \
                      ratio-optimal-area | ratio-optimal-vra | prime-factor | \
-                     compact-polsby | apportion-regions | moving-knife | spectral",
+                     compact-polsby | apportion-regions | moving-knife | \
+                     spectral | regionalization",
                     other
                 ));
             }
@@ -721,6 +726,25 @@ algorithm:
         assert!(
             matches!(algo.split, SplitStrategy::Spectral { max_iters: 200 }),
             "spectral must map to SplitStrategy::Spectral, got: {:?}",
+            algo.split
+        );
+    }
+
+    #[test]
+    fn test_structure_regionalization_maps_correctly() {
+        use crate::runner::SplitStrategy;
+        let yaml = r#"
+name: test
+algorithm:
+  structure: regionalization
+  search: single
+"#;
+        let f = write_yaml(yaml);
+        let doc = AlgoYaml::from_file(f.path()).unwrap();
+        let algo = doc.to_algorithm_config().unwrap();
+        assert!(
+            matches!(algo.split, SplitStrategy::Regionalization),
+            "regionalization must map to SplitStrategy::Regionalization, got: {:?}",
             algo.split
         );
     }
