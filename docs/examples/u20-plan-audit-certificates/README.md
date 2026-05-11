@@ -3,6 +3,9 @@
 This directory contains small public examples for the U.20 fixed-point contract.
 They are intentionally tiny so the verification behavior is inspectable.
 
+Package conventions are defined in
+[`docs/file-formats/rplan-packages.md`](../../file-formats/rplan-packages.md).
+
 ## Valid Package
 
 `grid3x3-valid/` contains:
@@ -30,6 +33,8 @@ They cover the U.20 failure catalog:
 - tampered plan assignment
 - changed context/source hash
 - canonical unit-order mismatch
+- profile mismatch remains covered by audit-profile CLI tests and should be
+  promoted into a public package fixture later
 
 Those failures are certificate-verification failures, not broad legal judgments.
 The certificate verifies only the declared profile, package hashes, context, and

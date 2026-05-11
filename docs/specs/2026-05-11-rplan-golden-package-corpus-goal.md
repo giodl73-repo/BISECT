@@ -1,6 +1,6 @@
 # Goal: RPLAN Golden Package Corpus and Verifier Bridge
 
-**Status:** Active - ready to begin  
+**Status:** Active - Stage 1 package contract complete
 **Date:** 2026-05-11  
 **Owner:** BISECT / RPLAN integration  
 **Depends on:** `docs/specs/2026-05-11-algorithm-family-paper-writing-goal.md`
@@ -17,14 +17,14 @@ contract that every algorithm family can land on.
 
 ## Stage 1 - Package Contract
 
-- [ ] Define the canonical package directory shape:
+- [x] Define the canonical package directory shape:
       `plan.rplan`, `context.rctx`, `audit-certificate.json`, `manifest.json`,
       optional method transcript, and optional solve/search report.
-- [ ] Add a short package schema note under `docs/file-formats/` or
+- [x] Add a short package schema note under `docs/file-formats/` or
       `docs/examples/`.
-- [ ] Decide whether package manifests stay example-local for now or become a
+- [x] Decide whether package manifests stay example-local for now or become a
       crate-owned schema later.
-- [ ] Ensure package docs distinguish file integrity, certificate verification,
+- [x] Ensure package docs distinguish file integrity, certificate verification,
       audit result, and legal/policy non-claims.
 
 ## Stage 2 - U.20 Negative Fixture Catalog
