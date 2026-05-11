@@ -3182,7 +3182,7 @@ fn write_rplan_audit_sidecars(
         units: units.clone(),
         graph: Some(build_rplan_graph(graph)),
         populations: Some(graph.vertex_weights.clone()),
-        subdivisions: None,
+        subdivisions: build_rplan_subdivisions(graph),
         source_hashes: source_hashes.clone(),
     };
     context.context_hash = context
@@ -3242,6 +3242,7 @@ fn write_rplan_audit_sidecars(
             rplan_audit::AuditConstraint::PlanShape,
             rplan_audit::AuditConstraint::Population,
             rplan_audit::AuditConstraint::Contiguity,
+            rplan_audit::AuditConstraint::Splits,
         ],
         generated_at_utc,
         algorithm_lineage,
@@ -3369,6 +3370,27 @@ fn build_rplan_graph(graph: &crate::adjacency_loader::LoadedGraph) -> rplan_core
         edge_semantics: rplan_core::EdgeSemantics::Undirected,
         adjacency,
     }
+}
+
+fn build_rplan_subdivisions(
+    graph: &crate::adjacency_loader::LoadedGraph,
+) -> Option<rplan_core::SubdivisionContext> {
+    let mut county_ids = Vec::with_capacity(graph.n_vertices);
+    for idx in 0..graph.n_vertices {
+        let county_id = graph.index_to_geoid.get(&idx).and_then(|geoid| {
+            (geoid.len() >= 5 && geoid[..5].bytes().all(|byte| byte.is_ascii_digit()))
+                .then(|| geoid[..5].to_string())
+        });
+        county_ids.push(county_id);
+    }
+
+    county_ids
+        .iter()
+        .any(Option::is_some)
+        .then_some(rplan_core::SubdivisionContext {
+            county_ids: Some(county_ids),
+            municipal_ids: None,
+        })
 }
 
 fn runner_legal_profile(cfg: &StateConfig, balance_tolerance: f64) -> rplan_audit::LegalProfile {
@@ -3867,6 +3889,14 @@ mod tests {
         let context_text = std::fs::read_to_string(tmp.path().join("context.rctx")).unwrap();
         let context = rplan_io::read_rctx_str(&context_text).unwrap();
         assert_eq!(context.context_hash, sidecars.context_hash);
+        assert_eq!(
+            context
+                .subdivisions
+                .as_ref()
+                .and_then(|subdivisions| subdivisions.county_ids.as_ref())
+                .unwrap()[0],
+            Some("53001".to_string())
+        );
 
         let cert_text = std::fs::read_to_string(tmp.path().join("audit-certificate.json")).unwrap();
         let cert: rplan_audit::AuditCertificate = serde_json::from_str(&cert_text).unwrap();
@@ -3879,6 +3909,23 @@ mod tests {
             .warnings
             .iter()
             .any(|warning| warning.code == "PROVENANCE_INCOMPLETE"));
+        let splits = cert
+            .checks
+            .iter()
+            .find(|check| check.name == "splits")
+            .unwrap();
+        assert_eq!(splits.status, rplan_audit::CheckStatus::Pass);
+        assert!(matches!(
+            &splits.witnesses[0],
+            rplan_audit::Witness::Split(rplan_audit::SplitWitness {
+                subdivision_kind,
+                subdivision_id,
+                district_ids,
+                unit_count: 5,
+            }) if subdivision_kind == "county"
+                && subdivision_id == "53001"
+                && district_ids == &vec![0, 1]
+        ));
 
         let rplan_text = std::fs::read_to_string(tmp.path().join("plan.rplan")).unwrap();
         let rplan = rplan_io::read_rplan_str(&rplan_text).unwrap();
@@ -3956,6 +4003,19 @@ mod tests {
             "intermediate/ilp_solve_reports/audit-summary.json"
         );
         assert_eq!(lineage.extra["audit_summary_sha256"], summary_sha);
+    }
+
+    #[test]
+    fn test_build_rplan_subdivisions_ignores_missing_geoids() {
+        let mut graph = path5_loaded_graph();
+        graph.index_to_geoid.remove(&0);
+        graph.index_to_geoid.insert(1, "not-a-geoid".to_string());
+
+        let subdivisions = build_rplan_subdivisions(&graph).unwrap();
+        let county_ids = subdivisions.county_ids.unwrap();
+        assert_eq!(county_ids[0], None);
+        assert_eq!(county_ids[1], None);
+        assert_eq!(county_ids[2], Some("53001".to_string()));
     }
 
     // ── Task 199: StateConfig::new_bulk constructor ───────────────────────────
