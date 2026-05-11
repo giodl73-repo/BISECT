@@ -639,6 +639,13 @@ mod tests {
     }
 
     fn write_rplan_audit_fixture(plan_root: &Path) -> PlanManifest {
+        write_rplan_audit_fixture_with_lineage(plan_root, None)
+    }
+
+    fn write_rplan_audit_fixture_with_lineage(
+        plan_root: &Path,
+        algorithm_lineage: Option<rplan_audit::AlgorithmLineage>,
+    ) -> PlanManifest {
         let units = rplan_core::PlanUnitIndex {
             unit_kind: rplan_core::UnitKind::Tract,
             state: Some("WA".to_string()),
@@ -703,7 +710,7 @@ mod tests {
             extensions: BTreeMap::new(),
         };
         let profile = rplan_audit::LegalProfile::us_congressional_project_v1(2020);
-        let certificate = rplan_audit::audit_plan(
+        let certificate = rplan_audit::audit_plan_with_lineage(
             &plan,
             Some(&context),
             &profile,
@@ -717,6 +724,7 @@ mod tests {
                 rplan_audit::AuditConstraint::Contiguity,
             ],
             "2026-05-10T00:00:00Z",
+            algorithm_lineage,
         )
         .unwrap();
 
@@ -759,7 +767,22 @@ mod tests {
         crate::ilp_audit::write_ilp_audit_summary_for_dir(&report_dir, &summary_path).unwrap();
         let summary_sha = bisect_report::sha256_file(&summary_path).unwrap();
 
-        let mut manifest = write_rplan_audit_fixture(plan_root);
+        let algorithm_lineage = rplan_audit::AlgorithmLineage::new(
+            "bisect-ilp",
+            "0.1.0",
+            "branch-and-cut",
+            Vec::new(),
+            serde_json::json!({
+                "fallback": "metis",
+                "audit_summary_path": "intermediate/ilp_solve_reports/audit-summary.json",
+                "audit_summary_sha256": summary_sha,
+            }),
+        )
+        .unwrap();
+        let mut manifest =
+            write_rplan_audit_fixture_with_lineage(plan_root, Some(algorithm_lineage));
+        manifest.ilp_method = Some("branch-and-cut".to_string());
+        manifest.ilp_fallback = Some("metis".to_string());
         manifest.ilp_solve_report_dir = Some("intermediate/ilp_solve_reports".to_string());
         manifest.ilp_audit_summary_path =
             Some("intermediate/ilp_solve_reports/audit-summary.json".to_string());
