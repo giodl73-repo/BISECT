@@ -4,3 +4,27 @@ Claims are classified as fixture correctness, real-data smoke, benchmark
 result, empirical sweep, certification, or legal interpretation. A method may
 produce a valid plan or certificate without proving political fairness or legal
 compliance beyond its declared profile.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.22\linewidth}p{0.33\linewidth}p{0.31\linewidth}}
+\toprule
+Evidence level & Supports & Does not support by itself \\
+\midrule
+Fixture correctness & Deterministic behavior on toy cases & Real-data performance \\
+Real-data smoke & CLI and data-path viability & Statistical generalization \\
+Benchmark result & Measured runtime or quality on named runs & Universal dominance \\
+Empirical sweep & Distributional comparison under a protocol & Legal compliance \\
+Certificate & Declared constraints, lineage, or bounds & Political fairness \\
+Legal interpretation & How evidence informs a posture & Technical validity alone \\
+\bottomrule
+\end{tabular}
+\caption{Claim boundaries used by the U-series papers.}
+\end{table}
+
+This discipline lets the implementation papers be useful before they are
+exhaustive. A staged exact solver can report fixture-level separation and audit
+lineage while marking broader runtime comparisons as future empirical work; a
+legal-posture paper can explain how a search record supports a claim without
+converting that record into a legal conclusion.

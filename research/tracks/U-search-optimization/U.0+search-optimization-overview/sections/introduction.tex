@@ -4,3 +4,10 @@ The U-series covers the methods that choose, improve, certify, and compare
 candidate plans after construction. This overview is a taxonomy paper: it does
 not add new algorithms or empirical results, but organizes the existing U.1-U.20
 surface so implementation, evidence, and legal interpretation stay separated.
+
+The practical contract is that every method eventually emits or consumes a
+declared plan artifact with enough context for downstream audit. In the current
+implementation program, that boundary is the RPLAN/RCTX fixed point: a final
+plan, the run context that produced or selected it, and the audit sidecars that
+state which profile was checked. U.0 therefore reads the U papers as a family
+of roles around a common artifact rather than as competing claims of equal kind.

@@ -5,3 +5,28 @@ exact optimization, multi-objective selection, legal posture, and audit
 certification. The shared RPLAN/RCTX fixed point is the artifact boundary that
 lets heterogeneous methods be compared without pretending they prove the same
 kind of claim.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.18\linewidth}p{0.34\linewidth}p{0.34\linewidth}}
+\toprule
+Paper band & Role & Primary claim type \\
+\midrule
+U.1--U.11 & Existing search and ensemble foundations & Method and empirical framing \\
+U.12 & Algorithm-selection matrix & Methodology and operator guidance \\
+U.13 & Exact-vs-heuristic certification & Certificate interpretation \\
+U.14 & Multi-objective selection & Selection and export discipline \\
+U.15 & Legal postures for search & Legal/policy interpretation limits \\
+U.16--U.19 & Exact and heuristic implementations & Implementation and evaluation \\
+U.20 & Plan audit certificates & Artifact and verifier contract \\
+\bottomrule
+\end{tabular}
+\caption{U-series spine after the RPLAN/RCTX fixed point.}
+\end{table}
+
+The taxonomy is deliberately role based. A branch-and-cut run, a large
+neighborhood search run, and a Pareto-front selection run may all emit usable
+plans, but their evidence differs: one may offer a bound or infeasibility
+witness, another may offer a validity-preserving improvement trace, and another
+may offer a documented trade-off choice among non-dominated alternatives.
