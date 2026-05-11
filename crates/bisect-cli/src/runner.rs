@@ -271,6 +271,8 @@ pub enum SplitStrategy {
     /// Capacity-constrained clustering (T.15). Crate-level kernel is available;
     /// runner execution is staged after direct k-way plan integration.
     CapacityClustering,
+    /// Spectral graph partitioning baseline (T.14).
+    Spectral { max_iters: usize },
 }
 
 impl SplitStrategy {
@@ -291,6 +293,7 @@ impl SplitStrategy {
             Self::Ilp { .. } => "ilp",
             Self::MovingKnife { .. } => "moving-knife",
             Self::CapacityClustering => "capacity-clustering",
+            Self::Spectral { .. } => "spectral",
         }
     }
 }
@@ -654,6 +657,16 @@ impl AlgorithmConfig {
                 metis,
                 mode_label: None,
             },
+            PM::Spectral => Self {
+                split: SplitStrategy::Spectral {
+                    max_iters: args.spectral_iters,
+                },
+                seeds: SeedCompositor::Single,
+                weights: base_weights,
+                vertex_constraints: pop_only,
+                metis,
+                mode_label: None,
+            },
         };
 
         // ── Apply compositor layer overrides ──────────────────────────────────
@@ -698,6 +711,12 @@ impl AlgorithmConfig {
                     pop_only,
                 ),
                 SM::CapacityClustering => (SplitStrategy::CapacityClustering, pop_only),
+                SM::Spectral => (
+                    SplitStrategy::Spectral {
+                        max_iters: args.spectral_iters,
+                    },
+                    pop_only,
+                ),
             };
             algo.split = new_split;
             algo.vertex_constraints = new_vc;
@@ -996,6 +1015,14 @@ impl AlgorithmConfig {
             },
             PM::CapacityClustering => Self {
                 split: SplitStrategy::CapacityClustering,
+                seeds: SeedCompositor::Single,
+                weights: WeightSpec::default(),
+                vertex_constraints: pop,
+                metis,
+                mode_label: None,
+            },
+            PM::Spectral => Self {
+                split: SplitStrategy::Spectral { max_iters: 200 },
                 seeds: SeedCompositor::Single,
                 weights: WeightSpec::default(),
                 vertex_constraints: pop,
@@ -2340,6 +2367,34 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                     .map(|(idx, district)| (idx, district + 1))
                     .collect()
             }
+            SplitStrategy::Spectral { max_iters } => {
+                status(
+                    cfg.position,
+                    &format!(
+                        "{}: spectral recursive bisection into {} districts",
+                        cfg.state_code, num_districts
+                    ),
+                );
+                let (spectral_assignment, summary) = run_spectral_recursive(
+                    &graph.adjacency,
+                    &graph.vertex_weights,
+                    num_districts,
+                    balance_tolerance_frac,
+                    *max_iters,
+                )?;
+                let summary_path = intermediate_dir.join("spectral_summary.json");
+                std::fs::write(
+                    &summary_path,
+                    serde_json::to_string_pretty(&summary)
+                        .map_err(|e| format!("serialize spectral summary failed: {e}"))?,
+                )
+                .map_err(|e| format!("write spectral summary failed: {e}"))?;
+                spectral_assignment
+                    .into_iter()
+                    .enumerate()
+                    .map(|(idx, district)| (idx, district + 1))
+                    .collect()
+            }
             _ => {
                 match &cfg.algo.seeds {
                     SeedCompositor::Percentile { p, seeds } => {
@@ -2998,6 +3053,10 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             source_format_fingerprint: None,
             import_compat_sha256: None,
             edge_cut: Some(edge_cut),
+            spectral_iters: match &cfg.algo.split {
+                SplitStrategy::Spectral { max_iters } => Some(*max_iters),
+                _ => None,
+            },
             ilp_method: match &cfg.algo.split {
                 SplitStrategy::Ilp { method, .. } => Some(method.to_string()),
                 _ => None,
@@ -3730,6 +3789,31 @@ fn runner_algorithm_lineage(
             .map(Some)
             .map_err(|e| format!("capacity-clustering lineage construction failed: {e}"))
         }
+        SplitStrategy::Spectral { .. } => {
+            let summary_path = plan_root.join("intermediate").join("spectral_summary.json");
+            let text = std::fs::read_to_string(&summary_path)
+                .map_err(|e| format!("read spectral summary for lineage failed: {e}"))?;
+            let summary: serde_json::Value = serde_json::from_str(&text)
+                .map_err(|e| format!("parse spectral summary for lineage failed: {e}"))?;
+            let summary_sha256 = bisect_report::sha256_file(&summary_path)
+                .map_err(|e| format!("hash spectral summary for lineage failed: {e}"))?;
+            let extra = serde_json::json!({
+                "lineage_schema_version": "bisect-spectral-lineage-v1",
+                "method": "spectral",
+                "summary_path": "intermediate/spectral_summary.json",
+                "summary_sha256": summary_sha256,
+                "summary": summary,
+            });
+            rplan_audit::AlgorithmLineage::new(
+                "bisect-apportion",
+                env!("CARGO_PKG_VERSION"),
+                "spectral",
+                Vec::new(),
+                extra,
+            )
+            .map(Some)
+            .map_err(|e| format!("spectral lineage construction failed: {e}"))
+        }
         _ => Ok(None),
     }
 }
@@ -3759,6 +3843,141 @@ fn audit_result_label(result: &rplan_audit::AuditResult) -> &'static str {
         rplan_audit::AuditResult::Fail => "fail",
         rplan_audit::AuditResult::PassWithWarnings => "pass-with-warnings",
     }
+}
+
+fn run_spectral_recursive(
+    adjacency: &[Vec<usize>],
+    weights: &[i64],
+    k: usize,
+    tolerance: f64,
+    max_iters: usize,
+) -> Result<(Vec<usize>, serde_json::Value), String> {
+    if k == 0 {
+        return Err("spectral: k must be greater than zero".to_string());
+    }
+    if adjacency.len() != weights.len() {
+        return Err("spectral: adjacency and weight lengths must match".to_string());
+    }
+    let mut assignment = vec![0usize; adjacency.len()];
+    let mut node_summaries = Vec::new();
+    split_spectral_node(
+        adjacency,
+        weights,
+        &(0..adjacency.len()).collect::<Vec<_>>(),
+        k,
+        0,
+        tolerance,
+        max_iters,
+        &mut assignment,
+        &mut node_summaries,
+    )?;
+    let edge_cut = count_edge_cuts_zero_based(&assignment, adjacency);
+    Ok((
+        assignment,
+        serde_json::json!({
+            "schema_version": "bisect-spectral-run-summary-v1",
+            "method": "spectral",
+            "max_iters": max_iters,
+            "tolerance": tolerance,
+            "k": k,
+            "edge_cut": edge_cut,
+            "nodes": node_summaries,
+        }),
+    ))
+}
+
+#[allow(clippy::too_many_arguments)]
+fn split_spectral_node(
+    adjacency: &[Vec<usize>],
+    weights: &[i64],
+    vertices: &[usize],
+    k: usize,
+    district_offset: usize,
+    tolerance: f64,
+    max_iters: usize,
+    assignment: &mut [usize],
+    node_summaries: &mut Vec<serde_json::Value>,
+) -> Result<(), String> {
+    if k == 1 {
+        for &vertex in vertices {
+            assignment[vertex] = district_offset;
+        }
+        return Ok(());
+    }
+    let local_index: HashMap<usize, usize> = vertices
+        .iter()
+        .enumerate()
+        .map(|(local, &global)| (global, local))
+        .collect();
+    let local_adjacency: Vec<Vec<usize>> = vertices
+        .iter()
+        .map(|&global| {
+            adjacency[global]
+                .iter()
+                .filter_map(|neighbor| local_index.get(neighbor).copied())
+                .collect()
+        })
+        .collect();
+    let local_weights: Vec<i64> = vertices.iter().map(|&global| weights[global]).collect();
+    let result = bisect_apportion::spectral_bisect(
+        &local_adjacency,
+        &local_weights,
+        bisect_apportion::SpectralConfig {
+            max_iters,
+            tolerance,
+        },
+    )
+    .map_err(|e| format!("spectral split failed: {e}"))?;
+    node_summaries.push(serde_json::to_value(&result.summary).map_err(|e| e.to_string())?);
+
+    let mut left = Vec::new();
+    let mut right = Vec::new();
+    for (local, &global) in vertices.iter().enumerate() {
+        if result.assignment[local] == 0 {
+            left.push(global);
+        } else {
+            right.push(global);
+        }
+    }
+    let left_k = k / 2;
+    let right_k = k - left_k;
+    split_spectral_node(
+        adjacency,
+        weights,
+        &left,
+        left_k,
+        district_offset,
+        tolerance,
+        max_iters,
+        assignment,
+        node_summaries,
+    )?;
+    split_spectral_node(
+        adjacency,
+        weights,
+        &right,
+        right_k,
+        district_offset + left_k,
+        tolerance,
+        max_iters,
+        assignment,
+        node_summaries,
+    )
+}
+
+fn count_edge_cuts_zero_based(assignment: &[usize], adjacency: &[Vec<usize>]) -> usize {
+    let mut cut = 0usize;
+    for (node, neighbors) in adjacency.iter().enumerate() {
+        for &neighbor in neighbors {
+            if neighbor > node
+                && neighbor < assignment.len()
+                && assignment[node] != assignment[neighbor]
+            {
+                cut += 1;
+            }
+        }
+    }
+    cut
 }
 
 /// Check if a state's outputs already exist and are complete.
@@ -4463,6 +4682,67 @@ mod tests {
             "intermediate/capacity_clustering_summary.json"
         );
         assert_eq!(lineage.extra["summary_sha256"], summary_sha);
+    }
+
+    #[test]
+    fn test_write_rplan_audit_sidecars_records_spectral_lineage() {
+        let tmp = TempDir::new().unwrap();
+        let mut cfg = make_config("WA");
+        cfg.num_districts = 2;
+        cfg.algo.split = SplitStrategy::Spectral { max_iters: 32 };
+
+        let graph = path5_loaded_graph();
+        let assignments: HashMap<usize, usize> = [(0, 1), (1, 1), (2, 1), (3, 2), (4, 2)]
+            .into_iter()
+            .collect();
+        let summary_path = tmp
+            .path()
+            .join("intermediate")
+            .join("spectral_summary.json");
+        std::fs::create_dir_all(summary_path.parent().unwrap()).unwrap();
+        std::fs::write(
+            &summary_path,
+            serde_json::to_string_pretty(&serde_json::json!({
+                "schema_version": "bisect-spectral-run-summary-v1",
+                "method": "spectral",
+                "max_iters": 32,
+                "tolerance": 0.25,
+                "k": 2,
+                "edge_cut": 1,
+                "nodes": []
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+        let summary_sha = bisect_report::sha256_file(&summary_path).unwrap();
+
+        write_rplan_audit_sidecars(
+            tmp.path(),
+            &cfg,
+            "wa_path5",
+            &graph,
+            &assignments,
+            "wa_adjacency_2020.adj.bin",
+            std::path::Path::new("missing-adjacency-fixture.adj.bin"),
+            "https://www.census.gov/example.zip",
+            0.25,
+            "2026-05-10T00:00:00Z",
+        )
+        .unwrap();
+
+        let cert_text = std::fs::read_to_string(tmp.path().join("audit-certificate.json")).unwrap();
+        let cert: rplan_audit::AuditCertificate = serde_json::from_str(&cert_text).unwrap();
+        let lineage = cert.algorithm_lineage.unwrap();
+        assert_eq!(lineage.producer_crate, "bisect-apportion");
+        assert_eq!(lineage.method, "spectral");
+        assert!(lineage.parameters_hash.starts_with("sha256:"));
+        assert_eq!(
+            lineage.extra["summary_path"],
+            "intermediate/spectral_summary.json"
+        );
+        assert_eq!(lineage.extra["summary_sha256"], summary_sha);
+        assert_eq!(lineage.extra["summary"]["max_iters"], 32);
+        assert_eq!(lineage.extra["summary"]["edge_cut"], 1);
     }
 
     fn write_l2_ilp_audit_report(dir: &std::path::Path, name: &str) {
@@ -5792,6 +6072,7 @@ mod tests {
             (PM::CompactBisect, "compact-bisect"),
             (PM::GeoSection, "geosection"),
             (PM::AreaSection, "areasection"),
+            (PM::Spectral, "spectral"),
         ];
         for (mode, expected_name) in &cases {
             let algo = AlgorithmConfig::defaults_for_mode(mode);
@@ -5818,6 +6099,7 @@ mod tests {
             (PM::CompactBisect, "compact-bisect"),
             (PM::GeoSection, "geosection"),
             (PM::AreaSection, "areasection"),
+            (PM::Spectral, "spectral"),
         ];
         for (mode, name) in &cases {
             let algo = AlgorithmConfig::defaults_for_mode(mode);
@@ -5842,6 +6124,7 @@ mod tests {
             PM::CompactBisect,
             PM::GeoSection,
             PM::AreaSection,
+            PM::Spectral,
         ];
         for mode in &modes {
             let algo = AlgorithmConfig::defaults_for_mode(mode);
@@ -5939,6 +6222,7 @@ mod tests {
             ("apportion-regions", SplitStrategy::ApportionRegions),
             ("vra-section", SplitStrategy::VraSection { w_vra: 0.40 }),
             ("capacity-clustering", SplitStrategy::CapacityClustering),
+            ("spectral", SplitStrategy::Spectral { max_iters: 200 }),
         ];
         for (expected_name, variant) in all {
             assert_eq!(
@@ -6428,6 +6712,18 @@ mod tests {
         assert_eq!(algo.mode_name(), "capacity-clustering");
     }
 
+    #[test]
+    fn spectral_defaults_to_single_seed_marker() {
+        use crate::args::PartitionMode as PM;
+        let algo = AlgorithmConfig::defaults_for_mode(&PM::Spectral);
+        assert!(matches!(
+            algo.split,
+            SplitStrategy::Spectral { max_iters: 200 }
+        ));
+        assert!(matches!(algo.seeds, SeedCompositor::Single));
+        assert_eq!(algo.mode_name(), "spectral");
+    }
+
     // ── Group 4: Compositor StructureMode / WeightMode / SearchMode overrides ──
 
     #[test]
@@ -6505,6 +6801,34 @@ mod tests {
             "capacity-clustering structure override must set SplitStrategy::CapacityClustering"
         );
         assert_eq!(algo.mode_name(), "capacity-clustering");
+    }
+
+    #[test]
+    fn structure_override_spectral_sets_iters() {
+        use crate::args::{StateArgs, StructureMode};
+        use clap::Parser;
+        let args = StateArgs::parse_from([
+            "state",
+            "--state",
+            "VT",
+            "--partition-mode",
+            "edge-weighted",
+            "--structure",
+            "spectral",
+            "--spectral-iters",
+            "32",
+        ]);
+        assert_eq!(
+            args.structure,
+            Some(StructureMode::Spectral),
+            "parsed structure must be Spectral"
+        );
+        let algo = AlgorithmConfig::from_state_args(&args);
+        assert!(
+            matches!(algo.split, SplitStrategy::Spectral { max_iters: 32 }),
+            "spectral structure override must set SplitStrategy::Spectral"
+        );
+        assert_eq!(algo.mode_name(), "spectral");
     }
 
     #[test]

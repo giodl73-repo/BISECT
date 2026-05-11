@@ -116,6 +116,9 @@ pub enum PartitionMode {
     /// full runner execution is staged behind repair/RPLAN integration.
     #[value(name = "capacity-clustering")]
     CapacityClustering,
+    /// Spectral graph partitioning baseline (T.14).
+    #[value(name = "spectral")]
+    Spectral,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
@@ -180,6 +183,7 @@ impl std::fmt::Display for PartitionMode {
             Self::Ilp => write!(f, "ilp"),
             Self::MovingKnife => write!(f, "moving-knife"),
             Self::CapacityClustering => write!(f, "capacity-clustering"),
+            Self::Spectral => write!(f, "spectral"),
         }
     }
 }
@@ -1379,6 +1383,10 @@ pub enum StructureMode {
     /// --structure capacity-clustering
     #[value(name = "capacity-clustering")]
     CapacityClustering,
+    /// Spectral graph partitioning baseline (T.14).
+    /// --structure spectral --spectral-iters 200
+    #[value(name = "spectral")]
+    Spectral,
 }
 
 /// Layer 2 compositor: which edge/vertex weight signal to use.
@@ -1900,6 +1908,11 @@ pub struct StateArgs {
     /// polsby: 4π·Area(D)/Perimeter(D)² — Phase 1 falls back to reock.
     #[arg(long, default_value = "reock")]
     pub mka_metric: String,
+
+    /// Spectral: smoothing iterations per bisection node (default: 200).
+    /// Requires --partition-mode spectral or --structure spectral.
+    #[arg(long, default_value_t = 200usize)]
+    pub spectral_iters: usize,
 
     // ── SMC-Percentile parameters ─────────────────────────────────────────────
     /// Number of SMC particles for --search smc-percentile (default: 5000).
@@ -2926,6 +2939,7 @@ mod tests {
             (PartitionMode::VraSection, "vra-section"),
             (PartitionMode::MovingKnife, "moving-knife"),
             (PartitionMode::CapacityClustering, "capacity-clustering"),
+            (PartitionMode::Spectral, "spectral"),
         ];
         for (variant, expected) in cases {
             assert_eq!(
@@ -2951,6 +2965,7 @@ mod tests {
             ("bfs-growth", StructureMode::BfsGrowth),
             ("moving-knife", StructureMode::MovingKnife),
             ("capacity-clustering", StructureMode::CapacityClustering),
+            ("spectral", StructureMode::Spectral),
         ];
         for (s, expected) in cases {
             let parsed = StructureMode::from_str(s, true)

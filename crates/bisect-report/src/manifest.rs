@@ -119,6 +119,11 @@ pub struct PlanManifest {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub edge_cut: Option<f64>,
 
+    // ── Spectral partitioning audit fields ───────────────────────────────────
+    /// Spectral smoothing iterations per recursive bisection node.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spectral_iters: Option<usize>,
+
     // ── ILP / exact optimization audit fields ────────────────────────────────
     /// ILP method requested by the runner ("formulation-only", "branch-and-cut",
     /// or "iterative-separation"). Absent for non-ILP plans.
@@ -593,6 +598,16 @@ mod tests {
         };
         let json = serde_json::to_value(&manifest).unwrap();
         assert!(json["tiger_sha256"].is_string());
+    }
+
+    #[test]
+    fn test_manifest_serializes_spectral_iters_when_present() {
+        let manifest = PlanManifest {
+            spectral_iters: Some(32),
+            ..Default::default()
+        };
+        let json = serde_json::to_value(&manifest).unwrap();
+        assert_eq!(json["spectral_iters"], 32);
     }
 
     #[test]

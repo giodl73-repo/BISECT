@@ -67,11 +67,11 @@ Purpose: add a cheap deterministic construction baseline.
 - [x] Implement deterministic Fiedler-vector approximation with convergence
       metadata.
 - [x] Implement population-balanced sweep cut and min-cut tie-breaking.
-- [ ] Recurse through the existing bisection compositor.
-- [ ] Add `--structure spectral` and YAML `structure: spectral`.
-- [ ] Record spectral parameters in manifests and `algorithm_lineage`.
+- [x] Recurse through the existing bisection compositor.
+- [x] Add `--structure spectral` and YAML `structure: spectral`.
+- [x] Record spectral parameters in manifests and `algorithm_lineage`.
 - [x] Add L0 path/two-clique/determinism tests.
-- [ ] Add L1 CLI/RPLAN sidecar test.
+- [x] Add L1 CLI/RPLAN sidecar test.
 
 ## Stage 3 - T.16 Hierarchical Regionalization
 
