@@ -19,6 +19,7 @@ members = [
     "crates/bisect-ilp",
     "crates/bisect-multiscale",
     "crates/bisect-clustering",
+    "crates/bisect-local-search",
     "python/bisect_py",
 ]
 resolver = "2"

@@ -306,6 +306,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "bisect-local-search"
+version = "0.1.0"
+dependencies = [
+ "rplan-audit",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "bisect-map"
 version = "0.1.0"
 dependencies = [

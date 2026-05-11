@@ -39,22 +39,22 @@ and focused L0/L1/L2 coverage.
 ## Stage 0 - Goal Setup
 
 - [x] Create this active completion goal.
-- [ ] Keep the goal checklist current as stages land.
+- [x] Keep the goal checklist current as stages land.
 
 ## Stage 1 - U.18 Local Search
 
 Purpose: add practical plan improvement methods and shared repair hooks for
 later construction/evolutionary families.
 
-- [ ] Write U.18 implementation spec and role-review notes.
-- [ ] Add `bisect-local-search` crate or stage-one module boundary.
-- [ ] Define input contract for improving an existing audited RPLAN plan.
-- [ ] Implement deterministic one-move improvement kernel.
-- [ ] Add tabu/LNS scaffolding with structured parameters, even if advanced
+- [x] Write U.18 implementation spec and role-review notes.
+- [x] Add `bisect-local-search` crate or stage-one module boundary.
+- [x] Define input contract for improving an existing audited RPLAN plan.
+- [x] Implement deterministic one-move improvement kernel.
+- [x] Add tabu/LNS scaffolding with structured parameters, even if advanced
       search is staged behind feature-complete tests.
-- [ ] Emit local-search summaries and `algorithm_lineage`.
+- [x] Emit local-search summaries and `algorithm_lineage`.
 - [ ] Wire `bisect improve` or `--search lns`/`--search tabu` surface.
-- [ ] Add L0 fixtures for determinism, validity preservation, and no-op cases.
+- [x] Add L0 fixtures for determinism, validity preservation, and no-op cases.
 - [ ] Add L1 CLI/RPLAN sidecar test.
 - [ ] Add L2 verify/report smoke path if the CLI surface emits final plans.
 
