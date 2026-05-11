@@ -84,13 +84,36 @@ cargo run -p rplan-cli -- verify-certificate `
   --context path/to/context.rctx
 ```
 
-`rplan verify-certificate` is the neutral verifier surface. `bisect verify`
-may additionally verify BISECT run manifests, solver summaries, assignment
+The BISECT bridge command consumes the same package manifest:
+
+```powershell
+cargo run -p bisect-cli -- verify `
+  --manifest path/to/package/manifest.json
+```
+
+`rplan verify-certificate` is the neutral verifier surface. For golden package
+manifests, `bisect verify` delegates to the same RPLAN certificate checks after
+first checking the package file hashes. For BISECT run manifests, `bisect verify`
+continues to verify BISECT reproduction metadata, solver summaries, assignment
 similarity, and report-sidechain artifacts.
+
+The fixed-point workflow is:
+
+```text
+algorithm output -> package -> certificate verification -> report
+```
 
 ## Current Public Examples
 
 - `docs/examples/u20-plan-audit-certificates/grid3x3-valid/`
+- `docs/examples/rplan-golden-packages/T.14+spectral-partitioning/`
+- `docs/examples/rplan-golden-packages/T.15+capacity-constrained-clustering/`
+- `docs/examples/rplan-golden-packages/T.16+hierarchical-regionalization/`
+- `docs/examples/rplan-golden-packages/T.17+flow-construction/`
+- `docs/examples/rplan-golden-packages/U.16+branch-and-cut/`
+- `docs/examples/rplan-golden-packages/U.17+branch-and-price/`
+- `docs/examples/rplan-golden-packages/U.18+local-search-improvement/`
+- `docs/examples/rplan-golden-packages/U.19+selected-frontier/`
 
 ## Negative Fixture Catalog
 

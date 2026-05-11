@@ -3153,13 +3153,13 @@ pub struct SweepArgs {
 }
 
 // ---------------------------------------------------------------------------
-// `BISECT verify` — reproduce plan from manifest.json and verify
+// `BISECT verify` — reproduce a BISECT plan manifest or verify an RPLAN package
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Parser)]
 #[command(disable_version_flag = true)]
 pub struct VerifyArgs {
-    /// Path to manifest.json to reproduce and verify
+    /// Path to a BISECT manifest.json or RPLAN golden package manifest.json
     #[arg(long)]
     pub manifest: std::path::PathBuf,
     /// Minimum Jaccard similarity for PASS (default: 0.99)

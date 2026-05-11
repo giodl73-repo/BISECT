@@ -1,8 +1,25 @@
 /// `bisect verify` — reproduce a plan from its manifest.json and verify it matches the original.
 use crate::args::VerifyArgs;
 use bisect_report::PlanManifest;
+use serde::Deserialize;
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
+
+const RPLAN_GOLDEN_PACKAGE_SCHEMA_VERSION: &str = "u20-public-example-manifest-v1";
+
+#[derive(Debug, Deserialize)]
+struct RplanGoldenPackageManifest {
+    schema_version: String,
+    example_id: Option<String>,
+    files: Vec<RplanGoldenPackageFile>,
+}
+
+#[derive(Debug, Deserialize)]
+struct RplanGoldenPackageFile {
+    path: String,
+    sha256: String,
+    role: String,
+}
 
 /// Check whether the binary SHA-256 in the manifest matches the current executable.
 ///
@@ -47,11 +64,117 @@ pub fn check_binary_sha256(manifest_sha256: &str, skip_binary_check: bool) {
     }
 }
 
+fn parse_rplan_golden_package_manifest(
+    content: &str,
+) -> anyhow::Result<Option<RplanGoldenPackageManifest>> {
+    let value: serde_json::Value =
+        serde_json::from_str(content).map_err(|e| anyhow::anyhow!("invalid manifest JSON: {e}"))?;
+    if value.get("schema_version").and_then(|v| v.as_str())
+        != Some(RPLAN_GOLDEN_PACKAGE_SCHEMA_VERSION)
+    {
+        return Ok(None);
+    }
+
+    let manifest = serde_json::from_value(value)
+        .map_err(|e| anyhow::anyhow!("invalid RPLAN package manifest JSON: {e}"))?;
+    Ok(Some(manifest))
+}
+
+fn verify_rplan_golden_package_manifest(
+    manifest_path: &Path,
+    manifest: &RplanGoldenPackageManifest,
+) -> anyhow::Result<()> {
+    if manifest.schema_version != RPLAN_GOLDEN_PACKAGE_SCHEMA_VERSION {
+        anyhow::bail!(
+            "unsupported RPLAN package manifest schema_version: {}",
+            manifest.schema_version
+        );
+    }
+
+    let package_root = manifest_plan_root(manifest_path);
+    let example_label = manifest.example_id.as_deref().unwrap_or("<unnamed>");
+    eprintln!("=== bisect verify: RPLAN package {example_label} ===");
+
+    for file in &manifest.files {
+        let path = resolve_package_file(package_root, &file.path)?;
+        let actual_sha256 = bisect_report::sha256_file(&path)
+            .map_err(|e| anyhow::anyhow!("hash RPLAN package file {}: {e}", path.display()))?;
+        if actual_sha256 != file.sha256.to_ascii_lowercase() {
+            anyhow::bail!(
+                "RPLAN package SHA-256 mismatch for {}: manifest={}, current={}",
+                file.path,
+                file.sha256,
+                actual_sha256
+            );
+        }
+    }
+
+    let plan_path = required_package_role_path(package_root, manifest, "plan")?;
+    let context_path = required_package_role_path(package_root, manifest, "context")?;
+    let certificate_path = required_package_role_path(package_root, manifest, "certificate")?;
+
+    let plan_text = std::fs::read_to_string(&plan_path)
+        .map_err(|e| anyhow::anyhow!("read RPLAN package plan {}: {e}", plan_path.display()))?;
+    let context_text = std::fs::read_to_string(&context_path).map_err(|e| {
+        anyhow::anyhow!("read RPLAN package context {}: {e}", context_path.display())
+    })?;
+    let certificate_bytes = std::fs::read(&certificate_path).map_err(|e| {
+        anyhow::anyhow!(
+            "read RPLAN package certificate {}: {e}",
+            certificate_path.display()
+        )
+    })?;
+
+    let rplan_document = rplan_io::read_rplan_str(&plan_text)
+        .map_err(|e| anyhow::anyhow!("parse RPLAN package plan: {e}"))?;
+    let context = rplan_io::read_rctx_str(&context_text)
+        .map_err(|e| anyhow::anyhow!("parse RPLAN package context: {e}"))?;
+    let certificate: rplan_audit::AuditCertificate = serde_json::from_slice(&certificate_bytes)
+        .map_err(|e| anyhow::anyhow!("parse RPLAN package certificate: {e}"))?;
+
+    rplan_audit::verify_audit_certificate(&certificate, Some(&rplan_document.plan), Some(&context))
+        .map_err(|e| anyhow::anyhow!("RPLAN package certificate verification failed: {e}"))?;
+
+    eprintln!("[PASS] RPLAN package manifest hashes verified");
+    eprintln!("[PASS] RPLAN package certificate verified");
+    Ok(())
+}
+
+fn required_package_role_path(
+    package_root: &Path,
+    manifest: &RplanGoldenPackageManifest,
+    role: &str,
+) -> anyhow::Result<PathBuf> {
+    let file = manifest
+        .files
+        .iter()
+        .find(|file| file.role == role)
+        .ok_or_else(|| anyhow::anyhow!("RPLAN package manifest missing required role: {role}"))?;
+    resolve_package_file(package_root, &file.path)
+}
+
+fn resolve_package_file(package_root: &Path, relative_path: &str) -> anyhow::Result<PathBuf> {
+    let path = Path::new(relative_path);
+    if path.is_absolute()
+        || path
+            .components()
+            .any(|component| matches!(component, Component::ParentDir))
+    {
+        anyhow::bail!("RPLAN package file path escapes package root: {relative_path}");
+    }
+    Ok(package_root.join(path))
+}
+
 pub fn run_verify(args: &VerifyArgs) -> anyhow::Result<()> {
+    let content = std::fs::read_to_string(&args.manifest)
+        .map_err(|e| anyhow::anyhow!("cannot read manifest '{}': {e}", args.manifest.display()))?;
+
+    if let Some(manifest) = parse_rplan_golden_package_manifest(&content)? {
+        return verify_rplan_golden_package_manifest(&args.manifest, &manifest);
+    }
+
     // ── assignments-only mode (no METIS re-run) ───────────────────────────────
     if args.verify_assignments_only {
-        let content = std::fs::read_to_string(&args.manifest)
-            .map_err(|e| anyhow::anyhow!("cannot read manifest: {e}"))?;
         let manifest: PlanManifest = serde_json::from_str(&content)?;
         let plan_root = manifest_plan_root(&args.manifest);
         verify_manifest_ilp_audit_summary(&manifest, plan_root)?;
@@ -122,8 +245,6 @@ pub fn run_verify(args: &VerifyArgs) -> anyhow::Result<()> {
     // Future: use PlanContext::from_label when label can be derived from manifest.label
     // (verify takes a manifest PATH not a label, so the refactor requires arg plumbing)
     // 1. Load manifest
-    let content = std::fs::read_to_string(&args.manifest)
-        .map_err(|e| anyhow::anyhow!("cannot read manifest '{}': {e}", args.manifest.display()))?;
     let manifest: PlanManifest = serde_json::from_str(&content)
         .map_err(|e| anyhow::anyhow!("invalid manifest JSON: {e}"))?;
     let plan_root = manifest_plan_root(&args.manifest);
@@ -611,6 +732,23 @@ mod tests {
         format!("{:x}", hasher.finalize())
     }
 
+    fn repo_root() -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(2)
+            .expect("repo root")
+            .to_path_buf()
+    }
+
+    fn public_golden_package_manifest() -> PathBuf {
+        repo_root()
+            .join("docs")
+            .join("examples")
+            .join("rplan-golden-packages")
+            .join("U.18+local-search-improvement")
+            .join("manifest.json")
+    }
+
     fn write_ilp_report(dir: &Path, name: &str, lp_bytes: &[u8], sha256: String) -> PathBuf {
         let formulation = bisect_ilp::build_formulation(&[vec![1], vec![0]], &[1, 1], 2, 0.05);
         let result = bisect_ilp::solve(
@@ -923,6 +1061,46 @@ mod tests {
             result.is_ok(),
             "dry_run with valid manifest must return Ok: {:?}",
             result
+        );
+    }
+
+    #[test]
+    fn test_verify_accepts_rplan_golden_package_manifest() {
+        let args = VerifyArgs {
+            manifest: public_golden_package_manifest(),
+            min_similarity: 0.99,
+            verify_label: None,
+            output_base: "outputs".to_string(),
+            dry_run: false,
+            skip_binary_check: true,
+            label: None,
+            verify_assignments_only: false,
+            plan_ref: None,
+        };
+
+        let result = run_verify(&args);
+        assert!(
+            result.is_ok(),
+            "bisect verify should accept public RPLAN package manifest: {:?}",
+            result.err()
+        );
+    }
+
+    #[test]
+    fn test_verify_rplan_golden_package_rejects_manifest_hash_mismatch() {
+        let manifest_path = public_golden_package_manifest();
+        let content = std::fs::read_to_string(&manifest_path).unwrap();
+        let mut manifest = parse_rplan_golden_package_manifest(&content)
+            .unwrap()
+            .expect("RPLAN golden package manifest");
+        manifest.files[0].sha256 = "0".repeat(64);
+
+        let result = verify_rplan_golden_package_manifest(&manifest_path, &manifest);
+        assert!(result.is_err(), "tampered package hash must fail");
+        let message = result.unwrap_err().to_string();
+        assert!(
+            message.contains("SHA-256 mismatch"),
+            "expected SHA-256 mismatch, got: {message}"
         );
     }
 

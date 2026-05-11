@@ -36,6 +36,13 @@ cargo run -p rplan-cli -- verify-certificate `
   --context docs/examples/rplan-golden-packages/U.18+local-search-improvement/context.rctx
 ```
 
+The same package can be checked through the BISECT bridge:
+
+```powershell
+cargo run -p bisect-cli -- verify `
+  --manifest docs/examples/rplan-golden-packages/U.18+local-search-improvement/manifest.json
+```
+
 Every package in this directory has:
 
 - `plan.rplan`

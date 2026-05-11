@@ -1,6 +1,6 @@
 # Goal: RPLAN Golden Package Corpus and Verifier Bridge
 
-**Status:** Active - Stage 1 package contract complete
+**Status:** Active - Stage 4 verifier bridge complete
 **Date:** 2026-05-11  
 **Owner:** BISECT / RPLAN integration  
 **Depends on:** `docs/specs/2026-05-11-algorithm-family-paper-writing-goal.md`
@@ -66,11 +66,11 @@ Acceptance for each package:
 
 ## Stage 4 - Verifier Bridge
 
-- [ ] Compare `rplan verify-certificate` and existing `bisect verify` behavior.
-- [ ] Add or update `bisect verify` so it can consume the same package shape, or
+- [x] Compare `rplan verify-certificate` and existing `bisect verify` behavior.
+- [x] Add or update `bisect verify` so it can consume the same package shape, or
       document why `rplan` is the neutral verifier and `bisect` delegates.
-- [ ] Add L1 tests showing both public surfaces agree on at least one package.
-- [ ] Update CLI help/docs with the fixed-point workflow:
+- [x] Add L1 tests showing both public surfaces agree on at least one package.
+- [x] Update CLI help/docs with the fixed-point workflow:
       algorithm output -> package -> certificate verification -> report.
 
 ## Stage 5 - Evidence Upgrades
