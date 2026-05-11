@@ -42,11 +42,15 @@ The `--structure` layer of the compositor. Every paper here answers: given k dis
 | T.11 | CVD Geographic — projected-centroid district construction | [PDF](papers/T.11+cvd-geographic.pdf) |
 | T.12 | BFS Region-Growing — greedy geographic district packing | [PDF](papers/T.12+bfs-growth.pdf) |
 | T.13 | Moving-Knife Redistricting — Reock-oriented fair-division construction | [PDF](papers/T.13+moving-knife.pdf) |
+| T.14 | Spectral Partitioning — deterministic Fiedler-vector construction baseline | — |
+| T.15 | Capacity-Constrained Clustering — population-capacity clusters with audit sidecars | — |
+| T.16 | Hierarchical Regionalization — agglomerative connected-region construction | — |
+| T.17 | Flow-Based Construction — capacity/cost flow assignment with infeasibility witnesses | — |
 
-Implemented construction additions now include T.14 spectral partitioning, T.15
-capacity-constrained clustering, T.16 hierarchical regionalization, and T.17
-flow-based construction, each with audited vertical slices. Implementation
-roadmap:
+T.14-T.17 are implemented as audited vertical slices and are now in the paper
+writing queue. Writing goal:
+[`2026-05-11-algorithm-family-paper-writing-goal.md`](specs/2026-05-11-algorithm-family-paper-writing-goal.md).
+Implementation roadmap:
 [`2026-05-10-algorithm-family-roadmap.md`](specs/2026-05-10-algorithm-family-roadmap.md).
 
 ---
@@ -57,6 +61,7 @@ The search, optimization, certification, and algorithm-selection layer. Once con
 
 | Code | Title | PDF | Note |
 |------|-------|-----|------|
+| U.0 | Search and Optimization Overview — taxonomy from construction to certification | — | writing queue |
 | U.1 | ConvergenceSweep — T=600 statutory seed formula | [PDF](papers/U.1+convergence-sweep.pdf) | `--search convergence` |
 | U.2 | Parameter Sensitivity — partisanship insensitive to tuning | [PDF](papers/U.2+parameter-sensitivity.pdf) | tuning/robustness |
 | U.3 | Simulated Annealing Bisection — cooling the edge-cut objective in the bisection tree | [PDF](papers/U.3+simulated-annealing.pdf) | `--structure simulated-annealing` |
@@ -68,14 +73,21 @@ The search, optimization, certification, and algorithm-selection layer. Once con
 | U.9 | BisectionEnsemble — Local ReCom at Each Bisection Node | [PDF](papers/U.9+bisection-ensemble.pdf) | local ensemble search |
 | U.10 | bisect-ensemble — Rust ReCom at 2500× Speed | [PDF](papers/U.10+bisect-ensemble.pdf) | high-performance search implementation |
 | U.11 | Resolution-Aware Redistricting — Geographic Granularity as a First-Class Parameter | [PDF](papers/U.11+resolution-aware.pdf) | resolution selection |
+| U.12 | Algorithm-Selection Matrix — choosing construction, search, exact, ensemble, and audit paths | — | writing queue |
+| U.13 | Exact-vs-Heuristic Certification — what proofs, bounds, and audits establish | — | writing queue |
+| U.14 | Multi-Objective Selection — selecting among trade-offs and sampled frontiers | — | writing queue |
+| U.15 | Legal Postures for Search — claim discipline for search and optimization choices | — | writing queue |
+| U.16 | Branch-And-Cut Redistricting — connectivity cuts, separation, and solver reports | — | implemented slice |
+| U.17 | Branch-And-Price Redistricting — column generation and exact fixture packages | — | implemented slice |
+| U.18 | Large-Neighborhood Search — local improvement, tabu/LNS scaffolding, and repair hooks | — | implemented slice |
+| U.19 | Evolutionary Search Comparison — validity-preserving crossover/mutation and selected frontier audits | — | implemented slice |
+| U.20 | Plan Audit Certificates — RPLAN/RCTX audit certificates and lineage fixed point | — | implemented slice |
 
 Search/optimization additions through U.20 are now implemented as audited
-vertical slices where they touch final plans: U.16 branch-and-cut, U.17
-branch-and-price, U.18 local-search improvement, U.19 evolutionary selected
-frontier packaging, and U.20 RPLAN plan-audit certificates. Remaining paper
-draft/index additions include U.0 overview, U.12 algorithm-selection
-matrix, U.13 exact-vs-heuristic certification, U.14 multi-objective selection,
-and U.15 legal postures for search. Implementation roadmap:
+vertical slices where they touch final plans and are in the paper writing
+queue. Writing goal:
+[`2026-05-11-algorithm-family-paper-writing-goal.md`](specs/2026-05-11-algorithm-family-paper-writing-goal.md).
+Implementation roadmap:
 [`2026-05-10-algorithm-family-roadmap.md`](specs/2026-05-10-algorithm-family-roadmap.md).
 RPLAN factoring and U.20 audit contract:
 [`2026-05-10-rplan-incubation.md`](specs/2026-05-10-rplan-incubation.md),

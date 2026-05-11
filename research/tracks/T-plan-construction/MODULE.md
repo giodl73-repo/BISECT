@@ -26,22 +26,24 @@ optimization, certification, and plan-selection methods live in
 | T.12+bfs-growth | BFS region-growing baseline |
 | T.13+moving-knife | Reock-oriented moving-knife construction |
 
-## Candidate Additions
+## Writing Queue
 
-These are not manuscripts yet. They are the clean places to add construction
-families that are distinct from search/optimization:
+These construction families are implemented as audited vertical slices and now
+need native manuscripts:
 
 - T.14+spectral-partitioning -- Laplacian/Fiedler-vector graph partitioning as
   a deterministic construction baseline.
-- T.15+capacity-constrained-clustering -- k-means/k-medoids/regionalization
-  with population capacities and contiguity repair.
+- T.15+capacity-constrained-clustering -- capacity-constrained clustering with
+  population capacities, contiguity repair, and RPLAN audit sidecars.
 - T.16+hierarchical-regionalization -- SKATER/Max-p style regionalization and
-  agglomerative construction methods.
-- T.17+flow-based-construction -- min-cost-flow or balanced-flow formulations
-  used as constructive district builders rather than exact global optimizers.
+  deterministic agglomerative construction methods.
+- T.17+flow-based-construction -- flow formulations used as constructive district
+  builders rather than exact global optimizers.
 
 Implementation boundaries, CLI surfaces, and crate placement are specified in
 `docs/specs/2026-05-10-algorithm-family-roadmap.md`.
+Paper-writing stages and panel-style review expectations are specified in
+`docs/specs/2026-05-11-algorithm-family-paper-writing-goal.md`.
 
 All paper sources live in subdirectories here.
 Compiled PDFs are in `docs/papers/`.

@@ -25,9 +25,10 @@ and practitioner algorithm selection.
 | U.10+bisect-ensemble | High-performance Rust ensemble/search implementation |
 | U.11+resolution-aware | Resolution as a first-class search/selection parameter |
 
-## Needed Spine Papers
+## Writing Queue - Spine Papers
 
-These should be added as native U-series papers after the physical refactor:
+These should be added as native U-series papers now that the physical refactor
+and audit fixed point are in place:
 
 - U.0+search-optimization-overview
 - U.12+algorithm-selection-matrix
@@ -35,10 +36,10 @@ These should be added as native U-series papers after the physical refactor:
 - U.14+multi-objective-selection
 - U.15+legal-postures-for-search
 
-## Candidate Additions
+## Writing Queue - Implementation Papers
 
-These are not manuscripts yet. They are the clean places to add algorithm
-families that the current U-series only partially covers:
+These algorithm families are implemented as audited vertical slices and now
+need native manuscripts:
 
 - U.16+branch-and-cut-redistricting -- exact MIP formulations with connectivity
   cuts, separation routines, and certificate reporting. U.6 covers ILP at a
@@ -57,6 +58,8 @@ families that the current U-series only partially covers:
 
 Implementation boundaries, CLI surfaces, and crate placement are specified in
 `docs/specs/2026-05-10-algorithm-family-roadmap.md`.
+Paper-writing stages and panel-style review expectations are specified in
+`docs/specs/2026-05-11-algorithm-family-paper-writing-goal.md`.
 
 All paper sources live in subdirectories here.
 Compiled PDFs are in `docs/papers/`.
