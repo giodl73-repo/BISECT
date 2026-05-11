@@ -246,6 +246,7 @@ name = "bisect-clustering"
 version = "0.1.0"
 dependencies = [
  "rplan-audit",
+ "rplan-core",
  "serde",
  "serde_json",
  "sha2",

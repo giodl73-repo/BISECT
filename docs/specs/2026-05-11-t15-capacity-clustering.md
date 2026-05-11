@@ -113,7 +113,7 @@ Canonical fixtures for L0/L1:
 - [x] L1 test produces a complete plan summary on `grid_3x3_k3`.
 - [x] Output summary is versioned and deterministic for fixed input.
 - [x] Audit-lineage payload builder rejects reserved certificate fields.
-- [ ] Stage 2 repair path proves final plans pass `rplan-audit`.
+- [x] Stage 2 repair path proves final plans pass `rplan-audit`.
 - [ ] Stage 3 CLI wiring emits RPLAN sidecars and verifies through `bisect verify`.
 
 ## Stop Line For Stage 1

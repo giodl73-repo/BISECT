@@ -2,7 +2,7 @@ use thiserror::Error;
 
 use crate::metrics::{all_clusters_connected, edge_cut, population_deviation};
 use crate::output::ClusterSummary;
-use crate::repair::RepairStatus;
+use crate::repair::{repair_to_valid_small, RepairStatus};
 use crate::seeds::{distances_from, farthest_point_seeds};
 
 #[derive(Debug, Clone)]
@@ -77,6 +77,42 @@ pub fn capacity_cluster(
         status,
         summary,
     })
+}
+
+pub fn capacity_cluster_repaired(
+    adjacency: &[Vec<usize>],
+    weights: &[i64],
+    config: ClusterConfig,
+) -> Result<ClusterResult, ClusterError> {
+    let mut result = capacity_cluster(adjacency, weights, config.clone())?;
+    if result.status != ClusterStatus::NeedsRepair {
+        return Ok(result);
+    }
+
+    let Some(repaired) = repair_to_valid_small(
+        adjacency,
+        weights,
+        &result.assignment,
+        config.k,
+        config.tolerance,
+    ) else {
+        return Ok(result);
+    };
+
+    result.assignment = repaired.assignment;
+    let deviation = population_deviation(weights, &result.assignment, config.k);
+    let cut = edge_cut(adjacency, &result.assignment);
+    result.status = ClusterStatus::Valid;
+    result.summary = ClusterSummary::new(
+        "capacity-clustering",
+        "farthest",
+        "exhaustive-small",
+        status_label(result.status),
+        RepairStatus::Repaired,
+        deviation,
+        cut,
+    );
+    Ok(result)
 }
 
 fn validate_inputs(
