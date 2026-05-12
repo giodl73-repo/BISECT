@@ -24,25 +24,53 @@ questions rather than claims solved by the merge routine.
         adjacency metadata.
   \item Enumerate adjacent candidate region pairs that remain eligible under
         the declared capacity and connectedness profile.
-  \item Score candidate merges using the implementation's deterministic merge
-        scoring rule.
-  \item Select the best candidate, breaking ties by stable region identifiers.
+  \item Score candidate merges by capacity eligibility first, then distance of
+        merged population from the ideal district population.
+  \item Select the best candidate, breaking ties by merged population and
+        stable region identifiers.
   \item Record a merge witness and repeat until the requested number of
         regions is reached or no eligible merge remains.
 \end{enumerate}
 
 \begin{table}[h]
 \centering
+\small
 \begin{tabular}{ll}
 \toprule
 Witness field & Purpose \\
 \midrule
-Input region ids & Identifies the merged regions \\
-Candidate score & Explains merge ordering \\
-Constraint status & Records capacity/connectedness checks \\
-Result region id & Links the new region to descendants \\
-Parameter hash & Binds merge settings to the artifact \\
+\texttt{step} & Orders the merge in the hierarchy \\
+\texttt{left\_region}, \texttt{right\_region} & Identifies the adjacent regions selected for merge \\
+\texttt{merged\_region} & Links the new region to its descendants \\
+\texttt{merged\_population} & Shows the population created by the merge \\
+\texttt{cut\_edges\_between} & Records adjacency strength between the merged regions \\
 \bottomrule
 \end{tabular}
-\caption{Minimum merge-witness fields for replayable regionalization lineage.}
+\caption{Implemented merge-witness fields for replayable regionalization
+lineage. The summary sidecar separately records merge count, hierarchy depth,
+capacity status, repair status, edge cut, and parameter hash.}
+\end{table}
+
+\subsection{Worked Merge Decision}
+
+The merge step is a local election among adjacent region pairs. Suppose the
+ideal district population is \(100\) with an upper capacity of \(110\). The
+constructor first separates over-capacity pairs from eligible pairs, then ranks
+eligible pairs by closeness to \(100\). A geographically adjacent pair can still
+lose if it would exceed capacity.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lllll}
+\toprule
+Pair & Merged pop. & Over capacity? & Distance to ideal & Decision \\
+\midrule
+A+B & 118 & yes & 18 & defer: over capacity \\
+B+C & 96 & no & 4 & selected \\
+C+D & 88 & no & 12 & eligible, lower rank \\
+\bottomrule
+\end{tabular}
+\caption{T.16 chooses among adjacent candidate merges. Capacity eligibility is
+checked before the score is used.}
 \end{table}

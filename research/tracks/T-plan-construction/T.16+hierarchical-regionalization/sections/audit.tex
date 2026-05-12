@@ -2,7 +2,7 @@
 
 Regionalization audit artifacts record the final assignments together with
 merge witnesses, parameter hashes, and algorithm lineage in the shared
-RPLAN/RCTX sidecar flow. The fixed-point claim is reproducibility and declared
+RPLAN and RCTX sidecar flow. The fixed-point claim is reproducibility and declared
 profile verification, not proof that a merge sequence is uniquely correct or
 legally sufficient.
 
@@ -10,3 +10,9 @@ The verifier can check that the exported plan and sidecars agree with the
 declared profile and recorded lineage. It does not certify that the merge order
 is globally optimal, that communities were preserved, or that the plan satisfies
 legal standards beyond the explicit audit profile.
+
+The merge log is construction evidence, not an independent legal certificate.
+It can answer questions such as which adjacent pair merged at step 37 and what
+population that merge produced. It cannot answer whether that merge was the
+best public-interest decision, whether an unmodeled community should have been
+kept intact, or whether a court would accept the resulting districts.

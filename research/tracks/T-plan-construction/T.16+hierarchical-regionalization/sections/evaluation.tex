@@ -8,6 +8,8 @@ construction on selected real-data smoke states.
 
 \begin{table}[h]
 \centering
+\small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{llll}
 \toprule
 Claim & Evidence now & Missing evidence & Status \\
@@ -20,12 +22,15 @@ Scale smoke & path100 benchmark package & Real-data benchmarks & Benchmark smoke
 Quality vs. baselines & None in this paper & Commands and outputs & Future \\
 \bottomrule
 \end{tabular}
+}
 \caption{Evidence ladder for T.16 claims. Connectedness, lineage, and empirical
 quality are separate evidence levels.}
 \end{table}
 
 \begin{table}[h]
 \centering
+\small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{llll}
 \toprule
 Constructor & Primary witness & Failure artifact & Current role \\
@@ -37,6 +42,14 @@ Spectral & split lineage & validation failure & comparison \\
 METIS & partition manifest & validation result & comparison \\
 \bottomrule
 \end{tabular}
+}
 \caption{Failure-behavior comparison framing. Quantitative comparisons remain
 future work until commands and outputs are recorded.}
 \end{table}
+
+The current evidence should be read as implementation and packaging evidence:
+the constructor produces deterministic merge logs, summaries, and verifier-facing
+packages on fixtures. It is not yet evidence that regionalization produces
+better compactness, fewer subdivision splits, or more persuasive community
+outcomes than flat clustering, METIS, spectral partitioning, or flow
+construction.

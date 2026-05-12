@@ -43,4 +43,13 @@ framing.
 - [x] P1 items addressed.
 - [x] Paper builds without errors.
 - [x] Claims map to evidence level.
-- [ ] Ready for round-2 simulated assessment.
+- [x] Ready for round-2 simulated assessment.
+
+## 2026-05-12 Paper-Quality Pass
+
+- [x] Aligned merge scoring and witness fields with the implemented
+      regionalization crate.
+- [x] Added a worked merge-candidate table showing capacity eligibility before
+      scoring.
+- [x] Expanded implementation, audit, evidence, and limitation boundaries.
+- [x] Marked the paper ready for another simulated assessment pass.

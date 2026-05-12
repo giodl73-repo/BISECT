@@ -1,6 +1,13 @@
 \section{Implementation}
 
-The implementation lives in \texttt{bisect-clustering::regionalization} and is
-exposed through \texttt{bisect state --structure regionalization}. Outputs
-include regionalization summaries, merge logs, parameter hashes, and algorithm
-lineage.
+The implementation lives in the regionalization module of
+\texttt{bisect-clustering} and is exposed through the regionalization structure
+mode. Outputs include regionalization summaries, merge logs, parameter hashes,
+and algorithm lineage.
+
+The summary records the regionalization method, adjacent balanced
+agglomerative merge policy, repair method, capacity status, repair status,
+population deviation, edge cut, merge count, hierarchy depth, and parameter
+hash. CLI/RPLAN export also stores the merge-log path and merge-log hash in
+lineage extras, so a verifier can distinguish the final plan assignment from
+the construction history that produced it.

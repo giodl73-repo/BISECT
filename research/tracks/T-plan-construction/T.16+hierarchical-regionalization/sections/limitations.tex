@@ -1,10 +1,17 @@
 \section{Limitations}
 
-The current implementation is a deterministic regionalization baseline, not a
-complete SKATER or Max-p reproduction. Merge scoring choices can affect output
-quality and should be evaluated empirically before broad claims.
+The current implementation is a deterministic regionalization baseline. It is
+not a complete reproduction of SKATER, Max-p, or other full spatial
+regionalization methods. Merge scoring choices can affect output quality and
+should be evaluated empirically before broad claims.
 
 Merge lineage improves inspectability but does not make the merge sequence
 normatively correct. Connectedness and capacity checks do not imply compactness,
 community preservation, partisan fairness, or legal compliance beyond the
 declared audit profile.
+
+The current scoring rule is intentionally simple: adjacent candidate pairs are
+ranked by capacity eligibility and population closeness, with deterministic
+tie-breaking. That is useful for a baseline, but it is not a reproduction of
+full spatial regionalization methods such as SKATER or Max-p, and it does not
+include richer socio-economic or community-character objectives.

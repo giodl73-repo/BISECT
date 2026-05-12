@@ -3,3 +3,10 @@
 Regionalization methods construct plans by merging small connected units into
 larger connected regions. T.16 adds this family to BISECT so the merge sequence
 itself becomes part of the explanation and audit trail.
+
+The main difference from flat capacity clustering is that regionalization has a
+history. A final district is not merely a set of units; it is the result of a
+sequence of adjacent merges. T.16 treats that sequence as evidence. The paper's
+central claim is therefore provenance-oriented: the constructor can emit a
+deterministic merge log and summary that explain how connected regions were
+formed under a declared capacity profile.
