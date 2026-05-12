@@ -58,7 +58,7 @@ are called complete.
 
 | Batch | Papers | Purpose | Status |
 |---|---|---|---|
-| 1 | T.1-T.4, U.1, U.8, U.9, U.12 | Re-review the atlas-aligned seed/compositor/legacy papers for paper-quality gaps after the alignment pass | In progress |
+| 1 | T.1-T.4, U.1, U.8, U.9, U.12 | Re-review the atlas-aligned seed/compositor/legacy papers for paper-quality gaps after the alignment pass | Completed 2026-05-12 |
 | 2 | T.14-T.17 | Construction-family golden vertical slices | Queued |
 | 3 | U.16-U.20 | Exact/search/audit certificate family, including U.20 fixed-point language | Queued |
 | 4 | U.10, G.4, G.7, G.10, G.11 | Sampling and ensemble methods | Queued |
@@ -77,4 +77,4 @@ are called complete.
 | U.1 ConvergenceSweep | Reviewed 2026-05-12 | Narrowed optimality/statistical claims; replaced finite-seed theorem with finite-artifact proposition | Rebuilt; no undefined refs/cites; PDF copied |
 | U.8 PercentileSweep | Reviewed 2026-05-12 | Narrowed percentile/ReCom/optimality claims; separated four-state evidence from TX/CA extrapolation | Rebuilt; no undefined refs/cites; PDF copied |
 | U.9 BisectionEnsemble | Reviewed 2026-05-12 | Scoped node-local ensemble claims; softened large-arity failure and single-run empirical claims; fixed accepted-rank indexing | Rebuilt; no undefined refs/cites; PDF copied |
-| U.12 Algorithm-Selection Matrix | Queued | Queued | Already rebuilt in atlas pass |
+| U.12 Algorithm-Selection Matrix | Reviewed 2026-05-12 | Expanded matrix with claim-boundary column, worked reading, and audit fixed-point fields | Rebuilt; no undefined refs/cites; PDF copied |

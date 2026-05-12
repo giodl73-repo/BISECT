@@ -20,20 +20,22 @@ is the artifact bundle that must be retained for audit.
 
 \begin{table}[htbp]
 \centering
-\small
-\begin{tabular}{p{0.20\linewidth}p{0.22\linewidth}p{0.24\linewidth}p{0.22\linewidth}}
+\scriptsize
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{p{0.15\linewidth}p{0.17\linewidth}p{0.20\linewidth}p{0.20\linewidth}p{0.18\linewidth}}
 \toprule
-Need & Preferred family & Required evidence & Audit handoff \\
+Need & Preferred family & Required evidence & Audit handoff & Do not claim \\
 \midrule
-Fast baseline & Construction & L0/L1 fixture and smoke tests & RPLAN with constructor metadata \\
-Improve candidate & Local/LNS search & Validity-preserving move trace & RPLAN/RCTX run summary \\
-Bounded claim & Exact optimization & Bound, witness, or solve report & Certificate and manifest \\
-Distributional context & Ensemble/SMC & Protocol and sampled-plan record & Exported plans and context \\
-Trade-off choice & Pareto selection & Frontier and selection rule & Selected-plan package \\
-Artifact verification & Audit verifier & Declared profile pass/fail & Certificate bundle \\
+Fast baseline & Construction & L0/L1 fixture and smoke tests & RPLAN with constructor metadata & Optimality or distribution \\
+Improve candidate & Local/LNS search & Validity-preserving move trace & RPLAN/RCTX run summary & Global bound \\
+Bounded claim & Exact optimization & Bound, witness, or solve report & Certificate and manifest & Legal sufficiency \\
+Distributional context & Ensemble/SMC & Protocol and sampled-plan record & Exported plans and context & Equal likelihood without target \\
+Trade-off choice & Pareto selection & Frontier and selection rule & Selected-plan package & Best on every objective \\
+Artifact verification & Audit verifier & Declared profile pass/fail & Certificate bundle & Substantive fairness \\
 \bottomrule
 \end{tabular}
-\caption{Method-family selection by claim need and audit handoff.}
+}
+\caption{Method-family selection by claim need, audit handoff, and claim boundary.}
 \end{table}
 
 The matrix is conservative by design. If the claim requires a bound, a search
@@ -50,6 +52,23 @@ What claim is the output meant to support? What evidence level is required for
 that claim? Which CLI surface or crate currently produces the relevant plan or
 certificate artifact? Which RPLAN/RCTX sidecars must be retained so another
 reader can inspect the run?
+
+\subsection*{Worked Reading}
+
+Suppose an operator needs a fast baseline for a new state. The matrix routes the
+work to a construction family and asks for fixture coverage, smoke-test output,
+and constructor metadata in the RPLAN package. The resulting claim is modest:
+``this run produced a package matching the declared construction recipe.'' If
+the same operator wants to say the result is typical, the row changes to
+Ensemble/SMC and the package must include a sampling protocol and sampled-plan
+record. If the operator wants to say no better solution exists under a stated
+objective, the row changes again to Exact optimization and requires a solve
+report or bound.
+
+The rows are intentionally not mutually exclusive over a project lifecycle.
+A careful study may begin with construction, improve with local search, compare
+against ensembles, and finally package an audit certificate. U.12 only requires
+that each exported claim name the row whose evidence supports it.
 
 \subsection*{Evidence Fields}
 

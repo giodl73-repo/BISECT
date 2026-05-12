@@ -14,6 +14,16 @@ The simulated panel found that U.12 has the right methodological scope but
 needed a concrete matrix, reusable preflight questions, and stronger caveats
 against treating workflow choice as a legal or algorithmic ranking.
 
+## 2026-05-12 Paper-Quality Pass
+
+The Batch 1 paper-quality pass expanded the matrix from a routing sketch into
+an operational claim-boundary table. The matrix now includes a "Do not claim"
+column, a worked reading that distinguishes construction, ensemble, and exact
+claims, explicit selection-record fields for RPLAN/RCTX handoff, and a clearer
+limitation that U.12 does not choose between legal theories. The paper remains
+framework-level guidance pending concrete command transcripts for staged U.16
+through U.20 surfaces.
+
 ## P1: Critical Enhancements
 
 ### P1.1: Selection matrix
@@ -47,4 +57,4 @@ against treating workflow choice as a legal or algorithmic ranking.
 - [x] P1 items addressed.
 - [x] Paper builds without errors.
 - [x] Claims map to evidence level.
-- [ ] Ready for round-2 simulated assessment.
+- [x] Ready for round-2 simulated assessment.
