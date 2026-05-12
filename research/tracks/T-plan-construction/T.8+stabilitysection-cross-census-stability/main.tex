@@ -13,12 +13,16 @@
 \usepackage{hyperref}
 \usepackage{natbib}
 \usepackage{booktabs}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
 \usepackage{xcolor}
 \usepackage{multirow}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{array}
 \usepackage{listings}
+\lstset{breaklines=true, columns=fullflexible}
 
 \title{StabilitySection: Cross-Census Stability of\\
        GeoSection-Optimal Redistricting Maps}
@@ -32,38 +36,29 @@
 \maketitle
 
 \begin{abstract}
-A redistricting algorithm is \emph{census-stable} for a state if it produces
-the same natural partition---the same first-level split ratio, the same
-bisection tree structure, and the same partisan seat distribution---across
-multiple decennial census cycles.
-We introduce the \textbf{Census Stability Score} (CSS), a composite metric
-measuring GeoSection's cross-census robustness for each state, and present the
-StabilitySection framework for computing it.
+StabilitySection is not a new map constructor.  It is a cross-census audit
+framework for asking whether GeoSection selects the same first bisection,
+similar district assignments, and similar outcome diagnostics when the input
+census year changes.
+We define the \textbf{Census Stability Score} (CSS), a composite metric for
+recording this cross-census robustness, and separate three levels of evidence:
+implemented GeoSection runs, tract-split proxy comparisons, and future
+district-level assignment matching.
 
-Cross-census stability has a precise legal significance that within-year seed
-stability (B.7) cannot provide.
-If GeoSection produces the same optimal map for a state using 2000, 2010,
-and 2020 population data---twenty years of demographic change---then the map is
-\emph{not a product of any particular census cycle's partisan distribution}.
-It is the geographic structure of the state, expressed consistently across
-three independent decennial snapshots.
-A challenger cannot argue the map was drawn to exploit the current partisan
-distribution: the current census year is merely one of three that converged
-to the same answer.
+The paper's central claim is methodological rather than legal-dispositive.
+When the same geography-first procedure returns the same first-level structure
+under multiple census snapshots, that is evidence that the structure is not an
+artefact of one vintage of population data.  It does not by itself prove that a
+map is legally required, partisan-neutral, or immune from challenge.  It gives
+courts, commissions, and researchers an auditable way to distinguish stable
+geographic structure from census-vintage sensitivity.
 
-We present complete 2020 GeoSection results for 44 multi-district states
-and the CSS framework with full methodology.
-For 2000 and 2010, the cross-year sweep is in progress; we report
-preliminary ratio-stability findings for the available subset of states,
-with 2010 cross-census stability results projected from 2020 pilot data
-and the full three-census CSS deferred to Phase~2.
-The 2000 vs.\ 2020 comparison---a twenty-year span---is already a strong
-empirical anchor.
-States expected to have CSS $\geq 0.90$: the Midwest row states (IA, KS, NE,
-MO, IN) and New England (ME, NH, VT).
-States expected to be structurally volatile: the Sun Belt growth corridor
-(TX, AZ, GA, FL, NV), where suburban expansion has reorganised the
-population-geography relationship between census cycles.
+We present the 2020 GeoSection baseline, a 2000--2010 tract-split proxy
+comparison for 30 comparable state cases, and the CSS computation plan for the
+full 2000/2010/2020 package.  The current empirical result is deliberately
+narrow: under a 5 percentage point first-split threshold, 20 of 30 comparable
+cases are stable in the proxy table.  Full three-census CSS, district Jaccard
+matching, and final-plan partisan comparisons remain Phase~2 evidence.
 \end{abstract}
 
 \input{sections/01-introduction}
@@ -74,6 +69,6 @@ population-geography relationship between census cycles.
 \input{sections/06-conclusion}
 
 \bibliographystyle{plainnat}
-\bibliography{references,../../references}
+\bibliography{references}
 
 \end{document}

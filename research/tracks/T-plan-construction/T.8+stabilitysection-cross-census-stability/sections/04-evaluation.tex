@@ -3,7 +3,7 @@
 
 \subsection{Experimental Setup}
 
-All 2020 GeoSection results use 2020 Census data, TIGER tract geometries,
+All 2020 GeoSection baseline results use 2020 Census data, TIGER tract geometries,
 and 2020 presidential election results (precinct-to-tract interpolation via
 VEST \citep{fekrazad2021}).
 District counts follow the 2020 apportionment.
@@ -15,17 +15,20 @@ The reference implementation is the \texttt{bisect} Rust binary, partition
 mode \texttt{geosection}, using METIS 5.1 via the \texttt{metis-rs} crate.
 All 44 multi-district states converge within the $0.5\,\%$ balance tolerance.
 
-For 2000 census year data, the 50-state sweep has completed 47 states;
-3 large states (CA, TX, FL) are still processing.
-\textbf{[TBD: 2010 sweep pending]}: the 2010 census sweep is in progress and
-will provide the third data point for three-census CSS computation.
+For earlier census years, this paper uses two different evidence streams.
+The 2000/2010 tract-split proxy table reports 30 comparable cases where the
+first-bisection tract share can be read consistently.  Full CSS still requires
+the stronger package layer: archived GeoSection summaries for each year,
+district assignments projected to a common geography, and same-year outcome
+diagnostics.
 
 \subsection{2020 Baseline: Full 50-State Natural Ratio Table}
 \label{sec:2020-baseline}
 
-Table~\ref{tab:natural-ratios-2020} reports the complete GeoSection natural
-ratio for all 44 multi-district states using 2020 Census data.
-This is the anchor dataset for the cross-census comparison.
+Table~\ref{tab:natural-ratios-2020} reports the GeoSection natural ratio
+baseline for multi-district states using 2020 Census data.
+This is the anchor dataset for the cross-census comparison; rows marked
+estimated or incomplete should not be read as final publication evidence.
 
 \begin{table}[h]
 \centering
@@ -85,7 +88,7 @@ PA  & 17 & 1:16 &  7 & $-9.4$  & 50.6 \\
 IL  & 17 & 1:16 & 12 & $+11.9$ & 58.7 \\
 NC  & 14 & 6:8  &  5 & $-13.6$ & 49.3 \\
 \midrule
-\multicolumn{6}{l}{\textit{Large states (in progress at 2000 sweep; 2020 complete)}} \\
+\multicolumn{6}{l}{\textit{Large states (2020 baseline provisional for publication use)}} \\
 GA  & 14 & (est.\ 5:9) & --- & --- & 50.1 \\
 MO  &  8 & (est.\ 1:7) & --- & --- & 41.4 \\
 TX  & 38 & 1:37 & --- & --- & 46.5 \\
@@ -107,8 +110,9 @@ documented in \citet{rodden2019}.
 \subsection{Two-Census Comparison: 2000 vs.\ 2020}
 \label{sec:two-census}
 
-The 2000 census sweep has completed 47 of 50 states.
-We report two-census CSS for the completed subset.
+The complete two-census CSS table is not yet available.
+This section records the comparison design and the available proxy evidence
+rather than a final 2000--2020 CSS result.
 
 \paragraph{Seat count changes between 2000 and 2020.}
 Table~\ref{tab:seat-changes} lists states whose congressional delegation
@@ -148,7 +152,7 @@ OK &  6 &  5 & $-1$ & Decline \\
 Based on the plan's theoretical predictions (\S\ref{sec:css-definition}),
 we categorise states into expected CSS classes:
 
-\textbf{Expected high CSS ($\geq 0.90$): stable geography, low growth.}
+\textbf{Candidate high CSS ($\geq 0.90$): stable geography, low growth.}
 The Midwest row states (IA, KS, NE, IN) and New England (ME, NH, VT, RI)
 have near-uniform agricultural-density or settled urban geographies that
 change slowly.
@@ -158,7 +162,7 @@ recent suburban growth.
 Predicted: ratio stability $= 1$, seat stability $= 1$,
 CSS $\approx 0.95$.
 
-\textbf{Expected medium CSS ($0.70$--$0.90$): growing metros, stable ratios.}
+\textbf{Candidate medium CSS ($0.70$--$0.90$): growing metros, stable ratios.}
 States like WI, MN, VA, and NC have growing suburban areas but their
 first-level geographic divisions are stable.
 Wisconsin's Milwaukee metro is geographically the same city regardless of
@@ -168,7 +172,7 @@ which is a physical feature of the city, not a demographic count.
 Predicted: ratio stability $= 1$, seat stability may vary by 1,
 CSS $\approx 0.80$.
 
-\textbf{Expected low CSS ($< 0.70$): Sun Belt growth corridor.}
+\textbf{Candidate low CSS ($< 0.70$): Sun Belt growth corridor.}
 TX, AZ, GA, FL, NV have experienced the most dramatic population
 redistribution between 2000 and 2020.
 Phoenix's suburban sprawl has pushed population far into previously rural
@@ -180,17 +184,16 @@ more of the state's population.
 Predicted: ratio instability in at least one year, CSS $\approx 0.60$.
 
 \paragraph{Ratio stability predictions and 2020 anchor.}
-Table~\ref{tab:ratio-stability} provides the 2020 natural ratios for all
-states alongside predicted 2000 ratios based on the Lorenz drift proxy.
-For states where the 2000 sweep is complete, the actual 2000 ratio is reported.
-\textbf{[TBD: full 2000 comparison table will be inserted once sweep completes
-all 50 states.]}
+Table~\ref{tab:ratio-stability} provides 2020 natural ratios alongside
+provisional stability classifications based on the Lorenz drift proxy and
+available first-split evidence.  It is a triage table for the Phase~2 package,
+not a replacement for archived two-census CSS.
 
 \begin{table}[h]
 \centering
 \caption{Natural ratio stability: 2000 vs.\ 2020 prediction.
   ``Same'' = predicted identical ratio.
-  ``Shifted'' = ratio expected to change (suburban growth).
+  ``Shifted'' = ratio expected or observed to change (suburban growth).
   ``Seat change'' = $k$ differs, ratio comparison normalised.
   CSS$_{2\text{yr}}$ = two-census CSS (seat weight 0.5, ratio 0.3, gap 0.2).}
 \label{tab:ratio-stability}
@@ -202,7 +205,7 @@ State & $k_{2020}$ & 2020 ratio & Ratio stability & Expected CSS$_{2\text{yr}}$ 
 \multicolumn{6}{l}{\textit{Unstable (ratio shift confirmed)}} \\
 IA  &  4 & 2:2  & Shifted  & $< 0.70$    & Low \\
 \midrule
-\multicolumn{6}{l}{\textit{Stable geography (high expected CSS)}} \\
+\multicolumn{6}{l}{\textit{Stable geography (high candidate CSS)}} \\
 KS  &  4 & 1:3  & Same     & $\geq 0.90$ & High \\
 NE  &  3 & 1:2  & Same     & $\geq 0.90$ & High \\
 ME  &  2 & 1:1  & Same     & $\geq 0.90$ & High \\
@@ -214,7 +217,7 @@ AL  &  7 & 3:4  & Same     & $\geq 0.90$ & High \\
 AR  &  4 & 1:3  & Same     & $\geq 0.90$ & High \\
 LA  &  6 & 1:5  & Same     & $\geq 0.90$ & High \\
 \midrule
-\multicolumn{6}{l}{\textit{Growing metros (medium expected CSS)}} \\
+\multicolumn{6}{l}{\textit{Growing metros (medium candidate CSS)}} \\
 WI  &  8 & 1:7  & Same     & $0.75$--$0.85$ & Medium \\
 MN  &  8 & 1:7  & Same     & $0.75$--$0.85$ & Medium \\
 IL  & 17 & 1:16 & Same$^*$ & $0.70$--$0.80$ & Medium \\
@@ -222,12 +225,12 @@ PA  & 17 & 1:16 & Same$^*$ & $0.70$--$0.80$ & Medium \\
 VA  & 11 & 1:10 & Likely   & $0.70$--$0.85$ & Medium \\
 OR  &  6 & 1:5  & Same     & $0.80$--$0.90$ & Medium \\
 \midrule
-\multicolumn{6}{l}{\textit{Sun Belt growth (low expected CSS)}} \\
+\multicolumn{6}{l}{\textit{Sun Belt growth (low candidate CSS)}} \\
 AZ  &  9 & 1:8  & Shifted  & $0.55$--$0.70$ & Low \\
 NV  &  4 & 1:3  & Shifted  & $0.50$--$0.65$ & Low \\
 NC  & 14 & 6:8  & Likely   & $0.65$--$0.80$ & Medium-low \\
 CO  &  8 & 1:7  & Shifted  & $0.60$--$0.75$ & Low-medium \\
-GA  & 14 & ---  & Unknown  & ---            & TBD \\
+GA  & 14 & ---  & Unknown  & ---            & Pending \\
 TX  & 38 & 1:37 & Shifted  & $0.50$--$0.65$ & Low \\
 FL  & 28 & 1:27 & Shifted  & $0.50$--$0.65$ & Low \\
 \bottomrule
@@ -264,9 +267,8 @@ ratio shift.
 \subsection{Two-Decade Stability: 2000 vs.\ 2010}
 \label{sec:three-census}
 
-Both the 2000 and 2010 GeoSection sweeps have completed (47/50 and 48/50 states
-respectively).
-The key stability metric at the first-bisection level is the
+For the available 2000--2010 proxy sample, the key stability metric at the
+first-bisection level is the
 \emph{tract split ratio} $f = |\mathrm{Left}| / (|\mathrm{Left}| + |\mathrm{Right}|)$,
 which measures what fraction of the state's tracts fall on the left side of
 the first bisection.
@@ -274,8 +276,8 @@ A stable state has $|f_{2000} - f_{2010}| \leq 0.05$.
 
 \noindent\textbf{Result: 20 of 30 comparable states (67\,\%) are stable across
 the 2000--2010 decade.}
-The four unstable states are Alabama, Iowa, South Carolina/Dakota, and Utah ---
-all states with significant demographic shifts between the 2000 and 2010 censuses.
+The 10 unstable or borderline cases include Alabama, Iowa, Mississippi,
+South Carolina, and Utah; the largest observed regime change is Iowa.
 
 \begin{itemize}
 \item \textbf{Alabama} ($f_{2000}=0.46 \to f_{2010}=0.40$): the Black Belt
@@ -294,19 +296,18 @@ The finding is best interpreted as: ``majority-stability is observed, with
 the lower bound of 48\,\% still above the null of 20\,\% random stability''
 (see \S\ref{sec:null-hypothesis} for the null derivation).
 
-The 67\,\% stability rate across a full census decade is the core empirical
+The 67\,\% proxy stability rate across a full census decade is the core empirical
 contribution of this paper.
 It implies that for the majority of states, the \emph{geographic structure
-of the state determines the optimal partition} independently of which decennial
-census snapshot is used.
-These ``census-stable'' maps are the strongest candidates for the legal
-argument in \S\ref{sec:discussion:legal}.
-Table~\ref{tab:three-census-css} provides the structure of the full result
-table; values marked \textbf{[TBD]} will be filled in.
+of the state appears to preserve the first split} under this proxy comparison.
+These ``census-stable'' maps are strong candidates for the evidentiary
+argument in \S\ref{sec:legal}.
+Table~\ref{tab:three-census-css} provides the structure of the future full
+result table; values marked pending require the Phase~2 package.
 
 \begin{table}[h]
 \centering
-\caption{Three-census CSS (2000/2010/2020). \textbf{[TBD: 2010 sweep pending.]}
+\caption{Three-census CSS (2000/2010/2020). Package computation pending.
   Columns: seat stability (Boolean), ratio stability (Boolean), gap similarity ($[0,1]$),
   CSS$_{3\text{yr}}$ ($[0,1]$), stability class.}
 \label{tab:three-census-css}
@@ -315,13 +316,13 @@ table; values marked \textbf{[TBD]} will be filled in.
 \toprule
 State & $s_{\text{seat}}$ & $s_{\text{ratio}}$ & $s_{\text{gap}}$ & CSS$_{3\text{yr}}$ & Class \\
 \midrule
-IA  & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-KS  & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-WI  & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-NC  & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-AZ  & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-TX  & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} & \textbf{[TBD]} \\
-\multicolumn{6}{c}{\textit{(full 50-state table pending 2010 sweep)}} \\
+IA  & pending & pending & pending & pending & pending \\
+KS  & pending & pending & pending & pending & pending \\
+WI  & pending & pending & pending & pending & pending \\
+NC  & pending & pending & pending & pending & pending \\
+AZ  & pending & pending & pending & pending & pending \\
+TX  & pending & pending & pending & pending & pending \\
+\multicolumn{6}{c}{\textit{(full 50-state table pending package computation)}} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -343,16 +344,14 @@ The GeoSection first bisection produced a 199/900 split ($f = 0.18$), placing
 Geometrically, this corresponds to a peel of the Des Moines metropolitan area
 from the remainder of rural Iowa---a small, densely populated core against a
 large, sparsely populated rural mass.
-The normalised edge-cut comparison strongly favoured the $1:3$ ratio at this
-census year: Des Moines's compact circular boundary generated a
-high-perimeter-to-area ratio that made the $1:3$ asymmetric split the
-minimum-edge-cut solution.
+The proxy evidence is consistent with a $1:3$ first split in this census year:
+a compact Des Moines-area peel competes against a larger rural remainder.
 
 \paragraph{2010 Census: near-equal geographic split.}
 By 2010, Iowa had approximately 1{,}286 census tracts---a 17\,\% increase
 driven primarily by the Census Bureau subdividing rapidly growing suburban
 tracts around Des Moines, Cedar Rapids, Iowa City, and the Quad Cities.
-The GeoSection first bisection shifted to a 630/656 split ($f = 0.49$),
+The first-bisection proxy shifted to a 630/656 split ($f = 0.49$),
 a near-equal east/west geographic division of the state.
 At the $2:2$ seat configuration, roughly half the state's tracts fall on
 each side.
@@ -402,8 +401,8 @@ would isolate this effect: if running GeoSection on the 2020 graph with
 If it produces $f \approx 0.18$, Hypothesis~A is dominant.
 
 \paragraph{The Lorenz drift proxy for Iowa.}
-GeoSection selects ratio $1:3$ in 2000 (Des Moines isolated) and $2:2$ in
-2010 (near-equal E/W split).
+The proxy table reads Iowa as a $1:3$-style split in 2000 (Des Moines isolated)
+and a $2:2$-style split in 2010 (near-equal E/W split).
 Under the Lorenz interpretation, a $1:3$ ratio at the first level indicates
 $p^*(0.5) \approx 0.65$ --- the densest 50\,\% of Iowa's land contained
 approximately 65\,\% of the state's population in 2000, consistent with
@@ -465,7 +464,7 @@ Computing actual Jaccard values requires the 2000/2010 TIGER tract-level
 assignments, available at
 \texttt{outputs/\{year\}/states/\{state\}/data/final\_assignments.json}.
 This computation is deferred to the three-census CSS evaluation phase when
-the full 2010 sweep completes.
+the package-complete cross-year assignments are available.
 
 \paragraph{Proxy Jaccard from tract split ratio $f$.}
 As a proxy for district-level Jaccard stability, we use the tract split
@@ -533,7 +532,7 @@ UT  & 0.32 & 0.25 & 0.07 & Medium \\
 AZ  & 0.11 & 0.11 & 0.00 & High \\
 \bottomrule
 \multicolumn{5}{l}{\textit{Note}: Values marked 0.00 for states with stable ratios are exact matches.} \\
-\multicolumn{5}{l}{\textit{Entries for states not yet in 2000/2010 sweeps are estimated from 2020 $p^*$.}} \\
+\multicolumn{5}{l}{\textit{Entries without paired outputs are provisional and derived from 2020 $p^*$.}} \\
 \end{tabular}
 \end{table}
 
@@ -562,7 +561,7 @@ Threshold $\tau$ & Stable states & Unstable states & Fraction stable \\
 \end{tabular}
 \end{table}
 
-The 67\,\% finding at $\tau = 0.05$ is not a threshold artefact.
+The 67\,\% finding at $\tau = 0.05$ is not only a threshold artefact.
 The four states with $\Delta f \geq 0.15$ (Iowa with 0.31,
 and three additional states near 0.15--0.20) are genuinely large-magnitude
 shifts that remain unstable at all thresholds above.
@@ -570,13 +569,13 @@ Moving to $\tau = 0.10$ adds 3 borderline states (Alabama at 0.06,
 South Carolina at 0.07, Utah at 0.07) to the stable category.
 The finding that a majority of states are stable is robust across all
 four threshold choices; the 67\,\% headline figure corresponds to the
-most defensible threshold (5\,\%), which is approximately the sampling
-uncertainty in $f$ for a typical 1{,}000-tract state at 50 seeds.
+working threshold (5\,\%).  A final paper should justify that threshold from
+archived seed dispersion rather than treating it as a settled sampling error.
 
 \subsection{Lorenz Drift Proxy Analysis}
 \label{sec:lorenz-analysis}
 
-While the full cross-census comparison awaits complete 2000 and 2010 sweeps,
+While the full cross-census comparison awaits package completion,
 the Lorenz drift proxy provides an immediate stability estimate from the 2020
 data alone.
 

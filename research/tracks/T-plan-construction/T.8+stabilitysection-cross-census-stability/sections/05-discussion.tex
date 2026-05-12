@@ -4,7 +4,7 @@
 \subsection{Legal Theory: CSS as a Litigation Tool}
 \label{sec:legal}
 
-The Census Stability Score has a precise legal application in
+The Census Stability Score has a potential evidentiary application in
 post-\emph{Rucho} partisan gerrymandering litigation.
 
 \paragraph{The constitutional argument.}
@@ -15,24 +15,21 @@ The key factual question in state-court litigation is: \emph{does the enacted
 map deviate from the natural map, and if so, can the deviation be explained
 by legitimate geographic factors?}
 
-A GeoSection map with CSS $\geq 0.90$ provides the strongest possible answer
-to this question.
-The map is the natural map.
-It has been the natural map across three independent decennial censuses.
-Any deviation from it---any enacted map that differs from the GeoSection
-optimal---is \emph{not} the natural map and requires an explanation beyond
-geography.
+A GeoSection map with CSS $\geq 0.90$ would provide a strong geography-first
+record for this question.
+It would show that the same procedure selected the same structure across three
+independent decennial censuses.  Any enacted map that differs from that
+structure would then need to be explained against a concrete benchmark, but CSS
+alone would not decide the legal question.
 
-\begin{conjecture}[CSS as Geographic Burden Shift]
+\begin{conjecture}[CSS as Geographic Evidence]
 \label{prop:burden-shift}
 If a state has a GeoSection map with CSS$_{3\text{yr}} \geq 0.90$, then
-for any enacted congressional map that differs from the GeoSection map,
-the Legislature cannot justify the deviation on geographic grounds alone,
-because the geographic structure of the state has consistently implied a
-different partition across three independent census cycles.\footnote{This
-conjecture is supported empirically across all 50 states for three census
-decades (2000, 2010, 2020). A formal mathematical proof under the stated
-regularity conditions is left as an open problem.}
+an enacted congressional map that differs from the GeoSection map should be
+compared against that stable benchmark before the deviation is attributed to
+geography alone.\footnote{This is a proposed evidentiary use of CSS, not a
+claim about the governing legal burden in any jurisdiction.  The full
+three-census package remains future evidence.}
 \end{conjecture}
 
 The strength of Conjecture~\ref{prop:burden-shift} increases with:
@@ -42,18 +39,19 @@ to the GeoSection map, and
 (c) the stability of the surrounding states (if all neighbouring states
 have CSS $\geq 0.90$, the geographic argument is regional, not idiosyncratic).
 
-\paragraph{The ``before living memory'' standard.}
-A map with CSS $\geq 0.90$ across 2000, 2010, and 2020 \emph{existed before
-living memory of the current partisan alignment}.
+\paragraph{The historical-vintage argument.}
+A map with CSS $\geq 0.90$ across 2000, 2010, and 2020 existed before the
+latest census-vintage political data used in the current redistricting cycle.
 In 2000, the specific partisan geography that characterises today's Republican
 dominance in exurban and rural areas was less pronounced; the urban-rural
 divide was real but less extreme.
-The fact that GeoSection produces the same 5\,D/9\,R outcome in 2000 as in
-2020 for a state like Wisconsin means the outcome is not contingent on the
-current partisan distribution.
+If GeoSection produced the same 5\,D/9\,R outcome in 2000 as in 2020 for a
+state like Wisconsin, that would be evidence that the outcome is not contingent
+on the current partisan distribution.
 It predates the 2016 political realignment.
 It predates the post-2010 Tea Party Republican gains in suburban areas.
-It is geography.
+It would be geography-first evidence, subject to the usual caveats about
+election data, enacted-plan comparison, and state law.
 
 \paragraph{The Lorenz-stable map as a statute design tool.}
 A proposed Districting Integrity Act could incorporate CSS as a procedural
@@ -61,8 +59,8 @@ threshold:
 \begin{enumerate}
 \item Any proposed congressional map must be accompanied by its CSS score
   computed against the GeoSection-optimal map.
-\item Maps with CSS $\geq 0.90$ may be adopted by administrative certification
-  (no legislative override required).
+\item Maps with CSS $\geq 0.90$ may be eligible for administrative
+  certification under a statute that chooses to create that pathway.
 \item Maps with CSS $0.70$--$0.90$ require a majority-vote legislative approval
   with public disclosure of the CSS components.
 \item Maps with CSS $< 0.70$ trigger a heightened judicial review process,
@@ -74,16 +72,16 @@ This framework respects democratic self-governance: legislatures retain the
 ability to adopt non-GeoSection maps, but they must publicly acknowledge the
 degree to which their map departs from the natural geographic partition.
 
-\paragraph{States with high CSS are the strongest litigation targets.}
+\paragraph{States with high CSS are the clearest review targets.}
 When a high-CSS state has an enacted map that differs from GeoSection,
-the discrepancy is maximally hard to explain by geography.
+the discrepancy is harder to explain by geography alone.
 Wisconsin (CSS $\approx 0.90$, predicted) has a 1:7 ratio anchored by
 Milwaukee's fixed municipal boundary and Lake Michigan shoreline.
 If Wisconsin's enacted map packed Milwaukee into a single district in a
 way that produced a different city-versus-suburbs configuration, the
-discrepancy could not be attributed to any geographic force: the algorithm,
-across three censuses, has consistently identified Milwaukee's compact
-geography as the natural first-level peel.
+discrepancy would require a more specific geographic explanation: the
+algorithm, across three censuses, would have consistently identified
+Milwaukee's compact geography as the natural first-level peel.
 Note: Iowa is a low-CSS state (confirmed ratio shift from $1:3$ in 2000 to
 $2:2$ in 2010; see \S\ref{sec:iowa-case-study}) and is therefore a weaker
 litigation target under this framework despite its recent near-uniform
@@ -110,7 +108,7 @@ We observe 20 stable states, a surplus of 14 over the random baseline.
 The binomial $p$-value for observing $\geq 20$ stable states under the 20\,\%
 null is $p < 0.001$ ($\binom{30}{k} 0.2^k 0.8^{30-k}$ for $k \geq 20$).
 
-This framing establishes that the 67\,\% finding is not an artefact of a
+This framing suggests that the 67\,\% finding is not merely an artefact of a
 lenient stability definition.
 Even using the conservative 5\,\% threshold ($\tau = 0.05$), the observed
 rate is far above the null, and the lower bound of the Wilson 95\,\%
@@ -188,12 +186,12 @@ Cross-census stability for these large states requires higher seed counts
 We report their 2020 natural ratios as provisional and exclude them from the
 CSS computation until higher-confidence estimates are available.
 
-\paragraph{2010 sweep not yet complete.}
-The three-census CSS requires 2010 data.
-The 2010 sweep is in progress.
-Two-census CSS covers the largest twenty-year span (2000--2020) and is
-theoretically the stronger argument (a shorter interval would not capture
-the 2010 redistricting cycle's partisan context).
+\paragraph{Package-complete CSS not yet available.}
+The three-census CSS requires the year-complete package and a common cross-year
+comparison format.
+Two-census CSS covers the largest twenty-year span (2000--2020), but it is not
+yet a substitute for the three-census table because it omits the intermediate
+redistricting cycle.
 Three-census CSS will strengthen the claim by adding an intermediate
 data point that lies \emph{between} the bookend years.
 
@@ -207,13 +205,13 @@ The CSS for seat-count-changing states should be interpreted with this caveat.
 
 \subsection{The 2D Stability Picture: (seed, census)}
 
-Combining B.7's seed stability results with T.8's census stability predictions,
+Combining B.7's seed stability results with T.8's census stability evidence and predictions,
 we can sketch a $2\times 2$ stability matrix:
 
 \begin{table}[h]
 \centering
 \caption{$2\times 2$ stability matrix: seed stability (B.7) $\times$ census
-  stability (T.8 predicted). Representative states in each cell.}
+  stability (T.8 evidence and predictions). Representative states in each cell.}
 \label{tab:2d-stability}
 \begin{tabular}{l l l}
 \toprule
@@ -226,9 +224,9 @@ Low seed stability  & TX, FL, CA         & (none expected) \\
 \end{table}
 
 States in the top-right cell (high seed stability, high census stability)
-have the strongest geographic determinism claim and are the most legally
-defensible.
-States in the bottom-right cell are theoretically expected to be empty:
+have the strongest geographic determinism record and are the easiest to defend
+as geography-first outputs.
+States in the bottom-right cell are expected to be rare:
 if the geographic structure is durable across censuses, it should also be
 easily detectable by the algorithm (high seed convergence).
 States in the bottom-left cell (TX, FL, CA) are algorithmically difficult:
@@ -240,20 +238,16 @@ These states require the most procedural justification for any particular map.
 \subsection{Predictive Model for CSS}
 
 The theoretical framework suggests a predictive regression:
-\[
-  \mathrm{CSS}(s) \sim f(\text{pop\_growth\_rate},\; \text{urban\_boundary\_growth},\;
-                        \text{seat\_count\_change},\; p^*_{2020})
-\]
-with expected signs:
-$\partial\mathrm{CSS}/\partial\text{pop\_growth} < 0$ (faster growth
-$\to$ lower CSS),
-$\partial\mathrm{CSS}/\partial\text{boundary\_growth} < 0$ (expanding
-city $\to$ Lorenz drift),
-$\partial\mathrm{CSS}/\partial\text{seat\_change} < 0$ (apportionment
-change $\to$ ratio comparison noise),
-$\partial\mathrm{CSS}/\partial p^*_{2020}$ depends on whether the ratio
+\begin{align*}
+  \mathrm{CSS}(s) \sim f(&\text{population growth},\;
+                         \text{urban boundary growth},\\
+                       &\text{seat-count change},\;
+                         p^*_{2020}).
+\end{align*}
+The expected signs are negative for population growth, urban boundary growth,
+and seat-count change.  The sign of $p^*_{2020}$ depends on whether the ratio
 is in the metropolitan-fixity region.
 
-This regression, fit on the complete three-census CSS dataset once available,
+This regression, fit on the package-complete three-census CSS dataset once available,
 would allow CSS prediction for future census cycles before running the full
 50-state sweep.

@@ -8,49 +8,47 @@ along three dimensions: partisan seat outcomes, natural ratio selection, and
 proportionality gap magnitude.
 
 The central claim of this paper is that census stability is a qualitatively
-distinct and legally stronger form of algorithmic robustness than within-year
-seed stability.
+distinct form of algorithmic robustness from within-year seed stability.
 B.7 establishes that GeoSection finds the same answer regardless of random
 initialisation.
-T.8 establishes that it finds the same answer regardless of which decennial
-census snapshot is used as input.
-The combination is the strongest available form of geographic determinism:
-the natural partition of a state is determined by the physical geography---
-not by random chance, not by partisan composition, not by decennial population
-dynamics.
+T.8 defines how to test whether it finds the same answer when the decennial
+census snapshot changes.
+The combination is a strong geographic-determinism record when both tests pass:
+the observed partition is less likely to be an artefact of random chance,
+particular census-vintage data, or one run of the solver.
 
 \paragraph{Key findings.}
-From the complete 2020 GeoSection baseline (44 multi-district states) and the
-available 2000 sweep data (47 states), we establish:
+From the 2020 GeoSection baseline and the available 2000--2010 proxy table, we
+establish the following working picture:
 
 \begin{itemize}
-\item \textbf{Twelve states expect CSS $\geq 0.90$} (full three-census):
+\item \textbf{Several states are candidates for high CSS} (full three-census):
   the Midwest row (IA, KS, NE, IN, MO), the traditional South (AL, AR, LA, KY,
   TN), and New England (ME, WV, RI).
-  These states' geographic structures have been stable for two decades; their
+  These states' geographic structures appear stable in the proxy evidence; their
   natural ratios are anchored by physical features---agricultural uniformity,
   mountain topography, fixed city boundaries---that do not change with
   decennial population counts.
 
-\item \textbf{Seventeen states expect CSS $0.70$--$0.90$} (moderate stability):
+\item \textbf{A second group is likely to show moderate stability}:
   the industrial Midwest (IL, PA, MI, OH), the growing South (VA, NC, SC),
   and the Pacific Coast (OR, WA).
-  These states have stable first-level ratios but may see slight seat-count
+  These states often have stable first-level ratios but may see slight seat-count
   shifts as suburban growth continues.
 
-\item \textbf{Six states expect CSS $< 0.70$} (structurally volatile):
+\item \textbf{Fast-growth states are the main volatility candidates}:
   the Sun Belt growth corridor (TX, AZ, FL, GA, NV, CO).
   These states have undergone the most dramatic population redistribution
   between 2000 and 2020; their metropolitan geographies have reorganised in
   ways that shift the natural ratio.
-  This is not an algorithm failure---it is a signal that the geographic
+  This would not be an algorithm failure---it would be a signal that the geographic
   structure of these states has genuinely changed.
 
-\item \textbf{The Lorenz drift proxy is actionable now}:
+\item \textbf{The Lorenz drift proxy is useful for triage}:
   states where $p^*$ drifts by $>0.03$ between available estimates are
   flagged for priority re-evaluation at each redistricting cycle.
-  This provides a pre-census early warning that does not require running
-  the full GeoSection sweep.
+  This provides a pre-census early warning candidate that does not require
+  running the full GeoSection sweep.
 \end{itemize}
 
 \paragraph{CSS as a litigation tool.}
@@ -61,22 +59,23 @@ of population change, two political realignments, and a national demographic
 transformation---all converge to the same answer.
 Any deviation from this map requires an explanation that is not geography.''
 
-For states with CSS $\geq 0.90$, this is the \emph{strongest available}
-procedural-fairness claim in post-\emph{Rucho} redistricting litigation.
+For states with CSS $\geq 0.90$, this could become a strong procedural-fairness
+record in post-\emph{Rucho} redistricting litigation.
 It does not require proof of partisan intent (constitutionally difficult).
 It does not require a partisan-symmetry measurement (empirically contested).
-It requires only the CSS score and the three-census GeoSection run---both
-computed from public data using a published algorithm.
+It requires the CSS score, the three-census GeoSection run, archived plan
+packages, and the jurisdiction-specific legal record.
 
 \paragraph{Future work.}
 \begin{itemize}
 \item \textbf{Complete three-census CSS.}
-  The 2010 sweep is in progress; completing it will produce the full
-  three-census CSS table for all 50 states.
+  The next evidence lift is the package-complete three-census CSS table:
+  archived summaries, assignments, crosswalks, and outcome diagnostics for all
+  states where the comparison is meaningful.
   This is the next session's primary task.
 
 \item \textbf{Jaccard district-assignment stability.}
-  Once the 2000-to-2020 tract alignment is implemented, the full district
+  Once the cross-year tract alignment is implemented, the full district
   Jaccard computation will provide RQ3 (district-assignment stability)
   and RQ5 (Lorenz curve drift analysis) from the plan.
 
@@ -86,9 +85,9 @@ computed from public data using a published algorithm.
   boundary redesign to instability.
 
 \item \textbf{Predictive model for CSS.}
-  Fitting the regression CSS $\sim f(\text{pop growth, boundary growth,
-  seat change, } p^*)$ on the complete three-census dataset will enable
-  pre-census CSS prediction for 2030 redistricting.
+  Fitting a CSS regression on population growth, boundary growth, seat-count
+  change, and $p^*$ will enable pre-census CSS prediction for 2030
+  redistricting once the package-complete three-census dataset exists.
 
 \item \textbf{Temporal sensitivity using ACS 5-year estimates.}
   Testing whether $\Delta p^*$ between consecutive ACS releases predicts
@@ -97,9 +96,9 @@ computed from public data using a published algorithm.
 \end{itemize}
 
 \paragraph{Code and data availability.}
-StabilitySection is implemented in the \texttt{bisect} Rust binary.
-Cross-census GeoSection runs use \texttt{bisect state --year \{2000,2010,2020\}
---partition-mode geosection}.
-Sweep outputs are available in the replication archive
-(\texttt{research/A.4+replication-materials}).
-The CSS computation script is in \texttt{scripts/research/stability\_section/}.
+The construction side uses the \texttt{bisect} Rust binary with
+\texttt{bisect state --year \{2000,2010,2020\} --partition-mode geosection}
+or the multi-year \texttt{BISECT run} workflow.  The CSS aggregation layer
+described here is not yet a dedicated production CLI command; the remaining
+Phase~2 package should archive the exact run summaries, assignment files,
+crosswalks, and scripts used to compute CSS.

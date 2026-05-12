@@ -36,13 +36,13 @@ metropolitan cores, GeoSection \emph{confirms} the asymmetric split that
 unnormalised minimum-edge-cut would also select, while for states with
 distributed population, it correctly selects a more balanced split.
 
-For cross-census stability, GeoSection's normalisation provides a theoretical
-stability guarantee: the denominator $\sqrt{\min(i,k-i)}$ is a function of
+For cross-census stability, GeoSection's normalisation provides a useful
+stability argument: the denominator $\sqrt{\min(i,k-i)}$ is a function of
 the \emph{number of districts}, not the population distribution.
 If the state's seat count is unchanged between censuses (the common case), the
 normalisation formula is identical; only the edge-cut numerator changes with
 population.
-We show in \S\ref{sec:theory} that the natural ratio is stable whenever the
+We conjecture in \S\ref{prop:lorenz} that the natural ratio is stable whenever the
 population shift is small relative to the isoperimetric gap between the winning
 and second-best ratios.
 
@@ -128,6 +128,7 @@ datasets, produces well-formed outputs with valid population balance.
 T.8's focus is complementary but distinct: we study the \emph{mathematical
 invariance} of the algorithm's optimal answer, not the \emph{computational
 reliability} of the pipeline.
-C.2 is a prerequisite for T.8 (we need the three census years in the
-pipeline), and T.8 provides the theoretical explanation for the empirical
-findings C.3 reports on temporal district assignment drift.
+C.2 is a prerequisite for T.8 because the comparison is only meaningful when
+the year-specific input packages are reproducible.  C.3 then studies temporal
+district assignment drift directly, while T.8 focuses on the GeoSection
+first-split and CSS measurement layer.

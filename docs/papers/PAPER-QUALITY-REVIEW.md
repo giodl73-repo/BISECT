@@ -67,7 +67,7 @@ are called complete.
 | 2 | T.14-T.17 | Construction-family golden vertical slices | Completed 2026-05-12 |
 | 3 | U.16-U.20 | Exact/search/audit certificate family, including U.20 fixed-point language | Completed 2026-05-12 |
 | 4 | U.10, G.4, G.7, G.10, G.11 | Sampling and ensemble methods | Completed 2026-05-12 |
-| 5 | T.5-T.13, U.0-U.7, U.11, U.13-U.15 | Older algorithm-family papers not yet lifted to the same explanatory standard | In progress: T.5-T.7 complete |
+| 5 | T.5-T.13, U.0-U.7, U.11, U.13-U.15 | Older algorithm-family papers not yet lifted to the same explanatory standard | In progress: T.5-T.8 complete |
 | 6 | B/C/D/F/G/A synthesis tracks | Portfolio, validation, legal, legislative, ensemble, and synthesis papers | Queued |
 | 7 | E/I/J/K/L/M/N/O/P/Q/R/S tracks | Remaining indexed papers and source-only drafts | Queued |
 
@@ -276,7 +276,7 @@ than the current short-run smoke comparison.
 | T.5 ProportionalSection | Reviewed 2026-05-12 | Reframed guarantee language as a top-level proportional target, added a worked block split, aligned the paper with the current top-split-only `run_proportional_section` implementation, corrected electorate/population notation, narrowed Lorenz feasibility to the non-contiguous relaxation, strengthened legal caveats, and clarified that numeric tables need archived trace packages | Rebuilt; no undefined refs/cites/BibTeX warnings/overfull boxes; PDF copied |
 | T.6 NestSection | Reviewed 2026-05-12 | Reframed the paper as theory plus an implemented validation substrate, corrected the trivial/weak/substantive strict-state counts, fixed the stale 22-state and `g >= 3` threshold claims, added clean and uneven nesting split examples, softened legal guarantees, aligned crate/CLI names with BISECT, and narrowed Mode 3 guarantees to reportable targets | Rebuilt; no undefined refs/cites/BibTeX warnings/overfull boxes; PDF copied |
 | T.7 VRASection | Reviewed 2026-05-12 | Reframed legal claims as design and evidence boundaries, aligned the demographic input with the current BISECT proxy implementation, removed first-level-to-final-plan compliance guarantees, clarified VAP/CVAP requirements, narrowed Alabama to a first-level precondition case, and fixed bibliography/build issues | Rebuilt; no undefined refs/cites/BibTeX warnings/overfull boxes; focused VRASection/demographics tests passed; PDF copied |
-| T.8 StabilitySection | Queued | Queued | Queued |
+| T.8 StabilitySection | Reviewed 2026-05-12 | Reframed StabilitySection as a cross-census audit layer rather than a map constructor, separated ratio/split-share/Jaccard evidence levels, added block-array split visuals, narrowed legal claims to evidentiary use, replaced computed-CSS overclaims with package-completion boundaries, and cleaned stale bibliography/build issues | Rebuilt; no undefined refs/cites/BibTeX warnings/overfull boxes; PDF copied |
 | T.9 Multi-Reapportionment Stability | Queued | Queued | Queued |
 | T.10 Centroidal Voronoi | Queued | Queued | Queued |
 | T.11 CVD Geographic | Queued | Queued | Queued |
@@ -292,6 +292,7 @@ than the current short-run smoke comparison.
 | T.5 ProportionalSection | 3.8 | 3.7 | 3.5 | 3.9 | 4.0 | 3.6 | 22.5 / 24 |
 | T.6 NestSection | 3.7 | 3.6 | 3.3 | 3.9 | 4.0 | 3.7 | 22.2 / 24 |
 | T.7 VRASection | 3.7 | 3.6 | 3.4 | 3.9 | 4.0 | 3.4 | 22.0 / 24 |
+| T.8 StabilitySection | 3.7 | 3.6 | 3.2 | 3.8 | 4.0 | 3.5 | 21.8 / 24 |
 
 ### Batch 5 Score Notes
 
@@ -327,3 +328,13 @@ archived partition packages, district-level demographic analysis, VAP/CVAP
 denominators, and bloc-voting review. The remaining ceiling is empirical and
 legal: stronger scoring requires final-plan packages and jurisdiction-specific
 legal analysis, not only first-level split tables.
+
+**T.8 StabilitySection -- 21.8/24.** The paper now reads as an audit/evaluation
+layer over GeoSection rather than a new constructor. The core improvement is
+the evidence ladder: L1 ratio stability, L2 first-split tract-share stability,
+and L3 district-assignment Jaccard. The new block-array examples show why a
+stable ratio is weaker than a stable visible split, and the legal discussion
+now treats CSS as evidence rather than a burden-shifting rule. The remaining
+ceiling is empirical: full three-census CSS needs archived year-by-year
+GeoSection packages, crosswalked assignments, district-level Jaccard, and
+same-year outcome diagnostics.

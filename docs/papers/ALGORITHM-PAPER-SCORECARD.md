@@ -66,7 +66,7 @@ Score bands:
 | T.5 ProportionalSection | 3.8 | 3.7 | 3.5 | 3.9 | 4.0 | 3.6 | 22.5 | Golden |
 | T.6 NestSection | 3.7 | 3.6 | 3.3 | 3.9 | 4.0 | 3.7 | 22.2 | Golden; constructor/maps remain future evidence |
 | T.7 VRASection | 3.7 | 3.6 | 3.4 | 3.9 | 4.0 | 3.4 | 22.0 | Golden; final-plan VAP/CVAP evidence pending |
-| T.8 StabilitySection | 3.1 | 3.0 | 3.0 | 3.0 | 3.3 | 3.0 | 18.4 | Needs clearer algorithm-vs-analysis scope |
+| T.8 StabilitySection | 3.7 | 3.6 | 3.2 | 3.8 | 4.0 | 3.5 | 21.8 | Strong; full CSS packages pending |
 | T.9 Multi-Reapportionment Stability | 3.1 | 3.0 | 2.9 | 3.0 | 3.3 | 3.0 | 18.3 | Needs examples and current data anchors |
 | T.10 Centroidal Voronoi | 3.0 | 3.2 | 2.8 | 3.0 | 3.3 | 3.0 | 18.3 | Algorithm explanation pass needed |
 | T.11 CVD Geographic | 3.0 | 3.1 | 2.8 | 3.0 | 3.3 | 3.0 | 18.2 | Needs visuals and implementation parity |
@@ -158,7 +158,7 @@ Score bands:
 
 ## Highest-Priority Lifts
 
-1. Continue the legacy construction pass: T.8-T.13. These need the same "show the split,
+1. Continue the legacy construction pass: T.9-T.13. These need the same "show the split,
    show the candidate, show the rejection" standard that made T.1 and U.18 much
    clearer.
 2. Metric correctness pass: K.2 first, then K.0/K.7 propagation. The Reock
@@ -172,7 +172,7 @@ Score bands:
 
 | Track family | Included rows | Current center of gravity | Main gap |
 |---|---:|---|---|
-| B/T construction foundations | 26 | Strong for reviewed/new slices, serviceable for older slices; T.5-T.7 now golden | legacy visuals and audit/package bridges |
+| B/T construction foundations | 26 | Strong for reviewed/new slices, serviceable for older slices; T.5-T.7 golden and T.8 strong | legacy visuals and audit/package bridges |
 | U search/optimization/audit | 21 | Strong, with U.10 and U.16-U.20 golden | refresh older U.2-U.7 and U.13-U.15 |
 | G ensemble/sampling | 16 | Strong but uneven; G.4/G.7/G.10/G.11 now golden | older G refresh and data-validation cleanup |
 | J apportionment | 7 | Serviceable | J.6 stale implementation claims |

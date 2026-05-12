@@ -6,7 +6,27 @@
 StabilitySection is not a new redistricting algorithm.
 It is an analysis framework that runs GeoSection once per census year for
 each state and compares outputs along four dimensions:
-natural ratio, bisection tree structure, district assignments, and partisan seats.
+natural ratio, bisection tree structure, district assignments, and outcome
+diagnostics.
+In the current BISECT codebase, the construction step is the existing
+\texttt{bisect state --partition-mode geosection} or multi-year
+\texttt{BISECT run} surface; the CSS aggregation described here is a paper
+and script-level audit layer rather than a dedicated production subcommand.
+
+\paragraph{Three evidence levels.}
+The paper uses three increasingly strong stability objects:
+\begin{center}
+\small
+\begin{tabular}{p{0.24\textwidth} p{0.33\textwidth} p{0.33\textwidth}}
+\toprule
+Level & What is compared & Current status \\
+\midrule
+L1 ratio & first-level split ratio such as $1:7$ or $2:2$ & available from GeoSection summaries \\
+L2 split share & tract share $f=|L|/(|L|+|R|)$ at the first bisection & used for the 30-case proxy table \\
+L3 assignment & district-to-district Jaccard after crosswalk/matching & Phase~2 package work \\
+\bottomrule
+\end{tabular}
+\end{center}
 
 \begin{algorithm}
 \caption{StabilitySection}
@@ -27,6 +47,38 @@ natural ratio, bisection tree structure, district assignments, and partisan seat
 \State \Return $\textsc{ComputeCSS}(\{r_y\}, \{T_y\}, \{A_y\}, \{p^*_y\}, \{\text{seats}_y\})$
 \end{algorithmic}
 \end{algorithm}
+
+\paragraph{Why the split is shown rather than named.}
+For a four-seat state, the first-level candidate family is not just labels
+``1:3'' and ``2:2''.  Each ratio induces a visible partition of the state graph:
+\[
+\begin{array}{c@{\qquad}c@{\qquad}c}
+\text{1:3 peel} &
+\begin{array}{|c|c|c|c|}
+\hline
+A & B & B & B\\
+\hline
+B & B & B & B\\
+\hline
+\end{array}
+&
+f=1/8\\[1.2em]
+\text{2:2 divide} &
+\begin{array}{|c|c|c|c|}
+\hline
+A & A & B & B\\
+\hline
+A & A & B & B\\
+\hline
+\end{array}
+&
+f=4/8
+\end{array}
+\]
+StabilitySection asks whether the same kind of picture recurs when the census
+year changes.  A repeated ratio with a very different $f$ is weaker evidence
+than a repeated ratio with the same visible split; a repeated $f$ is still
+weaker than a full district-assignment Jaccard match.
 
 \subsection{The Census Stability Score}
 \label{sec:css-definition}
@@ -87,8 +139,9 @@ where $\Delta f(s) = \min(r_y^L, r_y^R)/k_y - \min(r_{y'}^L, r_{y'}^R)/k_{y'}$
 is the fractional ratio shift.
 This assigns $s_{\text{ratio}} = 1$ when $\Delta f = 0$, $s_{\text{ratio}} = 0.4$
 when $\Delta f = 0.06$ (Alabama), and $s_{\text{ratio}} = 0$ when $\Delta f \geq 0.10$.
-All results in this paper use the binary formulation.
-The continuous alternative is presented here for completeness and future calibration.
+The score definitions use the binary formulation.  The proxy analysis also
+reports the continuous $\Delta f$ values because they are more informative for
+borderline cases such as Alabama and South Carolina.
 \end{remark}
 
 \paragraph{Gap similarity.}
@@ -236,14 +289,15 @@ the algorithmic output.
 \subsection{CSS for Two Census Years}
 \label{sec:two-year-css}
 
-With complete 2020 data and partial 2000 data, we compute a two-census CSS:
+For the package-complete version, the two-census CSS is:
 \[
   \mathrm{CSS}_{2\text{yr}}(s) = 0.5 \cdot s_{\text{seat}}^{(2000,2020)}
                                 + 0.3 \cdot s_{\text{ratio}}^{(2000,2020)}
                                 + 0.2 \cdot s_{\text{gap}}^{(2000,2020)}.
 \]
 This covers a twenty-year span.
-The full three-census CSS will incorporate 2010 when that sweep completes:
+The full three-census CSS will incorporate 2010 when the package layer is
+available:
 \[
   \mathrm{CSS}_{3\text{yr}}(s) = 0.5 \cdot \bar{s}_{\text{seat}}
                                 + 0.3 \cdot \bar{s}_{\text{ratio}}
