@@ -4,18 +4,18 @@
 \subsection{Summary}
 
 We have presented Multi-scale MCMC Option B for redistricting, implemented
-in \texttt{redist-ensemble} and exposed via \texttt{--search multiscale}
-in \texttt{redist-cli}.
+in the BISECT CLI as \texttt{bisect state --search multiscale}.
+The reusable substrate lives in \texttt{bisect-multiscale}; current production
+orchestration is in \texttt{bisect-cli}'s \texttt{run\_multiscale} wrapper.
 The key results are:
 
 \begin{enumerate}
 
-  \item \textbf{County adjacency from tract graph (exact, no extra data).}
+  \item \textbf{County adjacency from the run's tract graph.}
   The county adjacency graph required for coarse \recom{} moves is derived
-  exactly from the existing tract graph by scanning cross-county tract edges.
-  Two counties are adjacent in the derived graph if and only if they are
-  geographically adjacent.
-  No additional data files, shapefiles, or census downloads are required.
+  from the existing tract graph by scanning cross-county tract edges.
+  No additional shapefiles or census downloads are required for Option B beyond
+  the tract GEOID map already paired with the adjacency data.
   The derivation runs in $O(|E|)$ time ($<1$ ms for Texas).
 
   \item \textbf{Mixing speed improvement for large $k$.}
@@ -29,21 +29,21 @@ The key results are:
   The resolution system defines Options A (block group $\to$ tract), B
   (tract $\to$ county, implemented), and C (block group $\to$ county), all
   sharing the \texttt{derive\_partition} helper.
-  Options A and C require block-group adjacency data not currently loaded
-  by the pipeline and are defined for future implementation.
+  Options A and C require block-group adjacency data; the runner has paths for
+  those cases when the data are supplied.
 
 \end{enumerate}
 
 \subsection{When to Use Multi-scale MCMC}
 
-\ms{} is the recommended ensemble method when:
+\ms{} is a useful search method when:
 \begin{itemize}
   \item $k \geq 30$ (the large-$k$ mixing problem is acute); or
   \item The state has a strong county-district correspondence (many states
         have constitutional or statutory requirements to respect county
         boundaries); or
-  \item Ensemble analysis requires effective independence between samples
-        (litigation support, academic publication, legislative compliance).
+  \item Ensemble analysis needs faster exploration than single-scale ReCom and
+        can tolerate the current approximate, non-reversible coarse move.
 \end{itemize}
 
 Standard \recom{} remains appropriate for:
@@ -54,10 +54,11 @@ Standard \recom{} remains appropriate for:
 
 \subsection{Parameter Guidelines}
 
-Based on the $\alpha$-sweep results in Section~\ref{sec:mixing}:
+Based on the local $\alpha$-sweep results in Section~\ref{sec:mixing}:
 \begin{itemize}
-  \item $\alpha = 0.3$ is the recommended default for states with $k = 30$--$45$.
-  \item $\alpha = 0.35$ may improve mixing for $k \geq 50$ (CA, $k = 52$).
+  \item $\alpha = 0.3$ is a reasonable starting default for states with $k = 30$--$45$.
+  \item $\alpha = 0.35$ may improve mixing for $k \geq 50$ (CA, $k = 52$), but
+        should be checked with recorded traces.
   \item $\alpha < 0.2$ provides minimal benefit over standard \recom{}.
   \item $\alpha > 0.45$ increases rebalance failure rates and degrades
         effective acceptance.
@@ -66,17 +67,29 @@ Based on the $\alpha$-sweep results in Section~\ref{sec:mixing}:
 \subsection{Legal Context}
 
 \paragraph{County-preservation legal requirements.}
-Many state constitutions contain explicit county-preservation requirements: California Article~XXI \S2(d), Colorado Article~V \S47, and Florida Article~III \S21 all constrain how counties may be split across districts. The multi-scale algorithm's county-level coarse moves treat counties as atomic units \emph{during the coarse step}, which may appear to preserve county integrity. However, the subsequent fine-level rebalance can split counties at the tract level.
+Many state constitutions contain explicit county-preservation requirements,
+including California Article~XXI \S2(d), Colorado Article~V \S47, and Florida
+Article~III \S21.
+The multi-scale algorithm's county-level coarse moves treat counties as atomic
+units \emph{during the coarse step}, but the subsequent fine-level rebalance can
+split counties at the tract level.
 
-The correct legal interpretation: multi-scale does not inherently satisfy county-preservation requirements, and county-preservation constraints must be enforced as separate post-processing checks, just as with any other search method. The coarse moves do, however, tend to produce plans where district boundaries respect county lines more often than pure tract-level ReCom, since the coarse step moves entire counties between districts. This tendency should be quantified empirically for any specific state's redistricting cycle.
+The correct legal interpretation is narrow: multi-scale does not inherently
+satisfy county-preservation requirements.
+Those constraints must be enforced as separate checks, just as with any other
+search method.
+The coarse moves may tend to produce plans where district boundaries respect
+county lines more often than pure tract-level ReCom, but that tendency should be
+quantified empirically for the specific state and redistricting cycle.
 
 \subsection{Future Directions}
 
 Three natural extensions of the current implementation:
 
 \paragraph{Multi-scale Forest ReCom.}
-Replacing the fine \recom{} chain with \fr{}~\citep{dellaLibera2026forestRecom}
-would provide distributional guarantees for the fine-level component.
+Replacing the fine \recom{} chain with Forest ReCom
+\citep{dellaLibera2026forestRecom}
+would provide stronger target accounting for the fine-level component.
 The Metropolis-Hastings acceptance ratio used in \fr{} is well-defined on
 the fine plan space; combining it with coarse moves requires care in
 defining the joint acceptance criterion.
@@ -94,12 +107,16 @@ This would automate the $\alpha$ selection currently done manually.
 
 \subsection{Implementation Reference}
 
-The complete implementation is in \texttt{crates/redist-ensemble/src/multiscale.rs}.
-The CLI integration is in \texttt{crates/redist-cli/src/compositor/multiscale.rs}.
-The GEOID-prefix coarsening helper is in
-\texttt{crates/redist-core/src/adjacency\_loader.rs}
-(\texttt{derive\_partition} and \texttt{build\_county\_coarsening}).
+The reusable substrate is in \texttt{crates/bisect-multiscale/}: seed
+derivation, hierarchy construction, rebalance, and configuration defaults.
+Current CLI orchestration lives in the \texttt{bisect-cli} runner. Its entry
+point is \texttt{run\_multiscale}; level construction is handled by the same
+runner module, and public flags/configuration are wired through the CLI runner
+and argument modules.
+The standalone \texttt{MultiScaleChain} API is still a consolidation target
+rather than the production entrypoint.
 
-All runs are reproducible from the manifest entry \texttt{plan\_resolution: ``tract-county''}
-and the base seed $b$, using the deterministic step-level seed schedule
-(Section~\ref{sec:algorithm}).
+Runs are reproducible from the search parameters, fine/coarse levels, base seed
+$b$, and the deterministic step-level seed schedule
+(Section~\ref{sec:algorithm}); publication packages should also retain the EC
+trace and selected-plan hash.

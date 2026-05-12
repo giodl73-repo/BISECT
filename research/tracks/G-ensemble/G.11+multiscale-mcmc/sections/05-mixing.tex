@@ -3,14 +3,15 @@
 
 \subsection{Experimental Setup}
 
-We compare standard \recom{} and \ms{} (Option B, $\alpha = 0.3$) on
+We report a short-run comparison between standard \recom{} and \ms{} (Option B,
+$\alpha = 0.3$) on
 Texas ($k = 38$, year 2020) with $T = 2000$ total steps.
 The primary mixing diagnostic is the autocorrelation function (ACF) of the
 edge-cut statistic $\ec(\pi) = |\{(v_1, v_2) \in E : \pi(v_1) \neq \pi(v_2)\}|$,
 evaluated at lag $\ell \in \{1, 10, 25, 50, 100\}$.
 
-Both chains start from the same initial plan (the minimum-EC plan found by
-\cs{} with $T = 100$ seeds).
+Both chains start from the same initial plan (the low-EC plan found by
+\cs{} with $T = 100$ seeds in the recorded experiment).
 Both use the same base seed $b = 0$ for the step-level RNG schedule.
 Wall-clock time is measured on a single core; the county graph derivation
 is included in the \ms{} time but is negligible ($<1$ ms).
@@ -45,12 +46,18 @@ Reduction (\%)
 \end{tabular}
 \end{table}
 
-Values are means over $n_{\text{runs}}=5$ independent chains ($s \in \{42,\ldots,46\}$, $T=2{,}000$ steps). Standard errors on autocorrelation estimates are $\pm 0.03$ for multi-scale and $\pm 0.04$ for standard \recom{} (bootstrap, 1,000 resamples). The 43\% reduction in lag-100 autocorrelation is robust across all 5 seed pairs ($p < 0.01$ by paired $t$-test).
+Values are reported as means over $n_{\text{runs}}=5$ independent chains
+($s \in \{42,\ldots,46\}$, $T=2{,}000$ steps). The current repository does not
+archive the full trace package beside this paper, so these numbers should be
+read as reproducible-run targets for Phase 2 packaging rather than as standalone
+publication evidence. Future packages should include the seed list, selected
+plan hashes, step-level EC traces, and hardware/runtime metadata.
 
 At lag 100, \ms{} reduces autocorrelation from $0.51$ to $0.29$, a $43\%$
 reduction.
-This translates directly to a $\approx 1.8\times$ increase in effective
-sample size (ESS) for a fixed number of steps.
+Under the usual AR(1)-style heuristic, this corresponds to an approximate
+$1.8\times$ increase in effective sample size (ESS) for a fixed number of
+steps.
 
 The reduction grows with lag, indicating that coarse moves provide genuine
 long-range mixing: they introduce plan configurations that are far from the
@@ -64,25 +71,31 @@ separately.
 
 \begin{table}[h]
 \centering
-\caption{Acceptance rates and runtime, Texas ($k=38$), $T=2000$ steps.\protect\footnotemark}
+\caption{Acceptance rates and runtime, Texas ($k=38$), $T=2000$ steps.}
 \label{tab:accept}
-\begin{tabular}{lllll}
+{\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}p{0.24\linewidth}p{0.14\linewidth}p{0.15\linewidth}p{0.23\linewidth}p{0.12\linewidth}@{}}
 \toprule
 Method
   & $\mathrm{acc}_{\mathrm{fine}}$
   & $\mathrm{acc}_{\mathrm{coarse}}$
-  & Steps/sec (fine)
+  & Throughput
   & Runtime \\
 \midrule
 Standard \recom{} & $12\%$ & --- & 8.2 & 244 s \\
-\ms{} ($\alpha=0.3$) & $11\%$ & $58\%$ & 8.1 fine / 163 coarse & 251 s \\
+\ms{} ($\alpha=0.3$) & $11\%$ & $58\%$ & 8.1 fine; 163 coarse & 251 s \\
 \bottomrule
 \end{tabular}
+}
 \end{table}
 
-\footnotetext{Runtimes measured on an Intel Core i7-11800H (2.3 GHz, 24 MB L3 cache, Windows 11) using the \texttt{redist-cli} release build (Rust 1.78, \texttt{--release} flag, 8 Rayon threads). Results may differ on different hardware; runtime is dominated by Wilson's spanning tree algorithm, which scales as $O(n \log n)$ on planar graphs.}
+\noindent\emph{Runtime note.}
+Runtimes were recorded on an Intel Core i7-11800H (2.3 GHz, 24 MB L3 cache,
+Windows 11) using a release build. Results may differ on different hardware;
+runtime is dominated by Wilson's spanning tree algorithm and rebalance checks.
 
-The coarse acceptance rate ($58\%$) is high because the county graph is
+In the recorded run, the coarse acceptance rate ($58\%$) is high because the county graph is
 small ($\approx 100$ nodes for Texas) and balanced county populations are
 easier to achieve: counties partition more evenly into $k = 38$ groups than
 individual tracts do.
@@ -137,7 +150,9 @@ other ensemble methods for large-$k$ states.
 \caption{Ensemble method comparison for large $k$ (TX $k=38$, CA $k=52$).
 ESS per 1000 steps, normalised to standard \recom{} = 1.0.}
 \label{tab:method-compare}
-\begin{tabular}{lllll}
+{\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}p{0.23\linewidth}p{0.16\linewidth}p{0.15\linewidth}p{0.17\linewidth}p{0.16\linewidth}@{}}
 \toprule
 Method
   & Mixing (lag 100)
@@ -159,22 +174,29 @@ Standard \recom{}
   & $0.44$
   & $1.3\times$
   & $L \times O(n/k)$
-  & Optimisation, not ensemble \\
+  & Search only \\
 \be{} (bisection nodes)
   & $0.35$
   & $1.6\times$
   & $O(n/k)$
-  & Structured plans only \\
+  & Bisection only \\
 \bottomrule
 \end{tabular}
+}
 \end{table}
 
-\ms{} achieves the best mixing per wall-clock second among methods with
-comparable per-step cost.
+\ms{} is the strongest large-$k$ result in this local short-run comparison
+among methods with comparable per-step cost.
 \sburst{} is not designed for ensemble sampling (it optimises toward a
 target, not samples uniformly).
 \be{} achieves comparable ESS but is restricted to plans produced by the
 bisection tree structure~\citep{h1paper}.
 
 \paragraph{Comparison to Autry et al.\ speedup.}
-Our 1.8$\times$ ESS gain (for TX $k=38$, Option B) is lower than Autry et al.'s 3$\times$ speedup (for NC $k=13$, three-level hierarchy). The gap has three sources: (1) we use a two-level hierarchy (tract + county) vs.\ Autry et al.'s three levels (tract + county + state); (2) TX $k=38$ has more districts than NC $k=13$, making each coarse step smaller relative to the total restructuring needed; (3) Autry et al.\ report ESS improvement on a different summary statistic (compactness vs.\ partisan seat share). A direct apples-to-apples comparison would require running both methods on the same state, same chain, same summary statistic, which is deferred to Phase 2.
+Our approximate 1.8$\times$ ESS gain (for TX $k=38$, Option B) is lower than
+Autry et al.'s 3$\times$ speedup (for NC $k=13$, three-level hierarchy). The
+gap has three likely sources: (1) we use a two-level hierarchy (tract + county)
+vs.\ Autry et al.'s three levels; (2) TX $k=38$ has more districts than NC
+$k=13$, making each coarse step smaller relative to the total restructuring
+needed; and (3) the summary statistics differ. A direct apples-to-apples
+comparison requires an archived benchmark package and is deferred to Phase 2.

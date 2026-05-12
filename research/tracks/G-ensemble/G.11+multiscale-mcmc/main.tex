@@ -18,7 +18,6 @@
 \usepackage{microtype}
 \usepackage{setspace}
 \usepackage{titlesec}
-\usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{lmodern}
 \usepackage[T1]{fontenc}
@@ -69,30 +68,29 @@ Texas ($k = 38$) or California ($k = 52$), each step restructures only two
 of the $k$ districts, so $O(k)$ steps are required merely to touch every
 district once, and tens of thousands of steps are needed for meaningful
 plan-space exploration.
-Multi-scale MCMC~\citep{autry2021} resolves this by interleaving two
+Multi-scale MCMC~\citep{autry2021} addresses this by interleaving two
 chains at different spatial resolutions: a \emph{fine} chain (tract-level
 \recom{}) that refines district boundaries locally, and a \emph{coarse}
 chain (county-level \recom{}) that restructures large contiguous areas in
 one step.
-We implement Option B (fine = census tract, coarse = county) in
-\texttt{redist-ensemble} as \texttt{MultiScaleChain} and expose it via
-\texttt{--search multiscale} in the CLI.
-The key design insight is that county adjacency can be derived exactly from
+BISECT exposes the fixed-$\alpha$ version through
+\texttt{bisect state --search multiscale}; the orchestration currently lives
+in \texttt{bisect-cli}'s \texttt{run\_multiscale} wrapper, with shared seed,
+hierarchy, configuration, and rebalance helpers in \texttt{bisect-multiscale}.
+The key design insight is that county adjacency can be derived reproducibly from
 the existing tract graph using GEOID prefix matching
 (\texttt{county\_fips = geoid[:5]}): two counties are adjacent if and only
-if any cross-county tract edge exists in the tract adjacency graph.
+if any cross-county tract edge exists in the tract adjacency graph used by the
+run.
 This derivation requires no extra data files and no additional census
 downloads.
-On Texas ($k = 38$, $T = 2000$ steps), \ms{} reduces lag-100
-autocorrelation of the edge-cut statistic by approximately $16$--$43\%$
-relative to standard \recom{} at comparable wall-clock time (16\% at
-$T = 1000$ steps per G.15 cross-comparison; 43\% at $T = 2000$ steps
-measured here), since the county graph ($\approx\!100$ nodes) makes
-coarse steps $20\times$ cheaper than fine steps ($\approx\!5200$ tract nodes).
-Three resolution options are defined: Option A (block-group $\to$ tract),
-Option B (tract $\to$ county, implemented), and Option C (block-group $\to$
-county), all sharing the \texttt{derive\_partition} helper via GEOID prefix
-matching.
+The current CLI supports tract-to-county Option B without a block-group graph
+and can exercise block-group fine resolutions when block-group adjacency is
+supplied.
+The evidence in this paper remains a short-run smoke comparison: Texas
+lag-100 edge-cut autocorrelation improves in the recorded tables, but the
+numbers should be read as implementation evidence rather than a portable
+mixing theorem.
 \end{abstract}
 
 \tableofcontents

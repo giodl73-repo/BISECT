@@ -22,7 +22,7 @@ A single \recom{} step:
 \end{enumerate}
 
 The mixing behaviour of \recom{} depends critically on $k$.
-For small $k$ (say $k = 8$ or $k = 14$), each step affects a meaningful
+For small $k$ (say $k = 8$ or $k = 14$), each step affects a larger
 fraction of the plan, and the chain explores the plan space efficiently.
 For large $k$, the fraction of the plan affected per step is $2/k$, which
 is small.
@@ -74,11 +74,14 @@ tract in the first county is adjacent to at least one tract in the second
 county in the fine graph $G$.
 \end{definition}
 
-The coarsening $f$ induces a \emph{coarse plan}: given a fine plan $\pi : V \to [k]$,
-the coarse plan assigns each county $c$ to the district that contains the
-majority of $c$'s population, or more precisely, the county plan
-$\pi_C : C \to [k]$ is defined by a projection rule (see
-Section~\ref{sec:algorithm}).
+The coarsening $f$ induces a \emph{coarse plan}: given a fine plan
+$\pi : V \to [k]$, the coarse wrapper must choose one district label for each
+coarse unit $c$.  A population-plurality rule is the natural model-level
+definition, but the current \texttt{run\_multiscale} wrapper uses a simpler
+fine-to-coarse sync pass over the \texttt{fine\_to\_coarse} mapping.  That
+implementation detail is harmless for the synthetic tests but should be
+treated as part of the current audit boundary rather than as a polished
+standalone chain API.
 
 A coarse \recom{} step operates on $G_C$ with county populations
 $\mathrm{pop}(c) = \sum_{v \in f^{-1}(c)} \mathrm{pop}(v)$.

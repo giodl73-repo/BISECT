@@ -118,7 +118,7 @@ Score bands:
 | G.8 Flip Proposals | 3.5 | 3.6 | 3.3 | 3.4 | 3.5 | 3.5 | 20.8 | Strong |
 | G.9 Forest ReCom | 3.5 | 3.6 | 3.3 | 3.4 | 3.5 | 3.5 | 20.8 | Strong |
 | G.10 Merge-Split | 3.8 | 3.8 | 3.6 | 3.9 | 4.0 | 3.6 | 22.7 | Golden |
-| G.11 Multiscale MCMC | 3.3 | 3.5 | 3.1 | 3.3 | 3.5 | 3.3 | 20.0 | Batch 4 target |
+| G.11 Multiscale MCMC | 3.8 | 3.7 | 3.5 | 3.9 | 4.0 | 3.6 | 22.5 | Golden |
 | G.12 Short-Burst Chains | 3.2 | 3.3 | 3.0 | 3.2 | 3.2 | 3.1 | 19.0 | Spec/paper alignment needed |
 | G.13 VRA-Aware Ensemble | 3.8 | 3.7 | 3.6 | 3.8 | 3.6 | 3.7 | 22.2 | Strong near-golden |
 | G.14 Ensemble Comparison | 3.9 | 3.8 | 3.8 | 3.9 | 3.6 | 3.9 | 22.9 | Golden |
@@ -158,16 +158,13 @@ Score bands:
 
 ## Highest-Priority Lifts
 
-1. Continue Batch 4: G.11. This is the remaining
-   ensemble/sampling paper most directly tied to implemented crates and
-   current atlas concepts.
-2. Legacy construction pass: T.5-T.13. These need the same "show the split,
+1. Legacy construction pass: T.5-T.13. These need the same "show the split,
    show the candidate, show the rejection" standard that made T.1 and U.18 much
    clearer.
-3. Metric correctness pass: K.2 first, then K.0/K.7 propagation. The Reock
+2. Metric correctness pass: K.2 first, then K.0/K.7 propagation. The Reock
    implementation mismatch is the most concrete known blocker in the metric
    algorithm papers.
-4. Apportionment implementation pass: J.6, then J.0-J.5. The mathematical
+3. Apportionment implementation pass: J.6, then J.0-J.5. The mathematical
    method papers are serviceable, but the implementation paper has known stale
    claims.
 
@@ -177,7 +174,7 @@ Score bands:
 |---|---:|---|---|
 | B/T construction foundations | 26 | Strong for reviewed/new slices, serviceable for older slices | legacy visuals and audit/package bridges |
 | U search/optimization/audit | 21 | Strong, with U.10 and U.16-U.20 golden | refresh older U.2-U.7 and U.13-U.15 |
-| G ensemble/sampling | 16 | Strong but uneven; G.4/G.7/G.10 now golden | Multiscale package evidence and data-validation cleanup |
+| G ensemble/sampling | 16 | Strong but uneven; G.4/G.7/G.10/G.11 now golden | older G refresh and data-validation cleanup |
 | J apportionment | 7 | Serviceable | J.6 stale implementation claims |
 | K compactness metrics | 8 | Strong except K.2 | Reock implementation mismatch |
 | L partisan metrics | 7 | Strong | cross-link to G/A synthesis |

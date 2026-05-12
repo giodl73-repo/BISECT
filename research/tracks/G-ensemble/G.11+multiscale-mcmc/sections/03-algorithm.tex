@@ -17,13 +17,20 @@ FIPS codes, $|C| = n_C$.
 
 The ideal fine population is $P_{\mathrm{ideal}} = \sum_v \mathrm{pop}(v) / k$;
 the fine tolerance is $\epsilon_f$ (default 0.005).
-The coarse tolerance is $\epsilon_c = 3 \epsilon_f$ (default 0.015), to
-reflect the lower precision of county-level population accounting.
-The factor of 3 is chosen as follows: a county-level coarse move moves all $m_c \approx n/100$ tracts in a county simultaneously (for a 100-county state). The fine-level rebalance step then corrects any violations. The factor 3 ensures that for states where the largest single county holds up to $3\varepsilon \cdot \text{pop}(\text{state})$ of total population (e.g., Los Angeles County, CA), the coarse chain still proposes valid county-level moves rather than immediately rejecting. For states with more uniform county populations (e.g., Iowa), a factor of 2 would suffice; the factor 3 is a conservative default. \textbf{Practitioners in states with extreme county population concentration should increase this factor or switch to Option A (BG-level fine moves).}
+The CLI wrapper uses coarse tolerance $\epsilon_c = 3 \epsilon_f$ to reflect
+the lower precision of county-level population accounting and to avoid rejecting
+nearly every coarse proposal before the fine-level rebalance step has a chance
+to repair it.
+The library configuration substrate still records a fixed-alpha default of
+$2\epsilon_f$, while the adaptive configuration and current CLI wrapper use
+$3\epsilon_f$.
+This mismatch is an implementation-boundary item: reports should record the
+actual tolerance multiplier used by the run rather than relying on a paper
+default.
 
 \subsection{County Adjacency Derivation}
 
-\begin{proposition}[County adjacency from tract graph]
+\begin{proposition}[County adjacency from the run's tract graph]
 \label{prop:county-adj-exact}
 Define the county adjacency graph $G_C = (C, E_C)$ by
 \[
@@ -34,24 +41,19 @@ Define the county adjacency graph $G_C = (C, E_C)$ by
   \mathrm{county}(v_1) = c_1,\;
   \mathrm{county}(v_2) = c_2.
 \]
-This derivation is exact: two counties are geographically adjacent if and
-only if they share a border, which implies the existence of at least one
-pair of adjacent tracts straddling the county boundary.
+This derivation is exact relative to the tract adjacency graph used by the run:
+two coarse county nodes are adjacent exactly when the run's fine graph contains
+at least one cross-county tract edge.
 The derivation requires one pass over the tract edge list and runs in $O(|E|)$
 time.
 \end{proposition}
 
 \begin{proof}
-The implication ``geographic adjacency $\Rightarrow$ cross-county tract edge''
-holds because county boundaries in the census TIGER/Line products are
-composed of sequences of tract boundaries.
-Every county boundary segment that forms a shared border between two counties
-is simultaneously a boundary segment of at least one pair of tracts, one in
-each county.
-The reverse implication ``cross-county tract edge $\Rightarrow$ geographic
-adjacency'' holds by definition: two tracts can share an edge in the
-adjacency graph only if they share a boundary segment, and if the tracts
-belong to different counties then those counties share that boundary segment.
+The algorithm scans the fine adjacency list and inserts a county edge whenever
+the endpoints' county prefixes differ. Therefore every inserted coarse edge has
+a witnessing fine edge, and every witnessing fine edge is represented in the
+coarse graph. Geographic adjacency not represented in the input tract graph
+cannot be recovered by this derivation.
 \end{proof}
 
 \begin{remark}[Water-boundary caveat]
@@ -70,14 +72,18 @@ county edges from $|C| = 254$ counties.
 
 The county population is
 $\mathrm{pop}(c) = \sum_{v \in f^{-1}(c)} \mathrm{pop}(v)$.
-The initial coarse plan $\pi_C^{(0)} : C \to [k]$ is derived from the
+The model-level coarse plan $\pi_C^{(0)} : C \to [k]$ can be derived from the
 initial fine plan $\pi^{(0)} : V \to [k]$ by \emph{plurality projection}:
 \[
   \pi_C^{(0)}(c) = \arg\max_{d \in [k]}\;
     \mathrm{pop}\!\left(\{v \in f^{-1}(c) : \pi^{(0)}(v) = d\}\right).
 \]
 That is, each county is assigned to the district that contains the plurality
-of its population.
+of its population. The current \texttt{run\_multiscale} wrapper instead
+initializes and syncs the coarse assignment by iterating
+\texttt{fine\_to\_coarse} and assigning the observed fine district label to the
+coarse slot. This is a simpler implementation rule than the model-level
+plurality projection above and should be made explicit in audit artifacts.
 
 \subsection{Rebalance Subroutine}
 
@@ -119,9 +125,7 @@ accepted plan.
 
 \subsection{Complete Algorithm}
 
-\begin{algorithm}
-\caption{\ms{} Option B}
-\label{alg:multiscale}
+\paragraph{Algorithm 1. \ms{} Option B as implemented by \texttt{run\_multiscale}.}
 \begin{algorithmic}[1]
 \Require Tract graph $G$, populations $\{\mathrm{pop}(v)\}$, GEOIDs,
          initial plan $\pi^{(0)}$, districts $k$,
@@ -135,13 +139,13 @@ accepted plan.
         \Comment{tract $\to$ county map}
 \State $G_C, \{\mathrm{pop}(c)\} \gets \textsc{DeriveCountyGraph}(G, f)$
         \Comment{$O(|E|)$, Prop.~\ref{prop:county-adj-exact}}
-\State $\pi_C \gets \textsc{PluralityProject}(\pi^{(0)}, f)$
+\State $\pi_C \gets \textsc{SyncCoarseFromFine}(\pi^{(0)}, f)$
 \State $\pi \gets \pi^{(0)}$
-\State $\mathrm{accepted} \gets [(\ec(\pi),\, \pi)]$
+\State $\mathrm{visited} \gets [(\ec(\pi),\,0,\, \pi)]$
 
 \For{$s \gets 1$ \textbf{to} $T$}
   \State $u \gets \mathrm{SHA256}(\texttt{"MSC\_STEP\_"} \,\|\, s^{\mathrm{u64le}}
-         \,\|\, 0^{\mathrm{u32le}} \,\|\, b^{\mathrm{u64le}})[0{:}8]$
+         \,\|\, \texttt{"\_"} \,\|\, 0^{\mathrm{u32le}} \,\|\, \texttt{"\_"} \,\|\, b^{\mathrm{u64le}})[0{:}8]$
          as $\mathrm{SmallRng}$
   \If{$u.\mathrm{gen\_range}(0.0, 1.0) < \alpha$}
     \Comment{Coarse move}
@@ -150,23 +154,22 @@ accepted plan.
             \Comment{assign each tract to its county's district}
     \State $\mathrm{ok} \gets \textsc{Rebalance}(\pi', \epsilon_f, \text{max}=200)$
     \If{$\mathrm{ok}$}
-      \State $\pi \gets \pi'$;\quad $\pi_C \gets \pi_C'$
-      \State $\mathrm{accepted}.\mathrm{push}((\ec(\pi), \pi))$
+      \State $\pi \gets \pi'$;\quad $\pi_C \gets \textsc{SyncCoarseFromFine}(\pi, f)$
     \EndIf
     \Comment{else reject: keep $\pi$, $\pi_C$ unchanged}
   \Else
     \Comment{Fine move}
     \State $\pi \gets \recom{}.\mathrm{step}(G, \{\mathrm{pop}(v)\}, \pi, \epsilon_f, u)$
-    \State $\pi_C \gets \textsc{PluralityProject}(\pi, f)$
+    \State $\pi_C \gets \textsc{SyncCoarseFromFine}(\pi, f)$
             \Comment{keep coarse plan consistent}
-    \State $\mathrm{accepted}.\mathrm{push}((\ec(\pi), \pi))$
   \EndIf
+  \State $\mathrm{visited}.\mathrm{push}((\ec(\pi), s, \pi))$
 \EndFor
 
-\State Sort $\mathrm{accepted}$ by $\ec$ ascending
-\State \Return $\mathrm{accepted}[\lfloor p \cdot |\mathrm{accepted}|\rfloor]$
+\State Sort $\mathrm{visited}$ by $(\ec,\mathrm{step})$ ascending
+\State $r \gets \min(\lfloor p \cdot |\mathrm{visited}|\rfloor, |\mathrm{visited}|-1)$
+\State \Return $\mathrm{visited}[r].\mathrm{plan}$
 \end{algorithmic}
-\end{algorithm}
 
 \paragraph{Deterministic seed schedule.}
 Each step $s$ derives its RNG from a SHA-256 hash of the step index and
@@ -175,7 +178,9 @@ the base seed:
   \mathrm{step\_seed}(s, b)
   = \mathrm{SHA256}\!\left(\texttt{"MSC\_STEP\_"}
     \,\|\, s^{\mathrm{u64le}}
+    \,\|\, \texttt{"\_"}
     \,\|\, 0^{\mathrm{u32le}}
+    \,\|\, \texttt{"\_"}
     \,\|\, b^{\mathrm{u64le}}\right)[0{:}8]
     \;\text{as}\; u64.
 \]
@@ -188,22 +193,27 @@ reproduction of any run from the manifest entry alone.
 bisect state --state TX --year 2020 \
     --search multiscale \
     --multiscale-steps 5000 \
-    --multiscale-alpha 0.3
+    --multiscale-alpha 0.3 \
+    --multiscale-fine tract \
+    --multiscale-coarse county \
+    --percentile 0.0
 \end{verbatim}
 
 \subsection{Correctness Properties}
 
 \begin{proposition}[Fine plan validity]
 \label{prop:validity}
-Every fine plan $\pi$ in the \texttt{accepted} list is connected and
-population-balanced within $\epsilon_f$.
+Every fine plan $\pi$ in the \texttt{visited} list that passes the current
+validity gates is population-balanced within $\epsilon_f$; the implementation
+intends accepted coarse moves to be rebalanced before they enter the selected
+plan pool.
 \end{proposition}
 
 \begin{proof}
-The initial plan $\pi^{(0)}$ is valid by assumption.
+The initial plan $\pi^{(0)}$ is valid by construction from \cs{}/METIS.
 Fine \recom{} steps preserve validity (the standard \recom{} invariant).
 Coarse moves are accepted only if \textsc{Rebalance} returns \texttt{ok},
-which certifies $|\mathrm{pop}(d) - P_{\mathrm{ideal}}| \leq \epsilon_f \cdot
+which checks $|\mathrm{pop}(d) - P_{\mathrm{ideal}}| \leq \epsilon_f \cdot
 P_{\mathrm{ideal}}$ for all $d$ after rebalancing.
 Connectivity of fine districts after a coarse move: each tract is assigned
 to the district of its county; within a county, the district assignment is
@@ -216,7 +226,7 @@ BFS, as in the \flip{} chain).
 
 \begin{remark}[Stationarity]
 \label{rem:stationarity}
-Like standard \recom{}, \ms{} does not have a fully characterised stationary
+Like standard \recom{}, the current \ms{} wrapper does not have a fully characterised stationary
 distribution.
 The coarse moves introduce an additional source of non-reversibility: the
 projection and rebalance operations are not symmetric in forward and reverse
@@ -224,7 +234,8 @@ directions.
 For practical redistricting ensemble analysis, this is acceptable---the goal
 is faster mixing to explore the plan space, not exact sampling from a specific
 distribution.
-Applications requiring exact distributional guarantees should use
-\fr{}~\citep{dellaLibera2026forestRecom} at the fine level, though the
-multi-scale extension of \fr{} is left for future work.
+Applications requiring stronger distributional guarantees need a separate
+acceptance accounting for the coarse projection/rebalance move. A ForestReCom
+fine chain~\citep{dellaLibera2026forestRecom} would improve only the fine-level
+component unless the coarse component is also Metropolized.
 \end{remark}

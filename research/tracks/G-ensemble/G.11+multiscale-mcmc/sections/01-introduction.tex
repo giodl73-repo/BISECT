@@ -22,8 +22,7 @@ lag 100, standard \recom{} on Texas still exhibits correlations above 0.5,
 indicating that 100-step windows are far too short to treat as independent
 draws from the plan space~\citep{autry2021}.
 
-This slow mixing is not a convergence failure---\recom{} does converge, and
-given sufficient steps it samples the plan space correctly---but a practical
+This slow mixing is not a proof of non-convergence; it is a practical
 obstacle.
 Ensemble analysis of redistricting plans for litigation, academic study, or
 legislative compliance requires samples that are effectively independent.
@@ -32,7 +31,7 @@ with single-scale \recom{}.
 
 \subsection{Multi-scale MCMC as the Hierarchical Solution}
 
-Multi-scale MCMC~\citep{autry2021} resolves the large-$k$ mixing problem
+Multi-scale MCMC~\citep{autry2021} addresses the large-$k$ mixing problem
 by operating simultaneously at two spatial resolutions.
 A \emph{coarse} chain restructures the plan at county granularity---treating
 each county as an atomic unit and proposing ReCom moves on the county
@@ -60,26 +59,30 @@ This paper makes three contributions.
 
   \item \textbf{County-level coarsening without extra data.}
   We show that the county adjacency graph required for coarse \recom{} moves
-  can be derived exactly from the existing tract adjacency graph using GEOID
+  can be derived reproducibly from the existing tract adjacency graph using GEOID
   prefix matching.
   No extra data files, shapefiles, or census downloads are required.
-  Section~\ref{sec:algorithm} gives the derivation and proves its exactness
+  Section~\ref{sec:algorithm} gives the derivation and its tract-graph boundary
   (Proposition~\ref{prop:county-adj-exact}).
 
   \item \textbf{Implementation of Option B.}
   We implement \ms{} Option B (fine = census tract, coarse = county) in
-  \texttt{redist-ensemble} as \texttt{MultiScaleChain} and expose it via
-  \texttt{--search multiscale} in the \texttt{redist-cli}.
+  BISECT as \texttt{bisect state --search multiscale}. The current
+  orchestration is in \texttt{bisect-cli}'s \texttt{run\_multiscale}; the
+  \texttt{bisect-multiscale} crate supplies seed, hierarchy, configuration,
+  and rebalance helpers, while its standalone chain API remains a substrate
+  for later consolidation.
   Section~\ref{sec:algorithm} gives the complete algorithm specification,
   including the rebalance contract (200 boundary swaps, reject if fails)
   and the coarse population tolerance ($3\times$ the fine tolerance).
 
   \item \textbf{Mixing speed comparison.}
-  We compare autocorrelation at lag 100 between standard \recom{} and
+  We report a short-run autocorrelation comparison at lag 100 between standard \recom{} and
   \ms{} (Option B, $\alpha = 0.3$) on Texas ($k = 38$, $T = 2000$ steps).
   Section~\ref{sec:mixing} reports the results; the measured reduction is
   $43\%$ in lag-100 autocorrelation at $T = 2000$ steps (16\% at $T = 1000$
-  steps per G.15 cross-comparison), at comparable wall-clock time.
+  steps per G.15 cross-comparison), at comparable wall-clock time. These
+  figures are implementation smoke evidence, not a general mixing-time proof.
 
 \end{enumerate}
 
@@ -101,9 +104,10 @@ so both scales share the same sampling subroutine.
 The resolution system (Section~\ref{sec:resolution}) that unifies Options A,
 B, and C is described in the companion resolution spec~\citep{dellaLibera2026resolution}.
 Forest ReCom~\citep{dellaLibera2026forestRecom} (G.9) provides an alternative
-fine-level chain with a known stationary distribution; it can replace standard
-ReCom in the fine level of \ms{} for distributional correctness, though this
-extension is left for future work.
+fine-level chain with a stronger reversible-ReCom target model. Replacing
+standard ReCom with Forest ReCom inside the multi-scale wrapper is a plausible
+future extension, but the coarse projection/rebalance step would still need its
+own acceptance accounting.
 
 \subsection{Paper Structure}
 
