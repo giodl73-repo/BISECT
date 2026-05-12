@@ -84,6 +84,6 @@ are called complete.
 | Paper | Review status | Fix status | Build/PDF status |
 |---|---|---|---|
 | T.14 Spectral Partitioning | Reviewed 2026-05-12 | Reframed as staged spectral-style smoothing baseline; added odd-seat split sketch, implementation boundary, evidence ladder, and audit limits | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
-| T.15 Capacity-Constrained Clustering | Queued | Pending | Pending |
+| T.15 Capacity-Constrained Clustering | Reviewed 2026-05-12 | Aligned status taxonomy with implementation; added worked capacity rejection table, repair/export boundary, and audit fixed-point limits | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
 | T.16 Hierarchical Regionalization | Queued | Pending | Pending |
 | T.17 Flow-Based Construction | Queued | Pending | Pending |

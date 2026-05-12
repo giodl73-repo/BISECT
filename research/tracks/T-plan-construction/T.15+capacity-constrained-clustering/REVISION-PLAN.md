@@ -43,4 +43,14 @@ audit contract.
 - [x] P1 items addressed.
 - [x] Paper builds without errors.
 - [x] Claims map to evidence level.
-- [ ] Ready for round-2 simulated assessment.
+- [x] Ready for round-2 simulated assessment.
+
+## 2026-05-12 Paper-Quality Pass
+
+- [x] Aligned paper terminology with implemented statuses:
+      \texttt{valid}, \texttt{needs-repair}, and
+      \texttt{infeasible-capacity}.
+- [x] Added a worked capacity-decision table showing candidate rejection by
+      population slack.
+- [x] Expanded implementation, audit, evidence, and repair-limit language.
+- [x] Marked the paper ready for another simulated assessment pass.

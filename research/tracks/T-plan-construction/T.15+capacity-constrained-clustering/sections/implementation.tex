@@ -1,6 +1,14 @@
 \section{Implementation}
 
 The implementation lives in \texttt{bisect-clustering} and is exposed through
-\texttt{bisect state --structure capacity-clustering} and YAML
-\texttt{structure: capacity-clustering}. Summaries record capacity status,
+the capacity-clustering structure mode in the CLI and YAML configuration.
+Summaries record capacity status,
 repair status, parameter hashes, and algorithm lineage.
+
+The crate boundary is split across deterministic seed placement, capacity-aware
+assignment, small-fixture repair, metrics, and output summaries. The summary
+schema records the method, seed method, repair method, capacity status, repair
+status, population deviation, edge cut, and a deterministic parameter hash. The
+CLI layer uses the repaired capacity-clustering entry point for exported
+construction paths and rejects non-\texttt{valid} results before final plan
+packaging.

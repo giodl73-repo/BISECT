@@ -8,6 +8,8 @@ and quality on selected real-data smoke states.
 
 \begin{table}[h]
 \centering
+\small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{llll}
 \toprule
 Claim & Evidence now & Missing evidence & Status \\
@@ -19,13 +21,15 @@ Scale smoke & path100 benchmark package & Real-data benchmarks & Benchmark smoke
 Plan quality vs. baselines & None in this paper & Metrics and datasets & Future \\
 \bottomrule
 \end{tabular}
+}
 \caption{Evidence ladder for T.15 claims. Feasibility and quality are tracked
 separately.}
 \end{table}
 
 \begin{table}[h]
 \centering
-\begin{tabular}{llll}
+\small
+\begin{tabular}{p{0.23\linewidth}p{0.24\linewidth}p{0.26\linewidth}p{0.16\linewidth}}
 \toprule
 Constructor & Capacity behavior & Failure artifact & Current role \\
 \midrule
@@ -39,3 +43,10 @@ METIS & external partitioning & manifest/validation result & comparison \\
 \caption{Failure-behavior comparison framing. Quantitative comparisons remain
 future work until commands and outputs are recorded.}
 \end{table}
+
+The comparison target is not just score quality. T.15 should be judged by
+whether it explains capacity pressure better than alternatives: which units
+could not be assigned, whether repair changed the plan, and what verifier
+evidence exists after export. Quality metrics such as compactness, subdivision
+splits, and partisan measures remain future empirical comparisons until the
+same states and tolerances are run across the construction portfolio.

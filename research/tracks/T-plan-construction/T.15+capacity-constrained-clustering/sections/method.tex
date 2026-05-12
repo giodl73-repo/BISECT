@@ -1,9 +1,10 @@
 \section{Method}
 
 The staged method uses deterministic farthest-point seeds, assigns units subject
-to population capacity, and records whether the resulting assignment is valid,
-repaired, or infeasible. Small repair routines are treated as auditable
-post-processing rather than invisible cleanup.
+to population capacity, and records whether the resulting assignment is
+\texttt{valid}, \texttt{needs-repair}, or \texttt{infeasible-capacity}. Small
+repair routines are treated as auditable post-processing rather than invisible
+cleanup.
 
 The atlas view makes the key decision inspectable: a geographically nearest
 cluster is only a candidate, not an entitlement. If assigning a unit would
@@ -24,26 +25,55 @@ optional inputs rather than claims of this baseline.
         breaking ties by stable unit identifier.
   \item Assign remaining units to candidate clusters in deterministic order
         while respecting target population capacity and declared slack.
-  \item Mark the assignment \texttt{valid} when all declared constraints pass.
-  \item Run bounded repair only when the initial assignment is close enough to
-        a valid profile for auditable post-processing.
-  \item Mark the result \texttt{repaired} when repair succeeds,
-        \texttt{infeasible} when capacity cannot be satisfied, and
-        \texttt{invalid} when validation fails after construction.
+  \item Mark the assignment \texttt{valid} when population deviation and
+        connectedness checks pass.
+  \item Mark the assignment \texttt{needs-repair} when the assignment is close
+        enough to repair but does not yet pass all checks.
+  \item Run bounded repair only for \texttt{needs-repair} outputs. In the
+        current slice this is an exhaustive small-fixture repair path.
+  \item Mark the result \texttt{infeasible-capacity} when the requested capacity
+        profile cannot be satisfied. Invalid input is returned as an error
+        before a plan artifact is emitted.
 \end{enumerate}
 
 \begin{table}[h]
 \centering
+\small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lll}
 \toprule
 Status & Meaning & Artifact behavior \\
 \midrule
-\texttt{valid} & Assignment satisfies declared profile & Write final sidecars \\
-\texttt{repaired} & Bounded repair changed assignment & Write repair lineage \\
-\texttt{infeasible} & Capacity cannot be satisfied & Write witness summary \\
-\texttt{invalid} & Validation fails after construction & Block final export \\
+\texttt{valid} & Assignment satisfies declared profile & Write final sidecars with \texttt{repair-status=not-needed} or \texttt{repaired} \\
+\texttt{needs-repair} & Assignment failed connectedness or balance checks but may be repairable & Keep repair requirement visible; do not collapse into final export \\
+\texttt{infeasible-capacity} & Capacity cannot be satisfied under the declared tolerance & Write witness summary rather than a final plan claim \\
+\texttt{invalid input} & Input shape is malformed, such as \(k=0\) or mismatched arrays & Return an error before producing a plan artifact \\
 \bottomrule
 \end{tabular}
+}
 \caption{Capacity-clustering status taxonomy. Repair is visible lineage, not
 hidden cleanup.}
+\end{table}
+
+\subsection{Worked Capacity Decision}
+
+The assignment step is easiest to read as a visible rejection table. Suppose two
+clusters target \(50\) population each with ten percent slack, so the local upper
+capacity is \(55\). The next unit has population \(20\). The nearest seed is not
+automatically allowed to take it; capacity arithmetic decides which candidate
+remains eligible.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lllll}
+\toprule
+Candidate cluster & Distance rank & Current pop. & Pop. after unit & Decision \\
+\midrule
+A & 1 & 45 & 65 & reject: exceeds \(55\) \\
+B & 2 & 32 & 52 & accept: within slack \\
+\bottomrule
+\end{tabular}
+\caption{T.15 assigns by deterministic ranked candidates subject to capacity.
+The nearest cluster can lose when accepting the unit would overfill it.}
 \end{table}

@@ -4,3 +4,11 @@ Capacity-constrained clustering gives BISECT a construction family whose
 primary abstraction is assignment to population-capacity clusters. This makes
 capacity status, repair, and infeasibility visible rather than hidden inside a
 single final assignment.
+
+The central design choice is to make failure part of the artifact contract.
+Many construction algorithms only expose a final plan or an error. T.15 exposes
+the intermediate accountability surface: which deterministic seeds were chosen,
+which assignment rule was used, whether capacity was satisfied, whether repair
+was needed, and whether the exported plan is backed by RPLAN and RCTX sidecars.
+That makes the paper useful even before broad empirical comparison, because it
+defines how a clustered construction should explain itself.
