@@ -61,6 +61,16 @@ pub enum RcountCoreError {
         declared: i64,
         computed: i64,
     },
+    #[error("duplicate status event id: {event_id}")]
+    DuplicateStatusEventId { event_id: String },
+    #[error("status event {event_id} has the same before and after status")]
+    NoStatusTransition { event_id: String },
+    #[error("status event {event_id} must include authority and explanation")]
+    IncompleteStatusEvent { event_id: String },
+    #[error("missing canvass correction event from unofficial to canvassed")]
+    MissingCanvassCorrectionEvent,
+    #[error("missing summaries for status {status:?}")]
+    MissingStatusSummaries { status: CountStatus },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -144,11 +154,42 @@ pub enum CountStatus {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum StatusEventType {
+    InitialUnofficialReport,
+    LateMailBatchAdded,
+    ProvisionalAdjudication,
+    BallotCureUpdate,
+    DuplicateBallotResolution,
+    WriteInAdjudication,
+    RecountUpdate,
+    CourtOrder,
+    Certification,
+    AmendedCertification,
+    Correction,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct StatusEvent {
+    pub event_id: String,
+    pub event_type: StatusEventType,
+    pub status_before: CountStatus,
+    pub status_after: CountStatus,
+    pub effective_at: String,
+    pub authority: String,
+    #[serde(default)]
+    pub source_refs: Vec<String>,
+    pub explanation: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RcountPackage {
     pub rcount_version: String,
     pub contests: Vec<Contest>,
     pub reporting_units: Vec<ReportingUnit>,
     pub summaries: Vec<Summary>,
+    #[serde(default)]
+    pub status_events: Vec<StatusEvent>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -175,8 +216,8 @@ pub fn canonical_hash(prefix: &[u8], value: &Value) -> Result<String, RcountCore
 }
 
 pub fn record_hash<T: Serialize>(record: &T) -> Result<String, RcountCoreError> {
-    let value =
-        serde_json::to_value(record).map_err(|err| RcountCoreError::CanonicalJson(err.to_string()))?;
+    let value = serde_json::to_value(record)
+        .map_err(|err| RcountCoreError::CanonicalJson(err.to_string()))?;
     canonical_hash(RECORD_HASH_PREFIX, &value)
 }
 
@@ -198,13 +239,13 @@ pub fn verify_package(package: &RcountPackage) -> Result<VerificationReport, Rco
 
     let mut report = VerificationReport::default();
     for summary in package.summaries.iter() {
-        let contest = contests
-            .get(summary.contest_id.as_str())
-            .ok_or_else(|| RcountCoreError::UnknownSelection {
+        let contest = contests.get(summary.contest_id.as_str()).ok_or_else(|| {
+            RcountCoreError::UnknownSelection {
                 contest_id: summary.contest_id.clone(),
                 reporting_unit_id: summary.reporting_unit_id.clone(),
                 selection_id: "<contest-missing>".to_string(),
-            })?;
+            }
+        })?;
         verify_contest_selection_sum(contest, summary)?;
         report.passed.push(EquationPass {
             equation_id: "contest_selection_sum".to_string(),
@@ -212,6 +253,7 @@ pub fn verify_package(package: &RcountPackage) -> Result<VerificationReport, Rco
             reporting_unit_id: summary.reporting_unit_id.clone(),
         });
     }
+    report.passed.extend(verify_status_events(package)?);
     Ok(report)
 }
 
@@ -250,7 +292,8 @@ pub fn verify_contest_selection_sum(
         selection_votes += total.votes;
     }
 
-    let computed = selection_votes + summary.undervotes + summary.overvotes + summary.blank_contests;
+    let computed =
+        selection_votes + summary.undervotes + summary.overvotes + summary.blank_contests;
     if computed != summary.counted_ballots {
         return Err(RcountCoreError::ContestSelectionSumMismatch {
             contest_id: summary.contest_id.clone(),
@@ -267,17 +310,43 @@ pub fn verify_jurisdiction_total(
     jurisdiction_reporting_unit_id: &str,
     summaries: &[Summary],
 ) -> Result<Vec<EquationPass>, RcountCoreError> {
-    let total = summaries
+    let totals: Vec<&Summary> = summaries
         .iter()
-        .find(|summary| {
+        .filter(|summary| {
             summary.contest_id == contest_id
                 && summary.reporting_unit_id == jurisdiction_reporting_unit_id
         })
-        .ok_or_else(|| RcountCoreError::MissingJurisdictionTotal {
+        .collect();
+    if totals.is_empty() {
+        return Err(RcountCoreError::MissingJurisdictionTotal {
             contest_id: contest_id.to_string(),
             jurisdiction_reporting_unit_id: jurisdiction_reporting_unit_id.to_string(),
-        })?;
+        });
+    }
 
+    let mut passes = Vec::new();
+    for total in totals {
+        verify_jurisdiction_total_for_status(
+            contest_id,
+            jurisdiction_reporting_unit_id,
+            total,
+            summaries,
+        )?;
+        passes.push(EquationPass {
+            equation_id: "jurisdiction_contest_total".to_string(),
+            contest_id: contest_id.to_string(),
+            reporting_unit_id: jurisdiction_reporting_unit_id.to_string(),
+        });
+    }
+    Ok(passes)
+}
+
+fn verify_jurisdiction_total_for_status(
+    contest_id: &str,
+    jurisdiction_reporting_unit_id: &str,
+    total: &Summary,
+    summaries: &[Summary],
+) -> Result<(), RcountCoreError> {
     let mut selection_sums: BTreeMap<&str, i64> = BTreeMap::new();
     let mut undervotes = 0i64;
     let mut overvotes = 0i64;
@@ -287,9 +356,12 @@ pub fn verify_jurisdiction_total(
     for summary in summaries.iter().filter(|summary| {
         summary.contest_id == contest_id
             && summary.reporting_unit_id != jurisdiction_reporting_unit_id
+            && summary.status == total.status
     }) {
         for selection in summary.totals.iter() {
-            *selection_sums.entry(selection.selection_id.as_str()).or_default() += selection.votes;
+            *selection_sums
+                .entry(selection.selection_id.as_str())
+                .or_default() += selection.votes;
         }
         undervotes += summary.undervotes;
         overvotes += summary.overvotes;
@@ -326,11 +398,64 @@ pub fn verify_jurisdiction_total(
         counted_ballots,
     )?;
 
-    Ok(vec![EquationPass {
-        equation_id: "jurisdiction_contest_total".to_string(),
-        contest_id: contest_id.to_string(),
-        reporting_unit_id: jurisdiction_reporting_unit_id.to_string(),
-    }])
+    Ok(())
+}
+
+pub fn verify_status_events(package: &RcountPackage) -> Result<Vec<EquationPass>, RcountCoreError> {
+    let mut seen = BTreeSet::new();
+    let mut passes = Vec::new();
+    for event in package.status_events.iter() {
+        if !seen.insert(event.event_id.as_str()) {
+            return Err(RcountCoreError::DuplicateStatusEventId {
+                event_id: event.event_id.clone(),
+            });
+        }
+        if event.status_before == event.status_after
+            && event.event_type != StatusEventType::InitialUnofficialReport
+        {
+            return Err(RcountCoreError::NoStatusTransition {
+                event_id: event.event_id.clone(),
+            });
+        }
+        if event.authority.trim().is_empty() || event.explanation.trim().is_empty() {
+            return Err(RcountCoreError::IncompleteStatusEvent {
+                event_id: event.event_id.clone(),
+            });
+        }
+        passes.push(EquationPass {
+            equation_id: "status_event_declared".to_string(),
+            contest_id: "*".to_string(),
+            reporting_unit_id: event.event_id.clone(),
+        });
+    }
+    Ok(passes)
+}
+
+pub fn verify_canvass_correction_event(
+    package: &RcountPackage,
+) -> Result<EquationPass, RcountCoreError> {
+    let has_event = package.status_events.iter().any(|event| {
+        event.event_type == StatusEventType::Correction
+            && event.status_before == CountStatus::Unofficial
+            && event.status_after == CountStatus::Canvassed
+    });
+    if !has_event {
+        return Err(RcountCoreError::MissingCanvassCorrectionEvent);
+    }
+    for status in [CountStatus::Unofficial, CountStatus::Canvassed] {
+        if !package
+            .summaries
+            .iter()
+            .any(|summary| summary.status == status)
+        {
+            return Err(RcountCoreError::MissingStatusSummaries { status });
+        }
+    }
+    Ok(EquationPass {
+        equation_id: "canvass_correction_event".to_string(),
+        contest_id: "*".to_string(),
+        reporting_unit_id: "*".to_string(),
+    })
 }
 
 pub fn synthetic_summary_basic_package() -> RcountPackage {
@@ -392,7 +517,100 @@ pub fn synthetic_summary_basic_package() -> RcountPackage {
         contests: vec![contest],
         reporting_units,
         summaries,
+        status_events: vec![],
     }
+}
+
+pub fn synthetic_canvass_correction_package() -> RcountPackage {
+    let mut package = synthetic_summary_basic_package();
+    let unofficial = vec![
+        summary_with_status(
+            "syn:precinct:P-001",
+            CountStatus::Unofficial,
+            40,
+            34,
+            1,
+            3,
+            1,
+            0,
+        ),
+        summary_with_status(
+            "syn:precinct:P-002",
+            CountStatus::Unofficial,
+            25,
+            30,
+            0,
+            4,
+            0,
+            1,
+        ),
+        summary_with_status(
+            "syn:jurisdiction:SYN",
+            CountStatus::Unofficial,
+            65,
+            64,
+            1,
+            7,
+            1,
+            1,
+        ),
+    ];
+    let canvassed = vec![
+        summary_with_status(
+            "syn:precinct:P-001",
+            CountStatus::Canvassed,
+            40,
+            35,
+            1,
+            3,
+            1,
+            0,
+        ),
+        summary_with_status(
+            "syn:precinct:P-002",
+            CountStatus::Canvassed,
+            25,
+            30,
+            0,
+            4,
+            0,
+            1,
+        ),
+        summary_with_status(
+            "syn:jurisdiction:SYN",
+            CountStatus::Canvassed,
+            65,
+            65,
+            1,
+            7,
+            1,
+            1,
+        ),
+    ];
+    package.summaries = unofficial.into_iter().chain(canvassed).collect();
+    package.status_events = vec![
+        StatusEvent {
+            event_id: "event-0001".to_string(),
+            event_type: StatusEventType::InitialUnofficialReport,
+            status_before: CountStatus::Unofficial,
+            status_after: CountStatus::Unofficial,
+            effective_at: "2024-11-05T23:00:00Z".to_string(),
+            authority: "SYN County Election Office".to_string(),
+            source_refs: vec!["source:unofficial-election-night-export".to_string()],
+            explanation: "Election-night unofficial report loaded from the first public export.".to_string(),
+        },
+        StatusEvent {
+            event_id: "event-0002".to_string(),
+            event_type: StatusEventType::Correction,
+            status_before: CountStatus::Unofficial,
+            status_after: CountStatus::Canvassed,
+            effective_at: "2024-11-12T18:22:00Z".to_string(),
+            authority: "SYN County Canvassing Board".to_string(),
+            source_refs: vec!["source:canvass-minutes-2024-11-12".to_string()],
+            explanation: "Canvass correction added one Candidate B vote in P-001 after write-in adjudication review.".to_string(),
+        },
+    ];
+    package
 }
 
 fn summary(
@@ -404,11 +622,33 @@ fn summary(
     overvotes: i64,
     blank_contests: i64,
 ) -> Summary {
+    summary_with_status(
+        reporting_unit_id,
+        CountStatus::Canvassed,
+        cand_a,
+        cand_b,
+        write_in,
+        undervotes,
+        overvotes,
+        blank_contests,
+    )
+}
+
+fn summary_with_status(
+    reporting_unit_id: &str,
+    status: CountStatus,
+    cand_a: i64,
+    cand_b: i64,
+    write_in: i64,
+    undervotes: i64,
+    overvotes: i64,
+    blank_contests: i64,
+) -> Summary {
     Summary {
         contest_id: "syn-2024-mayor".to_string(),
         reporting_unit_id: reporting_unit_id.to_string(),
         batch_id: None,
-        status: CountStatus::Canvassed,
+        status,
         totals: vec![
             SelectionTotal {
                 selection_id: "cand-a".to_string(),
@@ -502,6 +742,39 @@ mod tests {
             verify_jurisdiction_total("syn-2024-mayor", "syn:jurisdiction:SYN", &package.summaries)
                 .expect("jurisdiction total must verify");
         assert_eq!(passes[0].equation_id, "jurisdiction_contest_total");
+    }
+
+    #[test]
+    fn synthetic_canvass_correction_verifies_both_status_snapshots() {
+        let package = synthetic_canvass_correction_package();
+        let report = verify_package(&package).expect("canvass correction package must verify");
+        assert_eq!(
+            report
+                .passed
+                .iter()
+                .filter(|pass| pass.equation_id == "contest_selection_sum")
+                .count(),
+            6
+        );
+        let jurisdiction_passes =
+            verify_jurisdiction_total("syn-2024-mayor", "syn:jurisdiction:SYN", &package.summaries)
+                .expect("both status snapshots must reconcile");
+        assert_eq!(jurisdiction_passes.len(), 2);
+    }
+
+    #[test]
+    fn canvass_correction_requires_public_event_and_snapshots() {
+        let mut package = synthetic_canvass_correction_package();
+        let pass = verify_canvass_correction_event(&package).unwrap();
+        assert_eq!(pass.equation_id, "canvass_correction_event");
+
+        package.status_events.clear();
+        let err = verify_canvass_correction_event(&package)
+            .expect_err("missing correction event must fail");
+        assert!(matches!(
+            err,
+            RcountCoreError::MissingCanvassCorrectionEvent
+        ));
     }
 
     #[test]

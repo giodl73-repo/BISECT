@@ -1,11 +1,20 @@
 use std::process::Command;
 
 fn docs_summary_basic_path() -> String {
+    docs_package_path("summary-basic")
+}
+
+fn docs_canvass_correction_path() -> String {
+    docs_package_path("canvass-correction")
+}
+
+fn docs_package_path(package_name: &str) -> String {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .ancestors()
         .nth(2)
         .unwrap()
-        .join("docs/examples/rcount-golden-packages/summary-basic")
+        .join("docs/examples/rcount-golden-packages")
+        .join(package_name)
         .to_string_lossy()
         .into_owned()
 }
@@ -28,13 +37,31 @@ fn verify_summary_basic_exits_zero() {
 }
 
 #[test]
+fn verify_canvass_correction_exposes_event_correlation() {
+    let output = Command::new(env!("CARGO_BIN_EXE_rcount"))
+        .args([
+            "verify",
+            &docs_canvass_correction_path(),
+            "--format",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains(r#""status":"pass""#));
+    assert!(stdout.contains(r#""equation_id":"canvass_correction_event""#));
+}
+
+#[test]
 fn verify_tampered_manifest_exits_one() {
     let tmp = tempfile::TempDir::new().unwrap();
-    copy_dir_all(
-        std::path::Path::new(&docs_summary_basic_path()),
-        tmp.path(),
-    )
-    .unwrap();
+    copy_dir_all(std::path::Path::new(&docs_summary_basic_path()), tmp.path()).unwrap();
     let manifest_path = tmp.path().join("manifest.json");
     let mut raw: serde_json::Value =
         serde_json::from_slice(&std::fs::read(&manifest_path).unwrap()).unwrap();
@@ -55,12 +82,11 @@ fn verify_tampered_manifest_exits_one() {
 #[test]
 fn verify_can_write_transcript_to_package() {
     let tmp = tempfile::TempDir::new().unwrap();
-    copy_dir_all(
-        std::path::Path::new(&docs_summary_basic_path()),
-        tmp.path(),
-    )
-    .unwrap();
-    let transcript_path = tmp.path().join("transcripts").join("verify-transcript.json");
+    copy_dir_all(std::path::Path::new(&docs_summary_basic_path()), tmp.path()).unwrap();
+    let transcript_path = tmp
+        .path()
+        .join("transcripts")
+        .join("verify-transcript.json");
     std::fs::remove_file(&transcript_path).unwrap();
 
     let output = Command::new(env!("CARGO_BIN_EXE_rcount"))

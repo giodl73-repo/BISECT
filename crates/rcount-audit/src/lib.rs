@@ -1,5 +1,6 @@
 use rcount_core::{
-    package_content_hash, verify_jurisdiction_total, verify_package, EquationPass, RcountPackage,
+    package_content_hash, verify_canvass_correction_event, verify_jurisdiction_total,
+    verify_package, EquationPass, RcountPackage,
 };
 use rcount_io::{read_package_dir, RcountIoError, RcountManifest};
 use serde::{Deserialize, Serialize};
@@ -120,6 +121,19 @@ fn verify_loaded_package(
         }),
     }
 
+    if !package.status_events.is_empty() {
+        match verify_canvass_correction_event(package) {
+            Ok(pass) => checks.push(pass_result(pass)),
+            Err(err) => checks.push(CheckResult {
+                equation_id: "canvass_correction_event".to_string(),
+                status: VerificationStatus::Fail,
+                contest_id: None,
+                reporting_unit_id: None,
+                error: Some(err.to_string()),
+            }),
+        }
+    }
+
     let status = if checks
         .iter()
         .all(|check| check.status == VerificationStatus::Pass)
@@ -152,8 +166,10 @@ fn pass_result(pass: EquationPass) -> CheckResult {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rcount_core::synthetic_summary_basic_package;
-    use rcount_io::{synthetic_summary_basic_manifest, write_package_dir};
+    use rcount_core::{synthetic_canvass_correction_package, synthetic_summary_basic_package};
+    use rcount_io::{
+        synthetic_canvass_correction_manifest, synthetic_summary_basic_manifest, write_package_dir,
+    };
 
     #[test]
     fn valid_summary_basic_produces_pass_transcript() {
@@ -209,6 +225,22 @@ mod tests {
             .iter()
             .any(|check| check.equation_id == "contest_selection_sum"
                 && check.status == VerificationStatus::Fail));
+    }
+
+    #[test]
+    fn canvass_correction_produces_event_correlation_pass() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_canvass_correction_package();
+        let manifest = synthetic_canvass_correction_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+
+        let transcript = verify_package_dir(tmp.path());
+        assert_eq!(transcript.status, VerificationStatus::Pass);
+        assert!(transcript
+            .checks
+            .iter()
+            .any(|check| check.equation_id == "canvass_correction_event"
+                && check.status == VerificationStatus::Pass));
     }
 
     #[test]

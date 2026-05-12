@@ -76,6 +76,19 @@ pub struct PackageHashes {
 pub fn synthetic_summary_basic_manifest(
     package: &RcountPackage,
 ) -> Result<RcountManifest, RcountIoError> {
+    synthetic_manifest(package, "canvassed")
+}
+
+pub fn synthetic_canvass_correction_manifest(
+    package: &RcountPackage,
+) -> Result<RcountManifest, RcountIoError> {
+    synthetic_manifest(package, "canvassed")
+}
+
+fn synthetic_manifest(
+    package: &RcountPackage,
+    status: &str,
+) -> Result<RcountManifest, RcountIoError> {
     Ok(RcountManifest {
         rcount_version: RCOUNT_VERSION.to_string(),
         jurisdiction: Jurisdiction {
@@ -88,7 +101,7 @@ pub fn synthetic_summary_basic_manifest(
             election_type: "general".to_string(),
             scope: "synthetic-county".to_string(),
         },
-        status: "canvassed".to_string(),
+        status: status.to_string(),
         hash_algorithm: "sha256".to_string(),
         content_hash: package_content_hash(package)?,
         created_by: CreatedBy {
@@ -119,7 +132,10 @@ pub fn write_package_dir(
         &dir.join("sources").join("source-index.json"),
         &SourceIndex { sources: vec![] },
     )?;
-    write_ndjson(&dir.join("normalized").join("contests.ndjson"), &package.contests)?;
+    write_ndjson(
+        &dir.join("normalized").join("contests.ndjson"),
+        &package.contests,
+    )?;
     write_ndjson(
         &dir.join("normalized").join("reporting-units.ndjson"),
         &package.reporting_units,
@@ -133,9 +149,14 @@ pub fn write_package_dir(
         &[
             r#"{"equation_id":"contest_selection_sum","status":"declared"}"#,
             r#"{"equation_id":"jurisdiction_contest_total","status":"declared"}"#,
+            r#"{"equation_id":"status_event_declared","status":"declared"}"#,
+            r#"{"equation_id":"canvass_correction_event","status":"declared"}"#,
         ],
     )?;
-    write_lines(&dir.join("status").join("events.ndjson"), &[])?;
+    write_ndjson(
+        &dir.join("status").join("events.ndjson"),
+        &package.status_events,
+    )?;
     write_json_pretty(
         &dir.join("proofs").join("package-hashes.json"),
         &PackageHashes {
@@ -166,6 +187,7 @@ pub fn read_package_dir(dir: &Path) -> Result<(RcountManifest, RcountPackage), R
         contests: read_ndjson(&dir.join("normalized").join("contests.ndjson"))?,
         reporting_units: read_ndjson(&dir.join("normalized").join("reporting-units.ndjson"))?,
         summaries: read_ndjson(&dir.join("normalized").join("summaries.ndjson"))?,
+        status_events: read_ndjson(&dir.join("status").join("events.ndjson"))?,
     };
     let computed = package_content_hash(&package)?;
     if manifest.content_hash != computed {
@@ -189,6 +211,13 @@ pub fn default_summary_basic_docs_dir() -> PathBuf {
         .join("examples")
         .join("rcount-golden-packages")
         .join("summary-basic")
+}
+
+pub fn default_canvass_correction_docs_dir() -> PathBuf {
+    PathBuf::from("docs")
+        .join("examples")
+        .join("rcount-golden-packages")
+        .join("canvass-correction")
 }
 
 fn write_json_pretty<T: Serialize>(path: &Path, value: &T) -> Result<(), RcountIoError> {
@@ -236,7 +265,7 @@ fn write_lines(path: &Path, lines: &[&str]) -> Result<(), RcountIoError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rcount_core::synthetic_summary_basic_package;
+    use rcount_core::{synthetic_canvass_correction_package, synthetic_summary_basic_package};
 
     #[test]
     fn round_trips_synthetic_summary_basic_package() {
@@ -248,6 +277,17 @@ mod tests {
         assert_eq!(decoded_manifest.content_hash, manifest.content_hash);
         assert_eq!(decoded_package.summaries.len(), 3);
         verify_summary_basic_dir(tmp.path()).unwrap();
+    }
+
+    #[test]
+    fn round_trips_synthetic_canvass_correction_package() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_canvass_correction_package();
+        let manifest = synthetic_canvass_correction_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+        let (_, decoded_package) = read_package_dir(tmp.path()).unwrap();
+        assert_eq!(decoded_package.summaries.len(), 6);
+        assert_eq!(decoded_package.status_events.len(), 2);
     }
 
     #[test]

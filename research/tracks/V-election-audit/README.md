@@ -28,12 +28,14 @@ recompute public claims from lower-level evidence.
 
 - `rcount-core`: started 2026-05-12 with canonical hash prefixes, core contest
   and summary records, a synthetic `summary-basic` package generator, and L0
-  checks for `contest_selection_sum` and `jurisdiction_contest_total`.
+  checks for `contest_selection_sum`, `jurisdiction_contest_total`, and
+  canvass-correction event correlation.
 - `rcount-io`: started 2026-05-12 with package-directory read/write helpers,
-  a `summary-basic` generator, and a docs fixture verifier for
-  `docs/examples/rcount-golden-packages/summary-basic`.
+  `summary-basic` and `canvass-correction` generators, and docs fixture
+  verification.
 - `rcount-audit`: started 2026-05-12 with pass/fail verification transcripts
-  for `summary-basic`, tampered manifest failures, and bad arithmetic failures.
+  for `summary-basic` and `canvass-correction`, tampered manifest failures,
+  and bad arithmetic failures.
 - `rcount-cli`: started 2026-05-12 with `rcount verify <package-dir>` and
   optional `--write-transcript`.
 

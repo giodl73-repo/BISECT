@@ -6,7 +6,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let transcript = verify_and_write_transcript(&dir)?;
     println!(
         "wrote {} with status {:?}",
-        dir.join("transcripts").join("verify-transcript.json").display(),
+        dir.join("transcripts")
+            .join("verify-transcript.json")
+            .display(),
         transcript.status
     );
     Ok(())
