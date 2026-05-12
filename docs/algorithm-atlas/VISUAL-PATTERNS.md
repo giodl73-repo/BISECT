@@ -23,6 +23,8 @@ raw tiny split -> normalized ratio table/chart -> chosen root split and recursio
 - Put the failure mode and the selected behavior in the same visual frame.
 - Include at least one numeric table, score, threshold, or ledger when the
   algorithm makes a quantitative decision.
+- Show the split, not just the split label. A `1:13` ratio should be drawn as
+  one part against thirteen parts; a `7:7` ratio should look visibly balanced.
 - Label whether higher or lower scores win.
 - Show the artifact consequence: selected split, emitted report, audit package,
   rejected move, resample genealogy, or frontier selection.
@@ -51,3 +53,17 @@ the algorithm's decision rule and its artifact consequence in the same figure.
 
 When a page has two constraints, make both visible in the decision panel. Do not
 hide the secondary constraint in prose; show the pass/fail window directly.
+
+## Split Depiction Rule
+
+If an algorithm is about dividing seats, population, land area, graph units, or
+district columns, the visual should depict the division directly:
+
+| Concept | Weak visual | Better visual |
+|---|---|---|
+| `1:13` ratio | a box labeled `1:13` | a bar/map split into one small part and thirteen parts |
+| `7:7` ratio | a box labeled `7:7` | two equal halves with a visible dividing line |
+| county split | text saying "county split" | county region visibly crossed by a boundary |
+| selected frontier point | text saying "selected" | highlighted point on the frontier |
+
+Labels can still name the split, but the geometry must carry the meaning first.

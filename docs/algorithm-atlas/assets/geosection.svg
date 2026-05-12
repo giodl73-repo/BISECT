@@ -1,13 +1,46 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="960" height="360" viewBox="0 0 960 360" role="img" aria-labelledby="title desc">
   <title id="title">GeoSection ratio scan</title>
   <desc id="desc">First-level ratios are scored by normalized edge cut to avoid caterpillar splits.</desc>
-  <style>.bg{fill:#fbfbf8}.panel{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.bar{fill:#dbeafe;stroke:#2b5c9b;stroke-width:2}.win{fill:#e4f5eb;stroke:#2f7d4c;stroke-width:3}.bad{fill:#ffe4e1;stroke:#b84a42;stroke-width:2}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.mono{font:12px Consolas,monospace;fill:#17212b}</style>
+  <style>.bg{fill:#fbfbf8}.panel{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.bar{fill:#dbeafe;stroke:#2b5c9b;stroke-width:2}.win{fill:#e4f5eb;stroke:#2f7d4c;stroke-width:3}.bad{fill:#ffe4e1;stroke:#b84a42;stroke-width:2}.minor{fill:#b84a42}.major{fill:#f6c7bd}.minor2{fill:#2b5c9b}.major2{fill:#dbeafe}.minorWin{fill:#2f7d4c}.majorWin{fill:#e4f5eb}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.mono{font:12px Consolas,monospace;fill:#17212b}</style>
   <rect class="bg" width="960" height="360"/><rect class="panel" x="60" y="55" width="840" height="255" rx="8"/>
   <text class="label" x="95" y="92">First-level ratio scan</text>
-  <rect class="bad" x="110" y="210" width="90" height="45" rx="6"/><text class="small" x="126" y="238">1:13</text>
-  <rect class="bar" x="240" y="185" width="90" height="70" rx="6"/><text class="small" x="257" y="238">2:12</text>
-  <rect class="bar" x="370" y="155" width="90" height="100" rx="6"/><text class="small" x="387" y="238">3:11</text>
-  <rect class="win" x="500" y="125" width="90" height="130" rx="6"/><text class="small" x="517" y="238">7:7</text>
+  <g transform="translate(110 210)">
+    <rect class="bad" x="0" y="0" width="90" height="45" rx="6"/>
+    <clipPath id="r1clip"><rect x="0" y="0" width="90" height="45" rx="6"/></clipPath>
+    <g clip-path="url(#r1clip)">
+      <rect class="minor" x="0" y="0" width="6.4" height="45"/>
+      <rect class="major" x="6.4" y="0" width="83.6" height="45"/>
+    </g>
+    <text class="small" x="20" y="65">1 / 13</text>
+  </g>
+  <g transform="translate(240 185)">
+    <rect class="bar" x="0" y="0" width="90" height="70" rx="6"/>
+    <clipPath id="r2clip"><rect x="0" y="0" width="90" height="70" rx="6"/></clipPath>
+    <g clip-path="url(#r2clip)">
+      <rect class="minor2" x="0" y="0" width="12.9" height="70"/>
+      <rect class="major2" x="12.9" y="0" width="77.1" height="70"/>
+    </g>
+    <text class="small" x="20" y="90">2 / 12</text>
+  </g>
+  <g transform="translate(370 155)">
+    <rect class="bar" x="0" y="0" width="90" height="100" rx="6"/>
+    <clipPath id="r3clip"><rect x="0" y="0" width="90" height="100" rx="6"/></clipPath>
+    <g clip-path="url(#r3clip)">
+      <rect class="minor2" x="0" y="0" width="19.3" height="100"/>
+      <rect class="major2" x="19.3" y="0" width="70.7" height="100"/>
+    </g>
+    <text class="small" x="20" y="120">3 / 11</text>
+  </g>
+  <g transform="translate(500 125)">
+    <rect class="win" x="0" y="0" width="90" height="130" rx="6"/>
+    <clipPath id="r7clip"><rect x="0" y="0" width="90" height="130" rx="6"/></clipPath>
+    <g clip-path="url(#r7clip)">
+      <rect class="minorWin" x="0" y="0" width="45" height="130"/>
+      <rect class="majorWin" x="45" y="0" width="45" height="130"/>
+    </g>
+    <line x1="45" y1="0" x2="45" y2="130" stroke="#2f7d4c" stroke-width="2"/>
+    <text class="small" x="22" y="150">7 / 7</text>
+  </g>
   <text class="mono" x="640" y="155">score = EC_min / sqrt(min(i,k-i))</text>
   <text class="small" x="640" y="190">Small splits must beat the normalization,</text><text class="small" x="640" y="210">not merely enclose less area.</text>
 </svg>
