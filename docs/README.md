@@ -19,6 +19,7 @@ This directory contains **human-friendly** documentation for users, researchers,
 ### I'm a Researcher or Data Analyst
 
 **Understanding the algorithm**:
+- [algorithm-atlas/README.md](algorithm-atlas/README.md) - Visual guide to the algorithm families
 - [RECURSIVE_BISECTION.md](RECURSIVE_BISECTION.md) - How redistricting works
 - [DATA_DICTIONARY.md](DATA_DICTIONARY.md) - Field definitions for statistical analysis
 - [VISUALIZATION_GUIDE.md](VISUALIZATION_GUIDE.md) - Interpreting compactness and political metrics

@@ -26,6 +26,7 @@ statistical, or implementation claims. For public-facing claim discipline, use
 
 ## Where to go next
 
+- **Visual algorithm guide**: see `docs/algorithm-atlas/`
 - **Running the pipeline**: see `CLAUDE.md` → Common Commands
 - **Output files**: see `docs/PIPELINE_OUTPUTS.md`
 - **Algorithm detail**: see `docs/RECURSIVE_BISECTION.md`

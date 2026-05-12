@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="360" viewBox="0 0 900 360" role="img" aria-labelledby="title desc">
+  <title id="title">T.17 flow based construction</title>
+  <desc id="desc">Seeds, capacities, and costs guide a flow-style assignment, with summaries and infeasibility witnesses.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#334155"/></marker>
+    <style>text{font-family:Arial,Helvetica,sans-serif;fill:#172033}.h{font-size:22px;font-weight:700}.s{font-size:13px;fill:#475569}.box{fill:#fff;stroke:#94a3b8;stroke-width:1.5;rx:8}.line{stroke:#334155;stroke-width:2;fill:none;marker-end:url(#arrow)}.flow{stroke:#0284c7;stroke-width:5;fill:none;marker-end:url(#arrow)}.a{fill:#dbeafe;stroke:#2563eb}.b{fill:#dcfce7;stroke:#16a34a}.warn{fill:#fef3c7;stroke:#d97706}</style>
+  </defs>
+  <rect width="900" height="360" fill="#f8fafc"/>
+  <text x="32" y="42" class="h">T.17 Flow-Based Construction</text>
+  <text x="32" y="66" class="s">Use seed, capacity, and cost information to build an assignment and explain failures.</text>
+  <rect x="32" y="105" width="180" height="160" class="box"/>
+  <circle cx="72" cy="185" r="14" class="a"/><circle cx="172" cy="185" r="14" class="b"/>
+  <path d="M88 185 C110 145,135 145,158 185" class="flow"/><path d="M88 185 C110 225,135 225,158 185" class="flow"/>
+  <text x="66" y="292" class="s">seeds and costs</text>
+  <path d="M225 185 L295 185" class="line"/>
+  <rect x="310" y="105" width="165" height="160" class="box"/>
+  <rect x="342" y="145" width="45" height="82" class="a" rx="6"/><rect x="400" y="145" width="45" height="82" class="b" rx="6"/>
+  <text x="336" y="292" class="s">capacity assignment</text>
+  <path d="M490 185 L560 185" class="line"/>
+  <rect x="575" y="105" width="145" height="160" class="box warn"/>
+  <text x="600" y="145" class="s">flow summary</text><text x="600" y="174" class="s">status</text><text x="600" y="198" class="s">edge cut</text><text x="600" y="222" class="s">witness if fail</text>
+  <path d="M735 185 L800 185" class="line"/>
+  <rect x="815" y="105" width="60" height="160" class="box b"/>
+  <text x="825" y="166" class="s">RPLAN</text><text x="825" y="190" class="s">RCTX</text><text x="824" y="214" class="s">audit</text>
+</svg>

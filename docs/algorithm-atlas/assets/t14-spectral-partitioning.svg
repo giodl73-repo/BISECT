@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="360" viewBox="0 0 900 360" role="img" aria-labelledby="title desc">
+  <title id="title">T.14 spectral partitioning</title>
+  <desc id="desc">A graph becomes a Laplacian, then a Fiedler ordering, then a balanced sweep cut.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#334155"/></marker>
+    <style>text{font-family:Arial,Helvetica,sans-serif;fill:#172033}.h{font-size:22px;font-weight:700}.s{font-size:13px;fill:#475569}.box{fill:#fff;stroke:#94a3b8;stroke-width:1.5;rx:8}.blue{fill:#dbeafe;stroke:#2563eb}.green{fill:#dcfce7;stroke:#16a34a}.line{stroke:#334155;stroke-width:2;fill:none;marker-end:url(#arrow)}.edge{stroke:#64748b;stroke-width:2}.node{stroke:#334155;stroke-width:1.5}</style>
+  </defs>
+  <rect width="900" height="360" fill="#f8fafc"/>
+  <text x="32" y="42" class="h">T.14 Spectral Partitioning</text>
+  <text x="32" y="66" class="s">Use graph eigenstructure to order units, then sweep for a balanced cut.</text>
+  <rect x="32" y="105" width="170" height="160" class="box"/>
+  <line x1="82" y1="150" x2="132" y2="130" class="edge"/><line x1="132" y1="130" x2="162" y2="180" class="edge"/><line x1="82" y1="150" x2="98" y2="218" class="edge"/><line x1="98" y1="218" x2="162" y2="180" class="edge"/>
+  <circle cx="82" cy="150" r="12" class="node blue"/><circle cx="132" cy="130" r="12" class="node blue"/><circle cx="162" cy="180" r="12" class="node green"/><circle cx="98" cy="218" r="12" class="node green"/>
+  <text x="58" y="292" class="s">adjacency graph</text>
+  <path d="M215 185 L285 185" class="line"/>
+  <rect x="300" y="105" width="150" height="160" class="box"/>
+  <text x="333" y="158" class="s">Laplacian</text><text x="337" y="188" class="h">L</text><text x="322" y="218" class="s">Fiedler vector</text>
+  <path d="M465 185 L535 185" class="line"/>
+  <rect x="550" y="105" width="150" height="160" class="box"/>
+  <circle cx="585" cy="185" r="10" class="node blue"/><circle cx="620" cy="185" r="10" class="node blue"/><line x1="642" y1="140" x2="642" y2="230" stroke="#ef4444" stroke-width="3" stroke-dasharray="6 5"/><circle cx="665" cy="185" r="10" class="node green"/><circle cx="700" cy="185" r="10" class="node green"/>
+  <text x="578" y="292" class="s">ordered sweep cut</text>
+  <path d="M715 185 L785 185" class="line"/>
+  <rect x="800" y="105" width="70" height="160" class="box green"/>
+  <text x="817" y="166" class="s">RPLAN</text><text x="815" y="190" class="s">RCTX</text><text x="810" y="214" class="s">audit</text>
+</svg>

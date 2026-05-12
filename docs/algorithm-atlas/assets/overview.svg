@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="620" viewBox="0 0 980 620" role="img" aria-labelledby="title desc">
+  <title id="title">BISECT algorithm atlas overview</title>
+  <desc id="desc">Layered map of construction, search, exact optimization, frontier selection, and RPLAN audit fixed point.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#334155"/>
+    </marker>
+    <style>
+      text { font-family: Arial, Helvetica, sans-serif; fill: #172033; }
+      .title { font-size: 28px; font-weight: 700; }
+      .subtitle { font-size: 14px; fill: #475569; }
+      .layer-title { font-size: 17px; font-weight: 700; }
+      .small { font-size: 12px; fill: #475569; }
+      .box { fill: #ffffff; stroke: #94a3b8; stroke-width: 1.5; rx: 8; }
+      .construct { fill: #e0f2fe; stroke: #0284c7; }
+      .search { fill: #ede9fe; stroke: #7c3aed; }
+      .exact { fill: #fef3c7; stroke: #d97706; }
+      .frontier { fill: #dcfce7; stroke: #16a34a; }
+      .audit { fill: #f1f5f9; stroke: #334155; }
+      .line { stroke: #334155; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect x="0" y="0" width="980" height="620" fill="#f8fafc"/>
+  <text x="40" y="50" class="title">BISECT Algorithm Atlas</text>
+  <text x="40" y="76" class="subtitle">Visual field guide: what each algorithm family does and how every final plan returns to RPLAN.</text>
+
+  <rect x="40" y="110" width="900" height="86" class="box construct"/>
+  <text x="65" y="142" class="layer-title">Construction: make a plan</text>
+  <text x="65" y="170" class="small">T.14 Spectral</text>
+  <text x="220" y="170" class="small">T.15 Capacity Clustering</text>
+  <text x="440" y="170" class="small">T.16 Regionalization</text>
+  <text x="650" y="170" class="small">T.17 Flow Construction</text>
+
+  <rect x="40" y="230" width="280" height="86" class="box search"/>
+  <text x="65" y="262" class="layer-title">Search: improve or sample</text>
+  <text x="65" y="290" class="small">U.18 local search, ReCom, SMC, multiscale</text>
+
+  <rect x="350" y="230" width="280" height="86" class="box exact"/>
+  <text x="375" y="262" class="layer-title">Exact: prove or bound</text>
+  <text x="375" y="290" class="small">U.16 branch-and-cut, U.17 branch-and-price</text>
+
+  <rect x="660" y="230" width="280" height="86" class="box frontier"/>
+  <text x="685" y="262" class="layer-title">Selection: expose trade-offs</text>
+  <text x="685" y="290" class="small">U.19 Pareto / evolutionary frontier</text>
+
+  <rect x="120" y="390" width="740" height="122" class="box audit"/>
+  <text x="145" y="424" class="layer-title">RPLAN audit fixed point</text>
+  <text x="145" y="456" class="small">plan.rplan -> context.rctx -> audit-certificate.json -> manifest.json</text>
+  <text x="145" y="486" class="small">Verified by: rplan verify-certificate and bisect verify --manifest</text>
+
+  <path d="M490 196 L490 230" class="line"/>
+  <path d="M180 316 L360 390" class="line"/>
+  <path d="M490 316 L490 390" class="line"/>
+  <path d="M800 316 L620 390" class="line"/>
+
+  <rect x="40" y="552" width="900" height="34" fill="#ffffff" stroke="#cbd5e1" rx="6"/>
+  <text x="60" y="574" class="small">Claim discipline: diagrams explain mechanism and artifacts. They do not imply legal sufficiency or method superiority without the linked evidence.</text>
+</svg>

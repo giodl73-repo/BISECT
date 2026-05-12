@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="360" viewBox="0 0 900 360" role="img" aria-labelledby="title desc">
+  <title id="title">T.16 hierarchical regionalization</title>
+  <desc id="desc">Adjacent units merge into larger regions while a merge log records each step.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#334155"/></marker>
+    <style>text{font-family:Arial,Helvetica,sans-serif;fill:#172033}.h{font-size:22px;font-weight:700}.s{font-size:13px;fill:#475569}.box{fill:#fff;stroke:#94a3b8;stroke-width:1.5;rx:8}.line{stroke:#334155;stroke-width:2;fill:none;marker-end:url(#arrow)}.a{fill:#dbeafe;stroke:#2563eb}.b{fill:#dcfce7;stroke:#16a34a}.c{fill:#fef3c7;stroke:#d97706}</style>
+  </defs>
+  <rect width="900" height="360" fill="#f8fafc"/>
+  <text x="32" y="42" class="h">T.16 Hierarchical Regionalization</text>
+  <text x="32" y="66" class="s">Merge adjacent regions until the target district count remains.</text>
+  <rect x="32" y="105" width="170" height="160" class="box"/>
+  <rect x="62" y="145" width="35" height="35" class="a"/><rect x="100" y="145" width="35" height="35" class="b"/><rect x="138" y="145" width="35" height="35" class="c"/><rect x="62" y="183" width="35" height="35" class="c"/><rect x="100" y="183" width="35" height="35" class="a"/><rect x="138" y="183" width="35" height="35" class="b"/>
+  <text x="68" y="292" class="s">unit regions</text>
+  <path d="M215 185 L285 185" class="line"/>
+  <rect x="300" y="105" width="160" height="160" class="box"/>
+  <rect x="330" y="150" width="74" height="35" class="a"/><rect x="330" y="188" width="35" height="35" class="c"/><rect x="368" y="188" width="36" height="35" class="a"/>
+  <text x="328" y="292" class="s">merge adjacent pair</text>
+  <path d="M475 185 L545 185" class="line"/>
+  <rect x="560" y="105" width="150" height="160" class="box"/>
+  <text x="585" y="145" class="s">merge-log.json</text><text x="585" y="174" class="s">step</text><text x="585" y="198" class="s">left/right</text><text x="585" y="222" class="s">population</text>
+  <path d="M725 185 L795 185" class="line"/>
+  <rect x="810" y="105" width="60" height="160" class="box b"/>
+  <text x="820" y="166" class="s">RPLAN</text><text x="820" y="190" class="s">RCTX</text><text x="819" y="214" class="s">audit</text>
+</svg>
