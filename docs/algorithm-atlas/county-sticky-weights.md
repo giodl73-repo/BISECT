@@ -20,6 +20,16 @@ same structure + boosted intra-county edges -> fewer county splits
 Because it changes the meaning of edge cut, it is best understood as a
 trade-off knob: fewer county splits may cost some compactness.
 
+## Picture 0: Candidate Cuts And Weighted Consequence
+
+![County-Sticky candidate cuts](assets/county-sticky-weights.svg)
+
+County-Sticky keeps the same candidate cut search, but changes the cost of
+candidate cuts. In the figure, Cut X is shorter in raw boundary length but cuts
+inside a county, so the same-county multiplier makes it expensive. Cut Y is
+longer but follows a county boundary, so it can win the weighted objective if
+population and contiguity remain valid.
+
 ## Picture 1: Weight Multiplication
 
 ![County-Sticky numeric weights](assets/county-sticky-numeric.svg)
@@ -39,7 +49,9 @@ cut. A mature report should show both sides of the trade.
 
 ## Worked Edge Weights
 
-County-Sticky only changes the edge costs the structure/search layers see:
+County-Sticky only changes the edge costs the structure/search layers see. The
+candidate set remains a structure/search question; the weights layer changes
+which candidate looks cheaper:
 
 | Edge | County relationship | Base edge weight | `alpha_county` | Effective weight |
 |---|---|---:|---:|---:|

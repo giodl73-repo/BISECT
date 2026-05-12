@@ -1,12 +1,129 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="360" viewBox="0 0 960 360" role="img" aria-labelledby="title desc">
-  <title id="title">County-Sticky edge weights</title>
-  <desc id="desc">Intra-county edges receive higher weights to discourage county splits.</desc>
-  <style>.bg{fill:#fbfbf8}.panel{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.county{fill:#eef2ff;stroke:#5b61b6;stroke-width:2}.node{fill:#fff;stroke:#2b5c9b;stroke-width:2}.thin{stroke:#778899;stroke-width:2}.thick{stroke:#2f7d4c;stroke-width:7}.cut{stroke:#b84a42;stroke-width:4;stroke-dasharray:6 5}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}</style>
-  <rect class="bg" width="960" height="360"/><rect class="panel" x="70" y="55" width="820" height="250" rx="8"/>
-  <rect class="county" x="130" y="105" width="270" height="150" rx="14"/><rect class="county" x="555" y="105" width="270" height="150" rx="14"/>
-  <circle class="node" cx="195" cy="165" r="18"/><circle class="node" cx="295" cy="165" r="18"/><circle class="node" cx="665" cy="165" r="18"/><circle class="node" cx="765" cy="165" r="18"/>
-  <line class="thick" x1="213" y1="165" x2="277" y2="165"/><line class="thin" x1="313" y1="165" x2="647" y2="165"/><line class="thick" x1="683" y1="165" x2="747" y2="165"/>
-  <line class="cut" x1="465" y1="95" x2="465" y2="270"/>
-  <text class="label" x="185" y="88">County A</text><text class="label" x="610" y="88">County B</text>
-  <text class="small" x="150" y="285">Heavy intra-county edges make within-county cuts expensive; cross-county cuts are not automatically banned.</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-labelledby="title desc">
+  <title id="title">County-Sticky weights make county-splitting cuts more expensive</title>
+  <desc id="desc">A teaching figure showing the same block map with county labels, two candidate cuts, how intra-county edges receive a multiplier, and why the weighted decision may prefer a county-respecting cut.</desc>
+  <style>
+    .bg{fill:#f7f5ef}
+    .panel{fill:#fffdf8;stroke:#26323d;stroke-width:1.6}
+    .card{fill:#fff;stroke:#c7d0da;stroke-width:1.2}
+    .title{font:700 30px Arial,sans-serif;fill:#17212b}
+    .label{font:700 17px Arial,sans-serif;fill:#17212b}
+    .small{font:14px Arial,sans-serif;fill:#52616b}
+    .tiny{font:12px Arial,sans-serif;fill:#52616b}
+    .mono{font:12px Consolas,monospace;fill:#17212b}
+    .cell{stroke:#fff;stroke-width:2}
+    .countyA{fill:#dbeafe}
+    .countyB{fill:#fef3c7}
+    .countyC{fill:#dcfce7}
+    .cutBad{stroke:#b6423c;stroke-width:5;stroke-linecap:round;stroke-dasharray:9 6}
+    .cutGood{stroke:#25724d;stroke-width:5;stroke-linecap:round}
+    .countyLine{stroke:#26323d;stroke-width:3}
+    .warn{fill:#fff1ed;stroke:#b6423c;stroke-width:1.5}
+    .ok{fill:#eef8f0;stroke:#25724d;stroke-width:1.5}
+    .rule{fill:#eef2ff;stroke:#5b61b6;stroke-width:1.5}
+    .tableHead{fill:#26323d}
+    .tableLine{stroke:#d8dee5;stroke-width:1}
+    .line{stroke:#596673;stroke-width:2;fill:none;marker-end:url(#arrow)}
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#596673"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" width="1280" height="760"/>
+  <text class="title" x="46" y="54">County-Sticky: same split search, different edge costs</text>
+  <text class="small" x="48" y="84">The candidate cuts are still allowed. The county multiplier changes which cut is cheaper under the weighted objective.</text>
+
+  <rect class="panel" x="42" y="116" width="1196" height="554" rx="12"/>
+
+  <!-- Base map -->
+  <g transform="translate(76 152)">
+    <text class="label" x="0" y="0">1. County labels on the unit grid</text>
+    <rect class="card" x="0" y="28" width="260" height="242" rx="9"/>
+    <g transform="translate(36 60)">
+      <!-- 6 x 4 grid: A left 2 cols, B middle 2 cols, C right 2 cols -->
+      <rect class="cell countyA" x="0" y="0" width="30" height="30"/><rect class="cell countyA" x="32" y="0" width="30" height="30"/><rect class="cell countyB" x="64" y="0" width="30" height="30"/><rect class="cell countyB" x="96" y="0" width="30" height="30"/><rect class="cell countyC" x="128" y="0" width="30" height="30"/><rect class="cell countyC" x="160" y="0" width="30" height="30"/>
+      <rect class="cell countyA" x="0" y="32" width="30" height="30"/><rect class="cell countyA" x="32" y="32" width="30" height="30"/><rect class="cell countyB" x="64" y="32" width="30" height="30"/><rect class="cell countyB" x="96" y="32" width="30" height="30"/><rect class="cell countyC" x="128" y="32" width="30" height="30"/><rect class="cell countyC" x="160" y="32" width="30" height="30"/>
+      <rect class="cell countyA" x="0" y="64" width="30" height="30"/><rect class="cell countyA" x="32" y="64" width="30" height="30"/><rect class="cell countyB" x="64" y="64" width="30" height="30"/><rect class="cell countyB" x="96" y="64" width="30" height="30"/><rect class="cell countyC" x="128" y="64" width="30" height="30"/><rect class="cell countyC" x="160" y="64" width="30" height="30"/>
+      <rect class="cell countyA" x="0" y="96" width="30" height="30"/><rect class="cell countyA" x="32" y="96" width="30" height="30"/><rect class="cell countyB" x="64" y="96" width="30" height="30"/><rect class="cell countyB" x="96" y="96" width="30" height="30"/><rect class="cell countyC" x="128" y="96" width="30" height="30"/><rect class="cell countyC" x="160" y="96" width="30" height="30"/>
+      <line class="countyLine" x1="63" y1="-2" x2="63" y2="128"/>
+      <line class="countyLine" x1="127" y1="-2" x2="127" y2="128"/>
+    </g>
+    <g transform="translate(30 210)">
+      <rect class="countyA" x="0" y="0" width="18" height="18"/><text class="tiny" x="28" y="14">County A</text>
+      <rect class="countyB" x="96" y="0" width="18" height="18"/><text class="tiny" x="124" y="14">County B</text>
+      <rect class="countyC" x="0" y="28" width="18" height="18"/><text class="tiny" x="28" y="42">County C</text>
+    </g>
+  </g>
+
+  <path class="line" d="M344 274 H404"/>
+
+  <!-- Candidate cuts -->
+  <g transform="translate(420 152)">
+    <text class="label" x="0" y="0">2. Candidate cuts remain legal candidates</text>
+    <g transform="translate(0 28)">
+      <rect class="card" width="220" height="242" rx="9"/>
+      <text class="label" x="20" y="34">Cut X</text>
+      <text class="tiny" x="20" y="54">shorter, but splits counties</text>
+      <g transform="translate(18 76)">
+        <rect class="cell countyA" x="0" y="0" width="28" height="28"/><rect class="cell countyA" x="30" y="0" width="28" height="28"/><rect class="cell countyB" x="60" y="0" width="28" height="28"/><rect class="cell countyB" x="90" y="0" width="28" height="28"/><rect class="cell countyC" x="120" y="0" width="28" height="28"/><rect class="cell countyC" x="150" y="0" width="28" height="28"/>
+        <rect class="cell countyA" x="0" y="30" width="28" height="28"/><rect class="cell countyA" x="30" y="30" width="28" height="28"/><rect class="cell countyB" x="60" y="30" width="28" height="28"/><rect class="cell countyB" x="90" y="30" width="28" height="28"/><rect class="cell countyC" x="120" y="30" width="28" height="28"/><rect class="cell countyC" x="150" y="30" width="28" height="28"/>
+        <rect class="cell countyA" x="0" y="60" width="28" height="28"/><rect class="cell countyA" x="30" y="60" width="28" height="28"/><rect class="cell countyB" x="60" y="60" width="28" height="28"/><rect class="cell countyB" x="90" y="60" width="28" height="28"/><rect class="cell countyC" x="120" y="60" width="28" height="28"/><rect class="cell countyC" x="150" y="60" width="28" height="28"/>
+        <rect class="cell countyA" x="0" y="90" width="28" height="28"/><rect class="cell countyA" x="30" y="90" width="28" height="28"/><rect class="cell countyB" x="60" y="90" width="28" height="28"/><rect class="cell countyB" x="90" y="90" width="28" height="28"/><rect class="cell countyC" x="120" y="90" width="28" height="28"/><rect class="cell countyC" x="150" y="90" width="28" height="28"/>
+        <path class="cutBad" d="M92 -4 C70 28 72 74 94 122"/>
+      </g>
+      <rect class="warn" x="20" y="210" width="178" height="24" rx="5"/>
+      <text class="tiny" x="38" y="227">cuts inside County B</text>
+    </g>
+    <g transform="translate(244 28)">
+      <rect class="card" width="220" height="242" rx="9"/>
+      <text class="label" x="20" y="34">Cut Y</text>
+      <text class="tiny" x="20" y="54">longer, follows county line</text>
+      <g transform="translate(18 76)">
+        <rect class="cell countyA" x="0" y="0" width="28" height="28"/><rect class="cell countyA" x="30" y="0" width="28" height="28"/><rect class="cell countyB" x="60" y="0" width="28" height="28"/><rect class="cell countyB" x="90" y="0" width="28" height="28"/><rect class="cell countyC" x="120" y="0" width="28" height="28"/><rect class="cell countyC" x="150" y="0" width="28" height="28"/>
+        <rect class="cell countyA" x="0" y="30" width="28" height="28"/><rect class="cell countyA" x="30" y="30" width="28" height="28"/><rect class="cell countyB" x="60" y="30" width="28" height="28"/><rect class="cell countyB" x="90" y="30" width="28" height="28"/><rect class="cell countyC" x="120" y="30" width="28" height="28"/><rect class="cell countyC" x="150" y="30" width="28" height="28"/>
+        <rect class="cell countyA" x="0" y="60" width="28" height="28"/><rect class="cell countyA" x="30" y="60" width="28" height="28"/><rect class="cell countyB" x="60" y="60" width="28" height="28"/><rect class="cell countyB" x="90" y="60" width="28" height="28"/><rect class="cell countyC" x="120" y="60" width="28" height="28"/><rect class="cell countyC" x="150" y="60" width="28" height="28"/>
+        <rect class="cell countyA" x="0" y="90" width="28" height="28"/><rect class="cell countyA" x="30" y="90" width="28" height="28"/><rect class="cell countyB" x="60" y="90" width="28" height="28"/><rect class="cell countyB" x="90" y="90" width="28" height="28"/><rect class="cell countyC" x="120" y="90" width="28" height="28"/><rect class="cell countyC" x="150" y="90" width="28" height="28"/>
+        <line class="cutGood" x1="119" y1="-4" x2="119" y2="122"/>
+      </g>
+      <rect class="ok" x="20" y="210" width="178" height="24" rx="5"/>
+      <text class="tiny" x="38" y="227">uses county boundary</text>
+    </g>
+  </g>
+
+  <path class="line" d="M890 274 H936"/>
+
+  <!-- Decision rule -->
+  <g transform="translate(948 152)">
+    <text class="label" x="0" y="0">3. Weighted objective changes selection</text>
+    <rect x="0" y="28" width="252" height="174" rx="8" fill="#ffffff" stroke="#d8dee5"/>
+    <rect class="tableHead" x="0" y="28" width="252" height="32" rx="8"/>
+    <text x="14" y="49" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#fff">cut</text>
+    <text x="70" y="49" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#fff">raw</text>
+    <text x="122" y="49" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#fff">county penalty</text>
+    <text x="214" y="49" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#fff">score</text>
+    <line class="tableLine" x1="0" y1="92" x2="252" y2="92"/>
+    <line class="tableLine" x1="0" y1="124" x2="252" y2="124"/>
+    <g font-family="Consolas, monospace" font-size="13" fill="#17212b">
+      <text x="14" y="81">X</text><text x="70" y="81">8</text><text x="122" y="81">x3</text><text x="214" y="81">24</text>
+      <text x="14" y="113">Y</text><text x="70" y="113">12</text><text x="122" y="113">x1</text><text x="214" y="113">12</text>
+    </g>
+    <rect class="ok" x="16" y="136" width="218" height="48" rx="7"/>
+    <text class="small" x="32" y="166">select Y if validity still holds</text>
+    <g transform="translate(0 240)">
+      <rect class="rule" x="0" y="0" width="252" height="96" rx="8"/>
+      <text class="small" x="18" y="30">County-Sticky discourages</text>
+      <text class="small" x="18" y="52">county splits. It does not</text>
+      <text class="small" x="18" y="74">ban them as hard constraints.</text>
+    </g>
+  </g>
+
+  <g transform="translate(90 460)">
+    <text class="label" x="0" y="0">What changed?</text>
+    <text class="small" x="0" y="32">Candidate cuts are the same candidates the structure/search layer would consider.</text>
+    <text class="small" x="0" y="56">Only the edge weights change: same-county cut edges become expensive, so a county-line cut can beat a shorter interior cut.</text>
+  </g>
+
+  <rect x="74" y="702" width="1132" height="34" rx="10" fill="#26323d"/>
+  <text x="100" y="724" font-family="Arial, sans-serif" font-size="15" fill="#fff">Reading rule: County-Sticky does not forbid a county split; it makes county-splitting candidate cuts pay a visible weighted cost.</text>
 </svg>
