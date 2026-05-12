@@ -43,4 +43,13 @@ items: flow/status semantics, evidence separation, and audit contract limits.
 - [x] P1 items addressed.
 - [x] Paper builds without errors.
 - [x] Claims map to evidence level.
-- [ ] Ready for round-2 simulated assessment.
+- [x] Ready for round-2 simulated assessment.
+
+## 2026-05-12 Paper-Quality Pass
+
+- [x] Aligned status taxonomy and summary fields with \texttt{bisect-flow}.
+- [x] Reframed the method as capacity-gated frontier growth, not a full
+      min-cost-flow solver.
+- [x] Added a worked frontier-decision table and model-relative witness
+      language.
+- [x] Marked the paper ready for another simulated assessment pass.

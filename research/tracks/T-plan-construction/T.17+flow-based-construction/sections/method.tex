@@ -1,9 +1,9 @@
 \section{Method}
 
-The staged method constructs assignments under population-capacity constraints
-and records whether a valid assignment exists for the fixture. When capacity is
-infeasible, the output carries an explicit witness rather than emitting an
-invalid final plan.
+The staged method constructs assignments under population capacity limits. It
+records whether the implemented model produced a valid result, a result needing
+repair, or an infeasible-capacity result. When capacity is infeasible, the
+output carries an explicit witness rather than emitting a final plan.
 
 The atlas framing treats eligible arcs as the candidate objects. A unit can
 send supply only along arcs allowed by the declared graph/profile, and a
@@ -20,29 +20,63 @@ pipeline. The baseline is feasibility- and audit-oriented. It is not yet the
 branch-and-cut or branch-and-price machinery planned for U.16 and U.17.
 
 \begin{enumerate}
-  \item Create source-side supply from units and demand-side capacity targets
-        for districts or construction bins.
-  \item Add eligible arcs according to the declared graph/profile and attach
-        costs from the staged constructor configuration.
-  \item Enforce capacity bounds and extract assignments from selected flow.
+  \item Select deterministic farthest-point seeds on the adjacency graph.
+  \item Compute lower, ideal, and upper district-population bounds from the
+        declared tolerance.
+  \item Grow balanced frontiers from the seeds. A frontier arc is eligible only
+        when assigning that unit keeps the target district at or below the
+        upper capacity bound.
+  \item Fill remaining unassigned units by nearest seed only after frontier
+        growth stalls, then validate population and connectedness.
   \item Mark the result \texttt{valid} when assignment and validation checks
         pass.
-  \item Mark the result \texttt{infeasible} when the declared flow model cannot
-        satisfy capacity, and \texttt{invalid} when validation fails after
-        extraction.
+  \item Mark the result \texttt{needs-repair} when extraction exists but fails
+        declared checks, and run the staged small-fixture repair when enabled.
+  \item Mark the result \texttt{infeasible-capacity} when no balanced capacity
+        assignment exists for the declared fixture. Invalid input returns an
+        error before a flow artifact is emitted.
 \end{enumerate}
 
 \begin{table}[h]
 \centering
+\small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lll}
 \toprule
 Status & Meaning & Artifact behavior \\
 \midrule
 \texttt{valid} & Model produces a validated assignment & Write final sidecars \\
-\texttt{infeasible} & Model/profile cannot satisfy capacity & Write witness \\
-\texttt{invalid} & Extracted assignment fails validation & Block final export \\
+\texttt{needs-repair} & Extracted assignment fails declared checks & Try staged repair or block export \\
+\texttt{infeasible-capacity} & Model/profile cannot satisfy capacity & Write model-relative witness \\
+\texttt{invalid input} & Input shape is malformed & Return an error before artifact emission \\
 \bottomrule
 \end{tabular}
+}
 \caption{Flow-construction status taxonomy. Infeasibility is relative to the
 declared model and profile.}
+\end{table}
+
+\subsection{Worked Frontier Decision}
+
+The current baseline does not solve a general min-cost-flow instance. Its
+flow-like decision is a deterministic frontier assignment under capacity. If
+the upper bound is \(55\), a candidate arc into a district with population
+\(48\) is rejected for a unit of population \(10\), while a lighter unit remains
+eligible.
+
+\begin{table}[h]
+\centering
+\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lllll}
+\toprule
+District frontier & Candidate unit & Current pop. & Pop. after arc & Decision \\
+\midrule
+A & \(u_7\) pop. 10 & 48 & 58 & reject: exceeds \(55\) \\
+B & \(u_8\) pop. 6 & 47 & 53 & accept: within bound \\
+\bottomrule
+\end{tabular}
+}
+\caption{T.17 exposes capacity-gated frontier arcs. Rejection is evidence about
+the declared model, not evidence that all possible districting models fail.}
 \end{table}

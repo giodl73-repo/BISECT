@@ -4,6 +4,12 @@ The current flow constructor is a baseline, not a mature min-cost-flow solver
 for every redistricting instance. Capacity feasibility and district quality
 must be evaluated separately.
 
+The implementation is closer to deterministic capacity-gated frontier growth
+than to a full network simplex, multi-commodity flow, or branch-and-price
+solver. That is an acceptable construction baseline, but the paper must not
+borrow stronger optimization guarantees from algorithms that are not yet part
+of this slice.
+
 Flow feasibility is also model-relative. A successful flow assignment does not
 prove compactness, community preservation, partisan fairness, or legal
 compliance. An infeasibility witness explains failure under the declared graph,

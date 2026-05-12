@@ -1,6 +1,13 @@
 \section{Implementation}
 
 The implementation lives in \texttt{bisect-flow} and is exposed through
-\texttt{bisect state --structure flow-construction} and YAML
-\texttt{structure: flow-construction}. Summaries record status, edge cut,
+the flow-construction structure mode. Summaries record status, edge cut,
 population deviation, parameter hash, and algorithm lineage.
+
+The versioned \texttt{FlowSummary} records method, seed method, cost method,
+repair method, status, population deviation, edge cut, seeds, optional
+infeasibility witness, and parameter hash. The implemented defaults are
+farthest-point seeds, an edge-cut cost label, and BFS repair. The witness fields
+are the failure reason, ideal population, lower population, and upper population.
+Those fields explain the model profile that failed; they are not a certificate
+of universal infeasibility.

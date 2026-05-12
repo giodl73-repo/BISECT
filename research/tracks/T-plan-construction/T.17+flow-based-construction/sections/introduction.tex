@@ -3,3 +3,10 @@
 Flow formulations are a natural way to express capacity and assignment costs.
 T.17 adds a small deterministic flow-construction baseline that records validity
 and infeasibility in a form suitable for audit and later solver expansion.
+
+The staged T.17 implementation should be read as a contract-setting constructor,
+not as the final exact-optimization engine. It uses deterministic seeds and a
+balanced frontier expansion to produce assignments or model-relative failure
+evidence. The value of the paper is that it defines the evidence surface later
+flow, branch-and-cut, and branch-and-price solvers can share: status, capacity
+bounds, seeds, costs, repair setting, and RPLAN/RCTX lineage.

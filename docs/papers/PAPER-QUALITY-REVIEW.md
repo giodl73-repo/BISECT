@@ -59,7 +59,7 @@ are called complete.
 | Batch | Papers | Purpose | Status |
 |---|---|---|---|
 | 1 | T.1-T.4, U.1, U.8, U.9, U.12 | Re-review the atlas-aligned seed/compositor/legacy papers for paper-quality gaps after the alignment pass | Completed 2026-05-12 |
-| 2 | T.14-T.17 | Construction-family golden vertical slices | In progress |
+| 2 | T.14-T.17 | Construction-family golden vertical slices | Completed 2026-05-12 |
 | 3 | U.16-U.20 | Exact/search/audit certificate family, including U.20 fixed-point language | Queued |
 | 4 | U.10, G.4, G.7, G.10, G.11 | Sampling and ensemble methods | Queued |
 | 5 | T.5-T.13, U.0-U.7, U.11, U.13-U.15 | Older algorithm-family papers not yet lifted to the same explanatory standard | Queued |
@@ -86,4 +86,4 @@ are called complete.
 | T.14 Spectral Partitioning | Reviewed 2026-05-12 | Reframed as staged spectral-style smoothing baseline; added odd-seat split sketch, implementation boundary, evidence ladder, and audit limits | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
 | T.15 Capacity-Constrained Clustering | Reviewed 2026-05-12 | Aligned status taxonomy with implementation; added worked capacity rejection table, repair/export boundary, and audit fixed-point limits | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
 | T.16 Hierarchical Regionalization | Reviewed 2026-05-12 | Aligned merge scoring and witness fields with implementation; added worked merge-decision table, merge-log evidence boundaries, and audit limits | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
-| T.17 Flow-Based Construction | Queued | Pending | Pending |
+| T.17 Flow-Based Construction | Reviewed 2026-05-12 | Reframed as capacity-gated frontier baseline; aligned summary/status fields with implementation; added worked frontier-decision table and model-relative witness limits | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |

@@ -1,6 +1,6 @@
 \section{Audit Artifacts}
 
-Flow-construction summaries become audit evidence through the RPLAN/RCTX
+Flow-construction summaries become audit evidence through the RPLAN and RCTX
 sidecar path: assignments, capacity status, infeasibility witnesses where
 present, parameter hashes, and algorithm lineage are preserved for verifier
 checks. Passing the audit profile confirms the recorded contract, not global
@@ -11,3 +11,8 @@ flow model, costs, capacities, parameters, validation outcome, and algorithm
 lineage. Parameter hashes are intended to detect drift in the run
 configuration. An infeasibility witness is model-relative: it explains why the
 declared flow profile failed, not why no possible redistricting plan can exist.
+
+This distinction is especially important because U.16 and U.17 are the papers
+that carry exact optimization and bound language. T.17 only promises that the
+construction run and its status can be replayed and audited under the declared
+profile.

@@ -8,6 +8,8 @@ clustering, regionalization, and METIS baselines.
 
 \begin{table}[h]
 \centering
+\small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{llll}
 \toprule
 Claim & Evidence now & Missing evidence & Status \\
@@ -19,12 +21,15 @@ Audit lineage & L1 sidecar checks & Real export transcript & Current \\
 Scale smoke & path100 benchmark package & Real-data benchmarks & Benchmark smoke \\
 \bottomrule
 \end{tabular}
+}
 \caption{Evidence ladder for T.17 claims. Feasibility, witness generation, and
 plan quality are separate evidence levels.}
 \end{table}
 
 \begin{table}[h]
 \centering
+\small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{llll}
 \toprule
 Constructor & Capacity behavior & Failure artifact & Current role \\
@@ -36,6 +41,13 @@ Spectral & sweep balance & validation failure & comparison \\
 METIS & external partitioning & manifest/validation result & comparison \\
 \bottomrule
 \end{tabular}
+}
 \caption{Failure-behavior comparison framing. Quantitative comparisons remain
 future work until commands and outputs are recorded.}
 \end{table}
+
+The evaluation standard is model-relative. A path fixture can prove that the
+frontier assignment respects the implemented capacity contract. An
+infeasibility fixture can prove that a witness is emitted when the declared
+capacity bounds cannot be met. Neither result proves district quality, legal
+sufficiency, or optimality against exact U-series solvers.
