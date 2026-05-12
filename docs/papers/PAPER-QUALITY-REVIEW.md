@@ -71,7 +71,7 @@ are called complete.
 | Paper | Review status | Fix status | Build/PDF status |
 |---|---|---|---|
 | T.1 GeoSection | Reviewed 2026-05-12 | Fixed count and claim-consistency issues | Rebuilt clean; PDF copied |
-| T.2 AreaSection | Queued | Queued | Already rebuilt in atlas pass |
+| T.2 AreaSection | Reviewed 2026-05-12 | Fixed NC/seat-stability claim drift | Rebuilt clean; PDF copied |
 | T.3 County-Sticky Weights | Queued | Queued | Already rebuilt in atlas pass |
 | T.4 ApportionRegions | Queued | Queued | Already rebuilt in atlas pass |
 | U.1 ConvergenceSweep | Queued | Queued | Already rebuilt in atlas pass |

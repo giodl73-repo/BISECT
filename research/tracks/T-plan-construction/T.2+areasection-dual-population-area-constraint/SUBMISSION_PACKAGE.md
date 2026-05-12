@@ -2,7 +2,7 @@
 
 **Paper**: AreaSection: Simultaneous Population and Land-Area Balance in Minimum-Edge-Cut Redistricting
 **Target venue**: Political Analysis (Cambridge University Press)
-**Panel avg**: 3.3/4 (Round 2 — 4/5 accept or accept-with-minor)
+**Panel avg**: 3.6/4 (Round 3 — accepted)
 **Status**: Ready for submission (all minor items resolved)
 
 ## Submission Checklist
@@ -45,9 +45,12 @@ over-representation in competitive states under both algorithms, confirming that
 the partisan deficit is a property of geographic voter distribution, not of the
 redistricting algorithm.
 
-The paper provides a clean empirical test of an important theoretical claim: 
+The paper provides a clean empirical test of an important theoretical claim:
 does the structure of the bisection algorithm — not just the objective function —
-affect partisan outcomes? The answer from 34 states and 50 seeds per ratio is: no.
+affect partisan outcomes? The answer from 34 states and 50 seeds per ratio is:
+occasionally yes, but only by one seat in the current comparison set and with no
+systematic partisan direction. North Carolina is the key exception where the
+area-balanced first split changes the delegation from 5D/9R to 6D/8R.
 
 ## Replication Archive
 https://github.com/giodl73-repo/REDIST

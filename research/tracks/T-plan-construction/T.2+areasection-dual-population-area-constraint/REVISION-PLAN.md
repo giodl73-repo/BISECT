@@ -2,7 +2,7 @@
 status: ACCEPTED
 final_avg: 3.6/4
 rounds: 3
-last_updated: 2026-05-05
+last_updated: 2026-05-12
 ---
 
 # T.2 AreaSection — Revision Plan
@@ -27,3 +27,15 @@ Five reviewers: Ullman (3.2), Polikarpova (3.3), Steinhardt (3.1), Liang (3.4), 
 
 Fresh panel: Karypis, Rodden, Duchin, Stephanopoulos, Liang.
 Round 3 avg: 3.6/4 — ACCEPTED.
+
+## 2026-05-12 Paper-Quality Check
+
+Status: maintained accepted status after atlas-alignment review.
+The pass corrected claim drift from earlier drafts: the current 34-state
+comparison is 25 unchanged and 9 one-seat differences, so the paper no longer
+states that Wisconsin and North Carolina both have identical seat allocations
+or that AreaSection never shifts competitive-state seats.
+North Carolina is now treated as the key one-seat exception, while the broader
+claim is narrowed to small, state-specific, non-systematic effects.
+The paper rebuilt with no undefined references/citations and zero BibTeX
+warnings, and the PDF was recopied to `docs/papers/`.

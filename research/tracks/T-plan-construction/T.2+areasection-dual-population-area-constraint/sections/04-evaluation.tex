@@ -303,17 +303,20 @@ under AreaSection.}
 The mean proportionality gap is $-6.2$\,pp in competitive states.
 
 This result confirms that the proportionality deficit in competitive states
-is \emph{not} a consequence of the urban-peeling bisection strategy that
-AreaSection is designed to eliminate.
-Even with geographic balance enforced at the first bisection level,
-the same states produce the same partisan tilt.
+is not eliminated by removing the urban-peeling bisection strategy that
+AreaSection is designed to address.
+Even with geographic balance enforced at the first bisection level, the
+competitive-state set still shows Republican over-representation on average.
 The systematic under-representation of the Democratic Party in competitive
 states is a property of geographic voter sorting
 \citep{rodden2019,chen2013}, not of the redistricting algorithm.
 
-This is the central empirical validation of AreaSection's null hypothesis:
-the area constraint changed the \emph{structure} of the bisection tree
-(IL: 1:16 $\to$ 8:9; NY: 1:25 $\to$ 13:13) without changing the
-\emph{outcome} for any competitive state.
-The geographic balance constraint is politically inert in the sense that
-matters most: it does not shift seats.
+This is the central empirical boundary of AreaSection's null hypothesis:
+the area constraint changes the \emph{structure} of the bisection tree
+(IL: 1:16 $\to$ 8:9; NY: 1:25 $\to$ 13:13), but usually leaves seat counts
+unchanged.
+North Carolina is the important exception in this competitive set, shifting
+from 5D/9R under GeoSection to 6D/8R under AreaSection.
+The geographic balance constraint is therefore not partisan-proof in every
+state; the narrower result is that its effects are small, state-specific, and
+not systematically aligned with either party.
