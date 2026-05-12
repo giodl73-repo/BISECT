@@ -2,7 +2,7 @@
 //!
 //! Output format: newline-delimited JSON (NDJSON) with:
 //! - One line per particle: {"plan": [...], "log_weight": -2.31, "particle_idx": 0}
-//! - Resample records between stages (when resampling occurs)
+//! - Resample records after particle lines (when resampling occurs)
 //! - Final metadata record with file_sha256 (SHA-256 of all preceding lines, LF-normalised)
 
 use serde::{Deserialize, Serialize};
@@ -10,7 +10,9 @@ use sha2::{Digest, Sha256};
 use std::fmt::Write as FmtWrite;
 use std::io::{self, Write};
 
-/// A resampling event record — embedded in the NDJSON stream between stages.
+use crate::seeds::resample_seed;
+
+/// A resampling event record embedded in the NDJSON stream after particle lines.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResampleRecord {
     #[serde(rename = "type")]
@@ -80,7 +82,7 @@ impl SmcResult {
     ///
     /// Format:
     /// - One particle line per plan: {"plan":[...],"log_weight":-2.31,"particle_idx":0}
-    /// - Resample records interleaved if requested (requires resample metadata)
+    /// - Resample records if resampling occurred
     /// - Final metadata line with file_sha256
     pub fn write_ndjson<W: Write>(&self, writer: &mut W, config: &WriteConfig) -> io::Result<()> {
         let mut hasher = Sha256::new();
@@ -99,6 +101,35 @@ impl SmcResult {
                 serde_json::to_string(plan).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?,
                 log_w,
                 i,
+            );
+            hasher.update(line.as_bytes());
+            writer.write_all(line.as_bytes())?;
+        }
+
+        // Write resample records. They are emitted after final particles rather
+        // than interleaved so the result can be serialized from SmcResult alone.
+        for (round, index_map) in self.index_maps.iter().enumerate() {
+            let stage = self
+                .resample_rounds
+                .get(round)
+                .copied()
+                .unwrap_or(round + 1);
+            let ess_before = stage
+                .checked_sub(1)
+                .and_then(|idx| self.ess_trace.get(idx).copied())
+                .unwrap_or(0.0);
+            let record = ResampleRecord {
+                record_type: "resample".into(),
+                stage,
+                resample_round: round as u32,
+                ess_before,
+                resample_seed: resample_seed(self.base_seed, round as u32),
+                index_map: index_map.clone(),
+            };
+            let line = format!(
+                "{}\n",
+                serde_json::to_string(&record)
+                    .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?
             );
             hasher.update(line.as_bytes());
             writer.write_all(line.as_bytes())?;
@@ -169,6 +200,19 @@ mod tests {
             index_maps: vec![],
             base_seed: 42,
             n_particles: n_plans,
+        }
+    }
+
+    fn make_result_with_resample() -> SmcResult {
+        SmcResult {
+            plans: vec![vec![1, 1, 2, 2]; 3],
+            weights: vec![0.2, 0.5, 0.3],
+            resample_count: 1,
+            resample_rounds: vec![1],
+            ess_trace: vec![1.8],
+            index_maps: vec![vec![1, 1, 2]],
+            base_seed: 73,
+            n_particles: 3,
         }
     }
 
@@ -261,6 +305,29 @@ mod tests {
                 "particle line must have 'particle_idx'"
             );
         }
+    }
+
+    #[test]
+    fn ndjson_includes_resample_records_when_present() {
+        let result = make_result_with_resample();
+        let config = WriteConfig {
+            resample_threshold: 0.5,
+            pop_tolerance: 0.005,
+        };
+        let mut buf = Vec::new();
+        result.write_ndjson(&mut buf, &config).unwrap();
+        let s = String::from_utf8(buf).unwrap();
+        let lines: Vec<&str> = s.lines().collect();
+        assert_eq!(
+            lines.len(),
+            5,
+            "3 particles + 1 resample + 1 metadata = 5 lines"
+        );
+        let resample: serde_json::Value = serde_json::from_str(lines[3]).unwrap();
+        assert_eq!(resample["type"], "resample");
+        assert_eq!(resample["stage"], 1);
+        assert_eq!(resample["resample_round"], 0);
+        assert_eq!(resample["index_map"].as_array().unwrap().len(), 3);
     }
 
     #[test]

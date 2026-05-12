@@ -105,17 +105,17 @@ domain separation, such collisions are computationally infeasible.
 
 \subsection{NC 2020 L2 Test}
 
-The \texttt{redist-smc} L2 test (\texttt{\#[ignore]}, run manually) exercises
-the full SMC algorithm on North Carolina 2020 census data with $N = 200$
-particles (for speed) and base seed 42.
+The \texttt{bisect-smc} L2 tests (\texttt{\#[ignore]}, run manually) exercise
+the full SMC algorithm on North Carolina, Vermont, and Wisconsin 2020 data.
+The North Carolina run uses $N = 1{,}000$ particles and base seed 42.
 In our experiments, the run completes in approximately 40 seconds on an 8-core
 workstation and produces a valid weighted ensemble.
-The \ess{} after the final stage is approximately $140$--$180$ (out of 200
-particles), confirming that weight collapse is not severe for the NC 2020
-graph at $N = 200$.
+The L2 checks assert valid weighted ensembles and report resampling/ESS
+behavior for the real-data fixtures. These are implementation smoke tests, not
+full empirical studies.
 
-All quantitative claims in this section are from single-run experiments and
-should not be over-interpreted.
+All quantitative runtime and percentile claims in this section are local
+single-run measurements and should not be over-interpreted.
 Phase~2 results are reported in Section~\ref{sec:phase2}.
 
 \subsection{Phase 2: Large-$k$ Validation}
@@ -164,10 +164,9 @@ The weighted ensemble places the \ar{} plan at the 0.7th percentile
 
 \paragraph{\texttt{SeedCompositor::SmcPercentile}.}
 
-The \texttt{bisect ensemble --method smc --select-percentile 0.5} command
-is implemented and tested: it runs the full SMC algorithm, then selects the
-particle at the weighted median of the final ensemble (rank
-$\lfloor 0.5 \times \ess \rfloor$ in the importance-weighted order).
+The \texttt{smc-percentile} search mode is implemented and tested: it runs the
+full SMC algorithm, then selects the particle at the requested weighted
+percentile of a score distribution using Algorithm~\ref{alg:smc-percentile}.
 This enables SMC-percentile plan selection as an alternative to the
 ConvergenceSweep approach, for practitioners who prefer calibrated ensemble
 inference over deterministic seed optimisation.

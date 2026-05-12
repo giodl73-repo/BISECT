@@ -3,18 +3,17 @@
 
 \subsection{Output Format}
 
-Every \smc{} run writes NDJSON (newline-delimited JSON) to the output stream.
+Every \smc{} run can write NDJSON (newline-delimited JSON) to the output
+stream.
 Each line is one of three record types:
 
 \paragraph{Particle records.}
 One record per finalised particle, written in order of particle index:
 \begin{verbatim}
 {
-  "type": "particle",
-  "particle_id": <usize>,
-  "stage": <u32>,
-  "district_assignments": [<u8>; n],
-  "log_weight": <f64>
+  "plan": [<u32>; n],
+  "log_weight": <f64>,
+  "particle_idx": <usize>
 }
 \end{verbatim}
 
@@ -23,8 +22,8 @@ One record per systematic resampling event:
 \begin{verbatim}
 {
   "type": "resample",
-  "round": <u32>,
   "stage": <u32>,
+  "resample_round": <u32>,
   "ess_before": <f64>,
   "resample_seed": <u64>,
   "index_map": [<usize>; N]
@@ -41,11 +40,12 @@ One record at the end of the output:
 {
   "type": "metadata",
   "base_seed": <u64>,
-  "particles": <usize>,
-  "districts": <u32>,
-  "tolerance": <f64>,
+  "n_particles": <usize>,
+  "k": <usize>,
+  "pop_tolerance": <f64>,
   "resample_threshold": <f64>,
   "resample_count": <u32>,
+  "ess_trace": [<f64>],
   "file_sha256": "<hex string>"
 }
 \end{verbatim}
@@ -66,10 +66,9 @@ proceeds as follows.
         A mismatch indicates the file has been altered.
 
   \item \textbf{Seed spot-check.}
-        For a randomly chosen particle $i$ and stage $t$, derive
-        $\mathrm{particle\_seed}(s, t, i)$ from the recorded
-        \texttt{base\_seed} $s$ using the SHA-256 schedule (Section~2.2),
-        and confirm it matches the deterministic seed that would be used by
+        For a randomly chosen particle and stage, derive the particle seed
+        from the recorded \texttt{base\_seed} using the SHA-256 schedule
+        in Section~2.2. Confirm that this is the seed passed to
         \texttt{SmallRng::seed\_from\_u64} at that stage.
 
   \item \textbf{Resample replay.}

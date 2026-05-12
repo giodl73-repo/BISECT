@@ -8,7 +8,7 @@ use rand::SeedableRng;
 use rayon::prelude::*;
 use thiserror::Error;
 
-use crate::output::{ResampleRecord, SmcResult};
+use crate::output::SmcResult;
 use crate::partial_plan::PartialPlan;
 use crate::proposal::{propose_district, ProposeError};
 use crate::resample::{ess, kahan_softmax, systematic_resample};

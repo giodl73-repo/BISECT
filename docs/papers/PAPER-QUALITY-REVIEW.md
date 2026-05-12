@@ -66,7 +66,7 @@ are called complete.
 | 1 | T.1-T.4, U.1, U.8, U.9, U.12 | Re-review the atlas-aligned seed/compositor/legacy papers for paper-quality gaps after the alignment pass | Completed 2026-05-12 |
 | 2 | T.14-T.17 | Construction-family golden vertical slices | Completed 2026-05-12 |
 | 3 | U.16-U.20 | Exact/search/audit certificate family, including U.20 fixed-point language | Completed 2026-05-12 |
-| 4 | U.10, G.4, G.7, G.10, G.11 | Sampling and ensemble methods | Queued |
+| 4 | U.10, G.4, G.7, G.10, G.11 | Sampling and ensemble methods | In progress: G.4 and G.7 complete |
 | 5 | T.5-T.13, U.0-U.7, U.11, U.13-U.15 | Older algorithm-family papers not yet lifted to the same explanatory standard | Queued |
 | 6 | B/C/D/F/G/A synthesis tracks | Portfolio, validation, legal, legislative, ensemble, and synthesis papers | Queued |
 | 7 | E/I/J/K/L/M/N/O/P/Q/R/S tracks | Remaining indexed papers and source-only drafts | Queued |
@@ -206,7 +206,7 @@ consumers.
 |---|---|---|---|
 | U.10 bisect-ensemble | Queued | Queued | Queued |
 | G.4 Ensemble Diagnostics | Reviewed 2026-05-12 | Fixed old binary/crate names, ESS example drift, source-ensemble certification boundary, 99th-percentile ESS caveat, Hamming reference semantics, statutory step-count rule, and Daubert known-error framing | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
-| G.7 SMC Redistricting | Queued | Queued | Queued |
+| G.7 SMC Redistricting | Reviewed 2026-05-12 | Softened calibration claims, refreshed Phase 2 and SmcPercentile status, added weighted-percentile algorithm, diagnostic-output comparison, NDJSON resample audit parity, and external-validation boundary | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
 | G.10 Merge-Split | Queued | Queued | Queued |
 | G.11 Multiscale MCMC | Queued | Queued | Queued |
 
@@ -217,6 +217,7 @@ consumers.
 | Paper | P1 Claim | P2 Algorithm | P3 Evidence | P4 Boundary | P5 Build | P6 Reader | Total |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | G.4 Ensemble Diagnostics | 3.8 | 3.7 | 3.7 | 3.9 | 4.0 | 3.6 | 22.7 / 24 |
+| G.7 SMC Redistricting | 3.8 | 3.8 | 3.7 | 3.8 | 4.0 | 3.7 | 22.8 / 24 |
 
 ### Batch 4 Score Notes
 
@@ -226,3 +227,11 @@ multi-chain R-hat certification from partial ESS/Hamming certification for
 legacy single-chain source ensembles. The remaining ceiling is empirical
 packaging: a future pass should archive the actual six-state chain traces and
 diagnostic JSON artifacts rather than relying on paper tables alone.
+
+**G.7 SMC Redistricting -- 22.8/24.** The paper now avoids the old "only SMC"
+overclaim, distinguishes asymptotic target consistency from external validation,
+formalises the weighted-percentile/SmcPercentile selection rule, and matches the
+implemented NDJSON audit stream including resample records. The remaining ceiling
+is external replication: archived R `redist` cross-validation traces and TX/CA
+Phase 2 run artifacts would turn the current implementation evidence into a more
+portable publication package.

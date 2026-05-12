@@ -71,22 +71,22 @@ Sequential Monte Carlo (\smc{}) produces a calibrated weighted sample from the
 space of valid redistricting plans.
 Unlike \recom{} --- a Markov chain with unknown stationary distribution ---
 \smc{} importance-weights each plan by the product of the proposal densities at
-each construction stage, recovering the true uniform distribution over valid
-plans without mixing assumptions.
-We implement \smc{} in the \texttt{redist-smc} Rust crate (48 tests,
+each construction stage, giving an asymptotically consistent estimator for the
+declared target distribution without Markov chain mixing assumptions.
+We implement \smc{} in the \texttt{bisect-smc} Rust crate,
 Rayon-parallelised per stage) as \texttt{bisect ensemble --method smc}.
 The key algorithmic innovations are: (1)~importance weights equal to
 $\log|\mathrm{valid\_cuts}(T)|$, which corrects for the spanning-tree
 proposal's non-uniformity; and (2)~largest-component seeding, which preserves
 the connectivity invariant that the unassigned subgraph remains connected after
 each district assignment.
-For any inferential claim about the redistricting plan space --- ``what fraction
-of valid NC plans have at least 7 Democratic seats?'' --- only \smc{} provides
-a statistically valid answer without requiring Markov chain mixing to be
-demonstrated.
+For inferential claims about the redistricting plan space --- ``what fraction
+of valid NC plans have at least 7 Democratic seats?'' --- \smc{} provides a
+calibrated alternative to Markov-chain ensembles whose mixing must be
+demonstrated separately.
 We derive the weight-correctness guarantee (Proposition~1), the connectivity
-invariant (Proposition~2), and a practical \ess{} degradation model
-(Proposition~3) that drives the particle-count scaling guidance.
+invariant (Proposition~2), and a first-order \ess{} degradation approximation
+that drives the particle-count guidance.
 \end{abstract}
 
 \tableofcontents

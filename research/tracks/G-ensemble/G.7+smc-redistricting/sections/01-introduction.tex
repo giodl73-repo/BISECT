@@ -39,8 +39,9 @@ mixing assumption.
 
 This paper makes three contributions.
 
-\paragraph{Contribution 1: The \texttt{redist-smc} Rust implementation.}
-We implement \smc{} as a Rust crate (\texttt{redist-smc}) with 48 tests,
+\paragraph{Contribution 1: The \texttt{bisect-smc} Rust implementation.}
+We implement \smc{} as a Rust crate (\texttt{bisect-smc}) with L0, L1, and
+ignored real-data L2 tests,
 Rayon parallelism at the per-stage particle-proposal step, and a full SHA-256
 audit chain.
 The implementation is exposed to the CLI as
@@ -80,25 +81,23 @@ that ReCom-based ensembles for small synthetic graphs deviate significantly from
 the uniform distribution, even after chains that appear to have mixed by
 conventional diagnostics.
 
-\smc{} eliminates this concern by construction.
-The importance weights are exact: for any function $f$ of redistricting plans,
-the \smc{} estimator $\hat{f}_N = \sum_i w_i f(\pi_i)$ converges to
+\smc{} addresses this concern by construction when the proposal support and
+weighting model match the declared target distribution.
+For any bounded function $f$ of redistricting plans, the \smc{} estimator
+$\hat{f}_N = \sum_i w_i f(\pi_i)$ converges to
 $\mathrm{E}_\pi[f]$ (the expectation under the uniform distribution) as $N \to
 \infty$, without Markov chain assumptions.
 
 \subsection{Scope and Limitations}
 
-This paper describes \smc{} as implemented in \texttt{redist-smc} and
-validated on synthetic graphs (L1 tests) and North Carolina 2020 census data
-(L2 test, Section~\ref{sec:implementation}).
-All empirical claims are single-run results and should not be over-interpreted
-without replication.
-
-Phase 2 (future work) will add \texttt{SeedCompositor::SmcPercentile} to
-enable plan selection from the weighted ensemble and validate against the R
-\texttt{redist::redist\_smc()} reference implementation~\citep{mccartan2023}.
-Until that validation is complete, we treat \smc{} as a calibrated sampler for
-research purposes, not a production certification tool.
+This paper describes \smc{} as implemented in \texttt{bisect-smc} and
+validated on synthetic graphs, North Carolina and Wisconsin real-data L2 tests,
+and Phase~2 large-$k$ Texas/California runs reported in
+Section~\ref{sec:phase2}. \texttt{SeedCompositor::SmcPercentile} is now
+implemented for selected-plan export from the weighted ensemble. The remaining
+claim boundary is external replication: the paper reports local implementation
+evidence, not an independent court-ready validation against every outside SMC
+implementation.
 
 \subsection{Paper Structure}
 

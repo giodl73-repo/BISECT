@@ -32,14 +32,16 @@ full reproducibility from a single \texttt{base\_seed}.
 
 \paragraph{Per-particle seed.}
 Particle $i$ at stage $t$ uses the seed:
-\[
+\begin{align*}
   \mathrm{particle\_seed}(s, t, i)
-  = \mathrm{SHA256}\!\left(
+  ={}& \mathrm{SHA256}\!\left(
     \texttt{"SMC\_PARTICLE\_"} \,\|\, t^{\mathrm{le32}}
+  \right. \\
+  &\left.
     \,\|\, \texttt{"\_"} \,\|\, i^{\mathrm{le32}}
     \,\|\, \texttt{"\_"} \,\|\, s^{\mathrm{le64}}
   \right)[0{:}8] \;\text{as } u64,
-\]
+\end{align*}
 where $s$ is the \texttt{base\_seed}, $\cdot^{\mathrm{le32}}$ denotes
 little-endian 4-byte encoding, $\cdot^{\mathrm{le64}}$ denotes little-endian
 8-byte encoding, and $[0{:}8]$ takes the first 8 bytes of the SHA-256 digest.
@@ -115,8 +117,40 @@ with no synchronisation until the ESS check (line~16).
 
 \paragraph{CLI invocation.}
 \begin{verbatim}
-bisect ensemble --method smc --state NC --year 2020 --particles 5000 --base-seed 42
+bisect ensemble --method smc \
+  --state NC --year 2020 \
+  --particles 5000 --base-seed 42
 \end{verbatim}
+
+\subsection{Weighted Percentile Selection}
+\label{subsec:smc-percentile}
+
+The SMC sampler can also export one representative plan from the weighted
+ensemble. This is not a claim that the selected plan is optimal; it is a
+deterministic rule for selecting a percentile of the weighted SMC distribution.
+
+\begin{algorithm}
+\caption{\smc{} Percentile Selection}
+\label{alg:smc-percentile}
+\begin{algorithmic}[1]
+\Require Weighted plans $(\pi_i,w_i)_{i=1}^N$, score function $g$, percentile $p \in [0,1]$
+\Ensure One selected plan $\pi^*$
+\State sort particles by $(g(\pi_i), i)$ in increasing order
+\State $c \gets 0$
+\For{$i$ in sorted order}
+  \State $c \gets c + w_i$
+  \If{$c \geq p$}
+    \State \Return $\pi_i$
+  \EndIf
+\EndFor
+\State \Return the final sorted particle
+\end{algorithmic}
+\end{algorithm}
+
+The implementation exposes this rule as the \texttt{smc-percentile} search
+mode and as SMC ensemble selection. The stable tie-breaker by particle index is
+part of the audit contract: the same weighted ensemble, score function, and
+percentile must select the same particle.
 
 \subsection{Importance Weight Derivation}
 \label{subsec:weight-derivation}
@@ -238,11 +272,10 @@ largest-component rule.
 \subsection{ESS and Practical Degradation}
 \label{subsec:ess}
 
-\begin{proposition}[Practical ESS degradation]
+\begin{proposition}[First-order ESS approximation]
 \label{prop:ess-degrade}
-Let $\mu = \mathrm{E}[\log|\mathcal{V}(T)|]$ and $\sigma^2 =
-\mathrm{Var}[\log|\mathcal{V}(T)|]$ be the mean and variance of the log valid-cut
-count over random spanning trees of a fixed graph.
+Let $X=\log|\mathcal{V}(T)|$ be the log valid-cut count for a random spanning
+tree of a fixed graph, with mean $\mu$ and variance $\sigma^2$.
 After $k - 1$ stages without resampling, the expected effective sample size
 satisfies:
 \[
@@ -262,7 +295,10 @@ where $\mathrm{Var}_{\mathrm{normalised}}[\tilde{w}_i] \approx (k-1)\sigma^2$
 for log-normal weights with small variance.
 \end{proof}
 
-This result drives the practical particle-count scaling guidance:
+This approximation is a planning model, not a formal lower bound. The Phase~2
+large-$k$ runs below are therefore reported as empirical evidence rather than
+as proof of a universal ESS floor. The approximation drives the practical
+particle-count scaling guidance:
 \begin{center}
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{@{}lll@{}}

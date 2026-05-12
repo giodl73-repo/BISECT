@@ -15,11 +15,13 @@
 //! target = uniform; importance correction = |valid_cuts|; log_increment = log(|valid_cuts|).
 
 use rand::rngs::SmallRng;
-use rand::{Rng, SeedableRng};
+use rand::Rng;
+#[cfg(test)]
+use rand::SeedableRng;
 use thiserror::Error;
 
 use crate::partial_plan::PartialPlan;
-use bisect_ensemble::spanning::{random_spanning_tree, SpanningTree};
+use bisect_ensemble::spanning::random_spanning_tree;
 
 #[derive(Debug, Error)]
 pub enum ProposeError {
