@@ -12,23 +12,28 @@ $k$-district plans (under mild conditions) and mixes efficiently for moderate $k
 Python library that has become standard for redistricting analysis in litigation
 and academic research \citep{herschlag2020quantifying, chikina2017assessing}.
 
-The critical limitation identified in this paper---bipartition failure for large
-prime $k$---is a known but underreported problem in the GerryChain community.
+The critical limitation considered in this paper---stalling under difficult
+large-state or large-factor configurations---is a known but underreported
+problem in the GerryChain community.
 When two districts are merged and the combined subgraph has $n_{\text{merge}}$
-tracts with a target population ratio of $(k-2):2$ per district, the spanning
-tree cut must achieve a near-extreme balance. For $k=38$ (Texas), each district
+tracts, the spanning tree cut must achieve a balanced split of that merged
+region while respecting the geometry inherited from surrounding districts.
+For $k=38$ (Texas), each district
 holds $1/38 \approx 2.6\%$ of the state population; after merging two adjacent
 districts the merged region holds $5.3\%$, and the cut must split this into two
-regions of $2.6\%$ each---achievable in principle but requiring extremely
-specific spanning tree structure. Rejection rates approach $1 - O(1/k)$.
+regions of $2.6\%$ each. This is a 1:1 split within the merged pair, not a
+1:37 split of the full state; the difficulty is geometric sparsity of accepted
+cut edges in the sampled trees.
 
 \paragraph{Wilson's uniform spanning tree.}
 The random spanning tree underlying ReCom is sampled via Wilson's algorithm
 \citep{wilson1996generating}, which runs a loop-erased random walk from each
 vertex and produces a perfectly uniform spanning tree in $O(n)$ expected time.
 BisectionEnsemble inherits this subroutine unchanged; the difference is that
-it applies Wilson's algorithm to a local subregion of $\approx n/k$ tracts
-rather than to the full state graph of $n$ tracts.
+it applies Wilson's algorithm to the current bisection-tree node, whose size is
+approximately $n/2^\ell$ at depth $\ell$, rather than to a full-plan ensemble
+state. At the root this can still be a large subgraph; the locality advantage
+grows with tree depth.
 
 \paragraph{PercentileSweep (U.8).}
 \citet{dellaLibera2026percentilesweep} introduced PercentileSweep, which

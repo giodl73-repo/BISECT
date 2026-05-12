@@ -32,9 +32,9 @@ theoretically grounded sampling distribution: the UST of a graph $H$ is the
 unique maximum-entropy distribution over spanning trees of $H$
 \citep{aldous1990random, wilson1996generating}. Each accepted plan
 $(A_t, B_t)$ is drawn from the distribution induced by the UST on the
-feasible bisections of the local subregion. This provides the same
-``representativeness'' argument as full-state ReCom ensembles, localised to
-each bisection node.
+accepted feasible bisections of the local subregion. This provides a
+node-local representativeness argument. It is not a claim that the final map is
+drawn from, or representative of, the full-plan ReCom ensemble.
 
 \paragraph{Pre-committed procedure.}
 The hyperparameters $p$ and $T$ are fixed before any plans are generated.
@@ -55,7 +55,8 @@ BisectionEnsemble inherits by construction.
 Each bisection node in the tree receives a population target $(t_1, t_2)$
 derived from its parent's allocation and the seat count $k$. The ReCom chain
 only accepts plans that achieve population balance within the tolerance
-$\varepsilon$ (by Theorem~\ref{thm:tractable}, such plans always exist).
+$\varepsilon$, falling back to the METIS initialisation if the finite local
+chain accepts no proposals.
 The hierarchical structure ensures that population imbalances do not compound:
 an imbalance at node $v$ is bounded by $\varepsilon$ and propagates only to
 $v$'s subtree, where sub-tolerances absorb it. The final districts satisfy

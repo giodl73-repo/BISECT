@@ -24,12 +24,11 @@ with a local ReCom ensemble. It is defined by two hyperparameters:
 \noindent\textbf{Remark on locality.}
 The term ``local'' refers to the subgraph managed by a single bisection node,
 but its practical meaning depends on tree depth. At depth $\ell$, each node
-manages $\approx n/2^\ell$ tracts: the root node ($\ell=0$) manages half the
+manages $\approx n/2^\ell$ tracts: the root node ($\ell=0$) manages the full
 state, while leaf nodes manage $\approx n/k$ tracts. The locality advantage
 --- the reduction in problem size relative to a full-state ensemble --- therefore
-grows with depth. At the root, the local ensemble still spans $n/2$ tracts, which
-may be a substantial fraction of the state; the full locality benefit is realised
-at the leaf level.
+grows with depth. At the root, the local ensemble still spans the whole state
+subgraph; the full locality benefit is realised at deeper levels.
 
 \subsection{The BisectionEnsemble Primitive}
 \label{sec:alg:primitive}
@@ -60,11 +59,12 @@ at the leaf level.
           with $|\Pi| = m$. For each $\pi \in \Pi$, compute the edge-cut
           weight $\text{EC}(\pi) = \sum_{(u,v) \in \delta(\pi)} w(u,v)$.
     \item \textbf{Select}: Sort $\Pi$ by $\text{EC}(\cdot)$. Return
-          $\pi^* = \Pi[\lfloor p \cdot m \rfloor]$ (zero-indexed).
+          $\pi^* = \Pi[\lfloor p \cdot (m-1) \rfloor]$ (zero-indexed).
           If $m = 0$ (no plans accepted within $T$ steps), return the METIS
-          initialization $\pi_0$ as a fallback. By Theorem~\ref{thm:tractable},
-          $m = 0$ has probability zero in the limit; this fallback applies only
-          for small $T$ where the chain may not yet have encountered a balanced cut.
+          initialization $\pi_0$ as a fallback. This fallback is part of the
+          algorithmic contract: a finite local chain may fail to accept a
+          proposal even though the large-arity full-plan failure mode has been
+          avoided.
   \end{enumerate}
 \end{definition}
 
@@ -121,63 +121,24 @@ BisectionEnsemble at every node.
 \subsection{Key Theoretical Properties}
 \label{sec:alg:theory}
 
-\begin{theorem}[Tractability]
+\begin{proposition}[Large-arity failure avoidance]
   \label{thm:tractable}
-  BisectionEnsemble never encounters a bipartition failure. That is, for any
-  connected subgraph $H$ and balance tolerance $\varepsilon > 0$, the
-  BisectionEnsemble chain accepts a balanced bisection within
-  $O(\log(1/\delta))$ ReCom steps with probability at least $1 - \delta$.
-\end{theorem}
+  At every node where BisectionEnsemble is applied, the ReCom sampler is asked
+  for a two-way bisection of the current node subgraph.
+  The method therefore avoids the large-arity full-plan split that can stall a
+  direct $k$-way ensemble. This is not a proof of rapid mixing or guaranteed
+  finite-$T$ acceptance for every local subgraph.
+\end{proposition}
 
 \begin{proof}
-  We establish the result in three parts.
-
-  \textbf{Part 1: Every spanning tree of $H$ contains a balanced cut edge.}
-  Let $\mathcal{T}$ be any spanning tree of $H = (V_H, E_H, w)$.
-  Root $\mathcal{T}$ at an arbitrary vertex $r$.
-  For each edge $e \in \mathcal{T}$, let $A_e \subseteq V_H$ denote the
-  component not containing $r$ when $e$ is removed, and let $B_e = V_H
-  \setminus A_e$.  As $e$ ranges over the $|V_H| - 1$ tree edges ordered by
-  a DFS traversal, $\text{pop}(A_e)$ increases from $\text{pop}(v_{\min})$
-  (a single leaf) to $\text{pop}(H) - \text{pop}(v_r)$ (all but the
-  root's component), with consecutive values differing by at most
-  $\max_{v \in V_H} \text{pop}(v)$.
-  By a discrete intermediate-value argument, there exists an edge $e^*$ such
-  that $|\text{pop}(A_{e^*}) - t_1 \cdot \text{pop}(H)| \leq \max_{v}
-  \text{pop}(v)$.
-  Since individual census tracts represent $\ll 0.5\%$ of any node's
-  population in all experimental states (NC, WI, TX), the tolerance
-  $\varepsilon$ specified in Definition~\ref{def:be-primitive} is met.
-  Hence \emph{every} spanning tree of $H$ has at least one balanced cut edge.
-
-  \textbf{Part 2: The balanced spanning tree is sampled with positive probability.}
-  Wilson's algorithm \citep{wilson1996generating} samples exactly from the
-  uniform spanning tree (UST) distribution on $H$.  The UST assigns
-  \emph{positive probability} to every spanning tree of a connected graph:
-  for any spanning tree $\mathcal{T}^*$, $\Pr[\text{UST} = \mathcal{T}^*]
-  \propto \prod_{e \in \mathcal{T}^*} w(e) > 0$ (since all edge weights are
-  positive).  Therefore, the spanning tree established in Part~1 is sampled
-  with positive probability at each ReCom step.
-
-  \textbf{Part 3: The chain accepts in finite expected steps.}
-  Because a balanced cut edge exists in every spanning tree (Part~1) and every
-  spanning tree is sampled with positive probability (Part~2), each ReCom step
-  produces a balanced bisection with probability bounded away from zero.
-  Formally, letting $q > 0$ denote the minimum acceptance probability over all
-  states of the chain, the number of steps until the first acceptance is
-  stochastically dominated by a geometric random variable with success
-  probability $q$, so the expected number of steps to first acceptance is
-  $1/q < \infty$.  The expected number of steps to accumulate $m \geq 1$
-  accepted plans is $m/q = O(|V_H|)$ under the average-case cover-time
-  assumption for the UST sampler.
-
-  \emph{Note on ``existence of acceptance'' vs.\ ``per-step acceptance
-  probability.''} Part~1 establishes that acceptance is always possible
-  (existence); Part~2--3 establish that it occurs in finite expected time
-  (positive probability). These are logically distinct: it would be possible
-  for a balanced cut to exist yet be sampled with probability zero if the
-  UST distribution were not fully supported, but the full support of UST
-  (Part~2) rules this out.
+  Algorithm~\ref{alg:bisection-ensemble} routes only $p'=2$ tree nodes to the
+  local ensemble primitive. The primitive in Definition~\ref{def:be-primitive}
+  always samples a bisection of the current node region $H$, so the ReCom
+  sampler never has to construct a $p'$-way split with $p'>2$.
+  Nodes with $p'>2$ remain outside this guarantee and continue to use METIS
+  directly. A difficult local geometry can still lower acceptance, which is why
+  the primitive records accepted/rejected proposals and falls back to the METIS
+  initialisation when $m=0$.
 \end{proof}
 
 \begin{proposition}[Contiguity preservation]

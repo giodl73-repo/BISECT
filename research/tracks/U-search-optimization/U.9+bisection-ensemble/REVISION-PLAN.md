@@ -8,6 +8,19 @@
 
 ---
 
+## 2026-05-12 Paper-Quality Pass
+
+The atlas-alignment review narrowed the main claim boundary: BisectionEnsemble
+is now described as a node-local ensemble mechanism that avoids large-arity
+full-plan splits inside the ReCom sampler, not as a proof that local finite-$T$
+chains always accept or mix quickly. The former tractability theorem was
+replaced with a scoped proposition, finite-$T$ METIS fallback is part of the
+algorithmic contract, empirical compactness/partisan findings are identified
+as single-run observations, and percentile rank selection now uses
+$\lfloor p(\text{accepted\_count}-1)\rfloor$ to preserve endpoint behavior.
+
+---
+
 ## Round 2 Status
 
 All Critical (C-1 through C-8) and Priority-1 Secondary (S-1, S-6) fixes have been applied.

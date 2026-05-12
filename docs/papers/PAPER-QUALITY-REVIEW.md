@@ -76,5 +76,5 @@ are called complete.
 | T.4 ApportionRegions | Reviewed 2026-05-12 | Narrowed determinism/constitutional claims | Rebuilt clean; PDF copied |
 | U.1 ConvergenceSweep | Reviewed 2026-05-12 | Narrowed optimality/statistical claims; replaced finite-seed theorem with finite-artifact proposition | Rebuilt; no undefined refs/cites; PDF copied |
 | U.8 PercentileSweep | Reviewed 2026-05-12 | Narrowed percentile/ReCom/optimality claims; separated four-state evidence from TX/CA extrapolation | Rebuilt; no undefined refs/cites; PDF copied |
-| U.9 BisectionEnsemble | Queued | Queued | Already rebuilt in atlas pass |
+| U.9 BisectionEnsemble | Reviewed 2026-05-12 | Scoped node-local ensemble claims; softened large-arity failure and single-run empirical claims; fixed accepted-rank indexing | Rebuilt; no undefined refs/cites; PDF copied |
 | U.12 Algorithm-Selection Matrix | Queued | Queued | Already rebuilt in atlas pass |

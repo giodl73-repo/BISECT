@@ -29,30 +29,30 @@
 \maketitle
 
 \begin{abstract}
-Markov-chain redistricting ensemble methods (ReCom, GerryChain) sample the full
-plan space by running $k$-way recombination steps, but exhibit catastrophic
-bipartition failure at large $k$: Pennsylvania ($k=17$, prime) requires a
-17-way bipartition of the whole state; Texas ($k=38=2\times 19$) requires a
-19-way bipartition at the first ApportionRegions split.
-These large-arity bipartitions have no efficient graph-theoretic decomposition
-and cause GerryChain cold-start failures. We introduce \emph{BisectionEnsemble}, which resolves this failure
+Markov-chain redistricting ensemble methods (ReCom, GerryChain) sample broad
+plan spaces but can stall on large or geometrically constrained states under
+particular full-plan configurations.
+We introduce \emph{BisectionEnsemble}, which avoids the large-arity cold-start
+failure mode
 by repositioning ensemble sampling inside the bisection tree rather than around
 it. At each node of the bisection tree---which decomposes a $k$-district state
 into a hierarchy of 2-way cuts---we run a local $T$-step ReCom chain on the
-$\approx n/k$-tract subregion and select the bisection cut at percentile $p$ of
-the collected edge-cut distribution. Since every local ensemble is always 2-way
-($k_{\text{local}} = 2$), bipartition failure at the local ReCom level is structurally impossible.
+$n/2^\ell$-tract subregion at depth $\ell$ and select the bisection cut at
+percentile $p$ of the collected edge-cut distribution. Since every sampled
+ensemble node is 2-way ($k_{\text{local}} = 2$), the method does not require a
+large-arity split inside the ReCom sampler; finite-$T$ local chains can still
+reject proposals or fall back to their METIS initialisation.
 The bisection tree structure (ApportionRegions, GeoSection) is fully preserved.
 We implement \texttt{SeedCompositor::BisectionEnsemble\{p, ensemble\_steps\}} in
 \texttt{redist-cli} using \texttt{split\_subgraph\_bisection\_ensemble()}, which
 seeds a METIS bisection as the Markov chain's initial state, runs
 \texttt{ensemble\_steps} ReCom steps via \texttt{redist\_ensemble::recom::RecomChain},
 collects accepted plans with their edge cuts, and returns the plan at rank
-$\lfloor p \times \text{accepted\_count} \rfloor$.
+$\lfloor p \times (\text{accepted\_count}-1) \rfloor$.
 Empirical evaluation on NC ($k=14$), WI ($k=8$), and TX ($k=38$) shows that
 BisectionEnsemble(p=0.5, T=100) improves Polsby-Popper compactness by
-5--12\% over standard METIS bisection, matches or improves partisan proportionality,
-and crucially, succeeds on TX where direct GerryChain $k=38$ fails with bipartition errors.
+5--12\% over standard METIS bisection in single-run observations and succeeds
+on the tested TX configuration where direct GerryChain stalls.
 Runtime is $O(T \cdot n \log n)$ total and trivially parallelisable across tree nodes.
 \end{abstract}
 

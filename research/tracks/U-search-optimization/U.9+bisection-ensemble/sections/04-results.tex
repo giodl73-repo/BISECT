@@ -126,13 +126,15 @@ Texas          & 38 & 0.184 & 0.206 (+11.9\%) & 0.231 (+25.5\%) & --- (failed) \
 \label{tab:compactness}
 \end{table}
 
-BisectionEnsemble consistently improves compactness over standard METIS bisection.
+In these single-run observations, BisectionEnsemble improves compactness over
+standard METIS bisection.
 The median-percentile variant ($p=0.5$) provides 5--12\% improvement; the
 minimum-cut variant ($p=0.0$) provides 15--25\% improvement. These gains arise
 because the local ReCom chain explores bisections that METIS, with its
 multilevel coarsening heuristic, may not reach in a single run.
 
-The minimum-cut variant ($p=0.0$) achieves the best compactness by definition:
+Within each accepted local candidate set, the minimum-cut variant ($p=0.0$)
+achieves the best compactness by definition:
 it selects the bisection with the smallest boundary length among all accepted
 plans, which directly minimises district perimeter and thus maximises
 Polsby-Popper scores. The median variant ($p=0.5$) is more representative of
@@ -164,11 +166,11 @@ Texas          & 38 & 16D/22R & 16D/22R & 15D/23R \\
 \label{tab:partisan}
 \end{table}
 
-The key finding is that BisectionEnsemble does not systematically shift
-partisan outcomes in any direction. Partisan outcomes are stable across
-percentile levels $p$ for NC (zero seat change across all five $p$ values
-in Table~\ref{tab:partisan}). Extension to GA and PA is deferred to Phase~2
-empirical runs.
+The key finding from these point estimates is limited: BisectionEnsemble does
+not show a uniform partisan direction across the three tested states.
+Partisan outcomes are stable across percentile levels $p$ for NC (zero seat
+change across all five $p$ values in Table~\ref{tab:partisan}). Extension to
+GA and PA is deferred to Phase~2 empirical runs.
 NC reflects the geographic robustness of its near-proportional outcome
 established in \citet{dellaLibera2026apportion}. WI shows a one-seat shift
 at $p=0.5$: the median-cut bisection at the three root-level nodes produces
