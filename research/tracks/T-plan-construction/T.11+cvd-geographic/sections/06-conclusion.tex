@@ -1,38 +1,21 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-We have introduced Phase~2 \cvdgeo{}, the geographic extension of the
-Centroidal Voronoi Districts algorithm from T.10~\citep{dellaLibera2026cvd}.
-Phase~2 replaces BFS hop-count distance with Euclidean distance on
-EPSG:5070 Albers-projected tract centroids, uses the true population-weighted
-mean coordinate as the centroid update, and terminates on an
-$\varepsilon = 1.0$\,m tolerance to prevent discrete snap oscillation.
+Geographic CVD completes an important practical choice in the CVD family:
+BISECT can now split by graph-hop proximity or by projected-coordinate
+proximity. The graph-distance mode is data-light and native to contiguity.
+The geographic mode is useful when the map and the adjacency graph tell
+different proximity stories.
 
 \paragraph{When to use geographic CVD.}
-The choice between Phase~1 and Phase~2 depends on state geometry:
+Use \texttt{--cvd-metric geographic} when the split should be driven by map
+distance: coastal states, peninsulas, long corridors, island-adjacent regions,
+and sparse tracts with very different physical sizes. Use the default
+\texttt{graph-distance} mode when centroid data is absent, when the graph
+topology is the intended proximity model, or when the publication package has
+not yet validated projection and centroid provenance.
 
-\begin{itemize}
-\item \textbf{Use \texttt{--cvd-metric geographic}} for:
-  Florida (panhandle + Keys), Alaska (sparse adjacency, vast tracts),
-  Washington (Puget Sound coastal geometry), Maine (peninsulas and island tracts).
-  These states have large BFS-to-Euclidean divergence where Phase~2 provides
-  6\,\% or more PP improvement.
-
-\item \textbf{Phase~1 (\texttt{graph-distance}) is adequate} for:
-  North Carolina, Wisconsin, Iowa, Kansas, and most regular-geometry inland
-  states where hop-count and Euclidean distance agree.
-  The 2\,\% Phase~2 improvement on NC does not justify the fetch step for
-  routine runs.
-\end{itemize}
-
-\paragraph{Phase~2 is a strict upgrade for target states.}
-Phase~2 improves PP, reduces edge cut, converges faster, and is 13--18\%
-faster per run than Phase~1 for the same iteration budget.
-There is no quality dimension on which Phase~2 is worse than Phase~1;
-the only cost is the one-time centroid fetch step.
-
-\paragraph{YAML configuration.}
-The recommended YAML for coastal-state runs:
+\paragraph{Current command shape.}
 \begin{verbatim}
 algorithm:
   structure: centroidal-voronoi
@@ -40,68 +23,34 @@ algorithm:
   search: convergence
   cvd_iters: 20
   cvd_metric: geographic
-  cvd_seed_init: kmeans++
-  convergence_threshold: 600
   balance_tolerance: 0.5
-workers: 8
 \end{verbatim}
 
-\paragraph{Legal and Practitioner Use.}
-For legal use, CVD-Geographic is the preferred structure-layer algorithm when
-Polsby-Popper compactness is the primary criterion.
-Its $O(n)$ Lloyd iterations produce verifiably compact boundaries that can be
-submitted as ``compactness-optimised'' plans in litigation.
-The 20 Lloyd iteration default matches the T.10 convergence finding
-(Section~\ref{sec:comparison}); plans generated with fewer iterations should
-disclose the iteration count, as early termination may leave seeds not yet
-at their geographic centroid.
+\paragraph{Legal and practitioner use.}
+Geographic CVD should be presented as a reproducible compactness reference
+plan, not as a legal compliance certificate. Compactness standards vary by
+jurisdiction; Voting Rights Act analysis, communities of interest, incumbent
+handling, county and municipal splits, and state-specific criteria remain
+separate checks. The value of geographic CVD is that its proximity decision is
+auditable from centroids, projection constants, base seed, and node path.
 
-\paragraph{Legal context.} CVD-Geographic optimises Polsby-Popper as a purely geometric metric. It does not certify compliance with state constitutional compactness standards, which vary by jurisdiction and may involve different compactness measures (Reock, convex hull ratio) or weigh compactness against other criteria. Practitioners in Florida~\citep{floridaConst} and other high-litigation states should verify compactness compliance using \texttt{redist analyze --types compactness} and consult legal counsel on whether the specific PP improvement is legally material under the applicable state standard. VRA majority-minority district requirements are not affected by the distance metric choice.
-
-\paragraph{Open questions.}
-Several extensions remain for future work:
+\paragraph{Remaining work.}
+The next paper-quality and implementation milestones are clear:
 
 \begin{enumerate}
-\item \textbf{Ellipsoidal Albers.}
-  The spherical approximation introduces $\le 3$\,m error per tract.
-  An ellipsoidal implementation (PROJ library bindings, GRS80) would
-  eliminate this error entirely.
-  For redistricting purposes, 3\,m is negligible; for other geographic
-  applications of the algorithm, the ellipsoidal formula may be warranted.
-
-\item \textbf{Geographic CVD + BisectionEnsemble.}
-  Running \be{}$(T=50)$ with \cvdgeo{} bisectors would select the
-  lowest-EC geographic Voronoi plan across 50 base seeds.
-  Since Phase~2 is faster per run than Phase~1, the ensemble overhead
-  is smaller.
-  This configuration is deferred to G.15~\citep{dellaLibera2026comparison}.
-
-\item \textbf{Geographic CVD as SA warm start.}
-  Phase~2 plans are geometrically compact and have lower edge cuts than
-  Phase~1 plans.
-  Using \cvdgeo{} as the initialisation for \sa{} bisection
-  (instead of \metis{}) may find lower-EC solutions with different
-  compactness properties.
-
-\item \textbf{Ensemble interaction.}
-  Verify that \texttt{cvd\_geo\_seed} (which depends on both
-  \texttt{base\_seed} and \texttt{node\_path}) produces distinct seeds
-  across ensemble members at each bisection node.
-  This is expected from the SHA-256 construction but should be asserted
-  as an L2 test.
-
-\item \textbf{International territories.}
-  Guam and other US territories lack well-established Albers projections.
-  A fallback to raw Euclidean on WGS84 coordinates (adequate for
-  small territories where meridian convergence is minor) is an option.
+\item Build archived NC/FL/WA benchmark packages with graph-distance and
+  geographic CVD side by side.
+\item Add ratio-aware CVD target populations so odd-seat nodes can split by
+  $k_L:k_R$ rather than only by half population.
+\item Record projection metadata in the run/audit manifest.
+\item Validate the centroid fetch route and archive centroid file hashes.
+\item Add state-specific projection dispatch only after tests and package
+  metadata can prove which transform was used.
 \end{enumerate}
 
 \paragraph{Summary.}
-Phase~2 \cvdgeo{} completes the geographic generalisation of the \cvd{}
-algorithm portfolio.
-Phase~1 (T.10) provides a robust, data-light baseline for all states.
-Phase~2 (this paper) provides a geometrically exact alternative for states
-where geographic and graph-topological distance diverge.
-Together they give practitioners a choice: fast and adequate everywhere
-(\texttt{graph-distance}), or optimal for coastal and irregular states
-(\texttt{geographic}).
+T.10 explains CVD as a proximity-packing split primitive. T.11 makes the
+geographic metric legible: show the coordinate field, show the ownership
+frontier, show the snapped centroid update, and show the audit inputs needed
+to reproduce the split. That is the standard this family needs before we move
+from attractive geometry to durable public evidence.

@@ -49,12 +49,13 @@ An ellipsoidal implementation using PROJ library bindings is deferred to
 Phase~3.
 \end{remark}
 
-\begin{remark}[State-specific projections]
-Alaska (FIPS 02) uses EPSG:3338 (Alaska Albers, central meridian $-154^{\circ}$,
-parallels $55^{\circ}$/$65^{\circ}$); Hawaii (FIPS 15) uses EPSG:102007
-(Hawaii Albers); Puerto Rico (FIPS 72) uses EPSG:32161.
-Selection is automatic from the state FIPS code at load time.
-The EPSG code used is recorded in the audit chain (\S\ref{subsec:audit}).
+\begin{remark}[Projection scope]
+The current BISECT implementation applies the same spherical Albers transform
+for every geographic CVD run. State-specific projection dispatch for Alaska,
+Hawaii, Puerto Rico, and territories is a future evidence and implementation
+item. Any publication package using those jurisdictions should record the
+projection used and should not imply automatic EPSG dispatch until that code
+exists.
 \end{remark}
 
 \subsection{Seed Derivation}
@@ -143,7 +144,7 @@ the snap replaces it with the geographically closest real tract.
 This approximation is exact when $\bar{\mathbf{c}}_j$ lies inside a real tract's
 footprint and introduces at most one census-tract width of error otherwise.
 
-\subsection{$\varepsilon$-Convergence Criterion}
+\subsection{\texorpdfstring{$\varepsilon$-Convergence Criterion}{Epsilon-Convergence Criterion}}
 
 \begin{definition}[$\varepsilon$-Convergence]
 \label{def:eps-convergence}
@@ -167,7 +168,7 @@ Typical census tract widths are $\ge 200$\,m; a convergence tolerance of
 Algorithm~\ref{alg:cvdgeo} gives the complete Phase~2 \cvdgeo{} bisection.
 
 \begin{algorithm}[t]
-\caption{\cvdgeo{}-\textsc{Bisect}($G_v$, $\mathbf{x}$, $\mathbf{p}$, $k_L$, $k_R$,
+\caption{\cvdgeo{}-\textsc{Bisect}($G_v$, $\mathbf{x}$, $\mathbf{p}$,
   $\mathtt{base\_seed}$, $\mathtt{node\_path}$, $\mathtt{cvd\_iters}$,
   $\mathtt{balance\_tolerance}$)}
 \label{alg:cvdgeo}
@@ -188,8 +189,6 @@ Algorithm~\ref{alg:cvdgeo} gives the complete Phase~2 \cvdgeo{} bisection.
 \For{$\mathrm{iter} = 0$ \textbf{to} $\mathtt{cvd\_iters} - 1$}
   \State $a(t) \gets \arg\min_{j} \|\mathbf{x}_t - \mathbf{s}_j\|$ for all $t \in V_v$
          \Comment{Voronoi: Definition~\ref{def:euc-voronoi}}
-  \State $a \gets \mathrm{Rebalance}(a, G_v, \mathbf{p}, \mathtt{balance\_tolerance})$
-         \Comment{200-iter boundary-swap}
   \For{$j \in \{0, 1\}$}
     \State $D_j \gets \{t : a(t) = j\}$;
            $P_j \gets \sum_{t \in D_j} p_t$
@@ -207,10 +206,48 @@ Algorithm~\ref{alg:cvdgeo} gives the complete Phase~2 \cvdgeo{} bisection.
 \EndFor
 \State $a \gets \arg\min_j \|\mathbf{x}_t - \mathbf{s}_j\|$ for all $t$
        \Comment{final assignment from converged seeds}
-\State $(S, \bar{S}) \gets \mathrm{Rebalance}(a, G_v, \mathbf{p}, \mathtt{balance\_tolerance})$
+\State $(S, \bar{S}) \gets \mathrm{HalfRebalance}_{200}(a, G_v, \mathbf{p}, \mathtt{balance\_tolerance})$
+\Comment{current implementation target}
 \State \textbf{return} $(S, \bar{S})$
 \end{algorithmic}
 \end{algorithm}
+
+\subsection{Show the Iteration}
+
+The geographic mode is easiest to audit as a sequence of ownership pictures.
+The first row shows two seeds in projected coordinate space. The second row
+shows Euclidean Voronoi ownership. The third row shows the population-weighted
+centroid of each owned side and the snap back to a real tract.
+
+\begin{center}
+\begin{tabular}{c@{\qquad}c@{\qquad}c}
+\textbf{1. Seeds} & \textbf{2. Ownership} & \textbf{3. New seeds} \\
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+S0 & . & . & . & S1 \\ \hline
+. & . & . & . & . \\ \hline
+. & . & . & . & . \\ \hline
+\end{tabular}
+&
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+0 & 0 & 0 & 1 & 1 \\ \hline
+0 & 0 & 1 & 1 & 1 \\ \hline
+0 & 0 & 1 & 1 & 1 \\ \hline
+\end{tabular}
+&
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+. & . & . & . & . \\ \hline
+. & S0' & . & S1' & . \\ \hline
+. & . & . & . & . \\ \hline
+\end{tabular}
+\end{tabular}
+\end{center}
+
+The point is not the labels ``0'' and ``1''; it is the visible ownership
+frontier. Geographic CVD changes where that frontier falls because its distance
+field is drawn from projected coordinates instead of graph hops.
 
 \paragraph{Key difference from Phase~1.}
 The medoid computation (Phase~1: 100 BFS passes per iteration for the two
@@ -221,14 +258,14 @@ post-hoc rebalance, audit chain output --- are preserved.
 
 \subsection{Convergence Analysis}
 
-\begin{proposition}[Monotone Energy Descent for Phase~2]
+\begin{proposition}[Bounded Lloyd Step for Geographic CVD]
 \label{prop:geo-convergence}
 Let $\mathcal{E}(\mathbf{s}_0, \mathbf{s}_1)
 = \sum_{j} \sum_{t \in D_j} \|\mathbf{x}_t - \mathbf{s}_j\|^2$
 be the total Euclidean quantisation energy.
-Each iteration (Voronoi assignment + population-weighted centroid update +
-nearest-tract snap) satisfies
-$\mathcal{E}^{(i+1)} \le \mathcal{E}^{(i)} + O(\varepsilon^2)$.
+The assignment and continuous centroid update are Lloyd steps in projected
+space. The nearest-tract snap adds a bounded discretisation error determined
+by the local tract-centroid spacing.
 \end{proposition}
 
 \begin{proof}
@@ -259,10 +296,10 @@ $\mathcal{E}^{(i+1)} \le \mathcal{E}^{(i)} + O(\varepsilon^2)$.
     minimum tract size.
     Thus the total energy change per snap is $O(r_{\max}^2)$, bounded and
     converging.
-Combining (a), (b), (c): energy is non-increasing up to $O(\varepsilon^2)$
-rounding per iteration.
-Since $\mathcal{E} \ge 0$ and the number of distinct Voronoi partitions of
-$V_v$ is finite, the iteration terminates.
+Combining (a), (b), and (c), the implemented update is a Lloyd-style descent
+step followed by bounded discrete snapping. Because the implementation also
+has a fixed \texttt{cvd\_iters} cap, termination is guaranteed even when a
+discrete two-cycle would otherwise persist.
 \end{proof}
 
 \subsection{Runtime Complexity}
@@ -278,20 +315,23 @@ $V_v$ is finite, the iteration terminates.
   \item Centroid update: $O(m)$ weighted accumulation + $O(m)$ nearest scan.
   \end{itemize}
 \item Post-hoc rebalance: $O(200 m)$.
-\item Total: $O((n_{\mathrm{iter}} + 200) \times m)$.
+\item Total: $O((n_{\mathrm{iter}} + 200) \times m)$ for the implemented
+  two-seed bisection node.
 \end{itemize}
 For $n_{\mathrm{iter}} = 20$: $O(220m) = O(m)$.
-This is strictly faster than Phase~1 at the same iteration count, which
-requires $O(100m)$ BFS per iteration for the medoid computation in addition to
-the $O(m)$ Voronoi assignment.
+This removes the graph-medoid BFS passes used by graph-distance CVD. End-to-end
+speed still depends on centroid I/O, projection cost, rebalance work, and final
+validation, so the paper treats runtime comparison as an empirical benchmark
+target rather than a theorem.
 \end{proposition}
 
 \subsection{Audit Chain Fields}
 \label{subsec:audit}
 
-Phase~2 appends the following fields to
-\texttt{runs/\{label\}/\{year\}/index.json}
-(new fields relative to Phase~1 are marked with $\dagger$):
+The audit package for a geographic CVD run should expose, at minimum, the
+following fields or equivalent manifest entries. Some are implemented in logs
+or configuration today; others are acceptance targets for a complete archived
+package:
 
 \begin{verbatim}
 "structure": "centroidal-voronoi",
@@ -300,11 +340,11 @@ Phase~2 appends the following fields to
 "seed_init": "kmeans++",
 "base_seed": 12345678,
 "cvd_seed": 987654321,
-"cvd_seed_formula": "SHA-256('CVD_GEO_INIT_'||node_path||'_'||base_seed:u64le)", (dagger)
+"cvd_seed_formula": "SHA-256('CVD_GEO_INIT_' || node_path || ...)",
 "node_path": "01",                    (dagger)
 "iterations_to_convergence": 11,
 "convergence_warning": false,
-"projection": "EPSG:5070",            (dagger)
+"projection": "spherical Albers / EPSG:5070 constants", (dagger)
 "final_ec": 2847,
 "final_pp_mean": 0.241
 \end{verbatim}
@@ -316,5 +356,6 @@ so that an independent auditor can recompute \texttt{cvd\_seed} from
 \texttt{node\_path} is required: the Phase~2 seed depends on both \texttt{base\_seed}
 and \texttt{node\_path}, and without \texttt{node\_path} the seed cannot be
 rederived from \texttt{base\_seed} alone.
-\texttt{projection} records the EPSG code used; it varies by state FIPS code
-(5070 for continental US; 3338 for Alaska; 102007 for Hawaii; 32161 for Puerto Rico).
+\texttt{projection} should record the transform actually used. In the current
+code path, that is the platform spherical Albers transform with EPSG:5070
+constants, not state-specific dispatch.

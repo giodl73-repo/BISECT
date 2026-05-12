@@ -1,5 +1,6 @@
-% ARCHIVED 2026-05-09: T.11 content folded into T.10+centroidal-voronoi §5 (Phase 2 section).
-% T.11 is retired as a standalone paper. See T.10 for the canonical Phase 1 + Phase 2 treatment.
+% T.11 is a companion detail note for the geographic CVD metric now summarized
+% in T.10. It is intentionally narrower than T.10: implementation contract,
+% metric geometry, audit hooks, and evidence targets.
 \documentclass[12pt]{article}
 
 \usepackage[margin=1in]{geometry}
@@ -56,8 +57,8 @@
 %% -----------------------------------------------------------------------
 
 \title{%
-  \textbf{Geographic Centroidal Voronoi Districts: True Euclidean}\\
-  \textbf{Proximity via Albers Projection}\\[0.8em]
+  \textbf{Geographic Centroidal Voronoi Districts:}\\
+  \textbf{Projected Proximity as a BISECT Split Primitive}\\[0.8em]
   \normalsize\textit{T.11 --- Algorithm Design / Geometric Structure Phase~2}%
 }
 
@@ -75,29 +76,27 @@
 
 \begin{abstract}
 \noindent
-Phase~1 Centroidal Voronoi Districts (\cvd{}, T.10) uses BFS hop-count as the
-distance metric --- appropriate for connected redistricting graphs but divergent
-from true geographic distance in coastal, elongated, or geometrically irregular
-states.
-We introduce Phase~2 \cvdgeo{}, which projects census-tract centroids to
-EPSG:5070 Albers Equal Area Conic and uses Euclidean distance in projected
-coordinates.
-The key changes over Phase~1 are: (1) the centroid update uses the true
-population-weighted mean coordinate rather than the graph-distance medoid
-approximation; (2) convergence is $\varepsilon$-tolerance-based ($\varepsilon = 1.0$\,m)
-rather than exact equality, preventing oscillation from discrete snap;
-(3) the seed prefix is \texttt{"CVD\_GEO\_INIT\_"}, isolating Phase~2
-seeds from Phase~1 in the audit chain.
+Centroidal Voronoi Districts (\cvd{}, T.10) now has two implemented metric
+modes inside BISECT: graph-distance CVD, which assigns tracts by BFS hop count,
+and geographic CVD, which assigns tracts by Euclidean distance after projecting
+tract centroids with the platform's spherical Albers transform. This companion
+paper explains why the geographic mode exists, how it is wired into recursive
+bisection, and what still separates the implementation from a publication-grade
+state-by-state comparison.
 
-Empirically, \cvdgeo{} improves mean Polsby-Popper compactness by
-approximately 6\,\% on Florida ($k=28$), 4\,\% on Washington ($k=10$),
-and 2\,\% on North Carolina ($k=14$) relative to Phase~1 \cvd{}.
-For regular-geometry states, Phase~1 is adequate and requires no centroid data;
-\texttt{--cvd-metric geographic} is recommended for Florida, Alaska, Washington,
-and Maine.
-Runtime is $O(n_{\mathrm{iter}} \times m)$ --- strictly faster than Phase~1
-because projection is $O(1)$ per tract and eliminates 50 BFS evaluations per
-medoid update.
+The implemented changes over graph-distance CVD are concrete: a distinct
+geographic seed domain; k-farthest initialization in projected coordinate
+space; Lloyd-style coordinate updates snapped to the nearest tract; a
+one-meter seed-displacement stopping rule; and an error path when geographic
+CVD is requested without centroid data.
+The current implementation still rebalances each local split toward one half
+of node population, so ratio-aware geographic CVD splits for odd-seat nodes
+remain an implementation and evidence gap.
+
+The paper therefore treats NC/FL/WA tables as benchmark targets, not final
+claims. Its main contribution is the audit contract: geographic CVD is now a
+BISECT split primitive that can be verified from adjacency, population,
+centroid, base-seed, and node-path inputs.
 \end{abstract}
 
 \tableofcontents
