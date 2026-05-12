@@ -29,6 +29,9 @@ recompute public claims from lower-level evidence.
 - `rcount-core`: started 2026-05-12 with canonical hash prefixes, core contest
   and summary records, a synthetic `summary-basic` package generator, and L0
   checks for `contest_selection_sum` and `jurisdiction_contest_total`.
+- `rcount-io`: started 2026-05-12 with package-directory read/write helpers,
+  a `summary-basic` generator, and a docs fixture verifier for
+  `docs/examples/rcount-golden-packages/summary-basic`.
 
 ## Track Contract
 

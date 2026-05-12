@@ -4,7 +4,7 @@ Status: draft
 Date: 2026-05-12
 Track: `research/tracks/V-election-audit`
 Role review: `docs/specs/reviews/rcount-track-r1_roles.md`
-First crate slice: `crates/rcount-core`
+First crate slices: `crates/rcount-core`, `crates/rcount-io`
 
 ## Purpose
 
@@ -284,7 +284,7 @@ Recommended crates:
 | Crate | Responsibility |
 |---|---|
 | `rcount-core` | data model, canonical records, hash projections, first summary arithmetic checks |
-| `rcount-io` | package read/write, NDJSON/JSON parsing, source index |
+| `rcount-io` | package read/write, NDJSON/JSON parsing, source index, docs fixture generation |
 | `rcount-audit` | reconciliation equations, package verification, transcripts |
 | `rcount-cli` | user-facing commands and fixture verification |
 
@@ -297,6 +297,8 @@ V.0 acceptance requires these fixtures:
 
 1. `summary-basic`: one contest, two precincts, jurisdiction total; verifies.
    First in-crate generator: `rcount_core::synthetic_summary_basic_package`.
+   Public package generator:
+   `cargo run -p rcount-io --example summary_basic_package`.
 2. `canvass-correction`: unofficial total superseded by canvassed event; both
    states replay and the final status explains the delta.
 3. `privacy-inclusion-sketch`: inclusion proof fixture that verifies a
@@ -413,6 +415,13 @@ Current L0 coverage:
 - `contest_selection_sum` pass/fail;
 - `jurisdiction_contest_total` pass/fail;
 - synthetic `summary-basic` package generation.
+
+Current L1 coverage:
+
+- `rcount-io` package directory round trip;
+- manifest `content_hash` mismatch rejection;
+- docs fixture verification for
+  `docs/examples/rcount-golden-packages/summary-basic`.
 
 ## CLI Shape
 
