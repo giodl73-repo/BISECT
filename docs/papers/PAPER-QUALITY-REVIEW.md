@@ -9,6 +9,11 @@ real peer review. Any simulated reviewer or role perspective is synthetic
 feedback for strengthening drafts. It is not endorsement, acceptance evidence,
 or a substitute for submission to real venues.
 
+Portfolio-wide triage scores for algorithm-bearing papers are tracked in
+[`ALGORITHM-PAPER-SCORECARD.md`](ALGORITHM-PAPER-SCORECARD.md). Those scores
+route work across tracks; this ledger records the slower paper-by-paper
+read/patch/rebuild loop.
+
 ## Review Standard
 
 Every reviewed paper must pass six paper-quality gates before we mark it done.

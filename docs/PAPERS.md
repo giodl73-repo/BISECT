@@ -8,6 +8,8 @@ Current atlas-to-paper alignment work is tracked in
 [`docs/papers/ATLAS-ALIGNMENT.md`](papers/ATLAS-ALIGNMENT.md).
 The slower publication-quality review ledger is
 [`docs/papers/PAPER-QUALITY-REVIEW.md`](papers/PAPER-QUALITY-REVIEW.md).
+The portfolio-wide algorithm-paper triage scorecard is
+[`docs/papers/ALGORITHM-PAPER-SCORECARD.md`](papers/ALGORITHM-PAPER-SCORECARD.md).
 
 ---
 
