@@ -100,7 +100,7 @@ Score bands:
 | U.16 Branch-and-Cut | 3.8 | 3.7 | 3.6 | 3.9 | 4.0 | 3.7 | 22.7 | Golden |
 | U.17 Branch-and-Price | 3.8 | 3.8 | 3.6 | 3.9 | 4.0 | 3.7 | 22.8 | Golden |
 | U.18 Large-Neighborhood Search | 3.8 | 3.8 | 3.7 | 3.9 | 4.0 | 3.8 | 23.0 | Golden |
-| U.19 Evolutionary Search Comparison | 3.5 | 3.4 | 3.4 | 3.7 | 3.5 | 3.4 | 20.9 | Next Batch 3 target |
+| U.19 Evolutionary Search Comparison | 3.8 | 3.7 | 3.7 | 3.9 | 4.0 | 3.7 | 22.8 | Golden |
 | U.20 Plan Audit Certificates | 3.7 | 3.5 | 3.6 | 3.9 | 3.5 | 3.5 | 21.7 | Next Batch 3 target; fixed-point paper |
 
 ## Ensemble And Sampling
@@ -158,7 +158,7 @@ Score bands:
 
 ## Highest-Priority Lifts
 
-1. Finish Batch 3: U.19 and U.20. They are close to strong/golden and anchor
+1. Finish Batch 3: U.20. It anchors
    the audit fixed point for all newer algorithm families.
 2. Batch 4: G.4, G.7, G.10, and G.11. These are the ensemble/sampling papers
    most directly tied to implemented crates and current atlas concepts.

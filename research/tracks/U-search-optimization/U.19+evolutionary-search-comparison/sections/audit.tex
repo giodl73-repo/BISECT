@@ -17,3 +17,12 @@ entries belongs to the U.14 selection record and the U.15 posture boundary.
 
 The public golden package can be checked either through the RPLAN certificate
 verifier or through the BISECT manifest verifier.
+
+The selected package schema is
+\texttt{bisect-pareto-selected-frontier-package-v1}. It writes
+\texttt{selected-frontier.rplan}, \texttt{selected-frontier.rctx},
+\texttt{audit-certificate.json}, and \texttt{manifest.json}. The manifest
+records seed, selected index, frontier size, objective values, validity status,
+certificate digest, certificate content hash, legal profile id, and context
+hash. That package is the point where an exploratory evolutionary row becomes a
+normal audit object.

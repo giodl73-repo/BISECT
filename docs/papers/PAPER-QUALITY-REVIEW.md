@@ -143,7 +143,7 @@ intentionally modest.
 | U.16 Branch-and-Cut Redistricting | Reviewed 2026-05-12 | Added worked disconnected-incumbent separation example, concrete solve-report fields, manifest lineage boundary, U.13/U.20 positioning, and path8 command evidence | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
 | U.17 Branch-and-Price Redistricting | Reviewed 2026-05-12 | Added path4 column/master example, concrete branch-price report fields, CLI/test/package evidence, and fixed-point lineage boundary | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
 | U.18 Large-Neighborhood Search | Reviewed 2026-05-12 | Added six-unit one-move parent/child example, concrete local-search summary fields, CLI/test/package evidence, and no-improvement benchmark boundary | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
-| U.19 | Queued | Queued | Queued |
+| U.19 Evolutionary Search Comparison | Reviewed 2026-05-12 | Added selected-frontier row-to-package example, concrete frontier/metadata/lineage fields, U.14/U.15/U.20 boundary, and seed/objective sensitivity caveats | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
 | U.20 | Queued | Queued | Queued |
 
 ## Batch 3 Paper-Quality Scorecard
@@ -155,6 +155,7 @@ intentionally modest.
 | U.16 Branch-and-Cut Redistricting | 3.8 | 3.7 | 3.6 | 3.9 | 4.0 | 3.7 | 22.7 / 24 |
 | U.17 Branch-and-Price Redistricting | 3.8 | 3.8 | 3.6 | 3.9 | 4.0 | 3.7 | 22.8 / 24 |
 | U.18 Large-Neighborhood Search | 3.8 | 3.8 | 3.7 | 3.9 | 4.0 | 3.8 | 23.0 / 24 |
+| U.19 Evolutionary Search Comparison | 3.8 | 3.7 | 3.7 | 3.9 | 4.0 | 3.7 | 22.8 / 24 |
 
 ### Batch 3 Score Notes
 
@@ -180,3 +181,10 @@ changes, and why validity gates are separate from improvement claims. The
 summary table and package evidence make no-op and improvement runs auditable.
 The remaining ceiling is empirical: the current packages prove the contract, not
 real-data improvement distributions or production LNS/tabu quality.
+
+**U.19 Evolutionary Search Comparison — 22.8/24.** The paper now makes selected
+frontier packaging concrete: a frontier row is search evidence, a selected index
+is a trade-off record, and the exported RPLAN/RCTX package is the audit object.
+The U.14/U.15/U.20 boundaries are explicit. The remaining ceiling is empirical:
+frontier robustness still needs seed, objective, and budget sensitivity evidence
+before the paper should make broader quality claims.

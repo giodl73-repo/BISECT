@@ -1,6 +1,14 @@
 \section{Introduction}
 
 U.19 documents \texttt{bisect-pareto} and \texttt{bisect-cli::pareto\_cmd},
-exposed through \texttt{bisect pareto} and selected-frontier audit flags. The paper is an
-evolutionary/multi-objective implementation paper, not a proof that a computed
-frontier is globally complete.
+exposed through \texttt{bisect pareto} and selected-frontier audit flags. The
+paper is an evolutionary/multi-objective implementation paper, not a proof that
+a computed frontier is globally complete.
+
+The method belongs beside U.14 and U.15 rather than replacing them. U.19 can
+show that a frontier was generated under a seed, budget, and objective vector;
+U.14 supplies the selection record explaining why one non-dominated entry was
+chosen; U.15 states the legal or policy posture that may be attached to that
+choice. Once a frontier entry is selected, U.20's fixed-point audit path takes
+over: the selected plan must be exported as RPLAN/RCTX with certificate and
+manifest sidecars.

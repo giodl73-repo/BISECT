@@ -27,3 +27,33 @@ U.14 selection record and U.15 posture analysis \\
 \end{tabular}
 \caption{Claim and evidence ladder for U.19.}
 \end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.32\linewidth}p{0.54\linewidth}}
+\toprule
+Command or package & Evidence produced \\
+\midrule
+\texttt{cargo test -p bisect-pareto} & Checks deterministic frontiers,
+non-domination, operator validity/fallback behavior, NDJSON metadata, and
+selected-package sidecars. \\
+\texttt{bisect pareto --selected-frontier-index ...} & Writes the frontier
+NDJSON and selected RPLAN/RCTX/audit/manifest package for the chosen row. \\
+Public U.19 golden package & Preserves a selected-frontier package with
+manifest and verification-ready sidecars. \\
+\bottomrule
+\end{tabular}
+\caption{Current U.19 evidence path.}
+\end{table}
+
+The representative CLI shape is:
+\begin{verbatim}
+bisect pareto --state TT --year 2020 \
+  --selected-frontier-index 1 \
+  --selected-frontier-context context.rctx \
+  --selected-frontier-out selected-frontier
+\end{verbatim}
+Changing the base seed, objectives, population size, or generation budget can
+change the frontier and therefore the meaning of index 1. Those parameters are
+part of the evidence, not incidental run decoration.

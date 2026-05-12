@@ -11,6 +11,22 @@ events. A selected entry need not be best in every objective; it is a chosen
 trade-off point whose generation, objective vector, validity status, and
 selection index must travel with the RPLAN/RCTX package.
 
+The implementation's frontier object makes the record concrete. Each frontier
+entry carries a one-based district assignment, objective values for edge cut,
+seats, and VRA deficit, a non-dominated flag, generation found, plan-level
+validity status, and optional audit-certificate identity fields for exported
+entries. The final NDJSON line records population size, generation count,
+frontier size, base seed, runtime, output version, and a SHA-256 hash of the
+plan lines. This is the evidence that a row was observed in a particular search
+run, not evidence that no better row exists outside that budget.
+
+A selected-frontier example is deliberately small. Suppose index 1 has edge cut
+137 and county splits 8 while index 0 has edge cut 130 and county splits 13.
+Index 1 is not globally ``better''; it is the selected trade-off. Exporting it
+therefore records selected index 1, frontier size, base seed, generation,
+objective vector, and validity status before writing the selected RPLAN/RCTX
+package.
+
 \begin{table}[htbp]
 \centering
 \small
@@ -26,6 +42,23 @@ Selection-deferred & frontier entry without selection record & comparison only \
 \bottomrule
 \end{tabular}
 \caption{Evolutionary comparison record layers.}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.27\linewidth}p{0.29\linewidth}p{0.30\linewidth}}
+\toprule
+Artifact field & Current value family & Interpretation \\
+\midrule
+Frontier row & plan, objectives, generation, validity & Observed comparison entry \\
+Metadata row & population, generations, base seed, hash & Reproducible run envelope \\
+Selected package & selected index, frontier size, RPLAN/RCTX paths & Chosen entry exported for audit \\
+Lineage extra & method, seed, generation, objectives, validity & Bridge from package back to frontier \\
+Audit certificate & profile, context hash, result, content hash & Final-plan validity evidence \\
+\bottomrule
+\end{tabular}
+\caption{Concrete U.19 fields that separate frontier evidence from audit evidence.}
 \end{table}
 
 The implementation therefore separates producing candidates, observing a
