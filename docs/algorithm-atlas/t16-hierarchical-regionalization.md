@@ -15,6 +15,23 @@ seeds. Hierarchical regionalization builds upward: singletons become small
 regions, small regions become larger regions, and the final district assignment
 is the top layer of a recorded merge tree.
 
+## How BISECT Uses It
+
+T.16 gives BISECT a bottom-up way to build district-scale regions. Instead of
+choosing one cut or choosing seeds, it repeatedly chooses the next eligible
+adjacent merge. Each merge must be explainable, so the merge witness is as
+important as the final assignment.
+
+So the BISECT role is:
+
+```text
+singleton units -> choose adjacent merges -> stop at k auditable regions
+```
+
+This is useful when the system needs a hierarchy of regions, not just a final
+flat plan. Reviewers can inspect intermediate layers and replay why each larger
+region exists.
+
 ## Algorithm Shape
 
 ```text

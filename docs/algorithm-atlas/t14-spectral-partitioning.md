@@ -23,6 +23,24 @@ district count is not a power of two, the recursive call receives proportional
 left/right seat targets so the tree can still end at the requested number of
 districts.
 
+## How BISECT Uses It
+
+T.14 is the most literal "bisect" algorithm in this group. BISECT uses spectral
+partitioning to choose a two-way split of the current induced graph. That split
+is population-balanced under the configured tolerance, then the same procedure
+can be applied recursively to each side until the requested district count is
+reached.
+
+So the BISECT role is:
+
+```text
+current region needing subdivision -> choose one auditable bisection cut
+```
+
+It does not choose seeds. It chooses a Fiedler ordering and then a sweep cut
+through that ordering. The output becomes a district assignment plus spectral
+summary evidence that can flow into RPLAN/RCTX packaging.
+
 ## Algorithm Shape
 
 ```text

@@ -16,6 +16,25 @@ outputs converge on the same fixed point:
 algorithm output -> RPLAN -> RCTX -> audit certificate -> manifest -> verifier
 ```
 
+## How BISECT Uses These Algorithms
+
+BISECT is not only a collection of standalone algorithms. The construction
+methods are ways to make the next auditable plan-building decision: choose a
+balanced split, choose seeds, grow capacity-aware assignments, merge regions, or
+prove that the declared construction profile cannot be satisfied.
+
+| Role In BISECT | Algorithms That Play This Role |
+|---|---|
+| Choose a balanced bisection cut | T.14 spectral partitioning |
+| Choose seed centers for district growth | T.15 capacity clustering, T.17 flow construction |
+| Assign units under population capacity | T.15 capacity clustering, T.17 flow construction |
+| Build larger connected regions from smaller ones | T.16 hierarchical regionalization |
+| Emit infeasibility or repair evidence instead of hiding failure | T.15 capacity clustering, T.17 flow construction |
+
+In other words, the algorithm is the construction engine, but the BISECT system
+cares just as much about the evidence trail. A method is useful when its choices
+can be replayed, summarized, packaged as RPLAN/RCTX, and checked by the verifier.
+
 ## Visual Grammar
 
 The atlas uses a few repeated visual conventions so the pages can be read as a

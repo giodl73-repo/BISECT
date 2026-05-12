@@ -14,6 +14,25 @@ baseline. It is deliberately narrower than the later U.16/U.17 optimization
 machinery. The central promise is that valid, infeasible, and invalid outcomes
 are distinguished in the artifact trail.
 
+## How BISECT Uses It
+
+T.17 gives BISECT a constrained-assignment view of construction. Depending on
+the configured profile, district bins or seeded targets receive unit supply
+through eligible arcs. The method is useful when the question is not "where is
+the next cut?" but "can this population supply be assigned to these district
+capacities under the declared graph/profile?"
+
+So the BISECT role is:
+
+```text
+unit supply + district capacity -> choose eligible assignments or emit witness
+```
+
+This also makes T.17 a bridge toward the later optimization papers. It prepares
+the audit vocabulary for capacity bounds, costs, assignment extraction, and
+infeasibility evidence before the heavier branch-and-cut or branch-and-price
+machinery arrives.
+
 ## Algorithm Shape
 
 ```text

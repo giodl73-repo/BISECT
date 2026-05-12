@@ -14,6 +14,24 @@ The point of T.15 is not only to create clusters. It is to make capacity status
 auditable. A result can be valid, repaired, infeasible, or invalid, and those
 statuses mean different things for package export.
 
+## How BISECT Uses It
+
+T.15 is a seed-and-grow construction path. BISECT uses it when the next plan
+building decision should start from seed centers rather than from a spectral
+cut. The algorithm chooses deterministic farthest-point seeds, then assigns
+units to those seeds while watching population capacity.
+
+So the BISECT role is:
+
+```text
+graph + populations -> choose seeds -> grow capacity-aware district pieces
+```
+
+This can produce a full district assignment for benchmark packages, or it can
+produce repair/infeasibility evidence when the staged capacity profile cannot be
+met cleanly. The seed choices and status lineage are the key things BISECT needs
+to preserve.
+
 ## Algorithm Shape
 
 ```text
