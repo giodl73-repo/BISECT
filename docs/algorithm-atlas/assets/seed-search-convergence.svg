@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="390" viewBox="0 0 960 390" role="img" aria-labelledby="title desc">
+  <title id="title">Seed convergence timeline</title>
+  <desc id="desc">Convergence search stops after a threshold of consecutive non-improving seeds.</desc>
+  <style>.bg{fill:#fbfbf8}.panel{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.seed{fill:#dbeafe;stroke:#2b5c9b;stroke-width:2}.best{fill:#e4f5eb;stroke:#2f7d4c;stroke-width:3}.stop{fill:#ffe4e1;stroke:#b84a42;stroke-width:2}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.line{stroke:#596673;stroke-width:2}</style>
+  <rect class="bg" width="960" height="390"/><rect class="panel" x="60" y="55" width="840" height="270" rx="8"/>
+  <text class="label" x="90" y="92">ConvergenceSweep evidence is a timeline</text>
+  <line class="line" x1="120" y1="190" x2="810" y2="190"/>
+  <circle class="seed" cx="150" cy="190" r="18"/><circle class="seed" cx="230" cy="190" r="18"/><circle class="best" cx="310" cy="190" r="22"/><circle class="seed" cx="390" cy="190" r="18"/><circle class="seed" cx="470" cy="190" r="18"/><circle class="seed" cx="550" cy="190" r="18"/><circle class="stop" cx="630" cy="190" r="18"/><circle class="stop" cx="710" cy="190" r="18"/><circle class="stop" cx="790" cy="190" r="18"/>
+  <text class="small" x="288" y="235">new best</text><text class="small" x="610" y="235">non-improving streak</text>
+  <text class="small" x="120" y="290">Real threshold may be 600; this diagram compresses the streak.</text>
+</svg>

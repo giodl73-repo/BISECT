@@ -35,6 +35,17 @@ routine adds connectivity cuts and resolves. The report records solver mode,
 cut activity, incumbent objective, lower bound, gap, fallback reason, and
 parameter hash.
 
+## Picture 2: Tiny Path8 Connectivity Cut
+
+![U.16 path8 connectivity cut](assets/u16-path8-cut.svg)
+
+The path8 benchmark is intentionally small enough to inspect by hand. A solver
+candidate can assign district A to both ends of the path while the middle units
+belong to other districts. That assignment can look feasible to the relaxed
+model but fails district connectivity. Separation turns the failure into a
+specific violated cut, resolves, and writes both the formulation artifact and
+the solve report.
+
 ## Step-By-Step Mechanics
 
 1. Build the ILP formulation for the declared graph and objective.
@@ -44,6 +55,14 @@ parameter hash.
 5. Repeat until solved, bounded, timed out, or fallback is triggered.
 6. Emit an ILP solve report and algorithm lineage.
 7. Package any final plan through RPLAN/RCTX/audit certificate/manifest.
+
+## Tiny Example
+
+In the path8 package, `node_root.lp` is the model witness and
+`ilp-solve-report.json` is the lifecycle witness. The plan is not just "the
+solver output"; it is a package saying which model was used, what status was
+reached, whether cuts were active, and how the final assignment was bound into
+the same U.20 audit bundle as non-solver plans.
 
 ## What The Certificate Needs To Explain
 
@@ -60,10 +79,21 @@ instance. It does not imply that every large real instance was solved to
 optimality, and it does not claim branch-and-cut dominates construction or
 search methods.
 
+## Failure Modes
+
+- A disconnected incumbent must produce separation evidence or a fallback
+  status, not a silent accepted plan.
+- A timeout or external solver failure can still be useful if the report says
+  formulation-only, bounded, fallback, or no-solution explicitly.
+- A package without `node_root.lp`, solve status, or parameter identity is not
+  enough evidence for a branch-and-cut claim.
+
 ## References In This Repo
 
 - Crate: `bisect-ilp`
+- Core files: `crates/bisect-ilp/src/formulation.rs`, `crates/bisect-ilp/src/separation.rs`, `crates/bisect-ilp/src/output.rs`
 - CLI surface: `--structure ilp --ilp-method branch-and-cut`
 - Paper: `docs/papers/U.16+branch-and-cut-redistricting.pdf`
 - Golden package: `docs/examples/rplan-golden-packages/U.16+branch-and-cut/`
 - Benchmark package: `docs/examples/rplan-benchmark-packages/U.16+branch-and-cut-path8-benchmark/`
+- Report witnesses: `docs/examples/rplan-benchmark-packages/U.16+branch-and-cut-path8-benchmark/node_root.lp`, `docs/examples/rplan-benchmark-packages/U.16+branch-and-cut-path8-benchmark/ilp-solve-report.json`

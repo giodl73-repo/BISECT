@@ -31,6 +31,14 @@ A low-weight particle can disappear during systematic resampling; a high-weight
 particle can be copied into multiple slots. The output records resample maps so
 the particle genealogy is not hidden.
 
+## Picture 2: Proposal, Weight, Resample
+
+![SMC proposal and resampling path](assets/smc-proposal.svg)
+
+The important SMC picture is not only the final sample. It is the path by which
+partial plans survive: proposal seed, connected district proposal, log-weight
+update, ESS check, and resampling genealogy.
+
 ## Step-By-Step Mechanics
 
 1. Initialize `n_particles` empty partial plans.
@@ -40,6 +48,14 @@ the particle genealogy is not hidden.
 5. Compute effective sample size.
 6. Systematically resample when ESS falls below the configured threshold.
 7. Assign remaining units at the final stage and emit weighted completed plans.
+
+## Reading The Output
+
+An NDJSON run is a ledger. Metadata says which graph, seed, and configuration
+were used. Particle records say what each particle proposed and how it was
+weighted. Resampling records say which ancestors were copied forward. If all
+particles die, that failure is an informative output about the proposal and
+tolerance settings.
 
 ## What The Output Needs To Explain
 
@@ -57,5 +73,5 @@ few particles or too strict a tolerance.
 ## References In This Repo
 
 - Crate: `bisect-smc`
-- Core files: `crates/bisect-smc/src/algorithm.rs`, `crates/bisect-smc/src/output.rs`
+- Core files: `crates/bisect-smc/src/algorithm.rs`, `crates/bisect-smc/src/proposal.rs`, `crates/bisect-smc/src/resample.rs`, `crates/bisect-smc/src/output.rs`
 - Tests: `crates/bisect-smc/tests/L1_integration.rs`, `crates/bisect-smc/tests/L2_real.rs`

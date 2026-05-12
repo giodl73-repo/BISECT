@@ -31,6 +31,15 @@ The manifest ties together the plan, context, certificate, method transcript,
 and optional method reports. The verifier checks hashes, certificate identity,
 context identity, declared profile, and lineage shape.
 
+## Picture 2: Failure Is Part Of The Contract
+
+![U.20 audit failure path](assets/u20-failure-path.svg)
+
+The fixed point is strongest when it explains rejection as clearly as
+acceptance. Hash mismatch, context mismatch, profile mismatch, certificate
+identity mismatch, and malformed lineage are different failures. They should
+surface as structured reasons, not as one generic invalid result.
+
 ## Step-By-Step Mechanics
 
 1. Write the final plan assignment as RPLAN.
@@ -42,6 +51,14 @@ context identity, declared profile, and lineage shape.
 6. Verify with `rplan verify-certificate` or `bisect verify --manifest`.
 7. Report structured failure reasons when hashes, context, profile, or lineage
    do not match.
+
+## Tiny Example
+
+The `grid3x3-valid` reference package is the smallest positive example. The
+negative fixtures document the opposite side: a verifier must reject packages
+whose hashes, certificate identity, or declared context no longer line up. That
+positive/negative pair is what makes U.20 a reusable acceptance layer rather
+than a ceremonial export format.
 
 ## What The Certificate Needs To Explain
 
@@ -56,10 +73,18 @@ U.20 proves the artifact can be independently checked against declared data and
 profiles. It does not certify legal sufficiency in the world, algorithmic
 optimality, or empirical superiority.
 
+## Failure Modes
+
+- Editing `plan.rplan` after certificate generation must break verification.
+- Reusing a certificate with a different context must break verification.
+- Algorithm lineage can be rich, but certificate validity must remain tied to
+  declared context/profile facts rather than unreviewed method claims.
+
 ## References In This Repo
 
 - Crates: `rplan-core`, `rplan-io`, `rplan-audit`
 - CLI surfaces: `rplan verify-certificate`, `bisect verify --manifest`
 - Paper: `docs/papers/U.20+plan-audit-certificates.pdf`
 - Reference package: `docs/examples/u20-plan-audit-certificates/grid3x3-valid/`
+- Negative fixtures: `docs/examples/u20-plan-audit-certificates/NEGATIVE-FIXTURES.md`
 - Benchmark package: `docs/examples/rplan-benchmark-packages/U.20+audit-grid10-benchmark/`

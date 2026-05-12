@@ -33,6 +33,15 @@ uniform spanning tree of the merged region, enumerate balanced tree cuts, and
 select one balanced edge. If no balanced cut exists, the implementation can
 resample or try another pair according to the configured chain variant.
 
+## Picture 2: Ensemble Diagnostics
+
+![ReCom diagnostics](assets/recom-diagnostics.svg)
+
+One ReCom step is easy to draw, but the algorithm becomes useful through many
+steps and often multiple chains. The diagnostic view records whether chains are
+moving, whether cut fractions are stable, and whether summary metrics have
+enough effective sample size to support the comparison being made.
+
 ## Step-By-Step Mechanics
 
 1. Start from a valid district assignment.
@@ -44,6 +53,13 @@ resample or try another pair according to the configured chain variant.
 6. Accept a replacement pair when the cut preserves the declared tolerance.
 7. Record step diagnostics such as cut fraction, population deviation, and
    acceptance.
+
+## Reading The Output
+
+The chain transcript should let a reviewer distinguish "the step was rejected,"
+"the pair had no balanced cut," "the chain moved but the summary did not mix,"
+and "the ensemble comparison was run with too few accepted samples." Those are
+different stories, and they should not collapse into a single sample count.
 
 ## What The Output Needs To Explain
 
@@ -63,3 +79,4 @@ about every legal or political claim.
 - Crate: `bisect-ensemble`
 - Concept guide: `docs/concepts/ensemble-methods.md`
 - Core files: `crates/bisect-ensemble/src/recom.rs`, `crates/bisect-ensemble/src/chain.rs`
+- Tests: `crates/bisect-ensemble/tests/ensemble_l1.rs`, `crates/bisect-ensemble/tests/ensemble_l2.rs`

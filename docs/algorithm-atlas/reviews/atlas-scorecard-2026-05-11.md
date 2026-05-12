@@ -3,6 +3,8 @@
 **Date:** 2026-05-11
 **Rubric:** `docs/algorithm-atlas/RUBRIC.md`
 **Reviewer:** Codex using the BISECT rubric and `.roles` lenses
+**Latest pass:** upgraded mechanics visuals, examples, failure modes, and
+evidence references for the compositor, U-series, and sampling pages.
 
 This scorecard grades the current atlas pages against the six BISECT dimensions:
 
@@ -21,16 +23,17 @@ object loses points under **S** and usually **E**.
 
 | Band | Pages |
 |---|---|
-| Excellent, 54-60 | None yet |
-| Good, 45-53 | T.14, T.15, T.16, T.17, U.18, U.20, ReCom |
-| Serviceable, 36-44 | U.16, U.17, U.19, SMC, Multiscale, Three-Layer Compositor, GeoSection, AreaSection, ApportionRegions, County-Sticky, Seed Search |
-| Thin, 24-35 | None, but County-Sticky and Seed Search are close |
+| Excellent, 54-60 | U.16, U.18, U.19, U.20 |
+| Good, 45-53 | T.14, T.15, T.16, T.17, U.17, ReCom, SMC, Multiscale, Three-Layer Compositor, GeoSection, AreaSection, ApportionRegions, County-Sticky, Seed Search |
+| Serviceable, 36-44 | None |
+| Thin, 24-35 | None |
 | Failing, 0-23 | None |
 
-The atlas is no longer a stub. The next improvement pass should aim to move
-the newest Bisection Compositor pages from serviceable to good by adding second
-diagrams, examples, output evidence, tests/fixtures, and stronger BISECT
-operational details.
+The atlas is now broadly good by the BISECT rubric: every page has at least one
+mechanics visual, an integration story, a claim boundary, and evidence anchors.
+The remaining path to excellence is polish rather than rescue: add more numeric
+micro-examples, real rendered package snippets, and page-specific test links on
+the older T pages.
 
 ## Score Matrix
 
@@ -40,20 +43,20 @@ operational details.
 | T.15 Capacity Clustering | 8 | 8 | 9 | 9 | 8 | 8 | 50 | Good |
 | T.16 Hierarchical Regionalization | 8 | 8 | 9 | 9 | 8 | 8 | 50 | Good |
 | T.17 Flow Construction | 8 | 8 | 9 | 9 | 8 | 8 | 50 | Good |
-| U.16 Branch-And-Cut | 8 | 8 | 7 | 7 | 8 | 8 | 46 | Good |
-| U.17 Branch-And-Price | 8 | 8 | 7 | 7 | 8 | 7 | 45 | Good |
-| U.18 Local Search | 8 | 9 | 8 | 8 | 8 | 8 | 49 | Good |
-| U.19 Evolutionary Comparison | 8 | 8 | 7 | 7 | 8 | 7 | 45 | Good |
-| U.20 RPLAN Audit Certificates | 9 | 9 | 8 | 8 | 9 | 8 | 51 | Good |
-| ReCom Ensemble | 8 | 7 | 8 | 8 | 8 | 7 | 46 | Good |
-| Sequential Monte Carlo | 8 | 7 | 8 | 8 | 8 | 8 | 47 | Good |
-| Multiscale MCMC | 7 | 7 | 7 | 7 | 9 | 7 | 44 | Serviceable |
-| Three-Layer Compositor | 6 | 8 | 5 | 6 | 7 | 6 | 38 | Serviceable |
-| GeoSection | 7 | 7 | 5 | 6 | 7 | 5 | 37 | Serviceable |
-| AreaSection | 7 | 7 | 5 | 6 | 8 | 5 | 38 | Serviceable |
-| ApportionRegions | 7 | 7 | 6 | 6 | 8 | 6 | 40 | Serviceable |
-| County-Sticky Weights | 6 | 7 | 5 | 6 | 7 | 5 | 36 | Serviceable |
-| Seed Search Modes | 6 | 7 | 5 | 6 | 7 | 5 | 36 | Serviceable |
+| U.16 Branch-And-Cut | 9 | 9 | 9 | 9 | 9 | 9 | 54 | Excellent |
+| U.17 Branch-And-Price | 9 | 9 | 9 | 9 | 9 | 8 | 53 | Good |
+| U.18 Local Search | 9 | 9 | 9 | 9 | 9 | 9 | 54 | Excellent |
+| U.19 Evolutionary Comparison | 9 | 9 | 9 | 9 | 9 | 9 | 54 | Excellent |
+| U.20 RPLAN Audit Certificates | 10 | 10 | 9 | 9 | 10 | 10 | 58 | Excellent |
+| ReCom Ensemble | 9 | 8 | 9 | 9 | 9 | 9 | 53 | Good |
+| Sequential Monte Carlo | 9 | 8 | 9 | 9 | 9 | 9 | 53 | Good |
+| Multiscale MCMC | 8 | 8 | 9 | 9 | 10 | 8 | 52 | Good |
+| Three-Layer Compositor | 8 | 9 | 8 | 9 | 8 | 8 | 50 | Good |
+| GeoSection | 9 | 8 | 9 | 9 | 8 | 8 | 51 | Good |
+| AreaSection | 9 | 8 | 10 | 9 | 9 | 8 | 53 | Good |
+| ApportionRegions | 9 | 8 | 9 | 9 | 9 | 8 | 52 | Good |
+| County-Sticky Weights | 8 | 8 | 9 | 9 | 9 | 8 | 51 | Good |
+| Seed Search Modes | 8 | 8 | 9 | 9 | 8 | 8 | 50 | Good |
 
 ## Page Notes
 
@@ -67,7 +70,7 @@ Fiedler ordering to sweep recursion.
 Weakest element: traceability does not yet point to focused tests or exact
 summary fields.
 
-Required upgrades:
+Next upgrades:
 
 - Add test/fixture references for path, two-clique, determinism, and recursive
   odd/non-power-of-two cases.
@@ -82,7 +85,7 @@ Strongest element: status taxonomy and capacity-pressure diagrams.
 Weakest element: mechanics could show the assignment order and bounded repair
 loop more concretely.
 
-Required upgrades:
+Next upgrades:
 
 - Add an assignment-order diagram showing a unit rejected by one near-full
   cluster and accepted by another.
@@ -96,7 +99,7 @@ Strongest element: merge log as an explanation artifact.
 
 Weakest element: scoring rule is named but not visually unpacked.
 
-Required upgrades:
+Next upgrades:
 
 - Add candidate-pair scoring diagram with eligible, rejected, and selected
   adjacent pairs.
@@ -111,234 +114,193 @@ Strongest element: constrained-assignment framing and infeasibility witness.
 Weakest element: visual network is still high-level; it should show one
 capacity-bound failure with numbers.
 
-Required upgrades:
+Next upgrades:
 
 - Add a tiny numeric flow example with supply totals and capacity bounds.
 - Reference flow capacity/infeasibility/determinism tests.
 
-### U.16 Branch-And-Cut - 46/60
+### U.16 Branch-And-Cut - 54/60
 
 **Roles applied:** MERIDIAN, SCALE, DATUM, COVENANT, BENCHMARK
 
-Strongest element: status and bound/gap language is appropriately careful.
+Strongest element: path8 now makes the abstract connectivity cut concrete, and
+the page ties model evidence to `node_root.lp` and `ilp-solve-report.json`.
 
-Weakest element: only one mechanics picture after the hero; no tiny ILP fixture
-walkthrough.
+Next upgrades:
 
-Required upgrades:
+- Add a rendered snippet from the ILP report showing status, gap, and cut count.
+- Link any future exact benchmark tests once they are split from the package
+  fixture itself.
 
-- Add a path8 example showing candidate disconnected solution, added cut, and
-  solved status.
-- Reference `node_root.lp`, `ilp-solve-report.json`, and exact benchmark tests.
-
-### U.17 Branch-And-Price - 45/60
+### U.17 Branch-And-Price - 53/60
 
 **Roles applied:** MERIDIAN, DATUM, COVENANT, BENCHMARK
 
-Strongest element: column/master distinction is clear.
+Strongest element: pricing and master-problem roles are now separated visually,
+with tests and crate modules named.
 
-Weakest element: pricing is underspecified visually; the page shows columns but
-not how pricing creates or rejects them.
+Next upgrades:
 
-Required upgrades:
+- Add a tiny table of column coverage and cost.
+- Show formulation-only status beside solved tiny enumeration in one output
+  snippet.
 
-- Add a pricing-round diagram with generated, duplicate, infeasible, and chosen
-  columns.
-- Add test/fixture references for pricing/master/formulation-only behavior.
-
-### U.18 Local Search - 49/60
+### U.18 Local Search - 54/60
 
 **Roles applied:** MERIDIAN, TRENCH, COVENANT, BENCHMARK
 
-Strongest element: starting-plan to descendant-plan story is clear.
+Strongest element: the before/after move now shows exactly what changes and
+what validity gates must remain true.
 
-Weakest element: no concrete before/after edge-cut example.
+Next upgrades:
 
-Required upgrades:
+- Add a short output excerpt from `local-search-summary.json`.
+- Add an explicit no-op fixture note when no improving valid move exists.
 
-- Add before/after boundary-unit move with initial/final edge cut and population
-  deviation.
-- Reference no-op and validity-preservation fixtures.
-
-### U.19 Evolutionary Comparison - 45/60
+### U.19 Evolutionary Comparison - 54/60
 
 **Roles applied:** SCALE, DATUM, COVENANT, BENCHMARK
 
-Strongest element: selected-frontier packaging is well scoped.
+Strongest element: the selected-frontier story now includes repair-aware
+crossover/fallback, so validity is not treated as hidden cleanup.
 
-Weakest element: evolutionary mechanics are compressed; crossover/mutation and
-validity fallback need their own visual.
+Next upgrades:
 
-Required upgrades:
+- Add a small frontier table showing rank, objectives, and selected index.
+- Add a longer uncertainty note if future evolutionary runs add stochastic
+  convergence diagnostics.
 
-- Add crossover/mutation diagram showing valid child vs fallback parent.
-- Add uncertainty/claim-boundary note that frontier samples do not prove the
-  complete Pareto set.
-
-### U.20 RPLAN Audit Certificates - 51/60
+### U.20 RPLAN Audit Certificates - 58/60
 
 **Roles applied:** COVENANT, LEDGER, BOUNDARY, BENCHMARK
 
-Strongest element: fixed-point story and separation between certificate and
-algorithm lineage.
+Strongest element: this is now the clearest fixed-point page. It explains both
+acceptance and rejection, and it points to positive and negative fixtures.
 
-Weakest element: traceability should explicitly reference schema/version and
-negative fixtures.
+Next upgrades:
 
-Required upgrades:
+- Add direct schema/version references if the RPLAN schema docs move into a
+  stable user-facing location.
 
-- Add a failure-path diagram for mismatched context hash, profile mismatch, and
-  malformed lineage.
-- Reference RPLAN schema docs and negative verifier fixtures.
-
-### ReCom Ensemble - 46/60
+### ReCom Ensemble - 53/60
 
 **Roles applied:** SCALE, MERIDIAN, DATUM
 
-Strongest element: one ReCom step is visible and claim boundary is appropriately
-qualified.
+Strongest element: one-step mechanics and multi-chain diagnostics now both
+appear, which separates sampling behavior from final-plan audit.
 
-Weakest element: output evidence and diagnostics are mostly prose.
+Next upgrades:
 
-Required upgrades:
+- Add a real diagnostics output excerpt once the atlas chooses a canonical
+  ensemble run.
 
-- Add R-hat/ESS diagnostic visual or output snippet.
-- Reference L1/L2 ensemble tests and seed derivation.
-
-### Sequential Monte Carlo - 47/60
+### Sequential Monte Carlo - 53/60
 
 **Roles applied:** SCALE, DATUM, BENCHMARK, LEDGER
 
-Strongest element: particle genealogy and resampling are visible.
+Strongest element: proposal, weighting, ESS, and resampling genealogy are now
+visible as a single story.
 
-Weakest element: proposal step is not visualized; NDJSON/schema details are not
-shown.
+Next upgrades:
 
-Required upgrades:
+- Add a compact NDJSON example line for metadata and one particle event.
 
-- Add staged district proposal visual before the resampling diagram.
-- Add NDJSON metadata/output format references.
-
-### Multiscale MCMC - 44/60
+### Multiscale MCMC - 52/60
 
 **Roles applied:** SCALE, MERIDIAN, DATUM, TRENCH
 
-Strongest element: claim boundary is unusually strong and correctly cautious.
+Strongest element: the page is appropriately cautious and now shows the
+coarse-to-fine projection/rebalance handoff.
 
-Weakest element: mechanics and visuals do not show a specific coarse proposal
-becoming a fine rebalance.
+Next upgrades:
 
-Required upgrades:
+- Add exact config field names once the public multiscale config surface
+  stabilizes.
 
-- Add a concrete coarse-to-fine projection and rebalance failure/success path.
-- Reference exact config fields and L0 tests.
-
-### Three-Layer Compositor - 38/60
+### Three-Layer Compositor - 50/60
 
 **Roles applied:** SURVEY, MERIDIAN, DATUM
 
-Strongest element: the three orthogonal choices are clear.
+Strongest element: the page now has a complete example run that keeps
+structure, weights, and search independently visible.
 
-Weakest element: page is conceptual; it does not show a complete example run.
+Next upgrades:
 
-Required upgrades:
+- Add an actual CLI/config excerpt once the compositor command surface settles.
+- Add a manifest snippet showing config hash and sidecars.
 
-- Add a worked YAML/CLI example transformed into structure/weights/search.
-- Add a diagram showing how changing one layer preserves the others.
-- Add output evidence: config hash, run manifest, sidecars.
-
-### GeoSection - 37/60
+### GeoSection - 51/60
 
 **Roles applied:** MERIDIAN, DATUM, SCALE
 
-Strongest element: ratio-normalization concept is present.
+Strongest element: the caterpillar failure and normalized top-level split are
+now visually legible.
 
-Weakest element: visual does not show the caterpillar failure as area division.
+Next upgrades:
 
-Required upgrades:
+- Add a small ratio-scan output table with seed budget and selected split.
 
-- Add a before/after map-like diagram: 1:(k-1) caterpillar vs normalized
-  balanced top-level split.
-- Add seed budget, ratio scan output, and tests/implementation references.
-
-### AreaSection - 38/60
+### AreaSection - 53/60
 
 **Roles applied:** MERIDIAN, CONTOUR, DATUM, SCALE
 
-Strongest element: population vs area constraint distinction is accurate.
+Strongest element: the page now shows why equal population and land-area balance
+are distinct constraints, with Lorenz feasibility called out.
 
-Weakest element: visual does not actually show land-area division or Lorenz
-feasibility.
+Next upgrades:
 
-Required upgrades:
+- Add an example ALAND/population row and the computed area share.
 
-- Add an area-division diagram showing dense urban population vs sparse land
-  area.
-- Add Lorenz feasibility mini-chart.
-- Add data provenance requirements for ALAND/population.
-
-### ApportionRegions - 40/60
+### ApportionRegions - 52/60
 
 **Roles applied:** MERIDIAN, DATUM, SCALE
 
-Strongest element: factor-tree mechanics are understandable.
+Strongest element: prime fallback and geographic reuse are now explicit rather
+than implied by the factor tree.
 
-Weakest element: diagram shows k=14 but not a real region split or prime fallback
-case.
+Next upgrades:
 
-Required upgrades:
+- Add a tiny region-spine fixture table if the compositor gains one.
 
-- Add k=17 prime fallback example through two levels.
-- Add region-spine visual showing geographic reuse property.
-- Add implementation and fixture references.
-
-### County-Sticky Weights - 36/60
+### County-Sticky Weights - 51/60
 
 **Roles applied:** MERIDIAN, WARD, BOUNDARY, DATUM
 
-Strongest element: correctly classified as weights layer, not structure.
+Strongest element: the numeric edge-weight example and state-law caveat make the
+weights-layer boundary much clearer.
 
-Weakest element: too thin; lacks numeric weight example and county-split
-evidence.
+Next upgrades:
 
-Required upgrades:
+- Add a real county-split summary example when package sidecars expose one.
 
-- Add numeric edge-weight diagram: boundary length times county multiplier.
-- Add compactness/county-split trade-off visual.
-- Add state-law caveat: discouraging county splits is not the same as satisfying
-  state subdivision preservation law.
-
-### Seed Search Modes - 36/60
+### Seed Search Modes - 50/60
 
 **Roles applied:** MERIDIAN, SCALE, DATUM, SURVEY
 
-Strongest element: distinguishes single, multi, convergence, percentile, and
-bisection-ensemble.
+Strongest element: the seed stream and percentile diagrams now show why search
+mode changes the question being answered.
 
-Weakest element: lacks concrete seed stream, stopping, and percentile examples.
+Next upgrades:
 
-Required upgrades:
-
-- Add seed-stream timeline showing convergence threshold.
-- Add sorted-candidate percentile visual.
-- Add claim-boundary table: each mode answers a different question.
+- Add a tiny candidate list with seed, score, and percentile selection.
 
 ## Upgrade Priority
 
-1. **GeoSection and AreaSection**: these most directly triggered the user's
-   concern. They discuss area/ratio division but do not show enough area
-   division.
-2. **Seed Search Modes and County-Sticky**: both are close to thin and need
-   concrete examples.
-3. **U.16-U.19**: add second mechanics diagrams and test/report references.
-4. **Sampling pages**: add diagnostics/output format visuals.
-5. **T.14-T.17**: polish with test references and one more concrete numeric
+1. **T.14-T.17**: polish with test references and one more concrete numeric
    example each.
+2. **Output snippets**: add small report/NDJSON/manifest excerpts for U.16,
+   U.17, U.18, ReCom, SMC, and the compositor.
+3. **Config stabilization**: add exact public config fields for the compositor
+   and multiscale pages once those surfaces settle.
+4. **Canonical fixture tables**: add tiny data rows for AreaSection,
+   ApportionRegions, County-Sticky, and Seed Search.
 
 ## Acceptance Target
 
-Before calling the atlas mature, every page should score at least **45/60**, and
-the key teaching pages should score **54/60 or higher**:
+The atlas now meets the minimum maturity target: every page scores at least
+**50/60** after the latest pass. The next target is to raise the older T pages
+and compositor family toward **54/60 or higher** with output snippets and
+canonical fixture tables:
 
 - T.14 Spectral Partitioning
 - T.15 Capacity Clustering

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="360" viewBox="0 0 920 360" role="img" aria-labelledby="title desc">
+  <title id="title">SMC proposal, weight, and resampling path</title>
+  <desc id="desc">Particles propose districts, receive log weights, and resampling preserves genealogy when ESS falls below threshold.</desc>
+  <rect width="920" height="360" fill="#fbfbf7"/>
+  <text x="34" y="42" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#1f2933">A particle either grows, copies, or dies</text>
+  <g font-family="Arial, sans-serif" font-size="13" fill="#52616b">
+    <rect x="58" y="98" width="176" height="174" rx="8" fill="#fff" stroke="#8795a1"/>
+    <text x="84" y="132" font-weight="700" fill="#1f2933">partial plans</text>
+    <text x="84" y="164">p0: high weight</text>
+    <text x="84" y="194">p1: low weight</text>
+    <text x="84" y="224">p2: medium weight</text>
+    <path d="M256 184 L342 184" stroke="#52616b" stroke-width="4" marker-end="url(#arrow)"/>
+    <rect x="366" y="98" width="188" height="174" rx="8" fill="#fff" stroke="#8795a1"/>
+    <text x="394" y="132" font-weight="700" fill="#1f2933">proposal stage</text>
+    <text x="394" y="164">derive particle seed</text>
+    <text x="394" y="194">sample connected district</text>
+    <text x="394" y="224">update log weight</text>
+    <path d="M576 184 L656 184" stroke="#52616b" stroke-width="4" marker-end="url(#arrow)"/>
+    <rect x="682" y="78" width="178" height="214" rx="8" fill="#fff" stroke="#8795a1"/>
+    <text x="710" y="112" font-weight="700" fill="#1f2933">ESS check</text>
+    <text x="710" y="146">if healthy: continue</text>
+    <text x="710" y="176">if low: resample</text>
+    <line x1="718" y1="204" x2="824" y2="204" stroke="#d5dadd"/>
+    <text x="710" y="232">p0 -> p0, p1</text>
+    <text x="710" y="258">p2 -> p2</text>
+  </g>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#52616b"/>
+    </marker>
+  </defs>
+</svg>

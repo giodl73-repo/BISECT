@@ -32,6 +32,15 @@ The frontier records objective values, validity status, generation, seed
 metadata, and plan identity. A selected frontier entry is converted into RPLAN
 assignments and verified against the supplied RCTX context.
 
+## Picture 2: Repair-Aware Crossover
+
+![U.19 repair-aware crossover](assets/u19-crossover-fallback.svg)
+
+U.19 is not allowed to hide invalid offspring. Crossover and mutation can
+produce a child that fails connectedness or population checks. The algorithm
+must repair, fall back, or reject the candidate and then record that path before
+frontier scoring.
+
 ## Step-By-Step Mechanics
 
 1. Initialize a deterministic population from content/base seeds.
@@ -41,6 +50,13 @@ assignments and verified against the supplied RCTX context.
 5. Emit frontier entries with per-plan validity status.
 6. Select a frontier entry by zero-based index.
 7. Package the selected plan as RPLAN/RCTX/audit certificate/manifest.
+
+## Tiny Example
+
+The selected-frontier package is the key teaching artifact. The frontier can be
+lightweight, but a chosen entry becomes an ordinary audit bundle with
+`method-transcript.json`, objective values, selected index, generation, producer
+identity, and validity status.
 
 ## What The Certificate Needs To Explain
 
@@ -55,9 +71,20 @@ U.19 documents reproducible comparison and selected-plan packaging. It does not
 claim the evolutionary search found all possible Pareto-optimal plans or that a
 selected frontier plan is legally superior.
 
+## Failure Modes
+
+- A child can inherit incompatible district pieces; validity fallback must be
+  visible in lineage.
+- Frontier rank can change when objectives or seeds change, so selected index
+  and configuration are part of the evidence.
+- A selected plan must pass the same RPLAN/RCTX audit checks as a plan created
+  by construction, exact optimization, or local search.
+
 ## References In This Repo
 
 - Crate: `bisect-pareto`
+- Core files: `crates/bisect-pareto/src/crossover.rs`, `crates/bisect-pareto/src/mutation.rs`, `crates/bisect-pareto/src/output.rs`, `crates/bisect-pareto/src/audit.rs`
 - CLI surface: `bisect pareto --selected-frontier-index ...`
+- Tests: `crates/bisect-pareto/tests/L0_unit.rs`, `crates/bisect-pareto/tests/L1_integration.rs`
 - Paper: `docs/papers/U.19+evolutionary-search-comparison.pdf`
 - Golden package: `docs/examples/rplan-golden-packages/U.19+selected-frontier/`

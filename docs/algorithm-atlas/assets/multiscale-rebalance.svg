@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="360" viewBox="0 0 920 360" role="img" aria-labelledby="title desc">
+  <title id="title">Multiscale projection and rebalance</title>
+  <desc id="desc">A coarse move is projected to fine units, then a rebalance step restores fine-level population and connectivity constraints.</desc>
+  <rect width="920" height="360" fill="#fbfbf7"/>
+  <text x="34" y="42" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#1f2933">Coarse moves must return to fine validity</text>
+  <g font-family="Arial, sans-serif" font-size="13" fill="#52616b">
+    <text x="82" y="88" font-weight="700" fill="#1f2933">coarse blocks</text>
+    <g transform="translate(78 110)" stroke="#fff" stroke-width="4">
+      <rect x="0" y="0" width="90" height="90" fill="#5b8def"/><rect x="90" y="0" width="90" height="90" fill="#72b47e"/>
+      <rect x="0" y="90" width="90" height="90" fill="#5b8def"/><rect x="90" y="90" width="90" height="90" fill="#72b47e"/>
+    </g>
+    <path d="M292 200 L374 200" stroke="#52616b" stroke-width="4" marker-end="url(#arrow)"/>
+    <text x="386" y="88" font-weight="700" fill="#1f2933">projected fine plan</text>
+    <g transform="translate(386 110)" stroke="#fff" stroke-width="2">
+      <rect x="0" y="0" width="45" height="45" fill="#5b8def"/><rect x="45" y="0" width="45" height="45" fill="#5b8def"/><rect x="90" y="0" width="45" height="45" fill="#72b47e"/><rect x="135" y="0" width="45" height="45" fill="#72b47e"/>
+      <rect x="0" y="45" width="45" height="45" fill="#5b8def"/><rect x="45" y="45" width="45" height="45" fill="#f2b84b"/><rect x="90" y="45" width="45" height="45" fill="#72b47e"/><rect x="135" y="45" width="45" height="45" fill="#72b47e"/>
+      <rect x="0" y="90" width="45" height="45" fill="#5b8def"/><rect x="45" y="90" width="45" height="45" fill="#5b8def"/><rect x="90" y="90" width="45" height="45" fill="#72b47e"/><rect x="135" y="90" width="45" height="45" fill="#72b47e"/>
+      <rect x="0" y="135" width="45" height="45" fill="#5b8def"/><rect x="45" y="135" width="45" height="45" fill="#5b8def"/><rect x="90" y="135" width="45" height="45" fill="#72b47e"/><rect x="135" y="135" width="45" height="45" fill="#72b47e"/>
+    </g>
+    <text x="432" y="314">yellow unit marks imbalance</text>
+    <path d="M592 200 L674 200" stroke="#52616b" stroke-width="4" marker-end="url(#arrow)"/>
+    <rect x="696" y="118" width="166" height="164" rx="8" fill="#fff" stroke="#8795a1"/>
+    <text x="724" y="152" font-weight="700" fill="#1f2933">rebalance</text>
+    <text x="724" y="184">repair population</text>
+    <text x="724" y="214">check contiguity</text>
+    <text x="724" y="244">accept or reject</text>
+  </g>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#52616b"/>
+    </marker>
+  </defs>
+</svg>

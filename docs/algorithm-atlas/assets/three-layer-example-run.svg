@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="390" viewBox="0 0 960 390" role="img" aria-labelledby="title desc">
+  <title id="title">Three-layer compositor example run</title>
+  <desc id="desc">A YAML run resolves to structure, weights, search, then a hash-bound output package.</desc>
+  <style>.bg{fill:#fbfbf8}.panel{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.s{fill:#dbeafe;stroke:#2b5c9b;stroke-width:2}.w{fill:#fff3cd;stroke:#c79300;stroke-width:2}.q{fill:#e4f5eb;stroke:#2f7d4c;stroke-width:2}.out{fill:#eef2ff;stroke:#5b61b6;stroke-width:2}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.mono{font:12px Consolas,monospace;fill:#17212b}.arrow{stroke:#596673;stroke-width:2;fill:none;marker-end:url(#arrow)}</style>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#596673"/></marker></defs>
+  <rect class="bg" width="960" height="390"/>
+  <rect class="panel" x="45" y="45" width="265" height="285" rx="8"/>
+  <text class="label" x="75" y="82">YAML choices</text>
+  <text class="mono" x="75" y="122">structure: prime-factor</text>
+  <text class="mono" x="75" y="152">weights: county</text>
+  <text class="mono" x="75" y="182">alpha_county: 3.0</text>
+  <text class="mono" x="75" y="212">search: convergence</text>
+  <text class="mono" x="75" y="242">threshold: 600</text>
+  <rect class="s" x="390" y="60" width="180" height="58" rx="8"/><text class="small" x="430" y="94">factor tree</text>
+  <rect class="w" x="390" y="150" width="180" height="58" rx="8"/><text class="small" x="422" y="184">county edge boost</text>
+  <rect class="q" x="390" y="240" width="180" height="58" rx="8"/><text class="small" x="420" y="274">seed stopping rule</text>
+  <rect class="out" x="680" y="120" width="210" height="120" rx="8"/><text class="label" x="728" y="156">run evidence</text><text class="small" x="720" y="182">config hash + manifest</text><text class="small" x="720" y="204">sidecars + summaries</text><text class="small" x="720" y="226">RPLAN when final</text>
+  <path class="arrow" d="M310 130 C350 100 355 90 390 90"/><path class="arrow" d="M310 175 H390"/><path class="arrow" d="M310 220 C350 250 355 268 390 268"/><path class="arrow" d="M570 90 C625 110 640 135 680 150"/><path class="arrow" d="M570 179 H680"/><path class="arrow" d="M570 268 C625 245 640 220 680 205"/>
+</svg>

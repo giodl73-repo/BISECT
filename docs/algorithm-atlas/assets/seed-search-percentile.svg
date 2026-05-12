@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="390" viewBox="0 0 960 390" role="img" aria-labelledby="title desc">
+  <title id="title">Seed percentile selection</title>
+  <desc id="desc">Percentile search sorts candidate plans and selects a rank rather than the minimum.</desc>
+  <style>.bg{fill:#fbfbf8}.panel{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.bar{fill:#dbeafe;stroke:#2b5c9b;stroke-width:2}.sel{fill:#fff3cd;stroke:#c79300;stroke-width:3}.min{fill:#e4f5eb;stroke:#2f7d4c;stroke-width:2}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.axis{stroke:#2f3a45;stroke-width:2}</style>
+  <rect class="bg" width="960" height="390"/><rect class="panel" x="60" y="55" width="840" height="270" rx="8"/>
+  <text class="label" x="90" y="92">Sorted candidates answer different questions</text>
+  <line class="axis" x1="120" y1="270" x2="820" y2="270"/>
+  <rect class="min" x="140" y="225" width="45" height="45"/><rect class="bar" x="210" y="210" width="45" height="60"/><rect class="bar" x="280" y="190" width="45" height="80"/><rect class="sel" x="350" y="165" width="45" height="105"/><rect class="bar" x="420" y="150" width="45" height="120"/><rect class="bar" x="490" y="130" width="45" height="140"/><rect class="bar" x="560" y="115" width="45" height="155"/>
+  <text class="small" x="132" y="300">minimum</text><text class="small" x="330" y="300">selected percentile</text><text class="small" x="620" y="200">higher edge cut</text>
+</svg>

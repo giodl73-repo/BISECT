@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="360" viewBox="0 0 920 360" role="img" aria-labelledby="title desc">
+  <title id="title">U.19 crossover, mutation, and validity fallback</title>
+  <desc id="desc">Two parent plans create a child through crossover and mutation; invalid children are repaired or fall back before frontier scoring.</desc>
+  <rect width="920" height="360" fill="#fbfbf7"/>
+  <text x="34" y="42" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#1f2933">Repair-aware evolutionary step</text>
+  <g font-family="Arial, sans-serif" font-size="13" fill="#52616b">
+    <rect x="56" y="92" width="160" height="92" rx="8" fill="#fff" stroke="#8795a1"/>
+    <text x="82" y="126" font-weight="700" fill="#1f2933">parent A</text>
+    <text x="82" y="154">compact, higher split</text>
+    <rect x="56" y="206" width="160" height="92" rx="8" fill="#fff" stroke="#8795a1"/>
+    <text x="82" y="240" font-weight="700" fill="#1f2933">parent B</text>
+    <text x="82" y="268">lower split, looser shape</text>
+    <path d="M238 138 L332 178" stroke="#52616b" stroke-width="4" marker-end="url(#arrow)"/>
+    <path d="M238 252 L332 214" stroke="#52616b" stroke-width="4" marker-end="url(#arrow)"/>
+    <rect x="354" y="132" width="180" height="110" rx="8" fill="#fff" stroke="#8795a1"/>
+    <text x="384" y="166" font-weight="700" fill="#1f2933">crossover child</text>
+    <text x="384" y="194">district pieces spliced</text>
+    <text x="384" y="218">then mutation proposed</text>
+    <path d="M554 186 L642 186" stroke="#52616b" stroke-width="4" marker-end="url(#arrow)"/>
+    <rect x="662" y="112" width="200" height="154" rx="8" fill="#fff" stroke="#8795a1"/>
+    <text x="690" y="146" font-weight="700" fill="#1f2933">validity gate</text>
+    <text x="690" y="176">connected?</text>
+    <text x="690" y="202">population feasible?</text>
+    <text x="690" y="228">repair, fallback, or reject</text>
+    <path d="M764 270 L764 310 L442 310 L442 250" fill="none" stroke="#d64545" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#arrowRed)"/>
+    <text x="506" y="332" fill="#d64545">fallback is lineage, not hidden cleanup</text>
+  </g>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#52616b"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#d64545"/>
+    </marker>
+  </defs>
+</svg>

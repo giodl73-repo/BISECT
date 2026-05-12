@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="390" viewBox="0 0 960 390" role="img" aria-labelledby="title desc">
+  <title id="title">AreaSection population and land-area pressure</title>
+  <desc id="desc">Dense urban units can satisfy population balance with little land area; AreaSection makes this pressure visible.</desc>
+  <style>.bg{fill:#fbfbf8}.panel{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.urban{fill:#b84a42;stroke:#7a211c;stroke-width:2}.rural{fill:#e4f5eb;stroke:#2f7d4c;stroke-width:2}.split{stroke:#2b5c9b;stroke-width:5}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.barBg{fill:#edf1f5;stroke:#9aa7b3}.pop{fill:#b84a42}.area{fill:#2f7d4c}</style>
+  <rect class="bg" width="960" height="390"/><rect class="panel" x="45" y="45" width="870" height="285" rx="8"/>
+  <text class="label" x="75" y="82">Same population can occupy very different area</text>
+  <rect class="urban" x="105" y="125" width="70" height="70"/><rect class="urban" x="185" y="125" width="70" height="70"/><rect class="urban" x="105" y="205" width="70" height="70"/><rect class="urban" x="185" y="205" width="70" height="70"/>
+  <rect class="rural" x="300" y="105" width="110" height="110"/><rect class="rural" x="420" y="105" width="110" height="110"/><rect class="rural" x="300" y="225" width="110" height="70"/><rect class="rural" x="420" y="225" width="110" height="70"/>
+  <line class="split" x1="280" y1="100" x2="280" y2="300"/><text class="small" x="112" y="305">dense side: high population, low area</text><text class="small" x="315" y="315">sparse side: lower density, high area</text>
+  <text class="small" x="650" y="125">Population target</text><rect class="barBg" x="650" y="138" width="170" height="22" rx="4"/><rect class="pop" x="650" y="138" width="166" height="22" rx="4"/>
+  <text class="small" x="650" y="190">Area window</text><rect class="barBg" x="650" y="203" width="170" height="22" rx="4"/><rect class="area" x="650" y="203" width="70" height="22" rx="4"/>
+  <text class="small" x="650" y="255">AreaSection asks whether both bars can be acceptable.</text>
+</svg>

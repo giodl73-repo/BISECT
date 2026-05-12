@@ -31,6 +31,15 @@ Pricing generates candidate connected districts. The master problem then asks
 which compatible columns cover all units once. A chosen column set becomes the
 plan assignment if the fixture solve succeeds.
 
+## Picture 2: One Pricing Round
+
+![U.17 pricing round](assets/u17-pricing-round.svg)
+
+A pricing round is a controlled expansion of the vocabulary available to the
+master problem. Candidate districts are columns. Each column says which units it
+covers, what it costs, and which pricing round produced it. The master then
+chooses a non-overlapping cover rather than assigning units one by one.
+
 ## Step-By-Step Mechanics
 
 1. Generate connected, population-feasible district columns for small graphs.
@@ -41,6 +50,13 @@ plan assignment if the fixture solve succeeds.
 6. Record status, pricing rounds, generated column count, bounds, gap, and
    optional solution.
 7. Package solved final plans through the RPLAN fixed point.
+
+## Tiny Example
+
+On tiny fixtures, deterministic enumeration can stand in for a full production
+branch-and-price stack. That keeps the page honest: the column model, pricing
+metadata, master status, and selected column set are real, while advanced
+branching and industrial pricing remain future expansion points.
 
 ## What The Certificate Needs To Explain
 
@@ -55,9 +71,19 @@ U.17 is not yet a production branch-and-price solver. It establishes the audited
 contract and tiny exact path that later pricing, branching, and solver
 integrations must preserve.
 
+## Failure Modes
+
+- Generated columns can be valid individually but fail to cover every unit
+  exactly once.
+- A master can be formulation-only; that is a report status, not a solved plan.
+- Pricing metadata must not disappear after packaging, because it is the bridge
+  from selected assignment back to district-column evidence.
+
 ## References In This Repo
 
 - Crate: `bisect-column`
+- Core files: `crates/bisect-column/src/pricing.rs`, `crates/bisect-column/src/master.rs`, `crates/bisect-column/src/output.rs`
 - CLI surface: `bisect exact --method branch-and-price`
+- Tests: `crates/bisect-column/tests/l0_pricing_master.rs`
 - Paper: `docs/papers/U.17+branch-and-price-redistricting.pdf`
 - Golden package: `docs/examples/rplan-golden-packages/U.17+branch-and-price/`

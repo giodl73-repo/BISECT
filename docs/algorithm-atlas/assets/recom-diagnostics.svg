@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="360" viewBox="0 0 920 360" role="img" aria-labelledby="title desc">
+  <title id="title">ReCom ensemble diagnostics</title>
+  <desc id="desc">Multiple ReCom chains emit accepted steps and summary diagnostics such as acceptance, cut fraction, ESS, and R-hat.</desc>
+  <rect width="920" height="360" fill="#fbfbf7"/>
+  <text x="34" y="42" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#1f2933">Many local steps become ensemble evidence</text>
+  <g font-family="Arial, sans-serif" font-size="13" fill="#52616b">
+    <text x="66" y="86" font-weight="700" fill="#1f2933">chains</text>
+    <line x1="72" y1="128" x2="390" y2="128" stroke="#5b8def" stroke-width="5"/>
+    <circle cx="110" cy="128" r="10" fill="#5b8def"/><circle cx="190" cy="128" r="10" fill="#5b8def"/><circle cx="300" cy="128" r="10" fill="#5b8def"/>
+    <line x1="72" y1="184" x2="390" y2="184" stroke="#72b47e" stroke-width="5"/>
+    <circle cx="130" cy="184" r="10" fill="#72b47e"/><circle cx="245" cy="184" r="10" fill="#72b47e"/><circle cx="342" cy="184" r="10" fill="#72b47e"/>
+    <line x1="72" y1="240" x2="390" y2="240" stroke="#f2b84b" stroke-width="5"/>
+    <circle cx="104" cy="240" r="10" fill="#f2b84b"/><circle cx="230" cy="240" r="10" fill="#f2b84b"/><circle cx="364" cy="240" r="10" fill="#f2b84b"/>
+    <path d="M420 184 L508 184" stroke="#52616b" stroke-width="4" marker-end="url(#arrow)"/>
+    <rect x="532" y="102" width="314" height="176" rx="8" fill="#fff" stroke="#8795a1"/>
+    <text x="560" y="138" font-weight="700" fill="#1f2933">diagnostics table</text>
+    <text x="560" y="168">acceptance rate by chain</text>
+    <text x="560" y="194">cut-fraction distribution</text>
+    <text x="560" y="220">ESS/R-hat when available</text>
+    <text x="560" y="246">seed and step transcript identity</text>
+  </g>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#52616b"/>
+    </marker>
+  </defs>
+</svg>

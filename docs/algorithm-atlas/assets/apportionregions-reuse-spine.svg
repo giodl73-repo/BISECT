@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="390" viewBox="0 0 960 390" role="img" aria-labelledby="title desc">
+  <title id="title">ApportionRegions reusable regional spine</title>
+  <desc id="desc">Related seat counts can share a top-level regional spine while differing in later splits.</desc>
+  <style>.bg{fill:#fbfbf8}.panel{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.region{fill:#dbeafe;stroke:#2b5c9b;stroke-width:2}.region2{fill:#e4f5eb;stroke:#2f7d4c;stroke-width:2}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.line{stroke:#596673;stroke-width:2}</style>
+  <rect class="bg" width="960" height="390"/><rect class="panel" x="65" y="55" width="830" height="270" rx="8"/>
+  <text class="label" x="95" y="92">Shared top-level spine, different leaf refinements</text>
+  <path class="region" d="M130 145 C190 110 260 125 285 185 C245 220 180 225 130 190 Z"/>
+  <path class="region2" d="M285 185 C325 130 410 125 455 170 C430 235 345 245 285 185 Z"/>
+  <path class="region" d="M455 170 C535 130 620 145 650 205 C590 250 500 235 455 170 Z"/>
+  <path class="region2" d="M650 205 C705 160 800 170 830 225 C780 275 700 270 650 205 Z"/>
+  <line class="line" x1="160" y1="265" x2="800" y2="265"/>
+  <text class="small" x="170" y="292">same regional spine</text><text class="small" x="610" y="292">different later district leaves</text>
+</svg>

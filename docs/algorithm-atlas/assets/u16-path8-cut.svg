@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="360" viewBox="0 0 920 360" role="img" aria-labelledby="title desc">
+  <title id="title">U.16 path8 connectivity cut example</title>
+  <desc id="desc">A candidate assignment on a path graph creates a disconnected district, so branch-and-cut adds a connectivity cut before resolving.</desc>
+  <rect width="920" height="360" fill="#fbfbf7"/>
+  <text x="34" y="42" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#1f2933">Path8: candidate, witness, cut, report</text>
+  <g font-family="Arial, sans-serif" font-size="14" fill="#1f2933">
+    <text x="48" y="86" font-weight="700">1. Solver candidate</text>
+    <text x="386" y="86" font-weight="700">2. Disconnected district witness</text>
+    <text x="688" y="86" font-weight="700">3. Add cut and record status</text>
+  </g>
+  <g transform="translate(44 122)">
+    <line x1="26" y1="48" x2="286" y2="48" stroke="#9aa5b1" stroke-width="6" stroke-linecap="round"/>
+    <g font-family="Arial, sans-serif" font-size="12" text-anchor="middle">
+      <circle cx="26" cy="48" r="18" fill="#5b8def"/><text x="26" y="53" fill="white">A</text>
+      <circle cx="63" cy="48" r="18" fill="#5b8def"/><text x="63" y="53" fill="white">A</text>
+      <circle cx="100" cy="48" r="18" fill="#f2b84b"/><text x="100" y="53" fill="#1f2933">B</text>
+      <circle cx="137" cy="48" r="18" fill="#f2b84b"/><text x="137" y="53" fill="#1f2933">B</text>
+      <circle cx="174" cy="48" r="18" fill="#f2b84b"/><text x="174" y="53" fill="#1f2933">B</text>
+      <circle cx="211" cy="48" r="18" fill="#72b47e"/><text x="211" y="53" fill="white">C</text>
+      <circle cx="248" cy="48" r="18" fill="#72b47e"/><text x="248" y="53" fill="white">C</text>
+      <circle cx="285" cy="48" r="18" fill="#5b8def"/><text x="285" y="53" fill="white">A</text>
+    </g>
+    <text x="26" y="105" font-family="Arial, sans-serif" font-size="13" fill="#52616b">A appears at both ends of the path.</text>
+  </g>
+  <path d="M342 168 C374 124 402 124 432 168" fill="none" stroke="#d64545" stroke-width="4" marker-end="url(#arrow)"/>
+  <g transform="translate(390 118)">
+    <rect x="0" y="0" width="230" height="132" rx="8" fill="#fff" stroke="#d64545" stroke-width="2"/>
+    <text x="18" y="34" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#1f2933">Connectivity separation</text>
+    <text x="18" y="62" font-family="Arial, sans-serif" font-size="13" fill="#52616b">District A has two components:</text>
+    <text x="18" y="84" font-family="Arial, sans-serif" font-size="13" fill="#52616b">{0,1} and {7}</text>
+    <text x="18" y="110" font-family="Arial, sans-serif" font-size="13" fill="#d64545">violated cut emitted</text>
+  </g>
+  <path d="M636 168 C666 124 690 124 724 168" fill="none" stroke="#547a45" stroke-width="4" marker-end="url(#arrow2)"/>
+  <g transform="translate(702 116)" font-family="Arial, sans-serif">
+    <rect x="0" y="0" width="178" height="142" rx="8" fill="#ffffff" stroke="#547a45" stroke-width="2"/>
+    <text x="18" y="34" font-size="15" font-weight="700" fill="#1f2933">Report fields</text>
+    <text x="18" y="61" font-size="13" fill="#52616b">status: gap-bounded</text>
+    <text x="18" y="83" font-size="13" fill="#52616b">cuts_added: 1</text>
+    <text x="18" y="105" font-size="13" fill="#52616b">gap: declared</text>
+    <text x="18" y="127" font-size="13" fill="#52616b">fallback: none</text>
+  </g>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#d64545"/>
+    </marker>
+    <marker id="arrow2" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#547a45"/>
+    </marker>
+  </defs>
+</svg>

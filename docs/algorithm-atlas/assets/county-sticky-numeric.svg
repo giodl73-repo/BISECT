@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="390" viewBox="0 0 960 390" role="img" aria-labelledby="title desc">
+  <title id="title">County-Sticky numeric edge weights</title>
+  <desc id="desc">Shared-boundary edge weights inside a county are multiplied by alpha_county.</desc>
+  <style>.bg{fill:#fbfbf8}.panel{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.node{fill:#dbeafe;stroke:#2b5c9b;stroke-width:2}.thick{stroke:#2f7d4c;stroke-width:8}.thin{stroke:#778899;stroke-width:3}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.mono{font:13px Consolas,monospace;fill:#17212b}</style>
+  <rect class="bg" width="960" height="390"/><rect class="panel" x="60" y="55" width="840" height="270" rx="8"/>
+  <text class="label" x="90" y="92">County multiplier changes cut cost</text>
+  <circle class="node" cx="180" cy="190" r="26"/><circle class="node" cx="350" cy="190" r="26"/><circle class="node" cx="560" cy="190" r="26"/><circle class="node" cx="730" cy="190" r="26"/>
+  <line class="thick" x1="206" y1="190" x2="324" y2="190"/><line class="thin" x1="376" y1="190" x2="534" y2="190"/><line class="thick" x1="586" y1="190" x2="704" y2="190"/>
+  <text class="mono" x="230" y="160">120m x 3.0 = 360</text><text class="mono" x="405" y="220">90m x 1.0 = 90</text><text class="mono" x="615" y="160">80m x 3.0 = 240</text>
+  <text class="small" x="165" y="245">same county</text><text class="small" x="500" y="245">county line</text><text class="small" x="705" y="245">same county</text>
+</svg>
