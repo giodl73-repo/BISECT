@@ -1,14 +1,98 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="360" viewBox="0 0 960 360" role="img" aria-labelledby="title desc">
-  <title id="title">U.16 branch-and-cut overview</title>
-  <desc id="desc">BISECT turns graph constraints into an ILP, separates connectivity cuts, and packages solver evidence.</desc>
-  <style>.bg{fill:#fbfbf8}.box{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.solver{fill:#eef2ff;stroke:#5b61b6;stroke-width:2}.cut{fill:#fff3cd;stroke:#c79300;stroke-width:2}.pkg{fill:#e4f5eb;stroke:#2f7d4c;stroke-width:2}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.arrow{stroke:#596673;stroke-width:2;fill:none;marker-end:url(#arrow)}</style>
-  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#596673"/></marker></defs>
-  <rect class="bg" width="960" height="360"/>
-  <rect class="box" x="55" y="105" width="150" height="90" rx="8"/><text class="label" x="93" y="140">graph</text><text class="small" x="82" y="162">population</text><text class="small" x="80" y="180">objective</text>
-  <rect class="solver" x="270" y="105" width="155" height="90" rx="8"/><text class="label" x="315" y="140">ILP model</text><text class="small" x="298" y="162">assignment vars</text><text class="small" x="306" y="180">constraints</text>
-  <rect class="cut" x="490" y="105" width="155" height="90" rx="8"/><text class="label" x="522" y="140">separation</text><text class="small" x="520" y="162">connectivity</text><text class="small" x="535" y="180">cuts</text>
-  <rect class="solver" x="710" y="65" width="170" height="80" rx="8"/><text class="label" x="748" y="100">solve report</text><text class="small" x="740" y="122">status + bound/gap</text>
-  <rect class="pkg" x="710" y="205" width="170" height="80" rx="8"/><text class="label" x="748" y="240">RPLAN fixed</text><text class="small" x="760" y="262">point package</text>
-  <path class="arrow" d="M205 150 H270"/><path class="arrow" d="M425 150 H490"/><path class="arrow" d="M645 135 C685 115 685 105 710 105"/><path class="arrow" d="M645 165 C685 205 685 245 710 245"/><path class="arrow" d="M568 105 C548 70 500 65 475 105"/>
-  <text class="small" x="350" y="290">Branch-and-cut is exact only when the report says the declared solve actually reached that status.</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="620" viewBox="0 0 1120 620" role="img" aria-labelledby="title desc">
+  <title id="title">U.16 branch and cut solver loop</title>
+  <desc id="desc">Branch and cut builds an ILP, tests a candidate incumbent, separates a violated connectivity cut, resolves with a bound, and packages the solver report.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#334155"/></marker>
+    <style>
+      text{font-family:Arial,Helvetica,sans-serif;fill:#162033}
+      .bg{fill:#f8fafc}
+      .panel{fill:#fff;stroke:#64748b;stroke-width:1.5;rx:8}
+      .h{font-size:24px;font-weight:700}
+      .sub{font-size:14px;fill:#475569}
+      .label{font-size:14px;font-weight:700}
+      .small{font-size:12px;fill:#475569}
+      .tiny{font-size:10px;fill:#475569}
+      .mono{font-size:11px;font-family:Consolas,monospace;fill:#162033}
+      .arrow{stroke:#334155;stroke-width:2;fill:none;marker-end:url(#arrow)}
+      .loop{stroke:#9333ea;stroke-width:2.5;fill:none;marker-end:url(#arrow)}
+      .path{stroke:#94a3b8;stroke-width:5;stroke-linecap:round}
+      .a{fill:#60a5fa;stroke:#1d4ed8;stroke-width:2}
+      .b{fill:#fbbf24;stroke:#b45309;stroke-width:2}
+      .c{fill:#86efac;stroke:#15803d;stroke-width:2}
+      .bad{fill:#fee2e2;stroke:#dc2626;stroke-width:1.8;rx:5}
+      .cut{fill:#fff7ed;stroke:#f97316;stroke-width:1.8;rx:5}
+      .good{fill:#ecfdf5;stroke:#059669;stroke-width:1.8;rx:5}
+      .model{fill:#eef2ff;stroke:#6366f1;stroke-width:1.8;rx:5}
+      .dash{stroke:#dc2626;stroke-width:3;stroke-dasharray:6 5}
+      .chip{fill:#f8fafc;stroke:#64748b;stroke-width:1.3;rx:5}
+    </style>
+  </defs>
+  <rect width="1120" height="620" class="bg"/>
+  <text x="32" y="44" class="h">U.16 Branch-And-Cut</text>
+  <text x="32" y="68" class="sub">Exact claims come from the solver lifecycle: candidate incumbents, separated cuts, bounds, status, and package evidence.</text>
+
+  <rect x="32" y="96" width="318" height="228" class="panel"/>
+  <text x="52" y="124" class="label">1. Build the declared ILP model</text>
+  <text x="52" y="146" class="small">Assignment variables plus objective and graph constraints.</text>
+  <rect x="62" y="174" width="250" height="118" class="model"/>
+  <text x="82" y="202" class="mono">minimize compactness_cost</text>
+  <text x="82" y="226" class="mono">x[u,d] in {0,1}</text>
+  <text x="82" y="250" class="mono">population bounds</text>
+  <text x="82" y="274" class="mono">connectivity cuts: lazy/separated</text>
+
+  <path d="M364 210 H412" class="arrow"/>
+
+  <rect x="426" y="96" width="300" height="228" class="panel"/>
+  <text x="446" y="124" class="label">2. Candidate incumbent is inspected</text>
+  <text x="446" y="146" class="small">Relaxed/integer candidates can violate connectivity.</text>
+  <g transform="translate(456 190)">
+    <line x1="24" y1="38" x2="240" y2="38" class="path"/>
+    <circle cx="24" cy="38" r="17" class="a"/><text x="19" y="43" class="tiny">A</text>
+    <circle cx="55" cy="38" r="17" class="a"/><text x="50" y="43" class="tiny">A</text>
+    <circle cx="86" cy="38" r="17" class="b"/><text x="81" y="43" class="tiny">B</text>
+    <circle cx="117" cy="38" r="17" class="b"/><text x="112" y="43" class="tiny">B</text>
+    <circle cx="148" cy="38" r="17" class="b"/><text x="143" y="43" class="tiny">B</text>
+    <circle cx="179" cy="38" r="17" class="c"/><text x="174" y="43" class="tiny">C</text>
+    <circle cx="210" cy="38" r="17" class="c"/><text x="205" y="43" class="tiny">C</text>
+    <circle cx="240" cy="38" r="17" class="a"/><text x="235" y="43" class="tiny">A</text>
+    <line x1="188" y1="-6" x2="188" y2="82" class="dash"/>
+  </g>
+  <rect x="474" y="284" width="216" height="24" class="bad"/>
+  <text x="490" y="301" class="small">District A has components {0,1} and {7}</text>
+
+  <path d="M740 210 H788" class="arrow"/>
+
+  <rect x="802" y="96" width="286" height="228" class="panel"/>
+  <text x="822" y="124" class="label">3. Separate cut and resolve</text>
+  <text x="822" y="146" class="small">The violated witness becomes a new constraint.</text>
+  <rect x="832" y="174" width="226" height="64" class="cut"/>
+  <text x="850" y="199" class="mono">cut: connect(A, root=0)</text>
+  <text x="850" y="221" class="mono">forbid isolated tail {7}</text>
+  <path d="M945 238 C950 284 870 296 742 264" class="loop"/>
+  <text x="840" y="294" class="small">Resolve until solved, bounded, fallback, timeout, or formulation-only.</text>
+
+  <rect x="32" y="374" width="330" height="172" class="panel"/>
+  <text x="52" y="402" class="label">Solve report says what is proven</text>
+  <rect x="58" y="426" width="272" height="92" class="good"/>
+  <text x="76" y="450" class="mono">method: branch-and-cut</text>
+  <text x="76" y="472" class="mono">status: gap-bounded</text>
+  <text x="76" y="494" class="mono">cuts_added: 3</text>
+  <text x="76" y="516" class="mono">incumbent: 17, lower_bound: 16</text>
+
+  <rect x="398" y="374" width="326" height="172" class="panel"/>
+  <text x="418" y="402" class="label">Claim boundary</text>
+  <rect x="426" y="430" width="126" height="42" class="good"/>
+  <text x="456" y="456" class="small">solved</text>
+  <rect x="574" y="430" width="126" height="42" class="cut"/>
+  <text x="596" y="456" class="small">bounded/fallback</text>
+  <text x="418" y="510" class="small">A package can claim only the status that the report reached for the declared instance.</text>
+
+  <rect x="760" y="374" width="328" height="172" class="panel"/>
+  <text x="780" y="402" class="label">Downstream consequence</text>
+  <text x="780" y="426" class="small">The fixed-point bundle carries the model witness and lifecycle report.</text>
+  <rect x="786" y="462" width="78" height="42" class="model"/><text x="806" y="487" class="small">LP</text>
+  <rect x="882" y="462" width="78" height="42" class="chip"/><text x="896" y="487" class="small">report</text>
+  <rect x="978" y="462" width="78" height="42" class="good"/><text x="994" y="487" class="small">RPLAN</text>
+  <path d="M864 484 H882" class="arrow"/><path d="M960 484 H978" class="arrow"/>
+  <text x="780" y="532" class="small">Reading rule: show the incumbent, the violated cut, and the status fields that limit the exactness claim.</text>
 </svg>

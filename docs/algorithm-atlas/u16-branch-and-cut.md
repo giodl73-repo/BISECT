@@ -25,6 +25,21 @@ The output is only useful if the status vocabulary is explicit. A solved exact
 package, a fallback package, and a formulation-only artifact are different
 claims.
 
+## Picture 0: Incumbent To Connectivity Cut
+
+The opening figure shows the branch-and-cut loop as an audit story. The ILP
+model proposes a candidate incumbent. The connectivity checker inspects the
+candidate as a graph assignment, not just as variable values. In the path
+example, district A appears at both ends of the path, so A has two components:
+`{0,1}` and `{7}`.
+
+That graph failure becomes a violated connectivity cut, the model is resolved,
+and the lifecycle report records what happened. The report fields are what make
+the claim boundary visible: `solved`, `gap-bounded`, `fallback`, `timeout`, and
+`formulation-only` mean different things. BISECT needs both the model witness
+and the solve report before it can treat the output as an auditable U.20
+package.
+
 ## Picture 1: Model, Separation, And Status
 
 ![U.16 model separation status](assets/u16-branch-and-cut-status.svg)
