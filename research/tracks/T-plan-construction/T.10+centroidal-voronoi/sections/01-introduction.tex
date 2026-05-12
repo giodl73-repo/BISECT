@@ -20,15 +20,19 @@ All of these algorithms are, fundamentally, graph-topology methods: they
 reason about which edges to cut, which vertices to separate, and how to
 minimise the cost of a topological partition.
 
-\paragraph{A second family: geometry.}
+\paragraph{A second family: proximity packing.}
 This paper introduces a different approach.
 Centroidal Voronoi Districts (\cvd{}) assigns each census tract to its nearest
-seed by geographic proximity and iterates seed placement to convergence.
+seed and iterates seed placement to convergence.
 No edge-cut objective is consulted.
-The algorithm does not reason about graph topology at all during its main loop;
-it reasons about \emph{distance} --- which seed is closest to each tract.
-\cvd{} is in the tradition of Voronoi-based spatial partitioning rather than
-graph partitioning.
+In graph-distance mode, the distance is BFS hop count on the tract adjacency
+graph; in geographic mode, the distance is Euclidean distance on projected
+tract centroids.
+The common idea is \emph{proximity}: which seed owns each tract, and where
+should that seed move after the ownership regions are known?
+\cvd{} is therefore in the tradition of Voronoi-based spatial partitioning
+rather than graph partitioning, while still using graph connectivity for
+hop-count distance and contiguity repair.
 
 The conceptual distinction matters in practice.
 Edge-cut minimisation produces plans that follow existing graph structure:
@@ -56,32 +60,34 @@ Du, Faber and Gunzburger~\citeyear{du1999} proved convergence for Centroidal
 Voronoi Tessellations (CVTs) under mild regularity conditions and surveyed their
 applications in mesh generation, image compression, and spatial discretisation.
 
-\cvd{} replaces:
+\cvd{} has two implemented metric modes:
 \begin{itemize}
-\item \textbf{Euclidean distance} with \textbf{BFS hop-count distance} on the
-  census-tract adjacency graph (Phase 1, this paper);
-\item \textbf{the centroid} (a possibly non-existent fractional point) with
-  \textbf{the graph-distance medoid} (the actual tract minimising mean hop
-  distance to all other tracts in its district).
+\item \textbf{Graph-distance CVD}: replaces Euclidean distance with BFS
+  hop-count distance on the census-tract adjacency graph, and replaces the
+  continuous centroid with a graph-distance medoid.
+\item \textbf{Geographic CVD}: uses Euclidean distance on Albers-projected
+  tract centroids, computes a population-weighted coordinate mean, and snaps
+  the result back to the nearest actual tract.
 \end{itemize}
-The medoid substitution is necessary because the redistricting domain is
-discrete: seeds must be actual census tracts, not fractional coordinates.
-The BFS substitution avoids the need for geographic coordinate data, making
-Phase~1 fully implementable with existing adjacency-list data.
+Both modes keep seeds as real census tracts because the next Voronoi step needs
+a valid tract or coordinate anchor that can be replayed from public inputs.
+The graph-distance mode remains useful when centroid companion data are absent;
+the geographic mode is the more literal Lloyd-style construction when centroid
+data are present.
 
 \subsection{Use Cases for CVD}
 
 Three practical use cases motivate \cvd{}:
 
 \paragraph{Fast initial plan.}
-\cvd{} runs in $O(n \times n_{\mathrm{iter}})$ time with no spanning trees,
-no MCMC, and no parameter tuning beyond the iteration count.
+\cvd{} runs with no spanning trees, no MCMC, and no parameter tuning beyond
+the iteration count and metric choice.
 For exploratory runs or as a starting point for \sa{} refinement, \cvd{}
 provides a valid, balanced, compact plan at low cost.
 
 \paragraph{Geometric baseline.}
-The ``most geometrically natural partition'' is a defensible legal argument
-in redistricting litigation.
+The ``most geometrically natural partition'' is best treated as a comparative
+baseline in redistricting litigation, not as a binding legal rule.
 \cvd{} provides this baseline: the plan produced by assigning each tract to
 its nearest district centre, with no reference to political boundaries,
 demographic composition, or incumbent addresses.
@@ -103,36 +109,46 @@ Structure-layer replacement for \metis{}.
 The algorithm has one primary tunable parameter:
 \texttt{cvd\_iters} (default 20) controls the maximum number of
 assignment-medoid iterations.
-Seed initialisation uses k-farthest BFS selection: the first seed is derived
+Seed initialisation uses farthest-first selection: the first seed is derived
 deterministically from the global base seed and node path; the second is the
-BFS-farthest tract from the first.
+tract farthest from the first under the selected metric.
 A post-hoc 200-iteration boundary-swap rebalance enforces the population
 balance tolerance.
 
+\paragraph{Implementation boundary.}
+The current implementation is a binary splitter inside
+\texttt{BisectionTree::from\_k}.  For an odd-seat node such as $k=7$, the
+tree schedule records a $3:4$ child split, but the CVD rebalance currently
+targets a half-population split at the local node.
+This is acceptable for explaining the CVD mechanism and for even-split
+fixtures, but publication claims for odd-seat statewide runs need either a
+ratio-aware CVD rebalance or archived evidence showing the final RPLAN package
+passes population audit after the full tree completes.
+
 \paragraph{Convergence.}
-For census-tract graphs, \cvd{} typically converges in 8--14 iterations on
-large states (NC, TX).
-For path-like or elongated subgraphs (rural county chains), k-farthest seeding
+For census-tract graphs, draft \cvd{} runs typically converge in 8--15
+iterations on large states (NC, TX).
+For path-like or elongated subgraphs (rural county chains), farthest-first seeding
 trivially places seeds at opposite ends of the path, and convergence occurs in
 1--3 steps.
 The algorithm halts when seeds are unchanged between consecutive iterations.
 
 \paragraph{Compactness profile.}
-\cvd{} achieves Polsby-Popper compactness competitive with \metis{}
-on NC ($k=14$) despite not optimising edge cuts.
+\cvd{} achieves Polsby-Popper compactness competitive with \metis{} in the
+draft NC ($k=14$) comparison despite not optimising edge cuts.
 The compactness arises naturally from the geometric proximity objective: tracts
 near the centre of a district tend to be compact because they are equally
 distant from all boundaries.
-Section~\ref{sec:comparison} gives the full three-algorithm comparison
-(\cvd{}, \metis{}, \sa{}) on NC, WI, and TX.
+Section~\ref{sec:comparison} gives the three-algorithm comparison
+(\cvd{}, \metis{}, \sa{}) on NC, WI, and TX, but treats the numbers as
+benchmark targets until they are paired with archived run packages.
 
-\paragraph{Phase~2 preview.}
-Section~\ref{sec:phase2} previews Geographic \cvd{}: replacing BFS hop-count
-distance with Euclidean distance on EPSG:5070 projected tract centroids.
-This requires adding a \texttt{tract\_centroids} field to \texttt{LoadedGraph}
-(a Phase~2 task), but is expected to yield a 5--10\% further PP improvement
-for coastal and elongated states where hop-count distance diverges from
-geographic distance.
+\paragraph{Geographic mode.}
+Section~\ref{sec:phase2} describes Geographic \cvd{}: replacing BFS hop-count
+distance with Euclidean distance on projected tract centroids.
+The code now exposes \texttt{VoronoiMetric::Geographic} and loads optional
+\texttt{tract\_centroids} companion data; production claims require real
+centroid-backed packages rather than projection-only expectations.
 
 \subsection{Paper Structure}
 
@@ -141,13 +157,14 @@ graph-distance medoid clustering.
 Section~\ref{sec:algorithm} gives the formal \cvd{} algorithm with pseudocode,
 the seed derivation, and convergence analysis.
 Section~\ref{sec:comparison} presents empirical comparisons on NC, WI, and TX.
-Section~\ref{sec:phase2} previews Phase~2 geographic \cvd{}.
+Section~\ref{sec:phase2} describes geographic \cvd{}.
 Section~\ref{sec:conclusion} situates \cvd{} in the B-series algorithm landscape.
 
 \subsection{Relation to Prior Work}
 
-\cvd{} is a Structure-layer algorithm, orthogonal to the SeedCompositor
-strategies (\cs{}, \be{}).
+\cvd{} is a Structure-layer algorithm.
+Seed-compositor strategies such as convergence sweeps and \be{} can run over
+it without changing the split rule.
 It is related to but distinct from \metis{}~\citep{karypis1998} (graph
 topology vs.\ geometry) and from \sa{}~\citep{b19paper} (no warm start,
 different objective).

@@ -71,13 +71,13 @@ where $d(\cdot,\cdot)$ is the distance metric.
 Unlike the mean, the medoid is always an element of $S$, making it the
 natural centre representative for discrete domains.
 
-\cvd{} uses the graph-distance medoid exclusively:
+\cvd{} uses the graph-distance medoid in its default graph-distance mode:
 the ``centroid'' of each district after Voronoi assignment is the tract
-minimising the sum of BFS hop-count distances to all other tracts in the
-district.
-This ensures that seeds are always real census tracts, and that each
-subsequent Voronoi assignment step starts from a valid, connectable
-graph node.
+minimising sampled BFS hop-count distance to the district.
+Geographic \cvd{} instead computes a population-weighted coordinate mean and
+snaps that point back to the nearest actual tract.
+Both modes ensure that the next Voronoi assignment starts from a replayable
+tract anchor rather than an unspecified fractional object.
 
 \paragraph{Approximate medoid.}
 Computing the exact medoid requires evaluating $\sum_{j \in S} d(i,j)$
@@ -85,9 +85,10 @@ for every tract $i \in S$, which costs $O(|S|^2)$ BFS evaluations per
 district per iteration.
 For large states (NC: $\sim 2{,}660$ tracts; TX: $\sim 5{,}300$ tracts),
 the exact medoid is expensive.
-\cvd{} uses an approximate medoid: sample up to 50 tracts uniformly at
-random from $S$ and compute the BFS sum only to those 50 tracts.
-The tract minimising this approximate sum is the approximate medoid.
+\cvd{} uses an approximate medoid: sample up to 50 tracts from $S$ using the
+node's deterministic RNG stream and compute the candidate's BFS sum only to
+those sampled probes.
+The district tract minimising this approximate sum is the approximate medoid.
 For $|S| \le 50$, the approximation degenerates to the exact medoid.
 For $|S| \gg 50$, the approximation error is bounded by standard
 concentration inequalities: the expected error is $O(\sqrt{1/50})$ relative
@@ -109,7 +110,7 @@ Unlike geographic Euclidean distance, BFS hop count:
 The primary limitation of BFS hop count is its insensitivity to geographic
 scale: two adjacent rural tracts (large area) are distance 1, as are two
 adjacent urban tracts (small area).
-Phase~2 geographic \cvd{} (Section~\ref{sec:phase2}) addresses this by
+Geographic \cvd{} (Section~\ref{sec:phase2}) addresses this by
 replacing BFS distance with Euclidean distance on projected tract centroids.
 
 \subsection{Structure-Layer Algorithms in the B-Series}
@@ -127,27 +128,30 @@ algorithms in the B-series and their primary design dimension.
 \centering
 \caption{Structure-layer algorithms in the B-series redistricting platform.
   ``Optimises'' describes the primary objective at each bisection node.
-  CVD optimises geographic proximity (not edge cut).
+  CVD optimises proximity under the selected metric (not edge cut).
   All algorithms enforce population balance via post-hoc rebalance.}
 \label{tab:structure-comparison-bg}
+\small
+\setlength{\tabcolsep}{3pt}
 \renewcommand{\arraystretch}{1.25}
-\begin{tabular}{@{}lllll@{}}
+\begin{tabular}{@{}p{0.17\linewidth}p{0.25\linewidth}p{0.13\linewidth}p{0.15\linewidth}p{0.20\linewidth}@{}}
 \toprule
-Algorithm & Optimises & Randomness & Data needed & Phase \\
+Algorithm & Optimises & Randomness & Data needed & Status \\
 \midrule
-\metis{}         & Edge cut (graph)       & Seeded  & None         & Done \\
-\sa{} (U.3)     & Edge cut (graph) + SA  & Seeded  & None         & Done \\
-\geosec{} (T.1)  & Direction + EC ratio   & Seeded  & None         & Done \\
-\areasec{} (T.2) & Area-swing + EC        & Seeded  & None         & Done \\
-\textbf{\cvd{} (T.10)} & \textbf{Geographic distance} & \textbf{Seeded}
-                        & \textbf{None (P1) / Centroids (P2)} & \textbf{This paper} \\
-\bfsgrowth{} (T.12) & Population balance + proximity & Seeded & None & T.12 \\
+\textsc{Metis} & Edge cut & Seeded & none & implemented \\
+SA & Edge cut + annealing & Seeded & none & implemented \\
+GeoSection & Direction + EC ratio & Seeded & none & implemented \\
+AreaSection & Area-swing + EC & Seeded & none & implemented \\
+\textbf{CVD} & \textbf{Graph/geographic proximity} & \textbf{Seeded}
+                        & \textbf{None / centroids} & \textbf{Implemented; package evidence pending} \\
+BFS Growth & Population balance + proximity & Seeded & none & T.12 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\cvd{} is orthogonal to SeedCompositor strategies: \be{} or \cs{} can be
-applied over \cvd{} subproblems just as over \metis{} subproblems.
+\cvd{} is orthogonal to the seed-compositor layer.
+\be{} or convergence sweeps can be applied over \cvd{} subproblems just as
+over \metis{} subproblems.
 Running \be{}$(T=50)$ with \cvd{} bisection would sample 50 independent
 \cvd{} runs per node (each with a different BFS-derived seed) and select
 the geometrically most compact result.

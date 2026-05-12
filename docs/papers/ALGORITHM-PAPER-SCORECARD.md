@@ -68,7 +68,7 @@ Score bands:
 | T.7 VRASection | 3.7 | 3.6 | 3.4 | 3.9 | 4.0 | 3.4 | 22.0 | Golden; final-plan VAP/CVAP evidence pending |
 | T.8 StabilitySection | 3.7 | 3.6 | 3.2 | 3.8 | 4.0 | 3.5 | 21.8 | Strong; full CSS packages pending |
 | T.9 Multi-Reapportionment Stability | 3.7 | 3.7 | 3.1 | 3.9 | 4.0 | 3.5 | 21.9 | Strong; scenario packages pending |
-| T.10 Centroidal Voronoi | 3.0 | 3.2 | 2.8 | 3.0 | 3.3 | 3.0 | 18.3 | Algorithm explanation pass needed |
+| T.10 Centroidal Voronoi | 3.6 | 3.5 | 3.0 | 3.8 | 3.9 | 3.4 | 21.2 | Strong; ratio-aware splits and packages pending |
 | T.11 CVD Geographic | 3.0 | 3.1 | 2.8 | 3.0 | 3.3 | 3.0 | 18.2 | Needs visuals and implementation parity |
 | T.12 BFS Growth | 3.0 | 3.2 | 2.8 | 3.0 | 3.3 | 3.0 | 18.3 | Needs worked growth/rejection ledger |
 | T.13 Moving-Knife | 3.0 | 3.1 | 2.8 | 3.0 | 3.3 | 3.1 | 18.3 | Needs geometric visual explanation |
@@ -158,7 +158,7 @@ Score bands:
 
 ## Highest-Priority Lifts
 
-1. Continue the legacy construction pass: T.10-T.13. These need the same "show the split,
+1. Continue the legacy construction pass: T.11-T.13. These need the same "show the split,
    show the candidate, show the rejection" standard that made T.1 and U.18 much
    clearer.
 2. Metric correctness pass: K.2 first, then K.0/K.7 propagation. The Reock

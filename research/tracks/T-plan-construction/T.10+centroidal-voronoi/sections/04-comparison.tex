@@ -16,9 +16,14 @@ congressional delegation sizes and geographic complexity:
   and vast rural west.
 \end{itemize}
 
-All runs use 2020 Census data, geographic boundary-length edge weights
+The table below is a draft benchmark comparison, not yet an archived package
+claim.
+Publication use requires the same artifacts as the newer T/U papers: RPLAN,
+RCTX, audit certificate, manifest hashes, CLI transcript, and a record of the
+exact CVD metric and centroid file when geographic mode is used.
+All draft runs use 2020 Census data, geographic boundary-length edge weights
 (the B.2 default~\citep{b2paper}), the standard bisection tree structure,
-and a single seed ($s = s_0$, the content-derived seed).
+and a single seed.
 The three algorithms compared are:
 
 \begin{enumerate}
@@ -26,8 +31,8 @@ The three algorithms compared are:
   This is the standard platform configuration~\citep{karypis1998}.
 \item \textbf{SA(steps=10)}: \sa{} bisection with $\mathtt{steps\_per\_tract} = 10$,
   warm-started from the \metis{} solution~\citep{b19paper}.
-\item \textbf{CVD(iters=20)}: \cvd{} bisection with
-  $\mathtt{cvd\_iters} = 20$, k-farthest seed initialisation,
+\item \textbf{CVD(iters=20)}: graph-distance \cvd{} bisection with
+  $\mathtt{cvd\_iters} = 20$, farthest-first seed initialisation,
   approximate medoid (probe size 50), and 200-iteration rebalance.
 \end{enumerate}
 
@@ -46,7 +51,7 @@ For each (state, algorithm) pair we report:
 
 \subsection{Results}
 
-Table~\ref{tab:main} presents the comparison.
+Table~\ref{tab:main} presents the draft comparison.
 \cvd{}(iters=20) achieves Polsby-Popper compactness competitive with
 \metis{} --- within 5\% on NC and WI --- despite not optimising edge cuts.
 The edge-cut values for \cvd{} are substantially higher than \metis{},
@@ -56,12 +61,14 @@ by BFS distance is not designed to follow geographic boundary lines.
 \begin{table}[t]
 \centering
 \caption{%
-  Algorithm comparison on NC ($k=14$), WI ($k=8$), TX ($k=38$).
+  Draft algorithm comparison on NC ($k=14$), WI ($k=8$), TX ($k=38$).
   EC: total edge cut (lower is better).
   PP: mean Polsby-Popper compactness (higher is better).
   Iter: iterations to convergence (CVD only; ``---'' for others).
   Runtime: wall-clock seconds (single core).
   $\Delta$PP: PP relative to METIS baseline (percentage points).
+  Values should be treated as benchmark targets until archived with run
+  manifests.
 }
 \label{tab:main}
 \renewcommand{\arraystretch}{1.25}
@@ -127,7 +134,7 @@ default $\mathtt{cvd\_iters} = 20$ budget.
 NC converges in 13 iterations; WI (more elongated) in 11; TX (more complex
 urban geography) in 15.
 No convergence warnings were triggered.
-Convergence is faster on elongated states (WI) because the k-farthest
+Convergence is faster on elongated states (WI) because the farthest-first
 initialisation places seeds near the eastern and western ends of the state,
 requiring fewer iterations to stabilise.
 
@@ -163,10 +170,11 @@ WI & 8  & 3D/5R\textsuperscript{\dag} & 2D/6R\textsuperscript{\dag} & One-seat v
 TX & 38 & 16D/22R & 16D/22R & Stable \\
 \bottomrule
 \end{tabular}
-\caption{Partisan outcomes (2020 presidential, single run, seed $s=42$).
-CVD produces proportional outcomes consistent with ApportionRegions, consistent
-with the geographic-proximity mechanism being partisan-neutral.
-\newline\footnotesize{$\dagger$ Single-run result (seed=42); partisan seat counts are seed-sensitive for competitive states. Multi-seed validation (50 runs) deferred to Phase~2.}}
+\caption{Draft partisan outcomes (2020 presidential, single run, seed $s=42$).
+These rows are diagnostics only.  A single CVD run does not establish partisan
+neutrality or proportionality; those claims require multi-seed, same-metric
+packages.
+\newline\footnotesize{$\dagger$ Single-run result (seed=42); partisan seat counts are seed-sensitive for competitive states. Multi-seed validation is pending.}}
 \label{tab:partisan}
 \end{table}
 
@@ -197,7 +205,9 @@ NC $k=14$).
 The CVD PP distribution is centred at
 $\mu_\mathrm{CVD} = 0.242 \pm 0.008$ and the METIS PP distribution at
 $\mu_\mathrm{METIS} = 0.217 \pm 0.011$; the distributions have $<15\%$ overlap,
-confirming that CVD plans occupy a geometrically distinct region of plan space.
+suggesting that CVD plans occupy a geometrically distinct region of plan space.
+This distributional comparison also needs an archived seed manifest before it
+can carry publication weight.
 
 \subsection{Relation to BisectionEnsemble}
 
@@ -205,7 +215,7 @@ confirming that CVD plans occupy a geometrically distinct region of plan space.
 SeedCompositor-layer strategy.
 Running \be{}$(T=50)$ with \cvd{} bisectors would execute 50 independent
 \cvd{} runs per node, each with a different base seed (and therefore a
-different CVD node seed and different k-farthest initialisation), and select
+different CVD node seed and different farthest-first initialisation), and select
 the result with the lowest edge cut.
 This combination is expected to improve \cvd{}'s PP further, since the
 worst-EC \cvd{} plans tend to also be less compact.

@@ -72,32 +72,39 @@
 
 \begin{abstract}
 \noindent
-We introduce Centroidal Voronoi Districts (\cvd{}), a new Structure-layer
-algorithm for redistricting that assigns each census tract to its nearest
-seed by graph hop-count distance and iteratively moves seeds to the
-population-weighted graph-distance medoid of their assigned district.
-\cvd{} is the discrete redistricting analogue of Lloyd's algorithm
-for optimal quantisation~\citep{lloyd1982}, adapted to weighted planar
-graphs via the \emph{graph-distance medoid} as the centroid surrogate.
+We introduce Centroidal Voronoi Districts (\cvd{}), a Structure-layer
+algorithm for redistricting that constructs each bisection node by proximity
+packing rather than edge-cut minimisation.
+The implemented graph-distance mode assigns each census tract to its nearest
+seed by BFS hop count and iteratively moves seeds to graph-distance medoids.
+The implemented geographic mode instead uses Albers-projected tract centroids
+and updates seeds through population-weighted Euclidean means snapped back to
+real tracts.
+\cvd{} is the discrete redistricting analogue of Lloyd's algorithm for
+optimal quantisation~\citep{lloyd1982}, but with redistricting-specific
+constraints: finite tract units, population balance, contiguity repair, and
+deterministic seed derivation.
 
-Two seeds are placed using k-farthest BFS selection: the first seed is
-chosen by a deterministic hash of the node path and global seed; the second
-is the tract farthest from the first by BFS hop count.
-This initialisation maximises initial spread and prevents degenerate
-configurations where both seeds occupy the same geographic region.
-Iterating Voronoi assignment and medoid update to convergence---typically
-10--20 steps on census-tract graphs---produces geometrically round,
-compact districts that are fundamentally different in character from the
-edge-cut minimising plans produced by \metis{}.
+Two seeds are placed using farthest-first selection: the first seed is chosen
+from a SHA-256-derived per-node seed; the second is the tract farthest from the
+first under the selected metric.
+This initialisation shows the algorithm's purpose visually: one seed grabs one
+end of the state, the other grabs the opposite end, and the boundary moves
+until the two proximity regions stabilise.
+The current implementation is a binary splitter inside the standard
+\texttt{BisectionTree}; it rebalances each split toward a half-population
+target, so odd-seat ratio-aware targeting remains an implementation/evidence
+ceiling for publication claims.
 
-Empirically, \cvd{} on North Carolina ($k=14$) achieves Polsby-Popper
-compactness competitive with \metis{} despite not optimising edge cuts,
-and typically converges in 8--14 iterations.
-\cvd{} runs in $O(n \times k \times n_{\mathrm{iter}})$ time with no spanning
-trees, no MCMC, and no parameter tuning beyond iteration count.
-We compare \cvd{} with \metis{} and \sa{} on compactness, edge cut, and
-runtime, and preview Phase~2 Geographic \cvd{} using Euclidean distance on
-EPSG:5070 projected tract centroids.
+Empirically, draft \cvd{} runs on North Carolina ($k=14$) show
+Polsby-Popper compactness competitive with \metis{} despite not optimising
+edge cuts, but the numerical comparison tables in this paper should be read
+as benchmark targets unless paired with archived RPLAN/RCTX run packages.
+\cvd{} has a simple verifier story: given the input graph or centroids, node
+path, base seed, metric, iteration budget, and rebalance rule, an auditor can
+replay the split tree.
+We compare \cvd{} with \metis{} and \sa{} on compactness, edge cut, runtime,
+and evidence requirements.
 \end{abstract}
 
 \tableofcontents
