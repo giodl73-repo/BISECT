@@ -4,6 +4,9 @@
 
 Papers are organised by the question they answer. Each paper's series code is shown for cross-reference. To recompile: `cd research && make docs`
 
+Current atlas-to-paper alignment work is tracked in
+[`docs/papers/ATLAS-ALIGNMENT.md`](papers/ATLAS-ALIGNMENT.md).
+
 ---
 
 ## Track B — Algorithm Foundations
