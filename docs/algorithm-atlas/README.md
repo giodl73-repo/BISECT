@@ -5,6 +5,10 @@ It complements `docs/concepts/` and the research papers with small diagrams,
 plain-language summaries, and links to the crates, CLI surfaces, papers, and
 RPLAN packages that make each method concrete.
 
+Pages are reviewed against the [BISECT Algorithm Atlas Rubric](RUBRIC.md), a
+six-part scorecard for behavioral mechanics, BISECT integration, spatial visual
+specificity, explanatory story, claim boundaries, and traceable evidence.
+
 ## Overview
 
 ![BISECT algorithm atlas overview](assets/overview.svg)
