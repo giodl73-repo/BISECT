@@ -5,7 +5,8 @@
 **Scope:** Reproducible election counting, canvass reconciliation, and plan-linked vote audit packages  
 **Related specs:** [`2026-05-10-rplan-incubation.md`](2026-05-10-rplan-incubation.md),
 [`2026-05-10-rplan-v0.2-schema.md`](2026-05-10-rplan-v0.2-schema.md),
-[`2026-05-10-plan-audit-certificates.md`](2026-05-10-plan-audit-certificates.md)
+[`2026-05-10-plan-audit-certificates.md`](2026-05-10-plan-audit-certificates.md),
+[`2026-05-12-rcount-certification-research.md`](2026-05-12-rcount-certification-research.md)
 
 ## Decision
 
@@ -424,6 +425,8 @@ granular evidence, but that requires a separate privacy review.
       boundary-change cases.
 - [ ] Stage 10: add privacy-safe receipt inclusion fixtures and explicitly reject
       plaintext vote-selection receipt proofs.
+- [ ] Stage 11: complete the certification-law and current-systems research
+      matrix from the RCOUNT certification research roadmap.
 
 ## First Golden Fixture
 

@@ -1,6 +1,6 @@
 # Research Papers
 
-190+ papers across twenty active tracks (A–G, I–U). PDFs open directly from the links below. LaTeX sources in [`research/tracks/`](../research/tracks/) — each series in its own track subdirectory. Some later-track drafts remain source-only and do not yet have PDFs in this index.
+190+ papers across active tracks (A–G, I–V). PDFs open directly from the links below. LaTeX sources in [`research/tracks/`](../research/tracks/) — each series in its own track subdirectory. Some later-track drafts remain source-only and do not yet have PDFs in this index.
 
 Papers are organised by the question they answer. Each paper's series code is shown for cross-reference. To recompile: `cd research && make docs`
 
@@ -106,6 +106,34 @@ RPLAN factoring and U.20 audit contract:
 [`2026-05-10-rplan-incubation.md`](specs/2026-05-10-rplan-incubation.md),
 [`2026-05-10-rplan-v0.2-schema.md`](specs/2026-05-10-rplan-v0.2-schema.md),
 [`2026-05-10-plan-audit-certificates.md`](specs/2026-05-10-plan-audit-certificates.md).
+
+---
+
+## Track V — Vote Counting, Certification, And Public Verification
+
+The election-counting fixed point. RPLAN verifies the plan; RCOUNT verifies the
+count ledgers, canvass arithmetic, precinct lineage, tamper-evident hashes,
+privacy-safe inclusion proofs, audit replay, and district vote aggregation.
+Roadmap:
+[`2026-05-12-v-election-audit-paper-track.md`](specs/2026-05-12-v-election-audit-paper-track.md).
+RCOUNT specs:
+[`2026-05-12-rcount-incubation.md`](specs/2026-05-12-rcount-incubation.md),
+[`2026-05-12-rcount-certification-research.md`](specs/2026-05-12-rcount-certification-research.md).
+
+| Code | Title | PDF | Note |
+|------|-------|-----|------|
+| V.0 | RCOUNT Overview — reproducible election count packages | — | planned |
+| V.1 | Canvass Arithmetic — unofficial returns to certified totals | — | planned |
+| V.2 | Precinct Lineage Across Elections — splits, merges, renames, movement | — | planned |
+| V.3 | Tamper-Evident Precinct And Batch Hashing — public roots and proofs | — | planned |
+| V.4 | Privacy-Safe Voter Inclusion Proofs — inclusion without coercion receipts | — | planned |
+| V.5 | Ballot Manifest Verification — batch/container accounting | — | planned |
+| V.6 | CVR-To-Summary Reconciliation — cast vote records to public summaries | — | planned |
+| V.7 | Replayable Risk-Limiting Audits — public seed, sample replay, stopping rules | — | planned |
+| V.8 | District Vote Aggregation With RPLAN — count hashes plus plan hashes | — | planned |
+| V.9 | Count-System Interoperability — vendor exports to RCOUNT | — | planned |
+| V.10 | Certification Evidence Matrix — law, systems, and public data availability | — | planned |
+| V.11 | Performance And Parallel Verification In Rust — full-election verification | — | planned |
 
 ---
 
