@@ -8,6 +8,25 @@ Each page is scored out of 60 points across six dimensions that spell BISECT.
 A strong page should teach the algorithm, show the actual mechanism, connect it
 to BISECT, and state the claim boundary without becoming a paper.
 
+## Role Lenses
+
+Atlas pages should be reviewed with the repo's `.roles` lenses when the page's
+claim touches that role. A page does not need every role, but it should face the
+roles that can falsify its claims.
+
+| Role | Use When The Page Claims... | Rubric Pressure |
+|---|---|---|
+| MERIDIAN | graph partitioning, bisection, compactness, METIS, solver mechanics | Check algorithm invariants and decision rules |
+| DATUM | methodological evidence, comparison, "baseline", "benchmark", "supports" | Ask what would falsify the claim |
+| SCALE | percentiles, means, ranks, convergence, benchmark summaries | Require scope, uncertainty, and sample definition |
+| SURVEY | court, commission, practitioner, CLI workflow, adoption | Require operational takeaway and audience fit |
+| CONTOUR | census graph, populations, geography, unit order, demographics | Require input provenance and unit identity |
+| BOUNDARY | validity, legal profile, VRA, equal population, contiguity | Prevent algorithmic validity from implying legal sufficiency |
+| COVENANT | audit, certificate, manifest, reproduction, evidence | Require chain-of-custody and hash-bound artifacts |
+| LEDGER | RPLAN, RCTX, GeoJSON, NDJSON, external tool compatibility | Require schema/version/interchange clarity |
+| BENCHMARK | tests, fixtures, packages, verification | Require evidence that wrong behavior would be caught |
+| TRENCH | status paths, failure modes, repair, infeasibility | Require named failure modes and structural prevention |
+
 ## Score Bands
 
 | Score | Meaning |
@@ -33,9 +52,14 @@ step, including the choices it makes?
 Checklist:
 
 - Names the input object: graph, plan, particles, columns, regions, seeds, etc.
+- Names the required invariants: population tolerance, connectedness, coverage,
+  capacity, objective, transition kernel, status taxonomy, or hash identity.
+- States the data provenance or unit-order assumption when graph/population
+  inputs matter.
 - Shows the main transition: cut, merge, assign, improve, price, resample, verify.
 - Explains what is optimized, sampled, repaired, or certified.
-- Includes failure/status paths where they are part of the algorithm.
+- Includes failure/status paths where they are part of the algorithm, including
+  what structurally prevents invalid output from being treated as final output.
 
 ## I - Integration With BISECT
 
@@ -57,6 +81,8 @@ Checklist:
 - States whether it emits final plans, summaries, witnesses, reports, or only
   exploratory output.
 - Connects final-plan paths to RPLAN/RCTX/certificate/manifest.
+- States what a practitioner can do after reading the page: run a CLI command,
+  inspect a package, understand a report, or choose a safer method.
 
 ## S - Spatial And Visual Specificity
 
@@ -100,6 +126,8 @@ Checklist:
 - Uses captions/prose to narrate each diagram.
 - Includes a tiny example when the algorithm is abstract.
 - Ends by clarifying when to use it and what not to claim.
+- Names the intended reader context when it matters: developer, researcher,
+  reviewer, court/commission practitioner, or general technical reader.
 
 ## C - Claim Boundary And Correctness
 
@@ -118,10 +146,14 @@ Checklist:
 - Distinguishes valid, repaired, infeasible, invalid, solved, bounded,
   formulation-only, exploratory, and benchmark-tier outputs.
 - Avoids legal-sufficiency claims unless the artifact actually supports them.
-- Qualifies sampling and convergence claims.
+- Qualifies sampling and convergence claims with sample size, scope, diagnostic,
+  uncertainty, or "not yet established" language as appropriate.
+- States what evidence would falsify or weaken the page's claim.
 - Separates "deterministic construction path" from "optimality proof."
 - Separates "audit certificate verifies declared context/profile" from "the
   plan is legally sufficient in the world."
+- Does not imply constitutional/VRA sufficiency from algorithmic validity,
+  compactness, or audit acceptance alone.
 
 ## T - Traceability And Evidence
 
@@ -143,6 +175,12 @@ Checklist:
 - Points to golden, method-produced, benchmark, or reference packages where
   available.
 - Names verifier commands or audit reports for final-plan paths.
+- Points to tests or fixtures when the page describes behavior that should be
+  mechanically checked.
+- Names schemas, format versions, or sidecar file types when discussing RPLAN,
+  RCTX, GeoJSON, NDJSON, manifests, or external-tool compatibility.
+- For audit-facing pages, identifies the hash-bound artifacts and any external
+  tool or binary provenance that could affect chain of custody.
 
 ## Required Page Skeleton
 
@@ -155,6 +193,9 @@ Every mature atlas page should contain:
 5. `What The Certificate/Output Needs To Explain`
 6. `Claim Boundary`
 7. `References In This Repo`
+
+Where applicable, mature pages should also include `Failure Modes` or fold those
+failure modes explicitly into `Claim Boundary`.
 
 For algorithms where two diagrams are not enough, add more. The visual standard
 is concrete mechanism first: if the algorithm manipulates regions, seeds,
@@ -182,4 +223,6 @@ Strongest element:
 Weakest element:
 Required upgrades:
 Optional upgrades:
+Roles applied:
+Falsifying evidence to check:
 ```
