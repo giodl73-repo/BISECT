@@ -15,9 +15,9 @@ P1 items addressed this revision:
 - [x] TIGER data vintage specified — 2020 TIGER/Line, tract-level FIPS, precise county split definition
 - [x] Percentage rounding fixed — 33.7% and 36.5% used consistently (Duchin R1 P1.3)
 
-P1 items still open (from R2 reviews):
+P1/P2 items revisited in 2026-05-12 paper-quality pass:
 - [ ] Per-state maximum population deviation at alpha_c = 3.0 — Stephanopoulos R2 maintains this as P1; national average (0.44%) masks potential outliers
-- [ ] County split metric relationship explained — arithmetic between 487 splits and 312 multi-county districts not explained (Karypis R2 P2)
+- [x] County split metric relationship explained — arithmetic between 487 split incidences and 312 multi-county districts now distinguished in methodology (Karypis R2 P2)
 - [ ] 34-state list provided — states with constitutional vs. statutory county preservation requirements (Stephanopoulos R2 P2, Rodden R2 P2)
 
 ## P1 — Required (original list)
@@ -38,7 +38,7 @@ P1 items still open (from R2 reviews):
 - [ ] Add a Pareto frontier plot (county splits vs. mean PP scatter with frontier curve and elbow marked)
 - [ ] Per-state maximum population deviation at alpha_c = 3.0 — report worst-case state (Stephanopoulos R2)
 - [ ] 34-state list: constitutional (mandatory) vs. statutory (directory), congressional vs. state legislative scope
-- [ ] County split metric relationship: explain arithmetic between 487 total splits and 312 multi-county districts
+- [x] County split metric relationship: explain arithmetic between 487 total splits and 312 multi-county districts
 - [ ] Compare Iowa alpha_c = 3.0 output to Iowa's actual enacted congressional maps (external validity)
 - [ ] Test at block-group resolution for Iowa and one large state (Texas)
 - [ ] Two-level hierarchy (county + municipal, alpha_c = 3.0 + alpha_m = 1.5) preliminary result for Iowa

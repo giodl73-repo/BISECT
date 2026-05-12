@@ -72,7 +72,7 @@ are called complete.
 |---|---|---|---|
 | T.1 GeoSection | Reviewed 2026-05-12 | Fixed count and claim-consistency issues | Rebuilt clean; PDF copied |
 | T.2 AreaSection | Reviewed 2026-05-12 | Fixed NC/seat-stability claim drift | Rebuilt clean; PDF copied |
-| T.3 County-Sticky Weights | Queued | Queued | Already rebuilt in atlas pass |
+| T.3 County-Sticky Weights | Reviewed 2026-05-12 | Fixed alpha grid and split-metric definitions | Rebuilt clean; PDF copied |
 | T.4 ApportionRegions | Queued | Queued | Already rebuilt in atlas pass |
 | U.1 ConvergenceSweep | Queued | Queued | Already rebuilt in atlas pass |
 | U.8 PercentileSweep | Queued | Queued | Already rebuilt in atlas pass |

@@ -39,10 +39,11 @@ Karypis and Kumar~\citep{karypis1998}.
 
 We define:
 \begin{itemize}
-  \item \emph{County splits}: the number of county-district pairs
-    $(c, d)$ such that district $d$ intersects county $c$ but is not
-    fully contained within it.  Equivalently, the number of counties
-    whose tracts are assigned to more than one district.
+  \item \emph{County split incidences}: for each county $c$, let
+    $m_c$ be the number of districts intersecting $c$.
+    The split count is $\sum_c \max(0, m_c - 1)$.
+    This counts the number of extra district pieces created beyond the
+    first district touching each county.
   \item \emph{Multi-county districts}: the number of districts that
     draw tracts from more than one county.
   \item \emph{Perfect county preservation}: a district that contains
@@ -50,9 +51,20 @@ We define:
     counties).
 \end{itemize}
 
+The first two metrics are related but not interchangeable.
+County split incidences are county-centered: they ask how many additional
+district pieces counties are broken into.
+Multi-county districts are district-centered: they ask how many districts cross
+at least one county line.
+A single district can contribute to multiple county split incidences, and a
+single split county can affect multiple districts.
+Thus the national headline numbers answer different questions: 487 $\to$ 323
+reports fewer extra county pieces, while 312 $\to$ 198 reports fewer districts
+that span county boundaries.
+
 \subsection{Parameter sweep design}
 
-We sweep $\alpha_c \in \{1.0, 1.5, 2.0, 3.0, 5.0, 10.0\}$ on all 50
+We sweep $\alpha_c \in \{1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 5.0, 10.0\}$ on all 50
 states using the 2020 Census congressional maps ($k$ given by 2020
 apportionment).  For each $(\text{state}, \alpha_c)$ pair:
 \begin{enumerate}
@@ -63,8 +75,8 @@ apportionment).  For each $(\text{state}, \alpha_c)$ pair:
     multi-county districts, and max population deviation.
 \end{enumerate}
 
-Total runs: $50 \text{ states} \times 6 \text{ } \alpha_c \text{ values} =
-300$ redistricting runs.
+Total runs: $50 \text{ states} \times 8 \text{ } \alpha_c \text{ values} =
+400$ redistricting runs.
 
 \subsection{Pareto frontier analysis}
 
