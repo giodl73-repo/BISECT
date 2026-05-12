@@ -16,6 +16,28 @@ outputs converge on the same fixed point:
 algorithm output -> RPLAN -> RCTX -> audit certificate -> manifest -> verifier
 ```
 
+## Visual Grammar
+
+The atlas uses a few repeated visual conventions so the pages can be read as a
+family rather than as isolated pictures:
+
+| Shape | Meaning |
+|---|---|
+| Graph nodes and edges | Units, precincts, blocks, or intermediate regions |
+| Thick divider | A candidate cut, cluster boundary, or assignment boundary |
+| Colored region | A district, cluster, flow bin, or merged regional unit |
+| Table-like witness | Data recorded so the result can be replayed or audited |
+| Red or amber path | Constraint pressure, repair, or infeasibility behavior |
+| Blue package rail | The fixed point from algorithm output to RPLAN/RCTX/certificate |
+
+Each algorithm page is organized around four questions:
+
+1. What object does the algorithm operate on?
+2. What choice does it make at each step?
+3. What evidence is emitted so another tool can replay or reject the result?
+4. Where is the claim boundary, especially when a result is infeasible or only
+   benchmark-tier?
+
 ## Construction Family
 
 | Algorithm | Visual Guide | What To Look For |

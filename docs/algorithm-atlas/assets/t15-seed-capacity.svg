@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="430" viewBox="0 0 960 430" role="img" aria-labelledby="title desc">
+  <title id="title">T.15 seeds and capacity pressure</title>
+  <desc id="desc">Deterministic farthest-point seeds start clusters, then capacity bars constrain assignment.</desc>
+  <defs>
+    <style>
+      .bg{fill:#fbfbf8}.panel{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.edge{stroke:#9aa7b3;stroke-width:2}.unit{fill:#f4f7fb;stroke:#6b7785;stroke-width:2}.seedA{fill:#bfe5cf;stroke:#2f7d4c;stroke-width:3}.seedB{fill:#ffd9b8;stroke:#b86520;stroke-width:3}.seedC{fill:#d8ceff;stroke:#6650b8;stroke-width:3}.a{fill:#dff3e6;stroke:#2f7d4c;stroke-width:2}.b{fill:#ffe7d1;stroke:#b86520;stroke-width:2}.c{fill:#eee8ff;stroke:#6650b8;stroke-width:2}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.barBg{fill:#edf1f5;stroke:#9aa7b3}.barA{fill:#2f7d4c}.barB{fill:#b86520}.barC{fill:#6650b8}.warn{fill:#fff3cd;stroke:#d39e00;stroke-width:1.5}
+    </style>
+  </defs>
+  <rect class="bg" width="960" height="430"/>
+  <rect class="panel" x="35" y="45" width="540" height="330" rx="8"/>
+  <rect class="panel" x="625" y="45" width="290" height="330" rx="8"/>
+  <text class="label" x="65" y="82">Deterministic farthest-point seeds</text>
+  <line class="edge" x1="130" y1="135" x2="210" y2="105"/><line class="edge" x1="210" y1="105" x2="300" y2="140"/><line class="edge" x1="300" y1="140" x2="390" y2="105"/><line class="edge" x1="390" y1="105" x2="480" y2="145"/>
+  <line class="edge" x1="130" y1="135" x2="170" y2="240"/><line class="edge" x1="170" y1="240" x2="285" y2="245"/><line class="edge" x1="285" y1="245" x2="390" y2="240"/><line class="edge" x1="390" y1="240" x2="480" y2="145"/><line class="edge" x1="300" y1="140" x2="285" y2="245"/>
+  <circle class="seedA" cx="130" cy="135" r="24"/><circle class="a" cx="210" cy="105" r="20"/><circle class="b" cx="300" cy="140" r="20"/><circle class="seedB" cx="390" cy="105" r="24"/><circle class="seedC" cx="480" cy="145" r="24"/><circle class="a" cx="170" cy="240" r="20"/><circle class="b" cx="285" cy="245" r="20"/><circle class="c" cx="390" cy="240" r="20"/>
+  <text class="small" x="121" y="140">S1</text><text class="small" x="381" y="110">S2</text><text class="small" x="471" y="150">S3</text>
+  <text class="small" x="68" y="318">Seeds spread across the graph first. Assignment then fills</text>
+  <text class="small" x="68" y="336">clusters while checking population capacity and adjacency.</text>
+  <text class="label" x="655" y="82">Capacity bars</text>
+  <text class="small" x="655" y="125">Cluster S1</text><rect class="barBg" x="655" y="138" width="210" height="24" rx="4"/><rect class="barA" x="655" y="138" width="156" height="24" rx="4"/><text class="small" x="875" y="156">74%</text>
+  <text class="small" x="655" y="190">Cluster S2</text><rect class="barBg" x="655" y="203" width="210" height="24" rx="4"/><rect class="barB" x="655" y="203" width="194" height="24" rx="4"/><text class="small" x="875" y="221">92%</text>
+  <text class="small" x="655" y="255">Cluster S3</text><rect class="barBg" x="655" y="268" width="210" height="24" rx="4"/><rect class="barC" x="655" y="268" width="124" height="24" rx="4"/><text class="small" x="875" y="286">59%</text>
+  <rect class="warn" x="655" y="315" width="210" height="36" rx="6"/><text class="small" x="667" y="338">Near-full clusters trigger repair or status evidence.</text>
+</svg>

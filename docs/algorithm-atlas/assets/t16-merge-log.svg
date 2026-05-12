@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="430" viewBox="0 0 960 430" role="img" aria-labelledby="title desc">
+  <title id="title">T.16 merge log and hierarchy tree</title>
+  <desc id="desc">A merge witness table records input ids, score, constraint status, result id, and parameter hash, then forms a hierarchy tree.</desc>
+  <defs>
+    <style>
+      .bg{fill:#fbfbf8}.panel{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.header{fill:#e9eef5}.row{fill:#fff}.tree{fill:#e7f6ec;stroke:#2f7d4c;stroke-width:2}.leaf{fill:#eef6ff;stroke:#2b5c9b;stroke-width:2}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.mono{font:12px Consolas,monospace;fill:#17212b}.line{stroke:#596673;stroke-width:2}
+    </style>
+  </defs>
+  <rect class="bg" width="960" height="430"/>
+  <rect class="panel" x="35" y="45" width="560" height="330" rx="8"/><rect class="panel" x="640" y="45" width="285" height="330" rx="8"/>
+  <text class="label" x="65" y="80">Merge witness log</text>
+  <rect class="header" x="65" y="105" width="500" height="34"/><text class="mono" x="78" y="127">inputs     score   status      result   params</text>
+  <rect class="row" x="65" y="139" width="500" height="34"/><text class="mono" x="78" y="161">A,B        0.12    ok          R1       h7c1</text>
+  <rect class="row" x="65" y="173" width="500" height="34"/><text class="mono" x="78" y="195">C,D        0.18    ok          R2       h7c1</text>
+  <rect class="row" x="65" y="207" width="500" height="34"/><text class="mono" x="78" y="229">R1,E       0.24    ok          R3       h7c1</text>
+  <rect class="row" x="65" y="241" width="500" height="34"/><text class="mono" x="78" y="263">R2,F       0.31    capacity    R4       h7c1</text>
+  <text class="small" x="65" y="315">The row order is the replay path. Stable ids make ties reproducible.</text>
+  <text class="label" x="680" y="80">Derived hierarchy</text>
+  <rect class="tree" x="750" y="105" width="65" height="36" rx="8"/><text class="small" x="769" y="128">R3</text>
+  <line class="line" x1="782" y1="141" x2="730" y2="195"/><line class="line" x1="782" y1="141" x2="840" y2="195"/>
+  <rect class="tree" x="700" y="195" width="65" height="36" rx="8"/><rect class="leaf" x="815" y="195" width="65" height="36" rx="8"/>
+  <text class="small" x="719" y="218">R1</text><text class="small" x="840" y="218">E</text>
+  <line class="line" x1="732" y1="231" x2="705" y2="285"/><line class="line" x1="732" y1="231" x2="765" y2="285"/>
+  <rect class="leaf" x="675" y="285" width="55" height="32" rx="8"/><rect class="leaf" x="755" y="285" width="55" height="32" rx="8"/>
+  <text class="small" x="696" y="306">A</text><text class="small" x="776" y="306">B</text>
+  <text class="small" x="675" y="345">Final regions are tree tops; units are leaves.</text>
+</svg>

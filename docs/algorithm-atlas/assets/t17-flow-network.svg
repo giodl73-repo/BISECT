@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="430" viewBox="0 0 960 430" role="img" aria-labelledby="title desc">
+  <title id="title">T.17 flow construction network</title>
+  <desc id="desc">Unit supply flows through eligible arcs into district capacity bins.</desc>
+  <defs>
+    <style>
+      .bg{fill:#fbfbf8}.panel{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.source{fill:#e9eef5;stroke:#2f3a45;stroke-width:2}.unit{fill:#dbeafe;stroke:#2b5c9b;stroke-width:2}.binA{fill:#dff3e6;stroke:#2f7d4c;stroke-width:2}.binB{fill:#ffe7d1;stroke:#b86520;stroke-width:2}.binC{fill:#eee8ff;stroke:#6650b8;stroke-width:2}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.edge{stroke:#778899;stroke-width:2;fill:none;marker-end:url(#arrow)}.cap{fill:#edf1f5;stroke:#9aa7b3}.fill{fill:#5b8bd8}
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#778899"/></marker>
+  </defs>
+  <rect class="bg" width="960" height="430"/>
+  <rect class="panel" x="40" y="45" width="880" height="330" rx="8"/>
+  <text class="label" x="70" y="80">Flow-style assignment layers</text>
+  <rect class="source" x="85" y="170" width="90" height="70" rx="10"/><text class="label" x="108" y="200">source</text><text class="small" x="104" y="221">supply</text>
+  <rect class="unit" x="300" y="95" width="82" height="48" rx="8"/><rect class="unit" x="300" y="160" width="82" height="48" rx="8"/><rect class="unit" x="300" y="225" width="82" height="48" rx="8"/><rect class="unit" x="300" y="290" width="82" height="48" rx="8"/>
+  <text class="small" x="325" y="124">u1: 48</text><text class="small" x="325" y="189">u2: 51</text><text class="small" x="325" y="254">u3: 47</text><text class="small" x="325" y="319">u4: 55</text>
+  <rect class="binA" x="625" y="100" width="110" height="58" rx="8"/><rect class="binB" x="625" y="200" width="110" height="58" rx="8"/><rect class="binC" x="625" y="300" width="110" height="58" rx="8"/>
+  <text class="small" x="653" y="124">D1 target</text><text class="small" x="653" y="144">95..105</text><text class="small" x="653" y="224">D2 target</text><text class="small" x="653" y="244">95..105</text><text class="small" x="653" y="324">D3 target</text><text class="small" x="653" y="344">95..105</text>
+  <path class="edge" d="M175 205 C225 150 250 120 300 120"/><path class="edge" d="M175 205 C230 190 250 185 300 185"/><path class="edge" d="M175 205 C230 230 250 250 300 250"/><path class="edge" d="M175 205 C225 280 250 315 300 315"/>
+  <path class="edge" d="M382 120 C470 105 530 110 625 128"/><path class="edge" d="M382 185 C485 170 530 200 625 228"/><path class="edge" d="M382 250 C500 250 540 230 625 228"/><path class="edge" d="M382 315 C490 310 540 322 625 328"/>
+  <rect class="cap" x="785" y="112" width="90" height="18" rx="4"/><rect class="fill" x="785" y="112" width="78" height="18" rx="4"/>
+  <rect class="cap" x="785" y="212" width="90" height="18" rx="4"/><rect class="fill" x="785" y="212" width="86" height="18" rx="4"/>
+  <rect class="cap" x="785" y="312" width="90" height="18" rx="4"/><rect class="fill" x="785" y="312" width="45" height="18" rx="4"/>
+  <text class="small" x="70" y="350">Eligible arcs and costs decide where supply may go; capacity bars decide whether the assignment can be valid.</text>
+</svg>

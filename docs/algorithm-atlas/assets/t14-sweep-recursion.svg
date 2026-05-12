@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="430" viewBox="0 0 960 430" role="img" aria-labelledby="title desc">
+  <title id="title">T.14 sweep cut and recursive district tree</title>
+  <desc id="desc">Candidate sweep cuts are scored by population deviation and cut quality, then the chosen cut becomes a recursive branch.</desc>
+  <defs>
+    <style>
+      .bg{fill:#fbfbf8}.panel{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.unit{fill:#dbeafe;stroke:#2b5c9b;stroke-width:2}.chosen{stroke:#d14b4b;stroke-width:5}.candidate{stroke:#f2b84b;stroke-width:3;stroke-dasharray:6 5}.tree{fill:#e7f6ec;stroke:#2f7d4c;stroke-width:2}.leaf{fill:#eef6ff;stroke:#2b5c9b;stroke-width:2}.line{stroke:#596673;stroke-width:2}
+    </style>
+  </defs>
+  <rect class="bg" width="960" height="430"/>
+  <rect class="panel" x="35" y="45" width="520" height="330" rx="8"/>
+  <rect class="panel" x="605" y="45" width="320" height="330" rx="8"/>
+  <text class="label" x="65" y="82">Sweep across Fiedler-sorted units</text>
+  <g transform="translate(75 150)">
+    <rect class="unit" x="0" y="0" width="42" height="70" rx="6"/><rect class="unit" x="52" y="0" width="42" height="70" rx="6"/><rect class="unit" x="104" y="0" width="42" height="70" rx="6"/><rect class="unit" x="156" y="0" width="42" height="70" rx="6"/><rect class="unit" x="208" y="0" width="42" height="70" rx="6"/><rect class="unit" x="260" y="0" width="42" height="70" rx="6"/><rect class="unit" x="312" y="0" width="42" height="70" rx="6"/><rect class="unit" x="364" y="0" width="42" height="70" rx="6"/>
+    <text class="small" x="15" y="42">u1</text><text class="small" x="67" y="42">u2</text><text class="small" x="119" y="42">u3</text><text class="small" x="171" y="42">u4</text><text class="small" x="223" y="42">u5</text><text class="small" x="275" y="42">u6</text><text class="small" x="327" y="42">u7</text><text class="small" x="379" y="42">u8</text>
+    <line class="candidate" x1="151" y1="-25" x2="151" y2="95"/><line class="chosen" x1="203" y1="-25" x2="203" y2="95"/><line class="candidate" x1="255" y1="-25" x2="255" y2="95"/>
+  </g>
+  <text class="small" x="75" y="270">candidate: pop 39 / 61, cut 5</text>
+  <text class="small" x="75" y="295">chosen: pop 50 / 50, cut 4</text>
+  <text class="small" x="75" y="320">candidate: pop 62 / 38, cut 3</text>
+  <text class="small" x="310" y="270">Selection balances population first under</text>
+  <text class="small" x="310" y="288">the declared tolerance, then applies the</text>
+  <text class="small" x="310" y="306">deterministic tie and quality rules.</text>
+  <text class="label" x="635" y="82">Recursive construction tree</text>
+  <rect class="tree" x="720" y="110" width="90" height="42" rx="8"/><text class="small" x="742" y="136">8 units</text>
+  <line class="line" x1="765" y1="152" x2="685" y2="215"/><line class="line" x1="765" y1="152" x2="845" y2="215"/>
+  <rect class="tree" x="640" y="215" width="90" height="42" rx="8"/><rect class="tree" x="800" y="215" width="90" height="42" rx="8"/>
+  <text class="small" x="665" y="241">4 units</text><text class="small" x="825" y="241">4 units</text>
+  <line class="line" x1="685" y1="257" x2="650" y2="315"/><line class="line" x1="685" y1="257" x2="720" y2="315"/><line class="line" x1="845" y1="257" x2="810" y2="315"/><line class="line" x1="845" y1="257" x2="880" y2="315"/>
+  <rect class="leaf" x="610" y="315" width="80" height="36" rx="8"/><rect class="leaf" x="700" y="315" width="80" height="36" rx="8"/><rect class="leaf" x="790" y="315" width="80" height="36" rx="8"/><rect class="leaf" x="880" y="315" width="40" height="36" rx="8"/>
+  <text class="small" x="630" y="338">D1</text><text class="small" x="720" y="338">D2</text><text class="small" x="810" y="338">D3</text><text class="small" x="892" y="338">D4</text>
+</svg>
