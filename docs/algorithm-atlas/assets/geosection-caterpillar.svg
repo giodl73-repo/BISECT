@@ -1,16 +1,155 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="390" viewBox="0 0 960 390" role="img" aria-labelledby="title desc">
-  <title id="title">GeoSection caterpillar comparison</title>
-  <desc id="desc">An unnormalized small split creates a caterpillar-like remainder; normalized scoring selects a more balanced top-level split.</desc>
-  <style>.bg{fill:#fbfbf8}.panel{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.state{fill:#eef2ff;stroke:#5b61b6;stroke-width:2}.smallSide{fill:#ffe4e1;stroke:#b84a42;stroke-width:3}.halfA{fill:#dbeafe;stroke:#2b5c9b;stroke-width:3}.halfB{fill:#e4f5eb;stroke:#2f7d4c;stroke-width:3}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.cut{stroke:#b84a42;stroke-width:4}</style>
-  <rect class="bg" width="960" height="390"/>
-  <rect class="panel" x="45" y="55" width="400" height="270" rx="8"/><rect class="panel" x="515" y="55" width="400" height="270" rx="8"/>
-  <text class="label" x="75" y="90">Raw edge cut can favor 1:(k-1)</text>
-  <path class="state" d="M110 135 C180 95 300 105 365 155 C405 185 390 245 325 270 C240 305 130 270 95 210 C80 180 85 155 110 135 Z"/>
-  <path class="smallSide" d="M110 135 C145 118 180 112 205 115 C190 150 188 190 205 230 C160 238 115 228 95 210 C80 180 85 155 110 135 Z"/>
-  <text class="small" x="120" y="285">Short boundary, long leftover region.</text>
-  <text class="label" x="545" y="90">GeoSection normalizes ratio cost</text>
-  <path class="halfA" d="M580 135 C650 95 735 105 765 185 C700 200 645 230 605 270 C550 235 540 170 580 135 Z"/>
-  <path class="halfB" d="M765 185 C815 195 870 205 855 245 C835 295 690 305 605 270 C645 230 700 200 765 185 Z"/>
-  <line class="cut" x1="765" y1="185" x2="605" y2="270"/>
-  <text class="small" x="560" y="285">Selected split reflects geometry after size correction.</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-labelledby="title desc">
+  <title id="title">GeoSection ratio normalization prevents caterpillar splits</title>
+  <desc id="desc">A teaching figure showing how raw edge cut can favor a tiny first split, while GeoSection compares normalized ratio scores and selects a more representative top-level split before ordinary recursion continues.</desc>
+  <style>
+    .bg{fill:#f7f5ef}
+    .ink{fill:#17212b}
+    .muted{fill:#52616b}
+    .hair{stroke:#c9d1d9;stroke-width:1.5}
+    .panel{fill:#fffdf8;stroke:#26323d;stroke-width:1.6}
+    .panelTitle{font:700 23px Arial,sans-serif;fill:#17212b}
+    .label{font:700 16px Arial,sans-serif;fill:#17212b}
+    .small{font:14px Arial,sans-serif;fill:#52616b}
+    .tiny{font:12px Arial,sans-serif;fill:#52616b}
+    .mono{font:13px Consolas,monospace;fill:#17212b}
+    .rawFill{fill:#ffe6df;stroke:#b6423c;stroke-width:3}
+    .rawRemainder{fill:#f4d7cc;stroke:#9b342f;stroke-width:2.5}
+    .stateFill{fill:#e9edf7;stroke:#6b7280;stroke-width:2.5}
+    .chosenA{fill:#d9e8ff;stroke:#245b99;stroke-width:3}
+    .chosenB{fill:#e1f4e8;stroke:#25724d;stroke-width:3}
+    .futureA{fill:#b9d4fa;stroke:#245b99;stroke-width:2}
+    .futureB{fill:#b8e7c7;stroke:#25724d;stroke-width:2}
+    .badStroke{stroke:#b6423c;stroke-width:4}
+    .goodStroke{stroke:#25724d;stroke-width:4}
+    .warn{fill:#fff1ed;stroke:#b6423c;stroke-width:1.5}
+    .ok{fill:#eef8f0;stroke:#25724d;stroke-width:1.5}
+    .tableHead{fill:#26323d}
+    .tableLine{stroke:#d8dee5;stroke-width:1}
+    .barRaw{fill:#f7b6a8}
+    .barGood{fill:#97d3a7}
+    .barNeutral{fill:#b9c9df}
+  </style>
+
+  <rect class="bg" width="1280" height="760"/>
+
+  <text x="46" y="54" font-family="Arial, sans-serif" font-size="32" font-weight="700" class="ink">GeoSection: do not let a tiny enclosure choose the whole recursion tree</text>
+  <text x="48" y="84" class="small">The algorithm scans first-level ratios, normalizes raw cut cost by section size, and only then chooses the root split.</text>
+
+  <rect class="panel" x="42" y="118" width="366" height="548" rx="12"/>
+  <rect class="panel" x="456" y="118" width="366" height="548" rx="12"/>
+  <rect class="panel" x="870" y="118" width="366" height="548" rx="12"/>
+
+  <text class="panelTitle" x="72" y="158">1. Raw scan is tempted</text>
+  <text class="panelTitle" x="486" y="158">2. Normalize ratio scores</text>
+  <text class="panelTitle" x="900" y="158">3. Recurse from chosen root</text>
+
+  <!-- Panel 1: raw caterpillar map -->
+  <g transform="translate(66 192)">
+    <path class="stateFill" d="M48 96 C84 34 180 20 249 52 C300 76 323 128 307 181 C289 241 220 285 145 276 C70 267 21 215 24 157 C25 132 34 113 48 96 Z"/>
+    <path class="rawFill" d="M48 96 C73 54 130 38 177 42 C155 73 148 111 159 152 C135 177 86 181 47 159 C24 146 28 119 48 96 Z"/>
+    <path d="M177 42 C155 73 148 111 159 152" fill="none" class="badStroke" stroke-linecap="round"/>
+
+    <g transform="translate(78 66)">
+      <circle cx="0" cy="0" r="10" fill="#b6423c"/>
+      <circle cx="36" cy="-10" r="10" fill="#b6423c"/>
+      <circle cx="72" cy="-8" r="10" fill="#b6423c"/>
+    </g>
+    <g transform="translate(190 86)" fill="#6b7280">
+      <circle cx="0" cy="0" r="8"/>
+      <circle cx="34" cy="18" r="8"/>
+      <circle cx="58" cy="52" r="8"/>
+      <circle cx="44" cy="94" r="8"/>
+      <circle cx="6" cy="124" r="8"/>
+      <circle cx="-44" cy="126" r="8"/>
+      <circle cx="-86" cy="94" r="8"/>
+    </g>
+
+    <rect class="warn" x="10" y="304" width="300" height="100" rx="8"/>
+    <text class="label" x="28" y="334">Raw winner: 1:7</text>
+    <text class="small" x="28" y="362">Only a short boundary is needed</text>
+    <text class="small" x="28" y="384">to wrap the small side.</text>
+  </g>
+
+  <!-- Panel 2: table + bar chart -->
+  <g transform="translate(482 188)">
+    <text class="label" x="0" y="0">Same seed budget per ratio</text>
+    <text class="tiny" x="0" y="24">score = EC_min / sqrt(min(i, k-i))</text>
+
+    <rect x="0" y="46" width="314" height="154" rx="8" fill="#ffffff" stroke="#d8dee5"/>
+    <rect class="tableHead" x="0" y="46" width="314" height="34" rx="8"/>
+    <text x="16" y="68" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#ffffff">ratio</text>
+    <text x="92" y="68" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#ffffff">raw cut</text>
+    <text x="168" y="68" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#ffffff">normalizer</text>
+    <text x="260" y="68" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#ffffff">score</text>
+    <rect x="6" y="154" width="302" height="32" rx="4" fill="#edf8ef"/>
+    <line class="tableLine" x1="0" y1="116" x2="314" y2="116"/>
+    <line class="tableLine" x1="0" y1="152" x2="314" y2="152"/>
+    <line class="tableLine" x1="0" y1="188" x2="314" y2="188"/>
+    <g font-family="Consolas, monospace" font-size="13" fill="#17212b">
+      <text x="18" y="104">1:7</text><text x="102" y="104">12</text><text x="178" y="104">1.00</text><text x="268" y="104">12.0</text>
+      <text x="18" y="140">2:6</text><text x="102" y="140">18</text><text x="178" y="140">1.41</text><text x="268" y="140">12.7</text>
+      <text x="18" y="176">3:5</text><text x="102" y="176">20</text><text x="178" y="176">1.73</text><text x="268" y="176">11.5</text>
+    </g>
+    <g transform="translate(0 244)">
+      <line x1="0" y1="152" x2="314" y2="152" class="hair"/>
+      <line x1="0" y1="18" x2="0" y2="152" class="hair"/>
+      <rect class="barRaw" x="34" y="34" width="44" height="118" rx="5"/>
+      <rect class="barNeutral" x="135" y="28" width="44" height="124" rx="5"/>
+      <rect class="barGood" x="236" y="40" width="44" height="112" rx="5"/>
+      <text class="tiny" x="36" y="174">1:7</text>
+      <text class="tiny" x="137" y="174">2:6</text>
+      <text class="tiny" x="238" y="174">3:5</text>
+      <text class="tiny" x="10" y="14">normalized score, lower wins</text>
+      <text class="tiny" x="216" y="34">selected</text>
+    </g>
+
+    <rect class="ok" x="0" y="430" width="314" height="72" rx="8"/>
+    <text class="label" x="18" y="458">Normalized winner: 3:5</text>
+    <text class="small" x="18" y="482">The root split is less brittle.</text>
+  </g>
+
+  <!-- Panel 3: selected map + recursion tree -->
+  <g transform="translate(904 192)">
+    <path class="chosenA" d="M44 96 C80 34 176 20 245 52 C266 62 283 77 294 96 C250 126 207 153 166 183 C120 177 72 167 42 139 C32 128 34 109 44 96 Z"/>
+    <path class="chosenB" d="M294 96 C322 143 310 205 255 244 C207 278 132 287 77 258 C111 224 138 201 166 183 C207 153 250 126 294 96 Z"/>
+    <path d="M294 96 C250 126 207 153 166 183 C138 201 111 224 77 258" fill="none" class="goodStroke" stroke-linecap="round"/>
+
+    <g transform="translate(24 302)">
+      <text class="label" x="0" y="0">Root choice becomes the tree</text>
+      <g transform="translate(8 28)" font-family="Arial, sans-serif">
+        <rect x="110" y="0" width="82" height="34" rx="6" fill="#eef8f0" stroke="#25724d"/>
+        <text x="151" y="22" text-anchor="middle" font-size="13" fill="#17212b">3:5 root</text>
+        <line x1="151" y1="34" x2="92" y2="74" stroke="#52616b" stroke-width="2"/>
+        <line x1="151" y1="34" x2="212" y2="74" stroke="#52616b" stroke-width="2"/>
+        <rect x="42" y="74" width="98" height="34" rx="6" class="futureA"/>
+        <rect x="164" y="74" width="98" height="34" rx="6" class="futureB"/>
+        <text x="91" y="96" text-anchor="middle" font-size="13" fill="#17212b">recurse k=3</text>
+        <text x="213" y="96" text-anchor="middle" font-size="13" fill="#17212b">recurse k=5</text>
+        <line x1="91" y1="108" x2="60" y2="140" stroke="#52616b" stroke-width="2"/>
+        <line x1="91" y1="108" x2="122" y2="140" stroke="#52616b" stroke-width="2"/>
+        <line x1="213" y1="108" x2="182" y2="140" stroke="#52616b" stroke-width="2"/>
+        <line x1="213" y1="108" x2="244" y2="140" stroke="#52616b" stroke-width="2"/>
+        <circle cx="60" cy="144" r="12" fill="#b9d4fa"/><circle cx="122" cy="144" r="12" fill="#b9d4fa"/>
+        <circle cx="182" cy="144" r="12" fill="#b8e7c7"/><circle cx="244" cy="144" r="12" fill="#b8e7c7"/>
+      </g>
+    </g>
+
+    <rect x="0" y="500" width="308" height="44" rx="8" fill="#eef2ff" stroke="#6b7280"/>
+    <text class="small" x="18" y="528">Later splits use ordinary recursive bisection.</text>
+  </g>
+
+  <!-- arrows between panels -->
+  <path d="M419 396 C436 386 443 386 456 396" fill="none" stroke="#52616b" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M833 396 C850 386 857 386 870 396" fill="none" stroke="#52616b" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <rect x="74" y="690" width="1132" height="42" rx="10" fill="#26323d"/>
+  <text x="100" y="717" font-family="Arial, sans-serif" font-size="16" fill="#ffffff">
+    Reading rule: raw edge cut explains the tempting tiny split; normalized score explains the chosen first split; the chosen split becomes the root of the rest of the bisection tree.
+  </text>
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#52616b"/>
+    </marker>
+  </defs>
 </svg>
