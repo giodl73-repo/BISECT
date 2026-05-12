@@ -2,7 +2,7 @@
 
 **Paper**: `U.18+large-neighborhood-search`  
 **Round**: 1 to 2  
-**Date**: 2026-05-11  
+**Date**: 2026-05-11; updated 2026-05-12  
 **Source**: `reviews/SYNTHESIS.md`
 
 > **Purpose**: This plan is based on AI-generated quality assessment feedback.
@@ -37,13 +37,23 @@ parent-child lineage requirements for audited descendant plans.
 
 ## P2: Substantial Enhancements
 
-- [ ] Add command transcripts for improved, no-op, and staged-method fixtures.
-- [ ] Add a move summary schema example with before/after district metrics.
-- [ ] Archive a public descendant RPLAN/RCTX package for a fixture plan.
+- [x] Add command transcripts for improved, no-op, and staged-method fixtures.
+- [x] Add a move summary schema example with before/after district metrics.
+- [x] Archive a public descendant RPLAN/RCTX package for a fixture plan.
+
+## 2026-05-12 Paper-Quality Pass
+
+- [x] Replaced draft framing with implementation-paper framing.
+- [x] Added U.18's role between construction outputs and the U.20 fixed point.
+- [x] Added the six-unit one-move fixture showing parent assignment, accepted
+      move, child assignment, and edge-cut delta.
+- [x] Added concrete local-search summary fields and CLI/package evidence.
+- [x] Distinguished improvement, no-improvement, rejected, and staged-method
+      evidence from global-search or tabu/LNS quality claims.
 
 ## Quality Checkpoints
 
 - [x] P1 items addressed.
 - [x] Paper builds without errors.
 - [x] Claims map to evidence level.
-- [ ] Ready for round-2 simulated assessment.
+- [x] Ready for round-2 simulated assessment.

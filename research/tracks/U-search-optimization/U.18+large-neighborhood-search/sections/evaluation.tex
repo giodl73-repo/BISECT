@@ -27,3 +27,31 @@ Benchmark protocol and comparison baselines \\
 \end{tabular}
 \caption{Claim and evidence ladder for U.18.}
 \end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.32\linewidth}p{0.54\linewidth}}
+\toprule
+Command or package & Evidence produced \\
+\midrule
+\texttt{cargo test -p bisect-local-search} & Checks deterministic one-move
+improvement, no-improvement, staged-method errors, summary hashes, and lineage. \\
+\texttt{bisect improve} fixture run & Writes the local-search summary, child
+RPLAN/RCTX, audit certificate, manifest, and parent-plan lineage. \\
+Public U.18 packages & Preserve improvement, generated-descendant, and grid10
+benchmark/no-improvement examples in the package corpus. \\
+\bottomrule
+\end{tabular}
+\caption{Current U.18 evidence path.}
+\end{table}
+
+The representative CLI shape is:
+\begin{verbatim}
+bisect improve --method one-move \
+  --plan input.rplan --context input.rctx \
+  --out-dir out --tolerance 34
+\end{verbatim}
+The grid10 benchmark package records the equally important no-improvement case:
+the search ran, preserved the parent assignment, and still emitted auditable
+summary and lineage artifacts.

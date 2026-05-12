@@ -137,7 +137,7 @@ intentionally modest.
 |---|---|---|---|
 | U.16 Branch-and-Cut Redistricting | Reviewed 2026-05-12 | Added worked disconnected-incumbent separation example, concrete solve-report fields, manifest lineage boundary, U.13/U.20 positioning, and path8 command evidence | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
 | U.17 Branch-and-Price Redistricting | Reviewed 2026-05-12 | Added path4 column/master example, concrete branch-price report fields, CLI/test/package evidence, and fixed-point lineage boundary | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
-| U.18 | Queued | Queued | Queued |
+| U.18 Large-Neighborhood Search | Reviewed 2026-05-12 | Added six-unit one-move parent/child example, concrete local-search summary fields, CLI/test/package evidence, and no-improvement benchmark boundary | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
 | U.19 | Queued | Queued | Queued |
 | U.20 | Queued | Queued | Queued |
 
@@ -149,6 +149,7 @@ intentionally modest.
 |---|---:|---:|---:|---:|---:|---:|---:|
 | U.16 Branch-and-Cut Redistricting | 3.8 | 3.7 | 3.6 | 3.9 | 4.0 | 3.7 | 22.7 / 24 |
 | U.17 Branch-and-Price Redistricting | 3.8 | 3.8 | 3.6 | 3.9 | 4.0 | 3.7 | 22.8 / 24 |
+| U.18 Large-Neighborhood Search | 3.8 | 3.8 | 3.7 | 3.9 | 4.0 | 3.8 | 23.0 / 24 |
 
 ### Batch 3 Score Notes
 
@@ -167,3 +168,10 @@ columns that cover every unit once. The report-field table and CLI evidence
 make the implementation contract auditable. The remaining ceiling is still
 solver maturity: production branch-and-price claims need larger column pools,
 pricing transcripts, solver versions, and archived benchmark outputs.
+
+**U.18 Large-Neighborhood Search — 23.0/24.** The paper now has a concrete
+parent-to-child story: the six-unit fixture shows which unit moves, how edge cut
+changes, and why validity gates are separate from improvement claims. The
+summary table and package evidence make no-op and improvement runs auditable.
+The remaining ceiling is empirical: the current packages prove the contract, not
+real-data improvement distributions or production LNS/tabu quality.

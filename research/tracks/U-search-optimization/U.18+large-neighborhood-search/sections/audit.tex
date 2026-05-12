@@ -15,3 +15,11 @@ artifact was produced.
 
 The public golden package can be checked either through the RPLAN certificate
 verifier or through the BISECT manifest verifier.
+
+The parent-child chain is the audit-critical object. The CLI computes the
+parent plan hash, writes \texttt{local-search-summary.json}, stores its digest
+in algorithm lineage, and emits \texttt{improved.rplan}, \texttt{improved.rctx},
+\texttt{audit-certificate.json}, and \texttt{manifest.json}. The certificate
+verifies the child plan; the summary explains the transition from the parent.
+That separation prevents an edge-cut improvement from being confused with a
+legal-validity claim or a global-search claim.

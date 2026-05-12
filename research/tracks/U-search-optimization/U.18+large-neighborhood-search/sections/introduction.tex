@@ -5,3 +5,10 @@ U.18 documents \texttt{bisect-local-search} and
 staged \texttt{--search lns} and \texttt{--search tabu} surfaces. The
 paper is a heuristic improvement implementation paper, not a global optimality
 claim.
+
+The method is a descendant-plan workflow. It starts from an audited plan and
+context, evaluates local moves against the same profile constraints, and writes
+a child package only when the accepted assignment still verifies.
+This places U.18 between the construction papers and U.20: construction creates
+a starting plan, local search explains an improvement transition, and the audit
+certificate fixes the child plan as a reusable artifact.

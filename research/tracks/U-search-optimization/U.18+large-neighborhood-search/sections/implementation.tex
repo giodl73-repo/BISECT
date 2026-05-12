@@ -13,6 +13,16 @@ the evaluated neighborhood and rejection reasons are recorded. The descendant
 package is therefore evidence of a local transition from a parent plan, not a
 new construction from scratch.
 
+The L0 improvement fixture makes the transition small enough to inspect. The
+starting assignment is \([0,0,0,1,1,1]\) on a six-unit graph with equal
+populations and two districts. Unit 2 touches the opposite district through
+units 3, 4, and 5. Moving unit 2 from district 0 to district 1 preserves
+population tolerance at 34 percent, keeps both districts connected, and reduces
+edge cut from 3 to 1. The emitted child assignment is
+\([0,0,1,1,1,1]\). A competing move that improves edge cut but breaks population
+or contiguity would be recorded as evaluated and rejected, not silently treated
+as an improvement.
+
 \begin{table}[htbp]
 \centering
 \small
@@ -27,6 +37,25 @@ Staged method & requested method and unsupported scope & roadmap boundary \\
 \bottomrule
 \end{tabular}
 \caption{Improvement-family statuses.}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.24\linewidth}p{0.30\linewidth}p{0.32\linewidth}}
+\toprule
+Summary field & Current value family & Interpretation \\
+\midrule
+Summary schema & local-search summary v1 & Stable JSON envelope for transition evidence \\
+Method & one-move, staged tabu, staged LNS & Search surface requested \\
+Status & improved or no-improvement & Whether a child assignment changed \\
+Move counts & evaluated and accepted counts & Why no-op runs are inspectable \\
+Edge cut & initial and final values & Objective delta evidence \\
+Population deviation & initial and final values & Validity gate evidence \\
+Parameter hash & SHA-256 digest & Tamper check for summary-defining inputs \\
+\bottomrule
+\end{tabular}
+\caption{Concrete local-search summary fields emitted by \texttt{bisect-local-search}.}
 \end{table}
 
 The paper therefore does not treat every command invocation as a successful
