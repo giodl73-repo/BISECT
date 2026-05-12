@@ -36,7 +36,10 @@ redistricting ensembles.
 The Gelman-Rubin $\rhat$ statistic~\citep{gelman1992} runs multiple
 independent chains from different starting plans and compares between-chain
 variance to within-chain variance.
-Values of $\rhat < 1.1$ indicate approximate convergence.
+Values of $\rhat < 1.1$ indicate approximate convergence for the
+redistricting statistics used here. The command-line validator's default
+threshold is stricter in some research-toolkit modes; G.4's publication
+standard is invoked explicitly with \texttt{--rhat-threshold 1.1}.
 We extend $\rhat$ to the redistricting setting by applying it to ten
 parallel \recom{} chains with randomised start plans.
 
@@ -90,10 +93,18 @@ Section~\ref{sec:statutory} formalises this division of labor.
 
 \subsection{Implementation}
 
-All three diagnostics are implemented in the \texttt{bisect} Rust binary:
+The diagnostic validator consumes one JSONL file per chain and is implemented
+in the \texttt{bisect} Rust workspace:
 \begin{verbatim}
-  redist analyze --types ensemble-diagnostics --state NC --year 2020
+  BISECT research validate-ensemble \
+      --ensemble-dir outputs/ensembles/nc_2020/chains \
+      --rhat-threshold 1.1 \
+      --ess-min 500 \
+      --strict
 \end{verbatim}
-The command runs ten chains, computes $\rhat$, $\ess$, and $\ham(1)$,
-and reports a pass/fail verdict against the thresholds defined in
-Section~\ref{sec:statutory}.
+The command computes $\rhat$ and $\ess$ on the recorded chain metrics and
+reports a pass/fail verdict against the thresholds defined in
+Section~\ref{sec:statutory}. Hamming autocorrelation is implemented in
+\texttt{bisect-analysis::ensemble\_diagnostics} for partition trajectories and
+is part of the diagnostic artifact family, but the validator's stable input
+contract is currently metric JSONL.

@@ -111,7 +111,7 @@ Score bands:
 | G.1 GerryChain Congressional Comparison | 3.0 | 2.9 | 3.0 | 3.0 | 3.3 | 3.0 | 18.2 | Evidence/data validation pass |
 | G.2 Partisan Outcome Distributions | 2.6 | 2.8 | 2.6 | 2.8 | 3.2 | 2.8 | 16.8 | Known data-validation issues |
 | G.3 Compactness Distribution Position | 3.0 | 2.9 | 2.9 | 3.0 | 3.3 | 3.0 | 18.1 | Needs current ensemble anchors |
-| G.4 Ensemble Diagnostics | 3.1 | 3.3 | 3.1 | 3.2 | 3.3 | 3.2 | 19.2 | Batch 4 target |
+| G.4 Ensemble Diagnostics | 3.8 | 3.7 | 3.7 | 3.9 | 4.0 | 3.6 | 22.7 | Golden |
 | G.5 Convergence Mixing Analysis | 3.0 | 3.1 | 2.9 | 3.1 | 3.3 | 3.0 | 18.4 | Needs diagnostic evidence pass |
 | G.6 Short-Burst | 3.3 | 3.5 | 3.2 | 3.3 | 3.5 | 3.4 | 20.2 | Strong draft, accepted but evidence could deepen |
 | G.7 SMC Redistricting | 3.2 | 3.5 | 3.2 | 3.3 | 3.5 | 3.3 | 20.0 | Batch 4 target; crate implemented |
@@ -158,8 +158,9 @@ Score bands:
 
 ## Highest-Priority Lifts
 
-1. Batch 4: G.4, G.7, G.10, and G.11. These are the ensemble/sampling papers
-   most directly tied to implemented crates and current atlas concepts.
+1. Continue Batch 4: U.10, G.7, G.10, and G.11. These are the
+   ensemble/sampling papers most directly tied to implemented crates and
+   current atlas concepts.
 2. Legacy construction pass: T.5-T.13. These need the same "show the split,
    show the candidate, show the rejection" standard that made T.1 and U.18 much
    clearer.
@@ -176,7 +177,7 @@ Score bands:
 |---|---:|---|---|
 | B/T construction foundations | 26 | Strong for reviewed/new slices, serviceable for older slices | legacy visuals and audit/package bridges |
 | U search/optimization/audit | 21 | Strong, with U.16-U.20 golden | refresh older U.2-U.7 and U.13-U.15 |
-| G ensemble/sampling | 16 | Strong but uneven | diagnostics/package evidence and data-validation cleanup |
+| G ensemble/sampling | 16 | Strong but uneven; G.4 now golden | SMC/MergeSplit/Multiscale package evidence and data-validation cleanup |
 | J apportionment | 7 | Serviceable | J.6 stale implementation claims |
 | K compactness metrics | 8 | Strong except K.2 | Reock implementation mismatch |
 | L partisan metrics | 7 | Strong | cross-link to G/A synthesis |

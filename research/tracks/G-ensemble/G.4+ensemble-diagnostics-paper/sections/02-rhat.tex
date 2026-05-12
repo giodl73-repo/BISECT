@@ -38,6 +38,11 @@ we adopt the threshold $\rhat < 1.1$ for approximate convergence.
 This threshold is conservative: it permits $\widehat{\mathrm{var}}^+$ to
 exceed $W$ by up to 10\%, implying the chains have not fully decorrelated
 but have explored broadly similar regions.
+The threshold is intentionally a publication standard rather than a hidden
+software default: stricter tooling may default to 1.05, but G.4 certification
+uses 1.1 consistently because redistricting outcomes include bounded,
+integer-valued seat counts whose between-chain agreement is coarser than for
+continuous model parameters.
 
 For redistricting applications, we compute $\rhat$ for two outcome
 functions:
@@ -66,6 +71,17 @@ Section~\ref{sec:application} presents the full results.
 Typical findings: $\rhat(\PP) < 1.1$ is achieved at $n \approx 2{,}000$
 steps for small states (NC, WI) and $n \approx 10{,}000$--$20{,}000$
 steps for large states (TX, CA).
+
+\subsection{Single-Chain Ensembles}
+
+The $\rhat$ statistic is a multi-chain diagnostic. It is undefined for a
+single published chain, no matter how many plans that chain contains. For such
+ensembles, G.4 can still certify the effective sample size and available
+autocorrelation diagnostics, but it cannot certify between-chain agreement.
+New court-facing ensemble studies should therefore archive at least five
+parallel chains; the current implementation requires at least four chains for
+the R-hat calculation and this paper recommends five as the publication
+minimum.
 
 \subsection{Rank-Normalized $\hat{R}$}
 

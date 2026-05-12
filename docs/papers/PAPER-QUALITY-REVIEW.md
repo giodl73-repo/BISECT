@@ -199,3 +199,30 @@ and reserved lineage collisions from being treated as valid evidence. The
 remaining ceiling is ecosystem breadth: larger real-data packages, more
 adversarial variants, solver-version transcripts, and external package
 consumers.
+
+## Batch 4 Checklist
+
+| Paper | Review status | Fix status | Build/PDF status |
+|---|---|---|---|
+| U.10 bisect-ensemble | Queued | Queued | Queued |
+| G.4 Ensemble Diagnostics | Reviewed 2026-05-12 | Fixed old binary/crate names, ESS example drift, source-ensemble certification boundary, 99th-percentile ESS caveat, Hamming reference semantics, statutory step-count rule, and Daubert known-error framing | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
+| G.7 SMC Redistricting | Queued | Queued | Queued |
+| G.10 Merge-Split | Queued | Queued | Queued |
+| G.11 Multiscale MCMC | Queued | Queued | Queued |
+
+## Batch 4 Paper-Quality Scorecard
+
+**Scoring date:** 2026-05-12
+
+| Paper | P1 Claim | P2 Algorithm | P3 Evidence | P4 Boundary | P5 Build | P6 Reader | Total |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| G.4 Ensemble Diagnostics | 3.8 | 3.7 | 3.7 | 3.9 | 4.0 | 3.6 | 22.7 / 24 |
+
+### Batch 4 Score Notes
+
+**G.4 Ensemble Diagnostics — 22.7/24.** The paper now matches the current
+BISECT validator surface, keeps the corrected ESS values visible, and separates
+multi-chain R-hat certification from partial ESS/Hamming certification for
+legacy single-chain source ensembles. The remaining ceiling is empirical
+packaging: a future pass should archive the actual six-state chain traces and
+diagnostic JSON artifacts rather than relying on paper tables alone.

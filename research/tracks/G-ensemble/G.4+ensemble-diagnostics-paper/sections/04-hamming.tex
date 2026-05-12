@@ -24,6 +24,11 @@ The lag-$k$ Hamming autocorrelation of the chain is:
   \ham(k) = \mathrm{Corr}(d_{\mathrm{Ham}}(\pi_0, \pi_t),\,
                             d_{\mathrm{Ham}}(\pi_0, \pi_{t+k})).
 \]
+In all computations reported here, $\pi_0$ is the chain's initial random
+spanning-tree plan. This makes the diagnostic reproducible and avoids using
+the enacted plan or an optimized plan as the reference. The statistic should
+be interpreted after an initial burn-in interval; before burn-in, the reference
+choice can dominate the apparent autocorrelation.
 
 Intuitively, $\ham(1)$ measures how correlated consecutive plans are:
 a value near 1 means the chain is moving slowly through plan space.
@@ -36,6 +41,9 @@ This is the formulation used in the $\ess$ calculation of
 Section~\ref{sec:ess}.
 The Hamming-based version provides a more direct geometric picture of
 chain mixing.
+The $\ham(1) < 0.95$ rule is therefore a motion screen: it catches nearly
+frozen chains, but it is not the main convergence guarantee. The operative
+criteria remain multi-chain $\rhat$ and metric-level $\ess$.
 
 \subsection{Hamming Distance as a Diagnostic}
 

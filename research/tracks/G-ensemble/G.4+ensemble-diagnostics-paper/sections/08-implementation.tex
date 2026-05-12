@@ -1,27 +1,30 @@
-\section{Implementation in \texttt{redist analyze}}
+\section{Implementation in \texttt{BISECT research}}
 \label{sec:implementation}
 
 \subsection{Command-Line Interface}
 
-The three diagnostics described in this paper are implemented in the
-\texttt{redist-analysis} crate of the \texttt{bisect} Rust binary.
-The command syntax is:
+The diagnostic math described in this paper is implemented in the
+\texttt{bisect-analysis} crate. The stable command-line surface for metric
+traces is \texttt{BISECT research validate-ensemble}. It consumes one JSONL file
+per chain, where each line contains a step number and a metric map.
 
 \begin{verbatim}
-  redist analyze --types ensemble-diagnostics \
-                 --state NC \
-                 --year 2020 \
-                 --chains 10 \
-                 --steps 10000
+  BISECT research validate-ensemble \
+      --ensemble-dir outputs/ensembles/nc_2020/chains \
+      --output validate-ensemble.json \
+      --rhat-threshold 1.1 \
+      --ess-min 500 \
+      --strict
 \end{verbatim}
 
 The command:
 \begin{enumerate}
-\item Loads the census tract adjacency graph for the specified state and year.
-\item Generates $m = $ \texttt{--chains} random start plans via spanning-tree bisection.
-\item Runs $n = $ \texttt{--steps} steps of \recom{} per chain.
-\item Computes $\rhat$, $\ess$, and $\ham(1)$ at checkpoints.
-\item Reports pass/fail against the thresholds from Section~\ref{sec:statutory}.
+\item Reads every \texttt{*.jsonl} file in \texttt{--ensemble-dir} as one chain.
+\item Validates that R-hat has enough equal-length chains.
+\item Computes $\rhat$ and $\ess$ for each metric present in every chain.
+\item Optionally records enacted-plan percentile ranks when supplied.
+\item Reports pass/fail against the explicit thresholds from
+      Section~\ref{sec:statutory}.
 \end{enumerate}
 
 \subsection{Output Format}
@@ -38,7 +41,7 @@ The output is a JSON file with the following structure:
   "diagnostics": {
     "rhat_pp": 1.02,
     "rhat_seats": 1.03,
-    "ess_pp": 769,
+    "ess_pp": 695,
     "ess_seats": 1538,
     "hamming_lag1": 0.87
   },
@@ -51,9 +54,10 @@ The output is a JSON file with the following structure:
 }
 \end{verbatim}
 
-A \texttt{PASS} verdict indicates that the ensemble meets the evidentiary
-standards of Section~\ref{sec:statutory} and is suitable for use in
-redistricting litigation.
+A \texttt{PASS} verdict indicates that the supplied metrics meet the explicit
+thresholds used for this validation run. It is evidence about convergence of
+the recorded ensemble metrics, not a standalone legal conclusion about the
+enacted plan.
 
 \subsection{Implementation Details}
 
@@ -62,7 +66,8 @@ The \recom{} step selects two adjacent districts uniformly at random,
 merges their tract sets, generates a random spanning tree of the merged
 subgraph, and bisects the spanning tree at its centroid edge subject to
 population balance.
-The implementation uses the \texttt{redist-core} spanning-tree sampler.
+The implementation uses the BISECT spanning-tree and ensemble components when
+chains are generated inside the workspace.
 
 \paragraph{R-hat computation.}
 Each chain's PP time series is stored in a ring buffer.
@@ -79,13 +84,12 @@ pair. For large $k$ we use the greedy approximation (sort districts by
 centroid proximity), which is accurate to within 1\% for nearly-converged
 chains.
 
-\subsection{Relation to Ensemble Diagnostics Crate}
+\subsection{Relation to Diagnostics Code}
 
-The diagnostics are exposed through the \texttt{ensemble\_diagnostics}
-module in \texttt{redist-analysis}:
+The diagnostics code is exposed through the BISECT analysis crate:
 
 \begin{verbatim}
-  redist_analysis::ensemble_diagnostics::{
+  bisect_analysis::ensemble_diagnostics::{
       rhat,          // Gelman-Rubin R-hat
       ess,           // Effective sample size
       hamming_lag1,  // Lag-1 Hamming autocorrelation

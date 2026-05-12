@@ -108,3 +108,35 @@ A conservative statutory minimum of 10{,}000 steps is appropriate for
 states with $k \leq 20$.
 For larger delegations, chain length should scale as $O(k)$,
 with explicit diagnostic certification required.
+
+\subsection{Certification of Source Ensembles Used Elsewhere}
+
+G.4 is also a bridge paper: it supplies the diagnostic vocabulary used by
+G.1--G.3 and the later statistical-inference papers. Published single-chain
+ensembles can be partially certified, but they cannot satisfy the multi-chain
+R-hat condition retroactively.
+
+\begin{table}[h]
+\centering
+\caption{How G.4 standards apply to source ensembles cited by companion papers.}
+\label{tab:source-ensemble-cert}
+\begin{tabular}{p{0.24\linewidth}p{0.25\linewidth}p{0.34\linewidth}}
+\toprule
+Source pattern & Certifiable diagnostics & Boundary \\
+\midrule
+Single long NC chain & ESS and available Hamming summaries & R-hat unavailable;
+report percentile uncertainty using ESS, not nominal $N$ \\
+Multi-chain WI/GA/PA ensemble & R-hat, ESS, and Hamming if chain files are
+archived & certification depends on access to per-chain traces \\
+New BISECT ensemble package & R-hat and ESS through
+\texttt{validate-ensemble}; Hamming through diagnostic artifacts & use explicit
+G.4 thresholds for publication claims \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+This distinction prevents a common overstatement. A 24{,}518-plan chain may
+have enough effective samples for a reported percentile interval, but it still
+does not demonstrate between-chain agreement. Conversely, a short multi-chain
+run may have excellent $\rhat$ while failing the ESS threshold. G.4 requires
+both when both are available.
