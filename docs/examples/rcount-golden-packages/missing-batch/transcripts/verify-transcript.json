@@ -1,0 +1,25 @@
+{
+  "transcript_version": "rcount-audit-transcript-v1",
+  "verifier": "rcount-audit",
+  "status": "fail",
+  "package_content_hash": "sha256:8e5253ddcd44b49d242de6d25603a9ab665b20705dc634e9cfb3bbcaa58394a1",
+  "manifest_content_hash": "sha256:8e5253ddcd44b49d242de6d25603a9ab665b20705dc634e9cfb3bbcaa58394a1",
+  "checks": [
+    {
+      "equation_id": "batch_summary_total",
+      "status": "fail",
+      "error": "summary for contest syn-2024-mayor reporting unit syn:precinct:P-001 references missing batch id: batch:P-001:late-mail"
+    },
+    {
+      "equation_id": "jurisdiction_contest_total",
+      "status": "pass",
+      "contest_id": "syn-2024-mayor",
+      "reporting_unit_id": "syn:jurisdiction:SYN"
+    },
+    {
+      "equation_id": "source_hash_match",
+      "status": "pass",
+      "reporting_unit_id": "source:synthetic-summary-export"
+    }
+  ]
+}

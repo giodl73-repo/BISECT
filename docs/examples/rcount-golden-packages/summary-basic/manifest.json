@@ -12,7 +12,7 @@
   },
   "status": "canvassed",
   "hash_algorithm": "sha256",
-  "content_hash": "sha256:936ceb188fbbbe4a78dc6a57902300eb2e12381b2572c43ea3f1d0033168aac7",
+  "content_hash": "sha256:a32748c501517099a9cadfb8e604eda7b502c65e7eb478db062fd50a79ca1231",
   "created_by": {
     "tool": "rcount-io-example",
     "version": "0.1-draft"

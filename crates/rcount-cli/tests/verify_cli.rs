@@ -12,6 +12,14 @@ fn docs_bad_selection_sum_path() -> String {
     docs_package_path("bad-selection-sum")
 }
 
+fn docs_mail_batch_added_path() -> String {
+    docs_package_path("mail-batch-added")
+}
+
+fn docs_missing_batch_path() -> String {
+    docs_package_path("missing-batch")
+}
+
 fn docs_package_path(package_name: &str) -> String {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .ancestors()
@@ -73,6 +81,37 @@ fn verify_bad_selection_sum_exits_one_after_package_read() {
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(stdout.contains(r#""equation_id":"contest_selection_sum""#));
     assert!(stdout.contains("contest selection sum mismatch"));
+    assert!(stdout.contains(r#""equation_id":"source_hash_match","status":"pass""#));
+}
+
+#[test]
+fn verify_mail_batch_added_exposes_batch_correlation() {
+    let output = Command::new(env!("CARGO_BIN_EXE_rcount"))
+        .args(["verify", &docs_mail_batch_added_path(), "--format", "json"])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains(r#""equation_id":"batch_summary_total""#));
+    assert!(stdout.contains(r#""reporting_unit_id":"batch:P-001:late-mail""#));
+}
+
+#[test]
+fn verify_missing_batch_exits_one_after_package_read() {
+    let output = Command::new(env!("CARGO_BIN_EXE_rcount"))
+        .args(["verify", &docs_missing_batch_path(), "--format", "json"])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(1));
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains(r#""equation_id":"batch_summary_total""#));
+    assert!(stdout.contains("references missing batch id"));
     assert!(stdout.contains(r#""equation_id":"source_hash_match","status":"pass""#));
 }
 

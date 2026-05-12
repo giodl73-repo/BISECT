@@ -1,6 +1,6 @@
 use rcount_core::{
     package_content_hash, verify_canvass_correction_event, verify_jurisdiction_total,
-    verify_package, EquationPass, RcountPackage,
+    verify_package, EquationPass, RcountCoreError, RcountPackage, StatusEventType,
 };
 use rcount_io::{read_package_dir, verify_source_index, RcountIoError, RcountManifest};
 use serde::{Deserialize, Serialize};
@@ -101,7 +101,7 @@ fn verify_loaded_package(
             checks.extend(report.passed.into_iter().map(pass_result));
         }
         Err(err) => checks.push(CheckResult {
-            equation_id: "contest_selection_sum".to_string(),
+            equation_id: equation_id_for_core_error(&err).to_string(),
             status: VerificationStatus::Fail,
             contest_id: None,
             reporting_unit_id: None,
@@ -122,7 +122,11 @@ fn verify_loaded_package(
         }),
     }
 
-    if !package.status_events.is_empty() {
+    if package
+        .status_events
+        .iter()
+        .any(|event| event.event_type == StatusEventType::Correction)
+    {
         match verify_canvass_correction_event(package) {
             Ok(pass) => checks.push(pass_result(pass)),
             Err(err) => checks.push(CheckResult {
@@ -183,10 +187,28 @@ fn pass_result(pass: EquationPass) -> CheckResult {
     }
 }
 
+fn equation_id_for_core_error(err: &RcountCoreError) -> &'static str {
+    match err {
+        RcountCoreError::MissingBatch { .. }
+        | RcountCoreError::DuplicateBatchId { .. }
+        | RcountCoreError::BatchSummaryTotalMismatch { .. } => "batch_summary_total",
+        RcountCoreError::AcceptedBallotsMismatch { .. } => "accepted_ballots",
+        RcountCoreError::DuplicateStatusEventId { .. }
+        | RcountCoreError::NoStatusTransition { .. }
+        | RcountCoreError::IncompleteStatusEvent { .. } => "status_event_declared",
+        RcountCoreError::MissingCanvassCorrectionEvent
+        | RcountCoreError::MissingStatusSummaries { .. } => "canvass_correction_event",
+        _ => "contest_selection_sum",
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rcount_core::{synthetic_canvass_correction_package, synthetic_summary_basic_package};
+    use rcount_core::{
+        synthetic_canvass_correction_package, synthetic_mail_batch_added_package,
+        synthetic_missing_batch_package, synthetic_summary_basic_package,
+    };
     use rcount_io::{
         synthetic_canvass_correction_manifest, synthetic_summary_basic_manifest, write_package_dir,
     };
@@ -308,6 +330,45 @@ mod tests {
             .iter()
             .any(|check| check.equation_id == "canvass_correction_event"
                 && check.status == VerificationStatus::Pass));
+    }
+
+    #[test]
+    fn mail_batch_added_produces_batch_correlation_passes() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_mail_batch_added_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+
+        let transcript = verify_package_dir(tmp.path());
+        assert_eq!(transcript.status, VerificationStatus::Pass);
+        assert_eq!(
+            transcript
+                .checks
+                .iter()
+                .filter(|check| check.equation_id == "batch_summary_total"
+                    && check.status == VerificationStatus::Pass)
+                .count(),
+            3
+        );
+    }
+
+    #[test]
+    fn missing_batch_produces_batch_correlation_failure() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_missing_batch_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+
+        let transcript = verify_package_dir(tmp.path());
+        assert_eq!(transcript.status, VerificationStatus::Fail);
+        assert!(transcript
+            .checks
+            .iter()
+            .any(|check| check.equation_id == "batch_summary_total"
+                && check
+                    .error
+                    .as_deref()
+                    .is_some_and(|error| error.contains("references missing batch id"))));
     }
 
     #[test]

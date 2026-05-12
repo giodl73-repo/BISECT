@@ -71,6 +71,26 @@ pub enum RcountCoreError {
     MissingCanvassCorrectionEvent,
     #[error("missing summaries for status {status:?}")]
     MissingStatusSummaries { status: CountStatus },
+    #[error("duplicate batch id: {batch_id}")]
+    DuplicateBatchId { batch_id: String },
+    #[error("summary for contest {contest_id} reporting unit {reporting_unit_id} references missing batch id: {batch_id}")]
+    MissingBatch {
+        contest_id: String,
+        reporting_unit_id: String,
+        batch_id: String,
+    },
+    #[error("batch total mismatch for batch {batch_id}: declared {declared_ballots}, summary {summary_ballots}")]
+    BatchSummaryTotalMismatch {
+        batch_id: String,
+        declared_ballots: i64,
+        summary_ballots: i64,
+    },
+    #[error("accepted ballots mismatch for batch {batch_id}: declared {declared_ballots}, counted plus rejected {computed_ballots}")]
+    AcceptedBallotsMismatch {
+        batch_id: String,
+        declared_ballots: i64,
+        computed_ballots: i64,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -141,6 +161,28 @@ pub struct Summary {
     pub counted_ballots: i64,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum BatchKind {
+    ElectionDay,
+    Mail,
+    Provisional,
+    CentralCount,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct BatchManifest {
+    pub batch_id: String,
+    pub reporting_unit_id: String,
+    pub kind: BatchKind,
+    pub status: CountStatus,
+    pub accepted_ballots: i64,
+    pub counted_ballots: i64,
+    pub rejected_ballots: i64,
+    #[serde(default)]
+    pub source_refs: Vec<String>,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum CountStatus {
@@ -187,6 +229,8 @@ pub struct RcountPackage {
     pub rcount_version: String,
     pub contests: Vec<Contest>,
     pub reporting_units: Vec<ReportingUnit>,
+    #[serde(default)]
+    pub batches: Vec<BatchManifest>,
     pub summaries: Vec<Summary>,
     #[serde(default)]
     pub status_events: Vec<StatusEvent>,
@@ -254,6 +298,7 @@ pub fn verify_package(package: &RcountPackage) -> Result<VerificationReport, Rco
         });
     }
     report.passed.extend(verify_status_events(package)?);
+    report.passed.extend(verify_batch_summary_totals(package)?);
     Ok(report)
 }
 
@@ -458,6 +503,68 @@ pub fn verify_canvass_correction_event(
     })
 }
 
+pub fn verify_batch_summary_totals(
+    package: &RcountPackage,
+) -> Result<Vec<EquationPass>, RcountCoreError> {
+    let mut batches: BTreeMap<&str, &BatchManifest> = BTreeMap::new();
+    let mut passes = Vec::new();
+    for batch in package.batches.iter() {
+        ensure_non_negative(batch.accepted_ballots)?;
+        ensure_non_negative(batch.counted_ballots)?;
+        ensure_non_negative(batch.rejected_ballots)?;
+        if batches.insert(batch.batch_id.as_str(), batch).is_some() {
+            return Err(RcountCoreError::DuplicateBatchId {
+                batch_id: batch.batch_id.clone(),
+            });
+        }
+        let computed = batch.counted_ballots + batch.rejected_ballots;
+        if batch.accepted_ballots != computed {
+            return Err(RcountCoreError::AcceptedBallotsMismatch {
+                batch_id: batch.batch_id.clone(),
+                declared_ballots: batch.accepted_ballots,
+                computed_ballots: computed,
+            });
+        }
+        passes.push(EquationPass {
+            equation_id: "accepted_ballots".to_string(),
+            contest_id: "*".to_string(),
+            reporting_unit_id: batch.batch_id.clone(),
+        });
+    }
+
+    for summary in package
+        .summaries
+        .iter()
+        .filter(|summary| summary.batch_id.is_some())
+    {
+        let batch_id = summary
+            .batch_id
+            .as_ref()
+            .expect("filtered to batch summaries");
+        let batch =
+            batches
+                .get(batch_id.as_str())
+                .ok_or_else(|| RcountCoreError::MissingBatch {
+                    contest_id: summary.contest_id.clone(),
+                    reporting_unit_id: summary.reporting_unit_id.clone(),
+                    batch_id: batch_id.clone(),
+                })?;
+        if batch.counted_ballots != summary.counted_ballots {
+            return Err(RcountCoreError::BatchSummaryTotalMismatch {
+                batch_id: batch_id.clone(),
+                declared_ballots: batch.counted_ballots,
+                summary_ballots: summary.counted_ballots,
+            });
+        }
+        passes.push(EquationPass {
+            equation_id: "batch_summary_total".to_string(),
+            contest_id: summary.contest_id.clone(),
+            reporting_unit_id: batch_id.clone(),
+        });
+    }
+    Ok(passes)
+}
+
 pub fn synthetic_summary_basic_package() -> RcountPackage {
     let contest = Contest {
         contest_id: "syn-2024-mayor".to_string(),
@@ -516,6 +623,7 @@ pub fn synthetic_summary_basic_package() -> RcountPackage {
         rcount_version: RCOUNT_VERSION.to_string(),
         contests: vec![contest],
         reporting_units,
+        batches: vec![],
         summaries,
         status_events: vec![],
     }
@@ -619,6 +727,97 @@ pub fn synthetic_bad_selection_sum_package() -> RcountPackage {
     package
 }
 
+pub fn synthetic_mail_batch_added_package() -> RcountPackage {
+    let mut package = synthetic_summary_basic_package();
+    package.batches = vec![
+        BatchManifest {
+            batch_id: "batch:P-001:election-day".to_string(),
+            reporting_unit_id: "syn:precinct:P-001".to_string(),
+            kind: BatchKind::ElectionDay,
+            status: CountStatus::Canvassed,
+            accepted_ballots: 70,
+            counted_ballots: 70,
+            rejected_ballots: 0,
+            source_refs: vec!["source:synthetic-summary-export".to_string()],
+        },
+        BatchManifest {
+            batch_id: "batch:P-001:late-mail".to_string(),
+            reporting_unit_id: "syn:precinct:P-001".to_string(),
+            kind: BatchKind::Mail,
+            status: CountStatus::Canvassed,
+            accepted_ballots: 10,
+            counted_ballots: 10,
+            rejected_ballots: 0,
+            source_refs: vec!["source:synthetic-summary-export".to_string()],
+        },
+        BatchManifest {
+            batch_id: "batch:P-002:election-day".to_string(),
+            reporting_unit_id: "syn:precinct:P-002".to_string(),
+            kind: BatchKind::ElectionDay,
+            status: CountStatus::Canvassed,
+            accepted_ballots: 60,
+            counted_ballots: 60,
+            rejected_ballots: 0,
+            source_refs: vec!["source:synthetic-summary-export".to_string()],
+        },
+    ];
+    package.summaries = vec![
+        summary_with_status_and_batch(
+            "syn:precinct:P-001",
+            CountStatus::Canvassed,
+            Some("batch:P-001:election-day"),
+            35,
+            30,
+            1,
+            3,
+            1,
+            0,
+        ),
+        summary_with_status_and_batch(
+            "syn:precinct:P-001",
+            CountStatus::Canvassed,
+            Some("batch:P-001:late-mail"),
+            5,
+            5,
+            0,
+            0,
+            0,
+            0,
+        ),
+        summary_with_status_and_batch(
+            "syn:precinct:P-002",
+            CountStatus::Canvassed,
+            Some("batch:P-002:election-day"),
+            25,
+            30,
+            0,
+            4,
+            0,
+            1,
+        ),
+        summary("syn:jurisdiction:SYN", 65, 65, 1, 7, 1, 1),
+    ];
+    package.status_events = vec![StatusEvent {
+        event_id: "event-0003".to_string(),
+        event_type: StatusEventType::LateMailBatchAdded,
+        status_before: CountStatus::Unofficial,
+        status_after: CountStatus::Canvassed,
+        effective_at: "2024-11-08T17:00:00Z".to_string(),
+        authority: "SYN County Election Office".to_string(),
+        source_refs: vec!["source:synthetic-summary-export".to_string()],
+        explanation: "Late-arriving mail batch for P-001 was accepted before canvass.".to_string(),
+    }];
+    package
+}
+
+pub fn synthetic_missing_batch_package() -> RcountPackage {
+    let mut package = synthetic_mail_batch_added_package();
+    package
+        .batches
+        .retain(|batch| batch.batch_id != "batch:P-001:late-mail");
+    package
+}
+
 fn summary(
     reporting_unit_id: &str,
     cand_a: i64,
@@ -628,9 +827,10 @@ fn summary(
     overvotes: i64,
     blank_contests: i64,
 ) -> Summary {
-    summary_with_status(
+    summary_with_status_and_batch(
         reporting_unit_id,
         CountStatus::Canvassed,
+        None,
         cand_a,
         cand_b,
         write_in,
@@ -650,10 +850,34 @@ fn summary_with_status(
     overvotes: i64,
     blank_contests: i64,
 ) -> Summary {
+    summary_with_status_and_batch(
+        reporting_unit_id,
+        status,
+        None,
+        cand_a,
+        cand_b,
+        write_in,
+        undervotes,
+        overvotes,
+        blank_contests,
+    )
+}
+
+fn summary_with_status_and_batch(
+    reporting_unit_id: &str,
+    status: CountStatus,
+    batch_id: Option<&str>,
+    cand_a: i64,
+    cand_b: i64,
+    write_in: i64,
+    undervotes: i64,
+    overvotes: i64,
+    blank_contests: i64,
+) -> Summary {
     Summary {
         contest_id: "syn-2024-mayor".to_string(),
         reporting_unit_id: reporting_unit_id.to_string(),
-        batch_id: None,
+        batch_id: batch_id.map(str::to_string),
         status,
         totals: vec![
             SelectionTotal {
@@ -766,6 +990,39 @@ mod tests {
             verify_jurisdiction_total("syn-2024-mayor", "syn:jurisdiction:SYN", &package.summaries)
                 .expect("both status snapshots must reconcile");
         assert_eq!(jurisdiction_passes.len(), 2);
+    }
+
+    #[test]
+    fn synthetic_mail_batch_added_verifies_batch_summaries() {
+        let package = synthetic_mail_batch_added_package();
+        let report = verify_package(&package).expect("mail batch package must verify");
+        assert_eq!(
+            report
+                .passed
+                .iter()
+                .filter(|pass| pass.equation_id == "batch_summary_total")
+                .count(),
+            3
+        );
+        assert_eq!(
+            report
+                .passed
+                .iter()
+                .filter(|pass| pass.equation_id == "accepted_ballots")
+                .count(),
+            3
+        );
+        let jurisdiction_passes =
+            verify_jurisdiction_total("syn-2024-mayor", "syn:jurisdiction:SYN", &package.summaries)
+                .expect("batched summaries must roll up");
+        assert_eq!(jurisdiction_passes.len(), 1);
+    }
+
+    #[test]
+    fn batch_summary_total_catches_missing_batch() {
+        let package = synthetic_missing_batch_package();
+        let err = verify_batch_summary_totals(&package).expect_err("missing batch must fail");
+        assert!(matches!(err, RcountCoreError::MissingBatch { .. }));
     }
 
     #[test]

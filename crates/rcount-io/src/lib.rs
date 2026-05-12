@@ -84,6 +84,7 @@ pub struct PackageHashes {
     pub package_content_hash: String,
     pub contest_count: usize,
     pub reporting_unit_count: usize,
+    pub batch_count: usize,
     pub summary_count: usize,
 }
 
@@ -165,6 +166,10 @@ pub fn write_package_dir(
         &package.reporting_units,
     )?;
     write_ndjson(
+        &dir.join("normalized").join("batches.ndjson"),
+        &package.batches,
+    )?;
+    write_ndjson(
         &dir.join("normalized").join("summaries.ndjson"),
         &package.summaries,
     )?;
@@ -173,6 +178,7 @@ pub fn write_package_dir(
         &[
             r#"{"equation_id":"contest_selection_sum","status":"declared"}"#,
             r#"{"equation_id":"jurisdiction_contest_total","status":"declared"}"#,
+            r#"{"equation_id":"batch_summary_total","status":"declared"}"#,
             r#"{"equation_id":"status_event_declared","status":"declared"}"#,
             r#"{"equation_id":"canvass_correction_event","status":"declared"}"#,
         ],
@@ -187,6 +193,7 @@ pub fn write_package_dir(
             package_content_hash: computed,
             contest_count: package.contests.len(),
             reporting_unit_count: package.reporting_units.len(),
+            batch_count: package.batches.len(),
             summary_count: package.summaries.len(),
         },
     )?;
@@ -210,6 +217,7 @@ pub fn read_package_dir(dir: &Path) -> Result<(RcountManifest, RcountPackage), R
         rcount_version: manifest.rcount_version.clone(),
         contests: read_ndjson(&dir.join("normalized").join("contests.ndjson"))?,
         reporting_units: read_ndjson(&dir.join("normalized").join("reporting-units.ndjson"))?,
+        batches: read_optional_ndjson(&dir.join("normalized").join("batches.ndjson"))?,
         summaries: read_ndjson(&dir.join("normalized").join("summaries.ndjson"))?,
         status_events: read_ndjson(&dir.join("status").join("events.ndjson"))?,
     };
@@ -291,6 +299,20 @@ pub fn default_bad_selection_sum_docs_dir() -> PathBuf {
         .join("bad-selection-sum")
 }
 
+pub fn default_mail_batch_added_docs_dir() -> PathBuf {
+    PathBuf::from("docs")
+        .join("examples")
+        .join("rcount-golden-packages")
+        .join("mail-batch-added")
+}
+
+pub fn default_missing_batch_docs_dir() -> PathBuf {
+    PathBuf::from("docs")
+        .join("examples")
+        .join("rcount-golden-packages")
+        .join("missing-batch")
+}
+
 fn write_json_pretty<T: Serialize>(path: &Path, value: &T) -> Result<(), RcountIoError> {
     let bytes = serde_json::to_vec_pretty(value)?;
     fs::write(path, bytes)?;
@@ -307,6 +329,7 @@ fn write_synthetic_source_export(
         "source_format": "synthetic-summary-export-v1",
         "contest_count": package.contests.len(),
         "reporting_unit_count": package.reporting_units.len(),
+        "batch_count": package.batches.len(),
         "summary_count": package.summaries.len(),
         "status_event_count": package.status_events.len(),
     });
@@ -376,6 +399,16 @@ fn read_ndjson<T: for<'de> Deserialize<'de>>(path: &Path) -> Result<Vec<T>, Rcou
     Ok(records)
 }
 
+fn read_optional_ndjson<T: for<'de> Deserialize<'de>>(
+    path: &Path,
+) -> Result<Vec<T>, RcountIoError> {
+    if path.exists() {
+        read_ndjson(path)
+    } else {
+        Ok(Vec::new())
+    }
+}
+
 fn write_lines(path: &Path, lines: &[&str]) -> Result<(), RcountIoError> {
     let mut file = File::create(path)?;
     for line in lines {
@@ -390,6 +423,7 @@ mod tests {
     use super::*;
     use rcount_core::{
         synthetic_bad_selection_sum_package, synthetic_canvass_correction_package,
+        synthetic_mail_batch_added_package, synthetic_missing_batch_package,
         synthetic_summary_basic_package,
     };
 
@@ -416,6 +450,42 @@ mod tests {
         assert_eq!(decoded_package.summaries.len(), 6);
         assert_eq!(decoded_package.status_events.len(), 2);
         assert_eq!(verify_source_index(tmp.path()).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn round_trips_synthetic_mail_batch_added_package() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_mail_batch_added_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+        let (_, decoded_package) = read_package_dir(tmp.path()).unwrap();
+        assert_eq!(decoded_package.batches.len(), 3);
+        assert_eq!(
+            decoded_package
+                .summaries
+                .iter()
+                .filter(|summary| summary.batch_id.is_some())
+                .count(),
+            3
+        );
+    }
+
+    #[test]
+    fn round_trips_synthetic_missing_batch_package() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_missing_batch_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+        let (_, decoded_package) = read_package_dir(tmp.path()).unwrap();
+        assert_eq!(decoded_package.batches.len(), 2);
+        assert_eq!(
+            decoded_package
+                .summaries
+                .iter()
+                .filter(|summary| summary.batch_id.as_deref() == Some("batch:P-001:late-mail"))
+                .count(),
+            1
+        );
     }
 
     #[test]
