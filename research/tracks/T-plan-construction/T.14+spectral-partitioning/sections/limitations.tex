@@ -4,6 +4,11 @@ Spectral partitioning is a relaxation. A valid and deterministic spectral plan
 does not imply global optimality, political fairness, or legal compliance beyond
 the declared audit profile.
 
+The current implementation is also a staged spectral-style baseline rather than
+a full eigensolver. Its smoothing coordinate is useful because it is cheap,
+stable, and auditable, but claims that depend on exact Laplacian eigenvectors
+remain future work.
+
 The method is also sensitive to graph construction choices. Disconnected
 components, weakly connected geography, nearly symmetric graphs, and edge
 weight conventions can change the spectral coordinate and therefore the sweep

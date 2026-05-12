@@ -56,4 +56,12 @@ explicit evidence separation, and stronger audit-limit language.
 - [x] P1 items addressed.
 - [x] Paper builds without errors.
 - [x] Claims map to evidence level.
-- [ ] Ready for round-2 simulated assessment.
+- [x] Ready for round-2 simulated assessment.
+
+## 2026-05-12 Paper-Quality Pass
+
+- [x] Reframed the implementation as a deterministic spectral-style smoothing
+      baseline rather than a full Fiedler/Lanczos eigensolver.
+- [x] Added a worked odd-seat split sketch showing target propagation.
+- [x] Expanded implementation, evidence, audit, and limitation boundaries.
+- [x] Marked the paper ready for another simulated assessment pass.

@@ -1,7 +1,7 @@
 \section{Method}
 
-The staged method approximates a Fiedler vector, sorts units by the spectral
-coordinate, and evaluates population-balanced sweep cuts. Recursive calls pass
+The staged method builds a deterministic spectral-style coordinate, sorts units
+by that coordinate, and evaluates population-balanced sweep cuts. Recursive calls pass
 proportional target fractions so odd and non-power-of-two district counts are
 handled without silently changing the intended seat allocation.
 
@@ -13,19 +13,20 @@ pair of recursive workloads with explicit left/right seat counts.
 
 \subsection{Reproducible Procedure}
 
-The constructor operates on the tract-adjacency graph supplied by the BISECT
+The constructor operates on the tract adjacency graph supplied by the BISECT
 state pipeline. Vertices carry population weights, edges encode adjacency, and
 the current implementation treats edge weights as the graph weights available
 from that pipeline. For each recursive subproblem:
 
 \begin{enumerate}
   \item Build the weighted graph induced by the current unit set.
-  \item Form the Laplacian used by \texttt{bisect-apportion::spectral}.
-  \item Approximate a Fiedler vector and sort units by spectral coordinate,
-        breaking ties by stable unit identifier.
-  \item Sweep prefixes in that order and select the cut whose population is
-        closest to the requested proportional target while satisfying the
-        declared tolerance.
+  \item Build a centered anchor vector from stable unit order and smooth it
+        over adjacency for the configured iteration budget.
+  \item Normalize the coordinate after each smoothing pass and sort units by
+        coordinate, breaking ties by stable unit identifier.
+  \item Sweep prefixes in that order, reject cuts outside the declared
+        population tolerance, and select the feasible cut with minimum edge cut,
+        breaking remaining ties by sweep index.
   \item Recurse on the two induced subgraphs with the requested left and right
         seat counts until each leaf represents one district.
 \end{enumerate}
@@ -37,3 +38,30 @@ gaps, islands, disconnected components, and alternative adjacency definitions
 belong to the input graph construction layer, and near-symmetric graphs can
 make the spectral coordinate weakly informative even when the run remains
 deterministic.
+
+\subsection{Odd-Seat Split Sketch}
+
+For non-power-of-two district counts, the important visual is the target tree,
+not a ratio label. A seven-district run first asks the root cut to create
+workloads for three and four seats. The four-seat side can then split evenly,
+while the three-seat side carries one odd split. The constructor therefore
+chooses each local bisection with the population target implied by the child
+seat counts, not by a universal 50/50 rule.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{p{0.12\linewidth}p{0.18\linewidth}p{0.32\linewidth}p{0.27\linewidth}}
+\toprule
+Depth & Node target & Requested child targets & Local target fraction \\
+\midrule
+0 & 7 seats & 3 seats / 4 seats & \(3/7\) then \(4/7\) \\
+1 & 3 seats & 1 seat / 2 seats & \(1/3\) then \(2/3\) \\
+1 & 4 seats & 2 seats / 2 seats & \(1/2\) then \(1/2\) \\
+2 & 2 seats & 1 seat / 1 seat & \(1/2\) then \(1/2\) \\
+\bottomrule
+\end{tabular}
+\caption{Recursive target propagation for \(k=7\). Each row describes the
+population target used by a local spectral sweep, so odd-seat recursion remains
+auditable rather than implicit.}
+\end{table}

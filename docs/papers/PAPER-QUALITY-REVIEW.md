@@ -59,7 +59,7 @@ are called complete.
 | Batch | Papers | Purpose | Status |
 |---|---|---|---|
 | 1 | T.1-T.4, U.1, U.8, U.9, U.12 | Re-review the atlas-aligned seed/compositor/legacy papers for paper-quality gaps after the alignment pass | Completed 2026-05-12 |
-| 2 | T.14-T.17 | Construction-family golden vertical slices | Queued |
+| 2 | T.14-T.17 | Construction-family golden vertical slices | In progress |
 | 3 | U.16-U.20 | Exact/search/audit certificate family, including U.20 fixed-point language | Queued |
 | 4 | U.10, G.4, G.7, G.10, G.11 | Sampling and ensemble methods | Queued |
 | 5 | T.5-T.13, U.0-U.7, U.11, U.13-U.15 | Older algorithm-family papers not yet lifted to the same explanatory standard | Queued |
@@ -78,3 +78,12 @@ are called complete.
 | U.8 PercentileSweep | Reviewed 2026-05-12 | Narrowed percentile/ReCom/optimality claims; separated four-state evidence from TX/CA extrapolation | Rebuilt; no undefined refs/cites; PDF copied |
 | U.9 BisectionEnsemble | Reviewed 2026-05-12 | Scoped node-local ensemble claims; softened large-arity failure and single-run empirical claims; fixed accepted-rank indexing | Rebuilt; no undefined refs/cites; PDF copied |
 | U.12 Algorithm-Selection Matrix | Reviewed 2026-05-12 | Expanded matrix with claim-boundary column, worked reading, and audit fixed-point fields | Rebuilt; no undefined refs/cites; PDF copied |
+
+## Batch 2 Checklist
+
+| Paper | Review status | Fix status | Build/PDF status |
+|---|---|---|---|
+| T.14 Spectral Partitioning | Reviewed 2026-05-12 | Reframed as staged spectral-style smoothing baseline; added odd-seat split sketch, implementation boundary, evidence ladder, and audit limits | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
+| T.15 Capacity-Constrained Clustering | Queued | Pending | Pending |
+| T.16 Hierarchical Regionalization | Queued | Pending | Pending |
+| T.17 Flow-Based Construction | Queued | Pending | Pending |

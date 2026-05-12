@@ -1,18 +1,21 @@
 \section{Evaluation Plan}
 
 The first evidence layer is fixture correctness: path graphs, two-clique graphs,
-determinism, and recursive split handling. The next evidence layer should
-compare spectral construction against METIS, GeoSection, and clustering on
-selected real-data smoke cases.
+determinism, and recursive split handling. The current package layer adds a
+method-produced six-unit spectral fixture and a 100-unit synthetic benchmark
+package that exercise lineage, manifest hashes, and verifier acceptance. The
+next evidence layer should compare spectral construction against METIS,
+GeoSection, and clustering on selected real-data smoke cases.
 
 \begin{table}[h]
 \centering
-\begin{tabular}{llll}
+\small
+\begin{tabular}{p{0.22\linewidth}p{0.28\linewidth}p{0.27\linewidth}p{0.12\linewidth}}
 \toprule
 Claim & Evidence now & Missing evidence & Status \\
 \midrule
-Deterministic fixture output & L0 path/two-clique tests & None for fixtures & Current \\
-Odd-\(k\) recursion handling & Recursive split fixtures & Broader \(k\) sweep & Current \\
+Deterministic local split output & L0 path/two-clique/determinism tests & None for fixtures & Current \\
+Odd-\(k\) recursion handling & Recursive target-fraction hardening & Broader \(k\) sweep & Current \\
 RPLAN audit lineage & L1 sidecar checks, method package, and 100-unit benchmark smoke & Real-data export transcript & Current \\
 Quality vs. METIS/GeoSection & None in this paper & Smoke commands and outputs & Future \\
 Runtime scaling & None in this paper & Benchmark script and hardware & Future \\
@@ -24,7 +27,8 @@ and empirical plan quality are separate evidence levels.}
 
 \begin{table}[h]
 \centering
-\begin{tabular}{llll}
+\small
+\begin{tabular}{p{0.22\linewidth}p{0.22\linewidth}p{0.27\linewidth}p{0.18\linewidth}}
 \toprule
 Constructor & Primary role & Exposed failure mode & Audit surface \\
 \midrule
@@ -38,3 +42,10 @@ Regionalization & merge baseline & merge-order sensitivity & merge witnesses \\
 \caption{Planned constructor comparison framing. Quantitative entries remain
 future work until commands, data, and outputs are recorded.}
 \end{table}
+
+The evaluation reading rule is therefore simple: fixture and package rows
+support construction correctness and audit replay, while comparison rows are
+research agenda items. The paper should not be read as evidence that spectral
+construction beats METIS, GeoSection, capacity clustering, or regionalization
+on plan quality; it creates the deterministic baseline needed to run that
+comparison cleanly.

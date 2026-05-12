@@ -5,3 +5,12 @@ redistricting because it exposes a continuous relaxation of the cut problem.
 This paper positions T.14 as a transparent construction method whose value is
 explainability, reproducibility, and comparison against stronger construction
 and optimization families.
+
+The phrase ``spectral'' is used carefully here. The implemented T.14 slice is a
+deterministic spectral-style bisection baseline: it builds a graph coordinate
+by smoothing an anchored vector over adjacency, sorts units by that coordinate,
+and then selects a population-feasible sweep cut. It is not yet a full Lanczos
+or production eigensolver implementation of the exact Fiedler vector. That
+distinction is part of the contribution boundary rather than an implementation
+detail, because it tells the reader which claims are supported today: replayable
+construction, fixture behavior, and audit lineage, not spectral optimality.

@@ -4,3 +4,11 @@ The implementation lives in \texttt{bisect-apportion::spectral} and is exposed
 through \texttt{bisect state --structure spectral} and YAML
 \texttt{structure: spectral}. Final plan paths use the shared RPLAN/RCTX audit
 sidecar flow when emitted by the CLI.
+
+The bisection kernel records the method name, sweep identity, iteration count,
+convergence flag, edge cut, population deviation, tolerance, target fraction,
+and parameter hash in \texttt{SpectralSummary}. The CLI recursion layer owns
+the split tree and passes the proportional target fraction for each recursive
+node. This crate boundary matters for review: \texttt{bisect-apportion} proves
+the deterministic local split contract on fixtures, while the CLI/RPLAN layer
+proves that recursive construction metadata is exported as a replayable package.
