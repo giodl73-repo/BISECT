@@ -27,9 +27,10 @@ raw tiny split -> normalized ratio table/chart -> chosen root split and recursio
   algorithm makes a quantitative decision.
 - Show the split, not just the split label. A `1:13` ratio should be drawn as
   one part against thirteen parts; a `7:7` ratio should look visibly balanced.
-- Prefer two-dimensional miniatures for spatial algorithms. If the algorithm
-  acts on a state, region, county, grid, or district map, use little map-like
-  shapes before falling back to one-dimensional bars.
+- Prefer two-dimensional block miniatures for schematic spatial algorithms. If
+  the algorithm acts on a state, region, county, grid, or district map, use a
+  countable little array of blocks before falling back to blobs or
+  one-dimensional bars.
 - Label whether higher or lower scores win.
 - Show the artifact consequence: selected split, emitted report, audit package,
   rejected move, resample genealogy, or frontier selection.
@@ -73,9 +74,9 @@ district columns, the visual should depict the division directly:
 
 Labels can still name the split, but the geometry must carry the meaning first.
 
-For spatial pages, include more than one geometry when it matters. A long state
-and a tall state can make clear why the algorithm is trying several candidate
-root splits instead of assuming one universal split shape.
+For spatial pages, include more than one geometry when it matters. A long block
+array and a tall block array can make clear why the algorithm is trying several
+candidate root splits instead of assuming one universal split shape.
 
 ## Candidate Purpose Rule
 
