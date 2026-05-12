@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="360" viewBox="0 0 960 360" role="img" aria-labelledby="title desc">
+  <title id="title">GeoSection ratio scan</title>
+  <desc id="desc">First-level ratios are scored by normalized edge cut to avoid caterpillar splits.</desc>
+  <style>.bg{fill:#fbfbf8}.panel{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.bar{fill:#dbeafe;stroke:#2b5c9b;stroke-width:2}.win{fill:#e4f5eb;stroke:#2f7d4c;stroke-width:3}.bad{fill:#ffe4e1;stroke:#b84a42;stroke-width:2}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.mono{font:12px Consolas,monospace;fill:#17212b}</style>
+  <rect class="bg" width="960" height="360"/><rect class="panel" x="60" y="55" width="840" height="255" rx="8"/>
+  <text class="label" x="95" y="92">First-level ratio scan</text>
+  <rect class="bad" x="110" y="210" width="90" height="45" rx="6"/><text class="small" x="126" y="238">1:13</text>
+  <rect class="bar" x="240" y="185" width="90" height="70" rx="6"/><text class="small" x="257" y="238">2:12</text>
+  <rect class="bar" x="370" y="155" width="90" height="100" rx="6"/><text class="small" x="387" y="238">3:11</text>
+  <rect class="win" x="500" y="125" width="90" height="130" rx="6"/><text class="small" x="517" y="238">7:7</text>
+  <text class="mono" x="640" y="155">score = EC_min / sqrt(min(i,k-i))</text>
+  <text class="small" x="640" y="190">Small splits must beat the normalization,</text><text class="small" x="640" y="210">not merely enclose less area.</text>
+</svg>

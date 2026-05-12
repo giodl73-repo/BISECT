@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="360" viewBox="0 0 960 360" role="img" aria-labelledby="title desc">
+  <title id="title">Three-layer compositor</title>
+  <desc id="desc">Structure, weights, and search combine into one reproducible BISECT run.</desc>
+  <style>.bg{fill:#fbfbf8}.layer{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.s{fill:#dbeafe;stroke:#2b5c9b;stroke-width:2}.w{fill:#fff3cd;stroke:#c79300;stroke-width:2}.q{fill:#e4f5eb;stroke:#2f7d4c;stroke-width:2}.out{fill:#eef2ff;stroke:#5b61b6;stroke-width:2}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.arrow{stroke:#596673;stroke-width:2;fill:none;marker-end:url(#arrow)}</style>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#596673"/></marker></defs>
+  <rect class="bg" width="960" height="360"/><rect class="layer s" x="70" y="70" width="190" height="70" rx="8"/><text class="label" x="126" y="102">structure</text><text class="small" x="105" y="123">tree / split topology</text>
+  <rect class="layer w" x="70" y="155" width="190" height="70" rx="8"/><text class="label" x="134" y="187">weights</text><text class="small" x="108" y="208">what cuts cost</text>
+  <rect class="layer q" x="70" y="240" width="190" height="70" rx="8"/><text class="label" x="137" y="272">search</text><text class="small" x="108" y="293">which candidate wins</text>
+  <rect class="out" x="395" y="135" width="170" height="95" rx="8"/><text class="label" x="425" y="173">resolved config</text><text class="small" x="428" y="194">hash + parameters</text>
+  <rect class="out" x="700" y="135" width="170" height="95" rx="8"/><text class="label" x="742" y="173">BISECT run</text><text class="small" x="735" y="194">sidecars + evidence</text>
+  <path class="arrow" d="M260 105 C320 115 350 145 395 160"/><path class="arrow" d="M260 190 H395"/><path class="arrow" d="M260 275 C320 255 350 220 395 205"/><path class="arrow" d="M565 182 H700"/>
+</svg>

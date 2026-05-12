@@ -35,6 +35,17 @@ In other words, the algorithm is the construction engine, but the BISECT system
 cares just as much about the evidence trail. A method is useful when its choices
 can be replayed, summarized, packaged as RPLAN/RCTX, and checked by the verifier.
 
+## Bisection Compositor Family
+
+| Algorithm | Visual Guide | What To Look For |
+|---|---|---|
+| Three-Layer Compositor | [Three-Layer Compositor](three-layer-compositor.md) | Structure, weights, search as independent choices |
+| GeoSection | [GeoSection](geosection.md) | Ratio scan, isoperimetric normalization, caterpillar avoidance |
+| AreaSection | [AreaSection](areasection.md) | Population/area dual constraint and Lorenz feasibility |
+| ApportionRegions | [ApportionRegions](apportionregions.md) | Prime-factor tree and reusable regional spine |
+| County-Sticky Weights | [County-Sticky Weights](county-sticky-weights.md) | Intra-county edge boost and compactness/split trade-off |
+| Seed Search Modes | [Seed Search Modes](seed-search-modes.md) | Single, multi, convergence, percentile, bisection-ensemble |
+
 ## Visual Grammar
 
 The atlas uses a few repeated visual conventions so the pages can be read as a
@@ -88,10 +99,8 @@ Each algorithm page is organized around four questions:
 
 The next atlas pages should cover:
 
-- older B/T section algorithms such as GeoSection, AreaSection, and
-  ApportionRegions
-- weights/search layer pages such as County-Sticky, ConvergenceSweep, and
-  PercentileSweep
+- VRASection, ProportionalSection, NestSection, and StabilitySection
+- Moving-Knife, compact-Polsby, CVD, BFS growth, and simulated annealing
 
 ## Relationship To Other Docs
 

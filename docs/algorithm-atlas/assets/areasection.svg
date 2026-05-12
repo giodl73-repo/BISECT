@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="360" viewBox="0 0 960 360" role="img" aria-labelledby="title desc">
+  <title id="title">AreaSection feasibility</title>
+  <desc id="desc">Population and land-area constraints filter feasible first-level ratios.</desc>
+  <style>.bg{fill:#fbfbf8}.panel{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.pop{fill:#dbeafe;stroke:#2b5c9b;stroke-width:2}.area{fill:#fff3cd;stroke:#c79300;stroke-width:2}.ok{fill:#e4f5eb;stroke:#2f7d4c;stroke-width:2}.no{fill:#ffe4e1;stroke:#b84a42;stroke-width:2}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.arrow{stroke:#596673;stroke-width:2;fill:none;marker-end:url(#arrow)}</style>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#596673"/></marker></defs>
+  <rect class="bg" width="960" height="360"/><rect class="panel" x="65" y="60" width="830" height="245" rx="8"/>
+  <rect class="pop" x="110" y="120" width="155" height="75" rx="8"/><text class="label" x="148" y="153">population</text><text class="small" x="150" y="174">tight target</text>
+  <rect class="area" x="330" y="120" width="155" height="75" rx="8"/><text class="label" x="390" y="153">area</text><text class="small" x="365" y="174">looser window</text>
+  <rect class="ok" x="570" y="85" width="170" height="55" rx="8"/><text class="small" x="608" y="118">ratio feasible</text>
+  <rect class="no" x="570" y="175" width="170" height="55" rx="8"/><text class="small" x="605" y="208">ratio skipped</text>
+  <path class="arrow" d="M265 157 H330"/><path class="arrow" d="M485 145 C525 115 535 112 570 112"/><path class="arrow" d="M485 170 C525 200 535 202 570 202"/>
+  <text class="small" x="110" y="265">Lorenz-style feasibility keeps impossible population/area ratios out of the scan.</text>
+</svg>
