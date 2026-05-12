@@ -1,24 +1,109 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="900" height="360" viewBox="0 0 900 360" role="img" aria-labelledby="title desc">
-  <title id="title">T.16 hierarchical regionalization</title>
-  <desc id="desc">Adjacent units merge into larger regions while a merge log records each step.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="620" viewBox="0 0 1120 620" role="img" aria-labelledby="title desc">
+  <title id="title">T.16 hierarchical regionalization merge decision flow</title>
+  <desc id="desc">A hierarchical regionalization example shows singleton units, adjacent merge candidates, an eligibility rejection, a selected merge, and the resulting merge witness tree.</desc>
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#334155"/></marker>
-    <style>text{font-family:Arial,Helvetica,sans-serif;fill:#172033}.h{font-size:22px;font-weight:700}.s{font-size:13px;fill:#475569}.box{fill:#fff;stroke:#94a3b8;stroke-width:1.5;rx:8}.line{stroke:#334155;stroke-width:2;fill:none;marker-end:url(#arrow)}.a{fill:#dbeafe;stroke:#2563eb}.b{fill:#dcfce7;stroke:#16a34a}.c{fill:#fef3c7;stroke:#d97706}</style>
+    <style>
+      text{font-family:Arial,Helvetica,sans-serif;fill:#162033}
+      .bg{fill:#f8fafc}
+      .panel{fill:#fff;stroke:#64748b;stroke-width:1.5;rx:8}
+      .h{font-size:24px;font-weight:700}
+      .sub{font-size:14px;fill:#475569}
+      .label{font-size:14px;font-weight:700}
+      .small{font-size:12px;fill:#475569}
+      .tiny{font-size:10px;fill:#475569}
+      .mono{font-size:11px;font-family:Consolas,monospace;fill:#162033}
+      .arrow{stroke:#334155;stroke-width:2;fill:none;marker-end:url(#arrow)}
+      .cell{fill:#f8fafc;stroke:#475569;stroke-width:1.5}
+      .r0{fill:#dbeafe;stroke:#2563eb;stroke-width:2}
+      .r1{fill:#dcfce7;stroke:#16a34a;stroke-width:2}
+      .r2{fill:#fef3c7;stroke:#b45309;stroke-width:2}
+      .r3{fill:#fce7f3;stroke:#be185d;stroke-width:2}
+      .cand{fill:#eef2ff;stroke:#6366f1;stroke-width:1.5;rx:5}
+      .reject{fill:#fee2e2;stroke:#dc2626;stroke-width:1.8;rx:5}
+      .select{fill:#ecfdf5;stroke:#059669;stroke-width:1.8;rx:5}
+      .line{stroke:#64748b;stroke-width:2}
+      .dash{stroke:#dc2626;stroke-width:2;stroke-dasharray:5 4}
+      .tree{fill:#ecfdf5;stroke:#059669;stroke-width:1.8;rx:6}
+      .leaf{fill:#eff6ff;stroke:#2563eb;stroke-width:1.5;rx:6}
+    </style>
   </defs>
-  <rect width="900" height="360" fill="#f8fafc"/>
-  <text x="32" y="42" class="h">T.16 Hierarchical Regionalization</text>
-  <text x="32" y="66" class="s">Merge adjacent regions until the target district count remains.</text>
-  <rect x="32" y="105" width="170" height="160" class="box"/>
-  <rect x="62" y="145" width="35" height="35" class="a"/><rect x="100" y="145" width="35" height="35" class="b"/><rect x="138" y="145" width="35" height="35" class="c"/><rect x="62" y="183" width="35" height="35" class="c"/><rect x="100" y="183" width="35" height="35" class="a"/><rect x="138" y="183" width="35" height="35" class="b"/>
-  <text x="68" y="292" class="s">unit regions</text>
-  <path d="M215 185 L285 185" class="line"/>
-  <rect x="300" y="105" width="160" height="160" class="box"/>
-  <rect x="330" y="150" width="74" height="35" class="a"/><rect x="330" y="188" width="35" height="35" class="c"/><rect x="368" y="188" width="36" height="35" class="a"/>
-  <text x="328" y="292" class="s">merge adjacent pair</text>
-  <path d="M475 185 L545 185" class="line"/>
-  <rect x="560" y="105" width="150" height="160" class="box"/>
-  <text x="585" y="145" class="s">merge-log.json</text><text x="585" y="174" class="s">step</text><text x="585" y="198" class="s">left/right</text><text x="585" y="222" class="s">population</text>
-  <path d="M725 185 L795 185" class="line"/>
-  <rect x="810" y="105" width="60" height="160" class="box b"/>
-  <text x="820" y="166" class="s">RPLAN</text><text x="820" y="190" class="s">RCTX</text><text x="819" y="214" class="s">audit</text>
+  <rect width="1120" height="620" class="bg"/>
+  <text x="32" y="44" class="h">T.16 Hierarchical Regionalization</text>
+  <text x="32" y="68" class="sub">Bottom-up construction is a repeated adjacent-pair decision, and the merge witness is the evidence.</text>
+
+  <rect x="32" y="96" width="300" height="246" class="panel"/>
+  <text x="52" y="124" class="label">1. Start with singleton regions</text>
+  <text x="52" y="146" class="small">Each block has population and graph adjacency.</text>
+  <g transform="translate(72 172)">
+    <rect class="cell" x="0" y="0" width="48" height="48"/><text x="17" y="29" class="tiny">R0</text><text x="14" y="43" class="tiny">44</text>
+    <rect class="cell" x="48" y="0" width="48" height="48"/><text x="65" y="29" class="tiny">R1</text><text x="62" y="43" class="tiny">48</text>
+    <rect class="cell" x="96" y="0" width="48" height="48"/><text x="113" y="29" class="tiny">R2</text><text x="110" y="43" class="tiny">73</text>
+    <rect class="cell" x="0" y="48" width="48" height="48"/><text x="17" y="77" class="tiny">R3</text><text x="14" y="91" class="tiny">36</text>
+    <rect class="cell" x="48" y="48" width="48" height="48"/><text x="65" y="77" class="tiny">R4</text><text x="62" y="91" class="tiny">52</text>
+    <rect class="cell" x="96" y="48" width="48" height="48"/><text x="113" y="77" class="tiny">R5</text><text x="110" y="91" class="tiny">68</text>
+    <rect class="cell" x="0" y="96" width="48" height="48"/><text x="17" y="125" class="tiny">R6</text><text x="14" y="139" class="tiny">57</text>
+    <rect class="cell" x="48" y="96" width="48" height="48"/><text x="65" y="125" class="tiny">R7</text><text x="62" y="139" class="tiny">42</text>
+    <rect class="cell" x="96" y="96" width="48" height="48"/><text x="113" y="125" class="tiny">R8</text><text x="110" y="139" class="tiny">45</text>
+  </g>
+  <text x="52" y="326" class="small">Only adjacent regions enter the candidate set.</text>
+
+  <path d="M346 218 H394" class="arrow"/>
+
+  <rect x="408" y="96" width="312" height="246" class="panel"/>
+  <text x="428" y="124" class="label">2. Candidate pairs are scored after eligibility</text>
+  <text x="428" y="146" class="small">Capacity and connectedness gate the score.</text>
+  <rect x="432" y="170" width="258" height="28" fill="#e2e8f0"/>
+  <text x="444" y="189" class="mono">pair       pop   gate       score</text>
+  <rect x="432" y="198" width="258" height="34" class="select"/>
+  <text x="444" y="220" class="mono">R0+R1       92   ok         0.18</text>
+  <rect x="432" y="238" width="258" height="34" class="reject"/>
+  <text x="444" y="260" class="mono">R2+R5      141   capacity   --</text>
+  <rect x="432" y="278" width="258" height="34" class="cand"/>
+  <text x="444" y="300" class="mono">R7+R8       87   ok         0.27</text>
+  <text x="428" y="328" class="small">The lowest eligible score wins; rejected pairs are still evidence.</text>
+
+  <path d="M734 218 H782" class="arrow"/>
+
+  <rect x="796" y="96" width="292" height="246" class="panel"/>
+  <text x="816" y="124" class="label">3. Apply selected merge and record witness</text>
+  <text x="816" y="146" class="small">The grid changes, and the log can replay the change.</text>
+  <g transform="translate(824 170)">
+    <rect class="r0" x="0" y="0" width="96" height="48"/><text x="33" y="29" class="tiny">R01</text><text x="33" y="43" class="tiny">92</text>
+    <rect class="cell" x="96" y="0" width="48" height="48"/><text x="113" y="29" class="tiny">R2</text>
+    <rect class="cell" x="0" y="48" width="48" height="48"/><text x="17" y="77" class="tiny">R3</text>
+    <rect class="cell" x="48" y="48" width="48" height="48"/><text x="65" y="77" class="tiny">R4</text>
+    <rect class="cell" x="96" y="48" width="48" height="48"/><text x="113" y="77" class="tiny">R5</text>
+    <rect class="cell" x="0" y="96" width="48" height="48"/><text x="17" y="125" class="tiny">R6</text>
+    <rect class="cell" x="48" y="96" width="48" height="48"/><text x="65" y="125" class="tiny">R7</text>
+    <rect class="cell" x="96" y="96" width="48" height="48"/><text x="113" y="125" class="tiny">R8</text>
+  </g>
+  <rect x="988" y="172" width="72" height="108" class="select"/>
+  <text x="999" y="198" class="tiny">witness</text>
+  <text x="999" y="218" class="tiny">inputs R0,R1</text>
+  <text x="999" y="238" class="tiny">score 0.18</text>
+  <text x="999" y="258" class="tiny">out R01</text>
+
+  <rect x="32" y="382" width="520" height="178" class="panel"/>
+  <text x="52" y="410" class="label">Merge lineage becomes the replay tree</text>
+  <rect x="252" y="432" width="72" height="34" class="tree"/><text x="273" y="454" class="small">R014</text>
+  <line x1="288" y1="466" x2="222" y2="510" class="line"/><line x1="288" y1="466" x2="364" y2="510" class="line"/>
+  <rect x="186" y="510" width="72" height="34" class="tree"/><text x="207" y="532" class="small">R01</text>
+  <rect x="336" y="510" width="72" height="34" class="leaf"/><text x="363" y="532" class="small">R4</text>
+  <line x1="222" y1="510" x2="176" y2="482" class="line"/><line x1="222" y1="510" x2="268" y2="482" class="line"/>
+  <rect x="142" y="448" width="54" height="30" class="leaf"/><text x="160" y="468" class="small">R0</text>
+  <rect x="248" y="448" width="54" height="30" class="leaf"/><text x="266" y="468" class="small">R1</text>
+  <text x="52" y="532" class="small">Every non-leaf region must point back to the merge row that created it.</text>
+
+  <rect x="596" y="382" width="492" height="178" class="panel"/>
+  <text x="616" y="410" class="label">Downstream consequence</text>
+  <text x="616" y="434" class="small">Stopping at k regions emits a final assignment; stopping early emits constructor failure evidence.</text>
+  <rect x="632" y="462" width="112" height="54" class="tree"/>
+  <text x="660" y="484" class="small">RPLAN</text><text x="652" y="502" class="tiny">region tops</text>
+  <rect x="772" y="462" width="112" height="54" class="cand"/>
+  <text x="798" y="484" class="small">merge log</text><text x="796" y="502" class="tiny">replay path</text>
+  <rect x="912" y="462" width="112" height="54" class="reject"/>
+  <text x="932" y="484" class="small">witness</text><text x="928" y="502" class="tiny">rejections/status</text>
+  <path d="M744 488 H772" class="arrow"/><path d="M884 488 H912" class="arrow"/>
+  <text x="616" y="542" class="small">Reading rule: do not just show larger blobs; show which adjacent pair won and why competing pairs failed or lost.</text>
 </svg>

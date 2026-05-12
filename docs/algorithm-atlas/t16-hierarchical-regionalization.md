@@ -32,6 +32,20 @@ This is useful when the system needs a hierarchy of regions, not just a final
 flat plan. Reviewers can inspect intermediate layers and replay why each larger
 region exists.
 
+## Picture 0: Adjacent-Pair Choice To Merge Witness
+
+The opening figure shows the bottom-up decision that defines T.16. The grid
+starts as singleton regions. The algorithm then enumerates only adjacent pairs,
+checks each pair against the declared capacity and connectedness profile, and
+scores only the pairs that survive those gates. A rejected pair is still part of
+the evidence because it explains why a visually plausible merge was not taken.
+
+The selected row is applied to the grid and written as a merge witness. That
+witness is what later becomes the hierarchy tree: every non-leaf region should
+trace back to the row that created it. For BISECT, the replayable merge log is
+as important as the final color map because it explains how the final region
+tops came to exist.
+
 ## Algorithm Shape
 
 ```text
