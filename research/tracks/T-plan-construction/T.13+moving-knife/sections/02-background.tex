@@ -1,165 +1,102 @@
 \section{Background}
 \label{sec:background}
 
-\subsection{Fair Division and the Moving-Knife Protocol}
+\subsection{Moving-Knife as a Procedural Metaphor}
 
-Fair-division theory addresses the problem of allocating a divisible resource
-among multiple claimants such that each claimant regards the allocation as
-acceptable by some criterion --- most commonly \emph{proportionality} (each
-party receives at least $1/n$ of the whole) or \emph{envy-freeness} (no party
-prefers another party's share to its own).
+Fair-division theory studies procedures for dividing a resource among
+claimants. Dubins and Spanier's moving-knife protocol is one of the classic
+continuous procedures~\citep{dubins1961}: a knife moves across the resource,
+and the stopping rule determines the allocation.
 
-The moving-knife protocol was introduced by Dubins and
-Spanier~\citeyear{dubins1961} as a continuous-time generalisation of the
-``cut-and-choose'' two-party procedure.
-In cut-and-choose, one party divides the resource into two pieces they value
-equally, and the other party chooses the piece they prefer.
-The procedure is proportional but not envy-free when the ``cutter'' and
-``chooser'' value the resource differently.
-
-Dubins and Spanier's moving-knife protocol achieves both properties
-simultaneously for two parties:
-\begin{enumerate}
-\item A referee moves a knife across the resource at a uniform rate.
-\item The first party calls ``stop'' when the portion to the left of the knife
-  reaches $1/2$ of that party's total valuation.
-\item The left portion is awarded to the calling party; the right portion
-  goes to the other party.
-\end{enumerate}
-The protocol is \emph{procedurally impartial}: the knife sweep is mechanical
-and neither party controls its rate or direction.
-Rawlsian fairness requires that procedures be chosen from behind a ``veil of
-ignorance'' about which position one will occupy; the moving-knife protocol
-embodies this principle, since neither party knows in advance whether they
-will be the caller or the recipient.
-
-Puppe and Tasnadi~\citeyear{puppe2026} adapt the moving-knife framework to
-redistricting by reinterpreting ``the resource'' as the state's geographic
-territory and ``the knife'' as a directional sweep line.
-Instead of moving across the state at a fixed rate, the knife rotates through
-angular orientations.
-At each orientation, the ``stop'' criterion is replaced by the population
-balance condition: the split point is wherever the cumulative population
-first reaches $P_{\mathrm{total}}/2$.
-The ``value'' being optimised is Reock compactness: the algorithm stops
-not when either party calls stop, but at the orientation that maximises
-the geometric quality of the split.
+BISECT's \mka{} does not import all of the envy-free or proportionality
+guarantees from cake-cutting. Redistricting has fixed geography, indivisible
+tracts, population balance constraints, contiguity requirements, and legal
+criteria that do not map cleanly onto private valuations. The useful transfer
+is procedural: a public, mechanical sweep is easier to explain and audit than
+an opaque choice among many candidate maps.
 
 \subsection{Reock Compactness}
 \label{subsec:reock}
 
-Reock compactness was introduced by Ernest Reock in 1961 as a
-``measure of the shape of geographic districts''~\citep{reock1961}.
-The measure is defined for a district $D$ as:
+Reock compactness is
 \begin{equation}
   \reock{}(D) = \frac{A(D)}{A(\mathrm{MEC}(D))},
   \label{eq:reock}
 \end{equation}
-where $A(D)$ is the area of district $D$ and $A(\mathrm{MEC}(D))$ is the
-area of the smallest circle that encloses $D$ (the minimum enclosing circle,
-or MEC).
-Since $D \subseteq \mathrm{MEC}(D)$ by definition, we have $\reock{}(D) \in (0, 1]$,
-with equality iff $D$ is a perfect circle.
+where $\mathrm{MEC}(D)$ is the minimum enclosing circle of district
+$D$~\citep{reock1961}. A compact round region fills much of its enclosing
+circle; a long thin region does not.
 
-\begin{remark}[Centroid approximation]
+The implemented scorer is an approximation. It computes the minimum enclosing
+circle of projected tract centroids, not the exact district polygon boundary.
+When explicit tract areas are not passed to the scorer, the numerator is the
+number of centroid points. The resulting value is clamped to $[0,1]$.
+
+\begin{remark}[Current score versus publication Reock]
 \label{rem:centroid-approx}
-The precise Reock score of a district requires the MEC of the district's
-full polygon boundary.
-In the Phase~1 implementation described in this paper, we compute the MEC of
-the projected tract centroid points only (not the full polygon vertices).
-This approximation may yield $\reock{}_{\mathrm{approx}}(D) > 1.0$ for districts
-that contain large-area boundary tracts whose polygon vertices extend beyond
-the centroid-MEC.
-The implementation clamps all Reock scores to $[0.0, 1.0]$: \linebreak
-$\reock{}_{\mathrm{clamped}} = \min(\reock{}_{\mathrm{approx}}, 1.0)$.
-The invariant $\reock{} \le 1$ is enforced by clamping, not by structural
-guarantee of the centroid approximation.
-Phase~2 will implement the polygon-boundary MEC.
+The current split scorer is useful for ranking candidate sweep directions
+inside the algorithm. It is not yet a final legal Reock statistic for a
+certified district plan. A publication-grade Reock package should compute the
+minimum enclosing circle of polygon boundary vertices and use true district
+area in the numerator.
 \end{remark}
 
-\paragraph{Legal prominence.}
-Reock is the most widely cited compactness measure in redistricting
-litigation for two reasons.
-First, it is intuitively interpretable: a district with Reock $= 0.40$ uses
-40\,\% of the smallest circle that could contain it.
-Second, elongation and protrusion --- the most common forms of partisan
-packing and cracking --- directly reduce Reock, because elongated shapes
-have large MECs relative to their area.
-Polsby-Popper is sensitive to perimeter irregularity (``jagged'' edges from
-following county or precinct boundaries) even in compact districts; Reock is
-not, because it depends only on the overall extent of the district, not its
-boundary smoothness.
-
-\subsection{Welzl's Minimum-Enclosing-Circle Algorithm}
+\subsection{Minimum Enclosing Circles}
 \label{subsec:welzl}
 
-Given a set of $m$ points in the plane, Welzl's algorithm~\citep{welzl1991}
-computes the smallest enclosing circle in expected $O(m)$ time via a
-randomised incremental procedure.
-The algorithm maintains a candidate MEC and processes points one at a time.
-If a new point lies outside the current MEC, the point is added to the
-\emph{basis} (the boundary-defining set) and the MEC is recomputed from the
-updated basis.
-In the redistricting context, the input points are the projected centroids
-of the tracts in the half being evaluated; the basis has at most three points
-(the MEC of a set of 2D points has at most 3 boundary points).
+The implementation uses a deterministic-shuffle version of Welzl's randomized
+incremental minimum-enclosing-circle algorithm~\citep{welzl1991}. For a set of
+points in the plane, the enclosing circle is determined by at most three
+boundary points. This makes the scoring routine fast enough to call twice per
+candidate orientation.
 
-\begin{proposition}[Welzl Runtime~\protect\citep{welzl1991}]
-\label{prop:welzl}
-Welzl's algorithm computes the MEC of $m$ points in $\mathbb{R}^2$ in
-expected $O(m)$ time.
-\end{proposition}
+\begin{center}
+\begin{tabular}{c@{\quad}c@{\quad}c}
+\textbf{Two-point basis} & \textbf{Three-point basis} & \textbf{Elongated set} \\
+\begin{tabular}{ccc}
+$\bullet$ &  & $\bullet$ \\
+ & $\circ$ &
+\end{tabular}
+&
+\begin{tabular}{ccc}
+$\bullet$ &  & $\bullet$ \\
+ & $\circ$ & \\
+ & $\bullet$ &
+\end{tabular}
+&
+\begin{tabular}{ccccc}
+$\bullet$ & $\bullet$ & $\bullet$ & $\bullet$ & $\bullet$
+\end{tabular}
+\end{tabular}
+\end{center}
 
-The expected-$O(m)$ bound makes Welzl's algorithm well-suited to the inner
-loop of \mka{}: it is called $2 \times n_{\mathrm{orient}}$ times per bisection
-node (once for each half at each orientation), contributing $O(n_{\mathrm{orient}} \cdot m \log m)$
-total work (the $O(m \log m)$ sort step dominates).
+The third sketch is the danger case \mka{} tries to avoid: a sweep that creates
+an elongated half has a large enclosing circle and therefore a lower score.
 
-\subsection{Relationship to Existing Platform Algorithms}
+\subsection{Where \mka{} Sits in the Portfolio}
 \label{subsec:related}
-
-Table~\ref{tab:algorithm-compare} places \mka{} in the context of the four
-main structure algorithms in the redistricting platform.
 
 \begin{table}[t]
 \centering
-\caption{%
-  Structure algorithm comparison.
-  \mka{} is the only algorithm that directly targets Reock; the others
-  optimise different metrics and achieve Reock as a secondary consequence.
-  Runtime is per bisection node with $m$ tracts.
-}
+\small
+\caption{Structure-layer roles. ``Direct target'' means the implemented split
+routine scores candidates by that quantity; it does not imply final-plan global
+optimality.}
 \label{tab:algorithm-compare}
-\renewcommand{\arraystretch}{1.3}
-\begin{tabular}{@{}lllll@{}}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}p{0.16\linewidth}p{0.25\linewidth}p{0.21\linewidth}p{0.25\linewidth}@{}}
 \toprule
-Algorithm & Optimises & Distance & Reock & Runtime \\
+Algorithm & Candidate mechanism & Direct target & Main caveat \\
 \midrule
-\metis{}  & Edge cuts & Graph topology & Low & $O(m \log m)$ \\
-\cvd{}    & Proximity & BFS hop-count  & Medium & $O(n_{\mathrm{iter}} \times m)$ \\
-\cvdgeo{} & Proximity & Euclidean      & Medium--high & $O(n_{\mathrm{iter}} \times m)$ \\
-\bfsg{}   & Balance speed & Euclidean seeds & Medium & $O(m \log m)$ \\
-\textbf{\mka{}} & \textbf{Reock} & \textbf{Euclidean sweep} & \textbf{Highest} & $O(n_{\mathrm{orient}} \cdot m \log m)$ \\
+\metis{} & graph partition & edge cut & graph objective, not Reock \\
+\cvdgeo{} & geographic assignment & seed proximity & half-split target today \\
+\bfsg{} & two-frontier growth & legible contiguity & baseline, not compactness proof \\
+\mka{} & projection sweep & centroid-MEC Reock & local and approximate \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\paragraph{\mka{} as the third geometric algorithm.}
-\cvdgeo{} (T.11) and \bfsg{} (T.12~\citep{dellaLibera2026bfs}) each
-introduced a new geometric structure algorithm targeting a distinct court-relevant
-metric: \cvdgeo{} targets Polsby-Popper via geographic proximity clustering;
-\bfsg{} targets geographic coverage balance.
-\mka{} is the third, targeting Reock via angular sweep.
-The three algorithms form a family: each uses Albers EPSG:5070 projection for
-geographic coordinates, each shares the 200-iteration boundary-swap rebalance,
-and each provides a distinct plain-language justification for the submitted plan.
-
-\paragraph{Why not optimise Polsby-Popper in \mka{}?}
-Polsby-Popper requires perimeter computation, which in turn requires the
-polygon boundary data from TIGER/Line shapefiles.
-Reock requires only the positions of tract centroids and the MEC geometry,
-both available from the existing centroid companion file.
-\mka{} therefore defaults to Reock; an optional \texttt{--mka-metric polsby}
-flag is supported for contexts where Polsby-Popper is the legally operative
-metric, but Reock is the preferred default because it requires no polygon
-boundary data beyond what \cvdgeo{} already uses.
+\mka{} is therefore best understood as a diagnostic and construction option
+for Reock-shaped geometry. It supplies a clear candidate ledger:
+orientation, population prefix, left score, right score, selected minimum.
+That ledger is the bridge to future audit artifacts.

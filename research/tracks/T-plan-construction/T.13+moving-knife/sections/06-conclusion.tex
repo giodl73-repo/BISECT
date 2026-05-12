@@ -1,84 +1,39 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-We have introduced the Moving-Knife Algorithm (\mka{}), the first redistricting
-structure algorithm that explicitly maximises Reock compactness.
-\mka{} adapts the fair-division moving-knife protocol of Dubins and
-Spanier~\citeyear{dubins1961} to the bisection framework, sweeping through 180
-orientations and selecting the one that maximises the minimum Reock score of
-the two population-balanced halves.
-Implementation reuses the Albers EPSG:5070 projection and centroid companion
-file from \cvdgeo{} (T.11~\citep{dellaLibera2026cvdgeo}), and the 200-iteration
-boundary-swap rebalance shared with all geometric structure algorithms.
+\mka{} gives BISECT a simple directional sweep alternative to graph cuts,
+Voronoi assignment, and BFS growth. It is visually legible: for every candidate
+angle, the reader can inspect the projection order, population prefix, two
+halves, and worst-half Reock approximation.
 
-\paragraph{When to use \mka{}.}
-Use \texttt{--structure moving-knife} when:
-\begin{itemize}
-\item The jurisdiction's constitutional or statutory standard explicitly
-  cites Reock compactness (North Carolina, Florida, Wisconsin --- see
-  Section~\ref{sec:introduction}).
-\item A court order or remedial mandate specifies that the submitted plan
-  must demonstrate Reock maximisation.
-\item A procedurally neutral, legally articulable justification is needed
-  that is more accessible to non-technical judges than the graph-theoretic
-  arguments of \metis{} or the Lloyd-iteration arguments of \cvdgeo{}.
-\end{itemize}
+\paragraph{Use today.}
+Use \texttt{--structure moving-knife} when a run needs a geometry-first
+baseline whose split choices are easy to replay. Treat the output as a
+candidate structure plan that still needs the standard validation and scoring
+pipeline.
 
-\paragraph{When other algorithms may be preferable.}
-\begin{itemize}
-\item For Polsby-Popper optimisation: use \cvdgeo{}
-  (\texttt{--structure centroidal-voronoi --cvd-metric geographic}).
-\item For minimum edge cut: use \metis{}
-  (\texttt{--structure standard-bisect}).
-\item For geographic balance speed: use \bfsg{}
-  (\texttt{--structure bfs-growth}).
-\item When Reock is not the operative metric: \mka{}'s 10--15\,\% EC premium
-  over \cvdgeo{} may not be justified.
-\end{itemize}
+\paragraph{Do not overclaim.}
+The current implementation does not prove final-plan Reock optimality, does not
+compute polygon-boundary Reock, and does not implement true Polsby-Popper
+optimization inside \texttt{split\_subgraph\_mka}. It is a credible local
+splitter, not yet a standalone certification system.
 
-\paragraph{Position in the algorithm portfolio.}
-\mka{} joins \cvdgeo{} (T.11) and \bfsg{} (T.12~\citep{dellaLibera2026bfs})
-as the third geometric structure algorithm in the platform.
-Together, the three algorithms provide coverage of the three compactness
-metrics most commonly cited in redistricting litigation:
-\bfsg{} targets geographic balance (used as a proxy for Convex Hull Ratio),
-\cvdgeo{} targets Polsby-Popper via geographic proximity, and
-\mka{} targets Reock via angular sweep.
-Practitioners selecting among them should match the algorithm to the legally
-operative metric in their jurisdiction.
-
-\paragraph{Open questions.}
-Several extensions are deferred:
+\paragraph{Next work.}
 \begin{enumerate}
-\item \textbf{Polygon-boundary MEC (Phase~2)}: replace the centroid
-  approximation (Remark~\ref{rem:centroid-approx}) with the full
-  polygon-boundary MEC using the TIGER/Line shapefile vertex data.
-  This will eliminate the $\reock{} > 1$ clamping cases and produce
-  exact Reock scores.
-
-\item \textbf{$n_{\mathrm{orient}}$ tradeoff}: benchmark 36 vs.\ 180 orientations
-  on FL and WA panhandle geometries to determine whether the 5$\times$
-  speedup of 36 orientations is worth the small quality loss.
-
-\item \textbf{\mka{} + BisectionEnsemble}: run \be{}$(T=50)$ with \mka{}
-  bisectors to find the best Reock-maximising seed among 50 independent
-  runs.
-  Per-run runtime ($\approx$6\,s on NC) makes the ensemble feasible with
-  \texttt{--workers 8}.
-
-\item \textbf{Non-convex subgraphs}: for states with severe non-convexity
-  (peninsulas, island tracts), investigate whether a post-hoc local search
-  over orientations --- seeded by \mka{}'s $\theta^*$ --- can improve
-  on the linear sweep's heuristic.
+\item Archive per-node angle ledgers: projection order, prefix population,
+  left/right scores, selected angle, and post-rebalance changes.
+\item Add polygon-boundary Reock scoring for final plans and, if feasible, for
+  candidate split ranking.
+\item Implement real Polsby-Popper scoring only when perimeter data are present
+  in the split routine.
+\item Run same-metric NC/FL/WA packages against \metis{}, \cvdgeo{}, and
+  \bfsg{}.
+\item Add visual atlas panels that show each rejected angle and why the winner
+  has the best worst-half enclosing-circle score.
 \end{enumerate}
 
 \paragraph{Summary.}
-The Moving-Knife Algorithm provides a principled, court-defensible
-procedure for Reock maximisation in congressional redistricting.
-Its theoretical basis in fair-division theory (Dubins-Spanier 1961,
-Puppe-Tasnadi 2026) provides academic grounding; its empirical performance
-(highest Min-Reock on NC, FL, and WA) confirms the operational claim;
-and its fair-division certificate offers a procedurally neutral justification
-that is accessible to non-technical decision-makers.
-The algorithm is available in the \texttt{bisect} platform as
-\texttt{--structure moving-knife}.
+The useful contribution is not the phrase ``moving knife.'' It is the visible
+ledger: show the sweep, show the prefix, show both enclosing-circle scores, and
+show why that split was chosen. That is the standard this paper now sets for
+\mka{}.

@@ -3,66 +3,42 @@
 
 \subsection{Notation}
 
-Let $G_v = (V_v, E_v)$ be the subgraph at bisection tree node $v$, with
-$m = |V_v|$ tracts and population $p_i$ for each tract $i \in V_v$.
-Let $\ell_i = (\lambda_i, \phi_i)$ be the WGS84 (longitude, latitude) of
-the population-weighted centroid of tract $i$'s polygon, loaded from the
-centroid companion file (Section~\ref{subsec:data}).
-Let $\mathbf{x}_i = (x_i, y_i) = \mathrm{proj}(\ell_i)$ be the
-Albers-projected coordinates in metres (EPSG:5070, shared with
-\cvdgeo{}~\citep{dellaLibera2026cvdgeo}).
+Let $G_v=(V_v,E_v)$ be the current bisection-tree node with $m=|V_v|$ tracts.
+Each tract $i$ has population $p_i$ and centroid
+$\ell_i=(\lambda_i,\phi_i)$. The implementation projects centroids to Albers
+coordinates $\mathbf{x}_i=(x_i,y_i)$ before scoring directions.
 
-\subsection{Design Choices}
-\label{subsec:design}
+\subsection{The Implemented Split}
 
-Three non-obvious design decisions underlie the algorithm.
+For each orientation $\theta_k=k\pi/n_{\mathrm{orient}}$, \mka{} computes the
+projection
+\[
+  q_i(\theta_k) = x_i\cos\theta_k + y_i\sin\theta_k.
+\]
+Sorting by $q_i$ turns the node into a one-dimensional queue. The split point
+is the first prefix whose cumulative population reaches $P_v/2$.
 
-\paragraph{Choice 1: $n_{\mathrm{orient}} = 180$ (every $1^\circ$).}
-The sweep tests orientations $\theta \in \{0, 1, \ldots, 179\}$ degrees,
-covering $[0^\circ, 180^\circ)$ uniformly.
-Restricting to $[0^\circ, 180^\circ)$ is correct because opposite
-orientations produce the same bisecting hyperplane with left and right
-swapped; no information is lost by this restriction.
-The 1$^\circ$ granularity ensures the globally best direction is never
-missed by more than half a degree.
-Runtime is $O(n_{\mathrm{orient}} \cdot m \log m) \approx O(180 m \log m)$ per bisection node,
-which is comparable to a single iteration of \cvdgeo{} and substantially
-faster than the full \cvdgeo{} run (typically 7--12 iterations $\times$ $O(m)$).
+\begin{center}
+\begin{tabular}{r|rrrrrrrr|l}
+rank & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & candidate \\
+\hline
+pop  & 4 & 3 & 2 & 6 & 1 & 5 & 2 & 3 & $P_v=26$ \\
+cum  & 4 & 7 & 9 & 15 & 16 & 21 & 23 & 26 & stop at 15 \\
+side & L & L & L & L & R & R & R & R & $L/R$
+\end{tabular}
+\end{center}
 
-\paragraph{Choice 2: Reock as the default metric.}
-The sweep scores each split by $\min(\reock{}_{\mathrm{left}}, \reock{}_{\mathrm{right}})$:
-the worst-case Reock score of the two halves.
-Using the minimum (rather than the mean) ensures both halves are compact,
-following the maximin principle: maximise the outcome for the worst-off
-district.
-Reock is the default (rather than Polsby-Popper) because Reock requires only
-centroid positions and MEC geometry; Polsby-Popper requires polygon perimeter
-data, introducing an additional data dependency.
-The flag \texttt{--mka-metric polsby} enables Polsby-Popper scoring for
-jurisdictions where that metric is legally operative.
-
-\paragraph{Choice 3: Post-hoc rebalance.}
-The linear sweep produces a population split that is close to but not exactly
-balanced: the binary search for the split point may overshoot by at most one
-tract's population.
-The same 200-iteration boundary-swap rebalance used by \cvdgeo{} and \bfsg{}
-enforces exact balance within tolerance.
-The rebalance also repairs contiguity: for non-convex subgraph geometries, a
-linear sweep may produce disconnected half-subgraphs; BFS-based contiguity
-repair is applied before returning the final split.
+The score for this candidate is
+\[
+  \min(\reock{}_{\mathrm{centroid}}(L),\reock{}_{\mathrm{centroid}}(R)).
+\]
+The algorithm keeps the assignment with the largest score across all tested
+orientations.
 
 \subsection{Seed Derivation}
 \label{subsec:seed}
 
-\mka{} is deterministic given \texttt{base\_seed} and $n_{\mathrm{orient}}$.
-A seed is needed only for tie-breaking when two orientations produce
-identical minimum-Reock scores (rare in practice).
-
-\begin{definition}[\mka{} Node Seed]
-\label{def:mka-seed}
-Let $\mathtt{base\_seed}$ be the unsigned 64-bit global seed and
-$\mathtt{node\_path}$ the path string for bisection tree node $v$.
-The \emph{\mka{} node seed} is:
+The code defines a deterministic node seed:
 \[
   s_v^{\mathrm{mka}} = \mathrm{first8}\bigl(
     \mathrm{SHA\text{-}256}(
@@ -71,146 +47,68 @@ The \emph{\mka{} node seed} is:
       \;\|\; \mathtt{node\_path}
       \;\|\; \mathrm{le8}(\mathtt{base\_seed})
     )
-  \bigr),
+  \bigr).
 \]
-where $\mathrm{le4}(n)$ encodes $n$ as a 4-byte little-endian \texttt{u32},
-$\mathrm{le8}(x)$ encodes $x$ as an 8-byte little-endian \texttt{u64}, and
-$\mathrm{first8}(h)$ reads the first 8 bytes of the SHA-256 digest as a
-little-endian \texttt{u64}~\citep{sha256nist}.
-\end{definition}
+The prefix is tested to be distinct from CVD seed prefixes. In the current
+split routine this value is computed as a reserved tie seed, but ties are
+resolved by the first strictly best orientation encountered rather than by a
+random draw. The seed formula should still be retained in manifests once
+per-node angle ledgers are archived.
 
-The length prefix $\mathrm{le4}(|\mathtt{node\_path}|)$ eliminates
-prefix-collision risk: the boundary between \texttt{node\_path} and
-\texttt{base\_seed} is unambiguous.
-The prefix \texttt{"MKA\_INIT\_"} is distinct from \texttt{"CVD\_GEO\_INIT\_"}
-(Phase~2 \cvdgeo{}) and \texttt{"CVD\_INIT\_"} (Phase~1 \cvd{}).
-A platform invariant test asserts all three prefix constants are present in
-source and are pairwise distinct.
-
-\subsection{Formal Pseudocode}
-
-Algorithm~\ref{alg:mka} gives the complete \mka{} bisection procedure.
+\subsection{Pseudocode}
 
 \begin{algorithm}[t]
 \caption{\mka{}-\textsc{Bisect}($G_v$, $\mathbf{x}$, $\mathbf{p}$,
-  $A$, $n_{\mathrm{orient}}$, $\mathtt{base\_seed}$,
-  $\mathtt{node\_path}$, $\mathtt{balance\_tolerance}$)}
+  $n_{\mathrm{orient}}$, $\tau$)}
 \label{alg:mka}
 \begin{algorithmic}[1]
-\State $m \gets |V_v|$;\quad $P \gets \sum_{i \in V_v} p_i$
-\If{$m < 2$}
-  \textbf{return} degenerate assignment
-\EndIf
-\State $s_v \gets \mka{}\text{-Seed}(\mathtt{base\_seed}, \mathtt{node\_path})$
-       \Comment{Definition~\ref{def:mka-seed}}
-\State $\mathtt{sorted} \gets \mathrm{sort}(V_v)$
-       \Comment{sort by global tract index}
-\State $\mathbf{x}' \gets [\mathbf{x}_i : i \in \mathtt{sorted}]$
-       \Comment{projected coordinates in sorted order}
-\State $\mathtt{best\_score} \gets -\infty$;\quad
-       $\mathtt{best\_left} \gets \emptyset$;\quad
-       $\mathtt{best\_right} \gets \emptyset$
-\For{$k = 0$ \textbf{to} $n_{\mathrm{orient}} - 1$}
-  \State $\theta \gets k \cdot \pi / n_{\mathrm{orient}}$
-         \Comment{angle in $[0, \pi)$}
-  \State $\mathbf{u} \gets (\cos\theta, \sin\theta)$
-         \Comment{unit sweep vector}
-  \State $\mathrm{proj}_i \gets \mathbf{x}'_i \cdot \mathbf{u}$ for all $i$
-         \Comment{project onto sweep axis}
-  \State $\sigma \gets$ sort indices by $\mathrm{proj}_i$ ascending
-  \State $C \gets 0$;\quad $\mathtt{split} \gets 0$
-  \For{$j = 0$ \textbf{to} $m-1$}
-    \State $C \gets C + p_{\sigma[j]}$
-    \If{$C \ge P/2$}
-      $\mathtt{split} \gets j$;\quad \textbf{break}
-    \EndIf
-  \EndFor
-  \State $L \gets \{\mathtt{sorted}[\sigma[j]] : j \le \mathtt{split}\}$
-  \State $R \gets \{\mathtt{sorted}[\sigma[j]] : j > \mathtt{split}\}$
-  \State $r_L \gets \reock{}(L, \mathbf{x}, A)$
-         \Comment{Reock via Welzl MEC; clamped to $[0,1]$}
-  \State $r_R \gets \reock{}(R, \mathbf{x}, A)$
-  \State $\mathtt{score} \gets \min(r_L, r_R)$
-  \If{$\mathtt{score} > \mathtt{best\_score}$}
-    \State $\mathtt{best\_score} \gets \mathtt{score}$;\quad
-           $\mathtt{best\_left} \gets L$;\quad
-           $\mathtt{best\_right} \gets R$
-  \ElsIf{$\mathtt{score} = \mathtt{best\_score}$}
-    \State tie-break by $s_v$
+\State sort $V_v$ by global tract id for deterministic local indexing
+\State build local adjacency for the later boundary rebalance
+\State $P \gets \sum_{i\in V_v}p_i$;\quad $P^* \gets \lfloor P/2\rfloor$
+\State project all available centroids to Albers coordinates
+\State $\mathtt{best\_score}\gets-\infty$;\quad
+       $\mathtt{best\_assignment}\gets$ all right
+\For{$k=0$ \textbf{to} $n_{\mathrm{orient}}-1$}
+  \State $\theta\gets k\pi/n_{\mathrm{orient}}$
+  \State compute $q_i=x_i\cos\theta+y_i\sin\theta$ for every local tract $i$
+  \State sort tracts by $q_i$
+  \State scan the sorted list until cumulative population reaches $P^*$
+  \State assign the prefix left and the suffix right
+  \State compute centroid-MEC Reock for left and right
+  \State $\mathtt{score}\gets\min(r_L,r_R)$
+  \If{$\mathtt{score}>\mathtt{best\_score}$}
+    \State keep this assignment
   \EndIf
 \EndFor
-\State $(\mathtt{best\_left}, \mathtt{best\_right}) \gets
-       \mathrm{Rebalance}(\mathtt{best\_left}, \mathtt{best\_right},
-       G_v, \mathbf{p}, \mathtt{balance\_tolerance})$
-       \Comment{200-iter boundary-swap}
-\State \textbf{return} $(\mathtt{best\_left}, \mathtt{best\_right})$
+\State rebalance for at most 200 boundary moves toward $P/2$
+\State repair degenerate empty-side cases if necessary
+\State \Return left and right global tract sets
 \end{algorithmic}
 \end{algorithm}
 
-The \textbf{Reock} subroutine (line 17) computes:
-\[
-  \reock{}(S, \mathbf{x}, A) =
-  \min\!\left(1.0,\;
-    \frac{\sum_{i \in S} A_i}{\pi \cdot r_{\mathrm{MEC}}(S, \mathbf{x})^2}
-  \right),
-\]
-where $A_i$ is the TIGER/Line polygon area of tract $i$ in square metres,
-and $r_{\mathrm{MEC}}(S, \mathbf{x})$ is the radius of the smallest enclosing
-circle of the projected centroid points $\{\mathbf{x}_i : i \in S\}$,
-computed by Welzl's algorithm (Proposition~\ref{prop:welzl}).
-The clamp enforces the $\reock{} \le 1$ invariant under the centroid
-approximation (Remark~\ref{rem:centroid-approx}).
+\subsection{Boundary Rebalance}
 
-\subsection{Runtime Complexity}
+The sweep can overshoot the half-population target by one tract. After the best
+orientation is chosen, the code repeatedly moves a boundary tract from the
+heavier side to the lighter side when that move best reduces the population
+excess. This loop is capped at 200 iterations.
 
-\begin{proposition}[\mka{} Runtime]
-\label{prop:mka-runtime}
-\mka{} bisection at a node with $m$ tracts requires:
-\begin{itemize}
-\item Per orientation ($n_{\mathrm{orient}}$ total):
-  \begin{itemize}
-  \item Projection: $O(m)$ dot products.
-  \item Sort: $O(m \log m)$ (dominated by projection if $m$ is small;
-    note that the sort can be replaced by a linear scan when $n_{\mathrm{orient}}$
-    is large, since successive orientations produce nearly-sorted projections).
-  \item Population binary search: $O(m)$ cumulative sum.
-  \item Welzl MEC (two calls): expected $O(m)$ each.
-  \end{itemize}
-\item Post-hoc rebalance: $O(200m)$.
-\item Total: $O(n_{\mathrm{orient}} \cdot m \log m + 200m)
-            = O(n_{\mathrm{orient}} \cdot m \log m)$.
-\end{itemize}
-For $n_{\mathrm{orient}} = 180$: $O(180 m \log m)$.
-This is comparable to one full \cvdgeo{} iteration count (typically 7--12)
-$\times$ $O(m)$ per iteration $= O(84m)$--$O(144m)$.
-The sort step dominates; using a radix sort reduces the per-orientation
-cost to $O(m)$, giving total $O(180m)$ --- strictly faster than \cvdgeo{}.
-\end{proposition}
+The loop is deliberately local. It considers only tracts adjacent to the other
+side, but it does not run a full contiguity proof after every tentative move.
+As with the other structure splitters, the returned plan should be validated by
+the downstream plan checks before any certification claim is made.
 
-\subsection{Data Requirements}
+\subsection{Data and CLI}
 \label{subsec:data}
 
-\mka{} requires the same centroid companion file introduced by \cvdgeo{}:
-\texttt{\{state\}\_centroids\_\{year\}.json}, stored alongside the adjacency
-file in \texttt{data/\{year\}/}.
-It additionally requires the tract area field (\texttt{LoadedGraph.tract\_areas}),
-which stores TIGER/Line polygon areas in square metres and is bundled with
-the existing adjacency file.
-No additional fetch step is needed if centroids were already fetched for
-\cvdgeo{} Phase~2.
-
-If the centroid companion file is absent and \texttt{--structure moving-knife}
-is requested, the CLI returns a diagnostic error:
+\mka{} requires tract centroids. If centroids are absent, the CLI returns a
+configuration error:
 \begin{verbatim}
-ERROR: --structure moving-knife requires tract centroid data.
-       Run: bisect fetch --type centroids --states NC --year 2020
+[CONFIG] --structure moving-knife requires centroid data.
+Run: bisect fetch --type centroids
 \end{verbatim}
-No silent fallback to a different algorithm occurs.
 
-\subsection{CLI and YAML}
-\label{subsec:cli}
-
-\paragraph{Pure \mka{} structure:}
+The standard invocation is:
 \begin{verbatim}
 bisect state --state NC --year 2020 \
   --structure moving-knife \
@@ -218,57 +116,16 @@ bisect state --state NC --year 2020 \
   --mka-metric reock
 \end{verbatim}
 
-\paragraph{Hybrid: \mka{} direction + \areasec{} balance enforcement:}
-The \texttt{split\_subgraph\_mka\_direction} function returns the optimal
-angle $\theta^* \in [0, \pi)$ without performing the full split.
-\areasec{} uses $\theta^*$ to override its \texttt{ratio\_direction} before
-applying its own balance logic:
-\begin{verbatim}
-bisect state --state NC --year 2020 \
-  --structure area-section \
-  --area-section-init moving-knife
-\end{verbatim}
+\texttt{--mka-metric polsby-popper} is accepted by the enum, but currently
+falls back to the Reock scoring path in \texttt{split\_subgraph\_mka}.
 
-\paragraph{YAML configuration:}
-\begin{verbatim}
-algorithm:
-  structure: moving-knife
-  mka_orientations: 180
-  mka_metric: reock           # or: polsby-popper
-  weights: geographic
-  search: convergence
-  convergence_threshold: 600
-  balance_tolerance: 0.5
-workers: 8
-\end{verbatim}
+\subsection{Runtime}
 
-\subsection{Audit Chain}
-\label{subsec:audit}
-
-Every \mka{} run appends the following fields to
-\texttt{runs/\{label\}/\{year\}/index.json}:
-
-\begin{verbatim}
-"structure":         "moving-knife",
-"mka_orientations":  180,
-"mka_metric":        "reock",
-"mka_seed_formula":  "SHA-256('MKA_INIT_'||node_path_len:u32le
-                       ||node_path||base_seed:u64le)",
-"node_path":         "01",
-"base_seed":         12345678,
-"mka_seed":          987654321,
-"optimal_angle_deg": 47.0,
-"reock_left":        0.412,
-"reock_right":       0.389,
-"min_reock_score":   0.389,
-"convergence_warning": false
-\end{verbatim}
-
-\texttt{optimal\_angle\_deg} enables independent verification: an auditor
-reruns the sweep with the same centroids and $n_{\mathrm{orient}}$ and confirms
-$\theta^*$ matches.
-\texttt{node\_path} is required for independent seed reproduction.
-\texttt{convergence\_warning} is always \texttt{false} for \mka{}:
-the sweep is exhaustive over all orientations and has no iterative
-convergence criterion.
-\texttt{min\_reock\_score} is the quantity \mka{} directly maximises.
+Each orientation requires $O(m)$ projection work, $O(m\log m)$ sorting, a
+linear population scan, and two minimum-enclosing-circle scores. The resulting
+node-level runtime is
+\[
+  O(n_{\mathrm{orient}}\,m\log m + 200m).
+\]
+For the default $n_{\mathrm{orient}}=180$, this is heavier than one simple
+graph split but still small enough to serve as an auditable geometric baseline.

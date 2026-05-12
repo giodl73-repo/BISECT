@@ -71,7 +71,7 @@ Score bands:
 | T.10 Centroidal Voronoi | 3.6 | 3.5 | 3.0 | 3.8 | 3.9 | 3.4 | 21.2 | Strong; ratio-aware splits and packages pending |
 | T.11 CVD Geographic | 3.6 | 3.5 | 3.0 | 3.8 | 3.9 | 3.5 | 21.3 | Strong; benchmark packages and ratio-aware CVD pending |
 | T.12 BFS Growth | 3.6 | 3.5 | 3.0 | 3.8 | 3.9 | 3.5 | 21.3 | Strong; benchmark packages and ratio-aware splits pending |
-| T.13 Moving-Knife | 3.0 | 3.1 | 2.8 | 3.0 | 3.3 | 3.1 | 18.3 | Needs geometric visual explanation |
+| T.13 Moving-Knife | 3.6 | 3.6 | 3.0 | 3.8 | 3.9 | 3.6 | 21.5 | Strong; per-node angle ledgers and exact Reock pending |
 | T.14 Spectral Partitioning | 3.7 | 3.5 | 3.5 | 3.8 | 4.0 | 3.6 | 22.1 | Strong; needs richer graph/sweep visual |
 | T.15 Capacity-Constrained Clustering | 3.8 | 3.7 | 3.6 | 3.8 | 4.0 | 3.7 | 22.6 | Golden |
 | T.16 Hierarchical Regionalization | 3.8 | 3.7 | 3.6 | 3.8 | 4.0 | 3.7 | 22.6 | Golden |
@@ -158,15 +158,14 @@ Score bands:
 
 ## Highest-Priority Lifts
 
-1. Continue the legacy construction pass: T.13. It needs the same "show the split,
-   show the candidate, show the rejection" standard that made T.1 and U.18 much
-   clearer.
-2. Metric correctness pass: K.2 first, then K.0/K.7 propagation. The Reock
+1. Metric correctness pass: K.2 first, then K.0/K.7 propagation. The Reock
    implementation mismatch is the most concrete known blocker in the metric
    algorithm papers.
-3. Apportionment implementation pass: J.6, then J.0-J.5. The mathematical
+2. Apportionment implementation pass: J.6, then J.0-J.5. The mathematical
    method papers are serviceable, but the implementation paper has known stale
    claims.
+3. Older search pass: U.0-U.7, U.11, and U.13-U.15 need the same
+   implementation/evidence-boundary refresh now applied to T.5-T.13.
 
 ## Track Summary
 

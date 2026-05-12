@@ -1,149 +1,142 @@
 \section{Introduction}
 \label{sec:introduction}
 
-\subsection{The Legal Landscape for Reock Compactness}
+\subsection{The Splitter We Need}
 
-Compactness is a constitutional requirement in many states and a frequent
-battleground in redistricting litigation.
-Among the half-dozen compactness measures in common use---Polsby-Popper,
-convex hull ratio, perimeter-to-area ratio, and others---Reock has achieved
-unusual legal prominence.
-Reock compactness is defined as
-\[
-  \reock{}(D) = \frac{\mathrm{Area}(D)}{\mathrm{Area}(\mathrm{MEC}(D))},
-\]
-where $\mathrm{MEC}(D)$ is the minimum enclosing circle of district $D$~\citep{reock1961}.
-It measures the fraction of the smallest possible circular container that the
-district actually occupies.
-A perfect circle achieves $\reock{} = 1$; elongated or irregular districts
-approach~0.
+BISECT has several ways to split a graph node. \metis{} follows graph
+boundary structure. \cvdgeo{} assigns tracts to geographic centers. \bfsg{}
+grows two regions from seeds. \mka{} asks a different question:
 
-Three major redistricting cases have explicitly cited Reock scores as evidence:
+\begin{quote}
+Which straight sweep direction gives the best worst-half Reock score after the
+node is divided into two population-balanced prefixes?
+\end{quote}
 
-\paragraph{\textit{Common Cause v.\ Lewis} (North Carolina, 2019).}
-The North Carolina Superior Court struck down the 2017 legislative maps as
-unconstitutional partisan gerrymanders.
-Expert witnesses for the plaintiffs presented Reock scores for each district,
-and the court's remedial order required that the remedial plan ``not be drawn
-with the intent or effect'' of producing Reock scores below the enacted-plan
-baseline~\citep{common_cause_lewis}.
-The NC case established Reock as a judicially cognisable metric in the
-state's constitutional context.
+The question is intentionally local. BISECT builds a final plan by recursive
+bisection, so \mka{} is not a global optimizer over all $k$ districts. It is a
+node-level structure primitive: take the current node, try many sweep angles,
+choose the best two-way split under the implemented score, then continue down
+the bisection tree.
 
-\paragraph{\textit{Whitford v.\ Gill} (Wisconsin, 2016).}
-The district court's remedial discussion included Reock analysis for
-individual legislative districts.
-Although the Supreme Court ultimately remanded on standing grounds, the
-lower court's detailed engagement with Reock as a compactness indicator
-influenced subsequent redistricting litigation in the Midwest.
+\subsection{Show the Sweep, Not the Slogan}
 
-\paragraph{Florida's Article~III \S20 Fair Districts Amendment cases.}
-Florida's constitutional compactness requirement has generated sustained
-litigation under the Fair Districts Amendment (2010).
-Florida courts have applied Polsby-Popper and perimeter-based compactness
-metrics rather than Reock as the primary indicator in these cases,
-making \mka{}'s Reock maximisation a distinct and complementary contribution
-in Florida redistricting contexts~\citep{floridaConst}.
+The moving-knife idea is easy to say and easy to overstate. The useful visual
+object is not merely a label such as ``47 degrees.'' It is the ordered prefix
+created by projecting every tract onto the candidate axis.
 
-\subsection{The Gap in Existing Algorithms}
+\begin{center}
+\begin{tabular}{c@{\qquad}c@{\qquad}c}
+\textbf{Horizontal sweep} & \textbf{Diagonal sweep} & \textbf{Vertical sweep} \\
+\begin{tabular}{|c|c|c|c|}
+\hline
+1 & 2 & 3 & 4 \\
+\hline
+1 & 2 & 3 & 4 \\
+\hline
+1 & 2 & 3 & 4 \\
+\hline
+\end{tabular}
+&
+\begin{tabular}{|c|c|c|c|}
+\hline
+1 & 1 & 2 & 3 \\
+\hline
+1 & 2 & 3 & 4 \\
+\hline
+2 & 3 & 4 & 4 \\
+\hline
+\end{tabular}
+&
+\begin{tabular}{|c|c|c|c|}
+\hline
+1 & 1 & 1 & 1 \\
+\hline
+2 & 2 & 2 & 2 \\
+\hline
+3 & 3 & 3 & 3 \\
+\hline
+\end{tabular}
+\end{tabular}
+\end{center}
 
-The redistricting algorithms currently deployed in the platform---\metis{},
-\cvdgeo{}, \bfsg{}, and their variants---do not explicitly optimise Reock.
+The numbers are projection ranks. For each angle, the algorithm reads tracts
+from rank 1 upward until the cumulative population reaches half of the node.
+That prefix becomes one side of the candidate split; the remaining suffix
+becomes the other side. The selected angle is the one whose two halves have the
+largest minimum Reock score under the current centroid-MEC approximation.
+
+\subsection{Why Reock Appears Here}
+
+Reock compactness compares a district's area to the area of the smallest circle
+that encloses it~\citep{reock1961}. It is a natural score for a sweep-based
+splitter because bad directions create long, thin prefixes whose enclosing
+circle grows quickly.
+
+\begin{center}
+\begin{tabular}{cc}
+\textbf{Short enclosing circle} & \textbf{Long enclosing circle} \\
+\begin{tabular}{|c|c|c|}
+\hline
+L & L & R \\
+\hline
+L & L & R \\
+\hline
+R & R & R \\
+\hline
+\end{tabular}
+&
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+L & L & L & L & R \\
+\hline
+R & R & R & R & R \\
+\hline
+\end{tabular}
+\end{tabular}
+\end{center}
+
+The left candidate is blocky. The right candidate stretches the left half
+across most of the state, so its minimum enclosing circle is large relative to
+its area. \mka{} prefers the former if population balance permits it.
+
+\subsection{Implementation Status}
+
+The implementation entry points live in the bisection runner:
+\begin{center}
+\small
+\begin{tabular}{lll}
+\texttt{split\_subgraph\_mka} &
+\texttt{split\_subgraph\_mka\_direction} &
+\texttt{run\_all\_splits\_mka}
+\end{tabular}
+\end{center}
+The current contract is:
 
 \begin{itemize}
-\item \metis{} minimises the total edge cut of the bisection graph.
-  It achieves compact districts as a side effect because boundary-minimising
-  partitions tend to be spatially clustered, but it has no mechanism to
-  maximise the minimum-enclosing-circle metric specifically.
-
-\item \cvdgeo{} minimises the total squared Euclidean distance from each tract
-  centroid to its assigned district seed (Lloyd's algorithm in projected
-  coordinates).
-  It optimises Polsby-Popper compactness as a byproduct of geographic
-  clustering but does not target the MEC geometry that Reock measures.
-
-\item \bfsg{} grows districts outward from geographically dispersed seeds,
-  optimising for geographic balance speed.
-  Its radial growth pattern tends to produce roughly circular districts,
-  but this is a geometric consequence of radial expansion, not a direct
-  Reock objective~\citep{dellaLibera2026bfs}.
+\item centroid data are required; missing centroids produce a configuration
+  error rather than a silent fallback;
+\item coordinates are projected with the same Albers helper used by geographic
+  CVD;
+\item the default metric is Reock, computed from centroid points;
+\item \texttt{polsby-popper} is parsed, but the current split routine falls
+  back to Reock because perimeter data are not present there;
+\item the post-sweep boundary rebalance is local and bounded, so final
+  validation remains a required downstream step.
 \end{itemize}
 
-When a redistricting commission must certify to a court that it submitted
-the ``most compact'' plan available, none of the existing algorithms provides
-a direct claim: each optimises a different surrogate.
-A commission using \metis{} can say ``we minimised graph boundary length'';
-a commission using \cvdgeo{} can say ``we minimised geographic distance to seeds.''
-Neither can say ``we maximised Reock'' --- because neither algorithm actually does.
+\subsection{Contributions}
 
-\subsection{The Moving-Knife Solution}
-
-The Moving-Knife Algorithm (\mka{}) closes this gap.
-At each bisection node, \mka{} tests $n_{\mathrm{orient}}$ candidate sweep
-directions, evaluates the Reock score of each resulting population-balanced
-split, and returns the split that maximises the minimum Reock score of the
-two halves.
-After the orientation is selected, a 200-iteration boundary-swap rebalance
-(shared with \cvdgeo{} and \bfsg{}) enforces exact population balance
-within tolerance.
-
-The algorithm is grounded in fair-division theory.
-Dubins and Spanier~\citeyear{dubins1961} introduced the moving-knife protocol
-as a procedure for dividing a heterogeneous good (the canonical ``cake'') among
-$n$ players in a way that is envy-free and procedurally impartial.
-The core idea is that a knife sweeps across the good at a controlled pace;
-the first player who calls ``stop'' receives the piece to the left of the knife.
-No player has information about the other players' preferences; the knife
-sweep is neutral.
-Puppe and Tasnadi~\citeyear{puppe2026} formalise the adaptation of this
-protocol to redistricting: the ``cake'' is the state's geography, and the
-``knife'' sweeps through angular orientations rather than linear positions.
-\mka{} is the computational realisation of their proposal.
-
-\subsection{Three Contributions}
-
-This paper makes three contributions:
+This paper contributes an implementation-aligned account of \mka{}:
 
 \begin{enumerate}
-\item \textbf{Implementation.}
-  We implement \mka{} in the \texttt{bisect} platform as
-  \texttt{SplitStrategy::MovingKnife}, reusing the Albers EPSG:5070
-  projection from \cvdgeo{} (T.11~\citep{dellaLibera2026cvdgeo}) and
-  Welzl's minimum-enclosing-circle algorithm~\citep{welzl1991}.
-  Runtime is $O(n_{\mathrm{orient}} \cdot m \log m)$ per bisection node
-  (the sort step dominates), comparable to one \cvdgeo{} iteration.
-
-\item \textbf{Reock comparison.}
-  We compare \mka{} against \metis{}, \cvdgeo{}, and \bfsg{} on three
-  states with diverse geometry: NC ($k=14$), FL ($k=28$), and WA ($k=10$).
-  \mka{} achieves the highest minimum-Reock score on all three states;
-  the improvement over the next-best algorithm ranges from approximately
-  8\,\% (NC) to 14\,\% (FL).
-
-\item \textbf{Fair-division legal argument.}
-  The moving-knife protocol provides a \emph{fair-division certificate}:
-  a plain-language description of the plan as the product of a neutral
-  sweep that no party controlled.
-  We argue this argument is more accessible to non-technical judges than
-  the graph-theoretic arguments available for \metis{} and \cvdgeo{}.
+\item It explains the actual two-way recursive bisection routine and its
+  orientation scan.
+\item It gives visual checks for projection rank, population prefix, and
+  worst-half Reock scoring.
+\item It separates useful fair-division language from legal or empirical claims
+  that require archived evidence packages.
 \end{enumerate}
 
-\subsection{Scope and Paper Structure}
-
-Section~\ref{sec:background} reviews the theoretical foundations: the
-Dubins-Spanier moving-knife protocol, Reock compactness, Welzl's MEC
-algorithm, and the relationship to existing algorithms in the platform.
-Section~\ref{sec:algorithm} presents the full \mka{} algorithm with
-pseudocode, design rationale, and audit-chain specification.
-Section~\ref{sec:comparison} presents the empirical Reock comparison on NC,
-FL, and WA.
-Section~\ref{sec:fair-division} develops the fair-division legal argument
-and its application in litigation contexts.
-Section~\ref{sec:conclusion} gives usage recommendations.
-
-\paragraph{Main result.}
-\mka{} is the only redistricting algorithm that explicitly maximises
-Reock compactness; it achieves the highest minimum-Reock score on all
-three test states at $O(n_{\mathrm{orient}} \cdot m \log m)$ runtime per bisection node.
-For court filings that require an explicit Reock-maximising justification,
-\texttt{--structure moving-knife} is the recommended algorithm.
+The result is a practical structure-layer paper, not a certification brief. It
+shows what \mka{} currently does, why the choices are inspectable, and what
+must be added before the method can support stronger publication claims.
