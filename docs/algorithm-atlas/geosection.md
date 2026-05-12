@@ -17,6 +17,12 @@ root split means "make two child regions that each recursively produce seven
 districts." GeoSection is choosing the root allocation of the recursion tree,
 not merely drawing a one-time boundary.
 
+In the overview figure, the chips under each candidate show the recursive
+workload implied by that root choice. A `1:13` candidate is not just one small
+piece beside a large piece; it says "finish one district now, then send the
+thirteen-district side into later chunks." A `2:12` or `3:11` candidate changes
+both the first geography and the sequence of later subdivision work.
+
 ## How BISECT Uses It
 
 BISECT uses GeoSection when the top-level split ratio should be chosen from

@@ -92,3 +92,8 @@ frontier points, it should state the downstream decision they feed:
 | local-search moves | which validity-preserving move becomes the descendant plan |
 
 If the reader cannot tell why the candidates exist, the figure is not finished.
+
+For recursive algorithms, show the workload created by the candidate. A
+GeoSection root split should show not only `3 / 11`, but also the later
+district-count chunks implied by sending an eleven-district child back into the
+recursive splitter.
