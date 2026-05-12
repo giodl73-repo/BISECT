@@ -3,9 +3,9 @@
 **Date:** 2026-05-11
 **Rubric:** `docs/algorithm-atlas/RUBRIC.md`
 **Reviewer:** Codex using the BISECT rubric and `.roles` lenses
-**Latest pass:** upgraded mechanics visuals, examples, failure modes, evidence
-references, worked ledgers, output snippets, and reading checklists across the
-atlas.
+**Latest pass:** rescored against the upgraded gold-standard visual rubric.
+GeoSection is the reference standard; Seed Search has started the next upgrade
+wave.
 
 This scorecard grades the current atlas pages against the six BISECT dimensions:
 
@@ -16,300 +16,115 @@ This scorecard grades the current atlas pages against the six BISECT dimensions:
 - **C** Claim Boundary And Correctness
 - **T** Traceability And Evidence
 
-Scores are out of 60. The main scoring pressure is visual and explanatory
-depth: a page that has correct prose but does not show the actual algorithmic
-object loses points under **S** and usually **E**.
+Scores are out of 60. The main scoring pressure is now stricter than the first
+atlas pass: a page must show candidate objects, why those candidates exist, the
+decision rule, and the downstream workload or artifact consequence. Correct
+prose plus generic diagrams no longer earns an excellent score.
 
 ## Summary
 
 | Band | Pages |
 |---|---|
-| Excellent, 54-60 | U.16, U.18, U.19, U.20 |
-| Good, 45-53 | T.14, T.15, T.16, T.17, U.17, ReCom, SMC, Multiscale, Three-Layer Compositor, GeoSection, AreaSection, ApportionRegions, County-Sticky, Seed Search |
+| Excellent, 54-60 | GeoSection, Seed Search, U.20 |
+| Good, 45-53 | T.14, T.15, T.16, T.17, U.16, U.17, U.18, U.19, ReCom, SMC, Multiscale, Three-Layer Compositor, AreaSection, ApportionRegions, County-Sticky |
 | Serviceable, 36-44 | None |
 | Thin, 24-35 | None |
 | Failing, 0-23 | None |
 
-The atlas is now broadly good by the BISECT rubric: every page has at least one
-mechanics visual, an integration story, a claim boundary, evidence anchors, and
-a worked ledger or output-reading guide. The remaining path to excellence is
-visual polish rather than rescue: improve SVG artistry, add real rendered
-package snippets where available, and move the strongest examples into
-publication-grade figures.
+The atlas remains useful, but the stricter rubric makes the next work clearer.
+Many pages have accurate prose and supporting diagrams, yet their primary
+visuals do not fully explain candidate purpose, decision rule, and consequence.
+Those pages should be treated as good teaching drafts until their primary
+figures are upgraded.
 
 ## Score Matrix
 
 | Page | B | I | S | E | C | T | Total | Band |
 |---|---:|---:|---:|---:|---:|---:|---:|---|
-| T.14 Spectral Partitioning | 9 | 8 | 9 | 9 | 8 | 8 | 51 | Good |
-| T.15 Capacity Clustering | 8 | 8 | 9 | 9 | 8 | 8 | 50 | Good |
-| T.16 Hierarchical Regionalization | 8 | 8 | 9 | 9 | 8 | 8 | 50 | Good |
-| T.17 Flow Construction | 8 | 8 | 9 | 9 | 8 | 8 | 50 | Good |
-| U.16 Branch-And-Cut | 9 | 9 | 9 | 9 | 9 | 9 | 54 | Excellent |
-| U.17 Branch-And-Price | 9 | 9 | 9 | 9 | 9 | 8 | 53 | Good |
-| U.18 Local Search | 9 | 9 | 9 | 9 | 9 | 9 | 54 | Excellent |
-| U.19 Evolutionary Comparison | 9 | 9 | 9 | 9 | 9 | 9 | 54 | Excellent |
-| U.20 RPLAN Audit Certificates | 10 | 10 | 9 | 9 | 10 | 10 | 58 | Excellent |
-| ReCom Ensemble | 9 | 8 | 9 | 9 | 9 | 9 | 53 | Good |
-| Sequential Monte Carlo | 9 | 8 | 9 | 9 | 9 | 9 | 53 | Good |
-| Multiscale MCMC | 8 | 8 | 9 | 9 | 10 | 8 | 52 | Good |
-| Three-Layer Compositor | 8 | 9 | 8 | 9 | 8 | 8 | 50 | Good |
-| GeoSection | 9 | 8 | 9 | 9 | 8 | 8 | 51 | Good |
-| AreaSection | 9 | 8 | 10 | 9 | 9 | 8 | 53 | Good |
-| ApportionRegions | 9 | 8 | 9 | 9 | 9 | 8 | 52 | Good |
-| County-Sticky Weights | 8 | 8 | 9 | 9 | 9 | 8 | 51 | Good |
-| Seed Search Modes | 8 | 8 | 9 | 9 | 8 | 8 | 50 | Good |
+| T.14 Spectral Partitioning | 8 | 8 | 7 | 8 | 8 | 8 | 47 | Good |
+| T.15 Capacity Clustering | 8 | 8 | 6 | 8 | 8 | 8 | 46 | Good |
+| T.16 Hierarchical Regionalization | 8 | 8 | 6 | 8 | 8 | 8 | 46 | Good |
+| T.17 Flow Construction | 8 | 8 | 6 | 8 | 8 | 8 | 46 | Good |
+| U.16 Branch-And-Cut | 9 | 9 | 7 | 8 | 9 | 9 | 51 | Good |
+| U.17 Branch-And-Price | 9 | 9 | 7 | 8 | 9 | 8 | 50 | Good |
+| U.18 Local Search | 9 | 9 | 7 | 8 | 9 | 9 | 51 | Good |
+| U.19 Evolutionary Comparison | 9 | 9 | 7 | 8 | 9 | 9 | 51 | Good |
+| U.20 RPLAN Audit Certificates | 10 | 10 | 7 | 9 | 10 | 10 | 56 | Excellent |
+| ReCom Ensemble | 8 | 8 | 7 | 8 | 9 | 9 | 49 | Good |
+| Sequential Monte Carlo | 8 | 8 | 7 | 8 | 9 | 9 | 49 | Good |
+| Multiscale MCMC | 8 | 8 | 6 | 8 | 10 | 8 | 48 | Good |
+| Three-Layer Compositor | 8 | 9 | 6 | 8 | 8 | 8 | 47 | Good |
+| GeoSection | 10 | 9 | 10 | 10 | 9 | 9 | 57 | Excellent |
+| AreaSection | 9 | 8 | 8 | 9 | 9 | 8 | 51 | Good |
+| ApportionRegions | 8 | 8 | 7 | 8 | 9 | 8 | 48 | Good |
+| County-Sticky Weights | 8 | 8 | 6 | 8 | 9 | 8 | 47 | Good |
+| Seed Search Modes | 9 | 9 | 9 | 10 | 9 | 8 | 54 | Excellent |
 
 ## Page Notes
 
-### T.14 Spectral Partitioning - 51/60
-
-**Roles applied:** MERIDIAN, DATUM, COVENANT, BENCHMARK
-
-Strongest element: clear mechanics and visual sequence from Laplacian to
-Fiedler ordering to sweep recursion.
-
-Weakest element: traceability does not yet point to focused tests or exact
-summary fields.
-
-Next upgrades:
-
-- Add test/fixture references for path, two-clique, determinism, and recursive
-  odd/non-power-of-two cases.
-- Add one small visual of an actual split package sidecar or spectral summary.
-
-### T.15 Capacity Clustering - 50/60
-
-**Roles applied:** MERIDIAN, TRENCH, COVENANT, BENCHMARK
-
-Strongest element: status taxonomy and capacity-pressure diagrams.
-
-Weakest element: mechanics could show the assignment order and bounded repair
-loop more concretely.
-
-Next upgrades:
-
-- Add an assignment-order diagram showing a unit rejected by one near-full
-  cluster and accepted by another.
-- Reference capacity/infeasibility/determinism tests.
-
-### T.16 Hierarchical Regionalization - 50/60
-
-**Roles applied:** MERIDIAN, TRENCH, COVENANT, BENCHMARK
-
-Strongest element: merge log as an explanation artifact.
-
-Weakest element: scoring rule is named but not visually unpacked.
-
-Next upgrades:
-
-- Add candidate-pair scoring diagram with eligible, rejected, and selected
-  adjacent pairs.
-- Reference hierarchy/capacity/determinism fixtures.
-
-### T.17 Flow Construction - 50/60
-
-**Roles applied:** MERIDIAN, TRENCH, COVENANT, LEDGER
-
-Strongest element: constrained-assignment framing and infeasibility witness.
-
-Weakest element: visual network is still high-level; it should show one
-capacity-bound failure with numbers.
-
-Next upgrades:
-
-- Add a tiny numeric flow example with supply totals and capacity bounds.
-- Reference flow capacity/infeasibility/determinism tests.
-
-### U.16 Branch-And-Cut - 54/60
-
-**Roles applied:** MERIDIAN, SCALE, DATUM, COVENANT, BENCHMARK
-
-Strongest element: path8 now makes the abstract connectivity cut concrete, and
-the page ties model evidence to `node_root.lp` and `ilp-solve-report.json`.
-
-Next upgrades:
-
-- Add a rendered snippet from the ILP report showing status, gap, and cut count.
-- Link any future exact benchmark tests once they are split from the package
-  fixture itself.
-
-### U.17 Branch-And-Price - 53/60
-
-**Roles applied:** MERIDIAN, DATUM, COVENANT, BENCHMARK
-
-Strongest element: pricing and master-problem roles are now separated visually,
-with tests and crate modules named.
-
-Next upgrades:
-
-- Add a tiny table of column coverage and cost.
-- Show formulation-only status beside solved tiny enumeration in one output
-  snippet.
-
-### U.18 Local Search - 54/60
-
-**Roles applied:** MERIDIAN, TRENCH, COVENANT, BENCHMARK
-
-Strongest element: the before/after move now shows exactly what changes and
-what validity gates must remain true.
-
-Next upgrades:
-
-- Add a short output excerpt from `local-search-summary.json`.
-- Add an explicit no-op fixture note when no improving valid move exists.
-
-### U.19 Evolutionary Comparison - 54/60
-
-**Roles applied:** SCALE, DATUM, COVENANT, BENCHMARK
-
-Strongest element: the selected-frontier story now includes repair-aware
-crossover/fallback, so validity is not treated as hidden cleanup.
-
-Next upgrades:
-
-- Add a small frontier table showing rank, objectives, and selected index.
-- Add a longer uncertainty note if future evolutionary runs add stochastic
-  convergence diagnostics.
-
-### U.20 RPLAN Audit Certificates - 58/60
-
-**Roles applied:** COVENANT, LEDGER, BOUNDARY, BENCHMARK
-
-Strongest element: this is now the clearest fixed-point page. It explains both
-acceptance and rejection, and it points to positive and negative fixtures.
-
-Next upgrades:
-
-- Add direct schema/version references if the RPLAN schema docs move into a
-  stable user-facing location.
-
-### ReCom Ensemble - 53/60
-
-**Roles applied:** SCALE, MERIDIAN, DATUM
-
-Strongest element: one-step mechanics and multi-chain diagnostics now both
-appear, which separates sampling behavior from final-plan audit.
-
-Next upgrades:
-
-- Add a real diagnostics output excerpt once the atlas chooses a canonical
-  ensemble run.
-
-### Sequential Monte Carlo - 53/60
-
-**Roles applied:** SCALE, DATUM, BENCHMARK, LEDGER
-
-Strongest element: proposal, weighting, ESS, and resampling genealogy are now
-visible as a single story.
-
-Next upgrades:
-
-- Add a compact NDJSON example line for metadata and one particle event.
-
-### Multiscale MCMC - 52/60
-
-**Roles applied:** SCALE, MERIDIAN, DATUM, TRENCH
-
-Strongest element: the page is appropriately cautious and now shows the
-coarse-to-fine projection/rebalance handoff.
-
-Next upgrades:
-
-- Add exact config field names once the public multiscale config surface
-  stabilizes.
-
-### Three-Layer Compositor - 50/60
-
-**Roles applied:** SURVEY, MERIDIAN, DATUM
-
-Strongest element: the page now has a complete example run that keeps
-structure, weights, and search independently visible.
-
-Next upgrades:
-
-- Add an actual CLI/config excerpt once the compositor command surface settles.
-- Add a manifest snippet showing config hash and sidecars.
-
-### GeoSection - 51/60
-
-**Roles applied:** MERIDIAN, DATUM, SCALE
-
-Strongest element: the caterpillar failure and normalized top-level split are
-now visually legible.
-
-Next upgrades:
-
-- Add a small ratio-scan output table with seed budget and selected split.
-
-### AreaSection - 53/60
-
-**Roles applied:** MERIDIAN, CONTOUR, DATUM, SCALE
-
-Strongest element: the page now shows why equal population and land-area balance
-are distinct constraints, with Lorenz feasibility called out.
-
-Next upgrades:
-
-- Add an example ALAND/population row and the computed area share.
-
-### ApportionRegions - 52/60
-
-**Roles applied:** MERIDIAN, DATUM, SCALE
-
-Strongest element: prime fallback and geographic reuse are now explicit rather
-than implied by the factor tree.
-
-Next upgrades:
-
-- Add a tiny region-spine fixture table if the compositor gains one.
-
-### County-Sticky Weights - 51/60
-
-**Roles applied:** MERIDIAN, WARD, BOUNDARY, DATUM
-
-Strongest element: the numeric edge-weight example and state-law caveat make the
-weights-layer boundary much clearer.
-
-Next upgrades:
-
-- Add a real county-split summary example when package sidecars expose one.
-
-### Seed Search Modes - 50/60
-
-**Roles applied:** MERIDIAN, SCALE, DATUM, SURVEY
-
-Strongest element: the seed stream and percentile diagrams now show why search
-mode changes the question being answered.
-
-Next upgrades:
-
-- Add a tiny candidate list with seed, score, and percentile selection.
+### Excellent Under The New Rubric
+
+**GeoSection - 57/60.** The page now shows countable 2D root-allocation
+thumbnails, recursive workload chips, the normalized decision rule, and the
+effect of the chosen first split on later recursion. It is the current visual
+reference.
+
+**Seed Search Modes - 54/60.** The page now shows why candidate plans exist,
+how seed-derived candidates differ, how mode changes the selection rule, and
+what each selected result may claim.
+
+**U.20 RPLAN Audit Certificates - 56/60.** The fixed-point story is strong and
+claim-safe. Its next visual upgrade should make positive and negative verifier
+paths as concrete as GeoSection's root-allocation workload.
+
+### Good But Still Below The Gold Standard
+
+**AreaSection - 51/60.** Strong population/area feasibility story, but the main
+figure should adopt countable 2D block arrays and explicitly show feasible root
+workloads.
+
+**U.16, U.17, U.18, U.19 - 50-51/60.** These pages are accurate and
+well-evidenced, but their primary visuals still need more complete
+candidate-set -> decision-rule -> artifact-consequence paths.
+
+**ReCom and SMC - 49/60.** Sampling pages explain diagnostics and genealogy,
+but the visuals should better show candidate transitions and why a sampled step
+or particle is accepted, rejected, copied, or diagnosed.
+
+**T.14-T.17 - 46-47/60.** The T pages have good prose and ledgers, but their
+main figures predate the stricter rubric. Each needs a gold-standard teaching
+figure: candidates, decision rule, and final artifact/status consequence.
+
+**Multiscale, Three-Layer Compositor, ApportionRegions, County-Sticky -
+47-48/60.** These pages are conceptually useful but not yet visually
+self-explanatory. They need countable candidate objects and clearer downstream
+consequences.
 
 ## Upgrade Priority
 
-1. **Visual polish**: replace the simplest schematic SVGs with richer
-   publication-grade figures where the algorithm has spatial structure.
-2. **Rendered package snippets**: use real sidecar excerpts for U.16, U.17,
-   U.18, ReCom, SMC, and the compositor when canonical package outputs settle.
-3. **Config stabilization**: add exact public config fields for the compositor
-   and multiscale pages once those surfaces settle.
-4. **Canonical fixture tables**: add tiny data rows for AreaSection,
-   ApportionRegions, County-Sticky, and Seed Search.
+1. **AreaSection**: convert the strong but still abstract area figure into
+   countable 2D block arrays with explicit feasible root workloads.
+2. **County-Sticky Weights**: show a county block map where candidate cuts cross
+   or respect county boundaries, then show the weighted decision consequence.
+3. **ApportionRegions**: replace factor-tree prose visuals with countable seat
+   workloads, prime fallback, and reused spine consequences.
+4. **T.14-T.17**: upgrade the construction-family visuals to show candidates,
+   decision rules, and artifact/status consequences.
+5. **U-series and sampling pages**: add richer primary teaching figures only
+   after the spatial/compositor family reaches the GeoSection standard.
 
 ## Acceptance Target
 
-The atlas now meets the minimum maturity target: every page scores at least
-**50/60** after the latest pass. The next target is to raise the older T pages
-and compositor family toward **54/60 or higher** with output snippets and
-canonical fixture tables:
+Under the stricter rubric, every page remains at least good, but only
+GeoSection, Seed Search, and U.20 currently score excellent. The next target is
+to raise the spatial/compositor family to **54/60 or higher** with
+gold-standard teaching figures:
 
 - T.14 Spectral Partitioning
 - T.15 Capacity Clustering
 - T.16 Hierarchical Regionalization
 - T.17 Flow Construction
-- U.20 RPLAN Audit Certificates
 - Three-Layer Compositor
-- GeoSection
 - AreaSection
 - ApportionRegions
+- County-Sticky Weights

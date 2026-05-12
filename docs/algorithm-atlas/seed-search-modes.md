@@ -20,6 +20,22 @@ content-derived seed stream -> candidate plans -> selected result
 The major modes are `single`, `multi`, `convergence`, `percentile`, and
 `bisection-ensemble`.
 
+The candidates exist because the same structure and weights can land in
+different local optima under different seeds. Search mode is the downstream
+decision rule: it says whether BISECT should return the default seed, the best
+candidate in a fixed budget, a candidate at a requested rank, or the best value
+seen before a no-improvement stopping threshold.
+
+## Picture 0: Candidate Plans And Mode Claims
+
+![Seed search mode candidates and claims](assets/seed-search-modes.svg)
+
+The main figure shows the candidate set, why it exists, and what each search
+mode is allowed to claim. The same four seed-produced plans support different
+outputs depending on the mode. `multi` can select the lowest edge cut in the
+budget; `percentile` intentionally selects a rank after sorting; `convergence`
+adds a stopping rule to the seed stream.
+
 ## Picture 1: Convergence Sweep Timeline
 
 ![Seed convergence timeline](assets/seed-search-convergence.svg)

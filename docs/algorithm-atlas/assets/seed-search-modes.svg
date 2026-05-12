@@ -1,13 +1,139 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="360" viewBox="0 0 960 360" role="img" aria-labelledby="title desc">
-  <title id="title">Seed search modes</title>
-  <desc id="desc">A deterministic seed stream produces candidates; search mode decides which plan is selected.</desc>
-  <style>.bg{fill:#fbfbf8}.box{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.seed{fill:#dbeafe;stroke:#2b5c9b;stroke-width:2}.cand{fill:#fff3cd;stroke:#c79300;stroke-width:2}.sel{fill:#e4f5eb;stroke:#2f7d4c;stroke-width:2}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.arrow{stroke:#596673;stroke-width:2;fill:none;marker-end:url(#arrow)}</style>
-  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#596673"/></marker></defs>
-  <rect class="bg" width="960" height="360"/>
-  <rect class="seed" x="70" y="120" width="150" height="85" rx="8"/><text class="label" x="108" y="153">seed stream</text><text class="small" x="102" y="175">content-derived</text>
-  <rect class="cand" x="315" y="80" width="150" height="55" rx="8"/><text class="small" x="350" y="113">single</text>
-  <rect class="cand" x="315" y="145" width="150" height="55" rx="8"/><text class="small" x="350" y="178">multi / min</text>
-  <rect class="cand" x="315" y="210" width="150" height="55" rx="8"/><text class="small" x="337" y="243">percentile</text>
-  <rect class="sel" x="600" y="120" width="170" height="85" rx="8"/><text class="label" x="642" y="153">selected plan</text><text class="small" x="635" y="175">claim depends on mode</text>
-  <path class="arrow" d="M220 162 H315"/><path class="arrow" d="M465 107 C530 120 550 145 600 152"/><path class="arrow" d="M465 172 H600"/><path class="arrow" d="M465 237 C530 220 550 180 600 170"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-labelledby="title desc">
+  <title id="title">Seed Search modes choose different candidates from the same seed stream</title>
+  <desc id="desc">A teaching figure showing why BISECT tries multiple seeds, how each seed creates a candidate plan with scores, and how search mode changes which candidate is selected and what claim the output supports.</desc>
+  <style>
+    .bg{fill:#f7f5ef}
+    .panel{fill:#fffdf8;stroke:#26323d;stroke-width:1.6}
+    .card{fill:#fff;stroke:#c7d0da;stroke-width:1.2}
+    .label{font:700 17px Arial,sans-serif;fill:#17212b}
+    .title{font:700 30px Arial,sans-serif;fill:#17212b}
+    .small{font:14px Arial,sans-serif;fill:#52616b}
+    .tiny{font:12px Arial,sans-serif;fill:#52616b}
+    .mono{font:12px Consolas,monospace;fill:#17212b}
+    .cell{stroke:#fff;stroke-width:2}
+    .a{fill:#6ea0db}
+    .b{fill:#f0bc5e}
+    .c{fill:#72b985}
+    .d{fill:#c084d8}
+    .seed{fill:#dbeafe;stroke:#245b99;stroke-width:2}
+    .candidate{fill:#fff8e8;stroke:#c79300;stroke-width:1.5}
+    .selected{fill:#eef8f0;stroke:#25724d;stroke-width:2.4}
+    .warn{fill:#fff1ed;stroke:#b6423c;stroke-width:1.5}
+    .rule{fill:#eef2ff;stroke:#5b61b6;stroke-width:1.5}
+    .line{stroke:#596673;stroke-width:2;fill:none;marker-end:url(#arrow)}
+    .tableHead{fill:#26323d}
+    .tableLine{stroke:#d8dee5;stroke-width:1}
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#596673"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" width="1280" height="760"/>
+  <text class="title" x="46" y="54">Seed Search: same algorithm, different seeds, different claims</text>
+  <text class="small" x="48" y="84">BISECT tries seeds because METIS/local search can settle into different local optima. Search mode decides which candidate becomes the reported plan.</text>
+
+  <rect class="panel" x="42" y="116" width="1196" height="554" rx="12"/>
+
+  <!-- Inputs -->
+  <g transform="translate(74 150)">
+    <rect class="card" x="0" y="0" width="196" height="148" rx="9"/>
+    <text class="label" x="20" y="32">Fixed inputs</text>
+    <text class="tiny" x="20" y="60">structure + weights</text>
+    <text class="tiny" x="20" y="82">graph + population</text>
+    <text class="tiny" x="20" y="104">content hash</text>
+    <text class="tiny" x="20" y="126">base seed derivation</text>
+  </g>
+  <path class="line" d="M274 224 H332"/>
+
+  <!-- Seed stream -->
+  <g transform="translate(342 150)">
+    <rect class="card" x="0" y="0" width="174" height="148" rx="9"/>
+    <text class="label" x="20" y="32">Seed stream</text>
+    <g transform="translate(18 58)">
+      <rect class="seed" x="0" y="0" width="34" height="28" rx="5"/><text class="mono" x="9" y="19">s0</text>
+      <rect class="seed" x="44" y="0" width="34" height="28" rx="5"/><text class="mono" x="53" y="19">s1</text>
+      <rect class="seed" x="88" y="0" width="34" height="28" rx="5"/><text class="mono" x="97" y="19">s2</text>
+      <rect class="seed" x="132" y="0" width="34" height="28" rx="5"/><text class="mono" x="141" y="19">s3</text>
+    </g>
+    <text class="tiny" x="20" y="112">same run recipe, different</text>
+    <text class="tiny" x="20" y="130">candidate partitions</text>
+  </g>
+  <path class="line" d="M520 224 H572"/>
+
+  <!-- Candidates -->
+  <g transform="translate(590 132)">
+    <text class="label" x="0" y="0">Candidate plans from seeds</text>
+    <g transform="translate(0 24)">
+      <rect class="candidate" x="0" y="0" width="128" height="160" rx="8"/>
+      <text class="mono" x="16" y="24">s0</text><text class="tiny" x="52" y="24">cut 142</text>
+      <g transform="translate(22 44)">
+        <rect class="cell a" x="0" y="0" width="24" height="24"/><rect class="cell a" x="26" y="0" width="24" height="24"/><rect class="cell b" x="52" y="0" width="24" height="24"/>
+        <rect class="cell a" x="0" y="26" width="24" height="24"/><rect class="cell c" x="26" y="26" width="24" height="24"/><rect class="cell b" x="52" y="26" width="24" height="24"/>
+        <rect class="cell c" x="0" y="52" width="24" height="24"/><rect class="cell c" x="26" y="52" width="24" height="24"/><rect class="cell b" x="52" y="52" width="24" height="24"/>
+      </g>
+      <text class="tiny" x="18" y="140">county splits 9</text>
+    </g>
+    <g transform="translate(146 24)">
+      <rect class="selected" x="0" y="0" width="128" height="160" rx="8"/>
+      <text class="mono" x="16" y="24">s1</text><text class="tiny" x="52" y="24">cut 131</text>
+      <g transform="translate(22 44)">
+        <rect class="cell a" x="0" y="0" width="24" height="24"/><rect class="cell a" x="26" y="0" width="24" height="24"/><rect class="cell a" x="52" y="0" width="24" height="24"/>
+        <rect class="cell c" x="0" y="26" width="24" height="24"/><rect class="cell c" x="26" y="26" width="24" height="24"/><rect class="cell b" x="52" y="26" width="24" height="24"/>
+        <rect class="cell c" x="0" y="52" width="24" height="24"/><rect class="cell b" x="26" y="52" width="24" height="24"/><rect class="cell b" x="52" y="52" width="24" height="24"/>
+      </g>
+      <text class="tiny" x="18" y="140">minimum cut</text>
+    </g>
+    <g transform="translate(292 24)">
+      <rect class="candidate" x="0" y="0" width="128" height="160" rx="8"/>
+      <text class="mono" x="16" y="24">s2</text><text class="tiny" x="52" y="24">cut 136</text>
+      <g transform="translate(22 44)">
+        <rect class="cell a" x="0" y="0" width="24" height="24"/><rect class="cell a" x="26" y="0" width="24" height="24"/><rect class="cell b" x="52" y="0" width="24" height="24"/>
+        <rect class="cell c" x="0" y="26" width="24" height="24"/><rect class="cell a" x="26" y="26" width="24" height="24"/><rect class="cell b" x="52" y="26" width="24" height="24"/>
+        <rect class="cell c" x="0" y="52" width="24" height="24"/><rect class="cell c" x="26" y="52" width="24" height="24"/><rect class="cell b" x="52" y="52" width="24" height="24"/>
+      </g>
+      <text class="tiny" x="18" y="140">median candidate</text>
+    </g>
+    <g transform="translate(438 24)">
+      <rect class="candidate" x="0" y="0" width="128" height="160" rx="8"/>
+      <text class="mono" x="16" y="24">s3</text><text class="tiny" x="52" y="24">cut 149</text>
+      <g transform="translate(22 44)">
+        <rect class="cell d" x="0" y="0" width="24" height="24"/><rect class="cell a" x="26" y="0" width="24" height="24"/><rect class="cell a" x="52" y="0" width="24" height="24"/>
+        <rect class="cell d" x="0" y="26" width="24" height="24"/><rect class="cell c" x="26" y="26" width="24" height="24"/><rect class="cell b" x="52" y="26" width="24" height="24"/>
+        <rect class="cell c" x="0" y="52" width="24" height="24"/><rect class="cell c" x="26" y="52" width="24" height="24"/><rect class="cell b" x="52" y="52" width="24" height="24"/>
+      </g>
+      <text class="tiny" x="18" y="140">county splits 8</text>
+    </g>
+  </g>
+
+  <!-- Decision rules -->
+  <g transform="translate(90 356)">
+    <text class="label" x="0" y="0">Mode changes the decision rule</text>
+    <rect x="0" y="24" width="508" height="166" rx="8" fill="#ffffff" stroke="#d8dee5"/>
+    <rect class="tableHead" x="0" y="24" width="508" height="32" rx="8"/>
+    <text x="16" y="45" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#fff">mode</text>
+    <text x="138" y="45" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#fff">candidate purpose</text>
+    <text x="336" y="45" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#fff">selected output</text>
+    <line class="tableLine" x1="0" y1="88" x2="508" y2="88"/>
+    <line class="tableLine" x1="0" y1="120" x2="508" y2="120"/>
+    <line class="tableLine" x1="0" y1="152" x2="508" y2="152"/>
+    <g font-family="Arial, sans-serif" font-size="13" fill="#17212b">
+      <text x="16" y="77">single</text><text x="138" y="77">replay default seed</text><text x="336" y="77">s0</text>
+      <text x="16" y="109">multi/min</text><text x="138" y="109">best in fixed budget</text><text x="336" y="109">s1, cut 131</text>
+      <text x="16" y="141">percentile</text><text x="138" y="141">chosen rank after sorting</text><text x="336" y="141">s2, median</text>
+      <text x="16" y="173">convergence</text><text x="138" y="173">stop after no-improve streak</text><text x="336" y="173">best so far + threshold</text>
+    </g>
+  </g>
+
+  <g transform="translate(666 410)">
+    <rect class="rule" x="0" y="0" width="492" height="112" rx="9"/>
+    <text class="label" x="24" y="34">Output claim depends on mode</text>
+    <text class="small" x="24" y="62">Minimum mode can claim "best in this seed budget."</text>
+    <text class="small" x="24" y="84">Percentile mode can claim "chosen rank in this candidate distribution."</text>
+    <text class="small" x="24" y="106">Neither is a proof of global optimality.</text>
+  </g>
+
+  <rect x="74" y="702" width="1132" height="34" rx="10" fill="#26323d"/>
+  <text x="100" y="724" font-family="Arial, sans-serif" font-size="15" fill="#fff">Reading rule: seeds create candidate plans; search mode is the rule that selects one candidate and defines what the result is allowed to claim.</text>
 </svg>
