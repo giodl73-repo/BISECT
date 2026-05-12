@@ -7,7 +7,7 @@
 the METIS heuristic may land in a local optimum, leaving a more compact map
 undiscovered.
 By sweeping $T = 600$ seeds and returning the global minimum, \cs{}%
-\footnote{The T=600 ConvergenceSweep formula is certified in U.1~\cite{deluca2026convergence} (Round~2, accepted; mean reviewer score 3.67/4). The formula's theoretical foundations and 89-seed empirical margin above Georgia's certified tail are documented in that paper.}
+\footnote{The T=600 ConvergenceSweep formula is certified in U.1~\cite{b16paper} (Round~2, accepted; mean reviewer score 3.67/4). The formula's theoretical foundations and 89-seed empirical margin above Georgia's certified tail are documented in that paper.}
 guarantees that the plan produced is the best available within the bisection
 family.
 
@@ -49,7 +49,7 @@ Second, the choice is \emph{principled}: each value of $p$ corresponds to
 a recognisable legal doctrine (Section~\ref{sec:legal-posture}).
 Third, the choice is \emph{auditable}: given the statutory $p$, any party
 can reproduce the plan by running the same $T$ seeds and selecting rank
-$\floor{p \times T}$.
+$\floor{p \times (T-1)}$.
 
 \subsection{The Insensitivity Finding}
 

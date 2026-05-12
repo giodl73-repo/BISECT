@@ -21,11 +21,16 @@ Sort the $T$ plans by $\ECnorm$ in ascending order (lowest edge cut first):
 \[
   \pi_0 \leq \pi_1 \leq \cdots \leq \pi_{T-1}.
 \]
-Return the plan at rank $r = \floor{p \times T}$, where $p \in [0, 1]$
+Return the plan at rank $r = \floor{p \times (T-1)}$, where $p \in [0, 1]$
 is the statutory percentile parameter.
 The returned plan is $\pi_r$---the plan at the $p$-th quantile of the
 $T$-plan bisection distribution.
 \end{definition}
+
+The $(T-1)$ factor makes the endpoint behavior explicit: $p=0$ selects the
+lowest edge-cut plan, $p=0.5$ selects the median rank, and $p=1$ selects the
+highest edge-cut plan in the sorted candidate set without indexing past the
+last candidate.
 
 The algorithm requires exactly $T$ METIS calls.
 Unlike \cs{}, which terminates early when the convergence criterion is
@@ -139,7 +144,7 @@ distinction.
   \State Append $(\pi_i, \ECnorm(s_i))$ to \text{plans}
 \EndFor
 \State Sort \text{plans} by $\ECnorm$ ascending \Comment{Best (lowest cut) first}
-\State $r \leftarrow \floor{p \times T}$
+\State $r \leftarrow \floor{p \times (T - 1)}$
 \State \Return $\text{plans}[r].\pi$
 \end{algorithmic}
 \end{algorithm}
@@ -148,3 +153,14 @@ The $T$ iterations in line 2--6 are fully independent and may be
 parallelised.
 Observed runtime at 50-worker parallelism: approximately $2T/50$
 seconds per state for typical census-tract graph sizes.
+
+In the atlas framing, PercentileSweep exposes a ranked candidate distribution.
+The candidates exist because fixed structure and weights can still produce
+different local optima under different content-derived seeds.
+The decision rule is not ``choose the best'' unless $p=0$; it is ``sort by
+declared objective and choose the declared rank.''
+The consequence is therefore a selected percentile plan plus a ranking sidecar
+that preserves every candidate score, seed index, selected rank, and tie rule.
+This evidence can support a typicality or percentile claim within the bisection
+family, but not a claim that the selected plan is globally optimal or
+representative of the full ReCom plan space.

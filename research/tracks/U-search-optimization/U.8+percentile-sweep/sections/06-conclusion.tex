@@ -6,7 +6,7 @@
 This paper introduced \ps{}$(p, T)$, a generalisation of \cs{} that makes
 the compactness percentile an explicit statutory parameter.
 By running $T$ bisection plans and returning the plan at rank $\floor{p
-\times T}$, \ps{} allows the \dia{} to specify exactly which position in
+\times (T-1)}$, \ps{} allows the \dia{} to specify exactly which position in
 the compactness distribution should be selected.
 
 The central empirical finding is that partisan outcomes are largely
@@ -60,7 +60,7 @@ Three open questions remain.
 
 First, does the insensitivity result hold for $T < 101$?
 With fewer plans, the distribution is less well-sampled and rank $r =
-\floor{p \times T}$ is a cruder quantile estimate.
+\floor{p \times (T-1)}$ is a cruder quantile estimate.
 A sensitivity analysis over $T \in \{11, 21, 51, 101, 201\}$ would
 bound the minimum $T$ required for stable percentile selection.
 

@@ -6,6 +6,18 @@ methods explore alternatives, exact methods can provide bounded certificates,
 multi-objective methods expose trade-offs, and audit methods verify declared
 artifact contracts.
 
+\subsection*{Compositor Framing}
+
+The selection matrix is also a three-layer compositor checklist.
+For any recommended workflow, the operator should name the structure layer,
+weight layer, and search layer before interpreting the result.
+Changing one layer creates a new run recipe; it should not be described as an
+isolated algorithm comparison unless the other two layers are held fixed.
+The candidate object is therefore the resolved run recipe itself: structure
+choice, weighting choice, search mode, backend settings, and config hash.
+The decision rule is the row chosen for the intended claim, and the consequence
+is the artifact bundle that must be retained for audit.
+
 \begin{table}[htbp]
 \centering
 \small
@@ -38,3 +50,13 @@ What claim is the output meant to support? What evidence level is required for
 that claim? Which CLI surface or crate currently produces the relevant plan or
 certificate artifact? Which RPLAN/RCTX sidecars must be retained so another
 reader can inspect the run?
+
+\subsection*{Evidence Fields}
+
+A publication-ready selection record should include the resolved structure,
+weights, search mode, seed rule or seed budget, objective, selected artifact,
+RPLAN/RCTX identifiers, sidecar list, certificate or solve-report path when
+available, and the claim boundary stated in plain language.
+This prevents a valid audit certificate from being read as an optimality proof,
+a local-search improvement from being read as a global bound, or a percentile
+seed run from being read as an ensemble over all valid plans.

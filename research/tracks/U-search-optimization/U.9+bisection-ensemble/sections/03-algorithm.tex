@@ -75,6 +75,17 @@ subgraph at each step. This differs from a general $k$-way ReCom step where
 only two of the $k$ districts are merged; here, the entire node region is
 always the merge domain.
 
+In the atlas framing, a BisectionEnsemble node is a local candidate generator.
+Its candidates are accepted ReCom bisections of the current node region, each
+with a proposal index, sampled-tree identifier or hash, accepted/rejected
+status, population deviation, and edge cut.
+The decision rule is percentile selection over accepted local bisections; if no
+candidate is accepted, the consequence records the METIS initialization
+fallback rather than silently pretending an ensemble selection occurred.
+The output carried forward is the selected bisection and its two child
+workloads, while the local proposal log is the evidence boundary separating a
+node-local ensemble claim from a full-plan ReCom ensemble claim.
+
 \subsection{Integration with the Bisection Tree}
 \label{sec:alg:tree}
 

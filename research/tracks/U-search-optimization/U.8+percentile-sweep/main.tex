@@ -105,7 +105,7 @@ geographic convergence.
 This paper introduces \ps{}, a generalisation that makes the compactness
 percentile an explicit statutory parameter.
 \ps{}$(p, T)$ runs $T$ bisection plans from the SHA-256 seed walk, sorts them
-by normalised edge cut, and returns the plan at rank $\floor{p \times T}$.
+by normalised edge cut, and returns the plan at rank $\floor{p \times (T-1)}$.
 Special cases include \cs{} ($p = 0.0$) and \ms{} ($p = 0.5$).
 
 The central empirical claim is that \emph{partisan outcomes are largely

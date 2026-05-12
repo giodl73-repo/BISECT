@@ -152,6 +152,18 @@ Algorithm~\ref{alg:cs} gives the complete \cs{} procedure.
 The algorithm returns the partition $\Pi^*$ achieving the minimum normalised
 edge cut seen across all seeds $s_0, s_0+1, \ldots, s_0 + j - 1$.
 
+In the atlas framing, the candidates are the full sequence of seeded plans,
+not only the final minimum.
+Each candidate carries its seed index, derived METIS seed, normalised edge cut,
+population-balance status, and whether it improved the incumbent.
+The decision rule is the first plan with minimum observed $\ECnorm$ before the
+$T$-long no-improvement tail closes the sweep.
+The consequence is a selected plan plus a stopping certificate: the run should
+preserve the seed stream, incumbent-improvement events, $T$, $j^*$, and
+$j_{\mathrm{stop}}$ so that another reader can replay why the sweep stopped.
+This evidence supports a best-observed-under-threshold claim, not a proof of
+global optimality.
+
 \subsection{Correctness}
 
 \begin{proposition}[Determinism]
