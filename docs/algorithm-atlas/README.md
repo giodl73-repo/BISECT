@@ -5,9 +5,15 @@ It complements `docs/concepts/` and the research papers with small diagrams,
 plain-language summaries, and links to the crates, CLI surfaces, papers, and
 RPLAN packages that make each method concrete.
 
-Pages are reviewed against the [BISECT Algorithm Atlas Rubric](RUBRIC.md), a
-six-part scorecard for behavioral mechanics, BISECT integration, spatial visual
+All current atlas pages meet the upgraded gold-standard threshold in the
+[2026-05-11 scorecard](reviews/atlas-scorecard-2026-05-11.md). Pages are
+reviewed against the [BISECT Algorithm Atlas Rubric](RUBRIC.md), a six-part
+scorecard for behavioral mechanics, BISECT integration, spatial visual
 specificity, explanatory story, claim boundaries, and traceable evidence.
+
+The companion [Visual Patterns](VISUAL-PATTERNS.md) guide records the rule that
+now drives the atlas: show the split, move, assignment, cut, repair, selection,
+or sample transition directly. Do not merely label it.
 
 ## Overview
 
@@ -38,6 +44,18 @@ prove that the declared construction profile cannot be satisfied.
 In other words, the algorithm is the construction engine, but the BISECT system
 cares just as much about the evidence trail. A method is useful when its choices
 can be replayed, summarized, packaged as RPLAN/RCTX, and checked by the verifier.
+
+## Reading Paths
+
+Read the atlas by the question you are trying to answer:
+
+| Question | Start Here | Then Read |
+|---|---|---|
+| How does BISECT divide geography? | [GeoSection](geosection.md) | [AreaSection](areasection.md), [County-Sticky Weights](county-sticky-weights.md), [ApportionRegions](apportionregions.md) |
+| How do construction algorithms build plans? | [T.14 Spectral Partitioning](t14-spectral-partitioning.md) | [T.15 Capacity Clustering](t15-capacity-clustering.md), [T.16 Hierarchical Regionalization](t16-hierarchical-regionalization.md), [T.17 Flow Construction](t17-flow-construction.md) |
+| How do exact and search methods explain their claims? | [U.16 Branch-And-Cut](u16-branch-and-cut.md) | [U.17 Branch-And-Price](u17-branch-and-price.md), [U.18 Local Search](u18-local-search.md), [U.19 Evolutionary Comparison](u19-evolutionary-comparison.md) |
+| How do sampling methods explain movement and diagnostics? | [ReCom Ensemble](recom-ensemble.md) | [Sequential Monte Carlo](sequential-monte-carlo.md), [Multiscale MCMC](multiscale-mcmc.md) |
+| How does everything become audit evidence? | [U.20 RPLAN Audit Certificates](u20-rplan-audit-certificates.md) | [Three-Layer Compositor](three-layer-compositor.md), [Seed Search Modes](seed-search-modes.md) |
 
 ## Bisection Compositor Family
 
@@ -72,6 +90,22 @@ Each algorithm page is organized around four questions:
 4. Where is the claim boundary, especially when a result is infeasible or only
    benchmark-tier?
 
+## Gold-Standard Checklist
+
+New or revised atlas pages should satisfy the same test before being treated as
+excellent:
+
+- Show the candidate objects, not just the final result.
+- Show why those candidates exist: adjacency, ratio scan, seed rule, pricing
+  round, particle proposal, or solver incumbent.
+- Show the decision rule in the visual: accepted, rejected, skipped, repaired,
+  resampled, selected, or proven by status.
+- Show the downstream consequence: recursive workload, package sidecar,
+  verifier status, merge log, solve report, frontier entry, or diagnostics.
+- State the claim boundary so readers know what the method does not prove.
+- Name the evidence fields a reviewer can inspect in RPLAN/RCTX, summaries,
+  transcripts, reports, packages, or NDJSON output.
+
 ## Construction Family
 
 | Algorithm | Visual Guide | What To Look For |
@@ -99,12 +133,21 @@ Each algorithm page is organized around four questions:
 | Sequential Monte Carlo | [Sequential Monte Carlo](sequential-monte-carlo.md) | Particles, staged district proposals, weights, ESS resampling |
 | Multiscale MCMC | [Multiscale MCMC](multiscale-mcmc.md) | Coarse/fine hierarchy, tract moves, block-group moves, rebalance |
 
-## Coming Next
+## Review Artifacts
 
-The next atlas pages should cover:
+| Artifact | Purpose |
+|---|---|
+| [Rubric](RUBRIC.md) | Defines the six BISECT scoring dimensions |
+| [Visual Patterns](VISUAL-PATTERNS.md) | Captures reusable figure rules and anti-patterns |
+| [Scorecard](reviews/atlas-scorecard-2026-05-11.md) | Records the current all-golden atlas review |
+| [Role Review](reviews/rubric-r1_roles.md) | Preserves the `.roles` review pass for the rubric |
 
-- VRASection, ProportionalSection, NestSection, and StabilitySection
-- Moving-Knife, compact-Polsby, CVD, BFS growth, and simulated annealing
+## Possible Future Pages
+
+Future atlas pages could cover VRASection, ProportionalSection, NestSection,
+StabilitySection, Moving-Knife, compact-Polsby, CVD, BFS growth, and simulated
+annealing. Add them only when the page can meet the gold-standard checklist
+above.
 
 ## Relationship To Other Docs
 
