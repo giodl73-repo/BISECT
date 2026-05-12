@@ -41,6 +41,15 @@ It does not choose seeds. It chooses a Fiedler ordering and then a sweep cut
 through that ordering. The output becomes a district assignment plus spectral
 summary evidence that can flow into RPLAN/RCTX packaging.
 
+## Picture 0: Graph Ordering To Sweep Decision
+
+![T.14 spectral partitioning visual](assets/t14-spectral-partitioning.svg)
+
+The primary visual shows the candidate path under the gold-standard rubric. The
+graph produces a Fiedler ordering, the ordering creates prefix-cut candidates,
+the sweep table rejects population-infeasible cuts, and the selected balanced
+cut becomes the next recursive workload plus package summary evidence.
+
 ## Algorithm Shape
 
 ```text
