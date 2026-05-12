@@ -110,11 +110,25 @@ superiority.
 - [x] Run focused benchmark corpus tests.
 - [x] Commit and push the audit benchmark slice.
 
+## Stage 9 - Add Flow-Construction Benchmark Package
+
+- [x] Generate a flow-construction benchmark package from the `bisect-flow`
+      construction path.
+- [x] Use a deterministic 100-unit synthetic path graph with equal population.
+- [x] Include flow summary, method transcript, benchmark notes, and verifier
+      manifest hashes.
+- [x] Verify through `rplan verify-certificate`.
+- [x] Verify through `bisect verify --manifest`.
+- [x] Update T.17 evidence docs and package inventory.
+- [x] Run focused benchmark corpus tests.
+- [x] Commit and push the flow benchmark slice.
+
 ## Candidate Matrix
 
 | Candidate | Side | Data | Footprint | Why It Is Useful | Risk |
 |---|---|---|---|---|---|
 | T.14 spectral grid10 benchmark | Construction | no external data | small, in-repo | Exercises benchmark manifest, timing notes, 100-unit context, and verifier bridge | Still synthetic; no wall-clock claim |
+| T.17 flow path100 benchmark | Construction | no external data | small, in-repo | Exercises flow-construction lineage, benchmark manifest, 100-unit context, and verifier bridge | Still synthetic; no wall-clock claim |
 | U.16 branch-and-cut path8 benchmark | Exact | no external data | small, in-repo | Exercises solver-grade transcript, LP model artifact hashing, exact certificate metadata, and verifier bridge | Still synthetic and intentionally tiny |
 | U.18 local-search grid10 benchmark | Search | no external data; parent is T.14 grid benchmark | small, in-repo | Exercises benchmark search packaging, no-improvement transcript, and parent-plan lineage | Still synthetic; no improvement claim |
 | U.20 audit grid10 benchmark | Audit | no external data | small, in-repo | Exercises verifier scale, audit fixed-point lineage, and benchmark package bridge | Does not advance algorithm quality claims |

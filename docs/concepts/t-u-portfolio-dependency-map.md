@@ -67,6 +67,7 @@ T.16 hierarchical regionalization
 T.17 flow construction
   bisect-flow
   golden package: T.17+flow-construction
+  benchmark package: T.17+flow-path100-benchmark
 
 U.16 branch-and-cut
   bisect-ilp
@@ -151,6 +152,7 @@ docs/examples/rplan-method-packages/
 
 docs/examples/rplan-benchmark-packages/
   T.14+spectral-grid10-benchmark/
+  T.17+flow-path100-benchmark/
   U.16+branch-and-cut-path8-benchmark/
   U.18+local-search-grid10-benchmark/
   U.20+audit-grid10-benchmark/

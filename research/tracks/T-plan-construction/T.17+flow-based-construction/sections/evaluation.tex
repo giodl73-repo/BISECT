@@ -1,9 +1,10 @@
 \section{Evaluation Plan}
 
-The current evidence layer includes path balance, infeasible capacity, and
-determinism fixtures. The next evidence layer should characterize scale limits
-and compare flow construction with clustering, regionalization, and METIS
-baselines.
+The current evidence layer includes path balance, infeasible capacity,
+determinism fixtures, and a benchmark-tier RPLAN package generated from the
+flow constructor on a 100-unit synthetic path. The next evidence layer should
+characterize real-data scale limits and compare flow construction with
+clustering, regionalization, and METIS baselines.
 
 \begin{table}[h]
 \centering
@@ -15,7 +16,7 @@ Path fixture balance & L0 path tests & None for fixtures & Current \\
 Infeasible capacity witness & L0 infeasibility tests & Broader case sweep & Current \\
 Deterministic output & L0 determinism tests & Larger graph sweep & Current \\
 Audit lineage & L1 sidecar checks & Real export transcript & Current \\
-Scale and quality & None in this paper & Benchmarks and smoke states & Future \\
+Scale smoke & path100 benchmark package & Real-data benchmarks & Benchmark smoke \\
 \bottomrule
 \end{tabular}
 \caption{Evidence ladder for T.17 claims. Feasibility, witness generation, and
