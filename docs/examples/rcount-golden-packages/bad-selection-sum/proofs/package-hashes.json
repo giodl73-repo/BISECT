@@ -1,7 +1,8 @@
 {
-  "package_content_hash": "sha256:3a3f31488d1c7837136aa4fcfdd641a15c7340f1c9059f371df6eb3b3e77d77f",
+  "package_content_hash": "sha256:08efdf36286cb52b90590a653b6909ad940f7963c0e449c0c8fed7ad5196bf3d",
   "contest_count": 1,
   "reporting_unit_count": 3,
   "batch_count": 0,
+  "lineage_count": 0,
   "summary_count": 3
 }

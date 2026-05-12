@@ -91,6 +91,26 @@ pub enum RcountCoreError {
         declared_ballots: i64,
         computed_ballots: i64,
     },
+    #[error("duplicate lineage event id: {lineage_id}")]
+    DuplicateLineageId { lineage_id: String },
+    #[error(
+        "lineage event {lineage_id} references missing prior reporting unit: {reporting_unit_id}"
+    )]
+    MissingPriorLineageUnit {
+        lineage_id: String,
+        reporting_unit_id: String,
+    },
+    #[error(
+        "lineage event {lineage_id} references missing current reporting unit: {reporting_unit_id}"
+    )]
+    MissingCurrentLineageUnit {
+        lineage_id: String,
+        reporting_unit_id: String,
+    },
+    #[error("lineage event {lineage_id} has invalid split cardinality")]
+    InvalidSplitLineage { lineage_id: String },
+    #[error("lineage event {lineage_id} has invalid merge cardinality")]
+    InvalidMergeLineage { lineage_id: String },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -183,6 +203,26 @@ pub struct BatchManifest {
     pub source_refs: Vec<String>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum LineageKind {
+    Unchanged,
+    Split,
+    Merge,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ReportingUnitLineage {
+    pub lineage_id: String,
+    pub kind: LineageKind,
+    pub prior_cycle: String,
+    pub current_cycle: String,
+    pub prior_reporting_unit_ids: Vec<String>,
+    pub current_reporting_unit_ids: Vec<String>,
+    pub authority: String,
+    pub explanation: String,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum CountStatus {
@@ -231,6 +271,8 @@ pub struct RcountPackage {
     pub reporting_units: Vec<ReportingUnit>,
     #[serde(default)]
     pub batches: Vec<BatchManifest>,
+    #[serde(default)]
+    pub lineage: Vec<ReportingUnitLineage>,
     pub summaries: Vec<Summary>,
     #[serde(default)]
     pub status_events: Vec<StatusEvent>,
@@ -299,6 +341,7 @@ pub fn verify_package(package: &RcountPackage) -> Result<VerificationReport, Rco
     }
     report.passed.extend(verify_status_events(package)?);
     report.passed.extend(verify_batch_summary_totals(package)?);
+    report.passed.extend(verify_lineage_conservation(package)?);
     Ok(report)
 }
 
@@ -565,6 +608,77 @@ pub fn verify_batch_summary_totals(
     Ok(passes)
 }
 
+pub fn verify_lineage_conservation(
+    package: &RcountPackage,
+) -> Result<Vec<EquationPass>, RcountCoreError> {
+    let units: BTreeSet<&str> = package
+        .reporting_units
+        .iter()
+        .map(|unit| unit.reporting_unit_id.as_str())
+        .collect();
+    let mut seen = BTreeSet::new();
+    let mut passes = Vec::new();
+
+    for event in package.lineage.iter() {
+        if !seen.insert(event.lineage_id.as_str()) {
+            return Err(RcountCoreError::DuplicateLineageId {
+                lineage_id: event.lineage_id.clone(),
+            });
+        }
+        for prior in event.prior_reporting_unit_ids.iter() {
+            if !units.contains(prior.as_str()) {
+                return Err(RcountCoreError::MissingPriorLineageUnit {
+                    lineage_id: event.lineage_id.clone(),
+                    reporting_unit_id: prior.clone(),
+                });
+            }
+        }
+        for current in event.current_reporting_unit_ids.iter() {
+            if !units.contains(current.as_str()) {
+                return Err(RcountCoreError::MissingCurrentLineageUnit {
+                    lineage_id: event.lineage_id.clone(),
+                    reporting_unit_id: current.clone(),
+                });
+            }
+        }
+        match event.kind {
+            LineageKind::Unchanged => {
+                if event.prior_reporting_unit_ids.len() != 1
+                    || event.current_reporting_unit_ids.len() != 1
+                {
+                    return Err(RcountCoreError::InvalidSplitLineage {
+                        lineage_id: event.lineage_id.clone(),
+                    });
+                }
+            }
+            LineageKind::Split => {
+                if event.prior_reporting_unit_ids.len() != 1
+                    || event.current_reporting_unit_ids.len() < 2
+                {
+                    return Err(RcountCoreError::InvalidSplitLineage {
+                        lineage_id: event.lineage_id.clone(),
+                    });
+                }
+            }
+            LineageKind::Merge => {
+                if event.prior_reporting_unit_ids.len() < 2
+                    || event.current_reporting_unit_ids.len() != 1
+                {
+                    return Err(RcountCoreError::InvalidMergeLineage {
+                        lineage_id: event.lineage_id.clone(),
+                    });
+                }
+            }
+        }
+        passes.push(EquationPass {
+            equation_id: "lineage_conservation".to_string(),
+            contest_id: "*".to_string(),
+            reporting_unit_id: event.lineage_id.clone(),
+        });
+    }
+    Ok(passes)
+}
+
 pub fn synthetic_summary_basic_package() -> RcountPackage {
     let contest = Contest {
         contest_id: "syn-2024-mayor".to_string(),
@@ -624,6 +738,7 @@ pub fn synthetic_summary_basic_package() -> RcountPackage {
         contests: vec![contest],
         reporting_units,
         batches: vec![],
+        lineage: vec![],
         summaries,
         status_events: vec![],
     }
@@ -815,6 +930,98 @@ pub fn synthetic_missing_batch_package() -> RcountPackage {
     package
         .batches
         .retain(|batch| batch.batch_id != "batch:P-001:late-mail");
+    package
+}
+
+pub fn synthetic_precinct_split_lineage_package() -> RcountPackage {
+    let mut package = synthetic_summary_basic_package();
+    package.reporting_units.extend([
+        ReportingUnit {
+            reporting_unit_id: "syn:precinct:P-004".to_string(),
+            kind: ReportingUnitKind::Precinct,
+            parent_jurisdiction: "syn-county-1".to_string(),
+            source_ids: vec!["P-004".to_string()],
+            valid_from: Some("2024-11-05".to_string()),
+            valid_to: Some("2028-11-07".to_string()),
+        },
+        ReportingUnit {
+            reporting_unit_id: "syn:precinct:P-004A".to_string(),
+            kind: ReportingUnitKind::SplitPrecinct,
+            parent_jurisdiction: "syn-county-1".to_string(),
+            source_ids: vec!["P-004A".to_string()],
+            valid_from: Some("2028-11-07".to_string()),
+            valid_to: None,
+        },
+        ReportingUnit {
+            reporting_unit_id: "syn:precinct:P-004B".to_string(),
+            kind: ReportingUnitKind::SplitPrecinct,
+            parent_jurisdiction: "syn-county-1".to_string(),
+            source_ids: vec!["P-004B".to_string()],
+            valid_from: Some("2028-11-07".to_string()),
+            valid_to: None,
+        },
+        ReportingUnit {
+            reporting_unit_id: "syn:precinct:P-007".to_string(),
+            kind: ReportingUnitKind::Precinct,
+            parent_jurisdiction: "syn-county-1".to_string(),
+            source_ids: vec!["P-007".to_string()],
+            valid_from: Some("2024-11-05".to_string()),
+            valid_to: Some("2028-11-07".to_string()),
+        },
+        ReportingUnit {
+            reporting_unit_id: "syn:precinct:P-008".to_string(),
+            kind: ReportingUnitKind::Precinct,
+            parent_jurisdiction: "syn-county-1".to_string(),
+            source_ids: vec!["P-008".to_string()],
+            valid_from: Some("2024-11-05".to_string()),
+            valid_to: Some("2028-11-07".to_string()),
+        },
+        ReportingUnit {
+            reporting_unit_id: "syn:precinct:P-078".to_string(),
+            kind: ReportingUnitKind::Precinct,
+            parent_jurisdiction: "syn-county-1".to_string(),
+            source_ids: vec!["P-078".to_string()],
+            valid_from: Some("2028-11-07".to_string()),
+            valid_to: None,
+        },
+    ]);
+    package.lineage = vec![
+        ReportingUnitLineage {
+            lineage_id: "lineage:P-004-split".to_string(),
+            kind: LineageKind::Split,
+            prior_cycle: "SYN-2024-general".to_string(),
+            current_cycle: "SYN-2028-general".to_string(),
+            prior_reporting_unit_ids: vec!["syn:precinct:P-004".to_string()],
+            current_reporting_unit_ids: vec![
+                "syn:precinct:P-004A".to_string(),
+                "syn:precinct:P-004B".to_string(),
+            ],
+            authority: "SYN County Election Office".to_string(),
+            explanation: "P-004 split into two precincts after municipal growth.".to_string(),
+        },
+        ReportingUnitLineage {
+            lineage_id: "lineage:P-007-P-008-merge".to_string(),
+            kind: LineageKind::Merge,
+            prior_cycle: "SYN-2024-general".to_string(),
+            current_cycle: "SYN-2028-general".to_string(),
+            prior_reporting_unit_ids: vec![
+                "syn:precinct:P-007".to_string(),
+                "syn:precinct:P-008".to_string(),
+            ],
+            current_reporting_unit_ids: vec!["syn:precinct:P-078".to_string()],
+            authority: "SYN County Election Office".to_string(),
+            explanation: "P-007 and P-008 merged into P-078 during precinct consolidation."
+                .to_string(),
+        },
+    ];
+    package
+}
+
+pub fn synthetic_bad_lineage_package() -> RcountPackage {
+    let mut package = synthetic_precinct_split_lineage_package();
+    package.lineage[0]
+        .current_reporting_unit_ids
+        .push("syn:precinct:P-004C".to_string());
     package
 }
 
@@ -1023,6 +1230,30 @@ mod tests {
         let package = synthetic_missing_batch_package();
         let err = verify_batch_summary_totals(&package).expect_err("missing batch must fail");
         assert!(matches!(err, RcountCoreError::MissingBatch { .. }));
+    }
+
+    #[test]
+    fn synthetic_precinct_split_lineage_verifies_split_and_merge() {
+        let package = synthetic_precinct_split_lineage_package();
+        let report = verify_package(&package).expect("lineage package must verify");
+        assert_eq!(
+            report
+                .passed
+                .iter()
+                .filter(|pass| pass.equation_id == "lineage_conservation")
+                .count(),
+            2
+        );
+    }
+
+    #[test]
+    fn lineage_conservation_catches_missing_current_unit() {
+        let package = synthetic_bad_lineage_package();
+        let err = verify_lineage_conservation(&package).expect_err("bad lineage must fail");
+        assert!(matches!(
+            err,
+            RcountCoreError::MissingCurrentLineageUnit { .. }
+        ));
     }
 
     #[test]

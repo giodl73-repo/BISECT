@@ -2,8 +2,8 @@
   "transcript_version": "rcount-audit-transcript-v1",
   "verifier": "rcount-audit",
   "status": "fail",
-  "package_content_hash": "sha256:a32748c501517099a9cadfb8e604eda7b502c65e7eb478db062fd50a79ca1231",
-  "manifest_content_hash": "sha256:a32748c501517099a9cadfb8e604eda7b502c65e7eb478db062fd50a79ca1231",
+  "package_content_hash": "sha256:0b9e71091969ce24d59b12841d3a8f2e31b3bd35b1b5b5eea922c1d18171c402",
+  "manifest_content_hash": "sha256:0b9e71091969ce24d59b12841d3a8f2e31b3bd35b1b5b5eea922c1d18171c402",
   "checks": [
     {
       "equation_id": "contest_selection_sum",
@@ -32,7 +32,7 @@
     {
       "equation_id": "source_hash_match",
       "status": "fail",
-      "error": "source hash mismatch for source:synthetic-summary-export: declared sha256:aad23b3a39017ced9e9f583aa3547d0b98d2673a3d2293541c6e3eff3955d4eb, computed sha256:9411c155d1350de00f41c5f73e9115ac9242c6644483ef8f9162e38cbfb9bf03"
+      "error": "source hash mismatch for source:synthetic-summary-export: declared sha256:5ac0b61f1147e0357865ae320e4b619136edd14be01e35fdb5ba16d4a43ed311, computed sha256:9411c155d1350de00f41c5f73e9115ac9242c6644483ef8f9162e38cbfb9bf03"
     }
   ]
 }

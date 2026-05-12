@@ -1,0 +1,25 @@
+{
+  "transcript_version": "rcount-audit-transcript-v1",
+  "verifier": "rcount-audit",
+  "status": "fail",
+  "package_content_hash": "sha256:cfa9bf301df093a5265b9b5dffe862d0bee6c7a10123b782a0ea1551a2448fc9",
+  "manifest_content_hash": "sha256:cfa9bf301df093a5265b9b5dffe862d0bee6c7a10123b782a0ea1551a2448fc9",
+  "checks": [
+    {
+      "equation_id": "lineage_conservation",
+      "status": "fail",
+      "error": "lineage event lineage:P-004-split references missing current reporting unit: syn:precinct:P-004C"
+    },
+    {
+      "equation_id": "jurisdiction_contest_total",
+      "status": "pass",
+      "contest_id": "syn-2024-mayor",
+      "reporting_unit_id": "syn:jurisdiction:SYN"
+    },
+    {
+      "equation_id": "source_hash_match",
+      "status": "pass",
+      "reporting_unit_id": "source:synthetic-summary-export"
+    }
+  ]
+}

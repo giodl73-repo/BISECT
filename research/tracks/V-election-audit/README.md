@@ -29,15 +29,17 @@ recompute public claims from lower-level evidence.
 - `rcount-core`: started 2026-05-12 with canonical hash prefixes, core contest
   and summary records, a synthetic `summary-basic` package generator, and L0
   checks for `contest_selection_sum`, `jurisdiction_contest_total`, and
-  canvass-correction event correlation, plus batch-summary accounting.
+  canvass-correction event correlation, plus batch-summary accounting and
+  reporting-unit lineage conservation.
 - `rcount-io`: started 2026-05-12 with package-directory read/write helpers,
   `summary-basic`, `canvass-correction`, `mail-batch-added`,
-  `bad-selection-sum`, and `missing-batch` generators, and docs fixture
-  verification, including source-index hash checks.
+  `precinct-split-lineage`, `bad-selection-sum`, `missing-batch`, and
+  `bad-lineage` generators, and docs fixture verification, including
+  source-index hash checks.
 - `rcount-audit`: started 2026-05-12 with pass/fail verification transcripts
   for `summary-basic` and `canvass-correction`, tampered manifest failures,
-  bad arithmetic failures, batch-accounting failures, and missing/tampered
-  source-hash failures.
+  bad arithmetic failures, batch-accounting failures, bad lineage failures,
+  and missing/tampered source-hash failures.
 - `rcount-cli`: started 2026-05-12 with `rcount verify <package-dir>` and
   optional `--write-transcript`.
 
