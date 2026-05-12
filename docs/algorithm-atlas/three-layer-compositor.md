@@ -21,6 +21,15 @@ Changing GeoSection to AreaSection should not silently change county weights or
 seed search. Changing ConvergenceSweep to PercentileSweep should not silently
 change the split topology.
 
+## Picture 0: Layer Choices To Manifest Consequence
+
+![Three-layer compositor choices](assets/three-layer-compositor.svg)
+
+The compositor visual shows the candidate choices in each layer, the selected
+run recipe, and the artifact consequence. The important claim is not just that
+three boxes feed a run; it is that a reviewer can see which layer changed, which
+config hash resulted, and which sidecar explains each layer's contribution.
+
 ## Step-By-Step Mechanics
 
 1. Resolve the structure mode from CLI/config.
