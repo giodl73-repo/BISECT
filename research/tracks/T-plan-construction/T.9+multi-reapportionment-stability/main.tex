@@ -58,35 +58,40 @@
 
 \begin{abstract}
 \noindent
-What happens in 2030 when states gain or lose congressional seats?
+What happens in 2030 if states gain or lose congressional seats?
 The \ar{} algorithm constructs a bisection tree whose structure is
-determined entirely by the prime factorisation of the district count $k$.
+determined by the split prescription for the district count $k$: composites
+split by their largest prime factor, while large primes use a binary
+floor/ceiling fallback.
 A change in $k$ can therefore produce a dramatic change in tree
 topology---not because the algorithm has changed, but because the
 arithmetic has.
-This paper characterises the 2030 reapportionment shock using
-Census Bureau projections (TX: $38 \to 41$, CA: $52 \to 50$,
-FL: $28 \to 29$, NY: $26 \to 25$, and others), traces how
-each seat change alters the bisection tree, and simulates
-the resulting tract-level boundary movements.
-The key finding is that seat-change-induced disruption is
-equivalent to approximately 9--10 \recom{} steps: far less than
-a full MCMC remix (10{,}000+ steps to decorrelate) and less than
-typical political redistricting (35--55\,\% tract reassignment).
-The reapportionment adjustment itself is deterministic and requires
-no MCMC steps; subsequent chain remixing takes $\approx$10 \recom{}
-steps to restabilise.
+This paper characterises an illustrative 2030 reapportionment scenario
+(TX: $38 \to 41$, CA: $52 \to 50$, FL: $28 \to 29$, NY: $26 \to 25$,
+and others), traces how each seat change alters the split tree, and
+defines the package evidence needed to measure tract-level boundary
+movement.
+The paper's current empirical tables should be read as scenario/audit
+targets unless accompanied by archived run manifests.
+In that scenario, the largest reported disruption is Texas at
+$d_{\rm Ham}=0.23$, algebraically equivalent to roughly 9--10 one-step
+\recom{} units under the approximation $1/k$.
+That comparison is a scale heuristic, not an empirical mixing result.
+The reapportionment adjustment itself is deterministic once the input
+data, district count, seed, graph, and split prescription are fixed.
 The \ar{} algorithm recomputes the tree fresh from the new
 apportionment each decade, which is the intended statutory
 behavior under the \dia{}.
-Texas is the most interesting case: $38 = 2 \times 19$ (deep prime,
-two-phase tree) changes to $41$ (prime, flat tree), producing
+Texas is the most interesting case: $38 = 2 \times 19$ (large-factor,
+largest-prime-first tree) changes to $41$ (large-prime binary fallback),
+producing
 the largest structural change in the nation.
 California's move from $52 = 4 \times 13$ to $50 = 2 \times 5^2$
 produces a qualitatively different but similarly disruptive
 factorisation change.
-We conclude that decadal recomputation is algorithmically sound
-and politically neutral.
+We conclude that decadal recomputation is the right algorithmic staging,
+while stronger claims about disruption magnitude or political neutrality
+require archived comparison packages.
 \end{abstract}
 
 \tableofcontents

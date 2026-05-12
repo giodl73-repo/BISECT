@@ -196,7 +196,7 @@ pub fn is_prime(n: u32) -> bool {
 /// for prime > MAX_DIRECT_SPLIT). Used to compute per-level METIS balance
 /// tolerance such that cumulative error stays within the statutory limit.
 ///
-/// Examples: k=8→3, k=17→4, k=38→5, k=52→3.
+/// Examples: k=8→3, k=17→4, k=38→2, k=52→3.
 pub fn pfr_tree_depth(k: u32) -> u32 {
     if k <= 1 {
         return 0;

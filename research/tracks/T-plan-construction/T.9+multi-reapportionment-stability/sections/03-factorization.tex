@@ -9,38 +9,43 @@
          with projected changes. ``Depth'' is the depth of the \ar{}
          bisection tree.}
 \label{tab:factorization}
-\begin{tabular}{lccccc}
+\begin{tabular}{lcccccc}
 \toprule
-State & 2020 $k$ & Factorisation & Depth & 2030 $k$ & Factorisation \\
+State & 2020 $k$ & 2020 split & Depth & 2030 $k$ & 2030 split & Depth \\
 \midrule
-Texas & 38 & $2 \times 19$ & 2 & 41 & prime \\
-California & 52 & $2^2 \times 13$ & 3 & 50 & $2 \times 5^2$ \\
-Florida & 28 & $2^2 \times 7$ & 3 & 29 & prime \\
-New York & 26 & $2 \times 13$ & 2 & 25 & $5^2$ \\
-Arizona & 9 & $3^2$ & 2 & 10 & $2 \times 5$ \\
-Georgia & 14 & $2 \times 7$ & 2 & 15 & $3 \times 5$ \\
-N. Carolina & 14 & $2 \times 7$ & 2 & 15 & $3 \times 5$ \\
-Illinois & 17 & prime & 1 & 16 & $2^4$ \\
-Michigan & 13 & prime & 1 & 12 & $2^2 \times 3$ \\
-Pennsylvania & 17 & prime & 1 & 16 & $2^4$ \\
+Texas & 38 & $19\times2$ & 2 & 41 & $20+21$ & 4 \\
+California & 52 & $13\times4$ & 3 & 50 & $5\times10$ & 3 \\
+Florida & 28 & $7\times4$ & 3 & 29 & $14+15$ & 3 \\
+New York & 26 & $13\times2$ & 2 & 25 & $5\times5$ & 2 \\
+Arizona & 9 & $3\times3$ & 2 & 10 & $5\times2$ & 2 \\
+Georgia & 14 & $7\times2$ & 2 & 15 & $5\times3$ & 2 \\
+N. Carolina & 14 & $7\times2$ & 2 & 15 & $5\times3$ & 2 \\
+Illinois & 17 & $8+9$ & 4 & 16 & $2\times8$ & 4 \\
+Michigan & 13 & $6+7$ & 4 & 12 & $3\times4$ & 3 \\
+Pennsylvania & 17 & $8+9$ & 4 & 16 & $2\times8$ & 4 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
+Depth counts recursive split levels under the implemented
+\texttt{split\_prescription}.  A large prime therefore has depth greater than
+one because it first falls back to a binary split and then recurses on the two
+composite or smaller-prime sides.
+
 \subsection{Texas: The Most Dramatic Change}
 
 Texas goes from $38 = 2 \times 19$ to $41$ (prime).
-Under the current tree, Texas is bisected into two halves of 19 districts each;
-each half is then recursively bisected 19 ways (19 is prime, so this is a
-flat 19-way split).
-The tree has depth 2 with two major subtrees.
+Under the current implementation, Texas first splits into 19 two-seat
+containers.  Each two-seat container then performs a direct two-way split.
+The large factor is used first so that states sharing a large factor can reuse
+the same top-level partition.
 
-Under the 2030 tree, Texas is directly split 41 ways at the root.
-This is a flat tree of depth 1.
-Every tract's district assignment is determined by a single 41-way
-METIS partition rather than a hierarchical 2-level bisection.
-The change from a 2-level to a 1-level tree means that the geographic
-organization of the state's districts is fundamentally different.
+Under the 2030 scenario tree, 41 is prime and greater than 3, so the root
+uses the large-prime fallback: a binary split into 20-seat and 21-seat
+subregions.  The 20 side then begins with a $5\times4$ split, while the
+21 side begins with a $7\times3$ split.  The change from a 19-container
+top level to a 20/21 binary top level means that the geographic organization
+of the state's districts is fundamentally different.
 
 \paragraph{Expected boundary movement.}
 With $38 \to 41$ districts, the target district population decreases
@@ -55,30 +60,29 @@ We expect boundary movement of approximately 15--25\% of tracts
 California goes from $52 = 2^2 \times 13$ to $50 = 2 \times 5^2$.
 Both are composite, but the factorisation paths differ:
 \begin{itemize}
-\item $52$: bisect to 2 halves of 26 each; each 26 bisects to 2 halves of
-      13 each; each 13 is a flat prime split.
+\item $52$: split into 13 four-seat containers; each 4 splits into two
+      two-seat containers, then each two-seat container splits directly.
       Tree depth: 3.
-\item $50$: bisect to 2 halves of 25 each; each 25 splits as $5 \times 5$
-      (bisect to 5 halves of 5 each; each 5 is a flat prime split).
+\item $50$: split into 5 ten-seat containers; each 10 splits into five
+      two-seat containers, then each two-seat container splits directly.
       Tree depth: 3.
 \end{itemize}
 
 Both have depth 3, but the intermediate splitting differs.
-At the second level, $52$-tree makes halves of 13 while $50$-tree makes
-fifths of 5.
+At the top level, the $52$ tree makes 13 containers of 4 while the $50$ tree
+makes 5 containers of 10.
 This is a structural change but less dramatic than the Texas prime transition.
 
 \subsection{Florida: The Most Structurally Significant Change}
 
-Florida goes from $28 = 2^2 \times 7$ (composite, three-level tree:
-bisect to 2 halves of 14 each; each 14 bisects to 2 halves of 7 each;
-each 7 is a flat prime split) to $29$ (prime: flat single-level tree).
+Florida goes from $28 = 2^2 \times 7$ (composite: seven four-seat containers)
+to $29$ (prime: binary $14:15$ fallback).
 
 The seat gain changes the tree type from composite to prime-fallback,
 the reverse of the prime-to-composite transitions in Illinois, Michigan,
 and Pennsylvania.
-This is Florida's most structurally significant change: 29 is prime,
-so the 29-seat tree is a flat 29-way split at the root.
+This is Florida's most structurally significant scenario: 29 is prime,
+so the 29-seat tree begins with a $14:15$ split at the root.
 By contrast, a hypothetical $30 = 2 \times 3 \times 5$ would allow a
 hierarchical tree ($15 \to 5 \to 3$ or $10 \to 6 \to 2$ depending on
 factor order), which can better preserve county boundaries because the
@@ -95,13 +99,12 @@ fallback.
 
 These states currently have prime seat counts ($17, 13, 17$) and will
 move to composite ($16, 12, 16$).
-A prime $k$ has a flat single-level tree (all tracts assigned in one
-$k$-way METIS partition).
-A composite $k$ has a hierarchical tree.
+A large prime $k$ has a binary fallback tree.
+A composite $k$ has a largest-prime-first hierarchical tree.
 
-This is the reverse of the Texas transition: going from flat to hierarchical.
-Hierarchical trees are generally more compact (each subproblem is a cleaner
-bisection) but the boundary movement from restructuring the tree is substantial.
+This is the reverse of the Texas transition: going from a prime fallback to a
+composite largest-prime-first tree.  Boundary movement from restructuring the
+tree can still be substantial, even when both prescriptions are deterministic.
 
 \begin{table}[h]
 \centering
@@ -111,14 +114,14 @@ bisection) but the boundary movement from restructuring the tree is substantial.
 \toprule
 State & 2020 tree type & 2030 tree type \\
 \midrule
-Texas & Two-level (2-19) & Flat prime \\
-California & Three-level ($4 \times 13$) & Three-level ($2 \times 25$) \\
-Florida & Three-level ($4 \times 7$) & Flat prime \\
+Texas & 19 containers of 2 & Binary 20/21 fallback \\
+California & 13 containers of 4 & 5 containers of 10 \\
+Florida & 7 containers of 4 & Binary 14/15 fallback \\
 New York & Two-level (2-13) & Two-level (5-5) \\
 Arizona & Two-level (3-3) & Two-level (2-5) \\
 Georgia/NC & Two-level (2-7) & Two-level (3-5) \\
-Illinois/PA & Flat prime (17) & Four-level ($2^4$) \\
-Michigan & Flat prime (13) & Three-level ($4 \times 3$) \\
+Illinois/PA & Binary 8/9 fallback & Four-level ($2^4$) \\
+Michigan & Binary 6/7 fallback & Three-level ($3 \times 4$) \\
 \bottomrule
 \end{tabular}
 \end{table}

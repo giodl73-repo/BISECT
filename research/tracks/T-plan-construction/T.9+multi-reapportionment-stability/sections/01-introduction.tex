@@ -11,25 +11,27 @@ response to population change~\citep{wesberry1964}, and the algorithm
 should reflect the new apportionment.
 
 But what actually happens when a state gains or loses seats?
-The \ar{} bisection tree is determined entirely by the prime factorisation
-of $k$ (T.4~\citep{b11paper}).
+The \ar{} split tree is determined by the prime factorisation of $k$ together
+with the prime fallback rule (T.4~\citep{b11paper}).
 A change in $k$ can dramatically alter the tree topology---not because the
 algorithm has changed, but because the arithmetic has.
 
-This paper characterises the 2030 reapportionment shock.
-We use Census Bureau 2030 projections~\citep{census2030proj} to identify
-which states will gain or lose seats, trace how each seat change alters
-the \ar{} bisection tree, and simulate the resulting tract-level boundary
-movements.
+This paper characterises an illustrative 2030 reapportionment shock.
+We use a projection scenario~\citep{census2030proj} to identify states that
+may gain or lose seats, trace how each seat change alters the \ar{} split
+tree, and define the run package needed to measure tract-level boundary
+movement.  The final 2030 apportionment will not be known until the official
+enumeration and Huntington-Hill apportionment are complete.
 
 \subsection{The Key Cases}
 
 \paragraph{Texas ($38 \to 41$).}
-$38 = 2 \times 19$ is a two-level tree (bisect to 2, each half bisects
-to 19 by recursive bisection since 19 is prime).
-$41$ is prime: the entire tree is a flat 41-way split at the root.
+$38 = 2 \times 19$ first splits into 19 two-district regions under the
+largest-prime-first rule.
+$41$ is prime, so the implemented prescription uses a binary $20:21$ fallback
+at the root rather than a flat 41-way split.
 This is the most dramatic factorisation change in the nation.
-We expect large boundary movement.
+It is the priority case for package-backed boundary movement.
 
 \paragraph{California ($52 \to 50$).}
 $52 = 4 \times 13 = 2^2 \times 13$.
@@ -39,7 +41,7 @@ We characterise the structural change and expected boundary movement.
 
 \paragraph{Florida ($28 \to 29$).}
 $28 = 4 \times 7 = 2^2 \times 7$.
-$29$ is prime: flat tree, major structural change.
+$29$ is prime: binary $14:15$ fallback, major structural change.
 
 \paragraph{New York ($26 \to 25$).}
 $26 = 2 \times 13$.
@@ -47,11 +49,12 @@ $25 = 5^2 = 5 \times 5$: balanced two-level tree.
 
 \subsection{Main Finding}
 
-The main finding: seat-change-induced boundary disruption is \emph{less}
-than the disruption from a single \recom{} MCMC remix step.
-This makes intuitive sense: the \ar{} algorithm is optimising for compactness
-within the new apportionment, which requires finding a new optimal map
-from scratch, but the geographic constraints are largely unchanged.
+The main finding is an evidence boundary: the reported Texas disruption
+($d_{\rm Ham}=0.23$) is a plausible scenario value and a useful audit target,
+but it must be archived with the same run metadata as other BISECT plan
+packages before it can carry publication weight.  Algebraically, that value is
+roughly nine one-step \recom{} units for $k=38$; this is a scale comparison,
+not a measured mixing-time claim.
 
 \subsection{Paper Structure}
 

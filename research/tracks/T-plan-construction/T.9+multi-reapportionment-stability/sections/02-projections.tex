@@ -1,25 +1,26 @@
 \section{2030 Reapportionment Projections}
 \label{sec:projections}
 
-\subsection{Census Bureau Projections}
+\subsection{Projection Scenario}
 
-Based on Census Bureau population projections~\citep{census2030proj} and
-\hh{} apportionment calculations~\citep{huntington1928,balinski1982},
-we project the following seat changes for 2030:
+Based on the projection scenario used in this paper~\citep{census2030proj}
+and \hh{} apportionment calculations~\citep{huntington1928,balinski1982},
+we analyze the following possible seat changes for 2030:
 
 \begin{table}[h]
 \centering
-\caption{Projected 2030 congressional seat changes. Seat counts shown
-         as 2020 $\to$ 2030 (projected). ``Tree change'' indicates the
-         qualitative change in the \ar{} bisection tree.}
+\caption{Illustrative 2030 congressional seat-change scenario. Seat counts
+         shown as 2020 $\to$ 2030 scenario value. ``Tree change'' indicates
+         the qualitative change in the \ar{} split tree.}
 \label{tab:projections}
+\small
 \begin{tabular}{lcccc}
 \toprule
 State & 2020 seats & 2030 (proj.) & Change & Tree change \\
 \midrule
-Texas & 38 & 41 & $+3$ & Dramatic (composite $\to$ prime) \\
+Texas & 38 & 41 & $+3$ & Dramatic (19-way $\to$ binary fallback) \\
 California & 52 & 50 & $-2$ & Structural \\
-Florida & 28 & 29 & $+1$ & Dramatic (composite $\to$ prime) \\
+Florida & 28 & 29 & $+1$ & Dramatic (7-way $\to$ binary fallback) \\
 New York & 26 & 25 & $-1$ & Structural \\
 Arizona & 9 & 10 & $+1$ & Minor \\
 Georgia & 14 & 15 & $+1$ & Minor \\
@@ -33,22 +34,48 @@ Pennsylvania & 17 & 16 & $-1$ & Minor \\
 
 \subsection{The Role of Prime Factorization}
 
-The \ar{} bisection tree for $k$ districts is constructed as follows:
+The implemented \ar{} split prescription for $k$ districts is constructed as
+follows:
 \begin{enumerate}
 \item Find the prime factorisation $k = p_1^{a_1} \times \cdots \times p_r^{a_r}$.
-\item At each node of the tree, split by the largest prime factor.
-\item Recurse on each half until all leaves have one district.
+\item If $k \leq 3$, perform a direct $k$-way split.
+\item If $k$ is composite, split by the largest prime factor $p$, producing
+      $p$ subregions with $k/p$ districts each.
+\item If $k > 3$ is prime, split into two subregions with
+      $\lfloor k/2 \rfloor$ and $\lceil k/2 \rceil$ districts, then recurse.
 \end{enumerate}
 
-A change from composite $k$ to prime $k'$ fundamentally changes this tree:
-a composite $k$ has a multi-level tree, while a prime $k'$ has a flat tree
-(one root split into $k'$ leaves directly).
-This is the Texas and Florida case.
+A change from composite $k$ to prime $k'$ fundamentally changes the top
+prescription: the composite case starts with a largest-prime multiway split,
+while the prime case starts with an uneven binary split.
+This is the Texas and Florida case.  The old draft described large primes as
+flat $k$-way splits; the current implementation deliberately avoids that by
+using the binary fallback.
+
+\subsection{Show the Tree, Not Just the Factorisation}
+
+The difference is easiest to see as a small tree sketch:
+\[
+\begin{array}{c@{\qquad}c}
+\text{Texas 2020: }38=2\times 19 &
+\boxed{38}\rightarrow 19\times\boxed{2}\\[0.4em]
+\text{Texas scenario: }41\text{ prime} &
+\boxed{41}\rightarrow \boxed{20}+\boxed{21}
+       \rightarrow (5\times\boxed{4}) + (7\times\boxed{3})
+\end{array}
+\]
+The 2020 tree begins by carving 19 equal two-seat containers.  The scenario
+tree begins by carving one 20-seat side and one 21-seat side, then decomposes
+those subproblems.  The visible reason for disruption is therefore not merely
+``prime versus composite''; it is a different first split of the state.
 
 \subsection{Projection Uncertainty}
 
-The 2030 seat counts are projections, not final values.
-Census Bureau population projections have uncertainty bounds of
-$\pm 1$--$2$ seats for the largest states.
-Our analysis treats the projected seat counts as exact; the structural
-conclusions are robust to small changes in the projections.
+The 2030 seat counts are scenario values, not final values.
+Seat changes can move at the margin, especially for fast-growing or
+slow-declining states.
+The structural conclusion should therefore be read conditionally:
+if Florida is 29, it uses the large-prime binary fallback; if Florida is 30,
+it becomes a composite $2\times3\times5$ case with a largest-prime first split.
+The projection package should include a $\pm1$ sensitivity table before the
+paper makes strong state-specific claims.

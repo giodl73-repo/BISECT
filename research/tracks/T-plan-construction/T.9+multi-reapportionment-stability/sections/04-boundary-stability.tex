@@ -20,6 +20,12 @@ alone, not from the combination of seat change and population redistribution.
 The actual 2030 disruption will be larger (population redistribution adds
 further disruption).
 
+\paragraph{Evidence status.}
+The values below are scenario targets unless accompanied by archived run
+manifests.  A publication package should include the 2020-seat plan, the
+scenario-seat plan, the graph hash, the split prescription, the seed, the
+canonical district matching rule, and the Hamming-distance script output.
+
 \subsection{Results}
 
 \begin{table}[h]
@@ -33,9 +39,9 @@ further disruption).
 \toprule
 State & $k_{20}$ & $k_{30}$ & $d_{\rm Ham}$ & Change type \\
 \midrule
-Texas       & 38 & 41 & 0.23 & Tree restructure (composite $\to$ prime) \\
+Texas       & 38 & 41 & 0.23 & Tree restructure (19-way $\to$ binary) \\
 California  & 52 & 50 & 0.14 & Tree restructure (different composite) \\
-Florida     & 28 & 29 & 0.19 & Tree restructure (composite $\to$ prime) \\
+Florida     & 28 & 29 & 0.19 & Tree restructure (7-way $\to$ binary) \\
 New York    & 26 & 25 & 0.12 & Tree restructure (different composite) \\
 Arizona     & 9  & 10 & 0.09 & Minor tree change \\
 Georgia     & 14 & 15 & 0.08 & Tree restructure (different composite) \\
@@ -50,7 +56,7 @@ Pennsylvania& 17 & 16 & 0.14 & Prime $\to$ four-level tree \\
 \subsection{Interpretation}
 
 The Hamming distances range from 0.08 (Georgia: minor structural change)
-to 0.23 (Texas: dramatic prime transition).
+to 0.23 (Texas: dramatic large-prime fallback transition).
 For context:
 \begin{itemize}
 \item A single \recom{} step changes $\approx 1/k$ of tracts.
@@ -62,19 +68,19 @@ For context:
 The Texas reapportionment ($d_{\rm Ham} = 0.23$) is equivalent to
 approximately $0.23 / 0.026 \approx 9$ \recom{} steps.
 This is a large disruption relative to algorithmic mixing, but small
-relative to politically-motivated redistricting, which typically changes
-30--60\% of tracts.
+relative to the political-redistricting comparison range used in this draft.
+That comparison range requires external citation or a same-metric enacted-plan
+calculation before it should be treated as publication evidence.
 
 \subsection{Which Districts Are Most Affected?}
 
-For Texas, the transition from a 2-level tree (two halves of 19) to a
-flat 41-way tree most affects:
+For Texas, the transition from a 19-container tree to a binary 20/21 fallback
+tree most affects:
 \begin{itemize}
-\item The boundary between the two halves of the 2-level tree (the
-      ``spine'' of the current 38-district map).
-\item Districts near the state's centroid (where the two subtrees meet).
+\item The boundaries among the 19 two-seat containers in the current map.
+\item The new top-level 20/21 split line in the scenario map.
 \item Urban districts in Houston and Dallas metro areas (where the
-      prime-19 flat split is replaced by the global 41-way partition).
+      19-container structure is replaced by a statewide 20/21 first split).
 \end{itemize}
 
 Rural districts are less affected because their geography constrains
@@ -89,9 +95,7 @@ driving the seat gain.
 \subsection{Seed Variance Around Reported Disruption}
 \label{sec:seed-variance}
 
-The Hamming distances in Table~\ref{tab:boundary-stability} are measured
-at seed $= 0$ (the DIA default seed).
-Across $T = 600$ seeds, median disruption is $\pm 0.8$ percentage points
-from the reported values.
-The qualitative ordering of states by disruption magnitude is stable
-across all seeds.
+The Hamming distances in Table~\ref{tab:boundary-stability} should be stored
+with seed metadata.  The draft's claimed $\pm 0.8$ percentage-point seed
+variation is a useful target, but the paper should not rely on it without the
+seed manifest and per-seed Hamming table in the archive.
