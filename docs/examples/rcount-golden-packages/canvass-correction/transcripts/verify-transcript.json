@@ -2,8 +2,8 @@
   "transcript_version": "rcount-audit-transcript-v1",
   "verifier": "rcount-audit",
   "status": "pass",
-  "package_content_hash": "sha256:4f1c096bf39239b0d15a4d37601c8daf1cad62f98cdbb79f3d77d1b10885a2de",
-  "manifest_content_hash": "sha256:4f1c096bf39239b0d15a4d37601c8daf1cad62f98cdbb79f3d77d1b10885a2de",
+  "package_content_hash": "sha256:bbf12f948536644f26131234a969905ded25cef42eadfbd9ed3da280bfb51781",
+  "manifest_content_hash": "sha256:bbf12f948536644f26131234a969905ded25cef42eadfbd9ed3da280bfb51781",
   "checks": [
     {
       "equation_id": "contest_selection_sum",

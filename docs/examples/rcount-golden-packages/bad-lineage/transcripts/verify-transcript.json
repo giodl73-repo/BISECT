@@ -2,8 +2,8 @@
   "transcript_version": "rcount-audit-transcript-v1",
   "verifier": "rcount-audit",
   "status": "fail",
-  "package_content_hash": "sha256:cfa9bf301df093a5265b9b5dffe862d0bee6c7a10123b782a0ea1551a2448fc9",
-  "manifest_content_hash": "sha256:cfa9bf301df093a5265b9b5dffe862d0bee6c7a10123b782a0ea1551a2448fc9",
+  "package_content_hash": "sha256:edf4c7d4950b0aec7f8e071dbce9ed67603bcc526cc6a0545b02ffe76a827785",
+  "manifest_content_hash": "sha256:edf4c7d4950b0aec7f8e071dbce9ed67603bcc526cc6a0545b02ffe76a827785",
   "checks": [
     {
       "equation_id": "lineage_conservation",

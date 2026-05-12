@@ -86,6 +86,7 @@ pub struct PackageHashes {
     pub reporting_unit_count: usize,
     pub batch_count: usize,
     pub lineage_count: usize,
+    pub inclusion_proof_count: usize,
     pub summary_count: usize,
 }
 
@@ -175,6 +176,10 @@ pub fn write_package_dir(
         &package.lineage,
     )?;
     write_ndjson(
+        &dir.join("proofs").join("inclusion-proofs.ndjson"),
+        &package.inclusion_proofs,
+    )?;
+    write_ndjson(
         &dir.join("normalized").join("summaries.ndjson"),
         &package.summaries,
     )?;
@@ -201,6 +206,7 @@ pub fn write_package_dir(
             reporting_unit_count: package.reporting_units.len(),
             batch_count: package.batches.len(),
             lineage_count: package.lineage.len(),
+            inclusion_proof_count: package.inclusion_proofs.len(),
             summary_count: package.summaries.len(),
         },
     )?;
@@ -226,6 +232,9 @@ pub fn read_package_dir(dir: &Path) -> Result<(RcountManifest, RcountPackage), R
         reporting_units: read_ndjson(&dir.join("normalized").join("reporting-units.ndjson"))?,
         batches: read_optional_ndjson(&dir.join("normalized").join("batches.ndjson"))?,
         lineage: read_optional_ndjson(&dir.join("normalized").join("lineage.ndjson"))?,
+        inclusion_proofs: read_optional_ndjson(
+            &dir.join("proofs").join("inclusion-proofs.ndjson"),
+        )?,
         summaries: read_ndjson(&dir.join("normalized").join("summaries.ndjson"))?,
         status_events: read_ndjson(&dir.join("status").join("events.ndjson"))?,
     };
@@ -335,6 +344,20 @@ pub fn default_bad_lineage_docs_dir() -> PathBuf {
         .join("bad-lineage")
 }
 
+pub fn default_privacy_inclusion_sketch_docs_dir() -> PathBuf {
+    PathBuf::from("docs")
+        .join("examples")
+        .join("rcount-golden-packages")
+        .join("privacy-inclusion-sketch")
+}
+
+pub fn default_choice_bearing_proof_docs_dir() -> PathBuf {
+    PathBuf::from("docs")
+        .join("examples")
+        .join("rcount-golden-packages")
+        .join("choice-bearing-proof")
+}
+
 fn write_json_pretty<T: Serialize>(path: &Path, value: &T) -> Result<(), RcountIoError> {
     let bytes = serde_json::to_vec_pretty(value)?;
     fs::write(path, bytes)?;
@@ -353,6 +376,7 @@ fn write_synthetic_source_export(
         "reporting_unit_count": package.reporting_units.len(),
         "batch_count": package.batches.len(),
         "lineage_count": package.lineage.len(),
+        "inclusion_proof_count": package.inclusion_proofs.len(),
         "summary_count": package.summaries.len(),
         "status_event_count": package.status_events.len(),
     });
@@ -446,8 +470,9 @@ mod tests {
     use super::*;
     use rcount_core::{
         synthetic_bad_lineage_package, synthetic_bad_selection_sum_package,
-        synthetic_canvass_correction_package, synthetic_mail_batch_added_package,
-        synthetic_missing_batch_package, synthetic_precinct_split_lineage_package,
+        synthetic_canvass_correction_package, synthetic_choice_bearing_proof_package,
+        synthetic_mail_batch_added_package, synthetic_missing_batch_package,
+        synthetic_precinct_split_lineage_package, synthetic_privacy_inclusion_package,
         synthetic_summary_basic_package,
     };
 
@@ -537,6 +562,32 @@ mod tests {
         assert!(decoded_package.lineage[0]
             .current_reporting_unit_ids
             .contains(&"syn:precinct:P-004C".to_string()));
+    }
+
+    #[test]
+    fn round_trips_synthetic_privacy_inclusion_package() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_privacy_inclusion_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+        let (_, decoded_package) = read_package_dir(tmp.path()).unwrap();
+        assert_eq!(decoded_package.inclusion_proofs.len(), 1);
+        assert!(decoded_package.inclusion_proofs[0]
+            .candidate_selections
+            .is_empty());
+    }
+
+    #[test]
+    fn round_trips_synthetic_choice_bearing_proof_package() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_choice_bearing_proof_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+        let (_, decoded_package) = read_package_dir(tmp.path()).unwrap();
+        assert_eq!(
+            decoded_package.inclusion_proofs[0].candidate_selections,
+            vec!["cand-a".to_string()]
+        );
     }
 
     #[test]

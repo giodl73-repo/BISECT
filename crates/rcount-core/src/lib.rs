@@ -111,6 +111,17 @@ pub enum RcountCoreError {
     InvalidSplitLineage { lineage_id: String },
     #[error("lineage event {lineage_id} has invalid merge cardinality")]
     InvalidMergeLineage { lineage_id: String },
+    #[error("duplicate proof id: {proof_id}")]
+    DuplicateProofId { proof_id: String },
+    #[error("proof {proof_id} exposes candidate selections")]
+    ChoiceBearingProof { proof_id: String },
+    #[error("proof {proof_id} combines voter identity with ballot style and timestamp")]
+    LinkableVoterProof { proof_id: String },
+    #[error("proof {proof_id} has invalid token hash: {token_hash}")]
+    InvalidProofTokenHash {
+        proof_id: String,
+        token_hash: String,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -223,6 +234,29 @@ pub struct ReportingUnitLineage {
     pub explanation: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum InclusionProofKind {
+    AnonymizedAcceptedBallotToken,
+    AnonymizedCountedBallotToken,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct InclusionProof {
+    pub proof_id: String,
+    pub kind: InclusionProofKind,
+    pub token_hash: String,
+    pub reporting_unit_id: String,
+    #[serde(default)]
+    pub candidate_selections: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub voter_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ballot_style: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub issued_at: Option<String>,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum CountStatus {
@@ -273,6 +307,8 @@ pub struct RcountPackage {
     pub batches: Vec<BatchManifest>,
     #[serde(default)]
     pub lineage: Vec<ReportingUnitLineage>,
+    #[serde(default)]
+    pub inclusion_proofs: Vec<InclusionProof>,
     pub summaries: Vec<Summary>,
     #[serde(default)]
     pub status_events: Vec<StatusEvent>,
@@ -342,6 +378,7 @@ pub fn verify_package(package: &RcountPackage) -> Result<VerificationReport, Rco
     report.passed.extend(verify_status_events(package)?);
     report.passed.extend(verify_batch_summary_totals(package)?);
     report.passed.extend(verify_lineage_conservation(package)?);
+    report.passed.extend(verify_proof_privacy(package)?);
     Ok(report)
 }
 
@@ -679,6 +716,40 @@ pub fn verify_lineage_conservation(
     Ok(passes)
 }
 
+pub fn verify_proof_privacy(package: &RcountPackage) -> Result<Vec<EquationPass>, RcountCoreError> {
+    let mut seen = BTreeSet::new();
+    let mut passes = Vec::new();
+    for proof in package.inclusion_proofs.iter() {
+        if !seen.insert(proof.proof_id.as_str()) {
+            return Err(RcountCoreError::DuplicateProofId {
+                proof_id: proof.proof_id.clone(),
+            });
+        }
+        if !is_sha256_hash(&proof.token_hash) {
+            return Err(RcountCoreError::InvalidProofTokenHash {
+                proof_id: proof.proof_id.clone(),
+                token_hash: proof.token_hash.clone(),
+            });
+        }
+        if !proof.candidate_selections.is_empty() {
+            return Err(RcountCoreError::ChoiceBearingProof {
+                proof_id: proof.proof_id.clone(),
+            });
+        }
+        if proof.voter_id.is_some() && proof.ballot_style.is_some() && proof.issued_at.is_some() {
+            return Err(RcountCoreError::LinkableVoterProof {
+                proof_id: proof.proof_id.clone(),
+            });
+        }
+        passes.push(EquationPass {
+            equation_id: "proof_privacy_gate".to_string(),
+            contest_id: "*".to_string(),
+            reporting_unit_id: proof.proof_id.clone(),
+        });
+    }
+    Ok(passes)
+}
+
 pub fn synthetic_summary_basic_package() -> RcountPackage {
     let contest = Contest {
         contest_id: "syn-2024-mayor".to_string(),
@@ -739,6 +810,7 @@ pub fn synthetic_summary_basic_package() -> RcountPackage {
         reporting_units,
         batches: vec![],
         lineage: vec![],
+        inclusion_proofs: vec![],
         summaries,
         status_events: vec![],
     }
@@ -1025,6 +1097,27 @@ pub fn synthetic_bad_lineage_package() -> RcountPackage {
     package
 }
 
+pub fn synthetic_privacy_inclusion_package() -> RcountPackage {
+    let mut package = synthetic_summary_basic_package();
+    package.inclusion_proofs = vec![InclusionProof {
+        proof_id: "proof:accepted-token-001".to_string(),
+        kind: InclusionProofKind::AnonymizedAcceptedBallotToken,
+        token_hash: format!("sha256:{}", "a".repeat(64)),
+        reporting_unit_id: "syn:precinct:P-001".to_string(),
+        candidate_selections: vec![],
+        voter_id: None,
+        ballot_style: None,
+        issued_at: None,
+    }];
+    package
+}
+
+pub fn synthetic_choice_bearing_proof_package() -> RcountPackage {
+    let mut package = synthetic_privacy_inclusion_package();
+    package.inclusion_proofs[0].candidate_selections = vec!["cand-a".to_string()];
+    package
+}
+
 fn summary(
     reporting_unit_id: &str,
     cand_a: i64,
@@ -1143,6 +1236,13 @@ fn ensure_non_negative(value: i64) -> Result<(), RcountCoreError> {
     Ok(())
 }
 
+fn is_sha256_hash(value: &str) -> bool {
+    let Some(hex) = value.strip_prefix("sha256:") else {
+        return false;
+    };
+    hex.len() == 64 && hex.bytes().all(|byte| byte.is_ascii_hexdigit())
+}
+
 fn check_residual(
     contest_id: &str,
     field: &str,
@@ -1254,6 +1354,27 @@ mod tests {
             err,
             RcountCoreError::MissingCurrentLineageUnit { .. }
         ));
+    }
+
+    #[test]
+    fn synthetic_privacy_inclusion_proof_verifies() {
+        let package = synthetic_privacy_inclusion_package();
+        let report = verify_package(&package).expect("privacy inclusion proof must verify");
+        assert_eq!(
+            report
+                .passed
+                .iter()
+                .filter(|pass| pass.equation_id == "proof_privacy_gate")
+                .count(),
+            1
+        );
+    }
+
+    #[test]
+    fn choice_bearing_proof_fails_privacy_gate() {
+        let package = synthetic_choice_bearing_proof_package();
+        let err = verify_proof_privacy(&package).expect_err("choice-bearing proof must fail");
+        assert!(matches!(err, RcountCoreError::ChoiceBearingProof { .. }));
     }
 
     #[test]

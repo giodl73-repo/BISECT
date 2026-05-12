@@ -28,6 +28,14 @@ fn docs_bad_lineage_path() -> String {
     docs_package_path("bad-lineage")
 }
 
+fn docs_privacy_inclusion_sketch_path() -> String {
+    docs_package_path("privacy-inclusion-sketch")
+}
+
+fn docs_choice_bearing_proof_path() -> String {
+    docs_package_path("choice-bearing-proof")
+}
+
 fn docs_package_path(package_name: &str) -> String {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .ancestors()
@@ -156,6 +164,47 @@ fn verify_bad_lineage_exits_one_after_package_read() {
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(stdout.contains(r#""equation_id":"lineage_conservation""#));
     assert!(stdout.contains("missing current reporting unit"));
+    assert!(stdout.contains(r#""equation_id":"source_hash_match","status":"pass""#));
+}
+
+#[test]
+fn verify_privacy_inclusion_exposes_privacy_gate() {
+    let output = Command::new(env!("CARGO_BIN_EXE_rcount"))
+        .args([
+            "verify",
+            &docs_privacy_inclusion_sketch_path(),
+            "--format",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains(r#""equation_id":"proof_privacy_gate""#));
+    assert!(stdout.contains(r#""reporting_unit_id":"proof:accepted-token-001""#));
+}
+
+#[test]
+fn verify_choice_bearing_proof_exits_one_after_package_read() {
+    let output = Command::new(env!("CARGO_BIN_EXE_rcount"))
+        .args([
+            "verify",
+            &docs_choice_bearing_proof_path(),
+            "--format",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(1));
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains(r#""equation_id":"proof_privacy_gate""#));
+    assert!(stdout.contains("exposes candidate selections"));
     assert!(stdout.contains(r#""equation_id":"source_hash_match","status":"pass""#));
 }
 

@@ -30,16 +30,16 @@ recompute public claims from lower-level evidence.
   and summary records, a synthetic `summary-basic` package generator, and L0
   checks for `contest_selection_sum`, `jurisdiction_contest_total`, and
   canvass-correction event correlation, plus batch-summary accounting and
-  reporting-unit lineage conservation.
+  reporting-unit lineage conservation and receipt-safe proof privacy gates.
 - `rcount-io`: started 2026-05-12 with package-directory read/write helpers,
   `summary-basic`, `canvass-correction`, `mail-batch-added`,
-  `precinct-split-lineage`, `bad-selection-sum`, `missing-batch`, and
-  `bad-lineage` generators, and docs fixture verification, including
-  source-index hash checks.
+  `precinct-split-lineage`, `privacy-inclusion-sketch`, `bad-selection-sum`,
+  `missing-batch`, `bad-lineage`, and `choice-bearing-proof` generators, and
+  docs fixture verification, including source-index hash checks.
 - `rcount-audit`: started 2026-05-12 with pass/fail verification transcripts
   for `summary-basic` and `canvass-correction`, tampered manifest failures,
   bad arithmetic failures, batch-accounting failures, bad lineage failures,
-  and missing/tampered source-hash failures.
+  proof-privacy failures, and missing/tampered source-hash failures.
 - `rcount-cli`: started 2026-05-12 with `rcount verify <package-dir>` and
   optional `--write-transcript`.
 
