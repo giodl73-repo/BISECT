@@ -1,25 +1,92 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="900" height="360" viewBox="0 0 900 360" role="img" aria-labelledby="title desc">
-  <title id="title">T.17 flow based construction</title>
-  <desc id="desc">Seeds, capacities, and costs guide a flow-style assignment, with summaries and infeasibility witnesses.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="620" viewBox="0 0 1120 620" role="img" aria-labelledby="title desc">
+  <title id="title">T.17 flow based construction assignment and witness flow</title>
+  <desc id="desc">A flow construction example shows unit supplies, eligible arcs, target capacity bounds, selected assignments, an over-capacity failure, and the resulting status evidence.</desc>
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#334155"/></marker>
-    <style>text{font-family:Arial,Helvetica,sans-serif;fill:#172033}.h{font-size:22px;font-weight:700}.s{font-size:13px;fill:#475569}.box{fill:#fff;stroke:#94a3b8;stroke-width:1.5;rx:8}.line{stroke:#334155;stroke-width:2;fill:none;marker-end:url(#arrow)}.flow{stroke:#0284c7;stroke-width:5;fill:none;marker-end:url(#arrow)}.a{fill:#dbeafe;stroke:#2563eb}.b{fill:#dcfce7;stroke:#16a34a}.warn{fill:#fef3c7;stroke:#d97706}</style>
+    <style>
+      text{font-family:Arial,Helvetica,sans-serif;fill:#162033}
+      .bg{fill:#f8fafc}
+      .panel{fill:#fff;stroke:#64748b;stroke-width:1.5;rx:8}
+      .h{font-size:24px;font-weight:700}
+      .sub{font-size:14px;fill:#475569}
+      .label{font-size:14px;font-weight:700}
+      .small{font-size:12px;fill:#475569}
+      .tiny{font-size:10px;fill:#475569}
+      .mono{font-size:11px;font-family:Consolas,monospace;fill:#162033}
+      .arrow{stroke:#334155;stroke-width:2;fill:none;marker-end:url(#arrow)}
+      .arc{stroke:#94a3b8;stroke-width:2;fill:none;marker-end:url(#arrow)}
+      .sel{stroke:#0284c7;stroke-width:5;fill:none;marker-end:url(#arrow)}
+      .badArc{stroke:#dc2626;stroke-width:3;stroke-dasharray:6 4;fill:none;marker-end:url(#arrow)}
+      .unit{fill:#eff6ff;stroke:#2563eb;stroke-width:2}
+      .binA{fill:#dbeafe;stroke:#2563eb;stroke-width:2}
+      .binB{fill:#dcfce7;stroke:#16a34a;stroke-width:2}
+      .reject{fill:#fee2e2;stroke:#dc2626;stroke-width:1.8;rx:5}
+      .selectBox{fill:#ecfdf5;stroke:#059669;stroke-width:1.8;rx:5}
+      .warn{fill:#fff7ed;stroke:#f97316;stroke-width:1.8;rx:5}
+      .chip{fill:#eef2ff;stroke:#6366f1;stroke-width:1.5;rx:5}
+      .barBg{fill:#e2e8f0;stroke:#94a3b8}
+      .barA{fill:#60a5fa}
+      .barB{fill:#4ade80}
+    </style>
   </defs>
-  <rect width="900" height="360" fill="#f8fafc"/>
-  <text x="32" y="42" class="h">T.17 Flow-Based Construction</text>
-  <text x="32" y="66" class="s">Use seed, capacity, and cost information to build an assignment and explain failures.</text>
-  <rect x="32" y="105" width="180" height="160" class="box"/>
-  <circle cx="72" cy="185" r="14" class="a"/><circle cx="172" cy="185" r="14" class="b"/>
-  <path d="M88 185 C110 145,135 145,158 185" class="flow"/><path d="M88 185 C110 225,135 225,158 185" class="flow"/>
-  <text x="66" y="292" class="s">seeds and costs</text>
-  <path d="M225 185 L295 185" class="line"/>
-  <rect x="310" y="105" width="165" height="160" class="box"/>
-  <rect x="342" y="145" width="45" height="82" class="a" rx="6"/><rect x="400" y="145" width="45" height="82" class="b" rx="6"/>
-  <text x="336" y="292" class="s">capacity assignment</text>
-  <path d="M490 185 L560 185" class="line"/>
-  <rect x="575" y="105" width="145" height="160" class="box warn"/>
-  <text x="600" y="145" class="s">flow summary</text><text x="600" y="174" class="s">status</text><text x="600" y="198" class="s">edge cut</text><text x="600" y="222" class="s">witness if fail</text>
-  <path d="M735 185 L800 185" class="line"/>
-  <rect x="815" y="105" width="60" height="160" class="box b"/>
-  <text x="825" y="166" class="s">RPLAN</text><text x="825" y="190" class="s">RCTX</text><text x="824" y="214" class="s">audit</text>
+  <rect width="1120" height="620" class="bg"/>
+  <text x="32" y="44" class="h">T.17 Flow-Based Construction</text>
+  <text x="32" y="68" class="sub">The model chooses among eligible arcs from unit supply to district capacity; failures become witness evidence, not silent plans.</text>
+
+  <rect x="32" y="96" width="492" height="270" class="panel"/>
+  <text x="52" y="124" class="label">1. Supplies, eligible arcs, and capacity bounds</text>
+  <text x="52" y="146" class="small">Only declared eligible arcs can carry assignment flow.</text>
+  <circle cx="102" cy="190" r="24" class="unit"/><text x="93" y="187" class="tiny">u0</text><text x="92" y="202" class="tiny">48</text>
+  <circle cx="102" cy="250" r="24" class="unit"/><text x="93" y="247" class="tiny">u1</text><text x="92" y="262" class="tiny">52</text>
+  <circle cx="102" cy="310" r="24" class="unit"/><text x="93" y="307" class="tiny">u2</text><text x="92" y="322" class="tiny">60</text>
+  <circle cx="250" cy="190" r="24" class="unit"/><text x="241" y="187" class="tiny">u3</text><text x="240" y="202" class="tiny">50</text>
+  <rect x="388" y="174" width="84" height="54" class="binA" rx="7"/><text x="416" y="197" class="small">A</text><text x="404" y="216" class="tiny">95..105</text>
+  <rect x="388" y="276" width="84" height="54" class="binB" rx="7"/><text x="416" y="299" class="small">B</text><text x="404" y="318" class="tiny">95..105</text>
+  <path d="M126 190 C210 160 300 166 388 190" class="sel"/>
+  <path d="M126 250 C210 238 300 220 388 205" class="sel"/>
+  <path d="M126 310 C210 310 300 304 388 304" class="sel"/>
+  <path d="M274 190 C326 208 358 250 388 300" class="badArc"/>
+  <path d="M126 190 C220 220 298 254 388 294" class="arc"/>
+  <text x="52" y="350" class="small">Selected arcs are blue; the dashed selected attempt overfills B.</text>
+
+  <path d="M538 232 H586" class="arrow"/>
+
+  <rect x="600" y="96" width="488" height="270" class="panel"/>
+  <text x="620" y="124" class="label">2. Assignment ledger decides the status</text>
+  <text x="620" y="146" class="small">A valid extraction must satisfy every bin bound.</text>
+  <rect x="626" y="170" width="426" height="28" fill="#e2e8f0"/>
+  <text x="638" y="189" class="mono">unit  supply  eligible   selected  running load</text>
+  <rect x="626" y="198" width="426" height="34" class="selectBox"/>
+  <text x="638" y="220" class="mono">u0      48     A,B        A         A=48</text>
+  <rect x="626" y="236" width="426" height="34" class="selectBox"/>
+  <text x="638" y="258" class="mono">u1      52     A          A         A=100 ok</text>
+  <rect x="626" y="274" width="426" height="34" class="selectBox"/>
+  <text x="638" y="296" class="mono">u2      60     B          B         B=60</text>
+  <rect x="626" y="312" width="426" height="34" class="reject"/>
+  <text x="638" y="334" class="mono">u3      50     B          B         B=110 &gt; 105</text>
+
+  <rect x="32" y="402" width="342" height="156" class="panel"/>
+  <text x="52" y="430" class="label">Capacity readout</text>
+  <text x="52" y="456" class="small">A is feasible, B violates the declared upper bound.</text>
+  <text x="58" y="494" class="small">Bin A</text>
+  <rect x="116" y="478" width="160" height="22" class="barBg" rx="3"/><rect x="116" y="478" width="152" height="22" class="barA" rx="3"/><text x="286" y="494" class="tiny">100 / 105</text>
+  <text x="58" y="532" class="small">Bin B</text>
+  <rect x="116" y="516" width="160" height="22" class="barBg" rx="3"/><rect x="116" y="516" width="168" height="22" class="barB" rx="3"/><text x="286" y="532" class="tiny">110 / 105</text>
+
+  <rect x="408" y="402" width="304" height="156" class="panel"/>
+  <text x="428" y="430" class="label">Status fork</text>
+  <rect x="432" y="462" width="112" height="48" class="selectBox"/>
+  <text x="468" y="483" class="small">valid</text><text x="452" y="501" class="tiny">all bounds pass</text>
+  <rect x="568" y="462" width="112" height="48" class="reject"/>
+  <text x="596" y="483" class="small">invalid</text><text x="584" y="501" class="tiny">extraction fails</text>
+  <text x="428" y="540" class="small">If no feasible extraction exists, emit infeasible witness instead.</text>
+
+  <rect x="746" y="402" width="342" height="156" class="panel"/>
+  <text x="766" y="430" class="label">Downstream consequence</text>
+  <text x="766" y="456" class="small">Packages bind both the assignment and the reason it may not export.</text>
+  <rect x="780" y="486" width="82" height="44" class="selectBox"/><text x="804" y="511" class="small">RPLAN</text>
+  <rect x="884" y="486" width="82" height="44" class="chip"/><text x="911" y="511" class="small">RCTX</text>
+  <rect x="988" y="486" width="82" height="44" class="warn"/><text x="1001" y="511" class="small">witness</text>
+  <path d="M862 508 H884" class="arrow"/><path d="M966 508 H988" class="arrow"/>
+  <text x="766" y="544" class="small">Reading rule: show available arcs, selected arcs, and the exact bound that fails.</text>
 </svg>

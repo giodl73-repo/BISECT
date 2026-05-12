@@ -33,6 +33,21 @@ the audit vocabulary for capacity bounds, costs, assignment extraction, and
 infeasibility evidence before the heavier branch-and-cut or branch-and-price
 machinery arrives.
 
+## Picture 0: Eligible Arcs To Status Evidence
+
+The opening figure shows the flow decision in countable form. Unit supplies sit
+on the left. District bins sit on the right with visible lower and upper
+capacity bounds. Only eligible arcs may carry assignment flow, and a selected
+arc is acceptable only if the running bin load remains inside the declared
+bound.
+
+The important failure is explicit: sending `u3 = 50` to bin B after `u2 = 60`
+creates `B = 110`, which exceeds the upper bound of `105`. T.17 must either
+find a different feasible extraction or emit `infeasible`/`invalid` evidence.
+For BISECT, that status fork is the point of the algorithm: a package should
+say whether it contains a valid plan, a model infeasibility witness, or a
+blocked invalid extraction.
+
 ## Algorithm Shape
 
 ```text
