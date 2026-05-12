@@ -120,6 +120,7 @@ Core concepts:
 | Canvass ledger | Corrections, adjudications, late-arriving ballots, and official certification deltas. |
 | Audit sample | Hand-count/RLA sample units, sample size, sampled ballots or batches, and comparison outcomes. |
 | Aggregation map | Optional mapping from reporting units to counties, precincts, districts, or RPLAN units. |
+| Unit change ledger | Precinct splits, merges, renames, boundary changes, and reporting-unit lineage across elections. |
 | Certificate | Machine-checkable reconciliation result with hashes, warnings, failures, and unsupported checks. |
 
 The first implementation should support aggregate ledgers. It should not require
@@ -186,6 +187,10 @@ Minimum phase-1 checks:
 | Canvass arithmetic | Certified totals equal tabulator totals plus recorded canvass adjustments. |
 | Aggregation arithmetic | Jurisdiction and district totals equal the sum of their lower-level units. |
 | Hash binding | Certificate hashes bind the exact `.rcount` document and any external context inputs. |
+| Unit lineage | Precinct or reporting-unit changes across elections are explicit splits, merges, closures, or renames. |
+| Electorate movement | Registration, eligibility, and turnout changes are explainable by unit lineage plus voter or aggregate movement records when available. |
+| Receipt inclusion | A privacy-safe voter receipt or ballot-tracker token is included in the public inclusion structure without revealing choices. |
+| Public root consistency | Precinct, batch, contest, canvass, and global hash roots recompute from the published ledger leaves. |
 
 Checks must distinguish:
 
@@ -197,6 +202,118 @@ Checks must distinguish:
 This distinction is crucial. A small package with precinct tabulations can still
 be useful if the certificate honestly says that eligibility and RLA checks are
 unsupported.
+
+## Precinct And Electorate Movement
+
+Election-to-election comparisons are only meaningful if the unit universe is
+auditable. A precinct may split, merge, be renamed, move polling places, change
+boundaries, or be replaced by vote centers. RCOUNT should represent those
+changes directly rather than treating precinct ids as stable by assumption.
+
+The unit change ledger should support:
+
+| Change | Meaning |
+|--------|---------|
+| `unchanged` | Same reporting unit id and same boundary/source hash. |
+| `renamed` | Same unit, new public id or label. |
+| `split` | One prior unit becomes multiple current units. |
+| `merged` | Multiple prior units become one current unit. |
+| `boundary_change` | Same public id, changed unit geography or assignment. |
+| `opened` | New unit with no prior ancestor. |
+| `closed` | Prior unit with no current descendant. |
+
+Electorate movement should be handled at the most public safe level available:
+
+- aggregate registration deltas by precinct or reporting unit;
+- ballot-style eligibility deltas;
+- anonymized movement matrices between old and new units when legally public;
+- hashed private references only when a jurisdiction can publish them without
+  exposing personally identifiable voter information.
+
+The audit question is not "did every voter stay in the same precinct?" The
+question is: "can the reported eligibility and turnout changes be reconciled
+with the published unit-lineage and voter-movement evidence?"
+
+## Tamper-Evident Hash Structure
+
+Every RCOUNT package should be able to expose a public hash tree, even when the
+package contains only aggregate rows.
+
+Suggested root structure:
+
+```text
+global_count_root
+  election_metadata_root
+  unit_universe_root
+  eligibility_root
+  ballot_ledger_root
+  tabulation_root
+    precinct_root[PCT-001]
+      batch_root[BATCH-001]
+      contest_total_leaf[contest, choice, count]
+  canvass_root
+  audit_sample_root
+  prior_election_lineage_root
+```
+
+Each precinct or reporting unit should have its own recomputable root. The
+global root should be computed from sorted, typed child hashes so that any
+change in a precinct total, canvass correction, unit id, or contest definition
+changes the global certificate hash.
+
+The CLI should eventually offer:
+
+```text
+rcount hash --count election.rcount
+rcount verify --count election.rcount --certificate count-certificate.json
+rcount prove-unit --count election.rcount --unit PCT-001
+rcount prove-receipt --count election.rcount --receipt RECEIPT_ID
+```
+
+## Voter-Facing Receipt Boundary
+
+RCOUNT may support a voter-facing inclusion proof, but it must not create a
+vote-buying or coercion receipt.
+
+Acceptable receipt model:
+
+- The voter receives a random receipt token or ballot-tracker token.
+- The token proves that a ballot envelope, check-in event, or encrypted ballot
+  record was included in the public ledger.
+- The token does not reveal candidate choices.
+- The token cannot be used to prove how the voter voted to another person.
+- The public bulletin board exposes a hash inclusion proof from the token leaf
+  to the election or precinct root.
+
+Dangerous receipt model:
+
+- The voter receives a hash of the plaintext vote selections.
+- A third party can verify both participation and candidate choices.
+- The receipt can be used for coercion or vote buying.
+
+The default RCOUNT design should support "my ballot/check-in was included" and
+"this precinct total is hash-bound to the global root." It should not support
+"I can prove to someone else how I voted."
+
+For systems that publish ballot-level cast vote records, RCOUNT should require a
+separate privacy review before accepting voter-facing ballot hashes.
+
+## Count Test Surface
+
+The tests we want to offer fall into five families:
+
+| Family | Example tests |
+|--------|---------------|
+| Arithmetic | non-negative counts, row sums, contest totals, jurisdiction totals, certified totals after canvass deltas |
+| Eligibility and turnout | ballots issued/returned/cast reconcile with eligibility, provisional/rejected/spoiled categories, turnout does not exceed eligible voters unless explicitly explained |
+| Unit lineage | precinct ids are stable or explicitly changed, splits/merges conserve prior-unit lineage, old-to-new comparison denominators are valid |
+| Hash and tamper evidence | precinct roots recompute, batch roots recompute, global root recomputes, certificate binds exact input files, receipt inclusion path verifies |
+| Plan-linked aggregation | precinct-to-district totals reconcile through RPLAN/RCTX/crosswalk, split precincts are explicit, district totals are tied to plan and context hashes |
+
+Phase 1 should implement arithmetic and hash binding for aggregate precinct
+fixtures. Phase 2 should add unit-lineage checks. Phase 3 should add
+privacy-safe receipt inclusion proofs. Phase 4 should add plan-linked
+aggregation through `rcount-rplan`.
 
 ## Plan-Aware Bridge
 
@@ -275,6 +392,8 @@ Allowed in phase 1:
 - batch or scanner totals
 - public audit sample summaries
 - public canvass correction records
+- public precinct or reporting-unit lineage records
+- privacy-safe inclusion receipt identifiers that do not reveal vote choices
 
 Out of scope for phase 1:
 
@@ -283,6 +402,7 @@ Out of scope for phase 1:
 - ballot-level cast vote records that may create privacy risks
 - signature records
 - personally identifiable provisional-ballot records
+- plaintext vote-selection receipts or hashes that let voters prove their choices
 
 Later versions may support hashed or privacy-preserving references to more
 granular evidence, but that requires a separate privacy review.
@@ -300,6 +420,10 @@ granular evidence, but that requires a separate privacy review.
       fixtures.
 - [ ] Stage 8: update paper/docs language that discusses election audit and
       certification.
+- [ ] Stage 9: add unit-lineage fixtures for precinct split, merge, rename, and
+      boundary-change cases.
+- [ ] Stage 10: add privacy-safe receipt inclusion fixtures and explicitly reject
+      plaintext vote-selection receipt proofs.
 
 ## First Golden Fixture
 
@@ -338,6 +462,11 @@ attempting full election administration complexity.
    claims while still resembling a real canvass?
 5. Should the first plan-aware bridge operate at precinct-to-district level
    only, or also support precinct-to-RPLAN-unit crosswalks?
+6. Should receipt inclusion be modeled as envelope/check-in inclusion only, or
+   should RCOUNT support encrypted-ballot bulletin-board systems as a separate
+   profile?
+7. What is the minimum safe public representation of voter movement between
+   precincts when precinct boundaries change between elections?
 
 ## Goal Prompt
 
