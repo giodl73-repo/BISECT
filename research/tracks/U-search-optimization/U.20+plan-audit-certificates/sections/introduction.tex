@@ -1,6 +1,20 @@
 \section{Introduction}
 
-U.20 documents `rplan-core`, `rplan-io`, `rplan-audit`, `bisect verify`, and
-`rplan-cli`. The paper asks whether BISECT can use a neutral
-plan/context/certificate family as the fixed point for construction, exact,
-local-search, Pareto, and future algorithm families.
+U.20 documents \texttt{rplan-core}, \texttt{rplan-io}, \texttt{rplan-audit},
+\texttt{rplan-cli}, and the BISECT manifest verifier. The paper asks whether
+BISECT can use a neutral plan/context/certificate family as the fixed point for
+construction, exact, local-search, Pareto, and future algorithm families.
+
+The fixed point is not another search method. It is the acceptance contract at
+the end of a method run. A construction algorithm may export a deterministic
+baseline package, an exact method may export a solve report and final plan, a
+large-neighborhood search may export a parent/child improvement record, and a
+Pareto search may export a selected frontier row. U.20 says what all of those
+outputs must become before they are carried into reports: a plan, a context, a
+profile-scoped certificate, a manifest, and a lineage record with stable hashes.
+
+This narrowness is the core design choice. RPLAN/RCTX does not erase the
+method-specific evidence from T.14--T.17 or U.16--U.19. Instead, it gives those
+families one common final-plan surface so that BISECT can verify package
+integrity, context agreement, declared profile checks, and provenance without
+pretending to re-prove every upstream algorithmic claim.

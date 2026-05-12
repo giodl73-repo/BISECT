@@ -2,7 +2,14 @@
 
 U.20 is the fixed-point paper for the roadmap. It explains how heterogeneous
 algorithm families can converge on a common plan/context/audit package while
-keeping their method-specific evidence and limitations explicit. The reviewed
-draft now states the invariant directly: certificates are powerful because they
-are narrow, profile-scoped, and tied to verifiable package semantics rather
-than broad legal or political conclusions.
+keeping their method-specific evidence and limitations explicit. That closes
+the T/U implementation arc in a precise way: construction, exact optimization,
+local search, and Pareto selection may disagree about how candidate plans are
+found, but they now agree on what a final plan must carry before BISECT treats
+it as auditable.
+
+The invariant is intentionally narrow. Certificates are useful because they are
+profile-scoped and tied to verifiable package semantics rather than broad legal
+or political conclusions. U.20 therefore turns the algorithm family into an
+inspectable artifact pipeline: method evidence first, fixed-point package next,
+downstream report last.

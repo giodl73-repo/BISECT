@@ -21,3 +21,44 @@ output becomes a package, the package certificate is checked, and the checked
 package can then be referenced by reports. The neutral surface is
 the RPLAN certificate verifier; the BISECT manifest verifier consumes the same
 package manifest shape as a bridge.
+
+\begin{quote}
+\small
+\begin{verbatim}
+rplan-cli verify-certificate \
+  --certificate audit-certificate.json \
+  --plan plan.rplan \
+  --context context.rctx
+
+bisect-cli verify --manifest manifest.json
+\end{verbatim}
+\end{quote}
+
+The first command checks the certificate against the plan and context. The
+second command checks the BISECT package manifest bridge. In the public
+examples these commands are intentionally run on small packages so that a
+reader can inspect every file and every hash involved in the decision.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.25\linewidth}p{0.35\linewidth}p{0.27\linewidth}}
+\toprule
+Fixture & Expected verifier signal & Meaning \\
+\midrule
+Missing context & certificate requires context hash & contextual claims need
+the RCTX, not only the RPLAN \\
+Plan tamper & certificate plan hash mismatch & assignment content changed
+after certification \\
+Context tamper or stale context & certificate context hash mismatch & graph,
+population, order, or source content changed \\
+Canonical unit-order mismatch & certificate context hash mismatch & positional
+assignments no longer match the certified unit order \\
+Profile mismatch & legal profile chamber mismatch or RPLAN legal profile
+mismatch & the certificate cannot be reused for a different declared profile \\
+Reserved lineage field & algorithm lineage extra uses reserved certificate
+field & method metadata cannot override top-level certificate semantics \\
+\bottomrule
+\end{tabular}
+\caption{Verifier-facing negative fixtures for the U.20 contract.}
+\end{table}

@@ -48,3 +48,32 @@ Lineage & algorithm/run ids link to parent artifacts & broken provenance \\
 \end{tabular}
 \caption{Fixed-point invariants for verifier-facing packages.}
 \end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.22\linewidth}p{0.28\linewidth}p{0.34\linewidth}}
+\toprule
+Family & Example package & Evidence retained before U.20 \\
+\midrule
+Construction & T.14--T.17 golden packages & construction summaries, witnesses,
+and final assignments \\
+Exact search & U.16 and U.17 packages & solve reports, separation/column
+events, and model-relative certificates \\
+Local search & U.18 package & parent plan, candidate move, child plan, and
+improvement status \\
+Pareto search & U.19 selected-frontier package & frontier row, selected index,
+objectives, and export metadata \\
+Audit benchmark & U.20 grid packages & manifest, certificate, context, hashes,
+and negative fixture catalog \\
+\bottomrule
+\end{tabular}
+\caption{Public package families currently exercising the fixed point.}
+\end{table}
+
+The common package shape is deliberately small. A typical public package has a
+plan file, a context file, an audit-certificate JSON file, and a manifest JSON
+file. Method-specific files may sit beside those artifacts, but the
+verifier-facing contract is the same: the manifest names the files and hashes,
+the certificate binds the plan and context under a declared profile, and the
+lineage record says which algorithm run produced the exported plan.

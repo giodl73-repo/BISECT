@@ -28,3 +28,34 @@ fixture variants \\
 \end{tabular}
 \caption{Claim and evidence ladder for U.20.}
 \end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.26\linewidth}p{0.24\linewidth}p{0.34\linewidth}}
+\toprule
+Corpus slice & Public package role & What the package proves \\
+\midrule
+T.14 spectral-style construction & construction export & a constructed final
+assignment can enter the common package path \\
+U.16 branch-and-cut & exact-search export & a model-relative solve artifact can
+hand off a final RPLAN/RCTX package \\
+U.18 large-neighborhood search & local-search export & a parent/child
+improvement record can end in the same audit surface \\
+U.19 selected frontier & Pareto export & a chosen frontier row can be separated
+from the certified plan package \\
+U.20 grid3x3 reference & certificate example & plan, context, certificate, and
+manifest hashes agree on an inspectable fixture \\
+U.20 grid10 benchmark & benchmark package & the fixed point can be timed and
+regression-tested on a larger synthetic grid \\
+\bottomrule
+\end{tabular}
+\caption{Public corpus used to check that U.20 is a cross-family endpoint.}
+\end{table}
+
+The evaluation standard is therefore mechanical rather than rhetorical. A
+method earns the right to appear in downstream reports only after its exported
+package survives manifest checks, certificate checks, and the negative fixture
+catalog. If a package lacks context, mutates a plan, changes a context hash,
+changes unit order, reuses the wrong profile, or smuggles reserved lineage
+fields into method metadata, the verifier must reject it with a specific reason.

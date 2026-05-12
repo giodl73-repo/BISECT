@@ -7,7 +7,10 @@ The fixed point also depends on honest profile naming: a package can be valid
 for one profile while lacking the context required by another.
 
 Publication-ready evidence now has an initial public 3x3 package, a grid10
-audit benchmark package, and CLI negative tests for missing context, plan
-tamper, context hash changes, and unit-order mismatch. Additional publication
-fixtures should still cover stale RCTX context, profile mismatch, unsupported
-constraint claims, and broken lineage pointers.
+audit benchmark package, public construction/exact/local-search/Pareto package
+families, and CLI negative tests for missing context, plan tamper, context hash
+changes, unit-order mismatch, stale context, profile mismatch, missing-input
+constraints, and reserved lineage fields. The next evidence ceiling is not the
+fixed-point contract itself but breadth: larger real-data packages, more
+adversarial fixture variants, solver-version transcripts, and independent
+package consumers outside this repository.

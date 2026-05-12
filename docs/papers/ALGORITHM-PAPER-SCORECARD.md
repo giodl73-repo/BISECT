@@ -101,7 +101,7 @@ Score bands:
 | U.17 Branch-and-Price | 3.8 | 3.8 | 3.6 | 3.9 | 4.0 | 3.7 | 22.8 | Golden |
 | U.18 Large-Neighborhood Search | 3.8 | 3.8 | 3.7 | 3.9 | 4.0 | 3.8 | 23.0 | Golden |
 | U.19 Evolutionary Search Comparison | 3.8 | 3.7 | 3.7 | 3.9 | 4.0 | 3.7 | 22.8 | Golden |
-| U.20 Plan Audit Certificates | 3.7 | 3.5 | 3.6 | 3.9 | 3.5 | 3.5 | 21.7 | Next Batch 3 target; fixed-point paper |
+| U.20 Plan Audit Certificates | 3.9 | 3.7 | 3.8 | 4.0 | 4.0 | 3.7 | 23.1 | Golden; fixed-point paper |
 
 ## Ensemble And Sampling
 
@@ -158,17 +158,15 @@ Score bands:
 
 ## Highest-Priority Lifts
 
-1. Finish Batch 3: U.20. It anchors
-   the audit fixed point for all newer algorithm families.
-2. Batch 4: G.4, G.7, G.10, and G.11. These are the ensemble/sampling papers
+1. Batch 4: G.4, G.7, G.10, and G.11. These are the ensemble/sampling papers
    most directly tied to implemented crates and current atlas concepts.
-3. Legacy construction pass: T.5-T.13. These need the same "show the split,
+2. Legacy construction pass: T.5-T.13. These need the same "show the split,
    show the candidate, show the rejection" standard that made T.1 and U.18 much
    clearer.
-4. Metric correctness pass: K.2 first, then K.0/K.7 propagation. The Reock
+3. Metric correctness pass: K.2 first, then K.0/K.7 propagation. The Reock
    implementation mismatch is the most concrete known blocker in the metric
    algorithm papers.
-5. Apportionment implementation pass: J.6, then J.0-J.5. The mathematical
+4. Apportionment implementation pass: J.6, then J.0-J.5. The mathematical
    method papers are serviceable, but the implementation paper has known stale
    claims.
 
@@ -177,7 +175,7 @@ Score bands:
 | Track family | Included rows | Current center of gravity | Main gap |
 |---|---:|---|---|
 | B/T construction foundations | 26 | Strong for reviewed/new slices, serviceable for older slices | legacy visuals and audit/package bridges |
-| U search/optimization/audit | 21 | Strong, with U.16-U.18 golden | finish U.19/U.20 and refresh older U.2-U.7 |
+| U search/optimization/audit | 21 | Strong, with U.16-U.20 golden | refresh older U.2-U.7 and U.13-U.15 |
 | G ensemble/sampling | 16 | Strong but uneven | diagnostics/package evidence and data-validation cleanup |
 | J apportionment | 7 | Serviceable | J.6 stale implementation claims |
 | K compactness metrics | 8 | Strong except K.2 | Reock implementation mismatch |

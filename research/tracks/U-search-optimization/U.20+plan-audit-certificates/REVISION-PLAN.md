@@ -2,7 +2,7 @@
 
 **Paper**: `U.20+plan-audit-certificates`  
 **Round**: 1 to 2  
-**Date**: 2026-05-11  
+**Date**: 2026-05-12  
 **Source**: `reviews/SYNTHESIS.md`
 
 > **Purpose**: This plan is based on AI-generated quality assessment feedback.
@@ -33,17 +33,29 @@ serve as the portfolio integration paper.
 **Target sections**: `sections/evaluation.tex`, `sections/limitations.tex`  
 **Tasks**:
 - [x] Add a claim/evidence/publication-gap table.
-- [x] Mark public examples and tamper/failure-mode catalog as publication gaps.
+- [x] Mark public examples and tamper/failure-mode catalog as evidence.
 
 ## P2: Substantial Enhancements
 
 - [x] Add a concrete manifest and certificate snippet.
 - [x] Add tamper tests for unit-order mismatch, hash mismatch, and profile mismatch.
-- [ ] Archive public examples from construction, exact, local-search, and Pareto outputs.
+- [x] Archive public examples from construction, exact, local-search, and Pareto outputs.
+
+## 2026-05-12 Paper-Quality Pass
+
+- [x] Reframed the abstract and introduction around the fixed-point endpoint
+  for construction, exact, local-search, and Pareto families.
+- [x] Added a public package-family table showing construction, exact,
+  local-search, Pareto, and audit benchmark coverage.
+- [x] Added verifier command surfaces for certificate and manifest checks.
+- [x] Added a negative fixture table with expected verifier signals.
+- [x] Updated limitations to separate completed fixture coverage from the next
+  evidence ceiling: larger real-data packages, adversarial variants, and
+  external consumers.
 
 ## Quality Checkpoints
 
 - [x] P1 items addressed.
 - [x] Paper builds without errors.
 - [x] Claims map to evidence level.
-- [ ] Ready for round-2 simulated assessment.
+- [x] Ready for round-2 simulated assessment.

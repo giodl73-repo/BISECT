@@ -65,7 +65,7 @@ are called complete.
 |---|---|---|---|
 | 1 | T.1-T.4, U.1, U.8, U.9, U.12 | Re-review the atlas-aligned seed/compositor/legacy papers for paper-quality gaps after the alignment pass | Completed 2026-05-12 |
 | 2 | T.14-T.17 | Construction-family golden vertical slices | Completed 2026-05-12 |
-| 3 | U.16-U.20 | Exact/search/audit certificate family, including U.20 fixed-point language | In progress |
+| 3 | U.16-U.20 | Exact/search/audit certificate family, including U.20 fixed-point language | Completed 2026-05-12 |
 | 4 | U.10, G.4, G.7, G.10, G.11 | Sampling and ensemble methods | Queued |
 | 5 | T.5-T.13, U.0-U.7, U.11, U.13-U.15 | Older algorithm-family papers not yet lifted to the same explanatory standard | Queued |
 | 6 | B/C/D/F/G/A synthesis tracks | Portfolio, validation, legal, legislative, ensemble, and synthesis papers | Queued |
@@ -144,7 +144,7 @@ intentionally modest.
 | U.17 Branch-and-Price Redistricting | Reviewed 2026-05-12 | Added path4 column/master example, concrete branch-price report fields, CLI/test/package evidence, and fixed-point lineage boundary | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
 | U.18 Large-Neighborhood Search | Reviewed 2026-05-12 | Added six-unit one-move parent/child example, concrete local-search summary fields, CLI/test/package evidence, and no-improvement benchmark boundary | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
 | U.19 Evolutionary Search Comparison | Reviewed 2026-05-12 | Added selected-frontier row-to-package example, concrete frontier/metadata/lineage fields, U.14/U.15/U.20 boundary, and seed/objective sensitivity caveats | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
-| U.20 | Queued | Queued | Queued |
+| U.20 Plan Audit Certificates | Reviewed 2026-05-12 | Added fixed-point endpoint framing, public package-family table, verifier command surfaces, negative fixture signals, and updated evidence ceiling | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
 
 ## Batch 3 Paper-Quality Scorecard
 
@@ -156,6 +156,7 @@ intentionally modest.
 | U.17 Branch-and-Price Redistricting | 3.8 | 3.8 | 3.6 | 3.9 | 4.0 | 3.7 | 22.8 / 24 |
 | U.18 Large-Neighborhood Search | 3.8 | 3.8 | 3.7 | 3.9 | 4.0 | 3.8 | 23.0 / 24 |
 | U.19 Evolutionary Search Comparison | 3.8 | 3.7 | 3.7 | 3.9 | 4.0 | 3.7 | 22.8 / 24 |
+| U.20 Plan Audit Certificates | 3.9 | 3.7 | 3.8 | 4.0 | 4.0 | 3.7 | 23.1 / 24 |
 
 ### Batch 3 Score Notes
 
@@ -188,3 +189,13 @@ is a trade-off record, and the exported RPLAN/RCTX package is the audit object.
 The U.14/U.15/U.20 boundaries are explicit. The remaining ceiling is empirical:
 frontier robustness still needs seed, objective, and budget sensitivity evidence
 before the paper should make broader quality claims.
+
+**U.20 Plan Audit Certificates — 23.1/24.** The paper now reads as the fixed
+point for the algorithm roadmap rather than only a schema note. It names the
+public construction, exact, local-search, Pareto, and audit package families;
+shows the verifier command surfaces; and lists the negative fixture signals
+that prevent package tamper, stale context, unit-order mismatch, profile reuse,
+and reserved lineage collisions from being treated as valid evidence. The
+remaining ceiling is ecosystem breadth: larger real-data packages, more
+adversarial variants, solver-version transcripts, and external package
+consumers.
