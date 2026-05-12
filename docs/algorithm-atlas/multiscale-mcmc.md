@@ -25,6 +25,16 @@ It sits beside ReCom and SMC in the sampling/search substrate rather than in the
 final RPLAN fixed point itself. Final exported plans still need the ordinary
 RPLAN/RCTX/audit path.
 
+## Picture 0: Coarse Move To Fine Validity Gate
+
+![Multiscale coarse move validity gate](assets/multiscale-mcmc.svg)
+
+The primary visual shows the candidate path that matters under the atlas
+rubric. A coarse block move is proposed, projected back to fine units, then
+checked by a rebalance gate. The output must record whether projection
+introduced imbalance and whether rebalance accepted, repaired, or rejected the
+move.
+
 ## Picture 1: Coarse/Fine Move Cycle
 
 ![Multiscale coarse and fine cycle](assets/multiscale-cycle.svg)

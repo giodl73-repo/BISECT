@@ -25,8 +25,8 @@ prose plus generic diagrams no longer earns an excellent score.
 
 | Band | Pages |
 |---|---|
-| Excellent, 54-60 | GeoSection, AreaSection, Seed Search, County-Sticky, ApportionRegions, Three-Layer Compositor, U.20 |
-| Good, 45-53 | T.14, T.15, T.16, T.17, U.16, U.17, U.18, U.19, ReCom, SMC, Multiscale |
+| Excellent, 54-60 | GeoSection, AreaSection, Seed Search, County-Sticky, ApportionRegions, Three-Layer Compositor, Multiscale, U.20 |
+| Good, 45-53 | T.14, T.15, T.16, T.17, U.16, U.17, U.18, U.19, ReCom, SMC |
 | Serviceable, 36-44 | None |
 | Thin, 24-35 | None |
 | Failing, 0-23 | None |
@@ -52,7 +52,7 @@ figures are upgraded.
 | U.20 RPLAN Audit Certificates | 10 | 10 | 7 | 9 | 10 | 10 | 56 | Excellent |
 | ReCom Ensemble | 8 | 8 | 7 | 8 | 9 | 9 | 49 | Good |
 | Sequential Monte Carlo | 8 | 8 | 7 | 8 | 9 | 9 | 49 | Good |
-| Multiscale MCMC | 8 | 8 | 6 | 8 | 10 | 8 | 48 | Good |
+| Multiscale MCMC | 9 | 9 | 9 | 10 | 10 | 8 | 55 | Excellent |
 | Three-Layer Compositor | 9 | 10 | 9 | 10 | 9 | 9 | 56 | Excellent |
 | GeoSection | 10 | 9 | 10 | 10 | 9 | 9 | 57 | Excellent |
 | AreaSection | 10 | 9 | 10 | 10 | 9 | 8 | 56 | Excellent |
@@ -97,6 +97,10 @@ structure, weights, and search, the resolved recipe, the config-hash
 consequence, and sidecars that identify which layer produced each piece of
 evidence.
 
+**Multiscale MCMC - 55/60.** The page now shows fine units, coarse candidate
+moves, projection, rebalance gates, output status fields, and the sampler
+correctness claim boundary.
+
 **U.16, U.17, U.18, U.19 - 50-51/60.** These pages are accurate and
 well-evidenced, but their primary visuals still need more complete
 candidate-set -> decision-rule -> artifact-consequence paths.
@@ -109,29 +113,22 @@ or particle is accepted, rejected, copied, or diagnosed.
 main figures predate the stricter rubric. Each needs a gold-standard teaching
 figure: candidates, decision rule, and final artifact/status consequence.
 
-**Multiscale - 48/60.** This page is conceptually useful but not yet visually
-self-explanatory. It needs countable candidate moves and clearer downstream
-accept/reject/rebalance consequences.
-
 ## Upgrade Priority
 
 1. **T.14-T.17**: upgrade the construction-family visuals to show candidates,
    decision rules, and artifact/status consequences.
-2. **Multiscale MCMC**: show fine/coarse candidate moves, projection, rebalance,
-   and accept/reject consequence as one countable visual.
-3. **U-series and sampling pages**: add richer primary teaching figures only
+2. **U-series and sampling pages**: add richer primary teaching figures only
    after the spatial/compositor family reaches the GeoSection standard.
 
 ## Acceptance Target
 
 Under the stricter rubric, every page remains at least good, but only
 GeoSection, AreaSection, County-Sticky, ApportionRegions, Three-Layer
-Compositor, Seed Search, and U.20 currently score excellent. The next target is
-to raise the construction and multiscale pages to **54/60 or higher** with
+Compositor, Multiscale, Seed Search, and U.20 currently score excellent. The
+next target is to raise the construction pages to **54/60 or higher** with
 gold-standard teaching figures:
 
 - T.14 Spectral Partitioning
 - T.15 Capacity Clustering
 - T.16 Hierarchical Regionalization
 - T.17 Flow Construction
-- Multiscale MCMC
