@@ -25,8 +25,8 @@ prose plus generic diagrams no longer earns an excellent score.
 
 | Band | Pages |
 |---|---|
-| Excellent, 54-60 | T.14, GeoSection, AreaSection, Seed Search, County-Sticky, ApportionRegions, Three-Layer Compositor, Multiscale, U.20 |
-| Good, 45-53 | T.15, T.16, T.17, U.16, U.17, U.18, U.19, ReCom, SMC |
+| Excellent, 54-60 | T.14, T.15, GeoSection, AreaSection, Seed Search, County-Sticky, ApportionRegions, Three-Layer Compositor, Multiscale, U.20 |
+| Good, 45-53 | T.16, T.17, U.16, U.17, U.18, U.19, ReCom, SMC |
 | Serviceable, 36-44 | None |
 | Thin, 24-35 | None |
 | Failing, 0-23 | None |
@@ -42,7 +42,7 @@ figures are upgraded.
 | Page | B | I | S | E | C | T | Total | Band |
 |---|---:|---:|---:|---:|---:|---:|---:|---|
 | T.14 Spectral Partitioning | 9 | 9 | 10 | 10 | 9 | 8 | 55 | Excellent |
-| T.15 Capacity Clustering | 8 | 8 | 6 | 8 | 8 | 8 | 46 | Good |
+| T.15 Capacity Clustering | 9 | 9 | 10 | 10 | 9 | 8 | 55 | Excellent |
 | T.16 Hierarchical Regionalization | 8 | 8 | 6 | 8 | 8 | 8 | 46 | Good |
 | T.17 Flow Construction | 8 | 8 | 6 | 8 | 8 | 8 | 46 | Good |
 | U.16 Branch-And-Cut | 9 | 9 | 7 | 8 | 9 | 9 | 51 | Good |
@@ -105,6 +105,11 @@ correctness claim boundary.
 ordering candidate path, sweep-cut decision table, recursive workload
 consequence, and package-summary evidence boundary.
 
+**T.15 Capacity Clustering - 55/60.** The page now shows why deterministic
+farthest-point seeds are tried, how assignment candidates are tested against
+capacity, why a nearest cluster can be rejected, and which status evidence is
+carried into RPLAN/RCTX/certificate export.
+
 **U.16, U.17, U.18, U.19 - 50-51/60.** These pages are accurate and
 well-evidenced, but their primary visuals still need more complete
 candidate-set -> decision-rule -> artifact-consequence paths.
@@ -113,14 +118,14 @@ candidate-set -> decision-rule -> artifact-consequence paths.
 but the visuals should better show candidate transitions and why a sampled step
 or particle is accepted, rejected, copied, or diagnosed.
 
-**T.15-T.17 - 46/60.** These construction pages have good prose and ledgers,
+**T.16-T.17 - 46/60.** These construction pages have good prose and ledgers,
 but their main figures predate the stricter rubric. Each needs a gold-standard
 teaching figure: candidates, decision rule, and final artifact/status
 consequence.
 
 ## Upgrade Priority
 
-1. **T.15-T.17**: upgrade the construction-family visuals to show candidates,
+1. **T.16-T.17**: upgrade the construction-family visuals to show candidates,
    decision rules, and artifact/status consequences.
 2. **U-series and sampling pages**: add richer primary teaching figures only
    after the spatial/compositor family reaches the GeoSection standard.
@@ -128,11 +133,10 @@ consequence.
 ## Acceptance Target
 
 Under the stricter rubric, every page remains at least good, but only
-T.14, GeoSection, AreaSection, County-Sticky, ApportionRegions, Three-Layer
+T.14, T.15, GeoSection, AreaSection, County-Sticky, ApportionRegions, Three-Layer
 Compositor, Multiscale, Seed Search, and U.20 currently score excellent. The
 next target is to raise the remaining construction pages to **54/60 or higher** with
 gold-standard teaching figures:
 
-- T.15 Capacity Clustering
 - T.16 Hierarchical Regionalization
 - T.17 Flow Construction

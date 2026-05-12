@@ -32,6 +32,20 @@ produce repair/infeasibility evidence when the staged capacity profile cannot be
 met cleanly. The seed choices and status lineage are the key things BISECT needs
 to preserve.
 
+## Picture 0: Candidate Assignment With Capacity Evidence
+
+The opening figure is read left to right. First, deterministic farthest-point
+seeds explain why these cluster centers exist before any unit is assigned. Then
+the assignment panel shows the important capacity-clustering decision: a unit
+can be closest to cluster A and still be rejected because `85 + 35 > 100`.
+The algorithm then tries the next eligible cluster and accepts the unit only
+when the visible capacity arithmetic fits.
+
+The bottom ledger is the audit form of the same story. BISECT must preserve
+more than final colors: it needs the seed order, the candidate that failed, the
+capacity reason for rejection, the fallback assignment, and the final
+`valid`/`repaired`/`infeasible`/`invalid` status that controls package export.
+
 ## Algorithm Shape
 
 ```text
