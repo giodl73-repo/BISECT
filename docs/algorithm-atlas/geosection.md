@@ -10,13 +10,20 @@ short boundary. GeoSection scans first-level split ratios and normalizes edge
 cut by `sqrt(min(i, k-i))` so small-ratio splits do not win only because they
 are small.
 
+The ratios are tried because the first split decides how many final districts
+each child region must contain. For `k = 14`, a `1:13` root split means "make
+one district on the left, then recursively make thirteen on the right." A `7:7`
+root split means "make two child regions that each recursively produce seven
+districts." GeoSection is choosing the root allocation of the recursion tree,
+not merely drawing a one-time boundary.
+
 ## How BISECT Uses It
 
 BISECT uses GeoSection when the top-level split ratio should be chosen from
 geometry rather than assumed:
 
 ```text
-try ratios -> normalize cut cost -> choose first-level split -> recurse
+try root allocations -> normalize cut cost -> choose first-level split -> recurse
 ```
 
 After the first level, subsequent regions use ordinary recursive bisection.
@@ -57,7 +64,8 @@ first split when it has comparable boundary cost per unit of section size.
 
 ## Step-By-Step Mechanics
 
-1. For target `k`, enumerate ratios from `1:(k-1)` through the balanced split.
+1. For target `k`, enumerate root allocations from `1:(k-1)` through the
+   balanced split.
 2. Run the configured METIS/search budget for each candidate ratio.
 3. Record the best edge cut for each ratio.
 4. Score each ratio as `EC_min / sqrt(min(i, k-i))`.

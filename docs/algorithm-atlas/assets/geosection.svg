@@ -1,46 +1,96 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="360" viewBox="0 0 960 360" role="img" aria-labelledby="title desc">
-  <title id="title">GeoSection ratio scan</title>
-  <desc id="desc">First-level ratios are scored by normalized edge cut to avoid caterpillar splits.</desc>
-  <style>.bg{fill:#fbfbf8}.panel{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.bar{fill:#dbeafe;stroke:#2b5c9b;stroke-width:2}.win{fill:#e4f5eb;stroke:#2f7d4c;stroke-width:3}.bad{fill:#ffe4e1;stroke:#b84a42;stroke-width:2}.minor{fill:#b84a42}.major{fill:#f6c7bd}.minor2{fill:#2b5c9b}.major2{fill:#dbeafe}.minorWin{fill:#2f7d4c}.majorWin{fill:#e4f5eb}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.mono{font:12px Consolas,monospace;fill:#17212b}</style>
-  <rect class="bg" width="960" height="360"/><rect class="panel" x="60" y="55" width="840" height="255" rx="8"/>
-  <text class="label" x="95" y="92">First-level ratio scan</text>
-  <g transform="translate(110 210)">
-    <rect class="bad" x="0" y="0" width="90" height="45" rx="6"/>
-    <clipPath id="r1clip"><rect x="0" y="0" width="90" height="45" rx="6"/></clipPath>
-    <g clip-path="url(#r1clip)">
-      <rect class="minor" x="0" y="0" width="6.4" height="45"/>
-      <rect class="major" x="6.4" y="0" width="83.6" height="45"/>
-    </g>
-    <text class="small" x="20" y="65">1 / 13</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="440" viewBox="0 0 1180 440" role="img" aria-labelledby="title desc">
+  <title id="title">GeoSection ratio scan with two-dimensional state thumbnails</title>
+  <desc id="desc">First-level district-count allocations are tried as different two-dimensional state splits so GeoSection can choose a root split that fits the state's geometry before recursion.</desc>
+  <style>
+    .bg{fill:#fbfbf8}
+    .panel{fill:#fff;stroke:#2f3a45;stroke-width:1.5}
+    .card{fill:#fffdf8;stroke:#c7d0da;stroke-width:1.2}
+    .state{fill:#eef2f7;stroke:#6b7280;stroke-width:2}
+    .minorBad{fill:#c84f47;stroke:#8c2e28;stroke-width:2}
+    .minor{fill:#6ea0db;stroke:#245b99;stroke-width:2}
+    .major{fill:#dbeafe;stroke:#245b99;stroke-width:2}
+    .minorWin{fill:#6fb982;stroke:#25724d;stroke-width:2}
+    .majorWin{fill:#dff3e6;stroke:#25724d;stroke-width:2}
+    .cutBad{stroke:#b6423c;stroke-width:4;stroke-linecap:round;stroke-dasharray:8 6}
+    .cut{stroke:#245b99;stroke-width:4;stroke-linecap:round}
+    .cutWin{stroke:#25724d;stroke-width:4;stroke-linecap:round}
+    .label{font:700 16px Arial,sans-serif;fill:#17212b}
+    .small{font:13px Arial,sans-serif;fill:#52616b}
+    .tiny{font:12px Arial,sans-serif;fill:#52616b}
+    .mono{font:12px Consolas,monospace;fill:#17212b}
+    .note{fill:#eef8f0;stroke:#25724d;stroke-width:1.5}
+    .warn{fill:#fff1ed;stroke:#b6423c;stroke-width:1.5}
+  </style>
+
+  <rect class="bg" width="1180" height="440"/>
+  <rect class="panel" x="42" y="42" width="1096" height="350" rx="10"/>
+  <text class="label" x="76" y="82">First-level ratio scan: choose the root allocation of the recursive tree</text>
+  <text class="small" x="76" y="108">Each thumbnail is a possible first split of the same state. The labels say how many final districts each child region must produce.</text>
+
+  <g transform="translate(76 142)">
+    <rect class="card" x="0" y="0" width="150" height="188" rx="8"/>
+    <text class="label" x="18" y="28">1 / 13</text>
+    <text class="tiny" x="18" y="48">tiny child + huge child</text>
+    <path class="state" d="M28 82 C50 54 101 50 126 78 C151 107 130 149 86 156 C43 163 18 132 28 82 Z"/>
+    <path class="minorBad" d="M28 82 C39 65 62 56 82 58 C71 76 69 100 76 123 C52 128 31 118 25 99 C23 92 24 87 28 82 Z"/>
+    <path class="cutBad" d="M82 58 C71 76 69 100 76 123"/>
+    <rect class="warn" x="18" y="142" width="114" height="30" rx="5"/>
+    <text class="tiny" x="28" y="162">raw cut likes this</text>
   </g>
-  <g transform="translate(240 185)">
-    <rect class="bar" x="0" y="0" width="90" height="70" rx="6"/>
-    <clipPath id="r2clip"><rect x="0" y="0" width="90" height="70" rx="6"/></clipPath>
-    <g clip-path="url(#r2clip)">
-      <rect class="minor2" x="0" y="0" width="12.9" height="70"/>
-      <rect class="major2" x="12.9" y="0" width="77.1" height="70"/>
-    </g>
-    <text class="small" x="20" y="90">2 / 12</text>
+
+  <g transform="translate(252 142)">
+    <rect class="card" x="0" y="0" width="150" height="188" rx="8"/>
+    <text class="label" x="18" y="28">2 / 12</text>
+    <text class="tiny" x="18" y="48">still root-heavy</text>
+    <path class="state" d="M28 82 C50 54 101 50 126 78 C151 107 130 149 86 156 C43 163 18 132 28 82 Z"/>
+    <path class="minor" d="M28 82 C45 57 79 52 101 62 C86 82 78 111 84 143 C54 148 29 132 25 103 C24 95 24 88 28 82 Z"/>
+    <path class="cut" d="M101 62 C86 82 78 111 84 143"/>
+    <text class="tiny" x="18" y="162">compare normalized score</text>
   </g>
-  <g transform="translate(370 155)">
-    <rect class="bar" x="0" y="0" width="90" height="100" rx="6"/>
-    <clipPath id="r3clip"><rect x="0" y="0" width="90" height="100" rx="6"/></clipPath>
-    <g clip-path="url(#r3clip)">
-      <rect class="minor2" x="0" y="0" width="19.3" height="100"/>
-      <rect class="major2" x="19.3" y="0" width="70.7" height="100"/>
-    </g>
-    <text class="small" x="20" y="120">3 / 11</text>
+
+  <g transform="translate(428 142)">
+    <rect class="card" x="0" y="0" width="150" height="188" rx="8"/>
+    <text class="label" x="18" y="28">3 / 11</text>
+    <text class="tiny" x="18" y="48">larger first child</text>
+    <path class="state" d="M28 82 C50 54 101 50 126 78 C151 107 130 149 86 156 C43 163 18 132 28 82 Z"/>
+    <path class="minor" d="M28 82 C50 54 96 50 116 71 C97 92 83 123 72 153 C43 148 18 122 28 82 Z"/>
+    <path class="cut" d="M116 71 C97 92 83 123 72 153"/>
+    <text class="tiny" x="18" y="162">candidate root geometry</text>
   </g>
-  <g transform="translate(500 125)">
-    <rect class="win" x="0" y="0" width="90" height="130" rx="6"/>
-    <clipPath id="r7clip"><rect x="0" y="0" width="90" height="130" rx="6"/></clipPath>
-    <g clip-path="url(#r7clip)">
-      <rect class="minorWin" x="0" y="0" width="45" height="130"/>
-      <rect class="majorWin" x="45" y="0" width="45" height="130"/>
-    </g>
-    <line x1="45" y1="0" x2="45" y2="130" stroke="#2f7d4c" stroke-width="2"/>
-    <text class="small" x="22" y="150">7 / 7</text>
+
+  <g transform="translate(604 142)">
+    <rect class="card" x="0" y="0" width="150" height="188" rx="8"/>
+    <text class="label" x="18" y="28">7 / 7</text>
+    <text class="tiny" x="18" y="48">balanced children</text>
+    <path class="majorWin" d="M76 58 C101 51 126 62 136 90 C149 126 119 154 83 157 C79 126 75 91 76 58 Z"/>
+    <path class="minorWin" d="M28 82 C40 64 57 58 76 58 C75 91 79 126 83 157 C47 159 18 132 28 82 Z"/>
+    <path class="cutWin" d="M76 58 C75 91 79 126 83 157"/>
+    <rect class="note" x="18" y="142" width="114" height="30" rx="5"/>
+    <text class="tiny" x="38" y="162">often plausible</text>
   </g>
-  <text class="mono" x="640" y="155">score = EC_min / sqrt(min(i,k-i))</text>
-  <text class="small" x="640" y="190">Small splits must beat the normalization,</text><text class="small" x="640" y="210">not merely enclose less area.</text>
+
+  <g transform="translate(790 132)">
+    <text class="mono" x="0" y="26">score = EC_min / sqrt(min(i,k-i))</text>
+    <text class="small" x="0" y="60">Why try different splits?</text>
+    <text class="small" x="0" y="84">The first split commits the recursion:</text>
+    <text class="small" x="0" y="106">left child makes i districts, right child</text>
+    <text class="small" x="0" y="128">makes k-i districts. Different state shapes</text>
+    <text class="small" x="0" y="150">can prefer different root allocations.</text>
+
+    <g transform="translate(0 184)">
+      <text class="tiny" x="0" y="-10">long state</text>
+      <rect x="0" y="0" width="132" height="46" rx="18" fill="#eef2f7" stroke="#6b7280"/>
+      <line x1="66" y1="2" x2="66" y2="44" class="cutWin"/>
+      <text class="tiny" x="150" y="29">split along length</text>
+    </g>
+    <g transform="translate(0 260)">
+      <text class="tiny" x="0" y="-10">tall state</text>
+      <rect x="42" y="0" width="48" height="86" rx="18" fill="#eef2f7" stroke="#6b7280"/>
+      <line x1="44" y1="43" x2="88" y2="43" class="cutWin"/>
+      <text class="tiny" x="150" y="47">split along height</text>
+    </g>
+  </g>
+
+  <rect x="76" y="352" width="1010" height="24" rx="8" fill="#26323d"/>
+  <text x="100" y="369" font-family="Arial, sans-serif" font-size="13" fill="#ffffff">Reading rule: GeoSection tries root allocations because the first split determines the recursive district counts inside each child region.</text>
 </svg>

@@ -21,10 +21,15 @@ raw tiny split -> normalized ratio table/chart -> chosen root split and recursio
 
 - Prefer one large teaching figure over several tiny decorative figures.
 - Put the failure mode and the selected behavior in the same visual frame.
+- Say why the candidates are being tried. A figure should answer "what decision
+  is this candidate set feeding?" before it asks the reader to compare scores.
 - Include at least one numeric table, score, threshold, or ledger when the
   algorithm makes a quantitative decision.
 - Show the split, not just the split label. A `1:13` ratio should be drawn as
   one part against thirteen parts; a `7:7` ratio should look visibly balanced.
+- Prefer two-dimensional miniatures for spatial algorithms. If the algorithm
+  acts on a state, region, county, grid, or district map, use little map-like
+  shapes before falling back to one-dimensional bars.
 - Label whether higher or lower scores win.
 - Show the artifact consequence: selected split, emitted report, audit package,
   rejected move, resample genealogy, or frontier selection.
@@ -61,9 +66,28 @@ district columns, the visual should depict the division directly:
 
 | Concept | Weak visual | Better visual |
 |---|---|---|
-| `1:13` ratio | a box labeled `1:13` | a bar/map split into one small part and thirteen parts |
-| `7:7` ratio | a box labeled `7:7` | two equal halves with a visible dividing line |
+| `1:13` ratio | a box labeled `1:13` | a state thumbnail or bar split into one small part and thirteen parts |
+| `7:7` ratio | a box labeled `7:7` | a state thumbnail or bar split into two equal halves |
 | county split | text saying "county split" | county region visibly crossed by a boundary |
 | selected frontier point | text saying "selected" | highlighted point on the frontier |
 
 Labels can still name the split, but the geometry must carry the meaning first.
+
+For spatial pages, include more than one geometry when it matters. A long state
+and a tall state can make clear why the algorithm is trying several candidate
+root splits instead of assuming one universal split shape.
+
+## Candidate Purpose Rule
+
+When a visual shows multiple candidate splits, seeds, columns, moves, or
+frontier points, it should state the downstream decision they feed:
+
+| Candidate set | Downstream decision |
+|---|---|
+| GeoSection ratios | root allocation of district counts before recursion |
+| AreaSection ratios | feasible root allocation under population and area windows |
+| seed stream | which deterministic candidate plan is selected |
+| branch-and-price columns | which district columns cover all units once |
+| local-search moves | which validity-preserving move becomes the descendant plan |
+
+If the reader cannot tell why the candidates exist, the figure is not finished.
