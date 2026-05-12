@@ -14,15 +14,16 @@ Algorithmic redistricting systems face a structural tension here.
 A map drawn by minimum-edge-cut bisection makes no reference to racial
 or political data: it sees only boundary lengths and census populations.
 This neutrality is legally valuable --- it defeats racial-predominance challenges
-under \emph{Shaw v.\ Reno} \citep{shaw1993} --- but it means the algorithm
-has no mechanism to detect or correct VRA shortfalls.
+less directly than a race-targeting method under \emph{Shaw v.\ Reno}
+\citep{shaw1993} --- but it means the algorithm has no mechanism to detect or
+correct VRA shortfalls.
 
 \paragraph{Why explicit minority constraints fail.}
 The natural engineering response is to add minority population as a second
 METIS constraint, alongside population balance.
 B.3 \citep{b3paper} tested this approach (``MetisVra'') on five
 majority-minority states with historically significant VRA litigation.
-The results were damaging: MetisVra failed completely in 3 of 5 states
+The reported results were damaging: MetisVra failed completely in 3 of 5 states
 (Alabama, Louisiana, South Carolina), achieving zero majority-minority
 (MM) districts across all 140 tested parameter configurations.
 
@@ -59,7 +60,8 @@ by a two-component score:
   $\mathrm{EC}_\text{norm}(i)$ from GeoSection \citep{b8paper} (lower is better).
 \item \textbf{Geographic alignment}: $A(\text{split}) = |\mathrm{MVAP}_\text{frac}(L)
   - \mathrm{MVAP}_\text{frac}(R)|$, where $\mathrm{MVAP}_\text{frac}$ is the
-  minority VAP fraction on each side of the bisection.
+  share of the current subgraph's minority-population signal placed on each
+  side of the bisection.
 \end{enumerate}
 
 The combined selection score is:
@@ -80,27 +82,26 @@ VRASection selects a $2:5$ first-level bisection, separating the Black Belt
 region (south-central Alabama, historically concentrated Black population)
 from the northern industrial corridor and Gulf Coast.
 GeoSection selects a $3:4$ split (near-equal geographic division; see T.1 Table~1 for the confirmed AL GeoSection natural ratio).
-The $2:5$ split more effectively satisfies Gingles Prong 1 because it
+The $2:5$ split better preserves the geographic concentration relevant to
+Gingles Prong 1 because it
 concentrates a larger fraction of Alabama's Black population on one side,
 providing a geographic foundation for downstream MM district formation
-without explicitly targeting race.
+without imposing a district-level racial target.
 
 \paragraph{The legal distinction.}
-VRASection uses minority VAP as input, which might superficially suggest
-racial targeting.
+VRASection uses a race-associated demographic input, which raises legal risk
+that must be documented rather than waved away.
 The critical difference is in the function computed.
 MetisVra's second constraint forces METIS to concentrate minority
 population above a user-specified threshold --- race is a co-equal
 optimization target.
 VRASection's alignment score measures the \emph{spatial distribution}
 of any population that the user designates as ``minority VAP''.
-The algorithm cannot know whether the clustered population is Black,
-Hispanic, Native American, or any other group.
-It selects the bisection ratio that best exploits pre-existing geographic
-concentration, which may or may not be a minority community.
+The algorithm selects the bisection ratio that best exploits pre-existing
+geographic concentration in the user-provided demographic signal.
 At $w_\text{vra} = 0.40$, compactness is weighted $1 / (1 - 0.40) = 1.67\times$
-more heavily than alignment, ensuring geographic compactness remains the
-predominant factor under \emph{Shaw}'s racial-predominance test.
+more heavily than alignment.  That supports a geography-first record, but
+\emph{Shaw}'s racial-predominance test remains fact-specific.
 
 \paragraph{Contributions.}
 This paper makes four contributions:
@@ -108,8 +109,8 @@ This paper makes four contributions:
 \begin{enumerate}
 \item \textbf{VRASection algorithm} (\S\ref{sec:algorithm}): formal
   definition of the alignment score, modified objective function, and
-  algorithm pseudocode, including legal analysis of why the design
-  avoids racial predominance.
+  algorithm pseudocode, including legal analysis of how the design limits
+  racial-predominance risk.
 
 \item \textbf{Alabama case study} (\S\ref{sec:evaluation}): the $2:5$
   vs.\ $3:4$ comparison as the lead empirical result, with analysis of

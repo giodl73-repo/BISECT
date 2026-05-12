@@ -1,7 +1,7 @@
 \section{Discussion}
 \label{sec:discussion}
 
-\subsection{$w_\text{vra}$ Sensitivity}
+\subsection{\texorpdfstring{$w_\text{vra}$}{w-vra} Sensitivity}
 
 The alignment weight $w_\text{vra}$ is the primary tuning parameter of
 VRASection.
@@ -18,14 +18,15 @@ States with moderate geographic sorting (NC, GA, TX) will show little
 change from GeoSection, because their minority populations, while
 concentrated in cities, do not produce alignment scores high enough to
 overcome a 4:1 compactness preference.
-This regime is recommended when legal risk is high and the state has no
-clear Section 2 obligation.
+This regime is the more conservative exploratory setting when legal risk is
+high and the state has no clear Section 2 obligation.
 
 \paragraph{Default weight ($w_\text{vra} = 0.4$): balanced.}
 The proposed default gives compactness 60\,\% weight and alignment 40\,\%.
 For Alabama, this weight is sufficient to shift the ratio from $1:6$ to $2:5$
 (Section~\ref{sec:evaluation}).
-The Shaw predominance condition is satisfied with a 20\,pp margin.
+The coefficient record keeps compactness larger than the alignment term by a
+20\,pp margin, which supports but does not decide the Shaw predominance inquiry.
 This regime is recommended as the standard setting for states where
 Section 2 litigation has occurred or is anticipated.
 
@@ -35,30 +36,34 @@ the compactness cost, meaning a ratio with $A = 1$ would be preferred
 even if its normalised edge-cut is 2.5$\times$ the GeoSection winner's.
 In states with moderate geographic concentration, this can produce ratios
 that sacrifice meaningful compactness for marginal alignment gains.
-The Shaw predominance condition is not satisfied at $w_\text{vra} = 0.6$
+The coefficient record no longer supports a geography-first argument at
+$w_\text{vra} = 0.6$
 (see \S\ref{sec:shaw-line} below).
 This regime should not be used in standard redistricting; it may be useful
 for research to identify the maximum alignment achievable under geographic
 constraints.
 
 \paragraph{Summary table.}
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
+\small
 \caption{$w_\text{vra}$ regimes and their properties.}
 \label{tab:wvra}
-\begin{tabular}{ccccl}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}ccccl@{}}
 \toprule
 $w_\text{vra}$ & \textbf{Compactness weight} & \textbf{Alignment weight}
-  & \textbf{Shaw compliant?} & \textbf{Recommended use} \\
+  & \textbf{Coefficient record} & \textbf{Recommended use} \\
 \midrule
-0.0  & 100\,\% & 0\,\%   & Yes (=GeoSection)  & Pure compactness \\
-0.2  & 80\,\%  & 20\,\%  & Yes                & Low-obligation states \\
-0.4  & 60\,\%  & 40\,\%  & Yes                & \textbf{Default (Section 2 states)} \\
-0.5  & 50\,\%  & 50\,\%  & Borderline         & Not recommended \\
-0.6  & 40\,\%  & 60\,\%  & No                 & Research only \\
-1.0  & 0\,\%   & 100\,\% & No                 & Research only \\
+0.0  & 100\,\% & 0\,\%   & Pure geography     & Pure compactness \\
+0.2  & 80\,\%  & 20\,\%  & Geography larger   & Low-obligation states \\
+0.4  & 60\,\%  & 40\,\%  & Geography larger   & \textbf{Default (Section 2 states)} \\
+0.5  & 50\,\%  & 50\,\%  & Tied               & Not recommended \\
+0.6  & 40\,\%  & 60\,\%  & Alignment larger   & Research only \\
+1.0  & 0\,\%   & 100\,\% & Pure alignment     & Research only \\
 \bottomrule
 \end{tabular}
+}
 \end{table}
 
 \subsection{The Shaw v. Reno Line and the Cooper v. Harris Counterfactual}
@@ -78,7 +83,7 @@ specific boundary choices are explicable on non-racial grounds.
 The controlling question under \emph{Shaw}/\emph{Miller}/\emph{Cooper} is:
 \emph{Would the legislature have drawn this district this way even if it
 were not trying to satisfy the VRA?}
-VRASection passes this test because the counterfactual map --- the pure
+VRASection can support this inquiry because the counterfactual map --- the pure
 GeoSection result at $w_\text{vra} = 0$ --- is explicitly available as a
 comparison point.
 The counterfactual is not hypothetical; it is computed.
@@ -100,9 +105,9 @@ racial assignment.
 For the three states where VRASection and GeoSection agree (MS, GA, LA),
 the alignment score did not change the outcome: the geographically optimal
 split and the minority-aligned split are the same split.
-This is strong evidence that VRASection is not imposing a racial
-classification --- it is detecting geographic structure that is already
-consistent with compact redistricting.
+This is evidence that VRASection is often detecting geographic structure that
+is already consistent with compact redistricting, rather than forcing a
+different racial target in every state.
 
 For the three states where VRASection changes the ratio (AL, NC, SC),
 the change is geographically explicable:
@@ -175,8 +180,8 @@ It does not attempt to force a minority-concentrated partition where none
 exists in the geography.
 This is the correct behaviour: if no geographic boundary separates
 minority-concentrated from minority-dispersed areas, there is no
-Gingles Prong 1 community to protect, and a standard compact-district
-algorithm is the legally appropriate choice.
+Gingles Prong 1 signal for this algorithm to use, and a standard
+compact-district algorithm is the less race-conscious choice.
 
 \paragraph{Zero user-specified minority thresholds.}
 MetisVra requires a user-specified minority target fraction (e.g., $>50\,\%$)
@@ -189,7 +194,7 @@ The $w_\text{vra}$ weight is a methodological preference
 Two practitioners using VRASection with $w_\text{vra} = 0.40$ will
 produce the same map, without either having specified a minority fraction.
 
-\subsection{Limitation: Alignment Does Not Guarantee $> 50\,\%$ Minority VAP}
+\subsection{\texorpdfstring{Limitation: Alignment Does Not Guarantee $> 50\,\%$ Minority VAP}{Limitation: alignment does not guarantee majority-minority districts}}
 
 VRASection's alignment score measures geographic concentration at the
 \emph{bisection level}, not at the \emph{district level}.
@@ -217,9 +222,9 @@ but not recommended for standard use due to increased racial predominance risk).
 
 \subsection{Callais v. Landry and the Evidence Standard}
 
-The redist codebase's Callais evidence layer (landed 2026-04-30) provides
+The BISECT codebase's Callais evidence layer provides
 WLS+HC3 regression infrastructure for validating racial bloc voting
-under the \emph{Callais v.\ Landry} (2025) standard.
+under the \emph{Callais v.\ Landry} evidence framework.
 VRASection is designed to be used in conjunction with this evidence layer:
 the algorithm produces a map candidate; the bloc-voting analysis validates
 whether each candidate minority opportunity district satisfies Gingles

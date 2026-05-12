@@ -8,8 +8,11 @@ Vertices $V$ are census tracts; edges $E$ connect tracts sharing a common
 boundary; edge weights $w(e) > 0$ are shared boundary lengths in metres.
 Vertex weights $\mathbf{p} \in \mathbb{Z}_{>0}^{|V|}$ are census tract populations.
 Let $k$ be the number of congressional districts allocated to this state.
-Let $\mathbf{m} \in \mathbb{R}_{\geq 0}^{|V|}$ be per-tract minority VAP
-counts, where $m_v$ is the minority voting-age population of tract $v$.
+Let $\mathbf{m} \in \mathbb{R}_{\geq 0}^{|V|}$ be a per-tract minority
+population signal.  In the current BISECT ratio-selection implementation,
+$m_v$ is the tract's minority fraction multiplied by tract population; this is
+a spatial proxy, not necessarily true VAP or CVAP.  When true VAP/CVAP is
+available, the same formulas can be applied to those counts.
 
 \begin{definition}[Feasible bisection]
 A \emph{feasible bisection} of $G$ with ratio $i:(k-i)$, $1 \leq i \leq \lfloor k/2 \rfloor$,
@@ -137,13 +140,15 @@ is legible to non-technical audiences and can be stated plainly in
 expert testimony.
 \end{remark}
 
-\subsection{Legal Analysis: Why VRASection Is Not Racial Targeting}
+\subsection{Legal Design Boundary}
 \label{sec:legal-analysis}
 
 The \emph{Shaw}/\emph{Miller} racial predominance test asks:
 did the legislature subordinate traditional redistricting principles
 to racial considerations?
-VRASection's design addresses this test on two levels.
+VRASection's design addresses this risk on two levels.  This is a design
+argument, not a legal guarantee: courts evaluate the factual record of a map,
+not merely the coefficients in an algorithm.
 
 \paragraph{What the algorithm does not do.}
 VRASection does not:
@@ -151,23 +156,22 @@ VRASection does not:
 \item Set a target minority percentage for any district.
 \item Require any district to achieve $> 50\,\%$ minority VAP.
 \item Enumerate racial groups or treat different groups differently.
-\item Use racial identity as a selection criterion at any level
-  (minority VAP is a census attribute, not a racial classification).
+\item Use a district-level racial target as a hard constraint.
 \end{itemize}
 
 \paragraph{What the algorithm does.}
 VRASection observes the spatial distribution of a user-designated
-population attribute (minority VAP) and rewards bisections that
+race-associated population attribute and rewards bisections that
 separate high-concentration tracts from low-concentration tracts.
-This is categorically a \emph{geographic} operation: the algorithm
+The defended interpretation is geographic: the algorithm
 finds a natural geographic boundary in the tract adjacency graph.
 If tracts with high minority VAP were distributed uniformly across
 the state, the alignment score would be near zero for all ratios,
 and VRASection would select the same ratio as GeoSection.
 The alignment score is non-trivial only when there is a geographic
-boundary separating minority-concentrated areas from dispersed areas
---- i.e., only when Gingles Prong 1's geographic compactness requirement
-is actually satisfied in the data.
+boundary separating minority-concentrated areas from dispersed areas.  That
+signal is relevant to Gingles Prong 1, but it does not by itself establish the
+full legal standard.
 
 \paragraph{The compactness dominance condition.}
 At $w_\text{vra} < 0.5$, the compactness component of the score
@@ -175,25 +179,28 @@ At $w_\text{vra} < 0.5$, the compactness component of the score
 ($w_\text{vra} \cdot 1 \cdot \mathrm{EC}_\text{norm} = w_\text{vra} \cdot \mathrm{EC}_\text{norm}$)
 by a factor of at least $(1 - w_\text{vra}) / w_\text{vra} > 1$.
 That is:
-\[
-  \text{compactness contribution} \;=\; (1 - w_\text{vra}) \cdot \mathrm{EC}_\text{norm}(i)
-  \;>\; w_\text{vra} \cdot \mathrm{EC}_\text{norm}(i) \;=\; \text{alignment contribution}
-\]
-Geographic compactness is quantifiably the predominant factor for any
-$w_\text{vra} \in (0, 0.5)$.
+\begin{align*}
+  \text{compactness contribution}
+    &= (1 - w_\text{vra}) \cdot \mathrm{EC}_\text{norm}(i),\\
+  \text{alignment contribution}
+    &\leq w_\text{vra} \cdot \mathrm{EC}_\text{norm}(i).
+\end{align*}
+For $w_\text{vra} < 0.5$, the first term is larger.
+Geographic compactness is quantifiably the larger term in this simplified
+score decomposition for any $w_\text{vra} \in (0, 0.5)$.
 The proposed default $w_\text{vra} = 0.40$ gives compactness 60\,\% weight
-and alignment 40\,\% weight, satisfying the \emph{Shaw} threshold with
-a 20\,pp margin.
+and alignment 40\,\% weight.  This supports a geography-first record; it does
+not create a bright-line \emph{Shaw} threshold.
 
 \paragraph{Contrast with MetisVra.}
 MetisVra adds minority concentration as a co-equal METIS constraint.
 In the ncon=2 formulation, minority VAP fraction and population balance
 are simultaneous hard constraints with equal solver priority.
-This likely fails \emph{Miller}'s predominance test in states where race
+This raises \emph{Miller} predominance risk in states where race
 must override compactness to achieve the minority target --- precisely
 the states where MetisVra fails empirically (AL, LA, SC).
 VRASection uses race as a soft tie-breaker, bounded to 40\,\% of the
-selection score, satisfying a proportionality standard rather than maximisation.
+selection score, which is a narrower design than direct maximisation.
 
 \subsection{Algorithm Pseudocode}
 

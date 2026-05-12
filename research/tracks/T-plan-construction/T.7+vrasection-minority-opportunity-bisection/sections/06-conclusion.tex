@@ -1,8 +1,8 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-VRASection bridges the gap between geographic compactness and Voting Rights
-Act compliance in congressional redistricting.
+VRASection is a geography-first attempt to make Voting Rights Act-relevant
+spatial concentration visible during congressional redistricting.
 
 The core tension in algorithmic VRA redistricting is that race-neutral
 algorithms satisfy \emph{Shaw}'s non-targeting requirement but may produce
@@ -10,28 +10,30 @@ VRA-deficient maps; while race-targeting algorithms (MetisVra) may satisfy
 Section 2 but fail \emph{Shaw}'s predominance test --- and, empirically,
 fail numerically in 60\,\% of tested states.
 
-VRASection resolves this tension through a design insight grounded in
+VRASection addresses this tension through a design insight grounded in
 Gingles Prong 1 itself: a minority community that satisfies the legal
-standard for Section 2 protection is, by definition, one that is
+compactness component of Section 2 protection is, by definition, one that is
 \emph{geographically compact}.
 Geographic compactness is already encoded in the census-tract adjacency
 graph as clustering.
 VRASection makes this clustering measurable through the alignment score
 $A(\text{split}) = |\mathrm{MVAP}_\text{frac}(L) - \mathrm{MVAP}_\text{frac}(R)|$,
 which detects natural geographic boundaries between minority-concentrated
-and minority-dispersed areas without racial targeting.
+and minority-dispersed areas with a bounded demographic signal rather than a
+hard racial target.
 
 The tie-breaking approach --- applying the alignment bonus only at the
 first bisection level, bounded to 40\,\% of the selection score --- produces
-maps that are legally defensible from both directions:
-they satisfy Section 2 by exploiting the same geographic concentration that
-Gingles Prong 1 requires, and they satisfy \emph{Shaw} by keeping geographic
-compactness as the predominant factor with a quantifiable 20\,pp margin.
+maps with a clearer legal record from both directions:
+they respond to the geographic concentration that Gingles Prong 1 requires,
+and they preserve a compactness-first objective record relevant to
+\emph{Shaw}.  They do not automatically satisfy Section 2 or immunize a map
+from racial-predominance review.
 
 The Alabama empirical result demonstrates the approach's practical significance.
-VRASection shifts the first-level bisection from $1:6$ (Birmingham isolation)
+VRASection shifts the first-level bisection from the pure compactness baseline
 to $2:5$ (Black Belt concentration), at a 4.3\,\% EC premium.
-This shift responds directly to the \emph{Allen v.\ Milligan} (2023) finding:
+This shift responds to the geography at issue in \emph{Allen v.\ Milligan} (2023):
 the Black Belt region, dispersed under the $1:6$ split, is concentrated on
 one side under the $2:5$ split, creating the geographic preconditions for
 a second Black-opportunity district.
@@ -39,13 +41,13 @@ a second Black-opportunity district.
 The full six-state empirical comparison, pending completion, will test whether
 VRASection achieves the MetisVra target (MM district count) without the
 MetisVra failure modes (numerical instability, 0\,\% success in three states).
-We expect VRASection to succeed where MetisVra failed because it operates
+The hypothesis is that VRASection will succeed where MetisVra failed because it operates
 through geographic signal extraction rather than constraint solving,
 and to require no user-specified racial targets because the geographic
 concentration signal is self-contained in the minority VAP distribution.
 
 More broadly, VRASection demonstrates that the Gingles framework and the
-Shaw framework are not in conflict for algorithmically drawn maps.
+Shaw framework need not be in conflict for algorithmically drawn maps.
 Gingles Prong 1's geographic compactness requirement is the same
 geographic compactness that \emph{Shaw} protects as a traditional redistricting
 principle.
@@ -53,7 +55,7 @@ An algorithm that rewards natural geographic concentration --- not racial
 identity, but the spatial clustering that makes a community legally cognizable
 --- respects both requirements simultaneously.
 VRASection provides a mathematically precise, legally articulable, and
-empirically testable mechanism for doing so.
+empirically testable mechanism for testing that possibility.
 
 \paragraph{Future work.}
 Open questions for follow-on research include:

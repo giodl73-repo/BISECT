@@ -7,8 +7,11 @@ We run VRASection and GeoSection on seven states with historically significant
 VRA litigation or demographic composition at the 2020 Census.
 All runs use the 2020 TIGER census-tract adjacency graphs with TIGER boundary
 lengths as edge weights.
-Minority VAP is sourced from the 2020 Census P4 table (Hispanic or Latino,
-and Not Hispanic or Latino -- Black or African American alone).
+The current implementation reads tract-level demographics from the BISECT
+demographics CSV and converts minority fraction times tract population into a
+minority-population spatial proxy.  Where true VAP or CVAP files are available,
+the same score should be recomputed on those denominators before making a
+legal claim.
 State congressional allocations are the 2020 apportionment (in effect for
 the 2022 elections).
 VRASection parameters: $N = 50$ seeds per ratio, $\delta = 0.005$ balance
@@ -16,11 +19,12 @@ tolerance, $w_\text{vra} = 0.40$ alignment weight.
 
 \begin{table}[t]
 \centering
+\small
 \caption{VRA evaluation states: demographics and litigation history.}
 \label{tab:states}
-\begin{tabular}{llcll}
+\begin{tabular}{@{}lcccl@{}}
 \toprule
-\textbf{State} & \textbf{$k$} & \textbf{Minority VAP (\%)} & \textbf{Group} & \textbf{Key cases} \\
+\textbf{State} & \textbf{$k$} & \textbf{Share} & \textbf{Group} & \textbf{Key cases} \\
 \midrule
 Alabama (AL) & 7  & 27.5 & Black      & \emph{Allen v.\ Milligan} (2023) \\
 Mississippi (MS) & 4 & 37.6 & Black   & \emph{NAACP v.\ Fordice} (1992) \\
@@ -36,11 +40,12 @@ South Carolina (SC) & 7 & 27.5 & Black & \emph{Alexander v.\ SC NAACP} (2023) \\
 
 Table~\ref{tab:comparison} reports the first-level bisection ratio selected by
 GeoSection (T.1) and VRASection (this paper) for each state, along with
-MetisVra (B.3) success status and the expected number of MM districts
-under VRASection.
+MetisVra (B.3) success status and the first-level interpretation of the
+VRASection split.  The table does not certify final Section 2 compliance.
 
 \begin{table}[t]
 \centering
+\small
 \caption{GeoSection vs.\ VRASection first-level bisection ratios across VRA states.
   MetisVra success column is from B.3 \citep{b3paper}.
   $A(\text{winner})$ is the alignment score at the winning VRASection ratio,
@@ -48,11 +53,11 @@ under VRASection.
   ``TBD'' cells require the full comparison pipeline run; the Alabama result is
   confirmed empirically.}
 \label{tab:comparison}
-\begin{tabular}{lccccc}
+\begin{tabular}{@{}lccclp{1.45in}@{}}
 \toprule
-\textbf{State} & \textbf{GeoSection ratio} & \textbf{VRASection ratio}
-  & \textbf{$A(\text{winner})$}
-  & \textbf{MetisVra success?} & \textbf{VRASection MM districts} \\
+\textbf{State} & \textbf{Geo} & \textbf{VRA}
+  & \textbf{$A$}
+  & \textbf{MetisVra} & \textbf{First-level interpretation} \\
 \midrule
 AL & 3:4 & \textbf{2:5} & 0.27 & No (0/28 configs) & Black Belt isolated \\
 MS & 1:3 & \textbf{1:3} & 0.12 & Yes (23/28) & Same (minority dispersed) \\
@@ -64,19 +69,21 @@ SC & 3:4 & \textbf{1:6} & 0.22 & No (0/28 configs)   & Coastal minority region \
 \end{tabular}
 \end{table}
 
-All results confirmed from the implementation run (50 seeds per ratio, 2020 Census).
+The first-level ratio results are confirmed from the implementation run
+(50 seeds per ratio, 2020 Census inputs).
 The selection score margin (gap between winning and runner-up score) characterises
 the stability of the ratio selection: a larger margin indicates that seed variance
 is unlikely to change the winner.
 
 \begin{table}[t]
 \centering
+\small
 \caption{Selection score margins for change states (AL, NC, SC).
   ``Winner score'' is the VRASection selection score at the winning ratio;
   ``Runner-up score'' is the next-best ratio's score.
   A large margin indicates stable ratio selection.}
 \label{tab:margins}
-\begin{tabular}{lcccc}
+\begin{tabular}{@{}lcccc@{}}
 \toprule
 State & Winning ratio & Winner score & Runner-up score & Margin \\
 \midrule
@@ -187,18 +194,20 @@ voting strength.
 
 The $2:5$ split creates a southern sub-region containing the Black Belt,
 Montgomery, and Mobile areas.
-This sub-region has an estimated 35--40\,\% Black VAP, sufficient to produce
-one or two Black-opportunity districts in the 5-district subregion depending
-on how the sub-region is further bisected.
+This sub-region has an estimated 35--40\,\% Black share, improving the
+conditions for one or two Black-opportunity districts in the 5-district
+subregion depending on how the sub-region is further bisected.
 Critically, the Black Belt community remains intact on one side of the
-first bisection, which satisfies Gingles Prong 1 at the geographic level
-before any district boundaries are drawn.
+first bisection, preserving the geography relevant to Gingles Prong 1 before
+any district boundaries are drawn.
 
 \begin{table}[t]
 \centering
+\small
 \caption{Alabama first-level bisection comparison: GeoSection vs.\ VRASection.}
 \label{tab:alabama}
-\begin{tabular}{lccccc}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}lccccc@{}}
 \toprule
 \textbf{Algorithm} & \textbf{Ratio} & $\mathrm{EC}_\text{norm}$ & \textbf{Alignment $A$}
   & \textbf{Selection score} & \textbf{EC premium} \\
@@ -207,6 +216,7 @@ GeoSection  & 3:4 & 501.3 & --- & 501.3 & 0.0\,\% (baseline) \\
 VRASection  & 2:5 & 448.7 & 0.42 & 322.5 & $-10.7$\,\% (VRA-aligned, lower EC) \\
 \bottomrule
 \end{tabular}
+}
 \end{table}
 
 \paragraph{Black Belt as a majority-minority subgraph.}
@@ -223,40 +233,28 @@ from Dallas County through Macon County on the left-side subgraph.
 More directly relevant: VRASection's \emph{selected} $2:5$ split
 concentrates the Black Belt, Montgomery, and Mobile coastal areas on
 one side of the bisection.
-This southern sub-region contains approximately 52\,\% Black VAP by
-VAP (2020 Census), making the first-level subgraph majority-minority
-before any further bisection is performed.\footnote{%
-  The 52\,\% figure is based on the Black Belt counties' reported VAP
-  demographics in the 2020 Census Redistricting Data (P.L.\ 94-171).
-  Full MM district counting requires running the complete
-  \texttt{bisect analyze --types demographic} pipeline on the final
-  7-way partition; this analysis is pending for the full empirical run
-  reported in Section~\ref{sec:projected}.}
-The recursive GeoSection within this subgraph will then produce at least
-one majority-Black congressional district, satisfying
-\emph{Allen v.\ Milligan}'s requirement for two Black-opportunity
-districts in Alabama.
-
-Running the full 7-district partition under VRASection produces one confirmed
-majority-Black district (CD-7 equivalent, containing Jefferson County/Birmingham
-at 55.2\,\% Black VAP) and a second majority-Black district (CD-2 equivalent,
-covering the Black Belt at 52.8\,\% Black VAP), satisfying the two-district
-requirement from \emph{Allen v.\ Milligan}.
-The remaining 5 districts range from 14\,\% to 28\,\% Black VAP.
-\footnote{District-level demographics require the \texttt{--types demographic}
-analysis pipeline; the VAP percentages above are estimates based on the
-2:5 subgraph's tract composition.}
+The selected first-level split is therefore best read as a precondition result:
+it keeps the Black Belt, Montgomery, and Mobile coastal areas on the same side
+of the first bisection.  It does not by itself prove that the final 7-district
+plan contains the two Black-opportunity districts required by
+\emph{Allen v.\ Milligan}.  That claim requires an archived final partition,
+district-level demographic analysis, and legally relevant VAP or CVAP
+denominators.  The next empirical package should run
+\texttt{bisect analyze --types demographic,bloc-voting} on the final plan and
+report district-level opportunity evidence separately from the first-level
+alignment score.
 
 \paragraph{Interpretation.}
 The EC premium of 4.3\,\% quantifies the compactness cost of the VRA-aligned
 split.
-A 4.3\,\% increase in normalised edge-cut is modest: it falls well within
-any legally defensible range for a map modification motivated by Section 2.
+A 4.3\,\% increase in normalised edge-cut is modest as an engineering
+trade-off, but there is no universal legal percentage threshold for a map
+modification motivated by Section 2.
 For reference, the Supreme Court in \emph{Miller v.\ Johnson} (1995) did
 not set a numerical threshold; the question is whether the compactness
 sacrifice is justified by a compelling interest (VRA compliance).
-A 4.3\,\% premium, combined with VRASection's design ensuring compactness
-remains the predominant factor ($w_\text{vra} = 0.40$), provides a
+A 4.3\,\% premium, combined with VRASection's design record that compactness
+has the larger coefficient ($w_\text{vra} = 0.40$), provides evidence for a
 defensible record.
 
 \subsection{Open Empirical Questions and Future Work}

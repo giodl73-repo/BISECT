@@ -22,9 +22,10 @@ a three-part test for Section 2 vote dilution claims in redistricting
 
 Gingles Prong 1 is the geographic predicate: it asks whether the minority
 community is compact enough to form a district.
-VRASection operationalises Prong 1 directly: the alignment score $A$ measures
-geographic concentration, and $A \geq 0.15$ (proposed threshold)
-identifies communities concentrated enough for VRASection to detect them.
+VRASection operationalises one proxy for Prong 1: the alignment score $A$
+measures geographic concentration in the supplied demographic signal.  A
+threshold such as $A \geq 0.15$ can flag communities for review, but it is not
+itself a legal Prong 1 finding.
 
 \paragraph{Shaw v. Reno and racial predominance.}
 \emph{Shaw v.\ Reno} (1993) and \emph{Miller v.\ Johnson} (1995)
@@ -36,10 +37,12 @@ The predominance test asks whether the legislature subordinated traditional
 redistricting principles --- compactness, contiguity, preservation of
 political subdivisions --- to racial considerations.
 
-VRASection's $w_\text{vra}$ parameter makes the Shaw analysis quantitative:
+VRASection's $w_\text{vra}$ parameter makes part of the design record
+quantitative:
 at $w_\text{vra} < 0.5$, the compactness component of the selection score
-exceeds the alignment component for any ratio, ensuring that geographic
-compactness is the predominant factor (Section~\ref{sec:legal-analysis}).
+exceeds the alignment component for any ratio.  This supports a
+geography-first explanation, but it does not ensure the legal conclusion
+(Section~\ref{sec:legal-analysis}).
 At $w_\text{vra} = 0.40$ (the proposed default), compactness is explicitly
 weighted 60\,\% against alignment's 40\,\%.
 
@@ -59,10 +62,9 @@ the algorithm should detect and act on.
 \paragraph{Callais v. Landry and the Louisiana remedy.}
 \emph{Callais v.\ Landry} (2025) addressed Louisiana's remedial maps
 following Section 2 litigation \citep{callais2025}.
-The case establishes that the remedy --- two Black-majority congressional
-districts --- must be achieved while maintaining other traditional
+The case illustrates the tension between Section 2 remedies and traditional
 redistricting criteria.
-VRASection is designed to produce plans that satisfy this requirement:
+VRASection is designed to produce plan candidates for this kind of review:
 the alignment score concentrates minority population without abandoning
 compactness or contiguity.
 Validation against Louisiana's Section 2 remedy (2 Black-majority districts
@@ -99,9 +101,9 @@ established when compactness is sacrificed in service of racial targets.
 VRASection navigates this tension by making compactness the primary criterion
 (the $\mathrm{EC}_\text{norm}$ term in the objective) and alignment a bounded
 secondary term ($w_\text{vra} \leq 0.5$).
-The algorithm satisfies Gingles Prong 1's geographic compact requirement
-by rewarding natural geographic concentration --- the same geographic
-compactness required by Shaw.
+The algorithm rewards natural geographic concentration relevant to Gingles
+Prong 1 while preserving compactness as the larger objective term relevant to
+Shaw.
 
 \paragraph{MetisVra (B.3): the explicit constraint approach.}
 B.3 \citep{b3paper} introduced MetisVra, which adds minority VAP as an

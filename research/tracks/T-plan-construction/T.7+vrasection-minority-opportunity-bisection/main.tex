@@ -1,6 +1,8 @@
 \documentclass[12pt]{article}
 
 \usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
 \usepackage{amsmath, amssymb, amsthm}
 \newtheorem{theorem}{Theorem}
 \newtheorem{definition}{Definition}
@@ -14,7 +16,9 @@
 \usepackage{natbib}
 \usepackage{booktabs}
 \usepackage{xcolor}
+\usepackage{microtype}
 \usepackage{multirow}
+\usepackage{array}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 
@@ -32,10 +36,11 @@
 \begin{abstract}
 Congressional redistricting algorithms that attempt to satisfy the Voting
 Rights Act (\S 2) by adding minority population as an explicit METIS
-constraint (``MetisVra'') fail in 3 of 5 majority-minority states due to
-numerical scale mismatch: minority VAP fractions (0.0--1.0) and census
-population counts (10,000--200,000) differ by 60--800$\times$, producing
-infeasible or degenerate partitions \citep{b3paper}.
+constraint (``MetisVra'') encounter a practical scale problem in the
+companion B.3 experiments: minority-fraction values (0.0--1.0) and census
+population counts (10,000--200,000) differ by orders of magnitude, producing
+infeasible or degenerate partitions in several tested configurations
+\citep{b3paper}.
 
 We introduce \textbf{VRASection}, which abandons explicit minority constraints
 and instead exploits the geographic structure of \emph{Gingles Prong 1}:
@@ -45,6 +50,11 @@ This geographic concentration is already encoded in the census-tract adjacency
 graph; VRASection makes it measurable through a \emph{geographic alignment score}
 $A(\text{split}) = |\text{MVAP}_\text{frac}(L) - \text{MVAP}_\text{frac}(R)|$
 layered on top of GeoSection's isoperimetric ratio scan \citep{b8paper}.
+In the current BISECT implementation, the score is computed from a demographic
+proxy: tract minority fraction multiplied by tract population, loaded from
+\texttt{data/\{year\}/demographics}.  True VAP/CVAP inputs are supported in
+the audit data model, but the shipped ratio-selection path should be read as a
+minority-population spatial proxy rather than a legal finding.
 
 The modified selection objective is:
 \[
@@ -52,12 +62,13 @@ The modified selection objective is:
   \cdot A \cdot \max(\mathrm{EC}_{\text{norm}},\, 1)
 \]
 where $w_\text{vra} = 0.40$ by default.
-At this weight, compactness is weighted 50\,\% more heavily than alignment,
-ensuring geographic compactness remains the predominant criterion
-under the \emph{Shaw v.\ Reno} / \emph{Miller v.\ Johnson} racial-predominance tests.
-The alignment score uses only the spatial distribution of minority VAP ---
-not racial identity itself --- satisfying Gingles Prong 1 without constituting
-racial targeting.
+At this weight, compactness is weighted 50\,\% more heavily than alignment.
+That coefficient is useful evidence for a geography-first design record, but
+it is not a mechanical safe harbor under \emph{Shaw v.\ Reno} or
+\emph{Miller v.\ Johnson}; racial predominance remains a fact-specific legal
+inquiry.  The alignment score is best understood as a bounded use of a
+race-associated demographic attribute to detect spatial concentration, not as
+an automatic Gingles or constitutional certification.
 
 Applied to Alabama (7 districts, 27\,\% Black VAP), VRASection selects
 a $2:5$ first-level bisection, separating the Black Belt region from the
@@ -65,14 +76,16 @@ northern and coastal areas, compared to GeoSection's $3:4$ split
 (near-equal geographic division).
 The $2:5$ split more effectively concentrates minority population on one
 side for downstream minority-opportunity-district formation.
-Full comparison runs across 6 historically significant VRA states are
-pending; Alabama's $2:5$ result provides the lead case study.
+Full final-plan comparison packages across 6 historically significant VRA
+states remain pending; Alabama's first-level $2:5$ result provides the lead
+case study.
 
 VRASection requires no user-specified minority-fraction targets.
 It passes the MetisVra failure modes by design: there is no second METIS
 constraint and no scale mismatch.
-We analyse the algorithm's legal robustness, sensitivity to $w_\text{vra}$,
-and relationship to the \emph{Callais v.\ Landry} (2025) evidence standard.
+We analyse the algorithm's legal risk boundaries, sensitivity to
+$w_\text{vra}$, and relationship to the \emph{Callais v.\ Landry} evidence
+workflow.
 \end{abstract}
 
 \input{sections/01-introduction}
@@ -83,6 +96,6 @@ and relationship to the \emph{Callais v.\ Landry} (2025) evidence standard.
 \input{sections/06-conclusion}
 
 \bibliographystyle{plainnat}
-\bibliography{references,../../references}
+\bibliography{references}
 
 \end{document}
