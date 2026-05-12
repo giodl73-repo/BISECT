@@ -149,6 +149,17 @@ If not, a more equal split wins.
 \end{algorithmic}
 \end{algorithm}
 
+In the atlas framing, the ratio scan should be read as a visible set of
+candidate splits, not as a single opaque bisection.
+For each ratio $i:(k-i)$, the candidate object is the best METIS split found
+across its seed bundle, together with its raw edge cut, normalised score, and
+recursive consequence.
+The decision rule is the minimum normalised score; the consequence is that the
+selected split fixes two child workloads, $i^*$ and $k-i^*$, that are carried
+forward into the next recursive calls.
+The scan log is therefore the evidence path for claims about why a $1:(k-1)$
+peel was accepted, rejected, or replaced by a more balanced geographic split.
+
 \paragraph{Key properties.}
 \begin{itemize}
 \item Each recursive call finds its own natural ratio independently.

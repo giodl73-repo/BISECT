@@ -15,10 +15,11 @@ boundaries lie.
 
 We argue this separation is artificial and consequential. The seat count $n$
 assigned to a state is not merely a quota --- it encodes a geometric structure.
-Specifically, the prime factorization $n = p_1^{a_1} \times p_2^{a_2} \times
-\cdots$ determines a unique hierarchical partition of any geographic region:
-split into $p_1$ sub-regions, then split each sub-region into $p_2$ parts, and
-so on. When applied to a state's census-tract graph using minimum-cut graph
+Specifically, the prime factorization of $n$ determines a canonical
+largest-prime-first split prescription for any geographic region: split first
+by the largest prime factor, then recurse on each child workload, using a
+binary floor/ceiling fallback when the remaining workload is itself a large
+prime. When applied to a state's census-tract graph using minimum-cut graph
 partitioning, this hierarchy produces a congressional map with two inputs only:
 \begin{enumerate}
   \item The prime factorization of $n$ --- pure arithmetic, determined by the
@@ -34,9 +35,10 @@ those seats are located.
 
 \paragraph{The reuse property.}
 The most practically significant feature of AR is that geographic splits are
-computed once and reused. The canonical 2-way minimum-cut partition of a state
-(``the bisection'') is computed once and applies to every even seat count.
-The canonical 3-way partition applies to every seat count divisible by~3.
+computed once and reused. The canonical largest-prime split is computed once
+and reused across seat counts that share that same top-level factor. For
+example, seat counts $34 = 2 \times 17$ and $51 = 3 \times 17$ both begin with
+the same canonical 17-way partition before their child workloads diverge.
 When a state gains or loses a seat after reapportionment, only the levels of
 the factorization tree affected by the changed prime structure require
 recomputation. Districts have \emph{ancestors} in the tree --- a district
@@ -49,10 +51,10 @@ AR also makes visible a previously unrecognized structural phenomenon:
 consecutive seat counts can have disjoint prime factorizations, causing
 complete structural breaks in the map. California currently has 52 seats
 ($52 = 2^2 \times 13$); the preceding apportionment gave it 53 seats
-($53$ is prime). Going from 52 to 53 requires discarding the entire
-2-level binary structure and replacing it with a single 53-way cut of the
-whole state. Going from 51 ($= 3 \times 17$) to 52 ($= 4 \times 13$)
-replaces a ternary top level with a binary one. These discontinuities are
+($53$ is prime). Going from 52 to 53 requires discarding the 13-way top-level
+structure and replacing it with the large-prime binary fallback
+$53 \to (26,27)$. Going from 51 ($= 3 \times 17$) to 52 ($= 4 \times 13$)
+replaces a 17-way top level with a 13-way top level. These discontinuities are
 \emph{mathematically forced}, not arbitrary: they reflect the prime
 structure of the integers, not political choices. We characterize when such
 breaks occur and propose a continuity-preserving variant (AR-smooth) that

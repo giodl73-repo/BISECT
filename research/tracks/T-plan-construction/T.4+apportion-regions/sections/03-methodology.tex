@@ -75,6 +75,18 @@ uniform case ($k_1 = \cdots = k_p = n/p$) METIS uses equal target fractions;
 for the binary fallback case ($k_1 = \lfloor n/2 \rfloor$, $k_2 = \lceil n/2
 \rceil$) it uses proportional target fractions $k_1/n$ and $k_2/n$.
 
+In the atlas framing, each AR node exposes three inspectable candidate
+objects: the arithmetic split prescription, the METIS partition for that
+prescription, and the recursive child workload list.
+The decision rule is fixed by the seat-count factorization before geography is
+consulted; METIS then constructs the geographic realisation of that arithmetic
+choice.
+The consequence is a tree of reusable subregions, so the transcript should
+record the factor used at every node, the child target counts, the seed, and
+the partition hash.
+That evidence separates AR's structural claim from any later plan-quality or
+partisan-outcome claim.
+
 \paragraph{Determinism assumption.}
 METIS~5.x's multilevel $k$-way partitioning is deterministic given a fixed
 random seed and fixed input graph (adjacency structure, vertex weights, edge
@@ -169,9 +181,11 @@ For $n = 2^k$ (e.g., Wisconsin: $n = 8 = 2^3$), the tree is a complete binary
 tree of depth~$k$ --- exactly the recursive bisection algorithm of
 \citet{dellaLibera2026mec}.
 
-For $n$ prime (e.g., Pennsylvania: $n = 17$), the tree has depth~1: a single
-$n$-way cut of the whole state. No reuse is possible across different prime seat
-counts.
+For $n$ prime and $n > \kappa$ (e.g., Pennsylvania: $n = 17$), the first level
+uses AR-binary: a floor/ceiling split into two child workloads. No top-level
+largest-prime reuse is possible across different prime seat counts, but the
+children may still reuse lower-level composite structure such as $8 = 2^3$ or
+$9 = 3^2$.
 
 \subsection{Handling Reapportionment}
 \label{sec:reapportionment}

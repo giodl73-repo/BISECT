@@ -74,6 +74,17 @@ $\alpha_c$ value.  The ``elbow'' of the Pareto frontier identifies the
 $\alpha_c$ value beyond which further increases produce diminishing
 county-split reduction at disproportionate compactness cost.
 
+In the atlas framing, the candidates are not alternative district maps alone
+but alternative weighted graph policies.
+Each $\alpha_c$ candidate produces a graph, a deterministic plan, and a
+measurement record containing county splits, multi-county districts,
+compactness, and population deviation.
+The decision rule is the Pareto elbow: select the smallest weight that removes
+avoidable county splits without paying a disproportionate compactness cost.
+The evidence path must preserve the whole sweep, because a single selected map
+cannot show which county splits were unavoidable, which were avoided by the
+weighting policy, or where the trade-off became too expensive.
+
 \subsection{State selection for case studies}
 
 We provide detailed case studies for:

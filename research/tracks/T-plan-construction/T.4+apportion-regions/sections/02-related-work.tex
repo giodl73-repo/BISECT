@@ -22,11 +22,12 @@ using recursive bisection and characterised its seed sensitivity.
 AR generalises MEC by using \emph{prime}-way splits, not only binary ones.
 
 \paragraph{Hierarchical redistricting.}
-\citet{cohen2021making} and \citet{hegeman2020recursive} study recursive
-district structures but do not connect the recursion depth or branching factor
-to the prime factorization of the seat count. Existing hierarchical methods
-treat the bisection tree structure as an implementation detail, not as a
-mathematically-determined property of the seat count.
+Existing graph-partitioning redistricting methods use recursive structure as
+an implementation strategy: recursive bisection repeatedly splits the current
+region, and $k$-way partitioning splits a region directly into $k$ balanced
+parts. AR makes a different claim. It treats the branching factor and
+recursion depth as consequences of the apportioned seat count's prime
+factorization, not as tunable engineering choices.
 
 \paragraph{Constitutional basis.}
 \citet{rucho2019} (Rucho v.\ Common Cause) held that partisan gerrymandering

@@ -52,15 +52,16 @@ One might ask: why use prime factorization? Why not use any factorization
   \item \textbf{Uniqueness}: The prime factorization is the \emph{unique}
         canonical factorization of every integer (Fundamental Theorem of
         Arithmetic). Any other factorization introduces a choice.
-  \item \textbf{Minimal splits}: Primes are irreducible --- a $p$-way split
-        cannot be further decomposed. Using composite splits would introduce
-        redundancy (a $6$-way split could have been a $2\times 3$ or
-        $3\times 2$ split, requiring an ordering choice).
-  \item \textbf{Consistency with smallest-prime-first}: The canonical ordering
-        (smallest prime first) ensures that the largest geographic units
-        (coarsest splits) correspond to the smallest prime factors. For most
-        states, this produces 2-way or 3-way top-level splits, giving
-        geographic coherence (two halves, three thirds).
+  \item \textbf{Irreducible split units}: Primes are irreducible --- a $p$-way
+        split cannot be further decomposed without introducing an ordering
+        choice. Composite splits would be redundant: a $6$-way split could
+        mean $2\times 3$, $3\times 2$, or a direct 6-way cut.
+  \item \textbf{Consistency with largest-prime-first}: The canonical ordering
+        (largest prime first) maximises reuse across seat counts that share a
+        large factor. Seat counts $34 = 2\times 17$ and $51 = 3\times 17$,
+        for example, begin with the same 17-way geographic partition; a
+        smallest-prime-first rule would split them into halves and thirds
+        instead, destroying that shared top-level structure.
 \end{enumerate}
 
 \subsection{The Funny Cases}
@@ -68,14 +69,15 @@ One might ask: why use prime factorization? Why not use any factorization
 
 Several seat count transitions are structurally extreme:
 \begin{itemize}
-  \item $51 \to 52$: $[3, 17] \to [2, 2, 13]$. Complete structural break.
-        The ternary top level (NorCal/Central/SoCal) gives way to a binary
-        top level (North/South), with a completely different secondary
-        structure.
-  \item $52 \to 53$: $[2, 2, 13] \to [53]$. Complete structural break.
-        The two-level binary-then-13 structure gives way to a single 53-cut.
+  \item $51 \to 52$: $[17, 3] \to [13, 2, 2]$. Complete structural break.
+        The 17-way top level gives way to a 13-way top level, with a
+        completely different secondary structure.
+  \item $52 \to 53$: $[13, 2, 2] \to [53\text{-binary}]$. Complete structural
+        break. The 13-way top level gives way to the large-prime fallback
+        split $53 \to (26,27)$.
   \item $n = $ prime $\to n+1 = 2 \times \text{something}$: gaining one seat
-        converts a depth-1 tree to a depth-$\geq 2$ tree.
+        converts a large-prime binary fallback tree to a composite
+        largest-prime tree.
 \end{itemize}
 
 These transitions are mathematically inevitable, not arbitrary. Their

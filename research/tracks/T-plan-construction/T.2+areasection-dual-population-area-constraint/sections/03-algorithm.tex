@@ -51,6 +51,7 @@ The Lorenz curve provides lower and upper bounds on the achievable area fraction
 for a given population fraction:
 
 \begin{proposition}[Feasibility bounds]
+\label{prop:lorenz-feasibility}
 For a target population fraction $p$, the set of achievable non-contiguous
 area fractions is the interval
 \[
@@ -164,6 +165,18 @@ The full algorithm is:
   \item Select ratio with minimum $\mathrm{EC}_{\text{norm}}$ as the natural ratio.
   \item Recurse on each half with GeoSection (ncon=1, ratio scanning).
 \end{enumerate}
+
+In the atlas framing, AreaSection adds a feasibility gate before GeoSection's
+candidate split comparison.
+Each ratio candidate first carries a Lorenz status, then a bundle of
+dual-constraint METIS attempts, and finally a normalised score if at least one
+attempt is usable.
+The selected split is therefore not simply the shortest boundary: it is the
+candidate that passed the population-area screen, survived the METIS
+dual-constraint attempt, and won the normalised comparison.
+The output should carry both the chosen recursive workloads and the rejected
+ratio records, because the rejected records are the evidence for the claim that
+area balance forced, or did not force, the top-level geography.
 
 \subsection{Computational Cost}
 

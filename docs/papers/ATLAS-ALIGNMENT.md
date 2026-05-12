@@ -31,10 +31,10 @@ Each paper should be checked against six atlas-derived requirements:
 
 | Atlas page | Paper/PDF | Source | Evidence package status | Alignment status |
 |---|---|---|---|---|
-| [GeoSection](../algorithm-atlas/geosection.md) | [T.1](T.1+geosection-ratio-optimal-bisection.pdf) | `research/tracks/T-plan-construction/T.1+geosection-ratio-optimal-bisection/` | Legacy/compositor evidence; needs package-path audit in paper | Queued |
-| [AreaSection](../algorithm-atlas/areasection.md) | [T.2](T.2+areasection-dual-population-area-constraint.pdf) | `research/tracks/T-plan-construction/T.2+areasection-dual-population-area-constraint/` | Legacy/compositor evidence; needs package-path audit in paper | Queued |
-| [County-Sticky Weights](../algorithm-atlas/county-sticky-weights.md) | [T.3](T.3+subdivision-respecting-redistricting.pdf) | `research/tracks/T-plan-construction/T.3+subdivision-respecting-redistricting/` | Legacy/compositor evidence; needs package-path audit in paper | Queued |
-| [ApportionRegions](../algorithm-atlas/apportionregions.md) | [T.4](T.4+apportion-regions.pdf) | `research/tracks/T-plan-construction/T.4+apportion-regions/` | Legacy/compositor evidence; needs package-path audit in paper | Queued |
+| [GeoSection](../algorithm-atlas/geosection.md) | [T.1](T.1+geosection-ratio-optimal-bisection.pdf) | `research/tracks/T-plan-construction/T.1+geosection-ratio-optimal-bisection/` | Legacy/compositor evidence; needs package-path audit in paper | Aligned 2026-05-12; rebuilt PDF |
+| [AreaSection](../algorithm-atlas/areasection.md) | [T.2](T.2+areasection-dual-population-area-constraint.pdf) | `research/tracks/T-plan-construction/T.2+areasection-dual-population-area-constraint/` | Legacy/compositor evidence; needs package-path audit in paper | Aligned 2026-05-12; rebuilt PDF |
+| [County-Sticky Weights](../algorithm-atlas/county-sticky-weights.md) | [T.3](T.3+subdivision-respecting-redistricting.pdf) | `research/tracks/T-plan-construction/T.3+subdivision-respecting-redistricting/` | Legacy/compositor evidence; needs package-path audit in paper | Aligned 2026-05-12; rebuilt PDF |
+| [ApportionRegions](../algorithm-atlas/apportionregions.md) | [T.4](T.4+apportion-regions.pdf) | `research/tracks/T-plan-construction/T.4+apportion-regions/` | Legacy/compositor evidence; needs package-path audit in paper | Aligned 2026-05-12; rebuilt PDF |
 | [Seed Search Modes](../algorithm-atlas/seed-search-modes.md) | [U.1](U.1+convergence-sweep.pdf), [U.8](U.8+percentile-sweep.pdf), [U.9](U.9+bisection-ensemble.pdf) | `research/tracks/U-search-optimization/` | Search-mode evidence split across papers | Queued |
 | [Three-Layer Compositor](../algorithm-atlas/three-layer-compositor.md) | [U.12](U.12+algorithm-selection-matrix.pdf) and portfolio docs | `research/tracks/U-search-optimization/U.12+algorithm-selection-matrix/` | Cross-family evidence | Queued |
 | [T.14 Spectral Partitioning](../algorithm-atlas/t14-spectral-partitioning.md) | [T.14](T.14+spectral-partitioning.pdf) | `research/tracks/T-plan-construction/T.14+spectral-partitioning/` | Golden, method, and benchmark packages exist | Aligned 2026-05-12; rebuilt PDF |
@@ -73,6 +73,7 @@ Each paper should be checked against six atlas-derived requirements:
 4. **Compositor and legacy T-family pass**
    - Bring T.1-T.4, seed search, and the compositor guide up to the same
      candidate-decision-consequence language.
+   - T.1-T.4 completed 2026-05-12; seed search and compositor remain queued.
 
 5. **Panel quality-improvement pass**
    - Run or simulate the local paper-level review process only after source
@@ -89,4 +90,6 @@ Each paper should be checked against six atlas-derived requirements:
 - [x] Changed T.14-T.17 PDFs are copied to `docs/papers/`.
 - [x] Changed U.16-U.20 PDFs are copied to `docs/papers/`.
 - [x] Changed sampling PDFs are copied to `docs/papers/`.
+- [x] Every edited source paper rebuilds cleanly for the completed T.1-T.4 legacy pass.
+- [x] Changed T.1-T.4 PDFs are copied to `docs/papers/`.
 - [ ] Review language follows the panel disclosure boundary.
