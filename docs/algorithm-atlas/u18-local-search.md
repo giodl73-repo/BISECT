@@ -23,6 +23,19 @@ This makes local search the bridge between construction families and later
 repair-aware evolutionary workflows. It also gives BISECT a disciplined place
 to stage tabu and large-neighborhood search parameters.
 
+## Picture 0: Candidate Move Gates
+
+The opening figure shows local search as a descendant-plan decision. The input
+is already an audited valid plan. The algorithm considers boundary moves in a
+deterministic order, but every candidate must pass population tolerance,
+connectedness, and strict objective improvement before it can be accepted.
+
+The key lesson is that the most attractive move by edge-cut delta can still be
+rejected. In the example, one candidate improves edge cut but disconnects its
+source district, and another improves more but fails population tolerance. The
+accepted move is the first best candidate that passes all gates, and the
+descendant package must preserve that transition evidence.
+
 ## Picture 1: Boundary Move Evaluation
 
 ![U.18 boundary move evaluation](assets/u18-boundary-move.svg)
