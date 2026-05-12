@@ -31,8 +31,8 @@ recompute public claims from lower-level evidence.
   checks for `contest_selection_sum`, `jurisdiction_contest_total`, and
   canvass-correction event correlation.
 - `rcount-io`: started 2026-05-12 with package-directory read/write helpers,
-  `summary-basic` and `canvass-correction` generators, and docs fixture
-  verification, including source-index hash checks.
+  `summary-basic`, `canvass-correction`, and `bad-selection-sum` generators,
+  and docs fixture verification, including source-index hash checks.
 - `rcount-audit`: started 2026-05-12 with pass/fail verification transcripts
   for `summary-basic` and `canvass-correction`, tampered manifest failures,
   bad arithmetic failures, and missing/tampered source-hash failures.

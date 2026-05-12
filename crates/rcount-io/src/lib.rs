@@ -284,6 +284,13 @@ pub fn default_canvass_correction_docs_dir() -> PathBuf {
         .join("canvass-correction")
 }
 
+pub fn default_bad_selection_sum_docs_dir() -> PathBuf {
+    PathBuf::from("docs")
+        .join("examples")
+        .join("rcount-golden-packages")
+        .join("bad-selection-sum")
+}
+
 fn write_json_pretty<T: Serialize>(path: &Path, value: &T) -> Result<(), RcountIoError> {
     let bytes = serde_json::to_vec_pretty(value)?;
     fs::write(path, bytes)?;
@@ -381,7 +388,10 @@ fn write_lines(path: &Path, lines: &[&str]) -> Result<(), RcountIoError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rcount_core::{synthetic_canvass_correction_package, synthetic_summary_basic_package};
+    use rcount_core::{
+        synthetic_bad_selection_sum_package, synthetic_canvass_correction_package,
+        synthetic_summary_basic_package,
+    };
 
     #[test]
     fn round_trips_synthetic_summary_basic_package() {
@@ -423,6 +433,20 @@ mod tests {
             read_package_dir(tmp.path()),
             Err(RcountIoError::ContentHashMismatch { .. })
         ));
+    }
+
+    #[test]
+    fn round_trips_synthetic_bad_selection_sum_package() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_bad_selection_sum_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+        let (_, decoded_package) = read_package_dir(tmp.path()).unwrap();
+        assert_eq!(
+            decoded_package.summaries[0].counted_ballots,
+            synthetic_summary_basic_package().summaries[0].counted_ballots + 1
+        );
+        assert!(verify_source_index(tmp.path()).is_ok());
     }
 
     #[test]

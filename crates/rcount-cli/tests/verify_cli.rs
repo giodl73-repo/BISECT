@@ -8,6 +8,10 @@ fn docs_canvass_correction_path() -> String {
     docs_package_path("canvass-correction")
 }
 
+fn docs_bad_selection_sum_path() -> String {
+    docs_package_path("bad-selection-sum")
+}
+
 fn docs_package_path(package_name: &str) -> String {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .ancestors()
@@ -56,6 +60,20 @@ fn verify_canvass_correction_exposes_event_correlation() {
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(stdout.contains(r#""status":"pass""#));
     assert!(stdout.contains(r#""equation_id":"canvass_correction_event""#));
+}
+
+#[test]
+fn verify_bad_selection_sum_exits_one_after_package_read() {
+    let output = Command::new(env!("CARGO_BIN_EXE_rcount"))
+        .args(["verify", &docs_bad_selection_sum_path(), "--format", "json"])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(1));
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains(r#""equation_id":"contest_selection_sum""#));
+    assert!(stdout.contains("contest selection sum mismatch"));
+    assert!(stdout.contains(r#""equation_id":"source_hash_match","status":"pass""#));
 }
 
 #[test]

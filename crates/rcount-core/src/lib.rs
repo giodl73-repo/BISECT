@@ -613,6 +613,12 @@ pub fn synthetic_canvass_correction_package() -> RcountPackage {
     package
 }
 
+pub fn synthetic_bad_selection_sum_package() -> RcountPackage {
+    let mut package = synthetic_summary_basic_package();
+    package.summaries[0].counted_ballots += 1;
+    package
+}
+
 fn summary(
     reporting_unit_id: &str,
     cand_a: i64,
@@ -779,8 +785,7 @@ mod tests {
 
     #[test]
     fn bad_arithmetic_fails_with_specific_equation_error() {
-        let mut package = synthetic_summary_basic_package();
-        package.summaries[0].counted_ballots += 1;
+        let package = synthetic_bad_selection_sum_package();
         let err = verify_package(&package).expect_err("bad counted ballot total must fail");
         assert!(matches!(
             err,

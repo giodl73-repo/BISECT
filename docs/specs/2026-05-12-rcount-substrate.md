@@ -352,6 +352,9 @@ V.0 acceptance requires these fixtures:
 5. `missing-source-hash`: source index omits a raw file hash; verifier fails.
 6. `tampered-source`: raw source bytes change after the source index hash is
    written; verifier fails with `source_hash_match`.
+7. `bad-selection-sum`: manifest and source hashes verify, but one summary's
+   `counted_ballots` no longer equals votes plus residuals; verifier fails
+   with `contest_selection_sum`.
 
 ## Validation Harness
 
@@ -468,6 +471,8 @@ Current L0 coverage:
 Current L1 coverage:
 
 - `rcount-io` package directory round trip;
+- public `bad-selection-sum` fixture generation with valid package/source
+  hashes;
 - manifest `content_hash` mismatch rejection;
 - source index hash verification and empty-source-index rejection;
 - docs fixture verification for

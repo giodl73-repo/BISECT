@@ -1,0 +1,26 @@
+{
+  "transcript_version": "rcount-audit-transcript-v1",
+  "verifier": "rcount-audit",
+  "status": "fail",
+  "package_content_hash": "sha256:e008ddee74807ebe8eecb714f21432bffc73b0198dfa58a39aee071b00167583",
+  "manifest_content_hash": "sha256:e008ddee74807ebe8eecb714f21432bffc73b0198dfa58a39aee071b00167583",
+  "checks": [
+    {
+      "equation_id": "contest_selection_sum",
+      "status": "fail",
+      "error": "contest selection sum mismatch for contest syn-2024-mayor reporting unit syn:precinct:P-001: declared 81, computed 80"
+    },
+    {
+      "equation_id": "jurisdiction_contest_total",
+      "status": "fail",
+      "contest_id": "syn-2024-mayor",
+      "reporting_unit_id": "syn:jurisdiction:SYN",
+      "error": "jurisdiction residual mismatch for contest syn-2024-mayor field counted_ballots: declared 140, computed 141"
+    },
+    {
+      "equation_id": "source_hash_match",
+      "status": "pass",
+      "reporting_unit_id": "source:synthetic-summary-export"
+    }
+  ]
+}

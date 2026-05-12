@@ -9,6 +9,7 @@ election data and make no legal certification claim.
 |---|---|---|
 | `summary-basic` | `cargo run -p rcount-io --example summary_basic_package` | One contest, two precincts, one jurisdiction total; verifies `contest_selection_sum` and `jurisdiction_contest_total`. |
 | `canvass-correction` | `cargo run -p rcount-io --example canvass_correction_package` | Unofficial and canvassed snapshots where a public correction event explains the changed total. |
+| `bad-selection-sum` | `cargo run -p rcount-io --example bad_selection_sum_package` | Negative fixture: manifest and source hashes verify, but local contest arithmetic fails. |
 | `tampered-source` | copied from `summary-basic`, then raw source bytes edited | Negative fixture: arithmetic still passes, but `source_hash_match` fails. |
 | `missing-source-hash` | copied from `summary-basic`, then source index emptied | Negative fixture: package records omit the raw source hash evidence. |
 
@@ -28,6 +29,7 @@ The CLI verifier can check the package directly:
 ```text
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/summary-basic
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/canvass-correction
+cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/bad-selection-sum
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/tampered-source
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/missing-source-hash
 ```
