@@ -57,11 +57,41 @@ weighted. Resampling records say which ancestors were copied forward. If all
 particles die, that failure is an informative output about the proposal and
 tolerance settings.
 
+## Worked Particle Ledger
+
+| Stage | Particle | Proposal | Log weight | Event |
+|---:|---:|---|---:|---|
+| 0 | 0 | seed district A | -0.2 | survives |
+| 0 | 1 | seed district B | -2.8 | low weight |
+| 0 | 2 | seed district C | -0.5 | survives |
+| 1 | 1 | copied from particle 0 | -0.2 | resampled |
+
+This is why SMC output needs genealogy. After resampling, particle 1 may no
+longer be the descendant of its own earlier proposal. The record should say
+which ancestor was copied forward.
+
+## NDJSON Reading Checklist
+
+- Metadata records should appear before particle events.
+- Proposal events should include stage, particle index, derived seed, and
+  proposal status.
+- Resampling events should include ancestor maps, not only the new particle
+  count.
+- Completion records should carry final weights and plan identity.
+
 ## What The Output Needs To Explain
 
 The NDJSON stream records particle plans, log weights, particle indexes,
 resampling events, metadata, seed formulas, and file hash identity. Those fields
 make the sample reproducible for a fixed input and base seed.
+
+Example event shapes:
+
+```json
+{ "type": "metadata", "base_seed": 73, "n_particles": 3 }
+{ "type": "particle", "stage": 0, "particle": 1, "log_weight": -2.8 }
+{ "type": "resample", "stage": 1, "ancestors": [0, 0, 2] }
+```
 
 ## Claim Boundary
 

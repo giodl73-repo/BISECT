@@ -39,6 +39,34 @@ regional split. That does not prove the same final districts, but it gives the
 pipeline a stable top-level geography to compare across reapportionment
 scenarios.
 
+## Worked Factor Tree
+
+For `k = 18`, the largest prime factor is `3`, so the root can split into three
+regions of six districts each:
+
+```text
+18
+├─ 6
+│  ├─ 3
+│  └─ 3
+├─ 6
+│  ├─ 3
+│  └─ 3
+└─ 6
+   ├─ 3
+   └─ 3
+```
+
+For `k = 17`, there is no non-trivial factor. The root falls back to `8 + 9`,
+then the `9` child can split as `3 x 3`.
+
+## Tree Reading Checklist
+
+- Composite nodes should name the factor that determined their split.
+- Prime fallback nodes should be labeled as floor/ceil, not factor splits.
+- The final leaves should add back up to the target district count.
+- A reused spine means reused regional hierarchy, not identical final districts.
+
 ## Step-By-Step Mechanics
 
 1. Read the target district count `k`.
@@ -54,6 +82,21 @@ scenarios.
 The evidence should expose the factor tree, the split prescribed at each node,
 the fallback rule for prime targets, and the final district leaves. For
 cross-cycle comparisons, it should identify which top-level spine was reused.
+
+Example output fields:
+
+```json
+{
+  "structure": "prime-factor",
+  "target_districts": 17,
+  "root_split": [8, 9],
+  "root_rule": "prime_floor_ceil_fallback",
+  "children": [
+    { "k": 8, "rule": "largest_prime_factor" },
+    { "k": 9, "rule": "largest_prime_factor" }
+  ]
+}
+```
 
 ## Claim Boundary
 

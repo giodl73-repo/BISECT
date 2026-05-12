@@ -3,8 +3,9 @@
 **Date:** 2026-05-11
 **Rubric:** `docs/algorithm-atlas/RUBRIC.md`
 **Reviewer:** Codex using the BISECT rubric and `.roles` lenses
-**Latest pass:** upgraded mechanics visuals, examples, failure modes, and
-evidence references for the compositor, U-series, and sampling pages.
+**Latest pass:** upgraded mechanics visuals, examples, failure modes, evidence
+references, worked ledgers, output snippets, and reading checklists across the
+atlas.
 
 This scorecard grades the current atlas pages against the six BISECT dimensions:
 
@@ -30,10 +31,11 @@ object loses points under **S** and usually **E**.
 | Failing, 0-23 | None |
 
 The atlas is now broadly good by the BISECT rubric: every page has at least one
-mechanics visual, an integration story, a claim boundary, and evidence anchors.
-The remaining path to excellence is polish rather than rescue: add more numeric
-micro-examples, real rendered package snippets, and page-specific test links on
-the older T pages.
+mechanics visual, an integration story, a claim boundary, evidence anchors, and
+a worked ledger or output-reading guide. The remaining path to excellence is
+visual polish rather than rescue: improve SVG artistry, add real rendered
+package snippets where available, and move the strongest examples into
+publication-grade figures.
 
 ## Score Matrix
 
@@ -286,10 +288,10 @@ Next upgrades:
 
 ## Upgrade Priority
 
-1. **T.14-T.17**: polish with test references and one more concrete numeric
-   example each.
-2. **Output snippets**: add small report/NDJSON/manifest excerpts for U.16,
-   U.17, U.18, ReCom, SMC, and the compositor.
+1. **Visual polish**: replace the simplest schematic SVGs with richer
+   publication-grade figures where the algorithm has spatial structure.
+2. **Rendered package snippets**: use real sidecar excerpts for U.16, U.17,
+   U.18, ReCom, SMC, and the compositor when canonical package outputs settle.
 3. **Config stabilization**: add exact public config fields for the compositor
    and multiscale pages once those surfaces settle.
 4. **Canonical fixture tables**: add tiny data rows for AreaSection,

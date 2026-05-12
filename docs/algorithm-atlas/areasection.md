@@ -39,6 +39,31 @@ The feasibility filter asks whether the requested population share can plausibly
 fit inside the declared area window. Ratios outside the feasible band should be
 skipped before the expensive partition search begins.
 
+## Worked Population-Area Tension
+
+Imagine six units with equal population target pressure but very different land
+area:
+
+| Unit group | Population share | Land-area share | What it means |
+|---|---:|---:|---|
+| Dense city core | 50% | 8% | population balance can be met in a tiny footprint |
+| Inner suburbs | 25% | 17% | moderate population and area |
+| Rural remainder | 25% | 75% | low population density dominates land area |
+
+A population-only split can choose the dense city core as one side and satisfy
+population perfectly while producing an extreme area division. AreaSection keeps
+population as the tight constraint, then asks whether the land-area share falls
+inside the declared area window.
+
+## Feasibility Reading Checklist
+
+- A skipped ratio is not a failed partition; it is a ratio rejected before
+  search because the population/area window is empty.
+- A feasible ratio still needs a graph cut that satisfies population tolerance,
+  contiguity, and the configured area swing.
+- The output should say whether population or area was binding, because those
+  are different explanations for why a split was hard.
+
 ## Step-By-Step Mechanics
 
 1. Compute population and land-area weights for units.
@@ -53,6 +78,20 @@ skipped before the expensive partition search begins.
 AreaSection evidence should report population tolerance, area swing, unit area
 source, skipped ratios, selected ratio, and whether population or area was the
 binding constraint.
+
+Example output fields:
+
+```json
+{
+  "structure": "ratio-optimal-area",
+  "population_tolerance": 0.005,
+  "area_swing": 0.20,
+  "area_source": "ALAND",
+  "skipped_ratios": [{ "ratio": [1, 7], "reason": "empty_area_window" }],
+  "selected_ratio": [3, 5],
+  "binding_constraint": "population"
+}
+```
 
 ## Claim Boundary
 

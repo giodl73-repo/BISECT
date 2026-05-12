@@ -123,6 +123,27 @@ bars: a geographically close unit might be rejected by a nearly full cluster
 and sent to another seed. That is the behavior the status lineage is meant to
 surface.
 
+## Worked Assignment Ledger
+
+| Step | Unit population | Nearest seed | Cluster load before | Decision | Cluster load after |
+|---:|---:|---|---:|---|---:|
+| 1 | 45 | A | 0 | assign to A | 45 |
+| 2 | 40 | A | 45 | assign to A | 85 |
+| 3 | 35 | A | 85 | reject A, try B | 35 |
+
+The third unit may be geographically closer to A, but assigning it to A would
+overfill that cluster. The algorithm’s value is not that it always makes the
+best human-looking choice; it is that it exposes the capacity reason for the
+choice it made.
+
+## Status Reading Checklist
+
+- `valid` means the assignment passed validation without repair.
+- `repaired` means a bounded repair path changed the assignment and recorded
+  the repair lineage.
+- `infeasible` is a constructor/status claim, not a mathematical impossibility
+  proof for all possible districtings.
+
 ## References In This Repo
 
 - Crate: `bisect-clustering`

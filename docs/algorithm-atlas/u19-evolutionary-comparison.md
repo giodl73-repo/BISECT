@@ -58,12 +58,44 @@ lightweight, but a chosen entry becomes an ordinary audit bundle with
 `method-transcript.json`, objective values, selected index, generation, producer
 identity, and validity status.
 
+## Worked Frontier Table
+
+| Frontier index | Generation | Edge cut | County splits | Validity | Selected? |
+|---:|---:|---:|---:|---|---|
+| 0 | 4 | 130 | 13 | valid |  |
+| 1 | 5 | 137 | 8 | valid | yes |
+| 2 | 5 | 128 | 16 | valid |  |
+| 3 | 6 | 126 | 9 | repaired |  |
+
+Index 1 is not "best" in every objective. It is selected because it occupies a
+chosen trade-off position. The package needs to preserve that selection context
+so readers do not treat it as a single-objective optimum.
+
+## Frontier Reading Checklist
+
+- Each row should carry objective values and validity status.
+- Repaired or fallback children should remain visible after ranking.
+- The selected package should record the zero-based selected index and the
+  configuration that produced the frontier.
+
 ## What The Certificate Needs To Explain
 
 The selected-frontier certificate verifies the exported plan. The lineage must
 carry selected index, configuration, validity status, generation, objective
 values, and `bisect-pareto` producer identity so the chosen point can be traced
 back to the frontier.
+
+Example lineage fields:
+
+```json
+{
+  "method": "evolutionary-comparison",
+  "selected_frontier_index": 1,
+  "generation": 5,
+  "objectives": { "edge_cut": 137, "county_splits": 8 },
+  "validity": "valid"
+}
+```
 
 ## Claim Boundary
 

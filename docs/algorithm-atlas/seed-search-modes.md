@@ -37,6 +37,32 @@ Percentile mode answers a different question from minimum search. It sorts the
 candidate plans by edge cut and returns a rank. The selected plan may be
 intentionally non-minimal.
 
+## Worked Seed List
+
+The same structure and weights can produce a different plan for each derived
+seed. Search mode decides which row matters:
+
+| Seed index | Edge cut | County splits | Minimum mode | Percentile mode |
+|---:|---:|---:|---|---|
+| 0 | 142 | 9 |  |  |
+| 1 | 131 | 11 | selected |  |
+| 2 | 136 | 10 |  | selected at median |
+| 3 | 149 | 8 |  |  |
+
+Minimum mode returns seed 1. Median percentile mode returns seed 2 after
+sorting by edge cut. That is not a bug: it is a different experimental question
+about typicality rather than best observed compactness.
+
+## Mode Claims
+
+| Mode | Question it answers | What it must not claim |
+|---|---|---|
+| `single` | What does the deterministic default seed produce? | best observed plan |
+| `multi` | What is the best plan in this fixed seed budget? | convergence |
+| `convergence` | Did the best value stop improving under this threshold? | proof of global optimum |
+| `percentile` | What does a chosen rank in the candidate distribution look like? | minimum compactness |
+| `bisection-ensemble` | What if this bisection node is sampled locally? | full-plan ReCom ensemble |
+
 ## Step-By-Step Mechanics
 
 1. `single`: run one publicly derived seed.
@@ -53,6 +79,19 @@ intentionally non-minimal.
 The output should report the seed derivation rule, seed count or stopping
 threshold, selected rank, objective values, and whether the result is a minimum,
 percentile, convergence-selected, or local-ensemble bisection.
+
+Example output fields:
+
+```json
+{
+  "search": "percentile",
+  "seed_derivation": "content-hash + seed_index",
+  "seed_count": 4,
+  "objective": "edge_cut",
+  "selected_percentile": 0.50,
+  "selected_seed_index": 2
+}
+```
 
 ## Claim Boundary
 

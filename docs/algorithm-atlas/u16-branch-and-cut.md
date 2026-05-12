@@ -64,6 +64,30 @@ solver output"; it is a package saying which model was used, what status was
 reached, whether cuts were active, and how the final assignment was bound into
 the same U.20 audit bundle as non-solver plans.
 
+## Report Reading Checklist
+
+| Field | Why it matters |
+|---|---|
+| `method` | distinguishes branch-and-cut from other exact modes |
+| `status` | says solved, bounded, fallback, timeout, or formulation-only |
+| `incumbent_objective` | explains the best found plan |
+| `lower_bound` and `gap` | explain what is proven about optimality |
+| `cuts_added` | shows whether connectivity separation was active |
+| `fallback_reason` | prevents an unsolved run from masquerading as exact |
+
+Example report shape:
+
+```json
+{
+  "method": "branch-and-cut",
+  "status": "gap-bounded",
+  "incumbent_objective": 17.0,
+  "lower_bound": 16.0,
+  "gap": 0.0588,
+  "cuts_added": 3
+}
+```
+
 ## What The Certificate Needs To Explain
 
 The certificate binds the final plan to the RCTX context. The U.16 lineage adds

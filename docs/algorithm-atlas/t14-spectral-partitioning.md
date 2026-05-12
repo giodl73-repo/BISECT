@@ -134,6 +134,28 @@ and easy to replay. On an irregular graph, the ordering can snake through
 bridges or bottlenecks instead, which is the behavior the atlas diagrams are
 trying to make visible.
 
+## Worked Sweep Table
+
+For ten equal-population units and a 50/50 split, the sweep table might look
+like this:
+
+| Prefix cut | Left population | Right population | Balanced? | Edge cut | Decision |
+|---:|---:|---:|---|---:|---|
+| 4 | 40% | 60% | no | 1 | reject |
+| 5 | 50% | 50% | yes | 1 | selected |
+| 6 | 60% | 40% | no | 1 | reject |
+
+On a less regular graph, multiple balanced cuts may exist. T.14 needs stable
+tie rules so the same graph, populations, and tolerance replay to the same
+selected cut.
+
+## Summary Reading Checklist
+
+- The summary should include target counts for the current recursive node.
+- Population deviation and edge cut should be recorded for the selected cut.
+- Tie-breaking should be deterministic when Fiedler coordinates or sweep scores
+  are equal.
+
 ## References In This Repo
 
 - Crate/function: `bisect-apportion`

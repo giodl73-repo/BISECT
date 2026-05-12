@@ -119,6 +119,28 @@ between 95 and 105. If every eligible arc into the second bin comes from units
 that overfill it, the model may have no valid assignment. T.17 should surface
 that as an infeasibility witness rather than silently emitting an invalid plan.
 
+## Worked Capacity Ledger
+
+| Unit | Supply | Eligible bins | Selected bin | Running bin load |
+|---|---:|---|---|---:|
+| u0 | 48 | A, B | A | A = 48 |
+| u1 | 52 | A | A | A = 100 |
+| u2 | 60 | B | B | B = 60 |
+| u3 | 50 | B | B | B = 110, invalid |
+
+If bin B has an upper bound of 105, the last assignment cannot be accepted as a
+valid plan. The correct artifact is either a different feasible extraction or
+an infeasibility/invalid status with a witness.
+
+## Witness Reading Checklist
+
+- Capacity bounds should be visible as lower and upper numbers, not only a
+  tolerance phrase.
+- Eligible arcs should explain why some apparently reasonable assignments were
+  unavailable.
+- The status should distinguish model infeasibility from post-extraction
+  validation failure.
+
 ## References In This Repo
 
 - Crate: `bisect-flow`

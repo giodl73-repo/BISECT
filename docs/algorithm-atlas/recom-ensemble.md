@@ -61,11 +61,44 @@ The chain transcript should let a reviewer distinguish "the step was rejected,"
 and "the ensemble comparison was run with too few accepted samples." Those are
 different stories, and they should not collapse into a single sample count.
 
+## Worked Diagnostics
+
+| Chain | Proposed steps | Accepted steps | Acceptance | Warning |
+|---:|---:|---:|---:|---|
+| 0 | 1,000 | 611 | 0.611 |  |
+| 1 | 1,000 | 94 | 0.094 | low movement |
+| 2 | 1,000 | 587 | 0.587 |  |
+
+The ensemble is not automatically bad because one chain moves slowly, but the
+report has to make that visible. A comparison that uses only the pooled final
+sample count can hide exactly the behavior a reviewer needs to inspect.
+
+## Diagnostic Claims
+
+| Evidence | Supports | Does not prove |
+|---|---|---|
+| acceptance rate | chain is moving under this proposal | correct stationary distribution |
+| ESS | summary has enough effective draws for this metric | all summaries are reliable |
+| R-hat | chains agree on this scalar summary | legal validity or optimality |
+| seed transcript | fixed-seed reproducibility | seed-independent conclusion |
+
 ## What The Output Needs To Explain
 
 The ensemble output needs chain seeds, per-chain step records, acceptance
 behavior, cut-fraction summaries, R-hat/ESS diagnostics when available, and
 enough seed derivation detail to make fixed-seed runs reproducible.
+
+Example output fields:
+
+```json
+{
+  "sampler": "recom",
+  "chains": 3,
+  "steps_per_chain": 1000,
+  "acceptance": [0.611, 0.094, 0.587],
+  "diagnostics": { "r_hat_edge_cut": 1.03, "ess_edge_cut": 420.0 }
+}
+```
 
 ## Claim Boundary
 

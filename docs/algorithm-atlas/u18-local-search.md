@@ -56,11 +56,43 @@ and the usual RPLAN/RCTX/audit/manifest bundle. The summary is where reviewers
 see moves evaluated, moves accepted, edge-cut change, population deviation, and
 the deterministic parameter hash.
 
+## Worked Move Ledger
+
+| Candidate move | Population check | Contiguity check | Edge-cut delta | Decision |
+|---|---|---|---:|---|
+| unit 4: A -> B | pass | fail | -3 | reject |
+| unit 5: A -> B | pass | pass | -2 | accept |
+| unit 8: C -> B | fail | pass | -4 | reject |
+
+The accepted move is not necessarily the most visually dramatic move. It is the
+first best move under the declared deterministic ordering that improves the
+objective and preserves validity.
+
+## Summary Reading Checklist
+
+- `moves_evaluated` and `moves_accepted` should make no-op runs explainable.
+- Initial and final edge cut should move in the expected direction.
+- Initial and final population deviation should stay within the declared
+  tolerance, even if edge cut improves.
+
 ## What The Certificate Needs To Explain
 
 The certificate verifies the descendant plan. The local-search summary explains
 the transition: method, status, moves evaluated, moves accepted, initial/final
 edge cut, initial/final population deviation, tolerance, and parameter hash.
+
+Example summary fields:
+
+```json
+{
+  "method": "one-move",
+  "status": "improved",
+  "moves_evaluated": 3,
+  "moves_accepted": 1,
+  "initial_edge_cut": 5,
+  "final_edge_cut": 3
+}
+```
 
 ## Claim Boundary
 

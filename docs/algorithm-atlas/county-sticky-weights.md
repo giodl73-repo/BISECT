@@ -37,6 +37,27 @@ County preservation is a trade-off, not a magic switch. Increasing the county
 multiplier can reduce county splits, but it can also increase perimeter or edge
 cut. A mature report should show both sides of the trade.
 
+## Worked Edge Weights
+
+County-Sticky only changes the edge costs the structure/search layers see:
+
+| Edge | County relationship | Base edge weight | `alpha_county` | Effective weight |
+|---|---|---:|---:|---:|
+| A-B | same county | 4 | 3.0 | 12 |
+| B-C | county boundary | 4 | 3.0 | 4 |
+| C-D | same county | 2 | 3.0 | 6 |
+
+METIS can still cut A-B, but it now pays three times as much as it would have
+without the county multiplier. That is why this belongs in the weights layer:
+it changes the cut objective, not the recursive split tree.
+
+## Report Reading Checklist
+
+- Compare against the same structure and search mode with `alpha_county = 1`.
+- Report county splits and compactness separately.
+- State whether county labels came from unit metadata, a join file, or a
+  preprocessed graph attribute.
+
 ## Step-By-Step Mechanics
 
 1. Build the adjacency graph and county labels.
@@ -50,6 +71,19 @@ cut. A mature report should show both sides of the trade.
 The output should report the county multiplier, how county labels were joined,
 which metric counts county splits, and the compactness effect relative to the
 same structure/search run without the county multiplier.
+
+Example output fields:
+
+```json
+{
+  "weights": "county",
+  "alpha_county": 3.0,
+  "county_label_source": "unit.county_geoid",
+  "baseline_county_splits": 14,
+  "weighted_county_splits": 9,
+  "edge_cut_delta": 0.08
+}
+```
 
 ## Claim Boundary
 

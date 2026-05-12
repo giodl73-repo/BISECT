@@ -60,11 +60,45 @@ imbalance, and whether rebalancing accepted or rejected the move. Without that
 evidence, a multiscale run is hard to distinguish from an unexplained heuristic
 perturbation.
 
+## Worked Hierarchy Row
+
+| Fine unit | Coarse block | Before district | Coarse proposal | After rebalance |
+|---|---|---:|---:|---:|
+| u0 | C0 | 1 | 1 | 1 |
+| u1 | C0 | 1 | 2 | 1 |
+| u2 | C1 | 2 | 2 | 2 |
+| u3 | C1 | 2 | 2 | 2 |
+
+The coarse proposal can move an entire block, but fine-level validity may force
+some units back during rebalance. That is not a cosmetic detail; it is the
+difference between a heuristic jump and a reviewable Markov/search step.
+
+## Move Reading Checklist
+
+- Name the move type: fine move, coarse move, projection, or rebalance.
+- Record whether the move was accepted, rejected, or accepted after repair.
+- Keep coarse and fine tolerances separate.
+- Do not claim sampler correctness without an explicit target distribution and
+  acceptance-ratio argument.
+
 ## What The Output Needs To Explain
 
 The important evidence is the hierarchy definition, coarse tolerance, fine
 tolerance, seed derivation, move type, acceptance or rejection status, and any
 rebalance action needed to restore validity.
+
+Example output fields:
+
+```json
+{
+  "move_type": "coarse_projection",
+  "coarse_block": "C0",
+  "projection_status": "imbalanced",
+  "rebalance_status": "accepted",
+  "fine_tolerance": 0.005,
+  "coarse_tolerance": 0.030
+}
+```
 
 ## Claim Boundary
 

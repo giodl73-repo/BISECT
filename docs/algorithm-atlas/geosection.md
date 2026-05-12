@@ -31,6 +31,30 @@ split is still good after correcting for the size of the smaller side. The goal
 is to choose a first split that reflects state geometry rather than the
 mechanical cheapness of enclosing a tiny district.
 
+## Worked Ratio Scan
+
+Suppose the target is `k = 8` districts and the top-level scan evaluates these
+candidate first splits:
+
+| Ratio | Raw edge cut | Normalizer | Normalized score | Interpretation |
+|---|---:|---:|---:|---|
+| `1:7` | 12 | `sqrt(1)` = 1.00 | 12.0 | cheap-looking small enclosure |
+| `2:6` | 18 | `sqrt(2)` = 1.41 | 12.7 | still narrow |
+| `3:5` | 22 | `sqrt(3)` = 1.73 | 12.7 | competitive |
+| `4:4` | 26 | `sqrt(4)` = 2.00 | 13.0 | balanced but slightly worse |
+
+Raw edge cut would pick `1:7`. GeoSection reads that as suspicious because the
+small side is cheap to wrap. After normalization, the scan can prefer a larger
+first split when it has comparable boundary cost per unit of section size.
+
+## Visual Reading Checklist
+
+- The small enclosure should look cheaper in raw perimeter, not magically bad.
+- The normalized score should make the reader compare ratios rather than
+  pictures alone.
+- The chosen first split should become the root of the recursive bisection
+  tree; later splits are ordinary recursive bisections inside each side.
+
 ## Step-By-Step Mechanics
 
 1. For target `k`, enumerate ratios from `1:(k-1)` through the balanced split.
@@ -45,6 +69,21 @@ mechanical cheapness of enclosing a tiny district.
 The GeoSection evidence should show the candidate ratios, seed budget, minimum
 edge cut per ratio, normalized score per ratio, selected ratio, and the
 subsequent recursive split tree.
+
+Example output fields:
+
+```json
+{
+  "structure": "ratio-optimal",
+  "target_districts": 8,
+  "seed_budget_per_ratio": 200,
+  "selected_ratio": [3, 5],
+  "ratios": [
+    { "ratio": [1, 7], "best_edge_cut": 12, "score": 12.0 },
+    { "ratio": [3, 5], "best_edge_cut": 22, "score": 12.7 }
+  ]
+}
+```
 
 ## Claim Boundary
 

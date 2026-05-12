@@ -58,12 +58,47 @@ branch-and-price stack. That keeps the page honest: the column model, pricing
 metadata, master status, and selected column set are real, while advanced
 branching and industrial pricing remain future expansion points.
 
+## Worked Column Table
+
+| Column | Units covered | Population status | Cost | Master decision |
+|---|---|---|---:|---|
+| C1 | `{0,1,2}` | feasible | 8.0 | selected |
+| C2 | `{3,4,5}` | feasible | 7.5 | selected |
+| C3 | `{1,2,3}` | feasible but overlaps C1/C2 | 6.0 | rejected |
+| C4 | `{6,7}` | under target | 4.0 | not eligible |
+
+The master does not ask which individual units should move. It asks which
+columns form an exact cover. A cheap column can still be rejected because it
+overlaps selected columns or leaves another unit uncovered.
+
+## Report Reading Checklist
+
+- The pricing section should list how many columns were generated, filtered,
+  and retained by round.
+- The master section should say whether it was solved, enumerated on a tiny
+  fixture, or emitted as formulation-only.
+- The selected solution should identify column IDs, not only final district
+  assignments.
+
 ## What The Certificate Needs To Explain
 
 The audit certificate verifies the exported plan. The U.17 lineage explains how
 that plan came from the column-generation lifecycle: pricing metadata,
 master-problem status, bounds/gap when available, and whether the run was a true
 solved output or only a formulation.
+
+Example lineage fields:
+
+```json
+{
+  "method": "branch-and-price",
+  "pricing_rounds": 1,
+  "generated_columns": 4,
+  "retained_columns": 3,
+  "master_status": "enumerated_exact",
+  "selected_columns": ["C1", "C2"]
+}
+```
 
 ## Claim Boundary
 

@@ -60,12 +60,45 @@ whose hashes, certificate identity, or declared context no longer line up. That
 positive/negative pair is what makes U.20 a reusable acceptance layer rather
 than a ceremonial export format.
 
+## Artifact Contract
+
+| Artifact | What it owns | What it must not own |
+|---|---|---|
+| `plan.rplan` | unit-to-district assignment | legal data context |
+| `context.rctx` | graph, unit order, population, profile context | method-specific claims |
+| `audit-certificate.json` | validity under declared context/profile | solver optimality |
+| `method-transcript.json` | how the plan was produced | independent validity proof |
+| `manifest.json` | hashes and package inventory | new facts not in artifacts |
+
+This separation is the fixed point. A solver can have rich reports and a sampler
+can have diagnostics, but the verifier still asks whether the package artifacts
+agree with each other.
+
+## Verification Reading Checklist
+
+- The manifest hashes should bind every artifact the claim depends on.
+- The certificate should identify the context/profile it was generated against.
+- Negative fixtures should fail for specific reasons: hash mismatch, wrong
+  context, profile mismatch, malformed lineage, or missing artifact.
+
 ## What The Certificate Needs To Explain
 
 The certificate explains plan validity under a declared context and profile.
 Algorithm-specific lineage explains how the plan was produced. Keeping those
 layers distinct prevents solver reports, construction summaries, or frontier
 metadata from becoming ad hoc certificate fields.
+
+Example verifier result:
+
+```json
+{
+  "valid": false,
+  "reason": "plan_hash_mismatch",
+  "artifact": "plan.rplan",
+  "expected": "sha256:...",
+  "observed": "sha256:..."
+}
+```
 
 ## Claim Boundary
 

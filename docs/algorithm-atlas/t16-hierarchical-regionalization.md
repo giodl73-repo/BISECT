@@ -123,6 +123,27 @@ the algorithm can only combine adjacent regions whose combined population and
 connectedness still pass the declared profile. The merge log is what lets a
 reviewer see why one adjacent pair was chosen over another.
 
+## Worked Merge Ledger
+
+| Step | Candidate pair | Combined population | Eligible? | Score | Decision |
+|---:|---|---:|---|---:|---|
+| 1 | R0 + R1 | 92 | yes | 0.18 | selected |
+| 1 | R2 + R3 | 141 | no |  | reject capacity |
+| 2 | R01 + R4 | 128 | yes | 0.23 | selected |
+
+The score alone does not choose a merge. Eligibility comes first. A pair with a
+beautiful boundary score is rejected if the merged population or connectedness
+profile fails.
+
+## Merge-Tree Reading Checklist
+
+- Every non-leaf region should point back to exactly two or more child regions,
+  depending on the staged merge rule.
+- The merge log should say why rejected adjacent pairs were ineligible when
+  that rejection affects the final path.
+- A stop-before-target status should be visible as a constructor failure, not
+  hidden inside a partial assignment.
+
 ## References In This Repo
 
 - Crate/module: `bisect-clustering::regionalization`
