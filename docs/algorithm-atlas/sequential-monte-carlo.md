@@ -23,6 +23,20 @@ The SMC output is useful when the audit question is distributional and the
 construction process itself should expose particle weights, resampling stages,
 and deterministic seed derivation.
 
+## Picture 0: Particle Weights To Resampling Genealogy
+
+The opening figure shows the SMC lifecycle as an event ledger. Particles propose
+districts with derived seeds, receive log weights, and may die when proposals
+fail. When effective sample size drops below the threshold, systematic
+resampling copies high-weight ancestors forward. The ancestor map is the key
+visual object: after resampling, a particle slot may no longer descend from its
+own earlier proposal.
+
+For BISECT, the final weighted plans are only interpretable with this genealogy.
+The NDJSON stream needs proposal status, weights, ESS trigger, ancestor map,
+completion weights, and seed identity so the sample is reproducible for the
+declared input and base seed.
+
 ## Picture 1: Particles, Weights, And Resampling
 
 ![SMC particles and resampling](assets/smc-particles.svg)

@@ -25,17 +25,15 @@ prose plus generic diagrams no longer earns an excellent score.
 
 | Band | Pages |
 |---|---|
-| Excellent, 54-60 | T.14, T.15, T.16, T.17, U.16, U.17, U.18, U.19, GeoSection, AreaSection, Seed Search, County-Sticky, ApportionRegions, Three-Layer Compositor, Multiscale, U.20 |
-| Good, 45-53 | ReCom, SMC |
+| Excellent, 54-60 | T.14, T.15, T.16, T.17, U.16, U.17, U.18, U.19, ReCom, SMC, GeoSection, AreaSection, Seed Search, County-Sticky, ApportionRegions, Three-Layer Compositor, Multiscale, U.20 |
+| Good, 45-53 | None |
 | Serviceable, 36-44 | None |
 | Thin, 24-35 | None |
 | Failing, 0-23 | None |
 
-The atlas remains useful, but the stricter rubric makes the next work clearer.
-Many pages have accurate prose and supporting diagrams, yet their primary
-visuals do not fully explain candidate purpose, decision rule, and consequence.
-Those pages should be treated as good teaching drafts until their primary
-figures are upgraded.
+The atlas now meets the upgraded gold-standard threshold across every current
+page. The maintenance rule is to keep future pages at this same level before
+adding them to the excellent band.
 
 ## Score Matrix
 
@@ -50,8 +48,8 @@ figures are upgraded.
 | U.18 Local Search | 9 | 9 | 10 | 10 | 9 | 9 | 56 | Excellent |
 | U.19 Evolutionary Comparison | 9 | 9 | 10 | 10 | 9 | 9 | 56 | Excellent |
 | U.20 RPLAN Audit Certificates | 10 | 10 | 7 | 9 | 10 | 10 | 56 | Excellent |
-| ReCom Ensemble | 8 | 8 | 7 | 8 | 9 | 9 | 49 | Good |
-| Sequential Monte Carlo | 8 | 8 | 7 | 8 | 9 | 9 | 49 | Good |
+| ReCom Ensemble | 9 | 9 | 10 | 10 | 9 | 9 | 56 | Excellent |
+| Sequential Monte Carlo | 9 | 9 | 10 | 10 | 9 | 9 | 56 | Excellent |
 | Multiscale MCMC | 9 | 9 | 9 | 10 | 10 | 8 | 55 | Excellent |
 | Three-Layer Compositor | 9 | 10 | 9 | 10 | 9 | 9 | 56 | Excellent |
 | GeoSection | 10 | 9 | 10 | 10 | 9 | 9 | 57 | Excellent |
@@ -76,8 +74,6 @@ what each selected result may claim.
 **U.20 RPLAN Audit Certificates - 56/60.** The fixed-point story is strong and
 claim-safe. Its next visual upgrade should make positive and negative verifier
 paths as concrete as GeoSection's root-allocation workload.
-
-### Good But Still Below The Gold Standard
 
 **AreaSection - 56/60.** The page now uses countable population/area block
 arrays, shows a skipped dense-core candidate, shows the feasibility decision
@@ -136,19 +132,23 @@ boundary.
 offspring creation, frontier objective trade-offs, selected-index context,
 validity lineage, and the selected-frontier package consequence.
 
-**ReCom and SMC - 49/60.** Sampling pages explain diagnostics and genealogy,
-but the visuals should better show candidate transitions and why a sampled step
-or particle is accepted, rejected, copied, or diagnosed.
+**ReCom Ensemble - 56/60.** The page now shows adjacent-pair selection, merged
+tree-cut candidates, balanced-cut acceptance, no-cut/rejection distinction,
+chain diagnostics, and the finite-ensemble claim boundary.
+
+**Sequential Monte Carlo - 56/60.** The page now shows particle proposals,
+log-weight updates, ESS-triggered resampling, ancestor-copy genealogy, NDJSON
+event evidence, and the weighted-sample claim boundary.
 
 ## Upgrade Priority
 
-1. **U-series and sampling pages**: add richer primary teaching figures only
-   after the spatial/compositor family reaches the GeoSection standard.
+1. **Maintenance pass**: keep future atlas pages at the same candidate,
+   decision, consequence, and evidence standard before adding them to the
+   excellent band.
 
 ## Acceptance Target
 
-Under the stricter rubric, every page remains at least good, but only
-T.14, T.15, T.16, T.17, U.16, U.17, U.18, U.19, GeoSection, AreaSection, County-Sticky, ApportionRegions, Three-Layer
-Compositor, Multiscale, Seed Search, and U.20 currently score excellent. The
-next target is to raise the remaining U-series and sampling pages to **54/60 or
-higher** with gold-standard teaching figures.
+All current atlas pages now score **54/60 or higher** under the upgraded
+gold-standard rubric. Future additions should keep the same visual contract:
+show candidate objects, why those candidates exist, the decision rule, and the
+downstream workload, status, or artifact consequence.

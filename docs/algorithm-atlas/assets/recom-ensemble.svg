@@ -1,14 +1,79 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="360" viewBox="0 0 960 360" role="img" aria-labelledby="title desc">
-  <title id="title">ReCom ensemble overview</title>
-  <desc id="desc">A valid plan moves through repeated ReCom steps into an ensemble distribution with diagnostics.</desc>
-  <style>.bg{fill:#fbfbf8}.box{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.move{fill:#eef2ff;stroke:#5b61b6;stroke-width:2}.dist{fill:#fff3cd;stroke:#c79300;stroke-width:2}.diag{fill:#e4f5eb;stroke:#2f7d4c;stroke-width:2}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.arrow{stroke:#596673;stroke-width:2;fill:none;marker-end:url(#arrow)}</style>
-  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#596673"/></marker></defs>
-  <rect class="bg" width="960" height="360"/>
-  <rect class="box" x="70" y="115" width="145" height="85" rx="8"/><text class="label" x="104" y="148">valid plan</text><text class="small" x="103" y="170">starting map</text>
-  <rect class="move" x="300" y="115" width="160" height="85" rx="8"/><text class="label" x="337" y="148">ReCom step</text><text class="small" x="323" y="170">merge + tree + cut</text>
-  <rect class="dist" x="545" y="115" width="150" height="85" rx="8"/><text class="label" x="587" y="148">ensemble</text><text class="small" x="579" y="170">sampled plans</text>
-  <rect class="diag" x="780" y="115" width="120" height="85" rx="8"/><text class="label" x="807" y="148">diagnose</text><text class="small" x="807" y="170">R-hat / ESS</text>
-  <path class="arrow" d="M215 157 H300"/><path class="arrow" d="M460 157 H545"/><path class="arrow" d="M695 157 H780"/>
-  <path class="arrow" d="M420 115 C470 55 610 55 650 115"/>
-  <text class="small" x="300" y="282">ReCom samples the feasible space; it is an evaluator and comparator, not an optimizer.</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="620" viewBox="0 0 1120 620" role="img" aria-labelledby="title desc">
+  <title id="title">ReCom ensemble merge tree cut and diagnostics</title>
+  <desc id="desc">A ReCom step chooses adjacent districts, merges them, samples a spanning tree, selects a balanced cut, accepts or rejects the proposal, and records chain diagnostics.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#334155"/></marker>
+    <style>
+      text{font-family:Arial,Helvetica,sans-serif;fill:#162033}
+      .bg{fill:#f8fafc}.panel{fill:#fff;stroke:#64748b;stroke-width:1.5;rx:8}
+      .h{font-size:24px;font-weight:700}.sub{font-size:14px;fill:#475569}.label{font-size:14px;font-weight:700}.small{font-size:12px;fill:#475569}.tiny{font-size:10px;fill:#475569}.mono{font-size:11px;font-family:Consolas,monospace;fill:#162033}
+      .arrow{stroke:#334155;stroke-width:2;fill:none;marker-end:url(#arrow)}.edge{stroke:#64748b;stroke-width:2}.tree{stroke:#0284c7;stroke-width:4}.cut{stroke:#dc2626;stroke-width:4;stroke-dasharray:6 4}
+      .a{fill:#dbeafe;stroke:#2563eb;stroke-width:2}.b{fill:#dcfce7;stroke:#16a34a;stroke-width:2}.c{fill:#fef3c7;stroke:#b45309;stroke-width:2}.good{fill:#ecfdf5;stroke:#059669;stroke-width:1.8;rx:5}.warn{fill:#fff7ed;stroke:#f97316;stroke-width:1.8;rx:5}.bad{fill:#fee2e2;stroke:#dc2626;stroke-width:1.8;rx:5}.header{fill:#e2e8f0}
+    </style>
+  </defs>
+  <rect width="1120" height="620" class="bg"/>
+  <text x="32" y="44" class="h">ReCom Ensemble</text>
+  <text x="32" y="68" class="sub">A ReCom proposal is accepted only when a merged district pair can be split by a balanced tree cut; diagnostics say how the chain behaved.</text>
+
+  <rect x="32" y="96" width="280" height="252" class="panel"/>
+  <text x="52" y="124" class="label">1. Choose adjacent districts</text>
+  <text x="52" y="146" class="small">Only neighboring districts form a proposal pair.</text>
+  <g transform="translate(74 176)">
+    <rect class="a" x="0" y="0" width="48" height="48"/><rect class="a" x="48" y="0" width="48" height="48"/><rect class="b" x="96" y="0" width="48" height="48"/>
+    <rect class="a" x="0" y="48" width="48" height="48"/><rect class="b" x="48" y="48" width="48" height="48"/><rect class="b" x="96" y="48" width="48" height="48"/>
+    <rect class="c" x="0" y="96" width="48" height="48"/><rect class="c" x="48" y="96" width="48" height="48"/><rect class="b" x="96" y="96" width="48" height="48"/>
+  </g>
+  <rect x="54" y="324" width="220" height="24" class="good"/><text x="70" y="341" class="small">chosen pair: A + B, C untouched</text>
+
+  <path d="M326 222 H374" class="arrow"/>
+
+  <rect x="388" y="96" width="336" height="252" class="panel"/>
+  <text x="408" y="124" class="label">2. Merge, sample tree, enumerate balanced cuts</text>
+  <text x="408" y="146" class="small">Tree edges are candidates; balance decides which cuts are legal.</text>
+  <g transform="translate(426 178)">
+    <line class="tree" x1="24" y1="24" x2="86" y2="24"/><line class="tree" x1="86" y1="24" x2="148" y2="24"/><line class="tree" x1="86" y1="24" x2="86" y2="86"/><line class="tree" x1="86" y1="86" x2="148" y2="86"/><line class="tree" x1="86" y1="86" x2="86" y2="148"/>
+    <circle class="a" cx="24" cy="24" r="18"/><text x="18" y="29" class="tiny">44</text>
+    <circle class="a" cx="86" cy="24" r="18"/><text x="80" y="29" class="tiny">48</text>
+    <circle class="b" cx="148" cy="24" r="18"/><text x="142" y="29" class="tiny">45</text>
+    <circle class="b" cx="86" cy="86" r="18"/><text x="80" y="91" class="tiny">52</text>
+    <circle class="b" cx="148" cy="86" r="18"/><text x="142" y="91" class="tiny">50</text>
+    <circle class="a" cx="86" cy="148" r="18"/><text x="80" y="153" class="tiny">46</text>
+    <line class="cut" x1="116" y1="50" x2="116" y2="110"/>
+  </g>
+  <rect x="604" y="184" width="90" height="38" class="bad"/><text x="620" y="207" class="tiny">cut: 92/193</text>
+  <rect x="604" y="236" width="90" height="38" class="good"/><text x="620" y="259" class="tiny">cut: 144/141</text>
+  <text x="408" y="330" class="small">Rejected tree cuts matter because no balanced cut means no accepted step.</text>
+
+  <path d="M738 222 H786" class="arrow"/>
+
+  <rect x="800" y="96" width="288" height="252" class="panel"/>
+  <text x="820" y="124" class="label">3. Accept step and record diagnostics</text>
+  <text x="820" y="146" class="small">The ensemble claim lives in many recorded steps.</text>
+  <rect x="832" y="174" width="222" height="28" class="header"/><text x="844" y="193" class="mono">event          value</text>
+  <rect x="832" y="202" width="222" height="32" class="good"/><text x="844" y="223" class="mono">accepted       true</text>
+  <rect x="832" y="238" width="222" height="32" class="good"/><text x="844" y="259" class="mono">pop_deviation  0.02</text>
+  <rect x="832" y="274" width="222" height="32" class="warn"/><text x="844" y="295" class="mono">chain_seed     s:0:17</text>
+  <text x="820" y="330" class="small">Rejected, no-cut, and accepted steps must stay distinguishable.</text>
+
+  <rect x="32" y="392" width="342" height="158" class="panel"/>
+  <text x="52" y="420" class="label">Chain diagnostics</text>
+  <rect x="62" y="450" width="278" height="74" class="warn"/>
+  <text x="82" y="474" class="mono">acceptance: [0.611, 0.094, 0.587]</text>
+  <text x="82" y="496" class="mono">r_hat_edge_cut: 1.03</text>
+  <text x="82" y="518" class="mono">ess_edge_cut: 420</text>
+
+  <rect x="412" y="392" width="318" height="158" class="panel"/>
+  <text x="432" y="420" class="label">Claim boundary</text>
+  <rect x="446" y="458" width="110" height="44" class="good"/><text x="470" y="484" class="small">moving</text>
+  <rect x="582" y="458" width="110" height="44" class="warn"/><text x="596" y="484" class="small">diagnosed</text>
+  <text x="432" y="534" class="small">Finite ReCom ensembles support comparison, not convergence proof or optimality.</text>
+
+  <rect x="768" y="392" width="320" height="158" class="panel"/>
+  <text x="788" y="420" class="label">Downstream consequence</text>
+  <text x="788" y="444" class="small">BISECT compares a plan to a diagnosed sample distribution.</text>
+  <rect x="806" y="476" width="76" height="42" class="a" rx="5"/><text x="827" y="501" class="small">plan</text>
+  <rect x="904" y="476" width="76" height="42" class="warn"/><text x="916" y="501" class="small">sample</text>
+  <rect x="1002" y="476" width="60" height="42" class="good"/><text x="1014" y="501" class="small">diag</text>
+  <path d="M882 498 H904" class="arrow"/><path d="M980 498 H1002" class="arrow"/>
+  <text x="788" y="536" class="small">Reading rule: show the district pair, tree-cut candidates, acceptance result, and diagnostics.</text>
 </svg>

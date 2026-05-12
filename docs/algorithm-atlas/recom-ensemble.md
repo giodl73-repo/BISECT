@@ -24,6 +24,19 @@ This complements deterministic construction. A BISECT plan may be produced by a
 constructor or solver, then compared against an ensemble to understand whether
 its compactness, partisan outcome, or other metric is typical or outlying.
 
+## Picture 0: Proposal Pair To Chain Diagnostics
+
+The opening figure shows one ReCom step as a visible sampling decision. The
+chain first chooses adjacent districts, then merges them and samples a spanning
+tree over the merged region. Tree edges become candidate cuts, but only balanced
+cuts can replace the district pair. A proposal with no balanced cut is a
+different event from an accepted move, and both need to appear in diagnostics.
+
+The bottom panels connect the local step to the ensemble claim. Acceptance
+rates, R-hat, ESS, and seed transcripts are not decoration; they are the
+evidence that lets BISECT compare a plan against the sampled distribution
+without pretending the finite ensemble proves convergence or optimality.
+
 ## Picture 1: One ReCom Step
 
 ![One ReCom step](assets/recom-step.svg)
