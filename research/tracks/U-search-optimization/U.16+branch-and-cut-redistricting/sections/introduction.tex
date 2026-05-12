@@ -1,7 +1,17 @@
 \section{Introduction}
 
-U.16 documents the `bisect-ilp` and `bisect-cli` branch-and-cut surface:
-`--structure ilp --ilp-method branch-and-cut`. Its claim is not that every
-redistricting instance is solved exactly at scale, but that exact-optimization
-runs should expose formulation, separation, proof status, and audit lineage in
-a reproducible form.
+U.16 documents the \texttt{bisect-ilp} and \texttt{bisect-cli}
+branch-and-cut surface:
+\texttt{--structure ilp --ilp-method branch-and-cut}. Its claim is not that
+every redistricting instance is solved exactly at scale, but that
+exact-optimization runs should expose formulation, separation, proof status,
+and audit lineage in a reproducible form.
+
+The paper sits between the algorithm-selection vocabulary of U.13 and the
+fixed-point audit contract of U.20. U.13 asks when an exact method is the right
+tool; U.16 says what evidence an exact branch-and-cut run must emit before it
+is allowed to use exact language; U.20 explains how the resulting plan and
+context become a stable auditable object. The central distinction is that an
+RPLAN/RCTX certificate can show that a final plan is valid and traceable, while
+only a solver report can show that a particular model was solved, bounded, or
+left unresolved.

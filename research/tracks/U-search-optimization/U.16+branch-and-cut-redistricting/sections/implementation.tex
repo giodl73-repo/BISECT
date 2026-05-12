@@ -18,6 +18,20 @@ components, the separation routine emits the violated connectivity cut and the
 model is resolved. The paper's exactness language therefore belongs to the
 solver report, while final-plan validity belongs to the RPLAN/RCTX certificate.
 
+For example, on a five-vertex path with two districts, the assignment
+\[
+  [0,1,0,1,1]
+\]
+places district 0 on the separated vertices 0 and 2, with vertex 1 assigned to
+the other district between them. A separation round does not describe this as
+``probably bad'' or silently repair it. It emits a structured round: schema
+\texttt{branch-and-cut-separation-round-v1}, status
+\texttt{violated-connectivity-cuts}, cut count 4, and disconnected districts
+\([0,1]\). The next solve is then performed under the added cuts. If the
+process ends with a proof, the run may claim a model-relative exact result; if
+it ends by timeout or fallback, the same final plan may still be auditable but
+the exactness claim is withheld.
+
 \begin{table}[htbp]
 \centering
 \small
@@ -33,6 +47,31 @@ Proof/bound & Carries exact evidence when available & Valid plan mistaken for pr
 \end{tabular}
 \caption{Minimum branch-and-cut report fields.}
 \end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.24\linewidth}p{0.30\linewidth}p{0.32\linewidth}}
+\toprule
+Artifact field & Current value family & Interpretation \\
+\midrule
+Report schema & \texttt{ilp-solve-report-v1} & Stable JSON envelope for solver evidence \\
+Model format & \texttt{cplex-lp} & Rebuildable model serialization \\
+Model digest & SHA-256 digest & Tamper check for the LP file \\
+Proof status & proved-optimal, bounded-gap, timed-out, not-solved & Exactness vocabulary \\
+Fallback flag & true/false & Whether a non-ILP plan source was needed \\
+Search strategy & e.g. \texttt{k2-branch-and-bound} & Solver/search family actually used \\
+\bottomrule
+\end{tabular}
+\caption{Concrete solve-report fields used by the U.16 implementation.}
+\end{table}
+
+The package-level lineage repeats the same boundary. A BISECT manifest records
+the \texttt{bisect-ilp-lineage-v1} schema, the ILP solve-report directory, the
+audit summary path, the audit-summary digest, the fallback flag, and the
+configured optimality gap. Those fields make the branch-and-cut path observable
+after the PDF, plan, and context have been copied away from the machine that
+produced them.
 
 \begin{table}[htbp]
 \centering

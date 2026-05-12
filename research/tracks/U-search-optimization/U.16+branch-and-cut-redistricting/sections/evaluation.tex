@@ -26,3 +26,38 @@ Exact performance scales & future benchmark placeholder & real-data benchmark pr
 \end{tabular}
 \caption{Evidence ladder for U.16 claims.}
 \end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.30\linewidth}p{0.56\linewidth}}
+\toprule
+Command or package & Evidence produced \\
+\midrule
+Path8 generator example
+& Builds the public path8 benchmark package with LP artifact, solve report,
+manifest, RPLAN/RCTX pair, and audit certificate. \\
+RPLAN certificate verifier
+& Checks that the exported plan and context satisfy the declared certificate
+profile and lineage expectations. \\
+BISECT manifest verifier
+& Checks method transcript, ILP audit summary digest, solve-report directory,
+and manifest-sidecar consistency. \\
+\bottomrule
+\end{tabular}
+\caption{Audit commands that define the current U.16 evidence path.}
+\end{table}
+
+The concrete generator command is:
+\begin{verbatim}
+cargo run -p bisect-cli --no-default-features \
+  --example u16_branch_cut_path8_benchmark_package
+\end{verbatim}
+The corresponding verification commands target the generated certificate and
+manifest JSON files.
+
+The path8 package is intentionally small. It is a smoke-test instance for the
+exact-search contract, not a scaling result. A paper that claims real-data
+branch-and-cut performance should add solver name and version, hardware, time
+limit, optimality gap, instance metadata, full transcripts, and archived output
+directories for every reported instance.

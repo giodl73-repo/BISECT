@@ -1,9 +1,10 @@
 \section{Conclusion}
 
 U.16 turns branch-and-cut from a black-box exact option into an auditable
-implementation contract. The paper's next readiness step is a simulated panel
-review focused on proof semantics, fallback reporting, and solver-report
-reproducibility.
+implementation contract. Its contribution is the separation of three claims:
+the ILP formulation can be rebuilt, the separation loop can report violated
+connectivity cuts and proof status, and the final plan can be certified as an
+RPLAN/RCTX fixed point.
 
 Once those semantics are stable, branch-and-cut can sit beside heuristic and
 construction methods without category confusion: exact claims live in the solver

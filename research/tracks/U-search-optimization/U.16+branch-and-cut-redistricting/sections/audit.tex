@@ -14,3 +14,11 @@ plan is not a reusable BISECT output.
 
 The public golden package can be checked either through the RPLAN certificate
 verifier or through the BISECT manifest verifier.
+
+This is the fixed-point discipline that U.20 later generalizes. The plan and
+context fix the district assignment and input universe; the manifest fixes the
+method transcript and sidecar hashes; the ILP summary hash fixes the collection
+of solve reports. If the LP model, proof-status field, fallback flag, or
+summary JSON is edited after the fact, the hash chain changes. The verifier
+does not need to trust the prose claim in this paper; it checks the declared
+artifacts.

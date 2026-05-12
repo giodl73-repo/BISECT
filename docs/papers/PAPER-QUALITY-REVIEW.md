@@ -60,7 +60,7 @@ are called complete.
 |---|---|---|---|
 | 1 | T.1-T.4, U.1, U.8, U.9, U.12 | Re-review the atlas-aligned seed/compositor/legacy papers for paper-quality gaps after the alignment pass | Completed 2026-05-12 |
 | 2 | T.14-T.17 | Construction-family golden vertical slices | Completed 2026-05-12 |
-| 3 | U.16-U.20 | Exact/search/audit certificate family, including U.20 fixed-point language | Queued |
+| 3 | U.16-U.20 | Exact/search/audit certificate family, including U.20 fixed-point language | In progress |
 | 4 | U.10, G.4, G.7, G.10, G.11 | Sampling and ensemble methods | Queued |
 | 5 | T.5-T.13, U.0-U.7, U.11, U.13-U.15 | Older algorithm-family papers not yet lifted to the same explanatory standard | Queued |
 | 6 | B/C/D/F/G/A synthesis tracks | Portfolio, validation, legal, legislative, ensemble, and synthesis papers | Queued |
@@ -130,3 +130,31 @@ The model-relative witness language is strong. The remaining ceiling is solver
 depth: the paper should not score higher until it has either a fuller flow model
 or a recorded comparison showing why this baseline is useful despite being
 intentionally modest.
+
+## Batch 3 Checklist
+
+| Paper | Review status | Fix status | Build/PDF status |
+|---|---|---|---|
+| U.16 Branch-and-Cut Redistricting | Reviewed 2026-05-12 | Added worked disconnected-incumbent separation example, concrete solve-report fields, manifest lineage boundary, U.13/U.20 positioning, and path8 command evidence | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
+| U.17 | Queued | Queued | Queued |
+| U.18 | Queued | Queued | Queued |
+| U.19 | Queued | Queued | Queued |
+| U.20 | Queued | Queued | Queued |
+
+## Batch 3 Paper-Quality Scorecard
+
+**Scoring date:** 2026-05-12
+
+| Paper | P1 Claim | P2 Algorithm | P3 Evidence | P4 Boundary | P5 Build | P6 Reader | Total |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| U.16 Branch-and-Cut Redistricting | 3.8 | 3.7 | 3.6 | 3.9 | 4.0 | 3.7 | 22.7 / 24 |
+
+### Batch 3 Score Notes
+
+**U.16 Branch-and-Cut Redistricting — 22.7/24.** The paper now makes the
+exact-search boundary concrete: the five-vertex path example shows why a
+connectivity cut is emitted, the solve-report table names the proof and fallback
+fields, and the audit section cleanly separates model-relative exactness from
+RPLAN/RCTX validity. The remaining ceiling is empirical depth: the path8 package
+is the right smoke-test artifact, but real-data exact-performance claims still
+need solver versions, hardware, transcripts, and archived solve directories.
