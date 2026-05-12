@@ -64,7 +64,7 @@ Score bands:
 | T.3 County-Sticky Weights | 3.7 | 3.7 | 3.5 | 3.8 | 4.0 | 3.7 | 22.4 | Strong; near-golden |
 | T.4 ApportionRegions | 3.8 | 3.8 | 3.6 | 3.8 | 4.0 | 3.8 | 22.8 | Golden |
 | T.5 ProportionalSection | 3.8 | 3.7 | 3.5 | 3.9 | 4.0 | 3.6 | 22.5 | Golden |
-| T.6 NestSection | 3.1 | 3.2 | 2.9 | 3.1 | 3.3 | 3.0 | 18.6 | Needs nesting examples and verifier story |
+| T.6 NestSection | 3.7 | 3.6 | 3.3 | 3.9 | 4.0 | 3.7 | 22.2 | Golden; constructor/maps remain future evidence |
 | T.7 VRASection | 3.0 | 3.1 | 2.8 | 2.9 | 3.3 | 3.0 | 18.1 | Legal boundary pass needed |
 | T.8 StabilitySection | 3.1 | 3.0 | 3.0 | 3.0 | 3.3 | 3.0 | 18.4 | Needs clearer algorithm-vs-analysis scope |
 | T.9 Multi-Reapportionment Stability | 3.1 | 3.0 | 2.9 | 3.0 | 3.3 | 3.0 | 18.3 | Needs examples and current data anchors |
@@ -158,7 +158,7 @@ Score bands:
 
 ## Highest-Priority Lifts
 
-1. Continue the legacy construction pass: T.6-T.13. These need the same "show the split,
+1. Continue the legacy construction pass: T.7-T.13. These need the same "show the split,
    show the candidate, show the rejection" standard that made T.1 and U.18 much
    clearer.
 2. Metric correctness pass: K.2 first, then K.0/K.7 propagation. The Reock
@@ -172,7 +172,7 @@ Score bands:
 
 | Track family | Included rows | Current center of gravity | Main gap |
 |---|---:|---|---|
-| B/T construction foundations | 26 | Strong for reviewed/new slices, serviceable for older slices; T.5 now golden | legacy visuals and audit/package bridges |
+| B/T construction foundations | 26 | Strong for reviewed/new slices, serviceable for older slices; T.5/T.6 now golden | legacy visuals and audit/package bridges |
 | U search/optimization/audit | 21 | Strong, with U.10 and U.16-U.20 golden | refresh older U.2-U.7 and U.13-U.15 |
 | G ensemble/sampling | 16 | Strong but uneven; G.4/G.7/G.10/G.11 now golden | older G refresh and data-validation cleanup |
 | J apportionment | 7 | Serviceable | J.6 stale implementation claims |

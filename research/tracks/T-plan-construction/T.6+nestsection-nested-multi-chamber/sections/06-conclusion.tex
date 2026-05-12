@@ -13,7 +13,8 @@ structurally linked.  We applied this score to all 50 US states under the 2020
 apportionment, finding that 11 states admit strict nesting ($\sigma = 0$) and
 39 require best-effort Mode~3 nesting ($\sigma \geq 50$).  The absence of
 states in the intermediate range is a structural property of current US
-apportionments, not an artifact of the metric.
+apportionments because it is a structural property of the GCD score itself,
+not an artifact of the metric.
 
 The three case studies illustrate the range of outcomes:
 \begin{itemize}
@@ -23,27 +24,30 @@ The three case studies illustrate the range of outcomes:
         tail splits within each trunk region.
   \item \textbf{North Carolina} ($g = 2$, $\sigma = 85.7\%$): A single trunk
         bisection is all that can be shared.  Mode~3 nesting with
-        $\tau_\text{pop} \leq 0.04$ is achievable, but the partisan consequences
-        of the trunk bisection are non-trivial.
+        a target $\tau_\text{pop} \leq 0.04$ is a measurable design goal, but
+        the achieved boundary-zone fraction must be reported by an actual run.
   \item \textbf{Texas} ($g = 1$, $\sigma = 96.8\%$): The primality of the
-        31-seat senate makes the state structurally incompatible.  No meaningful
-        cross-chamber nesting is achievable without restructuring the chamber
-        sizes.
+        31-seat senate makes the three-chamber spine trivial.  Meaningful
+        congressional-senate-house nesting would require either approximate
+        Mode~3 optimization or restructuring the chamber sizes.
 \end{itemize}
 
 The legal argument is constructive: requiring NestSection for compatible states
 reduces the degrees of freedom available for partisan optimization before the
-map is drawn, not after.  States with $g \geq 2$ (22 states) could be subject
+map is drawn, not after.  States with $g \geq 2$ (17 states) could be subject
 to a best-effort nesting mandate; states with $g \geq 5$ (Oregon and Alabama)
 could be subject to a strict nesting mandate with zero boundary tolerance.
 Such a statute would be the first anti-gerrymandering rule that operates at
-the level of geometric structure rather than partisan outcome.
+the level of geometric structure rather than partisan outcome, though its legal
+force would depend on state law, statutory drafting, and judicial review.
 
-The implementation is available in \texttt{redist-apportion::nest} and is fully
-tested against all 50 states.  Future work will validate the algorithm on actual
-census geography and measure the gerrymander-resistance effect empirically.
+The current implementation provides nesting validation in
+\path{bisect-cli::nesting}, suite-level nesting profiles in
+\path{bisect-cli::suite}, and audit profile support in \path{rplan-audit}.
+Future work will add the full three-chamber constructor, validate it on actual
+census geography, and measure the gerrymander-resistance effect empirically.
 
 \paragraph{Acknowledgments.}
 The authors thank the NCSL for chamber-size data and the Census Bureau for the
 2020 apportionment figures.  The \texttt{bisect} Rust workspace is available
-at \url{https://github.com/apportionment-research/redist}.
+at \url{https://github.com/giodl73-repo/BISECT}.

@@ -53,25 +53,28 @@ Congressional, state senate, and state house districts for the same state are
 currently drawn by three independent redistricting processes.  This independence
 creates structural opportunities for coherent gerrymandering: a partisan actor
 who controls all three processes can pack or crack a geographic community at
-every legislative level simultaneously.  \emph{NestSection} eliminates this
-opportunity by forcing all three chambers to share a common hierarchical
-bisection tree---the \emph{compatible factorization spine}.
+every legislative level simultaneously.  \emph{NestSection} addresses this
+opportunity by asking the three chambers to share the largest hierarchical
+bisection prefix that their seat counts permit---the \emph{compatible
+factorization spine}.
 
 The spine is determined by $g = \gcd(C, S, H)$, where $C$, $S$, and $H$ are
 the congressional, senate, and house seat counts.  When $g$ equals the smallest
 chamber size, nesting is exact (score $= 0$); when $g = 1$, the chambers share
 only a trivial root (score $\approx 100$).  We apply the
 \textsc{SpineCompatibility} score to all 50 US states under the 2020
-apportionment, finding 11 states with score 0 (including Oregon, Alabama,
-Montana, and Wyoming), and identifying the structural reasons why 39 states
-require a best-effort Mode~3 nesting.
+apportionment, finding 11 states with score 0, of which Oregon and Alabama
+are the two substantive multi-region exact cases, and identifying the
+structural reasons why 39 states require best-effort Mode~3 analysis.
 
-The central legal argument is that a shared geographic hierarchy is an
-anti-gerrymandering mechanism by construction: a partisan actor who locks in a
-congressional spine cannot then draw senate boundaries that contradict it,
-because the senate tree is geometrically derived from the same trunk sequence.
-We discuss the statutory design implications and propose a nestability threshold
-$g \geq 5$ as a practical criterion for mandating exact nesting.
+The central policy argument is that a shared geographic hierarchy is a
+process constraint on coherent multi-chamber gerrymandering: a partisan actor
+who locks in a congressional spine has fewer degrees of freedom when drawing
+state senate and house boundaries against the same trunk.  We discuss statutory
+design implications and propose a nestability threshold $g \geq 5$ as a
+practical criterion for exact-nesting pilots.  The current BISECT workspace
+implements nesting validation and audit support; the full three-chamber
+constructive pipeline described here remains a design target.
 \end{abstract}
 
 \bigskip

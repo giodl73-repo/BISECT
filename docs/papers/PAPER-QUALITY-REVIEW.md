@@ -274,7 +274,7 @@ than the current short-run smoke comparison.
 | Paper | Review status | Fix status | Build/PDF status |
 |---|---|---|---|
 | T.5 ProportionalSection | Reviewed 2026-05-12 | Reframed guarantee language as a top-level proportional target, added a worked block split, aligned the paper with the current top-split-only `run_proportional_section` implementation, corrected electorate/population notation, narrowed Lorenz feasibility to the non-contiguous relaxation, strengthened legal caveats, and clarified that numeric tables need archived trace packages | Rebuilt; no undefined refs/cites/BibTeX warnings/overfull boxes; PDF copied |
-| T.6 NestSection | Queued | Queued | Queued |
+| T.6 NestSection | Reviewed 2026-05-12 | Reframed the paper as theory plus an implemented validation substrate, corrected the trivial/weak/substantive strict-state counts, fixed the stale 22-state and `g >= 3` threshold claims, added clean and uneven nesting split examples, softened legal guarantees, aligned crate/CLI names with BISECT, and narrowed Mode 3 guarantees to reportable targets | Rebuilt; no undefined refs/cites/BibTeX warnings/overfull boxes; PDF copied |
 | T.7 VRASection | Queued | Queued | Queued |
 | T.8 StabilitySection | Queued | Queued | Queued |
 | T.9 Multi-Reapportionment Stability | Queued | Queued | Queued |
@@ -290,6 +290,7 @@ than the current short-run smoke comparison.
 | Paper | P1 Claim | P2 Algorithm | P3 Evidence | P4 Boundary | P5 Build | P6 Reader | Total |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | T.5 ProportionalSection | 3.8 | 3.7 | 3.5 | 3.9 | 4.0 | 3.6 | 22.5 / 24 |
+| T.6 NestSection | 3.7 | 3.6 | 3.3 | 3.9 | 4.0 | 3.7 | 22.2 / 24 |
 
 ### Batch 5 Score Notes
 
@@ -303,3 +304,14 @@ R-bloc with exactly three Democratic units. The remaining ceiling is evidence:
 the historical six-state tables need archived per-seed traces, selected-plan
 hashes, and run metadata before they should carry standalone publication
 weight.
+
+**T.6 NestSection -- 22.2/24.** The paper now distinguishes the GCD spine
+theory from the current BISECT implementation, which validates nesting and
+records audit profile rules but does not yet ship a full three-chamber
+constructor. The state census now reports 6 trivial one-seat strict states,
+3 weak two-region strict states, and 2 substantive exact cases (Oregon and
+Alabama), with the broader `g >= 2` tier corrected to 17 states. The new
+Washington and New York examples show the split instead of merely naming it:
+clean 2:1 nesting versus an uneven 50-house-across-21-senate container pattern.
+The remaining ceiling is empirical and visual: actual case-study maps and an
+implemented constructor would lift the evidence path beyond schematic figures.

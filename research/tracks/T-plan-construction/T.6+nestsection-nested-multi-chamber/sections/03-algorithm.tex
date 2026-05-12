@@ -159,17 +159,23 @@ the trunk.  No boundary violations occur.
 \emph{Mode 2 is mathematically empty}: Theorem~\ref{thm:bimodal} proves that
 no positive integer triple $(C, S, H)$ can produce a score in $(0, 50)$.
 The mode is defined here for completeness and to establish the classification
-vocabulary, but it cannot arise for any real apportionment.
-The trunk covers more than half the structural degrees of freedom of the
-smallest chamber.  The spine provides a strong geographic anchor, but the
-tail splits produce boundary zones where chambers partially overlap.
+vocabulary, but it cannot arise for any real apportionment under the GCD
+score.  Approximate-nesting designs that use a non-GCD trunk are outside this
+mode and belong to the Mode~3 optimization problem.
 
 \paragraph{Mode 3 --- Best-effort nesting ($\sigma \geq 50$).}
 The trunk is a small fraction of the smallest chamber.  The chambers can
 share only a coarse geographic skeleton.  A mismatch tolerance $\tau_\text{pop}$
 (population fraction allowed in boundary zones) is required.
 
-\subsection{The Full NestSection Algorithm}
+\subsection{The Constructive NestSection Algorithm}
+
+Algorithm~\ref{alg:nestsection} is the constructive target for the full
+three-chamber system.  It combines the number-theoretic spine with GeoSection
+partitioning and ApportionRegions seat assignment.  The current implementation
+boundary is narrower: BISECT validates nested chamber relationships and records
+nesting rules in audit profiles, but does not yet ship this full
+three-chamber constructor.
 
 \begin{algorithm}
 \caption{\textsc{NestSection}$(G, C, S, H, \tau_\text{pop})$}
@@ -194,11 +200,41 @@ share only a coarse geographic skeleton.  A mismatch tolerance $\tau_\text{pop}$
 \end{algorithmic}
 \end{algorithm}
 
-\paragraph{NestRefine.}  \textsc{NestRefine} splits each senate district into
-$h_i / s_i$ house sub-districts.  When $h_i / s_i$ is not an integer, it
-assigns floor or ceiling counts by population weight and marks boundary zones
-where a house district straddles a senate boundary.  The population fraction
-in boundary zones must not exceed $\tau_\text{pop}$.
+\paragraph{NestRefine.}  \textsc{NestRefine} splits senate districts into house
+sub-districts.  When $h_i / s_i$ is not an integer, it assigns each senate
+district either $\lfloor h_i/s_i \rfloor$ or $\lceil h_i/s_i \rceil$ house
+districts so the total remains $h_i$.  Any house district that cannot be kept
+inside one senate district is assigned to the senate district containing the
+larger share of its population and is reported as a boundary-zone violation.
+The total population fraction in such flagged units is the measured
+$\tau_\text{pop}$, not an automatic guarantee.
+
+\subsection{Show the Split: Clean and Uneven Nesting}
+
+The nesting rule should be visible in the district counts, not merely named.
+In a clean state such as Washington for the state legislative tiers alone
+($S=49$, $H=98$), each senate district contains exactly two house districts:
+\[
+  \underbrace{[HH]\ [HH]\ [HH]\ \cdots\ [HH]}_{49\ \text{senate districts}}
+  \quad\text{with}\quad 98 = 49 \cdot 2.
+\]
+No floor/ceiling assignment is needed.
+
+New York shows the uneven case.  The state legislative tiers have
+$S=63$, $H=150$, and $\gcd(S,H)=3$.  A three-region trunk gives each trunk
+region 21 senate districts and 50 house districts.  Since
+$50 = 8\cdot 3 + 13\cdot 2$, each trunk requires eight senate districts with
+three house districts and thirteen senate districts with two:
+\[
+\begin{array}{ccccccccccccccccccccc}
+3&2&2&3&2&2&3&2&2&3&2&2&3&2&2&3&2&2&3&2&3
+\end{array}
+\]
+The row sums to 50 house districts across 21 senate containers.  This is the
+mechanical reason Mode~3 needs explicit reporting: the construction is not
+``about 2.38 houses per senate'' in prose; it is a concrete pattern of
+two-house and three-house senate containers, plus any geographic boundary-zone
+population needed to realize that pattern on census blocks.
 
 \begin{remark}[Uniformity in Mode 1 states]
 \label{rem:mode1-uniformity}
@@ -222,8 +258,9 @@ The trunk size $g$ determines the geographic scale of the shared structure.
 For Oregon ($g = 6$), the shared trunk has 6 regions averaging roughly 700,000
 residents each --- approximately the size of a single congressional district.
 For Alabama ($g = 7$), the trunk has 7 regions matching the 7 congressional
-districts exactly, and senate districts are unions of exactly 5 trunk regions
-each.
+districts exactly.  Each trunk region then contains exactly 5 senate districts
+and 15 house districts, so every senate district contains exactly 3 house
+districts.
 
 For states with $g = 1$ (e.g., Texas with $C=38$, $S=31$, $H=150$), the
 ``trunk'' is the entire state, and the three chambers share no sub-state

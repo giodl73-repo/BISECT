@@ -1,12 +1,13 @@
 \section{Discussion}
 \label{sec:discussion}
 
-\subsection{The Legal Argument: Shared Hierarchy as Anti-Gerrymandering}
+\subsection{Legal And Policy Framing}
 
 \paragraph{The structural constraint argument.}
-NestSection's central legal contribution is the observation that a shared
-bisection hierarchy is an anti-gerrymandering mechanism by \emph{construction},
-not by detection.  Once the trunk is fixed by GeoSection at the spine level,
+NestSection's central policy contribution is the observation that a shared
+bisection hierarchy can constrain multi-chamber gerrymandering by
+\emph{construction}, not only by detection.  Once the trunk is fixed by
+GeoSection at the spine level,
 the congressional, senate, and house maps are all constrained to respect the
 same initial geographic cuts.  A partisan actor who wishes to pack a community
 into a safe congressional district must use the same geographic bisection that
@@ -16,7 +17,8 @@ the pack is constrained to one side of the trunk for all three chambers.
 This is fundamentally different from post-hoc gerrymandering detection methods
 (ensemble analysis, partisan symmetry tests), which evaluate a map after it is
 drawn.  NestSection reduces the feasible plan space before any partisan
-optimization occurs.
+optimization occurs, but it does not prove that every remaining plan is
+partisan-neutral.
 
 \paragraph{Degrees-of-freedom reduction.}
 Formally, the number of distinct geographic configurations compatible with the
@@ -73,10 +75,12 @@ NestSection's most natural application is to \emph{state legislative} maps
 constitutional provisions on compactness, contiguity, and integrity of
 political subdivisions, not Art.\ I, \S4.  States that voluntarily adopt
 NestSection for their state legislative chambers, drawing those maps to be
-consistent with a pre-existing federal congressional map, face no federal
-constitutional barrier.  The compatibility score $\sigma$ operates on the
-relationship among all three chamber sizes, but the structural constraint
-it enforces on the senate and house maps is a matter of state law.
+consistent with a pre-existing federal congressional map, have a stronger
+state-law footing than a federal mandate would.  This paper does not claim
+immunity from federal constitutional challenge.  The compatibility score
+$\sigma$ operates on the relationship among all three chamber sizes, but the
+structural constraint it enforces on the senate and house maps is primarily a
+matter of state law.
 
 The federal constitutional question arises only in the distinct scenario where
 Congress were to mandate that state congressional maps conform to a
@@ -94,9 +98,11 @@ We propose a two-tier statutory structure:
         Oregon ($g=6$) and Alabama ($g=7$) currently qualify.  These states
         can achieve exact hierarchical nesting (Mode~1) with no population
         tolerance.  A statute requiring Mode~1 for these states would be
-        straightforwardly achievable with existing redistricting algorithms.
+        algorithmically plausible with existing graph-partitioning and nesting
+        validation tools, subject to empirical population-balance checks.
   \item \textbf{Best-effort nesting} (Mode~3 with $\tau_\text{pop} \leq 0.02$)
-        for states where $\gcd(C,S,H) \geq 2$: 22 states currently qualify.
+        for states where $\gcd(C,S,H) \geq 2$: 17 states currently qualify in
+        the 2020 table.
         The statute would require the published boundary-zone fraction $\tau$ to
         be minimized and publicly reported, creating an empirically verifiable
         standard for cross-chamber consistency.
@@ -105,18 +111,15 @@ We propose a two-tier statutory structure:
 \paragraph{Judicial enforceability.}
 Judicial enforceability of a NestSection requirement raises two distinct
 questions.  First, who has standing to challenge a non-nested map?  The most
-natural plaintiffs are political subdivisions (counties, municipalities) whose
-territories span chamber boundaries inconsistently~--- they can argue that the
-inconsistent boundaries create administrative burdens that serve no compelling
-interest.  Second, what is the standard of review?  If NestSection is framed
-as a procedural rule (the map must be derived from a mathematical process),
-courts reviewing it apply rational-basis scrutiny, not strict scrutiny~--- the
-bar is low.  A statute stating ``state legislative districts shall be derived
-by refining the congressional factorization tree'' has a rational basis in
-administrative consistency and resistance to manipulation.  Courts striking
-down such a requirement would need to find it facially arbitrary, which the
-Bimodality Gap Theorem makes difficult: the compatible states are a
-mathematically defined class, not a politically selected one.
+natural plaintiffs may include political subdivisions (counties,
+municipalities) whose territories span chamber boundaries inconsistently, but
+standing is a live procedural question.  Second, what is the standard of
+review?  A NestSection statute should be framed as a neutral procedural rule
+grounded in administrability, compactness, contiguity, and resistance to
+manipulation.  Whether a court applies rational-basis review or a more exacting
+standard depends on the claim and forum.  The Bimodality Gap Theorem helps by
+showing that the covered class is mathematically defined rather than selected
+state by state for partisan effect.
 
 \subsection{Limitations}
 
@@ -201,8 +204,8 @@ data for the case-study states (Oregon, North Carolina, Texas) and measuring:
 \paragraph{Gerrymander resistance hypothesis.}
 Section~\ref{sec:intro} conjectures that NestSection reduces partisan variance
 by approximately 30--50\% in moderate-compatibility states.  Testing this
-hypothesis requires the ensemble-diagnostics infrastructure from
-\texttt{redist-analysis::ensemble\_diagnostics} (R-hat, ESS, Hamming
+hypothesis requires the ensemble-diagnostics infrastructure now exposed through
+the BISECT analysis and CLI crates (R-hat, ESS, Hamming
 autocorrelation).  A formal test would compare the standard deviation of
 Democratic seat share across 100 NestSection seeds vs.\ 100 independent
 GeoSection seeds for NC and WI.
@@ -221,7 +224,7 @@ The NestSection trunk constraint interacts with Voting Rights Act
 Section~2 compliance.  If a minority-majority community is bisected by the
 trunk, it will be split at all three legislative levels simultaneously.  This
 could harm VRA compliance if the split reduces the minority's ability to elect
-representatives of their choice.  The \texttt{redist analyze --types bloc-voting}
+representatives of their choice.  The \texttt{bisect analyze --types bloc-voting}
 Callais pipeline provides the tools to measure this interaction.  A NestSection
 implementation should include a VRA preflight check (analogous to the
 \texttt{callais\_preflight} function in the existing pipeline) to detect cases

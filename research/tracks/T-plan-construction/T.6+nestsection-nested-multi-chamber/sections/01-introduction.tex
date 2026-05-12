@@ -31,8 +31,9 @@ anchors, producing three maps that are at best loosely correlated.
 
 \subsection{NestSection}
 
-We propose \emph{NestSection}, an algorithm that forces the three chambers to
-share a common \emph{compatible factorization spine}.  The spine is the
+We propose \emph{NestSection}, an algorithmic framework that makes the three
+chambers share a common \emph{compatible factorization spine} whenever their
+seat counts permit it.  The spine is the
 coarsest geographic division that all three chambers agree on: it is
 determined by $g = \gcd(C, S, H)$, the greatest common divisor of the three
 seat counts.  Within each of the $g$ spine regions, the three chambers recurse
@@ -62,8 +63,9 @@ trunk; a score of 100 means the trunk is trivially a single root.
   \item A 50-state compatibility census under the 2020 apportionment, including
         an exact classification of which states admit strict nesting and which
         require best-effort Mode~3 nesting (Section~\ref{sec:evaluation}).
-  \item A legal argument that shared-spine redistricting is an anti-gerrymandering
-        mechanism by construction, and a statutory design proposal for states
+  \item A legal and policy argument that shared-spine redistricting is a
+        verifiable process constraint on multi-chamber manipulation, and a
+        statutory design proposal for states
         where $g \geq 5$ (Section~\ref{sec:discussion}).
 \end{enumerate}
 
@@ -76,8 +78,11 @@ compatibility census and three case studies (Oregon, North Carolina, Texas).
 Section~\ref{sec:discussion} develops the legal argument, addresses limitations,
 and outlines future work.  Section~\ref{sec:conclusion} summarizes.
 
-\paragraph{Implementation note.}  The $\spine$ algorithm is implemented in the
-\texttt{redist-apportion} crate of the \texttt{bisect} Rust workspace; the
-\texttt{compatible\_spines}, \texttt{spine\_compatibility\_score}, and
-\texttt{us\_state\_compatibility\_table} functions are publicly exported and
-tested against all 50 states.
+\paragraph{Implementation note.}  The current BISECT workspace implements
+validation for this proposal.  \path{bisect-cli::nesting} validates nested
+district relationships; \path{bisect-cli::suite} exposes state legislative
+nesting profiles; and \path{rplan-audit} records chamber-nesting rules in
+audit profiles.  The three-chamber \textsc{NestSection} construction in
+Section~\ref{sec:algorithm} is therefore presented as the next constructive
+layer on top of an implemented validation substrate, not as a fully shipped
+pipeline.
