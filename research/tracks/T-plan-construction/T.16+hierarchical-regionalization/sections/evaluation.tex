@@ -1,9 +1,10 @@
 \section{Evaluation Plan}
 
 The current evidence layer includes path, grid, two-clique, capacity, and
-determinism fixtures. The next evidence layer should compare regionalization
-against flat clustering, METIS, and flow construction on selected real-data
-smoke states.
+determinism fixtures, plus a benchmark-tier RPLAN package generated from the
+regionalization constructor on a 100-unit synthetic path. The next evidence
+layer should compare regionalization against flat clustering, METIS, and flow
+construction on selected real-data smoke states.
 
 \begin{table}[h]
 \centering
@@ -15,6 +16,7 @@ Connected fixture output & L0 path/grid tests & None for fixtures & Current \\
 Deterministic merge logs & L0 determinism tests & Broader graph sweep & Current \\
 Capacity handling & L0 capacity fixtures & Real-data smoke & Current \\
 Audit lineage & L1 sidecar checks & Real export transcript & Current \\
+Scale smoke & path100 benchmark package & Real-data benchmarks & Benchmark smoke \\
 Quality vs. baselines & None in this paper & Commands and outputs & Future \\
 \bottomrule
 \end{tabular}

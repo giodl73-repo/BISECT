@@ -1180,6 +1180,7 @@ mod tests {
             vec![
                 "T.14+spectral-grid10-benchmark",
                 "T.15+capacity-path100-benchmark",
+                "T.16+regionalization-path100-benchmark",
                 "T.17+flow-path100-benchmark",
                 "U.16+branch-and-cut-path8-benchmark",
                 "U.18+local-search-grid10-benchmark",

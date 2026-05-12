@@ -1,6 +1,6 @@
 # Next Session Handoff: Algorithm-Family Paper Portfolio
 
-**Status:** Benchmark-tier RPLAN package frontier complete through construction, clustering, flow-construction, exact, search, and audit slices
+**Status:** Benchmark-tier RPLAN package frontier complete through construction, clustering/regionalization, flow-construction, exact, search, and audit slices
 **Owner:** maintainer (you)
 **Last update:** 2026-05-11
 
@@ -28,6 +28,8 @@ goals are complete:
   `docs/examples/rplan-benchmark-packages/T.14+spectral-grid10-benchmark/`.
 - The clustering benchmark-tier package is
   `docs/examples/rplan-benchmark-packages/T.15+capacity-path100-benchmark/`.
+- The regionalization benchmark-tier package is
+  `docs/examples/rplan-benchmark-packages/T.16+regionalization-path100-benchmark/`.
 - The flow-construction benchmark-tier package is
   `docs/examples/rplan-benchmark-packages/T.17+flow-path100-benchmark/`.
 - The exact-side benchmark-tier package is
@@ -65,8 +67,8 @@ packaging:
 
 - Keep `docs/PAPERS.md` current as paper titles or notes change.
 - Extend public fixture/package examples beyond the current tiny golden corpus,
-  two method-produced packages, and construction/clustering/flow/exact/search/
-  audit benchmark packages.
+  two method-produced packages, and construction/clustering/regionalization/
+  flow/exact/search/audit benchmark packages.
 - Use `docs/concepts/t-u-portfolio-dependency-map.md` as the visual dependency
   map for T/U publication packaging.
 - Promote larger real method-produced packages when non-toy fixture outputs are
