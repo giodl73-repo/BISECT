@@ -1,8 +1,33 @@
 {
+  "transcript_version": "rcount-audit-transcript-v1",
+  "verifier": "rcount-audit",
+  "status": "pass",
+  "package_content_hash": "sha256:06432b00410c0d9bddf3ee783eac582bf768c7ccf41d6ca04d5b085b41c1b589",
+  "manifest_content_hash": "sha256:06432b00410c0d9bddf3ee783eac582bf768c7ccf41d6ca04d5b085b41c1b589",
   "checks": [
-    "contest_selection_sum",
-    "jurisdiction_contest_total"
-  ],
-  "status": "generated-fixture",
-  "verifier": "rcount-io"
+    {
+      "equation_id": "contest_selection_sum",
+      "status": "pass",
+      "contest_id": "syn-2024-mayor",
+      "reporting_unit_id": "syn:precinct:P-001"
+    },
+    {
+      "equation_id": "contest_selection_sum",
+      "status": "pass",
+      "contest_id": "syn-2024-mayor",
+      "reporting_unit_id": "syn:precinct:P-002"
+    },
+    {
+      "equation_id": "contest_selection_sum",
+      "status": "pass",
+      "contest_id": "syn-2024-mayor",
+      "reporting_unit_id": "syn:jurisdiction:SYN"
+    },
+    {
+      "equation_id": "jurisdiction_contest_total",
+      "status": "pass",
+      "contest_id": "syn-2024-mayor",
+      "reporting_unit_id": "syn:jurisdiction:SYN"
+    }
+  ]
 }

@@ -6,6 +6,7 @@ members = [
     "crates/rplan-cli",
     "crates/rcount-core",
     "crates/rcount-io",
+    "crates/rcount-audit",
     "crates/bisect-core",
     "crates/bisect-data",
     "crates/bisect-apportion",

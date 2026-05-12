@@ -1,0 +1,228 @@
+use rcount_core::{
+    package_content_hash, verify_jurisdiction_total, verify_package, EquationPass, RcountPackage,
+};
+use rcount_io::{read_package_dir, RcountIoError, RcountManifest};
+use serde::{Deserialize, Serialize};
+use std::fs;
+use std::path::Path;
+use thiserror::Error;
+
+pub const RCOUNT_AUDIT_TRANSCRIPT_VERSION: &str = "rcount-audit-transcript-v1";
+
+#[derive(Debug, Error)]
+pub enum RcountAuditError {
+    #[error("io error: {0}")]
+    Io(#[from] RcountIoError),
+    #[error("core error: {0}")]
+    Core(#[from] rcount_core::RcountCoreError),
+    #[error("json error: {0}")]
+    Json(#[from] serde_json::Error),
+    #[error("filesystem error: {0}")]
+    Fs(#[from] std::io::Error),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum VerificationStatus {
+    Pass,
+    Fail,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CheckResult {
+    pub equation_id: String,
+    pub status: VerificationStatus,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub contest_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reporting_unit_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct VerificationTranscript {
+    pub transcript_version: String,
+    pub verifier: String,
+    pub status: VerificationStatus,
+    pub package_content_hash: String,
+    pub manifest_content_hash: String,
+    pub checks: Vec<CheckResult>,
+}
+
+pub fn verify_package_dir(dir: &Path) -> VerificationTranscript {
+    match read_package_dir(dir) {
+        Ok((manifest, package)) => verify_loaded_package(&manifest, &package),
+        Err(err) => VerificationTranscript {
+            transcript_version: RCOUNT_AUDIT_TRANSCRIPT_VERSION.to_string(),
+            verifier: "rcount-audit".to_string(),
+            status: VerificationStatus::Fail,
+            package_content_hash: "<unavailable>".to_string(),
+            manifest_content_hash: "<unavailable>".to_string(),
+            checks: vec![CheckResult {
+                equation_id: "package_read".to_string(),
+                status: VerificationStatus::Fail,
+                contest_id: None,
+                reporting_unit_id: None,
+                error: Some(err.to_string()),
+            }],
+        },
+    }
+}
+
+pub fn write_verification_transcript(
+    dir: &Path,
+    transcript: &VerificationTranscript,
+) -> Result<(), RcountAuditError> {
+    let transcript_dir = dir.join("transcripts");
+    fs::create_dir_all(&transcript_dir)?;
+    let bytes = serde_json::to_vec_pretty(transcript)?;
+    fs::write(transcript_dir.join("verify-transcript.json"), bytes)?;
+    Ok(())
+}
+
+pub fn verify_and_write_transcript(dir: &Path) -> Result<VerificationTranscript, RcountAuditError> {
+    let transcript = verify_package_dir(dir);
+    write_verification_transcript(dir, &transcript)?;
+    Ok(transcript)
+}
+
+fn verify_loaded_package(
+    manifest: &RcountManifest,
+    package: &RcountPackage,
+) -> VerificationTranscript {
+    let package_hash = package_content_hash(package).unwrap_or_else(|err| format!("error:{err}"));
+    let mut checks = Vec::new();
+
+    match verify_package(package) {
+        Ok(report) => {
+            checks.extend(report.passed.into_iter().map(pass_result));
+        }
+        Err(err) => checks.push(CheckResult {
+            equation_id: "contest_selection_sum".to_string(),
+            status: VerificationStatus::Fail,
+            contest_id: None,
+            reporting_unit_id: None,
+            error: Some(err.to_string()),
+        }),
+    }
+
+    match verify_jurisdiction_total("syn-2024-mayor", "syn:jurisdiction:SYN", &package.summaries) {
+        Ok(passes) => {
+            checks.extend(passes.into_iter().map(pass_result));
+        }
+        Err(err) => checks.push(CheckResult {
+            equation_id: "jurisdiction_contest_total".to_string(),
+            status: VerificationStatus::Fail,
+            contest_id: Some("syn-2024-mayor".to_string()),
+            reporting_unit_id: Some("syn:jurisdiction:SYN".to_string()),
+            error: Some(err.to_string()),
+        }),
+    }
+
+    let status = if checks
+        .iter()
+        .all(|check| check.status == VerificationStatus::Pass)
+    {
+        VerificationStatus::Pass
+    } else {
+        VerificationStatus::Fail
+    };
+
+    VerificationTranscript {
+        transcript_version: RCOUNT_AUDIT_TRANSCRIPT_VERSION.to_string(),
+        verifier: "rcount-audit".to_string(),
+        status,
+        package_content_hash: package_hash,
+        manifest_content_hash: manifest.content_hash.clone(),
+        checks,
+    }
+}
+
+fn pass_result(pass: EquationPass) -> CheckResult {
+    CheckResult {
+        equation_id: pass.equation_id,
+        status: VerificationStatus::Pass,
+        contest_id: Some(pass.contest_id),
+        reporting_unit_id: Some(pass.reporting_unit_id),
+        error: None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rcount_core::synthetic_summary_basic_package;
+    use rcount_io::{synthetic_summary_basic_manifest, write_package_dir};
+
+    #[test]
+    fn valid_summary_basic_produces_pass_transcript() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_summary_basic_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+
+        let transcript = verify_package_dir(tmp.path());
+        assert_eq!(transcript.status, VerificationStatus::Pass);
+        assert_eq!(transcript.checks.len(), 4);
+        assert_eq!(
+            transcript.package_content_hash,
+            transcript.manifest_content_hash
+        );
+    }
+
+    #[test]
+    fn tampered_manifest_produces_fail_transcript() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_summary_basic_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+
+        let manifest_path = tmp.path().join("manifest.json");
+        let mut raw: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(&manifest_path).unwrap()).unwrap();
+        raw["content_hash"] = serde_json::Value::String("sha256:bad".to_string());
+        std::fs::write(&manifest_path, serde_json::to_vec_pretty(&raw).unwrap()).unwrap();
+
+        let transcript = verify_package_dir(tmp.path());
+        assert_eq!(transcript.status, VerificationStatus::Fail);
+        assert_eq!(transcript.checks[0].equation_id, "package_read");
+        assert!(transcript.checks[0]
+            .error
+            .as_ref()
+            .unwrap()
+            .contains("content_hash mismatch"));
+    }
+
+    #[test]
+    fn bad_arithmetic_produces_fail_transcript() {
+        let tmp = tempfile::tempdir().unwrap();
+        let mut package = synthetic_summary_basic_package();
+        package.summaries[0].counted_ballots += 1;
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+
+        let transcript = verify_package_dir(tmp.path());
+        assert_eq!(transcript.status, VerificationStatus::Fail);
+        assert!(transcript
+            .checks
+            .iter()
+            .any(|check| check.equation_id == "contest_selection_sum"
+                && check.status == VerificationStatus::Fail));
+    }
+
+    #[test]
+    fn docs_summary_basic_transcript_verifies_when_present() {
+        let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("..")
+            .join("docs")
+            .join("examples")
+            .join("rcount-golden-packages")
+            .join("summary-basic");
+        if dir.exists() {
+            let transcript = verify_package_dir(&dir);
+            assert_eq!(transcript.status, VerificationStatus::Pass);
+        }
+    }
+}

@@ -12,3 +12,9 @@ election data and make no legal certification claim.
 The verifier surface is still crate-level while RCOUNT is incubating. The first
 public fixture is generated from `rcount_core::synthetic_summary_basic_package`
 and written through `rcount-io`.
+
+The real verifier transcript is generated with:
+
+```text
+cargo run -p rcount-audit --example write_summary_basic_transcript
+```

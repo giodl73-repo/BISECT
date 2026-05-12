@@ -32,6 +32,8 @@ recompute public claims from lower-level evidence.
 - `rcount-io`: started 2026-05-12 with package-directory read/write helpers,
   a `summary-basic` generator, and a docs fixture verifier for
   `docs/examples/rcount-golden-packages/summary-basic`.
+- `rcount-audit`: started 2026-05-12 with pass/fail verification transcripts
+  for `summary-basic`, tampered manifest failures, and bad arithmetic failures.
 
 ## Track Contract
 
