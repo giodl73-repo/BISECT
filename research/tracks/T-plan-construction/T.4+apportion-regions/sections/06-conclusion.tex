@@ -6,19 +6,22 @@ generates congressional district maps by applying the prime factorization of
 the apportioned seat count as a hierarchical geographic partition. The
 algorithm has two inputs: arithmetic (the prime factorization of $n$) and
 geography (the census-tract adjacency graph with TIGER boundary weights).
-It produces a unique map for each state at each seat count, with no political
-inputs and no human boundary choices.
+Under a fixed implementation, seed rule, and tie-breaking policy, it produces
+a reproducible map for each state at each seat count, with no political inputs
+or manual boundary choices.
 
 The key structural properties --- reuse of canonical prime splits across
 seat counts, stability under reapportionment when factorizations share a
 common prefix, and complete structural breaks when they do not --- follow
-directly from the Fundamental Theorem of Arithmetic. The map is as
-non-arbitrary as the seat count itself.
+directly from the Fundamental Theorem of Arithmetic. The tree topology is
+therefore arithmetic rather than discretionary, while the exact geography still
+depends on the published graph, seed, and METIS realization.
 
-The constitutional argument is that AR extends Huntington-Hill
-(Article~I~\S2) from seat allocation to geographic allocation, rather than
-invoking the Manner clause (\S4) as a separate authority. The apportionment
-process, taken to its geographic conclusion, produces the map.
+The constitutional argument is that AR can be read as extending
+Huntington-Hill (Article~I~\S2) from seat allocation to geographic allocation,
+rather than treating the Manner clause (\S4) as the only possible authority.
+The apportionment process, taken to its geographic conclusion, supplies the
+tree structure that the partitioner realizes.
 
 The most striking empirical finding is the $51 \to 52$ California transition,
 where consecutive seat counts have completely disjoint prime structures,

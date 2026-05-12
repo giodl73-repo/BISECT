@@ -68,7 +68,7 @@ into the highly-reused sub-trees $k=8=2^3$ (three binary levels) and $k=9=3^2$
   \end{enumerate}
 \end{definition}
 
-The $p$-way partition in step~3 is computed by METIS~5.x (version with
+The $p$-way partition in step~3 is computed by METIS~5.2 (version with
 \texttt{part\_kway} for $p > 2$, \texttt{part\_recursive} for $p = 2$) using
 population vertex weights and TIGER boundary-length edge weights. For the
 uniform case ($k_1 = \cdots = k_p = n/p$) METIS uses equal target fractions;
@@ -88,7 +88,7 @@ That evidence separates AR's structural claim from any later plan-quality or
 partisan-outcome claim.
 
 \paragraph{Determinism assumption.}
-METIS~5.x's multilevel $k$-way partitioning is deterministic given a fixed
+METIS~5.2's multilevel $k$-way partitioning is deterministic given a fixed
 random seed and fixed input graph (adjacency structure, vertex weights, edge
 weights). We rely on this property throughout: when we say two seat counts
 ``share the same partition,'' we mean the assignment of census tracts to
@@ -161,7 +161,7 @@ split regardless of whether $p$ was intended as a ``$p$-way cut.'' The reuse
 theorem holds for AR-binary under the same determinism assumption.
 
 A variant \emph{AR-direct} that uses direct $k$-way METIS for all prime $k$
-is fully equivalent to AR-binary in our implementation: METIS~5.x's
+is fully equivalent to AR-binary in our implementation: METIS~5.2's
 \texttt{part\_kway} handles $k = 17$ directly (single call, 0.1\% tolerance).
 We defer a systematic comparison of AR-binary vs.\ AR-direct to future work.
 
@@ -240,4 +240,4 @@ the tree depth (bitwise rotation), ensuring full reproducibility without manual
 seed specification.
 The complete source code and build manifest (Rust workspace lockfile, METIS
 vendored source, and pipeline configuration) are available at the project
-repository.
+repository: \url{https://github.com/giodl73-repo/BISECT}.

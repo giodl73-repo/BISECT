@@ -57,10 +57,11 @@ interpolated to census tracts \citep{deford2019recombination} (partisan data sou
 \label{sec:eval:factorizations}
 
 Table~\ref{tab:factorizations} shows the 2020 seat count for each state and its
-canonical AR factorization (largest prime first). Seven seat counts are prime and
-use binary fallback at their first level: CT and OK ($k=5$, $\to 2+3$),
+canonical AR factorization (largest prime first). Eight states have prime seat
+counts greater than three and therefore use binary fallback at their first
+level: CT and OK ($k=5$, $\to 2+3$),
 SC and AL ($k=7$, $\to 3+4$), VA ($k=11$, $\to 5+6$), MI ($k=13$, $\to 6+7$),
-and PA and IL ($k=17$, $\to 8+9$). Twelve states with $k = 2^m$ have fully binary
+and PA and IL ($k=17$, $\to 8+9$). Eighteen states with $k = 2^m$ have fully binary
 trees (MT, RI, NH, ME, HI, ID, WV: $k=2$; KS, UT, NV, AR, IA, MS: $k=4$;
 CO, WI, MO, MD, MN: $k=8$) and are identical to standard recursive bisection.
 
@@ -218,14 +219,14 @@ bisection, yielding a slightly more proportional outcome. Texas also demonstrate
 the computational tractability of large-prime top-level splits: a single METIS
 19-way call at ufactor=1 completes in under one second per seed.
 
-\subsection{Seed Sensitivity: Zero Variance in All 50 States}
+\subsection{Seed Sensitivity: Zero Partisan Variance in All 50 States}
 \label{sec:eval:seeds}
 
 We ran AR at 10 seeds (seeds 1--10) for all 50 states, and 20 seeds
 (seeds 1--20) for the seven focal states (NC, GA, WI, PA, MN, TN, TX).
 480 total runs were completed with 100\% success rate.
 
-\paragraph{Result: complete determinism.}
+\paragraph{Result: zero outcome variance in the tested runs.}
 Every state produced an identical partisan outcome on every seed.
 Table~\ref{tab:seed-sensitivity} summarises the focal states; all remaining
 states also showed zero variance. Edge-cut values were likewise identical
@@ -248,8 +249,8 @@ TX & 38 & $19 \times 2$ & 16D/22R ($-5.1$\,pp) & 20 & 0 \\
 \bottomrule
 \end{tabular}
 \caption{AR partisan outcomes across 10--20 seeds. Variance = number of seeds
-  that produced a different outcome than seed~1. Zero variance in all cases:
-  AR produces identical partitions regardless of METIS seed.}
+  that produced a different outcome than seed~1. Zero partisan variance in all
+  cases tested; byte-identical tract assignments require a separate certificate.}
 \label{tab:seed-sensitivity}
 \end{table}
 
@@ -265,12 +266,13 @@ outcomes vary across thousands of seeds. AR converts a hard, high-variance
 global search into a sequence of easy, low-variance local searches.
 
 \paragraph{Implication for the constitutional argument.}
-If AR's output is independent of the METIS seed, the map is determined by
-exactly two inputs: the prime factorization of $n$ (arithmetic) and the
-census-tract graph $G$ (geography). The METIS seed --- the last remaining
-degree of freedom in the algorithm --- turns out to be irrelevant in practice.
-This strengthens the constitutional claim: AR is not merely reproducible given
-a seed; it is functionally seedless. Any seed produces the same map.
+If AR's partisan outcome and edge-cut value are invariant across tested METIS
+seeds, the remaining seed choice is less consequential for the claims reported
+here.
+This strengthens the reproducibility claim but does not eliminate the need to
+publish a fixed seed derivation rule and a tract-assignment certificate.
+For legal use, the certified artifact should state the exact seed, graph hash,
+and tie-breaking policy used to produce the submitted map.
 
 \subsection{Structural Disruption Across Reapportionments}
 \label{sec:eval:disruption}

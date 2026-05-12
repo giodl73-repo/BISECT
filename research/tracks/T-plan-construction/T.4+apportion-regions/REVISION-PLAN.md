@@ -44,13 +44,25 @@ Round 4 used the same panel of 5 reviewers (Karypis, Rodden, Duchin, Stephanopou
 
 ## Round 4 Open Items (P2 — for journal submission)
 
-- [ ] Drop "plausible estimates" qualifier in ensemble comparison (Duchin, Liang) — replace with direct attribution to Herschlag et al.
+- [x] Drop "plausible estimates" qualifier in ensemble comparison (Duchin, Liang) — replaced with direct attribution to Herschlag et al. in the 2026-05-12 paper-quality pass
 - [ ] Add cross-reference from Step 3 to boundary-position caveat in §5.4 (Duchin)
-- [ ] Specify METIS 5.2 consistently in §3.2 AR Algorithm paragraph (Karypis)
+- [x] Specify METIS 5.2 consistently in §3.2 AR Algorithm paragraph (Karypis)
 - [ ] Add graph checksums for NC and GA to Reproducibility paragraph (Liang)
-- [ ] Add repository URL or DOI to Reproducibility paragraph (Liang)
+- [x] Add repository URL or DOI to Reproducibility paragraph (Liang)
 - [ ] Add one sentence engaging Moore v. Harper in §5.1 (Stephanopoulos)
 - [ ] Clarify WI seed-invariance vs. multi-seed-protocol tension (Rodden)
+
+## 2026-05-12 Paper-Quality Check
+
+Status: maintained accepted status after atlas-alignment review.
+The pass narrowed deterministic and constitutional language so the paper now
+distinguishes arithmetic tree determinism from exact map reproduction under a
+fixed implementation, seed derivation rule, graph hash, and tie-breaking policy.
+It also corrected the prime-seat/factored-seat state counts in the factorization
+summary, narrowed seed-invariance claims to partisan outcomes and edge-cut
+values unless a byte-identical certificate is present, specified METIS 5.2 in
+the AR algorithm paragraph, added the repository URL, and removed the
+"plausible estimates" qualifier from the Herschlag ensemble comparison.
 
 ## Round 3 Review Panel
 

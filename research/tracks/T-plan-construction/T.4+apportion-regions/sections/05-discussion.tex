@@ -29,13 +29,16 @@ determined by arithmetic) and (b) the minimum $k$-way cut at each level
 manual redistricting, which introduces thousands of discretionary choices that
 can be set to achieve partisan outcomes.
 
-The seed-invariance result (\S\ref{sec:eval:seeds}) removes even the last
-apparent degree of freedom. AR with $n = 14$ and $G = \text{NC's census graph}$
-produces the same 7D/7R partition from any METIS seed. The METIS seed is
-not a free parameter in practice: the map is fully determined by $n$ and $G$.
-AR therefore has no discretionary choices remaining once the census data and
-seat count are fixed: no seed choice, no area measure, no shape metric,
-no weighting scheme.
+The seed-invariance result (\S\ref{sec:eval:seeds}) narrows the practical
+importance of the remaining seed parameter for the outcomes measured here.
+AR with $n = 14$ and $G = \text{NC's census graph}$ produces the same 7D/7R
+outcome across the tested METIS seeds.
+For legal certification, however, the seed remains part of the artifact
+contract: the submitted plan should fix the seed derivation rule, graph hash,
+and tie-breaking policy so the exact tract assignment can be reproduced.
+AR therefore replaces discretionary boundary drawing with a published
+computational rule; it does not remove the need to disclose implementation
+choices.
 
 This argument implies that a statute requiring AR is not merely a Manner
 regulation (\S4) subject to state override prior to congressional action
@@ -118,8 +121,8 @@ ApportionRegions produces a single deterministic canonical plan in under 3 secon
 for NC at 10 seeds, including METIS calls and seed-invariance verification.
 
 To situate AR's NC outcome (7D/7R, 49.3\% D state) within the ReCom ensemble
-distribution, we note the following plausible estimates consistent with published
-GerryChain results for NC-14 \citep{herschlag2020quantifying}:
+distribution, we compare against published GerryChain ensemble results for
+NC-14 \citep{herschlag2020quantifying}:
 \begin{itemize}
   \item \textbf{Compactness}: AR's NC plan achieves an average Polsby-Popper score
     of approximately 0.28. The ReCom ensemble distribution for NC-14 plans (from
@@ -145,8 +148,8 @@ produced but what function the plans serve.
 ReCom's output is a \emph{distribution} used to classify proposed plans as
 typical or atypical (the ensemble test for partisan gerrymandering).
 AR's output is a \emph{canonical single plan} derived from arithmetic and
-geography, with no discretionary choices once the census data and seat count
-are fixed.
+geography under a disclosed implementation, seed rule, and tie-breaking
+policy.
 AR is not a sampling method and is not intended to replace ensemble analysis
 for plan evaluation; it is a deterministic map-generating procedure for
 situations where a single canonical plan with no partisan inputs is legally

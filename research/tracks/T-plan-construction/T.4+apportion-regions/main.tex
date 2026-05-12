@@ -41,9 +41,11 @@ state's census-tract graph. The resulting \emph{ApportionRegions}
 adjacency). All prime-$p$ splits of a given state are computed once and reused
 across every seat count sharing that prime factor. When $n$ changes after
 reapportionment, only the levels of the factorization tree affected by the new
-prime structure require recomputation. The map is uniquely determined by
-census data and number theory --- no political inputs, no discretionary choices
-once the census data and seat count are fixed. We prove that AR is constitutional under Article~I~\S2 directly,
+prime structure require recomputation. Under a fixed implementation, seed
+derivation rule, and deterministic tie-breaking policy, the map is determined
+by census data and number theory rather than partisan inputs or manual boundary
+choices. We argue that AR can be understood as an Article~I~\S2 apportionment
+extension,
 evaluate the algorithm on all 50 states, and characterize the striking
 discontinuities that occur when consecutive seat counts have disjoint prime
 factorizations (e.g., California's 51\,=\,3\,$\times$\,17 and
