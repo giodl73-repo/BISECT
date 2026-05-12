@@ -24,6 +24,19 @@ It is not a replacement for construction or exact optimization. It is the
 multi-objective layer that can compare outputs and preserve selected-plan
 lineage.
 
+## Picture 0: Frontier Selection With Validity Lineage
+
+The opening figure shows the U.19 decision as a comparison, not a single-score
+optimization. Crossover and mutation create candidate children, but invalid or
+repaired children remain visible in lineage. The frontier then records objective
+values, generation, validity status, and selected index.
+
+The selected entry is not "best" in every objective. In the example, index 1
+has a higher edge cut than some alternatives, but fewer county splits. That is
+the trade-off being selected. BISECT therefore needs the selected-frontier index
+and objective context before the chosen plan can move downstream into an
+ordinary RPLAN/RCTX/audit package.
+
 ## Picture 1: Frontier To Selected Package
 
 ![U.19 frontier and selected package](assets/u19-frontier-selected.svg)

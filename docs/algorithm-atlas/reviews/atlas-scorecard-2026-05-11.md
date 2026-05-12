@@ -25,8 +25,8 @@ prose plus generic diagrams no longer earns an excellent score.
 
 | Band | Pages |
 |---|---|
-| Excellent, 54-60 | T.14, T.15, T.16, T.17, U.16, U.17, U.18, GeoSection, AreaSection, Seed Search, County-Sticky, ApportionRegions, Three-Layer Compositor, Multiscale, U.20 |
-| Good, 45-53 | U.19, ReCom, SMC |
+| Excellent, 54-60 | T.14, T.15, T.16, T.17, U.16, U.17, U.18, U.19, GeoSection, AreaSection, Seed Search, County-Sticky, ApportionRegions, Three-Layer Compositor, Multiscale, U.20 |
+| Good, 45-53 | ReCom, SMC |
 | Serviceable, 36-44 | None |
 | Thin, 24-35 | None |
 | Failing, 0-23 | None |
@@ -48,7 +48,7 @@ figures are upgraded.
 | U.16 Branch-And-Cut | 9 | 9 | 10 | 10 | 9 | 9 | 56 | Excellent |
 | U.17 Branch-And-Price | 9 | 9 | 10 | 10 | 9 | 8 | 55 | Excellent |
 | U.18 Local Search | 9 | 9 | 10 | 10 | 9 | 9 | 56 | Excellent |
-| U.19 Evolutionary Comparison | 9 | 9 | 7 | 8 | 9 | 9 | 51 | Good |
+| U.19 Evolutionary Comparison | 9 | 9 | 10 | 10 | 9 | 9 | 56 | Excellent |
 | U.20 RPLAN Audit Certificates | 10 | 10 | 7 | 9 | 10 | 10 | 56 | Excellent |
 | ReCom Ensemble | 8 | 8 | 7 | 8 | 9 | 9 | 49 | Good |
 | Sequential Monte Carlo | 8 | 8 | 7 | 8 | 9 | 9 | 49 | Good |
@@ -132,9 +132,9 @@ population and contiguity gates, rejected tempting moves, the accepted first
 best valid move, descendant-plan evidence, and the no-global-optimum claim
 boundary.
 
-**U.19 - 51/60.** This page is accurate and
-well-evidenced, but its primary visuals still need more complete
-candidate-set -> decision-rule -> artifact-consequence paths.
+**U.19 Evolutionary Comparison - 56/60.** The page now shows repair-aware
+offspring creation, frontier objective trade-offs, selected-index context,
+validity lineage, and the selected-frontier package consequence.
 
 **ReCom and SMC - 49/60.** Sampling pages explain diagnostics and genealogy,
 but the visuals should better show candidate transitions and why a sampled step
@@ -148,7 +148,7 @@ or particle is accepted, rejected, copied, or diagnosed.
 ## Acceptance Target
 
 Under the stricter rubric, every page remains at least good, but only
-T.14, T.15, T.16, T.17, U.16, U.17, U.18, GeoSection, AreaSection, County-Sticky, ApportionRegions, Three-Layer
+T.14, T.15, T.16, T.17, U.16, U.17, U.18, U.19, GeoSection, AreaSection, County-Sticky, ApportionRegions, Three-Layer
 Compositor, Multiscale, Seed Search, and U.20 currently score excellent. The
 next target is to raise the remaining U-series and sampling pages to **54/60 or
 higher** with gold-standard teaching figures.
