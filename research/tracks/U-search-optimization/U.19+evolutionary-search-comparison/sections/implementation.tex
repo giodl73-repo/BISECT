@@ -5,6 +5,12 @@ mutation operators, deterministic fixed-seed frontier metadata, and selected
 frontier export. Operators may return valid children, explicit valid fallbacks,
 or rejected-child records; invalid silent outputs falsify the contract.
 
+The atlas view makes the frontier decision explicit. Offspring creation,
+repair/fallback, frontier observation, and selected-index export are different
+events. A selected entry need not be best in every objective; it is a chosen
+trade-off point whose generation, objective vector, validity status, and
+selection index must travel with the RPLAN/RCTX package.
+
 \begin{table}[htbp]
 \centering
 \small

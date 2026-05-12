@@ -6,6 +6,13 @@ paths. The summary must record parent plan id, attempted method, accepted move
 or rejection/no-op reason, objective delta, validity checks, and output artifact
 id when a child plan is emitted.
 
+The atlas framing treats every boundary move as a candidate that must pass
+separate gates. A move that improves the edge-cut objective can still be
+rejected for population or connectedness, and a no-op run is meaningful only if
+the evaluated neighborhood and rejection reasons are recorded. The descendant
+package is therefore evidence of a local transition from a parent plan, not a
+new construction from scratch.
+
 \begin{table}[htbp]
 \centering
 \small

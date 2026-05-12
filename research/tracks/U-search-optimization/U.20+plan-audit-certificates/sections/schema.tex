@@ -26,6 +26,13 @@ Construction, exact optimization, local search, and Pareto comparison may carry
 different upstream evidence, but their final packages must agree on the same
 artifact vocabulary.
 
+The atlas framing requires both positive and negative verifier paths to be
+concrete. A passing package shows the plan, context, certificate, manifest, and
+hash chain agreeing. A failing package should identify the exact broken
+invariant: missing context, order mismatch, stale hash, unsupported profile, or
+broken lineage pointer. That failure reason is part of the audit product rather
+than an implementation footnote.
+
 \begin{table}[htbp]
 \centering
 \small

@@ -12,6 +12,12 @@ still failing to support an exact optimization claim because the solver timed
 out, fell back, or never produced a bound. U.16 therefore requires every output
 to carry a status label before any exactness language is used.
 
+The atlas framing makes the separated candidate concrete. A candidate incumbent
+must be inspectable as a graph assignment; if a district appears in disconnected
+components, the separation routine emits the violated connectivity cut and the
+model is resolved. The paper's exactness language therefore belongs to the
+solver report, while final-plan validity belongs to the RPLAN/RCTX certificate.
+
 \begin{table}[htbp]
 \centering
 \small

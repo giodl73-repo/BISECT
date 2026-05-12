@@ -41,11 +41,11 @@ Each paper should be checked against six atlas-derived requirements:
 | [T.15 Capacity Clustering](../algorithm-atlas/t15-capacity-clustering.md) | [T.15](T.15+capacity-constrained-clustering.pdf) | `research/tracks/T-plan-construction/T.15+capacity-constrained-clustering/` | Golden and benchmark packages exist | Aligned 2026-05-12; rebuilt PDF |
 | [T.16 Hierarchical Regionalization](../algorithm-atlas/t16-hierarchical-regionalization.md) | [T.16](T.16+hierarchical-regionalization.pdf) | `research/tracks/T-plan-construction/T.16+hierarchical-regionalization/` | Golden and benchmark packages exist | Aligned 2026-05-12; rebuilt PDF |
 | [T.17 Flow Construction](../algorithm-atlas/t17-flow-construction.md) | [T.17](T.17+flow-based-construction.pdf) | `research/tracks/T-plan-construction/T.17+flow-based-construction/` | Golden and benchmark packages exist | Aligned 2026-05-12; rebuilt PDF |
-| [U.16 Branch-And-Cut](../algorithm-atlas/u16-branch-and-cut.md) | [U.16](U.16+branch-and-cut-redistricting.pdf) | `research/tracks/U-search-optimization/U.16+branch-and-cut-redistricting/` | Golden and path8 benchmark packages exist | Needs atlas-language skim |
-| [U.17 Branch-And-Price](../algorithm-atlas/u17-branch-and-price.md) | [U.17](U.17+branch-and-price-redistricting.pdf) | `research/tracks/U-search-optimization/U.17+branch-and-price-redistricting/` | Golden package exists | Needs atlas-language skim |
-| [U.18 Local Search](../algorithm-atlas/u18-local-search.md) | [U.18](U.18+large-neighborhood-search.pdf) | `research/tracks/U-search-optimization/U.18+large-neighborhood-search/` | Golden, method, and benchmark packages exist | Needs atlas-language skim |
-| [U.19 Evolutionary Comparison](../algorithm-atlas/u19-evolutionary-comparison.md) | [U.19](U.19+evolutionary-search-comparison.pdf) | `research/tracks/U-search-optimization/U.19+evolutionary-search-comparison/` | Selected-frontier golden package exists | Needs atlas-language skim |
-| [U.20 RPLAN Audit Certificates](../algorithm-atlas/u20-rplan-audit-certificates.md) | [U.20](U.20+plan-audit-certificates.pdf) | `research/tracks/U-search-optimization/U.20+plan-audit-certificates/` | Golden corpus and grid10 audit benchmark exist | Needs atlas-language skim |
+| [U.16 Branch-And-Cut](../algorithm-atlas/u16-branch-and-cut.md) | [U.16](U.16+branch-and-cut-redistricting.pdf) | `research/tracks/U-search-optimization/U.16+branch-and-cut-redistricting/` | Golden and path8 benchmark packages exist | Aligned 2026-05-12; rebuilt PDF |
+| [U.17 Branch-And-Price](../algorithm-atlas/u17-branch-and-price.md) | [U.17](U.17+branch-and-price-redistricting.pdf) | `research/tracks/U-search-optimization/U.17+branch-and-price-redistricting/` | Golden package exists | Aligned 2026-05-12; rebuilt PDF |
+| [U.18 Local Search](../algorithm-atlas/u18-local-search.md) | [U.18](U.18+large-neighborhood-search.pdf) | `research/tracks/U-search-optimization/U.18+large-neighborhood-search/` | Golden, method, and benchmark packages exist | Aligned 2026-05-12; rebuilt PDF |
+| [U.19 Evolutionary Comparison](../algorithm-atlas/u19-evolutionary-comparison.md) | [U.19](U.19+evolutionary-search-comparison.pdf) | `research/tracks/U-search-optimization/U.19+evolutionary-search-comparison/` | Selected-frontier golden package exists | Aligned 2026-05-12; rebuilt PDF |
+| [U.20 RPLAN Audit Certificates](../algorithm-atlas/u20-rplan-audit-certificates.md) | [U.20](U.20+plan-audit-certificates.pdf) | `research/tracks/U-search-optimization/U.20+plan-audit-certificates/` | Golden corpus and grid10 audit benchmark exist | Aligned 2026-05-12; rebuilt PDF |
 | [ReCom Ensemble](../algorithm-atlas/recom-ensemble.md) | [U.10](U.10+bisect-ensemble.pdf), [G.4](G.4+ensemble-diagnostics-paper.pdf), [G.10](G.10+merge-split.pdf) | `research/tracks/U-search-optimization/U.10+bisect-ensemble/`, `research/tracks/G-ensemble/` | Ensemble outputs; package alignment unclear | Queued |
 | [Sequential Monte Carlo](../algorithm-atlas/sequential-monte-carlo.md) | [G.7](G.7+smc-redistricting.pdf) | `research/tracks/G-ensemble/G.7+smc-redistricting/` | SMC NDJSON/test evidence; package alignment unclear | Queued |
 | [Multiscale MCMC](../algorithm-atlas/multiscale-mcmc.md) | [G.11](G.11+multiscale-mcmc.pdf) | `research/tracks/G-ensemble/G.11+multiscale-mcmc/` | Multiscale sampler evidence; package alignment unclear | Queued |
@@ -59,7 +59,7 @@ Each paper should be checked against six atlas-derived requirements:
      candidate, decision, consequence, or evidence phrase.
    - Rebuild PDFs if LaTeX sources change.
 
-2. **U.16-U.20 exact/search/audit pass**
+2. **U.16-U.20 exact/search/audit pass** - completed 2026-05-12
    - Preserve category boundaries: solver proof claims stay in solver reports;
      plan validity claims stay in RPLAN/RCTX/certificates.
    - Make U.20 fixed-point language consistent across all U-series papers.
@@ -83,6 +83,8 @@ Each paper should be checked against six atlas-derived requirements:
 
 - [ ] Every atlas-covered paper has an explicit C1-C6 alignment row.
 - [x] Every edited source paper rebuilds cleanly for the completed T.14-T.17 pass.
+- [x] Every edited source paper rebuilds cleanly for the completed U.16-U.20 pass.
 - [x] `docs/PAPERS.md` links to this tracker.
 - [x] Changed T.14-T.17 PDFs are copied to `docs/papers/`.
+- [x] Changed U.16-U.20 PDFs are copied to `docs/papers/`.
 - [ ] Review language follows the panel disclosure boundary.

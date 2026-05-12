@@ -11,6 +11,12 @@ report is not necessarily a branch-and-price proof; and an exact fixture
 package is scoped to the fixture model, objective, and column universe recorded
 in the run context.
 
+In the atlas view, the candidates are whole district columns rather than
+individual unit moves. A low-cost column can still be rejected by the master if
+it overlaps selected columns or leaves another unit uncovered. The selected
+solution must therefore name column ids and coverage status, not only the final
+assignment colors.
+
 \begin{table}[htbp]
 \centering
 \small
