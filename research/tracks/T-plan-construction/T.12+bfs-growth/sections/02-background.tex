@@ -17,31 +17,23 @@ KL refinement---has not been studied as a redistricting method.
 This paper fills that gap by evaluating BFS growth as a complete
 Structure-layer algorithm.
 
-\subsection{k-Farthest Seed Selection}
+\subsection{Two-Seed Farthest Selection}
 
 The quality of a BFS partition is determined primarily by seed placement.
 Seeds that are close together produce uneven districts (one large, one
 small); seeds at opposite ends of the graph produce more balanced initial
 boundaries.
 
-The \emph{k-farthest} strategy selects seeds greedily by BFS distance:
+The implemented two-seed strategy selects seeds greedily by BFS distance:
 \begin{enumerate}
 \item Seed~0 is selected by population-weighted sampling (denser areas
   first, reflecting the fact that high-population areas are more likely
   to require splitting and thus benefit from being starting points).
-\item Each subsequent seed is the tract with the maximum minimum BFS
-  distance to any already-selected seed.
+\item The second seed is the tract with maximum BFS distance from seed 0.
 \end{enumerate}
-This strategy is a BFS analogue of the farthest-point initialisation used
-in $k$-means++ for Euclidean spaces~\citep{cormen2009}.
-It ensures that seeds are maximally spread across the graph topology rather
-than clustering in densely connected regions.
-
-For the redistricting bisection case ($k=2$), the k-farthest strategy
-reduces to: place seed~0 by weighted sampling, then place seed~1 at the
-BFS-farthest tract from seed~0.
-This is exactly the strategy that maximises the initial boundary length
-between the two growing regions.
+This is a graph-distance analogue of farthest-point initialisation
+\citep{cormen2009}, but the implemented form is binary because BISECT grows
+plans through recursive bisection.
 
 \subsection{The Population-Deficit Priority Function}
 
@@ -56,20 +48,13 @@ to district $d$.
 The tract with the lowest priority key is expanded next; ties are broken
 by tract index.
 
-This priority function fills the \emph{emptiest} district first.
+This priority function fills the \emph{currently smaller} side first.
 It is motivated by the following balance argument: if district $d$ has
 population far below the ideal, its neighbours should be assigned to $d$
 before they are assigned to a more populated district.
-Formally, under the deficit-priority function, the final imbalance is
-bounded by the maximum single-tract population, because each growth step
-reduces the maximum deficit by at least the added tract's population.
-
-An alternative priority function---$|\text{ideal} - P_d^{\mathrm{current}}|$
-(absolute deficit)---would produce the same ordering when a district is
-below ideal, but would deprioritise districts that have exceeded their
-ideal population, potentially allowing overfull districts to grow further.
-The current-population priority avoids this pathology by always filling
-the smallest district.
+The priority is a heuristic, not a balance proof. Large tract populations,
+frontier geometry, disconnected components, and the later rebalance pass all
+affect the final deviation.
 
 \paragraph{Comparison with CVD.}
 \cvd{} assigns each tract to the district whose centroid (geographic center
@@ -100,7 +85,7 @@ Data needed & Adjacency only & Adjacency + centroids & Adjacency \\
 Iterations & 1 pass & $\sim$20 iters & Multilevel KL \\
 Runtime & $O(n \log n)$ & $O(n \times k \times 20)$ & $O(n \log n)$ \\
 Contiguity guarantee & Yes (BFS) & No (post-process) & No (post-process) \\
-Compactness & Low (floor) & Medium & Medium-high \\
+Compactness & Benchmark target & Proximity packing & Edge-cut oriented \\
 Hyperparameters & 0 & 1 (iter count) & 1 (ufactor) \\
 \bottomrule
 \end{tabular}
@@ -129,5 +114,6 @@ at each node:
 \areasec{} adds area-swing constraints;
 \ar{}~\citep{b11paper} links the bisection tree to Huntington-Hill
 apportionment.
-\bfsg{} is the unique structure-layer algorithm that optimises nothing:
-it is the zero-optimisation baseline against which all others are measured.
+\bfsg{} is the structure-layer algorithm that optimises the least: it is the
+minimal adjacency-growth baseline against which stronger splitters can be
+measured once same-metric packages exist.

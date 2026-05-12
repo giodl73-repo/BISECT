@@ -53,8 +53,8 @@
 %% -----------------------------------------------------------------------
 
 \title{%
-  \textbf{BFS Region-Growing: Greedy Geographic District Packing}\\
-  \textbf{from $k$-Farthest Seeds}\\[0.8em]
+  \textbf{BFS Region-Growing: A Minimal Contiguous}\\
+  \textbf{Bisection Baseline for BISECT}\\[0.8em]
   \normalsize\textit{T.12 --- Algorithm Design / Geometric Structure}%
 }
 
@@ -72,36 +72,23 @@
 
 \begin{abstract}
 \noindent
-We introduce \bfsg{}, the simplest redistricting algorithm: place $k$ seeds
-at maximally spread locations via BFS-farthest selection, then repeatedly
-assign each unassigned tract to the adjacent district with the greatest
-population deficit.
-The algorithm requires only the adjacency graph and population weights---no
-temperature schedule, no iteration count, no distance metric.
-A single pass of the priority queue produces a contiguous assignment;
-contiguity is guaranteed by induction on the BFS frontier.
-Post-hoc boundary-swap rebalancing (200 iterations) brings all districts
-within the standard $\pm 0.5\%$ tolerance.
+\bfsg{} is BISECT's smallest implemented structure-layer alternative to
+METIS-style bisection. At each bisection-tree node it selects one
+population-weighted seed, chooses a second seed at maximum BFS distance from
+the first, grows two frontier regions with a priority queue keyed by current
+district population, assigns any disconnected leftovers to the smaller side,
+and applies the same 200-step local boundary rebalance family used elsewhere
+in the platform. The only required inputs are adjacency, population, balance
+tolerance, base seed, and node path.
 
-Total runtime is $O(n \log n)$ per bisection node, matching \metis{} and
-substantially faster than simulated annealing (U.3) or CVD (T.10).
-Empirical comparison on NC ($k=14$), WI ($k=8$), and TX ($k=38$) shows
-that \bfsg{} provides a geometric baseline that is competitive with \metis{}
-on Polsby-Popper compactness (typically $9$--$14\%$ \emph{higher} PP than
-\metis{}) while sacrificing edge-cut quality ($8$--$15\%$ higher EC than
-\metis{}).
-The relevant comparison depends on the compactness metric: for PP-based
-compactness \bfsg{} is not a lower bound, for EC-based compactness it is.
-The \emph{geometric floor} claim applies specifically to edge-cut compactness.
-
-\bfsg{} is useful as: (1) a fast warm-start for MCMC chains
-(\recom{}/Forest ReCom), replacing \metis{} when a geographically
-structured initial plan is preferred; (2) the ``simplest geographic
-partition'' baseline for evaluating how much optimisation algorithms
-add beyond basic geographic proximity; and (3) a legal-argumentation
-tool demonstrating that the submitted plan outperforms the most
-primitive contiguous partition.
-Implementation: \texttt{--structure bfs-growth}.
+This paper corrects the older presentation of BFS Growth. The implementation is
+a recursive two-way bisection primitive, not a general $k$-seed simultaneous
+constructor. It is a baseline and warm-start candidate, not a certified
+compactness floor. Its strongest property is legibility: every accepted tract
+is reached from an already-owned neighbor unless the disconnected-graph safety
+net fires. The remaining publication gap is empirical: NC/WI/TX quality and
+warm-start claims need archived same-metric run packages before they carry
+standalone weight. Implementation: \texttt{--structure bfs-growth}.
 \end{abstract}
 
 \input{sections/01-introduction}

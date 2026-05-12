@@ -67,7 +67,7 @@ are called complete.
 | 2 | T.14-T.17 | Construction-family golden vertical slices | Completed 2026-05-12 |
 | 3 | U.16-U.20 | Exact/search/audit certificate family, including U.20 fixed-point language | Completed 2026-05-12 |
 | 4 | U.10, G.4, G.7, G.10, G.11 | Sampling and ensemble methods | Completed 2026-05-12 |
-| 5 | T.5-T.13, U.0-U.7, U.11, U.13-U.15 | Older algorithm-family papers not yet lifted to the same explanatory standard | In progress: T.5-T.11 complete |
+| 5 | T.5-T.13, U.0-U.7, U.11, U.13-U.15 | Older algorithm-family papers not yet lifted to the same explanatory standard | In progress: T.5-T.12 complete |
 | 6 | B/C/D/F/G/A synthesis tracks | Portfolio, validation, legal, legislative, ensemble, and synthesis papers | Queued |
 | 7 | E/I/J/K/L/M/N/O/P/Q/R/S tracks | Remaining indexed papers and source-only drafts | Queued |
 
@@ -280,7 +280,7 @@ than the current short-run smoke comparison.
 | T.9 Multi-Reapportionment Stability | Reviewed 2026-05-12 | Corrected ApportionRegions prime behavior to match the implemented large-prime binary fallback, added visible tree sketches and first-split/depth tables, reframed 2030 values as projection scenarios and audit targets, narrowed ReCom/political-redistricting comparisons to scale heuristics pending same-metric packages, and added election-audit reconciliation principles | Rebuilt; no undefined refs/cites/BibTeX warnings/overfull boxes; bisect-apportion prime tests passed; PDF copied |
 | T.10 Centroidal Voronoi | Reviewed 2026-05-12 | Reframed CVD as proximity packing with graph-distance and geographic metric modes, aligned the seed derivation and approximate-medoid direction with the Rust implementation, added a visible seed/ownership/split grid, corrected Phase 2 language now that geographic CVD and centroid loading exist, narrowed numerical comparisons to benchmark targets pending packages, and surfaced the current half-split limitation for odd-seat nodes | Rebuilt; no undefined refs/cites/BibTeX warnings/overfull boxes; focused CVD tests passed; PDF copied |
 | T.11 CVD Geographic | Reviewed 2026-05-12 | Recast the archived companion as an implemented geographic-metric note, added map-vs-hop and seed/ownership/centroid visuals, aligned centroid companion naming and projection scope with the Rust loader, removed unsupported NC/FL/WA improvement claims, surfaced the half-population odd-seat limitation, and reframed empirical tables as benchmark targets | Rebuilt; no undefined refs/cites/BibTeX warnings/overfull boxes; focused CVD tests passed; PDF copied |
-| T.12 BFS Growth | Queued | Queued | Queued |
+| T.12 BFS Growth | Reviewed 2026-05-12 | Reframed BFS Growth as the implemented recursive two-way splitter rather than a simultaneous k-way constructor, added seed/frontier/split and heap-pop visuals, aligned seed derivation, heap priority, disconnected leftovers, and local rebalance with Rust, removed unsupported NC/WI/TX and warm-start claims, and surfaced validation/ratio-aware gaps | Rebuilt; no undefined refs/cites/BibTeX warnings/overfull boxes; focused BFS Growth tests passed; PDF copied |
 | T.13 Moving-Knife | Queued | Queued | Queued |
 
 ## Batch 5 Paper-Quality Scorecard
@@ -296,6 +296,7 @@ than the current short-run smoke comparison.
 | T.9 Multi-Reapportionment Stability | 3.7 | 3.7 | 3.1 | 3.9 | 4.0 | 3.5 | 21.9 / 24 |
 | T.10 Centroidal Voronoi | 3.6 | 3.5 | 3.0 | 3.8 | 3.9 | 3.4 | 21.2 / 24 |
 | T.11 CVD Geographic | 3.6 | 3.5 | 3.0 | 3.8 | 3.9 | 3.5 | 21.3 / 24 |
+| T.12 BFS Growth | 3.6 | 3.5 | 3.0 | 3.8 | 3.9 | 3.5 | 21.3 / 24 |
 
 ### Batch 5 Score Notes
 
@@ -373,3 +374,14 @@ scope, and missing-centroid error behavior. The remaining ceiling is empirical
 and architectural: NC/FL/WA comparisons need archived centroid-backed packages,
 projection metadata needs to be carried into run manifests, and odd-seat CVD
 nodes still need ratio-aware population targets.
+
+**T.12 BFS Growth -- 21.3/24.** The paper now matches the shipped recursive
+two-way BFS splitter rather than describing a simultaneous k-seed constructor.
+It documents the two-stage deterministic seed derivation, population-weighted
+first seed, farthest-BFS second seed, population-keyed heap expansion,
+disconnected-leftover safety net, and bounded boundary rebalance. The new
+block arrays show why the algorithm tries particular frontier moves instead of
+merely naming a 50/50 target. The remaining ceiling is empirical and
+architectural: NC/WI/TX comparisons, warm-start claims, and odd-seat
+ratio-aware split targets need archived packages before they can carry
+publication weight.
