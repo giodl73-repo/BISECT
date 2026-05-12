@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="360" viewBox="0 0 960 360" role="img" aria-labelledby="title desc">
+  <title id="title">ReCom ensemble overview</title>
+  <desc id="desc">A valid plan moves through repeated ReCom steps into an ensemble distribution with diagnostics.</desc>
+  <style>.bg{fill:#fbfbf8}.box{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.move{fill:#eef2ff;stroke:#5b61b6;stroke-width:2}.dist{fill:#fff3cd;stroke:#c79300;stroke-width:2}.diag{fill:#e4f5eb;stroke:#2f7d4c;stroke-width:2}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.arrow{stroke:#596673;stroke-width:2;fill:none;marker-end:url(#arrow)}</style>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#596673"/></marker></defs>
+  <rect class="bg" width="960" height="360"/>
+  <rect class="box" x="70" y="115" width="145" height="85" rx="8"/><text class="label" x="104" y="148">valid plan</text><text class="small" x="103" y="170">starting map</text>
+  <rect class="move" x="300" y="115" width="160" height="85" rx="8"/><text class="label" x="337" y="148">ReCom step</text><text class="small" x="323" y="170">merge + tree + cut</text>
+  <rect class="dist" x="545" y="115" width="150" height="85" rx="8"/><text class="label" x="587" y="148">ensemble</text><text class="small" x="579" y="170">sampled plans</text>
+  <rect class="diag" x="780" y="115" width="120" height="85" rx="8"/><text class="label" x="807" y="148">diagnose</text><text class="small" x="807" y="170">R-hat / ESS</text>
+  <path class="arrow" d="M215 157 H300"/><path class="arrow" d="M460 157 H545"/><path class="arrow" d="M695 157 H780"/>
+  <path class="arrow" d="M420 115 C470 55 610 55 650 115"/>
+  <text class="small" x="300" y="282">ReCom samples the feasible space; it is an evaluator and comparator, not an optimizer.</text>
+</svg>

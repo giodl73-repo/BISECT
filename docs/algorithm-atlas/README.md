@@ -76,11 +76,22 @@ Each algorithm page is organized around four questions:
 | U.19 Evolutionary Comparison | [U.19 Evolutionary Comparison](u19-evolutionary-comparison.md) | Crossover/mutation, Pareto frontier, selected-frontier package |
 | U.20 RPLAN Audit Certificates | [U.20 RPLAN Audit Certificates](u20-rplan-audit-certificates.md) | Fixed point, hashes, certificate verification, failure reasons |
 
+## Sampling And Ensemble Family
+
+| Algorithm | Visual Guide | What To Look For |
+|---|---|---|
+| ReCom Ensemble | [ReCom Ensemble](recom-ensemble.md) | Merge adjacent districts, sample spanning tree, cut balanced edge |
+| Sequential Monte Carlo | [Sequential Monte Carlo](sequential-monte-carlo.md) | Particles, staged district proposals, weights, ESS resampling |
+| Multiscale MCMC | [Multiscale MCMC](multiscale-mcmc.md) | Coarse/fine hierarchy, tract moves, block-group moves, rebalance |
+
 ## Coming Next
 
 The next atlas pages should cover:
 
-- ReCom, SMC, multiscale, and ensemble search families
+- older B/T section algorithms such as GeoSection, AreaSection, and
+  ApportionRegions
+- weights/search layer pages such as County-Sticky, ConvergenceSweep, and
+  PercentileSweep
 
 ## Relationship To Other Docs
 

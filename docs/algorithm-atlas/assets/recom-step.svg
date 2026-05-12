@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="390" viewBox="0 0 960 390" role="img" aria-labelledby="title desc">
+  <title id="title">One ReCom step</title>
+  <desc id="desc">Two adjacent districts are merged, a spanning tree is sampled, and a balanced edge is cut.</desc>
+  <style>.bg{fill:#fbfbf8}.panel{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.a{fill:#dbeafe;stroke:#2b5c9b;stroke-width:2}.b{fill:#ffe7d1;stroke:#b86520;stroke-width:2}.m{fill:#eef2ff;stroke:#5b61b6;stroke-width:2}.edge{stroke:#596673;stroke-width:2}.cut{stroke:#b84a42;stroke-width:5}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.arrow{stroke:#596673;stroke-width:2;fill:none;marker-end:url(#arrow)}</style>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#596673"/></marker></defs>
+  <rect class="bg" width="960" height="390"/>
+  <rect class="panel" x="35" y="55" width="260" height="260" rx="8"/><rect class="panel" x="350" y="55" width="260" height="260" rx="8"/><rect class="panel" x="665" y="55" width="260" height="260" rx="8"/>
+  <text class="label" x="70" y="90">1. choose adjacent pair</text><g transform="translate(85 125)"><rect class="a" x="0" y="0" width="60" height="60"/><rect class="a" x="0" y="60" width="60" height="60"/><rect class="b" x="60" y="0" width="60" height="60"/><rect class="b" x="60" y="60" width="60" height="60"/></g>
+  <text class="label" x="385" y="90">2. merge and sample tree</text><circle class="m" cx="435" cy="150" r="18"/><circle class="m" cx="515" cy="145" r="18"/><circle class="m" cx="455" cy="230" r="18"/><circle class="m" cx="535" cy="225" r="18"/><line class="edge" x1="435" y1="150" x2="515" y2="145"/><line class="edge" x1="515" y1="145" x2="535" y2="225"/><line class="edge" x1="435" y1="150" x2="455" y2="230"/>
+  <text class="label" x="700" y="90">3. cut balanced edge</text><circle class="a" cx="755" cy="150" r="18"/><circle class="a" cx="835" cy="145" r="18"/><circle class="b" cx="775" cy="230" r="18"/><circle class="b" cx="855" cy="225" r="18"/><line class="edge" x1="755" y1="150" x2="835" y2="145"/><line class="edge" x1="835" y1="145" x2="855" y2="225"/><line class="cut" x1="755" y1="150" x2="775" y2="230"/>
+  <path class="arrow" d="M300 185 H345"/><path class="arrow" d="M615 185 H660"/>
+</svg>

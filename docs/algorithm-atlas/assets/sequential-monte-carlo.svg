@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="360" viewBox="0 0 960 360" role="img" aria-labelledby="title desc">
+  <title id="title">Sequential Monte Carlo overview</title>
+  <desc id="desc">Many partial-plan particles propose districts, receive weights, resample, and finish as weighted plans.</desc>
+  <style>.bg{fill:#fbfbf8}.box{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.particle{fill:#dbeafe;stroke:#2b5c9b;stroke-width:2}.weight{fill:#fff3cd;stroke:#c79300;stroke-width:2}.out{fill:#e4f5eb;stroke:#2f7d4c;stroke-width:2}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.arrow{stroke:#596673;stroke-width:2;fill:none;marker-end:url(#arrow)}</style>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#596673"/></marker></defs>
+  <rect class="bg" width="960" height="360"/>
+  <rect class="particle" x="70" y="95" width="140" height="105" rx="8"/><text class="label" x="103" y="130">particles</text><text class="small" x="97" y="152">partial plans</text><text class="small" x="105" y="171">N copies</text>
+  <rect class="box" x="295" y="95" width="150" height="105" rx="8"/><text class="label" x="335" y="130">propose</text><text class="small" x="320" y="152">next district</text><text class="small" x="322" y="171">per particle</text>
+  <rect class="weight" x="530" y="95" width="150" height="105" rx="8"/><text class="label" x="568" y="130">weight</text><text class="small" x="560" y="152">ESS check</text><text class="small" x="553" y="171">resample if low</text>
+  <rect class="out" x="765" y="95" width="130" height="105" rx="8"/><text class="label" x="797" y="130">sample</text><text class="small" x="790" y="152">weighted final</text><text class="small" x="813" y="171">plans</text>
+  <path class="arrow" d="M210 147 H295"/><path class="arrow" d="M445 147 H530"/><path class="arrow" d="M680 147 H765"/>
+  <text class="small" x="285" y="282">SMC grows a weighted sample through stages; resampling keeps particle effort where weight remains.</text>
+</svg>
