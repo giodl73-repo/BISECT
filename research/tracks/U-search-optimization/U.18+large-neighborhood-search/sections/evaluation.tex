@@ -2,8 +2,10 @@
 
 Current evidence is L0 behavior for improvements, no-ops, rejected moves, and
 staged methods; L1 CLI and RPLAN sidecar tests; and a public U.18 parent/child
-lineage package in the package corpus. Empirical distributions of accepted
-moves, objective deltas, and tabu/LNS comparisons are future evidence.
+lineage package in the package corpus. A benchmark-tier 100-unit synthetic grid
+package now records parent-plan lineage and no-improvement behavior over a
+larger audited input. Empirical distributions of accepted moves, objective
+deltas, and tabu/LNS comparisons are future evidence.
 
 \begin{table}[htbp]
 \centering
@@ -12,8 +14,9 @@ moves, objective deltas, and tabu/LNS comparisons are future evidence.
 \toprule
 Claim & Current evidence & Publication gap \\
 \midrule
-One-move search can emit valid descendants & L0 improvement fixtures and L1
-RPLAN sidecar tests plus public lineage package & larger before/after package \\
+One-move search can emit valid descendants & L0 improvement fixtures, L1
+RPLAN sidecar tests, public lineage package, and 100-unit benchmark package &
+larger real-data before/after package \\
 No-op and rejected moves are reproducible & L0 status fixtures & CLI
 transcripts for each status \\
 Staged LNS/tabu surfaces are honest roadmap boundaries & Staged-method status

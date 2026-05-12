@@ -74,11 +74,23 @@ superiority.
 - [x] Commit coherent slices.
 - [x] Push to `origin/main`.
 
+## Stage 6 - Add Search-Side Benchmark Package
+
+- [x] Generate a search-side benchmark package from a real CLI workflow.
+- [x] Use the T.14 benchmark package as the audited parent input.
+- [x] Include parent-plan lineage and the raw `bisect improve` run manifest.
+- [x] Verify through `rplan verify-certificate`.
+- [x] Verify through `bisect verify --manifest`.
+- [x] Update U.18 evidence docs and package inventory.
+- [x] Run focused benchmark corpus tests.
+- [x] Commit and push the second benchmark slice.
+
 ## Candidate Matrix
 
 | Candidate | Side | Data | Footprint | Why It Is Useful | Risk |
 |---|---|---|---|---|---|
 | T.14 spectral grid10 benchmark | Construction | no external data | small, in-repo | Exercises benchmark manifest, timing notes, 100-unit context, and verifier bridge | Still synthetic; no wall-clock claim |
+| U.18 local-search grid10 benchmark | Search | no external data; parent is T.14 grid benchmark | small, in-repo | Exercises benchmark search packaging, no-improvement transcript, and parent-plan lineage | Still synthetic; no improvement claim |
 | Synthetic multi-family benchmark | Construction/search | no external data | small, in-repo | Exercises multiple package producers with timing notes | Still synthetic |
 | T.14 spectral small real state | Construction | TIGER/PL or pinned fixture | medium | Raises spectral evidence beyond synthetic path fixture | External data and larger artifacts |
 | U.18 local-search real descendant | Search | existing RPLAN/RCTX input | small to medium | Shows improvement/no-improvement transcript on a realistic parent plan | Needs realistic parent package |

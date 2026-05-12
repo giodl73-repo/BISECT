@@ -1,6 +1,6 @@
 # Next Session Handoff: Algorithm-Family Paper Portfolio
 
-**Status:** Benchmark-tier RPLAN package frontier active
+**Status:** Benchmark-tier RPLAN package frontier complete
 **Owner:** maintainer (you)
 **Last update:** 2026-05-11
 
@@ -26,6 +26,8 @@ goals are complete:
   `docs/examples/rplan-method-packages/U.18+local-search-generated-descendant/`.
 - The first benchmark-tier package is
   `docs/examples/rplan-benchmark-packages/T.14+spectral-grid10-benchmark/`.
+- The second benchmark-tier package is
+  `docs/examples/rplan-benchmark-packages/U.18+local-search-grid10-benchmark/`.
 
 Completed goal doc:
 
@@ -69,9 +71,11 @@ warnings that resolved by final output, and MiKTeX update reminders.
 
 ## Good Next Move
 
-Finish the first benchmark-tier package slice:
+Plan the next frontier beyond synthetic benchmark-tier packages:
 
-1. Run `rplan verify-certificate` and `bisect verify --manifest` for
-   `T.14+spectral-grid10-benchmark`.
-2. Run focused corpus tests for benchmark packages.
-3. Commit and push the verified benchmark package slice.
+1. Choose whether the next package should use pinned real data or stay
+   synthetic but cover exact/flow/clustering families.
+2. Keep larger outputs in a release artifact bundle if they are no longer
+   small enough for in-repo review.
+3. Preserve the same verifier path: RPLAN/RCTX, certificate, manifest, command
+   transcript, method transcript, and benchmark notes.

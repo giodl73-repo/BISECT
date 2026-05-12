@@ -54,6 +54,7 @@ T.14 spectral construction
   bisect-apportion::spectral
   bisect-cli example generator
   package: T.14+spectral-generated-synthetic
+  benchmark package: T.14+spectral-grid10-benchmark
 
 T.15 capacity clustering
   bisect-clustering
@@ -80,6 +81,7 @@ U.18 local search / LNS
   bisect improve
   golden package: U.18+local-search-improvement
   method package: U.18+local-search-generated-descendant
+  benchmark package: U.18+local-search-grid10-benchmark
 
 U.19 evolutionary / selected frontier
   bisect-pareto
@@ -147,6 +149,7 @@ docs/examples/rplan-method-packages/
 
 docs/examples/rplan-benchmark-packages/
   T.14+spectral-grid10-benchmark/
+  U.18+local-search-grid10-benchmark/
 
 docs/examples/u20-plan-audit-certificates/
   grid3x3-valid/

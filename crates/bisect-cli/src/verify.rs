@@ -1175,7 +1175,13 @@ mod tests {
             verified.push(package_name);
         }
         verified.sort();
-        assert_eq!(verified, vec!["T.14+spectral-grid10-benchmark"]);
+        assert_eq!(
+            verified,
+            vec![
+                "T.14+spectral-grid10-benchmark",
+                "U.18+local-search-grid10-benchmark",
+            ]
+        );
     }
 
     #[test]

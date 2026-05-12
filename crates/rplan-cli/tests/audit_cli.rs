@@ -542,7 +542,13 @@ fn verify_certificate_accepts_all_public_benchmark_packages() {
         verified.push(entry.file_name().to_string_lossy().into_owned());
     }
     verified.sort();
-    assert_eq!(verified, vec!["T.14+spectral-grid10-benchmark"]);
+    assert_eq!(
+        verified,
+        vec![
+            "T.14+spectral-grid10-benchmark",
+            "U.18+local-search-grid10-benchmark",
+        ]
+    );
 }
 
 #[test]
