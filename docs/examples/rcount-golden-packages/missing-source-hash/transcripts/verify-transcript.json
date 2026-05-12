@@ -1,7 +1,7 @@
 {
   "transcript_version": "rcount-audit-transcript-v1",
   "verifier": "rcount-audit",
-  "status": "pass",
+  "status": "fail",
   "package_content_hash": "sha256:936ceb188fbbbe4a78dc6a57902300eb2e12381b2572c43ea3f1d0033168aac7",
   "manifest_content_hash": "sha256:936ceb188fbbbe4a78dc6a57902300eb2e12381b2572c43ea3f1d0033168aac7",
   "checks": [
@@ -31,8 +31,8 @@
     },
     {
       "equation_id": "source_hash_match",
-      "status": "pass",
-      "reporting_unit_id": "source:synthetic-summary-export"
+      "status": "fail",
+      "error": "source index is empty"
     }
   ]
 }

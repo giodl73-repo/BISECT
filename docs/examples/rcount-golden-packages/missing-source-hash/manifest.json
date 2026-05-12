@@ -1,0 +1,20 @@
+{
+  "rcount_version": "0.1-draft",
+  "jurisdiction": {
+    "country": "US",
+    "state": "SYN",
+    "county": "SYN-COUNTY-1"
+  },
+  "election": {
+    "date": "2024-11-05",
+    "type": "general",
+    "scope": "synthetic-county"
+  },
+  "status": "canvassed",
+  "hash_algorithm": "sha256",
+  "content_hash": "sha256:936ceb188fbbbe4a78dc6a57902300eb2e12381b2572c43ea3f1d0033168aac7",
+  "created_by": {
+    "tool": "rcount-io-example",
+    "version": "0.1-draft"
+  }
+}

@@ -1,7 +1,9 @@
 use rcount_core::{
     package_content_hash, verify_jurisdiction_total, verify_package, RcountPackage, RCOUNT_VERSION,
+    SOURCE_HASH_PREFIX,
 };
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
@@ -19,6 +21,18 @@ pub enum RcountIoError {
     UnsupportedVersion(String),
     #[error("manifest content_hash mismatch: declared {declared}, computed {computed}")]
     ContentHashMismatch { declared: String, computed: String },
+    #[error("source index is empty")]
+    EmptySourceIndex,
+    #[error("source path is not package-relative under sources/: {path}")]
+    InvalidSourcePath { path: String },
+    #[error("source file is missing: {path}")]
+    MissingSourceFile { path: String },
+    #[error("source hash mismatch for {source_id}: declared {declared}, computed {computed}")]
+    SourceHashMismatch {
+        source_id: String,
+        declared: String,
+        computed: String,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -71,6 +85,13 @@ pub struct PackageHashes {
     pub contest_count: usize,
     pub reporting_unit_count: usize,
     pub summary_count: usize,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SourceCheck {
+    pub source_id: String,
+    pub path: String,
+    pub sha256: String,
 }
 
 pub fn synthetic_summary_basic_manifest(
@@ -128,9 +149,12 @@ pub fn write_package_dir(
     manifest.content_hash = computed.clone();
 
     write_json_pretty(&dir.join("manifest.json"), &manifest)?;
+    let source_entry = write_synthetic_source_export(dir, package)?;
     write_json_pretty(
         &dir.join("sources").join("source-index.json"),
-        &SourceIndex { sources: vec![] },
+        &SourceIndex {
+            sources: vec![source_entry],
+        },
     )?;
     write_ndjson(
         &dir.join("normalized").join("contests.ndjson"),
@@ -199,6 +223,46 @@ pub fn read_package_dir(dir: &Path) -> Result<(RcountManifest, RcountPackage), R
     Ok((manifest, package))
 }
 
+pub fn read_source_index(dir: &Path) -> Result<SourceIndex, RcountIoError> {
+    read_json(&dir.join("sources").join("source-index.json"))
+}
+
+pub fn verify_source_index(dir: &Path) -> Result<Vec<SourceCheck>, RcountIoError> {
+    let index = read_source_index(dir)?;
+    if index.sources.is_empty() {
+        return Err(RcountIoError::EmptySourceIndex);
+    }
+
+    let mut checks = Vec::new();
+    for source in index.sources {
+        let path = package_relative_source_path(&source.path)?;
+        let full_path = dir.join(&path);
+        if !full_path.exists() {
+            return Err(RcountIoError::MissingSourceFile {
+                path: source.path.clone(),
+            });
+        }
+        let computed = source_file_hash(&full_path)?;
+        if computed != source.sha256 {
+            return Err(RcountIoError::SourceHashMismatch {
+                source_id: source.source_id,
+                declared: source.sha256,
+                computed,
+            });
+        }
+        checks.push(SourceCheck {
+            source_id: source.source_id,
+            path: source.path,
+            sha256: computed,
+        });
+    }
+    Ok(checks)
+}
+
+pub fn source_file_hash(path: &Path) -> Result<String, RcountIoError> {
+    Ok(source_bytes_hash(&fs::read(path)?))
+}
+
 pub fn verify_summary_basic_dir(dir: &Path) -> Result<(), RcountIoError> {
     let (_, package) = read_package_dir(dir)?;
     verify_package(&package)?;
@@ -224,6 +288,58 @@ fn write_json_pretty<T: Serialize>(path: &Path, value: &T) -> Result<(), RcountI
     let bytes = serde_json::to_vec_pretty(value)?;
     fs::write(path, bytes)?;
     Ok(())
+}
+
+fn write_synthetic_source_export(
+    dir: &Path,
+    package: &RcountPackage,
+) -> Result<SourceEntry, RcountIoError> {
+    let path = PathBuf::from("sources").join("synthetic-summary-export.json");
+    let full_path = dir.join(&path);
+    let value = serde_json::json!({
+        "source_format": "synthetic-summary-export-v1",
+        "contest_count": package.contests.len(),
+        "reporting_unit_count": package.reporting_units.len(),
+        "summary_count": package.summaries.len(),
+        "status_event_count": package.status_events.len(),
+    });
+    let bytes = serde_json::to_vec_pretty(&value)?;
+    fs::write(&full_path, &bytes)?;
+    Ok(SourceEntry {
+        source_id: "source:synthetic-summary-export".to_string(),
+        path: path.to_string_lossy().replace('\\', "/"),
+        sha256: source_bytes_hash(&bytes),
+    })
+}
+
+fn source_bytes_hash(bytes: &[u8]) -> String {
+    let mut h = Sha256::new();
+    h.update(SOURCE_HASH_PREFIX);
+    h.update(bytes);
+    format!("sha256:{:x}", h.finalize())
+}
+
+fn package_relative_source_path(path: &str) -> Result<PathBuf, RcountIoError> {
+    let candidate = Path::new(path);
+    if candidate.is_absolute()
+        || candidate
+            .components()
+            .any(|component| matches!(component, std::path::Component::ParentDir))
+    {
+        return Err(RcountIoError::InvalidSourcePath {
+            path: path.to_string(),
+        });
+    }
+    let mut components = candidate.components();
+    match components.next() {
+        Some(std::path::Component::Normal(first)) if first == "sources" => {}
+        _ => {
+            return Err(RcountIoError::InvalidSourcePath {
+                path: path.to_string(),
+            });
+        }
+    }
+    Ok(candidate.to_path_buf())
 }
 
 fn read_json<T: for<'de> Deserialize<'de>>(path: &Path) -> Result<T, RcountIoError> {
@@ -276,6 +392,7 @@ mod tests {
         let (decoded_manifest, decoded_package) = read_package_dir(tmp.path()).unwrap();
         assert_eq!(decoded_manifest.content_hash, manifest.content_hash);
         assert_eq!(decoded_package.summaries.len(), 3);
+        assert_eq!(verify_source_index(tmp.path()).unwrap().len(), 1);
         verify_summary_basic_dir(tmp.path()).unwrap();
     }
 
@@ -288,6 +405,7 @@ mod tests {
         let (_, decoded_package) = read_package_dir(tmp.path()).unwrap();
         assert_eq!(decoded_package.summaries.len(), 6);
         assert_eq!(decoded_package.status_events.len(), 2);
+        assert_eq!(verify_source_index(tmp.path()).unwrap().len(), 1);
     }
 
     #[test]
@@ -304,6 +422,44 @@ mod tests {
         assert!(matches!(
             read_package_dir(tmp.path()),
             Err(RcountIoError::ContentHashMismatch { .. })
+        ));
+    }
+
+    #[test]
+    fn rejects_tampered_source_file() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_summary_basic_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+        std::fs::write(
+            tmp.path()
+                .join("sources")
+                .join("synthetic-summary-export.json"),
+            br#"{"tampered":true}"#,
+        )
+        .unwrap();
+
+        assert!(matches!(
+            verify_source_index(tmp.path()),
+            Err(RcountIoError::SourceHashMismatch { .. })
+        ));
+    }
+
+    #[test]
+    fn rejects_empty_source_index() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_summary_basic_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+        std::fs::write(
+            tmp.path().join("sources").join("source-index.json"),
+            br#"{"sources":[]}"#,
+        )
+        .unwrap();
+
+        assert!(matches!(
+            verify_source_index(tmp.path()),
+            Err(RcountIoError::EmptySourceIndex)
         ));
     }
 

@@ -2,7 +2,7 @@ use rcount_core::{
     package_content_hash, verify_canvass_correction_event, verify_jurisdiction_total,
     verify_package, EquationPass, RcountPackage,
 };
-use rcount_io::{read_package_dir, RcountIoError, RcountManifest};
+use rcount_io::{read_package_dir, verify_source_index, RcountIoError, RcountManifest};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
@@ -53,7 +53,7 @@ pub struct VerificationTranscript {
 
 pub fn verify_package_dir(dir: &Path) -> VerificationTranscript {
     match read_package_dir(dir) {
-        Ok((manifest, package)) => verify_loaded_package(&manifest, &package),
+        Ok((manifest, package)) => verify_loaded_package(dir, &manifest, &package),
         Err(err) => VerificationTranscript {
             transcript_version: RCOUNT_AUDIT_TRANSCRIPT_VERSION.to_string(),
             verifier: "rcount-audit".to_string(),
@@ -89,6 +89,7 @@ pub fn verify_and_write_transcript(dir: &Path) -> Result<VerificationTranscript,
 }
 
 fn verify_loaded_package(
+    dir: &Path,
     manifest: &RcountManifest,
     package: &RcountPackage,
 ) -> VerificationTranscript {
@@ -132,6 +133,25 @@ fn verify_loaded_package(
                 error: Some(err.to_string()),
             }),
         }
+    }
+
+    match verify_source_index(dir) {
+        Ok(source_checks) => {
+            checks.extend(source_checks.into_iter().map(|source| CheckResult {
+                equation_id: "source_hash_match".to_string(),
+                status: VerificationStatus::Pass,
+                contest_id: None,
+                reporting_unit_id: Some(source.source_id),
+                error: None,
+            }));
+        }
+        Err(err) => checks.push(CheckResult {
+            equation_id: "source_hash_match".to_string(),
+            status: VerificationStatus::Fail,
+            contest_id: None,
+            reporting_unit_id: None,
+            error: Some(err.to_string()),
+        }),
     }
 
     let status = if checks
@@ -180,7 +200,7 @@ mod tests {
 
         let transcript = verify_package_dir(tmp.path());
         assert_eq!(transcript.status, VerificationStatus::Pass);
-        assert_eq!(transcript.checks.len(), 4);
+        assert_eq!(transcript.checks.len(), 5);
         assert_eq!(
             transcript.package_content_hash,
             transcript.manifest_content_hash
@@ -225,6 +245,53 @@ mod tests {
             .iter()
             .any(|check| check.equation_id == "contest_selection_sum"
                 && check.status == VerificationStatus::Fail));
+    }
+
+    #[test]
+    fn tampered_source_produces_fail_transcript() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_summary_basic_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+        std::fs::write(
+            tmp.path()
+                .join("sources")
+                .join("synthetic-summary-export.json"),
+            br#"{"tampered":true}"#,
+        )
+        .unwrap();
+
+        let transcript = verify_package_dir(tmp.path());
+        assert_eq!(transcript.status, VerificationStatus::Fail);
+        assert!(transcript
+            .checks
+            .iter()
+            .any(|check| check.equation_id == "source_hash_match"
+                && check.status == VerificationStatus::Fail));
+    }
+
+    #[test]
+    fn missing_source_hash_produces_fail_transcript() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_summary_basic_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+        std::fs::write(
+            tmp.path().join("sources").join("source-index.json"),
+            br#"{"sources":[]}"#,
+        )
+        .unwrap();
+
+        let transcript = verify_package_dir(tmp.path());
+        assert_eq!(transcript.status, VerificationStatus::Fail);
+        assert!(transcript
+            .checks
+            .iter()
+            .any(|check| check.equation_id == "source_hash_match"
+                && check
+                    .error
+                    .as_deref()
+                    .is_some_and(|error| error.contains("source index is empty"))));
     }
 
     #[test]

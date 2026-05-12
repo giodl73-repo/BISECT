@@ -70,6 +70,11 @@
       "status": "pass",
       "contest_id": "*",
       "reporting_unit_id": "*"
+    },
+    {
+      "equation_id": "source_hash_match",
+      "status": "pass",
+      "reporting_unit_id": "source:synthetic-summary-export"
     }
   ]
 }

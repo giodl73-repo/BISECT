@@ -1,3 +1,9 @@
 {
-  "sources": []
+  "sources": [
+    {
+      "source_id": "source:synthetic-summary-export",
+      "path": "sources/synthetic-summary-export.json",
+      "sha256": "sha256:a9cfdad4b919d406c0db720ca30cbd3350b7de29e28b90c77ce6f3b6a5f4eb57"
+    }
+  ]
 }

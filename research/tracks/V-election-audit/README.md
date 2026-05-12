@@ -32,10 +32,10 @@ recompute public claims from lower-level evidence.
   canvass-correction event correlation.
 - `rcount-io`: started 2026-05-12 with package-directory read/write helpers,
   `summary-basic` and `canvass-correction` generators, and docs fixture
-  verification.
+  verification, including source-index hash checks.
 - `rcount-audit`: started 2026-05-12 with pass/fail verification transcripts
   for `summary-basic` and `canvass-correction`, tampered manifest failures,
-  and bad arithmetic failures.
+  bad arithmetic failures, and missing/tampered source-hash failures.
 - `rcount-cli`: started 2026-05-12 with `rcount verify <package-dir>` and
   optional `--write-transcript`.
 

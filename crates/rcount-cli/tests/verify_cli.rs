@@ -80,6 +80,50 @@ fn verify_tampered_manifest_exits_one() {
 }
 
 #[test]
+fn verify_tampered_source_exits_one() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    copy_dir_all(std::path::Path::new(&docs_summary_basic_path()), tmp.path()).unwrap();
+    std::fs::write(
+        tmp.path()
+            .join("sources")
+            .join("synthetic-summary-export.json"),
+        br#"{"tampered":true}"#,
+    )
+    .unwrap();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_rcount"))
+        .args(["verify", tmp.path().to_str().unwrap(), "--format", "json"])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(1));
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains(r#""status":"fail""#));
+    assert!(stdout.contains(r#""equation_id":"source_hash_match""#));
+}
+
+#[test]
+fn verify_missing_source_hash_exits_one() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    copy_dir_all(std::path::Path::new(&docs_summary_basic_path()), tmp.path()).unwrap();
+    std::fs::write(
+        tmp.path().join("sources").join("source-index.json"),
+        br#"{"sources":[]}"#,
+    )
+    .unwrap();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_rcount"))
+        .args(["verify", tmp.path().to_str().unwrap(), "--format", "json"])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(1));
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains(r#""equation_id":"source_hash_match""#));
+    assert!(stdout.contains("source index is empty"));
+}
+
+#[test]
 fn verify_can_write_transcript_to_package() {
     let tmp = tempfile::TempDir::new().unwrap();
     copy_dir_all(std::path::Path::new(&docs_summary_basic_path()), tmp.path()).unwrap();
