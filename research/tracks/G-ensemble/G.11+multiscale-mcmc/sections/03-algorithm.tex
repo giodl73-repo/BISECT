@@ -107,6 +107,16 @@ accepted coarse moves; failure occurs when a coarse move produces a coarse
 district that contains an entire county whose population far exceeds
 $P_{\mathrm{ideal}}$.
 
+In the atlas framing, a multiscale move is a candidate coarse/fine transition
+with a visible gate.
+Coarse moves propose on the county graph, project back to tracts, and then
+either pass the rebalance gate or are rejected with the previous fine plan
+restored.
+Fine moves stay on the tract graph.
+The transcript should preserve which scale proposed the move, whether
+projection and rebalance succeeded, and what status can be claimed for the
+accepted plan.
+
 \subsection{Complete Algorithm}
 
 \begin{algorithm}

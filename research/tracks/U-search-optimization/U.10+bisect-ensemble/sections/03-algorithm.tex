@@ -73,6 +73,13 @@ This enumeration is necessary to replicate GerryChain's stationary
 distribution, which places weight on each spanning tree proportional
 to the number of balanced bipartitions it admits~\citep{deford2021recombination}.
 
+In the atlas framing, a ReCom step has four inspectable candidate objects:
+the adjacent district pair, the merged-region spanning tree, the balanced cut
+set, and the accepted or rejected replacement pair. The chain transcript should
+distinguish an accepted balanced cut from a no-balanced-cut tree, a pair
+reselection event, or a slow-moving chain diagnostic. Those are different
+sampling facts and support different comparison claims.
+
 \begin{algorithm}
 \caption{One ReCom Step}
 \label{alg:recom}

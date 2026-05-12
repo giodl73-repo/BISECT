@@ -58,6 +58,16 @@ These derivations ensure that all randomness is determined by \texttt{base\_seed
 alone: any verifier who knows \texttt{base\_seed} can reconstruct every
 per-particle and per-resampling RNG state without additional secrets.
 
+In the atlas framing, the candidates are particle proposals at each stage.
+A particle proposal carries a derived seed, a connected district proposal,
+a log-weight update, and a survival status.
+When the effective sample size falls below the threshold, the resampling event
+must record which ancestors are copied forward; after resampling, a particle
+slot is not automatically the descendant of its previous occupant.
+These distinctions make the sampled ensemble auditable as a sequence of
+proposed, killed, weighted, copied, and finalised objects rather than as a
+bag of finished plans.
+
 \subsection{The Full SMC Algorithm}
 
 \begin{algorithm}

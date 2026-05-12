@@ -46,9 +46,9 @@ Each paper should be checked against six atlas-derived requirements:
 | [U.18 Local Search](../algorithm-atlas/u18-local-search.md) | [U.18](U.18+large-neighborhood-search.pdf) | `research/tracks/U-search-optimization/U.18+large-neighborhood-search/` | Golden, method, and benchmark packages exist | Aligned 2026-05-12; rebuilt PDF |
 | [U.19 Evolutionary Comparison](../algorithm-atlas/u19-evolutionary-comparison.md) | [U.19](U.19+evolutionary-search-comparison.pdf) | `research/tracks/U-search-optimization/U.19+evolutionary-search-comparison/` | Selected-frontier golden package exists | Aligned 2026-05-12; rebuilt PDF |
 | [U.20 RPLAN Audit Certificates](../algorithm-atlas/u20-rplan-audit-certificates.md) | [U.20](U.20+plan-audit-certificates.pdf) | `research/tracks/U-search-optimization/U.20+plan-audit-certificates/` | Golden corpus and grid10 audit benchmark exist | Aligned 2026-05-12; rebuilt PDF |
-| [ReCom Ensemble](../algorithm-atlas/recom-ensemble.md) | [U.10](U.10+bisect-ensemble.pdf), [G.4](G.4+ensemble-diagnostics-paper.pdf), [G.10](G.10+merge-split.pdf) | `research/tracks/U-search-optimization/U.10+bisect-ensemble/`, `research/tracks/G-ensemble/` | Ensemble outputs; package alignment unclear | Queued |
-| [Sequential Monte Carlo](../algorithm-atlas/sequential-monte-carlo.md) | [G.7](G.7+smc-redistricting.pdf) | `research/tracks/G-ensemble/G.7+smc-redistricting/` | SMC NDJSON/test evidence; package alignment unclear | Queued |
-| [Multiscale MCMC](../algorithm-atlas/multiscale-mcmc.md) | [G.11](G.11+multiscale-mcmc.pdf) | `research/tracks/G-ensemble/G.11+multiscale-mcmc/` | Multiscale sampler evidence; package alignment unclear | Queued |
+| [ReCom Ensemble](../algorithm-atlas/recom-ensemble.md) | [U.10](U.10+bisect-ensemble.pdf), [G.4](G.4+ensemble-diagnostics-paper.pdf), [G.10](G.10+merge-split.pdf) | `research/tracks/U-search-optimization/U.10+bisect-ensemble/`, `research/tracks/G-ensemble/` | Ensemble outputs; package alignment unclear | Aligned 2026-05-12; rebuilt PDF |
+| [Sequential Monte Carlo](../algorithm-atlas/sequential-monte-carlo.md) | [G.7](G.7+smc-redistricting.pdf) | `research/tracks/G-ensemble/G.7+smc-redistricting/` | SMC NDJSON/test evidence; package alignment unclear | Aligned 2026-05-12; rebuilt PDF |
+| [Multiscale MCMC](../algorithm-atlas/multiscale-mcmc.md) | [G.11](G.11+multiscale-mcmc.pdf) | `research/tracks/G-ensemble/G.11+multiscale-mcmc/` | Multiscale sampler evidence; package alignment unclear | Aligned 2026-05-12; rebuilt PDF |
 
 ## Stage Plan
 
@@ -65,7 +65,7 @@ Each paper should be checked against six atlas-derived requirements:
    - Make U.20 fixed-point language consistent across all U-series papers.
    - Rebuild PDFs if LaTeX sources change.
 
-3. **Sampling pass**
+3. **Sampling pass** - completed 2026-05-12
    - Align ReCom, SMC, and Multiscale papers with the atlas emphasis on
      proposed transitions, accepted/rejected/copied steps, diagnostics, and
      finite-sample claim boundaries.
@@ -84,7 +84,9 @@ Each paper should be checked against six atlas-derived requirements:
 - [ ] Every atlas-covered paper has an explicit C1-C6 alignment row.
 - [x] Every edited source paper rebuilds cleanly for the completed T.14-T.17 pass.
 - [x] Every edited source paper rebuilds cleanly for the completed U.16-U.20 pass.
+- [x] Every edited source paper rebuilds cleanly for the completed sampling pass.
 - [x] `docs/PAPERS.md` links to this tracker.
 - [x] Changed T.14-T.17 PDFs are copied to `docs/papers/`.
 - [x] Changed U.16-U.20 PDFs are copied to `docs/papers/`.
+- [x] Changed sampling PDFs are copied to `docs/papers/`.
 - [ ] Review language follows the panel disclosure boundary.
