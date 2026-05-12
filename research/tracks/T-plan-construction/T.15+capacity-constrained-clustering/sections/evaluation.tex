@@ -1,9 +1,10 @@
 \section{Evaluation Plan}
 
 The current evidence layer includes deterministic seed tests, infeasible
-capacity fixtures, connectedness checks, and RPLAN audit package tests. The
-next empirical layer should measure feasibility and quality on selected
-real-data smoke states.
+capacity fixtures, connectedness checks, RPLAN audit package tests, and a
+benchmark-tier RPLAN package generated from the capacity constructor on a
+100-unit synthetic path. The next empirical layer should measure feasibility
+and quality on selected real-data smoke states.
 
 \begin{table}[h]
 \centering
@@ -14,7 +15,7 @@ Claim & Evidence now & Missing evidence & Status \\
 Deterministic seeds & L0 seed fixtures & None for fixtures & Current \\
 Capacity status reporting & L0 infeasibility tests & Broader case sweep & Current \\
 RPLAN repair lineage & L1 sidecar tests & Real export transcript & Current \\
-Feasibility on states & None in this paper & Smoke commands and outputs & Future \\
+Scale smoke & path100 benchmark package & Real-data benchmarks & Benchmark smoke \\
 Plan quality vs. baselines & None in this paper & Metrics and datasets & Future \\
 \bottomrule
 \end{tabular}
