@@ -1,6 +1,6 @@
 # Next Session Handoff: Algorithm-Family Paper Portfolio
 
-**Status:** Benchmark-tier RPLAN package frontier complete
+**Status:** Benchmark-tier RPLAN package frontier complete through construction, exact, and search slices
 **Owner:** maintainer (you)
 **Last update:** 2026-05-11
 
@@ -26,6 +26,8 @@ goals are complete:
   `docs/examples/rplan-method-packages/U.18+local-search-generated-descendant/`.
 - The first benchmark-tier package is
   `docs/examples/rplan-benchmark-packages/T.14+spectral-grid10-benchmark/`.
+- The exact-side benchmark-tier package is
+  `docs/examples/rplan-benchmark-packages/U.16+branch-and-cut-path8-benchmark/`.
 - The second benchmark-tier package is
   `docs/examples/rplan-benchmark-packages/U.18+local-search-grid10-benchmark/`.
 
@@ -56,8 +58,9 @@ The residual work area is benchmark-tier public fixture depth and publication
 packaging:
 
 - Keep `docs/PAPERS.md` current as paper titles or notes change.
-- Extend public fixture/package examples beyond the current tiny golden corpus
-  two method-produced packages, and first benchmark-tier package.
+- Extend public fixture/package examples beyond the current tiny golden corpus,
+  two method-produced packages, and construction/exact/search benchmark
+  packages.
 - Use `docs/concepts/t-u-portfolio-dependency-map.md` as the visual dependency
   map for T/U publication packaging.
 - Promote larger real method-produced packages when non-toy fixture outputs are

@@ -85,16 +85,30 @@ superiority.
 - [x] Run focused benchmark corpus tests.
 - [x] Commit and push the second benchmark slice.
 
+## Stage 7 - Add Exact-Side Benchmark Package
+
+- [x] Generate an exact-side benchmark package from the `bisect-ilp`
+      branch-and-cut solver path.
+- [x] Include the CPLEX-LP model artifact and `ilp-solve-report.json` hashes.
+- [x] Record branch-and-cut certificate metadata in method transcript and
+      RPLAN algorithm lineage.
+- [x] Verify through `rplan verify-certificate`.
+- [x] Verify through `bisect verify --manifest`.
+- [x] Update U.16 evidence docs and package inventory.
+- [x] Run focused benchmark corpus tests.
+- [x] Commit and push the exact benchmark slice.
+
 ## Candidate Matrix
 
 | Candidate | Side | Data | Footprint | Why It Is Useful | Risk |
 |---|---|---|---|---|---|
 | T.14 spectral grid10 benchmark | Construction | no external data | small, in-repo | Exercises benchmark manifest, timing notes, 100-unit context, and verifier bridge | Still synthetic; no wall-clock claim |
+| U.16 branch-and-cut path8 benchmark | Exact | no external data | small, in-repo | Exercises solver-grade transcript, LP model artifact hashing, exact certificate metadata, and verifier bridge | Still synthetic and intentionally tiny |
 | U.18 local-search grid10 benchmark | Search | no external data; parent is T.14 grid benchmark | small, in-repo | Exercises benchmark search packaging, no-improvement transcript, and parent-plan lineage | Still synthetic; no improvement claim |
 | Synthetic multi-family benchmark | Construction/search | no external data | small, in-repo | Exercises multiple package producers with timing notes | Still synthetic |
 | T.14 spectral small real state | Construction | TIGER/PL or pinned fixture | medium | Raises spectral evidence beyond synthetic path fixture | External data and larger artifacts |
 | U.18 local-search real descendant | Search | existing RPLAN/RCTX input | small to medium | Shows improvement/no-improvement transcript on a realistic parent plan | Needs realistic parent package |
-| U.16 formulation-only exact package | Exact | synthetic or tiny pinned | small | Gives solver-grade benchmark transcript without external solver dependency | May be too close to golden fixtures |
+| U.16 formulation-only exact package | Exact | synthetic or tiny pinned | small | Gives solver-grade benchmark transcript without external solver dependency | Superseded by the path8 solved exact benchmark for now |
 | U.20 audit stress package | Audit | synthetic generated | small | Exercises verifier scale and negative/positive behavior | Does not advance algorithm quality claims |
 
 ## Suggested `/goal`

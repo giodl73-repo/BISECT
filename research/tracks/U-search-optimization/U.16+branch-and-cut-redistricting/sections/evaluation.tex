@@ -3,9 +3,11 @@
 The current evidence ladder is fixture and staged exact-contract evidence.
 Required L0/L1 checks include formulation construction, cut-report emission,
 fallback status clarity, and RPLAN sidecar verification. A public U.16 golden
-package now records the branch-and-cut family handoff in the package corpus.
-Real-data exact performance and broad runtime claims remain future benchmark
-evidence.
+package records the branch-and-cut family handoff in the package corpus. A
+synthetic path8 benchmark package now adds a solved exact branch-and-cut
+artifact, including the CPLEX-LP model hash, solve report, audit certificate,
+and verifier manifest. Real-data exact performance and broad runtime claims
+remain future benchmark evidence.
 
 \begin{table}[htbp]
 \centering
@@ -14,10 +16,11 @@ evidence.
 \toprule
 Claim & Current evidence & Publication gap \\
 \midrule
-Formulation reports are reproducible & L0 formulation fixtures & command transcript table \\
+Formulation reports are reproducible & L0 formulation fixtures and the path8
+benchmark LP/report artifact & larger model corpus \\
 Fallback status is explicit & L0/L1 status tests & failure-mode examples \\
 RPLAN sidecars verify lineage & L1 audit package checks and public golden
-package & larger solver-produced instance \\
+package plus solved path8 benchmark & larger solver-produced instance \\
 Exact performance scales & future benchmark placeholder & real-data benchmark protocol \\
 \bottomrule
 \end{tabular}

@@ -71,6 +71,7 @@ T.17 flow construction
 U.16 branch-and-cut
   bisect-ilp
   golden package: U.16+branch-and-cut
+  benchmark package: U.16+branch-and-cut-path8-benchmark
 
 U.17 branch-and-price
   bisect-column
@@ -149,6 +150,7 @@ docs/examples/rplan-method-packages/
 
 docs/examples/rplan-benchmark-packages/
   T.14+spectral-grid10-benchmark/
+  U.16+branch-and-cut-path8-benchmark/
   U.18+local-search-grid10-benchmark/
 
 docs/examples/u20-plan-audit-certificates/

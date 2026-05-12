@@ -54,4 +54,5 @@ cargo run -p bisect-cli -- verify `
 | Package | Source workflow | Status | Scope |
 |---|---|---|---|
 | `T.14+spectral-grid10-benchmark` | `cargo run -p bisect-cli --no-default-features --example spectral_grid10_benchmark_package` | 100-unit synthetic grid partition verifies | Benchmark-tier package contract and verifier scale smoke; no wall-clock or real-data claim |
+| `U.16+branch-and-cut-path8-benchmark` | `cargo run -p bisect-cli --no-default-features --example u16_branch_cut_path8_benchmark_package` | 8-unit synthetic path solved to proven optimality and verifies | Exact-solver artifact packaging, LP model hashing, branch-and-cut lineage, and verifier smoke; no real-data scaling claim |
 | `U.18+local-search-grid10-benchmark` | `cargo run -p bisect-cli -- improve` over `T.14+spectral-grid10-benchmark` | one-move search found no improving move; package verifies | Benchmark-tier search packaging, parent-plan lineage, and verifier scale smoke; no improvement or real-data claim |
