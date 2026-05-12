@@ -8,6 +8,12 @@ use sha2::{Digest, Sha256};
 
 use crate::recom::{RecomChain, StepRecord};
 
+pub const ENSEMBLE_OUTPUT_VERSION: &str = "1.0";
+
+fn default_output_version() -> String {
+    ENSEMBLE_OUTPUT_VERSION.to_string()
+}
+
 /// Per-chain result.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ChainResult {
@@ -53,6 +59,8 @@ impl<'de> Deserialize<'de> for StepRecord {
 /// Full ensemble result.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EnsembleResult {
+    #[serde(default = "default_output_version")]
+    pub ensemble_output_version: String,
     pub state: String,
     pub k: u32,
     pub n_steps: u64,
@@ -63,7 +71,7 @@ pub struct EnsembleResult {
     pub r_hat: Option<f64>,
     /// Effective sample size (Geyer 1992).
     pub ess: Option<f64>,
-    /// Lag-1 to lag-20 Hamming autocorrelation.
+    /// Lag-1 to lag-20 cut-fraction autocorrelation proxy.
     pub hamming_autocorr: Vec<f64>,
     /// Pooled mean cut fraction.
     pub pooled_cut_mean: f64,
@@ -166,6 +174,7 @@ pub fn run_ensemble(
     let hamming_autocorr = compute_hamming_autocorr(&chains, 20);
 
     EnsembleResult {
+        ensemble_output_version: ENSEMBLE_OUTPUT_VERSION.to_string(),
         state,
         k,
         n_steps,
@@ -262,10 +271,10 @@ fn compute_ess(chains: &[ChainResult]) -> f64 {
     (n as f64 / sum).max(1.0)
 }
 
-/// Compute Hamming autocorrelation at lags 1..=max_lag.
+/// Compute cut-fraction autocorrelation proxy at lags 1..=max_lag.
 ///
-/// Hamming distance between consecutive assignments is a natural
-/// measure of chain mixing for discrete redistricting plans.
+/// Full Hamming autocorrelation requires storing complete assignments at each
+/// step. The current crate exposes a lightweight cut-fraction proxy instead.
 fn compute_hamming_autocorr(chains: &[ChainResult], max_lag: usize) -> Vec<f64> {
     // Use cut_fraction as a proxy (actual Hamming requires storing full assignments).
     // Full Hamming requires storing complete assignment vectors per step which is
@@ -314,6 +323,7 @@ mod tests {
         let assign = vec![1u32, 1, 2, 2];
         let result = run_ensemble(adj, pop, assign, 2, 0.1, 20, 2, 42, "test".into());
         assert_eq!(result.n_chains, 2);
+        assert_eq!(result.ensemble_output_version, ENSEMBLE_OUTPUT_VERSION);
         assert_eq!(result.chains.len(), 2);
         assert_eq!(result.chains[0].steps.len(), 20);
         assert!(result.r_hat.is_some());
@@ -515,6 +525,7 @@ mod tests {
         let json = serde_json::to_string(&result).expect("must serialize");
         let back: EnsembleResult = serde_json::from_str(&json).expect("must deserialize");
         assert_eq!(back.state, "nc");
+        assert_eq!(back.ensemble_output_version, ENSEMBLE_OUTPUT_VERSION);
         assert_eq!(back.k, 2);
         assert_eq!(back.n_steps, 10);
         assert_eq!(back.chains[0].steps.len(), 10);

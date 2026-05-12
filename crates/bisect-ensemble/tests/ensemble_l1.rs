@@ -3,7 +3,7 @@
 //! These tests exercise the full `run_ensemble` pipeline on synthetic graphs
 //! without requiring real census data. All tests run in CI with no `#[ignore]`.
 
-use bisect_ensemble::chain::{chain_seed, run_ensemble};
+use bisect_ensemble::chain::{chain_seed, run_ensemble, ENSEMBLE_OUTPUT_VERSION};
 
 // ── Graph helpers ─────────────────────────────────────────────────────────────
 
@@ -50,6 +50,7 @@ fn full_run_returns_correct_shape() {
     let assign = band_assignment(5, 4, 4);
     let result = run_ensemble(adj, pop, assign, 4, 0.05, 100, 2, 42, "grid".into());
     assert_eq!(result.n_steps, 100);
+    assert_eq!(result.ensemble_output_version, ENSEMBLE_OUTPUT_VERSION);
     assert_eq!(result.n_chains, 2);
     assert_eq!(result.k, 4);
     assert_eq!(result.chains.len(), 2);
@@ -177,6 +178,7 @@ fn json_roundtrip_full_run() {
     let back: bisect_ensemble::chain::EnsembleResult =
         serde_json::from_str(&json).expect("must deserialize");
     assert_eq!(back.state, result.state);
+    assert_eq!(back.ensemble_output_version, ENSEMBLE_OUTPUT_VERSION);
     assert_eq!(back.k, result.k);
     assert_eq!(back.n_steps, result.n_steps);
     assert_eq!(back.chains[0].steps.len(), result.chains[0].steps.len());

@@ -91,7 +91,7 @@ Score bands:
 | U.7 Pareto Redistricting | 3.1 | 3.2 | 3.0 | 3.1 | 3.4 | 3.1 | 18.9 | Align with U.19 selected-frontier artifacts |
 | U.8 PercentileSweep | 3.7 | 3.5 | 3.5 | 3.9 | 4.0 | 3.5 | 22.1 | Strong |
 | U.9 BisectionEnsemble | 3.6 | 3.5 | 3.4 | 3.7 | 4.0 | 3.5 | 21.7 | Strong |
-| U.10 bisect-ensemble | 3.2 | 3.4 | 3.1 | 3.2 | 3.5 | 3.2 | 19.6 | Needs package/transcript bridge |
+| U.10 bisect-ensemble | 3.8 | 3.7 | 3.6 | 3.9 | 4.0 | 3.6 | 22.6 | Golden |
 | U.11 Resolution-Aware | 3.1 | 3.0 | 3.0 | 3.1 | 3.3 | 3.0 | 18.5 | Needs algorithm-selection framing |
 | U.12 Algorithm-Selection Matrix | 3.8 | 3.6 | 3.6 | 3.9 | 4.0 | 3.7 | 22.6 | Golden |
 | U.13 Exact-vs-Heuristic Certification | 3.6 | 3.4 | 3.3 | 3.8 | 3.5 | 3.4 | 21.0 | Strong; update after U.16-U.20 |
@@ -158,7 +158,7 @@ Score bands:
 
 ## Highest-Priority Lifts
 
-1. Continue Batch 4: U.10, G.10, and G.11. These are the
+1. Continue Batch 4: G.10 and G.11. These are the
    ensemble/sampling papers most directly tied to implemented crates and
    current atlas concepts.
 2. Legacy construction pass: T.5-T.13. These need the same "show the split,
@@ -176,7 +176,7 @@ Score bands:
 | Track family | Included rows | Current center of gravity | Main gap |
 |---|---:|---|---|
 | B/T construction foundations | 26 | Strong for reviewed/new slices, serviceable for older slices | legacy visuals and audit/package bridges |
-| U search/optimization/audit | 21 | Strong, with U.16-U.20 golden | refresh older U.2-U.7 and U.13-U.15 |
+| U search/optimization/audit | 21 | Strong, with U.10 and U.16-U.20 golden | refresh older U.2-U.7 and U.13-U.15 |
 | G ensemble/sampling | 16 | Strong but uneven; G.4/G.7 now golden | MergeSplit/Multiscale package evidence and data-validation cleanup |
 | J apportionment | 7 | Serviceable | J.6 stale implementation claims |
 | K compactness metrics | 8 | Strong except K.2 | Reock implementation mismatch |

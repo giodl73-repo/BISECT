@@ -66,7 +66,7 @@ are called complete.
 | 1 | T.1-T.4, U.1, U.8, U.9, U.12 | Re-review the atlas-aligned seed/compositor/legacy papers for paper-quality gaps after the alignment pass | Completed 2026-05-12 |
 | 2 | T.14-T.17 | Construction-family golden vertical slices | Completed 2026-05-12 |
 | 3 | U.16-U.20 | Exact/search/audit certificate family, including U.20 fixed-point language | Completed 2026-05-12 |
-| 4 | U.10, G.4, G.7, G.10, G.11 | Sampling and ensemble methods | In progress: G.4 and G.7 complete |
+| 4 | U.10, G.4, G.7, G.10, G.11 | Sampling and ensemble methods | In progress: U.10, G.4, and G.7 complete |
 | 5 | T.5-T.13, U.0-U.7, U.11, U.13-U.15 | Older algorithm-family papers not yet lifted to the same explanatory standard | Queued |
 | 6 | B/C/D/F/G/A synthesis tracks | Portfolio, validation, legal, legislative, ensemble, and synthesis papers | Queued |
 | 7 | E/I/J/K/L/M/N/O/P/Q/R/S tracks | Remaining indexed papers and source-only drafts | Queued |
@@ -204,7 +204,7 @@ consumers.
 
 | Paper | Review status | Fix status | Build/PDF status |
 |---|---|---|---|
-| U.10 bisect-ensemble | Queued | Queued | Queued |
+| U.10 bisect-ensemble | Reviewed 2026-05-12 | Renamed old redist-ensemble framing, aligned current crate/CLI boundary, corrected ReCom pseudocode, RNG seed contract, output schema versioning, and diagnostics scope | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
 | G.4 Ensemble Diagnostics | Reviewed 2026-05-12 | Fixed old binary/crate names, ESS example drift, source-ensemble certification boundary, 99th-percentile ESS caveat, Hamming reference semantics, statutory step-count rule, and Daubert known-error framing | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
 | G.7 SMC Redistricting | Reviewed 2026-05-12 | Softened calibration claims, refreshed Phase 2 and SmcPercentile status, added weighted-percentile algorithm, diagnostic-output comparison, NDJSON resample audit parity, and external-validation boundary | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
 | G.10 Merge-Split | Queued | Queued | Queued |
@@ -216,10 +216,20 @@ consumers.
 
 | Paper | P1 Claim | P2 Algorithm | P3 Evidence | P4 Boundary | P5 Build | P6 Reader | Total |
 |---|---:|---:|---:|---:|---:|---:|---:|
+| U.10 bisect-ensemble | 3.8 | 3.7 | 3.6 | 3.9 | 4.0 | 3.6 | 22.6 / 24 |
 | G.4 Ensemble Diagnostics | 3.8 | 3.7 | 3.7 | 3.9 | 4.0 | 3.6 | 22.7 / 24 |
 | G.7 SMC Redistricting | 3.8 | 3.8 | 3.7 | 3.8 | 4.0 | 3.7 | 22.8 / 24 |
 
 ### Batch 4 Score Notes
+
+**U.10 bisect-ensemble -- 22.6/24.** The paper now matches the actual
+workspace crate and current CLI boundary: `bisect ensemble` is SMC-only today,
+while `bisect-ensemble` backs ReCom-family library use and the
+`bisection-ensemble` search mode. The ReCom pseudocode now matches the
+pair-attempt/tree-resample implementation, the SHA-256 seed contract matches
+`SmallRng::seed_from_u64`, and diagnostics are scoped as cut-fraction smoke
+evidence unless the G.4 validator is used. The remaining ceiling is Phase 2
+benchmark and historical G-track cross-validation packaging.
 
 **G.4 Ensemble Diagnostics — 22.7/24.** The paper now matches the current
 BISECT validator surface, keeps the corrected ESS values visible, and separates

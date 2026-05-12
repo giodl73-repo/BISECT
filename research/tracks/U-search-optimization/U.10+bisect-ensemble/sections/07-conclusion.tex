@@ -32,9 +32,10 @@ bipartition infeasibility is a property of the plan space geometry.
 \re{}'s advantage is throughput: Rust reduces the pair-reselection warm-up
 from seconds to microseconds, making cold-start runs practical within a
 pipeline budget.
-Convergence diagnostics ($\rhat$, $\ess$, $\ham(1)$) are computed
-in-pass using Welford's online algorithm and Geyer's initial monotone
-sequence estimator, adding no asymptotic overhead.
+Convergence diagnostics ($\rhat$, $\ess$, and a cut-fraction
+autocorrelation proxy) are computed in-pass for smoke validation and
+regression testing; final multi-chain publication diagnostics should still
+flow through the G.4 validator.
 
 \subsection{Methodological Significance}
 
@@ -45,12 +46,13 @@ distinguished:
 The G-track papers (G.0--G.5) establish the theoretical and empirical
 framework for placing \ar{} plans within \recom{} ensembles, but their
 computational results previously depended on a Python \gc{} installation.
-\re{} makes those results reproducible from the \texttt{bisect} Rust
-binary alone, satisfying the AEA replication standard for the full
-portfolio.
+\re{} makes the core ReCom substrate reproducible inside the Rust workspace,
+but the historical G-track claims are not fully replaced until the Phase~2
+cross-validation reruns are archived.
 This is a genuine legal-adjacent contribution: independent reproducibility
-from a single deterministic binary strengthens the chain-of-custody argument
-for ensemble results submitted in litigation.
+from deterministic Rust artifacts strengthens the chain-of-custody argument
+for ensemble results submitted in litigation, provided the output package and
+validator are included.
 
 \paragraph{Throughput improvement.}
 Longer runs, more chains, and faster convergence diagnostics benefit
@@ -74,10 +76,11 @@ construction, Wilson walk, balance enumeration, serde output).
 The full benchmark protocol is specified in Section~\ref{ssec:phase2}.
 
 \paragraph{Pipeline integration.}
-The \texttt{bisect ensemble} subcommand should be integrated into
-\texttt{bisect build} as an automatic post-redistricting audit step,
-running 10{,}000 steps from the produced plan and reporting
-$\rhat$, $\ess$, $\ham(1)$, and the plan's percentile rank in the
+The \texttt{bisect-ensemble} crate is already available to the BISECT
+workspace and to the \texttt{bisection-ensemble} search mode. A future
+standalone ReCom export command should run from a produced plan, emit a
+versioned ensemble JSON artifact, and report $\rhat$, $\ess$, a plan-distance
+or proxy autocorrelation trace, and the plan's percentile rank in the
 resulting ensemble distribution.
 
 \paragraph{Stationarity verification and empirical G-track replication (deferred to Phase~2).}

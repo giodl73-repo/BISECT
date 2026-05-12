@@ -1,8 +1,8 @@
 //! Wilson's loop-erased random walk for uniform random spanning trees.
 //!
 //! Given a connected undirected graph on n vertices, samples a spanning tree
-//! uniformly at random in O(cover time) expected time — O(n log n) for planar
-//! graphs (Wilson 1996, Theorem 1.1).
+//! uniformly at random in O(cover time) expected time; for planar graphs the
+//! cover-time specialization is O(n log n) by Aldous (1991).
 //!
 //! For redistricting regions of ~n/k tracts this runs in O((n/k) log(n/k)).
 

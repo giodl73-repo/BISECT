@@ -31,7 +31,7 @@
 \setstretch{1.4}
 
 %% Shorthand macros
-\newcommand{\re}{\textsc{redist-ensemble}}
+\newcommand{\re}{\textsc{bisect-ensemble}}
 \newcommand{\gc}{\textsc{GerryChain}}
 \newcommand{\recom}{\textsc{ReCom}}
 \newcommand{\ar}{\textsc{ApportionRegions}}
@@ -57,7 +57,7 @@
 %% -----------------------------------------------------------------------
 
 \title{%
-  \textbf{\texttt{redist-ensemble}: A High-Performance Rust Implementation}\\
+  \textbf{\texttt{bisect-ensemble}: A High-Performance Rust Implementation}\\
   \textbf{of ReCom for Redistricting Feasibility Analysis}\\[0.8em]
   \normalsize\textit{U.10 --- Rust Ensemble Engine}%
 }
@@ -86,7 +86,7 @@ ensemble a 5--8 minute computation.
 This throughput limits ensemble analysis to an offline, post-hoc step
 run separately from the redistricting pipeline.
 
-We present \texttt{redist-ensemble}, a Rust implementation of the
+We present \texttt{bisect-ensemble}, a Rust implementation of the
 \recom{} Markov chain using Wilson's uniform random spanning tree
 algorithm~\citep{wilson1996generating}.
 Wilson's algorithm runs in expected time equal to the cover time of
@@ -100,16 +100,16 @@ This reduces the per-step cost to native
 compiled arithmetic at roughly $50{,}000$\est\ steps per
 second---an estimated $2{,}300\times$\est\ speedup over \gc{}
 (measured without pair reselection).
-At this throughput, a 10{,}000-step ensemble for North Carolina completes
-in approximately 0.2 seconds\est, enabling ensemble analysis as an
-integrated real-time audit step within the \texttt{bisect build}
-pipeline rather than an overnight computation.
+At this throughput, a 10{,}000-step ensemble for North Carolina would
+complete in approximately 0.2 seconds\est, making ReCom-style comparison
+cheap enough for the same workflow family as \texttt{bisect state}
+search modes and audit reports rather than an overnight computation.
 
 The implementation consists of three modules: \texttt{spanning.rs}
 (Wilson's loop-erased random walk), \texttt{recom.rs} (the \recom{}
-proposal with correct stationary-distribution balance-cut enumeration),
+proposal with balanced-cut enumeration and pair-reselection diagnostics),
 and \texttt{chain.rs} (parallel runner with Rayon, per-chain SHA-256
-seeds, $\rhat$, $\ess$, and Hamming autocorrelation diagnostics).
+seeds, $\rhat$, $\ess$, and cut-fraction autocorrelation diagnostics).
 Benchmark validation against \texttt{criterion.rs} is planned for Phase~2
 (\est\,all throughput and speedup figures are estimates pending
 \texttt{criterion.rs} benchmarks; see Section~\ref{ssec:phase2}).

@@ -10,9 +10,9 @@
 //!
 //! Set `BISECT_ADJ_NC` / `BISECT_ADJ_WI` env vars to override the default path.
 
-use bisect_ensemble::chain::{run_ensemble, EnsembleResult};
+use bisect_ensemble::chain::run_ensemble;
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 // ── Data loading helpers ──────────────────────────────────────────────────────
 
@@ -46,7 +46,6 @@ fn find_final_assignments(state_name: &str) -> Option<PathBuf> {
     let root = manifest_dir.ancestors().nth(3)?;
     let outputs = root.join("outputs");
     // Find any run that has this state's final_assignments.json
-    let pattern = format!("*/2020/states/{state_name}/data/final_assignments.json");
     // Simple glob-like search
     for entry in std::fs::read_dir(&outputs).ok()? {
         let entry = entry.ok()?;
@@ -73,11 +72,6 @@ fn load_adj_and_pop(state_abbr: &str) -> Option<(Vec<Vec<u32>>, Vec<i64>, Vec<u3
     // that `generate_adj_bin.py` produces. If not available, skip.
     let adj_bin = find_adj_bin(state_abbr)?;
     let adj_dir = adj_bin.parent()?;
-    let geoids_path = adj_dir.join(format!(
-        "{}_adjacency_2020_geoids.json",
-        state_abbr.to_lowercase()
-    ));
-
     // Try loading a pre-dumped JSON version of the adjacency (created by the runner script).
     let json_path = adj_dir.join(format!(
         "{}_adjacency_2020_for_rust.json",

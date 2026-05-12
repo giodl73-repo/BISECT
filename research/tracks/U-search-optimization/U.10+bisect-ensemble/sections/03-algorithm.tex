@@ -69,9 +69,10 @@ Algorithm~\ref{alg:recom} describes one step of the \recom{} chain.
 The critical design decision is the treatment of tree bipartitions:
 we enumerate \emph{all} balanced cuts of the spanning tree rather than
 sampling a single cut.
-This enumeration is necessary to replicate GerryChain's stationary
-distribution, which places weight on each spanning tree proportional
-to the number of balanced bipartitions it admits~\citep{deford2021recombination}.
+This enumeration is necessary to match the intended ReCom proposal family:
+the implementation samples a spanning tree, enumerates every balanced tree
+cut, and then chooses uniformly from the feasible cut set. The paper does not
+claim that a finite run proves global uniformity over all valid plans.
 
 In the atlas framing, a ReCom step has four inspectable candidate objects:
 the adjacent district pair, the merged-region spanning tree, the balanced cut
@@ -86,24 +87,22 @@ sampling facts and support different comparison claims.
 \begin{algorithmic}[1]
 \Require Current partition $\sigma$, population tolerance $\varepsilon$
 \Ensure Updated partition $\sigma'$
-\State $\text{resample\_count} \leftarrow 0$
-\Repeat
-  \If{$\text{resample\_count} \geq 10$}
-    \State Select a new pair $(i, j)$ uniformly from all adjacent district pairs
-    \State $\text{resample\_count} \leftarrow 0$
-  \EndIf
-  \State Select pair $(i, j)$ uniformly from all adjacent district pairs
+\State $P \leftarrow$ adjacent district pairs in $\sigma$, shuffled uniformly
+\For{$(i,j)$ in first 50 entries of $P$}
   \State $R \leftarrow V_i \cup V_j$ \Comment{Merged region}
   \State $H \leftarrow G[R]$ \Comment{Induced subgraph}
-  \State $T \leftarrow \textsc{WilsonUST}(H)$ \Comment{Algorithm \ref{alg:wilson}}
-  \State $\mathcal{B} \leftarrow \{e \in T : \text{removing } e \text{ gives a balanced bipartition}\}$
-  \Comment{Enumerate all balanced cuts}
-  \State $\text{resample\_count} \leftarrow \text{resample\_count} + 1$
-\Until{$\mathcal{B} \neq \emptyset$}
-\State Sample $e^* \sim \mathrm{Uniform}(\mathcal{B})$
-\State $\{A, B\} \leftarrow$ bipartition of $T$ induced by removing $e^*$
-\State Update $\sigma'$ by assigning $V_i \leftarrow A$, $V_j \leftarrow B$
-\State \Return $\sigma'$
+  \For{$r=1,\ldots,10$}
+    \State $T \leftarrow \textsc{WilsonUST}(H)$ \Comment{Algorithm \ref{alg:wilson}}
+    \State $\mathcal{B} \leftarrow$ all balanced tree cuts of $T$
+    \If{$\mathcal{B} \neq \emptyset$}
+      \State Sample $e^* \sim \mathrm{Uniform}(\mathcal{B})$
+      \State $\{A, B\} \leftarrow$ components induced by removing $e^*$
+      \State Update $\sigma'$ by assigning $V_i \leftarrow A$, $V_j \leftarrow B$
+      \State \Return $\sigma'$
+    \EndIf
+  \EndFor
+\EndFor
+\State \Return $\sigma$ \Comment{Rejected step after pair-attempt budget}
 \end{algorithmic}
 \end{algorithm}
 
@@ -178,8 +177,8 @@ The string literals are ASCII bytes.
 The total is $15 + 8 + 1 + 8 = 32$ bytes, giving a
 fixed-length, unambiguous encoding with no collision risk between chain
 indices or base-seed values.
-The SHA-256 digest (256 bits) is used to seed \texttt{SmallRng}
-(\texttt{rand} crate version 0.8) via \texttt{SeedableRng::from\_seed},
-supplying the first 16 bytes of the SHA-256 output as two
-little-endian \texttt{u64} values matching xoshiro128++'s native
-state format.
+The first 8 bytes of the SHA-256 digest are interpreted as a little-endian
+\texttt{u64}. The chain runner then calls
+\texttt{SmallRng::seed\_from\_u64(seed)} from the \texttt{rand} crate
+(version 0.8). This matches the current crate contract exactly and avoids
+claiming a particular \texttt{SmallRng} internal state layout.

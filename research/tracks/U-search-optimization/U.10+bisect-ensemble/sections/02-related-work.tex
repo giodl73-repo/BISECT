@@ -10,9 +10,10 @@ At each step, the chain selects a pair of adjacent districts, merges
 them into a single region, generates a random spanning tree of the merged
 region using Wilson's algorithm, finds all balanced bipartitions of that
 tree, and selects one uniformly at random.
-The chain's stationary distribution is uniform over the space of
-population-balanced redistricting plans, up to the spanning-tree bias
-introduced by graph structure.
+The chain has a well-defined ReCom sampling distribution over
+population-balanced redistricting plans; it is not a proof of uniformity
+over all legally valid plans, and finite runs still require diagnostic
+checks.
 
 \gc{}~\citep{gerrychain2021} is the canonical open-source Python
 implementation of \recom{}, developed and maintained by the MGGG
@@ -82,7 +83,10 @@ deterministic redistricting algorithms to \gc{} ensembles.
 \citet{dellaLibera2026g4} formalizes the $\rhat$, $\ess$, and Hamming
 autocorrelation diagnostics implemented in the \texttt{bisect} binary.
 The U.9 paper~\citep{dellaLibera2026h1} establishes the bisection-ensemble
-connection that motivates real-time ensemble integration.
-\re{} closes the final methodological gap: G-track results previously
-depended on the Python \gc{} installation; \re{} makes those results
-reproducible from the \texttt{bisect} Rust binary alone.
+connection that motivates local ReCom integration inside the BISECT
+construction tree.
+\re{} narrows a major reproducibility gap: G-track results previously
+depended on the Python \gc{} installation; the Rust crate makes the core
+ReCom substrate available inside the BISECT workspace. Full replacement of
+the historical G-track runs still requires the Phase~2 cross-validation
+described in Section~\ref{sec:conclusion}.

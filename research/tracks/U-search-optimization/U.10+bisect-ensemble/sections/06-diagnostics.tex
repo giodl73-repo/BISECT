@@ -48,20 +48,19 @@ has been explored.
 
 For redistricting statistics, which are discrete (seat counts take
 integer values) or bounded (compactness metrics lie in $[0,1]$),
-we follow \citet{vehtari2021rank} and apply the rank-normalised $\rhat$
-variant.
-All $CN$ draws across all chains are first rank-transformed to
-approximate normality, then $\rhat$ is computed on the transformed values.
-Rank normalisation removes sensitivity to the marginal distribution shape
-and is the current best practice for MCMC diagnostics~\citep{vehtari2021rank}.
+\citet{vehtari2021rank} recommend rank-normalised $\rhat$.
+The current \re{} crate computes the classical Gelman-Rubin approximation on
+the cut-fraction trace and marks it as a summary-metric diagnostic. A future
+diagnostics pass should add the rank-normalised variant before using discrete
+seat-count diagnostics as publication evidence.
 
 \paragraph{Implementation.}
 Each chain accumulates $\bar{\theta}_{c\cdot}$ and $s_c^2$ incrementally
 using Welford's online algorithm~\citep{welford1962note}, requiring $O(1)$
 storage per chain.
-For rank normalisation, all step-level draws are buffered in a
-\texttt{Vec<f64>} and rank-sorted at chain completion.
-$\rhat$ is computed in a single pass over the $C$ chain statistics.
+In the current crate, $\rhat$ is computed in a single pass over the $C$ chain
+statistics for cut fraction. The G.4 diagnostics validator remains the
+stronger multi-metric publication surface.
 
 \subsection{Effective Sample Size}
 
@@ -78,8 +77,9 @@ For redistricting chains, typical lag-1 autocorrelation is
 $\hat{\rho}_1 \approx 0.85$--$0.95$, giving
 $\ess \approx 500$--$2{,}000$ for a 10{,}000-step chain.
 
-We use the multi-chain $\ess$ formula from~\citet{vehtari2021rank}, which
-pools within-chain and between-chain information:
+The publication target is the multi-chain $\ess$ formula from
+\citet{vehtari2021rank}, which pools within-chain and between-chain
+information:
 \[
   \ess_{\text{bulk}} = \frac{CN \cdot \min(\hat{V}/B, 1)}{1 + 2\sum_{k=1}^{\hat{K}}\hat{\rho}_k^+},
 \]
@@ -87,6 +87,11 @@ where $\hat{V} = W + B/N$ and $\hat{\rho}_k^+$ is the rank-normalised
 lag-$k$ autocorrelation (computed on the rank-transformed draws as
 described in Section~\ref{sec:diagnostics} for $\rhat$;
 see \citealt{vehtari2021rank} for the full estimator).
+
+The current crate exposes a simpler first-chain ESS estimate using Geyer's
+initial positive sequence on cut fraction. That estimate is useful as a smoke
+diagnostic and L1/L2 regression target, but the multi-chain G.4 validator
+should be used for final publication or litigation tables.
 
 \paragraph{Target.}
 We require $\ess \geq 400$ for any summary statistic used in a legal
@@ -113,20 +118,21 @@ reference plan $\sigma_0$.
 In practice, $\hat{\rho}_1 \approx 0.87$--$0.93$ for \recom{}, with
 geometric decay: $\ham(k) \approx \hat{\rho}_1^k$.
 
-The Hamming autocorrelation serves as a distribution-free mixing
-diagnostic: it measures how rapidly consecutive plans decorrelate in
-plan space, independent of any particular summary statistic.
+True Hamming autocorrelation serves as a distribution-free mixing diagnostic:
+it measures how rapidly consecutive plans decorrelate in plan space,
+independent of any particular summary statistic.
 A chain with $\ham(1) > 0.98$ is mixing slowly and may require
 thinning or a longer run; $\ham(1) < 0.90$ indicates healthy mixing.
 
-The normalized cut fraction $\phi(\sigma) = |E_\sigma| / |E|$
-(the fraction of edges crossing district boundaries) is used as a
-computationally efficient running diagnostic when computing $\ham(1)$.
+The current crate uses the normalized cut fraction
+$\phi(\sigma) = |E_\sigma| / |E|$ (the fraction of edges crossing district
+boundaries) as a computationally efficient running proxy for the
+autocorrelation trace.
 $\phi(\sigma)$ is not a collision-free plan identifier: two distinct
 plans can share the same cut fraction.
-However, its correlation with plan-to-plan Hamming distance makes it
-a useful chain-progress diagnostic, and it is the same summary statistic
-minimized by METIS and reported by the \ar{} evaluation.
+However, its correlation with plan-to-plan Hamming distance makes it a useful
+chain-progress diagnostic, and it is the same summary statistic minimized by
+METIS and reported by the \ar{} evaluation.
 
 \subsection{Convergence Targets for Publication}
 
@@ -138,15 +144,17 @@ require approximately 0.1 seconds.
 
 \begin{table}[h]
 \centering
-\caption{Convergence diagnostic thresholds for \re{} publication results.}
+\caption{Convergence diagnostic thresholds for \re{} publication results.
+  Current crate fields provide the cut-fraction smoke-diagnostic subset;
+  final publication tables should use the G.4 multi-chain validator.}
 \label{tab:diag-targets}
 \begin{tabular}{lll}
 \toprule
 Diagnostic & Symbol & Target \\
 \midrule
-Gelman-Rubin (rank-normalised) & $\rhat$ & $< 1.05$ \\
+Gelman-Rubin on reported statistic & $\rhat$ & $< 1.05$ \\
 Effective sample size & $\ess$ & $\geq 400$ per statistic \\
-Hamming autocorrelation & $\ham(1)$ & $0.85$--$0.95$ \\
+Plan-distance or proxy autocorrelation & $\ham(1)$ / proxy & visible decay \\
 \bottomrule
 \end{tabular}
 \end{table}
