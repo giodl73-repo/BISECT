@@ -5,6 +5,12 @@ coordinate, and evaluates population-balanced sweep cuts. Recursive calls pass
 proportional target fractions so odd and non-power-of-two district counts are
 handled without silently changing the intended seat allocation.
 
+In the atlas framing, the candidates are not arbitrary graph cuts. They are
+prefix cuts induced by the Fiedler ordering. The ordering explains why the
+candidate set exists; the sweep table explains why a particular prefix is
+selected or skipped. The downstream consequence of the selected root cut is a
+pair of recursive workloads with explicit left/right seat counts.
+
 \subsection{Reproducible Procedure}
 
 The constructor operates on the tract-adjacency graph supplied by the BISECT

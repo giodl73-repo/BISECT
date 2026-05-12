@@ -37,10 +37,10 @@ Each paper should be checked against six atlas-derived requirements:
 | [ApportionRegions](../algorithm-atlas/apportionregions.md) | [T.4](T.4+apportion-regions.pdf) | `research/tracks/T-plan-construction/T.4+apportion-regions/` | Legacy/compositor evidence; needs package-path audit in paper | Queued |
 | [Seed Search Modes](../algorithm-atlas/seed-search-modes.md) | [U.1](U.1+convergence-sweep.pdf), [U.8](U.8+percentile-sweep.pdf), [U.9](U.9+bisection-ensemble.pdf) | `research/tracks/U-search-optimization/` | Search-mode evidence split across papers | Queued |
 | [Three-Layer Compositor](../algorithm-atlas/three-layer-compositor.md) | [U.12](U.12+algorithm-selection-matrix.pdf) and portfolio docs | `research/tracks/U-search-optimization/U.12+algorithm-selection-matrix/` | Cross-family evidence | Queued |
-| [T.14 Spectral Partitioning](../algorithm-atlas/t14-spectral-partitioning.md) | [T.14](T.14+spectral-partitioning.pdf) | `research/tracks/T-plan-construction/T.14+spectral-partitioning/` | Golden, method, and benchmark packages exist | Needs atlas-language skim |
-| [T.15 Capacity Clustering](../algorithm-atlas/t15-capacity-clustering.md) | [T.15](T.15+capacity-constrained-clustering.pdf) | `research/tracks/T-plan-construction/T.15+capacity-constrained-clustering/` | Golden and benchmark packages exist | Needs atlas-language skim |
-| [T.16 Hierarchical Regionalization](../algorithm-atlas/t16-hierarchical-regionalization.md) | [T.16](T.16+hierarchical-regionalization.pdf) | `research/tracks/T-plan-construction/T.16+hierarchical-regionalization/` | Golden and benchmark packages exist | Needs atlas-language skim |
-| [T.17 Flow Construction](../algorithm-atlas/t17-flow-construction.md) | [T.17](T.17+flow-based-construction.pdf) | `research/tracks/T-plan-construction/T.17+flow-based-construction/` | Golden and benchmark packages exist | Needs atlas-language skim |
+| [T.14 Spectral Partitioning](../algorithm-atlas/t14-spectral-partitioning.md) | [T.14](T.14+spectral-partitioning.pdf) | `research/tracks/T-plan-construction/T.14+spectral-partitioning/` | Golden, method, and benchmark packages exist | Aligned 2026-05-12; rebuilt PDF |
+| [T.15 Capacity Clustering](../algorithm-atlas/t15-capacity-clustering.md) | [T.15](T.15+capacity-constrained-clustering.pdf) | `research/tracks/T-plan-construction/T.15+capacity-constrained-clustering/` | Golden and benchmark packages exist | Aligned 2026-05-12; rebuilt PDF |
+| [T.16 Hierarchical Regionalization](../algorithm-atlas/t16-hierarchical-regionalization.md) | [T.16](T.16+hierarchical-regionalization.pdf) | `research/tracks/T-plan-construction/T.16+hierarchical-regionalization/` | Golden and benchmark packages exist | Aligned 2026-05-12; rebuilt PDF |
+| [T.17 Flow Construction](../algorithm-atlas/t17-flow-construction.md) | [T.17](T.17+flow-based-construction.pdf) | `research/tracks/T-plan-construction/T.17+flow-based-construction/` | Golden and benchmark packages exist | Aligned 2026-05-12; rebuilt PDF |
 | [U.16 Branch-And-Cut](../algorithm-atlas/u16-branch-and-cut.md) | [U.16](U.16+branch-and-cut-redistricting.pdf) | `research/tracks/U-search-optimization/U.16+branch-and-cut-redistricting/` | Golden and path8 benchmark packages exist | Needs atlas-language skim |
 | [U.17 Branch-And-Price](../algorithm-atlas/u17-branch-and-price.md) | [U.17](U.17+branch-and-price-redistricting.pdf) | `research/tracks/U-search-optimization/U.17+branch-and-price-redistricting/` | Golden package exists | Needs atlas-language skim |
 | [U.18 Local Search](../algorithm-atlas/u18-local-search.md) | [U.18](U.18+large-neighborhood-search.pdf) | `research/tracks/U-search-optimization/U.18+large-neighborhood-search/` | Golden, method, and benchmark packages exist | Needs atlas-language skim |
@@ -52,7 +52,7 @@ Each paper should be checked against six atlas-derived requirements:
 
 ## Stage Plan
 
-1. **T.14-T.17 construction pass**
+1. **T.14-T.17 construction pass** - completed 2026-05-12
    - Compare each paper's method, implementation, evaluation, audit, and
      limitations sections against the atlas page.
    - Add small paper-language patches only where the atlas exposes a missing
@@ -82,7 +82,7 @@ Each paper should be checked against six atlas-derived requirements:
 ## Acceptance Checklist
 
 - [ ] Every atlas-covered paper has an explicit C1-C6 alignment row.
-- [ ] Every edited source paper rebuilds cleanly.
-- [ ] `docs/PAPERS.md` links to this tracker.
-- [ ] Any changed PDFs are copied to `docs/papers/`.
+- [x] Every edited source paper rebuilds cleanly for the completed T.14-T.17 pass.
+- [x] `docs/PAPERS.md` links to this tracker.
+- [x] Changed T.14-T.17 PDFs are copied to `docs/papers/`.
 - [ ] Review language follows the panel disclosure boundary.

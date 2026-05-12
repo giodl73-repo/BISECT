@@ -5,6 +5,14 @@ and records whether a valid assignment exists for the fixture. When capacity is
 infeasible, the output carries an explicit witness rather than emitting an
 invalid final plan.
 
+The atlas framing treats eligible arcs as the candidate objects. A unit can
+send supply only along arcs allowed by the declared graph/profile, and a
+selected arc remains valid only while the target bin stays inside its lower and
+upper capacity bounds. The important failure is therefore concrete: the paper
+should name the bound that fails and whether the artifact is a different
+feasible extraction, a model-relative infeasibility witness, or an invalid
+post-extraction block.
+
 \subsection{Reproducible Procedure}
 
 The constructor uses the graph and unit attributes supplied by the BISECT state

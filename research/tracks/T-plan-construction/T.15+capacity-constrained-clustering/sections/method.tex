@@ -5,6 +5,13 @@ to population capacity, and records whether the resulting assignment is valid,
 repaired, or infeasible. Small repair routines are treated as auditable
 post-processing rather than invisible cleanup.
 
+The atlas view makes the key decision inspectable: a geographically nearest
+cluster is only a candidate, not an entitlement. If assigning a unit would
+overfill that cluster, the candidate is rejected with visible capacity
+arithmetic and the next eligible cluster is tried. The paper's artifact claim
+therefore depends on preserving seed order, rejected capacity candidates,
+fallback assignments, and final status.
+
 \subsection{Reproducible Procedure}
 
 The constructor operates on the graph and unit attributes supplied by the

@@ -5,6 +5,12 @@ merge witnesses. Each witness records enough information to explain why regions
 were combined and to distinguish valid construction from infeasible capacity
 cases.
 
+The atlas reading rule is that larger regions are not self-explanatory. The
+paper must show the adjacent-pair candidate set, the eligibility gate, the
+score used only after eligibility is established, and the merge witness that
+creates the next non-leaf region. Rejected adjacent pairs remain evidence when
+they explain why an apparently plausible merge was not taken.
+
 \subsection{Reproducible Procedure}
 
 The constructor operates on the adjacency graph emitted by the BISECT state
