@@ -29,7 +29,10 @@ AreaSection has to keep population tight while treating land area as a looser
 shape signal. Dense urban units can carry much more population per square mile
 than rural units. A population-balanced split can therefore be geographically
 small on one side and huge on the other. The area window makes that pressure
-visible.
+visible. In the figure, the dense-core `1:7` candidate passes population but
+fails the area window, so it is skipped before partition search. The feasible
+`3:5` candidate then creates the recursive workload: one child must produce
+three districts and the other must produce five.
 
 ## Picture 2: Feasibility Filter
 

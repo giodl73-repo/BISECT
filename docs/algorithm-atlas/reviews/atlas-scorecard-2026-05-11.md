@@ -25,8 +25,8 @@ prose plus generic diagrams no longer earns an excellent score.
 
 | Band | Pages |
 |---|---|
-| Excellent, 54-60 | GeoSection, Seed Search, U.20 |
-| Good, 45-53 | T.14, T.15, T.16, T.17, U.16, U.17, U.18, U.19, ReCom, SMC, Multiscale, Three-Layer Compositor, AreaSection, ApportionRegions, County-Sticky |
+| Excellent, 54-60 | GeoSection, AreaSection, Seed Search, U.20 |
+| Good, 45-53 | T.14, T.15, T.16, T.17, U.16, U.17, U.18, U.19, ReCom, SMC, Multiscale, Three-Layer Compositor, ApportionRegions, County-Sticky |
 | Serviceable, 36-44 | None |
 | Thin, 24-35 | None |
 | Failing, 0-23 | None |
@@ -55,7 +55,7 @@ figures are upgraded.
 | Multiscale MCMC | 8 | 8 | 6 | 8 | 10 | 8 | 48 | Good |
 | Three-Layer Compositor | 8 | 9 | 6 | 8 | 8 | 8 | 47 | Good |
 | GeoSection | 10 | 9 | 10 | 10 | 9 | 9 | 57 | Excellent |
-| AreaSection | 9 | 8 | 8 | 9 | 9 | 8 | 51 | Good |
+| AreaSection | 10 | 9 | 10 | 10 | 9 | 8 | 56 | Excellent |
 | ApportionRegions | 8 | 8 | 7 | 8 | 9 | 8 | 48 | Good |
 | County-Sticky Weights | 8 | 8 | 6 | 8 | 9 | 8 | 47 | Good |
 | Seed Search Modes | 9 | 9 | 9 | 10 | 9 | 8 | 54 | Excellent |
@@ -79,9 +79,9 @@ paths as concrete as GeoSection's root-allocation workload.
 
 ### Good But Still Below The Gold Standard
 
-**AreaSection - 51/60.** Strong population/area feasibility story, but the main
-figure should adopt countable 2D block arrays and explicitly show feasible root
-workloads.
+**AreaSection - 56/60.** The page now uses countable population/area block
+arrays, shows a skipped dense-core candidate, shows the feasibility decision
+rule, and names the recursive workload created by the feasible root.
 
 **U.16, U.17, U.18, U.19 - 50-51/60.** These pages are accurate and
 well-evidenced, but their primary visuals still need more complete
@@ -102,22 +102,20 @@ consequences.
 
 ## Upgrade Priority
 
-1. **AreaSection**: convert the strong but still abstract area figure into
-   countable 2D block arrays with explicit feasible root workloads.
-2. **County-Sticky Weights**: show a county block map where candidate cuts cross
+1. **County-Sticky Weights**: show a county block map where candidate cuts cross
    or respect county boundaries, then show the weighted decision consequence.
-3. **ApportionRegions**: replace factor-tree prose visuals with countable seat
+2. **ApportionRegions**: replace factor-tree prose visuals with countable seat
    workloads, prime fallback, and reused spine consequences.
-4. **T.14-T.17**: upgrade the construction-family visuals to show candidates,
+3. **T.14-T.17**: upgrade the construction-family visuals to show candidates,
    decision rules, and artifact/status consequences.
-5. **U-series and sampling pages**: add richer primary teaching figures only
+4. **U-series and sampling pages**: add richer primary teaching figures only
    after the spatial/compositor family reaches the GeoSection standard.
 
 ## Acceptance Target
 
 Under the stricter rubric, every page remains at least good, but only
-GeoSection, Seed Search, and U.20 currently score excellent. The next target is
-to raise the spatial/compositor family to **54/60 or higher** with
+GeoSection, AreaSection, Seed Search, and U.20 currently score excellent. The
+next target is to raise the remaining spatial/compositor family to **54/60 or higher** with
 gold-standard teaching figures:
 
 - T.14 Spectral Partitioning
@@ -125,6 +123,5 @@ gold-standard teaching figures:
 - T.16 Hierarchical Regionalization
 - T.17 Flow Construction
 - Three-Layer Compositor
-- AreaSection
 - ApportionRegions
 - County-Sticky Weights
