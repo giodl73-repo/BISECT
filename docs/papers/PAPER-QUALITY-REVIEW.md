@@ -136,7 +136,7 @@ intentionally modest.
 | Paper | Review status | Fix status | Build/PDF status |
 |---|---|---|---|
 | U.16 Branch-and-Cut Redistricting | Reviewed 2026-05-12 | Added worked disconnected-incumbent separation example, concrete solve-report fields, manifest lineage boundary, U.13/U.20 positioning, and path8 command evidence | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
-| U.17 | Queued | Queued | Queued |
+| U.17 Branch-and-Price Redistricting | Reviewed 2026-05-12 | Added path4 column/master example, concrete branch-price report fields, CLI/test/package evidence, and fixed-point lineage boundary | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
 | U.18 | Queued | Queued | Queued |
 | U.19 | Queued | Queued | Queued |
 | U.20 | Queued | Queued | Queued |
@@ -148,6 +148,7 @@ intentionally modest.
 | Paper | P1 Claim | P2 Algorithm | P3 Evidence | P4 Boundary | P5 Build | P6 Reader | Total |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | U.16 Branch-and-Cut Redistricting | 3.8 | 3.7 | 3.6 | 3.9 | 4.0 | 3.7 | 22.7 / 24 |
+| U.17 Branch-and-Price Redistricting | 3.8 | 3.8 | 3.6 | 3.9 | 4.0 | 3.7 | 22.8 / 24 |
 
 ### Batch 3 Score Notes
 
@@ -158,3 +159,11 @@ fields, and the audit section cleanly separates model-relative exactness from
 RPLAN/RCTX validity. The remaining ceiling is empirical depth: the path8 package
 is the right smoke-test artifact, but real-data exact-performance claims still
 need solver versions, hardware, transcripts, and archived solve directories.
+
+**U.17 Branch-and-Price Redistricting — 22.8/24.** The paper now explains the
+column-generation lifecycle through the path4 fixture: valid columns are not
+automatically a valid exact cover, and the master must select non-overlapping
+columns that cover every unit once. The report-field table and CLI evidence
+make the implementation contract auditable. The remaining ceiling is still
+solver maturity: production branch-and-price claims need larger column pools,
+pricing transcripts, solver versions, and archived benchmark outputs.

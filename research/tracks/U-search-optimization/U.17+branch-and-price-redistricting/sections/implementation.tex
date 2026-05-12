@@ -17,6 +17,15 @@ it overlaps selected columns or leaves another unit uncovered. The selected
 solution must therefore name column ids and coverage status, not only the final
 assignment colors.
 
+On the current path4 fixture, the graph has units \(0-1-2-3\), equal
+populations, \(k=2\), and a one-percent tolerance. Pricing enumerates connected
+balanced subsets. The eligible district columns are \(\{0,1\}\), \(\{1,2\}\),
+and \(\{2,3\}\). The middle column is individually valid, but it cannot appear
+with either endpoint column without double-covering unit 1 or unit 2. The
+master therefore selects the endpoint columns, records selected column ids
+\([0,2]\), emits assignment \([0,0,1,1]\), and reports objective 1. This is the
+small example that separates column validity from exact cover validity.
+
 \begin{table}[htbp]
 \centering
 \small
@@ -35,6 +44,25 @@ Package & final assignments, manifest, certificate & L1 audit path \\
 \begin{table}[htbp]
 \centering
 \small
+\begin{tabular}{p{0.22\linewidth}p{0.29\linewidth}p{0.35\linewidth}}
+\toprule
+Report field & Current value family & Interpretation \\
+\midrule
+Report schema & branch-price report v1 & Stable JSON envelope for U.17 evidence \\
+Status & formulation-only, exact-fixture-optimal, infeasible & Allowed claim vocabulary \\
+Pricing counts & rounds and generated columns & Size of generated column pool \\
+Bounds & lower bound, upper bound, gap & Master evidence when solved \\
+Formulation size & constraints, columns, incidence nonzeros & Rebuildability and scale context \\
+Solution & selected column ids, assignment, objective & Bridge from columns to final RPLAN \\
+Parameter hash & SHA-256 digest & Tamper check for report-defining parameters \\
+\bottomrule
+\end{tabular}
+\caption{Concrete branch-price report fields emitted by \texttt{bisect-column}.}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\small
 \begin{tabular}{p{0.24\linewidth}p{0.34\linewidth}p{0.28\linewidth}}
 \toprule
 Status & Meaning & Allowed claim \\
@@ -48,3 +76,9 @@ Formulation-only & model/report built without solve & staged implementation only
 \end{tabular}
 \caption{Status vocabulary for branch-and-price outputs.}
 \end{table}
+
+The status table intentionally uses a richer explanatory vocabulary than the
+current enum. The implementation enum has \texttt{formulation-only},
+\texttt{exact-fixture-optimal}, and \texttt{infeasible}. The paper-level terms
+``pricing-valid,'' ``master-bounded,'' and ``fixture-solved'' are reader-facing
+states that explain which part of the lifecycle produced the evidence.

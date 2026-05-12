@@ -1,6 +1,13 @@
 \section{Introduction}
 
 U.17 documents \texttt{bisect-column} and \texttt{bisect-cli::exact\_cmd},
-exposed as \texttt{bisect exact --method branch-and-price}. The paper is an exact-optimization
-implementation paper about column-generation contracts, not a claim that the
-large-instance pricing strategy is complete.
+exposed as \texttt{bisect exact --method branch-and-price}. The paper is an
+exact-optimization implementation paper about column-generation contracts, not
+a claim that the large-instance pricing strategy is complete.
+
+The purpose is to make branch-and-price inspectable before production-scale
+solver integration. U.16 works with assignment variables and connectivity cuts;
+U.17 works with whole district columns and a set-partitioning master problem.
+U.20 then gives both families the same fixed-point destination: selected plans
+become RPLAN/RCTX artifacts, while solver-specific evidence stays in the
+sidecar reports and method lineage.

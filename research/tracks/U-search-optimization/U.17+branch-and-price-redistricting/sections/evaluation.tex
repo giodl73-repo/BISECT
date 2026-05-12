@@ -21,3 +21,32 @@ Large-instance branch-price scales & future evidence placeholder & benchmark pro
 \end{tabular}
 \caption{Evidence ladder for U.17 claims.}
 \end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.31\linewidth}p{0.55\linewidth}}
+\toprule
+Command or package & Evidence produced \\
+\midrule
+\texttt{cargo test -p bisect-column} & Checks pricing, formulation-only
+reports, exact path4 master enumeration, bounds, selected columns, and lineage
+hashes. \\
+\texttt{bisect exact} fixture run & Writes branch-price report,
+algorithm-lineage JSON, exact RPLAN/RCTX, audit certificate, and manifest when
+a tiny exact solution exists. \\
+Public golden package & Preserves the U.17 method transcript, plan, context,
+manifest, and audit certificate in the package corpus. \\
+\bottomrule
+\end{tabular}
+\caption{Current U.17 evidence path.}
+\end{table}
+
+The CLI shape for the exact fixture path is:
+\begin{verbatim}
+bisect exact --method branch-and-price \
+  --context fixture.rctx --out-dir exact \
+  --districts 2 --tolerance 1.0
+\end{verbatim}
+Passing \texttt{--formulation-only} changes the claim: the output can document
+the generated master but must not be described as a solved exact plan.

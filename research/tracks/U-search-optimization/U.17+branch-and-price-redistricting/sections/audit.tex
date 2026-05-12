@@ -12,3 +12,12 @@ evidence needed to interpret exactness.
 
 The public golden package can be checked either through the RPLAN certificate
 verifier or through the BISECT manifest verifier.
+
+The fixed point is deliberately two-layered. The RPLAN/RCTX pair fixes the
+assignment and input graph; the branch-price report fixes the column-generation
+evidence that led to the assignment. The algorithm lineage includes producer
+\texttt{bisect-column}, method \texttt{branch-and-price}, report schema,
+status, pricing rounds, generated column count, bounds, gap, and parameter
+hash. Editing the selected columns or changing a formulation-only run into a
+solved exact claim is therefore not an innocent prose change; it changes the
+sidecar evidence that the package is expected to preserve.

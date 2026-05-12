@@ -2,7 +2,7 @@
 
 **Paper**: `U.17+branch-and-price-redistricting`  
 **Round**: 1 to 2  
-**Date**: 2026-05-11  
+**Date**: 2026-05-11; updated 2026-05-12  
 **Source**: `reviews/SYNTHESIS.md`
 
 > **Purpose**: This plan is based on AI-generated quality assessment feedback.
@@ -39,13 +39,24 @@ column-generation audit metadata, and explicit evidence-level boundaries.
 
 ## P2: Substantial Enhancements
 
-- [ ] Add solver logs, command transcripts, and column-pool examples.
-- [ ] Add larger formulation-only examples before performance comparison.
-- [ ] Tie exact fixture examples to archived RPLAN/RCTX packages.
+- [x] Add solver logs, command transcripts, and column-pool examples.
+- [x] Add larger formulation-only examples before performance comparison.
+- [x] Tie exact fixture examples to archived RPLAN/RCTX packages.
+
+## 2026-05-12 Paper-Quality Pass
+
+- [x] Replaced draft framing with implementation-paper framing.
+- [x] Positioned U.17 against U.16 branch-and-cut and U.20 fixed-point audit
+      semantics.
+- [x] Added the path4 column-generation example showing why a valid middle
+      column can still be rejected by exact cover.
+- [x] Added concrete branch-price report fields from \texttt{bisect-column}.
+- [x] Added CLI/test/package evidence and kept large-instance performance out
+      of scope.
 
 ## Quality Checkpoints
 
 - [x] P1 items addressed.
 - [x] Paper builds without errors.
 - [x] Claims map to evidence level.
-- [ ] Ready for round-2 simulated assessment.
+- [x] Ready for round-2 simulated assessment.
