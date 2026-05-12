@@ -25,8 +25,8 @@ prose plus generic diagrams no longer earns an excellent score.
 
 | Band | Pages |
 |---|---|
-| Excellent, 54-60 | GeoSection, AreaSection, Seed Search, County-Sticky, U.20 |
-| Good, 45-53 | T.14, T.15, T.16, T.17, U.16, U.17, U.18, U.19, ReCom, SMC, Multiscale, Three-Layer Compositor, ApportionRegions |
+| Excellent, 54-60 | GeoSection, AreaSection, Seed Search, County-Sticky, ApportionRegions, U.20 |
+| Good, 45-53 | T.14, T.15, T.16, T.17, U.16, U.17, U.18, U.19, ReCom, SMC, Multiscale, Three-Layer Compositor |
 | Serviceable, 36-44 | None |
 | Thin, 24-35 | None |
 | Failing, 0-23 | None |
@@ -56,7 +56,7 @@ figures are upgraded.
 | Three-Layer Compositor | 8 | 9 | 6 | 8 | 8 | 8 | 47 | Good |
 | GeoSection | 10 | 9 | 10 | 10 | 9 | 9 | 57 | Excellent |
 | AreaSection | 10 | 9 | 10 | 10 | 9 | 8 | 56 | Excellent |
-| ApportionRegions | 8 | 8 | 7 | 8 | 9 | 8 | 48 | Good |
+| ApportionRegions | 9 | 9 | 10 | 10 | 9 | 8 | 55 | Excellent |
 | County-Sticky Weights | 9 | 9 | 10 | 10 | 9 | 8 | 55 | Excellent |
 | Seed Search Modes | 9 | 9 | 9 | 10 | 9 | 8 | 54 | Excellent |
 
@@ -88,6 +88,10 @@ units, candidate cuts that cross or respect county boundaries, weighted
 decision scores, and the correct consequence: county splits are discouraged,
 not banned.
 
+**ApportionRegions - 55/60.** The page now shows the countable seat-workload
+tree before geography enters: prime fallback, child factor logic, and the final
+regional workload consequence.
+
 **U.16, U.17, U.18, U.19 - 50-51/60.** These pages are accurate and
 well-evidenced, but their primary visuals still need more complete
 candidate-set -> decision-rule -> artifact-consequence paths.
@@ -100,14 +104,14 @@ or particle is accepted, rejected, copied, or diagnosed.
 main figures predate the stricter rubric. Each needs a gold-standard teaching
 figure: candidates, decision rule, and final artifact/status consequence.
 
-**Multiscale, Three-Layer Compositor, ApportionRegions - 47-48/60.** These
-pages are conceptually useful but not yet visually self-explanatory. They need
-countable candidate objects and clearer downstream consequences.
+**Multiscale and Three-Layer Compositor - 47-48/60.** These pages are
+conceptually useful but not yet visually self-explanatory. They need countable
+candidate objects and clearer downstream consequences.
 
 ## Upgrade Priority
 
-1. **ApportionRegions**: replace factor-tree prose visuals with countable seat
-   workloads, prime fallback, and reused spine consequences.
+1. **Three-Layer Compositor**: show structure, weights, and search as separate
+   candidate choices feeding one manifest consequence.
 2. **T.14-T.17**: upgrade the construction-family visuals to show candidates,
    decision rules, and artifact/status consequences.
 3. **U-series and sampling pages**: add richer primary teaching figures only
@@ -116,9 +120,9 @@ countable candidate objects and clearer downstream consequences.
 ## Acceptance Target
 
 Under the stricter rubric, every page remains at least good, but only
-GeoSection, AreaSection, County-Sticky, Seed Search, and U.20 currently score
-excellent. The next target is to raise the remaining spatial/compositor family
-to **54/60 or higher** with
+GeoSection, AreaSection, County-Sticky, ApportionRegions, Seed Search, and U.20
+currently score excellent. The next target is to raise the remaining
+spatial/compositor family to **54/60 or higher** with
 gold-standard teaching figures:
 
 - T.14 Spectral Partitioning
@@ -126,4 +130,3 @@ gold-standard teaching figures:
 - T.16 Hierarchical Regionalization
 - T.17 Flow Construction
 - Three-Layer Compositor
-- ApportionRegions

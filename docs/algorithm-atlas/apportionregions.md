@@ -21,6 +21,16 @@ seat count k -> factor tree -> regional split sequence -> district leaves
 The useful property is reuse: related seat counts can share a top-level spine
 when their factorization structure aligns.
 
+## Picture 0: Countable Seat Workload
+
+![ApportionRegions countable seat workload](assets/apportionregions.svg)
+
+The main visual shows the thing ApportionRegions chooses before geography is
+asked to draw anything: a deterministic workload tree of district counts. For
+`k = 17`, the root is prime, so the algorithm falls back to `8 | 9`. The
+children then resume factor logic: `8 -> 4 | 4` and `9 -> 3 | 3 | 3`. That tree
+is the regional split workload the geographic partitioner must realize.
+
 ## Picture 1: Prime Fallback Then Composite Children
 
 ![ApportionRegions prime fallback](assets/apportionregions-prime-fallback.svg)

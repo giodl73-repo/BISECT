@@ -1,12 +1,112 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="360" viewBox="0 0 960 360" role="img" aria-labelledby="title desc">
-  <title id="title">ApportionRegions prime-factor tree</title>
-  <desc id="desc">Seat count factorization chooses the split tree.</desc>
-  <style>.bg{fill:#fbfbf8}.node{fill:#eef2ff;stroke:#5b61b6;stroke-width:2}.leaf{fill:#e4f5eb;stroke:#2f7d4c;stroke-width:2}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.line{stroke:#596673;stroke-width:2}</style>
-  <rect class="bg" width="960" height="360"/>
-  <text class="label" x="375" y="55">Example: k = 14 = 7 x 2</text>
-  <rect class="node" x="410" y="80" width="120" height="45" rx="8"/><text class="small" x="450" y="108">14 seats</text>
-  <line class="line" x1="470" y1="125" x2="160" y2="185"/><line class="line" x1="470" y1="125" x2="780" y2="185"/>
-  <g><rect class="node" x="120" y="185" width="80" height="38" rx="8"/><rect class="node" x="230" y="185" width="80" height="38" rx="8"/><rect class="node" x="340" y="185" width="80" height="38" rx="8"/><rect class="node" x="450" y="185" width="80" height="38" rx="8"/><rect class="node" x="560" y="185" width="80" height="38" rx="8"/><rect class="node" x="670" y="185" width="80" height="38" rx="8"/><rect class="node" x="780" y="185" width="80" height="38" rx="8"/></g>
-  <text class="small" x="145" y="209">2</text><text class="small" x="255" y="209">2</text><text class="small" x="365" y="209">2</text><text class="small" x="475" y="209">2</text><text class="small" x="585" y="209">2</text><text class="small" x="695" y="209">2</text><text class="small" x="805" y="209">2</text>
-  <text class="small" x="335" y="285">Largest prime factor creates the top-level regional spine; each 2 then bisects.</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-labelledby="title desc">
+  <title id="title">ApportionRegions turns a seat count into a countable recursive workload</title>
+  <desc id="desc">A teaching figure showing a prime seat count falling back to an 8 and 9 root split, then composite children splitting into countable workloads and final district leaves.</desc>
+  <style>
+    .bg{fill:#f7f5ef}
+    .panel{fill:#fffdf8;stroke:#26323d;stroke-width:1.6}
+    .card{fill:#fff;stroke:#c7d0da;stroke-width:1.2}
+    .title{font:700 30px Arial,sans-serif;fill:#17212b}
+    .label{font:700 17px Arial,sans-serif;fill:#17212b}
+    .small{font:14px Arial,sans-serif;fill:#52616b}
+    .tiny{font:12px Arial,sans-serif;fill:#52616b}
+    .mono{font:12px Consolas,monospace;fill:#17212b}
+    .seat{fill:#dbeafe;stroke:#245b99;stroke-width:1}
+    .left{fill:#b9d4fa;stroke:#245b99;stroke-width:1}
+    .right{fill:#b8e7c7;stroke:#25724d;stroke-width:1}
+    .leaf{fill:#ffffff;stroke:#9aa7b3;stroke-width:1}
+    .fallback{fill:#fff1ed;stroke:#b6423c;stroke-width:1.5}
+    .factor{fill:#eef8f0;stroke:#25724d;stroke-width:1.5}
+    .rule{fill:#eef2ff;stroke:#5b61b6;stroke-width:1.5}
+    .line{stroke:#596673;stroke-width:2;fill:none;marker-end:url(#arrow)}
+    .thick{stroke:#26323d;stroke-width:3}
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#596673"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" width="1280" height="760"/>
+  <text class="title" x="46" y="54">ApportionRegions: seat count becomes the recursive split workload</text>
+  <text class="small" x="48" y="84">The algorithm is not choosing arbitrary regions; it is turning k into a deterministic tree of child district counts.</text>
+
+  <rect class="panel" x="42" y="116" width="1196" height="554" rx="12"/>
+
+  <!-- Step 1 -->
+  <g transform="translate(76 150)">
+    <text class="label" x="0" y="0">1. Candidate workload: k = 17 seats</text>
+    <rect class="card" x="0" y="28" width="280" height="168" rx="9"/>
+    <g transform="translate(24 60)">
+      <rect class="seat" x="0" y="0" width="24" height="24"/><rect class="seat" x="28" y="0" width="24" height="24"/><rect class="seat" x="56" y="0" width="24" height="24"/><rect class="seat" x="84" y="0" width="24" height="24"/><rect class="seat" x="112" y="0" width="24" height="24"/><rect class="seat" x="140" y="0" width="24" height="24"/><rect class="seat" x="168" y="0" width="24" height="24"/><rect class="seat" x="196" y="0" width="24" height="24"/><rect class="seat" x="224" y="0" width="24" height="24"/>
+      <rect class="seat" x="0" y="28" width="24" height="24"/><rect class="seat" x="28" y="28" width="24" height="24"/><rect class="seat" x="56" y="28" width="24" height="24"/><rect class="seat" x="84" y="28" width="24" height="24"/><rect class="seat" x="112" y="28" width="24" height="24"/><rect class="seat" x="140" y="28" width="24" height="24"/><rect class="seat" x="168" y="28" width="24" height="24"/><rect class="seat" x="196" y="28" width="24" height="24"/>
+    </g>
+    <rect class="fallback" x="24" y="132" width="232" height="42" rx="7"/>
+    <text class="small" x="42" y="159">17 is prime: no largest-factor split</text>
+  </g>
+
+  <path class="line" d="M366 250 H432"/>
+
+  <!-- Step 2 -->
+  <g transform="translate(450 150)">
+    <text class="label" x="0" y="0">2. Prime fallback chooses root split</text>
+    <rect class="card" x="0" y="28" width="356" height="168" rx="9"/>
+    <g transform="translate(32 60)">
+      <text class="label" x="28" y="-12">8</text>
+      <rect class="left" x="0" y="0" width="24" height="24"/><rect class="left" x="28" y="0" width="24" height="24"/><rect class="left" x="56" y="0" width="24" height="24"/><rect class="left" x="84" y="0" width="24" height="24"/>
+      <rect class="left" x="0" y="28" width="24" height="24"/><rect class="left" x="28" y="28" width="24" height="24"/><rect class="left" x="56" y="28" width="24" height="24"/><rect class="left" x="84" y="28" width="24" height="24"/>
+    </g>
+    <line class="thick" x1="164" y1="54" x2="164" y2="122"/>
+    <g transform="translate(198 60)">
+      <text class="label" x="32" y="-12">9</text>
+      <rect class="right" x="0" y="0" width="24" height="24"/><rect class="right" x="28" y="0" width="24" height="24"/><rect class="right" x="56" y="0" width="24" height="24"/>
+      <rect class="right" x="0" y="28" width="24" height="24"/><rect class="right" x="28" y="28" width="24" height="24"/><rect class="right" x="56" y="28" width="24" height="24"/>
+      <rect class="right" x="0" y="56" width="24" height="24"/><rect class="right" x="28" y="56" width="24" height="24"/><rect class="right" x="56" y="56" width="24" height="24"/>
+    </g>
+    <rect class="fallback" x="24" y="132" width="308" height="42" rx="7"/>
+    <text class="small" x="42" y="159">root rule: floor(17/2) | ceil(17/2)</text>
+  </g>
+
+  <path class="line" d="M818 250 H884"/>
+
+  <!-- Step 3 -->
+  <g transform="translate(902 150)">
+    <text class="label" x="0" y="0">3. Children resume factor logic</text>
+    <rect class="card" x="0" y="28" width="284" height="284" rx="9"/>
+    <g transform="translate(24 58)">
+      <text class="label" x="0" y="0">8 -> 4 + 4</text>
+      <rect class="left" x="0" y="22" width="22" height="22"/><rect class="left" x="24" y="22" width="22" height="22"/><rect class="left" x="48" y="22" width="22" height="22"/><rect class="left" x="72" y="22" width="22" height="22"/>
+      <text class="small" x="102" y="39">|</text>
+      <rect class="left" x="122" y="22" width="22" height="22"/><rect class="left" x="146" y="22" width="22" height="22"/><rect class="left" x="170" y="22" width="22" height="22"/><rect class="left" x="194" y="22" width="22" height="22"/>
+    </g>
+    <g transform="translate(24 132)">
+      <text class="label" x="0" y="0">9 -> 3 + 3 + 3</text>
+      <rect class="right" x="0" y="22" width="22" height="22"/><rect class="right" x="24" y="22" width="22" height="22"/><rect class="right" x="48" y="22" width="22" height="22"/>
+      <text class="small" x="78" y="39">|</text>
+      <rect class="right" x="98" y="22" width="22" height="22"/><rect class="right" x="122" y="22" width="22" height="22"/><rect class="right" x="146" y="22" width="22" height="22"/>
+      <text class="small" x="176" y="39">|</text>
+      <rect class="right" x="196" y="22" width="22" height="22"/><rect class="right" x="220" y="22" width="22" height="22"/><rect class="right" x="244" y="22" width="22" height="22"/>
+    </g>
+    <rect class="factor" x="24" y="232" width="236" height="38" rx="7"/>
+    <text class="small" x="44" y="256">final leaves still sum to 17</text>
+  </g>
+
+  <!-- Lower decision rule -->
+  <g transform="translate(86 440)">
+    <text class="label" x="0" y="0">Decision rule</text>
+    <rect class="rule" x="0" y="22" width="516" height="116" rx="9"/>
+    <text class="small" x="24" y="56">Composite k: split by largest prime factor.</text>
+    <text class="small" x="24" y="82">Prime k greater than 3: fall back to floor/ceil binary split.</text>
+    <text class="small" x="24" y="108">Small k up to 3: split directly.</text>
+  </g>
+
+  <g transform="translate(650 440)">
+    <text class="label" x="0" y="0">Artifact consequence</text>
+    <rect class="factor" x="0" y="22" width="484" height="116" rx="9"/>
+    <text class="small" x="24" y="56">The output is a deterministic factor tree:</text>
+    <text class="mono" x="24" y="84">17 -> [8, 9] -> [4,4] and [3,3,3]</text>
+    <text class="small" x="24" y="110">This tree becomes the regional split workload.</text>
+  </g>
+
+  <rect x="74" y="702" width="1132" height="34" rx="10" fill="#26323d"/>
+  <text x="100" y="724" font-family="Arial, sans-serif" font-size="15" fill="#fff">Reading rule: ApportionRegions chooses a countable seat-workload tree first; geography is then asked to realize each prescribed split.</text>
 </svg>
