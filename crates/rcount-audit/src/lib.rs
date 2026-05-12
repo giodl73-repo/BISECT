@@ -1,6 +1,7 @@
 use rcount_core::{
     package_content_hash, verify_canvass_correction_event, verify_jurisdiction_total,
-    verify_package, EquationPass, RcountCoreError, RcountPackage, StatusEventType,
+    verify_package, EquationPass, RcountCoreError, RcountPackage, ReportingUnitKind,
+    StatusEventType,
 };
 use rcount_io::{read_package_dir, verify_source_index, RcountIoError, RcountManifest};
 use serde::{Deserialize, Serialize};
@@ -109,17 +110,29 @@ fn verify_loaded_package(
         }),
     }
 
-    match verify_jurisdiction_total("syn-2024-mayor", "syn:jurisdiction:SYN", &package.summaries) {
-        Ok(passes) => {
-            checks.extend(passes.into_iter().map(pass_result));
+    for contest in &package.contests {
+        for jurisdiction_unit in package
+            .reporting_units
+            .iter()
+            .filter(|unit| unit.kind == ReportingUnitKind::JurisdictionTotal)
+        {
+            match verify_jurisdiction_total(
+                &contest.contest_id,
+                &jurisdiction_unit.reporting_unit_id,
+                &package.summaries,
+            ) {
+                Ok(passes) => {
+                    checks.extend(passes.into_iter().map(pass_result));
+                }
+                Err(err) => checks.push(CheckResult {
+                    equation_id: "jurisdiction_contest_total".to_string(),
+                    status: VerificationStatus::Fail,
+                    contest_id: Some(contest.contest_id.clone()),
+                    reporting_unit_id: Some(jurisdiction_unit.reporting_unit_id.clone()),
+                    error: Some(err.to_string()),
+                }),
+            }
         }
-        Err(err) => checks.push(CheckResult {
-            equation_id: "jurisdiction_contest_total".to_string(),
-            status: VerificationStatus::Fail,
-            contest_id: Some("syn-2024-mayor".to_string()),
-            reporting_unit_id: Some("syn:jurisdiction:SYN".to_string()),
-            error: Some(err.to_string()),
-        }),
     }
 
     if package

@@ -45,6 +45,19 @@ fn docs_district_aggregation_dir() -> std::path::PathBuf {
         .join("district-aggregation-rplan")
 }
 
+fn docs_multi_election_cycle_path(cycle_id: &str) -> String {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .ancestors()
+        .nth(2)
+        .unwrap()
+        .join("docs/examples/rcount-golden-packages")
+        .join("multi-election-harness")
+        .join(cycle_id)
+        .join("package")
+        .to_string_lossy()
+        .into_owned()
+}
+
 fn docs_package_path(package_name: &str) -> String {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .ancestors()
@@ -337,6 +350,29 @@ fn aggregate_districts_with_rplan_outputs_district_totals() {
     assert!(stdout.contains(r#""district_label":"SYN-D1""#));
     assert!(stdout.contains(r#""counted_ballots":80"#));
     assert!(stdout.contains(r#""rplan_plan_hash":"sha256:"#));
+}
+
+#[test]
+fn verify_multi_election_cycle_uses_package_contest_for_jurisdiction_total() {
+    let output = Command::new(env!("CARGO_BIN_EXE_rcount"))
+        .args([
+            "verify",
+            &docs_multi_election_cycle_path("SYN-2028-general"),
+            "--format",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains(r#""status":"pass""#));
+    assert!(stdout.contains(r#""contest_id":"syn-cycle-mayor""#));
+    assert!(stdout.contains(r#""equation_id":"jurisdiction_contest_total""#));
 }
 
 fn copy_dir_all(src: &std::path::Path, dst: &std::path::Path) -> std::io::Result<()> {

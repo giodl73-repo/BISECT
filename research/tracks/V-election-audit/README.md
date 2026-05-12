@@ -43,7 +43,8 @@ recompute public claims from lower-level evidence.
 - `rcount-district`: started 2026-05-12 as the optional bridge from verified
   RCOUNT summaries to RPLAN district assignments, producing district totals and
   transcripts that bind the RCOUNT package hash, RPLAN plan hash, and optional
-  RCTX context hash.
+  RCTX context hash. It also contains the first L2 synthetic multi-election
+  harness with split/merge precinct lineage across three cycles.
 - `rcount-cli`: started 2026-05-12 with `rcount verify <package-dir>` and
   optional `--write-transcript`, plus `rcount aggregate-districts` for the
   RPLAN-backed district aggregation slice.

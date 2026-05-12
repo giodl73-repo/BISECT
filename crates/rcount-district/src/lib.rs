@@ -1,5 +1,7 @@
 use rcount_core::{
-    package_content_hash, verify_package, CountStatus, RcountPackage, SelectionTotal, Summary,
+    package_content_hash, verify_jurisdiction_total, verify_lineage_conservation, verify_package,
+    CountStatus, LineageKind, RcountPackage, ReportingUnit, ReportingUnitKind,
+    ReportingUnitLineage, Selection, SelectionKind, SelectionTotal, Summary,
 };
 use rplan_core::{CanonicalOrder, DistrictPlan, PlanUnitIndex, RplanContext, UnitKind};
 use rplan_io::{read_rctx_str, read_rplan_str, RplanDocument, RplanMetadataV02, RplanProvenance};
@@ -75,6 +77,42 @@ pub struct DistrictAggregationTranscript {
     pub checks: Vec<DistrictAggregationCheck>,
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct SyntheticElectionCycle {
+    pub cycle_id: String,
+    pub package: RcountPackage,
+    pub plan: RplanDocument,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SyntheticCycleCheck {
+    pub cycle_id: String,
+    pub package_content_hash: String,
+    pub rplan_plan_hash: String,
+    pub current_reporting_units: Vec<String>,
+    pub lineage_event_count: usize,
+    pub district_count: usize,
+    pub status: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct SyntheticMultiElectionHarness {
+    pub harness_version: String,
+    pub contest_id: String,
+    pub status: CountStatus,
+    pub cycles: Vec<SyntheticElectionCycle>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SyntheticMultiElectionTranscript {
+    pub harness_version: String,
+    pub contest_id: String,
+    pub status: CountStatus,
+    pub cycle_count: usize,
+    pub cycle_checks: Vec<SyntheticCycleCheck>,
+    pub district_aggregations: Vec<DistrictAggregationTranscript>,
+}
+
 pub fn aggregate_package_dir_with_plan_path(
     package_dir: &Path,
     plan_path: &Path,
@@ -95,6 +133,107 @@ pub fn aggregate_package_dir_with_plan_path(
         contest_id,
         status,
     )
+}
+
+pub fn synthetic_multi_election_harness(
+) -> Result<SyntheticMultiElectionHarness, RcountDistrictError> {
+    let contest_id = "syn-cycle-mayor";
+    let status = CountStatus::Canvassed;
+    let cycles = vec![
+        SyntheticElectionCycle {
+            cycle_id: "SYN-2024-general".to_string(),
+            package: synthetic_cycle_2024_package(contest_id, status),
+            plan: synthetic_rplan_document_for_units(
+                "synthetic-cycle-2024",
+                2024,
+                &[
+                    "syn:precinct:P-001",
+                    "syn:precinct:P-002",
+                    "syn:precinct:P-003",
+                ],
+                &[0, 1, 1],
+            )?,
+        },
+        SyntheticElectionCycle {
+            cycle_id: "SYN-2026-general".to_string(),
+            package: synthetic_cycle_2026_package(contest_id, status),
+            plan: synthetic_rplan_document_for_units(
+                "synthetic-cycle-2026",
+                2026,
+                &[
+                    "syn:precinct:P-001A",
+                    "syn:precinct:P-001B",
+                    "syn:precinct:P-002",
+                    "syn:precinct:P-003",
+                ],
+                &[0, 0, 1, 1],
+            )?,
+        },
+        SyntheticElectionCycle {
+            cycle_id: "SYN-2028-general".to_string(),
+            package: synthetic_cycle_2028_package(contest_id, status),
+            plan: synthetic_rplan_document_for_units(
+                "synthetic-cycle-2028",
+                2028,
+                &[
+                    "syn:precinct:P-001A",
+                    "syn:precinct:P-001B",
+                    "syn:precinct:P-023",
+                ],
+                &[0, 0, 1],
+            )?,
+        },
+    ];
+
+    Ok(SyntheticMultiElectionHarness {
+        harness_version: "0.1-draft".to_string(),
+        contest_id: contest_id.to_string(),
+        status,
+        cycles,
+    })
+}
+
+pub fn verify_synthetic_multi_election_harness(
+    harness: &SyntheticMultiElectionHarness,
+) -> Result<SyntheticMultiElectionTranscript, RcountDistrictError> {
+    let mut cycle_checks = Vec::new();
+    let mut district_aggregations = Vec::new();
+
+    for cycle in &harness.cycles {
+        verify_package(&cycle.package)?;
+        verify_jurisdiction_total(
+            &harness.contest_id,
+            "syn:jurisdiction:SYN",
+            &cycle.package.summaries,
+        )?;
+        verify_lineage_conservation(&cycle.package)?;
+        let aggregation = aggregate_package_districts(
+            &cycle.package,
+            &cycle.plan.plan,
+            None,
+            &harness.contest_id,
+            harness.status,
+        )?;
+        cycle_checks.push(SyntheticCycleCheck {
+            cycle_id: cycle.cycle_id.clone(),
+            package_content_hash: package_content_hash(&cycle.package)?,
+            rplan_plan_hash: cycle.plan.plan.plan_hash()?,
+            current_reporting_units: cycle.plan.plan.units.unit_ids.clone(),
+            lineage_event_count: cycle.package.lineage.len(),
+            district_count: aggregation.district_totals.len(),
+            status: "pass".to_string(),
+        });
+        district_aggregations.push(aggregation);
+    }
+
+    Ok(SyntheticMultiElectionTranscript {
+        harness_version: harness.harness_version.clone(),
+        contest_id: harness.contest_id.clone(),
+        status: harness.status,
+        cycle_count: harness.cycles.len(),
+        cycle_checks,
+        district_aggregations,
+    })
 }
 
 pub fn aggregate_package_districts(
@@ -203,6 +342,50 @@ pub fn synthetic_summary_basic_rplan_document() -> Result<RplanDocument, RcountD
             description: Some(
                 "Two-precinct synthetic district assignment for RCOUNT aggregation.".to_string(),
             ),
+        },
+        provenance: RplanProvenance::default(),
+        geometry: None,
+        extensions: BTreeMap::new(),
+    })
+}
+
+pub fn synthetic_rplan_document_for_units(
+    label: &str,
+    year: u16,
+    unit_ids: &[&str],
+    assignment: &[u32],
+) -> Result<RplanDocument, RcountDistrictError> {
+    let mut units = PlanUnitIndex {
+        unit_kind: UnitKind::Precinct,
+        state: Some("SYN".to_string()),
+        year: Some(year),
+        canonical_order: CanonicalOrder::ExplicitUnitIds,
+        unit_ids: unit_ids
+            .iter()
+            .map(|unit_id| (*unit_id).to_string())
+            .collect(),
+        unit_universe_hash: String::new(),
+        source_id: Some(format!("rcount:{label}")),
+    };
+    units.unit_universe_hash = units.compute_unit_universe_hash()?;
+    let plan = DistrictPlan {
+        schema_version: rplan_core::DISTRICT_PLAN_SCHEMA_VERSION.to_string(),
+        units,
+        assignment: assignment.to_vec(),
+        k: 2,
+        display_labels: vec!["SYN-D1".to_string(), "SYN-D2".to_string()],
+        allow_empty_districts: false,
+    };
+    plan.validate()?;
+    Ok(RplanDocument {
+        rplan_version: rplan_io::RPLAN_V02.to_string(),
+        plan,
+        metadata: RplanMetadataV02 {
+            label: label.to_string(),
+            jurisdiction: "SYN".to_string(),
+            chamber: "county-council".to_string(),
+            created_at: "2026-05-12T00:00:00Z".to_string(),
+            description: Some("Synthetic multi-election RCOUNT/RPLAN harness cycle.".to_string()),
         },
         provenance: RplanProvenance::default(),
         geometry: None,
@@ -319,6 +502,272 @@ fn sum_sources_for_district(
     }
 }
 
+fn synthetic_cycle_2024_package(contest_id: &str, status: CountStatus) -> RcountPackage {
+    synthetic_cycle_package(
+        contest_id,
+        status,
+        &[
+            (
+                "syn:precinct:P-001",
+                "2024-11-05",
+                None,
+                (42, 33, 1, 3, 1, 0),
+            ),
+            (
+                "syn:precinct:P-002",
+                "2024-11-05",
+                None,
+                (27, 31, 0, 4, 0, 1),
+            ),
+            (
+                "syn:precinct:P-003",
+                "2024-11-05",
+                None,
+                (20, 22, 0, 2, 1, 0),
+            ),
+        ],
+        vec![],
+    )
+}
+
+fn synthetic_cycle_2026_package(contest_id: &str, status: CountStatus) -> RcountPackage {
+    synthetic_cycle_package(
+        contest_id,
+        status,
+        &[
+            (
+                "syn:precinct:P-001",
+                "2024-11-05",
+                Some("2026-11-03"),
+                (0, 0, 0, 0, 0, 0),
+            ),
+            (
+                "syn:precinct:P-001A",
+                "2026-11-03",
+                None,
+                (24, 17, 0, 2, 0, 0),
+            ),
+            (
+                "syn:precinct:P-001B",
+                "2026-11-03",
+                None,
+                (21, 18, 1, 2, 1, 0),
+            ),
+            (
+                "syn:precinct:P-002",
+                "2024-11-05",
+                None,
+                (30, 33, 0, 3, 0, 1),
+            ),
+            (
+                "syn:precinct:P-003",
+                "2024-11-05",
+                None,
+                (22, 25, 0, 2, 1, 0),
+            ),
+        ],
+        vec![ReportingUnitLineage {
+            lineage_id: "lineage:2026:P-001-split".to_string(),
+            kind: LineageKind::Split,
+            prior_cycle: "SYN-2024-general".to_string(),
+            current_cycle: "SYN-2026-general".to_string(),
+            prior_reporting_unit_ids: vec!["syn:precinct:P-001".to_string()],
+            current_reporting_unit_ids: vec![
+                "syn:precinct:P-001A".to_string(),
+                "syn:precinct:P-001B".to_string(),
+            ],
+            authority: "SYN County Boundary Board".to_string(),
+            explanation: "P-001 split into two precincts before the 2026 general election."
+                .to_string(),
+        }],
+    )
+}
+
+fn synthetic_cycle_2028_package(contest_id: &str, status: CountStatus) -> RcountPackage {
+    synthetic_cycle_package(
+        contest_id,
+        status,
+        &[
+            (
+                "syn:precinct:P-001A",
+                "2026-11-03",
+                None,
+                (25, 18, 0, 2, 0, 0),
+            ),
+            (
+                "syn:precinct:P-001B",
+                "2026-11-03",
+                None,
+                (23, 19, 1, 1, 1, 0),
+            ),
+            (
+                "syn:precinct:P-002",
+                "2024-11-05",
+                Some("2028-11-07"),
+                (0, 0, 0, 0, 0, 0),
+            ),
+            (
+                "syn:precinct:P-003",
+                "2024-11-05",
+                Some("2028-11-07"),
+                (0, 0, 0, 0, 0, 0),
+            ),
+            (
+                "syn:precinct:P-023",
+                "2028-11-07",
+                None,
+                (56, 61, 1, 5, 1, 1),
+            ),
+        ],
+        vec![ReportingUnitLineage {
+            lineage_id: "lineage:2028:P-002-P-003-merge".to_string(),
+            kind: LineageKind::Merge,
+            prior_cycle: "SYN-2026-general".to_string(),
+            current_cycle: "SYN-2028-general".to_string(),
+            prior_reporting_unit_ids: vec![
+                "syn:precinct:P-002".to_string(),
+                "syn:precinct:P-003".to_string(),
+            ],
+            current_reporting_unit_ids: vec!["syn:precinct:P-023".to_string()],
+            authority: "SYN County Boundary Board".to_string(),
+            explanation: "P-002 and P-003 merged into P-023 before the 2028 general election."
+                .to_string(),
+        }],
+    )
+}
+
+fn synthetic_cycle_package(
+    contest_id: &str,
+    status: CountStatus,
+    units: &[(&str, &str, Option<&str>, (i64, i64, i64, i64, i64, i64))],
+    lineage: Vec<ReportingUnitLineage>,
+) -> RcountPackage {
+    let contest = rcount_core::Contest {
+        contest_id: contest_id.to_string(),
+        title: "Synthetic Cycle Mayor".to_string(),
+        vote_for: 1,
+        selections: vec![
+            Selection {
+                selection_id: "cand-a".to_string(),
+                kind: SelectionKind::Candidate,
+                label: "Candidate A".to_string(),
+            },
+            Selection {
+                selection_id: "cand-b".to_string(),
+                kind: SelectionKind::Candidate,
+                label: "Candidate B".to_string(),
+            },
+            Selection {
+                selection_id: "write-in".to_string(),
+                kind: SelectionKind::WriteInBucket,
+                label: "Write-in".to_string(),
+            },
+        ],
+    };
+    let mut reporting_units: Vec<ReportingUnit> = units
+        .iter()
+        .map(|(unit_id, valid_from, valid_to, _)| ReportingUnit {
+            reporting_unit_id: (*unit_id).to_string(),
+            kind: ReportingUnitKind::Precinct,
+            parent_jurisdiction: "syn-county-1".to_string(),
+            source_ids: vec![unit_id.replace("syn:precinct:", "")],
+            valid_from: Some((*valid_from).to_string()),
+            valid_to: valid_to.map(str::to_string),
+        })
+        .collect();
+    reporting_units.push(ReportingUnit {
+        reporting_unit_id: "syn:jurisdiction:SYN".to_string(),
+        kind: ReportingUnitKind::JurisdictionTotal,
+        parent_jurisdiction: "syn".to_string(),
+        source_ids: vec!["SYN".to_string()],
+        valid_from: Some("2024-11-05".to_string()),
+        valid_to: None,
+    });
+
+    let mut summaries: Vec<Summary> = units
+        .iter()
+        .filter(|(_, _, valid_to, _)| valid_to.is_none())
+        .map(|(unit_id, _, _, totals)| {
+            cycle_summary_with_status(contest_id, unit_id, status, *totals)
+        })
+        .collect();
+    summaries.push(jurisdiction_summary(contest_id, status, &summaries));
+
+    RcountPackage {
+        rcount_version: rcount_core::RCOUNT_VERSION.to_string(),
+        contests: vec![contest],
+        reporting_units,
+        batches: vec![],
+        lineage,
+        inclusion_proofs: vec![],
+        summaries,
+        status_events: vec![],
+    }
+}
+
+fn jurisdiction_summary(contest_id: &str, status: CountStatus, summaries: &[Summary]) -> Summary {
+    let mut cand_a = 0;
+    let mut cand_b = 0;
+    let mut write_in = 0;
+    let mut undervotes = 0;
+    let mut overvotes = 0;
+    let mut blank_contests = 0;
+    for summary in summaries {
+        cand_a += summary.totals[0].votes;
+        cand_b += summary.totals[1].votes;
+        write_in += summary.totals[2].votes;
+        undervotes += summary.undervotes;
+        overvotes += summary.overvotes;
+        blank_contests += summary.blank_contests;
+    }
+    cycle_summary_with_status(
+        contest_id,
+        "syn:jurisdiction:SYN",
+        status,
+        (
+            cand_a,
+            cand_b,
+            write_in,
+            undervotes,
+            overvotes,
+            blank_contests,
+        ),
+    )
+}
+
+fn cycle_summary_with_status(
+    contest_id: &str,
+    reporting_unit_id: &str,
+    status: CountStatus,
+    totals: (i64, i64, i64, i64, i64, i64),
+) -> Summary {
+    let (cand_a, cand_b, write_in, undervotes, overvotes, blank_contests) = totals;
+    Summary {
+        contest_id: contest_id.to_string(),
+        reporting_unit_id: reporting_unit_id.to_string(),
+        batch_id: None,
+        status,
+        totals: vec![
+            SelectionTotal {
+                selection_id: "cand-a".to_string(),
+                votes: cand_a,
+            },
+            SelectionTotal {
+                selection_id: "cand-b".to_string(),
+                votes: cand_b,
+            },
+            SelectionTotal {
+                selection_id: "write-in".to_string(),
+                votes: write_in,
+            },
+        ],
+        undervotes,
+        overvotes,
+        blank_contests,
+        counted_ballots: cand_a + cand_b + write_in + undervotes + overvotes + blank_contests,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -344,5 +793,23 @@ mod tests {
         assert_eq!(transcript.district_totals[1].summary.counted_ballots, 60);
         assert_eq!(transcript.district_totals[0].summary.totals[0].votes, 40);
         assert_eq!(transcript.district_totals[1].summary.totals[1].votes, 30);
+    }
+
+    #[test]
+    fn verifies_multi_election_harness_across_lineage_and_districts() {
+        let harness = synthetic_multi_election_harness().unwrap();
+        let transcript = verify_synthetic_multi_election_harness(&harness).unwrap();
+
+        assert_eq!(transcript.cycle_count, 3);
+        assert_eq!(transcript.district_aggregations.len(), 3);
+        assert_eq!(transcript.cycle_checks[0].lineage_event_count, 0);
+        assert_eq!(transcript.cycle_checks[1].lineage_event_count, 1);
+        assert_eq!(transcript.cycle_checks[2].lineage_event_count, 1);
+        assert_eq!(
+            transcript.district_aggregations[2].district_totals[1]
+                .summary
+                .reporting_unit_id,
+            "rplan:district:1:SYN-D2"
+        );
     }
 }
