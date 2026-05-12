@@ -85,7 +85,7 @@ The search, optimization, certification, and algorithm-selection layer. Once con
 | U.17 | Branch-And-Price Redistricting — column generation and exact fixture packages | [PDF](papers/U.17+branch-and-price-redistricting.pdf) | reviewed draft; public golden package |
 | U.18 | Large-Neighborhood Search — local improvement, tabu/LNS scaffolding, and repair hooks | [PDF](papers/U.18+large-neighborhood-search.pdf) | reviewed draft; public lineage and benchmark packages |
 | U.19 | Evolutionary Search Comparison — validity-preserving crossover/mutation and selected frontier audits | [PDF](papers/U.19+evolutionary-search-comparison.pdf) | reviewed draft; public selected-frontier package |
-| U.20 | Plan Audit Certificates — RPLAN/RCTX audit certificates and lineage fixed point | [PDF](papers/U.20+plan-audit-certificates.pdf) | reviewed draft; public package corpus |
+| U.20 | Plan Audit Certificates — RPLAN/RCTX audit certificates and lineage fixed point | [PDF](papers/U.20+plan-audit-certificates.pdf) | reviewed draft; public package corpus and audit benchmark |
 
 U.0 and U.12-U.20 are reviewed drafts with PDFs and paper-level simulated
 review/revision artifacts. Search/optimization additions through U.20 are

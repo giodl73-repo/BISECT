@@ -98,6 +98,18 @@ superiority.
 - [x] Run focused benchmark corpus tests.
 - [x] Commit and push the exact benchmark slice.
 
+## Stage 8 - Add Audit-Side Benchmark Package
+
+- [x] Generate an audit-only benchmark package from a deterministic synthetic
+      RPLAN/RCTX pair.
+- [x] Include audit fixed-point summary, transcript, benchmark notes, and
+      verifier manifest hashes.
+- [x] Verify through `rplan verify-certificate`.
+- [x] Verify through `bisect verify --manifest`.
+- [x] Update U.20 evidence docs and package inventory.
+- [x] Run focused benchmark corpus tests.
+- [x] Commit and push the audit benchmark slice.
+
 ## Candidate Matrix
 
 | Candidate | Side | Data | Footprint | Why It Is Useful | Risk |
@@ -105,11 +117,12 @@ superiority.
 | T.14 spectral grid10 benchmark | Construction | no external data | small, in-repo | Exercises benchmark manifest, timing notes, 100-unit context, and verifier bridge | Still synthetic; no wall-clock claim |
 | U.16 branch-and-cut path8 benchmark | Exact | no external data | small, in-repo | Exercises solver-grade transcript, LP model artifact hashing, exact certificate metadata, and verifier bridge | Still synthetic and intentionally tiny |
 | U.18 local-search grid10 benchmark | Search | no external data; parent is T.14 grid benchmark | small, in-repo | Exercises benchmark search packaging, no-improvement transcript, and parent-plan lineage | Still synthetic; no improvement claim |
+| U.20 audit grid10 benchmark | Audit | no external data | small, in-repo | Exercises verifier scale, audit fixed-point lineage, and benchmark package bridge | Does not advance algorithm quality claims |
 | Synthetic multi-family benchmark | Construction/search | no external data | small, in-repo | Exercises multiple package producers with timing notes | Still synthetic |
 | T.14 spectral small real state | Construction | TIGER/PL or pinned fixture | medium | Raises spectral evidence beyond synthetic path fixture | External data and larger artifacts |
 | U.18 local-search real descendant | Search | existing RPLAN/RCTX input | small to medium | Shows improvement/no-improvement transcript on a realistic parent plan | Needs realistic parent package |
 | U.16 formulation-only exact package | Exact | synthetic or tiny pinned | small | Gives solver-grade benchmark transcript without external solver dependency | Superseded by the path8 solved exact benchmark for now |
-| U.20 audit stress package | Audit | synthetic generated | small | Exercises verifier scale and negative/positive behavior | Does not advance algorithm quality claims |
+| U.20 audit stress package | Audit | synthetic generated | small | Exercises verifier scale and negative/positive behavior | Covered positively by the audit grid10 benchmark; negative cases remain in U.20 fixtures |
 
 ## Suggested `/goal`
 

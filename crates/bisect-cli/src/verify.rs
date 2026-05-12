@@ -1181,6 +1181,7 @@ mod tests {
                 "T.14+spectral-grid10-benchmark",
                 "U.16+branch-and-cut-path8-benchmark",
                 "U.18+local-search-grid10-benchmark",
+                "U.20+audit-grid10-benchmark",
             ]
         );
     }

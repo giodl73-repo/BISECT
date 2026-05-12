@@ -30,6 +30,8 @@ goals are complete:
   `docs/examples/rplan-benchmark-packages/U.16+branch-and-cut-path8-benchmark/`.
 - The second benchmark-tier package is
   `docs/examples/rplan-benchmark-packages/U.18+local-search-grid10-benchmark/`.
+- The audit-side benchmark-tier package is
+  `docs/examples/rplan-benchmark-packages/U.20+audit-grid10-benchmark/`.
 
 Completed goal doc:
 
@@ -59,7 +61,7 @@ packaging:
 
 - Keep `docs/PAPERS.md` current as paper titles or notes change.
 - Extend public fixture/package examples beyond the current tiny golden corpus,
-  two method-produced packages, and construction/exact/search benchmark
+  two method-produced packages, and construction/exact/search/audit benchmark
   packages.
 - Use `docs/concepts/t-u-portfolio-dependency-map.md` as the visual dependency
   map for T/U publication packaging.
