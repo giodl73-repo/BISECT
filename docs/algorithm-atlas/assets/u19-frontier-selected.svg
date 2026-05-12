@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="390" viewBox="0 0 960 390" role="img" aria-labelledby="title desc">
+  <title id="title">U.19 frontier and selected package</title>
+  <desc id="desc">Pareto points are plotted by objectives; one selected point becomes an RPLAN audit package.</desc>
+  <style>.bg{fill:#fbfbf8}.panel{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.axis{stroke:#2f3a45;stroke-width:2}.pt{fill:#dbeafe;stroke:#2b5c9b;stroke-width:2}.sel{fill:#fff3cd;stroke:#c79300;stroke-width:4}.pkg{fill:#e4f5eb;stroke:#2f7d4c;stroke-width:2}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.arrow{stroke:#596673;stroke-width:2;fill:none;marker-end:url(#arrow)}</style>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#596673"/></marker></defs>
+  <rect class="bg" width="960" height="390"/><rect class="panel" x="45" y="45" width="450" height="285" rx="8"/><rect class="panel" x="585" y="75" width="280" height="210" rx="8"/>
+  <text class="label" x="75" y="82">Pareto frontier</text><line class="axis" x1="105" y1="275" x2="405" y2="275"/><line class="axis" x1="105" y1="275" x2="105" y2="115"/>
+  <text class="small" x="210" y="305">compactness cost</text><text class="small" x="55" y="125">splits</text>
+  <circle class="pt" cx="155" cy="230" r="9"/><circle class="pt" cx="200" cy="205" r="9"/><circle class="sel" cx="250" cy="175" r="11"/><circle class="pt" cx="305" cy="150" r="9"/><circle class="pt" cx="360" cy="135" r="9"/>
+  <path class="arrow" d="M270 175 C420 145 500 150 585 165"/>
+  <text class="label" x="625" y="118">Selected entry</text>
+  <rect class="pkg" x="625" y="145" width="190" height="95" rx="8"/><text class="small" x="650" y="174">index: 2</text><text class="small" x="650" y="195">validity: valid</text><text class="small" x="650" y="216">generation: 14</text>
+  <text class="small" x="625" y="265">Converted to RPLAN and verified against RCTX.</text>
+</svg>

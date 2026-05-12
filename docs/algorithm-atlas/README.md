@@ -66,15 +66,20 @@ Each algorithm page is organized around four questions:
 | T.16 Hierarchical Regionalization | [T.16 Hierarchical Regionalization](t16-hierarchical-regionalization.md) | Adjacent merges, merge log, hierarchy depth |
 | T.17 Flow-Based Construction | [T.17 Flow Construction](t17-flow-construction.md) | Seeds, capacities, flow-style assignment, infeasibility witness |
 
+## Search, Optimization, And Audit Family
+
+| Algorithm | Visual Guide | What To Look For |
+|---|---|---|
+| U.16 Branch-And-Cut | [U.16 Branch-And-Cut](u16-branch-and-cut.md) | ILP model, connectivity cuts, solver status, bounds/gaps |
+| U.17 Branch-And-Price | [U.17 Branch-And-Price](u17-branch-and-price.md) | District columns, pricing, master problem, formulation status |
+| U.18 Local Search | [U.18 Local Search](u18-local-search.md) | Boundary moves, validity-preserving improvement, search summary |
+| U.19 Evolutionary Comparison | [U.19 Evolutionary Comparison](u19-evolutionary-comparison.md) | Crossover/mutation, Pareto frontier, selected-frontier package |
+| U.20 RPLAN Audit Certificates | [U.20 RPLAN Audit Certificates](u20-rplan-audit-certificates.md) | Fixed point, hashes, certificate verification, failure reasons |
+
 ## Coming Next
 
 The next atlas pages should cover:
 
-- U.16 branch-and-cut
-- U.17 branch-and-price
-- U.18 local search
-- U.19 selected/evolutionary frontier
-- U.20 RPLAN audit certificates
 - ReCom, SMC, multiscale, and ensemble search families
 
 ## Relationship To Other Docs

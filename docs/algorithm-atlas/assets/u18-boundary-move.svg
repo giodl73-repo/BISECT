@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="390" viewBox="0 0 960 390" role="img" aria-labelledby="title desc">
+  <title id="title">U.18 boundary move evaluation</title>
+  <desc id="desc">A boundary unit is tested for movement into a neighboring district and checked for population, contiguity, and edge cut.</desc>
+  <style>.bg{fill:#fbfbf8}.panel{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.a{fill:#dbeafe;stroke:#2b5c9b;stroke-width:2}.b{fill:#ffe7d1;stroke:#b86520;stroke-width:2}.move{fill:#fff3cd;stroke:#c79300;stroke-width:4}.good{fill:#e4f5eb;stroke:#2f7d4c;stroke-width:2}.bad{fill:#ffe4e1;stroke:#b84a42;stroke-width:2}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.arrow{stroke:#596673;stroke-width:2;fill:none;marker-end:url(#arrow)}</style>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#596673"/></marker></defs>
+  <rect class="bg" width="960" height="390"/><rect class="panel" x="45" y="45" width="450" height="285" rx="8"/><rect class="panel" x="555" y="45" width="330" height="285" rx="8"/>
+  <text class="label" x="75" y="82">Candidate boundary move</text>
+  <g transform="translate(120 115)"><rect class="a" x="0" y="0" width="60" height="60"/><rect class="a" x="60" y="0" width="60" height="60"/><rect class="b" x="120" y="0" width="60" height="60"/><rect class="a" x="0" y="60" width="60" height="60"/><rect class="move" x="60" y="60" width="60" height="60"/><rect class="b" x="120" y="60" width="60" height="60"/><rect class="a" x="0" y="120" width="60" height="60"/><rect class="b" x="60" y="120" width="60" height="60"/><rect class="b" x="120" y="120" width="60" height="60"/></g>
+  <path class="arrow" d="M315 205 H380"/><text class="small" x="385" y="210">try move</text>
+  <text class="label" x="590" y="82">Move gates</text>
+  <rect class="good" x="590" y="115" width="230" height="42" rx="6"/><text class="small" x="615" y="141">population remains within tolerance</text>
+  <rect class="good" x="590" y="175" width="230" height="42" rx="6"/><text class="small" x="628" y="201">both districts remain connected</text>
+  <rect class="good" x="590" y="235" width="230" height="42" rx="6"/><text class="small" x="627" y="261">edge cut strictly improves</text>
+  <text class="small" x="75" y="305">If any gate fails, the candidate is rejected and the next deterministic move is tested.</text>
+</svg>

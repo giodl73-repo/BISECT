@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="390" viewBox="0 0 960 390" role="img" aria-labelledby="title desc">
+  <title id="title">U.16 model separation and status</title>
+  <desc id="desc">A candidate disconnected solution produces violated connectivity cuts before the solver report records status.</desc>
+  <style>.bg{fill:#fbfbf8}.panel{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.node{fill:#dbeafe;stroke:#2b5c9b;stroke-width:2}.bad{fill:#ffe4e1;stroke:#b84a42;stroke-width:2}.good{fill:#e4f5eb;stroke:#2f7d4c;stroke-width:2}.cut{stroke:#b84a42;stroke-width:4;stroke-dasharray:6 5}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.mono{font:12px Consolas,monospace;fill:#17212b}</style>
+  <rect class="bg" width="960" height="390"/>
+  <rect class="panel" x="45" y="45" width="395" height="285" rx="8"/><rect class="panel" x="520" y="45" width="365" height="285" rx="8"/>
+  <text class="label" x="75" y="82">Candidate solution check</text>
+  <circle class="bad" cx="130" cy="150" r="24"/><circle class="bad" cx="205" cy="150" r="24"/><circle class="good" cx="320" cy="150" r="24"/><circle class="bad" cx="130" cy="235" r="24"/><circle class="good" cx="320" cy="235" r="24"/>
+  <line x1="130" y1="150" x2="205" y2="150" stroke="#778899" stroke-width="2"/><line x1="130" y1="150" x2="130" y2="235" stroke="#778899" stroke-width="2"/><line class="cut" x1="240" y1="115" x2="240" y2="275"/><line x1="320" y1="150" x2="320" y2="235" stroke="#778899" stroke-width="2"/>
+  <text class="small" x="75" y="295">If a district is disconnected, separation adds cuts and resolves.</text>
+  <text class="label" x="555" y="82">Minimum report fields</text>
+  <text class="mono" x="555" y="125">solver_mode: branch-and-cut</text>
+  <text class="mono" x="555" y="153">status: solved | bounded | fallback</text>
+  <text class="mono" x="555" y="181">cuts_added: 12</text>
+  <text class="mono" x="555" y="209">incumbent: 7</text>
+  <text class="mono" x="555" y="237">lower_bound: 7</text>
+  <text class="mono" x="555" y="265">gap: 0.0</text>
+  <text class="small" x="555" y="305">The report makes exact, fallback, and partial claims distinguishable.</text>
+</svg>

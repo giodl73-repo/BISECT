@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="360" viewBox="0 0 960 360" role="img" aria-labelledby="title desc">
+  <title id="title">U.20 RPLAN audit certificates overview</title>
+  <desc id="desc">Different algorithm outputs converge on RPLAN, RCTX, certificate, manifest, and verifier.</desc>
+  <style>.bg{fill:#fbfbf8}.alg{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.artifact{fill:#dbeafe;stroke:#2b5c9b;stroke-width:2}.cert{fill:#eef2ff;stroke:#5b61b6;stroke-width:2}.ok{fill:#e4f5eb;stroke:#2f7d4c;stroke-width:2}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.arrow{stroke:#596673;stroke-width:2;fill:none;marker-end:url(#arrow)}</style>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#596673"/></marker></defs>
+  <rect class="bg" width="960" height="360"/>
+  <rect class="alg" x="45" y="50" width="135" height="56" rx="8"/><text class="small" x="78" y="83">constructor</text>
+  <rect class="alg" x="45" y="125" width="135" height="56" rx="8"/><text class="small" x="86" y="158">solver</text>
+  <rect class="alg" x="45" y="200" width="135" height="56" rx="8"/><text class="small" x="78" y="233">search/frontier</text>
+  <rect class="artifact" x="285" y="105" width="110" height="70" rx="8"/><text class="label" x="317" y="135">plan</text><text class="small" x="318" y="156">RPLAN</text>
+  <rect class="artifact" x="445" y="105" width="110" height="70" rx="8"/><text class="label" x="475" y="135">context</text><text class="small" x="482" y="156">RCTX</text>
+  <rect class="cert" x="605" y="105" width="125" height="70" rx="8"/><text class="label" x="636" y="135">audit</text><text class="small" x="630" y="156">certificate</text>
+  <rect class="cert" x="780" y="105" width="110" height="70" rx="8"/><text class="label" x="807" y="135">manifest</text><text class="small" x="807" y="156">hashes</text>
+  <rect class="ok" x="390" y="235" width="180" height="62" rx="8"/><text class="label" x="424" y="263">verifier accepts</text><text class="small" x="426" y="282">or explains failure</text>
+  <path class="arrow" d="M180 78 C225 100 240 130 285 140"/><path class="arrow" d="M180 153 H285"/><path class="arrow" d="M180 228 C225 190 240 150 285 140"/><path class="arrow" d="M395 140 H445"/><path class="arrow" d="M555 140 H605"/><path class="arrow" d="M730 140 H780"/><path class="arrow" d="M835 175 C770 250 650 265 570 265"/><path class="arrow" d="M445 175 C435 205 430 220 430 235"/>
+</svg>
