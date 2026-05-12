@@ -193,6 +193,40 @@ pub fn synthetic_multi_election_harness(
     })
 }
 
+pub fn synthetic_bad_lineage_multi_election_harness(
+) -> Result<SyntheticMultiElectionHarness, RcountDistrictError> {
+    let mut harness = synthetic_multi_election_harness()?;
+    let cycle = harness
+        .cycles
+        .iter_mut()
+        .find(|cycle| cycle.cycle_id == "SYN-2028-general")
+        .expect("synthetic harness includes 2028 cycle");
+    cycle.package.lineage[0].current_reporting_unit_ids =
+        vec!["syn:precinct:P-023-MISSING".to_string()];
+    Ok(harness)
+}
+
+pub fn synthetic_stale_plan_multi_election_harness(
+) -> Result<SyntheticMultiElectionHarness, RcountDistrictError> {
+    let mut harness = synthetic_multi_election_harness()?;
+    let cycle = harness
+        .cycles
+        .iter_mut()
+        .find(|cycle| cycle.cycle_id == "SYN-2028-general")
+        .expect("synthetic harness includes 2028 cycle");
+    cycle.plan = synthetic_rplan_document_for_units(
+        "synthetic-cycle-2028-stale-plan",
+        2028,
+        &[
+            "syn:precinct:P-001A",
+            "syn:precinct:P-001B",
+            "syn:precinct:P-002",
+        ],
+        &[0, 0, 1],
+    )?;
+    Ok(harness)
+}
+
 pub fn verify_synthetic_multi_election_harness(
     harness: &SyntheticMultiElectionHarness,
 ) -> Result<SyntheticMultiElectionTranscript, RcountDistrictError> {
@@ -811,5 +845,30 @@ mod tests {
                 .reporting_unit_id,
             "rplan:district:1:SYN-D2"
         );
+    }
+
+    #[test]
+    fn rejects_multi_election_harness_with_bad_lineage() {
+        let harness = synthetic_bad_lineage_multi_election_harness().unwrap();
+        let err = verify_synthetic_multi_election_harness(&harness).unwrap_err();
+        assert!(matches!(
+            err,
+            RcountDistrictError::Core(
+                rcount_core::RcountCoreError::MissingCurrentLineageUnit { .. }
+            )
+        ));
+    }
+
+    #[test]
+    fn rejects_multi_election_harness_with_stale_plan_unit() {
+        let harness = synthetic_stale_plan_multi_election_harness().unwrap();
+        let err = verify_synthetic_multi_election_harness(&harness).unwrap_err();
+        assert!(matches!(
+            err,
+            RcountDistrictError::MissingPlanUnitSummary {
+                reporting_unit_id,
+                ..
+            } if reporting_unit_id == "syn:precinct:P-002"
+        ));
     }
 }

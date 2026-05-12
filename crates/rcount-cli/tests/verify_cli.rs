@@ -58,6 +58,17 @@ fn docs_multi_election_cycle_path(cycle_id: &str) -> String {
         .into_owned()
 }
 
+fn docs_multi_election_negative_path(case_name: &str, cycle_id: &str) -> std::path::PathBuf {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .ancestors()
+        .nth(2)
+        .unwrap()
+        .join("docs/examples/rcount-golden-packages")
+        .join("multi-election-harness-negatives")
+        .join(case_name)
+        .join(cycle_id)
+}
+
 fn docs_package_path(package_name: &str) -> String {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .ancestors()
@@ -373,6 +384,67 @@ fn verify_multi_election_cycle_uses_package_contest_for_jurisdiction_total() {
     assert!(stdout.contains(r#""status":"pass""#));
     assert!(stdout.contains(r#""contest_id":"syn-cycle-mayor""#));
     assert!(stdout.contains(r#""equation_id":"jurisdiction_contest_total""#));
+}
+
+#[test]
+fn verify_bad_multi_election_lineage_exits_one() {
+    let cycle_dir = docs_multi_election_negative_path("bad-lineage", "SYN-2028-general");
+    let output = Command::new(env!("CARGO_BIN_EXE_rcount"))
+        .args([
+            "verify",
+            cycle_dir.join("package").to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(1));
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains(r#""equation_id":"lineage_conservation""#));
+    assert!(stdout.contains("references missing current reporting unit"));
+}
+
+#[test]
+fn aggregate_stale_multi_election_plan_exits_two() {
+    let cycle_dir = docs_multi_election_negative_path("stale-plan", "SYN-2028-general");
+    let output = Command::new(env!("CARGO_BIN_EXE_rcount"))
+        .args([
+            "aggregate-districts",
+            cycle_dir.join("package").to_str().unwrap(),
+            "--plan",
+            cycle_dir.join("plan.rplan.json").to_str().unwrap(),
+            "--contest-id",
+            "syn-cycle-mayor",
+            "--format",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(2));
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(stderr.contains("missing plan unit summary"));
+    assert!(stderr.contains("syn:precinct:P-002"));
+}
+
+#[test]
+fn verify_tampered_multi_election_source_exits_one() {
+    let cycle_dir = docs_multi_election_negative_path("tampered-2028-source", "SYN-2028-general");
+    let output = Command::new(env!("CARGO_BIN_EXE_rcount"))
+        .args([
+            "verify",
+            cycle_dir.join("package").to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(1));
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains(r#""equation_id":"source_hash_match""#));
+    assert!(stdout.contains("source hash mismatch"));
 }
 
 fn copy_dir_all(src: &std::path::Path, dst: &std::path::Path) -> std::io::Result<()> {

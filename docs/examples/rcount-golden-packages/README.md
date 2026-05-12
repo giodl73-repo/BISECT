@@ -14,6 +14,7 @@ election data and make no legal certification claim.
 | `privacy-inclusion-sketch` | `cargo run -p rcount-io --example privacy_inclusion_sketch_package` | Receipt-safe inclusion proof: an anonymized token is present without choices. |
 | `district-aggregation-rplan` | `cargo run -p rcount-district --example district_aggregation_rplan` | Optional RPLAN bridge: verified precinct summaries are assigned into district totals with package and plan hashes. |
 | `multi-election-harness` | `cargo run -p rcount-district --example multi_election_harness` | L2 synthetic state: three election cycles with precinct split/merge lineage and per-cycle RPLAN district aggregation. |
+| `multi-election-harness-negatives` | `cargo run -p rcount-district --example multi_election_negative_harnesses` | L2 negative cases: bad lineage, stale RPLAN unit assignment, and tampered cycle source evidence. |
 | `bad-selection-sum` | `cargo run -p rcount-io --example bad_selection_sum_package` | Negative fixture: manifest and source hashes verify, but local contest arithmetic fails. |
 | `missing-batch` | `cargo run -p rcount-io --example missing_batch_package` | Negative fixture: manifest and source hashes verify, but a batch summary references absent batch evidence. |
 | `bad-lineage` | `cargo run -p rcount-io --example bad_lineage_package` | Negative fixture: manifest and source hashes verify, but lineage references a missing current unit. |
@@ -42,10 +43,14 @@ cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/precinct-
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/privacy-inclusion-sketch
 cargo run -p rcount-cli -- aggregate-districts docs/examples/rcount-golden-packages/district-aggregation-rplan/package --plan docs/examples/rcount-golden-packages/district-aggregation-rplan/plan.rplan.json
 cargo run -p rcount-district --example multi_election_harness
+cargo run -p rcount-district --example multi_election_negative_harnesses
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/bad-selection-sum
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/missing-batch
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/bad-lineage
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/choice-bearing-proof
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/tampered-source
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/missing-source-hash
+cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/multi-election-harness-negatives/bad-lineage/SYN-2028-general/package
+cargo run -p rcount-cli -- aggregate-districts docs/examples/rcount-golden-packages/multi-election-harness-negatives/stale-plan/SYN-2028-general/package --plan docs/examples/rcount-golden-packages/multi-election-harness-negatives/stale-plan/SYN-2028-general/plan.rplan.json --contest-id syn-cycle-mayor
+cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/multi-election-harness-negatives/tampered-2028-source/SYN-2028-general/package
 ```
