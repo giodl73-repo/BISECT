@@ -23,6 +23,20 @@ generate columns -> solve master problem -> record bounds/gap/provenance
 The current slice is intentionally modest: formulation-only reports for larger
 cases and deterministic exact enumeration for tiny fixtures.
 
+## Picture 0: Column Pricing To Exact Cover
+
+The opening figure shows the difference between branch-and-price and
+unit-by-unit assignment. Pricing creates whole district columns: each column
+already covers a connected set of units, carries population status, cost, and
+pricing-round provenance. The master problem then chooses columns that cover
+every unit exactly once.
+
+The important decision is not "pick the cheapest column." In the example, C3
+has a lower cost than the selected columns, but it overlaps the chosen cover and
+would double-cover units. The selected solution is therefore expressed as
+column IDs, such as `[C1, C2]`, and the package lineage must preserve the
+pricing counts, master status, and selected columns behind the final plan.
+
 ## Picture 1: Pricing Columns Into A Master
 
 ![U.17 pricing and master problem](assets/u17-column-master.svg)
