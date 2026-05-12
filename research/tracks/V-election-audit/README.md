@@ -19,7 +19,7 @@ recompute public claims from lower-level evidence.
 | V.5 | Ballot Manifest Verification | planned |
 | V.6 | CVR-To-Summary Reconciliation | planned |
 | V.7 | Replayable Risk-Limiting Audits | planned |
-| V.8 | District Vote Aggregation With RPLAN | planned |
+| V.8 | District Vote Aggregation With RPLAN | substrate slice landed |
 | V.9 | Count-System Interoperability: Vendor Exports To RCOUNT | planned |
 | V.10 | Certification Evidence Matrix | planned |
 | V.11 | Performance And Parallel Verification In Rust | planned |
@@ -40,8 +40,13 @@ recompute public claims from lower-level evidence.
   for `summary-basic` and `canvass-correction`, tampered manifest failures,
   bad arithmetic failures, batch-accounting failures, bad lineage failures,
   proof-privacy failures, and missing/tampered source-hash failures.
+- `rcount-district`: started 2026-05-12 as the optional bridge from verified
+  RCOUNT summaries to RPLAN district assignments, producing district totals and
+  transcripts that bind the RCOUNT package hash, RPLAN plan hash, and optional
+  RCTX context hash.
 - `rcount-cli`: started 2026-05-12 with `rcount verify <package-dir>` and
-  optional `--write-transcript`.
+  optional `--write-transcript`, plus `rcount aggregate-districts` for the
+  RPLAN-backed district aggregation slice.
 
 ## Track Contract
 

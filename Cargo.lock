@@ -2675,6 +2675,8 @@ dependencies = [
  "anyhow",
  "clap",
  "rcount-audit",
+ "rcount-core",
+ "rcount-district",
  "serde_json",
  "tempfile",
 ]
@@ -2686,6 +2688,19 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "rcount-district"
+version = "0.1.0"
+dependencies = [
+ "rcount-core",
+ "rcount-io",
+ "rplan-core",
+ "rplan-io",
+ "serde",
+ "serde_json",
  "thiserror 2.0.18",
 ]
 

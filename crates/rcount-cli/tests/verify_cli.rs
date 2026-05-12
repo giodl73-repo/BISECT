@@ -36,6 +36,15 @@ fn docs_choice_bearing_proof_path() -> String {
     docs_package_path("choice-bearing-proof")
 }
 
+fn docs_district_aggregation_dir() -> std::path::PathBuf {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .ancestors()
+        .nth(2)
+        .unwrap()
+        .join("docs/examples/rcount-golden-packages")
+        .join("district-aggregation-rplan")
+}
+
 fn docs_package_path(package_name: &str) -> String {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .ancestors()
@@ -301,6 +310,33 @@ fn verify_can_write_transcript_to_package() {
     );
     let transcript = std::fs::read_to_string(transcript_path).unwrap();
     assert!(transcript.contains(r#""verifier": "rcount-audit""#));
+}
+
+#[test]
+fn aggregate_districts_with_rplan_outputs_district_totals() {
+    let dir = docs_district_aggregation_dir();
+    let output = Command::new(env!("CARGO_BIN_EXE_rcount"))
+        .args([
+            "aggregate-districts",
+            dir.join("package").to_str().unwrap(),
+            "--plan",
+            dir.join("plan.rplan.json").to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains(r#""equation_id":"district_aggregation_total""#));
+    assert!(stdout.contains(r#""district_label":"SYN-D1""#));
+    assert!(stdout.contains(r#""counted_ballots":80"#));
+    assert!(stdout.contains(r#""rplan_plan_hash":"sha256:"#));
 }
 
 fn copy_dir_all(src: &std::path::Path, dst: &std::path::Path) -> std::io::Result<()> {

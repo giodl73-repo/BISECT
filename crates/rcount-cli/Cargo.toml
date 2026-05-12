@@ -12,6 +12,8 @@ path = "src/main.rs"
 
 [dependencies]
 rcount-audit = { path = "../rcount-audit" }
+rcount-core = { path = "../rcount-core" }
+rcount-district = { path = "../rcount-district" }
 clap.workspace = true
 serde_json.workspace = true
 anyhow.workspace = true
