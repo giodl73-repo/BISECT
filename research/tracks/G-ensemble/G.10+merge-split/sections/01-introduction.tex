@@ -11,19 +11,18 @@ first balanced cut found in that tree.
 The procedure is fast---$O(m \log m)$ per step where $m$ is the number of
 edges in the merged region---and produces plans with high acceptance rates.
 
-However, standard \recom{} has a fundamental distributional gap:
-the acceptance ratio is implicitly~1 at every step.
-Because the forward and reverse proposals are symmetric under the uniform
-spanning tree measure, cancelling the ratio exactly, the Metropolis-Hastings
-condition $Q(\pi, \pi') / Q(\pi', \pi) = \pi^*(\pi') / \pi^*(\pi)$ cannot
-distinguish any two plans.
+However, standard \recom{} has a distributional gap:
+the acceptance ratio is implicitly~1 at every feasible step.
+The implementation does not compute the reverse proposal probability, so the
+Metropolis-Hastings condition
+$Q(\pi, \pi') / Q(\pi', \pi) = \pi^*(\pi') / \pi^*(\pi)$ is not evaluated.
 The chain therefore targets some stationary distribution, but that
 distribution is not the uniform distribution over valid plans---it is an
 unknown distribution shaped by the spanning tree measure and the geometry
 of the adjacency graph.
 For litigation contexts where ensemble arguments are used to demonstrate that
-a submitted plan is an outlier, this unknown distribution is a significant
-weakness.
+a submitted plan is an outlier, this target-distribution boundary must be
+disclosed rather than treated as a solved calibration claim.
 
 \subsection{Two Solutions at Different Costs}
 
@@ -34,35 +33,42 @@ Sample a spanning \emph{forest} (rather than a spanning tree) of the merged
 region; the acceptance ratio is the ratio of the number of spanning forests
 of the two proposed sub-plans, which equals the ratio of matrix-tree
 determinants.
-This exactly targets the uniform distribution over valid spanning-forest
-partitions.
-ForestRecom uses the two-tree UST approximation at $O(m \log m)$ per step---the same asymptotic cost as MergeSplit.
+This gives a stronger, explicitly Metropolized target model than standard
+\recom{}.
+The exact determinant variant is more expensive; the BISECT implementation and
+neighboring G.9 paper use the same UST-family engineering vocabulary as the
+rest of this crate family, so this paper treats \forestrecom{} as the stronger
+theoretical reference and avoids using it as a blanket wall-clock strawman.
 
 \paragraph{Merge-Split MCMC~\citep{janson2022} (this paper).}
 Sample an independent reverse spanning tree of the same merged region and
 count the number of balanced cuts in each tree.
 The acceptance ratio is $\mathrm{cuts\_fwd} / \mathrm{cuts\_rev}$, which is
-a random estimate of the exact Metropolis-Hastings ratio.
+a stochastic correction for the balanced-cut-count portion of the
+Metropolis-Hastings ratio.
 The cost is $O(m \log m)$ per step---the same as standard \recom{}---because
 both trees are sampled via Wilson's algorithm~\citep{wilson1996}.
 
-Merge-Split approximates the uniform distribution in expectation: the ratio
-is an unbiased estimate of the true MH ratio, so the chain is ``approximately
-reversible'' rather than exactly reversible.
-The approximation is the price of the $O(m \log m)$ cost; Forest \recom{}
-shares the same $O(m \log m)$ asymptotic cost via the two-tree UST approximation.
+Merge-Split is therefore best understood as an approximate reversible-ReCom
+chain with an explicit audit surface.  Its ratio is visible in every step
+record, but exact plan-space uniformity is not claimed by the implementation:
+pair-count corrections and determinant-style corrections are outside the
+current \texttt{MergeSplitChain} contract.
 
 \subsection{Main Contributions}
 
 \begin{enumerate}
   \item \textbf{Algorithm.} We give the complete specification of
-        \mergesplit{} as implemented in \texttt{redist-cli}
-        (\texttt{MergeSplitChain}), including the deterministic dual-seed
-        schedule and the two-tree acceptance ratio
+        \mergesplit{} as implemented in \texttt{bisect-ensemble}
+        (\texttt{MergeSplitChain}) and wired through
+        \texttt{bisect state --search merge-split}, including the deterministic
+        dual-seed schedule, pair-reselection budget, accepted-state collection,
+        edge-cut percentile selection, and two-tree acceptance ratio
         (Section~\ref{sec:algorithm}).
 
-  \item \textbf{Formal properties.} We state the approximate detailed balance
-        theorem for \mergesplit{} (Theorem~\ref{thm:approx-balance}), prove
+  \item \textbf{Formal properties.} We state the implemented stochastic-balance
+        claim boundary for \mergesplit{} (Proposition~\ref{thm:approx-balance}),
+        prove
         that the acceptance rate is positive on well-connected graphs
         (Proposition~\ref{prop:positive-accept}), and derive the per-step
         cost (Proposition~\ref{prop:cost})
@@ -72,7 +78,9 @@ shares the same $O(m \log m)$ asymptotic cost via the two-tree UST approximation
         $Q(\pi' \!\to\! \pi) / Q(\pi \!\to\! \pi')$ carefully, showing that
         the forward cut count appears in the numerator (not the denominator)
         and verifying that the implementation uses
-        $\mathrm{cuts\_fwd} / \mathrm{cuts\_rev}$ correctly
+        $\mathrm{cuts\_fwd} / \mathrm{cuts\_rev}$ correctly for the
+        balanced-cut-count component while explicitly naming the omitted
+        pair-count correction
         (Section~\ref{sec:algorithm}).
 
   \item \textbf{Comparison.} We provide a unified three-way comparison of

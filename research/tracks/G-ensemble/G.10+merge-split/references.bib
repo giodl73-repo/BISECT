@@ -11,12 +11,10 @@
             Sampling},
   year   = {2026},
   note   = {G.9 in Algorithmic Redistricting series.
-            Introduces ForestRecom as a reversible ReCom variant using
-            determinant-based acceptance ratios. Per-step cost $O(m^2)$;
-            acceptance rate $\approx 40\%$. Merge-Split (this paper)
-            reduces per-step cost to $O(m \log m)$ at the price of
-            using a random estimate of the ratio rather than the exact
-            matrix-tree value.},
+            Introduces ForestRecom as a reversible ReCom variant with a
+            forest-based Metropolis correction. This paper uses G.9 as the
+            stronger reversible-ReCom reference point and states the
+            implementation boundary for Merge-Split's two-tree correction.},
 }
 
 @misc{dellaLibera2026smc,
@@ -25,8 +23,9 @@
             via Particle Filtering},
   year   = {2026},
   note   = {G.7 in Algorithmic Redistricting series.
-            Presents SMC as the gold standard for exact distributional
-            calibration. Used as the upper reference point in
+            Presents SMC as a particle-filter calibration route with explicit
+            proposal, weighting, resampling, and ESS diagnostics. Used as the
+            upper reference point in
             Section~\ref{sec:when-to-use}.},
 }
 
@@ -54,7 +53,8 @@
             Algorithm: sample independent spanning trees $T_{\mathrm{fwd}}$
             and $T_{\mathrm{rev}}$ of the merged region; accept with
             probability $\min(1, \mathrm{cuts\_fwd}/\mathrm{cuts\_rev})$.
-            Shows approximate targeting of the uniform distribution.
+            Provides the two-tree correction that this paper treats as an
+            approximate reversible-ReCom mechanism.
             This paper (G.10) implements Janson's algorithm in Rust and
             provides empirical acceptance rates and EC quality for US
             congressional districts.},
@@ -72,12 +72,10 @@
   year    = {2020},
   note    = {arXiv:2008.06131. Introduces Forest ReCom (referred to in
              subsequent literature as the spanning-forest proposal).
-             Acceptance ratio uses the ratio of spanning forest counts
-             (matrix-tree determinants), giving exact targeting of the
-             uniform distribution over forests. Per-step cost $O(m^2)$.
-             Merge-Split replaces the determinant with a random estimate
-             from an independent spanning tree, reducing cost to
-             $O(m \log m)$.},
+             Acceptance-ratio variants use spanning-forest counts or related
+             sampled forest machinery. Merge-Split instead uses an independent
+             reverse spanning tree to expose the balanced-cut-count correction
+             used in this implementation.},
 }
 
 %% ===================================================================

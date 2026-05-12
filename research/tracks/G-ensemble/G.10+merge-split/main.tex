@@ -18,7 +18,6 @@
 \usepackage{microtype}
 \usepackage{setspace}
 \usepackage{titlesec}
-\usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{lmodern}
 \usepackage[T1]{fontenc}
@@ -63,26 +62,26 @@
 \begin{abstract}
 \noindent
 Standard ReCom~\citep{deford2021} samples a random spanning tree of a merged
-two-district region and selects a balanced cut, but the acceptance ratio is
-always~1: the forward and reverse proposal probabilities are implicitly equal.
-This means the stationary distribution is unknown.
-Merge-Split MCMC~\citep{janson2022} breaks this symmetry by sampling an
-\emph{independent} reverse spanning tree and computing the ratio
-$\mathrm{valid\_cuts\_fwd} / \mathrm{valid\_cuts\_rev}$, which equals
-$Q(\pi' \!\to\! \pi) / Q(\pi \!\to\! \pi')$ exactly under uniform cut
-selection.
-The resulting chain approximately targets the uniform distribution over valid
-redistricting plans at $O(m \log m)$ per step---the same asymptotic cost as
-standard ReCom and far cheaper than Forest ReCom's $O(m^2)$ determinant
-computation~\citep{dellaLibera2026forestRecom}.
-We implement \mergesplit{} as \texttt{MergeSplitChain} and expose it via
-\texttt{--search merge-split}.
-Empirical results on North Carolina ($k=14$) and Wisconsin ($k=8$) show an
-acceptance rate of approximately~60\%, higher than Forest ReCom's~40\%,
-with comparable ensemble quality.
-\mergesplit{} is the recommended chain when approximate uniformity is
-sufficient and speed matters; Forest ReCom is reserved for applications
-requiring stricter distributional guarantees.
+two-district region and selects a balanced cut, then accepts every feasible
+proposal.  The resulting chain is fast, but its finite-state target is not
+explicitly computed.
+Merge-Split MCMC~\citep{janson2022} adds an \emph{independent} reverse
+spanning tree and accepts with
+$\min(1,\mathrm{valid\_cuts\_fwd}/\mathrm{valid\_cuts\_rev})$.
+The ratio corrects the main balanced-cut-count asymmetry: if the forward tree
+offered many cuts and the reverse tree offered few, the proposed move was easier
+to generate forward than backward and is downweighted.
+In BISECT, this is implemented as \texttt{MergeSplitChain} in
+\texttt{bisect-ensemble} and exposed through
+\texttt{bisect state --search merge-split}.
+The implementation is a declared two-tree stochastic correction, not a claim of
+exact uniform plan-space sampling: it omits determinant and district-pair-count
+corrections and should be audited as an approximate reversible-ReCom chain.
+For production search, the CLI records the initial plan and accepted states,
+sorts them by edge cut, and returns the requested edge-cut percentile.
+Empirical smoke results on North Carolina ($k=14$) and Wisconsin ($k=8$) show
+acceptance around~60\%, with plan quality comparable to the neighboring
+ForestReCom and standard-ReCom baselines under the same short-run caveats.
 \end{abstract}
 
 \tableofcontents

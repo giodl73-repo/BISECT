@@ -6,11 +6,13 @@
 Table~\ref{tab:comparison} summarises the key properties of the three
 main reversible-ReCom designs.
 Standard \recom{}~\citep{deford2021} is included as the baseline; it
-achieves high throughput but sacrifices distributional guarantees.
-\mergesplit{}~\citep{janson2022} restores approximate distributional
-guarantees at the same asymptotic cost.
-\forestrecom{}~\citep{mccartan2020,dellaLibera2026forestRecom} achieves
-exact guarantees at higher cost.
+achieves high throughput but leaves the finite-chain target implicit.
+\mergesplit{}~\citep{janson2022} adds an explicit two-tree correction for
+balanced-cut-count asymmetry.
+\forestrecom{}~\citep{mccartan2020,dellaLibera2026forestRecom} supplies the
+stronger reversible-ReCom reference point, with implementation details and
+costs depending on whether one uses determinant-style forest counts or a
+UST-family approximation.
 
 \begin{table}[ht]
 \centering
@@ -21,26 +23,27 @@ exact guarantees at higher cost.
   $m$ = edges in merged region $\approx 2n/k$ on average.}
 \label{tab:comparison}
 \renewcommand{\arraystretch}{1.35}
-\begin{tabular}{@{}lllll@{}}
+\small
+\begin{tabular}{@{}p{0.22\linewidth}p{0.22\linewidth}p{0.24\linewidth}p{0.24\linewidth}@{}}
 \toprule
 Property & Standard \recom{} & \mergesplit{} & \forestrecom{} \\
 \midrule
-Stationary distribution
-  & Unknown
-  & $\approx$uniform (over valid plans)
-  & Proportional to spanning forest count \\
+Target claim
+  & Implicit/unknown
+  & Approx.\ two-tree correction
+  & Stronger reversible forest model \\
 Acceptance ratio
   & 1 always
-  & fwd/rev $\approx Q(y{\to}x)/Q(x{\to}y)$
-  & $\det_{\mathrm{new}}/\det_{\mathrm{fwd}}$ (matrix-tree) \\
+  & cuts\_fwd/cuts\_rev
+  & forest-count or UST-family ratio \\
 Ratio type
   & N/A
-  & Random estimate
-  & Exact matrix-tree \\
+  & Stochastic per-step proxy
+  & Determinant or sampled proxy \\
 Per-step cost
   & $O(m \log m)$
   & $O(m \log m)$
-  & $O(m^2)$ \\
+  & variant-dependent \\
 Empirical accept rate
   & $\approx\!80\%$
   & $\approx\!60\%$
@@ -54,13 +57,15 @@ EC quality (NC/WI)
 \end{table}
 
 \begin{remark}[Distinct target distributions]
-Forest \recom{} and \mergesplit{} have distinct target distributions:
-\mergesplit{} approximately targets the uniform distribution over valid plans;
-Forest \recom{} targets a distribution proportional to the number of spanning
-forests of the contracted graph, which rewards plans where the merged region
-has many spanning forests.
-In practice these distributions are similar for typical redistricting graphs
-but are not identical.
+Forest \recom{} and \mergesplit{} should not be collapsed into the same target
+claim.
+\mergesplit{} exposes a two-tree cut-count correction and omits pair-count and
+determinant terms.
+Forest \recom{} uses a forest-based Metropolis correction and is the stronger
+reversibility reference in this family.
+For short practical runs the two may produce similar compactness and seat-share
+profiles, but that is an empirical observation, not an identity of target
+distributions.
 \end{remark}
 
 \subsection{Standard ReCom vs.\ Merge-Split}
@@ -74,12 +79,12 @@ penalty when the forward tree happened to have many balanced cuts (diluting
 the proposal probability) while the reverse tree has few.
 
 The acceptance rate penalty of \mergesplit{} relative to standard \recom{}
-is the direct price of the distributional guarantee.
+is the direct price of the declared stochastic correction.
 In our NC experiments, this penalty is approximately~20 percentage points.
 For a fixed computational budget, \mergesplit{} produces approximately 25\%
 fewer accepted plans per second than standard \recom{}, but those plans are
-drawn from an approximately uniform distribution rather than the unknown
-standard-ReCom stationary distribution.
+drawn from a chain whose main cut-count correction is explicit rather than
+from the unknown standard-ReCom stationary distribution.
 
 The per-step cost is asymptotically equal: both run two Wilson's-algorithm
 calls (standard \recom{} runs one, \mergesplit{} runs two, but the constant
@@ -90,51 +95,49 @@ lower acceptance rate (fewer plan updates per step).
 
 \subsection{Merge-Split vs.\ Forest ReCom}
 
-Both \mergesplit{} and \forestrecom{} approximately target the uniform
-distribution.
-The key difference is the precision of the acceptance ratio:
+Both \mergesplit{} and \forestrecom{} make the acceptance ratio visible.
+The key difference is what ratio is being estimated or computed:
 
 \begin{itemize}
-  \item \forestrecom{} computes the exact ratio of spanning forest counts
-        using matrix-tree determinants~\citep{mccartan2020}.
-        The determinant computation costs $O(m^2)$ and gives the chain
-        exact detailed balance with a distribution proportional to the
-        number of spanning forests of each sub-plan.
+  \item Determinant-style \forestrecom{} computes a forest-count ratio using
+        matrix-tree determinants~\citep{mccartan2020}.
+        That gives a stronger formal target model at higher cost.
+        UST-family \forestrecom{} implementations trade some of that exactness
+        language for the same graph-sampling machinery used elsewhere in this
+        crate family.
 
   \item \mergesplit{} estimates the ratio by sampling a second spanning
         tree.
-        The estimate is unbiased (in expectation it equals the true ratio)
-        but has variance.
-        The variance decreases as the cut count distributions become
-        more concentrated.
+        The estimate has variance and does not include the pair-count term.
+        It is therefore best used as a fast, reproducible correction rather
+        than as a stand-alone proof of exact uniform sampling.
 \end{itemize}
 
 In our empirical experiments on NC and WI, both chains produce similar
 distributional profiles: the fraction of 7D/7R vs.\ 8D/6R plans in a
 1{,}000-step ensemble differs by less than~2 percentage points between
 \mergesplit{} and \forestrecom{}.
-The practical difference is throughput: \forestrecom{} takes approximately
-$10\times$--$20\times$ longer per step due to the $O(m^2)$ determinant,
-so for a fixed time budget, \mergesplit{} generates substantially larger
-ensembles.
+The practical difference is operational: \mergesplit{} has a compact
+two-tree step record and the current CLI percentile selector, while
+\forestrecom{} carries the stronger forest-measure lineage and should be chosen
+when that claim is the point of the run.
 
 \subsection{When Does the Exact Ratio Matter?}
 
-The exact determinant ratio of \forestrecom{} is valuable when:
+The stronger \forestrecom{} ratio is valuable when:
 \begin{itemize}
   \item The ensemble is small (few steps), and variance in the ratio
         estimate could systematically bias the distribution.
-  \item The application requires formal proof of distributional properties
-        (e.g., for an expert witness report requiring exact mathematical
-        statements about the target distribution).
-  \item The merged-region graphs are small ($m \lesssim 100$), where the
-        $O(m^2)$ cost is acceptable and the exact ratio provides meaningful
-        additional precision.
+  \item The application requires stronger formal statements about the target
+        distribution than the \mergesplit{} two-tree proxy supports.
+  \item The merged-region graphs are small enough that richer forest-count
+        accounting is affordable and the additional precision is worth the
+        engineering cost.
 \end{itemize}
 
-For standard 50-state production runs with $n \gtrsim 1{,}000$ tracts,
-the $O(m^2)$ cost of \forestrecom{} is prohibitive for large ensembles,
-and \mergesplit{} is preferred.
+For standard 50-state production search runs with $n \gtrsim 1{,}000$ tracts,
+\mergesplit{} is preferred when the immediate output is a compact, reproducible
+candidate-selection run rather than a formal forest-measure study.
 
 \subsection{Empirical Results: NC and WI}
 

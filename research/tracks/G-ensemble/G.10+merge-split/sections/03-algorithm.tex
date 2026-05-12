@@ -34,47 +34,48 @@ where $b$ is the base seed, $t$ is the step index, $\cdot^{\mathrm{le64}}$
 and $\cdot^{\mathrm{le32}}$ denote little-endian 8-byte and 4-byte encodings
 respectively, and $[0{:}8]$ takes the first 8 bytes of the SHA-256 output.
 
-\begin{algorithm}
-\caption{\mergesplit{} Chain}
-\label{alg:mergesplit}
+\paragraph{Algorithm 1. \mergesplit{} Chain.}
 \begin{algorithmic}[1]
-\Require Initial plan $\pi_0$, steps $S$, base seed $b$
-\Ensure  Selected plan $\pi^*$ (minimum EC over visited plans)
+\Require Initial plan $\pi_0$, steps $S$, base seed $b$, edge-cut percentile $p$
+\Ensure  Selected accepted/initial plan $\pi^*$ at EC percentile $p$
 \State $\pi \gets \pi_0$
-\State $\mathrm{best} \gets (\ec(\pi_0),\, \pi_0)$
-\For{$t \gets 1$ \textbf{to} $S$}
+\State $\mathrm{accepted} \gets [(\ec(\pi_0),\,0,\,\pi_0)]$
+\For{$t \gets 0$ \textbf{to} $S-1$}
   \State $\mathrm{rng}_{\mathrm{fwd}} \gets \mathrm{SmallRng::seed\_from\_u64}(\mathrm{step\_seed}(b, t))$
   \State $\mathrm{rng}_{\mathrm{rev}} \gets \mathrm{SmallRng::seed\_from\_u64}(\mathrm{rev\_seed}(b, t))$
-  \State $(d_i, d_j) \gets \mathrm{sample\_adjacent\_pair}(\pi,\; \mathrm{rng}_{\mathrm{fwd}})$
-         \Comment{with pair reselection on failure}
-  \State $R \gets \pi^{-1}(d_i) \cup \pi^{-1}(d_j)$
-  \State $T_{\mathrm{fwd}} \gets \mathrm{Wilson\_UST}(G[R],\; \mathrm{rng}_{\mathrm{fwd}})$
-  \State $\mathrm{cuts\_fwd} \gets |\{\text{balanced cuts of } T_{\mathrm{fwd}}\}|$
-  \If{$\mathrm{cuts\_fwd} = 0$} \textbf{continue} \EndIf
-  \State $e^* \gets \mathrm{rng}_{\mathrm{fwd}}.\mathrm{choose}(\text{balanced cuts of } T_{\mathrm{fwd}})$
-  \State $\pi' \gets$ plan induced by removing $e^*$ from $T_{\mathrm{fwd}}$
-  \State $T_{\mathrm{rev}} \gets \mathrm{Wilson\_UST}(G[R],\; \mathrm{rng}_{\mathrm{rev}})$
-         \Comment{independent sample}
-  \State $\mathrm{cuts\_rev} \gets |\{\text{balanced cuts of } T_{\mathrm{rev}}\}|$
-  \If{$\mathrm{cuts\_rev} = 0$}
-    \State $\alpha \gets 0.0$
-  \Else
-    \State $\alpha \gets \mathrm{cuts\_fwd} / \mathrm{cuts\_rev}$
-         \Comment{$= Q(\pi' \!\to\! \pi) / Q(\pi \!\to\! \pi')$ in expectation}
-  \EndIf
-  \If{$\mathrm{rng}_{\mathrm{fwd}}.\mathrm{sample}(\mathrm{Uniform}[0,1]) < \min(1, \alpha)$}
-    \State $\pi \gets \pi'$
-    \If{$\ec(\pi') < \mathrm{best.ec}$}
-      \State $\mathrm{best} \gets (\ec(\pi'),\, \pi')$
+  \State $\mathrm{pairs} \gets \mathrm{adjacent\_district\_pairs}(\pi)$
+  \State $\mathrm{attempts} \gets \min(|\mathrm{pairs}|,\max(k,\min(50,|\mathrm{pairs}|)))$
+  \For{$a \gets 1$ \textbf{to} $\mathrm{attempts}$}
+    \State $(d_i, d_j) \gets$ next shuffled adjacent pair from $\mathrm{pairs}$
+    \State $R \gets \pi^{-1}(d_i) \cup \pi^{-1}(d_j)$
+    \State $T_{\mathrm{fwd}} \gets \mathrm{Wilson\_UST}(G[R],\; \mathrm{rng}_{\mathrm{fwd}})$
+    \State $\mathrm{cuts\_fwd} \gets |\{\text{balanced cuts of } T_{\mathrm{fwd}}\}|$
+    \If{$\mathrm{cuts\_fwd} = 0$} \textbf{continue} \EndIf
+    \State $e^* \gets \mathrm{rng}_{\mathrm{fwd}}.\mathrm{choose}(\text{balanced cuts of } T_{\mathrm{fwd}})$
+    \State $\pi' \gets$ plan induced by removing $e^*$ from $T_{\mathrm{fwd}}$
+    \State $T_{\mathrm{rev}} \gets \mathrm{Wilson\_UST}(G[R],\; \mathrm{rng}_{\mathrm{rev}})$
+           \Comment{independent sample}
+    \State $\mathrm{cuts\_rev} \gets |\{\text{balanced cuts of } T_{\mathrm{rev}}\}|$
+    \If{$\mathrm{cuts\_rev} = 0$}
+      \State $\alpha \gets 0.0$
+    \Else
+      \State $\alpha \gets \mathrm{cuts\_fwd} / \mathrm{cuts\_rev}$
+           \Comment{two-tree stochastic correction}
     \EndIf
-  \EndIf
+    \If{$\mathrm{rng}_{\mathrm{fwd}}.\mathrm{sample}(\mathrm{Uniform}[0,1]) < \min(1, \alpha)$}
+      \State $\pi \gets \pi'$
+      \State append $(\ec(\pi'),\,t+1,\,\pi')$ to $\mathrm{accepted}$
+    \EndIf
+    \State \textbf{break}
+  \EndFor
 \EndFor
-\State \Return $\mathrm{best.plan}$
+\State sort $\mathrm{accepted}$ by $(\ec,\mathrm{step})$ ascending
+\State $r \gets \min(\lfloor p \cdot |\mathrm{accepted}|\rfloor,\;|\mathrm{accepted}|-1)$
+\State \Return $\mathrm{accepted}[r].\mathrm{plan}$
 \end{algorithmic}
-\end{algorithm}
 
 \paragraph{Design choices.}
-Three aspects of Algorithm~\ref{alg:mergesplit} deserve comment.
+Three aspects of this specification deserve comment.
 
 First, the forward and reverse random sources ($\mathrm{rng}_{\mathrm{fwd}}$
 and $\mathrm{rng}_{\mathrm{rev}}$) are derived from different SHA-256 prefixes
@@ -92,10 +93,15 @@ cut, the reverse move from $\pi'$ back to $\pi$ has probability zero under
 any spanning tree of $G[R]$ that has no balanced cuts.
 Accepting such a proposal would violate detailed balance.
 
-Third, the chain tracks the best plan (minimum edge cut) across all visited
-plans, rather than the full visited sequence.
-This is appropriate for the plan-selection use case; for full ensemble
-analysis, the visited sequence should be retained.
+Third, the CLI wrapper includes the initial METIS/\cs{} plan in the candidate
+list, appends only accepted states, sorts candidates by edge cut with the step
+index as a deterministic tie-breaker, and returns the requested percentile.
+Thus \texttt{--percentile 0.0} selects the minimum-edge-cut visited candidate,
+while \texttt{--percentile 0.5} selects the median accepted/initial candidate by
+edge cut.  Full ensemble analysis should retain the complete visited sequence
+and the per-step \texttt{StepRecord} fields
+\texttt{accepted}, \texttt{valid\_cuts\_forward},
+\texttt{valid\_cuts\_reverse}, and \texttt{ratio}.
 
 \paragraph{CLI invocation.}
 \begin{verbatim}
@@ -108,7 +114,8 @@ bisect state --state NC --year 2020 \
 \begin{proposition}[Ratio direction]
 \label{prop:ratio-direction}
 The Metropolis-Hastings acceptance ratio for the move $\pi \to \pi'$
-under the uniform target distribution is:
+under the uniform target distribution, after conditioning on the same adjacent
+district pair and merged region, has the balanced-cut-count component:
 \[
   \frac{Q(\pi' \to \pi)}{Q(\pi \to \pi')}
   = \frac{1 / |\mathcal{C}(T_{\mathrm{rev}}, R)|}
@@ -116,7 +123,8 @@ under the uniform target distribution is:
   = \frac{|\mathcal{C}(T_{\mathrm{fwd}}, R)|}{|\mathcal{C}(T_{\mathrm{rev}}, R)|}
   = \frac{\mathrm{cuts\_fwd}}{\mathrm{cuts\_rev}}.
 \]
-The forward cut count appears in the \textbf{numerator} (not the denominator).
+The forward cut count appears in the \textbf{numerator} (not the denominator)
+for this component.
 \end{proposition}
 
 \begin{proof}
@@ -142,25 +150,28 @@ The proposal probability for the reverse move $\pi' \to \pi$ is:
   \cdot \frac{1}{|\mathcal{C}(T_{\mathrm{rev}}, R)|}.
 \]
 
-Assuming $|\mathcal{P}(\pi)| = |\mathcal{P}(\pi')|$ (the number of
-adjacent district pairs is the same in both plans, which holds when
-the adjacency structure is preserved), the ratio is:
+After dropping the district-pair-count term, or equivalently conditioning on
+equal adjacent-pair counts, the implemented ratio is:
 \[
   \frac{Q(\pi' \to \pi)}{Q(\pi \to \pi')}
   = \frac{|\mathcal{C}(T_{\mathrm{fwd}}, R)|}{|\mathcal{C}(T_{\mathrm{rev}}, R)|}.
 \]
 The implementation correctly uses
-$\mathrm{cuts\_fwd} / \mathrm{cuts\_rev}$. \qed
+$\mathrm{cuts\_fwd} / \mathrm{cuts\_rev}$ for this component. \qed
 \end{proof}
 
-\begin{remark}[Bounding the pair-count assumption]
-The equality $|\mathcal{P}(\pi)| = |\mathcal{P}(\pi')|$ holds when both plans
-have the same number of adjacent district pairs.
-In practice $|\mathcal{P}(\pi)|$ and $|\mathcal{P}(\pi')|$ can differ by at
-most~2 (one pair is added or removed per step), introducing a correction factor
-of at most $(|\mathcal{P}(\pi)| \pm 2) / |\mathcal{P}(\pi)|$.
-For NC ($k=14$, typically $|\mathcal{P}| \approx 18$--22 pairs), this factor is
-bounded within~10\% of~1, which we treat as negligible.
+\begin{remark}[Pair-count correction boundary]
+\normalfont
+Let $\mathcal{P}(\pi)$ denote the set of adjacent district pairs available from
+plan $\pi$. The full proposal ratio also contains the district-pair term
+\[
+  \frac{|\mathcal{P}(\pi)|}{|\mathcal{P}(\pi')|},
+\]
+The current \texttt{MergeSplitChain} does not multiply by this factor.
+That omission is usually modest when the district-adjacency graph is dense and
+pair counts change little, but it is not a theorem-level zero term.
+This is the main reason the implementation is described as a two-tree
+stochastic correction rather than an exact uniform sampler.
 \end{remark}
 
 \begin{remark}[Intuition for the direction]
@@ -176,44 +187,36 @@ acceptance; $\mathrm{cuts\_fwd} / \mathrm{cuts\_rev} < 1$ leads to reduced
 acceptance.
 \end{remark}
 
-\subsection{Approximate Detailed Balance}
+\subsection{Stochastic Balance Claim Boundary}
 
-\begin{theorem}[Approximate detailed balance]
+\begin{proposition}[Implemented stochastic correction]
 \label{thm:approx-balance}
-The \mergesplit{} chain satisfies detailed balance in expectation with
-respect to the uniform distribution over valid redistricting plans.
-That is, for any two valid plans $\pi$ and $\pi'$ that differ by a
-single region merge-split move:
+For each proposed move that reaches a forward balanced cut, the implemented
+\mergesplit{} step applies a reproducible independent reverse-tree correction
+to the balanced-cut-count portion of the proposal ratio:
 \[
-  \mathbb{E}\!\left[
-    \mathrm{Trans}(\pi, \pi')
-  \right]
-  = \mathbb{E}\!\left[
-    \mathrm{Trans}(\pi', \pi)
-  \right],
+  \alpha_{\mathrm{impl}} =
+  \begin{cases}
+    0, & \mathrm{cuts\_rev}=0,\\
+    \min(1,\mathrm{cuts\_fwd}/\mathrm{cuts\_rev}), & \mathrm{cuts\_rev}>0.
+  \end{cases}
 \]
-where $\mathrm{Trans}(\pi, \pi')$ is the transition probability from $\pi$
-to $\pi'$ and the expectation is over the randomness of the spanning tree
-samples.
-\end{theorem}
+This makes the main reversible-ReCom asymmetry observable and auditable, but it
+does not by itself prove exact detailed balance for the finite implemented
+chain.
+\end{proposition}
 
 \begin{proof}[Proof sketch]
-By symmetry of Wilson's algorithm, the expected number of balanced cuts
-of a uniformly random spanning tree of $G[R]$ is the same regardless of
-which of the two plans $\pi$ or $\pi'$ is current.
-Therefore:
-\[
-  \mathbb{E}\!\left[\frac{\mathrm{cuts\_fwd}}{\mathrm{cuts\_rev}}\right]
-  = \mathbb{E}\!\left[\frac{|\mathcal{C}(T, R)|}{|\mathcal{C}(T', R)|}\right]
-  \approx 1,
-\]
-where the approximation holds when $|\mathcal{C}(T, R)|$ and
-$|\mathcal{C}(T', R)|$ are approximately identically distributed
-(both are uniform samples from $\mathcal{T}(R)$).
-Under the Metropolis-Hastings rule with ratio $\alpha = \mathrm{cuts\_fwd}/\mathrm{cuts\_rev}$,
-the expected transition satisfies detailed balance with the uniform
-distribution as the target.
-The exact argument follows \citet{janson2022}, Proposition~2.
+Wilson's algorithm samples both $T_{\mathrm{fwd}}$ and $T_{\mathrm{rev}}$
+from the uniform spanning-tree distribution on the same merged region $G[R]$,
+using independent seed streams.  Conditional on the merged region, the only
+tree-dependent cut-selection probabilities in the forward and reverse
+directions are inversely proportional to their balanced-cut counts.  Therefore
+the ratio $\mathrm{cuts\_fwd}/\mathrm{cuts\_rev}$ is the implemented correction
+for that tree-dependent term.  The proof is deliberately limited to the
+implemented contract: determinant corrections, pair-count corrections, and
+global mixing diagnostics must be supplied separately when a stronger target
+claim is needed.
 \end{proof}
 
 \subsection{Propositions}

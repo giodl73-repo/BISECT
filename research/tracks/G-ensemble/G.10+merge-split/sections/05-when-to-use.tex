@@ -7,9 +7,9 @@ The choice among standard \recom{}, \mergesplit{}, \forestrecom{}, and
 SMC~\citep{dellaLibera2026smc} depends on three factors:
 
 \begin{enumerate}
-  \item \textbf{Distributional requirement.} Does the application require
-        exact targeting of the uniform distribution, or is approximate
-        uniformity sufficient?
+  \item \textbf{Distributional requirement.} Does the application require a
+        formal target-distribution proof, or is a declared approximate
+        reversible-ReCom correction sufficient?
   \item \textbf{Computational budget.} How many steps (and wall-clock
         time) are available?
   \item \textbf{Ensemble size.} Is the goal to produce a large ensemble
@@ -22,28 +22,29 @@ SMC~\citep{dellaLibera2026smc} depends on three factors:
 \mergesplit{} is the recommended chain when:
 
 \begin{itemize}
-  \item Approximate uniformity is sufficient --- the application benefits
-        from a known (approximately uniform) stationary distribution, but
-        does not require formal exact-determinant guarantees.
+  \item A declared approximate correction is sufficient --- the application
+        benefits from a reproducible reverse-tree ratio and visible step
+        diagnostics, but does not require formal exact-determinant guarantees.
         This covers most expert-witness and legislative-disclosure contexts
-        where the practitioner can state ``the chain approximately targets
-        the uniform distribution'' without requiring mathematical exactness.
+        where the practitioner can state the actual mechanism used by the
+        chain and its approximation boundary.
         We note that no published redistricting court opinion has
         specifically addressed the distinction between exact and approximate
         uniform targeting in Markov chain methods; this claim reflects
         practitioner consensus rather than established legal precedent.
         Consult legal counsel for litigation contexts.
 
-  \item Speed matters --- the ensemble must be large (many thousands of
-        plans) for statistical power, or the state is large ($n \gtrsim
-        2{,}000$ tracts), making \forestrecom{}'s $O(m^2)$ cost per step
-        impractical within the available budget.
+  \item Speed and deterministic candidate selection matter --- the run must
+        visit many states and return a requested edge-cut percentile under a
+        fixed seed schedule.
 
   \item Standard ReCom's distributional ambiguity is a concern --- when
         opposing counsel or a court scrutinises the ensemble methodology,
         the unknown stationary distribution of standard \recom{} is a
         vulnerability.
-        \mergesplit{} provides a principled, citable response~\citep{janson2022}.
+        \mergesplit{} provides a principled, citable response~\citep{janson2022},
+        provided the report also states the pair-count and determinant terms
+        that are outside the current implementation.
 
   \item The acceptance rate of \forestrecom{} ($\approx\!40\%$) is too
         low for the available computational budget --- \mergesplit{}'s
@@ -59,39 +60,39 @@ SMC~\citep{dellaLibera2026smc} depends on three factors:
 \forestrecom{}~\citep{dellaLibera2026forestRecom} is preferred when:
 
 \begin{itemize}
-  \item Strict theoretical guarantees are required --- the application
-        must demonstrate exact detailed balance rather than approximate
-        balance.
-        This matters for peer-reviewed publication claims about exact
-        uniformity.
+  \item Stronger theoretical guarantees are required --- the application must
+        demonstrate a forest-measure or determinant-backed target model rather
+        than the \mergesplit{} two-tree proxy.
+        This matters for peer-reviewed publication claims about exact target
+        distributions.
 
-  \item The merged regions are small ($m \lesssim 100$ edges) ---
-        in this regime, the $O(m^2)$ cost is negligible and the exact
-        determinant provides additional precision without cost.
+  \item The merged regions are small enough that richer forest-count accounting
+        is affordable and useful.
 
   \item The ensemble is small and variance in the ratio estimate is a
         concern --- with fewer than 100 steps, the random estimate in
         \mergesplit{} may introduce systematic bias in the seat
-        distribution, whereas the exact determinant of \forestrecom{} is
-        immune to this.
+        distribution, whereas a stronger \forestrecom{} correction is less
+        exposed to this specific one-sample variance.
 \end{itemize}
 
 \subsection{Use SMC When}
 
-Sequential Monte Carlo~\citep{dellaLibera2026smc} is the gold standard:
+Sequential Monte Carlo~\citep{dellaLibera2026smc} is the right escalation when
+the desired claim is a calibrated particle estimate for a declared target:
 
 \begin{itemize}
-  \item Exact calibration is required --- SMC produces samples from the
-        exact target distribution without the approximation of
-        \mergesplit{} or the forest-measure approximation of
-        \forestrecom{}.
+  \item Stronger calibration is required --- SMC produces weighted particles
+        for a declared target and reports effective sample size, resampling,
+        and weight degeneracy diagnostics rather than relying on MCMC mixing
+        alone.
 
-  \item The ensemble must provably represent the full plan space ---
-        SMC's particle filter guarantees coverage that MCMC methods
-        cannot match for fixed step counts.
+  \item The ensemble must make its proposal and reweighting stages explicit,
+        because the particle filter gives a different audit surface than a
+        single Markov chain.
 
-  \item The chain mixing time is a concern --- SMC does not mix; it
-        directly samples from the target distribution.
+  \item The chain mixing time is a concern --- SMC replaces one long Markov
+        path with staged proposal, weighting, and resampling diagnostics.
 \end{itemize}
 The price of SMC is implementation complexity and memory: retaining and
 resampling a particle population requires $O(N \cdot n)$ memory for $N$
@@ -105,25 +106,25 @@ For standard 50-state redistricting analysis:
 \begin{enumerate}
   \item Generate the initial plan using \cs{}~\citep{b11paper} or
         another global search method.
-  \item Run \mergesplit{} for 1{,}000--10{,}000 steps to build the
-        ensemble.
+  \item Run \mergesplit{} for 1{,}000--10{,}000 steps to visit candidate
+        states.
   \item For litigation contexts, state explicitly that the chain uses the
-        Merge-Split proposal~\citep{janson2022} with approximate
-        uniformity targeting.
+        Merge-Split proposal~\citep{janson2022} with a two-tree stochastic
+        correction, reverse zero-cut rejection, and no pair-count multiplier.
   \item If the state has large districts ($n/k \geq 200$ tracts per
         district), prefer a longer run to compensate for the larger
         merged-region size.
-  \item Record the base seed, step count, and the best plan's district
-        assignment hash for reproducibility.
+  \item Record the base seed, step count, percentile, chosen plan hash, and
+        acceptance/cut-count diagnostics for reproducibility.
 \end{enumerate}
 
 \paragraph{CLI reference.}
 \begin{verbatim}
-# 1000-step Merge-Split chain, best plan (percentile 0.0)
+# 1000 steps; choose minimum-EC candidate
 bisect state --state NC --year 2020 \
     --search merge-split --merge-split-steps 1000 --percentile 0.0
 
-# 5000-step chain for a larger ensemble
+# 5000-step chain, still selecting the minimum-EC visited candidate
 bisect state --state TX --year 2020 \
     --search merge-split --merge-split-steps 5000 --percentile 0.0
 \end{verbatim}

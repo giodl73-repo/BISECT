@@ -66,7 +66,7 @@ are called complete.
 | 1 | T.1-T.4, U.1, U.8, U.9, U.12 | Re-review the atlas-aligned seed/compositor/legacy papers for paper-quality gaps after the alignment pass | Completed 2026-05-12 |
 | 2 | T.14-T.17 | Construction-family golden vertical slices | Completed 2026-05-12 |
 | 3 | U.16-U.20 | Exact/search/audit certificate family, including U.20 fixed-point language | Completed 2026-05-12 |
-| 4 | U.10, G.4, G.7, G.10, G.11 | Sampling and ensemble methods | In progress: U.10, G.4, and G.7 complete |
+| 4 | U.10, G.4, G.7, G.10, G.11 | Sampling and ensemble methods | In progress: U.10, G.4, G.7, and G.10 complete |
 | 5 | T.5-T.13, U.0-U.7, U.11, U.13-U.15 | Older algorithm-family papers not yet lifted to the same explanatory standard | Queued |
 | 6 | B/C/D/F/G/A synthesis tracks | Portfolio, validation, legal, legislative, ensemble, and synthesis papers | Queued |
 | 7 | E/I/J/K/L/M/N/O/P/Q/R/S tracks | Remaining indexed papers and source-only drafts | Queued |
@@ -207,7 +207,7 @@ consumers.
 | U.10 bisect-ensemble | Reviewed 2026-05-12 | Renamed old redist-ensemble framing, aligned current crate/CLI boundary, corrected ReCom pseudocode, RNG seed contract, output schema versioning, and diagnostics scope | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
 | G.4 Ensemble Diagnostics | Reviewed 2026-05-12 | Fixed old binary/crate names, ESS example drift, source-ensemble certification boundary, 99th-percentile ESS caveat, Hamming reference semantics, statutory step-count rule, and Daubert known-error framing | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
 | G.7 SMC Redistricting | Reviewed 2026-05-12 | Softened calibration claims, refreshed Phase 2 and SmcPercentile status, added weighted-percentile algorithm, diagnostic-output comparison, NDJSON resample audit parity, and external-validation boundary | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
-| G.10 Merge-Split | Queued | Queued | Queued |
+| G.10 Merge-Split | Reviewed 2026-05-12 | Reframed exact-uniform claims to the implemented two-tree stochastic correction, aligned pseudocode with pair-reselection, dual seeds, accepted-state percentile selection, named pair-count/determinant boundaries, and updated ReCom/ForestReCom/SMC guidance | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
 | G.11 Multiscale MCMC | Queued | Queued | Queued |
 
 ## Batch 4 Paper-Quality Scorecard
@@ -219,6 +219,7 @@ consumers.
 | U.10 bisect-ensemble | 3.8 | 3.7 | 3.6 | 3.9 | 4.0 | 3.6 | 22.6 / 24 |
 | G.4 Ensemble Diagnostics | 3.8 | 3.7 | 3.7 | 3.9 | 4.0 | 3.6 | 22.7 / 24 |
 | G.7 SMC Redistricting | 3.8 | 3.8 | 3.7 | 3.8 | 4.0 | 3.7 | 22.8 / 24 |
+| G.10 Merge-Split | 3.8 | 3.8 | 3.6 | 3.9 | 4.0 | 3.6 | 22.7 / 24 |
 
 ### Batch 4 Score Notes
 
@@ -245,3 +246,14 @@ implemented NDJSON audit stream including resample records. The remaining ceilin
 is external replication: archived R `redist` cross-validation traces and TX/CA
 Phase 2 run artifacts would turn the current implementation evidence into a more
 portable publication package.
+
+**G.10 Merge-Split -- 22.7/24.** The paper now matches the shipped
+`MergeSplitChain` and `bisect state --search merge-split` behavior: deterministic
+forward/reverse SHA-256 seed streams, pair reselection, reverse zero-cut
+rejection, accepted-state collection, edge-cut percentile selection, and
+diagnostic `StepRecord` fields are all named. The biggest improvement is the
+claim boundary: the paper no longer says the implemented chain exactly samples
+uniformly, and instead states the two-tree cut-count correction plus the omitted
+pair-count and determinant terms. The remaining ceiling is empirical: the NC/WI
+figures are useful smoke evidence, but a publication package still wants archived
+multi-seed traces and a direct G.9/G.10/G.7 comparison artifact.

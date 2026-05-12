@@ -85,25 +85,29 @@ ratios by sampling $T'$---the reverse spanning tree---independently:
         independent random source.
   \item Count $\mathrm{cuts\_fwd} = |\mathcal{C}(T_{\mathrm{fwd}}, R)|$
         and $\mathrm{cuts\_rev} = |\mathcal{C}(T_{\mathrm{rev}}, R)|$.
-  \item Use the ratio $\mathrm{cuts\_fwd} / \mathrm{cuts\_rev}$ as the
-        acceptance probability.
+  \item Use $\min(1,\mathrm{cuts\_fwd} / \mathrm{cuts\_rev})$ as the
+        acceptance probability when $\mathrm{cuts\_rev}>0$, and reject when
+        the reverse tree has no balanced cuts.
 \end{enumerate}
 
-The key insight is that $|\mathcal{C}(T_{\mathrm{rev}}, R)|$ is a random
-estimate of the expected balanced-cut count $\mathbb{E}[|\mathcal{C}(T', R)|]$
-over all spanning trees $T'$.
-Since both trees are sampled uniformly, the ratio is an unbiased estimator
-of the true ratio $Q(\pi', \pi) / Q(\pi, \pi')$ in expectation, giving
-approximate detailed balance.
+The key insight is that the reverse sample exposes whether the proposed split
+would be easy or hard to regenerate from the proposed state.
+Since both trees are sampled uniformly from the same merged region, the ratio
+is a one-sample stochastic correction for the balanced-cut-count asymmetry
+between the forward and reverse moves.
+It is not a determinant computation and it is not the full finite-chain
+Metropolis-Hastings ratio when district-pair counts differ.
 
 \begin{remark}[Exact vs.\ approximate reversibility]
 \label{rem:approx}
-The \mergesplit{} ratio is a random estimate, not the exact matrix-tree ratio
-used by \forestrecom{}~\citep{mccartan2020,dellaLibera2026forestRecom}.
-The approximation is \emph{consistent}---the chain still has a stationary
-distribution---but the stationary distribution is the uniform distribution
-only in expectation over the randomness of $T_{\mathrm{rev}}$.
-For practical redistricting ensembles this distinction rarely matters
-(both produce similar distributional profiles in our experiments), but
-it is important for theoretical claims about exact uniformity.
+The \mergesplit{} ratio is a random, per-step correction, not the exact
+matrix-tree ratio used by determinant-style \forestrecom{}
+variants~\citep{mccartan2020,dellaLibera2026forestRecom}.
+The chain still has a stationary distribution on the finite valid-plan graph
+under the usual irreducibility and laziness conditions, but this paper does not
+claim that the implemented chain exactly samples uniformly from all valid
+plans.
+Its audit claim is narrower and useful: the balanced-cut-count correction,
+reverse zero-cut rejection, seed schedule, and accepted-state selection are
+declared and reproducible.
 \end{remark}
