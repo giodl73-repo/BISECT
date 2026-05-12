@@ -13,6 +13,8 @@ This is a quality-improvement tracker, not peer review. When using the local
 `panel` publication process, follow its disclosure rule: simulated reviewer
 perspectives are for pre-submission strengthening and are not real peer review
 or endorsement.
+The slower paper-quality review loop is tracked in
+[`PAPER-QUALITY-REVIEW.md`](PAPER-QUALITY-REVIEW.md).
 
 ## Alignment Rubric
 

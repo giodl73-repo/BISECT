@@ -57,18 +57,17 @@ Second, each subregion after a split recomputes its own principal axis
 to discourage cuts parallel to the new subregion's minor axis,
 producing straighter district boundaries.
 
-Applied to 45 states (2020 Census, 50 seeds per ratio), GeoSection
-selects near-equal ratios for 28 states and genuinely asymmetric ratios
-for 17 states where urban concentration is geographically real.
-Wisconsin: $1:7$ (Milwaukee is genuinely compact, 85\,km boundary).
+Applied to the 44 multi-district states (2020 Census, 50 seeds per ratio),
+GeoSection selects a mixture of near-equal and genuinely asymmetric root
+ratios.
+Wisconsin: $1:7$ (Milwaukee is genuinely compact under the scan).
 North Carolina: $6:8$ east/west split (Charlotte/Raleigh are not
 compact enough to win under normalisation).
 Tennessee: $1:8$ (Nashville/Memphis justify a peel).
 
 A comparison against standard minimum-edge-cut bisection (B.7 baseline)
-shows that GeoSection improves the proportionality gap by 1--2 seats in
-states with strong geographic concentration and is neutral in states
-with uniform density.
+shows that GeoSection changes the seat count by one seat in seven comparison
+states and is neutral in the remaining 37.
 For North Carolina, GeoSection's $6:8$ east/west split produces 7\,D/7\,R
 ($+0.7$\,pp proportionality gap, near-proportional); standard bisection
 produces 5\,D/9\,R ($-13.6$\,pp).

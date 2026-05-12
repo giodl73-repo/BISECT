@@ -13,8 +13,9 @@ congressional standard established in \emph{Karcher v.\ Daggett} (1983).
 
 The reference implementation is the \texttt{bisect} Rust binary using
 METIS 5.1 (vendored via \texttt{metis-rs} 0.2 FFI crate).
-All 45 multi-district states converge within the 0.5\,\% balance tolerance.
-Five single-district states (AK, DE, ND, SD, VT, WY) receive trivial
+All 44 multi-district states converge within the 0.5\,\% balance tolerance
+at the level reported in the sweep.
+Six single-district states (AK, DE, ND, SD, VT, WY) receive trivial
 single-district assignments and are excluded from the ratio analysis.
 
 The MEC baseline (B.7) uses the same pipeline with standard
@@ -94,16 +95,18 @@ normalised boundary than any $1:3$ urban peel because the state's
 agricultural-density population is nearly uniform.
 
 \paragraph{Pattern 2: Genuine urban asymmetry confirmed.}
-States with compact, geographically isolated metropolitan cores receive
+States with compact, geographically isolated metropolitan cores can receive
 $1:k-1$ splits confirmed by the normalisation.
-Illinois ($k=17$, $1:16$): Chicago's boundary is $\sim$130\,km; the
-normalised comparison $\mathrm{EC}(1:16) \approx 2158$\,km vs.\
-$\mathrm{EC}(8:9)/\sqrt{8} \approx 2900/2.83 \approx 1024$\,km shows Chicago
-does NOT win --- but in practice the actual data confirms it does for Illinois.
-Wisconsin ($k=8$, $1:7$): Milwaukee's boundary is confirmed at 85\,km
-(normalised).
-Tennessee ($k=9$, $1:8$): Nashville/Memphis corridor confirmed at 72\,km.
-Pennsylvania ($k=17$, $1:16$): Philadelphia confirmed at 39\,km.
+The important evidence is not a verbal city-boundary estimate but the full
+ratio scan: the selected asymmetric split must have the lowest observed
+$\mathrm{EC}/\sqrt{\min(i,k-i)}$ among the feasible root ratios under the
+same seed budget.
+Wisconsin ($k=8$, $1:7$), Tennessee ($k=9$, $1:8$), Pennsylvania
+($k=17$, $1:16$), and Illinois ($k=17$, $1:16$) are examples where the scan
+confirms an asymmetric root allocation.
+Large-state entries with incomplete recursive or partisan data are retained
+in Table~\ref{tab:natural-ratios} but should be read as ratio-scan evidence,
+not as complete outcome comparisons.
 
 \paragraph{Pattern 3: Key normalisation shifts.}
 North Carolina ($k=14$) is the most important case.
@@ -229,7 +232,7 @@ geographic voter sorting in the Piedmont corridor dominates the outcome.
 
 Table~\ref{tab:head-to-head} compares GeoSection and the MEC baseline
 (standard $\lfloor k/2\rfloor:\lceil k/2\rceil$ bisection from B.7)
-on all 44 multi-district states with complete data.
+on the 44 multi-district states with complete seat-count comparisons.
 
 \begin{table}[h]
 \centering
@@ -252,7 +255,7 @@ OK  & 33.1\,\% & 1 & 0 & $+1$ & GeoSection \\
 \multicolumn{6}{l}{\textit{MEC gives more D seats}} \\
 PA  & 50.6\,\% & 7 & 8 & $-1$ & MEC \\
 \midrule
-\multicolumn{6}{l}{\textit{Identical seat counts (38 states)}} \\
+\multicolumn{6}{l}{\textit{Identical seat counts (37 states)}} \\
 NC  & 49.3\,\% & 5 & 5 & 0 & -- \\
 AZ  & 50.2\,\% & 4 & 4 & 0 & -- \\
 \ldots & & & & & \\
@@ -260,7 +263,7 @@ AZ  & 50.2\,\% & 4 & 4 & 0 & -- \\
 \end{tabular}
 \end{table}
 
-\noindent\textbf{Key finding: 38 states identical, 7 differ by 1 seat.}
+\noindent\textbf{Key finding: 37 states identical, 7 differ by 1 seat.}
 GeoSection gives 1 additional D seat in 6 states (CO, MN, WA, WI, IL, OK);
 MEC gives 1 additional D seat in 1 state (PA).
 Net effect: $+5$ D seats under GeoSection across 44 states.

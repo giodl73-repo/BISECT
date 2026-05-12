@@ -44,8 +44,9 @@ geometric criterion that is neutral with respect to partisanship.
 GeoSection does not eliminate all asymmetric splits.
 For states where the urban core is genuinely geographically isolated, the
 normalisation \emph{confirms} the peel rather than overriding it.
-Philadelphia ($k=17$, PA): $\mathrm{EC}(1:16)/\sqrt{1} = 39$\,km $<$ any
-normalised equal-split comparison.
+Pennsylvania ($k=17$) is an example: the ratio scan selects a $1:16$ root
+allocation after comparing the observed normalised edge-cut for each feasible
+ratio under the same seed budget.
 The algorithm's selection of $1:16$ carries a stronger legal argument:
 ``we tried the equal split and it costs more per unit of geographic territory;
 Philadelphia is genuinely compact and geographically isolated.''
@@ -71,15 +72,16 @@ independent of the 5\,D/9\,R seat count.
 GeoSection changes the bisection tree structure.
 In 6 of 44 states, this changes the seat count by $+1\,D$; in 1 state (Pennsylvania),
 it changes by $-1\,D$.
-In 38 states the seat count is unchanged.
+In 37 states the seat count is unchanged.
 The partisan claim is weak: GeoSection is not a proportionality fix.
 Its primary legal merit is procedural (claim (a)), not partisan.
 
 \paragraph{Pennsylvania: why MEC outperforms GeoSection.}
 Pennsylvania is the one state where the MEC baseline produces a better Democratic
 outcome than GeoSection.
-GeoSection confirms the $1:16$ Philadelphia peel: Philadelphia's compact
-130\,km boundary wins the isoperimetric comparison against any near-equal split.
+GeoSection confirms the $1:16$ Philadelphia peel: the observed normalised
+score for the asymmetric root allocation wins the scan against the near-equal
+alternatives.
 Under MEC, the standard $8:9$ first-level bisection places several southeast
 Pennsylvania suburban tracts (Delaware County, Chester County outer ring) in
 the western bisection half.
@@ -163,7 +165,7 @@ Both algorithms prevent the caterpillar pathology; they differ in how far
 they go.
 For North Carolina, both algorithms select $6:8$ as the natural ratio
 (AreaSection via area constraint, GeoSection via normalised edge-cut).
-For Illinois, GeoSection still selects $1:16$ (Chicago's compact boundary
+For Illinois, GeoSection still selects $1:16$ (the asymmetric root allocation
 wins the isoperimetric comparison), while AreaSection selects $8:9$
 (Chicago occupies $<5$\,\% of Illinois's land, making area balance infeasible
 at $1:16$).
@@ -201,7 +203,7 @@ is independently desirable (large, geographically diverse states).
 \label{sec:stability}
 
 The head-to-head comparison in Section~\ref{sec:comparison} shows that
-38 of 44 states produce identical seat counts under GeoSection and the
+37 of 44 states produce identical seat counts under GeoSection and the
 MEC baseline.
 This stability is not a coincidence.
 

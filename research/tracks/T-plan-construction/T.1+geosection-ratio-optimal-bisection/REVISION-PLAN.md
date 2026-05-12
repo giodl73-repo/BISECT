@@ -2,7 +2,7 @@
 status: ACCEPTED
 final_avg: 3.5/4
 rounds: 2
-last_updated: 2026-05-05
+last_updated: 2026-05-12
 ---
 
 # T.1 GeoSection — Revision Plan
@@ -28,3 +28,13 @@ Five reviewers: Karypis (3.5), Rodden (3.0), Duchin (3.0), Polikarpova (3.0), Li
 
 Fresh panel: Karypis, Rodden, Duchin, Stephanopoulos, Liang.
 Round 2 avg: 3.6/4 — ACCEPTED.
+
+## 2026-05-12 Paper-Quality Check
+
+Status: maintained accepted status after atlas-alignment review.
+The pass corrected internal consistency issues found by the P1 claim-discipline
+gate: the multi-district state count is 44 rather than 45, the head-to-head
+seat-count arithmetic is 37 unchanged plus 7 one-seat changes, and unsupported
+city-boundary examples were narrowed to ratio-scan evidence language.
+The paper rebuilt with no undefined references/citations and zero BibTeX
+warnings, and the PDF was recopied to `docs/papers/`.

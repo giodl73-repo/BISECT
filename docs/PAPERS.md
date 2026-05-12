@@ -6,6 +6,8 @@ Papers are organised by the question they answer. Each paper's series code is sh
 
 Current atlas-to-paper alignment work is tracked in
 [`docs/papers/ATLAS-ALIGNMENT.md`](papers/ATLAS-ALIGNMENT.md).
+The slower publication-quality review ledger is
+[`docs/papers/PAPER-QUALITY-REVIEW.md`](papers/PAPER-QUALITY-REVIEW.md).
 
 ---
 
