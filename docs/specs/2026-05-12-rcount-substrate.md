@@ -6,6 +6,7 @@ Track: `research/tracks/V-election-audit`
 Role review: `docs/specs/reviews/rcount-track-r1_roles.md`
 First crate slices: `crates/rcount-core`, `crates/rcount-io`,
 `crates/rcount-audit`
+CLI slice: `crates/rcount-cli`
 
 ## Purpose
 
@@ -442,6 +443,13 @@ rcount hash package.rcount
 rcount explain-delta package.rcount --event event-0007
 rcount verify-proof package.rcount proofs/example.json
 rcount aggregate-districts package.rcount --plan plan.rplan --context context.rctx
+```
+
+Initial implementation:
+
+```text
+cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/summary-basic
+cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/summary-basic --write-transcript
 ```
 
 ## Open Questions

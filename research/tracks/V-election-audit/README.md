@@ -34,6 +34,8 @@ recompute public claims from lower-level evidence.
   `docs/examples/rcount-golden-packages/summary-basic`.
 - `rcount-audit`: started 2026-05-12 with pass/fail verification transcripts
   for `summary-basic`, tampered manifest failures, and bad arithmetic failures.
+- `rcount-cli`: started 2026-05-12 with `rcount verify <package-dir>` and
+  optional `--write-transcript`.
 
 ## Track Contract
 

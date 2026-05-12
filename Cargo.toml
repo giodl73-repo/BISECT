@@ -7,6 +7,7 @@ members = [
     "crates/rcount-core",
     "crates/rcount-io",
     "crates/rcount-audit",
+    "crates/rcount-cli",
     "crates/bisect-core",
     "crates/bisect-data",
     "crates/bisect-apportion",

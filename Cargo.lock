@@ -2669,6 +2669,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "rcount-cli"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "rcount-audit",
+ "serde_json",
+ "tempfile",
+]
+
+[[package]]
 name = "rcount-core"
 version = "0.1.0"
 dependencies = [

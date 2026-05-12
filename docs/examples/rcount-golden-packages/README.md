@@ -18,3 +18,9 @@ The real verifier transcript is generated with:
 ```text
 cargo run -p rcount-audit --example write_summary_basic_transcript
 ```
+
+The CLI verifier can check the package directly:
+
+```text
+cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/summary-basic
+```
