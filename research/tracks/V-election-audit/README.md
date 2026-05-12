@@ -34,3 +34,22 @@ Each paper should separate:
 - what remains a human, statutory, judicial, recount, or audit-board decision.
 
 The voter-facing rule is strict: prove inclusion, not candidate choices.
+
+## Role Review
+
+Initial substrate spec: `docs/specs/2026-05-12-rcount-substrate.md`.
+
+Initial role-panel review: `docs/specs/reviews/rcount-track-r1_roles.md`.
+
+RCOUNT uses the standard project roles plus three election-count roles:
+
+- CANVASS: official canvass workflow, certification states, recount and
+  adjudication lineage;
+- TALLY: CVRs, ballot manifests, batch accounting, contest semantics, and
+  vendor export meaning;
+- VAULT: ballot secrecy, receipt-safety, canonical hashes, inclusion proofs,
+  and cryptographic threat models.
+
+Before crate work starts, V.0 must define the substrate package anatomy,
+canonical hash rules, reporting-unit model, ballot/contest semantics, and
+receipt-safe public verification boundary.
