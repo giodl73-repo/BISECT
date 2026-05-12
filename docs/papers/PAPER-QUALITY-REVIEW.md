@@ -87,3 +87,46 @@ are called complete.
 | T.15 Capacity-Constrained Clustering | Reviewed 2026-05-12 | Aligned status taxonomy with implementation; added worked capacity rejection table, repair/export boundary, and audit fixed-point limits | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
 | T.16 Hierarchical Regionalization | Reviewed 2026-05-12 | Aligned merge scoring and witness fields with implementation; added worked merge-decision table, merge-log evidence boundaries, and audit limits | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
 | T.17 Flow-Based Construction | Reviewed 2026-05-12 | Reframed as capacity-gated frontier baseline; aligned summary/status fields with implementation; added worked frontier-decision table and model-relative witness limits | Rebuilt; no undefined refs/cites/overfull boxes; PDF copied |
+
+## Batch 2 Paper-Quality Scorecard
+
+**Scoring date:** 2026-05-12
+
+These scores are an internal quality checkpoint using the six paper-quality
+gates above. They are not venue acceptance predictions and do not replace a
+fresh simulated panel or external review.
+
+| Paper | P1 Claim | P2 Algorithm | P3 Evidence | P4 Boundary | P5 Build | P6 Reader | Total |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| T.14 Spectral Partitioning | 3.7 | 3.5 | 3.5 | 3.8 | 4.0 | 3.6 | 22.1 / 24 |
+| T.15 Capacity-Constrained Clustering | 3.8 | 3.7 | 3.6 | 3.8 | 4.0 | 3.7 | 22.6 / 24 |
+| T.16 Hierarchical Regionalization | 3.8 | 3.7 | 3.6 | 3.8 | 4.0 | 3.7 | 22.6 / 24 |
+| T.17 Flow-Based Construction | 3.8 | 3.6 | 3.6 | 3.9 | 4.0 | 3.6 | 22.5 / 24 |
+
+### Batch 2 Score Notes
+
+**T.14 Spectral Partitioning — 22.1/24.** The paper is now honest about the
+implemented spectral-style smoothing baseline rather than a full eigensolver,
+and the odd-seat target table makes recursive target propagation inspectable.
+The remaining ceiling is visual/mathematical depth: a future version should add
+an actual graph/order/sweep figure and a real-data smoke transcript before it
+should claim more than deterministic baseline behavior.
+
+**T.15 Capacity-Constrained Clustering — 22.6/24.** The status taxonomy now
+matches implementation vocabulary, and the worked capacity rejection table
+shows the decision rule instead of merely naming it. The remaining gap is
+comparative evidence: path100 and fixture packages support auditability, but
+not real-data quality or repair robustness.
+
+**T.16 Hierarchical Regionalization — 22.6/24.** The merge scoring and witness
+fields are tied to the crate behavior, and the merge-decision table gives the
+paper a clear local mechanism. The next lift is a richer merge-tree visual and
+real-data comparison against capacity clustering, flow construction, METIS, and
+spectral construction.
+
+**T.17 Flow-Based Construction — 22.5/24.** The paper now sharply separates the
+capacity-gated frontier baseline from future exact flow/branch-price solvers.
+The model-relative witness language is strong. The remaining ceiling is solver
+depth: the paper should not score higher until it has either a fuller flow model
+or a recorded comparison showing why this baseline is useful despite being
+intentionally modest.
