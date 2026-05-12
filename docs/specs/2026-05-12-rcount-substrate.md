@@ -4,6 +4,7 @@ Status: draft
 Date: 2026-05-12
 Track: `research/tracks/V-election-audit`
 Role review: `docs/specs/reviews/rcount-track-r1_roles.md`
+First crate slice: `crates/rcount-core`
 
 ## Purpose
 
@@ -282,7 +283,7 @@ Recommended crates:
 
 | Crate | Responsibility |
 |---|---|
-| `rcount-core` | data model, canonical records, hash projections |
+| `rcount-core` | data model, canonical records, hash projections, first summary arithmetic checks |
 | `rcount-io` | package read/write, NDJSON/JSON parsing, source index |
 | `rcount-audit` | reconciliation equations, package verification, transcripts |
 | `rcount-cli` | user-facing commands and fixture verification |
@@ -295,6 +296,7 @@ declared by source evidence and status events, then checked for consistency.
 V.0 acceptance requires these fixtures:
 
 1. `summary-basic`: one contest, two precincts, jurisdiction total; verifies.
+   First in-crate generator: `rcount_core::synthetic_summary_basic_package`.
 2. `canvass-correction`: unofficial total superseded by canvassed event; both
    states replay and the final status explains the delta.
 3. `privacy-inclusion-sketch`: inclusion proof fixture that verifies a
@@ -404,6 +406,13 @@ RCOUNT should use the same rough L0/L1/L2 ladder as the rest of the repo:
 
 The first milestone should stop at L2. Real data belongs after the synthetic
 state catches arithmetic, lineage, privacy, and tamper-evidence failures.
+
+Current L0 coverage:
+
+- canonical record/package hash stability;
+- `contest_selection_sum` pass/fail;
+- `jurisdiction_contest_total` pass/fail;
+- synthetic `summary-basic` package generation.
 
 ## CLI Shape
 

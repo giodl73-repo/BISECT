@@ -24,6 +24,12 @@ recompute public claims from lower-level evidence.
 | V.10 | Certification Evidence Matrix | planned |
 | V.11 | Performance And Parallel Verification In Rust | planned |
 
+## Implementation Status
+
+- `rcount-core`: started 2026-05-12 with canonical hash prefixes, core contest
+  and summary records, a synthetic `summary-basic` package generator, and L0
+  checks for `contest_selection_sum` and `jurisdiction_contest_total`.
+
 ## Track Contract
 
 Each paper should separate:
