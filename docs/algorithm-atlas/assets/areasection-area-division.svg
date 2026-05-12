@@ -1,13 +1,151 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="390" viewBox="0 0 960 390" role="img" aria-labelledby="title desc">
-  <title id="title">AreaSection population and land-area pressure</title>
-  <desc id="desc">Dense urban units can satisfy population balance with little land area; AreaSection makes this pressure visible.</desc>
-  <style>.bg{fill:#fbfbf8}.panel{fill:#fff;stroke:#2f3a45;stroke-width:1.5}.urban{fill:#b84a42;stroke:#7a211c;stroke-width:2}.rural{fill:#e4f5eb;stroke:#2f7d4c;stroke-width:2}.split{stroke:#2b5c9b;stroke-width:5}.label{font:15px Arial,sans-serif;fill:#17212b}.small{font:12px Arial,sans-serif;fill:#3d4a56}.barBg{fill:#edf1f5;stroke:#9aa7b3}.pop{fill:#b84a42}.area{fill:#2f7d4c}</style>
-  <rect class="bg" width="960" height="390"/><rect class="panel" x="45" y="45" width="870" height="285" rx="8"/>
-  <text class="label" x="75" y="82">Same population can occupy very different area</text>
-  <rect class="urban" x="105" y="125" width="70" height="70"/><rect class="urban" x="185" y="125" width="70" height="70"/><rect class="urban" x="105" y="205" width="70" height="70"/><rect class="urban" x="185" y="205" width="70" height="70"/>
-  <rect class="rural" x="300" y="105" width="110" height="110"/><rect class="rural" x="420" y="105" width="110" height="110"/><rect class="rural" x="300" y="225" width="110" height="70"/><rect class="rural" x="420" y="225" width="110" height="70"/>
-  <line class="split" x1="280" y1="100" x2="280" y2="300"/><text class="small" x="112" y="305">dense side: high population, low area</text><text class="small" x="315" y="315">sparse side: lower density, high area</text>
-  <text class="small" x="650" y="125">Population target</text><rect class="barBg" x="650" y="138" width="170" height="22" rx="4"/><rect class="pop" x="650" y="138" width="166" height="22" rx="4"/>
-  <text class="small" x="650" y="190">Area window</text><rect class="barBg" x="650" y="203" width="170" height="22" rx="4"/><rect class="area" x="650" y="203" width="70" height="22" rx="4"/>
-  <text class="small" x="650" y="255">AreaSection asks whether both bars can be acceptable.</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-labelledby="title desc">
+  <title id="title">AreaSection balances population while constraining land-area extremes</title>
+  <desc id="desc">A teaching figure showing how a population-only split can choose a tiny dense area, while AreaSection checks a population-area feasibility window and selects a ratio that keeps both population and land area within the declared regime.</desc>
+  <style>
+    .bg{fill:#f7f5ef}
+    .ink{fill:#17212b}
+    .muted{fill:#52616b}
+    .panel{fill:#fffdf8;stroke:#26323d;stroke-width:1.6}
+    .panelTitle{font:700 23px Arial,sans-serif;fill:#17212b}
+    .label{font:700 16px Arial,sans-serif;fill:#17212b}
+    .small{font:14px Arial,sans-serif;fill:#52616b}
+    .tiny{font:12px Arial,sans-serif;fill:#52616b}
+    .mono{font:13px Consolas,monospace;fill:#17212b}
+    .urban{fill:#c84f47;stroke:#832924;stroke-width:2}
+    .suburb{fill:#e8b45b;stroke:#9d6b1e;stroke-width:2}
+    .rural{fill:#9ed8aa;stroke:#2f7d4c;stroke-width:2}
+    .mapShell{fill:#edf1f7;stroke:#6b7280;stroke-width:2.5}
+    .badCut{stroke:#b6423c;stroke-width:5;stroke-linecap:round;stroke-dasharray:10 7}
+    .goodCut{stroke:#25724d;stroke-width:5;stroke-linecap:round}
+    .warn{fill:#fff1ed;stroke:#b6423c;stroke-width:1.5}
+    .ok{fill:#eef8f0;stroke:#25724d;stroke-width:1.5}
+    .axis{stroke:#26323d;stroke-width:2}
+    .curve{fill:none;stroke:#245b99;stroke-width:4}
+    .window{fill:#dff3e6;stroke:#25724d;stroke-width:2;opacity:.72}
+    .skip{fill:#ffe6df;stroke:#b6423c;stroke-width:2;opacity:.76}
+    .tableHead{fill:#26323d}
+    .tableLine{stroke:#d8dee5;stroke-width:1}
+    .popBar{fill:#c84f47}
+    .areaBar{fill:#2f7d4c}
+    .barBg{fill:#edf1f5;stroke:#aab4bf;stroke-width:1}
+  </style>
+
+  <rect class="bg" width="1280" height="760"/>
+  <text x="46" y="54" font-family="Arial, sans-serif" font-size="32" font-weight="700" class="ink">AreaSection: population stays tight, land-area extremes become visible</text>
+  <text x="48" y="84" class="small">The algorithm filters first-level ratios by a population-area window before spending search budget on a partition.</text>
+
+  <rect class="panel" x="42" y="118" width="366" height="548" rx="12"/>
+  <rect class="panel" x="456" y="118" width="366" height="548" rx="12"/>
+  <rect class="panel" x="870" y="118" width="366" height="548" rx="12"/>
+
+  <text class="panelTitle" x="72" y="158">1. Population-only can shrink</text>
+  <text class="panelTitle" x="486" y="158">2. Feasibility uses two signals</text>
+  <text class="panelTitle" x="900" y="158">3. Search only feasible ratios</text>
+
+  <!-- Panel 1: population-only map -->
+  <g transform="translate(68 188)">
+    <path class="mapShell" d="M46 86 C93 34 193 24 260 60 C323 94 323 176 277 227 C230 279 121 286 58 236 C13 200 12 124 46 86 Z"/>
+    <g>
+      <rect class="urban" x="66" y="86" width="46" height="46" rx="4"/>
+      <rect class="urban" x="116" y="84" width="46" height="46" rx="4"/>
+      <rect class="urban" x="66" y="136" width="46" height="46" rx="4"/>
+      <rect class="urban" x="116" y="134" width="46" height="46" rx="4"/>
+      <rect class="suburb" x="170" y="86" width="54" height="54" rx="4"/>
+      <rect class="suburb" x="170" y="146" width="54" height="54" rx="4"/>
+      <rect class="rural" x="230" y="78" width="70" height="70" rx="5"/>
+      <rect class="rural" x="230" y="154" width="70" height="70" rx="5"/>
+      <rect class="rural" x="88" y="194" width="132" height="54" rx="5"/>
+    </g>
+    <path class="badCut" d="M180 58 C168 98 168 151 182 198"/>
+    <rect class="warn" x="8" y="292" width="310" height="126" rx="8"/>
+    <text class="label" x="26" y="322">Population-only winner</text>
+    <text class="small" x="26" y="350">left side: 50% population</text>
+    <text class="small" x="26" y="374">left side: 8% land area</text>
+    <text class="small" x="26" y="398">geographically tiny but balanced</text>
+  </g>
+
+  <!-- Panel 2: feasibility, bars, tiny Lorenz -->
+  <g transform="translate(486 190)">
+    <text class="label" x="0" y="0">A ratio must satisfy both windows</text>
+    <text class="tiny" x="0" y="24">population window is tight; area window is looser</text>
+
+    <g transform="translate(0 58)">
+      <text class="tiny" x="0" y="-10">candidate: 1:7 dense-core split</text>
+      <rect class="barBg" x="0" y="0" width="300" height="24" rx="5"/>
+      <rect class="popBar" x="0" y="0" width="150" height="24" rx="5"/>
+      <line x1="145" y1="-4" x2="145" y2="30" stroke="#26323d" stroke-width="2"/>
+      <line x1="155" y1="-4" x2="155" y2="30" stroke="#26323d" stroke-width="2"/>
+      <text class="tiny" x="0" y="48">population: passes target band</text>
+
+      <rect class="barBg" x="0" y="78" width="300" height="24" rx="5"/>
+      <rect class="areaBar" x="0" y="78" width="24" height="24" rx="5"/>
+      <rect x="90" y="72" width="120" height="36" rx="5" fill="none" stroke="#25724d" stroke-width="2"/>
+      <text class="tiny" x="0" y="126">area: outside declared window</text>
+    </g>
+
+    <g transform="translate(20 244)">
+      <line class="axis" x1="0" y1="180" x2="278" y2="180"/>
+      <line class="axis" x1="0" y1="180" x2="0" y2="18"/>
+      <path class="curve" d="M0 180 C58 174 102 150 138 112 C183 67 228 35 278 18"/>
+      <rect class="window" x="94" y="54" width="96" height="126"/>
+      <rect class="skip" x="16" y="136" width="52" height="44"/>
+      <text class="tiny" x="66" y="212">cumulative land area</text>
+      <text class="tiny" x="-14" y="12">population</text>
+      <text class="tiny" x="104" y="48">feasible band</text>
+      <text class="tiny" x="22" y="130">skip</text>
+    </g>
+
+    <rect class="ok" x="0" y="462" width="314" height="56" rx="8"/>
+    <text class="label" x="18" y="496">Filter before partition search</text>
+  </g>
+
+  <!-- Panel 3: feasible ratio table + chosen map -->
+  <g transform="translate(900 188)">
+    <rect x="0" y="0" width="306" height="154" rx="8" fill="#ffffff" stroke="#d8dee5"/>
+    <rect class="tableHead" x="0" y="0" width="306" height="34" rx="8"/>
+    <text x="14" y="22" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#fff">ratio</text>
+    <text x="80" y="22" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#fff">pop</text>
+    <text x="136" y="22" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#fff">area</text>
+    <text x="204" y="22" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#fff">action</text>
+    <line class="tableLine" x1="0" y1="70" x2="306" y2="70"/>
+    <line class="tableLine" x1="0" y1="106" x2="306" y2="106"/>
+    <line class="tableLine" x1="0" y1="142" x2="306" y2="142"/>
+    <rect x="6" y="74" width="294" height="28" rx="4" fill="#edf8ef"/>
+    <g font-family="Consolas, monospace" font-size="13" fill="#17212b">
+      <text x="14" y="58">1:7</text><text x="82" y="58">pass</text><text x="140" y="58">fail</text><text x="204" y="58">skip</text>
+      <text x="14" y="94">3:5</text><text x="82" y="94">pass</text><text x="140" y="94">pass</text><text x="204" y="94">search</text>
+      <text x="14" y="130">4:4</text><text x="82" y="130">pass</text><text x="140" y="130">pass</text><text x="204" y="130">search</text>
+    </g>
+
+    <g transform="translate(6 202)">
+      <path class="mapShell" d="M42 66 C89 18 190 8 254 42 C316 75 318 158 272 209 C225 260 115 270 54 218 C12 182 10 106 42 66 Z"/>
+      <rect class="urban" x="62" y="66" width="44" height="44" rx="4"/>
+      <rect class="urban" x="110" y="65" width="44" height="44" rx="4"/>
+      <rect class="urban" x="62" y="114" width="44" height="44" rx="4"/>
+      <rect class="urban" x="110" y="113" width="44" height="44" rx="4"/>
+      <rect class="suburb" x="162" y="66" width="54" height="54" rx="4"/>
+      <rect class="suburb" x="158" y="128" width="54" height="54" rx="4"/>
+      <rect class="rural" x="222" y="58" width="64" height="64" rx="5"/>
+      <rect class="rural" x="222" y="132" width="64" height="64" rx="5"/>
+      <rect class="rural" x="84" y="178" width="128" height="48" rx="5"/>
+      <path class="goodCut" d="M228 44 C197 85 169 122 141 164 C122 193 99 209 58 218"/>
+    </g>
+    <rect class="ok" x="0" y="486" width="306" height="58" rx="8"/>
+    <text class="label" x="18" y="516">Selected: feasible 3:5</text>
+    <text class="small" x="18" y="536">Then recurse normally inside each side.</text>
+  </g>
+
+  <path d="M419 396 C436 386 443 386 456 396" fill="none" stroke="#52616b" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M833 396 C850 386 857 386 870 396" fill="none" stroke="#52616b" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <rect x="74" y="690" width="1132" height="42" rx="10" fill="#26323d"/>
+  <text x="100" y="717" font-family="Arial, sans-serif" font-size="16" fill="#ffffff">
+    Reading rule: population balance can hide tiny land area; AreaSection skips ratios with empty population-area windows before choosing the first split.
+  </text>
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#52616b"/>
+    </marker>
+  </defs>
 </svg>

@@ -42,3 +42,12 @@ reading rule footer
 This pattern should be applied next to AreaSection, Seed Search Modes,
 County-Sticky Weights, and U.20 because those pages benefit most from seeing
 the algorithm's decision rule and its artifact consequence in the same figure.
+
+## Applied Examples
+
+- GeoSection: raw tiny split -> normalized ratio score -> chosen recursive root.
+- AreaSection: population-only tiny footprint -> population/area feasibility
+  window -> feasible ratios searched and selected.
+
+When a page has two constraints, make both visible in the decision panel. Do not
+hide the secondary constraint in prose; show the pass/fail window directly.
