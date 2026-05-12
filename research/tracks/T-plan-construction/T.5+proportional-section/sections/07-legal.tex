@@ -14,7 +14,9 @@ It does \textbf{not} demonstrate:
   \item that the algorithm is partisan-neutral --- it explicitly incorporates
     a proportionality target and thus requires partisan vote data as an input;
   \item that states with $\sigma < 0.05$ (free proportionality) are presently
-    gerrymandered; or
+    gerrymandered, or that such states are immune from gerrymandering claims;
+    $\sigma$ describes only this paper's top-level proportional-target signal;
+    or
   \item that T.5 at any $\eta$ is guaranteed to improve proportionality ---
     Table~\ref{tab:tradeoff-empirical} shows that it worsens outcomes for North
     Carolina at all tested $\eta$ values.
@@ -58,8 +60,11 @@ T.5's most immediate legal contribution is evidentiary.
 For states where $\sigma$ is low (free or cheap proportionality), a court
 can assess whether a geography-only algorithm's non-proportional outcome is
 ``natural'' (unavoidable given geography) or artificially produced.
-If $\sigma < 0.05$ and the algorithm still produces a $-10$\,pp gap,
-something other than geography is causing the shortfall.
+If $\sigma < 0.05$ and the algorithm still produces a $-10$\,pp gap, the
+shortfall is not explained by a large top-level proportional-target shift
+alone. It may arise from contiguity, granularity, downstream recursive splits,
+or ordinary partisan design in an enacted map; T.5 does not identify intent by
+itself.
 
 For states where Lorenz feasibility is violated (expensive-proportionality),
 the court has a rigorous basis for finding that proportionality is geometrically
@@ -96,9 +101,10 @@ In the post-\emph{Rucho} landscape, three legal developments matter for T.5:
     of Pennsylvania} (Pa. 2018) and \emph{Harper v.\ Hall} (N.C. 2022) struck
     down maps as partisan gerrymanders under state constitutional anti-partisan
     provisions.
-    T.5's $\sigma$ classification provides a rigorous quantitative test that
-    state courts can apply: a map drawn by a geography-only algorithm with
-    $\sigma = 0$ has no partisan signal and cannot be a partisan gerrymander.
+    T.5's $\sigma$ classification provides a quantitative diagnostic that
+    state courts can inspect: when $\sigma = 0$, the proportional top-level
+    target coincides with the neutral target. That fact is evidence about one
+    mechanism, not immunity from a broader partisan-gerrymandering claim.
 
   \item \textbf{The algorithmic neutrality standard}: T.5 defines a
     \emph{spectrum} from full algorithmic neutrality ($\sigma = 0$) to
@@ -117,7 +123,8 @@ In the post-\emph{Rucho} landscape, three legal developments matter for T.5:
     Even if \emph{Rucho} bars courts from mandating proportional outcomes,
     courts retain authority to mandate fair \emph{processes}.
     A requirement that redistricting use a publicly auditable, partisan-data-free
-    algorithm (such as T.2 or a verified $\sigma = 0$ variant of T.5) is a
+    algorithm (such as T.2 or a variant whose proportional target coincides
+    with the neutral target) is a
     procedural mandate, not an outcome mandate.
     State courts in Pennsylvania and North Carolina have accepted this framing.
 \end{enumerate}

@@ -30,7 +30,7 @@ implicit Democratic packing without any partisan input.
 The Rodden effect is a fact about geography, not about algorithms.
 
 This raises a precise mathematical question: \emph{what partisan information
-is required to guarantee proportional outcomes, and how far do geography-only
+is required to target proportional outcomes, and how far do geography-only
 algorithms fall short?}
 We call the difference the \emph{proportionality gap} and characterise it
 across all 50 states.
@@ -41,11 +41,14 @@ redistricting to METIS's $\mathtt{ncon}=2$ mode with vertex weights
 $[\text{population},\, D_{\text{votes}}]$.
 The Democratic-vote constraint encodes how many Democratic voters belong to
 each half of a bisection.
-By choosing these targets precisely, we can guarantee that each half produces
-the correct number of party-winning districts.
+By choosing these targets precisely, we can make the top-level D-bloc and
+R-bloc carry the vote shares implied by a proportional seat allocation.
+Whether the downstream recursive districts realise those winning seats is a
+separate contiguity, granularity, and implementation question.
 
-The central result is a closed-form formula (Theorem~\ref{thm:proportionality})
-for the $\mathtt{tpwgts}$ parameters that achieve exact partisan proportionality.
+The central result is a closed-form formula (Proposition~\ref{prop:top-split})
+for the $\mathtt{tpwgts}$ parameters that express the top-level proportional
+target.
 The formula is derived from first principles: the R-bloc receives the minimum
 Democratic voter share needed for Republicans to win every district in that bloc,
 and no more.
@@ -53,11 +56,15 @@ and no more.
 The companion result is a feasibility characterisation (Theorem~\ref{thm:lorenz-feasibility}):
 a \emph{partisan Lorenz curve}, sorting tracts from most to least Democratic,
 determines when proportional packing is achievable under the geographic
-constraint.
+constraint. This paper treats that curve as a necessary diagnostic for
+contiguous single-member maps, not as a proof that a contiguous proportional
+map exists.
 States with uniform partisan geography (near-diagonal Lorenz curves) can
 achieve proportionality easily.
-States with extreme urban concentration (Lorenz curves far above the diagonal)
-cannot achieve proportionality through any contiguous redistricting.
+States with extreme urban concentration (Lorenz curves far from the diagonal)
+may fail the necessary conditions for a contiguous proportional map, or may pass
+the relaxed Lorenz test while still failing because the required units cannot
+be assembled into connected balanced districts.
 
 \paragraph{What this paper is not.}
 We do not advocate for partisan redistricting.
@@ -77,8 +84,8 @@ Section~\ref{sec:related} reviews related work on efficiency gaps, partisan
 Lorenz curves, and dual-constraint graph partitioning.
 Section~\ref{sec:framework} introduces the $\mathtt{ncon}=2$ framework and
 derives the $\mathtt{tpwgts}$ formula.
-Section~\ref{sec:theory} proves the proportionality guarantee and the
-Lorenz feasibility condition.
+Section~\ref{sec:theory} proves the top-level proportional target and the
+Lorenz diagnostic condition.
 Section~\ref{sec:eval} presents the 50-state sweep.
 Section~\ref{sec:compromise} characterises states where proportionality is
 cheaply achievable.

@@ -90,17 +90,20 @@ unit aggregation.
 
 \subsection{The Recursive Case}
 
-Theorem~\ref{thm:proportionality} guarantees proportionality at the first
+Proposition~\ref{prop:top-split} defines the proportional target at the first
 bisection level.
-For full proportionality across the entire $k$-district map, the same
-constraint must be applied recursively at every level of the PrimeFactor
-bisection tree.
+For a full recursive proportionality claim across the entire $k$-district map,
+the same type of constraint would need to be applied recursively at every level
+of the bisection tree.
 
 At each level, the local Democratic fraction $d'$ of the subregion determines
 a new $\mathtt{tpwgts}$ vector.
 If the D-bloc is a majority-D subregion ($d' > 0.5$), the recursive constraint
 uses the local $d'$ and $k' = k_D$ to produce $k'_D$ and $k'_R$ for that level.
 
-The full recursive proportionality guarantee follows by induction:
-each bisection achieves local proportionality, and the leaf districts
-each contain one winning party at the correct population level.
+This is future work, not the current production behavior. The current BISECT
+runner uses the proportional $[\text{population}, D_{\text{votes}}]$ constraint
+only for the top split and then recurses inside each bloc with population-only
+GeoSection. The safe interpretation is therefore: T.5 selects a partisan-aware
+top-level split and then studies whether the standard downstream construction
+realises the intended seat allocation.

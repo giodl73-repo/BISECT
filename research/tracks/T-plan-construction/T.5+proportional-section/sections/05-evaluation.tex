@@ -18,7 +18,7 @@ For comparison, we include:
   \item Theoretical proportional (exact $k_D/k_R$ by HH)
 \end{itemize}
 
-\subsection{Empirical METIS Runs: 6-State $\times$ 3-$\eta$ Table}
+\subsection{Empirical METIS Runs: Six-State Eta Table}
 \label{sec:eval:empirical6}
 
 To distinguish analytical predictions from actual METIS behaviour, we ran the
@@ -27,7 +27,14 @@ at three $\eta = \mathtt{ubvec}[1]$ values.
 Each cell reports the achieved proportionality gap $\Delta$ (Definition~\ref{def:pgap})
 at convergence (30 seeds per run; maximum deviation reported as the worst seed).
 Parameters: METIS 5.1.0, $\mathtt{ncon}=2$, vertex weights $[p_v, d_v]$,
-$\mathtt{tpwgts}$ from equation~\eqref{eq:tpwgts-formula}, $\mathtt{ubvec}[0] = 1.001$.
+$\mathtt{tpwgts}$ from equation~\eqref{eq:tpwgts-formula}, and
+$\mathtt{ubvec}[0] = 1.001$. The current BISECT path applies this dual
+constraint to the top split only, tries the recorded seed budget for that
+split, and then recurses with standard population-only GeoSection. Historical
+tables in this draft report the selected outcome from those seed sweeps; the
+full trace archive with per-seed variance is not bundled with the paper and
+should be added before treating the numeric table as standalone publication
+evidence.
 
 \begin{table}[h]
 \centering
@@ -39,6 +46,7 @@ $\mathtt{tpwgts}$ from equation~\eqref{eq:tpwgts-formula}, $\mathtt{ubvec}[0] = 
   $\approx$ = no change. All runs: METIS 5.1.0, 30 seeds, 1.5\% balance tolerance.}
 \label{tab:empirical6}
 \small
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{lrrrrrrr}
 \toprule
 State & D vote & $k$ & T.2 $\Delta$ & $\eta=1.05$ & $\eta=1.10$ & $\eta=1.20$ & Best \\
@@ -51,6 +59,7 @@ Minnesota   & 53.6\,\% &  8 & $-3.6$\,pp  & $-16.1$\,\textdownarrow & $-3.6$\,$\
 Nevada      & 51.2\,\% &  4 & $-1.2$\,pp  & $-1.2$\,$\approx$ & $+23.8$\,\textdownarrow & $-1.2$\,$\approx$ & none (NV: over-proportional D at 1.10) \\
 \bottomrule
 \end{tabular}
+}
 \end{table}
 
 \noindent Three patterns emerge from Table~\ref{tab:empirical6}:
@@ -70,13 +79,13 @@ Nevada      & 51.2\,\% &  4 & $-1.2$\,pp  & $-1.2$\,$\approx$ & $+23.8$\,\textdo
     geographic responsiveness threshold.
 \end{enumerate}
 
-These empirical results validate the analytical predictions of Section~\ref{sec:theory}:
-the $C \times \sigma$ bound correctly predicts that AZ and GA improve at most
-$0.1$\,pp, and WI's 12.5\,pp improvement at $\eta = 1.10$ occurs because WI's
-$\sigma = 0.003$ sits at exactly the right point on the Lorenz curve for the
-constraint to flip a marginal district --- a topological event, not a smooth
-tradeoff. The non-monotone, state-specific response of T.5 to $\eta$ cannot
-be predicted analytically; it requires the empirical runs reported here.
+These empirical results are consistent with the analytical diagnostics of
+Section~\ref{sec:theory}: small $\sigma$ alone does not imply that a contiguous
+plan will realise proportional seats. WI's 12.5\,pp improvement at
+$\eta = 1.10$ is best read as a topological flip in the selected METIS split,
+not as a smooth response predicted by the formula. The non-monotone,
+state-specific response of T.5 to $\eta$ cannot be certified analytically from
+$\sigma$ alone; it requires archived empirical runs.
 
 \subsection{The Proportionality Gap Baseline (T.2 Reference)}
 
@@ -111,8 +120,7 @@ Mean      &          &   &   &     & $-6.2$\,pp \\
 
 \subsection{The Partisan Lorenz Curves}
 
-Figure~\ref{fig:lorenz-partisan} shows the partisan Lorenz curves $L_D(x)$ for
-three representative states.
+The partisan Lorenz diagnostic compares $L_D(x)$ for three representative states.
 The x-axis is cumulative population fraction (R-heavy tracts first).
 The y-axis is cumulative Democratic-voter fraction.
 The horizontal dashed line at $y = k_R/(2dk)$ is the proportionality target

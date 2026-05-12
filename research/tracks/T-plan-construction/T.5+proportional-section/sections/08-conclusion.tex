@@ -2,21 +2,21 @@
 \label{sec:conclusion}
 
 We introduced a dual-constraint bisection framework for partisan-proportional
-redistricting, extending minimum-edge-cut algorithms to $\mathtt{ncon}=2$ with
-vertex weights $[\text{population},\, D_{\text{votes}}]$.
+redistricting. It extends minimum-edge-cut algorithms with two vertex weights:
+population and Democratic votes.
 The central contribution is a closed-form formula~\eqref{eq:tpwgts-formula}
-for the partition targets that guarantee proportional seat allocation:
+for the top-level partition targets that express a proportional seat allocation:
 \[
   \mathtt{tpwgts} = \left[\frac{k_D}{k},\; 1 - \frac{k_R}{2dk},\;
                           \frac{k_R}{k},\; \frac{k_R}{2dk}\right]
 \]
 
-The partisan Lorenz curve determines when this target is geographically feasible.
+The partisan Lorenz curve gives a non-contiguous feasibility diagnostic for
+this target.
 The partisan signal strength $\sigma$ measures how much the neutral geographic
 distribution must be ``pulled'' toward the proportional target --- from
-$\sigma \approx 0$ (free proportionality, geography already gives proportional
-outcomes) to $\sigma > 0.2$ (expensive proportionality, geographic concentration
-makes proportional maps nearly impossible).
+$\sigma \approx 0$ (the proportional top-level target is almost neutral) to
+$\sigma > 0.2$ (the target requires substantial partisan concentration).
 
 \paragraph{Empirical tradeoff results.}
 Running the T.5 constraint at $\eta \in \{1.05, 1.10, 1.20\}$ across 6 competitive
@@ -37,13 +37,13 @@ target. Georgia needs to shift 0.1\,\% of D votes from neutral; Wisconsin needs
 By Theorem~\ref{thm:invariance} (Tradeoff invariance), varying the partisan
 constraint from loose ($\eta = \infty$) to strict ($\eta = 1.0$) cannot close
 more than $C \cdot \sigma$ of the gap for competitive states. For Georgia
-($\sigma = 0.001$) and Wisconsin ($\sigma = 0.003$), this is less than 0.5\,pp
-improvement on a 14\,pp gap.
+($\sigma = 0.001$) and Wisconsin ($\sigma = 0.003$), the target shift itself is
+tiny compared with the observed 12--14\,pp gaps.
 
 \textbf{The proportionality problem in competitive states is a Lorenz feasibility
 problem, not a target calibration problem.}
-The algorithm cannot find the right partition because geography prevents it,
-not because we are asking for the wrong target.
+The top-level target is easy to write down; the hard part is finding contiguous
+downstream districts that realise it.
 
 The states that most need proportional redistricting are the states where
 proportionality is most expensive.
@@ -70,8 +70,8 @@ the gap is not evidence of manipulation, but of geography.
 Three directions merit further investigation:
 \begin{enumerate}
 \item \textbf{Recursive proportionality}: applying the T.5 constraint at
-  every level of the bisection tree to guarantee proportionality not just
-  at the first split but throughout the entire district structure.
+  every level of the bisection tree and recording child-level feasibility
+  witnesses, rather than using the current top-split-only implementation.
 
 \item \textbf{Continuous tolerance curves}: empirical measurement of how the
   proportionality gap decreases as $\mathtt{ubvec}[1]$ is tightened, for each

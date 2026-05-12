@@ -67,7 +67,7 @@ are called complete.
 | 2 | T.14-T.17 | Construction-family golden vertical slices | Completed 2026-05-12 |
 | 3 | U.16-U.20 | Exact/search/audit certificate family, including U.20 fixed-point language | Completed 2026-05-12 |
 | 4 | U.10, G.4, G.7, G.10, G.11 | Sampling and ensemble methods | Completed 2026-05-12 |
-| 5 | T.5-T.13, U.0-U.7, U.11, U.13-U.15 | Older algorithm-family papers not yet lifted to the same explanatory standard | Queued |
+| 5 | T.5-T.13, U.0-U.7, U.11, U.13-U.15 | Older algorithm-family papers not yet lifted to the same explanatory standard | In progress: T.5 complete |
 | 6 | B/C/D/F/G/A synthesis tracks | Portfolio, validation, legal, legislative, ensemble, and synthesis papers | Queued |
 | 7 | E/I/J/K/L/M/N/O/P/Q/R/S tracks | Remaining indexed papers and source-only drafts | Queued |
 
@@ -268,3 +268,38 @@ also names the current simple coarse-sync boundary for Options A/C. The
 remaining ceiling is empirical and architectural: a standalone `MultiScaleChain`
 entrypoint plus archived multi-seed traces would make the evidence more durable
 than the current short-run smoke comparison.
+
+## Batch 5 Checklist
+
+| Paper | Review status | Fix status | Build/PDF status |
+|---|---|---|---|
+| T.5 ProportionalSection | Reviewed 2026-05-12 | Reframed guarantee language as a top-level proportional target, added a worked block split, aligned the paper with the current top-split-only `run_proportional_section` implementation, corrected electorate/population notation, narrowed Lorenz feasibility to the non-contiguous relaxation, strengthened legal caveats, and clarified that numeric tables need archived trace packages | Rebuilt; no undefined refs/cites/BibTeX warnings/overfull boxes; PDF copied |
+| T.6 NestSection | Queued | Queued | Queued |
+| T.7 VRASection | Queued | Queued | Queued |
+| T.8 StabilitySection | Queued | Queued | Queued |
+| T.9 Multi-Reapportionment Stability | Queued | Queued | Queued |
+| T.10 Centroidal Voronoi | Queued | Queued | Queued |
+| T.11 CVD Geographic | Queued | Queued | Queued |
+| T.12 BFS Growth | Queued | Queued | Queued |
+| T.13 Moving-Knife | Queued | Queued | Queued |
+
+## Batch 5 Paper-Quality Scorecard
+
+**Scoring date:** 2026-05-12
+
+| Paper | P1 Claim | P2 Algorithm | P3 Evidence | P4 Boundary | P5 Build | P6 Reader | Total |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| T.5 ProportionalSection | 3.8 | 3.7 | 3.5 | 3.9 | 4.0 | 3.6 | 22.5 / 24 |
+
+### Batch 5 Score Notes
+
+**T.5 ProportionalSection -- 22.5/24.** The paper now says what the shipped
+algorithm actually does: it applies the partisan dual constraint to the
+top-level Huntington-Hill split and then recurses with population-only
+GeoSection. The formula remains useful, but it is framed as a target identity
+and diagnostic rather than a map-wide proportionality guarantee. The new block
+example shows the difference between saying "50/50" and showing a six-unit
+R-bloc with exactly three Democratic units. The remaining ceiling is evidence:
+the historical six-state tables need archived per-seed traces, selected-plan
+hashes, and run metadata before they should carry standalone publication
+weight.

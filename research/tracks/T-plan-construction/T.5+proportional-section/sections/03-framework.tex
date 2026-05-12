@@ -8,10 +8,13 @@ Each vertex $v \in V$ carries:
 \begin{itemize}
   \item $p_v > 0$: total census population
   \item $d_v \geq 0$: two-party Democratic votes (2020 presidential)
+  \item $t_v \geq d_v$: total two-party votes
 \end{itemize}
 
-Let $P = \sum_v p_v$, $D = \sum_v d_v$, $R = P - D$ (two-party totals).
-Write $d = D/P$ for the statewide Democratic vote share and $r = 1 - d$.
+Let $P = \sum_v p_v$ be total population, let $D = \sum_v d_v$ be Democratic
+two-party votes, let $T = \sum_v t_v$ be total two-party votes, and let
+$R = T-D$ be Republican two-party votes.
+Write $d = D/T$ for the statewide Democratic vote share and $r = 1 - d$.
 
 Let $k$ be the congressional district count.
 A \emph{proportional seat allocation} assigns $k_D = \mathrm{HH}(d, r, k)$
@@ -29,14 +32,14 @@ The \emph{proportionality gap} is
 \[
   \Delta = \frac{s_D}{k} - d.
 \]
-$\Delta > 0$ indicates Democratic over-representation; $\Delta < 0$ indicates
-Republican over-representation.
+Positive $\Delta$ indicates Democratic over-representation.
+Negative $\Delta$ indicates Republican over-representation.
 The proportionally fair outcome is $\Delta = 0$, achieved when each party's
 seat share equals its vote share.
 \end{definition}
 
-\noindent Note that $\Delta$ differs from the efficiency gap \citep{mcghee2014measuring}:
-the efficiency gap is based on wasted votes ($\text{EG} = (W_D - W_R)/P$),
+\noindent Note that $\Delta$ differs from the efficiency gap \citep{stephanopoulos2015}:
+the efficiency gap is based on wasted votes ($\text{EG} = (W_D - W_R)/T$),
 whereas $\Delta$ directly compares seat share to vote share.
 The two measures agree in sign for strongly disproportionate outcomes but
 diverge for near-proportional plans; Section~\ref{sec:legal} discusses the
@@ -64,15 +67,15 @@ The target is implemented via METIS's $\mathtt{tpwgts}$ array:
 \subsection{The Proportionality Formula}
 \label{sec:formula}
 
-The key design question is: what value of $\tau_D$ guarantees that the D-bloc
-produces $k_D$ Democratic-winning districts and the R-bloc produces $k_R$
-Republican-winning districts?
+The key design question is: what value of $\tau_D$ makes the top-level D-bloc
+and R-bloc carry the vote shares implied by a $k_D:k_R$ proportional seat
+allocation?
 
 \begin{definition}[Proportional target]
 A target $\tau_D^*$ is \emph{proportionally optimal} if:
 \begin{enumerate}
   \item The right (R-bloc) has exactly 50\,\% Democratic concentration:
-    $\frac{(1-\tau_D) D}{(k_R/k) P} = 0.5$
+    $\frac{(1-\tau_D) D}{(k_R/k) T} = 0.5$
   \item No more Democratic votes are allocated to the R-bloc than this minimum.
 \end{enumerate}
 \end{definition}
@@ -100,12 +103,62 @@ The full $\mathtt{tpwgts}$ vector for proportional bisection is therefore:
 D-bloc Democratic concentration: $0.722 \times 0.6 / (2/3) = 65\,\%$ D.
 R-bloc Democratic concentration: $0.278 \times 0.6 / (1/3) = 50\,\%$ D. \checkmark
 
+This concentration calculation treats the bloc's two-party electorate as
+proportional to its population share. The implementation constrains population
+and Democratic votes directly; it records total two-party votes for analysis,
+but does not add total two-party votes as a third METIS constraint.
+
+\subsection{Worked Top-Level Split}
+\label{sec:worked-split}
+
+The formula is easiest to see on a small gridded state with twelve equal
+population units, four districts, and a 50--50 two-party electorate. A
+proportional allocation is $k_D = 2$, $k_R = 2$, so the top split should give
+half the population to the D-bloc and half to the R-bloc. The R-bloc should
+receive exactly half of all Democratic votes: just enough for its two districts
+to sit at the 50\,\% threshold before downstream bisection.
+
+\begin{center}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{ccc@{\qquad}ccc}
+\multicolumn{3}{c}{candidate A: too little D in R-bloc} &
+\multicolumn{3}{c}{candidate B: target split} \\
+\fbox{D} & \fbox{D} & \fbox{R} & \fbox{D} & \fbox{R} & \fbox{R} \\
+\fbox{D} & \fbox{R} & \fbox{R} & \fbox{D} & \fbox{R} & \fbox{R} \\
+\fbox{D} & \fbox{R} & \fbox{R} & \fbox{D} & \fbox{D} & \fbox{R} \\
+\fbox{D} & \fbox{R} & \fbox{R} & \fbox{D} & \fbox{D} & \fbox{R} \\
+\end{tabular}
+\end{center}
+
+In candidate A, a vertical R-bloc of six units contains only two D units
+($2/6 = 33\,\%$ D). It is very safe for Republicans, but it wastes the
+proportional target by over-packing Democratic voters into the D-bloc. In
+candidate B, the R-bloc contains three D units and three R units ($50\,\%$ D).
+That is the T.5 target: do not give the R-bloc fewer Democratic votes than
+needed, and reserve the remaining Democratic votes for the D-bloc. METIS is
+then asked to find a low-edge-cut contiguous split near candidate B, subject to
+population and Democratic-vote tolerance.
+
+\subsection{Implementation Boundary}
+\label{sec:implementation-boundary}
+
+The current BISECT runner implements this proportional constraint at the first
+bisection only. The production path, \texttt{run\_proportional\_section} in the
+\texttt{bisect-cli} bisection runner, builds $\mathtt{ncon}=2$ vertex weights
+$[\text{population}, D_{\text{votes}}]$, tries multiple seeds for the
+Huntington-Hill $k_D:k_R$ split, chooses the minimum edge-cut feasible split,
+and then recurses inside the two blocs with the standard population-only
+GeoSection recursion. Thus the shipped algorithm is a top-level proportional
+diagnostic and construction variant, not a proof that every leaf district will
+meet a recursive partisan target.
+
 \subsection{The Partisan Tolerance Parameter}
 
 METIS's $\mathtt{ubvec}[1]$ controls how strictly the Democratic-vote constraint
 is enforced:
 \begin{itemize}
-  \item $\mathtt{ubvec}[1] = 1.0$: hard constraint (exact proportionality required)
+  \item $\mathtt{ubvec}[1] = 1.0$: hard top-level Democratic-vote target
   \item $\mathtt{ubvec}[1] = 1.05$: 5\,\% tolerance around target
   \item $\mathtt{ubvec}[1] \to \infty$: constraint disabled (reverts to T.2/T.1)
 \end{itemize}
@@ -116,8 +169,8 @@ Section~\ref{sec:eval} characterises the tradeoff curve for each state.
 
 \subsection{Connection to AreaSection}
 
-AreaSection (T.2) uses the identical $\mathtt{ncon}=2$ infrastructure with
-vertex weights $[\text{population},\, \text{area}]$ and
+AreaSection (T.2) also uses two vertex weights: population and land area.
+It sets
 $\mathtt{tpwgts} = [k_L/k,\; 0.5,\; k_R/k,\; 0.5]$ (targeting 50\,\%
 land area on each side).
 

@@ -38,21 +38,21 @@ states with geographically concentrated partisan populations --- the Rodden
 effect --- because Democratic voters are packed in dense urban cores while
 Republican voters are dispersed.
 This paper asks: what is the minimum partisan information required to
-\emph{guarantee} proportional outcomes, and how far do geography-only
+\emph{target} proportional outcomes, and how far do geography-only
 algorithms fall short?
 
 We introduce a dual-constrained bisection framework that extends minimum-edge-cut
 redistricting to $\mathtt{ncon}=2$ with vertex weights
 $[\text{population},\, D_{\text{votes}}]$.
 The core contribution is a closed-form formula for the $\mathtt{tpwgts}$
-parameters that guarantee partisan-proportional district allocation:
+parameters that target a partisan-proportional top-level allocation:
 \[
   \mathtt{tpwgts} = \left[\frac{k_D}{k},\; 1 - \frac{k_R}{2dk},\;
                           \frac{k_R}{k},\; \frac{k_R}{2dk}\right]
 \]
 where $d$ is the statewide Democratic vote share, $k$ is the total district
 count, and $k_D$, $k_R$ are the proportional seat allocations.
-This formula gives the R-bloc exactly the minimum Democratic voter share
+In the model, this formula gives the R-bloc exactly the minimum Democratic voter share
 needed for Republicans to win each district, while concentrating remaining
 Democratic votes in the D-bloc.
 
@@ -64,10 +64,10 @@ proportional target is essentially identical to the neutral target.
 Georgia ($\sigma = 0.001$) and Wisconsin ($\sigma = 0.003$) require shifting
 less than 0.3\,\% of Democratic votes from the neutral distribution to achieve
 proportionality.
-Yet both states show $-14$\,pp proportionality gaps under geography-only algorithms.
-The gap is not caused by incorrect targeting: it is caused by the Rodden effect
-making contiguous partitions geometrically incapable of reaching even the
-near-neutral proportional target.
+Yet both states show large proportionality gaps under geography-only algorithms.
+The gap is not solved by retuning one top-level target: the Rodden effect,
+district granularity, and downstream recursive bisections can keep contiguous
+partitions from realising the model target.
 
 A \emph{partisan Lorenz curve} --- sorting tracts by Democratic density ---
 determines when proportional packing is geographically feasible under the
