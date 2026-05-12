@@ -14,10 +14,11 @@ The \texttt{SeedCompositor} enum has three variants:
 
 \begin{enumerate}
 \item \texttt{Fixed(u32)} --- a single fixed seed; reproducible but not
-      certified optimal.
+      convergence-certified.
 \item \texttt{ConvergenceSweep\{threshold: u32\}} --- the \cs{} procedure
-      described in Algorithm~\ref{alg:cs}; certified optimal for
-      $\texttt{threshold} \ge 600$ on all US state congressional graphs.
+      described in Algorithm~\ref{alg:cs}; certified as
+      best-observed-under-threshold for $\texttt{threshold} \ge 600$ on the
+      B.7 50-state tract-level evidence base.
 \item \texttt{Ensemble\{count: u32, seeds: Vec<u32>\}} --- an explicit seed
       list for ensemble analysis (B.7 research mode).
 \end{enumerate}

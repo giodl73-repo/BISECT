@@ -8,6 +8,18 @@ All P1 items are ordered first. No new empirical runs are required — all fixes
 text corrections, additions of content from existing B.7 data, or statutory drafting
 additions. Items are numbered for tracking.
 
+## 2026-05-12 Paper-Quality Pass
+
+The atlas-alignment review tightened the remaining claim-boundary issues:
+the abstract, introduction, implementation summary, sufficiency analysis, and
+conclusion now frame ConvergenceSweep as a reproducible
+best-observed-under-threshold certificate rather than a proof of global
+optimality. The old finite-seed theorem was replaced with a deliberately
+modest finite-output-artifact proposition, avoiding the prior planar-cut bound.
+The Gumbel result is now described as descriptive support for comparable
+tract-level graphs, with the empirical 89-seed margin remaining the primary
+statutory evidence.
+
 ---
 
 ## P1 Items (Blocking — Do First)

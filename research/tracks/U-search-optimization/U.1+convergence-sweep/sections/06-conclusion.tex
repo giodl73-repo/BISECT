@@ -15,7 +15,7 @@ theoretical gap in the \dia{}'s constitutional argument.
       The returned map might happen to be correct, but the algorithm cannot
       certify it.
 
-\item \textbf{T=600 certifies all 50 US states.}
+\item \textbf{T=600 certifies the observed 50-state tract-level sweep.}
       Under the B.7 50-state sweep, $T = 600$ certifies every state with a
       margin of at least 89 seeds above the observed worst-case tail.
       Under the Gumbel($\hat\mu = 200$, $\hat\sigma = 150$) extreme-value model
@@ -38,7 +38,7 @@ with a seed ``determined by the formula
 \texttt{SHA-256(census\_release\_id || 'DIA\_SEED\_V1')}.''
 That was the correct intuition, but two questions were left open:
 \begin{enumerate}
-\item What search procedure finds the optimal plan given the seed?
+\item What search procedure selects the incumbent plan given the seed stream?
 \item How many seeds must be tried before the search can certify it has
       converged?
 \end{enumerate}
@@ -68,8 +68,9 @@ argument for the \dia{}:
       the \cs{}-optimal plan is representative of the minimum-class, not an
       outlier.
 \item \textbf{(U.1, this paper)} \cs{} with $\Tstat = 600$ certifies that
-      the optimal plan found is the global minimum $\ECnorm$ plan across all
-      seeds tried, with $P(\tau > \Tstat) < 10^{-3}$.
+      the selected plan is the minimum-$\ECnorm$ incumbent observed before a
+      600-seed no-improvement tail, with $P(\tau > \Tstat) < 10^{-3}$ under
+      the descriptive tail model.
 \item \textbf{(U.1, this paper)} The SHA-256 seed formula ensures that no
       human chose the seed after knowing its partisan consequences; the
       certificate of seed neutrality is publicly verifiable.
@@ -81,7 +82,7 @@ Steps 1--6 together constitute a complete, fully-cited argument that the
 \item Population-balanced (step 1);
 \item Derived from first constitutional principles (step 2);
 \item Compact and algorithmically neutral (steps 3--4);
-\item Provably optimal under its own objective function (step 5); and
+\item Auditable under its own objective function and stopping rule (step 5); and
 \item Procedurally untainted by seed cherry-picking (step 6).
 \end{itemize}
 
@@ -106,10 +107,10 @@ Section~\ref{sec:implementation}, clause~(C)).
 \item[Block-level resolution.]
 The B.7 sweep used census tract data ($n \le 15{,}000$ vertices per state).
 Block-level data ($n \le 1.5 \times 10^6$) produces much larger graphs.
-Whether \cs{} convergence tails scale with $n$ is unknown; the theoretical
-bound in Theorem~\ref{thm:finiteseed} grows with $n^{2(k-1)}$, but empirical
-evidence at block resolution would be needed before block-level redistricting
-could be certified with $\Tstat = 600$.
+Whether \cs{} convergence tails scale with $n$ is unknown; the finite-output
+observation in Proposition~\ref{thm:finiteseed} is not a useful runtime bound,
+so empirical evidence at block resolution would be needed before block-level
+redistricting could be certified with $\Tstat = 600$.
 METIS complexity is $O(m \log n)$, so a 100$\times$ increase in $n$ (from
 ${\sim}15{,}000$ tract-level to ${\sim}1.5 \times 10^6$ block-level vertices)
 increases per-seed time by approximately $100\times$ and may increase the number
@@ -146,15 +147,16 @@ probability below $10^{-3}$.
 The \dia{} can therefore enter court with the following position:
 \begin{quote}
   \itshape
-  Our algorithm is provably optimal: it sweeps forward until 600 consecutive
-  seeds produce no improvement.
-  Our empirical dataset shows no US state requires more than 512 consecutive
-  seeds.
+  Our algorithm is reproducibly certified: it sweeps forward until 600
+  consecutive seeds produce no improvement.
+  Our empirical tract-level dataset shows no 2020 US state requires more than
+  512 consecutive seeds.
   Our statistical model assigns probability below one-in-a-thousand to any US
-  state requiring more than 600.
+  comparable state graph requiring more than 600.
   If you believe we have missed a better plan, run the sweep---with the same
   public seed formula and the same census data---and show us the lower edge cut.
-  The map is auditable, reproducible, and certifiably optimal.
+  The map is auditable, reproducible, and certified as the best observed plan
+  under the statutory threshold.
 \end{quote}
 
 That is the constitutional argument U.1 enables B.02 to make.

@@ -4,8 +4,9 @@
 \subsection{Overview}
 
 The central question for statutory design is: \emph{what value of $T$ is
-sufficient to certify that \cs{} has found the global minimum $\ECnorm$ for
-every US state?}
+sufficient to certify that \cs{} has run long enough to support a
+best-observed-under-threshold $\ECnorm$ claim for every US state in the
+current evidence base?}
 
 The question cannot be answered by proof alone---minimum edge cut is
 $\mathcal{NP}$-hard, so we cannot verify that the METIS local optimum is the
@@ -144,11 +145,11 @@ certifies Wisconsin comfortably.
 \setlength{\fboxsep}{8pt}
 \fbox{\parbox{0.8\linewidth}{%
 \textbf{Key finding.}
-$T = 500$ is \emph{insufficient}: it would halt the Georgia sweep at
-seed $s_0 + 500$, at which point only 11 seeds have passed since the true
-minimum at seed $s_0 + 489$.
-The algorithm would return the last improving plan, not the globally optimal one
-from its perspective.
+$T = 500$ is \emph{insufficient as a convergence certificate}: it would halt the
+Georgia sweep at seed $s_0 + 500$, at which point only 11 seeds have passed
+since the best observed plan at seed $s_0 + 489$.
+The algorithm would return the last improving plan without completing the
+observed 511-seed non-improvement tail.
 $T = 600$ certifies Georgia with an 89-seed margin.
 }}
 \end{center}
@@ -167,7 +168,7 @@ From the B.7 Georgia sweep data, the two relevant plans are:
   \item \textbf{$T = 500$ halt plan}: the plan at seed $s_0 + 500$, which is
         the same plan as seed $s_0 + 489$ (the last improving seed), since no
         seed between 490 and 500 produced a new minimum.
-        $\ECnorm = \ECnorm^*$ (the global minimum in the 1{,}500-seed sweep).
+        $\ECnorm = \ECnorm^*$ (the minimum observed in the 1{,}500-seed sweep).
   \item \textbf{$T = 600$ certified plan}: also the plan at seed $s_0 + 489$,
         since that remains the minimum through seed $s_0 + 1{,}499$.
 \end{itemize}
@@ -192,51 +193,44 @@ would produce a different (suboptimal) plan under $T = 500$.
 }}
 \end{center}
 
-\subsection{Theoretical Argument: Finite Solution Space}
+\subsection{Theoretical Argument: Finite Search Artifacts}
 
 The empirical argument above is necessary but not alone sufficient; we also
 need a theoretical reason to believe that the tail distribution is
 concentrated---that very long tails are not merely unobserved, but genuinely
 improbable.
 
-\begin{theorem}[Finite Effective Seed Space]
+\begin{proposition}[Finite Effective Seed Artifacts]
 \label{thm:finiteseed}
-Let $G = (V, E, w)$ be a planar graph with $n$ vertices and maximum
-degree $\Delta$.
-The number of distinct minimum-edge-cut $k$-partitions of $G$ produced
-by a recursive bisection tree is at most $O(n^{2(k-1)})$.
-Therefore, for any fixed $\ECnorm$ threshold $e^*$, METIS can visit at most
-$O(n^{2(k-1)})$ distinct plan equivalence classes as the seed varies over
-$\mathbb{Z}$, so the seed space is finite.
-\end{theorem}
+For fixed graph $G$, district count $k$, implementation version, objective
+function, and population-balance tolerance, the set of partitions that can be
+returned by a seeded METIS run is finite.
+Consequently, \cs{} is a deterministic traversal of a finite set of possible
+output artifacts, even though the practical seed stream is treated as an
+unbounded sequence for statutory search.
+\end{proposition}
 
 \begin{proof}[Proof sketch]
-Each distinct partition of $G$ into $k$ parts via recursive bisection is
-determined by an ordered sequence of $k-1$ bisection cuts in the recursive tree
-(one cut per internal tree node).
-The number of distinct minimum cuts in a planar graph with $n$ vertices is bounded
-by $O(n^2)$: by the planar separator theorem, a planar graph on $n$ vertices has
-at most $O(n)$ vertex-balanced separators of size $O(\sqrt{n})$, and the Euler
-formula bounds the number of distinct edge-cut sets at $O(n^2)$
-(see \citealt{karypis1998} for a discussion of cut-space bounds in the METIS context).
-An ordered $(k-1)$-tuple of such cuts from a recursive bisection tree has at most
-$(O(n^2))^{k-1} = O(n^{2(k-1)})$ choices.
-Hence the total number of distinct partitions is $O(n^{2(k-1)})$.
-
-Since METIS assigns each seed to a local optimum in this finite partition space,
-the seed space wraps: after at most $O(n^{2(k-1)})$ distinct seeds, no new partition
-is encountered.
-A $T$-stable halting criterion therefore terminates in finite time for
-all US state graphs.
+The vertex set $V$ is finite, so the number of possible assignments of
+vertices to $k$ labelled districts is at most $k^{|V|}$ before enforcing
+population balance, contiguity, or objective constraints.
+The legal and algorithmic constraints only reduce that finite set.
+For a fixed implementation and seed, METIS returns one element of this finite
+set; varying the seed can therefore visit only finitely many distinct output
+partitions.
+Algorithm~\ref{alg:cs} halts operationally when $T$ consecutive seeds fail to
+improve the incumbent; the finite-output observation explains why the search is
+over artifacts in a finite state space, but it is not itself a bound on the
+number of seeds required before a better artifact stops appearing.
 \end{proof}
 
 \begin{remark}
-Theorem~\ref{thm:finiteseed} is an existence result, not a tight bound.
-For US state congressional graphs ($n \le 10{,}000$, $k \le 52$), the bound
-$O(n^{2(k-1)})$ is astronomically large.
-The empirical evidence from B.7 is more informative: in practice, the METIS
-heuristic visits all distinct local optima within roughly $1{,}500$ seeds for
-every state.
+Proposition~\ref{thm:finiteseed} is deliberately modest.
+It does not prove global optimality, and it does not claim a useful seed-count
+bound.
+The empirical evidence from B.7 is the informative part: in the 1{,}500-seed
+tract-level sweep, no state required more than a 511-seed non-improvement tail
+to certify the best observed incumbent.
 \end{remark}
 
 \subsection{Extreme-Value Model for the Tail Distribution}
@@ -316,11 +310,11 @@ $P(\tau > 600) = 1 - \exp(-e^{-400/150})
                < 0.001$.
 \end{proof}
 
-\begin{theorem}[T=600 Certifies All US States]
+\begin{theorem}[T=600 Certifies the Observed 50-State Sweep]
 \label{thm:gumbel}
 Under the Gumbel($\hat{\mu} = 200$, $\hat{\sigma} = 150$) descriptive model fit to the
-B.7 50-state dataset, the probability that any US state's congressional
-redistricting graph has a convergence tail exceeding $T = 600$ is below
+B.7 50-state dataset, the estimated probability that a comparable tract-level
+US congressional graph has a convergence tail exceeding $T = 600$ is below
 $10^{-3}$.
 Georgia is the empirical worst case with $\tau = 511$; $T = 600$ gives an
 89-seed margin above this observed maximum.
@@ -365,13 +359,13 @@ Georgia's tail of 511 seeds exceeds $T = 500$ by 11 seeds.
 
 The failure mode under $T = 500$ for Georgia is:
 \begin{enumerate}
-\item The sweep reaches seed $s_0 + 489$, at which point it finds the global
-      minimum $\ECnorm$ seen in the 1{,}500-seed sweep.
+\item The sweep reaches seed $s_0 + 489$, at which point it finds the minimum
+      $\ECnorm$ observed in the 1{,}500-seed sweep.
 \item Seeds $s_0 + 490$ through $s_0 + 500$ produce no improvement.
 \item At seed $s_0 + 501$, the algorithm halts with $\mathtt{no\_improve} = T
       = 500$.
-\item The returned map \emph{is} the global minimum (since no seed between
-      490 and 500 improved it), but the algorithm cannot certify this:
+\item The returned map \emph{is} the observed 1{,}500-seed incumbent, but the
+      algorithm cannot certify this from a $T=500$ run alone:
       it halted 11 seeds before completing the 511-seed non-improving run.
 \end{enumerate}
 

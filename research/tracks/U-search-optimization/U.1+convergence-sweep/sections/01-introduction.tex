@@ -29,7 +29,7 @@ high seed offsets (seed 489 and seed 1{,}023 relative to the content-derived
 start, respectively).
 
 A statute that publishes a single fixed seed cannot certify that the map it
-produces is the best available map under its own objective function.
+produces is the best observed map under its own seed-search protocol.
 A well-prepared challenger need only run a different seed and show a
 lower edge cut to challenge the map's optimality claim.
 
@@ -47,11 +47,11 @@ The design achieves two properties simultaneously:
       protocol constant \texttt{"DIA\_SEED\_V1"}, $s_0$ is uniquely determined.
       Given $T$ and $s_0$, the sweep produces the same map on every machine.
       The result is fully auditable.
-\item \textbf{Optimality.} If the algorithm has not improved in $T$ consecutive
+\item \textbf{Convergence certification.} If the algorithm has not improved in $T$ consecutive
       seeds, the probability of finding a strictly better plan at seed
       $s_0 + T + k$ decreases exponentially in $k$ (Theorem~\ref{thm:gumbel}).
       For $T = 600$, the probability of missing a better plan is below
-      $10^{-3}$ for every state in the union.
+      $10^{-3}$ under the descriptive tail model fit to the 50-state sweep.
 \end{enumerate}
 
 Neither property holds for the fixed-seed design.

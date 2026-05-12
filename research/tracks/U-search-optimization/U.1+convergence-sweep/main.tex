@@ -97,16 +97,17 @@ This paper introduces \cs{}, a forward-sweeping search that starts at the
 content-derived seed $s_0 = \seedexpr \bmod 2^{31}$ and advances one seed at a time until
 $T$ consecutive seeds produce no improvement in normalised edge cut
 $\ECnorm$.
-The final map is the seed achieving the global minimum $\ECnorm$ across all
-seeds tried.
+The final map is the seed achieving the lowest observed $\ECnorm$ among the
+seeds tried before the convergence halt.
 
-The central contribution is an empirical certification of the sufficient
+The central contribution is an empirical certification of a statutory stopping
 threshold $T$.
 Using full 50-state sweep data from B.7, we identify Georgia as the hardest
 convergence case: the algorithm last improves at seed $s_0 + 489$ and then runs
 511 consecutive non-improving seeds before halting.
-A threshold $T = 500$ would therefore \emph{fail} Georgia---missing its true
-minimum by 11 seeds.
+A threshold $T = 500$ would therefore \emph{fail} Georgia as a convergence
+certificate: it would stop 11 seeds before the observed non-improvement tail is
+complete.
 
 We recommend $\Tstat = 600$ for statutory use, giving an 89-seed margin above
 the observed worst case, with $P(\text{tail} > 600) < 0.001$ under a fitted
@@ -115,9 +116,10 @@ For research and non-binding runs, $\Tprac = 500$ is appropriate.
 The algorithm is already implemented as
 \texttt{SeedCompositor::ConvergenceSweep\{threshold\}} in the \texttt{bisect}
 binary.
-\cs{} closes the final gap in B.02's constitutional argument: the
-\dia{} now specifies not just an algorithm (\ar{}) but a provably convergent
-search procedure that produces the globally optimal map deterministically.
+\cs{} closes the final procedural gap in B.02's constitutional argument: the
+\dia{} now specifies not just an algorithm (\ar{}) but a reproducible seed
+search, an auditable stopping rule, and a certificate for the best plan observed
+under that threshold.
 \end{abstract}
 
 \tableofcontents
