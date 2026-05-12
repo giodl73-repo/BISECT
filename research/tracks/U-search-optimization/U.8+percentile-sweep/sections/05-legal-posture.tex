@@ -61,8 +61,8 @@ Under \karcher{}, any challenger must produce an alternative plan that
 is at least as compact.
 For states where the $p = 0.0$ plan sits at the 0.1--0.2nd percentile
 of the \recom{} ensemble (WI, GA, PA per G.1~\citep{g1paper}), this means
-the challenger must produce a plan more compact than 99.8\% of all valid
-plans.
+the challenger must produce a plan more compact than almost all sampled
+G.1 ensemble plans.
 This is an extraordinarily high bar.
 
 This bar is computed from the G.1 \gc{} ensemble (1{,}000 steps per state).
@@ -197,14 +197,18 @@ This is an advocacy position for practitioners to assert, not settled
 doctrine.
 
 \textbf{Second, determinism.}
-The $p = 0.0$ plan is the global optimum of the bisection family.
-It can be certified by running all $T$ seeds and verifying that no seed
-achieves a lower $\ECnorm$.
+The $p = 0.0$ plan is the minimum edge-cut member of the audited $T$-seed
+bisection candidate set.
+It can be certified by running all $T$ declared seeds and verifying that no
+candidate in that set achieves a lower $\ECnorm$.
 This certification is straightforward and does not depend on any statistical
 model.
 For $p > 0$, the result depends on the particular $T$-seed sample; for
-$p = 0.0$, it is robust to the choice of $T$ (as long as $T \geq T_{\mathrm{stat}}
-= 600$, certified in U.1~\citep{b16paper}).
+$p = 0.0$, the result has the strongest compactness posture within the same
+audited sample.
+When the statutory objective is convergence certification rather than a fixed
+sample percentile, U.1's \cs{} threshold $T_{\mathrm{stat}}=600$ supplies the
+corresponding stopping rule~\citep{b16paper}.
 
 \textbf{Third, partisan neutrality.}
 The insensitivity finding (Section~\ref{sec:results}) confirms that
@@ -217,12 +221,13 @@ as motivated by partisan calculation.
 The recommendation is therefore:
 \begin{statute}
 \textbf{Statutory Recommendation.}
-The \dia{} shall specify \ps{}$(0.0, 600)$, equivalent to \cs{} with
-$T_{\mathrm{stat}} = 600$.
+The \dia{} shall specify the compactness-extremum posture: either
+\cs{} with $T_{\mathrm{stat}} = 600$ when using a convergence certificate, or
+\ps{}$(0.0, 600)$ when using a fixed audited candidate distribution.
 The legal rationale is the compactness doctrine: the resulting plan is the
-most compact consistent with population balance and contiguity within the
-\ar{} bisection family.
-The statutory record shall state that partisan outcomes are invariant to
-the compactness percentile (U.8), so the compactness choice is not a
-partisan choice.
+lowest edge-cut member selected under the declared seed-search rule, subject
+to population balance and contiguity within the \ar{} bisection family.
+The statutory record shall state that partisan outcomes are invariant to the
+compactness percentile in the four fully swept U.8 states, so the compactness
+choice is not supported by evidence of partisan cherry-picking.
 \end{statute}

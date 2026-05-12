@@ -6,19 +6,20 @@
 \cs{}~\citep{b16paper} solves a genuine problem: a fixed single seed for
 the METIS heuristic may land in a local optimum, leaving a more compact map
 undiscovered.
-By sweeping $T = 600$ seeds and returning the global minimum, \cs{}%
-\footnote{The T=600 ConvergenceSweep formula is certified in U.1~\cite{b16paper} (Round~2, accepted; mean reviewer score 3.67/4). The formula's theoretical foundations and 89-seed empirical margin above Georgia's certified tail are documented in that paper.}
-guarantees that the plan produced is the best available within the bisection
-family.
+By sweeping forward until 600 consecutive seeds produce no improvement, \cs{}
+certifies the best observed incumbent under its statutory stopping threshold.
+U.1 documents the 89-seed empirical margin above Georgia's observed 2020
+convergence tail and treats the Gumbel tail model as supporting
+evidence~\citep{b16paper}.
 
 This guarantee is also a potential vulnerability.
 A sophisticated opponent could raise what we call the \emph{over-optimising
 objection}: the algorithm is specifically designed to find the most extreme
 member of its plan family.
 In the compactness dimension, this extremum sits at the 0.1--0.7th percentile
-of the full \recom{} ensemble for most states (G.1~\citep{g1paper}).
-The plan is, by construction, more compact than 99\%+ of all valid
-redistricting plans.
+of the sampled \recom{} ensemble for most states (G.1~\citep{g1paper}).
+In the sampled G.1 ensembles, the plan is more compact than 99\%+ of sampled
+\recom{} alternatives for those states.
 No legislature drawing districts by hand would produce anything close to
 this level of compactness.
 Could this extremism itself be a form of manipulation---a gerrymander of

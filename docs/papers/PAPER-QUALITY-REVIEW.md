@@ -75,6 +75,6 @@ are called complete.
 | T.3 County-Sticky Weights | Reviewed 2026-05-12 | Fixed alpha grid and split-metric definitions | Rebuilt clean; PDF copied |
 | T.4 ApportionRegions | Reviewed 2026-05-12 | Narrowed determinism/constitutional claims | Rebuilt clean; PDF copied |
 | U.1 ConvergenceSweep | Reviewed 2026-05-12 | Narrowed optimality/statistical claims; replaced finite-seed theorem with finite-artifact proposition | Rebuilt; no undefined refs/cites; PDF copied |
-| U.8 PercentileSweep | Queued | Queued | Already rebuilt in atlas pass |
+| U.8 PercentileSweep | Reviewed 2026-05-12 | Narrowed percentile/ReCom/optimality claims; separated four-state evidence from TX/CA extrapolation | Rebuilt; no undefined refs/cites; PDF copied |
 | U.9 BisectionEnsemble | Queued | Queued | Already rebuilt in atlas pass |
 | U.12 Algorithm-Selection Matrix | Queued | Queued | Already rebuilt in atlas pass |

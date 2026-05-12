@@ -10,21 +10,21 @@ Starting from the content-derived seed $s_0 = \lfloor \text{SHA-256}(\texttt{cen
 a time, tracking the normalised edge cut $\ECnorm$ achieved by each METIS
 call.
 The sweep halts after $T$ consecutive seeds produce no improvement.
-The final plan is the one achieving the global minimum $\ECnorm$ across all
-seeds tried.
+The final plan is the lowest-$\ECnorm$ incumbent observed before the
+convergence halt.
 
-U.1's central contribution is empirical certification that $T = 600$ is
-sufficient for all 50 states.
+U.1's central contribution is empirical certification that $T = 600$ covers
+the observed 2020 50-state tract-level convergence tails.
 Georgia is the hardest case: the algorithm last improves at seed $s_0 + 489$,
 then runs 511 consecutive non-improving seeds before halting.
 A threshold of $T = 500$ would fail Georgia.
 The recommended $T_{\mathrm{stat}} = 600$ provides an 89-seed margin with
 $P(\mathrm{tail} > 600) < 0.001$ under a fitted Gumbel extreme-value model.
 
-\ps{} is a direct generalisation of \cs{}.
-Where \cs{} always returns the rank-0 plan (minimum edge cut), \ps{}
+\ps{} uses the same seed-search layer but changes the question being asked.
+Where \cs{} keeps walking until the no-improvement threshold certifies a
+rank-0 incumbent, \ps{} constructs a fixed $T$-seed distribution and
 parametrises the return rank.
-The $T$-seed infrastructure is identical; only the selection rule changes.
 
 \subsection{Seed Sensitivity (B.7)}
 
@@ -58,8 +58,8 @@ ensembles for six states.
 The comparison metric is normalised edge-cut fraction.
 The key findings:
 \begin{itemize}
-\item Wisconsin: 0.2nd percentile of the ensemble (more compact than 99.8\%
-      of valid plans).
+\item Wisconsin: 0.2nd percentile of the sampled ensemble (more compact than
+      99.8\% of sampled plans).
 \item Georgia: 0.1st percentile.
 \item Pennsylvania: 0.2nd percentile.
 \item North Carolina: 50th percentile.
@@ -72,7 +72,7 @@ The key findings:
 These positions establish the baseline for the over-optimising objection and
 motivate \ps{}'s percentile parametrisation.
 For states at the 0.1st percentile, the legal question is whether being more
-compact than 99.9\% of plans is an asset or a liability.
+compact than 99.9\% of sampled plans is an asset or a liability.
 \ps{} makes this a statutory choice.
 
 \subsection{Parameter Sensitivity (U.2)}

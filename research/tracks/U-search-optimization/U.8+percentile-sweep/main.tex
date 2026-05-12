@@ -93,12 +93,12 @@
 
 \begin{abstract}
 \noindent
-\cs{} (U.1) finds the minimum-edge-cut plan across a forward sweep of
-$T = 600$ seeds---always returning the compactness extremum of the bisection
-family.
-Real \gc{} data (G.1) places this extremum at the 0.1--0.7th percentile of
-the \recom{} ensemble for most states, confirming that the algorithmic plan
-is more compact than 99\%+ of valid alternatives.
+\cs{} (U.1) walks a content-derived seed stream until 600 consecutive seeds
+produce no improvement, returning the lowest edge-cut incumbent observed before
+that convergence halt.
+Real \gc{} data (G.1) places this incumbent at the 0.1--0.7th percentile of
+the sampled \recom{} ensemble for most states, indicating that the algorithmic
+plan is more compact than 99\%+ of sampled ensemble alternatives.
 North Carolina is the exception, landing at the 50th percentile due to
 geographic convergence.
 
@@ -122,9 +122,9 @@ The legal contribution is a mapping from percentile to doctrine.
 Three postures emerge: $p = 0.0$ (compactness doctrine, \karcher{});
 $p = 0.5$ (representativeness doctrine); and \ts{}(50th, \recom{}) (full
 ensemble representativeness).
-We recommend $p = 0.0$ for statutory use: the plan is the most compact
-consistent with population balance and contiguity, and no neutral party
-can produce a more compact alternative.
+We recommend $p = 0.0$ for statutory use: the plan is the most compact member
+of the declared bisection candidate set, subject to population balance and
+contiguity, and challengers must compare against that same audited family.
 \end{abstract}
 
 \tableofcontents

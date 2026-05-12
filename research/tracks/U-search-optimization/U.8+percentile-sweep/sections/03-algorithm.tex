@@ -75,8 +75,9 @@ The differences are:
 \begin{enumerate}
 \item \cs{} uses a sequential stopping rule (halt after $T$ consecutive
       non-improving seeds); \ps{} always runs exactly $T$ seeds.
-\item \cs{} returns the global minimum $\ECnorm$; \ps{}$(0.0, T)$ also
-      returns the global minimum but does so by sorting and selecting rank 0.
+\item \cs{} returns the lowest observed incumbent before its convergence halt;
+      \ps{}$(0.0, T)$ returns the lowest edge-cut member of a fixed $T$-seed
+      candidate set by sorting and selecting rank 0.
 \item \cs{} requires the seeds to be evaluated in order (because the stopping
       criterion depends on the sequence of outcomes); \ps{} seeds are
       independent and parallelisable.

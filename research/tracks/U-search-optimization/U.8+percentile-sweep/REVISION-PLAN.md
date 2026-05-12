@@ -42,6 +42,17 @@ Seed-chain vs. independent-hash explained in §3.2. K-P1-A closed.
 
 ## Open Items After Round 2
 
+## 2026-05-12 Paper-Quality Pass
+
+The atlas-alignment review tightened the remaining claim boundaries:
+\cs{} is now described as a best-observed-under-threshold certificate rather
+than a global optimum over the bisection family; \ps{}$(0,T)$ is described as
+rank-0 selection from a fixed audited $T$-seed candidate set; and G.1
+\recom{} percentile claims are framed as sampled-ensemble point estimates.
+The conclusion now separates the four fully swept states (NC, WI, GA, PA) from
+TX/CA extrapolations, and the statutory recommendation no longer treats
+\ps{}$(0,600)$ as literally equivalent to \cs{} with $T_{\mathrm{stat}}=600$.
+
 ### P1 Items Remaining (block final publication)
 
 | ID | Item | Reviewer | Round 1 ID |
