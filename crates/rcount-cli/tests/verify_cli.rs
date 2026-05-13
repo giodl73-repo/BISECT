@@ -170,6 +170,56 @@ fn verify_summary_basic_exits_zero() {
 }
 
 #[test]
+fn import_statement_csv_then_verify_exits_zero() {
+    let tmp = tempfile::tempdir().unwrap();
+    let csv_path = tmp.path().join("statement.csv");
+    std::fs::write(
+        &csv_path,
+        concat!(
+            "contest_id,contest_title,vote_for,selection_id,selection_label,selection_kind,reporting_unit_id,reporting_unit_kind,parent_jurisdiction,status,votes,undervotes,overvotes,blank_contests,counted_ballots\n",
+            "syn-2024-mayor,Synthetic Mayor,1,cand-a,Candidate A,candidate,syn:precinct:P-001,precinct,syn-county-1,canvassed,40,3,1,0,80\n",
+            "syn-2024-mayor,Synthetic Mayor,1,cand-b,Candidate B,candidate,syn:precinct:P-001,precinct,syn-county-1,canvassed,35,3,1,0,80\n",
+            "syn-2024-mayor,Synthetic Mayor,1,write-in,Write-in,write-in-bucket,syn:precinct:P-001,precinct,syn-county-1,canvassed,1,3,1,0,80\n",
+            "syn-2024-mayor,Synthetic Mayor,1,cand-a,Candidate A,candidate,syn:precinct:P-002,precinct,syn-county-1,canvassed,25,4,0,1,60\n",
+            "syn-2024-mayor,Synthetic Mayor,1,cand-b,Candidate B,candidate,syn:precinct:P-002,precinct,syn-county-1,canvassed,30,4,0,1,60\n",
+            "syn-2024-mayor,Synthetic Mayor,1,write-in,Write-in,write-in-bucket,syn:precinct:P-002,precinct,syn-county-1,canvassed,0,4,0,1,60\n",
+            "syn-2024-mayor,Synthetic Mayor,1,cand-a,Candidate A,candidate,syn:jurisdiction:SYN,jurisdiction-total,syn,canvassed,65,7,1,1,140\n",
+            "syn-2024-mayor,Synthetic Mayor,1,cand-b,Candidate B,candidate,syn:jurisdiction:SYN,jurisdiction-total,syn,canvassed,65,7,1,1,140\n",
+            "syn-2024-mayor,Synthetic Mayor,1,write-in,Write-in,write-in-bucket,syn:jurisdiction:SYN,jurisdiction-total,syn,canvassed,1,7,1,1,140\n",
+        ),
+    )
+    .unwrap();
+    let package_dir = tmp.path().join("package");
+
+    let import = Command::new(env!("CARGO_BIN_EXE_rcount"))
+        .arg("import-statement-csv")
+        .arg(&csv_path)
+        .arg(&package_dir)
+        .output()
+        .unwrap();
+    assert!(
+        import.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&import.stderr)
+    );
+
+    let output = Command::new(env!("CARGO_BIN_EXE_rcount"))
+        .arg("verify")
+        .arg(&package_dir)
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains(r#""reporting_unit_id":"source:statement-csv""#));
+    assert!(stdout.contains(r#""equation_id":"jurisdiction_contest_total""#));
+}
+
+#[test]
 fn verify_canvass_correction_exposes_event_correlation() {
     let output = Command::new(env!("CARGO_BIN_EXE_rcount"))
         .args([

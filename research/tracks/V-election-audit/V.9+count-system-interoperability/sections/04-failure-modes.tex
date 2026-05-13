@@ -1,0 +1,13 @@
+\section{Failure Modes}
+
+The adapter rejects missing required cells, bad status labels, unsupported
+reporting-unit kinds, invalid numeric fields, duplicate selection rows inside a
+summary, and conflicting repeated metadata. After import, the ordinary verifier
+catches the deeper count errors: selection sums that do not equal counted
+ballots, jurisdiction totals that do not equal precinct totals, unknown
+selections, negative counts, and source-file tampering.
+
+This two-layer structure matters. Parser failures are evidence-meaning failures:
+the source cannot be safely normalized. Verifier failures are package-consistency
+failures: the source was normalized, but its declared equations do not hold.
+Keeping those categories separate makes later vendor adapters easier to audit.

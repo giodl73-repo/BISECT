@@ -14,6 +14,7 @@ path = "src/main.rs"
 rcount-audit = { path = "../rcount-audit" }
 rcount-core = { path = "../rcount-core" }
 rcount-district = { path = "../rcount-district" }
+rcount-io = { path = "../rcount-io" }
 clap.workspace = true
 serde_json.workspace = true
 anyhow.workspace = true

@@ -2677,6 +2677,7 @@ dependencies = [
  "rcount-audit",
  "rcount-core",
  "rcount-district",
+ "rcount-io",
  "serde_json",
  "tempfile",
 ]
@@ -2708,6 +2709,7 @@ dependencies = [
 name = "rcount-io"
 version = "0.1.0"
 dependencies = [
+ "csv",
  "rcount-core",
  "serde",
  "serde_json",

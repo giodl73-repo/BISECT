@@ -74,7 +74,7 @@ RPLAN/RCTX plan hash
 | V.6 | CVR-To-Summary Reconciliation | CVR row counts, contest sums, summary-result checks | Verifies that cast vote records and published summaries agree. |
 | V.7 | Replayable Risk-Limiting Audits | public seed, sample replay, stopping-rule verification | Lets anyone replay ballot/batch selection and audit conclusions. |
 | V.8 | District Vote Aggregation With RPLAN | RCOUNT + RPLAN + crosswalk | Binds district outcomes to both plan hashes and count hashes. |
-| V.9 | Count-System Interoperability: Vendor Exports To RCOUNT | adapters and normalization | Converts current election-system outputs into neutral public packages. |
+| V.9 | Count-System Interoperability: Vendor Exports To RCOUNT | adapters, source hashing, and normalization | Converts current election-system outputs into neutral public packages. |
 | V.10 | Certification Evidence Matrix | evidence-family matrix, data availability, audit requirements | Separates what law requires from what RCOUNT can additionally prove. |
 | V.11 | Performance And Parallel Verification In Rust | parallel precinct/batch hashing and reconciliation | Shows public verification can be fast enough for full-election packages. |
 
@@ -132,7 +132,7 @@ Then move into election-administration techniques:
 | V.6 | CVR-summary reconciler |
 | V.7 | RLA sampler replay and stopping verifier |
 | V.8 | `rcount-rplan` bridge |
-| V.9 | import adapters for public sample exports |
+| V.9 | statement CSV import adapter, source hash preservation, future CDF/vendor adapters |
 | V.10 | evidence matrix tied to RCOUNT fixture coverage |
 | V.11 | parallel verifier benchmarks |
 

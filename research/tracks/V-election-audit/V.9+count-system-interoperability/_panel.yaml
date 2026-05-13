@@ -1,0 +1,20 @@
+paper: V.9+count-system-interoperability
+title: "Count-System Interoperability: Vendor Exports To RCOUNT"
+type: publication
+stage: draft
+round: 0
+content_mode: draft
+venue: technical report
+review_date: 2026-05-13
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - TALLY
+  - LEDGER
+  - CANVASS
+  - VAULT
+  - BENCHMARK
+p1_items:
+  - "[x] Define a first public statement-of-votes CSV adapter contract."
+  - "[x] Wire adapter through rcount import-statement-csv."
+  - "[x] Preserve source hash evidence in generated packages."
+  - "[ ] Add NIST ERR/CDF and jurisdiction-specific adapters."

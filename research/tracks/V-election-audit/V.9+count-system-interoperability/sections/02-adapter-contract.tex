@@ -1,0 +1,22 @@
+\section{Adapter Contract}
+
+An RCOUNT import adapter should satisfy five rules.
+
+\begin{enumerate}
+  \item Preserve the original source bytes and register them in the source
+    index.
+  \item Normalize only fields whose meaning the adapter understands.
+  \item Emit ordinary RCOUNT records rather than an adapter-only side channel.
+  \item Run the normal verifier after import, so arithmetic and source hashes
+    share the same transcript surface.
+  \item Name the unsupported claims explicitly: eligibility, voting-system
+    certification, ballot-marking correctness, and legal certification remain
+    outside the adapter.
+\end{enumerate}
+
+This mirrors the direction of NIST election common-data-format work, which
+separates interoperability schemas from the legal judgment that a result is
+official \citep{nist-election-results-cdf,nist-cdf-guidance}. RCOUNT can ingest
+such schemas later, but the package invariant is the same: source evidence is
+hashed, normalized evidence is typed, and verifier equations describe exactly
+what was checked.

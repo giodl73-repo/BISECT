@@ -20,7 +20,7 @@ recompute public claims from lower-level evidence.
 | V.6 | CVR-To-Summary Reconciliation | ready |
 | V.7 | Replayable Risk-Limiting Audits | sampler, margin, stopping-risk, and jurisdiction adapters landed |
 | V.8 | District Vote Aggregation With RPLAN | substrate slice landed |
-| V.9 | Count-System Interoperability: Vendor Exports To RCOUNT | planned |
+| V.9 | Count-System Interoperability: Vendor Exports To RCOUNT | statement CSV adapter slice landed |
 | V.10 | Certification Evidence Matrix | draft landed |
 | V.11 | Performance And Parallel Verification In Rust | planned |
 
@@ -50,8 +50,13 @@ recompute public claims from lower-level evidence.
   harness with split/merge precinct lineage across three cycles, plus negative
   L2 cases for broken lineage, stale RPLAN units, and tampered cycle sources.
 - `rcount-cli`: started 2026-05-12 with `rcount verify <package-dir>` and
-  optional `--write-transcript`, plus `rcount aggregate-districts` for the
-  RPLAN-backed district aggregation slice.
+  optional `--write-transcript`, `rcount aggregate-districts` for the
+  RPLAN-backed district aggregation slice, and `rcount import-statement-csv`
+  for the first V.9 source-export adapter.
+- Interoperability slice: `rcount-io` now imports a compact
+  statement-of-votes CSV into ordinary RCOUNT records, preserves the original
+  source bytes as `source:statement-csv`, and verifies imported packages through
+  the same source-hash and arithmetic checks as generated fixtures.
 - Audit fixture ladder: now includes Colorado-style RLA, California-style RLA,
   and ordinary manual-audit model fixtures, each with positive and negative
   transcripts.

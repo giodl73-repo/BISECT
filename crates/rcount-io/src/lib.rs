@@ -1,9 +1,11 @@
 use rcount_core::{
-    package_content_hash, verify_jurisdiction_total, verify_package, RcountPackage, RCOUNT_VERSION,
-    SOURCE_HASH_PREFIX,
+    package_content_hash, verify_jurisdiction_total, verify_package, Contest, CountStatus,
+    RcountPackage, ReportingUnit, ReportingUnitKind, Selection, SelectionKind, SelectionTotal,
+    StatusEvent, Summary, RCOUNT_VERSION, SOURCE_HASH_PREFIX,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
@@ -15,6 +17,8 @@ pub enum RcountIoError {
     Core(#[from] rcount_core::RcountCoreError),
     #[error("json error: {0}")]
     Json(#[from] serde_json::Error),
+    #[error("csv error: {0}")]
+    Csv(#[from] csv::Error),
     #[error("io error: {0}")]
     Io(#[from] std::io::Error),
     #[error("unsupported RCOUNT version: {0}")]
@@ -32,6 +36,22 @@ pub enum RcountIoError {
         source_id: String,
         declared: String,
         computed: String,
+    },
+    #[error("statement CSV row {row} is missing {field}")]
+    MissingStatementCsvField { row: usize, field: String },
+    #[error("statement CSV row {row} has invalid {field}: {value}")]
+    InvalidStatementCsvField {
+        row: usize,
+        field: String,
+        value: String,
+    },
+    #[error("statement CSV row {row} conflicts with prior {field} for {id}: {prior} vs {value}")]
+    ConflictingStatementCsvField {
+        row: usize,
+        id: String,
+        field: String,
+        prior: String,
+        value: String,
     },
 }
 
@@ -505,6 +525,357 @@ pub fn default_bad_manual_audit_docs_dir() -> PathBuf {
         .join("bad-manual-audit")
 }
 
+#[derive(Debug, Deserialize)]
+struct StatementCsvRow {
+    contest_id: String,
+    contest_title: String,
+    vote_for: String,
+    selection_id: String,
+    selection_label: String,
+    selection_kind: String,
+    reporting_unit_id: String,
+    reporting_unit_kind: String,
+    parent_jurisdiction: String,
+    status: String,
+    votes: String,
+    undervotes: String,
+    overvotes: String,
+    blank_contests: String,
+    counted_ballots: String,
+}
+
+#[derive(Debug, Clone)]
+struct SummaryAccumulator {
+    contest_id: String,
+    reporting_unit_id: String,
+    status: CountStatus,
+    totals: Vec<SelectionTotal>,
+    seen_selection_ids: BTreeSet<String>,
+    undervotes: i64,
+    overvotes: i64,
+    blank_contests: i64,
+    counted_ballots: i64,
+}
+
+/// Imports a deliberately small statement-of-votes CSV into the neutral RCOUNT
+/// model. This adapter is the V.9 fixture surface: one row per
+/// contest/reporting-unit/selection total, plus repeated residual columns.
+pub fn import_statement_csv(path: &Path) -> Result<RcountPackage, RcountIoError> {
+    let mut reader = csv::Reader::from_path(path)?;
+    let mut contests: BTreeMap<String, Contest> = BTreeMap::new();
+    let mut reporting_units: BTreeMap<String, ReportingUnit> = BTreeMap::new();
+    let mut summaries: BTreeMap<(String, String, CountStatus), SummaryAccumulator> =
+        BTreeMap::new();
+
+    for (index, row) in reader.deserialize::<StatementCsvRow>().enumerate() {
+        let row_number = index + 2;
+        let row = row?;
+        let contest_id = required(row_number, "contest_id", row.contest_id)?;
+        let contest_title = required(row_number, "contest_title", row.contest_title)?;
+        let vote_for = parse_u32(row_number, "vote_for", row.vote_for)?;
+        let selection_id = required(row_number, "selection_id", row.selection_id)?;
+        let selection_label = required(row_number, "selection_label", row.selection_label)?;
+        let selection_kind = parse_selection_kind(row_number, row.selection_kind)?;
+        let reporting_unit_id = required(row_number, "reporting_unit_id", row.reporting_unit_id)?;
+        let reporting_unit_kind = parse_reporting_unit_kind(row_number, row.reporting_unit_kind)?;
+        let parent_jurisdiction =
+            required(row_number, "parent_jurisdiction", row.parent_jurisdiction)?;
+        let status = parse_count_status(row_number, row.status)?;
+        let votes = parse_i64(row_number, "votes", row.votes)?;
+        let undervotes = parse_i64(row_number, "undervotes", row.undervotes)?;
+        let overvotes = parse_i64(row_number, "overvotes", row.overvotes)?;
+        let blank_contests = parse_i64(row_number, "blank_contests", row.blank_contests)?;
+        let counted_ballots = parse_i64(row_number, "counted_ballots", row.counted_ballots)?;
+
+        let contest = contests.entry(contest_id.clone()).or_insert(Contest {
+            contest_id: contest_id.clone(),
+            title: contest_title.clone(),
+            vote_for,
+            selections: Vec::new(),
+        });
+        require_same(
+            row_number,
+            &contest_id,
+            "contest_title",
+            &contest.title,
+            &contest_title,
+        )?;
+        require_same(
+            row_number,
+            &contest_id,
+            "vote_for",
+            &contest.vote_for.to_string(),
+            &vote_for.to_string(),
+        )?;
+        if let Some(selection) = contest
+            .selections
+            .iter()
+            .find(|selection| selection.selection_id == selection_id)
+        {
+            require_same(
+                row_number,
+                &selection_id,
+                "selection_label",
+                &selection.label,
+                &selection_label,
+            )?;
+            if selection.kind != selection_kind {
+                return Err(RcountIoError::ConflictingStatementCsvField {
+                    row: row_number,
+                    id: selection_id.clone(),
+                    field: "selection_kind".to_string(),
+                    prior: format!("{:?}", selection.kind),
+                    value: format!("{selection_kind:?}"),
+                });
+            }
+        } else {
+            contest.selections.push(Selection {
+                selection_id: selection_id.clone(),
+                kind: selection_kind,
+                label: selection_label,
+            });
+        }
+
+        let unit = reporting_units
+            .entry(reporting_unit_id.clone())
+            .or_insert(ReportingUnit {
+                reporting_unit_id: reporting_unit_id.clone(),
+                kind: reporting_unit_kind.clone(),
+                parent_jurisdiction: parent_jurisdiction.clone(),
+                source_ids: vec!["source:statement-csv".to_string()],
+                valid_from: None,
+                valid_to: None,
+            });
+        if unit.kind != reporting_unit_kind {
+            return Err(RcountIoError::ConflictingStatementCsvField {
+                row: row_number,
+                id: reporting_unit_id,
+                field: "reporting_unit_kind".to_string(),
+                prior: format!("{:?}", unit.kind),
+                value: format!("{reporting_unit_kind:?}"),
+            });
+        }
+        require_same(
+            row_number,
+            &unit.reporting_unit_id,
+            "parent_jurisdiction",
+            &unit.parent_jurisdiction,
+            &parent_jurisdiction,
+        )?;
+
+        let key = (contest_id.clone(), reporting_unit_id.clone(), status);
+        let summary = summaries.entry(key).or_insert(SummaryAccumulator {
+            contest_id,
+            reporting_unit_id,
+            status,
+            totals: Vec::new(),
+            seen_selection_ids: BTreeSet::new(),
+            undervotes,
+            overvotes,
+            blank_contests,
+            counted_ballots,
+        });
+        require_same(
+            row_number,
+            &summary.reporting_unit_id,
+            "undervotes",
+            &summary.undervotes.to_string(),
+            &undervotes.to_string(),
+        )?;
+        require_same(
+            row_number,
+            &summary.reporting_unit_id,
+            "overvotes",
+            &summary.overvotes.to_string(),
+            &overvotes.to_string(),
+        )?;
+        require_same(
+            row_number,
+            &summary.reporting_unit_id,
+            "blank_contests",
+            &summary.blank_contests.to_string(),
+            &blank_contests.to_string(),
+        )?;
+        require_same(
+            row_number,
+            &summary.reporting_unit_id,
+            "counted_ballots",
+            &summary.counted_ballots.to_string(),
+            &counted_ballots.to_string(),
+        )?;
+        if summary.seen_selection_ids.insert(selection_id.clone()) {
+            summary.totals.push(SelectionTotal {
+                selection_id,
+                votes,
+            });
+        } else {
+            return Err(RcountIoError::ConflictingStatementCsvField {
+                row: row_number,
+                id: summary.reporting_unit_id.clone(),
+                field: "selection_id".to_string(),
+                prior: "already present".to_string(),
+                value: selection_id,
+            });
+        }
+    }
+
+    Ok(RcountPackage {
+        rcount_version: RCOUNT_VERSION.to_string(),
+        contests: contests.into_values().collect(),
+        reporting_units: reporting_units.into_values().collect(),
+        batches: Vec::new(),
+        lineage: Vec::new(),
+        inclusion_proofs: Vec::new(),
+        cvr: Vec::new(),
+        rla_audits: Vec::new(),
+        manual_audits: Vec::new(),
+        summaries: summaries
+            .into_values()
+            .map(|summary| Summary {
+                contest_id: summary.contest_id,
+                reporting_unit_id: summary.reporting_unit_id,
+                batch_id: None,
+                status: summary.status,
+                totals: summary.totals,
+                undervotes: summary.undervotes,
+                overvotes: summary.overvotes,
+                blank_contests: summary.blank_contests,
+                counted_ballots: summary.counted_ballots,
+            })
+            .collect(),
+        status_events: Vec::<StatusEvent>::new(),
+    })
+}
+
+pub fn write_statement_csv_package_dir(
+    dir: &Path,
+    csv_path: &Path,
+    manifest: &RcountManifest,
+    package: &RcountPackage,
+) -> Result<(), RcountIoError> {
+    write_package_dir(dir, manifest, package)?;
+    let source_path = PathBuf::from("sources").join("statement-of-votes.csv");
+    let bytes = fs::read(csv_path)?;
+    fs::write(dir.join(&source_path), &bytes)?;
+    let synthetic = dir.join("sources").join("synthetic-summary-export.json");
+    if synthetic.exists() {
+        fs::remove_file(synthetic)?;
+    }
+    write_json_pretty(
+        &dir.join("sources").join("source-index.json"),
+        &SourceIndex {
+            sources: vec![SourceEntry {
+                source_id: "source:statement-csv".to_string(),
+                path: source_path.to_string_lossy().replace('\\', "/"),
+                sha256: source_bytes_hash(&bytes),
+            }],
+        },
+    )?;
+    Ok(())
+}
+
+fn required(row: usize, field: &str, value: String) -> Result<String, RcountIoError> {
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        return Err(RcountIoError::MissingStatementCsvField {
+            row,
+            field: field.to_string(),
+        });
+    }
+    Ok(trimmed.to_string())
+}
+
+fn parse_i64(row: usize, field: &str, value: String) -> Result<i64, RcountIoError> {
+    let value = required(row, field, value)?;
+    value
+        .parse::<i64>()
+        .map_err(|_| RcountIoError::InvalidStatementCsvField {
+            row,
+            field: field.to_string(),
+            value,
+        })
+}
+
+fn parse_u32(row: usize, field: &str, value: String) -> Result<u32, RcountIoError> {
+    let value = required(row, field, value)?;
+    value
+        .parse::<u32>()
+        .map_err(|_| RcountIoError::InvalidStatementCsvField {
+            row,
+            field: field.to_string(),
+            value,
+        })
+}
+
+fn parse_selection_kind(row: usize, value: String) -> Result<SelectionKind, RcountIoError> {
+    match required(row, "selection_kind", value)?.as_str() {
+        "candidate" => Ok(SelectionKind::Candidate),
+        "write-in-bucket" => Ok(SelectionKind::WriteInBucket),
+        other => Err(RcountIoError::InvalidStatementCsvField {
+            row,
+            field: "selection_kind".to_string(),
+            value: other.to_string(),
+        }),
+    }
+}
+
+fn parse_reporting_unit_kind(
+    row: usize,
+    value: String,
+) -> Result<ReportingUnitKind, RcountIoError> {
+    match required(row, "reporting_unit_kind", value)?.as_str() {
+        "precinct" => Ok(ReportingUnitKind::Precinct),
+        "split-precinct" => Ok(ReportingUnitKind::SplitPrecinct),
+        "vote-center" => Ok(ReportingUnitKind::VoteCenter),
+        "central-count-batch" => Ok(ReportingUnitKind::CentralCountBatch),
+        "mail-batch" => Ok(ReportingUnitKind::MailBatch),
+        "provisional-batch" => Ok(ReportingUnitKind::ProvisionalBatch),
+        "jurisdiction-total" => Ok(ReportingUnitKind::JurisdictionTotal),
+        "district-total" => Ok(ReportingUnitKind::DistrictTotal),
+        other => Err(RcountIoError::InvalidStatementCsvField {
+            row,
+            field: "reporting_unit_kind".to_string(),
+            value: other.to_string(),
+        }),
+    }
+}
+
+fn parse_count_status(row: usize, value: String) -> Result<CountStatus, RcountIoError> {
+    match required(row, "status", value)?.as_str() {
+        "unofficial" => Ok(CountStatus::Unofficial),
+        "canvassed" => Ok(CountStatus::Canvassed),
+        "recounted" => Ok(CountStatus::Recounted),
+        "amended" => Ok(CountStatus::Amended),
+        "certified" => Ok(CountStatus::Certified),
+        "withdrawn" => Ok(CountStatus::Withdrawn),
+        "superseded" => Ok(CountStatus::Superseded),
+        other => Err(RcountIoError::InvalidStatementCsvField {
+            row,
+            field: "status".to_string(),
+            value: other.to_string(),
+        }),
+    }
+}
+
+fn require_same(
+    row: usize,
+    id: &str,
+    field: &str,
+    prior: &str,
+    value: &str,
+) -> Result<(), RcountIoError> {
+    if prior != value {
+        return Err(RcountIoError::ConflictingStatementCsvField {
+            row,
+            id: id.to_string(),
+            field: field.to_string(),
+            prior: prior.to_string(),
+            value: value.to_string(),
+        });
+    }
+    Ok(())
+}
+
 fn write_json_pretty<T: Serialize>(path: &Path, value: &T) -> Result<(), RcountIoError> {
     let bytes = serde_json::to_vec_pretty(value)?;
     fs::write(path, bytes)?;
@@ -658,6 +1029,43 @@ mod tests {
         assert_eq!(decoded_package.summaries.len(), 6);
         assert_eq!(decoded_package.status_events.len(), 2);
         assert_eq!(verify_source_index(tmp.path()).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn imports_statement_csv_and_preserves_source_hash() {
+        let tmp = tempfile::tempdir().unwrap();
+        let csv_path = tmp.path().join("statement.csv");
+        std::fs::write(
+            &csv_path,
+            concat!(
+                "contest_id,contest_title,vote_for,selection_id,selection_label,selection_kind,reporting_unit_id,reporting_unit_kind,parent_jurisdiction,status,votes,undervotes,overvotes,blank_contests,counted_ballots\n",
+                "syn-2024-mayor,Synthetic Mayor,1,cand-a,Candidate A,candidate,syn:precinct:P-001,precinct,syn-county-1,canvassed,40,3,1,0,80\n",
+                "syn-2024-mayor,Synthetic Mayor,1,cand-b,Candidate B,candidate,syn:precinct:P-001,precinct,syn-county-1,canvassed,35,3,1,0,80\n",
+                "syn-2024-mayor,Synthetic Mayor,1,write-in,Write-in,write-in-bucket,syn:precinct:P-001,precinct,syn-county-1,canvassed,1,3,1,0,80\n",
+                "syn-2024-mayor,Synthetic Mayor,1,cand-a,Candidate A,candidate,syn:precinct:P-002,precinct,syn-county-1,canvassed,25,4,0,1,60\n",
+                "syn-2024-mayor,Synthetic Mayor,1,cand-b,Candidate B,candidate,syn:precinct:P-002,precinct,syn-county-1,canvassed,30,4,0,1,60\n",
+                "syn-2024-mayor,Synthetic Mayor,1,write-in,Write-in,write-in-bucket,syn:precinct:P-002,precinct,syn-county-1,canvassed,0,4,0,1,60\n",
+                "syn-2024-mayor,Synthetic Mayor,1,cand-a,Candidate A,candidate,syn:jurisdiction:SYN,jurisdiction-total,syn,canvassed,65,7,1,1,140\n",
+                "syn-2024-mayor,Synthetic Mayor,1,cand-b,Candidate B,candidate,syn:jurisdiction:SYN,jurisdiction-total,syn,canvassed,65,7,1,1,140\n",
+                "syn-2024-mayor,Synthetic Mayor,1,write-in,Write-in,write-in-bucket,syn:jurisdiction:SYN,jurisdiction-total,syn,canvassed,1,7,1,1,140\n",
+            ),
+        )
+        .unwrap();
+
+        let package = import_statement_csv(&csv_path).unwrap();
+        verify_package(&package).unwrap();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        let package_dir = tmp.path().join("package");
+        write_statement_csv_package_dir(&package_dir, &csv_path, &manifest, &package).unwrap();
+
+        let (_, decoded_package) = read_package_dir(&package_dir).unwrap();
+        verify_package(&decoded_package).unwrap();
+        let checks = verify_source_index(&package_dir).unwrap();
+        assert_eq!(checks[0].source_id, "source:statement-csv");
+        assert!(package_dir.join("sources/statement-of-votes.csv").exists());
+        assert!(!package_dir
+            .join("sources/synthetic-summary-export.json")
+            .exists());
     }
 
     #[test]

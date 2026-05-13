@@ -1,0 +1,25 @@
+\section{Implemented Statement CSV Slice}
+
+The first implemented V.9 adapter is intentionally small. The CLI command is:
+
+\begin{verbatim}
+rcount import-statement-csv <csv> <output-dir>
+\end{verbatim}
+
+The CSV uses one row per contest, reporting unit, selection, and status. It has
+four column families:
+
+\begin{itemize}
+  \item Contest columns: id, title, and vote-for cardinality.
+  \item Selection columns: id, label, and candidate or write-in-bucket kind.
+  \item Unit columns: reporting-unit id, reporting-unit kind, and parent
+    jurisdiction.
+  \item Count columns: status, selection votes, undervotes, overvotes, blanks,
+    and counted ballots.
+\end{itemize}
+
+The adapter stores the original statement file as source evidence and gives it a
+stable statement-CSV source label. It also produces normal contest,
+reporting-unit, and summary NDJSON files. A package created this way is verified
+by \texttt{rcount verify}; the source-hash check is reported as the same source
+hash equation used by synthetic fixtures.

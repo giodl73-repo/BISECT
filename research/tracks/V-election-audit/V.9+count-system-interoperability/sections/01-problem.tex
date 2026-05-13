@@ -1,0 +1,18 @@
+\section{The Interoperability Problem}
+
+RCOUNT is only useful if it can meet election offices where their public records
+already are. Some offices publish machine-readable result exports. Others
+publish statements of votes as spreadsheets, PDFs, precinct reports, county
+canvass files, or vendor-specific artifacts. The EAC describes canvass and
+certification as the process by which unofficial results become official public
+results \citep{eac-canvass-certification}. RCOUNT's role is narrower: it
+normalizes declared public evidence into a package that can be mechanically
+rechecked.
+
+The adapter layer is therefore not a cosmetic import step. It is where source
+meaning becomes explicit. A field named ``total'' might mean votes for one
+selection, ballots cast in a contest, ballots accepted in a batch, or a
+jurisdiction-wide summary. A status label might mean election-night unofficial,
+canvassed, recounted, amended, or certified. An adapter must not guess silently.
+It must map each source field to a typed RCOUNT object or leave the source claim
+outside the verifier.

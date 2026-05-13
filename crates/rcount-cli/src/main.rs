@@ -3,6 +3,9 @@ use clap::{Parser, Subcommand, ValueEnum};
 use rcount_audit::{verify_package_dir, write_verification_transcript, VerificationStatus};
 use rcount_core::CountStatus;
 use rcount_district::aggregate_package_dir_with_plan_path;
+use rcount_io::{
+    import_statement_csv, synthetic_summary_basic_manifest, write_statement_csv_package_dir,
+};
 use std::path::PathBuf;
 
 #[derive(Debug, Parser)]
@@ -17,6 +20,7 @@ struct Cli {
 enum Commands {
     Verify(VerifyArgs),
     AggregateDistricts(AggregateDistrictsArgs),
+    ImportStatementCsv(ImportStatementCsvArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -47,6 +51,12 @@ struct AggregateDistrictsArgs {
     format: OutputFormat,
 }
 
+#[derive(Debug, Parser)]
+struct ImportStatementCsvArgs {
+    csv: PathBuf,
+    output_dir: PathBuf,
+}
+
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum OutputFormat {
     Json,
@@ -67,6 +77,7 @@ fn run() -> Result<i32> {
     match Cli::parse().command {
         Commands::Verify(args) => run_verify(args),
         Commands::AggregateDistricts(args) => run_aggregate_districts(args),
+        Commands::ImportStatementCsv(args) => run_import_statement_csv(args),
     }
 }
 
@@ -115,6 +126,15 @@ fn run_aggregate_districts(args: AggregateDistrictsArgs) -> Result<i32> {
     } else {
         println!("{output}");
     }
+    Ok(0)
+}
+
+fn run_import_statement_csv(args: ImportStatementCsvArgs) -> Result<i32> {
+    let package = import_statement_csv(&args.csv)
+        .with_context(|| format!("importing statement CSV {}", args.csv.display()))?;
+    let manifest = synthetic_summary_basic_manifest(&package)?;
+    write_statement_csv_package_dir(&args.output_dir, &args.csv, &manifest, &package)
+        .with_context(|| format!("writing RCOUNT package {}", args.output_dir.display()))?;
     Ok(0)
 }
 

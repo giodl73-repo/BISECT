@@ -1,0 +1,42 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{Count-System Interoperability: Vendor Exports To RCOUNT}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Election results are published through many local workflows: election-night
+exports, statements of votes, canvass reports, vendor reports, spreadsheets,
+PDFs, and common-data-format files. RCOUNT should not pretend those sources are
+already neutral ledgers. It should make adapter work explicit. This paper
+defines the first V.9 interoperability slice: a statement-of-votes CSV adapter
+that normalizes contest, reporting-unit, selection, residual, status, and
+jurisdiction-total rows into an ordinary RCOUNT package while preserving the
+source file hash. The adapter is intentionally small, but it establishes the
+contract future NIST ERR/CDF and jurisdiction-specific adapters should follow:
+parse, normalize, hash the original source, verify the resulting package, and
+label any claim the adapter cannot make.
+\end{abstract}
+
+\input{sections/01-problem}
+\input{sections/02-adapter-contract}
+\input{sections/03-implemented-slice}
+\input{sections/04-failure-modes}
+\input{sections/05-boundaries}
+\input{sections/06-conclusion}
+
+\nocite{eac-canvass-certification,nist-election-results-cdf,nist-cdf-guidance,rcount-substrate-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}
