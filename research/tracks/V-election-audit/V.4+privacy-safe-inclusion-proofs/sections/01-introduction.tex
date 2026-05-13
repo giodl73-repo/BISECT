@@ -11,3 +11,10 @@ V.4 narrows the problem to voter-facing proof material. The baseline proof is
 not a complete cryptographic voting system. It is a privacy gate over public
 proof records: if the record carries candidate selections or linkable voter
 facts, it fails.
+
+The voter-facing interpretation is deliberately narrow. A passing proof can
+support the statement that an anonymized accepted-token or counted-token record
+appears in the public package. It does not support the stronger statement that
+``my vote for candidate X was counted,'' because that stronger statement is
+exactly the receipt a coercer would want. Refusing to publish that evidence is a
+voter protection, not a missing feature.

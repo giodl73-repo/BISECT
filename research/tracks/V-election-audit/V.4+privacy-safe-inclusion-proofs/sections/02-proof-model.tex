@@ -18,7 +18,33 @@ Field & Public meaning \\
 \end{tabularx}
 \end{center}
 
+This is a public proof contract, not a complete token-issuance protocol:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Contract point & Requirement \\
+\midrule
+Identifier scope & \texttt{proof\_id} is package-local and should not be a durable voter identifier. \\
+Allowed evidence & The public record may expose proof kind, anonymized token hash, and coarse reporting-unit reference. \\
+Forbidden evidence & Candidate selections, voter identity, ballot style, precise timestamps, device identifiers, and equivalent linkers are outside the baseline public proof. \\
+Token caveat & A hash is not privacy by itself; token issuance, salts, nonces, key custody, and disclosure policy remain protocol work. \\
+Gate meaning & Passing \texttt{proof\_privacy\_gate} is a necessary baseline check, not a formal coercion-resistance proof. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
 The distinction between accepted and counted matters. An accepted-token proof
-says the public package contains an anonymized accepted-record token. A
-counted-token proof would say the package contains an anonymized counted-record
-token. Neither form says which candidates were selected.
+follows ballot acceptance decisions: the voter returned material, the office
+resolved eligibility and cure questions under local law, and the package
+represents an anonymized accepted-record token. A counted-token proof follows
+counting and any adjudication path represented in the package. Neither form says
+which candidates were selected, whether a recount will later change the public
+record, or whether a canvassing board has certified final totals.
+
+The token is also not the same thing as a voter, ballot card, ballot, CVR row,
+contest row, or vote. Those accounting relationships belong to the larger
+RCOUNT evidence model. V.5 handles ballot manifests and V.6 handles
+CVR-to-summary reconciliation; V.4 only defines the receipt-safe public edge of
+an inclusion-style proof.

@@ -9,6 +9,21 @@ not a full privacy proof.
 \small
 \begin{tabularx}{\textwidth}{lX}
 \toprule
+Actor demand & Why the baseline proof should not satisfy it \\
+\midrule
+Vote buyer asks for proof of a selected candidate & Candidate selections are absent and any choice-bearing proof fails. \\
+Employer asks a worker to reveal a public proof id & The identifier is package-local and should not be a durable identity token. \\
+Campaign combines ballot style and issue time & Ballot style and precise timestamps are forbidden in the public proof. \\
+Observer targets a tiny reporting unit or rare contest & Small-cell and rare-contest metadata require disclosure review before publication. \\
+Insider tries deterministic token linkage across exports & Token issuance, salts, nonces, and custody are protocol controls outside this public gate. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
 Rejected public field pattern & Risk \\
 \midrule
 Candidate selections in proof & Creates a direct vote-choice receipt. \\
@@ -21,3 +36,16 @@ Small reporting unit plus rare contest facts & Can create small-cell disclosure 
 
 Passing the gate means only that the baseline public record avoids these obvious
 receipt channels. It does not prove end-to-end coercion resistance.
+
+The proof surface can be visualized as a narrow public window:
+
+\begin{center}
+\small
+\begin{tabular}{ccc}
+\fbox{\begin{tabular}{c}private election\\status records\end{tabular}} &
+$\longrightarrow$ &
+\fbox{\begin{tabular}{c}public proof\\kind + token hash\\+ coarse unit\end{tabular}} \\
+ & & \\
+\multicolumn{3}{c}{\textit{choices, voter identity, ballot style, precise time, and device facts stay outside}} \\
+\end{tabular}
+\end{center}

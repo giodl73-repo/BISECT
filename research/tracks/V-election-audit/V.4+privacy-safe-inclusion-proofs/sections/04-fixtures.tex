@@ -18,3 +18,23 @@ accepted-token proof with an anonymized token hash and no candidate selections:
 The negative fixture is \texttt{choice-bearing-proof}. It changes the same proof
 by adding \texttt{cand-a} to \texttt{candidate\_selections}. That proof must
 fail, even if package arithmetic and source hashes pass.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+Fixture & Proof file & Transcript file \\
+\midrule
+\texttt{privacy-inclusion-sketch} & proof NDJSON & verify transcript \\
+\texttt{choice-bearing-proof} & proof NDJSON & verify transcript \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+In both packages those anchors are the package-local paths
+\path{proofs/inclusion-proofs.ndjson} and
+\path{transcripts/verify-transcript.json}.
+
+The pair catches a concrete regression: if a future verifier accepts a public
+proof that contains candidate selections, the negative fixture should fail the
+acceptance run.

@@ -5,12 +5,24 @@ adjudication, and ballot acceptance are legal and administrative decisions. A
 proof can refer to an accepted or counted token only after those decisions have
 been represented in the package.
 
+The ordinary lifecycle is returned, accepted or rejected, counted if eligible
+and countable, canvassed, and certified. Jurisdictions vary in cure windows,
+provisional-ballot handling, recount procedures, public-record rules, and
+voter-verification rights. V.4 therefore defines a minimum receipt-safety rule
+for public artifacts, not a national canvass workflow.
+
 RCOUNT also does not give voters a candidate-choice receipt. A public artifact
 that proves a voter selected a candidate is a failure, not a feature. The
 baseline proof sketch avoids candidate selections by construction.
 
+Reporting-unit references need care. Vote centers, central-count mail batches,
+split precincts, and batch boundaries may be less intuitive than a voter-facing
+precinct label. In small units, even coarse metadata can become sensitive when
+combined with rare contests, write-ins, ballot styles, or timing facts.
+
 Finally, V.4 is not a complete end-to-end voting protocol. It does not specify
 ballot casting, voter authentication, mixnets, cryptographic tallying, or a
-formal coercion-resistance proof. Those would require a separate protocol
-paper. V.4 only defines the minimum privacy gate RCOUNT public proof records
-must pass.
+formal coercion-resistance proof. It also does not specify token salts, nonces,
+key custody, detached signatures, or issuance ceremonies. Those would require a
+separate protocol paper. V.4 only defines the minimum privacy gate RCOUNT public
+proof records must pass.

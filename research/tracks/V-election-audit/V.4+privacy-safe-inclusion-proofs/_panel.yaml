@@ -1,8 +1,8 @@
 paper: V.4+privacy-safe-inclusion-proofs
 title: "Privacy-Safe Voter Inclusion Proofs"
 type: publication
-stage: review
-round: 1
+stage: ready
+round: 2
 content_mode: draft
 venue: technical report
 review_date: 2026-05-12
@@ -20,8 +20,9 @@ reviews:
   CANVASS: reviews/REVIEW-CANVASS.md
   TALLY: reviews/REVIEW-TALLY.md
   SYNTHESIS: reviews/SYNTHESIS.md
+  ROUND2: reviews/ROUND2-SYNTHESIS.md
 p1_items:
-  - "[ ] Add a receipt/coercion threat model table for public proof artifacts."
-  - "[ ] Define the public proof contract and forbidden linkability fields more explicitly."
-  - "[ ] Add fixture-to-expected-result traceability with exact check ids and transcript anchors."
-  - "[ ] Clarify accepted-token versus counted-token semantics and voter-facing wording."
+  - "[x] Add a receipt/coercion threat model table for public proof artifacts."
+  - "[x] Define the public proof contract and forbidden linkability fields more explicitly."
+  - "[x] Add fixture-to-expected-result traceability with exact check ids and transcript anchors."
+  - "[x] Clarify accepted-token versus counted-token semantics and voter-facing wording."

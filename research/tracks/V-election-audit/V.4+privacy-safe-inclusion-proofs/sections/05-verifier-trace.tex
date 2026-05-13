@@ -20,13 +20,13 @@ cargo run -p rcount-cli -- verify \
 \toprule
 Fixture & Expected result & Carrying check \\
 \midrule
-\texttt{privacy-inclusion-sketch} & pass & \texttt{proof\_privacy\_gate} passes for \texttt{proof:accepted-token-001}. \\
-\texttt{choice-bearing-proof} & fail & \texttt{proof\_privacy\_gate} fails because the proof exposes candidate selections. \\
+\texttt{privacy-inclusion-sketch} & transcript status \texttt{pass} & \texttt{proof\_privacy\_gate} passes for \texttt{proof:accepted-token-001}; \texttt{source\_hash\_match} also passes. \\
+\texttt{choice-bearing-proof} & transcript status \texttt{fail} & \texttt{proof\_privacy\_gate} fails with \texttt{proof proof:accepted-token-001 exposes candidate selections}; \texttt{source\_hash\_match} still passes. \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
-The negative transcript says:
+The negative transcript anchors the failure to the privacy gate:
 \begin{quote}
 \footnotesize
 \begin{verbatim}
@@ -37,3 +37,7 @@ The negative transcript says:
 }
 \end{verbatim}
 \end{quote}
+
+That separation matters. The package can be well-formed, hash-bound, and
+arithmetically coherent while still being unacceptable for public voter-facing
+proof use.
