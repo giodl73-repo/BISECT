@@ -23,3 +23,22 @@ The negative fixture is \texttt{bad-cvr-summary}. It changes one P-001 CVR row
 from \texttt{cand-a} to \texttt{cand-b} while leaving the public summaries
 unchanged. The summary arithmetic still passes, but the CVR aggregate no longer
 matches the summary: Candidate A computes to 39 instead of 40.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Path & Role \\
+\midrule
+\path{normalized/cvr.ndjson} & Normalized CVR contest interpretation rows. \\
+\path{normalized/summaries.ndjson} & Public summary targets for CVR aggregation. \\
+\path{normalized/contests.ndjson} & Selection ids and \texttt{vote\_for} constraints. \\
+\path{sources/source-index.json} & Raw source hash evidence. \\
+\path{transcripts/verify-transcript.json} & Verifier pass/fail transcript. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The regression caught by \texttt{bad-cvr-summary} is precise: a verifier that
+checks only summary arithmetic, or silently ignores \path{normalized/cvr.ndjson},
+would miss a CVR-side selection drift.

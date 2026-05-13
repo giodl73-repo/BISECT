@@ -18,3 +18,22 @@ Finally, CVR publication must inherit V.4's receipt-safety rule. Rare ballot
 styles, write-ins, timestamps, scanner batches, or unique selection patterns can
 turn a CVR into identifying evidence. A deployable CVR layer needs redaction,
 aggregation, or restricted-publication policy in addition to arithmetic checks.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+CVR publication pattern & Risk \\
+\midrule
+Rare write-in plus tiny reporting unit & Narrows a ballot to a small group or one voter. \\
+Unique cross-contest selection pattern & Can become a recognizable ballot signature. \\
+Ballot style plus batch or scanner time & Can join with check-in or observation records. \\
+Single-card provisional or cure batch & Can reveal whether a specific ballot was counted. \\
+Joining CVRs to inclusion tokens & Can turn inclusion verification into a choice receipt. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Public CVR packages may therefore need aggregation, suppression, delayed
+publication, or restricted evidence views. Hashes make evidence tamper-evident;
+they do not make ballot-level records private.

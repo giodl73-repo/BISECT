@@ -17,7 +17,7 @@ recompute public claims from lower-level evidence.
 | V.3 | Tamper-Evident Precinct And Batch Hashing | ready |
 | V.4 | Privacy-Safe Voter Inclusion Proofs | ready |
 | V.5 | Ballot Manifest Verification | ready |
-| V.6 | CVR-To-Summary Reconciliation | draft |
+| V.6 | CVR-To-Summary Reconciliation | ready |
 | V.7 | Replayable Risk-Limiting Audits | planned |
 | V.8 | District Vote Aggregation With RPLAN | substrate slice landed |
 | V.9 | Count-System Interoperability: Vendor Exports To RCOUNT | planned |

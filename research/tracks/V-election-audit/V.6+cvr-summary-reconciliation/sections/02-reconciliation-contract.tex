@@ -52,3 +52,23 @@ Field & Meaning \\
 \bottomrule
 \end{tabularx}
 \end{center}
+
+The implemented verifier treats the row as one contest interpretation. Each
+CVR id and contest id pair must be unique. A row fails if it combines a
+candidate selection with a residual flag, sets multiple residual flags,
+references an unknown selection id, or contains more selections than the
+contest's \texttt{vote\_for} rule permits.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Check & Failure caught \\
+\midrule
+\texttt{cvr\_summary\_total} & CVR aggregates disagree with public summary selections or residuals. \\
+\texttt{contest\_selection\_sum} & Summary selections plus residuals do not equal counted ballots. \\
+\texttt{jurisdiction\_contest\_total} & Lower-level summaries do not roll up to the jurisdiction total. \\
+\texttt{source\_hash\_match} & Published source evidence bytes no longer match declared hashes. \\
+\bottomrule
+\end{tabularx}
+\end{center}
