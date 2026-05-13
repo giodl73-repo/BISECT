@@ -60,3 +60,18 @@ centroid-radius rule rather than by Welzl support-point mechanics.
 In contrast, PP depends on the total perimeter $P = \sum_i |e_i|$ summed over all
 boundary edges. Each additional vertex introduced by TIGER/Line digitisation of
 the coastline adds perimeter length, directly increasing $P$ and decreasing PP.
+
+\subsection{Exact-MBC Smoke Evidence}
+
+The repository now includes a separate exact polygon-MBC reference path and a
+hash-bound smoke package at
+\texttt{docs/examples/k-reock-evidence-packages/exact-mbc-smoke/}.  The package
+contains simple polygon fixtures with known minimum bounding circles: a unit
+square where exact-MBC and the centroid proxy coincide, and a $3$-$4$-$5$ right
+triangle where the exact-MBC circle is supported by the hypotenuse endpoints and
+the centroid proxy is lower.  The verifier lives in
+\texttt{crates/bisect-analysis/src/compactness\_evidence.rs}.
+
+This package upgrades the exact-MBC reference evidence, but it does not change
+the production output of \texttt{bisect label-analyze}.  District-scale exact-MBC
+claims still require packages built from real projected district polygons.

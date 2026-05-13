@@ -20,8 +20,11 @@ circle containing $D$), with area $A(\text{MBC}(D)) = \pi r^2$. Then:
   \text{Reock}(D) = \frac{A(D)}{\pi r^2}.
 \]
 Exact-MBC computation can use Welzl's randomised algorithm in $O(n)$ expected
-time, but \textsc{bisect}'s production \texttt{reock()} currently reports a
-centroid-plus-max-boundary-radius approximation for Python-pipeline parity
+time.  \textsc{bisect} now includes a separate exact polygon-MBC reference path
+and a hash-bound smoke package at
+\texttt{docs/examples/k-reock-evidence-packages/exact-mbc-smoke/}.  The
+production \texttt{reock()} metric used by \texttt{all\_metrics()} still reports
+a centroid-plus-max-boundary-radius approximation for Python-pipeline parity
 (K.2, Section~3).
 
 \subsection{Convex Hull Ratio (CH)}

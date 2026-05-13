@@ -1,7 +1,7 @@
 # K Exact Reock Evidence Packages Goal
 
 **Opened:** 2026-05-13
-**Status:** active
+**Status:** complete
 
 ## Goal
 
@@ -20,8 +20,8 @@ records where exact MBC differs from the production proxy.
 - [x] Add an active wave and pulse context for K exact Reock evidence.
 - [x] Add exact polygon-MBC helper coverage in `bisect-analysis`.
 - [x] Add a hash-bound exact-MBC Reock fixture package.
-- [ ] Update K.0/K.2/K.7 ledgers and papers to cite the package.
-- [ ] Close the wave with validation commands and commit evidence.
+- [x] Update K.0/K.2/K.7 ledgers and papers to cite the package.
+- [x] Close the wave with validation commands and commit evidence.
 
 ## Non-Goals
 

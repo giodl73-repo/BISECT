@@ -135,14 +135,14 @@ Score bands:
 | J.4 Jefferson/D'Hondt | 3.3 | 3.4 | 3.1 | 3.3 | 3.3 | 3.3 | 19.7 | Serviceable-plus; current API boundary |
 | J.5 Apportionment Paradoxes | 3.3 | 3.4 | 3.1 | 3.4 | 3.3 | 3.3 | 19.8 | Serviceable-plus; synthetic-check boundary |
 | J.6 bisect-apportion Implementation | 3.5 | 3.6 | 3.4 | 3.6 | 3.6 | 3.5 | 21.2 | Strong; 2020 Census/SHA verifier package added |
-| K.0 Compactness Overview | 3.5 | 3.4 | 3.3 | 3.5 | 3.4 | 3.4 | 20.5 | Strong; Reock proxy caveat propagated |
+| K.0 Compactness Overview | 3.6 | 3.5 | 3.4 | 3.6 | 3.5 | 3.5 | 21.1 | Strong; exact-MBC smoke package added |
 | K.1 Polsby-Popper | 3.5 | 3.6 | 3.3 | 3.4 | 3.4 | 3.5 | 20.7 | Strong |
-| K.2 Reock | 3.5 | 3.5 | 3.3 | 3.6 | 3.5 | 3.4 | 20.8 | Strong; implementation mismatch fixed, exact-MBC evidence pending |
+| K.2 Reock | 3.7 | 3.7 | 3.5 | 3.7 | 3.7 | 3.6 | 21.9 | Strong; exact-MBC smoke package and proxy boundary |
 | K.3 Convex Hull | 3.5 | 3.5 | 3.3 | 3.4 | 3.4 | 3.5 | 20.6 | Strong |
 | K.4 Schwartzberg | 3.5 | 3.5 | 3.3 | 3.4 | 3.4 | 3.5 | 20.6 | Strong |
 | K.5 Length-Width | 3.2 | 3.3 | 3.0 | 3.2 | 3.3 | 3.2 | 19.2 | Minor revision |
 | K.6 Population-Weighted Compactness | 3.5 | 3.5 | 3.3 | 3.4 | 3.4 | 3.5 | 20.6 | Strong |
-| K.7 Composite/Court Guide | 3.4 | 3.4 | 3.2 | 3.5 | 3.4 | 3.4 | 20.3 | Serviceable-plus; Reock disclosure propagated |
+| K.7 Composite/Court Guide | 3.5 | 3.5 | 3.3 | 3.6 | 3.5 | 3.5 | 20.9 | Stronger; exact/proxy Reock disclosure package |
 | L.0 Partisan Fairness Overview | 3.6 | 3.4 | 3.4 | 3.8 | 3.4 | 3.5 | 21.1 | Strong |
 | L.1 Efficiency Gap | 3.7 | 3.5 | 3.4 | 3.8 | 3.4 | 3.6 | 21.4 | Strong |
 | L.2 Mean-Median | 3.7 | 3.5 | 3.4 | 3.8 | 3.4 | 3.6 | 21.4 | Strong |
@@ -158,9 +158,8 @@ Score bands:
 
 ## Highest-Priority Lifts
 
-1. Metric follow-through: K.2/K.0/K.7 no longer have the Welzl/implementation
-   blocker, but exact polygon-MBC Reock and archived same-metric packages remain
-   future evidence lifts.
+1. Metric follow-through: K.2/K.0/K.7 now have exact-MBC smoke evidence, but
+   real district polygon exact-MBC packages remain future evidence lifts.
 2. Package evidence follow-through: U.2/U.4 still need archived sweep or
    production CLI packages before they can score as implementation papers.
 3. G-track package follow-through: G.1-G.3 need archived external traces and
@@ -174,6 +173,6 @@ Score bands:
 | U search/optimization/audit | 21 | Strong after older-paper boundary pass; U.10 and U.16-U.20 golden | archived sweep/CLI packages for U.2/U.4 |
 | G ensemble/sampling | 16 | Strong/serviceable-plus after cleanup; G.4/G.7/G.10/G.11 golden | archived external traces for G.1-G.3 |
 | J apportionment | 7 | Serviceable-plus after implementation-boundary pass | Census/SHA fixtures and Hamilton public API remain future work |
-| K compactness metrics | 8 | Strong/serviceable-plus after K.2 disclosure pass | exact polygon-MBC evidence and K.5 minor revision |
+| K compactness metrics | 8 | Strong/serviceable-plus after exact-MBC smoke package | real district exact-MBC packages and K.5 minor revision |
 | L partisan metrics | 7 | Strong | cross-link to G/A synthesis |
 | M community weights | 5 | Strong where PDFs exist | source-only papers need completion |

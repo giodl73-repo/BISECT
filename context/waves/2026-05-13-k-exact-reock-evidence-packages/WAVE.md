@@ -1,7 +1,7 @@
 ---
 wave: k-exact-reock-evidence-packages
 date_open: 2026-05-13
-status: active
+status: complete
 source_goal: docs/specs/2026-05-13-k-exact-reock-evidence-packages-goal.md
 ---
 
@@ -35,8 +35,8 @@ scoped.
 | Pulse | Status | Evidence |
 |---|---|---|
 | 01 - Exact-MBC smoke package | DONE | Added exact MBC helper, smoke fixtures, manifest, and verifier tests |
-| 02 - K ledger update | TODO | Update K.0/K.2/K.7 papers, index, scorecard, and PDFs |
-| 03 - Closeout | TODO | Archive wave with carry-forwards for real district polygon packages |
+| 02 - K ledger update | DONE | Updated K.0/K.2/K.7 papers, index, scorecard, and PDFs |
+| 03 - Closeout | DONE | Archived wave with carry-forwards for real district polygon packages |
 
 ## Validation Gate
 
@@ -45,3 +45,10 @@ cargo fmt
 $env:CARGO_INCREMENTAL='0'; cargo test -p bisect-analysis
 git diff --check
 ```
+
+## Closeout
+
+Completed. The wave delivered a separate exact polygon-MBC reference path,
+hash-bound exact/proxy smoke fixtures, verifier coverage, K.0/K.2/K.7 ledger
+updates, rebuilt PDFs, and explicit carry-forwards for real district polygon
+exact-MBC packages.

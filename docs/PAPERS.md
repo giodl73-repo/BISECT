@@ -299,14 +299,14 @@ One paper per compactness metric: mathematical definition, properties, implement
 
 | Code | Title | PDF | Status |
 |------|-------|-----|--------|
-| K.0 | Compactness Taxonomy and Overview | [PDF](papers/K.0+compactness-overview.pdf) | **Accepted** |
+| K.0 | Compactness Taxonomy and Overview | [PDF](papers/K.0+compactness-overview.pdf) | exact-MBC smoke package added |
 | K.1 | Polsby-Popper Score | [PDF](papers/K.1+polsby-popper.pdf) | **Accepted** |
-| K.2 | Reock Score | [PDF](papers/K.2+reock.pdf) | Reviewed draft; exact-MBC implementation pending |
+| K.2 | Reock Score | [PDF](papers/K.2+reock.pdf) | exact-MBC smoke package added |
 | K.3 | Convex Hull Ratio | [PDF](papers/K.3+convex-hull.pdf) | **Accepted** |
 | K.4 | Schwartzberg Score | [PDF](papers/K.4+schwartzberg.pdf) | **Accepted** |
 | K.5 | Length-Width Ratio | [PDF](papers/K.5+length-width.pdf) | Minor Revision |
 | K.6 | Population-Weighted Compactness | [PDF](papers/K.6+population-weighted-compactness.pdf) | **Accepted** |
-| K.7 | Multi-Metric Composite and Court Usage Guide | [PDF](papers/K.7+composite-court-guide.pdf) | Minor Revision |
+| K.7 | Multi-Metric Composite and Court Usage Guide | [PDF](papers/K.7+composite-court-guide.pdf) | exact/proxy Reock disclosure |
 
 ---
 
