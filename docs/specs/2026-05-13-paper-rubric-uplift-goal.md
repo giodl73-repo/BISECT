@@ -1,7 +1,7 @@
 # Paper Rubric Uplift Goal
 
 **Opened:** 2026-05-13
-**Status:** active - pulse 04 complete
+**Status:** complete
 
 ## Goal
 
@@ -56,3 +56,20 @@ Welzl/implementation mismatch. The pass should distinguish:
   manifests, and verifier paths.
 - [x] The scorecard, paper review ledger, and public paper index record G-track
   uplift status and remaining external-trace ceilings.
+
+## Wave Closeout
+
+- [x] All listed wave pulses completed and committed.
+- [x] All affected PDFs rebuilt and copied to `docs/papers/`.
+- [x] Paper scorecard, quality review ledger, public paper index, wave docs, and
+  active goal updated.
+- [x] No architecture changes were made; this was a research-paper and evidence
+  boundary wave.
+
+## Carry-Forwards
+
+- K track: exact polygon-MBC Reock evidence and archived same-metric packages.
+- J track: Census/SHA apportionment fixtures and optional Hamilton public API.
+- U track: archived U.2 sweep packages and U.4 production CLI/package path.
+- G track: archived external GerryChain/ReCom traces and election/metric
+  packages for G.1-G.3 headline percentiles.

@@ -1,7 +1,7 @@
 ---
 wave: paper-rubric-uplift
 date_open: 2026-05-13
-status: active
+status: complete
 source_goal: docs/specs/2026-05-13-paper-rubric-uplift-goal.md
 ---
 
@@ -56,5 +56,24 @@ git diff --check
 
 ## Next
 
-Pulse 04 refreshed the weaker G ensemble papers. No further pulses are currently
-listed for this wave.
+Wave complete. Future work is now package-evidence follow-through rather than
+rubric triage: exact polygon-MBC Reock packages, Census apportionment fixtures,
+U-track sweep/CLI packages, and archived G-track external traces.
+
+## Closeout
+
+| Metric | Result |
+|---|---|
+| Pulses completed | 4 / 4 |
+| Paper families refreshed | K compactness, J apportionment, U search/optimization, G ensemble |
+| PDFs rebuilt | K.0/K.2/K.7, J.0-J.6, U.0-U.7/U.11/U.13-U.15, G.1-G.3/G.5/G.12 |
+| Main scorecard blockers removed | K.2 Reock mismatch, J.6 stale implementation claims, older U boundary drift, weaker G diagnostic/data overclaims |
+
+## Lessons Learned
+
+- Boundary passes are most effective when they name both the current artifact and
+  the missing evidence tier.
+- Paper PDFs should remain binary in git attributes; otherwise `git diff --check`
+  reports PDF-internal whitespace.
+- Strong rubric movement does not require implementation changes when the
+  problem is stale paper language; avoid rewriting code to match overbroad prose.

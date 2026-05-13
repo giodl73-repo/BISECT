@@ -22,7 +22,7 @@
 | 2026-05-11 | Algorithm Atlas And T/U Frontier | Atlas pages, T/U crates, package frontier, paper alignment | archived |
 | 2026-05-12 | RCOUNT Substrate And V Track | RCOUNT crate family, V.0-V.10 papers, adapters, audit fixtures | archived |
 | 2026-05-13 | R Package Completion | RCOUNT audit algorithms, then RCTX/RHIST base dimensions | archived |
-| 2026-05-13 | Paper Rubric Uplift | Raise below-rubric papers starting with K.2 Reock metric correctness | active |
+| 2026-05-13 | Paper Rubric Uplift | Raised below-rubric papers across K/J/U/G tracks with claim-boundary passes | archived |
 
 ## Operating Model
 
