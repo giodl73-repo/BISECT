@@ -1,16 +1,18 @@
-The Reock--PP gap is the difference Reock$(D) - $ PP$(D)$ for each district $D$.
-A positive gap (Reock $>$ PP) means Reock is more lenient: the district appears
-more compact to Reock than to PP.
+The Reock--PP gap reported here is the difference
+$\widehat{\text{Reock}}(D) - $ PP$(D)$ for each district $D$, where
+$\widehat{\text{Reock}}$ is the current \textsc{bisect} centroid-radius proxy.
+A positive gap means the district appears more compact to the reported Reock
+proxy than to PP.
 
 \subsection{Empirical Gap Estimates}
 
 \begin{table}[ht]
 \centering
-\caption{Mean Reock--PP gap by state and algorithm (seed $= 42^\dagger$).}
+\caption{Mean reported-Reock--PP gap by state and algorithm (seed $= 42^\dagger$).}
 \label{tab:reock_pp_gap}
 \begin{tabular}{llc}
 \toprule
-State & Algorithm & Mean (Reock $-$ PP) \\
+State & Algorithm & Mean (reported Reock $-$ PP) \\
 \midrule
 \multirow{4}{*}{NC ($k=14$)}
   & standard-bisect & $+0.14^\dagger$ \\
@@ -39,12 +41,14 @@ State & Algorithm & Mean (Reock $-$ PP) \\
 
 Under ratio-optimal on NC 2020, the mean Reock--PP gap is $+0.15^\dagger$.
 The spec-stated value of $+0.12$ represents a conservative lower bound;
-our observed value of $+0.15$ is consistent and confirms Claim~3 that
-Reock is systematically more lenient than PP.
+our observed value of $+0.15$ is consistent with that target and shows that the
+reported Reock proxy is more lenient than PP in this fixture.
 
 \subsection{Interpretation}
 
-The gap is positive for all districts because:
+The observed gap is positive for all rows in Table~\ref{tab:reock_pp_gap};
+there is no theorem that the gap must be positive for every possible district
+or for exact-MBC Reock.  In these fixtures, the explanation is:
 \begin{enumerate}
   \item Reock's denominator is the MBC area, which by definition contains the district,
     so Reock $\leq 1$.
@@ -64,7 +68,8 @@ The gap is positive for all districts because:
 \subsection{Practitioner Implication}
 
 When opposing counsel argues that a plan is non-compact based on PP values,
-a Reock-based analysis will generally show higher scores (Reock $-$ PP $\approx +0.12$--$+0.22$),
-providing a defensible counter-argument that the districts are reasonable
-by the area-based standard.
+a Reock-based analysis may show higher scores (in these rows,
+reported Reock $-$ PP $\approx +0.12$--$+0.22$), providing a useful area-based
+comparison.  The argument should be presented as metric disagreement, not as
+proof that the districts are legally reasonable.
 Both metrics should be included in a composite profile (K.7).

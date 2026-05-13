@@ -25,7 +25,9 @@ platform, version [version], with seed $= [seed]$.
   \item \textbf{Polsby-Popper (PP)}: Mean $= [PP]$ (scale $[0,1]$; higher is more compact;
     $1.0$ = circle; $0.785$ = square). Source: K.1.
   \item \textbf{Reock}: Mean $= [Reock]$ (scale $[0,1]$; higher is more compact;
-    less sensitive to coastal boundary artifacts than PP). Source: K.2.
+    less sensitive to coastal boundary artifacts than PP). In \textsc{bisect},
+    this is the centroid-plus-maximum-boundary-radius proxy, not exact polygon-MBC
+    Reock. Source: K.2.
   \item \textbf{Convex Hull Ratio (CH)}: Mean $= [CH]$ (scale $(0,1]$; $1.0$
     means perfectly convex; no district has tentacle appendages below CH $= 0.85$).
     Source: K.3.
@@ -38,12 +40,12 @@ platform, version [version], with seed $= [seed]$.
     Source: K.6.
 \end{itemize}
 
-\noindent The submitted plan achieves PP $= [PP]$, Reock $= [Reock]$,
+\noindent The submitted plan achieves PP $= [PP]$, reported Reock $= [Reock]$,
 CH $= [CH]$, placing it in the [percentile] of algorithmically-generated plans
 for [State] under 2020 Census data.
 
 \noindent All six metrics are within the acceptable range for all $[k]$ districts
-(PP $\geq 0.18$, Reock $\geq 0.30$, CH $\geq 0.82$, S $\leq 2.4$, LW $\leq 2.8$,
+(PP $\geq 0.18$, reported Reock $\geq 0.30$, CH $\geq 0.82$, S $\leq 2.4$, LW $\leq 2.8$,
 PWC within two standard deviations of state mean).
 
 \noindent The complete per-district compactness data are provided in Appendix~A
@@ -67,5 +69,6 @@ For certified court filings, add:
   \emph{I certify that the compactness values reported herein were computed
   using version [X.Y.Z] of the \textsc{bisect} platform from the TIGER/Line
   2020 Census tract geometry files (SHA-256: [hash]) with no modification to
-  the underlying data or software.}
+  the underlying data or software. Reock values are the \textsc{bisect}
+  centroid-radius approximation unless an exact-MBC method is separately named.}
 \end{quote}

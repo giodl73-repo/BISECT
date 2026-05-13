@@ -1,39 +1,43 @@
 The moving-knife algorithm (MKA) is a structure algorithm in \textsc{bisect}
-(\texttt{--structure moving-knife}) designed to maximise the minimum Reock score
-across all districts in a partition.
+(\texttt{--structure moving-knife}) designed to choose directional recursive
+splits with a strong worst-side compactness proxy.
 
 \subsection{Algorithm Description}
 
-MKA extends the classical moving-knife fair division procedure~\citep{brams2000win}
-to graph partitioning.
-At each recursive step, MKA maintains the set of candidate bisection cuts
-(METIS-generated graph partitions at the current level) and selects the cut
-that maximises the minimum Reock score among the two sub-regions.
+MKA adapts the moving-knife intuition~\citep{brams2000win} to a recursive
+tract graph splitter.  At each recursive step, the implementation tests a grid
+of candidate directions, projects tract centroids onto each direction, sorts
+units by projection rank, and cuts the first population-balanced prefix.  It
+then scores the two sides with a point-cloud enclosing-circle proxy and selects
+the direction with the best worst-side score before bounded local rebalance.
 
 Formally, at step $t$ of the recursion with region $G_t$ to be divided into
 $k_1$ and $k_2$ districts:
 \begin{enumerate}
-  \item Generate candidate cuts $\{C_1, \ldots, C_m\}$ via METIS.
-  \item For each cut $C_j$, compute $\text{Reock}^{\min}(C_j) = \min(\text{Reock}(L_j), \text{Reock}(R_j))$,
-    where $L_j$ and $R_j$ are the geometric shapes of the two sub-regions.
-  \item Select $C^* = \arg\max_j \text{Reock}^{\min}(C_j)$.
+  \item Generate candidate directions $\{\theta_1, \ldots, \theta_m\}$.
+  \item For each direction, project centroids, sort units, and form a
+    population-balanced prefix/suffix cut.
+  \item Compute a proxy score
+    $\text{ReockProxy}^{\min}(\theta_j) =
+    \min(\widehat R(L_j), \widehat R(R_j))$ over tract-centroid point clouds.
+  \item Select $\theta^* = \arg\max_j \text{ReockProxy}^{\min}(\theta_j)$,
+    then run the local rebalance path.
 \end{enumerate}
 
 \subsection{Reock Maximisation Property}
 
-MKA does not guarantee a globally maximum Reock partition (which would require
-exponential search), but it provides a greedy approximation that empirically
-outperforms standard-bisect, prime-factor, and ratio-optimal on the
-minimum-Reock objective.
+MKA does not guarantee a globally maximum Reock partition and does not optimise
+the exact polygon-MBC metric.  It provides an auditable directional baseline
+whose candidate ledger can be checked against the implemented point-cloud proxy.
 
 \subsection{Empirical Validation}
 
-Table~\ref{tab:mka_reock} reports mean and minimum district Reock for all four
-algorithms on NC 2020 (seed $= 42^\dagger$).
+Table~\ref{tab:mka_reock} reports mean and minimum district Reock-proxy values
+for all four algorithms on NC 2020 (seed $= 42^\dagger$).
 
 \begin{table}[ht]
 \centering
-\caption{District Reock under four structure algorithms, NC 2020, seed $= 42^\dagger$.}
+\caption{District reported Reock under four structure algorithms, NC 2020, seed $= 42^\dagger$.}
 \label{tab:mka_reock}
 \begin{tabular}{lcccc}
 \toprule
@@ -51,8 +55,11 @@ moving-knife    & 0.29 & 0.37 & 0.38$^\dagger$ & 0.53 \\
 \end{tablenotes}
 \end{table}
 
-MKA achieves mean Reock $= 0.38^\dagger$ on NC 2020---a 23\% improvement over
+MKA achieves mean reported Reock $= 0.38^\dagger$ on NC 2020---a 23\% improvement over
 standard-bisect ($0.31^\dagger$) and a 3\% improvement over ratio-optimal ($0.37^\dagger$).
 The minimum district Reock under MKA is $0.29$, versus $0.21$ for standard-bisect
 (a 38\% improvement in the worst-case district).
-This empirically confirms Claim~2: MKA maximises minimum Reock by construction.
+This supports the weaker implementation claim: MKA's directional sweep is aligned
+with its worst-side compactness proxy on this single-run fixture.  Stronger
+same-metric or statewide superiority claims require archived per-node candidate
+ledgers and exact polygon-Reock comparisons.

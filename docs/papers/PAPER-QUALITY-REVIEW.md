@@ -69,7 +69,7 @@ are called complete.
 | 4 | U.10, G.4, G.7, G.10, G.11 | Sampling and ensemble methods | Completed 2026-05-12 |
 | 5 | T.5-T.13, U.0-U.7, U.11, U.13-U.15 | Older algorithm-family papers not yet lifted to the same explanatory standard | In progress: T.5-T.13 complete |
 | 6 | B/C/D/F/G/A synthesis tracks | Portfolio, validation, legal, legislative, ensemble, and synthesis papers | Queued |
-| 7 | E/I/J/K/L/M/N/O/P/Q/R/S tracks | Remaining indexed papers and source-only drafts | Queued |
+| 7 | E/I/J/K/L/M/N/O/P/Q/R/S tracks | Remaining indexed papers and source-only drafts | In progress: K.2/K.0/K.7 Reock pass complete |
 
 ## Batch 1 Checklist
 
@@ -397,3 +397,22 @@ remaining ceiling is archival and metric-level: per-node angle ledgers,
 polygon-boundary Reock, true perimeter-aware Polsby-Popper, and same-metric
 NC/FL/WA packages are needed before the paper can claim more than a strong
 auditable structure baseline.
+
+## Batch 7 K-Track Checkpoint
+
+| Paper | Review status | Fix status | Build/PDF status |
+|---|---|---|---|
+| K.0 Compactness Overview | Reviewed 2026-05-13 | Propagated the K.2 Reock implementation boundary: canonical exact-MBC Reock is distinct from the `bisect-analysis` centroid-radius reported metric and the moving-knife point-cloud proxy | Rebuild target for pulse 01 |
+| K.2 Reock | Reviewed 2026-05-13 | Reframed the paper around canonical exact-MBC Reock, the production centroid-radius compactness report, and the moving-knife point-cloud proxy; narrowed MKA and Reock-PP claims to single-seed/proxy evidence; added implementation-path table and court disclosure language | Rebuild target for pulse 01 |
+| K.7 Composite Court Guide | Reviewed 2026-05-13 | Propagated Reock disclosure into court survey, `bisect label-analyze` output, template expert language, and composite threshold wording | Rebuild target for pulse 01 |
+
+### Batch 7 K-Track Score Notes
+
+**K.2 Reock -- 20.8/24.** The correctness blocker is removed: the paper no
+longer says or implies that the production compactness report uses exact Welzl
+MBC. It now names the three relevant objects separately: canonical exact-MBC
+Reock, `bisect-analysis::reock` as the centroid-plus-maximum-boundary-radius
+proxy, and `bisection_runner::welzl_mec` as a moving-knife tract-centroid helper.
+The remaining ceiling is evidentiary rather than correctness: exact polygon-MBC
+implementation, archived same-metric compactness packages, and per-node MKA
+candidate ledgers would be needed before the K.2 paper should move beyond strong.

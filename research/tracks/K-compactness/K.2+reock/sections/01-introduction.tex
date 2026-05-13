@@ -1,5 +1,5 @@
 The Reock score was introduced by \citet{reock1961note} as a measure of how
-much of the minimum enclosing circle a district fills.
+much of an enclosing circle a district fills.
 Its key conceptual insight is that the minimum bounding circle (MBC) is determined
 entirely by the most extreme points of a district---its ``tips''---rather than
 by the full boundary perimeter.
@@ -32,14 +32,17 @@ coastal boundaries contribute zigzag perimeter without corresponding district
 Reock avoids this problem: the MBC is determined by the extreme points
 (typically inland or cross-bay points), and the jagged coastline between
 those extreme points does not affect the MBC.
-This paper provides the first systematic comparison of Reock boundary sensitivity
-against PP boundary sensitivity under controlled computational conditions.
+This paper compares the current \textsc{bisect} Reock proxy's boundary
+sensitivity against PP boundary sensitivity under controlled computational
+conditions.  It keeps the canonical MBC definition visible while separating it
+from the deployed centroid approximation.
 
 \subsection{Moving-Knife Algorithm}
 
-The moving-knife algorithm (MKA) is a bisect structure algorithm designed to
-maximise the minimum Reock score across all districts.
-It operates by selecting bisection cuts that minimise the MBC radius growth,
-preferring cuts that produce round sub-regions rather than elongated ones.
-We provide the first empirical validation of MKA's Reock maximisation claim
-on NC 2020 data.
+The moving-knife algorithm (MKA) is a \textsc{bisect} structure algorithm that
+uses projected tract centroids to search for directional bisection cuts with
+strong worst-side compactness.  It is not a global Reock optimizer and it does
+not use polygon exact-MBC Reock inside the splitter.  The implementation projects
+centroids, sorts units by candidate direction, cuts a population prefix, scores
+both sides with a point-cloud minimum-enclosing-circle proxy, and keeps the best
+worst-side candidate before local rebalance.

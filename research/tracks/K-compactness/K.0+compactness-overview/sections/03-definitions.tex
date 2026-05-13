@@ -19,7 +19,9 @@ circle containing $D$), with area $A(\text{MBC}(D)) = \pi r^2$. Then:
 \[
   \text{Reock}(D) = \frac{A(D)}{\pi r^2}.
 \]
-Computation uses Welzl's randomised algorithm in $O(n)$ expected time
+Exact-MBC computation can use Welzl's randomised algorithm in $O(n)$ expected
+time, but \textsc{bisect}'s production \texttt{reock()} currently reports a
+centroid-plus-max-boundary-radius approximation for Python-pipeline parity
 (K.2, Section~3).
 
 \subsection{Convex Hull Ratio (CH)}

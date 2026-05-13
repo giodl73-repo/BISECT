@@ -24,6 +24,8 @@ Our three principal findings are:
 For any redistricting plan submitted to a court, commission, or legislature:
 \begin{enumerate}
   \item Run \texttt{bisect label-analyze --types all} to generate the composite profile.
+  \item Disclose that \textsc{bisect} Reock is the centroid-radius approximation
+    unless exact-MBC Reock was computed separately.
   \item Include the template language from Section~6 in the expert report body.
   \item Append the full per-district table (Appendix B) and the structured JSON (Appendix A).
   \item Verify the hash chain with \texttt{bisect label-verify}.
@@ -35,7 +37,7 @@ For any redistricting plan submitted to a court, commission, or legislature:
 
 A plan passes the composite compactness profile if all districts satisfy:
 \begin{itemize}
-  \item PP $\geq 0.18$, Reock $\geq 0.30$, CH $\geq 0.82$,
+  \item PP $\geq 0.18$, reported Reock $\geq 0.30$, CH $\geq 0.82$,
     S $\leq 2.4$, LW $\leq 2.8$, PWC within two standard deviations of state mean.
 \end{itemize}
 All bisect ratio-optimal NC 2020 plans satisfy these criteria for all 14 districts.

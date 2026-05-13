@@ -1,5 +1,5 @@
-We quantify Reock's boundary insensitivity by comparing Reock values computed
-on smoothed vs.\ raw TIGER/Line district geometries.
+We quantify the reported Reock proxy's boundary insensitivity by comparing
+values computed on smoothed vs.\ raw TIGER/Line district geometries.
 
 \subsection{Boundary Representations}
 
@@ -12,11 +12,12 @@ NC coastal tracts may have $> 1{,}000$ vertices along a single coastal segment.
 We apply Douglas-Peucker simplification~\citep{douglas1973algorithms}
 with tolerance $\epsilon = 100$ metres to reduce vertex counts by approximately
 60--80\% for coastal tracts, while preserving the overall shape of inland boundaries.
-This represents the ``true'' compactness of a district stripped of digitisation noise.
+This represents a simplified-boundary comparison, not a court-certified
+``true'' compactness value.
 
 \subsection{Reock vs.\ PP Sensitivity}
 
-Table~\ref{tab:boundary_sensitivity} compares the change in mean district Reock
+Table~\ref{tab:boundary_sensitivity} compares the change in mean district reported Reock
 and PP when switching from smoothed to raw boundaries for NC coastal districts
 (seed $= 42^\dagger$, ratio-optimal).
 
@@ -29,7 +30,7 @@ and PP when switching from smoothed to raw boundaries for NC coastal districts
 \toprule
 Metric & Smoothed & Raw (TIGER/Line) & Change \\
 \midrule
-Reock & 0.374$^\dagger$ & 0.355$^\dagger$ & $-0.019$ \\
+Reported Reock & 0.374$^\dagger$ & 0.355$^\dagger$ & $-0.019$ \\
 PP    & 0.261$^\dagger$ & 0.213$^\dagger$ & $-0.048$ \\
 \bottomrule
 \end{tabular}
@@ -41,18 +42,20 @@ PP    & 0.261$^\dagger$ & 0.213$^\dagger$ & $-0.048$ \\
 \end{tablenotes}
 \end{table}
 
-The Reock decrease ($-0.019$) is 2.5$\times$ smaller than the PP decrease ($-0.048$).
-This confirms Claim~1: Reock is less sensitive to boundary representation
-than PP for coastal and riverine districts.
+The reported Reock decrease ($-0.019$) is 2.5$\times$ smaller than the PP
+decrease ($-0.048$).  This supports the operational claim that the current
+\textsc{bisect} Reock proxy is less sensitive to boundary representation than PP
+for these coastal and riverine districts.  It does not by itself prove an
+exact-MBC Reock sensitivity bound.
 
 \subsection{Mechanism}
 
-The MBC is determined by at most three extreme points on the district boundary
-(by Welzl's algorithm, the boundary set $|R| \leq 3$).
-For a coastal NC district, these extreme points are typically the inland extreme
-(a Piedmont tract) and two coastal extremes (the northernmost and southernmost
-shoreline points), none of which move substantially when digitisation detail is reduced.
-The jagged coastline between these extreme points does not affect the MBC.
+For exact-MBC Reock, the circle is determined by a small support set of boundary
+points, often two or three extremes.  For the current centroid proxy, the radius
+is determined by whichever boundary coordinate is farthest from the polygon
+centroid.  In both cases, small coastline wiggles usually matter less than they
+do for a perimeter sum, but the implemented proxy should be described by its
+centroid-radius rule rather than by Welzl support-point mechanics.
 
 In contrast, PP depends on the total perimeter $P = \sum_i |e_i|$ summed over all
 boundary edges. Each additional vertex introduced by TIGER/Line digitisation of

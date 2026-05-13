@@ -18,8 +18,8 @@ Litigation evidence (federal/state court) &
 \addlinespace
 Coastal/riverine state comparison &
   Reock &
-  Less sensitive to TIGER/Line boundary artifacts than PP; MBC visually intuitive;
-  used in NC (\textit{Harper v.\ Hall}) and WI (\textit{Gill v.\ Whitford}) &
+  Less sensitive to TIGER/Line boundary artifacts than PP; enclosing-circle visual
+  intuitive; disclose \textsc{bisect}'s centroid-radius proxy when exact MBC matters &
   \texttt{--types reock} \\
 \addlinespace
 Public communication &
@@ -68,7 +68,8 @@ The decision table does not depend on algorithm choice for the lead metric
 recommendation. However, if the goal is \emph{maximising} a specific metric,
 algorithm matters:
 \begin{itemize}
-  \item Maximise Reock: use \texttt{--structure moving-knife} (K.2).
+  \item Improve the Reock-oriented proxy: use \texttt{--structure moving-knife}
+    with the K.2 disclosure that this is not exact polygon-MBC optimisation.
   \item Minimise PWC: use \texttt{--structure prime-factor} (K.6).
   \item Maximise PP: use \texttt{--structure ratio-optimal} (K.1).
   \item All algorithms guarantee CH $> 0.85$ on NC by construction (K.3).

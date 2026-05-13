@@ -298,7 +298,7 @@ One paper per compactness metric: mathematical definition, properties, implement
 |------|-------|-----|--------|
 | K.0 | Compactness Taxonomy and Overview | [PDF](papers/K.0+compactness-overview.pdf) | **Accepted** |
 | K.1 | Polsby-Popper Score | [PDF](papers/K.1+polsby-popper.pdf) | **Accepted** |
-| K.2 | Reock Score | [PDF](papers/K.2+reock.pdf) | **Accepted** |
+| K.2 | Reock Score | [PDF](papers/K.2+reock.pdf) | Reviewed draft; exact-MBC implementation pending |
 | K.3 | Convex Hull Ratio | [PDF](papers/K.3+convex-hull.pdf) | **Accepted** |
 | K.4 | Schwartzberg Score | [PDF](papers/K.4+schwartzberg.pdf) | **Accepted** |
 | K.5 | Length-Width Ratio | [PDF](papers/K.5+length-width.pdf) | Minor Revision |

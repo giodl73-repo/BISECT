@@ -25,11 +25,11 @@ compactness metrics are relevant to gerrymandering analysis.
 
 \subsection{Advantages of Reock for Coastal States}
 
-Reock is preferred over PP in expert testimony for states with coastlines
-because it avoids the boundary-sensitivity problem documented in Section~4.
+Reock is often useful alongside PP in expert testimony for states with coastlines
+because it reduces the boundary-sensitivity problem documented in Section~4.
 When opposing counsel challenges PP values as inflated by coastline artifacts,
-a Reock-based analysis provides a boundary-insensitive alternative that is
-difficult to dismiss.
+a Reock-based analysis provides an area-based alternative with a different
+failure mode.
 The MBC overlay is also visually intuitive for courtroom presentation:
 the expert draws the minimum enclosing circle on the district map and the
 court can see immediately what fraction of that circle the district occupies.
@@ -43,7 +43,8 @@ For court filings using Reock:
   TIGER/Line tract geometries projected to Albers Equal Area Conic (EPSG:5070).
   The approximation circle is centred at the polygon centroid with radius equal to the
   maximum distance from the centroid to any boundary vertex; it contains the polygon
-  and may be slightly larger than the true MBC, producing conservative (slightly lower)
-  Reock values. Reock $= A(\text{district})/A(\text{approx.\ MBC})$.
-  Exact Welzl MBC computation remains future work.}
+  and may be larger than the true MBC, producing implementation-parity Reock
+  values that may differ from exact-MBC Reock. Reock
+  $= A(\text{district})/A(\text{approx.\ MBC})$ in this report.
+  Exact polygon-MBC computation remains future work for the compactness report.}
 \end{quote}

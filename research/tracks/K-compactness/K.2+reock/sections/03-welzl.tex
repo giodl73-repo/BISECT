@@ -1,26 +1,48 @@
-Computing the exact minimum bounding circle (MBC) of a polygon is equivalent to
-computing the smallest enclosing disk (SED) of its vertex set, solvable in
-$O(n)$ expected time by Welzl's randomised algorithm~\citep{welzl1991smallest}.
-The current \textsc{bisect} implementation does not yet call Welzl directly;
-it uses the centroid-plus-max-radius approximation described below.
+Computing the exact minimum bounding circle (MBC) of a polygon can be reduced to
+computing the smallest enclosing disk (SED) of the relevant boundary point set,
+solvable in expected linear time by Welzl's randomised algorithm~\citep{welzl1991smallest}.
+That algorithm is the correct reference for exact-MBC Reock, but it is not the
+same as every Reock-like score exposed by \textsc{bisect}.
 
-\subsection{Implementation in bisect}
+\subsection{Implementation paths in bisect}
 
-The implementation in \texttt{crates/bisect-analysis/src/compactness.rs}
-uses a \textbf{centroid-plus-max-radius approximation}: the bounding circle
-centre is taken as the polygon centroid, and the radius is the maximum distance
-from the centroid to any vertex on the polygon boundary.
-This approximation matches the convention used in the Python redistricting
-pipeline that bisect supersedes, ensuring comparability of Reock scores across
-pipeline versions.
+\begin{table}[ht]
+\centering
+\caption{Reock-related implementation paths in \textsc{bisect}.}
+\label{tab:reock_implementation_paths}
+\begin{tabular}{p{0.26\linewidth}p{0.31\linewidth}p{0.31\linewidth}}
+\toprule
+Surface & What it computes & Evidence boundary \\
+\midrule
+\texttt{bisect-analysis::reock} &
+Polygon area divided by a centroid-plus-max-boundary-radius circle. &
+Production compactness metric; Python-parity proxy, not exact MBC. \\
+\texttt{bisection\_runner::welzl\_mec} &
+Minimum enclosing circle of a projected tract-centroid point set. &
+Moving-knife candidate-scoring helper; not district-polygon Reock. \\
+Canonical K.2 definition &
+Polygon area divided by true minimum enclosing circle area. &
+Mathematical target and external-software comparison point. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The production implementation in
+\texttt{crates/bisect-analysis/src/compactness.rs} uses a
+\textbf{centroid-plus-max-radius approximation}: the circle centre is taken as
+the polygon centroid, and the radius is the maximum distance from the centroid
+to any exterior boundary coordinate.  This approximation matches the convention
+used in the Python redistricting pipeline that \textsc{bisect} supersedes,
+ensuring comparability of Reock scores across pipeline versions.
 
 \begin{remark}[Future work]
-Exact Welzl MBC remains future work.
+Exact polygon MBC remains future work for the compactness report.
 The centroid-plus-max-radius approximation yields a circle that contains the polygon
 but may be larger than the true MBC (the approximation errs toward over-coverage,
 producing Reock values that are conservative---i.e., slightly lower than true-MBC Reock).
 Practitioners requiring exact MBC-based Reock (e.g., for reproduction against
-other redistricting software) should note this approximation.
+other redistricting software) should note this approximation and should not cite
+\texttt{bisect label-analyze} Reock values as exact-MBC scores.
 \end{remark}
 
 Test invariants (L0):

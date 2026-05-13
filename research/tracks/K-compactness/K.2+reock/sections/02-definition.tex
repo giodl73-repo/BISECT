@@ -2,7 +2,7 @@
 
 Let $D$ be a district polygon and let MBC$(D)$ be the smallest circle that
 contains $D$, with radius $r(D)$.
-The Reock score is:
+The canonical Reock score is:
 \begin{equation}
   \text{Reock}(D) = \frac{A(D)}{\pi r(D)^2},
   \label{eq:reock}
@@ -57,3 +57,21 @@ shapes, Reock tends to exceed PP.
 (For example, a $1 \times 6$ rectangle has Reock $\approx 0.21$ and PP $\approx 0.38$,
 while a square has Reock $\approx 0.64$ and PP $\approx 0.785$.)
 No uniform ordering between Reock and PP holds for all convex polygons.
+
+\subsection{Implementation Boundary}
+
+The formula above is the mathematical reference point.  The production
+\textsc{bisect} compactness report currently computes
+\[
+  \widehat{\text{Reock}}(D)
+  = \frac{A(D)}{\pi \hat r(D)^2},
+\]
+where $\hat r(D)$ is the maximum distance from the polygon centroid to an
+exterior boundary coordinate.  This preserves parity with the archived Python
+pipeline and is documented in
+\texttt{crates/bisect-analysis/src/compactness.rs}.  It is a containing-circle
+proxy, not the true MBC for every polygon.  A separate helper in
+\texttt{crates/bisect-cli/src/bisection\_runner.rs} computes a minimum enclosing
+circle over tract-centroid point clouds for moving-knife candidate scoring; that
+helper is not the district-polygon compactness metric reported by
+\texttt{bisect label-analyze}.

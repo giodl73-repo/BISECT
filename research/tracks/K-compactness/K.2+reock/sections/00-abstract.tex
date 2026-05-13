@@ -1,20 +1,25 @@
-The Reock score (Reock $= A / A(\text{MBC})$) compares a district's area to its
-minimum bounding circle (MBC), providing a compactness measure that is substantially
-less sensitive to boundary representation artifacts than the Polsby-Popper score.
-We study Reock across four \textsc{bisect} structure algorithms---standard-bisect,
+The Reock score compares a district's area to a circle enclosing the district,
+providing a compactness measure that is substantially less sensitive to boundary
+representation artifacts than the Polsby-Popper score.
+Canonical Reock uses the true minimum enclosing circle; the current
+\textsc{bisect} compactness report intentionally uses the
+centroid-plus-maximum-boundary-radius approximation inherited from the archived
+Python pipeline, while the moving-knife structure search uses a separate
+projected-centroid point-cloud proxy.
+We study reported Reock values across four \textsc{bisect} structure algorithms---standard-bisect,
 prime-factor, ratio-optimal, and moving-knife---for North Carolina ($k=14$),
 Wisconsin ($k=8$), and Texas ($k=38$) under 2020 Census data.
-The implementation uses a centroid-plus-max-radius approximation that matches the
-Python redistricting pipeline's convention; exact Welzl MBC remains future work.
-Key findings: (1) Reock decreases by $\leq 0.02$ when switching from smoothed to
+Key findings: (1) The reported Reock proxy decreases by $\leq 0.02$ when switching from smoothed to
 raw TIGER/Line boundaries on NC coastal districts, versus PP decreasing by
-$0.04$--$0.08$, confirming Reock's boundary insensitivity.
-(2) The moving-knife algorithm (MKA), a greedy approximation that selects
-bisection cuts maximising the minimum sub-region Reock score, achieves mean district
+$0.04$--$0.08$, supporting the proxy's boundary-insensitivity claim.
+(2) The moving-knife algorithm (MKA), an implemented directional sweep that
+scores candidate prefixes by minimum point-cloud Reock proxy, achieves mean reported
 Reock $\geq 0.38^\dagger$ on NC 2020 versus $0.31^\dagger$ for standard-bisect---a
 23\% empirical improvement in mean Reock.
-(3) The empirical Reock--PP gap averages $+0.15$ on NC 2020 under ratio-optimal,
-confirming that Reock is systematically more lenient than PP.
-All Reock values use the centroid approximation; gaps may differ slightly from
-true MBC-based Reock.
+(3) The empirical reported-Reock--PP gap averages $+0.15$ on NC 2020 under
+ratio-optimal, showing metric disagreement in this fixture rather than a
+universal Reock-over-PP ordering.
+All reported district Reock values use the centroid approximation; gaps may
+differ from true MBC-based Reock and should be treated as implementation-parity
+evidence, not exact-MBC evidence.
 All results use single seed $= 42^\dagger$.

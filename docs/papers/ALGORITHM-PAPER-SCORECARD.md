@@ -135,14 +135,14 @@ Score bands:
 | J.4 Jefferson/D'Hondt | 3.2 | 3.4 | 3.0 | 3.2 | 3.3 | 3.2 | 19.3 | Serviceable |
 | J.5 Apportionment Paradoxes | 3.2 | 3.3 | 3.0 | 3.3 | 3.3 | 3.2 | 19.3 | Serviceable |
 | J.6 bisect-apportion Implementation | 2.6 | 3.0 | 2.6 | 2.8 | 3.2 | 2.8 | 17.0 | Needs Work; known stale implementation claims |
-| K.0 Compactness Overview | 3.4 | 3.4 | 3.2 | 3.3 | 3.4 | 3.4 | 20.1 | Strong but inherits K.2 method caveat |
+| K.0 Compactness Overview | 3.5 | 3.4 | 3.3 | 3.5 | 3.4 | 3.4 | 20.5 | Strong; Reock proxy caveat propagated |
 | K.1 Polsby-Popper | 3.5 | 3.6 | 3.3 | 3.4 | 3.4 | 3.5 | 20.7 | Strong |
-| K.2 Reock | 2.8 | 3.1 | 2.6 | 3.0 | 3.3 | 3.0 | 17.8 | Needs Work; known Welzl/implementation mismatch |
+| K.2 Reock | 3.5 | 3.5 | 3.3 | 3.6 | 3.5 | 3.4 | 20.8 | Strong; implementation mismatch fixed, exact-MBC evidence pending |
 | K.3 Convex Hull | 3.5 | 3.5 | 3.3 | 3.4 | 3.4 | 3.5 | 20.6 | Strong |
 | K.4 Schwartzberg | 3.5 | 3.5 | 3.3 | 3.4 | 3.4 | 3.5 | 20.6 | Strong |
 | K.5 Length-Width | 3.2 | 3.3 | 3.0 | 3.2 | 3.3 | 3.2 | 19.2 | Minor revision |
 | K.6 Population-Weighted Compactness | 3.5 | 3.5 | 3.3 | 3.4 | 3.4 | 3.5 | 20.6 | Strong |
-| K.7 Composite/Court Guide | 3.2 | 3.3 | 3.0 | 3.3 | 3.3 | 3.2 | 19.3 | Minor revision; K.2 caveat propagates |
+| K.7 Composite/Court Guide | 3.4 | 3.4 | 3.2 | 3.5 | 3.4 | 3.4 | 20.3 | Serviceable-plus; Reock disclosure propagated |
 | L.0 Partisan Fairness Overview | 3.6 | 3.4 | 3.4 | 3.8 | 3.4 | 3.5 | 21.1 | Strong |
 | L.1 Efficiency Gap | 3.7 | 3.5 | 3.4 | 3.8 | 3.4 | 3.6 | 21.4 | Strong |
 | L.2 Mean-Median | 3.7 | 3.5 | 3.4 | 3.8 | 3.4 | 3.6 | 21.4 | Strong |
@@ -158,14 +158,14 @@ Score bands:
 
 ## Highest-Priority Lifts
 
-1. Metric correctness pass: K.2 first, then K.0/K.7 propagation. The Reock
-   implementation mismatch is the most concrete known blocker in the metric
-   algorithm papers.
-2. Apportionment implementation pass: J.6, then J.0-J.5. The mathematical
+1. Apportionment implementation pass: J.6, then J.0-J.5. The mathematical
    method papers are serviceable, but the implementation paper has known stale
    claims.
-3. Older search pass: U.0-U.7, U.11, and U.13-U.15 need the same
+2. Older search pass: U.0-U.7, U.11, and U.13-U.15 need the same
    implementation/evidence-boundary refresh now applied to T.5-T.13.
+3. Metric follow-through: K.2/K.0/K.7 no longer have the Welzl/implementation
+   blocker, but exact polygon-MBC Reock and archived same-metric packages remain
+   future evidence lifts.
 
 ## Track Summary
 
@@ -175,6 +175,6 @@ Score bands:
 | U search/optimization/audit | 21 | Strong, with U.10 and U.16-U.20 golden | refresh older U.2-U.7 and U.13-U.15 |
 | G ensemble/sampling | 16 | Strong but uneven; G.4/G.7/G.10/G.11 now golden | older G refresh and data-validation cleanup |
 | J apportionment | 7 | Serviceable | J.6 stale implementation claims |
-| K compactness metrics | 8 | Strong except K.2 | Reock implementation mismatch |
+| K compactness metrics | 8 | Strong/serviceable-plus after K.2 disclosure pass | exact polygon-MBC evidence and K.5 minor revision |
 | L partisan metrics | 7 | Strong | cross-link to G/A synthesis |
 | M community weights | 5 | Strong where PDFs exist | source-only papers need completion |

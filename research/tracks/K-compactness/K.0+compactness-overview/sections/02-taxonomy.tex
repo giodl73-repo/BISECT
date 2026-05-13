@@ -37,11 +37,14 @@ Area-based metrics compare the district's area to a reference shape derived
 from its geometry---the minimum enclosing circle or the convex hull.
 Reock and CH belong to this family.
 
-\textbf{Reock} compares district area to its minimum bounding circle (MBC):
+\textbf{Canonical Reock} compares district area to its minimum bounding circle (MBC):
 \[
   \text{Reock} = \frac{A}{\pi r^2} \in [0, 1],
 \]
 where $r$ is the radius of the smallest circle containing the district.
+The current \textsc{bisect} reported Reock value uses a centroid-plus-maximum
+boundary-radius proxy for Python-pipeline parity; K.2 separates that production
+metric from exact-MBC Reock.
 
 \textbf{Convex Hull Ratio} compares district area to its convex hull:
 \[
@@ -52,10 +55,11 @@ where $\text{conv}(D)$ is the convex hull of district $D$.
 \paragraph{Boundary insensitivity.}
 Area-based metrics are substantially less sensitive to boundary representation
 because they measure the interior area of a shape, not its perimeter.
-On NC coastal districts, Reock decreases by $\leq 0.02$ when switching from
+On NC coastal districts, the reported Reock proxy decreases by $\leq 0.02$ when switching from
 smoothed to raw TIGER/Line boundaries, versus PP decreasing by $0.04$--$0.08$
 (K.2).
-This makes area-based metrics more appropriate for coastal states.
+This makes area-based metrics useful for coastal states, provided the proxy is
+disclosed when exact-MBC reproduction is required.
 
 \paragraph{What each detects.}
 Reock detects departure from circularity in the global shape envelope,
