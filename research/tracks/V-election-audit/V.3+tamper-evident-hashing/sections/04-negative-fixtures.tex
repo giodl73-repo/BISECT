@@ -1,0 +1,20 @@
+\section{Negative Fixtures}
+
+The hash layer earns its keep when adjacent checks disagree. Two negative
+fixtures show different failures:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+Fixture & Failure & Interpretation \\
+\midrule
+\texttt{tampered-source} & \texttt{source\_hash\_match} fails after raw source bytes are edited. & Arithmetic can still pass, but the evidence file no longer matches the declared hash. \\
+\texttt{missing-source-hash} & \texttt{source\_hash\_match} fails because the source index is empty. & The package omits the raw source-hash evidence needed for replay. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+In both cases, local contest sums and jurisdiction totals can pass. That is the
+point: hash failures are not arithmetic failures. A good verifier transcript
+keeps them separate so a public reader can ask the right follow-up question.

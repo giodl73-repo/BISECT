@@ -1,0 +1,41 @@
+\section{Verifier Traceability}
+
+The fixtures can be regenerated and verified from the crate examples:
+
+\begin{quote}
+\footnotesize
+\begin{verbatim}
+cargo run -p rcount-io --example summary_basic_package
+cargo run -p rcount-io --example mail_batch_added_package
+cargo run -p rcount-cli -- verify \
+  docs/examples/rcount-golden-packages/summary-basic
+cargo run -p rcount-cli -- verify \
+  docs/examples/rcount-golden-packages/mail-batch-added
+cargo run -p rcount-cli -- verify \
+  docs/examples/rcount-golden-packages/tampered-source
+cargo run -p rcount-cli -- verify \
+  docs/examples/rcount-golden-packages/missing-source-hash
+\end{verbatim}
+\end{quote}
+
+A compact excerpt from \texttt{tampered-source} shows the desired attribution:
+\begin{quote}
+\footnotesize
+\begin{verbatim}
+{
+  "status": "fail",
+  "checks": [
+    {"equation_id": "contest_selection_sum", "status": "pass"},
+    {"equation_id": "jurisdiction_contest_total", "status": "pass"},
+    {
+      "equation_id": "source_hash_match",
+      "status": "fail",
+      "error": "source hash mismatch for source:synthetic-summary-export"
+    }
+  ]
+}
+\end{verbatim}
+\end{quote}
+
+The important property is not merely that the package fails. It fails at the
+source-evidence layer while preserving the fact that arithmetic checks passed.

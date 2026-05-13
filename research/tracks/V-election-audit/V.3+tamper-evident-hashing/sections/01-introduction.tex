@@ -1,0 +1,17 @@
+\section{Introduction}
+
+A public count package has two different integrity problems. First, the package
+must preserve the meaning of public election records: contests, reporting units,
+batches, statuses, residual counts, and source references. Second, it must make
+later byte-level changes visible. A normalized summary can still add correctly
+after the raw source file has been edited, replaced, truncated, or omitted.
+
+RCOUNT therefore separates arithmetic checks from hash checks. A verifier may
+report that local contest sums and jurisdiction totals pass while the source
+hash check fails. That is not a contradiction. It means the normalized records
+reconcile, but the raw evidence no longer matches the package's declared source
+index.
+
+The discipline is tamper evidence, not omniscience. Hashes can show that bytes
+changed. They cannot show that the original bytes were lawful, complete,
+accurately exported, free of malware, or sufficient for certification.

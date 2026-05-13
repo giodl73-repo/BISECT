@@ -1,0 +1,27 @@
+\section{Batch Manifests}
+
+Batch manifests make the hashing and accounting surface smaller than the whole
+election. A package can describe election-day batches, mail batches,
+provisional batches, or central-count batches and bind each manifest to source
+references.
+
+In \texttt{mail-batch-added}, the batch ledger contains:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lrrrX}
+\toprule
+Batch & Accepted & Counted & Rejected & Source reference \\
+\midrule
+P-001 election day & 70 & 70 & 0 & \texttt{synthetic-summary-export} \\
+P-001 late mail & 10 & 10 & 0 & \texttt{synthetic-summary-export} \\
+P-002 election day & 60 & 60 & 0 & \texttt{synthetic-summary-export} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The manifest gives RCOUNT two kinds of evidence. The arithmetic evidence checks
+that accepted ballots equal counted plus rejected ballots. The source evidence
+checks that the public input bytes referenced by the batch still match the
+source index. A late mail batch is therefore not treated as suspicious because
+it is late; it is auditable because it is declared, reconciled, and source-bound.

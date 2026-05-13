@@ -1,0 +1,16 @@
+\section{Boundaries}
+
+Hashing is not certification. A passing RCOUNT hash check says that declared
+source bytes still match their recorded hashes. It does not say that an election
+official certified the result, that the source export was complete, or that a
+court would accept the record.
+
+Hashing is also not encryption. If a source file contains private data, hashing
+the file does not make the data safe to publish. RCOUNT packages should publish
+only receipt-safe public evidence, and private support files should be handled
+under the jurisdiction's custody rules.
+
+Finally, tamper evidence is not malware resistance or end-to-end cryptographic
+voting. RCOUNT can detect that a published source file changed after hashing. It
+cannot prove that a tabulator, ballot-marking device, or export pipeline was
+correct before that source file was produced.

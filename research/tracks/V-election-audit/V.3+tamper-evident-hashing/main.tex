@@ -1,0 +1,41 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{Tamper-Evident Precinct And Batch Hashing}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Public election-count evidence is fragile unless the bytes being verified are
+named, hashed, and replayed. This paper describes RCOUNT's tamper-evidence
+layer: source hashes for raw public inputs, package hashes for normalized
+records, batch manifests for smaller accounting units, and transcripts that
+separate hash failures from arithmetic failures. Hashing does not certify an
+election or prove tabulator correctness. It makes later changes visible: if a
+source file changes after publication, a verifier can detect the mismatch even
+when summary arithmetic still passes.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-hash-layers}
+\input{sections/03-batch-hashing}
+\input{sections/04-negative-fixtures}
+\input{sections/05-verifier-trace}
+\input{sections/06-boundaries}
+\input{sections/07-conclusion}
+
+\nocite{rcount-overview-2026,rcount-canvass-2026,rcount-lineage-2026,rcount-substrate-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

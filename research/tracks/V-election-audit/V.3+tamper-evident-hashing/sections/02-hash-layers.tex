@@ -1,0 +1,43 @@
+\section{Hash Layers}
+
+RCOUNT uses separate hash roles so that verifier transcripts can name the layer
+that failed.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+Layer & Object & Purpose \\
+\midrule
+Source hash & Raw public input file & Detects byte changes in the evidence an adapter read. \\
+Record hash & Normalized record & Supports stable hashes over canonicalized rows. \\
+Event hash & Status or lineage event & Binds typed public events to canonical records. \\
+Package hash & RCOUNT package content & Names the normalized claim set as a whole. \\
+Proof hash & Public proof object & Names inclusion-proof material without exposing choices. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The current crates use domain-separated SHA-256 prefixes for these roles. The
+domain separation matters because a hash of a source file should not be confused
+with a hash of a package, event, or proof. Each role answers a different
+question.
+
+The \texttt{summary-basic} package currently records a package content hash and
+simple package counts:
+\begin{quote}
+\footnotesize
+\begin{verbatim}
+{
+  "package_content_hash": "sha256:2e8876...",
+  "contest_count": 1,
+  "reporting_unit_count": 3,
+  "batch_count": 0,
+  "summary_count": 3
+}
+\end{verbatim}
+\end{quote}
+
+That digest names the normalized package. It does not replace the source index:
+an auditor still needs to know which raw files were read and whether those raw
+file hashes match.
