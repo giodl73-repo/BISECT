@@ -1,0 +1,24 @@
+{
+  "schema_version": "g-ensemble-evidence-manifest v1",
+  "package_id": "G.1+synthetic-bad-hash",
+  "status": "active",
+  "papers": ["G.1"],
+  "claims": [
+    {
+      "paper": "G.1",
+      "claim": "synthetic compactness percentile smoke claim is trace-backed",
+      "required_roles": ["external-trace"]
+    }
+  ],
+  "files": [
+    {
+      "path": "trace.json",
+      "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "role": "external-trace",
+      "description": "Negative fixture: declared hash intentionally does not match trace.json."
+    }
+  ],
+  "verifier_path": "crates/bisect-ensemble/src/evidence_manifest.rs",
+  "verification_commands": ["cargo test -p bisect-ensemble negative_fixture_rejects_hash_mismatch"],
+  "missing_evidence": []
+}

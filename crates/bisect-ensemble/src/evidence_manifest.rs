@@ -1,4 +1,7 @@
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
+use std::fs;
+use std::path::Path;
 use thiserror::Error;
 
 pub const G_ENSEMBLE_EVIDENCE_MANIFEST_VERSION: &str = "g-ensemble-evidence-manifest v1";
@@ -80,6 +83,14 @@ pub enum EvidenceManifestError {
     MissingPackageWithoutGap,
     #[error("claim {index} must require at least one evidence role")]
     ClaimWithoutRequiredRoles { index: usize },
+    #[error("could not read referenced file {path}: {message}")]
+    FileRead { path: String, message: String },
+    #[error("hash mismatch for {path}: declared {declared}, computed {computed}")]
+    FileHashMismatch {
+        path: String,
+        declared: String,
+        computed: String,
+    },
 }
 
 impl GEnsembleEvidenceManifest {
@@ -135,6 +146,30 @@ impl GEnsembleEvidenceManifest {
             }
         }
 
+        Ok(())
+    }
+
+    pub fn validate_referenced_file_hashes(
+        &self,
+        package_root: impl AsRef<Path>,
+    ) -> Result<(), EvidenceManifestError> {
+        self.validate()?;
+        let package_root = package_root.as_ref();
+        for file in &self.files {
+            let path = package_root.join(&file.path);
+            let bytes = fs::read(&path).map_err(|error| EvidenceManifestError::FileRead {
+                path: file.path.clone(),
+                message: error.to_string(),
+            })?;
+            let computed = format!("{:x}", Sha256::digest(&bytes));
+            if computed != file.sha256 {
+                return Err(EvidenceManifestError::FileHashMismatch {
+                    path: file.path.clone(),
+                    declared: file.sha256.clone(),
+                    computed,
+                });
+            }
+        }
         Ok(())
     }
 }
@@ -303,5 +338,30 @@ mod tests {
             manifest.validate(),
             Err(EvidenceManifestError::ActivePackageMissingVerification)
         );
+    }
+
+    #[test]
+    fn fixture_manifest_hashes_match_referenced_files() {
+        let manifest: GEnsembleEvidenceManifest = serde_json::from_str(include_str!(
+            "fixtures/g_ensemble/active-smoke/manifest.json"
+        ))
+        .expect("fixture must parse");
+        let root =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("src/fixtures/g_ensemble/active-smoke");
+
+        assert_eq!(manifest.validate_referenced_file_hashes(root), Ok(()));
+    }
+
+    #[test]
+    fn negative_fixture_rejects_hash_mismatch() {
+        let manifest: GEnsembleEvidenceManifest =
+            serde_json::from_str(include_str!("fixtures/g_ensemble/bad-hash/manifest.json"))
+                .expect("fixture must parse");
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/fixtures/g_ensemble/bad-hash");
+
+        assert!(matches!(
+            manifest.validate_referenced_file_hashes(root),
+            Err(EvidenceManifestError::FileHashMismatch { .. })
+        ));
     }
 }

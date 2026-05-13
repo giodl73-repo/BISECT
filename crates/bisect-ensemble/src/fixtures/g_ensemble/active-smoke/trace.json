@@ -1,0 +1,11 @@
+{
+  "trace_kind": "synthetic-recom-smoke",
+  "state": "SYN",
+  "steps": [
+    {
+      "step": 1,
+      "cut_fraction": 0.25,
+      "accepted": true
+    }
+  ]
+}

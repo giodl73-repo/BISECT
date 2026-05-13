@@ -1,0 +1,5 @@
+{
+  "metric_kind": "synthetic-compactness-smoke",
+  "polsby_popper_percentile": 0.5,
+  "reock_percentile": 0.5
+}

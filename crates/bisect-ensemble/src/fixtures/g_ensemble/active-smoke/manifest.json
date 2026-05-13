@@ -1,0 +1,30 @@
+{
+  "schema_version": "g-ensemble-evidence-manifest v1",
+  "package_id": "G.1+synthetic-smoke",
+  "status": "active",
+  "papers": ["G.1"],
+  "claims": [
+    {
+      "paper": "G.1",
+      "claim": "synthetic compactness percentile smoke claim is trace-backed",
+      "required_roles": ["external-trace", "metric-output"]
+    }
+  ],
+  "files": [
+    {
+      "path": "trace.json",
+      "sha256": "0ea3e812fea978feb40a2b9d0fb5f1c446ff6fad6c5758a4c4507bf5259d417b",
+      "role": "external-trace",
+      "description": "Tiny synthetic trace used only to exercise package validation."
+    },
+    {
+      "path": "metrics.json",
+      "sha256": "a601319a961811d192bc84126a51b5f7fb9500e93450d147bbadefe5a9c2b2dc",
+      "role": "metric-output",
+      "description": "Tiny synthetic metric output used only to exercise package validation."
+    }
+  ],
+  "verifier_path": "crates/bisect-ensemble/src/evidence_manifest.rs",
+  "verification_commands": ["cargo test -p bisect-ensemble fixture_manifest_hashes_match_referenced_files"],
+  "missing_evidence": []
+}
