@@ -18,5 +18,13 @@ thresholds, and reporting-unit conventions.
 
 Fourth, it does not expose voter choices. Even when a future adapter ingests CVR
 or ballot-manifest evidence, public RCOUNT packages must preserve the privacy
-boundary described in V.0.
+boundary described in V.0. Public event metadata also inherits that boundary:
+small reporting units, rare write-ins, ballot-style combinations, timestamps,
+or overly precise source references can create reidentification risk. Hashing a
+source file provides tamper evidence; it does not make private source data safe
+to publish.
 
+Finally, V.1 is not an end-to-end cryptographic voting protocol. It supplies
+replayable public arithmetic and evidence references. Later papers may add
+privacy-safe inclusion proofs and CVR reconciliation, but the rule remains:
+prove inclusion, never prove candidate choices.

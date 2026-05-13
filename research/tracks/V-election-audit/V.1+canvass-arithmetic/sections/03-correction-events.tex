@@ -7,17 +7,25 @@ public correction event from unofficial to canvassed status.
 
 \begin{center}
 \small
-\begin{tabularx}{\textwidth}{lrrr}
+\begin{tabularx}{\textwidth}{lrrrrrrr}
 \toprule
-Snapshot & Candidate A & Candidate B & Counted ballots \\
+Snapshot & A & B & WI & Under & Over & Blank & Counted \\
 \midrule
-P-001 unofficial & 40 & 34 & 79 \\
-P-001 canvassed & 40 & 35 & 80 \\
-Jurisdiction unofficial & 65 & 64 & 139 \\
-Jurisdiction canvassed & 65 & 65 & 140 \\
+P-001 unofficial & 40 & 34 & 1 & 3 & 1 & 0 & 79 \\
+P-001 canvassed & 40 & 35 & 1 & 3 & 1 & 0 & 80 \\
+Jurisdiction unofficial & 65 & 64 & 1 & 7 & 1 & 1 & 139 \\
+Jurisdiction canvassed & 65 & 65 & 1 & 7 & 1 & 1 & 140 \\
 \bottomrule
 \end{tabularx}
 \end{center}
+
+The local equation for P-001 therefore changes by one declared vote, not by a
+hidden overwrite:
+\[
+  40 + 34 + 1 + 3 + 1 + 0 = 79
+  \quad\rightarrow\quad
+  40 + 35 + 1 + 3 + 1 + 0 = 80.
+\]
 
 The verifier checks three things. First, each summary satisfies local contest
 arithmetic: candidate votes plus residual counts equal counted ballots. Second,
@@ -25,8 +33,43 @@ each status-specific jurisdiction total equals the sum of its reporting units.
 Third, a correction event exists with authority, source references, explanation,
 and a transition from unofficial to canvassed.
 
+The minimal normalized event contract is deliberately small:
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & Meaning \\
+\midrule
+\texttt{event\_id} & Stable identifier within the package. \\
+\texttt{event\_type} & Typed reason, such as correction, late-mail-batch-added, recount-update, court-order, or certification. \\
+\texttt{status\_before}, \texttt{status\_after} & The declared transition. Initial unofficial reports may have the same before and after status. \\
+\texttt{effective\_at} & Public event date or timestamp asserted by the source adapter. \\
+\texttt{authority} & Office, board, court, or source authority making the public assertion. \\
+\texttt{source\_refs} & Package source identifiers whose raw hashes bind the event to declared evidence. \\
+\texttt{explanation} & Human-readable reason for the transition. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+A compact record for this fixture is:
+\begin{quote}
+\footnotesize
+\begin{verbatim}
+{
+  "event_id": "event-0002",
+  "event_type": "correction",
+  "status_before": "unofficial",
+  "status_after": "canvassed",
+  "effective_at": "2024-11-12T18:22:00Z",
+  "authority": "SYN County Canvassing Board",
+  "source_refs": ["source:canvass-minutes-2024-11-12"],
+  "explanation": "Canvass correction added one Candidate B vote in P-001..."
+}
+\end{verbatim}
+\end{quote}
+
 This does not prove that the correction was lawful. It proves that the package
 does not hide the delta. A public reader can see the before snapshot, the after
 snapshot, the event metadata, and the source hashes that bind the package to its
-declared evidence.
-
+declared evidence. A passing RCOUNT event check means "this transition is
+declared and linked," not "this board action satisfies every statute."

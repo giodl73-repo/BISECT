@@ -10,12 +10,18 @@ For every batch manifest, accepted ballots must reconcile:
   \text{accepted ballots} =
   \text{counted ballots} + \text{rejected ballots}.
 \]
+These are declared source facts. RCOUNT verifies that the declared counts are
+internally consistent; it does not decide whether a voter was eligible, whether
+a cure was timely, or whether a provisional ballot should have been accepted.
 For every batch summary, the summary's counted ballots must match the manifest's
 counted ballots:
 \[
   \text{summary counted ballots} =
   \text{manifest counted ballots}.
 \]
+Batch-specific summaries are adapter-dependent: a package may contain ordinary
+reporting-unit summaries without batch ids, but once a summary references a
+batch id, the corresponding batch manifest is required.
 
 In the \texttt{mail-batch-added} fixture, P-001 has an election-day batch and a
 late mail batch. The late mail batch is not suspicious because it is late; it is
@@ -41,3 +47,5 @@ leaving a summary that references it. Arithmetic alone may still look plausible,
 but the accounting evidence is missing. The verifier should therefore fail at
 \texttt{batch\_summary\_total}, not at a generic package error.
 
+This paper stops at summary and batch accounting. CVR-to-summary reconciliation,
+including ballot cards, CVR rows, and parser diagnostics, belongs to V.6.

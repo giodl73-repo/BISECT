@@ -1,8 +1,8 @@
 paper: V.1+canvass-arithmetic
 title: "Canvass Arithmetic: From Unofficial Returns To Certified Totals"
 type: publication
-stage: draft
-round: 1
+stage: ready
+round: 2
 content_mode: draft
 venue: technical report
 review_date: 2026-05-12
@@ -20,8 +20,9 @@ reviews:
   LEDGER: reviews/REVIEW-LEDGER.md
   VAULT: reviews/REVIEW-VAULT.md
   SYNTHESIS: reviews/SYNTHESIS.md
+  ROUND2: reviews/ROUND2-SYNTHESIS.md
 p1_items:
-  - "Define the minimal status-event schema and transition evidence contract."
-  - "Add fixture-to-command traceability for canvass-correction, mail-batch-added, and missing-batch."
-  - "Separate batch accounting, contest residual arithmetic, and ballot-acceptance decisions more visibly."
-  - "Name the jurisdiction-variation fields/adapters without implying one national canvass workflow."
+  - "[x] Define the minimal status-event schema and transition evidence contract."
+  - "[x] Add fixture-to-command traceability for canvass-correction, mail-batch-added, and missing-batch."
+  - "[x] Separate batch accounting, contest residual arithmetic, and ballot-acceptance decisions more visibly."
+  - "[x] Name the jurisdiction-variation fields/adapters without implying one national canvass workflow."
