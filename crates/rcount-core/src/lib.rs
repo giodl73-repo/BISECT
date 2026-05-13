@@ -4966,6 +4966,34 @@ mod tests {
     }
 
     #[test]
+    fn rhist_reference_consumes_split_merge_fixture_package_hash() {
+        let mut package = synthetic_summary_basic_package();
+        let package_hash = rhist_fixture_package_hash("l2-three-cycle");
+        package.rhist_refs = vec![RhistReference {
+            reference_id: "rhist:syn-l2-three-cycle".to_string(),
+            package_hash: package_hash.clone(),
+            package_path: Some("docs/fixtures/rhist/l2-three-cycle".to_string()),
+            cycle_ids: vec![
+                "syn-2024-general".to_string(),
+                "syn-2026-general".to_string(),
+                "syn-2028-general".to_string(),
+            ],
+            role: "unit-lineage".to_string(),
+            note: Some("References RHIST rename/split/merge fixture by package hash.".to_string()),
+        }];
+
+        let report = verify_package(&package).expect("RHIST fixture reference must verify");
+        assert!(report.passed.iter().any(|pass| {
+            pass.equation_id == "rhist_reference_declared"
+                && pass.reporting_unit_id == "rhist:syn-l2-three-cycle"
+        }));
+        assert_eq!(
+            package.rhist_refs[0].package_hash,
+            "sha256:2c391099d7b61ba0c27fd231376391aadec81de62a387e291a043ed18d69db0b"
+        );
+    }
+
+    #[test]
     fn rhist_reference_rejects_bad_hash() {
         let mut package = synthetic_summary_basic_package();
         package.rhist_refs = vec![RhistReference {
@@ -5006,6 +5034,23 @@ mod tests {
             verify_package(&package),
             Err(RcountCoreError::UnsupportedRhistReferenceRole { .. })
         ));
+    }
+
+    fn rhist_fixture_package_hash(name: &str) -> String {
+        let manifest_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("..")
+            .join("docs")
+            .join("fixtures")
+            .join("rhist")
+            .join(name)
+            .join("manifest.json");
+        let manifest: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(manifest_path).unwrap()).unwrap();
+        manifest["package_content_hash"]
+            .as_str()
+            .unwrap()
+            .to_string()
     }
 
     #[test]

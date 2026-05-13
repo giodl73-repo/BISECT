@@ -458,3 +458,15 @@ The first real-source pressure fixture is
 Census-derived Rhode Island tract source slices for GEOID `44001030601` across
 2000, 2010, and 2020. It proves source preservation and unchanged-lineage
 verification only, not full Census tract relationship coverage.
+
+Pulse 05 locks `docs/fixtures/rhist/l2-three-cycle` as the minimal positive
+rename/split/merge fixture and keeps `l0-missing-unit` plus `l1-bad-weights` as
+negative coverage. `rhist-core` verifies the declared manifest package hash
+against the canonical package projection before accepting lineage records, so
+fixture mutations cannot pass under stale hashes.
+
+RCOUNT consumes RHIST through `RhistReference` package hashes and cycle ids. The
+RCOUNT consumer test references the locked `l2-three-cycle` package hash instead
+of copying lineage events into RCOUNT. RPLAN should consume the same RHIST
+package as an optional historical-comparison input in the reference-integration
+pulse; RPLAN must not store RHIST lineage events as plan facts.

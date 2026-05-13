@@ -38,7 +38,7 @@ math unless the method-specific replay and validation fixture are present.
 | 02 - Ranked-choice audit boundary | DONE | `pulses/02+ranked-choice-audit-boundary.md`; V.19 RAIRE/AWAIRE fixtures and tests |
 | 03 - Analytic and observable boundary methods | DONE | `pulses/03+analytic-observable-boundaries.md`; V.20 Bayesian and V.21 SOBA fixtures and tests |
 | 04 - RCTX minimal package fixture | DONE | `pulses/04+rctx-minimal-package-fixture.md`; `docs/fixtures/rctx/l0-shared-context`; `rctx-core` fixture verifier and RCOUNT consumer coverage |
-| 05 - RHIST minimal lineage fixture | TODO | after RCTX fixture |
+| 05 - RHIST minimal lineage fixture | DONE | `pulses/05+rhist-minimal-lineage-fixture.md`; L2 rename/split/merge fixture lock, manifest hash verifier, and RCOUNT RHIST package-hash reference coverage |
 | 06 - RCOUNT/RPLAN reference integration | TODO | after RCTX/RHIST fixtures |
 
 ## Validation Gate
@@ -61,7 +61,7 @@ errors are not acceptable.
 
 ## Next
 
-Pulse 05 should lock the minimal RHIST lineage fixture and RCOUNT/RHIST
-reference coverage now that RCTX has a positive fixture and negative helper
-coverage. `rctx-io` remains deferred until an independent RCTX package directory
-loader is needed.
+Pulse 06 should integrate the now-locked RCTX and RHIST package references into
+RCOUNT/RPLAN examples without duplicating geography or lineage ownership
+semantics. `rctx-io` remains deferred until an independent RCTX package
+directory loader is needed.

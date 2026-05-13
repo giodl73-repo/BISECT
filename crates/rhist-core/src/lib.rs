@@ -13,6 +13,17 @@ pub enum RhistCoreError {
     UnsupportedVersion(String),
     #[error("package id is empty")]
     EmptyPackageId,
+    #[error("package {package_id} has invalid package hash: {package_hash}")]
+    InvalidPackageHash {
+        package_id: String,
+        package_hash: String,
+    },
+    #[error("package {package_id} hash mismatch: declared {declared}, computed {computed}")]
+    PackageHashMismatch {
+        package_id: String,
+        declared: String,
+        computed: String,
+    },
     #[error("manifest references missing cycle: {cycle_id}")]
     ManifestMissingCycle { cycle_id: String },
     #[error("duplicate source id: {source_id}")]
@@ -332,6 +343,20 @@ fn verify_manifest(package: &RhistPackage) -> Result<(), RhistCoreError> {
     }
     if package.manifest.package_id.trim().is_empty() {
         return Err(RhistCoreError::EmptyPackageId);
+    }
+    if !is_sha256_hash(&package.manifest.package_content_hash) {
+        return Err(RhistCoreError::InvalidPackageHash {
+            package_id: package.manifest.package_id.clone(),
+            package_hash: package.manifest.package_content_hash.clone(),
+        });
+    }
+    let computed = package_content_hash(package)?;
+    if computed != package.manifest.package_content_hash {
+        return Err(RhistCoreError::PackageHashMismatch {
+            package_id: package.manifest.package_id.clone(),
+            declared: package.manifest.package_content_hash.clone(),
+            computed,
+        });
     }
     let cycles: BTreeSet<&str> = package
         .cycles
@@ -782,6 +807,42 @@ fn map_rctx_crosswalk_error(
         | rctx_core::RctxCoreError::InvalidSourceHash { source_id, .. } => {
             RhistCoreError::MissingSourceRef { source_id }
         }
+        rctx_core::RctxCoreError::UnsupportedVersion(version) => RhistCoreError::CanonicalJson(
+            format!("unexpected RCTX package version error: {version}"),
+        ),
+        rctx_core::RctxCoreError::EmptyPackageId => {
+            RhistCoreError::CanonicalJson("unexpected empty RCTX package id".to_string())
+        }
+        rctx_core::RctxCoreError::InvalidPackageHash {
+            package_id,
+            package_hash,
+        } => RhistCoreError::CanonicalJson(format!(
+            "unexpected RCTX package hash error for {package_id}: {package_hash}"
+        )),
+        rctx_core::RctxCoreError::GraphMissingContext {
+            graph_id,
+            context_hash,
+        } => RhistCoreError::CanonicalJson(format!(
+            "unexpected RCTX graph context error for {graph_id}: {context_hash}"
+        )),
+        rctx_core::RctxCoreError::InvalidGraphHash {
+            graph_id,
+            graph_hash,
+        } => RhistCoreError::CanonicalJson(format!(
+            "unexpected RCTX graph hash error for {graph_id}: {graph_hash}"
+        )),
+        rctx_core::RctxCoreError::GraphMissingSourceRef {
+            graph_id,
+            source_id,
+        } => RhistCoreError::CanonicalJson(format!(
+            "unexpected RCTX graph source error for {graph_id}: {source_id}"
+        )),
+        rctx_core::RctxCoreError::ClaimBoundaryPackageMismatch => RhistCoreError::CanonicalJson(
+            "unexpected RCTX claim-boundary package mismatch".to_string(),
+        ),
+        rctx_core::RctxCoreError::EmptyClaimBoundary => {
+            RhistCoreError::CanonicalJson("unexpected empty RCTX claim boundary".to_string())
+        }
         rctx_core::RctxCoreError::CanonicalJson(message) => RhistCoreError::CanonicalJson(message),
     }
 }
@@ -853,6 +914,21 @@ mod tests {
     }
 
     #[test]
+    fn l2_three_cycle_fixture_locks_rename_split_and_merge() {
+        let package = read_fixture("l2-three-cycle");
+        let kinds: BTreeSet<_> = package
+            .lineage_events
+            .iter()
+            .map(|event| event.event_kind)
+            .collect();
+        assert!(kinds.contains(&LineageEventKind::Rename));
+        assert!(kinds.contains(&LineageEventKind::Split));
+        assert!(kinds.contains(&LineageEventKind::Merge));
+
+        verify_package(&package).expect("rename/split/merge fixture must verify");
+    }
+
+    #[test]
     fn real_ri_tract_unchanged_fixture_verifies() {
         let package = read_fixture("real-ri-tract-unchanged");
         let reports =
@@ -897,6 +973,18 @@ mod tests {
     }
 
     #[test]
+    fn verifier_rejects_manifest_package_hash_drift() {
+        let mut package = read_fixture("l2-three-cycle");
+        package.manifest.package_content_hash =
+            "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff".to_string();
+
+        assert!(matches!(
+            verify_package(&package),
+            Err(RhistCoreError::PackageHashMismatch { .. })
+        ));
+    }
+
+    #[test]
     fn fixture_source_hashes_match_preserved_bytes() {
         for fixture in [
             "l0-rename",
@@ -922,6 +1010,7 @@ mod tests {
         package.lineage_events[0]
             .to_unit_ids
             .push("syn:precinct:P-001B".to_string());
+        package.manifest.package_content_hash = package_content_hash(&package).unwrap();
         let err = verify_package(&package).expect_err("bad rename cardinality should fail");
         assert!(matches!(
             err,

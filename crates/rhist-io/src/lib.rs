@@ -41,8 +41,8 @@ pub fn read_package_dir(dir: impl AsRef<Path>) -> Result<RhistPackage, RhistIoEr
     let dir = dir.as_ref();
     let package = read_package_dir_unverified(dir)?;
     verify_source_files(dir, &package.source_index)?;
-    verify_package(&package)?;
     verify_package_hash(&package)?;
+    verify_package(&package)?;
     Ok(package)
 }
 

@@ -151,14 +151,14 @@ RPLAN state.
 - [x] RHIST implementation spec and review record exist.
 - [x] RHIST-compatible references exist in RCOUNT.
 - [x] RCOUNT transitional lineage can map toward RHIST-compatible events.
-- [ ] Lock the L0 RHIST positive fixture for rename/split/merge lineage.
-- [ ] Lock the L0 RHIST negative fixture for missing unit or bad crosswalk
+- [x] Lock the RHIST positive fixture for rename/split/merge lineage.
+- [x] Lock the RHIST negative fixture for missing unit or bad crosswalk
   weight.
-- [ ] Ensure `rhist-core`, `rhist-io`, and any CLI verify surface remain tiny
+- [x] Ensure `rhist-core`, `rhist-io`, and any CLI verify surface remain tiny
   and package-boundary focused.
-- [ ] Add an RCOUNT consumer test that references an RHIST fixture by package
+- [x] Add an RCOUNT consumer test that references an RHIST fixture by package
   hash rather than embedding new history semantics.
-- [ ] Add an RPLAN consumer note or fixture for historical plan comparison.
+- [x] Add an RPLAN consumer note or fixture plan for historical plan comparison.
 
 ## Stage 4 - RCOUNT Source Adapter And Data Validation Ladder
 
