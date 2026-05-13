@@ -19,6 +19,7 @@
 
 pub mod compositor;
 pub mod divisor_methods;
+pub mod evidence_manifest;
 pub mod graph;
 pub mod huntington_hill;
 pub mod nest;

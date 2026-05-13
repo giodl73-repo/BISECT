@@ -25,6 +25,7 @@ If you're adding a new manifest type, land a one-task edit to §1 in the same co
 | `bloc_voting.json` (top-level) | `bloc-voting v1` | `bisect-analysis::bloc_voting_writer` (shipped 2026-04-30) | Callais Evidence Layer plan Task 6 |
 | `reproducibility_package_manifest.json` | `repro-package v1` | `bisect-report::repro_zip` (when shipped) | Court Submission Reports plan Task 6 |
 | `g-ensemble-evidence-manifest.json` | `g-ensemble-evidence-manifest v1` | `bisect-ensemble::evidence_manifest` | G Ensemble Evidence Packages wave |
+| `j-apportionment-evidence-manifest.json` | `j-apportionment-evidence-manifest v1` | `bisect-apportion::evidence_manifest` | J Apportionment Evidence Packages wave |
 
 **Adding a new manifest type:** edit this table, add a `## §3.X — <kind> v<n>` subsection at the bottom enumerating fields beyond the canonical set, and reference both from the spec/plan that owns it.
 
@@ -176,6 +177,27 @@ Required fields beyond §2:
 
 Roles are `external-trace`, `bisect-plan`, `rctx-context`, `election-input`,
 `metric-output`, `diagnostic`, `manifest`, and `other`.
+
+### 3.12 `j-apportionment-evidence-manifest v1`
+
+Source: `bisect-apportion::evidence_manifest::ApportionmentEvidenceManifest`.
+
+This manifest binds J-track apportionment claims to official Census source
+tables and extracted verifier fixtures. The first shipped package covers 2020
+Census Table 1 and verifies that the Huntington-Hill / Method of Equal
+Proportions implementation reproduces the official 435-seat apportionment.
+
+Required fields beyond §2:
+
+| Field | Definition |
+|---|---|
+| `package_id` | Stable package slug, usually including paper range and Census table. |
+| `census_table` | Human-readable Census table title. |
+| `source_url` | Official Census URL used for extraction. |
+| `source_sha256` | SHA-256 of the source bytes downloaded from `source_url`. |
+| `extracted_files` | Array of `{path, sha256, role}` rows for package-relative extracted fixtures. |
+| `verifier_path` | Package-relative source path for the verifier implementation. |
+| `verification_commands` | Commands that replay or validate the package. |
 
 ---
 
