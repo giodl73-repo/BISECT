@@ -66,17 +66,15 @@ Redistricting Markov chains such as \recom{} operate on exponentially
 large combinatorial state spaces whose mixing time---the number of
 steps required to approach stationarity---governs the validity of any
 ensemble-based analysis.
-We derive theoretical mixing time bounds for redistricting chains on
-planar graphs, establishing that the spectral gap $\sgap$ satisfies
-$\sgap = \Omega(1/n^2)$ in the worst case, implying $\tmix = O(n^3
-\log n)$ under reversible dynamics.
+We review theoretical mixing-time bounds relevant to redistricting chains on
+planar graphs and use them as cautionary upper-bound context rather than as a
+validated bound for every implemented chain.
 For the census-tract graphs encountered in practice ($n \approx 200$--$8{,}000$),
 this bound predicts $\tmix$ on the order of $10^5$--$10^8$ steps---far
 beyond what is run in reported studies.
-Empirically, \recom{} chains achieve $\rhat < 1.1$ in 2{,}000--20{,}000
-steps for Polsby-Popper, but the gap between theory and practice reflects
-the concentration of the stationary distribution near high-compactness
-regions of state space.
+Empirical diagnostics such as $\rhat$, ESS, autocorrelation, and Hamming traces
+can show that monitored summaries stabilized in a run; they do not prove that
+the chain reached the full stationary distribution.
 We contrast MCMC mixing with the \cs{} algorithm (U.1), which provides
 a deterministic $O(T \cdot n)$ stopping certificate.
 We identify the irreplaceable role of ensemble methods---auditing enacted
@@ -94,6 +92,7 @@ an uncertified MCMC run.
 \input{sections/04-empirical-mixing}
 \input{sections/05-convergence-sweep}
 \input{sections/06-when-ensemble}
+\input{sections/06b-current-boundary}
 \input{sections/07-conclusion}
 
 \bibliographystyle{plainnat}

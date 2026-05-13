@@ -413,6 +413,22 @@ solver/model artifacts for real instances. U.7/U.13-U.15 are now much stronger
 as bridge papers because they explicitly distinguish generated frontiers,
 selected records, solver proofs, heuristic diagnostics, and legal argument
 templates.
+
+## Batch 10 - G-track ensemble cleanup
+
+**G.1-G.3, G.5, G.12 -- validation and diagnostic boundary pass.** The weaker
+ensemble papers now name the package evidence needed for their claims:
+GerryChain/external traces, election-data models, compactness metric versions,
+RPLAN/RCTX plan packages, diagnostic JSON, chain counts, seeds, step counts, and
+verifier status. G.5 now treats R-hat/ESS/autocorrelation/Hamming as diagnostics
+rather than proof of stationarity, and G.12 separates short-burst best-plan
+search from representative ensemble sampling.
+
+The remaining ceiling is external evidence. G.1-G.3 still need archived
+GerryChain/ReCom traces and election/metric packages before their headline
+percentiles should be treated as final results. G.12 needs checked-in command
+and package paths for calibrated short-burst variants before implementation
+claims can rise to the G.10/G.11 level.
 It documents the two-stage deterministic seed derivation, population-weighted
 first seed, farthest-BFS second seed, population-keyed heap expansion,
 disconnected-leftover safety net, and bounded boundary rebalance. The new

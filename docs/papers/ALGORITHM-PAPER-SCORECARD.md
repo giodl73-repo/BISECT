@@ -108,18 +108,18 @@ Score bands:
 | Paper | P1 | P2 | P3 | P4 | P5 | P6 | Total | Priority |
 |---|---:|---:|---:|---:|---:|---:|---:|---|
 | G.0 Ensemble Methodology | 3.1 | 3.1 | 3.0 | 3.2 | 3.3 | 3.1 | 18.8 | Needs modern package/diagnostic framing |
-| G.1 GerryChain Congressional Comparison | 3.0 | 2.9 | 3.0 | 3.0 | 3.3 | 3.0 | 18.2 | Evidence/data validation pass |
-| G.2 Partisan Outcome Distributions | 2.6 | 2.8 | 2.6 | 2.8 | 3.2 | 2.8 | 16.8 | Known data-validation issues |
-| G.3 Compactness Distribution Position | 3.0 | 2.9 | 2.9 | 3.0 | 3.3 | 3.0 | 18.1 | Needs current ensemble anchors |
+| G.1 GerryChain Congressional Comparison | 3.3 | 3.2 | 3.2 | 3.4 | 3.4 | 3.2 | 19.7 | Serviceable-plus; external-trace package needed |
+| G.2 Partisan Outcome Distributions | 3.2 | 3.1 | 3.0 | 3.3 | 3.3 | 3.1 | 19.0 | Serviceable-plus; election/ensemble model boundary |
+| G.3 Compactness Distribution Position | 3.3 | 3.2 | 3.1 | 3.4 | 3.4 | 3.2 | 19.6 | Serviceable-plus; metric/trace boundary |
 | G.4 Ensemble Diagnostics | 3.8 | 3.7 | 3.7 | 3.9 | 4.0 | 3.6 | 22.7 | Golden |
-| G.5 Convergence Mixing Analysis | 3.0 | 3.1 | 2.9 | 3.1 | 3.3 | 3.0 | 18.4 | Needs diagnostic evidence pass |
+| G.5 Convergence Mixing Analysis | 3.4 | 3.4 | 3.2 | 3.6 | 3.4 | 3.3 | 20.3 | Strong; diagnostics scoped correctly |
 | G.6 Short-Burst | 3.3 | 3.5 | 3.2 | 3.3 | 3.5 | 3.4 | 20.2 | Strong draft, accepted but evidence could deepen |
 | G.7 SMC Redistricting | 3.8 | 3.8 | 3.7 | 3.8 | 4.0 | 3.7 | 22.8 | Golden |
 | G.8 Flip Proposals | 3.5 | 3.6 | 3.3 | 3.4 | 3.5 | 3.5 | 20.8 | Strong |
 | G.9 Forest ReCom | 3.5 | 3.6 | 3.3 | 3.4 | 3.5 | 3.5 | 20.8 | Strong |
 | G.10 Merge-Split | 3.8 | 3.8 | 3.6 | 3.9 | 4.0 | 3.6 | 22.7 | Golden |
 | G.11 Multiscale MCMC | 3.8 | 3.7 | 3.5 | 3.9 | 4.0 | 3.6 | 22.5 | Golden |
-| G.12 Short-Burst Chains | 3.2 | 3.3 | 3.0 | 3.2 | 3.2 | 3.1 | 19.0 | Spec/paper alignment needed |
+| G.12 Short-Burst Chains | 3.4 | 3.4 | 3.2 | 3.5 | 3.4 | 3.3 | 20.2 | Strong; short-burst diagnostic boundary |
 | G.13 VRA-Aware Ensemble | 3.8 | 3.7 | 3.6 | 3.8 | 3.6 | 3.7 | 22.2 | Strong near-golden |
 | G.14 Ensemble Comparison | 3.9 | 3.8 | 3.8 | 3.9 | 3.6 | 3.9 | 22.9 | Golden |
 | G.15 Comprehensive Comparison | 3.5 | 3.5 | 3.4 | 3.6 | 3.4 | 3.5 | 20.9 | Strong; index status should be reconciled |
@@ -158,13 +158,13 @@ Score bands:
 
 ## Highest-Priority Lifts
 
-1. Ensemble data cleanup: G.1-G.3/G.5/G.12 need validation and diagnostic
-   evidence refresh.
-2. Metric follow-through: K.2/K.0/K.7 no longer have the Welzl/implementation
+1. Metric follow-through: K.2/K.0/K.7 no longer have the Welzl/implementation
    blocker, but exact polygon-MBC Reock and archived same-metric packages remain
    future evidence lifts.
-3. Package evidence follow-through: U.2/U.4 still need archived sweep or
+2. Package evidence follow-through: U.2/U.4 still need archived sweep or
    production CLI packages before they can score as implementation papers.
+3. G-track package follow-through: G.1-G.3 need archived external traces and
+   election/metric packages before their percentile claims can score higher.
 
 ## Track Summary
 
@@ -172,7 +172,7 @@ Score bands:
 |---|---:|---|---|
 | B/T construction foundations | 26 | Strong for reviewed/new slices, serviceable for older slices; T.5-T.7 golden and T.8/T.9 strong | legacy visuals and audit/package bridges |
 | U search/optimization/audit | 21 | Strong after older-paper boundary pass; U.10 and U.16-U.20 golden | archived sweep/CLI packages for U.2/U.4 |
-| G ensemble/sampling | 16 | Strong but uneven; G.4/G.7/G.10/G.11 now golden | older G refresh and data-validation cleanup |
+| G ensemble/sampling | 16 | Strong/serviceable-plus after cleanup; G.4/G.7/G.10/G.11 golden | archived external traces for G.1-G.3 |
 | J apportionment | 7 | Serviceable-plus after implementation-boundary pass | Census/SHA fixtures and Hamilton public API remain future work |
 | K compactness metrics | 8 | Strong/serviceable-plus after K.2 disclosure pass | exact polygon-MBC evidence and K.5 minor revision |
 | L partisan metrics | 7 | Strong | cross-link to G/A synthesis |

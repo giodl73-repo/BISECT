@@ -71,26 +71,16 @@ The underlying chain type is a parameter.
 We implement two new chain variants---\sbf{} and \sbms{}---by composing
 Short-Burst with ForestRecom (G.9) and MergeSplit (G.10) chains,
 respectively.
-This pairing delivers two properties simultaneously: compactness optimization
-(the contribution of the Short-Burst wrapper) and approximate distributional
-correctness (the contribution of the ForestRecom and MergeSplit chains).
-We evaluate all three Short-Burst variants---standard \recom{}-based,
-\sbf{}, and \sbms{}---on North Carolina ($k=14$), Wisconsin ($k=8$),
-and Texas ($k=38$) at equal compute budget (1000 total steps per run).
-The key empirical finding is that standard \sburst{} achieves comparable
-or slightly better final edge-cut than the calibrated variants because its
-higher per-burst acceptance rate ($\approx 80\%$) explores more plans per
-burst; ForestRecom and MergeSplit spend compute on the Metropolis--Hastings
-ratio computation that is unnecessary for pure compactness optimization.
-However, \sbf{} produces better \emph{ensemble coverage} near good plans
-because each accepted step is an approximately correct sample from the
-stationary distribution.
+This pairing separates compactness optimization (the contribution of the
+Short-Burst wrapper) from distributional diagnostics (the contribution of the
+underlying chain).  The empirical comparison to archive is whether standard
+\sburst{}, \sbf{}, and \sbms{} differ in final edge cut, per-burst acceptance,
+and coverage near good plans under equal compute budgets.
 We introduce the \emph{per-burst acceptance rate} diagnostic, recorded in
 the audit manifest, which quantifies the effective burst length for each
 chain type.
-The three variants are available via
-\texttt{--search short-burst-forest} and
-\texttt{--search short-burst-merge-split}.
+The three variants should be cited as implemented only where a checked-in
+command, test, and package path expose the named modes.
 \end{abstract}
 
 \tableofcontents
@@ -101,6 +91,7 @@ The three variants are available via
 \input{sections/03-algorithm}
 \input{sections/04-comparison}
 \input{sections/05-when-to-use}
+\input{sections/05b-current-boundary}
 \input{sections/06-conclusion}
 
 \bibliographystyle{plainnat}

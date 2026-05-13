@@ -1,7 +1,7 @@
 # Paper Rubric Uplift Goal
 
 **Opened:** 2026-05-13
-**Status:** active - pulse 03 complete
+**Status:** active - pulse 04 complete
 
 ## Goal
 
@@ -46,3 +46,13 @@ Welzl/implementation mismatch. The pass should distinguish:
   language where only a method/protocol/substrate is present.
 - [x] The scorecard, paper review ledger, and public paper index record U-track
   uplift status and remaining package-evidence ceilings.
+
+## Pulse 04 Result
+
+- [x] G.1-G.3, G.5, and G.12 now carry current data, validation, diagnostic, or
+  implementation-boundary sections.
+- [x] Ensemble percentile, partisan-distribution, compactness-position, mixing,
+  and short-burst claims are scoped to archived traces, diagnostics, package
+  manifests, and verifier paths.
+- [x] The scorecard, paper review ledger, and public paper index record G-track
+  uplift status and remaining external-trace ceilings.

@@ -1,0 +1,13 @@
+\section{Current Implementation and Diagnostic Boundary}
+
+Short-burst chains are optimization wrappers over chain primitives.  They can
+improve the best observed objective under a fixed compute budget, but restarting
+from good states changes the sampling story.  Unless the package carries the
+underlying chain, restart schedule, burst length, acceptance logs, selected
+state, and diagnostics, short-burst output should be treated as heuristic
+improvement rather than a representative ensemble sample.
+
+ForestReCom and Merge-Split components add acceptance accounting and diagnostic
+structure, but they do not by themselves make the burst-selected plan a draw
+from stationarity.  The paper's claim boundary is therefore best-plan search
+plus diagnostics, not distributional correctness.

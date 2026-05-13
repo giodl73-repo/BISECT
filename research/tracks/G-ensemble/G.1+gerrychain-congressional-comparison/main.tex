@@ -36,6 +36,7 @@
 \newcommand{\cs}{\textsc{ConvergenceSweep}}
 \newcommand{\pp}{\ensuremath{\mathrm{PP}}}
 \newcommand{\EC}{\ensuremath{\mathrm{EC}}}
+\newcommand{\ess}{\ensuremath{\mathrm{ESS}}}
 
 %% Legal case macros
 \newcommand{\case}[1]{\textit{#1}}
@@ -81,30 +82,25 @@
 \noindent
 The most important missing comparison in algorithmic redistricting research
 is the direct placement of a deterministic algorithmic plan within a
-Markov-chain ensemble.  This paper provides that comparison for six
-congressional delegation states using real \gc{} \recom{} ensembles (1,000
-steps each): North Carolina ($k=14$), Wisconsin ($k=8$), Georgia ($k=14$),
-Pennsylvania ($k=17$), Texas ($k=38$), and California ($k=52$).
+Markov-chain ensemble.  This paper gives that comparison protocol for six
+congressional delegation states using \gc{} \recom{} ensembles: North Carolina
+($k=14$), Wisconsin ($k=8$), Georgia ($k=14$), Pennsylvania ($k=17$), Texas
+($k=38$), and California ($k=52$).
 
 The comparison metric is \emph{normalised edge-cut fraction}---the fraction
 of census-tract boundaries that cross district lines, the quantity METIS
 directly minimises.  The central finding is structural, not incidental: the
 \ar{} algorithm minimises edge cut by design, so the \ar{} plan is expected
 to fall at the \emph{low end} of the cut-fraction distribution, corresponding
-to the \emph{high end} of compactness.  The data confirm this.  Wisconsin,
-Georgia, and Pennsylvania sit at the 0.2nd, 0.1st, and 0.2nd percentile of
-their respective ensemble distributions---more compact than 99.8\% of valid
-plans.  North Carolina is the notable exception: the \ar{} plan lands at the
-50th percentile because the state's geographic structure so tightly constrains
-the feasible space that the minimum-cut solution and the ensemble median are
-nearly identical (plan cut $= 0.0973$, ensemble mean $= 0.0970$, $\Delta <
-0.3\%$).  Texas and California results are pending; both are expected below
-the 5th percentile.
+to the \emph{high end} of compactness.  Any numerical percentile claim requires
+the archived ensemble traces, sample definition, diagnostics, and metric version
+that produced it; without those artifacts, the examples are calibration targets
+rather than final external-validation evidence.
 
 The legal implication is reframed accordingly.  The \ar{} plan is defensible
-not because it is \emph{typical} but because it is the \emph{most compact}
-plan consistent with population balance and contiguity.  Any challenger must
-produce a more compact alternative; 99.8\% of valid plans have higher edge cuts.
+not because it is \emph{typical} but because it is produced by a declared
+compactness-minimizing rule.  Any stronger courtroom claim must travel with the
+plan package and ensemble diagnostics.
 \end{abstract}
 
 \tableofcontents
@@ -118,6 +114,7 @@ produce a more compact alternative; 99.8\% of valid plans have higher edge cuts.
 \input{sections/06-tx-ca}
 \input{sections/07-summary-table}
 \input{sections/08-legal-argument}
+\input{sections/08b-current-boundary}
 \input{sections/09-conclusion}
 
 \bibliographystyle{plainnat}

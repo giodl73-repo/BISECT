@@ -1,0 +1,12 @@
+\section{Current Diagnostic Evidence Boundary}
+
+The current \texttt{bisect-ensemble} diagnostics include R-hat, ESS-style
+summaries, Hamming autocorrelation, acceptance accounting, and step records.
+These are run diagnostics: they can falsify a bad ensemble and support a
+monitored summary, but they do not certify stationarity or representative
+coverage of the entire redistricting state space.
+
+Any convergence claim should name chain count, steps, burn-in/thinning, proposal
+kernel, seed schedule, monitored statistic, threshold, and archived diagnostic
+JSON.  For legal or public-facing work, the appropriate posture is ``diagnosed
+under declared summaries,'' not ``proved mixed.''
