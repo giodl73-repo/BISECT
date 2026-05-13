@@ -24,3 +24,13 @@ The negative fixture is \texttt{bad-rla-replay}. It changes the first published
 sample draw to \texttt{cvr:P-999:999}. The manifest hash and source hash still
 verify, but sampler replay recomputes draw 0 as \texttt{cvr:P-001:022} and
 fails the package.
+
+The stopping fixture is \texttt{rla-stopping}. It uses the same replayed sample
+but adds one observation per draw. Each observation repeats the sampled CVR id
+and records the observed contest interpretation. With zero discrepancies and
+\texttt{max\_discrepancies = 0}, the declared status \texttt{pass} verifies.
+
+The stopping negative fixture is \texttt{bad-rla-stopping}. It leaves sampler
+replay intact, but changes one observed interpretation. The computed status is
+\texttt{escalate}, so the declared \texttt{pass} fails under
+\texttt{rla\_stopping\_rule}.

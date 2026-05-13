@@ -8,7 +8,7 @@
 \usepackage{natbib}
 \usepackage{tabularx}
 
-\title{Replayable Risk-Limiting Audit Samplers}
+\title{Replayable Risk-Limiting Audit Samplers And Stopping Checks}
 \author{Gio Della-Libera}
 \date{Draft --- \today}
 
@@ -18,13 +18,14 @@
 \begin{abstract}
 Risk-limiting audits depend on two separable claims: the sample was selected
 from the declared ballot population by a public random process, and the sampled
-ballots provide enough evidence to stop or escalate under a named statistical
-method. This paper lands the first RCOUNT contract. A verifier can recompute
-the contest audit population from normalized CVR rows, recompute the contest
-manifest hash, replay a SHA-256 sampler from the public seed, risk limit, and
-algorithm id, and compare every published sample draw. The current fixture
-pair proves the replay surface: \texttt{rla-replay} passes, while
-\texttt{bad-rla-replay} fails when one sampled CVR id is edited.
+ballots provide enough evidence to stop or escalate under a named rule. This
+paper lands both an RCOUNT sampler-replay contract and a first stopping-check
+contract. A verifier recomputes the contest audit population from normalized
+CVR rows, replays a SHA-256 sampler from public seed material, checks sampled
+observations against CVR interpretations, and verifies that the declared
+pass-or-escalate status follows from the discrepancy threshold. The fixture
+pairs prove both surfaces: \texttt{rla-replay} and \texttt{rla-stopping} pass,
+while edited sample draws or observed marks fail.
 \end{abstract}
 
 \input{sections/01-introduction}

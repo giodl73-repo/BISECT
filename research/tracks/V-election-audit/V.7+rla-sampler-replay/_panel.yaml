@@ -1,5 +1,5 @@
 paper: V.7+rla-sampler-replay
-title: "Replayable Risk-Limiting Audit Samplers"
+title: "Replayable Risk-Limiting Audit Samplers And Stopping Checks"
 type: publication
 stage: draft
 round: 0
@@ -14,6 +14,7 @@ reviewers:
   - VAULT
   - LEDGER
 p1_items:
-  - "[ ] Add statistical stopping-rule contract after sampler replay."
-  - "[ ] Add observation/discrepancy records and stopping negative fixtures."
+  - "[x] Add observation records and stopping negative fixtures."
+  - "[x] Add first stopping-rule contract after sampler replay."
+  - "[ ] Add statistical stopping math after the threshold contract."
   - "[ ] Review sampler method against state-specific RLA requirements."

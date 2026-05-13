@@ -199,6 +199,7 @@ pub fn write_package_dir(
             r#"{"equation_id":"canvass_correction_event","status":"declared"}"#,
             r#"{"equation_id":"cvr_summary_total","status":"declared"}"#,
             r#"{"equation_id":"rla_sampler_replay","status":"declared"}"#,
+            r#"{"equation_id":"rla_stopping_rule","status":"declared"}"#,
         ],
     )?;
     write_ndjson(
@@ -397,6 +398,20 @@ pub fn default_bad_rla_replay_docs_dir() -> PathBuf {
         .join("bad-rla-replay")
 }
 
+pub fn default_rla_stopping_docs_dir() -> PathBuf {
+    PathBuf::from("docs")
+        .join("examples")
+        .join("rcount-golden-packages")
+        .join("rla-stopping")
+}
+
+pub fn default_bad_rla_stopping_docs_dir() -> PathBuf {
+    PathBuf::from("docs")
+        .join("examples")
+        .join("rcount-golden-packages")
+        .join("bad-rla-stopping")
+}
+
 fn write_json_pretty<T: Serialize>(path: &Path, value: &T) -> Result<(), RcountIoError> {
     let bytes = serde_json::to_vec_pretty(value)?;
     fs::write(path, bytes)?;
@@ -511,11 +526,12 @@ mod tests {
     use super::*;
     use rcount_core::{
         synthetic_bad_cvr_summary_package, synthetic_bad_lineage_package,
-        synthetic_bad_rla_replay_package, synthetic_bad_selection_sum_package,
-        synthetic_canvass_correction_package, synthetic_choice_bearing_proof_package,
-        synthetic_cvr_summary_package, synthetic_mail_batch_added_package,
-        synthetic_missing_batch_package, synthetic_precinct_split_lineage_package,
-        synthetic_privacy_inclusion_package, synthetic_rla_replay_package,
+        synthetic_bad_rla_replay_package, synthetic_bad_rla_stopping_package,
+        synthetic_bad_selection_sum_package, synthetic_canvass_correction_package,
+        synthetic_choice_bearing_proof_package, synthetic_cvr_summary_package,
+        synthetic_mail_batch_added_package, synthetic_missing_batch_package,
+        synthetic_precinct_split_lineage_package, synthetic_privacy_inclusion_package,
+        synthetic_rla_replay_package, synthetic_rla_stopping_package,
         synthetic_summary_basic_package,
     };
 
@@ -679,6 +695,33 @@ mod tests {
         assert_eq!(
             decoded_package.rla_audits[0].sample_draws[0].cvr_id,
             "cvr:P-999:999"
+        );
+    }
+
+    #[test]
+    fn round_trips_synthetic_rla_stopping_package() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_rla_stopping_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+        let (_, decoded_package) = read_package_dir(tmp.path()).unwrap();
+        assert_eq!(decoded_package.rla_audits[0].observations.len(), 12);
+        assert_eq!(
+            decoded_package.rla_audits[0].stopping_rule_id.as_deref(),
+            Some("zero-discrepancy-threshold-v1")
+        );
+    }
+
+    #[test]
+    fn round_trips_synthetic_bad_rla_stopping_package() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_bad_rla_stopping_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+        let (_, decoded_package) = read_package_dir(tmp.path()).unwrap();
+        assert_eq!(
+            decoded_package.rla_audits[0].observations[0].observed_selection_ids,
+            vec!["cand-b".to_string()]
         );
     }
 

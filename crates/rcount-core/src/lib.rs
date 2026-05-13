@@ -186,6 +186,25 @@ pub enum RcountCoreError {
         declared_cvr_id: String,
         computed_cvr_id: String,
     },
+    #[error("RLA audit {audit_id} has incomplete stopping-rule fields")]
+    MissingRlaStoppingRule { audit_id: String },
+    #[error("RLA audit {audit_id} has duplicate observation for draw {draw_index}")]
+    DuplicateRlaObservation { audit_id: String, draw_index: u32 },
+    #[error("RLA audit {audit_id} is missing observation for draw {draw_index}")]
+    MissingRlaObservation { audit_id: String, draw_index: u32 },
+    #[error("RLA audit {audit_id} observation draw {draw_index} references cvr {observed_cvr_id}, expected {expected_cvr_id}")]
+    RlaObservationCvrMismatch {
+        audit_id: String,
+        draw_index: u32,
+        expected_cvr_id: String,
+        observed_cvr_id: String,
+    },
+    #[error("RLA audit {audit_id} declares status {declared:?}, computed {computed:?}")]
+    RlaStoppingStatusMismatch {
+        audit_id: String,
+        declared: RlaStoppingStatus,
+        computed: RlaStoppingStatus,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -351,12 +370,41 @@ pub struct RiskLimitAudit {
     pub manifest_hash: String,
     pub sample_size: u32,
     pub sample_draws: Vec<RlaSampleDraw>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub observations: Vec<RlaSampleObservation>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stopping_rule_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_discrepancies: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub declared_status: Option<RlaStoppingStatus>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RlaSampleDraw {
     pub draw_index: u32,
     pub cvr_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RlaSampleObservation {
+    pub draw_index: u32,
+    pub cvr_id: String,
+    #[serde(default)]
+    pub observed_selection_ids: Vec<String>,
+    #[serde(default)]
+    pub undervote: bool,
+    #[serde(default)]
+    pub overvote: bool,
+    #[serde(default)]
+    pub blank_contest: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum RlaStoppingStatus {
+    Pass,
+    Escalate,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -489,6 +537,7 @@ pub fn verify_package(package: &RcountPackage) -> Result<VerificationReport, Rco
         .passed
         .extend(verify_cvr_summary_reconciliation(package)?);
     report.passed.extend(verify_rla_sampler_replay(package)?);
+    report.passed.extend(verify_rla_stopping_rules(package)?);
     Ok(report)
 }
 
@@ -1115,6 +1164,106 @@ pub fn replay_rla_sample(
     Ok(draws)
 }
 
+pub fn verify_rla_stopping_rules(
+    package: &RcountPackage,
+) -> Result<Vec<EquationPass>, RcountCoreError> {
+    let mut passes = Vec::new();
+    for audit in &package.rla_audits {
+        if audit.observations.is_empty()
+            && audit.stopping_rule_id.is_none()
+            && audit.max_discrepancies.is_none()
+            && audit.declared_status.is_none()
+        {
+            continue;
+        }
+        if audit.stopping_rule_id.as_deref() != Some("zero-discrepancy-threshold-v1")
+            || audit.max_discrepancies.is_none()
+            || audit.declared_status.is_none()
+        {
+            return Err(RcountCoreError::MissingRlaStoppingRule {
+                audit_id: audit.audit_id.clone(),
+            });
+        }
+
+        let cvr_by_id: BTreeMap<&str, &CvrContestRecord> = package
+            .cvr
+            .iter()
+            .filter(|row| row.contest_id == audit.contest_id)
+            .map(|row| (row.cvr_id.as_str(), row))
+            .collect();
+        let mut observations = BTreeMap::new();
+        for observation in &audit.observations {
+            if observations
+                .insert(observation.draw_index, observation)
+                .is_some()
+            {
+                return Err(RcountCoreError::DuplicateRlaObservation {
+                    audit_id: audit.audit_id.clone(),
+                    draw_index: observation.draw_index,
+                });
+            }
+        }
+
+        let mut discrepancies = 0u32;
+        for draw in &audit.sample_draws {
+            let observation = observations.get(&draw.draw_index).ok_or_else(|| {
+                RcountCoreError::MissingRlaObservation {
+                    audit_id: audit.audit_id.clone(),
+                    draw_index: draw.draw_index,
+                }
+            })?;
+            if observation.cvr_id != draw.cvr_id {
+                return Err(RcountCoreError::RlaObservationCvrMismatch {
+                    audit_id: audit.audit_id.clone(),
+                    draw_index: draw.draw_index,
+                    expected_cvr_id: draw.cvr_id.clone(),
+                    observed_cvr_id: observation.cvr_id.clone(),
+                });
+            }
+            let cvr = cvr_by_id.get(draw.cvr_id.as_str()).ok_or_else(|| {
+                RcountCoreError::MissingRlaPopulation {
+                    audit_id: audit.audit_id.clone(),
+                    contest_id: audit.contest_id.clone(),
+                }
+            })?;
+            if !observation_matches_cvr(observation, cvr) {
+                discrepancies += 1;
+            }
+        }
+
+        let computed = if discrepancies <= audit.max_discrepancies.unwrap() {
+            RlaStoppingStatus::Pass
+        } else {
+            RlaStoppingStatus::Escalate
+        };
+        let declared = audit.declared_status.unwrap();
+        if declared != computed {
+            return Err(RcountCoreError::RlaStoppingStatusMismatch {
+                audit_id: audit.audit_id.clone(),
+                declared,
+                computed,
+            });
+        }
+        passes.push(EquationPass {
+            equation_id: "rla_stopping_rule".to_string(),
+            contest_id: audit.contest_id.clone(),
+            reporting_unit_id: audit.audit_id.clone(),
+        });
+    }
+    Ok(passes)
+}
+
+fn observation_matches_cvr(observation: &RlaSampleObservation, cvr: &CvrContestRecord) -> bool {
+    let mut observed = observation.observed_selection_ids.clone();
+    observed.sort();
+    let mut expected = cvr.selection_ids.clone();
+    expected.sort();
+    observed == expected
+        && observation.undervote == cvr.undervote
+        && observation.overvote == cvr.overvote
+        && observation.blank_contest == cvr.blank_contest
+}
+
 fn rla_population(package: &RcountPackage, contest_id: &str) -> Vec<String> {
     let mut population: Vec<String> = package
         .cvr
@@ -1582,6 +1731,10 @@ pub fn synthetic_rla_replay_package() -> RcountPackage {
         manifest_hash,
         sample_size: 12,
         sample_draws: vec![],
+        observations: vec![],
+        stopping_rule_id: None,
+        max_discrepancies: None,
+        declared_status: None,
     };
     audit.sample_draws =
         replay_rla_sample(&package, &audit).expect("synthetic RLA sample must replay");
@@ -1593,6 +1746,54 @@ pub fn synthetic_bad_rla_replay_package() -> RcountPackage {
     let mut package = synthetic_rla_replay_package();
     package.rla_audits[0].sample_draws[0].cvr_id = "cvr:P-999:999".to_string();
     package
+}
+
+pub fn synthetic_rla_stopping_package() -> RcountPackage {
+    let mut package = synthetic_rla_replay_package();
+    let observations = rla_observations_from_sample(&package, &package.rla_audits[0])
+        .expect("synthetic RLA observations must match sample");
+    let audit = &mut package.rla_audits[0];
+    audit.observations = observations;
+    audit.stopping_rule_id = Some("zero-discrepancy-threshold-v1".to_string());
+    audit.max_discrepancies = Some(0);
+    audit.declared_status = Some(RlaStoppingStatus::Pass);
+    package
+}
+
+pub fn synthetic_bad_rla_stopping_package() -> RcountPackage {
+    let mut package = synthetic_rla_stopping_package();
+    package.rla_audits[0].observations[0].observed_selection_ids = vec!["cand-b".to_string()];
+    package
+}
+
+fn rla_observations_from_sample(
+    package: &RcountPackage,
+    audit: &RiskLimitAudit,
+) -> Result<Vec<RlaSampleObservation>, RcountCoreError> {
+    let cvr_by_id: BTreeMap<&str, &CvrContestRecord> = package
+        .cvr
+        .iter()
+        .filter(|row| row.contest_id == audit.contest_id)
+        .map(|row| (row.cvr_id.as_str(), row))
+        .collect();
+    let mut observations = Vec::with_capacity(audit.sample_draws.len());
+    for draw in &audit.sample_draws {
+        let cvr = cvr_by_id.get(draw.cvr_id.as_str()).ok_or_else(|| {
+            RcountCoreError::MissingRlaPopulation {
+                audit_id: audit.audit_id.clone(),
+                contest_id: audit.contest_id.clone(),
+            }
+        })?;
+        observations.push(RlaSampleObservation {
+            draw_index: draw.draw_index,
+            cvr_id: draw.cvr_id.clone(),
+            observed_selection_ids: cvr.selection_ids.clone(),
+            undervote: cvr.undervote,
+            overvote: cvr.overvote,
+            blank_contest: cvr.blank_contest,
+        });
+    }
+    Ok(observations)
 }
 
 fn summary(
@@ -2008,6 +2209,27 @@ mod tests {
         let err = verify_rla_sampler_replay(&package)
             .expect_err("bad RLA replay package must fail sample replay");
         assert!(matches!(err, RcountCoreError::RlaSampleMismatch { .. }));
+    }
+
+    #[test]
+    fn rla_stopping_package_verifies_observations() {
+        let package = synthetic_rla_stopping_package();
+        let report = verify_package(&package).expect("RLA stopping package must verify");
+        assert!(report
+            .passed
+            .iter()
+            .any(|pass| pass.equation_id == "rla_stopping_rule"));
+    }
+
+    #[test]
+    fn rla_stopping_fails_when_declared_pass_has_discrepancy() {
+        let package = synthetic_bad_rla_stopping_package();
+        let err = verify_rla_stopping_rules(&package)
+            .expect_err("bad RLA stopping package must fail stopping rule");
+        assert!(matches!(
+            err,
+            RcountCoreError::RlaStoppingStatusMismatch { .. }
+        ));
     }
 
     #[test]
