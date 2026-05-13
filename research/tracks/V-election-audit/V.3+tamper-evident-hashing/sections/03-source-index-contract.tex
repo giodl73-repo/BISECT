@@ -1,0 +1,35 @@
+\section{Source Index Contract}
+
+Source hashes bind raw bytes. Normalized hashes bind canonical records. The
+source index is the bridge between those layers.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & Contract \\
+\midrule
+\texttt{source\_id} & Stable package identifier for the source artifact. \\
+\texttt{path} & Package-relative path under \texttt{sources/}; absolute paths and parent-directory escapes are invalid. \\
+\texttt{sha256} & Domain-separated hash over the raw source bytes. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The current synthetic source index is intentionally small:
+\begin{quote}
+\footnotesize
+\begin{verbatim}
+{
+  "source_id": "source:synthetic-summary-export",
+  "path": "sources/synthetic-summary-export.json",
+  "sha256": "sha256:f1fd7040..."
+}
+\end{verbatim}
+\end{quote}
+
+Real adapters will need more metadata: source format, export system, parser
+version, public-record citation, custody note, redaction status, and parser
+diagnostics. That richer adapter contract belongs to V.9. V.3 only requires the
+baseline replay rule: the package names the source path, hashes the raw bytes,
+and rejects empty or missing source evidence.

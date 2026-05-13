@@ -18,3 +18,17 @@ Fixture & Failure & Interpretation \\
 In both cases, local contest sums and jurisdiction totals can pass. That is the
 point: hash failures are not arithmetic failures. A good verifier transcript
 keeps them separate so a public reader can ask the right follow-up question.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+Fixture & Expected result & Carrying checks \\
+\midrule
+\texttt{summary-basic} & pass & \texttt{contest\_selection\_sum}, \texttt{jurisdiction\_contest\_total}, \texttt{source\_hash\_match}. \\
+\texttt{mail-batch-added} & pass & \texttt{accepted\_ballots}, \texttt{batch\_summary\_total}, \texttt{source\_hash\_match}. \\
+\texttt{tampered-source} & fail & \texttt{source\_hash\_match} reports a declared/computed hash mismatch. \\
+\texttt{missing-source-hash} & fail & \texttt{source\_hash\_match} reports an empty source index. \\
+\bottomrule
+\end{tabularx}
+\end{center}

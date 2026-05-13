@@ -14,7 +14,7 @@ recompute public claims from lower-level evidence.
 | V.0 | RCOUNT Overview: Reproducible Election Count Packages | ready |
 | V.1 | Canvass Arithmetic: From Unofficial Returns To Certified Totals | ready |
 | V.2 | Precinct Lineage Across Elections | ready |
-| V.3 | Tamper-Evident Precinct And Batch Hashing | draft |
+| V.3 | Tamper-Evident Precinct And Batch Hashing | ready |
 | V.4 | Privacy-Safe Voter Inclusion Proofs | planned |
 | V.5 | Ballot Manifest Verification | planned |
 | V.6 | CVR-To-Summary Reconciliation | planned |

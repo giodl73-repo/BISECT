@@ -1,8 +1,8 @@
 paper: V.3+tamper-evident-hashing
 title: "Tamper-Evident Precinct And Batch Hashing"
 type: publication
-stage: draft
-round: 1
+stage: ready
+round: 2
 content_mode: draft
 venue: technical report
 review_date: 2026-05-12
@@ -20,8 +20,9 @@ reviews:
   TALLY: reviews/REVIEW-TALLY.md
   CANVASS: reviews/REVIEW-CANVASS.md
   SYNTHESIS: reviews/SYNTHESIS.md
+  ROUND2: reviews/ROUND2-SYNTHESIS.md
 p1_items:
-  - "Add a threat model table separating tamper evidence from malware resistance, secrecy, certification, and E2E voting."
-  - "Define the source-index and canonical-hash contract more explicitly."
-  - "Add fixture-to-expected-result traceability for summary-basic, mail-batch-added, tampered-source, and missing-source-hash."
-  - "Clarify batch-hash and source-reference boundaries for TALLY/CANVASS readers."
+  - "[x] Add a threat model table separating tamper evidence from malware resistance, secrecy, certification, and E2E voting."
+  - "[x] Define the source-index and canonical-hash contract more explicitly."
+  - "[x] Add fixture-to-expected-result traceability for summary-basic, mail-batch-added, tampered-source, and missing-source-hash."
+  - "[x] Clarify batch-hash and source-reference boundaries for TALLY/CANVASS readers."

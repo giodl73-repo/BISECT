@@ -14,3 +14,25 @@ Finally, tamper evidence is not malware resistance or end-to-end cryptographic
 voting. RCOUNT can detect that a published source file changed after hashing. It
 cannot prove that a tabulator, ballot-marking device, or export pipeline was
 correct before that source file was produced.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+Concern & RCOUNT hash layer can show & It does not show \\
+\midrule
+Source byte change & Declared raw bytes no longer match. & Who changed them or why. \\
+Source omission & Source index is empty or file is missing. & Whether another office record exists elsewhere. \\
+Package mutation & Normalized content hash changed. & Whether the old or new content is legally correct. \\
+Parser substitution & Different normalized records can be detected by package hash. & That the parser captured every source nuance. \\
+Private data & Nothing; hashes are not redaction. & That sensitive files are safe to publish. \\
+Malware or tabulator error & Nothing directly. & Device or export-pipeline correctness. \\
+Certification & Evidence consistency. & Legal certification or court acceptance. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+For public-record workflows, a certification artifact can itself be a hashed
+source. That still separates evidence integrity from the legal act of
+certification. Detached signatures, source-custody attestations, and superseding
+or amended source packages are future work.

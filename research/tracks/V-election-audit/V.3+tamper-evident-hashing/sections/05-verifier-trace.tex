@@ -39,3 +39,25 @@ A compact excerpt from \texttt{tampered-source} shows the desired attribution:
 
 The important property is not merely that the package fails. It fails at the
 source-evidence layer while preserving the fact that arithmetic checks passed.
+
+The \texttt{missing-source-hash} fixture fails at the same layer for a different
+reason:
+\begin{quote}
+\footnotesize
+\begin{verbatim}
+{
+  "status": "fail",
+  "checks": [
+    {
+      "equation_id": "source_hash_match",
+      "status": "fail",
+      "error": "source index is empty"
+    }
+  ]
+}
+\end{verbatim}
+\end{quote}
+
+The crate-level regression surface is split between \texttt{rcount-io}, which
+checks source-index rules, and \texttt{rcount-audit}/\texttt{rcount-cli}, which
+emit public verification transcripts.

@@ -23,6 +23,26 @@ domain separation matters because a hash of a source file should not be confused
 with a hash of a package, event, or proof. Each role answers a different
 question.
 
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Prefix & Hash role \\
+\midrule
+\texttt{RCOUNT\_SOURCE\_V1} & Raw source file bytes. \\
+\texttt{RCOUNT\_RECORD\_V1} & Normalized canonical record. \\
+\texttt{RCOUNT\_FILE\_V1} & Canonical normalized file projection. \\
+\texttt{RCOUNT\_PACKAGE\_V1} & Package content hash. \\
+\texttt{RCOUNT\_EVENT\_V1} & Status or canvass event. \\
+\texttt{RCOUNT\_PROOF\_V1} & Public proof object. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The suffix is part of the contract. Future RCOUNT versions may migrate hash
+algorithms or canonical projections, but the prefix and algorithm must be
+recorded so older packages remain replayable.
+
 The \texttt{summary-basic} package currently records a package content hash and
 simple package counts:
 \begin{quote}
@@ -41,3 +61,9 @@ simple package counts:
 That digest names the normalized package. It does not replace the source index:
 an auditor still needs to know which raw files were read and whether those raw
 file hashes match.
+
+The normalized package hash covers the package's contests, reporting units,
+batches, lineage records, inclusion-proof records, summaries, and status events
+after canonical JSON projection. Volatile metadata such as local file mtimes,
+temporary paths, pretty-printing, and transcript generation time is not part of
+that normalized package content.

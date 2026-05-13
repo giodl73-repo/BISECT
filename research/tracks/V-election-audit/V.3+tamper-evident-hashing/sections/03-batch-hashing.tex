@@ -25,3 +25,9 @@ that accepted ballots equal counted plus rejected ballots. The source evidence
 checks that the public input bytes referenced by the batch still match the
 source index. A late mail batch is therefore not treated as suspicious because
 it is late; it is auditable because it is declared, reconciled, and source-bound.
+
+Batch ids are package-scoped. A batch source reference says which declared
+source artifact supports the manifest row. It does not prove that every ballot
+in the batch was interpreted correctly, that every rejection reason is complete,
+or that a CVR adapter preserved every field. Ballot manifest verification is
+V.5, and CVR-to-summary reconciliation is V.6.
