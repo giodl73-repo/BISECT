@@ -55,7 +55,8 @@ answers.
 
 \subsection{L2: Real-Data Regression Tests}
 
-L2 Census Bureau official-apportionment fixtures are not yet checked in for this
-crate.  They are the next evidence step for J.6: materialize 2000, 2010, and
-2020 population/seat tables, compare canonical output strings, and add hash
-records for publication provenance.
+The first Census Bureau official-apportionment fixture is checked in for 2020
+Table 1.  The package materializes the 50-state population/seat table, records
+the Census XLSX source SHA-256, validates the extracted JSON hash, and verifies
+that \texttt{huntington\_hill()} reproduces the official 435-seat allocation.
+The remaining evidence step is to add the same package shape for 2000 and 2010.

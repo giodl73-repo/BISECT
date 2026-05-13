@@ -24,7 +24,7 @@ anchors J.0-J.6.
 - [x] Add verifier coverage that recomputes Huntington-Hill seats from the
   extracted populations and matches the official 435-seat result.
 - [x] Document source URL, source SHA-256, and verifier path.
-- [ ] Update J paper ledgers after the package is in place.
+- [x] Update J paper ledgers after the package is in place.
 - [ ] Run validation and commit.
 
 ## Non-Goals

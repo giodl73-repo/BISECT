@@ -23,17 +23,20 @@ Ties are broken deterministically by lexicographic state name order.
 \subsection{Current Verification Boundary}
 
 The crate has unit tests for the priority sequence, constitutional floor, seat
-totals, and invalid house sizes.  It does not yet ship 2000/2010/2020 Census
-Bureau reference fixtures or a \texttt{bisect apportion --verify} CLI.  Those
-fixtures are the next hardening step before the implementation should be cited
-as a standalone official-apportionment verifier.
+totals, and invalid house sizes.  It now also ships a hash-bound 2020 Census
+Table 1 package at
+\texttt{docs/examples/j-apportionment-evidence-packages/2020-census-table01/}.
+The package records the official Census XLSX URL, source SHA-256, extracted
+50-state apportionment rows, and a verifier test that recomputes
+Huntington-Hill and matches the official 435-seat allocation.  A
+\texttt{bisect apportion --verify} CLI and 2000/2010 packages remain future
+hardening work.
 
 \subsection{The 2020 Apportionment Target}
 
-The 2020 Census Bureau apportionment remains the target reference for future L2
-tests.  Running the public \texttt{huntington\_hill()} function on a checked-in
-50-state population table should produce the official 435-seat allocation, but
-that end-to-end reference fixture is not yet part of the crate.
+The 2020 Census Bureau apportionment is now the first checked-in reference
+fixture.  Running the public \texttt{huntington\_hill()} function on the
+extracted 50-state population table produces the official 435-seat allocation.
 
 \subsection{Test Suite}
 

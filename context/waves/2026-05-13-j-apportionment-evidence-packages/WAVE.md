@@ -34,7 +34,7 @@ historical source table is hash-bound and validated.
 | Pulse | Status | Evidence |
 |---|---|---|
 | 01 - 2020 Census Table 1 verifier | DONE | Added source-SHA manifest, extracted rows, and Huntington-Hill replay coverage |
-| 02 - J ledger update | TODO | Update J.0-J.6 paper/index/scorecard references to package evidence |
+| 02 - J ledger update | DONE | Updated J.0/J.1/J.6 papers, public index, and scorecard to cite the 2020 package |
 | 03 - Historical carry-forward | TODO | Decide 2010/2000/1910-2020 package scope or close with explicit gaps |
 
 ## Validation Gate
@@ -47,5 +47,5 @@ git diff --check
 
 ## Next
 
-Start pulse 02: update J.0-J.6 paper/index/scorecard references to the 2020
-Census Table 1 evidence package.
+Start pulse 03: close the wave with historical 2000/2010 package gaps and
+optional CLI verifier carry-forwards.

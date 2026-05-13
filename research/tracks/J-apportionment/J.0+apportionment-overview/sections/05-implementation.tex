@@ -32,6 +32,10 @@ for Huntington-Hill, $P_i(s) = p_i/\sqrt{s(s+1)}$.
 Earlier drafts described exact integer comparisons, a unified five-method API,
 SHA-256 Census verification, and a \texttt{bisect apportion} CLI.  Those are not
 the current shipped surface.  The current crate uses \texttt{f64} priority
-comparisons, has 99 tests overall with 24 apportionment/paradox tests, and needs
-future 2000/2010/2020 Census Bureau fixtures before it should be cited as a
-standalone verified apportionment artifact.
+comparisons, has 102 tests overall, and now includes a hash-bound 2020 Census
+Table 1 evidence package at
+\texttt{docs/examples/j-apportionment-evidence-packages/2020-census-table01/}.
+That package records the Census source URL, source XLSX SHA-256, extracted
+50-state apportionment rows, and verifier tests that replay Huntington-Hill
+against the official 435-seat result.  Historical 2000/2010 fixtures and a
+standalone \texttt{bisect apportion --verify} CLI remain future hardening work.
