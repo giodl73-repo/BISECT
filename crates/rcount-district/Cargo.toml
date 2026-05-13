@@ -9,9 +9,12 @@ description = "Optional RCOUNT district aggregation over RPLAN/RCTX assignments"
 [dependencies]
 rcount-core = { path = "../rcount-core" }
 rcount-io = { path = "../rcount-io" }
+rctx-core = { path = "../rctx-core" }
 rplan-core = { path = "../rplan-core" }
 rplan-io = { path = "../rplan-io" }
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
 
+[dev-dependencies]
+tempfile.workspace = true

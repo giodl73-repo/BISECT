@@ -6,7 +6,13 @@
 **Related specs:** [`2026-05-10-rplan-incubation.md`](2026-05-10-rplan-incubation.md),
 [`2026-05-10-rplan-v0.2-schema.md`](2026-05-10-rplan-v0.2-schema.md),
 [`2026-05-10-plan-audit-certificates.md`](2026-05-10-plan-audit-certificates.md),
-[`2026-05-12-rcount-certification-research.md`](2026-05-12-rcount-certification-research.md)
+[`2026-05-12-rcount-certification-research.md`](2026-05-12-rcount-certification-research.md),
+[`2026-05-13-rcount-validation-data-landscape.md`](2026-05-13-rcount-validation-data-landscape.md),
+[`2026-05-13-rcount-audit-algorithm-roadmap.md`](2026-05-13-rcount-audit-algorithm-roadmap.md),
+[`2026-05-13-civic-evidence-package-family.md`](2026-05-13-civic-evidence-package-family.md),
+[`2026-05-13-civic-evidence-layer-access-patterns.md`](2026-05-13-civic-evidence-layer-access-patterns.md),
+[`2026-05-13-rctx-boundary.md`](2026-05-13-rctx-boundary.md),
+[`2026-05-13-rhist-boundary.md`](2026-05-13-rhist-boundary.md)
 
 ## Decision
 
@@ -63,6 +69,7 @@ implementing public fixtures.
 
 ```text
 rcount-core   # generic election count, ledger, canvass, and reconciliation model
+rcount-stats  # deterministic statistical primitives for audit replay
 rcount-io     # RCOUNT read/write, canonical JSON, schema migration
 rcount-audit  # reconciliation checks and count audit certificates
 rcount-rplan  # optional plan-aware district aggregation bridge
@@ -73,7 +80,9 @@ Initial dependency direction:
 
 ```text
 rcount-io -> rcount-core
+rcount-stats -> rcount-core only if shared ids/types are needed; prefer no RCOUNT package dependency
 rcount-audit -> rcount-core
+rcount-audit -> rcount-stats
 rcount-audit -> rcount-io
 rcount-rplan -> rcount-core
 rcount-rplan -> rcount-audit
@@ -101,6 +110,23 @@ rcount-audit -> rplan-*
 This keeps the core count model independent from redistricting plans. The only
 crate that knows about both count ledgers and district plans is the optional
 bridge crate `rcount-rplan`.
+
+The broader package-family boundary is tracked in
+[`2026-05-13-civic-evidence-package-family.md`](2026-05-13-civic-evidence-package-family.md).
+That spec recommends extracting precinct/reporting-unit history into an
+RHIST-compatible package before deeper multi-cycle RCOUNT work, so RCOUNT does
+not become the permanent owner of all historical unit lineage.
+
+Layer access rules are tracked in
+[`2026-05-13-civic-evidence-layer-access-patterns.md`](2026-05-13-civic-evidence-layer-access-patterns.md).
+For RCOUNT this means:
+
+- current-election count ledgers stay in RCOUNT;
+- cross-cycle unit lineage belongs to RHIST;
+- shared unit identity and crosswalks must remain compatible with RCTX;
+- district aggregation binds RCOUNT, RPLAN, RCTX, and crosswalk hashes;
+- audit transcripts stay embedded until RAUDIT has a second production
+  consumer.
 
 ## Core Model
 
@@ -131,6 +157,17 @@ ballot-level cast vote records.
 
 A `.rcount` file is a count-ledger artifact. It is not required to contain
 geometries, district plans, or private voter records.
+
+Directory-form packages may also include `normalized/rhist-refs.ndjson` for
+hash-bound RHIST inputs. These references are consumer links: they identify the
+RHIST package hash, consumed cycle ids, and role, while long-run unit history
+remains owned by RHIST.
+
+Directory-form packages may also include `normalized/rctx-refs.ndjson` for
+hash-bound RCTX inputs. These references identify the consumed context hash,
+optional crosswalk hash, and role (`unit-context`, `aggregation-crosswalk`, or
+`plan-context`) while shared unit identity and crosswalk verification remain
+RCTX-owned.
 
 ```json
 {

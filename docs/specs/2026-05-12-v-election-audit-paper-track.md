@@ -4,7 +4,9 @@
 **Date:** 2026-05-12  
 **Substrate:** RCOUNT, with optional RPLAN bridge for district aggregation  
 **Related specs:** [`2026-05-12-rcount-incubation.md`](2026-05-12-rcount-incubation.md),
-[`2026-05-12-rcount-certification-research.md`](2026-05-12-rcount-certification-research.md)
+[`2026-05-12-rcount-certification-research.md`](2026-05-12-rcount-certification-research.md),
+[`2026-05-13-rcount-validation-data-landscape.md`](2026-05-13-rcount-validation-data-landscape.md),
+[`2026-05-13-rcount-audit-algorithm-roadmap.md`](2026-05-13-rcount-audit-algorithm-roadmap.md)
 
 ## Track Thesis
 
@@ -77,6 +79,21 @@ RPLAN/RCTX plan hash
 | V.9 | Count-System Interoperability: Vendor Exports To RCOUNT | adapters, source hashing, and normalization | Converts current election-system outputs into neutral public packages. |
 | V.10 | Certification Evidence Matrix | evidence-family matrix, data availability, audit requirements | Separates what law requires from what RCOUNT can additionally prove. |
 | V.11 | Performance And Parallel Verification In Rust | parallel precinct/batch hashing and reconciliation | Shows public verification can be fast enough for full-election packages. |
+| V.12 | BRAVO Ballot-Polling Audits | sequential likelihood-ratio ballot polling | Replays the classic ballot-polling RLA family. |
+| V.13 | Minerva And Athena Ballot-Polling Audits | round-level ballot-polling risk measures | Replays Arlo/Rhode-Island-style ballot-polling reports. |
+| V.14 | Kaplan-Markov And MACRO Comparison Audits | overstatement-error risk math | Replays ballot/batch comparison audit evidence. |
+| V.15 | ALPHA And Betting-Martingale Audits | sequential martingale tests | Provides a shared modern RLA test core. |
+| V.16 | SHANGRLA Assorters | assertion/assorter mean-test framework | Gives RCOUNT a common audit assertion language. |
+| V.17 | Stratified And Hybrid RLAs | multi-stratum evidence combination | Combines polling and comparison strata without flattening assumptions. |
+| V.18 | Batch Comparison Audits | hand-tally versus reported batch comparison | Adds batch-level audit risk replay above manifest accounting. |
+| V.19 | RAIRE And AWAIRE For RCV Audits | ranked-choice assertion generation | Extends RCOUNT to IRV/RCV audit claims. |
+| V.20 | Bayesian Tabulation Audits | posterior audit analytics | Records Bayesian audit claims with calibration boundaries. |
+| V.21 | Observable Ballot-Level Audits | privacy-preserving ballot/CVR linkage | Connects ballot-level public observability to RCOUNT evidence. |
+
+External validation targets are tracked in
+[`2026-05-13-rcount-validation-data-landscape.md`](2026-05-13-rcount-validation-data-landscape.md).
+Algorithm implementation order is tracked in
+[`2026-05-13-rcount-audit-algorithm-roadmap.md`](2026-05-13-rcount-audit-algorithm-roadmap.md).
 
 ## Paper Acceptance Contract
 
@@ -135,6 +152,16 @@ Then move into election-administration techniques:
 | V.9 | statement CSV and NIST CDF-style import adapters, source hash preservation, future jurisdiction adapters |
 | V.10 | evidence matrix tied to RCOUNT fixture coverage |
 | V.11 | parallel verifier benchmarks |
+| V.12 | BRAVO fixture math and ballot-polling transcript |
+| V.13 | Minerva/Athena replay, starting with RI/Arlo-style reports |
+| V.14 | comparison-audit overstatement error verifier |
+| V.15 | ALPHA/betting-martingale sequential test core |
+| V.16 | SHANGRLA assertion and assorter records |
+| V.17 | stratum coordinator and combined-risk transcript |
+| V.18 | batch hand-tally comparison verifier |
+| V.19 | ranked-choice CVR/assertion support |
+| V.20 | Bayesian analytic transcript with calibration boundary |
+| V.21 | commitment/opening records for observable ballot audits |
 
 ## Track Directory
 
@@ -159,6 +186,16 @@ V.8+district-vote-aggregation
 V.9+count-system-interoperability
 V.10+certification-evidence-matrix
 V.11+rust-verification-performance
+V.12+bravo-ballot-polling
+V.13+minerva-athena-ballot-polling
+V.14+kaplan-markov-macro-comparison
+V.15+alpha-betting-martingales
+V.16+shangrla-assorters
+V.17+stratified-hybrid-rlas
+V.18+batch-comparison-audits
+V.19+raire-awaire-rcv
+V.20+bayesian-tabulation-audits
+V.21+observable-ballot-audits
 ```
 
 ## Goal Prompt

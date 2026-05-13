@@ -96,3 +96,20 @@ Add tests for every new feature: L0 (inline unit), L1 (integration, synthetic da
 - `docs/quickstart/` — persona guides (special master, researcher, state staff, algorithm explorer, federal statute)
 - `docs/legal/` — model federal statute, fairness doctrine
 - `README.md` — public-facing overview
+
+## Wave execution
+
+Large goals now run through `context/waves/PHASES.md`. The active wave has a
+`WAVE.md`, pulse plans under `pulses/`, fork contexts under `forks/`, and
+review panels under `panels/`.
+
+Use the local wave skills:
+
+- `/r-wave status` to find the active wave and next pulse.
+- `/r-fork NN` to materialize a pulse into one execution context.
+- `/r-pulse next` or `/r-pulse NN` to execute a pulse with scout, edits, docs,
+  and validation.
+- `/r-review pulse NN` to write role-based findings.
+
+The current active wave is R Package Completion, tracking RCOUNT, RCTX, RHIST,
+and the wider civic evidence package family.

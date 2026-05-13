@@ -7,6 +7,7 @@ license.workspace = true
 description = "RCOUNT election-count data model, canonical hashing, and core reconciliation checks"
 
 [dependencies]
+rayon.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true

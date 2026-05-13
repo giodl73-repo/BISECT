@@ -5,7 +5,8 @@
 **Scope:** Generic district-plan interchange, audit, and future extraction path  
 **Related specs:** [`2026-04-26-spec0-rplan-format.md`](2026-04-26-spec0-rplan-format.md),
 [`2026-05-10-rplan-v0.2-schema.md`](2026-05-10-rplan-v0.2-schema.md),
-[`2026-05-10-plan-audit-certificates.md`](2026-05-10-plan-audit-certificates.md)
+[`2026-05-10-plan-audit-certificates.md`](2026-05-10-plan-audit-certificates.md),
+[`2026-05-13-civic-evidence-package-family.md`](2026-05-13-civic-evidence-package-family.md)
 **Review records:** [`rplan-incubation-r2_roles.md`](reviews/rplan-incubation-r2_roles.md),
 [`rplan-v0.2-schema-r1_roles.md`](reviews/rplan-v0.2-schema-r1_roles.md),
 [`rplan-v0.2-schema-r2_roles.md`](reviews/rplan-v0.2-schema-r2_roles.md),

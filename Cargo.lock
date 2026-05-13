@@ -2662,6 +2662,7 @@ version = "0.1.0"
 dependencies = [
  "rcount-core",
  "rcount-io",
+ "rcount-stats",
  "serde",
  "serde_json",
  "tempfile",
@@ -2678,6 +2679,9 @@ dependencies = [
  "rcount-core",
  "rcount-district",
  "rcount-io",
+ "rctx-core",
+ "rplan-core",
+ "rplan-io",
  "serde_json",
  "tempfile",
 ]
@@ -2686,6 +2690,7 @@ dependencies = [
 name = "rcount-core"
 version = "0.1.0"
 dependencies = [
+ "rayon",
  "serde",
  "serde_json",
  "sha2",
@@ -2698,10 +2703,12 @@ version = "0.1.0"
 dependencies = [
  "rcount-core",
  "rcount-io",
+ "rctx-core",
  "rplan-core",
  "rplan-io",
  "serde",
  "serde_json",
+ "tempfile",
  "thiserror 2.0.18",
 ]
 
@@ -2715,6 +2722,33 @@ dependencies = [
  "serde_json",
  "sha2",
  "tempfile",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "rcount-rhist"
+version = "0.1.0"
+dependencies = [
+ "rcount-core",
+ "rhist-core",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "rcount-stats"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "rctx-core"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2",
  "thiserror 2.0.18",
 ]
 
@@ -2822,6 +2856,42 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "47b34b781b31e5d73e9fbc8689c70551fd1ade9a19e3e28cfec8580a79290cc4"
 dependencies = [
  "bytemuck",
+]
+
+[[package]]
+name = "rhist-cli"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "rhist-core",
+ "rhist-io",
+ "serde",
+ "serde_json",
+ "tempfile",
+]
+
+[[package]]
+name = "rhist-core"
+version = "0.1.0"
+dependencies = [
+ "rctx-core",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "rhist-io"
+version = "0.1.0"
+dependencies = [
+ "rhist-core",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tempfile",
+ "thiserror 2.0.18",
 ]
 
 [[package]]

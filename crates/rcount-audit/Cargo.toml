@@ -9,6 +9,7 @@ description = "RCOUNT package verification and audit transcripts"
 [dependencies]
 rcount-core = { path = "../rcount-core" }
 rcount-io = { path = "../rcount-io" }
+rcount-stats = { path = "../rcount-stats" }
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true

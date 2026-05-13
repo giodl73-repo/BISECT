@@ -22,7 +22,17 @@ recompute public claims from lower-level evidence.
 | V.8 | District Vote Aggregation With RPLAN | substrate slice landed |
 | V.9 | Count-System Interoperability: Vendor Exports To RCOUNT | statement CSV adapter slice landed |
 | V.10 | Certification Evidence Matrix | draft landed |
-| V.11 | Performance And Parallel Verification In Rust | planned |
+| V.11 | Performance And Parallel Verification In Rust | first parallel verifier slice landed |
+| V.12 | BRAVO Ballot-Polling Audits | atlas scaffold landed |
+| V.13 | Minerva And Athena Ballot-Polling Audits | atlas scaffold landed; RI boundary adapter landed |
+| V.14 | Kaplan-Markov And MACRO Comparison Audits | atlas scaffold landed |
+| V.15 | ALPHA And Betting-Martingale Audits | atlas scaffold landed |
+| V.16 | SHANGRLA Assorters | first assertion/assorter transcript schema landed |
+| V.17 | Stratified And Hybrid RLAs | atlas scaffold landed |
+| V.18 | Batch Comparison Audits | atlas scaffold landed |
+| V.19 | RAIRE And AWAIRE For RCV Audits | atlas scaffold landed |
+| V.20 | Bayesian Tabulation Audits | atlas scaffold landed |
+| V.21 | Observable Ballot-Level Audits | atlas scaffold landed |
 
 ## Implementation Status
 
@@ -46,7 +56,13 @@ recompute public claims from lower-level evidence.
 - `rcount-district`: started 2026-05-12 as the optional bridge from verified
   RCOUNT summaries to RPLAN district assignments, producing district totals and
   transcripts that bind the RCOUNT package hash, RPLAN plan hash, and optional
-  RCTX context hash. It also contains the first L2 synthetic multi-election
+  RCTX context hash. The transcript now also carries a declared
+  `rctx_reference_id` and `rctx_crosswalk_hash` when the aggregation context
+  matches a package `rctx_refs` binding. `rcount aggregate-districts` now
+  accepts `--crosswalk` to validate an explicit RCTX crosswalk NDJSON file and
+  reject declared crosswalk-hash drift. Explicit crosswalk rows now drive the
+  aggregation arithmetic; weighted allocations must be integral in the current
+  transcript model. It also contains the first L2 synthetic multi-election
   harness with split/merge precinct lineage across three cycles, plus negative
   L2 cases for broken lineage, stale RPLAN units, and tampered cycle sources.
 - `rcount-cli`: started 2026-05-12 with `rcount verify <package-dir>` and
@@ -61,6 +77,31 @@ recompute public claims from lower-level evidence.
 - Audit fixture ladder: now includes Colorado-style RLA, California-style RLA,
   and ordinary manual-audit model fixtures, each with positive and negative
   transcripts.
+- First external validation adapter: `rcount import-ri2024-rep28-rla` imports
+  Rhode Island's 2024 State Representative District 28 ballot-polling audit
+  report, ballot manifest, and ballot retrieval CSV into a verifiable RCOUNT
+  package. This slice verifies source hashes, contest arithmetic, manifest
+  batch accounting, and sampled-ballot/retrieval key consistency, and writes a
+  source-summary transcript; Minerva risk replay and ballot-level observation
+  checks remain future work.
+- External validation roadmap: `docs/specs/2026-05-13-rcount-validation-data-landscape.md`
+  ranks Rhode Island RLA artifacts, Colorado RLA artifacts, MEDSL/OpenElections
+  returns, and public CVR corpora as the first real-world validation targets.
+- RCOUNT audit algorithm atlas: `docs/algorithm-atlas/` now carries V.12-V.21
+  pages for BRAVO, Minerva/Athena, Kaplan-Markov/MACRO, ALPHA, SHANGRLA,
+  stratified/hybrid RLAs, batch comparison, RAIRE/AWAIRE, Bayesian audits, and
+  SOBA-style observable ballot audits, plus W.01 for non-certifying forensic
+  anomaly analytics.
+- First audit-algorithm substrate slice: `rcount-core` now has registered
+  audit method ids, SHANGRLA/ALPHA-friendly assertion and assorter-value
+  transcript records, optional package-level `audit_algorithm_runs`, and a
+  verifier check for transcript shape, links, risk limits, and value bounds.
+- Stats layer: `rcount-stats` is the IO-free home for exact rational arithmetic,
+  ppm probability/risk-limit helpers, and future shared sequential-test
+  primitives used by BRAVO, ALPHA, Minerva/Athena, and comparison audits.
+- Package-family guardrail: `docs/specs/2026-05-13-civic-evidence-package-family.md`
+  defines RCTX/RMAP/RHIST/RPLAN/RCOUNT/RAUDIT/RSTAT boundaries and recommends a
+  minimal RHIST lineage slice before deeper multi-cycle RCOUNT expansion.
 
 ## Track Contract
 

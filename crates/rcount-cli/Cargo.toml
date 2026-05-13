@@ -20,4 +20,7 @@ serde_json.workspace = true
 anyhow.workspace = true
 
 [dev-dependencies]
+rctx-core = { path = "../rctx-core" }
+rplan-core = { path = "../rplan-core" }
+rplan-io = { path = "../rplan-io" }
 tempfile.workspace = true

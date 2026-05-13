@@ -1,5 +1,15 @@
 # RCOUNT Substrate Spec
 
+**Package-family note:** The broader civic evidence package boundary is tracked
+in [`2026-05-13-civic-evidence-package-family.md`](2026-05-13-civic-evidence-package-family.md).
+Future multi-cycle RCOUNT lineage should remain compatible with RHIST rather
+than hard-coding all history into RCOUNT.
+Layer access patterns are tracked in
+[`2026-05-13-civic-evidence-layer-access-patterns.md`](2026-05-13-civic-evidence-layer-access-patterns.md):
+RCOUNT owns current count ledgers, RHIST owns cross-cycle unit lineage, RCTX
+owns shared unit identity/crosswalks, and RAUDIT remains deferred until audit
+transcripts need to stand outside RCOUNT.
+
 Status: draft
 Date: 2026-05-12
 Track: `research/tracks/V-election-audit`
@@ -318,6 +328,25 @@ The district aggregation transcript must hash:
 - aggregation code version;
 - unit crosswalk source hashes.
 
+The count package can now carry the context/crosswalk binding in
+`normalized/rctx-refs.ndjson`, so district aggregation transcripts can point to
+a declared RCOUNT consumer reference instead of inventing a separate input
+channel.
+
+The district aggregation transcript should include `rctx_reference_id` and
+`rctx_crosswalk_hash` when a supplied `.rctx` context matches a declared
+RCOUNT `aggregation-crosswalk` reference.
+
+When `rcount aggregate-districts` receives `--crosswalk`, the crosswalk file is
+read as RCTX crosswalk NDJSON, verified with `rctx-core`, and hashed with the
+canonical RCTX crosswalk-set hash. If the matching RCOUNT `rctx_refs` record
+declares a `crosswalk_hash`, the computed hash must match.
+
+With an explicit crosswalk, district aggregation projects source RCOUNT
+summaries through the crosswalk rows before summing by RPLAN district. The
+current implementation requires every weighted count field to allocate to an
+integer; non-integral weighted allocations fail rather than being rounded.
+
 ## Crate Staging
 
 Recommended crates:
@@ -529,6 +558,20 @@ Current audit coverage:
   receipt-safe proof privacy checks;
 - `rcount-audit` pass transcript for `manual-audit`, including hand-count to
   machine-total reconciliation;
+- `rcount-audit` BRAVO and fixed-bet ALPHA statistic replay helpers with
+  pass/fail/boundary algorithm transcripts;
+- RI Rep. 28 Minerva import emits a boundary-only package-level audit algorithm
+  run, and `replay-audit-algorithms` reports that Minerva risk is preserved but
+  not recomputed;
+- V.14/V.18 comparison-audit scaffolding includes exact plurality
+  overstatement/taint primitives, exact batch plurality margin overstatement,
+  package-level batch comparison records, core batch overstatement verification,
+  algorithm-step linkage to verified batch overstatement taints,
+  missing-hand-tally, batch-size-drift, and algorithm-taint-drift negatives, an
+  initial Kaplan-Markov taint-product replay transcript,
+  `batch-comparison-v1` replay through the same comparison-risk surface, and a
+  core helper that derives batch-comparison algorithm runs from verified batch
+  audits plus sampled-batch order, with IO round-trip and CLI replay coverage;
 - fail transcript for tampered manifest/content hash;
 - fail transcript for missing batch evidence;
 - fail transcript for bad lineage evidence;
@@ -537,6 +580,10 @@ Current audit coverage:
 - fail transcript for bad summary arithmetic;
 - fail transcript for bad manual-audit hand-count evidence;
 - CLI district aggregation transcript for a synthetic RPLAN assignment;
+- CLI district aggregation transcript that preserves a declared RCTX reference
+  id and crosswalk hash when a matching context is supplied;
+- CLI `replay-audit-algorithms` output for package-level algorithm runs,
+  returning exit code `1` when declared replay statistics drift;
 - L2 synthetic multi-election replay transcript with split/merge lineage and
   per-cycle district aggregation;
 - L2 negative CLI coverage for bad lineage, stale district plan units, and
@@ -553,7 +600,8 @@ rcount verify package.rcount
 rcount hash package.rcount
 rcount explain-delta package.rcount --event event-0007
 rcount verify-proof package.rcount proofs/example.json
-rcount aggregate-districts package.rcount --plan plan.rplan --context context.rctx
+rcount replay-audit-algorithms package.rcount
+rcount aggregate-districts package.rcount --plan plan.rplan --context context.rctx --crosswalk crosswalks.ndjson
 ```
 
 Initial implementation:
@@ -561,6 +609,7 @@ Initial implementation:
 ```text
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/summary-basic
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/summary-basic --write-transcript
+cargo run -p rcount-cli -- replay-audit-algorithms docs/examples/rcount-golden-packages/summary-basic
 cargo run -p rcount-cli -- aggregate-districts docs/examples/rcount-golden-packages/district-aggregation-rplan/package --plan docs/examples/rcount-golden-packages/district-aggregation-rplan/plan.rplan.json
 ```
 

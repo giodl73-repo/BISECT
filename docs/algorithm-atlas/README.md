@@ -56,6 +56,7 @@ Read the atlas by the question you are trying to answer:
 | How do exact and search methods explain their claims? | [U.16 Branch-And-Cut](u16-branch-and-cut.md) | [U.17 Branch-And-Price](u17-branch-and-price.md), [U.18 Local Search](u18-local-search.md), [U.19 Evolutionary Comparison](u19-evolutionary-comparison.md) |
 | How do sampling methods explain movement and diagnostics? | [ReCom Ensemble](recom-ensemble.md) | [Sequential Monte Carlo](sequential-monte-carlo.md), [Multiscale MCMC](multiscale-mcmc.md) |
 | How does everything become audit evidence? | [U.20 RPLAN Audit Certificates](u20-rplan-audit-certificates.md) | [Three-Layer Compositor](three-layer-compositor.md), [Seed Search Modes](seed-search-modes.md) |
+| How do RCOUNT election audits replay statistical evidence? | [V.16 SHANGRLA Assorters](v16-shangrla-assorters.md) | [V.15 ALPHA](v15-alpha-betting-martingale.md), [V.13 Minerva/Athena](v13-minerva-athena-ballot-polling.md), [V.14 Kaplan-Markov/MACRO](v14-kaplan-markov-macro-comparison.md) |
 
 ## Bisection Compositor Family
 
@@ -133,6 +134,27 @@ excellent:
 | Sequential Monte Carlo | [Sequential Monte Carlo](sequential-monte-carlo.md) | Particles, staged district proposals, weights, ESS resampling |
 | Multiscale MCMC | [Multiscale MCMC](multiscale-mcmc.md) | Coarse/fine hierarchy, tract moves, block-group moves, rebalance |
 
+## RCOUNT Audit Algorithm Family
+
+These pages extend the atlas from RPLAN-producing algorithms into RCOUNT audit
+replay. V-series pages are certification/audit algorithms. W-series pages are
+exploratory analytics that can guide investigation but must not be treated as
+certifying evidence.
+
+| Algorithm | Visual Guide | What To Look For |
+|---|---|---|
+| V.12 BRAVO Ballot-Polling RLA | [V.12 BRAVO](v12-bravo-ballot-polling.md) | Sequential likelihood ratio, ballot observations, stop/continue boundary |
+| V.13 Minerva And Athena | [V.13 Minerva/Athena](v13-minerva-athena-ballot-polling.md) | Round-level ballot-polling risk measurements and RI/Arlo-style reports |
+| V.14 Kaplan-Markov / MACRO | [V.14 Kaplan-Markov/MACRO](v14-kaplan-markov-macro-comparison.md) | CVR/hand comparison, overstatement errors, running P-values |
+| V.15 ALPHA And Betting Martingales | [V.15 ALPHA](v15-alpha-betting-martingale.md) | Assorter values, bets, martingale transcript, adaptive stopping |
+| V.16 SHANGRLA Assorters | [V.16 SHANGRLA](v16-shangrla-assorters.md) | Outcome assertions, assorter formulas, mean tests |
+| V.17 Stratified And Hybrid RLAs | [V.17 Stratified/Hybrid](v17-stratified-suite-hybrid.md) | Polling/comparison strata, combining rules, nuisance parameters |
+| V.18 Batch Comparison | [V.18 Batch Comparison](v18-batch-comparison.md) | Batch hand tallies, reported batch totals, batch overstatements |
+| V.19 RAIRE And AWAIRE | [V.19 RAIRE/AWAIRE](v19-raire-awaire-rcv.md) | RCV/IRV assertion sets and ranked-ballot evidence |
+| V.20 Bayesian Tabulation Audits | [V.20 Bayesian Audits](v20-bayesian-tabulation-audits.md) | Priors, posterior outcome probabilities, calibration boundary |
+| V.21 SOBA Observable Audits | [V.21 SOBA](v21-soba-observable-ballot-audits.md) | Commitments, privacy-preserving ballot linkage, public observability |
+| W.01 Election Forensic Analytics | [W.01 Forensics](w01-election-forensic-analytics.md) | Outlier scores, residuals, digit tests, investigative boundary |
+
 ## Review Artifacts
 
 | Artifact | Purpose |
@@ -144,10 +166,10 @@ excellent:
 
 ## Possible Future Pages
 
-Future atlas pages could cover VRASection, ProportionalSection, NestSection,
-StabilitySection, Moving-Knife, compact-Polsby, CVD, BFS growth, and simulated
-annealing. Add them only when the page can meet the gold-standard checklist
-above.
+Future RPLAN atlas pages could cover VRASection, ProportionalSection,
+NestSection, StabilitySection, Moving-Knife, compact-Polsby, CVD, BFS growth,
+and simulated annealing. Future RCOUNT pages should add implementation-specific
+variants only when they have a transcript shape, fixtures, and a claim boundary.
 
 ## Relationship To Other Docs
 

@@ -1,9 +1,15 @@
 {
-  "package_content_hash": "sha256:2e8876b13333c5e2b11e1febe81850d9f310452c9b619132901a12c2a493f0e6",
+  "package_content_hash": "sha256:09eec04c6adc3dfc150bd065f152d75d9111333c3311bc20760fbc28c2009591",
   "contest_count": 1,
   "reporting_unit_count": 3,
   "batch_count": 0,
   "lineage_count": 0,
+  "rhist_ref_count": 0,
+  "rctx_ref_count": 1,
   "inclusion_proof_count": 0,
+  "cvr_count": 0,
+  "audit_algorithm_run_count": 0,
+  "rla_audit_count": 0,
+  "manual_audit_count": 0,
   "summary_count": 3
 }

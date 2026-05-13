@@ -1,3 +1,4 @@
+use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use sha2::{Digest, Sha256};
@@ -18,6 +19,18 @@ pub const COLORADO_RLA_METHOD_ID: &str = "colorado-rule-25-comparison-v1";
 pub const CALIFORNIA_RLA_METHOD_ID: &str = "california-public-rla-v1";
 pub const CALIFORNIA_BALLOT_MANIFEST_FORMAT_ID: &str =
     "ca-post-election-rla-ballot-manifest-2019-10-15";
+pub const BRAVO_BALLOT_POLLING_METHOD_ID: &str = "bravo-ballot-polling-v1";
+pub const MINERVA_BALLOT_POLLING_METHOD_ID: &str = "minerva-ballot-polling-v1";
+pub const ATHENA_BALLOT_POLLING_METHOD_ID: &str = "athena-ballot-polling-v1";
+pub const KAPLAN_MARKOV_COMPARISON_METHOD_ID: &str = "kaplan-markov-comparison-v1";
+pub const ALPHA_MARTINGALE_METHOD_ID: &str = "alpha-martingale-v1";
+pub const SHANGRLA_ASSORTER_METHOD_ID: &str = "shangrla-assorter-v1";
+pub const STRATIFIED_HYBRID_RLA_METHOD_ID: &str = "stratified-hybrid-rla-v1";
+pub const BATCH_COMPARISON_METHOD_ID: &str = "batch-comparison-v1";
+pub const RAIRE_IRV_METHOD_ID: &str = "raire-irv-v1";
+pub const AWAIRE_IRV_METHOD_ID: &str = "awaire-irv-v1";
+pub const BAYESIAN_TABULATION_AUDIT_METHOD_ID: &str = "bayesian-tabulation-audit-v1";
+pub const SOBA_OBSERVABLE_BALLOT_AUDIT_METHOD_ID: &str = "soba-observable-ballot-audit-v1";
 
 #[derive(Debug, Error, Clone, PartialEq, Eq)]
 pub enum RcountCoreError {
@@ -118,6 +131,31 @@ pub enum RcountCoreError {
     InvalidSplitLineage { lineage_id: String },
     #[error("lineage event {lineage_id} has invalid merge cardinality")]
     InvalidMergeLineage { lineage_id: String },
+    #[error("duplicate RHIST reference id: {reference_id}")]
+    DuplicateRhistReference { reference_id: String },
+    #[error("RHIST reference {reference_id} has invalid package hash: {package_hash}")]
+    InvalidRhistPackageHash {
+        reference_id: String,
+        package_hash: String,
+    },
+    #[error("RHIST reference {reference_id} must include at least one cycle id")]
+    EmptyRhistCycleRefs { reference_id: String },
+    #[error("RHIST reference {reference_id} has unsupported role: {role}")]
+    UnsupportedRhistReferenceRole { reference_id: String, role: String },
+    #[error("duplicate RCTX reference id: {reference_id}")]
+    DuplicateRctxReference { reference_id: String },
+    #[error("RCTX reference {reference_id} has invalid context hash: {context_hash}")]
+    InvalidRctxContextHash {
+        reference_id: String,
+        context_hash: String,
+    },
+    #[error("RCTX reference {reference_id} has invalid crosswalk hash: {crosswalk_hash}")]
+    InvalidRctxCrosswalkHash {
+        reference_id: String,
+        crosswalk_hash: String,
+    },
+    #[error("RCTX reference {reference_id} has unsupported role: {role}")]
+    UnsupportedRctxReferenceRole { reference_id: String, role: String },
     #[error("duplicate proof id: {proof_id}")]
     DuplicateProofId { proof_id: String },
     #[error("proof {proof_id} exposes candidate selections")]
@@ -170,6 +208,90 @@ pub enum RcountCoreError {
         audit_id: String,
         sampling_algorithm_id: String,
     },
+    #[error("duplicate audit algorithm run id: {run_id}")]
+    DuplicateAuditAlgorithmRunId { run_id: String },
+    #[error("audit algorithm run {run_id} has invalid risk limit ppm: {risk_limit_ppm}")]
+    InvalidAuditAlgorithmRiskLimit { run_id: String, risk_limit_ppm: u32 },
+    #[error("audit algorithm run {run_id} has invalid MACRO design fields")]
+    InvalidAuditMacroDesign { run_id: String },
+    #[error("audit algorithm run {run_id} has invalid stratified/hybrid design")]
+    InvalidStratifiedHybridDesign { run_id: String },
+    #[error("audit algorithm run {run_id} references missing stratified/hybrid component run: {component_run_id}")]
+    MissingStratifiedHybridComponent {
+        run_id: String,
+        component_run_id: String,
+    },
+    #[error("audit algorithm run {run_id} has invalid ranked-choice audit design")]
+    InvalidRankedChoiceAuditDesign { run_id: String },
+    #[error("audit algorithm run {run_id} step {step_index} has invalid ranked choices")]
+    InvalidRankedChoiceSample { run_id: String, step_index: u32 },
+    #[error("audit algorithm run {run_id} has invalid Bayesian audit design")]
+    InvalidBayesianAuditDesign { run_id: String },
+    #[error("audit algorithm run {run_id} has invalid observable-ballot audit design")]
+    InvalidObservableBallotAuditDesign { run_id: String },
+    #[error("audit algorithm run {run_id} step {step_index} references missing observable-ballot opening: {proof_id}")]
+    MissingObservableBallotOpening {
+        run_id: String,
+        step_index: u32,
+        proof_id: String,
+    },
+    #[error("audit algorithm run {run_id} has unsupported method id: {method_id}")]
+    UnsupportedAuditAlgorithmMethod { run_id: String, method_id: String },
+    #[error("audit algorithm run {run_id} has duplicate assertion id: {assertion_id}")]
+    DuplicateAuditAssertion {
+        run_id: String,
+        assertion_id: String,
+    },
+    #[error("audit algorithm run {run_id} assertion {assertion_id} has invalid assorter bound")]
+    InvalidAuditAssorterBound {
+        run_id: String,
+        assertion_id: String,
+    },
+    #[error("audit algorithm run {run_id} step {step_index} references missing assertion {assertion_id}")]
+    MissingAuditAssertion {
+        run_id: String,
+        step_index: u32,
+        assertion_id: String,
+    },
+    #[error("audit algorithm run {run_id} has duplicate sample step {step_index} for assertion {assertion_id}")]
+    DuplicateAuditSampleStep {
+        run_id: String,
+        assertion_id: String,
+        step_index: u32,
+    },
+    #[error("audit algorithm run {run_id} step {step_index} has invalid assorter value")]
+    InvalidAuditAssorterValue { run_id: String, step_index: u32 },
+    #[error(
+        "audit algorithm run {run_id} step {step_index} has invalid p-value ppm: {p_value_ppm}"
+    )]
+    InvalidAuditPValue {
+        run_id: String,
+        step_index: u32,
+        p_value_ppm: u32,
+    },
+    #[error("audit algorithm run {run_id} step {step_index} references missing batch comparison audit for batch {batch_id}")]
+    MissingBatchComparisonAlgorithmEvidence {
+        run_id: String,
+        step_index: u32,
+        batch_id: String,
+    },
+    #[error("audit algorithm run {run_id} step {step_index} batch comparison taint mismatch: declared {declared:?}, computed {computed:?}")]
+    BatchComparisonAlgorithmTaintMismatch {
+        run_id: String,
+        step_index: u32,
+        declared: RationalValue,
+        computed: RationalValue,
+    },
+    #[error("audit algorithm run {run_id} batch comparison sample order is empty")]
+    EmptyBatchComparisonAlgorithmSample { run_id: String },
+    #[error("audit algorithm run {run_id} batch comparison audit {audit_id} has nonpositive reported margin: {reported_margin}")]
+    InvalidBatchComparisonAlgorithmMargin {
+        run_id: String,
+        audit_id: String,
+        reported_margin: i64,
+    },
+    #[error("audit algorithm run {run_id} batch comparison audit {audit_id} assertion mismatch")]
+    BatchComparisonAlgorithmAssertionMismatch { run_id: String, audit_id: String },
     #[error("RLA audit {audit_id} has no CVR population for contest {contest_id}")]
     MissingRlaPopulation {
         audit_id: String,
@@ -314,6 +436,57 @@ pub enum RcountCoreError {
         declared: ManualAuditStatus,
         computed: ManualAuditStatus,
     },
+    #[error("duplicate batch comparison audit id: {audit_id}")]
+    DuplicateBatchComparisonAuditId { audit_id: String },
+    #[error("batch comparison audit {audit_id} references missing batch: {batch_id}")]
+    MissingBatchComparisonBatch { audit_id: String, batch_id: String },
+    #[error("batch comparison audit {audit_id} batch size mismatch for {batch_id}: declared {declared}, batch manifest {manifest}")]
+    BatchComparisonBatchSizeMismatch {
+        audit_id: String,
+        batch_id: String,
+        declared: i64,
+        manifest: i64,
+    },
+    #[error("batch comparison audit {audit_id} is missing batch summary for contest {contest_id} batch {batch_id}")]
+    MissingBatchComparisonSummary {
+        audit_id: String,
+        contest_id: String,
+        batch_id: String,
+    },
+    #[error("batch comparison audit {audit_id} reported total mismatch for {selection_id}: declared {declared}, summary {summary}")]
+    BatchComparisonReportedTotalMismatch {
+        audit_id: String,
+        selection_id: String,
+        declared: i64,
+        summary: i64,
+    },
+    #[error("batch comparison audit {audit_id} is missing hand tally for {selection_id}")]
+    MissingBatchComparisonHandTally {
+        audit_id: String,
+        selection_id: String,
+    },
+    #[error("batch comparison audit {audit_id} declared reported margin {declared}, computed {computed}")]
+    BatchComparisonReportedMarginMismatch {
+        audit_id: String,
+        declared: i64,
+        computed: i64,
+    },
+    #[error(
+        "batch comparison audit {audit_id} declared hand margin {declared}, computed {computed}"
+    )]
+    BatchComparisonHandMarginMismatch {
+        audit_id: String,
+        declared: i64,
+        computed: i64,
+    },
+    #[error(
+        "batch comparison audit {audit_id} declared overstatement {declared}, computed {computed}"
+    )]
+    BatchComparisonOverstatementMismatch {
+        audit_id: String,
+        declared: i64,
+        computed: i64,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -424,6 +597,34 @@ pub struct ReportingUnitLineage {
     pub current_reporting_unit_ids: Vec<String>,
     pub authority: String,
     pub explanation: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RhistReference {
+    pub reference_id: String,
+    pub package_hash: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub package_path: Option<String>,
+    #[serde(default)]
+    pub cycle_ids: Vec<String>,
+    pub role: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub note: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RctxReference {
+    pub reference_id: String,
+    pub context_hash: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub context_path: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub crosswalk_hash: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub crosswalk_path: Option<String>,
+    pub role: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub note: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -550,6 +751,137 @@ pub struct RlaMarginMetadata {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RationalValue {
+    pub numerator: i64,
+    pub denominator: i64,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum AuditAssertionKind {
+    PluralityWinnerLoser,
+    AssorterMean,
+    ComparisonOverstatement,
+    RankedChoiceAssertion,
+    BayesianOutcome,
+    ObservableBallotLinkage,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AuditAssertion {
+    pub assertion_id: String,
+    pub kind: AuditAssertionKind,
+    pub assorter_id: String,
+    pub assorter_upper_bound: RationalValue,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub winner_selection_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub loser_selection_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum AuditSamplingMode {
+    WithReplacement,
+    WithoutReplacement,
+    Bernoulli,
+    Weighted,
+    Batch,
+    BoundaryOnly,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum AuditAlgorithmDecision {
+    Pass,
+    Continue,
+    Escalate,
+    Boundary,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AuditSampleStep {
+    pub step_index: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub round_index: Option<u32>,
+    pub assertion_id: String,
+    pub sample_unit_id: String,
+    pub assorter_value: RationalValue,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bet: Option<RationalValue>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub statistic: Option<RationalValue>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub p_value_ppm: Option<u32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub ranked_choices: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub source_refs: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AuditStratum {
+    pub stratum_id: String,
+    pub method_id: String,
+    pub component_run_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ballot_count: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub allocation_ppm: Option<u32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub source_refs: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AuditAlgorithmRun {
+    pub run_id: String,
+    pub contest_id: String,
+    pub method_id: String,
+    pub sampling_mode: AuditSamplingMode,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub rcv_elimination_order: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub risk_limit_ppm: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reported_winner_votes: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reported_loser_votes: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub macro_ballot_count: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub macro_reported_margin: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub macro_gamma: Option<RationalValue>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub combining_rule_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nuisance_parameter: Option<RationalValue>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bayesian_prior_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bayesian_likelihood_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub posterior_winner_probability_ppm: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub posterior_risk_ppm: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub simulation_seed: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub posterior_draws: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub calibrated_risk_limit_ppm: Option<u32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub strata: Vec<AuditStratum>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub assertions: Vec<AuditAssertion>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub sample_steps: Vec<AuditSampleStep>,
+    pub decision: AuditAlgorithmDecision,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub source_refs: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum RlaStoppingStatus {
     Pass,
@@ -575,6 +907,23 @@ pub struct ManualAudit {
     pub machine_totals: Vec<SelectionTotal>,
     pub hand_totals: Vec<SelectionTotal>,
     pub declared_status: ManualAuditStatus,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct BatchComparisonAudit {
+    pub audit_id: String,
+    pub contest_id: String,
+    pub batch_id: String,
+    pub declared_batch_ballots: i64,
+    pub winner_selection_id: String,
+    pub loser_selection_id: String,
+    pub reported_totals: Vec<SelectionTotal>,
+    pub hand_totals: Vec<SelectionTotal>,
+    pub declared_reported_margin: i64,
+    pub declared_hand_margin: i64,
+    pub declared_overstatement: i64,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub source_refs: Vec<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -627,14 +976,22 @@ pub struct RcountPackage {
     pub batches: Vec<BatchManifest>,
     #[serde(default)]
     pub lineage: Vec<ReportingUnitLineage>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub rhist_refs: Vec<RhistReference>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub rctx_refs: Vec<RctxReference>,
     #[serde(default)]
     pub inclusion_proofs: Vec<InclusionProof>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub cvr: Vec<CvrContestRecord>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub audit_algorithm_runs: Vec<AuditAlgorithmRun>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rla_audits: Vec<RiskLimitAudit>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub manual_audits: Vec<ManualAudit>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub batch_comparison_audits: Vec<BatchComparisonAudit>,
     pub summaries: Vec<Summary>,
     #[serde(default)]
     pub status_events: Vec<StatusEvent>,
@@ -704,10 +1061,73 @@ pub fn verify_package(package: &RcountPackage) -> Result<VerificationReport, Rco
     report.passed.extend(verify_status_events(package)?);
     report.passed.extend(verify_batch_summary_totals(package)?);
     report.passed.extend(verify_lineage_conservation(package)?);
+    report.passed.extend(verify_rhist_references(package)?);
+    report.passed.extend(verify_rctx_references(package)?);
     report.passed.extend(verify_proof_privacy(package)?);
     report
         .passed
         .extend(verify_cvr_summary_reconciliation(package)?);
+    report
+        .passed
+        .extend(verify_batch_comparison_audits(package)?);
+    report.passed.extend(verify_audit_algorithm_runs(package)?);
+    report.passed.extend(verify_rla_sampler_replay(package)?);
+    report.passed.extend(verify_rla_margin_metadata(package)?);
+    report.passed.extend(verify_rla_stopping_rules(package)?);
+    report
+        .passed
+        .extend(verify_rla_jurisdiction_adapters(package)?);
+    report.passed.extend(verify_manual_audits(package)?);
+    Ok(report)
+}
+
+pub fn verify_package_parallel(
+    package: &RcountPackage,
+) -> Result<VerificationReport, RcountCoreError> {
+    let contests: BTreeMap<&str, &Contest> = package
+        .contests
+        .iter()
+        .map(|contest| (contest.contest_id.as_str(), contest))
+        .collect();
+    for contest in package.contests.iter() {
+        validate_contest(contest)?;
+    }
+
+    let summary_passes = package
+        .summaries
+        .par_iter()
+        .map(|summary| {
+            let contest = contests.get(summary.contest_id.as_str()).ok_or_else(|| {
+                RcountCoreError::UnknownSelection {
+                    contest_id: summary.contest_id.clone(),
+                    reporting_unit_id: summary.reporting_unit_id.clone(),
+                    selection_id: "<contest-missing>".to_string(),
+                }
+            })?;
+            verify_contest_selection_sum(contest, summary)?;
+            Ok(EquationPass {
+                equation_id: "contest_selection_sum".to_string(),
+                contest_id: summary.contest_id.clone(),
+                reporting_unit_id: summary.reporting_unit_id.clone(),
+            })
+        })
+        .collect::<Result<Vec<_>, RcountCoreError>>()?;
+
+    let mut report = VerificationReport::default();
+    report.passed.extend(summary_passes);
+    report.passed.extend(verify_status_events(package)?);
+    report.passed.extend(verify_batch_summary_totals(package)?);
+    report.passed.extend(verify_lineage_conservation(package)?);
+    report.passed.extend(verify_rhist_references(package)?);
+    report.passed.extend(verify_rctx_references(package)?);
+    report.passed.extend(verify_proof_privacy(package)?);
+    report
+        .passed
+        .extend(verify_cvr_summary_reconciliation(package)?);
+    report
+        .passed
+        .extend(verify_batch_comparison_audits(package)?);
+    report.passed.extend(verify_audit_algorithm_runs(package)?);
     report.passed.extend(verify_rla_sampler_replay(package)?);
     report.passed.extend(verify_rla_margin_metadata(package)?);
     report.passed.extend(verify_rla_stopping_rules(package)?);
@@ -1052,6 +1472,89 @@ pub fn verify_lineage_conservation(
     Ok(passes)
 }
 
+pub fn verify_rhist_references(
+    package: &RcountPackage,
+) -> Result<Vec<EquationPass>, RcountCoreError> {
+    let mut seen = BTreeSet::new();
+    let mut passes = Vec::new();
+    for reference in &package.rhist_refs {
+        if !seen.insert(reference.reference_id.as_str()) {
+            return Err(RcountCoreError::DuplicateRhistReference {
+                reference_id: reference.reference_id.clone(),
+            });
+        }
+        if !is_sha256_hash(&reference.package_hash) {
+            return Err(RcountCoreError::InvalidRhistPackageHash {
+                reference_id: reference.reference_id.clone(),
+                package_hash: reference.package_hash.clone(),
+            });
+        }
+        if reference.cycle_ids.is_empty() {
+            return Err(RcountCoreError::EmptyRhistCycleRefs {
+                reference_id: reference.reference_id.clone(),
+            });
+        }
+        if !matches!(
+            reference.role.as_str(),
+            "unit-lineage" | "aggregation-crosswalk" | "context-lineage"
+        ) {
+            return Err(RcountCoreError::UnsupportedRhistReferenceRole {
+                reference_id: reference.reference_id.clone(),
+                role: reference.role.clone(),
+            });
+        }
+        passes.push(EquationPass {
+            equation_id: "rhist_reference_declared".to_string(),
+            contest_id: "*".to_string(),
+            reporting_unit_id: reference.reference_id.clone(),
+        });
+    }
+    Ok(passes)
+}
+
+pub fn verify_rctx_references(
+    package: &RcountPackage,
+) -> Result<Vec<EquationPass>, RcountCoreError> {
+    let mut seen = BTreeSet::new();
+    let mut passes = Vec::new();
+    for reference in &package.rctx_refs {
+        if !seen.insert(reference.reference_id.as_str()) {
+            return Err(RcountCoreError::DuplicateRctxReference {
+                reference_id: reference.reference_id.clone(),
+            });
+        }
+        if !is_sha256_hash(&reference.context_hash) {
+            return Err(RcountCoreError::InvalidRctxContextHash {
+                reference_id: reference.reference_id.clone(),
+                context_hash: reference.context_hash.clone(),
+            });
+        }
+        if let Some(crosswalk_hash) = &reference.crosswalk_hash {
+            if !is_sha256_hash(crosswalk_hash) {
+                return Err(RcountCoreError::InvalidRctxCrosswalkHash {
+                    reference_id: reference.reference_id.clone(),
+                    crosswalk_hash: crosswalk_hash.clone(),
+                });
+            }
+        }
+        if !matches!(
+            reference.role.as_str(),
+            "unit-context" | "aggregation-crosswalk" | "plan-context"
+        ) {
+            return Err(RcountCoreError::UnsupportedRctxReferenceRole {
+                reference_id: reference.reference_id.clone(),
+                role: reference.role.clone(),
+            });
+        }
+        passes.push(EquationPass {
+            equation_id: "rctx_reference_declared".to_string(),
+            contest_id: "*".to_string(),
+            reporting_unit_id: reference.reference_id.clone(),
+        });
+    }
+    Ok(passes)
+}
+
 pub fn verify_proof_privacy(package: &RcountPackage) -> Result<Vec<EquationPass>, RcountCoreError> {
     let mut seen = BTreeSet::new();
     let mut passes = Vec::new();
@@ -1276,6 +1779,543 @@ pub fn verify_rla_sampler_replay(
         });
     }
     Ok(passes)
+}
+
+pub fn verify_audit_algorithm_runs(
+    package: &RcountPackage,
+) -> Result<Vec<EquationPass>, RcountCoreError> {
+    let mut seen_runs = BTreeSet::new();
+    for run in &package.audit_algorithm_runs {
+        if !seen_runs.insert(run.run_id.as_str()) {
+            return Err(RcountCoreError::DuplicateAuditAlgorithmRunId {
+                run_id: run.run_id.clone(),
+            });
+        }
+    }
+
+    let mut passes = Vec::new();
+    for run in &package.audit_algorithm_runs {
+        if !is_supported_audit_algorithm_method(&run.method_id) {
+            return Err(RcountCoreError::UnsupportedAuditAlgorithmMethod {
+                run_id: run.run_id.clone(),
+                method_id: run.method_id.clone(),
+            });
+        }
+        if let Some(risk_limit_ppm) = run.risk_limit_ppm {
+            if risk_limit_ppm == 0 || risk_limit_ppm >= 1_000_000 {
+                return Err(RcountCoreError::InvalidAuditAlgorithmRiskLimit {
+                    run_id: run.run_id.clone(),
+                    risk_limit_ppm,
+                });
+            }
+        }
+        verify_audit_macro_design(run)?;
+        verify_stratified_hybrid_design(run, &seen_runs)?;
+        verify_ranked_choice_audit_design(run)?;
+        verify_bayesian_audit_design(run)?;
+        verify_soba_observable_ballot_design(package, run)?;
+
+        let mut assertions = BTreeMap::new();
+        for assertion in &run.assertions {
+            if assertions
+                .insert(assertion.assertion_id.as_str(), assertion)
+                .is_some()
+            {
+                return Err(RcountCoreError::DuplicateAuditAssertion {
+                    run_id: run.run_id.clone(),
+                    assertion_id: assertion.assertion_id.clone(),
+                });
+            }
+            if assertion.assorter_id.trim().is_empty()
+                || !is_positive_rational(assertion.assorter_upper_bound)
+            {
+                return Err(RcountCoreError::InvalidAuditAssorterBound {
+                    run_id: run.run_id.clone(),
+                    assertion_id: assertion.assertion_id.clone(),
+                });
+            }
+        }
+
+        let mut seen_steps = BTreeSet::new();
+        for step in &run.sample_steps {
+            let Some(assertion) = assertions.get(step.assertion_id.as_str()) else {
+                return Err(RcountCoreError::MissingAuditAssertion {
+                    run_id: run.run_id.clone(),
+                    step_index: step.step_index,
+                    assertion_id: step.assertion_id.clone(),
+                });
+            };
+            if !seen_steps.insert((step.assertion_id.as_str(), step.step_index)) {
+                return Err(RcountCoreError::DuplicateAuditSampleStep {
+                    run_id: run.run_id.clone(),
+                    assertion_id: step.assertion_id.clone(),
+                    step_index: step.step_index,
+                });
+            }
+            if !is_non_negative_rational(step.assorter_value)
+                || rational_gt(step.assorter_value, assertion.assorter_upper_bound)
+                || step.bet.is_some_and(|bet| !has_positive_denominator(bet))
+                || step
+                    .statistic
+                    .is_some_and(|statistic| !is_non_negative_rational(statistic))
+            {
+                return Err(RcountCoreError::InvalidAuditAssorterValue {
+                    run_id: run.run_id.clone(),
+                    step_index: step.step_index,
+                });
+            }
+            if step.p_value_ppm.is_some_and(|p_value| p_value > 1_000_000) {
+                return Err(RcountCoreError::InvalidAuditPValue {
+                    run_id: run.run_id.clone(),
+                    step_index: step.step_index,
+                    p_value_ppm: step.p_value_ppm.unwrap(),
+                });
+            }
+        }
+
+        passes.push(EquationPass {
+            equation_id: "audit_algorithm_transcript".to_string(),
+            contest_id: run.contest_id.clone(),
+            reporting_unit_id: run.run_id.clone(),
+        });
+        if run.method_id == BATCH_COMPARISON_METHOD_ID
+            && package
+                .batch_comparison_audits
+                .iter()
+                .any(|audit| audit.contest_id == run.contest_id)
+        {
+            verify_batch_comparison_algorithm_linkage(package, run)?;
+            passes.push(EquationPass {
+                equation_id: "batch_comparison_algorithm_linkage".to_string(),
+                contest_id: run.contest_id.clone(),
+                reporting_unit_id: run.run_id.clone(),
+            });
+        }
+    }
+    Ok(passes)
+}
+
+fn verify_audit_macro_design(run: &AuditAlgorithmRun) -> Result<(), RcountCoreError> {
+    match (
+        run.macro_ballot_count,
+        run.macro_reported_margin,
+        run.macro_gamma,
+    ) {
+        (None, None, None) => Ok(()),
+        (Some(ballot_count), Some(reported_margin), Some(gamma))
+            if ballot_count > 0
+                && reported_margin > 0
+                && gamma.denominator > 0
+                && rational_gt(
+                    gamma,
+                    RationalValue {
+                        numerator: 1,
+                        denominator: 1,
+                    },
+                ) =>
+        {
+            Ok(())
+        }
+        _ => Err(RcountCoreError::InvalidAuditMacroDesign {
+            run_id: run.run_id.clone(),
+        }),
+    }
+}
+
+fn verify_stratified_hybrid_design(
+    run: &AuditAlgorithmRun,
+    run_ids: &BTreeSet<&str>,
+) -> Result<(), RcountCoreError> {
+    if run.method_id != STRATIFIED_HYBRID_RLA_METHOD_ID {
+        if run.combining_rule_id.is_some()
+            || run.nuisance_parameter.is_some()
+            || !run.strata.is_empty()
+        {
+            return Err(RcountCoreError::InvalidStratifiedHybridDesign {
+                run_id: run.run_id.clone(),
+            });
+        }
+        return Ok(());
+    }
+
+    if run
+        .combining_rule_id
+        .as_deref()
+        .is_none_or(|rule| rule.trim().is_empty())
+        || run
+            .nuisance_parameter
+            .is_none_or(|parameter| !has_positive_denominator(parameter))
+        || run.strata.len() < 2
+        || !run.assertions.is_empty()
+        || !run.sample_steps.is_empty()
+    {
+        return Err(RcountCoreError::InvalidStratifiedHybridDesign {
+            run_id: run.run_id.clone(),
+        });
+    }
+
+    let mut seen_strata = BTreeSet::new();
+    let mut allocation_sum = 0_u32;
+    for stratum in &run.strata {
+        let Some(allocation_ppm) = stratum.allocation_ppm else {
+            return Err(RcountCoreError::InvalidStratifiedHybridDesign {
+                run_id: run.run_id.clone(),
+            });
+        };
+        if stratum.stratum_id.trim().is_empty()
+            || !seen_strata.insert(stratum.stratum_id.as_str())
+            || stratum.component_run_id == run.run_id
+            || !is_supported_audit_algorithm_method(&stratum.method_id)
+            || stratum.method_id == STRATIFIED_HYBRID_RLA_METHOD_ID
+            || stratum.ballot_count.is_some_and(|ballots| ballots == 0)
+            || allocation_ppm == 0
+            || allocation_ppm > 1_000_000
+        {
+            return Err(RcountCoreError::InvalidStratifiedHybridDesign {
+                run_id: run.run_id.clone(),
+            });
+        }
+        allocation_sum = allocation_sum.saturating_add(allocation_ppm);
+        if !run_ids.contains(stratum.component_run_id.as_str()) {
+            return Err(RcountCoreError::MissingStratifiedHybridComponent {
+                run_id: run.run_id.clone(),
+                component_run_id: stratum.component_run_id.clone(),
+            });
+        }
+    }
+    if allocation_sum != 1_000_000 {
+        return Err(RcountCoreError::InvalidStratifiedHybridDesign {
+            run_id: run.run_id.clone(),
+        });
+    }
+    Ok(())
+}
+
+fn verify_ranked_choice_audit_design(run: &AuditAlgorithmRun) -> Result<(), RcountCoreError> {
+    let is_ranked_method = matches!(
+        run.method_id.as_str(),
+        RAIRE_IRV_METHOD_ID | AWAIRE_IRV_METHOD_ID
+    );
+    if !is_ranked_method {
+        if !run.rcv_elimination_order.is_empty()
+            || run
+                .sample_steps
+                .iter()
+                .any(|step| !step.ranked_choices.is_empty())
+        {
+            return Err(RcountCoreError::InvalidRankedChoiceAuditDesign {
+                run_id: run.run_id.clone(),
+            });
+        }
+        return Ok(());
+    }
+
+    if run.rcv_elimination_order.len() < 2
+        || run.assertions.is_empty()
+        || run
+            .assertions
+            .iter()
+            .any(|assertion| assertion.kind != AuditAssertionKind::RankedChoiceAssertion)
+    {
+        return Err(RcountCoreError::InvalidRankedChoiceAuditDesign {
+            run_id: run.run_id.clone(),
+        });
+    }
+
+    let candidates = run
+        .rcv_elimination_order
+        .iter()
+        .map(String::as_str)
+        .collect::<BTreeSet<_>>();
+    if candidates.len() != run.rcv_elimination_order.len() {
+        return Err(RcountCoreError::InvalidRankedChoiceAuditDesign {
+            run_id: run.run_id.clone(),
+        });
+    }
+
+    for step in &run.sample_steps {
+        if step.ranked_choices.is_empty() {
+            return Err(RcountCoreError::InvalidRankedChoiceSample {
+                run_id: run.run_id.clone(),
+                step_index: step.step_index,
+            });
+        }
+        let mut seen_choices = BTreeSet::new();
+        for choice in &step.ranked_choices {
+            if !candidates.contains(choice.as_str()) || !seen_choices.insert(choice.as_str()) {
+                return Err(RcountCoreError::InvalidRankedChoiceSample {
+                    run_id: run.run_id.clone(),
+                    step_index: step.step_index,
+                });
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn verify_bayesian_audit_design(run: &AuditAlgorithmRun) -> Result<(), RcountCoreError> {
+    if run.method_id != BAYESIAN_TABULATION_AUDIT_METHOD_ID {
+        if run.bayesian_prior_id.is_some()
+            || run.bayesian_likelihood_id.is_some()
+            || run.posterior_winner_probability_ppm.is_some()
+            || run.posterior_risk_ppm.is_some()
+            || run.simulation_seed.is_some()
+            || run.posterior_draws.is_some()
+            || run.calibrated_risk_limit_ppm.is_some()
+        {
+            return Err(RcountCoreError::InvalidBayesianAuditDesign {
+                run_id: run.run_id.clone(),
+            });
+        }
+        return Ok(());
+    }
+
+    if run
+        .bayesian_prior_id
+        .as_deref()
+        .is_none_or(|prior| prior.trim().is_empty())
+        || run
+            .bayesian_likelihood_id
+            .as_deref()
+            .is_none_or(|likelihood| likelihood.trim().is_empty())
+        || run
+            .posterior_winner_probability_ppm
+            .is_none_or(|probability| probability > 1_000_000)
+        || run.posterior_risk_ppm.is_none_or(|risk| risk > 1_000_000)
+        || run.posterior_draws.is_some_and(|draws| draws == 0)
+        || run
+            .calibrated_risk_limit_ppm
+            .is_some_and(|limit| limit == 0 || limit >= 1_000_000)
+        || run.assertions.is_empty()
+        || run
+            .assertions
+            .iter()
+            .any(|assertion| assertion.kind != AuditAssertionKind::BayesianOutcome)
+    {
+        return Err(RcountCoreError::InvalidBayesianAuditDesign {
+            run_id: run.run_id.clone(),
+        });
+    }
+
+    Ok(())
+}
+
+fn verify_soba_observable_ballot_design(
+    package: &RcountPackage,
+    run: &AuditAlgorithmRun,
+) -> Result<(), RcountCoreError> {
+    if run.method_id != SOBA_OBSERVABLE_BALLOT_AUDIT_METHOD_ID {
+        if run
+            .assertions
+            .iter()
+            .any(|assertion| assertion.kind == AuditAssertionKind::ObservableBallotLinkage)
+        {
+            return Err(RcountCoreError::InvalidObservableBallotAuditDesign {
+                run_id: run.run_id.clone(),
+            });
+        }
+        return Ok(());
+    }
+
+    if run.assertions.is_empty()
+        || run.sample_steps.is_empty()
+        || run
+            .assertions
+            .iter()
+            .any(|assertion| assertion.kind != AuditAssertionKind::ObservableBallotLinkage)
+    {
+        return Err(RcountCoreError::InvalidObservableBallotAuditDesign {
+            run_id: run.run_id.clone(),
+        });
+    }
+
+    let proofs = package
+        .inclusion_proofs
+        .iter()
+        .map(|proof| (proof.proof_id.as_str(), proof))
+        .collect::<BTreeMap<_, _>>();
+    for step in &run.sample_steps {
+        let proof = proofs.get(step.sample_unit_id.as_str()).ok_or_else(|| {
+            RcountCoreError::MissingObservableBallotOpening {
+                run_id: run.run_id.clone(),
+                step_index: step.step_index,
+                proof_id: step.sample_unit_id.clone(),
+            }
+        })?;
+        if !proof.candidate_selections.is_empty() || proof.voter_id.is_some() {
+            return Err(RcountCoreError::InvalidObservableBallotAuditDesign {
+                run_id: run.run_id.clone(),
+            });
+        }
+    }
+
+    Ok(())
+}
+
+fn verify_batch_comparison_algorithm_linkage(
+    package: &RcountPackage,
+    run: &AuditAlgorithmRun,
+) -> Result<(), RcountCoreError> {
+    let audits_by_batch = package
+        .batch_comparison_audits
+        .iter()
+        .filter(|audit| audit.contest_id == run.contest_id)
+        .map(|audit| (audit.batch_id.as_str(), audit))
+        .collect::<BTreeMap<_, _>>();
+
+    for step in &run.sample_steps {
+        let audit = audits_by_batch
+            .get(step.sample_unit_id.as_str())
+            .ok_or_else(
+                || RcountCoreError::MissingBatchComparisonAlgorithmEvidence {
+                    run_id: run.run_id.clone(),
+                    step_index: step.step_index,
+                    batch_id: step.sample_unit_id.clone(),
+                },
+            )?;
+        let computed = RationalValue {
+            numerator: audit.declared_overstatement,
+            denominator: audit.declared_reported_margin,
+        };
+        if !rational_eq(step.assorter_value, computed) {
+            return Err(RcountCoreError::BatchComparisonAlgorithmTaintMismatch {
+                run_id: run.run_id.clone(),
+                step_index: step.step_index,
+                declared: step.assorter_value,
+                computed,
+            });
+        }
+    }
+
+    Ok(())
+}
+
+pub fn derive_batch_comparison_algorithm_run(
+    package: &RcountPackage,
+    run_id: &str,
+    contest_id: &str,
+    risk_limit_ppm: u32,
+    sampled_batch_ids: &[String],
+    decision: AuditAlgorithmDecision,
+) -> Result<AuditAlgorithmRun, RcountCoreError> {
+    if sampled_batch_ids.is_empty() {
+        return Err(RcountCoreError::EmptyBatchComparisonAlgorithmSample {
+            run_id: run_id.to_string(),
+        });
+    }
+    if risk_limit_ppm == 0 || risk_limit_ppm >= 1_000_000 {
+        return Err(RcountCoreError::InvalidAuditAlgorithmRiskLimit {
+            run_id: run_id.to_string(),
+            risk_limit_ppm,
+        });
+    }
+
+    verify_batch_comparison_audits(package)?;
+
+    let audits_by_batch = package
+        .batch_comparison_audits
+        .iter()
+        .filter(|audit| audit.contest_id == contest_id)
+        .map(|audit| (audit.batch_id.as_str(), audit))
+        .collect::<BTreeMap<_, _>>();
+
+    let first_audit = audits_by_batch
+        .get(sampled_batch_ids[0].as_str())
+        .ok_or_else(
+            || RcountCoreError::MissingBatchComparisonAlgorithmEvidence {
+                run_id: run_id.to_string(),
+                step_index: 0,
+                batch_id: sampled_batch_ids[0].clone(),
+            },
+        )?;
+    let winner_selection_id = first_audit.winner_selection_id.clone();
+    let loser_selection_id = first_audit.loser_selection_id.clone();
+    let assertion_id = format!("assertion:{winner_selection_id}-over-{loser_selection_id}");
+
+    let mut run_source_refs = BTreeSet::new();
+    let mut sample_steps = Vec::with_capacity(sampled_batch_ids.len());
+    for (step_index, batch_id) in sampled_batch_ids.iter().enumerate() {
+        let audit = audits_by_batch.get(batch_id.as_str()).ok_or_else(|| {
+            RcountCoreError::MissingBatchComparisonAlgorithmEvidence {
+                run_id: run_id.to_string(),
+                step_index: step_index as u32,
+                batch_id: batch_id.clone(),
+            }
+        })?;
+        if audit.winner_selection_id != winner_selection_id
+            || audit.loser_selection_id != loser_selection_id
+        {
+            return Err(RcountCoreError::BatchComparisonAlgorithmAssertionMismatch {
+                run_id: run_id.to_string(),
+                audit_id: audit.audit_id.clone(),
+            });
+        }
+        if audit.declared_reported_margin <= 0 {
+            return Err(RcountCoreError::InvalidBatchComparisonAlgorithmMargin {
+                run_id: run_id.to_string(),
+                audit_id: audit.audit_id.clone(),
+                reported_margin: audit.declared_reported_margin,
+            });
+        }
+
+        let mut step_source_refs = vec![audit.audit_id.clone()];
+        step_source_refs.extend(audit.source_refs.clone());
+        run_source_refs.extend(step_source_refs.iter().cloned());
+        sample_steps.push(AuditSampleStep {
+            step_index: step_index as u32,
+            round_index: None,
+            assertion_id: assertion_id.clone(),
+            sample_unit_id: batch_id.clone(),
+            assorter_value: RationalValue {
+                numerator: audit.declared_overstatement,
+                denominator: audit.declared_reported_margin,
+            },
+            bet: None,
+            statistic: None,
+            p_value_ppm: None,
+            ranked_choices: Vec::new(),
+            source_refs: step_source_refs,
+        });
+    }
+
+    Ok(AuditAlgorithmRun {
+        run_id: run_id.to_string(),
+        contest_id: contest_id.to_string(),
+        method_id: BATCH_COMPARISON_METHOD_ID.to_string(),
+        sampling_mode: AuditSamplingMode::Batch,
+        rcv_elimination_order: Vec::new(),
+        risk_limit_ppm: Some(risk_limit_ppm),
+        reported_winner_votes: None,
+        reported_loser_votes: None,
+        macro_ballot_count: None,
+        macro_reported_margin: None,
+        macro_gamma: None,
+        combining_rule_id: None,
+        nuisance_parameter: None,
+        bayesian_prior_id: None,
+        bayesian_likelihood_id: None,
+        posterior_winner_probability_ppm: None,
+        posterior_risk_ppm: None,
+        simulation_seed: None,
+        posterior_draws: None,
+        calibrated_risk_limit_ppm: None,
+        strata: Vec::new(),
+        assertions: vec![AuditAssertion {
+            assertion_id,
+            kind: AuditAssertionKind::ComparisonOverstatement,
+            assorter_id: "batch-plurality-overstatement-taint-v1".to_string(),
+            assorter_upper_bound: RationalValue {
+                numerator: 1,
+                denominator: 1,
+            },
+            winner_selection_id: Some(winner_selection_id),
+            loser_selection_id: Some(loser_selection_id),
+        }],
+        sample_steps,
+        decision,
+        source_refs: run_source_refs.into_iter().collect(),
+    })
 }
 
 pub fn rla_contest_manifest_hash(
@@ -1721,6 +2761,144 @@ pub fn verify_manual_audits(package: &RcountPackage) -> Result<Vec<EquationPass>
     Ok(passes)
 }
 
+pub fn verify_batch_comparison_audits(
+    package: &RcountPackage,
+) -> Result<Vec<EquationPass>, RcountCoreError> {
+    let mut seen = BTreeSet::new();
+    let mut passes = Vec::new();
+    for audit in &package.batch_comparison_audits {
+        if !seen.insert(audit.audit_id.as_str()) {
+            return Err(RcountCoreError::DuplicateBatchComparisonAuditId {
+                audit_id: audit.audit_id.clone(),
+            });
+        }
+        let batch = package
+            .batches
+            .iter()
+            .find(|batch| batch.batch_id == audit.batch_id)
+            .ok_or_else(|| RcountCoreError::MissingBatchComparisonBatch {
+                audit_id: audit.audit_id.clone(),
+                batch_id: audit.batch_id.clone(),
+            })?;
+        if audit.declared_batch_ballots != batch.counted_ballots {
+            return Err(RcountCoreError::BatchComparisonBatchSizeMismatch {
+                audit_id: audit.audit_id.clone(),
+                batch_id: audit.batch_id.clone(),
+                declared: audit.declared_batch_ballots,
+                manifest: batch.counted_ballots,
+            });
+        }
+        let summary = package
+            .summaries
+            .iter()
+            .find(|summary| {
+                summary.contest_id == audit.contest_id
+                    && summary.batch_id.as_deref() == Some(audit.batch_id.as_str())
+                    && summary.status == CountStatus::Canvassed
+            })
+            .ok_or_else(|| RcountCoreError::MissingBatchComparisonSummary {
+                audit_id: audit.audit_id.clone(),
+                contest_id: audit.contest_id.clone(),
+                batch_id: audit.batch_id.clone(),
+            })?;
+        let summary_totals = totals_by_selection(&summary.totals);
+        let reported_totals = totals_by_selection(&audit.reported_totals);
+        check_reported_batch_total(
+            &audit.audit_id,
+            &audit.winner_selection_id,
+            &summary_totals,
+            &reported_totals,
+        )?;
+        check_reported_batch_total(
+            &audit.audit_id,
+            &audit.loser_selection_id,
+            &summary_totals,
+            &reported_totals,
+        )?;
+
+        let hand_totals = totals_by_selection(&audit.hand_totals);
+        let reported_winner = required_total(&audit.winner_selection_id, &reported_totals);
+        let reported_loser = required_total(&audit.loser_selection_id, &reported_totals);
+        let hand_winner =
+            required_hand_total(&audit.audit_id, &audit.winner_selection_id, &hand_totals)?;
+        let hand_loser =
+            required_hand_total(&audit.audit_id, &audit.loser_selection_id, &hand_totals)?;
+        let reported_margin = reported_winner - reported_loser;
+        let hand_margin = hand_winner - hand_loser;
+        let overstatement = reported_margin - hand_margin;
+        if audit.declared_reported_margin != reported_margin {
+            return Err(RcountCoreError::BatchComparisonReportedMarginMismatch {
+                audit_id: audit.audit_id.clone(),
+                declared: audit.declared_reported_margin,
+                computed: reported_margin,
+            });
+        }
+        if audit.declared_hand_margin != hand_margin {
+            return Err(RcountCoreError::BatchComparisonHandMarginMismatch {
+                audit_id: audit.audit_id.clone(),
+                declared: audit.declared_hand_margin,
+                computed: hand_margin,
+            });
+        }
+        if audit.declared_overstatement != overstatement {
+            return Err(RcountCoreError::BatchComparisonOverstatementMismatch {
+                audit_id: audit.audit_id.clone(),
+                declared: audit.declared_overstatement,
+                computed: overstatement,
+            });
+        }
+        passes.push(EquationPass {
+            equation_id: "batch_comparison_overstatement".to_string(),
+            contest_id: audit.contest_id.clone(),
+            reporting_unit_id: audit.batch_id.clone(),
+        });
+    }
+    Ok(passes)
+}
+
+fn check_reported_batch_total(
+    audit_id: &str,
+    selection_id: &str,
+    summary_totals: &BTreeMap<&str, i64>,
+    reported_totals: &BTreeMap<&str, i64>,
+) -> Result<(), RcountCoreError> {
+    let summary = required_total(selection_id, summary_totals);
+    let declared = required_total(selection_id, reported_totals);
+    if declared != summary {
+        return Err(RcountCoreError::BatchComparisonReportedTotalMismatch {
+            audit_id: audit_id.to_string(),
+            selection_id: selection_id.to_string(),
+            declared,
+            summary,
+        });
+    }
+    Ok(())
+}
+
+fn totals_by_selection(totals: &[SelectionTotal]) -> BTreeMap<&str, i64> {
+    totals
+        .iter()
+        .map(|total| (total.selection_id.as_str(), total.votes))
+        .collect()
+}
+
+fn required_total(selection_id: &str, totals: &BTreeMap<&str, i64>) -> i64 {
+    totals.get(selection_id).copied().unwrap_or(0)
+}
+
+fn required_hand_total(
+    audit_id: &str,
+    selection_id: &str,
+    totals: &BTreeMap<&str, i64>,
+) -> Result<i64, RcountCoreError> {
+    totals.get(selection_id).copied().ok_or_else(|| {
+        RcountCoreError::MissingBatchComparisonHandTally {
+            audit_id: audit_id.to_string(),
+            selection_id: selection_id.to_string(),
+        }
+    })
+}
+
 fn verify_declared_rla_discrepancies(
     audit: &RiskLimitAudit,
     computed: &[RlaDiscrepancy],
@@ -1889,10 +3067,14 @@ pub fn synthetic_summary_basic_package() -> RcountPackage {
         reporting_units,
         batches: vec![],
         lineage: vec![],
+        rhist_refs: vec![],
+        rctx_refs: vec![],
         inclusion_proofs: vec![],
         cvr: vec![],
+        audit_algorithm_runs: vec![],
         rla_audits: vec![],
         manual_audits: vec![],
+        batch_comparison_audits: vec![],
         summaries,
         status_events: vec![],
     }
@@ -2087,6 +3269,465 @@ pub fn synthetic_missing_batch_package() -> RcountPackage {
     package
 }
 
+pub fn synthetic_batch_comparison_package() -> RcountPackage {
+    let mut package = synthetic_mail_batch_added_package();
+    package.batch_comparison_audits = vec![BatchComparisonAudit {
+        audit_id: "batch-comparison:P-001-election-day".to_string(),
+        contest_id: "syn-2024-mayor".to_string(),
+        batch_id: "batch:P-001:election-day".to_string(),
+        declared_batch_ballots: 70,
+        winner_selection_id: "cand-a".to_string(),
+        loser_selection_id: "cand-b".to_string(),
+        reported_totals: vec![
+            SelectionTotal {
+                selection_id: "cand-a".to_string(),
+                votes: 35,
+            },
+            SelectionTotal {
+                selection_id: "cand-b".to_string(),
+                votes: 30,
+            },
+        ],
+        hand_totals: vec![
+            SelectionTotal {
+                selection_id: "cand-a".to_string(),
+                votes: 34,
+            },
+            SelectionTotal {
+                selection_id: "cand-b".to_string(),
+                votes: 31,
+            },
+        ],
+        declared_reported_margin: 5,
+        declared_hand_margin: 3,
+        declared_overstatement: 2,
+        source_refs: vec!["source:synthetic-batch-hand-tally".to_string()],
+    }];
+    package
+}
+
+pub fn synthetic_batch_comparison_algorithm_package() -> RcountPackage {
+    let mut package = synthetic_batch_comparison_package();
+    package.audit_algorithm_runs = vec![derive_batch_comparison_algorithm_run(
+        &package,
+        "audit-run:batch-comparison-taint-linkage",
+        "syn-2024-mayor",
+        300_000,
+        &["batch:P-001:election-day".to_string()],
+        AuditAlgorithmDecision::Continue,
+    )
+    .expect("synthetic batch comparison algorithm run must derive")];
+    package
+}
+
+pub fn synthetic_kaplan_markov_macro_package() -> RcountPackage {
+    let mut package = synthetic_summary_basic_package();
+    package.audit_algorithm_runs = vec![AuditAlgorithmRun {
+        run_id: "audit-run:kaplan-markov-macro-pass".to_string(),
+        contest_id: "syn-2024-mayor".to_string(),
+        method_id: KAPLAN_MARKOV_COMPARISON_METHOD_ID.to_string(),
+        sampling_mode: AuditSamplingMode::WithoutReplacement,
+        rcv_elimination_order: Vec::new(),
+        risk_limit_ppm: Some(500_000),
+        reported_winner_votes: Some(65),
+        reported_loser_votes: Some(65),
+        macro_ballot_count: Some(100),
+        macro_reported_margin: Some(10),
+        macro_gamma: Some(RationalValue {
+            numerator: 11,
+            denominator: 10,
+        }),
+        combining_rule_id: None,
+        nuisance_parameter: None,
+        bayesian_prior_id: None,
+        bayesian_likelihood_id: None,
+        posterior_winner_probability_ppm: None,
+        posterior_risk_ppm: None,
+        simulation_seed: None,
+        posterior_draws: None,
+        calibrated_risk_limit_ppm: None,
+        strata: Vec::new(),
+        assertions: vec![AuditAssertion {
+            assertion_id: "assertion:cand-a-over-cand-b".to_string(),
+            kind: AuditAssertionKind::ComparisonOverstatement,
+            assorter_id: "macro-overstatement-category-v1".to_string(),
+            assorter_upper_bound: RationalValue {
+                numerator: 2,
+                denominator: 1,
+            },
+            winner_selection_id: Some("cand-a".to_string()),
+            loser_selection_id: Some("cand-b".to_string()),
+        }],
+        sample_steps: (0..16)
+            .map(|step_index| AuditSampleStep {
+                step_index,
+                round_index: None,
+                assertion_id: "assertion:cand-a-over-cand-b".to_string(),
+                sample_unit_id: format!("ballot:macro:{step_index}"),
+                assorter_value: RationalValue {
+                    numerator: 0,
+                    denominator: 1,
+                },
+                bet: None,
+                statistic: None,
+                p_value_ppm: None,
+                ranked_choices: Vec::new(),
+                source_refs: vec![format!("source:macro-ballot:{step_index}")],
+            })
+            .collect(),
+        decision: AuditAlgorithmDecision::Pass,
+        source_refs: vec!["source:synthetic-macro-comparison-audit".to_string()],
+    }];
+    package
+}
+
+pub fn synthetic_minerva_round_one_package() -> RcountPackage {
+    let mut package = synthetic_summary_basic_package();
+    package.audit_algorithm_runs = vec![AuditAlgorithmRun {
+        run_id: "audit-run:minerva-round-one-pass".to_string(),
+        contest_id: "syn-2024-mayor".to_string(),
+        method_id: MINERVA_BALLOT_POLLING_METHOD_ID.to_string(),
+        sampling_mode: AuditSamplingMode::WithReplacement,
+        rcv_elimination_order: Vec::new(),
+        risk_limit_ppm: Some(100_000),
+        reported_winner_votes: Some(3),
+        reported_loser_votes: Some(1),
+        macro_ballot_count: None,
+        macro_reported_margin: None,
+        macro_gamma: None,
+        combining_rule_id: None,
+        nuisance_parameter: None,
+        bayesian_prior_id: None,
+        bayesian_likelihood_id: None,
+        posterior_winner_probability_ppm: None,
+        posterior_risk_ppm: None,
+        simulation_seed: None,
+        posterior_draws: None,
+        calibrated_risk_limit_ppm: None,
+        strata: Vec::new(),
+        assertions: vec![AuditAssertion {
+            assertion_id: "assertion:cand-a-over-cand-b".to_string(),
+            kind: AuditAssertionKind::PluralityWinnerLoser,
+            assorter_id: "plurality-winner-loser-v1".to_string(),
+            assorter_upper_bound: RationalValue {
+                numerator: 1,
+                denominator: 1,
+            },
+            winner_selection_id: Some("cand-a".to_string()),
+            loser_selection_id: Some("cand-b".to_string()),
+        }],
+        sample_steps: (0..6)
+            .map(|step_index| AuditSampleStep {
+                step_index,
+                round_index: None,
+                assertion_id: "assertion:cand-a-over-cand-b".to_string(),
+                sample_unit_id: format!("ballot:minerva:{step_index}"),
+                assorter_value: RationalValue {
+                    numerator: 1,
+                    denominator: 1,
+                },
+                bet: None,
+                statistic: None,
+                p_value_ppm: None,
+                ranked_choices: Vec::new(),
+                source_refs: vec![format!("source:minerva-ballot:{step_index}")],
+            })
+            .collect(),
+        decision: AuditAlgorithmDecision::Pass,
+        source_refs: vec!["source:synthetic-minerva-round-one-audit".to_string()],
+    }];
+    package
+}
+
+pub fn synthetic_minerva_multi_round_package() -> RcountPackage {
+    let mut package = synthetic_minerva_round_one_package();
+    package.audit_algorithm_runs[0].run_id = "audit-run:minerva-multi-round-pass".to_string();
+    for step in &mut package.audit_algorithm_runs[0].sample_steps {
+        step.round_index = if step.step_index < 5 {
+            Some(0)
+        } else {
+            Some(1)
+        };
+    }
+    package
+}
+
+pub fn synthetic_athena_boundary_package() -> RcountPackage {
+    let mut package = synthetic_minerva_multi_round_package();
+    let run = &mut package.audit_algorithm_runs[0];
+    run.run_id = "audit-run:athena-boundary".to_string();
+    run.method_id = ATHENA_BALLOT_POLLING_METHOD_ID.to_string();
+    run.decision = AuditAlgorithmDecision::Boundary;
+    run.source_refs = vec!["source:synthetic-athena-boundary-audit".to_string()];
+    package
+}
+
+pub fn synthetic_stratified_hybrid_package() -> RcountPackage {
+    let mut package = synthetic_batch_comparison_algorithm_package();
+    let minerva_run = synthetic_minerva_multi_round_package()
+        .audit_algorithm_runs
+        .into_iter()
+        .next()
+        .expect("synthetic Minerva package must contain one algorithm run");
+    let batch_run = package.audit_algorithm_runs[0].clone();
+    package.audit_algorithm_runs.push(minerva_run);
+    package.audit_algorithm_runs.push(AuditAlgorithmRun {
+        run_id: "audit-run:stratified-hybrid-boundary".to_string(),
+        contest_id: "syn-2024-mayor".to_string(),
+        method_id: STRATIFIED_HYBRID_RLA_METHOD_ID.to_string(),
+        sampling_mode: AuditSamplingMode::BoundaryOnly,
+        rcv_elimination_order: Vec::new(),
+        risk_limit_ppm: Some(100_000),
+        reported_winner_votes: None,
+        reported_loser_votes: None,
+        macro_ballot_count: None,
+        macro_reported_margin: None,
+        macro_gamma: None,
+        combining_rule_id: Some("suite-nuisance-boundary-v1".to_string()),
+        nuisance_parameter: Some(RationalValue {
+            numerator: 1,
+            denominator: 2,
+        }),
+        bayesian_prior_id: None,
+        bayesian_likelihood_id: None,
+        posterior_winner_probability_ppm: None,
+        posterior_risk_ppm: None,
+        simulation_seed: None,
+        posterior_draws: None,
+        calibrated_risk_limit_ppm: None,
+        strata: vec![
+            AuditStratum {
+                stratum_id: "stratum:batch-comparison".to_string(),
+                method_id: batch_run.method_id,
+                component_run_id: batch_run.run_id,
+                ballot_count: Some(80),
+                allocation_ppm: Some(500_000),
+                source_refs: vec!["source:synthetic-batch-hand-tally".to_string()],
+            },
+            AuditStratum {
+                stratum_id: "stratum:ballot-polling".to_string(),
+                method_id: MINERVA_BALLOT_POLLING_METHOD_ID.to_string(),
+                component_run_id: "audit-run:minerva-multi-round-pass".to_string(),
+                ballot_count: Some(60),
+                allocation_ppm: Some(500_000),
+                source_refs: vec!["source:synthetic-minerva-round-one-audit".to_string()],
+            },
+        ],
+        assertions: Vec::new(),
+        sample_steps: Vec::new(),
+        decision: AuditAlgorithmDecision::Boundary,
+        source_refs: vec![
+            "audit-run:batch-comparison-taint-linkage".to_string(),
+            "audit-run:minerva-multi-round-pass".to_string(),
+        ],
+    });
+    package
+}
+
+pub fn synthetic_bad_stratified_hybrid_package() -> RcountPackage {
+    let mut package = synthetic_stratified_hybrid_package();
+    package.audit_algorithm_runs[2].strata[1].component_run_id =
+        "audit-run:missing-stratum".to_string();
+    package
+}
+
+pub fn synthetic_flattened_stratified_hybrid_package() -> RcountPackage {
+    let mut package = synthetic_stratified_hybrid_package();
+    package.audit_algorithm_runs[2].strata.truncate(1);
+    package.audit_algorithm_runs[2].strata[0].allocation_ppm = Some(1_000_000);
+    package
+}
+
+pub fn synthetic_raire_boundary_package() -> RcountPackage {
+    synthetic_ranked_choice_boundary_package(
+        RAIRE_IRV_METHOD_ID,
+        "audit-run:raire-irv-boundary",
+        "raire-neb-not-eliminated-before-v1",
+    )
+}
+
+pub fn synthetic_awaire_boundary_package() -> RcountPackage {
+    synthetic_ranked_choice_boundary_package(
+        AWAIRE_IRV_METHOD_ID,
+        "audit-run:awaire-irv-boundary",
+        "awaire-adaptive-irv-v1",
+    )
+}
+
+pub fn synthetic_bad_raire_boundary_package() -> RcountPackage {
+    let mut package = synthetic_raire_boundary_package();
+    package.audit_algorithm_runs[0].sample_steps[0]
+        .ranked_choices
+        .push("cand-a".to_string());
+    package
+}
+
+pub fn synthetic_bayesian_tabulation_boundary_package() -> RcountPackage {
+    let mut package = synthetic_summary_basic_package();
+    package.audit_algorithm_runs = vec![AuditAlgorithmRun {
+        run_id: "audit-run:bayesian-tabulation-boundary".to_string(),
+        contest_id: "syn-2024-mayor".to_string(),
+        method_id: BAYESIAN_TABULATION_AUDIT_METHOD_ID.to_string(),
+        sampling_mode: AuditSamplingMode::BoundaryOnly,
+        rcv_elimination_order: Vec::new(),
+        risk_limit_ppm: None,
+        reported_winner_votes: None,
+        reported_loser_votes: None,
+        macro_ballot_count: None,
+        macro_reported_margin: None,
+        macro_gamma: None,
+        combining_rule_id: None,
+        nuisance_parameter: None,
+        bayesian_prior_id: Some("dirichlet-multinomial-toy-prior-v1".to_string()),
+        bayesian_likelihood_id: Some("sample-counts-without-replacement-v1".to_string()),
+        posterior_winner_probability_ppm: Some(958_000),
+        posterior_risk_ppm: Some(42_000),
+        simulation_seed: Some(20_240_513),
+        posterior_draws: Some(10_000),
+        calibrated_risk_limit_ppm: None,
+        strata: Vec::new(),
+        assertions: vec![AuditAssertion {
+            assertion_id: "assertion:bayesian-cand-a-outcome".to_string(),
+            kind: AuditAssertionKind::BayesianOutcome,
+            assorter_id: "bayesian-posterior-winner-probability-v1".to_string(),
+            assorter_upper_bound: RationalValue {
+                numerator: 1,
+                denominator: 1,
+            },
+            winner_selection_id: Some("cand-a".to_string()),
+            loser_selection_id: Some("cand-b".to_string()),
+        }],
+        sample_steps: Vec::new(),
+        decision: AuditAlgorithmDecision::Boundary,
+        source_refs: vec!["source:synthetic-bayesian-tabulation-audit".to_string()],
+    }];
+    package
+}
+
+pub fn synthetic_bad_bayesian_tabulation_boundary_package() -> RcountPackage {
+    let mut package = synthetic_bayesian_tabulation_boundary_package();
+    package.audit_algorithm_runs[0].posterior_risk_ppm = Some(1_000_001);
+    package
+}
+
+fn synthetic_ranked_choice_boundary_package(
+    method_id: &str,
+    run_id: &str,
+    assorter_id: &str,
+) -> RcountPackage {
+    let mut package = synthetic_summary_basic_package();
+    package.audit_algorithm_runs = vec![AuditAlgorithmRun {
+        run_id: run_id.to_string(),
+        contest_id: "syn-2024-mayor".to_string(),
+        method_id: method_id.to_string(),
+        sampling_mode: AuditSamplingMode::WithoutReplacement,
+        rcv_elimination_order: vec![
+            "cand-c".to_string(),
+            "cand-b".to_string(),
+            "cand-a".to_string(),
+        ],
+        risk_limit_ppm: Some(100_000),
+        reported_winner_votes: None,
+        reported_loser_votes: None,
+        macro_ballot_count: None,
+        macro_reported_margin: None,
+        macro_gamma: None,
+        combining_rule_id: None,
+        nuisance_parameter: None,
+        bayesian_prior_id: None,
+        bayesian_likelihood_id: None,
+        posterior_winner_probability_ppm: None,
+        posterior_risk_ppm: None,
+        simulation_seed: None,
+        posterior_draws: None,
+        calibrated_risk_limit_ppm: None,
+        strata: Vec::new(),
+        assertions: vec![AuditAssertion {
+            assertion_id: "assertion:irv-cand-a-over-cand-b".to_string(),
+            kind: AuditAssertionKind::RankedChoiceAssertion,
+            assorter_id: assorter_id.to_string(),
+            assorter_upper_bound: RationalValue {
+                numerator: 1,
+                denominator: 1,
+            },
+            winner_selection_id: Some("cand-a".to_string()),
+            loser_selection_id: Some("cand-b".to_string()),
+        }],
+        sample_steps: vec![
+            AuditSampleStep {
+                step_index: 0,
+                round_index: None,
+                assertion_id: "assertion:irv-cand-a-over-cand-b".to_string(),
+                sample_unit_id: "ranked-ballot:0".to_string(),
+                assorter_value: RationalValue {
+                    numerator: 1,
+                    denominator: 1,
+                },
+                bet: None,
+                statistic: None,
+                p_value_ppm: None,
+                ranked_choices: vec![
+                    "cand-a".to_string(),
+                    "cand-b".to_string(),
+                    "cand-c".to_string(),
+                ],
+                source_refs: vec!["source:synthetic-ranked-cvr:0".to_string()],
+            },
+            AuditSampleStep {
+                step_index: 1,
+                round_index: None,
+                assertion_id: "assertion:irv-cand-a-over-cand-b".to_string(),
+                sample_unit_id: "ranked-ballot:1".to_string(),
+                assorter_value: RationalValue {
+                    numerator: 0,
+                    denominator: 1,
+                },
+                bet: None,
+                statistic: None,
+                p_value_ppm: None,
+                ranked_choices: vec![
+                    "cand-b".to_string(),
+                    "cand-a".to_string(),
+                    "cand-c".to_string(),
+                ],
+                source_refs: vec!["source:synthetic-ranked-cvr:1".to_string()],
+            },
+        ],
+        decision: AuditAlgorithmDecision::Boundary,
+        source_refs: vec!["source:synthetic-ranked-choice-audit".to_string()],
+    }];
+    package
+}
+
+pub fn synthetic_bad_batch_comparison_algorithm_package() -> RcountPackage {
+    let mut package = synthetic_batch_comparison_algorithm_package();
+    package.audit_algorithm_runs[0].sample_steps[0].assorter_value = RationalValue {
+        numerator: 1,
+        denominator: 5,
+    };
+    package
+}
+
+pub fn synthetic_bad_batch_comparison_package() -> RcountPackage {
+    let mut package = synthetic_batch_comparison_package();
+    package.batch_comparison_audits[0].declared_overstatement = 0;
+    package
+}
+
+pub fn synthetic_missing_hand_tally_batch_comparison_package() -> RcountPackage {
+    let mut package = synthetic_batch_comparison_package();
+    package.batch_comparison_audits[0]
+        .hand_totals
+        .retain(|total| total.selection_id != "cand-b");
+    package
+}
+
+pub fn synthetic_batch_size_drift_comparison_package() -> RcountPackage {
+    let mut package = synthetic_batch_comparison_package();
+    package.batch_comparison_audits[0].declared_batch_ballots = 69;
+    package
+}
+
 pub fn synthetic_precinct_split_lineage_package() -> RcountPackage {
     let mut package = synthetic_summary_basic_package();
     package.reporting_units.extend([
@@ -2197,6 +3838,69 @@ pub fn synthetic_privacy_inclusion_package() -> RcountPackage {
 pub fn synthetic_choice_bearing_proof_package() -> RcountPackage {
     let mut package = synthetic_privacy_inclusion_package();
     package.inclusion_proofs[0].candidate_selections = vec!["cand-a".to_string()];
+    package
+}
+
+pub fn synthetic_soba_observable_ballot_boundary_package() -> RcountPackage {
+    let mut package = synthetic_privacy_inclusion_package();
+    package.audit_algorithm_runs = vec![AuditAlgorithmRun {
+        run_id: "audit-run:soba-observable-ballot-boundary".to_string(),
+        contest_id: "syn-2024-mayor".to_string(),
+        method_id: SOBA_OBSERVABLE_BALLOT_AUDIT_METHOD_ID.to_string(),
+        sampling_mode: AuditSamplingMode::BoundaryOnly,
+        rcv_elimination_order: Vec::new(),
+        risk_limit_ppm: None,
+        reported_winner_votes: None,
+        reported_loser_votes: None,
+        macro_ballot_count: None,
+        macro_reported_margin: None,
+        macro_gamma: None,
+        combining_rule_id: None,
+        nuisance_parameter: None,
+        bayesian_prior_id: None,
+        bayesian_likelihood_id: None,
+        posterior_winner_probability_ppm: None,
+        posterior_risk_ppm: None,
+        simulation_seed: None,
+        posterior_draws: None,
+        calibrated_risk_limit_ppm: None,
+        strata: Vec::new(),
+        assertions: vec![AuditAssertion {
+            assertion_id: "assertion:observable-ballot-opening".to_string(),
+            kind: AuditAssertionKind::ObservableBallotLinkage,
+            assorter_id: "soba-commitment-opening-v1".to_string(),
+            assorter_upper_bound: RationalValue {
+                numerator: 1,
+                denominator: 1,
+            },
+            winner_selection_id: None,
+            loser_selection_id: None,
+        }],
+        sample_steps: vec![AuditSampleStep {
+            step_index: 0,
+            round_index: None,
+            assertion_id: "assertion:observable-ballot-opening".to_string(),
+            sample_unit_id: "proof:accepted-token-001".to_string(),
+            assorter_value: RationalValue {
+                numerator: 1,
+                denominator: 1,
+            },
+            bet: None,
+            statistic: None,
+            p_value_ppm: None,
+            ranked_choices: Vec::new(),
+            source_refs: vec!["source:synthetic-soba-opening".to_string()],
+        }],
+        decision: AuditAlgorithmDecision::Boundary,
+        source_refs: vec!["source:synthetic-soba-observable-ballot-audit".to_string()],
+    }];
+    package
+}
+
+pub fn synthetic_missing_soba_opening_package() -> RcountPackage {
+    let mut package = synthetic_soba_observable_ballot_boundary_package();
+    package.audit_algorithm_runs[0].sample_steps[0].sample_unit_id =
+        "proof:missing-token".to_string();
     package
 }
 
@@ -2731,9 +4435,128 @@ fn check_cvr_field(
     Ok(())
 }
 
+fn is_supported_audit_algorithm_method(method_id: &str) -> bool {
+    matches!(
+        method_id,
+        BRAVO_BALLOT_POLLING_METHOD_ID
+            | MINERVA_BALLOT_POLLING_METHOD_ID
+            | ATHENA_BALLOT_POLLING_METHOD_ID
+            | KAPLAN_MARKOV_COMPARISON_METHOD_ID
+            | ALPHA_MARTINGALE_METHOD_ID
+            | SHANGRLA_ASSORTER_METHOD_ID
+            | STRATIFIED_HYBRID_RLA_METHOD_ID
+            | BATCH_COMPARISON_METHOD_ID
+            | RAIRE_IRV_METHOD_ID
+            | AWAIRE_IRV_METHOD_ID
+            | BAYESIAN_TABULATION_AUDIT_METHOD_ID
+            | SOBA_OBSERVABLE_BALLOT_AUDIT_METHOD_ID
+    )
+}
+
+fn is_positive_rational(value: RationalValue) -> bool {
+    value.denominator > 0 && value.numerator > 0
+}
+
+fn is_non_negative_rational(value: RationalValue) -> bool {
+    value.denominator > 0 && value.numerator >= 0
+}
+
+fn has_positive_denominator(value: RationalValue) -> bool {
+    value.denominator > 0
+}
+
+fn rational_gt(lhs: RationalValue, rhs: RationalValue) -> bool {
+    (lhs.numerator as i128) * (rhs.denominator as i128)
+        > (rhs.numerator as i128) * (lhs.denominator as i128)
+}
+
+fn rational_eq(lhs: RationalValue, rhs: RationalValue) -> bool {
+    lhs.denominator > 0
+        && rhs.denominator > 0
+        && (lhs.numerator as i128) * (rhs.denominator as i128)
+            == (rhs.numerator as i128) * (lhs.denominator as i128)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn synthetic_shangrla_algorithm_run() -> AuditAlgorithmRun {
+        AuditAlgorithmRun {
+            run_id: "audit-run:shangrla-toy".to_string(),
+            contest_id: "syn-2024-mayor".to_string(),
+            method_id: SHANGRLA_ASSORTER_METHOD_ID.to_string(),
+            sampling_mode: AuditSamplingMode::WithoutReplacement,
+            rcv_elimination_order: Vec::new(),
+            risk_limit_ppm: Some(100_000),
+            reported_winner_votes: None,
+            reported_loser_votes: None,
+            macro_ballot_count: None,
+            macro_reported_margin: None,
+            macro_gamma: None,
+            combining_rule_id: None,
+            nuisance_parameter: None,
+            bayesian_prior_id: None,
+            bayesian_likelihood_id: None,
+            posterior_winner_probability_ppm: None,
+            posterior_risk_ppm: None,
+            simulation_seed: None,
+            posterior_draws: None,
+            calibrated_risk_limit_ppm: None,
+            strata: Vec::new(),
+            assertions: vec![AuditAssertion {
+                assertion_id: "assertion:cand-a-over-cand-b".to_string(),
+                kind: AuditAssertionKind::PluralityWinnerLoser,
+                assorter_id: "plurality-winner-loser-v1".to_string(),
+                assorter_upper_bound: RationalValue {
+                    numerator: 1,
+                    denominator: 1,
+                },
+                winner_selection_id: Some("cand-a".to_string()),
+                loser_selection_id: Some("cand-b".to_string()),
+            }],
+            sample_steps: vec![
+                AuditSampleStep {
+                    step_index: 0,
+                    round_index: None,
+                    assertion_id: "assertion:cand-a-over-cand-b".to_string(),
+                    sample_unit_id: "cvr:P-001:001".to_string(),
+                    assorter_value: RationalValue {
+                        numerator: 1,
+                        denominator: 1,
+                    },
+                    bet: None,
+                    statistic: Some(RationalValue {
+                        numerator: 2,
+                        denominator: 1,
+                    }),
+                    p_value_ppm: Some(80_000),
+                    ranked_choices: Vec::new(),
+                    source_refs: vec!["source:synthetic-audit".to_string()],
+                },
+                AuditSampleStep {
+                    step_index: 1,
+                    round_index: None,
+                    assertion_id: "assertion:cand-a-over-cand-b".to_string(),
+                    sample_unit_id: "cvr:P-001:002".to_string(),
+                    assorter_value: RationalValue {
+                        numerator: 1,
+                        denominator: 2,
+                    },
+                    bet: None,
+                    statistic: Some(RationalValue {
+                        numerator: 3,
+                        denominator: 1,
+                    }),
+                    p_value_ppm: Some(50_000),
+                    ranked_choices: Vec::new(),
+                    source_refs: vec!["source:synthetic-audit".to_string()],
+                },
+            ],
+            decision: AuditAlgorithmDecision::Pass,
+            source_refs: vec!["source:synthetic-audit".to_string()],
+        }
+    }
 
     #[test]
     fn synthetic_summary_basic_verifies_selection_sums() {
@@ -2741,6 +4564,307 @@ mod tests {
         let report = verify_package(&package).expect("synthetic summary package must verify");
         assert_eq!(report.passed.len(), 3);
         assert!(report.failed.is_empty());
+    }
+
+    #[test]
+    fn parallel_verifier_matches_serial_reports() {
+        let packages = vec![
+            synthetic_summary_basic_package(),
+            synthetic_canvass_correction_package(),
+            synthetic_mail_batch_added_package(),
+            synthetic_precinct_split_lineage_package(),
+            synthetic_privacy_inclusion_package(),
+            synthetic_cvr_summary_package(),
+            synthetic_rla_replay_package(),
+            synthetic_rla_stopping_package(),
+            synthetic_rla_margin_package(),
+            synthetic_rla_statistical_package(),
+            synthetic_colorado_rla_package(),
+            synthetic_california_rla_package(),
+            synthetic_manual_audit_package(),
+        ];
+
+        for package in packages {
+            let serial = verify_package(&package).expect("serial verifier must accept fixture");
+            let parallel =
+                verify_package_parallel(&package).expect("parallel verifier must accept fixture");
+            assert_eq!(parallel, serial);
+        }
+    }
+
+    #[test]
+    fn parallel_verifier_matches_serial_error_for_bad_selection_sum() {
+        let package = synthetic_bad_selection_sum_package();
+        assert_eq!(
+            verify_package_parallel(&package).expect_err("parallel verifier must fail"),
+            verify_package(&package).expect_err("serial verifier must fail")
+        );
+    }
+
+    #[test]
+    fn audit_algorithm_transcript_accepts_shangrla_assorter_steps() {
+        let mut package = synthetic_summary_basic_package();
+        package.audit_algorithm_runs = vec![synthetic_shangrla_algorithm_run()];
+
+        let report = verify_package(&package).expect("audit algorithm transcript must verify");
+        assert!(report.passed.iter().any(|pass| {
+            pass.equation_id == "audit_algorithm_transcript"
+                && pass.reporting_unit_id == "audit-run:shangrla-toy"
+        }));
+    }
+
+    #[test]
+    fn audit_algorithm_transcript_rejects_missing_assertion_step() {
+        let mut package = synthetic_summary_basic_package();
+        let mut run = synthetic_shangrla_algorithm_run();
+        run.sample_steps[0].assertion_id = "assertion:missing".to_string();
+        package.audit_algorithm_runs = vec![run];
+
+        assert!(matches!(
+            verify_package(&package),
+            Err(RcountCoreError::MissingAuditAssertion { .. })
+        ));
+    }
+
+    #[test]
+    fn audit_algorithm_transcript_rejects_out_of_bound_assorter_value() {
+        let mut package = synthetic_summary_basic_package();
+        let mut run = synthetic_shangrla_algorithm_run();
+        run.sample_steps[0].assorter_value = RationalValue {
+            numerator: 3,
+            denominator: 2,
+        };
+        package.audit_algorithm_runs = vec![run];
+
+        assert!(matches!(
+            verify_package(&package),
+            Err(RcountCoreError::InvalidAuditAssorterValue { .. })
+        ));
+    }
+
+    #[test]
+    fn audit_algorithm_transcript_rejects_partial_macro_design() {
+        let mut package = synthetic_summary_basic_package();
+        let mut run = synthetic_shangrla_algorithm_run();
+        run.method_id = KAPLAN_MARKOV_COMPARISON_METHOD_ID.to_string();
+        run.macro_ballot_count = Some(100);
+        package.audit_algorithm_runs = vec![run];
+
+        assert!(matches!(
+            verify_package(&package),
+            Err(RcountCoreError::InvalidAuditMacroDesign { .. })
+        ));
+    }
+
+    #[test]
+    fn audit_algorithm_transcript_rejects_invalid_macro_gamma() {
+        let mut package = synthetic_summary_basic_package();
+        let mut run = synthetic_shangrla_algorithm_run();
+        run.method_id = KAPLAN_MARKOV_COMPARISON_METHOD_ID.to_string();
+        run.macro_ballot_count = Some(100);
+        run.macro_reported_margin = Some(10);
+        run.macro_gamma = Some(RationalValue {
+            numerator: 1,
+            denominator: 1,
+        });
+        package.audit_algorithm_runs = vec![run];
+
+        assert!(matches!(
+            verify_package(&package),
+            Err(RcountCoreError::InvalidAuditMacroDesign { .. })
+        ));
+    }
+
+    #[test]
+    fn kaplan_markov_macro_package_verifies_algorithm_transcript() {
+        let package = synthetic_kaplan_markov_macro_package();
+        let report = verify_package(&package).expect("MACRO package must verify");
+        assert!(report.passed.iter().any(|pass| {
+            pass.equation_id == "audit_algorithm_transcript"
+                && pass.reporting_unit_id == "audit-run:kaplan-markov-macro-pass"
+        }));
+    }
+
+    #[test]
+    fn minerva_round_one_package_verifies_algorithm_transcript() {
+        let package = synthetic_minerva_round_one_package();
+        let report = verify_package(&package).expect("Minerva package must verify");
+        assert!(report.passed.iter().any(|pass| {
+            pass.equation_id == "audit_algorithm_transcript"
+                && pass.reporting_unit_id == "audit-run:minerva-round-one-pass"
+        }));
+    }
+
+    #[test]
+    fn minerva_multi_round_package_verifies_algorithm_transcript() {
+        let package = synthetic_minerva_multi_round_package();
+        let report = verify_package(&package).expect("multi-round Minerva package must verify");
+        assert!(report.passed.iter().any(|pass| {
+            pass.equation_id == "audit_algorithm_transcript"
+                && pass.reporting_unit_id == "audit-run:minerva-multi-round-pass"
+        }));
+        assert_eq!(
+            package.audit_algorithm_runs[0].sample_steps[4].round_index,
+            Some(0)
+        );
+        assert_eq!(
+            package.audit_algorithm_runs[0].sample_steps[5].round_index,
+            Some(1)
+        );
+    }
+
+    #[test]
+    fn athena_boundary_package_verifies_algorithm_transcript() {
+        let package = synthetic_athena_boundary_package();
+        let report = verify_package(&package).expect("Athena boundary package must verify");
+        assert!(report.passed.iter().any(|pass| {
+            pass.equation_id == "audit_algorithm_transcript"
+                && pass.reporting_unit_id == "audit-run:athena-boundary"
+        }));
+        assert_eq!(
+            package.audit_algorithm_runs[0].method_id,
+            ATHENA_BALLOT_POLLING_METHOD_ID
+        );
+    }
+
+    #[test]
+    fn stratified_hybrid_package_verifies_component_references() {
+        let package = synthetic_stratified_hybrid_package();
+        let report = verify_package(&package).expect("stratified package must verify");
+        assert!(report.passed.iter().any(|pass| {
+            pass.equation_id == "audit_algorithm_transcript"
+                && pass.reporting_unit_id == "audit-run:stratified-hybrid-boundary"
+        }));
+        let run = package
+            .audit_algorithm_runs
+            .iter()
+            .find(|run| run.method_id == STRATIFIED_HYBRID_RLA_METHOD_ID)
+            .expect("stratified run must be present");
+        assert_eq!(run.strata.len(), 2);
+        assert_eq!(
+            run.combining_rule_id.as_deref(),
+            Some("suite-nuisance-boundary-v1")
+        );
+        assert_eq!(
+            run.nuisance_parameter,
+            Some(RationalValue {
+                numerator: 1,
+                denominator: 2,
+            })
+        );
+        assert_eq!(run.strata[0].allocation_ppm, Some(500_000));
+        assert_eq!(run.strata[1].allocation_ppm, Some(500_000));
+    }
+
+    #[test]
+    fn stratified_hybrid_package_rejects_missing_component() {
+        let package = synthetic_bad_stratified_hybrid_package();
+        assert!(matches!(
+            verify_package(&package),
+            Err(RcountCoreError::MissingStratifiedHybridComponent { .. })
+        ));
+    }
+
+    #[test]
+    fn stratified_hybrid_package_rejects_flattened_stratum() {
+        let package = synthetic_flattened_stratified_hybrid_package();
+        assert!(matches!(
+            verify_package(&package),
+            Err(RcountCoreError::InvalidStratifiedHybridDesign { .. })
+        ));
+    }
+
+    #[test]
+    fn raire_boundary_package_verifies_ranked_choice_surface() {
+        let package = synthetic_raire_boundary_package();
+        let report = verify_package(&package).expect("RAIRE boundary package must verify");
+        assert!(report.passed.iter().any(|pass| {
+            pass.equation_id == "audit_algorithm_transcript"
+                && pass.reporting_unit_id == "audit-run:raire-irv-boundary"
+        }));
+        assert_eq!(
+            package.audit_algorithm_runs[0].rcv_elimination_order,
+            vec![
+                "cand-c".to_string(),
+                "cand-b".to_string(),
+                "cand-a".to_string(),
+            ]
+        );
+    }
+
+    #[test]
+    fn awaire_boundary_package_verifies_ranked_choice_surface() {
+        let package = synthetic_awaire_boundary_package();
+        let report = verify_package(&package).expect("AWAIRE boundary package must verify");
+        assert!(report.passed.iter().any(|pass| {
+            pass.equation_id == "audit_algorithm_transcript"
+                && pass.reporting_unit_id == "audit-run:awaire-irv-boundary"
+        }));
+        assert_eq!(
+            package.audit_algorithm_runs[0].method_id,
+            AWAIRE_IRV_METHOD_ID
+        );
+    }
+
+    #[test]
+    fn ranked_choice_boundary_package_rejects_duplicate_ranked_choice() {
+        let package = synthetic_bad_raire_boundary_package();
+        assert!(matches!(
+            verify_package(&package),
+            Err(RcountCoreError::InvalidRankedChoiceSample { .. })
+        ));
+    }
+
+    #[test]
+    fn bayesian_tabulation_boundary_package_verifies_analytic_surface() {
+        let package = synthetic_bayesian_tabulation_boundary_package();
+        let report =
+            verify_package(&package).expect("Bayesian tabulation boundary package must verify");
+        assert!(report.passed.iter().any(|pass| {
+            pass.equation_id == "audit_algorithm_transcript"
+                && pass.reporting_unit_id == "audit-run:bayesian-tabulation-boundary"
+        }));
+        assert_eq!(
+            package.audit_algorithm_runs[0].posterior_winner_probability_ppm,
+            Some(958_000)
+        );
+        assert_eq!(
+            package.audit_algorithm_runs[0].posterior_risk_ppm,
+            Some(42_000)
+        );
+    }
+
+    #[test]
+    fn bayesian_tabulation_boundary_package_rejects_invalid_posterior_risk() {
+        let package = synthetic_bad_bayesian_tabulation_boundary_package();
+        assert!(matches!(
+            verify_package(&package),
+            Err(RcountCoreError::InvalidBayesianAuditDesign { .. })
+        ));
+    }
+
+    #[test]
+    fn soba_observable_ballot_boundary_package_verifies_opening_linkage() {
+        let package = synthetic_soba_observable_ballot_boundary_package();
+        let report = verify_package(&package).expect("SOBA boundary package must verify");
+        assert!(report.passed.iter().any(|pass| {
+            pass.equation_id == "audit_algorithm_transcript"
+                && pass.reporting_unit_id == "audit-run:soba-observable-ballot-boundary"
+        }));
+        assert!(package.inclusion_proofs[0].candidate_selections.is_empty());
+        assert_eq!(
+            package.audit_algorithm_runs[0].assertions[0].kind,
+            AuditAssertionKind::ObservableBallotLinkage
+        );
+    }
+
+    #[test]
+    fn soba_observable_ballot_boundary_package_rejects_missing_opening() {
+        let package = synthetic_missing_soba_opening_package();
+        assert!(matches!(
+            verify_package(&package),
+            Err(RcountCoreError::MissingObservableBallotOpening { .. })
+        ));
     }
 
     #[test]
@@ -2815,6 +4939,130 @@ mod tests {
                 .count(),
             2
         );
+    }
+
+    #[test]
+    fn rhist_reference_declared_verifies() {
+        let mut package = synthetic_summary_basic_package();
+        package.rhist_refs = vec![RhistReference {
+            reference_id: "rhist:real-ri-tract-unchanged".to_string(),
+            package_hash: "sha256:ccbddf423aa4ac08b0d45c4ac0b9db411293ea41fef3ac8fa93f9de9e85f66bb"
+                .to_string(),
+            package_path: Some("docs/fixtures/rhist/real-ri-tract-unchanged".to_string()),
+            cycle_ids: vec![
+                "ri-2000-census".to_string(),
+                "ri-2010-census".to_string(),
+                "ri-2020-census".to_string(),
+            ],
+            role: "unit-lineage".to_string(),
+            note: Some("Real-source RHIST pressure fixture.".to_string()),
+        }];
+
+        let report = verify_package(&package).expect("RHIST reference must verify");
+        assert!(report.passed.iter().any(|pass| {
+            pass.equation_id == "rhist_reference_declared"
+                && pass.reporting_unit_id == "rhist:real-ri-tract-unchanged"
+        }));
+    }
+
+    #[test]
+    fn rhist_reference_rejects_bad_hash() {
+        let mut package = synthetic_summary_basic_package();
+        package.rhist_refs = vec![RhistReference {
+            reference_id: "rhist:bad-hash".to_string(),
+            package_hash: "not-a-hash".to_string(),
+            package_path: None,
+            cycle_ids: vec!["cycle:one".to_string()],
+            role: "unit-lineage".to_string(),
+            note: None,
+        }];
+
+        assert!(matches!(
+            verify_package(&package),
+            Err(RcountCoreError::InvalidRhistPackageHash { .. })
+        ));
+    }
+
+    #[test]
+    fn rhist_reference_requires_cycles_and_supported_role() {
+        let mut package = synthetic_summary_basic_package();
+        package.rhist_refs = vec![RhistReference {
+            reference_id: "rhist:no-cycles".to_string(),
+            package_hash: "sha256:ccbddf423aa4ac08b0d45c4ac0b9db411293ea41fef3ac8fa93f9de9e85f66bb"
+                .to_string(),
+            package_path: None,
+            cycle_ids: vec![],
+            role: "unit-lineage".to_string(),
+            note: None,
+        }];
+        assert!(matches!(
+            verify_package(&package),
+            Err(RcountCoreError::EmptyRhistCycleRefs { .. })
+        ));
+
+        package.rhist_refs[0].cycle_ids = vec!["cycle:one".to_string()];
+        package.rhist_refs[0].role = "freeform-history".to_string();
+        assert!(matches!(
+            verify_package(&package),
+            Err(RcountCoreError::UnsupportedRhistReferenceRole { .. })
+        ));
+    }
+
+    #[test]
+    fn rctx_reference_declared_verifies() {
+        let mut package = synthetic_summary_basic_package();
+        package.rctx_refs = vec![RctxReference {
+            reference_id: "rctx:summary-basic-context".to_string(),
+            context_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+                .to_string(),
+            context_path: Some("context.rctx".to_string()),
+            crosswalk_hash: Some(
+                "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+                    .to_string(),
+            ),
+            crosswalk_path: Some("crosswalks/summary-basic-to-plan.ndjson".to_string()),
+            role: "aggregation-crosswalk".to_string(),
+            note: Some("Synthetic RCTX aggregation binding.".to_string()),
+        }];
+
+        let report = verify_package(&package).expect("RCTX reference must verify");
+        assert!(report.passed.iter().any(|pass| {
+            pass.equation_id == "rctx_reference_declared"
+                && pass.reporting_unit_id == "rctx:summary-basic-context"
+        }));
+    }
+
+    #[test]
+    fn rctx_reference_rejects_bad_hashes_and_role() {
+        let mut package = synthetic_summary_basic_package();
+        package.rctx_refs = vec![RctxReference {
+            reference_id: "rctx:bad-context".to_string(),
+            context_hash: "not-a-hash".to_string(),
+            context_path: None,
+            crosswalk_hash: None,
+            crosswalk_path: None,
+            role: "unit-context".to_string(),
+            note: None,
+        }];
+        assert!(matches!(
+            verify_package(&package),
+            Err(RcountCoreError::InvalidRctxContextHash { .. })
+        ));
+
+        package.rctx_refs[0].context_hash =
+            "sha256:1111111111111111111111111111111111111111111111111111111111111111".to_string();
+        package.rctx_refs[0].crosswalk_hash = Some("not-a-hash".to_string());
+        assert!(matches!(
+            verify_package(&package),
+            Err(RcountCoreError::InvalidRctxCrosswalkHash { .. })
+        ));
+
+        package.rctx_refs[0].crosswalk_hash = None;
+        package.rctx_refs[0].role = "map-render".to_string();
+        assert!(matches!(
+            verify_package(&package),
+            Err(RcountCoreError::UnsupportedRctxReferenceRole { .. })
+        ));
     }
 
     #[test]
@@ -3042,6 +5290,124 @@ mod tests {
         assert!(matches!(
             err,
             RcountCoreError::ManualAuditStatusMismatch { .. }
+        ));
+    }
+
+    #[test]
+    fn batch_comparison_package_verifies_overstatement() {
+        let package = synthetic_batch_comparison_package();
+        let report = verify_package(&package).expect("batch comparison package must verify");
+        assert!(report
+            .passed
+            .iter()
+            .any(|pass| pass.equation_id == "batch_comparison_overstatement"
+                && pass.reporting_unit_id == "batch:P-001:election-day"));
+    }
+
+    #[test]
+    fn batch_comparison_algorithm_links_to_verified_overstatement() {
+        let package = synthetic_batch_comparison_algorithm_package();
+        let report =
+            verify_package(&package).expect("batch comparison algorithm package must verify");
+        assert!(report.passed.iter().any(|pass| {
+            pass.equation_id == "batch_comparison_algorithm_linkage"
+                && pass.reporting_unit_id == "audit-run:batch-comparison-taint-linkage"
+        }));
+    }
+
+    #[test]
+    fn derives_batch_comparison_algorithm_run_from_sample_order() {
+        let package = synthetic_batch_comparison_package();
+        let run = derive_batch_comparison_algorithm_run(
+            &package,
+            "audit-run:batch-comparison-derived",
+            "syn-2024-mayor",
+            300_000,
+            &["batch:P-001:election-day".to_string()],
+            AuditAlgorithmDecision::Continue,
+        )
+        .expect("batch comparison run must derive from package audits");
+
+        assert_eq!(run.method_id, BATCH_COMPARISON_METHOD_ID);
+        assert_eq!(
+            run.sample_steps[0].sample_unit_id,
+            "batch:P-001:election-day"
+        );
+        assert_eq!(
+            run.sample_steps[0].assorter_value,
+            RationalValue {
+                numerator: 2,
+                denominator: 5
+            }
+        );
+        assert!(run.sample_steps[0]
+            .source_refs
+            .contains(&"batch-comparison:P-001-election-day".to_string()));
+        assert!(run
+            .source_refs
+            .contains(&"source:synthetic-batch-hand-tally".to_string()));
+    }
+
+    #[test]
+    fn batch_comparison_algorithm_derivation_rejects_missing_sampled_batch() {
+        let package = synthetic_batch_comparison_package();
+        let err = derive_batch_comparison_algorithm_run(
+            &package,
+            "audit-run:batch-comparison-derived",
+            "syn-2024-mayor",
+            300_000,
+            &["batch:P-404".to_string()],
+            AuditAlgorithmDecision::Continue,
+        )
+        .expect_err("missing sampled batch must fail derivation");
+
+        assert!(matches!(
+            err,
+            RcountCoreError::MissingBatchComparisonAlgorithmEvidence { .. }
+        ));
+    }
+
+    #[test]
+    fn batch_comparison_algorithm_fails_when_taint_drifts() {
+        let package = synthetic_bad_batch_comparison_algorithm_package();
+        let err = verify_audit_algorithm_runs(&package)
+            .expect_err("bad batch comparison algorithm taint must fail linkage");
+        assert!(matches!(
+            err,
+            RcountCoreError::BatchComparisonAlgorithmTaintMismatch { .. }
+        ));
+    }
+
+    #[test]
+    fn batch_comparison_fails_when_overstatement_drifts() {
+        let package = synthetic_bad_batch_comparison_package();
+        let err = verify_batch_comparison_audits(&package)
+            .expect_err("bad batch comparison package must fail overstatement check");
+        assert!(matches!(
+            err,
+            RcountCoreError::BatchComparisonOverstatementMismatch { .. }
+        ));
+    }
+
+    #[test]
+    fn batch_comparison_fails_when_hand_tally_is_missing() {
+        let package = synthetic_missing_hand_tally_batch_comparison_package();
+        let err = verify_batch_comparison_audits(&package)
+            .expect_err("missing hand tally must fail batch comparison check");
+        assert!(matches!(
+            err,
+            RcountCoreError::MissingBatchComparisonHandTally { .. }
+        ));
+    }
+
+    #[test]
+    fn batch_comparison_fails_when_batch_size_drifts() {
+        let package = synthetic_batch_size_drift_comparison_package();
+        let err = verify_batch_comparison_audits(&package)
+            .expect_err("batch size drift must fail before overstatement check");
+        assert!(matches!(
+            err,
+            RcountCoreError::BatchComparisonBatchSizeMismatch { .. }
         ));
     }
 
