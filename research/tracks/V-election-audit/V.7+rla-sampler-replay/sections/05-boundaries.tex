@@ -1,0 +1,16 @@
+\section{Boundaries}
+
+This slice verifies sample selection, not RLA stopping. It does not compute a
+Kaplan-Markov, ballot-polling, or ballot-level comparison risk measure. It also
+does not decide whether a jurisdiction's legal RLA method permits replacement
+sampling, modulo reduction, or a particular manifest construction.
+
+Those boundaries are deliberate. V.7 now has a replayable sampler surface that
+later work can reuse. The next layer should add observation records,
+discrepancy types, margin metadata, stopping rules, escalation rules, and
+state-specific sampler adapters.
+
+The privacy boundary also matters. A public RLA sample can reveal ballot-level
+records selected for audit. RCOUNT can make the sample reproducible, but
+jurisdictions still need publication rules for small batches, rare ballot
+styles, and any join between CVRs and voter-facing inclusion tokens.

@@ -1,0 +1,41 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{Replayable Risk-Limiting Audit Samplers}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Risk-limiting audits depend on two separable claims: the sample was selected
+from the declared ballot population by a public random process, and the sampled
+ballots provide enough evidence to stop or escalate under a named statistical
+method. This paper lands the first RCOUNT contract. A verifier can recompute
+the contest audit population from normalized CVR rows, recompute the contest
+manifest hash, replay a SHA-256 sampler from the public seed, risk limit, and
+algorithm id, and compare every published sample draw. The current fixture
+pair proves the replay surface: \texttt{rla-replay} passes, while
+\texttt{bad-rla-replay} fails when one sampled CVR id is edited.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-sampler-contract}
+\input{sections/03-implemented-surface}
+\input{sections/04-fixtures}
+\input{sections/05-boundaries}
+\input{sections/06-conclusion}
+
+\nocite{rcount-overview-2026,rcount-v5-2026,rcount-v6-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

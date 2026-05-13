@@ -1,0 +1,30 @@
+\section{Sampler Contract}
+
+The implemented audit record stores:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & Meaning \\
+\midrule
+\texttt{audit\_id} & Stable id for the audit round. \\
+\texttt{contest\_id} & Contest whose CVR rows define the audit population. \\
+\texttt{risk\_limit\_ppm} & Risk limit in parts per million, avoiding floating-point drift. \\
+\texttt{public\_seed} & Public random seed, such as a dice-generated seed ceremony value. \\
+\texttt{sampling\_algorithm\_id} & Versioned sampler name. Current value: \texttt{rcount-sha256-modulo-v1}. \\
+\texttt{manifest\_hash} & Hash of the sorted unique CVR ids for the contest. \\
+\texttt{sample\_size} & Number of draws in this replay round. \\
+\texttt{sample\_draws} & Published draw index and selected CVR id pairs. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The population is the sorted unique set of \texttt{cvr\_id} values for the
+target contest. Draw $i$ hashes the domain prefix, manifest hash, public seed,
+contest id, risk limit, draw index, and algorithm id. The first eight digest
+bytes are interpreted as a little-endian integer and reduced modulo the
+population length.
+
+This modulo sampler is intentionally simple and versioned. A future statutory
+or state-specific sampler can live beside it under a different algorithm id.

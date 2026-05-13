@@ -1,0 +1,15 @@
+\section{Introduction}
+
+Risk-limiting audits (RLAs) are often described as statistical audits, but a
+large part of public trust sits one layer below the statistical test. Observers
+must be able to ask whether the sampled ballots were actually the ballots that
+the public seed and manifest should have selected.
+
+RCOUNT therefore treats sampler replay as its own contract. The verifier does
+not need to trust a vendor user interface, an exported spreadsheet, or a
+hand-copied sample list. It recomputes the population and the draws from
+published package data.
+
+This paper covers the first V.7 substrate slice. It does not claim that an RLA
+has stopped correctly. It claims that the sample list used by a later stopping
+rule is reproducible from public evidence.

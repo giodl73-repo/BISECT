@@ -220,6 +220,13 @@ fn equation_id_for_core_error(err: &RcountCoreError) -> &'static str {
         | RcountCoreError::UnknownCvrSelection { .. }
         | RcountCoreError::MissingCvrSummary { .. }
         | RcountCoreError::CvrSummaryMismatch { .. } => "cvr_summary_total",
+        RcountCoreError::DuplicateRlaAuditId { .. }
+        | RcountCoreError::InvalidRlaRiskLimit { .. }
+        | RcountCoreError::InvalidRlaSampleSize { .. }
+        | RcountCoreError::UnsupportedRlaSamplingAlgorithm { .. }
+        | RcountCoreError::MissingRlaPopulation { .. }
+        | RcountCoreError::RlaManifestHashMismatch { .. }
+        | RcountCoreError::RlaSampleMismatch { .. } => "rla_sampler_replay",
         RcountCoreError::DuplicateStatusEventId { .. }
         | RcountCoreError::NoStatusTransition { .. }
         | RcountCoreError::IncompleteStatusEvent { .. } => "status_event_declared",
@@ -234,10 +241,11 @@ mod tests {
     use super::*;
     use rcount_core::{
         synthetic_bad_cvr_summary_package, synthetic_bad_lineage_package,
-        synthetic_canvass_correction_package, synthetic_choice_bearing_proof_package,
-        synthetic_cvr_summary_package, synthetic_mail_batch_added_package,
-        synthetic_missing_batch_package, synthetic_precinct_split_lineage_package,
-        synthetic_privacy_inclusion_package, synthetic_summary_basic_package,
+        synthetic_bad_rla_replay_package, synthetic_canvass_correction_package,
+        synthetic_choice_bearing_proof_package, synthetic_cvr_summary_package,
+        synthetic_mail_batch_added_package, synthetic_missing_batch_package,
+        synthetic_precinct_split_lineage_package, synthetic_privacy_inclusion_package,
+        synthetic_rla_replay_package, synthetic_summary_basic_package,
     };
     use rcount_io::{
         synthetic_canvass_correction_manifest, synthetic_summary_basic_manifest, write_package_dir,
@@ -512,6 +520,41 @@ mod tests {
                     .error
                     .as_deref()
                     .is_some_and(|error| error.contains("CVR summary mismatch"))));
+    }
+
+    #[test]
+    fn rla_replay_package_produces_sampler_replay_pass() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_rla_replay_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+
+        let transcript = verify_package_dir(tmp.path());
+        assert_eq!(transcript.status, VerificationStatus::Pass);
+        assert!(transcript
+            .checks
+            .iter()
+            .any(|check| check.equation_id == "rla_sampler_replay"
+                && check.status == VerificationStatus::Pass));
+    }
+
+    #[test]
+    fn bad_rla_replay_package_produces_sampler_replay_failure() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_bad_rla_replay_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+
+        let transcript = verify_package_dir(tmp.path());
+        assert_eq!(transcript.status, VerificationStatus::Fail);
+        assert!(transcript
+            .checks
+            .iter()
+            .any(|check| check.equation_id == "rla_sampler_replay"
+                && check
+                    .error
+                    .as_deref()
+                    .is_some_and(|error| error.contains("sample mismatch"))));
     }
 
     #[test]

@@ -1,0 +1,26 @@
+\section{Fixtures}
+
+The positive fixture is \texttt{rla-replay}. It extends the V.6 CVR summary
+fixture with one audit round for \texttt{syn-2024-mayor}. The package contains
+140 CVR contest rows, a 5 percent risk limit encoded as \texttt{50000} ppm, a
+20-digit public seed, and 12 replayed sample draws.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Path & Role \\
+\midrule
+\path{audits/rla.ndjson} & RLA replay records and sample draws. \\
+\path{normalized/cvr.ndjson} & Contest CVR rows used to derive the audit population. \\
+\path{normalized/summaries.ndjson} & Public totals reconciled against CVR rows. \\
+\path{sources/source-index.json} & Source hash evidence for the synthetic export. \\
+\path{transcripts/verify-transcript.json} & CLI verifier transcript. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The negative fixture is \texttt{bad-rla-replay}. It changes the first published
+sample draw to \texttt{cvr:P-999:999}. The manifest hash and source hash still
+verify, but sampler replay recomputes draw 0 as \texttt{cvr:P-001:022} and
+fails the package.

@@ -1,0 +1,23 @@
+\section{Implemented Surface}
+
+The RCOUNT implementation adds audit-round and sample-draw records to
+\texttt{rcount-core}. The package verifier now runs
+\texttt{verify\_rla\_sampler\_replay} after CVR reconciliation, so a package
+can only pass when the declared RLA sample draws replay.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Check & Failure caught \\
+\midrule
+\texttt{rla\_sampler\_replay} & Duplicate audit ids, invalid risk limits, empty or wrong-sized samples, unsupported algorithm ids, manifest hash drift, and edited sample draws. \\
+\texttt{cvr\_summary\_total} & CVR rows still reconcile to the public summaries before they are used as the audit population. \\
+\texttt{source\_hash\_match} & Source evidence bytes still match the declared source index. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The audit transcript maps sampler failures to
+\texttt{rla\_sampler\_replay}, making the failure visible through the same CLI
+surface as prior RCOUNT checks.

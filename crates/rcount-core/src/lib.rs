@@ -11,6 +11,9 @@ pub const FILE_HASH_PREFIX: &[u8] = b"RCOUNT_FILE_V1\0";
 pub const PACKAGE_HASH_PREFIX: &[u8] = b"RCOUNT_PACKAGE_V1\0";
 pub const EVENT_HASH_PREFIX: &[u8] = b"RCOUNT_EVENT_V1\0";
 pub const PROOF_HASH_PREFIX: &[u8] = b"RCOUNT_PROOF_V1\0";
+pub const RLA_MANIFEST_HASH_PREFIX: &[u8] = b"RCOUNT_RLA_MANIFEST_V1\0";
+pub const RLA_SAMPLE_PREFIX: &[u8] = b"RCOUNT_RLA_SAMPLE_V1\0";
+pub const RLA_SAMPLING_ALGORITHM_ID: &str = "rcount-sha256-modulo-v1";
 
 #[derive(Debug, Error, Clone, PartialEq, Eq)]
 pub enum RcountCoreError {
@@ -148,6 +151,40 @@ pub enum RcountCoreError {
         field: String,
         summary: i64,
         cvr: i64,
+    },
+    #[error("duplicate RLA audit id: {audit_id}")]
+    DuplicateRlaAuditId { audit_id: String },
+    #[error("RLA audit {audit_id} has invalid risk limit ppm: {risk_limit_ppm}")]
+    InvalidRlaRiskLimit {
+        audit_id: String,
+        risk_limit_ppm: u32,
+    },
+    #[error("RLA audit {audit_id} has invalid sample size: {sample_size}")]
+    InvalidRlaSampleSize { audit_id: String, sample_size: u32 },
+    #[error("RLA audit {audit_id} has unsupported sampling algorithm: {sampling_algorithm_id}")]
+    UnsupportedRlaSamplingAlgorithm {
+        audit_id: String,
+        sampling_algorithm_id: String,
+    },
+    #[error("RLA audit {audit_id} has no CVR population for contest {contest_id}")]
+    MissingRlaPopulation {
+        audit_id: String,
+        contest_id: String,
+    },
+    #[error(
+        "RLA audit {audit_id} manifest hash mismatch: declared {declared}, computed {computed}"
+    )]
+    RlaManifestHashMismatch {
+        audit_id: String,
+        declared: String,
+        computed: String,
+    },
+    #[error("RLA audit {audit_id} sample mismatch at draw {draw_index}: declared {declared_cvr_id}, computed {computed_cvr_id}")]
+    RlaSampleMismatch {
+        audit_id: String,
+        draw_index: u32,
+        declared_cvr_id: String,
+        computed_cvr_id: String,
     },
 }
 
@@ -304,6 +341,24 @@ pub struct CvrContestRecord {
     pub source_refs: Vec<String>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RiskLimitAudit {
+    pub audit_id: String,
+    pub contest_id: String,
+    pub risk_limit_ppm: u32,
+    pub public_seed: String,
+    pub sampling_algorithm_id: String,
+    pub manifest_hash: String,
+    pub sample_size: u32,
+    pub sample_draws: Vec<RlaSampleDraw>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RlaSampleDraw {
+    pub draw_index: u32,
+    pub cvr_id: String,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum CountStatus {
@@ -358,6 +413,8 @@ pub struct RcountPackage {
     pub inclusion_proofs: Vec<InclusionProof>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub cvr: Vec<CvrContestRecord>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub rla_audits: Vec<RiskLimitAudit>,
     pub summaries: Vec<Summary>,
     #[serde(default)]
     pub status_events: Vec<StatusEvent>,
@@ -431,6 +488,7 @@ pub fn verify_package(package: &RcountPackage) -> Result<VerificationReport, Rco
     report
         .passed
         .extend(verify_cvr_summary_reconciliation(package)?);
+    report.passed.extend(verify_rla_sampler_replay(package)?);
     Ok(report)
 }
 
@@ -936,6 +994,140 @@ pub fn verify_cvr_summary_reconciliation(
     Ok(passes)
 }
 
+pub fn verify_rla_sampler_replay(
+    package: &RcountPackage,
+) -> Result<Vec<EquationPass>, RcountCoreError> {
+    let mut seen = BTreeSet::new();
+    let mut passes = Vec::new();
+    for audit in &package.rla_audits {
+        if !seen.insert(audit.audit_id.as_str()) {
+            return Err(RcountCoreError::DuplicateRlaAuditId {
+                audit_id: audit.audit_id.clone(),
+            });
+        }
+        if audit.risk_limit_ppm == 0 || audit.risk_limit_ppm >= 1_000_000 {
+            return Err(RcountCoreError::InvalidRlaRiskLimit {
+                audit_id: audit.audit_id.clone(),
+                risk_limit_ppm: audit.risk_limit_ppm,
+            });
+        }
+        if audit.sample_size == 0 || audit.sample_draws.len() != audit.sample_size as usize {
+            return Err(RcountCoreError::InvalidRlaSampleSize {
+                audit_id: audit.audit_id.clone(),
+                sample_size: audit.sample_size,
+            });
+        }
+        if audit.sampling_algorithm_id != RLA_SAMPLING_ALGORITHM_ID {
+            return Err(RcountCoreError::UnsupportedRlaSamplingAlgorithm {
+                audit_id: audit.audit_id.clone(),
+                sampling_algorithm_id: audit.sampling_algorithm_id.clone(),
+            });
+        }
+        let computed_manifest_hash =
+            rla_contest_manifest_hash_for_audit(package, &audit.contest_id, &audit.audit_id)?;
+        if audit.manifest_hash != computed_manifest_hash {
+            return Err(RcountCoreError::RlaManifestHashMismatch {
+                audit_id: audit.audit_id.clone(),
+                declared: audit.manifest_hash.clone(),
+                computed: computed_manifest_hash,
+            });
+        }
+        let expected = replay_rla_sample(package, audit)?;
+        for (declared, computed) in audit.sample_draws.iter().zip(expected.iter()) {
+            if declared.draw_index != computed.draw_index || declared.cvr_id != computed.cvr_id {
+                return Err(RcountCoreError::RlaSampleMismatch {
+                    audit_id: audit.audit_id.clone(),
+                    draw_index: computed.draw_index,
+                    declared_cvr_id: declared.cvr_id.clone(),
+                    computed_cvr_id: computed.cvr_id.clone(),
+                });
+            }
+        }
+        passes.push(EquationPass {
+            equation_id: "rla_sampler_replay".to_string(),
+            contest_id: audit.contest_id.clone(),
+            reporting_unit_id: audit.audit_id.clone(),
+        });
+    }
+    Ok(passes)
+}
+
+pub fn rla_contest_manifest_hash(
+    package: &RcountPackage,
+    contest_id: &str,
+) -> Result<String, RcountCoreError> {
+    rla_contest_manifest_hash_for_audit(package, contest_id, "<manifest-hash>")
+}
+
+fn rla_contest_manifest_hash_for_audit(
+    package: &RcountPackage,
+    contest_id: &str,
+    audit_id: &str,
+) -> Result<String, RcountCoreError> {
+    let population = rla_population(package, contest_id);
+    if population.is_empty() {
+        return Err(RcountCoreError::MissingRlaPopulation {
+            audit_id: audit_id.to_string(),
+            contest_id: contest_id.to_string(),
+        });
+    }
+    let value = serde_json::json!({
+        "contest_id": contest_id,
+        "cvr_ids": population,
+    });
+    canonical_hash(RLA_MANIFEST_HASH_PREFIX, &value)
+}
+
+pub fn replay_rla_sample(
+    package: &RcountPackage,
+    audit: &RiskLimitAudit,
+) -> Result<Vec<RlaSampleDraw>, RcountCoreError> {
+    let population = rla_population(package, &audit.contest_id);
+    if population.is_empty() {
+        return Err(RcountCoreError::MissingRlaPopulation {
+            audit_id: audit.audit_id.clone(),
+            contest_id: audit.contest_id.clone(),
+        });
+    }
+
+    let mut draws = Vec::with_capacity(audit.sample_size as usize);
+    for draw_index in 0..audit.sample_size {
+        let mut h = Sha256::new();
+        h.update(RLA_SAMPLE_PREFIX);
+        h.update(audit.manifest_hash.as_bytes());
+        h.update(b"\0");
+        h.update(audit.public_seed.as_bytes());
+        h.update(b"\0");
+        h.update(audit.contest_id.as_bytes());
+        h.update(b"\0");
+        h.update(audit.risk_limit_ppm.to_le_bytes());
+        h.update(draw_index.to_le_bytes());
+        h.update(audit.sampling_algorithm_id.as_bytes());
+        let digest = h.finalize();
+        let mut bytes = [0u8; 8];
+        bytes.copy_from_slice(&digest[..8]);
+        let selected = u64::from_le_bytes(bytes) as usize % population.len();
+        draws.push(RlaSampleDraw {
+            draw_index,
+            cvr_id: population[selected].clone(),
+        });
+    }
+    Ok(draws)
+}
+
+fn rla_population(package: &RcountPackage, contest_id: &str) -> Vec<String> {
+    let mut population: Vec<String> = package
+        .cvr
+        .iter()
+        .filter(|row| row.contest_id == contest_id)
+        .map(|row| row.cvr_id.clone())
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect();
+    population.sort();
+    population
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 struct CvrAggregateKey {
     contest_id: String,
@@ -1026,6 +1218,7 @@ pub fn synthetic_summary_basic_package() -> RcountPackage {
         lineage: vec![],
         inclusion_proofs: vec![],
         cvr: vec![],
+        rla_audits: vec![],
         summaries,
         status_events: vec![],
     }
@@ -1373,6 +1566,32 @@ pub fn synthetic_bad_cvr_summary_package() -> RcountPackage {
         })
         .expect("synthetic CVR package must contain a Candidate A row");
     row.selection_ids = vec!["cand-b".to_string()];
+    package
+}
+
+pub fn synthetic_rla_replay_package() -> RcountPackage {
+    let mut package = synthetic_cvr_summary_package();
+    let manifest_hash = rla_contest_manifest_hash(&package, "syn-2024-mayor")
+        .expect("synthetic CVR package must have an RLA population");
+    let mut audit = RiskLimitAudit {
+        audit_id: "rla:syn-2024-mayor:round-1".to_string(),
+        contest_id: "syn-2024-mayor".to_string(),
+        risk_limit_ppm: 50_000,
+        public_seed: "31415926535897932384".to_string(),
+        sampling_algorithm_id: RLA_SAMPLING_ALGORITHM_ID.to_string(),
+        manifest_hash,
+        sample_size: 12,
+        sample_draws: vec![],
+    };
+    audit.sample_draws =
+        replay_rla_sample(&package, &audit).expect("synthetic RLA sample must replay");
+    package.rla_audits = vec![audit];
+    package
+}
+
+pub fn synthetic_bad_rla_replay_package() -> RcountPackage {
+    let mut package = synthetic_rla_replay_package();
+    package.rla_audits[0].sample_draws[0].cvr_id = "cvr:P-999:999".to_string();
     package
 }
 
@@ -1770,6 +1989,25 @@ mod tests {
         let err = verify_cvr_summary_reconciliation(&package)
             .expect_err("bad CVR summary package must fail");
         assert!(matches!(err, RcountCoreError::CvrSummaryMismatch { .. }));
+    }
+
+    #[test]
+    fn rla_replay_package_verifies_sample() {
+        let package = synthetic_rla_replay_package();
+        let report = verify_package(&package).expect("RLA replay package must verify");
+        assert!(report
+            .passed
+            .iter()
+            .any(|pass| pass.equation_id == "rla_sampler_replay"));
+        assert_eq!(package.rla_audits[0].sample_draws.len(), 12);
+    }
+
+    #[test]
+    fn rla_replay_fails_on_tampered_sample_draw() {
+        let package = synthetic_bad_rla_replay_package();
+        let err = verify_rla_sampler_replay(&package)
+            .expect_err("bad RLA replay package must fail sample replay");
+        assert!(matches!(err, RcountCoreError::RlaSampleMismatch { .. }));
     }
 
     #[test]
