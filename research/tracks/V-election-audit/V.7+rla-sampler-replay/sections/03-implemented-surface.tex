@@ -17,6 +17,11 @@ as selection, residual, combined selection-and-residual, or wrong-CVR
 observations. When a package declares a discrepancy list, the declared
 draw ids, CVR ids, and kinds must match the computed taxonomy exactly.
 
+Margin metadata is also bound to the public summary before statistical stopping
+math is attempted. The audit record names a winner selection, loser selection,
+reported votes, reported margin, and diluted-margin denominator. The verifier
+checks those fields against the canvassed jurisdiction total.
+
 \begin{center}
 \small
 \begin{tabularx}{\textwidth}{lX}
@@ -24,6 +29,7 @@ draw ids, CVR ids, and kinds must match the computed taxonomy exactly.
 Check & Failure caught \\
 \midrule
 \texttt{rla\_sampler\_replay} & Duplicate audit ids, invalid risk limits, empty or wrong-sized samples, unsupported algorithm ids, manifest hash drift, and edited sample draws. \\
+\texttt{rla\_margin\_metadata} & Winner/loser selection ids, reported votes, reported margin, and diluted-margin denominator drift from the jurisdiction summary. \\
 \texttt{rla\_stopping\_rule} & Missing or duplicate observations, wrong sampled CVRs, declared discrepancy taxonomy drift, and declared stop/escalate outcomes that disagree with observed discrepancies. \\
 \texttt{cvr\_summary\_total} & CVR rows still reconcile to the public summaries before they are used as the audit population. \\
 \texttt{source\_hash\_match} & Source evidence bytes still match the declared source index. \\

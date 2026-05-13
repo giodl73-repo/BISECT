@@ -218,6 +218,45 @@ pub enum RcountCoreError {
         declared: RlaDiscrepancyKind,
         computed: RlaDiscrepancyKind,
     },
+    #[error("RLA audit {audit_id} is missing margin metadata")]
+    MissingRlaMarginMetadata { audit_id: String },
+    #[error(
+        "RLA audit {audit_id} margin metadata references missing selection id: {selection_id}"
+    )]
+    MissingRlaMarginSelection {
+        audit_id: String,
+        selection_id: String,
+    },
+    #[error("RLA audit {audit_id} reported margin is not positive: {margin}")]
+    InvalidRlaReportedMargin { audit_id: String, margin: i64 },
+    #[error("RLA audit {audit_id} reported winner votes mismatch for {selection_id}: declared {declared}, summary {summary}")]
+    RlaWinnerVotesMismatch {
+        audit_id: String,
+        selection_id: String,
+        declared: i64,
+        summary: i64,
+    },
+    #[error("RLA audit {audit_id} reported loser votes mismatch for {selection_id}: declared {declared}, summary {summary}")]
+    RlaLoserVotesMismatch {
+        audit_id: String,
+        selection_id: String,
+        declared: i64,
+        summary: i64,
+    },
+    #[error(
+        "RLA audit {audit_id} reported margin mismatch: declared {declared}, summary {summary}"
+    )]
+    RlaReportedMarginMismatch {
+        audit_id: String,
+        declared: i64,
+        summary: i64,
+    },
+    #[error("RLA audit {audit_id} diluted margin denominator mismatch: declared {declared}, summary {summary}")]
+    RlaDilutedMarginDenominatorMismatch {
+        audit_id: String,
+        declared: i64,
+        summary: i64,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -388,6 +427,8 @@ pub struct RiskLimitAudit {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub discrepancies: Vec<RlaDiscrepancy>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub margin: Option<RlaMarginMetadata>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub stopping_rule_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_discrepancies: Option<u32>,
@@ -429,6 +470,16 @@ pub struct RlaDiscrepancy {
     pub draw_index: u32,
     pub cvr_id: String,
     pub kind: RlaDiscrepancyKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RlaMarginMetadata {
+    pub winner_selection_id: String,
+    pub loser_selection_id: String,
+    pub reported_winner_votes: i64,
+    pub reported_loser_votes: i64,
+    pub reported_margin: i64,
+    pub diluted_margin_denominator: i64,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -568,6 +619,7 @@ pub fn verify_package(package: &RcountPackage) -> Result<VerificationReport, Rco
         .passed
         .extend(verify_cvr_summary_reconciliation(package)?);
     report.passed.extend(verify_rla_sampler_replay(package)?);
+    report.passed.extend(verify_rla_margin_metadata(package)?);
     report.passed.extend(verify_rla_stopping_rules(package)?);
     Ok(report)
 }
@@ -1195,6 +1247,95 @@ pub fn replay_rla_sample(
     Ok(draws)
 }
 
+pub fn verify_rla_margin_metadata(
+    package: &RcountPackage,
+) -> Result<Vec<EquationPass>, RcountCoreError> {
+    let mut passes = Vec::new();
+    for audit in &package.rla_audits {
+        let Some(margin) = &audit.margin else {
+            continue;
+        };
+        let summary = package
+            .summaries
+            .iter()
+            .find(|summary| {
+                summary.contest_id == audit.contest_id
+                    && summary.batch_id.is_none()
+                    && summary.status == CountStatus::Canvassed
+                    && package.reporting_units.iter().any(|unit| {
+                        unit.reporting_unit_id == summary.reporting_unit_id
+                            && unit.kind == ReportingUnitKind::JurisdictionTotal
+                    })
+            })
+            .ok_or_else(|| RcountCoreError::MissingJurisdictionTotal {
+                contest_id: audit.contest_id.clone(),
+                jurisdiction_reporting_unit_id: "<jurisdiction-total>".to_string(),
+            })?;
+        let totals: BTreeMap<&str, i64> = summary
+            .totals
+            .iter()
+            .map(|total| (total.selection_id.as_str(), total.votes))
+            .collect();
+        let winner_votes = totals
+            .get(margin.winner_selection_id.as_str())
+            .copied()
+            .ok_or_else(|| RcountCoreError::MissingRlaMarginSelection {
+                audit_id: audit.audit_id.clone(),
+                selection_id: margin.winner_selection_id.clone(),
+            })?;
+        let loser_votes = totals
+            .get(margin.loser_selection_id.as_str())
+            .copied()
+            .ok_or_else(|| RcountCoreError::MissingRlaMarginSelection {
+                audit_id: audit.audit_id.clone(),
+                selection_id: margin.loser_selection_id.clone(),
+            })?;
+        if margin.reported_winner_votes != winner_votes {
+            return Err(RcountCoreError::RlaWinnerVotesMismatch {
+                audit_id: audit.audit_id.clone(),
+                selection_id: margin.winner_selection_id.clone(),
+                declared: margin.reported_winner_votes,
+                summary: winner_votes,
+            });
+        }
+        if margin.reported_loser_votes != loser_votes {
+            return Err(RcountCoreError::RlaLoserVotesMismatch {
+                audit_id: audit.audit_id.clone(),
+                selection_id: margin.loser_selection_id.clone(),
+                declared: margin.reported_loser_votes,
+                summary: loser_votes,
+            });
+        }
+        let computed_margin = winner_votes - loser_votes;
+        if computed_margin <= 0 {
+            return Err(RcountCoreError::InvalidRlaReportedMargin {
+                audit_id: audit.audit_id.clone(),
+                margin: computed_margin,
+            });
+        }
+        if margin.reported_margin != computed_margin {
+            return Err(RcountCoreError::RlaReportedMarginMismatch {
+                audit_id: audit.audit_id.clone(),
+                declared: margin.reported_margin,
+                summary: computed_margin,
+            });
+        }
+        if margin.diluted_margin_denominator != summary.counted_ballots {
+            return Err(RcountCoreError::RlaDilutedMarginDenominatorMismatch {
+                audit_id: audit.audit_id.clone(),
+                declared: margin.diluted_margin_denominator,
+                summary: summary.counted_ballots,
+            });
+        }
+        passes.push(EquationPass {
+            equation_id: "rla_margin_metadata".to_string(),
+            contest_id: audit.contest_id.clone(),
+            reporting_unit_id: audit.audit_id.clone(),
+        });
+    }
+    Ok(passes)
+}
+
 pub fn verify_rla_stopping_rules(
     package: &RcountPackage,
 ) -> Result<Vec<EquationPass>, RcountCoreError> {
@@ -1814,6 +1955,7 @@ pub fn synthetic_rla_replay_package() -> RcountPackage {
         sample_draws: vec![],
         observations: vec![],
         discrepancies: vec![],
+        margin: None,
         stopping_rule_id: None,
         max_discrepancies: None,
         declared_status: None,
@@ -1839,6 +1981,29 @@ pub fn synthetic_rla_stopping_package() -> RcountPackage {
     audit.stopping_rule_id = Some("zero-discrepancy-threshold-v1".to_string());
     audit.max_discrepancies = Some(0);
     audit.declared_status = Some(RlaStoppingStatus::Pass);
+    package
+}
+
+pub fn synthetic_rla_margin_package() -> RcountPackage {
+    let mut package = synthetic_rla_stopping_package();
+    package.rla_audits[0].margin = Some(RlaMarginMetadata {
+        winner_selection_id: "cand-a".to_string(),
+        loser_selection_id: "write-in".to_string(),
+        reported_winner_votes: 65,
+        reported_loser_votes: 1,
+        reported_margin: 64,
+        diluted_margin_denominator: 140,
+    });
+    package
+}
+
+pub fn synthetic_bad_rla_margin_package() -> RcountPackage {
+    let mut package = synthetic_rla_margin_package();
+    package.rla_audits[0]
+        .margin
+        .as_mut()
+        .expect("synthetic RLA margin package must contain margin")
+        .reported_margin += 1;
     package
 }
 
@@ -2349,6 +2514,27 @@ mod tests {
         assert!(matches!(
             err,
             RcountCoreError::RlaDiscrepancyMismatch { .. }
+        ));
+    }
+
+    #[test]
+    fn rla_margin_package_verifies_reported_margin_metadata() {
+        let package = synthetic_rla_margin_package();
+        let report = verify_package(&package).expect("RLA margin package must verify");
+        assert!(report
+            .passed
+            .iter()
+            .any(|pass| pass.equation_id == "rla_margin_metadata"));
+    }
+
+    #[test]
+    fn rla_margin_fails_when_declared_margin_drifts() {
+        let package = synthetic_bad_rla_margin_package();
+        let err = verify_rla_margin_metadata(&package)
+            .expect_err("bad RLA margin package must fail margin metadata");
+        assert!(matches!(
+            err,
+            RcountCoreError::RlaReportedMarginMismatch { .. }
         ));
     }
 

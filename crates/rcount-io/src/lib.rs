@@ -199,6 +199,7 @@ pub fn write_package_dir(
             r#"{"equation_id":"canvass_correction_event","status":"declared"}"#,
             r#"{"equation_id":"cvr_summary_total","status":"declared"}"#,
             r#"{"equation_id":"rla_sampler_replay","status":"declared"}"#,
+            r#"{"equation_id":"rla_margin_metadata","status":"declared"}"#,
             r#"{"equation_id":"rla_stopping_rule","status":"declared"}"#,
         ],
     )?;
@@ -426,6 +427,20 @@ pub fn default_bad_rla_discrepancy_docs_dir() -> PathBuf {
         .join("bad-rla-discrepancy")
 }
 
+pub fn default_rla_margin_docs_dir() -> PathBuf {
+    PathBuf::from("docs")
+        .join("examples")
+        .join("rcount-golden-packages")
+        .join("rla-margin")
+}
+
+pub fn default_bad_rla_margin_docs_dir() -> PathBuf {
+    PathBuf::from("docs")
+        .join("examples")
+        .join("rcount-golden-packages")
+        .join("bad-rla-margin")
+}
+
 fn write_json_pretty<T: Serialize>(path: &Path, value: &T) -> Result<(), RcountIoError> {
     let bytes = serde_json::to_vec_pretty(value)?;
     fs::write(path, bytes)?;
@@ -540,12 +555,13 @@ mod tests {
     use super::*;
     use rcount_core::{
         synthetic_bad_cvr_summary_package, synthetic_bad_lineage_package,
-        synthetic_bad_rla_discrepancy_package, synthetic_bad_rla_replay_package,
-        synthetic_bad_rla_stopping_package, synthetic_bad_selection_sum_package,
-        synthetic_canvass_correction_package, synthetic_choice_bearing_proof_package,
-        synthetic_cvr_summary_package, synthetic_mail_batch_added_package,
-        synthetic_missing_batch_package, synthetic_precinct_split_lineage_package,
-        synthetic_privacy_inclusion_package, synthetic_rla_discrepancy_package,
+        synthetic_bad_rla_discrepancy_package, synthetic_bad_rla_margin_package,
+        synthetic_bad_rla_replay_package, synthetic_bad_rla_stopping_package,
+        synthetic_bad_selection_sum_package, synthetic_canvass_correction_package,
+        synthetic_choice_bearing_proof_package, synthetic_cvr_summary_package,
+        synthetic_mail_batch_added_package, synthetic_missing_batch_package,
+        synthetic_precinct_split_lineage_package, synthetic_privacy_inclusion_package,
+        synthetic_rla_discrepancy_package, synthetic_rla_margin_package,
         synthetic_rla_replay_package, synthetic_rla_stopping_package,
         synthetic_summary_basic_package,
     };
@@ -758,6 +774,40 @@ mod tests {
         write_package_dir(tmp.path(), &manifest, &package).unwrap();
         let (_, decoded_package) = read_package_dir(tmp.path()).unwrap();
         assert_eq!(decoded_package.rla_audits[0].discrepancies.len(), 1);
+    }
+
+    #[test]
+    fn round_trips_synthetic_rla_margin_package() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_rla_margin_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+        let (_, decoded_package) = read_package_dir(tmp.path()).unwrap();
+        assert_eq!(
+            decoded_package.rla_audits[0]
+                .margin
+                .as_ref()
+                .unwrap()
+                .reported_margin,
+            64
+        );
+    }
+
+    #[test]
+    fn round_trips_synthetic_bad_rla_margin_package() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_bad_rla_margin_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+        let (_, decoded_package) = read_package_dir(tmp.path()).unwrap();
+        assert_eq!(
+            decoded_package.rla_audits[0]
+                .margin
+                .as_ref()
+                .unwrap()
+                .reported_margin,
+            65
+        );
     }
 
     #[test]

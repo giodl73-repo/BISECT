@@ -22,10 +22,10 @@ ballots provide enough evidence to stop or escalate under a named rule. This
 paper lands both an RCOUNT sampler-replay contract and a first stopping-check
 contract. A verifier recomputes the contest audit population from normalized
 CVR rows, replays a SHA-256 sampler from public seed material, checks sampled
-observations against CVR interpretations, and verifies that the declared
-pass-or-escalate status follows from the discrepancy threshold. The fixture
-pairs prove both surfaces: \texttt{rla-replay} and \texttt{rla-stopping} pass,
-while edited sample draws or observed marks fail.
+observations against CVR interpretations, binds reported margin metadata to
+public summaries, and verifies that the declared pass-or-escalate status
+follows from the discrepancy threshold. The fixture pairs prove the replay,
+margin, observation, and taxonomy surfaces.
 \end{abstract}
 
 \input{sections/01-introduction}

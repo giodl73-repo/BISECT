@@ -10,6 +10,7 @@
 - [x] Add observation rows for sampled ballot interpretations.
 - [x] Add first stopping-rule verifier and escalation transcript behavior.
 - [x] Add discrepancy taxonomy for ballot-level comparison audits.
+- [x] Bind reported RLA margin metadata to public summaries.
 
 ## Next
 

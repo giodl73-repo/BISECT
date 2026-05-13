@@ -6,8 +6,11 @@ The verifier recomputes the contest population hash and every draw from public
 seed material, then checks that observed marks support the declared
 pass-or-escalate status. When discrepancies are present, the verifier also
 checks that the declared discrepancy taxonomy matches the computed mismatch.
+Reported margin metadata is no longer free text; it is recomputed from the
+public jurisdiction summary.
 
 The remaining V.7 work is to replace the simple threshold rule with legally
 specified statistical stopping methods. With sampler replay and observations in
-place, that layer can focus on margins and escalation without also carrying the
-burden of proving how the sample was chosen or what type of mismatch occurred.
+place, that layer can focus on risk calculations and escalation without also
+carrying the burden of proving how the sample was chosen, what type of mismatch
+occurred, or which public totals define the margin.

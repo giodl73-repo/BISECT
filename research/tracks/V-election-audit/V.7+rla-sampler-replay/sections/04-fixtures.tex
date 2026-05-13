@@ -43,3 +43,12 @@ because the observation, discrepancy taxonomy, and status agree.
 The taxonomy negative fixture is \texttt{bad-rla-discrepancy}. It declares the
 same observed mark mismatch as a residual discrepancy. The verifier recomputes
 a selection discrepancy and fails the taxonomy check.
+
+The margin fixture is \texttt{rla-margin}. It adds reported winner votes, loser
+votes, reported margin, and diluted-margin denominator to the audit record.
+Those fields are recomputed from the canvassed jurisdiction summary before the
+audit passes.
+
+The margin negative fixture is \texttt{bad-rla-margin}. It changes the
+reported margin while leaving the public summary unchanged. The package fails
+under the margin metadata check.
