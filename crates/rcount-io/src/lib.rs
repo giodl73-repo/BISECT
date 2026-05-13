@@ -469,6 +469,20 @@ pub fn default_bad_colorado_rla_docs_dir() -> PathBuf {
         .join("bad-colorado-rla")
 }
 
+pub fn default_california_rla_docs_dir() -> PathBuf {
+    PathBuf::from("docs")
+        .join("examples")
+        .join("rcount-golden-packages")
+        .join("california-rla")
+}
+
+pub fn default_bad_california_rla_docs_dir() -> PathBuf {
+    PathBuf::from("docs")
+        .join("examples")
+        .join("rcount-golden-packages")
+        .join("bad-california-rla")
+}
+
 fn write_json_pretty<T: Serialize>(path: &Path, value: &T) -> Result<(), RcountIoError> {
     let bytes = serde_json::to_vec_pretty(value)?;
     fs::write(path, bytes)?;
@@ -582,11 +596,12 @@ fn write_lines(path: &Path, lines: &[&str]) -> Result<(), RcountIoError> {
 mod tests {
     use super::*;
     use rcount_core::{
-        synthetic_bad_colorado_rla_package, synthetic_bad_cvr_summary_package,
-        synthetic_bad_lineage_package, synthetic_bad_rla_discrepancy_package,
-        synthetic_bad_rla_margin_package, synthetic_bad_rla_replay_package,
-        synthetic_bad_rla_statistical_package, synthetic_bad_rla_stopping_package,
-        synthetic_bad_selection_sum_package, synthetic_canvass_correction_package,
+        synthetic_bad_california_rla_package, synthetic_bad_colorado_rla_package,
+        synthetic_bad_cvr_summary_package, synthetic_bad_lineage_package,
+        synthetic_bad_rla_discrepancy_package, synthetic_bad_rla_margin_package,
+        synthetic_bad_rla_replay_package, synthetic_bad_rla_statistical_package,
+        synthetic_bad_rla_stopping_package, synthetic_bad_selection_sum_package,
+        synthetic_california_rla_package, synthetic_canvass_correction_package,
         synthetic_choice_bearing_proof_package, synthetic_colorado_rla_package,
         synthetic_cvr_summary_package, synthetic_mail_batch_added_package,
         synthetic_missing_batch_package, synthetic_precinct_split_lineage_package,
@@ -885,6 +900,36 @@ mod tests {
         assert_eq!(
             decoded_package.rla_audits[0].public_seed,
             "3141592653589793238X"
+        );
+    }
+
+    #[test]
+    fn round_trips_synthetic_california_rla_package() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_california_rla_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+        let (_, decoded_package) = read_package_dir(tmp.path()).unwrap();
+        assert_eq!(
+            decoded_package.rla_audits[0]
+                .jurisdiction_method_id
+                .as_deref(),
+            Some("california-public-rla-v1")
+        );
+    }
+
+    #[test]
+    fn round_trips_synthetic_bad_california_rla_package() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_bad_california_rla_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+        let (_, decoded_package) = read_package_dir(tmp.path()).unwrap();
+        assert_eq!(
+            decoded_package.rla_audits[0]
+                .audit_software_source_url
+                .as_deref(),
+            Some("synthetic-election-audit/rcount-open-rla-synthetic-v1")
         );
     }
 

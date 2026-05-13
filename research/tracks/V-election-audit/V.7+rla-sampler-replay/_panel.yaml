@@ -20,4 +20,5 @@ p1_items:
   - "[x] Bind reported margin metadata to public summaries."
   - "[x] Add first statistical risk-estimate method after the threshold contract."
   - "[x] Add first Colorado-style adapter fixture for state-specific record checks."
+  - "[x] Add California-style public audit software adapter fixture."
   - "[ ] Review sampler method against state-specific RLA requirements."

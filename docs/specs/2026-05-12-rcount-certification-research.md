@@ -203,8 +203,10 @@ rcount aggregate-plan --plan plan.rplan --context context.rctx --count election.
 - [ ] Select three model jurisdictions for fixtures: one Colorado-style RLA,
       one California-style RLA, and one ordinary canvass/manual-audit state.
       Initial Colorado-style synthetic adapter fixture landed as
-      `docs/examples/rcount-golden-packages/colorado-rla`; California and
-      manual-audit fixtures remain future work.
+      `docs/examples/rcount-golden-packages/colorado-rla`; initial
+      California-style public audit software fixture landed as
+      `docs/examples/rcount-golden-packages/california-rla`; ordinary
+      canvass/manual-audit fixture remains future work.
 - [ ] Define RCOUNT v0.1 canonical JSON and CSV ingest rules.
 - [ ] Implement aggregate arithmetic before ballot-level support.
 - [ ] Add privacy review before any voter-facing receipt proof ships.

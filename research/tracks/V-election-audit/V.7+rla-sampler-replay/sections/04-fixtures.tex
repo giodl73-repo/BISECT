@@ -78,3 +78,13 @@ sample replayable by recomputing draws and observations from an edited seed,
 but the edited seed contains a non-digit character. The generic sampler and
 stopping layers can still be made internally consistent; the jurisdiction
 adapter rejects the package under \texttt{rla\_jurisdiction\_adapter}.
+
+The public-tool fixture is \texttt{california-rla}. It adds a California-style
+method id, ballot manifest format id, audit software id, and public source URL
+to the statistical fixture. The adapter verifies that this public tooling
+metadata is present and shaped like a reproducible public audit record.
+
+The public-tool negative fixture is \texttt{bad-california-rla}. It keeps the
+audit otherwise internally consistent, but changes the source field to a
+non-URL identifier. The package fails under
+\texttt{rla\_jurisdiction\_adapter}.

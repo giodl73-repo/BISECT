@@ -19,6 +19,7 @@ election data and make no legal certification claim.
 | `rla-margin` | `cargo run -p rcount-io --example rla_margin_package` | RLA reported winner/loser votes, margin, and denominator are bound to public jurisdiction totals. |
 | `rla-statistical` | `cargo run -p rcount-io --example rla_statistical_package` | Named comparison-margin stopping method recomputes declared risk estimate and verifies pass/escalate status. |
 | `colorado-rla` | `cargo run -p rcount-io --example colorado_rla_package` | Colorado-style RLA adapter names a jurisdiction method and verifies 20-digit seed, SHA-256 sampler, margin, and stopping fields. |
+| `california-rla` | `cargo run -p rcount-io --example california_rla_package` | California-style RLA adapter names public audit software metadata and the required ballot manifest format. |
 | `district-aggregation-rplan` | `cargo run -p rcount-district --example district_aggregation_rplan` | Optional RPLAN bridge: verified precinct summaries are assigned into district totals with package and plan hashes. |
 | `multi-election-harness` | `cargo run -p rcount-district --example multi_election_harness` | L2 synthetic state: three election cycles with precinct split/merge lineage and per-cycle RPLAN district aggregation. |
 | `multi-election-harness-negatives` | `cargo run -p rcount-district --example multi_election_negative_harnesses` | L2 negative cases: bad lineage, stale RPLAN unit assignment, and tampered cycle source evidence. |
@@ -33,6 +34,7 @@ election data and make no legal certification claim.
 | `bad-rla-margin` | `cargo run -p rcount-io --example bad_rla_margin_package` | Negative fixture: reported margin metadata drifts from the public jurisdiction total. |
 | `bad-rla-statistical` | `cargo run -p rcount-io --example bad_rla_statistical_package` | Negative fixture: declared risk estimate no longer matches the named stopping method. |
 | `bad-colorado-rla` | `cargo run -p rcount-io --example bad_colorado_rla_package` | Negative fixture: Colorado-style adapter rejects a public seed that is not 20 decimal digits. |
+| `bad-california-rla` | `cargo run -p rcount-io --example bad_california_rla_package` | Negative fixture: California-style adapter rejects audit software source metadata that is not a public URL. |
 | `tampered-source` | copied from `summary-basic`, then raw source bytes edited | Negative fixture: arithmetic still passes, but `source_hash_match` fails. |
 | `missing-source-hash` | copied from `summary-basic`, then source index emptied | Negative fixture: package records omit the raw source hash evidence. |
 
@@ -62,6 +64,7 @@ cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/rla-discr
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/rla-margin
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/rla-statistical
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/colorado-rla
+cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/california-rla
 cargo run -p rcount-cli -- aggregate-districts docs/examples/rcount-golden-packages/district-aggregation-rplan/package --plan docs/examples/rcount-golden-packages/district-aggregation-rplan/plan.rplan.json
 cargo run -p rcount-district --example multi_election_harness
 cargo run -p rcount-district --example multi_election_negative_harnesses
@@ -76,6 +79,7 @@ cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/bad-rla-d
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/bad-rla-margin
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/bad-rla-statistical
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/bad-colorado-rla
+cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/bad-california-rla
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/tampered-source
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/missing-source-hash
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/multi-election-harness-negatives/bad-lineage/SYN-2028-general/package

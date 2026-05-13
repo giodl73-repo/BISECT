@@ -13,6 +13,7 @@
 - [x] Bind reported RLA margin metadata to public summaries.
 - [x] Add first named statistical risk-estimate stopping method.
 - [x] Add first Colorado-style jurisdiction adapter fixture.
+- [x] Add California-style public audit software adapter fixture.
 
 ## Next
 

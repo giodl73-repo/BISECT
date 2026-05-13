@@ -36,6 +36,13 @@ Colorado-style comparison audit fixture: a 20 digit public seed, the named
 SHA-256 sampler, margin metadata, a comparison-margin stopping method, declared
 risk estimate, and declared pass/escalate status.
 
+The second jurisdiction adapter is \texttt{california-public-rla-v1}. It
+targets a different public-contract layer: the audit record must name a
+California-style ballot manifest format, public audit software identity, public
+source URL, margin metadata, and declared audit status. This models the
+open-algorithm and manifest-shape requirements before any later statutory risk
+calculation is added.
+
 \begin{center}
 \small
 \begin{tabularx}{\textwidth}{lX}
@@ -45,7 +52,7 @@ Check & Failure caught \\
 \texttt{rla\_sampler\_replay} & Duplicate audit ids, invalid risk limits, empty or wrong-sized samples, unsupported algorithm ids, manifest hash drift, and edited sample draws. \\
 \texttt{rla\_margin\_metadata} & Winner/loser selection ids, reported votes, reported margin, and diluted-margin denominator drift from the jurisdiction summary. \\
 \texttt{rla\_stopping\_rule} & Missing or duplicate observations, wrong sampled CVRs, declared discrepancy taxonomy drift, risk-estimate drift, and declared stop/escalate outcomes that disagree with observed discrepancies. \\
-\texttt{rla\_jurisdiction\_adapter} & Unsupported jurisdiction methods and Colorado-style adapter records missing seed, sampler, margin, or stopping-risk fields. \\
+\texttt{rla\_jurisdiction\_adapter} & Unsupported jurisdiction methods; Colorado-style records missing seed, sampler, margin, or stopping-risk fields; California-style records missing public software or manifest-format metadata. \\
 \texttt{cvr\_summary\_total} & CVR rows still reconcile to the public summaries before they are used as the audit population. \\
 \texttt{source\_hash\_match} & Source evidence bytes still match the declared source index. \\
 \bottomrule

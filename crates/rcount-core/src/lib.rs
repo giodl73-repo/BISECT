@@ -15,6 +15,9 @@ pub const RLA_MANIFEST_HASH_PREFIX: &[u8] = b"RCOUNT_RLA_MANIFEST_V1\0";
 pub const RLA_SAMPLE_PREFIX: &[u8] = b"RCOUNT_RLA_SAMPLE_V1\0";
 pub const RLA_SAMPLING_ALGORITHM_ID: &str = "rcount-sha256-modulo-v1";
 pub const COLORADO_RLA_METHOD_ID: &str = "colorado-rule-25-comparison-v1";
+pub const CALIFORNIA_RLA_METHOD_ID: &str = "california-public-rla-v1";
+pub const CALIFORNIA_BALLOT_MANIFEST_FORMAT_ID: &str =
+    "ca-post-election-rla-ballot-manifest-2019-10-15";
 
 #[derive(Debug, Error, Clone, PartialEq, Eq)]
 pub enum RcountCoreError {
@@ -278,6 +281,18 @@ pub enum RcountCoreError {
     },
     #[error("RLA audit {audit_id} is missing Colorado-style comparison audit fields")]
     MissingColoradoRlaComparisonFields { audit_id: String },
+    #[error("RLA audit {audit_id} is missing California-style public audit tool fields")]
+    MissingCaliforniaRlaPublicToolFields { audit_id: String },
+    #[error("RLA audit {audit_id} has invalid California-style ballot manifest format: {ballot_manifest_format_id}")]
+    InvalidCaliforniaRlaManifestFormat {
+        audit_id: String,
+        ballot_manifest_format_id: String,
+    },
+    #[error("RLA audit {audit_id} has invalid public audit software source URL: {source_url}")]
+    InvalidRlaSoftwareSourceUrl {
+        audit_id: String,
+        source_url: String,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -439,6 +454,12 @@ pub struct RiskLimitAudit {
     pub contest_id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub jurisdiction_method_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ballot_manifest_format_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub audit_software_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub audit_software_source_url: Option<String>,
     pub risk_limit_ppm: u32,
     pub public_seed: String,
     pub sampling_algorithm_id: String,
@@ -1502,6 +1523,7 @@ pub fn verify_rla_jurisdiction_adapters(
         };
         match jurisdiction_method_id {
             COLORADO_RLA_METHOD_ID => verify_colorado_rla_adapter(audit)?,
+            CALIFORNIA_RLA_METHOD_ID => verify_california_rla_adapter(audit)?,
             other => {
                 return Err(RcountCoreError::UnsupportedRlaJurisdictionMethod {
                     audit_id: audit.audit_id.clone(),
@@ -1534,6 +1556,40 @@ fn verify_colorado_rla_adapter(audit: &RiskLimitAudit) -> Result<(), RcountCoreE
     {
         return Err(RcountCoreError::MissingColoradoRlaComparisonFields {
             audit_id: audit.audit_id.clone(),
+        });
+    }
+    Ok(())
+}
+
+fn verify_california_rla_adapter(audit: &RiskLimitAudit) -> Result<(), RcountCoreError> {
+    let Some(ballot_manifest_format_id) = audit.ballot_manifest_format_id.as_deref() else {
+        return Err(RcountCoreError::MissingCaliforniaRlaPublicToolFields {
+            audit_id: audit.audit_id.clone(),
+        });
+    };
+    if ballot_manifest_format_id != CALIFORNIA_BALLOT_MANIFEST_FORMAT_ID {
+        return Err(RcountCoreError::InvalidCaliforniaRlaManifestFormat {
+            audit_id: audit.audit_id.clone(),
+            ballot_manifest_format_id: ballot_manifest_format_id.to_string(),
+        });
+    }
+    if audit.audit_software_id.as_deref().is_none_or(str::is_empty)
+        || audit
+            .audit_software_source_url
+            .as_deref()
+            .is_none_or(str::is_empty)
+        || audit.margin.is_none()
+        || audit.declared_status.is_none()
+    {
+        return Err(RcountCoreError::MissingCaliforniaRlaPublicToolFields {
+            audit_id: audit.audit_id.clone(),
+        });
+    }
+    let source_url = audit.audit_software_source_url.as_deref().unwrap();
+    if !(source_url.starts_with("https://") || source_url.starts_with("http://")) {
+        return Err(RcountCoreError::InvalidRlaSoftwareSourceUrl {
+            audit_id: audit.audit_id.clone(),
+            source_url: source_url.to_string(),
         });
     }
     Ok(())
@@ -2068,6 +2124,9 @@ pub fn synthetic_rla_replay_package() -> RcountPackage {
         audit_id: "rla:syn-2024-mayor:round-1".to_string(),
         contest_id: "syn-2024-mayor".to_string(),
         jurisdiction_method_id: None,
+        ballot_manifest_format_id: None,
+        audit_software_id: None,
+        audit_software_source_url: None,
         risk_limit_ppm: 50_000,
         public_seed: "31415926535897932384".to_string(),
         sampling_algorithm_id: RLA_SAMPLING_ALGORITHM_ID.to_string(),
@@ -2165,6 +2224,25 @@ pub fn synthetic_bad_colorado_rla_package() -> RcountPackage {
     package.rla_audits[0].observations =
         rla_observations_from_sample(&package, &package.rla_audits[0])
             .expect("bad Colorado seed package must still have matching observations");
+    package
+}
+
+pub fn synthetic_california_rla_package() -> RcountPackage {
+    let mut package = synthetic_rla_statistical_package();
+    let audit = &mut package.rla_audits[0];
+    audit.jurisdiction_method_id = Some(CALIFORNIA_RLA_METHOD_ID.to_string());
+    audit.ballot_manifest_format_id = Some(CALIFORNIA_BALLOT_MANIFEST_FORMAT_ID.to_string());
+    audit.audit_software_id = Some("rcount-open-rla-synthetic-v1".to_string());
+    audit.audit_software_source_url = Some(
+        "https://github.com/synthetic-election-audit/rcount-open-rla-synthetic-v1".to_string(),
+    );
+    package
+}
+
+pub fn synthetic_bad_california_rla_package() -> RcountPackage {
+    let mut package = synthetic_california_rla_package();
+    package.rla_audits[0].audit_software_source_url =
+        Some("synthetic-election-audit/rcount-open-rla-synthetic-v1".to_string());
     package
 }
 
@@ -2743,6 +2821,31 @@ mod tests {
         assert!(matches!(
             err,
             RcountCoreError::InvalidColoradoRlaSeed { .. }
+        ));
+    }
+
+    #[test]
+    fn california_rla_package_verifies_public_tool_adapter() {
+        let package = synthetic_california_rla_package();
+        let report = verify_package(&package).expect("California-style RLA package must verify");
+        assert!(report
+            .passed
+            .iter()
+            .any(|pass| pass.equation_id == "rla_jurisdiction_adapter"));
+        assert_eq!(
+            package.rla_audits[0].ballot_manifest_format_id.as_deref(),
+            Some(CALIFORNIA_BALLOT_MANIFEST_FORMAT_ID)
+        );
+    }
+
+    #[test]
+    fn california_rla_fails_when_source_url_is_not_public_url() {
+        let package = synthetic_bad_california_rla_package();
+        let err = verify_rla_jurisdiction_adapters(&package)
+            .expect_err("bad California-style RLA package must fail jurisdiction adapter");
+        assert!(matches!(
+            err,
+            RcountCoreError::InvalidRlaSoftwareSourceUrl { .. }
         ));
     }
 

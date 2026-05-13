@@ -18,7 +18,7 @@ recompute public claims from lower-level evidence.
 | V.4 | Privacy-Safe Voter Inclusion Proofs | ready |
 | V.5 | Ballot Manifest Verification | ready |
 | V.6 | CVR-To-Summary Reconciliation | ready |
-| V.7 | Replayable Risk-Limiting Audits | sampler, margin, stopping-risk, and first jurisdiction adapter landed |
+| V.7 | Replayable Risk-Limiting Audits | sampler, margin, stopping-risk, and jurisdiction adapters landed |
 | V.8 | District Vote Aggregation With RPLAN | substrate slice landed |
 | V.9 | Count-System Interoperability: Vendor Exports To RCOUNT | planned |
 | V.10 | Certification Evidence Matrix | planned |
