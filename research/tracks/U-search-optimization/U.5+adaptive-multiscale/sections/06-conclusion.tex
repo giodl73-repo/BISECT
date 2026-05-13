@@ -41,9 +41,9 @@ It is orthogonal to all Structure-layer choices (\geosec{}, \areasec{},
 prime-factor, \sa{}) and all WeightsOverride choices.
 For practitioners, the recommendation is straightforward:
 \begin{itemize}
-  \item Use \texttt{--search multiscale-adaptive} whenever you would have
-    used \texttt{--search multiscale}.
-    The adaptation cost is negligible and the calibration benefit is real.
+  \item Use adaptive multiscale search where the current build exposes a
+    checked-in mode and package path; otherwise treat it as a library substrate
+    and paper protocol.
   \item Use \texttt{--search multiscale --multiscale-alpha X} only when you
     have strong prior knowledge that $X$ is the correct $\alpha$ for this
     specific state, or for reproducibility of a specific historical run.
@@ -101,10 +101,7 @@ Several extensions are deferred to future work:
 \end{enumerate}
 
 \paragraph{Implementation note.}
-\ams{} is implemented as \texttt{AdaptiveMultiScaleChain} in the
-\texttt{redist-multiscale} crate, wrapping \texttt{MultiScaleChain} by
-composition.
-The CLI flag \texttt{--search multiscale-adaptive} enables it; the YAML
-key is \texttt{search: multiscale-adaptive}.
-All other platform interfaces (\texttt{bisect label-analyze},
-\texttt{bisect label-verify}, the manifest schema) are unchanged.
+\ams{} has a Rust substrate in \texttt{bisect-multiscale}, including
+\texttt{AdaptiveMultiScaleChain}-style tuning behavior.  CLI and manifest
+claims should be made only where the current binary and tests expose that
+surface.

@@ -1,0 +1,12 @@
+\section{Current Implementation and Evidence Boundary}
+
+Resolution-aware search is a package contract as much as an algorithm choice.
+The current evidence path must name the unit type, fine-to-coarse mapping,
+adjacency derivation, population aggregation, and any information lost in the
+chosen resolution.  A manifest field is useful only if a verifier can replay the
+mapping and detect mismatched unit order or topology.
+
+Claims about mixing improvement or legal adequacy should therefore be tied to a
+specific archived package.  Resolution changes can improve computational
+behavior, but they do not by themselves prove that the resulting plan is
+legally sufficient or comparable to tract-level runs.

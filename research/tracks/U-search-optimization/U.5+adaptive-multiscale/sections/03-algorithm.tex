@@ -136,9 +136,9 @@ adding \texttt{alpha} (current $\alpha$), \texttt{coarse\_accept\_window}
 All projection, rebalance, and hierarchy logic is inherited unchanged from
 \texttt{MultiScaleChain}.
 
-\subsection{CLI and YAML}
+\subsection{Target CLI and YAML}
 
-\paragraph{CLI.}
+\paragraph{Target CLI.}
 \begin{verbatim}
 bisect state --state TX --year 2020 \
   --search multiscale-adaptive \
@@ -148,12 +148,11 @@ bisect state --state TX --year 2020 \
   --percentile 0.0
 \end{verbatim}
 
-Advanced parameters \texttt{--ms-gamma0} (default 0.10) and
-\texttt{--ms-initial-alpha} (default 0.30) are available as expert flags for
-diagnosing slow convergence; they default to sensible values for all tested
-states.
+Advanced parameters such as \texttt{--ms-gamma0} and
+\texttt{--ms-initial-alpha} are the expected expert controls for diagnosing slow
+convergence once the mode is wired to a production CLI.
 
-\paragraph{YAML.}
+\paragraph{Target YAML.}
 \begin{verbatim}
 algorithm:
   structure: prime-factor
@@ -167,8 +166,8 @@ algorithm:
 
 \subsection{Audit Trail}
 
-Every run with \texttt{--search multiscale-adaptive} records the following
-fields in \texttt{runs/\{label\}/\{year\}/index.json}:
+Every production run of adaptive multiscale search should record the following
+fields in its manifest:
 
 \begin{verbatim}
 "search": "multiscale-adaptive",

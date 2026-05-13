@@ -180,9 +180,9 @@ Algorithm~\ref{alg:ilp} gives the top-level \ilp{} redistricting procedure.
   \State \textbf{return} \metis{}-\textsc{Bisect}$(G_v, k, \mathbf{p}, \varepsilon_{\mathrm{bal}})$
   \Comment{size guard}
 \EndIf
-\State Build LP/MPS file $F$ with constraints
+\State Build formulation summary $F$ with constraints
   \eqref{eq:coverage}--\eqref{eq:flow-root}
-  \Comment{write to \texttt{runs/\ldots/ilp/\{node\}.mps}}
+  \Comment{full MPS/LP export is an evidence-layer requirement}
 \State $(x^*, z^*, \text{status}, \text{gap}) \gets \textsc{Solve}(F, \tau, \delta)$
   \Comment{$\tau$: time limit, $\delta$: gap threshold}
 \If{status $\in$ \{\texttt{Optimal}, \texttt{GapReached}\}}
@@ -200,12 +200,11 @@ Algorithm~\ref{alg:ilp} gives the top-level \ilp{} redistricting procedure.
 
 The solver interface is abstracted behind a \texttt{Solver} trait so that
 backends can be swapped without touching the formulation code.
-Phase~1 uses a two-tier priority order:
+The intended solver path uses a two-tier priority order:
 
 \begin{enumerate}
 \item \textbf{\glpk{} via \texttt{good\_lp}} --- pure Rust $+$ C binding,
-  no subprocess, bundled with the crate.
-  Default for $n \leq 200$.
+  no subprocess, when available.
   Typical solve time for NH: 47\,s.
 
 \item \textbf{\highs{} subprocess} --- invokes the \texttt{highs} binary
@@ -215,34 +214,29 @@ Phase~1 uses a two-tier priority order:
   faster branch-and-bound than \glpk{} on larger instances.
 \end{enumerate}
 
-If neither solver is available and $n \leq n_{\max}$, the MPS file is
-written and the CLI returns an error directing the user to install
-\texttt{highs}.
+If neither solver is available and $n \leq n_{\max}$, the implementation should
+return a formulation or solver-unavailable status rather than silently treating
+the result as exact.
 
 \subsection{Size Guard and Fallback}
 
-If the subgraph at a bisection node has $n > \texttt{max\_tracts}$
-(default 500), \ilp{} is not invoked and \metis{} runs instead:
+If the subgraph at a bisection node exceeds the configured exact-solve limit,
+\ilp{} is not the proving mechanism for that node:
 
 \begin{verbatim}
 WARNING: ILP solver skipped for node at depth 2 (847 tracts > 500 limit).
-         Falling back to METIS.
-         Increase --ilp-max-tracts or use --structure metis to suppress.
+         Exact solver skipped; heuristic or formulation-only status required.
 \end{verbatim}
 
-The fallback is recorded in the audit JSON as
-\texttt{"solver\_status": "fallback\_metis"} so that the audit chain
-accurately reflects which portions of the bisection tree used exact
-optimisation and which used heuristic fallback.
+The package must record a non-exact status so that the audit chain accurately
+reflects which portions of the bisection tree used exact optimisation and which
+used heuristic or formulation-only fallback.
 
 \subsection{MPS File Retention}
 
-Before invoking the solver, the formulation is serialised to
-\texttt{runs/\{label\}/\{year\}/ilp/\{node\_id\}.mps} in the standard
-Mathematical Programming System format.
-This file is retained regardless of solver outcome.
-An external auditor can reload it into any LP/MIP solver and verify that
-the committed plan achieves the reported optimal objective value.
-This is the practical manifestation of the ``no valid plan has lower
-edge cuts'' certificate: the certificate is the MPS file plus the
-solver's return status.
+Before courtroom-grade verification, the formulation must be serialised to a
+replayable LP/MPS artifact and hash-bound into the run package.  An external
+auditor can then reload it into an LP/MIP solver and verify that the committed
+plan achieves the reported objective value.  Without the replayable model file
+and solver status, the artifact is formulation evidence rather than an
+optimality certificate.

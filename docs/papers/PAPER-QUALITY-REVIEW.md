@@ -395,6 +395,24 @@ claims about exact integer arithmetic, a standalone CLI, five-method public API,
 or verified Census outputs. Their mathematical comparisons remain serviceable;
 stronger scoring requires actual Census-year fixture packages and regenerated
 tables from those checked-in artifacts.
+
+## Batch 9 - U-track search-boundary refresh
+
+**U.0-U.7, U.11, U.13-U.15 -- boundary pass.** The older search papers now carry
+current implementation/evidence boundary sections. The pass aligns seed search,
+parameter sweeps, annealing, parallel tempering, adaptive multiscale, ILP, Pareto
+frontiers, resolution choice, certification, multi-objective selection, and legal
+postures with the modern U.10/U.16-U.20 package vocabulary: RPLAN/RCTX lineage,
+hash-bound manifests, verifier status, solver certificates, selected-frontier
+packages, and artifact-class claim limits.
+
+The main remaining ceiling is empirical/package evidence. U.2 still needs
+archived full sweep packages, U.4 needs a checked-in production CLI/package path
+before being cited as implemented, and U.6 exact claims require replayable
+solver/model artifacts for real instances. U.7/U.13-U.15 are now much stronger
+as bridge papers because they explicitly distinguish generated frontiers,
+selected records, solver proofs, heuristic diagnostics, and legal argument
+templates.
 It documents the two-stage deterministic seed derivation, population-weighted
 first seed, farthest-BFS second seed, population-keyed heap expansion,
 disconnected-leftover safety net, and bounded boundary rebalance. The new

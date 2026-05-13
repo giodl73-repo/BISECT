@@ -241,9 +241,9 @@ A normal cold chain acceptance rate with very low swap rate indicates that the
 tolerance ladder is over-spaced: adjacent chains are too different in tolerance
 to exchange efficiently.
 
-\subsection{CLI Invocation and YAML Configuration}
+\subsection{Target CLI Invocation and YAML Configuration}
 
-\pt{} is exposed via the \texttt{--search parallel-tempering} flag:
+A production \pt{} surface would expose a search mode like:
 \begin{verbatim}
 bisect state --state TX --year 2020 \
   --search parallel-tempering \
@@ -255,7 +255,7 @@ bisect state --state TX --year 2020 \
   --percentile 0.0
 \end{verbatim}
 
-YAML configuration:
+Target YAML configuration:
 \begin{verbatim}
 algorithm:
   structure: ratio-optimal
@@ -267,6 +267,9 @@ algorithm:
   pt_hot_tolerance: 0.05
   percentile: 0.0
 \end{verbatim}
+
+This command shape is a design target unless the current build exposes the
+corresponding CLI flags and tests.
 
 \subsection{Audit Chain}
 

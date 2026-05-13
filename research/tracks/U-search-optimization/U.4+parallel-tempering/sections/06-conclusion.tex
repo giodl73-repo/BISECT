@@ -47,13 +47,11 @@ The recommended decision rule for practitioners is:
 \end{itemize}
 
 \paragraph{Implementation.}
-\pt{} redistricting is implemented in the \texttt{bisect} binary under
-\texttt{--search parallel-tempering}, with parameters \texttt{--pt-replicas},
-\texttt{--pt-swap-interval}, \texttt{--pt-cold-tol}, and \texttt{--pt-hot-tol}.
-The \texttt{ParallelTemperingChain} struct lives in
-\texttt{redist-ensemble/src/parallel\_tempering.rs} and exposes
-\texttt{swap\_acceptance\_rate()}, \texttt{cold\_chain\_ec\_mean()},
-and \texttt{select\_plan(p)} as the primary API.
+\pt{} redistricting should be implemented as a package-backed search mode
+before production claims are made.  The expected implementation surface is a
+chain object exposing swap acceptance, cold-chain diagnostics, selected-plan
+export, and RPLAN/RCTX verifier status; absent that checked-in path, this paper
+is a method design and diagnostic protocol.
 
 \paragraph{Legal and Practitioner Use.}
 \pt{} is appropriate for practitioners who require the highest-quality single

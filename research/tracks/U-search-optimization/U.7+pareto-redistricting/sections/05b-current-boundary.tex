@@ -1,0 +1,14 @@
+\section{Current Implementation and Evidence Boundary}
+
+The current \texttt{bisect-pareto} crate implements NSGA-II frontier generation
+and selected-frontier packages with RPLAN/RCTX sidecars.  That supports an
+auditable selected-frontier record, not a guarantee that the sampled frontier is
+the complete mathematical Pareto frontier.  ``Pareto-optimal'' in this context
+means non-dominated within the generated candidate population unless an exact
+certificate says otherwise.
+
+Legal posture claims such as enacted-plan dominance require the full candidate
+set definition, objective functions, selected frontier index, audit certificate,
+and verifier result.  Without those artifacts, the paper should be read as a
+method and selection-record design rather than evidence about a particular
+state's enacted plan.

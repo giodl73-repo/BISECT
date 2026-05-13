@@ -1,0 +1,14 @@
+\section{Current Implementation Boundary}
+
+The current U-track implementation family now includes exact-method substrates
+(\texttt{bisect-ilp}, \texttt{bisect-column}), heuristic and frontier substrates
+(\texttt{bisect-local-search}, \texttt{bisect-pareto},
+\texttt{bisect-ensemble}, \texttt{bisect-multiscale}), and verifier-facing
+RPLAN/RCTX packages.  Certification language should follow the artifact:
+solver proof, bound report, heuristic diagnostic, selected-frontier package, or
+final-plan audit certificate.
+
+The key rule remains unchanged but is now more operational: never let a
+heuristic diagnostic masquerade as a proof, and never let an audit certificate
+for declared context become a claim that the plan is legally sufficient in the
+world.

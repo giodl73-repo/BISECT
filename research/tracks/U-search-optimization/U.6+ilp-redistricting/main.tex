@@ -80,10 +80,10 @@ Every structure-layer algorithm in the redistricting literature --- \metis{},
 simulated annealing, Centroidal Voronoi Districts, BFS region-growing --- is
 heuristic: each produces a valid plan but cannot certify that no valid plan
 achieves lower edge cuts.
-We introduce \ilp{} redistricting, which finds the \emph{provably optimal}
-edge-cut plan via Integer Linear Programming and can therefore issue the
-certificate: ``no valid plan with the specified population balance has fewer
-cut edges than the submitted plan.''
+We introduce \ilp{} redistricting as the exact-optimization boundary: when a
+solver certificate is present, the package can prove that no valid plan under
+the declared model and population balance has fewer cut edges than the submitted
+plan.
 
 The formulation uses binary assignment variables $x_{t,d} \in \{0,1\}$,
 cut-edge indicators $z_{t,t'}$ for undirected edges $t < t'$, and
@@ -92,18 +92,19 @@ both-endpoint capacity bound $f_{t,t',d} \leq (n-1)\cdot\min(x_{t,d},
 x_{t',d})$.
 The objective $\min\sum_{t<t'} z_{t,t'}$ counts each cut edge exactly once.
 
-Exact optimisation is tractable only for small instances ($n \leq 500$ tracts).
+Exact optimisation is tractable only for small instances and solver-bounded
+subproblems.
 The primary use cases are: single-district states (VT, ND, WY, AK, DE, SD,
 $k=1$, trivially optimal with EC$= 0$); two-district states (NH, RI, $k=2$,
 known-optimal solutions reachable in under 60\,s); and bisection nodes of
 larger states where the subgraph is small ($n/k \leq 500$).
-For $n > 500$, the implementation falls back to \metis{} with a warning.
+For larger instances, ILP should be treated as a benchmark, formulation, or
+subproblem method unless an archived solver package proves the stated bound.
 
-Empirical comparison on small instances shows that \ilp{} matches or improves
-on the best heuristic plans: on NH ($k=2$), \ilp{} achieves an edge cut equal
-to or better than 1{,}000-seed \be{} in 47\,s average solve time.
-The retained MPS file enables independent auditor verification: any external
-solver can reload the formulation and confirm the submitted plan's optimality.
+Empirical comparison on small instances should be tied to retained solver
+artifacts.  A retained model file and solver report enable independent auditor
+verification only when the file is a valid replayable formulation and the solver
+certificate records incumbent, bound, gap, and status.
 \end{abstract}
 
 \tableofcontents
@@ -114,6 +115,7 @@ solver can reload the formulation and confirm the submitted plan's optimality.
 \input{sections/03-algorithm}
 \input{sections/04-results}
 \input{sections/05-legal}
+\input{sections/05b-current-boundary}
 \input{sections/06-conclusion}
 
 \bibliographystyle{plainnat}

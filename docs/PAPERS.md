@@ -74,12 +74,12 @@ The search, optimization, certification, and algorithm-selection layer. Once con
 |------|-------|-----|------|
 | U.0 | Search and Optimization Overview — taxonomy from construction to certification | [PDF](papers/U.0+search-optimization-overview.pdf) | reviewed draft |
 | U.1 | ConvergenceSweep — T=600 statutory seed formula | [PDF](papers/U.1+convergence-sweep.pdf) | `--search convergence` |
-| U.2 | Parameter Sensitivity — partisanship insensitive to tuning | [PDF](papers/U.2+parameter-sensitivity.pdf) | tuning/robustness |
-| U.3 | Simulated Annealing Bisection — cooling the edge-cut objective in the bisection tree | [PDF](papers/U.3+simulated-annealing.pdf) | `--structure simulated-annealing` |
-| U.4 | Parallel Tempering — multi-chain replica exchange MCMC | [PDF](papers/U.4+parallel-tempering.pdf) | `--search parallel-tempering` |
-| U.5 | Adaptive Multi-scale MCMC — self-tuning alpha via Robbins-Monro | [PDF](papers/U.5+adaptive-multiscale.pdf) | `--search multiscale-adaptive` |
-| U.6 | Exact Redistricting via ILP — certifiable optimality for small instances | [PDF](papers/U.6+ilp-redistricting.pdf) | `--structure ilp`; exact certification |
-| U.7 | Pareto-Optimal Redistricting — transparent trade-offs via NSGA-II | [PDF](papers/U.7+pareto-redistricting.pdf) | `bisect pareto` |
+| U.2 | Parameter Sensitivity — evidence protocol for tuning robustness | [PDF](papers/U.2+parameter-sensitivity.pdf) | package-backed sweep needed |
+| U.3 | Simulated Annealing Bisection — cooling the edge-cut objective in the bisection tree | [PDF](papers/U.3+simulated-annealing.pdf) | heuristic/local-search boundary |
+| U.4 | Parallel Tempering — multi-chain replica exchange MCMC | [PDF](papers/U.4+parallel-tempering.pdf) | method design; CLI path pending |
+| U.5 | Adaptive Multi-scale MCMC — self-tuning alpha via Robbins-Monro | [PDF](papers/U.5+adaptive-multiscale.pdf) | `bisect-multiscale` substrate |
+| U.6 | Exact Redistricting via ILP — model-scoped certificates for small instances | [PDF](papers/U.6+ilp-redistricting.pdf) | solver package required |
+| U.7 | Pareto-Optimal Redistricting — transparent trade-offs via NSGA-II | [PDF](papers/U.7+pareto-redistricting.pdf) | `bisect-pareto` selected-frontier package |
 | U.8 | PercentileSweep — Statutory Choice of Legal Posture | [PDF](papers/U.8+percentile-sweep.pdf) | legal posture selection |
 | U.9 | BisectionEnsemble — Local ReCom at Each Bisection Node | [PDF](papers/U.9+bisection-ensemble.pdf) | local ensemble search |
 | U.10 | bisect-ensemble — Rust ReCom at 2500× Speed | [PDF](papers/U.10+bisect-ensemble.pdf) | high-performance search implementation |

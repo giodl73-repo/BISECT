@@ -1,0 +1,13 @@
+\section{Current Implementation and Evidence Boundary}
+
+Exact optimization claims require an explicit solver certificate.  The current
+\texttt{bisect-ilp} crate contains formulation summaries, solver-result and
+certificate types, and tests for the exact-method boundary; full MPS/LP export
+and external solver replay are separate evidence layers that must be present
+before claiming a courtroom-grade optimum for a real state.
+
+Accordingly, this paper should distinguish three statuses: formulation-only,
+bounded solve, and proven optimum.  A proven optimum must name the model,
+instance hash, solver and version, objective, gap tolerance, incumbent, bound,
+and verifier path.  For larger states, ILP remains a benchmark or subproblem
+tool unless the archived package proves otherwise.

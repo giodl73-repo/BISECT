@@ -1,0 +1,13 @@
+\section{Current Implementation and Evidence Boundary}
+
+Adaptive multiscale search has a current Rust substrate in
+\texttt{bisect-multiscale}, including Robbins--Monro-style tuning parameters.
+The evidence boundary remains narrower than the mathematical convergence
+language: adaptation can stabilize a tuning trace under a declared target, but
+that does not prove representative sampling or legal sufficiency of the selected
+plan.
+
+Published claims should name the adaptation schedule, target acceptance rate,
+resolution hierarchy, seed, diagnostics, and package hashes.  Without those
+artifacts, empirical statements about state-specific optimal $\alpha$ values
+should be treated as calibration examples rather than final benchmark results.

@@ -1,0 +1,12 @@
+\section{Current Implementation Boundary}
+
+Multi-objective selection now has a concrete selected-frontier package pattern
+through \texttt{bisect-pareto}: selected index, objective vector, RPLAN/RCTX
+sidecars, manifest metadata, and audit-certificate path.  The selection record
+must travel with the plan because the same assignment can carry different
+meaning under a different candidate set or objective definition.
+
+This paper should not imply that a selected plan is neutral because it came from
+a frontier.  The defensible claim is narrower: the package records which
+candidate was selected, from what declared set, under what objective vector and
+selection rule, and whether the selected plan passed the declared verifier.

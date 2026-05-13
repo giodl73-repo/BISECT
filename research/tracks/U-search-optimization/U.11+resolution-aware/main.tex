@@ -123,16 +123,15 @@ We prove this criterion correctly propagates geographic adjacency from the
 tract level up.
 
 The system supports three multi-scale options:
-Option~A (BG$\to$tract), Option~B (tract$\to$county, fully implemented),
-and Option~C (BG$\to$county).
+Option~A (BG$\to$tract), Option~B (tract$\to$county, current primary
+substrate), and Option~C (BG$\to$county).
 Every plan manifest records \texttt{plan\_resolution}, \texttt{n\_units},
 and \texttt{unit\_type}; multi-scale manifests additionally record
 \texttt{fine\_to\_coarse\_formula} so an independent verifier can reconstruct
 the partition without code.
-Empirical comparison on Texas ($k=38$) shows that Option~B multi-scale chains
-reduce lag-100 autocorrelation by approximately 27\% (estimated$^\dagger$) relative
-to single-scale ReCom at tract level,
-providing a concrete efficiency benefit alongside the flexibility gain.
+The empirical comparison to archive is whether Option~B multi-scale chains
+reduce lag-100 autocorrelation relative to single-scale ReCom at tract level,
+providing a concrete efficiency claim alongside the flexibility gain.
 \end{abstract}
 
 \tableofcontents
@@ -144,6 +143,7 @@ providing a concrete efficiency benefit alongside the flexibility gain.
 \input{sections/04-manifests}
 \input{sections/05-empirical}
 \input{sections/05b-legal}
+\input{sections/05c-current-boundary}
 \input{sections/06-conclusion}
 
 \bibliographystyle{plainnat}

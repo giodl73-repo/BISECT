@@ -32,7 +32,8 @@ For the edge-cut minimisation objective used throughout this platform,
 the certificate reads:
 
 \begin{quote}
-\textit{``No valid redistricting plan for this state, with the given
+\textit{``Under this declared model and package instance, no valid
+redistricting plan for this state, with the given
 population balance tolerance and contiguity requirement, has fewer
 than $\mathrm{EC}^* = k$ cut edges. The submitted plan achieves this
 bound and is therefore globally optimal.''}
@@ -44,10 +45,9 @@ This is a statement that no heuristic can produce.
 
 \ilp{} redistricting is not a general replacement for \metis{}.
 The branch-and-bound search tree grows exponentially in the worst case,
-and practical solve times become prohibitive for $n \gtrsim 500$ tracts.
-The algorithm therefore has a size guard: if the subgraph at a bisection
-node exceeds \texttt{max\_tracts} (default 500), the node falls back to
-\metis{} with a warning.
+and practical solve times become prohibitive for large tract graphs.
+The implementation must therefore expose explicit status: proven optimum,
+bounded solve, formulation-only, solver unavailable, or heuristic fallback.
 
 Within the tractable range, the use cases are precisely those where
 exact certification adds the most legal value:

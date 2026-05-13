@@ -1,0 +1,14 @@
+\section{Current Implementation and Evidence Boundary}
+
+Simulated annealing is a heuristic local-improvement path.  It can report the
+best plan encountered under a temperature schedule, proposal kernel, seed, and
+runtime budget, but it does not certify global optimality or sample a
+representative distribution.  Any plan selected by annealing needs the same
+final-plan audit package as other search outputs: assignments, objective values,
+population and contiguity checks, parameter hashes, and lineage.
+
+Within current BISECT architecture, annealing should be treated as a local-search
+family alongside the audited improvement and repair hooks in the modern U-track,
+not as a standalone legal proof.  Claims about percent compactness improvements
+need the archived run packages that define the baseline, seed set, and metric
+versions.

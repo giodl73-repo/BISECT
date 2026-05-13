@@ -1,0 +1,14 @@
+\section{Current Implementation and Evidence Boundary}
+
+\cs{} is a deterministic seed-search rule: it records the best observed seed
+under a fixed stopping threshold.  Its certificate is a search ledger, not a
+proof that no untried seed or alternative algorithm could improve the result.
+For publication-grade use, the run should be carried in an RPLAN/RCTX package
+with seed domain separation, threshold, objective definition, attempted-seed
+range, best-seed lineage, and verifier status.
+
+The paper's Georgia threshold example should be treated as a documented
+calibration target unless accompanied by the archived 50-state sweep package
+that produced it.  Legal or statutory use depends on the disclosed stopping
+rule and audit trail, not on an assertion that the search has converged in an
+absolute mathematical sense.

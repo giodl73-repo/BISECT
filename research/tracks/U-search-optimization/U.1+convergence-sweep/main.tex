@@ -100,13 +100,13 @@ $\ECnorm$.
 The final map is the seed achieving the lowest observed $\ECnorm$ among the
 seeds tried before the convergence halt.
 
-The central contribution is an empirical certification of a statutory stopping
-threshold $T$.
-Using full 50-state sweep data from B.7, we identify Georgia as the hardest
+The central contribution is a reproducible stopping-threshold protocol for
+statutory seed search.
+Using the B.7 sweep as a calibration target, we identify Georgia as the hardest
 convergence case: the algorithm last improves at seed $s_0 + 489$ and then runs
 511 consecutive non-improving seeds before halting.
 A threshold $T = 500$ would therefore \emph{fail} Georgia as a convergence
-certificate: it would stop 11 seeds before the observed non-improvement tail is
+ledger: it would stop 11 seeds before the observed non-improvement tail is
 complete.
 
 We recommend $\Tstat = 600$ for statutory use, giving an 89-seed margin above
@@ -117,9 +117,9 @@ The algorithm is already implemented as
 \texttt{SeedCompositor::ConvergenceSweep\{threshold\}} in the \texttt{bisect}
 binary.
 \cs{} closes the final procedural gap in B.02's constitutional argument: the
-\dia{} now specifies not just an algorithm (\ar{}) but a reproducible seed
-search, an auditable stopping rule, and a certificate for the best plan observed
-under that threshold.
+\dia{} can specify not just an algorithm (\ar{}) but a reproducible seed
+search, an auditable stopping rule, and a package ledger for the best plan
+observed under that threshold.
 \end{abstract}
 
 \tableofcontents
@@ -130,6 +130,7 @@ under that threshold.
 \input{sections/03-t-sufficiency}
 \input{sections/04-sha256-seed}
 \input{sections/05-implementation}
+\input{sections/05b-current-boundary}
 \input{sections/06-conclusion}
 
 \bibliographystyle{plainnat}

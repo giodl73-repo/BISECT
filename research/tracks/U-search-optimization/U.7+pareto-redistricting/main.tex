@@ -98,18 +98,17 @@ neutrality), and (3) $\VRA$: minority VAP shortfall below 50\% in
 formerly majority-minority districts (VRA compliance).
 All three are minimised.
 
-The central legal application is the \emph{enacted-plan dominance test}:
-if the NSGA-II frontier contains a plan that strictly beats the enacted plan
-on all three objectives simultaneously, the legislature chose a provably worse
-option on its own stated criteria.
-This is direct, non-statistical evidence of gerrymandering, distinct in
-character from ensemble-based arguments.
+The central legal posture is the \emph{enacted-plan dominance test}: if the
+archived NSGA-II candidate set contains a valid plan that strictly beats the
+enacted plan on all declared objectives, the selected-frontier package supports
+an argument that the enacted plan was worse on its own stated criteria.  This is
+a record-based argument, not by itself a legal conclusion.
 
 We present NSGA-II adapted for redistricting plans as chromosomes, with a
 ReCom-style crossover operator and a single boundary-tract flip mutation.
 Empirical results on NC ($k=14$, 14 congressional districts) and WI ($k=8$)
-demonstrate meaningful Pareto frontiers of typically 18--24 plans and characterise
-enacted-plan dominance for both states.
+should be cited only with the archived candidate population, objective vectors,
+selected-frontier package, and verifier output.
 
 \textbf{D\_seats note:} With NC $k=14$, $\Dseats$ takes only $\sim$14 discrete
 values.  The Pareto ordering may then collapse to a two-dimensional
@@ -126,6 +125,7 @@ Phase~2 will introduce vote margin as a continuous proxy.
 \input{sections/03-algorithm}
 \input{sections/04-results}
 \input{sections/05-legal}
+\input{sections/05b-current-boundary}
 \input{sections/06-conclusion}
 
 \bibliographystyle{plainnat}

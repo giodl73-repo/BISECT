@@ -90,19 +90,15 @@ where $\beta = 1/\varepsilon$ is the inverse tolerance.
 Hot chains mix freely across plan space; the cold chain inherits this global
 diversity via accepted swaps.
 
-Empirically, \pt{} with $N_{\mathrm{replicas}} = 4$ achieves lower cold-chain
-edge cut than single-chain \fr{} on Texas ($k=38$), where local-optima
-trapping is most severe, with modest improvements on North Carolina ($k=14$)
-and Wisconsin ($k=8$) where single-chain mixing is adequate.
-Observed swap acceptance rates of $18$--$24\%$ are near the empirical
-target of ${\approx}23\%$ for Gaussian systems (Kone \& Kofke 2005),
-providing evidence that the geometric ladder is well-calibrated for redistricting
-chains.
+The empirical claim to archive is whether \pt{} with
+$N_{\mathrm{replicas}} = 4$ lowers cold-chain edge cut relative to a
+single-chain baseline on large-$k$ states such as Texas, and whether observed
+swap acceptance rates are near the empirical ${\approx}23\%$ target for
+Gaussian systems (Kone \& Kofke 2005).
 The cold chain returns the distribution-correct plan; the hot chains serve
 only to inject global diversity.
-\pt{} is implemented as \texttt{--search parallel-tempering} in the
-\texttt{bisect} binary and is the recommended search strategy for states
-with $k \ge 30$.
+\pt{} should be treated as a search-layer method pending a checked-in CLI,
+test, and package path for a production mode.
 \end{abstract}
 
 \tableofcontents
@@ -113,6 +109,7 @@ with $k \ge 30$.
 \input{sections/03-algorithm}
 \input{sections/04-empirical}
 \input{sections/05-when-to-use}
+\input{sections/05b-current-boundary}
 \input{sections/06-conclusion}
 
 \bibliographystyle{plainnat}

@@ -84,12 +84,11 @@ Crucially, the algorithm tracks the \emph{best-ever} plan seen, not
 the final state after cooling; this discards the exploration overhead
 and returns the lowest edge-cut bisection found during the run.
 
-Empirically, \sa{} with $\texttt{steps\_per\_tract} = 10$ achieves
-10--18\% Polsby-Popper improvement over baseline \metis{} bisection
-on North Carolina ($k=14$), Wisconsin ($k=8$), and Texas ($k=38$).
-This improvement lies between multi-seed \metis{} and \be{} at $T=100$,
-at a runtime cost that scales as $O(\texttt{steps\_per\_tract} \times n)$
-per node.
+The empirical claim to archive is whether \sa{} with
+$\texttt{steps\_per\_tract} = 10$ improves Polsby-Popper over baseline
+\metis{} bisection on North Carolina ($k=14$), Wisconsin ($k=8$), and Texas
+($k=38$), at runtime scaling as
+$O(\texttt{steps\_per\_tract} \times n)$ per node.
 \sa{} is a deterministic optimiser: it produces a single high-quality
 bisection per node rather than a distributional sample.
 We contrast it with \recom{} (Markov chain sampling) and \be{}
@@ -105,6 +104,7 @@ We contrast it with \recom{} (Markov chain sampling) and \be{}
 \input{sections/04-empirical}
 \input{sections/05-sensitivity}
 \input{sections/05b-legal}
+\input{sections/05c-current-boundary}
 \input{sections/06-conclusion}
 
 \bibliographystyle{plainnat}

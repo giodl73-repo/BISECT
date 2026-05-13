@@ -37,7 +37,7 @@ must name the deployed behavior, the ideal definition, and the evidence ceiling.
 |---|---|---|
 | 01 - K.2 Reock correctness pass | DONE | `pulses/01+k2-reock-correctness.md`; K.2 source/PDF, K.0/K.7 caveat propagation, compactness scorecard |
 | 02 - J apportionment implementation pass | DONE | `pulses/02+j6-apportionment-implementation.md`; J.6 current API/test/verification boundary, J.0-J.5 bridge caveats, rebuilt J PDFs |
-| 03 - Older search paper refresh | TODO | U.0-U.7, U.11, U.13-U.15 implementation/evidence-boundary pass |
+| 03 - Older search paper refresh | DONE | `pulses/03+older-search-paper-refresh.md`; U.0-U.7, U.11, U.13-U.15 implementation/evidence-boundary pass |
 | 04 - Ensemble data cleanup | TODO | G.1-G.3/G.5/G.12 validation and diagnostic evidence refresh |
 
 ## Validation Gate
@@ -56,5 +56,5 @@ git diff --check
 
 ## Next
 
-Pulse 02 removed the J.6 stale implementation blocker. Continue with pulse 03:
-older U search papers that need implementation/evidence-boundary refresh.
+Pulse 03 refreshed the older U search papers. Continue with pulse 04:
+G.1-G.3/G.5/G.12 ensemble validation and diagnostic evidence cleanup.

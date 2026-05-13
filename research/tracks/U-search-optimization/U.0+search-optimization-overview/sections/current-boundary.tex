@@ -1,0 +1,15 @@
+\section{Current Implementation Boundary}
+
+The U-series should now be read through the package boundary established by
+U.10 and U.16--U.20.  Search and optimization methods are not accepted merely
+because they produce plausible maps: final-plan claims need RPLAN/RCTX lineage,
+hash-bound manifests, verifier status, and a profile-scoped certificate.
+
+Older papers in this track may describe algorithms as if they were complete
+CLI workflows.  The current implementation boundary is narrower.  Some methods
+are mature library substrates, some are audited vertical slices, and some remain
+methodological papers pending checked-in empirical packages.  The claim boundary
+is therefore: search papers can explain candidate generation, diagnostics, and
+selection logic; they cannot by themselves prove legal sufficiency, statistical
+representativeness, or global optimality unless the cited package includes the
+corresponding verifier or solver certificate.

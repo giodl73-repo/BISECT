@@ -85,17 +85,16 @@ Every $\Delta = 50$ steps the algorithm measures the observed coarse acceptance
 rate in the current window; if it exceeds the target (0.30) $\alpha$ is
 increased; if below, $\alpha$ is decreased.
 The Robbins-Monro step size $\gamma_t = \gamma_0 / \sqrt{t}$ satisfies the
-classical convergence conditions ($\sum \gamma_t = \infty$, $\sum \gamma_t^2 < \infty$),
-so the alpha trace converges to the state-specific optimal under a monotonicity
-assumption empirically satisfied for typical redistricting county graphs.
+classical stochastic-approximation conditions
+($\sum \gamma_t = \infty$, $\sum \gamma_t^2 < \infty$), but the resulting
+trace should be interpreted as a calibrated tuning path rather than a proof of
+statewide optimality.
 
-Empirically, \ams{} converges: North Carolina ($k=14$) stabilises at
-$\alpha^* \approx 0.28$, Texas ($k=38$) at $\approx 0.33$, and Iowa ($k=4$)
-at $\approx 0.17$.
-Autocorrelation of the edge-cut objective at lag 100 matches or improves on
-fixed-$\alpha$ \ms{} in all three states, with no manual tuning.
-\ams{} is a drop-in replacement for \texttt{--search multiscale}, exposed as
-\texttt{--search multiscale-adaptive}.
+The empirical claim to archive is whether North Carolina ($k=14$), Texas
+($k=38$), and Iowa ($k=4$) stabilize at distinct $\alpha$ values and whether
+lag-100 edge-cut autocorrelation matches or improves on fixed-$\alpha$ \ms{}.
+\ams{} has a Rust substrate in \texttt{bisect-multiscale}; production CLI claims
+need the corresponding checked-in command and package path.
 \end{abstract}
 
 \tableofcontents
@@ -106,6 +105,7 @@ fixed-$\alpha$ \ms{} in all three states, with no manual tuning.
 \input{sections/03-algorithm}
 \input{sections/04-convergence}
 \input{sections/05-comparison}
+\input{sections/05b-current-boundary}
 \input{sections/06-conclusion}
 
 \bibliographystyle{plainnat}

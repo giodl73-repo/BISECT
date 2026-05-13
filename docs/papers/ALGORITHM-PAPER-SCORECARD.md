@@ -81,22 +81,22 @@ Score bands:
 
 | Paper | P1 | P2 | P3 | P4 | P5 | P6 | Total | Priority |
 |---|---:|---:|---:|---:|---:|---:|---:|---|
-| U.0 Search Optimization Overview | 3.3 | 3.2 | 3.0 | 3.4 | 3.5 | 3.2 | 19.6 | Needs architecture refresh |
-| U.1 ConvergenceSweep | 3.7 | 3.5 | 3.5 | 3.8 | 4.0 | 3.5 | 22.0 | Strong |
-| U.2 Parameter Sensitivity | 3.0 | 2.9 | 2.9 | 3.0 | 3.3 | 3.0 | 18.1 | Needs current evidence protocol |
-| U.3 Simulated Annealing | 3.0 | 3.2 | 2.8 | 3.0 | 3.3 | 3.0 | 18.3 | Needs modern search/status framing |
-| U.4 Parallel Tempering | 3.0 | 3.1 | 2.8 | 3.0 | 3.3 | 3.0 | 18.2 | Needs chain diagnostics clarity |
-| U.5 Adaptive Multiscale | 3.0 | 3.1 | 2.8 | 3.0 | 3.3 | 3.0 | 18.2 | Needs implementation/evidence pass |
-| U.6 ILP Redistricting | 3.0 | 3.2 | 2.9 | 3.0 | 3.3 | 3.0 | 18.4 | Superseded by U.16; align proof language |
-| U.7 Pareto Redistricting | 3.1 | 3.2 | 3.0 | 3.1 | 3.4 | 3.1 | 18.9 | Align with U.19 selected-frontier artifacts |
+| U.0 Search Optimization Overview | 3.5 | 3.4 | 3.2 | 3.6 | 3.6 | 3.4 | 20.7 | Strong; package boundary refreshed |
+| U.1 ConvergenceSweep | 3.7 | 3.6 | 3.5 | 3.9 | 4.0 | 3.6 | 22.3 | Strong; search-ledger boundary |
+| U.2 Parameter Sensitivity | 3.3 | 3.2 | 3.1 | 3.4 | 3.4 | 3.2 | 19.6 | Serviceable-plus; package-backed sweep pending |
+| U.3 Simulated Annealing | 3.3 | 3.4 | 3.1 | 3.4 | 3.4 | 3.2 | 19.8 | Serviceable-plus; heuristic boundary |
+| U.4 Parallel Tempering | 3.3 | 3.3 | 3.1 | 3.4 | 3.4 | 3.2 | 19.7 | Serviceable-plus; CLI/package path pending |
+| U.5 Adaptive Multiscale | 3.4 | 3.4 | 3.2 | 3.5 | 3.4 | 3.3 | 20.2 | Strong; bisect-multiscale boundary |
+| U.6 ILP Redistricting | 3.4 | 3.5 | 3.2 | 3.6 | 3.4 | 3.3 | 20.4 | Strong; exact status language aligned |
+| U.7 Pareto Redistricting | 3.5 | 3.5 | 3.3 | 3.6 | 3.5 | 3.4 | 20.8 | Strong; selected-frontier artifact aligned |
 | U.8 PercentileSweep | 3.7 | 3.5 | 3.5 | 3.9 | 4.0 | 3.5 | 22.1 | Strong |
 | U.9 BisectionEnsemble | 3.6 | 3.5 | 3.4 | 3.7 | 4.0 | 3.5 | 21.7 | Strong |
 | U.10 bisect-ensemble | 3.8 | 3.7 | 3.6 | 3.9 | 4.0 | 3.6 | 22.6 | Golden |
-| U.11 Resolution-Aware | 3.1 | 3.0 | 3.0 | 3.1 | 3.3 | 3.0 | 18.5 | Needs algorithm-selection framing |
+| U.11 Resolution-Aware | 3.4 | 3.3 | 3.2 | 3.5 | 3.4 | 3.3 | 20.1 | Strong; resolution package boundary |
 | U.12 Algorithm-Selection Matrix | 3.8 | 3.6 | 3.6 | 3.9 | 4.0 | 3.7 | 22.6 | Golden |
-| U.13 Exact-vs-Heuristic Certification | 3.6 | 3.4 | 3.3 | 3.8 | 3.5 | 3.4 | 21.0 | Strong; update after U.16-U.20 |
-| U.14 Multi-Objective Selection | 3.4 | 3.3 | 3.2 | 3.5 | 3.5 | 3.3 | 20.2 | Serviceable; needs selected-plan examples |
-| U.15 Legal Postures for Search | 3.5 | 3.1 | 3.1 | 3.8 | 3.5 | 3.3 | 20.3 | Serviceable; legal posture examples needed |
+| U.13 Exact-vs-Heuristic Certification | 3.7 | 3.6 | 3.5 | 3.9 | 3.6 | 3.6 | 21.9 | Strong; U.16-U.20 boundary integrated |
+| U.14 Multi-Objective Selection | 3.6 | 3.5 | 3.4 | 3.7 | 3.6 | 3.5 | 21.3 | Strong; selected-frontier record aligned |
+| U.15 Legal Postures for Search | 3.7 | 3.4 | 3.4 | 3.9 | 3.6 | 3.6 | 21.6 | Strong; artifact-class posture aligned |
 | U.16 Branch-and-Cut | 3.8 | 3.7 | 3.6 | 3.9 | 4.0 | 3.7 | 22.7 | Golden |
 | U.17 Branch-and-Price | 3.8 | 3.8 | 3.6 | 3.9 | 4.0 | 3.7 | 22.8 | Golden |
 | U.18 Large-Neighborhood Search | 3.8 | 3.8 | 3.7 | 3.9 | 4.0 | 3.8 | 23.0 | Golden |
@@ -158,20 +158,20 @@ Score bands:
 
 ## Highest-Priority Lifts
 
-1. Older search pass: U.0-U.7, U.11, and U.13-U.15 need the same
-   implementation/evidence-boundary refresh now applied to T.5-T.13.
-2. Ensemble data cleanup: G.1-G.3/G.5/G.12 need validation and diagnostic
+1. Ensemble data cleanup: G.1-G.3/G.5/G.12 need validation and diagnostic
    evidence refresh.
-3. Metric follow-through: K.2/K.0/K.7 no longer have the Welzl/implementation
+2. Metric follow-through: K.2/K.0/K.7 no longer have the Welzl/implementation
    blocker, but exact polygon-MBC Reock and archived same-metric packages remain
    future evidence lifts.
+3. Package evidence follow-through: U.2/U.4 still need archived sweep or
+   production CLI packages before they can score as implementation papers.
 
 ## Track Summary
 
 | Track family | Included rows | Current center of gravity | Main gap |
 |---|---:|---|---|
 | B/T construction foundations | 26 | Strong for reviewed/new slices, serviceable for older slices; T.5-T.7 golden and T.8/T.9 strong | legacy visuals and audit/package bridges |
-| U search/optimization/audit | 21 | Strong, with U.10 and U.16-U.20 golden | refresh older U.2-U.7 and U.13-U.15 |
+| U search/optimization/audit | 21 | Strong after older-paper boundary pass; U.10 and U.16-U.20 golden | archived sweep/CLI packages for U.2/U.4 |
 | G ensemble/sampling | 16 | Strong but uneven; G.4/G.7/G.10/G.11 now golden | older G refresh and data-validation cleanup |
 | J apportionment | 7 | Serviceable-plus after implementation-boundary pass | Census/SHA fixtures and Hamilton public API remain future work |
 | K compactness metrics | 8 | Strong/serviceable-plus after K.2 disclosure pass | exact polygon-MBC evidence and K.5 minor revision |

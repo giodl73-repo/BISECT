@@ -66,22 +66,20 @@ A recurring question from legislative staff and DIA administrators is:
 ``What if the algorithm parameters are tweaked?''
 Could a hostile legislature exploit parameter freedom to produce
 a partisan outcome while claiming algorithmic neutrality?
-This paper answers the question empirically through a 50-state
-parameter sweep of five key parameters: METIS imbalance factor
+This paper gives the empirical protocol for a 50-state parameter sweep of five
+key parameters: METIS imbalance factor
 $\ufactor \in [0.1\%, 5\%]$, county edge weight $\acounty \in [1.0, 10.0]$,
 \cs{} threshold $T \in [100, 1{,}000]$, area swing $\aswing \in [1.05, 1.20]$,
 and VRA boost weight $\wvra \in [0.2, 0.6]$.
-The central finding is that \emph{partisan seat counts are insensitive to
-parameter tuning}: the maximum variation across the full parameter range is
-$\Delta D\text{-seats} \leq 0.3$ nationally, comparable to sampling noise.
-Compactness, by contrast, is sensitive: $\ufactor$ alone drives Polsby-Popper
-variation of $\pm 0.010$ across its range.
-This finding is consistent with B.0's bakeoff result that
+The target finding to test is whether partisan seat counts are insensitive to
+parameter tuning under the archived sweep package, while compactness is more
+sensitive to imbalance and county-weight choices.
+This hypothesis is consistent with B.0's bakeoff result that
 algorithm structure---not parameter settings within a fixed algorithm---is
 the key lever for partisan outcomes.
-We conclude that fixing parameters in statute is safe for partisan
-neutrality, while the optimal $\ufactor$ and $\acounty$ values
-identified here should be encoded as DIA defaults.
+We conclude that statutory parameter defaults should be justified by checked-in
+sweep packages rather than by informal tuning, and that any proposed defaults
+should travel with the parameter grid and output hashes that support them.
 \end{abstract}
 
 \tableofcontents
@@ -93,6 +91,7 @@ identified here should be encoded as DIA defaults.
 \input{sections/04-results}
 \input{sections/05-key-finding}
 \input{sections/06-implications}
+\input{sections/06b-current-boundary}
 \input{sections/07-conclusion}
 
 \bibliographystyle{plainnat}

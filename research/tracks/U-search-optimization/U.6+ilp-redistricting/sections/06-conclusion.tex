@@ -1,14 +1,10 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-We have introduced \ilp{} redistricting, the first structure-layer algorithm
-in this platform to provide a mathematical optimality certificate for
-edge-cut compactness.
-For small instances ($n \leq 500$ tracts), the ILP formulation with
-both-endpoint MTZ contiguity constraints and a single cut-edge indicator
-per undirected edge finds the provably optimal redistricting plan in
-practical solve times: under 50\,s for NH ($n=260$, $k=2$) and under
-1\,s for single-district states.
+We have introduced \ilp{} redistricting as the exact-optimization boundary for
+edge-cut compactness.  For small instances, the ILP formulation can support a
+mathematical optimality certificate when the package includes the replayable
+model, solver status, incumbent, bound, and gap.
 
 \paragraph{What ILP is the right tool for.}
 \ilp{} redistricting is the correct choice in two situations:
@@ -16,9 +12,8 @@ practical solve times: under 50\,s for NH ($n=260$, $k=2$) and under
 \begin{enumerate}
 \item \textbf{Small-state certification.}
   For VT, ND, WY, AK, DE, SD, MT ($k=1$) and NH, RI ($k=2$), \ilp{}
-  is strictly superior to any heuristic: it finds a better plan (lower EC)
-  in competitive or better time, and adds the certificate that no heuristic
-  can provide.
+  can be superior to a heuristic when the solver certificate is archived:
+  it can add a model-scoped certificate that no heuristic can provide.
 
 \item \textbf{Bisection node certification.}
   For large-$k$ states where each bisection node has $n \leq 500$ tracts,
@@ -29,10 +24,10 @@ practical solve times: under 50\,s for NH ($n=260$, $k=2$) and under
 \end{enumerate}
 
 \paragraph{What ILP is not the right tool for.}
-For production 50-state builds, or any state where bisection nodes exceed
-500 tracts, \metis{} remains the correct default.
-The ILP size guard (default \texttt{max\_tracts = 500}) falls back to
-\metis{} automatically and records the fallback in the audit chain.
+For production 50-state builds, or any state where bisection nodes exceed the
+configured exact-solve limit, \metis{} or another heuristic remains the
+practical default.  Any fallback must be recorded as non-exact in the audit
+chain.
 
 \paragraph{Phase~2 enhancements.}
 Several enhancements are deferred:

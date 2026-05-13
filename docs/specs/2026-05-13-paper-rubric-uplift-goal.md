@@ -1,7 +1,7 @@
 # Paper Rubric Uplift Goal
 
 **Opened:** 2026-05-13
-**Status:** active - pulse 02 complete
+**Status:** active - pulse 03 complete
 
 ## Goal
 
@@ -36,3 +36,13 @@ Welzl/implementation mismatch. The pass should distinguish:
 - [x] J.0-J.5 bridge sections inherit the current implementation boundary.
 - [x] The scorecard and paper review ledger record J-track uplift status.
 - [x] Changed J-track PDFs are rebuilt and copied to `docs/papers/`.
+
+## Pulse 03 Result
+
+- [x] U.0-U.7, U.11, and U.13-U.15 now state current implementation and
+  evidence boundaries.
+- [x] Older search papers no longer rely on unqualified convergence,
+  representativeness, legal-sufficiency, production-CLI, or global-optimality
+  language where only a method/protocol/substrate is present.
+- [x] The scorecard, paper review ledger, and public paper index record U-track
+  uplift status and remaining package-evidence ceilings.
