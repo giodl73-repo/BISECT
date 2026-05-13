@@ -1,0 +1,24 @@
+\section{Proof Model}
+
+The current RCOUNT proof sketch has a deliberately small public surface:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & Public meaning \\
+\midrule
+\texttt{proof\_id} & Stable package-local proof identifier. \\
+\texttt{kind} & Accepted-token or counted-token proof kind. \\
+\texttt{token\_hash} & Anonymized token digest, not a candidate-choice digest. \\
+\texttt{reporting\_unit\_id} & Public reporting unit associated with the proof. \\
+\texttt{candidate\_selections} & Must be empty in the baseline public proof. \\
+\texttt{voter\_id}, \texttt{ballot\_style}, \texttt{issued\_at} & Must be absent in public baseline proofs. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The distinction between accepted and counted matters. An accepted-token proof
+says the public package contains an anonymized accepted-record token. A
+counted-token proof would say the package contains an anonymized counted-record
+token. Neither form says which candidates were selected.

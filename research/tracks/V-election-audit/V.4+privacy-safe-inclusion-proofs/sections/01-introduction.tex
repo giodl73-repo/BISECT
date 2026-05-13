@@ -1,0 +1,13 @@
+\section{Introduction}
+
+Public verification has a sharp privacy edge. A voter should be able to ask
+whether a counted or accepted record is present without gaining an artifact that
+can prove a candidate choice to a buyer, employer, family member, campaign, or
+state actor. The hard rule for RCOUNT is therefore simple: prove inclusion,
+never prove choices.
+
+V.3 described how source and package hashes make public evidence tamper-evident.
+V.4 narrows the problem to voter-facing proof material. The baseline proof is
+not a complete cryptographic voting system. It is a privacy gate over public
+proof records: if the record carries candidate selections or linkable voter
+facts, it fails.

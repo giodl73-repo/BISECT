@@ -1,0 +1,20 @@
+\section{Fixtures}
+
+The positive fixture is \texttt{privacy-inclusion-sketch}. It contains one
+accepted-token proof with an anonymized token hash and no candidate selections:
+\begin{quote}
+\footnotesize
+\begin{verbatim}
+{
+  "proof_id": "proof:accepted-token-001",
+  "kind": "anonymized-accepted-ballot-token",
+  "token_hash": "sha256:aaaaaaaa...",
+  "reporting_unit_id": "syn:precinct:P-001",
+  "candidate_selections": []
+}
+\end{verbatim}
+\end{quote}
+
+The negative fixture is \texttt{choice-bearing-proof}. It changes the same proof
+by adding \texttt{cand-a} to \texttt{candidate\_selections}. That proof must
+fail, even if package arithmetic and source hashes pass.

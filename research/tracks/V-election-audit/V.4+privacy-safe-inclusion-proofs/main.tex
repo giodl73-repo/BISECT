@@ -1,0 +1,42 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{Privacy-Safe Voter Inclusion Proofs}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Voters may reasonably want assurance that an accepted or counted record exists
+without receiving a receipt that proves how they voted. This paper defines the
+baseline RCOUNT privacy gate for inclusion-style proofs. A public proof may
+carry an anonymized token hash and a reporting-unit reference, but it must not
+carry candidate selections, direct voter identity, ballot style, timestamps, or
+other linkable facts that create coercion or vote-buying risk. Using the
+\texttt{privacy-inclusion-sketch} and \texttt{choice-bearing-proof} fixtures, we
+show how RCOUNT can reject choice-bearing artifacts while preserving a narrow
+path toward receipt-safe public verification.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-proof-model}
+\input{sections/03-privacy-gate}
+\input{sections/04-fixtures}
+\input{sections/05-verifier-trace}
+\input{sections/06-boundaries}
+\input{sections/07-conclusion}
+
+\nocite{rcount-overview-2026,rcount-hashing-2026,rcount-substrate-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

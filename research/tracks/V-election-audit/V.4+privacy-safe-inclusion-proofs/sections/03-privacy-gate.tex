@@ -1,0 +1,23 @@
+\section{Privacy Gate}
+
+The \texttt{proof\_privacy\_gate} is intentionally conservative. It rejects a
+proof if it exposes candidate selections, combines voter identity with ballot
+style and timestamps, or uses an invalid token hash. These are mechanical gates,
+not a full privacy proof.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Rejected public field pattern & Risk \\
+\midrule
+Candidate selections in proof & Creates a direct vote-choice receipt. \\
+Voter identity in proof & Links public proof material to a person. \\
+Ballot style plus timestamp & May reidentify a voter in small populations. \\
+Small reporting unit plus rare contest facts & Can create small-cell disclosure risk. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Passing the gate means only that the baseline public record avoids these obvious
+receipt channels. It does not prove end-to-end coercion resistance.
