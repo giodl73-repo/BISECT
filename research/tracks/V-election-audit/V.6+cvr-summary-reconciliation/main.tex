@@ -1,0 +1,42 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{CVR-To-Summary Reconciliation}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Cast-vote records are only useful for public verification if their contest
+interpretations reconcile to the public summaries they support. This paper
+defines the RCOUNT CVR-to-summary contract: ballot-card or CVR-row counts must
+match manifest accounting, contest selections and residuals must sum to counted
+ballots, and aggregated CVR interpretations must match published summary
+totals. The current fixtures exercise that contract with
+\texttt{cvr\_summary\_total}: the positive fixture passes when CVR contest rows
+aggregate to the public summaries, while the negative fixture fails when a CVR
+row is changed without a matching summary change.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-reconciliation-contract}
+\input{sections/03-current-equations}
+\input{sections/04-fixtures}
+\input{sections/05-verifier-trace}
+\input{sections/06-boundaries}
+\input{sections/07-conclusion}
+
+\nocite{rcount-overview-2026,rcount-substrate-2026,rcount-v5-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

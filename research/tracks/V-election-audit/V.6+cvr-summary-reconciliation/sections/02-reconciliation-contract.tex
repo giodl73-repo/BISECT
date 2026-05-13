@@ -1,0 +1,54 @@
+\section{Reconciliation Contract}
+
+The full CVR-to-summary contract has three layers:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Layer & Required reconciliation \\
+\midrule
+Manifest to CVR rows & Ballot-card or CVR-row counts match ballot manifest accounting for the represented batch or reporting unit. \\
+CVR rows to contest aggregates & Candidate selections, write-in buckets, undervotes, overvotes, and blank contests aggregate by contest. \\
+Contest aggregates to summaries & Aggregated CVR interpretations match published summaries by contest, reporting unit, status, and optional batch. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{align*}
+\texttt{manifest card count}
+  &= \texttt{CVR row/card count} \\
+  &= \texttt{summary counted basis}
+\end{align*}
+
+\[
+\sum \texttt{CVR contest interpretations}
+  = \texttt{summary selections and residuals}
+\]
+
+The word CVR must stay precise. A CVR row is not necessarily a voter or a whole
+ballot; some systems export one row per ballot card, one row per sheet side, or
+one row per contest grouping. A CVR can record an undervote, overvote, blank
+contest, adjudicated write-in bucket, or contest not on that ballot style. V.6
+therefore treats the adapter's row semantics as part of the evidence contract,
+not as an implementation detail.
+
+The first normalized RCOUNT row uses this package-local contract:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & Meaning \\
+\midrule
+\texttt{cvr\_id} & Package-local CVR/card identifier; not a voter identifier. \\
+\texttt{contest\_id} & Contest interpreted by this row. \\
+\texttt{reporting\_unit\_id} & Public reporting unit for aggregation. \\
+\texttt{batch\_id} & Optional batch link when manifest evidence is batch-level. \\
+\texttt{status} & Count status represented by the row. \\
+\texttt{selection\_ids} & Candidate or write-in bucket selections interpreted for the contest. \\
+\texttt{undervote}, \texttt{overvote}, \texttt{blank\_contest} & Residual contest interpretation flags. \\
+\texttt{source\_refs} & Source evidence rows supporting the normalized CVR row. \\
+\bottomrule
+\end{tabularx}
+\end{center}

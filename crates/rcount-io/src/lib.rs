@@ -87,6 +87,7 @@ pub struct PackageHashes {
     pub batch_count: usize,
     pub lineage_count: usize,
     pub inclusion_proof_count: usize,
+    pub cvr_count: usize,
     pub summary_count: usize,
 }
 
@@ -179,6 +180,7 @@ pub fn write_package_dir(
         &dir.join("proofs").join("inclusion-proofs.ndjson"),
         &package.inclusion_proofs,
     )?;
+    write_ndjson(&dir.join("normalized").join("cvr.ndjson"), &package.cvr)?;
     write_ndjson(
         &dir.join("normalized").join("summaries.ndjson"),
         &package.summaries,
@@ -192,6 +194,7 @@ pub fn write_package_dir(
             r#"{"equation_id":"lineage_conservation","status":"declared"}"#,
             r#"{"equation_id":"status_event_declared","status":"declared"}"#,
             r#"{"equation_id":"canvass_correction_event","status":"declared"}"#,
+            r#"{"equation_id":"cvr_summary_total","status":"declared"}"#,
         ],
     )?;
     write_ndjson(
@@ -207,6 +210,7 @@ pub fn write_package_dir(
             batch_count: package.batches.len(),
             lineage_count: package.lineage.len(),
             inclusion_proof_count: package.inclusion_proofs.len(),
+            cvr_count: package.cvr.len(),
             summary_count: package.summaries.len(),
         },
     )?;
@@ -235,6 +239,7 @@ pub fn read_package_dir(dir: &Path) -> Result<(RcountManifest, RcountPackage), R
         inclusion_proofs: read_optional_ndjson(
             &dir.join("proofs").join("inclusion-proofs.ndjson"),
         )?,
+        cvr: read_optional_ndjson(&dir.join("normalized").join("cvr.ndjson"))?,
         summaries: read_ndjson(&dir.join("normalized").join("summaries.ndjson"))?,
         status_events: read_ndjson(&dir.join("status").join("events.ndjson"))?,
     };
@@ -358,6 +363,20 @@ pub fn default_choice_bearing_proof_docs_dir() -> PathBuf {
         .join("choice-bearing-proof")
 }
 
+pub fn default_cvr_summary_docs_dir() -> PathBuf {
+    PathBuf::from("docs")
+        .join("examples")
+        .join("rcount-golden-packages")
+        .join("cvr-summary")
+}
+
+pub fn default_bad_cvr_summary_docs_dir() -> PathBuf {
+    PathBuf::from("docs")
+        .join("examples")
+        .join("rcount-golden-packages")
+        .join("bad-cvr-summary")
+}
+
 fn write_json_pretty<T: Serialize>(path: &Path, value: &T) -> Result<(), RcountIoError> {
     let bytes = serde_json::to_vec_pretty(value)?;
     fs::write(path, bytes)?;
@@ -377,6 +396,7 @@ fn write_synthetic_source_export(
         "batch_count": package.batches.len(),
         "lineage_count": package.lineage.len(),
         "inclusion_proof_count": package.inclusion_proofs.len(),
+        "cvr_count": package.cvr.len(),
         "summary_count": package.summaries.len(),
         "status_event_count": package.status_events.len(),
     });
@@ -469,8 +489,9 @@ fn write_lines(path: &Path, lines: &[&str]) -> Result<(), RcountIoError> {
 mod tests {
     use super::*;
     use rcount_core::{
-        synthetic_bad_lineage_package, synthetic_bad_selection_sum_package,
-        synthetic_canvass_correction_package, synthetic_choice_bearing_proof_package,
+        synthetic_bad_cvr_summary_package, synthetic_bad_lineage_package,
+        synthetic_bad_selection_sum_package, synthetic_canvass_correction_package,
+        synthetic_choice_bearing_proof_package, synthetic_cvr_summary_package,
         synthetic_mail_batch_added_package, synthetic_missing_batch_package,
         synthetic_precinct_split_lineage_package, synthetic_privacy_inclusion_package,
         synthetic_summary_basic_package,
@@ -588,6 +609,31 @@ mod tests {
             decoded_package.inclusion_proofs[0].candidate_selections,
             vec!["cand-a".to_string()]
         );
+    }
+
+    #[test]
+    fn round_trips_synthetic_cvr_summary_package() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_cvr_summary_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+        let (_, decoded_package) = read_package_dir(tmp.path()).unwrap();
+        assert_eq!(decoded_package.cvr.len(), 140);
+        assert!(decoded_package
+            .cvr
+            .iter()
+            .any(|row| row.cvr_id == "cvr:P-001:001"));
+    }
+
+    #[test]
+    fn round_trips_synthetic_bad_cvr_summary_package() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_bad_cvr_summary_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+        let (_, decoded_package) = read_package_dir(tmp.path()).unwrap();
+        assert_eq!(decoded_package.cvr.len(), 140);
+        assert!(verify_source_index(tmp.path()).is_ok());
     }
 
     #[test]

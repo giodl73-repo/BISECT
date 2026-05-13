@@ -122,6 +122,33 @@ pub enum RcountCoreError {
         proof_id: String,
         token_hash: String,
     },
+    #[error("duplicate CVR contest row for cvr {cvr_id} contest {contest_id}")]
+    DuplicateCvrContest { cvr_id: String, contest_id: String },
+    #[error("CVR contest row {cvr_id}/{contest_id} has invalid mark cardinality")]
+    InvalidCvrContestCardinality { cvr_id: String, contest_id: String },
+    #[error(
+        "CVR contest row {cvr_id}/{contest_id} references unknown selection id: {selection_id}"
+    )]
+    UnknownCvrSelection {
+        cvr_id: String,
+        contest_id: String,
+        selection_id: String,
+    },
+    #[error(
+        "missing summary for CVR aggregate contest {contest_id} reporting unit {reporting_unit_id}"
+    )]
+    MissingCvrSummary {
+        contest_id: String,
+        reporting_unit_id: String,
+    },
+    #[error("CVR summary mismatch for contest {contest_id} reporting unit {reporting_unit_id} field {field}: summary {summary}, cvr {cvr}")]
+    CvrSummaryMismatch {
+        contest_id: String,
+        reporting_unit_id: String,
+        field: String,
+        summary: i64,
+        cvr: i64,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -257,7 +284,27 @@ pub struct InclusionProof {
     pub issued_at: Option<String>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CvrContestRecord {
+    pub cvr_id: String,
+    pub contest_id: String,
+    pub reporting_unit_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub batch_id: Option<String>,
+    pub status: CountStatus,
+    #[serde(default)]
+    pub selection_ids: Vec<String>,
+    #[serde(default)]
+    pub undervote: bool,
+    #[serde(default)]
+    pub overvote: bool,
+    #[serde(default)]
+    pub blank_contest: bool,
+    #[serde(default)]
+    pub source_refs: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum CountStatus {
     Unofficial,
@@ -309,6 +356,8 @@ pub struct RcountPackage {
     pub lineage: Vec<ReportingUnitLineage>,
     #[serde(default)]
     pub inclusion_proofs: Vec<InclusionProof>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub cvr: Vec<CvrContestRecord>,
     pub summaries: Vec<Summary>,
     #[serde(default)]
     pub status_events: Vec<StatusEvent>,
@@ -379,6 +428,9 @@ pub fn verify_package(package: &RcountPackage) -> Result<VerificationReport, Rco
     report.passed.extend(verify_batch_summary_totals(package)?);
     report.passed.extend(verify_lineage_conservation(package)?);
     report.passed.extend(verify_proof_privacy(package)?);
+    report
+        .passed
+        .extend(verify_cvr_summary_reconciliation(package)?);
     Ok(report)
 }
 
@@ -750,6 +802,168 @@ pub fn verify_proof_privacy(package: &RcountPackage) -> Result<Vec<EquationPass>
     Ok(passes)
 }
 
+pub fn verify_cvr_summary_reconciliation(
+    package: &RcountPackage,
+) -> Result<Vec<EquationPass>, RcountCoreError> {
+    if package.cvr.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let contests: BTreeMap<&str, &Contest> = package
+        .contests
+        .iter()
+        .map(|contest| (contest.contest_id.as_str(), contest))
+        .collect();
+    let mut seen = BTreeSet::new();
+    let mut aggregates: BTreeMap<CvrAggregateKey, CvrAggregate> = BTreeMap::new();
+
+    for row in &package.cvr {
+        if !seen.insert((row.cvr_id.as_str(), row.contest_id.as_str())) {
+            return Err(RcountCoreError::DuplicateCvrContest {
+                cvr_id: row.cvr_id.clone(),
+                contest_id: row.contest_id.clone(),
+            });
+        }
+        let contest = contests.get(row.contest_id.as_str()).ok_or_else(|| {
+            RcountCoreError::UnknownCvrSelection {
+                cvr_id: row.cvr_id.clone(),
+                contest_id: row.contest_id.clone(),
+                selection_id: "<contest-missing>".to_string(),
+            }
+        })?;
+        let valid_selection_ids: BTreeSet<&str> = contest
+            .selections
+            .iter()
+            .map(|selection| selection.selection_id.as_str())
+            .collect();
+        let residual_count = row.undervote as u8 + row.overvote as u8 + row.blank_contest as u8;
+        if residual_count > 1
+            || (residual_count == 1 && !row.selection_ids.is_empty())
+            || row.selection_ids.len() > contest.vote_for as usize
+        {
+            return Err(RcountCoreError::InvalidCvrContestCardinality {
+                cvr_id: row.cvr_id.clone(),
+                contest_id: row.contest_id.clone(),
+            });
+        }
+        for selection_id in &row.selection_ids {
+            if !valid_selection_ids.contains(selection_id.as_str()) {
+                return Err(RcountCoreError::UnknownCvrSelection {
+                    cvr_id: row.cvr_id.clone(),
+                    contest_id: row.contest_id.clone(),
+                    selection_id: selection_id.clone(),
+                });
+            }
+        }
+
+        let aggregate = aggregates.entry(CvrAggregateKey::from(row)).or_default();
+        aggregate.counted_ballots += 1;
+        for selection_id in &row.selection_ids {
+            *aggregate
+                .selection_votes
+                .entry(selection_id.clone())
+                .or_default() += 1;
+        }
+        aggregate.undervotes += row.undervote as i64;
+        aggregate.overvotes += row.overvote as i64;
+        aggregate.blank_contests += row.blank_contest as i64;
+    }
+
+    let mut passes = Vec::new();
+    for (key, aggregate) in aggregates {
+        let summary = package
+            .summaries
+            .iter()
+            .find(|summary| {
+                summary.contest_id == key.contest_id
+                    && summary.reporting_unit_id == key.reporting_unit_id
+                    && summary.batch_id == key.batch_id
+                    && summary.status == key.status
+            })
+            .ok_or_else(|| RcountCoreError::MissingCvrSummary {
+                contest_id: key.contest_id.clone(),
+                reporting_unit_id: key.reporting_unit_id.clone(),
+            })?;
+
+        for total in &summary.totals {
+            let cvr = aggregate
+                .selection_votes
+                .get(&total.selection_id)
+                .copied()
+                .unwrap_or_default();
+            check_cvr_field(
+                &key.contest_id,
+                &key.reporting_unit_id,
+                &format!("selection:{}", total.selection_id),
+                total.votes,
+                cvr,
+            )?;
+        }
+        check_cvr_field(
+            &key.contest_id,
+            &key.reporting_unit_id,
+            "undervotes",
+            summary.undervotes,
+            aggregate.undervotes,
+        )?;
+        check_cvr_field(
+            &key.contest_id,
+            &key.reporting_unit_id,
+            "overvotes",
+            summary.overvotes,
+            aggregate.overvotes,
+        )?;
+        check_cvr_field(
+            &key.contest_id,
+            &key.reporting_unit_id,
+            "blank_contests",
+            summary.blank_contests,
+            aggregate.blank_contests,
+        )?;
+        check_cvr_field(
+            &key.contest_id,
+            &key.reporting_unit_id,
+            "counted_ballots",
+            summary.counted_ballots,
+            aggregate.counted_ballots,
+        )?;
+        passes.push(EquationPass {
+            equation_id: "cvr_summary_total".to_string(),
+            contest_id: key.contest_id,
+            reporting_unit_id: key.reporting_unit_id,
+        });
+    }
+    Ok(passes)
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+struct CvrAggregateKey {
+    contest_id: String,
+    reporting_unit_id: String,
+    batch_id: Option<String>,
+    status: CountStatus,
+}
+
+impl From<&CvrContestRecord> for CvrAggregateKey {
+    fn from(row: &CvrContestRecord) -> Self {
+        Self {
+            contest_id: row.contest_id.clone(),
+            reporting_unit_id: row.reporting_unit_id.clone(),
+            batch_id: row.batch_id.clone(),
+            status: row.status,
+        }
+    }
+}
+
+#[derive(Debug, Default)]
+struct CvrAggregate {
+    selection_votes: BTreeMap<String, i64>,
+    undervotes: i64,
+    overvotes: i64,
+    blank_contests: i64,
+    counted_ballots: i64,
+}
+
 pub fn synthetic_summary_basic_package() -> RcountPackage {
     let contest = Contest {
         contest_id: "syn-2024-mayor".to_string(),
@@ -811,6 +1025,7 @@ pub fn synthetic_summary_basic_package() -> RcountPackage {
         batches: vec![],
         lineage: vec![],
         inclusion_proofs: vec![],
+        cvr: vec![],
         summaries,
         status_events: vec![],
     }
@@ -1118,6 +1333,49 @@ pub fn synthetic_choice_bearing_proof_package() -> RcountPackage {
     package
 }
 
+pub fn synthetic_cvr_summary_package() -> RcountPackage {
+    let mut package = synthetic_summary_basic_package();
+    package.cvr = vec![];
+    append_cvr_rows(
+        &mut package.cvr,
+        "P-001",
+        "syn:precinct:P-001",
+        40,
+        35,
+        1,
+        3,
+        1,
+        0,
+    );
+    append_cvr_rows(
+        &mut package.cvr,
+        "P-002",
+        "syn:precinct:P-002",
+        25,
+        30,
+        0,
+        4,
+        0,
+        1,
+    );
+    package
+}
+
+pub fn synthetic_bad_cvr_summary_package() -> RcountPackage {
+    let mut package = synthetic_cvr_summary_package();
+    let row = package
+        .cvr
+        .iter_mut()
+        .find(|row| {
+            row.reporting_unit_id == "syn:precinct:P-001"
+                && row.selection_ids.len() == 1
+                && row.selection_ids[0] == "cand-a"
+        })
+        .expect("synthetic CVR package must contain a Candidate A row");
+    row.selection_ids = vec!["cand-b".to_string()];
+    package
+}
+
 fn summary(
     reporting_unit_id: &str,
     cand_a: i64,
@@ -1200,6 +1458,102 @@ fn summary_with_status_and_batch(
     }
 }
 
+fn append_cvr_rows(
+    rows: &mut Vec<CvrContestRecord>,
+    id_prefix: &str,
+    reporting_unit_id: &str,
+    cand_a: i64,
+    cand_b: i64,
+    write_in: i64,
+    undervotes: i64,
+    overvotes: i64,
+    blank_contests: i64,
+) {
+    let mut ordinal = 1usize;
+    for (selection_id, count) in [
+        ("cand-a", cand_a),
+        ("cand-b", cand_b),
+        ("write-in", write_in),
+    ] {
+        for _ in 0..count {
+            rows.push(cvr_selection_row(
+                id_prefix,
+                ordinal,
+                reporting_unit_id,
+                selection_id,
+            ));
+            ordinal += 1;
+        }
+    }
+    for _ in 0..undervotes {
+        rows.push(cvr_residual_row(
+            id_prefix,
+            ordinal,
+            reporting_unit_id,
+            "undervote",
+        ));
+        ordinal += 1;
+    }
+    for _ in 0..overvotes {
+        rows.push(cvr_residual_row(
+            id_prefix,
+            ordinal,
+            reporting_unit_id,
+            "overvote",
+        ));
+        ordinal += 1;
+    }
+    for _ in 0..blank_contests {
+        rows.push(cvr_residual_row(
+            id_prefix,
+            ordinal,
+            reporting_unit_id,
+            "blank",
+        ));
+        ordinal += 1;
+    }
+}
+
+fn cvr_selection_row(
+    id_prefix: &str,
+    ordinal: usize,
+    reporting_unit_id: &str,
+    selection_id: &str,
+) -> CvrContestRecord {
+    CvrContestRecord {
+        cvr_id: format!("cvr:{id_prefix}:{ordinal:03}"),
+        contest_id: "syn-2024-mayor".to_string(),
+        reporting_unit_id: reporting_unit_id.to_string(),
+        batch_id: None,
+        status: CountStatus::Canvassed,
+        selection_ids: vec![selection_id.to_string()],
+        undervote: false,
+        overvote: false,
+        blank_contest: false,
+        source_refs: vec!["source:synthetic-summary-export".to_string()],
+    }
+}
+
+fn cvr_residual_row(
+    id_prefix: &str,
+    ordinal: usize,
+    reporting_unit_id: &str,
+    residual: &str,
+) -> CvrContestRecord {
+    CvrContestRecord {
+        cvr_id: format!("cvr:{id_prefix}:{ordinal:03}"),
+        contest_id: "syn-2024-mayor".to_string(),
+        reporting_unit_id: reporting_unit_id.to_string(),
+        batch_id: None,
+        status: CountStatus::Canvassed,
+        selection_ids: vec![],
+        undervote: residual == "undervote",
+        overvote: residual == "overvote",
+        blank_contest: residual == "blank",
+        source_refs: vec!["source:synthetic-summary-export".to_string()],
+    }
+}
+
 fn canonicalize_value(value: &Value) -> Value {
     match value {
         Value::Array(values) => Value::Array(values.iter().map(canonicalize_value).collect()),
@@ -1255,6 +1609,25 @@ fn check_residual(
             field: field.to_string(),
             declared,
             computed,
+        });
+    }
+    Ok(())
+}
+
+fn check_cvr_field(
+    contest_id: &str,
+    reporting_unit_id: &str,
+    field: &str,
+    summary: i64,
+    cvr: i64,
+) -> Result<(), RcountCoreError> {
+    if summary != cvr {
+        return Err(RcountCoreError::CvrSummaryMismatch {
+            contest_id: contest_id.to_string(),
+            reporting_unit_id: reporting_unit_id.to_string(),
+            field: field.to_string(),
+            summary,
+            cvr,
         });
     }
     Ok(())
@@ -1375,6 +1748,28 @@ mod tests {
         let package = synthetic_choice_bearing_proof_package();
         let err = verify_proof_privacy(&package).expect_err("choice-bearing proof must fail");
         assert!(matches!(err, RcountCoreError::ChoiceBearingProof { .. }));
+    }
+
+    #[test]
+    fn synthetic_cvr_summary_verifies_against_summaries() {
+        let package = synthetic_cvr_summary_package();
+        let report = verify_package(&package).expect("CVR summary package must verify");
+        assert_eq!(
+            report
+                .passed
+                .iter()
+                .filter(|pass| pass.equation_id == "cvr_summary_total")
+                .count(),
+            2
+        );
+    }
+
+    #[test]
+    fn bad_cvr_summary_fails_cvr_reconciliation() {
+        let package = synthetic_bad_cvr_summary_package();
+        let err = verify_cvr_summary_reconciliation(&package)
+            .expect_err("bad CVR summary package must fail");
+        assert!(matches!(err, RcountCoreError::CvrSummaryMismatch { .. }));
     }
 
     #[test]

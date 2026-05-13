@@ -17,7 +17,7 @@ recompute public claims from lower-level evidence.
 | V.3 | Tamper-Evident Precinct And Batch Hashing | ready |
 | V.4 | Privacy-Safe Voter Inclusion Proofs | ready |
 | V.5 | Ballot Manifest Verification | ready |
-| V.6 | CVR-To-Summary Reconciliation | planned |
+| V.6 | CVR-To-Summary Reconciliation | draft |
 | V.7 | Replayable Risk-Limiting Audits | planned |
 | V.8 | District Vote Aggregation With RPLAN | substrate slice landed |
 | V.9 | Count-System Interoperability: Vendor Exports To RCOUNT | planned |
@@ -27,19 +27,22 @@ recompute public claims from lower-level evidence.
 ## Implementation Status
 
 - `rcount-core`: started 2026-05-12 with canonical hash prefixes, core contest
-  and summary records, a synthetic `summary-basic` package generator, and L0
-  checks for `contest_selection_sum`, `jurisdiction_contest_total`, and
-  canvass-correction event correlation, plus batch-summary accounting and
-  reporting-unit lineage conservation and receipt-safe proof privacy gates.
+  and summary records, synthetic package generators, and L0 checks for
+  `contest_selection_sum`, `jurisdiction_contest_total`, canvass-correction
+  event correlation, batch-summary accounting, reporting-unit lineage
+  conservation, receipt-safe proof privacy gates, and CVR-to-summary
+  reconciliation.
 - `rcount-io`: started 2026-05-12 with package-directory read/write helpers,
   `summary-basic`, `canvass-correction`, `mail-batch-added`,
-  `precinct-split-lineage`, `privacy-inclusion-sketch`, `bad-selection-sum`,
-  `missing-batch`, `bad-lineage`, and `choice-bearing-proof` generators, and
-  docs fixture verification, including source-index hash checks.
+  `precinct-split-lineage`, `privacy-inclusion-sketch`, `cvr-summary`,
+  `bad-selection-sum`, `missing-batch`, `bad-lineage`, `choice-bearing-proof`,
+  and `bad-cvr-summary` generators, and docs fixture verification, including
+  source-index hash checks.
 - `rcount-audit`: started 2026-05-12 with pass/fail verification transcripts
   for `summary-basic` and `canvass-correction`, tampered manifest failures,
   bad arithmetic failures, batch-accounting failures, bad lineage failures,
-  proof-privacy failures, and missing/tampered source-hash failures.
+  proof-privacy failures, CVR-summary failures, and missing/tampered
+  source-hash failures.
 - `rcount-district`: started 2026-05-12 as the optional bridge from verified
   RCOUNT summaries to RPLAN district assignments, producing district totals and
   transcripts that bind the RCOUNT package hash, RPLAN plan hash, and optional

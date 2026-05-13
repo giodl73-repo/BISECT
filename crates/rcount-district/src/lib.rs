@@ -734,6 +734,7 @@ fn synthetic_cycle_package(
         batches: vec![],
         lineage,
         inclusion_proofs: vec![],
+        cvr: vec![],
         summaries,
         status_events: vec![],
     }

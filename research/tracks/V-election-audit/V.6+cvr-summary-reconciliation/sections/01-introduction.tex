@@ -1,0 +1,15 @@
+\section{Introduction}
+
+Cast-vote records are the interpreted contest marks exported by a voting system.
+They can make public verification much stronger: instead of trusting only a
+summary row, an auditor can recompute contest totals from lower-level records.
+They can also make verification more dangerous if ballot-level detail exposes
+rare vote patterns, ballot styles, or small-cell combinations.
+
+V.6 defines the reconciliation contract between CVR evidence and public
+summaries. The current RCOUNT crates now normalize a small
+\path{normalized/cvr.ndjson} surface: one row per CVR contest interpretation.
+Those rows aggregate to public summaries through \texttt{cvr\_summary\_total},
+while \texttt{contest\_selection\_sum} remains the summary-side guardrail that
+checks selections, write-in buckets, undervotes, overvotes, and blank contests
+against declared counted ballots.

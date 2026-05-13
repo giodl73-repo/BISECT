@@ -1,0 +1,11 @@
+\section{Conclusion}
+
+CVR-to-summary reconciliation is where public verification moves from totals to
+interpreted ballot evidence. The implemented V.6 slice reconciles normalized
+CVR contest rows to public summaries and keeps the summary-side invariant in
+place: selections plus residuals must equal counted ballots, and bad local
+evidence must not hide inside jurisdiction totals.
+
+That gives V.7 a stable base for replayable risk-limiting audits, while keeping
+the remaining CVR privacy and vendor-adapter questions visible instead of
+pretending they are already finished.

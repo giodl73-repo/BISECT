@@ -1,0 +1,43 @@
+\section{Current Equations}
+
+The current implementation exercises both the normalized CVR aggregate and the
+summary-side guardrail. The CVR equation is:
+
+\[
+\sum \texttt{normalized CVR contest rows}
+  = \texttt{summary selections and residuals}.
+\]
+
+For each contest, reporting unit, status, and optional batch, the verifier
+aggregates \texttt{selection\_ids}, \texttt{undervote}, \texttt{overvote}, and
+\texttt{blank\_contest} fields from \path{normalized/cvr.ndjson}. It then
+compares those aggregates to \path{normalized/summaries.ndjson}. A mismatch
+fails as \texttt{cvr\_summary\_total}.
+
+The summary guardrail remains \texttt{contest\_selection\_sum}:
+
+\[
+\texttt{counted\_ballots}
+  = \sum \texttt{selection votes}
+  + \texttt{undervotes}
+  + \texttt{overvotes}
+  + \texttt{blank\_contests}.
+\]
+
+RCOUNT also checks \texttt{jurisdiction\_contest\_total}, which rolls lower-level
+reporting-unit summaries up to the jurisdiction summary. Together, these checks
+catch arithmetic drift before a CVR adapter is allowed to claim that
+lower-level rows support the public totals.
+
+\begin{center}
+\small
+\begin{tabular}{ccccc}
+\fbox{\begin{tabular}{c}manifest\\cards\end{tabular}} &
+$\rightarrow$ &
+\fbox{\begin{tabular}{c}normalized CVR\\contest rows\end{tabular}} &
+$\rightarrow$ &
+\fbox{\begin{tabular}{c}public summaries\\selections + residuals\end{tabular}} \\
+ & & & & \\
+\multicolumn{5}{c}{\textit{V.6 implements the CVR-to-summary gate; V.5 supplies manifest controls}} \\
+\end{tabular}
+\end{center}

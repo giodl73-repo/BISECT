@@ -1,0 +1,25 @@
+\section{Fixtures}
+
+The positive fixture is \texttt{cvr-summary}. It contains 140 normalized CVR
+contest rows: 80 rows for P-001 and 60 rows for P-002. For precinct P-001, the
+public summary declares 80 counted ballots:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lrrrrrr}
+\toprule
+Unit & A & B & Write-in & Under & Over & Blank \\
+\midrule
+P-001 & 40 & 35 & 1 & 3 & 1 & 0 \\
+P-002 & 25 & 30 & 0 & 4 & 0 & 1 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+For P-001, the CVR aggregate is \(40 + 35 + 1 + 3 + 1 + 0 = 80\), so
+\texttt{cvr\_summary\_total} and \texttt{contest\_selection\_sum} both pass.
+
+The negative fixture is \texttt{bad-cvr-summary}. It changes one P-001 CVR row
+from \texttt{cand-a} to \texttt{cand-b} while leaving the public summaries
+unchanged. The summary arithmetic still passes, but the CVR aggregate no longer
+matches the summary: Candidate A computes to 39 instead of 40.

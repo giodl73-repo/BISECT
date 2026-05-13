@@ -1,0 +1,20 @@
+\section{Boundaries}
+
+V.6 does not say a voting system captured voter intent correctly. A CVR export
+is an interpretation artifact. Hand audits, risk-limiting audits, recounts, and
+adjudication records remain separate evidence.
+
+V.6 also does not require every jurisdiction to publish ballot-level CVRs. Some
+jurisdictions do not produce them, some publish only redacted or transformed
+versions, and some contests are too small for safe ballot-level publication.
+RCOUNT can still verify summary and manifest layers when public CVRs are absent.
+
+The implemented row shape is a normalized interchange surface, not a direct
+vendor schema. V.9 owns vendor CSV, JSON, XML, and NIST-style adapter details.
+Adapters must preserve enough raw source evidence for an independent parser to
+disagree with the normalized rows.
+
+Finally, CVR publication must inherit V.4's receipt-safety rule. Rare ballot
+styles, write-ins, timestamps, scanner batches, or unique selection patterns can
+turn a CVR into identifying evidence. A deployable CVR layer needs redaction,
+aggregation, or restricted-publication policy in addition to arithmetic checks.

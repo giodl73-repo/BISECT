@@ -1,0 +1,41 @@
+\section{Verifier Traceability}
+
+The fixtures can be regenerated and checked directly:
+
+\begin{quote}
+\footnotesize
+\begin{verbatim}
+cargo run -p rcount-io --example cvr_summary_package
+cargo run -p rcount-io --example bad_cvr_summary_package
+cargo run -p rcount-cli -- verify \
+  docs/examples/rcount-golden-packages/cvr-summary
+cargo run -p rcount-cli -- verify \
+  docs/examples/rcount-golden-packages/bad-cvr-summary
+\end{verbatim}
+\end{quote}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+Fixture & Expected result & Carrying checks \\
+\midrule
+\texttt{cvr-summary} & transcript status \texttt{pass} & \texttt{cvr\_summary\_total}, \texttt{contest\_selection\_sum}, \texttt{jurisdiction\_contest\_total}, and \texttt{source\_hash\_match} pass. \\
+\texttt{bad-cvr-summary} & transcript status \texttt{fail} & \texttt{cvr\_summary\_total} fails for P-001 while source hashes still pass. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The negative transcript anchors the failure:
+
+\begin{quote}
+\footnotesize
+\begin{verbatim}
+{
+  "equation_id": "cvr_summary_total",
+  "status": "fail",
+  "error": "CVR summary mismatch for contest syn-2024-mayor \
+reporting unit syn:precinct:P-001 field selection:cand-a: summary 40, cvr 39"
+}
+\end{verbatim}
+\end{quote}
