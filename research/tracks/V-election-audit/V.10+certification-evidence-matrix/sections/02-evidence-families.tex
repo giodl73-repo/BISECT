@@ -1,0 +1,31 @@
+\section{Evidence Families}
+
+Across states, certification evidence tends to fall into recurring families.
+The exact deadline, official, and audit type varies, but the public proof
+problem is stable enough to model.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Evidence family & Public question \\
+\midrule
+Canvass arithmetic & Do reporting-unit, contest, batch, and jurisdiction totals agree after official corrections? \\
+Lineage & Are precinct splits, merges, renames, and boundary changes explicit across cycles? \\
+Source integrity & Do public exports, summaries, CVRs, and manifests still hash to the declared package evidence? \\
+Ballot accounting & Do batches, manifests, accepted ballots, rejected ballots, and counted ballots reconcile? \\
+CVR reconciliation & Do ballot-level CVR rows reproduce published summary totals where CVRs are available? \\
+Audit completion & Did the required hand audit, RLA, or recount produce an auditable pass/escalate record? \\
+Voter-facing inclusion & Can a voter check inclusion without creating a receipt for candidate choices? \\
+District aggregation & Do district totals follow from a count package and a plan/context hash? \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Risk-limiting audits deserve special care because they are statistical and
+jurisdiction-specific. NCSL describes RLAs as audits that limit the risk of
+certifying an incorrect outcome and notes that audit completion may be tied to
+canvass or certification timelines \citep{ncsl-post-election-audits}. RCOUNT
+therefore records replayable samples, observations, margins, stopping methods,
+and adapter metadata, but leaves statutory adequacy to jurisdiction-specific
+rules.

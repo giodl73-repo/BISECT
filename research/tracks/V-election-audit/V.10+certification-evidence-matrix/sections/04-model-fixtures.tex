@@ -1,0 +1,26 @@
+\section{Model Fixtures}
+
+The current fixture suite contains three model audit styles.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+Fixture & Positive claim & Negative pair \\
+\midrule
+\texttt{colorado-rla} & A Colorado-style comparison audit record has a 20 digit public seed, SHA-256 sampler, margin metadata, stopping method, risk estimate, and status. & \texttt{bad-colorado-rla} rejects a seed that is not 20 decimal digits. \\
+\texttt{california-rla} & A California-style public audit record names ballot manifest format, audit software id, public source URL, margin, and status. & \texttt{bad-california-rla} rejects non-public source metadata. \\
+\texttt{manual-audit} & A plain manual audit hand count matches canvassed machine totals within zero-vote tolerance. & \texttt{bad-manual-audit} catches a hand-count drift hidden behind declared pass. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+These fixtures are not real state certifications. They are controlled examples
+that exercise different evidence styles. Colorado's public RLA materials
+describe ballot manifests, public seed generation, and audit software sampling
+\citep{colorado-rla-faq}; Rule 25 also names CVR and summary reconciliation
+requirements for comparison audits \citep{colorado-rule-25}. California's RLA
+regulations emphasize an accurate ballot manifest and public software
+algorithm/source-code disclosure \citep{california-rla-regulations}. The manual
+audit fixture covers the more ordinary case: compare hand-count totals to the
+canvassed machine totals and escalate when they disagree beyond tolerance.

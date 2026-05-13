@@ -1,0 +1,20 @@
+paper: V.10+certification-evidence-matrix
+title: "Certification Evidence Matrix For Public Election Count Audits"
+type: publication
+stage: draft
+round: 0
+content_mode: draft
+venue: technical report
+review_date: 2026-05-13
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - CANVASS
+  - TALLY
+  - VAULT
+  - LEDGER
+  - BENCHMARK
+p1_items:
+  - "[x] Map certification evidence families to implemented RCOUNT checks."
+  - "[x] Include Colorado-style RLA, California-style RLA, and manual-audit fixtures."
+  - "[x] Keep legal certification outside the software claim."
+  - "[ ] Add real jurisdiction/export matrix rows."

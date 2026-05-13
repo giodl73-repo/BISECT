@@ -21,7 +21,7 @@ recompute public claims from lower-level evidence.
 | V.7 | Replayable Risk-Limiting Audits | sampler, margin, stopping-risk, and jurisdiction adapters landed |
 | V.8 | District Vote Aggregation With RPLAN | substrate slice landed |
 | V.9 | Count-System Interoperability: Vendor Exports To RCOUNT | planned |
-| V.10 | Certification Evidence Matrix | planned |
+| V.10 | Certification Evidence Matrix | draft landed |
 | V.11 | Performance And Parallel Verification In Rust | planned |
 
 ## Implementation Status
@@ -52,6 +52,9 @@ recompute public claims from lower-level evidence.
 - `rcount-cli`: started 2026-05-12 with `rcount verify <package-dir>` and
   optional `--write-transcript`, plus `rcount aggregate-districts` for the
   RPLAN-backed district aggregation slice.
+- Audit fixture ladder: now includes Colorado-style RLA, California-style RLA,
+  and ordinary manual-audit model fixtures, each with positive and negative
+  transcripts.
 
 ## Track Contract
 

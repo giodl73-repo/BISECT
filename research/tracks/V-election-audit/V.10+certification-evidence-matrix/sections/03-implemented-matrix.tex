@@ -1,0 +1,28 @@
+\section{Implemented Matrix}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+RCOUNT check & Evidence used & What it mechanically proves \\
+\midrule
+\texttt{contest\_selection\_sum} & Contest summaries & Selection totals plus residual counts equal counted ballots. \\
+\texttt{jurisdiction\_contest\_total} & Reporting-unit and jurisdiction summaries & Local totals roll up to the jurisdiction total. \\
+\texttt{batch\_summary\_total} & Batch manifests and batch-tagged summaries & Counted, accepted, and rejected ballot accounting is internally consistent. \\
+\texttt{lineage\_conservation} & Prior/current reporting units and lineage records & Split/merge records reference real units and have valid cardinality. \\
+\texttt{source\_hash\_match} & Source index and package-relative files & Published source bytes match the declared hashes. \\
+\texttt{proof\_privacy\_gate} & Inclusion proof records & Voter-facing proofs do not disclose candidate selections or linkable voter metadata. \\
+\texttt{cvr\_summary\_total} & CVR rows and public summaries & CVR aggregates reproduce public reporting-unit summaries. \\
+\texttt{rla\_sampler\_replay} & CVR population, seed, manifest hash, and algorithm id & Published RLA sample draws replay from public material. \\
+\texttt{rla\_margin\_metadata} & RLA margin record and canvassed summary & Reported audit margin fields match public totals. \\
+\texttt{rla\_stopping\_rule} & Sample observations, discrepancies, margin, and risk estimate & Declared pass/escalate status follows from the named RCOUNT stopping contract. \\
+\texttt{rla\_jurisdiction\_adapter} & Jurisdiction method metadata & State-style record-shape requirements are present for synthetic Colorado and California fixtures. \\
+\texttt{manual\_audit\_reconciliation} & Manual audit hand totals and canvassed machine totals & Hand-count totals are within declared tolerance, and declared status agrees. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+This matrix is intentionally operational. It names equation ids visible in
+\texttt{rcount verify} transcripts, not abstract desiderata. A public reader
+can ask which row failed, which evidence file fed that row, and whether the
+failure is arithmetic, hashing, privacy, audit, or adapter metadata.

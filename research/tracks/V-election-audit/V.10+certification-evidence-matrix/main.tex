@@ -1,0 +1,42 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{Certification Evidence Matrix For Public Election Count Audits}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Election certification is a legal and administrative act, not a single hash or
+software verdict. RCOUNT therefore needs an evidence matrix: a way to say which
+public records support each mechanical claim, which verifier equation checks
+that claim, and which certification questions remain outside the package. This
+paper maps recurring certification evidence families to implemented RCOUNT
+fixtures: canvass arithmetic, precinct lineage, batch accounting, privacy-safe
+inclusion, CVR reconciliation, RLA replay and stopping checks, jurisdiction
+adapter metadata, district aggregation, and manual audit reconciliation. The
+matrix is designed to help officials, researchers, and courts distinguish
+machine-checkable public evidence from statutory judgment.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-evidence-families}
+\input{sections/03-implemented-matrix}
+\input{sections/04-model-fixtures}
+\input{sections/05-boundaries}
+\input{sections/06-conclusion}
+
+\nocite{eac-canvass-certification,eac-voting-system-certification,ncsl-post-election-audits,colorado-rla-faq,colorado-rule-25,california-rla-regulations,rcount-substrate-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}
