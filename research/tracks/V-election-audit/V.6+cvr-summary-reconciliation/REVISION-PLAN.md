@@ -1,11 +1,20 @@
 # Revision Plan
 
-No simulated review round has been run yet.
+Round 1 simulated review is complete.
 
-Expected first-round focus:
+## P1 Items
 
-- TALLY: CVR row, ballot card, contest, selection, and residual semantics.
-- BENCHMARK: summary-positive and bad-selection negative traceability.
-- CANVASS: adjudication, write-in review, recount, and certification boundaries.
-- VAULT: privacy risk of ballot-level CVRs and rare combinations.
-- LEDGER: future `normalized/cvr.ndjson` path and vendor adapter boundaries.
+1. [ ] Clarify CVR row cardinality and the one-row-per-contest interpretation
+   contract, including duplicate `(cvr_id, contest_id)` rejection.
+2. [ ] Add exact fixture path and transcript anchors for `cvr-summary` and
+   `bad-cvr-summary`.
+3. [ ] Add a privacy/publication risk table for ballot-level CVR patterns.
+4. [ ] State adapter/version boundaries and future negative fixture
+   expectations for duplicate rows and invalid cardinality.
+
+## P2 Items
+
+- [ ] Add a short implemented-check table.
+- [ ] Tie `cvr_summary_total` to `contest_selection_sum` and
+  `jurisdiction_contest_total` more explicitly.
+- [ ] Keep V.7 and V.9 handoffs visible.

@@ -1,12 +1,27 @@
 paper: V.6+cvr-summary-reconciliation
 title: "CVR-To-Summary Reconciliation"
 type: publication
-stage: draft
-round: 0
+stage: review
+round: 1
 content_mode: draft
 venue: technical report
 review_date: 2026-05-12
 review_notice: AI-generated quality-improvement simulation, not real peer review.
-reviewers: []
-reviews: {}
-p1_items: []
+reviewers:
+  - TALLY
+  - BENCHMARK
+  - CANVASS
+  - VAULT
+  - LEDGER
+reviews:
+  TALLY: reviews/REVIEW-TALLY.md
+  BENCHMARK: reviews/REVIEW-BENCHMARK.md
+  CANVASS: reviews/REVIEW-CANVASS.md
+  VAULT: reviews/REVIEW-VAULT.md
+  LEDGER: reviews/REVIEW-LEDGER.md
+  SYNTHESIS: reviews/SYNTHESIS.md
+p1_items:
+  - "[ ] Clarify CVR row cardinality and the one-row-per-contest interpretation contract."
+  - "[ ] Add exact fixture path and transcript anchors for cvr-summary and bad-cvr-summary."
+  - "[ ] Add privacy/publication risk table for ballot-level CVR patterns."
+  - "[ ] State adapter/version boundaries and duplicate-row failure expectations."
