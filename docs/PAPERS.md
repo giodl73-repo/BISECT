@@ -159,7 +159,9 @@ Ensemble methods: GerryChain/ReCom comparison, diagnostics, mixing time. How doe
 | G.13 | VRA-Aware Ensemble — chains preserving majority-minority districts | [PDF](papers/G.13+vra-aware-ensemble.pdf) | **Accepted** 3.8/4 — `--search vra-recom` |
 | G.14 | A Practitioner's Comparison of Redistricting Ensemble Algorithms | [PDF](papers/G.14+ensemble-comparison.pdf) | **Accepted** 4.0/4 |
 
-**Key finding (G.1, real data):** The bisection plan sits at the compactness extremum — 0.1–0.7th percentile in WI/GA/PA/CA. NC is 50th percentile: geographic constraint makes the minimum-cut plan coincide with the ensemble median.
+**Evidence target (G.1-G.3):** headline compactness and partisan percentiles now
+require archived external traces, election/metric inputs, diagnostics, and
+RPLAN/RCTX plan packages before being cited as final findings.
 
 ---
 
