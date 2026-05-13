@@ -36,7 +36,7 @@ explicit manifest gap, not by silently weakening checks.
 
 | Pulse | Status | Evidence |
 |---|---|---|
-| 01 - Evidence inventory and manifest contract | TODO | Locate existing G.1-G.3 artifacts; define package contract and missing-evidence manifest |
+| 01 - Evidence inventory and manifest contract | DONE | Added `bisect-ensemble::evidence_manifest` contract and documented missing-evidence handling |
 | 02 - Validator and fixtures | TODO | Add positive/negative package validation coverage |
 | 03 - Minimal evidence package | TODO | Build one minimal package or explicit missing-evidence package |
 | 04 - Paper and ledger update | TODO | Update G.1-G.3, scorecard, paper index, and closeout docs after validation |
@@ -53,5 +53,5 @@ git diff --check
 
 ## Next
 
-Start pulse 01: inventory existing G.1-G.3 evidence artifacts and write the
-package manifest contract.
+Start pulse 02: add package fixtures and consumer validation around the G
+evidence manifest contract.

@@ -24,6 +24,7 @@ If you're adding a new manifest type, land a one-task edit to §1 in the same co
 | `bloc_voting.json` `race_of_candidate_provenance` block | `race-of-candidate v1` | `bisect-analysis::race_of_candidate` (shipped 2026-04-30) | Callais Evidence Layer plan Task 4 |
 | `bloc_voting.json` (top-level) | `bloc-voting v1` | `bisect-analysis::bloc_voting_writer` (shipped 2026-04-30) | Callais Evidence Layer plan Task 6 |
 | `reproducibility_package_manifest.json` | `repro-package v1` | `bisect-report::repro_zip` (when shipped) | Court Submission Reports plan Task 6 |
+| `g-ensemble-evidence-manifest.json` | `g-ensemble-evidence-manifest v1` | `bisect-ensemble::evidence_manifest` | G Ensemble Evidence Packages wave |
 
 **Adding a new manifest type:** edit this table, add a `## §3.X — <kind> v<n>` subsection at the bottom enumerating fields beyond the canonical set, and reference both from the spec/plan that owns it.
 
@@ -147,6 +148,34 @@ Required fields beyond §2:
 - §3.10 `repro-package v1` (Court Submission Reports plan)
 
 Each plan's Task that ships a new manifest type lands the corresponding §3.X subsection in the same commit.
+
+### 3.11 `g-ensemble-evidence-manifest v1`
+
+Source: `bisect-ensemble::evidence_manifest::GEnsembleEvidenceManifest`.
+
+This manifest binds G.1-G.3 ensemble claims to the concrete artifacts needed to
+cite compactness percentiles, partisan outcome positions, and
+metric-distribution positions. It supports two statuses:
+
+- `active` — all cited artifacts are present, hash-bound, and have a verifier.
+- `missing-evidence` — the package intentionally records an evidence gap found
+  by a scout or validator. This status is not evidence for a headline claim.
+
+Required fields beyond §2:
+
+| Field | Definition |
+|---|---|
+| `package_id` | Stable package slug, usually including paper and scenario. |
+| `status` | `active` or `missing-evidence`. |
+| `papers` | G-track papers covered, e.g. `["G.1", "G.2"]`. |
+| `claims` | Array of `{paper, claim, required_roles}` rows naming the claim and required artifact roles. |
+| `files` | Array of `{path, sha256, role, description?}` rows. Paths are package-relative and portable; SHA-256 values are 64 lowercase hex characters. |
+| `verifier_path` | Package-relative source path for the validator or verifier implementation. |
+| `verification_commands` | Commands that replay or validate the package. Active packages require at least one. |
+| `missing_evidence` | Array of `{role, reason, next_step}` rows. Required for `missing-evidence`; forbidden for `active`. |
+
+Roles are `external-trace`, `bisect-plan`, `rctx-context`, `election-input`,
+`metric-output`, `diagnostic`, `manifest`, and `other`.
 
 ---
 

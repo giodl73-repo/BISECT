@@ -6,6 +6,7 @@
 //! spanning trees.
 
 pub mod chain;
+pub mod evidence_manifest;
 pub mod forest_recom;
 pub mod merge_split;
 pub mod parallel_tempering;
