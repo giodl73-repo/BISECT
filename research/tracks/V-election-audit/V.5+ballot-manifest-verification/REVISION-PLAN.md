@@ -1,11 +1,20 @@
 # Revision Plan
 
-No simulated review round has been run yet.
+Round 1 simulated review is complete.
 
-Expected first-round focus:
+## P1 Items
 
-- TALLY: ballot, card, batch, CVR, and contest semantics.
-- CANVASS: late mail, provisional, cure, recount, and certification status.
-- BENCHMARK: positive and negative fixture traceability.
-- LEDGER: manifest row identity, source references, and canonical package paths.
-- VAULT: privacy risk from batch granularity and small-cell publication.
+1. [ ] Define manifest rows as accounting controls and separate ballots, ballot
+   cards, CVRs, contests, selections, voters, and batches.
+2. [ ] Add a batch lifecycle/status model covering late mail, provisional,
+   duplicated-ballot, central-count, vote-center, and recount-driven changes.
+3. [ ] Add exact fixture file-path and transcript traceability for
+   `mail-batch-added` and `missing-batch`.
+4. [ ] Define the canonical path/source-ref contract for normalized batch
+   manifests.
+
+## P2 Items
+
+- [ ] Add a compact manifest-to-summary-to-jurisdiction diagram.
+- [ ] Add a privacy table for small batches and rare batch metadata.
+- [ ] Point forward to V.6 for CVR-to-summary reconciliation and V.7 for RLAs.
