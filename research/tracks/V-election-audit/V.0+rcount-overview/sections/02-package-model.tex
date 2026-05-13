@@ -6,22 +6,23 @@ and transcripts. The current Rust implementation writes these layers as JSON or
 NDJSON files so they can be diffed, hashed, and replayed with ordinary tools.
 
 \begin{center}
-\begin{tabular}{ll}
+\small
+\begin{tabularx}{\textwidth}{llX}
 \toprule
-Layer & Purpose \\
+Layer & Required & Purpose \\
 \midrule
-\texttt{manifest.json} & Jurisdiction, election metadata, and package hash \\
-\texttt{sources/} & Raw or synthetic source evidence and source index hashes \\
-\texttt{normalized/contests.ndjson} & Contest definitions and valid selections \\
-\texttt{normalized/reporting-units.ndjson} & Precincts, batches, jurisdiction totals, districts \\
-\texttt{normalized/summaries.ndjson} & Contest totals by reporting unit, status, and batch \\
-\texttt{normalized/batches.ndjson} & Batch manifests and accepted/counted/rejected ballots \\
-\texttt{normalized/lineage.ndjson} & Reporting-unit split, merge, and unchanged events \\
-\texttt{proofs/} & Privacy-safe inclusion proof sketches and package hashes \\
-\texttt{status/events.ndjson} & Canvass, correction, recount, and certification events \\
-\texttt{transcripts/} & Verifier output and replay evidence \\
+\texttt{manifest.json} & Yes & Jurisdiction, election metadata, version, and package hash \\
+\texttt{sources/} & Yes & Raw or synthetic source evidence and package-relative source index hashes \\
+\texttt{normalized/contests.ndjson} & Yes & Contest definitions and valid selections \\
+\texttt{normalized/reporting-units.ndjson} & Yes & Precincts, batches, jurisdiction totals, districts \\
+\texttt{normalized/summaries.ndjson} & Yes & Contest totals by reporting unit, status, and optional batch \\
+\texttt{normalized/batches.ndjson} & Optional & Batch manifests and accepted/counted/rejected ballots \\
+\texttt{normalized/lineage.ndjson} & Optional & Reporting-unit split, merge, and unchanged events \\
+\texttt{proofs/} & Optional & Privacy-safe inclusion proof sketches and package hashes \\
+\texttt{status/events.ndjson} & Yes & Canvass, correction, recount, and certification events \\
+\texttt{transcripts/} & Yes & Verifier output and replay evidence \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{center}
 
 The central record is a summary: a contest id, reporting unit id, optional batch
@@ -37,4 +38,3 @@ another. A package content hash binds the normalized model. Source hashes bind
 the raw evidence bytes used to justify that model. This distinction lets a
 verifier say whether arithmetic failed, source evidence was tampered with, or a
 manifest no longer matches the normalized records.
-

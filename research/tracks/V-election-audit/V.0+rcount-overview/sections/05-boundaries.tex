@@ -19,6 +19,23 @@ anonymized token exists in accepted or counted evidence, but they must not carry
 candidate selections or link voter identity, ballot style, and timestamp in a
 way that reidentifies the ballot.
 
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+Threat or claim & RCOUNT v0 position & Non-goal or warning \\
+\midrule
+Source tampering & Source bytes are hashed and checked against the source index. & Hashes do not prove the original source was truthful. \\
+Parser substitution & Normalized records are package-hashed. & Parser diagnostics and independent parser disagreement are future adapter work. \\
+Package truncation & Package content hash changes when normalized records are omitted. & Detached signatures are future work. \\
+Equivocation & A transcript binds one package hash to one verification run. & Public log consistency is not yet implemented. \\
+Small-cell disclosure & Proof sketches reject obvious linkable identity fields. & Rare write-ins, tiny precincts, ballot styles, and timestamps still require suppression policy. \\
+Coercion receipts & Choice-bearing proof sketches fail the privacy gate. & RCOUNT must not let voters prove candidate choices. \\
+Malware resistance & Out of scope. & RCOUNT is not a voting-system security proof. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
 The RPLAN boundary is optional. District vote aggregation is necessary when
 precinct or reporting-unit totals must be projected onto districts, especially
 when district assignments change across cycles. But count packages should not
@@ -26,3 +43,17 @@ depend on districting machinery unless the public claim being verified is a
 district total. This keeps the base verifier small while allowing RCOUNT and
 RPLAN to meet at a hashed assignment boundary.
 
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+RCOUNT can mechanically show & RCOUNT does not show \\
+\midrule
+Package records match their manifest hash. & Election officials acted lawfully. \\
+Source bytes match the declared source index. & Voting-system software was uncompromised. \\
+Contest and jurisdiction arithmetic reconciles. & Every eligible voter was registered or every ballot decision was correct. \\
+Declared batches, lineage, and privacy gates pass. & Public proof sketches are a complete end-to-end voting protocol. \\
+District totals replay from a specified RPLAN assignment. & The district plan is fair, lawful, or politically neutral. \\
+\bottomrule
+\end{tabularx}
+\end{center}

@@ -1,0 +1,36 @@
+\section{Status, Schema, and Hash Contract}
+
+RCOUNT records count status as data rather than prose. A status says what public
+claim is being replayed; a status event says why the claim changed.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+Status & Typical evidence & What RCOUNT can verify \\
+\midrule
+Unofficial & Election-night export or preliminary report & Local arithmetic and source hash stability for the preliminary claim. \\
+Canvassed & Canvass report, board minutes, corrected public export & Arithmetic, jurisdiction totals, and declared correction events. \\
+Recounted & Recount report or updated statement of votes & Arithmetic and event lineage for the recount snapshot. \\
+Amended & Amended certification or court-ordered correction & Arithmetic and public event history for the amended snapshot. \\
+Certified & Official certification artifact & Mechanical consistency of records marked certified, not the legal validity of certification. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The schema contract is intentionally small. A package declares
+\texttt{rcount\_version}; the current crates use a draft version while the
+format is incubating. Required layers are the manifest, contests, reporting
+units, summaries, status events, source index, source bytes, package hashes, and
+transcripts. Optional layers include batch manifests, lineage events, inclusion
+proof sketches, and district aggregation transcripts. Source index paths are
+package-relative and must remain under \texttt{sources/}.
+
+Hashes are over canonical JSON projections or exact source bytes with
+domain-separated prefixes. The current prefix families are source, record, file,
+package, event, and proof. This prevents a hash from one layer from being
+silently reused as evidence for another. A district aggregation transcript adds
+the RCOUNT package content hash, the RPLAN plan hash, and, when present, the
+RCTX context hash. Those hashes bind the district total to both the count
+package and the assignment used to project reporting units into districts.
+

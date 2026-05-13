@@ -9,7 +9,8 @@ different failures and should not collapse into a generic ``invalid election''
 message.
 
 \begin{center}
-\begin{tabular}{lll}
+\small
+\begin{tabularx}{\textwidth}{lXX}
 \toprule
 Check & Inputs & Failure caught \\
 \midrule
@@ -24,7 +25,7 @@ Check & Inputs & Failure caught \\
 \texttt{source\_hash\_match} & Source index, source bytes & Raw evidence changed after packaging \\
 \texttt{district\_aggregation\_total} & RCOUNT, RPLAN & District totals do not replay from units \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{center}
 
 The current CLI exposes two verifier paths. \texttt{rcount verify} reads a
@@ -41,4 +42,3 @@ lawfully, that voting-system software was uncompromised, or that a court would
 uphold the election. Those questions belong to law, administration, security,
 and audit practice. RCOUNT contributes a replayable evidence layer underneath
 those decisions.
-

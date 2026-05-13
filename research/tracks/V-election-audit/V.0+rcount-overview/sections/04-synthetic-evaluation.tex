@@ -7,7 +7,8 @@ fixtures let each verifier layer be exercised with minimal records, known
 expected outcomes, and reproducible failure modes.
 
 \begin{center}
-\begin{tabular}{lll}
+\small
+\begin{tabularx}{\textwidth}{llX}
 \toprule
 Fixture & Expected & Contract layer \\
 \midrule
@@ -26,7 +27,20 @@ Fixture & Expected & Contract layer \\
 \texttt{missing-source-hash} & fail & Omitted source evidence \\
 \texttt{multi-election-harness-negatives} & fail & Bad lineage, stale plan, tampered cycle source \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
+\end{center}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{llX}
+\toprule
+Level & Scope & Evidence in this draft \\
+\midrule
+L0 & Pure equations and hash projections & Core unit tests for contest sums, jurisdiction totals, status events, package hashes, batch accounting, lineage, and proof privacy. \\
+L1 & Package fixtures and CLI verification & Golden packages under \texttt{docs/examples/rcount-golden-packages} and \texttt{rcount verify}. \\
+L2 & Multi-election replay & Three-cycle synthetic harness with split/merge lineage, per-cycle RPLAN plans, district aggregation, and negative cases. \\
+\bottomrule
+\end{tabularx}
 \end{center}
 
 The L2 harness is the most important fixture because it links the concepts that
@@ -41,3 +55,18 @@ real-world coverage. It is a contract test. Before RCOUNT reads a public state
 file, the package format should already know how to fail when arithmetic,
 lineage, privacy, district projection, or source evidence breaks.
 
+The reproducibility surface is executable. The key commands are:
+\begin{quote}
+\small
+\begin{verbatim}
+cargo run -p rcount-district --example multi_election_harness
+cargo run -p rcount-district --example multi_election_negative_harnesses
+cargo test -p rcount-district -p rcount-audit -p rcount-cli
+\end{verbatim}
+\end{quote}
+Negative fixtures intentionally fail through different surfaces:
+\begin{itemize}
+\item bad lineage fails the package verifier;
+\item stale plan units fail district aggregation;
+\item tampered cycle sources fail source hash verification.
+\end{itemize}

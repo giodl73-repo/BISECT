@@ -1,0 +1,45 @@
+\section{Count Semantics}
+
+RCOUNT v0 is a summary-level substrate. It does not attempt to preserve the
+full voting-system object model, but it must name the objects it summarizes so
+that later adapters do not erase election meaning.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Term & Meaning in the RCOUNT boundary \\
+\midrule
+Ballot & A voter-facing voting record as treated by the jurisdiction. RCOUNT v0 does not model voter eligibility or ballot issuance decisions. \\
+Ballot card & A physical or electronic card that may contain only part of a ballot. Future adapters must not assume one CVR row equals one voter. \\
+CVR row & A voting-system export row describing interpreted marks. RCOUNT v0 can cite CVRs as source evidence but normalizes only public summaries. \\
+Contest & An election question with valid selections, vote-for rules, and residual accounting. \\
+Selection & A candidate, option, or write-in bucket that may receive votes in a contest. \\
+Summary & A public count claim: selections plus undervotes, overvotes, blank contests, and counted ballots for one contest, reporting unit, status, and optional batch. \\
+Batch & An accounting control such as election-day, mail, provisional, or central-count ballots, with accepted, counted, and rejected counts. \\
+Reporting unit & The public geography or accounting unit: precinct, split precinct, vote center, batch, jurisdiction total, or district total. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Residual counts are first-class because they change the meaning of the total.
+For a single-vote contest, the local equation is:
+\[
+  \text{counted ballots} =
+  \sum \text{selection votes} + \text{undervotes} + \text{overvotes}
+  + \text{blank contests}.
+\]
+Write-ins may be reported as explicit candidates, adjudicated names, or a
+bucket depending on jurisdiction and export format. RCOUNT v0 uses a
+write-in-bucket selection in its synthetic fixtures and leaves richer write-in
+normalization to adapters.
+
+Batch accounting is a separate control from contest arithmetic. In the
+\texttt{mail-batch-added} fixture, accepted ballots reconcile as:
+\[
+  \text{accepted ballots} = \text{counted ballots} + \text{rejected ballots}.
+\]
+A batch summary must then agree with the batch manifest's counted ballots. This
+distinction lets RCOUNT catch a missing or inconsistent batch without treating a
+legitimate late mail batch as suspicious merely because a total changed.
+

@@ -1,7 +1,7 @@
 paper: V.0+rcount-overview
 title: "RCOUNT: Reproducible Election Count Packages"
 type: publication
-stage: synthesis
+stage: recheck
 round: 1
 content_mode: draft
 venue: technical report
@@ -29,19 +29,20 @@ reviews:
     min_score: 2
     max_score: 3
     synthesis: reviews/SYNTHESIS.md
+    revision_plan: REVISION-PLAN.md
 p1_items:
   - id: P1.1
     title: Define the certification and count-status lifecycle.
-    addressed: false
+    addressed: true
   - id: P1.2
     title: Add core tally semantics before the package model.
-    addressed: false
+    addressed: true
   - id: P1.3
     title: Strengthen the privacy/threat model boundary.
-    addressed: false
+    addressed: true
   - id: P1.4
     title: Make the synthetic evidence ladder reproducible.
-    addressed: false
+    addressed: true
   - id: P1.5
     title: State the schema/version/hash contract.
-    addressed: false
+    addressed: true
