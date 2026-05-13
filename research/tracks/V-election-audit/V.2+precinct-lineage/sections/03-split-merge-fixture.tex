@@ -1,0 +1,25 @@
+\section{Split And Merge Fixture}
+
+The \texttt{precinct-split-lineage} fixture contains two canonical events:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+Event & Prior units & Current units \\
+\midrule
+\texttt{lineage:P-004-split} & \texttt{P-004} & \texttt{P-004A}, \texttt{P-004B} \\
+\texttt{lineage:P-007-P-008-merge} & \texttt{P-007}, \texttt{P-008} & \texttt{P-078} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The first event says that P-004 split into two precincts after municipal
+growth. The second says that P-007 and P-008 merged into P-078 during precinct
+consolidation. The verifier's \texttt{lineage\_conservation} check confirms the
+cardinality and existence of the referenced units.
+
+The fixture is intentionally about evidence shape, not demographic judgment. It
+does not claim that a split is harmless or that a merge is fair. It gives later
+analysis a stable, auditable way to avoid comparing P-004 in one cycle to only
+P-004A in the next.

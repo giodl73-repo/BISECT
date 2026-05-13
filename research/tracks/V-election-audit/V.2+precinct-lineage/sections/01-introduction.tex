@@ -1,0 +1,19 @@
+\section{Introduction}
+
+Precincts are administrative objects, not eternal atoms. A county may split a
+precinct after growth, merge two precincts after consolidation, rename a unit,
+or report vote-center and central-count batches differently from one cycle to
+the next. A public audit system that compares elections by matching raw precinct
+labels will eventually confuse administrative change with electoral change.
+
+V.1 described how RCOUNT keeps canvass statuses from overwriting one another.
+V.2 extends that idea across election cycles. The unit universe for one election
+is allowed to differ from the next, but the difference must be declared through
+lineage evidence that a verifier can replay.
+
+The goal is modest and important. RCOUNT does not decide whether a precinct
+change was wise, lawful, or politically neutral. It verifies that the package
+declares how prior reporting units relate to current reporting units, that the
+referenced units exist, that each cycle's sources still hash correctly, and
+that any RPLAN district aggregation binds the exact unit universe used in that
+cycle.

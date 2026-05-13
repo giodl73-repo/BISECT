@@ -1,0 +1,43 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{Precinct Lineage Across Elections}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Election comparisons often assume that a precinct identifier means the same
+thing across cycles. That assumption fails when precincts split, merge, rename,
+or move under new reporting conventions. This paper describes how RCOUNT treats
+reporting-unit lineage as public evidence. A lineage event links prior-cycle
+units to current-cycle units, records the authority and explanation for the
+change, and lets multi-election verification distinguish real administrative
+change from stale plans, broken crosswalks, or tampered sources. Using the
+\texttt{precinct-split-lineage} fixture and the three-cycle synthetic harness,
+we show how RCOUNT can compare elections without reducing precinct history to
+fragile string matching.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-lineage-model}
+\input{sections/03-split-merge-fixture}
+\input{sections/04-multi-election-harness}
+\input{sections/05-failure-modes}
+\input{sections/06-boundaries}
+\input{sections/07-conclusion}
+
+\nocite{rcount-overview-2026,rcount-canvass-2026,rcount-substrate-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

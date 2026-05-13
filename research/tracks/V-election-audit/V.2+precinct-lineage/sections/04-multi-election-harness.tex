@@ -1,0 +1,31 @@
+\section{Multi-Election Harness}
+
+The L2 synthetic harness spans three cycles: 2024, 2026, and 2028. Each cycle
+has its own RCOUNT package, RPLAN plan hash, unit universe hash, and district
+aggregation transcript. The point is not that the synthetic elections are
+realistic. The point is that every cross-cycle comparison names the exact count
+package and plan universe that produced it.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lrrX}
+\toprule
+Cycle & Units & Lineage events & Unit universe \\
+\midrule
+2024 & 3 & 0 & \texttt{P-001}, \texttt{P-002}, \texttt{P-003} \\
+2026 & 4 & 1 & \texttt{P-001A}, \texttt{P-001B}, \texttt{P-002}, \texttt{P-003} \\
+2028 & 3 & 1 & \texttt{P-001A}, \texttt{P-001B}, \texttt{P-023} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+For district aggregation, each cycle binds three hashes:
+\[
+  H_{\mathrm{count\ package}},\quad
+  H_{\mathrm{rplan\ plan}},\quad
+  H_{\mathrm{unit\ universe}}.
+\]
+That triple prevents a stale crosswalk from being silently reused against a
+different set of reporting units. If the plan expects P-002 but the current
+package only contains P-023 after a merge, the failure belongs to the plan/unit
+boundary, not to vote arithmetic.

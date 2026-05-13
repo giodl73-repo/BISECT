@@ -1,0 +1,17 @@
+\section{Boundaries}
+
+RCOUNT lineage does not prove why voters moved, whether turnout changed, or
+whether a precinct alteration had political intent. It only states the
+administrative relationship between reporting units and verifies that the
+declared relationship is structurally consistent.
+
+It also does not require a county to publish voter-level movement records.
+Lineage works at the reporting-unit level. When future adapters use voter-file
+or registration evidence, they must preserve the V.0 privacy boundary: public
+verification should not expose voter identity, ballot style, timestamps, or
+small-cell facts that allow reidentification.
+
+Finally, lineage is not a substitute for RPLAN. RCOUNT can declare how reporting
+units changed; RPLAN declares how those units aggregate into districts for a
+specific plan and cycle. The bridge between them must remain hash-bound and
+optional.

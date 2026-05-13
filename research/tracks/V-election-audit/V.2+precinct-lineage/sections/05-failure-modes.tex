@@ -1,0 +1,23 @@
+\section{Failure Modes}
+
+Lineage verification is most useful when failures are specific. The current
+negative harnesses separate three adjacent problems:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+Negative case & Expected failure & Interpretation \\
+\midrule
+\texttt{bad-lineage} & Missing current reporting unit & A lineage event points to a unit that does not exist. \\
+\texttt{stale-plan} & Missing plan unit summary & The RPLAN assignment expects a unit absent from the RCOUNT package. \\
+\texttt{tampered-2028-source} & Source hash mismatch & The package source evidence changed after hashing. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+These failures should not collapse into a generic "cross-cycle mismatch." A bad
+lineage record asks the election package to fix its administrative history. A
+stale plan asks the district aggregation layer to use the right unit universe.
+A source hash mismatch asks the package publisher to explain why the evidence
+bytes changed. The remedy differs because the failure layer differs.

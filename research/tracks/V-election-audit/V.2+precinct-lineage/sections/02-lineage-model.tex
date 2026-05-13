@@ -1,0 +1,32 @@
+\section{Lineage Model}
+
+An RCOUNT lineage event relates reporting units across cycles. The core fields
+are:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & Meaning \\
+\midrule
+\texttt{lineage\_id} & Stable event identifier within the package. \\
+\texttt{kind} & Administrative relation: unchanged, split, or merge in the current draft. \\
+\texttt{prior\_cycle}, \texttt{current\_cycle} & Election cycles connected by the event. \\
+\texttt{prior\_reporting\_unit\_ids} & Units from the earlier cycle. \\
+\texttt{current\_reporting\_unit\_ids} & Units in the later cycle. \\
+\texttt{authority} & Public office, board, or source asserting the change. \\
+\texttt{explanation} & Human-readable reason, such as growth, consolidation, or redrawn precinct boundaries. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The verifier checks structure before interpretation. A split must name one prior
+unit and multiple current units. A merge must name multiple prior units and one
+current unit. Every referenced unit must exist in the package's reporting-unit
+records. Those checks do not prove that the county drew the new units correctly;
+they prove that the declared cross-cycle relationship is internally replayable.
+
+Lineage is distinct from count totals. The lineage event says how units relate;
+the summaries still carry contest, status, residual, and counted-ballot
+arithmetic. This separation keeps an administrative crosswalk from silently
+rewriting votes.
