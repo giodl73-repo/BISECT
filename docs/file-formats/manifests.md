@@ -27,6 +27,7 @@ If you're adding a new manifest type, land a one-task edit to §1 in the same co
 | `g-ensemble-evidence-manifest.json` | `g-ensemble-evidence-manifest v1` | `bisect-ensemble::evidence_manifest` | G Ensemble Evidence Packages wave |
 | `j-apportionment-evidence-manifest.json` | `j-apportionment-evidence-manifest v1` | `bisect-apportion::evidence_manifest` | J Apportionment Evidence Packages wave |
 | `k-reock-evidence-manifest.json` | `k-reock-evidence-manifest v1` | `bisect-analysis::compactness_evidence` | K Exact Reock Evidence Packages wave |
+| `u-search-evidence-manifest.json` | `u-search-evidence-manifest v1` | `bisect-ensemble::search_evidence` | U Search Evidence Packages wave |
 
 **Adding a new manifest type:** edit this table, add a `## §3.X — <kind> v<n>` subsection at the bottom enumerating fields beyond the canonical set, and reference both from the spec/plan that owns it.
 
@@ -214,6 +215,25 @@ Required fields beyond §2:
 |---|---|
 | `package_id` | Stable package slug including the K-track scope. |
 | `fixture_file` | `{path, sha256, role}` for the package-relative exact-MBC fixture set. |
+| `verifier_path` | Package-relative source path for the verifier implementation. |
+| `verification_commands` | Commands that replay or validate the package. |
+
+### 3.14 `u-search-evidence-manifest v1`
+
+Source: `bisect-ensemble::search_evidence::USearchEvidenceManifest`.
+
+This manifest binds U-track search and optimization evidence fixtures to their
+verifier. The first package covers U.2 parameter-sweep smoke evidence and U.4
+parallel-tempering audit-shape evidence. It is deliberately synthetic and does
+not by itself prove a 50-state parameter sweep or production CLI mode.
+
+Required fields beyond §2:
+
+| Field | Definition |
+|---|---|
+| `package_id` | Stable package slug including the covered U-track scope. |
+| `papers` | U-track papers covered, e.g. `["U.2", "U.4"]`. |
+| `fixture_file` | `{path, sha256, role}` for the package-relative search fixture set. |
 | `verifier_path` | Package-relative source path for the verifier implementation. |
 | `verification_commands` | Commands that replay or validate the package. |
 

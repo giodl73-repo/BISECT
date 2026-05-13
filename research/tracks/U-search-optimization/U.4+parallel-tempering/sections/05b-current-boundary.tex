@@ -10,3 +10,13 @@ The current project contains ensemble and multiscale substrates, but this paper
 should not imply a production CLI recommendation unless a checked-in command,
 test, and package path exists for the named mode.  Treat the paper as
 methodological unless it points to such an implementation artifact.
+
+The first package-backed artifact is now a synthetic parallel-tempering smoke
+package at
+\texttt{docs/examples/u-search-evidence-packages/synthetic-sweep-and-pt/}.
+It verifies the audit shape for a geometric tolerance ladder, swap-attempt count,
+swap-acceptance bound, selected-rank bound, and cold-chain record count through
+\texttt{bisect-ensemble::search\_evidence}.  This supports the paper's audit-log
+schema claims, but it still does not establish a production \texttt{bisect}
+parallel-tempering CLI until that command path and a real run package are
+checked in.

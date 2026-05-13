@@ -83,9 +83,9 @@ Score bands:
 |---|---:|---:|---:|---:|---:|---:|---:|---|
 | U.0 Search Optimization Overview | 3.5 | 3.4 | 3.2 | 3.6 | 3.6 | 3.4 | 20.7 | Strong; package boundary refreshed |
 | U.1 ConvergenceSweep | 3.7 | 3.6 | 3.5 | 3.9 | 4.0 | 3.6 | 22.3 | Strong; search-ledger boundary |
-| U.2 Parameter Sensitivity | 3.3 | 3.2 | 3.1 | 3.4 | 3.4 | 3.2 | 19.6 | Serviceable-plus; package-backed sweep pending |
+| U.2 Parameter Sensitivity | 3.5 | 3.4 | 3.3 | 3.5 | 3.5 | 3.4 | 20.6 | Stronger; synthetic sweep package, real 50-state sweep pending |
 | U.3 Simulated Annealing | 3.3 | 3.4 | 3.1 | 3.4 | 3.4 | 3.2 | 19.8 | Serviceable-plus; heuristic boundary |
-| U.4 Parallel Tempering | 3.3 | 3.3 | 3.1 | 3.4 | 3.4 | 3.2 | 19.7 | Serviceable-plus; CLI/package path pending |
+| U.4 Parallel Tempering | 3.5 | 3.5 | 3.3 | 3.5 | 3.5 | 3.4 | 20.7 | Stronger; synthetic PT package, production CLI pending |
 | U.5 Adaptive Multiscale | 3.4 | 3.4 | 3.2 | 3.5 | 3.4 | 3.3 | 20.2 | Strong; bisect-multiscale boundary |
 | U.6 ILP Redistricting | 3.4 | 3.5 | 3.2 | 3.6 | 3.4 | 3.3 | 20.4 | Strong; exact status language aligned |
 | U.7 Pareto Redistricting | 3.5 | 3.5 | 3.3 | 3.6 | 3.5 | 3.4 | 20.8 | Strong; selected-frontier artifact aligned |
@@ -160,8 +160,9 @@ Score bands:
 
 1. Metric follow-through: K.2/K.0/K.7 now have exact-MBC smoke evidence, but
    real district polygon exact-MBC packages remain future evidence lifts.
-2. Package evidence follow-through: U.2/U.4 still need archived sweep or
-   production CLI packages before they can score as implementation papers.
+2. Package evidence follow-through: U.2/U.4 now have synthetic package evidence,
+   but still need real archived sweep and production CLI packages before they can
+   score as implementation papers.
 3. G-track package follow-through: G.1-G.3 need archived external traces and
    election/metric packages before their percentile claims can score higher.
 
@@ -170,7 +171,7 @@ Score bands:
 | Track family | Included rows | Current center of gravity | Main gap |
 |---|---:|---|---|
 | B/T construction foundations | 26 | Strong for reviewed/new slices, serviceable for older slices; T.5-T.7 golden and T.8/T.9 strong | legacy visuals and audit/package bridges |
-| U search/optimization/audit | 21 | Strong after older-paper boundary pass; U.10 and U.16-U.20 golden | archived sweep/CLI packages for U.2/U.4 |
+| U search/optimization/audit | 21 | Strong after synthetic U.2/U.4 package and U.10/U.16-U.20 golden slices | real archived sweep/CLI packages for U.2/U.4 |
 | G ensemble/sampling | 16 | Strong/serviceable-plus after cleanup; G.4/G.7/G.10/G.11 golden | archived external traces for G.1-G.3 |
 | J apportionment | 7 | Serviceable-plus after implementation-boundary pass | Census/SHA fixtures and Hamilton public API remain future work |
 | K compactness metrics | 8 | Strong/serviceable-plus after exact-MBC smoke package | real district exact-MBC packages and K.5 minor revision |

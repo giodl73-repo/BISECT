@@ -11,3 +11,11 @@ or more parameters, record the plan package for every cell, and compare the
 resulting metrics under a declared profile.  It should not be cited as a
 complete 50-state partisan-neutrality finding without the archived sweep
 packages and statistical summary that support the headline numbers.
+
+The repository now includes a synthetic smoke package for this contract at
+\texttt{docs/examples/u-search-evidence-packages/synthetic-sweep-and-pt/}.
+The package records a baseline, parameter grids, per-run output hashes, and
+summary metrics, and is verified by
+\texttt{bisect-ensemble::search\_evidence}.  This improves the evidence
+boundary from prose-only protocol to package-backed schema validation.  It is
+not a substitute for the real 50-state sweep archive described above.

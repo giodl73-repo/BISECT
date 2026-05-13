@@ -74,9 +74,9 @@ The search, optimization, certification, and algorithm-selection layer. Once con
 |------|-------|-----|------|
 | U.0 | Search and Optimization Overview — taxonomy from construction to certification | [PDF](papers/U.0+search-optimization-overview.pdf) | reviewed draft |
 | U.1 | ConvergenceSweep — T=600 statutory seed formula | [PDF](papers/U.1+convergence-sweep.pdf) | `--search convergence` |
-| U.2 | Parameter Sensitivity — evidence protocol for tuning robustness | [PDF](papers/U.2+parameter-sensitivity.pdf) | package-backed sweep needed |
+| U.2 | Parameter Sensitivity — evidence protocol for tuning robustness | [PDF](papers/U.2+parameter-sensitivity.pdf) | synthetic sweep package added; real 50-state sweep pending |
 | U.3 | Simulated Annealing Bisection — cooling the edge-cut objective in the bisection tree | [PDF](papers/U.3+simulated-annealing.pdf) | heuristic/local-search boundary |
-| U.4 | Parallel Tempering — multi-chain replica exchange MCMC | [PDF](papers/U.4+parallel-tempering.pdf) | method design; CLI path pending |
+| U.4 | Parallel Tempering — multi-chain replica exchange MCMC | [PDF](papers/U.4+parallel-tempering.pdf) | synthetic PT package added; production CLI pending |
 | U.5 | Adaptive Multi-scale MCMC — self-tuning alpha via Robbins-Monro | [PDF](papers/U.5+adaptive-multiscale.pdf) | `bisect-multiscale` substrate |
 | U.6 | Exact Redistricting via ILP — model-scoped certificates for small instances | [PDF](papers/U.6+ilp-redistricting.pdf) | solver package required |
 | U.7 | Pareto-Optimal Redistricting — transparent trade-offs via NSGA-II | [PDF](papers/U.7+pareto-redistricting.pdf) | `bisect-pareto` selected-frontier package |
