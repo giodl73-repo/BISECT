@@ -11,7 +11,7 @@ recompute public claims from lower-level evidence.
 
 | Code | Working title | Status |
 |------|---------------|--------|
-| V.0 | RCOUNT Overview: Reproducible Election Count Packages | draft |
+| V.0 | RCOUNT Overview: Reproducible Election Count Packages | ready |
 | V.1 | Canvass Arithmetic: From Unofficial Returns To Certified Totals | planned |
 | V.2 | Precinct Lineage Across Elections | planned |
 | V.3 | Tamper-Evident Precinct And Batch Hashing | planned |

@@ -1,8 +1,8 @@
 paper: V.0+rcount-overview
 title: "RCOUNT: Reproducible Election Count Packages"
 type: publication
-stage: recheck
-round: 1
+stage: ready
+round: 2
 content_mode: draft
 venue: technical report
 review_date: 2026-05-12
@@ -30,6 +30,11 @@ reviews:
     max_score: 3
     synthesis: reviews/SYNTHESIS.md
     revision_plan: REVISION-PLAN.md
+  round_2:
+    avg_score: 3.0
+    min_score: 3
+    max_score: 3
+    synthesis: reviews/ROUND2-SYNTHESIS.md
 p1_items:
   - id: P1.1
     title: Define the certification and count-status lifecycle.

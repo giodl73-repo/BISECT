@@ -2,6 +2,9 @@
 
 Round 1 synthesis: `reviews/SYNTHESIS.md`.
 
+Round 2 recheck: `reviews/ROUND2-SYNTHESIS.md`. V.0 is ready with P2 polish
+remaining.
+
 ## P1.1 Certification And Count-Status Lifecycle
 
 - [x] Add a table in the verifier or boundaries section for unofficial, canvassed,
