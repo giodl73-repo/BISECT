@@ -1,7 +1,7 @@
 ---
 wave: r-package-completion
 date_open: 2026-05-13
-status: active
+status: complete
 source_goal: docs/specs/2026-05-13-r-package-completion-goal.md
 ---
 
@@ -65,3 +65,16 @@ All planned pulses are complete. Carry forward RMAP/RAUDIT/RCERT/RSTAT/RLOG/
 RCHAIN/RROLL/RCASE activation decisions to the next wave or close review, and
 keep `rctx-io` deferred until an independent RCTX package directory loader is
 needed.
+
+## Close Summary
+
+This wave completed the RCOUNT audit replay/boundary tranche and stabilized the
+first shared RCTX/RHIST base-package references. RCOUNT can now replay or
+boundary-report the V.12/V.13/V.14/V.15/V.17/V.18/V.19/V.20/V.21 audit surfaces
+named in this wave, while RCTX and RHIST have independent minimal fixtures,
+package/hash shapes, verifier coverage, and RCOUNT/RPLAN reference examples.
+
+The wave deliberately did not activate RMAP, RAUDIT, RCERT, RSTAT, RLOG,
+RCHAIN, RROLL, or RCASE beyond documented defer/activate boundaries. Those
+packages should move only when a second consumer or real-source access pattern
+requires them.

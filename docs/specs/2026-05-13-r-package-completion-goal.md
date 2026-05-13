@@ -1,6 +1,6 @@
 # Goal: Finish The Civic Evidence R-Package Family
 
-**Status:** Active goal  
+**Status:** Wave checkpoint complete; long-tail package activation deferred
 **Track:** R-package family completion  
 **Foundation:** [`2026-05-13-civic-evidence-package-family.md`](2026-05-13-civic-evidence-package-family.md),
 [`2026-05-13-civic-evidence-layer-access-patterns.md`](2026-05-13-civic-evidence-layer-access-patterns.md),
@@ -234,17 +234,28 @@ creating new facts.
 
 ## Final Acceptance
 
-- [ ] RCOUNT current-count and audit algorithm roadmap reaches its declared
+- [x] RCOUNT current-count and audit algorithm roadmap reaches its declared
   boundary.
 - [x] RCTX and RHIST have independent minimal package fixtures and verifier
   coverage.
 - [x] RCOUNT and RPLAN can both reference RCTX/RHIST without duplicating their
   ownership semantics.
-- [ ] RMAP, RAUDIT, RCERT, RSTAT, RLOG, RCHAIN, RROLL, and RCASE each have a
+- [x] RMAP, RAUDIT, RCERT, RSTAT, RLOG, RCHAIN, RROLL, and RCASE each have a
   written defer/activate decision.
-- [ ] Every active package has a claim-boundary file or documented equivalent.
-- [ ] The docs/specs review records reflect the final build order.
+- [x] Every active package has a claim-boundary file or documented equivalent.
+- [x] The docs/specs review records reflect the final build order.
 - [x] Full focused workspace suites pass for all implemented crates.
+
+## Wave Closeout
+
+The 2026-05-13 R Package Completion wave is complete as a checkpoint: RCOUNT
+audit replay and boundary methods reached the declared wave scope, RCTX and
+RHIST have independent minimal fixtures and verifier coverage, and RCOUNT/RPLAN
+can reference their package hashes without absorbing base ownership semantics.
+
+The package family is intentionally not "all packages active." RMAP, RAUDIT,
+RCERT, RSTAT, RLOG, RCHAIN, RROLL, and RCASE remain deferred until a real
+consumer or source-pressure pattern justifies activation.
 
 ## Suggested `/goal`
 

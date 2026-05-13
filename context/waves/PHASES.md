@@ -21,7 +21,7 @@
 | 2026-05-10 | RPLAN/U20 Audit Packages | RPLAN golden packages, U20 audit certificates, provenance and sidecars | archived |
 | 2026-05-11 | Algorithm Atlas And T/U Frontier | Atlas pages, T/U crates, package frontier, paper alignment | archived |
 | 2026-05-12 | RCOUNT Substrate And V Track | RCOUNT crate family, V.0-V.10 papers, adapters, audit fixtures | archived |
-| 2026-05-13 | R Package Completion | RCOUNT audit algorithms, then RCTX/RHIST base dimensions | active |
+| 2026-05-13 | R Package Completion | RCOUNT audit algorithms, then RCTX/RHIST base dimensions | archived |
 
 ## Operating Model
 
