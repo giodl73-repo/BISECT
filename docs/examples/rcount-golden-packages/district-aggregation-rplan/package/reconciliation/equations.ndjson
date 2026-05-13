@@ -11,3 +11,4 @@
 {"equation_id":"rla_margin_metadata","status":"declared"}
 {"equation_id":"rla_stopping_rule","status":"declared"}
 {"equation_id":"manual_audit_reconciliation","status":"declared"}
+{"equation_id":"batch_comparison_overstatement","status":"declared"}

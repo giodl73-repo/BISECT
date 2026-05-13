@@ -38,5 +38,12 @@
     "conversion_lineage": []
   },
   "geometry": null,
-  "extensions": {}
+  "extensions": {
+    "civic_evidence_base_references": {
+      "claim_boundary": "RPLAN records assignments only; RHIST owns cross-cycle lineage.",
+      "rctx_crosswalk_hash": "sha256:906054d087e8c006047448c821d79e75a81bb1bbeb1d9349ab7b5d025029d9bb",
+      "rctx_package_hash": "sha256:bf552e9d9753d3376155ca9c4b21db6b1930e37919a58bcb9096cd563653d532",
+      "rhist_package_hash": "sha256:2c391099d7b61ba0c27fd231376391aadec81de62a387e291a043ed18d69db0b"
+    }
+  }
 }

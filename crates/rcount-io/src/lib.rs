@@ -2067,7 +2067,8 @@ mod tests {
         synthetic_rla_margin_package, synthetic_rla_replay_package,
         synthetic_rla_statistical_package, synthetic_rla_stopping_package,
         synthetic_soba_observable_ballot_boundary_package, synthetic_stratified_hybrid_package,
-        synthetic_summary_basic_package, RctxReference, RhistReference,
+        synthetic_summary_basic_package, synthetic_summary_basic_package_with_base_references,
+        RctxReference, RhistReference, SYN_RCTX_L0_CROSSWALK_HASH, SYN_RHIST_L2_PACKAGE_HASH,
     };
 
     #[test]
@@ -2605,6 +2606,28 @@ mod tests {
         assert_eq!(
             decoded_package.rctx_refs[0].crosswalk_hash.as_deref(),
             Some("sha256:2222222222222222222222222222222222222222222222222222222222222222")
+        );
+        verify_package(&decoded_package).unwrap();
+    }
+
+    #[test]
+    fn round_trips_shared_rctx_rhist_base_references() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_summary_basic_package_with_base_references();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+        assert!(tmp.path().join("normalized/rctx-refs.ndjson").is_file());
+        assert!(tmp.path().join("normalized/rhist-refs.ndjson").is_file());
+
+        let (_, decoded_package) = read_package_dir(tmp.path()).unwrap();
+        assert_eq!(
+            decoded_package.rctx_refs[0].crosswalk_hash.as_deref(),
+            Some(SYN_RCTX_L0_CROSSWALK_HASH)
+        );
+        assert_eq!(
+            decoded_package.rhist_refs[0].package_hash,
+            SYN_RHIST_L2_PACKAGE_HASH
         );
         verify_package(&decoded_package).unwrap();
     }

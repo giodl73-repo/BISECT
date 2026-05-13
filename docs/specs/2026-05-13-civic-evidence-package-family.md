@@ -174,6 +174,12 @@ recorded, with a tiny synthetic multi-cycle unit-lineage package and one
 negative fixture. That will stabilize the dimension that both RPLAN and RCOUNT
 need most.
 
+Pulse 06 wires the first shared-reference example: RCOUNT's summary fixture can
+declare the RCTX L0 context/crosswalk hashes and the RHIST L2 package hash, and
+the district-aggregation RPLAN example carries the same package hashes in an
+extension note. This is composition metadata only; it does not transfer RCTX
+unit identity, RHIST lineage, or RCOUNT ledgers into RPLAN.
+
 ## RHIST Minimal Slice
 
 The first RHIST slice should include:

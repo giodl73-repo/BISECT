@@ -1,10 +1,10 @@
 {
   "aggregation_version": "0.1-draft",
-  "rcount_package_content_hash": "sha256:09eec04c6adc3dfc150bd065f152d75d9111333c3311bc20760fbc28c2009591",
+  "rcount_package_content_hash": "sha256:acdc48a4cf60ec1df93f624dec19b85856dca7930f1dde35291126f9facfe621",
   "rplan_plan_hash": "sha256:b51c9ac1550a391c7f426a8a109212d62dfa7903f5e25ac19d30a1990b87ac79",
   "rctx_context_hash": "sha256:b11f1eabcaf33e2d2691ddbe498c650830cffb9b0fb62820292d4ca0166c0bb7",
-  "rctx_reference_id": "rctx:summary-basic-to-plan",
-  "rctx_crosswalk_hash": "sha256:6b8a42eb2c63c890f0ee562f02beb4c332962dafdba67dd30b192a42745b5d44",
+  "rctx_reference_id": "rctx:syn-l0-shared-context",
+  "rctx_crosswalk_hash": "sha256:906054d087e8c006047448c821d79e75a81bb1bbeb1d9349ab7b5d025029d9bb",
   "contest_id": "syn-2024-mayor",
   "status": "canvassed",
   "unit_universe_hash": "sha256:72beae0d4e61c061c5f373089f71d216b306d7099f11ea5a3c32447bc13b0399",

@@ -31,6 +31,14 @@ pub const RAIRE_IRV_METHOD_ID: &str = "raire-irv-v1";
 pub const AWAIRE_IRV_METHOD_ID: &str = "awaire-irv-v1";
 pub const BAYESIAN_TABULATION_AUDIT_METHOD_ID: &str = "bayesian-tabulation-audit-v1";
 pub const SOBA_OBSERVABLE_BALLOT_AUDIT_METHOD_ID: &str = "soba-observable-ballot-audit-v1";
+pub const SYN_RCTX_L0_PACKAGE_HASH: &str =
+    "sha256:bf552e9d9753d3376155ca9c4b21db6b1930e37919a58bcb9096cd563653d532";
+pub const SYN_RCTX_L0_CONTEXT_HASH: &str =
+    "sha256:b11f1eabcaf33e2d2691ddbe498c650830cffb9b0fb62820292d4ca0166c0bb7";
+pub const SYN_RCTX_L0_CROSSWALK_HASH: &str =
+    "sha256:906054d087e8c006047448c821d79e75a81bb1bbeb1d9349ab7b5d025029d9bb";
+pub const SYN_RHIST_L2_PACKAGE_HASH: &str =
+    "sha256:2c391099d7b61ba0c27fd231376391aadec81de62a387e291a043ed18d69db0b";
 
 #[derive(Debug, Error, Clone, PartialEq, Eq)]
 pub enum RcountCoreError {
@@ -3080,6 +3088,34 @@ pub fn synthetic_summary_basic_package() -> RcountPackage {
     }
 }
 
+pub fn synthetic_summary_basic_package_with_base_references() -> RcountPackage {
+    let mut package = synthetic_summary_basic_package();
+    package.rctx_refs = vec![RctxReference {
+        reference_id: "rctx:syn-l0-shared-context".to_string(),
+        context_hash: SYN_RCTX_L0_CONTEXT_HASH.to_string(),
+        context_path: Some("docs/fixtures/rctx/l0-shared-context".to_string()),
+        crosswalk_hash: Some(SYN_RCTX_L0_CROSSWALK_HASH.to_string()),
+        crosswalk_path: Some("docs/fixtures/rctx/l0-shared-context/units/crosswalks.ndjson".to_string()),
+        role: "aggregation-crosswalk".to_string(),
+        note: Some(format!(
+            "References RCTX fixture package {SYN_RCTX_L0_PACKAGE_HASH} by stable context and crosswalk hashes."
+        )),
+    }];
+    package.rhist_refs = vec![RhistReference {
+        reference_id: "rhist:syn-l2-three-cycle".to_string(),
+        package_hash: SYN_RHIST_L2_PACKAGE_HASH.to_string(),
+        package_path: Some("docs/fixtures/rhist/l2-three-cycle".to_string()),
+        cycle_ids: vec![
+            "syn-2024-general".to_string(),
+            "syn-2026-general".to_string(),
+            "syn-2028-general".to_string(),
+        ],
+        role: "unit-lineage".to_string(),
+        note: Some("References RHIST rename/split/merge fixture by package hash.".to_string()),
+    }];
+    package
+}
+
 pub fn synthetic_canvass_correction_package() -> RcountPackage {
     let mut package = synthetic_summary_basic_package();
     let unofficial = vec![
@@ -4989,8 +5025,32 @@ mod tests {
         }));
         assert_eq!(
             package.rhist_refs[0].package_hash,
-            "sha256:2c391099d7b61ba0c27fd231376391aadec81de62a387e291a043ed18d69db0b"
+            SYN_RHIST_L2_PACKAGE_HASH
         );
+    }
+
+    #[test]
+    fn synthetic_summary_basic_base_references_verify_together() {
+        let package = synthetic_summary_basic_package_with_base_references();
+        let report = verify_package(&package).expect("base references must verify");
+
+        assert_eq!(package.rctx_refs[0].context_hash, SYN_RCTX_L0_CONTEXT_HASH);
+        assert_eq!(
+            package.rctx_refs[0].crosswalk_hash.as_deref(),
+            Some(SYN_RCTX_L0_CROSSWALK_HASH)
+        );
+        assert_eq!(
+            package.rhist_refs[0].package_hash,
+            SYN_RHIST_L2_PACKAGE_HASH
+        );
+        assert!(report
+            .passed
+            .iter()
+            .any(|pass| pass.equation_id == "rctx_reference_declared"));
+        assert!(report
+            .passed
+            .iter()
+            .any(|pass| pass.equation_id == "rhist_reference_declared"));
     }
 
     #[test]

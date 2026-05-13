@@ -92,6 +92,10 @@ Expected cross-package queries:
   The first shared positive fixture is
   `docs/fixtures/rctx/l0-shared-context`; RCOUNT consumes it by stable context
   and crosswalk hashes rather than copying RCTX graph/source ownership.
+- RPLAN examples may carry package-reference notes in `extensions`, as in the
+  district-aggregation example's `civic_evidence_base_references` object. That
+  object points to RCTX/RHIST package hashes for composition only; RPLAN remains
+  the owner of district assignments, not unit history or count ledgers.
 - Transitional RCOUNT embedded lineage maps through `rcount-rhist` into
   RHIST-compatible events; this is a bridge, not a transfer of RHIST ownership
   into RCOUNT.

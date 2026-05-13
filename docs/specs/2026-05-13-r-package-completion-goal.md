@@ -141,7 +141,7 @@ Purpose: stabilize the machine geography layer that RPLAN and RCOUNT both use.
 - [ ] Add `rctx-cli verify` only after the fixture shape is stable.
 - [x] Add RCOUNT consumer coverage that preserves the minimal RCTX fixture
   context and crosswalk hashes during district aggregation.
-- [ ] Update RPLAN examples to reference the same RCTX fixture where possible.
+- [x] Update RPLAN examples to reference the same RCTX fixture where possible.
 
 ## Stage 3 - RHIST Minimal Lineage Package
 
@@ -236,15 +236,15 @@ creating new facts.
 
 - [ ] RCOUNT current-count and audit algorithm roadmap reaches its declared
   boundary.
-- [ ] RCTX and RHIST have independent minimal package fixtures and verifier
+- [x] RCTX and RHIST have independent minimal package fixtures and verifier
   coverage.
-- [ ] RCOUNT and RPLAN can both reference RCTX/RHIST without duplicating their
+- [x] RCOUNT and RPLAN can both reference RCTX/RHIST without duplicating their
   ownership semantics.
 - [ ] RMAP, RAUDIT, RCERT, RSTAT, RLOG, RCHAIN, RROLL, and RCASE each have a
   written defer/activate decision.
 - [ ] Every active package has a claim-boundary file or documented equivalent.
 - [ ] The docs/specs review records reflect the final build order.
-- [ ] Full focused workspace suites pass for all implemented crates.
+- [x] Full focused workspace suites pass for all implemented crates.
 
 ## Suggested `/goal`
 
