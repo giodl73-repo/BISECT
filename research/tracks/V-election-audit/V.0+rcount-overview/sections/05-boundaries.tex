@@ -1,0 +1,28 @@
+\section{Boundaries and Non-Goals}
+
+RCOUNT is most useful when its boundaries are explicit. It is not an election
+management system, a voter registration database, a ballot marking device
+verifier, an end-to-end voting protocol, or a replacement for risk-limiting
+audits. It can store evidence relevant to those domains, but its core claim is
+that public count packages can be replayed and checked.
+
+The certification boundary is especially important. A canvassing board may
+certify results after considering statutes, deadlines, cure rules, recount
+requests, court orders, and evidence that cannot be reduced to arithmetic. RCOUNT
+can show that a canvassed total equals a set of public summaries and that a
+correction event exists. It cannot decide whether the board acted lawfully.
+
+The privacy boundary is equally strict. A public artifact that lets a voter
+prove their candidate choice can become a coercion receipt. RCOUNT therefore
+treats inclusion proofs as privacy-gated sketches: they may show that an
+anonymized token exists in accepted or counted evidence, but they must not carry
+candidate selections or link voter identity, ballot style, and timestamp in a
+way that reidentifies the ballot.
+
+The RPLAN boundary is optional. District vote aggregation is necessary when
+precinct or reporting-unit totals must be projected onto districts, especially
+when district assignments change across cycles. But count packages should not
+depend on districting machinery unless the public claim being verified is a
+district total. This keeps the base verifier small while allowing RCOUNT and
+RPLAN to meet at a hashed assignment boundary.
+

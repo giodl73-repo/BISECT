@@ -1,0 +1,40 @@
+\section{Package Model}
+
+An RCOUNT package is a directory whose files separate source evidence,
+normalized records, reconciliation declarations, proof sketches, status events,
+and transcripts. The current Rust implementation writes these layers as JSON or
+NDJSON files so they can be diffed, hashed, and replayed with ordinary tools.
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+Layer & Purpose \\
+\midrule
+\texttt{manifest.json} & Jurisdiction, election metadata, and package hash \\
+\texttt{sources/} & Raw or synthetic source evidence and source index hashes \\
+\texttt{normalized/contests.ndjson} & Contest definitions and valid selections \\
+\texttt{normalized/reporting-units.ndjson} & Precincts, batches, jurisdiction totals, districts \\
+\texttt{normalized/summaries.ndjson} & Contest totals by reporting unit, status, and batch \\
+\texttt{normalized/batches.ndjson} & Batch manifests and accepted/counted/rejected ballots \\
+\texttt{normalized/lineage.ndjson} & Reporting-unit split, merge, and unchanged events \\
+\texttt{proofs/} & Privacy-safe inclusion proof sketches and package hashes \\
+\texttt{status/events.ndjson} & Canvass, correction, recount, and certification events \\
+\texttt{transcripts/} & Verifier output and replay evidence \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The central record is a summary: a contest id, reporting unit id, optional batch
+id, count status, selection totals, undervotes, overvotes, blank contests, and
+counted ballots. This is intentionally not a cast-vote-record schema. Summaries
+are the public claims being verified; source files and future adapters can
+explain how those summaries were derived from vendor exports, statements of
+votes, or canvass reports.
+
+Hashes use domain-separated prefixes so that a record hash, source hash, file
+hash, proof hash, and package hash cannot be silently substituted for one
+another. A package content hash binds the normalized model. Source hashes bind
+the raw evidence bytes used to justify that model. This distinction lets a
+verifier say whether arithmetic failed, source evidence was tampered with, or a
+manifest no longer matches the normalized records.
+

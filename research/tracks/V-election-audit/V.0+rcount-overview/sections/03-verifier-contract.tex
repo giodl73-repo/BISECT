@@ -1,0 +1,44 @@
+\section{Verifier Contract}
+
+The verifier contract is deliberately layered. A package may fail because local
+contest arithmetic is wrong, because jurisdiction totals do not equal the sum of
+their reporting units, because a batch summary has no batch manifest, because a
+lineage event references a missing precinct, because a proof exposes voter
+choices, or because source bytes no longer match the source index. These are
+different failures and should not collapse into a generic ``invalid election''
+message.
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Check & Inputs & Failure caught \\
+\midrule
+\texttt{contest\_selection\_sum} & Contest, summary & Votes plus residuals mismatch ballots \\
+\texttt{jurisdiction\_contest\_total} & Summaries & Jurisdiction total disagrees with units \\
+\texttt{status\_event\_declared} & Status events & Missing or malformed public event history \\
+\texttt{canvass\_correction\_event} & Status events, summaries & Changed canvass lacks correction event \\
+\texttt{accepted\_ballots} & Batch manifest & Accepted ballots mismatch counted plus rejected \\
+\texttt{batch\_summary\_total} & Batch manifest, summary & Batch summary lacks accounting evidence \\
+\texttt{lineage\_conservation} & Reporting units, lineage & Split or merge references missing units \\
+\texttt{proof\_privacy\_gate} & Inclusion proof sketches & Proof reveals choices or linkable identity \\
+\texttt{source\_hash\_match} & Source index, source bytes & Raw evidence changed after packaging \\
+\texttt{district\_aggregation\_total} & RCOUNT, RPLAN & District totals do not replay from units \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The current CLI exposes two verifier paths. \texttt{rcount verify} reads a
+package directory and emits a pass/fail transcript with per-check results.
+\texttt{rcount aggregate-districts} reads an RCOUNT package and an RPLAN
+assignment, then emits district totals and an aggregation transcript. The latter
+path is intentionally optional: base RCOUNT packages do not require districts,
+districting graphs, or RPLAN contexts.
+
+The contract is not a certification standard. A passing transcript means the
+package satisfied the declared mechanical checks. It does not prove that every
+eligible voter was registered, that every ballot was accepted or rejected
+lawfully, that voting-system software was uncompromised, or that a court would
+uphold the election. Those questions belong to law, administration, security,
+and audit practice. RCOUNT contributes a replayable evidence layer underneath
+those decisions.
+

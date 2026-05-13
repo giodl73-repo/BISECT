@@ -1,0 +1,43 @@
+\section{Synthetic Evaluation}
+
+The first RCOUNT milestone uses synthetic fixtures instead of real election
+exports. This is a conscious staging decision. Real data adapters introduce
+jurisdiction and vendor variation before the core contract is stable. Synthetic
+fixtures let each verifier layer be exercised with minimal records, known
+expected outcomes, and reproducible failure modes.
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Fixture & Expected & Contract layer \\
+\midrule
+\texttt{summary-basic} & pass & Contest sums and jurisdiction total \\
+\texttt{canvass-correction} & pass & Status transition and correction event \\
+\texttt{mail-batch-added} & pass & Batch accounting and late mail evidence \\
+\texttt{precinct-split-lineage} & pass & Split and merge reporting-unit lineage \\
+\texttt{privacy-inclusion-sketch} & pass & Choice-free inclusion proof sketch \\
+\texttt{district-aggregation-rplan} & pass & Optional RPLAN district aggregation \\
+\texttt{multi-election-harness} & pass & Three-cycle L2 replay with lineage and districts \\
+\texttt{bad-selection-sum} & fail & Local contest arithmetic \\
+\texttt{missing-batch} & fail & Missing batch evidence \\
+\texttt{bad-lineage} & fail & Missing current lineage unit \\
+\texttt{choice-bearing-proof} & fail & Receipt-risk proof exposure \\
+\texttt{tampered-source} & fail & Source hash mismatch \\
+\texttt{missing-source-hash} & fail & Omitted source evidence \\
+\texttt{multi-election-harness-negatives} & fail & Bad lineage, stale plan, tampered cycle source \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The L2 harness is the most important fixture because it links the concepts that
+otherwise look separate. It generates three synthetic election cycles. The 2026
+cycle splits one precinct into two. The 2028 cycle merges two precincts into a
+new reporting unit. Each cycle has a package, a plan assignment, and district
+aggregation evidence. Negative variants then break the lineage, use a stale
+RPLAN unit, or tamper with one cycle's source bytes.
+
+This style of synthetic evaluation is not a claim about performance or
+real-world coverage. It is a contract test. Before RCOUNT reads a public state
+file, the package format should already know how to fail when arithmetic,
+lineage, privacy, district projection, or source evidence breaks.
+

@@ -1,0 +1,33 @@
+\section{Introduction}
+
+Election-count publication is not a single computation. Election-night returns
+are often unofficial; late mail ballots, provisional adjudication, ballot cures,
+write-in review, duplication, recounts, and court orders may legitimately change
+totals before certification. Public trust therefore depends on two ideas that
+must be held together: the public should be able to replay arithmetic from
+available evidence, and the software doing the replay must not pretend to make
+the legal judgment that election officials and courts make.
+
+RCOUNT is a proposed substrate for that replay. It packages election-count
+records into a stable directory layout, uses canonical hashes to bind normalized
+records to source evidence, and emits verification transcripts for mechanical
+checks. Its target is narrower than end-to-end cryptographic voting and broader
+than a single vendor export parser. RCOUNT asks: given the public artifacts an
+election office is willing or required to publish, can an independent party
+recompute the public count claims and locate failures at a precise layer?
+
+The design is guided by three roles. CANVASS keeps status transitions grounded
+in election administration: unofficial, canvassed, recounted, amended, and
+certified totals are not interchangeable. TALLY keeps ballot and contest
+accounting explicit: batches, reporting units, residual counts, write-ins, and
+vendor source distinctions must survive normalization. VAULT keeps public
+verification from becoming a coercion channel: RCOUNT can support inclusion and
+tamper evidence, but it must not let a voter prove candidate choices.
+
+This paper makes four contributions. First, it defines the RCOUNT package model
+as a layered public-evidence artifact. Second, it describes the verifier
+contract currently implemented in the Rust crates. Third, it identifies the
+optional boundary with RPLAN district assignments. Fourth, it documents the
+synthetic positive and negative fixture suite used to stabilize the first
+contract before real state or vendor adapters are introduced.
+

@@ -1,0 +1,17 @@
+\section{Conclusion}
+
+RCOUNT proposes a modest but useful fixed point for public election-count
+evidence: package the normalized claims, bind them to source bytes, replay the
+arithmetic, preserve canvass and precinct lineage, reject unsafe proofs, and
+emit transcripts that name the layer that passed or failed. The current Rust
+implementation and fixture suite are intentionally synthetic, but they cover the
+first contract surface from local summaries through multi-election district
+aggregation.
+
+The next papers in the V-series can now specialize. V.1 can focus on canvass
+arithmetic and status transitions. V.2 can focus on precinct lineage across
+cycles. V.3 and V.4 can separate tamper evidence from privacy-safe public
+inclusion. V.8 can give the RPLAN district aggregation boundary its own full
+treatment. The shared rule across the series is simple: make public arithmetic
+replayable without overstating what software can certify.
+

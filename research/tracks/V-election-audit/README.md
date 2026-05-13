@@ -11,7 +11,7 @@ recompute public claims from lower-level evidence.
 
 | Code | Working title | Status |
 |------|---------------|--------|
-| V.0 | RCOUNT Overview: Reproducible Election Count Packages | planned |
+| V.0 | RCOUNT Overview: Reproducible Election Count Packages | draft |
 | V.1 | Canvass Arithmetic: From Unofficial Returns To Certified Totals | planned |
 | V.2 | Precinct Lineage Across Elections | planned |
 | V.3 | Tamper-Evident Precinct And Batch Hashing | planned |
@@ -76,6 +76,6 @@ RCOUNT uses the standard project roles plus three election-count roles:
 - VAULT: ballot secrecy, receipt-safety, canonical hashes, inclusion proofs,
   and cryptographic threat models.
 
-Before crate work starts, V.0 must define the substrate package anatomy,
-canonical hash rules, reporting-unit model, ballot/contest semantics, and
+V.0 now defines the substrate package anatomy, canonical hash rules,
+reporting-unit model, ballot/contest semantics, synthetic fixture ladder, and
 receipt-safe public verification boundary.

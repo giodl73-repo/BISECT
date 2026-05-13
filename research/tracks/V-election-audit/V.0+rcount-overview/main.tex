@@ -1,0 +1,41 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+
+\title{RCOUNT: Reproducible Election Count Packages}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Election results become public facts through a mixture of voting-system exports,
+batch accounting, canvass decisions, recounts, public records, and legal
+certification. This paper introduces RCOUNT, a reproducible package format and
+verifier contract for replaying election-count claims from public evidence.
+RCOUNT does not certify elections and does not prove voter choices. Instead, it
+binds normalized contest summaries, reporting units, batches, lineage events,
+source hashes, and privacy-safe proof sketches into a package that third parties
+can verify mechanically. We describe the package layers, the core reconciliation
+checks, the optional RPLAN boundary for district aggregation, and a synthetic
+fixture suite that includes both positive and negative multi-election cases.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-package-model}
+\input{sections/03-verifier-contract}
+\input{sections/04-synthetic-evaluation}
+\input{sections/05-boundaries}
+\input{sections/06-conclusion}
+
+\nocite{rcount-substrate-2026,rplan-substrate-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}
