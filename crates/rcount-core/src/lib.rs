@@ -257,6 +257,14 @@ pub enum RcountCoreError {
         declared: i64,
         summary: i64,
     },
+    #[error("RLA audit {audit_id} is missing statistical risk estimate")]
+    MissingRlaRiskEstimate { audit_id: String },
+    #[error("RLA audit {audit_id} risk estimate mismatch: declared {declared_ppm} ppm, computed {computed_ppm} ppm")]
+    RlaRiskEstimateMismatch {
+        audit_id: String,
+        declared_ppm: u32,
+        computed_ppm: u32,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -434,6 +442,8 @@ pub struct RiskLimitAudit {
     pub max_discrepancies: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub declared_status: Option<RlaStoppingStatus>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub declared_risk_ppm: Option<u32>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1345,14 +1355,29 @@ pub fn verify_rla_stopping_rules(
             && audit.stopping_rule_id.is_none()
             && audit.max_discrepancies.is_none()
             && audit.declared_status.is_none()
+            && audit.declared_risk_ppm.is_none()
         {
             continue;
         }
-        if audit.stopping_rule_id.as_deref() != Some("zero-discrepancy-threshold-v1")
-            || audit.max_discrepancies.is_none()
+        let stopping_rule_id = audit.stopping_rule_id.as_deref().ok_or_else(|| {
+            RcountCoreError::MissingRlaStoppingRule {
+                audit_id: audit.audit_id.clone(),
+            }
+        })?;
+        if !matches!(
+            stopping_rule_id,
+            "zero-discrepancy-threshold-v1" | "comparison-margin-threshold-v1"
+        ) || audit.max_discrepancies.is_none()
             || audit.declared_status.is_none()
         {
             return Err(RcountCoreError::MissingRlaStoppingRule {
+                audit_id: audit.audit_id.clone(),
+            });
+        }
+        if stopping_rule_id == "comparison-margin-threshold-v1"
+            && (audit.margin.is_none() || audit.declared_risk_ppm.is_none())
+        {
+            return Err(RcountCoreError::MissingRlaRiskEstimate {
                 audit_id: audit.audit_id.clone(),
             });
         }
@@ -1410,7 +1435,24 @@ pub fn verify_rla_stopping_rules(
 
         verify_declared_rla_discrepancies(audit, &computed_discrepancies)?;
 
-        let computed = if computed_discrepancies.len() as u32 <= audit.max_discrepancies.unwrap() {
+        let computed_risk_ppm = if stopping_rule_id == "comparison-margin-threshold-v1" {
+            let computed = comparison_margin_risk_ppm(audit);
+            let declared = audit.declared_risk_ppm.unwrap();
+            if declared != computed {
+                return Err(RcountCoreError::RlaRiskEstimateMismatch {
+                    audit_id: audit.audit_id.clone(),
+                    declared_ppm: declared,
+                    computed_ppm: computed,
+                });
+            }
+            Some(computed)
+        } else {
+            None
+        };
+
+        let computed = if computed_discrepancies.len() as u32 <= audit.max_discrepancies.unwrap()
+            && computed_risk_ppm.map_or(true, |risk| risk <= audit.risk_limit_ppm)
+        {
             RlaStoppingStatus::Pass
         } else {
             RlaStoppingStatus::Escalate
@@ -1484,6 +1526,19 @@ fn classify_rla_discrepancy(
         (false, true) => Some(RlaDiscrepancyKind::ResidualMismatch),
         (false, false) => None,
     }
+}
+
+fn comparison_margin_risk_ppm(audit: &RiskLimitAudit) -> u32 {
+    let margin = audit
+        .margin
+        .as_ref()
+        .expect("comparison margin verifier requires margin metadata");
+    let sample_margin_product =
+        (audit.sample_size as u128).saturating_mul(margin.reported_margin.max(1) as u128);
+    let denominator = sample_margin_product.max(1);
+    let base = (1_000_000u128 + denominator - 1) / denominator;
+    let discrepancy_penalty = (audit.discrepancies.len() as u128).saturating_mul(250_000);
+    base.saturating_add(discrepancy_penalty).min(1_000_000) as u32
 }
 
 fn rla_population(package: &RcountPackage, contest_id: &str) -> Vec<String> {
@@ -1959,6 +2014,7 @@ pub fn synthetic_rla_replay_package() -> RcountPackage {
         stopping_rule_id: None,
         max_discrepancies: None,
         declared_status: None,
+        declared_risk_ppm: None,
     };
     audit.sample_draws =
         replay_rla_sample(&package, &audit).expect("synthetic RLA sample must replay");
@@ -2004,6 +2060,28 @@ pub fn synthetic_bad_rla_margin_package() -> RcountPackage {
         .as_mut()
         .expect("synthetic RLA margin package must contain margin")
         .reported_margin += 1;
+    package
+}
+
+pub fn synthetic_rla_statistical_package() -> RcountPackage {
+    let mut package = synthetic_rla_margin_package();
+    let risk_ppm = comparison_margin_risk_ppm(&package.rla_audits[0]);
+    let audit = &mut package.rla_audits[0];
+    audit.stopping_rule_id = Some("comparison-margin-threshold-v1".to_string());
+    audit.max_discrepancies = Some(0);
+    audit.declared_status = Some(RlaStoppingStatus::Pass);
+    audit.declared_risk_ppm = Some(risk_ppm);
+    package
+}
+
+pub fn synthetic_bad_rla_statistical_package() -> RcountPackage {
+    let mut package = synthetic_rla_statistical_package();
+    package.rla_audits[0].declared_risk_ppm = Some(
+        package.rla_audits[0]
+            .declared_risk_ppm
+            .expect("synthetic statistical package must contain risk")
+            + 1,
+    );
     package
 }
 
@@ -2535,6 +2613,28 @@ mod tests {
         assert!(matches!(
             err,
             RcountCoreError::RlaReportedMarginMismatch { .. }
+        ));
+    }
+
+    #[test]
+    fn rla_statistical_package_verifies_risk_estimate() {
+        let package = synthetic_rla_statistical_package();
+        let report = verify_package(&package).expect("RLA statistical package must verify");
+        assert!(report
+            .passed
+            .iter()
+            .any(|pass| pass.equation_id == "rla_stopping_rule"));
+        assert_eq!(package.rla_audits[0].declared_risk_ppm, Some(1303));
+    }
+
+    #[test]
+    fn rla_statistical_fails_when_declared_risk_drifts() {
+        let package = synthetic_bad_rla_statistical_package();
+        let err = verify_rla_stopping_rules(&package)
+            .expect_err("bad RLA statistical package must fail risk estimate");
+        assert!(matches!(
+            err,
+            RcountCoreError::RlaRiskEstimateMismatch { .. }
         ));
     }
 

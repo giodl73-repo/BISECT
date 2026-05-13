@@ -18,5 +18,5 @@ p1_items:
   - "[x] Add first stopping-rule contract after sampler replay."
   - "[x] Add discrepancy taxonomy and taxonomy negative fixture."
   - "[x] Bind reported margin metadata to public summaries."
-  - "[ ] Add statistical stopping math after the threshold contract."
+  - "[x] Add first statistical risk-estimate method after the threshold contract."
   - "[ ] Review sampler method against state-specific RLA requirements."

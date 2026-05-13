@@ -76,6 +76,14 @@ fn docs_bad_rla_margin_path() -> String {
     docs_package_path("bad-rla-margin")
 }
 
+fn docs_rla_statistical_path() -> String {
+    docs_package_path("rla-statistical")
+}
+
+fn docs_bad_rla_statistical_path() -> String {
+    docs_package_path("bad-rla-statistical")
+}
+
 fn docs_district_aggregation_dir() -> std::path::PathBuf {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .ancestors()
@@ -439,6 +447,42 @@ fn verify_bad_rla_margin_exits_one_after_package_read() {
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(stdout.contains(r#""equation_id":"rla_margin_metadata""#));
     assert!(stdout.contains("reported margin mismatch"));
+    assert!(stdout.contains(r#""equation_id":"source_hash_match","status":"pass""#));
+}
+
+#[test]
+fn verify_rla_statistical_exposes_risk_estimate() {
+    let output = Command::new(env!("CARGO_BIN_EXE_rcount"))
+        .args(["verify", &docs_rla_statistical_path(), "--format", "json"])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains(r#""equation_id":"rla_margin_metadata""#));
+    assert!(stdout.contains(r#""equation_id":"rla_stopping_rule""#));
+}
+
+#[test]
+fn verify_bad_rla_statistical_exits_one_after_package_read() {
+    let output = Command::new(env!("CARGO_BIN_EXE_rcount"))
+        .args([
+            "verify",
+            &docs_bad_rla_statistical_path(),
+            "--format",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(1));
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains(r#""equation_id":"rla_stopping_rule""#));
+    assert!(stdout.contains("risk estimate mismatch"));
     assert!(stdout.contains(r#""equation_id":"source_hash_match","status":"pass""#));
 }
 

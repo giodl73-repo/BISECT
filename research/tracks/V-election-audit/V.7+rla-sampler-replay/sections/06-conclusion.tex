@@ -7,10 +7,12 @@ seed material, then checks that observed marks support the declared
 pass-or-escalate status. When discrepancies are present, the verifier also
 checks that the declared discrepancy taxonomy matches the computed mismatch.
 Reported margin metadata is no longer free text; it is recomputed from the
-public jurisdiction summary.
+public jurisdiction summary. The first named statistical method also recomputes
+a declared risk estimate before accepting a stopping claim.
 
-The remaining V.7 work is to replace the simple threshold rule with legally
-specified statistical stopping methods. With sampler replay and observations in
-place, that layer can focus on risk calculations and escalation without also
+The remaining V.7 work is to add legally specified statistical stopping
+methods, especially Kaplan-Markov or state-specific adapters, on top of the
+same audit surface. With sampler replay and observations in place, that layer
+can focus on jurisdictional risk calculations and escalation without also
 carrying the burden of proving how the sample was chosen, what type of mismatch
 occurred, or which public totals define the margin.

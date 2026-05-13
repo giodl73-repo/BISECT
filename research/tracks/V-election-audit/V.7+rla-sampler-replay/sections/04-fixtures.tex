@@ -52,3 +52,17 @@ audit passes.
 The margin negative fixture is \texttt{bad-rla-margin}. It changes the
 reported margin while leaving the public summary unchanged. The package fails
 under the margin metadata check.
+
+The statistical fixture is \texttt{rla-statistical}. It keeps the replayed
+sample, observations, and margin metadata, then names
+\texttt{comparison-margin-threshold-v1} as the stopping method. The audit
+record declares the recomputed risk estimate in parts per million. The verifier
+recomputes that value from sample size, reported margin, and discrepancy count,
+then accepts the declared \texttt{pass} only when both the discrepancy threshold
+and risk limit are satisfied.
+
+The statistical negative fixture is \texttt{bad-rla-statistical}. It leaves the
+sample, observations, margin metadata, and declared status unchanged, but edits
+the declared risk estimate by one part per million. The package therefore fails
+under \texttt{rla\_stopping\_rule}; the transcript exposes the declared and
+computed risk estimates side by side.

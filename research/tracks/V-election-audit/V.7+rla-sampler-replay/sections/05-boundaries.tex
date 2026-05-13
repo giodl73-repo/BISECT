@@ -1,15 +1,19 @@
 \section{Boundaries}
 
-This slice verifies sample selection and a deliberately small stopping
-contract. It does not compute a Kaplan-Markov, ballot-polling, or full
-ballot-level comparison risk measure. It also does not decide whether a
-jurisdiction's legal RLA method permits replacement sampling, modulo
-reduction, or a particular manifest construction.
+This slice verifies sample selection and a deliberately small family of
+stopping contracts. The newest method,
+\texttt{comparison-margin-threshold-v1}, is a deterministic comparison-margin
+risk-estimate check: it binds sample size, reported margin, discrepancy count,
+declared risk estimate, and risk limit into one replayable equation. It is not
+a Kaplan-Markov, ballot-polling, or full statutory ballot-level comparison
+risk measure. It also does not decide whether a jurisdiction's legal RLA method
+permits replacement sampling, modulo reduction, or a particular manifest
+construction.
 
 Those boundaries are deliberate. V.7 now has a replayable sampler surface, a
-minimal observation-to-status surface, and explicit discrepancy taxonomy that
-later work can reuse. It also binds reported margin metadata to the public
-summary. The next layer should add Kaplan-Markov or jurisdiction-specific
+minimal observation-to-status surface, explicit discrepancy taxonomy, bound
+margin metadata, and a first named statistical-risk surface that later work can
+reuse. The next layer should add Kaplan-Markov or jurisdiction-specific
 stopping math, escalation workflows, and state-specific sampler adapters.
 
 The privacy boundary also matters. A public RLA sample can reveal ballot-level
