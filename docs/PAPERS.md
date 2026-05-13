@@ -286,7 +286,7 @@ Congressional seat apportionment — how seats are allocated to states before di
 | J.3 | Adams Method and Smallest-State Bias | [PDF](papers/J.3+adams-method.pdf) | Minor Revision |
 | J.4 | Jefferson/D'Hondt and Large-State Bias | [PDF](papers/J.4+jefferson-dhondt.pdf) | Minor Revision |
 | J.5 | Apportionment Paradoxes and Balinski-Young Impossibility | [PDF](papers/J.5+apportionment-paradoxes.pdf) | Minor Revision |
-| J.6 | bisect-apportion: Verified Implementation | [PDF](papers/J.6+bisect-apportion-implementation.pdf) | Minor Revision |
+| J.6 | bisect-apportion: Current Implementation Boundary | [PDF](papers/J.6+bisect-apportion-implementation.pdf) | Reviewed Draft |
 
 ---
 

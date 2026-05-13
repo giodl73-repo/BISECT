@@ -1,7 +1,7 @@
 # Paper Rubric Uplift Goal
 
 **Opened:** 2026-05-13
-**Status:** active - pulse 01 complete
+**Status:** active - pulse 02 complete
 
 ## Goal
 
@@ -28,3 +28,11 @@ Welzl/implementation mismatch. The pass should distinguish:
 - [x] The paper quality ledger records the review/fix/build loop.
 - [x] The algorithm paper scorecard updates K.2/K.0/K.7 scores or status notes.
 - [x] The wave pulse is closed with validation commands and commit evidence.
+
+## Pulse 02 Result
+
+- [x] J.6 no longer claims a five-method public API, standalone CLI, exact
+  integer priority comparisons, or checked-in SHA/Census verification fixtures.
+- [x] J.0-J.5 bridge sections inherit the current implementation boundary.
+- [x] The scorecard and paper review ledger record J-track uplift status.
+- [x] Changed J-track PDFs are rebuilt and copied to `docs/papers/`.

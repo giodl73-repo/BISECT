@@ -1,119 +1,61 @@
 \label{sec:tests}
 
-The \textsc{bisect-apportion} test suite comprises 95 tests organised
-into three levels following the \textsc{bisect} platform convention;
+The \textsc{bisect-apportion} test suite currently comprises 99 tests;
 24 tests specifically cover apportionment methods and paradox checking
 (\texttt{huntington\_hill}, \texttt{divisor\_methods}, and
 \texttt{paradoxes} modules), while the remaining tests cover the
-prime-factor compositor, graph, nesting, and split strategies
+prime-factor compositor, graph, nesting, spectral, and split strategies
 that share the same crate.
 
 \subsection{L0: Unit Tests}
 
 L0 tests verify individual functions and edge cases in isolation.
 
-\paragraph{Priority formula tests (12 tests):}
+\paragraph{Priority formula and allocation tests:}
 \begin{itemize}
-  \item \texttt{hh\_priority(100, 1)}: Expected \texttt{Priority\{num: 10000, den: 2\}}
-    (i.e., $100^2/(1\times2) = 5000$, representing priority $\approx 70.7$).
-  \item \texttt{hh\_priority(100, 2)}: Expected \texttt{Priority\{num: 10000, den: 6\}}
-    ($100^2/(2\times3) \approx 1666.7$).
-  \item \texttt{webster\_priority(100, 0)}: $P = 2\times100/1 = 200$.
-  \item \texttt{adams\_priority(100, 1)}: $P = 100/1 = 100$.
-  \item \texttt{jefferson\_priority(100, 0)}: $P = 100/(0+1) = 100$.
-  \item And corresponding tests for Webster, Adams, Jefferson at seats 1--3.
+  \item Equal-population two-state examples split evenly under all four divisor
+    methods.
+  \item A 3:1 population ratio with four seats returns the unambiguous 3--1
+    allocation under all four divisor methods.
+  \item Huntington-Hill single-state, constitutional-floor, total-seat, and
+    fewer-seats-than-states panic behavior are covered.
 \end{itemize}
 
-\paragraph{Comparison tests (8 tests):}
+\paragraph{Comparison and bias tests:}
 \begin{itemize}
-  \item Two equal-priority states compared exactly (cross-multiplication).
-  \item Priority ordering: HH threshold $< $ Webster threshold for $s=1$.
-  \item Priority comparison: states with populations 100 and 101 at seat 1.
+  \item Jefferson is checked against Huntington-Hill on a synthetic large-state
+    bias fixture.
+  \item Adams is checked against Huntington-Hill on a synthetic small-state bias
+    fixture.
+  \item All four divisor methods are checked for requested house-size totals and
+    minimum one-seat-per-state output.
 \end{itemize}
 
-\paragraph{Edge case tests (17 tests):}
+\paragraph{Paradox checks:}
 \begin{itemize}
-  \item Single state, $H=1$: returns [(``State'', 1)].
-  \item Single state, $H=10$: returns [(``State'', 10)].
-  \item Two states, equal population, $H=4$: returns [(``A'', 2), (``B'', 2)].
-  \item $H = n$ (minimum House): all states receive exactly 1 seat.
-  \item State with population 1 and state with population $10^6$: large
-    population state gets vastly more seats.
-  \item Constitutional floor: state with very small population
-    receives 1 seat (not 0).
-  \item Hamilton at exact quotas: no fractional parts, same as lower quotas.
-  \item \texttt{check\_alabama\_paradox}: Hamilton on 3-state paradox
-    configuration returns \texttt{Some(...)}.
-  \item \texttt{check\_alabama\_paradox}: HH on 2020 Census returns \texttt{None}.
+  \item \texttt{check\_alabama\_paradox} returns no events for Huntington-Hill,
+    Webster, Adams, and Jefferson over a synthetic 5-state population vector and
+    house sizes 5 through 50.
+  \item Empty and single-house-size inputs return no events.
+  \item A monotone non-decrease property test checks all four divisor methods
+    over house sizes 3 through 30 on a three-state fixture.
 \end{itemize}
 
 \subsection{L1: Integration Tests}
 
-L1 tests verify complete apportionments on synthetic examples with
-known correct answers.
+L1 tests verify complete apportionments on synthetic examples with known correct
+answers.
 
-\paragraph{5-state canonical example (5 tests):}
-Populations $(6, 6, 2, 2, 1)$, $H = 10$:
+\paragraph{Synthetic divisor examples:}
 \begin{itemize}
-  \item HH: verify hand-computed priority sequence produces expected allocation.
-  \item Webster: expected same result for this example.
-  \item Adams: expected same result.
-  \item Jefferson: expected result (floor rounding, possibly different).
-  \item Hamilton: expected result (exact quotas happen to be near integers).
+  \item Equal-population and 3:1 ratio fixtures exercise all four divisor
+    methods through the public \texttt{apportionment\_divisor()} API.
+  \item Bias fixtures compare Adams and Jefferson against Huntington-Hill.
 \end{itemize}
-
-\paragraph{Paradox detection (3 tests):}
-\begin{itemize}
-  \item 3-state Alabama paradox configuration:
-    \texttt{check\_alabama\_paradox} returns the correct state name.
-  \item HH on same configuration: \texttt{None} (paradox-free).
-  \item Hamilton on additional paradox configuration (from J.5): correct state.
-\end{itemize}
-
-\paragraph{Output format tests:}
-\begin{itemize}
-  \item Canonical string format (``\texttt{StateName:seats\textbackslash n}''
-    sorted alphabetically) matches expected output for 3-state example.
-  \item All 50 states present in output; seat total equals \texttt{house\_size}.
-\end{itemize}
-
-\paragraph{D'Hondt equivalence test (1 test):}
-5-party example from \citet{lijphart1994electoral}: Jefferson with vote totals
-produces same allocation as standard d'Hondt table.
-
-\paragraph{Webster-Sainte-Lagu\"{e} equivalence test (1 test):}
-5-party example with Webster: produces same allocation as Sainte-Lagu\"{e}.
-
-\paragraph{Precision stress test (1 test):}
-Populations at maximum realistic values ($5 \times 10^7$), 52 seats:
-no \texttt{f64} precision loss affects the seat allocation result.
 
 \subsection{L2: Real-Data Regression Tests}
 
-L2 tests verify against Census Bureau official apportionments.
-
-\paragraph{2020 Census:}
-\begin{itemize}
-  \item HH 2020: string comparison passes; all 50 states match official table.
-  \item Webster 2020: all 50 states match expected Webster output.
-  \item Hamilton 2020: all 50 states match expected Hamilton output
-    (which agrees with HH for 2020 data).
-\end{itemize}
-
-\paragraph{2010 Census:}
-\begin{itemize}
-  \item HH 2010: string comparison passes; all 50 states match.
-  \item Webster 2010: matches expected (may differ from HH for 1--2 states).
-  \item Hamilton 2010: matches expected.
-\end{itemize}
-
-\paragraph{2000 Census:}
-\begin{itemize}
-  \item HH 2000: string comparison passes; all 50 states match.
-  \item Webster 2000: matches expected.
-  \item Adams 2000: matches expected.
-\end{itemize}
-
-\paragraph{Historical census test (1 test):}
-HH for 1940 Census (the last apportionment under Webster before 1941):
-produces the officially published 1940 apportionment.
+L2 Census Bureau official-apportionment fixtures are not yet checked in for this
+crate.  They are the next evidence step for J.6: materialize 2000, 2010, and
+2020 population/seat tables, compare canonical output strings, and add hash
+records for publication provenance.

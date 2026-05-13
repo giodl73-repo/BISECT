@@ -6,14 +6,18 @@ The \textsc{bisect-apportion} Adams implementation uses the priority:
 \]
 for $s \geq 1$ (with the first seat guaranteed by the constitutional
 floor initialisation).
-In integer arithmetic, the comparison is:
-$P_i > P_j \iff p_i \cdot s_j > p_j \cdot s_i$,
-which uses only 64-bit integers (well within range for 2020 Census data
-where $p_i \leq 4 \times 10^7$ and $s_j \leq 52$).
+The current implementation evaluates this priority as \texttt{f64} inside the
+shared \texttt{apportionment\_divisor()} priority queue:
 
 \begin{verbatim}
-bisect apportion --year 2020 --method adams
+RoundingRule::Adams => p / n,
 \end{verbatim}
+
+\begin{verbatim}
+let seats = apportionment_divisor(&populations, 435, RoundingRule::Adams);
+\end{verbatim}
+
+There is not yet a standalone \texttt{bisect apportion --method adams} CLI.
 
 \subsection{European Usage of Adams}
 
@@ -30,12 +34,8 @@ method, not merely a theoretical construct.
 \subsection{Test Suite}
 
 \begin{itemize}
-  \item \textbf{L0}: $\lceil 1.1 \rceil = 2$, $\lceil 2.0 \rceil = 2$,
-    $\lceil 2.1 \rceil = 3$ --- basic ceiling arithmetic.
-  \item \textbf{L1}: 3-state example (pop 100, 100, 15; 5 seats):
-    Adams with a divisor that produces 5 total seats gives [2, 2, 1]
-    (same as HH and Webster for this example).
-  \item \textbf{L2}: 2020 Census Adams output matches official HH
-    apportionment (since both give the same result for 2020 data)
-    at 100\% match rate.
+  \item Equal-population and 3:1 ratio synthetic examples cover the Adams path.
+  \item A small-state-bias fixture compares Adams against Huntington-Hill.
+  \item Shared divisor-method tests assert total-seat preservation and the
+    one-seat constitutional floor.
 \end{itemize}

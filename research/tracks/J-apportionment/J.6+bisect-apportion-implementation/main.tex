@@ -22,8 +22,8 @@
 \newtheorem{lemma}[theorem]{Lemma}
 \newtheorem{definition}{Definition}
 
-\title{\textbf{\textsc{bisect-apportion}: A Verified Implementation\\
-of Five Congressional Apportionment Methods}}
+\title{\textbf{\textsc{bisect-apportion}: Current Implementation\\
+Boundary for Congressional Apportionment Methods}}
 
 \author{Giovanni Della-Libera}
 
@@ -38,29 +38,29 @@ of Five Congressional Apportionment Methods}}
 \end{abstract}
 
 \section*{Keywords}
-apportionment software, Huntington-Hill implementation, SHA-256 verification,
+apportionment software, Huntington-Hill implementation, implementation boundary,
 Rust, priority queue, \textsc{bisect-apportion}, census verification,
 congressional apportionment
 
 \section{Introduction: Why Exact Implementation Matters}
 \input{sections/01-introduction}
 
-\section{Implementation Architecture: Priority Queue, Integer Arithmetic, Trait Interface}
+\section{Implementation Architecture: Priority Queue and Public Library Surface}
 \input{sections/02-architecture}
 
 \section{Huntington-Hill Implementation: Priority Formula and Tie-Breaking}
 \input{sections/03-huntington-hill}
 
-\section{Webster, Adams, Jefferson, and Hamilton Implementations}
+\section{Webster, Adams, Jefferson, and Hamilton Boundary}
 \input{sections/04-other-methods}
 
-\section{SHA-256 Verification Against 2020 Census Bureau Results}
+\section{Verification Boundary Against Census Bureau Results}
 \input{sections/05-verification}
 
-\section{Test Suite: L0/L1/L2 Coverage}
+\section{Test Suite and Missing L2 Coverage}
 \input{sections/06-tests}
 
-\section{Comparative Output: All Five Methods for 2020 Census}
+\section{Comparative Output and Current Evidence Boundary}
 \input{sections/07-comparison}
 
 \section{Conclusion}

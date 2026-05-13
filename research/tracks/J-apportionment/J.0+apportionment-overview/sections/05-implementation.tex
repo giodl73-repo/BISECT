@@ -1,77 +1,37 @@
 \label{sec:implementation}
 
-The \textsc{bisect-apportion} crate implements all five apportionment
-methods in Rust with a unified interface.
-It is invoked before each redistricting run to determine the seat
-count for each state, and its Huntington-Hill output is SHA-256-verified
-against the official 2020 Census Bureau apportionment.
+The \textsc{bisect-apportion} crate currently implements four divisor-method
+apportionment paths in Rust:
 
-\subsection{Architecture}
-
-The crate exposes a single primary function:
-
-\begin{verbatim}
-pub fn apportion(
-    populations: &[(String, u64)],
-    house_size: usize,
-    method: ApportionMethod,
-) -> Vec<(String, usize)>
-\end{verbatim}
+\begin{itemize}
+  \item \texttt{huntington\_hill(populations, total\_seats)}
+  \item \texttt{apportionment\_divisor(populations, house\_size, RoundingRule)}
+\end{itemize}
 
 \noindent
-where \texttt{ApportionMethod} is an enum with variants
-\texttt{HuntingtonHill}, \texttt{Webster}, \texttt{Adams},
-\texttt{Jefferson}, and \texttt{Hamilton}.
-The function returns a sorted vector of (state name, seat count) pairs.
+\texttt{RoundingRule} has variants \texttt{HuntingtonHill}, \texttt{Webster},
+\texttt{Adams}, and \texttt{Jefferson}.  Hamilton/largest remainder remains a
+J-track mathematical and paradox-analysis reference point, but it is not yet a
+public \textsc{bisect-apportion} API.
+
+\subsection{Architecture}
 
 All divisor methods share a priority-queue implementation:
 \begin{enumerate}
   \item Assign each state 1 seat (constitutional floor).
-  \item Build a max-heap of (priority, state\_index) pairs.
+  \item Build a max-heap of \texttt{f64} priority values.
   \item For each of the remaining $H - n$ seats, pop the state with
     highest priority, increment its seat count, and push its new
     priority back onto the heap.
 \end{enumerate}
 The priority formula differs by method:
-for Huntington-Hill, $P_i(s) = p_i^2 / (s \cdot (s+1))$
-(squared to avoid floating-point square roots --- equivalent to
-$p_i / \sqrt{s(s+1)}$ but computed with integer arithmetic).
+for Huntington-Hill, $P_i(s) = p_i/\sqrt{s(s+1)}$.
 
-\subsection{Integer Arithmetic for Exact Comparison}
+\subsection{Current Evidence Boundary}
 
-A critical implementation detail is tie-breaking.
-When two states have exactly equal priority values, the method of
-comparison determines which state receives the seat.
-The crate represents all priority values as rational numbers
-$P_i(s) = p_i^2 / (s(s+1))$ stored as pairs of \texttt{u128}
-integers, enabling exact comparison via cross-multiplication
-without floating-point rounding.
-This is essential for the SHA verification: floating-point priority
-comparison can produce wrong results in near-tie cases,
-whereas integer comparison is exact.
-
-\subsection{SHA-256 Verification}
-
-The 2020 Census Bureau published its official apportionment on
-April~26, 2021 \citep{census2020apportionment}.
-The \textsc{bisect-apportion} verification protocol computes
-the SHA-256 hash of the string formed by concatenating
-``\texttt{StateA:seats\textbackslash n}'' lines sorted alphabetically,
-and compares this to the hash of the same string constructed
-from the Census Bureau table.
-The two hashes match exactly, confirming zero discrepancies
-across all 50 states.
-
-\subsection{CLI Usage}
-
-\begin{verbatim}
-bisect apportion --year 2020 --method huntington-hill --verify
-bisect apportion --year 2020 --method webster
-bisect apportion --year 2020 --method adams
-bisect apportion --year 2020 --method jefferson
-bisect apportion --year 2020 --method hamilton
-\end{verbatim}
-
-The \texttt{--verify} flag triggers the SHA comparison and exits
-non-zero if the hash does not match the committed reference.
-This makes apportionment correctness a CI-enforced invariant.
+Earlier drafts described exact integer comparisons, a unified five-method API,
+SHA-256 Census verification, and a \texttt{bisect apportion} CLI.  Those are not
+the current shipped surface.  The current crate uses \texttt{f64} priority
+comparisons, has 99 tests overall with 24 apportionment/paradox tests, and needs
+future 2000/2010/2020 Census Bureau fixtures before it should be cited as a
+standalone verified apportionment artifact.

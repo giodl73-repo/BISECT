@@ -2,40 +2,39 @@ The \textsc{bisect-apportion} crate implements Webster's method via the
 same priority-queue architecture as Huntington-Hill, with the priority
 function changed to:
 \[
-  P_i^{\text{Web}}(s) = \frac{p_i^2}{(s+0.5)^2 \cdot 4}
+  P_i^{\text{Web}}(s) = \frac{p_i}{s+0.5}.
 \]
-in integer arithmetic (multiplying by 4 to avoid fractions in the
-denominator: $p_i/(s+0.5) = 2p_i/(2s+1)$, so the integer comparison is
-$P_i > P_j \iff (2p_i)^2 \cdot (2s_j+1)^2 > (2p_j)^2 \cdot (2s_i+1)^2$,
-i.e., $p_i^2 \cdot (2s_j+1)^2 > p_j^2 \cdot (2s_i+1)^2$).
-
-\subsection{CLI Usage}
+The implementation computes this as:
 
 \begin{verbatim}
-bisect apportion --year 2020 --method webster
+RoundingRule::Webster => p / (n + 0.5),
 \end{verbatim}
 
-The output format is identical to Huntington-Hill output.
-For the 2020 Census, the output matches the HH output exactly.
+where \texttt{p} and \texttt{n} are the \texttt{f64} casts of population
+and current seat count.
+
+\subsection{Current API Usage}
+
+\begin{verbatim}
+let seats = apportionment_divisor(&populations, 435, RoundingRule::Webster);
+\end{verbatim}
+
+There is not yet a standalone \texttt{bisect apportion --method webster} CLI.
 
 \subsection{Test Coverage}
 
 \begin{itemize}
-  \item \textbf{L0}: Priority formula $P^{\text{Web}}(0) = 2p$,
-    $P^{\text{Web}}(1) = 2p/3$, etc.\ computed correctly.
-  \item \textbf{L1}: 3-state synthetic example (pop 100, 100, 15;
-    5 seats): Webster produces [2, 2, 1]; verified by hand.
-  \item \textbf{L2}: 2020 Census Webster output matches HH output
-    at 100\% (50/50 states identical).
+  \item Equal-population and 3:1 ratio synthetic examples cover the Webster path.
+  \item Shared divisor-method tests assert total-seat preservation and the
+    one-seat constitutional floor.
+  \item The paradox module checks that Webster has no Alabama-paradox event over
+    the synthetic house-size range 5 through 50.
 \end{itemize}
 
 \subsection{Sainte-Lagu\"e Mode}
 
-The \textsc{bisect-apportion} crate's Webster implementation is
-also usable for party-list PR seat allocation (Sainte-Lagu\"e mode),
-where the \texttt{populations} argument receives party vote totals
-and \texttt{house\_size} is the number of seats to allocate.
-This enables comparative electoral systems analysis
-(e.g., ``how many seats would each party receive under Sainte-Lagu\"e
-if the 2020 House used party-list PR?'') without requiring a separate
-implementation.
+The \textsc{bisect-apportion} Webster implementation can also be used as a
+Sainte-Lagu\"e-style party-list allocation helper when the \texttt{populations}
+argument is interpreted as party vote totals and \texttt{house\_size} as the
+number of seats to allocate.  This is a library use case, not yet a separate CLI
+mode.

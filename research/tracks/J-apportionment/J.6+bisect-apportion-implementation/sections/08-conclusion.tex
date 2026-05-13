@@ -1,45 +1,35 @@
-The \textsc{bisect-apportion} crate establishes that a redistricting
-platform can implement federal apportionment law exactly, verifiably,
-and with full test coverage.
-String comparison of the implementation's output against the Census Bureau's
-official publication creates an auditable chain of custody for the
-apportionment step that litigation and commission contexts require.
+The \textsc{bisect-apportion} crate establishes a deterministic implementation
+substrate for federal apportionment methods, but the current evidence is more
+limited than earlier drafts claimed.  It has tested public divisor-method APIs,
+not yet a checked-in Census Bureau regression corpus, cryptographic verifier,
+Hamilton public API, or standalone apportionment CLI.
 
-Three engineering decisions underpin the crate's correctness:
+Three engineering decisions underpin the crate's current reliability:
 \begin{enumerate}
   \item \textbf{Double-precision arithmetic}: \texttt{f64} priority values
     provide stable comparisons for the integer-valued populations and seat
     counts used in apportionment; ties are broken deterministically by
     lexicographic state name order.
-  \item \textbf{Separate implementations}: \texttt{huntington\_hill()} and
-    \texttt{apportionment\_divisor()} share the same algorithmic core while
-    maintaining clear API separation; correctness demonstrated for
-    Huntington-Hill via L2 regression transfers structurally
-    to Webster, Adams, and Jefferson.
-  \item \textbf{L0/L1/L2 test pyramid}: The 95-test suite (24 apportionment-specific)
-    covers unit formulas (L0), synthetic examples (L1), and real-data regression
-    (L2), providing the multilevel assurance expected for software
-    implementing federal law.
+  \item \textbf{Separate public APIs}: \texttt{huntington\_hill()} provides the
+    federal method directly, while \texttt{apportionment\_divisor()} exposes
+    Huntington-Hill, Webster, Adams, and Jefferson through \texttt{RoundingRule}.
+  \item \textbf{Executable test base}: The 99-test suite includes 24
+    apportionment/paradox tests covering unit behavior, synthetic examples, seat
+    totals, constitutional floors, and house monotonicity checks.
 \end{enumerate}
 
-The comparative analysis (Section~\ref{sec:comparison}) shows that for
-the 2020 Census, Huntington-Hill, Webster, and Hamilton agree on all
-50 states, while Adams and Jefferson produce small divergences for
-states near the rounding boundary.
-This empirical result contextualises the theoretical debates in J.1--J.5:
-the choice of apportionment method has real but limited consequences
-for 2020 Census data, concentrated in a small number of states with
-populations near the rounding threshold.
+The comparative analysis in Section~\ref{sec:comparison} should be treated as a
+target fixture until the official population and seat tables are committed and
+wired into tests.  That future fixture will contextualise the theoretical
+debates in J.1--J.5.
 
-For practitioners, the key takeaway is that \textsc{bisect-apportion}
-provides a legally defensible and independently auditable implementation
-of 2~U.S.C.\ \S2a.
-It should be the first step in any redistricting pipeline:
-run \texttt{bisect apportion --year \{year\} --method huntington-hill}
-before beginning any district-drawing computation to confirm that
-the seat counts match the Census Bureau's official apportionment.
+For practitioners, the key takeaway is that \textsc{bisect-apportion} provides
+the library substrate for a legally defensible implementation of 2~U.S.C.\
+\S2a.  The next hardening step is to add public Census fixtures, canonical-output
+hashes, and a user-facing command or report surface before using the crate as
+standalone litigation evidence.
 
-Future work includes SHA-256 seed verification and extension
-to state legislative apportionments (which may use different methods and
-different statutory seat counts) and to international PR seat allocations
-(using the d'Hondt and Sainte-Lagu\"{e} equivalences documented in J.2 and J.4).
+Future work includes Hamilton/largest-remainder output, SHA-256 reference
+verification, Census-year fixtures, state legislative apportionments, and
+international PR seat allocations using the d'Hondt and Sainte-Lagu\"{e}
+equivalences documented in J.2 and J.4.

@@ -378,6 +378,23 @@ nodes still need ratio-aware population targets.
 
 **T.12 BFS Growth -- 21.3/24.** The paper now matches the shipped recursive
 two-way BFS splitter rather than describing a simultaneous k-seed constructor.
+
+## Batch 8 - J-track implementation-boundary pass
+
+**J.6 bisect-apportion Implementation -- 20.0/24.** The paper now describes the
+crate as it exists: four divisor methods, `f64` priority comparisons, library
+APIs, 99 crate tests, 24 apportionment/paradox tests, and no checked-in
+Census/SHA verifier fixture. It explicitly separates Hamilton as a
+mathematical/paradox reference from current public apportionment APIs. The
+remaining ceiling is implementation evidence: add 2000/2010/2020 Census
+fixtures, hash manifests, a verifier path, and (if desired) Hamilton as a public
+API before making courtroom-grade official-output claims.
+
+**J.0-J.5 bridge caveats.** The method papers now avoid inheriting stale J.6
+claims about exact integer arithmetic, a standalone CLI, five-method public API,
+or verified Census outputs. Their mathematical comparisons remain serviceable;
+stronger scoring requires actual Census-year fixture packages and regenerated
+tables from those checked-in artifacts.
 It documents the two-stage deterministic seed derivation, population-weighted
 first seed, farthest-BFS second seed, population-keyed heap expansion,
 disconnected-leftover safety net, and bounded boundary rebalance. The new

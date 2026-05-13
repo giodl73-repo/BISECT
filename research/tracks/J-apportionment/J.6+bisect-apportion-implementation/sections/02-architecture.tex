@@ -30,15 +30,19 @@ pub enum RoundingRule {
 
 Both functions guarantee at least 1 seat per state (constitutional floor)
 and a total seat count equal to \texttt{total\_seats} / \texttt{house\_size}.
+The output order differs by API: \texttt{huntington\_hill()} returns a
+\texttt{HashMap}, while \texttt{apportionment\_divisor()} preserves the input
+slice order.
 
-Secondary utilities:
+Secondary utility:
 
 \begin{verbatim}
-/// Check if Hamilton produces the Alabama paradox at this H.
+/// Check whether a divisor method has an Alabama-paradox event.
 pub fn check_alabama_paradox(
     populations: &[(String, u64)],
-    house_size: usize,
-) -> Option<(String, usize, usize)>
+    house_sizes: &[u32],
+    rule: RoundingRule,
+) -> Vec<(String, u32, u32)>
 \end{verbatim}
 
 \subsection{Priority Queue Implementation}
@@ -99,57 +103,16 @@ Double-precision floating-point arithmetic (\texttt{f64}) is used for
 priority comparisons.
 Huntington-Hill priorities involve square roots ($P / \sqrt{n(n+1)}$) and
 are therefore irrational; \texttt{f64} introduces rounding error.
-The question is whether this error can flip a priority ordering.
-The relative error of \texttt{f64} is $\varepsilon_{\rm rel} \approx 2^{-52}
-\approx 2.2 \times 10^{-16}$.
-For a typical priority value of $10^6$, the absolute rounding error is
-$\approx 2.2 \times 10^{-10}$.
-For the 2020 Census apportionment, the minimum priority gap (closest two
-states ever were to exchanging a seat) was approximately $8.3$ priority
-units (Montana's 2nd seat vs.\ North Carolina's 14th seat, a gap of
-$\approx 8.3$ computed from the published Census Bureau priority table).
-This gap is $\sim 10^{10}\times$ larger than the \texttt{f64} rounding error,
-confirming that \texttt{f64} is sufficient for the 2020 data.
-\textbf{Caveat}: for hypothetical populations engineered to produce
-priority gaps smaller than $\sim 10^{-9}$, \texttt{f64} could give wrong
-results. For robustness, a production implementation could fall back to
-128-bit rational arithmetic when the minimum gap falls below a configurable
-threshold (not implemented in the current version).
+For the 2020 Census-scale population values, observed priority gaps are much
+larger than the floating-point error scale, but this crate does not yet include
+an exact-rational fallback for adversarial near-tie inputs.
 Ties are broken deterministically by lexicographic state name order.
 
-\subsection{Hamilton Implementation}
+\subsection{Hamilton Boundary}
 
-Hamilton does not use the priority queue.
-It is implemented separately:
-
-\begin{verbatim}
-fn apportion_hamilton(
-    populations: &[(String, u64)],
-    house_size: usize,
-) -> Vec<(String, usize)> {
-    let total: u64 = populations.iter().map(|(_, p)| p).sum();
-    // Compute exact quotas as rationals
-    let quotas: Vec<(u128, u128)> = populations.iter()
-        .map(|(_, &p)| (p as u128 * house_size as u128, total as u128))
-        .collect();
-    // Assign lower quotas
-    let mut seats: Vec<usize> = quotas.iter()
-        .map(|&(n, d)| (n / d) as usize)
-        .collect();
-    // Apply constitutional floor
-    for s in seats.iter_mut() { *s = (*s).max(1); }
-    // Distribute remainder seats by fractional part
-    let remainder = house_size.saturating_sub(seats.iter().sum());
-    let mut fracs: Vec<(u128, usize)> = quotas.iter()
-        .enumerate()
-        .map(|(i, &(n, d))| (n % d, i))
-        .collect();
-    fracs.sort_by(|a, b| b.0.cmp(&a.0));
-    for k in 0..remainder {
-        seats[fracs[k].1] += 1;
-    }
-    populations.iter().zip(seats.iter())
-        .map(|((name, _), &s)| (name.clone(), s))
-        .collect()
-}
-\end{verbatim}
+Hamilton is not currently exposed as a \textsc{bisect-apportion} public
+function.  The crate's paradox module discusses Hamilton historically because
+the Alabama paradox is a largest-remainder failure mode, but
+\texttt{check\_alabama\_paradox()} currently evaluates divisor-method outputs
+produced by \texttt{apportionment\_divisor()} across caller-provided house-size
+sequences.

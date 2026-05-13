@@ -26,9 +26,9 @@ to Huntington-Hill.
 Using 2020 Census data (apportionment population 331{,}108{,}434;
 435 seats), we compute all five methods' seat allocations for all 50 states
 and identify the three states where methods diverge.
-The \textsc{bisect-apportion} Rust crate implements all five methods
-with a unified interface and reproduces the official 2020 Census Bureau
-Huntington-Hill apportionment exactly, verified by SHA-256 comparison to
-the published result.
+The \textsc{bisect-apportion} Rust crate currently implements the four divisor
+methods with floating-point priority comparisons.  Hamilton remains a
+mathematical reference point for paradox analysis, and Census-reference
+verification fixtures remain future hardening work.
 This paper is the foundational overview for J.1--J.6, which study each
 method and the paradox theory in depth.

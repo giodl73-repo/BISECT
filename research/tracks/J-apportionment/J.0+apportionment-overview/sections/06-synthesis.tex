@@ -11,7 +11,8 @@ documents the 1941 statutory adoption (2~U.S.C.\ \S2a),
 and analyses the Supreme Court's upholding of this statutory
 choice in \textit{United States Dept.\ of Commerce v.\ Montana},
 503~U.S.\ 442 (1992).
-The SHA-verified 2020 apportionment appears in the appendix.
+The 2020 apportionment remains the target for future checked-in
+Census-reference fixtures.
 
 \paragraph{J.2 (Webster).}
 Webster's arithmetic mean rounding is slightly more large-state-favoring
@@ -51,9 +52,8 @@ The Balinski-Young impossibility theorem \citep{balinski1982fair}
 paradox-immune --- provides the theoretical capstone.
 
 \paragraph{J.6 (Implementation).}
-Documents the \textsc{bisect-apportion} crate in detail:
-integer arithmetic for exact priority comparison, the SHA-256
-verification protocol, the 61-test suite at L0/L1/L2 levels,
-and comparative results for all five methods on 2020 Census data.
-The crate's unified interface enables the comparative analysis
-in J.0--J.5 to be reproduced computationally.
+Documents the current \textsc{bisect-apportion} crate boundary:
+four divisor methods with \texttt{f64} priority comparisons, 99 crate tests,
+24 apportionment/paradox tests, and missing Census-reference fixtures.
+The crate's current interface enables divisor-method comparative analysis,
+while Hamilton and official-output verification remain future work.

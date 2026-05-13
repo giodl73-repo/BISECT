@@ -16,19 +16,20 @@ of each decennial census.
 Any redistricting platform claiming to implement U.S.\ apportionment
 law must reproduce these official seat counts exactly.
 
-\textsc{bisect-apportion} achieves this requirement through four
-design choices:
+\textsc{bisect-apportion} currently approaches this requirement through four
+design choices, with Census-reference verification still identified as future
+hardening:
 \begin{enumerate}
   \item \textbf{Double-precision arithmetic}: Priority values are compared
     as \texttt{f64} floating-point, which provides numerically stable
     comparisons for the populations used in apportionment.
-  \item \textbf{Output verification}: The crate's L2 tests compare its
-    output string-by-string against the Census Bureau's published result;
-    SHA-256 cryptographic verification remains a future hardening step.
-  \item \textbf{Comprehensive test suite}: 95 tests across the crate at
-    L0/L1/L2 provide coverage of unit formulas, synthetic examples, and
-    real-data regression; 24 tests specifically target apportionment
-    methods and paradox detection.
+  \item \textbf{Output reproducibility}: Current tests verify deterministic
+    output on synthetic fixtures and method properties.  Full Census Bureau
+    string/hash regression remains a future hardening step.
+  \item \textbf{Comprehensive test suite}: 99 tests across the crate provide
+    coverage of unit formulas, synthetic examples, prime-factor compositor
+    behavior, nesting helpers, spectral helpers, and split strategies; 24 tests
+    specifically target apportionment methods and paradox detection.
   \item \textbf{Separate functions per method}: \texttt{huntington\_hill()}
     (for the official U.S.\ method) and \texttt{apportionment\_divisor()}
     (for Webster, Adams, and Jefferson via \texttt{RoundingRule}) enable
@@ -41,12 +42,12 @@ Sections~\ref{sec:architecture}--\ref{sec:other-methods} describe the
 code architecture and method implementations.
 Section~\ref{sec:verification} describes the verification approach.
 Section~\ref{sec:tests} documents the test suite.
-Section~\ref{sec:comparison} presents the comparative 2020 Census
-output for all five methods.
+Section~\ref{sec:comparison} presents comparison-table targets and the current
+evidence boundary.
 
-\subsection{Why Five Methods?}
+\subsection{Why Four Implemented Divisor Methods?}
 
-The crate implements all five methods because practitioners and
+The crate implements the four divisor methods because practitioners and
 researchers need counterfactual analysis:
 \emph{what would the seat allocation be if Congress had adopted
 Webster instead of Huntington-Hill?}
@@ -54,5 +55,7 @@ Webster instead of Huntington-Hill?}
 These questions arise in apportionment reform advocacy, in academic
 analysis of congressional representation, and in state-level
 apportionment decisions where different methods are legally permitted.
-A unified five-method implementation enables these comparisons without
-requiring practitioners to seek separate tools for each method.
+A unified divisor-method implementation enables these comparisons without
+requiring practitioners to seek separate tools for each method.  Hamilton remains
+important for J.5 paradox analysis, but it is not yet a public
+\textsc{bisect-apportion} apportionment API.

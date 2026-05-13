@@ -121,15 +121,15 @@ All four divisor methods satisfy:
 
 \subsection{Verification: Huntington-Hill on Census Data}
 
-The \textsc{bisect-apportion} crate verifies paradox immunity for HH
-empirically:
+The \textsc{bisect-apportion} crate empirically checks Alabama-paradox immunity
+for all four implemented divisor methods on synthetic population fixtures:
 \begin{itemize}
-  \item \textbf{Alabama paradox check}: For $H \in \{434, 435, 436\}$
-    and 2020 Census data, no state's seat count decreases as $H$ increases.
-    The L0 test asserts this invariant.
-  \item \textbf{Population paradox check}: Increasing any state's
-    population by 1 in the 2020 data does not decrease that state's
-    seat count.
-    The L0 test asserts monotone non-decrease for each state.
+  \item \textbf{Alabama paradox check}: For house sizes 5 through 50 on a
+    five-state synthetic population vector, no state's seat count decreases as
+    $H$ increases under Huntington-Hill, Webster, Adams, or Jefferson.
+  \item \textbf{House-size monotonicity}: A three-state synthetic fixture checks
+    that each state's seat series is non-decreasing across house sizes 3 through
+    30 for all four divisor rules.
 \end{itemize}
-Both checks pass, confirming the formal proof.
+These checks support the formal proof but do not replace future Census-year
+fixtures.

@@ -128,13 +128,13 @@ Score bands:
 
 | Paper | P1 | P2 | P3 | P4 | P5 | P6 | Total | Priority |
 |---|---:|---:|---:|---:|---:|---:|---:|---|
-| J.0 Apportionment Overview | 3.2 | 3.3 | 3.0 | 3.2 | 3.3 | 3.2 | 19.2 | Minor-revision family pass |
-| J.1 Huntington-Hill | 3.3 | 3.5 | 3.1 | 3.3 | 3.3 | 3.3 | 19.8 | Needs verified implementation bridge |
-| J.2 Webster | 3.2 | 3.4 | 3.0 | 3.2 | 3.3 | 3.2 | 19.3 | Serviceable |
-| J.3 Adams | 3.2 | 3.4 | 3.0 | 3.2 | 3.3 | 3.2 | 19.3 | Serviceable |
-| J.4 Jefferson/D'Hondt | 3.2 | 3.4 | 3.0 | 3.2 | 3.3 | 3.2 | 19.3 | Serviceable |
-| J.5 Apportionment Paradoxes | 3.2 | 3.3 | 3.0 | 3.3 | 3.3 | 3.2 | 19.3 | Serviceable |
-| J.6 bisect-apportion Implementation | 2.6 | 3.0 | 2.6 | 2.8 | 3.2 | 2.8 | 17.0 | Needs Work; known stale implementation claims |
+| J.0 Apportionment Overview | 3.3 | 3.4 | 3.1 | 3.3 | 3.3 | 3.3 | 19.7 | Serviceable-plus; implementation boundary propagated |
+| J.1 Huntington-Hill | 3.4 | 3.5 | 3.2 | 3.4 | 3.3 | 3.4 | 20.2 | Strong; verified-fixture caveat propagated |
+| J.2 Webster | 3.3 | 3.4 | 3.1 | 3.3 | 3.3 | 3.3 | 19.7 | Serviceable-plus; current API boundary |
+| J.3 Adams | 3.3 | 3.4 | 3.1 | 3.3 | 3.3 | 3.3 | 19.7 | Serviceable-plus; current API boundary |
+| J.4 Jefferson/D'Hondt | 3.3 | 3.4 | 3.1 | 3.3 | 3.3 | 3.3 | 19.7 | Serviceable-plus; current API boundary |
+| J.5 Apportionment Paradoxes | 3.3 | 3.4 | 3.1 | 3.4 | 3.3 | 3.3 | 19.8 | Serviceable-plus; synthetic-check boundary |
+| J.6 bisect-apportion Implementation | 3.3 | 3.4 | 3.2 | 3.4 | 3.4 | 3.3 | 20.0 | Strong boundary paper; Census fixtures pending |
 | K.0 Compactness Overview | 3.5 | 3.4 | 3.3 | 3.5 | 3.4 | 3.4 | 20.5 | Strong; Reock proxy caveat propagated |
 | K.1 Polsby-Popper | 3.5 | 3.6 | 3.3 | 3.4 | 3.4 | 3.5 | 20.7 | Strong |
 | K.2 Reock | 3.5 | 3.5 | 3.3 | 3.6 | 3.5 | 3.4 | 20.8 | Strong; implementation mismatch fixed, exact-MBC evidence pending |
@@ -158,11 +158,10 @@ Score bands:
 
 ## Highest-Priority Lifts
 
-1. Apportionment implementation pass: J.6, then J.0-J.5. The mathematical
-   method papers are serviceable, but the implementation paper has known stale
-   claims.
-2. Older search pass: U.0-U.7, U.11, and U.13-U.15 need the same
+1. Older search pass: U.0-U.7, U.11, and U.13-U.15 need the same
    implementation/evidence-boundary refresh now applied to T.5-T.13.
+2. Ensemble data cleanup: G.1-G.3/G.5/G.12 need validation and diagnostic
+   evidence refresh.
 3. Metric follow-through: K.2/K.0/K.7 no longer have the Welzl/implementation
    blocker, but exact polygon-MBC Reock and archived same-metric packages remain
    future evidence lifts.
@@ -174,7 +173,7 @@ Score bands:
 | B/T construction foundations | 26 | Strong for reviewed/new slices, serviceable for older slices; T.5-T.7 golden and T.8/T.9 strong | legacy visuals and audit/package bridges |
 | U search/optimization/audit | 21 | Strong, with U.10 and U.16-U.20 golden | refresh older U.2-U.7 and U.13-U.15 |
 | G ensemble/sampling | 16 | Strong but uneven; G.4/G.7/G.10/G.11 now golden | older G refresh and data-validation cleanup |
-| J apportionment | 7 | Serviceable | J.6 stale implementation claims |
+| J apportionment | 7 | Serviceable-plus after implementation-boundary pass | Census/SHA fixtures and Hamilton public API remain future work |
 | K compactness metrics | 8 | Strong/serviceable-plus after K.2 disclosure pass | exact polygon-MBC evidence and K.5 minor revision |
 | L partisan metrics | 7 | Strong | cross-link to G/A synthesis |
 | M community weights | 5 | Strong where PDFs exist | source-only papers need completion |

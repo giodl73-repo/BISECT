@@ -20,13 +20,12 @@ The Supreme Court in \textit{Montana} confirmed that Congress has broad
 discretion in choosing among apportionment methods and that the choice
 need not be optimal under any single criterion.
 
-The \textsc{bisect-apportion} crate makes this framework computationally
-accessible: it implements all five methods with exact integer arithmetic,
-reproduces the 2020 Census Bureau result exactly under SHA verification,
-and provides a CLI for counterfactual apportionment analysis.
-For redistricting practitioners and researchers, it establishes that
-the apportionment step of the \textsc{bisect} pipeline is a correct,
-auditable, and reproducible implementation of federal law.
+The current \textsc{bisect-apportion} crate makes the divisor-method portion of
+this framework computationally accessible: it implements Huntington-Hill,
+Webster, Adams, and Jefferson with deterministic priority-queue logic.
+Hamilton support, a standalone CLI, and checked-in Census-reference verification
+fixtures remain future hardening work before the crate should be described as a
+standalone official-output verifier.
 
 \paragraph{Future directions.}
 The J-track does not address the apportionment of state legislative

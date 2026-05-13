@@ -72,9 +72,10 @@ receives a seat count within 1 of its exact quota), and bias direction
 (which states gain or lose seats relative to strict proportionality)
 --- and provide the 2020 Census seat allocation table for all five methods
 and all 50 states (Section~\ref{sec:fairness}).
-Third, we document the \textsc{bisect-apportion} crate's implementation
-of all five methods and its SHA-256-verified reproduction of the official
-2020 apportionment (Section~\ref{sec:implementation}).
+Third, we document the current \textsc{bisect-apportion} implementation
+boundary: four divisor methods, shared paradox helpers, and the missing
+Census-reference fixture layer needed before official-output verification
+claims are appropriate (Section~\ref{sec:implementation}).
 
 \subsection{Data}
 

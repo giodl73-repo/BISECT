@@ -11,8 +11,6 @@ RoundingRule::Webster => p / (n + 0.5),
 
 where \texttt{p} and \texttt{n} are the \texttt{f64} casts of population
 and current seat count.
-The comparison $p_i/(s_i+0.5) > p_j/(s_j+0.5)$ is computed exactly
-within \texttt{f64} precision for the population values used in practice.
 
 \subsection{Adams}
 
@@ -35,25 +33,26 @@ RoundingRule::Jefferson => p / (n + 1.0),
 
 Jefferson initialises with 1 seat per state (constitutional floor),
 and the priority formula $p/(n+1.0)$ means the next seat priority
-for a state at 1 seat is $p/2$, equivalent to the d'Hondt divisor sequence.
+for a state at 1 seat is $p/2$, equivalent to the d'Hondt divisor sequence
+under a U.S.-style one-seat floor.
 
-\subsection{Hamilton}
+\subsection{Hamilton Boundary}
 
-Hamilton does not use the priority queue (see Section~\ref{sec:architecture}).
-The key implementation detail is representing exact quotas as rational
-fractions to avoid floating-point precision loss in the fractional-part comparison:
-the fractional part $f_i = q_i - \lfloor q_i \rfloor$ is stored as
-$(p_i \times H \mod N, N)$ in integer arithmetic.
+Hamilton/largest remainder is not currently implemented as a public
+\textsc{bisect-apportion} apportionment function.  It remains in the J-track as
+the canonical source of the Alabama paradox and as a future comparison target.
+Any paper table that mentions Hamilton should therefore be read as mathematical
+context or a target fixture, not as current crate output.
 
 \subsection{Edge Cases}
 
-All methods handle:
+All four implemented divisor methods handle:
 \begin{itemize}
   \item \textbf{Single state}: Returns $H$ seats (trivially).
   \item \textbf{Exact quotas}: If $q_i$ is an integer for all $i$
-    (and $\sum q_i = H$), all methods agree.
+    (and $\sum q_i = H$), the divisor methods agree on the tested fixtures.
   \item \textbf{Constitutional floor}: States with exact quota $< 1$
-    receive 1 seat; the divisor adjusts to compensate.
-  \item \textbf{Maximum state count}: Tested with $n = 50$, $H = 435$
-    (the federal case) and with $n = 100$, $H = 1000$ (stress test).
+    receive 1 seat; the priority sequence allocates the remaining seats.
+  \item \textbf{Seat totals}: Unit tests assert that all four divisor methods
+    return the requested house size on representative synthetic inputs.
 \end{itemize}

@@ -1,36 +1,33 @@
-We present \textsc{bisect-apportion}, a Rust crate implementing five
-congressional apportionment methods --- Huntington-Hill, Webster, Adams,
-Jefferson/d'Hondt, and Hamilton --- with two primary public functions:
+We present \textsc{bisect-apportion}, a Rust crate that currently implements
+four divisor-method apportionment paths --- Huntington-Hill, Webster, Adams,
+and Jefferson/d'Hondt --- with two primary public functions:
 \texttt{huntington\_hill()} and \texttt{apportionment\_divisor()}.
-The central empirical claim is that the Huntington-Hill implementation
-exactly reproduces the official 2020 Census Bureau congressional
-apportionment (435 seats, 50 states), confirmed by string comparison
-to the Census Bureau's April~26, 2021 published result:
-zero discrepancies across all 50 states.
+Hamilton/largest-remainder apportionment is a paper and paradox-analysis
+reference point, not a shipped public apportionment function in this crate.
+The central implementation claim is narrower than earlier drafts: the crate
+exposes deterministic priority-queue divisor methods with constitutional-floor
+handling, deterministic tie-breaking, and executable unit/property tests.
 
 The priority computations use \texttt{f64} arithmetic.
 For the seat counts and population values in U.S.\ apportionment
 (populations $\leq 40$~million, seat counts $\leq 100$), the observed
 priority gaps are far larger than floating-point rounding error, so the
-computed seat allocations match the Census Bureau outputs exactly on the
-2020, 2010, and 2000 verification sets.
-SHA-256 seed verification remains a future hardening step; currently the
-implementation uses a deterministic seed formula without cryptographic
-verification.
+current fixture allocations remain stable.  Full Census Bureau regression
+fixtures and SHA-256 publication verification remain future hardening steps;
+the current crate does not yet ship a cryptographic apportionment verifier or
+a \texttt{bisect apportion} CLI command.
 
-The test suite comprises 95 tests across the crate at three levels:
+The test suite comprises 99 tests across the crate:
 L0 (unit tests on priority formulas and edge cases),
 L1 (integration tests on synthetic examples with known correct answers),
-and L2 (real-data regression tests against Census Bureau apportionments
-for 2000, 2010, and 2020); 24 tests specifically cover apportionment
-methods and paradox checking.
-The Huntington-Hill L2 test achieves 100\% match rate (50/50 states)
-for all three census years.
+and property tests for prime-factor, nesting, spectral, and split helpers that
+share the crate.  Twenty-four tests specifically cover apportionment methods
+and paradox checking.
 The crate also implements \texttt{check\_alabama\_paradox()},
-which verifies that the Huntington-Hill allocation is house monotone
-for Census data.
+which empirically checks house monotonicity over caller-provided house-size
+sequences for divisor methods.
 
-\textsc{bisect-apportion} is the apportionment component of the
-\textsc{bisect} redistricting platform, providing the seat counts
-that determine how many congressional districts each state draws
-before the redistricting pipeline begins.
+\textsc{bisect-apportion} is the apportionment and prime-factor compositor
+component of the \textsc{bisect} redistricting platform, providing reusable
+apportionment functions and redistricting tree helpers used elsewhere in the
+platform.

@@ -26,8 +26,8 @@ J.0 (overview) → J.1 (Huntington-Hill) → J.2 (Webster) → J.3 (Adams)
 J.1: Prove Huntington-Hill minimises relative deviation from quota.
 J.5: Show which of {Alabama, population, new-states} paradoxes each method
   is susceptible to; prove HH is paradox-free for fixed house size.
-J.6: Document bisect-apportion CLI, show SHA-verified 2020 apportionment
-  matches official Census Bureau results exactly.
+J.6: Document the current bisect-apportion library boundary, including four
+  divisor methods, paradox helpers, and missing Census-verification fixtures.
 
 ## Quantification
 

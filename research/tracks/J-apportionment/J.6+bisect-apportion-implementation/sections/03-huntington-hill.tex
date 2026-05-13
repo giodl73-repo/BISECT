@@ -50,14 +50,14 @@ equivalent and either state is equally entitled to the seat.
 
 The 385th seat (the last seat allocated above the constitutional floor)
 in the 2020 apportionment was awarded to New York.
-The priority value at this step was:
+The priority value at this step is computed in the implementation as:
 \[
-  P_{\text{NY}}(25) = \frac{20{,}201{,}249^2}{25 \times 26}
-  = \frac{4.08 \times 10^{14}}{650}
-  \approx 6.28 \times 10^{11}.
+  P_{\text{NY}}(25) = \frac{20{,}201{,}249}{\sqrt{25 \times 26}}
+  \approx 792{,}000.
 \]
 The next highest priority was for a competing state (Montana or
 another state near its rounding boundary), with a priority below
 New York's.
-The Census Bureau publishes the full priority sequence, and
-\textsc{bisect-apportion}'s output matches it.
+The Census Bureau publishes the full priority sequence; a future J.6 hardening
+fixture should compare the crate's computed sequence or final canonical output
+against that table.

@@ -2,43 +2,39 @@
 
 \subsection{Verification Approach}
 
-The \textsc{bisect-apportion} implementation verifies its
-Huntington-Hill output against the Census Bureau's published 2020
-apportionment by comparing the two seat allocations state by state.
-The verification approach:
+The current \textsc{bisect-apportion} implementation is ready for Census Bureau
+regression verification, but the crate does not yet ship checked-in 2000/2010/2020
+Census reference fixtures or SHA-256 verifier outputs.  The intended verification
+approach is:
 
 \begin{enumerate}
   \item \textbf{Construct the canonical string}: Sort the 50 (state, seats)
     pairs alphabetically by state name.
     Concatenate as \texttt{"StateName:seats\textbackslash n"}
-    for each pair (e.g., \texttt{"Alabama:7\textbackslash nAlaska:1\textbackslash n...Wyoming:1\textbackslash n"}).
+    for each pair.
   \item \textbf{Compare to reference}: The Census Bureau table
-    \citep{census2020apportionment} is processed into the same canonical
+    \citep{census2020apportionment} should be processed into the same canonical
     format and compared string-by-string at test time.
   \item \textbf{Verify}: If the computed and reference strings match,
-    the apportionment is correct; otherwise the test fails.
+    the apportionment is correct relative to that fixture; otherwise the test fails.
 \end{enumerate}
 
-SHA-256 seed verification remains a planned hardening step; currently the
-implementation uses the deterministic seed formula
-$s_0 = f(\text{census\_release\_id})$ without cryptographic verification.
+SHA-256 publication verification remains a planned hardening step; there is no
+current apportionment seed formula or cryptographic verifier in the crate.
 
-\subsection{The 2020 Verification Result}
+\subsection{The 2020 Verification Target}
 
-The \textsc{bisect-apportion} output for 2020 Census data matches
-the Census Bureau's April~26, 2021 official apportionment
-\citep{census2020apportionment} with zero discrepancies across all
-50 states.
-The L2 regression test in the test suite confirms this match
-on every CI run.
+The paper retains the Census Bureau's April~26, 2021 official apportionment
+\citep{census2020apportionment} as the target reference.  A future L2 fixture
+should materialize the 50-state population table and official seat table in the
+repository, compute \texttt{huntington\_hill()}, and compare the canonical output
+string.  Until that fixture lands, the implementation evidence is L0/L1 and
+property-test evidence rather than a checked-in 50-state Census regression.
 
 \subsection{2010 and 2000 Verification}
 
-The same string comparison is performed for the 2010 and 2000 Census years.
-Both pass with zero discrepancies across all 50 states.
-This three-decade verification establishes that the implementation
-is correct not only for 2020 but is robust to population distribution
-changes across census years.
+The same string-comparison protocol should be added for the 2010 and 2000
+Census years.  Those rows remain future evidence, not current test coverage.
 
 \subsection{Why Verification Matters for Redistricting}
 
@@ -51,12 +47,12 @@ every downstream computation is wrong.
 
 Verification provides:
 \begin{itemize}
-  \item \textbf{Reproducibility}: Any party can reproduce the
-    verification by running the L2 test suite.
-  \item \textbf{Audit trail}: The string comparison creates a documented
+  \item \textbf{Reproducibility}: Any party should be able to reproduce the
+    verification once the L2 fixture is checked in.
+  \item \textbf{Audit trail}: The string comparison would create a documented
     link between the Census Bureau's official publication and the
     redistricting platform's input.
-  \item \textbf{CI enforcement}: The verification runs in CI on every
-    commit, ensuring that code changes do not silently break the
-    apportionment computation.
+  \item \textbf{CI enforcement}: Once added, the verification should run in CI
+    to ensure that code changes do not silently break the apportionment
+    computation.
 \end{itemize}
