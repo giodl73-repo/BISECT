@@ -4,6 +4,7 @@ use rcount_core::{
     StatusEvent, Summary, RCOUNT_VERSION, SOURCE_HASH_PREFIX,
 };
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, File};
@@ -53,6 +54,10 @@ pub enum RcountIoError {
         prior: String,
         value: String,
     },
+    #[error("NIST CDF import is missing {field}")]
+    MissingNistCdfField { field: String },
+    #[error("NIST CDF import has invalid {field}: {value}")]
+    InvalidNistCdfField { field: String, value: String },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -774,6 +779,203 @@ pub fn write_statement_csv_package_dir(
     Ok(())
 }
 
+/// Imports a small NIST Election Results Reporting CDF-style JSON fixture into
+/// RCOUNT. This is a first adapter slice, not a complete CDF implementation.
+pub fn import_nist_cdf_json(path: &Path) -> Result<RcountPackage, RcountIoError> {
+    let value: Value = serde_json::from_slice(&fs::read(path)?)?;
+    let report = value.get("ElectionReport").unwrap_or(&value);
+    let status = parse_nist_status(
+        report
+            .get("ResultsStatus")
+            .and_then(Value::as_str)
+            .unwrap_or("canvassed"),
+    )?;
+
+    let mut reporting_units = BTreeMap::new();
+    for unit in array_field(report, "GpUnit")? {
+        let id = nist_id(unit, "GpUnit")?;
+        let kind = unit
+            .get("Type")
+            .and_then(Value::as_str)
+            .map(parse_nist_reporting_unit_kind)
+            .transpose()?
+            .unwrap_or(ReportingUnitKind::Precinct);
+        reporting_units.insert(
+            id.clone(),
+            ReportingUnit {
+                reporting_unit_id: id,
+                kind,
+                parent_jurisdiction: "nist-cdf".to_string(),
+                source_ids: vec!["source:nist-cdf-json".to_string()],
+                valid_from: None,
+                valid_to: None,
+            },
+        );
+    }
+
+    let elections = array_field(report, "Election")?;
+    let mut contests = BTreeMap::new();
+    let mut summaries: BTreeMap<(String, String, CountStatus), SummaryAccumulator> =
+        BTreeMap::new();
+
+    for election in elections {
+        for contest_value in array_field(election, "Contest")? {
+            let contest_id = nist_id(contest_value, "Contest")?;
+            let contest_title = nist_text(contest_value.get("Name")).unwrap_or(contest_id.clone());
+            let vote_for = contest_value
+                .get("NumberElected")
+                .or_else(|| contest_value.get("VotesAllowed"))
+                .and_then(Value::as_u64)
+                .unwrap_or(1) as u32;
+            let contest = contests.entry(contest_id.clone()).or_insert(Contest {
+                contest_id: contest_id.clone(),
+                title: contest_title.clone(),
+                vote_for,
+                selections: Vec::new(),
+            });
+            require_same(
+                0,
+                &contest_id,
+                "contest_title",
+                &contest.title,
+                &contest_title,
+            )?;
+
+            for selection_value in array_field(contest_value, "ContestSelection")? {
+                let selection_id = nist_id(selection_value, "ContestSelection")?;
+                let selection_label =
+                    nist_text(selection_value.get("Name")).unwrap_or(selection_id.clone());
+                let selection_kind = if selection_value
+                    .get("IsWriteIn")
+                    .and_then(Value::as_bool)
+                    .unwrap_or(false)
+                {
+                    SelectionKind::WriteInBucket
+                } else {
+                    SelectionKind::Candidate
+                };
+                if !contest
+                    .selections
+                    .iter()
+                    .any(|selection| selection.selection_id == selection_id)
+                {
+                    contest.selections.push(Selection {
+                        selection_id: selection_id.clone(),
+                        kind: selection_kind,
+                        label: selection_label,
+                    });
+                }
+                for count in array_field(selection_value, "VoteCounts")? {
+                    let reporting_unit_id = nist_gp_unit_ref(count)?;
+                    ensure_nist_unit(&mut reporting_units, &reporting_unit_id);
+                    let votes = nist_count(count, "Count")?;
+                    let summary = summaries
+                        .entry((contest_id.clone(), reporting_unit_id.clone(), status))
+                        .or_insert(SummaryAccumulator {
+                            contest_id: contest_id.clone(),
+                            reporting_unit_id,
+                            status,
+                            totals: Vec::new(),
+                            seen_selection_ids: BTreeSet::new(),
+                            undervotes: 0,
+                            overvotes: 0,
+                            blank_contests: 0,
+                            counted_ballots: 0,
+                        });
+                    if summary.seen_selection_ids.insert(selection_id.clone()) {
+                        summary.totals.push(SelectionTotal {
+                            selection_id: selection_id.clone(),
+                            votes,
+                        });
+                    }
+                }
+            }
+
+            for other_count in optional_array_field(contest_value, "OtherCounts") {
+                let reporting_unit_id = nist_gp_unit_ref(other_count)?;
+                ensure_nist_unit(&mut reporting_units, &reporting_unit_id);
+                let summary = summaries
+                    .entry((contest_id.clone(), reporting_unit_id.clone(), status))
+                    .or_insert(SummaryAccumulator {
+                        contest_id: contest_id.clone(),
+                        reporting_unit_id,
+                        status,
+                        totals: Vec::new(),
+                        seen_selection_ids: BTreeSet::new(),
+                        undervotes: 0,
+                        overvotes: 0,
+                        blank_contests: 0,
+                        counted_ballots: 0,
+                    });
+                summary.undervotes += optional_nist_count(other_count, "Undervotes")?;
+                summary.overvotes += optional_nist_count(other_count, "Overvotes")?;
+                summary.blank_contests += optional_nist_count(other_count, "BlankVotes")?;
+            }
+        }
+    }
+
+    Ok(RcountPackage {
+        rcount_version: RCOUNT_VERSION.to_string(),
+        contests: contests.into_values().collect(),
+        reporting_units: reporting_units.into_values().collect(),
+        batches: Vec::new(),
+        lineage: Vec::new(),
+        inclusion_proofs: Vec::new(),
+        cvr: Vec::new(),
+        rla_audits: Vec::new(),
+        manual_audits: Vec::new(),
+        summaries: summaries
+            .into_values()
+            .map(|mut summary| {
+                summary.counted_ballots =
+                    summary.totals.iter().map(|total| total.votes).sum::<i64>()
+                        + summary.undervotes
+                        + summary.overvotes
+                        + summary.blank_contests;
+                Summary {
+                    contest_id: summary.contest_id,
+                    reporting_unit_id: summary.reporting_unit_id,
+                    batch_id: None,
+                    status: summary.status,
+                    totals: summary.totals,
+                    undervotes: summary.undervotes,
+                    overvotes: summary.overvotes,
+                    blank_contests: summary.blank_contests,
+                    counted_ballots: summary.counted_ballots,
+                }
+            })
+            .collect(),
+        status_events: Vec::<StatusEvent>::new(),
+    })
+}
+
+pub fn write_nist_cdf_package_dir(
+    dir: &Path,
+    json_path: &Path,
+    manifest: &RcountManifest,
+    package: &RcountPackage,
+) -> Result<(), RcountIoError> {
+    write_package_dir(dir, manifest, package)?;
+    let source_path = PathBuf::from("sources").join("nist-cdf-results.json");
+    let bytes = fs::read(json_path)?;
+    fs::write(dir.join(&source_path), &bytes)?;
+    let synthetic = dir.join("sources").join("synthetic-summary-export.json");
+    if synthetic.exists() {
+        fs::remove_file(synthetic)?;
+    }
+    write_json_pretty(
+        &dir.join("sources").join("source-index.json"),
+        &SourceIndex {
+            sources: vec![SourceEntry {
+                source_id: "source:nist-cdf-json".to_string(),
+                path: source_path.to_string_lossy().replace('\\', "/"),
+                sha256: source_bytes_hash(&bytes),
+            }],
+        },
+    )?;
+    Ok(())
+}
+
 fn required(row: usize, field: &str, value: String) -> Result<String, RcountIoError> {
     let trimmed = value.trim();
     if trimmed.is_empty() {
@@ -874,6 +1076,143 @@ fn require_same(
         });
     }
     Ok(())
+}
+
+fn array_field<'a>(value: &'a Value, field: &str) -> Result<Vec<&'a Value>, RcountIoError> {
+    match value.get(field) {
+        Some(Value::Array(values)) => Ok(values.iter().collect()),
+        Some(other) => Ok(vec![other]),
+        None => Err(RcountIoError::MissingNistCdfField {
+            field: field.to_string(),
+        }),
+    }
+}
+
+fn optional_array_field<'a>(value: &'a Value, field: &str) -> Vec<&'a Value> {
+    match value.get(field) {
+        Some(Value::Array(values)) => values.iter().collect(),
+        Some(other) => vec![other],
+        None => Vec::new(),
+    }
+}
+
+fn nist_id(value: &Value, field: &str) -> Result<String, RcountIoError> {
+    value
+        .get("@id")
+        .or_else(|| value.get("id"))
+        .or_else(|| value.get("Id"))
+        .and_then(Value::as_str)
+        .map(ToString::to_string)
+        .ok_or_else(|| RcountIoError::MissingNistCdfField {
+            field: format!("{field}.@id"),
+        })
+}
+
+fn nist_text(value: Option<&Value>) -> Option<String> {
+    let value = value?;
+    if let Some(text) = value.as_str() {
+        return Some(text.to_string());
+    }
+    value
+        .get("Text")
+        .and_then(Value::as_array)
+        .and_then(|texts| texts.first())
+        .and_then(|text| text.get("Value"))
+        .and_then(Value::as_str)
+        .map(ToString::to_string)
+}
+
+fn nist_gp_unit_ref(value: &Value) -> Result<String, RcountIoError> {
+    value
+        .get("GpUnitId")
+        .or_else(|| value.get("GpUnit"))
+        .or_else(|| value.get("ReportingUnit"))
+        .and_then(|field| {
+            field
+                .as_str()
+                .map(ToString::to_string)
+                .or_else(|| {
+                    field
+                        .get("@id")
+                        .and_then(Value::as_str)
+                        .map(ToString::to_string)
+                })
+                .or_else(|| {
+                    field
+                        .get("$ref")
+                        .and_then(Value::as_str)
+                        .map(ToString::to_string)
+                })
+        })
+        .ok_or_else(|| RcountIoError::MissingNistCdfField {
+            field: "GpUnitId".to_string(),
+        })
+}
+
+fn nist_count(value: &Value, field: &str) -> Result<i64, RcountIoError> {
+    value
+        .get(field)
+        .and_then(Value::as_i64)
+        .ok_or_else(|| RcountIoError::MissingNistCdfField {
+            field: field.to_string(),
+        })
+}
+
+fn optional_nist_count(value: &Value, field: &str) -> Result<i64, RcountIoError> {
+    match value.get(field) {
+        Some(count) => count
+            .as_i64()
+            .ok_or_else(|| RcountIoError::InvalidNistCdfField {
+                field: field.to_string(),
+                value: count.to_string(),
+            }),
+        None => Ok(0),
+    }
+}
+
+fn parse_nist_status(value: &str) -> Result<CountStatus, RcountIoError> {
+    match value {
+        "unofficial" | "pre-election" | "election-night" => Ok(CountStatus::Unofficial),
+        "canvassed" | "canvass" | "official" => Ok(CountStatus::Canvassed),
+        "recounted" | "recount" => Ok(CountStatus::Recounted),
+        "amended" => Ok(CountStatus::Amended),
+        "certified" => Ok(CountStatus::Certified),
+        other => Err(RcountIoError::InvalidNistCdfField {
+            field: "ResultsStatus".to_string(),
+            value: other.to_string(),
+        }),
+    }
+}
+
+fn parse_nist_reporting_unit_kind(value: &str) -> Result<ReportingUnitKind, RcountIoError> {
+    match value {
+        "precinct" | "Precinct" => Ok(ReportingUnitKind::Precinct),
+        "split-precinct" | "split_precinct" | "SplitPrecinct" => {
+            Ok(ReportingUnitKind::SplitPrecinct)
+        }
+        "vote-center" | "VoteCenter" => Ok(ReportingUnitKind::VoteCenter),
+        "district" | "District" => Ok(ReportingUnitKind::DistrictTotal),
+        "county" | "state" | "jurisdiction" | "County" | "State" => {
+            Ok(ReportingUnitKind::JurisdictionTotal)
+        }
+        other => Err(RcountIoError::InvalidNistCdfField {
+            field: "GpUnit.Type".to_string(),
+            value: other.to_string(),
+        }),
+    }
+}
+
+fn ensure_nist_unit(units: &mut BTreeMap<String, ReportingUnit>, reporting_unit_id: &str) {
+    units
+        .entry(reporting_unit_id.to_string())
+        .or_insert(ReportingUnit {
+            reporting_unit_id: reporting_unit_id.to_string(),
+            kind: ReportingUnitKind::Precinct,
+            parent_jurisdiction: "nist-cdf".to_string(),
+            source_ids: vec!["source:nist-cdf-json".to_string()],
+            valid_from: None,
+            valid_to: None,
+        });
 }
 
 fn write_json_pretty<T: Serialize>(path: &Path, value: &T) -> Result<(), RcountIoError> {
@@ -1066,6 +1405,67 @@ mod tests {
         assert!(!package_dir
             .join("sources/synthetic-summary-export.json")
             .exists());
+    }
+
+    #[test]
+    fn imports_nist_cdf_json_and_preserves_source_hash() {
+        let tmp = tempfile::tempdir().unwrap();
+        let json_path = tmp.path().join("cdf.json");
+        std::fs::write(
+            &json_path,
+            r#"{
+  "ElectionReport": {
+    "ResultsStatus": "canvassed",
+    "GpUnit": [
+      {"@id": "syn:precinct:P-001", "Type": "precinct", "Name": {"Text": [{"Value": "P-001"}]}},
+      {"@id": "syn:precinct:P-002", "Type": "precinct", "Name": {"Text": [{"Value": "P-002"}]}},
+      {"@id": "syn:jurisdiction:SYN", "Type": "county", "Name": {"Text": [{"Value": "SYN County"}]}}
+    ],
+    "Election": [{
+      "Contest": [{
+        "@id": "syn-2024-mayor",
+        "Name": {"Text": [{"Value": "Synthetic Mayor"}]},
+        "NumberElected": 1,
+        "ContestSelection": [
+          {"@id": "cand-a", "Name": {"Text": [{"Value": "Candidate A"}]}, "VoteCounts": [
+            {"GpUnitId": "syn:precinct:P-001", "Count": 40},
+            {"GpUnitId": "syn:precinct:P-002", "Count": 25},
+            {"GpUnitId": "syn:jurisdiction:SYN", "Count": 65}
+          ]},
+          {"@id": "cand-b", "Name": {"Text": [{"Value": "Candidate B"}]}, "VoteCounts": [
+            {"GpUnitId": "syn:precinct:P-001", "Count": 35},
+            {"GpUnitId": "syn:precinct:P-002", "Count": 30},
+            {"GpUnitId": "syn:jurisdiction:SYN", "Count": 65}
+          ]},
+          {"@id": "write-in", "Name": {"Text": [{"Value": "Write-in"}]}, "IsWriteIn": true, "VoteCounts": [
+            {"GpUnitId": "syn:precinct:P-001", "Count": 1},
+            {"GpUnitId": "syn:precinct:P-002", "Count": 0},
+            {"GpUnitId": "syn:jurisdiction:SYN", "Count": 1}
+          ]}
+        ],
+        "OtherCounts": [
+          {"GpUnitId": "syn:precinct:P-001", "Undervotes": 3, "Overvotes": 1, "BlankVotes": 0},
+          {"GpUnitId": "syn:precinct:P-002", "Undervotes": 4, "Overvotes": 0, "BlankVotes": 1},
+          {"GpUnitId": "syn:jurisdiction:SYN", "Undervotes": 7, "Overvotes": 1, "BlankVotes": 1}
+        ]
+      }]
+    }]
+  }
+}"#,
+        )
+        .unwrap();
+
+        let package = import_nist_cdf_json(&json_path).unwrap();
+        verify_package(&package).unwrap();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        let package_dir = tmp.path().join("package");
+        write_nist_cdf_package_dir(&package_dir, &json_path, &manifest, &package).unwrap();
+
+        let (_, decoded_package) = read_package_dir(&package_dir).unwrap();
+        verify_package(&decoded_package).unwrap();
+        let checks = verify_source_index(&package_dir).unwrap();
+        assert_eq!(checks[0].source_id, "source:nist-cdf-json");
+        assert!(package_dir.join("sources/nist-cdf-results.json").exists());
     }
 
     #[test]

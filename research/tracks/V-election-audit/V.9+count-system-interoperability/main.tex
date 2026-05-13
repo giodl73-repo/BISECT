@@ -19,13 +19,14 @@ Election results are published through many local workflows: election-night
 exports, statements of votes, canvass reports, vendor reports, spreadsheets,
 PDFs, and common-data-format files. RCOUNT should not pretend those sources are
 already neutral ledgers. It should make adapter work explicit. This paper
-defines the first V.9 interoperability slice: a statement-of-votes CSV adapter
-that normalizes contest, reporting-unit, selection, residual, status, and
-jurisdiction-total rows into an ordinary RCOUNT package while preserving the
-source file hash. The adapter is intentionally small, but it establishes the
-contract future NIST ERR/CDF and jurisdiction-specific adapters should follow:
-parse, normalize, hash the original source, verify the resulting package, and
-label any claim the adapter cannot make.
+defines the first V.9 interoperability slices: a statement-of-votes CSV adapter
+and a small NIST Election Results Reporting CDF-style JSON adapter. Both
+normalize contest, reporting-unit, selection, residual, status, and
+jurisdiction-total evidence into ordinary RCOUNT packages while preserving the
+source file hash. The adapters are intentionally small, but they establish the
+contract future jurisdiction-specific adapters should follow: parse, normalize,
+hash the original source, verify the resulting package, and label any claim the
+adapter cannot make.
 \end{abstract}
 
 \input{sections/01-problem}

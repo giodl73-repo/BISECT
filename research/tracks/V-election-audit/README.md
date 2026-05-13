@@ -53,10 +53,11 @@ recompute public claims from lower-level evidence.
   optional `--write-transcript`, `rcount aggregate-districts` for the
   RPLAN-backed district aggregation slice, and `rcount import-statement-csv`
   for the first V.9 source-export adapter.
-- Interoperability slice: `rcount-io` now imports a compact
-  statement-of-votes CSV into ordinary RCOUNT records, preserves the original
-  source bytes as `source:statement-csv`, and verifies imported packages through
-  the same source-hash and arithmetic checks as generated fixtures.
+- Interoperability slice: `rcount-io` now imports compact statement-of-votes
+  CSV and NIST ERR/CDF-style JSON fixtures into ordinary RCOUNT records,
+  preserves the original source bytes as `source:statement-csv` or
+  `source:nist-cdf-json`, and verifies imported packages through the same
+  source-hash and arithmetic checks as generated fixtures.
 - Audit fixture ladder: now includes Colorado-style RLA, California-style RLA,
   and ordinary manual-audit model fixtures, each with positive and negative
   transcripts.

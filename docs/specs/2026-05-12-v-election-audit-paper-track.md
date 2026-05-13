@@ -132,7 +132,7 @@ Then move into election-administration techniques:
 | V.6 | CVR-summary reconciler |
 | V.7 | RLA sampler replay and stopping verifier |
 | V.8 | `rcount-rplan` bridge |
-| V.9 | statement CSV import adapter, source hash preservation, future CDF/vendor adapters |
+| V.9 | statement CSV and NIST CDF-style import adapters, source hash preservation, future jurisdiction adapters |
 | V.10 | evidence matrix tied to RCOUNT fixture coverage |
 | V.11 | parallel verifier benchmarks |
 

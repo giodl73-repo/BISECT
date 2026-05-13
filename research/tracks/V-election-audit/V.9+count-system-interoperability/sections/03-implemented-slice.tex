@@ -1,6 +1,7 @@
-\section{Implemented Statement CSV Slice}
+\section{Implemented Import Slices}
 
-The first implemented V.9 adapter is intentionally small. The CLI command is:
+The first implemented V.9 adapters are intentionally small. The statement CSV
+command is:
 
 \begin{verbatim}
 rcount import-statement-csv <csv> <output-dir>
@@ -23,3 +24,15 @@ stable statement-CSV source label. It also produces normal contest,
 reporting-unit, and summary NDJSON files. A package created this way is verified
 by \texttt{rcount verify}; the source-hash check is reported as the same source
 hash equation used by synthetic fixtures.
+
+The second command imports a small NIST ERR/CDF-style JSON fixture:
+
+\begin{verbatim}
+rcount import-nist-cdf-json <json> <output-dir>
+\end{verbatim}
+
+That adapter reads CDF-shaped group units, contests, contest selections, vote
+counts, other-count residuals, and result status fields. It maps recognized
+group-unit types to RCOUNT reporting-unit kinds, preserves the source file under
+a stable CDF source label, and computes residual-aware counted ballots from
+selection votes, undervotes, overvotes, and blank contests.

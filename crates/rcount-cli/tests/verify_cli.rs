@@ -220,6 +220,83 @@ fn import_statement_csv_then_verify_exits_zero() {
 }
 
 #[test]
+fn import_nist_cdf_json_then_verify_exits_zero() {
+    let tmp = tempfile::tempdir().unwrap();
+    let json_path = tmp.path().join("cdf.json");
+    std::fs::write(
+        &json_path,
+        r#"{
+  "ElectionReport": {
+    "ResultsStatus": "canvassed",
+    "GpUnit": [
+      {"@id": "syn:precinct:P-001", "Type": "precinct"},
+      {"@id": "syn:precinct:P-002", "Type": "precinct"},
+      {"@id": "syn:jurisdiction:SYN", "Type": "county"}
+    ],
+    "Election": [{
+      "Contest": [{
+        "@id": "syn-2024-mayor",
+        "Name": {"Text": [{"Value": "Synthetic Mayor"}]},
+        "NumberElected": 1,
+        "ContestSelection": [
+          {"@id": "cand-a", "Name": {"Text": [{"Value": "Candidate A"}]}, "VoteCounts": [
+            {"GpUnitId": "syn:precinct:P-001", "Count": 40},
+            {"GpUnitId": "syn:precinct:P-002", "Count": 25},
+            {"GpUnitId": "syn:jurisdiction:SYN", "Count": 65}
+          ]},
+          {"@id": "cand-b", "Name": {"Text": [{"Value": "Candidate B"}]}, "VoteCounts": [
+            {"GpUnitId": "syn:precinct:P-001", "Count": 35},
+            {"GpUnitId": "syn:precinct:P-002", "Count": 30},
+            {"GpUnitId": "syn:jurisdiction:SYN", "Count": 65}
+          ]},
+          {"@id": "write-in", "Name": {"Text": [{"Value": "Write-in"}]}, "IsWriteIn": true, "VoteCounts": [
+            {"GpUnitId": "syn:precinct:P-001", "Count": 1},
+            {"GpUnitId": "syn:precinct:P-002", "Count": 0},
+            {"GpUnitId": "syn:jurisdiction:SYN", "Count": 1}
+          ]}
+        ],
+        "OtherCounts": [
+          {"GpUnitId": "syn:precinct:P-001", "Undervotes": 3, "Overvotes": 1, "BlankVotes": 0},
+          {"GpUnitId": "syn:precinct:P-002", "Undervotes": 4, "Overvotes": 0, "BlankVotes": 1},
+          {"GpUnitId": "syn:jurisdiction:SYN", "Undervotes": 7, "Overvotes": 1, "BlankVotes": 1}
+        ]
+      }]
+    }]
+  }
+}"#,
+    )
+    .unwrap();
+    let package_dir = tmp.path().join("package");
+
+    let import = Command::new(env!("CARGO_BIN_EXE_rcount"))
+        .arg("import-nist-cdf-json")
+        .arg(&json_path)
+        .arg(&package_dir)
+        .output()
+        .unwrap();
+    assert!(
+        import.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&import.stderr)
+    );
+
+    let output = Command::new(env!("CARGO_BIN_EXE_rcount"))
+        .arg("verify")
+        .arg(&package_dir)
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains(r#""reporting_unit_id":"source:nist-cdf-json""#));
+    assert!(stdout.contains(r#""equation_id":"jurisdiction_contest_total""#));
+}
+
+#[test]
 fn verify_canvass_correction_exposes_event_correlation() {
     let output = Command::new(env!("CARGO_BIN_EXE_rcount"))
         .args([

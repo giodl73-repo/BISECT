@@ -4,7 +4,8 @@ use rcount_audit::{verify_package_dir, write_verification_transcript, Verificati
 use rcount_core::CountStatus;
 use rcount_district::aggregate_package_dir_with_plan_path;
 use rcount_io::{
-    import_statement_csv, synthetic_summary_basic_manifest, write_statement_csv_package_dir,
+    import_nist_cdf_json, import_statement_csv, synthetic_summary_basic_manifest,
+    write_nist_cdf_package_dir, write_statement_csv_package_dir,
 };
 use std::path::PathBuf;
 
@@ -21,6 +22,7 @@ enum Commands {
     Verify(VerifyArgs),
     AggregateDistricts(AggregateDistrictsArgs),
     ImportStatementCsv(ImportStatementCsvArgs),
+    ImportNistCdfJson(ImportNistCdfJsonArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -57,6 +59,12 @@ struct ImportStatementCsvArgs {
     output_dir: PathBuf,
 }
 
+#[derive(Debug, Parser)]
+struct ImportNistCdfJsonArgs {
+    json: PathBuf,
+    output_dir: PathBuf,
+}
+
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum OutputFormat {
     Json,
@@ -78,6 +86,7 @@ fn run() -> Result<i32> {
         Commands::Verify(args) => run_verify(args),
         Commands::AggregateDistricts(args) => run_aggregate_districts(args),
         Commands::ImportStatementCsv(args) => run_import_statement_csv(args),
+        Commands::ImportNistCdfJson(args) => run_import_nist_cdf_json(args),
     }
 }
 
@@ -134,6 +143,15 @@ fn run_import_statement_csv(args: ImportStatementCsvArgs) -> Result<i32> {
         .with_context(|| format!("importing statement CSV {}", args.csv.display()))?;
     let manifest = synthetic_summary_basic_manifest(&package)?;
     write_statement_csv_package_dir(&args.output_dir, &args.csv, &manifest, &package)
+        .with_context(|| format!("writing RCOUNT package {}", args.output_dir.display()))?;
+    Ok(0)
+}
+
+fn run_import_nist_cdf_json(args: ImportNistCdfJsonArgs) -> Result<i32> {
+    let package = import_nist_cdf_json(&args.json)
+        .with_context(|| format!("importing NIST CDF JSON {}", args.json.display()))?;
+    let manifest = synthetic_summary_basic_manifest(&package)?;
+    write_nist_cdf_package_dir(&args.output_dir, &args.json, &manifest, &package)
         .with_context(|| format!("writing RCOUNT package {}", args.output_dir.display()))?;
     Ok(0)
 }

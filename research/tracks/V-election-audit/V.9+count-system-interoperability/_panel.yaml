@@ -16,5 +16,6 @@ reviewers:
 p1_items:
   - "[x] Define a first public statement-of-votes CSV adapter contract."
   - "[x] Wire adapter through rcount import-statement-csv."
+  - "[x] Add a first NIST ERR/CDF-style JSON adapter fixture."
   - "[x] Preserve source hash evidence in generated packages."
-  - "[ ] Add NIST ERR/CDF and jurisdiction-specific adapters."
+  - "[ ] Add jurisdiction-specific public export examples."
