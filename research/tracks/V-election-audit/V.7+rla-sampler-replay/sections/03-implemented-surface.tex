@@ -12,6 +12,11 @@ residual flags are compared to the normalized CVR row. If the number of
 discrepancies is no greater than \texttt{max\_discrepancies}, the computed
 status is \texttt{pass}; otherwise it is \texttt{escalate}.
 
+Discrepancies are now first-class records. The verifier classifies mismatches
+as selection, residual, combined selection-and-residual, or wrong-CVR
+observations. When a package declares a discrepancy list, the declared
+draw ids, CVR ids, and kinds must match the computed taxonomy exactly.
+
 \begin{center}
 \small
 \begin{tabularx}{\textwidth}{lX}
@@ -19,7 +24,7 @@ status is \texttt{pass}; otherwise it is \texttt{escalate}.
 Check & Failure caught \\
 \midrule
 \texttt{rla\_sampler\_replay} & Duplicate audit ids, invalid risk limits, empty or wrong-sized samples, unsupported algorithm ids, manifest hash drift, and edited sample draws. \\
-\texttt{rla\_stopping\_rule} & Missing or duplicate observations, observations for the wrong sampled CVR, and declared stop/escalate outcomes that disagree with observed discrepancies. \\
+\texttt{rla\_stopping\_rule} & Missing or duplicate observations, wrong sampled CVRs, declared discrepancy taxonomy drift, and declared stop/escalate outcomes that disagree with observed discrepancies. \\
 \texttt{cvr\_summary\_total} & CVR rows still reconcile to the public summaries before they are used as the audit population. \\
 \texttt{source\_hash\_match} & Source evidence bytes still match the declared source index. \\
 \bottomrule

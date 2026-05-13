@@ -15,6 +15,7 @@ election data and make no legal certification claim.
 | `cvr-summary` | `cargo run -p rcount-io --example cvr_summary_package` | CVR contest rows reconcile to public summary selections and residuals. |
 | `rla-replay` | `cargo run -p rcount-io --example rla_replay_package` | Replayable RLA sample: public seed, contest manifest hash, risk limit, and algorithm id reproduce the selected CVR ids. |
 | `rla-stopping` | `cargo run -p rcount-io --example rla_stopping_package` | RLA sample observations match CVR interpretations and satisfy the declared stopping threshold. |
+| `rla-discrepancy` | `cargo run -p rcount-io --example rla_discrepancy_package` | RLA observation discrepancy is explicitly classified and the declared escalation verifies. |
 | `district-aggregation-rplan` | `cargo run -p rcount-district --example district_aggregation_rplan` | Optional RPLAN bridge: verified precinct summaries are assigned into district totals with package and plan hashes. |
 | `multi-election-harness` | `cargo run -p rcount-district --example multi_election_harness` | L2 synthetic state: three election cycles with precinct split/merge lineage and per-cycle RPLAN district aggregation. |
 | `multi-election-harness-negatives` | `cargo run -p rcount-district --example multi_election_negative_harnesses` | L2 negative cases: bad lineage, stale RPLAN unit assignment, and tampered cycle source evidence. |
@@ -25,6 +26,7 @@ election data and make no legal certification claim.
 | `bad-cvr-summary` | `cargo run -p rcount-io --example bad_cvr_summary_package` | Negative fixture: CVR rows no longer reconcile to the public summary. |
 | `bad-rla-replay` | `cargo run -p rcount-io --example bad_rla_replay_package` | Negative fixture: the published RLA sample draw no longer replays from the seed and contest manifest hash. |
 | `bad-rla-stopping` | `cargo run -p rcount-io --example bad_rla_stopping_package` | Negative fixture: the sample replays, but observed marks imply escalation rather than declared pass. |
+| `bad-rla-discrepancy` | `cargo run -p rcount-io --example bad_rla_discrepancy_package` | Negative fixture: observed marks imply one discrepancy type, but the declared taxonomy names another. |
 | `tampered-source` | copied from `summary-basic`, then raw source bytes edited | Negative fixture: arithmetic still passes, but `source_hash_match` fails. |
 | `missing-source-hash` | copied from `summary-basic`, then source index emptied | Negative fixture: package records omit the raw source hash evidence. |
 
@@ -50,6 +52,7 @@ cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/privacy-i
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/cvr-summary
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/rla-replay
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/rla-stopping
+cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/rla-discrepancy
 cargo run -p rcount-cli -- aggregate-districts docs/examples/rcount-golden-packages/district-aggregation-rplan/package --plan docs/examples/rcount-golden-packages/district-aggregation-rplan/plan.rplan.json
 cargo run -p rcount-district --example multi_election_harness
 cargo run -p rcount-district --example multi_election_negative_harnesses
@@ -60,6 +63,7 @@ cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/choice-be
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/bad-cvr-summary
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/bad-rla-replay
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/bad-rla-stopping
+cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/bad-rla-discrepancy
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/tampered-source
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/missing-source-hash
 cargo run -p rcount-cli -- verify docs/examples/rcount-golden-packages/multi-election-harness-negatives/bad-lineage/SYN-2028-general/package

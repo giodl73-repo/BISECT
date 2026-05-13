@@ -9,9 +9,9 @@
 - [x] Expose sampler replay through `rcount verify`.
 - [x] Add observation rows for sampled ballot interpretations.
 - [x] Add first stopping-rule verifier and escalation transcript behavior.
+- [x] Add discrepancy taxonomy for ballot-level comparison audits.
 
 ## Next
 
-- [ ] Add discrepancy taxonomy for ballot-level comparison audits.
 - [ ] Add Kaplan-Markov or state-specific statistical stopping math.
 - [ ] Add state-specific sampler/stopping adapters once legal targets are selected.

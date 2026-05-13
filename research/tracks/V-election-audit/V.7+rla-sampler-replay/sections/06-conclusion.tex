@@ -4,9 +4,10 @@ RCOUNT now has an implemented replay contract for the first half of an RLA:
 the sample list. It also has a first observation and stopping-status contract.
 The verifier recomputes the contest population hash and every draw from public
 seed material, then checks that observed marks support the declared
-pass-or-escalate status.
+pass-or-escalate status. When discrepancies are present, the verifier also
+checks that the declared discrepancy taxonomy matches the computed mismatch.
 
 The remaining V.7 work is to replace the simple threshold rule with legally
 specified statistical stopping methods. With sampler replay and observations in
-place, that layer can focus on discrepancies, margins, and escalation without
-also carrying the burden of proving how the sample was chosen.
+place, that layer can focus on margins and escalation without also carrying the
+burden of proving how the sample was chosen or what type of mismatch occurred.

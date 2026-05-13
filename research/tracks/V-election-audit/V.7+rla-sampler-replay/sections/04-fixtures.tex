@@ -34,3 +34,12 @@ The stopping negative fixture is \texttt{bad-rla-stopping}. It leaves sampler
 replay intact, but changes one observed interpretation. The computed status is
 \texttt{escalate}, so the declared \texttt{pass} fails under
 \texttt{rla\_stopping\_rule}.
+
+The discrepancy fixture is \texttt{rla-discrepancy}. It contains the same
+observed mark mismatch as \texttt{bad-rla-stopping}, but declares the mismatch
+as a selection discrepancy and declares \texttt{escalate}. The package passes
+because the observation, discrepancy taxonomy, and status agree.
+
+The taxonomy negative fixture is \texttt{bad-rla-discrepancy}. It declares the
+same observed mark mismatch as a residual discrepancy. The verifier recomputes
+a selection discrepancy and fails the taxonomy check.
