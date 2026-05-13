@@ -66,3 +66,15 @@ sample, observations, margin metadata, and declared status unchanged, but edits
 the declared risk estimate by one part per million. The package therefore fails
 under \texttt{rla\_stopping\_rule}; the transcript exposes the declared and
 computed risk estimates side by side.
+
+The jurisdiction fixture is \texttt{colorado-rla}. It adds a Colorado-style
+method id to the statistical fixture. The added adapter check verifies that the
+public seed is exactly 20 decimal digits and that the record carries the
+expected sampler, margin, stopping method, risk estimate, and declared status
+fields.
+
+The jurisdiction negative fixture is \texttt{bad-colorado-rla}. It keeps the
+sample replayable by recomputing draws and observations from an edited seed,
+but the edited seed contains a non-digit character. The generic sampler and
+stopping layers can still be made internally consistent; the jurisdiction
+adapter rejects the package under \texttt{rla\_jurisdiction\_adapter}.

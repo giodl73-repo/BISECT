@@ -243,6 +243,9 @@ fn equation_id_for_core_error(err: &RcountCoreError) -> &'static str {
         | RcountCoreError::RlaLoserVotesMismatch { .. }
         | RcountCoreError::RlaReportedMarginMismatch { .. }
         | RcountCoreError::RlaDilutedMarginDenominatorMismatch { .. } => "rla_margin_metadata",
+        RcountCoreError::UnsupportedRlaJurisdictionMethod { .. }
+        | RcountCoreError::InvalidColoradoRlaSeed { .. }
+        | RcountCoreError::MissingColoradoRlaComparisonFields { .. } => "rla_jurisdiction_adapter",
         RcountCoreError::DuplicateStatusEventId { .. }
         | RcountCoreError::NoStatusTransition { .. }
         | RcountCoreError::IncompleteStatusEvent { .. } => "status_event_declared",
@@ -256,11 +259,12 @@ fn equation_id_for_core_error(err: &RcountCoreError) -> &'static str {
 mod tests {
     use super::*;
     use rcount_core::{
-        synthetic_bad_cvr_summary_package, synthetic_bad_lineage_package,
-        synthetic_bad_rla_discrepancy_package, synthetic_bad_rla_margin_package,
-        synthetic_bad_rla_replay_package, synthetic_bad_rla_statistical_package,
-        synthetic_bad_rla_stopping_package, synthetic_canvass_correction_package,
-        synthetic_choice_bearing_proof_package, synthetic_cvr_summary_package,
+        synthetic_bad_colorado_rla_package, synthetic_bad_cvr_summary_package,
+        synthetic_bad_lineage_package, synthetic_bad_rla_discrepancy_package,
+        synthetic_bad_rla_margin_package, synthetic_bad_rla_replay_package,
+        synthetic_bad_rla_statistical_package, synthetic_bad_rla_stopping_package,
+        synthetic_canvass_correction_package, synthetic_choice_bearing_proof_package,
+        synthetic_colorado_rla_package, synthetic_cvr_summary_package,
         synthetic_mail_batch_added_package, synthetic_missing_batch_package,
         synthetic_precinct_split_lineage_package, synthetic_privacy_inclusion_package,
         synthetic_rla_discrepancy_package, synthetic_rla_margin_package,
@@ -715,6 +719,39 @@ mod tests {
                     .error
                     .as_deref()
                     .is_some_and(|error| error.contains("risk estimate mismatch"))));
+    }
+
+    #[test]
+    fn colorado_rla_package_produces_jurisdiction_adapter_pass() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_colorado_rla_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+
+        let transcript = verify_package_dir(tmp.path());
+        assert_eq!(transcript.status, VerificationStatus::Pass);
+        assert!(transcript
+            .checks
+            .iter()
+            .any(|check| check.equation_id == "rla_jurisdiction_adapter"
+                && check.status == VerificationStatus::Pass));
+    }
+
+    #[test]
+    fn bad_colorado_rla_package_produces_seed_failure() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_bad_colorado_rla_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+
+        let transcript = verify_package_dir(tmp.path());
+        assert_eq!(transcript.status, VerificationStatus::Fail);
+        assert!(transcript.checks.iter().any(|check| check.equation_id
+            == "rla_jurisdiction_adapter"
+            && check
+                .error
+                .as_deref()
+                .is_some_and(|error| error.contains("invalid Colorado-style public seed"))));
     }
 
     #[test]

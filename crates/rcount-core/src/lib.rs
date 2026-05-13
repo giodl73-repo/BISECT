@@ -14,6 +14,7 @@ pub const PROOF_HASH_PREFIX: &[u8] = b"RCOUNT_PROOF_V1\0";
 pub const RLA_MANIFEST_HASH_PREFIX: &[u8] = b"RCOUNT_RLA_MANIFEST_V1\0";
 pub const RLA_SAMPLE_PREFIX: &[u8] = b"RCOUNT_RLA_SAMPLE_V1\0";
 pub const RLA_SAMPLING_ALGORITHM_ID: &str = "rcount-sha256-modulo-v1";
+pub const COLORADO_RLA_METHOD_ID: &str = "colorado-rule-25-comparison-v1";
 
 #[derive(Debug, Error, Clone, PartialEq, Eq)]
 pub enum RcountCoreError {
@@ -265,6 +266,18 @@ pub enum RcountCoreError {
         declared_ppm: u32,
         computed_ppm: u32,
     },
+    #[error("RLA audit {audit_id} has unsupported jurisdiction method: {jurisdiction_method_id}")]
+    UnsupportedRlaJurisdictionMethod {
+        audit_id: String,
+        jurisdiction_method_id: String,
+    },
+    #[error("RLA audit {audit_id} has invalid Colorado-style public seed: {public_seed}")]
+    InvalidColoradoRlaSeed {
+        audit_id: String,
+        public_seed: String,
+    },
+    #[error("RLA audit {audit_id} is missing Colorado-style comparison audit fields")]
+    MissingColoradoRlaComparisonFields { audit_id: String },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -424,6 +437,8 @@ pub struct CvrContestRecord {
 pub struct RiskLimitAudit {
     pub audit_id: String,
     pub contest_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub jurisdiction_method_id: Option<String>,
     pub risk_limit_ppm: u32,
     pub public_seed: String,
     pub sampling_algorithm_id: String,
@@ -631,6 +646,9 @@ pub fn verify_package(package: &RcountPackage) -> Result<VerificationReport, Rco
     report.passed.extend(verify_rla_sampler_replay(package)?);
     report.passed.extend(verify_rla_margin_metadata(package)?);
     report.passed.extend(verify_rla_stopping_rules(package)?);
+    report
+        .passed
+        .extend(verify_rla_jurisdiction_adapters(package)?);
     Ok(report)
 }
 
@@ -1474,6 +1492,53 @@ pub fn verify_rla_stopping_rules(
     Ok(passes)
 }
 
+pub fn verify_rla_jurisdiction_adapters(
+    package: &RcountPackage,
+) -> Result<Vec<EquationPass>, RcountCoreError> {
+    let mut passes = Vec::new();
+    for audit in &package.rla_audits {
+        let Some(jurisdiction_method_id) = audit.jurisdiction_method_id.as_deref() else {
+            continue;
+        };
+        match jurisdiction_method_id {
+            COLORADO_RLA_METHOD_ID => verify_colorado_rla_adapter(audit)?,
+            other => {
+                return Err(RcountCoreError::UnsupportedRlaJurisdictionMethod {
+                    audit_id: audit.audit_id.clone(),
+                    jurisdiction_method_id: other.to_string(),
+                });
+            }
+        }
+        passes.push(EquationPass {
+            equation_id: "rla_jurisdiction_adapter".to_string(),
+            contest_id: audit.contest_id.clone(),
+            reporting_unit_id: audit.audit_id.clone(),
+        });
+    }
+    Ok(passes)
+}
+
+fn verify_colorado_rla_adapter(audit: &RiskLimitAudit) -> Result<(), RcountCoreError> {
+    if audit.public_seed.len() != 20 || !audit.public_seed.bytes().all(|byte| byte.is_ascii_digit())
+    {
+        return Err(RcountCoreError::InvalidColoradoRlaSeed {
+            audit_id: audit.audit_id.clone(),
+            public_seed: audit.public_seed.clone(),
+        });
+    }
+    if audit.sampling_algorithm_id != RLA_SAMPLING_ALGORITHM_ID
+        || audit.margin.is_none()
+        || audit.stopping_rule_id.as_deref() != Some("comparison-margin-threshold-v1")
+        || audit.declared_risk_ppm.is_none()
+        || audit.declared_status.is_none()
+    {
+        return Err(RcountCoreError::MissingColoradoRlaComparisonFields {
+            audit_id: audit.audit_id.clone(),
+        });
+    }
+    Ok(())
+}
+
 fn verify_declared_rla_discrepancies(
     audit: &RiskLimitAudit,
     computed: &[RlaDiscrepancy],
@@ -2002,6 +2067,7 @@ pub fn synthetic_rla_replay_package() -> RcountPackage {
     let mut audit = RiskLimitAudit {
         audit_id: "rla:syn-2024-mayor:round-1".to_string(),
         contest_id: "syn-2024-mayor".to_string(),
+        jurisdiction_method_id: None,
         risk_limit_ppm: 50_000,
         public_seed: "31415926535897932384".to_string(),
         sampling_algorithm_id: RLA_SAMPLING_ALGORITHM_ID.to_string(),
@@ -2082,6 +2148,23 @@ pub fn synthetic_bad_rla_statistical_package() -> RcountPackage {
             .expect("synthetic statistical package must contain risk")
             + 1,
     );
+    package
+}
+
+pub fn synthetic_colorado_rla_package() -> RcountPackage {
+    let mut package = synthetic_rla_statistical_package();
+    package.rla_audits[0].jurisdiction_method_id = Some(COLORADO_RLA_METHOD_ID.to_string());
+    package
+}
+
+pub fn synthetic_bad_colorado_rla_package() -> RcountPackage {
+    let mut package = synthetic_colorado_rla_package();
+    package.rla_audits[0].public_seed = "3141592653589793238X".to_string();
+    package.rla_audits[0].sample_draws =
+        replay_rla_sample(&package, &package.rla_audits[0]).expect("bad seed still replays");
+    package.rla_audits[0].observations =
+        rla_observations_from_sample(&package, &package.rla_audits[0])
+            .expect("bad Colorado seed package must still have matching observations");
     package
 }
 
@@ -2635,6 +2718,31 @@ mod tests {
         assert!(matches!(
             err,
             RcountCoreError::RlaRiskEstimateMismatch { .. }
+        ));
+    }
+
+    #[test]
+    fn colorado_rla_package_verifies_jurisdiction_adapter() {
+        let package = synthetic_colorado_rla_package();
+        let report = verify_package(&package).expect("Colorado-style RLA package must verify");
+        assert!(report
+            .passed
+            .iter()
+            .any(|pass| pass.equation_id == "rla_jurisdiction_adapter"));
+        assert_eq!(
+            package.rla_audits[0].jurisdiction_method_id.as_deref(),
+            Some(COLORADO_RLA_METHOD_ID)
+        );
+    }
+
+    #[test]
+    fn colorado_rla_fails_when_seed_is_not_twenty_digits() {
+        let package = synthetic_bad_colorado_rla_package();
+        let err = verify_rla_jurisdiction_adapters(&package)
+            .expect_err("bad Colorado-style RLA package must fail jurisdiction adapter");
+        assert!(matches!(
+            err,
+            RcountCoreError::InvalidColoradoRlaSeed { .. }
         ));
     }
 

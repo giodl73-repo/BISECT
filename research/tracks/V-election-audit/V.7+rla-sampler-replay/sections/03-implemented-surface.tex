@@ -29,6 +29,13 @@ adds a large penalty for declared discrepancies, checks the declared risk
 estimate, and only permits \texttt{pass} when the estimate is at or below the
 audit's risk limit and discrepancy count is within the declared threshold.
 
+The first jurisdiction adapter is
+\texttt{colorado-rule-25-comparison-v1}. It does not claim full Colorado
+certification compliance. It verifies the RCOUNT-side contract needed by a
+Colorado-style comparison audit fixture: a 20 digit public seed, the named
+SHA-256 sampler, margin metadata, a comparison-margin stopping method, declared
+risk estimate, and declared pass/escalate status.
+
 \begin{center}
 \small
 \begin{tabularx}{\textwidth}{lX}
@@ -38,6 +45,7 @@ Check & Failure caught \\
 \texttt{rla\_sampler\_replay} & Duplicate audit ids, invalid risk limits, empty or wrong-sized samples, unsupported algorithm ids, manifest hash drift, and edited sample draws. \\
 \texttt{rla\_margin\_metadata} & Winner/loser selection ids, reported votes, reported margin, and diluted-margin denominator drift from the jurisdiction summary. \\
 \texttt{rla\_stopping\_rule} & Missing or duplicate observations, wrong sampled CVRs, declared discrepancy taxonomy drift, risk-estimate drift, and declared stop/escalate outcomes that disagree with observed discrepancies. \\
+\texttt{rla\_jurisdiction\_adapter} & Unsupported jurisdiction methods and Colorado-style adapter records missing seed, sampler, margin, or stopping-risk fields. \\
 \texttt{cvr\_summary\_total} & CVR rows still reconcile to the public summaries before they are used as the audit population. \\
 \texttt{source\_hash\_match} & Source evidence bytes still match the declared source index. \\
 \bottomrule
@@ -46,5 +54,6 @@ Check & Failure caught \\
 
 The audit transcript maps sampler failures to
 \texttt{rla\_sampler\_replay} and stopping failures to
-\texttt{rla\_stopping\_rule}, making both layers visible through the same CLI
-surface as prior RCOUNT checks.
+\texttt{rla\_stopping\_rule}. Jurisdiction adapter failures surface as
+\texttt{rla\_jurisdiction\_adapter}, making all three layers visible through
+the same CLI surface as prior RCOUNT checks.

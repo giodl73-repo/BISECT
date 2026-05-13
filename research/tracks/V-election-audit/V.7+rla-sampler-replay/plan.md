@@ -12,8 +12,9 @@
 - [x] Add discrepancy taxonomy for ballot-level comparison audits.
 - [x] Bind reported RLA margin metadata to public summaries.
 - [x] Add first named statistical risk-estimate stopping method.
+- [x] Add first Colorado-style jurisdiction adapter fixture.
 
 ## Next
 
 - [ ] Add Kaplan-Markov or state-specific statutory stopping math.
-- [ ] Add state-specific sampler/stopping adapters once legal targets are selected.
+- [ ] Expand state-specific sampler/stopping adapters after legal target review.
