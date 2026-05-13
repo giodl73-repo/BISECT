@@ -1,7 +1,7 @@
 # G Ensemble Evidence Packages Goal
 
 **Opened:** 2026-05-13
-**Status:** active
+**Status:** complete
 
 ## Goal
 
@@ -26,8 +26,17 @@ models, compactness metric versions, diagnostics, and verifier status.
 - [x] Add positive and negative validation coverage for the package shape.
 - [x] Create at least one minimal G evidence package or, if data is unavailable,
   a hash-bound missing-evidence manifest that makes the gap explicit.
-- [ ] Update G.1-G.3 papers/ledgers only after package evidence exists.
-- [ ] Close the wave with validation commands and commit evidence.
+- [x] Update G.1-G.3 papers/ledgers only after package evidence exists.
+- [x] Close the wave with validation commands and commit evidence.
+
+## Closeout
+
+The wave created `g-ensemble-evidence-manifest v1`, positive and negative
+fixtures, consumer hash validation, and
+`docs/examples/g-ensemble-evidence-packages/G.1-G.3+missing-evidence/`.
+G.1-G.3 ledgers now point to that package as a validated evidence gap rather
+than treating the missing external traces, election inputs, metric outputs,
+diagnostics, and RPLAN/RCTX baselines as implicit.
 
 ## Non-Goals
 

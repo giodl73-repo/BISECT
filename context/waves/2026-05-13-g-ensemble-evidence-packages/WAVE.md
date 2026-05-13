@@ -1,7 +1,7 @@
 ---
 wave: g-ensemble-evidence-packages
 date_open: 2026-05-13
-status: active
+status: complete
 source_goal: docs/specs/2026-05-13-g-ensemble-evidence-packages-goal.md
 ---
 
@@ -39,7 +39,7 @@ explicit manifest gap, not by silently weakening checks.
 | 01 - Evidence inventory and manifest contract | DONE | Added `bisect-ensemble::evidence_manifest` contract and documented missing-evidence handling |
 | 02 - Validator and fixtures | DONE | Added synthetic positive/negative fixtures and referenced-file SHA-256 validation |
 | 03 - Minimal evidence package | DONE | Added hash-bound `G.1-G.3+missing-evidence` package and validator coverage |
-| 04 - Paper and ledger update | TODO | Update G.1-G.3, scorecard, paper index, and closeout docs after validation |
+| 04 - Paper and ledger update | DONE | G.1-G.3 papers, scorecard, and public index point at the missing-evidence package |
 
 ## Validation Gate
 
@@ -51,7 +51,8 @@ cargo test -p bisect-ensemble
 git diff --check
 ```
 
-## Next
+## Closeout
 
-Start pulse 04: update G.1-G.3 paper ledgers, public paper index, scorecard, and
-wave closeout to point at the missing-evidence package.
+Completed. The wave produced a manifest contract, synthetic positive/negative
+fixtures, referenced-file hash validation, a hash-bound G.1-G.3 missing-evidence
+package, and paper/index/scorecard links to that package.

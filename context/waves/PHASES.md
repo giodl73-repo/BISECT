@@ -23,7 +23,7 @@
 | 2026-05-12 | RCOUNT Substrate And V Track | RCOUNT crate family, V.0-V.10 papers, adapters, audit fixtures | archived |
 | 2026-05-13 | R Package Completion | RCOUNT audit algorithms, then RCTX/RHIST base dimensions | archived |
 | 2026-05-13 | Paper Rubric Uplift | Raised below-rubric papers across K/J/U/G tracks with claim-boundary passes | archived |
-| 2026-05-13 | G Ensemble Evidence Packages | Build auditable external ensemble/election/metric packages for G.1-G.3 claims | active |
+| 2026-05-13 | G Ensemble Evidence Packages | Build auditable external ensemble/election/metric packages for G.1-G.3 claims | archived |
 
 ## Operating Model
 

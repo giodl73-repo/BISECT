@@ -108,9 +108,9 @@ Score bands:
 | Paper | P1 | P2 | P3 | P4 | P5 | P6 | Total | Priority |
 |---|---:|---:|---:|---:|---:|---:|---:|---|
 | G.0 Ensemble Methodology | 3.1 | 3.1 | 3.0 | 3.2 | 3.3 | 3.1 | 18.8 | Needs modern package/diagnostic framing |
-| G.1 GerryChain Congressional Comparison | 3.3 | 3.2 | 3.2 | 3.4 | 3.4 | 3.2 | 19.7 | Serviceable-plus; external-trace package needed |
-| G.2 Partisan Outcome Distributions | 3.2 | 3.1 | 3.0 | 3.3 | 3.3 | 3.1 | 19.0 | Serviceable-plus; election/ensemble model boundary |
-| G.3 Compactness Distribution Position | 3.3 | 3.2 | 3.1 | 3.4 | 3.4 | 3.2 | 19.6 | Serviceable-plus; metric/trace boundary |
+| G.1 GerryChain Congressional Comparison | 3.4 | 3.3 | 3.3 | 3.5 | 3.5 | 3.3 | 20.3 | Stronger boundary; hash-bound missing-evidence package |
+| G.2 Partisan Outcome Distributions | 3.3 | 3.2 | 3.1 | 3.4 | 3.4 | 3.2 | 19.6 | Serviceable-plus; hash-bound election/ensemble gap package |
+| G.3 Compactness Distribution Position | 3.4 | 3.3 | 3.2 | 3.5 | 3.5 | 3.3 | 20.2 | Stronger boundary; hash-bound metric/trace gap package |
 | G.4 Ensemble Diagnostics | 3.8 | 3.7 | 3.7 | 3.9 | 4.0 | 3.6 | 22.7 | Golden |
 | G.5 Convergence Mixing Analysis | 3.4 | 3.4 | 3.2 | 3.6 | 3.4 | 3.3 | 20.3 | Strong; diagnostics scoped correctly |
 | G.6 Short-Burst | 3.3 | 3.5 | 3.2 | 3.3 | 3.5 | 3.4 | 20.2 | Strong draft, accepted but evidence could deepen |

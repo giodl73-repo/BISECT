@@ -144,9 +144,9 @@ Ensemble methods: GerryChain/ReCom comparison, diagnostics, mixing time. How doe
 | Code | Title | PDF | Note |
 |------|-------|-----|------|
 | G.0 | Ensemble Comparison Methodology | [PDF](papers/G.0+ensemble-methodology.pdf) | Framework |
-| G.1 | GerryChain Congressional Comparison — 6 key states | [PDF](papers/G.1+gerrychain-congressional-comparison.pdf) | external-trace package needed |
-| G.2 | Partisan Outcome Distributions | [PDF](papers/G.2+partisan-outcome-distributions.pdf) | election/ensemble model boundary |
-| G.3 | Compactness Distribution Position | [PDF](papers/G.3+compactness-distribution-position.pdf) | metric/trace boundary |
+| G.1 | GerryChain Congressional Comparison — 6 key states | [PDF](papers/G.1+gerrychain-congressional-comparison.pdf) | missing-evidence package: `docs/examples/g-ensemble-evidence-packages/G.1-G.3+missing-evidence/` |
+| G.2 | Partisan Outcome Distributions | [PDF](papers/G.2+partisan-outcome-distributions.pdf) | missing-evidence package: `docs/examples/g-ensemble-evidence-packages/G.1-G.3+missing-evidence/` |
+| G.3 | Compactness Distribution Position | [PDF](papers/G.3+compactness-distribution-position.pdf) | missing-evidence package: `docs/examples/g-ensemble-evidence-packages/G.1-G.3+missing-evidence/` |
 | G.4 | Ensemble Diagnostics — R-hat, ESS, Hamming | [PDF](papers/G.4+ensemble-diagnostics-paper.pdf) | |
 | G.5 | Convergence and Mixing Time Analysis | [PDF](papers/G.5+convergence-mixing-analysis.pdf) | diagnostic, not proof of mixing |
 | G.6 | Short-Burst Optimization for Minimum-Edge-Cut Redistricting | [PDF](papers/G.6+short-burst.pdf) | **Accepted** 3.0/4 — `--search short-burst` |
@@ -159,9 +159,10 @@ Ensemble methods: GerryChain/ReCom comparison, diagnostics, mixing time. How doe
 | G.13 | VRA-Aware Ensemble — chains preserving majority-minority districts | [PDF](papers/G.13+vra-aware-ensemble.pdf) | **Accepted** 3.8/4 — `--search vra-recom` |
 | G.14 | A Practitioner's Comparison of Redistricting Ensemble Algorithms | [PDF](papers/G.14+ensemble-comparison.pdf) | **Accepted** 4.0/4 |
 
-**Evidence target (G.1-G.3):** headline compactness and partisan percentiles now
-require archived external traces, election/metric inputs, diagnostics, and
-RPLAN/RCTX plan packages before being cited as final findings.
+**Evidence package (G.1-G.3):** `docs/examples/g-ensemble-evidence-packages/G.1-G.3+missing-evidence/`
+is hash-bound and validates the current gap: headline compactness and partisan
+percentiles still require archived external traces, election/metric inputs,
+diagnostics, and RPLAN/RCTX plan packages before being cited as final findings.
 
 ---
 
