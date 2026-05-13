@@ -49,6 +49,13 @@ pub struct CompactnessMetrics {
     pub area_m2: f64,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct BoundingCircle {
+    pub center_x: f64,
+    pub center_y: f64,
+    pub radius: f64,
+}
+
 // ---------------------------------------------------------------------------
 // Core formulas — each matches the Python implementation exactly
 // ---------------------------------------------------------------------------
@@ -87,6 +94,32 @@ pub fn reock(polygon: &Polygon<f64>) -> Result<f64, CompactnessError> {
     }
     let circle_area = PI * radius * radius;
     Ok((area / circle_area).min(1.0))
+}
+
+/// Exact polygon-vertex minimum-bounding-circle Reock.
+///
+/// This is intentionally separate from `reock()`, which remains the production
+/// Python-parity centroid-radius proxy. For a polygon with straight edges, the
+/// minimum circle containing all exterior vertices also contains every exterior
+/// edge segment because circles are convex.
+pub fn exact_reock(polygon: &Polygon<f64>) -> Result<f64, CompactnessError> {
+    let area = polygon.unsigned_area();
+    if area == 0.0 {
+        return Err(CompactnessError::EmptyGeometry);
+    }
+    let circle = minimum_bounding_circle(polygon)?;
+    if circle.radius == 0.0 {
+        return Ok(0.0);
+    }
+    Ok((area / (PI * circle.radius * circle.radius)).min(1.0))
+}
+
+pub fn minimum_bounding_circle(polygon: &Polygon<f64>) -> Result<BoundingCircle, CompactnessError> {
+    let points = exterior_points(polygon);
+    if points.is_empty() || polygon.unsigned_area() == 0.0 {
+        return Err(CompactnessError::EmptyGeometry);
+    }
+    Ok(smallest_enclosing_circle(&points))
 }
 
 /// Convex Hull Ratio: A / convex_hull_area.
@@ -307,6 +340,103 @@ fn max_distance_to_boundary(polygon: &Polygon<f64>, centroid: Point<f64>) -> f64
             (dx * dx + dy * dy).sqrt()
         })
         .fold(0.0_f64, f64::max)
+}
+
+fn exterior_points(polygon: &Polygon<f64>) -> Vec<Coord<f64>> {
+    let mut points: Vec<Coord<f64>> = polygon.exterior().coords().cloned().collect();
+    if points.len() > 1 && points.first() == points.last() {
+        points.pop();
+    }
+    points
+}
+
+fn smallest_enclosing_circle(points: &[Coord<f64>]) -> BoundingCircle {
+    if points.len() == 1 {
+        return BoundingCircle {
+            center_x: points[0].x,
+            center_y: points[0].y,
+            radius: 0.0,
+        };
+    }
+
+    let mut best = BoundingCircle {
+        center_x: 0.0,
+        center_y: 0.0,
+        radius: f64::INFINITY,
+    };
+    for i in 0..points.len() {
+        for j in (i + 1)..points.len() {
+            let circle = circle_from_diameter(points[i], points[j]);
+            if contains_all(&circle, points) && circle.radius < best.radius {
+                best = circle;
+            }
+        }
+    }
+    for i in 0..points.len() {
+        for j in (i + 1)..points.len() {
+            for k in (j + 1)..points.len() {
+                if let Some(circle) = circle_from_three_points(points[i], points[j], points[k]) {
+                    if contains_all(&circle, points) && circle.radius < best.radius {
+                        best = circle;
+                    }
+                }
+            }
+        }
+    }
+    best
+}
+
+fn circle_from_diameter(a: Coord<f64>, b: Coord<f64>) -> BoundingCircle {
+    let center_x = (a.x + b.x) / 2.0;
+    let center_y = (a.y + b.y) / 2.0;
+    BoundingCircle {
+        center_x,
+        center_y,
+        radius: distance(
+            Coord {
+                x: center_x,
+                y: center_y,
+            },
+            a,
+        ),
+    }
+}
+
+fn circle_from_three_points(a: Coord<f64>, b: Coord<f64>, c: Coord<f64>) -> Option<BoundingCircle> {
+    let d = 2.0 * (a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y));
+    if d.abs() < 1e-12 {
+        return None;
+    }
+    let a2 = a.x * a.x + a.y * a.y;
+    let b2 = b.x * b.x + b.y * b.y;
+    let c2 = c.x * c.x + c.y * c.y;
+    let center_x = (a2 * (b.y - c.y) + b2 * (c.y - a.y) + c2 * (a.y - b.y)) / d;
+    let center_y = (a2 * (c.x - b.x) + b2 * (a.x - c.x) + c2 * (b.x - a.x)) / d;
+    let center = Coord {
+        x: center_x,
+        y: center_y,
+    };
+    Some(BoundingCircle {
+        center_x,
+        center_y,
+        radius: distance(center, a),
+    })
+}
+
+fn contains_all(circle: &BoundingCircle, points: &[Coord<f64>]) -> bool {
+    let center = Coord {
+        x: circle.center_x,
+        y: circle.center_y,
+    };
+    points
+        .iter()
+        .all(|&point| distance(center, point) <= circle.radius + 1e-9)
+}
+
+fn distance(a: Coord<f64>, b: Coord<f64>) -> f64 {
+    let dx = a.x - b.x;
+    let dy = a.y - b.y;
+    (dx * dx + dy * dy).sqrt()
 }
 
 #[cfg(test)]

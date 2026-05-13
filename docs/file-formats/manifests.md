@@ -26,6 +26,7 @@ If you're adding a new manifest type, land a one-task edit to §1 in the same co
 | `reproducibility_package_manifest.json` | `repro-package v1` | `bisect-report::repro_zip` (when shipped) | Court Submission Reports plan Task 6 |
 | `g-ensemble-evidence-manifest.json` | `g-ensemble-evidence-manifest v1` | `bisect-ensemble::evidence_manifest` | G Ensemble Evidence Packages wave |
 | `j-apportionment-evidence-manifest.json` | `j-apportionment-evidence-manifest v1` | `bisect-apportion::evidence_manifest` | J Apportionment Evidence Packages wave |
+| `k-reock-evidence-manifest.json` | `k-reock-evidence-manifest v1` | `bisect-analysis::compactness_evidence` | K Exact Reock Evidence Packages wave |
 
 **Adding a new manifest type:** edit this table, add a `## §3.X — <kind> v<n>` subsection at the bottom enumerating fields beyond the canonical set, and reference both from the spec/plan that owns it.
 
@@ -196,6 +197,23 @@ Required fields beyond §2:
 | `source_url` | Official Census URL used for extraction. |
 | `source_sha256` | SHA-256 of the source bytes downloaded from `source_url`. |
 | `extracted_files` | Array of `{path, sha256, role}` rows for package-relative extracted fixtures. |
+| `verifier_path` | Package-relative source path for the verifier implementation. |
+| `verification_commands` | Commands that replay or validate the package. |
+
+### 3.13 `k-reock-evidence-manifest v1`
+
+Source: `bisect-analysis::compactness_evidence::ReockEvidenceManifest`.
+
+This manifest binds exact polygon-MBC Reock evidence fixtures to their verifier.
+It is distinct from production `bisect-analysis::reock()`, which remains the
+centroid-radius proxy used by `all_metrics()` for compatibility.
+
+Required fields beyond §2:
+
+| Field | Definition |
+|---|---|
+| `package_id` | Stable package slug including the K-track scope. |
+| `fixture_file` | `{path, sha256, role}` for the package-relative exact-MBC fixture set. |
 | `verifier_path` | Package-relative source path for the verifier implementation. |
 | `verification_commands` | Commands that replay or validate the package. |
 

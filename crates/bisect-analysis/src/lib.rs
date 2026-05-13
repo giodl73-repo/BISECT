@@ -2,6 +2,7 @@ pub mod analyzer;
 pub mod bloc_voting;
 pub mod bloc_voting_writer;
 pub mod compactness;
+pub mod compactness_evidence;
 pub mod comparison;
 pub mod contiguity;
 pub mod county_names;
@@ -33,8 +34,9 @@ pub use bloc_voting_writer::{
     ProvenanceBlock, RegressionBlock, WriteContext, ECOLOGY_CAVEAT,
 };
 pub use compactness::{
-    all_metrics, convex_hull_ratio, length_width_ratio, polsby_popper,
-    population_weighted_compactness, reock, schwartzberg, CompactnessError, CompactnessMetrics,
+    all_metrics, convex_hull_ratio, exact_reock, length_width_ratio, minimum_bounding_circle,
+    polsby_popper, population_weighted_compactness, reock, schwartzberg, BoundingCircle,
+    CompactnessError, CompactnessMetrics,
 };
 pub use comparison::{
     compare_plans, format_comparison_csv, format_comparison_json, format_comparison_table, jaccard,
