@@ -1,0 +1,43 @@
+\section{Batch Accounting}
+
+Canvass changes often enter through batch accounting rather than direct precinct
+edits. Late mail ballots, provisional adjudication, duplicated damaged ballots,
+and central-count batches may be accepted or rejected after election night.
+RCOUNT models this with batch manifests and optional batch-specific summaries.
+
+For every batch manifest, accepted ballots must reconcile:
+\[
+  \text{accepted ballots} =
+  \text{counted ballots} + \text{rejected ballots}.
+\]
+For every batch summary, the summary's counted ballots must match the manifest's
+counted ballots:
+\[
+  \text{summary counted ballots} =
+  \text{manifest counted ballots}.
+\]
+
+In the \texttt{mail-batch-added} fixture, P-001 has an election-day batch and a
+late mail batch. The late mail batch is not suspicious because it is late; it is
+auditable because it is declared. The event says a late-arriving mail batch was
+accepted before canvass, the batch manifest declares accepted/counted/rejected
+ballots, and the batch summary ties contest totals to that accounting evidence.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lrrrX}
+\toprule
+Batch & Accepted & Counted & Rejected & Check \\
+\midrule
+P-001 election day & 70 & 70 & 0 & Accepted equals counted plus rejected. \\
+P-001 late mail & 10 & 10 & 0 & Batch summary must count 10 ballots. \\
+P-002 election day & 60 & 60 & 0 & Batch summary must count 60 ballots. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The negative \texttt{missing-batch} fixture removes the late mail manifest while
+leaving a summary that references it. Arithmetic alone may still look plausible,
+but the accounting evidence is missing. The verifier should therefore fail at
+\texttt{batch\_summary\_total}, not at a generic package error.
+

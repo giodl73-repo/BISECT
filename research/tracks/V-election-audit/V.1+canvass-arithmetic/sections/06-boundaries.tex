@@ -1,0 +1,22 @@
+\section{Boundaries}
+
+RCOUNT canvass arithmetic has four main boundaries.
+
+First, it does not decide ballot eligibility. A package can record accepted,
+counted, rejected, and cured ballot categories, but the legal decision to accept
+or reject a ballot is made under jurisdiction-specific law.
+
+Second, it does not replace canvassing-board minutes or certification records.
+Status events should point to public authority and source references, but the
+software verifies the presence and consistency of those records, not their legal
+sufficiency.
+
+Third, it does not require one national canvass workflow. The synthetic fixtures
+are deliberately small and jurisdiction-neutral. Real adapters must preserve
+state and local differences in cure periods, provisional rules, recount
+thresholds, and reporting-unit conventions.
+
+Fourth, it does not expose voter choices. Even when a future adapter ingests CVR
+or ballot-manifest evidence, public RCOUNT packages must preserve the privacy
+boundary described in V.0.
+

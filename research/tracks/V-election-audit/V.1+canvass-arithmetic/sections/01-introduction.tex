@@ -1,0 +1,23 @@
+\section{Introduction}
+
+Election-night totals are not certification. They are preliminary public
+claims, often produced before every ballot category has been accepted,
+duplicated, adjudicated, or reconciled. A trustworthy public count system must
+therefore explain change, not merely detect change. The same one-vote delta can
+be a write-in adjudication correction, a late mail batch, a data-entry error, a
+missing source file, or an unexplained alteration. These cases require different
+evidence and different public conclusions.
+
+V.0 introduced RCOUNT as a reproducible package format for election-count
+claims. This paper focuses on the canvass arithmetic layer: how unofficial,
+canvassed, recounted, amended, and certified snapshots can be represented as
+status-specific summaries, how public events explain transitions, and how batch
+manifests and jurisdiction totals constrain the arithmetic.
+
+The key boundary remains the same. RCOUNT does not decide that a canvassing
+board acted lawfully. It can show that a declared canvassed total equals the
+published precinct or batch summaries; that a correction event exists; that a
+late mail batch reconciles accepted, counted, and rejected ballots; and that the
+source files still match their hashes. That is a mechanical replay of public
+evidence, not legal certification.
+

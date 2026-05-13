@@ -1,0 +1,28 @@
+\section{Status-Specific Snapshots}
+
+RCOUNT treats status as part of the summary key. A contest summary is not just
+``the total for P-001''; it is the total for a contest, reporting unit, optional
+batch, and status. This lets an unofficial total and a canvassed total coexist
+in the same package without overwriting one another.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+Status & Example source & Mechanical checks \\
+\midrule
+Unofficial & Election-night export & Contest arithmetic, jurisdiction rollup for unofficial summaries, source hash. \\
+Canvassed & Canvass report or corrected export & Contest arithmetic, jurisdiction rollup for canvassed summaries, status-event evidence. \\
+Recounted & Recount report & Same arithmetic on the recount snapshot plus recount event lineage. \\
+Amended & Amended statement or court order & Arithmetic on amended snapshot plus public event reference. \\
+Certified & Certification artifact & Consistency of records marked certified, not legal validity. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The jurisdiction-total check is status-specific. If a package contains both
+unofficial and canvassed snapshots, the unofficial jurisdiction total must equal
+the unofficial precinct summaries, and the canvassed jurisdiction total must
+equal the canvassed precinct summaries. This prevents a verifier from comparing
+records across statuses as if they belonged to one immutable table.
+

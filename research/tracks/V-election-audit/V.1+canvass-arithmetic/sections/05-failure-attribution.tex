@@ -1,0 +1,40 @@
+\section{Failure Attribution}
+
+Canvass arithmetic is useful only if failures are attributed to the right layer.
+RCOUNT transcripts therefore name equation ids rather than producing only a
+single pass/fail bit.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+Layer & Failure & Interpretation \\
+\midrule
+Contest sum & Candidate votes plus residuals do not equal counted ballots & Local summary arithmetic is wrong. \\
+Jurisdiction total & Jurisdiction total does not equal reporting-unit summaries & Rollup is wrong for that contest/status. \\
+Canvass correction & Changed canvass lacks public correction event & Transition evidence is missing. \\
+Batch summary & Batch summary references absent manifest & Accounting evidence is missing. \\
+Accepted ballots & Accepted ballots differ from counted plus rejected & Batch manifest accounting is inconsistent. \\
+Source hash & Raw source file changes after packaging & Source evidence no longer matches the package index. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+In verifier transcripts these layers correspond to stable machine ids:
+\begin{quote}
+\small
+\begin{verbatim}
+contest_selection_sum
+jurisdiction_contest_total
+canvass_correction_event
+batch_summary_total
+accepted_ballots
+source_hash_match
+\end{verbatim}
+\end{quote}
+
+This attribution matters rhetorically as well as technically. A source hash
+failure is not the same as a bad jurisdiction total. A missing batch manifest is
+not the same as a fraudulent canvass. RCOUNT's contribution is to make those
+distinctions visible enough that later legal, administrative, or audit decisions
+can reason from a stable mechanical record.

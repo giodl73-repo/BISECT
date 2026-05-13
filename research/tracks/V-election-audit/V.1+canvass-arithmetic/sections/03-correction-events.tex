@@ -1,0 +1,32 @@
+\section{Correction Events}
+
+The \texttt{canvass-correction} fixture models a small but important case. The
+unofficial snapshot reports one fewer vote for Candidate B in precinct P-001
+than the canvassed snapshot. The package includes both sets of summaries and a
+public correction event from unofficial to canvassed status.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lrrr}
+\toprule
+Snapshot & Candidate A & Candidate B & Counted ballots \\
+\midrule
+P-001 unofficial & 40 & 34 & 79 \\
+P-001 canvassed & 40 & 35 & 80 \\
+Jurisdiction unofficial & 65 & 64 & 139 \\
+Jurisdiction canvassed & 65 & 65 & 140 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The verifier checks three things. First, each summary satisfies local contest
+arithmetic: candidate votes plus residual counts equal counted ballots. Second,
+each status-specific jurisdiction total equals the sum of its reporting units.
+Third, a correction event exists with authority, source references, explanation,
+and a transition from unofficial to canvassed.
+
+This does not prove that the correction was lawful. It proves that the package
+does not hide the delta. A public reader can see the before snapshot, the after
+snapshot, the event metadata, and the source hashes that bind the package to its
+declared evidence.
+

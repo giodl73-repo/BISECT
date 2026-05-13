@@ -1,0 +1,46 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{Canvass Arithmetic: From Unofficial Returns To Certified Totals}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Election totals change for legitimate reasons between election night and
+certification: late mail ballots arrive, provisional ballots are adjudicated,
+write-ins are reviewed, duplicates are resolved, and recounts or court orders
+may alter the public record. This paper describes how RCOUNT represents that
+evolution without treating every change as either fraud or final truth. We
+define canvass arithmetic as the collection of status-specific summary checks,
+jurisdiction rollups, public status events, batch accounting equations, and
+source hash checks that let third parties replay public count claims. Using the
+\texttt{canvass-correction}, \texttt{mail-batch-added}, and
+\texttt{missing-batch} synthetic fixtures, we show how a verifier can identify
+the layer where a canvass claim passes or fails while leaving legal
+certification to election officials and courts.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-status-snapshots}
+\input{sections/03-correction-events}
+\input{sections/04-batch-accounting}
+\input{sections/05-failure-attribution}
+\input{sections/06-boundaries}
+\input{sections/07-conclusion}
+
+\nocite{rcount-overview-2026,rcount-substrate-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}
+
