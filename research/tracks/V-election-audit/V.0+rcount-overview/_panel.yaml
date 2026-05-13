@@ -1,13 +1,47 @@
 paper: V.0+rcount-overview
 title: "RCOUNT: Reproducible Election Count Packages"
 type: publication
-stage: draft
-round: 0
+stage: synthesis
+round: 1
 content_mode: draft
 venue: technical report
 review_date: 2026-05-12
 review_notice: AI-generated quality-improvement simulation, not real peer review.
-reviewers: []
-reviews: {}
-p1_items: []
-
+reviewers:
+  - name: CANVASS
+    profile_ref: .roles/canvass.md
+    score: 3
+  - name: TALLY
+    profile_ref: .roles/tally.md
+    score: 2
+  - name: VAULT
+    profile_ref: .roles/vault.md
+    score: 2
+  - name: BENCHMARK
+    profile_ref: .roles/benchmark.md
+    score: 3
+  - name: LEDGER
+    profile_ref: .roles/ledger.md
+    score: 2
+reviews:
+  round_1:
+    avg_score: 2.4
+    min_score: 2
+    max_score: 3
+    synthesis: reviews/SYNTHESIS.md
+p1_items:
+  - id: P1.1
+    title: Define the certification and count-status lifecycle.
+    addressed: false
+  - id: P1.2
+    title: Add core tally semantics before the package model.
+    addressed: false
+  - id: P1.3
+    title: Strengthen the privacy/threat model boundary.
+    addressed: false
+  - id: P1.4
+    title: Make the synthetic evidence ladder reproducible.
+    addressed: false
+  - id: P1.5
+    title: State the schema/version/hash contract.
+    addressed: false
