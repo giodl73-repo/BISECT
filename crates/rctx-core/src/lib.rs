@@ -7,9 +7,19 @@ use thiserror::Error;
 pub const RCTX_VERSION: &str = "0.1";
 pub const RCTX_CROSSWALK_HASH_PREFIX: &[u8] = b"RCTX_CROSSWALK_V1\0";
 pub const RCTX_CROSSWALK_SET_HASH_PREFIX: &[u8] = b"RCTX_CROSSWALK_SET_V1\0";
+pub const RCTX_PACKAGE_HASH_PREFIX: &[u8] = b"RCTX_PACKAGE_V1\0";
 
 #[derive(Debug, Error, Clone, PartialEq, Eq)]
 pub enum RctxCoreError {
+    #[error("unsupported RCTX version: {0}")]
+    UnsupportedVersion(String),
+    #[error("package id is empty")]
+    EmptyPackageId,
+    #[error("package {package_id} has invalid package hash: {package_hash}")]
+    InvalidPackageHash {
+        package_id: String,
+        package_hash: String,
+    },
     #[error("context {context_hash} has invalid sha256 hash")]
     InvalidContextHash { context_hash: String },
     #[error("context {context_hash} has no units")]
@@ -59,8 +69,57 @@ pub enum RctxCoreError {
         crosswalk_id: String,
         source_id: String,
     },
+    #[error("graph {graph_id} references missing context: {context_hash}")]
+    GraphMissingContext {
+        graph_id: String,
+        context_hash: String,
+    },
+    #[error("graph {graph_id} has invalid graph hash: {graph_hash}")]
+    InvalidGraphHash {
+        graph_id: String,
+        graph_hash: String,
+    },
+    #[error("graph {graph_id} references missing source: {source_id}")]
+    GraphMissingSourceRef { graph_id: String, source_id: String },
+    #[error("claim boundary package id does not match manifest")]
+    ClaimBoundaryPackageMismatch,
+    #[error("claim boundary must include proves and does_not_prove entries")]
+    EmptyClaimBoundary,
     #[error("canonical JSON error: {0}")]
     CanonicalJson(String),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RctxPackage {
+    pub manifest: RctxManifest,
+    #[serde(default)]
+    pub source_index: Vec<RctxSourceIndexEntry>,
+    #[serde(default)]
+    pub units: Vec<ContextUnitIndex>,
+    #[serde(default)]
+    pub graphs: Vec<GraphRecord>,
+    #[serde(default)]
+    pub crosswalks: Vec<CrosswalkRecord>,
+    pub claim_boundary: ClaimBoundary,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RctxManifest {
+    pub rctx_version: String,
+    pub package_id: String,
+    pub jurisdiction: String,
+    pub producer: String,
+    pub created_at: String,
+    pub package_content_hash: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RctxSourceIndexEntry {
+    pub source_id: String,
+    pub path: String,
+    pub sha256: String,
+    pub media_type: String,
+    pub description: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -69,10 +128,19 @@ pub struct ContextUnitIndex {
     pub unit_ids: Vec<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct SourceIndexEntry {
     pub source_id: String,
     pub sha256: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct GraphRecord {
+    pub graph_id: String,
+    pub context_hash: String,
+    pub graph_hash: String,
+    #[serde(default)]
+    pub source_refs: Vec<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -116,9 +184,56 @@ pub struct CrosswalkVerificationInput {
     pub crosswalks: Vec<CrosswalkRecord>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ClaimBoundary {
+    pub package_id: String,
+    pub proves: Vec<String>,
+    pub does_not_prove: Vec<String>,
+    #[serde(default)]
+    pub caveats: Vec<String>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VerificationReport {
     pub check_id: &'static str,
+}
+
+pub fn package_content_hash(package: &RctxPackage) -> Result<String, RctxCoreError> {
+    let mut manifest = serde_json::to_value(&package.manifest)
+        .map_err(|err| RctxCoreError::CanonicalJson(err.to_string()))?;
+    if let Some(object) = manifest.as_object_mut() {
+        object.remove("package_content_hash");
+    }
+    let value = serde_json::json!({
+        "rctx_version": package.manifest.rctx_version,
+        "manifest_without_package_content_hash": manifest,
+        "source_index": package.source_index,
+        "units": package.units,
+        "graphs": package.graphs,
+        "crosswalks": package.crosswalks,
+        "claim_boundary": package.claim_boundary,
+    });
+    canonical_hash(RCTX_PACKAGE_HASH_PREFIX, &value)
+}
+
+pub fn verify_package(package: &RctxPackage) -> Result<Vec<VerificationReport>, RctxCoreError> {
+    verify_manifest(package)?;
+    let sources = verify_package_sources(package)?;
+    let input = CrosswalkVerificationInput {
+        contexts: package.units.clone(),
+        sources: sources.iter().cloned().collect(),
+        crosswalks: package.crosswalks.clone(),
+    };
+    let mut reports = vec![report("manifest_package_hash")];
+    reports.extend(verify_crosswalk_input(&input)?);
+    verify_graphs(package, &sources)?;
+    if !package.graphs.is_empty() {
+        reports.push(report("graph_context_refs"));
+        reports.push(report("graph_source_refs"));
+    }
+    verify_claim_boundary(package)?;
+    reports.push(report("claim_boundary_present"));
+    Ok(reports)
 }
 
 pub fn verify_crosswalk_input(
@@ -149,6 +264,97 @@ pub fn crosswalk_set_hash(records: &[CrosswalkRecord]) -> Result<String, RctxCor
     let value = serde_json::to_value(records)
         .map_err(|err| RctxCoreError::CanonicalJson(err.to_string()))?;
     canonical_hash(RCTX_CROSSWALK_SET_HASH_PREFIX, &value)
+}
+
+pub fn synthetic_minimal_package_fixture() -> Result<RctxPackage, RctxCoreError> {
+    let context_hash = "sha256:b11f1eabcaf33e2d2691ddbe498c650830cffb9b0fb62820292d4ca0166c0bb7";
+    let source_hash = "sha256:253e748527f192efece9361b79250aaa1e1e00348f89d44a3e7dc3267433b3cf";
+    let graph_hash = "sha256:3333333333333333333333333333333333333333333333333333333333333333";
+    let mut package = RctxPackage {
+        manifest: RctxManifest {
+            rctx_version: RCTX_VERSION.to_string(),
+            package_id: "syn-rctx-l0-shared-context".to_string(),
+            jurisdiction: "SYN".to_string(),
+            producer: "rctx-fixture".to_string(),
+            created_at: "2026-05-13T00:00:00Z".to_string(),
+            package_content_hash: zero_hash(),
+        },
+        source_index: vec![RctxSourceIndexEntry {
+            source_id: "syn-precincts.csv".to_string(),
+            path: "sources/syn-precincts.csv".to_string(),
+            sha256: source_hash.to_string(),
+            media_type: "text/csv".to_string(),
+            description: "Synthetic precinct unit list".to_string(),
+        }],
+        units: vec![ContextUnitIndex {
+            context_hash: context_hash.to_string(),
+            unit_ids: vec![
+                "syn:precinct:P-001".to_string(),
+                "syn:precinct:P-002".to_string(),
+            ],
+        }],
+        graphs: vec![GraphRecord {
+            graph_id: "graph:summary-basic-adjacency".to_string(),
+            context_hash: context_hash.to_string(),
+            graph_hash: graph_hash.to_string(),
+            source_refs: vec!["syn-precincts.csv".to_string()],
+        }],
+        crosswalks: vec![
+            CrosswalkRecord {
+                crosswalk_id: "cw-summary-basic-identity".to_string(),
+                from_context_hash: context_hash.to_string(),
+                to_context_hash: context_hash.to_string(),
+                from_unit_id: "syn:precinct:P-001".to_string(),
+                to_unit_id: "syn:precinct:P-001".to_string(),
+                weight: RationalWeight { num: 1, den: 1 },
+                weight_kind: CrosswalkWeightKind::UnitCount,
+                exhaustive: true,
+                source_refs: vec!["syn-precincts.csv".to_string()],
+            },
+            CrosswalkRecord {
+                crosswalk_id: "cw-summary-basic-identity".to_string(),
+                from_context_hash: context_hash.to_string(),
+                to_context_hash: context_hash.to_string(),
+                from_unit_id: "syn:precinct:P-002".to_string(),
+                to_unit_id: "syn:precinct:P-002".to_string(),
+                weight: RationalWeight { num: 1, den: 1 },
+                weight_kind: CrosswalkWeightKind::UnitCount,
+                exhaustive: true,
+                source_refs: vec!["syn-precincts.csv".to_string()],
+            },
+        ],
+        claim_boundary: ClaimBoundary {
+            package_id: "syn-rctx-l0-shared-context".to_string(),
+            proves: vec![
+                "declared canonical unit ids are unique".to_string(),
+                "declared graph and crosswalk records reference known context and source ids"
+                    .to_string(),
+                "declared exhaustive crosswalk weights sum to one".to_string(),
+            ],
+            does_not_prove: vec![
+                "official legal validity of geography".to_string(),
+                "completeness of all geography sources".to_string(),
+                "vote totals, district assignments, or rendered maps".to_string(),
+            ],
+            caveats: Vec::new(),
+        },
+    };
+    package.manifest.package_content_hash = package_content_hash(&package)?;
+    Ok(package)
+}
+
+pub fn synthetic_missing_source_ref_package_fixture() -> Result<RctxPackage, RctxCoreError> {
+    let mut package = synthetic_minimal_package_fixture()?;
+    package.crosswalks[0].source_refs = vec!["source:missing".to_string()];
+    package.manifest.package_content_hash = package_content_hash(&package)?;
+    Ok(package)
+}
+
+pub fn synthetic_bad_crosswalk_weight_package_fixture() -> Result<RctxPackage, RctxCoreError> {
+    let mut package = synthetic_minimal_package_fixture()?;
+    package.crosswalks[0].weight = RationalWeight { num: 2, den: 1 };
+    package.manifest.package_content_hash = package_content_hash(&package)?;
+    Ok(package)
 }
 
 pub fn canonical_hash(prefix: &[u8], value: &Value) -> Result<String, RctxCoreError> {
@@ -212,6 +418,88 @@ fn source_ids(sources: &[SourceIndexEntry]) -> Result<BTreeSet<String>, RctxCore
         }
     }
     Ok(ids)
+}
+
+fn verify_manifest(package: &RctxPackage) -> Result<(), RctxCoreError> {
+    if package.manifest.rctx_version != RCTX_VERSION {
+        return Err(RctxCoreError::UnsupportedVersion(
+            package.manifest.rctx_version.clone(),
+        ));
+    }
+    if package.manifest.package_id.trim().is_empty() {
+        return Err(RctxCoreError::EmptyPackageId);
+    }
+    if !is_sha256_hash(&package.manifest.package_content_hash) {
+        return Err(RctxCoreError::InvalidPackageHash {
+            package_id: package.manifest.package_id.clone(),
+            package_hash: package.manifest.package_content_hash.clone(),
+        });
+    }
+    Ok(())
+}
+
+fn verify_package_sources(
+    package: &RctxPackage,
+) -> Result<BTreeSet<SourceIndexEntry>, RctxCoreError> {
+    let sources = package
+        .source_index
+        .iter()
+        .map(|source| SourceIndexEntry {
+            source_id: source.source_id.clone(),
+            sha256: source.sha256.clone(),
+        })
+        .collect::<Vec<_>>();
+    source_ids(&sources)?;
+    Ok(sources.into_iter().collect())
+}
+
+fn verify_graphs(
+    package: &RctxPackage,
+    sources: &BTreeSet<SourceIndexEntry>,
+) -> Result<(), RctxCoreError> {
+    let context_hashes: BTreeSet<&str> = package
+        .units
+        .iter()
+        .map(|context| context.context_hash.as_str())
+        .collect();
+    let source_ids: BTreeSet<&str> = sources
+        .iter()
+        .map(|source| source.source_id.as_str())
+        .collect();
+    for graph in &package.graphs {
+        if !context_hashes.contains(graph.context_hash.as_str()) {
+            return Err(RctxCoreError::GraphMissingContext {
+                graph_id: graph.graph_id.clone(),
+                context_hash: graph.context_hash.clone(),
+            });
+        }
+        if !is_sha256_hash(&graph.graph_hash) {
+            return Err(RctxCoreError::InvalidGraphHash {
+                graph_id: graph.graph_id.clone(),
+                graph_hash: graph.graph_hash.clone(),
+            });
+        }
+        for source_id in &graph.source_refs {
+            if !source_ids.contains(source_id.as_str()) {
+                return Err(RctxCoreError::GraphMissingSourceRef {
+                    graph_id: graph.graph_id.clone(),
+                    source_id: source_id.clone(),
+                });
+            }
+        }
+    }
+    Ok(())
+}
+
+fn verify_claim_boundary(package: &RctxPackage) -> Result<(), RctxCoreError> {
+    if package.claim_boundary.package_id != package.manifest.package_id {
+        return Err(RctxCoreError::ClaimBoundaryPackageMismatch);
+    }
+    if package.claim_boundary.proves.is_empty() || package.claim_boundary.does_not_prove.is_empty()
+    {
+        return Err(RctxCoreError::EmptyClaimBoundary);
+    }
+    Ok(())
 }
 
 fn verify_crosswalk_records(
@@ -348,6 +636,10 @@ fn report(check_id: &'static str) -> VerificationReport {
     VerificationReport { check_id }
 }
 
+fn zero_hash() -> String {
+    "sha256:0000000000000000000000000000000000000000000000000000000000000000".to_string()
+}
+
 fn canonicalize_value(value: &Value) -> Value {
     match value {
         Value::Array(values) => Value::Array(values.iter().map(canonicalize_value).collect()),
@@ -367,6 +659,7 @@ fn canonicalize_value(value: &Value) -> Value {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::{Path, PathBuf};
 
     const FROM_HASH: &str =
         "sha256:1111111111111111111111111111111111111111111111111111111111111111";
@@ -485,5 +778,121 @@ mod tests {
         let second = crosswalk_set_hash(&input.crosswalks).unwrap();
         assert_eq!(first, second);
         assert!(is_sha256_hash(&first));
+    }
+
+    #[test]
+    fn minimal_package_fixture_verifies() {
+        let package = synthetic_minimal_package_fixture().unwrap();
+        let reports = verify_package(&package).expect("minimal RCTX package verifies");
+        assert!(reports
+            .iter()
+            .any(|report| report.check_id == "manifest_package_hash"));
+        assert!(reports
+            .iter()
+            .any(|report| report.check_id == "crosswalk_source_refs"));
+        assert!(reports
+            .iter()
+            .any(|report| report.check_id == "graph_source_refs"));
+        assert!(reports
+            .iter()
+            .any(|report| report.check_id == "claim_boundary_present"));
+    }
+
+    #[test]
+    fn minimal_package_rejects_missing_source_ref() {
+        let package = synthetic_missing_source_ref_package_fixture().unwrap();
+        assert!(matches!(
+            verify_package(&package),
+            Err(RctxCoreError::MissingSourceRef { .. })
+        ));
+    }
+
+    #[test]
+    fn minimal_package_rejects_bad_crosswalk_weight() {
+        let package = synthetic_bad_crosswalk_weight_package_fixture().unwrap();
+        assert!(matches!(
+            verify_package(&package),
+            Err(RctxCoreError::CrosswalkWeightSum { .. })
+        ));
+    }
+
+    #[test]
+    fn package_content_hash_has_rctx_prefix_and_ignores_declared_hash() {
+        let mut package = synthetic_minimal_package_fixture().unwrap();
+        let hash = package_content_hash(&package).unwrap();
+        assert!(is_sha256_hash(&hash));
+
+        package.manifest.package_content_hash =
+            "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff".to_string();
+        assert_eq!(package_content_hash(&package).unwrap(), hash);
+    }
+
+    #[test]
+    fn docs_fixture_matches_helper_and_source_hashes() {
+        let helper = synthetic_minimal_package_fixture().unwrap();
+        let fixture = read_fixture("l0-shared-context");
+        assert_eq!(fixture, helper);
+        assert_eq!(
+            package_content_hash(&fixture).unwrap(),
+            fixture.manifest.package_content_hash
+        );
+        assert_eq!(
+            crosswalk_set_hash(&fixture.crosswalks).unwrap(),
+            read_json::<serde_json::Value>(
+                &fixture_root("l0-shared-context")
+                    .join("proofs")
+                    .join("package-hashes.json"),
+            )["crosswalk_set_hash"]
+                .as_str()
+                .unwrap()
+        );
+        verify_package(&fixture).expect("docs fixture verifies");
+
+        let root = fixture_root("l0-shared-context");
+        for source in fixture.source_index {
+            let bytes = std::fs::read(root.join(&source.path)).expect("read source bytes");
+            assert_eq!(source.sha256, sha256_string(&bytes));
+        }
+    }
+
+    fn read_fixture(name: &str) -> RctxPackage {
+        let root = fixture_root(name);
+        RctxPackage {
+            manifest: read_json(&root.join("manifest.json")),
+            source_index: read_json(&root.join("sources").join("source-index.json")),
+            units: read_ndjson(&root.join("units").join("context-units.ndjson")),
+            graphs: read_ndjson(&root.join("graphs").join("graphs.ndjson")),
+            crosswalks: read_ndjson(&root.join("units").join("crosswalks.ndjson")),
+            claim_boundary: read_json(&root.join("claims").join("claim-boundary.json")),
+        }
+    }
+
+    fn fixture_root(name: &str) -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("..")
+            .join("docs")
+            .join("fixtures")
+            .join("rctx")
+            .join(name)
+    }
+
+    fn read_json<T: for<'de> Deserialize<'de>>(path: &Path) -> T {
+        let text = std::fs::read_to_string(path).expect("read json");
+        serde_json::from_str(&text).expect("parse json")
+    }
+
+    fn read_ndjson<T: for<'de> Deserialize<'de>>(path: &Path) -> Vec<T> {
+        let text = std::fs::read_to_string(path).expect("read ndjson");
+        text.lines()
+            .filter(|line| !line.trim().is_empty())
+            .map(|line| serde_json::from_str(line).expect("parse ndjson row"))
+            .collect()
+    }
+
+    fn sha256_string(bytes: &[u8]) -> String {
+        let mut h = Sha256::new();
+        h.update(bytes);
+        format!("sha256:{:x}", h.finalize())
     }
 }

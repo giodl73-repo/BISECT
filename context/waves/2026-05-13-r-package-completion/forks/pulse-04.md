@@ -47,12 +47,24 @@ Get-ChildItem -Recurse crates/rctx-core
 
 ## Deliverables
 
-- [ ] Decide whether pulse 04 needs only fixture/docs or also `rctx-io`.
-- [ ] Add a tiny positive RCTX fixture or fixture-construction helper.
-- [ ] Add a negative fixture for missing source ref or bad crosswalk weight.
-- [ ] Add RCOUNT/RCTX consumer coverage where the existing APIs make sense.
-- [ ] Update `WAVE.md` pulse status and active goal checklist.
-- [ ] Run focused validation.
+- [x] Decide whether pulse 04 needs only fixture/docs or also `rctx-io`.
+- [x] Add a tiny positive RCTX fixture or fixture-construction helper.
+- [x] Add a negative fixture for missing source ref or bad crosswalk weight.
+- [x] Add RCOUNT/RCTX consumer coverage where the existing APIs make sense.
+- [x] Update `WAVE.md` pulse status and active goal checklist.
+- [x] Run focused validation.
+
+## Completion Notes
+
+- Decision: no `rctx-io` crate for pulse 04. `rctx-core` now owns the minimal
+  package fixture/helper and verifier path; directory loading stays deferred
+  until there is an independent loader requirement.
+- Positive fixture: `docs/fixtures/rctx/l0-shared-context`.
+- Negative coverage: missing source ref and bad exhaustive crosswalk weight
+  helpers in `rctx-core`.
+- Consumer coverage: `rcount-district` preserves the fixture context and
+  crosswalk hashes through district aggregation without absorbing RCTX graph or
+  source ownership.
 
 ## Validation
 
@@ -96,4 +108,3 @@ code verifies.
 - Prefer a minimal fixture/helper if `rctx-io` is not yet justified.
 - Check off pulse gates only after they are complete.
 - Run the validation commands before marking the pulse done.
-

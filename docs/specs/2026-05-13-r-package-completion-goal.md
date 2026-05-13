@@ -134,12 +134,14 @@ Purpose: stabilize the machine geography layer that RPLAN and RCOUNT both use.
 - [x] `rctx-core` verifies exact rational crosswalk rows and source refs.
 - [x] RCOUNT district aggregation can preserve declared RCTX reference and
   crosswalk hash.
-- [ ] Add a minimal RCTX package directory fixture with manifest, source index,
-  units, graph/crosswalk records, package hashes, and verify transcript.
-- [ ] Add `rctx-io` only when the package directory needs independent loading.
+- [x] Add a minimal RCTX package directory fixture with manifest, source index,
+   units, graph/crosswalk records, package hashes, and verify transcript.
+- [x] Defer `rctx-io` until the package directory needs independent loading;
+  pulse 04 uses `rctx-core` fixture helpers and docs fixtures only.
 - [ ] Add `rctx-cli verify` only after the fixture shape is stable.
-- [ ] Update RPLAN and RCOUNT examples to reference the same RCTX fixture where
-  possible.
+- [x] Add RCOUNT consumer coverage that preserves the minimal RCTX fixture
+  context and crosswalk hashes during district aggregation.
+- [ ] Update RPLAN examples to reference the same RCTX fixture where possible.
 
 ## Stage 3 - RHIST Minimal Lineage Package
 

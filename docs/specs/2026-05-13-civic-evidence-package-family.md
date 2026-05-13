@@ -112,8 +112,11 @@ This is the order that minimizes rewrites:
 1. **RCTX minimal context boundary.** Confirm canonical unit ids, unit order,
    graph/source hashes, and crosswalk record shape. RPLAN already has an
    implemented `.rctx`; treat it as RCTX-compatible while the shared boundary
-   stabilizes. The first shared crate slice is `rctx-core` for exact rational
-   crosswalk verification only.
+   stabilizes. The first shared crate slice is `rctx-core`, with the
+   `docs/fixtures/rctx/l0-shared-context` fixture covering manifest,
+   source-index, unit-index, graph, crosswalk, package-hash, transcript, and
+   claim-boundary records. `rctx-io` remains deferred until an independent
+   directory loader is needed beyond this fixture/helper shape.
 2. **RHIST minimal lineage package.** Extract the precinct/reporting-unit
    lineage model now, before adding more multi-election RCOUNT features.
 3. **RCOUNT current work.** Continue count arithmetic, source adapters, audit

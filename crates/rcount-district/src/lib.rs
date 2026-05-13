@@ -1278,6 +1278,48 @@ mod tests {
     }
 
     #[test]
+    fn aggregation_consumes_minimal_rctx_fixture_crosswalk() {
+        let rctx_fixture = rctx_core::synthetic_minimal_package_fixture().unwrap();
+        let context_units = &rctx_fixture.units[0];
+        let mut package = synthetic_summary_basic_package();
+        let crosswalk_hash = rctx_core::crosswalk_set_hash(&rctx_fixture.crosswalks).unwrap();
+        package.rctx_refs = vec![RctxReference {
+            reference_id: "rctx:syn-l0-shared-context".to_string(),
+            context_hash: context_units.context_hash.clone(),
+            context_path: Some("docs/fixtures/rctx/l0-shared-context".to_string()),
+            crosswalk_hash: Some(crosswalk_hash.clone()),
+            crosswalk_path: Some("units/crosswalks.ndjson".to_string()),
+            role: "aggregation-crosswalk".to_string(),
+            note: Some(
+                "Consumes the minimal RCTX fixture by stable context/crosswalk hashes.".to_string(),
+            ),
+        }];
+        let plan_doc = synthetic_summary_basic_rplan_document().unwrap();
+        let context = synthetic_summary_basic_context(&plan_doc.plan).unwrap();
+
+        let transcript = aggregate_package_districts(
+            &package,
+            &plan_doc.plan,
+            Some(&context),
+            None,
+            "syn-2024-mayor",
+            CountStatus::Canvassed,
+        )
+        .unwrap();
+
+        assert_eq!(
+            transcript.rctx_reference_id.as_deref(),
+            Some("rctx:syn-l0-shared-context")
+        );
+        assert_eq!(
+            transcript.rctx_crosswalk_hash.as_deref(),
+            Some(crosswalk_hash.as_str())
+        );
+        assert_eq!(transcript.district_totals[0].summary.counted_ballots, 80);
+        assert_eq!(transcript.district_totals[1].summary.counted_ballots, 60);
+    }
+
+    #[test]
     fn aggregation_uses_explicit_crosswalk_projection() {
         let tmp = tempfile::tempdir().unwrap();
         let crosswalk_path = tmp.path().join("crosswalks.ndjson");

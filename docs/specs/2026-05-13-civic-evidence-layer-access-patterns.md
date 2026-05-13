@@ -89,6 +89,9 @@ Expected cross-package queries:
 - RCOUNT package directories may record RCTX context/crosswalk inputs in
   `normalized/rctx-refs.ndjson`; each reference binds context hashes and
   optional crosswalk hashes used by unit-context or plan-aggregation claims.
+  The first shared positive fixture is
+  `docs/fixtures/rctx/l0-shared-context`; RCOUNT consumes it by stable context
+  and crosswalk hashes rather than copying RCTX graph/source ownership.
 - Transitional RCOUNT embedded lineage maps through `rcount-rhist` into
   RHIST-compatible events; this is a bridge, not a transfer of RHIST ownership
   into RCOUNT.
