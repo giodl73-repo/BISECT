@@ -24,7 +24,7 @@
 | 2026-05-13 | R Package Completion | RCOUNT audit algorithms, then RCTX/RHIST base dimensions | archived |
 | 2026-05-13 | Paper Rubric Uplift | Raised below-rubric papers across K/J/U/G tracks with claim-boundary passes | archived |
 | 2026-05-13 | G Ensemble Evidence Packages | Build auditable external ensemble/election/metric packages for G.1-G.3 claims | archived |
-| 2026-05-13 | J Apportionment Evidence Packages | Add Census/SHA fixtures and verifier coverage for J-track apportionment claims | active |
+| 2026-05-13 | J Apportionment Evidence Packages | Add Census/SHA fixtures and verifier coverage for J-track apportionment claims | archived |
 
 ## Operating Model
 

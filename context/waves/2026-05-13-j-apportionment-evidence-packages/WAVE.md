@@ -1,7 +1,7 @@
 ---
 wave: j-apportionment-evidence-packages
 date_open: 2026-05-13
-status: active
+status: complete
 source_goal: docs/specs/2026-05-13-j-apportionment-evidence-packages-goal.md
 ---
 
@@ -35,7 +35,7 @@ historical source table is hash-bound and validated.
 |---|---|---|
 | 01 - 2020 Census Table 1 verifier | DONE | Added source-SHA manifest, extracted rows, and Huntington-Hill replay coverage |
 | 02 - J ledger update | DONE | Updated J.0/J.1/J.6 papers, public index, and scorecard to cite the 2020 package |
-| 03 - Historical carry-forward | TODO | Decide 2010/2000/1910-2020 package scope or close with explicit gaps |
+| 03 - Historical carry-forward | DONE | Closed wave with 2000/2010 packages and CLI verifier as carry-forwards |
 
 ## Validation Gate
 
@@ -45,7 +45,8 @@ cargo test -p bisect-apportion
 git diff --check
 ```
 
-## Next
+## Closeout
 
-Start pulse 03: close the wave with historical 2000/2010 package gaps and
-optional CLI verifier carry-forwards.
+Completed. The wave delivered a 2020 Census Table 1 source-SHA package,
+Huntington-Hill verifier coverage, J.0/J.1/J.6 ledger updates, rebuilt PDFs, and
+explicit carry-forwards for 2000/2010 packages and a standalone CLI verifier.

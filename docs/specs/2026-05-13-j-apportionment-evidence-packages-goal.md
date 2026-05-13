@@ -1,7 +1,7 @@
 # J Apportionment Evidence Packages Goal
 
 **Opened:** 2026-05-13
-**Status:** active
+**Status:** complete
 
 ## Goal
 
@@ -25,7 +25,17 @@ anchors J.0-J.6.
   extracted populations and matches the official 435-seat result.
 - [x] Document source URL, source SHA-256, and verifier path.
 - [x] Update J paper ledgers after the package is in place.
-- [ ] Run validation and commit.
+- [x] Run validation and commit.
+
+## Closeout
+
+The wave delivered
+`docs/examples/j-apportionment-evidence-packages/2020-census-table01/`, a
+source-SHA-bound 2020 Census Table 1 extraction, and verifier coverage in
+`bisect-apportion::evidence_manifest` that recomputes Huntington-Hill and
+matches the official 435-seat result. J.0, J.1, J.6, the public paper index, and
+the scorecard now cite that package. Historical 2000/2010 packages and a
+standalone `bisect apportion --verify` command remain carry-forwards.
 
 ## Non-Goals
 
