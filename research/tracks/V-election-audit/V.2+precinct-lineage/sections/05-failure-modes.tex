@@ -21,3 +21,8 @@ lineage record asks the election package to fix its administrative history. A
 stale plan asks the district aggregation layer to use the right unit universe.
 A source hash mismatch asks the package publisher to explain why the evidence
 bytes changed. The remedy differs because the failure layer differs.
+
+The stale-plan negative is especially important for later district aggregation.
+It fails before a verifier can safely publish district totals, because the plan
+assignment refers to a reporting unit that the count package for that cycle does
+not contain.

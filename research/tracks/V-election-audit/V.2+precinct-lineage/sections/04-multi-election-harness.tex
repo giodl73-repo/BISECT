@@ -25,7 +25,15 @@ For district aggregation, each cycle binds three hashes:
   H_{\mathrm{rplan\ plan}},\quad
   H_{\mathrm{unit\ universe}}.
 \]
+In the current transcript, the unit-universe hash binds the sorted reporting
+unit ids that the aggregation used for that cycle. It is not a substitute for
+the package hash or plan hash; it is a compact guard that says which unit set
+the bridge actually saw.
 That triple prevents a stale crosswalk from being silently reused against a
 different set of reporting units. If the plan expects P-002 but the current
 package only contains P-023 after a merge, the failure belongs to the plan/unit
 boundary, not to vote arithmetic.
+
+This L2 harness is where RCOUNT and RPLAN meet. Base lineage verification does
+not require RPLAN. District aggregation does, because the district totals depend
+on a particular plan assignment over a particular reporting-unit universe.

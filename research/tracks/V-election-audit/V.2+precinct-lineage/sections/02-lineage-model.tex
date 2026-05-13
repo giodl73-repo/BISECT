@@ -11,7 +11,7 @@ Field & Meaning \\
 \midrule
 \texttt{lineage\_id} & Stable event identifier within the package. \\
 \texttt{kind} & Administrative relation: unchanged, split, or merge in the current draft. \\
-\texttt{prior\_cycle}, \texttt{current\_cycle} & Election cycles connected by the event. \\
+\texttt{prior\_cycle}, \texttt{current\_cycle} & Package-level cycle labels connected by the event, such as \texttt{SYN-2024-general}. \\
 \texttt{prior\_reporting\_unit\_ids} & Units from the earlier cycle. \\
 \texttt{current\_reporting\_unit\_ids} & Units in the later cycle. \\
 \texttt{authority} & Public office, board, or source asserting the change. \\
@@ -25,8 +25,21 @@ unit and multiple current units. A merge must name multiple prior units and one
 current unit. Every referenced unit must exist in the package's reporting-unit
 records. Those checks do not prove that the county drew the new units correctly;
 they prove that the declared cross-cycle relationship is internally replayable.
+The current crate uses unchanged, split, and merge events; rename and boundary
+adjustment events are future lineage kinds, not implied by this draft.
+
+Cycle ids are scoped to the package family being compared. They are stable
+labels for audit transcripts, not national election identifiers. Reporting-unit
+ids are likewise scoped to the RCOUNT package and its source adapters.
 
 Lineage is distinct from count totals. The lineage event says how units relate;
 the summaries still carry contest, status, residual, and counted-ballot
 arithmetic. This separation keeps an administrative crosswalk from silently
-rewriting votes.
+rewriting votes. The check named \texttt{lineage\_conservation} conserves the
+declared unit relationship: it validates split/merge cardinality and referenced
+unit existence. It does not assert that vote totals are conserved across cycles.
+
+Public source artifacts for lineage can vary by jurisdiction. Examples include
+precinct-change orders, board records, county GIS releases, public precinct
+notices, statements of votes, and source crosswalks. RCOUNT normalizes the
+lineage record and binds public source references where they are available.

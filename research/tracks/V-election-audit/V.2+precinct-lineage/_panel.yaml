@@ -1,8 +1,8 @@
 paper: V.2+precinct-lineage
 title: "Precinct Lineage Across Elections"
 type: publication
-stage: draft
-round: 1
+stage: ready
+round: 2
 content_mode: draft
 venue: technical report
 review_date: 2026-05-12
@@ -20,8 +20,9 @@ reviews:
   LEDGER: reviews/REVIEW-LEDGER.md
   VAULT: reviews/REVIEW-VAULT.md
   SYNTHESIS: reviews/SYNTHESIS.md
+  ROUND2: reviews/ROUND2-SYNTHESIS.md
 p1_items:
-  - "Add fixture-to-command traceability for the lineage fixture and L2 harness."
-  - "Define cycle ids, unit-universe hashes, and lineage cardinality rules more explicitly."
-  - "Show a concrete cross-cycle split/merge diagram or ledger table."
-  - "Clarify privacy and legal boundaries for small-unit lineage evidence."
+  - "[x] Add fixture-to-command traceability for the lineage fixture and L2 harness."
+  - "[x] Define cycle ids, unit-universe hashes, and lineage cardinality rules more explicitly."
+  - "[x] Show a concrete cross-cycle split/merge diagram or ledger table."
+  - "[x] Clarify privacy and legal boundaries for small-unit lineage evidence."

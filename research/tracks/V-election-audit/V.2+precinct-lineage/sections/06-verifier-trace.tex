@@ -1,0 +1,48 @@
+\section{Verifier Traceability}
+
+The lineage examples are executable fixtures. The single-package lineage case
+is L1 coverage; the three-cycle harness and its negative variants are L2
+coverage.
+
+\begin{quote}
+\footnotesize
+\begin{verbatim}
+cargo run -p rcount-io --example precinct_split_lineage_package
+cargo run -p rcount-cli -- verify \
+  docs/examples/rcount-golden-packages/precinct-split-lineage
+
+cargo run -p rcount-district --example multi_election_harness
+cargo run -p rcount-district --example multi_election_negative_harnesses
+\end{verbatim}
+\end{quote}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+Fixture & Expected result & Evidence \\
+\midrule
+\texttt{precinct-split-lineage} & pass & Two \texttt{lineage\_conservation} checks plus package source hash verification. \\
+\texttt{multi-election-harness} & pass & Three cycles, each with count package hash, RPLAN plan hash, unit-universe hash, and district aggregation checks. \\
+\texttt{bad-lineage} & fail & Lineage event references missing current unit \texttt{P-023-MISSING}. \\
+\texttt{stale-plan} & fail & Plan expects a unit summary absent from the RCOUNT package. \\
+\texttt{tampered-2028-source} & fail & 2028 package source hash mismatch. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+A compact negative excerpt is enough to show the failure layer:
+\begin{quote}
+\footnotesize
+\begin{verbatim}
+{
+  "expected_result": "fail",
+  "failure": "core error: lineage event ... references missing current
+              reporting unit: syn:precinct:P-023-MISSING"
+}
+\end{verbatim}
+\end{quote}
+
+The transcript is not saying that P-023 is politically good or bad. It is saying
+that a lineage event points to an undeclared unit, so the package cannot support
+that cross-cycle claim.

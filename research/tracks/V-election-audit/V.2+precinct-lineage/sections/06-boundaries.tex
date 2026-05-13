@@ -3,15 +3,32 @@
 RCOUNT lineage does not prove why voters moved, whether turnout changed, or
 whether a precinct alteration had political intent. It only states the
 administrative relationship between reporting units and verifies that the
-declared relationship is structurally consistent.
+declared relationship is structurally consistent. A passing lineage check is
+not legal approval of a precinct change.
 
 It also does not require a county to publish voter-level movement records.
-Lineage works at the reporting-unit level. When future adapters use voter-file
-or registration evidence, they must preserve the V.0 privacy boundary: public
-verification should not expose voter identity, ballot style, timestamps, or
-small-cell facts that allow reidentification.
+Lineage works at the reporting-unit level, not the individual-voter level. When
+future adapters use voter-file, assignment, or registration evidence, they must
+preserve the V.0 privacy boundary: public verification should not expose voter
+identity, ballot style, timestamps, or small-cell facts that allow
+reidentification. Private support evidence can be hashed and retained by an
+authority without being published; a hash does not sanitize sensitive source
+data.
 
 Finally, lineage is not a substitute for RPLAN. RCOUNT can declare how reporting
 units changed; RPLAN declares how those units aggregate into districts for a
 specific plan and cycle. The bridge between them must remain hash-bound and
 optional.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{XX}
+\toprule
+RCOUNT lineage enables & RCOUNT lineage does not prove \\
+\midrule
+Replayable split, merge, and unchanged-unit evidence. & Legal validity or political neutrality of a precinct change. \\
+Cycle-specific unit-universe checks. & Individual voter movement. \\
+Failure attribution for bad lineage, stale plans, and source tampering. & That turnout or vote shifts have any particular cause. \\
+\bottomrule
+\end{tabularx}
+\end{center}
