@@ -293,6 +293,27 @@ pub enum RcountCoreError {
         audit_id: String,
         source_url: String,
     },
+    #[error("duplicate manual audit id: {audit_id}")]
+    DuplicateManualAuditId { audit_id: String },
+    #[error("manual audit {audit_id} is missing canvassed summary for contest {contest_id} reporting unit {reporting_unit_id}")]
+    MissingManualAuditSummary {
+        audit_id: String,
+        contest_id: String,
+        reporting_unit_id: String,
+    },
+    #[error("manual audit {audit_id} machine total mismatch for {selection_id}: declared {declared}, summary {summary}")]
+    ManualAuditMachineTotalMismatch {
+        audit_id: String,
+        selection_id: String,
+        declared: i64,
+        summary: i64,
+    },
+    #[error("manual audit {audit_id} declares status {declared:?}, computed {computed:?}")]
+    ManualAuditStatusMismatch {
+        audit_id: String,
+        declared: ManualAuditStatus,
+        computed: ManualAuditStatus,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -535,6 +556,27 @@ pub enum RlaStoppingStatus {
     Escalate,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ManualAuditStatus {
+    Pass,
+    Escalate,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ManualAudit {
+    pub audit_id: String,
+    pub contest_id: String,
+    pub reporting_unit_id: String,
+    pub authority: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub audited_batch_ids: Vec<String>,
+    pub tolerance_votes: i64,
+    pub machine_totals: Vec<SelectionTotal>,
+    pub hand_totals: Vec<SelectionTotal>,
+    pub declared_status: ManualAuditStatus,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum CountStatus {
@@ -591,6 +633,8 @@ pub struct RcountPackage {
     pub cvr: Vec<CvrContestRecord>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rla_audits: Vec<RiskLimitAudit>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub manual_audits: Vec<ManualAudit>,
     pub summaries: Vec<Summary>,
     #[serde(default)]
     pub status_events: Vec<StatusEvent>,
@@ -670,6 +714,7 @@ pub fn verify_package(package: &RcountPackage) -> Result<VerificationReport, Rco
     report
         .passed
         .extend(verify_rla_jurisdiction_adapters(package)?);
+    report.passed.extend(verify_manual_audits(package)?);
     Ok(report)
 }
 
@@ -1595,6 +1640,87 @@ fn verify_california_rla_adapter(audit: &RiskLimitAudit) -> Result<(), RcountCor
     Ok(())
 }
 
+pub fn verify_manual_audits(package: &RcountPackage) -> Result<Vec<EquationPass>, RcountCoreError> {
+    let mut seen = BTreeSet::new();
+    let mut passes = Vec::new();
+    for audit in &package.manual_audits {
+        if !seen.insert(audit.audit_id.as_str()) {
+            return Err(RcountCoreError::DuplicateManualAuditId {
+                audit_id: audit.audit_id.clone(),
+            });
+        }
+        let summary = package
+            .summaries
+            .iter()
+            .find(|summary| {
+                summary.contest_id == audit.contest_id
+                    && summary.reporting_unit_id == audit.reporting_unit_id
+                    && summary.status == CountStatus::Canvassed
+                    && summary.batch_id.is_none()
+            })
+            .ok_or_else(|| RcountCoreError::MissingManualAuditSummary {
+                audit_id: audit.audit_id.clone(),
+                contest_id: audit.contest_id.clone(),
+                reporting_unit_id: audit.reporting_unit_id.clone(),
+            })?;
+        let summary_totals: BTreeMap<&str, i64> = summary
+            .totals
+            .iter()
+            .map(|total| (total.selection_id.as_str(), total.votes))
+            .collect();
+        let machine_totals: BTreeMap<&str, i64> = audit
+            .machine_totals
+            .iter()
+            .map(|total| (total.selection_id.as_str(), total.votes))
+            .collect();
+        for (selection_id, summary_votes) in &summary_totals {
+            let declared = machine_totals.get(selection_id).copied().ok_or_else(|| {
+                RcountCoreError::ManualAuditMachineTotalMismatch {
+                    audit_id: audit.audit_id.clone(),
+                    selection_id: (*selection_id).to_string(),
+                    declared: 0,
+                    summary: *summary_votes,
+                }
+            })?;
+            if declared != *summary_votes {
+                return Err(RcountCoreError::ManualAuditMachineTotalMismatch {
+                    audit_id: audit.audit_id.clone(),
+                    selection_id: (*selection_id).to_string(),
+                    declared,
+                    summary: *summary_votes,
+                });
+            }
+        }
+        let hand_totals: BTreeMap<&str, i64> = audit
+            .hand_totals
+            .iter()
+            .map(|total| (total.selection_id.as_str(), total.votes))
+            .collect();
+        let computed = if summary_totals.iter().all(|(selection_id, machine_votes)| {
+            hand_totals.get(selection_id).is_some_and(|hand_votes| {
+                (*hand_votes - *machine_votes).abs() <= audit.tolerance_votes
+            })
+        }) {
+            ManualAuditStatus::Pass
+        } else {
+            ManualAuditStatus::Escalate
+        };
+        if audit.declared_status != computed {
+            return Err(RcountCoreError::ManualAuditStatusMismatch {
+                audit_id: audit.audit_id.clone(),
+                declared: audit.declared_status,
+                computed,
+            });
+        }
+        passes.push(EquationPass {
+            equation_id: "manual_audit_reconciliation".to_string(),
+            contest_id: audit.contest_id.clone(),
+            reporting_unit_id: audit.reporting_unit_id.clone(),
+        });
+    }
+    Ok(passes)
+}
+
 fn verify_declared_rla_discrepancies(
     audit: &RiskLimitAudit,
     computed: &[RlaDiscrepancy],
@@ -1766,6 +1892,7 @@ pub fn synthetic_summary_basic_package() -> RcountPackage {
         inclusion_proofs: vec![],
         cvr: vec![],
         rla_audits: vec![],
+        manual_audits: vec![],
         summaries,
         status_events: vec![],
     }
@@ -2243,6 +2370,54 @@ pub fn synthetic_bad_california_rla_package() -> RcountPackage {
     let mut package = synthetic_california_rla_package();
     package.rla_audits[0].audit_software_source_url =
         Some("synthetic-election-audit/rcount-open-rla-synthetic-v1".to_string());
+    package
+}
+
+pub fn synthetic_manual_audit_package() -> RcountPackage {
+    let mut package = synthetic_summary_basic_package();
+    package.manual_audits = vec![ManualAudit {
+        audit_id: "manual-audit:syn-2024-mayor:P-001".to_string(),
+        contest_id: "syn-2024-mayor".to_string(),
+        reporting_unit_id: "syn:precinct:P-001".to_string(),
+        authority: "SYN County Canvassing Board".to_string(),
+        audited_batch_ids: vec![],
+        tolerance_votes: 0,
+        machine_totals: vec![
+            SelectionTotal {
+                selection_id: "cand-a".to_string(),
+                votes: 40,
+            },
+            SelectionTotal {
+                selection_id: "cand-b".to_string(),
+                votes: 35,
+            },
+            SelectionTotal {
+                selection_id: "write-in".to_string(),
+                votes: 1,
+            },
+        ],
+        hand_totals: vec![
+            SelectionTotal {
+                selection_id: "cand-a".to_string(),
+                votes: 40,
+            },
+            SelectionTotal {
+                selection_id: "cand-b".to_string(),
+                votes: 35,
+            },
+            SelectionTotal {
+                selection_id: "write-in".to_string(),
+                votes: 1,
+            },
+        ],
+        declared_status: ManualAuditStatus::Pass,
+    }];
+    package
+}
+
+pub fn synthetic_bad_manual_audit_package() -> RcountPackage {
+    let mut package = synthetic_manual_audit_package();
+    package.manual_audits[0].hand_totals[1].votes += 1;
     package
 }
 
@@ -2846,6 +3021,27 @@ mod tests {
         assert!(matches!(
             err,
             RcountCoreError::InvalidRlaSoftwareSourceUrl { .. }
+        ));
+    }
+
+    #[test]
+    fn manual_audit_package_verifies_hand_count_totals() {
+        let package = synthetic_manual_audit_package();
+        let report = verify_package(&package).expect("manual audit package must verify");
+        assert!(report
+            .passed
+            .iter()
+            .any(|pass| pass.equation_id == "manual_audit_reconciliation"));
+    }
+
+    #[test]
+    fn manual_audit_fails_when_hand_count_exceeds_tolerance() {
+        let package = synthetic_bad_manual_audit_package();
+        let err = verify_manual_audits(&package)
+            .expect_err("bad manual audit package must fail reconciliation");
+        assert!(matches!(
+            err,
+            RcountCoreError::ManualAuditStatusMismatch { .. }
         ));
     }
 

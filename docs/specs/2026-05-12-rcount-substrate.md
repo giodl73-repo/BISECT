@@ -527,12 +527,15 @@ Current audit coverage:
   split/merge lineage checks;
 - `rcount-audit` pass transcript for `privacy-inclusion-sketch`, including
   receipt-safe proof privacy checks;
+- `rcount-audit` pass transcript for `manual-audit`, including hand-count to
+  machine-total reconciliation;
 - fail transcript for tampered manifest/content hash;
 - fail transcript for missing batch evidence;
 - fail transcript for bad lineage evidence;
 - fail transcript for choice-bearing proof evidence;
 - fail transcript for missing or tampered source hash evidence;
 - fail transcript for bad summary arithmetic;
+- fail transcript for bad manual-audit hand-count evidence;
 - CLI district aggregation transcript for a synthetic RPLAN assignment;
 - L2 synthetic multi-election replay transcript with split/merge lineage and
   per-cycle district aggregation;

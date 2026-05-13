@@ -89,6 +89,7 @@ pub struct PackageHashes {
     pub inclusion_proof_count: usize,
     pub cvr_count: usize,
     pub rla_audit_count: usize,
+    pub manual_audit_count: usize,
     pub summary_count: usize,
 }
 
@@ -185,6 +186,10 @@ pub fn write_package_dir(
     write_ndjson(&dir.join("normalized").join("cvr.ndjson"), &package.cvr)?;
     write_ndjson(&dir.join("audits").join("rla.ndjson"), &package.rla_audits)?;
     write_ndjson(
+        &dir.join("audits").join("manual.ndjson"),
+        &package.manual_audits,
+    )?;
+    write_ndjson(
         &dir.join("normalized").join("summaries.ndjson"),
         &package.summaries,
     )?;
@@ -201,6 +206,7 @@ pub fn write_package_dir(
             r#"{"equation_id":"rla_sampler_replay","status":"declared"}"#,
             r#"{"equation_id":"rla_margin_metadata","status":"declared"}"#,
             r#"{"equation_id":"rla_stopping_rule","status":"declared"}"#,
+            r#"{"equation_id":"manual_audit_reconciliation","status":"declared"}"#,
         ],
     )?;
     write_ndjson(
@@ -218,6 +224,7 @@ pub fn write_package_dir(
             inclusion_proof_count: package.inclusion_proofs.len(),
             cvr_count: package.cvr.len(),
             rla_audit_count: package.rla_audits.len(),
+            manual_audit_count: package.manual_audits.len(),
             summary_count: package.summaries.len(),
         },
     )?;
@@ -248,6 +255,7 @@ pub fn read_package_dir(dir: &Path) -> Result<(RcountManifest, RcountPackage), R
         )?,
         cvr: read_optional_ndjson(&dir.join("normalized").join("cvr.ndjson"))?,
         rla_audits: read_optional_ndjson(&dir.join("audits").join("rla.ndjson"))?,
+        manual_audits: read_optional_ndjson(&dir.join("audits").join("manual.ndjson"))?,
         summaries: read_ndjson(&dir.join("normalized").join("summaries.ndjson"))?,
         status_events: read_ndjson(&dir.join("status").join("events.ndjson"))?,
     };
@@ -483,6 +491,20 @@ pub fn default_bad_california_rla_docs_dir() -> PathBuf {
         .join("bad-california-rla")
 }
 
+pub fn default_manual_audit_docs_dir() -> PathBuf {
+    PathBuf::from("docs")
+        .join("examples")
+        .join("rcount-golden-packages")
+        .join("manual-audit")
+}
+
+pub fn default_bad_manual_audit_docs_dir() -> PathBuf {
+    PathBuf::from("docs")
+        .join("examples")
+        .join("rcount-golden-packages")
+        .join("bad-manual-audit")
+}
+
 fn write_json_pretty<T: Serialize>(path: &Path, value: &T) -> Result<(), RcountIoError> {
     let bytes = serde_json::to_vec_pretty(value)?;
     fs::write(path, bytes)?;
@@ -504,6 +526,7 @@ fn write_synthetic_source_export(
         "inclusion_proof_count": package.inclusion_proofs.len(),
         "cvr_count": package.cvr.len(),
         "rla_audit_count": package.rla_audits.len(),
+        "manual_audit_count": package.manual_audits.len(),
         "summary_count": package.summaries.len(),
         "status_event_count": package.status_events.len(),
     });
@@ -598,12 +621,13 @@ mod tests {
     use rcount_core::{
         synthetic_bad_california_rla_package, synthetic_bad_colorado_rla_package,
         synthetic_bad_cvr_summary_package, synthetic_bad_lineage_package,
-        synthetic_bad_rla_discrepancy_package, synthetic_bad_rla_margin_package,
-        synthetic_bad_rla_replay_package, synthetic_bad_rla_statistical_package,
-        synthetic_bad_rla_stopping_package, synthetic_bad_selection_sum_package,
-        synthetic_california_rla_package, synthetic_canvass_correction_package,
-        synthetic_choice_bearing_proof_package, synthetic_colorado_rla_package,
-        synthetic_cvr_summary_package, synthetic_mail_batch_added_package,
+        synthetic_bad_manual_audit_package, synthetic_bad_rla_discrepancy_package,
+        synthetic_bad_rla_margin_package, synthetic_bad_rla_replay_package,
+        synthetic_bad_rla_statistical_package, synthetic_bad_rla_stopping_package,
+        synthetic_bad_selection_sum_package, synthetic_california_rla_package,
+        synthetic_canvass_correction_package, synthetic_choice_bearing_proof_package,
+        synthetic_colorado_rla_package, synthetic_cvr_summary_package,
+        synthetic_mail_batch_added_package, synthetic_manual_audit_package,
         synthetic_missing_batch_package, synthetic_precinct_split_lineage_package,
         synthetic_privacy_inclusion_package, synthetic_rla_discrepancy_package,
         synthetic_rla_margin_package, synthetic_rla_replay_package,
@@ -931,6 +955,27 @@ mod tests {
                 .as_deref(),
             Some("synthetic-election-audit/rcount-open-rla-synthetic-v1")
         );
+    }
+
+    #[test]
+    fn round_trips_synthetic_manual_audit_package() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_manual_audit_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+        let (_, decoded_package) = read_package_dir(tmp.path()).unwrap();
+        assert_eq!(decoded_package.manual_audits.len(), 1);
+        assert_eq!(decoded_package.manual_audits[0].tolerance_votes, 0);
+    }
+
+    #[test]
+    fn round_trips_synthetic_bad_manual_audit_package() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_bad_manual_audit_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+        let (_, decoded_package) = read_package_dir(tmp.path()).unwrap();
+        assert_eq!(decoded_package.manual_audits[0].hand_totals[1].votes, 36);
     }
 
     #[test]

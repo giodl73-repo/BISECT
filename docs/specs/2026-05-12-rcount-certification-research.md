@@ -200,13 +200,14 @@ rcount aggregate-plan --plan plan.rplan --context context.rctx --count election.
 - [ ] Inventory voting-system export formats from EAC-certified systems where
       public docs exist: CVR exports, summary reports, ballot manifests, audit
       logs, and results XML/CSV.
-- [ ] Select three model jurisdictions for fixtures: one Colorado-style RLA,
+- [x] Select three model jurisdictions for fixtures: one Colorado-style RLA,
       one California-style RLA, and one ordinary canvass/manual-audit state.
       Initial Colorado-style synthetic adapter fixture landed as
       `docs/examples/rcount-golden-packages/colorado-rla`; initial
       California-style public audit software fixture landed as
       `docs/examples/rcount-golden-packages/california-rla`; ordinary
-      canvass/manual-audit fixture remains future work.
+      canvass/manual-audit fixture landed as
+      `docs/examples/rcount-golden-packages/manual-audit`.
 - [ ] Define RCOUNT v0.1 canonical JSON and CSV ingest rules.
 - [ ] Implement aggregate arithmetic before ballot-level support.
 - [ ] Add privacy review before any voter-facing receipt proof ships.

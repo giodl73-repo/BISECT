@@ -100,6 +100,14 @@ fn docs_bad_california_rla_path() -> String {
     docs_package_path("bad-california-rla")
 }
 
+fn docs_manual_audit_path() -> String {
+    docs_package_path("manual-audit")
+}
+
+fn docs_bad_manual_audit_path() -> String {
+    docs_package_path("bad-manual-audit")
+}
+
 fn docs_district_aggregation_dir() -> std::path::PathBuf {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .ancestors()
@@ -566,6 +574,36 @@ fn verify_bad_california_rla_exits_one_after_package_read() {
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(stdout.contains(r#""equation_id":"rla_jurisdiction_adapter""#));
     assert!(stdout.contains("invalid public audit software source URL"));
+    assert!(stdout.contains(r#""equation_id":"source_hash_match","status":"pass""#));
+}
+
+#[test]
+fn verify_manual_audit_exposes_reconciliation() {
+    let output = Command::new(env!("CARGO_BIN_EXE_rcount"))
+        .args(["verify", &docs_manual_audit_path(), "--format", "json"])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains(r#""equation_id":"manual_audit_reconciliation""#));
+}
+
+#[test]
+fn verify_bad_manual_audit_exits_one_after_package_read() {
+    let output = Command::new(env!("CARGO_BIN_EXE_rcount"))
+        .args(["verify", &docs_bad_manual_audit_path(), "--format", "json"])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(1));
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains(r#""equation_id":"manual_audit_reconciliation""#));
+    assert!(stdout.contains("computed Escalate"));
     assert!(stdout.contains(r#""equation_id":"source_hash_match","status":"pass""#));
 }
 

@@ -736,6 +736,7 @@ fn synthetic_cycle_package(
         inclusion_proofs: vec![],
         cvr: vec![],
         rla_audits: vec![],
+        manual_audits: vec![],
         summaries,
         status_events: vec![],
     }

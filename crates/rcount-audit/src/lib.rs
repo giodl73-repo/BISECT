@@ -252,6 +252,10 @@ fn equation_id_for_core_error(err: &RcountCoreError) -> &'static str {
         RcountCoreError::DuplicateStatusEventId { .. }
         | RcountCoreError::NoStatusTransition { .. }
         | RcountCoreError::IncompleteStatusEvent { .. } => "status_event_declared",
+        RcountCoreError::DuplicateManualAuditId { .. }
+        | RcountCoreError::MissingManualAuditSummary { .. }
+        | RcountCoreError::ManualAuditMachineTotalMismatch { .. }
+        | RcountCoreError::ManualAuditStatusMismatch { .. } => "manual_audit_reconciliation",
         RcountCoreError::MissingCanvassCorrectionEvent
         | RcountCoreError::MissingStatusSummaries { .. } => "canvass_correction_event",
         _ => "contest_selection_sum",
@@ -264,12 +268,13 @@ mod tests {
     use rcount_core::{
         synthetic_bad_california_rla_package, synthetic_bad_colorado_rla_package,
         synthetic_bad_cvr_summary_package, synthetic_bad_lineage_package,
-        synthetic_bad_rla_discrepancy_package, synthetic_bad_rla_margin_package,
-        synthetic_bad_rla_replay_package, synthetic_bad_rla_statistical_package,
-        synthetic_bad_rla_stopping_package, synthetic_california_rla_package,
-        synthetic_canvass_correction_package, synthetic_choice_bearing_proof_package,
-        synthetic_colorado_rla_package, synthetic_cvr_summary_package,
-        synthetic_mail_batch_added_package, synthetic_missing_batch_package,
+        synthetic_bad_manual_audit_package, synthetic_bad_rla_discrepancy_package,
+        synthetic_bad_rla_margin_package, synthetic_bad_rla_replay_package,
+        synthetic_bad_rla_statistical_package, synthetic_bad_rla_stopping_package,
+        synthetic_california_rla_package, synthetic_canvass_correction_package,
+        synthetic_choice_bearing_proof_package, synthetic_colorado_rla_package,
+        synthetic_cvr_summary_package, synthetic_mail_batch_added_package,
+        synthetic_manual_audit_package, synthetic_missing_batch_package,
         synthetic_precinct_split_lineage_package, synthetic_privacy_inclusion_package,
         synthetic_rla_discrepancy_package, synthetic_rla_margin_package,
         synthetic_rla_replay_package, synthetic_rla_statistical_package,
@@ -789,6 +794,39 @@ mod tests {
                 .error
                 .as_deref()
                 .is_some_and(|error| error.contains("invalid public audit software source URL"))));
+    }
+
+    #[test]
+    fn manual_audit_package_produces_reconciliation_pass() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_manual_audit_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+
+        let transcript = verify_package_dir(tmp.path());
+        assert_eq!(transcript.status, VerificationStatus::Pass);
+        assert!(transcript
+            .checks
+            .iter()
+            .any(|check| check.equation_id == "manual_audit_reconciliation"
+                && check.status == VerificationStatus::Pass));
+    }
+
+    #[test]
+    fn bad_manual_audit_package_produces_reconciliation_failure() {
+        let tmp = tempfile::tempdir().unwrap();
+        let package = synthetic_bad_manual_audit_package();
+        let manifest = synthetic_summary_basic_manifest(&package).unwrap();
+        write_package_dir(tmp.path(), &manifest, &package).unwrap();
+
+        let transcript = verify_package_dir(tmp.path());
+        assert_eq!(transcript.status, VerificationStatus::Fail);
+        assert!(transcript.checks.iter().any(|check| check.equation_id
+            == "manual_audit_reconciliation"
+            && check
+                .error
+                .as_deref()
+                .is_some_and(|error| error.contains("declares status Pass, computed Escalate"))));
     }
 
     #[test]
