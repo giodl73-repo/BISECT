@@ -1,0 +1,29 @@
+\section{Verification Equations}
+
+RCOUNT currently exposes two manifest-layer equations:
+
+\[
+\texttt{accepted\_ballots(batch)}
+  = \texttt{counted\_ballots(batch)} + \texttt{rejected\_ballots(batch)}
+\]
+
+\[
+\texttt{batch\_summary\_total(batch)}
+  = \texttt{counted\_ballots(batch)}
+\]
+
+The second equation is only evaluated for summary rows with a
+\texttt{batch\_id}. The verifier first checks that the batch id exists in
+\path{normalized/batches.ndjson}. If a summary references a missing batch, the
+package fails before the batch total can be trusted.
+
+\begin{center}
+\small
+\begin{tabular}{ccc}
+\fbox{\begin{tabular}{c}batch manifest\\accepted, counted, rejected\end{tabular}} &
+$\longleftrightarrow$ &
+\fbox{\begin{tabular}{c}batch summaries\\contest counts and residuals\end{tabular}} \\
+ & & \\
+\multicolumn{3}{c}{\textit{jurisdiction totals roll up only after these local controls hold}} \\
+\end{tabular}
+\end{center}

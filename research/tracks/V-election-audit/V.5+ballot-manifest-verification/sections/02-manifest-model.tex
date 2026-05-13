@@ -1,0 +1,26 @@
+\section{Manifest Model}
+
+The current RCOUNT batch manifest row is intentionally small:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & Meaning \\
+\midrule
+\texttt{batch\_id} & Stable package identifier for the batch. \\
+\texttt{reporting\_unit\_id} & Public unit associated with the batch, such as a precinct or central-count unit. \\
+\texttt{kind} & Operational class, such as election-day, mail, provisional, vote-center, or central-count. \\
+\texttt{status} & Publication status represented in the package. \\
+\texttt{accepted\_ballots} & Ballots accepted into the batch's accounting path. \\
+\texttt{counted\_ballots} & Ballots counted from that batch for the represented contest summaries. \\
+\texttt{rejected\_ballots} & Accepted-accounting records later rejected or removed from counting. \\
+\texttt{source\_refs} & Source evidence rows that support the manifest row. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+A batch row is not necessarily a precinct, voter, ballot card, CVR row, or
+contest row. It is an accounting control. The later CVR paper can reconcile
+contest selections inside counted ballots; V.5 only checks whether the batch
+containers named by summaries exist and balance.

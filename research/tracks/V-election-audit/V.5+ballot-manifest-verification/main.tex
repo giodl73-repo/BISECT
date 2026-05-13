@@ -1,0 +1,40 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{Ballot Manifest Verification}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Public vote totals are not meaningful unless the counted inputs are accounted
+for. This paper defines the first RCOUNT ballot-manifest verification layer:
+batch manifest records must reconcile accepted, counted, and rejected ballot
+counts, and each batch-level summary must reference an existing manifest row.
+Using the \texttt{mail-batch-added} and \texttt{missing-batch} fixtures, we
+show how RCOUNT can distinguish a legitimate late mail batch from a canvassed
+summary that points at absent batch evidence.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-manifest-model}
+\input{sections/03-equations}
+\input{sections/04-fixtures}
+\input{sections/05-verifier-trace}
+\input{sections/06-boundaries}
+\input{sections/07-conclusion}
+
+\nocite{rcount-overview-2026,rcount-substrate-2026,rcount-v3-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

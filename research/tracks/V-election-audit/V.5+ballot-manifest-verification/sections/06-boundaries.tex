@@ -1,0 +1,16 @@
+\section{Boundaries}
+
+Ballot manifest verification does not certify an election. It verifies a public
+accounting relationship inside the package. Officials, canvassing boards,
+recount procedures, and courts still decide eligibility, acceptance, cure,
+duplication, adjudication, recount changes, and certification.
+
+The manifest layer also does not prove voter intent or tabulator correctness. A
+batch may reconcile numerically while a later CVR or audit layer still finds a
+parser, contest-definition, or hand-audit problem. RCOUNT should report those
+as separate failures instead of collapsing them into one generic claim.
+
+Finally, batch granularity has privacy implications. Very small batches,
+single-voter provisional batches, rare write-in batches, or precise batch times
+can create small-cell disclosure risk. Publication policy must be reviewed with
+V.4's receipt-safety rule in mind.

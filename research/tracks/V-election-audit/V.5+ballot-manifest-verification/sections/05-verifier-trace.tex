@@ -1,0 +1,40 @@
+\section{Verifier Traceability}
+
+The fixtures can be regenerated and checked directly:
+
+\begin{quote}
+\footnotesize
+\begin{verbatim}
+cargo run -p rcount-io --example mail_batch_added_package
+cargo run -p rcount-io --example missing_batch_package
+cargo run -p rcount-cli -- verify \
+  docs/examples/rcount-golden-packages/mail-batch-added
+cargo run -p rcount-cli -- verify \
+  docs/examples/rcount-golden-packages/missing-batch
+\end{verbatim}
+\end{quote}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+Fixture & Expected result & Carrying checks \\
+\midrule
+\texttt{mail-batch-added} & transcript status \texttt{pass} & \texttt{accepted\_ballots} and \texttt{batch\_summary\_total} pass for each declared batch. \\
+\texttt{missing-batch} & transcript status \texttt{fail} & \texttt{batch\_summary\_total} fails because the P-001 late mail summary references an absent batch. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The negative transcript says:
+\begin{quote}
+\footnotesize
+\begin{verbatim}
+{
+  "equation_id": "batch_summary_total",
+  "status": "fail",
+  "error": "summary for contest syn-2024-mayor reporting unit \
+syn:precinct:P-001 references missing batch id: batch:P-001:late-mail"
+}
+\end{verbatim}
+\end{quote}

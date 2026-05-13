@@ -16,7 +16,7 @@ recompute public claims from lower-level evidence.
 | V.2 | Precinct Lineage Across Elections | ready |
 | V.3 | Tamper-Evident Precinct And Batch Hashing | ready |
 | V.4 | Privacy-Safe Voter Inclusion Proofs | ready |
-| V.5 | Ballot Manifest Verification | planned |
+| V.5 | Ballot Manifest Verification | draft |
 | V.6 | CVR-To-Summary Reconciliation | planned |
 | V.7 | Replayable Risk-Limiting Audits | planned |
 | V.8 | District Vote Aggregation With RPLAN | substrate slice landed |

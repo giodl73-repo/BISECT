@@ -1,0 +1,12 @@
+\section{Introduction}
+
+Election totals are often published as precinct or jurisdiction summaries, but
+the operational evidence underneath them is batch-based. Election-day scanner
+batches, central-count mail batches, provisional batches, duplicated-ballot
+batches, and vote-center batches may all contribute to the same contest total.
+If the public summary says a batch was counted, the package needs a manifest row
+for that batch.
+
+V.5 defines the first RCOUNT ballot-manifest verification layer. It does not
+try to prove voter eligibility or voter intent. It asks a narrower accounting
+question: do the batch manifest rows and batch-level summaries reconcile?

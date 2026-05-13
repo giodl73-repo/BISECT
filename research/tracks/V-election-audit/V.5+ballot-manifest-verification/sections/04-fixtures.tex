@@ -1,0 +1,23 @@
+\section{Fixtures}
+
+The positive fixture is \texttt{mail-batch-added}. It represents a canvassed
+state where precinct P-001 has an election-day batch and a late mail batch.
+The status event explains that the late mail batch was accepted before canvass.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lrrr}
+\toprule
+Batch & Accepted & Counted & Rejected \\
+\midrule
+\texttt{batch:P-001:election-day} & 70 & 70 & 0 \\
+\texttt{batch:P-001:late-mail} & 10 & 10 & 0 \\
+\texttt{batch:P-002:election-day} & 60 & 60 & 0 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The negative fixture is \texttt{missing-batch}. Its summaries still reference
+the P-001 late-mail batch, but \path{normalized/batches.ndjson} omits that
+manifest row. Source hashes and package structure can still be present; the
+accounting evidence is incomplete.
