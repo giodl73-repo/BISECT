@@ -24,7 +24,7 @@ models, compactness metric versions, diagnostics, and verifier status.
   to G.1-G.3.
 - [x] Define the package schema/manifest contract for external ensemble evidence.
 - [x] Add positive and negative validation coverage for the package shape.
-- [ ] Create at least one minimal G evidence package or, if data is unavailable,
+- [x] Create at least one minimal G evidence package or, if data is unavailable,
   a hash-bound missing-evidence manifest that makes the gap explicit.
 - [ ] Update G.1-G.3 papers/ledgers only after package evidence exists.
 - [ ] Close the wave with validation commands and commit evidence.

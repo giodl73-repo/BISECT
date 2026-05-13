@@ -38,7 +38,7 @@ explicit manifest gap, not by silently weakening checks.
 |---|---|---|
 | 01 - Evidence inventory and manifest contract | DONE | Added `bisect-ensemble::evidence_manifest` contract and documented missing-evidence handling |
 | 02 - Validator and fixtures | DONE | Added synthetic positive/negative fixtures and referenced-file SHA-256 validation |
-| 03 - Minimal evidence package | TODO | Build one minimal package or explicit missing-evidence package |
+| 03 - Minimal evidence package | DONE | Added hash-bound `G.1-G.3+missing-evidence` package and validator coverage |
 | 04 - Paper and ledger update | TODO | Update G.1-G.3, scorecard, paper index, and closeout docs after validation |
 
 ## Validation Gate
@@ -53,6 +53,5 @@ git diff --check
 
 ## Next
 
-Start pulse 03: build an explicit missing-evidence package for the absent
-G.1-G.3 external traces and election/metric artifacts, unless real local
-artifacts are found first.
+Start pulse 04: update G.1-G.3 paper ledgers, public paper index, scorecard, and
+wave closeout to point at the missing-evidence package.
