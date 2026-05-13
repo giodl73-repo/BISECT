@@ -10,3 +10,8 @@ for that batch.
 V.5 defines the first RCOUNT ballot-manifest verification layer. It does not
 try to prove voter eligibility or voter intent. It asks a narrower accounting
 question: do the batch manifest rows and batch-level summaries reconcile?
+
+This makes the ballot manifest an accounting control. It is not the same object
+as a voter list, ballot image, ballot card, cast-vote record, contest record, or
+candidate selection. RCOUNT keeps those categories separate so a verifier can
+say exactly which layer passed and which layer still needs evidence.

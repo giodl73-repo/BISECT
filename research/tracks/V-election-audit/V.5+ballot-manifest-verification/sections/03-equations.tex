@@ -23,7 +23,11 @@ package fails before the batch total can be trusted.
 \fbox{\begin{tabular}{c}batch manifest\\accepted, counted, rejected\end{tabular}} &
 $\longleftrightarrow$ &
 \fbox{\begin{tabular}{c}batch summaries\\contest counts and residuals\end{tabular}} \\
- & & \\
-\multicolumn{3}{c}{\textit{jurisdiction totals roll up only after these local controls hold}} \\
+ & $\longrightarrow$ & \\
+\multicolumn{3}{c}{\fbox{\begin{tabular}{c}jurisdiction summary\\public contest totals\end{tabular}}} \\
 \end{tabular}
 \end{center}
+
+Jurisdiction totals roll up only after these local controls hold. A verifier
+that silently treats a missing batch as zero, optional, or inferred would hide
+the exact error the manifest layer is designed to catch.

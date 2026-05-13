@@ -20,7 +20,30 @@ Field & Meaning \\
 \end{tabularx}
 \end{center}
 
-A batch row is not necessarily a precinct, voter, ballot card, CVR row, or
-contest row. It is an accounting control. The later CVR paper can reconcile
-contest selections inside counted ballots; V.5 only checks whether the batch
-containers named by summaries exist and balance.
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Object & Boundary \\
+\midrule
+Voter & Eligibility and participation records are not public batch manifest rows. \\
+Ballot or ballot card & Physical or electronic voting artifacts may be represented by manifests, but are not identical to batch rows. \\
+CVR row & A cast-vote record records contest interpretation; V.6 reconciles CVRs to summaries. \\
+Contest summary & A contest summary can reference a batch, but it is not the manifest itself. \\
+Selection or vote & Candidate choices, write-ins, overvotes, undervotes, and blanks are contest semantics, not batch identity. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The package contract is:
+\begin{itemize}
+\item normalized batch manifest rows live at \path{normalized/batches.ndjson};
+\item summaries that claim batch-level support carry a \texttt{batch\_id};
+\item \texttt{batch\_id} is stable inside the package and may be mapped from
+  vendor ids, scanner labels, or election-office labels by an adapter;
+\item \texttt{source\_refs} bind the normalized row back to hashed source
+  evidence in \path{sources/source-index.json}.
+\end{itemize}
+
+Vendor export adapters and external schema mapping belong to V.9. V.5 only
+defines the normalized RCOUNT contract those adapters must satisfy.

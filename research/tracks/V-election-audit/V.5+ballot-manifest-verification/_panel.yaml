@@ -1,8 +1,8 @@
 paper: V.5+ballot-manifest-verification
 title: "Ballot Manifest Verification"
 type: publication
-stage: review
-round: 1
+stage: ready
+round: 2
 content_mode: draft
 venue: technical report
 review_date: 2026-05-12
@@ -20,8 +20,9 @@ reviews:
   LEDGER: reviews/REVIEW-LEDGER.md
   VAULT: reviews/REVIEW-VAULT.md
   SYNTHESIS: reviews/SYNTHESIS.md
+  ROUND2: reviews/ROUND2-SYNTHESIS.md
 p1_items:
-  - "[ ] Define manifest rows as accounting controls and separate ballots, cards, CVRs, contests, and batches."
-  - "[ ] Add a batch lifecycle/status model covering late mail, provisional, duplicated, and recount-driven changes."
-  - "[ ] Add exact fixture file-path and transcript traceability."
-  - "[ ] Define canonical path/source-ref contract for normalized batch manifests."
+  - "[x] Define manifest rows as accounting controls and separate ballots, cards, CVRs, contests, and batches."
+  - "[x] Add a batch lifecycle/status model covering late mail, provisional, duplicated, and recount-driven changes."
+  - "[x] Add exact fixture file-path and transcript traceability."
+  - "[x] Define canonical path/source-ref contract for normalized batch manifests."

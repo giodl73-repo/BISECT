@@ -5,6 +5,26 @@ accounting relationship inside the package. Officials, canvassing boards,
 recount procedures, and courts still decide eligibility, acceptance, cure,
 duplication, adjudication, recount changes, and certification.
 
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Workflow event & Manifest implication \\
+\midrule
+Late mail accepted & Add or update a mail batch with accepted and counted ballots. \\
+Provisional review & Add, reject, or reclassify provisional batch evidence after eligibility decisions. \\
+Ballot cure & Move records into accepted accounting only after the cure decision. \\
+Duplicated ballot resolution & Link counted batch evidence to duplication/adjudication source records. \\
+Recount or court order & Publish amended batch and summary records with event lineage. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+A missing batch is therefore a verification failure, not a standalone fraud
+finding. Investigation determines whether the cause is an export defect,
+publication lag, data-entry omission, lawful amendment not yet represented, or
+misconduct.
+
 The manifest layer also does not prove voter intent or tabulator correctness. A
 batch may reconcile numerically while a later CVR or audit layer still finds a
 parser, contest-definition, or hand-audit problem. RCOUNT should report those
@@ -14,3 +34,21 @@ Finally, batch granularity has privacy implications. Very small batches,
 single-voter provisional batches, rare write-in batches, or precise batch times
 can create small-cell disclosure risk. Publication policy must be reviewed with
 V.4's receipt-safety rule in mind.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Publication pattern & Privacy risk \\
+\midrule
+Single-voter provisional batch & Can reveal whether one person's ballot was accepted or rejected. \\
+Tiny cure batch & Can expose timing and status of a small group of voters. \\
+Rare write-in or contest batch & Can narrow candidate-choice inference in a small cell. \\
+Precise scanner time plus small unit & Can combine with observation or check-in records. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Jurisdictions may need public/restricted manifest views, aggregation, redaction,
+or delayed publication. Hashes and source references provide tamper evidence;
+they do not by themselves provide privacy.

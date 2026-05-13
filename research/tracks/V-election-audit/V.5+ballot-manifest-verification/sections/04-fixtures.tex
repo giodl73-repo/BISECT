@@ -17,6 +17,22 @@ Batch & Accepted & Counted & Rejected \\
 \end{tabularx}
 \end{center}
 
+The fixture uses these anchors:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Path & Role \\
+\midrule
+\path{normalized/batches.ndjson} & Declares batch manifest rows. \\
+\path{normalized/summaries.ndjson} & Declares batch-level and jurisdiction summaries. \\
+\path{status/events.ndjson} & Explains the late-mail transition into the canvassed state. \\
+\path{transcripts/verify-transcript.json} & Records verifier pass/fail checks. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
 The negative fixture is \texttt{missing-batch}. Its summaries still reference
 the P-001 late-mail batch, but \path{normalized/batches.ndjson} omits that
 manifest row. Source hashes and package structure can still be present; the
