@@ -37,6 +37,8 @@ pub enum GraphError<E> {
         target: usize,
         weight: f64,
     },
+    #[error("shortest-path count for node {node} became non-finite: {count}")]
+    NonFinitePathCount { node: usize, count: f64 },
 }
 
 #[derive(Debug, Error, Clone, PartialEq, Eq)]
@@ -238,6 +240,7 @@ where
 
             match previous {
                 None => {
+                    validate_path_count::<G::EdgeId>(edge.target, path_counts[node])?;
                     distances[edge.target] = Some(next_cost);
                     predecessors[edge.target] = vec![Predecessor {
                         node,
@@ -250,6 +253,7 @@ where
                     });
                 }
                 Some(prev_cost) if next_cost < prev_cost - EPSILON => {
+                    validate_path_count::<G::EdgeId>(edge.target, path_counts[node])?;
                     distances[edge.target] = Some(next_cost);
                     predecessors[edge.target] = vec![Predecessor {
                         node,
@@ -270,6 +274,7 @@ where
                         a.node.cmp(&b.node).then_with(|| a.edge_id.cmp(&b.edge_id))
                     });
                     path_counts[edge.target] += path_counts[node];
+                    validate_path_count::<G::EdgeId>(edge.target, path_counts[edge.target])?;
                 }
                 Some(_) => {}
             }
@@ -983,6 +988,13 @@ fn validate_weight<E>(
     Ok(())
 }
 
+fn validate_path_count<E>(node: usize, count: f64) -> Result<(), GraphError<E>> {
+    if !count.is_finite() {
+        return Err(GraphError::NonFinitePathCount { node, count });
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1043,6 +1055,26 @@ mod tests {
                 }
             ]
         );
+    }
+
+    #[test]
+    fn shortest_path_count_overflow_is_rejected() {
+        let mut graph = TinyGraph::new(1100);
+        let mut edge_id = 0usize;
+        for source in 0..1099 {
+            graph.add_edge(edge_id, source, source + 1, 1.0);
+            edge_id += 1;
+            graph.add_edge(edge_id, source, source + 1, 1.0);
+            edge_id += 1;
+        }
+
+        match single_source_shortest_paths(&graph, 0) {
+            Err(GraphError::NonFinitePathCount { node, count }) => {
+                assert!(node > 0);
+                assert!(count.is_infinite());
+            }
+            other => panic!("expected path-count overflow error, got {other:?}"),
+        }
     }
 
     #[test]

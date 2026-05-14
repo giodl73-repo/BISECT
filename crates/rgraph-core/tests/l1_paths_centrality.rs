@@ -93,6 +93,26 @@ fn l1_centrality_identifies_bridge_edge() {
 }
 
 #[test]
+fn l1_parallel_shortest_path_overflow_is_rejected_before_centrality() {
+    let mut graph = TestGraph::new(1100);
+    let mut edge_id = 0u32;
+    for source in 0..1099 {
+        graph = graph.edge(edge_id, source, source + 1, 1.0);
+        edge_id += 1;
+        graph = graph.edge(edge_id, source, source + 1, 1.0);
+        edge_id += 1;
+    }
+
+    match edge_betweenness(&graph) {
+        Err(GraphError::NonFinitePathCount { node, count }) => {
+            assert!(node > 0);
+            assert!(count.is_infinite());
+        }
+        other => panic!("expected path-count overflow error, got {other:?}"),
+    }
+}
+
+#[test]
 fn l1_invalid_target_from_adapter_is_reported() {
     let graph = TestGraph::new(2).edge(9, 0, 3, 1.0);
 
