@@ -1,6 +1,6 @@
 use rstat_core::hypothesis::{benjamini_hochberg, holm_bonferroni};
 use rstat_core::mcmc::{effective_sample_size, hamming_autocorrelation};
-use rstat_core::probability::regularized_incomplete_beta;
+use rstat_core::probability::{regularized_incomplete_beta, standard_normal_cdf};
 use rstat_core::resampling::bootstrap_percentile_interval;
 use rstat_core::summary::{quantile_sorted_copy, summary_stats, weighted_summary_stats};
 
@@ -62,6 +62,24 @@ fn l2_beta_cdf_remains_bounded_across_grid() {
             }
         }
     }
+}
+
+#[test]
+#[ignore = "L2 numeric stress: broad normal CDF grid"]
+fn l2_normal_cdf_grid_is_bounded_and_monotone() {
+    let mut previous = 0.0;
+    for i in -800..=800 {
+        let z = i as f64 / 100.0;
+        let value = standard_normal_cdf(z);
+        assert!((0.0..=1.0).contains(&value), "Phi({z}) = {value}");
+        assert!(
+            value + 1e-12 >= previous,
+            "Phi grid must be monotone at {z}"
+        );
+        previous = value;
+    }
+    assert!(standard_normal_cdf(-8.0) < 1e-14);
+    assert!(standard_normal_cdf(8.0) > 1.0 - 1e-14);
 }
 
 #[test]

@@ -856,6 +856,12 @@ pub mod mcmc {
 }
 
 pub mod probability {
+    /// Standard Normal CDF via Abramowitz & Stegun 7.1.26 approximation.
+    pub fn standard_normal_cdf(x: f64) -> f64 {
+        let t = x / std::f64::consts::SQRT_2;
+        0.5 * (1.0 + erf_approx(t))
+    }
+
     pub fn regularized_incomplete_beta(x: f64, a: f64, b: f64) -> f64 {
         if x <= 0.0 {
             return 0.0;
@@ -920,6 +926,20 @@ pub mod probability {
         result
     }
 
+    fn erf_approx(x: f64) -> f64 {
+        let sign = if x < 0.0 { -1.0 } else { 1.0 };
+        let x = x.abs();
+        let a1 = 0.254829592;
+        let a2 = -0.284496736;
+        let a3 = 1.421413741;
+        let a4 = -1.453152027;
+        let a5 = 1.061405429;
+        let p = 0.3275911;
+        let t = 1.0 / (1.0 + p * x);
+        let y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * (-x * x).exp();
+        sign * y
+    }
+
     fn lgamma(z: f64) -> f64 {
         let g = 7.0_f64;
         let c = [
@@ -959,6 +979,13 @@ pub mod probability {
         #[test]
         fn beta_symmetric_midpoint_is_half() {
             assert!((regularized_incomplete_beta(0.5, 2.0, 2.0) - 0.5).abs() < 0.01);
+        }
+
+        #[test]
+        fn normal_cdf_matches_known_quantiles() {
+            assert!((standard_normal_cdf(0.0) - 0.5).abs() < 1e-7);
+            assert!((standard_normal_cdf(1.96) - 0.975002).abs() < 2e-6);
+            assert!((standard_normal_cdf(-1.96) - 0.024998).abs() < 2e-6);
         }
     }
 }

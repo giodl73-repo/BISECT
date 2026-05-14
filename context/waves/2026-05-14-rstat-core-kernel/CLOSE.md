@@ -10,7 +10,7 @@ kernel crate.
 - `crates/rstat-core`
   - MCMC diagnostics: R-hat, ESS, Hamming autocorrelation, integrated
     autocorrelation time
-  - Probability helper: regularized incomplete beta
+  - Probability helpers: regularized incomplete beta, standard Normal CDF
   - Summary helpers: mean, summary statistics, median, deterministic R-7
     quantiles, percentile intervals, weighted descriptive summaries
   - Resampling helpers: seeded bootstrap statistics and percentile intervals
@@ -25,6 +25,7 @@ kernel crate.
   - bloc-voting Holm correction now uses `rstat-core` multiple-testing helpers
   - bloc-voting weighted standardization now uses `rstat-core` weighted summaries
   - population-weighted compactness now uses `rstat-core` weighted mean
+  - bloc-voting HC3 p-values now use `rstat-core` probability helpers
 - Test ladder
   - L0 inline unit tests for summary, MCMC, and probability helpers
   - L1 integration tests for composed summary/probability and MCMC diagnostics

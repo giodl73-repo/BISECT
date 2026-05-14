@@ -1,7 +1,7 @@
 use rstat_core::hypothesis::{
     bayesian_detection_score, benjamini_hochberg, empirical_p_value, holm_bonferroni, Tail,
 };
-use rstat_core::probability::regularized_incomplete_beta;
+use rstat_core::probability::{regularized_incomplete_beta, standard_normal_cdf};
 use rstat_core::resampling::{bootstrap_percentile_interval, bootstrap_statistics};
 use rstat_core::summary::{
     percentile_interval_sorted_copy, quantile_sorted_copy, summary_stats, weighted_mean,
@@ -35,6 +35,14 @@ fn l1_summary_and_probability_compose_for_interval_report() {
     assert!((stats.mean - 0.45).abs() < 1e-12);
     assert!(lo < stats.mean && stats.mean < hi);
     assert!((beta_mid - 0.5).abs() < 0.01);
+}
+
+#[test]
+fn l1_normal_cdf_two_sided_p_value_composes_for_z_score() {
+    let z = 1.96_f64;
+    let p_two_sided = 2.0 * (1.0 - standard_normal_cdf(z.abs()));
+
+    assert!((p_two_sided - 0.0499958).abs() < 5e-6);
 }
 
 #[test]

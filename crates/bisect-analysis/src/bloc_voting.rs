@@ -21,6 +21,7 @@ use thiserror::Error;
 
 use crate::race_of_candidate::RaceOfCandidateProvenance;
 use rstat_core::hypothesis::holm_bonferroni_named;
+use rstat_core::probability::standard_normal_cdf;
 use rstat_core::summary::{weighted_mean, weighted_std_dev_population};
 
 // ---------------------------------------------------------------------------
@@ -504,36 +505,13 @@ pub fn hc3_stderr(fit: &mut RegressionFit, precincts: &[Precinct]) -> Result<(),
         coef.stderr_hc3 = se;
         let t = if se > 0.0 { coef.estimate / se } else { 0.0 };
         // Two-sided p-value via Normal approximation (df typically >> 30).
-        coef.p_value_raw = 2.0 * (1.0 - normal_cdf(t.abs()));
+        coef.p_value_raw = 2.0 * (1.0 - standard_normal_cdf(t.abs()));
         // Document the approximation: precinct-level analyses generally have
         // df in the hundreds to thousands; Normal vs. t-cdf differs at the 3rd
         // decimal in this regime. Tests use this approximation as ground truth.
         let _ = df; // kept for future t-cdf swap-in
     }
     Ok(())
-}
-
-/// Standard Normal CDF via Abramowitz & Stegun 7.1.26 approximation
-/// (max error ~1.5e-7). Avoids an `erf` dependency.
-fn normal_cdf(x: f64) -> f64 {
-    // P(Z <= x) = 0.5 * (1 + erf(x / sqrt(2)))
-    let t = x / std::f64::consts::SQRT_2;
-    0.5 * (1.0 + erf_approx(t))
-}
-
-fn erf_approx(x: f64) -> f64 {
-    // Abramowitz & Stegun 7.1.26
-    let sign = if x < 0.0 { -1.0 } else { 1.0 };
-    let x = x.abs();
-    let a1 = 0.254829592;
-    let a2 = -0.284496736;
-    let a3 = 1.421413741;
-    let a4 = -1.453152027;
-    let a5 = 1.061405429;
-    let p = 0.3275911;
-    let t = 1.0 / (1.0 + p * x);
-    let y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * (-x * x).exp();
-    sign * y
 }
 
 /// VIF for `predictor_idx` (0-based, intercept is column 0): regress that

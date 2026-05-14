@@ -199,6 +199,9 @@ Candidate first API:
 8. Weighted descriptive summaries. **Landed in `rstat-core::summary`;
    `bisect-analysis::bloc_voting` and `bisect-analysis::compactness` consume
    them.**
+9. Normal CDF approximation. **Landed in `rstat-core::probability`;
+   `bisect-analysis::bloc_voting` consumes it for HC3 normal-approximation
+   p-values.**
 
 RCOUNT should continue to own election-audit method replay. `rstat-core` owns
 only reusable math.
