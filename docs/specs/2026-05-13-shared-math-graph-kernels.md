@@ -157,8 +157,11 @@ The first implementation wave should create `rgraph-core` with a narrow API:
    handling. **Landed in `rgraph-core` during the first wave to preserve ROUTE
    compatibility fixtures.**
 5. `reachable_nodes` for unweighted/filterable reachability. **Landed in
-   `rgraph-core`; `bisect-analysis::contiguity` consumes it.**
-6. Unit tests with tiny synthetic graphs covering:
+    `rgraph-core`; `bisect-analysis::contiguity` consumes it.**
+6. Connected components over all nodes or a restricted node subset. **Landed in
+   `rgraph-core`; `bisect-analysis::contiguity` now consumes restricted
+   components directly.**
+7. Unit tests with tiny synthetic graphs covering:
    - equal shortest-path split;
    - ignored non-shortest direct edge;
   - edge-filtered disconnection;

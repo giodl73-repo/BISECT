@@ -1,7 +1,7 @@
 use rgraph_core::{
-    edge_betweenness, reachable_nodes_with_filter, shortest_path_distance,
-    shortest_path_distance_with_filter, single_source_shortest_paths, DirectedWeightedGraph,
-    GraphError, WeightedEdge,
+    connected_components, connected_components_in_nodes_with_filter, edge_betweenness,
+    reachable_nodes_with_filter, shortest_path_distance, shortest_path_distance_with_filter,
+    single_source_shortest_paths, DirectedWeightedGraph, GraphError, WeightedEdge,
 };
 
 #[derive(Debug, Clone)]
@@ -102,5 +102,25 @@ fn l1_invalid_target_from_adapter_is_reported() {
             node: 3,
             node_count: 2
         }
+    );
+}
+
+#[test]
+fn l1_connected_components_support_subset_and_filter() {
+    let graph = TestGraph::new(7)
+        .edge(1, 0, 1, 1.0)
+        .edge(2, 1, 2, 1.0)
+        .edge(3, 3, 4, 1.0)
+        .edge(4, 4, 5, 1.0)
+        .edge(5, 5, 6, 1.0);
+
+    assert_eq!(
+        connected_components(&graph).unwrap(),
+        vec![vec![0, 1, 2], vec![3, 4, 5, 6]]
+    );
+    assert_eq!(
+        connected_components_in_nodes_with_filter(&graph, &[0, 1, 2, 4, 5, 6], |edge| edge != 5)
+            .unwrap(),
+        vec![vec![0, 1, 2], vec![4, 5], vec![6]]
     );
 }

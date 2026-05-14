@@ -1,5 +1,6 @@
 use rgraph_core::{
-    edge_betweenness, reachable_nodes, shortest_path_distance, DirectedWeightedGraph, WeightedEdge,
+    connected_components, edge_betweenness, reachable_nodes, shortest_path_distance,
+    DirectedWeightedGraph, WeightedEdge,
 };
 
 #[derive(Debug, Clone)]
@@ -72,4 +73,15 @@ fn l2_grid_edge_betweenness_remains_bounded() {
     assert!(!centrality.is_empty());
     assert!(centrality.values().all(|v| (0.0..=1.0).contains(v)));
     assert!(centrality.values().any(|v| *v > 0.5));
+}
+
+#[test]
+#[ignore = "L2 graph stress: connected components on larger disjoint grids"]
+fn l2_disjoint_grid_components_are_stable() {
+    let graph = GridGraph::new(80, 80);
+
+    let components = connected_components(&graph).unwrap();
+
+    assert_eq!(components.len(), 1);
+    assert_eq!(components[0].len(), 80 * 80);
 }

@@ -3,7 +3,7 @@
 /// For each district, collects all tract indices belonging to it, then
 /// runs BFS restricted to that subset using the adjacency list. If more
 /// than one connected component is found the district is non-contiguous.
-use rgraph_core::{reachable_nodes_with_filter, DirectedWeightedGraph, WeightedEdge};
+use rgraph_core::{connected_components_in_nodes_with_filter, DirectedWeightedGraph, WeightedEdge};
 use std::collections::{HashMap, HashSet};
 
 /// Result of checking contiguity for all districts in a plan.
@@ -140,8 +140,6 @@ pub fn bfs_component_count(
         return (0, vec![]);
     }
 
-    let mut visited: HashSet<usize> = HashSet::new();
-    let mut components: Vec<HashSet<usize>> = Vec::new();
     let node_count = tract_indices
         .iter()
         .copied()
@@ -154,27 +152,16 @@ pub fn bfs_component_count(
         node_count,
     };
 
-    let mut starts: Vec<_> = tract_indices.iter().copied().collect();
-    starts.sort_unstable();
-
-    for start in starts {
-        if visited.contains(&start) {
-            continue;
-        }
-
-        let component: HashSet<usize> =
-            reachable_nodes_with_filter(&graph, start, |(_, target)| {
-                tract_indices.contains(&target)
-            })
-            .expect("adjacency adapter emits only finite non-negative weights")
-            .into_iter()
-            .filter(|node| tract_indices.contains(node))
-            .collect();
-
-        visited.extend(component.iter().copied());
-
-        components.push(component);
-    }
+    let mut nodes: Vec<_> = tract_indices.iter().copied().collect();
+    nodes.sort_unstable();
+    let components: Vec<HashSet<usize>> =
+        connected_components_in_nodes_with_filter(&graph, &nodes, |(_, target)| {
+            tract_indices.contains(&target)
+        })
+        .expect("adjacency adapter emits only finite non-negative weights")
+        .into_iter()
+        .map(|component| component.into_iter().collect())
+        .collect();
 
     (components.len(), components)
 }

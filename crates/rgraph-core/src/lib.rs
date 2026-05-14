@@ -245,6 +245,86 @@ where
         .collect())
 }
 
+pub fn connected_components<G>(graph: &G) -> Result<Vec<Vec<usize>>, GraphError<G::EdgeId>>
+where
+    G: DirectedWeightedGraph,
+{
+    connected_components_with_filter(graph, |_| true)
+}
+
+pub fn connected_components_with_filter<G, F>(
+    graph: &G,
+    edge_filter: F,
+) -> Result<Vec<Vec<usize>>, GraphError<G::EdgeId>>
+where
+    G: DirectedWeightedGraph,
+    F: Fn(G::EdgeId) -> bool + Copy,
+{
+    let nodes: Vec<usize> = (0..graph.node_count()).collect();
+    connected_components_in_nodes_with_filter(graph, &nodes, edge_filter)
+}
+
+pub fn connected_components_in_nodes<G>(
+    graph: &G,
+    nodes: &[usize],
+) -> Result<Vec<Vec<usize>>, GraphError<G::EdgeId>>
+where
+    G: DirectedWeightedGraph,
+{
+    connected_components_in_nodes_with_filter(graph, nodes, |_| true)
+}
+
+pub fn connected_components_in_nodes_with_filter<G, F>(
+    graph: &G,
+    nodes: &[usize],
+    edge_filter: F,
+) -> Result<Vec<Vec<usize>>, GraphError<G::EdgeId>>
+where
+    G: DirectedWeightedGraph,
+    F: Fn(G::EdgeId) -> bool + Copy,
+{
+    let node_count = graph.node_count();
+    let mut starts = nodes.to_vec();
+    starts.sort_unstable();
+    starts.dedup();
+    for &node in &starts {
+        validate_node::<G::EdgeId>(node_count, node)?;
+    }
+
+    let allowed: std::collections::HashSet<usize> = starts.iter().copied().collect();
+    let mut visited = vec![false; node_count];
+    let mut components = Vec::new();
+
+    for start in starts {
+        if visited[start] {
+            continue;
+        }
+
+        let mut component = Vec::new();
+        let mut stack = vec![start];
+        visited[start] = true;
+        while let Some(node) = stack.pop() {
+            component.push(node);
+            let mut edges = graph.outgoing_edges(node);
+            edges.sort_by(|a, b| a.target.cmp(&b.target).then_with(|| a.id.cmp(&b.id)));
+            for edge in edges {
+                validate_weight(edge.id, node, edge.target, edge.weight)?;
+                validate_node::<G::EdgeId>(node_count, edge.target)?;
+                if !edge_filter(edge.id) || !allowed.contains(&edge.target) || visited[edge.target]
+                {
+                    continue;
+                }
+                visited[edge.target] = true;
+                stack.push(edge.target);
+            }
+        }
+        component.sort_unstable();
+        components.push(component);
+    }
+
+    Ok(components)
+}
+
 pub fn edge_betweenness<G>(graph: &G) -> Result<HashMap<G::EdgeId, f64>, GraphError<G::EdgeId>>
 where
     G: DirectedWeightedGraph,
@@ -408,6 +488,44 @@ mod tests {
         assert_eq!(tree.distance_to(0), Some(0.0));
         assert_eq!(tree.path_counts[0], 1.0);
         assert_eq!(reachable_nodes(&graph, 0).unwrap(), vec![0]);
+    }
+
+    #[test]
+    fn connected_components_are_sorted_and_deterministic() {
+        let mut graph = TinyGraph::new(5);
+        graph.add_edge(1, 0, 1, 1.0);
+        graph.add_edge(2, 1, 0, 1.0);
+        graph.add_edge(3, 3, 4, 1.0);
+
+        assert_eq!(
+            connected_components(&graph).unwrap(),
+            vec![vec![0, 1], vec![2], vec![3, 4]]
+        );
+    }
+
+    #[test]
+    fn connected_components_can_be_restricted_to_node_subset() {
+        let mut graph = TinyGraph::new(6);
+        graph.add_edge(1, 0, 1, 1.0);
+        graph.add_edge(2, 1, 2, 1.0);
+        graph.add_edge(3, 3, 4, 1.0);
+
+        assert_eq!(
+            connected_components_in_nodes(&graph, &[4, 3, 1, 0]).unwrap(),
+            vec![vec![0, 1], vec![3, 4]]
+        );
+    }
+
+    #[test]
+    fn connected_components_filter_can_remove_bridge() {
+        let mut graph = TinyGraph::new(3);
+        graph.add_edge(1, 0, 1, 1.0);
+        graph.add_edge(2, 1, 2, 1.0);
+
+        assert_eq!(
+            connected_components_with_filter(&graph, |edge| edge != 2).unwrap(),
+            vec![vec![0, 1], vec![2]]
+        );
     }
 
     #[test]
