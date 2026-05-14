@@ -656,6 +656,8 @@ pub mod mcmc {
         UnequalChainLengths(Vec<usize>),
         #[error("[INPUT] empty partition trajectory")]
         EmptyTrajectory,
+        #[error("[INPUT] empty partition at index {0}")]
+        EmptyPartition(usize),
         #[error(
             "[INPUT] partitions have differing unit counts: first={first}, at index {idx}={got}"
         )]
@@ -768,7 +770,13 @@ pub mod mcmc {
             return Err(DiagnosticsError::EmptyTrajectory);
         }
         let n_units = partitions[0].len();
+        if n_units == 0 {
+            return Err(DiagnosticsError::EmptyPartition(0));
+        }
         for (idx, partition) in partitions.iter().enumerate() {
+            if partition.is_empty() {
+                return Err(DiagnosticsError::EmptyPartition(idx));
+            }
             if partition.len() != n_units {
                 return Err(DiagnosticsError::PartitionLengthMismatch {
                     first: n_units,
@@ -846,6 +854,15 @@ pub mod mcmc {
                 hamming_autocorrelation(&partitions, 1),
                 Err(DiagnosticsError::PartitionLengthMismatch { .. })
             ));
+        }
+
+        #[test]
+        fn hamming_rejects_empty_partition() {
+            let partitions = vec![Vec::new(), Vec::new()];
+            assert_eq!(
+                hamming_autocorrelation(&partitions, 1),
+                Err(DiagnosticsError::EmptyPartition(0))
+            );
         }
 
         #[test]

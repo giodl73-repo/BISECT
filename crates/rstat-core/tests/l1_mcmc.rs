@@ -1,6 +1,6 @@
 use rstat_core::mcmc::{
     effective_sample_size, gelman_rubin_rhat, hamming_autocorrelation,
-    integrated_autocorrelation_time,
+    integrated_autocorrelation_time, DiagnosticsError,
 };
 
 #[test]
@@ -40,4 +40,14 @@ fn l1_hamming_tau_tracks_mixing_speed() {
 
     assert!(integrated_autocorrelation_time(&slow_h) > 1.0);
     assert!(integrated_autocorrelation_time(&fast_h) <= integrated_autocorrelation_time(&slow_h));
+}
+
+#[test]
+fn l1_hamming_rejects_empty_partition_vectors() {
+    let partitions = vec![Vec::new(), Vec::new(), Vec::new()];
+
+    assert_eq!(
+        hamming_autocorrelation(&partitions, 2),
+        Err(DiagnosticsError::EmptyPartition(0))
+    );
 }
