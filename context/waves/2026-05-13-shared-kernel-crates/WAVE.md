@@ -33,8 +33,8 @@ crates.
 
 | Pulse | Status | Evidence |
 |---|---|---|
-| 01 - RGRAPH core skeleton | DONE | `pulses/01+rgraph-core-skeleton.md`; `rgraph-core` shortest-path and reachability tests |
-| 02 - Brandes centrality compatibility | DONE | `pulses/02+brandes-centrality-compatibility.md`; ROUTE synthetic centrality tests ported to `rgraph-core` |
+| 01 - RGRAPH core skeleton | DONE | `pulses/01+rgraph-core-skeleton.md`; `rgraph-core` shortest-path and reachability tests; L0/L1/L2 coverage |
+| 02 - Brandes centrality compatibility | DONE | `pulses/02+brandes-centrality-compatibility.md`; ROUTE synthetic centrality tests ported to `rgraph-core`; L1/L2 centrality coverage |
 | 03 - BISECT graph consumer | DONE | `pulses/03+bisect-graph-consumer.md`; `bisect-analysis::contiguity` uses `rgraph-core` reachability |
 | 04 - ROUTE adapter decision | DONE | `pulses/04+route-adapter-decision.md`; cross-repo adapter deferred until dependency location is stable |
 | 05 - Wave close and extraction decision | DONE | `pulses/05+close-extraction-decision.md`; `rgraph-core` remains incubated here pending ROUTE consumer |
@@ -46,6 +46,7 @@ Run after each implementation pulse:
 ```powershell
 cargo fmt
 $env:CARGO_INCREMENTAL='0'; cargo test -p rgraph-core -- --test-threads=1
+$env:CARGO_INCREMENTAL='0'; cargo test -p rgraph-core -- --ignored --test-threads=1
 git diff --check
 ```
 
@@ -63,4 +64,8 @@ repository-local path leak.
 `rstat-core` remains a later wave. `rgraph-core` should stay incubated in this
 workspace until a ROUTE adapter or standalone shared repository provides the
 second real consumer.
+
+The `rgraph-core` test ladder includes inline L0 tests, L1 integration tests in
+`crates/rgraph-core/tests/l1_paths_centrality.rs`, and ignored L2 graph stress
+tests in `crates/rgraph-core/tests/l2_graph_stress.rs`.
 

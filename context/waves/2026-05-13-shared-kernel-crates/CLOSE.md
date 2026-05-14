@@ -17,6 +17,13 @@ consumer.
   - normalized weighted Brandes edge-betweenness
 - `bisect-analysis`
   - `contiguity::bfs_component_count` now consumes `rgraph-core`
+- Test ladder
+  - L0 inline tests for shortest paths, filters, invalid nodes/weights,
+    reachability, and Brandes centrality
+  - L1 integration tests for weighted paths, filter behavior, centrality, and
+    adapter error reporting
+  - L2 ignored graph stress tests for large grid reachability and moderate-grid
+    Brandes centrality
 - Wave/spec docs
   - source spec updated with the first-wave decision
   - ROUTE adapter deferred until dependency location is portable
@@ -33,6 +40,7 @@ consumer.
 ```powershell
 cargo fmt
 $env:CARGO_INCREMENTAL='0'; cargo test -p rgraph-core -- --test-threads=1
+$env:CARGO_INCREMENTAL='0'; cargo test -p rgraph-core -- --ignored --test-threads=1
 $env:CARGO_INCREMENTAL='0'; cargo test -p bisect-analysis contiguity -- --test-threads=1
 git diff --check
 ```

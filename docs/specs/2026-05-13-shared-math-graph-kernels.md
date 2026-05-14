@@ -161,9 +161,12 @@ The first implementation wave should create `rgraph-core` with a narrow API:
 6. Unit tests with tiny synthetic graphs covering:
    - equal shortest-path split;
    - ignored non-shortest direct edge;
-   - edge-filtered disconnection;
-   - zero-node and one-node graphs;
-   - negative/non-finite weight rejection policy.
+  - edge-filtered disconnection;
+  - zero-node and one-node graphs;
+  - negative/non-finite weight rejection policy.
+  **The graph kernel now has inline L0 tests, L1 integration tests under
+  `crates/rgraph-core/tests/l1_paths_centrality.rs`, and ignored L2 stress tests
+  under `crates/rgraph-core/tests/l2_graph_stress.rs`.**
 
 Route can then replace its local Dijkstra/Brandes implementation by adapting
 `HighwayGraph`. BISECT now consumes the same crate for graph-only contiguity
