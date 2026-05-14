@@ -54,3 +54,11 @@ The convex hull is computed first (Andrew's monotone chain, K.3 Section~3),
 then rotating calipers is applied to the hull vertices.
 Numerical precision: coordinates in projected metres (EPSG:5070);
 LW reported to 3 decimal places.
+
+The production compactness surface exposes
+\texttt{length\_width\_ratio()} as the MBR-based metric used by
+\texttt{all\_metrics()}.  The crate also exposes
+\texttt{axis\_aligned\_length\_width\_ratio()} as a diagnostic helper for this
+paper's AABB comparison.  A unit test verifies the central distinction: a
+rotated $3{:}1$ rectangle retains MBR LW $=3$, while its AABB LW collapses to
+$1$ at a $45^\circ$ orientation.

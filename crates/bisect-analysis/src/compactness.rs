@@ -1,4 +1,4 @@
-use geo::{Area, Centroid, ConvexHull, EuclideanLength};
+use geo::{Area, BoundingRect, Centroid, ConvexHull, EuclideanLength};
 use geo_types::{Coord, Point, Polygon};
 /// Compactness metrics: Polsby-Popper, Reock, Convex Hull Ratio,
 /// Schwartzberg, Length-Width Ratio, and Population-Weighted Compactness.
@@ -241,6 +241,30 @@ pub fn length_width_ratio(polygon: &Polygon<f64>) -> Result<f64, CompactnessErro
     }
 
     Ok(best_ratio.max(1.0)) // guarantee ≥ 1.0 despite floating-point noise
+}
+
+/// Axis-aligned length-width diagnostic: long_side / short_side of the AABB.
+///
+/// This helper is intentionally separate from [`length_width_ratio`]. The
+/// production compactness metric uses the rotation-invariant minimum bounding
+/// rectangle; AABB is exposed only for diagnostics and paper evidence about
+/// orientation dependence.
+pub fn axis_aligned_length_width_ratio(polygon: &Polygon<f64>) -> Result<f64, CompactnessError> {
+    let area = polygon.unsigned_area();
+    if area == 0.0 {
+        return Err(CompactnessError::EmptyGeometry);
+    }
+
+    let rect = polygon
+        .bounding_rect()
+        .ok_or(CompactnessError::EmptyGeometry)?;
+    let width = rect.max().x - rect.min().x;
+    let height = rect.max().y - rect.min().y;
+    if width <= 0.0 || height <= 0.0 {
+        return Err(CompactnessError::EmptyGeometry);
+    }
+
+    Ok((width.max(height) / width.min(height)).max(1.0))
 }
 
 /// Population-Weighted Compactness (Moment of Inertia).
@@ -784,6 +808,39 @@ mod tests {
             length_width_ratio(&empty),
             Err(CompactnessError::EmptyGeometry)
         ));
+    }
+
+    #[test]
+    fn test_lw_mbr_rotation_invariant_aabb_orientation_dependent() {
+        let angle = PI / 4.0;
+        let cos_a = angle.cos();
+        let sin_a = angle.sin();
+        let rotate = |x: f64, y: f64| Coord {
+            x: x * cos_a - y * sin_a,
+            y: x * sin_a + y * cos_a,
+        };
+        let rect = Polygon::new(
+            LineString::new(vec![
+                rotate(0.0, 0.0),
+                rotate(3.0, 0.0),
+                rotate(3.0, 1.0),
+                rotate(0.0, 1.0),
+                rotate(0.0, 0.0),
+            ]),
+            vec![],
+        );
+
+        let mbr_lw = length_width_ratio(&rect).unwrap();
+        let aabb_lw = axis_aligned_length_width_ratio(&rect).unwrap();
+
+        assert!(
+            (mbr_lw - 3.0).abs() < 1e-12,
+            "MBR LW should remain 3.0 under rotation, got {mbr_lw:.12}"
+        );
+        assert!(
+            (aabb_lw - 1.0).abs() < 1e-12,
+            "AABB LW should collapse to 1.0 for a 45-degree 3:1 rectangle, got {aabb_lw:.12}"
+        );
     }
 
     // ── Population-Weighted Compactness ──────────────────────────────────────

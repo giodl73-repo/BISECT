@@ -304,7 +304,7 @@ One paper per compactness metric: mathematical definition, properties, implement
 | K.2 | Reock Score | [PDF](papers/K.2+reock.pdf) | exact-MBC smoke package added |
 | K.3 | Convex Hull Ratio | [PDF](papers/K.3+convex-hull.pdf) | **Accepted** |
 | K.4 | Schwartzberg Score | [PDF](papers/K.4+schwartzberg.pdf) | **Accepted** |
-| K.5 | Length-Width Ratio | [PDF](papers/K.5+length-width.pdf) | Minor Revision |
+| K.5 | Length-Width Ratio | [PDF](papers/K.5+length-width.pdf) | MBR/AABB implementation boundary added |
 | K.6 | Population-Weighted Compactness | [PDF](papers/K.6+population-weighted-compactness.pdf) | **Accepted** |
 | K.7 | Multi-Metric Composite and Court Usage Guide | [PDF](papers/K.7+composite-court-guide.pdf) | exact/proxy Reock disclosure |
 

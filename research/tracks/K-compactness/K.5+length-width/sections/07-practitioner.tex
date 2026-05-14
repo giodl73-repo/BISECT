@@ -38,7 +38,11 @@ For court filings:
 \subsection{CLI Usage}
 
 \begin{verbatim}
-bisect label-analyze <label> --year 2020 --types lw
+bisect label-analyze <label> --year 2020 --types compactness
 \end{verbatim}
-Output includes both MBR and AABB values for comparison, with a flag
-if any district exceeds LW $= 3.0$.
+The resulting \texttt{compactness.json} includes the MBR-based
+\texttt{length\_width\_ratio} field for each district and
+\texttt{mean\_length\_width\_ratio} in the summary.  AABB values are diagnostic
+only: use \texttt{axis\_aligned\_length\_width\_ratio()} in
+\texttt{bisect-analysis} for orientation-bias checks, not as the production
+compactness score.

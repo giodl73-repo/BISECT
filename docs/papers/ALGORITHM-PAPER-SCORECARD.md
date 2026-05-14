@@ -140,7 +140,7 @@ Score bands:
 | K.2 Reock | 3.7 | 3.7 | 3.5 | 3.7 | 3.7 | 3.6 | 21.9 | Strong; exact-MBC smoke package and proxy boundary |
 | K.3 Convex Hull | 3.5 | 3.5 | 3.3 | 3.4 | 3.4 | 3.5 | 20.6 | Strong |
 | K.4 Schwartzberg | 3.5 | 3.5 | 3.3 | 3.4 | 3.4 | 3.5 | 20.6 | Strong |
-| K.5 Length-Width | 3.2 | 3.3 | 3.0 | 3.2 | 3.3 | 3.2 | 19.2 | Minor revision |
+| K.5 Length-Width | 3.5 | 3.5 | 3.3 | 3.5 | 3.5 | 3.4 | 20.7 | Strong; MBR/AABB boundary and diagnostic test |
 | K.6 Population-Weighted Compactness | 3.5 | 3.5 | 3.3 | 3.4 | 3.4 | 3.5 | 20.6 | Strong |
 | K.7 Composite/Court Guide | 3.5 | 3.5 | 3.3 | 3.6 | 3.5 | 3.5 | 20.9 | Stronger; exact/proxy Reock disclosure package |
 | L.0 Partisan Fairness Overview | 3.6 | 3.4 | 3.4 | 3.8 | 3.4 | 3.5 | 21.1 | Strong |
@@ -175,6 +175,6 @@ Score bands:
 | U search/optimization/audit | 21 | Strong after synthetic U.2/U.4 package and U.10/U.16-U.20 golden slices | real archived sweep/CLI packages for U.2/U.4 |
 | G ensemble/sampling | 16 | Strong after active synthetic G.1-G.3 package; G.4/G.7/G.10/G.11 golden | archived real external traces for G.1-G.3 |
 | J apportionment | 7 | Serviceable-plus after implementation-boundary pass | Census/SHA fixtures and Hamilton public API remain future work |
-| K compactness metrics | 8 | Strong/serviceable-plus after exact-MBC smoke package | real district exact-MBC packages and K.5 minor revision |
+| K compactness metrics | 8 | Strong after exact-MBC smoke package and K.5 MBR/AABB boundary | real district exact-MBC and LW replay packages |
 | L partisan metrics | 7 | Strong | cross-link to G/A synthesis |
 | M community weights | 5 | Strong/serviceable-plus with M.1/M.3 now PDF-backed | empirical packages for M.1/M.3 |
