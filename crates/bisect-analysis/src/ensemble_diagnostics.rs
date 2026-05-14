@@ -24,27 +24,9 @@
 //! Spec Task 7.1; the JSON output shapes match the spec's `ess.json`,
 //! `rhat.json`, `hamming_autocorr.json` schemas.
 
+use rstat_core::mcmc as rstat_mcmc;
+pub use rstat_core::mcmc::DiagnosticsError;
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
-
-/// Errors from the diagnostics module.
-#[derive(Debug, Error)]
-pub enum DiagnosticsError {
-    #[error("[INPUT] S-03 requires >=4 parallel chains for Gelman-Rubin R-hat; got {0}")]
-    InsufficientChains(usize),
-    #[error("[INPUT] empty chain at index {0}")]
-    EmptyChain(usize),
-    #[error("[INPUT] chains have differing lengths: {0:?}")]
-    UnequalChainLengths(Vec<usize>),
-    #[error("[INPUT] empty partition trajectory")]
-    EmptyTrajectory,
-    #[error("[INPUT] partitions have differing unit counts: first={first}, at index {idx}={got}")]
-    PartitionLengthMismatch {
-        first: usize,
-        idx: usize,
-        got: usize,
-    },
-}
 
 // ===========================================================================
 // Gelman-Rubin R-hat
@@ -72,59 +54,7 @@ pub struct RhatRecord {
 /// Returns the potential scale reduction factor (PSRF). Values close to 1.0
 /// indicate convergence; the field-standard threshold is `R-hat < 1.05`.
 pub fn gelman_rubin_rhat(chains: &[&[f64]]) -> Result<f64, DiagnosticsError> {
-    let m = chains.len();
-    if m < 4 {
-        return Err(DiagnosticsError::InsufficientChains(m));
-    }
-    let n = chains[0].len();
-    if n == 0 {
-        return Err(DiagnosticsError::EmptyChain(0));
-    }
-    for (i, c) in chains.iter().enumerate() {
-        if c.is_empty() {
-            return Err(DiagnosticsError::EmptyChain(i));
-        }
-        if c.len() != n {
-            let lens: Vec<usize> = chains.iter().map(|c| c.len()).collect();
-            return Err(DiagnosticsError::UnequalChainLengths(lens));
-        }
-    }
-
-    // Per-chain means + variances.
-    let chain_means: Vec<f64> = chains
-        .iter()
-        .map(|c| c.iter().sum::<f64>() / (n as f64))
-        .collect();
-    let grand_mean: f64 = chain_means.iter().sum::<f64>() / (m as f64);
-    let chain_vars: Vec<f64> = chains
-        .iter()
-        .zip(&chain_means)
-        .map(|(c, &mean)| {
-            c.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / ((n - 1).max(1) as f64)
-        })
-        .collect();
-
-    // Between-chain variance B/n.
-    let b_over_n: f64 = chain_means
-        .iter()
-        .map(|&mean| (mean - grand_mean).powi(2))
-        .sum::<f64>()
-        / ((m - 1).max(1) as f64);
-
-    // Within-chain variance W.
-    let w: f64 = chain_vars.iter().sum::<f64>() / (m as f64);
-
-    if w == 0.0 {
-        // Degenerate: all samples identical within every chain. R-hat is
-        // conventionally 1.0 in this case (no within-chain variation).
-        return Ok(1.0);
-    }
-
-    // Pooled variance estimator + R-hat.
-    let n_f = n as f64;
-    let var_plus = ((n_f - 1.0) / n_f) * w + b_over_n;
-    let r_hat = (var_plus / w).sqrt();
-    Ok(r_hat)
+    rstat_mcmc::gelman_rubin_rhat(chains)
 }
 
 /// Compute R-hat records for a list of (metric_name, per-chain-samples).
@@ -172,51 +102,7 @@ pub struct EssRecord {
 ///
 /// `ess = N / (1 + 2 * sum(rho_k))` for `k = 1..K` where `K` is the cutoff.
 pub fn effective_sample_size(trace: &[f64]) -> f64 {
-    let n = trace.len();
-    if n < 4 {
-        return n as f64;
-    }
-    let mean: f64 = trace.iter().sum::<f64>() / (n as f64);
-    let centered: Vec<f64> = trace.iter().map(|x| x - mean).collect();
-    let var: f64 = centered.iter().map(|x| x * x).sum::<f64>() / (n as f64);
-    if var == 0.0 {
-        return n as f64;
-    }
-    // Compute autocorrelations by direct sum (small N, no FFT needed).
-    let autocorr_at = |lag: usize| -> f64 {
-        if lag >= n {
-            return 0.0;
-        }
-        let mut s = 0.0;
-        for i in 0..(n - lag) {
-            s += centered[i] * centered[i + lag];
-        }
-        s / ((n as f64) * var)
-    };
-    // Initial monotone sequence: sum pairs (rho_{2k+1} + rho_{2k+2}) while
-    // the pair sum is positive AND monotonically decreasing.
-    let mut sum_rho = 0.0_f64;
-    let mut prev_pair = f64::INFINITY;
-    let max_lag = (n / 4).max(2);
-    let mut k = 0usize;
-    while 2 * k + 2 <= max_lag {
-        let pair = autocorr_at(2 * k + 1) + autocorr_at(2 * k + 2);
-        if pair <= 0.0 {
-            break;
-        }
-        // Enforce monotone decrease — clamp to prev_pair if the pair would
-        // increase (Geyer's "initial monotone sequence" refinement).
-        let pair = pair.min(prev_pair);
-        sum_rho += pair;
-        prev_pair = pair;
-        k += 1;
-    }
-    let denom = 1.0 + 2.0 * sum_rho;
-    if denom <= 0.0 {
-        n as f64 // numerical guard
-    } else {
-        (n as f64) / denom
-    }
+    rstat_mcmc::effective_sample_size(trace)
 }
 
 /// Build an EssRecord per metric. Each metric trace is a SINGLE concatenated
@@ -269,42 +155,7 @@ pub fn hamming_autocorrelation(
     partitions: &[Vec<usize>],
     max_lag: usize,
 ) -> Result<Vec<f64>, DiagnosticsError> {
-    let t = partitions.len();
-    if t == 0 {
-        return Err(DiagnosticsError::EmptyTrajectory);
-    }
-    let n_units = partitions[0].len();
-    for (i, p) in partitions.iter().enumerate() {
-        if p.len() != n_units {
-            return Err(DiagnosticsError::PartitionLengthMismatch {
-                first: n_units,
-                idx: i,
-                got: p.len(),
-            });
-        }
-    }
-    let max_lag = max_lag.min(t.saturating_sub(1));
-    let mut out = Vec::with_capacity(max_lag + 1);
-    out.push(0.0); // lag 0: distance to self is always 0
-    for lag in 1..=max_lag {
-        let mut total = 0.0;
-        let pairs = t - lag;
-        for i in 0..pairs {
-            let mut diff = 0usize;
-            for u in 0..n_units {
-                if partitions[i][u] != partitions[i + lag][u] {
-                    diff += 1;
-                }
-            }
-            total += (diff as f64) / (n_units as f64);
-        }
-        out.push(if pairs > 0 {
-            total / (pairs as f64)
-        } else {
-            0.0
-        });
-    }
-    Ok(out)
+    rstat_mcmc::hamming_autocorrelation(partitions, max_lag)
 }
 
 /// Compute the integrated autocorrelation time `tau_int` from a Hamming
@@ -316,18 +167,7 @@ pub fn hamming_autocorrelation(
 /// `tau_int = 1 + 2 * sum_{k=1..K} (1 - h_k)` where `K` is the smallest lag
 /// at which `(1 - h_k) <= 0` (i.e., the chain has fully mixed).
 pub fn integrated_autocorrelation_time(autocorr_per_lag: &[f64]) -> f64 {
-    if autocorr_per_lag.len() <= 1 {
-        return 1.0;
-    }
-    let mut tau = 1.0;
-    for &h in &autocorr_per_lag[1..] {
-        let rho = 1.0 - h;
-        if rho <= 0.0 {
-            break;
-        }
-        tau += 2.0 * rho;
-    }
-    tau
+    rstat_mcmc::integrated_autocorrelation_time(autocorr_per_lag)
 }
 
 /// Build `HammingAutocorrRecord` for each chain in `partitions_per_chain`.

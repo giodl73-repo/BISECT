@@ -39,6 +39,7 @@
 | 2026-05-13 | U.11 Resolution Evidence | Add GEOID mapping, population aggregation, and coarse-adjacency smoke fixture | archived |
 | 2026-05-13 | U.5 Adaptive Multiscale Evidence | Add Robbins-Monro alpha-trace and MSC_STEP seed smoke fixture | archived |
 | 2026-05-13 | Shared Kernel Crates | Build reusable pure-Rust graph/stat/math kernels for BISECT, ROUTE, and civic evidence projects | archived |
+| 2026-05-14 | RSTAT Core Kernel | Extract reusable deterministic statistics from BISECT analysis into `rstat-core` | archived |
 
 ## Operating Model
 

@@ -1,6 +1,6 @@
 # Shared Math, Statistics, And Graph Kernel Crates
 
-**Status:** First graph-kernel wave complete; statistics wave deferred
+**Status:** First graph and statistics kernel waves complete
 **Date:** 2026-05-13
 **Scope:** Reusable Rust algorithm crates for BISECT, ROUTE, and future civic
 evidence projects
@@ -178,13 +178,17 @@ Candidate first API:
 1. `SummaryStats` for count, mean, variance, standard deviation, min, max.
 2. Deterministic quantiles with an explicit interpolation rule.
 3. Autocorrelation, effective sample size, and R-hat helpers now living in
-   `bisect-analysis`.
-4. Permutation-test helpers now living in `bisect-analysis`.
+   `bisect-analysis`. **Landed in `rstat-core`; `bisect-analysis` keeps public
+   record wrappers.**
+4. Permutation-test helpers now living in `bisect-analysis`. **The beta CDF
+   probability kernel used by the permutation report now lives in `rstat-core`.**
 5. Exact or stable probability utilities that can later support `rcount-stats`,
-   without moving RCOUNT method semantics out of `rcount-stats`.
+   without moving RCOUNT method semantics out of `rcount-stats`. **Initial
+   incomplete-beta and Lanczos-gamma helpers landed; audit method semantics stay
+   in `rcount-stats`.**
 
-RCOUNT should continue to own election-audit method replay. `rstat-core` should
-own only reusable math.
+RCOUNT should continue to own election-audit method replay. `rstat-core` owns
+only reusable math.
 
 ## API Invariants
 

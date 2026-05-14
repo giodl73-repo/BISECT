@@ -6,7 +6,7 @@
 //!
 //! Used by S.1 (Hypothesis Testing for Partisan Gerrymandering).
 
-use std::collections::HashMap;
+use rstat_core::probability::regularized_incomplete_beta;
 
 /// A single plan in the ensemble, characterised by a scalar test statistic.
 #[derive(Debug, Clone)]
@@ -87,104 +87,6 @@ pub fn permutation_test_lower_tail(
         ess,
         p_value_ess_corrected: p_ess_corrected.clamp(0.0, 1.0),
         bds_at_0_05: bds.clamp(0.0, 1.0),
-    }
-}
-
-/// Regularised incomplete Beta function I_x(a, b) using continued fraction expansion.
-/// Used to compute the Bayesian Detection Score.
-fn regularized_incomplete_beta(x: f64, a: f64, b: f64) -> f64 {
-    if x <= 0.0 {
-        return 0.0;
-    }
-    if x >= 1.0 {
-        return 1.0;
-    }
-
-    // Use the continued fraction expansion (Lentz's method).
-    // Switch sides if x > (a+1)/(a+b+2) for numerical stability.
-    if x > (a + 1.0) / (a + b + 2.0) {
-        return 1.0 - regularized_incomplete_beta(1.0 - x, b, a);
-    }
-
-    let lbeta = lgamma(a) + lgamma(b) - lgamma(a + b);
-    let front = (a * x.ln() + b * (1.0 - x).ln() - lbeta).exp() / a;
-
-    front * beta_continued_fraction(x, a, b)
-}
-
-fn beta_continued_fraction(x: f64, a: f64, b: f64) -> f64 {
-    let max_iter = 200;
-    let eps = 1e-10;
-
-    let mut c = 1.0;
-    let mut d = 1.0 - (a + b) * x / (a + 1.0);
-    if d.abs() < f64::MIN_POSITIVE {
-        d = f64::MIN_POSITIVE;
-    }
-    d = 1.0 / d;
-    let mut result = d;
-
-    for m in 1..=max_iter {
-        let m = m as f64;
-
-        // Even step
-        let dm = m * (b - m) * x / ((a + 2.0 * m - 1.0) * (a + 2.0 * m));
-        d = 1.0 + dm * d;
-        if d.abs() < f64::MIN_POSITIVE {
-            d = f64::MIN_POSITIVE;
-        }
-        c = 1.0 + dm / c;
-        if c.abs() < f64::MIN_POSITIVE {
-            c = f64::MIN_POSITIVE;
-        }
-        d = 1.0 / d;
-        result *= d * c;
-
-        // Odd step
-        let dm = -(a + m) * (a + b + m) * x / ((a + 2.0 * m) * (a + 2.0 * m + 1.0));
-        d = 1.0 + dm * d;
-        if d.abs() < f64::MIN_POSITIVE {
-            d = f64::MIN_POSITIVE;
-        }
-        c = 1.0 + dm / c;
-        if c.abs() < f64::MIN_POSITIVE {
-            c = f64::MIN_POSITIVE;
-        }
-        d = 1.0 / d;
-        let delta = d * c;
-        result *= delta;
-
-        if (delta - 1.0).abs() < eps {
-            break;
-        }
-    }
-    result
-}
-
-/// Natural log of Gamma function (Lanczos approximation).
-fn lgamma(z: f64) -> f64 {
-    let g = 7.0_f64;
-    let c = [
-        0.99999999999980993,
-        676.5203681218851,
-        -1259.1392167224028,
-        771.32342877765313,
-        -176.61502916214059,
-        12.507343278686905,
-        -0.13857109526572012,
-        9.9843695780195716e-6,
-        1.5056327351493116e-7,
-    ];
-    if z < 0.5 {
-        std::f64::consts::PI.ln() - ((std::f64::consts::PI * z).sin().ln()) - lgamma(1.0 - z)
-    } else {
-        let z = z - 1.0;
-        let mut x = c[0];
-        for (i, &ci) in c[1..].iter().enumerate() {
-            x += ci / (z + i as f64 + 1.0);
-        }
-        let t = z + g + 0.5;
-        0.5 * (2.0 * std::f64::consts::PI).ln() + (z + 0.5) * t.ln() - t + x.ln()
     }
 }
 

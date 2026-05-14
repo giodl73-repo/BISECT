@@ -16,6 +16,7 @@ members = [
     "crates/rhist-io",
     "crates/rhist-cli",
     "crates/rgraph-core",
+    "crates/rstat-core",
     "crates/bisect-core",
     "crates/bisect-data",
     "crates/bisect-apportion",
