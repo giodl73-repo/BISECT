@@ -806,6 +806,8 @@ pub mod mcmc {
         NonFiniteTraceValue { index: usize, value: f64 },
         #[error("[INPUT] autocorrelation lag value must be in [0, 1], got {value} at lag {lag}")]
         InvalidAutocorrelationValue { lag: usize, value: f64 },
+        #[error("[NUMERIC] {operation} produced non-finite value {value}")]
+        NonFiniteResult { operation: &'static str, value: f64 },
         #[error("[INPUT] empty partition trajectory")]
         EmptyTrajectory,
         #[error("[INPUT] empty partition at index {0}")]
@@ -849,31 +851,57 @@ pub mod mcmc {
             }
         }
 
-        let chain_means: Vec<f64> = chains
-            .iter()
-            .map(|chain| chain.iter().sum::<f64>() / n as f64)
-            .collect();
-        let grand_mean = chain_means.iter().sum::<f64>() / m as f64;
-        let chain_vars: Vec<f64> = chains
-            .iter()
-            .zip(&chain_means)
-            .map(|(chain, mean)| {
-                chain.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (n - 1).max(1) as f64
-            })
-            .collect();
+        let mut chain_means = Vec::with_capacity(m);
+        for chain in chains {
+            let sum = checked_sum(chain.iter().copied(), "rhat chain mean sum")?;
+            let mean = sum / n as f64;
+            validate_result("rhat chain mean", mean)?;
+            chain_means.push(mean);
+        }
+        let grand_mean =
+            checked_sum(chain_means.iter().copied(), "rhat grand mean sum")? / m as f64;
+        validate_result("rhat grand mean", grand_mean)?;
 
-        let b_over_n = chain_means
-            .iter()
-            .map(|mean| (mean - grand_mean).powi(2))
-            .sum::<f64>()
-            / (m - 1).max(1) as f64;
-        let w = chain_vars.iter().sum::<f64>() / m as f64;
+        let mut chain_vars = Vec::with_capacity(m);
+        for (chain, mean) in chains.iter().zip(&chain_means) {
+            let mut sum_sq = 0.0;
+            for &x in *chain {
+                let centered = x - mean;
+                validate_result("rhat centered value", centered)?;
+                sum_sq += centered.powi(2);
+                validate_result("rhat chain variance sum", sum_sq)?;
+            }
+            let variance = sum_sq / (n - 1).max(1) as f64;
+            validate_result("rhat chain variance", variance)?;
+            chain_vars.push(variance);
+        }
+
+        let mut between_sum = 0.0;
+        for mean in &chain_means {
+            let centered = mean - grand_mean;
+            validate_result("rhat between-chain centered mean", centered)?;
+            between_sum += centered.powi(2);
+            validate_result("rhat between-chain variance sum", between_sum)?;
+        }
+        let b_over_n = between_sum / (m - 1).max(1) as f64;
+        validate_result("rhat between-chain variance", b_over_n)?;
+        let w =
+            checked_sum(chain_vars.iter().copied(), "rhat within-chain variance sum")? / m as f64;
+        validate_result("rhat within-chain variance", w)?;
         if w == 0.0 {
             return Ok(1.0);
         }
 
         let n_f = n as f64;
-        Ok((((n_f - 1.0) / n_f) * w + b_over_n).sqrt() / w.sqrt())
+        let variance_estimate = ((n_f - 1.0) / n_f) * w + b_over_n;
+        validate_result("rhat variance estimate", variance_estimate)?;
+        let numerator = variance_estimate.sqrt();
+        validate_result("rhat numerator", numerator)?;
+        let denominator = w.sqrt();
+        validate_result("rhat denominator", denominator)?;
+        let rhat = numerator / denominator;
+        validate_result("rhat", rhat)?;
+        Ok(rhat)
     }
 
     pub fn effective_sample_size(trace: &[f64]) -> Result<f64, DiagnosticsError> {
@@ -886,22 +914,34 @@ pub mod mcmc {
         if n < 4 {
             return Ok(n as f64);
         }
-        let mean = trace.iter().sum::<f64>() / n as f64;
-        let centered: Vec<f64> = trace.iter().map(|x| x - mean).collect();
-        let var = centered.iter().map(|x| x * x).sum::<f64>() / n as f64;
+        let mean = checked_sum(trace.iter().copied(), "ess mean sum")? / n as f64;
+        validate_result("ess mean", mean)?;
+        let mut centered = Vec::with_capacity(n);
+        for &x in trace {
+            let value = x - mean;
+            validate_result("ess centered value", value)?;
+            centered.push(value);
+        }
+        let var = checked_sum(centered.iter().map(|x| x * x), "ess variance sum")? / n as f64;
+        validate_result("ess variance", var)?;
         if var == 0.0 {
             return Ok(n as f64);
         }
 
-        let autocorr_at = |lag: usize| -> f64 {
+        let autocorr_at = |lag: usize| -> Result<f64, DiagnosticsError> {
             if lag >= n {
-                return 0.0;
+                return Ok(0.0);
             }
             let mut sum = 0.0;
             for i in 0..(n - lag) {
                 sum += centered[i] * centered[i + lag];
+                validate_result("ess autocorrelation sum", sum)?;
             }
-            sum / (n as f64 * var)
+            let denom = n as f64 * var;
+            validate_result("ess autocorrelation denominator", denom)?;
+            let rho = sum / denom;
+            validate_result("ess autocorrelation", rho)?;
+            Ok(rho)
         };
 
         let mut sum_rho = 0.0_f64;
@@ -909,21 +949,26 @@ pub mod mcmc {
         let max_lag = (n / 4).max(2);
         let mut k = 0usize;
         while 2 * k + 2 <= max_lag {
-            let pair = autocorr_at(2 * k + 1) + autocorr_at(2 * k + 2);
+            let pair = autocorr_at(2 * k + 1)? + autocorr_at(2 * k + 2)?;
+            validate_result("ess autocorrelation pair", pair)?;
             if pair <= 0.0 {
                 break;
             }
             let pair = pair.min(prev_pair);
             sum_rho += pair;
+            validate_result("ess autocorrelation pair sum", sum_rho)?;
             prev_pair = pair;
             k += 1;
         }
 
         let denom = 1.0 + 2.0 * sum_rho;
+        validate_result("ess denominator", denom)?;
         if denom <= 0.0 {
             Ok(n as f64)
         } else {
-            Ok(n as f64 / denom)
+            let ess = n as f64 / denom;
+            validate_result("ess", ess)?;
+            Ok(ess)
         }
     }
 
@@ -994,6 +1039,25 @@ pub mod mcmc {
         Ok(tau)
     }
 
+    fn checked_sum<I>(values: I, operation: &'static str) -> Result<f64, DiagnosticsError>
+    where
+        I: IntoIterator<Item = f64>,
+    {
+        let mut sum = 0.0;
+        for value in values {
+            sum += value;
+            validate_result(operation, sum)?;
+        }
+        Ok(sum)
+    }
+
+    fn validate_result(operation: &'static str, value: f64) -> Result<(), DiagnosticsError> {
+        if !value.is_finite() {
+            return Err(DiagnosticsError::NonFiniteResult { operation, value });
+        }
+        Ok(())
+    }
+
     #[cfg(test)]
     mod tests {
         use super::*;
@@ -1037,6 +1101,23 @@ pub mod mcmc {
         }
 
         #[test]
+        fn rhat_rejects_overflowed_variance_aggregate() {
+            let c1 = vec![f64::MAX, -f64::MAX];
+            let c2 = vec![1.0, 1.0];
+            let c3 = vec![1.0, 1.0];
+            let c4 = vec![1.0, 1.0];
+            let chains = vec![c1.as_slice(), c2.as_slice(), c3.as_slice(), c4.as_slice()];
+
+            match gelman_rubin_rhat(&chains) {
+                Err(DiagnosticsError::NonFiniteResult { operation, value }) => {
+                    assert_eq!(operation, "rhat chain variance sum");
+                    assert!(value.is_infinite());
+                }
+                other => panic!("expected rhat overflow error, got {other:?}"),
+            }
+        }
+
+        #[test]
         fn ess_constant_trace_returns_n() {
             assert_eq!(effective_sample_size(&vec![5.0; 100]).unwrap(), 100.0);
         }
@@ -1049,6 +1130,17 @@ pub mod mcmc {
                     assert!(value.is_infinite());
                 }
                 other => panic!("expected non-finite trace value error, got {other:?}"),
+            }
+        }
+
+        #[test]
+        fn ess_rejects_overflowed_variance_aggregate() {
+            match effective_sample_size(&[f64::MAX, -f64::MAX, f64::MAX, -f64::MAX]) {
+                Err(DiagnosticsError::NonFiniteResult { operation, value }) => {
+                    assert_eq!(operation, "ess variance sum");
+                    assert!(value.is_infinite());
+                }
+                other => panic!("expected ess overflow error, got {other:?}"),
             }
         }
 

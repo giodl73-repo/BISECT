@@ -50,6 +50,31 @@ fn l1_ess_rejects_non_finite_evidence_trace() {
 }
 
 #[test]
+fn l1_mcmc_rejects_non_finite_diagnostic_aggregates() {
+    let c1 = vec![f64::MAX, -f64::MAX];
+    let c2 = vec![1.0, 1.0];
+    let c3 = vec![1.0, 1.0];
+    let c4 = vec![1.0, 1.0];
+    let chains = vec![c1.as_slice(), c2.as_slice(), c3.as_slice(), c4.as_slice()];
+
+    match gelman_rubin_rhat(&chains) {
+        Err(DiagnosticsError::NonFiniteResult { operation, value }) => {
+            assert_eq!(operation, "rhat chain variance sum");
+            assert!(value.is_infinite());
+        }
+        other => panic!("expected rhat overflow error, got {other:?}"),
+    }
+
+    match effective_sample_size(&[f64::MAX, -f64::MAX, f64::MAX, -f64::MAX]) {
+        Err(DiagnosticsError::NonFiniteResult { operation, value }) => {
+            assert_eq!(operation, "ess variance sum");
+            assert!(value.is_infinite());
+        }
+        other => panic!("expected ess overflow error, got {other:?}"),
+    }
+}
+
+#[test]
 fn l1_hamming_tau_tracks_mixing_speed() {
     let slow = vec![
         vec![1, 1, 2, 2],

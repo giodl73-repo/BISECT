@@ -394,6 +394,37 @@ mod tests {
         assert!(recs[0].below_threshold);
     }
 
+    #[test]
+    fn test_records_reject_non_finite_diagnostic_aggregates() {
+        let c1 = vec![f64::MAX, -f64::MAX];
+        let c2 = vec![1.0, 1.0];
+        let c3 = vec![1.0, 1.0];
+        let c4 = vec![1.0, 1.0];
+        let rhat_metrics = vec![(
+            "eff_gap".to_string(),
+            vec![c1.as_slice(), c2.as_slice(), c3.as_slice(), c4.as_slice()],
+        )];
+
+        match rhat_records(&rhat_metrics) {
+            Err(DiagnosticsError::NonFiniteResult { operation, value }) => {
+                assert_eq!(operation, "rhat chain variance sum");
+                assert!(value.is_infinite());
+            }
+            other => panic!("expected rhat overflow error, got {other:?}"),
+        }
+
+        match ess_records(&[(
+            "eff_gap".to_string(),
+            [f64::MAX, -f64::MAX, f64::MAX, -f64::MAX].as_slice(),
+        )]) {
+            Err(DiagnosticsError::NonFiniteResult { operation, value }) => {
+                assert_eq!(operation, "ess variance sum");
+                assert!(value.is_infinite());
+            }
+            other => panic!("expected ess overflow error, got {other:?}"),
+        }
+    }
+
     // ── Hamming-distance autocorrelation ───────────────────────────────────
 
     #[test]

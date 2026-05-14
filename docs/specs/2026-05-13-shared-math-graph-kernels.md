@@ -293,7 +293,9 @@ metrics: R-hat rejects non-finite chain values with a typed diagnostics error,
 ESS rejects non-finite trace values, integrated autocorrelation time rejects
 non-finite or out-of-range lag values, and `hamming_autocorrelation` rejects
 empty partition vectors so trajectory diagnostics cannot emit non-finite values
-for malformed records.
+for malformed records. R-hat and ESS also reject overflowed aggregate arithmetic
+with typed diagnostics errors before convergence records can contain non-finite
+summary metrics.
 
 RCOUNT should continue to own election-audit method replay. `rstat-core` owns
 only reusable math.
