@@ -25,7 +25,8 @@ semantics out of `rcount-stats`.
 |---|---|---|
 | 01 - MCMC diagnostics kernel | DONE | `rstat-core::mcmc`; `bisect-analysis::ensemble_diagnostics` wrappers |
 | 02 - Probability kernel | DONE | `rstat-core::probability::regularized_incomplete_beta`; permutation consumer |
-| 03 - Close and validation | DONE | `cargo test -p rstat-core`; `cargo test -p bisect-analysis` |
+| 03 - Summary and quantile kernel | DONE | `rstat-core::summary`; L0/L1/L2 tests; partisan consumer |
+| 04 - Close and validation | DONE | `cargo test -p rstat-core`; `cargo test -p rstat-core -- --ignored`; `cargo test -p bisect-analysis` |
 
 ## Close Summary
 
@@ -36,7 +37,11 @@ semantics out of `rcount-stats`.
 - Hamming-distance autocorrelation;
 - integrated autocorrelation time;
 - regularized incomplete beta with Lanczos-gamma support.
+- descriptive summary statistics;
+- deterministic R-7 quantiles and percentile intervals.
 
 `bisect-analysis` still owns redistricting-specific record shapes and
 permutation-test report semantics, but delegates reusable math to `rstat-core`.
+The test ladder now includes inline L0 tests, integration L1 tests, and ignored
+L2 numeric stress tests that can be run explicitly.
 

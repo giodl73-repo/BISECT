@@ -1,3 +1,178 @@
+pub mod summary {
+    use thiserror::Error;
+
+    #[derive(Debug, Error, Clone, PartialEq)]
+    pub enum SummaryError {
+        #[error("[INPUT] empty sample")]
+        EmptySample,
+        #[error("[INPUT] sample contains non-finite value {value} at index {index}")]
+        NonFiniteValue { index: usize, value: f64 },
+        #[error("[INPUT] quantile q must be in [0, 1], got {0}")]
+        InvalidQuantile(f64),
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    pub struct SummaryStats {
+        pub count: usize,
+        pub mean: f64,
+        pub variance_population: f64,
+        pub variance_sample: Option<f64>,
+        pub std_dev_population: f64,
+        pub std_dev_sample: Option<f64>,
+        pub min: f64,
+        pub max: f64,
+    }
+
+    pub fn mean(values: &[f64]) -> Result<f64, SummaryError> {
+        validate_values(values)?;
+        Ok(values.iter().sum::<f64>() / values.len() as f64)
+    }
+
+    pub fn summary_stats(values: &[f64]) -> Result<SummaryStats, SummaryError> {
+        validate_values(values)?;
+        let count = values.len();
+        let mean = values.iter().sum::<f64>() / count as f64;
+        let mut sum_sq = 0.0;
+        let mut min = f64::INFINITY;
+        let mut max = f64::NEG_INFINITY;
+        for &value in values {
+            sum_sq += (value - mean).powi(2);
+            min = min.min(value);
+            max = max.max(value);
+        }
+        let variance_population = sum_sq / count as f64;
+        let variance_sample = if count > 1 {
+            Some(sum_sq / (count - 1) as f64)
+        } else {
+            None
+        };
+
+        Ok(SummaryStats {
+            count,
+            mean,
+            variance_population,
+            variance_sample,
+            std_dev_population: variance_population.sqrt(),
+            std_dev_sample: variance_sample.map(f64::sqrt),
+            min,
+            max,
+        })
+    }
+
+    pub fn median(values: &[f64]) -> Result<f64, SummaryError> {
+        quantile_sorted_copy(values, 0.5)
+    }
+
+    /// Deterministic R-7 quantile, the default interpolation used by R and NumPy.
+    pub fn quantile_sorted_copy(values: &[f64], q: f64) -> Result<f64, SummaryError> {
+        validate_values(values)?;
+        validate_quantile(q)?;
+        let mut sorted = values.to_vec();
+        sorted.sort_by(f64::total_cmp);
+        quantile_sorted(&sorted, q)
+    }
+
+    /// Deterministic R-7 quantile over an already sorted finite sample.
+    pub fn quantile_sorted(sorted_values: &[f64], q: f64) -> Result<f64, SummaryError> {
+        validate_values(sorted_values)?;
+        validate_quantile(q)?;
+        if sorted_values.len() == 1 {
+            return Ok(sorted_values[0]);
+        }
+
+        let h = (sorted_values.len() - 1) as f64 * q;
+        let lo = h.floor() as usize;
+        let hi = h.ceil() as usize;
+        if lo == hi {
+            Ok(sorted_values[lo])
+        } else {
+            let frac = h - lo as f64;
+            Ok(sorted_values[lo] * (1.0 - frac) + sorted_values[hi] * frac)
+        }
+    }
+
+    pub fn percentile_interval_sorted_copy(
+        values: &[f64],
+        low_q: f64,
+        high_q: f64,
+    ) -> Result<(f64, f64), SummaryError> {
+        validate_values(values)?;
+        validate_quantile(low_q)?;
+        validate_quantile(high_q)?;
+        let mut sorted = values.to_vec();
+        sorted.sort_by(f64::total_cmp);
+        Ok((
+            quantile_sorted(&sorted, low_q)?,
+            quantile_sorted(&sorted, high_q)?,
+        ))
+    }
+
+    fn validate_values(values: &[f64]) -> Result<(), SummaryError> {
+        if values.is_empty() {
+            return Err(SummaryError::EmptySample);
+        }
+        for (index, &value) in values.iter().enumerate() {
+            if !value.is_finite() {
+                return Err(SummaryError::NonFiniteValue { index, value });
+            }
+        }
+        Ok(())
+    }
+
+    fn validate_quantile(q: f64) -> Result<(), SummaryError> {
+        if !q.is_finite() || !(0.0..=1.0).contains(&q) {
+            return Err(SummaryError::InvalidQuantile(q));
+        }
+        Ok(())
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn l0_summary_stats_match_hand_computed_values() {
+            let stats = summary_stats(&[1.0, 2.0, 3.0, 4.0]).unwrap();
+            assert_eq!(stats.count, 4);
+            assert_eq!(stats.mean, 2.5);
+            assert!((stats.variance_population - 1.25).abs() < 1e-12);
+            assert!((stats.variance_sample.unwrap() - 5.0 / 3.0).abs() < 1e-12);
+            assert_eq!(stats.min, 1.0);
+            assert_eq!(stats.max, 4.0);
+        }
+
+        #[test]
+        fn l0_median_handles_even_and_odd_counts() {
+            assert_eq!(median(&[3.0, 1.0, 2.0]).unwrap(), 2.0);
+            assert_eq!(median(&[4.0, 1.0, 3.0, 2.0]).unwrap(), 2.5);
+        }
+
+        #[test]
+        fn l0_quantile_uses_r7_interpolation() {
+            let values = [0.0, 10.0, 20.0, 30.0, 40.0];
+            assert_eq!(quantile_sorted_copy(&values, 0.25).unwrap(), 10.0);
+            assert_eq!(quantile_sorted_copy(&values, 0.125).unwrap(), 5.0);
+        }
+
+        #[test]
+        fn l0_rejects_empty_and_non_finite_samples() {
+            assert_eq!(mean(&[]), Err(SummaryError::EmptySample));
+            assert!(matches!(
+                mean(&[1.0, f64::NAN]),
+                Err(SummaryError::NonFiniteValue { index: 1, .. })
+            ));
+        }
+
+        #[test]
+        fn l0_rejects_invalid_quantile() {
+            assert_eq!(
+                quantile_sorted_copy(&[1.0], 1.5),
+                Err(SummaryError::InvalidQuantile(1.5))
+            );
+        }
+    }
+}
+
 pub mod mcmc {
     use thiserror::Error;
 

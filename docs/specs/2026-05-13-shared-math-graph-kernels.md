@@ -176,7 +176,9 @@ The statistics wave should begin with extraction, not invention.
 Candidate first API:
 
 1. `SummaryStats` for count, mean, variance, standard deviation, min, max.
-2. Deterministic quantiles with an explicit interpolation rule.
+   **Landed in `rstat-core::summary`.**
+2. Deterministic quantiles with an explicit interpolation rule. **Landed as R-7
+   quantiles and percentile intervals in `rstat-core::summary`.**
 3. Autocorrelation, effective sample size, and R-hat helpers now living in
    `bisect-analysis`. **Landed in `rstat-core`; `bisect-analysis` keeps public
    record wrappers.**
@@ -189,6 +191,10 @@ Candidate first API:
 
 RCOUNT should continue to own election-audit method replay. `rstat-core` owns
 only reusable math.
+
+The statistics kernel now has a three-level test ladder: inline L0 unit tests,
+L1 integration tests under `crates/rstat-core/tests/l1_*`, and ignored L2 numeric
+stress tests under `crates/rstat-core/tests/l2_numeric_stress.rs`.
 
 ## API Invariants
 

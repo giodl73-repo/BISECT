@@ -1,6 +1,7 @@
 use rand::rngs::SmallRng;
 use rand::seq::SliceRandom;
 use rand::SeedableRng;
+use rstat_core::summary::{mean, median, percentile_interval_sorted_copy};
 /// Partisan metrics: Efficiency Gap, Mean-Median, Partisan Bias, Declination,
 /// Seats-Votes Curve + Responsiveness. Bootstrap CI for applicable metrics.
 /// Spec 4 — board amendments R3 applied.
@@ -134,16 +135,9 @@ pub fn compute_mean_median(districts: &[DistrictElection]) -> f64 {
     if districts.is_empty() {
         return 0.0;
     }
-    let mut shares: Vec<f64> = districts.iter().map(|d| d.dem_pct()).collect();
-    let mean = shares.iter().sum::<f64>() / shares.len() as f64;
-    shares.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    let n = shares.len();
-    let median = if n % 2 == 0 {
-        (shares[n / 2 - 1] + shares[n / 2]) / 2.0
-    } else {
-        shares[n / 2]
-    };
-    mean - median
+    let shares: Vec<f64> = districts.iter().map(|d| d.dem_pct()).collect();
+    mean(&shares).expect("district vote shares are finite")
+        - median(&shares).expect("district vote shares are finite")
 }
 
 /// Partisan Bias: dem_seat_share at the swing where statewide Dem = 50%, minus 0.5.
@@ -294,10 +288,8 @@ where
             .collect();
         samples.push(metric_fn(&resample));
     }
-    samples.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    let low_idx = ((0.025 * n_bootstrap as f64) as usize).min(n_bootstrap - 1);
-    let high_idx = ((0.975 * n_bootstrap as f64) as usize).min(n_bootstrap - 1);
-    (samples[low_idx], samples[high_idx])
+    percentile_interval_sorted_copy(&samples, 0.025, 0.975)
+        .expect("bootstrap metric samples are finite")
 }
 
 // ---------------------------------------------------------------------------
