@@ -1,7 +1,7 @@
 use crate::bisection_runner::{derive_sa_seed, split_subgraph_sa};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::Path;
 use thiserror::Error;
@@ -235,19 +235,12 @@ fn validate_partition(
 }
 
 fn is_connected(adjacency: &[Vec<usize>], side: &HashSet<usize>) -> bool {
-    let Some(&start) = side.iter().next() else {
+    if side.is_empty() {
         return false;
-    };
-    let mut seen = HashSet::from([start]);
-    let mut queue = VecDeque::from([start]);
-    while let Some(v) = queue.pop_front() {
-        for &nb in &adjacency[v] {
-            if side.contains(&nb) && seen.insert(nb) {
-                queue.push_back(nb);
-            }
-        }
     }
-    seen.len() == side.len()
+    let nodes: Vec<usize> = side.iter().copied().collect();
+    rgraph_core::node_subset_connected(adjacency, &nodes)
+        .expect("validated SA evidence adjacency and subset")
 }
 
 fn edge_cut(adjacency: &[Vec<usize>], left: &HashSet<usize>) -> usize {

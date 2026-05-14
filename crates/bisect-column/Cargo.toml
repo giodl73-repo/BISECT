@@ -7,6 +7,7 @@ license.workspace = true
 description = "Column-generation and branch-and-price contracts for exact redistricting"
 
 [dependencies]
+rgraph-core = { path = "../rgraph-core" }
 rplan-audit = { path = "../rplan-audit" }
 serde.workspace = true
 serde_json.workspace = true

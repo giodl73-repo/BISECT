@@ -1,7 +1,7 @@
 use rgraph_core::{
     articulation_points, assignment_labels_connected, bridges, connected_components,
-    edge_betweenness, reachable_nodes, shortest_path_distance, undirected_edge_cut,
-    DirectedWeightedGraph, WeightedEdge,
+    edge_betweenness, node_subset_connected, reachable_nodes, shortest_path_distance,
+    undirected_edge_cut, DirectedWeightedGraph, WeightedEdge,
 };
 
 #[derive(Debug, Clone)]
@@ -176,4 +176,36 @@ fn l2_grid_label_connectivity_detects_split_components() {
 
     assert!(assignment_labels_connected(&adjacency, &connected_assignment, 0..2).unwrap());
     assert!(!assignment_labels_connected(&adjacency, &disconnected_assignment, 0..2).unwrap());
+}
+
+#[test]
+#[ignore = "L2 graph stress: larger grid node-subset connectivity"]
+fn l2_grid_node_subset_connectivity_detects_split_components() {
+    let width = 80;
+    let height = 80;
+    let adjacency: Vec<Vec<usize>> = (0..width * height)
+        .map(|node| {
+            let x = node % width;
+            let y = node / width;
+            let mut neighbors = Vec::new();
+            if x > 0 {
+                neighbors.push(node - 1);
+            }
+            if x + 1 < width {
+                neighbors.push(node + 1);
+            }
+            if y > 0 {
+                neighbors.push(node - width);
+            }
+            if y + 1 < height {
+                neighbors.push(node + width);
+            }
+            neighbors
+        })
+        .collect();
+    let connected_column: Vec<usize> = (0..height).map(|row| row * width).collect();
+    let disconnected_corners = vec![0_usize, width * height - 1];
+
+    assert!(node_subset_connected(&adjacency, &connected_column).unwrap());
+    assert!(!node_subset_connected(&adjacency, &disconnected_corners).unwrap());
 }

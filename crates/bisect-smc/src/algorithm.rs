@@ -239,20 +239,8 @@ mod tests {
         if tracts.is_empty() {
             return true;
         }
-        let set: std::collections::HashSet<usize> = tracts.iter().copied().collect();
-        let mut visited = std::collections::HashSet::new();
-        let mut queue = std::collections::VecDeque::new();
-        queue.push_back(tracts[0]);
-        visited.insert(tracts[0]);
-        while let Some(v) = queue.pop_front() {
-            for &nb in &adj[v] {
-                if set.contains(&nb) && !visited.contains(&nb) {
-                    visited.insert(nb);
-                    queue.push_back(nb);
-                }
-            }
-        }
-        visited.len() == tracts.len()
+        rgraph_core::node_subset_connected(adj, tracts)
+            .expect("validated SMC test adjacency and subset")
     }
 
     #[test]

@@ -205,7 +205,11 @@ The first implementation wave should create `rgraph-core` with a narrow API:
     `rgraph-core`; `bisect-local-search`, `bisect-clustering`, `bisect-flow`, and
     `bisect-ilp` consume the shared kernel while retaining domain wrappers for
     population balance, repair, search, and solver semantics.**
-11. Unit tests with tiny synthetic graphs covering:
+11. Node-subset connectivity over adjacency lists. **Landed in `rgraph-core`;
+    `bisect-column`, `bisect-smc::proposal`, `bisect-pareto::mutation`, CLI
+    bisection subset checks, and SA evidence checks consume it while keeping
+    empty-subset policy and pricing/proposal/mutation/evidence semantics local.**
+12. Unit tests with tiny synthetic graphs covering:
    - equal shortest-path split;
    - ignored non-shortest direct edge;
   - edge-filtered disconnection;

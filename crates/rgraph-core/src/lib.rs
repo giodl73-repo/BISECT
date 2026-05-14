@@ -69,6 +69,18 @@ pub enum LabelConnectivityError {
     },
 }
 
+#[derive(Debug, Error, Clone, PartialEq, Eq)]
+pub enum SubsetConnectivityError {
+    #[error("subset node index {node} is out of bounds for graph with {node_count} nodes")]
+    NodeOutOfBounds { node: usize, node_count: usize },
+    #[error("neighbor index {neighbor} from node {node} is out of bounds for graph with {node_count} nodes")]
+    NeighborOutOfBounds {
+        node: usize,
+        neighbor: usize,
+        node_count: usize,
+    },
+}
+
 pub trait NodeIndex: Copy {
     fn to_usize(self) -> Option<usize>;
 }
@@ -405,6 +417,68 @@ where
         }
     }
     Ok(true)
+}
+
+pub fn node_subset_connected<I, N>(
+    adjacency: &[Vec<I>],
+    nodes: &[N],
+) -> Result<bool, SubsetConnectivityError>
+where
+    I: NodeIndex,
+    N: NodeIndex,
+{
+    if nodes.is_empty() {
+        return Ok(true);
+    }
+
+    let node_count = adjacency.len();
+    let mut in_subset = vec![false; node_count];
+    let mut unique_nodes = Vec::new();
+    for &node in nodes {
+        let Some(node) = node.to_usize() else {
+            return Err(SubsetConnectivityError::NodeOutOfBounds {
+                node: usize::MAX,
+                node_count,
+            });
+        };
+        if node >= node_count {
+            return Err(SubsetConnectivityError::NodeOutOfBounds { node, node_count });
+        }
+        if !in_subset[node] {
+            in_subset[node] = true;
+            unique_nodes.push(node);
+        }
+    }
+
+    let mut seen = vec![false; node_count];
+    let mut stack = vec![unique_nodes[0]];
+    seen[unique_nodes[0]] = true;
+    let mut reached = 0usize;
+    while let Some(node) = stack.pop() {
+        reached += 1;
+        for &neighbor in &adjacency[node] {
+            let Some(neighbor) = neighbor.to_usize() else {
+                return Err(SubsetConnectivityError::NeighborOutOfBounds {
+                    node,
+                    neighbor: usize::MAX,
+                    node_count,
+                });
+            };
+            if neighbor >= node_count {
+                return Err(SubsetConnectivityError::NeighborOutOfBounds {
+                    node,
+                    neighbor,
+                    node_count,
+                });
+            }
+            if in_subset[neighbor] && !seen[neighbor] {
+                seen[neighbor] = true;
+                stack.push(neighbor);
+            }
+        }
+    }
+
+    Ok(reached == unique_nodes.len())
 }
 
 fn validate_assignment_adjacency<I, D>(
@@ -1281,6 +1355,56 @@ mod tests {
         assert_eq!(
             undirected_edge_cut(&adjacency, &assignment),
             Err(EdgeCutError::NeighborOutOfBounds {
+                node: 0,
+                neighbor: 2,
+                node_count: 2
+            })
+        );
+    }
+
+    #[test]
+    fn node_subset_connected_accepts_contiguous_subset() {
+        let adjacency = vec![vec![1_usize], vec![0, 2], vec![1, 3], vec![2]];
+
+        assert!(node_subset_connected(&adjacency, &[1_usize, 2, 3]).unwrap());
+        assert!(node_subset_connected(&adjacency, &[2_usize]).unwrap());
+        assert!(node_subset_connected(&adjacency, &[] as &[usize]).unwrap());
+    }
+
+    #[test]
+    fn node_subset_connected_rejects_disconnected_subset() {
+        let adjacency = vec![vec![1_usize], vec![0, 2], vec![1, 3], vec![2]];
+
+        assert!(!node_subset_connected(&adjacency, &[0_usize, 3]).unwrap());
+    }
+
+    #[test]
+    fn node_subset_connected_treats_duplicate_nodes_as_one_subset_member() {
+        let adjacency = vec![vec![1_usize], vec![0]];
+
+        assert!(node_subset_connected(&adjacency, &[0_usize, 0, 1]).unwrap());
+    }
+
+    #[test]
+    fn node_subset_connected_rejects_out_of_bounds_node() {
+        let adjacency = vec![vec![1_usize], vec![0]];
+
+        assert_eq!(
+            node_subset_connected(&adjacency, &[0_usize, 2]),
+            Err(SubsetConnectivityError::NodeOutOfBounds {
+                node: 2,
+                node_count: 2
+            })
+        );
+    }
+
+    #[test]
+    fn node_subset_connected_rejects_out_of_bounds_neighbor() {
+        let adjacency = vec![vec![2_usize], vec![0]];
+
+        assert_eq!(
+            node_subset_connected(&adjacency, &[0_usize, 1]),
+            Err(SubsetConnectivityError::NeighborOutOfBounds {
                 node: 0,
                 neighbor: 2,
                 node_count: 2

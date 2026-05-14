@@ -270,6 +270,7 @@ dependencies = [
 name = "bisect-column"
 version = "0.1.0"
 dependencies = [
+ "rgraph-core",
  "rplan-audit",
  "serde",
  "serde_json",
@@ -439,6 +440,7 @@ dependencies = [
  "bisect-ensemble",
  "rand",
  "rayon",
+ "rgraph-core",
  "ropt-core",
  "serde",
  "serde_json",

@@ -109,20 +109,8 @@ fn is_connected_subset(tracts: &[usize], adjacency: &[Vec<usize>]) -> bool {
     if tracts.len() <= 1 {
         return true;
     }
-    let set: std::collections::HashSet<usize> = tracts.iter().copied().collect();
-    let mut visited = std::collections::HashSet::new();
-    let mut queue = std::collections::VecDeque::new();
-    queue.push_back(tracts[0]);
-    visited.insert(tracts[0]);
-    while let Some(v) = queue.pop_front() {
-        for &u in &adjacency[v] {
-            if set.contains(&u) && !visited.contains(&u) {
-                visited.insert(u);
-                queue.push_back(u);
-            }
-        }
-    }
-    visited.len() == tracts.len()
+    rgraph_core::node_subset_connected(adjacency, tracts)
+        .expect("validated Pareto adjacency and subset")
 }
 
 #[cfg(test)]

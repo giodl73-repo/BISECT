@@ -129,21 +129,9 @@ fn is_connected_subset(adjacency: &[Vec<usize>], vertices: &HashSet<usize>) -> b
     if vertices.len() <= 1 {
         return true;
     }
-    let Some(&start) = vertices.iter().next() else {
-        return true;
-    };
-    let mut visited: HashSet<usize> = HashSet::with_capacity(vertices.len());
-    let mut queue = std::collections::VecDeque::new();
-    visited.insert(start);
-    queue.push_back(start);
-    while let Some(v) = queue.pop_front() {
-        for &nb in &adjacency[v] {
-            if vertices.contains(&nb) && visited.insert(nb) {
-                queue.push_back(nb);
-            }
-        }
-    }
-    visited.len() == vertices.len()
+    let nodes: Vec<usize> = vertices.iter().copied().collect();
+    rgraph_core::node_subset_connected(adjacency, &nodes)
+        .expect("validated bisection-runner adjacency and subset")
 }
 
 /// Convert adjacency list to CSR format required by the METIS C API.

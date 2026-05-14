@@ -1,7 +1,7 @@
 use rgraph_core::{
     articulation_points, articulation_points_with_filter, assignment_labels_connected, bridges,
     bridges_with_filter, connected_components, connected_components_in_nodes_with_filter,
-    edge_betweenness, reachable_nodes_with_filter, shortest_path_distance,
+    edge_betweenness, node_subset_connected, reachable_nodes_with_filter, shortest_path_distance,
     shortest_path_distance_with_filter, single_source_shortest_paths, undirected_edge_cut, Bridge,
     DirectedWeightedGraph, GraphError, WeightedEdge,
 };
@@ -203,4 +203,12 @@ fn l1_assignment_labels_connected_matches_redistricting_fixture() {
 
     assert!(assignment_labels_connected(&adjacency, &connected_assignment, 0..2).unwrap());
     assert!(!assignment_labels_connected(&adjacency, &disconnected_assignment, 0..2).unwrap());
+}
+
+#[test]
+fn l1_node_subset_connected_matches_redistricting_fixture() {
+    let adjacency = vec![vec![1_usize], vec![0, 2], vec![1, 3], vec![2, 4], vec![3]];
+
+    assert!(node_subset_connected(&adjacency, &[1_usize, 2, 3]).unwrap());
+    assert!(!node_subset_connected(&adjacency, &[0_usize, 4]).unwrap());
 }

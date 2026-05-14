@@ -1,5 +1,3 @@
-use std::collections::VecDeque;
-
 use serde::{Deserialize, Serialize};
 
 use crate::master::Column;
@@ -69,28 +67,8 @@ fn subset_connected(adjacency: &[Vec<usize>], units: &[usize]) -> bool {
     if units.is_empty() {
         return false;
     }
-    let n = adjacency.len();
-    let mut in_subset = vec![false; n];
-    for &unit in units {
-        if unit >= n {
-            return false;
-        }
-        in_subset[unit] = true;
-    }
-    let mut seen = vec![false; n];
-    let mut queue = VecDeque::from([units[0]]);
-    seen[units[0]] = true;
-    let mut count = 0usize;
-    while let Some(unit) = queue.pop_front() {
-        count += 1;
-        for &neighbor in &adjacency[unit] {
-            if neighbor < n && in_subset[neighbor] && !seen[neighbor] {
-                seen[neighbor] = true;
-                queue.push_back(neighbor);
-            }
-        }
-    }
-    count == units.len()
+    rgraph_core::node_subset_connected(adjacency, units)
+        .expect("validated column-pricing adjacency and subset")
 }
 
 fn subset_edge_cut(adjacency: &[Vec<usize>], mask: usize) -> usize {
