@@ -12,8 +12,8 @@ fn l1_mcmc_diagnostics_separate_converged_and_stuck_traces() {
     let chains = vec![c1.as_slice(), c2.as_slice(), c3.as_slice(), c4.as_slice()];
 
     let rhat = gelman_rubin_rhat(&chains).unwrap();
-    let mixed_ess = effective_sample_size(&[0.0, 1.0, -1.0, 0.5, -0.5, 1.5, -1.5, 0.25]);
-    let stuck_ess = effective_sample_size(&[1.0; 8]);
+    let mixed_ess = effective_sample_size(&[0.0, 1.0, -1.0, 0.5, -0.5, 1.5, -1.5, 0.25]).unwrap();
+    let stuck_ess = effective_sample_size(&[1.0; 8]).unwrap();
 
     assert!(rhat < 1.05);
     assert!(mixed_ess > 0.0);
@@ -36,6 +36,17 @@ fn l1_rhat_rejects_non_finite_evidence_trace() {
             value: f64::INFINITY
         })
     );
+}
+
+#[test]
+fn l1_ess_rejects_non_finite_evidence_trace() {
+    match effective_sample_size(&[0.1, 0.2, f64::NAN, 0.4]) {
+        Err(DiagnosticsError::NonFiniteTraceValue { index, value }) => {
+            assert_eq!(index, 2);
+            assert!(value.is_nan());
+        }
+        other => panic!("expected non-finite trace value error, got {other:?}"),
+    }
 }
 
 #[test]

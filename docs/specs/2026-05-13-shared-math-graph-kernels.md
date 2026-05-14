@@ -280,8 +280,9 @@ Candidate first API:
 
 `rstat-core::mcmc` rejects malformed diagnostics inputs before producing evidence
 metrics: R-hat rejects non-finite chain values with a typed diagnostics error,
-and `hamming_autocorrelation` rejects empty partition vectors so trajectory
-diagnostics cannot emit non-finite values for malformed records.
+ESS rejects non-finite trace values, and `hamming_autocorrelation` rejects empty
+partition vectors so trajectory diagnostics cannot emit non-finite values for
+malformed records.
 
 RCOUNT should continue to own election-audit method replay. `rstat-core` owns
 only reusable math.

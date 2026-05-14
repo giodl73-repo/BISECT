@@ -101,7 +101,7 @@ pub struct EssRecord {
 /// pair sum (rho_{2k} + rho_{2k+1}) becomes non-positive.
 ///
 /// `ess = N / (1 + 2 * sum(rho_k))` for `k = 1..K` where `K` is the cutoff.
-pub fn effective_sample_size(trace: &[f64]) -> f64 {
+pub fn effective_sample_size(trace: &[f64]) -> Result<f64, DiagnosticsError> {
     rstat_mcmc::effective_sample_size(trace)
 }
 
@@ -109,18 +109,18 @@ pub fn effective_sample_size(trace: &[f64]) -> f64 {
 /// trace (the caller may concatenate post-burn-in samples across chains, OR
 /// pass per-chain traces and average; this module computes the simple per-
 /// trace ESS).
-pub fn ess_records(metrics: &[(String, &[f64])]) -> Vec<EssRecord> {
+pub fn ess_records(metrics: &[(String, &[f64])]) -> Result<Vec<EssRecord>, DiagnosticsError> {
     metrics
         .iter()
         .map(|(name, trace)| {
-            let ess = effective_sample_size(trace);
-            EssRecord {
+            let ess = effective_sample_size(trace)?;
+            Ok(EssRecord {
                 metric: name.clone(),
                 ess,
                 n_total: trace.len(),
                 computed_on: "summary_statistic".to_string(),
                 below_threshold: ess < 100.0,
-            }
+            })
         })
         .collect()
 }
@@ -315,7 +315,7 @@ mod tests {
             ((rng_state >> 33) as f64) / ((1u64 << 31) as f64) - 1.0
         };
         let trace: Vec<f64> = (0..1000).map(|_| rand()).collect();
-        let ess = effective_sample_size(&trace);
+        let ess = effective_sample_size(&trace).unwrap();
         assert!(
             ess > 500.0,
             "iid trace should have ESS > N/2; got {ess} of {}",
@@ -340,7 +340,7 @@ mod tests {
             x = 0.9 * x + rand();
             trace.push(x);
         }
-        let ess = effective_sample_size(&trace);
+        let ess = effective_sample_size(&trace).unwrap();
         assert!(
             ess < 200.0,
             "AR(0.9) should give small ESS; got {ess} of {}",
@@ -353,7 +353,7 @@ mod tests {
     fn test_ess_constant_trace_returns_n() {
         // No variance -> ESS conventionally = N.
         let trace = vec![5.0; 100];
-        let ess = effective_sample_size(&trace);
+        let ess = effective_sample_size(&trace).unwrap();
         assert_eq!(ess, 100.0);
     }
 
@@ -361,7 +361,7 @@ mod tests {
     fn test_ess_short_trace_returns_n() {
         // Below the autocorrelation lag minimum -> just N.
         let trace = vec![1.0, 2.0, 3.0];
-        let ess = effective_sample_size(&trace);
+        let ess = effective_sample_size(&trace).unwrap();
         assert_eq!(ess, 3.0);
     }
 
@@ -381,7 +381,7 @@ mod tests {
             x = 0.95 * x + rand();
             trace.push(x);
         }
-        let recs = ess_records(&[("eff_gap".to_string(), trace.as_slice())]);
+        let recs = ess_records(&[("eff_gap".to_string(), trace.as_slice())]).unwrap();
         assert_eq!(
             recs[0].computed_on, "summary_statistic",
             "S-03: ESS on summary statistics, NOT partitions"

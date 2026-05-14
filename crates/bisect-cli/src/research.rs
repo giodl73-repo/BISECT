@@ -222,7 +222,8 @@ pub fn run_validate_ensemble(args: &ValidateEnsembleArgs) -> anyhow::Result<()> 
         // ESS — pool across chains by concatenation. (Per-chain ESS would
         // also be defensible; pooled is the more common reporting.)
         let pooled: Vec<f64> = per_chain_values.iter().flatten().copied().collect();
-        let ess_records_vec = ess_records(&[(metric_name.clone(), pooled.as_slice())]);
+        let ess_records_vec = ess_records(&[(metric_name.clone(), pooled.as_slice())])
+            .map_err(|e| anyhow::anyhow!("ess({}): {}", metric_name, e))?;
         let ess = ess_records_vec
             .into_iter()
             .next()

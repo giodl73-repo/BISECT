@@ -42,7 +42,7 @@ fn l2_long_autocorrelated_trace_has_reduced_ess() {
         trace.push(x);
     }
 
-    let ess = effective_sample_size(&trace);
+    let ess = effective_sample_size(&trace).unwrap();
 
     assert!(ess > 0.0);
     assert!(ess < trace.len() as f64 / 5.0);

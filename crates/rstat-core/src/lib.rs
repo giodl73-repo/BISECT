@@ -699,6 +699,8 @@ pub mod mcmc {
             sample_index: usize,
             value: f64,
         },
+        #[error("[INPUT] trace contains non-finite value {value} at index {index}")]
+        NonFiniteTraceValue { index: usize, value: f64 },
         #[error("[INPUT] empty partition trajectory")]
         EmptyTrajectory,
         #[error("[INPUT] empty partition at index {0}")]
@@ -769,16 +771,21 @@ pub mod mcmc {
         Ok((((n_f - 1.0) / n_f) * w + b_over_n).sqrt() / w.sqrt())
     }
 
-    pub fn effective_sample_size(trace: &[f64]) -> f64 {
+    pub fn effective_sample_size(trace: &[f64]) -> Result<f64, DiagnosticsError> {
         let n = trace.len();
+        for (index, &value) in trace.iter().enumerate() {
+            if !value.is_finite() {
+                return Err(DiagnosticsError::NonFiniteTraceValue { index, value });
+            }
+        }
         if n < 4 {
-            return n as f64;
+            return Ok(n as f64);
         }
         let mean = trace.iter().sum::<f64>() / n as f64;
         let centered: Vec<f64> = trace.iter().map(|x| x - mean).collect();
         let var = centered.iter().map(|x| x * x).sum::<f64>() / n as f64;
         if var == 0.0 {
-            return n as f64;
+            return Ok(n as f64);
         }
 
         let autocorr_at = |lag: usize| -> f64 {
@@ -809,9 +816,9 @@ pub mod mcmc {
 
         let denom = 1.0 + 2.0 * sum_rho;
         if denom <= 0.0 {
-            n as f64
+            Ok(n as f64)
         } else {
-            n as f64 / denom
+            Ok(n as f64 / denom)
         }
     }
 
@@ -919,7 +926,18 @@ pub mod mcmc {
 
         #[test]
         fn ess_constant_trace_returns_n() {
-            assert_eq!(effective_sample_size(&vec![5.0; 100]), 100.0);
+            assert_eq!(effective_sample_size(&vec![5.0; 100]).unwrap(), 100.0);
+        }
+
+        #[test]
+        fn ess_rejects_non_finite_trace_values() {
+            match effective_sample_size(&[1.0, f64::INFINITY, 2.0, 3.0]) {
+                Err(DiagnosticsError::NonFiniteTraceValue { index, value }) => {
+                    assert_eq!(index, 1);
+                    assert!(value.is_infinite());
+                }
+                other => panic!("expected non-finite trace value error, got {other:?}"),
+            }
         }
 
         #[test]
