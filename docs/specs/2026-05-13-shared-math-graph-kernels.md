@@ -315,7 +315,9 @@ The numeric kernel starts with small dense linear algebra, extracted from
    matrix-vector multiply. Matrix product overflow is rejected with a typed
    numeric error instead of returning non-finite regression matrices.**
 3. Gauss-Jordan inverse with partial pivoting and typed errors. **Landed in
-   `rmath-core`; bloc-voting WLS and HC3 now use it.**
+   `rmath-core`; bloc-voting WLS and HC3 now use it. Inversion rejects
+   overflowed row normalization, row elimination, and result entries with typed
+   numeric errors before callers can consume non-finite inverse matrices.**
 4. Test ladder. **Inline L0 tests, L1 WLS normal-equation/pivoting tests, and an
    ignored L2 Hilbert-like inverse stress test landed under
    `crates/rmath-core/tests/`.**

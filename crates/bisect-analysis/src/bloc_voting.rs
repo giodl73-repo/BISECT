@@ -1193,6 +1193,22 @@ mod tests {
         }
     }
 
+    #[test]
+    fn test_invert_non_finite_result_maps_to_numeric_error() {
+        let error = BlocVotingError::from(LinearAlgebraError::NonFiniteResult {
+            operation: "invert row normalization",
+            value: f64::INFINITY,
+        });
+
+        match error {
+            BlocVotingError::Numeric(message) => {
+                assert!(message.contains("invert row normalization"));
+                assert!(message.contains("inf"));
+            }
+            other => panic!("expected Numeric error, got {:?}", other),
+        }
+    }
+
     // ── fit_wls input validation ─────────────────────────────────────────────
 
     #[test]

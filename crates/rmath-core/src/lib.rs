@@ -188,7 +188,9 @@ pub fn invert(m: &DenseMatrix) -> Result<DenseMatrix, LinearAlgebraError> {
         }
         let pivot = aug.at(c, c);
         for j in 0..(2 * n) {
-            aug.set(c, j, aug.at(c, j) / pivot);
+            let value = aug.at(c, j) / pivot;
+            validate_result_scalar("invert row normalization", value)?;
+            aug.set(c, j, value);
         }
         for r in 0..n {
             if r == c {
@@ -199,7 +201,9 @@ pub fn invert(m: &DenseMatrix) -> Result<DenseMatrix, LinearAlgebraError> {
                 continue;
             }
             for j in 0..(2 * n) {
-                aug.set(r, j, aug.at(r, j) - factor * aug.at(c, j));
+                let value = aug.at(r, j) - factor * aug.at(c, j);
+                validate_result_scalar("invert row elimination", value)?;
+                aug.set(r, j, value);
             }
         }
     }
@@ -207,7 +211,9 @@ pub fn invert(m: &DenseMatrix) -> Result<DenseMatrix, LinearAlgebraError> {
     let mut inv = DenseMatrix::zeros(n, n);
     for i in 0..n {
         for j in 0..n {
-            inv.set(i, j, aug.at(i, n + j));
+            let value = aug.at(i, n + j);
+            validate_result_scalar("invert result", value)?;
+            inv.set(i, j, value);
         }
     }
     Ok(inv)
@@ -440,6 +446,19 @@ mod tests {
         let a = DenseMatrix::from_row_major(2, 2, vec![1.0, 2.0, 2.0, 4.0]).unwrap();
 
         assert_eq!(invert(&a), Err(LinearAlgebraError::Singular));
+    }
+
+    #[test]
+    fn l0_inverse_rejects_overflowed_row_normalization() {
+        let a = DenseMatrix::from_row_major(2, 2, vec![1e-11, f64::MAX, 0.0, 1.0]).unwrap();
+
+        match invert(&a) {
+            Err(LinearAlgebraError::NonFiniteResult { operation, value }) => {
+                assert_eq!(operation, "invert row normalization");
+                assert!(value.is_infinite());
+            }
+            other => panic!("expected inverse normalization overflow error, got {other:?}"),
+        }
     }
 
     #[test]

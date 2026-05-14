@@ -31,6 +31,19 @@ fn l1_partial_pivoting_handles_zero_initial_pivot() {
 }
 
 #[test]
+fn l1_inverse_overflow_is_rejected_before_non_finite_matrix_output() {
+    let matrix = DenseMatrix::from_row_major(2, 2, vec![1e-11, f64::MAX, 0.0, 1.0]).unwrap();
+
+    match invert(&matrix) {
+        Err(LinearAlgebraError::NonFiniteResult { operation, value }) => {
+            assert_eq!(operation, "invert row normalization");
+            assert!(value.is_infinite());
+        }
+        other => panic!("expected inverse overflow error, got {other:?}"),
+    }
+}
+
+#[test]
 fn l1_matrix_product_overflow_is_rejected() {
     let a = DenseMatrix::from_row_major(1, 2, vec![f64::MAX, f64::MAX]).unwrap();
     let b = DenseMatrix::from_row_major(2, 1, vec![1.0, 1.0]).unwrap();
