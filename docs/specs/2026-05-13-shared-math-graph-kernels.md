@@ -258,9 +258,10 @@ Candidate first API:
 4. Permutation-test helpers now living in `bisect-analysis`. **The beta CDF
    probability kernel used by the permutation report now lives in `rstat-core`.**
 5. Exact or stable probability utilities that can later support `rcount-stats`,
-   without moving RCOUNT method semantics out of `rcount-stats`. **Initial
-   incomplete-beta and Lanczos-gamma helpers landed; audit method semantics stay
-   in `rcount-stats`.**
+    without moving RCOUNT method semantics out of `rcount-stats`. **Initial
+    incomplete-beta and Lanczos-gamma helpers landed; the beta CDF now rejects
+    non-finite `x` values and non-positive/non-finite shape parameters with typed
+    probability errors. Audit method semantics stay in `rcount-stats`.**
 6. Seeded bootstrap resampling helpers. **Landed in `rstat-core::resampling`;
    `bisect-analysis::partisan` consumes them for bootstrap CIs.**
 7. Empirical p-values and multiple-testing corrections. **Landed in

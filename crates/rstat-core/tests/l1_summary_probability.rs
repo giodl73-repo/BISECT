@@ -29,7 +29,7 @@ fn l1_summary_and_probability_compose_for_interval_report() {
 
     let stats = summary_stats(&samples).unwrap();
     let (lo, hi) = percentile_interval_sorted_copy(&samples, 0.25, 0.75).unwrap();
-    let beta_mid = regularized_incomplete_beta(0.5, 2.0, 2.0);
+    let beta_mid = regularized_incomplete_beta(0.5, 2.0, 2.0).unwrap();
 
     assert_eq!(stats.count, 8);
     assert!((stats.mean - 0.45).abs() < 1e-12);

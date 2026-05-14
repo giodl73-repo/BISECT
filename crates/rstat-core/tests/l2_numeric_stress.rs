@@ -54,7 +54,7 @@ fn l2_beta_cdf_remains_bounded_across_grid() {
     for a in [0.5, 1.0, 2.0, 10.0, 50.0] {
         for b in [0.5, 1.0, 3.0, 9.0, 40.0] {
             for x in [0.01, 0.10, 0.50, 0.90, 0.99] {
-                let value = regularized_incomplete_beta(x, a, b);
+                let value = regularized_incomplete_beta(x, a, b).unwrap();
                 assert!(
                     (0.0..=1.0).contains(&value),
                     "I_x({a},{b}) at {x} = {value}"

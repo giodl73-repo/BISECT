@@ -460,7 +460,7 @@ pub mod resampling {
 }
 
 pub mod hypothesis {
-    use crate::probability::regularized_incomplete_beta;
+    use crate::probability::{regularized_incomplete_beta, ProbabilityError};
     use std::collections::HashMap;
     use thiserror::Error;
 
@@ -474,6 +474,8 @@ pub mod hypothesis {
         InvalidProbability(f64),
         #[error("[INPUT] ESS must be positive and finite, got {0}")]
         InvalidEss(f64),
+        #[error(transparent)]
+        Probability(#[from] ProbabilityError),
     }
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -529,7 +531,7 @@ pub mod hypothesis {
         validate_ess(ess)?;
         let a = p_raw * ess + 1.0;
         let b = (1.0 - p_raw) * ess + 1.0;
-        Ok(regularized_incomplete_beta(threshold, a, b).clamp(0.0, 1.0))
+        Ok(regularized_incomplete_beta(threshold, a, b)?.clamp(0.0, 1.0))
     }
 
     pub fn holm_bonferroni(p_values: &[f64]) -> Result<Vec<f64>, HypothesisError> {
@@ -990,13 +992,28 @@ pub mod mcmc {
 }
 
 pub mod probability {
+    use thiserror::Error;
+
+    #[derive(Debug, Error, Clone, PartialEq)]
+    pub enum ProbabilityError {
+        #[error("[INPUT] beta CDF x must be finite, got {0}")]
+        NonFiniteX(f64),
+        #[error("[INPUT] beta shape parameter '{name}' must be positive and finite, got {value}")]
+        InvalidShape { name: &'static str, value: f64 },
+    }
+
     /// Standard Normal CDF via Abramowitz & Stegun 7.1.26 approximation.
     pub fn standard_normal_cdf(x: f64) -> f64 {
         let t = x / std::f64::consts::SQRT_2;
         0.5 * (1.0 + erf_approx(t))
     }
 
-    pub fn regularized_incomplete_beta(x: f64, a: f64, b: f64) -> f64 {
+    pub fn regularized_incomplete_beta(x: f64, a: f64, b: f64) -> Result<f64, ProbabilityError> {
+        validate_beta_inputs(x, a, b)?;
+        Ok(regularized_incomplete_beta_inner(x, a, b))
+    }
+
+    fn regularized_incomplete_beta_inner(x: f64, a: f64, b: f64) -> f64 {
         if x <= 0.0 {
             return 0.0;
         }
@@ -1005,12 +1022,31 @@ pub mod probability {
         }
 
         if x > (a + 1.0) / (a + b + 2.0) {
-            return 1.0 - regularized_incomplete_beta(1.0 - x, b, a);
+            return 1.0 - regularized_incomplete_beta_inner(1.0 - x, b, a);
         }
 
         let lbeta = lgamma(a) + lgamma(b) - lgamma(a + b);
         let front = (a * x.ln() + b * (1.0 - x).ln() - lbeta).exp() / a;
         front * beta_continued_fraction(x, a, b)
+    }
+
+    fn validate_beta_inputs(x: f64, a: f64, b: f64) -> Result<(), ProbabilityError> {
+        if !x.is_finite() {
+            return Err(ProbabilityError::NonFiniteX(x));
+        }
+        if !a.is_finite() || a <= 0.0 {
+            return Err(ProbabilityError::InvalidShape {
+                name: "a",
+                value: a,
+            });
+        }
+        if !b.is_finite() || b <= 0.0 {
+            return Err(ProbabilityError::InvalidShape {
+                name: "b",
+                value: b,
+            });
+        }
+        Ok(())
     }
 
     fn beta_continued_fraction(x: f64, a: f64, b: f64) -> f64 {
@@ -1106,13 +1142,35 @@ pub mod probability {
 
         #[test]
         fn beta_boundaries_are_exact() {
-            assert!((regularized_incomplete_beta(0.0, 2.0, 3.0) - 0.0).abs() < 1e-10);
-            assert!((regularized_incomplete_beta(1.0, 2.0, 3.0) - 1.0).abs() < 1e-10);
+            assert!((regularized_incomplete_beta(0.0, 2.0, 3.0).unwrap() - 0.0).abs() < 1e-10);
+            assert!((regularized_incomplete_beta(1.0, 2.0, 3.0).unwrap() - 1.0).abs() < 1e-10);
         }
 
         #[test]
         fn beta_symmetric_midpoint_is_half() {
-            assert!((regularized_incomplete_beta(0.5, 2.0, 2.0) - 0.5).abs() < 0.01);
+            assert!((regularized_incomplete_beta(0.5, 2.0, 2.0).unwrap() - 0.5).abs() < 0.01);
+        }
+
+        #[test]
+        fn beta_rejects_invalid_inputs() {
+            match regularized_incomplete_beta(f64::NAN, 2.0, 2.0) {
+                Err(ProbabilityError::NonFiniteX(value)) => assert!(value.is_nan()),
+                other => panic!("expected non-finite x error, got {other:?}"),
+            }
+            assert_eq!(
+                regularized_incomplete_beta(0.5, 0.0, 2.0),
+                Err(ProbabilityError::InvalidShape {
+                    name: "a",
+                    value: 0.0
+                })
+            );
+            assert_eq!(
+                regularized_incomplete_beta(0.5, 2.0, f64::INFINITY),
+                Err(ProbabilityError::InvalidShape {
+                    name: "b",
+                    value: f64::INFINITY
+                })
+            );
         }
 
         #[test]
