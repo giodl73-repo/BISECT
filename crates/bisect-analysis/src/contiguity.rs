@@ -3,7 +3,8 @@
 /// For each district, collects all tract indices belonging to it, then
 /// runs BFS restricted to that subset using the adjacency list. If more
 /// than one connected component is found the district is non-contiguous.
-use std::collections::{HashMap, HashSet, VecDeque};
+use rgraph_core::{reachable_nodes_with_filter, DirectedWeightedGraph, WeightedEdge};
+use std::collections::{HashMap, HashSet};
 
 /// Result of checking contiguity for all districts in a plan.
 #[derive(Debug, Clone, serde::Serialize)]
@@ -141,34 +142,71 @@ pub fn bfs_component_count(
 
     let mut visited: HashSet<usize> = HashSet::new();
     let mut components: Vec<HashSet<usize>> = Vec::new();
+    let node_count = tract_indices
+        .iter()
+        .copied()
+        .max()
+        .map(|max_idx| max_idx + 1)
+        .unwrap_or(0)
+        .max(adjacency.len());
+    let graph = AdjacencyGraph {
+        adjacency,
+        node_count,
+    };
 
-    for &start in tract_indices {
+    let mut starts: Vec<_> = tract_indices.iter().copied().collect();
+    starts.sort_unstable();
+
+    for start in starts {
         if visited.contains(&start) {
             continue;
         }
 
-        // BFS from `start`, restricted to `tract_indices`.
-        let mut component = HashSet::new();
-        let mut queue = VecDeque::new();
-        queue.push_back(start);
-        visited.insert(start);
+        let component: HashSet<usize> =
+            reachable_nodes_with_filter(&graph, start, |(_, target)| {
+                tract_indices.contains(&target)
+            })
+            .expect("adjacency adapter emits only finite non-negative weights")
+            .into_iter()
+            .filter(|node| tract_indices.contains(node))
+            .collect();
 
-        while let Some(node) = queue.pop_front() {
-            component.insert(node);
-            if let Some(neighbors) = adjacency.get(node) {
-                for &neighbor in neighbors {
-                    if tract_indices.contains(&neighbor) && !visited.contains(&neighbor) {
-                        visited.insert(neighbor);
-                        queue.push_back(neighbor);
-                    }
-                }
-            }
-        }
+        visited.extend(component.iter().copied());
 
         components.push(component);
     }
 
     (components.len(), components)
+}
+
+struct AdjacencyGraph<'a> {
+    adjacency: &'a [Vec<usize>],
+    node_count: usize,
+}
+
+impl DirectedWeightedGraph for AdjacencyGraph<'_> {
+    type EdgeId = (usize, usize);
+
+    fn node_count(&self) -> usize {
+        self.node_count
+    }
+
+    fn outgoing_edges(&self, source: usize) -> Vec<WeightedEdge<Self::EdgeId>> {
+        self.adjacency
+            .get(source)
+            .map(|neighbors| {
+                neighbors
+                    .iter()
+                    .copied()
+                    .map(|target| WeightedEdge {
+                        id: (source, target),
+                        target,
+                        weight: 1.0,
+                    })
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
 }
 
 /// Produce a human-readable county context string for a GEOID.

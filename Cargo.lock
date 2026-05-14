@@ -179,6 +179,7 @@ dependencies = [
  "geo 0.28.0",
  "geo-types 0.7.19",
  "rand",
+ "rgraph-core",
  "serde",
  "serde_json",
  "sha2",
@@ -2856,6 +2857,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "47b34b781b31e5d73e9fbc8689c70551fd1ade9a19e3e28cfec8580a79290cc4"
 dependencies = [
  "bytemuck",
+]
+
+[[package]]
+name = "rgraph-core"
+version = "0.1.0"
+dependencies = [
+ "thiserror 2.0.18",
 ]
 
 [[package]]
