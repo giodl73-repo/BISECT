@@ -17,6 +17,8 @@ pub mod summary {
         InvalidQuantile(f64),
         #[error("[INPUT] percentile interval quantiles must satisfy low <= high, got low={low}, high={high}")]
         InvalidIntervalQuantiles { low: f64, high: f64 },
+        #[error("[NUMERIC] {operation} produced non-finite value {value}")]
+        NonFiniteResult { operation: &'static str, value: f64 },
     }
 
     #[derive(Debug, Clone, Copy, PartialEq)]
@@ -44,35 +46,53 @@ pub mod summary {
 
     pub fn mean(values: &[f64]) -> Result<f64, SummaryError> {
         validate_values(values)?;
-        Ok(values.iter().sum::<f64>() / values.len() as f64)
+        let sum = checked_sum(values, "mean sum")?;
+        let mean = sum / values.len() as f64;
+        validate_result("mean", mean)?;
+        Ok(mean)
     }
 
     pub fn summary_stats(values: &[f64]) -> Result<SummaryStats, SummaryError> {
         validate_values(values)?;
         let count = values.len();
-        let mean = values.iter().sum::<f64>() / count as f64;
+        let sum = checked_sum(values, "summary mean sum")?;
+        let mean = sum / count as f64;
+        validate_result("summary mean", mean)?;
         let mut sum_sq = 0.0;
         let mut min = f64::INFINITY;
         let mut max = f64::NEG_INFINITY;
         for &value in values {
             sum_sq += (value - mean).powi(2);
+            validate_result("summary variance sum", sum_sq)?;
             min = min.min(value);
             max = max.max(value);
         }
         let variance_population = sum_sq / count as f64;
+        validate_result("summary population variance", variance_population)?;
         let variance_sample = if count > 1 {
-            Some(sum_sq / (count - 1) as f64)
+            let variance = sum_sq / (count - 1) as f64;
+            validate_result("summary sample variance", variance)?;
+            Some(variance)
         } else {
             None
         };
+        let std_dev_population = variance_population.sqrt();
+        validate_result("summary population stddev", std_dev_population)?;
+        let std_dev_sample = variance_sample
+            .map(f64::sqrt)
+            .map(|value| {
+                validate_result("summary sample stddev", value)?;
+                Ok(value)
+            })
+            .transpose()?;
 
         Ok(SummaryStats {
             count,
             mean,
             variance_population,
             variance_sample,
-            std_dev_population: variance_population.sqrt(),
-            std_dev_sample: variance_sample.map(f64::sqrt),
+            std_dev_population,
+            std_dev_sample,
             min,
             max,
         })
@@ -80,7 +100,9 @@ pub mod summary {
 
     pub fn weighted_mean(values: &[f64], weights: &[f64]) -> Result<f64, SummaryError> {
         let (total_weight, weighted_sum) = validate_weighted_values(values, weights)?;
-        Ok(weighted_sum / total_weight)
+        let mean = weighted_sum / total_weight;
+        validate_result("weighted mean", mean)?;
+        Ok(mean)
     }
 
     pub fn weighted_summary_stats(
@@ -89,22 +111,27 @@ pub mod summary {
     ) -> Result<WeightedSummaryStats, SummaryError> {
         let (total_weight, weighted_sum) = validate_weighted_values(values, weights)?;
         let mean = weighted_sum / total_weight;
+        validate_result("weighted mean", mean)?;
         let mut weighted_sum_sq = 0.0;
         let mut min = f64::INFINITY;
         let mut max = f64::NEG_INFINITY;
         for (&value, &weight) in values.iter().zip(weights) {
             weighted_sum_sq += weight * (value - mean).powi(2);
+            validate_result("weighted variance sum", weighted_sum_sq)?;
             min = min.min(value);
             max = max.max(value);
         }
         let variance_population = weighted_sum_sq / total_weight;
+        validate_result("weighted population variance", variance_population)?;
+        let std_dev_population = variance_population.max(0.0).sqrt();
+        validate_result("weighted population stddev", std_dev_population)?;
 
         Ok(WeightedSummaryStats {
             count: values.len(),
             total_weight,
             mean,
             variance_population,
-            std_dev_population: variance_population.max(0.0).sqrt(),
+            std_dev_population,
             min,
             max,
         })
@@ -200,12 +227,30 @@ pub mod summary {
                 });
             }
             total_weight += weight;
+            validate_result("weighted total weight", total_weight)?;
             weighted_sum += value * weight;
+            validate_result("weighted sum", weighted_sum)?;
         }
         if total_weight <= 0.0 {
             return Err(SummaryError::ZeroTotalWeight);
         }
         Ok((total_weight, weighted_sum))
+    }
+
+    fn checked_sum(values: &[f64], operation: &'static str) -> Result<f64, SummaryError> {
+        let mut sum = 0.0;
+        for &value in values {
+            sum += value;
+            validate_result(operation, sum)?;
+        }
+        Ok(sum)
+    }
+
+    fn validate_result(operation: &'static str, value: f64) -> Result<(), SummaryError> {
+        if !value.is_finite() {
+            return Err(SummaryError::NonFiniteResult { operation, value });
+        }
+        Ok(())
     }
 
     fn validate_quantile(q: f64) -> Result<(), SummaryError> {
@@ -241,6 +286,28 @@ pub mod summary {
         }
 
         #[test]
+        fn l0_summary_rejects_overflowed_mean_sum() {
+            match summary_stats(&[f64::MAX, f64::MAX]) {
+                Err(SummaryError::NonFiniteResult { operation, value }) => {
+                    assert_eq!(operation, "summary mean sum");
+                    assert!(value.is_infinite());
+                }
+                other => panic!("expected summary overflow error, got {other:?}"),
+            }
+        }
+
+        #[test]
+        fn l0_summary_rejects_overflowed_variance_sum() {
+            match summary_stats(&[f64::MAX, -f64::MAX]) {
+                Err(SummaryError::NonFiniteResult { operation, value }) => {
+                    assert_eq!(operation, "summary variance sum");
+                    assert!(value.is_infinite());
+                }
+                other => panic!("expected summary variance overflow error, got {other:?}"),
+            }
+        }
+
+        #[test]
         fn l0_weighted_summary_stats_match_hand_computed_values() {
             let values = [0.0, 10.0, 20.0];
             let weights = [1.0, 2.0, 1.0];
@@ -254,6 +321,17 @@ pub mod summary {
             assert!((stats.std_dev_population - 50.0_f64.sqrt()).abs() < 1e-12);
             assert_eq!(stats.min, 0.0);
             assert_eq!(stats.max, 20.0);
+        }
+
+        #[test]
+        fn l0_weighted_summary_rejects_overflowed_weight_sum() {
+            match weighted_summary_stats(&[1.0, 1.0], &[f64::MAX, f64::MAX]) {
+                Err(SummaryError::NonFiniteResult { operation, value }) => {
+                    assert_eq!(operation, "weighted total weight");
+                    assert!(value.is_infinite());
+                }
+                other => panic!("expected weighted summary overflow error, got {other:?}"),
+            }
         }
 
         #[test]

@@ -252,7 +252,8 @@ The statistics wave should begin with extraction, not invention.
 Candidate first API:
 
 1. `SummaryStats` for count, mean, variance, standard deviation, min, max.
-   **Landed in `rstat-core::summary`.**
+   **Landed in `rstat-core::summary`. Summary aggregate overflow is rejected
+   with typed errors instead of returning non-finite evidence fields.**
 2. Deterministic quantiles with an explicit interpolation rule. **Landed as R-7
    quantiles and percentile intervals in `rstat-core::summary`.**
 3. Autocorrelation, effective sample size, and R-hat helpers now living in
@@ -274,7 +275,8 @@ Candidate first API:
    returned map.**
 8. Weighted descriptive summaries. **Landed in `rstat-core::summary`;
    `bisect-analysis::bloc_voting` and `bisect-analysis::compactness` consume
-   them.**
+   them. Weighted aggregate overflow is rejected with typed errors before
+   weighted means or variances can become non-finite.**
 9. Normal CDF approximation. **Landed in `rstat-core::probability`;
    `bisect-analysis::bloc_voting` consumes it for HC3 normal-approximation
    p-values. The helper rejects non-finite z-scores with a typed probability

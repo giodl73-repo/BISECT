@@ -75,6 +75,25 @@ fn l1_weighted_summary_matches_expanded_sample() {
 }
 
 #[test]
+fn l1_summary_rejects_non_finite_aggregate_results() {
+    match summary_stats(&[f64::MAX, -f64::MAX]) {
+        Err(SummaryError::NonFiniteResult { operation, value }) => {
+            assert_eq!(operation, "summary variance sum");
+            assert!(value.is_infinite());
+        }
+        other => panic!("expected summary overflow error, got {other:?}"),
+    }
+
+    match weighted_mean(&[1.0, 1.0], &[f64::MAX, f64::MAX]) {
+        Err(SummaryError::NonFiniteResult { operation, value }) => {
+            assert_eq!(operation, "weighted total weight");
+            assert!(value.is_infinite());
+        }
+        other => panic!("expected weighted summary overflow error, got {other:?}"),
+    }
+}
+
+#[test]
 fn l1_bootstrap_summary_interval_composes_with_quantiles() {
     let sample = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
     let stat = |xs: &[f64]| xs.iter().sum::<f64>() / xs.len() as f64;
