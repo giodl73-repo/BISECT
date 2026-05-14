@@ -196,6 +196,19 @@ fn l1_undirected_edge_cut_matches_redistricting_fixture() {
 }
 
 #[test]
+fn l1_undirected_edge_cut_is_direction_invariant_for_boundary_lists() {
+    let symmetric = vec![vec![1_usize], vec![0, 2], vec![1, 3], vec![2]];
+    let high_to_low_only = vec![vec![], vec![0_usize], vec![1], vec![2]];
+    let assignment = vec![0_usize, 0, 1, 1];
+
+    assert_eq!(undirected_edge_cut(&symmetric, &assignment).unwrap(), 1);
+    assert_eq!(
+        undirected_edge_cut(&high_to_low_only, &assignment).unwrap(),
+        1
+    );
+}
+
+#[test]
 fn l1_assignment_labels_connected_matches_redistricting_fixture() {
     let adjacency = vec![vec![1_usize], vec![0, 2], vec![1, 3], vec![2, 4], vec![3]];
     let connected_assignment = vec![0_usize, 0, 1, 1, 1];

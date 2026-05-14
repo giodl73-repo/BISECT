@@ -337,7 +337,7 @@ where
     D: Eq,
     F: FnMut(usize) -> D,
 {
-    let mut cut = 0usize;
+    let mut cut_edges = std::collections::HashSet::new();
     for (node, neighbors) in adjacency.iter().enumerate() {
         for &neighbor in neighbors {
             let Some(neighbor) = neighbor.to_usize() else {
@@ -354,12 +354,12 @@ where
                     node_count: adjacency.len(),
                 });
             }
-            if neighbor > node && label_of(node) != label_of(neighbor) {
-                cut += 1;
+            if node != neighbor && label_of(node) != label_of(neighbor) {
+                cut_edges.insert(ordered_pair(node, neighbor));
             }
         }
     }
-    Ok(cut)
+    Ok(cut_edges.len())
 }
 
 pub fn assignment_label_connected<I, D>(
@@ -1331,6 +1331,14 @@ mod tests {
             undirected_edge_cut_by(&adjacency, |node| left.contains(&node)).unwrap(),
             2
         );
+    }
+
+    #[test]
+    fn undirected_edge_cut_counts_asymmetric_adjacency_once() {
+        let adjacency = vec![vec![], vec![0_usize, 0], vec![1]];
+        let assignment = vec![0_usize, 1, 1];
+
+        assert_eq!(undirected_edge_cut(&adjacency, &assignment).unwrap(), 1);
     }
 
     #[test]
