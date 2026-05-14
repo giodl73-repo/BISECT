@@ -3,7 +3,10 @@ use rstat_core::hypothesis::{
 };
 use rstat_core::probability::regularized_incomplete_beta;
 use rstat_core::resampling::{bootstrap_percentile_interval, bootstrap_statistics};
-use rstat_core::summary::{percentile_interval_sorted_copy, quantile_sorted_copy, summary_stats};
+use rstat_core::summary::{
+    percentile_interval_sorted_copy, quantile_sorted_copy, summary_stats, weighted_mean,
+    weighted_summary_stats,
+};
 
 #[test]
 fn l1_summary_quantiles_are_order_invariant() {
@@ -32,6 +35,26 @@ fn l1_summary_and_probability_compose_for_interval_report() {
     assert!((stats.mean - 0.45).abs() < 1e-12);
     assert!(lo < stats.mean && stats.mean < hi);
     assert!((beta_mid - 0.5).abs() < 0.01);
+}
+
+#[test]
+fn l1_weighted_summary_matches_expanded_sample() {
+    let values = [1.0, 3.0, 5.0];
+    let weights = [1.0, 2.0, 1.0];
+    let expanded = [1.0, 3.0, 3.0, 5.0];
+
+    let weighted = weighted_summary_stats(&values, &weights).unwrap();
+    let expanded_stats = summary_stats(&expanded).unwrap();
+
+    assert_eq!(weighted.mean, expanded_stats.mean);
+    assert_eq!(
+        weighted.variance_population,
+        expanded_stats.variance_population
+    );
+    assert_eq!(
+        weighted_mean(&values, &weights).unwrap(),
+        expanded_stats.mean
+    );
 }
 
 #[test]

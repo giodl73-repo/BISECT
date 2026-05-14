@@ -12,7 +12,7 @@ kernel crate.
     autocorrelation time
   - Probability helper: regularized incomplete beta
   - Summary helpers: mean, summary statistics, median, deterministic R-7
-    quantiles, percentile intervals
+    quantiles, percentile intervals, weighted descriptive summaries
   - Resampling helpers: seeded bootstrap statistics and percentile intervals
   - Hypothesis helpers: empirical p-values, ESS beta correction, Bayesian
     detection score, Holm-Bonferroni, Benjamini-Hochberg
@@ -23,6 +23,8 @@ kernel crate.
     `rstat-core` summary helpers
   - partisan bootstrap CI now uses `rstat-core` resampling helpers
   - bloc-voting Holm correction now uses `rstat-core` multiple-testing helpers
+  - bloc-voting weighted standardization now uses `rstat-core` weighted summaries
+  - population-weighted compactness now uses `rstat-core` weighted mean
 - Test ladder
   - L0 inline unit tests for summary, MCMC, and probability helpers
   - L1 integration tests for composed summary/probability and MCMC diagnostics

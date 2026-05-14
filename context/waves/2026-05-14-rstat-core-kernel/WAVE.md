@@ -28,7 +28,8 @@ semantics out of `rcount-stats`.
 | 03 - Summary and quantile kernel | DONE | `rstat-core::summary`; L0/L1/L2 tests; partisan consumer |
 | 04 - Bootstrap resampling kernel | DONE | `rstat-core::resampling`; L0/L1/L2 tests; partisan bootstrap consumer |
 | 05 - Hypothesis and multiple-testing kernel | DONE | `rstat-core::hypothesis`; permutation and bloc-voting consumers |
-| 06 - Close and validation | DONE | `cargo test -p rstat-core`; `cargo test -p rstat-core -- --ignored`; `cargo test -p bisect-analysis` |
+| 06 - Weighted summary kernel | DONE | `rstat-core::summary` weighted helpers; bloc-voting and compactness consumers |
+| 07 - Close and validation | DONE | `cargo test -p rstat-core`; `cargo test -p rstat-core -- --ignored`; `cargo test -p bisect-analysis` |
 
 ## Close Summary
 
@@ -44,6 +45,7 @@ semantics out of `rcount-stats`.
 - seeded bootstrap statistic and percentile interval helpers.
 - empirical p-values, ESS beta correction, Bayesian detection score, and
   multiple-testing corrections.
+- weighted descriptive summaries.
 
 `bisect-analysis` still owns redistricting-specific record shapes and
 permutation-test report semantics, but delegates reusable math to `rstat-core`.

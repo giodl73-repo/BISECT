@@ -1,5 +1,6 @@
 use geo::{Area, BoundingRect, Centroid, ConvexHull, EuclideanLength};
 use geo_types::{Coord, Point, Polygon};
+use rstat_core::summary::weighted_mean;
 /// Compactness metrics: Polsby-Popper, Reock, Convex Hull Ratio,
 /// Schwartzberg, Length-Width Ratio, and Population-Weighted Compactness.
 ///
@@ -302,18 +303,18 @@ pub fn population_weighted_compactness(
     }
 
     let (cx, cy) = district_centroid;
-    let weighted_sum: f64 = centroids
+    let squared_distances: Vec<f64> = centroids
         .iter()
-        .zip(populations.iter())
-        .map(|(&(x, y), &pop)| {
+        .map(|&(x, y)| {
             let dx = x - cx;
             let dy = y - cy;
-            let d2 = dx * dx + dy * dy;
-            d2 * pop as f64
+            dx * dx + dy * dy
         })
-        .sum();
+        .collect();
+    let weights: Vec<f64> = populations.iter().map(|&pop| pop as f64).collect();
 
-    weighted_sum / total_pop as f64
+    weighted_mean(&squared_distances, &weights)
+        .expect("population-weighted compactness inputs are finite with positive total population")
 }
 
 /// Compute all five geometry-based metrics for a district polygon.

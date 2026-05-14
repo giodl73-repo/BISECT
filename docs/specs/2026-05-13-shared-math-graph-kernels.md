@@ -196,6 +196,9 @@ Candidate first API:
 7. Empirical p-values and multiple-testing corrections. **Landed in
    `rstat-core::hypothesis`; `bisect-analysis::permutation` and
    `bisect-analysis::bloc_voting` consume them.**
+8. Weighted descriptive summaries. **Landed in `rstat-core::summary`;
+   `bisect-analysis::bloc_voting` and `bisect-analysis::compactness` consume
+   them.**
 
 RCOUNT should continue to own election-audit method replay. `rstat-core` owns
 only reusable math.

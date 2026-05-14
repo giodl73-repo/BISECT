@@ -2,7 +2,7 @@ use rstat_core::hypothesis::{benjamini_hochberg, holm_bonferroni};
 use rstat_core::mcmc::{effective_sample_size, hamming_autocorrelation};
 use rstat_core::probability::regularized_incomplete_beta;
 use rstat_core::resampling::bootstrap_percentile_interval;
-use rstat_core::summary::{quantile_sorted_copy, summary_stats};
+use rstat_core::summary::{quantile_sorted_copy, summary_stats, weighted_summary_stats};
 
 #[test]
 #[ignore = "L2 numeric stress: larger deterministic sample than normal unit suite"]
@@ -15,6 +15,20 @@ fn l2_large_summary_sample_is_stable() {
     assert_eq!(stats.count, 100_000);
     assert!(stats.mean > 0.49 && stats.mean < 0.51);
     assert!(q99 > 0.98 && q99 < 1.0);
+}
+
+#[test]
+#[ignore = "L2 numeric stress: larger weighted sample"]
+fn l2_large_weighted_summary_sample_is_stable() {
+    let values: Vec<f64> = (0..100_000).map(|i| (i % 997) as f64 / 997.0).collect();
+    let weights: Vec<f64> = (0..100_000).map(|i| (1 + (i % 17)) as f64).collect();
+
+    let stats = weighted_summary_stats(&values, &weights).unwrap();
+
+    assert_eq!(stats.count, 100_000);
+    assert!(stats.total_weight > 0.0);
+    assert!(stats.mean > 0.49 && stats.mean < 0.51);
+    assert!(stats.std_dev_population > 0.0);
 }
 
 #[test]

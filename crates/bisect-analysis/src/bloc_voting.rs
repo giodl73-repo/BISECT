@@ -21,6 +21,7 @@ use thiserror::Error;
 
 use crate::race_of_candidate::RaceOfCandidateProvenance;
 use rstat_core::hypothesis::holm_bonferroni_named;
+use rstat_core::summary::{weighted_mean, weighted_std_dev_population};
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -352,8 +353,7 @@ pub fn fit_wls(
     let yhat = mat_mul_vec(&x, &beta);
     let residuals: Vec<f64> = (0..n).map(|i| y[i] - yhat[i]).collect();
 
-    let total_w: f64 = w.iter().sum();
-    let y_mean: f64 = w.iter().zip(y.iter()).map(|(wi, yi)| wi * yi).sum::<f64>() / total_w;
+    let y_mean: f64 = weighted_mean(&y, &w).expect("bloc voting weights and responses are finite");
     let ss_tot: f64 = w
         .iter()
         .zip(y.iter())
@@ -372,19 +372,7 @@ pub fn fit_wls(
 
     // Standardized β: weighted std on each predictor and on y.
     let weighted_std = |col: &[f64]| -> f64 {
-        let mean: f64 = w
-            .iter()
-            .zip(col.iter())
-            .map(|(wi, ci)| wi * ci)
-            .sum::<f64>()
-            / total_w;
-        let var: f64 = w
-            .iter()
-            .zip(col.iter())
-            .map(|(wi, ci)| wi * (ci - mean).powi(2))
-            .sum::<f64>()
-            / total_w;
-        var.max(0.0).sqrt()
+        weighted_std_dev_population(col, &w).expect("bloc voting weights and predictors are finite")
     };
     let sd_y = weighted_std(&y);
 

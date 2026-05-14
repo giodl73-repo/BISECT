@@ -5,8 +5,14 @@ pub mod summary {
     pub enum SummaryError {
         #[error("[INPUT] empty sample")]
         EmptySample,
+        #[error("[INPUT] value and weight lengths differ: {values} values vs {weights} weights")]
+        LengthMismatch { values: usize, weights: usize },
         #[error("[INPUT] sample contains non-finite value {value} at index {index}")]
         NonFiniteValue { index: usize, value: f64 },
+        #[error("[INPUT] weight contains negative or non-finite value {value} at index {index}")]
+        InvalidWeight { index: usize, value: f64 },
+        #[error("[INPUT] total weight must be positive")]
+        ZeroTotalWeight,
         #[error("[INPUT] quantile q must be in [0, 1], got {0}")]
         InvalidQuantile(f64),
     }
@@ -19,6 +25,17 @@ pub mod summary {
         pub variance_sample: Option<f64>,
         pub std_dev_population: f64,
         pub std_dev_sample: Option<f64>,
+        pub min: f64,
+        pub max: f64,
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    pub struct WeightedSummaryStats {
+        pub count: usize,
+        pub total_weight: f64,
+        pub mean: f64,
+        pub variance_population: f64,
+        pub std_dev_population: f64,
         pub min: f64,
         pub max: f64,
     }
@@ -57,6 +74,45 @@ pub mod summary {
             min,
             max,
         })
+    }
+
+    pub fn weighted_mean(values: &[f64], weights: &[f64]) -> Result<f64, SummaryError> {
+        let (total_weight, weighted_sum) = validate_weighted_values(values, weights)?;
+        Ok(weighted_sum / total_weight)
+    }
+
+    pub fn weighted_summary_stats(
+        values: &[f64],
+        weights: &[f64],
+    ) -> Result<WeightedSummaryStats, SummaryError> {
+        let (total_weight, weighted_sum) = validate_weighted_values(values, weights)?;
+        let mean = weighted_sum / total_weight;
+        let mut weighted_sum_sq = 0.0;
+        let mut min = f64::INFINITY;
+        let mut max = f64::NEG_INFINITY;
+        for (&value, &weight) in values.iter().zip(weights) {
+            weighted_sum_sq += weight * (value - mean).powi(2);
+            min = min.min(value);
+            max = max.max(value);
+        }
+        let variance_population = weighted_sum_sq / total_weight;
+
+        Ok(WeightedSummaryStats {
+            count: values.len(),
+            total_weight,
+            mean,
+            variance_population,
+            std_dev_population: variance_population.max(0.0).sqrt(),
+            min,
+            max,
+        })
+    }
+
+    pub fn weighted_std_dev_population(
+        values: &[f64],
+        weights: &[f64],
+    ) -> Result<f64, SummaryError> {
+        Ok(weighted_summary_stats(values, weights)?.std_dev_population)
     }
 
     pub fn median(values: &[f64]) -> Result<f64, SummaryError> {
@@ -119,6 +175,36 @@ pub mod summary {
         Ok(())
     }
 
+    fn validate_weighted_values(
+        values: &[f64],
+        weights: &[f64],
+    ) -> Result<(f64, f64), SummaryError> {
+        validate_values(values)?;
+        if values.len() != weights.len() {
+            return Err(SummaryError::LengthMismatch {
+                values: values.len(),
+                weights: weights.len(),
+            });
+        }
+
+        let mut total_weight = 0.0;
+        let mut weighted_sum = 0.0;
+        for (index, (&value, &weight)) in values.iter().zip(weights).enumerate() {
+            if !weight.is_finite() || weight < 0.0 {
+                return Err(SummaryError::InvalidWeight {
+                    index,
+                    value: weight,
+                });
+            }
+            total_weight += weight;
+            weighted_sum += value * weight;
+        }
+        if total_weight <= 0.0 {
+            return Err(SummaryError::ZeroTotalWeight);
+        }
+        Ok((total_weight, weighted_sum))
+    }
+
     fn validate_quantile(q: f64) -> Result<(), SummaryError> {
         if !q.is_finite() || !(0.0..=1.0).contains(&q) {
             return Err(SummaryError::InvalidQuantile(q));
@@ -139,6 +225,22 @@ pub mod summary {
             assert!((stats.variance_sample.unwrap() - 5.0 / 3.0).abs() < 1e-12);
             assert_eq!(stats.min, 1.0);
             assert_eq!(stats.max, 4.0);
+        }
+
+        #[test]
+        fn l0_weighted_summary_stats_match_hand_computed_values() {
+            let values = [0.0, 10.0, 20.0];
+            let weights = [1.0, 2.0, 1.0];
+
+            let stats = weighted_summary_stats(&values, &weights).unwrap();
+
+            assert_eq!(stats.count, 3);
+            assert_eq!(stats.total_weight, 4.0);
+            assert_eq!(stats.mean, 10.0);
+            assert!((stats.variance_population - 50.0).abs() < 1e-12);
+            assert!((stats.std_dev_population - 50.0_f64.sqrt()).abs() < 1e-12);
+            assert_eq!(stats.min, 0.0);
+            assert_eq!(stats.max, 20.0);
         }
 
         #[test]
@@ -168,6 +270,28 @@ pub mod summary {
             assert_eq!(
                 quantile_sorted_copy(&[1.0], 1.5),
                 Err(SummaryError::InvalidQuantile(1.5))
+            );
+        }
+
+        #[test]
+        fn l0_rejects_invalid_weighted_inputs() {
+            assert_eq!(
+                weighted_mean(&[1.0, 2.0], &[1.0]),
+                Err(SummaryError::LengthMismatch {
+                    values: 2,
+                    weights: 1
+                })
+            );
+            assert_eq!(
+                weighted_mean(&[1.0], &[-1.0]),
+                Err(SummaryError::InvalidWeight {
+                    index: 0,
+                    value: -1.0
+                })
+            );
+            assert_eq!(
+                weighted_mean(&[1.0], &[0.0]),
+                Err(SummaryError::ZeroTotalWeight)
             );
         }
     }
