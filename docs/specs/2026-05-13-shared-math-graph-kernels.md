@@ -11,6 +11,11 @@ evidence projects
 Create a small family of reusable Rust algorithm crates instead of continuing to
 copy graph, statistics, and optimization kernels into each domain project.
 
+These shared crates are reusable algorithm sets whose value comes from explicit
+L0/L1/L2 coverage. Other projects can use them, but changes should stay
+algorithm-driven: bug fixes, justified reuse, or coverage needed to protect a
+domain algorithm.
+
 The immediate need is not an R-language dependency. The need is a pure-Rust
 substrate for deterministic algorithms that can be reused by redistricting,
 route-network analysis, election audits, and later civic evidence packages.
@@ -153,6 +158,11 @@ The initial optimizer kernel has landed with generic minimization-objective
 Pareto dominance, fast non-dominated sorting, and crowding distance in
 `ropt-core`. `bisect-pareto` consumes these helpers while retaining
 redistricting objective definitions and NSGA-II orchestration.
+
+Deterministic domain-separated seed derivation has also landed in `ropt-core`.
+`bisect-pareto` keeps Pareto-specific domain labels (`PARETO_INIT_`,
+`PARETO_CROSS_`, `PARETO_MUT_`) while delegating the SHA-256 seed kernel to the
+shared crate.
 
 ## First Wave: `rgraph-core`
 

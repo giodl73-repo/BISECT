@@ -1,3 +1,4 @@
+use sha2::{Digest, Sha256};
 use thiserror::Error;
 
 pub trait ObjectiveVector {
@@ -49,6 +50,14 @@ pub enum RoptError {
         point_index: usize,
         len: usize,
     },
+    #[error("[INPUT] seed domain must not be empty")]
+    EmptySeedDomain,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SeedPart {
+    U32(u32),
+    U64(u64),
 }
 
 pub fn dominates<T: ObjectiveVector>(a: &T, b: &T) -> Result<bool, RoptError> {
@@ -155,6 +164,27 @@ pub fn crowding_distance<T: ObjectiveVector>(
     }
 
     Ok(distances)
+}
+
+pub fn derive_seed(domain: &[u8], parts: &[SeedPart]) -> Result<u64, RoptError> {
+    if domain.is_empty() {
+        return Err(RoptError::EmptySeedDomain);
+    }
+    let mut hasher = Sha256::new();
+    hasher.update(domain);
+    for (index, part) in parts.iter().enumerate() {
+        if index > 0 {
+            hasher.update(b"_");
+        }
+        match part {
+            SeedPart::U32(value) => hasher.update(value.to_le_bytes()),
+            SeedPart::U64(value) => hasher.update(value.to_le_bytes()),
+        }
+    }
+    let digest = hasher.finalize();
+    Ok(u64::from_le_bytes(
+        digest[..8].try_into().expect("SHA-256 digest has 32 bytes"),
+    ))
 }
 
 fn validate_pair<T: ObjectiveVector>(a: &T, b: &T) -> Result<(), RoptError> {
@@ -272,5 +302,23 @@ mod tests {
             }
             other => panic!("expected non-finite objective error, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn l0_seed_derivation_is_deterministic_and_domain_separated() {
+        let a = derive_seed(b"PARETO_INIT_", &[SeedPart::U32(0), SeedPart::U64(42)]).unwrap();
+        let b = derive_seed(b"PARETO_INIT_", &[SeedPart::U32(0), SeedPart::U64(42)]).unwrap();
+        let c = derive_seed(b"PARETO_MUT_", &[SeedPart::U32(0), SeedPart::U64(42)]).unwrap();
+
+        assert_eq!(a, b);
+        assert_ne!(a, c);
+    }
+
+    #[test]
+    fn l0_seed_derivation_rejects_empty_domain() {
+        assert_eq!(
+            derive_seed(b"", &[SeedPart::U64(42)]),
+            Err(RoptError::EmptySeedDomain)
+        );
     }
 }

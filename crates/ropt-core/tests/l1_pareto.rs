@@ -1,4 +1,6 @@
-use ropt_core::{crowding_distance, dominates, fast_non_dominated_sort, ObjectiveVector};
+use ropt_core::{
+    crowding_distance, derive_seed, dominates, fast_non_dominated_sort, ObjectiveVector, SeedPart,
+};
 
 #[derive(Debug)]
 struct Candidate {
@@ -74,4 +76,25 @@ fn l1_crowding_uses_front_local_positions() {
     assert!(distances[0].is_infinite());
     assert!(distances[1].is_finite());
     assert!(distances[2].is_infinite());
+}
+
+#[test]
+fn l1_seed_derivation_matches_pareto_legacy_shape() {
+    let init = derive_seed(b"PARETO_INIT_", &[SeedPart::U32(5), SeedPart::U64(99)]).unwrap();
+    let cross = derive_seed(
+        b"PARETO_CROSS_",
+        &[SeedPart::U32(3), SeedPart::U32(7), SeedPart::U64(99)],
+    )
+    .unwrap();
+    let mutation = derive_seed(
+        b"PARETO_MUT_",
+        &[SeedPart::U32(3), SeedPart::U32(7), SeedPart::U64(99)],
+    )
+    .unwrap();
+
+    assert_eq!(
+        init,
+        derive_seed(b"PARETO_INIT_", &[SeedPart::U32(5), SeedPart::U64(99)]).unwrap()
+    );
+    assert_ne!(cross, mutation);
 }

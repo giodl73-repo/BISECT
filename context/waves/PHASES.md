@@ -45,6 +45,7 @@
 | 2026-05-14 | RMATH Core Vector Kernel | Extract deterministic vector helpers from spectral and Fiedler math | archived |
 | 2026-05-14 | RMATH Core Eigen Kernel | Extract deterministic symmetric 2x2 eigensystem from GeoSection orientation | archived |
 | 2026-05-14 | ROPT Core Pareto Kernel | Extract generic Pareto dominance and crowding utilities from NSGA-II | archived |
+| 2026-05-14 | ROPT Core Seed Kernel | Extract deterministic domain-separated seed derivation from NSGA-II | archived |
 
 ## Operating Model
 

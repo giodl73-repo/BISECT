@@ -5,20 +5,18 @@
 //!
 //! Per spec §6.
 
-use sha2::{Digest, Sha256};
+use ropt_core::{derive_seed, SeedPart};
 
 /// Derive an initialisation seed for plan `i`.
 ///
 /// SHA-256("PARETO_INIT_" || i:u32le || "_" || base_seed:u64le) → first 8 bytes as u64le
 /// Input: 12 + 4 + 1 + 8 = 25 bytes total
 pub fn init_seed(base_seed: u64, i: u32) -> u64 {
-    let mut hasher = Sha256::new();
-    hasher.update(b"PARETO_INIT_"); // 12 bytes
-    hasher.update(i.to_le_bytes()); // 4 bytes
-    hasher.update(b"_"); // 1 byte
-    hasher.update(base_seed.to_le_bytes()); // 8 bytes
-    let digest = hasher.finalize();
-    u64::from_le_bytes(digest[..8].try_into().unwrap())
+    derive_seed(
+        b"PARETO_INIT_",
+        &[SeedPart::U32(i), SeedPart::U64(base_seed)],
+    )
+    .expect("non-empty seed domain")
 }
 
 /// Derive a crossover seed for generation `gen`, plan pair index `i`.
@@ -27,15 +25,15 @@ pub fn init_seed(base_seed: u64, i: u32) -> u64 {
 /// → first 8 bytes as u64le
 /// Input: 13 + 4 + 1 + 4 + 1 + 8 = 31 bytes total
 pub fn cross_seed(base_seed: u64, gen: u32, i: u32) -> u64 {
-    let mut hasher = Sha256::new();
-    hasher.update(b"PARETO_CROSS_"); // 13 bytes
-    hasher.update(gen.to_le_bytes()); // 4 bytes
-    hasher.update(b"_"); // 1 byte
-    hasher.update(i.to_le_bytes()); // 4 bytes
-    hasher.update(b"_"); // 1 byte
-    hasher.update(base_seed.to_le_bytes()); // 8 bytes
-    let digest = hasher.finalize();
-    u64::from_le_bytes(digest[..8].try_into().unwrap())
+    derive_seed(
+        b"PARETO_CROSS_",
+        &[
+            SeedPart::U32(gen),
+            SeedPart::U32(i),
+            SeedPart::U64(base_seed),
+        ],
+    )
+    .expect("non-empty seed domain")
 }
 
 /// Derive a mutation seed for generation `gen`, offspring index `i`.
@@ -44,15 +42,15 @@ pub fn cross_seed(base_seed: u64, gen: u32, i: u32) -> u64 {
 /// → first 8 bytes as u64le
 /// Input: 11 + 4 + 1 + 4 + 1 + 8 = 29 bytes total
 pub fn mut_seed(base_seed: u64, gen: u32, i: u32) -> u64 {
-    let mut hasher = Sha256::new();
-    hasher.update(b"PARETO_MUT_"); // 11 bytes
-    hasher.update(gen.to_le_bytes()); // 4 bytes
-    hasher.update(b"_"); // 1 byte
-    hasher.update(i.to_le_bytes()); // 4 bytes
-    hasher.update(b"_"); // 1 byte
-    hasher.update(base_seed.to_le_bytes()); // 8 bytes
-    let digest = hasher.finalize();
-    u64::from_le_bytes(digest[..8].try_into().unwrap())
+    derive_seed(
+        b"PARETO_MUT_",
+        &[
+            SeedPart::U32(gen),
+            SeedPart::U32(i),
+            SeedPart::U64(base_seed),
+        ],
+    )
+    .expect("non-empty seed domain")
 }
 
 #[cfg(test)]
