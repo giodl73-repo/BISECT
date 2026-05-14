@@ -10,6 +10,7 @@ description = "Compactness metrics and VRA analysis for redistricting outputs"
 bisect-core = { path = "../bisect-core" }
 rgraph-core = { path = "../rgraph-core" }
 rstat-core = { path = "../rstat-core" }
+rmath-core = { path = "../rmath-core" }
 anyhow.workspace = true
 serde.workspace = true
 serde_json.workspace = true

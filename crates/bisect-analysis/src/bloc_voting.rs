@@ -20,6 +20,7 @@ use std::collections::HashMap;
 use thiserror::Error;
 
 use crate::race_of_candidate::RaceOfCandidateProvenance;
+use rmath_core::{invert, mat_mul, mat_mul_vec, DenseMatrix as Mat, LinearAlgebraError};
 use rstat_core::hypothesis::holm_bonferroni_named;
 use rstat_core::probability::standard_normal_cdf;
 use rstat_core::summary::{
@@ -131,143 +132,13 @@ pub enum BlocVotingError {
     Numeric(String),
 }
 
-// ---------------------------------------------------------------------------
-// Linear algebra core (small matrices, p <= 5)
-// ---------------------------------------------------------------------------
-
-/// Row-major dense matrix (rows × cols) of f64.
-#[derive(Debug, Clone)]
-struct Mat {
-    rows: usize,
-    cols: usize,
-    data: Vec<f64>,
-}
-
-impl Mat {
-    fn zeros(rows: usize, cols: usize) -> Self {
-        Mat {
-            rows,
-            cols,
-            data: vec![0.0; rows * cols],
+impl From<LinearAlgebraError> for BlocVotingError {
+    fn from(value: LinearAlgebraError) -> Self {
+        match value {
+            LinearAlgebraError::Singular => BlocVotingError::Singular,
+            other => BlocVotingError::Numeric(other.to_string()),
         }
     }
-    fn at(&self, r: usize, c: usize) -> f64 {
-        self.data[r * self.cols + c]
-    }
-    fn set(&mut self, r: usize, c: usize, v: f64) {
-        self.data[r * self.cols + c] = v;
-    }
-}
-
-/// Multiply A (m×k) × B (k×n) → (m×n).
-fn mat_mul(a: &Mat, b: &Mat) -> Mat {
-    assert_eq!(a.cols, b.rows);
-    let mut out = Mat::zeros(a.rows, b.cols);
-    for i in 0..a.rows {
-        for k in 0..a.cols {
-            let aik = a.at(i, k);
-            if aik == 0.0 {
-                continue;
-            }
-            for j in 0..b.cols {
-                let v = out.at(i, j) + aik * b.at(k, j);
-                out.set(i, j, v);
-            }
-        }
-    }
-    out
-}
-
-/// Multiply A (m×k) × v (k) → (m).
-fn mat_mul_vec(a: &Mat, v: &[f64]) -> Vec<f64> {
-    assert_eq!(a.cols, v.len());
-    let mut out = vec![0.0; a.rows];
-    for i in 0..a.rows {
-        let mut s = 0.0;
-        for j in 0..a.cols {
-            s += a.at(i, j) * v[j];
-        }
-        out[i] = s;
-    }
-    out
-}
-
-/// Transpose A (m×n) → (n×m).
-fn transpose(a: &Mat) -> Mat {
-    let mut out = Mat::zeros(a.cols, a.rows);
-    for i in 0..a.rows {
-        for j in 0..a.cols {
-            out.set(j, i, a.at(i, j));
-        }
-    }
-    out
-}
-
-/// Invert a square matrix via Gauss-Jordan elimination with partial pivoting.
-/// Returns Err(Singular) if no nonzero pivot is found in a column.
-fn invert(m: &Mat) -> Result<Mat, BlocVotingError> {
-    assert_eq!(m.rows, m.cols);
-    let n = m.rows;
-    // Augment [m | I] in a 2n-column matrix.
-    let mut aug = Mat::zeros(n, 2 * n);
-    for i in 0..n {
-        for j in 0..n {
-            aug.set(i, j, m.at(i, j));
-        }
-        aug.set(i, n + i, 1.0);
-    }
-    for c in 0..n {
-        // Find pivot row.
-        let mut pivot_row = c;
-        let mut pivot_abs = aug.at(c, c).abs();
-        for r in (c + 1)..n {
-            let v = aug.at(r, c).abs();
-            if v > pivot_abs {
-                pivot_abs = v;
-                pivot_row = r;
-            }
-        }
-        if pivot_abs < 1e-12 {
-            return Err(BlocVotingError::Singular);
-        }
-        // Swap rows.
-        if pivot_row != c {
-            for j in 0..(2 * n) {
-                let tmp = aug.at(c, j);
-                let v = aug.at(pivot_row, j);
-                aug.set(c, j, v);
-                aug.set(pivot_row, j, tmp);
-            }
-        }
-        // Scale pivot row so pivot becomes 1.
-        let piv = aug.at(c, c);
-        for j in 0..(2 * n) {
-            let v = aug.at(c, j) / piv;
-            aug.set(c, j, v);
-        }
-        // Eliminate column c in all other rows.
-        for r in 0..n {
-            if r == c {
-                continue;
-            }
-            let factor = aug.at(r, c);
-            if factor == 0.0 {
-                continue;
-            }
-            for j in 0..(2 * n) {
-                let v = aug.at(r, j) - factor * aug.at(c, j);
-                aug.set(r, j, v);
-            }
-        }
-    }
-    // Right half is the inverse.
-    let mut inv = Mat::zeros(n, n);
-    for i in 0..n {
-        for j in 0..n {
-            inv.set(i, j, aug.at(i, n + j));
-        }
-    }
-    Ok(inv)
 }
 
 // ---------------------------------------------------------------------------
@@ -350,10 +221,10 @@ pub fn fit_wls(
         xtwy[i] = s;
     }
     let xtwx_inv = invert(&xtwx)?;
-    let beta = mat_mul_vec(&xtwx_inv, &xtwy);
+    let beta = mat_mul_vec(&xtwx_inv, &xtwy)?;
 
     // Residuals + R².
-    let yhat = mat_mul_vec(&x, &beta);
+    let yhat = mat_mul_vec(&x, &beta)?;
     let residuals: Vec<f64> = (0..n).map(|i| y[i] - yhat[i]).collect();
 
     let y_mean: f64 = weighted_mean(&y, &w).expect("bloc voting weights and responses are finite");
@@ -466,7 +337,7 @@ pub fn hc3_stderr(fit: &mut RegressionFit, precincts: &[Precinct]) -> Result<(),
     let mut h: Vec<f64> = Vec::with_capacity(n);
     for i in 0..n {
         let xi: Vec<f64> = (0..p1).map(|k| x.at(i, k)).collect();
-        let inv_xi = mat_mul_vec(&bread, &xi);
+        let inv_xi = mat_mul_vec(&bread, &xi)?;
         let mut hi = 0.0;
         for k in 0..p1 {
             hi += xi[k] * inv_xi[k];
@@ -493,8 +364,8 @@ pub fn hc3_stderr(fit: &mut RegressionFit, precincts: &[Precinct]) -> Result<(),
             }
         }
     }
-    let mid = mat_mul(&meat, &bread);
-    let var_beta = mat_mul(&bread, &mid);
+    let mid = mat_mul(&meat, &bread)?;
+    let var_beta = mat_mul(&bread, &mid)?;
 
     let df = (n as f64) - (p1 as f64);
     let names_with_intercept: Vec<String> = std::iter::once("intercept".to_string())
@@ -1293,7 +1164,7 @@ mod tests {
         m.set(1, 0, 2.0);
         m.set(1, 1, 4.0);
         match invert(&m) {
-            Err(BlocVotingError::Singular) => {}
+            Err(LinearAlgebraError::Singular) => {}
             other => panic!("expected Singular, got {:?}", other),
         }
     }

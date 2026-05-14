@@ -41,6 +41,7 @@
 | 2026-05-13 | Shared Kernel Crates | Build reusable pure-Rust graph/stat/math kernels for BISECT, ROUTE, and civic evidence projects | archived |
 | 2026-05-14 | RSTAT Core Kernel | Extract reusable deterministic statistics from BISECT analysis into `rstat-core` | archived |
 | 2026-05-14 | RGRAPH Core Expansion | Add reusable graph-only connected components with BISECT contiguity consumer coverage | archived |
+| 2026-05-14 | RMATH Core Matrix Kernel | Extract deterministic dense matrix helpers from bloc-voting WLS/HC3 math | archived |
 
 ## Operating Model
 

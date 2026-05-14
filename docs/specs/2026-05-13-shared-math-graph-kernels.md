@@ -120,16 +120,22 @@ Does not own:
 
 ### `rmath-core`
 
-Owns only shared numeric primitives that are reused by at least two higher-level
+Owns only shared numeric primitives that are reusable across higher-level
 crates:
 
+- small deterministic dense-matrix helpers;
+- matrix/vector multiplication and transpose;
+- Gauss-Jordan inversion with partial pivoting;
 - exact rational arithmetic;
 - stable summation;
 - log-sum-exp;
 - numeric tolerance policy;
 - special functions needed by `rstat-core`.
 
-If `rmath-core` would be a dump of helpers with one consumer, defer it.
+Initial matrix helpers have landed because BISECT had audited WLS/HC3 matrix
+math in `bisect-analysis::bloc_voting`, and ROUTE/optimization packages will
+need the same small deterministic linear-algebra substrate without adopting a
+large external dependency.
 
 ### `ropt-core`
 
@@ -221,6 +227,31 @@ only reusable math.
 The statistics kernel now has a three-level test ladder: inline L0 unit tests,
 L1 integration tests under `crates/rstat-core/tests/l1_*`, and ignored L2 numeric
 stress tests under `crates/rstat-core/tests/l2_numeric_stress.rs`.
+
+## Third Wave: `rmath-core`
+
+The numeric kernel starts with small dense linear algebra, extracted from
+`bisect-analysis::bloc_voting`:
+
+1. Row-major dense matrix type. **Landed in `rmath-core::DenseMatrix`.**
+2. Matrix multiplication, matrix-vector multiplication, and transpose. **Landed
+   in `rmath-core`; `bisect-analysis::bloc_voting` consumes matrix multiply and
+   matrix-vector multiply.**
+3. Gauss-Jordan inverse with partial pivoting and typed errors. **Landed in
+   `rmath-core`; bloc-voting WLS and HC3 now use it.**
+4. Test ladder. **Inline L0 tests, L1 WLS normal-equation/pivoting tests, and an
+   ignored L2 Hilbert-like inverse stress test landed under
+   `crates/rmath-core/tests/`.**
+
+`rmath-core` remains numeric-only. It must not own regression semantics,
+statistical inference, optimization objectives, or redistricting/route domain
+interpretation.
+
+Likely next `rmath-core` candidates are the existing eigen/vector routines:
+`bisect-data::fiedler` (weighted Laplacian lambda2 via deflated power iteration),
+`bisect-apportion::spectral` (smoothed spectral vector and normalization), and
+`bisect-cli::geosection_orientation` (closed-form 2x2 covariance eigensystem for
+minor-axis orientation).
 
 ## API Invariants
 
