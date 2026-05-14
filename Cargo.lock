@@ -384,6 +384,7 @@ dependencies = [
  "bisect-ensemble",
  "rand",
  "rayon",
+ "rgraph-core",
  "ropt-core",
  "serde",
  "serde_json",

@@ -8,6 +8,7 @@ description = "Multi-scale MCMC redistricting — hierarchical mixing for large-
 
 [dependencies]
 bisect-ensemble = { path = "../bisect-ensemble" }
+rgraph-core = { path = "../rgraph-core" }
 ropt-core = { path = "../ropt-core" }
 rand.workspace = true
 sha2.workspace = true
