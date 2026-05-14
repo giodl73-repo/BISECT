@@ -1,6 +1,7 @@
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use thiserror::Error;
 
 use crate::analyzer::{Analyzer, AnalyzerContext};
 
@@ -37,12 +38,38 @@ pub struct PoliticalResult {
     pub districts: Vec<PoliticalDistrict>,
 }
 
+#[derive(Debug, Error, Clone, PartialEq)]
+pub enum PoliticalError {
+    #[error("[INPUT] non-finite {field} for geoid {geoid}: {value}")]
+    NonFiniteVote {
+        geoid: String,
+        field: &'static str,
+        value: f64,
+    },
+    #[error("[INPUT] negative {field} for geoid {geoid}: {value}")]
+    NegativeVote {
+        geoid: String,
+        field: &'static str,
+        value: f64,
+    },
+    #[error("[NUMERIC] {operation} produced non-finite value {value}")]
+    NonFiniteAggregate { operation: &'static str, value: f64 },
+}
+
 /// Aggregate political rows into per-district results.
 pub fn aggregate_political(
     rows: &[PoliticalRow],
     assignments: &HashMap<String, usize>,
     num_districts: usize,
 ) -> PoliticalResult {
+    try_aggregate_political(rows, assignments, num_districts).expect("political inputs are valid")
+}
+
+fn try_aggregate_political(
+    rows: &[PoliticalRow],
+    assignments: &HashMap<String, usize>,
+    num_districts: usize,
+) -> Result<PoliticalResult, PoliticalError> {
     let mut totals: HashMap<usize, (f64, f64)> = HashMap::new();
     for d in 1..=num_districts {
         totals.insert(d, (0.0, 0.0));
@@ -50,10 +77,14 @@ pub fn aggregate_political(
 
     let mut unmatched = 0usize;
     for row in rows {
+        validate_vote(&row.geoid, "dem_votes", row.dem_votes)?;
+        validate_vote(&row.geoid, "rep_votes", row.rep_votes)?;
         if let Some(&district) = assignments.get(&row.geoid) {
             let e = totals.entry(district).or_insert((0.0, 0.0));
             e.0 += row.dem_votes;
+            validate_finite("district Democratic votes", e.0)?;
             e.1 += row.rep_votes;
+            validate_finite("district Republican votes", e.1)?;
         } else {
             unmatched += 1;
         }
@@ -67,13 +98,19 @@ pub fn aggregate_political(
         .into_iter()
         .map(|(district, (dem, rep))| {
             let total = dem + rep;
+            validate_finite("district two-party votes", total)?;
             let (dem_pct, rep_pct) = if total == 0.0 {
                 (0.0, 0.0)
             } else {
-                (dem / total, rep / total)
+                let dem_pct = dem / total;
+                let rep_pct = rep / total;
+                validate_finite("district Democratic vote share", dem_pct)?;
+                validate_finite("district Republican vote share", rep_pct)?;
+                (dem_pct, rep_pct)
             };
             let margin = dem_pct - rep_pct;
-            PoliticalDistrict {
+            validate_finite("district political margin", margin)?;
+            Ok(PoliticalDistrict {
                 district,
                 total_votes: total,
                 dem_votes: dem,
@@ -83,16 +120,41 @@ pub fn aggregate_political(
                 margin,
                 lean_dem: margin >= 0.0,
                 is_uncontested: dem == 0.0 || rep == 0.0,
-            }
+            })
         })
-        .collect();
+        .collect::<Result<Vec<_>, PoliticalError>>()?;
     districts.sort_by_key(|d| d.district);
 
-    PoliticalResult {
+    Ok(PoliticalResult {
         analyzer: "political",
         available: true,
         districts,
+    })
+}
+
+fn validate_vote(geoid: &str, field: &'static str, value: f64) -> Result<(), PoliticalError> {
+    if !value.is_finite() {
+        return Err(PoliticalError::NonFiniteVote {
+            geoid: geoid.to_string(),
+            field,
+            value,
+        });
     }
+    if value < 0.0 {
+        return Err(PoliticalError::NegativeVote {
+            geoid: geoid.to_string(),
+            field,
+            value,
+        });
+    }
+    Ok(())
+}
+
+fn validate_finite(operation: &'static str, value: f64) -> Result<(), PoliticalError> {
+    if !value.is_finite() {
+        return Err(PoliticalError::NonFiniteAggregate { operation, value });
+    }
+    Ok(())
 }
 
 pub struct PoliticalAnalyzer;
@@ -132,11 +194,11 @@ impl Analyzer for PoliticalAnalyzer {
             .collect::<Result<Vec<_>, _>>()
             .context("failed to parse political CSV rows")?;
 
-        Ok(aggregate_political(
+        Ok(try_aggregate_political(
             &rows,
             ctx.assignments,
             ctx.num_districts,
-        ))
+        )?)
     }
 }
 
@@ -185,6 +247,61 @@ mod tests {
         let assignments = hashmap(&[("50001", 1)]);
         let r = aggregate_political(&rows, &assignments, 1);
         assert!(r.districts[0].is_uncontested);
+    }
+
+    #[test]
+    fn test_try_political_rejects_non_finite_votes() {
+        let rows = vec![make_pol_row("50001", f64::NAN, 100.0)];
+        let assignments = hashmap(&[("50001", 1)]);
+
+        match try_aggregate_political(&rows, &assignments, 1) {
+            Err(PoliticalError::NonFiniteVote {
+                geoid,
+                field,
+                value,
+            }) => {
+                assert_eq!(geoid, "50001");
+                assert_eq!(field, "dem_votes");
+                assert!(value.is_nan());
+            }
+            other => panic!("expected NonFiniteVote, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_try_political_rejects_negative_votes() {
+        let rows = vec![make_pol_row("50001", 100.0, -1.0)];
+        let assignments = hashmap(&[("50001", 1)]);
+
+        match try_aggregate_political(&rows, &assignments, 1) {
+            Err(PoliticalError::NegativeVote {
+                geoid,
+                field,
+                value,
+            }) => {
+                assert_eq!(geoid, "50001");
+                assert_eq!(field, "rep_votes");
+                assert_eq!(value, -1.0);
+            }
+            other => panic!("expected NegativeVote, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_try_political_rejects_overflowed_district_votes() {
+        let rows = vec![
+            make_pol_row("50001", f64::MAX, 0.0),
+            make_pol_row("50002", f64::MAX, 0.0),
+        ];
+        let assignments = hashmap(&[("50001", 1), ("50002", 1)]);
+
+        match try_aggregate_political(&rows, &assignments, 1) {
+            Err(PoliticalError::NonFiniteAggregate { operation, value }) => {
+                assert_eq!(operation, "district Democratic votes");
+                assert!(value.is_infinite());
+            }
+            other => panic!("expected NonFiniteAggregate, got {other:?}"),
+        }
     }
 
     #[test]

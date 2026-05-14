@@ -300,9 +300,10 @@ Candidate first API:
      errors instead of substituting `(NaN, NaN)` cluster intervals.**
 
 Adjacent election-evidence consumers also enforce the same invariant before
-calling or comparing shared statistical outputs: partisan and proportionality
-ingestion reject non-finite, negative, or overflowed vote totals with typed
-errors instead of emitting non-finite vote shares, gaps, or bootstrap intervals.
+calling or comparing shared statistical outputs: partisan, political, and
+proportionality ingestion reject non-finite, negative, or overflowed vote totals
+with typed errors instead of emitting non-finite vote shares, gaps, margins, or
+bootstrap intervals.
 Party-list D'Hondt allocation and Gallagher disproportionality helpers likewise
 expose fallible typed-error paths so malformed vote maps cannot silently compare
 NaN quotients or produce non-finite disproportionality scores.

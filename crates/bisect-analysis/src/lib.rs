@@ -62,7 +62,7 @@ pub use partisan::{
     try_compute_partisan_metrics, DistrictElection, MetricWithCI, PartisanError, PartisanMetrics,
     SeatsVotesCurve,
 };
-pub use political::{PoliticalAnalyzer, PoliticalDistrict, PoliticalResult};
+pub use political::{PoliticalAnalyzer, PoliticalDistrict, PoliticalError, PoliticalResult};
 pub use proportionality::{
     aggregate_proportionality, ProportionalityAnalyzer, ProportionalityError, ProportionalityResult,
 };
