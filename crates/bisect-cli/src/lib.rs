@@ -18,6 +18,8 @@ pub mod export_cmd;
 pub mod fetch;
 pub mod geometry;
 pub mod geosection_orientation;
+pub mod housing;
+pub mod housing_evidence;
 pub mod ilp_audit;
 pub mod import_cmd;
 pub mod import_label;

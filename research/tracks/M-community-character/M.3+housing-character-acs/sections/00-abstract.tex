@@ -19,17 +19,17 @@ owner-occupancy rate, and housing vintage score.
 The cosine similarity of adjacent tracts' housing character vectors
 modifies METIS edge weights via the standard M-track blend formula.
 
-M.3 has a distinctive implementation advantage: the ACS tables it requires
-are extensions of the demographics CSV already fetched by \texttt{bisect fetch}.
-No new download infrastructure is required; four new columns extend the
-existing pipeline.
-This makes M.3 the lowest-cost M-track signal to implement empirically.
+M.3 has a distinctive implementation advantage: the ACS tables it requires are
+available through the same Census API infrastructure already used by
+\texttt{bisect fetch}. The implemented \texttt{acs-housing} fetch path writes
+the four derived columns, and \texttt{--weights-override housing-character}
+applies the edge-weight blend.
 
-Experimental results are deferred to Phase~2, pending extension of the
-ACS demographics pipeline.
+Implementation mechanics are backed by a hash-bound smoke package; empirical
+outcome results remain future work until full plan runs are archived.
 The empirical design targets North Carolina (14 congressional districts,
 2020 vintage): expected outcomes include within-district homogenization of
-housing type$^\dagger$ and clustering of pre-1960 historic neighborhoods.$^\dagger$
+housing type and clustering of pre-1960 historic neighborhoods.
 The legal foundation draws on neighborhood stability jurisprudence,
 historic preservation district doctrine, and long-tenured homeowner
 representation interests recognized in state redistricting criteria.

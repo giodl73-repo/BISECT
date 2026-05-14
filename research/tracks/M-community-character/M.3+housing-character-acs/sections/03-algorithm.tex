@@ -12,9 +12,10 @@ The categories are:
 3 or 4 units (B25024\_005),
 5 to 9 units (B25024\_006),
 10 to 19 units (B25024\_007),
-20 or more units (B25024\_008),
-mobile home (B25024\_009),
-boat, RV, van, etc.\ (B25024\_010).
+20 to 49 units (B25024\_008),
+50 or more units (B25024\_009),
+mobile home (B25024\_010),
+boat, RV, van, etc.\ (B25024\_011).
 The universe is all housing units in the tract.
 The total is B25024\_001.
 
@@ -54,11 +55,11 @@ dense urban cores.
 
 \paragraph{Large-multifamily fraction (MF).}
 \begin{equation}
-  \mathrm{MF}(t) = \frac{\text{B25024\_007}(t) + \text{B25024\_008}(t)}{\text{B25024\_001}(t)},
+  \mathrm{MF}(t) = \frac{\text{B25024\_007}(t) + \text{B25024\_008}(t) + \text{B25024\_009}(t)}{\text{B25024\_001}(t)},
   \label{eq:mf}
 \end{equation}
 the fraction of units in structures with 10 or more units.
-Note: the M.4 spec uses ``5+ units'' informally; the precise B25024 category boundary for large multifamily is 10 units (B25024\_007: 10--19 units; B25024\_008: 20 or more units). Structures with 5--9 units (B25024\_006) are excluded from the large-multifamily fraction because they are more similar in community character to small apartment buildings than to large elevator buildings.
+Note: the M.4 spec uses ``5+ units'' informally; the precise B25024 category boundary for large multifamily is 10 units (B25024\_007: 10--19 units; B25024\_008: 20--49 units; B25024\_009: 50 or more units). Structures with 5--9 units (B25024\_006) are excluded from the large-multifamily fraction because they are more similar in community character to small apartment buildings than to large elevator buildings.
 $\mathrm{MF}(t) \in [0,1]$.
 High values ($> 0.50$) characterize apartment corridors, urban high-density
 residential zones, and transit-oriented development nodes.
@@ -91,7 +92,7 @@ The spec formula is unbounded (it exceeds 1.0 for tracts with median year before
 and uses an arbitrary divisor.
 Equation~\eqref{eq:vt} is the implementation target: it is clamped to $[0,1]$,
 calibrated on the 1940--2020 housing stock range, and consistent with the
-$^\dagger$Phase~2 test invariants.
+implementation test invariants.
 The formula is calibrated so that:
 \begin{itemize}
   \item Median year 1940 or earlier: $\mathrm{VT} = 1.0$ (fully historic).
@@ -199,21 +200,27 @@ B25035) are available from the same Census API endpoint already used by
 \texttt{bisect fetch} to populate the demographics CSV.
 The current ACS fetch retrieves tables covering race, age, income, and
 educational attainment at the census tract level.
-Adding B25024, B25003, and B25035 requires:
+Adding B25024, B25003, and B25035 now uses the existing
+\texttt{bisect fetch --type acs-housing} path:
 \begin{enumerate}
-  \item Extending the \texttt{acs\_fetch} module's table list with the new
-    table identifiers.
-  \item Adding four output columns to the demographics CSV:
+  \item The fetch list requests ACS B25024, B25003, and B25035 tract variables
+    from the standard Census ACS API endpoint.
+  \item The derived CSV contains four output columns:
     \texttt{pct\_single\_family}, \texttt{pct\_multifamily},
-    \texttt{pct\_owner\_occupied}, \texttt{housing\_vintage}.
+    \texttt{pct\_owner}, and \texttt{housing\_vintage}.
   \item Implementing the four formulas (Equations~\ref{eq:sf}--\ref{eq:vt})
-    in the demographics preprocessing step.
-  \item Implementing the cosine similarity and blend formula (Equations~\ref{eq:cosine}
+    in the ACS housing preprocessing step.
+  \item Applying the cosine similarity and blend formula (Equations~\ref{eq:cosine}
     and~\ref{eq:blend}) in the \texttt{housing-character} weight mode.
 \end{enumerate}
 No new API calls to new endpoints, no new file formats, and no changes to
 the adjacency graph pipeline are required.
 The CLI flag is \texttt{--weights-override housing-character}.
+
+The current implementation treats B25024 large multifamily as 10+ unit
+structures (B25024\_007E--B25024\_009E) and uses B25024\_001E as the denominator.
+Mobile homes and boat/RV/van units are part of the denominator but are not
+counted as large multifamily.
 
 \subsection{Test Invariants (L0)}
 
@@ -237,3 +244,8 @@ The following invariants must hold on every build:
   \item[\texttt{weight\_stays\_nonneg}]
     $w_h(u,v) \geq 0$ for all edges after blending.
 \end{description}
+
+The repository also includes the hash-bound smoke package
+\texttt{docs/examples/m-community-character-evidence-packages/M.3+acs-housing-smoke}.
+It verifies the ACS housing formulas, denominator defaults, and edge-weight
+blend through \texttt{bisect-cli::housing\_evidence}.

@@ -1,11 +1,12 @@
 \label{sec:empirical}
 
-Empirical validation of the housing character weights requires extending the
-\textsc{bisect} ACS demographics pipeline with the four new columns described in
-Section~\ref{sec:algorithm}.
-This extension is designated Phase~2; all empirical values in this section
-carry the~$^\dagger$ dagger notation indicating results pending ACS pipeline
-extension.
+The implementation slice for M.3 is now present in \textsc{bisect}. The
+\texttt{acs-housing} fetch path derives the four housing-character columns, and
+the \texttt{housing-character} weight mode applies the cosine-similarity blend
+to graph edges. This section separates implemented evidence from future
+empirical claims: the formula and edge-weight mechanics are package verified,
+while state-level outcome results remain future work until full NC-14 runs are
+archived.
 
 \subsection{Target State and Configuration}
 
@@ -37,7 +38,7 @@ $= 0.5\%$).
 
 \subsection{Primary Empirical Hypothesis}
 
-\paragraph{H1: Within-district housing homogeneity improves.}$^\dagger$
+\paragraph{H1: Within-district housing homogeneity improves.}
 The M-track primary metric for M.3 is the mean within-district standard
 deviation of \texttt{pct\_single\_family} across all 14 NC districts.
 Formally:
@@ -48,25 +49,46 @@ Formally:
   \label{eq:within-sf}
 \end{equation}
 We predict that $\overline{\sigma}_{\mathrm{SF}}$ under housing-character weights
-will be at least 10\% lower than under geographic weights.$^\dagger$
+will be at least 10\% lower than under geographic weights. This is a future
+empirical claim, not established by the smoke package.
 
-\paragraph{H2: Historic neighborhood co-assignment.}$^\dagger$
+\paragraph{H2: Historic neighborhood co-assignment.}
 Define the set of ``historic tracts'' as those with $\mathrm{VT}(t) > 0.64$
-(median year built before 1960) in North Carolina (approximately 180 tracts).$^\dagger$
+(median year built before 1960) in North Carolina.
 We predict that the fraction of historic tract pairs that are co-assigned to
 the same district under housing-character weights will be at least 60\%,
-versus at most 40\% under geographic weights.$^\dagger$
+versus at most 40\% under geographic weights. The threshold remains a
+pre-registered target for the future state run.
 This tests whether the vintage signal causes the historic neighborhoods of
 Raleigh and Durham to cluster together rather than being split across suburban
 and apartment-corridor districts.
 
-\paragraph{H3: Apartment corridor isolation.}$^\dagger$
+\paragraph{H3: Apartment corridor isolation.}
 Define ``apartment corridor tracts'' as those with $\mathrm{MF}(t) > 0.50$
 (majority large-multifamily units).
 We predict that the mean within-district $\mathrm{MF}$ variance under
 housing-character weights is lower than under geographic weights,
 indicating that apartment corridor tracts are grouped together rather than
-scattered across single-family districts.$^\dagger$
+scattered across single-family districts.
+
+\subsection{Package-Verified Mechanics}
+
+The smoke package
+\texttt{docs/examples/m-community-character-evidence-packages/M.3+acs-housing-smoke}
+contains two synthetic tract rows and one edge. The verifier recomputes:
+\begin{itemize}
+  \item \texttt{pct\_single\_family} from B25024\_002E and B25024\_003E over
+    B25024\_001E;
+  \item \texttt{pct\_multifamily} from B25024\_007E--B25024\_009E over
+    B25024\_001E;
+  \item \texttt{pct\_owner} from B25003\_002E over B25003\_001E;
+  \item \texttt{housing\_vintage} from B25035\_001E with the 1940--2020 clamp;
+  \item the final edge weight
+    $w_h = w_{\mathrm{geo}}(\alpha + (1-\alpha)\mathrm{sim}_h)$.
+\end{itemize}
+The package is deliberately synthetic. It validates implementation mechanics
+and tamper rejection; it does not claim an empirical compactness,
+proportionality, or community-preservation result for North Carolina.
 
 \subsection{Mill Hill Clustering --- Qualitative Prediction}
 
@@ -81,7 +103,7 @@ but have high housing character similarity to each other across municipal
 boundaries.
 We predict that under housing-character weights, Durham's Mill Grove and
 West End, Burlington's Edgewood, and similar mill villages will show elevated
-co-assignment rates compared to geographic weights.$^\dagger$
+co-assignment rates compared to geographic weights.
 
 \subsection{Implementation Cost Confirmation}
 
@@ -89,14 +111,15 @@ A secondary empirical goal is to confirm the zero-cost implementation claim:
 that adding B25024, B25003, and B25035 to the ACS fetch requires no new
 download infrastructure, no new API keys, and no changes to the adjacency
 graph pipeline.
-This will be verified by:
+This has been verified for the formula and graph-weight layer by:
 \begin{enumerate}
-  \item Extending the ACS demographics CSV with the four new columns.
-  \item Confirming that \texttt{bisect fetch --year 2020} populates all
-    four new columns without errors for all 2,655 North Carolina tracts.
-  \item Confirming that the housing-character weight mode produces a valid
-    METIS input graph (all edge weights positive, no missing values).
+  \item extending the ACS housing CSV with the four new columns;
+  \item adding formula tests for denominator defaults and vintage clamping;
+  \item adding a hash-bound fixture that confirms the housing-character weight
+    mode produces a positive blended edge weight.
 \end{enumerate}
+The full all-tract North Carolina fetch and plan comparison remain future
+empirical work.
 
 \subsection{Comparison Methodology}
 

@@ -1487,6 +1487,10 @@ pub enum WeightMode {
     /// Download: bisect fetch --type lodes --year 2020 --states <STATE>
     #[value(name = "economic-character")]
     EconomicCharacter,
+    /// Housing character similarity weights (M.3). Requires ACS housing data.
+    /// Download: bisect fetch --type acs-housing --year 2020 --states <STATE>
+    #[value(name = "housing-character")]
+    HousingCharacter,
     /// Administrative zone co-membership weights (M.6). Requires TIGER school districts
     /// and EIA Form 861. Download: bisect fetch --type school-districts --type eia-861
     #[value(name = "zone-membership")]
@@ -3099,6 +3103,7 @@ mod tests {
             ("vra-aligned", WeightMode::VraAligned),
             ("proportional", WeightMode::Proportional),
             ("economic-character", WeightMode::EconomicCharacter),
+            ("housing-character", WeightMode::HousingCharacter),
             ("zone-membership", WeightMode::ZoneMembership),
         ];
         for (s, expected) in cases {

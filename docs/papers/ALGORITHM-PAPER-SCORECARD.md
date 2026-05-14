@@ -152,7 +152,7 @@ Score bands:
 | L.6 Proportionality vs Majoritarianism | 3.7 | 3.4 | 3.4 | 3.8 | 3.4 | 3.6 | 21.3 | Strong |
 | M.0 Community Character Overview | 3.5 | 3.4 | 3.3 | 3.6 | 3.4 | 3.5 | 20.7 | Strong |
 | M.1 Economic Character via LODES | 3.4 | 3.4 | 3.2 | 3.5 | 3.4 | 3.3 | 20.2 | PDF published; empirical Phase 2 pending |
-| M.3 Housing Character via ACS | 3.3 | 3.4 | 3.1 | 3.4 | 3.3 | 3.2 | 19.7 | PDF published; empirical design deferred |
+| M.3 Housing Character via ACS | 3.5 | 3.5 | 3.3 | 3.5 | 3.5 | 3.4 | 20.7 | Strong; ACS housing smoke package added, NC empirical run pending |
 | M.6 Administrative Zone Membership | 3.5 | 3.5 | 3.3 | 3.6 | 3.4 | 3.5 | 20.8 | Strong |
 | M.9 Economic Character Weights | 3.5 | 3.5 | 3.3 | 3.6 | 3.4 | 3.5 | 20.8 | Strong |
 

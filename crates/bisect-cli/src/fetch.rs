@@ -318,8 +318,8 @@ pub fn build_fetch_list(
         if want_acs_housing {
             let fips = &state.fips;
             let url = format!(
-                "https://api.census.gov/data/{year}/acs/acs5?get=B25024_002E,B25024_003E,\
-B25024_007E,B25024_008E,B25024_009E,B25024_010E,B25024_011E,B25003_001E,B25003_002E,\
+                "https://api.census.gov/data/{year}/acs/acs5?get=B25024_001E,B25024_002E,B25024_003E,\
+B25024_007E,B25024_008E,B25024_009E,B25003_001E,B25003_002E,\
 B25035_001E,NAME&for=tract:*&in=state:{fips}"
             );
             let local_path = data_dir
@@ -779,15 +779,15 @@ pub fn download_lodes_od(url: &str, dest_path: &std::path::Path) -> Result<(), S
 /// a per-tract CSV with four derived columns.
 ///
 /// API response: JSON array where row 0 is a header and rows 1..N are data.
-/// Each data row includes: B25024_002E (1-unit detached), B25024_003E (1-unit attached),
-/// B25024_007E..B25024_010E (5+unit multifamily), B25024_011E (mobile home),
+/// Each data row includes: B25024_001E (total units), B25024_002E (1-unit detached),
+/// B25024_003E (1-unit attached), B25024_007E..B25024_009E (10+ unit multifamily),
 /// B25003_001E (total occupied), B25003_002E (owner-occupied),
 /// B25035_001E (median year built), plus NAME, state, county, tract columns.
 ///
 /// Derived columns written to dest_path:
 ///   geoid            = state(2) + county(3) + tract(6)
-///   pct_sf           = (1-unit-det + 1-unit-att) / total_units   [0,1], default 0.5
-///   pct_mf           = (5-9 + 10-19 + 20-49 + 50+ units) / total_units  [0,1]
+///   pct_single_family = (1-unit-det + 1-unit-att) / total_units   [0,1], default 0.5
+///   pct_multifamily   = (10-19 + 20-49 + 50+ units) / total_units  [0,1]
 ///   pct_owner        = owner_occupied / total_occupied  [0,1], default 0.5
 ///   housing_vintage  = 1.0 - (median_year_built - 1940) / (2020 - 1940)  [0,1]
 ///                      pre-1940 -> ~1.0 (historic), 2020+ -> 0.0 (new);
@@ -811,8 +811,11 @@ pub fn download_acs_housing(url: &str, dest_path: &Path) -> Result<(), String> {
     if !response.status().is_success() {
         if response.status().as_u16() == 404 {
             println!("[WARN] ACS housing data not available for this state/year (404). Skipping.");
-            std::fs::write(dest_path, "geoid,pct_sf,pct_mf,pct_owner,housing_vintage\n")
-                .map_err(|e| format!("write empty acs-housing: {e}"))?;
+            std::fs::write(
+                dest_path,
+                "geoid,pct_single_family,pct_multifamily,pct_owner,housing_vintage\n",
+            )
+            .map_err(|e| format!("write empty acs-housing: {e}"))?;
             return Ok(());
         }
         return Err(format!("HTTP {}: ACS housing {url}", response.status()));
@@ -826,8 +829,11 @@ pub fn download_acs_housing(url: &str, dest_path: &Path) -> Result<(), String> {
         serde_json::from_str(&body).map_err(|e| format!("ACS JSON parse: {e}\nURL: {url}"))?;
 
     if rows.is_empty() {
-        std::fs::write(dest_path, "geoid,pct_sf,pct_mf,pct_owner,housing_vintage\n")
-            .map_err(|e| format!("write empty acs-housing: {e}"))?;
+        std::fs::write(
+            dest_path,
+            "geoid,pct_single_family,pct_multifamily,pct_owner,housing_vintage\n",
+        )
+        .map_err(|e| format!("write empty acs-housing: {e}"))?;
         return Ok(());
     }
 
@@ -843,12 +849,12 @@ pub fn download_acs_housing(url: &str, dest_path: &Path) -> Result<(), String> {
             .ok_or_else(|| format!("ACS housing: column '{name}' not found in response header"))
     };
 
+    let i_total_units = find_col("B25024_001E")?;
     let i_sf_det = find_col("B25024_002E")?;
     let i_sf_att = find_col("B25024_003E")?;
-    let i_mf_5_9 = find_col("B25024_007E")?;
-    let i_mf_1019 = find_col("B25024_008E")?;
-    let i_mf_2049 = find_col("B25024_009E")?;
-    let i_mf_50p = find_col("B25024_010E")?;
+    let i_mf_1019 = find_col("B25024_007E")?;
+    let i_mf_2049 = find_col("B25024_008E")?;
+    let i_mf_50p = find_col("B25024_009E")?;
     let i_occ_tot = find_col("B25003_001E")?;
     let i_occ_own = find_col("B25003_002E")?;
     let i_vintage = find_col("B25035_001E")?;
@@ -868,7 +874,11 @@ pub fn download_acs_housing(url: &str, dest_path: &Path) -> Result<(), String> {
     let mut out = std::fs::File::create(dest_path)
         .map_err(|e| format!("create {}: {e}", dest_path.display()))?;
     use std::io::Write as IoWrite;
-    writeln!(out, "geoid,pct_sf,pct_mf,pct_owner,housing_vintage").map_err(|e| e.to_string())?;
+    writeln!(
+        out,
+        "geoid,pct_single_family,pct_multifamily,pct_owner,housing_vintage"
+    )
+    .map_err(|e| e.to_string())?;
 
     let mut row_count = 0usize;
     for row in rows.iter().skip(1) {
@@ -889,52 +899,25 @@ pub fn download_acs_housing(url: &str, dest_path: &Path) -> Result<(), String> {
         }
         let geoid = format!("{state_fips}{county_fips}{tract_code}");
 
-        // Housing type fractions
-        let sf_det = parse_f64(&row[i_sf_det]).max(0.0);
-        let sf_att = parse_f64(&row[i_sf_att]).max(0.0);
-        let mf_5_9 = parse_f64(&row[i_mf_5_9]).max(0.0);
-        let mf_1019 = parse_f64(&row[i_mf_1019]).max(0.0);
-        let mf_2049 = parse_f64(&row[i_mf_2049]).max(0.0);
-        let mf_50p = parse_f64(&row[i_mf_50p]).max(0.0);
-
-        let sf_units = sf_det + sf_att;
-        let mf_units = mf_5_9 + mf_1019 + mf_2049 + mf_50p;
-        let total_units = sf_units + mf_units;
-
-        let pct_sf = if total_units > 0.0 {
-            (sf_units / total_units).clamp(0.0, 1.0)
-        } else {
-            0.5
-        };
-        let pct_mf = if total_units > 0.0 {
-            (mf_units / total_units).clamp(0.0, 1.0)
-        } else {
-            0.5
-        };
-
-        // Tenure fraction
-        let occ_tot = parse_f64(&row[i_occ_tot]).max(0.0);
-        let occ_own = parse_f64(&row[i_occ_own]).max(0.0);
-        let pct_owner = if occ_tot > 0.0 {
-            (occ_own / occ_tot).clamp(0.0, 1.0)
-        } else {
-            0.5
-        };
-
-        // Housing vintage: 1.0 = pre-1940 (historic), 0.0 = 2020+ (new)
-        // Unreliable code from Census: -666666666
-        let raw_vintage = parse_f64(&row[i_vintage]);
-        let housing_vintage = if raw_vintage < -600_000_000.0 || raw_vintage == 0.0 {
-            // Unreliable or missing — use neutral
-            0.5
-        } else {
-            let v = 1.0 - (raw_vintage - 1940.0) / (2020.0 - 1940.0);
-            v.clamp(0.0, 1.0)
-        };
+        let housing = crate::housing::derive_housing_character(crate::housing::AcsHousingRaw {
+            total_units: parse_f64(&row[i_total_units]),
+            single_family_detached: parse_f64(&row[i_sf_det]),
+            single_family_attached: parse_f64(&row[i_sf_att]),
+            multifamily_10_19: parse_f64(&row[i_mf_1019]),
+            multifamily_20_49: parse_f64(&row[i_mf_2049]),
+            multifamily_50_plus: parse_f64(&row[i_mf_50p]),
+            occupied_total: parse_f64(&row[i_occ_tot]),
+            owner_occupied: parse_f64(&row[i_occ_own]),
+            median_year_built: parse_f64(&row[i_vintage]),
+        });
 
         writeln!(
             out,
-            "{geoid},{pct_sf:.6},{pct_mf:.6},{pct_owner:.6},{housing_vintage:.6}"
+            "{geoid},{:.6},{:.6},{:.6},{:.6}",
+            housing.pct_single_family,
+            housing.pct_multifamily,
+            housing.pct_owner,
+            housing.housing_vintage
         )
         .map_err(|e| e.to_string())?;
         row_count += 1;
@@ -1878,7 +1861,7 @@ h_geocode,w_geocode,S000,SA01,SA02,SA03,SE01,SE02,SE03,SI01,SI02,SI03,createdate
         );
     }
 
-    /// Verify pct_sf defaults to 0.5 when total_units == 0
+    /// Verify pct_single_family defaults to 0.5 when total_units == 0
     #[test]
     fn test_acs_housing_pct_sf_default_when_zero_units() {
         let sf_units = 0.0_f64;

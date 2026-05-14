@@ -28,6 +28,7 @@ If you're adding a new manifest type, land a one-task edit to §1 in the same co
 | `j-apportionment-evidence-manifest.json` | `j-apportionment-evidence-manifest v1` | `bisect-apportion::evidence_manifest` | J Apportionment Evidence Packages wave |
 | `j-divisor-evidence-manifest.json` | `j-divisor-evidence-manifest v1` | `bisect-apportion::divisor_evidence` | J Divisor Method Evidence wave |
 | `k-reock-evidence-manifest.json` | `k-reock-evidence-manifest v1` | `bisect-analysis::compactness_evidence` | K Exact Reock Evidence Packages wave |
+| `m3-housing-evidence-manifest.json` | `m3-housing-evidence-manifest v1` | `bisect-cli::housing_evidence` | M.3 Housing Character Evidence wave |
 | `u-search-evidence-manifest.json` | `u-search-evidence-manifest v1` | `bisect-ensemble::search_evidence` | U Search Evidence Packages wave |
 
 **Adding a new manifest type:** edit this table, add a `## §3.X — <kind> v<n>` subsection at the bottom enumerating fields beyond the canonical set, and reference both from the spec/plan that owns it.
@@ -253,6 +254,24 @@ Required fields beyond §2:
 | `package_id` | Stable package slug including the covered U-track scope. |
 | `papers` | U-track papers covered, e.g. `["U.2", "U.4"]`. |
 | `fixture_file` | `{path, sha256, role}` for the package-relative search fixture set. |
+| `verifier_path` | Package-relative source path for the verifier implementation. |
+| `verification_commands` | Commands that replay or validate the package. |
+
+### 3.16 `m3-housing-evidence-manifest v1`
+
+Source: `bisect-cli::housing_evidence::HousingEvidenceManifest`.
+
+This manifest binds M.3 ACS housing-character formula and edge-weight smoke
+fixtures to a verifier. It covers B25024/B25003/B25035-derived tract character
+columns and the `housing-character` edge-weight blend.
+
+Required fields beyond §2:
+
+| Field | Definition |
+|---|---|
+| `package_id` | Stable package slug including the covered M-track scope. |
+| `papers` | M-track papers covered, e.g. `["M.3"]`. |
+| `fixture_file` | `{path, sha256, role}` for the package-relative housing fixture set. |
 | `verifier_path` | Package-relative source path for the verifier implementation. |
 | `verification_commands` | Commands that replay or validate the package. |
 

@@ -389,6 +389,37 @@ impl EdgeWeighter for EconomicCharacterWeighter {
 }
 
 // ---------------------------------------------------------------------------
+// Step 5b -- Housing character similarity (M.3)
+// ---------------------------------------------------------------------------
+
+/// Blends existing edge weights by ACS housing-character cosine similarity.
+pub struct HousingCharacterWeighter {
+    chars: Vec<crate::housing::HousingChar>,
+    alpha: f64,
+}
+
+impl HousingCharacterWeighter {
+    pub fn new(chars: Vec<crate::housing::HousingChar>, alpha: f64) -> Self {
+        Self { chars, alpha }
+    }
+}
+
+impl EdgeWeighter for HousingCharacterWeighter {
+    fn apply(&self, weights: EdgeMap) -> EdgeMap {
+        let neutral = crate::housing::HousingChar::neutral();
+        weights
+            .into_iter()
+            .map(|((u, v), w)| {
+                let cu = self.chars.get(u).unwrap_or(&neutral);
+                let cv = self.chars.get(v).unwrap_or(&neutral);
+                let sim = crate::housing::cosine_similarity(cu, cv);
+                ((u, v), w * (self.alpha + (1.0 - self.alpha) * sim))
+            })
+            .collect()
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Step 6 — COI (Community of Interest) file-based weights
 // ---------------------------------------------------------------------------
 

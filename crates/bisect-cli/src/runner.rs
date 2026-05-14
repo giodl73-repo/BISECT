@@ -333,6 +333,8 @@ pub struct WeightSpec {
     pub directional_lambda: f64,
     /// Enable economic character similarity weights (M.9/M.1). Requires LODES WAC data.
     pub economic_character: bool,
+    /// Enable housing character similarity weights (M.3). Requires ACS housing data.
+    pub housing_character: bool,
     /// Blend factor for economic character weighter [0.0, 1.0]. Default 0.5.
     /// alpha=1.0 → no effect; alpha=0.0 → fully similarity-driven.
     pub econ_alpha: f64,
@@ -358,6 +360,7 @@ impl Default for WeightSpec {
             alpha_vtd: 0.0,
             directional_lambda: 0.0,
             economic_character: false,
+            housing_character: false,
             econ_alpha: 0.5,
             zone_membership: false,
             zone_alpha: 1.0,
@@ -777,6 +780,12 @@ impl AlgorithmConfig {
                 WM::EconomicCharacter => WeightSpec {
                     geographic: true,
                     economic_character: true,
+                    econ_alpha: 0.5,
+                    ..WeightSpec::default()
+                },
+                WM::HousingCharacter => WeightSpec {
+                    geographic: true,
+                    housing_character: true,
                     econ_alpha: 0.5,
                     ..WeightSpec::default()
                 },
@@ -4318,6 +4327,38 @@ fn build_edge_weights(
             Err(e) => {
                 eprintln!(
                     "WARNING: LODES WAC load error: {e}. Falling back to geographic weights."
+                );
+            }
+        }
+    }
+
+    // Step 5b: Housing character similarity (M.3).
+    if spec.housing_character {
+        use crate::edge_weights::HousingCharacterWeighter;
+        use crate::housing::{align_housing_to_adjacency, load_acs_housing_tract};
+        status(
+            position,
+            &format!("{state_code}: housing-character -- loading ACS housing"),
+        );
+        match load_acs_housing_tract(state_name, year) {
+            Ok(housing_chars) if !housing_chars.is_empty() => {
+                let node_chars = align_housing_to_adjacency(
+                    &housing_chars,
+                    &graph.index_to_geoid,
+                    graph.n_vertices,
+                );
+                composer =
+                    composer.push(HousingCharacterWeighter::new(node_chars, spec.econ_alpha));
+            }
+            Ok(_) => {
+                eprintln!(
+                    "WARNING: ACS housing not found for {state_name} {year}. \
+                           Run: bisect fetch --type acs-housing --year {year} --states {state_code}"
+                );
+            }
+            Err(e) => {
+                eprintln!(
+                    "WARNING: ACS housing load error: {e}. Falling back to geographic weights."
                 );
             }
         }
