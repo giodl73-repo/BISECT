@@ -84,7 +84,7 @@ Score bands:
 | U.0 Search Optimization Overview | 3.5 | 3.4 | 3.2 | 3.6 | 3.6 | 3.4 | 20.7 | Strong; package boundary refreshed |
 | U.1 ConvergenceSweep | 3.7 | 3.6 | 3.5 | 3.9 | 4.0 | 3.6 | 22.3 | Strong; search-ledger boundary |
 | U.2 Parameter Sensitivity | 3.5 | 3.4 | 3.3 | 3.5 | 3.5 | 3.4 | 20.6 | Stronger; synthetic sweep package, real 50-state sweep pending |
-| U.3 Simulated Annealing | 3.3 | 3.4 | 3.1 | 3.4 | 3.4 | 3.2 | 19.8 | Serviceable-plus; heuristic boundary |
+| U.3 Simulated Annealing | 3.5 | 3.5 | 3.3 | 3.5 | 3.5 | 3.4 | 20.7 | Stronger; synthetic SA mechanics package, state empirical run package pending |
 | U.4 Parallel Tempering | 3.5 | 3.5 | 3.3 | 3.5 | 3.5 | 3.4 | 20.7 | Stronger; synthetic PT package, production CLI pending |
 | U.5 Adaptive Multiscale | 3.4 | 3.4 | 3.2 | 3.5 | 3.4 | 3.3 | 20.2 | Strong; bisect-multiscale boundary |
 | U.6 ILP Redistricting | 3.4 | 3.5 | 3.2 | 3.6 | 3.4 | 3.3 | 20.4 | Strong; exact status language aligned |

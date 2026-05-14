@@ -12,3 +12,10 @@ family alongside the audited improvement and repair hooks in the modern U-track,
 not as a standalone legal proof.  Claims about percent compactness improvements
 need the archived run packages that define the baseline, seed set, and metric
 versions.
+
+The shipped \texttt{U.3+sa-smoke} package is a mechanics fixture.  Its manifest
+hash-binds a JSON fixture consumed by \texttt{bisect-cli::sa\_evidence}; the
+verifier checks deterministic seed derivation, same-seed replay, full/disjoint
+nonempty connected partitions, and a synthetic grid edge-cut bound.  This is a
+positive/negative consumer test for the SA implementation boundary, not a
+substitute for a 50-state or NC/WI/TX empirical archive.

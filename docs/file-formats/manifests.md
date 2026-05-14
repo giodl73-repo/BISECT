@@ -30,6 +30,7 @@ If you're adding a new manifest type, land a one-task edit to §1 in the same co
 | `k-reock-evidence-manifest.json` | `k-reock-evidence-manifest v1` | `bisect-analysis::compactness_evidence` | K Exact Reock Evidence Packages wave |
 | `m1-economic-evidence-manifest.json` | `m1-economic-evidence-manifest v1` | `bisect-cli::lodes_evidence` | M.1 Economic Character Evidence wave |
 | `m3-housing-evidence-manifest.json` | `m3-housing-evidence-manifest v1` | `bisect-cli::housing_evidence` | M.3 Housing Character Evidence wave |
+| `u3-sa-evidence-manifest.json` | `u3-sa-evidence-manifest v1` | `bisect-cli::sa_evidence` | U.3 Simulated Annealing Evidence wave |
 | `u-search-evidence-manifest.json` | `u-search-evidence-manifest v1` | `bisect-ensemble::search_evidence` | U Search Evidence Packages wave |
 
 **Adding a new manifest type:** edit this table, add a `## §3.X — <kind> v<n>` subsection at the bottom enumerating fields beyond the canonical set, and reference both from the spec/plan that owns it.
@@ -292,6 +293,25 @@ Required fields beyond §2:
 | `package_id` | Stable package slug including the covered M-track scope. |
 | `papers` | M-track papers covered, e.g. `["M.3"]`. |
 | `fixture_file` | `{path, sha256, role}` for the package-relative housing fixture set. |
+| `verifier_path` | Package-relative source path for the verifier implementation. |
+| `verification_commands` | Commands that replay or validate the package. |
+
+### 3.18 `u3-sa-evidence-manifest v1`
+
+Source: `bisect-cli::sa_evidence::SaEvidenceManifest`.
+
+This manifest binds U.3 simulated-annealing smoke fixtures to a verifier. It
+covers deterministic SA seed derivation, same-seed replay, partition invariants,
+and a small synthetic grid edge-cut bound. It is not evidence for the paper's
+state-level empirical table or global optimality claims.
+
+Required fields beyond §2:
+
+| Field | Definition |
+|---|---|
+| `package_id` | Stable package slug including the covered U-track scope. |
+| `papers` | U-track papers covered, e.g. `["U.3"]`. |
+| `fixture_file` | `{path, sha256, role}` for the package-relative SA fixture set. |
 | `verifier_path` | Package-relative source path for the verifier implementation. |
 | `verification_commands` | Commands that replay or validate the package. |
 

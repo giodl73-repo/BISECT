@@ -34,6 +34,7 @@
 | 2026-05-13 | J Divisor Method Evidence | Add Webster/Adams/Jefferson divisor smoke package and paradox verifier coverage | archived |
 | 2026-05-13 | M.3 ACS Housing Evidence | Add housing-character weight mode, ACS formula fixture, and M.3 evidence boundary | archived |
 | 2026-05-13 | M.1 LODES Economic Evidence | Add economic-character formula fixture and M.1 evidence boundary | archived |
+| 2026-05-13 | U.3 Simulated Annealing Evidence | Add deterministic SA seed/grid smoke fixture and U.3 evidence boundary | archived |
 
 ## Operating Model
 

@@ -47,6 +47,7 @@ pub mod report_cmd;
 pub mod research;
 pub mod run_registry;
 pub mod runner;
+pub mod sa_evidence;
 pub mod status;
 pub mod suite;
 pub mod sweep;
