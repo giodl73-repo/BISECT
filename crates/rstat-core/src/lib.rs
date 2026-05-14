@@ -701,6 +701,8 @@ pub mod mcmc {
         },
         #[error("[INPUT] trace contains non-finite value {value} at index {index}")]
         NonFiniteTraceValue { index: usize, value: f64 },
+        #[error("[INPUT] autocorrelation lag value must be in [0, 1], got {value} at lag {lag}")]
+        InvalidAutocorrelationValue { lag: usize, value: f64 },
         #[error("[INPUT] empty partition trajectory")]
         EmptyTrajectory,
         #[error("[INPUT] empty partition at index {0}")]
@@ -867,9 +869,16 @@ pub mod mcmc {
         Ok(out)
     }
 
-    pub fn integrated_autocorrelation_time(autocorr_per_lag: &[f64]) -> f64 {
+    pub fn integrated_autocorrelation_time(
+        autocorr_per_lag: &[f64],
+    ) -> Result<f64, DiagnosticsError> {
+        for (lag, &value) in autocorr_per_lag.iter().enumerate() {
+            if !value.is_finite() || !(0.0..=1.0).contains(&value) {
+                return Err(DiagnosticsError::InvalidAutocorrelationValue { lag, value });
+            }
+        }
         if autocorr_per_lag.len() <= 1 {
-            return 1.0;
+            return Ok(1.0);
         }
         let mut tau = 1.0;
         for &h in &autocorr_per_lag[1..] {
@@ -879,7 +888,7 @@ pub mod mcmc {
             }
             tau += 2.0 * rho;
         }
-        tau
+        Ok(tau)
     }
 
     #[cfg(test)]
@@ -960,7 +969,22 @@ pub mod mcmc {
 
         #[test]
         fn tau_lag_zero_only_is_one() {
-            assert_eq!(integrated_autocorrelation_time(&[0.0]), 1.0);
+            assert_eq!(integrated_autocorrelation_time(&[0.0]).unwrap(), 1.0);
+        }
+
+        #[test]
+        fn tau_rejects_invalid_lag_values() {
+            match integrated_autocorrelation_time(&[0.0, f64::NAN]) {
+                Err(DiagnosticsError::InvalidAutocorrelationValue { lag, value }) => {
+                    assert_eq!(lag, 1);
+                    assert!(value.is_nan());
+                }
+                other => panic!("expected invalid autocorrelation value error, got {other:?}"),
+            }
+            assert_eq!(
+                integrated_autocorrelation_time(&[0.0, 1.2]),
+                Err(DiagnosticsError::InvalidAutocorrelationValue { lag: 1, value: 1.2 })
+            );
         }
     }
 }

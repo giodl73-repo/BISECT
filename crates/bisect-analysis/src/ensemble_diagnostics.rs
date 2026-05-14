@@ -166,7 +166,7 @@ pub fn hamming_autocorrelation(
 ///
 /// `tau_int = 1 + 2 * sum_{k=1..K} (1 - h_k)` where `K` is the smallest lag
 /// at which `(1 - h_k) <= 0` (i.e., the chain has fully mixed).
-pub fn integrated_autocorrelation_time(autocorr_per_lag: &[f64]) -> f64 {
+pub fn integrated_autocorrelation_time(autocorr_per_lag: &[f64]) -> Result<f64, DiagnosticsError> {
     rstat_mcmc::integrated_autocorrelation_time(autocorr_per_lag)
 }
 
@@ -180,7 +180,7 @@ pub fn hamming_records(
         .enumerate()
         .map(|(idx, parts)| {
             let autocorr = hamming_autocorrelation(parts, max_lag)?;
-            let tau = integrated_autocorrelation_time(&autocorr);
+            let tau = integrated_autocorrelation_time(&autocorr)?;
             Ok(HammingAutocorrRecord {
                 chain_idx: idx,
                 autocorr_per_lag: autocorr,
@@ -463,7 +463,7 @@ mod tests {
         // For h = [0.0, 0.99, 0.99, 0.99, 1.0]:
         // tau = 1 + 2*0.01 + 2*0.01 + 2*0.01 = 1.06 (lag 4 stops the sum since 1-1.0=0)
         let h = vec![0.0, 0.99, 0.99, 0.99, 1.0];
-        let tau = integrated_autocorrelation_time(&h);
+        let tau = integrated_autocorrelation_time(&h).unwrap();
         assert!(tau < 1.10, "well-mixed chain: tau_int ~ 1; got {tau}");
     }
 
@@ -474,7 +474,7 @@ mod tests {
         let h = vec![
             0.0, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 1.0,
         ];
-        let tau = integrated_autocorrelation_time(&h);
+        let tau = integrated_autocorrelation_time(&h).unwrap();
         assert!(
             tau > 5.0,
             "slow mixing should give large tau_int; got {tau}"
@@ -484,7 +484,7 @@ mod tests {
     #[test]
     fn test_tau_int_lag_0_only_returns_1() {
         let h = vec![0.0];
-        assert_eq!(integrated_autocorrelation_time(&h), 1.0);
+        assert_eq!(integrated_autocorrelation_time(&h).unwrap(), 1.0);
     }
 
     #[test]

@@ -67,8 +67,22 @@ fn l1_hamming_tau_tracks_mixing_speed() {
     let slow_h = hamming_autocorrelation(&slow, 3).unwrap();
     let fast_h = hamming_autocorrelation(&fast, 3).unwrap();
 
-    assert!(integrated_autocorrelation_time(&slow_h) > 1.0);
-    assert!(integrated_autocorrelation_time(&fast_h) <= integrated_autocorrelation_time(&slow_h));
+    let slow_tau = integrated_autocorrelation_time(&slow_h).unwrap();
+    let fast_tau = integrated_autocorrelation_time(&fast_h).unwrap();
+
+    assert!(slow_tau > 1.0);
+    assert!(fast_tau <= slow_tau);
+}
+
+#[test]
+fn l1_tau_rejects_invalid_hamming_lag_values() {
+    assert_eq!(
+        integrated_autocorrelation_time(&[0.0, -0.1]),
+        Err(DiagnosticsError::InvalidAutocorrelationValue {
+            lag: 1,
+            value: -0.1
+        })
+    );
 }
 
 #[test]
