@@ -196,9 +196,11 @@ The first implementation wave should create `rgraph-core` with a narrow API:
    `bisect-ensemble::parallel_tempering` consume it while keeping objective and
    sampling semantics local. Follow-on slice-consumer expansion also routes
    `bisect-apportion::spectral`, `bisect-clustering`, `bisect-flow`, and the CLI
-   zero-based spectral summary helper through the shared kernel. HashMap-shaped
-   bisection-runner helpers and HashSet-shaped evidence helpers remain local
-   until a dedicated assignment adapter is justified.**
+   zero-based spectral summary helper through the shared kernel. The
+   closure-based `undirected_edge_cut_by` adapter now lets HashMap-shaped
+   bisection-runner helpers and HashSet-shaped evidence helpers reuse the
+   graph-only edge traversal while keeping missing-assignment defaults and
+   side-membership semantics local.**
 10. Assignment-label connectivity over adjacency lists. **Landed in
     `rgraph-core`; `bisect-local-search`, `bisect-clustering`, `bisect-flow`, and
     `bisect-ilp` consume the shared kernel while retaining domain wrappers for

@@ -313,6 +313,18 @@ where
         });
     }
 
+    undirected_edge_cut_by(adjacency, |node| &assignment[node])
+}
+
+pub fn undirected_edge_cut_by<I, D, F>(
+    adjacency: &[Vec<I>],
+    mut label_of: F,
+) -> Result<usize, EdgeCutError>
+where
+    I: NodeIndex,
+    D: Eq,
+    F: FnMut(usize) -> D,
+{
     let mut cut = 0usize;
     for (node, neighbors) in adjacency.iter().enumerate() {
         for &neighbor in neighbors {
@@ -323,14 +335,14 @@ where
                     node_count: adjacency.len(),
                 });
             };
-            if neighbor >= assignment.len() {
+            if neighbor >= adjacency.len() {
                 return Err(EdgeCutError::NeighborOutOfBounds {
                     node,
                     neighbor,
                     node_count: adjacency.len(),
                 });
             }
-            if neighbor > node && assignment[node] != assignment[neighbor] {
+            if neighbor > node && label_of(node) != label_of(neighbor) {
                 cut += 1;
             }
         }
@@ -1219,6 +1231,32 @@ mod tests {
         let assignment = vec![1_u32, 2, 2];
 
         assert_eq!(undirected_edge_cut(&adjacency, &assignment).unwrap(), 1);
+    }
+
+    #[test]
+    fn undirected_edge_cut_by_supports_map_defaults() {
+        let adjacency = vec![vec![1_usize], vec![0, 2], vec![1, 3], vec![2]];
+        let assignment = std::collections::HashMap::from([(0usize, 0usize), (3, 1)]);
+
+        assert_eq!(
+            undirected_edge_cut_by(&adjacency, |node| assignment
+                .get(&node)
+                .copied()
+                .unwrap_or(0))
+            .unwrap(),
+            1
+        );
+    }
+
+    #[test]
+    fn undirected_edge_cut_by_supports_set_membership() {
+        let adjacency = vec![vec![1_usize, 2], vec![0, 3], vec![0, 3], vec![1, 2]];
+        let left = std::collections::HashSet::from([0usize, 1]);
+
+        assert_eq!(
+            undirected_edge_cut_by(&adjacency, |node| left.contains(&node)).unwrap(),
+            2
+        );
     }
 
     #[test]

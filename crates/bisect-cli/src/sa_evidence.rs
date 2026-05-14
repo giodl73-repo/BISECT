@@ -251,15 +251,8 @@ fn is_connected(adjacency: &[Vec<usize>], side: &HashSet<usize>) -> bool {
 }
 
 fn edge_cut(adjacency: &[Vec<usize>], left: &HashSet<usize>) -> usize {
-    let mut cut = 0;
-    for (u, nbrs) in adjacency.iter().enumerate() {
-        for &v in nbrs {
-            if v > u && left.contains(&u) != left.contains(&v) {
-                cut += 1;
-            }
-        }
-    }
-    cut
+    rgraph_core::undirected_edge_cut_by(adjacency, |node| left.contains(&node))
+        .expect("validated SA evidence adjacency")
 }
 
 fn validate_file(file: &EvidenceFile) -> Result<(), SaEvidenceError> {

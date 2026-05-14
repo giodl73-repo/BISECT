@@ -50,6 +50,7 @@
 | 2026-05-14 | RGRAPH Edge Cut Kernel | Extract reusable undirected edge-cut counting from local search, Pareto, and PT | archived |
 | 2026-05-14 | RGRAPH Edge Cut Consumer Expansion | Route remaining slice-based edge-cut consumers through `rgraph-core` | archived |
 | 2026-05-14 | RGRAPH Label Connectivity Kernel | Extract reusable assignment-label connectivity checks from local search, clustering, flow, and ILP | archived |
+| 2026-05-14 | RGRAPH Edge Cut Adapter Kernel | Add closure-based edge-cut adapter for map/set-shaped assignments | archived |
 
 ## Operating Model
 

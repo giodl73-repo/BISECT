@@ -2213,19 +2213,8 @@ pub fn run_all_splits_percentile(
 
 /// Count total edge cuts in an assignment.
 fn count_edge_cuts(assignment: &HashMap<usize, usize>, adj: &[Vec<usize>]) -> usize {
-    let mut cut = 0usize;
-    for (v, nbrs) in adj.iter().enumerate() {
-        let dv = assignment.get(&v).copied().unwrap_or(0);
-        for &nb in nbrs {
-            if nb > v {
-                let dn = assignment.get(&nb).copied().unwrap_or(0);
-                if dv != dn {
-                    cut += 1;
-                }
-            }
-        }
-    }
-    cut
+    rgraph_core::undirected_edge_cut_by(adj, |node| assignment.get(&node).copied().unwrap_or(0))
+        .expect("validated bisection-runner adjacency")
 }
 
 // ── BisectionEnsemble ─────────────────────────────────────────────────────────
