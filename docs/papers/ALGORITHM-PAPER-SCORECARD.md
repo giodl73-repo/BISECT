@@ -151,8 +151,8 @@ Score bands:
 | L.5 Seats-Votes | 3.7 | 3.5 | 3.4 | 3.8 | 3.4 | 3.6 | 21.4 | Strong |
 | L.6 Proportionality vs Majoritarianism | 3.7 | 3.4 | 3.4 | 3.8 | 3.4 | 3.6 | 21.3 | Strong |
 | M.0 Community Character Overview | 3.5 | 3.4 | 3.3 | 3.6 | 3.4 | 3.5 | 20.7 | Strong |
-| M.1 Economic Character via LODES | n/a | n/a | n/a | n/a | n/a | n/a | Source-only | Post-write pending |
-| M.3 Housing Character via ACS | n/a | n/a | n/a | n/a | n/a | n/a | Source-only | First draft/source gap |
+| M.1 Economic Character via LODES | 3.4 | 3.4 | 3.2 | 3.5 | 3.4 | 3.3 | 20.2 | PDF published; empirical Phase 2 pending |
+| M.3 Housing Character via ACS | 3.3 | 3.4 | 3.1 | 3.4 | 3.3 | 3.2 | 19.7 | PDF published; empirical design deferred |
 | M.6 Administrative Zone Membership | 3.5 | 3.5 | 3.3 | 3.6 | 3.4 | 3.5 | 20.8 | Strong |
 | M.9 Economic Character Weights | 3.5 | 3.5 | 3.3 | 3.6 | 3.4 | 3.5 | 20.8 | Strong |
 
@@ -177,4 +177,4 @@ Score bands:
 | J apportionment | 7 | Serviceable-plus after implementation-boundary pass | Census/SHA fixtures and Hamilton public API remain future work |
 | K compactness metrics | 8 | Strong/serviceable-plus after exact-MBC smoke package | real district exact-MBC packages and K.5 minor revision |
 | L partisan metrics | 7 | Strong | cross-link to G/A synthesis |
-| M community weights | 5 | Strong where PDFs exist | source-only papers need completion |
+| M community weights | 5 | Strong/serviceable-plus with M.1/M.3 now PDF-backed | empirical packages for M.1/M.3 |

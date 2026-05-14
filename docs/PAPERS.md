@@ -333,9 +333,9 @@ Operationalizing communities of interest as METIS edge weights. Each paper defin
 | Code | Title | PDF | Status |
 |------|-------|-----|--------|
 | M.0 | Community Character Weighting: Framework for Communities of Interest | [PDF](papers/M.0+community-character-overview.pdf) | **Accepted** |
-| M.1 | Economic Character Edge Weights via LODES | — | Post-write pending |
+| M.1 | Economic Character Edge Weights via LODES | [PDF](papers/M.1+economic-character-lodes.pdf) | PDF published; empirical Phase 2 pending |
 | M.9 | Economic Character Edge Weights via LODES — community similarity as edge modifier | [PDF](papers/M.9+economic-character-weights.pdf) | **Accepted** |
-| M.3 | Housing Character Edge Weights via ACS | — | First draft |
+| M.3 | Housing Character Edge Weights via ACS | [PDF](papers/M.3+housing-character-acs.pdf) | PDF published; empirical design deferred |
 | M.6 | Administrative Zone Co-membership (School/Fire/Electric Districts) | [PDF](papers/M.6+administrative-zone-membership.pdf) | **Accepted** |
 
 ---

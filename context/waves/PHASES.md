@@ -28,6 +28,7 @@
 | 2026-05-13 | K Exact Reock Evidence Packages | Add exact polygon-MBC Reock fixture and package evidence for K-track papers | archived |
 | 2026-05-13 | U Search Evidence Packages | Add package-backed U.2 sweep and U.4 parallel-tempering evidence boundaries | archived |
 | 2026-05-13 | G Active Ensemble Evidence Packages | Add active synthetic external trace, election, metric, plan/context evidence for G.1-G.3 | archived |
+| 2026-05-13 | M Community Source Completion | Promote M.1 and M.3 from source-only to PDF-backed paper entries | archived |
 
 ## Operating Model
 
