@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use crate::io_utils::write_json_atomic;
-use bisect_analysis::{compute_partisan_metrics, DistrictElection};
+use bisect_analysis::{try_compute_partisan_metrics, DistrictElection};
 
 // ---------------------------------------------------------------------------
 // Election CSV record
@@ -81,9 +81,31 @@ pub fn parse_election_csv<R: std::io::Read>(reader: R) -> anyhow::Result<Vec<Ele
     let mut records = Vec::new();
     for result in rdr.deserialize::<ElectionRecord>() {
         let rec = result.context("Failed to parse election CSV row")?;
+        validate_election_record(records.len() + 2, &rec)?;
         records.push(rec);
     }
     Ok(records)
+}
+
+fn validate_election_record(row: usize, rec: &ElectionRecord) -> anyhow::Result<()> {
+    validate_vote_field(row, &rec.geoid, "dem_votes", rec.dem_votes)?;
+    validate_vote_field(row, &rec.geoid, "rep_votes", rec.rep_votes)?;
+    Ok(())
+}
+
+fn validate_vote_field(
+    row: usize,
+    geoid: &str,
+    field: &'static str,
+    value: f64,
+) -> anyhow::Result<()> {
+    if !value.is_finite() {
+        anyhow::bail!("Election CSV row {row} geoid {geoid} has non-finite {field}: {value}");
+    }
+    if value < 0.0 {
+        anyhow::bail!("Election CSV row {row} geoid {geoid} has negative {field}: {value}");
+    }
+    Ok(())
 }
 
 /// Load election CSV from disk. Returns Err with guidance message if not found.
@@ -107,16 +129,26 @@ pub fn load_election_data(path: &Path, year: &str) -> anyhow::Result<Vec<Electio
 pub fn aggregate_election_to_districts(
     election: &[ElectionRecord],
     assignments: &HashMap<String, usize>,
-) -> HashMap<usize, DistrictElection> {
+) -> anyhow::Result<HashMap<usize, DistrictElection>> {
     let mut totals: HashMap<usize, (f64, f64)> = HashMap::new();
     for rec in election {
         if let Some(&dist) = assignments.get(&rec.geoid) {
             let entry = totals.entry(dist).or_insert((0.0, 0.0));
             entry.0 += rec.dem_votes;
             entry.1 += rec.rep_votes;
+            if !entry.0.is_finite() {
+                anyhow::bail!(
+                    "Aggregating election CSV overflowed Democratic votes for district {dist}"
+                );
+            }
+            if !entry.1.is_finite() {
+                anyhow::bail!(
+                    "Aggregating election CSV overflowed Republican votes for district {dist}"
+                );
+            }
         }
     }
-    totals
+    Ok(totals
         .into_iter()
         .map(|(district, (dem_votes, rep_votes))| {
             (
@@ -128,7 +160,7 @@ pub fn aggregate_election_to_districts(
                 },
             )
         })
-        .collect()
+        .collect())
 }
 
 // ---------------------------------------------------------------------------
@@ -196,12 +228,12 @@ pub fn run_partisan(args: &PartisanArgs<'_>) -> anyhow::Result<()> {
     let records = load_election_data(election_path, args.year)
         .with_context(|| format!("Loading election data from {}", election_path.display()))?;
 
-    let by_district = aggregate_election_to_districts(&records, args.assignments);
+    let by_district = aggregate_election_to_districts(&records, args.assignments)?;
     let mut districts_vec: Vec<DistrictElection> = by_district.into_values().collect();
     districts_vec.sort_by_key(|d| d.district);
 
     // Compute metrics
-    let metrics = compute_partisan_metrics(&districts_vec, None, args.bootstrap_samples);
+    let metrics = try_compute_partisan_metrics(&districts_vec, None, args.bootstrap_samples)?;
 
     // Methodology warning for non-congressional
     let methodology_warning = if args.chamber != "congressional" {
@@ -313,7 +345,7 @@ mod tests {
         ];
         let assignments: HashMap<String, usize> =
             [("t1".into(), 1usize), ("t2".into(), 1), ("t3".into(), 2)].into();
-        let by_district = aggregate_election_to_districts(&election, &assignments);
+        let by_district = aggregate_election_to_districts(&election, &assignments).unwrap();
         assert!((by_district[&1].dem_votes - 300.0).abs() < 1e-9);
         assert!((by_district[&1].rep_votes - 200.0).abs() < 1e-9);
         assert!((by_district[&2].dem_votes - 80.0).abs() < 1e-9);
@@ -358,6 +390,26 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_election_csv_rejects_non_finite_votes() {
+        let csv = "geoid,dem_votes,rep_votes\n99999999999,NaN,1000.0\n";
+        let err = parse_election_csv(Cursor::new(csv.as_bytes())).unwrap_err();
+        assert!(
+            err.to_string().contains("non-finite dem_votes"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[test]
+    fn test_parse_election_csv_rejects_negative_votes() {
+        let csv = "geoid,dem_votes,rep_votes\n99999999999,10.0,-1.0\n";
+        let err = parse_election_csv(Cursor::new(csv.as_bytes())).unwrap_err();
+        assert!(
+            err.to_string().contains("negative rep_votes"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[test]
     fn test_parse_election_csv_multiple_rows() {
         let csv = "geoid,dem_votes,rep_votes\ng1,100.0,80.0\ng2,200.0,150.0\ng3,50.0,75.0\n";
         let records = parse_election_csv(Cursor::new(csv.as_bytes())).unwrap();
@@ -383,7 +435,7 @@ mod tests {
     fn test_aggregate_empty_election_returns_empty() {
         let election: Vec<ElectionRecord> = Vec::new();
         let assignments: HashMap<String, usize> = HashMap::new();
-        let result = aggregate_election_to_districts(&election, &assignments);
+        let result = aggregate_election_to_districts(&election, &assignments).unwrap();
         assert!(result.is_empty());
     }
 
@@ -396,7 +448,7 @@ mod tests {
             rep_votes: 111.0,
         }];
         let assignments: HashMap<String, usize> = HashMap::new();
-        let result = aggregate_election_to_districts(&election, &assignments);
+        let result = aggregate_election_to_districts(&election, &assignments).unwrap();
         assert!(result.is_empty(), "unassigned GEOIDs must be dropped");
     }
 
@@ -408,7 +460,7 @@ mod tests {
             rep_votes: 200.0,
         }];
         let assignments: HashMap<String, usize> = [("t1".to_string(), 1usize)].into();
-        let result = aggregate_election_to_districts(&election, &assignments);
+        let result = aggregate_election_to_districts(&election, &assignments).unwrap();
         assert_eq!(result.len(), 1);
         assert!((result[&1].dem_votes - 300.0).abs() < 1e-9);
         assert!((result[&1].rep_votes - 200.0).abs() < 1e-9);
@@ -439,7 +491,7 @@ mod tests {
             ("c".to_string(), 1),
         ]
         .into();
-        let result = aggregate_election_to_districts(&election, &assignments);
+        let result = aggregate_election_to_districts(&election, &assignments).unwrap();
         assert_eq!(result.len(), 1);
         assert!((result[&1].dem_votes - 450.0).abs() < 1e-9);
         assert!((result[&1].rep_votes - 225.0).abs() < 1e-9);
@@ -453,7 +505,7 @@ mod tests {
             rep_votes: 5.0,
         }];
         let assignments: HashMap<String, usize> = [("x".to_string(), 7usize)].into();
-        let result = aggregate_election_to_districts(&election, &assignments);
+        let result = aggregate_election_to_districts(&election, &assignments).unwrap();
         assert!(
             result.contains_key(&7),
             "district_id from assignment must be preserved"
@@ -470,7 +522,7 @@ mod tests {
             rep_votes: 1000.0,
         }];
         let assignments: HashMap<String, usize> = [("t".to_string(), 1usize)].into();
-        let result = aggregate_election_to_districts(&election, &assignments);
+        let result = aggregate_election_to_districts(&election, &assignments).unwrap();
         assert_eq!(result[&1].dem_votes, 0.0);
         assert_eq!(result[&1].rep_votes, 1000.0);
     }
@@ -488,10 +540,34 @@ mod tests {
         }
         let assignments: HashMap<String, usize> =
             (0..500).map(|i| (format!("g{i}"), 1usize)).collect();
-        let result = aggregate_election_to_districts(&election, &assignments);
+        let result = aggregate_election_to_districts(&election, &assignments).unwrap();
         assert_eq!(result.len(), 1);
         assert!((result[&1].dem_votes - 5000.0).abs() < 1e-6);
         assert!((result[&1].rep_votes - 4000.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_aggregate_rejects_overflowed_votes() {
+        let election = vec![
+            ElectionRecord {
+                geoid: "a".into(),
+                dem_votes: f64::MAX,
+                rep_votes: 0.0,
+            },
+            ElectionRecord {
+                geoid: "b".into(),
+                dem_votes: f64::MAX,
+                rep_votes: 0.0,
+            },
+        ];
+        let assignments: HashMap<String, usize> =
+            [("a".to_string(), 1usize), ("b".to_string(), 1usize)].into();
+        let err = aggregate_election_to_districts(&election, &assignments).unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("overflowed Democratic votes for district 1"),
+            "unexpected error: {err}"
+        );
     }
 
     // ── PartisanDistrictOutput derived fields ────────────────────────────────

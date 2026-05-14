@@ -274,7 +274,10 @@ Candidate first API:
     fraction intermediates before permutation or hypothesis evidence can consume
     non-finite beta-CDF values. Audit method semantics stay in `rcount-stats`.**
 6. Seeded bootstrap resampling helpers. **Landed in `rstat-core::resampling`;
-   `bisect-analysis::partisan` consumes them for bootstrap CIs.**
+   `bisect-analysis::partisan` consumes them for bootstrap CIs. Partisan CLI
+   ingestion and the fallible metrics wrapper reject non-finite, negative, or
+   overflowed vote totals before bootstrap evidence can panic or emit non-finite
+   intervals.**
 7. Empirical p-values and multiple-testing corrections. **Landed in
    `rstat-core::hypothesis`; `bisect-analysis::permutation` and
    `bisect-analysis::bloc_voting` consume them. Named Holm correction rejects

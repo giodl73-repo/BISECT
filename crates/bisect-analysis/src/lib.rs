@@ -56,8 +56,9 @@ pub use nesting::{
 };
 pub use partisan::{
     bootstrap_ci, compute_declination, compute_efficiency_gap, compute_mean_median,
-    compute_partisan_bias, compute_partisan_metrics, compute_seats_votes_curve, DistrictElection,
-    MetricWithCI, PartisanMetrics, SeatsVotesCurve,
+    compute_partisan_bias, compute_partisan_metrics, compute_seats_votes_curve, try_bootstrap_ci,
+    try_compute_partisan_metrics, DistrictElection, MetricWithCI, PartisanError, PartisanMetrics,
+    SeatsVotesCurve,
 };
 pub use political::{PoliticalAnalyzer, PoliticalDistrict, PoliticalResult};
 pub use proportionality::{

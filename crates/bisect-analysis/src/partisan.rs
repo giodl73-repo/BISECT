@@ -1,9 +1,10 @@
-use rstat_core::resampling::bootstrap_percentile_interval;
+use rstat_core::resampling::{bootstrap_percentile_interval, BootstrapError};
 use rstat_core::summary::{mean, median};
 /// Partisan metrics: Efficiency Gap, Mean-Median, Partisan Bias, Declination,
 /// Seats-Votes Curve + Responsiveness. Bootstrap CI for applicable metrics.
 /// Spec 4 — board amendments R3 applied.
 use serde::Serialize;
+use thiserror::Error;
 
 // ---------------------------------------------------------------------------
 // Data types
@@ -78,6 +79,28 @@ pub struct PartisanMetrics {
     pub seats_votes: SeatsVotesCurve,
     pub statewide_dem_vote_share: f64,
     pub statewide_dem_seat_share: f64,
+}
+
+#[derive(Debug, Error, Clone, PartialEq)]
+pub enum PartisanError {
+    #[error("[INPUT] non-finite district {district} {field}: {value}")]
+    NonFiniteDistrictVotes {
+        district: usize,
+        field: &'static str,
+        value: f64,
+    },
+    #[error("[INPUT] negative district {district} {field}: {value}")]
+    NegativeDistrictVotes {
+        district: usize,
+        field: &'static str,
+        value: f64,
+    },
+    #[error("[NUMERIC] {operation} produced non-finite value {value}")]
+    NonFiniteAggregate { operation: &'static str, value: f64 },
+    #[error("[NUMERIC] {metric} metric produced non-finite value {value}")]
+    NonFiniteMetric { metric: &'static str, value: f64 },
+    #[error(transparent)]
+    Bootstrap(#[from] BootstrapError),
 }
 
 // ---------------------------------------------------------------------------
@@ -281,6 +304,25 @@ where
         .expect("bootstrap metric samples are finite")
 }
 
+pub fn try_bootstrap_ci<F>(
+    districts: &[DistrictElection],
+    metric_fn: F,
+    n_bootstrap: usize,
+    rng_seed: u64,
+) -> Result<(f64, f64), PartisanError>
+where
+    F: Fn(&[DistrictElection]) -> f64,
+{
+    Ok(bootstrap_percentile_interval(
+        districts,
+        n_bootstrap,
+        rng_seed,
+        metric_fn,
+        0.025,
+        0.975,
+    )?)
+}
+
 // ---------------------------------------------------------------------------
 // Combined compute
 // ---------------------------------------------------------------------------
@@ -293,6 +335,16 @@ pub fn compute_partisan_metrics(
     rng_seed_override: Option<u64>,
     n_bootstrap: usize,
 ) -> PartisanMetrics {
+    try_compute_partisan_metrics(districts, rng_seed_override, n_bootstrap)
+        .expect("partisan metric inputs are valid")
+}
+
+pub fn try_compute_partisan_metrics(
+    districts: &[DistrictElection],
+    rng_seed_override: Option<u64>,
+    n_bootstrap: usize,
+) -> Result<PartisanMetrics, PartisanError> {
+    validate_district_elections(districts)?;
     let n = districts.len();
     let seed = rng_seed_override.unwrap_or(42);
     let ci_available = n >= CI_MIN_DISTRICTS;
@@ -310,14 +362,26 @@ pub fn compute_partisan_metrics(
     let pb_val = compute_partisan_bias(districts);
     let decl_val = compute_declination(districts);
     let seats_votes = compute_seats_votes_curve(districts, 61);
+    validate_metric("efficiency_gap", eg_val)?;
+    validate_metric("mean_median", mm_val)?;
+    validate_metric("partisan_bias", pb_val)?;
+    validate_metric("declination", decl_val)?;
+    validate_metric("seats_votes responsiveness", seats_votes.responsiveness)?;
+    validate_metric("seats_votes bias", seats_votes.bias)?;
+    for (vote_share, seat_share) in &seats_votes.swing_points {
+        validate_metric("seats_votes vote_share", *vote_share)?;
+        validate_metric("seats_votes seat_share", *seat_share)?;
+    }
 
     let (eg_lo, eg_hi, mm_lo, mm_hi, pb_lo, pb_hi, decl_lo, decl_hi) = if ci_available {
         // Board amendment: print progress before bootstrap calls
         eprintln!("Running bootstrap CI ({n_bootstrap} samples, 4 metrics)...");
-        let (eg_lo, eg_hi) = bootstrap_ci(districts, compute_efficiency_gap, n_bootstrap, seed);
-        let (mm_lo, mm_hi) = bootstrap_ci(districts, compute_mean_median, n_bootstrap, seed);
-        let (pb_lo, pb_hi) = bootstrap_ci(districts, compute_partisan_bias, n_bootstrap, seed);
-        let (decl_lo, decl_hi) = bootstrap_ci(districts, compute_declination, n_bootstrap, seed);
+        let (eg_lo, eg_hi) =
+            try_bootstrap_ci(districts, compute_efficiency_gap, n_bootstrap, seed)?;
+        let (mm_lo, mm_hi) = try_bootstrap_ci(districts, compute_mean_median, n_bootstrap, seed)?;
+        let (pb_lo, pb_hi) = try_bootstrap_ci(districts, compute_partisan_bias, n_bootstrap, seed)?;
+        let (decl_lo, decl_hi) =
+            try_bootstrap_ci(districts, compute_declination, n_bootstrap, seed)?;
         (
             Some(eg_lo),
             Some(eg_hi),
@@ -369,16 +433,22 @@ pub fn compute_partisan_metrics(
         );
     }
 
-    let total_votes: f64 = districts.iter().map(|d| d.total()).sum();
+    let total_votes = finite_sum(districts.iter().map(|d| d.total()), "partisan total votes")?;
     let statewide_dem_vote_share = if total_votes > 0.0 {
-        districts.iter().map(|d| d.dem_votes).sum::<f64>() / total_votes
+        let dem_votes = finite_sum(
+            districts.iter().map(|d| d.dem_votes),
+            "partisan Democratic votes",
+        )?;
+        let value = dem_votes / total_votes;
+        validate_metric("statewide_dem_vote_share", value)?;
+        value
     } else {
         0.0
     };
     let statewide_dem_seat_share =
         districts.iter().filter(|d| d.dem_won()).count() as f64 / n.max(1) as f64;
 
-    PartisanMetrics {
+    Ok(PartisanMetrics {
         efficiency_gap: MetricWithCI {
             value: eg_val,
             direction: direction_rep_pos(eg_val),
@@ -418,7 +488,72 @@ pub fn compute_partisan_metrics(
         seats_votes,
         statewide_dem_vote_share,
         statewide_dem_seat_share,
+    })
+}
+
+fn validate_district_elections(districts: &[DistrictElection]) -> Result<(), PartisanError> {
+    for district in districts {
+        validate_vote_field(district.district, "dem_votes", district.dem_votes)?;
+        validate_vote_field(district.district, "rep_votes", district.rep_votes)?;
+        let total = district.total();
+        if !total.is_finite() {
+            return Err(PartisanError::NonFiniteAggregate {
+                operation: "district total votes",
+                value: total,
+            });
+        }
     }
+    finite_sum(
+        districts.iter().map(|district| district.total()),
+        "partisan total votes",
+    )?;
+    Ok(())
+}
+
+fn validate_vote_field(
+    district: usize,
+    field: &'static str,
+    value: f64,
+) -> Result<(), PartisanError> {
+    if !value.is_finite() {
+        return Err(PartisanError::NonFiniteDistrictVotes {
+            district,
+            field,
+            value,
+        });
+    }
+    if value < 0.0 {
+        return Err(PartisanError::NegativeDistrictVotes {
+            district,
+            field,
+            value,
+        });
+    }
+    Ok(())
+}
+
+fn finite_sum<I>(values: I, operation: &'static str) -> Result<f64, PartisanError>
+where
+    I: IntoIterator<Item = f64>,
+{
+    let mut sum = 0.0;
+    for value in values {
+        sum += value;
+        if !sum.is_finite() {
+            return Err(PartisanError::NonFiniteAggregate {
+                operation,
+                value: sum,
+            });
+        }
+    }
+    Ok(sum)
+}
+
+fn validate_metric(metric: &'static str, value: f64) -> Result<(), PartisanError> {
+    if !value.is_finite() {
+        return Err(PartisanError::NonFiniteMetric { metric, value });
+    }
+    Ok(())
 }
 
 // ---------------------------------------------------------------------------
@@ -1009,5 +1144,48 @@ mod tests {
             "responsiveness must be finite"
         );
         assert!(result.seats_votes.bias.is_finite(), "bias must be finite");
+    }
+
+    #[test]
+    fn test_try_partisan_metrics_rejects_non_finite_votes() {
+        let mut districts = uniform_plan(4, 0.55);
+        districts[2].dem_votes = f64::NAN;
+
+        match try_compute_partisan_metrics(&districts, None, 100) {
+            Err(PartisanError::NonFiniteDistrictVotes {
+                district,
+                field,
+                value,
+            }) => {
+                assert_eq!(district, 3);
+                assert_eq!(field, "dem_votes");
+                assert!(value.is_nan());
+            }
+            other => panic!("expected NonFiniteDistrictVotes, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_try_partisan_metrics_rejects_overflowed_total_votes() {
+        let districts = vec![
+            DistrictElection {
+                district: 1,
+                dem_votes: f64::MAX,
+                rep_votes: 0.0,
+            },
+            DistrictElection {
+                district: 2,
+                dem_votes: f64::MAX,
+                rep_votes: 0.0,
+            },
+        ];
+
+        match try_compute_partisan_metrics(&districts, None, 100) {
+            Err(PartisanError::NonFiniteAggregate { operation, value }) => {
+                assert_eq!(operation, "partisan total votes");
+                assert!(value.is_infinite());
+            }
+            other => panic!("expected NonFiniteAggregate, got {other:?}"),
+        }
     }
 }
