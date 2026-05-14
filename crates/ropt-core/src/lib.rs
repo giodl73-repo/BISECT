@@ -50,6 +50,11 @@ pub enum RoptError {
         point_index: usize,
         len: usize,
     },
+    #[error("[INPUT] front entry {front_index} duplicates objective index {point_index}")]
+    DuplicateFrontIndex {
+        front_index: usize,
+        point_index: usize,
+    },
     #[error("[INPUT] seed domain must not be empty")]
     EmptySeedDomain,
 }
@@ -235,6 +240,7 @@ fn validate_objective<T: ObjectiveVector>(
 }
 
 fn validate_front(front: &[usize], len: usize) -> Result<(), RoptError> {
+    let mut seen = vec![false; len];
     for (front_index, &point_index) in front.iter().enumerate() {
         if point_index >= len {
             return Err(RoptError::FrontIndexOutOfBounds {
@@ -243,6 +249,13 @@ fn validate_front(front: &[usize], len: usize) -> Result<(), RoptError> {
                 len,
             });
         }
+        if seen[point_index] {
+            return Err(RoptError::DuplicateFrontIndex {
+                front_index,
+                point_index,
+            });
+        }
+        seen[point_index] = true;
     }
     Ok(())
 }
@@ -304,6 +317,17 @@ mod tests {
             }
             other => panic!("expected non-finite objective error, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn l0_duplicate_front_index_is_rejected() {
+        assert_eq!(
+            crowding_distance(&[0, 1, 1], &[[1.0], [2.0]]),
+            Err(RoptError::DuplicateFrontIndex {
+                front_index: 2,
+                point_index: 1
+            })
+        );
     }
 
     #[test]

@@ -1,5 +1,6 @@
 use ropt_core::{
-    crowding_distance, derive_seed, dominates, fast_non_dominated_sort, ObjectiveVector, SeedPart,
+    crowding_distance, derive_seed, dominates, fast_non_dominated_sort, ObjectiveVector, RoptError,
+    SeedPart,
 };
 
 #[derive(Debug)]
@@ -97,4 +98,28 @@ fn l1_seed_derivation_matches_pareto_legacy_shape() {
         derive_seed(b"PARETO_INIT_", &[SeedPart::U32(5), SeedPart::U64(99)]).unwrap()
     );
     assert_ne!(cross, mutation);
+}
+
+#[test]
+fn l1_crowding_rejects_duplicate_front_membership() {
+    let candidates = vec![
+        Candidate {
+            compactness: 1.0,
+            partisan_deviation: 1.0,
+            vra_deficit: 1.0,
+        },
+        Candidate {
+            compactness: 2.0,
+            partisan_deviation: 2.0,
+            vra_deficit: 2.0,
+        },
+    ];
+
+    assert_eq!(
+        crowding_distance(&[0, 1, 0], &candidates),
+        Err(RoptError::DuplicateFrontIndex {
+            front_index: 2,
+            point_index: 0
+        })
+    );
 }
