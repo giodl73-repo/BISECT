@@ -24,6 +24,20 @@ pub struct DenseMatrix {
     data: Vec<f64>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Symmetric2x2 {
+    pub a00: f64,
+    pub a01: f64,
+    pub a11: f64,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Symmetric2x2Eigensystem {
+    pub lambda_min: f64,
+    pub lambda_max: f64,
+    pub minor_eigenvector: (f64, f64),
+}
+
 impl DenseMatrix {
     pub fn zeros(rows: usize, cols: usize) -> Self {
         Self {
@@ -246,13 +260,43 @@ pub fn normalize_centered(
     Ok(values)
 }
 
+pub fn symmetric_2x2_eigensystem(
+    matrix: Symmetric2x2,
+) -> Result<Symmetric2x2Eigensystem, LinearAlgebraError> {
+    validate_scalar(matrix.a00, 0, 0)?;
+    validate_scalar(matrix.a01, 0, 1)?;
+    validate_scalar(matrix.a11, 1, 1)?;
+
+    let trace_half = (matrix.a00 + matrix.a11) / 2.0;
+    let disc = (((matrix.a00 - matrix.a11) / 2.0).powi(2) + matrix.a01.powi(2)).sqrt();
+    let lambda_min = trace_half - disc;
+    let lambda_max = trace_half + disc;
+
+    let mut minor_eigenvector = if matrix.a01.abs() > 1e-12 {
+        (matrix.a01, lambda_min - matrix.a00)
+    } else if matrix.a00 < matrix.a11 {
+        (1.0, 0.0)
+    } else {
+        (0.0, 1.0)
+    };
+    let norm = l2_norm(&[minor_eigenvector.0, minor_eigenvector.1])?;
+    if norm > 0.0 {
+        minor_eigenvector.0 /= norm;
+        minor_eigenvector.1 /= norm;
+    }
+
+    Ok(Symmetric2x2Eigensystem {
+        lambda_min,
+        lambda_max,
+        minor_eigenvector,
+    })
+}
+
 fn validate_finite(matrix: &DenseMatrix) -> Result<(), LinearAlgebraError> {
     for row in 0..matrix.rows {
         for col in 0..matrix.cols {
             let value = matrix.at(row, col);
-            if !value.is_finite() {
-                return Err(LinearAlgebraError::NonFiniteValue { row, col, value });
-            }
+            validate_scalar(value, row, col)?;
         }
     }
     Ok(())
@@ -260,9 +304,14 @@ fn validate_finite(matrix: &DenseMatrix) -> Result<(), LinearAlgebraError> {
 
 fn validate_vector(values: &[f64]) -> Result<(), LinearAlgebraError> {
     for (row, &value) in values.iter().enumerate() {
-        if !value.is_finite() {
-            return Err(LinearAlgebraError::NonFiniteValue { row, col: 0, value });
-        }
+        validate_scalar(value, row, 0)?;
+    }
+    Ok(())
+}
+
+fn validate_scalar(value: f64, row: usize, col: usize) -> Result<(), LinearAlgebraError> {
+    if !value.is_finite() {
+        return Err(LinearAlgebraError::NonFiniteValue { row, col, value });
     }
     Ok(())
 }
@@ -397,5 +446,50 @@ mod tests {
             center_in_place(&mut values),
             Err(LinearAlgebraError::EmptyVector)
         );
+    }
+
+    #[test]
+    fn l0_symmetric_2x2_diagonal_minor_axis() {
+        let eigen = symmetric_2x2_eigensystem(Symmetric2x2 {
+            a00: 1.0,
+            a01: 0.0,
+            a11: 4.0,
+        })
+        .unwrap();
+
+        assert_eq!(eigen.lambda_min, 1.0);
+        assert_eq!(eigen.lambda_max, 4.0);
+        assert_eq!(eigen.minor_eigenvector, (1.0, 0.0));
+    }
+
+    #[test]
+    fn l0_symmetric_2x2_off_diagonal_eigenpair_matches_equation() {
+        let matrix = Symmetric2x2 {
+            a00: 2.0,
+            a01: 1.0,
+            a11: 2.0,
+        };
+        let eigen = symmetric_2x2_eigensystem(matrix).unwrap();
+        let (x, y) = eigen.minor_eigenvector;
+
+        assert!((eigen.lambda_min - 1.0).abs() < 1e-12);
+        assert!((eigen.lambda_max - 3.0).abs() < 1e-12);
+        assert!((matrix.a00 * x + matrix.a01 * y - eigen.lambda_min * x).abs() < 1e-12);
+        assert!((matrix.a01 * x + matrix.a11 * y - eigen.lambda_min * y).abs() < 1e-12);
+    }
+
+    #[test]
+    fn l0_symmetric_2x2_non_finite_is_rejected() {
+        match symmetric_2x2_eigensystem(Symmetric2x2 {
+            a00: 1.0,
+            a01: f64::INFINITY,
+            a11: 2.0,
+        }) {
+            Err(LinearAlgebraError::NonFiniteValue { row, col, value }) => {
+                assert_eq!((row, col), (0, 1));
+                assert!(value.is_infinite());
+            }
+            other => panic!("expected non-finite matrix error, got {other:?}"),
+        }
     }
 }

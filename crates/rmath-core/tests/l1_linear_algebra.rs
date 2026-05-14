@@ -1,6 +1,6 @@
 use rmath_core::{
-    center_in_place, dot, invert, l2_norm, mat_mul, mat_mul_vec, normalize_centered, transpose,
-    DenseMatrix, LinearAlgebraError,
+    center_in_place, dot, invert, l2_norm, mat_mul, mat_mul_vec, normalize_centered,
+    symmetric_2x2_eigensystem, transpose, DenseMatrix, LinearAlgebraError, Symmetric2x2,
 };
 
 #[test]
@@ -64,4 +64,27 @@ fn l1_non_finite_vector_input_is_rejected() {
         }
         other => panic!("expected non-finite vector error, got {other:?}"),
     }
+}
+
+#[test]
+fn l1_symmetric_2x2_matches_geosection_horizontal_band_covariance() {
+    let eigen = symmetric_2x2_eigensystem(Symmetric2x2 {
+        a00: 0.0025,
+        a01: 0.0,
+        a11: 8.25,
+    })
+    .unwrap();
+
+    assert!((eigen.lambda_min - 0.0025).abs() < 1e-12);
+    assert_eq!(eigen.minor_eigenvector, (1.0, 0.0));
+    assert!(
+        (eigen
+            .minor_eigenvector
+            .0
+            .atan2(eigen.minor_eigenvector.1)
+            .to_degrees()
+            - 90.0)
+            .abs()
+            < 1e-12
+    );
 }

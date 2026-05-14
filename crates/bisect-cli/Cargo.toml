@@ -32,6 +32,7 @@ bisect-report    = { path = "../bisect-report" }
 rplan-audit      = { path = "../rplan-audit" }
 rplan-core       = { path = "../rplan-core" }
 rplan-io         = { path = "../rplan-io" }
+rmath-core       = { path = "../rmath-core" }
 # metis is only compiled when the c-ffi-engine feature is enabled.
 metis            = { workspace = true, optional = true }
 geo.workspace         = true

@@ -7,6 +7,7 @@
 /// 4. Apply directional penalty: edges parallel to cut direction are expensive
 ///    (they contribute to zigzag), edges perpendicular are cheap (they form
 ///    a straight cut across the minor axis).
+use rmath_core::{symmetric_2x2_eigensystem, Symmetric2x2};
 use std::collections::HashMap;
 use std::path::Path;
 
@@ -156,22 +157,14 @@ pub fn compute_minor_axis(
     c01 /= n;
     c11 /= n;
 
-    // Eigenvalues of [[c00,c01],[c01,c11]]
-    // λ = (c00+c11)/2 ± sqrt(((c00-c11)/2)² + c01²)
-    let trace_half = (c00 + c11) / 2.0;
-    let disc = (((c00 - c11) / 2.0).powi(2) + c01.powi(2)).sqrt();
-    let lambda_min = trace_half - disc; // smaller eigenvalue
-
-    // Eigenvector for lambda_min: [c01, lambda_min - c00] (or [c11-lambda_min, -c01])
-    // Minor axis angle = atan2(eigvec_y, eigvec_x)
-    let (evx, evy) = if c01.abs() > 1e-12 {
-        (c01, lambda_min - c00)
-    } else if c00 < c11 {
-        (1.0, 0.0) // lat axis is minor
-    } else {
-        (0.0, 1.0) // lon axis is minor
-    };
-    Some(evx.atan2(evy))
+    let eigen = symmetric_2x2_eigensystem(Symmetric2x2 {
+        a00: c00,
+        a01: c01,
+        a11: c11,
+    })
+    .expect("finite covariance matrix");
+    let (minor_lat, minor_lon) = eigen.minor_eigenvector;
+    Some(minor_lat.atan2(minor_lon))
 }
 
 /// Apply directional edge weight penalty.

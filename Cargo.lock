@@ -237,6 +237,7 @@ dependencies = [
  "rand",
  "rayon",
  "reqwest",
+ "rmath-core",
  "rplan-audit",
  "rplan-core",
  "rplan-io",

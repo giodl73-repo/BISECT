@@ -1,4 +1,7 @@
-use rmath_core::{center_in_place, invert, l2_norm, mat_mul, normalize_in_place, DenseMatrix};
+use rmath_core::{
+    center_in_place, invert, l2_norm, mat_mul, normalize_in_place, symmetric_2x2_eigensystem,
+    DenseMatrix, Symmetric2x2,
+};
 
 #[test]
 #[ignore = "L2 numeric stress: Hilbert-like inverse smoke test"]
@@ -38,4 +41,19 @@ fn l2_long_alternating_vector_centers_and_normalizes() {
 
     assert!(values.iter().sum::<f64>().abs() < 1e-9);
     assert!((l2_norm(&values).unwrap() - 1.0).abs() < 1e-12);
+}
+
+#[test]
+#[ignore = "L2 numeric stress: near-degenerate symmetric 2x2 eigensystem"]
+fn l2_near_degenerate_symmetric_2x2_has_unit_minor_vector() {
+    let eigen = symmetric_2x2_eigensystem(Symmetric2x2 {
+        a00: 1.0,
+        a01: 1e-13,
+        a11: 1.0 + 1e-13,
+    })
+    .unwrap();
+
+    let norm = l2_norm(&[eigen.minor_eigenvector.0, eigen.minor_eigenvector.1]).unwrap();
+    assert!(eigen.lambda_min <= eigen.lambda_max);
+    assert!((norm - 1.0).abs() < 1e-12);
 }

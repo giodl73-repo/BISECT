@@ -246,15 +246,17 @@ The numeric kernel starts with small dense linear algebra, extracted from
    normalization. **Landed in `rmath-core`; `bisect-apportion::spectral` consumes
    centered normalization and `bisect-data::fiedler` consumes dot, centering, and
    normalization helpers.**
+6. Closed-form symmetric 2x2 eigensystem. **Landed in `rmath-core`;
+   `bisect-cli::geosection_orientation` consumes the minor eigenvector for PCA
+   minor-axis orientation.**
 
 `rmath-core` remains numeric-only. It must not own regression semantics,
 statistical inference, optimization objectives, or redistricting/route domain
 interpretation.
 
-Likely next `rmath-core` candidates are the remaining existing eigen routines:
-`bisect-cli::geosection_orientation` (closed-form 2x2 covariance eigensystem for
-minor-axis orientation), and possibly a graph-Laplacian power-iteration helper if
-another consumer appears beyond the current `bisect-data::fiedler` certificate.
+The remaining possible `rmath-core` candidate is a graph-Laplacian
+power-iteration helper if another consumer appears beyond the current
+`bisect-data::fiedler` certificate.
 
 ## API Invariants
 

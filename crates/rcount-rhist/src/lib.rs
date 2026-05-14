@@ -66,8 +66,8 @@ mod tests {
     use super::*;
     use rcount_core::synthetic_precinct_split_lineage_package;
     use rhist_core::{
-        verify_package, ClaimBoundary, ContextIndexEntry, CycleKind, CycleRecord, RhistManifest,
-        RhistPackage, RHIST_VERSION,
+        package_content_hash, verify_package, ClaimBoundary, ContextIndexEntry, CycleKind,
+        CycleRecord, RhistManifest, RhistPackage, RHIST_VERSION,
     };
 
     #[test]
@@ -118,7 +118,7 @@ mod tests {
     }
 
     fn rhist_package_for_mapped_events(events: Vec<LineageEvent>) -> RhistPackage {
-        RhistPackage {
+        let mut package = RhistPackage {
             manifest: RhistManifest {
                 rhist_version: RHIST_VERSION.to_string(),
                 package_id: "syn-rhist-from-rcount-lineage".to_string(),
@@ -203,6 +203,8 @@ mod tests {
                     "test package uses synthetic contexts and no crosswalk weights".to_string(),
                 ],
             },
-        }
+        };
+        package.manifest.package_content_hash = package_content_hash(&package).unwrap();
+        package
     }
 }
