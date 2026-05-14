@@ -55,6 +55,8 @@ pub enum RoptError {
         front_index: usize,
         point_index: usize,
     },
+    #[error("[NUMERIC] {operation} produced non-finite value {value}")]
+    NonFiniteResult { operation: &'static str, value: f64 },
     #[error("[INPUT] seed domain must not be empty")]
     EmptySeedDomain,
 }
@@ -158,14 +160,23 @@ pub fn crowding_distance<T: ObjectiveVector>(
         let obj_min = objectives[front[sorted[0]]].objective_value(dimension);
         let obj_max = objectives[front[sorted[n - 1]]].objective_value(dimension);
         let obj_range = obj_max - obj_min;
+        validate_result("crowding objective range", obj_range)?;
         if obj_range == 0.0 {
             continue;
         }
 
         for i in 1..n - 1 {
+            if distances[sorted[i]].is_infinite() {
+                continue;
+            }
             let prev = objectives[front[sorted[i - 1]]].objective_value(dimension);
             let next = objectives[front[sorted[i + 1]]].objective_value(dimension);
-            distances[sorted[i]] += (next - prev) / obj_range;
+            let numerator = next - prev;
+            validate_result("crowding objective span", numerator)?;
+            let increment = numerator / obj_range;
+            validate_result("crowding increment", increment)?;
+            distances[sorted[i]] += increment;
+            validate_result("crowding distance", distances[sorted[i]])?;
         }
     }
 
@@ -269,6 +280,13 @@ fn validate_front(front: &[usize], len: usize) -> Result<(), RoptError> {
     Ok(())
 }
 
+fn validate_result(operation: &'static str, value: f64) -> Result<(), RoptError> {
+    if !value.is_finite() {
+        return Err(RoptError::NonFiniteResult { operation, value });
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -299,6 +317,19 @@ mod tests {
         assert!(distance[3].is_infinite());
         assert!(distance[1].is_finite());
         assert!(distance[2].is_finite());
+    }
+
+    #[test]
+    fn l0_crowding_rejects_overflowed_objective_range() {
+        let objectives = [[-f64::MAX], [0.0], [f64::MAX]];
+
+        match crowding_distance(&[0, 1, 2], &objectives) {
+            Err(RoptError::NonFiniteResult { operation, value }) => {
+                assert_eq!(operation, "crowding objective range");
+                assert!(value.is_infinite());
+            }
+            other => panic!("expected crowding overflow error, got {other:?}"),
+        }
     }
 
     #[test]

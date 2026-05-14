@@ -80,6 +80,35 @@ fn l1_crowding_uses_front_local_positions() {
 }
 
 #[test]
+fn l1_crowding_rejects_non_finite_distance_intermediates() {
+    let candidates = vec![
+        Candidate {
+            compactness: -f64::MAX,
+            partisan_deviation: 0.0,
+            vra_deficit: 0.0,
+        },
+        Candidate {
+            compactness: 0.0,
+            partisan_deviation: 0.0,
+            vra_deficit: 0.0,
+        },
+        Candidate {
+            compactness: f64::MAX,
+            partisan_deviation: 0.0,
+            vra_deficit: 0.0,
+        },
+    ];
+
+    match crowding_distance(&[0, 1, 2], &candidates) {
+        Err(RoptError::NonFiniteResult { operation, value }) => {
+            assert_eq!(operation, "crowding objective range");
+            assert!(value.is_infinite());
+        }
+        other => panic!("expected crowding overflow error, got {other:?}"),
+    }
+}
+
+#[test]
 fn l1_seed_derivation_matches_pareto_legacy_shape() {
     let init = derive_seed(b"PARETO_INIT_", &[SeedPart::U32(5), SeedPart::U64(99)]).unwrap();
     let cross = derive_seed(

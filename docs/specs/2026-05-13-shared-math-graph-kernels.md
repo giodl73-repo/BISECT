@@ -157,7 +157,10 @@ It does not own domain objectives or feasibility constraints.
 The initial optimizer kernel has landed with generic minimization-objective
 Pareto dominance, fast non-dominated sorting, and crowding distance in
 `ropt-core`. `bisect-pareto` consumes these helpers while retaining
-redistricting objective definitions and NSGA-II orchestration.
+redistricting objective definitions and NSGA-II orchestration. Crowding-distance
+normalization rejects overflowed objective ranges, spans, increments, and
+distance sums with typed optimizer errors instead of returning non-finite
+interior front distances.
 
 Deterministic domain-separated seed derivation has also landed in `ropt-core`.
 `bisect-pareto` keeps Pareto-specific domain labels (`PARETO_INIT_`,

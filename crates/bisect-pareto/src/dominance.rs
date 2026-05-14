@@ -6,7 +6,7 @@
 //! Per spec §3.2 and §3.3.
 
 use crate::objectives::Objectives;
-use ropt_core::ObjectiveVector;
+use ropt_core::{ObjectiveVector, RoptError};
 
 impl ObjectiveVector for Objectives {
     fn objective_count(&self) -> usize {
@@ -47,7 +47,16 @@ pub fn fast_non_dominated_sort(objectives: &[Objectives]) -> Vec<Vec<usize>> {
 ///
 /// If `front` has fewer than 2 plans, all distances are f64::INFINITY.
 pub fn crowding_distance(front: &[usize], objectives: &[Objectives]) -> Vec<f64> {
-    ropt_core::crowding_distance(front, objectives).expect("valid finite bisect-pareto objectives")
+    try_crowding_distance(front, objectives).expect("valid finite bisect-pareto objectives")
+}
+
+/// Fallible crowding-distance wrapper for tests and callers that need typed
+/// numeric errors instead of the legacy infallible NSGA-II helper contract.
+pub fn try_crowding_distance(
+    front: &[usize],
+    objectives: &[Objectives],
+) -> Result<Vec<f64>, RoptError> {
+    ropt_core::crowding_distance(front, objectives)
 }
 
 #[cfg(test)]
@@ -160,6 +169,24 @@ mod tests {
         let dist = crowding_distance(&front, &objectives);
         assert_eq!(dist.len(), 1);
         assert!(dist[0].is_infinite());
+    }
+
+    #[test]
+    fn crowding_overflow_surfaces_typed_optimizer_error() {
+        let front = vec![0, 1, 2];
+        let objectives = vec![
+            obj(-f64::MAX, 0.0, 0.0),
+            obj(0.0, 0.0, 0.0),
+            obj(f64::MAX, 0.0, 0.0),
+        ];
+
+        match try_crowding_distance(&front, &objectives) {
+            Err(RoptError::NonFiniteResult { operation, value }) => {
+                assert_eq!(operation, "crowding objective range");
+                assert!(value.is_infinite());
+            }
+            other => panic!("expected crowding overflow error, got {other:?}"),
+        }
     }
 
     #[test]
