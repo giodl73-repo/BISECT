@@ -540,32 +540,8 @@ fn edge_cut(adjacency: &[Vec<usize>], assignment: &[usize]) -> usize {
 }
 
 fn all_districts_connected(adjacency: &[Vec<usize>], assignment: &[usize], k: usize) -> bool {
-    (0..k).all(|district| district_connected(adjacency, assignment, district))
-}
-
-fn district_connected(adjacency: &[Vec<usize>], assignment: &[usize], district: usize) -> bool {
-    let Some(start) = assignment.iter().position(|&value| value == district) else {
-        return false;
-    };
-    let district_size = assignment
-        .iter()
-        .filter(|&&value| value == district)
-        .count();
-    let mut visited = vec![false; assignment.len()];
-    let mut queue = VecDeque::from([start]);
-    visited[start] = true;
-    let mut seen = 0usize;
-    while let Some(node) = queue.pop_front() {
-        seen += 1;
-        for &neighbor in &adjacency[node] {
-            if neighbor < assignment.len() && !visited[neighbor] && assignment[neighbor] == district
-            {
-                visited[neighbor] = true;
-                queue.push_back(neighbor);
-            }
-        }
-    }
-    seen == district_size
+    rgraph_core::assignment_labels_connected(adjacency, assignment, 0..k)
+        .expect("validated flow adjacency and assignment")
 }
 
 #[cfg(test)]

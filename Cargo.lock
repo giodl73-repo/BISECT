@@ -337,6 +337,7 @@ dependencies = [
 name = "bisect-ilp"
 version = "0.1.0"
 dependencies = [
+ "rgraph-core",
  "serde",
  "serde_json",
  "sha2",

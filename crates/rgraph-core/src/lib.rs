@@ -54,6 +54,21 @@ pub enum EdgeCutError {
     },
 }
 
+#[derive(Debug, Error, Clone, PartialEq, Eq)]
+pub enum LabelConnectivityError {
+    #[error("assignment length {assignment_len} does not match adjacency length {adjacency_len}")]
+    AssignmentLengthMismatch {
+        adjacency_len: usize,
+        assignment_len: usize,
+    },
+    #[error("neighbor index {neighbor} from node {node} is out of bounds for graph with {node_count} nodes")]
+    NeighborOutOfBounds {
+        node: usize,
+        neighbor: usize,
+        node_count: usize,
+    },
+}
+
 pub trait NodeIndex: Copy {
     fn to_usize(self) -> Option<usize>;
 }
@@ -321,6 +336,97 @@ where
         }
     }
     Ok(cut)
+}
+
+pub fn assignment_label_connected<I, D>(
+    adjacency: &[Vec<I>],
+    assignment: &[D],
+    label: D,
+) -> Result<bool, LabelConnectivityError>
+where
+    I: NodeIndex,
+    D: Eq + Copy,
+{
+    validate_assignment_adjacency(adjacency, assignment)?;
+
+    let Some(start) = assignment.iter().position(|&assigned| assigned == label) else {
+        return Ok(false);
+    };
+    let member_count = assignment
+        .iter()
+        .filter(|&&assigned| assigned == label)
+        .count();
+
+    let mut seen = vec![false; assignment.len()];
+    let mut stack = vec![start];
+    seen[start] = true;
+    let mut reached = 0usize;
+    while let Some(node) = stack.pop() {
+        reached += 1;
+        for &neighbor in &adjacency[node] {
+            let neighbor = neighbor
+                .to_usize()
+                .expect("assignment adjacency was already validated");
+            if assignment[neighbor] == label && !seen[neighbor] {
+                seen[neighbor] = true;
+                stack.push(neighbor);
+            }
+        }
+    }
+
+    Ok(reached == member_count)
+}
+
+pub fn assignment_labels_connected<I, D, L>(
+    adjacency: &[Vec<I>],
+    assignment: &[D],
+    labels: L,
+) -> Result<bool, LabelConnectivityError>
+where
+    I: NodeIndex,
+    D: Eq + Copy,
+    L: IntoIterator<Item = D>,
+{
+    for label in labels {
+        if !assignment_label_connected(adjacency, assignment, label)? {
+            return Ok(false);
+        }
+    }
+    Ok(true)
+}
+
+fn validate_assignment_adjacency<I, D>(
+    adjacency: &[Vec<I>],
+    assignment: &[D],
+) -> Result<(), LabelConnectivityError>
+where
+    I: NodeIndex,
+{
+    if adjacency.len() != assignment.len() {
+        return Err(LabelConnectivityError::AssignmentLengthMismatch {
+            adjacency_len: adjacency.len(),
+            assignment_len: assignment.len(),
+        });
+    }
+    for (node, neighbors) in adjacency.iter().enumerate() {
+        for &neighbor in neighbors {
+            let Some(neighbor) = neighbor.to_usize() else {
+                return Err(LabelConnectivityError::NeighborOutOfBounds {
+                    node,
+                    neighbor: usize::MAX,
+                    node_count: adjacency.len(),
+                });
+            };
+            if neighbor >= assignment.len() {
+                return Err(LabelConnectivityError::NeighborOutOfBounds {
+                    node,
+                    neighbor,
+                    node_count: adjacency.len(),
+                });
+            }
+        }
+    }
+    Ok(())
 }
 
 pub fn connected_components<G>(graph: &G) -> Result<Vec<Vec<usize>>, GraphError<G::EdgeId>>
@@ -1137,6 +1243,62 @@ mod tests {
         assert_eq!(
             undirected_edge_cut(&adjacency, &assignment),
             Err(EdgeCutError::NeighborOutOfBounds {
+                node: 0,
+                neighbor: 2,
+                node_count: 2
+            })
+        );
+    }
+
+    #[test]
+    fn assignment_label_connected_accepts_contiguous_label() {
+        let adjacency = vec![vec![1_usize], vec![0, 2], vec![1, 3], vec![2]];
+        let assignment = vec![0, 0, 1, 1];
+
+        assert!(assignment_label_connected(&adjacency, &assignment, 0).unwrap());
+        assert!(assignment_label_connected(&adjacency, &assignment, 1).unwrap());
+        assert!(assignment_labels_connected(&adjacency, &assignment, 0..2).unwrap());
+    }
+
+    #[test]
+    fn assignment_label_connected_rejects_disconnected_label() {
+        let adjacency = vec![vec![1_usize], vec![0, 2], vec![1]];
+        let assignment = vec![0, 1, 0];
+
+        assert!(!assignment_label_connected(&adjacency, &assignment, 0).unwrap());
+        assert!(!assignment_labels_connected(&adjacency, &assignment, 0..2).unwrap());
+    }
+
+    #[test]
+    fn assignment_label_connected_returns_false_for_missing_label() {
+        let adjacency = vec![vec![1_usize], vec![0]];
+        let assignment = vec![0, 0];
+
+        assert!(!assignment_label_connected(&adjacency, &assignment, 1).unwrap());
+    }
+
+    #[test]
+    fn assignment_label_connected_rejects_length_mismatch() {
+        let adjacency = vec![vec![1_usize], vec![0]];
+        let assignment = vec![0];
+
+        assert_eq!(
+            assignment_label_connected(&adjacency, &assignment, 0),
+            Err(LabelConnectivityError::AssignmentLengthMismatch {
+                adjacency_len: 2,
+                assignment_len: 1
+            })
+        );
+    }
+
+    #[test]
+    fn assignment_label_connected_rejects_out_of_bounds_neighbor() {
+        let adjacency = vec![vec![2_usize], vec![0]];
+        let assignment = vec![0, 0];
+
+        assert_eq!(
+            assignment_label_connected(&adjacency, &assignment, 0),
+            Err(LabelConnectivityError::NeighborOutOfBounds {
                 node: 0,
                 neighbor: 2,
                 node_count: 2

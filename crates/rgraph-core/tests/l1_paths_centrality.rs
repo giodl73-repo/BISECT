@@ -1,9 +1,9 @@
 use rgraph_core::{
-    articulation_points, articulation_points_with_filter, bridges, bridges_with_filter,
-    connected_components, connected_components_in_nodes_with_filter, edge_betweenness,
-    reachable_nodes_with_filter, shortest_path_distance, shortest_path_distance_with_filter,
-    single_source_shortest_paths, undirected_edge_cut, Bridge, DirectedWeightedGraph, GraphError,
-    WeightedEdge,
+    articulation_points, articulation_points_with_filter, assignment_labels_connected, bridges,
+    bridges_with_filter, connected_components, connected_components_in_nodes_with_filter,
+    edge_betweenness, reachable_nodes_with_filter, shortest_path_distance,
+    shortest_path_distance_with_filter, single_source_shortest_paths, undirected_edge_cut, Bridge,
+    DirectedWeightedGraph, GraphError, WeightedEdge,
 };
 
 #[derive(Debug, Clone)]
@@ -193,4 +193,14 @@ fn l1_undirected_edge_cut_matches_redistricting_fixture() {
     let assignment = vec![0_u32, 0, 1, 1];
 
     assert_eq!(undirected_edge_cut(&adjacency, &assignment).unwrap(), 2);
+}
+
+#[test]
+fn l1_assignment_labels_connected_matches_redistricting_fixture() {
+    let adjacency = vec![vec![1_usize], vec![0, 2], vec![1, 3], vec![2, 4], vec![3]];
+    let connected_assignment = vec![0_usize, 0, 1, 1, 1];
+    let disconnected_assignment = vec![0_usize, 1, 0, 1, 1];
+
+    assert!(assignment_labels_connected(&adjacency, &connected_assignment, 0..2).unwrap());
+    assert!(!assignment_labels_connected(&adjacency, &disconnected_assignment, 0..2).unwrap());
 }

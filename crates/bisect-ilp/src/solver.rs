@@ -342,31 +342,8 @@ impl<'a> ExactK2Search<'a> {
 }
 
 fn district_connected(adjacency: &[Vec<usize>], assignment: &[usize], district: usize) -> bool {
-    let Some(start) = assignment
-        .iter()
-        .enumerate()
-        .find_map(|(idx, &assigned)| (assigned == district).then_some(idx))
-    else {
-        return false;
-    };
-    let member_count = assignment
-        .iter()
-        .filter(|&&assigned| assigned == district)
-        .count();
-    let mut seen = vec![false; adjacency.len()];
-    let mut stack = vec![start];
-    seen[start] = true;
-    let mut reached = 0usize;
-    while let Some(node) = stack.pop() {
-        reached += 1;
-        for &neighbor in &adjacency[node] {
-            if assignment[neighbor] == district && !seen[neighbor] {
-                seen[neighbor] = true;
-                stack.push(neighbor);
-            }
-        }
-    }
-    reached == member_count
+    rgraph_core::assignment_label_connected(adjacency, assignment, district)
+        .expect("validated ILP adjacency and assignment")
 }
 
 // ── Convenience wrapper: build formulation then solve ─────────────────────────

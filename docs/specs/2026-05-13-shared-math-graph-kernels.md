@@ -199,7 +199,11 @@ The first implementation wave should create `rgraph-core` with a narrow API:
    zero-based spectral summary helper through the shared kernel. HashMap-shaped
    bisection-runner helpers and HashSet-shaped evidence helpers remain local
    until a dedicated assignment adapter is justified.**
-10. Unit tests with tiny synthetic graphs covering:
+10. Assignment-label connectivity over adjacency lists. **Landed in
+    `rgraph-core`; `bisect-local-search`, `bisect-clustering`, `bisect-flow`, and
+    `bisect-ilp` consume the shared kernel while retaining domain wrappers for
+    population balance, repair, search, and solver semantics.**
+11. Unit tests with tiny synthetic graphs covering:
    - equal shortest-path split;
    - ignored non-shortest direct edge;
   - edge-filtered disconnection;

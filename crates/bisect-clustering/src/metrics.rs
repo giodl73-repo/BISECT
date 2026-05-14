@@ -1,5 +1,3 @@
-use std::collections::{HashSet, VecDeque};
-
 pub fn edge_cut(adjacency: &[Vec<usize>], assignment: &[usize]) -> usize {
     rgraph_core::undirected_edge_cut(adjacency, assignment)
         .expect("validated clustering adjacency and assignment")
@@ -24,29 +22,6 @@ pub fn population_deviation(weights: &[i64], assignment: &[usize], k: usize) -> 
 }
 
 pub fn all_clusters_connected(adjacency: &[Vec<usize>], assignment: &[usize], k: usize) -> bool {
-    (0..k).all(|district| cluster_connected(adjacency, assignment, district))
-}
-
-fn cluster_connected(adjacency: &[Vec<usize>], assignment: &[usize], district: usize) -> bool {
-    let members: Vec<usize> = assignment
-        .iter()
-        .enumerate()
-        .filter_map(|(idx, &assigned)| (assigned == district).then_some(idx))
-        .collect();
-    if members.is_empty() {
-        return false;
-    }
-    let member_set: HashSet<usize> = members.iter().copied().collect();
-    let mut visited = HashSet::new();
-    let mut queue = VecDeque::new();
-    visited.insert(members[0]);
-    queue.push_back(members[0]);
-    while let Some(node) = queue.pop_front() {
-        for &neighbor in &adjacency[node] {
-            if member_set.contains(&neighbor) && visited.insert(neighbor) {
-                queue.push_back(neighbor);
-            }
-        }
-    }
-    visited.len() == members.len()
+    rgraph_core::assignment_labels_connected(adjacency, assignment, 0..k)
+        .expect("validated clustering adjacency and assignment")
 }
