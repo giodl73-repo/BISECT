@@ -19,3 +19,12 @@ external traces, metric outputs, diagnostics, and RPLAN/RCTX baseline packages
 for the headline percentile claims.  Those claims should not be upgraded from
 protocol statements to findings until that package is replaced or supplemented
 by active evidence packages.
+
+The repository now also includes an active synthetic package at
+\texttt{docs/examples/g-ensemble-evidence-packages/G.1-G.3+active-synthetic/}.
+It supplies every required artifact role---external trace, metric output,
+diagnostics, BISECT plan, and RCTX context---and is hash-validated by
+\texttt{bisect-ensemble::evidence\_manifest}.  This proves the package contract
+is executable, but the files are synthetic smoke data; real GerryChain/ReCom
+traces remain required before citing the paper's state percentiles as empirical
+findings.

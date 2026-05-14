@@ -144,9 +144,9 @@ Ensemble methods: GerryChain/ReCom comparison, diagnostics, mixing time. How doe
 | Code | Title | PDF | Note |
 |------|-------|-----|------|
 | G.0 | Ensemble Comparison Methodology | [PDF](papers/G.0+ensemble-methodology.pdf) | Framework |
-| G.1 | GerryChain Congressional Comparison — 6 key states | [PDF](papers/G.1+gerrychain-congressional-comparison.pdf) | missing-evidence package: `docs/examples/g-ensemble-evidence-packages/G.1-G.3+missing-evidence/` |
-| G.2 | Partisan Outcome Distributions | [PDF](papers/G.2+partisan-outcome-distributions.pdf) | missing-evidence package: `docs/examples/g-ensemble-evidence-packages/G.1-G.3+missing-evidence/` |
-| G.3 | Compactness Distribution Position | [PDF](papers/G.3+compactness-distribution-position.pdf) | missing-evidence package: `docs/examples/g-ensemble-evidence-packages/G.1-G.3+missing-evidence/` |
+| G.1 | GerryChain Congressional Comparison — 6 key states | [PDF](papers/G.1+gerrychain-congressional-comparison.pdf) | active synthetic + missing real-evidence packages |
+| G.2 | Partisan Outcome Distributions | [PDF](papers/G.2+partisan-outcome-distributions.pdf) | active synthetic + missing real-evidence packages |
+| G.3 | Compactness Distribution Position | [PDF](papers/G.3+compactness-distribution-position.pdf) | active synthetic + missing real-evidence packages |
 | G.4 | Ensemble Diagnostics — R-hat, ESS, Hamming | [PDF](papers/G.4+ensemble-diagnostics-paper.pdf) | |
 | G.5 | Convergence and Mixing Time Analysis | [PDF](papers/G.5+convergence-mixing-analysis.pdf) | diagnostic, not proof of mixing |
 | G.6 | Short-Burst Optimization for Minimum-Edge-Cut Redistricting | [PDF](papers/G.6+short-burst.pdf) | **Accepted** 3.0/4 — `--search short-burst` |

@@ -108,9 +108,9 @@ Score bands:
 | Paper | P1 | P2 | P3 | P4 | P5 | P6 | Total | Priority |
 |---|---:|---:|---:|---:|---:|---:|---:|---|
 | G.0 Ensemble Methodology | 3.1 | 3.1 | 3.0 | 3.2 | 3.3 | 3.1 | 18.8 | Needs modern package/diagnostic framing |
-| G.1 GerryChain Congressional Comparison | 3.4 | 3.3 | 3.3 | 3.5 | 3.5 | 3.3 | 20.3 | Stronger boundary; hash-bound missing-evidence package |
-| G.2 Partisan Outcome Distributions | 3.3 | 3.2 | 3.1 | 3.4 | 3.4 | 3.2 | 19.6 | Serviceable-plus; hash-bound election/ensemble gap package |
-| G.3 Compactness Distribution Position | 3.4 | 3.3 | 3.2 | 3.5 | 3.5 | 3.3 | 20.2 | Stronger boundary; hash-bound metric/trace gap package |
+| G.1 GerryChain Congressional Comparison | 3.5 | 3.4 | 3.4 | 3.6 | 3.6 | 3.4 | 20.9 | Stronger; active synthetic package plus real-evidence gap |
+| G.2 Partisan Outcome Distributions | 3.4 | 3.3 | 3.2 | 3.5 | 3.5 | 3.3 | 20.2 | Stronger; active synthetic package plus real-election gap |
+| G.3 Compactness Distribution Position | 3.5 | 3.4 | 3.3 | 3.6 | 3.6 | 3.4 | 20.8 | Stronger; active synthetic package plus real-metric gap |
 | G.4 Ensemble Diagnostics | 3.8 | 3.7 | 3.7 | 3.9 | 4.0 | 3.6 | 22.7 | Golden |
 | G.5 Convergence Mixing Analysis | 3.4 | 3.4 | 3.2 | 3.6 | 3.4 | 3.3 | 20.3 | Strong; diagnostics scoped correctly |
 | G.6 Short-Burst | 3.3 | 3.5 | 3.2 | 3.3 | 3.5 | 3.4 | 20.2 | Strong draft, accepted but evidence could deepen |
@@ -163,8 +163,9 @@ Score bands:
 2. Package evidence follow-through: U.2/U.4 now have synthetic package evidence,
    but still need real archived sweep and production CLI packages before they can
    score as implementation papers.
-3. G-track package follow-through: G.1-G.3 need archived external traces and
-   election/metric packages before their percentile claims can score higher.
+3. G-track package follow-through: G.1-G.3 now have active synthetic package
+   evidence, but still need archived real external traces and election/metric
+   packages before their percentile claims can score as empirical findings.
 
 ## Track Summary
 
@@ -172,7 +173,7 @@ Score bands:
 |---|---:|---|---|
 | B/T construction foundations | 26 | Strong for reviewed/new slices, serviceable for older slices; T.5-T.7 golden and T.8/T.9 strong | legacy visuals and audit/package bridges |
 | U search/optimization/audit | 21 | Strong after synthetic U.2/U.4 package and U.10/U.16-U.20 golden slices | real archived sweep/CLI packages for U.2/U.4 |
-| G ensemble/sampling | 16 | Strong/serviceable-plus after cleanup; G.4/G.7/G.10/G.11 golden | archived external traces for G.1-G.3 |
+| G ensemble/sampling | 16 | Strong after active synthetic G.1-G.3 package; G.4/G.7/G.10/G.11 golden | archived real external traces for G.1-G.3 |
 | J apportionment | 7 | Serviceable-plus after implementation-boundary pass | Census/SHA fixtures and Hamilton public API remain future work |
 | K compactness metrics | 8 | Strong/serviceable-plus after exact-MBC smoke package | real district exact-MBC packages and K.5 minor revision |
 | L partisan metrics | 7 | Strong | cross-link to G/A synthesis |
