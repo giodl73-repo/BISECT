@@ -1,4 +1,5 @@
 use rstat_core::probability::regularized_incomplete_beta;
+use rstat_core::resampling::{bootstrap_percentile_interval, bootstrap_statistics};
 use rstat_core::summary::{percentile_interval_sorted_copy, quantile_sorted_copy, summary_stats};
 
 #[test]
@@ -28,4 +29,18 @@ fn l1_summary_and_probability_compose_for_interval_report() {
     assert!((stats.mean - 0.45).abs() < 1e-12);
     assert!(lo < stats.mean && stats.mean < hi);
     assert!((beta_mid - 0.5).abs() < 0.01);
+}
+
+#[test]
+fn l1_bootstrap_summary_interval_composes_with_quantiles() {
+    let sample = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
+    let stat = |xs: &[f64]| xs.iter().sum::<f64>() / xs.len() as f64;
+
+    let stats = bootstrap_statistics(&sample, 100, 99, stat).unwrap();
+    let direct_interval = percentile_interval_sorted_copy(&stats, 0.10, 0.90).unwrap();
+    let helper_interval =
+        bootstrap_percentile_interval(&sample, 100, 99, stat, 0.10, 0.90).unwrap();
+
+    assert_eq!(direct_interval, helper_interval);
+    assert!(helper_interval.0 <= helper_interval.1);
 }

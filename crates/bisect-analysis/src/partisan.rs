@@ -1,7 +1,5 @@
-use rand::rngs::SmallRng;
-use rand::seq::SliceRandom;
-use rand::SeedableRng;
-use rstat_core::summary::{mean, median, percentile_interval_sorted_copy};
+use rstat_core::resampling::bootstrap_percentile_interval;
+use rstat_core::summary::{mean, median};
 /// Partisan metrics: Efficiency Gap, Mean-Median, Partisan Bias, Declination,
 /// Seats-Votes Curve + Responsiveness. Bootstrap CI for applicable metrics.
 /// Spec 4 — board amendments R3 applied.
@@ -279,16 +277,7 @@ pub fn bootstrap_ci<F>(
 where
     F: Fn(&[DistrictElection]) -> f64,
 {
-    let mut rng = SmallRng::seed_from_u64(rng_seed);
-    let n = districts.len();
-    let mut samples: Vec<f64> = Vec::with_capacity(n_bootstrap);
-    for _ in 0..n_bootstrap {
-        let resample: Vec<DistrictElection> = (0..n)
-            .map(|_| districts.choose(&mut rng).unwrap().clone())
-            .collect();
-        samples.push(metric_fn(&resample));
-    }
-    percentile_interval_sorted_copy(&samples, 0.025, 0.975)
+    bootstrap_percentile_interval(districts, n_bootstrap, rng_seed, metric_fn, 0.025, 0.975)
         .expect("bootstrap metric samples are finite")
 }
 

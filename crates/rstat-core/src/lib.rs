@@ -173,6 +173,129 @@ pub mod summary {
     }
 }
 
+pub mod resampling {
+    use crate::summary::{percentile_interval_sorted_copy, SummaryError};
+    use rand::rngs::SmallRng;
+    use rand::{Rng, SeedableRng};
+    use thiserror::Error;
+
+    #[derive(Debug, Error, Clone, PartialEq)]
+    pub enum BootstrapError {
+        #[error("[INPUT] empty bootstrap sample")]
+        EmptySample,
+        #[error("[INPUT] bootstrap replicate count must be positive")]
+        ZeroReplicates,
+        #[error("[INPUT] bootstrap statistic for replicate {replicate} is non-finite: {value}")]
+        NonFiniteStatistic { replicate: usize, value: f64 },
+        #[error(transparent)]
+        Summary(#[from] SummaryError),
+    }
+
+    pub fn bootstrap_statistics<T, F>(
+        sample: &[T],
+        n_replicates: usize,
+        seed: u64,
+        statistic: F,
+    ) -> Result<Vec<f64>, BootstrapError>
+    where
+        T: Clone,
+        F: Fn(&[T]) -> f64,
+    {
+        if sample.is_empty() {
+            return Err(BootstrapError::EmptySample);
+        }
+        if n_replicates == 0 {
+            return Err(BootstrapError::ZeroReplicates);
+        }
+
+        let mut rng = SmallRng::seed_from_u64(seed);
+        let mut stats = Vec::with_capacity(n_replicates);
+        for replicate in 0..n_replicates {
+            let resample: Vec<T> = (0..sample.len())
+                .map(|_| sample[rng.gen_range(0..sample.len())].clone())
+                .collect();
+            let value = statistic(&resample);
+            if !value.is_finite() {
+                return Err(BootstrapError::NonFiniteStatistic { replicate, value });
+            }
+            stats.push(value);
+        }
+        Ok(stats)
+    }
+
+    pub fn bootstrap_percentile_interval<T, F>(
+        sample: &[T],
+        n_replicates: usize,
+        seed: u64,
+        statistic: F,
+        low_q: f64,
+        high_q: f64,
+    ) -> Result<(f64, f64), BootstrapError>
+    where
+        T: Clone,
+        F: Fn(&[T]) -> f64,
+    {
+        let stats = bootstrap_statistics(sample, n_replicates, seed, statistic)?;
+        Ok(percentile_interval_sorted_copy(&stats, low_q, high_q)?)
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn l0_bootstrap_statistics_are_seed_reproducible() {
+            let sample = [1.0, 2.0, 3.0, 4.0];
+            let stat = |xs: &[f64]| xs.iter().sum::<f64>() / xs.len() as f64;
+
+            let a = bootstrap_statistics(&sample, 20, 42, stat).unwrap();
+            let b = bootstrap_statistics(&sample, 20, 42, stat).unwrap();
+            let c = bootstrap_statistics(&sample, 20, 43, stat).unwrap();
+
+            assert_eq!(a, b);
+            assert_ne!(a, c);
+        }
+
+        #[test]
+        fn l0_bootstrap_percentile_interval_is_ordered() {
+            let sample = [1.0, 2.0, 3.0, 4.0, 5.0];
+            let stat = |xs: &[f64]| xs.iter().sum::<f64>() / xs.len() as f64;
+
+            let (lo, hi) = bootstrap_percentile_interval(&sample, 200, 7, stat, 0.025, 0.975)
+                .expect("bootstrap CI should compute");
+
+            assert!(lo <= hi);
+            assert!((1.0..=5.0).contains(&lo));
+            assert!((1.0..=5.0).contains(&hi));
+        }
+
+        #[test]
+        fn l0_bootstrap_rejects_empty_and_zero_replicates() {
+            let stat = |xs: &[f64]| xs.iter().sum::<f64>();
+            assert_eq!(
+                bootstrap_statistics::<f64, _>(&[], 10, 1, stat),
+                Err(BootstrapError::EmptySample)
+            );
+            assert_eq!(
+                bootstrap_statistics(&[1.0], 0, 1, stat),
+                Err(BootstrapError::ZeroReplicates)
+            );
+        }
+
+        #[test]
+        fn l0_bootstrap_rejects_non_finite_statistics() {
+            let err = bootstrap_statistics(&[1.0, 2.0], 1, 1, |_| f64::NAN).unwrap_err();
+            assert!(matches!(
+                err,
+                BootstrapError::NonFiniteStatistic {
+                    replicate: 0,
+                    value
+                } if value.is_nan()
+            ));
+        }
+    }
+}
+
 pub mod mcmc {
     use thiserror::Error;
 

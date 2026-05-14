@@ -1,5 +1,6 @@
 use rstat_core::mcmc::{effective_sample_size, hamming_autocorrelation};
 use rstat_core::probability::regularized_incomplete_beta;
+use rstat_core::resampling::bootstrap_percentile_interval;
 use rstat_core::summary::{quantile_sorted_copy, summary_stats};
 
 #[test]
@@ -60,4 +61,18 @@ fn l2_hamming_autocorrelation_handles_large_trajectory() {
     assert_eq!(autocorr.len(), 51);
     assert_eq!(autocorr[0], 0.0);
     assert!(autocorr.iter().all(|v| (0.0..=1.0).contains(v)));
+}
+
+#[test]
+#[ignore = "L2 numeric stress: many deterministic bootstrap replicates"]
+fn l2_bootstrap_percentile_interval_large_replicate_count() {
+    let sample: Vec<f64> = (0..2_000).map(|i| (i % 101) as f64).collect();
+    let stat = |xs: &[f64]| xs.iter().sum::<f64>() / xs.len() as f64;
+
+    let (lo, hi) = bootstrap_percentile_interval(&sample, 5_000, 20260514, stat, 0.025, 0.975)
+        .expect("large bootstrap should compute");
+
+    assert!(lo < hi);
+    assert!(lo > 45.0);
+    assert!(hi < 55.0);
 }

@@ -191,6 +191,8 @@ Candidate first API:
    without moving RCOUNT method semantics out of `rcount-stats`. **Initial
    incomplete-beta and Lanczos-gamma helpers landed; audit method semantics stay
    in `rcount-stats`.**
+6. Seeded bootstrap resampling helpers. **Landed in `rstat-core::resampling`;
+   `bisect-analysis::partisan` consumes them for bootstrap CIs.**
 
 RCOUNT should continue to own election-audit method replay. `rstat-core` owns
 only reusable math.

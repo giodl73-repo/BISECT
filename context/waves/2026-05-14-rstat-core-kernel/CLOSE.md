@@ -13,11 +13,13 @@ kernel crate.
   - Probability helper: regularized incomplete beta
   - Summary helpers: mean, summary statistics, median, deterministic R-7
     quantiles, percentile intervals
+  - Resampling helpers: seeded bootstrap statistics and percentile intervals
 - `bisect-analysis`
   - ensemble diagnostics now delegate reusable math to `rstat-core`
   - permutation report now uses `rstat-core` probability math
   - partisan mean-median and bootstrap percentile intervals now use
     `rstat-core` summary helpers
+  - partisan bootstrap CI now uses `rstat-core` resampling helpers
 - Test ladder
   - L0 inline unit tests for summary, MCMC, and probability helpers
   - L1 integration tests for composed summary/probability and MCMC diagnostics
@@ -26,7 +28,7 @@ kernel crate.
 
 ## Deferred
 
-- Bootstrap/permutation scaffolds and multiple-testing helpers.
+- General permutation scaffolds and multiple-testing helpers.
 - Any RCOUNT audit-method extraction. `rcount-stats` remains the owner for
   election-audit replay semantics.
 

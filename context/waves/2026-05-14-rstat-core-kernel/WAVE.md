@@ -26,7 +26,8 @@ semantics out of `rcount-stats`.
 | 01 - MCMC diagnostics kernel | DONE | `rstat-core::mcmc`; `bisect-analysis::ensemble_diagnostics` wrappers |
 | 02 - Probability kernel | DONE | `rstat-core::probability::regularized_incomplete_beta`; permutation consumer |
 | 03 - Summary and quantile kernel | DONE | `rstat-core::summary`; L0/L1/L2 tests; partisan consumer |
-| 04 - Close and validation | DONE | `cargo test -p rstat-core`; `cargo test -p rstat-core -- --ignored`; `cargo test -p bisect-analysis` |
+| 04 - Bootstrap resampling kernel | DONE | `rstat-core::resampling`; L0/L1/L2 tests; partisan bootstrap consumer |
+| 05 - Close and validation | DONE | `cargo test -p rstat-core`; `cargo test -p rstat-core -- --ignored`; `cargo test -p bisect-analysis` |
 
 ## Close Summary
 
@@ -39,6 +40,7 @@ semantics out of `rcount-stats`.
 - regularized incomplete beta with Lanczos-gamma support.
 - descriptive summary statistics;
 - deterministic R-7 quantiles and percentile intervals.
+- seeded bootstrap statistic and percentile interval helpers.
 
 `bisect-analysis` still owns redistricting-specific record shapes and
 permutation-test report semantics, but delegates reusable math to `rstat-core`.
