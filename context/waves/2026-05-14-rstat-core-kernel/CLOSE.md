@@ -29,16 +29,21 @@ kernel crate.
   - bloc-voting cluster-bootstrap intervals now use `rstat-core` percentile
     intervals
 - Test ladder
-  - L0 inline unit tests for summary, MCMC, and probability helpers
-  - L1 integration tests for composed summary/probability and MCMC diagnostics
-  - L2 ignored numeric stress tests for large samples, long traces, beta grids,
-    and larger partition trajectories
+  - L0 inline unit tests for summary, resampling, hypothesis, MCMC, and
+    probability helpers
+  - L1 integration tests for composed summary/probability/bootstrap/hypothesis
+    helpers and MCMC diagnostics
+  - L2 ignored numeric stress tests for large samples, weighted summaries, long
+    traces, beta and Normal grids, bootstrap replicates, and multiple-testing
+    families
 
 ## Deferred
 
 - Additional method-specific hypothesis reports beyond current BISECT consumers.
 - Any RCOUNT audit-method extraction. `rcount-stats` remains the owner for
   election-audit replay semantics.
+- ROUTE consumption. The shared crates remain incubated in this workspace until a
+  portable git/local dependency plan is executed outside this wave.
 
 ## Validation
 

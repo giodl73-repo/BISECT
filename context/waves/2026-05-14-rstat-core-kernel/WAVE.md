@@ -31,7 +31,7 @@ semantics out of `rcount-stats`.
 | 06 - Weighted summary kernel | DONE | `rstat-core::summary` weighted helpers; bloc-voting and compactness consumers |
 | 07 - Normal CDF probability helper | DONE | `rstat-core::probability::standard_normal_cdf`; bloc-voting consumer |
 | 08 - Bootstrap percentile interval reuse | DONE | bloc-voting cluster bootstrap uses `rstat-core::summary` intervals |
-| 09 - Close and validation | DONE | `cargo test -p rstat-core`; `cargo test -p rstat-core -- --ignored`; `cargo test -p bisect-analysis` |
+| 09 - Close and validation | DONE | full `rstat-core` L0/L1/L2 ladder; full `bisect-analysis` consumer suite; `git diff --check` |
 
 ## Close Summary
 
@@ -51,8 +51,8 @@ semantics out of `rcount-stats`.
 - standard Normal CDF approximation.
 - R-7 percentile interval reuse for bootstrap reports.
 
-`bisect-analysis` still owns redistricting-specific record shapes and
-permutation-test report semantics, but delegates reusable math to `rstat-core`.
-The test ladder now includes inline L0 tests, integration L1 tests, and ignored
-L2 numeric stress tests that can be run explicitly.
+`bisect-analysis` still owns redistricting-specific record shapes, legal/report
+interpretations, and election-audit semantics, but delegates reusable math to
+`rstat-core`. The test ladder now includes inline L0 tests, integration L1 tests,
+and ignored L2 numeric stress tests that can be run explicitly.
 
