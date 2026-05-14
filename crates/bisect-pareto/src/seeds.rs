@@ -9,8 +9,7 @@ use ropt_core::{derive_seed, SeedPart};
 
 /// Derive an initialisation seed for plan `i`.
 ///
-/// SHA-256("PARETO_INIT_" || i:u32le || "_" || base_seed:u64le) → first 8 bytes as u64le
-/// Input: 12 + 4 + 1 + 8 = 25 bytes total
+/// Uses `ropt-core`'s typed seed transcript with the `"PARETO_INIT_"` domain.
 pub fn init_seed(base_seed: u64, i: u32) -> u64 {
     derive_seed(
         b"PARETO_INIT_",
@@ -21,9 +20,7 @@ pub fn init_seed(base_seed: u64, i: u32) -> u64 {
 
 /// Derive a crossover seed for generation `gen`, plan pair index `i`.
 ///
-/// SHA-256("PARETO_CROSS_" || gen:u32le || "_" || i:u32le || "_" || base_seed:u64le)
-/// → first 8 bytes as u64le
-/// Input: 13 + 4 + 1 + 4 + 1 + 8 = 31 bytes total
+/// Uses `ropt-core`'s typed seed transcript with the `"PARETO_CROSS_"` domain.
 pub fn cross_seed(base_seed: u64, gen: u32, i: u32) -> u64 {
     derive_seed(
         b"PARETO_CROSS_",
@@ -38,9 +35,7 @@ pub fn cross_seed(base_seed: u64, gen: u32, i: u32) -> u64 {
 
 /// Derive a mutation seed for generation `gen`, offspring index `i`.
 ///
-/// SHA-256("PARETO_MUT_" || gen:u32le || "_" || i:u32le || "_" || base_seed:u64le)
-/// → first 8 bytes as u64le
-/// Input: 11 + 4 + 1 + 4 + 1 + 8 = 29 bytes total
+/// Uses `ropt-core`'s typed seed transcript with the `"PARETO_MUT_"` domain.
 pub fn mut_seed(base_seed: u64, gen: u32, i: u32) -> u64 {
     derive_seed(
         b"PARETO_MUT_",

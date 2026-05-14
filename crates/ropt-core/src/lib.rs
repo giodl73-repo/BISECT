@@ -177,7 +177,10 @@ pub fn derive_seed(domain: &[u8], parts: &[SeedPart]) -> Result<u64, RoptError> 
         return Err(RoptError::EmptySeedDomain);
     }
     let mut hasher = Sha256::new();
+    hasher.update(b"ropt-seed-v2");
+    hasher.update((domain.len() as u64).to_le_bytes());
     hasher.update(domain);
+    hasher.update((parts.len() as u64).to_le_bytes());
     for part in parts {
         match part {
             SeedPart::U32(value) => {
@@ -356,6 +359,14 @@ mod tests {
             derive_seed(b"SEED_DOMAIN_", &[SeedPart::U32(1), SeedPart::U32(0)]).unwrap();
 
         assert_ne!(single_u64, split_u32s);
+    }
+
+    #[test]
+    fn l0_seed_derivation_tags_domain_boundary() {
+        let with_part = derive_seed(b"SEED_DOMAIN_", &[SeedPart::U32(1)]).unwrap();
+        let domain_absorbing_part = derive_seed(b"SEED_DOMAIN_u32\x01\x00\x00\x00", &[]).unwrap();
+
+        assert_ne!(with_part, domain_absorbing_part);
     }
 
     #[test]

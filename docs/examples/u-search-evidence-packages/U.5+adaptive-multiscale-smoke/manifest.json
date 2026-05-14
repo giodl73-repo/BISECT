@@ -4,7 +4,7 @@
   "papers": ["U.5"],
   "fixture_file": {
     "path": "adaptive-fixtures.json",
-    "sha256": "2204914913a6b72a599671e776e5309de6c6562ea67ff40562a1b1b383b8543d",
+    "sha256": "a057337911606053377c905d83a42bbe22cf3cf657392d455885492c5cb9e362",
     "role": "adaptive-alpha-trace-fixture"
   },
   "verifier_path": "crates/bisect-multiscale/src/adaptive_evidence.rs",

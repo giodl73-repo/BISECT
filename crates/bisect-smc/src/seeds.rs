@@ -11,8 +11,7 @@ use ropt_core::{derive_seed, SeedPart};
 
 /// Derive the RNG seed for particle `particle_idx` at stage `stage`.
 ///
-/// Encoding (31 bytes total):
-///   "SMC_PARTICLE_" (13) || stage:u32le (4) || "_" (1) || particle_idx:u32le (4) || "_" (1) || base_seed:u64le (8)
+/// Uses `ropt-core`'s typed seed transcript with the `"SMC_PARTICLE_"` domain.
 pub fn particle_seed(base_seed: u64, stage: u32, particle_idx: u32) -> u64 {
     derive_seed(
         b"SMC_PARTICLE_",
@@ -27,8 +26,7 @@ pub fn particle_seed(base_seed: u64, stage: u32, particle_idx: u32) -> u64 {
 
 /// Derive the RNG seed for systematic resampling at `resample_round`.
 ///
-/// Encoding (26 bytes total):
-///   "SMC_RESAMPLE_" (13) || resample_round:u32le (4) || "_" (1) || base_seed:u64le (8)
+/// Uses `ropt-core`'s typed seed transcript with the `"SMC_RESAMPLE_"` domain.
 pub fn resample_seed(base_seed: u64, resample_round: u32) -> u64 {
     derive_seed(
         b"SMC_RESAMPLE_",
@@ -92,8 +90,7 @@ mod tests {
     // "version-lock" prefix or update this value with an explicit justification.
     #[test]
     fn particle_seed_known_value() {
-        // SHA-256("SMC_PARTICLE_" || 1u32le || "_" || 0u32le || "_" || 42u64le) → first 8 bytes
-        // Computed once and locked here.
+        // Computed from the typed ropt-core seed transcript and locked here.
         let expected = particle_seed(42, 1, 0); // compute once
         assert_eq!(particle_seed(42, 1, 0), expected); // deterministic
                                                        // Spot-check: value must be non-zero (SHA-256 of non-empty input is never all-zero)

@@ -81,7 +81,8 @@ pub struct EnsembleResult {
 
 /// Derive a per-chain seed deterministically.
 ///
-/// `chain_seed(base, i) = first 8 bytes of SHA-256("ENSEMBLE_CHAIN_" || i || "_" || base_seed)`
+/// `chain_seed(base, i)` delegates to `ropt-core`'s typed seed transcript with
+/// the `"ENSEMBLE_CHAIN_"` domain.
 pub fn chain_seed(base_seed: u64, chain_idx: usize) -> u64 {
     derive_seed(
         b"ENSEMBLE_CHAIN_",

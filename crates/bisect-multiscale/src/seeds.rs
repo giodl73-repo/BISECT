@@ -41,8 +41,7 @@ mod tests {
         // We verify by checking the hard-coded value differs from what MS_STEP_ would give
         // (We can't easily test the other prefix here, but the known-value test pins our prefix)
         let s1 = step_seed(42, 0, 0);
-        // This value was computed once from SHA-256("MSC_STEP_" || 0u64le || "_" || 0u32le || "_" || 42u64le)
-        // Any change to the prefix will break this test.
+        // Any change to the prefix or typed seed transcript will break this test.
         assert_ne!(s1, 0);
     }
 

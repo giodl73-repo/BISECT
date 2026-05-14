@@ -17,8 +17,7 @@ use ropt_core::{derive_seed, SeedPart};
 
 /// Derive the replica step seed for a given replica, step, and base seed.
 ///
-/// `SHA-256("PT_REPLICA_" || replica:u32le || "_" || step:u64le || "_" || base_seed:u64le)`
-/// → least-significant 64 bits.
+/// Uses `ropt-core`'s typed seed transcript with the `"PT_REPLICA_"` domain.
 pub fn replica_seed(base_seed: u64, replica: u32, step: u64) -> u64 {
     derive_seed(
         b"PT_REPLICA_",
@@ -33,8 +32,7 @@ pub fn replica_seed(base_seed: u64, replica: u32, step: u64) -> u64 {
 
 /// Derive the swap RNG seed for a given step, pair index, and base seed.
 ///
-/// `SHA-256("PT_SWAP_" || pair:u32le || "_" || step:u64le || "_" || base_seed:u64le)`
-/// → least-significant 64 bits.
+/// Uses `ropt-core`'s typed seed transcript with the `"PT_SWAP_"` domain.
 pub fn swap_seed(base_seed: u64, step: u64, pair: u32) -> u64 {
     derive_seed(
         b"PT_SWAP_",
