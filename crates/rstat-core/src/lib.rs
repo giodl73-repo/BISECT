@@ -1195,6 +1195,8 @@ pub mod probability {
         NonFiniteX(f64),
         #[error("[INPUT] beta shape parameter '{name}' must be positive and finite, got {value}")]
         InvalidShape { name: &'static str, value: f64 },
+        #[error("[NUMERIC] {operation} produced non-finite value {value}")]
+        NonFiniteResult { operation: &'static str, value: f64 },
     }
 
     /// Standard Normal CDF via Abramowitz & Stegun 7.1.26 approximation.
@@ -1208,24 +1210,45 @@ pub mod probability {
 
     pub fn regularized_incomplete_beta(x: f64, a: f64, b: f64) -> Result<f64, ProbabilityError> {
         validate_beta_inputs(x, a, b)?;
-        Ok(regularized_incomplete_beta_inner(x, a, b))
+        let value = regularized_incomplete_beta_inner(x, a, b)?;
+        validate_result("beta cdf", value)?;
+        Ok(value)
     }
 
-    fn regularized_incomplete_beta_inner(x: f64, a: f64, b: f64) -> f64 {
+    fn regularized_incomplete_beta_inner(x: f64, a: f64, b: f64) -> Result<f64, ProbabilityError> {
         if x <= 0.0 {
-            return 0.0;
+            return Ok(0.0);
         }
         if x >= 1.0 {
-            return 1.0;
+            return Ok(1.0);
         }
 
-        if x > (a + 1.0) / (a + b + 2.0) {
-            return 1.0 - regularized_incomplete_beta_inner(1.0 - x, b, a);
+        let shape_window = a + b + 2.0;
+        validate_result("beta shape window", shape_window)?;
+        let branch_threshold = (a + 1.0) / shape_window;
+        validate_result("beta branch threshold", branch_threshold)?;
+        if x > branch_threshold {
+            let complement = 1.0 - regularized_incomplete_beta_inner(1.0 - x, b, a)?;
+            validate_result("beta complement", complement)?;
+            return Ok(complement);
         }
 
-        let lbeta = lgamma(a) + lgamma(b) - lgamma(a + b);
-        let front = (a * x.ln() + b * (1.0 - x).ln() - lbeta).exp() / a;
-        front * beta_continued_fraction(x, a, b)
+        let lgamma_a = lgamma(a);
+        validate_result("beta lgamma(a)", lgamma_a)?;
+        let lgamma_b = lgamma(b);
+        validate_result("beta lgamma(b)", lgamma_b)?;
+        let lgamma_sum = lgamma(a + b);
+        validate_result("beta lgamma(a+b)", lgamma_sum)?;
+        let lbeta = lgamma_a + lgamma_b - lgamma_sum;
+        validate_result("beta log normalizer", lbeta)?;
+        let exponent = a * x.ln() + b * (1.0 - x).ln() - lbeta;
+        validate_result("beta front exponent", exponent)?;
+        let front = exponent.exp() / a;
+        validate_result("beta front factor", front)?;
+        let fraction = beta_continued_fraction(x, a, b)?;
+        let value = front * fraction;
+        validate_result("beta continued fraction product", value)?;
+        Ok(value)
     }
 
     fn validate_beta_inputs(x: f64, a: f64, b: f64) -> Result<(), ProbabilityError> {
@@ -1247,51 +1270,64 @@ pub mod probability {
         Ok(())
     }
 
-    fn beta_continued_fraction(x: f64, a: f64, b: f64) -> f64 {
+    fn beta_continued_fraction(x: f64, a: f64, b: f64) -> Result<f64, ProbabilityError> {
         let max_iter = 200;
         let eps = 1e-10;
 
         let mut c = 1.0;
         let mut d = 1.0 - (a + b) * x / (a + 1.0);
+        validate_result("beta continued fraction initial d", d)?;
         if d.abs() < f64::MIN_POSITIVE {
             d = f64::MIN_POSITIVE;
         }
         d = 1.0 / d;
+        validate_result("beta continued fraction reciprocal", d)?;
         let mut result = d;
 
         for m in 1..=max_iter {
             let m = m as f64;
 
             let dm = m * (b - m) * x / ((a + 2.0 * m - 1.0) * (a + 2.0 * m));
+            validate_result("beta continued fraction even term", dm)?;
             d = 1.0 + dm * d;
+            validate_result("beta continued fraction even d", d)?;
             if d.abs() < f64::MIN_POSITIVE {
                 d = f64::MIN_POSITIVE;
             }
             c = 1.0 + dm / c;
+            validate_result("beta continued fraction even c", c)?;
             if c.abs() < f64::MIN_POSITIVE {
                 c = f64::MIN_POSITIVE;
             }
             d = 1.0 / d;
+            validate_result("beta continued fraction even reciprocal", d)?;
             result *= d * c;
+            validate_result("beta continued fraction result", result)?;
 
             let dm = -(a + m) * (a + b + m) * x / ((a + 2.0 * m) * (a + 2.0 * m + 1.0));
+            validate_result("beta continued fraction odd term", dm)?;
             d = 1.0 + dm * d;
+            validate_result("beta continued fraction odd d", d)?;
             if d.abs() < f64::MIN_POSITIVE {
                 d = f64::MIN_POSITIVE;
             }
             c = 1.0 + dm / c;
+            validate_result("beta continued fraction odd c", c)?;
             if c.abs() < f64::MIN_POSITIVE {
                 c = f64::MIN_POSITIVE;
             }
             d = 1.0 / d;
+            validate_result("beta continued fraction odd reciprocal", d)?;
             let delta = d * c;
+            validate_result("beta continued fraction delta", delta)?;
             result *= delta;
+            validate_result("beta continued fraction result", result)?;
 
             if (delta - 1.0).abs() < eps {
                 break;
             }
         }
-        result
+        Ok(result)
     }
 
     fn erf_approx(x: f64) -> f64 {
@@ -1334,6 +1370,13 @@ pub mod probability {
         }
     }
 
+    fn validate_result(operation: &'static str, value: f64) -> Result<(), ProbabilityError> {
+        if !value.is_finite() {
+            return Err(ProbabilityError::NonFiniteResult { operation, value });
+        }
+        Ok(())
+    }
+
     #[cfg(test)]
     mod tests {
         use super::*;
@@ -1369,6 +1412,17 @@ pub mod probability {
                     value: f64::INFINITY
                 })
             );
+        }
+
+        #[test]
+        fn beta_rejects_overflowed_shape_window_before_recursing() {
+            match regularized_incomplete_beta(0.5, f64::MAX, f64::MAX) {
+                Err(ProbabilityError::NonFiniteResult { operation, value }) => {
+                    assert_eq!(operation, "beta shape window");
+                    assert!(value.is_infinite());
+                }
+                other => panic!("expected beta shape overflow error, got {other:?}"),
+            }
         }
 
         #[test]

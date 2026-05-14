@@ -265,7 +265,9 @@ Candidate first API:
     without moving RCOUNT method semantics out of `rcount-stats`. **Initial
     incomplete-beta and Lanczos-gamma helpers landed; the beta CDF now rejects
     non-finite `x` values and non-positive/non-finite shape parameters with typed
-    probability errors. Audit method semantics stay in `rcount-stats`.**
+    probability errors. It also rejects overflowed shape-window and continued
+    fraction intermediates before permutation or hypothesis evidence can consume
+    non-finite beta-CDF values. Audit method semantics stay in `rcount-stats`.**
 6. Seeded bootstrap resampling helpers. **Landed in `rstat-core::resampling`;
    `bisect-analysis::partisan` consumes them for bootstrap CIs.**
 7. Empirical p-values and multiple-testing corrections. **Landed in

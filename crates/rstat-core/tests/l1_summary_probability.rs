@@ -55,6 +55,17 @@ fn l1_normal_cdf_rejects_non_finite_evidence_statistic() {
 }
 
 #[test]
+fn l1_beta_cdf_rejects_overflowed_shape_aggregates() {
+    match regularized_incomplete_beta(0.5, f64::MAX, f64::MAX) {
+        Err(ProbabilityError::NonFiniteResult { operation, value }) => {
+            assert_eq!(operation, "beta shape window");
+            assert!(value.is_infinite());
+        }
+        other => panic!("expected beta shape overflow error, got {other:?}"),
+    }
+}
+
+#[test]
 fn l1_weighted_summary_matches_expanded_sample() {
     let values = [1.0, 3.0, 5.0];
     let weights = [1.0, 2.0, 1.0];
@@ -130,6 +141,20 @@ fn l1_empirical_p_value_and_detection_score_compose() {
     assert_eq!((n_extreme, n_total), (1, 100));
     assert!((p_raw - 0.01).abs() < 1e-12);
     assert!(bds > 0.80);
+}
+
+#[test]
+fn l1_detection_score_rejects_overflowed_beta_shapes() {
+    match bayesian_detection_score(0.5, 0.5, f64::MAX) {
+        Err(HypothesisError::Probability(ProbabilityError::NonFiniteResult {
+            operation,
+            value,
+        })) => {
+            assert_eq!(operation, "beta lgamma(a)");
+            assert!(value.is_infinite());
+        }
+        other => panic!("expected beta shape overflow error, got {other:?}"),
+    }
 }
 
 #[test]

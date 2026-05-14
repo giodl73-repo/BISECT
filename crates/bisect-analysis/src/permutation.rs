@@ -6,7 +6,9 @@
 //!
 //! Used by S.1 (Hypothesis Testing for Partisan Gerrymandering).
 
-use rstat_core::hypothesis::{bayesian_detection_score, empirical_p_value, ess_beta_median, Tail};
+use rstat_core::hypothesis::{
+    bayesian_detection_score, empirical_p_value, ess_beta_median, HypothesisError, Tail,
+};
 
 /// A single plan in the ensemble, characterised by a scalar test statistic.
 #[derive(Debug, Clone)]
@@ -57,17 +59,14 @@ pub fn permutation_test_lower_tail(
     query_statistic: f64,
     ensemble: &[EnsemblePlan],
     ess: f64,
-) -> PermutationTestResult {
+) -> Result<PermutationTestResult, HypothesisError> {
     let reference: Vec<f64> = ensemble.iter().map(|p| p.statistic).collect();
     let (n_as_extreme, n_total, p_raw) =
-        empirical_p_value(query_statistic, &reference, Tail::Lower)
-            .expect("permutation ensemble statistics are finite and non-empty");
-    let p_ess_corrected =
-        ess_beta_median(p_raw, ess).expect("permutation ESS is positive and finite");
-    let bds =
-        bayesian_detection_score(0.05, p_raw, ess).expect("permutation ESS is positive and finite");
+        empirical_p_value(query_statistic, &reference, Tail::Lower)?;
+    let p_ess_corrected = ess_beta_median(p_raw, ess)?;
+    let bds = bayesian_detection_score(0.05, p_raw, ess)?;
 
-    PermutationTestResult {
+    Ok(PermutationTestResult {
         query_statistic,
         n_as_extreme,
         n_total,
@@ -75,12 +74,13 @@ pub fn permutation_test_lower_tail(
         ess,
         p_value_ess_corrected: p_ess_corrected.clamp(0.0, 1.0),
         bds_at_0_05: bds.clamp(0.0, 1.0),
-    }
+    })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstat_core::probability::ProbabilityError;
 
     #[test]
     fn test_permutation_test_lower_tail() {
@@ -93,7 +93,7 @@ mod tests {
             .collect();
 
         // Query plan at 0.003 (very extreme)
-        let result = permutation_test_lower_tail(0.003, &ensemble, 70.0);
+        let result = permutation_test_lower_tail(0.003, &ensemble, 70.0).unwrap();
 
         assert_eq!(result.n_as_extreme, 1); // only plan 0 (0.000) is ≤ 0.003
         assert!((result.p_value_raw - 0.01).abs() < 0.005);
@@ -114,7 +114,7 @@ mod tests {
             })
             .collect();
 
-        let result = permutation_test_lower_tail(0.50, &ensemble, 500.0);
+        let result = permutation_test_lower_tail(0.50, &ensemble, 500.0).unwrap();
         assert!(result.p_value_raw > 0.40); // near 50th percentile
         assert!(!result.is_significant());
         assert!(result.bds_at_0_05 < 0.20);
@@ -124,5 +124,26 @@ mod tests {
     fn test_regularized_incomplete_beta_boundary() {
         assert!((bayesian_detection_score(0.0, 0.5, 10.0).unwrap() - 0.0).abs() < 1e-10);
         assert!((bayesian_detection_score(1.0, 0.5, 10.0).unwrap() - 1.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_permutation_rejects_overflowed_detection_score_shapes() {
+        let ensemble: Vec<EnsemblePlan> = (0..100)
+            .map(|i| EnsemblePlan {
+                id: i,
+                statistic: i as f64 / 100.0,
+            })
+            .collect();
+
+        match permutation_test_lower_tail(0.50, &ensemble, f64::MAX) {
+            Err(HypothesisError::Probability(ProbabilityError::NonFiniteResult {
+                operation,
+                value,
+            })) => {
+                assert_eq!(operation, "beta lgamma(a)");
+                assert!(value.is_infinite());
+            }
+            other => panic!("expected beta shape overflow error, got {other:?}"),
+        }
     }
 }
