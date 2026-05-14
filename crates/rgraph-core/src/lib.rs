@@ -45,6 +45,13 @@ pub struct Predecessor<E> {
     pub edge_id: E,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Bridge<E> {
+    pub source: usize,
+    pub target: usize,
+    pub edge_id: E,
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShortestPathTree<E> {
     pub source: usize,
@@ -325,6 +332,106 @@ where
     Ok(components)
 }
 
+pub fn bridges<G>(graph: &G) -> Result<Vec<Bridge<G::EdgeId>>, GraphError<G::EdgeId>>
+where
+    G: DirectedWeightedGraph,
+{
+    bridges_with_filter(graph, |_| true)
+}
+
+pub fn bridges_with_filter<G, F>(
+    graph: &G,
+    edge_filter: F,
+) -> Result<Vec<Bridge<G::EdgeId>>, GraphError<G::EdgeId>>
+where
+    G: DirectedWeightedGraph,
+    F: Fn(G::EdgeId) -> bool + Copy,
+{
+    let node_count = graph.node_count();
+    if node_count == 0 {
+        return Ok(Vec::new());
+    }
+
+    let mut adjacency = vec![Vec::new(); node_count];
+    let mut pair_edges: HashMap<(usize, usize), Vec<Bridge<G::EdgeId>>> = HashMap::new();
+    let mut directed_counts: HashMap<(usize, usize), usize> = HashMap::new();
+
+    for source in 0..node_count {
+        let mut edges = graph.outgoing_edges(source);
+        edges.sort_by(|a, b| a.target.cmp(&b.target).then_with(|| a.id.cmp(&b.id)));
+        for edge in edges {
+            if !edge_filter(edge.id) {
+                continue;
+            }
+            validate_weight(edge.id, source, edge.target, edge.weight)?;
+            validate_node::<G::EdgeId>(node_count, edge.target)?;
+            if source == edge.target {
+                continue;
+            }
+
+            let pair = ordered_pair(source, edge.target);
+            let entries = pair_edges.entry(pair).or_default();
+            if entries.is_empty() {
+                adjacency[pair.0].push(pair.1);
+                adjacency[pair.1].push(pair.0);
+            }
+            entries.push(Bridge {
+                source,
+                target: edge.target,
+                edge_id: edge.id,
+            });
+            *directed_counts.entry((source, edge.target)).or_insert(0) += 1;
+        }
+    }
+
+    for neighbors in &mut adjacency {
+        neighbors.sort_unstable();
+    }
+
+    let mut discovery = vec![None; node_count];
+    let mut low = vec![0; node_count];
+    let mut parent = vec![None; node_count];
+    let mut time = 0usize;
+    let mut bridge_pairs = Vec::new();
+
+    for node in 0..node_count {
+        if discovery[node].is_none() {
+            bridge_dfs(
+                node,
+                &adjacency,
+                &mut discovery,
+                &mut low,
+                &mut parent,
+                &mut time,
+                &mut bridge_pairs,
+            );
+        }
+    }
+
+    let mut out = Vec::new();
+    for pair in bridge_pairs {
+        if let Some(entries) = pair_edges.get(&pair) {
+            let has_parallel_same_direction = entries.iter().any(|entry| {
+                directed_counts
+                    .get(&(entry.source, entry.target))
+                    .copied()
+                    .unwrap_or(0)
+                    > 1
+            });
+            if !has_parallel_same_direction {
+                out.extend(entries.iter().copied());
+            }
+        }
+    }
+    out.sort_by(|a, b| {
+        a.source
+            .cmp(&b.source)
+            .then_with(|| a.target.cmp(&b.target))
+            .then_with(|| a.edge_id.cmp(&b.edge_id))
+    });
+    Ok(out)
+}
+
 pub fn edge_betweenness<G>(graph: &G) -> Result<HashMap<G::EdgeId, f64>, GraphError<G::EdgeId>>
 where
     G: DirectedWeightedGraph,
@@ -375,6 +482,49 @@ where
     }
 
     Ok(raw)
+}
+
+fn bridge_dfs(
+    node: usize,
+    adjacency: &[Vec<usize>],
+    discovery: &mut [Option<usize>],
+    low: &mut [usize],
+    parent: &mut [Option<usize>],
+    time: &mut usize,
+    bridge_pairs: &mut Vec<(usize, usize)>,
+) {
+    discovery[node] = Some(*time);
+    low[node] = *time;
+    *time += 1;
+
+    for &neighbor in &adjacency[node] {
+        if discovery[neighbor].is_none() {
+            parent[neighbor] = Some(node);
+            bridge_dfs(
+                neighbor,
+                adjacency,
+                discovery,
+                low,
+                parent,
+                time,
+                bridge_pairs,
+            );
+            low[node] = low[node].min(low[neighbor]);
+            if low[neighbor] > discovery[node].expect("visited node has discovery time") {
+                bridge_pairs.push(ordered_pair(node, neighbor));
+            }
+        } else if parent[node] != Some(neighbor) {
+            low[node] = low[node].min(discovery[neighbor].expect("visited neighbor"));
+        }
+    }
+}
+
+fn ordered_pair(a: usize, b: usize) -> (usize, usize) {
+    if a <= b {
+        (a, b)
+    } else {
+        (b, a)
+    }
 }
 
 fn validate_node<E>(node_count: usize, node: usize) -> Result<(), GraphError<E>> {
@@ -525,6 +675,92 @@ mod tests {
         assert_eq!(
             connected_components_with_filter(&graph, |edge| edge != 2).unwrap(),
             vec![vec![0, 1], vec![2]]
+        );
+    }
+
+    #[test]
+    fn bridges_identify_tree_edges_and_ignore_cycle_edges() {
+        let mut graph = TinyGraph::new(5);
+        graph.add_edge(1, 0, 1, 1.0);
+        graph.add_edge(2, 1, 2, 1.0);
+        graph.add_edge(3, 2, 0, 1.0);
+        graph.add_edge(4, 2, 3, 1.0);
+        graph.add_edge(5, 3, 4, 1.0);
+
+        let bridges = bridges(&graph).unwrap();
+
+        assert_eq!(
+            bridges,
+            vec![
+                Bridge {
+                    source: 2,
+                    target: 3,
+                    edge_id: 4
+                },
+                Bridge {
+                    source: 3,
+                    target: 4,
+                    edge_id: 5
+                }
+            ]
+        );
+    }
+
+    #[test]
+    fn bridges_return_reciprocal_adapter_edges_for_one_undirected_bridge() {
+        let mut graph = TinyGraph::new(2);
+        graph.add_edge(1, 0, 1, 1.0);
+        graph.add_edge(2, 1, 0, 1.0);
+
+        let bridges = bridges(&graph).unwrap();
+
+        assert_eq!(
+            bridges,
+            vec![
+                Bridge {
+                    source: 0,
+                    target: 1,
+                    edge_id: 1
+                },
+                Bridge {
+                    source: 1,
+                    target: 0,
+                    edge_id: 2
+                }
+            ]
+        );
+    }
+
+    #[test]
+    fn bridges_ignore_parallel_same_direction_edges() {
+        let mut graph = TinyGraph::new(2);
+        graph.add_edge(1, 0, 1, 1.0);
+        graph.add_edge(2, 0, 1, 1.0);
+
+        assert!(bridges(&graph).unwrap().is_empty());
+    }
+
+    #[test]
+    fn bridges_filter_can_create_bridge() {
+        let mut graph = TinyGraph::new(3);
+        graph.add_edge(1, 0, 1, 1.0);
+        graph.add_edge(2, 1, 2, 1.0);
+        graph.add_edge(3, 0, 2, 1.0);
+
+        assert_eq!(
+            bridges_with_filter(&graph, |edge| edge != 3).unwrap(),
+            vec![
+                Bridge {
+                    source: 0,
+                    target: 1,
+                    edge_id: 1
+                },
+                Bridge {
+                    source: 1,
+                    target: 2,
+                    edge_id: 2
+                }
+            ]
         );
     }
 

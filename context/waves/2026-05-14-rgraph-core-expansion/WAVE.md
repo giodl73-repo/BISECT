@@ -23,6 +23,7 @@ semantics into `rgraph-core`.
 | Pulse | Status | Evidence |
 |---|---|---|
 | 01 - Connected components kernel | DONE | `rgraph-core` components helpers; BISECT contiguity consumer; L0/L1/L2 tests |
+| 02 - Bridge detection kernel | DONE | `rgraph-core` undirected bridge helpers over directed adapter; L0/L1/L2 tests |
 
 ## Close Summary
 
@@ -30,4 +31,9 @@ semantics into `rgraph-core`.
 nodes or a caller-provided node subset. `bisect-analysis::contiguity` delegates
 component discovery to that shared helper while keeping GEOID, district, and
 county-context semantics local.
+
+The wave also adds deterministic undirected bridge detection over the existing
+directed graph adapter. Bridge detection is kept kernel-only for now so ROUTE
+redundancy analysis and future BISECT contiguity-fragility diagnostics can adopt
+the same primitive without moving domain scoring into `rgraph-core`.
 

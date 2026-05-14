@@ -1,5 +1,5 @@
 use rgraph_core::{
-    connected_components, edge_betweenness, reachable_nodes, shortest_path_distance,
+    bridges, connected_components, edge_betweenness, reachable_nodes, shortest_path_distance,
     DirectedWeightedGraph, WeightedEdge,
 };
 
@@ -84,4 +84,14 @@ fn l2_disjoint_grid_components_are_stable() {
 
     assert_eq!(components.len(), 1);
     assert_eq!(components[0].len(), 80 * 80);
+}
+
+#[test]
+#[ignore = "L2 graph stress: bridge detection on larger cyclic grid"]
+fn l2_grid_bridge_detection_remains_stable() {
+    let graph = GridGraph::new(40, 40);
+
+    let bridges = bridges(&graph).unwrap();
+
+    assert!(bridges.is_empty());
 }

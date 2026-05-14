@@ -1,7 +1,8 @@
 use rgraph_core::{
-    connected_components, connected_components_in_nodes_with_filter, edge_betweenness,
-    reachable_nodes_with_filter, shortest_path_distance, shortest_path_distance_with_filter,
-    single_source_shortest_paths, DirectedWeightedGraph, GraphError, WeightedEdge,
+    bridges, bridges_with_filter, connected_components, connected_components_in_nodes_with_filter,
+    edge_betweenness, reachable_nodes_with_filter, shortest_path_distance,
+    shortest_path_distance_with_filter, single_source_shortest_paths, Bridge,
+    DirectedWeightedGraph, GraphError, WeightedEdge,
 };
 
 #[derive(Debug, Clone)]
@@ -122,5 +123,46 @@ fn l1_connected_components_support_subset_and_filter() {
         connected_components_in_nodes_with_filter(&graph, &[0, 1, 2, 4, 5, 6], |edge| edge != 5)
             .unwrap(),
         vec![vec![0, 1, 2], vec![4, 5], vec![6]]
+    );
+}
+
+#[test]
+fn l1_bridges_ignore_cycles_and_respect_filters() {
+    let graph = TestGraph::new(6)
+        .edge(1, 0, 1, 1.0)
+        .edge(2, 1, 2, 1.0)
+        .edge(3, 2, 0, 1.0)
+        .edge(4, 2, 3, 1.0)
+        .edge(5, 3, 4, 1.0)
+        .edge(6, 4, 5, 1.0)
+        .edge(7, 5, 3, 1.0);
+
+    assert_eq!(
+        bridges(&graph).unwrap(),
+        vec![Bridge {
+            source: 2,
+            target: 3,
+            edge_id: 4
+        }]
+    );
+    assert_eq!(
+        bridges_with_filter(&graph, |edge| edge != 7).unwrap(),
+        vec![
+            Bridge {
+                source: 2,
+                target: 3,
+                edge_id: 4
+            },
+            Bridge {
+                source: 3,
+                target: 4,
+                edge_id: 5
+            },
+            Bridge {
+                source: 4,
+                target: 5,
+                edge_id: 6
+            }
+        ]
     );
 }

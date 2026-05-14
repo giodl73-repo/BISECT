@@ -161,15 +161,18 @@ The first implementation wave should create `rgraph-core` with a narrow API:
 6. Connected components over all nodes or a restricted node subset. **Landed in
    `rgraph-core`; `bisect-analysis::contiguity` now consumes restricted
    components directly.**
-7. Unit tests with tiny synthetic graphs covering:
+7. Undirected bridge detection over the directed adapter. **Landed in
+   `rgraph-core`; this remains kernel-only until a contiguity-fragility or ROUTE
+   redundancy consumer is added.**
+8. Unit tests with tiny synthetic graphs covering:
    - equal shortest-path split;
    - ignored non-shortest direct edge;
   - edge-filtered disconnection;
   - zero-node and one-node graphs;
   - negative/non-finite weight rejection policy.
-  **The graph kernel now has inline L0 tests, L1 integration tests under
-  `crates/rgraph-core/tests/l1_paths_centrality.rs`, and ignored L2 stress tests
-  under `crates/rgraph-core/tests/l2_graph_stress.rs`.**
+   **The graph kernel now has inline L0 tests, L1 integration tests under
+   `crates/rgraph-core/tests/l1_paths_centrality.rs`, and ignored L2 stress tests
+   under `crates/rgraph-core/tests/l2_graph_stress.rs`.**
 
 Route can then replace its local Dijkstra/Brandes implementation by adapting
 `HighwayGraph`. BISECT now consumes the same crate for graph-only contiguity
