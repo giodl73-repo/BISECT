@@ -310,6 +310,10 @@ NaN quotients or produce non-finite disproportionality scores.
 Demographic aggregation now rejects negative counts, subgroup totals above
 `total_pop`, and overflowing district sums before demographic percentages can
 become impossible evidence fields.
+VRA majority-minority aggregation now exposes a fallible checked path that
+rejects invalid thresholds, negative tract totals, non-finite population
+components, and component totals above tract population before district VRA
+percentages are emitted.
 
 `rstat-core::mcmc` rejects malformed diagnostics inputs before producing evidence
 metrics: R-hat rejects non-finite chain values with a typed diagnostics error,

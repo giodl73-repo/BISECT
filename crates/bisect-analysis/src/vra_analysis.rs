@@ -5,6 +5,7 @@
 /// This eliminates the vra_mode premature-clear bug class: analysis runs
 /// inside the same function that produces the partition.
 use std::collections::HashMap;
+use thiserror::Error;
 
 /// Per-district VRA demographics.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -28,6 +29,40 @@ pub struct VraAnalysis {
     pub districts: Vec<VraDistrict>,
 }
 
+#[derive(Debug, Error, Clone, PartialEq)]
+pub enum VraError {
+    #[error("[INPUT] majority-minority threshold must be finite and in [0, 1], got {value}")]
+    InvalidThreshold { value: f64 },
+    #[error("[INPUT] negative total population for tract {tract}: {value}")]
+    NegativeTotalPopulation { tract: usize, value: i64 },
+    #[error("[INPUT] non-finite {field} population for tract {tract}: {value}")]
+    NonFinitePopulation {
+        tract: usize,
+        field: &'static str,
+        value: f64,
+    },
+    #[error("[INPUT] negative {field} population for tract {tract}: {value}")]
+    NegativePopulation {
+        tract: usize,
+        field: &'static str,
+        value: f64,
+    },
+    #[error("[INPUT] {field} population exceeds total_pop for tract {tract}: value={value}, total_pop={total}")]
+    PopulationExceedsTotal {
+        tract: usize,
+        field: &'static str,
+        value: f64,
+        total: i64,
+    },
+    #[error("[NUMERIC] {operation} produced non-finite value {value}")]
+    NonFiniteResult { operation: &'static str, value: f64 },
+    #[error("[NUMERIC] {operation} overflowed for district {district}")]
+    AggregateOverflow {
+        district: usize,
+        operation: &'static str,
+    },
+}
+
 /// Compute VRA majority-minority district analysis from tract assignments.
 ///
 /// Matches Python vra_utils.py:analyze_mm_districts().
@@ -47,6 +82,26 @@ pub fn analyze_mm_districts(
     hispanic_pops: &[f64],
     mm_threshold: f64,
 ) -> VraAnalysis {
+    try_analyze_mm_districts(
+        assignments,
+        total_pops,
+        minority_pops,
+        black_pops,
+        hispanic_pops,
+        mm_threshold,
+    )
+    .expect("VRA inputs are valid")
+}
+
+pub fn try_analyze_mm_districts(
+    assignments: &HashMap<usize, usize>,
+    total_pops: &[i64],
+    minority_pops: &[f64],
+    black_pops: &[f64],
+    hispanic_pops: &[f64],
+    mm_threshold: f64,
+) -> Result<VraAnalysis, VraError> {
+    validate_threshold(mm_threshold)?;
     // Aggregate per district
     let mut dist_total: HashMap<usize, i64> = HashMap::new();
     let mut dist_minority: HashMap<usize, f64> = HashMap::new();
@@ -64,12 +119,31 @@ pub fn analyze_mm_districts(
         if tract >= total_pops.len() {
             continue;
         }
-        *dist_total.entry(dist).or_insert(0) += total_pops[tract];
-        *dist_minority.entry(dist).or_insert(0.0) +=
-            minority_pops.get(tract).copied().unwrap_or(0.0);
-        *dist_black.entry(dist).or_insert(0.0) += black_pops.get(tract).copied().unwrap_or(0.0);
-        *dist_hispanic.entry(dist).or_insert(0.0) +=
-            hispanic_pops.get(tract).copied().unwrap_or(0.0);
+        let total = total_pops[tract];
+        validate_total_population(tract, total)?;
+        let minority = validate_component(tract, "minority", minority_pops, total)?;
+        let black = validate_component(tract, "black", black_pops, total)?;
+        let hispanic = validate_component(tract, "hispanic", hispanic_pops, total)?;
+        let entry = dist_total.entry(dist).or_insert(0);
+        *entry = entry
+            .checked_add(total)
+            .ok_or(VraError::AggregateOverflow {
+                district: dist,
+                operation: "district total population",
+            })?;
+        add_component(
+            &mut dist_minority,
+            dist,
+            minority,
+            "district minority population",
+        )?;
+        add_component(&mut dist_black, dist, black, "district black population")?;
+        add_component(
+            &mut dist_hispanic,
+            dist,
+            hispanic,
+            "district Hispanic population",
+        )?;
     }
 
     // Build district list in sorted order
@@ -88,6 +162,9 @@ pub fn analyze_mm_districts(
         let pct_minority = if total > 0.0 { minority / total } else { 0.0 };
         let pct_black = if total > 0.0 { black / total } else { 0.0 };
         let pct_hispanic = if total > 0.0 { hispanic / total } else { 0.0 };
+        validate_finite("district minority percentage", pct_minority)?;
+        validate_finite("district black percentage", pct_black)?;
+        validate_finite("district Hispanic percentage", pct_hispanic)?;
         // Python vra_utils.py line 236: `is_mm = pct_minority > mm_threshold` (exclusive)
         let is_mm = pct_minority > mm_threshold;
 
@@ -105,11 +182,81 @@ pub fn analyze_mm_districts(
     }
 
     let mm_count = mm_districts.len();
-    VraAnalysis {
+    Ok(VraAnalysis {
         mm_count,
         mm_districts,
         districts,
+    })
+}
+
+fn validate_threshold(value: f64) -> Result<(), VraError> {
+    if !value.is_finite() || !(0.0..=1.0).contains(&value) {
+        return Err(VraError::InvalidThreshold { value });
     }
+    Ok(())
+}
+
+fn validate_total_population(tract: usize, value: i64) -> Result<(), VraError> {
+    if value < 0 {
+        return Err(VraError::NegativeTotalPopulation { tract, value });
+    }
+    Ok(())
+}
+
+fn validate_component(
+    tract: usize,
+    field: &'static str,
+    values: &[f64],
+    total: i64,
+) -> Result<f64, VraError> {
+    let value = values.get(tract).copied().unwrap_or(0.0);
+    if !value.is_finite() {
+        return Err(VraError::NonFinitePopulation {
+            tract,
+            field,
+            value,
+        });
+    }
+    if value < 0.0 {
+        return Err(VraError::NegativePopulation {
+            tract,
+            field,
+            value,
+        });
+    }
+    if value > total as f64 {
+        return Err(VraError::PopulationExceedsTotal {
+            tract,
+            field,
+            value,
+            total,
+        });
+    }
+    Ok(value)
+}
+
+fn add_component(
+    values: &mut HashMap<usize, f64>,
+    district: usize,
+    addend: f64,
+    operation: &'static str,
+) -> Result<(), VraError> {
+    let entry = values.entry(district).or_insert(0.0);
+    *entry += addend;
+    if !entry.is_finite() {
+        return Err(VraError::NonFiniteResult {
+            operation,
+            value: *entry,
+        });
+    }
+    Ok(())
+}
+
+fn validate_finite(operation: &'static str, value: f64) -> Result<(), VraError> {
+    if !value.is_finite() {
+        return Err(VraError::NonFiniteResult { operation, value });
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -258,6 +405,83 @@ mod tests {
         let vra = analyze_mm_districts(&assignments, &total, &minority, &[0.0; 2], &[0.0; 2], 0.50);
         // Tract 999 silently skipped; district 1 has 30% < 50% → not MM
         assert_eq!(vra.mm_count, 0);
+    }
+
+    #[test]
+    fn test_try_vra_rejects_non_finite_threshold() {
+        let assignments = simple_assignments();
+        let total = vec![1000i64; 6];
+        let minority = vec![300.0; 6];
+
+        match try_analyze_mm_districts(
+            &assignments,
+            &total,
+            &minority,
+            &minority,
+            &minority,
+            f64::NAN,
+        ) {
+            Err(VraError::InvalidThreshold { value }) => assert!(value.is_nan()),
+            other => panic!("expected InvalidThreshold, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_try_vra_rejects_negative_total_population() {
+        let assignments: HashMap<usize, usize> = vec![(0, 1)].into_iter().collect();
+        let total = vec![-1i64];
+        let minority = vec![0.0];
+
+        match try_analyze_mm_districts(&assignments, &total, &minority, &minority, &minority, 0.50)
+        {
+            Err(VraError::NegativeTotalPopulation { tract, value }) => {
+                assert_eq!(tract, 0);
+                assert_eq!(value, -1);
+            }
+            other => panic!("expected NegativeTotalPopulation, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_try_vra_rejects_non_finite_population_component() {
+        let assignments: HashMap<usize, usize> = vec![(0, 1)].into_iter().collect();
+        let total = vec![1000i64];
+        let minority = vec![f64::NAN];
+
+        match try_analyze_mm_districts(&assignments, &total, &minority, &[0.0], &[0.0], 0.50) {
+            Err(VraError::NonFinitePopulation {
+                tract,
+                field,
+                value,
+            }) => {
+                assert_eq!(tract, 0);
+                assert_eq!(field, "minority");
+                assert!(value.is_nan());
+            }
+            other => panic!("expected NonFinitePopulation, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_try_vra_rejects_component_above_total_population() {
+        let assignments: HashMap<usize, usize> = vec![(0, 1)].into_iter().collect();
+        let total = vec![1000i64];
+        let minority = vec![1001.0];
+
+        match try_analyze_mm_districts(&assignments, &total, &minority, &[0.0], &[0.0], 0.50) {
+            Err(VraError::PopulationExceedsTotal {
+                tract,
+                field,
+                value,
+                total,
+            }) => {
+                assert_eq!(tract, 0);
+                assert_eq!(field, "minority");
+                assert_eq!(value, 1001.0);
+                assert_eq!(total, 1000);
+            }
+            other => panic!("expected PopulationExceedsTotal, got {other:?}"),
+        }
     }
 
     #[test]

@@ -79,4 +79,6 @@ pub use splits::{
 };
 pub use summary::{SummaryAnalyzer, SummaryDistrict, SummaryResult};
 pub use urban::{UrbanAnalyzer, UrbanDistrict, UrbanResult};
-pub use vra_analysis::{analyze_mm_districts, VraAnalysis, VraDistrict};
+pub use vra_analysis::{
+    analyze_mm_districts, try_analyze_mm_districts, VraAnalysis, VraDistrict, VraError,
+};
