@@ -113,13 +113,13 @@ Score bands:
 | G.3 Compactness Distribution Position | 3.5 | 3.4 | 3.3 | 3.6 | 3.6 | 3.4 | 20.8 | Stronger; active synthetic package plus real-metric gap |
 | G.4 Ensemble Diagnostics | 3.8 | 3.7 | 3.7 | 3.9 | 4.0 | 3.6 | 22.7 | Golden |
 | G.5 Convergence Mixing Analysis | 3.4 | 3.4 | 3.2 | 3.6 | 3.4 | 3.3 | 20.3 | Strong; diagnostics scoped correctly |
-| G.6 Short-Burst | 3.3 | 3.5 | 3.2 | 3.3 | 3.5 | 3.4 | 20.2 | Strong draft, accepted but evidence could deepen |
+| G.6 Short-Burst | 3.5 | 3.5 | 3.3 | 3.5 | 3.5 | 3.5 | 20.8 | Stronger; endpoint/seed smoke package, production CLI pending |
 | G.7 SMC Redistricting | 3.8 | 3.8 | 3.7 | 3.8 | 4.0 | 3.7 | 22.8 | Golden |
 | G.8 Flip Proposals | 3.5 | 3.6 | 3.3 | 3.4 | 3.5 | 3.5 | 20.8 | Strong |
 | G.9 Forest ReCom | 3.5 | 3.6 | 3.3 | 3.4 | 3.5 | 3.5 | 20.8 | Strong |
 | G.10 Merge-Split | 3.8 | 3.8 | 3.6 | 3.9 | 4.0 | 3.6 | 22.7 | Golden |
 | G.11 Multiscale MCMC | 3.8 | 3.7 | 3.5 | 3.9 | 4.0 | 3.6 | 22.5 | Golden |
-| G.12 Short-Burst Chains | 3.4 | 3.4 | 3.2 | 3.5 | 3.4 | 3.3 | 20.2 | Strong; short-burst diagnostic boundary |
+| G.12 Short-Burst Chains | 3.5 | 3.5 | 3.3 | 3.5 | 3.5 | 3.4 | 20.7 | Stronger; seed-stream diagnostic package, production CLI pending |
 | G.13 VRA-Aware Ensemble | 3.8 | 3.7 | 3.6 | 3.8 | 3.6 | 3.7 | 22.2 | Strong near-golden |
 | G.14 Ensemble Comparison | 3.9 | 3.8 | 3.8 | 3.9 | 3.6 | 3.9 | 22.9 | Golden |
 | G.15 Comprehensive Comparison | 3.5 | 3.5 | 3.4 | 3.6 | 3.4 | 3.5 | 20.9 | Strong; index status should be reconciled |
@@ -173,7 +173,7 @@ Score bands:
 |---|---:|---|---|
 | B/T construction foundations | 26 | Strong for reviewed/new slices, serviceable for older slices; T.5-T.7 golden and T.8/T.9 strong | legacy visuals and audit/package bridges |
 | U search/optimization/audit | 21 | Strong after synthetic U.2/U.4 package and U.10/U.16-U.20 golden slices | real archived sweep/CLI packages for U.2/U.4 |
-| G ensemble/sampling | 16 | Strong after active synthetic G.1-G.3 package; G.4/G.7/G.10/G.11 golden | archived real external traces for G.1-G.3 |
+| G ensemble/sampling | 16 | Strong after active synthetic G.1-G.3 and G.6/G.12 short-burst packages; G.4/G.7/G.10/G.11 golden | archived real external traces for G.1-G.3 and production CLI for short-burst |
 | J apportionment | 7 | Serviceable-plus after implementation-boundary pass | Census/SHA fixtures and Hamilton public API remain future work |
 | K compactness metrics | 8 | Strong after exact-MBC smoke package and K.5 MBR/AABB boundary | real district exact-MBC and LW replay packages |
 | L partisan metrics | 7 | Strong | cross-link to G/A synthesis |

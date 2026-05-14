@@ -12,6 +12,7 @@ pub mod merge_split;
 pub mod parallel_tempering;
 pub mod recom;
 pub mod search_evidence;
+pub mod short_burst_evidence;
 pub mod spanning;
 pub mod vra_recom;
 

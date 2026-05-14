@@ -26,13 +26,17 @@ check and an empirical characterisation of the effective burst length.
 It is a lightweight addition to the manifest that costs no extra compute
 and provides meaningful diagnostic information.
 
-\paragraph{Implementation.}
-All three variants are available in \texttt{redist-cli}:
+\paragraph{Implementation boundary.}
+All three variants have a common intended command shape:
 \begin{verbatim}
 --search short-burst            # G.6: standard ReCom inner chain
 --search short-burst-forest     # G.12: ForestRecom inner chain
 --search short-burst-merge-split # G.12: MergeSplit inner chain
 \end{verbatim}
+The current repository evidence is narrower: the
+\texttt{G.6-G.12+short-burst-smoke} package verifies seed-stream,
+endpoint-restart, selected-endpoint, and acceptance-rate mechanics.  Production
+CLI commands and state empirical claims remain future package work.
 
 \paragraph{Composability.}
 The chain-type parameter exposes the composable structure of Short-Burst

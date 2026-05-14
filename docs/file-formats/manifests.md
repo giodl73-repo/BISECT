@@ -25,6 +25,7 @@ If you're adding a new manifest type, land a one-task edit to §1 in the same co
 | `bloc_voting.json` (top-level) | `bloc-voting v1` | `bisect-analysis::bloc_voting_writer` (shipped 2026-04-30) | Callais Evidence Layer plan Task 6 |
 | `reproducibility_package_manifest.json` | `repro-package v1` | `bisect-report::repro_zip` (when shipped) | Court Submission Reports plan Task 6 |
 | `g-ensemble-evidence-manifest.json` | `g-ensemble-evidence-manifest v1` | `bisect-ensemble::evidence_manifest` | G Ensemble Evidence Packages wave |
+| `g-short-burst-evidence-manifest.json` | `g-short-burst-evidence-manifest v1` | `bisect-ensemble::short_burst_evidence` | G Short-Burst Evidence wave |
 | `j-apportionment-evidence-manifest.json` | `j-apportionment-evidence-manifest v1` | `bisect-apportion::evidence_manifest` | J Apportionment Evidence Packages wave |
 | `j-divisor-evidence-manifest.json` | `j-divisor-evidence-manifest v1` | `bisect-apportion::divisor_evidence` | J Divisor Method Evidence wave |
 | `k-reock-evidence-manifest.json` | `k-reock-evidence-manifest v1` | `bisect-analysis::compactness_evidence` | K Exact Reock Evidence Packages wave |
@@ -312,6 +313,26 @@ Required fields beyond §2:
 | `package_id` | Stable package slug including the covered U-track scope. |
 | `papers` | U-track papers covered, e.g. `["U.3"]`. |
 | `fixture_file` | `{path, sha256, role}` for the package-relative SA fixture set. |
+| `verifier_path` | Package-relative source path for the verifier implementation. |
+| `verification_commands` | Commands that replay or validate the package. |
+
+### 3.19 `g-short-burst-evidence-manifest v1`
+
+Source: `bisect-ensemble::short_burst_evidence::ShortBurstEvidenceManifest`.
+
+This manifest binds G.6/G.12 short-burst smoke fixtures to a verifier. It
+covers deterministic chain/forward/reverse seed derivation, endpoint restart
+rather than within-burst-minimum restart, selected-endpoint ordering, and
+per-burst acceptance-rate arithmetic. It is not evidence for production CLI
+availability, state-level compactness tables, or stationarity.
+
+Required fields beyond §2:
+
+| Field | Definition |
+|---|---|
+| `package_id` | Stable package slug including the covered G-track scope. |
+| `papers` | G-track papers covered, e.g. `["G.6", "G.12"]`. |
+| `fixture_file` | `{path, sha256, role}` for the package-relative short-burst fixture set. |
 | `verifier_path` | Package-relative source path for the verifier implementation. |
 | `verification_commands` | Commands that replay or validate the package. |
 

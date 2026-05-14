@@ -65,8 +65,8 @@ Short-Burst optimization~\citep{cannon2022} applies sequences of short
 \recom{} chains---each restarting from the \emph{endpoint} of the
 previous burst---to concentrate exploration near low-edge-cut plans
 while preserving the Markov property.
-We implement Short-Burst in \texttt{redist-cli} as
-\texttt{SeedCompositor::ShortBurst} and compare it to multi-seed METIS,
+We specify Short-Burst as a \texttt{SeedCompositor::ShortBurst} candidate and
+compare it to multi-seed METIS,
 \cs{}, and \be{} on NC ($k=14$), WI ($k=8$), and TX ($k=38$)
 under a fixed budget of 1{,}000 total \recom{} steps.
 \shb{} achieves Polsby-Popper improvements of 15--22\%
@@ -77,6 +77,9 @@ The key correctness requirement is that each burst retains its
 \emph{endpoint}---not the within-burst minimum---to preserve the
 Markov restart property and avoid systematic bias toward lower-edge-cut
 plans in a way incompatible with the stationary distribution.
+The checked-in \texttt{G.6-G.12+short-burst-smoke} package verifies this
+seed and endpoint-retention boundary; production CLI availability and
+state-level empirical tables require separate run packages.
 Sensitivity analysis on NC shows that burst length governs performance
 more strongly than burst count: bursts of 5--20 steps outperform
 bursts of 50+ steps, which drift and resemble single-chain \recom{}.

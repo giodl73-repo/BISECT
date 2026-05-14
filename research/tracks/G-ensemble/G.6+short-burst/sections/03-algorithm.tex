@@ -32,6 +32,10 @@ Given parameters $\ell$ (burst length), $m$ (burst count), $p \in [0, 1]$
 
 The default parameters in \texttt{redist-cli} are $\ell = 20$, $m = 50$,
 $p = 0.0$ (always return the best endpoint found).
+The repository smoke package \texttt{G.6-G.12+short-burst-smoke} verifies this
+seed formula and the endpoint-retention selection rule on a synthetic endpoint
+ledger.  It does not by itself establish a production command path or state
+empirical result.
 
 \subsection{Chain-Seed Derivation}
 
@@ -100,7 +104,7 @@ to ensure no seed collision across search modes.
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{CLI Invocation}
+\subsection{Intended CLI Invocation}
 
 \begin{verbatim}
 bisect state --state NC --year 2020
@@ -109,6 +113,10 @@ bisect state --state NC --year 2020
     --n-bursts 50
     --percentile 0.0
 \end{verbatim}
+
+This invocation is the target surface for a production short-burst command.
+Until that surface is checked in with run packages, cite the smoke package only
+for mechanics replay.
 
 The percentile parameter \texttt{--percentile 0.0} selects the best
 endpoint (minimum edge-cut) across all bursts.

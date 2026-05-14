@@ -6,10 +6,11 @@ optimisation.
 By restarting short \recom{} chains from each burst's endpoint, it
 concentrates exploration near good plans without sacrificing the
 Markov property.
-The implementation in \texttt{bisect} as \texttt{--search short-burst}
-achieves 15--22\% Polsby-Popper improvement over single-seed METIS,
-outperforming both multi-seed METIS and \cs{} under a 1{,}000-step
-budget, and approaching \be{} performance.
+The checked-in mechanics package verifies the deterministic seed and endpoint
+retention rules for a future \texttt{--search short-burst} surface.  The
+15--22\% Polsby-Popper improvement over single-seed METIS remains a
+state-run empirical claim that needs archived assignments, metrics, parameters,
+and lineage before it is cited as production evidence.
 
 The key correctness requirement is \emph{endpoint retention} rather
 than within-burst minimization: retaining the burst endpoint
@@ -23,19 +24,18 @@ initialisation, and \shb{} refines via concentrated neighbourhood
 exploration.
 
 \paragraph{Legal and practitioner use.}
-\shb{} is appropriate for litigation support where a demonstrably
-compact plan is required.
-The 15--22\% PP improvement over single-seed METIS, achieved at
-identical runtime cost, enables a straightforward argument: the submitted
-plan was not merely drawn to pass a minimum compactness threshold but
-was refined by neighbourhood exploration.
+\shb{} is appropriate for litigation support only when the submitted plan is
+paired with its run package.  The 15--22\% PP improvement over single-seed
+METIS, if reproduced in such a package, enables a straightforward argument:
+the submitted plan was not merely drawn to pass a minimum compactness threshold
+but was refined by neighbourhood exploration.
 Because \shb{} operates on the initial METIS structure (preserving its
 prime-factor bisection tree), the plan carries the same political-neutrality
 properties as T.4's \ar{} plan while achieving measurably higher
 Polsby-Popper compactness.
-The efficiency-gap neutrality ($|\mathrm{EG}| < 0.05$ across NC, WI, TX)
-confirms that the compactness improvement is not purchased at the cost
-of partisan skew---a requirement under the \dia{} framework.
+The efficiency-gap neutrality claim ($|\mathrm{EG}| < 0.05$ across NC, WI, TX)
+is likewise a package-required empirical claim, not a consequence of the smoke
+fixture alone.
 
 \paragraph{Open directions.}
 

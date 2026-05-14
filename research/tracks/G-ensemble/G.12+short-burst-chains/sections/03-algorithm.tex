@@ -57,6 +57,9 @@ step index $t$ using the \texttt{SBF\_FWD\_} and \texttt{SBF\_REV\_}
 prefixes.
 This ensures that any burst trajectory can be independently reproduced by
 any verifier who holds the base seed $b$ and the burst parameters.
+The \texttt{G.6-G.12+short-burst-smoke} package includes a concrete
+\texttt{SBF\_CHAIN\_}/\texttt{SBF\_FWD\_}/\texttt{SBF\_REV\_} seed-stream
+fixture for this rule.
 
 \paragraph{Endpoint restart.}
 At the end of each burst, $\pi_{\mathrm{cur}}$ is updated to
@@ -67,12 +70,14 @@ previous $\pi_{\mathrm{cur}}$.
 This allows the chain to escape local minima by occasionally accepting
 worse endpoints during the burst (through the MH criterion).
 
-\paragraph{CLI invocation.}
+\paragraph{Intended CLI invocation.}
 \begin{verbatim}
 bisect state --state NC --year 2020 \
     --search short-burst-forest \
     --burst-length 20 --n-bursts 50 --percentile 0.0
 \end{verbatim}
+This is the intended production surface; the current package verifies mechanics
+only.
 
 \subsection{ShortBurstMergeSplit}
 \label{subsec:alg-sbms}
@@ -88,12 +93,14 @@ bisect state --state NC --year 2020 \
         identical.
 \end{enumerate}
 
-\paragraph{CLI invocation.}
+\paragraph{Intended CLI invocation.}
 \begin{verbatim}
 bisect state --state NC --year 2020 \
     --search short-burst-merge-split \
     --burst-length 20 --n-bursts 50 --percentile 0.0
 \end{verbatim}
+This is the intended production surface; the current package verifies mechanics
+only.
 
 \subsection{Per-Burst Acceptance Rate Diagnostic}
 \label{subsec:alg-acceptance}
