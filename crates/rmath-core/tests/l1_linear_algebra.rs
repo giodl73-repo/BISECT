@@ -77,6 +77,19 @@ fn l1_normalization_rejects_negative_min_norm_policy() {
 }
 
 #[test]
+fn l1_normalization_rejects_overflowed_norm_policy() {
+    let result = normalize_centered(vec![f64::MAX, -f64::MAX], 0.0);
+
+    match result {
+        Err(LinearAlgebraError::NonFiniteResult { operation, value }) => {
+            assert_eq!(operation, "dot");
+            assert!(value.is_infinite());
+        }
+        other => panic!("expected norm overflow error, got {other:?}"),
+    }
+}
+
+#[test]
 fn l1_symmetric_2x2_matches_geosection_horizontal_band_covariance() {
     let eigen = symmetric_2x2_eigensystem(Symmetric2x2 {
         a00: 0.0025,

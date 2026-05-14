@@ -219,11 +219,15 @@ pub fn dot(a: &[f64], b: &[f64]) -> Result<f64, LinearAlgebraError> {
             right: (b.len(), 1),
         });
     }
-    Ok(a.iter().zip(b).map(|(x, y)| x * y).sum())
+    let value = a.iter().zip(b).map(|(x, y)| x * y).sum();
+    validate_result_scalar("dot", value)?;
+    Ok(value)
 }
 
 pub fn l2_norm(values: &[f64]) -> Result<f64, LinearAlgebraError> {
-    Ok(dot(values, values)?.sqrt())
+    let norm = dot(values, values)?.sqrt();
+    validate_result_scalar("l2_norm", norm)?;
+    Ok(norm)
 }
 
 pub fn center_in_place(values: &mut [f64]) -> Result<(), LinearAlgebraError> {
@@ -417,6 +421,31 @@ mod tests {
     fn l0_dot_and_norm_match_hand_computed_values() {
         assert_eq!(dot(&[1.0, 2.0, 3.0], &[4.0, 5.0, 6.0]).unwrap(), 32.0);
         assert_eq!(l2_norm(&[3.0, 4.0]).unwrap(), 5.0);
+    }
+
+    #[test]
+    fn l0_dot_overflow_is_rejected() {
+        match dot(&[f64::MAX, f64::MAX], &[2.0, 2.0]) {
+            Err(LinearAlgebraError::NonFiniteResult { operation, value }) => {
+                assert_eq!(operation, "dot");
+                assert!(value.is_infinite());
+            }
+            other => panic!("expected dot overflow error, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn l0_normalization_rejects_overflowed_norm_without_mutating() {
+        let mut values = vec![f64::MAX, f64::MAX];
+
+        match normalize_in_place(&mut values, 0.0) {
+            Err(LinearAlgebraError::NonFiniteResult { operation, value }) => {
+                assert_eq!(operation, "dot");
+                assert!(value.is_infinite());
+            }
+            other => panic!("expected norm overflow error, got {other:?}"),
+        }
+        assert_eq!(values, vec![f64::MAX, f64::MAX]);
     }
 
     #[test]

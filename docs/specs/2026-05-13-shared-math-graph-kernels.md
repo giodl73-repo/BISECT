@@ -315,11 +315,13 @@ The numeric kernel starts with small dense linear algebra, extracted from
    ignored L2 Hilbert-like inverse stress test landed under
    `crates/rmath-core/tests/`.**
 5. Dot products, L2 norms, centering, in-place normalization, and centered
-    normalization. **Landed in `rmath-core`; `bisect-apportion::spectral` consumes
-    centered normalization and `bisect-data::fiedler` consumes dot, centering, and
-    normalization helpers. Normalization thresholds must be finite and
-    non-negative; negative thresholds are rejected with a typed error to avoid
-    zero-vector division into non-finite values.**
+   normalization. **Landed in `rmath-core`; `bisect-apportion::spectral` consumes
+   centered normalization and `bisect-data::fiedler` consumes dot, centering, and
+   normalization helpers. Normalization thresholds must be finite and
+   non-negative; negative thresholds are rejected with a typed error to avoid
+   zero-vector division into non-finite values. Dot and L2 norm overflow are also
+   rejected before normalization can divide finite vectors by `inf` and silently
+   collapse them to zeros.**
 6. Closed-form symmetric 2x2 eigensystem. **Landed in `rmath-core`;
    `bisect-cli::geosection_orientation` consumes the minor eigenvector for PCA
    minor-axis orientation. The eigensystem rejects non-finite intermediate
