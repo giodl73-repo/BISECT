@@ -83,6 +83,20 @@ fn l1_projection_out_of_ones_matches_fiedler_fixture() {
 }
 
 #[test]
+fn l1_centering_rejects_overflowed_sum_policy() {
+    let mut vector = vec![f64::MAX, f64::MAX];
+
+    match center_in_place(&mut vector) {
+        Err(LinearAlgebraError::NonFiniteResult { operation, value }) => {
+            assert_eq!(operation, "center_in_place sum");
+            assert!(value.is_infinite());
+        }
+        other => panic!("expected centering overflow error, got {other:?}"),
+    }
+    assert_eq!(vector, vec![f64::MAX, f64::MAX]);
+}
+
+#[test]
 fn l1_non_finite_vector_input_is_rejected() {
     match l2_norm(&[1.0, f64::NAN]) {
         Err(LinearAlgebraError::NonFiniteValue { row, col, value }) => {

@@ -235,9 +235,18 @@ pub fn l2_norm(values: &[f64]) -> Result<f64, LinearAlgebraError> {
 
 pub fn center_in_place(values: &mut [f64]) -> Result<(), LinearAlgebraError> {
     validate_non_empty_vector(values)?;
-    let mean = values.iter().sum::<f64>() / values.len() as f64;
-    for value in values {
-        *value -= mean;
+    let sum = values.iter().sum::<f64>();
+    validate_result_scalar("center_in_place sum", sum)?;
+    let mean = sum / values.len() as f64;
+    validate_result_scalar("center_in_place mean", mean)?;
+    let mut centered = Vec::with_capacity(values.len());
+    for &value in values.iter() {
+        let next = value - mean;
+        validate_result_scalar("center_in_place centered value", next)?;
+        centered.push(next);
+    }
+    for (value, centered_value) in values.iter_mut().zip(centered) {
+        *value = centered_value;
     }
     Ok(())
 }
@@ -485,6 +494,20 @@ mod tests {
 
         assert_eq!(values, vec![-2.0, 0.0, 2.0]);
         assert!(values.iter().sum::<f64>().abs() < 1e-12);
+    }
+
+    #[test]
+    fn l0_centering_rejects_overflowed_sum_without_mutating() {
+        let mut values = vec![f64::MAX, f64::MAX];
+
+        match center_in_place(&mut values) {
+            Err(LinearAlgebraError::NonFiniteResult { operation, value }) => {
+                assert_eq!(operation, "center_in_place sum");
+                assert!(value.is_infinite());
+            }
+            other => panic!("expected centering overflow error, got {other:?}"),
+        }
+        assert_eq!(values, vec![f64::MAX, f64::MAX]);
     }
 
     #[test]

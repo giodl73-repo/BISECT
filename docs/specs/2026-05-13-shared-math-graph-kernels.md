@@ -320,9 +320,9 @@ The numeric kernel starts with small dense linear algebra, extracted from
    centered normalization and `bisect-data::fiedler` consumes dot, centering, and
    normalization helpers. Normalization thresholds must be finite and
    non-negative; negative thresholds are rejected with a typed error to avoid
-   zero-vector division into non-finite values. Dot and L2 norm overflow are also
-   rejected before normalization can divide finite vectors by `inf` and silently
-   collapse them to zeros.**
+   zero-vector division into non-finite values. Centering sum/mean overflow and
+   dot/L2 norm overflow are also rejected before normalization can turn finite
+   vectors into non-finite or silently collapsed outputs.**
 6. Closed-form symmetric 2x2 eigensystem. **Landed in `rmath-core`;
    `bisect-cli::geosection_orientation` consumes the minor eigenvector for PCA
    minor-axis orientation. The eigensystem rejects non-finite intermediate
