@@ -266,7 +266,9 @@ Candidate first API:
    `bisect-analysis::partisan` consumes them for bootstrap CIs.**
 7. Empirical p-values and multiple-testing corrections. **Landed in
    `rstat-core::hypothesis`; `bisect-analysis::permutation` and
-   `bisect-analysis::bloc_voting` consume them.**
+   `bisect-analysis::bloc_voting` consume them. Named Holm correction rejects
+   duplicate test names rather than silently collapsing evidence rows in the
+   returned map.**
 8. Weighted descriptive summaries. **Landed in `rstat-core::summary`;
    `bisect-analysis::bloc_voting` and `bisect-analysis::compactness` consume
    them.**

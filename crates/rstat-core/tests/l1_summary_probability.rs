@@ -1,5 +1,6 @@
 use rstat_core::hypothesis::{
-    bayesian_detection_score, benjamini_hochberg, empirical_p_value, holm_bonferroni, Tail,
+    bayesian_detection_score, benjamini_hochberg, empirical_p_value, holm_bonferroni,
+    holm_bonferroni_named, HypothesisError, Tail,
 };
 use rstat_core::probability::{regularized_incomplete_beta, standard_normal_cdf, ProbabilityError};
 use rstat_core::resampling::{bootstrap_percentile_interval, bootstrap_statistics};
@@ -124,4 +125,19 @@ fn l1_multiple_testing_corrections_preserve_shape() {
     assert!(bh.iter().all(|p| (0.0..=1.0).contains(p)));
     assert!(holm[1] >= raw[1]);
     assert!(bh[1] <= holm[1]);
+}
+
+#[test]
+fn l1_named_holm_rejects_duplicate_evidence_keys() {
+    let raw = vec![
+        ("candidate_a::primary".to_string(), 0.01),
+        ("candidate_a::primary".to_string(), 0.04),
+    ];
+
+    assert_eq!(
+        holm_bonferroni_named(&raw),
+        Err(HypothesisError::DuplicateTestName(
+            "candidate_a::primary".to_string()
+        ))
+    );
 }

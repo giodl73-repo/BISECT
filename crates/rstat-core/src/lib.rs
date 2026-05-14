@@ -461,7 +461,7 @@ pub mod resampling {
 
 pub mod hypothesis {
     use crate::probability::{regularized_incomplete_beta, ProbabilityError};
-    use std::collections::HashMap;
+    use std::collections::{HashMap, HashSet};
     use thiserror::Error;
 
     #[derive(Debug, Error, Clone, PartialEq)]
@@ -474,6 +474,8 @@ pub mod hypothesis {
         InvalidProbability(f64),
         #[error("[INPUT] ESS must be positive and finite, got {0}")]
         InvalidEss(f64),
+        #[error("[INPUT] duplicate hypothesis test name '{0}'")]
+        DuplicateTestName(String),
         #[error(transparent)]
         Probability(#[from] ProbabilityError),
     }
@@ -556,6 +558,12 @@ pub mod hypothesis {
     pub fn holm_bonferroni_named(
         p_values: &[(String, f64)],
     ) -> Result<HashMap<String, f64>, HypothesisError> {
+        let mut names = HashSet::with_capacity(p_values.len());
+        for (name, _) in p_values {
+            if !names.insert(name.as_str()) {
+                return Err(HypothesisError::DuplicateTestName(name.clone()));
+            }
+        }
         let raw: Vec<f64> = p_values.iter().map(|(_, p)| *p).collect();
         let corrected = holm_bonferroni(&raw)?;
         Ok(p_values
@@ -661,6 +669,21 @@ pub mod hypothesis {
             assert!((corrected[1] - 0.06).abs() < 1e-12);
             assert!((corrected[2] - 0.06).abs() < 1e-12);
             assert_eq!(corrected[3], 0.90);
+        }
+
+        #[test]
+        fn l0_holm_bonferroni_named_rejects_duplicate_test_names() {
+            let raw = vec![
+                ("race::primary".to_string(), 0.01),
+                ("race::primary".to_string(), 0.02),
+            ];
+
+            assert_eq!(
+                holm_bonferroni_named(&raw),
+                Err(HypothesisError::DuplicateTestName(
+                    "race::primary".to_string()
+                ))
+            );
         }
 
         #[test]
