@@ -5,7 +5,7 @@ use rstat_core::probability::{regularized_incomplete_beta, standard_normal_cdf};
 use rstat_core::resampling::{bootstrap_percentile_interval, bootstrap_statistics};
 use rstat_core::summary::{
     percentile_interval_sorted_copy, quantile_sorted_copy, summary_stats, weighted_mean,
-    weighted_summary_stats,
+    weighted_summary_stats, SummaryError,
 };
 
 #[test]
@@ -77,6 +77,19 @@ fn l1_bootstrap_summary_interval_composes_with_quantiles() {
 
     assert_eq!(direct_interval, helper_interval);
     assert!(helper_interval.0 <= helper_interval.1);
+}
+
+#[test]
+fn l1_percentile_interval_rejects_reversed_evidence_bounds() {
+    let sample = [0.10, 0.20, 0.30, 0.40];
+
+    assert_eq!(
+        percentile_interval_sorted_copy(&sample, 0.80, 0.20),
+        Err(SummaryError::InvalidIntervalQuantiles {
+            low: 0.80,
+            high: 0.20
+        })
+    );
 }
 
 #[test]

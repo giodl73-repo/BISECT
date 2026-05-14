@@ -15,6 +15,8 @@ pub mod summary {
         ZeroTotalWeight,
         #[error("[INPUT] quantile q must be in [0, 1], got {0}")]
         InvalidQuantile(f64),
+        #[error("[INPUT] percentile interval quantiles must satisfy low <= high, got low={low}, high={high}")]
+        InvalidIntervalQuantiles { low: f64, high: f64 },
     }
 
     #[derive(Debug, Clone, Copy, PartialEq)]
@@ -155,6 +157,7 @@ pub mod summary {
         validate_values(values)?;
         validate_quantile(low_q)?;
         validate_quantile(high_q)?;
+        validate_interval_quantiles(low_q, high_q)?;
         let mut sorted = values.to_vec();
         sorted.sort_by(f64::total_cmp);
         Ok((
@@ -208,6 +211,16 @@ pub mod summary {
     fn validate_quantile(q: f64) -> Result<(), SummaryError> {
         if !q.is_finite() || !(0.0..=1.0).contains(&q) {
             return Err(SummaryError::InvalidQuantile(q));
+        }
+        Ok(())
+    }
+
+    fn validate_interval_quantiles(low_q: f64, high_q: f64) -> Result<(), SummaryError> {
+        if low_q > high_q {
+            return Err(SummaryError::InvalidIntervalQuantiles {
+                low: low_q,
+                high: high_q,
+            });
         }
         Ok(())
     }
@@ -270,6 +283,17 @@ pub mod summary {
             assert_eq!(
                 quantile_sorted_copy(&[1.0], 1.5),
                 Err(SummaryError::InvalidQuantile(1.5))
+            );
+        }
+
+        #[test]
+        fn l0_rejects_reversed_percentile_interval_quantiles() {
+            assert_eq!(
+                percentile_interval_sorted_copy(&[1.0, 2.0, 3.0], 0.90, 0.10),
+                Err(SummaryError::InvalidIntervalQuantiles {
+                    low: 0.90,
+                    high: 0.10
+                })
             );
         }
 
@@ -416,6 +440,21 @@ pub mod resampling {
                     value
                 } if value.is_nan()
             ));
+        }
+
+        #[test]
+        fn l0_bootstrap_rejects_reversed_percentile_interval_quantiles() {
+            let stat = |xs: &[f64]| xs.iter().sum::<f64>();
+
+            assert_eq!(
+                bootstrap_percentile_interval(&[1.0, 2.0], 10, 1, stat, 0.75, 0.25),
+                Err(BootstrapError::Summary(
+                    SummaryError::InvalidIntervalQuantiles {
+                        low: 0.75,
+                        high: 0.25
+                    }
+                ))
+            );
         }
     }
 }
