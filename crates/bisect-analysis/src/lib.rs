@@ -45,7 +45,9 @@ pub use comparison::{
 pub use contiguity::{bfs_component_count, check_contiguity, ContiguityResult, DistrictContiguity};
 pub use county_names::county_name;
 pub use demographic::{DemographicAnalyzer, DemographicDistrict, DemographicResult};
-pub use dhondt::{dhondt_allocate, gallagher_index};
+pub use dhondt::{
+    dhondt_allocate, gallagher_index, try_dhondt_allocate, try_gallagher_index, DhondtError,
+};
 pub use exit_codes::{
     compute_exit_code, compute_exit_code_with_flags, BIT_BALANCE, BIT_CONTIGUITY, BIT_MISSING_DATA,
     BIT_NESTING,
