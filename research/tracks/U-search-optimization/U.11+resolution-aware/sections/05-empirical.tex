@@ -59,6 +59,9 @@ proposals make district swaps that would require many sequential tract-level
 steps to achieve, reducing correlation between consecutive plans.
 The result is consistent with Autry et al.~\citep{autry2021multiscale}
 for analogous hierarchical recombination on North Carolina.
+This table remains an empirical archive requirement.  The current
+\texttt{U.11+resolution-smoke} package verifies resolution mapping mechanics
+only; it is not a replay of the TX chains or their autocorrelation diagnostics.
 
 \paragraph{Computational overhead.}
 Building $\ec$ from the TX tract graph (5{,}265 nodes, $\approx$14{,}000
@@ -94,6 +97,9 @@ We verify that a verifier holding \texttt{nc\_adjacency\_2020\_geoids.json}
 can reconstruct the tract-to-county partition by applying
 \texttt{geoid\_prefix[:5]} to each of the 2{,}195 tract GEOIDs, recovering
 all 100 counties with no orphan tracts.
+The checked-in smoke fixture exercises the same prefix rule on a five-tract
+synthetic graph, including orphan-detection-sensitive unit order and derived
+coarse topology.
 
 \subsection{Phase 2 Teaser: Expected BG-Level Precision Gains}
 

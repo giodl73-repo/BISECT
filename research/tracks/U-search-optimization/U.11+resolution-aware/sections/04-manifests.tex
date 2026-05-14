@@ -173,3 +173,13 @@ census block group resolution'').
 covers the entire manifest including resolution fields.
 A plan rebuilt at a different resolution will not match the stored hash,
 flagging a resolution mismatch as a verification failure.
+
+\subsection{Smoke Package Boundary}
+
+The repository includes \texttt{U.11+resolution-smoke}, a minimal package that
+hash-binds a synthetic tract-to-county fixture.  Its verifier recomputes the
+GEOID-prefix partition, checks \texttt{plan\_resolution}, \texttt{n\_units},
+and \texttt{unit\_type}, aggregates fine populations to county-level totals,
+and derives the coarse adjacency graph from fine adjacency.  The package is a
+manifest and topology replay test; it does not substantiate the Texas
+autocorrelation table or BG-level precision projections.

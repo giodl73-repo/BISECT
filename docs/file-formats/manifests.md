@@ -32,6 +32,7 @@ If you're adding a new manifest type, land a one-task edit to §1 in the same co
 | `m1-economic-evidence-manifest.json` | `m1-economic-evidence-manifest v1` | `bisect-cli::lodes_evidence` | M.1 Economic Character Evidence wave |
 | `m3-housing-evidence-manifest.json` | `m3-housing-evidence-manifest v1` | `bisect-cli::housing_evidence` | M.3 Housing Character Evidence wave |
 | `u3-sa-evidence-manifest.json` | `u3-sa-evidence-manifest v1` | `bisect-cli::sa_evidence` | U.3 Simulated Annealing Evidence wave |
+| `u11-resolution-evidence-manifest.json` | `u11-resolution-evidence-manifest v1` | `bisect-multiscale::resolution_evidence` | U.11 Resolution Evidence wave |
 | `u-search-evidence-manifest.json` | `u-search-evidence-manifest v1` | `bisect-ensemble::search_evidence` | U Search Evidence Packages wave |
 
 **Adding a new manifest type:** edit this table, add a `## §3.X — <kind> v<n>` subsection at the bottom enumerating fields beyond the canonical set, and reference both from the spec/plan that owns it.
@@ -333,6 +334,26 @@ Required fields beyond §2:
 | `package_id` | Stable package slug including the covered G-track scope. |
 | `papers` | G-track papers covered, e.g. `["G.6", "G.12"]`. |
 | `fixture_file` | `{path, sha256, role}` for the package-relative short-burst fixture set. |
+| `verifier_path` | Package-relative source path for the verifier implementation. |
+| `verification_commands` | Commands that replay or validate the package. |
+
+### 3.20 `u11-resolution-evidence-manifest v1`
+
+Source: `bisect-multiscale::resolution_evidence::ResolutionEvidenceManifest`.
+
+This manifest binds U.11 resolution-aware smoke fixtures to a verifier. It
+covers plan-resolution fields, GEOID-prefix fine-to-coarse mapping,
+population aggregation, and derived coarse adjacency. It is not evidence for
+state-level autocorrelation reduction, BG-level precision gains, or legal
+adequacy.
+
+Required fields beyond §2:
+
+| Field | Definition |
+|---|---|
+| `package_id` | Stable package slug including the covered U-track scope. |
+| `papers` | U-track papers covered, e.g. `["U.11"]`. |
+| `fixture_file` | `{path, sha256, role}` for the package-relative resolution fixture set. |
 | `verifier_path` | Package-relative source path for the verifier implementation. |
 | `verification_commands` | Commands that replay or validate the package. |
 

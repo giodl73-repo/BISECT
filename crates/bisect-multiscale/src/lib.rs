@@ -7,6 +7,7 @@
 pub mod chain;
 pub mod hierarchy;
 pub mod rebalance;
+pub mod resolution_evidence;
 pub mod seeds;
 
 pub use chain::{MultiScaleChain, MultiScaleConfig, MultiScaleError};

@@ -129,6 +129,9 @@ Every plan manifest records \texttt{plan\_resolution}, \texttt{n\_units},
 and \texttt{unit\_type}; multi-scale manifests additionally record
 \texttt{fine\_to\_coarse\_formula} so an independent verifier can reconstruct
 the partition without code.
+The checked-in \texttt{U.11+resolution-smoke} package verifies this mapping,
+population aggregation, and coarse-adjacency replay boundary on a synthetic
+tract-to-county fixture.
 The empirical comparison to archive is whether Option~B multi-scale chains
 reduce lag-100 autocorrelation relative to single-scale ReCom at tract level,
 providing a concrete efficiency claim alongside the flexibility gain.

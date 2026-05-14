@@ -83,7 +83,7 @@ The search, optimization, certification, and algorithm-selection layer. Once con
 | U.8 | PercentileSweep — Statutory Choice of Legal Posture | [PDF](papers/U.8+percentile-sweep.pdf) | legal posture selection |
 | U.9 | BisectionEnsemble — Local ReCom at Each Bisection Node | [PDF](papers/U.9+bisection-ensemble.pdf) | local ensemble search |
 | U.10 | bisect-ensemble — Rust ReCom at 2500× Speed | [PDF](papers/U.10+bisect-ensemble.pdf) | high-performance search implementation |
-| U.11 | Resolution-Aware Redistricting — Geographic Granularity as a First-Class Parameter | [PDF](papers/U.11+resolution-aware.pdf) | resolution selection |
+| U.11 | Resolution-Aware Redistricting — Geographic Granularity as a First-Class Parameter | [PDF](papers/U.11+resolution-aware.pdf) | resolution mapping smoke package added; autocorrelation archive pending |
 | U.12 | Algorithm-Selection Matrix — choosing construction, search, exact, ensemble, and audit paths | [PDF](papers/U.12+algorithm-selection-matrix.pdf) | reviewed draft |
 | U.13 | Exact-vs-Heuristic Certification — what proofs, bounds, and audits establish | [PDF](papers/U.13+exact-vs-heuristic-certification.pdf) | reviewed draft |
 | U.14 | Multi-Objective Selection — selecting among trade-offs and sampled frontiers | [PDF](papers/U.14+multi-objective-selection.pdf) | reviewed draft |

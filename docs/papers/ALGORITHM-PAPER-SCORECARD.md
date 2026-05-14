@@ -92,7 +92,7 @@ Score bands:
 | U.8 PercentileSweep | 3.7 | 3.5 | 3.5 | 3.9 | 4.0 | 3.5 | 22.1 | Strong |
 | U.9 BisectionEnsemble | 3.6 | 3.5 | 3.4 | 3.7 | 4.0 | 3.5 | 21.7 | Strong |
 | U.10 bisect-ensemble | 3.8 | 3.7 | 3.6 | 3.9 | 4.0 | 3.6 | 22.6 | Golden |
-| U.11 Resolution-Aware | 3.4 | 3.3 | 3.2 | 3.5 | 3.4 | 3.3 | 20.1 | Strong; resolution package boundary |
+| U.11 Resolution-Aware | 3.5 | 3.5 | 3.3 | 3.5 | 3.5 | 3.4 | 20.7 | Stronger; resolution mapping smoke package, autocorrelation archive pending |
 | U.12 Algorithm-Selection Matrix | 3.8 | 3.6 | 3.6 | 3.9 | 4.0 | 3.7 | 22.6 | Golden |
 | U.13 Exact-vs-Heuristic Certification | 3.7 | 3.6 | 3.5 | 3.9 | 3.6 | 3.6 | 21.9 | Strong; U.16-U.20 boundary integrated |
 | U.14 Multi-Objective Selection | 3.6 | 3.5 | 3.4 | 3.7 | 3.6 | 3.5 | 21.3 | Strong; selected-frontier record aligned |
@@ -160,7 +160,7 @@ Score bands:
 
 1. Metric follow-through: K.2/K.0/K.7 now have exact-MBC smoke evidence, but
    real district polygon exact-MBC packages remain future evidence lifts.
-2. Package evidence follow-through: U.2/U.4 now have synthetic package evidence,
+2. Package evidence follow-through: U.2/U.4/U.11 now have synthetic package evidence,
    but still need real archived sweep and production CLI packages before they can
    score as implementation papers.
 3. G-track package follow-through: G.1-G.3 now have active synthetic package
@@ -172,7 +172,7 @@ Score bands:
 | Track family | Included rows | Current center of gravity | Main gap |
 |---|---:|---|---|
 | B/T construction foundations | 26 | Strong for reviewed/new slices, serviceable for older slices; T.5-T.7 golden and T.8/T.9 strong | legacy visuals and audit/package bridges |
-| U search/optimization/audit | 21 | Strong after synthetic U.2/U.4 package and U.10/U.16-U.20 golden slices | real archived sweep/CLI packages for U.2/U.4 |
+| U search/optimization/audit | 21 | Strong after synthetic U.2/U.4/U.11 packages and U.10/U.16-U.20 golden slices | real archived sweep/CLI/autocorrelation packages for U.2/U.4/U.11 |
 | G ensemble/sampling | 16 | Strong after active synthetic G.1-G.3 and G.6/G.12 short-burst packages; G.4/G.7/G.10/G.11 golden | archived real external traces for G.1-G.3 and production CLI for short-burst |
 | J apportionment | 7 | Serviceable-plus after implementation-boundary pass | Census/SHA fixtures and Hamilton public API remain future work |
 | K compactness metrics | 8 | Strong after exact-MBC smoke package and K.5 MBR/AABB boundary | real district exact-MBC and LW replay packages |
