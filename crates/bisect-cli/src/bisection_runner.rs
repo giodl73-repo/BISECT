@@ -8160,6 +8160,40 @@ mod tests {
         assert_eq!(weighted_edge_cut(&edge_weights, &left), 2.25);
     }
 
+    #[test]
+    fn weighted_edge_cut_is_zero_when_no_edges_cross() {
+        let edge_weights = HashMap::from([
+            ((0usize, 1usize), 1.5),
+            ((1usize, 2usize), 2.25),
+            ((2usize, 3usize), 3.0),
+        ]);
+        let all_left = HashSet::from([0usize, 1, 2, 3]);
+        let none_left = HashSet::new();
+
+        assert_eq!(weighted_edge_cut(&edge_weights, &all_left), 0.0);
+        assert_eq!(weighted_edge_cut(&edge_weights, &none_left), 0.0);
+    }
+
+    #[test]
+    fn weighted_edge_cut_sums_all_crossing_edges() {
+        let edge_weights = HashMap::from([
+            ((0usize, 1usize), 1.5),
+            ((0usize, 2usize), 2.0),
+            ((1usize, 3usize), 3.25),
+        ]);
+        let left = HashSet::from([0usize, 1]);
+
+        assert_eq!(weighted_edge_cut(&edge_weights, &left), 5.25);
+    }
+
+    #[test]
+    fn weighted_edge_cut_treats_missing_nodes_as_right_side() {
+        let edge_weights = HashMap::from([((0usize, 10usize), 4.0), ((10usize, 11usize), 7.0)]);
+        let left = HashSet::from([0usize]);
+
+        assert_eq!(weighted_edge_cut(&edge_weights, &left), 4.0);
+    }
+
     // ── Simulated Annealing tests ─────────────────────────────────────────────
 
     // L0: zero steps returns the initial METIS plan unchanged (best = initial).
