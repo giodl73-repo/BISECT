@@ -128,6 +128,23 @@ fn l1_connected_components_support_subset_and_filter() {
 }
 
 #[test]
+fn l1_connected_components_are_direction_invariant_for_boundary_adapters() {
+    let graph = TestGraph::new(5)
+        .edge(1, 1, 0, 1.0)
+        .edge(2, 2, 1, 1.0)
+        .edge(3, 4, 3, 1.0);
+
+    assert_eq!(
+        connected_components(&graph).unwrap(),
+        vec![vec![0, 1, 2], vec![3, 4]]
+    );
+    assert_eq!(
+        connected_components_in_nodes_with_filter(&graph, &[0, 1, 2, 3], |_| true).unwrap(),
+        vec![vec![0, 1, 2], vec![3]]
+    );
+}
+
+#[test]
 fn l1_bridges_ignore_cycles_and_respect_filters() {
     let graph = TestGraph::new(6)
         .edge(1, 0, 1, 1.0)

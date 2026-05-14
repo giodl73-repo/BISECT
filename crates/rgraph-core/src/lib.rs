@@ -609,6 +609,7 @@ where
         validate_node::<G::EdgeId>(node_count, node)?;
     }
 
+    let adjacency = undirected_adjacency(graph, edge_filter)?;
     let allowed: std::collections::HashSet<usize> = starts.iter().copied().collect();
     let mut visited = vec![false; node_count];
     let mut components = Vec::new();
@@ -623,17 +624,12 @@ where
         visited[start] = true;
         while let Some(node) = stack.pop() {
             component.push(node);
-            let mut edges = graph.outgoing_edges(node);
-            edges.sort_by(|a, b| a.target.cmp(&b.target).then_with(|| a.id.cmp(&b.id)));
-            for edge in edges {
-                validate_weight(edge.id, node, edge.target, edge.weight)?;
-                validate_node::<G::EdgeId>(node_count, edge.target)?;
-                if !edge_filter(edge.id) || !allowed.contains(&edge.target) || visited[edge.target]
-                {
+            for &target in &adjacency[node] {
+                if !allowed.contains(&target) || visited[target] {
                     continue;
                 }
-                visited[edge.target] = true;
-                stack.push(edge.target);
+                visited[target] = true;
+                stack.push(target);
             }
         }
         component.sort_unstable();
@@ -1086,6 +1082,18 @@ mod tests {
         assert_eq!(
             connected_components(&graph).unwrap(),
             vec![vec![0, 1], vec![2], vec![3, 4]]
+        );
+    }
+
+    #[test]
+    fn connected_components_treat_directed_adapter_as_weak_components() {
+        let mut graph = TinyGraph::new(4);
+        graph.add_edge(1, 1, 0, 1.0);
+        graph.add_edge(2, 2, 1, 1.0);
+
+        assert_eq!(
+            connected_components(&graph).unwrap(),
+            vec![vec![0, 1, 2], vec![3]]
         );
     }
 
