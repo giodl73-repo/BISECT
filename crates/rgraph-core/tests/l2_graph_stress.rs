@@ -1,6 +1,6 @@
 use rgraph_core::{
-    bridges, connected_components, edge_betweenness, reachable_nodes, shortest_path_distance,
-    DirectedWeightedGraph, WeightedEdge,
+    articulation_points, bridges, connected_components, edge_betweenness, reachable_nodes,
+    shortest_path_distance, DirectedWeightedGraph, WeightedEdge,
 };
 
 #[derive(Debug, Clone)]
@@ -94,4 +94,14 @@ fn l2_grid_bridge_detection_remains_stable() {
     let bridges = bridges(&graph).unwrap();
 
     assert!(bridges.is_empty());
+}
+
+#[test]
+#[ignore = "L2 graph stress: articulation detection on larger cyclic grid"]
+fn l2_grid_articulation_detection_remains_stable() {
+    let graph = GridGraph::new(40, 40);
+
+    let articulations = articulation_points(&graph).unwrap();
+
+    assert!(articulations.is_empty());
 }

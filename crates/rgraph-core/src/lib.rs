@@ -432,6 +432,54 @@ where
     Ok(out)
 }
 
+pub fn articulation_points<G>(graph: &G) -> Result<Vec<usize>, GraphError<G::EdgeId>>
+where
+    G: DirectedWeightedGraph,
+{
+    articulation_points_with_filter(graph, |_| true)
+}
+
+pub fn articulation_points_with_filter<G, F>(
+    graph: &G,
+    edge_filter: F,
+) -> Result<Vec<usize>, GraphError<G::EdgeId>>
+where
+    G: DirectedWeightedGraph,
+    F: Fn(G::EdgeId) -> bool + Copy,
+{
+    let adjacency = undirected_adjacency(graph, edge_filter)?;
+    let node_count = adjacency.len();
+    if node_count == 0 {
+        return Ok(Vec::new());
+    }
+
+    let mut discovery = vec![None; node_count];
+    let mut low = vec![0; node_count];
+    let mut parent = vec![None; node_count];
+    let mut time = 0usize;
+    let mut is_articulation = vec![false; node_count];
+
+    for node in 0..node_count {
+        if discovery[node].is_none() {
+            articulation_dfs(
+                node,
+                &adjacency,
+                &mut discovery,
+                &mut low,
+                &mut parent,
+                &mut time,
+                &mut is_articulation,
+            );
+        }
+    }
+
+    Ok(is_articulation
+        .iter()
+        .enumerate()
+        .filter_map(|(node, is_cut)| is_cut.then_some(node))
+        .collect())
+}
+
 pub fn edge_betweenness<G>(graph: &G) -> Result<HashMap<G::EdgeId, f64>, GraphError<G::EdgeId>>
 where
     G: DirectedWeightedGraph,
@@ -482,6 +530,83 @@ where
     }
 
     Ok(raw)
+}
+
+fn undirected_adjacency<G, F>(
+    graph: &G,
+    edge_filter: F,
+) -> Result<Vec<Vec<usize>>, GraphError<G::EdgeId>>
+where
+    G: DirectedWeightedGraph,
+    F: Fn(G::EdgeId) -> bool + Copy,
+{
+    let node_count = graph.node_count();
+    let mut adjacency = vec![Vec::new(); node_count];
+    for source in 0..node_count {
+        let mut edges = graph.outgoing_edges(source);
+        edges.sort_by(|a, b| a.target.cmp(&b.target).then_with(|| a.id.cmp(&b.id)));
+        for edge in edges {
+            if !edge_filter(edge.id) {
+                continue;
+            }
+            validate_weight(edge.id, source, edge.target, edge.weight)?;
+            validate_node::<G::EdgeId>(node_count, edge.target)?;
+            if source == edge.target {
+                continue;
+            }
+            adjacency[source].push(edge.target);
+            adjacency[edge.target].push(source);
+        }
+    }
+
+    for neighbors in &mut adjacency {
+        neighbors.sort_unstable();
+        neighbors.dedup();
+    }
+    Ok(adjacency)
+}
+
+fn articulation_dfs(
+    node: usize,
+    adjacency: &[Vec<usize>],
+    discovery: &mut [Option<usize>],
+    low: &mut [usize],
+    parent: &mut [Option<usize>],
+    time: &mut usize,
+    is_articulation: &mut [bool],
+) {
+    discovery[node] = Some(*time);
+    low[node] = *time;
+    *time += 1;
+    let mut child_count = 0usize;
+
+    for &neighbor in &adjacency[node] {
+        if discovery[neighbor].is_none() {
+            child_count += 1;
+            parent[neighbor] = Some(node);
+            articulation_dfs(
+                neighbor,
+                adjacency,
+                discovery,
+                low,
+                parent,
+                time,
+                is_articulation,
+            );
+            low[node] = low[node].min(low[neighbor]);
+
+            if parent[node].is_none() && child_count > 1 {
+                is_articulation[node] = true;
+            }
+            if parent[node].is_some()
+                && low[neighbor] >= discovery[node].expect("visited node has discovery time")
+            {
+                is_articulation[node] = true;
+            }
+        } else if parent[node] != Some(neighbor) {
+            low[node] = low[node].min(discovery[neighbor].expect("visited neighbor"));
+        }
+    }
 }
 
 fn bridge_dfs(
@@ -761,6 +886,43 @@ mod tests {
                     edge_id: 2
                 }
             ]
+        );
+    }
+
+    #[test]
+    fn articulation_points_identify_cut_vertices_and_ignore_cycle_vertices() {
+        let mut graph = TinyGraph::new(6);
+        graph.add_edge(1, 0, 1, 1.0);
+        graph.add_edge(2, 1, 2, 1.0);
+        graph.add_edge(3, 2, 0, 1.0);
+        graph.add_edge(4, 2, 3, 1.0);
+        graph.add_edge(5, 3, 4, 1.0);
+        graph.add_edge(6, 4, 5, 1.0);
+        graph.add_edge(7, 5, 3, 1.0);
+
+        assert_eq!(articulation_points(&graph).unwrap(), vec![2, 3]);
+    }
+
+    #[test]
+    fn articulation_points_handle_root_with_multiple_children() {
+        let mut graph = TinyGraph::new(4);
+        graph.add_edge(1, 0, 1, 1.0);
+        graph.add_edge(2, 0, 2, 1.0);
+        graph.add_edge(3, 0, 3, 1.0);
+
+        assert_eq!(articulation_points(&graph).unwrap(), vec![0]);
+    }
+
+    #[test]
+    fn articulation_points_filter_can_create_cut_vertex() {
+        let mut graph = TinyGraph::new(3);
+        graph.add_edge(1, 0, 1, 1.0);
+        graph.add_edge(2, 1, 2, 1.0);
+        graph.add_edge(3, 0, 2, 1.0);
+
+        assert_eq!(
+            articulation_points_with_filter(&graph, |edge| edge != 3).unwrap(),
+            vec![1]
         );
     }
 

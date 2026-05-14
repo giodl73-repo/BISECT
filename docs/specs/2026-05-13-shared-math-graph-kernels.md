@@ -164,7 +164,10 @@ The first implementation wave should create `rgraph-core` with a narrow API:
 7. Undirected bridge detection over the directed adapter. **Landed in
    `rgraph-core`; this remains kernel-only until a contiguity-fragility or ROUTE
    redundancy consumer is added.**
-8. Unit tests with tiny synthetic graphs covering:
+8. Undirected articulation point detection over the directed adapter. **Landed in
+   `rgraph-core`; this remains kernel-only until a contiguity-fragility or ROUTE
+   redundancy consumer is added.**
+9. Unit tests with tiny synthetic graphs covering:
    - equal shortest-path split;
    - ignored non-shortest direct edge;
   - edge-filtered disconnection;

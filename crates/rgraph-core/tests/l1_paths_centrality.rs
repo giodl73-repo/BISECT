@@ -1,8 +1,8 @@
 use rgraph_core::{
-    bridges, bridges_with_filter, connected_components, connected_components_in_nodes_with_filter,
-    edge_betweenness, reachable_nodes_with_filter, shortest_path_distance,
-    shortest_path_distance_with_filter, single_source_shortest_paths, Bridge,
-    DirectedWeightedGraph, GraphError, WeightedEdge,
+    articulation_points, articulation_points_with_filter, bridges, bridges_with_filter,
+    connected_components, connected_components_in_nodes_with_filter, edge_betweenness,
+    reachable_nodes_with_filter, shortest_path_distance, shortest_path_distance_with_filter,
+    single_source_shortest_paths, Bridge, DirectedWeightedGraph, GraphError, WeightedEdge,
 };
 
 #[derive(Debug, Clone)]
@@ -164,5 +164,24 @@ fn l1_bridges_ignore_cycles_and_respect_filters() {
                 edge_id: 6
             }
         ]
+    );
+}
+
+#[test]
+fn l1_articulation_points_track_cut_vertices_and_filters() {
+    let graph = TestGraph::new(7)
+        .edge(1, 0, 1, 1.0)
+        .edge(2, 1, 2, 1.0)
+        .edge(3, 2, 0, 1.0)
+        .edge(4, 2, 3, 1.0)
+        .edge(5, 3, 4, 1.0)
+        .edge(6, 4, 5, 1.0)
+        .edge(7, 5, 3, 1.0)
+        .edge(8, 3, 6, 1.0);
+
+    assert_eq!(articulation_points(&graph).unwrap(), vec![2, 3]);
+    assert_eq!(
+        articulation_points_with_filter(&graph, |edge| edge != 7).unwrap(),
+        vec![2, 3, 4]
     );
 }

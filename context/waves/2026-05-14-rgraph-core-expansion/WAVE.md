@@ -24,6 +24,7 @@ semantics into `rgraph-core`.
 |---|---|---|
 | 01 - Connected components kernel | DONE | `rgraph-core` components helpers; BISECT contiguity consumer; L0/L1/L2 tests |
 | 02 - Bridge detection kernel | DONE | `rgraph-core` undirected bridge helpers over directed adapter; L0/L1/L2 tests |
+| 03 - Articulation point kernel | DONE | `rgraph-core` undirected articulation helpers over directed adapter; L0/L1/L2 tests |
 
 ## Close Summary
 
@@ -36,4 +37,8 @@ The wave also adds deterministic undirected bridge detection over the existing
 directed graph adapter. Bridge detection is kept kernel-only for now so ROUTE
 redundancy analysis and future BISECT contiguity-fragility diagnostics can adopt
 the same primitive without moving domain scoring into `rgraph-core`.
+
+Articulation point detection now shares the same undirected projection boundary
+as bridge detection and remains kernel-only until a domain crate needs to label
+network or district fragility.
 
