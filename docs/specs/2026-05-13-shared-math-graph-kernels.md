@@ -317,6 +317,10 @@ percentages are emitted.
 Summary population-balance merging now rejects invalid balance tolerances and
 negative population inputs before summary rows can emit invalid deviation or
 balance flags.
+Compactness geometry and population-weighted compactness consumers now reject
+non-finite polygon coordinates, non-finite centroids, population length
+mismatches, population overflows, and non-finite compactness intermediates before
+compactness evidence can emit `NaN`/`inf` values or panic on malformed rows.
 
 `rstat-core::mcmc` rejects malformed diagnostics inputs before producing evidence
 metrics: R-hat rejects non-finite chain values with a typed diagnostics error,

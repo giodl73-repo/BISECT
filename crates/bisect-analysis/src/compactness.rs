@@ -1,5 +1,5 @@
 use geo::{Area, BoundingRect, Centroid, ConvexHull, EuclideanLength};
-use geo_types::{Coord, Point, Polygon};
+use geo_types::{Coord, LineString, Point, Polygon};
 use rstat_core::summary::weighted_mean;
 /// Compactness metrics: Polsby-Popper, Reock, Convex Hull Ratio,
 /// Schwartzberg, Length-Width Ratio, and Population-Weighted Compactness.
@@ -19,12 +19,35 @@ use rstat_core::summary::weighted_mean;
 use std::f64::consts::PI;
 use thiserror::Error;
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Clone, PartialEq)]
 pub enum CompactnessError {
     #[error("empty geometry: cannot compute compactness for a polygon with zero area")]
     EmptyGeometry,
     #[error("zero perimeter: polygon has non-zero area but zero perimeter (degenerate geometry)")]
     ZeroPerimeter,
+    #[error("[INPUT] non-finite polygon coordinate in {ring} ring {ring_index} at coordinate {coord_index}: ({x}, {y})")]
+    NonFiniteCoordinate {
+        ring: &'static str,
+        ring_index: usize,
+        coord_index: usize,
+        x: f64,
+        y: f64,
+    },
+    #[error(
+        "[INPUT] centroids length {centroids} does not match populations length {populations}"
+    )]
+    PopulationLengthMismatch {
+        centroids: usize,
+        populations: usize,
+    },
+    #[error("[NUMERIC] total population overflowed")]
+    PopulationOverflow,
+    #[error("[INPUT] non-finite centroid {index}: ({x}, {y})")]
+    NonFiniteCentroid { index: usize, x: f64, y: f64 },
+    #[error("[INPUT] non-finite district centroid: ({x}, {y})")]
+    NonFiniteDistrictCentroid { x: f64, y: f64 },
+    #[error("[NUMERIC] {operation} produced non-finite value {value}")]
+    NonFiniteResult { operation: &'static str, value: f64 },
     #[error("WKB parse error: {0}")]
     WkbError(String),
 }
@@ -66,15 +89,19 @@ pub struct BoundingCircle {
 /// Python: `(4 * np.pi * area) / (perimeter ** 2)`, capped at 1.0.
 /// Requires projected coordinates (metres). Returns (score, perimeter_m).
 pub fn polsby_popper(polygon: &Polygon<f64>) -> Result<(f64, f64), CompactnessError> {
+    validate_polygon_finite(polygon)?;
     let area = polygon.unsigned_area();
+    validate_result("polsby_popper area", area)?;
     if area == 0.0 {
         return Err(CompactnessError::EmptyGeometry);
     }
     let perimeter = polygon_perimeter(polygon);
+    validate_result("polsby_popper perimeter", perimeter)?;
     if perimeter == 0.0 {
         return Err(CompactnessError::ZeroPerimeter);
     }
     let score = (4.0 * PI * area) / (perimeter * perimeter);
+    validate_result("polsby_popper score", score)?;
     Ok((score.min(1.0), perimeter)) // cap at 1.0 like Python
 }
 
@@ -84,17 +111,25 @@ pub fn polsby_popper(polygon: &Polygon<f64>) -> Result<(f64, f64), CompactnessEr
 /// This is an approximation of the minimum bounding circle (not the true MBC
 /// via Welzl's algorithm, but matching Python's approximation exactly).
 pub fn reock(polygon: &Polygon<f64>) -> Result<f64, CompactnessError> {
+    validate_polygon_finite(polygon)?;
     let area = polygon.unsigned_area();
+    validate_result("reock area", area)?;
     if area == 0.0 {
         return Err(CompactnessError::EmptyGeometry);
     }
     let centroid = polygon.centroid().ok_or(CompactnessError::EmptyGeometry)?;
+    validate_result("reock centroid x", centroid.x())?;
+    validate_result("reock centroid y", centroid.y())?;
     let radius = max_distance_to_boundary(polygon, centroid);
+    validate_result("reock radius", radius)?;
     if radius == 0.0 {
         return Ok(0.0);
     }
     let circle_area = PI * radius * radius;
-    Ok((area / circle_area).min(1.0))
+    validate_result("reock circle area", circle_area)?;
+    let score = area / circle_area;
+    validate_result("reock score", score)?;
+    Ok(score.min(1.0))
 }
 
 /// Exact polygon-vertex minimum-bounding-circle Reock.
@@ -104,7 +139,9 @@ pub fn reock(polygon: &Polygon<f64>) -> Result<f64, CompactnessError> {
 /// minimum circle containing all exterior vertices also contains every exterior
 /// edge segment because circles are convex.
 pub fn exact_reock(polygon: &Polygon<f64>) -> Result<f64, CompactnessError> {
+    validate_polygon_finite(polygon)?;
     let area = polygon.unsigned_area();
+    validate_result("exact_reock area", area)?;
     if area == 0.0 {
         return Err(CompactnessError::EmptyGeometry);
     }
@@ -112,31 +149,48 @@ pub fn exact_reock(polygon: &Polygon<f64>) -> Result<f64, CompactnessError> {
     if circle.radius == 0.0 {
         return Ok(0.0);
     }
-    Ok((area / (PI * circle.radius * circle.radius)).min(1.0))
+    validate_result("exact_reock radius", circle.radius)?;
+    let circle_area = PI * circle.radius * circle.radius;
+    validate_result("exact_reock circle area", circle_area)?;
+    let score = area / circle_area;
+    validate_result("exact_reock score", score)?;
+    Ok(score.min(1.0))
 }
 
 pub fn minimum_bounding_circle(polygon: &Polygon<f64>) -> Result<BoundingCircle, CompactnessError> {
+    validate_polygon_finite(polygon)?;
     let points = exterior_points(polygon);
-    if points.is_empty() || polygon.unsigned_area() == 0.0 {
+    let area = polygon.unsigned_area();
+    validate_result("minimum_bounding_circle area", area)?;
+    if points.is_empty() || area == 0.0 {
         return Err(CompactnessError::EmptyGeometry);
     }
-    Ok(smallest_enclosing_circle(&points))
+    let circle = smallest_enclosing_circle(&points);
+    validate_result("minimum_bounding_circle center_x", circle.center_x)?;
+    validate_result("minimum_bounding_circle center_y", circle.center_y)?;
+    validate_result("minimum_bounding_circle radius", circle.radius)?;
+    Ok(circle)
 }
 
 /// Convex Hull Ratio: A / convex_hull_area.
 ///
 /// Python: `area / geometry.convex_hull.area`.
 pub fn convex_hull_ratio(polygon: &Polygon<f64>) -> Result<f64, CompactnessError> {
+    validate_polygon_finite(polygon)?;
     let area = polygon.unsigned_area();
+    validate_result("convex_hull_ratio area", area)?;
     if area == 0.0 {
         return Err(CompactnessError::EmptyGeometry);
     }
     let hull = polygon.convex_hull();
     let hull_area = hull.unsigned_area();
+    validate_result("convex_hull_ratio hull area", hull_area)?;
     if hull_area == 0.0 {
         return Ok(0.0);
     }
-    Ok((area / hull_area).min(1.0))
+    let score = area / hull_area;
+    validate_result("convex_hull_ratio score", score)?;
+    Ok(score.min(1.0))
 }
 
 /// Schwartzberg score: P / (2√(πA)).
@@ -166,7 +220,9 @@ pub fn schwartzberg(polygon: &Polygon<f64>) -> Result<f64, CompactnessError> {
 ///
 /// Range [1, ∞); 1 = square or circle; 2 = 2:1 rectangle.
 pub fn length_width_ratio(polygon: &Polygon<f64>) -> Result<f64, CompactnessError> {
+    validate_polygon_finite(polygon)?;
     let area = polygon.unsigned_area();
+    validate_result("length_width_ratio area", area)?;
     if area == 0.0 {
         return Err(CompactnessError::EmptyGeometry);
     }
@@ -194,6 +250,7 @@ pub fn length_width_ratio(polygon: &Polygon<f64>) -> Result<f64, CompactnessErro
         let dx = c1.x - c0.x;
         let dy = c1.y - c0.y;
         let len = (dx * dx + dy * dy).sqrt();
+        validate_result("length_width_ratio edge length", len)?;
         if len == 0.0 {
             continue;
         }
@@ -212,6 +269,8 @@ pub fn length_width_ratio(polygon: &Polygon<f64>) -> Result<f64, CompactnessErro
         for c in &coords[..n] {
             let xr = c.x * cos_a + c.y * sin_a;
             let yr = -c.x * sin_a + c.y * cos_a;
+            validate_result("length_width_ratio rotated x", xr)?;
+            validate_result("length_width_ratio rotated y", yr)?;
             if xr < x_min {
                 x_min = xr;
             }
@@ -229,10 +288,14 @@ pub fn length_width_ratio(polygon: &Polygon<f64>) -> Result<f64, CompactnessErro
         let w = x_max - x_min; // dimension along edge
         let h = y_max - y_min; // dimension perpendicular to edge
         let box_area = w * h;
+        validate_result("length_width_ratio box width", w)?;
+        validate_result("length_width_ratio box height", h)?;
+        validate_result("length_width_ratio box area", box_area)?;
 
         if box_area > 0.0 && box_area < min_box_area {
             min_box_area = box_area;
             best_ratio = if w >= h { w / h } else { h / w };
+            validate_result("length_width_ratio ratio", best_ratio)?;
         }
     }
 
@@ -251,7 +314,9 @@ pub fn length_width_ratio(polygon: &Polygon<f64>) -> Result<f64, CompactnessErro
 /// rectangle; AABB is exposed only for diagnostics and paper evidence about
 /// orientation dependence.
 pub fn axis_aligned_length_width_ratio(polygon: &Polygon<f64>) -> Result<f64, CompactnessError> {
+    validate_polygon_finite(polygon)?;
     let area = polygon.unsigned_area();
+    validate_result("axis_aligned_length_width_ratio area", area)?;
     if area == 0.0 {
         return Err(CompactnessError::EmptyGeometry);
     }
@@ -261,11 +326,15 @@ pub fn axis_aligned_length_width_ratio(polygon: &Polygon<f64>) -> Result<f64, Co
         .ok_or(CompactnessError::EmptyGeometry)?;
     let width = rect.max().x - rect.min().x;
     let height = rect.max().y - rect.min().y;
+    validate_result("axis_aligned_length_width_ratio width", width)?;
+    validate_result("axis_aligned_length_width_ratio height", height)?;
     if width <= 0.0 || height <= 0.0 {
         return Err(CompactnessError::EmptyGeometry);
     }
 
-    Ok((width.max(height) / width.min(height)).max(1.0))
+    let ratio = (width.max(height) / width.min(height)).max(1.0);
+    validate_result("axis_aligned_length_width_ratio ratio", ratio)?;
+    Ok(ratio)
 }
 
 /// Population-Weighted Compactness (Moment of Inertia).
@@ -291,30 +360,53 @@ pub fn population_weighted_compactness(
     populations: &[u64],
     district_centroid: (f64, f64),
 ) -> f64 {
-    assert_eq!(
-        centroids.len(),
-        populations.len(),
-        "centroids and populations must have the same length"
-    );
+    try_population_weighted_compactness(centroids, populations, district_centroid)
+        .expect("population-weighted compactness inputs are valid")
+}
 
-    let total_pop: u64 = populations.iter().sum();
+pub fn try_population_weighted_compactness(
+    centroids: &[(f64, f64)],
+    populations: &[u64],
+    district_centroid: (f64, f64),
+) -> Result<f64, CompactnessError> {
+    if centroids.len() != populations.len() {
+        return Err(CompactnessError::PopulationLengthMismatch {
+            centroids: centroids.len(),
+            populations: populations.len(),
+        });
+    }
+    validate_centroid("district", usize::MAX, district_centroid)?;
+    for (index, &centroid) in centroids.iter().enumerate() {
+        validate_centroid("tract", index, centroid)?;
+    }
+
+    let total_pop = populations.iter().try_fold(0_u64, |acc, &pop| {
+        acc.checked_add(pop)
+            .ok_or(CompactnessError::PopulationOverflow)
+    })?;
     if total_pop == 0 {
-        return 0.0;
+        return Ok(0.0);
     }
 
     let (cx, cy) = district_centroid;
-    let squared_distances: Vec<f64> = centroids
-        .iter()
-        .map(|&(x, y)| {
-            let dx = x - cx;
-            let dy = y - cy;
-            dx * dx + dy * dy
-        })
-        .collect();
+    let mut squared_distances = Vec::with_capacity(centroids.len());
+    for &(x, y) in centroids {
+        let dx = x - cx;
+        let dy = y - cy;
+        let distance = dx * dx + dy * dy;
+        validate_result("population_weighted_compactness squared distance", distance)?;
+        squared_distances.push(distance);
+    }
     let weights: Vec<f64> = populations.iter().map(|&pop| pop as f64).collect();
 
-    weighted_mean(&squared_distances, &weights)
-        .expect("population-weighted compactness inputs are finite with positive total population")
+    let value = weighted_mean(&squared_distances, &weights).map_err(|_| {
+        CompactnessError::NonFiniteResult {
+            operation: "population_weighted_compactness weighted mean",
+            value: f64::NAN,
+        }
+    })?;
+    validate_result("population_weighted_compactness", value)?;
+    Ok(value)
 }
 
 /// Compute all five geometry-based metrics for a district polygon.
@@ -328,6 +420,7 @@ pub fn all_metrics(
     let schwartz = schwartzberg(polygon)?;
     let lw = length_width_ratio(polygon)?;
     let area = polygon.unsigned_area();
+    validate_result("all_metrics area", area)?;
     Ok(CompactnessMetrics {
         district,
         polsby_popper: pp,
@@ -343,6 +436,56 @@ pub fn all_metrics(
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+fn validate_polygon_finite(polygon: &Polygon<f64>) -> Result<(), CompactnessError> {
+    validate_line_string("exterior", 0, polygon.exterior())?;
+    for (ring_index, ring) in polygon.interiors().iter().enumerate() {
+        validate_line_string("interior", ring_index, ring)?;
+    }
+    Ok(())
+}
+
+fn validate_line_string(
+    ring: &'static str,
+    ring_index: usize,
+    line: &LineString<f64>,
+) -> Result<(), CompactnessError> {
+    for (coord_index, coord) in line.coords().enumerate() {
+        if !coord.x.is_finite() || !coord.y.is_finite() {
+            return Err(CompactnessError::NonFiniteCoordinate {
+                ring,
+                ring_index,
+                coord_index,
+                x: coord.x,
+                y: coord.y,
+            });
+        }
+    }
+    Ok(())
+}
+
+fn validate_result(operation: &'static str, value: f64) -> Result<(), CompactnessError> {
+    if value.is_finite() {
+        Ok(())
+    } else {
+        Err(CompactnessError::NonFiniteResult { operation, value })
+    }
+}
+
+fn validate_centroid(
+    kind: &'static str,
+    index: usize,
+    centroid: (f64, f64),
+) -> Result<(), CompactnessError> {
+    let (x, y) = centroid;
+    if x.is_finite() && y.is_finite() {
+        Ok(())
+    } else if kind == "district" {
+        Err(CompactnessError::NonFiniteDistrictCentroid { x, y })
+    } else {
+        Err(CompactnessError::NonFiniteCentroid { index, x, y })
+    }
+}
 
 /// Polygon perimeter = exterior ring length only.
 ///
@@ -904,6 +1047,38 @@ mod tests {
         );
     }
 
+    #[test]
+    fn test_pwc_rejects_length_mismatch() {
+        let err = try_population_weighted_compactness(&[(0.0, 0.0)], &[], (0.0, 0.0))
+            .expect_err("mismatched population rows must be rejected");
+        assert!(matches!(
+            err,
+            CompactnessError::PopulationLengthMismatch {
+                centroids: 1,
+                populations: 0
+            }
+        ));
+    }
+
+    #[test]
+    fn test_pwc_rejects_non_finite_centroid() {
+        let err = try_population_weighted_compactness(&[(f64::NAN, 0.0)], &[1], (0.0, 0.0))
+            .expect_err("non-finite tract centroid must be rejected");
+        assert!(matches!(
+            err,
+            CompactnessError::NonFiniteCentroid { index: 0, .. }
+        ));
+    }
+
+    #[test]
+    fn test_pwc_rejects_population_overflow() {
+        let centroids = [(0.0, 0.0), (1.0, 1.0)];
+        let populations = [u64::MAX, 1];
+        let err = try_population_weighted_compactness(&centroids, &populations, (0.0, 0.0))
+            .expect_err("overflowing total population must be rejected");
+        assert!(matches!(err, CompactnessError::PopulationOverflow));
+    }
+
     // ── all_metrics ──────────────────────────────────────────────────────────
 
     #[test]
@@ -927,6 +1102,31 @@ mod tests {
             "all_metrics LW ratio for square, got {}",
             m.length_width_ratio
         );
+    }
+
+    #[test]
+    fn test_all_metrics_rejects_non_finite_polygon_coordinate() {
+        let poly = Polygon::new(
+            LineString::new(vec![
+                Coord { x: 0.0, y: 0.0 },
+                Coord {
+                    x: f64::INFINITY,
+                    y: 0.0,
+                },
+                Coord { x: 1.0, y: 1.0 },
+                Coord { x: 0.0, y: 0.0 },
+            ]),
+            vec![],
+        );
+        let err = all_metrics(1, &poly).expect_err("non-finite geometry must be rejected");
+        assert!(matches!(
+            err,
+            CompactnessError::NonFiniteCoordinate {
+                ring: "exterior",
+                coord_index: 1,
+                ..
+            }
+        ));
     }
 
     // ── Bounds and Python parity ─────────────────────────────────────────────
