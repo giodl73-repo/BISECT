@@ -7,6 +7,7 @@ license.workspace = true
 description = "Capacity-constrained clustering construction algorithms for redistricting"
 
 [dependencies]
+rgraph-core = { path = "../rgraph-core" }
 rplan-audit = { path = "../rplan-audit" }
 rplan-core = { path = "../rplan-core" }
 serde.workspace = true

@@ -4171,18 +4171,8 @@ fn split_spectral_node(
 }
 
 fn count_edge_cuts_zero_based(assignment: &[usize], adjacency: &[Vec<usize>]) -> usize {
-    let mut cut = 0usize;
-    for (node, neighbors) in adjacency.iter().enumerate() {
-        for &neighbor in neighbors {
-            if neighbor > node
-                && neighbor < assignment.len()
-                && assignment[node] != assignment[neighbor]
-            {
-                cut += 1;
-            }
-        }
-    }
-    cut
+    rgraph_core::undirected_edge_cut(adjacency, assignment)
+        .expect("validated zero-based spectral adjacency and assignment")
 }
 
 /// Check if a state's outputs already exist and are complete.

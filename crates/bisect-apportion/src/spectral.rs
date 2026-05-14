@@ -195,18 +195,8 @@ fn balanced_sweep(
 }
 
 fn edge_cut(adjacency: &[Vec<usize>], assignment: &[usize]) -> usize {
-    let mut cut = 0usize;
-    for (node, neighbors) in adjacency.iter().enumerate() {
-        for &neighbor in neighbors {
-            if neighbor > node
-                && neighbor < assignment.len()
-                && assignment[node] != assignment[neighbor]
-            {
-                cut += 1;
-            }
-        }
-    }
-    cut
+    rgraph_core::undirected_edge_cut(adjacency, assignment)
+        .expect("validated spectral adjacency and assignment")
 }
 
 fn target_population_deviation(weights: &[i64], assignment: &[usize], target_fraction: f64) -> f64 {

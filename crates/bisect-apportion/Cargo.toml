@@ -8,6 +8,7 @@ description = "Huntington-Hill apportionment + extensible prime-factor redistric
 
 [dependencies]
 metis-core   = { workspace = true }
+rgraph-core = { path = "../rgraph-core" }
 rmath-core = { path = "../rmath-core" }
 # optional: only compiled when the "c-ffi" feature is enabled.
 # The "vendored" sub-feature bundles the METIS C source so no system

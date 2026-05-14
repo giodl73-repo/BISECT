@@ -194,7 +194,11 @@ The first implementation wave should create `rgraph-core` with a narrow API:
 9. Undirected edge-cut counting over adjacency lists and assignment labels.
    **Landed in `rgraph-core`; `bisect-local-search`, `bisect-pareto`, and
    `bisect-ensemble::parallel_tempering` consume it while keeping objective and
-   sampling semantics local.**
+   sampling semantics local. Follow-on slice-consumer expansion also routes
+   `bisect-apportion::spectral`, `bisect-clustering`, `bisect-flow`, and the CLI
+   zero-based spectral summary helper through the shared kernel. HashMap-shaped
+   bisection-runner helpers and HashSet-shaped evidence helpers remain local
+   until a dedicated assignment adapter is justified.**
 10. Unit tests with tiny synthetic graphs covering:
    - equal shortest-path split;
    - ignored non-shortest direct edge;

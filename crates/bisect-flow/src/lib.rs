@@ -535,15 +535,8 @@ fn population_deviation(weights: &[i64], assignment: &[usize], k: usize) -> f64 
 }
 
 fn edge_cut(adjacency: &[Vec<usize>], assignment: &[usize]) -> usize {
-    let mut cut = 0usize;
-    for (node, neighbors) in adjacency.iter().enumerate() {
-        for &neighbor in neighbors {
-            if neighbor > node && assignment[node] != assignment[neighbor] {
-                cut += 1;
-            }
-        }
-    }
-    cut
+    rgraph_core::undirected_edge_cut(adjacency, assignment)
+        .expect("validated flow adjacency and assignment")
 }
 
 fn all_districts_connected(adjacency: &[Vec<usize>], assignment: &[usize], k: usize) -> bool {

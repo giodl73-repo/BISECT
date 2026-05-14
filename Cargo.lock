@@ -196,6 +196,7 @@ dependencies = [
  "anyhow",
  "metis",
  "metis-core",
+ "rgraph-core",
  "rmath-core",
  "serde",
  "serde_json",
@@ -237,6 +238,7 @@ dependencies = [
  "rand",
  "rayon",
  "reqwest",
+ "rgraph-core",
  "rmath-core",
  "rplan-audit",
  "rplan-core",
@@ -255,6 +257,7 @@ dependencies = [
 name = "bisect-clustering"
 version = "0.1.0"
 dependencies = [
+ "rgraph-core",
  "rplan-audit",
  "rplan-core",
  "serde",
@@ -322,6 +325,7 @@ dependencies = [
 name = "bisect-flow"
 version = "0.1.0"
 dependencies = [
+ "rgraph-core",
  "rplan-audit",
  "serde",
  "serde_json",
