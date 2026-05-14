@@ -307,6 +307,9 @@ bootstrap intervals.
 Party-list D'Hondt allocation and Gallagher disproportionality helpers likewise
 expose fallible typed-error paths so malformed vote maps cannot silently compare
 NaN quotients or produce non-finite disproportionality scores.
+Demographic aggregation now rejects negative counts, subgroup totals above
+`total_pop`, and overflowing district sums before demographic percentages can
+become impossible evidence fields.
 
 `rstat-core::mcmc` rejects malformed diagnostics inputs before producing evidence
 metrics: R-hat rejects non-finite chain values with a typed diagnostics error,
