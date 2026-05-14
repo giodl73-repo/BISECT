@@ -372,6 +372,7 @@ where
     D: Eq + Copy,
 {
     validate_assignment_adjacency(adjacency, assignment)?;
+    let undirected = undirected_index_adjacency_for_labels(adjacency)?;
 
     let Some(start) = assignment.iter().position(|&assigned| assigned == label) else {
         return Ok(false);
@@ -387,10 +388,7 @@ where
     let mut reached = 0usize;
     while let Some(node) = stack.pop() {
         reached += 1;
-        for &neighbor in &adjacency[node] {
-            let neighbor = neighbor
-                .to_usize()
-                .expect("assignment adjacency was already validated");
+        for &neighbor in &undirected[node] {
             if assignment[neighbor] == label && !seen[neighbor] {
                 seen[neighbor] = true;
                 stack.push(neighbor);
@@ -450,13 +448,60 @@ where
         }
     }
 
+    let undirected = undirected_index_adjacency_for_subset(adjacency)?;
     let mut seen = vec![false; node_count];
     let mut stack = vec![unique_nodes[0]];
     seen[unique_nodes[0]] = true;
     let mut reached = 0usize;
     while let Some(node) = stack.pop() {
         reached += 1;
-        for &neighbor in &adjacency[node] {
+        for &neighbor in &undirected[node] {
+            if in_subset[neighbor] && !seen[neighbor] {
+                seen[neighbor] = true;
+                stack.push(neighbor);
+            }
+        }
+    }
+
+    Ok(reached == unique_nodes.len())
+}
+
+fn undirected_index_adjacency_for_labels<I>(
+    adjacency: &[Vec<I>],
+) -> Result<Vec<Vec<usize>>, LabelConnectivityError>
+where
+    I: NodeIndex,
+{
+    let node_count = adjacency.len();
+    let mut undirected = vec![Vec::new(); node_count];
+    for (node, neighbors) in adjacency.iter().enumerate() {
+        for &neighbor in neighbors {
+            let neighbor = neighbor
+                .to_usize()
+                .expect("assignment adjacency was already validated");
+            if node != neighbor {
+                undirected[node].push(neighbor);
+                undirected[neighbor].push(node);
+            }
+        }
+    }
+    for neighbors in &mut undirected {
+        neighbors.sort_unstable();
+        neighbors.dedup();
+    }
+    Ok(undirected)
+}
+
+fn undirected_index_adjacency_for_subset<I>(
+    adjacency: &[Vec<I>],
+) -> Result<Vec<Vec<usize>>, SubsetConnectivityError>
+where
+    I: NodeIndex,
+{
+    let node_count = adjacency.len();
+    let mut undirected = vec![Vec::new(); node_count];
+    for (node, neighbors) in adjacency.iter().enumerate() {
+        for &neighbor in neighbors {
             let Some(neighbor) = neighbor.to_usize() else {
                 return Err(SubsetConnectivityError::NeighborOutOfBounds {
                     node,
@@ -471,14 +516,17 @@ where
                     node_count,
                 });
             }
-            if in_subset[neighbor] && !seen[neighbor] {
-                seen[neighbor] = true;
-                stack.push(neighbor);
+            if node != neighbor {
+                undirected[node].push(neighbor);
+                undirected[neighbor].push(node);
             }
         }
     }
-
-    Ok(reached == unique_nodes.len())
+    for neighbors in &mut undirected {
+        neighbors.sort_unstable();
+        neighbors.dedup();
+    }
+    Ok(undirected)
 }
 
 fn validate_assignment_adjacency<I, D>(
@@ -1394,6 +1442,13 @@ mod tests {
     }
 
     #[test]
+    fn node_subset_connected_treats_adjacency_as_undirected() {
+        let adjacency = vec![vec![], vec![0_usize], vec![1]];
+
+        assert!(node_subset_connected(&adjacency, &[0_usize, 1, 2]).unwrap());
+    }
+
+    #[test]
     fn node_subset_connected_rejects_out_of_bounds_node() {
         let adjacency = vec![vec![1_usize], vec![0]];
 
@@ -1437,6 +1492,14 @@ mod tests {
 
         assert!(!assignment_label_connected(&adjacency, &assignment, 0).unwrap());
         assert!(!assignment_labels_connected(&adjacency, &assignment, 0..2).unwrap());
+    }
+
+    #[test]
+    fn assignment_label_connected_treats_adjacency_as_undirected() {
+        let adjacency = vec![vec![], vec![0_usize], vec![1]];
+        let assignment = vec![7_usize, 7, 7];
+
+        assert!(assignment_label_connected(&adjacency, &assignment, 7).unwrap());
     }
 
     #[test]

@@ -219,9 +219,28 @@ fn l1_assignment_labels_connected_matches_redistricting_fixture() {
 }
 
 #[test]
+fn l1_assignment_label_connectivity_is_direction_invariant() {
+    let symmetric = vec![vec![1_usize], vec![0, 2], vec![1, 3], vec![2]];
+    let high_to_low_only = vec![vec![], vec![0_usize], vec![1], vec![2]];
+    let assignment = vec![0_usize, 0, 0, 0];
+
+    assert!(assignment_labels_connected(&symmetric, &assignment, 0..1).unwrap());
+    assert!(assignment_labels_connected(&high_to_low_only, &assignment, 0..1).unwrap());
+}
+
+#[test]
 fn l1_node_subset_connected_matches_redistricting_fixture() {
     let adjacency = vec![vec![1_usize], vec![0, 2], vec![1, 3], vec![2, 4], vec![3]];
 
     assert!(node_subset_connected(&adjacency, &[1_usize, 2, 3]).unwrap());
     assert!(!node_subset_connected(&adjacency, &[0_usize, 4]).unwrap());
+}
+
+#[test]
+fn l1_node_subset_connectivity_is_direction_invariant() {
+    let symmetric = vec![vec![1_usize], vec![0, 2], vec![1, 3], vec![2]];
+    let high_to_low_only = vec![vec![], vec![0_usize], vec![1], vec![2]];
+
+    assert!(node_subset_connected(&symmetric, &[0_usize, 1, 2, 3]).unwrap());
+    assert!(node_subset_connected(&high_to_low_only, &[0_usize, 1, 2, 3]).unwrap());
 }
