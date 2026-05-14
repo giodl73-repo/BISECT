@@ -109,7 +109,9 @@ pub fn mat_mul(a: &DenseMatrix, b: &DenseMatrix) -> Result<DenseMatrix, LinearAl
                 continue;
             }
             for j in 0..b.cols {
-                out.set(i, j, out.at(i, j) + aik * b.at(k, j));
+                let value = out.at(i, j) + aik * b.at(k, j);
+                validate_result_scalar("mat_mul", value)?;
+                out.set(i, j, value);
             }
         }
     }
@@ -130,6 +132,7 @@ pub fn mat_mul_vec(a: &DenseMatrix, v: &[f64]) -> Result<Vec<f64>, LinearAlgebra
         let mut sum = 0.0;
         for (j, value) in v.iter().enumerate().take(a.cols) {
             sum += a.at(i, j) * value;
+            validate_result_scalar("mat_mul_vec", sum)?;
         }
         out[i] = sum;
     }
@@ -362,6 +365,20 @@ mod tests {
     }
 
     #[test]
+    fn l0_matrix_multiply_overflow_is_rejected() {
+        let a = DenseMatrix::from_row_major(1, 1, vec![f64::MAX]).unwrap();
+        let b = DenseMatrix::from_row_major(1, 1, vec![2.0]).unwrap();
+
+        match mat_mul(&a, &b) {
+            Err(LinearAlgebraError::NonFiniteResult { operation, value }) => {
+                assert_eq!(operation, "mat_mul");
+                assert!(value.is_infinite());
+            }
+            other => panic!("expected mat_mul overflow error, got {other:?}"),
+        }
+    }
+
+    #[test]
     fn l0_matrix_vector_multiply_matches_hand_computed_values() {
         let a = DenseMatrix::from_row_major(2, 3, vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
 
@@ -369,6 +386,19 @@ mod tests {
             mat_mul_vec(&a, &[10.0, 20.0, 30.0]).unwrap(),
             vec![140.0, 320.0]
         );
+    }
+
+    #[test]
+    fn l0_matrix_vector_multiply_overflow_is_rejected() {
+        let a = DenseMatrix::from_row_major(1, 1, vec![f64::MAX]).unwrap();
+
+        match mat_mul_vec(&a, &[2.0]) {
+            Err(LinearAlgebraError::NonFiniteResult { operation, value }) => {
+                assert_eq!(operation, "mat_mul_vec");
+                assert!(value.is_infinite());
+            }
+            other => panic!("expected mat_mul_vec overflow error, got {other:?}"),
+        }
     }
 
     #[test]

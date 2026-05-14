@@ -31,6 +31,33 @@ fn l1_partial_pivoting_handles_zero_initial_pivot() {
 }
 
 #[test]
+fn l1_matrix_product_overflow_is_rejected() {
+    let a = DenseMatrix::from_row_major(1, 2, vec![f64::MAX, f64::MAX]).unwrap();
+    let b = DenseMatrix::from_row_major(2, 1, vec![1.0, 1.0]).unwrap();
+
+    match mat_mul(&a, &b) {
+        Err(LinearAlgebraError::NonFiniteResult { operation, value }) => {
+            assert_eq!(operation, "mat_mul");
+            assert!(value.is_infinite());
+        }
+        other => panic!("expected matrix product overflow error, got {other:?}"),
+    }
+}
+
+#[test]
+fn l1_matrix_vector_product_overflow_is_rejected() {
+    let a = DenseMatrix::from_row_major(1, 2, vec![f64::MAX, f64::MAX]).unwrap();
+
+    match mat_mul_vec(&a, &[1.0, 1.0]) {
+        Err(LinearAlgebraError::NonFiniteResult { operation, value }) => {
+            assert_eq!(operation, "mat_mul_vec");
+            assert!(value.is_infinite());
+        }
+        other => panic!("expected matrix-vector product overflow error, got {other:?}"),
+    }
+}
+
+#[test]
 fn l1_centered_normalization_matches_spectral_fixture() {
     let vector = normalize_centered(vec![-2.5, -1.5, -0.5, 0.5, 1.5, 2.5], 0.0).unwrap();
 

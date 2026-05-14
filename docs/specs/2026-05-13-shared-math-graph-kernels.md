@@ -308,7 +308,8 @@ The numeric kernel starts with small dense linear algebra, extracted from
 1. Row-major dense matrix type. **Landed in `rmath-core::DenseMatrix`.**
 2. Matrix multiplication, matrix-vector multiplication, and transpose. **Landed
    in `rmath-core`; `bisect-analysis::bloc_voting` consumes matrix multiply and
-   matrix-vector multiply.**
+   matrix-vector multiply. Matrix product overflow is rejected with a typed
+   numeric error instead of returning non-finite regression matrices.**
 3. Gauss-Jordan inverse with partial pivoting and typed errors. **Landed in
    `rmath-core`; bloc-voting WLS and HC3 now use it.**
 4. Test ladder. **Inline L0 tests, L1 WLS normal-equation/pivoting tests, and an
