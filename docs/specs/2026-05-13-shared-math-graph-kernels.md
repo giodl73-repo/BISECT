@@ -166,6 +166,8 @@ shared crate.
 The same seed kernel now supports existing SMC, multiscale, ensemble-chain, and
 parallel-tempering seed helpers; those crates keep their own domain prefixes and
 RNG semantics.
+Seed transcripts include explicit `SeedPart` type tags so distinct part
+sequences cannot collide through raw byte concatenation.
 
 ## First Wave: `rgraph-core`
 
@@ -324,6 +326,8 @@ power-iteration helper if another consumer appears beyond the current
 - Deterministic outputs for deterministic inputs.
 - Stable tie handling documented in every shortest-path or ranking routine.
 - No hidden global RNG. Randomized helpers must take an explicit seed or RNG.
+- Seed transcript helpers must tag part boundaries and types; domain prefixes
+  alone are not enough to prevent cross-shape collisions.
 - No panics for malformed public inputs; return typed errors.
 - No silent dropping of invalid weights unless the function name and docs say so.
 - Public interval helpers must reject reversed bounds rather than swapping or

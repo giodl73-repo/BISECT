@@ -178,14 +178,20 @@ pub fn derive_seed(domain: &[u8], parts: &[SeedPart]) -> Result<u64, RoptError> 
     }
     let mut hasher = Sha256::new();
     hasher.update(domain);
-    for (index, part) in parts.iter().enumerate() {
-        if index > 0 {
-            hasher.update(b"_");
-        }
+    for part in parts {
         match part {
-            SeedPart::U32(value) => hasher.update(value.to_le_bytes()),
-            SeedPart::U64(value) => hasher.update(value.to_le_bytes()),
-            SeedPart::Usize(value) => hasher.update(value.to_le_bytes()),
+            SeedPart::U32(value) => {
+                hasher.update([b'u', b'3', b'2']);
+                hasher.update(value.to_le_bytes());
+            }
+            SeedPart::U64(value) => {
+                hasher.update([b'u', b'6', b'4']);
+                hasher.update(value.to_le_bytes());
+            }
+            SeedPart::Usize(value) => {
+                hasher.update([b'u', b's', b'z']);
+                hasher.update(value.to_le_bytes());
+            }
         }
     }
     let digest = hasher.finalize();
@@ -338,6 +344,18 @@ mod tests {
 
         assert_eq!(a, b);
         assert_ne!(a, c);
+    }
+
+    #[test]
+    fn l0_seed_derivation_tags_part_boundaries_and_types() {
+        let raw_collision_value = u64::from_le_bytes([1, 0, 0, 0, b'_', 0, 0, 0]);
+
+        let single_u64 =
+            derive_seed(b"SEED_DOMAIN_", &[SeedPart::U64(raw_collision_value)]).unwrap();
+        let split_u32s =
+            derive_seed(b"SEED_DOMAIN_", &[SeedPart::U32(1), SeedPart::U32(0)]).unwrap();
+
+        assert_ne!(single_u64, split_u32s);
     }
 
     #[test]

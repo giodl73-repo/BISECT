@@ -15,7 +15,7 @@
     "base_seed": 42,
     "chain_idx": 2,
     "seed_step": 1,
-    "expected_step_seed": 17869888678897657640,
+    "expected_step_seed": 11640412666846544,
     "coarse_acceptance_windows": [
       [true, true, false, false],
       [false, false, false, false],
