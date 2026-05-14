@@ -25,6 +25,7 @@ semantics into `rgraph-core`.
 | 01 - Connected components kernel | DONE | `rgraph-core` components helpers; BISECT contiguity consumer; L0/L1/L2 tests |
 | 02 - Bridge detection kernel | DONE | `rgraph-core` undirected bridge helpers over directed adapter; L0/L1/L2 tests |
 | 03 - Articulation point kernel | DONE | `rgraph-core` undirected articulation helpers over directed adapter; L0/L1/L2 tests |
+| 04 - Close and validation | DONE | full `rgraph-core` L0/L1/L2 ladder; focused BISECT contiguity consumer suite; `git diff --check` |
 
 ## Close Summary
 
@@ -41,4 +42,21 @@ the same primitive without moving domain scoring into `rgraph-core`.
 Articulation point detection now shares the same undirected projection boundary
 as bridge detection and remains kernel-only until a domain crate needs to label
 network or district fragility.
+
+## Deferred
+
+- ROUTE consumption remains deferred until the shared crates have a portable
+  git/local dependency plan.
+- BISECT contiguity-fragility reporting remains a domain-layer follow-up; the
+  generic bridge/articulation primitives are ready but intentionally unlabeled.
+
+## Validation
+
+```powershell
+cargo fmt
+$env:CARGO_INCREMENTAL='0'; cargo test -p rgraph-core -- --test-threads=1
+$env:CARGO_INCREMENTAL='0'; cargo test -p rgraph-core -- --ignored --test-threads=1
+$env:CARGO_INCREMENTAL='0'; cargo test -p bisect-analysis contiguity -- --test-threads=1
+git diff --check
+```
 
