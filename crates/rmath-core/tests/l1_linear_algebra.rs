@@ -67,6 +67,16 @@ fn l1_non_finite_vector_input_is_rejected() {
 }
 
 #[test]
+fn l1_normalization_rejects_negative_min_norm_policy() {
+    let result = normalize_centered(vec![1.0, 1.0, 1.0], -1e-12);
+
+    assert_eq!(
+        result,
+        Err(LinearAlgebraError::NegativeNormalizationThreshold { value: -1e-12 })
+    );
+}
+
+#[test]
 fn l1_symmetric_2x2_matches_geosection_horizontal_band_covariance() {
     let eigen = symmetric_2x2_eigensystem(Symmetric2x2 {
         a00: 0.0025,

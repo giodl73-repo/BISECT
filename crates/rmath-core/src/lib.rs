@@ -13,6 +13,8 @@ pub enum LinearAlgebraError {
     NotSquare { rows: usize, cols: usize },
     #[error("[INPUT] matrix contains non-finite value {value} at ({row}, {col})")]
     NonFiniteValue { row: usize, col: usize, value: f64 },
+    #[error("[INPUT] normalization threshold must be non-negative, got {value}")]
+    NegativeNormalizationThreshold { value: f64 },
     #[error("[NUMERIC] singular matrix")]
     Singular,
 }
@@ -240,6 +242,9 @@ pub fn normalize_in_place(values: &mut [f64], min_norm: f64) -> Result<bool, Lin
             value: min_norm,
         });
     }
+    if min_norm < 0.0 {
+        return Err(LinearAlgebraError::NegativeNormalizationThreshold { value: min_norm });
+    }
     let norm = l2_norm(values)?;
     if norm > min_norm {
         for value in values {
@@ -424,6 +429,17 @@ mod tests {
         let mut values = vec![0.0, 0.0, 0.0];
 
         assert!(!normalize_in_place(&mut values, 1e-14).unwrap());
+        assert_eq!(values, vec![0.0, 0.0, 0.0]);
+    }
+
+    #[test]
+    fn l0_negative_normalization_threshold_is_rejected() {
+        let mut values = vec![0.0, 0.0, 0.0];
+
+        assert_eq!(
+            normalize_in_place(&mut values, -1.0),
+            Err(LinearAlgebraError::NegativeNormalizationThreshold { value: -1.0 })
+        );
         assert_eq!(values, vec![0.0, 0.0, 0.0]);
     }
 
