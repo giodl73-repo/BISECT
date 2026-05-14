@@ -26,6 +26,7 @@ If you're adding a new manifest type, land a one-task edit to §1 in the same co
 | `reproducibility_package_manifest.json` | `repro-package v1` | `bisect-report::repro_zip` (when shipped) | Court Submission Reports plan Task 6 |
 | `g-ensemble-evidence-manifest.json` | `g-ensemble-evidence-manifest v1` | `bisect-ensemble::evidence_manifest` | G Ensemble Evidence Packages wave |
 | `j-apportionment-evidence-manifest.json` | `j-apportionment-evidence-manifest v1` | `bisect-apportion::evidence_manifest` | J Apportionment Evidence Packages wave |
+| `j-divisor-evidence-manifest.json` | `j-divisor-evidence-manifest v1` | `bisect-apportion::divisor_evidence` | J Divisor Method Evidence wave |
 | `k-reock-evidence-manifest.json` | `k-reock-evidence-manifest v1` | `bisect-analysis::compactness_evidence` | K Exact Reock Evidence Packages wave |
 | `u-search-evidence-manifest.json` | `u-search-evidence-manifest v1` | `bisect-ensemble::search_evidence` | U Search Evidence Packages wave |
 
@@ -218,7 +219,25 @@ Required fields beyond §2:
 | `verifier_path` | Package-relative source path for the verifier implementation. |
 | `verification_commands` | Commands that replay or validate the package. |
 
-### 3.14 `u-search-evidence-manifest v1`
+### 3.14 `j-divisor-evidence-manifest v1`
+
+Source: `bisect-apportion::divisor_evidence::DivisorEvidenceManifest`.
+
+This manifest binds J.2--J.5 divisor-method and paradox-immunity smoke fixtures
+to a verifier. It covers Webster, Adams, Jefferson, and the shared divisor
+monotonicity check used by the paradox paper.
+
+Required fields beyond §2:
+
+| Field | Definition |
+|---|---|
+| `package_id` | Stable package slug including the covered J-track scope. |
+| `papers` | J-track papers covered, e.g. `["J.2", "J.3", "J.4", "J.5"]`. |
+| `fixture_file` | `{path, sha256, role}` for the package-relative divisor fixture set. |
+| `verifier_path` | Package-relative source path for the verifier implementation. |
+| `verification_commands` | Commands that replay or validate the package. |
+
+### 3.15 `u-search-evidence-manifest v1`
 
 Source: `bisect-ensemble::search_evidence::USearchEvidenceManifest`.
 

@@ -285,11 +285,15 @@ Congressional seat apportionment — how seats are allocated to states before di
 |------|-------|-----|--------|
 | J.0 | Apportionment Methods: Overview | [PDF](papers/J.0+apportionment-overview.pdf) | 2020 Census package verified |
 | J.1 | Huntington-Hill: The Federal Method | [PDF](papers/J.1+huntington-hill.pdf) | 2020 Census package verified |
-| J.2 | Webster Method and Sainte-Laguë Equivalence | [PDF](papers/J.2+webster-method.pdf) | Minor Revision |
-| J.3 | Adams Method and Smallest-State Bias | [PDF](papers/J.3+adams-method.pdf) | Minor Revision |
-| J.4 | Jefferson/D'Hondt and Large-State Bias | [PDF](papers/J.4+jefferson-dhondt.pdf) | Minor Revision |
-| J.5 | Apportionment Paradoxes and Balinski-Young Impossibility | [PDF](papers/J.5+apportionment-paradoxes.pdf) | Minor Revision |
+| J.2 | Webster Method and Sainte-Laguë Equivalence | [PDF](papers/J.2+webster-method.pdf) | divisor smoke package added |
+| J.3 | Adams Method and Smallest-State Bias | [PDF](papers/J.3+adams-method.pdf) | divisor smoke package added |
+| J.4 | Jefferson/D'Hondt and Large-State Bias | [PDF](papers/J.4+jefferson-dhondt.pdf) | divisor smoke package added |
+| J.5 | Apportionment Paradoxes and Balinski-Young Impossibility | [PDF](papers/J.5+apportionment-paradoxes.pdf) | divisor smoke package added |
 | J.6 | bisect-apportion: Current Implementation Boundary | [PDF](papers/J.6+bisect-apportion-implementation.pdf) | 2020 Census package verified |
+
+**Evidence package (J.2-J.5):** `docs/examples/j-apportionment-evidence-packages/divisor-method-smoke/`
+is hash-bound and validates the current synthetic divisor-method surface for
+Webster, Adams, Jefferson, and shared divisor Alabama-paradox immunity.
 
 ---
 

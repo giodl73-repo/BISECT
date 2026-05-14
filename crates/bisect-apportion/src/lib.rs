@@ -18,6 +18,7 @@
 //! with population vertex weights and TIGER boundary-length edge weights.
 
 pub mod compositor;
+pub mod divisor_evidence;
 pub mod divisor_methods;
 pub mod evidence_manifest;
 pub mod graph;

@@ -130,10 +130,10 @@ Score bands:
 |---|---:|---:|---:|---:|---:|---:|---:|---|
 | J.0 Apportionment Overview | 3.4 | 3.5 | 3.2 | 3.4 | 3.4 | 3.4 | 20.3 | Stronger; 2020 Census/SHA package added |
 | J.1 Huntington-Hill | 3.5 | 3.6 | 3.4 | 3.5 | 3.5 | 3.5 | 21.0 | Strong; 2020 Census/SHA package verifies official seats |
-| J.2 Webster | 3.3 | 3.4 | 3.1 | 3.3 | 3.3 | 3.3 | 19.7 | Serviceable-plus; current API boundary |
-| J.3 Adams | 3.3 | 3.4 | 3.1 | 3.3 | 3.3 | 3.3 | 19.7 | Serviceable-plus; current API boundary |
-| J.4 Jefferson/D'Hondt | 3.3 | 3.4 | 3.1 | 3.3 | 3.3 | 3.3 | 19.7 | Serviceable-plus; current API boundary |
-| J.5 Apportionment Paradoxes | 3.3 | 3.4 | 3.1 | 3.4 | 3.3 | 3.3 | 19.8 | Serviceable-plus; synthetic-check boundary |
+| J.2 Webster | 3.5 | 3.4 | 3.3 | 3.4 | 3.5 | 3.4 | 20.5 | Strong; divisor smoke package added, historical replay pending |
+| J.3 Adams | 3.5 | 3.4 | 3.3 | 3.4 | 3.5 | 3.4 | 20.5 | Strong; divisor smoke package added, historical replay pending |
+| J.4 Jefferson/D'Hondt | 3.5 | 3.4 | 3.3 | 3.4 | 3.5 | 3.4 | 20.5 | Strong; divisor smoke package added, historical replay pending |
+| J.5 Apportionment Paradoxes | 3.5 | 3.4 | 3.3 | 3.5 | 3.5 | 3.4 | 20.6 | Strong; divisor paradox smoke package added |
 | J.6 bisect-apportion Implementation | 3.5 | 3.6 | 3.4 | 3.6 | 3.6 | 3.5 | 21.2 | Strong; 2020 Census/SHA verifier package added |
 | K.0 Compactness Overview | 3.6 | 3.5 | 3.4 | 3.6 | 3.5 | 3.5 | 21.1 | Strong; exact-MBC smoke package added |
 | K.1 Polsby-Popper | 3.5 | 3.6 | 3.3 | 3.4 | 3.4 | 3.5 | 20.7 | Strong |

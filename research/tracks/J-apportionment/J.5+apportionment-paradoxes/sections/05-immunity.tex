@@ -133,3 +133,14 @@ for all four implemented divisor methods on synthetic population fixtures:
 \end{itemize}
 These checks support the formal proof but do not replace future Census-year
 fixtures.
+
+\subsection{Hash-Bound Divisor Smoke Package}
+
+The repository now includes a minimal positive divisor-method evidence package at
+\texttt{docs/examples/j-apportionment-evidence-packages/divisor-method-smoke}.
+Its manifest uses schema \texttt{j-divisor-evidence-manifest v1}; it hash-binds
+the three-state allocation fixture and replays Webster, Adams, and Jefferson
+through \texttt{bisect-apportion::divisor\_evidence}.  The same fixture also
+checks the shared divisor Alabama-paradox surface across Huntington-Hill,
+Webster, Adams, and Jefferson for house sizes 3 through 10, expecting no
+decreasing seat events.
