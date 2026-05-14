@@ -10,6 +10,7 @@
 use crate::forest_recom::ForestRecomChain;
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
+use rgraph_core::undirected_edge_cut;
 use ropt_core::{derive_seed, SeedPart};
 
 // ── Seed derivation helpers ───────────────────────────────────────────────────
@@ -62,16 +63,7 @@ pub fn replica_rngs(rseed: u64) -> (SmallRng, SmallRng) {
 
 /// Count edges crossing district boundaries (each undirected edge counted once).
 fn count_edge_cuts_u32(assignment: &[u32], adj: &[Vec<u32>]) -> usize {
-    let mut cut = 0usize;
-    for (v, nbrs) in adj.iter().enumerate() {
-        let dv = assignment[v];
-        for &nb in nbrs {
-            if nb as usize > v && assignment[nb as usize] != dv {
-                cut += 1;
-            }
-        }
-    }
-    cut
+    undirected_edge_cut(adj, assignment).expect("validated parallel-tempering adjacency and plan")
 }
 
 // ── Main struct ───────────────────────────────────────────────────────────────

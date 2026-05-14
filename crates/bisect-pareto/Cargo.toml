@@ -8,6 +8,7 @@ description = "Multi-objective Pareto redistricting via NSGA-II (U.7)"
 
 [dependencies]
 bisect-ensemble = { path = "../bisect-ensemble" }
+rgraph-core = { path = "../rgraph-core" }
 rplan-audit = { path = "../rplan-audit" }
 rplan-core = { path = "../rplan-core" }
 rplan-io = { path = "../rplan-io" }

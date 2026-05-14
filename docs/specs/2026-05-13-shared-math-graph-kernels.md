@@ -1,6 +1,6 @@
 # Shared Math, Statistics, And Graph Kernel Crates
 
-**Status:** First graph and statistics kernel waves complete
+**Status:** Shared graph, statistics, math, and optimization kernels active
 **Date:** 2026-05-13
 **Scope:** Reusable Rust algorithm crates for BISECT, ROUTE, and future civic
 evidence projects
@@ -191,7 +191,11 @@ The first implementation wave should create `rgraph-core` with a narrow API:
 8. Undirected articulation point detection over the directed adapter. **Landed in
    `rgraph-core`; this remains kernel-only until a contiguity-fragility or ROUTE
    redundancy consumer is added.**
-9. Unit tests with tiny synthetic graphs covering:
+9. Undirected edge-cut counting over adjacency lists and assignment labels.
+   **Landed in `rgraph-core`; `bisect-local-search`, `bisect-pareto`, and
+   `bisect-ensemble::parallel_tempering` consume it while keeping objective and
+   sampling semantics local.**
+10. Unit tests with tiny synthetic graphs covering:
    - equal shortest-path split;
    - ignored non-shortest direct edge;
   - edge-filtered disconnection;

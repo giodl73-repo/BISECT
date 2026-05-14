@@ -47,6 +47,7 @@
 | 2026-05-14 | ROPT Core Pareto Kernel | Extract generic Pareto dominance and crowding utilities from NSGA-II | archived |
 | 2026-05-14 | ROPT Core Seed Kernel | Extract deterministic domain-separated seed derivation from NSGA-II | archived |
 | 2026-05-14 | ROPT Seed Consumer Expansion | Route SMC, multiscale, ensemble, and parallel-tempering seeds through `ropt-core` | archived |
+| 2026-05-14 | RGRAPH Edge Cut Kernel | Extract reusable undirected edge-cut counting from local search, Pareto, and PT | archived |
 
 ## Operating Model
 

@@ -24,17 +24,8 @@ pub struct Objectives {
 ///
 /// `adjacency[v]` is the list of neighbours of vertex v (usize indices).
 pub fn count_edge_cuts(plan: &[u32], adjacency: &[Vec<usize>]) -> usize {
-    let mut cuts = 0usize;
-    for (v, neighbours) in adjacency.iter().enumerate() {
-        let dv = plan[v];
-        for &u in neighbours {
-            // Only count each edge once (u > v)
-            if u > v && plan[u] != dv {
-                cuts += 1;
-            }
-        }
-    }
-    cuts
+    rgraph_core::undirected_edge_cut(adjacency, plan)
+        .expect("validated bisect-pareto adjacency and plan")
 }
 
 /// Evaluate all three objectives for a plan.

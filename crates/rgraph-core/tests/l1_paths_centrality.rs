@@ -2,7 +2,8 @@ use rgraph_core::{
     articulation_points, articulation_points_with_filter, bridges, bridges_with_filter,
     connected_components, connected_components_in_nodes_with_filter, edge_betweenness,
     reachable_nodes_with_filter, shortest_path_distance, shortest_path_distance_with_filter,
-    single_source_shortest_paths, Bridge, DirectedWeightedGraph, GraphError, WeightedEdge,
+    single_source_shortest_paths, undirected_edge_cut, Bridge, DirectedWeightedGraph, GraphError,
+    WeightedEdge,
 };
 
 #[derive(Debug, Clone)]
@@ -184,4 +185,12 @@ fn l1_articulation_points_track_cut_vertices_and_filters() {
         articulation_points_with_filter(&graph, |edge| edge != 7).unwrap(),
         vec![2, 3, 4]
     );
+}
+
+#[test]
+fn l1_undirected_edge_cut_matches_redistricting_fixture() {
+    let adjacency = vec![vec![1_usize, 2], vec![0, 3], vec![0, 3], vec![1, 2]];
+    let assignment = vec![0_u32, 0, 1, 1];
+
+    assert_eq!(undirected_edge_cut(&adjacency, &assignment).unwrap(), 2);
 }

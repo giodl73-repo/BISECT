@@ -1,6 +1,6 @@
 use rgraph_core::{
     articulation_points, bridges, connected_components, edge_betweenness, reachable_nodes,
-    shortest_path_distance, DirectedWeightedGraph, WeightedEdge,
+    shortest_path_distance, undirected_edge_cut, DirectedWeightedGraph, WeightedEdge,
 };
 
 #[derive(Debug, Clone)]
@@ -104,4 +104,39 @@ fn l2_grid_articulation_detection_remains_stable() {
     let articulations = articulation_points(&graph).unwrap();
 
     assert!(articulations.is_empty());
+}
+
+#[test]
+#[ignore = "L2 graph stress: larger grid edge-cut count"]
+fn l2_grid_edge_cut_counts_vertical_split() {
+    let width = 80;
+    let height = 80;
+    let adjacency: Vec<Vec<usize>> = (0..width * height)
+        .map(|node| {
+            let x = node % width;
+            let y = node / width;
+            let mut neighbors = Vec::new();
+            if x > 0 {
+                neighbors.push(node - 1);
+            }
+            if x + 1 < width {
+                neighbors.push(node + 1);
+            }
+            if y > 0 {
+                neighbors.push(node - width);
+            }
+            if y + 1 < height {
+                neighbors.push(node + width);
+            }
+            neighbors
+        })
+        .collect();
+    let assignment: Vec<usize> = (0..width * height)
+        .map(|node| usize::from(node % width >= width / 2))
+        .collect();
+
+    assert_eq!(
+        undirected_edge_cut(&adjacency, &assignment).unwrap(),
+        height
+    );
 }

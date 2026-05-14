@@ -10,6 +10,7 @@ description = "ReCom feasibility sampler for redistricting — uniform random sp
 metis-core     = { workspace = true }
 rand.workspace = true
 ropt-core = { path = "../ropt-core" }
+rgraph-core = { path = "../rgraph-core" }
 sha2.workspace = true
 rayon.workspace = true
 serde.workspace = true

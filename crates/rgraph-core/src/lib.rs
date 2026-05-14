@@ -39,6 +39,37 @@ pub enum GraphError<E> {
     },
 }
 
+#[derive(Debug, Error, Clone, PartialEq, Eq)]
+pub enum EdgeCutError {
+    #[error("assignment length {assignment_len} does not match adjacency length {adjacency_len}")]
+    AssignmentLengthMismatch {
+        adjacency_len: usize,
+        assignment_len: usize,
+    },
+    #[error("neighbor index {neighbor} from node {node} is out of bounds for graph with {node_count} nodes")]
+    NeighborOutOfBounds {
+        node: usize,
+        neighbor: usize,
+        node_count: usize,
+    },
+}
+
+pub trait NodeIndex: Copy {
+    fn to_usize(self) -> Option<usize>;
+}
+
+impl NodeIndex for usize {
+    fn to_usize(self) -> Option<usize> {
+        Some(self)
+    }
+}
+
+impl NodeIndex for u32 {
+    fn to_usize(self) -> Option<usize> {
+        usize::try_from(self).ok()
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Predecessor<E> {
     pub node: usize,
@@ -250,6 +281,46 @@ where
         .enumerate()
         .filter_map(|(node, distance)| distance.map(|_| node))
         .collect())
+}
+
+pub fn undirected_edge_cut<I, D>(
+    adjacency: &[Vec<I>],
+    assignment: &[D],
+) -> Result<usize, EdgeCutError>
+where
+    I: NodeIndex,
+    D: Eq,
+{
+    if adjacency.len() != assignment.len() {
+        return Err(EdgeCutError::AssignmentLengthMismatch {
+            adjacency_len: adjacency.len(),
+            assignment_len: assignment.len(),
+        });
+    }
+
+    let mut cut = 0usize;
+    for (node, neighbors) in adjacency.iter().enumerate() {
+        for &neighbor in neighbors {
+            let Some(neighbor) = neighbor.to_usize() else {
+                return Err(EdgeCutError::NeighborOutOfBounds {
+                    node,
+                    neighbor: usize::MAX,
+                    node_count: adjacency.len(),
+                });
+            };
+            if neighbor >= assignment.len() {
+                return Err(EdgeCutError::NeighborOutOfBounds {
+                    node,
+                    neighbor,
+                    node_count: adjacency.len(),
+                });
+            }
+            if neighbor > node && assignment[node] != assignment[neighbor] {
+                cut += 1;
+            }
+        }
+    }
+    Ok(cut)
 }
 
 pub fn connected_components<G>(graph: &G) -> Result<Vec<Vec<usize>>, GraphError<G::EdgeId>>
@@ -1026,5 +1097,50 @@ mod tests {
         let graph = TinyGraph::new(0);
 
         assert!(edge_betweenness(&graph).unwrap().is_empty());
+    }
+
+    #[test]
+    fn undirected_edge_cut_counts_each_crossing_once() {
+        let adjacency = vec![vec![1_usize, 2], vec![0, 3], vec![0, 3], vec![1, 2]];
+        let assignment = vec![0, 0, 1, 1];
+
+        assert_eq!(undirected_edge_cut(&adjacency, &assignment).unwrap(), 2);
+    }
+
+    #[test]
+    fn undirected_edge_cut_supports_u32_adjacency_and_assignment() {
+        let adjacency = vec![vec![1_u32], vec![0, 2], vec![1]];
+        let assignment = vec![1_u32, 2, 2];
+
+        assert_eq!(undirected_edge_cut(&adjacency, &assignment).unwrap(), 1);
+    }
+
+    #[test]
+    fn undirected_edge_cut_rejects_length_mismatch() {
+        let adjacency = vec![vec![1_usize], vec![0]];
+        let assignment = vec![0];
+
+        assert_eq!(
+            undirected_edge_cut(&adjacency, &assignment),
+            Err(EdgeCutError::AssignmentLengthMismatch {
+                adjacency_len: 2,
+                assignment_len: 1
+            })
+        );
+    }
+
+    #[test]
+    fn undirected_edge_cut_rejects_out_of_bounds_neighbor() {
+        let adjacency = vec![vec![2_usize], vec![0]];
+        let assignment = vec![0, 1];
+
+        assert_eq!(
+            undirected_edge_cut(&adjacency, &assignment),
+            Err(EdgeCutError::NeighborOutOfBounds {
+                node: 0,
+                neighbor: 2,
+                node_count: 2
+            })
+        );
     }
 }
