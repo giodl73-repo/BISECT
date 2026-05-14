@@ -113,6 +113,25 @@ fn l1_parallel_shortest_path_overflow_is_rejected_before_centrality() {
 }
 
 #[test]
+fn l1_shortest_path_distance_overflow_is_rejected() {
+    let graph = TestGraph::new(3)
+        .edge(1, 0, 1, f64::MAX)
+        .edge(2, 1, 2, f64::MAX);
+
+    match shortest_path_distance(&graph, 0, 2) {
+        Err(GraphError::NonFiniteDistance {
+            from,
+            target,
+            distance,
+        }) => {
+            assert_eq!((from, target), (1, 2));
+            assert!(distance.is_infinite());
+        }
+        other => panic!("expected distance overflow error, got {other:?}"),
+    }
+}
+
+#[test]
 fn l1_invalid_target_from_adapter_is_reported() {
     let graph = TestGraph::new(2).edge(9, 0, 3, 1.0);
 

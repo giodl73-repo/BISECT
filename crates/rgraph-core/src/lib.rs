@@ -37,6 +37,12 @@ pub enum GraphError<E> {
         target: usize,
         weight: f64,
     },
+    #[error("distance from {from} to {target} became non-finite: {distance}")]
+    NonFiniteDistance {
+        from: usize,
+        target: usize,
+        distance: f64,
+    },
     #[error("shortest-path count for node {node} became non-finite: {count}")]
     NonFinitePathCount { node: usize, count: f64 },
 }
@@ -236,6 +242,7 @@ where
             validate_node::<G::EdgeId>(node_count, edge.target)?;
 
             let next_cost = cost + edge.weight;
+            validate_distance::<G::EdgeId>(node, edge.target, next_cost)?;
             let previous = distances[edge.target];
 
             match previous {
@@ -995,6 +1002,17 @@ fn validate_path_count<E>(node: usize, count: f64) -> Result<(), GraphError<E>> 
     Ok(())
 }
 
+fn validate_distance<E>(from: usize, target: usize, distance: f64) -> Result<(), GraphError<E>> {
+    if !distance.is_finite() {
+        return Err(GraphError::NonFiniteDistance {
+            from,
+            target,
+            distance,
+        });
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1074,6 +1092,25 @@ mod tests {
                 assert!(count.is_infinite());
             }
             other => panic!("expected path-count overflow error, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn shortest_path_distance_overflow_is_rejected() {
+        let mut graph = TinyGraph::new(3);
+        graph.add_edge(1, 0, 1, f64::MAX);
+        graph.add_edge(2, 1, 2, f64::MAX);
+
+        match single_source_shortest_paths(&graph, 0) {
+            Err(GraphError::NonFiniteDistance {
+                from,
+                target,
+                distance,
+            }) => {
+                assert_eq!((from, target), (1, 2));
+                assert!(distance.is_infinite());
+            }
+            other => panic!("expected distance overflow error, got {other:?}"),
         }
     }
 

@@ -179,8 +179,9 @@ The first implementation wave should create `rgraph-core` with a narrow API:
 2. `shortest_path_distance` with optional edge filter. **Landed in
    `rgraph-core`.**
 3. `single_source_shortest_paths` returning distances, predecessor edges, and
-   shortest-path counts. **Shortest-path count overflow is rejected with a typed
-   graph error before centrality can consume non-finite path counts.**
+   shortest-path counts. **Distance and shortest-path count overflow are
+   rejected with typed graph errors before centrality can consume non-finite
+   distances or path counts.**
 4. `edge_betweenness` using weighted Brandes accumulation with deterministic tie
    handling. **Landed in `rgraph-core` during the first wave to preserve ROUTE
    compatibility fixtures.**
