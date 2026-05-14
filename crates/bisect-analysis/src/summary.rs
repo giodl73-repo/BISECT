@@ -1,5 +1,6 @@
 use serde::Serialize;
 use std::collections::HashMap;
+use thiserror::Error;
 
 use crate::analyzer::{Analyzer, AnalyzerContext};
 use crate::demographic::{DemographicAnalyzer, DemographicDistrict};
@@ -28,6 +29,20 @@ pub struct SummaryResult {
     pub districts: Vec<SummaryDistrict>,
 }
 
+#[derive(Debug, Error, Clone, PartialEq)]
+pub enum SummaryError {
+    #[error("[INPUT] balance tolerance must be finite and non-negative, got {value}")]
+    InvalidBalanceTolerance { value: f64 },
+    #[error("[INPUT] negative population for district {district}: {value}")]
+    NegativePopulation { district: usize, value: i64 },
+    #[error("[INPUT] negative ideal population for district {district}: {value}")]
+    NegativeIdealPopulation { district: usize, value: i64 },
+    #[error("[NUMERIC] population deviation overflowed for district {district}")]
+    PopulationDeviationOverflow { district: usize },
+    #[error("[NUMERIC] {operation} produced non-finite value {value}")]
+    NonFiniteResult { operation: &'static str, value: f64 },
+}
+
 /// Merge per-district data from sub-analyzers into a summary district.
 pub fn merge_district(
     district: usize,
@@ -37,19 +52,52 @@ pub fn merge_district(
     urban: Option<&UrbanDistrict>,
     balance_tolerance: f64,
 ) -> SummaryDistrict {
+    try_merge_district(district, demo, pol, ideal_pop, urban, balance_tolerance)
+        .expect("summary inputs are valid")
+}
+
+pub fn try_merge_district(
+    district: usize,
+    demo: Option<&DemographicDistrict>,
+    pol: Option<&PoliticalDistrict>,
+    ideal_pop: Option<i64>,
+    urban: Option<&UrbanDistrict>,
+    balance_tolerance: f64,
+) -> Result<SummaryDistrict, SummaryError> {
+    validate_tolerance(balance_tolerance)?;
     let total_pop = demo.map(|d| d.total_pop);
-    let pop_deviation_pct = total_pop.and_then(|tp| {
-        ideal_pop.map(|ip| {
-            if ip == 0 {
-                0.0
-            } else {
-                (tp - ip).abs() as f64 / ip as f64
-            }
-        })
-    });
+    if let Some(tp) = total_pop {
+        if tp < 0 {
+            return Err(SummaryError::NegativePopulation {
+                district,
+                value: tp,
+            });
+        }
+    }
+    if let Some(ip) = ideal_pop {
+        if ip < 0 {
+            return Err(SummaryError::NegativeIdealPopulation {
+                district,
+                value: ip,
+            });
+        }
+    }
+    let pop_deviation_pct = match (total_pop, ideal_pop) {
+        (Some(tp), Some(ip)) if ip != 0 => {
+            let diff = tp
+                .checked_sub(ip)
+                .and_then(|v| v.checked_abs())
+                .ok_or(SummaryError::PopulationDeviationOverflow { district })?;
+            let value = diff as f64 / ip as f64;
+            validate_finite("population deviation percentage", value)?;
+            Some(value)
+        }
+        (Some(_), Some(_)) => Some(0.0),
+        _ => None,
+    };
     let pop_balance_ok = pop_deviation_pct.map(|dev| dev <= balance_tolerance);
 
-    SummaryDistrict {
+    Ok(SummaryDistrict {
         district,
         total_pop,
         ideal_pop,
@@ -60,7 +108,21 @@ pub fn merge_district(
         dem_pct: pol.map(|p| p.dem_pct),
         lean_dem: pol.map(|p| p.lean_dem),
         largest_city: urban.and_then(|u| u.largest_city.clone()),
+    })
+}
+
+fn validate_tolerance(value: f64) -> Result<(), SummaryError> {
+    if !value.is_finite() || value < 0.0 {
+        return Err(SummaryError::InvalidBalanceTolerance { value });
     }
+    Ok(())
+}
+
+fn validate_finite(operation: &'static str, value: f64) -> Result<(), SummaryError> {
+    if !value.is_finite() {
+        return Err(SummaryError::NonFiniteResult { operation, value });
+    }
+    Ok(())
 }
 
 pub struct SummaryAnalyzer;
@@ -106,7 +168,7 @@ impl Analyzer for SummaryAnalyzer {
 
         let mut districts: Vec<SummaryDistrict> = (1..=ctx.num_districts)
             .map(|d| {
-                merge_district(
+                try_merge_district(
                     d,
                     demo_map.get(&d).copied(),
                     pol_map.get(&d).copied(),
@@ -115,7 +177,7 @@ impl Analyzer for SummaryAnalyzer {
                     ctx.balance_tolerance,
                 )
             })
-            .collect();
+            .collect::<Result<Vec<_>, SummaryError>>()?;
         districts.sort_by_key(|d| d.district);
 
         let population_balance_valid = districts.iter().all(|d| d.pop_balance_ok.unwrap_or(true));
@@ -248,5 +310,41 @@ mod tests {
         assert!(s.dem_pct.is_none());
         assert!(s.largest_city.is_none());
         assert_eq!(s.total_pop, Some(800));
+    }
+
+    #[test]
+    fn test_try_merge_rejects_non_finite_tolerance() {
+        let demo = make_demo(1, 1000, 0.2);
+
+        match try_merge_district(1, Some(&demo), None, Some(1000), None, f64::NAN) {
+            Err(SummaryError::InvalidBalanceTolerance { value }) => assert!(value.is_nan()),
+            other => panic!("expected InvalidBalanceTolerance, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_try_merge_rejects_negative_population() {
+        let demo = make_demo(1, -1, 0.2);
+
+        match try_merge_district(1, Some(&demo), None, Some(1000), None, 0.005) {
+            Err(SummaryError::NegativePopulation { district, value }) => {
+                assert_eq!(district, 1);
+                assert_eq!(value, -1);
+            }
+            other => panic!("expected NegativePopulation, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_try_merge_rejects_negative_ideal_population() {
+        let demo = make_demo(1, 1000, 0.2);
+
+        match try_merge_district(1, Some(&demo), None, Some(-1), None, 0.005) {
+            Err(SummaryError::NegativeIdealPopulation { district, value }) => {
+                assert_eq!(district, 1);
+                assert_eq!(value, -1);
+            }
+            other => panic!("expected NegativeIdealPopulation, got {other:?}"),
+        }
     }
 }

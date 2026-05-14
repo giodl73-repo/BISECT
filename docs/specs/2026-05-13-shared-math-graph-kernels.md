@@ -314,6 +314,9 @@ VRA majority-minority aggregation now exposes a fallible checked path that
 rejects invalid thresholds, negative tract totals, non-finite population
 components, and component totals above tract population before district VRA
 percentages are emitted.
+Summary population-balance merging now rejects invalid balance tolerances and
+negative population inputs before summary rows can emit invalid deviation or
+balance flags.
 
 `rstat-core::mcmc` rejects malformed diagnostics inputs before producing evidence
 metrics: R-hat rejects non-finite chain values with a typed diagnostics error,

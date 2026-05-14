@@ -77,7 +77,9 @@ pub use splits::{
     analyze_county_splits, analyze_county_splits_with_state, analyze_municipal_splits,
     county_fips_from_geoid, CountySplitResult, MunicipalSplitResult,
 };
-pub use summary::{SummaryAnalyzer, SummaryDistrict, SummaryResult};
+pub use summary::{
+    try_merge_district, SummaryAnalyzer, SummaryDistrict, SummaryError, SummaryResult,
+};
 pub use urban::{UrbanAnalyzer, UrbanDistrict, UrbanResult};
 pub use vra_analysis::{
     analyze_mm_districts, try_analyze_mm_districts, VraAnalysis, VraDistrict, VraError,
