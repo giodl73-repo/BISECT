@@ -20,6 +20,7 @@ use std::collections::HashMap;
 use thiserror::Error;
 
 use crate::race_of_candidate::RaceOfCandidateProvenance;
+use rstat_core::hypothesis::holm_bonferroni_named;
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -807,30 +808,7 @@ pub fn cluster_bootstrap(
 /// to include leave-one-out sensitivity-variant runs from Civic Bidirectional
 /// conflict resolution (S-02).
 pub fn holm_bonferroni(p_values: &[(String, f64)]) -> HashMap<String, f64> {
-    let m = p_values.len();
-    if m == 0 {
-        return HashMap::new();
-    }
-    // Sort by raw p ascending. Keep the original index so we can return by name.
-    let mut indexed: Vec<(usize, &str, f64)> = p_values
-        .iter()
-        .enumerate()
-        .map(|(i, (name, p))| (i, name.as_str(), *p))
-        .collect();
-    indexed.sort_by(|a, b| a.2.partial_cmp(&b.2).unwrap_or(std::cmp::Ordering::Equal));
-
-    let mut out = HashMap::new();
-    let mut running_max: f64 = 0.0;
-    for (j, (_, name, p)) in indexed.iter().enumerate() {
-        let multiplier = (m - j) as f64;
-        let corrected = (multiplier * p).clamp(0.0, 1.0);
-        // Step-down: take the cumulative max so values are non-decreasing.
-        if corrected > running_max {
-            running_max = corrected;
-        }
-        out.insert((*name).to_string(), running_max);
-    }
-    out
+    holm_bonferroni_named(p_values).expect("bloc voting p-values are finite probabilities")
 }
 
 // ---------------------------------------------------------------------------

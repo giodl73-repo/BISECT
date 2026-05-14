@@ -6,7 +6,7 @@
 //!
 //! Used by S.1 (Hypothesis Testing for Partisan Gerrymandering).
 
-use rstat_core::probability::regularized_incomplete_beta;
+use rstat_core::hypothesis::{bayesian_detection_score, empirical_p_value, ess_beta_median, Tail};
 
 /// A single plan in the ensemble, characterised by a scalar test statistic.
 #[derive(Debug, Clone)]
@@ -58,26 +58,14 @@ pub fn permutation_test_lower_tail(
     ensemble: &[EnsemblePlan],
     ess: f64,
 ) -> PermutationTestResult {
-    let n_total = ensemble.len();
-    let n_as_extreme = ensemble
-        .iter()
-        .filter(|p| p.statistic <= query_statistic)
-        .count();
-
-    let p_raw = n_as_extreme as f64 / n_total as f64;
-
-    // ESS-corrected p-value: posterior median of Beta(p_raw*ess + 1, (1-p_raw)*ess + 1)
-    // The posterior median ≈ (p_raw*ess + 1/3) / (ess + 2/3) for Beta distributions
-    // (Bayes estimate with Jeffrey's prior adjustment).
-    let a = p_raw * ess + 1.0;
-    let b = (1.0 - p_raw) * ess + 1.0;
-    let p_ess_corrected = (a - 1.0 / 3.0) / (a + b - 2.0 / 3.0);
-
-    // BDS: P(true percentile < 0.05 | p_raw, ess)
-    // Using regularized incomplete Beta function approximation.
-    // For p_raw << 0.05: BDS ≈ 1 - Beta_CDF(0.05, a, b)
-    // We use a simple numerical approximation via the continued fraction expansion.
-    let bds = regularized_incomplete_beta(0.05, a, b);
+    let reference: Vec<f64> = ensemble.iter().map(|p| p.statistic).collect();
+    let (n_as_extreme, n_total, p_raw) =
+        empirical_p_value(query_statistic, &reference, Tail::Lower)
+            .expect("permutation ensemble statistics are finite and non-empty");
+    let p_ess_corrected =
+        ess_beta_median(p_raw, ess).expect("permutation ESS is positive and finite");
+    let bds =
+        bayesian_detection_score(0.05, p_raw, ess).expect("permutation ESS is positive and finite");
 
     PermutationTestResult {
         query_statistic,
@@ -134,9 +122,7 @@ mod tests {
 
     #[test]
     fn test_regularized_incomplete_beta_boundary() {
-        assert!((regularized_incomplete_beta(0.0, 2.0, 3.0) - 0.0).abs() < 1e-10);
-        assert!((regularized_incomplete_beta(1.0, 2.0, 3.0) - 1.0).abs() < 1e-10);
-        // I_0.5(2, 2) = 0.5 by symmetry
-        assert!((regularized_incomplete_beta(0.5, 2.0, 2.0) - 0.5).abs() < 0.01);
+        assert!((bayesian_detection_score(0.0, 0.5, 10.0).unwrap() - 0.0).abs() < 1e-10);
+        assert!((bayesian_detection_score(1.0, 0.5, 10.0).unwrap() - 1.0).abs() < 1e-10);
     }
 }

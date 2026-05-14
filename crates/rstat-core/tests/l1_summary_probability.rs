@@ -1,3 +1,6 @@
+use rstat_core::hypothesis::{
+    bayesian_detection_score, benjamini_hochberg, empirical_p_value, holm_bonferroni, Tail,
+};
 use rstat_core::probability::regularized_incomplete_beta;
 use rstat_core::resampling::{bootstrap_percentile_interval, bootstrap_statistics};
 use rstat_core::summary::{percentile_interval_sorted_copy, quantile_sorted_copy, summary_stats};
@@ -43,4 +46,30 @@ fn l1_bootstrap_summary_interval_composes_with_quantiles() {
 
     assert_eq!(direct_interval, helper_interval);
     assert!(helper_interval.0 <= helper_interval.1);
+}
+
+#[test]
+fn l1_empirical_p_value_and_detection_score_compose() {
+    let reference: Vec<f64> = (0..100).map(|i| i as f64 / 100.0).collect();
+
+    let (n_extreme, n_total, p_raw) = empirical_p_value(0.003, &reference, Tail::Lower).unwrap();
+    let bds = bayesian_detection_score(0.05, p_raw, 70.0).unwrap();
+
+    assert_eq!((n_extreme, n_total), (1, 100));
+    assert!((p_raw - 0.01).abs() < 1e-12);
+    assert!(bds > 0.80);
+}
+
+#[test]
+fn l1_multiple_testing_corrections_preserve_shape() {
+    let raw = [0.001, 0.02, 0.03, 0.90];
+    let holm = holm_bonferroni(&raw).unwrap();
+    let bh = benjamini_hochberg(&raw).unwrap();
+
+    assert_eq!(holm.len(), raw.len());
+    assert_eq!(bh.len(), raw.len());
+    assert!(holm.iter().all(|p| (0.0..=1.0).contains(p)));
+    assert!(bh.iter().all(|p| (0.0..=1.0).contains(p)));
+    assert!(holm[1] >= raw[1]);
+    assert!(bh[1] <= holm[1]);
 }

@@ -296,6 +296,229 @@ pub mod resampling {
     }
 }
 
+pub mod hypothesis {
+    use crate::probability::regularized_incomplete_beta;
+    use std::collections::HashMap;
+    use thiserror::Error;
+
+    #[derive(Debug, Error, Clone, PartialEq)]
+    pub enum HypothesisError {
+        #[error("[INPUT] empty reference sample")]
+        EmptySample,
+        #[error("[INPUT] non-finite statistic {value} at index {index}")]
+        NonFiniteStatistic { index: usize, value: f64 },
+        #[error("[INPUT] probability must be in [0, 1], got {0}")]
+        InvalidProbability(f64),
+        #[error("[INPUT] ESS must be positive and finite, got {0}")]
+        InvalidEss(f64),
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum Tail {
+        Lower,
+        Upper,
+        TwoSidedDistanceFromCenter,
+    }
+
+    pub fn empirical_p_value(
+        observed: f64,
+        reference: &[f64],
+        tail: Tail,
+    ) -> Result<(usize, usize, f64), HypothesisError> {
+        if reference.is_empty() {
+            return Err(HypothesisError::EmptySample);
+        }
+        validate_finite(usize::MAX, observed)?;
+        for (index, &value) in reference.iter().enumerate() {
+            validate_finite(index, value)?;
+        }
+
+        let count = match tail {
+            Tail::Lower => reference.iter().filter(|&&value| value <= observed).count(),
+            Tail::Upper => reference.iter().filter(|&&value| value >= observed).count(),
+            Tail::TwoSidedDistanceFromCenter => {
+                let observed_distance = (observed - 0.5).abs();
+                reference
+                    .iter()
+                    .filter(|&&value| (value - 0.5).abs() >= observed_distance)
+                    .count()
+            }
+        };
+        let total = reference.len();
+        Ok((count, total, count as f64 / total as f64))
+    }
+
+    pub fn ess_beta_median(p_raw: f64, ess: f64) -> Result<f64, HypothesisError> {
+        validate_probability(p_raw)?;
+        validate_ess(ess)?;
+        let a = p_raw * ess + 1.0;
+        let b = (1.0 - p_raw) * ess + 1.0;
+        Ok(((a - 1.0 / 3.0) / (a + b - 2.0 / 3.0)).clamp(0.0, 1.0))
+    }
+
+    pub fn bayesian_detection_score(
+        threshold: f64,
+        p_raw: f64,
+        ess: f64,
+    ) -> Result<f64, HypothesisError> {
+        validate_probability(threshold)?;
+        validate_probability(p_raw)?;
+        validate_ess(ess)?;
+        let a = p_raw * ess + 1.0;
+        let b = (1.0 - p_raw) * ess + 1.0;
+        Ok(regularized_incomplete_beta(threshold, a, b).clamp(0.0, 1.0))
+    }
+
+    pub fn holm_bonferroni(p_values: &[f64]) -> Result<Vec<f64>, HypothesisError> {
+        let m = p_values.len();
+        if m == 0 {
+            return Ok(Vec::new());
+        }
+        validate_probabilities(p_values)?;
+        let mut indexed: Vec<(usize, f64)> = p_values.iter().copied().enumerate().collect();
+        indexed.sort_by(|a, b| a.1.total_cmp(&b.1).then_with(|| a.0.cmp(&b.0)));
+
+        let mut corrected = vec![0.0; m];
+        let mut running_max = 0.0_f64;
+        for (rank, (original_index, p)) in indexed.into_iter().enumerate() {
+            let adjusted = ((m - rank) as f64 * p).clamp(0.0, 1.0);
+            running_max = running_max.max(adjusted);
+            corrected[original_index] = running_max;
+        }
+        Ok(corrected)
+    }
+
+    pub fn holm_bonferroni_named(
+        p_values: &[(String, f64)],
+    ) -> Result<HashMap<String, f64>, HypothesisError> {
+        let raw: Vec<f64> = p_values.iter().map(|(_, p)| *p).collect();
+        let corrected = holm_bonferroni(&raw)?;
+        Ok(p_values
+            .iter()
+            .zip(corrected)
+            .map(|((name, _), p)| (name.clone(), p))
+            .collect())
+    }
+
+    pub fn benjamini_hochberg(p_values: &[f64]) -> Result<Vec<f64>, HypothesisError> {
+        let m = p_values.len();
+        if m == 0 {
+            return Ok(Vec::new());
+        }
+        validate_probabilities(p_values)?;
+        let mut indexed: Vec<(usize, f64)> = p_values.iter().copied().enumerate().collect();
+        indexed.sort_by(|a, b| a.1.total_cmp(&b.1).then_with(|| a.0.cmp(&b.0)));
+
+        let mut corrected = vec![0.0; m];
+        let mut running_min = 1.0_f64;
+        for (reverse_rank, (original_index, p)) in indexed.into_iter().rev().enumerate() {
+            let rank = m - reverse_rank;
+            let adjusted = (p * m as f64 / rank as f64).clamp(0.0, 1.0);
+            running_min = running_min.min(adjusted);
+            corrected[original_index] = running_min;
+        }
+        Ok(corrected)
+    }
+
+    fn validate_probabilities(p_values: &[f64]) -> Result<(), HypothesisError> {
+        for (index, &value) in p_values.iter().enumerate() {
+            validate_probability_at(index, value)?;
+        }
+        Ok(())
+    }
+
+    fn validate_probability(value: f64) -> Result<(), HypothesisError> {
+        validate_probability_at(usize::MAX, value)
+    }
+
+    fn validate_probability_at(index: usize, value: f64) -> Result<(), HypothesisError> {
+        if !value.is_finite() {
+            return Err(HypothesisError::NonFiniteStatistic { index, value });
+        }
+        if !(0.0..=1.0).contains(&value) {
+            return Err(HypothesisError::InvalidProbability(value));
+        }
+        Ok(())
+    }
+
+    fn validate_finite(index: usize, value: f64) -> Result<(), HypothesisError> {
+        if !value.is_finite() {
+            return Err(HypothesisError::NonFiniteStatistic { index, value });
+        }
+        Ok(())
+    }
+
+    fn validate_ess(ess: f64) -> Result<(), HypothesisError> {
+        if !ess.is_finite() || ess <= 0.0 {
+            return Err(HypothesisError::InvalidEss(ess));
+        }
+        Ok(())
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn l0_empirical_p_values_cover_all_tails() {
+            let reference = [0.0, 0.1, 0.2, 0.8, 0.9];
+
+            assert_eq!(
+                empirical_p_value(0.15, &reference, Tail::Lower).unwrap(),
+                (2, 5, 0.4)
+            );
+            assert_eq!(
+                empirical_p_value(0.85, &reference, Tail::Upper).unwrap(),
+                (1, 5, 0.2)
+            );
+            assert_eq!(
+                empirical_p_value(0.1, &reference, Tail::TwoSidedDistanceFromCenter).unwrap(),
+                (3, 5, 0.6)
+            );
+        }
+
+        #[test]
+        fn l0_ess_beta_median_matches_existing_formula() {
+            let p = ess_beta_median(0.01, 70.0).unwrap();
+            assert!((p - 0.0191588785046729).abs() < 1e-12);
+        }
+
+        #[test]
+        fn l0_holm_bonferroni_is_step_down_and_dominates_raw() {
+            let raw = [0.001, 0.02, 0.03, 0.90];
+            let corrected = holm_bonferroni(&raw).unwrap();
+
+            assert_eq!(corrected.len(), raw.len());
+            for (p, p_holm) in raw.iter().zip(&corrected) {
+                assert!(p_holm + 1e-12 >= *p);
+            }
+            assert!((corrected[0] - 0.004).abs() < 1e-12);
+            assert!((corrected[1] - 0.06).abs() < 1e-12);
+            assert!((corrected[2] - 0.06).abs() < 1e-12);
+            assert_eq!(corrected[3], 0.90);
+        }
+
+        #[test]
+        fn l0_benjamini_hochberg_is_bounded() {
+            let corrected = benjamini_hochberg(&[0.001, 0.02, 0.03, 0.90]).unwrap();
+            assert!(corrected.iter().all(|p| (0.0..=1.0).contains(p)));
+            assert!((corrected[0] - 0.004).abs() < 1e-12);
+        }
+
+        #[test]
+        fn l0_rejects_invalid_probability_and_ess() {
+            assert_eq!(
+                holm_bonferroni(&[1.2]),
+                Err(HypothesisError::InvalidProbability(1.2))
+            );
+            assert_eq!(
+                ess_beta_median(0.5, 0.0),
+                Err(HypothesisError::InvalidEss(0.0))
+            );
+        }
+    }
+}
+
 pub mod mcmc {
     use thiserror::Error;
 

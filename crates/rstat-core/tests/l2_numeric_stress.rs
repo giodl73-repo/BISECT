@@ -1,3 +1,4 @@
+use rstat_core::hypothesis::{benjamini_hochberg, holm_bonferroni};
 use rstat_core::mcmc::{effective_sample_size, hamming_autocorrelation};
 use rstat_core::probability::regularized_incomplete_beta;
 use rstat_core::resampling::bootstrap_percentile_interval;
@@ -75,4 +76,24 @@ fn l2_bootstrap_percentile_interval_large_replicate_count() {
     assert!(lo < hi);
     assert!(lo > 45.0);
     assert!(hi < 55.0);
+}
+
+#[test]
+#[ignore = "L2 numeric stress: large multiple-testing family"]
+fn l2_multiple_testing_large_family_is_bounded_and_monotone() {
+    let raw: Vec<f64> = (1..=10_000)
+        .map(|i| (i as f64 / 10_000.0).powi(2))
+        .collect();
+
+    let holm = holm_bonferroni(&raw).unwrap();
+    let bh = benjamini_hochberg(&raw).unwrap();
+
+    assert_eq!(holm.len(), raw.len());
+    assert_eq!(bh.len(), raw.len());
+    assert!(holm.iter().all(|p| (0.0..=1.0).contains(p)));
+    assert!(bh.iter().all(|p| (0.0..=1.0).contains(p)));
+    for i in 1..holm.len() {
+        assert!(holm[i] + 1e-12 >= holm[i - 1]);
+        assert!(bh[i] + 1e-12 >= bh[i - 1]);
+    }
 }

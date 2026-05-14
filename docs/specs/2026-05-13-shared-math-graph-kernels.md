@@ -193,6 +193,9 @@ Candidate first API:
    in `rcount-stats`.**
 6. Seeded bootstrap resampling helpers. **Landed in `rstat-core::resampling`;
    `bisect-analysis::partisan` consumes them for bootstrap CIs.**
+7. Empirical p-values and multiple-testing corrections. **Landed in
+   `rstat-core::hypothesis`; `bisect-analysis::permutation` and
+   `bisect-analysis::bloc_voting` consume them.**
 
 RCOUNT should continue to own election-audit method replay. `rstat-core` owns
 only reusable math.
