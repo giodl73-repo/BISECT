@@ -24,7 +24,7 @@ use rmath_core::{invert, mat_mul, mat_mul_vec, DenseMatrix as Mat, LinearAlgebra
 use rstat_core::hypothesis::holm_bonferroni_named;
 use rstat_core::probability::{standard_normal_cdf, ProbabilityError};
 use rstat_core::summary::{
-    percentile_interval_sorted_copy, weighted_mean, weighted_std_dev_population,
+    percentile_interval_sorted_copy, weighted_mean, weighted_std_dev_population, SummaryError,
 };
 
 // ---------------------------------------------------------------------------
@@ -143,6 +143,12 @@ impl From<LinearAlgebraError> for BlocVotingError {
 
 impl From<ProbabilityError> for BlocVotingError {
     fn from(value: ProbabilityError) -> Self {
+        BlocVotingError::Numeric(value.to_string())
+    }
+}
+
+impl From<SummaryError> for BlocVotingError {
+    fn from(value: SummaryError) -> Self {
         BlocVotingError::Numeric(value.to_string())
     }
 }
@@ -597,10 +603,8 @@ pub fn cluster_bootstrap(
     for name in &names_with_intercept {
         let cv = cluster_betas.remove(name).unwrap_or_default();
         let nv = naive_betas.remove(name).unwrap_or_default();
-        let (c_lo, c_hi) =
-            percentile_interval_sorted_copy(&cv, lo_q, hi_q).unwrap_or((f64::NAN, f64::NAN));
-        let (n_lo, n_hi) =
-            percentile_interval_sorted_copy(&nv, lo_q, hi_q).unwrap_or((f64::NAN, f64::NAN));
+        let (c_lo, c_hi) = percentile_interval_sorted_copy(&cv, lo_q, hi_q)?;
+        let (n_lo, n_hi) = percentile_interval_sorted_copy(&nv, lo_q, hi_q)?;
         cluster_ci.insert(name.clone(), (c_lo, c_hi));
         naive_ci.insert(name.clone(), (n_lo, n_hi));
         if (n_hi - c_hi).abs() > 0.05 || (n_lo - c_lo).abs() > 0.05 {
@@ -1203,6 +1207,22 @@ mod tests {
         match error {
             BlocVotingError::Numeric(message) => {
                 assert!(message.contains("invert row normalization"));
+                assert!(message.contains("inf"));
+            }
+            other => panic!("expected Numeric error, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_summary_non_finite_result_maps_to_numeric_error() {
+        let error = BlocVotingError::from(SummaryError::NonFiniteResult {
+            operation: "quantile span",
+            value: f64::INFINITY,
+        });
+
+        match error {
+            BlocVotingError::Numeric(message) => {
+                assert!(message.contains("quantile span"));
                 assert!(message.contains("inf"));
             }
             other => panic!("expected Numeric error, got {:?}", other),

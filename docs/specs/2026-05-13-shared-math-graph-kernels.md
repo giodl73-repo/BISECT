@@ -258,7 +258,9 @@ Candidate first API:
    **Landed in `rstat-core::summary`. Summary aggregate overflow is rejected
    with typed errors instead of returning non-finite evidence fields.**
 2. Deterministic quantiles with an explicit interpolation rule. **Landed as R-7
-   quantiles and percentile intervals in `rstat-core::summary`.**
+   quantiles and percentile intervals in `rstat-core::summary`. Quantile
+   interpolation overflow is rejected with typed summary errors rather than
+   emitting non-finite interval bounds.**
 3. Autocorrelation, effective sample size, and R-hat helpers now living in
    `bisect-analysis`. **Landed in `rstat-core`; `bisect-analysis` keeps public
    record wrappers.**
@@ -291,7 +293,8 @@ Candidate first API:
      cluster-bootstrap intervals now consume the tested R-7 percentile interval
      helper in `rstat-core::summary`. Percentile interval helpers reject reversed
      quantiles (`low_q > high_q`) with a typed `SummaryError` rather than
-     returning `(high, low)` evidence bounds.**
+     returning `(high, low)` evidence bounds, and bloc-voting propagates summary
+     errors instead of substituting `(NaN, NaN)` cluster intervals.**
 
 `rstat-core::mcmc` rejects malformed diagnostics inputs before producing evidence
 metrics: R-hat rejects non-finite chain values with a typed diagnostics error,

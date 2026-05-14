@@ -25,6 +25,17 @@ fn l1_summary_quantiles_are_order_invariant() {
 }
 
 #[test]
+fn l1_quantile_rejects_non_finite_interpolation_result() {
+    match quantile_sorted_copy(&[-f64::MAX, f64::MAX], 0.5) {
+        Err(SummaryError::NonFiniteResult { operation, value }) => {
+            assert_eq!(operation, "quantile span");
+            assert!(value.is_infinite());
+        }
+        other => panic!("expected quantile overflow error, got {other:?}"),
+    }
+}
+
+#[test]
 fn l1_summary_and_probability_compose_for_interval_report() {
     let samples = [0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80];
 

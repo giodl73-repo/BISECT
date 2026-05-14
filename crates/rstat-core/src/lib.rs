@@ -172,7 +172,13 @@ pub mod summary {
             Ok(sorted_values[lo])
         } else {
             let frac = h - lo as f64;
-            Ok(sorted_values[lo] * (1.0 - frac) + sorted_values[hi] * frac)
+            let span = sorted_values[hi] - sorted_values[lo];
+            validate_result("quantile span", span)?;
+            let increment = span * frac;
+            validate_result("quantile increment", increment)?;
+            let quantile = sorted_values[lo] + increment;
+            validate_result("quantile interpolation", quantile)?;
+            Ok(quantile)
         }
     }
 
@@ -362,6 +368,17 @@ pub mod summary {
                 quantile_sorted_copy(&[1.0], 1.5),
                 Err(SummaryError::InvalidQuantile(1.5))
             );
+        }
+
+        #[test]
+        fn l0_quantile_rejects_overflowed_interpolation_span() {
+            match quantile_sorted_copy(&[-f64::MAX, f64::MAX], 0.5) {
+                Err(SummaryError::NonFiniteResult { operation, value }) => {
+                    assert_eq!(operation, "quantile span");
+                    assert!(value.is_infinite());
+                }
+                other => panic!("expected quantile overflow error, got {other:?}"),
+            }
         }
 
         #[test]
