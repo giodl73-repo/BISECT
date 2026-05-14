@@ -272,6 +272,8 @@ Candidate first API:
    them.**
 9. Normal CDF approximation. **Landed in `rstat-core::probability`;
    `bisect-analysis::bloc_voting` consumes it for HC3 normal-approximation
+   p-values. The helper rejects non-finite z-scores with a typed probability
+   error so malformed regression evidence cannot silently propagate `NaN`
    p-values.**
 10. Bootstrap percentile interval reuse. **`bisect-analysis::bloc_voting`
      cluster-bootstrap intervals now consume the tested R-7 percentile interval

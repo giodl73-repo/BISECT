@@ -996,6 +996,8 @@ pub mod probability {
 
     #[derive(Debug, Error, Clone, PartialEq)]
     pub enum ProbabilityError {
+        #[error("[INPUT] normal CDF z-score must be finite, got {0}")]
+        NonFiniteZ(f64),
         #[error("[INPUT] beta CDF x must be finite, got {0}")]
         NonFiniteX(f64),
         #[error("[INPUT] beta shape parameter '{name}' must be positive and finite, got {value}")]
@@ -1003,9 +1005,12 @@ pub mod probability {
     }
 
     /// Standard Normal CDF via Abramowitz & Stegun 7.1.26 approximation.
-    pub fn standard_normal_cdf(x: f64) -> f64 {
+    pub fn standard_normal_cdf(x: f64) -> Result<f64, ProbabilityError> {
+        if !x.is_finite() {
+            return Err(ProbabilityError::NonFiniteZ(x));
+        }
         let t = x / std::f64::consts::SQRT_2;
-        0.5 * (1.0 + erf_approx(t))
+        Ok(0.5 * (1.0 + erf_approx(t)))
     }
 
     pub fn regularized_incomplete_beta(x: f64, a: f64, b: f64) -> Result<f64, ProbabilityError> {
@@ -1175,9 +1180,21 @@ pub mod probability {
 
         #[test]
         fn normal_cdf_matches_known_quantiles() {
-            assert!((standard_normal_cdf(0.0) - 0.5).abs() < 1e-7);
-            assert!((standard_normal_cdf(1.96) - 0.975002).abs() < 2e-6);
-            assert!((standard_normal_cdf(-1.96) - 0.024998).abs() < 2e-6);
+            assert!((standard_normal_cdf(0.0).unwrap() - 0.5).abs() < 1e-7);
+            assert!((standard_normal_cdf(1.96).unwrap() - 0.975002).abs() < 2e-6);
+            assert!((standard_normal_cdf(-1.96).unwrap() - 0.024998).abs() < 2e-6);
+        }
+
+        #[test]
+        fn normal_cdf_rejects_non_finite_z_scores() {
+            assert_eq!(
+                standard_normal_cdf(f64::INFINITY),
+                Err(ProbabilityError::NonFiniteZ(f64::INFINITY))
+            );
+            match standard_normal_cdf(f64::NAN) {
+                Err(ProbabilityError::NonFiniteZ(value)) => assert!(value.is_nan()),
+                other => panic!("expected NonFiniteZ(NaN), got {other:?}"),
+            }
         }
     }
 }

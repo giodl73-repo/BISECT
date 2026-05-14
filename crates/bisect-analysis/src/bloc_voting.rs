@@ -22,7 +22,7 @@ use thiserror::Error;
 use crate::race_of_candidate::RaceOfCandidateProvenance;
 use rmath_core::{invert, mat_mul, mat_mul_vec, DenseMatrix as Mat, LinearAlgebraError};
 use rstat_core::hypothesis::holm_bonferroni_named;
-use rstat_core::probability::standard_normal_cdf;
+use rstat_core::probability::{standard_normal_cdf, ProbabilityError};
 use rstat_core::summary::{
     percentile_interval_sorted_copy, weighted_mean, weighted_std_dev_population,
 };
@@ -138,6 +138,12 @@ impl From<LinearAlgebraError> for BlocVotingError {
             LinearAlgebraError::Singular => BlocVotingError::Singular,
             other => BlocVotingError::Numeric(other.to_string()),
         }
+    }
+}
+
+impl From<ProbabilityError> for BlocVotingError {
+    fn from(value: ProbabilityError) -> Self {
+        BlocVotingError::Numeric(value.to_string())
     }
 }
 
@@ -378,7 +384,7 @@ pub fn hc3_stderr(fit: &mut RegressionFit, precincts: &[Precinct]) -> Result<(),
         coef.stderr_hc3 = se;
         let t = if se > 0.0 { coef.estimate / se } else { 0.0 };
         // Two-sided p-value via Normal approximation (df typically >> 30).
-        coef.p_value_raw = 2.0 * (1.0 - standard_normal_cdf(t.abs()));
+        coef.p_value_raw = 2.0 * (1.0 - standard_normal_cdf(t.abs())?);
         // Document the approximation: precinct-level analyses generally have
         // df in the hundreds to thousands; Normal vs. t-cdf differs at the 3rd
         // decimal in this regime. Tests use this approximation as ground truth.
@@ -1073,6 +1079,24 @@ mod tests {
                 coef.p_value_raw
             );
         }
+    }
+
+    #[test]
+    fn test_hc3_stderr_rejects_non_finite_p_value_statistic() {
+        let precincts = synthetic_precincts(300, 0.05, 0.40, 0.20, 0.05, 1);
+        let names = vec!["pct_minority".to_string(), "pct_dem_baseline".to_string()];
+        let mut fit = fit_wls(&precincts, &names).expect("fit");
+        fit.coefficients
+            .get_mut("pct_minority")
+            .expect("pct_minority")
+            .estimate = f64::INFINITY;
+
+        let err = hc3_stderr(&mut fit, &precincts).expect_err("non-finite z must fail");
+
+        assert!(
+            matches!(err, BlocVotingError::Numeric(ref msg) if msg.contains("normal CDF z-score")),
+            "expected checked normal-CDF error, got {err:?}"
+        );
     }
 
     #[test]

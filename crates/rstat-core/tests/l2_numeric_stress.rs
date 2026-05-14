@@ -70,7 +70,7 @@ fn l2_normal_cdf_grid_is_bounded_and_monotone() {
     let mut previous = 0.0;
     for i in -800..=800 {
         let z = i as f64 / 100.0;
-        let value = standard_normal_cdf(z);
+        let value = standard_normal_cdf(z).unwrap();
         assert!((0.0..=1.0).contains(&value), "Phi({z}) = {value}");
         assert!(
             value + 1e-12 >= previous,
@@ -78,8 +78,8 @@ fn l2_normal_cdf_grid_is_bounded_and_monotone() {
         );
         previous = value;
     }
-    assert!(standard_normal_cdf(-8.0) < 1e-14);
-    assert!(standard_normal_cdf(8.0) > 1.0 - 1e-14);
+    assert!(standard_normal_cdf(-8.0).unwrap() < 1e-14);
+    assert!(standard_normal_cdf(8.0).unwrap() > 1.0 - 1e-14);
 }
 
 #[test]
