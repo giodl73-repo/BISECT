@@ -197,22 +197,28 @@ The first implementation wave should create `rgraph-core` with a narrow API:
    sampling semantics local. Follow-on slice-consumer expansion also routes
    `bisect-apportion::spectral`, `bisect-clustering`, `bisect-flow`, and the CLI
    zero-based spectral summary helper through the shared kernel. The
-   closure-based `undirected_edge_cut_by` adapter now lets HashMap-shaped
-   bisection-runner helpers and HashSet-shaped evidence helpers reuse the
-   graph-only edge traversal while keeping missing-assignment defaults and
-   side-membership semantics local. `bisect-column` also uses the same adapter
-   for bitmask membership labels without adding a bitmask-specific shared API.
-   Weighted cut scoring in `bisect-cli::bisection_runner` is consolidated as a
-   local helper, not promoted to `rgraph-core`, because current reuse is confined
-   to one module and weight-policy boundaries are CLI-specific.**
+    closure-based `undirected_edge_cut_by` adapter now lets HashMap-shaped
+    bisection-runner helpers and HashSet-shaped evidence helpers reuse the
+    graph-only edge traversal while keeping missing-assignment defaults and
+    side-membership semantics local. `bisect-column` also uses the same adapter
+    for bitmask membership labels without adding a bitmask-specific shared API.
+    Edge-cut counting now treats adjacency as an unordered boundary list: duplicate
+    entries and one-way high-to-low edges are counted once per unordered edge.
+    Weighted cut scoring in `bisect-cli::bisection_runner` is consolidated as a
+    local helper, not promoted to `rgraph-core`, because current reuse is confined
+    to one module and weight-policy boundaries are CLI-specific.**
 10. Assignment-label connectivity over adjacency lists. **Landed in
     `rgraph-core`; `bisect-local-search`, `bisect-clustering`, `bisect-flow`, and
     `bisect-ilp` consume the shared kernel while retaining domain wrappers for
-    population balance, repair, search, and solver semantics.**
+    population balance, repair, search, and solver semantics. Connectivity is
+    evaluated on the undirected closure of the adjacency list so one-way boundary
+    adapters do not falsely fragment districts.**
 11. Node-subset connectivity over adjacency lists. **Landed in `rgraph-core`;
     `bisect-column`, `bisect-smc::proposal`, `bisect-pareto::mutation`, CLI
     bisection subset checks, and SA evidence checks consume it while keeping
-    empty-subset policy and pricing/proposal/mutation/evidence semantics local.**
+    empty-subset policy and pricing/proposal/mutation/evidence semantics local.
+    It uses the same undirected adjacency policy as assignment-label
+    connectivity.**
 12. Unit tests with tiny synthetic graphs covering:
    - equal shortest-path split;
    - ignored non-shortest direct edge;
@@ -226,6 +232,13 @@ The first implementation wave should create `rgraph-core` with a narrow API:
 Route can then replace its local Dijkstra/Brandes implementation by adapting
 `HighwayGraph`. BISECT now consumes the same crate for graph-only contiguity
 component traversal without coupling to route data.
+
+For adjacency-list helpers whose names describe undirected redistricting
+boundaries (`undirected_edge_cut`, assignment-label connectivity, node-subset
+connectivity, and restricted connected components), malformed one-way adjacency
+lists are handled as weak/undirected graphs rather than silently producing
+orientation-dependent answers. Directed shortest paths and reachability remain
+directed by design.
 
 ## Second Wave: `rstat-core`
 
@@ -258,8 +271,14 @@ Candidate first API:
    `bisect-analysis::bloc_voting` consumes it for HC3 normal-approximation
    p-values.**
 10. Bootstrap percentile interval reuse. **`bisect-analysis::bloc_voting`
-    cluster-bootstrap intervals now consume the tested R-7 percentile interval
-    helper in `rstat-core::summary`.**
+     cluster-bootstrap intervals now consume the tested R-7 percentile interval
+     helper in `rstat-core::summary`. Percentile interval helpers reject reversed
+     quantiles (`low_q > high_q`) with a typed `SummaryError` rather than
+     returning `(high, low)` evidence bounds.**
+
+`rstat-core::mcmc::hamming_autocorrelation` rejects empty partition vectors with a
+typed diagnostics error so trajectory diagnostics cannot emit non-finite values
+for malformed partition records.
 
 RCOUNT should continue to own election-audit method replay. `rstat-core` owns
 only reusable math.
@@ -283,9 +302,11 @@ The numeric kernel starts with small dense linear algebra, extracted from
    ignored L2 Hilbert-like inverse stress test landed under
    `crates/rmath-core/tests/`.**
 5. Dot products, L2 norms, centering, in-place normalization, and centered
-   normalization. **Landed in `rmath-core`; `bisect-apportion::spectral` consumes
-   centered normalization and `bisect-data::fiedler` consumes dot, centering, and
-   normalization helpers.**
+    normalization. **Landed in `rmath-core`; `bisect-apportion::spectral` consumes
+    centered normalization and `bisect-data::fiedler` consumes dot, centering, and
+    normalization helpers. Normalization thresholds must be finite and
+    non-negative; negative thresholds are rejected with a typed error to avoid
+    zero-vector division into non-finite values.**
 6. Closed-form symmetric 2x2 eigensystem. **Landed in `rmath-core`;
    `bisect-cli::geosection_orientation` consumes the minor eigenvector for PCA
    minor-axis orientation.**
@@ -305,6 +326,10 @@ power-iteration helper if another consumer appears beyond the current
 - No hidden global RNG. Randomized helpers must take an explicit seed or RNG.
 - No panics for malformed public inputs; return typed errors.
 - No silent dropping of invalid weights unless the function name and docs say so.
+- Public interval helpers must reject reversed bounds rather than swapping or
+  returning evidence intervals with `low > high`.
+- Undirected adjacency-list helpers must be orientation-invariant for duplicated
+  or one-way boundary entries.
 - Domain-separated transcript/hash helpers belong in domain crates, not here.
 - Tests must include both positive and negative cases for every public function.
 
