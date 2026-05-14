@@ -163,6 +163,9 @@ Deterministic domain-separated seed derivation has also landed in `ropt-core`.
 `bisect-pareto` keeps Pareto-specific domain labels (`PARETO_INIT_`,
 `PARETO_CROSS_`, `PARETO_MUT_`) while delegating the SHA-256 seed kernel to the
 shared crate.
+The same seed kernel now supports existing SMC, multiscale, ensemble-chain, and
+parallel-tempering seed helpers; those crates keep their own domain prefixes and
+RNG semantics.
 
 ## First Wave: `rgraph-core`
 

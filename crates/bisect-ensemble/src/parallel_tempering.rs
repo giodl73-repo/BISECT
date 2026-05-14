@@ -10,7 +10,7 @@
 use crate::forest_recom::ForestRecomChain;
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
-use sha2::{Digest, Sha256};
+use ropt_core::{derive_seed, SeedPart};
 
 // ── Seed derivation helpers ───────────────────────────────────────────────────
 
@@ -19,15 +19,15 @@ use sha2::{Digest, Sha256};
 /// `SHA-256("PT_REPLICA_" || replica:u32le || "_" || step:u64le || "_" || base_seed:u64le)`
 /// → least-significant 64 bits.
 pub fn replica_seed(base_seed: u64, replica: u32, step: u64) -> u64 {
-    let mut h = Sha256::new();
-    h.update(b"PT_REPLICA_");
-    h.update(replica.to_le_bytes());
-    h.update(b"_");
-    h.update(step.to_le_bytes());
-    h.update(b"_");
-    h.update(base_seed.to_le_bytes());
-    let d = h.finalize();
-    u64::from_le_bytes(d[..8].try_into().unwrap())
+    derive_seed(
+        b"PT_REPLICA_",
+        &[
+            SeedPart::U32(replica),
+            SeedPart::U64(step),
+            SeedPart::U64(base_seed),
+        ],
+    )
+    .expect("non-empty seed domain")
 }
 
 /// Derive the swap RNG seed for a given step, pair index, and base seed.
@@ -35,15 +35,15 @@ pub fn replica_seed(base_seed: u64, replica: u32, step: u64) -> u64 {
 /// `SHA-256("PT_SWAP_" || pair:u32le || "_" || step:u64le || "_" || base_seed:u64le)`
 /// → least-significant 64 bits.
 pub fn swap_seed(base_seed: u64, step: u64, pair: u32) -> u64 {
-    let mut h = Sha256::new();
-    h.update(b"PT_SWAP_");
-    h.update(pair.to_le_bytes());
-    h.update(b"_");
-    h.update(step.to_le_bytes());
-    h.update(b"_");
-    h.update(base_seed.to_le_bytes());
-    let d = h.finalize();
-    u64::from_le_bytes(d[..8].try_into().unwrap())
+    derive_seed(
+        b"PT_SWAP_",
+        &[
+            SeedPart::U32(pair),
+            SeedPart::U64(step),
+            SeedPart::U64(base_seed),
+        ],
+    )
+    .expect("non-empty seed domain")
 }
 
 /// Derive forward/reverse RNGs from a replica seed.
@@ -51,20 +51,10 @@ pub fn swap_seed(base_seed: u64, step: u64, pair: u32) -> u64 {
 /// Uses domain-separated `"PT_FWD_"` / `"PT_REV_"` prefixes, matching the
 /// seeding convention in `forest_recom`.
 pub fn replica_rngs(rseed: u64) -> (SmallRng, SmallRng) {
-    let fwd = {
-        let mut h = Sha256::new();
-        h.update(b"PT_FWD_");
-        h.update(rseed.to_le_bytes());
-        let d = h.finalize();
-        SmallRng::seed_from_u64(u64::from_le_bytes(d[..8].try_into().unwrap()))
-    };
-    let rev = {
-        let mut h = Sha256::new();
-        h.update(b"PT_REV_");
-        h.update(rseed.to_le_bytes());
-        let d = h.finalize();
-        SmallRng::seed_from_u64(u64::from_le_bytes(d[..8].try_into().unwrap()))
-    };
+    let fwd_seed = derive_seed(b"PT_FWD_", &[SeedPart::U64(rseed)]).expect("non-empty seed domain");
+    let rev_seed = derive_seed(b"PT_REV_", &[SeedPart::U64(rseed)]).expect("non-empty seed domain");
+    let fwd = SmallRng::seed_from_u64(fwd_seed);
+    let rev = SmallRng::seed_from_u64(rev_seed);
     (fwd, rev)
 }
 

@@ -3,8 +3,8 @@
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
 use rayon::prelude::*;
+use ropt_core::{derive_seed, SeedPart};
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 
 use crate::recom::{RecomChain, StepRecord};
 
@@ -83,13 +83,11 @@ pub struct EnsembleResult {
 ///
 /// `chain_seed(base, i) = first 8 bytes of SHA-256("ENSEMBLE_CHAIN_" || i || "_" || base_seed)`
 pub fn chain_seed(base_seed: u64, chain_idx: usize) -> u64 {
-    let mut h = Sha256::new();
-    h.update(b"ENSEMBLE_CHAIN_");
-    h.update(chain_idx.to_le_bytes());
-    h.update(b"_");
-    h.update(base_seed.to_le_bytes());
-    let digest = h.finalize();
-    u64::from_le_bytes(digest[..8].try_into().unwrap())
+    derive_seed(
+        b"ENSEMBLE_CHAIN_",
+        &[SeedPart::Usize(chain_idx), SeedPart::U64(base_seed)],
+    )
+    .expect("non-empty seed domain")
 }
 
 /// Run a single chain for `n_steps` steps.

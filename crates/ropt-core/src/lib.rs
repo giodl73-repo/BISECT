@@ -58,6 +58,7 @@ pub enum RoptError {
 pub enum SeedPart {
     U32(u32),
     U64(u64),
+    Usize(usize),
 }
 
 pub fn dominates<T: ObjectiveVector>(a: &T, b: &T) -> Result<bool, RoptError> {
@@ -179,6 +180,7 @@ pub fn derive_seed(domain: &[u8], parts: &[SeedPart]) -> Result<u64, RoptError> 
         match part {
             SeedPart::U32(value) => hasher.update(value.to_le_bytes()),
             SeedPart::U64(value) => hasher.update(value.to_le_bytes()),
+            SeedPart::Usize(value) => hasher.update(value.to_le_bytes()),
         }
     }
     let digest = hasher.finalize();
@@ -320,5 +322,13 @@ mod tests {
             derive_seed(b"", &[SeedPart::U64(42)]),
             Err(RoptError::EmptySeedDomain)
         );
+    }
+
+    #[test]
+    fn l0_seed_derivation_supports_usize_parts() {
+        let a = derive_seed(b"ENSEMBLE_CHAIN_", &[SeedPart::Usize(7), SeedPart::U64(42)]).unwrap();
+        let b = derive_seed(b"ENSEMBLE_CHAIN_", &[SeedPart::Usize(7), SeedPart::U64(42)]).unwrap();
+
+        assert_eq!(a, b);
     }
 }

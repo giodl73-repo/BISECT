@@ -1,19 +1,19 @@
 //! Seed derivation for multi-scale MCMC.
 //! Prefix: "MSC_STEP_" (distinct from Merge-Split's "MS_STEP_" per spec).
 
-use sha2::{Digest, Sha256};
+use ropt_core::{derive_seed, SeedPart};
 
 /// Derive the step seed for step `step`, chain `chain_idx`, base seed `base_seed`.
 pub fn step_seed(base_seed: u64, step: u64, chain_idx: u32) -> u64 {
-    let mut h = Sha256::new();
-    h.update(b"MSC_STEP_");
-    h.update(step.to_le_bytes());
-    h.update(b"_");
-    h.update(chain_idx.to_le_bytes());
-    h.update(b"_");
-    h.update(base_seed.to_le_bytes());
-    let d = h.finalize();
-    u64::from_le_bytes(d[..8].try_into().unwrap())
+    derive_seed(
+        b"MSC_STEP_",
+        &[
+            SeedPart::U64(step),
+            SeedPart::U32(chain_idx),
+            SeedPart::U64(base_seed),
+        ],
+    )
+    .expect("non-empty seed domain")
 }
 
 #[cfg(test)]

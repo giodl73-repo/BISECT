@@ -7,22 +7,22 @@
 //! proposal algorithm semantics must change the prefix to prevent silent seed
 //! compatibility across algorithm versions.
 
-use sha2::{Digest, Sha256};
+use ropt_core::{derive_seed, SeedPart};
 
 /// Derive the RNG seed for particle `particle_idx` at stage `stage`.
 ///
 /// Encoding (31 bytes total):
 ///   "SMC_PARTICLE_" (13) || stage:u32le (4) || "_" (1) || particle_idx:u32le (4) || "_" (1) || base_seed:u64le (8)
 pub fn particle_seed(base_seed: u64, stage: u32, particle_idx: u32) -> u64 {
-    let mut h = Sha256::new();
-    h.update(b"SMC_PARTICLE_");
-    h.update(stage.to_le_bytes());
-    h.update(b"_");
-    h.update(particle_idx.to_le_bytes());
-    h.update(b"_");
-    h.update(base_seed.to_le_bytes());
-    let d = h.finalize();
-    u64::from_le_bytes(d[..8].try_into().unwrap())
+    derive_seed(
+        b"SMC_PARTICLE_",
+        &[
+            SeedPart::U32(stage),
+            SeedPart::U32(particle_idx),
+            SeedPart::U64(base_seed),
+        ],
+    )
+    .expect("non-empty seed domain")
 }
 
 /// Derive the RNG seed for systematic resampling at `resample_round`.
@@ -30,13 +30,11 @@ pub fn particle_seed(base_seed: u64, stage: u32, particle_idx: u32) -> u64 {
 /// Encoding (26 bytes total):
 ///   "SMC_RESAMPLE_" (13) || resample_round:u32le (4) || "_" (1) || base_seed:u64le (8)
 pub fn resample_seed(base_seed: u64, resample_round: u32) -> u64 {
-    let mut h = Sha256::new();
-    h.update(b"SMC_RESAMPLE_");
-    h.update(resample_round.to_le_bytes());
-    h.update(b"_");
-    h.update(base_seed.to_le_bytes());
-    let d = h.finalize();
-    u64::from_le_bytes(d[..8].try_into().unwrap())
+    derive_seed(
+        b"SMC_RESAMPLE_",
+        &[SeedPart::U32(resample_round), SeedPart::U64(base_seed)],
+    )
+    .expect("non-empty seed domain")
 }
 
 #[cfg(test)]
