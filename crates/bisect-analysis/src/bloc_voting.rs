@@ -124,6 +124,13 @@ pub struct RegressionFit {
 pub enum BlocVotingError {
     #[error("[INPUT] insufficient precincts: got {got}, need at least {min}")]
     InsufficientPrecincts { got: usize, min: usize },
+    #[error("[INPUT] non-finite value at precinct {idx} (id={id}) field {field}: {value}")]
+    NonFinitePrecinctValue {
+        idx: usize,
+        id: String,
+        field: &'static str,
+        value: f64,
+    },
     #[error("[INPUT] non-positive weight at precinct {idx} (id={id}): {weight}")]
     NonPositiveWeight { idx: usize, id: String, weight: f64 },
     #[error("[INTERNAL] singular design matrix (predictors collinear); try fewer covariates")]
@@ -195,6 +202,10 @@ pub fn fit_wls(
         return Err(BlocVotingError::InsufficientPrecincts { got: n, min: p + 2 });
     }
     for (i, pr) in precincts.iter().enumerate() {
+        validate_precinct_finite(i, pr, "total_votes", pr.total_votes)?;
+        validate_precinct_finite(i, pr, "candidate_share", pr.candidate_share)?;
+        validate_precinct_finite(i, pr, "pct_minority", pr.pct_minority)?;
+        validate_precinct_finite(i, pr, "pct_dem_baseline", pr.pct_dem_baseline)?;
         if pr.total_votes <= 0.0 {
             return Err(BlocVotingError::NonPositiveWeight {
                 idx: i,
@@ -314,6 +325,23 @@ pub fn fit_wls(
         residuals,
         predictor_names: predictor_names.to_vec(),
     })
+}
+
+fn validate_precinct_finite(
+    idx: usize,
+    precinct: &Precinct,
+    field: &'static str,
+    value: f64,
+) -> Result<(), BlocVotingError> {
+    if !value.is_finite() {
+        return Err(BlocVotingError::NonFinitePrecinctValue {
+            idx,
+            id: precinct.id.clone(),
+            field,
+            value,
+        });
+    }
+    Ok(())
 }
 
 /// Populate `stderr_hc3` and `p_value_raw` on every coefficient via White's
@@ -1538,6 +1566,24 @@ mod tests {
                 assert_eq!(idx, 10);
             }
             other => panic!("expected NonPositiveWeight, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_fit_wls_rejects_non_finite_precinct_fields() {
+        let mut precincts = synthetic_precincts(50, 0.0, 0.5, 0.3, 0.05, 0);
+        precincts[7].candidate_share = f64::NAN;
+        let names = vec!["pct_minority".to_string(), "pct_dem_baseline".to_string()];
+
+        match fit_wls(&precincts, &names) {
+            Err(BlocVotingError::NonFinitePrecinctValue {
+                idx, field, value, ..
+            }) => {
+                assert_eq!(idx, 7);
+                assert_eq!(field, "candidate_share");
+                assert!(value.is_nan());
+            }
+            other => panic!("expected NonFinitePrecinctValue, got {:?}", other),
         }
     }
 }
