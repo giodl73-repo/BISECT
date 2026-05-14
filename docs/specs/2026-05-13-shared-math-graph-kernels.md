@@ -200,7 +200,8 @@ The first implementation wave should create `rgraph-core` with a narrow API:
    closure-based `undirected_edge_cut_by` adapter now lets HashMap-shaped
    bisection-runner helpers and HashSet-shaped evidence helpers reuse the
    graph-only edge traversal while keeping missing-assignment defaults and
-   side-membership semantics local.**
+   side-membership semantics local. `bisect-column` also uses the same adapter
+   for bitmask membership labels without adding a bitmask-specific shared API.**
 10. Assignment-label connectivity over adjacency lists. **Landed in
     `rgraph-core`; `bisect-local-search`, `bisect-clustering`, `bisect-flow`, and
     `bisect-ilp` consume the shared kernel while retaining domain wrappers for

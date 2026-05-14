@@ -72,17 +72,6 @@ fn subset_connected(adjacency: &[Vec<usize>], units: &[usize]) -> bool {
 }
 
 fn subset_edge_cut(adjacency: &[Vec<usize>], mask: usize) -> usize {
-    let mut cut = 0usize;
-    for (unit, neighbors) in adjacency.iter().enumerate() {
-        let left_in = (mask & (1usize << unit)) != 0;
-        for &neighbor in neighbors {
-            if neighbor > unit {
-                let right_in = (mask & (1usize << neighbor)) != 0;
-                if left_in != right_in {
-                    cut += 1;
-                }
-            }
-        }
-    }
-    cut
+    rgraph_core::undirected_edge_cut_by(adjacency, |unit| (mask & (1usize << unit)) != 0)
+        .expect("validated column-pricing adjacency")
 }
